@@ -68,13 +68,12 @@ let dummy_options_flags =
     temp_dir = None;
     traces = None;
     trust_mode = None;
-    new_signatures = false;
+    new_check = false;
     abstract_locations = true;
     verbose = None;
     wait_for_recheck = None;
     weak = false;
     include_suppressions = false;
-    generate_tests = None;
   }
 
 let dummy_saved_state_flags =
@@ -106,6 +105,7 @@ let make_options () =
   let root = Path.dummy_path in
   CommandUtils.make_options
     ~flowconfig_name:".flowconfig"
+    ~flowconfig_hash:""
     ~flowconfig
     ~lazy_mode:None
     ~root
@@ -209,9 +209,9 @@ let include_dependencies_and_dependents
 (* There is memory sampling embedded throughout the code under test. It polls the shared memory
  * system to get information about its usage. If the shared memory system is not initialized, we get
  * crashes, so we have to initialize it before running tests. *)
-let sharedmem_config = { SharedMem_js.heap_size = 1024 * 1024; hash_table_pow = 19; log_level = 0 }
+let sharedmem_config = { SharedMem.heap_size = 1024 * 1024; hash_table_pow = 19; log_level = 0 }
 
-let _ = SharedMem_js.init sharedmem_config ~num_workers:1
+let _ = SharedMem.init sharedmem_config ~num_workers:1
 
 let tests =
   "types_js"

@@ -76,7 +76,7 @@ let main base_flags temp_dir quiet root () =
             prerr_endlinef "Successfully killed server for `%s`" (Path.to_string root)
         with FailedToKillNicely ->
           let msg = spf "Failed to kill server nicely for `%s`" root_s in
-          FlowExitStatus.(exit ~msg Kill_error)
+          Exit.(exit ~msg Kill_error)
       end
     | Error Server_missing ->
       if not quiet then prerr_endlinef "Warning: no server to kill for `%s`" root_s
@@ -99,7 +99,7 @@ let main base_flags temp_dir quiet root () =
             | None ->
               ();
               let msg = spf "Failed to kill server meanly for `%s`" root_s in
-              FlowExitStatus.(exit ~msg Kill_error)
+              Exit.(exit ~msg Kill_error)
           )
       end)
 

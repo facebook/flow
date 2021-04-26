@@ -153,8 +153,8 @@ Cannot cast `str3` to number because string [1] is incompatible with number [2].
         ^^^^
 
 References:
-   flow-typed/declares.js:15:26
-   15|   declare var strHidden: string;
+   flow-typed/declares.js:16:26
+   16|   declare var strHidden: string;
                                 ^^^^^^ [1]
    es_declare_module.js:23:8
    23| (str3: number); // Error: string ~> number
@@ -170,8 +170,8 @@ Cannot cast `num3` to string because number [1] is incompatible with string [2].
         ^^^^
 
 References:
-   flow-typed/declares.js:17:28
-   17|   declare export var num3: number;
+   flow-typed/declares.js:18:28
+   18|   declare export var num3: number;
                                   ^^^^^^ [1]
    es_declare_module.js:27:8
    27| (num3: string); // Error: number ~> string

@@ -26,6 +26,9 @@ queries_in_file autocomplete "jsx1.js" --pretty
 queries_in_file autocomplete "jsx2.js" --pretty
 queries_in_file autocomplete "jsx3.js" --pretty
 queries_in_file autocomplete "jsx4.js" --pretty
+queries_in_file autocomplete "jsx-attribute-member.js" --pretty
+queries_in_file autocomplete "jsx-closing-tag.js" --pretty
+queries_in_file autocomplete "jsx-closing-tag-unclosed.js" --pretty
 queries_in_file autocomplete "jsx-function-component.js" --pretty
 queries_in_file autocomplete "jsx-function-component-2.js" --pretty
 queries_in_file autocomplete "jsx-function-component-3.js" --pretty
@@ -38,7 +41,9 @@ queries_in_file autocomplete "if.js" --pretty
 queries_in_file autocomplete "override.js" --pretty
 queries_in_file autocomplete "member_class_property.js" --lsp
 queries_in_file autocomplete "member_class_static.js" --pretty
+queries_in_file autocomplete "member_interface_property.js" --lsp
 queries_in_file autocomplete "member_middle.js" --pretty
+queries_in_file autocomplete "opaque_types.js" --pretty
 queries_in_file autocomplete "optional_chaining_middle.js" --pretty
 queries_in_file autocomplete "optional_chaining_new.js" --pretty
 queries_in_file autocomplete "optional_chaining_continue.js" --pretty
@@ -54,6 +59,8 @@ queries_in_file autocomplete "poly.js" --pretty
 queries_in_file autocomplete "poly_no_args.js" --pretty
 queries_in_file autocomplete "identifier.js" --pretty
 queries_in_file autocomplete "identifier_middle.js" --pretty
+queries_in_file autocomplete "identifier_import_type.js" --pretty
+queries_in_file autocomplete "identifier_type.js" --pretty
 queries_in_file autocomplete "super.js" --pretty
 queries_in_file autocomplete "this-2.js" --pretty
 queries_in_file autocomplete "pattern.js" --pretty
@@ -80,6 +87,7 @@ queries_in_file autocomplete "suggest_optional_chaining_1.js" --lsp
 queries_in_file autocomplete "suggest_optional_chaining_2.js" --lsp
 queries_in_file autocomplete "suggest_optional_chaining_3.js" --lsp
 queries_in_file autocomplete "enums.js" --lsp
+queries_in_file autocomplete "enum-key.js" --lsp
 queries_in_file autocomplete "enum-id.js" --pretty
 queries_in_file autocomplete "class_declaration_name.js" --pretty
 queries_in_file autocomplete "pattern_object_key_middle.js" --pretty
@@ -94,3 +102,17 @@ queries_in_file autocomplete "jsdoc-members-7.js" --lsp
 queries_in_file autocomplete "jsdoc-members-8.js" --lsp
 queries_in_file autocomplete "types-jsdoc.js" --lsp
 queries_in_file autocomplete "qualified-types-jsdoc.js" --lsp
+queries_in_file autocomplete "bracket_syntax_1.js" --lsp
+queries_in_file autocomplete "bracket_syntax_2.js" --lsp
+queries_in_file autocomplete "bracket_syntax_3.js" --lsp
+queries_in_file autocomplete "bracket_syntax_4.js" --lsp
+queries_in_file autocomplete "bracket_syntax_5.js" --lsp
+queries_in_file autocomplete "bracket_syntax_6.js" --lsp
+queries_in_file autocomplete "iterator.js" --lsp
+queries_in_file autocomplete "bracket_syntax_needed.js" --lsp
+queries_in_file autocomplete "bracket_syntax_needed_2.js" --lsp
+queries_in_file autocomplete "upper_bounds_1.js" --lsp
+queries_in_file autocomplete "upper_bounds_2.js" --lsp
+queries_in_file autocomplete "upper_bounds_3.js" --pretty
+queries_in_file autocomplete "upper_bounds_4.js" --pretty
+queries_in_file autocomplete "upper_bounds_5.js" --pretty

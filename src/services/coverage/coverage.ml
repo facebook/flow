@@ -119,7 +119,6 @@ type tvar_status =
 
 class visitor =
   object (self)
-    val mutable tvar_cache : tvar_status IMap.t = IMap.empty
     (**
      * Type variables may appear in a cycle in the dependency graph, which requires
      * us to track the ones we've visited to avoid infinite recursion. There are three
@@ -141,9 +140,10 @@ class visitor =
      *   be rare and it's arguable if we should be allowing it in the first place,
      *   so we assign the value that corresponds to the fewest guarantees.
      *)
+    val mutable tvar_cache : tvar_status IMap.t = IMap.empty
 
     method private tvar cx id =
-      let (root_id, constraints) = Context.find_constraints cx id in
+      let (root_id, (lazy constraints)) = Context.find_constraints cx id in
       if id != root_id then
         self#tvar cx root_id
       else
@@ -156,7 +156,7 @@ class visitor =
             let cov =
               match constraints with
               | Resolved (_, t)
-              | FullyResolved (_, t) ->
+              | FullyResolved (_, (lazy t)) ->
                 self#type_ cx t
               | Unresolved bounds ->
                 let bounds = TypeMap.keys bounds.lower in
@@ -168,7 +168,6 @@ class visitor =
     method type_ cx =
       function
       | OpenT (_, id) -> self#tvar cx id
-      | MergedT (_, uses) -> self#merged_t cx uses
       | EvalT (t, _, id) -> self#eval_t cx t id
       (* Non-concrete (fallthrough) constructors *)
       | AnnotT (_, t, _)
@@ -232,7 +231,7 @@ class visitor =
       | MatchingPropT _
       | TypeDestructorTriggerT _ ->
         (Kind.Empty, Taint.Untainted)
-      | DefT (_, t, EmptyT _) -> (Kind.Empty, Taint.of_trust cx t)
+      | DefT (_, t, EmptyT) -> (Kind.Empty, Taint.of_trust cx t)
       | AnyT _ -> (Kind.Any, Taint.Tainted)
 
     method private types_of_use acc =

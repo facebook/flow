@@ -9,6 +9,7 @@ open Reason
 open Type
 open TypeUtil
 open Utils_js
+open Loc_collections
 
 let string_of_polarity = function
   | Polarity.Negative -> "Negative"
@@ -16,7 +17,7 @@ let string_of_polarity = function
   | Polarity.Positive -> "Positive"
 
 let string_of_union_enum = function
-  | UnionEnum.Str x -> spf "string %s" x
+  | UnionEnum.Str x -> spf "string %s" (display_string_of_name x)
   | UnionEnum.Num (_, x) -> spf "number %s" x
   | UnionEnum.Bool x -> spf "boolean %b" x
   | UnionEnum.Null -> "null"
@@ -36,8 +37,10 @@ let string_of_selector = function
 
 let string_of_destructor = function
   | NonMaybeType -> "NonMaybeType"
-  | PropertyType x -> spf "PropertyType %s" x
+  | PropertyType x -> spf "PropertyType %s" (display_string_of_name x)
   | ElementType _ -> "ElementType"
+  | OptionalIndexedAccessNonMaybeType _ -> "OptionalIndexedAccessNonMaybeType"
+  | OptionalIndexedAccessResultType _ -> "OptionalIndexedAccessResultType"
   | Bind _ -> "Bind"
   | ReadOnlyType -> "ReadOnly"
   | SpreadType _ -> "Spread"
@@ -79,7 +82,8 @@ let dump_reason cx reason =
   in
   Reason.dump_reason ~strip_root reason
 
-let rec dump_t_ (depth, tvars) cx t =
+let rec dump_t_ : type phase. int * ISet.t -> phase Context.t_ -> Type.t -> string =
+ fun (depth, tvars) cx t ->
   let p ?(reason = true) ?(extra = "") ?(trust = None) t =
     spf
       "%s %s(%s%s%s)"
@@ -173,7 +177,7 @@ let rec dump_t_ (depth, tvars) cx t =
         ~trust:(Some trust)
         ~extra:
           (match c with
-          | Literal (_, s) -> spf "%S" s
+          | Literal (_, s) -> spf "%S" (display_string_of_name s)
           | Truthy -> "truthy"
           | AnyLiteral -> "")
         t
@@ -198,7 +202,7 @@ let rec dump_t_ (depth, tvars) cx t =
     | AnyT (_, src) -> p ~extra:(string_of_any_source src) t
     | DefT (_, trust, MixedT flavor) ->
       p ~trust:(Some trust) ~extra:(string_of_mixed_flavor flavor) t
-    | DefT (_, trust, EmptyT _)
+    | DefT (_, trust, EmptyT)
     | DefT (_, trust, SymbolT)
     | DefT (_, trust, NullT)
     | DefT (_, trust, VoidT) ->
@@ -300,19 +304,13 @@ let rec dump_t_ (depth, tvars) cx t =
              (String.concat "; " (Base.List.map ~f:kid (UnionRep.members rep)))
              (UnionRep.string_of_specialization rep))
         t
-    | MergedT (_, uses) ->
-      p
-        ~extra:
-          ( "["
-          ^ String.concat ", " (Base.List.map ~f:(dump_use_t_ (depth - 1, tvars) cx) uses)
-          ^ "]" )
-        t
     | DefT (_, trust, IdxWrapper inner_obj) -> p ~trust:(Some trust) ~extra:(kid inner_obj) t
     | DefT (_, trust, ReactAbstractComponentT _) -> p ~trust:(Some trust) t
     | ShapeT (_, arg) -> p ~extra:(kid arg) t
     | MatchingPropT (_, _, arg) -> p ~extra:(kid arg) t
     | KeysT (_, arg) -> p ~extra:(kid arg) t
-    | DefT (_, trust, SingletonStrT s) -> p ~trust:(Some trust) ~extra:(spf "%S" s) t
+    | DefT (_, trust, SingletonStrT s) ->
+      p ~trust:(Some trust) ~extra:(spf "%S" (display_string_of_name s)) t
     | DefT (_, trust, SingletonNumT (_, s)) -> p ~trust:(Some trust) ~extra:s t
     | DefT (_, trust, SingletonBoolT b) -> p ~trust:(Some trust) ~extra:(spf "%B" b) t
     | ModuleT (_, { exports_tmap; _ }, _) ->
@@ -320,8 +318,9 @@ let rec dump_t_ (depth, tvars) cx t =
         t
         ~extra:
           ( Context.find_exports cx exports_tmap
-          |> SMap.bindings
-          |> Base.List.map ~f:(fun (name, (_, t)) -> kid t |> spf "%s: %s" name)
+          |> NameUtils.Map.bindings
+          |> Base.List.map ~f:(fun (name, (_, t)) ->
+                 kid t |> spf "%s: %s" (display_string_of_name name))
           |> String.concat ", "
           |> spf "[%s]" )
     | InternalT (ExtendsT (_, l, u)) -> p ~extra:(spf "%s, %s" (kid l) (kid u)) t
@@ -352,7 +351,8 @@ let rec dump_t_ (depth, tvars) cx t =
     | InternalT (ReposUpperT (_, arg)) ->
       p ~extra:(kid arg) t
 
-and dump_use_t_ (depth, tvars) cx t =
+and dump_use_t_ : type phase. int * ISet.t -> phase Context.t_ -> Type.use_t -> string =
+ fun (depth, tvars) cx t ->
   let p ?(reason = true) ?(extra = "") use_t =
     spf
       "%s (%s%s%s)"
@@ -381,10 +381,15 @@ and dump_use_t_ (depth, tvars) cx t =
   let props map =
     spf
       "{%s}"
-      (String.concat "; " (SMap.fold (fun k p acc -> spf "%s = %s" k (prop p) :: acc) map []))
+      (String.concat
+         "; "
+         (NameUtils.Map.fold
+            (fun k p acc -> spf "%s = %s" (display_string_of_name k) (prop p) :: acc)
+            map
+            []))
   in
   let propref = function
-    | Named (r, x) -> spf "%S %s" (dump_reason cx r) x
+    | Named (r, x) -> spf "%S %s" (dump_reason cx r) (display_string_of_name x)
     | Computed t -> kid t
   in
   let lookup_kind = function
@@ -438,7 +443,11 @@ and dump_use_t_ (depth, tvars) cx t =
         | ResolveDict (_, todo, acc) ->
           spf "ResolveDict (%s, %s)" (props todo) (resolved_object acc)
         | ResolveProp (k, todo, acc) ->
-          spf "ResolveProp (%s, %s, %s)" k (props todo) (resolved_object acc)
+          spf
+            "ResolveProp (%s, %s, %s)"
+            (display_string_of_name k)
+            (props todo)
+            (resolved_object acc)
       in
       let simplify_prop_type =
         SimplifyPropType.(
@@ -505,14 +514,14 @@ and dump_use_t_ (depth, tvars) cx t =
         []
     in
     let xs =
-      SMap.fold
-        (fun k (t, _) xs ->
+      NameUtils.Map.fold
+        (fun k (t, _, _) xs ->
           let opt =
             match t with
             | OptionalT _ -> "?"
             | _ -> ""
           in
-          (k ^ opt) :: xs)
+          (display_string_of_name k ^ opt) :: xs)
         props
         xs
     in
@@ -523,15 +532,15 @@ and dump_use_t_ (depth, tvars) cx t =
   in
   let operand_slice reason prop_map dict =
     let props =
-      SMap.fold
+      NameUtils.Map.fold
         (fun k p acc ->
           match (Type.Property.read_t p, Type.Property.write_t p) with
           | (Some t, _)
           | (_, Some t) ->
-            SMap.add k (t, true) acc
+            NameUtils.Map.add k (t, true, false) acc
           | _ -> acc)
         prop_map
-        SMap.empty
+        NameUtils.Map.empty
     in
     let obj_kind =
       match dict with
@@ -626,6 +635,17 @@ and dump_use_t_ (depth, tvars) cx t =
       in
       (fun a b -> spf "(%s, %s)" (resolve_tool a) (tool b)))
   in
+  let method_action = function
+    | CallM { meth_args_tlist; meth_tout = (call_r, call_tvar); meth_generic_this; _ }
+    | ChainM (_, _, _, { meth_args_tlist; meth_tout = (call_r, call_tvar); meth_generic_this; _ }, _)
+      ->
+      spf
+        "<this: %s>(%s) => (%s, %s)"
+        (Base.Option.value_map ~f:kid ~default:"None" meth_generic_this)
+        (String.concat "; " (Base.List.map ~f:call_arg_kid meth_args_tlist))
+        (string_of_reason call_r)
+        (tvar call_tvar)
+  in
   if depth = 0 then
     string_of_use_ctor t
   else
@@ -650,9 +670,10 @@ and dump_use_t_ (depth, tvars) cx t =
     | AssertBinaryInLHST _ -> p t
     | AssertBinaryInRHST _ -> p t
     | AssertForInRHST _ -> p t
-    | AssertIterableT _ -> p t
     | AssertImportIsValueT _ -> p t
-    | BecomeT (_, arg) -> p ~extra:(kid arg) t
+    | AssertInstanceofRHST _ -> p t
+    | AssertIterableT _ -> p t
+    | BecomeT { reason = _; t = arg; empty_success = _ } -> p ~extra:(kid arg) t
     | BindT (use_op, _, _, _) -> p t ~extra:(string_of_use_op use_op)
     | CallElemT (_, _, _, _) -> p t
     | CallT (use_op, _, { call_args_tlist; call_tout = (call_r, call_tvar); call_this_t; _ }) ->
@@ -686,7 +707,11 @@ and dump_use_t_ (depth, tvars) cx t =
           (spf
              "%s, {%s}"
              (kid arg)
-             (String.concat "; " (Base.List.map ~f:(fun (x, _) -> x) (SMap.bindings tmap))))
+             (String.concat
+                "; "
+                (Base.List.map
+                   ~f:(fun (x, _) -> display_string_of_name x)
+                   (NameUtils.Map.bindings tmap))))
     | ExportTypeT _ -> p t
     | FunImplicitVoidReturnT _ -> p t
     | AssertExportIsTypeT _ -> p t
@@ -743,7 +768,8 @@ and dump_use_t_ (depth, tvars) cx t =
         t
     | MakeExactT _ -> p t
     | MapTypeT _ -> p t
-    | MethodT (_, _, _, prop, _, _) -> p ~extra:(spf "(%s)" (propref prop)) t
+    | MethodT (_, _, _, prop, action, _) ->
+      p ~extra:(spf "(%s, %s)" (propref prop) (method_action action)) t
     | MixinT (_, arg) -> p ~extra:(kid arg) t
     | NotT (_, arg) -> p ~extra:(tout arg) t
     | NullishCoalesceT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (tout y)) t
@@ -753,7 +779,9 @@ and dump_use_t_ (depth, tvars) cx t =
     | ObjSealT _ -> p t
     | ObjTestProtoT _ -> p t
     | ObjTestT _ -> p t
-    | OptionalChainT (_, _, _, t', void_t) -> p ~extra:(spf "%s, %s" (use_kid t') (kid void_t)) t
+    | OptionalChainT { t_out; voided_out; _ } ->
+      p ~extra:(spf "%s, %s" (use_kid t_out) (kid voided_out)) t
+    | OptionalIndexedAccessT { index_type; _ } -> p ~extra:(kid index_type) t
     | OrT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (tout y)) t
     | PredicateT (pred, arg) ->
       p ~reason:false ~extra:(spf "%s, %s" (string_of_predicate pred) (tout arg)) t
@@ -888,7 +916,8 @@ and dump_use_t_ (depth, tvars) cx t =
              (use_kid upper))
     | ModuleExportsAssignT (_, _, _) -> p t
 
-and dump_tvar_ (depth, tvars) cx id =
+and dump_tvar_ : type phase. int * ISet.t -> phase Context.t_ -> Type.ident -> string =
+ fun (depth, tvars) cx id ->
   if ISet.mem id tvars then
     spf "%d, ^" id
   else
@@ -897,9 +926,9 @@ and dump_tvar_ (depth, tvars) cx id =
       try
         match Context.find_tvar cx id with
         | Goto g -> spf "%d, Goto %d" id g
-        | Root { constraints = Resolved (_, t) | FullyResolved (_, t); _ } ->
+        | Root { constraints = (lazy (Resolved (_, t) | FullyResolved (_, (lazy t)))); _ } ->
           spf "%d, Resolved %s" id (dump_t_ (depth - 1, stack) cx t)
-        | Root { constraints = Unresolved { lower; upper; _ }; _ } ->
+        | Root { constraints = (lazy (Unresolved { lower; upper; _ })); _ } ->
           if lower = TypeMap.empty && upper = UseTypeMap.empty then
             spf "%d" id
           else
@@ -914,12 +943,13 @@ and dump_tvar_ (depth, tvars) cx id =
                  "; "
                  (List.rev
                     (UseTypeMap.fold
-                       (fun use_t _ acc -> dump_use_t_ (depth - 1, stack) cx use_t :: acc)
+                       (fun (use_t, _) _ acc -> dump_use_t_ (depth - 1, stack) cx use_t :: acc)
                        upper
                        [])))
       with Context.Tvar_not_found _ -> spf "Not Found: %d" id)
 
-and dump_prop_ (depth, tvars) cx p =
+and dump_prop_ : type phase. int * ISet.t -> phase Context.t_ -> Type.TypeTerm.property -> string =
+ fun (depth, tvars) cx p ->
   let kid t = dump_t_ (depth, tvars) cx t in
   match p with
   | Field (_loc, t, polarity) -> spf "Field (%s) %s" (string_of_polarity polarity) (kid t)
@@ -950,20 +980,34 @@ let dump_flow ?(depth = 3) cx (l, u) =
 let string_of_scope_entry =
   Scope.(
     let string_of_value_binding
-        cx { Entry.kind; value_state; value_declare_loc; value_assign_loc; specific; general } =
+        cx
+        {
+          Entry.kind;
+          value_state;
+          value_declare_loc;
+          value_assign_loc;
+          specific;
+          general;
+          closure_writes;
+        } =
       let general_str =
         match general with
         | Annotated t -> spf "Annotated %s" (dump_t cx t)
         | Inferred t -> spf "Inferred %s" (dump_t cx t)
       in
       spf
-        "{ kind: %s; value_state: %s; value_declare_loc: %S; value_assign_loc: %s; specific: %s; general: %s }"
+        "{ kind: %s; value_state: %s; value_declare_loc: %S; value_assign_loc: %s; specific: %s; general: %s%s }"
         (Entry.string_of_value_kind kind)
         (State.to_string value_state)
         (string_of_aloc value_declare_loc)
         (string_of_aloc value_assign_loc)
         (dump_t cx specific)
         general_str
+        (Base.Option.value_map closure_writes ~default:"" ~f:(fun (locs, t) ->
+             spf
+               "; closure_writes: { locs: { %s }; t: %s }"
+               (ListUtils.to_string ", " string_of_aloc @@ ALocSet.elements locs)
+               (dump_t cx t)))
     in
     let string_of_type_binding cx { Entry.type_state; type_loc; type_; type_binding_kind = _ } =
       spf
@@ -981,8 +1025,9 @@ let string_of_scope_entry =
 
 let string_of_scope_entries cx entries =
   let strings =
-    SMap.fold
-      (fun name entry acc -> spf "%s: %s" name (string_of_scope_entry cx entry) :: acc)
+    NameUtils.Map.fold
+      (fun name entry acc ->
+        spf "%s: %s" (Reason.display_string_of_name name) (string_of_scope_entry cx entry) :: acc)
       entries
       []
     |> String.concat "; \n"
@@ -1043,9 +1088,7 @@ let string_of_default =
 
 let string_of_signature_error pp_loc err =
   let open Signature_error in
-  let module Sort = Signature_builder_kind.Sort in
   match err with
-  | ExpectedSort (sort, x, loc) -> spf "%s @ %s is not a %s" x (pp_loc loc) (Sort.to_string sort)
   | ExpectedAnnotation (loc, sort) ->
     spf "Expected annotation at %s @ %s" (Expected_annotation_sort.to_string sort) (pp_loc loc)
   | UnexpectedObjectKey (_loc, key_loc) -> spf "Expected simple object key @ %s" (pp_loc key_loc)
@@ -1060,10 +1103,6 @@ let string_of_signature_error pp_loc err =
       "Cannot determine the type of this %s @ %s"
       (Flow_ast_utils.ExpressionSort.to_string esort)
       (pp_loc loc)
-  | SketchyToplevelDef loc ->
-    spf "Unexpected toplevel definition that needs hoisting @ %s" (pp_loc loc)
-  | UnsupportedPredicateExpression loc -> spf "Unsupported predicate expression @ %s" (pp_loc loc)
-  | TODO (msg, loc) -> spf "TODO: %s @ %s" msg (pp_loc loc)
 
 let dump_error_message =
   let open Error_message in
@@ -1156,15 +1195,16 @@ let dump_error_message =
         (dump_reason cx reason_prop)
         (dump_reason cx reason_obj)
     | EDebugPrint (reason, _) -> spf "EDebugPrint (%s, _)" (dump_reason cx reason)
-    | EExportValueAsType (reason, str) ->
-      spf "EExportValueAsType (%s, %s)" (dump_reason cx reason) str
+    | EExportValueAsType (reason, name) ->
+      spf "EExportValueAsType (%s, %s)" (dump_reason cx reason) (display_string_of_name name)
     | EImportValueAsType (reason, str) ->
       spf "EImportValueAsType (%s, %s)" (dump_reason cx reason) str
     | EImportTypeAsTypeof (reason, str) ->
       spf "EImportTypeAsTypeof (%s, %s)" (dump_reason cx reason) str
     | EImportTypeAsValue (reason, str) ->
       spf "EImportTypeAsValue (%s, %s)" (dump_reason cx reason) str
-    | ERefineAsValue (reason, str) -> spf "ERefineAsValue (%s, %s)" (dump_reason cx reason) str
+    | ERefineAsValue (reason, name) ->
+      spf "ERefineAsValue (%s, %s)" (dump_reason cx reason) (display_string_of_name name)
     | ENoDefaultExport (reason, module_name, _) ->
       spf "ENoDefaultExport (%s, %s)" (dump_reason cx reason) module_name
     | EOnlyDefaultExport (reason, module_name, export_name) ->
@@ -1204,7 +1244,7 @@ let dump_error_message =
       spf
         "EPropNotFound (%s, %s, %s, %s, %s)"
         (match prop with
-        | Some prop -> spf "Some %s" prop
+        | Some prop -> spf "Some %s" (display_string_of_name prop)
         | None -> "None")
         (dump_reason cx reason_prop)
         (dump_reason cx reason_obj)
@@ -1217,7 +1257,7 @@ let dump_error_message =
         "EPropNotReadable { reason_prop = %s; prop_name = %s; use_op = %s }"
         (dump_reason cx reason_prop)
         (match prop_name with
-        | Some x -> spf "%S" x
+        | Some x -> spf "%S" (display_string_of_name x)
         | None -> "(computed)")
         (string_of_use_op use_op)
     | EPropNotWritable { reason_prop; prop_name; use_op } ->
@@ -1225,7 +1265,7 @@ let dump_error_message =
         "EPropNotWritable { reason_prop = %s; prop_name = %s; use_op = %s }"
         (dump_reason cx reason_prop)
         (match prop_name with
-        | Some x -> spf "%S" x
+        | Some x -> spf "%S" (display_string_of_name x)
         | None -> "(computed)")
         (string_of_use_op use_op)
     | EPropPolarityMismatch ((reason1, reason2), x, _, _) ->
@@ -1234,7 +1274,7 @@ let dump_error_message =
         (dump_reason cx reason1)
         (dump_reason cx reason2)
         (match x with
-        | Some x -> spf "%S" x
+        | Some x -> spf "%S" (display_string_of_name x)
         | None -> "(computed)")
     | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
       spf
@@ -1248,7 +1288,7 @@ let dump_error_message =
         "EBuiltinLookupFailed { reason = %s; name = %S }"
         (dump_reason cx reason)
         (match name with
-        | Some x -> spf "Some(%S)" x
+        | Some x -> spf "Some(%S)" (Reason.display_string_of_name x)
         | None -> "None")
     | EStrictLookupFailed { reason_prop; reason_obj; name; suggestion; use_op } ->
       spf
@@ -1256,7 +1296,7 @@ let dump_error_message =
         (dump_reason cx reason_prop)
         (dump_reason cx reason_obj)
         (match name with
-        | Some x -> spf "Some(%S)" x
+        | Some x -> spf "Some(%S)" (display_string_of_name x)
         | None -> "None")
         (match suggestion with
         | Some x -> spf "Some(%S)" x
@@ -1269,7 +1309,7 @@ let dump_error_message =
         "EPrivateLookupFailed ((%s, %s), %s, %s)"
         (dump_reason cx reason1)
         (dump_reason cx reason2)
-        x
+        (display_string_of_name x)
         (string_of_use_op use_op)
     | EAdditionMixed (reason, use_op) ->
       spf "EAdditionMixed (%s, %s)" (dump_reason cx reason) (string_of_use_op use_op)
@@ -1327,6 +1367,12 @@ let dump_error_message =
     | EIncompatibleWithExact ((reason1, reason2), use_op, _) ->
       spf
         "EIncompatibleWithExact ((%s, %s), %s)"
+        (dump_reason cx reason1)
+        (dump_reason cx reason2)
+        (string_of_use_op use_op)
+    | EFunctionIncompatibleWithIndexer ((reason1, reason2), use_op) ->
+      spf
+        "EFunctionIncompatibleWithIndexer((%s, %s), %s)"
         (dump_reason cx reason1)
         (dump_reason cx reason2)
         (string_of_use_op use_op)
@@ -1391,7 +1437,11 @@ let dump_error_message =
     | EMissingAnnotation (reason, _) -> spf "EMissingAnnotation (%s)" (dump_reason cx reason)
     | EMissingLocalAnnotation reason -> spf "EMissingLocalAnnotation (%s)" (dump_reason cx reason)
     | EBindingError (_binding_error, loc, x, entry) ->
-      spf "EBindingError (_, %s, %s, %s)" (string_of_aloc loc) x (Scope.Entry.string_of_kind entry)
+      spf
+        "EBindingError (_, %s, %s, %s)"
+        (string_of_aloc loc)
+        (Reason.display_string_of_name x)
+        (Scope.Entry.string_of_kind entry)
     | ERecursionLimit (reason1, reason2) ->
       spf "ERecursionLimit (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
     | EModuleOutsideRoot (loc, name) -> spf "EModuleOutsideRoot (%s, %S)" (string_of_aloc loc) name
@@ -1414,6 +1464,7 @@ let dump_error_message =
     | EExperimentalEnumsWithUnknownMembers loc ->
       spf "EExperimentalEnumsWithUnknownMembers (%s)" (string_of_aloc loc)
     | EExperimentalThisAnnot loc -> spf "EExperimentalThisAnnot (%s)" (string_of_aloc loc)
+    | EIndexedAccessNotEnabled loc -> spf "EIndexedAccessNotEnabled (%s)" (string_of_aloc loc)
     | EIndeterminateModuleType loc -> spf "EIndeterminateModuleType (%s)" (string_of_aloc loc)
     | EBadExportPosition loc -> spf "EBadExportPosition (%s)" (string_of_aloc loc)
     | EBadExportContext (name, loc) -> spf "EBadExportContext (%s, %s)" name (string_of_aloc loc)
@@ -1429,9 +1480,16 @@ let dump_error_message =
         (string_of_aloc loc)
         (Base.Option.value_map ~f:(dump_reason cx) ~default:"None" reason)
     | EThisInExportedFunction loc -> spf "EThisInExportedFunction (%s)" (string_of_aloc loc)
+    | ESuperOutsideMethod loc -> spf "ESuperOutsideMethod (%s)" (string_of_aloc loc)
     | EMixedImportAndRequire (loc, reason) ->
       spf "EMixedImportAndRequire (%s, %s)" (string_of_aloc loc) (dump_reason cx reason)
-    | EExportRenamedDefault (loc, s) -> spf "EExportRenamedDefault (%s, %s)" (string_of_aloc loc) s
+    | EToplevelLibraryImport loc -> spf "EToplevelLibraryImport (%s)" (string_of_aloc loc)
+    | EExportRenamedDefault { loc; name; is_reexport } ->
+      spf
+        "EExportRenamedDefault { loc = %s; name = %s; is_reexport = %B }"
+        (string_of_aloc loc)
+        (Base.Option.value ~default:"None" name)
+        is_reexport
     | EUnreachable loc -> spf "EUnreachable (%s)" (string_of_aloc loc)
     | EInvalidObjectKit { reason; reason_op; use_op } ->
       spf
@@ -1444,6 +1502,7 @@ let dump_error_message =
     | EBinaryInRHS reason -> spf "EBinaryInRHS (%s)" (dump_reason cx reason)
     | EArithmeticOperand reason -> spf "EArithmeticOperand (%s)" (dump_reason cx reason)
     | EForInRHS reason -> spf "EForInRHS (%s)" (dump_reason cx reason)
+    | EInstanceofRHS reason -> spf "EInstanceofRHS (%s)" (dump_reason cx reason)
     | EObjectComputedPropertyAccess (reason1, reason2) ->
       spf "EObjectComputedPropertyAccess (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
     | EObjectComputedPropertyAssign (reason1, reason2) ->
@@ -1597,7 +1656,7 @@ let dump_error_message =
         (dump_reason cx spread_reason)
         (dump_reason cx object1_reason)
         (dump_reason cx object2_reason)
-        propname
+        (display_string_of_name propname)
         (string_of_use_op use_op)
     | EInexactMayOverwriteIndexer
         { spread_reason; key_reason; value_reason; object2_reason; use_op } ->
@@ -1635,7 +1694,7 @@ let dump_error_message =
     | EEnumInvalidMemberAccess { member_name; suggestion; reason; enum_reason } ->
       spf
         "EEnumInvalidMemberAccess (%s) (%s) (%s) (%s)"
-        (Base.Option.value ~default:"<None>" member_name)
+        (Base.Option.value_map ~default:"<None>" ~f:display_string_of_name member_name)
         (Base.Option.value ~default:"<None>" suggestion)
         (dump_reason cx reason)
         (dump_reason cx enum_reason)
@@ -1707,6 +1766,10 @@ let dump_error_message =
         (dump_reason cx reason)
         (ListUtils.to_string ", " (dump_reason cx) blame_reasons)
     | EMalformedCode loc -> spf "EMalformedCode (%s)" (string_of_aloc loc)
+    | EImplicitInstantiationTemporaryError _ -> "EImplicitInstantiationTemporaryError"
+    | EImportInternalReactServerModule loc ->
+      spf "EImportInternalReactServerModule (%s)" (string_of_aloc loc)
+    | EImplicitInstantiationUnderconstrainedError _ -> "EImplicitInstantiationUnderconstrainedError"
 
 module Verbose = struct
   let print_if_verbose_lazy cx trace ?(delim = "") ?(indent = 0) (lines : string list Lazy.t) =

@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Constraint
 open Reason
 open Type
+open Constraint
 
 (* Helper module for full type resolution as needed to check union and
    intersection types.
@@ -47,7 +47,7 @@ open Type
 type t =
   | Binding of Type.tvar
   | OpenResolved
-  | OpenUnresolved of int option * reason * Constraint.ident
+  | OpenUnresolved of int option * reason * Type.ident
 
 (* log_unresolved is a mode that determines whether to log unresolved tvars:
    it is None when resolving annotations, and Some speculation_id when
@@ -56,7 +56,7 @@ let rec collect_of_types ?log_unresolved cx = List.fold_left (collect_of_type ?l
 
 and collect_of_type ?log_unresolved cx acc = function
   | OpenT (r, id) ->
-    let (id, constraints) = Context.find_constraints cx id in
+    let (id, (lazy constraints)) = Context.find_constraints cx id in
     if IMap.mem id acc then
       acc
     else (
@@ -116,7 +116,7 @@ and collect_of_type ?log_unresolved cx acc = function
      future work. *)
   | DefT (_, _, ObjT { props_tmap; flags; call_t; _ }) ->
     let props_tmap = Context.find_props cx props_tmap in
-    let acc = SMap.fold (collect_of_property ?log_unresolved cx) props_tmap acc in
+    let acc = NameUtils.Map.fold (collect_of_property ?log_unresolved cx) props_tmap acc in
     let ts =
       match flags.obj_kind with
       | Indexed { key; value; _ } -> [key; value]
@@ -151,9 +151,11 @@ and collect_of_type ?log_unresolved cx acc = function
     in
     let ts = List.fold_left (fun ts (_, _, t, _) -> t :: ts) ts type_args in
     let props_tmap =
-      SMap.union (Context.find_props cx own_props) (Context.find_props cx proto_props)
+      NameUtils.Map.union (Context.find_props cx own_props) (Context.find_props cx proto_props)
     in
-    let ts = SMap.fold (fun _ p ts -> Property.fold_t (fun ts t -> t :: ts) ts p) props_tmap ts in
+    let ts =
+      NameUtils.Map.fold (fun _ p ts -> Property.fold_t (fun ts t -> t :: ts) ts p) props_tmap ts
+    in
     let ts =
       match inst_call_t with
       | None -> ts
@@ -209,7 +211,7 @@ and collect_of_type ?log_unresolved cx acc = function
   | DefT (_, _, SymbolT)
   | DefT (_, _, VoidT)
   | DefT (_, _, NullT)
-  | DefT (_, _, EmptyT _)
+  | DefT (_, _, EmptyT)
   | DefT (_, _, MixedT _)
   | DefT (_, _, SingletonBoolT _)
   | DefT (_, _, SingletonNumT _)
@@ -219,9 +221,6 @@ and collect_of_type ?log_unresolved cx acc = function
   | DefT (_, _, EnumObjectT _)
   | AnyT _ ->
     acc
-  (* Since MergedT only arises from context opt, we can be certain that its
-   * uses are all fully resolved. No need to traverse the structure. *)
-  | MergedT _ -> acc
   | FunProtoBindT _
   | FunProtoCallT _
   | FunProtoApplyT _
@@ -236,7 +235,10 @@ and collect_of_type ?log_unresolved cx acc = function
 and collect_of_destructor ?log_unresolved cx acc = function
   | NonMaybeType -> acc
   | PropertyType _ -> acc
-  | ElementType t -> collect_of_type ?log_unresolved cx acc t
+  | ElementType { index_type; _ } -> collect_of_type ?log_unresolved cx acc index_type
+  | OptionalIndexedAccessNonMaybeType { index_type } ->
+    collect_of_type ?log_unresolved cx acc index_type
+  | OptionalIndexedAccessResultType _ -> acc
   | Bind t -> collect_of_type ?log_unresolved cx acc t
   | ReadOnlyType -> acc
   | SpreadType (_, ts, head_slice) ->
@@ -265,7 +267,7 @@ and collect_of_property ?log_unresolved cx name property acc =
 
 and collect_of_object_kit_spread_operand_slice
     ?log_unresolved cx acc { Object.Spread.reason = _; prop_map; dict; generics = _ } =
-  let acc = SMap.fold (collect_of_property ?log_unresolved cx) prop_map acc in
+  let acc = NameUtils.Map.fold (collect_of_property ?log_unresolved cx) prop_map acc in
   let ts =
     match dict with
     | Some { key; value; dict_polarity = _; dict_name = _ } -> [key; value]
@@ -293,7 +295,7 @@ and collect_of_type_map ?log_unresolved cx acc = function
 (* In some positions, like annots, we trust that tvars are 0->1. *)
 and collect_of_binding ?log_unresolved cx acc = function
   | OpenT ((_, id) as tvar) ->
-    let (id, constraints) = Context.find_constraints cx id in
+    let (id, (lazy constraints)) = Context.find_constraints cx id in
     if IMap.mem id acc then
       acc
     else (

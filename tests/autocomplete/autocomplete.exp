@@ -30,13 +30,13 @@ Flags: --pretty
 
 bar.js:4:5
 Flags: --pretty
-{"error":"not enough type information to autocomplete","result":[]}
+{"error":"not enough type information to extract members","result":[]}
 
 str.js:3:9
 Flags: --pretty
 {
   "result":[
-    {"name":"@@iterator","type":"() => Iterator<string>"},
+    {"name":"[Symbol.iterator]","type":"() => Iterator<string>"},
     {"name":"anchor","type":"(name: string) => string"},
     {"name":"charAt","type":"(pos: number) => string"},
     {"name":"charCodeAt","type":"(index: number) => number"},
@@ -164,11 +164,11 @@ Flags: --pretty
 
 object_builtins.js:4:5
 Flags: --pretty
-{"error":"not enough type information to autocomplete","result":[]}
+{"error":"not enough type information to extract members","result":[]}
 
 function_builtins.js:4:5
 Flags: --pretty
-{"error":"not enough type information to autocomplete","result":[]}
+{"error":"not enough type information to extract members","result":[]}
 
 fun.js:4:5
 Flags: --pretty
@@ -210,9 +210,9 @@ this2.js:5:6
 Flags: --pretty
 {
   "result":[
-    {"name":"super","type":"super"},
+    {"name":"A","type":"class A"},
     {"name":"this","type":"this"},
-    {"name":"A","type":"class A"}
+    {"name":"super","type":"super"}
   ]
 }
 
@@ -238,7 +238,7 @@ Flags: --pretty
 typeparams_function.js:3:4
 Flags: --pretty
 {
-  "result":[{"name":"this","type":"this"},{"name":"test","type":"<T>() => void"}]
+  "result":[{"name":"test","type":"<T>() => void"},{"name":"this","type":"this"}]
 }
 
 generics.js:6:5
@@ -287,9 +287,43 @@ jsx4.js:7:3
 Flags: --pretty
 {
   "result":[
-    {"name":"Computerization","type":"(props: empty) => void"},
+    {"name":"Complementarity","type":"class Complementarity"},
     {"name":"Compressibility","type":"(props: empty) => void"},
-    {"name":"Complementarity","type":"class Complementarity"}
+    {"name":"Computerization","type":"(props: empty) => void"}
+  ]
+}
+
+jsx-attribute-member.js:6:23
+Flags: --pretty
+{
+  "result":[
+    {"name":"bar","type":"string"},
+    {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
+    {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
+    {"name":"propertyIsEnumerable","type":"(prop: mixed) => boolean"},
+    {"name":"toLocaleString","type":"() => string"},
+    {"name":"toString","type":"() => string"},
+    {"name":"valueOf","type":"() => mixed"}
+  ]
+}
+
+jsx-closing-tag.js:10:14
+Flags: --pretty
+{
+  "result":[
+    {"name":"Bar","type":"(props: {+x: number, +y: string, ...}) => void"},
+    {"name":"Foo","type":"(props: {+x: number, +y: string, ...}) => void"},
+    {"name":"React","type":"module React"}
+  ]
+}
+
+jsx-closing-tag-unclosed.js:10:14
+Flags: --pretty
+{
+  "result":[
+    {"name":"Bar","type":"(props: {+x: number, +y: string, ...}) => void"},
+    {"name":"Foo","type":"(props: {+x: number, +y: string, ...}) => void"},
+    {"name":"React","type":"module React"}
   ]
 }
 
@@ -321,12 +355,12 @@ customfun.js:6:3
 Flags: --pretty
 {
   "result":[
-    {"name":"objectGetPrototypeOf","type":"(o: any) => any"},
-    {"name":"objectAssign","type":"(target: any, ...sources: Array<any>) => any"},
     {
       "name":"idx",
       "type":"<IdxObject: any, IdxResult>(obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult) => ?IdxResult"
-    }
+    },
+    {"name":"objectAssign","type":"(target: any, ...sources: Array<any>) => any"},
+    {"name":"objectGetPrototypeOf","type":"(o: any) => any"}
   ]
 }
 
@@ -350,7 +384,7 @@ if.js:3:7
 Flags: --pretty
 {
   "result":[
-    {"name":"@@iterator","type":"() => Iterator<string>"},
+    {"name":"[Symbol.iterator]","type":"() => Iterator<string>"},
     {"name":"anchor","type":"(name: string) => string"},
     {"name":"charAt","type":"(pos: number) => string"},
     {"name":"charCodeAt","type":"(index: number) => number"},
@@ -450,6 +484,7 @@ member_class_property.js:8:5
 Flags: --lsp
 {
   "label":"baz",
+  "labelDetails":{"type":"string"},
   "kind":6,
   "detail":"string",
   "sortText":"00000000000000000000",
@@ -457,10 +492,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
     "newText":"baz"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"baz"}]
   }
 }
 {
   "label":"hasOwnProperty",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "sortText":"00000000000000000001",
@@ -468,10 +509,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
     "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
   }
 }
 {
   "label":"isPrototypeOf",
+  "labelDetails":{"type":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "sortText":"00000000000000000001",
@@ -479,10 +530,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
     "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
   }
 }
 {
   "label":"propertyIsEnumerable",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "sortText":"00000000000000000001",
@@ -490,10 +551,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
     "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
   }
 }
 {
   "label":"toLocaleString",
+  "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
   "sortText":"00000000000000000001",
@@ -501,10 +572,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
     "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
   }
 }
 {
   "label":"toString",
+  "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
   "sortText":"00000000000000000001",
@@ -512,10 +593,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
     "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
   }
 }
 {
   "label":"valueOf",
+  "labelDetails":{"type":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "sortText":"00000000000000000001",
@@ -523,6 +610,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
     "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
   }
 }
 
@@ -547,11 +639,214 @@ Flags: --pretty
   ]
 }
 
+member_interface_property.js:9:5
+Flags: --lsp
+{
+  "label":"bar",
+  "labelDetails":{"type":"string"},
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "newText":"bar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"bar"}]
+  }
+}
+{
+  "label":"baz",
+  "labelDetails":{"type":"string"},
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "newText":"baz"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"baz"}]
+  }
+}
+{
+  "label":"hasOwnProperty",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
+  }
+}
+{
+  "label":"isPrototypeOf",
+  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
+  }
+}
+{
+  "label":"propertyIsEnumerable",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
+  }
+}
+{
+  "label":"toLocaleString",
+  "labelDetails":{"type":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
+  }
+}
+{
+  "label":"toString",
+  "labelDetails":{"type":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
+  }
+}
+{
+  "label":"valueOf",
+  "labelDetails":{"type":"() => mixed"},
+  "kind":3,
+  "detail":"() => mixed",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":8,"character":4},"end":{"line":8,"character":4}},
+    "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
+  }
+}
+
 member_middle.js:5:4
 Flags: --pretty
 {
   "result":[
     {"name":"foobar","type":"string"},
+    {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
+    {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
+    {"name":"propertyIsEnumerable","type":"(prop: mixed) => boolean"},
+    {"name":"toLocaleString","type":"() => string"},
+    {"name":"toString","type":"() => string"},
+    {"name":"valueOf","type":"() => mixed"}
+  ]
+}
+
+opaque_types.js:13:4
+Flags: --pretty
+{"result":[]}
+
+opaque_types.js:16:4
+Flags: --pretty
+{
+  "result":[
+    {"name":"foo","type":"string"},
+    {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
+    {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
+    {"name":"propertyIsEnumerable","type":"(prop: mixed) => boolean"},
+    {"name":"toLocaleString","type":"() => string"},
+    {"name":"toString","type":"() => string"},
+    {"name":"valueOf","type":"() => mixed"}
+  ]
+}
+
+opaque_types.js:19:4
+Flags: --pretty
+{
+  "result":[
+    {"name":"bar","type":"number"},
+    {"name":"foo","type":"string"},
+    {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
+    {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
+    {"name":"propertyIsEnumerable","type":"(prop: mixed) => boolean"},
+    {"name":"toLocaleString","type":"() => string"},
+    {"name":"toString","type":"() => string"},
+    {"name":"valueOf","type":"() => mixed"}
+  ]
+}
+
+opaque_types.js:22:4
+Flags: --pretty
+{
+  "result":[
+    {"name":"bar","type":"number"},
+    {"name":"foo","type":"string"},
     {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
     {"name":"isPrototypeOf","type":"(o: mixed) => boolean"},
     {"name":"propertyIsEnumerable","type":"(prop: mixed) => boolean"},
@@ -657,7 +952,7 @@ indirect_array.js:5:3
 Flags: --pretty
 {
   "result":[
-    {"name":"?.@@iterator","type":"void | (() => Iterator<T>)"},
+    {"name":"?.[Symbol.iterator]","type":"void | (() => Iterator<T>)"},
     {
       "name":"?.concat",
       "type":"void | (<S, Item: ($ReadOnlyArray<S> | S)>(...items: Array<Item>) => Array<(T | S)>)"
@@ -755,7 +1050,7 @@ indirect_array.js:11:3
 Flags: --pretty
 {
   "result":[
-    {"name":"@@iterator","type":"() => Iterator<T>"},
+    {"name":"[Symbol.iterator]","type":"() => Iterator<T>"},
     {
       "name":"concat",
       "type":"<S, Item: ($ReadOnlyArray<S> | S)>(...items: Array<Item>) => Array<(T | S)>"
@@ -918,30 +1213,38 @@ identifier.js:10:18
 Flags: --pretty
 {
   "result":[
-    {"name":"this","type":"this"},
-    {"name":"flowery","type":"number"},
-    {"name":"flounder","type":"any"},
-    {"name":"flotsam","type":"number"},
-    {"name":"florist","type":"number"},
-    {"name":"florescent","type":"() => void"},
+    {"name":"bartender","type":"number"},
     {"name":"floater","type":"number"},
-    {"name":"bartender","type":"number"}
+    {"name":"florescent","type":"() => void"},
+    {"name":"florist","type":"number"},
+    {"name":"flotsam","type":"number"},
+    {"name":"flounder","type":"empty"},
+    {"name":"flowery","type":"number"},
+    {"name":"this","type":"this"}
   ]
 }
 
 identifier_middle.js:6:4
 Flags: --pretty
 {
-  "result":[{"name":"foobaz","type":"number"},{"name":"foobarbaz","type":"number"}]
+  "result":[{"name":"foobarbaz","type":"number"},{"name":"foobaz","type":"number"}]
 }
+
+identifier_import_type.js:14:4
+Flags: --pretty
+{"result":[{"name":"ThisIsAValue","type":"string"}]}
+
+identifier_type.js:7:4
+Flags: --pretty
+{"result":[{"name":"baz","type":"bar"}]}
 
 super.js:4:8
 Flags: --pretty
 {
   "result":[
-    {"name":"super","type":"super"},
+    {"name":"Foo","type":"class Foo"},
     {"name":"this","type":"this"},
-    {"name":"Foo","type":"class Foo"}
+    {"name":"super","type":"super"}
   ]
 }
 
@@ -949,9 +1252,9 @@ this-2.js:5:10
 Flags: --pretty
 {
   "result":[
-    {"name":"y","type":"(z: empty) => empty"},
-    {"name":"x","type":"any"},
-    {"name":"foo","type":"() => void"}
+    {"name":"foo","type":"() => void"},
+    {"name":"x","type":"empty"},
+    {"name":"y","type":"(z: empty) => empty"}
   ]
 }
 
@@ -959,10 +1262,10 @@ this-2.js:9:4
 Flags: --pretty
 {
   "result":[
-    {"name":"this","type":"this"},
-    {"name":"y","type":"(z: empty) => empty"},
+    {"name":"foo","type":"() => void"},
     {"name":"x","type":"void"},
-    {"name":"foo","type":"() => void"}
+    {"name":"y","type":"(z: empty) => empty"},
+    {"name":"this","type":"this"}
   ]
 }
 
@@ -970,10 +1273,10 @@ this-2.js:13:15
 Flags: --pretty
 {
   "result":[
-    {"name":"z","type":"empty"},
-    {"name":"y","type":"(z: empty) => any"},
+    {"name":"foo","type":"() => void"},
     {"name":"x","type":"void"},
-    {"name":"foo","type":"() => void"}
+    {"name":"y","type":"(z: empty) => empty"},
+    {"name":"z","type":"empty"}
   ]
 }
 
@@ -981,12 +1284,12 @@ this-2.js:17:9
 Flags: --pretty
 {
   "result":[
-    {"name":"super","type":"super"},
-    {"name":"this","type":"this"},
-    {"name":"y","type":"(z: empty) => empty"},
-    {"name":"x","type":"void"},
+    {"name":"Bar","type":"class Bar"},
     {"name":"foo","type":"() => void"},
-    {"name":"Bar","type":"class Bar"}
+    {"name":"x","type":"void"},
+    {"name":"y","type":"(z: empty) => empty"},
+    {"name":"this","type":"this"},
+    {"name":"super","type":"super"}
   ]
 }
 
@@ -996,7 +1299,7 @@ Flags: --pretty
 
 pattern.js:8:4
 Flags: --pretty
-{"result":[{"name":"foo","type":"number"},{"name":"bar","type":"() => void"}]}
+{"result":[{"name":"bar","type":"() => void"},{"name":"foo","type":"number"}]}
 
 pattern.js:12:14
 Flags: --pretty
@@ -1020,10 +1323,10 @@ normalize-2.js:5:10
 Flags: --pretty
 {
   "result":[
-    {"name":"this","type":"this"},
-    {"name":"foo","type":"<T>(a: {b: T, ...}) => any"},
+    {"name":"a","type":"{b: T, ...}"},
     {"name":"c","type":"T"},
-    {"name":"a","type":"{b: T, ...}"}
+    {"name":"foo","type":"<T>(a: {b: T, ...}) => empty"},
+    {"name":"this","type":"this"}
   ]
 }
 
@@ -1038,10 +1341,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
     "newText":"Typologies."
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type -> qualified type",
+      {"token":null,"completion":"Typologies"}
+    ]
   }
 }
 {
   "label":"Typography",
+  "labelDetails":{"type":"class Typewriter"},
   "kind":7,
   "detail":"class Typewriter",
   "sortText":"00000000000000000000",
@@ -1049,10 +1362,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
     "newText":"Typography"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: class or enum",
+      {"token":null,"completion":"Typography"}
+    ]
   }
 }
 {
   "label":"Typewriter",
+  "labelDetails":{"type":"class Typewriter"},
   "kind":7,
   "detail":"class Typewriter",
   "sortText":"00000000000000000000",
@@ -1060,6 +1383,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
     "newText":"Typewriter"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: class or enum",
+      {"token":null,"completion":"Typewriter"}
+    ]
   }
 }
 {
@@ -1071,10 +1403,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
     "newText":"Types."
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type -> qualified type",
+      {"token":null,"completion":"Types"}
+    ]
   }
 }
 {
   "label":"Typesafe",
+  "labelDetails":{"type":"interface Typesafety"},
   "kind":8,
   "detail":"interface Typesafety",
   "sortText":"00000000000000000000",
@@ -1082,10 +1424,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
     "newText":"Typesafe"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"Typesafe"}
+    ]
   }
 }
 {
   "label":"Typhoon",
+  "labelDetails":{"type":"type Typhoon = string"},
   "kind":13,
   "detail":"type Typhoon = string",
   "sortText":"00000000000000000000",
@@ -1093,10 +1445,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
     "newText":"Typhoon"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"Typhoon"}
+    ]
   }
 }
 {
   "label":"Typnotism",
+  "labelDetails":{"type":"type Typnotism = number"},
   "kind":13,
   "detail":"type Typnotism = number",
   "sortText":"00000000000000000000",
@@ -1104,10 +1466,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
     "newText":"Typnotism"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"Typnotism"}
+    ]
   }
 }
 {
   "label":"Tyrant",
+  "labelDetails":{"type":"type Tyrant = string"},
   "kind":13,
   "detail":"type Tyrant = string",
   "sortText":"00000000000000000000",
@@ -1115,10 +1487,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
     "newText":"Tyrant"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"Tyrant"}
+    ]
   }
 }
 {
   "label":"Tympanic",
+  "labelDetails":{"type":"type Tympanic = number"},
   "kind":13,
   "detail":"type Tympanic = number",
   "sortText":"00000000000000000000",
@@ -1126,10 +1508,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
     "newText":"Tympanic"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"Tympanic"}
+    ]
   }
 }
 {
   "label":"Typeset",
+  "labelDetails":{"type":"interface Typeset"},
   "kind":8,
   "detail":"interface Typeset",
   "sortText":"00000000000000000000",
@@ -1137,6 +1529,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
     "newText":"Typeset"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"Typeset"}
+    ]
   }
 }
 {
@@ -1148,6 +1549,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
     "newText":"Typaram"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type parameter",
+      {"token":null,"completion":"Typaram"}
+    ]
   }
 }
 
@@ -1327,6 +1737,7 @@ rank.js:7:11
 Flags: --lsp
 {
   "label":"hasOwnProperty",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "sortText":"00000000000000000001",
@@ -1334,10 +1745,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
     "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
   }
 }
 {
   "label":"isPrototypeOf",
+  "labelDetails":{"type":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "sortText":"00000000000000000001",
@@ -1345,10 +1766,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
     "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
   }
 }
 {
   "label":"propertyIsEnumerable",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "sortText":"00000000000000000001",
@@ -1356,10 +1787,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
     "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
   }
 }
 {
   "label":"toLocaleString",
+  "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
   "sortText":"00000000000000000001",
@@ -1367,10 +1808,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
     "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
   }
 }
 {
   "label":"toString",
+  "labelDetails":{"type":"number"},
   "kind":6,
   "detail":"number",
   "sortText":"00000000000000000000",
@@ -1378,10 +1829,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
     "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
   }
 }
 {
   "label":"valueOf",
+  "labelDetails":{"type":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "sortText":"00000000000000000001",
@@ -1389,6 +1846,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":6,"character":10},"end":{"line":6,"character":10}},
     "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
   }
 }
 
@@ -1396,6 +1858,7 @@ rank_union.js:8:3
 Flags: --lsp
 {
   "label":"hasOwnProperty",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "sortText":"00000000000000000001",
@@ -1403,10 +1866,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
   }
 }
 {
   "label":"isPrototypeOf",
+  "labelDetails":{"type":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "sortText":"00000000000000000001",
@@ -1414,10 +1887,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
   }
 }
 {
   "label":"propertyIsEnumerable",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "sortText":"00000000000000000001",
@@ -1425,10 +1908,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
   }
 }
 {
   "label":"toLocaleString",
+  "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
   "sortText":"00000000000000000001",
@@ -1436,10 +1929,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
   }
 }
 {
   "label":"toString",
+  "labelDetails":{"type":"(() => string) | number"},
   "kind":13,
   "detail":"(() => string) | number",
   "sortText":"00000000000000000000",
@@ -1447,10 +1950,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
   }
 }
 {
   "label":"valueOf",
+  "labelDetails":{"type":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "sortText":"00000000000000000001",
@@ -1458,6 +1967,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
   }
 }
 
@@ -1465,6 +1979,7 @@ rank_intersection.js:8:3
 Flags: --lsp
 {
   "label":"hasOwnProperty",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -1476,10 +1991,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
   }
 }
 {
   "label":"isPrototypeOf",
+  "labelDetails":{"type":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -1491,10 +2016,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
   }
 }
 {
   "label":"propertyIsEnumerable",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -1506,10 +2041,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
   }
 }
 {
   "label":"toLocaleString",
+  "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -1521,10 +2066,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
   }
 }
 {
   "label":"toString",
+  "labelDetails":{"type":"(() => string) & number"},
   "kind":6,
   "detail":"(() => string) & number",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -1533,10 +2088,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
   }
 }
 {
   "label":"valueOf",
+  "labelDetails":{"type":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -1548,6 +2109,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":7,"character":2},"end":{"line":7,"character":2}},
     "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
   }
 }
 
@@ -1555,6 +2121,7 @@ suggest_optional_chaining_1.js:4:3
 Flags: --lsp
 {
   "label":"?.foo",
+  "labelDetails":{"type":"void | string"},
   "kind":13,
   "detail":"void | string",
   "sortText":"00000000000000000000",
@@ -1562,10 +2129,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
     "newText":"?.foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.foo"}
+    ]
   }
 }
 {
   "label":"?.hasOwnProperty",
+  "labelDetails":{"type":"void | ((prop: mixed) => boolean)"},
   "kind":13,
   "detail":"void | ((prop: mixed) => boolean)",
   "documentation":{
@@ -1577,10 +2154,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
     "newText":"?.hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.hasOwnProperty"}
+    ]
   }
 }
 {
   "label":"?.isPrototypeOf",
+  "labelDetails":{"type":"void | ((o: mixed) => boolean)"},
   "kind":13,
   "detail":"void | ((o: mixed) => boolean)",
   "documentation":{
@@ -1592,10 +2179,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
     "newText":"?.isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.isPrototypeOf"}
+    ]
   }
 }
 {
   "label":"?.propertyIsEnumerable",
+  "labelDetails":{"type":"void | ((prop: mixed) => boolean)"},
   "kind":13,
   "detail":"void | ((prop: mixed) => boolean)",
   "documentation":{
@@ -1607,10 +2204,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
     "newText":"?.propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.propertyIsEnumerable"}
+    ]
   }
 }
 {
   "label":"?.toLocaleString",
+  "labelDetails":{"type":"void | (() => string)"},
   "kind":13,
   "detail":"void | (() => string)",
   "documentation":{
@@ -1622,10 +2229,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
     "newText":"?.toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.toLocaleString"}
+    ]
   }
 }
 {
   "label":"?.toString",
+  "labelDetails":{"type":"void | (() => string)"},
   "kind":13,
   "detail":"void | (() => string)",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -1634,10 +2251,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
     "newText":"?.toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.toString"}
+    ]
   }
 }
 {
   "label":"?.valueOf",
+  "labelDetails":{"type":"void | (() => mixed)"},
   "kind":13,
   "detail":"void | (() => mixed)",
   "documentation":{
@@ -1649,6 +2276,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
     "newText":"?.valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.valueOf"}
+    ]
   }
 }
 
@@ -1656,6 +2292,7 @@ suggest_optional_chaining_2.js:4:3
 Flags: --lsp
 {
   "label":"?.bar",
+  "labelDetails":{"type":"void | number"},
   "kind":13,
   "detail":"void | number",
   "sortText":"00000000000000000000",
@@ -1663,10 +2300,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
     "newText":"?.bar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.bar"}
+    ]
   }
 }
 {
   "label":"foo",
+  "labelDetails":{"type":"string"},
   "kind":6,
   "detail":"string",
   "sortText":"00000000000000000000",
@@ -1674,10 +2321,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"foo"}]
   }
 }
 {
   "label":"hasOwnProperty",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -1689,10 +2342,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
   }
 }
 {
   "label":"isPrototypeOf",
+  "labelDetails":{"type":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -1704,10 +2367,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
   }
 }
 {
   "label":"propertyIsEnumerable",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -1719,10 +2392,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
   }
 }
 {
   "label":"toLocaleString",
+  "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -1734,10 +2417,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
   }
 }
 {
   "label":"toString",
+  "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -1746,10 +2439,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
   }
 }
 {
   "label":"valueOf",
+  "labelDetails":{"type":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -1761,6 +2460,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
   }
 }
 
@@ -1768,6 +2472,7 @@ suggest_optional_chaining_3.js:4:3
 Flags: --lsp
 {
   "label":"?.foo",
+  "labelDetails":{"type":"void | number | string"},
   "kind":13,
   "detail":"void | number | string",
   "sortText":"00000000000000000000",
@@ -1775,10 +2480,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":1},"end":{"line":3,"character":2}},
     "newText":"?.foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.foo"}
+    ]
   }
 }
 {
   "label":"hasOwnProperty",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -1790,10 +2505,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
   }
 }
 {
   "label":"isPrototypeOf",
+  "labelDetails":{"type":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -1805,10 +2530,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
   }
 }
 {
   "label":"propertyIsEnumerable",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -1820,10 +2555,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
   }
 }
 {
   "label":"toLocaleString",
+  "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -1835,10 +2580,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
   }
 }
 {
   "label":"toString",
+  "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -1847,10 +2602,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
   }
 }
 {
   "label":"valueOf",
+  "labelDetails":{"type":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -1862,6 +2623,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":3,"character":2},"end":{"line":3,"character":2}},
     "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
   }
 }
 
@@ -1869,6 +2635,7 @@ enums.js:10:3
 Flags: --lsp
 {
   "label":"Bar",
+  "labelDetails":{"type":"E"},
   "kind":6,
   "detail":"E",
   "sortText":"00000000000000000000",
@@ -1876,10 +2643,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
     "newText":"Bar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Bar"}]
   }
 }
 {
   "label":"Foo",
+  "labelDetails":{"type":"E"},
   "kind":6,
   "detail":"E",
   "sortText":"00000000000000000000",
@@ -1887,10 +2660,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
     "newText":"Foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Foo"}]
   }
 }
 {
   "label":"cast",
+  "labelDetails":{"type":"(input: ?string) => (void | E)"},
   "kind":3,
   "detail":"(input: ?string) => (void | E)",
   "sortText":"00000000000000000001",
@@ -1898,10 +2677,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
     "newText":"cast"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"cast"}]
   }
 }
 {
   "label":"isValid",
+  "labelDetails":{"type":"(input: ?string) => boolean"},
   "kind":3,
   "detail":"(input: ?string) => boolean",
   "sortText":"00000000000000000001",
@@ -1909,10 +2694,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
     "newText":"isValid"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"isValid"}]
   }
 }
 {
   "label":"members",
+  "labelDetails":{"type":"() => Iterable<E>"},
   "kind":3,
   "detail":"() => Iterable<E>",
   "sortText":"00000000000000000001",
@@ -1920,12 +2711,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
     "newText":"members"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"members"}]
   }
 }
 
+enum-key.js:4:4
+Flags: --lsp
+
 enum-id.js:9:4
 Flags: --pretty
-{"result":[{"name":"Foo","type":"enum Foo"},{"name":"Fab","type":"enum Fab"}]}
+{"result":[{"name":"Fab","type":"enum Fab"},{"name":"Foo","type":"enum Foo"}]}
 
 class_declaration_name.js:5:8
 Flags: --pretty
@@ -1948,19 +2747,184 @@ Flags: --pretty
 jsdoc.js:15:4
 Flags: --lsp
 {
-  "label":"x",
-  "kind":3,
-  "detail":"() => void",
-  "documentation":{"kind":"markdown","value":"a JSDoc in the same file"},
+  "label":"Bar",
+  "labelDetails":{"type":"class Bar"},
+  "kind":7,
+  "detail":"class Bar",
+  "documentation":{"kind":"markdown","value":"the class Bar"},
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
-    "newText":"x"
+    "newText":"Bar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"Bar"}
+    ]
+  }
+}
+{
+  "label":"BooleanEnum",
+  "labelDetails":{"type":"enum BooleanEnum"},
+  "kind":13,
+  "detail":"enum BooleanEnum",
+  "documentation":{"kind":"markdown","value":"a boolean enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"BooleanEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"BooleanEnum"}
+    ]
+  }
+}
+{
+  "label":"DefaultedStringEnum",
+  "labelDetails":{"type":"enum DefaultedStringEnum"},
+  "kind":13,
+  "detail":"enum DefaultedStringEnum",
+  "documentation":{"kind":"markdown","value":"a defaulted string enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"DefaultedStringEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"DefaultedStringEnum"}
+    ]
+  }
+}
+{
+  "label":"InitializedStringEnum",
+  "labelDetails":{"type":"enum InitializedStringEnum"},
+  "kind":13,
+  "detail":"enum InitializedStringEnum",
+  "documentation":{"kind":"markdown","value":"an initialized string enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"InitializedStringEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"InitializedStringEnum"}
+    ]
+  }
+}
+{
+  "label":"NumberEnum",
+  "labelDetails":{"type":"enum NumberEnum"},
+  "kind":13,
+  "detail":"enum NumberEnum",
+  "documentation":{"kind":"markdown","value":"a number enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"NumberEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"NumberEnum"}
+    ]
+  }
+}
+{
+  "label":"SymbolEnum",
+  "labelDetails":{"type":"enum SymbolEnum"},
+  "kind":13,
+  "detail":"enum SymbolEnum",
+  "documentation":{"kind":"markdown","value":"a symbol enum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"SymbolEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"SymbolEnum"}
+    ]
+  }
+}
+{
+  "label":"baz",
+  "labelDetails":{"type":"number"},
+  "kind":6,
+  "detail":"number",
+  "documentation":{"kind":"markdown","value":"the variable baz"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"baz"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"baz"}
+    ]
+  }
+}
+{
+  "label":"foo",
+  "labelDetails":{"type":"() => void"},
+  "kind":3,
+  "detail":"() => void",
+  "documentation":{"kind":"markdown","value":"the function foo"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
+    "newText":"foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"foo"}
+    ]
   }
 }
 {
   "label":"qux",
+  "labelDetails":{"type":"number"},
   "kind":6,
   "detail":"number",
   "documentation":{
@@ -1972,102 +2936,37 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
     "newText":"qux"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"qux"}
+    ]
   }
 }
 {
-  "label":"foo",
+  "label":"x",
+  "labelDetails":{"type":"() => void"},
   "kind":3,
   "detail":"() => void",
-  "documentation":{"kind":"markdown","value":"the function foo"},
+  "documentation":{"kind":"markdown","value":"a JSDoc in the same file"},
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
-    "newText":"foo"
-  }
-}
-{
-  "label":"baz",
-  "kind":6,
-  "detail":"number",
-  "documentation":{"kind":"markdown","value":"the variable baz"},
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
-    "newText":"baz"
-  }
-}
-{
-  "label":"SymbolEnum",
-  "kind":13,
-  "detail":"enum SymbolEnum",
-  "documentation":{"kind":"markdown","value":"a symbol enum"},
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
-    "newText":"SymbolEnum"
-  }
-}
-{
-  "label":"NumberEnum",
-  "kind":13,
-  "detail":"enum NumberEnum",
-  "documentation":{"kind":"markdown","value":"a number enum"},
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
-    "newText":"NumberEnum"
-  }
-}
-{
-  "label":"InitializedStringEnum",
-  "kind":13,
-  "detail":"enum InitializedStringEnum",
-  "documentation":{"kind":"markdown","value":"an initialized string enum"},
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
-    "newText":"InitializedStringEnum"
-  }
-}
-{
-  "label":"DefaultedStringEnum",
-  "kind":13,
-  "detail":"enum DefaultedStringEnum",
-  "documentation":{"kind":"markdown","value":"a defaulted string enum"},
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
-    "newText":"DefaultedStringEnum"
-  }
-}
-{
-  "label":"BooleanEnum",
-  "kind":13,
-  "detail":"enum BooleanEnum",
-  "documentation":{"kind":"markdown","value":"a boolean enum"},
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
-    "newText":"BooleanEnum"
-  }
-}
-{
-  "label":"Bar",
-  "kind":7,
-  "detail":"class Bar",
-  "documentation":{"kind":"markdown","value":"the class Bar"},
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":14,"character":3},"end":{"line":14,"character":3}},
-    "newText":"Bar"
+    "newText":"x"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"x"}
+    ]
   }
 }
 
@@ -2075,6 +2974,7 @@ jsdoc-members-1.js:43:5
 Flags: --lsp
 {
   "label":"a",
+  "labelDetails":{"type":"number"},
   "kind":6,
   "detail":"number",
   "documentation":{"kind":"markdown","value":"identifier property of an object literal"},
@@ -2083,10 +2983,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"a"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"a"}]
   }
 }
 {
   "label":"b",
+  "labelDetails":{"type":"number"},
   "kind":6,
   "detail":"number",
   "documentation":{"kind":"markdown","value":"literal property of an object literal"},
@@ -2095,10 +3001,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"b"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"b"}]
   }
 }
 {
   "label":"c",
+  "labelDetails":{"type":"number"},
   "kind":6,
   "detail":"number",
   "documentation":{"kind":"markdown","value":"computed property of an object literal"},
@@ -2107,10 +3019,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"c"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"c"}]
   }
 }
 {
   "label":"d",
+  "labelDetails":{"type":"number"},
   "kind":6,
   "detail":"number",
   "documentation":{"kind":"markdown","value":"annotated getter property of an object literal"},
@@ -2119,10 +3037,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"d"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"d"}]
   }
 }
 {
   "label":"e",
+  "labelDetails":{"type":"void"},
   "kind":6,
   "detail":"void",
   "sortText":"00000000000000000000",
@@ -2130,10 +3054,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"e"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"e"}]
   }
 }
 {
   "label":"f",
+  "labelDetails":{"type":"() => void"},
   "kind":3,
   "detail":"() => void",
   "documentation":{"kind":"markdown","value":"method property of an object literal"},
@@ -2142,10 +3072,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"f"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"f"}]
   }
 }
 {
   "label":"g",
+  "labelDetails":{"type":"() => Promise<void>"},
   "kind":3,
   "detail":"() => Promise<void>",
   "documentation":{"kind":"markdown","value":"async method property of an object literal"},
@@ -2154,10 +3090,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"g"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"g"}]
   }
 }
 {
   "label":"h",
+  "labelDetails":{"type":"number"},
   "kind":6,
   "detail":"number",
   "documentation":{
@@ -2169,10 +3111,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"h"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"h"}]
   }
 }
 {
   "label":"hasOwnProperty",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -2184,10 +3132,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
   }
 }
 {
   "label":"isPrototypeOf",
+  "labelDetails":{"type":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -2199,10 +3157,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
   }
 }
 {
   "label":"propertyIsEnumerable",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -2214,10 +3182,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
   }
 }
 {
   "label":"toLocaleString",
+  "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -2229,10 +3207,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
   }
 }
 {
   "label":"toString",
+  "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -2241,10 +3229,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
   }
 }
 {
   "label":"valueOf",
+  "labelDetails":{"type":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -2256,6 +3250,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":42,"character":4},"end":{"line":42,"character":4}},
     "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
   }
 }
 
@@ -2263,6 +3262,7 @@ jsdoc-members-2.js:5:17
 Flags: --lsp
 {
   "label":"bar",
+  "labelDetails":{"type":"2"},
   "kind":12,
   "detail":"2",
   "documentation":{"kind":"markdown","value":"bar is a getter property"},
@@ -2271,10 +3271,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":16},"end":{"line":4,"character":16}},
     "newText":"bar="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","jsx attribute",{"token":null,"completion":"bar"}]
   }
 }
 {
   "label":"baz",
+  "labelDetails":{"type":"3"},
   "kind":12,
   "detail":"3",
   "documentation":{"kind":"markdown","value":"baz is an identifier property with variance"},
@@ -2283,10 +3289,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":16},"end":{"line":4,"character":16}},
     "newText":"baz="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","jsx attribute",{"token":null,"completion":"baz"}]
   }
 }
 {
   "label":"foo",
+  "labelDetails":{"type":"1"},
   "kind":12,
   "detail":"1",
   "documentation":{"kind":"markdown","value":"foo is an identifier property"},
@@ -2295,10 +3307,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":16},"end":{"line":4,"character":16}},
     "newText":"foo="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","jsx attribute",{"token":null,"completion":"foo"}]
   }
 }
 {
   "label":"qux",
+  "labelDetails":{"type":"4"},
   "kind":12,
   "detail":"4",
   "documentation":{"kind":"markdown","value":"qux is a literal property"},
@@ -2307,6 +3325,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":16},"end":{"line":4,"character":16}},
     "newText":"qux="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","jsx attribute",{"token":null,"completion":"qux"}]
   }
 }
 
@@ -2314,6 +3337,7 @@ jsdoc-members-3.js:5:20
 Flags: --lsp
 {
   "label":"bar",
+  "labelDetails":{"type":"2"},
   "kind":12,
   "detail":"2",
   "documentation":{"kind":"markdown","value":"bar is a getter property"},
@@ -2322,10 +3346,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":19},"end":{"line":4,"character":19}},
     "newText":"bar="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","jsx attribute",{"token":null,"completion":"bar"}]
   }
 }
 {
   "label":"baz",
+  "labelDetails":{"type":"3"},
   "kind":12,
   "detail":"3",
   "documentation":{"kind":"markdown","value":"baz is an identifier property with variance"},
@@ -2334,10 +3364,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":19},"end":{"line":4,"character":19}},
     "newText":"baz="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","jsx attribute",{"token":null,"completion":"baz"}]
   }
 }
 {
   "label":"foo",
+  "labelDetails":{"type":"1"},
   "kind":12,
   "detail":"1",
   "documentation":{"kind":"markdown","value":"foo is an identifier property"},
@@ -2346,10 +3382,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":19},"end":{"line":4,"character":19}},
     "newText":"foo="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","jsx attribute",{"token":null,"completion":"foo"}]
   }
 }
 {
   "label":"qux",
+  "labelDetails":{"type":"4"},
   "kind":12,
   "detail":"4",
   "documentation":{"kind":"markdown","value":"qux is a literal property"},
@@ -2358,6 +3400,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":19},"end":{"line":4,"character":19}},
     "newText":"qux="
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","jsx attribute",{"token":null,"completion":"qux"}]
   }
 }
 
@@ -2365,6 +3412,7 @@ jsdoc-members-4.js:5:5
 Flags: --lsp
 {
   "label":"apply",
+  "labelDetails":{"type":"(thisArg: any, argArray?: any) => any"},
   "kind":3,
   "detail":"(thisArg: any, argArray?: any) => any",
   "sortText":"00000000000000000001",
@@ -2372,10 +3420,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"apply"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"apply"}]
   }
 }
 {
   "label":"arguments",
+  "labelDetails":{"type":"any"},
   "kind":6,
   "detail":"any",
   "sortText":"00000000000000000000",
@@ -2383,10 +3437,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"arguments"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"arguments"}]
   }
 }
 {
   "label":"bind",
+  "labelDetails":{"type":"(thisArg: any, ...argArray: Array<any>) => any"},
   "kind":3,
   "detail":"(thisArg: any, ...argArray: Array<any>) => any",
   "sortText":"00000000000000000001",
@@ -2394,10 +3454,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"bind"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"bind"}]
   }
 }
 {
   "label":"call",
+  "labelDetails":{"type":"(thisArg: any, ...argArray: Array<any>) => any"},
   "kind":3,
   "detail":"(thisArg: any, ...argArray: Array<any>) => any",
   "sortText":"00000000000000000001",
@@ -2405,10 +3471,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"call"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"call"}]
   }
 }
 {
   "label":"caller",
+  "labelDetails":{"type":"any | null"},
   "kind":13,
   "detail":"any | null",
   "sortText":"00000000000000000000",
@@ -2416,10 +3488,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"caller"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"caller"}]
   }
 }
 {
   "label":"hasOwnProperty",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -2431,10 +3509,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
   }
 }
 {
   "label":"isPrototypeOf",
+  "labelDetails":{"type":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -2446,10 +3534,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
   }
 }
 {
   "label":"length",
+  "labelDetails":{"type":"number"},
   "kind":6,
   "detail":"number",
   "sortText":"00000000000000000000",
@@ -2457,10 +3555,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"length"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"length"}]
   }
 }
 {
   "label":"name",
+  "labelDetails":{"type":"string"},
   "kind":6,
   "detail":"string",
   "sortText":"00000000000000000000",
@@ -2468,10 +3572,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"name"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"name"}]
   }
 }
 {
   "label":"propertyIsEnumerable",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -2483,10 +3593,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
   }
 }
 {
   "label":"staticMethod",
+  "labelDetails":{"type":"() => void"},
   "kind":3,
   "detail":"() => void",
   "documentation":{"kind":"markdown","value":"this is a static method"},
@@ -2495,10 +3615,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"staticMethod"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"staticMethod"}]
   }
 }
 {
   "label":"staticProp",
+  "labelDetails":{"type":"1"},
   "kind":12,
   "detail":"1",
   "documentation":{"kind":"markdown","value":"this is a static property"},
@@ -2507,10 +3633,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"staticProp"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"staticProp"}]
   }
 }
 {
   "label":"toLocaleString",
+  "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -2522,10 +3654,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
   }
 }
 {
   "label":"toString",
+  "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -2534,10 +3676,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
   }
 }
 {
   "label":"valueOf",
+  "labelDetails":{"type":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -2549,6 +3697,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
     "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
   }
 }
 
@@ -2556,6 +3709,7 @@ jsdoc-members-5.js:5:13
 Flags: --lsp
 {
   "label":"hasOwnProperty",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "sortText":"00000000000000000001",
@@ -2563,10 +3717,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
     "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
   }
 }
 {
   "label":"instanceMethod",
+  "labelDetails":{"type":"() => void"},
   "kind":3,
   "detail":"() => void",
   "documentation":{"kind":"markdown","value":"this is an instance method"},
@@ -2575,10 +3739,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
     "newText":"instanceMethod"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"instanceMethod"}
+    ]
   }
 }
 {
   "label":"instanceProp",
+  "labelDetails":{"type":"2"},
   "kind":12,
   "detail":"2",
   "documentation":{"kind":"markdown","value":"this is an instance property"},
@@ -2587,10 +3761,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
     "newText":"instanceProp"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"instanceProp"}]
   }
 }
 {
   "label":"isPrototypeOf",
+  "labelDetails":{"type":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "sortText":"00000000000000000001",
@@ -2598,10 +3778,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
     "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
   }
 }
 {
   "label":"propertyIsEnumerable",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "sortText":"00000000000000000001",
@@ -2609,10 +3799,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
     "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
   }
 }
 {
   "label":"toLocaleString",
+  "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
   "sortText":"00000000000000000001",
@@ -2620,10 +3820,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
     "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
   }
 }
 {
   "label":"toString",
+  "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
   "sortText":"00000000000000000001",
@@ -2631,10 +3841,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
     "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
   }
 }
 {
   "label":"valueOf",
+  "labelDetails":{"type":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "sortText":"00000000000000000001",
@@ -2642,10 +3858,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
     "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
   }
 }
 {
   "label":"varianceProp",
+  "labelDetails":{"type":"3"},
   "kind":12,
   "detail":"3",
   "documentation":{"kind":"markdown","value":"property with variance"},
@@ -2654,6 +3876,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
     "newText":"varianceProp"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"varianceProp"}]
   }
 }
 
@@ -2661,6 +3888,7 @@ jsdoc-members-6.js:6:5
 Flags: --lsp
 {
   "label":"bar",
+  "labelDetails":{"type":"2"},
   "kind":12,
   "detail":"2",
   "documentation":{"kind":"markdown","value":"bar is a getter property"},
@@ -2669,10 +3897,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
     "newText":"bar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"bar"}]
   }
 }
 {
   "label":"baz",
+  "labelDetails":{"type":"3"},
   "kind":12,
   "detail":"3",
   "documentation":{"kind":"markdown","value":"baz is an identifier property with variance"},
@@ -2681,10 +3915,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
     "newText":"baz"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"baz"}]
   }
 }
 {
   "label":"foo",
+  "labelDetails":{"type":"1"},
   "kind":12,
   "detail":"1",
   "documentation":{"kind":"markdown","value":"foo is an identifier property"},
@@ -2693,10 +3933,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
     "newText":"foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"foo"}]
   }
 }
 {
   "label":"hasOwnProperty",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -2708,10 +3954,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
     "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
   }
 }
 {
   "label":"isPrototypeOf",
+  "labelDetails":{"type":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -2723,10 +3979,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
     "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
   }
 }
 {
   "label":"propertyIsEnumerable",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -2738,10 +4004,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
     "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
   }
 }
 {
   "label":"qux",
+  "labelDetails":{"type":"4"},
   "kind":12,
   "detail":"4",
   "documentation":{"kind":"markdown","value":"qux is a literal property"},
@@ -2750,10 +4026,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
     "newText":"qux"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"qux"}]
   }
 }
 {
   "label":"toLocaleString",
+  "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -2765,10 +4047,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
     "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
   }
 }
 {
   "label":"toString",
+  "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -2777,10 +4069,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
     "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
   }
 }
 {
   "label":"valueOf",
+  "labelDetails":{"type":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -2792,6 +4090,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":4},"end":{"line":5,"character":4}},
     "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
   }
 }
 
@@ -2799,6 +4102,7 @@ jsdoc-members-7.js:6:5
 Flags: --lsp
 {
   "label":"?.bar",
+  "labelDetails":{"type":"void | 2"},
   "kind":13,
   "detail":"void | 2",
   "documentation":{"kind":"markdown","value":"bar is a getter property"},
@@ -2807,10 +4111,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
     "newText":"?.bar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.bar"}
+    ]
   }
 }
 {
   "label":"?.baz",
+  "labelDetails":{"type":"void | 3"},
   "kind":13,
   "detail":"void | 3",
   "documentation":{"kind":"markdown","value":"baz is an identifier property with variance"},
@@ -2819,10 +4133,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
     "newText":"?.baz"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.baz"}
+    ]
   }
 }
 {
   "label":"?.foo",
+  "labelDetails":{"type":"void | 1"},
   "kind":13,
   "detail":"void | 1",
   "documentation":{"kind":"markdown","value":"foo is an identifier property"},
@@ -2831,10 +4155,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
     "newText":"?.foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.foo"}
+    ]
   }
 }
 {
   "label":"?.hasOwnProperty",
+  "labelDetails":{"type":"void | ((prop: mixed) => boolean)"},
   "kind":13,
   "detail":"void | ((prop: mixed) => boolean)",
   "documentation":{
@@ -2846,10 +4180,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
     "newText":"?.hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.hasOwnProperty"}
+    ]
   }
 }
 {
   "label":"?.isPrototypeOf",
+  "labelDetails":{"type":"void | ((o: mixed) => boolean)"},
   "kind":13,
   "detail":"void | ((o: mixed) => boolean)",
   "documentation":{
@@ -2861,10 +4205,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
     "newText":"?.isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.isPrototypeOf"}
+    ]
   }
 }
 {
   "label":"?.propertyIsEnumerable",
+  "labelDetails":{"type":"void | ((prop: mixed) => boolean)"},
   "kind":13,
   "detail":"void | ((prop: mixed) => boolean)",
   "documentation":{
@@ -2876,10 +4230,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
     "newText":"?.propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.propertyIsEnumerable"}
+    ]
   }
 }
 {
   "label":"?.qux",
+  "labelDetails":{"type":"void | 4"},
   "kind":13,
   "detail":"void | 4",
   "documentation":{"kind":"markdown","value":"qux is a literal property"},
@@ -2888,10 +4252,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
     "newText":"?.qux"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.qux"}
+    ]
   }
 }
 {
   "label":"?.toLocaleString",
+  "labelDetails":{"type":"void | (() => string)"},
   "kind":13,
   "detail":"void | (() => string)",
   "documentation":{
@@ -2903,10 +4277,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
     "newText":"?.toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.toLocaleString"}
+    ]
   }
 }
 {
   "label":"?.toString",
+  "labelDetails":{"type":"void | (() => string)"},
   "kind":13,
   "detail":"void | (() => string)",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -2915,10 +4299,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
     "newText":"?.toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.toString"}
+    ]
   }
 }
 {
   "label":"?.valueOf",
+  "labelDetails":{"type":"void | (() => mixed)"},
   "kind":13,
   "detail":"void | (() => mixed)",
   "documentation":{
@@ -2930,6 +4324,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":5,"character":3},"end":{"line":5,"character":4}},
     "newText":"?.valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.valueOf"}
+    ]
   }
 }
 
@@ -2937,6 +4340,7 @@ jsdoc-members-8.js:11:21
 Flags: --lsp
 {
   "label":"Member1",
+  "labelDetails":{"type":"DefaultedStringEnum"},
   "kind":6,
   "detail":"DefaultedStringEnum",
   "documentation":{"kind":"markdown","value":"first member of a defaulted string enum"},
@@ -2945,10 +4349,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}},
     "newText":"Member1"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Member1"}]
   }
 }
 {
   "label":"Member2",
+  "labelDetails":{"type":"DefaultedStringEnum"},
   "kind":6,
   "detail":"DefaultedStringEnum",
   "documentation":{"kind":"markdown","value":"second member of a defaulted string enum"},
@@ -2957,10 +4367,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}},
     "newText":"Member2"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Member2"}]
   }
 }
 {
   "label":"cast",
+  "labelDetails":{"type":"(input: ?string) => (void | DefaultedStringEnum)"},
   "kind":3,
   "detail":"(input: ?string) => (void | DefaultedStringEnum)",
   "sortText":"00000000000000000001",
@@ -2968,10 +4384,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}},
     "newText":"cast"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"cast"}]
   }
 }
 {
   "label":"isValid",
+  "labelDetails":{"type":"(input: ?string) => boolean"},
   "kind":3,
   "detail":"(input: ?string) => boolean",
   "sortText":"00000000000000000001",
@@ -2979,10 +4401,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}},
     "newText":"isValid"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"isValid"}]
   }
 }
 {
   "label":"members",
+  "labelDetails":{"type":"() => Iterable<DefaultedStringEnum>"},
   "kind":3,
   "detail":"() => Iterable<DefaultedStringEnum>",
   "sortText":"00000000000000000001",
@@ -2990,6 +4418,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":10,"character":20},"end":{"line":10,"character":21}},
     "newText":"members"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"members"}]
   }
 }
 
@@ -2997,6 +4430,7 @@ jsdoc-members-8.js:13:23
 Flags: --lsp
 {
   "label":"Member1",
+  "labelDetails":{"type":"InitializedStringEnum"},
   "kind":6,
   "detail":"InitializedStringEnum",
   "documentation":{"kind":"markdown","value":"first member of an initialized string enum"},
@@ -3005,10 +4439,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}},
     "newText":"Member1"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Member1"}]
   }
 }
 {
   "label":"Member2",
+  "labelDetails":{"type":"InitializedStringEnum"},
   "kind":6,
   "detail":"InitializedStringEnum",
   "documentation":{"kind":"markdown","value":"second member of an initialized string enum"},
@@ -3017,10 +4457,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}},
     "newText":"Member2"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Member2"}]
   }
 }
 {
   "label":"cast",
+  "labelDetails":{"type":"(input: ?string) => (void | InitializedStringEnum)"},
   "kind":3,
   "detail":"(input: ?string) => (void | InitializedStringEnum)",
   "sortText":"00000000000000000001",
@@ -3028,10 +4474,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}},
     "newText":"cast"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"cast"}]
   }
 }
 {
   "label":"isValid",
+  "labelDetails":{"type":"(input: ?string) => boolean"},
   "kind":3,
   "detail":"(input: ?string) => boolean",
   "sortText":"00000000000000000001",
@@ -3039,10 +4491,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}},
     "newText":"isValid"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"isValid"}]
   }
 }
 {
   "label":"members",
+  "labelDetails":{"type":"() => Iterable<InitializedStringEnum>"},
   "kind":3,
   "detail":"() => Iterable<InitializedStringEnum>",
   "sortText":"00000000000000000001",
@@ -3050,6 +4508,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":12,"character":22},"end":{"line":12,"character":23}},
     "newText":"members"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"members"}]
   }
 }
 
@@ -3057,6 +4520,7 @@ jsdoc-members-8.js:15:12
 Flags: --lsp
 {
   "label":"Member1",
+  "labelDetails":{"type":"NumberEnum"},
   "kind":6,
   "detail":"NumberEnum",
   "documentation":{"kind":"markdown","value":"first member of a number enum"},
@@ -3065,10 +4529,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}},
     "newText":"Member1"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Member1"}]
   }
 }
 {
   "label":"Member2",
+  "labelDetails":{"type":"NumberEnum"},
   "kind":6,
   "detail":"NumberEnum",
   "documentation":{"kind":"markdown","value":"second member of a number enum"},
@@ -3077,10 +4547,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}},
     "newText":"Member2"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Member2"}]
   }
 }
 {
   "label":"cast",
+  "labelDetails":{"type":"(input: ?number) => (void | NumberEnum)"},
   "kind":3,
   "detail":"(input: ?number) => (void | NumberEnum)",
   "sortText":"00000000000000000001",
@@ -3088,10 +4564,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}},
     "newText":"cast"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"cast"}]
   }
 }
 {
   "label":"isValid",
+  "labelDetails":{"type":"(input: ?number) => boolean"},
   "kind":3,
   "detail":"(input: ?number) => boolean",
   "sortText":"00000000000000000001",
@@ -3099,10 +4581,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}},
     "newText":"isValid"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"isValid"}]
   }
 }
 {
   "label":"members",
+  "labelDetails":{"type":"() => Iterable<NumberEnum>"},
   "kind":3,
   "detail":"() => Iterable<NumberEnum>",
   "sortText":"00000000000000000001",
@@ -3110,6 +4598,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":14,"character":11},"end":{"line":14,"character":12}},
     "newText":"members"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"members"}]
   }
 }
 
@@ -3117,6 +4610,7 @@ jsdoc-members-8.js:17:13
 Flags: --lsp
 {
   "label":"Member1",
+  "labelDetails":{"type":"BooleanEnum"},
   "kind":6,
   "detail":"BooleanEnum",
   "documentation":{"kind":"markdown","value":"first member of a boolean enum"},
@@ -3125,10 +4619,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}},
     "newText":"Member1"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Member1"}]
   }
 }
 {
   "label":"Member2",
+  "labelDetails":{"type":"BooleanEnum"},
   "kind":6,
   "detail":"BooleanEnum",
   "documentation":{"kind":"markdown","value":"second member of a boolean enum"},
@@ -3137,10 +4637,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}},
     "newText":"Member2"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Member2"}]
   }
 }
 {
   "label":"cast",
+  "labelDetails":{"type":"(input: ?boolean) => (void | BooleanEnum)"},
   "kind":3,
   "detail":"(input: ?boolean) => (void | BooleanEnum)",
   "sortText":"00000000000000000001",
@@ -3148,10 +4654,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}},
     "newText":"cast"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"cast"}]
   }
 }
 {
   "label":"isValid",
+  "labelDetails":{"type":"(input: ?boolean) => boolean"},
   "kind":3,
   "detail":"(input: ?boolean) => boolean",
   "sortText":"00000000000000000001",
@@ -3159,10 +4671,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}},
     "newText":"isValid"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"isValid"}]
   }
 }
 {
   "label":"members",
+  "labelDetails":{"type":"() => Iterable<BooleanEnum>"},
   "kind":3,
   "detail":"() => Iterable<BooleanEnum>",
   "sortText":"00000000000000000001",
@@ -3170,6 +4688,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":16,"character":12},"end":{"line":16,"character":13}},
     "newText":"members"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"members"}]
   }
 }
 
@@ -3177,6 +4700,7 @@ jsdoc-members-8.js:19:12
 Flags: --lsp
 {
   "label":"Member1",
+  "labelDetails":{"type":"SymbolEnum"},
   "kind":6,
   "detail":"SymbolEnum",
   "documentation":{"kind":"markdown","value":"first member of a boolean enum"},
@@ -3185,10 +4709,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}},
     "newText":"Member1"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Member1"}]
   }
 }
 {
   "label":"Member2",
+  "labelDetails":{"type":"SymbolEnum"},
   "kind":6,
   "detail":"SymbolEnum",
   "documentation":{"kind":"markdown","value":"second member of a boolean enum"},
@@ -3197,10 +4727,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}},
     "newText":"Member2"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"Member2"}]
   }
 }
 {
   "label":"cast",
+  "labelDetails":{"type":"(input: ?symbol) => (void | SymbolEnum)"},
   "kind":3,
   "detail":"(input: ?symbol) => (void | SymbolEnum)",
   "sortText":"00000000000000000001",
@@ -3208,10 +4744,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}},
     "newText":"cast"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"cast"}]
   }
 }
 {
   "label":"isValid",
+  "labelDetails":{"type":"(input: ?symbol) => boolean"},
   "kind":3,
   "detail":"(input: ?symbol) => boolean",
   "sortText":"00000000000000000001",
@@ -3219,10 +4761,16 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}},
     "newText":"isValid"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"isValid"}]
   }
 }
 {
   "label":"members",
+  "labelDetails":{"type":"() => Iterable<SymbolEnum>"},
   "kind":3,
   "detail":"() => Iterable<SymbolEnum>",
   "sortText":"00000000000000000001",
@@ -3230,6 +4778,11 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":18,"character":11},"end":{"line":18,"character":12}},
     "newText":"members"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"members"}]
   }
 }
 
@@ -3237,6 +4790,7 @@ types-jsdoc.js:16:6
 Flags: --lsp
 {
   "label":"myEnum",
+  "labelDetails":{"type":"enum myEnum"},
   "kind":13,
   "detail":"enum myEnum",
   "documentation":{"kind":"markdown","value":"this is myEnum"},
@@ -3245,10 +4799,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
     "newText":"myEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: class or enum",
+      {"token":null,"completion":"myEnum"}
+    ]
   }
 }
 {
   "label":"myClass",
+  "labelDetails":{"type":"class myClass"},
   "kind":7,
   "detail":"class myClass",
   "documentation":{"kind":"markdown","value":"this is myClass"},
@@ -3257,22 +4821,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
     "newText":"myClass"
-  }
-}
-{
-  "label":"ExportClass",
-  "kind":7,
-  "detail":"class ExportClass",
-  "documentation":{"kind":"markdown","value":"this is ExportClass"},
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
-    "newText":"ExportClass"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: class or enum",
+      {"token":null,"completion":"myClass"}
+    ]
   }
 }
 {
   "label":"myFoo",
+  "labelDetails":{"type":"type myFoo = number"},
   "kind":13,
   "detail":"type myFoo = number",
   "documentation":{"kind":"markdown","value":"this is myFoo"},
@@ -3281,10 +4843,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
     "newText":"myFoo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"myFoo"}
+    ]
   }
 }
 {
   "label":"myBar",
+  "labelDetails":{"type":"type myBar<T> = ?T"},
   "kind":13,
   "detail":"type myBar<T> = ?T",
   "documentation":{"kind":"markdown","value":"this is myBar"},
@@ -3293,10 +4865,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
     "newText":"myBar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"myBar"}
+    ]
   }
 }
 {
   "label":"myInterface",
+  "labelDetails":{"type":"interface myInterface"},
   "kind":8,
   "detail":"interface myInterface",
   "documentation":{"kind":"markdown","value":"this is myInterface"},
@@ -3305,10 +4887,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
     "newText":"myInterface"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"myInterface"}
+    ]
   }
 }
 {
   "label":"ExportFoo",
+  "labelDetails":{"type":"type ExportFoo = number"},
   "kind":13,
   "detail":"type ExportFoo = number",
   "documentation":{"kind":"markdown","value":"this is ExportFoo"},
@@ -3317,10 +4909,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
     "newText":"ExportFoo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"ExportFoo"}
+    ]
   }
 }
 {
   "label":"ExportBar",
+  "labelDetails":{"type":"type ExportBar<T> = ?T"},
   "kind":13,
   "detail":"type ExportBar<T> = ?T",
   "documentation":{"kind":"markdown","value":"this is ExportBar"},
@@ -3329,10 +4931,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
     "newText":"ExportBar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"ExportBar"}
+    ]
   }
 }
 {
   "label":"ExportClass",
+  "labelDetails":{"type":"class ExportClass"},
   "kind":7,
   "detail":"class ExportClass",
   "documentation":{"kind":"markdown","value":"this is ExportClass"},
@@ -3341,10 +4953,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
     "newText":"ExportClass"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"ExportClass"}
+    ]
   }
 }
 {
   "label":"ExportInterface",
+  "labelDetails":{"type":"interface ExportInterface"},
   "kind":8,
   "detail":"interface ExportInterface",
   "documentation":{"kind":"markdown","value":"this is ExportInterface"},
@@ -3353,10 +4975,42 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
     "newText":"ExportInterface"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"ExportInterface"}
+    ]
+  }
+}
+{
+  "label":"ExportEnum",
+  "labelDetails":{"type":"enum ExportEnum"},
+  "kind":13,
+  "detail":"enum ExportEnum",
+  "documentation":{"kind":"markdown","value":"this is ExportEnum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"ExportEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"ExportEnum"}
+    ]
   }
 }
 {
   "label":"exportValue",
+  "labelDetails":{"type":"type exportValue = number"},
   "kind":13,
   "detail":"type exportValue = number",
   "documentation":{"kind":"markdown","value":"this is ExportValue"},
@@ -3365,6 +5019,15 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
     "newText":"exportValue"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"exportValue"}
+    ]
   }
 }
 
@@ -3372,6 +5035,7 @@ qualified-types-jsdoc.js:5:12
 Flags: --lsp
 {
   "label":"ExportBar",
+  "labelDetails":{"type":"type ExportBar<T> = ?T"},
   "kind":13,
   "detail":"type ExportBar<T> = ?T",
   "documentation":{"kind":"markdown","value":"this is ExportBar"},
@@ -3380,10 +5044,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
     "newText":"ExportBar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "qualified type alias",
+      {"token":null,"completion":"ExportBar"}
+    ]
   }
 }
 {
   "label":"ExportClass",
+  "labelDetails":{"type":"class ExportClass"},
   "kind":7,
   "detail":"class ExportClass",
   "documentation":{"kind":"markdown","value":"this is ExportClass"},
@@ -3392,10 +5066,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
     "newText":"ExportClass"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "qualified class",
+      {"token":null,"completion":"ExportClass"}
+    ]
   }
 }
 {
   "label":"ExportEnum",
+  "labelDetails":{"type":"enum ExportEnum"},
   "kind":13,
   "detail":"enum ExportEnum",
   "documentation":{"kind":"markdown","value":"this is ExportEnum"},
@@ -3404,10 +5088,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
     "newText":"ExportEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "qualified enum",
+      {"token":null,"completion":"ExportEnum"}
+    ]
   }
 }
 {
   "label":"ExportFoo",
+  "labelDetails":{"type":"type ExportFoo = number"},
   "kind":6,
   "detail":"type ExportFoo = number",
   "documentation":{"kind":"markdown","value":"this is ExportFoo"},
@@ -3416,10 +5110,20 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
     "newText":"ExportFoo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "qualified type alias",
+      {"token":null,"completion":"ExportFoo"}
+    ]
   }
 }
 {
   "label":"ExportInterface",
+  "labelDetails":{"type":"interface ExportInterface"},
   "kind":8,
   "detail":"interface ExportInterface",
   "documentation":{"kind":"markdown","value":"this is ExportInterface"},
@@ -3428,6 +5132,2204 @@ Flags: --lsp
   "textEdit":{
     "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
     "newText":"ExportInterface"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "qualified interface",
+      {"token":null,"completion":"ExportInterface"}
+    ]
   }
+}
+
+bracket_syntax_1.js:5:5
+Flags: --lsp
+{
+  "label":"\"bar\"",
+  "labelDetails":{"type":"string | void"},
+  "kind":13,
+  "detail":"string | void",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"\"bar\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"bar\""}
+    ]
+  }
+}
+{
+  "label":"\"foo\"",
+  "labelDetails":{"type":"number"},
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"\"foo\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"foo\""}
+    ]
+  }
+}
+{
+  "label":"\"hasOwnProperty\"",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"\"hasOwnProperty\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"hasOwnProperty\""}
+    ]
+  }
+}
+{
+  "label":"\"isPrototypeOf\"",
+  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"\"isPrototypeOf\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"isPrototypeOf\""}
+    ]
+  }
+}
+{
+  "label":"\"propertyIsEnumerable\"",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"\"propertyIsEnumerable\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"propertyIsEnumerable\""}
+    ]
+  }
+}
+{
+  "label":"\"toLocaleString\"",
+  "labelDetails":{"type":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"\"toLocaleString\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"toLocaleString\""}
+    ]
+  }
+}
+{
+  "label":"\"toString\"",
+  "labelDetails":{"type":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"\"toString\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"toString\""}
+    ]
+  }
+}
+{
+  "label":"\"valueOf\"",
+  "labelDetails":{"type":"() => mixed"},
+  "kind":3,
+  "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"\"valueOf\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"valueOf\""}
+    ]
+  }
+}
+{
+  "label":"obj",
+  "labelDetails":{"type":"{bar?: string, foo: number, ...}"},
+  "kind":6,
+  "detail":"{bar?: string, foo: number, ...}",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
+    "newText":"obj"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"obj"}
+    ]
+  }
+}
+
+bracket_syntax_2.js:5:14
+Flags: --lsp
+{
+  "label":"\"bar\"",
+  "labelDetails":{"type":"string | void"},
+  "kind":13,
+  "detail":"string | void",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"\"bar\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"bar\""}
+    ]
+  }
+}
+{
+  "label":"\"foo\"",
+  "labelDetails":{"type":"number"},
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"\"foo\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"foo\""}
+    ]
+  }
+}
+{
+  "label":"\"hasOwnProperty\"",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"\"hasOwnProperty\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"hasOwnProperty\""}
+    ]
+  }
+}
+{
+  "label":"\"isPrototypeOf\"",
+  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"\"isPrototypeOf\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"isPrototypeOf\""}
+    ]
+  }
+}
+{
+  "label":"\"propertyIsEnumerable\"",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"\"propertyIsEnumerable\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"propertyIsEnumerable\""}
+    ]
+  }
+}
+{
+  "label":"\"toLocaleString\"",
+  "labelDetails":{"type":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"\"toLocaleString\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"toLocaleString\""}
+    ]
+  }
+}
+{
+  "label":"\"toString\"",
+  "labelDetails":{"type":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"\"toString\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"toString\""}
+    ]
+  }
+}
+{
+  "label":"\"valueOf\"",
+  "labelDetails":{"type":"() => mixed"},
+  "kind":3,
+  "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"\"valueOf\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"valueOf\""}
+    ]
+  }
+}
+{
+  "label":"obj",
+  "labelDetails":{"type":"{bar?: string, foo: number, ...}"},
+  "kind":6,
+  "detail":"{bar?: string, foo: number, ...}",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"obj"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"obj"}
+    ]
+  }
+}
+{
+  "label":"x",
+  "labelDetails":{"type":"empty"},
+  "kind":6,
+  "detail":"empty",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"x"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"x"}
+    ]
+  }
+}
+
+bracket_syntax_3.js:5:14
+Flags: --lsp
+{
+  "label":"\"bar\"",
+  "labelDetails":{"type":"number"},
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"\"bar\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"bar\""}
+    ]
+  }
+}
+{
+  "label":"\"foo\"",
+  "labelDetails":{"type":"number"},
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"\"foo\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"foo\""}
+    ]
+  }
+}
+{
+  "label":"\"hasOwnProperty\"",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"\"hasOwnProperty\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"hasOwnProperty\""}
+    ]
+  }
+}
+{
+  "label":"\"isPrototypeOf\"",
+  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"\"isPrototypeOf\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"isPrototypeOf\""}
+    ]
+  }
+}
+{
+  "label":"\"propertyIsEnumerable\"",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"\"propertyIsEnumerable\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"propertyIsEnumerable\""}
+    ]
+  }
+}
+{
+  "label":"\"toLocaleString\"",
+  "labelDetails":{"type":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"\"toLocaleString\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"toLocaleString\""}
+    ]
+  }
+}
+{
+  "label":"\"toString\"",
+  "labelDetails":{"type":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"\"toString\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"toString\""}
+    ]
+  }
+}
+{
+  "label":"\"valueOf\"",
+  "labelDetails":{"type":"() => mixed"},
+  "kind":3,
+  "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"\"valueOf\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"valueOf\""}
+    ]
+  }
+}
+{
+  "label":"obj",
+  "labelDetails":{"type":"{bar: number, foo: number, ...}"},
+  "kind":6,
+  "detail":"{bar: number, foo: number, ...}",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":23}},
+    "newText":"obj"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"obj"}
+    ]
+  }
+}
+{
+  "label":"x",
+  "labelDetails":{"type":"empty"},
+  "kind":6,
+  "detail":"empty",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":23}},
+    "newText":"x"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"x"}
+    ]
+  }
+}
+
+bracket_syntax_4.js:5:15
+Flags: --lsp
+{
+  "label":"\"bar\"",
+  "labelDetails":{"type":"number"},
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":14},"end":{"line":4,"character":14}},
+    "newText":"\"bar\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"bar\""}
+    ]
+  }
+}
+{
+  "label":"\"foo\"",
+  "labelDetails":{"type":"number"},
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":14},"end":{"line":4,"character":14}},
+    "newText":"\"foo\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"foo\""}
+    ]
+  }
+}
+{
+  "label":"\"hasOwnProperty\"",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":14},"end":{"line":4,"character":14}},
+    "newText":"\"hasOwnProperty\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"hasOwnProperty\""}
+    ]
+  }
+}
+{
+  "label":"\"isPrototypeOf\"",
+  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":14},"end":{"line":4,"character":14}},
+    "newText":"\"isPrototypeOf\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"isPrototypeOf\""}
+    ]
+  }
+}
+{
+  "label":"\"propertyIsEnumerable\"",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":14},"end":{"line":4,"character":14}},
+    "newText":"\"propertyIsEnumerable\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"propertyIsEnumerable\""}
+    ]
+  }
+}
+{
+  "label":"\"toLocaleString\"",
+  "labelDetails":{"type":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":14},"end":{"line":4,"character":14}},
+    "newText":"\"toLocaleString\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"toLocaleString\""}
+    ]
+  }
+}
+{
+  "label":"\"toString\"",
+  "labelDetails":{"type":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":14},"end":{"line":4,"character":14}},
+    "newText":"\"toString\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"toString\""}
+    ]
+  }
+}
+{
+  "label":"\"valueOf\"",
+  "labelDetails":{"type":"() => mixed"},
+  "kind":3,
+  "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":14},"end":{"line":4,"character":14}},
+    "newText":"\"valueOf\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"valueOf\""}
+    ]
+  }
+}
+{
+  "label":"obj",
+  "labelDetails":{"type":"{bar: number, foo: number, ...}"},
+  "kind":6,
+  "detail":"{bar: number, foo: number, ...}",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":14},"end":{"line":4,"character":14}},
+    "newText":"obj"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"obj"}
+    ]
+  }
+}
+{
+  "label":"x",
+  "labelDetails":{"type":"empty"},
+  "kind":6,
+  "detail":"empty",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":14},"end":{"line":4,"character":14}},
+    "newText":"x"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"x"}
+    ]
+  }
+}
+
+bracket_syntax_5.js:8:13
+Flags: --lsp
+{
+  "label":"obj",
+  "labelDetails":{"type":"{bar: number, foo: number, ...}"},
+  "kind":6,
+  "detail":"{bar: number, foo: number, ...}",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":12},"end":{"line":7,"character":12}},
+    "newText":"obj"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"obj"}
+    ]
+  }
+}
+{
+  "label":"x",
+  "labelDetails":{"type":"empty"},
+  "kind":6,
+  "detail":"empty",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":12},"end":{"line":7,"character":12}},
+    "newText":"x"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"x"}
+    ]
+  }
+}
+
+bracket_syntax_6.js:5:13
+Flags: --lsp
+{
+  "label":"?.[\"bar\"]",
+  "labelDetails":{"type":"void | number"},
+  "kind":13,
+  "detail":"void | number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
+    "newText":"?.[\"bar\"]"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.[\"bar\"]"}
+    ]
+  }
+}
+{
+  "label":"?.[\"foo\"]",
+  "labelDetails":{"type":"void | number"},
+  "kind":13,
+  "detail":"void | number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
+    "newText":"?.[\"foo\"]"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.[\"foo\"]"}
+    ]
+  }
+}
+{
+  "label":"?.[\"hasOwnProperty\"]",
+  "labelDetails":{"type":"void | ((prop: mixed) => boolean)"},
+  "kind":13,
+  "detail":"void | ((prop: mixed) => boolean)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
+    "newText":"?.[\"hasOwnProperty\"]"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.[\"hasOwnProperty\"]"}
+    ]
+  }
+}
+{
+  "label":"?.[\"isPrototypeOf\"]",
+  "labelDetails":{"type":"void | ((o: mixed) => boolean)"},
+  "kind":13,
+  "detail":"void | ((o: mixed) => boolean)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
+    "newText":"?.[\"isPrototypeOf\"]"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.[\"isPrototypeOf\"]"}
+    ]
+  }
+}
+{
+  "label":"?.[\"propertyIsEnumerable\"]",
+  "labelDetails":{"type":"void | ((prop: mixed) => boolean)"},
+  "kind":13,
+  "detail":"void | ((prop: mixed) => boolean)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
+    "newText":"?.[\"propertyIsEnumerable\"]"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.[\"propertyIsEnumerable\"]"}
+    ]
+  }
+}
+{
+  "label":"?.[\"toLocaleString\"]",
+  "labelDetails":{"type":"void | (() => string)"},
+  "kind":13,
+  "detail":"void | (() => string)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
+    "newText":"?.[\"toLocaleString\"]"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.[\"toLocaleString\"]"}
+    ]
+  }
+}
+{
+  "label":"?.[\"toString\"]",
+  "labelDetails":{"type":"void | (() => string)"},
+  "kind":13,
+  "detail":"void | (() => string)",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
+    "newText":"?.[\"toString\"]"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.[\"toString\"]"}
+    ]
+  }
+}
+{
+  "label":"?.[\"valueOf\"]",
+  "labelDetails":{"type":"void | (() => mixed)"},
+  "kind":13,
+  "detail":"void | (() => mixed)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
+    "newText":"?.[\"valueOf\"]"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.[\"valueOf\"]"}
+    ]
+  }
+}
+{
+  "label":"obj",
+  "labelDetails":{"type":"?{bar: number, foo: number, ...}"},
+  "kind":13,
+  "detail":"?{bar: number, foo: number, ...}",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"obj"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"obj"}
+    ]
+  }
+}
+{
+  "label":"x",
+  "labelDetails":{"type":"empty"},
+  "kind":6,
+  "detail":"empty",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
+    "newText":"x"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"x"}
+    ]
+  }
+}
+
+iterator.js:4:5
+Flags: --lsp
+{
+  "label":"Symbol.iterator",
+  "labelDetails":{"type":"Iterator<number>"},
+  "kind":6,
+  "detail":"Iterator<number>",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
+    "newText":"Symbol.iterator"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"Symbol.iterator"}
+    ]
+  }
+}
+{
+  "label":"\"hasOwnProperty\"",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
+    "newText":"\"hasOwnProperty\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"hasOwnProperty\""}
+    ]
+  }
+}
+{
+  "label":"\"isPrototypeOf\"",
+  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
+    "newText":"\"isPrototypeOf\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"isPrototypeOf\""}
+    ]
+  }
+}
+{
+  "label":"\"propertyIsEnumerable\"",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
+    "newText":"\"propertyIsEnumerable\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"propertyIsEnumerable\""}
+    ]
+  }
+}
+{
+  "label":"\"toLocaleString\"",
+  "labelDetails":{"type":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
+    "newText":"\"toLocaleString\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"toLocaleString\""}
+    ]
+  }
+}
+{
+  "label":"\"toString\"",
+  "labelDetails":{"type":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
+    "newText":"\"toString\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"toString\""}
+    ]
+  }
+}
+{
+  "label":"\"valueOf\"",
+  "labelDetails":{"type":"() => mixed"},
+  "kind":3,
+  "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
+    "newText":"\"valueOf\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"valueOf\""}
+    ]
+  }
+}
+{
+  "label":"bar",
+  "labelDetails":{"type":"{\"@@asyncIterator\": AsyncIterator<number>, ...}"},
+  "kind":6,
+  "detail":"{\"@@asyncIterator\": AsyncIterator<number>, ...}",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
+    "newText":"bar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"bar"}
+    ]
+  }
+}
+{
+  "label":"foo",
+  "labelDetails":{"type":"{\"@@iterator\": Iterator<number>, ...}"},
+  "kind":6,
+  "detail":"{\"@@iterator\": Iterator<number>, ...}",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
+    "newText":"foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"foo"}
+    ]
+  }
+}
+
+iterator.js:8:5
+Flags: --lsp
+{
+  "label":"Symbol.asyncIterator",
+  "labelDetails":{"type":"AsyncIterator<number>"},
+  "kind":6,
+  "detail":"AsyncIterator<number>",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"Symbol.asyncIterator"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"Symbol.asyncIterator"}
+    ]
+  }
+}
+{
+  "label":"\"hasOwnProperty\"",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"\"hasOwnProperty\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"hasOwnProperty\""}
+    ]
+  }
+}
+{
+  "label":"\"isPrototypeOf\"",
+  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"\"isPrototypeOf\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"isPrototypeOf\""}
+    ]
+  }
+}
+{
+  "label":"\"propertyIsEnumerable\"",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"\"propertyIsEnumerable\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"propertyIsEnumerable\""}
+    ]
+  }
+}
+{
+  "label":"\"toLocaleString\"",
+  "labelDetails":{"type":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"\"toLocaleString\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"toLocaleString\""}
+    ]
+  }
+}
+{
+  "label":"\"toString\"",
+  "labelDetails":{"type":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"\"toString\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"toString\""}
+    ]
+  }
+}
+{
+  "label":"\"valueOf\"",
+  "labelDetails":{"type":"() => mixed"},
+  "kind":3,
+  "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"\"valueOf\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"valueOf\""}
+    ]
+  }
+}
+{
+  "label":"bar",
+  "labelDetails":{"type":"{\"@@asyncIterator\": AsyncIterator<number>, ...}"},
+  "kind":6,
+  "detail":"{\"@@asyncIterator\": AsyncIterator<number>, ...}",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"bar"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"bar"}
+    ]
+  }
+}
+{
+  "label":"foo",
+  "labelDetails":{"type":"{\"@@iterator\": Iterator<number>, ...}"},
+  "kind":6,
+  "detail":"{\"@@iterator\": Iterator<number>, ...}",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"foo"}
+    ]
+  }
+}
+
+bracket_syntax_needed.js:8:5
+Flags: --lsp
+{
+  "label":"foo",
+  "labelDetails":{"type":"number"},
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"foo"}]
+  }
+}
+{
+  "label":"[\"foo.bar.baz\"]",
+  "labelDetails":{"type":"number"},
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
+    "newText":"[\"foo.bar.baz\"]"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "dot-member switched to bracket-syntax member",
+      {"token":null,"completion":"[\"foo.bar.baz\"]"}
+    ]
+  }
+}
+{
+  "label":"hasOwnProperty",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
+  }
+}
+{
+  "label":"isPrototypeOf",
+  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
+  }
+}
+{
+  "label":"propertyIsEnumerable",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
+  }
+}
+{
+  "label":"toLocaleString",
+  "labelDetails":{"type":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
+  }
+}
+{
+  "label":"toString",
+  "labelDetails":{"type":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
+  }
+}
+{
+  "label":"valueOf",
+  "labelDetails":{"type":"() => mixed"},
+  "kind":3,
+  "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
+    "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
+  }
+}
+
+bracket_syntax_needed_2.js:8:5
+Flags: --lsp
+{
+  "label":"?.foo",
+  "labelDetails":{"type":"void | number"},
+  "kind":13,
+  "detail":"void | number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
+    "newText":"?.foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.foo"}
+    ]
+  }
+}
+{
+  "label":"?.[\"foo.bar.baz\"]",
+  "labelDetails":{"type":"void | number"},
+  "kind":13,
+  "detail":"void | number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
+    "newText":"?.[\"foo.bar.baz\"]"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.[\"foo.bar.baz\"]"}
+    ]
+  }
+}
+{
+  "label":"?.hasOwnProperty",
+  "labelDetails":{"type":"void | ((prop: mixed) => boolean)"},
+  "kind":13,
+  "detail":"void | ((prop: mixed) => boolean)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
+    "newText":"?.hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.hasOwnProperty"}
+    ]
+  }
+}
+{
+  "label":"?.isPrototypeOf",
+  "labelDetails":{"type":"void | ((o: mixed) => boolean)"},
+  "kind":13,
+  "detail":"void | ((o: mixed) => boolean)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
+    "newText":"?.isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.isPrototypeOf"}
+    ]
+  }
+}
+{
+  "label":"?.propertyIsEnumerable",
+  "labelDetails":{"type":"void | ((prop: mixed) => boolean)"},
+  "kind":13,
+  "detail":"void | ((prop: mixed) => boolean)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
+    "newText":"?.propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.propertyIsEnumerable"}
+    ]
+  }
+}
+{
+  "label":"?.toLocaleString",
+  "labelDetails":{"type":"void | (() => string)"},
+  "kind":13,
+  "detail":"void | (() => string)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
+    "newText":"?.toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.toLocaleString"}
+    ]
+  }
+}
+{
+  "label":"?.toString",
+  "labelDetails":{"type":"void | (() => string)"},
+  "kind":13,
+  "detail":"void | (() => string)",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
+    "newText":"?.toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.toString"}
+    ]
+  }
+}
+{
+  "label":"?.valueOf",
+  "labelDetails":{"type":"void | (() => mixed)"},
+  "kind":13,
+  "detail":"void | (() => mixed)",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
+    "newText":"?.valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "start optional chain",
+      {"token":null,"completion":"?.valueOf"}
+    ]
+  }
+}
+
+upper_bounds_1.js:10:3
+Flags: --lsp
+{
+  "label":"\"foo\"",
+  "labelDetails":{"type":"\"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"\"foo\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {"token":null,"completion":"\"foo\""}
+    ]
+  }
+}
+{
+  "label":"\"bar\"",
+  "labelDetails":{"type":"\"bar\""},
+  "kind":12,
+  "detail":"\"bar\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"\"bar\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {"token":null,"completion":"\"bar\""}
+    ]
+  }
+}
+{
+  "label":"\"baz\"",
+  "labelDetails":{"type":"\"baz\""},
+  "kind":12,
+  "detail":"\"baz\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"\"baz\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {"token":null,"completion":"\"baz\""}
+    ]
+  }
+}
+{
+  "label":"f",
+  "labelDetails":{"type":"(Union) => void"},
+  "kind":3,
+  "detail":"(Union) => void",
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"f"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"f"}
+    ]
+  }
+}
+
+upper_bounds_2.js:10:4
+Flags: --lsp
+{
+  "label":"\"baz\"",
+  "labelDetails":{"type":"\"baz\""},
+  "kind":12,
+  "detail":"\"baz\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"\"baz\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {"token":null,"completion":"\"baz\""}
+    ]
+  }
+}
+{
+  "label":"\"bar\"",
+  "labelDetails":{"type":"\"bar\""},
+  "kind":12,
+  "detail":"\"bar\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"\"bar\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {"token":null,"completion":"\"bar\""}
+    ]
+  }
+}
+{
+  "label":"\"foo\"",
+  "labelDetails":{"type":"\"foo\""},
+  "kind":12,
+  "detail":"\"foo\"",
+  "preselect":true,
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
+    "newText":"\"foo\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "literal from upper bound",
+      {"token":null,"completion":"\"foo\""}
+    ]
+  }
+}
+
+upper_bounds_3.js:12:5
+Flags: --pretty
+{
+  "result":[
+    {"name":"\"foo\"","type":"\"foo\""},
+    {"name":"\"bar\"","type":"\"bar\""},
+    {"name":"\"baz\"","type":"\"baz\""},
+    {"name":"f","type":"(Union) => void"},
+    {"name":"x","type":"empty"}
+  ]
+}
+
+upper_bounds_4.js:15:7
+Flags: --pretty
+{
+  "result":[
+    {"name":"\"foo\"","type":"\"foo\""},
+    {"name":"\"bar\"","type":"\"bar\""},
+    {"name":"\"baz\"","type":"\"baz\""},
+    {"name":"cond","type":"boolean"},
+    {"name":"f","type":"(Union) => void"},
+    {"name":"x","type":"\"foo\""}
+  ]
+}
+
+upper_bounds_5.js:13:5
+Flags: --pretty
+{
+  "result":[
+    {"name":"\"foo\"","type":"\"foo\""},
+    {"name":"\"bar\"","type":"\"bar\""},
+    {"name":"\"baz\"","type":"\"baz\""},
+    {"name":"f","type":"(Union) => void"},
+    {"name":"g","type":"(Union) => void"},
+    {"name":"x","type":"empty"}
+  ]
 }
 

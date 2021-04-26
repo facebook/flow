@@ -53,15 +53,16 @@ let main (module Runnable : Codemod_runner.RUNNABLE) codemod_flags () =
         dir
       else
         let msg = Utils_js.spf "Invalid root directory %s" provided_root in
-        FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
+        Exit.(exit ~msg Could_not_find_flowconfig)
   in
-  let flowconfig =
-    CommandUtils.read_config_or_exit (Server_files_js.config_file flowconfig_name root)
+  let (flowconfig, flowconfig_hash) =
+    CommandUtils.read_config_and_hash_or_exit (Server_files_js.config_file flowconfig_name root)
   in
   let shared_mem_config = CommandUtils.shm_config shm_flags flowconfig in
   let options =
     CommandUtils.make_options
       ~flowconfig_name
+      ~flowconfig_hash
       ~flowconfig
       ~lazy_mode:(Some Options.LAZY_MODE_FILESYSTEM)
       ~root

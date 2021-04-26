@@ -22,15 +22,16 @@ let metadata =
     (* global *)
     automatic_require_default = false;
     babel_loose_array_spread = false;
+    check_updates_against_providers = false;
     max_literal_length = 100;
     enable_const_params = false;
     enable_enums = true;
     enable_enums_with_unknown_members = true;
+    enable_indexed_access = true;
     enable_this_annot = true;
     enforce_strict_call_arity = true;
     enforce_local_inference_annotations = false;
     exact_by_default = false;
-    generate_tests = true;
     facebook_fbs = None;
     facebook_fbt = None;
     facebook_module_interop = false;
@@ -39,13 +40,14 @@ let metadata =
     max_trace_depth = 0;
     max_workers = 0;
     react_runtime = Options.ReactRuntimeClassic;
+    react_server_component_exts = SSet.empty;
     recursion_limit = 10000;
     root = Path.dummy_path;
+    run_post_inference_implicit_instantiation = false;
     strict_es6_import_export = false;
     strict_es6_import_export_excludes = [];
     strip_root = true;
     suppress_types = SSet.empty;
-    default_lib_dir = None;
     trust_mode = Options.NoTrust;
     type_asserts = false;
   }
@@ -117,21 +119,39 @@ let before_and_after_stmts file_name =
   | Error e -> Error e
   | Ok ((_, { Flow_ast.Program.statements = stmts; _ }), file_sig) ->
     let cx =
-      let aloc_tables = Utils_js.FilenameMap.empty in
-      let rev_table = lazy (ALoc.make_empty_reverse_table ()) in
-      let sig_cx = Context.make_sig () in
-      let ccx = Context.make_ccx sig_cx aloc_tables in
-      Context.make ccx metadata file_key rev_table Files.lib_module_ref Context.Checking
+      let aloc_table = lazy (ALoc.make_table file_key) in
+      let ccx = Context.make_ccx () in
+      Context.make
+        ccx
+        metadata
+        file_key
+        aloc_table
+        (Reason.OrdinaryName Files.lib_module_ref)
+        Context.Checking
     in
-    Flow_js.mk_builtins cx;
+    (* Loading the entire libdefs here would be overkill, but the typed_ast tests do use Object
+     * in a few tests. In order to avoid EBuiltinLookupFailed errors with an empty source location,
+     * we manually add "Object" -> Any into the builtins map. We use the UnresolvedName any type
+     * to avoid any "Any value used as type" errors that may otherwise appear *)
+    let builtins = Context.builtins cx in
+    let reason =
+      let loc = ALoc.none in
+      let desc = Reason.RCustom "Explicit any used in type_ast tests" in
+      Reason.mk_reason desc loc
+    in
+    Builtins.set_builtin
+      ~flow_t:(fun _ -> ())
+      builtins
+      (Reason.OrdinaryName "Object")
+      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
     add_require_tvars cx file_sig;
     let module_scope = Scope.fresh () in
-    Env.init_env cx module_scope;
+    Env.init_env module_scope;
     let stmts = Base.List.map ~f:Ast_loc_utils.loc_to_aloc_mapper#statement stmts in
     let t_stmts =
       try
         Statement.toplevel_decls cx stmts;
-        Statement.toplevels cx stmts
+        Toplevels.toplevels Statement.statement cx stmts
       with
       | Abnormal.Exn (Abnormal.Stmts t_stmts, _) -> t_stmts
       | Abnormal.Exn (Abnormal.Stmt t_stmt, _) -> [t_stmt]

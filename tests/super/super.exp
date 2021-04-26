@@ -100,6 +100,44 @@ References:
                         [2]
 
 
+Error ------------------------------------------------------------------------------------------- outside_method.js:13:9
+
+Cannot use `super` outside of a class method. [super-outside-method]
+
+   13|     b = () => { super.b() }
+               ^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- outside_method.js:15:9
+
+Cannot use `super` outside of a class method. [super-outside-method]
+
+   15|     c = function () { super.c() }
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ outside_method.js:15:29
+
+Cannot call `super.c` because property `c` is missing in empty super object [1]. [prop-missing]
+
+   outside_method.js:15:29
+   15|     c = function () { super.c() }
+                                   ^
+
+References:
+   outside_method.js:15:23
+   15|     c = function () { super.c() }
+                             ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- outside_method.js:17:9
+
+Cannot use `super` outside of a class method. [super-outside-method]
+
+   17|     d = super.d
+               ^^^^^^^
+
+
 Error --------------------------------------------------------------------------------------------------- super.js:10:11
 
 Cannot call `super` with `x` bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
@@ -177,4 +215,4 @@ References:
 
 
 
-Found 12 errors
+Found 16 errors

@@ -52,7 +52,7 @@ let set_saved_state_filename _ = ()
 let set_monitor_options ~file_watcher:_ = ()
 
 let set_server_options
-    ~lazy_mode:_ ~arch:_ ~abstract_locations:_ ~max_workers:_ ~enabled_rollouts:_ ~debug:_ =
+    ~lazy_mode:_ ~abstract_locations:_ ~max_workers:_ ~enabled_rollouts:_ ~debug:_ =
   ()
 
 let status_response ~num_errors:_ = ()
@@ -106,9 +106,10 @@ let recheck
     ~first_internal_error:_
     ~slowest_file:_
     ~num_slow_files:_
-    ~scm_update_distance:_
     ~scm_changed_mergebase:_ =
   ()
+
+let recheck_series ~recheck_count:_ ~profiling:_ = ()
 
 let murdered_by_oom_killer _ = ()
 
@@ -169,3 +170,7 @@ let live_parse_errors ~request:_ ~data:_ ~wall_start:_ = ()
 let live_non_parse_errors ~request:_ ~data:_ ~wall_start:_ = ()
 
 let live_non_parse_errors_failed ~request:_ ~data:_ ~wall_start:_ = ()
+
+let file_watcher_event_started ~name:_ ~data:_ = ()
+
+let file_watcher_event_finished ~name:_ ~data:_ = ()

@@ -65,8 +65,7 @@ let type_at_pos_type
     loc =
   let options =
     {
-      Ty_normalizer_env.fall_through_merged = false;
-      expand_internal_types = false;
+      Ty_normalizer_env.expand_internal_types = false;
       expand_type_aliases = expand_aliases;
       flag_shadowed_type_params = false;
       preserve_inferred_literal_types = false;
@@ -122,8 +121,7 @@ let insert_type_normalize
     scheme =
   let options =
     {
-      Ty_normalizer_env.fall_through_merged = false;
-      expand_internal_types = false;
+      Ty_normalizer_env.expand_internal_types = false;
       expand_type_aliases = expand_aliases;
       (* Shadowed type parameters won't be valid for type insertion *)
       flag_shadowed_type_params = true;

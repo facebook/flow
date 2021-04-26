@@ -80,7 +80,7 @@ let process_updates ?skip_incompatible ~options env updates =
   | Base.Result.Error { Recheck_updates.msg; exit_status } ->
     Hh_logger.fatal "Status: Error";
     Hh_logger.fatal "%s" msg;
-    FlowExitStatus.exit ~msg exit_status
+    Exit.exit ~msg exit_status
 
 (* on notification, execute client commands or recheck files *)
 let recheck
@@ -132,7 +132,7 @@ let recheck
           ~calc_errors_and_warnings;
         Lwt.return (log_recheck_event, summary_info, env))
   in
-  log_recheck_event ~profiling;
+  let%lwt () = log_recheck_event ~profiling in
 
   let duration = Profiling_js.get_profiling_duration profiling in
   let summary = ServerStatus.{ duration; info = summary_info } in
@@ -168,6 +168,14 @@ let run_but_cancel_on_file_changes ~options env ~get_forced ~f ~pre_cancel ~post
     Lwt.cancel cancel_thread;
     post_cancel ()
 
+type recheck_outcome =
+  | Nothing_to_do of ServerEnv.env
+  | Completed_recheck of {
+      profiling: Profiling_js.finished;
+      env: ServerEnv.env;
+      recheck_count: int;
+    }
+
 (* Perform a single recheck. This will incorporate any pending changes from the file watcher.
  * If any file watcher notifications come in during the recheck, it will be canceled and restarted
  * to include the new changes *)
@@ -176,6 +184,9 @@ let rec recheck_single
     ~files_to_force
     ?(file_watcher_metadata = MonitorProt.empty_file_watcher_metadata)
     ?(recheck_reasons_list_rev = [])
+    ?((* The number of rechecks in this series, including past canceled rechecks and the current
+       * one. *)
+    recheck_count = 1)
     genv
     env =
   ServerMonitorListenerState.(
@@ -200,18 +211,29 @@ let rec recheck_single
     let recheck_reasons_list_rev = workload.recheck_reasons_rev :: recheck_reasons_list_rev in
     if FilenameSet.is_empty files_to_recheck && CheckedSet.is_empty files_to_force then (
       List.iter (fun callback -> callback None) workload.profiling_callbacks;
-      Lwt.return (Error env) (* Nothing to do *)
+      Lwt.return (Nothing_to_do env)
     ) else
       (* Start the parallelizable workloads loop and return a function which will stop the loop *)
       let stop_parallelizable_workloads = start_parallelizable_workloads env in
       let post_cancel () =
         Hh_logger.info
           "Recheck successfully canceled. Restarting the recheck to include new file changes";
+        (* The canceled recheck, or a preceding sequence of canceled rechecks where none completed,
+         * may have introduced garbage into shared memory. Since we immediately start another
+         * recheck, we should first check whether we need to compact. Otherwise, sharedmem could
+         * potentially grow unbounded.
+         *
+         * The constant budget provided here should be sufficient to fully scan a 25G heap within 5
+         * iterations. We want to avoid the scenario where repeatedly cancelled rechecks cause the
+         * heap to grow faster than we can scan. An algorithmic approach to determine the amount of
+         * work based on the allocation rate would be better. *)
+        let _done : bool = SharedMem.collect_slice 20000000 in
         recheck_single
           ~files_to_recheck
           ~files_to_force
           ~file_watcher_metadata
           ~recheck_reasons_list_rev
+          ~recheck_count:(recheck_count + 1)
           genv
           env
       in
@@ -245,7 +267,7 @@ let rec recheck_single
 
         (* Now that the recheck is done, it's safe to retry deferred parallelizable workloads *)
         ServerMonitorListenerState.requeue_deferred_parallelizable_workloads ();
-        Lwt.return (Ok (profiling, env))
+        Lwt.return (Completed_recheck { profiling; env; recheck_count })
       in
       run_but_cancel_on_file_changes
         ~options
@@ -261,11 +283,19 @@ let recheck_loop =
   let rec loop ~profiling genv env =
     let files_to_recheck = FilenameSet.empty in
     let files_to_force = CheckedSet.empty in
-    match%lwt recheck_single ~files_to_recheck ~files_to_force genv env with
-    | Error env ->
-      (* No more work to do for now *)
-      Lwt.return (List.rev profiling, env)
-    | Ok (recheck_profiling, env) ->
+    let should_print_summary = Options.should_profile genv.options in
+    let%lwt (recheck_series_profiling, recheck_result) =
+      (* We are intentionally logging just the details around a single recursive `recheck_single`
+       * call so as to include only a series of canceled rechecks and the eventual completed one. *)
+      Profiling_js.with_profiling_lwt
+        ~label:"RecheckSeries"
+        ~should_print_summary
+        (fun _profiling -> recheck_single ~files_to_recheck ~files_to_force genv env)
+    in
+    match recheck_result with
+    | Nothing_to_do env -> Lwt.return (List.rev profiling, env)
+    | Completed_recheck { profiling = recheck_profiling; env; recheck_count } ->
+      FlowEventLogger.recheck_series ~profiling:recheck_series_profiling ~recheck_count;
       (* We just finished a recheck. Let's see if there's any more stuff to recheck *)
       loop ~profiling:(recheck_profiling :: profiling) genv env
   in

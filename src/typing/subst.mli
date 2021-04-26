@@ -6,3 +6,11 @@
  *)
 
 val subst : Context.t -> ?use_op:Type.use_op -> ?force:bool -> Type.t SMap.t -> Type.t -> Type.t
+
+val subst_destructor :
+  Context.t ->
+  ?use_op:Type.use_op ->
+  ?force:bool ->
+  Type.t SMap.t ->
+  Type.destructor ->
+  Type.destructor

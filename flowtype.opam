@@ -1,6 +1,6 @@
 opam-version: "2.0"
 name: "flowtype"
-version: "0.137.0"
+version: "0.149.0"
 maintainer: "flow@fb.com"
 authors: "Flow Team <flow@fb.com>"
 license: "MIT"
@@ -8,24 +8,22 @@ homepage: "https://flow.org"
 doc: "https://flow.org/en/docs/getting-started/"
 bug-reports: "https://github.com/facebook/flow/issues"
 depends: [
-  "ocaml" {>= "4.07.1"}
-  "base" {= "v0.11.1"}
+  "ocaml" {>= "4.09.1"}
+  "base" {>= "v0.12.2"}
   "base-unix"
   "base-bytes"
   "dtoa" {>= "0.3.1"}
   "ocamlbuild" {build}
   "ocamlfind" {build}
-  "ocaml-migrate-parsetree" {build}
-  "ounit" {with-test}
-  "sedlex" {= "2.1"}
-  "lwt" {>= "4.5.0" < "5.0.0" & os != "win32"}
-  "lwt" {>= "4.4.0" < "5.0.0" & os = "win32"}
+  "ounit2" {with-test}
+  "sedlex" {>= "2.1"}
+  "lwt" {>= "4.5.0" & < "5.0.0"}
   "lwt_log" {>= "1.1.0"}
-  "lwt_ppx" {>= "1.2.4" < "2.0.0"}
+  "lwt_ppx"
+  "ppxlib"
   "ppx_let" {>= "0.11.0"}
   "ppx_deriving" {build}
   "ppx_gen_rec" {build}
-  "ppx_tools_versioned" {build}
   "visitors" {build}
   "wtf8"
 ]

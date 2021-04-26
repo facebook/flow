@@ -597,9 +597,9 @@ Cannot assign `x` to `a` because `B` [1] is incompatible with `A` [2] in propert
                                   ^
 
 References:
-   dictionary.js:249:9
-   249|   x: {p:B},
-                ^ [1]
+   dictionary.js:249:11
+   249|   x: {| p:B |},
+                  ^ [1]
    dictionary.js:251:22
    251|   let a: {[k:string]:A} = x; // error
                              ^ [2]
@@ -614,9 +614,9 @@ Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in propert
                                   ^
 
 References:
-   dictionary.js:249:9
-   249|   x: {p:B},
-                ^ [1]
+   dictionary.js:249:11
+   249|   x: {| p:B |},
+                  ^ [1]
    dictionary.js:256:22
    256|   let c: {[k:string]:C} = x; // error
                              ^ [2]
@@ -631,9 +631,9 @@ Cannot cast `x.p` to `C` because `B` [1] is incompatible with `C` [2]. [incompat
            ^^^
 
 References:
-   dictionary.js:249:9
-   249|   x: {p:B},
-                ^ [1]
+   dictionary.js:249:11
+   249|   x: {| p:B |},
+                  ^ [1]
    dictionary.js:257:9
    257|   (x.p: C); // not true
                 ^ [2]
@@ -648,9 +648,9 @@ Cannot assign `x` to `a` because `B` [1] is incompatible with `A` [2] in propert
                                       ^
 
 References:
-   dictionary.js:263:9
-   263|   x: {p:B, x:X},
-                ^ [1]
+   dictionary.js:263:11
+   263|   x: {| p:B, x:X |},
+                  ^ [1]
    dictionary.js:265:22
    265|   let a: {[k:string]:A,x:X} = x; // error (as above), but exclusive of x
                              ^ [2]
@@ -665,9 +665,9 @@ Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in propert
                                       ^
 
 References:
-   dictionary.js:263:9
-   263|   x: {p:B, x:X},
-                ^ [1]
+   dictionary.js:263:11
+   263|   x: {| p:B, x:X |},
+                  ^ [1]
    dictionary.js:267:22
    267|   let c: {[k:string]:C,x:X} = x; // error (as above), but exclusive of x
                              ^ [2]
@@ -786,9 +786,9 @@ Cannot return `x` because `A` [1] is incompatible with `B` [2] in property `p`. 
                  ^
 
 References:
-   dictionary.js:305:10
-   305|   x: {p?:A},
-                 ^ [1]
+   dictionary.js:305:12
+   305|   x: {| p?:A |},
+                   ^ [1]
    dictionary.js:306:16
    306| ): {[k:string]:B} { // error: A ~> B
                        ^ [2]
@@ -803,9 +803,9 @@ Cannot return `x` because `C` [1] is incompatible with `B` [2] in property `p`. 
                  ^
 
 References:
-   dictionary.js:317:10
-   317|   x: {p?:C},
-                 ^ [1]
+   dictionary.js:317:12
+   317|   x: {| p?:C |},
+                   ^ [1]
    dictionary.js:318:16
    318| ): {[k:string]:B} { // error: C ~> B
                        ^ [2]

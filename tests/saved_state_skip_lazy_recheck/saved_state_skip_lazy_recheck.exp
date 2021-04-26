@@ -1,0 +1,131 @@
+
+Server should start in types-first mode
+
+Server should have no errors because it's lazy
+No errors!
+
+The Flow server is currently in filesystem lazy mode and is only checking 0/3 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+Adding a line should cause minimal rechecking and expose the error from test1.js only
+Error ----------------------------------------------------------------------------------------------------- test1.js:8:2
+
+Cannot cast `null` to string because null [1] is incompatible with string [2]. [incompatible-cast]
+
+   test1.js:8:2
+   8| (null: string);
+       ^^^^ [1]
+
+References:
+   test1.js:8:8
+   8| (null: string);
+             ^^^^^^ [2]
+
+
+
+Found 1 error
+
+The Flow server is currently in filesystem lazy mode and is only checking 3/3 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+========Skipping stats========
+Merge skipped 0 of 3 modules
+Check will skip 2 of 3 files
+
+Changing the type of the export should expose the error in test2.js
+Error ----------------------------------------------------------------------------------------------------- test1.js:8:2
+
+Cannot cast `null` to string because null [1] is incompatible with string [2]. [incompatible-cast]
+
+   test1.js:8:2
+   8| (null: string);
+       ^^^^ [1]
+
+References:
+   test1.js:8:8
+   8| (null: string);
+             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test2.js:3:2
+
+Cannot cast `require(...)` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
+
+   test2.js:3:2
+   3| (require('./test1'): string);
+       ^^^^^^^^^^^^^^^^^^
+
+References:
+   test1.js:6:18
+   6| module.exports = true;
+                       ^^^^ [1]
+   test2.js:3:22
+   3| (require('./test1'): string);
+                           ^^^^^^ [2]
+
+
+
+Found 2 errors
+
+The Flow server is currently in filesystem lazy mode and is only checking 3/3 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+========Skipping stats========
+Merge skipped 1 of 3 modules
+Check will skip 1 of 3 files
+
+Changing the exported type should expose the error in test3.js
+Error ----------------------------------------------------------------------------------------------------- test1.js:8:2
+
+Cannot cast `null` to string because null [1] is incompatible with string [2]. [incompatible-cast]
+
+   test1.js:8:2
+   8| (null: string);
+       ^^^^ [1]
+
+References:
+   test1.js:8:8
+   8| (null: string);
+             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test2.js:3:2
+
+Cannot cast `require(...)` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
+
+   test2.js:3:2
+   3| (require('./test1'): string);
+       ^^^^^^^^^^^^^^^^^^
+
+References:
+   test1.js:6:18
+   6| module.exports = true;
+                       ^^^^ [1]
+   test2.js:3:22
+   3| (require('./test1'): string);
+                           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test3.js:5:2
+
+Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test3.js:5:2
+   5| (0: string);
+       ^ [1]
+
+References:
+   test3.js:5:5
+   5| (0: string);
+          ^^^^^^ [2]
+
+
+
+Found 3 errors
+
+The Flow server is currently in filesystem lazy mode and is only checking 3/3 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+========Skipping stats========
+Merge skipped 0 of 3 modules
+Check will skip 0 of 3 files

@@ -384,7 +384,14 @@ end = struct
        sym_def_loc;
        sym_name;
       } ->
-        let local_name = to_local_name ~iteration ~reserved_names index use_mode sym_name in
+        let local_name =
+          to_local_name
+            ~iteration
+            ~reserved_names
+            index
+            use_mode
+            (Reason.display_string_of_name sym_name)
+        in
         let import_mode =
           match use_mode with
           | ValueUseMode -> Ty.TypeofMode
@@ -394,7 +401,7 @@ end = struct
           Ty.sym_provenance =
             Ty.Remote { Ty.imported_as = Some (ALoc.none, local_name, import_mode) };
           sym_anonymous = false;
-          sym_name = local_name;
+          sym_name = Reason.OrdinaryName local_name;
           sym_def_loc;
         }
       | {
@@ -405,7 +412,14 @@ end = struct
       }
       (* Special-case react-redux. *)
         when is_react_redux_loc sym_def_loc ->
-        let local_name = to_local_name ~iteration ~reserved_names index use_mode sym_name in
+        let local_name =
+          to_local_name
+            ~iteration
+            ~reserved_names
+            index
+            use_mode
+            (Reason.display_string_of_name sym_name)
+        in
         let import_mode =
           match use_mode with
           | ValueUseMode -> Ty.TypeofMode
@@ -415,7 +429,7 @@ end = struct
           Ty.sym_provenance =
             Ty.Library { Ty.imported_as = Some (ALoc.none, local_name, import_mode) };
           sym_anonymous = false;
-          sym_name = local_name;
+          sym_name = Reason.OrdinaryName local_name;
           sym_def_loc;
         }
       | s -> s
@@ -451,22 +465,22 @@ end = struct
 
     val fold : (ImportInfo.t -> 'a -> 'a) -> t -> 'a -> 'a
   end = struct
-    type t = ImportInfo.t Nel.t SMap.t
+    type t = ImportInfo.t Nel.t NameUtils.Map.t
 
-    let empty = SMap.empty
+    let empty = NameUtils.Map.empty
 
     let add info m =
       let name = info.ImportInfo.remote.Ty.sym_name in
       let lst' =
-        match SMap.find_opt name m with
+        match NameUtils.Map.find_opt name m with
         | Some lst -> Nel.cons info lst
         | None -> Nel.one info
       in
-      SMap.add name lst' m
+      NameUtils.Map.add name lst' m
 
     let next_index remote_symbol mode x =
       let { Ty.sym_name; _ } = remote_symbol in
-      match SMap.find_opt sym_name x with
+      match NameUtils.Map.find_opt sym_name x with
       | None -> 0
       | Some lst ->
         let max_index =
@@ -481,15 +495,16 @@ end = struct
         in
         max_index + 1
 
-    let fold f x acc = SMap.fold (fun _ lst a -> Nel.fold_left (fun b y -> f y b) a lst) x acc
+    let fold f x acc =
+      NameUtils.Map.fold (fun _ lst a -> Nel.fold_left (fun b y -> f y b) a lst) x acc
 
     (* debug *)
     let _dump m =
-      SMap.bindings m
+      NameUtils.Map.bindings m
       |> List.map (fun (k, v) ->
              Utils_js.spf
                "'%s' ->\n%s\n"
-               k
+               (Reason.display_string_of_name k)
                (Nel.map ImportInfo.dump v |> Nel.to_list |> String.concat "\n"))
       |> String.concat "\n"
   end
@@ -530,7 +545,7 @@ end = struct
              * use `import type { ... } from 'react'` and hard-code the module string
              * here. *)
             if is_react_file_key remote_source then
-              Modulename.String "React"
+              Modulename.String "react"
             else if is_react_redux_file_key remote_source then
               Modulename.String "react-redux"
             else
@@ -540,6 +555,9 @@ end = struct
               info.Module_heaps.module_name
           | None -> failwith "No source"
         in
+        (* TODO we should probably give up if we are trying to generate an import statement with
+         * an internal name. However, to avoid a behavior change let's do the conversion for now. *)
+        let remote_name = Reason.display_string_of_name remote_name in
         ExportsHelper.resolve use_mode sym_def_loc remote_name
         >>| fun { ExportsHelper.import_kind; default } ->
         let source = Modules.resolve file module_name in
@@ -599,7 +617,12 @@ end = struct
                       _;
                     }) ->
                 let local =
-                  { Ty.sym_provenance = Ty.Local; sym_def_loc; sym_name; sym_anonymous = false }
+                  {
+                    Ty.sym_provenance = Ty.Local;
+                    sym_def_loc;
+                    sym_name = Reason.OrdinaryName sym_name;
+                    sym_anonymous = false;
+                  }
                 in
                 Ty.Generic (local, Ty.ClassKind, None)
               | _ -> super#on_t env t
@@ -621,7 +644,7 @@ end = struct
                 {
                   Ty.sym_provenance = Ty.Local;
                   sym_anonymous = false;
-                  sym_name = local_name;
+                  sym_name = Reason.OrdinaryName local_name;
                   sym_def_loc;
                 }
               (* react-redux *)
@@ -643,7 +666,7 @@ end = struct
                 {
                   Ty.sym_provenance = Ty.Local;
                   sym_anonymous = false;
-                  sym_name = local_name;
+                  sym_name = Reason.OrdinaryName local_name;
                   sym_def_loc;
                 }
               | _ -> super#on_symbol env s

@@ -1,2 +1,2 @@
 [options]
-(verify_sig=on) well_formed_exports=true
+(short_literals=on) max_literal_length=10

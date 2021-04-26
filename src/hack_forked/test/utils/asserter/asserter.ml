@@ -67,7 +67,6 @@ module Process_status_comparator = struct
 end
 
 module type Pattern_substitutions = sig
-  val substitutions : (string * string) list
   (** List of key-value pairs. We perform these key to value
    * substitutions in-order.
    *
@@ -86,6 +85,7 @@ module type Pattern_substitutions = sig
    * Note: in actuality, the keys and values aren't treated as string literals
    * but as a pattern for regex and a template for replacement.
    *)
+  val substitutions : (string * string) list
 end
 
 (** Comparison between an expected pattern and an actual string. *)

@@ -12,22 +12,6 @@ References:
               ^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------------ 2/A.js:5:15
-
-Missing type annotation for `x`. [missing-annot]
-
-   5|   constructor(x) { this.x = x; }
-                    ^
-
-
-Error ------------------------------------------------------------------------------------------------------ 2/A.js:9:10
-
-Missing type annotation for `callback`. [missing-annot]
-
-   9|   onLoad(callback) {
-               ^^^^^^^^
-
-
 Error ----------------------------------------------------------------------------------------------------- 2/A.js:10:21
 
 Cannot call `callback` with `this.getX()` bound to `x` because number [1] is incompatible with string [2].
@@ -46,5 +30,13 @@ References:
                             ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------------ 2/B.js:3:13
 
-Found 4 errors
+Cannot call `A` because exports [1] is not a function. [not-a-function]
+
+   3| var z = new A("42").getX();
+                  ^
+
+
+
+Found 3 errors

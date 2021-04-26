@@ -264,7 +264,7 @@ end = struct
       initialized_body ()
 
   let parse_explicit_type ~enum_name env =
-    if Expect.maybe env T_OF then (
+    if Eat.maybe env T_OF then (
       Eat.push_lex_mode env Lex_mode.TYPE;
       let result =
         match Peek.token env with

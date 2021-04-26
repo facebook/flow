@@ -47,6 +47,8 @@ module type S = sig
   }
   [@@deriving show]
 
+  val debug_info : info -> string
+
   val scope : info -> scope -> Scope.t
 
   (* List of scopes associated with a loc. The returned list order should be

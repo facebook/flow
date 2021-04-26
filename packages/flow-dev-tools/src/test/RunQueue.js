@@ -5,6 +5,7 @@
 
 import colors from 'colors/safe';
 import {format} from 'util';
+import tty from 'tty';
 
 import runTestSuite from './runTestSuite';
 
@@ -198,17 +199,14 @@ export default class RunQueue {
       ) {
         const suiteName = this.almostDone.shift();
         this.done.push(suiteName);
-        if (this.isTTY) {
-          // $FlowFixMe Add to lib
-          process.stdout.moveCursor(0, -this.fancyStatusSize);
-          // $FlowFixMe Add to lib
-          process.stdout.cursorTo(0);
-          // $FlowFixMe Add to lib
-          process.stdout.clearLine();
+        const stdout = process.stdout;
+        if (this.isTTY && stdout instanceof tty.WriteStream) {
+          stdout.moveCursor(0, -this.fancyStatusSize);
+          stdout.cursorTo(0);
+          stdout.clearLine(0);
           this.printSuiteStatus(suiteName);
           this.fancyStatusSize > 0 && this.fancyStatusSize--;
-          // $FlowFixMe Add to lib
-          process.stdout.moveCursor(0, this.fancyStatusSize);
+          stdout.moveCursor(0, this.fancyStatusSize);
         } else if (!this.isFbmakeJson) {
           this.printSuiteStatus(suiteName);
         }

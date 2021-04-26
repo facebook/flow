@@ -77,6 +77,42 @@ export default (suite(({addFile, addFiles, addCode}) => [
       ),
   ]),
 
+  test('Requiring a .webp file', [
+    addFile('qux.webp')
+      .addCode("import './qux.webp'")
+      .noNewErrors(),
+  ]),
+
+  test('.webp extension cannot be omitted', [
+    addFile('qux.webp')
+      .addCode("import './qux'")
+      .newErrors(
+        `
+          test.js:3
+            3: import './qux'
+                      ^^^^^^^ Cannot resolve module \`./qux\`. [cannot-resolve-module]
+        `,
+      ),
+  ]),
+
+  test('By default, .webp files export the string type', [
+    addFile('qux.webp')
+      .addCode("const qux = require('./qux.webp');")
+      .addCode("(qux: number)")
+      .newErrors(
+        `
+          test.js:5
+            5: (qux: number)
+                ^^^ Cannot cast \`qux\` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+            References:
+              3: const qux = require('./qux.webp');
+                                     ^^^^^^^^^^^^ [1]
+              5: (qux: number)
+                       ^^^^^^ [2]
+        `,
+      ),
+  ]),
+
   test('module.name_mapper should still work', [
     addFiles('foo.css', 'cssMock.js')
       .addCode('const css = require("./foo.css");')

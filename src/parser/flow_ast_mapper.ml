@@ -154,8 +154,8 @@ class ['loc] mapper =
       | (loc, With stuff) -> id_loc this#with_ loc stuff stmt (fun stuff -> (loc, With stuff))
       | (loc, TypeAlias stuff) ->
         id_loc this#type_alias loc stuff stmt (fun stuff -> (loc, TypeAlias stuff))
-      (* TODO: Flow specific stuff *)
-      | (_loc, DeclareOpaqueType _) -> stmt
+      | (loc, DeclareOpaqueType otype) ->
+        id_loc this#opaque_type loc otype stmt (fun otype -> (loc, OpaqueType otype))
 
     method comment (c : 'loc Ast.Comment.t) = c
 
@@ -434,7 +434,7 @@ class ['loc] mapper =
     method class_implements_interface (interface : ('loc, 'loc) Ast.Class.Implements.Interface.t) =
       let open Ast.Class.Implements.Interface in
       let (loc, { id; targs }) = interface in
-      let id' = this#identifier id in
+      let id' = this#type_identifier id in
       let targs' = map_opt this#type_args targs in
       if id == id' && targs == targs' then
         interface
@@ -1151,10 +1151,10 @@ class ['loc] mapper =
     method generic_identifier_type (git : ('loc, 'loc) Ast.Type.Generic.Identifier.t) =
       let open Ast.Type.Generic.Identifier in
       match git with
-      | Unqualified i -> id this#identifier i git (fun i -> Unqualified i)
+      | Unqualified i -> id this#type_identifier i git (fun i -> Unqualified i)
       | Qualified (loc, { qualification; id }) ->
         let qualification' = this#generic_identifier_type qualification in
-        let id' = this#identifier id in
+        let id' = this#type_identifier id in
         if qualification' == qualification && id' == id then
           git
         else
@@ -1193,7 +1193,7 @@ class ['loc] mapper =
     method type_param (tparam : ('loc, 'loc) Ast.Type.TypeParam.t) =
       let open Ast.Type.TypeParam in
       let (loc, { name; bound; variance; default }) = tparam in
-      let name' = this#identifier name in
+      let name' = this#type_identifier name in
       let bound' = this#type_annotation_hint bound in
       let variance' = this#variance variance in
       let default' = map_opt this#type_ default in
@@ -1212,6 +1212,26 @@ class ['loc] mapper =
         gt
       else
         { id = id'; targs = targs'; comments = comments' }
+
+    method indexed_access _loc (ia : ('loc, 'loc) Ast.Type.IndexedAccess.t) =
+      let open Ast.Type.IndexedAccess in
+      let { _object; index; comments } = ia in
+      let _object' = this#type_ _object in
+      let index' = this#type_ index in
+      let comments' = this#syntax_opt comments in
+      if _object' == _object && index' == index && comments' == comments then
+        ia
+      else
+        { _object = _object'; index = index'; comments = comments' }
+
+    method optional_indexed_access loc (ia : ('loc, 'loc) Ast.Type.OptionalIndexedAccess.t) =
+      let open Ast.Type.OptionalIndexedAccess in
+      let { indexed_access; optional } = ia in
+      let indexed_access' = this#indexed_access loc indexed_access in
+      if indexed_access' == indexed_access then
+        ia
+      else
+        { indexed_access = indexed_access'; optional }
 
     method string_literal_type _loc (lit : 'loc Ast.StringLiteral.t) =
       let open Ast.StringLiteral in
@@ -1342,6 +1362,10 @@ class ['loc] mapper =
       | (loc, Object ot) -> id_loc this#object_type loc ot t (fun ot -> (loc, Object ot))
       | (loc, Interface i) -> id_loc this#interface_type loc i t (fun i -> (loc, Interface i))
       | (loc, Generic gt) -> id_loc this#generic_type loc gt t (fun gt -> (loc, Generic gt))
+      | (loc, IndexedAccess ia) ->
+        id_loc this#indexed_access loc ia t (fun ia -> (loc, IndexedAccess ia))
+      | (loc, OptionalIndexedAccess ia) ->
+        id_loc this#optional_indexed_access loc ia t (fun ia -> (loc, OptionalIndexedAccess ia))
       | (loc, StringLiteral lit) ->
         id_loc this#string_literal_type loc lit t (fun lit -> (loc, StringLiteral lit))
       | (loc, NumberLiteral lit) ->
@@ -1479,6 +1503,8 @@ class ['loc] mapper =
       else
         (loc, { name; comments = comments' })
 
+    method type_identifier (id : ('loc, 'loc) Ast.Identifier.t) = this#identifier id
+
     method interface _loc (interface : ('loc, 'loc) Ast.Statement.Interface.t) =
       let open Ast.Statement.Interface in
       let { id = ident; tparams; extends; body; comments } = interface in
@@ -1565,7 +1591,7 @@ class ['loc] mapper =
     method import_declaration _loc (decl : ('loc, 'loc) Ast.Statement.ImportDeclaration.t) =
       let open Ast.Statement.ImportDeclaration in
       let { import_kind; source; specifiers; default; comments } = decl in
-      let specifiers' = map_opt this#import_specifier specifiers in
+      let specifiers' = map_opt (this#import_specifier ~import_kind) specifiers in
       let default' = map_opt this#import_default_specifier default in
       let comments' = this#syntax_opt comments in
       if specifiers == specifiers' && default == default' && comments == comments' then
@@ -1573,11 +1599,14 @@ class ['loc] mapper =
       else
         { import_kind; source; specifiers = specifiers'; default = default'; comments = comments' }
 
-    method import_specifier (specifier : ('loc, 'loc) Ast.Statement.ImportDeclaration.specifier) =
+    method import_specifier
+        ~import_kind (specifier : ('loc, 'loc) Ast.Statement.ImportDeclaration.specifier) =
       let open Ast.Statement.ImportDeclaration in
       match specifier with
       | ImportNamedSpecifiers named_specifiers ->
-        let named_specifiers' = map_list this#import_named_specifier named_specifiers in
+        let named_specifiers' =
+          map_list (this#import_named_specifier ~import_kind) named_specifiers
+        in
         if named_specifiers == named_specifiers' then
           specifier
         else
@@ -1587,19 +1616,34 @@ class ['loc] mapper =
             ImportNamespaceSpecifier (loc, ident))
 
     method import_named_specifier
+        ~(import_kind : Ast.Statement.ImportDeclaration.import_kind)
         (specifier : ('loc, 'loc) Ast.Statement.ImportDeclaration.named_specifier) =
       let open Ast.Statement.ImportDeclaration in
       let { kind; local; remote } = specifier in
-      let remote' = this#identifier remote in
+      let is_type =
+        match (import_kind, kind) with
+        | (ImportType, _)
+        | (_, Some ImportType) ->
+          true
+        | _ -> false
+      in
+      let remote' =
+        if is_type then
+          this#type_identifier remote
+        else
+          this#identifier remote
+      in
       let local' =
         match local with
         | None -> None
         | Some ident ->
-          id
-            (this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let)
-            ident
-            local
-            (fun ident -> Some ident)
+          let local_visitor =
+            if is_type then
+              this#type_identifier
+            else
+              this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let
+          in
+          id local_visitor ident local (fun ident -> Some ident)
       in
       if local == local' && remote == remote' then
         specifier
@@ -1971,7 +2015,7 @@ class ['loc] mapper =
     method opaque_type _loc (otype : ('loc, 'loc) Ast.Statement.OpaqueType.t) =
       let open Ast.Statement.OpaqueType in
       let { id; tparams; impltype; supertype; comments } = otype in
-      let id' = this#identifier id in
+      let id' = this#type_identifier id in
       let tparams' = map_opt this#type_params tparams in
       let impltype' = map_opt this#type_ impltype in
       let supertype' = map_opt this#type_ supertype in
@@ -2407,7 +2451,7 @@ class ['loc] mapper =
     method type_alias _loc (stuff : ('loc, 'loc) Ast.Statement.TypeAlias.t) =
       let open Ast.Statement.TypeAlias in
       let { id; tparams; right; comments } = stuff in
-      let id' = this#identifier id in
+      let id' = this#type_identifier id in
       let tparams' = map_opt this#type_params tparams in
       let right' = this#type_ right in
       let comments' = this#syntax_opt comments in

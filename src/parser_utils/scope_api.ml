@@ -64,6 +64,28 @@ module Make (L : Loc_sig.S) = struct
   }
   [@@deriving show]
 
+  let debug_info =
+    let string_of_scope scope =
+      let { Scope.loc; parent; defs; locals; _ } = scope in
+      Utils_js.spf
+        "{\n\tLOC: %s\n\tPARENT: %s\n\tDEFS: %s\n\tLOCALS: %s\n}"
+        (L.debug_to_string loc)
+        (match parent with
+        | Some i -> string_of_int i
+        | None -> "")
+        ( ListUtils.assoc_to_string
+            ", "
+            (fun s -> s)
+            "="
+            (fun def -> L.debug_to_string @@ Nel.hd def.Def.locs)
+        @@ SMap.bindings defs )
+        ( ListUtils.assoc_to_string ", " L.debug_to_string "=" (fun def -> def.Def.actual_name)
+        @@ L.LMap.bindings locals )
+    in
+    fun info ->
+      let { scopes; _ } = info in
+      ListUtils.assoc_to_string "\n" string_of_int ": " string_of_scope @@ IMap.bindings scopes
+
   let all_uses { scopes; _ } =
     IMap.fold
       (fun _ scope acc ->
@@ -84,6 +106,8 @@ module Make (L : Loc_sig.S) = struct
       use_def_map
       DefMap.empty
 
+  exception Missing_def of info * use
+
   let def_of_use_opt { scopes; _ } use =
     IMap.fold
       (fun _ scope acc ->
@@ -96,7 +120,7 @@ module Make (L : Loc_sig.S) = struct
   let def_of_use info use =
     match def_of_use_opt info use with
     | Some def -> def
-    | None -> failwith "missing def"
+    | None -> raise (Missing_def (info, use))
 
   let use_is_def info use =
     let def = def_of_use info use in
@@ -119,8 +143,10 @@ module Make (L : Loc_sig.S) = struct
       L.LSet.empty
 
   let uses_of_use info ?exclude_def use =
-    let def = def_of_use info use in
-    uses_of_def info ?exclude_def def
+    try
+      let def = def_of_use info use in
+      uses_of_def info ?exclude_def def
+    with Missing_def _ -> L.LSet.empty
 
   let def_is_unused info def = L.LSet.is_empty (uses_of_def info ~exclude_def:true def)
 

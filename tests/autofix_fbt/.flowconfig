@@ -10,7 +10,5 @@ lib
 [options]
 no_flowlib=false
 facebook.fbt=FbtElement
-well_formed_exports=true
-types_first=true
 
 [strict]

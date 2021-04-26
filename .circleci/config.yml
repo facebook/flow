@@ -21,48 +21,34 @@ orbs:
         steps:
           - run:
               name: Install dependencies
-              command: |
-                choco install --no-progress cygwin
-                if (-not $?) { throw "Failed to install cygwin" }
-                choco install --no-progress rsync patch diffutils curl make zip unzip git m4 perl mingw64-x86_64-gcc-core --source=cygwin
-                if (-not $?) { throw "Failed to install deps from cygwin" }
+              command: .\scripts\windows\install_deps.ps1
           - run:
               name: Install opam
-              command: |
-                $install_dir = "$Env:TEMP\flow\opam_installer"
-                New-Item -ItemType Directory $install_dir
-                echo "Downloading opam64.tar.xz"
-                (New-Object System.Net.WebClient).DownloadFile("https://github.com/fdopen/opam-repository-mingw/releases/download/0.0.0.2/opam64.tar.xz", "$install_dir\opam64.tar.xz")
-                echo "Extracting opam64.tar.xz"
-                $out_dir = "$install_dir".Replace("\", "/")
-                C:\tools\cygwin\bin\tar.exe -x --force-local -f $install_dir\opam64.tar.xz -C "$out_dir"
-                echo "Installing opam"
-                C:\tools\cygwin\bin\bash.exe -l "$install_dir\opam64\install.sh"
-                echo "Done"
-      init:
-        steps:
-          - run:
-              name: Init opam
-              shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
-              command: |
-                export PATH=$PATH:/usr/local/bin:/usr/bin
-                [ -d ~/.opam ] || opam init default 'https://github.com/fdopen/opam-repository-mingw.git#opam2' --bare --disable-sandboxing
+              command: .\scripts\windows\install_opam.ps1
       create_switch:
         steps:
           - run:
               name: Create opam switch
-              shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
+              shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
               environment:
                 PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
               command: |
-                [ -d _opam ] || opam switch create . ocaml-variants.4.07.1+mingw64c --deps-only --yes -vvv
+                cd /cygdrive/c/Users/circleci/project
+                [ -d _opam ] || opam switch create . ocaml-variants.4.09.1+mingw64c --deps-only --yes -vvv
 
 executors:
   linux-opam:
     docker:
-      - image: ocaml/opam2:debian-8
+      - image: flowtype/flow-ci:linux-x86_64
         environment:
           <<: *opam_env
+    working_directory: ~/flow
+  linux-arm64:
+    machine:
+      image: ubuntu-2004:202101-01
+    environment:
+      <<: *opam_env
+    resource_class: arm.medium
     working_directory: ~/flow
   linux-node:
     docker:
@@ -90,22 +76,36 @@ executors:
     working_directory: ~/flow
 
 commands:
-  restore-opam-cache:
+  install-opam-mac:
+    steps:
+      - run:
+          name: Install opam
+          command: |
+            if ! [ -x "$(command -v opam)" ]; then
+              TMP=${TMPDIR:-/tmp}
+              curl -sL -o "$TMP/opam" "https://github.com/ocaml/opam/releases/download/$OPAM_VERSION/opam-$OPAM_VERSION-x86_64-macos"
+              install -m 755 "$TMP/opam" "/usr/local/bin/opam"
+              rm -f "$TMP/opam"
+            fi
+
+  make-opam-cachebreaker:
     steps:
       - run:
           name: Create cache breaker
           command: |
-            echo "ocaml-4.07.1" > .circleci/opamcachebreaker
-            opam --version >> .circleci/opamcachebreaker
-            cat flowtype.opam >> .circleci/opamcachebreaker
-            cat flow_parser.opam >> .circleci/opamcachebreaker
-            cat .circleci/config.yml >> .circleci/opamcachebreaker
+            .circleci/make_opam_cachebreaker.sh 4.09.1 > .circleci/opamcachebreaker
+
+  restore-opam-cache:
+    steps:
       - restore_cache:
           keys:
           - v1-opam-cache-{{ arch }}-{{ checksum ".circleci/opamcachebreaker" }}
 
   save-opam-cache:
     steps:
+      - run:
+          name: Preparing opam cache
+          command: touch ~/.opam/from_cache
       - save_cache:
           key: v1-opam-cache-{{ arch }}-{{ checksum ".circleci/opamcachebreaker" }}
           paths:
@@ -116,11 +116,7 @@ commands:
     steps:
       - run:
           name: Install deps from opam
-          command: |
-            eval $(opam env)
-            if [ ! -d _opam ]; then
-              opam switch create . 4.07.1 --deps-only | cat
-            fi
+          command: make deps
 
 jobs:
   checkout:
@@ -142,32 +138,15 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/flow
-      - run:
-          # installs `zip` and `m4` but also has to fix some apt issues:
-          # https://discuss.circleci.com/t/failed-to-fetch-jessie-updates/29246
-          # https://www.reddit.com/r/debian/comments/g9is3p/debian_8_jessie_keyexpired_drive_my_crazy/
-          # TODO: remove this when updating to ocaml/opam2:debian-9
-          name: Install deps
-          command: |
-            sudo rm /etc/apt/sources.list
-            echo "deb [trusted=yes] http://archive.debian.org/debian/ jessie main contrib non-free" | sudo tee -a /etc/apt/sources.list
-            echo "deb [trusted=yes] http://archive.debian.org/debian/ jessie-backports main contrib non-free" | sudo tee -a /etc/apt/sources.list
-            echo "deb-src [trusted=yes] http://archive.debian.org/debian/ jessie main contrib non-free" | sudo tee -a /etc/apt/sources.list
-            echo "deb-src [trusted=yes] http://archive.debian.org/debian/ jessie-backports main contrib non-free" | sudo tee -a /etc/apt/sources.list
-            echo "Acquire::Check-Valid-Until false;" | sudo tee -a /etc/apt/apt.conf.d/10-nocheckvalid
-            echo 'Package: *\nPin: origin "archive.debian.org"\nPin-Priority: 500' | sudo tee -a /etc/apt/preferences.d/10-archive-pin
-            sudo apt-get update && sudo apt-get --yes install zip m4
+      - make-opam-cachebreaker
       - restore-opam-cache
       - run:
-          name: Update opam repo
-          command: |
-            opam remote list -s | grep upstream >/dev/null || \
-              opam remote add upstream https://opam.ocaml.org --all-switches --set-default | cat
-            opam update | cat
+          name: Init opam
+          command: .circleci/opam_init.sh
       - create-opam-switch
       - run:
           name: Install extra deps from opam
-          command: opam install js_of_ocaml.3.4.0 | cat
+          command: opam install js_of_ocaml.3.7.1 | cat
       - save-opam-cache
       - run:
           name: Build flow
@@ -210,25 +189,78 @@ jobs:
           path: dist/flow_parser.js
           destination: flow_parser.js
 
+  build_linux_arm64:
+    executor: linux-arm64
+    steps:
+      - attach_workspace:
+          at: ~/flow
+      - run:
+          name: Start Docker image
+          command: |
+            rm -rf /home/circleci/.opam && mkdir /home/circleci/.opam
+            container_id=$(\
+              docker run -it -d \
+                --mount type=bind,source=/home/circleci/.opam,target=/home/opam/.opam \
+                --mount type=bind,source=/home/circleci/flow,target=/home/opam/flow \
+                flowtype/flow-ci:linux-arm64 \
+                /bin/bash \
+            )
+            echo "export CONTAINER_ID=$container_id" >> $BASH_ENV
+      - run:
+          name: Create cache breaker
+          command: |
+            docker exec -it $CONTAINER_ID /bin/bash -c 'cd flow && .circleci/make_opam_cachebreaker.sh 4.09.1 > .circleci/opamcachebreaker'
+      - restore-opam-cache
+      - run:
+          name: Init opam
+          command: |
+            docker exec -it $CONTAINER_ID /bin/bash -c 'flow/.circleci/opam_init.sh'
+      - run:
+          name: Install opam deps
+          command: |
+            docker exec -it $CONTAINER_ID /bin/bash -c 'cd flow && make deps'
+      - save-opam-cache
+      - run:
+          name: Build flow
+          command: |
+            docker exec -it $CONTAINER_ID /bin/bash -c 'cd flow && opam exec -- make bin/flow dist/flow.zip'
+            mkdir -p bin/linux-arm64 && cp bin/flow bin/linux-arm64/flow
+      - run:
+          name: Build libflowparser
+          command: |
+            docker exec -it $CONTAINER_ID /bin/bash -c 'cd flow && opam exec -- make -C src/parser dist/libflowparser.zip'
+      - run:
+          name: Stop Docker container
+          command: docker stop $CONTAINER_ID
+      - run:
+          name: Create artifacts
+          command: |
+            cp dist/flow.zip dist/flow-linux-arm64.zip
+            cp src/parser/dist/libflowparser.zip dist/libflowparser-linux-arm64.zip
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bin/linux-arm64/flow
+            - dist/flow-linux-arm64.zip
+            - dist/libflowparser-linux-arm64.zip
+      - store_artifacts:
+          path: dist/flow-linux-arm64.zip
+          destination: flow-linux-arm64.zip
+      - store_artifacts:
+          path: dist/libflowparser-linux-arm64.zip
+          destination: libflowparser-linux-arm64.zip
+
   build_macos:
     executor: mac
     steps:
       - attach_workspace:
           at: ~/flow
-      - run:
-          name: Install opam
-          command: |
-            if ! [ -x "$(command -v opam)" ]; then
-              TMP=${TMPDIR:-/tmp}
-              curl -sL -o "$TMP/opam" "https://github.com/ocaml/opam/releases/download/$OPAM_VERSION/opam-$OPAM_VERSION-x86_64-macos"
-              install -m 755 "$TMP/opam" "/usr/local/bin/opam"
-              rm -f "$TMP/opam"
-            fi
+      - install-opam-mac
+      - make-opam-cachebreaker
       - restore-opam-cache
       - run:
           name: Init opam
-          command: |
-            [ -d ~/.opam ] || opam init --bare --disable-sandboxing
+          command: .circleci/opam_init.sh
       - create-opam-switch
       - save-opam-cache
       - run:
@@ -263,26 +295,29 @@ jobs:
       - FLOW_TMP_DIR: 'C:\tmp\flow'
       - OPAMDOWNLOADJOBS: 1
     steps:
+      - attach_workspace:
+          at: .
       - run:
           name: Set up workspace
           command: |
             New-Item -ItemType Directory $Env:FLOW_TMP_DIR
       - opam_windows/install
-      - attach_workspace:
-          at: .
       - run:
           name: Create cache breaker
-          shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
+          shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
           command: |
+            cd /cygdrive/c/Users/circleci/project
             /usr/local/bin/opam --version > /cygdrive/c/tmp/flow/opamcachebreaker
-            echo "ocaml-4.07.1" >> /cygdrive/c/tmp/flow/opamcachebreaker
+            echo "ocaml-4.09.1" >> /cygdrive/c/tmp/flow/opamcachebreaker
             /usr/bin/cat flowtype.opam >> /cygdrive/c/tmp/flow/opamcachebreaker
             /usr/bin/cat flow_parser.opam >> /cygdrive/c/tmp/flow/opamcachebreaker
             /usr/bin/cat .circleci/config.yml >> /cygdrive/c/tmp/flow/opamcachebreaker
       - restore_cache:
           keys:
           - opam-cache-{{ arch }}-{{ checksum "C:/tmp/flow/opamcachebreaker" }}
-      - opam_windows/init
+      - run:
+          name: Init opam
+          command: .\scripts\windows\init_opam.ps1
       - opam_windows/create_switch
       - save_cache:
           key: opam-cache-{{ arch }}-{{ checksum "C:/tmp/flow/opamcachebreaker" }}
@@ -291,20 +326,22 @@ jobs:
             - _opam
       - run:
           name: Build flow.exe
-          shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
+          shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
           environment:
             PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
           command: |
+             cd /cygdrive/c/Users/circleci/project
              eval $(opam env)
              make bin/flow.exe dist/flow.zip
              mkdir -p bin/win64 && cp bin/flow.exe bin/win64/flow.exe
              cp dist/flow.zip dist/flow-win64.zip
       - run:
           name: Build parser test runner
-          shell: C:/tools/cygwin/bin/bash.exe --noprofile --norc -eo pipefail
+          shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
           environment:
             PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
           command: |
+            cd /cygdrive/c/Users/circleci/project
             eval $(opam env)
             make -C src/parser/ ../../_build/src/parser/test/run_tests.native
             cp _build/src/parser/test/run_tests.native bin/win64/run_parser_tests.exe
@@ -328,6 +365,17 @@ jobs:
       - run:
           name: Run tests
           command: ./runtests.sh bin/linux/flow | cat
+
+  runtests_linux_arm64:
+    executor: linux-arm64
+    environment:
+      FLOW_RUNTESTS_PARALLELISM: 8
+    steps:
+      - attach_workspace:
+          at: ~/flow
+      - run:
+          name: Run tests
+          command: ./runtests.sh bin/linux-arm64/flow | cat
 
   runtests_macos:
     executor: mac
@@ -378,7 +426,52 @@ jobs:
       - run:
           name: Run tool tests
           shell: bash
-          command: ./tool test --bin bin/win64/flow.exe --parallelism 1 --max-errored-tests-pct 20
+          command: ./tool test --bin bin/win64/flow.exe --parallelism 1
+
+  ounit_test_linux:
+    executor: linux-opam
+    steps:
+      - attach_workspace:
+          at: ~/flow
+      - make-opam-cachebreaker
+      - restore-opam-cache
+      - run:
+          name: Init opam
+          command: .circleci/opam_init.sh
+      - create-opam-switch
+      - run:
+          name: Install extra deps from opam
+          command: opam install ounit2.2.2.4 | cat
+      # let build-linux save the cache
+      # - save-opam-cache
+      - run:
+          name: Run ounit tests
+          command: opam exec -- make ounit-tests-ci
+      - store_test_results:
+          path: test-results/ounit/
+
+  ounit_test_macos:
+    executor: mac
+    steps:
+      - attach_workspace:
+          at: ~/flow
+      - install-opam-mac
+      - make-opam-cachebreaker
+      - restore-opam-cache
+      - run:
+          name: Init opam
+          command: .circleci/opam_init.sh
+      - create-opam-switch
+      - run:
+          name: Install extra deps from opam
+          command: opam install ounit2.2.2.4 | cat
+      # let build-mac save the cache
+      # - save-opam-cache
+      - run:
+          name: Run ounit tests
+          command: opam exec -- make ounit-tests-ci
+      - store_test_results:
+          path: test-results/ounit/
 
   parser_test_win:
     executor: win/default
@@ -409,6 +502,7 @@ jobs:
           command: |
             mkdir -p packages/flow-parser-bin/dist/release/
             cp dist/libflowparser-linux64.zip packages/flow-parser-bin/dist/release/libflowparser-linux64.zip
+            cp dist/libflowparser-linux-arm64.zip packages/flow-parser-bin/dist/release/libflowparser-linux-arm64.zip
             cp dist/libflowparser-osx.zip packages/flow-parser-bin/dist/release/libflowparser-osx.zip
             make dist/npm-flow-parser-bin.tgz
       - run:
@@ -459,6 +553,18 @@ jobs:
     - run:
         name: Upload Linux libflowparser
         command: .circleci/github_upload.sh dist/libflowparser-linux64.zip "libflowparser-linux64-$CIRCLE_TAG.zip"
+
+  github_linux_arm64:
+    executor: curl
+    steps:
+    - attach_workspace:
+        at: /flow
+    - run:
+        name: Upload Linux binary
+        command: .circleci/github_upload.sh dist/flow-linux-arm64.zip "flow-linux-arm64-$CIRCLE_TAG.zip"
+    - run:
+        name: Upload Linux libflowparser
+        command: .circleci/github_upload.sh dist/libflowparser-linux-arm64.zip "libflowparser-linux-arm64-$CIRCLE_TAG.zip"
 
   github_macos:
     executor: curl
@@ -552,6 +658,9 @@ workflows:
       - build_linux:
           requires:
             - checkout
+      - build_linux_arm64:
+          requires:
+            - checkout
       - build_macos:
           requires:
             - checkout
@@ -561,6 +670,9 @@ workflows:
       - runtests_linux:
           requires:
             - build_linux
+      - runtests_linux_arm64:
+          requires:
+            - build_linux_arm64
       - runtests_macos:
           requires:
             - build_macos
@@ -573,12 +685,19 @@ workflows:
       - tool_test_win:
           requires:
             - build_win
+      - ounit_test_linux:
+          requires:
+            - checkout
+      - ounit_test_macos:
+          requires:
+            - checkout
       - parser_test_win:
           requires:
             - build_win
       - npm_pack:
           requires:
             - build_linux
+            - build_linux_arm64
             - build_macos
 
       # only deploy the website from master, so that it can include docs/blog
@@ -599,6 +718,10 @@ workflows:
           <<: *run_on_release_tags
           requires:
             - checkout
+      - build_linux_arm64:
+          <<: *run_on_release_tags
+          requires:
+            - checkout
       - build_macos:
           <<: *run_on_release_tags
           requires:
@@ -611,6 +734,7 @@ workflows:
           <<: *run_on_release_tags
           requires:
             - build_linux
+            - build_linux_arm64
             - build_macos
       - npm_deploy:
           <<: *run_on_release_tags
@@ -620,6 +744,10 @@ workflows:
           <<: *run_on_release_tags
           requires:
             - build_linux
+      - github_linux_arm64:
+          <<: *run_on_release_tags
+          requires:
+            - build_linux_arm64
       - github_macos:
           <<: *run_on_release_tags
           requires:
@@ -632,6 +760,7 @@ workflows:
           <<: *run_on_release_tags
           requires:
             - github_linux
+            - github_linux_arm64
             - github_macos
             - github_win
       - try_flow_deploy:

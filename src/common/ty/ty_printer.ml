@@ -22,7 +22,8 @@ let crop_atom = Atom crop_symbol
 (* from Js_layout_generator *)
 let utf8_escape = Js_layout_generator.utf8_escape
 
-let better_quote = Js_layout_generator.better_quote
+(* TODO: make ~prefer_single_quotes configurable *)
+let better_quote = Js_layout_generator.better_quote ~prefer_single_quotes:false
 
 let wrap_in_parens = Js_layout_generator.wrap_in_parens
 
@@ -69,7 +70,7 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
     | FunProtoApply -> Atom "Function.prototype.apply"
     | FunProtoBind -> Atom "Function.prototype.bind"
     | FunProtoCall -> Atom "Function.prototype.call"
-    | TSymbol { sym_name; _ } -> Atom sym_name
+    | TSymbol { sym_name; _ } -> Atom (Reason.display_string_of_name sym_name)
   in
   (* The depth parameter is useful for formatting unions: Top-level does not
      get parentheses.
@@ -97,13 +98,21 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
     | Union (t1, t2, ts) -> type_union ~depth (t1 :: t2 :: ts)
     | Inter (t1, t2, ts) -> type_intersection ~depth (t1 :: t2 :: ts)
     | Utility s -> utility ~depth s
+    | IndexedAccess { _object; index; optional } ->
+      let left_delim =
+        if optional then
+          Atom "?.["
+        else
+          Atom "["
+      in
+      fuse [type_ ~depth _object; left_delim; type_ ~depth index; Atom "]"]
     | Tup ts ->
       list
         ~wrap:(Atom "[", Atom "]")
         ~sep:(Atom ",")
         ~trailing:false
         (counted_map (type_ ~depth) ts)
-    | StrLit raw -> fuse (in_quotes raw)
+    | StrLit raw -> fuse (in_quotes (Reason.display_string_of_name raw))
     | NumLit raw -> Atom raw
     | BoolLit value ->
       Atom
@@ -129,7 +138,7 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
     fuse [name; targs]
   and type_args ~depth targs =
     list ~wrap:(Atom "<", Atom ">") ~sep:(Atom ",") (counted_map (type_ ~depth) targs)
-  and identifier name = Atom name
+  and identifier name = Atom (Reason.display_string_of_name name)
   and any ~depth kind =
     let kind =
       match kind with
@@ -185,7 +194,7 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
           | Some id ->
             fuse
               [
-                identifier id;
+                identifier (Reason.OrdinaryName id);
                 ( if prm_optional then
                   Atom "?"
                 else
@@ -203,7 +212,7 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
         let quote = better_quote x in
         fuse [Atom quote; Atom (utf8_escape ~quote x); Atom quote]
       else
-        identifier x
+        identifier (Reason.OrdinaryName x)
     in
     Ty.(
       fun ~depth prop ->
@@ -215,7 +224,7 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
               fuse
                 [
                   variance_ polarity;
-                  to_key key;
+                  to_key (Reason.display_string_of_name key);
                   ( if optional then
                     Atom "?"
                   else
@@ -224,13 +233,18 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
                   pretty_space;
                   type_ ~depth t;
                 ]
-            | Method func -> fuse [to_key key; type_function ~depth ~sep:(Atom ":") func]
+            | Method func ->
+              fuse
+                [
+                  to_key (Reason.display_string_of_name key);
+                  type_function ~depth ~sep:(Atom ":") func;
+                ]
             | Get t ->
               group
                 [
                   Atom "get";
                   space;
-                  to_key key;
+                  to_key (Reason.display_string_of_name key);
                   Atom "(";
                   softline;
                   Atom ")";
@@ -243,7 +257,7 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
                 [
                   Atom "set";
                   space;
-                  to_key key;
+                  to_key (Reason.display_string_of_name key);
                   wrap_and_indent (Atom "(", Atom ")") [type_ ~depth t];
                   Atom ":";
                   pretty_space;
@@ -271,7 +285,7 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
         Atom "[";
         begin
           match dict_name with
-          | Some id -> fuse [identifier id; Atom ":"; pretty_space]
+          | Some id -> fuse [identifier (Reason.OrdinaryName id); Atom ":"; pretty_space]
           | None -> Empty
         end;
         type_ ~depth dict_key;
@@ -344,7 +358,7 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
   and utility ~depth u =
     let ctor = Ty.string_of_utility_ctor u in
     let ts = Ty.types_of_utility u in
-    type_reference ~depth (identifier ctor) ts
+    type_reference ~depth (identifier (Reason.OrdinaryName ctor)) ts
   and type_parameter ~depth params =
     list
       ~wrap:(Atom "<", Atom ">")
@@ -396,7 +410,7 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
     let body = list ~wrap:(Atom "{", Atom "}") ~sep:(Atom ";") (exports @ [default]) in
     let name =
       match name with
-      | Some name -> fuse (in_quotes name.Ty.sym_name)
+      | Some name -> fuse (in_quotes (Reason.display_string_of_name name.Ty.sym_name))
       | None -> Empty
     in
     fuse [Atom "module"; space; name; space; body]

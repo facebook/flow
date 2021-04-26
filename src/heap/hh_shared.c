@@ -75,6 +75,7 @@
 #include <unistd.h>
 #endif
 
+#include <limits.h>
 #include <stdalign.h>
 #include <inttypes.h>
 #include <lz4.h>
@@ -168,7 +169,7 @@ static int win32_getpagesize(void) {
 /* Types */
 /*****************************************************************************/
 
-/* Convention: .*_b = Size in bytes. */
+/* Convention: bsize = size in bytes, wsize = size in words. */
 
 // Locations in the heap are encoded as byte offsets from the beginning of the
 // hash table. Because all data in the heap is word-aligned, these offsets will
@@ -194,10 +195,10 @@ typedef uintnat addr_t;
 
 typedef struct {
   /* Layout information, used by workers to create memory mappings. */
-  size_t locals_size_b;
-  size_t hashtbl_size_b;
-  size_t heap_size_b;
-  size_t shared_mem_size_b;
+  size_t locals_bsize;
+  size_t hashtbl_bsize;
+  size_t heap_bsize;
+  size_t shared_mem_bsize;
 
   /* Maximum number of hashtable elements */
   size_t hashtbl_slots;
@@ -208,6 +209,13 @@ typedef struct {
   /* Where the heap will end (top), offset from hashtbl pointer */
   addr_t heap_max;
 
+  uintnat gc_phase;
+
+  /* Bytes which are free (color=Blue). This quantity is initially 0 and
+   * incremented during the GC sweep phase. The number will increase
+   * monotonically until compaction, when all free space is reclaimed. */
+  uintnat free_bsize;
+
   /* Logging level for shared memory statistics
    * 0 = nothing
    * 1 = log totals, averages, min, max bytes marshalled and unmarshalled
@@ -217,8 +225,6 @@ typedef struct {
 
   /* Initially 0; set to 1 to signal that workers should exit */
   size_t workers_should_exit;
-
-  size_t wasted_heap_size;
 
   /* A counter increasing globally across all forks. */
   alignas(128) uintnat counter;
@@ -261,9 +267,9 @@ typedef struct {
 // |                               * 31-1 decompress capacity (in words)
 // * 63-32 compressed size (in words)
 //
-// For GC, to distinguish headers from (word-aligned) pointers, the least bit is
-// always set to 1. The second bit is used for marking. The remaining 6 bits of
-// the low word are used to encode a tag, describing the type of object.
+// For GC, to distinguish headers from (word-aligned) pointers, the least bits
+// are never 00. The remaining 6 bits of the low word are used to encode a tag,
+// describing the type of object.
 //
 // For serialized objects (tag = 0), the remaining 7 bytes of the header word
 // encode two sizes, as outlined above, but other kinds of objects can use these
@@ -298,8 +304,24 @@ static _Bool should_scan(hh_tag_t tag) {
 
 // During GC, we read words from the heap which might be an addr or a header,
 // and we need to distinguish between them.
-#define Is_addr(x) ((x & 1) == 0)
-#define Is_unmarked_hd(x) ((x & 0b11) == 0b01)
+#define Is_addr(x) (((x) & 0b11) == 0)
+
+// The low 2 bits of headers are reserved for GC. The white bit pattern
+// denotes an unmarked object, black denotes a marked object, and blue denotes a
+// free object.
+#define Color_white 0b01
+#define Color_black 0b11
+#define Color_blue  0b10
+
+#define Color_hd(hd) ((hd) & 0b11)
+
+#define Is_white(hd) (Color_hd(hd) == Color_white)
+#define Is_black(hd) (Color_hd(hd) == Color_black)
+#define Is_blue(hd) (Color_hd(hd) == Color_blue)
+
+#define White_hd(hd) (((hd) & ~0b11) | Color_white)
+#define Black_hd(hd) ((hd) | Color_black)
+#define Blue_hd(hd) (((hd) & ~0b11) | Color_blue)
 
 // Object headers contain a mark bit, tag, and size information. Objects with
 // the serialized tag contain the size information in a slightly different place
@@ -359,37 +381,67 @@ typedef union {
 } helt_t;
 
 /*****************************************************************************/
-/* Marking */
+/* GC */
 /*****************************************************************************/
 
-typedef struct {
-  addr_t addr;
-  uintnat size;
-} mark_entry;
+// The possible values of info->gc_phase
+#define Phase_idle 0
+#define Phase_mark 1
+#define Phase_sweep 2
 
-struct mark_stack {
-  mark_entry* stack;
-  uintnat count;
-  uintnat size;
-};
-
+// The mark stack used during heap traversal for the GC's marking pass, which
+// visits every heap object once.
+//
 // When initializing the heap, we allocate stack space which is reused across
 // collections. During a marking pass, if we exceed the preallocated space, we
-// will grow the stack up to the max size.
+// will grow the stack. If we grow the mark stack during a collection, we will
+// free that additional space at the end of the collection.
 //
 // The max size is explicit to avoid exhausting available memory in the event of
-// a programmer error. We should not hit this limit, or come close to it.
-#define MARK_STACK_INIT_SIZE 2048
-#define MARK_STACK_MAX_SIZE (1024 * 1024 * 100)
+// a programmer error. We should not hit this limit, or come close to it. It
+// might become necessary to handle a mark stack overflow without crashing, but
+// this is not implemented.
+#define MARK_STACK_INIT_SIZE 4096
+#define MARK_STACK_MAX_SIZE (1024 * 1024 * 200)
 
-#define Is_marked(hd) ((hd) & 0b10)
-#define Marked_hd(hd) ((hd) | 0b10)
-#define Unmarked_hd(hd) ((hd) & ~0b10)
+// The current size of the mark stack buffer.
+static uintnat mark_stack_size = 0;
 
-// Because collection only happens on the master process, these are only
-// initialized in the master process and will remain NULL in workers.
-static mark_entry* mark_stack_init = NULL;
-static struct mark_stack* mark_stack = NULL;
+// Note: because collection only happens on the master process, the following
+// pointers are only initialized in the master process and will remain NULL in
+// workers.
+
+// The initial stack space, allocated at startup for the mark stack. This space
+// will persist between collections.
+static addr_t *mark_stack_init = NULL;
+
+// Base of the current mark stack. This is initially aliased to
+// mark_stack_init, but will change if the mark stack is realloced.
+static addr_t *mark_stack = NULL;
+
+// Head of the current mark stack, equal to `mark_stack` when the stack is
+// empty, adjusted during push/pop.
+static addr_t *mark_stack_ptr = NULL;
+
+// End of the current mark stack, equal to `mark_stack + mark_stack_size`, used
+// to trigger resize.
+static addr_t *mark_stack_end = NULL;
+
+// When we start a GC, we record the heap pointer here. We use this to identify
+// allocations performed during marking. These objects are not explicitly
+// marked, but are treated as reachable during the current collection pass.
+//
+// This address should always fall between info->heap_init and info->heap. This
+// invariant is set up in hh_shared_init and maintained in hh_collect_slice.
+static addr_t gc_end = NULL_ADDR;
+
+// The marking phase treats the shared hash table as GC roots, but these are
+// marked incrementally. Because we might modify the hash table between mark
+// slices, we insert write barriers in hh_remove and hh_move.
+static uintnat roots_ptr = 0;
+
+// Holds the current position of the sweep phase between slices.
+static addr_t sweep_ptr = NULL_ADDR;
 
 /*****************************************************************************/
 /* Globals */
@@ -416,19 +468,28 @@ static size_t worker_id = 0;
 
 static size_t worker_can_exit = 1;
 
-/* Expose so we can display diagnostics */
 CAMLprim value hh_used_heap_size(value unit) {
   CAMLparam1(unit);
   assert(info != NULL);
   CAMLreturn(Val_long(info->heap - info->heap_init));
 }
 
-/* Part of the heap not reachable from hashtable entries. Can be reclaimed with
- * hh_collect. */
-CAMLprim value hh_wasted_heap_size(value unit) {
+CAMLprim value hh_new_alloc_size(value unit) {
   CAMLparam1(unit);
   assert(info != NULL);
-  CAMLreturn(Val_long(info->wasted_heap_size));
+  CAMLreturn(Val_long(info->heap - gc_end));
+}
+
+CAMLprim value hh_free_heap_size(value unit) {
+  CAMLparam1(unit);
+  assert(info != NULL);
+  CAMLreturn(Val_long(info->free_bsize));
+}
+
+CAMLprim value hh_gc_phase(value unit) {
+  CAMLparam1(unit);
+  assert(info != NULL);
+  CAMLreturn(Val_long(info->gc_phase));
 }
 
 CAMLprim value hh_log_level(value unit) {
@@ -450,7 +511,7 @@ CAMLprim value hh_hash_stats(value unit) {
 }
 
 static void raise_failed_memfd_init(int errcode) {
-  static value *exn = NULL;
+  static const value *exn = NULL;
   if (!exn) exn = caml_named_value("failed_memfd_init");
   caml_raise_with_arg(*exn, unix_error_of_code(errcode));
 }
@@ -586,7 +647,7 @@ static char *memfd_map(size_t size) {
 
 static void raise_out_of_shared_memory(void)
 {
-  static value *exn = NULL;
+  static const value *exn = NULL;
   if (!exn) exn = caml_named_value("out_of_shared_memory");
   caml_raise_constant(*exn);
 }
@@ -602,9 +663,7 @@ static void win_reserve(char * mem, size_t sz) {
 }
 
 /* On Linux, memfd_reserve is only used to reserve memory that is mmap'd to the
- * memfd file. Memory outside of that mmap does not need to be reserved, so we
- * don't call memfd_reserve on things like the temporary mmap used by
- * hh_collect. Instead, they use win_reserve() */
+ * memfd file. */
 static void memfd_reserve(char * mem, size_t sz) {
   win_reserve(mem, sz);
 }
@@ -636,39 +695,39 @@ static void memfd_reserve(char *mem, size_t sz) {
 
 #endif
 
-static void map_info_page(int page_size) {
+static void map_info_page(int page_bsize) {
   // The first page of shared memory contains (1) size information describing
   // the layout of the rest of the shared file; (2) values which are atomically
   // updated by workers, like the heap pointer; and (3) various configuration
   // which is convenient to stick here, like the log level.
-  assert(page_size >= sizeof(shmem_info_t));
-  info = (shmem_info_t*)memfd_map(page_size);
+  assert(page_bsize >= sizeof(shmem_info_t));
+  info = (shmem_info_t*)memfd_map(page_bsize);
 
 #ifdef _WIN32
   // Memory must be reserved on Windows
-  win_reserve((char *)info, page_size);
+  win_reserve((char *)info, page_bsize);
 #endif
 }
 
-static void define_mappings(int page_size) {
+static void define_mappings(int page_bsize) {
   assert(info != NULL);
-  size_t locals_size = info->locals_size_b;
-  size_t hashtbl_size = info->hashtbl_size_b;
-  size_t heap_size = info->heap_size_b;
+  size_t locals_bsize = info->locals_bsize;
+  size_t hashtbl_bsize = info->hashtbl_bsize;
+  size_t heap_bsize = info->heap_bsize;
 
-  shared_mem = memfd_map(info->shared_mem_size_b);
+  shared_mem = memfd_map(info->shared_mem_bsize);
 
   /* Process-local storage */
-  locals = (local_t*)(shared_mem + page_size);
+  locals = (local_t*)(shared_mem + page_bsize);
 
   /* Hashtable */
-  hashtbl = (helt_t*)(shared_mem + page_size + locals_size);
+  hashtbl = (helt_t*)(shared_mem + page_bsize + locals_bsize);
 
 #ifdef _WIN32
   // Memory must be reserved on Windows. Heap allocations will be reserved
   // in hh_alloc, so we just reserve the locals and hashtbl memory here.
-  win_reserve((char *)locals, locals_size);
-  win_reserve((char *)hashtbl, hashtbl_size);
+  win_reserve((char *)locals, locals_bsize);
+  win_reserve((char *)hashtbl, hashtbl_bsize);
 #endif
 
 #ifdef MADV_DONTDUMP
@@ -676,7 +735,7 @@ static void define_mappings(int page_size) {
   // a core file. Moreover, it can be HUGE, and the extensive work done dumping
   // it once for each CPU can mean that the user will reboot their machine
   // before the much more useful stack gets dumped!
-  madvise(hashtbl, hashtbl_size + heap_size, MADV_DONTDUMP);
+  madvise(hashtbl, hashtbl_bsize + heap_bsize, MADV_DONTDUMP);
 #endif
 }
 
@@ -684,7 +743,7 @@ static value alloc_heap_bigarray(void) {
   CAMLparam0();
   CAMLlocal1(heap);
   int heap_flags = CAML_BA_NATIVE_INT | CAML_BA_C_LAYOUT | CAML_BA_EXTERNAL;
-  intnat heap_dim[1] = {Wsize_bsize(info->hashtbl_size_b + info->heap_size_b)};
+  intnat heap_dim[1] = {Wsize_bsize(info->hashtbl_bsize + info->heap_bsize)};
   heap = caml_ba_alloc(heap_flags, 1, hashtbl, heap_dim);
   CAMLreturn(heap);
 }
@@ -700,37 +759,38 @@ CAMLprim value hh_shared_init(
   CAMLparam2(config_val, num_workers_val);
   CAMLlocal1(result);
 
-  size_t page_size = getpagesize();
+  int page_bsize = getpagesize();
 
   /* Calculate layout information. We need to figure out how big the shared file
    * needs to be in order to create the file. We will also store enough of the
    * layout information in the first page of the shared file so that workers can
    * create mappings for the rest of the shared data. */
   size_t num_workers = Long_val(num_workers_val);
-  size_t locals_size_b = CACHE_ALIGN((1 + num_workers) * sizeof(local_t));
+  size_t locals_bsize = CACHE_ALIGN((1 + num_workers) * sizeof(local_t));
   size_t hashtbl_slots = 1ul << Long_val(Field(config_val, 1));
-  size_t hashtbl_size_b = CACHE_ALIGN(hashtbl_slots * sizeof(helt_t));
-  size_t heap_size_b = Long_val(Field(config_val, 0));
+  size_t hashtbl_bsize = CACHE_ALIGN(hashtbl_slots * sizeof(helt_t));
+  size_t heap_bsize = Long_val(Field(config_val, 0));
 
   /* The total size of the shared file must have space for the info page, local
    * data, the hash table, and the heap. */
-  size_t shared_mem_size_b =
-    page_size + locals_size_b + hashtbl_size_b + heap_size_b;
+  size_t shared_mem_bsize =
+    page_bsize + locals_bsize + hashtbl_bsize + heap_bsize;
 
-  memfd_init(shared_mem_size_b);
+  memfd_init(shared_mem_bsize);
 
   /* The info page contains (1) size information describing the layout of the
    * rest of the shared file; (2) values which are atomically updated by
    * workers, like the heap pointer; and (3) various configuration which is
    * conventient to stick here, like the log level. */
-  map_info_page(page_size);
-  info->locals_size_b = locals_size_b;
-  info->hashtbl_size_b = hashtbl_size_b;
-  info->heap_size_b = heap_size_b;
-  info->shared_mem_size_b = shared_mem_size_b;
+  map_info_page(page_bsize);
+  info->locals_bsize = locals_bsize;
+  info->hashtbl_bsize = hashtbl_bsize;
+  info->heap_bsize = heap_bsize;
+  info->shared_mem_bsize = shared_mem_bsize;
   info->hashtbl_slots = hashtbl_slots;
-  info->heap_init = hashtbl_size_b;
-  info->heap_max = info->heap_init + heap_size_b;
+  info->heap_init = hashtbl_bsize;
+  info->heap_max = info->heap_init + heap_bsize;
+  info->gc_phase = Phase_idle;
   info->log_level = Long_val(Field(config_val, 2));
 
   // Ensure the global counter starts on a COUNTER_RANGE boundary
@@ -739,13 +799,17 @@ CAMLprim value hh_shared_init(
   // Initialize top heap pointers
   info->heap = info->heap_init;
 
-  define_mappings(page_size);
+  define_mappings(page_bsize);
 
-  mark_stack = malloc(sizeof(struct mark_stack));
-  mark_stack_init = malloc(MARK_STACK_INIT_SIZE * sizeof(mark_entry));
-  mark_stack->stack = mark_stack_init;
-  mark_stack->count = 0;
-  mark_stack->size = MARK_STACK_INIT_SIZE;
+  mark_stack_size = MARK_STACK_INIT_SIZE;
+  mark_stack_init = malloc(MARK_STACK_INIT_SIZE * sizeof(addr_t));
+  mark_stack = mark_stack_init;
+  mark_stack_ptr = mark_stack;
+  mark_stack_end = mark_stack + MARK_STACK_INIT_SIZE;
+
+  // Invariant: info->heap_init <= gc_end <= info->heap
+  // See declaration of gc_end
+  gc_end = info->heap;
 
 #ifndef _WIN32
   // Uninstall ocaml's segfault handler. It's supposed to throw an exception on
@@ -775,9 +839,9 @@ value hh_connect(value handle_val, value worker_id_val) {
   // Avoid confusion with master process, which is designated 0
   assert(worker_id > 0);
 
-  int page_size = getpagesize();
-  map_info_page(page_size);
-  define_mappings(page_size);
+  int page_bsize = getpagesize();
+  map_info_page(page_bsize);
+  define_mappings(page_bsize);
 
   CAMLreturn(alloc_heap_bigarray());
 }
@@ -858,7 +922,7 @@ CAMLprim value hh_get_can_worker_stop(value unit) {
 static void check_should_exit(void) {
   assert(info != NULL);
   if(worker_can_exit && info->workers_should_exit) {
-    static value *exn = NULL;
+    static const value *exn = NULL;
     if (!exn) exn = caml_named_value("worker_should_exit");
     caml_raise_constant(*exn);
   }
@@ -871,21 +935,58 @@ CAMLprim value hh_check_should_exit(value unit) {
 }
 
 /*****************************************************************************/
-/* GC: Marking
+/* GC: Incremental Mark and Sweep
  *
  * Before compacting the heap, we must first find all live values. We can mark
  * all live values in the heap by starting with the root objects in the hash
  * table, then traversing the graph of all reachable objects from those roots.
+ *
+ * To avoid long pauses, we do this work incrementally. Between commands, we
+ * perform "slices" of mark and sweep work. After a slice of work, we return
+ * back to the server, which can either handle another request of perform
+ * another slice.
+ *
+ * Because the program can modify the heap between slices of mark and sweep, we
+ * need to be careful that all reachable objects are marked. We use a shapshot-
+ * at-the-beginning approach, which ensures that all reachable objects at the
+ * beginning of GC pass are marked. We also use an "allocate black" strategy,
+ * meaning that any new objects allocated during a collection are considered
+ * reachable.
+ *
+ * For snapshot-at-the-beginning, we use a Yuasa style deletion barrier. If a
+ * field is modified during collection, the "old" reference is added to the mark
+ * stack. The only modifications that happen during a GC pass are hh_move and
+ * hh_remove. These are both only called from the main server process, which
+ * means we don't need to store the mark stack in shared memory.
+ *
+ * The "allocate black" strategy is a bit non-standard. Because the shared heap
+ * is a bump allocator, we don't actually use the black color for new
+ * allocations. Instead, we record the location of the heap pointer at the
+ * beginning of a collection. Any addresses below that address need to be
+ * marked, while any addresses above that address are assumed to be live.
  */
 /*****************************************************************************/
+
+// Trigger the start of a new cycle (idle -> mark)
+CAMLprim value hh_start_cycle(value unit) {
+  CAMLparam1(unit);
+  assert(info->gc_phase == Phase_idle);
+  gc_end = info->heap;
+  roots_ptr = 0;
+  sweep_ptr = info->heap_init;
+  info->gc_phase = Phase_mark;
+  CAMLreturn(Val_unit);
+}
 
 static void mark_stack_overflow() {
   caml_failwith("mark_stack_resize: could not allocate space for mark stack");
 }
 
 // Mark stack starts out with some initial capacity, which grows as needed.
-static void mark_stack_resize(struct mark_stack *stk) {
-  size_t new_size = 2 * stk->size;
+static void mark_stack_resize(void) {
+  assert(mark_stack_ptr == mark_stack_end);
+
+  uintnat new_size = 2 * mark_stack_size;
 
   // To avoid exhausting the heap in the event of a programmer error, we fail if
   // the mark stack exceeds some fixed huge size (currently ~1.5 GB).
@@ -893,75 +994,176 @@ static void mark_stack_resize(struct mark_stack *stk) {
 
   // Keep the initial stack, which will be restored by mark_stack_reset.
   // Otherwise realloc, which frees the underlying memory if necessary.
-  mark_entry *new_stack;
-  if (stk->stack == mark_stack_init) {
-    new_stack = malloc(new_size * sizeof(mark_entry));
+  addr_t *new_stack;
+  if (mark_stack == mark_stack_init) {
+    new_stack = malloc(new_size * sizeof(addr_t));
     if (new_stack == NULL) mark_stack_overflow();
-    memcpy(new_stack, mark_stack_init, MARK_STACK_INIT_SIZE * sizeof(mark_entry));
+    memcpy(new_stack, mark_stack_init, MARK_STACK_INIT_SIZE * sizeof(addr_t));
   } else {
-    new_stack = realloc(&stk->stack, new_size * sizeof(mark_entry));
+    new_stack = realloc(mark_stack, new_size * sizeof(addr_t));
     if (new_stack == NULL) mark_stack_overflow();
   }
 
-  stk->stack = new_stack;
-  stk->size = new_size;
+  mark_stack = new_stack;
+  mark_stack_ptr = new_stack + mark_stack_size;
+  mark_stack_size = new_size;
+  mark_stack_end = mark_stack + new_size;
 }
 
 // Free any additional stack space allocated during marking. The initial stack
 // space allocation is re-used across marking passes.
-static void mark_stack_reset(struct mark_stack *stk) {
-  if (mark_stack->stack != mark_stack_init) {
-    free(stk->stack);
-    stk->stack = mark_stack_init;
-    stk->size = MARK_STACK_INIT_SIZE;
+static void mark_stack_reset(void) {
+  if (mark_stack != mark_stack_init) {
+    free(mark_stack);
+    mark_stack_size = MARK_STACK_INIT_SIZE;
+    mark_stack = mark_stack_init;
+    mark_stack_ptr = mark_stack;
+    mark_stack_end = mark_stack + MARK_STACK_INIT_SIZE;
   }
 }
 
-// Add a value to the mark stack, first checking that the object is not already
-// marked and that the object contains references.
-static void mark_push(struct mark_stack *stk, addr_t addr) {
-  hh_header_t hd = Deref(addr);
-
-  // Nothing to do if this object is already marked. If not, setting the mark
-  // bit will ensure the object is only scanned once.
-  if (Is_marked(hd)) return;
-  Deref(addr) = Marked_hd(hd);
-
-  // Only objects that contain pointers need to be scanned.
-  hh_tag_t tag = Obj_tag(hd);
-  if (should_scan(tag)) {
-    if (stk->count == stk->size) {
-      mark_stack_resize(stk);
-    }
-
-    mark_entry *entry = &stk->stack[stk->count++];
-    entry->addr = addr;
-    entry->size = Obj_wosize_tag(hd, tag);
-  }
-}
-
-// Iteratively mark all objects reachable from the stack.
-static void mark_rec(struct mark_stack *stk) {
-  while (stk->count > 0) {
-    mark_entry entry = stk->stack[--stk->count];
-
-    // Objects which contain any pointers currently contain only pointers, so we
-    // can simply enqueue the address in every (non-null) field.
-    for (intnat i = 0; i < entry.size; i++) {
-      uintnat field = Deref(Obj_field(entry.addr, i));
-      if (field != NULL_ADDR) {
-        mark_push(stk, field);
+// Add a reachable object to the mark stack.
+//
+// Objects allocated during marking will have an address greater than gc_end
+// and are treated as reachable. This is morally an "allocate black" scheme,
+// except we allocate white to avoid needing to sweep. Because we allocate
+// white and don't sweep these addresses, it's important that they are not
+// darkened.
+static inline void mark_slice_darken(addr_t addr) {
+  if (addr != NULL_ADDR && addr < gc_end) {
+    hh_header_t hd = Deref(addr);
+    if (Is_white(hd)) {
+      Deref(addr) = Black_hd(hd);
+      if (mark_stack_ptr == mark_stack_end) {
+        mark_stack_resize();
       }
+      *mark_stack_ptr++ = addr;
     }
   }
+}
+
+// Perform a bounded amount of marking work, incrementally. During the marking
+// phase, this function is called repeatedly until marking is complete. Once
+// complete, this function will transition to the sweep phase.
+CAMLprim value hh_mark_slice(value work_val) {
+  CAMLparam1(work_val);
+  assert(info->gc_phase == Phase_mark);
+
+  // We are able to partially scan an object for pointers and resume scanning in
+  // a subsequent slice. This is useful in the event of large objects which
+  // would otherwise cause long pauses if we needed to scan them all at once.
+  //
+  // If we stop in the middle of an object, we will store the address of that
+  // object and the index of the field where we should resume. Otherwise, these
+  // values will be NULL_ADDR and 0 respectively.
+  static addr_t current_value = NULL_ADDR;
+  static uintnat current_index = 0;
+
+  intnat work = Long_val(work_val);
+  intnat hashtbl_slots = info->hashtbl_slots;
+
+  addr_t v;
+  hh_header_t hd;
+  hh_tag_t tag;
+  uintnat i, size, start, end;
+
+  // If the previous slice stopped in the middle of scanning an object, the
+  // first thing we do in this slice is resume scanning where we left off.
+  v = current_value;
+  start = current_index;
+
+  // Work through the mark stack, scanning all gray objects for pointers.
+  // Because roots are colored gray but not added to the mark stack, also walk
+  // the heap to find marked roots.
+  while (work > 0) {
+    if (v == NULL_ADDR && mark_stack_ptr > mark_stack) {
+      v = *--mark_stack_ptr;
+    }
+    if (v != NULL_ADDR) {
+      hd = Deref(v);
+      tag = Obj_tag(hd);
+      size = Obj_wosize_tag(hd, tag);
+      if (should_scan(tag)) {
+        // Avoid scanning large objects all at once
+        end = start + work;
+        if (size < end) {
+          end = size;
+        }
+        for (i = start; i < end; i++) {
+          mark_slice_darken(Deref(Obj_field(v, i)));
+        }
+        if (end < size) {
+          // We did not finish scanning this object. We will resume scanning
+          // this object in the next slice.
+          start = end;
+        } else {
+          v = NULL_ADDR;
+          start = 0;
+        }
+      } else {
+        v = NULL_ADDR;
+      }
+      work--;
+    } else if (roots_ptr < hashtbl_slots) {
+      // Visit roots in shared hash table
+      mark_slice_darken(hashtbl[roots_ptr++].addr);
+      work--;
+    } else {
+      // Done marking, transition to sweep phase.
+      mark_stack_reset();
+      info->gc_phase = Phase_sweep;
+      break;
+    }
+  }
+
+  current_value = v;
+  current_index = start;
+
+  CAMLreturn(Val_long(work));
+}
+
+// Perform a bounded amount of sweeping work, incrementally. During the sweeping
+// phase, this function is called repeatedly until sweeping is complete. Once
+// complete, this function will transition to the idle phase.
+CAMLprim value hh_sweep_slice(value work_val) {
+  CAMLparam1(work_val);
+  assert(info->gc_phase == Phase_sweep);
+
+  intnat work = Long_val(work_val);
+
+  while (work > 0) {
+    if (sweep_ptr < gc_end) {
+      uintnat hd = Deref(sweep_ptr);
+      uintnat bhsize = Obj_bhsize(hd);
+      switch (Color_hd(hd)) {
+        case Color_white:
+          Deref(sweep_ptr) = Blue_hd(hd);
+          info->free_bsize += bhsize;
+          break;
+        case Color_black:
+          Deref(sweep_ptr) = White_hd(hd);
+          break;
+        case Color_blue:
+          break;
+      }
+      sweep_ptr += bhsize;
+      work--;
+    } else {
+      // Done sweeping
+      info->gc_phase = Phase_idle;
+      break;
+    }
+  }
+
+  CAMLreturn(Val_long(work));
 }
 
 /*****************************************************************************/
 /* GC: Compact
  *
  * We collect the shared heap by compacting: moving live values "to the left"
- * until there is no more wasted space. We can then continue to bump allocate
- * from the end.
+ * until there is no more free space. We can then continue to bump allocate from
+ * the end.
  *
  * The compaction algorithm is a Jonkers collector which performs the compaction
  * "in place" without allocating additional memory to maintain state.
@@ -1065,31 +1267,18 @@ static void gc_update(addr_t src, addr_t dst) {
   Deref(src) = p;
 }
 
-// A full collection proceeds in four phases:
-// 1. Marking
-// 2. Threading the root set
-// 3. Heap pass to update forward pointers
-// 4. Heap pass to update backward pointers and move objects
-CAMLprim value hh_collect(value unit) {
+// Compacting the heap proceeds in three phases:
+// 1. Thread the root set
+// 2. Walk heap, update forward pointers
+// 3. Walk heap, update backward pointers and move objects
+CAMLprim value hh_compact(value unit) {
   CAMLparam1(unit);
   assert_master();
+  assert(info->gc_phase == Phase_idle);
 
   intnat hashtbl_slots = info->hashtbl_slots;
-  struct mark_stack *stk = mark_stack;
 
-  // Step 1: Walk the hash table, which are the roots of our marking pass.
-  // Traverse entire heap marking every reachable object. After this step, any
-  // unmarked objects can be collected.
-  for (intnat i = 0; i < hashtbl_slots; i++) {
-    // Skip empty slots
-    if (hashtbl[i].addr != NULL_ADDR) {
-      mark_push(stk, hashtbl[i].addr);
-      mark_rec(stk);
-    }
-  }
-  mark_stack_reset(stk);
-
-  // Step 2: Scan the root set, threading any pointers to the heap. The
+  // Step 1: Scan the root set, threading any pointers to the heap. The
   // threading performed during this step will be unthreaded in the next step,
   // updating the hash table to point to the updated locations.
   for (intnat i = 0; i < hashtbl_slots; i++) {
@@ -1097,7 +1286,7 @@ CAMLprim value hh_collect(value unit) {
     gc_thread(hashtbl_addr);
   }
 
-  // Step 3: Scan the heap object-by-object from bottom to top. The dst pointer
+  // Step 2: Scan the heap object-by-object from bottom to top. The dst pointer
   // keeps track of where objects will move to, but we do not move anything
   // during this step.
   //
@@ -1124,8 +1313,8 @@ CAMLprim value hh_collect(value unit) {
   addr_t heap_ptr = info->heap;
   while (src < heap_ptr) {
     hh_header_t hd = Deref(src);
-    size_t size;
-    if (Is_unmarked_hd(hd)) {
+    intnat size;
+    if (Is_blue(hd)) {
       size = Obj_bhsize(hd);
     } else {
       gc_update(src, dst);
@@ -1137,7 +1326,7 @@ CAMLprim value hh_collect(value unit) {
     src += size;
   }
 
-  // Step 4: Scan the heap object-by-object again, actually moving objects this
+  // Step 3: Scan the heap object-by-object again, actually moving objects this
   // time around.
   //
   // Unmarked headers still indicate unreachable data and is not moved.
@@ -1152,14 +1341,13 @@ CAMLprim value hh_collect(value unit) {
   dst = info->heap_init;
   while (src < heap_ptr) {
     hh_header_t hd = Deref(src);
-    size_t size;
-    if (Is_unmarked_hd(hd)) {
+    intnat size;
+    if (Is_blue(hd)) {
       size = Obj_bhsize(hd);
     } else {
       gc_update(src, dst);
       hd = Deref(src);
       size = Obj_bhsize(hd);
-      Deref(src) = Unmarked_hd(hd);
       memmove(Ptr_of_addr(dst), Ptr_of_addr(src), size);
       dst += size;
     }
@@ -1175,13 +1363,18 @@ CAMLprim value hh_collect(value unit) {
   // would not force page faults under healthy operation.
 
   info->heap = dst;
-  info->wasted_heap_size = 0;
+
+  // Invariant: info->heap_init <= gc_end <= info->heap
+  // See declaration of gc_end
+  gc_end = dst;
+
+  info->free_bsize = 0;
 
   CAMLreturn(Val_unit);
 }
 
 static void raise_heap_full(void) {
-  static value *exn = NULL;
+  static const value *exn = NULL;
   if (!exn) exn = caml_named_value("heap_full");
   caml_raise_constant(*exn);
 }
@@ -1192,10 +1385,6 @@ static void raise_heap_full(void) {
 /*****************************************************************************/
 
 static addr_t hh_alloc(size_t wsize) {
-  // The size of this allocation needs to be kept in sync with wasted_heap_size
-  // modification in hh_remove and also when performing garbage collection. The
-  // macro Heap_entry_slot_size can be used to get the slot size from a valid
-  // header.
   size_t slot_size = Bsize_wsize(wsize);
   addr_t addr = __sync_fetch_and_add(&info->heap, slot_size);
   if (addr + slot_size > info->heap_max) {
@@ -1287,7 +1476,7 @@ CAMLprim value hh_store_ocaml(value v) {
   hh_header_t header
     = compressed_wsize << 36
     | decompress_capacity << 8
-    | 1;
+    | Color_white;
 
   // Allocate space for the header and compressed data
   heap_entry_t *entry = Entry_of_addr(hh_alloc(1 + compressed_wsize));
@@ -1331,7 +1520,7 @@ static uint64_t get_hash(value key) {
 }
 
 static void raise_hash_table_full(void) {
-  static value *exn = NULL;
+  static const value *exn = NULL;
   if (!exn) exn = caml_named_value("hash_table_full");
   caml_raise_constant(*exn);
 }
@@ -1380,14 +1569,25 @@ CAMLprim value hh_add(value key, value addr) {
     }
 
     if (slot_hash == 0) {
+      helt_t old;
+
       // This slot is free, but two threads may be racing to write to this slot,
       // so try to grab the slot atomically. Note that this is a 16-byte CAS
-      // writing both the hash and the address at the same time. Whatever data
-      // was in the slot at the time of the CAS will be stored in `old`.
-      helt_t old;
-      old.value = __sync_val_compare_and_swap(&hashtbl[slot].value, 0, elt.value);
+      // writing both the hash and the address at the same time. We expect the
+      // slot to contain `0`. If that's the case, `success == true`; otherwise,
+      // whatever data was in the slot at the time of the CAS will be stored in
+      // `old`.
+      old.value = 0;
+      _Bool success = __atomic_compare_exchange(
+        /* ptr */ &hashtbl[slot].value,
+        /* expected */ &old.value,
+        /* desired */ &elt.value,
+        /* weak */ 0,
+        /* success_memorder */ __ATOMIC_SEQ_CST,
+        /* failure_memorder */ __ATOMIC_SEQ_CST
+      );
 
-      if (old.hash == 0) {
+      if (success) {
         // The slot was still empty when we tried to CAS, meaning we
         // successfully grabbed the slot.
         uint64_t size = __sync_fetch_and_add(&info->hcounter, 1);
@@ -1517,12 +1717,19 @@ CAMLprim value hh_move(value key1, value key2) {
   assert_master();
   assert(hashtbl[slot1].hash == get_hash(key1));
   assert(hashtbl[slot2].addr == NULL_ADDR);
+
   // We are taking up a previously empty slot. Let's increment the counter.
   // hcounter_filled doesn't change, since slot1 becomes empty and slot2 becomes
   // filled.
   if (hashtbl[slot2].hash == 0) {
     info->hcounter += 1;
   }
+
+  // GC write barrier
+  if (info->gc_phase == Phase_mark) {
+    mark_slice_darken(hashtbl[slot1].addr);
+  }
+
   hashtbl[slot2].hash = get_hash(key2);
   hashtbl[slot2].addr = hashtbl[slot1].addr;
   hashtbl[slot1].addr = NULL_ADDR;
@@ -1540,16 +1747,13 @@ CAMLprim value hh_remove(value key) {
 
   assert_master();
   assert(hashtbl[slot].hash == get_hash(key));
-  // see hh_alloc for the source of this size
-  heap_entry_t *entry = Entry_of_addr(hashtbl[slot].addr);
-  // TODO: Wasted heap size calculation is under-counted. This will prevent GC
-  // from running, causing the shared heap to grow too large.
-  //
-  // Because we can have references between heap objects, the object being
-  // deleted in this function might be the only thing keeping other objects
-  // alive. The space occupied by those objects is also wasted, but not counted
-  // wasted_heap_size.
-  info->wasted_heap_size += Obj_bhsize(entry->header);
+  assert(hashtbl[slot].addr != NULL_ADDR);
+
+  // GC write barrier
+  if (info->gc_phase == Phase_mark) {
+    mark_slice_darken(hashtbl[slot].addr);
+  }
+
   hashtbl[slot].addr = NULL_ADDR;
   info->hcounter_filled -= 1;
   CAMLreturn(Val_unit);

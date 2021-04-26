@@ -3,6 +3,7 @@ declare class _C {
 }
 declare var _module: {
   C: Class<_C>;
+  ...
 }
 declare class D extends _module.C {
   foo(): string;

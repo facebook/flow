@@ -495,9 +495,9 @@ end = struct
    * something like that.
    *
    * But what happens if we ran 2 or more timers with the name "Parsing"? This is actually a very
-   * reasonable thing to do. Imagine some code which needs to call typecheck_contents on 2 or more
+   * reasonable thing to do. Imagine some code which needs to call parse_contents on 2 or more
    * files (get_def will do this when following a chain). We will get a "Parsing" timer for each
-   * typecheck_contents.
+   * parse_contents.
    *
    * I see a few relatively reasonable options here:
    * 1) Only report the first one. Since duplicates are an edge case, this is pretty reasonable

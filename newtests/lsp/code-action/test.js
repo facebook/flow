@@ -85,9 +85,9 @@ export default (suite(
         },
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/codeAction',
-            JSON.stringify([
+          {
+            method: 'textDocument/codeAction',
+            result: [
               {
                 title: 'Replace `faceboy` with `facebook`',
                 kind: 'quickfix',
@@ -133,12 +133,16 @@ export default (suite(
                 },
                 command: {
                   title: '',
-                  command: 'log:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: ['Replace `faceboy` with `facebook`'],
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'typo',
+                    'Replace `faceboy` with `facebook`',
+                  ],
                 },
               },
-            ]),
-          ],
+            ],
+          },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -186,9 +190,9 @@ export default (suite(
         },
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/codeAction',
-            JSON.stringify([
+          {
+            method: 'textDocument/codeAction',
+            result: [
               {
                 title: 'Replace `Foobat` with `Foobar`',
                 kind: 'quickfix',
@@ -234,12 +238,16 @@ export default (suite(
                 },
                 command: {
                   title: '',
-                  command: 'log:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: ['Replace `Foobat` with `Foobar`'],
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'typo',
+                    'Replace `Foobat` with `Foobar`',
+                  ],
                 },
               },
-            ]),
-          ],
+            ],
+          },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
@@ -298,7 +306,7 @@ export default (suite(
           ],
         },
       }).verifyAllLSPMessagesInStep(
-        [['textDocument/codeAction', '[]']],
+        [{method: 'textDocument/codeAction', result: []}],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
@@ -340,9 +348,9 @@ export default (suite(
         },
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/codeAction',
-            JSON.stringify([
+          {
+            method: 'textDocument/codeAction',
+            result: [
               {
                 title: "Replace `>` with `{'>'}`",
                 kind: 'quickfix',
@@ -387,12 +395,16 @@ export default (suite(
                 },
                 command: {
                   title: '',
-                  command: 'log:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: ["Replace `>` with `{'>'}`"],
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'typo',
+                    "Replace `>` with `{'>'}`",
+                  ],
                 },
               },
-            ]),
-          ],
+            ],
+          },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),

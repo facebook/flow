@@ -32,13 +32,19 @@ module type S = sig
 
   (** 1. Constructors *)
 
-  val default_constructor : Reason.t -> t
   (** Create signature for a default constructor.
 
       Flow represents default constructors as empty functions, i.e., functions
       with no type parameters, no formal parameters, an empty body, and a void
       return type. *)
+  val default_constructor : Reason.t -> t
 
+  (** Create signature for a class field initializer.
+
+      Field initializers are evaluated in the context of the class body.
+      Representing the initializer as a function means we can reuse `toplevels`
+      from this module to evaluate the initializer in the appropriate context,
+      where `this` and `super` point to the appropriate types. *)
   val field_initializer :
     Type.t SMap.t ->
     (* type params map *)
@@ -48,17 +54,9 @@ module type S = sig
     Type.annotated_or_inferred ->
     (* return *)
     t
-  (** Create signature for a class field initializer.
-
-      Field initializers are evaluated in the context of the class body.
-      Representing the initializer as a function means we can reuse `toplevels`
-      from this module to evaluate the initializer in the appropriate context,
-      where `this` and `super` point to the appropriate types. *)
 
   (** 1. Manipulation *)
 
-  val subst : Context.t -> Type.t SMap.t -> (* type params map *)
-                                            t -> t
   (** Return a signature with types from provided map substituted.
 
       Note that this function does not substitute type parameters declared by the
@@ -66,10 +64,12 @@ module type S = sig
       provided map.
 
       This signature's own type parameters will be subtituted by the
-      `generate-tests` function. *)
+      `check_with_generics` function. *)
+  val subst : Context.t -> Type.t SMap.t -> (* type params map *)
+                                            t -> t
 
-  val check_with_generics : Context.t -> (t -> 'a) -> t -> 'a
   (** Invoke callback with type parameters substituted by upper/lower bounds. *)
+  val check_with_generics : Context.t -> (t -> 'a) -> t -> 'a
 
   val toplevels :
     (ALoc.t, ALoc.t) Flow_ast.Identifier.t option ->
@@ -106,26 +106,28 @@ module type S = sig
 
   (** 1. Type Conversion *)
 
+  (** Create a function type for function declarations/expressions. *)
   val functiontype : Context.t -> Type.t -> (* this *)
                                             t -> Type.t
-  (** Create a function type for function declarations/expressions. *)
 
-  val methodtype : Context.t -> t -> Type.t
   (** Create a function type for class/interface methods. *)
+  val methodtype : Context.t -> ?ignore_this:bool -> t -> Type.t
 
-  val gettertype : t -> Type.t
   (** Create a type of the return expression of a getter function.
 
       Note that this is a partial function. If the signature does not represent a
       getter, this function will raise an exception. *)
+  val gettertype : t -> Type.t
 
-  val settertype : t -> Type.t
   (** Create a type of the single parameter of a setter function.
 
       Note that this is a partial function. If the signature does not represent a
       setter, this function will raise an exception. *)
+  val settertype : t -> Type.t
 
   (** 1. Util *)
 
   val to_ctor_sig : t -> t
+
+  val this_param : func_params -> Type.t option
 end

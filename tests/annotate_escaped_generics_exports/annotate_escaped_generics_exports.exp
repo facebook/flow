@@ -1,7 +1,7 @@
 >>> imp.js (#changes: 2)
 //@flow
 
-import type {T} from "./exp";import {f} from './exp';
+import type { T } from "./exp";import {f} from './exp';
 
 var v: Array<T> = [];
 

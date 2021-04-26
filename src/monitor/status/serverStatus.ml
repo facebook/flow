@@ -21,7 +21,7 @@ type summary_info =
   | RecheckSummary of {
       dependent_file_count: int;
       changed_file_count: int;
-      top_cycle: (File_key.t * int) option; (* name of cycle leader, and size of cycle *)
+      top_cycle: (File_key.t * int) option;  (** name of cycle leader, and size of cycle *)
     }
   | CommandSummary of string
   | InitSummary
@@ -31,42 +31,41 @@ type summary = {
   info: summary_info;
 }
 
+type deadline = float
+
 type event =
-  | Ready (* The server is free *)
-  | Init_start (* The server is starting to initialize *)
+  | Ready  (** The server is free *)
+  | Init_start  (** The server is starting to initialize *)
   | Read_saved_state
   | Load_saved_state_progress of progress
   | Parsing_progress of progress
+  | Indexing_progress of progress
   | Resolving_dependencies_progress
   | Calculating_dependencies_progress
   | Merging_progress of progress
-  | Merging_types_progress of progress
   | Checking_progress of progress
   | Canceling_progress of progress
-  | Finishing_up of summary (* Server's finishing up typechecking or other work *)
-  | Recheck_start (* The server is starting to recheck *)
-  | Handling_request_start (* The server is starting to handle an ephemeral/persistent request *)
-  | GC_start (* The server is starting to GC *)
-  | Collating_errors_start (* The server is collating the errors *)
-  | Watchman_wait_start of (* deadline *) float option
-
-(* The server is now blocked waiting for Watchman *)
+  | Finishing_up of summary  (** Server's finishing up typechecking or other work *)
+  | Recheck_start  (** The server is starting to recheck *)
+  | Handling_request_start  (** The server is starting to handle an ephemeral/persistent request *)
+  | GC_start  (** The server is starting to GC *)
+  | Collating_errors_start  (** The server is collating the errors *)
+  | Watchman_wait_start of deadline option  (** The server is now blocked waiting for Watchman *)
 
 type typecheck_status =
-  | Starting_typecheck (* A typecheck's initial state *)
+  | Starting_typecheck  (** A typecheck's initial state *)
   | Reading_saved_state
   | Loading_saved_state of progress
   | Parsing of progress
+  | Indexing of progress
   | Resolving_dependencies
   | Calculating_dependencies
   | Merging of progress
-  | Merging_types of progress
   | Checking of progress
   | Canceling of progress
-  | Garbage_collecting_typecheck (* We garbage collect during typechecks sometime *)
-  | Collating_errors (* We sometimes collate errors during typecheck *)
-  | Finishing_typecheck of summary (* haven't reached free state yet *)
-  | Waiting_for_watchman of (* deadline *) float option
+  | Collating_errors  (** We sometimes collate errors during typecheck *)
+  | Finishing_typecheck of summary  (** haven't reached free state yet *)
+  | Waiting_for_watchman of deadline option
 
 type restart_reason =
   | Server_out_of_date
@@ -74,21 +73,17 @@ type restart_reason =
   | Restart
 
 type typecheck_mode =
-  | Initializing (* Flow is busy starting up *)
-  | Rechecking (* Flow is busy rechecking *)
-  | Handling_request (* Flow is busy handling a request *)
-  | Restarting of restart_reason
-
-(* Same as initializing but with a reason why we restarted *)
+  | Initializing  (** Flow is busy starting up *)
+  | Rechecking  (** Flow is busy rechecking *)
+  | Handling_request  (** Flow is busy handling a request *)
+  | Restarting of restart_reason  (** Same as initializing but with a reason why we restarted *)
 
 type status =
-  | Starting_up (* The server's initial state *)
-  | Free (* Not busy doing something else *)
-  | Typechecking of typecheck_mode * typecheck_status (* Busy doing Flow stuff *)
-  | Garbage_collecting (* This one is pretty obvious *)
-  | Unknown
-
-(* A bad state caused by transitioning from a good state due to an unexpected event *)
+  | Starting_up  (** The server's initial state *)
+  | Free  (** Not busy doing something else *)
+  | Typechecking of typecheck_mode * typecheck_status  (** Busy doing Flow stuff *)
+  | Garbage_collecting  (** This one is pretty obvious *)
+  | Unknown  (** A bad state caused by transitioning from a good state due to an unexpected event *)
 
 let string_of_progress { finished; total } =
   match total with
@@ -97,7 +92,6 @@ let string_of_progress { finished; total } =
     spf "%d/%d (%02.1f%%)" finished total (100.0 *. float finished /. float (max 1 total))
 
 type emoji =
-  | Bicyclist
   | Closed_book
   | Cookie
   | Eyes
@@ -112,9 +106,9 @@ type emoji =
   | Wastebasket
   | Motorcycle
   | Skier
+  | Card_index_dividers
 
 let string_of_emoji = function
-  | Bicyclist -> "\xF0\x9F\x9A\xB4"
   | Closed_book -> "\xF0\x9F\x93\x95"
   | Cookie -> "\xF0\x9F\x8D\xAA"
   | Eyes -> "\xF0\x9F\x91\x80"
@@ -129,6 +123,7 @@ let string_of_emoji = function
   | Wastebasket -> "\xF0\x9F\x97\x91"
   | Motorcycle -> "\xf0\x9f\x8f\x8d"
   | Skier -> "\xE2\x9B\xB7"
+  | Card_index_dividers -> "\xF0\x9F\x97\x82"
 
 type pad_emoji =
   | Before
@@ -157,10 +152,10 @@ let string_of_event = function
   | Load_saved_state_progress progress ->
     spf "Load_saved_state_progress %s" (string_of_progress progress)
   | Parsing_progress progress -> spf "Parsing_progress files %s" (string_of_progress progress)
+  | Indexing_progress progress -> spf "Indexing_progress %s" (string_of_progress progress)
   | Calculating_dependencies_progress -> "Calculating_dependencies_progress"
   | Resolving_dependencies_progress -> "Resolving_dependencies_progress"
   | Merging_progress progress -> spf "Merging_progress %s" (string_of_progress progress)
-  | Merging_types_progress progress -> spf "Merging_types_progress %s" (string_of_progress progress)
   | Checking_progress progress -> spf "Checking_progress files %s" (string_of_progress progress)
   | Canceling_progress progress -> spf "Canceling_progress %s" (string_of_progress progress)
   | Finishing_up _ -> "Finishing_up"
@@ -170,8 +165,8 @@ let string_of_event = function
   | Collating_errors_start -> "Collating_errors_start"
   | Watchman_wait_start _deadline -> "Watchman_wait_start"
 
-(* As a general rule, use past tense for status updates that show progress and present perfect
-   progressive for those that don't. *)
+(** As a general rule, use past tense for status updates that show progress and present perfect
+    progressive for those that don't. *)
 let string_of_typecheck_status ~use_emoji = function
   | Starting_typecheck -> spf "%sstarting up" (render_emoji ~use_emoji Sleeping_face)
   | Reading_saved_state -> spf "%sreading saved state" (render_emoji ~use_emoji Closed_book)
@@ -179,11 +174,14 @@ let string_of_typecheck_status ~use_emoji = function
     spf "%sloading saved state %s" (render_emoji ~use_emoji Open_book) (string_of_progress progress)
   | Parsing progress ->
     spf "%sparsed files %s" (render_emoji ~use_emoji Ghost) (string_of_progress progress)
+  | Indexing progress ->
+    spf
+      "%sindexing files %s"
+      (render_emoji ~use_emoji Card_index_dividers)
+      (string_of_progress progress)
   | Resolving_dependencies -> spf "%sresolving dependencies" (render_emoji ~use_emoji Taco)
   | Calculating_dependencies -> spf "%scalculating dependencies" (render_emoji ~use_emoji Taco)
   | Merging progress ->
-    spf "%smerged files %s" (render_emoji ~use_emoji Bicyclist) (string_of_progress progress)
-  | Merging_types progress ->
     spf
       "%smerged module interfaces %s"
       (render_emoji ~use_emoji Motorcycle)
@@ -195,8 +193,6 @@ let string_of_typecheck_status ~use_emoji = function
       "%scanceling workers %s"
       (render_emoji ~use_emoji Recycling_symbol)
       (string_of_progress progress)
-  | Garbage_collecting_typecheck ->
-    spf "%sgarbage collecting shared memory" (render_emoji ~use_emoji Wastebasket)
   | Collating_errors -> spf "%scollating errors" (render_emoji ~use_emoji File_cabinet)
   | Waiting_for_watchman deadline ->
     let timeout =
@@ -240,8 +236,8 @@ let string_of_status ?(use_emoji = false) ?(terse = false) status =
       "Server is " )
     status_string
 
-(* Transition function for the status state machine. Given the current status and the event,
- * pick a new status *)
+(** Transition function for the status state machine. Given the current status and the event,
+    pick a new status *)
 let update ~event ~status =
   match (event, status) with
   | (Ready, _) -> Free
@@ -252,16 +248,14 @@ let update ~event ~status =
   | (Load_saved_state_progress progress, Typechecking (mode, _)) ->
     Typechecking (mode, Loading_saved_state progress)
   | (Parsing_progress progress, Typechecking (mode, _)) -> Typechecking (mode, Parsing progress)
+  | (Indexing_progress progress, Typechecking (mode, _)) -> Typechecking (mode, Indexing progress)
   | (Resolving_dependencies_progress, Typechecking (mode, _)) ->
     Typechecking (mode, Resolving_dependencies)
   | (Calculating_dependencies_progress, Typechecking (mode, _)) ->
     Typechecking (mode, Calculating_dependencies)
   | (Merging_progress progress, Typechecking (mode, _)) -> Typechecking (mode, Merging progress)
-  | (Merging_types_progress progress, Typechecking (mode, _)) ->
-    Typechecking (mode, Merging_types progress)
   | (Checking_progress progress, Typechecking (mode, _)) -> Typechecking (mode, Checking progress)
   | (Canceling_progress progress, Typechecking (mode, _)) -> Typechecking (mode, Canceling progress)
-  | (GC_start, Typechecking (mode, _)) -> Typechecking (mode, Garbage_collecting_typecheck)
   | (Collating_errors_start, Typechecking (mode, _)) -> Typechecking (mode, Collating_errors)
   | (Watchman_wait_start deadline, Typechecking (mode, _)) ->
     Typechecking (mode, Waiting_for_watchman deadline)
@@ -287,9 +281,9 @@ let is_free = function
   | Free -> true
   | _ -> false
 
-(* Returns true iff the transition from old_status to new_status is "significant", which is a
- * pretty arbitrary judgement of how interesting the new status is to a user, given that they
- * already have seen the old status *)
+(** Returns true iff the transition from old_status to new_status is "significant", which is a
+    pretty arbitrary judgement of how interesting the new status is to a user, given that they
+    already have seen the old status *)
 let is_significant_transition old_status new_status =
   (* If the statuses are literally the same, then the transition is not significant *)
   old_status <> new_status
@@ -303,8 +297,8 @@ let is_significant_transition old_status new_status =
       match (old_tc_status, new_tc_status) with
       (* Making progress within parsing, merging or canceling is not significant *)
       | (Parsing _, Parsing _)
+      | (Indexing _, Indexing _)
       | (Merging _, Merging _)
-      | (Merging_types _, Merging_types _)
       | (Checking _, Checking _)
       | (Canceling _, Canceling _) ->
         false
@@ -313,13 +307,12 @@ let is_significant_transition old_status new_status =
       | (_, Reading_saved_state)
       | (_, Loading_saved_state _)
       | (_, Parsing _)
+      | (_, Indexing _)
       | (_, Resolving_dependencies)
       | (_, Calculating_dependencies)
       | (_, Merging _)
-      | (_, Merging_types _)
       | (_, Checking _)
       | (_, Canceling _)
-      | (_, Garbage_collecting_typecheck)
       | (_, Waiting_for_watchman _)
       | (_, Collating_errors)
       | (_, Finishing_typecheck _) ->
@@ -343,7 +336,6 @@ let get_progress status =
   match status with
   | Typechecking (_, Parsing progress)
   | Typechecking (_, Merging progress)
-  | Typechecking (_, Merging_types progress)
   | Typechecking (_, Checking progress)
   | Typechecking (_, Canceling progress) ->
     print progress
@@ -434,9 +426,9 @@ let log_of_summaries ~(root : Path.t) (summaries : summary list) : FlowEventLogg
     in
     Base.List.fold summaries ~init ~f)
 
-(* When the server is initializing it will publish statuses that say it is initializing. The
- * monitor might know that the server actually is restarting. This function turns a initializing
- * status into a restarting status *)
+(** When the server is initializing it will publish statuses that say it is initializing. The
+    monitor might know that the server actually is restarting. This function turns a initializing
+    status into a restarting status *)
 let change_init_to_restart restart_reason status =
   Base.Option.value_map restart_reason ~default:status ~f:(fun restart_reason ->
       match status with

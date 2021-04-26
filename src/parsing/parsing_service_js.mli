@@ -16,9 +16,11 @@ type result =
   | Parse_ok of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
       file_sig: File_sig.With_Loc.t;
-      sig_extra: Parsing_heaps.sig_extra;
+      type_sig: Parsing_heaps.type_sig;
+      aloc_table: ALoc.table;
       tolerable_errors: File_sig.With_Loc.tolerable_error list;
       parse_errors: parse_error list;
+      exports: Exports.t;
     }
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
@@ -70,8 +72,6 @@ type parse_options = {
   parse_prevent_munge: bool;
   parse_module_ref_prefix: string option;
   parse_facebook_fbt: string option;
-  parse_arch: Options.arch;
-  parse_abstract_locations: bool;
   parse_type_asserts: bool;
   parse_suppress_types: SSet.t;
   parse_max_literal_len: int;

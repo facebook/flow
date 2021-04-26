@@ -1,3 +1,21 @@
+Error -------------------------------------------------------------------------------------------------- iterator.js:6:2
+
+Cannot cast `foo[Symbol.iterator]` to boolean because `$Iterator` [1] is incompatible with boolean [2].
+[incompatible-cast]
+
+   iterator.js:6:2
+   6| (foo[Symbol.iterator]: boolean); // Error
+       ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   iterator.js:2:15
+   2|   @@iterator: Iterator<number>,
+                    ^^^^^^^^^^^^^^^^ [1]
+   iterator.js:6:24
+   6| (foo[Symbol.iterator]: boolean); // Error
+                             ^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- symbol.js:8:17
 
 Cannot call `Symbol` because no more than 1 argument is expected by function type [1]. [extra-arg]
@@ -137,4 +155,4 @@ References:
 
 
 
-Found 8 errors
+Found 9 errors

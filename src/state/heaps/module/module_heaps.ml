@@ -9,7 +9,7 @@
 (* Maps module names to the filenames which provide those modules             *)
 
 module NameHeap =
-  SharedMem_js.WithCache
+  SharedMem.WithCache
     (Modulename.Key)
     (struct
       type t = File_key.t
@@ -23,6 +23,13 @@ module NameHeap =
 (* Subset of a file's context, with the important distinction that module
    references in the file have been resolved to module names. *)
 
+(** TODO [perf] Make resolved_requires tighter. For info:
+    (1) checked? We know that requires and phantom dependents for unchecked
+    files are empty.
+
+    (2) parsed? We only care about the module provided by an unparsed file, but
+    that's probably guessable.
+ **)
 type resolved_requires = {
   resolved_modules: Modulename.t SMap.t;
   (* map from module references in file
@@ -34,13 +41,6 @@ type resolved_requires = {
      references need to be re-resolved. *)
   hash: Xx.hash; (* An easy way to compare two resolved_requires to see if they've changed *)
 }
-(** TODO [perf] Make resolved_requires tighter. For info:
-    (1) checked? We know that requires and phantom dependents for unchecked
-    files are empty.
-
-    (2) parsed? We only care about the module provided by an unparsed file, but
-    that's probably guessable.
- **)
 
 let mk_resolved_requires ~resolved_modules ~phantom_dependents =
   let state = Xx.init 0L in
@@ -53,7 +53,7 @@ let mk_resolved_requires ~resolved_modules ~phantom_dependents =
   { resolved_modules; phantom_dependents; hash = Xx.digest state }
 
 module ResolvedRequiresHeap =
-  SharedMem_js.WithCache
+  SharedMem.WithCache
     (File_key)
     (struct
       type t = resolved_requires
@@ -62,19 +62,17 @@ module ResolvedRequiresHeap =
     end)
 
 (********************************** Info Heap *********************************)
-(* Maps filenames to info about a module, including the module's name.        *)
-(* note: currently we may have many files for one module name.                *)
-(* this is an issue.                                                          *)
 
 type info = {
   module_name: Modulename.t;
-  checked: bool;
-  (* in flow? *)
-  parsed: bool; (* if false, it's a tracking record only *)
+  checked: bool;  (** in flow? *)
+  parsed: bool;  (** if false, it's a tracking record only *)
 }
 
+(** Maps filenames to info about a module, including the module's name.
+    note: currently we may have many files for one module name. this is an issue. *)
 module InfoHeap =
-  SharedMem_js.WithCache
+  SharedMem.WithCache
     (File_key)
     (struct
       type t = info
@@ -264,7 +262,7 @@ module type READER = sig
 
   val get_resolved_requires_unsafe : reader:reader -> (File_key.t -> resolved_requires) Expensive.t
 
-  (* given a filename, returns module info *)
+  (** given a filename, returns module info *)
   val get_info_unsafe : reader:reader -> (File_key.t -> info) Expensive.t
 
   val get_info : reader:reader -> (File_key.t -> info option) Expensive.t
@@ -272,7 +270,11 @@ module type READER = sig
   val is_tracked_file : reader:reader -> File_key.t -> bool
 end
 
-module Mutator_reader : READER with type reader = Mutator_state_reader.t = struct
+module Mutator_reader : sig
+  include READER with type reader = Mutator_state_reader.t
+
+  val get_old_info : reader:reader -> (File_key.t -> info option) Expensive.t
+end = struct
   type reader = Mutator_state_reader.t
 
   let get_file ~reader:_ = Expensive.wrap NameHeap.get
@@ -292,6 +294,8 @@ module Mutator_reader : READER with type reader = Mutator_state_reader.t = struc
           failwith (Printf.sprintf "resolved requires not found for file %s" (File_key.to_string f)))
 
   let get_info ~reader:_ = Expensive.wrap InfoHeap.get
+
+  let get_old_info ~reader:_ = Expensive.wrap InfoHeap.get_old
 
   let get_info_unsafe ~reader ~audit f =
     match get_info ~reader ~audit f with

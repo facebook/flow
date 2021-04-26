@@ -7,8 +7,12 @@
 
 (************** file filter utils ***************)
 
+type lib_dir =
+  | Prelude of Path.t
+  | Flowlib of Path.t
+
 type options = {
-  default_lib_dir: Path.t option;
+  default_lib_dir: lib_dir option;
   ignores: (string * Str.regexp) list;
   untyped: (string * Str.regexp) list;
   declarations: (string * Str.regexp) list;
@@ -357,6 +361,18 @@ let dir_filter_of_options (options : options) f =
     fun _path ->
   true
 
+let is_in_flowlib (options : options) : string -> bool =
+  match options.default_lib_dir with
+  | None -> (fun _ -> false)
+  | Some libdir ->
+    let root =
+      match libdir with
+      | Prelude path
+      | Flowlib path ->
+        path
+    in
+    is_prefix (Path.to_string root)
+
 let init ?(flowlibs_only = false) (options : options) =
   let node_module_filter = is_node_module options in
   let libs =
@@ -368,7 +384,13 @@ let init ?(flowlibs_only = false) (options : options) =
   let (libs, filter) =
     match options.default_lib_dir with
     | None -> (libs, is_valid_path ~options)
-    | Some root ->
+    | Some libdir ->
+      let root =
+        match libdir with
+        | Prelude path
+        | Flowlib path ->
+          path
+      in
       let is_in_flowlib = is_prefix (Path.to_string root) in
       let is_valid_path = is_valid_path ~options in
       let filter path = is_in_flowlib path || is_valid_path path in
@@ -516,7 +538,8 @@ and normalize_path_ dir names =
     (* /<names> => /<names> *)
     construct_path Filename.dir_sep names
   | root :: names when is_windows_root root ->
-    (* C:\<names> => C:\<names> *)
+    (* c:\<names> => C:\<names> *)
+    let root = String.uppercase_ascii root in
     construct_path (root ^ Filename.dir_sep) names
   | _ ->
     (* <names> => dir/<names> *)
@@ -524,30 +547,30 @@ and normalize_path_ dir names =
 
 and construct_path = List.fold_left Filename.concat
 
+let split_path =
+  let rec f acc rest =
+    let dir = Filename.dirname rest in
+    if rest = dir then
+      if Filename.is_relative dir (* True for things like ".", false for "/", "C:/" *) then
+        acc
+      (* "path/to/foo.js" becomes ["path"; "to"; "foo.js"] *)
+      else
+        match acc with
+        | [] -> [dir] (* "/" becomes ["/"] *)
+        | last_dir :: rest ->
+          (* "/path/to/foo.js" becomes ["/path"; "to"; "foo.js"] *)
+          Filename.concat dir last_dir :: rest
+    else
+      f (Filename.basename rest :: acc) dir
+  in
+  (fun path -> f [] path)
+
 (* relative_path: (/path/to/foo, /path/to/bar/baz) -> ../bar/baz
  * absolute_path (/path/to/foo, ../bar/baz) -> /path/to/bar/baz
  *
  * Both of these are designed to avoid using Path and realpath so that we don't actually read the
  * file system *)
 let (relative_path, absolute_path) =
-  let split_path =
-    let rec f acc rest =
-      let dir = Filename.dirname rest in
-      if rest = dir then
-        if Filename.is_relative dir (* True for things like ".", false for "/", "C:/" *) then
-          acc
-        (* "path/to/foo.js" becomes ["path"; "to"; "foo.js"] *)
-        else
-          match acc with
-          | [] -> [dir] (* "/" becomes ["/"] *)
-          | last_dir :: rest ->
-            (* "/path/to/foo.js" becomes ["/path"; "to"; "foo.js"] *)
-            Filename.concat dir last_dir :: rest
-      else
-        f (Filename.basename rest :: acc) dir
-    in
-    (fun path -> f [] path)
-  in
   let rec make_relative = function
     | (dir1 :: root, dir2 :: file) when dir1 = dir2 -> make_relative (root, file)
     | (root, file) -> List.fold_left (fun path _ -> Filename.parent_dir_name :: path) file root

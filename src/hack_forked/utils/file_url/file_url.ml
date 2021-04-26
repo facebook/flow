@@ -94,7 +94,8 @@ let parse uri =
   if host <> "" && host <> "localhost" then failwith ("not localhost - " ^ uri);
   if query_fragment <> "" then failwith ("file url can't have query/fragment - " ^ uri);
   if Str.string_match dos_url_re path 0 then
-    let drive_letter = Str.matched_group 1 path in
+    (* normalize drive letter to uppercase to match `realpath` *)
+    let drive_letter = Str.matched_group 1 path |> String.uppercase_ascii in
     let rest = Str.matched_group 2 path in
     drive_letter ^ ":" ^ rest
   else if String.length path > 0 && path.[0] = '/' then
@@ -122,7 +123,8 @@ let parse uri =
 let create path =
   let absolute_path =
     if Str.string_match dos_re path 0 then
-      let drive_letter = Str.matched_group 1 path in
+      (* normalize drive letter to lower-case to match VS Code *)
+      let drive_letter = Str.matched_group 1 path |> String.lowercase_ascii in
       let rest = Str.matched_group 2 path in
       Printf.sprintf "%s:%s" drive_letter rest
     else if String_utils.string_starts_with path "/" then

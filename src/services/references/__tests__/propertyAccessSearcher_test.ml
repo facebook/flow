@@ -19,8 +19,6 @@ let run ctxt expected name content =
         parse_prevent_munge = false;
         parse_module_ref_prefix = None;
         parse_facebook_fbt = None;
-        parse_arch = Options.Classic;
-        parse_abstract_locations = false;
         (* following options unused in classic mode *)
         parse_type_asserts = false;
         parse_suppress_types = SSet.empty;

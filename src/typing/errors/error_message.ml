@@ -41,18 +41,18 @@ and 'loc t' =
       branches: ('loc Reason.virtual_reason * 'loc t') list;
     }
   | EIncompatibleProp of {
-      prop: string option;
+      prop: name option;
       reason_prop: 'loc virtual_reason;
       reason_obj: 'loc virtual_reason;
       special: lower_kind option;
       use_op: 'loc virtual_use_op option;
     }
   | EDebugPrint of 'loc virtual_reason * string
-  | EExportValueAsType of 'loc virtual_reason * string
+  | EExportValueAsType of 'loc virtual_reason * name
   | EImportValueAsType of 'loc virtual_reason * string
   | EImportTypeAsTypeof of 'loc virtual_reason * string
   | EImportTypeAsValue of 'loc virtual_reason * string
-  | ERefineAsValue of 'loc virtual_reason * string
+  | ERefineAsValue of 'loc virtual_reason * name
   | ENoDefaultExport of 'loc virtual_reason * string * string option
   | EOnlyDefaultExport of 'loc virtual_reason * string * string
   | ENoNamedExport of 'loc virtual_reason * string * string * string option
@@ -80,7 +80,7 @@ and 'loc t' =
       use_op: 'loc virtual_use_op;
     }
   | EPropNotFound of {
-      prop_name: string option;
+      prop_name: name option;
       reason_prop: 'loc virtual_reason;
       reason_obj: 'loc virtual_reason;
       use_op: 'loc virtual_use_op;
@@ -88,17 +88,17 @@ and 'loc t' =
     }
   | EPropNotReadable of {
       reason_prop: 'loc virtual_reason;
-      prop_name: string option;
+      prop_name: name option;
       use_op: 'loc virtual_use_op;
     }
   | EPropNotWritable of {
       reason_prop: 'loc virtual_reason;
-      prop_name: string option;
+      prop_name: name option;
       use_op: 'loc virtual_use_op;
     }
   | EPropPolarityMismatch of
       ('loc virtual_reason * 'loc virtual_reason)
-      * string option
+      * name option
       * (Polarity.t * Polarity.t)
       * 'loc virtual_use_op
   | EPolarityMismatch of {
@@ -109,17 +109,16 @@ and 'loc t' =
     }
   | EBuiltinLookupFailed of {
       reason: 'loc virtual_reason;
-      name: string option;
+      name: Reason.name option;
     }
   | EStrictLookupFailed of {
       reason_prop: 'loc virtual_reason;
       reason_obj: 'loc virtual_reason;
-      name: string option;
+      name: name option;
       suggestion: string option;
       use_op: 'loc virtual_use_op option;
     }
-  | EPrivateLookupFailed of
-      ('loc virtual_reason * 'loc virtual_reason) * string * 'loc virtual_use_op
+  | EPrivateLookupFailed of ('loc virtual_reason * 'loc virtual_reason) * name * 'loc virtual_use_op
   | EAdditionMixed of 'loc virtual_reason * 'loc virtual_use_op
   | EComparison of ('loc virtual_reason * 'loc virtual_reason)
   | ENonStrictEqualityComparison of ('loc virtual_reason * 'loc virtual_reason)
@@ -166,6 +165,8 @@ and 'loc t' =
     }
   | EIncompatibleWithExact of
       ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op * exactness_error_kind
+  | EFunctionIncompatibleWithIndexer of
+      ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
   | EUnsupportedExact of ('loc virtual_reason * 'loc virtual_reason)
   | EIdxArity of 'loc virtual_reason
   | EIdxUse1 of 'loc virtual_reason
@@ -203,7 +204,7 @@ and 'loc t' =
   | EUseArrayLiteral of 'loc
   | EMissingAnnotation of 'loc virtual_reason * 'loc virtual_reason list
   | EMissingLocalAnnotation of 'loc virtual_reason
-  | EBindingError of binding_error * 'loc * string * Scope.Entry.t
+  | EBindingError of binding_error * 'loc * name * Scope.Entry.t
   | ERecursionLimit of ('loc virtual_reason * 'loc virtual_reason)
   | EModuleOutsideRoot of 'loc * string
   | EMalformedPackageJson of 'loc * string
@@ -211,6 +212,7 @@ and 'loc t' =
   | EExperimentalEnums of 'loc
   | EExperimentalEnumsWithUnknownMembers of 'loc
   | EExperimentalThisAnnot of 'loc
+  | EIndexedAccessNotEnabled of 'loc
   | EUnsafeGetSet of 'loc
   | EIndeterminateModuleType of 'loc
   | EBadExportPosition of 'loc
@@ -220,8 +222,14 @@ and 'loc t' =
   | EInvalidImportStarUse of 'loc * 'loc virtual_reason
   | ENonConstVarExport of 'loc * 'loc virtual_reason option
   | EThisInExportedFunction of 'loc
+  | ESuperOutsideMethod of 'loc
   | EMixedImportAndRequire of 'loc * 'loc virtual_reason
-  | EExportRenamedDefault of 'loc * string
+  | EToplevelLibraryImport of 'loc
+  | EExportRenamedDefault of {
+      loc: 'loc;
+      name: string option;
+      is_reexport: bool;
+    }
   | EUnreachable of 'loc
   | EInvalidObjectKit of {
       reason: 'loc virtual_reason;
@@ -233,6 +241,7 @@ and 'loc t' =
   | EBinaryInRHS of 'loc virtual_reason
   | EArithmeticOperand of 'loc virtual_reason
   | EForInRHS of 'loc virtual_reason
+  | EInstanceofRHS of 'loc virtual_reason
   | EObjectComputedPropertyAccess of ('loc virtual_reason * 'loc virtual_reason)
   | EObjectComputedPropertyAssign of ('loc virtual_reason * 'loc virtual_reason)
   | EInvalidLHSInAssignment of 'loc
@@ -313,7 +322,7 @@ and 'loc t' =
       spread_reason: 'loc virtual_reason;
       object1_reason: 'loc virtual_reason;
       object2_reason: 'loc virtual_reason;
-      propname: string;
+      propname: name;
       error_kind: exactness_error_kind;
       use_op: 'loc virtual_use_op;
     }
@@ -340,7 +349,7 @@ and 'loc t' =
     }
   (* enums *)
   | EEnumInvalidMemberAccess of {
-      member_name: string option;
+      member_name: name option;
       suggestion: string option;
       reason: 'loc virtual_reason;
       enum_reason: 'loc virtual_reason;
@@ -410,6 +419,13 @@ and 'loc t' =
       blame_reasons: 'loc virtual_reason list;
     }
   | EMalformedCode of 'loc
+  | EImplicitInstantiationTemporaryError of 'loc * string
+  | EImportInternalReactServerModule of 'loc
+  | EImplicitInstantiationUnderconstrainedError of {
+      reason_call: 'loc virtual_reason;
+      reason_l: 'loc virtual_reason;
+      bound: string;
+    }
 
 and 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;
@@ -473,7 +489,6 @@ and 'loc unsupported_syntax =
   | ClassPropertyComputed
   | ReactCreateClassPropertyNonInit
   | RequireDynamicArgument
-  | RequireLazyDynamicArgument
   | CatchParameterAnnotation
   | CatchParameterDeclaration
   | DestructuringObjectPropertyLiteralNonString
@@ -504,12 +519,12 @@ and lower_kind =
   | Incompatible_intersection
 
 and 'loc upper_kind =
-  | IncompatibleGetPropT of 'loc * string option
-  | IncompatibleSetPropT of 'loc * string option
-  | IncompatibleMatchPropT of 'loc * string option
+  | IncompatibleGetPropT of 'loc * name option
+  | IncompatibleSetPropT of 'loc * name option
+  | IncompatibleMatchPropT of 'loc * name option
   | IncompatibleGetPrivatePropT
   | IncompatibleSetPrivatePropT
-  | IncompatibleMethodT of 'loc * string option
+  | IncompatibleMethodT of 'loc * name option
   | IncompatibleCallT
   | IncompatibleMixedCallT
   | IncompatibleConstructorT
@@ -528,7 +543,7 @@ and 'loc upper_kind =
   | IncompatibleThisSpecializeT
   | IncompatibleVarianceCheckT
   | IncompatibleGetKeysT
-  | IncompatibleHasOwnPropT of 'loc * string option
+  | IncompatibleHasOwnPropT of 'loc * name option
   | IncompatibleGetValuesT
   | IncompatibleUnaryMinusT
   | IncompatibleMapTypeTObject
@@ -568,14 +583,13 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     | ( ComprehensionExpression | GeneratorExpression | MetaPropertyExpression
       | ObjectPropertyLiteralNonString | ObjectPropertyGetSet | ObjectPropertyComputedGetSet
       | InvariantSpreadArgument | ClassPropertyLiteral | ClassPropertyComputed
-      | ReactCreateClassPropertyNonInit | RequireDynamicArgument | RequireLazyDynamicArgument
-      | CatchParameterAnnotation | CatchParameterDeclaration
-      | DestructuringObjectPropertyLiteralNonString | DestructuringExpressionPattern
-      | PredicateDeclarationForImplementation | PredicateDeclarationWithoutExpression
-      | PredicateDeclarationAnonymousParameters | PredicateInvalidBody
-      | PredicateFunctionAbstractReturnType | PredicateVoidReturn | MultipleIndexers
-      | MultipleProtos | ExplicitCallAfterProto | ExplicitProtoAfterCall | SpreadArgument
-      | ImportDynamicArgument | IllegalName | UnsupportedInternalSlot _ ) as u ->
+      | ReactCreateClassPropertyNonInit | RequireDynamicArgument | CatchParameterAnnotation
+      | CatchParameterDeclaration | DestructuringObjectPropertyLiteralNonString
+      | DestructuringExpressionPattern | PredicateDeclarationForImplementation
+      | PredicateDeclarationWithoutExpression | PredicateDeclarationAnonymousParameters
+      | PredicateInvalidBody | PredicateFunctionAbstractReturnType | PredicateVoidReturn
+      | MultipleIndexers | MultipleProtos | ExplicitCallAfterProto | ExplicitProtoAfterCall
+      | SpreadArgument | ImportDynamicArgument | IllegalName | UnsupportedInternalSlot _ ) as u ->
       u
   in
   function
@@ -682,6 +696,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       }
   | EIncompatibleWithExact ((r1, r2), op, kind) ->
     EIncompatibleWithExact ((map_reason r1, map_reason r2), map_use_op op, kind)
+  | EFunctionIncompatibleWithIndexer ((r1, r2), op) ->
+    EFunctionIncompatibleWithIndexer ((map_reason r1, map_reason r2), map_use_op op)
   | EInvalidCharSet { invalid = (ir, set); valid; use_op } ->
     EInvalidCharSet
       { invalid = (map_reason ir, set); valid = map_reason valid; use_op = map_use_op use_op }
@@ -791,6 +807,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EExperimentalEnums loc -> EExperimentalEnums (f loc)
   | EExperimentalEnumsWithUnknownMembers loc -> EExperimentalEnumsWithUnknownMembers (f loc)
   | EExperimentalThisAnnot loc -> EExperimentalThisAnnot (f loc)
+  | EIndexedAccessNotEnabled loc -> EIndexedAccessNotEnabled (f loc)
   | EIndeterminateModuleType loc -> EIndeterminateModuleType (f loc)
   | EBadExportPosition loc -> EBadExportPosition (f loc)
   | EBadExportContext (s, loc) -> EBadExportContext (s, f loc)
@@ -799,14 +816,18 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInvalidImportStarUse (loc, r) -> EInvalidImportStarUse (f loc, map_reason r)
   | ENonConstVarExport (loc, r) -> ENonConstVarExport (f loc, Base.Option.map ~f:map_reason r)
   | EThisInExportedFunction loc -> EThisInExportedFunction (f loc)
+  | ESuperOutsideMethod loc -> ESuperOutsideMethod (f loc)
   | EMixedImportAndRequire (loc, r) -> EMixedImportAndRequire (f loc, map_reason r)
-  | EExportRenamedDefault (loc, s) -> EExportRenamedDefault (f loc, s)
+  | EToplevelLibraryImport loc -> EToplevelLibraryImport (f loc)
+  | EExportRenamedDefault { loc; name; is_reexport } ->
+    EExportRenamedDefault { loc = f loc; name; is_reexport }
   | EUnreachable loc -> EUnreachable (f loc)
   | EInvalidTypeof (loc, s) -> EInvalidTypeof (f loc, s)
   | EBinaryInLHS r -> EBinaryInLHS (map_reason r)
   | EBinaryInRHS r -> EBinaryInRHS (map_reason r)
   | EArithmeticOperand r -> EArithmeticOperand (map_reason r)
   | EForInRHS r -> EForInRHS (map_reason r)
+  | EInstanceofRHS r -> EInstanceofRHS (map_reason r)
   | EObjectComputedPropertyAccess (r1, r2) ->
     EObjectComputedPropertyAccess (map_reason r1, map_reason r2)
   | EObjectComputedPropertyAssign (r1, r2) ->
@@ -952,6 +973,12 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         blame_reasons = Base.List.map ~f:map_reason blame_reasons;
       }
   | EMalformedCode loc -> EMalformedCode (f loc)
+  | EImplicitInstantiationTemporaryError (loc, msg) ->
+    EImplicitInstantiationTemporaryError (f loc, msg)
+  | EImportInternalReactServerModule loc -> EImportInternalReactServerModule (f loc)
+  | EImplicitInstantiationUnderconstrainedError { reason_call; reason_l; bound } ->
+    EImplicitInstantiationUnderconstrainedError
+      { reason_call = map_reason reason_call; reason_l = map_reason reason_l; bound }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1001,6 +1028,8 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op -> EUnionSpeculationFailed { use_op; reason; reason_op; branches })
   | EIncompatibleWithExact (rs, op, kind) ->
     util op (fun op -> EIncompatibleWithExact (rs, op, kind))
+  | EFunctionIncompatibleWithIndexer (rs, op) ->
+    util op (fun op -> EFunctionIncompatibleWithIndexer (rs, op))
   | EInvalidCharSet { invalid; valid; use_op } ->
     util use_op (fun use_op -> EInvalidCharSet { invalid; valid; use_op })
   | EIncompatibleWithShape (l, u, use_op) ->
@@ -1096,6 +1125,7 @@ let util_use_op_of_msg nope util = function
   | EExperimentalEnums _
   | EExperimentalEnumsWithUnknownMembers _
   | EExperimentalThisAnnot _
+  | EIndexedAccessNotEnabled _
   | EIndeterminateModuleType _
   | EBadExportPosition _
   | EBadExportContext _
@@ -1104,7 +1134,9 @@ let util_use_op_of_msg nope util = function
   | EInvalidImportStarUse _
   | ENonConstVarExport _
   | EThisInExportedFunction _
+  | ESuperOutsideMethod _
   | EMixedImportAndRequire _
+  | EToplevelLibraryImport _
   | EExportRenamedDefault _
   | EUnreachable _
   | EInvalidTypeof (_, _)
@@ -1112,6 +1144,7 @@ let util_use_op_of_msg nope util = function
   | EBinaryInRHS _
   | EArithmeticOperand _
   | EForInRHS _
+  | EInstanceofRHS _
   | EObjectComputedPropertyAccess (_, _)
   | EObjectComputedPropertyAssign (_, _)
   | EInvalidLHSInAssignment _
@@ -1157,7 +1190,10 @@ let util_use_op_of_msg nope util = function
   | EEnumInvalidCheck _
   | EEnumMemberUsedAsType _
   | EAssignExportedConstLikeBinding _
-  | EMalformedCode _ ->
+  | EMalformedCode _
+  | EImplicitInstantiationTemporaryError _
+  | EImportInternalReactServerModule _
+  | EImplicitInstantiationUnderconstrainedError _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1182,6 +1218,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EForInRHS reason
   | EBinaryInRHS reason
   | EBinaryInLHS reason
+  | EInstanceofRHS reason
   | EArithmeticOperand reason
   | ERecursionLimit (reason, _)
   | EMissingAnnotation (reason, _)
@@ -1272,12 +1309,15 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInvalidImportStarUse (loc, _)
   | ENonConstVarExport (loc, _)
   | EThisInExportedFunction loc
+  | ESuperOutsideMethod loc
   | EMixedImportAndRequire (loc, _)
-  | EExportRenamedDefault (loc, _)
+  | EToplevelLibraryImport loc
+  | EExportRenamedDefault { loc; _ }
   | EIndeterminateModuleType loc
   | EExperimentalEnums loc
   | EExperimentalEnumsWithUnknownMembers loc
   | EExperimentalThisAnnot loc
+  | EIndexedAccessNotEnabled loc
   | EUnsafeGetSet loc
   | EUninitializedInstanceProperty (loc, _)
   | EModuleOutsideRoot (loc, _)
@@ -1297,8 +1337,12 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUnexpectedThisType loc
   | ETypeParamMinArity (loc, _)
   | EAssignExportedConstLikeBinding { loc; _ }
-  | EMalformedCode loc ->
+  | EMalformedCode loc
+  | EImplicitInstantiationTemporaryError (loc, _)
+  | EImportInternalReactServerModule loc ->
     Some loc
+  | EImplicitInstantiationUnderconstrainedError { reason_call; _ } ->
+    Some (poly_loc_of_reason reason_call)
   | ELintSetting (loc, _) -> Some loc
   | ETypeParamArity (loc, _) -> Some loc
   | ESketchyNullLint { loc; _ } -> Some loc
@@ -1307,17 +1351,13 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ESignatureVerification sve ->
     Signature_error.(
       (match sve with
-      | ExpectedSort (_, _, loc)
       | ExpectedAnnotation (loc, _)
       | UnexpectedObjectKey (loc, _)
       | UnexpectedArraySpread (loc, _)
       | UnexpectedArrayHole loc
       | EmptyArray loc
       | EmptyObject loc
-      | UnexpectedExpression (loc, _)
-      | SketchyToplevelDef loc
-      | UnsupportedPredicateExpression loc
-      | TODO (_, loc) ->
+      | UnexpectedExpression (loc, _) ->
         Some loc))
   | EDuplicateModuleProvider { conflict; _ } -> Some conflict
   | EBindingError (_, loc, _, _) -> Some loc
@@ -1342,6 +1382,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EIncompatibleWithShape _
   | EInvalidCharSet _
   | EIncompatibleWithExact _
+  | EFunctionIncompatibleWithIndexer _
   | EUnionSpeculationFailed _
   | ETupleUnsafeWrite _
   | EROArrayWrite _
@@ -1398,6 +1439,7 @@ let kind_of_msg =
     | EExperimentalEnums _
     | EExperimentalEnumsWithUnknownMembers _
     | EExperimentalThisAnnot _
+    | EIndexedAccessNotEnabled _
     | EIndeterminateModuleType _
     | EUnreachable _
     | EInvalidTypeof _ ->
@@ -1415,8 +1457,8 @@ let mk_prop_message =
   Errors.Friendly.(
     function
     | None
-    | Some "$key"
-    | Some "$value" ->
+    (* TODO the $-prefixed names should be internal *)
+    | Some ("$key" | "$value") ->
       [text "an index signature declaring the expected key / value type"]
     | Some "$call" -> [text "a call signature declaring the expected parameter / return type"]
     | Some prop -> [text "property "; code prop])
@@ -1539,14 +1581,22 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     PropMissing
       {
         loc = loc_of_reason reason_prop;
-        prop;
+        prop = Base.Option.map ~f:display_string_of_name prop;
         reason_obj;
         suggestion = None;
         use_op = Base.Option.value ~default:unknown_use use_op;
       }
   | EDebugPrint (_, str) -> Normal { features = [text str] }
   | EExportValueAsType (_, export_name) ->
-    Normal { features = [text "Cannot export the value "; code export_name; text " as a type."] }
+    Normal
+      {
+        features =
+          [
+            text "Cannot export the value ";
+            code (display_string_of_name export_name);
+            text " as a type.";
+          ];
+      }
   | EImportValueAsType (_, export_name) ->
     let (prefix, export) = msg_export "the value " export_name in
     let features =
@@ -1595,7 +1645,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     Normal { features }
   | ERefineAsValue (_, name) ->
-    let (_, export) = msg_export "" name in
+    let (_, export) = msg_export "" (display_string_of_name name) in
     let features = [text "Cannot refine "; export; text " as a value. "] in
     Normal { features }
   | ENoDefaultExport (_, module_name, suggestion) ->
@@ -1816,25 +1866,40 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Incompatible { reason_lower; reason_upper; use_op }
   | EPropNotFound { prop_name; reason_obj; reason_prop; use_op; suggestion } ->
     PropMissing
-      { loc = loc_of_reason reason_prop; prop = prop_name; reason_obj; use_op; suggestion }
+      {
+        loc = loc_of_reason reason_prop;
+        prop = Base.Option.map ~f:display_string_of_name prop_name;
+        reason_obj;
+        use_op;
+        suggestion;
+      }
   | EPropNotReadable { reason_prop; prop_name = x; use_op } ->
     UseOp
       {
         loc = loc_of_reason reason_prop;
-        features = mk_prop_message x @ [text " is not readable"];
+        features =
+          mk_prop_message (Base.Option.map ~f:display_string_of_name x) @ [text " is not readable"];
         use_op;
       }
   | EPropNotWritable { reason_prop; prop_name = x; use_op } ->
     UseOp
       {
         loc = loc_of_reason reason_prop;
-        features = mk_prop_message x @ [text " is not writable"];
+        features =
+          mk_prop_message (Base.Option.map ~f:display_string_of_name x) @ [text " is not writable"];
         use_op;
       }
   | EPropPolarityMismatch
       ((reason_lower, reason_upper), prop, (polarity_lower, polarity_upper), use_op) ->
     PropPolarityMismatch
-      { prop; reason_lower; polarity_lower; reason_upper; polarity_upper; use_op }
+      {
+        prop = Base.Option.map ~f:display_string_of_name prop;
+        reason_lower;
+        polarity_lower;
+        reason_upper;
+        polarity_upper;
+        use_op;
+      }
   | EPolarityMismatch { reason; name; expected_polarity; actual_polarity } ->
     let polarity_string = function
       | Polarity.Positive -> "output"
@@ -1843,7 +1908,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     let expected_polarity = polarity_string expected_polarity in
     let actual_polarity = polarity_string actual_polarity in
-    let reason_targ = mk_reason (RIdentifier name) (def_loc_of_reason reason) in
+    let reason_targ = mk_reason (RIdentifier (OrdinaryName name)) (def_loc_of_reason reason) in
     let features =
       [
         text "Cannot use ";
@@ -1860,17 +1925,17 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     let features =
       match name with
       | Some x when is_internal_module_name x ->
-        [text "Cannot resolve module "; code (uninternal_module_name x); text "."]
+        [text "Cannot resolve module "; code (uninternal_name x); text "."]
       | None -> [text "Cannot resolve name "; desc reason; text "."]
       | Some x when is_internal_name x -> [text "Cannot resolve name "; desc reason; text "."]
-      | Some x -> [text "Cannot resolve name "; code x; text "."]
+      | Some x -> [text "Cannot resolve name "; code (display_string_of_name x); text "."]
     in
     Normal { features }
   | EStrictLookupFailed { reason_prop; reason_obj; name; suggestion; use_op } ->
     PropMissing
       {
         loc = loc_of_reason reason_prop;
-        prop = name;
+        prop = Base.Option.map ~f:display_string_of_name name;
         suggestion;
         reason_obj;
         use_op = Base.Option.value ~default:unknown_use use_op;
@@ -1879,7 +1944,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     PropMissing
       {
         loc = loc_of_reason (fst reasons);
-        prop = Some ("#" ^ x);
+        prop = Some ("#" ^ display_string_of_name x);
         reason_obj = snd reasons;
         use_op;
         suggestion = None;
@@ -2028,6 +2093,13 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         features = [text object_kind; ref lower; text " is incompatible with exact "; ref upper];
         use_op;
       }
+  | EFunctionIncompatibleWithIndexer ((lower, upper), use_op) ->
+    UseOp
+      {
+        loc = loc_of_reason lower;
+        features = [ref lower; text " is incompatible with indexed "; ref upper];
+        use_op;
+      }
   | EUnsupportedExact (_, lower) ->
     Normal { features = [text "Cannot create exact type from "; ref lower; text "."] }
   | EIdxArity _ ->
@@ -2171,14 +2243,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         [text "The parameter passed to "; code "require"; text " must be a string literal."]
       | ImportDynamicArgument ->
         [text "The parameter passed to "; code "import"; text " must be a string literal."]
-      | RequireLazyDynamicArgument ->
-        [
-          text "The first argument to ";
-          code "requireLazy";
-          text " must be an ";
-          text "array literal of string literals and the second argument must ";
-          text "be a callback.";
-        ]
       | CatchParameterAnnotation ->
         [text "Type annotations for catch parameters are not yet supported."]
       | CatchParameterDeclaration -> [text "Unsupported catch parameter declaration."]
@@ -2228,12 +2292,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     let default = [text "Missing type annotation for "; desc reason; text "."] in
     let features =
       match desc_of_reason reason with
-      | RTypeParam (_, (RImplicitInstantiation, _), _) ->
-        [
-          text "Please use a concrete type annotation instead of ";
-          code "_";
-          text " in this position.";
-        ]
       | RTypeParam (_, (reason_op_desc, reason_op_loc), (reason_tapp_desc, reason_tapp_loc)) ->
         let reason_op = mk_reason reason_op_desc reason_op_loc in
         let reason_tapp = mk_reason reason_tapp_desc reason_tapp_loc in
@@ -2259,12 +2317,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Normal { features = [text "Missing an annotation on "; desc r; text "."] }
   | EBindingError (binding_error, _, x, entry) ->
     let desc =
-      if x = internal_name "this" then
-        RThis
-      else if x = internal_name "super" then
-        RSuper
-      else
-        RIdentifier x
+      match x with
+      | InternalName "this" -> RThis
+      | InternalName "super" -> RSuper
+      | _ -> RIdentifier x
     in
     (* We can call to_loc here because reaching this point requires that everything else
        in the error message is concretized already; making Scopes polymorphic is not a good idea *)
@@ -2416,6 +2472,20 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
+  | EIndexedAccessNotEnabled _ ->
+    let features =
+      [
+        text "Indexed Access is not enabled. ";
+        text "You may enable it by adding ";
+        code "indexed_access=true";
+        text " to the ";
+        code "[options]";
+        text " section of your ";
+        code ".flowconfig";
+        text ".";
+      ]
+    in
+    Normal { features }
   | EIndeterminateModuleType _ ->
     let features =
       [
@@ -2489,6 +2559,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       }
   | EThisInExportedFunction _ ->
     Normal { features = [text "Cannot use "; code "this"; text " in an exported function."] }
+  | ESuperOutsideMethod _ ->
+    Normal { features = [text "Cannot use "; code "super"; text " outside of a class method."] }
   | EMixedImportAndRequire (_, import_reason) ->
     Normal
       {
@@ -2501,20 +2573,57 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " statements in the same file.";
           ];
       }
-  | EExportRenamedDefault (_, name) ->
+  | EToplevelLibraryImport _ ->
     Normal
       {
         features =
           [
-            text "Cannot set the default export of a module by renaming ";
-            code name;
-            text " to ";
-            code "default";
-            text ". If you intended to set the default export use ";
-            code (spf "export default %s" name);
-            text " instead.";
+            text "Cannot use an import statement at the toplevel of a library file. ";
+            text "Import statements may only appear inside a ";
+            code "declare module";
+            text ".";
           ];
       }
+  | EExportRenamedDefault { loc = _; name; is_reexport } ->
+    let reexport_message () =
+      [
+        text "If you intended to set the default export please ";
+        code "import";
+        text " and then ";
+        code "export default";
+        text " instead.";
+      ]
+    in
+    let features =
+      match (name, is_reexport) with
+      | (None, _) ->
+        [
+          text "Cannot set the default export of a module by re-exporting the ";
+          code "default";
+          text " property. ";
+        ]
+        @ reexport_message ()
+      | (Some name, true) ->
+        [
+          text "Cannot set the default export of a module by re-exporting ";
+          code name;
+          text " as ";
+          code "default";
+          text ". ";
+        ]
+        @ reexport_message ()
+      | (Some name, false) ->
+        [
+          text "Cannot set the default export of a module by renaming ";
+          code name;
+          text " to ";
+          code "default";
+          text ". If you intended to set the default export use ";
+          code (spf "export default %s" name);
+          text " instead.";
+        ]
+    in
+    Normal { features }
   | EUnexpectedTemporaryBaseType _ ->
     Normal
       {
@@ -2534,8 +2643,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Signature_error.(
       let features =
         match sve with
-        | ExpectedSort (sort, x, _) ->
-          [code x; text (spf " is not a %s." (Signature_builder_kind.Sort.to_string sort))]
         | ExpectedAnnotation (_, sort) ->
           [text (spf "Missing type annotation at %s:" (Expected_annotation_sort.to_string sort))]
         | UnexpectedObjectKey _ -> [text "Expected simple key in object:"]
@@ -2559,10 +2666,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
                  (Flow_ast_utils.ExpressionSort.to_string esort));
             text "Please provide an annotation, e.g., by adding a type cast around this expression.";
           ]
-        | SketchyToplevelDef _ -> [text "Unexpected toplevel definition that needs hoisting:"]
-        | UnsupportedPredicateExpression _ ->
-          [text "Unsupported kind of expression in predicate function:"]
-        | TODO (msg, _) -> [text (spf "TODO: %s is not supported yet, try using a type cast." msg)]
       in
       let features =
         text "Cannot build a typed interface for this module. "
@@ -2629,6 +2732,17 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text "because ";
         ref reason;
         text " is not an object, null, or undefined.";
+      ]
+    in
+    Normal { features }
+  | EInstanceofRHS reason ->
+    let features =
+      [
+        text "The right-hand side of an ";
+        code "instanceof";
+        text " expression must be an object, but got ";
+        ref reason;
+        text ".";
       ]
     in
     Normal { features }
@@ -3099,7 +3213,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " Try removing the indexer in ";
             ref object2_reason;
             text " or make ";
-            code propname;
+            code (display_string_of_name propname);
             text " a required property";
           ] )
     in
@@ -3112,9 +3226,9 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text " ";
         text error_reason;
         text ", so it may contain ";
-        code propname;
+        code (display_string_of_name propname);
         text " with a type that conflicts with ";
-        code propname;
+        code (display_string_of_name propname);
         text "'s definition in ";
         ref object1_reason;
         text ".";
@@ -3208,6 +3322,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       @
       match member_name with
       | Some name ->
+        let name = display_string_of_name name in
         [text " because "; code name; text " is not a member of "; ref enum_reason; text "."]
         @ Base.Option.value_map suggestion ~default:[] ~f:(fun suggestion ->
               [text " Did you mean the member "; code suggestion; text "?"])
@@ -3400,6 +3515,31 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text ".";
           ];
       }
+  | EImplicitInstantiationTemporaryError (_, msg) -> Normal { features = [text msg] }
+  | EImportInternalReactServerModule _ ->
+    Normal
+      {
+        features =
+          [
+            text "Do not import ";
+            code Type.react_server_module_ref;
+            text " directly. Instead, ensure you are in a React Server file and import ";
+            code "react";
+            text " normally.";
+          ];
+      }
+  | EImplicitInstantiationUnderconstrainedError { reason_call; reason_l; bound } ->
+    Normal
+      {
+        features =
+          [
+            code bound;
+            text " is underconstrained by ";
+            ref reason_call;
+            text " and is defined in ";
+            ref reason_l;
+          ];
+      }
 
 let is_lint_error = function
   | EUntypedTypeImport _
@@ -3541,6 +3681,7 @@ let error_code_of_message err : error_code option =
   | EExportsAnnot _ -> Some InvalidExportsTypeArg
   | EExportValueAsType (_, _) -> Some ExportValueAsType
   | EForInRHS _ -> Some InvalidInRhs
+  | EInstanceofRHS _ -> Some InvalidInRhs
   | EFunctionCallExtraArg _ -> Some ExtraArg
   | EFunPredCustom (_, _) -> Some FunctionPredicate
   | EIdxArity _ -> Some InvalidIdx
@@ -3560,11 +3701,13 @@ let error_code_of_message err : error_code option =
   | EIncompatibleProp { use_op = None; _ } -> Some IncompatibleType
   | EIncompatibleWithExact (_, _, Inexact) -> Some IncompatibleExact
   | EIncompatibleWithExact (_, _, Indexer) -> Some IncompatibleIndexer
+  | EFunctionIncompatibleWithIndexer _ -> Some IncompatibleFunctionIndexer
   | EIncompatibleWithShape _ -> Some IncompatibleShape
   | EEnumIncompatible { use_op; _ }
   | EIncompatibleWithUseOp { use_op; _ } ->
     error_code_of_use_op use_op ~default:IncompatibleType
   | EIndeterminateModuleType _ -> Some ModuleTypeConflict
+  | EIndexedAccessNotEnabled _ -> Some IndexedAccessNotEnabled
   | EInexactMayOverwriteIndexer _ -> Some CannotSpreadInexact
   (* We don't want these to be suppressible *)
   | EInternal (_, _) -> None
@@ -3583,6 +3726,7 @@ let error_code_of_message err : error_code option =
   | EMissingLocalAnnotation _ -> Some MissingLocalAnnot
   | EMissingTypeArgs _ -> Some MissingTypeArg
   | EMixedImportAndRequire _ -> Some MixedImportAndRequire
+  | EToplevelLibraryImport _ -> Some ToplevelLibraryImport
   | EModuleOutsideRoot (_, _) -> Some InvalidModule
   | ENoDefaultExport (_, _, _) -> Some MissingExport
   | ENoNamedExport (_, _, _, _) -> Some MissingExport
@@ -3613,6 +3757,7 @@ let error_code_of_message err : error_code option =
   | ESpeculationAmbiguous _ -> Some SpeculationAmbiguous
   | EStrictLookupFailed _ -> Some Error_codes.PropMissing
   | EThisInExportedFunction _ -> Some ThisInExportedFunction
+  | ESuperOutsideMethod _ -> Some SuperOutsideMethod
   | EExportRenamedDefault _ -> Some ExportRenamedDefault
   | ETooFewTypeArgs (_, _, _) -> Some MissingTypeArg
   | ETooManyTypeArgs (_, _, _) -> Some ExtraTypeArg
@@ -3641,8 +3786,11 @@ let error_code_of_message err : error_code option =
   | EUnsupportedKeyInObjectType _ -> Some IllegalKey
   | EUnsupportedSetProto _ -> Some CannotWrite
   | EUnsupportedSyntax (_, _) -> Some UnsupportedSyntax
+  | EImplicitInstantiationUnderconstrainedError _ -> Some UnderconstrainedImplicitInstantiation
   | EMalformedCode _
-  | EUnusedSuppression _ ->
+  | EImplicitInstantiationTemporaryError _
+  | EUnusedSuppression _
+  | EImportInternalReactServerModule _ ->
     None
   | EUseArrayLiteral _ -> Some IllegalNewArray
   | EAnyValueUsedAsType _

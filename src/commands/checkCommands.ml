@@ -127,9 +127,9 @@ module CheckCommand = struct
       () =
     let flowconfig_name = base_flags.Base_flags.flowconfig_name in
     let root = CommandUtils.guess_root flowconfig_name path_opt in
-    let flowconfig =
+    let (flowconfig, flowconfig_hash) =
       let flowconfig_path = Server_files_js.config_file flowconfig_name root in
-      read_config_or_exit ~enforce_warnings:(not ignore_version) flowconfig_path
+      read_config_and_hash_or_exit ~enforce_warnings:(not ignore_version) flowconfig_path
     in
     let options =
       let lazy_mode = Some Options.NON_LAZY_MODE in
@@ -146,6 +146,7 @@ module CheckCommand = struct
       in
       make_options
         ~flowconfig_name
+        ~flowconfig_hash
         ~flowconfig
         ~lazy_mode
         ~root
@@ -172,7 +173,7 @@ module CheckCommand = struct
     in
     let (errors, warnings) = Server.check_once options ~init_id ~shared_mem_config ~format_errors in
     Flow_server_profile.print_url ();
-    FlowExitStatus.exit
+    Exit.exit
       (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
 
   let command = CommandSpec.command spec main
@@ -236,11 +237,14 @@ module FocusCheckCommand = struct
           | [] -> None
           | x :: _ -> Some x )
     in
-    let flowconfig = read_config_or_exit (Server_files_js.config_file flowconfig_name root) in
+    let (flowconfig, flowconfig_hash) =
+      read_config_and_hash_or_exit (Server_files_js.config_file flowconfig_name root)
+    in
     let options =
       let lazy_mode = Some Options.NON_LAZY_MODE in
       make_options
         ~flowconfig_name
+        ~flowconfig_hash
         ~flowconfig
         ~lazy_mode
         ~root
@@ -279,7 +283,7 @@ module FocusCheckCommand = struct
     let (errors, warnings) =
       Server.check_once options ~init_id ~shared_mem_config ~focus_targets ~format_errors
     in
-    FlowExitStatus.exit
+    Exit.exit
       (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
 
   let command = CommandSpec.command spec main

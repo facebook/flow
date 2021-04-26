@@ -23,14 +23,14 @@ Property `key` is missing in object literal [1] but exists in `React.Element` [2
                            ^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:178:63
+   <BUILTINS>/react.js:193:63
                                                                       v-
-   178| declare type React$Element<+ElementType: React$ElementType> = {|
-   179|   +type: ElementType,
-   180|   +props: React$ElementProps<ElementType>,
-   181|   +key: React$Key | null,
-   182|   +ref: any,
-   183| |};
+   193| declare type React$Element<+ElementType: React$ElementType> = {|
+   194|   +type: ElementType,
+   195|   +props: React$ElementProps<ElementType>,
+   196|   +key: React$Key | null,
+   197|   +ref: any,
+   198| |};
         -^ [2]
 
 
@@ -43,14 +43,14 @@ Property `props` is missing in object literal [1] but exists in `React.Element` 
                            ^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:178:63
+   <BUILTINS>/react.js:193:63
                                                                       v-
-   178| declare type React$Element<+ElementType: React$ElementType> = {|
-   179|   +type: ElementType,
-   180|   +props: React$ElementProps<ElementType>,
-   181|   +key: React$Key | null,
-   182|   +ref: any,
-   183| |};
+   193| declare type React$Element<+ElementType: React$ElementType> = {|
+   194|   +type: ElementType,
+   195|   +props: React$ElementProps<ElementType>,
+   196|   +key: React$Key | null,
+   197|   +ref: any,
+   198| |};
         -^ [2]
 
 
@@ -63,14 +63,14 @@ Property `ref` is missing in object literal [1] but exists in `React.Element` [2
                            ^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:178:63
+   <BUILTINS>/react.js:193:63
                                                                       v-
-   178| declare type React$Element<+ElementType: React$ElementType> = {|
-   179|   +type: ElementType,
-   180|   +props: React$ElementProps<ElementType>,
-   181|   +key: React$Key | null,
-   182|   +ref: any,
-   183| |};
+   193| declare type React$Element<+ElementType: React$ElementType> = {|
+   194|   +type: ElementType,
+   195|   +props: React$ElementProps<ElementType>,
+   196|   +key: React$Key | null,
+   197|   +ref: any,
+   198| |};
         -^ [2]
 
 

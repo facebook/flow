@@ -2,15 +2,7 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":36},"end":{"line":1,"column":37}},
-      "message":"Unexpected token `=`, expected the token `;`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":36},"end":{"line":1,"column":37}},
-      "message":"Unexpected token `=`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":36},"end":{"line":1,"column":37}},
-      "message":"Invalid left-hand side in assignment"
+      "message":"Unexpected token `=`. Initializers are not allowed in a `declare opaque type`."
     }
   ],
   "type":"Program",
@@ -19,13 +11,13 @@
   "body":[
     {
       "type":"DeclareExportDeclaration",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":35}},
-      "range":[0,35],
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":41}},
+      "range":[0,41],
       "default":false,
       "declaration":{
         "type":"DeclareOpaqueType",
-        "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":35}},
-        "range":[15,35],
+        "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":41}},
+        "range":[15,41],
         "id":{
           "type":"Identifier",
           "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":30}},
@@ -35,7 +27,20 @@
           "optional":false
         },
         "typeParameters":null,
-        "impltype":null,
+        "impltype":{
+          "type":"GenericTypeAnnotation",
+          "loc":{"source":null,"start":{"line":1,"column":38},"end":{"line":1,"column":41}},
+          "range":[38,41],
+          "id":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":1,"column":38},"end":{"line":1,"column":41}},
+            "range":[38,41],
+            "name":"Baz",
+            "typeAnnotation":null,
+            "optional":false
+          },
+          "typeParameters":null
+        },
         "supertype":{
           "type":"GenericTypeAnnotation",
           "loc":{"source":null,"start":{"line":1,"column":32},"end":{"line":1,"column":35}},
@@ -53,33 +58,6 @@
       },
       "specifiers":[],
       "source":null
-    },
-    {
-      "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":1,"column":36},"end":{"line":1,"column":41}},
-      "range":[36,41],
-      "expression":{
-        "type":"AssignmentExpression",
-        "loc":{"source":null,"start":{"line":1,"column":36},"end":{"line":1,"column":41}},
-        "range":[36,41],
-        "operator":"=",
-        "left":{
-          "type":"Literal",
-          "loc":{"source":null,"start":{"line":1,"column":36},"end":{"line":1,"column":37}},
-          "range":[36,37],
-          "value":null,
-          "raw":"null"
-        },
-        "right":{
-          "type":"Identifier",
-          "loc":{"source":null,"start":{"line":1,"column":38},"end":{"line":1,"column":41}},
-          "range":[38,41],
-          "name":"Baz",
-          "typeAnnotation":null,
-          "optional":false
-        }
-      },
-      "directive":null
     }
   ],
   "comments":[]

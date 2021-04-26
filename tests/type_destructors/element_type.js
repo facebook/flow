@@ -21,3 +21,7 @@ function bar(o: Obj): $ElementType<Obj, string> {
   if (false) return o['buz'];
   else return 0;
 }
+
+type Z = ?{c: number};
+(1: $ElementType<Z, 'c'>); // Error - access 'c' on `void`/`null`
+(1: $ElementType<$NonMaybeType<Z>, 'c'>); // OK

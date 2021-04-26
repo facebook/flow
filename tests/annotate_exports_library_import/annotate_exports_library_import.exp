@@ -4,7 +4,7 @@
 >>> ./fileA.js
 // @flow
 
-import type {T} from "react-redux";const {foo} = require('react-redux');
+import type { T } from "react-redux";const {foo} = require('react-redux');
 
 module.exports = (foo(): T);
 
@@ -50,7 +50,7 @@ Warnings:
 >>> ./fileA.js
 // @flow
 
-import type {T} from "react-redux";const {foo} = require('react-redux');
+import type { T } from "react-redux";const {foo} = require('react-redux');
 
 module.exports = (foo(): T);
 

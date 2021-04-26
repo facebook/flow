@@ -7,6 +7,12 @@
 
 val mk_id : unit -> int
 
+type name =
+  | OrdinaryName of string
+  | InternalName of string
+  | InternalModuleName of string
+[@@deriving eq, ord, show]
+
 type 'loc virtual_reason_desc =
   | RTrusted of 'loc virtual_reason_desc
   | RPrivate of 'loc virtual_reason_desc
@@ -25,10 +31,11 @@ type 'loc virtual_reason_desc =
   | RExports
   | RNullOrVoid
   | RLongStringLit of int (* Max length *)
-  | RStringLit of string
+  | RStringLit of name
   | RNumberLit of string
   | RBigIntLit of string
   | RBooleanLit of bool
+  | RIndexedAccess of { optional: bool }
   | RMatchingProp of string * 'loc virtual_reason_desc
   | RObject
   | RObjectLit
@@ -98,7 +105,7 @@ type 'loc virtual_reason_desc =
   | RTupleMap
   | RObjectMap
   | RObjectMapi
-  | RType of string
+  | RType of name
   | RTypeAlias of string * 'loc option * 'loc virtual_reason_desc
   | ROpaqueType of string
   | RTypeParam of string * ('loc virtual_reason_desc * 'loc) * ('loc virtual_reason_desc * 'loc)
@@ -107,21 +114,22 @@ type 'loc virtual_reason_desc =
   | RMethodCall of string option
   | RParameter of string option
   | RRestParameter of string option
-  | RIdentifier of string
+  | RIdentifier of name
   | RIdentifierAssignment of string
   | RPropertyAssignment of string option
-  | RProperty of string option
+  | RProperty of name option
   | RPrivateProperty of string
-  | RShadowProperty of string
+  | RShadowProperty of name
   | RMember of {
       object_: string;
       property: string;
     }
-  | RPropertyOf of string * 'loc virtual_reason_desc
-  | RPropertyIsAString of string
-  | RMissingProperty of string option
-  | RUnknownProperty of string option
-  | RUndefinedProperty of string
+  | RPropertyOf of name * 'loc virtual_reason_desc
+  | RPropertyIsAString of name
+  | RMissingProperty of name option
+  | RUnknownProperty of name option
+  | RUnknownUnspecifiedProperty of 'loc virtual_reason_desc
+  | RUndefinedProperty of name
   | RSomeProperty
   | RNameProperty of 'loc virtual_reason_desc
   | RMissingAbstract of 'loc virtual_reason_desc
@@ -136,7 +144,6 @@ type 'loc virtual_reason_desc =
   | RCode of string
   | RCustom of string
   | RPolyType of 'loc virtual_reason_desc
-  | RPolyTest of string * 'loc virtual_reason_desc * ALoc.id * bool
   | RExactType of 'loc virtual_reason_desc
   | ROptional of 'loc virtual_reason_desc
   | RMaybe of 'loc virtual_reason_desc
@@ -162,10 +169,10 @@ type 'loc virtual_reason_desc =
   | RObjectPatternRestProp
   | RArrayPatternRestProp
   | RCommonJSExports of string
-  | RModule of string
+  | RModule of name
   | ROptionalChain
   | RReactProps
-  | RReactElement of string option
+  | RReactElement of name option
   | RReactClass
   | RReactComponent
   | RReactStatics
@@ -177,7 +184,7 @@ type 'loc virtual_reason_desc =
   | RReactChildrenOrUndefinedOrType of 'loc virtual_reason_desc
   | RReactSFC
   | RReactConfig
-  | RPossiblyMissingPropFromObj of string * 'loc virtual_reason_desc
+  | RPossiblyMissingPropFromObj of name * 'loc virtual_reason_desc
   | RWidenedObjProp of 'loc virtual_reason_desc
   | RUnionBranching of 'loc virtual_reason_desc * int
 
@@ -240,15 +247,19 @@ val locationless_reason : reason_desc -> reason
 
 val func_reason : async:bool -> generator:bool -> ALoc.t -> reason
 
-val is_internal_name : string -> bool
+val display_string_of_name : name -> string
 
-val internal_name : string -> string
+val is_internal_name : name -> bool
 
-val is_internal_module_name : string -> bool
+val internal_name : string -> name
 
-val internal_module_name : string -> string
+val internal_name_of_name : name -> name
 
-val uninternal_module_name : string -> string
+val is_internal_module_name : name -> bool
+
+val internal_module_name : string -> name
+
+val uninternal_name : name -> string
 
 val is_instantiable_reason : 'loc virtual_reason -> bool
 

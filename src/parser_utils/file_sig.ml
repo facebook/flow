@@ -13,11 +13,9 @@ open Flow_ast_visitor
 module Make
     (L : Loc_sig.S)
     (Scope_api : Scope_api_sig.S with module L = L)
-    (Scope_builder : Scope_builder_sig.S with module L = L and module Api = Scope_api)
-    (Signature_builder_deps : Signature_builder_deps_sig.S with module L = L) =
+    (Scope_builder : Scope_builder_sig.S with module L = L and module Api = Scope_api) =
 struct
   module L = L
-  module Signature_builder_deps = Signature_builder_deps
 
   type 'info t' = {
     module_sig: 'info module_sig';
@@ -111,7 +109,7 @@ struct
     | BadExportPosition of L.t
     (* e.g. `foo(module)`, dangerous because `module` is aliased *)
     | BadExportContext of string (* offending identifier *) * L.t
-    | SignatureVerificationError of Signature_builder_deps.Error.t
+    | SignatureVerificationError of L.t Signature_error.t
   [@@deriving show]
 
   type exports_info = {
@@ -418,7 +416,7 @@ struct
         [(exports_info t' * tolerable_error list, error) result, L.t] visitor
           ~init:(Ok (mk_file_sig init_exports_info, [])) as super
 
-      val scope_info = Scope_builder.program ast
+      val scope_info : Scope_api.info = Scope_builder.program ~with_types:true ast
 
       val mutable curr_declare_module : exports_info module_sig' option = None
 
@@ -626,7 +624,7 @@ struct
               default;
             Base.Option.iter
               ~f:(function
-                | ImportNamespaceSpecifier (loc, (_, { Ast.Identifier.name = local; comments = _ }))
+                | ImportNamespaceSpecifier (_, (loc, { Ast.Identifier.name = local; comments = _ }))
                   ->
                   (match import_kind with
                   | ImportType -> failwith "import type * is a parse error"
@@ -994,22 +992,6 @@ struct
             if not (Scope_api.is_local_use scope_info loc) then
               this#add_require
                 (Require { source = (source_loc, name); require_loc = call_loc; bindings })
-          | ( (_, Identifier (loc, { Ast.Identifier.name = "requireLazy"; comments = _ })),
-              ( _,
-                {
-                  Ast.Expression.ArgList.arguments =
-                    [Expression (_, Array { Array.elements; comments = _ }); Expression _];
-                  comments = _;
-                } ) ) ->
-            let element = function
-              | Array.Expression
-                  (source_loc, Literal { Ast.Literal.value = Ast.Literal.String name; _ }) ->
-                if not (Scope_api.is_local_use scope_info loc) then
-                  this#add_require
-                    (Require { source = (source_loc, name); require_loc = call_loc; bindings })
-              | _ -> ()
-            in
-            List.iter element elements
           | _ -> ()
         )
 
@@ -1423,12 +1405,6 @@ struct
           Signature_error.(
             begin
               match sve with
-              | ExpectedSort (sort, x, loc) ->
-                let loc' = this#loc loc in
-                if loc == loc' then
-                  tolerable_error
-                else
-                  SignatureVerificationError (ExpectedSort (sort, x, loc'))
               | ExpectedAnnotation (loc, sort) ->
                 let loc' = this#loc loc in
                 if loc == loc' then
@@ -1473,24 +1449,6 @@ struct
                   tolerable_error
                 else
                   SignatureVerificationError (UnexpectedExpression (loc', esort))
-              | SketchyToplevelDef loc ->
-                let loc' = this#loc loc in
-                if loc == loc' then
-                  tolerable_error
-                else
-                  SignatureVerificationError (SketchyToplevelDef loc')
-              | UnsupportedPredicateExpression loc ->
-                let loc' = this#loc loc in
-                if loc == loc' then
-                  tolerable_error
-                else
-                  SignatureVerificationError (UnsupportedPredicateExpression loc')
-              | TODO (msg, loc) ->
-                let loc' = this#loc loc in
-                if loc == loc' then
-                  tolerable_error
-                else
-                  SignatureVerificationError (TODO (msg, loc'))
             end)
 
       method error (error : error) =
@@ -1506,12 +1464,8 @@ struct
     end
 end
 
-module With_Loc =
-  Make (Loc_sig.LocS) (Scope_api.With_Loc) (Scope_builder.With_Loc)
-    (Signature_builder_deps.With_Loc)
-module With_ALoc =
-  Make (Loc_sig.ALocS) (Scope_api.With_ALoc) (Scope_builder.With_ALoc)
-    (Signature_builder_deps.With_ALoc)
+module With_Loc = Make (Loc_sig.LocS) (Scope_api.With_Loc) (Scope_builder.With_Loc)
+module With_ALoc = Make (Loc_sig.ALocS) (Scope_api.With_ALoc) (Scope_builder.With_ALoc)
 
 let abstractify_tolerable_errors =
   let module WL = With_Loc in

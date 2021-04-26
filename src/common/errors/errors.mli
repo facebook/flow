@@ -21,12 +21,12 @@ type error_kind =
 
 val string_of_kind : error_kind -> string
 
-type 'a info = 'a * string list
 (** simple structure for callers to specify message content.
     an info list looks like e.g.:
     [ location1, ["number"; "Type is incompatible with"];
       location2, ["string"] ]
  *)
+type 'a info = 'a * string list
 
 (** for extra info, enough structure to do simple tree-shaped output *)
 type 'a info_tree =

@@ -1044,12 +1044,11 @@ with type t = Impl.t = struct
             [
               ( "members",
                 array_of_list
-                  (fun ( loc,
-                         {
-                           InitializedMember.id;
-                           init = (_, { BooleanLiteral.value; comments = _ });
-                         } ) ->
-                    node "EnumBooleanMember" loc [("id", identifier id); ("init", bool value)])
+                  (fun (loc, { InitializedMember.id; init }) ->
+                    node
+                      "EnumBooleanMember"
+                      loc
+                      [("id", identifier id); ("init", boolean_literal init)])
                   members );
               ("explicitType", bool explicit_type);
               ("hasUnknownMembers", bool has_unknown_members);
@@ -1311,6 +1310,14 @@ with type t = Impl.t = struct
       node ?comments "BigIntLiteral" loc [("value", null); ("bigint", string raw)]
     and string_literal (loc, { StringLiteral.value; raw; comments }) =
       node ?comments "Literal" loc [("value", string value); ("raw", string raw)]
+    and boolean_literal (loc, { BooleanLiteral.value; comments }) =
+      let raw =
+        if value then
+          "true"
+        else
+          "false"
+      in
+      node ?comments "Literal" loc [("value", bool value); ("raw", string raw)]
     and template_literal (loc, { Expression.TemplateLiteral.quasis; expressions; comments }) =
       node
         ?comments
@@ -1376,6 +1383,8 @@ with type t = Impl.t = struct
         | Interface i -> interface_type (loc, i)
         | Array t -> array_type loc t
         | Generic g -> generic_type (loc, g)
+        | IndexedAccess ia -> indexed_access (loc, ia)
+        | OptionalIndexedAccess ia -> optional_indexed_access (loc, ia)
         | Union t -> union_type (loc, t)
         | Intersection t -> intersection_type (loc, t)
         | Typeof t -> typeof_type (loc, t)
@@ -1593,6 +1602,22 @@ with type t = Impl.t = struct
         "GenericTypeAnnotation"
         loc
         [("id", id); ("typeParameters", option type_args targs)]
+    and indexed_access_properties { Type.IndexedAccess._object; index; comments = _ } =
+      [("objectType", _type _object); ("indexType", _type index)]
+    and indexed_access (loc, ({ Type.IndexedAccess.comments; _ } as ia)) =
+      node ?comments "IndexedAccessType" loc (indexed_access_properties ia)
+    and optional_indexed_access
+        ( loc,
+          {
+            Type.OptionalIndexedAccess.indexed_access =
+              { Type.IndexedAccess.comments; _ } as indexed_access;
+            optional;
+          } ) =
+      node
+        ?comments
+        "OptionalIndexedAccessType"
+        loc
+        (indexed_access_properties indexed_access @ [("optional", bool optional)])
     and union_type (loc, { Type.Union.types = (t0, t1, ts); comments }) =
       node ?comments "UnionTypeAnnotation" loc [("types", array_of_list _type (t0 :: t1 :: ts))]
     and intersection_type (loc, { Type.Intersection.types = (t0, t1, ts); comments }) =

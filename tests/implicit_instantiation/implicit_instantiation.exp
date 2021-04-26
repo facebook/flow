@@ -49,13 +49,5 @@ References:
            ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:22:22
 
-Please use a concrete type annotation instead of `_` in this position. [missing-annot]
-
-   22|   x: unimplementable<_>(), // Error, requires concrete annot
-                            ^
-
-
-
-Found 4 errors
+Found 3 errors

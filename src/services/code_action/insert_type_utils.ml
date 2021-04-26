@@ -25,7 +25,7 @@ let show m =
             spf
               "%s\n%s - %s\n"
               (Reason.string_of_loc loc)
-              sym_name
+              (Reason.display_string_of_name sym_name)
               (Ty_debug.ctor_of_provenance sym_provenance)
           in
           x :: a)
@@ -428,7 +428,8 @@ module Builtins = struct
 
   let flowfixme_generic_ty ~preference lint_severities suppress_types =
     match suppress_name lint_severities suppress_types preference with
-    | Some name -> Ty.Generic (Ty_symbol.builtin_symbol name, Ty.TypeAliasKind, None)
+    | Some name ->
+      Ty.Generic (Ty_symbol.builtin_symbol (Reason.OrdinaryName name), Ty.TypeAliasKind, None)
     | None -> Ty.Any Ty.Annotated
 
   let flowfixme_ty = flowfixme_generic_ty ~preference:"$FlowFixMe"
@@ -448,7 +449,7 @@ module Builtins = struct
     {
       Ty.sym_provenance = Ty.Builtin;
       sym_def_loc = ALoc.none;
-      sym_name = "$TEMPORARY$object";
+      sym_name = Reason.OrdinaryName "$TEMPORARY$object";
       sym_anonymous = false;
     }
 
@@ -456,7 +457,7 @@ module Builtins = struct
     {
       Ty.sym_provenance = Ty.Builtin;
       sym_def_loc = ALoc.none;
-      sym_name = "$TEMPORARY$array";
+      sym_name = Reason.OrdinaryName "$TEMPORARY$array";
       sym_anonymous = false;
     }
 end
@@ -602,9 +603,11 @@ class patch_up_react_mapper ?(imports_react = false) () =
       | Ty.Generic
           ( ( {
                 Ty.sym_name =
-                  ( "AbstractComponent" | "ChildrenArray" | "ComponentType" | "Config" | "Context"
-                  | "Element" | "ElementConfig" | "ElementProps" | "ElementRef" | "ElementType"
-                  | "Key" | "Node" | "Portal" | "Ref" | "StatelessFunctionalComponent" ) as name;
+                  Reason.OrdinaryName
+                    ( ( "AbstractComponent" | "ChildrenArray" | "ComponentType" | "Config"
+                      | "Context" | "Element" | "ElementConfig" | "ElementProps" | "ElementRef"
+                      | "ElementType" | "Key" | "Node" | "Portal" | "Ref"
+                      | "StatelessFunctionalComponent" ) as name );
                 sym_provenance = Ty_symbol.Library { Ty_symbol.imported_as = None };
                 sym_def_loc;
                 _;
@@ -615,7 +618,7 @@ class patch_up_react_mapper ?(imports_react = false) () =
         let args_opt = Flow_ast_mapper.map_opt (ListUtils.ident_map (this#on_t loc)) args_opt in
         let symbol =
           if imports_react then
-            { symbol with Ty.sym_name = "React." ^ name }
+            { symbol with Ty.sym_name = Reason.OrdinaryName ("React." ^ name) }
           else
             { symbol with Ty.sym_provenance = Ty.Remote { Ty.imported_as = None } }
         in
@@ -625,11 +628,15 @@ class patch_up_react_mapper ?(imports_react = false) () =
     method! on_prop loc prop =
       let prop =
         match prop with
-        | Ty.NamedProp { name; prop = named_prop; from_proto } when Reason.is_internal_name name ->
-          Hh_logger.warn "ShadowProp %s at %s" name (Reason.string_of_loc loc);
+        | Ty.NamedProp { name; prop = named_prop; from_proto; def_loc }
+          when Reason.is_internal_name name ->
+          Hh_logger.warn
+            "ShadowProp %s at %s"
+            (Reason.display_string_of_name name)
+            (Reason.string_of_loc loc);
           (* Shadow props appear as regular props *)
-          let name = String.sub name 1 (String.length name - 1) in
-          Ty.NamedProp { name; prop = named_prop; from_proto }
+          let name = Reason.OrdinaryName (Reason.uninternal_name name) in
+          Ty.NamedProp { name; prop = named_prop; from_proto; def_loc }
         | prop -> prop
       in
       super#on_prop loc prop

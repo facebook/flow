@@ -11,8 +11,8 @@ let binding initialized to member expression = {"path":"let.js","line":28,"endli
 default import points to default export = {"path":"helpers/exports_default.js","line":3,"endline":3,"start":11,"end":15}
 local reference points to default import = {"path":"helpers/exports_default.js","line":3,"endline":3,"start":11,"end":15}
 named import of const points to named export = {"path":"helpers/exports_named.js","line":3,"endline":3,"start":20,"end":24}
-named import of let points to named export = {"path":"helpers/exports_named.js","line":5,"endline":5,"start":25,"end":26}
-named import of var points to named export = {"path":"helpers/exports_named.js","line":6,"endline":6,"start":25,"end":26}
+named import of let points to named export = {"path":"helpers/exports_named.js","line":5,"endline":5,"start":24,"end":29}
+named import of var points to named export = {"path":"helpers/exports_named.js","line":6,"endline":6,"start":24,"end":29}
 named import of function points to named export = {"path":"helpers/exports_named.js","line":7,"endline":7,"start":8,"end":21}
 named import of class points to named export = {"path":"helpers/exports_named.js","line":8,"endline":8,"start":14,"end":16}
 aliased named import points to named export (as) = {"path":"helpers/exports_named.js","line":0,"endline":0,"start":1,"end":0}
@@ -56,6 +56,26 @@ nested property access on the arg to the idx callback = {"path":"idx.js","line":
 global (builtin) variable = {"path":"[LIB] prelude.js","line":30,"endline":30,"start":15,"end":19}
 object destructuring key = {"path":"destructuring.js","line":4,"endline":4,"start":15,"end":17}
 object destructuring binding = {"path":"destructuring.js","line":5,"endline":5,"start":13,"end":15}
+annot.js:5:4
+Flags:
+helpers/exports_annot.js:7:18,7:18
+
+annot.js:8:4
+Flags:
+helpers/exports_annot.js:7:18,7:18
+
+annot.js:11:4
+Flags:
+helpers/exports_annot.js:13:24,13:32
+
+annot.js:14:4
+Flags:
+helpers/exports_annot.js:15:24,15:30
+
+annot.js:21:4
+Flags:
+annot.js:19:7,19:7
+
 exports.js:3:9
 Flags:
 helpers/exports_named.js:3:14,3:16
@@ -63,4 +83,16 @@ helpers/exports_named.js:3:14,3:16
 exports.js:5:16
 Flags:
 helpers/exports_named.js:3:14,3:16
+
+identifier.js:5:4
+Flags:
+identifier.js:3:10,3:16
+
+identifier.js:8:10
+Flags:
+identifier.js:3:10,3:16
+
+identifier.js:11:11
+Flags:
+identifier.js:3:10,3:16
 

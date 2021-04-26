@@ -4,7 +4,7 @@
 >>> ./main.js
 // @flow
 
-import type {I} from "./lib";const i = require('./lib');
+import type { I } from "./lib";const i = require('./lib');
 
 module.exports = (i(): I);
 
@@ -42,7 +42,7 @@ Warnings:
 >>> ./main.js
 // @flow
 
-import type {I} from "./lib";const i = require('./lib');
+import type { I } from "./lib";const i = require('./lib');
 
 module.exports = (i(): I);
 

@@ -18,13 +18,13 @@ open Utils_js
  * 2. Eagerly calculate `collate_errors` after init or a recheck, so that the server still has
  *    the init or recheck lock. If we improve how clients can tell if a server is busy or stuck
  *    then we can probably relax this.
- * 3. Throw away the collated errors when lazy mode's typecheck_contents adds more dependents or
- *    dependencies to the checked set
+ * 3. Throw away the collated errors when lazy mode adds more dependents or dependencies to the
+ *    checked set
  * *)
 let regenerate ~reader =
   Errors.(
     Error_suppressions.(
-      let lazy_table_of_aloc = Parsing_heaps.Reader.get_sig_ast_aloc_table_unsafe_lazy ~reader in
+      let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
       let add_suppression_warnings checked unused warnings =
         (* For each unused suppression, create an warning *)
         let deps = CheckedSet.dependencies checked in
@@ -94,7 +94,7 @@ let regenerate ~reader =
         let file_options = Some (Options.file_options options) in
         let (file_errs, file_suppressed, unused) =
           file_errs
-          |> Flow_error.concretize_errors lazy_table_of_aloc
+          |> Flow_error.concretize_errors loc_of_aloc
           |> Flow_error.make_errors_printable
           |> filter_suppressed_errors ~root ~file_options suppressions ~unused
         in

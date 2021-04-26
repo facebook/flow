@@ -82,7 +82,7 @@ To get a sense of when and why the different kinds of variance matters, let's
 talk about methods of subclasses and how they get type checked.
 
 We'll quickly set up our `BaseClass` which will define just one method that
-accepts an input value with the type `City` and an returned output also with
+accepts an input value with the type `City` and a returned output also with
 the type `City`.
 
 ```js

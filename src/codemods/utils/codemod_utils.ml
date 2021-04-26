@@ -25,27 +25,23 @@ type 'a job_config = {
 }
 
 (* Mappers produce new ASTs, which are saved to the heap. *)
-let save_ast_diff file_key ast ast' =
+let save_ast_diff ~opts file_key ast ast' =
   let diff = Flow_ast_differ.program Flow_ast_differ.Standard ast ast' in
   if List.length diff = 0 then
     ()
   else
     let file_path = File_key.to_string file_key in
     let file_input = File_input.FileName file_path in
-    let layout_opts =
-      Js_layout_generator.
-        {
-          preserve_formatting = true;
-          bracket_spacing = false;
-          trailing_commas = Trailing_commas.All;
-        }
-    in
-    let patch = Replacement_printer.mk_patch_ast_differ_unsafe ~opts:layout_opts diff file_input in
+    let patch = Replacement_printer.mk_patch_ast_differ_unsafe ~opts diff file_input in
     Diff_heaps.set_diff ~audit:Expensive.ok file_key patch
 
 let make_visitor :
-    ('b, 'a) abstract_codemod_runner -> (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t -> 'a -> 'b =
- fun runner ast cctx ->
+    ('b, 'a) abstract_codemod_runner ->
+    options:Options.t ->
+    (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
+    'a ->
+    'b =
+ fun runner ~options ast cctx ->
   let (prog_loc, _) = ast in
   let file = Base.Option.value_exn ~message:"No source for AST" (Loc.source prog_loc) in
   match runner with
@@ -56,7 +52,13 @@ let make_visitor :
   | Mapper mapper ->
     let mapper = mapper cctx in
     let ast' = mapper#program ast in
-    save_ast_diff file ast ast';
+    let opts =
+      {
+        (Code_action_service.layout_options options) with
+        Js_layout_generator.preserve_formatting = true (* minimizes changes *);
+      }
+    in
+    save_ast_diff ~opts file ast ast';
     mapper#acc
 
 let initialize_logs options = LoggingUtils.init_loggers ~options ()
@@ -75,7 +77,7 @@ module MakeMain (Runner : Codemod_runner.RUNNABLE) = struct
     let initial_lwt_thread () =
       let genv =
         let num_workers = Options.max_workers options in
-        let handle = SharedMem_js.init ~num_workers shared_mem_config in
+        let handle = SharedMem.init ~num_workers shared_mem_config in
         ServerEnvBuild.make_genv ~init_id ~options handle
       in
       Runner.run ~genv ~write ~repeat roots

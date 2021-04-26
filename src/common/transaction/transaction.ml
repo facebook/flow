@@ -50,15 +50,14 @@ let commit transaction = Lwt_list.iter_s (fun mutator -> mutator.commit ()) tran
 
 let rollback transaction = Lwt_list.iter_s (fun mutator -> mutator.rollback ()) transaction.mutators
 
-external reraise : exn -> 'a = "%reraise"
-
 let with_transaction f =
   let transaction = { mutators = [] } in
   let%lwt result =
     try%lwt f transaction
     with exn ->
+      let exn = Exception.wrap exn in
       let%lwt () = rollback transaction in
-      reraise exn
+      Exception.reraise exn
   in
   let%lwt () = commit transaction in
   Lwt.return result

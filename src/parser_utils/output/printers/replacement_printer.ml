@@ -26,21 +26,18 @@ let with_content_of_file_input file f =
     in
     Utils_js.assert_false error_msg
 
-let mk_loc_patch_ast_differ
-    ?(opts = Js_layout_generator.default_opts)
-    (diff : Flow_ast_differ.node Flow_ast_differ.change list) : loc_patch =
+let mk_loc_patch_ast_differ ~opts (diff : Flow_ast_differ.node Flow_ast_differ.change list) :
+    loc_patch =
   Ast_diff_printer.edits_of_changes ~opts diff
 
 let mk_patch_ast_differ
-    ?(opts = Js_layout_generator.default_opts)
-    (diff : Flow_ast_differ.node Flow_ast_differ.change list)
-    (content : string) : patch =
+    ~opts (diff : Flow_ast_differ.node Flow_ast_differ.change list) (content : string) : patch =
   let offset_table = Offset_utils.make ~kind:Offset_utils.Utf8 content in
   let offset loc = Offset_utils.offset offset_table loc in
   mk_loc_patch_ast_differ ~opts diff
   |> Base.List.map ~f:(fun (loc, text) -> Loc.(offset loc.start, offset loc._end, text))
 
-let mk_patch_ast_differ_unsafe ?(opts = Js_layout_generator.default_opts) diff file =
+let mk_patch_ast_differ_unsafe ~opts diff file =
   with_content_of_file_input file @@ mk_patch_ast_differ ~opts diff
 
 let print (patch : patch) (content : string) : string =

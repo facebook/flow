@@ -126,7 +126,7 @@ let main
         ();
 
       (* Return a successful exit code if there were only warnings. *)
-      FlowExitStatus.(
+      Exit.(
         exit
           (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings))
     )
@@ -139,7 +139,7 @@ let main
         ()
     else
       Printf.printf "No errors!\n%!";
-    FlowExitStatus.(exit No_error)
+    Exit.(exit No_error)
   | ServerProt.Response.NOT_COVERED ->
     if json then
       print_json
@@ -149,9 +149,9 @@ let main
         ()
     else
       Printf.printf "File is not @flow!\n%!";
-    FlowExitStatus.(exit No_error)
+    Exit.(exit No_error)
   | _ ->
     let msg = "Unexpected server response!" in
-    FlowExitStatus.(exit ~msg Unknown_error)
+    Exit.(exit ~msg Unknown_error)
 
 let command = CommandSpec.command spec main

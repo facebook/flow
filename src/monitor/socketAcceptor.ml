@@ -199,7 +199,7 @@ let perform_handshake_and_get_client_handshake ~client_fd =
       let msg = "Client and server are different builds. Flow server is out of date. Exiting" in
       FlowEventLogger.out_of_date ();
       Logger.fatal "%s" msg;
-      FlowExitStatus.exit ~msg FlowExitStatus.Build_id_mismatch
+      Exit.exit ~msg Exit.Build_id_mismatch
     in
     let fd_as_int = client_fd |> Lwt_unix.unix_file_descr |> Obj.magic in
     (* Stop request *)

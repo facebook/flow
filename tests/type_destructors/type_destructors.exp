@@ -34,6 +34,20 @@ References:
                        ^^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- element_type.js:26:21
+
+Cannot instantiate `$ElementType` because null or undefined [1] does not have properties. [incompatible-use]
+
+   element_type.js:26:21
+   26| (1: $ElementType<Z, 'c'>); // Error - access 'c' on `void`/`null`
+                           ^^^
+
+References:
+   element_type.js:26:18
+   26| (1: $ElementType<Z, 'c'>); // Error - access 'c' on `void`/`null`
+                        ^ [1]
+
+
 Error -------------------------------------------------------------------------------------------------- errors.js:12:10
 
 Cannot instantiate `$PropertyType` because property `p` is missing in object type [1]. [prop-missing]
@@ -78,8 +92,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:19:1
 
-Cannot call `fn1` because an index signature declaring the expected key / value type is missing in null [1].
-[incompatible-use]
+Cannot call `fn1` because null [1] does not have properties. [incompatible-use]
 
    errors.js:19:1
    19| fn1(null); // We should get an error on this line.
@@ -107,8 +120,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:22:1
 
-Cannot call `fn2` because an index signature declaring the expected key / value type is missing in null [1].
-[incompatible-use]
+Cannot call `fn2` because null [1] does not have properties. [incompatible-use]
 
    errors.js:22:1
    22| fn2(null)(); // We should get an error on this line.
@@ -370,6 +382,20 @@ References:
    non_maybe_type.js:35:17
    35| declare class A<T> {
                        ^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- non_maybe_type.js:55:2
+
+Cannot cast `'hi'` to `$NonMaybeType` because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   non_maybe_type.js:55:2
+   55| ('hi': $NonMaybeType<empty>); // Error
+        ^^^^ [1]
+
+References:
+   non_maybe_type.js:55:22
+   55| ('hi': $NonMaybeType<empty>); // Error
+                            ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- property_type.js:1:18
@@ -799,7 +825,4 @@ References:
 
 
 
-Found 53 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches
+Found 55 errors

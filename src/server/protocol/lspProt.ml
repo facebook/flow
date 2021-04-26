@@ -71,10 +71,7 @@ type recheck_reason =
   | Many_files_changed of { file_count: int }
   (* If we're using Watchman as the filewatcher, we can tell when the mergebase changed.
    * We can differentiate that from Many_files_changed *)
-  | Rebased of {
-      distance: int;
-      file_count: int;
-    }
+  | Rebased of { file_count: int }
   (* If try to autocomplete in foo.js and it's dependencies are unchecked, then we start a recheck
    * with a reason of Unchecked_dependencies { filename = "/path/to/foo.js"; } *)
   | Unchecked_dependencies of { filename: string }
@@ -89,8 +86,7 @@ type recheck_reason =
 let verbose_string_of_recheck_reason = function
   | Single_file_changed { filename } -> Printf.sprintf "1 file changed (%s)" filename
   | Many_files_changed { file_count } -> Printf.sprintf "%d files changed" file_count
-  | Rebased { distance; file_count } ->
-    Printf.sprintf "Rebased %d commits & %d files changed" distance file_count
+  | Rebased { file_count } -> Printf.sprintf "Rebased (%d files changed)" file_count
   | Unchecked_dependencies { filename } -> Printf.sprintf "Unchecked dependencies of %s" filename
   | Lazy_init_update_deps -> "Lazy init update deps"
   | Lazy_init_typecheck -> "Lazy init typecheck"
@@ -99,7 +95,7 @@ let verbose_string_of_recheck_reason = function
 let normalized_string_of_recheck_reason = function
   | Single_file_changed { filename = _ } -> "singleFileChanged"
   | Many_files_changed { file_count = _ } -> "manyFilesChanged"
-  | Rebased { distance = _; file_count = _ } -> "rebased"
+  | Rebased { file_count = _ } -> "rebased"
   | Unchecked_dependencies { filename = _ } -> "uncheckedDependencies"
   | Lazy_init_update_deps -> "lazyInitUpdateDeps"
   | Lazy_init_typecheck -> "lazyInitTypecheck"
@@ -158,8 +154,7 @@ type live_errors_failure = {
 }
 
 type live_errors_response = {
-  live_errors: Errors.ConcreteLocPrintableErrorSet.t;
-  live_warnings: Errors.ConcreteLocPrintableErrorSet.t;
+  live_diagnostics: Lsp.PublishDiagnostics.diagnostic list;
   live_errors_uri: Lsp.DocumentUri.t;
 }
 
@@ -176,13 +171,12 @@ type response_with_metadata = response * metadata
 
 type notification_from_server =
   | Errors of {
-      errors: Errors.ConcreteLocPrintableErrorSet.t;
-      warnings: Errors.ConcreteLocPrintableErrorSet.t;
+      diagnostics: Lsp.PublishDiagnostics.diagnostic list Lsp.UriMap.t;
       errors_reason: errors_reason;
     }
   | StartRecheck
   | EndRecheck of ServerProt.Response.lazy_stats
-  | ServerExit of FlowExitStatus.t  (** only used for the subset of exits which client handles *)
+  | ServerExit of Exit.t  (** only used for the subset of exits which client handles *)
   | Please_hold of (ServerStatus.status * FileWatcherStatus.status)
   | EOF  (** monitor is about to close the connection *)
 
@@ -194,11 +188,25 @@ let string_of_response = function
   | LspFromServer None -> "lspFromServer None"
   | LspFromServer (Some msg) ->
     Printf.sprintf "lspFromServer %s" (Lsp_fmt.message_name_to_string msg)
-  | LiveErrorsResponse (Ok { live_errors; live_warnings; live_errors_uri; _ }) ->
+  | LiveErrorsResponse (Ok { live_diagnostics; live_errors_uri; _ }) ->
+    let (errors, warnings, others) =
+      Base.List.fold_left
+        ~f:(fun (errors, warnings, others) { Lsp.PublishDiagnostics.severity; _ } ->
+          match severity with
+          | Some Lsp.PublishDiagnostics.Error -> (errors + 1, warnings, others)
+          | Some Lsp.PublishDiagnostics.Warning -> (errors, warnings + 1, others)
+          | Some Lsp.PublishDiagnostics.Information
+          | Some Lsp.PublishDiagnostics.Hint
+          | None ->
+            (errors, warnings, others + 1))
+        ~init:(0, 0, 0)
+        live_diagnostics
+    in
     Printf.sprintf
-      "liveErrorsResponse OK (%d errors, %d warnings) %s"
-      (Errors.ConcreteLocPrintableErrorSet.cardinal live_errors)
-      (Errors.ConcreteLocPrintableErrorSet.cardinal live_warnings)
+      "liveErrorsResponse OK (%d errors, %d warnings, %d other) %s"
+      errors
+      warnings
+      others
       (Lsp.DocumentUri.to_string live_errors_uri)
   | LiveErrorsResponse
       (Error { live_errors_failure_kind; live_errors_failure_reason; live_errors_failure_uri }) ->
@@ -224,7 +232,7 @@ let string_of_message_from_server = function
       | Errors _ -> "errors"
       | StartRecheck -> "startRecheck"
       | EndRecheck _ -> "endRecheck"
-      | ServerExit code -> "serverExit_" ^ FlowExitStatus.to_string code
+      | ServerExit code -> "serverExit_" ^ Exit.to_string code
       | Please_hold (server_status, watcher_status) ->
         Printf.sprintf
           "pleaseHold_server=%s_watcher=%s"
@@ -232,3 +240,69 @@ let string_of_message_from_server = function
           (FileWatcherStatus.string_of_status watcher_status)
       | EOF -> "EOF"
     end
+
+type message_from_server_mapper = {
+  of_live_errors_failure: message_from_server_mapper -> live_errors_failure -> live_errors_failure;
+  of_live_errors_response:
+    message_from_server_mapper -> live_errors_response -> live_errors_response;
+  of_message_from_server: message_from_server_mapper -> message_from_server -> message_from_server;
+  of_notification:
+    message_from_server_mapper -> notification_from_server -> notification_from_server;
+  of_response: message_from_server_mapper -> response -> response;
+}
+
+let default_message_from_server_mapper ~(lsp_mapper : Lsp_mapper.t) =
+  let open Lsp_mapper in
+  {
+    of_live_errors_failure =
+      (fun _mapper { live_errors_failure_kind; live_errors_failure_reason; live_errors_failure_uri } ->
+        let live_errors_failure_uri =
+          lsp_mapper.of_document_uri lsp_mapper live_errors_failure_uri
+        in
+        { live_errors_failure_kind; live_errors_failure_reason; live_errors_failure_uri });
+    of_live_errors_response =
+      (fun _mapper { live_diagnostics; live_errors_uri } ->
+        let live_diagnostics =
+          Base.List.map ~f:(lsp_mapper.of_diagnostic lsp_mapper) live_diagnostics
+        in
+        let live_errors_uri = lsp_mapper.of_document_uri lsp_mapper live_errors_uri in
+        { live_diagnostics; live_errors_uri });
+    of_message_from_server =
+      (fun mapper message ->
+        match message with
+        | RequestResponse (response, metadata) ->
+          RequestResponse (mapper.of_response mapper response, metadata)
+        | NotificationFromServer notification ->
+          NotificationFromServer (mapper.of_notification mapper notification));
+    of_notification =
+      (fun _mapper notif ->
+        match notif with
+        | Errors { diagnostics; errors_reason } ->
+          let diagnostics =
+            Lsp.UriMap.fold
+              (fun uri diags acc ->
+                let uri = lsp_mapper.of_document_uri lsp_mapper uri in
+                let diags = Base.List.map ~f:(lsp_mapper.of_diagnostic lsp_mapper) diags in
+                Lsp.UriMap.add uri diags acc)
+              diagnostics
+              Lsp.UriMap.empty
+          in
+          Errors { diagnostics; errors_reason }
+        | StartRecheck -> StartRecheck
+        | EndRecheck stats -> EndRecheck stats
+        | ServerExit exit_status -> ServerExit exit_status
+        | Please_hold (server_status, file_watcher_status) ->
+          Please_hold (server_status, file_watcher_status)
+        | EOF -> EOF);
+    of_response =
+      (fun mapper response ->
+        match response with
+        | LspFromServer lsp ->
+          LspFromServer (Base.Option.map ~f:(lsp_mapper.of_lsp_message lsp_mapper) lsp)
+        | LiveErrorsResponse (Ok live_errors_response) ->
+          LiveErrorsResponse (Ok (mapper.of_live_errors_response mapper live_errors_response))
+        | LiveErrorsResponse (Error live_errors_failure) ->
+          LiveErrorsResponse (Error (mapper.of_live_errors_failure mapper live_errors_failure))
+        | UncaughtException { request; exception_constructor; stack } ->
+          UncaughtException { request; exception_constructor; stack });
+  }

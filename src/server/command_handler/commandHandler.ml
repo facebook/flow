@@ -5,21 +5,27 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+(* this gets shadowed by Lsp.Exit *)
+module FlowExit = Exit
 open Base.Result
 open ServerEnv
 open Utils_js
 open Lsp
+open Types_js_types
 
-(* Returns the result of calling `type_contents`, along with a bool option indicating whether the
- * cache was hit -- None if no cache was available, Some true if it was hit, and Some false if it
- * was missed. *)
-let type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file =
-  match type_contents_cache with
+(* Returns the result of calling `type_parse_artifacts`, along with a bool option indicating
+ * whether the cache was hit -- None if no cache was available, Some true if it was hit, and Some
+ * false if it was missed. *)
+let type_parse_artifacts_with_cache
+    ~options ~env ~profiling ~type_parse_artifacts_cache file artifacts =
+  match type_parse_artifacts_cache with
   | None ->
-    let%lwt result = Types_js.type_contents ~options ~env ~profiling content file in
+    let%lwt result = Types_js.type_parse_artifacts ~options ~env ~profiling file artifacts in
     Lwt.return (result, None)
   | Some cache ->
-    let lazy_result = lazy (Types_js.type_contents ~options ~env ~profiling content file) in
+    let lazy_result =
+      lazy (Types_js.type_parse_artifacts ~options ~env ~profiling file artifacts)
+    in
     let%lwt (result, did_hit) = FilenameCache.with_cache file lazy_result cache in
     Lwt.return (result, Some did_hit)
 
@@ -65,6 +71,22 @@ let fold_json_of_parse_errors parse_errors acc =
     :: acc
   | [] -> acc
 
+let file_input_of_text_document_identifier ~client t =
+  let filename = Flow_lsp_conversions.lsp_DocumentIdentifier_to_flow_path t in
+  Persistent_connection.get_file client filename
+
+let file_input_of_text_document_identifier_opt ~client_id t =
+  Base.Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
+      file_input_of_text_document_identifier ~client t)
+
+let file_input_of_text_document_position ~client t =
+  let { Lsp.TextDocumentPositionParams.textDocument; _ } = t in
+  file_input_of_text_document_identifier ~client textDocument
+
+let file_input_of_text_document_position_opt ~client_id t =
+  Base.Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
+      file_input_of_text_document_position ~client t)
+
 let get_status ~profiling ~reader genv env client_root =
   let options = genv.ServerEnv.options in
   let server_root = Options.root options in
@@ -98,7 +120,8 @@ let get_status ~profiling ~reader genv env client_root =
   in
   (status_response, lazy_stats)
 
-let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~contents ~cursor =
+let autocomplete
+    ~trigger_character ~reader ~options ~env ~profiling ~filename ~contents ~cursor ~imports =
   let path =
     match filename with
     | Some filename -> filename
@@ -107,14 +130,17 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
   let path = File_key.SourceFile path in
   let cursor_loc =
     let (line, column) = cursor in
-    Loc.make path line column
+    Loc.cursor (Some path) line column
   in
   let (contents, broader_context) =
     let (line, column) = cursor in
     AutocompleteService_js.add_autocomplete_token contents line column
   in
   Autocomplete_js.autocomplete_set_hooks ~trigger_character ~cursor:cursor_loc;
-  let%lwt check_contents_result = Types_js.type_contents ~options ~env ~profiling contents path in
+  let%lwt file_artifacts_result =
+    let%lwt parse_result = Types_js.parse_contents ~options ~profiling contents path in
+    Types_js.type_parse_artifacts ~options ~env ~profiling path parse_result
+  in
   Autocomplete_js.autocomplete_unset_hooks ();
   let initial_json_props =
     let open Hh_json in
@@ -123,60 +149,72 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
       ("broader_context", JSON_String broader_context);
     ]
   in
-  match check_contents_result with
-  | Error err ->
+  match file_artifacts_result with
+  | Error _parse_errors ->
+    let err_str = "Couldn't parse file in parse_contents" in
     let json_data_to_log =
       let open Hh_json in
       JSON_Object
-        ( ("errors", JSON_Array [JSON_String err])
+        ( ("errors", JSON_Array [JSON_String err_str])
         :: ("result", JSON_String "FAILURE_CHECK_CONTENTS")
         :: ("count", JSON_Number "0")
         :: initial_json_props )
     in
-    Lwt.return (Error err, Some json_data_to_log)
-  | Ok (cx, info, file_sig, _, _ast, typed_ast, parse_errors) ->
+    Lwt.return (Error err_str, Some json_data_to_log)
+  | Ok
+      ( Parse_artifacts { docblock = info; file_sig; ast; parse_errors; _ },
+        Typecheck_artifacts { cx; typed_ast } ) ->
     Profiling_js.with_timer_lwt profiling ~timer:"GetResults" ~f:(fun () ->
         try_with_json2 (fun () ->
             let open AutocompleteService_js in
-            let (ac_type_string, results_res) =
+            let (token_opt, (ac_type_string, results_res)) =
               autocomplete_get_results
+                ~env
                 ~options
                 ~reader
                 ~cx
                 ~file_sig
+                ~ast
                 ~typed_ast
+                ~imports
                 trigger_character
                 cursor_loc
             in
             let json_props_to_log =
               ("ac_type", Hh_json.JSON_String ac_type_string)
               :: ("docblock", Docblock.json_of_docblock info)
+              :: ( "token",
+                   match token_opt with
+                   | None -> Hh_json.JSON_Null
+                   | Some token -> Hh_json.JSON_String token )
               :: initial_json_props
             in
             let (response, json_props_to_log) =
               let open Hh_json in
               match results_res with
-              | AcResult { results; errors_to_log } ->
+              | AcResult { result; errors_to_log } ->
+                let { ServerProt.Response.Completion.items; is_incomplete = _ } = result in
                 let result_string =
-                  match (results, errors_to_log) with
+                  match (items, errors_to_log) with
                   | (_, []) -> "SUCCESS"
                   | ([], _ :: _) -> "FAILURE"
                   | (_ :: _, _ :: _) -> "PARTIAL"
                 in
                 let at_least_one_result_has_documentation =
                   Base.List.exists
-                    results
+                    items
                     ~f:(fun ServerProt.Response.Completion.{ documentation; _ } ->
                       Base.Option.is_some documentation)
                 in
-                ( Ok results,
+                ( Ok (token_opt, result),
                   ("result", JSON_String result_string)
-                  :: ("count", JSON_Number (results |> List.length |> string_of_int))
+                  :: ("count", JSON_Number (items |> List.length |> string_of_int))
                   :: ("errors", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) errors_to_log))
                   :: ("documentation", JSON_Bool at_least_one_result_has_documentation)
                   :: json_props_to_log )
               | AcEmpty reason ->
-                ( Ok [],
+                ( Ok
+                    (token_opt, { ServerProt.Response.Completion.items = []; is_incomplete = false }),
                   ("result", JSON_String "SUCCESS")
                   :: ("count", JSON_Number "0")
                   :: ("empty_reason", JSON_String reason)
@@ -191,7 +229,10 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~
             Lwt.return (response, Some (Hh_json.JSON_Object json_props_to_log))))
 
 let check_file ~options ~env ~profiling ~force file_input =
-  let file = File_input.filename_of_file_input file_input in
+  let file =
+    let file_options = Options.file_options options in
+    File_input.filename_of_file_input file_input |> Files.filename_from_string ~options:file_options
+  in
   match file_input with
   | File_input.FileName _ -> failwith "Not implemented"
   | File_input.FileContent (_, content) ->
@@ -199,15 +240,21 @@ let check_file ~options ~env ~profiling ~force file_input =
       if force then
         true
       else
-        let (_, docblock) =
-          Parsing_service_js.(parse_docblock docblock_max_tokens (File_key.SourceFile file) content)
-        in
+        let (_, docblock) = Parsing_service_js.(parse_docblock docblock_max_tokens file content) in
         Docblock.is_flow docblock
     in
     if should_check then
-      let file = File_key.SourceFile file in
-      let%lwt (_, errors, warnings) =
-        Types_js.typecheck_contents ~options ~env ~profiling content file
+      let%lwt result =
+        let%lwt ((_, parse_errs) as intermediate_result) =
+          Types_js.parse_contents ~options ~profiling content file
+        in
+        if not (Flow_error.ErrorSet.is_empty parse_errs) then
+          Lwt.return (Error parse_errs)
+        else
+          Types_js.type_parse_artifacts ~options ~env ~profiling file intermediate_result
+      in
+      let (errors, warnings) =
+        Types_js.printable_errors_of_file_artifacts_result ~options ~env file result
       in
       Lwt.return (convert_errors ~errors ~warnings ~suppressed_errors:[])
     else
@@ -216,8 +263,10 @@ let check_file ~options ~env ~profiling ~force file_input =
 (* This returns result, json_data_to_log, where json_data_to_log is the json data from
  * getdef_get_result which we end up using *)
 let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, col) =
-  let loc = Loc.make file line col in
-  let (cx, _, file_sig, _, _ast, typed_ast, parse_errors) = check_result in
+  let loc = Loc.cursor (Some file) line col in
+  let (Parse_artifacts { file_sig; parse_errors; _ }, Typecheck_artifacts { cx; typed_ast }) =
+    check_result
+  in
   let file_sig = File_sig.abstractify_locs file_sig in
   Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
       try_with_json2 (fun () ->
@@ -258,7 +307,7 @@ let infer_type
     ~(reader : Parsing_heaps.Reader.reader)
     ~(env : ServerEnv.env)
     ~(profiling : Profiling_js.running)
-    ~type_contents_cache
+    ~type_parse_artifacts_cache
     input : (ServerProt.Response.infer_type_response * Hh_json.json option) Lwt.t =
   let {
     file_input;
@@ -280,15 +329,25 @@ let infer_type
   | Ok content ->
     let%lwt result =
       try_with_json (fun () ->
-          let%lwt (type_contents_result, did_hit_cache) =
-            type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file
+          let%lwt (file_artifacts_result, did_hit_cache) =
+            let%lwt parse_result = Types_js.parse_contents ~options ~profiling content file in
+            type_parse_artifacts_with_cache
+              ~options
+              ~env
+              ~profiling
+              ~type_parse_artifacts_cache
+              file
+              parse_result
           in
           let%lwt result =
-            match type_contents_result with
-            | Error str ->
+            match file_artifacts_result with
+            | Error _parse_errors ->
+              let err_str = "Couldn't parse file in parse_artifacts" in
               let json_props = add_cache_hit_data_to_json [] did_hit_cache in
-              Lwt.return (Error (str, Some (Hh_json.JSON_Object json_props)))
-            | Ok ((cx, _info, file_sig, _, _ast, typed_ast, _parse_errors) as check_result) ->
+              Lwt.return (Error (err_str, Some (Hh_json.JSON_Object json_props)))
+            | Ok
+                ( (Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) as
+                check_result ) ->
               let ((loc, ty), type_at_pos_json_props) =
                 Type_info_service.type_at_pos
                   ~cx
@@ -465,18 +524,23 @@ let dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructo
       let file = File_input.filename_of_file_input file_input in
       let file = File_key.SourceFile file in
       Lwt.return (File_input.content_of_file_input file_input) >>= fun content ->
-      Types_js.type_contents ~options ~env ~profiling content file
-      >>= fun (cx, _info, file_sig, _, _ast, typed_ast, _parse_errors) ->
-      Lwt.return
-        (Ok
-           (Type_info_service.dump_types
-              ~expand_aliases
-              ~evaluate_type_destructors
-              cx
-              file_sig
-              typed_ast)))
+      let%lwt file_artifacts_result =
+        let%lwt parse_result = Types_js.parse_contents ~options ~profiling content file in
+        Types_js.type_parse_artifacts ~options ~env ~profiling file parse_result
+      in
+      match file_artifacts_result with
+      | Error _parse_errors -> Lwt.return (Error "Couldn't parse file in parse_contents")
+      | Ok (Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) ->
+        Lwt.return
+          (Ok
+             (Type_info_service.dump_types
+                ~expand_aliases
+                ~evaluate_type_destructors
+                cx
+                file_sig
+                typed_ast)))
 
-let coverage ~options ~env ~profiling ~type_contents_cache ~force ~trust file_input =
+let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust file_input =
   if Options.trust_mode options = Options.NoTrust && trust then
     Error
       "Coverage cannot be run in trust mode if the server is not in trust mode. \n\nRestart the Flow server with --trust-mode=check' to enable this command."
@@ -486,14 +550,20 @@ let coverage ~options ~env ~profiling ~type_contents_cache ~force ~trust file_in
     let file = File_key.SourceFile file in
     File_input.content_of_file_input file_input %>>= fun content ->
     try_with (fun () ->
-        let%lwt (type_contents_result, _did_hit_cache) =
-          type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file
+        let%lwt (file_artifacts_result, _did_hit_cache) =
+          let%lwt parse_result = Types_js.parse_contents ~options ~profiling content file in
+          type_parse_artifacts_with_cache
+            ~options
+            ~env
+            ~profiling
+            ~type_parse_artifacts_cache
+            file
+            parse_result
         in
-        let result =
-          Base.Result.map type_contents_result ~f:(fun (cx, _, _, _, _, typed_ast, _) ->
-              Type_info_service.coverage ~cx ~typed_ast ~force ~trust file content)
-        in
-        Lwt.return result)
+        match file_artifacts_result with
+        | Ok (_, Typecheck_artifacts { cx; typed_ast }) ->
+          Lwt.return (Ok (Type_info_service.coverage ~cx ~typed_ast ~force ~trust file content))
+        | Error _parse_errors -> Lwt.return (Error "Couldn't parse file in parse_contents"))
 
 let batch_coverage ~options ~env ~trust ~batch =
   if Options.trust_mode options = Options.NoTrust && trust then
@@ -586,7 +656,7 @@ let suggest ~options ~env ~profiling file =
   let file_key = File_key.SourceFile file_name in
   File_input.content_of_file_input file %>>= fun file_content ->
   try_with (fun _ ->
-      let%lwt result = Type_info_service.suggest ~options ~env ~profiling file_key file_content in
+      let%lwt result = Code_action_service.suggest ~options ~env ~profiling file_key file_content in
       match result with
       | Ok (tc_errors, tc_warnings, suggest_warnings, file_patch) ->
         Lwt.return
@@ -631,14 +701,26 @@ let find_local_refs ~reader ~options ~env ~profiling (file_input, line, col) =
   FindRefs_js.find_local_refs ~reader ~options ~env ~profiling ~file_input ~line ~col
   |> Lwt_result.map convert_find_refs_result
 
-let get_def ~options ~reader ~env ~profiling ~type_contents_cache (file_input, line, col) =
+let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_input, line, col) =
   let filename = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile filename in
   let%lwt (check_result, did_hit_cache) =
     match File_input.content_of_file_input file_input with
     | Error _ as err -> Lwt.return (err, None)
     | Ok content ->
-      type_contents_with_cache ~options ~env ~profiling ~type_contents_cache content file
+      (match%lwt
+         let%lwt parse_result = Types_js.parse_contents ~options ~profiling content file in
+         type_parse_artifacts_with_cache
+           ~options
+           ~env
+           ~profiling
+           ~type_parse_artifacts_cache
+           file
+           parse_result
+       with
+      | (Ok result, did_hit_cache) -> Lwt.return (Ok result, did_hit_cache)
+      | (Error _parse_errors, did_hit_cache) ->
+        Lwt.return (Error "Couldn't parse file in parse_contents", did_hit_cache))
   in
   match check_result with
   | Error msg ->
@@ -710,10 +792,20 @@ let save_state ~saved_state_filename ~genv ~env ~profiling =
       Lwt.return (Ok ()))
 
 let handle_autocomplete
-    ~trigger_character ~reader ~options ~profiling ~env ~filename ~contents ~cursor =
+    ~trigger_character ~reader ~options ~profiling ~env ~filename ~contents ~cursor ~imports =
   let%lwt (result, json_data) =
-    autocomplete ~trigger_character ~reader ~options ~env ~profiling ~filename ~contents ~cursor
+    autocomplete
+      ~trigger_character
+      ~reader
+      ~options
+      ~env
+      ~profiling
+      ~filename
+      ~contents
+      ~cursor
+      ~imports
   in
+  let result = Base.Result.map result ~f:snd in
   Lwt.return (ServerProt.Response.AUTOCOMPLETE result, json_data)
 
 let handle_autofix_exports ~options ~input ~profiling ~env =
@@ -726,7 +818,7 @@ let handle_check_file ~options ~force ~input ~profiling ~env =
 
 let handle_coverage ~options ~force ~input ~trust ~profiling ~env =
   let%lwt response =
-    coverage ~options ~env ~profiling ~type_contents_cache:None ~force ~trust input
+    coverage ~options ~env ~profiling ~type_parse_artifacts_cache:None ~force ~trust input
   in
   Lwt.return (ServerProt.Response.COVERAGE response, None)
 
@@ -776,20 +868,18 @@ let handle_find_refs ~reader ~genv ~filename ~line ~char ~global ~multi_hop ~pro
 let handle_force_recheck ~files ~focus ~profile ~profiling =
   let fileset = SSet.of_list files in
   let reason =
-    LspProt.(
-      match files with
-      | [filename] -> Single_file_changed { filename }
-      | _ -> Many_files_changed { file_count = List.length files })
+    match files with
+    | [filename] -> LspProt.Single_file_changed { filename }
+    | _ -> LspProt.Many_files_changed { file_count = List.length files }
   in
   (* `flow force-recheck --focus a.js` not only marks a.js as a focused file, but it also
    * tells Flow that `a.js` has changed. In that case we push a.js to be rechecked and to be
    * focused *)
   let push ?callback files =
-    ServerMonitorListenerState.(
-      if focus then
-        push_files_to_force_focused_and_recheck ?callback ~reason files
-      else
-        push_files_to_recheck ?metadata:None ?callback ~reason files)
+    if focus then
+      ServerMonitorListenerState.push_files_to_force_focused_and_recheck ?callback ~reason files
+    else
+      ServerMonitorListenerState.push_files_to_recheck ?metadata:None ?callback ~reason files
   in
   if profile then (
     let (wait_for_recheck_thread, wakener) = Lwt.task () in
@@ -806,7 +896,7 @@ let handle_force_recheck ~files ~focus ~profile ~profiling =
 
 let handle_get_def ~reader ~options ~filename ~line ~char ~profiling ~env =
   let%lwt (result, json_data) =
-    get_def ~reader ~options ~env ~profiling ~type_contents_cache:None (filename, line, char)
+    get_def ~reader ~options ~env ~profiling ~type_parse_artifacts_cache:None (filename, line, char)
   in
   Lwt.return (ServerProt.Response.GET_DEF result, json_data)
 
@@ -845,7 +935,7 @@ let handle_infer_type
     }
   in
   let%lwt (result, json_data) =
-    infer_type ~options ~reader ~env ~profiling ~type_contents_cache:None input
+    infer_type ~options ~reader ~env ~profiling ~type_parse_artifacts_cache:None input
   in
   Lwt.return (ServerProt.Response.INFER_TYPE result, json_data)
 
@@ -879,23 +969,6 @@ let handle_rage ~reader ~options ~files ~profiling ~env =
   let items = collect_rage ~profiling ~options ~reader ~env ~files:(Some files) in
   Lwt.return (ServerProt.Response.RAGE items, None)
 
-let handle_refactor
-    ~reader ~genv ~input:file_input ~line ~char:col ~refactor_variant ~profiling ~env =
-  (* Refactor is another weird command that may mutate the env by doing a bunch of rechecking,
-   * since that's what find-refs does and refactor delegates to find-refs *)
-  ServerProt.Response.(
-    let env = ref env in
-    let%lwt result =
-      match refactor_variant with
-      | ServerProt.Request.RENAME new_name ->
-        Refactor_service.rename ~reader ~genv ~env ~profiling ~file_input ~line ~col ~new_name
-    in
-    let env = !env in
-    let result =
-      result |> Base.Result.map ~f:(Base.Option.map ~f:(fun refactor_edits -> { refactor_edits }))
-    in
-    Lwt.return (env, REFACTOR result, None))
-
 let handle_status ~reader ~genv ~client_root ~profiling ~env =
   let (status_response, lazy_stats) = get_status ~profiling ~reader genv env client_root in
   Lwt.return (env, ServerProt.Response.STATUS { status_response; lazy_stats }, None)
@@ -909,22 +982,48 @@ let handle_save_state ~saved_state_filename ~genv ~profiling ~env =
   Lwt.return (env, ServerProt.Response.SAVE_STATE result, None)
 
 let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
-  let CodeActionRequest.{ textDocument; range; _ } = params in
-  let (file_key, file, loc) =
-    Flow_lsp_conversions.lsp_textDocument_and_range_to_flow textDocument range client
-  in
-  match File_input.content_of_file_input file with
+  let CodeActionRequest.{ textDocument; range; context = { only = _; diagnostics } } = params in
+  let file_input = file_input_of_text_document_identifier ~client textDocument in
+  let file_key = File_key.SourceFile (File_input.filename_of_file_input file_input) in
+  let loc = Flow_lsp_conversions.lsp_range_to_flow_loc ~source:file_key range in
+  match File_input.content_of_file_input file_input with
   | Error msg -> Lwt.return (Error msg)
   | Ok file_contents ->
-    Code_action_service.code_actions_at_loc
-      ~reader
-      ~options
-      ~env
-      ~profiling
-      ~params
-      ~file_key
-      ~file_contents
-      ~loc
+    if not (Code_action_service.client_supports_quickfixes params) then
+      Lwt.return (Ok [])
+    else
+      let type_parse_artifacts_cache =
+        Some (Persistent_connection.type_parse_artifacts_cache client)
+      in
+      let uri = TextDocumentIdentifier.(textDocument.uri) in
+      let%lwt (file_artifacts_result, _did_hit_cache) =
+        let%lwt parse_result = Types_js.parse_contents ~options ~profiling file_contents file_key in
+        type_parse_artifacts_with_cache
+          ~options
+          ~env
+          ~profiling
+          ~type_parse_artifacts_cache
+          file_key
+          parse_result
+      in
+      (match file_artifacts_result with
+      | Error _ -> Lwt.return (Ok [])
+      | Ok
+          ( Parse_artifacts { file_sig; tolerable_errors; ast; parse_errors; _ },
+            Typecheck_artifacts { cx; typed_ast } ) ->
+        Code_action_service.code_actions_at_loc
+          ~options
+          ~env
+          ~reader
+          ~cx
+          ~file_sig
+          ~tolerable_errors
+          ~ast
+          ~typed_ast
+          ~parse_errors
+          ~diagnostics
+          ~uri
+          ~loc)
 
 type command_handler =
   (* A command can be handled immediately if it is super duper fast and doesn't require the env.
@@ -974,11 +1073,11 @@ let get_ephemeral_handler genv command =
   let reader = State_reader.create () in
   match command with
   | ServerProt.Request.AUTOCOMPLETE
-      { filename; contents; cursor; trigger_character; wait_for_recheck } ->
+      { filename; contents; cursor; trigger_character; wait_for_recheck; imports } ->
     mk_parallelizable
       ~wait_for_recheck
       ~options
-      (handle_autocomplete ~trigger_character ~reader ~options ~filename ~contents ~cursor)
+      (handle_autocomplete ~trigger_character ~reader ~options ~filename ~contents ~cursor ~imports)
   | ServerProt.Request.AUTOFIX_EXPORTS { input; verbose; wait_for_recheck } ->
     let options = { options with Options.opt_verbose = verbose } in
     mk_parallelizable ~wait_for_recheck ~options (handle_autofix_exports ~input ~options)
@@ -1081,10 +1180,6 @@ let get_ephemeral_handler genv command =
          ~omit_targ_defaults
          ~location_is_strict
          ~ambiguity_strategy)
-  | ServerProt.Request.REFACTOR { input; line; char; refactor_variant } ->
-    (* refactor delegates to find-refs, which is not parallelizable. Therefore refactor is also not
-     * parallelizable *)
-    Handle_nonparallelizable (handle_refactor ~reader ~genv ~input ~line ~char ~refactor_variant)
   | ServerProt.Request.STATUS { client_root; include_warnings } ->
     let genv =
       {
@@ -1196,17 +1291,17 @@ let rec handle_parallelizable_ephemeral_unsafe
 
         (* It sucks this has to live here. We need a better way to handle post-send logic
          * TODO - Do we actually need this error? Why do we even send the path? *)
-        ServerProt.Response.(
-          match response with
-          | STATUS { lazy_stats = _; status_response = DIRECTORY_MISMATCH { server; client } } ->
-            Hh_logger.fatal "Status: Error";
-            Hh_logger.fatal
-              "server_dir=%s, client_dir=%s"
-              (Path.to_string server)
-              (Path.to_string client);
-            Hh_logger.fatal "flow server is not listening to the same directory. Exiting.";
-            FlowExitStatus.(exit Server_client_directory_mismatch)
-          | _ -> ());
+        (match response with
+        | ServerProt.Response.(
+            STATUS { lazy_stats = _; status_response = DIRECTORY_MISMATCH { server; client } }) ->
+          Hh_logger.fatal "Status: Error";
+          Hh_logger.fatal
+            "server_dir=%s, client_dir=%s"
+            (Path.to_string server)
+            (Path.to_string client);
+          Hh_logger.fatal "flow server is not listening to the same directory. Exiting.";
+          FlowExit.(exit Server_client_directory_mismatch)
+        | _ -> ());
         Lwt.return json_data)
   in
   Lwt.return ((), profiling, json_data)
@@ -1352,9 +1447,9 @@ let keyvals_of_json (json : Hh_json.json option) : (string * Hh_json.json) list 
   | Some json -> [("json_data", json)]
 
 let with_data ~(extra_data : Hh_json.json option) (metadata : LspProt.metadata) : LspProt.metadata =
-  LspProt.(
-    let extra_data = metadata.extra_data @ keyvals_of_json extra_data in
-    { metadata with extra_data })
+  let open LspProt in
+  let extra_data = metadata.extra_data @ keyvals_of_json extra_data in
+  { metadata with extra_data }
 
 type 'a persistent_handling_result = 'a * LspProt.response * LspProt.metadata
 
@@ -1423,13 +1518,12 @@ let handle_persistent_did_open_notification_no_op ~metadata ~client:_ ~profiling
   Lwt.return ((), LspProt.LspFromServer None, metadata)
 
 let handle_persistent_did_change_notification ~params ~metadata ~client ~profiling:_ =
-  Lsp.DidChange.(
-    VersionedTextDocumentIdentifier.(
-      Persistent_connection.(
-        let fn = params.textDocument.uri |> Lsp_helpers.lsp_uri_to_path in
-        match client_did_change client fn params.contentChanges with
-        | Ok () -> Lwt.return ((), LspProt.LspFromServer None, metadata)
-        | Error (reason, stack) -> mk_lsp_error_response ~ret:() ~id:None ~reason ~stack metadata)))
+  let { Lsp.DidChange.textDocument; contentChanges } = params in
+  let { VersionedTextDocumentIdentifier.uri; version = _ } = textDocument in
+  let fn = Lsp_helpers.lsp_uri_to_path uri in
+  match Persistent_connection.client_did_change client fn contentChanges with
+  | Ok () -> Lwt.return ((), LspProt.LspFromServer None, metadata)
+  | Error (reason, stack) -> mk_lsp_error_response ~ret:() ~id:None ~reason ~stack metadata
 
 let handle_persistent_did_save_notification ~metadata ~client:_ ~profiling:_ =
   Lwt.return ((), LspProt.LspFromServer None, metadata)
@@ -1449,49 +1543,67 @@ let handle_persistent_cancel_notification ~params ~metadata ~client:_ ~profiling
   ServerMonitorListenerState.(cancellation_requests := IdSet.remove id !cancellation_requests);
   Lwt.return (env, LspProt.LspFromServer None, metadata)
 
-let handle_persistent_get_def ~reader ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
-  TextDocumentPositionParams.(
-    let (file, line, char) =
-      match loc with
-      | Some loc -> loc
-      | None ->
-        (* We must have failed to get the client when we first tried. We could throw here, but this is
-         * a little more defensive. The only danger here is that the file contents may have changed *)
-        Flow_lsp_conversions.lsp_DocumentPosition_to_flow params client
-    in
-    let type_contents_cache = Some (Persistent_connection.type_contents_cache client) in
-    let%lwt (result, extra_data) =
-      get_def ~options ~reader ~env ~profiling ~type_contents_cache (file, line, char)
-    in
-    let metadata = with_data ~extra_data metadata in
-    match result with
-    | Ok loc when loc = Loc.none ->
-      let response = ResponseMessage (id, DefinitionResult []) in
-      Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
-    | Ok loc ->
-      let default_uri = params.textDocument.TextDocumentIdentifier.uri in
-      let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc in
-      let definition_location = { Lsp.DefinitionLocation.location; title = None } in
-      let response = ResponseMessage (id, DefinitionResult [definition_location]) in
-      Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
-    | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata)
+let handle_persistent_did_change_configuration_notification ~params ~metadata ~client ~profiling:_ =
+  let open Hh_json_helpers in
+  let open Persistent_connection in
+  let { Lsp.DidChangeConfiguration.settings } = params in
+  let client_config = client_config client in
+  let json = Some settings in
+  let client_config =
+    let suggest = Jget.obj_opt json "suggest" in
+    match Jget.bool_opt suggest "autoImports" with
+    | Some suggest_autoimports -> { Client_config.suggest_autoimports }
+    | None -> client_config
+  in
+  client_did_change_configuration client client_config;
+  Lwt.return ((), LspProt.LspFromServer None, metadata)
 
-let handle_persistent_infer_type ~options ~reader ~id ~params ~loc ~metadata ~client ~profiling ~env
-    =
-  let open TextDocumentPositionParams in
-  let (file, line, column) =
-    match loc with
-    | Some loc -> loc
+let handle_persistent_get_def
+    ~reader ~options ~id ~params ~file_input ~metadata ~client ~profiling ~env =
+  let file_input =
+    match file_input with
+    | Some file_input -> file_input
     | None ->
       (* We must have failed to get the client when we first tried. We could throw here, but this is
        * a little more defensive. The only danger here is that the file contents may have changed *)
-      Flow_lsp_conversions.lsp_DocumentPosition_to_flow params client
+      file_input_of_text_document_position ~client params
   in
+  let (line, char) = Flow_lsp_conversions.position_of_document_position params in
+  let type_parse_artifacts_cache = Some (Persistent_connection.type_parse_artifacts_cache client) in
+  let%lwt (result, extra_data) =
+    get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_input, line, char)
+  in
+  let metadata = with_data ~extra_data metadata in
+  match result with
+  | Ok loc when loc = Loc.none ->
+    let response = ResponseMessage (id, DefinitionResult []) in
+    Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
+  | Ok loc ->
+    let { TextDocumentPositionParams.textDocument; position = _ } = params in
+    let default_uri = textDocument.TextDocumentIdentifier.uri in
+    let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc in
+    let definition_location = { Lsp.DefinitionLocation.location; title = None } in
+    let response = ResponseMessage (id, DefinitionResult [definition_location]) in
+    Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
+  | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
+
+let handle_persistent_infer_type
+    ~options ~reader ~id ~params ~file_input ~metadata ~client ~profiling ~env =
+  let open TextDocumentPositionParams in
+  let file_input =
+    match file_input with
+    | Some file_input -> file_input
+    | None ->
+      (* We must have failed to get the client when we first tried. We could throw here, but this is
+       * a little more defensive. The only danger here is that the file contents may have changed *)
+      file_input_of_text_document_position ~client params
+  in
+  let (line, column) = Flow_lsp_conversions.position_of_document_position params in
   (* if Some, would write to server logs *)
-  let type_contents_cache = Some (Persistent_connection.type_contents_cache client) in
+  let type_parse_artifacts_cache = Some (Persistent_connection.type_parse_artifacts_cache client) in
   let input =
     {
-      file_input = file;
+      file_input;
       query_position = { Loc.line; column };
       verbose = None;
       expand_aliases = false;
@@ -1502,7 +1614,7 @@ let handle_persistent_infer_type ~options ~reader ~id ~params ~loc ~metadata ~cl
     }
   in
   let%lwt (result, extra_data) =
-    infer_type ~options ~reader ~env ~profiling ~type_contents_cache input
+    infer_type ~options ~reader ~env ~profiling ~type_parse_artifacts_cache input
   in
   let metadata = with_data ~extra_data metadata in
   match result with
@@ -1559,78 +1671,88 @@ let handle_persistent_code_action_request
   | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
 
 let handle_persistent_autocomplete_lsp
-    ~reader ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
+    ~reader ~options ~id ~params ~file_input ~metadata ~client ~profiling ~env =
+  let client_config = Persistent_connection.client_config client in
   let lsp_init_params = Persistent_connection.lsp_initialize_params client in
   let is_snippet_supported = Lsp_helpers.supports_snippets lsp_init_params in
   let is_preselect_supported = Lsp_helpers.supports_preselect lsp_init_params in
-  Completion.(
-    let (file, line, char) =
-      match loc with
-      | Some loc -> loc
-      | None ->
-        (* We must have failed to get the client when we first tried. We could throw here, but this is
-         * a little more defensive. The only danger here is that the file contents may have changed *)
-        Flow_lsp_conversions.lsp_DocumentPosition_to_flow params.loc client
+  let is_label_detail_supported =
+    Lsp_helpers.supports_completion_item_label_details lsp_init_params
+  in
+  let { Completion.loc = lsp_loc; context } = params in
+  let file_input =
+    match file_input with
+    | Some file_input -> file_input
+    | None ->
+      (* We must have failed to get the client when we first tried. We could throw here, but this is
+       * a little more defensive. The only danger here is that the file contents may have changed *)
+      file_input_of_text_document_position ~client lsp_loc
+  in
+  let (line, char) = Flow_lsp_conversions.position_of_document_position lsp_loc in
+  let trigger_character =
+    Base.Option.value_map
+      ~f:(fun completionContext -> completionContext.Completion.triggerCharacter)
+      ~default:None
+      context
+  in
+  let fn_content =
+    match file_input with
+    | File_input.FileContent (fn, content) -> Ok (fn, content)
+    | File_input.FileName fn ->
+      (try Ok (Some fn, Sys_utils.cat fn)
+       with e ->
+         let e = Exception.wrap e in
+         Error (Exception.get_ctor_string e, Utils.Callstack (Exception.get_backtrace_string e)))
+  in
+  let imports =
+    Persistent_connection.Client_config.suggest_autoimports client_config
+    && Options.autoimports options
+  in
+  match fn_content with
+  | Error (reason, stack) -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason ~stack metadata
+  | Ok (filename, contents) ->
+    let%lwt (result, extra_data) =
+      autocomplete
+        ~trigger_character
+        ~reader
+        ~options
+        ~env
+        ~profiling
+        ~filename
+        ~contents
+        ~cursor:(line, char)
+        ~imports
     in
-    let trigger_character =
-      Base.Option.value_map
-        ~f:(fun completionContext -> completionContext.triggerCharacter)
-        ~default:None
-        params.context
-    in
-    let fn_content =
-      match file with
-      | File_input.FileContent (fn, content) -> Ok (fn, content)
-      | File_input.FileName fn ->
-        (try Ok (Some fn, Sys_utils.cat fn)
-         with e ->
-           let e = Exception.wrap e in
-           Error (Exception.get_ctor_string e, Utils.Callstack (Exception.get_backtrace_string e)))
-    in
-    match fn_content with
-    | Error (reason, stack) -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason ~stack metadata
-    | Ok (filename, contents) ->
-      let%lwt (result, extra_data) =
-        autocomplete
-          ~trigger_character
-          ~reader
-          ~options
-          ~env
-          ~profiling
-          ~filename
-          ~contents
-          ~cursor:(line, char)
-      in
-      let metadata = with_data ~extra_data metadata in
-      begin
-        match result with
-        | Ok items ->
-          let items =
-            Base.List.map
-              ~f:
-                (Flow_lsp_conversions.flow_completion_to_lsp
-                   ~is_snippet_supported
-                   ~is_preselect_supported)
-              items
-          in
-          let r = CompletionResult { Lsp.Completion.isIncomplete = false; items } in
-          let response = ResponseMessage (id, r) in
-          Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
-        | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
-      end)
+    let metadata = with_data ~extra_data metadata in
+    begin
+      match result with
+      | Ok (token, completions) ->
+        let result =
+          Flow_lsp_conversions.flow_completions_to_lsp
+            ?token
+            ~is_snippet_supported
+            ~is_preselect_supported
+            ~is_label_detail_supported
+            completions
+        in
+        let response = ResponseMessage (id, CompletionResult result) in
+        Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
+      | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
+    end
 
 let handle_persistent_signaturehelp_lsp
-    ~reader ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
-  let (file, line, col) =
-    match loc with
-    | Some loc -> loc
+    ~reader ~options ~id ~params ~file_input ~metadata ~client ~profiling ~env =
+  let file_input =
+    match file_input with
+    | Some file_input -> file_input
     | None ->
       (* We must have failed to get the client when we first tried. We could throw here, but this is
         * a little more defensive. The only danger here is that the file contents may have changed *)
-      Flow_lsp_conversions.lsp_DocumentPosition_to_flow params.SignatureHelp.loc client
+      file_input_of_text_document_position ~client params.SignatureHelp.loc
   in
+  let (line, col) = Flow_lsp_conversions.position_of_document_position params.SignatureHelp.loc in
   let fn_content =
-    match file with
+    match file_input with
     | File_input.FileContent (fn, content) -> Ok (fn, content)
     | File_input.FileName fn ->
       (try Ok (Some fn, Sys_utils.cat fn)
@@ -1647,13 +1769,38 @@ let handle_persistent_signaturehelp_lsp
       | None -> "-"
     in
     let path = File_key.SourceFile path in
-    let%lwt check_contents_result = Types_js.type_contents ~options ~env ~profiling contents path in
-    (match check_contents_result with
-    | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
-    | Ok (cx, _info, file_sig, _, _ast, typed_ast, _parse_errors) ->
+    let%lwt (file_artifacts_result, did_hit_cache) =
+      let%lwt parse_result = Types_js.parse_contents ~options ~profiling contents path in
+      let type_parse_artifacts_cache =
+        if Options.cache_signature_help_artifacts options then
+          Some (Persistent_connection.type_parse_artifacts_cache client)
+        else
+          None
+      in
+      type_parse_artifacts_with_cache
+        ~options
+        ~env
+        ~profiling
+        ~type_parse_artifacts_cache
+        path
+        parse_result
+    in
+    let metadata =
+      let json_props = add_cache_hit_data_to_json [] did_hit_cache in
+      let json = Hh_json.JSON_Object json_props in
+      with_data ~extra_data:(Some json) metadata
+    in
+    (match file_artifacts_result with
+    | Error _parse_errors ->
+      mk_lsp_error_response
+        ~ret:()
+        ~id:(Some id)
+        ~reason:"Couldn't parse file in parse_artifacts"
+        metadata
+    | Ok (Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) ->
       let func_details =
         let file_sig = File_sig.abstractify_locs file_sig in
-        let cursor_loc = Loc.make path line col in
+        let cursor_loc = Loc.cursor (Some path) line col in
         Signature_help.find_signatures ~options ~reader ~cx ~file_sig ~typed_ast cursor_loc
       in
       (match func_details with
@@ -1682,8 +1829,9 @@ let handle_persistent_signaturehelp_lsp
 
 let handle_persistent_document_highlight
     ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
-  let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client in
-  let%lwt result = find_local_refs ~reader ~options ~env ~profiling (file, line, char) in
+  let file_input = file_input_of_text_document_position ~client params in
+  let (line, char) = Flow_lsp_conversions.position_of_document_position params in
+  let%lwt result = find_local_refs ~reader ~options ~env ~profiling (file_input, line, char) in
   let extra_data =
     Some
       (Hh_json.JSON_Object
@@ -1715,32 +1863,91 @@ let handle_persistent_document_highlight
     Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
   | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
 
-let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~profiling ~env =
+(* This tries to simulate the logic from elsewhere which determines whether we would report
+ * errors for a given file. The criteria are
+ *
+ * 1) The file must be either implicitly included (be in the same dir structure as .flowconfig)
+ *    or explicitly included
+ * 2) The file must not be ignored
+ * 3) The file path must be a Flow file (e.g foo.js and not foo.php or foo/)
+ * 4) The file must either have `// @flow` or all=true must be set in the .flowconfig or CLI
+ *)
+let check_that_we_care_about_this_file =
+  let check_file_not_ignored ~file_options ~env ~file_path () =
+    if Files.wanted ~options:file_options env.ServerEnv.libs file_path then
+      Ok ()
+    else
+      Error "File is ignored"
+  in
+  let check_file_included ~options ~file_options ~file_path () =
+    let file_is_implicitly_included =
+      let root_str = spf "%s%s" (Path.to_string (Options.root options)) Filename.dir_sep in
+      String_utils.string_starts_with file_path root_str
+    in
+    if file_is_implicitly_included then
+      Ok ()
+    else if Files.is_included file_options file_path then
+      Ok ()
+    else
+      Error "File is not implicitly or explicitly included"
+  in
+  let check_is_flow_file ~file_options ~file_path () =
+    if Files.is_flow_file ~options:file_options file_path then
+      Ok ()
+    else
+      Error "File is not a Flow file"
+  in
+  let check_flow_pragma ~options ~content ~file_path () =
+    if Options.all options then
+      Ok ()
+    else
+      let (_, docblock) =
+        Parsing_service_js.(
+          parse_docblock docblock_max_tokens (File_key.SourceFile file_path) content)
+      in
+      if Docblock.is_flow docblock then
+        Ok ()
+      else
+        Error "File is missing @flow pragma and `all` is not set to `true`"
+  in
+  fun ~options ~env ~file_path ~content ->
+    let file_path = Files.imaginary_realpath file_path in
+    let file_options = Options.file_options options in
+    Ok ()
+    >>= check_file_not_ignored ~file_options ~env ~file_path
+    >>= check_file_included ~options ~file_options ~file_path
+    >>= check_is_flow_file ~file_options ~file_path
+    >>= check_flow_pragma ~options ~content ~file_path
+
+let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~client ~profiling ~env =
   let textDocument = params.TypeCoverage.textDocument in
-  let file =
-    match file with
-    | Some file -> file
+  let file_input =
+    match file_input with
+    | Some file_input -> file_input
     | None ->
       (* We must have failed to get the client when we first tried. We could throw here, but this is
        * a little more defensive. The only danger here is that the file contents may have changed *)
-      Flow_lsp_conversions.lsp_DocumentIdentifier_to_flow textDocument ~client
+      file_input_of_text_document_identifier ~client textDocument
   in
   (* if it isn't a flow file (i.e. lacks a @flow directive) then we won't do anything *)
-  let fkey = File_key.SourceFile (File_input.filename_of_file_input file) in
-  let content = File_input.content_of_file_input file in
+  let content = File_input.content_of_file_input file_input in
+  let file_path = File_input.filename_of_file_input file_input in
   let is_flow =
     match content with
     | Ok content ->
-      let (_, docblock) = Parsing_service_js.(parse_docblock docblock_max_tokens fkey content) in
-      Docblock.is_flow docblock
+      (match check_that_we_care_about_this_file ~options ~env ~file_path ~content with
+      | Ok () -> true
+      | Error _ -> false)
     | Error _ -> false
   in
   let%lwt result =
     if is_flow then
-      let force = false in
-      let type_contents_cache = Some (Persistent_connection.type_contents_cache client) in
       (* 'true' makes it report "unknown" for all exprs in non-flow files *)
-      coverage ~options ~env ~profiling ~type_contents_cache ~force ~trust:false file
+      let force = Options.all options in
+      let type_parse_artifacts_cache =
+        Some (Persistent_connection.type_parse_artifacts_cache client)
+      in
+      coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust:false file_input
     else
       Lwt.return (Ok [])
   in
@@ -1827,54 +2034,63 @@ let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~pro
   | (true, Error reason) -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
 
 let handle_persistent_find_refs ~reader ~genv ~id ~params ~metadata ~client ~profiling ~env =
-  FindReferences.(
-    let { loc; context = { includeDeclaration = _; includeIndirectReferences = multi_hop } } =
-      params
+  let FindReferences.
+        { loc; context = { includeDeclaration = _; includeIndirectReferences = multi_hop } } =
+    params
+  in
+  (* TODO: respect includeDeclaration *)
+  let file_input = file_input_of_text_document_position ~client loc in
+  let (line, char) = Flow_lsp_conversions.position_of_document_position loc in
+  let%lwt (env, result, dep_count) =
+    find_global_refs ~reader ~genv ~env ~profiling (file_input, line, char, multi_hop)
+  in
+  let extra_data =
+    Some
+      (Hh_json.JSON_Object
+         ( ( "result",
+             Hh_json.JSON_String
+               (match result with
+               | Ok _ -> "SUCCESS"
+               | _ -> "FAILURE") )
+         :: ("global", Hh_json.JSON_Bool true)
+         ::
+         (match dep_count with
+         | Some count -> [("deps", Hh_json.JSON_Number (string_of_int count))]
+         | None -> []) ))
+  in
+  let metadata = with_data ~extra_data metadata in
+  match result with
+  | Ok (Some (_name, locs)) ->
+    let lsp_locs =
+      Base.List.fold locs ~init:(Ok []) ~f:(fun acc loc ->
+          let location = Flow_lsp_conversions.loc_to_lsp loc in
+          Base.Result.combine location acc ~ok:List.cons ~err:(fun e _ -> e))
     in
-    (* TODO: respect includeDeclaration *)
-    let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow loc ~client in
-    let%lwt (env, result, dep_count) =
-      find_global_refs ~reader ~genv ~env ~profiling (file, line, char, multi_hop)
-    in
-    let extra_data =
-      Some
-        (Hh_json.JSON_Object
-           ( ( "result",
-               Hh_json.JSON_String
-                 (match result with
-                 | Ok _ -> "SUCCESS"
-                 | _ -> "FAILURE") )
-           :: ("global", Hh_json.JSON_Bool true)
-           ::
-           (match dep_count with
-           | Some count -> [("deps", Hh_json.JSON_Number (string_of_int count))]
-           | None -> []) ))
-    in
-    let metadata = with_data ~extra_data metadata in
-    match result with
-    | Ok (Some (_name, locs)) ->
-      let lsp_locs =
-        Base.List.fold locs ~init:(Ok []) ~f:(fun acc loc ->
-            let location = Flow_lsp_conversions.loc_to_lsp loc in
-            Base.Result.combine location acc ~ok:List.cons ~err:(fun e _ -> e))
-      in
-      begin
-        match lsp_locs with
-        | Ok lsp_locs ->
-          let response = ResponseMessage (id, FindReferencesResult lsp_locs) in
-          Lwt.return (env, LspProt.LspFromServer (Some response), metadata)
-        | Error reason -> mk_lsp_error_response ~ret:env ~id:(Some id) ~reason metadata
-      end
-    | Ok None ->
-      (* e.g. if it was requested on a place that's not even an identifier *)
-      let r = FindReferencesResult [] in
-      let response = ResponseMessage (id, r) in
-      Lwt.return (env, LspProt.LspFromServer (Some response), metadata)
-    | Error reason -> mk_lsp_error_response ~ret:env ~id:(Some id) ~reason metadata)
+    begin
+      match lsp_locs with
+      | Ok lsp_locs ->
+        let response = ResponseMessage (id, FindReferencesResult lsp_locs) in
+        Lwt.return (env, LspProt.LspFromServer (Some response), metadata)
+      | Error reason -> mk_lsp_error_response ~ret:env ~id:(Some id) ~reason metadata
+    end
+  | Ok None ->
+    (* e.g. if it was requested on a place that's not even an identifier *)
+    let r = FindReferencesResult [] in
+    let response = ResponseMessage (id, r) in
+    Lwt.return (env, LspProt.LspFromServer (Some response), metadata)
+  | Error reason -> mk_lsp_error_response ~ret:env ~id:(Some id) ~reason metadata
 
-let handle_persistent_rename ~reader ~genv ~id ~params ~metadata ~client ~profiling ~env =
+let handle_persistent_rename ~reader ~genv ~id ~params ~file_input ~metadata ~client ~profiling ~env
+    =
   let { Rename.textDocument; position; newName } = params in
-  let file_input = Flow_lsp_conversions.lsp_DocumentIdentifier_to_flow textDocument ~client in
+  let file_input =
+    match file_input with
+    | Some file_input -> file_input
+    | None ->
+      (* We must have failed to get the client when we first tried. We could throw here, but this is
+       * a little more defensive. The only danger here is that the file contents may have changed *)
+      file_input_of_text_document_identifier ~client textDocument
+  in
   let (line, col) = Flow_lsp_conversions.lsp_position_to_flow position in
   let env = ref env in
   let%lwt result =
@@ -1952,64 +2168,17 @@ let handle_persistent_execute_command ~id ~params ~metadata ~client:_ ~profiling
       (with_data ~extra_data metadata)
 
 let handle_persistent_unsupported ?id ~unhandled ~metadata ~client:_ ~profiling:_ =
-  let reason = Printf.sprintf "not implemented: %s" (Lsp_fmt.message_name_to_string unhandled) in
-  mk_lsp_error_response ~ret:() ~id ~reason metadata
-
-(* This tries to simulate the logic from elsewhere which determines whether we would report
- * errors for a given file. The criteria are
- *
- * 1) The file must be either implicitly included (be in the same dir structure as .flowconfig)
- *    or explicitly included
- * 2) The file must not be ignored
- * 3) The file path must be a Flow file (e.g foo.js and not foo.php or foo/)
- * 4) The file must either have `// @flow` or all=true must be set in the .flowconfig or CLI
- *)
-let check_that_we_care_about_this_file =
-  let check_file_not_ignored ~file_options ~env ~file_path () =
-    if Files.wanted ~options:file_options env.ServerEnv.libs file_path then
-      Ok ()
-    else
-      Error "File is ignored"
+  let message = Printf.sprintf "Unhandled method %s" (Lsp_fmt.message_name_to_string unhandled) in
+  let response =
+    match id with
+    | Some id ->
+      let e = { Error.code = Error.MethodNotFound; message; data = None } in
+      ResponseMessage (id, ErrorResult (e, ""))
+    | None ->
+      NotificationMessage
+        (TelemetryNotification { LogMessage.type_ = MessageType.ErrorMessage; message })
   in
-  let check_file_included ~options ~file_options ~file_path () =
-    let file_is_implicitly_included =
-      let root_str = spf "%s%s" (Path.to_string (Options.root options)) Filename.dir_sep in
-      String_utils.string_starts_with file_path root_str
-    in
-    if file_is_implicitly_included then
-      Ok ()
-    else if Files.is_included file_options file_path then
-      Ok ()
-    else
-      Error "File is not implicitly or explicitly included"
-  in
-  let check_is_flow_file ~file_options ~file_path () =
-    if Files.is_flow_file ~options:file_options file_path then
-      Ok ()
-    else
-      Error "File is not a Flow file"
-  in
-  let check_flow_pragma ~options ~content ~file_path () =
-    if Options.all options then
-      Ok ()
-    else
-      let (_, docblock) =
-        Parsing_service_js.(
-          parse_docblock docblock_max_tokens (File_key.SourceFile file_path) content)
-      in
-      if Docblock.is_flow docblock then
-        Ok ()
-      else
-        Error "File is missing @flow pragma and `all` is not set to `true`"
-  in
-  fun ~options ~env ~file_path ~content ->
-    let file_path = Files.imaginary_realpath file_path in
-    let file_options = Options.file_options options in
-    Ok ()
-    >>= check_file_not_ignored ~file_options ~env ~file_path
-    >>= check_file_included ~options ~file_options ~file_path
-    >>= check_is_flow_file ~file_options ~file_path
-    >>= check_flow_pragma ~options ~content ~file_path
+  Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
 
 (* What should we do if we get multiple requests for the same URI? Each request wants the most
  * up-to-date live errors, so if we have 10 pending requests then we would want to send the same
@@ -2067,18 +2236,43 @@ let handle_live_errors_request =
                        })),
                 metadata )
           | File_input.FileContent (_, content) ->
-            let%lwt (live_errors, live_warnings) =
+            let%lwt (live_errors, live_warnings, metadata) =
               match check_that_we_care_about_this_file ~options ~env ~file_path ~content with
               | Ok () ->
-                let%lwt (_, live_errors, live_warnings) =
-                  Types_js.typecheck_contents
-                    ~options
-                    ~env
-                    ~profiling
-                    content
-                    (File_key.SourceFile file_path)
+                let file_key =
+                  let file_options = Options.file_options options in
+                  Files.filename_from_string ~options:file_options file_path
                 in
-                Lwt.return (live_errors, live_warnings)
+                let%lwt (result, did_hit_cache) =
+                  let%lwt ((_, parse_errs) as intermediate_result) =
+                    Types_js.parse_contents ~options ~profiling content file_key
+                  in
+                  if not (Flow_error.ErrorSet.is_empty parse_errs) then
+                    Lwt.return (Error parse_errs, None)
+                  else
+                    let type_parse_artifacts_cache =
+                      if Options.cache_live_errors_artifacts options then
+                        Some (Persistent_connection.type_parse_artifacts_cache client)
+                      else
+                        None
+                    in
+                    type_parse_artifacts_with_cache
+                      ~options
+                      ~env
+                      ~profiling
+                      ~type_parse_artifacts_cache
+                      file_key
+                      intermediate_result
+                in
+                let (live_errors, live_warnings) =
+                  Types_js.printable_errors_of_file_artifacts_result ~options ~env file_key result
+                in
+                let metadata =
+                  let json_props = add_cache_hit_data_to_json [] did_hit_cache in
+                  let json = Hh_json.JSON_Object json_props in
+                  with_data ~extra_data:(Some json) metadata
+                in
+                Lwt.return (live_errors, live_warnings, metadata)
               | Error reason ->
                 Hh_logger.info "Not reporting live errors for file %S: %s" file_path reason;
 
@@ -2086,17 +2280,20 @@ let handle_live_errors_request =
                  * then just return empty sets *)
                 Lwt.return
                   ( Errors.ConcreteLocPrintableErrorSet.empty,
-                    Errors.ConcreteLocPrintableErrorSet.empty )
+                    Errors.ConcreteLocPrintableErrorSet.empty,
+                    metadata )
+            in
+            let live_errors_uri = Lsp.DocumentUri.of_string uri in
+            let live_diagnostics =
+              Flow_lsp_conversions.diagnostics_of_flow_errors
+                ~errors:live_errors
+                ~warnings:live_warnings
+              |> Lsp.UriMap.find_opt live_errors_uri
+              |> Base.Option.value ~default:[]
             in
             Lwt.return
               ( (),
-                LspProt.LiveErrorsResponse
-                  (Ok
-                     {
-                       LspProt.live_errors;
-                       live_warnings;
-                       live_errors_uri = uri |> Lsp.DocumentUri.of_string;
-                     }),
+                LspProt.LiveErrorsResponse (Ok { LspProt.live_diagnostics; live_errors_uri }),
                 metadata )
         in
         (* If we've successfully run and there isn't a more recent request for this URI,
@@ -2167,28 +2364,27 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     (* This mutates env, so it can't run in parallel *)
     Handle_nonparallelizable_persistent (handle_persistent_subscribe ~reader ~options ~metadata)
   | LspToServer (NotificationMessage (DidOpenNotification params)) ->
-    Lsp.DidOpen.(
-      TextDocumentItem.(
-        let content = params.textDocument.text in
-        let fn = params.textDocument.uri |> Lsp_helpers.lsp_uri_to_path in
-        let files = Nel.one (fn, content) in
-        let did_anything_change =
-          match Persistent_connection.get_client client_id with
-          | None -> false
-          | Some client ->
-            (* We want to create a local copy of this file immediately, so we can respond to requests
+    let { Lsp.DidOpen.textDocument } = params in
+    let { Lsp.TextDocumentItem.text; uri; languageId = _; version = _ } = textDocument in
+    let fn = Lsp_helpers.lsp_uri_to_path uri in
+    let files = Nel.one (fn, text) in
+    let did_anything_change =
+      match Persistent_connection.get_client client_id with
+      | None -> false
+      | Some client ->
+        (* We want to create a local copy of this file immediately, so we can respond to requests
               * about this file *)
-            Persistent_connection.client_did_open client ~files
-        in
-        if did_anything_change then (
-          enqueue_did_open_files files;
+        Persistent_connection.client_did_open client ~files
+    in
+    if did_anything_change then (
+      enqueue_did_open_files files;
 
-          (* This mutates env, so it can't run in parallel *)
-          Handle_nonparallelizable_persistent
-            (handle_persistent_did_open_notification ~reader ~genv ~metadata)
-        ) else
-          (* It's a no-op, so we can respond immediately *)
-          Handle_persistent_immediately (handle_persistent_did_open_notification_no_op ~metadata)))
+      (* This mutates env, so it can't run in parallel *)
+      Handle_nonparallelizable_persistent
+        (handle_persistent_did_open_notification ~reader ~genv ~metadata)
+    ) else
+      (* It's a no-op, so we can respond immediately *)
+      Handle_persistent_immediately (handle_persistent_did_open_notification_no_op ~metadata)
   | LspToServer (NotificationMessage (DidChangeNotification params)) ->
     (* This just updates our copy of the file in question. We want to do this immediately *)
     Handle_persistent_immediately (handle_persistent_did_change_notification ~params ~metadata)
@@ -2196,24 +2392,23 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     (* No-op can be handled immediately *)
     Handle_persistent_immediately (handle_persistent_did_save_notification ~metadata)
   | LspToServer (NotificationMessage (DidCloseNotification params)) ->
-    Lsp.DidClose.(
-      TextDocumentIdentifier.(
-        let fn = params.textDocument.uri |> Lsp_helpers.lsp_uri_to_path in
-        let filenames = Nel.one fn in
-        let did_anything_change =
-          match Persistent_connection.get_client client_id with
-          | None -> false
-          | Some client ->
-            (* Close this file immediately in case another didOpen comes soon *)
-            Persistent_connection.client_did_close client ~filenames
-        in
-        if did_anything_change then
-          (* This mutates env, so it can't run in parallel *)
-          Handle_nonparallelizable_persistent
-            (handle_persistent_did_close_notification ~reader ~genv ~metadata)
-        else
-          (* It's a no-op, so we can respond immediately *)
-          Handle_persistent_immediately (handle_persistent_did_close_notification_no_op ~metadata)))
+    let { Lsp.DidClose.textDocument } = params in
+    let fn = Lsp_helpers.lsp_textDocumentIdentifier_to_filename textDocument in
+    let filenames = Nel.one fn in
+    let did_anything_change =
+      match Persistent_connection.get_client client_id with
+      | None -> false
+      | Some client ->
+        (* Close this file immediately in case another didOpen comes soon *)
+        Persistent_connection.client_did_close client ~filenames
+    in
+    if did_anything_change then
+      (* This mutates env, so it can't run in parallel *)
+      Handle_nonparallelizable_persistent
+        (handle_persistent_did_close_notification ~reader ~genv ~metadata)
+    else
+      (* It's a no-op, so we can respond immediately *)
+      Handle_persistent_immediately (handle_persistent_did_close_notification_no_op ~metadata)
   | LspToServer (NotificationMessage (CancelRequestNotification params)) ->
     (* The general idea here is this:
       *
@@ -2227,24 +2422,21 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     let id = params.CancelRequest.id in
     ServerMonitorListenerState.(cancellation_requests := IdSet.add id !cancellation_requests);
     Handle_nonparallelizable_persistent (handle_persistent_cancel_notification ~params ~metadata)
+  | LspToServer (NotificationMessage (DidChangeConfigurationNotification params)) ->
+    Handle_persistent_immediately
+      (handle_persistent_did_change_configuration_notification ~params ~metadata)
   | LspToServer (RequestMessage (id, DefinitionRequest params)) ->
     (* Grab the file contents immediately in case of any future didChanges *)
-    let loc =
-      Base.Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
-          Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client)
-    in
+    let file_input = file_input_of_text_document_position_opt ~client_id params in
     mk_parallelizable_persistent
       ~options
-      (handle_persistent_get_def ~reader ~options ~id ~params ~loc ~metadata)
+      (handle_persistent_get_def ~reader ~options ~id ~params ~file_input ~metadata)
   | LspToServer (RequestMessage (id, HoverRequest params)) ->
     (* Grab the file contents immediately in case of any future didChanges *)
-    let loc =
-      Base.Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
-          Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client)
-    in
+    let file_input = file_input_of_text_document_position_opt ~client_id params in
     mk_parallelizable_persistent
       ~options
-      (handle_persistent_infer_type ~options ~reader ~id ~params ~loc ~metadata)
+      (handle_persistent_infer_type ~options ~reader ~id ~params ~file_input ~metadata)
   | LspToServer (RequestMessage (id, CodeActionRequest params)) ->
     mk_parallelizable_persistent
       ~options
@@ -2252,23 +2444,17 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
   | LspToServer (RequestMessage (id, CompletionRequest params)) ->
     (* Grab the file contents immediately in case of any future didChanges *)
     let loc = params.Completion.loc in
-    let loc =
-      Base.Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
-          Flow_lsp_conversions.lsp_DocumentPosition_to_flow loc ~client)
-    in
+    let file_input = file_input_of_text_document_position_opt ~client_id loc in
     mk_parallelizable_persistent
       ~options
-      (handle_persistent_autocomplete_lsp ~reader ~options ~id ~params ~loc ~metadata)
+      (handle_persistent_autocomplete_lsp ~reader ~options ~id ~params ~file_input ~metadata)
   | LspToServer (RequestMessage (id, SignatureHelpRequest params)) ->
     (* Grab the file contents immediately in case of any future didChanges *)
     let loc = params.SignatureHelp.loc in
-    let loc =
-      Base.Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
-          Flow_lsp_conversions.lsp_DocumentPosition_to_flow loc ~client)
-    in
+    let file_input = file_input_of_text_document_position_opt ~client_id loc in
     mk_parallelizable_persistent
       ~options
-      (handle_persistent_signaturehelp_lsp ~reader ~options ~id ~params ~loc ~metadata)
+      (handle_persistent_signaturehelp_lsp ~reader ~options ~id ~params ~file_input ~metadata)
   | LspToServer (RequestMessage (id, DocumentHighlightRequest params)) ->
     mk_parallelizable_persistent
       ~options
@@ -2276,22 +2462,24 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
   | LspToServer (RequestMessage (id, TypeCoverageRequest params)) ->
     (* Grab the file contents immediately in case of any future didChanges *)
     let textDocument = params.TypeCoverage.textDocument in
-    let file =
-      Base.Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
-          Flow_lsp_conversions.lsp_DocumentIdentifier_to_flow textDocument ~client)
-    in
+    let file_input = file_input_of_text_document_identifier_opt ~client_id textDocument in
     mk_parallelizable_persistent
       ~options
-      (handle_persistent_coverage ~options ~id ~params ~file ~metadata)
+      (handle_persistent_coverage ~options ~id ~params ~file_input ~metadata)
   | LspToServer (RequestMessage (id, FindReferencesRequest params)) ->
     (* Like `flow find-refs`, this is kind of slow and mutates env, so it can't run in parallel *)
     Handle_nonparallelizable_persistent
       (handle_persistent_find_refs ~reader ~genv ~id ~params ~metadata)
   | LspToServer (RequestMessage (id, RenameRequest params)) ->
+    (* Grab the file contents immediately in case of any future didChanges *)
+    let file_input =
+      let textDocument = params.Rename.textDocument in
+      file_input_of_text_document_identifier_opt ~client_id textDocument
+    in
     (* rename delegates to find-refs, which can be kind of slow and might mutate the env, so it
       * can't run in parallel *)
     Handle_nonparallelizable_persistent
-      (handle_persistent_rename ~reader ~genv ~id ~params ~metadata)
+      (handle_persistent_rename ~reader ~genv ~id ~params ~file_input ~metadata)
   | LspToServer (RequestMessage (id, RageRequest)) ->
     (* Whoever is waiting for the rage results probably doesn't want to wait for a recheck *)
     mk_parallelizable_persistent ~options (handle_persistent_rage ~reader ~genv ~id ~metadata)
@@ -2325,61 +2513,62 @@ let wrap_persistent_handler
     ~(workload : a)
     ~(default_ret : c)
     (arg : b) : c Lwt.t =
-  LspProt.(
-    let (request, metadata) = request in
-    match Persistent_connection.get_client client_id with
-    | None ->
-      Hh_logger.error "Unknown persistent client %d. Maybe connection went away?" client_id;
-      Lwt.return default_ret
-    | Some client ->
-      Hh_logger.info "Persistent request: %s" (string_of_request request);
-      MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
+  let (request, metadata) = request in
+  match Persistent_connection.get_client client_id with
+  | None ->
+    Hh_logger.error "Unknown persistent client %d. Maybe connection went away?" client_id;
+    Lwt.return default_ret
+  | Some client ->
+    Hh_logger.info "Persistent request: %s" (LspProt.string_of_request request);
+    MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
 
-      let should_print_summary = Options.should_profile genv.options in
-      let%lwt (profiling, result) =
-        Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary (fun profiling ->
-            match request with
-            | LspToServer (RequestMessage (id, _))
-              when IdSet.mem id !ServerMonitorListenerState.cancellation_requests ->
-              Hh_logger.info "Skipping canceled persistent request: %s" (string_of_request request);
+    let should_print_summary = Options.should_profile genv.options in
+    let%lwt (profiling, result) =
+      Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary (fun profiling ->
+          match request with
+          | LspProt.LspToServer (RequestMessage (id, _))
+            when IdSet.mem id !ServerMonitorListenerState.cancellation_requests ->
+            Hh_logger.info
+              "Skipping canceled persistent request: %s"
+              (LspProt.string_of_request request);
 
-              (* We can't actually skip a canceled request...we need to send a response. But we can
-               * skip the normal handler *)
-              handle_persistent_canceled ~ret:default_ret ~id ~metadata ~client ~profiling
-            | _ ->
-              (try%lwt handler ~genv ~workload ~client ~profiling arg with
-              | Lwt.Canceled as e ->
-                (* Don't swallow Lwt.Canceled. Parallelizable commands may be canceled and run again
-                 * later. *)
-                let e = Exception.wrap e in
-                Exception.reraise e
-              | e ->
-                let e = Exception.wrap e in
-                let exception_constructor = Exception.get_ctor_string e in
-                let stack = Exception.get_backtrace_string e in
-                Lwt.return
-                  ( default_ret,
-                    LspProt.UncaughtException { request; exception_constructor; stack },
-                    metadata )))
-      in
-      (* we'll send this "Finishing_up" event only after sending the LSP response *)
-      let event =
-        ServerStatus.(
-          Finishing_up
-            {
-              duration = Profiling_js.get_profiling_duration profiling;
-              info = CommandSummary (string_of_request request);
-            })
-      in
-      let server_profiling = Some profiling in
-      let server_logging_context = Some (FlowEventLogger.get_context ()) in
-      let (ret, lsp_response, metadata) = result in
-      let metadata = { metadata with server_profiling; server_logging_context } in
-      let response = (lsp_response, metadata) in
-      Persistent_connection.send_response response client;
-      Hh_logger.info "Persistent response: %s" (LspProt.string_of_response lsp_response);
-      MonitorRPC.status_update ~event;
-      Lwt.return ret)
+            (* We can't actually skip a canceled request...we need to send a response. But we can
+             * skip the normal handler *)
+            handle_persistent_canceled ~ret:default_ret ~id ~metadata ~client ~profiling
+          | _ ->
+            (try%lwt handler ~genv ~workload ~client ~profiling arg with
+            | Lwt.Canceled as e ->
+              (* Don't swallow Lwt.Canceled. Parallelizable commands may be canceled and run again
+               * later. *)
+              let e = Exception.wrap e in
+              Exception.reraise e
+            | e ->
+              let e = Exception.wrap e in
+              let exception_constructor = Exception.get_ctor_string e in
+              let stack = Exception.get_backtrace_string e in
+              Lwt.return
+                ( default_ret,
+                  LspProt.UncaughtException { request; exception_constructor; stack },
+                  metadata )))
+    in
+    (* we'll send this "Finishing_up" event only after sending the LSP response *)
+    let event =
+      ServerStatus.(
+        Finishing_up
+          {
+            duration = Profiling_js.get_profiling_duration profiling;
+            info = CommandSummary (LspProt.string_of_request request);
+          })
+    in
+    let server_profiling = Some profiling in
+    let server_logging_context = Some (FlowEventLogger.get_context ()) in
+    let (ret, lsp_response, metadata) = result in
+    let metadata = { metadata with LspProt.server_profiling; server_logging_context } in
+    let response = (lsp_response, metadata) in
+    Persistent_connection.send_response response client;
+    Hh_logger.info "Persistent response: %s" (LspProt.string_of_response lsp_response);
+    MonitorRPC.status_update ~event;
+    Lwt.return ret
 
 let handle_persistent_immediately_unsafe ~genv:_ ~workload ~client ~profiling () =
   workload ~client ~profiling

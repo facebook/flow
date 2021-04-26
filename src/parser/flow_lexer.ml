@@ -1715,6 +1715,7 @@ let type_token env lexbuf =
   | ";" -> Token (env, T_SEMICOLON)
   | "," -> Token (env, T_COMMA)
   | ":" -> Token (env, T_COLON)
+  | "?." -> Token (env, T_PLING_PERIOD)
   | "?" -> Token (env, T_PLING)
   | "[" -> Token (env, T_LBRACKET)
   | "]" -> Token (env, T_RBRACKET)
@@ -1789,3 +1790,8 @@ let template_tail = wrap template_tail
 let type_token = wrap type_token
 
 let token = wrap token
+
+let is_valid_identifier_name lexbuf =
+  match%sedlex lexbuf with
+  | (js_id_start, Star js_id_continue, eof) -> true
+  | _ -> false

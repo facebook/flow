@@ -6,14 +6,14 @@ exact_by_default=false (should print: {|f: number|} for exact)
 
 declare function foo(): {| f: number |};
 
-module.exports = (foo(): {|f: number|});
+module.exports = (foo(): {| f: number |});
 
 >>> inexact.js (#changes: 2)
 // @flow
 
 declare function foo(): { f: number; ... };
 
-module.exports = (foo(): {f: number,...});
+module.exports = (foo(): { f: number, ... });
 
 >>> Launching report...
 
@@ -51,14 +51,14 @@ exact_by_default=true (should print: {f: number, ...} for inexact)
 
 declare function foo(): {| f: number |};
 
-module.exports = (foo(): {f: number});
+module.exports = (foo(): { f: number });
 
 >>> inexact.js (#changes: 2)
 // @flow
 
 declare function foo(): { f: number; ... };
 
-module.exports = (foo(): {f: number,...});
+module.exports = (foo(): { f: number, ... });
 
 >>> Launching report...
 

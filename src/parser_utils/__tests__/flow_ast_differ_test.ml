@@ -334,7 +334,6 @@ class insert_import_mapper =
     method! statement_list stmts =
       if List.length stmts > 0 then
         let open Ast.Statement.ImportDeclaration in
-        let open Ast.StringLiteral in
         let stmts = super#statement_list stmts in
         let (loc, _) = List.hd stmts in
         let imp =
@@ -342,7 +341,7 @@ class insert_import_mapper =
             Ast.Statement.ImportDeclaration
               {
                 import_kind = Ast.Statement.ImportDeclaration.ImportValue;
-                source = (loc, { value = "baz"; raw = "\"baz\""; comments = None });
+                source = (loc, { Ast.StringLiteral.value = "baz"; raw = "\"baz\""; comments = None });
                 default = None;
                 specifiers =
                   Some
@@ -369,7 +368,6 @@ class insert_second_import_mapper =
     method! statement_list stmts =
       if List.length stmts > 0 then
         let open Ast.Statement.ImportDeclaration in
-        let open Ast.StringLiteral in
         let stmts = super#statement_list stmts in
         let (loc, _) = List.hd stmts in
         let imp =
@@ -377,7 +375,7 @@ class insert_second_import_mapper =
             Ast.Statement.ImportDeclaration
               {
                 import_kind = Ast.Statement.ImportDeclaration.ImportValue;
-                source = (loc, { value = "baz"; raw = "\"baz\""; comments = None });
+                source = (loc, { Ast.StringLiteral.value = "baz"; raw = "\"baz\""; comments = None });
                 default = None;
                 specifiers =
                   Some
@@ -404,8 +402,6 @@ class insert_second_cjsimport_mapper =
     method! statement_list stmts =
       if List.length stmts > 0 then
         let open Ast.Statement.Expression in
-        let open Ast.Expression.Call in
-        let open Ast.Literal in
         let stmts = super#statement_list stmts in
         let (loc, _) = List.hd stmts in
         let imp =
@@ -416,7 +412,7 @@ class insert_second_cjsimport_mapper =
                   ( loc,
                     Ast.Expression.Call
                       {
-                        callee =
+                        Ast.Expression.Call.callee =
                           ( loc,
                             Ast.Expression.Identifier
                               (Flow_ast_utils.ident_of_source (loc, "require")) );
@@ -430,7 +426,7 @@ class insert_second_cjsimport_mapper =
                                     ( loc,
                                       Ast.Expression.Literal
                                         {
-                                          value = Ast.Literal.String "baz";
+                                          Ast.Literal.value = Ast.Literal.String "baz";
                                           raw = "\"baz\"";
                                           comments = None;
                                         } );
@@ -455,8 +451,6 @@ class add_body_mapper =
     method! statement_list stmts =
       if List.length stmts > 0 then
         let open Ast.Statement.Expression in
-        let open Ast.Expression.Call in
-        let open Ast.Literal in
         let stmts = super#statement_list stmts in
         let (loc, _) = List.rev stmts |> List.hd in
         let imp =
@@ -467,7 +461,7 @@ class add_body_mapper =
                   ( loc,
                     Ast.Expression.Call
                       {
-                        callee =
+                        Ast.Expression.Call.callee =
                           ( loc,
                             Ast.Expression.Identifier (Flow_ast_utils.ident_of_source (loc, "foo"))
                           );
@@ -481,7 +475,7 @@ class add_body_mapper =
                                     ( loc,
                                       Ast.Expression.Literal
                                         {
-                                          value = Ast.Literal.String "baz";
+                                          Ast.Literal.value = Ast.Literal.String "baz";
                                           raw = "\"baz\"";
                                           comments = None;
                                         } );
@@ -712,12 +706,11 @@ class true_to_false_mapper =
       | _ -> expr
 
     method! type_annotation (annot : (Loc.t, Loc.t) Ast.Type.annotation) =
-      let open Ast.Type in
       let (t1, a) = annot in
       let (t2, right_var) = a in
       match right_var with
-      | BooleanLiteral { Ast.BooleanLiteral.value = true; comments } ->
-        (t1, (t2, BooleanLiteral { Ast.BooleanLiteral.value = false; comments }))
+      | Ast.Type.BooleanLiteral { Ast.BooleanLiteral.value = true; comments } ->
+        (t1, (t2, Ast.Type.BooleanLiteral { Ast.BooleanLiteral.value = false; comments }))
       | _ -> annot
   end
 
@@ -2011,33 +2004,33 @@ let tests =
            let source = "5 - (2 + 2)" in
            assert_edits_equal_standard_only
              ctxt
-             ~edits:[((0, 0), "import {baz} from \"baz\";"); ((5, 10), "(2 - 2)")]
+             ~edits:[((0, 0), "import { baz } from \"baz\";"); ((5, 10), "(2 - 2)")]
              ~source
-             ~expected:"import {baz} from \"baz\";5 - ((2 - 2))"
+             ~expected:"import { baz } from \"baz\";5 - ((2 - 2))"
              ~mapper:(new insert_import_mapper) );
          ( "insert_import_existing_split" >:: fun ctxt ->
            let source = "foo; 5 - (2 + 2)" in
            assert_edits_equal_standard_only
              ctxt
-             ~edits:[((0, 0), "import {baz} from \"baz\";"); ((10, 15), "(2 - 2)")]
+             ~edits:[((0, 0), "import { baz } from \"baz\";"); ((10, 15), "(2 - 2)")]
              ~source
-             ~expected:"import {baz} from \"baz\";foo; 5 - ((2 - 2))"
+             ~expected:"import { baz } from \"baz\";foo; 5 - ((2 - 2))"
              ~mapper:(new insert_import_mapper) );
          ( "insert_import_second_split" >:: fun ctxt ->
            let source = "import bing from 'bing'; 5 - (2 + 2)" in
            assert_edits_equal_standard_only
              ctxt
-             ~edits:[((24, 24), "import {baz} from \"baz\";"); ((30, 35), "(2 - 2)")]
+             ~edits:[((24, 24), "import { baz } from \"baz\";"); ((30, 35), "(2 - 2)")]
              ~source
-             ~expected:"import bing from 'bing';import {baz} from \"baz\"; 5 - ((2 - 2))"
+             ~expected:"import bing from 'bing';import { baz } from \"baz\"; 5 - ((2 - 2))"
              ~mapper:(new insert_second_import_mapper) );
          ( "existing_cjs_import_split" >:: fun ctxt ->
            let source = "const x = require('bing'); 5 - (2 + 2)" in
            assert_edits_equal_standard_only
              ctxt
-             ~edits:[((26, 26), "import {baz} from \"baz\";"); ((32, 37), "(2 - 2)")]
+             ~edits:[((26, 26), "import { baz } from \"baz\";"); ((32, 37), "(2 - 2)")]
              ~source
-             ~expected:"const x = require('bing');import {baz} from \"baz\"; 5 - ((2 - 2))"
+             ~expected:"const x = require('bing');import { baz } from \"baz\"; 5 - ((2 - 2))"
              ~mapper:(new insert_second_import_mapper) );
          ( "insert_cjs_import_split" >:: fun ctxt ->
            let source = "import 'bing'; 5 - (2 + 2)" in
@@ -2693,8 +2686,8 @@ let tests =
              ~edits:
                [
                  ( (13, 13),
-                   "import type {there as here} from \"new_import1\";
-import type {there as here} from \"new_import2\";"
+                   "import type { there as here } from \"new_import1\";
+import type { there as here } from \"new_import2\";"
                  );
                  ((20, 20), ": (() => number)");
                  ((23, 26), "(bla: () => number)");
@@ -2702,8 +2695,8 @@ import type {there as here} from \"new_import2\";"
                ]
              ~source
              ~expected:
-               "'use strict';import type {there as here} from \"new_import1\";
-import type {there as here} from \"new_import2\";const x: (() => number) = (bla: () => number): (() => number) => { return 0; };"
+               "'use strict';import type { there as here } from \"new_import1\";
+import type { there as here } from \"new_import2\";const x: (() => number) = (bla: () => number): (() => number) => { return 0; };"
              ~mapper:(new insert_import_and_annot_mapper) );
          ( "import_renamed_simple" >:: fun ctxt ->
            let source = "import rename from \"foo\";" in

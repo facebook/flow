@@ -122,13 +122,6 @@ let spread_subtract id1 id2 =
    in the spread list. *)
 let spread_append id1 id2 = spread_subtract id1 id2 @ id2
 
-(* legacy, just for RPolyTest reasons *)
-let aloc_of_id id =
-  let aloc_of_bound { generic = { id; _ }; _ } = id in
-  match id with
-  | Bound bound -> aloc_of_bound bound
-  | Spread spread -> Nel.hd spread |> aloc_of_bound
-
 let rec fold_ids ~f ~acc id =
   let test_bound acc { generic = { id; name }; super } =
     match super with

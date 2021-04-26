@@ -15,6 +15,8 @@ val add_aloc : Xx.state -> ALoc.t -> unit
 
 val add_type : Xx.state -> Type.t -> unit
 
+val add_name : Xx.state -> Reason.name -> unit
+
 val add_use : Xx.state -> Type.use_t -> unit
 
 val add_destructor : Xx.state -> Type.destructor -> unit

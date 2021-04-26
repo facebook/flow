@@ -4,17 +4,17 @@
 >>> ./a.js
 // @flow
 
-module.exports = ({}: {...});
+module.exports = ({}: { ... });
 
 >>> ./b.js
 // @flow
 
-module.exports = { f: ({}: {...}) };
+module.exports = { f: ({}: { ... }) };
 
 >>> ./c.js
 // @flow
 
-const obj = { f: ({}: {...}) };
+const obj = { f: ({}: { ... }) };
 
 obj.f = { x: 1 };
 obj.f = { x: "a" };
@@ -24,7 +24,7 @@ module.exports = obj;
 >>> ./d.js
 // @flow
 
-const obj: {|f: {|x: number|}, g: {|x: string|}|} = { };
+const obj: {| f: {| x: number |}, g: {| x: string |} |} = { };
 
 obj.f = { x: 1 };
 obj["g"] = { x: "a" };
@@ -34,7 +34,7 @@ module.exports = obj;
 >>> ./e.js
 // @flow
 
-const obj: {|a: number|} = {};
+const obj: {| a: number |} = {};
 declare function foo(x: { a: number }): void;
 foo(obj);
 module.exports = obj;
@@ -42,7 +42,7 @@ module.exports = obj;
 >>> ./f.js
 // @flow
 
-const obj: {|f: number|} = {};
+const obj: {| f: number |} = {};
 (obj.f: number);
 module.exports = obj;
 
@@ -51,7 +51,7 @@ module.exports = obj;
 
 declare function foo<X: { a: 1 }>(x: X): void;
 
-const obj: {|a: 1|} = {};
+const obj: {| a: 1 |} = {};
 foo(obj);
 module.exports = obj;
 
@@ -89,17 +89,17 @@ Warnings:
 >>> ./a.js
 // @flow
 
-module.exports = ({}: {...});
+module.exports = ({}: { ... });
 
 >>> ./b.js
 // @flow
 
-module.exports = { f: ({}: {...}) };
+module.exports = { f: ({}: { ... }) };
 
 >>> ./c.js
 // @flow
 
-const obj = { f: ({}: {...}) };
+const obj = { f: ({}: { ... }) };
 
 obj.f = { x: 1 };
 obj.f = { x: "a" };
@@ -109,7 +109,7 @@ module.exports = obj;
 >>> ./d.js
 // @flow
 
-const obj: {f: {x: number,...}, g: {x: string,...},...} = { };
+const obj: { f: { x: number, ... }, g: { x: string, ... }, ... } = { };
 
 obj.f = { x: 1 };
 obj["g"] = { x: "a" };
@@ -119,7 +119,7 @@ module.exports = obj;
 >>> ./e.js
 // @flow
 
-const obj: {a: number,...} = {};
+const obj: { a: number, ... } = {};
 declare function foo(x: { a: number }): void;
 foo(obj);
 module.exports = obj;
@@ -127,7 +127,7 @@ module.exports = obj;
 >>> ./f.js
 // @flow
 
-const obj: {f: number,...} = {};
+const obj: { f: number, ... } = {};
 (obj.f: number);
 module.exports = obj;
 
@@ -136,7 +136,7 @@ module.exports = obj;
 
 declare function foo<X: { a: 1 }>(x: X): void;
 
-const obj: {a: 1,...} = {};
+const obj: { a: 1, ... } = {};
 foo(obj);
 module.exports = obj;
 
@@ -144,25 +144,25 @@ module.exports = obj;
 === Diff between codemod-ed & autofix-ed ===
 >>> ./d.js
 3c3
-< const obj: {|f: {|x: number|}, g: {|x: string|}|} = { };
+< const obj: {| f: {| x: number |}, g: {| x: string |} |} = { };
 ---
-> const obj: {f: {x: number,...}, g: {x: string,...},...} = { };
+> const obj: { f: { x: number, ... }, g: { x: string, ... }, ... } = { };
 
 >>> ./e.js
 3c3
-< const obj: {|a: number|} = {};
+< const obj: {| a: number |} = {};
 ---
-> const obj: {a: number,...} = {};
+> const obj: { a: number, ... } = {};
 
 >>> ./f.js
 3c3
-< const obj: {|f: number|} = {};
+< const obj: {| f: number |} = {};
 ---
-> const obj: {f: number,...} = {};
+> const obj: { f: number, ... } = {};
 
 >>> ./g.js
 5c5
-< const obj: {|a: 1|} = {};
+< const obj: {| a: 1 |} = {};
 ---
-> const obj: {a: 1,...} = {};
+> const obj: { a: 1, ... } = {};
 

@@ -69,6 +69,30 @@ References:
                                         ^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------- instanceof.js:90:26
+
+The right-hand side of an `instanceof` expression must be an object, but got string [1]. [invalid-in-rhs]
+
+   90|   const y = x instanceof 'bad'; // error
+                                ^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- instanceof.js:91:20
+
+The right-hand side of an `instanceof` expression must be an object, but got string [1]. [invalid-in-rhs]
+
+   91|   if (x instanceof 'bad') {} // error
+                          ^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- instanceof.js:93:28
+
+The right-hand side of an `instanceof` expression must be an object, but got mixed [1]. [invalid-in-rhs]
+
+   93|   if (x instanceof ('bad': mixed)) {} // error
+                                  ^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- mixed.js:6:6
 
 Cannot cast `x` to number because `C` [1] is incompatible with number [2]. [incompatible-cast]
@@ -133,4 +157,4 @@ References:
 
 
 
-Found 9 errors
+Found 12 errors

@@ -12,6 +12,7 @@ let flow_position_to_lsp (line : int) (char : int) : Lsp.position =
 
 let lsp_position_to_flow (position : Lsp.position) : int * int =
   Lsp.(
+    (* Flow's line numbers are 1-indexed; LSP's are 0-indexed *)
     let line = position.line + 1 in
     let char = position.character in
     (line, char))
@@ -33,8 +34,6 @@ let loc_to_lsp_range (loc : Loc.t) : Lsp.range =
     let loc_start = loc.start in
     let loc_end = loc._end in
     let start = flow_position_to_lsp loc_start.line loc_start.column in
-    (* Flow's end range is inclusive, LSP's is exclusive.
-     * +1 for that, but -1 to make it 0-based *)
     let end_ = flow_position_to_lsp loc_end.line loc_end.column in
     { Lsp.start; end_ })
 
@@ -78,9 +77,11 @@ let flow_signature_help_to_lsp
     in
     Some { signatures; activeSignature = 0; activeParameter = active_parameter }
 
-let flow_completion_to_lsp
+let flow_completion_item_to_lsp
+    ?token
     ~is_snippet_supported:(_ : bool)
     ~(is_preselect_supported : bool)
+    ~(is_label_detail_supported : bool)
     (item : ServerProt.Response.Completion.completion_item) : Lsp.Completion.completionItem =
   let open ServerProt.Response.Completion in
   let detail =
@@ -100,8 +101,45 @@ let flow_completion_to_lsp
       item.text_edits
   in
   let documentation = Base.Option.map item.documentation ~f:(fun doc -> [Lsp.MarkedString doc]) in
+  let command =
+    Some
+      Lsp.Command.
+        {
+          title = "";
+          command = Command "log";
+          arguments =
+            Hh_json.
+              [
+                JSON_String "textDocument/completion";
+                JSON_String item.log_info;
+                JSON_Object
+                  [
+                    ( "token",
+                      match token with
+                      | None -> JSON_Null
+                      | Some token -> JSON_String token );
+                    ("completion", JSON_String item.name);
+                  ];
+              ];
+        }
+  in
+  let labelDetails =
+    if
+      is_label_detail_supported
+      && (Base.Option.is_some item.source || Base.Option.is_some item.type_)
+    then
+      Some
+        {
+          Lsp.CompletionItemLabelDetails.qualifier = item.source;
+          parameters = None;
+          type_ = item.type_;
+        }
+    else
+      None
+  in
   {
     Lsp.Completion.label = item.name;
+    labelDetails;
     kind = item.kind;
     detail;
     documentation;
@@ -111,9 +149,28 @@ let flow_completion_to_lsp
     insertText = None (* deprecated and should not be used *);
     insertTextFormat;
     textEdits;
-    command = None;
+    command;
     data = None;
   }
+
+let flow_completions_to_lsp
+    ?token
+    ~(is_snippet_supported : bool)
+    ~(is_preselect_supported : bool)
+    ~(is_label_detail_supported : bool)
+    (completions : ServerProt.Response.Completion.t) : Lsp.Completion.result =
+  let { ServerProt.Response.Completion.items; is_incomplete } = completions in
+  let items =
+    Base.List.map
+      ~f:
+        (flow_completion_item_to_lsp
+           ?token
+           ~is_snippet_supported
+           ~is_preselect_supported
+           ~is_label_detail_supported)
+      items
+  in
+  { Lsp.Completion.isIncomplete = is_incomplete; items }
 
 let file_key_to_uri (file_key_opt : File_key.t option) : (Lsp.DocumentUri.t, string) result =
   let ( >>| ) = Base.Result.( >>| ) in
@@ -149,26 +206,8 @@ let lsp_DocumentIdentifier_to_flow_path textDocument =
   let fn = Lsp_helpers.lsp_textDocumentIdentifier_to_filename textDocument in
   Sys_utils.realpath fn |> Base.Option.value ~default:fn
 
-let lsp_DocumentIdentifier_to_flow
-    (textDocument : Lsp.TextDocumentIdentifier.t) ~(client : Persistent_connection.single_client) :
-    File_input.t =
-  lsp_DocumentIdentifier_to_flow_path textDocument |> Persistent_connection.get_file client
-
-let lsp_DocumentPosition_to_flow
-    (params : Lsp.TextDocumentPositionParams.t) ~(client : Persistent_connection.single_client) :
-    File_input.t * int * int =
-  Lsp.TextDocumentPositionParams.(
-    let file = lsp_DocumentIdentifier_to_flow params.textDocument client in
-    let (line, char) = lsp_position_to_flow params.position in
-    (file, line, char))
-
-let lsp_textDocument_and_range_to_flow
-    ?(file_key_of_path = (fun p -> File_key.SourceFile p)) td range client =
-  let path = lsp_DocumentIdentifier_to_flow_path td in
-  let file_key = file_key_of_path path in
-  let file = Persistent_connection.get_file client path in
-  let loc = lsp_range_to_flow_loc ~source:file_key range in
-  (file_key, file, loc)
+let position_of_document_position { Lsp.TextDocumentPositionParams.position; _ } =
+  lsp_position_to_flow position
 
 module DocumentSymbols = struct
   let name_of_key (key : (Loc.t, Loc.t) Ast.Expression.Object.Property.key) : string option =
@@ -196,13 +235,19 @@ module DocumentSymbols = struct
       ~(containerName : string option)
       ~(name : string)
       ~(kind : Lsp.SymbolInformation.symbolKind) : Lsp.SymbolInformation.t list =
-    {
-      Lsp.SymbolInformation.name;
-      kind;
-      location = { Lsp.Location.uri; range = loc_to_lsp_range loc };
-      containerName;
-    }
-    :: acc
+    if name = "" then
+      (* sometimes due to parse errors, we end up with empty names. hide them!
+         in fact, VS Code throws out the entire response if any symbol name is falsy!
+         https://github.com/microsoft/vscode/blob/afd102cbd2e17305a510701d7fd963ec2528e4ea/src/vs/workbench/api/common/extHostTypes.ts#L1068-L1072 *)
+      acc
+    else
+      {
+        Lsp.SymbolInformation.name;
+        kind;
+        location = { Lsp.Location.uri; range = loc_to_lsp_range loc };
+        containerName;
+      }
+      :: acc
 
   let ast_name_opt ~uri ~containerName ~acc ~loc ~(name_opt : string option) ~kind =
     Base.Option.value_map name_opt ~default:acc ~f:(fun name ->
@@ -400,3 +445,42 @@ let flow_ast_to_lsp_symbols ~(uri : Lsp.DocumentUri.t) (program : (Loc.t, Loc.t)
     Lsp.SymbolInformation.t list =
   let (_loc, { Ast.Program.statements; _ }) = program in
   Base.List.fold statements ~init:[] ~f:(DocumentSymbols.ast_statement ~uri ~containerName:None)
+
+let diagnostics_of_flow_errors =
+  let error_to_lsp
+      ~(severity : Lsp.PublishDiagnostics.diagnosticSeverity) (error : Loc.t Errors.printable_error)
+      : (Lsp.DocumentUri.t * Lsp.PublishDiagnostics.diagnostic) option =
+    let error = Errors.Lsp_output.lsp_of_error error in
+    match loc_to_lsp error.Errors.Lsp_output.loc with
+    | Ok location ->
+      let uri = location.Lsp.Location.uri in
+      let related_to_lsp (loc, relatedMessage) =
+        match loc_to_lsp loc with
+        | Ok relatedLocation -> Some { Lsp.PublishDiagnostics.relatedLocation; relatedMessage }
+        | Error _ -> None
+      in
+      let relatedInformation =
+        Base.List.filter_map error.Errors.Lsp_output.relatedLocations ~f:related_to_lsp
+      in
+      Some
+        ( uri,
+          {
+            Lsp.PublishDiagnostics.range = location.Lsp.Location.range;
+            severity = Some severity;
+            code = Lsp.PublishDiagnostics.StringCode error.Errors.Lsp_output.code;
+            source = Some "Flow";
+            message = error.Errors.Lsp_output.message;
+            relatedInformation;
+            relatedLocations = relatedInformation (* legacy fb extension *);
+          } )
+    | Error _ -> None
+  in
+  fun ~errors ~warnings ->
+    let add severity error acc =
+      match error_to_lsp ~severity error with
+      | Some (uri, diagnostic) -> Lsp.UriMap.add ~combine:List.append uri [diagnostic] acc
+      | None -> acc
+    in
+    Lsp.UriMap.empty
+    |> Errors.ConcreteLocPrintableErrorSet.fold (add Lsp.PublishDiagnostics.Error) errors
+    |> Errors.ConcreteLocPrintableErrorSet.fold (add Lsp.PublishDiagnostics.Warning) warnings

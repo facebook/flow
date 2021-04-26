@@ -34,8 +34,6 @@ do_file "class-0.js" 4 3 4 4
 do_file "class-1.js" 5 6
 do_file "class-2.js" 4 6
 do_file "class-3.js" 9 15
-do_file "class-poly-0.js" 5 10
-do_file "comments-0.js" 4 33
 do_file "dictionary.js" 12 12
 do_file "func-0.js" 3 26
 do_file "func-1.js" 3 18
@@ -57,7 +55,6 @@ do_file "replacement-array.js" 5 15 --strategy=generalize
 do_file "replacement-arrow.js" 3 13
 do_file "replacement-class.js" 5 7
 do_file "replacement-dictionary.js" 3 3 --strategy=generalize
-do_file "replacement-function.js" 7 47
 do_file "replacement-object.js" 2 16
 
 do_file "func-0.js" 4 14 4 15

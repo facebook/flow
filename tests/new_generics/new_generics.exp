@@ -502,6 +502,76 @@ References:
                           ^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:17:13
+
+string literal `b` [1] is incompatible with string literal `a` [2]. [incompatible-type]
+
+   detect_literal_subtypes.js:17:13
+   17|   if (a === 'b'){ } // error 'b' not compatible with 'a'
+                   ^^^ [1]
+
+References:
+   detect_literal_subtypes.js:16:16
+   16| function a1<A: 'a'>(a: A): void {
+                      ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:17:13
+
+string literal `b` [1] is incompatible with string literal `a` [2]. [incompatible-type]
+
+   detect_literal_subtypes.js:17:13
+   17|   if (a === 'b'){ } // error 'b' not compatible with 'a'
+                   ^^^ [1]
+
+References:
+   detect_literal_subtypes.js:16:24
+   16| function a1<A: 'a'>(a: A): void {
+                              ^ [2]
+
+
+Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:21:13
+
+string literal `b` [1] is incompatible with string literal `a` [2]. [incompatible-type]
+
+   detect_literal_subtypes.js:21:13
+   21|   if (b === 'b'){ } // error 'b' not compatible with 'a'
+                   ^^^ [1]
+
+References:
+   detect_literal_subtypes.js:20:16
+   20| function b1<A: 'a', B: A>(b: B): void {
+                      ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:21:13
+
+string literal `b` [1] is incompatible with string literal `a` [2]. [incompatible-type]
+
+   detect_literal_subtypes.js:21:13
+   21|   if (b === 'b'){ } // error 'b' not compatible with 'a'
+                   ^^^ [1]
+
+References:
+   detect_literal_subtypes.js:20:30
+   20| function b1<A: 'a', B: A>(b: B): void {
+                                    ^ [2]
+
+
+Error --------------------------------------------------------------------------------- detect_literal_subtypes.js:39:10
+
+Property `r` is missing in `T` [1]. [prop-missing]
+
+   detect_literal_subtypes.js:39:10
+   39|     case 'r': // error
+                ^^^
+
+References:
+   detect_literal_subtypes.js:33:15
+   33| function c<X: T>(x: $Keys<X>) {
+                     ^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- exact.js:6:4
 
 Cannot cast `x` to `X` because inexact object type [1] is incompatible with exact `X` [2]. [incompatible-exact]
@@ -1004,8 +1074,8 @@ References:
    react.js:13:27
     13|   (a: React.ComponentType<{a: number}>); // nope, contravariance
                                   ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:257:38
-   257|   declare export type ComponentType<-P> = React$ComponentType<P>;
+   <BUILTINS>/react.js:272:38
+   272|   declare export type ComponentType<-P> = React$ComponentType<P>;
                                              ^ [3]
 
 
@@ -1025,8 +1095,8 @@ References:
    react.js:14:23
    14|   (b: React.Component<Props>); // nope
                              ^^^^^ [2]
-   <BUILTINS>/react.js:26:31
-   26| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:41:31
+   41| declare class React$Component<Props, State = void> {
                                      ^^^^^ [3]
 
 
@@ -1433,7 +1503,7 @@ References:
 
 
 
-Found 85 errors
+Found 90 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -374,7 +374,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
       const isConnected = env
         .getLSPMessagesSinceStartOfStep()
         .some(msg =>
-          Builder.doesMessageMatch(msg, expectedMethod, expectedContents),
+          Builder.doesMessageFuzzyMatch(msg, expectedMethod, expectedContents),
         );
       const suggestion = {
         method: 'lspStartAndConnect',
@@ -461,48 +461,73 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
-  // verifyAllLSPMessagesInStep(expects=['A',['B','{C,D}']], ignores=['B','E'])
-  // will look at all the actual messages that arrived in this step.
+  // verifyAllLSPMessagesInStep(expects, ignores) will look at all the actual
+  // messages that arrived in this step.
   //
-  // In this case there must be an "A", with any contents, followed by a "B"
-  // which has the strings C and D in its JSON representation (up to whitespace).
+  // For example, if expects = ['A',['B',{a:'b',c:false}]] and
+  // ignores = ['B','E'], there must be an "A", with any contents, followed by
+  // a "B" which exactly matches the given JSON object.
+  //
+  // Instead of an object, legacy callers also pass a string containing chunks
+  // of JSON which is very loosely compared. the string '{"a":"b","c":false}'
+  // tests whether response "B" contains the substrings `"a":"b"` and
+  // `"c":false` anywhere in its JSON representation. This doesn't enforce
+  // ordering or any structure, so should probably be avoided.
   //
   // It's okay if there are unexpected messages so long as they're in
   // ignores list - in this case we'd ignore any "B" (either because it came
-  // in the wrong order or because it didn't have C and D), and ignore any "E".
-  // But if there are unexpected messages not in the ignore list, then we fail.
+  // in the wrong order or because it didn't have the right contents), and
+  // ignore any "E". But if there are unexpected messages not in the ignore
+  // list, then we fail.
   verifyAllLSPMessagesInStep: (
-    $ReadOnlyArray<string | [string, string]>,
-    $ReadOnlyArray<string | [string, string]>,
+    $ReadOnlyArray<string | [string, string] | LSPMessage>,
+    $ReadOnlyArray<string | [string, string] | LSPMessage>,
   ) => TestStepSecondStage = (expects, ignores) => {
     const assertLoc = searchStackForTestAssertion();
     const ret = this._cloneWithAssertion((reason, env) => {
       const actualMessages = env.getLSPMessagesSinceStartOfStep();
-      let actuals: Array<string> = [];
+      let actuals: Array<string | [string, string] | LSPMessage> = [];
       let iExpect = 0;
+      // we test that messages are equal using a diff of strings, so we have
+      // to convert the expected value into a string.
+      let diffable = expected => {
+        if (typeof expected === 'string') {
+          return expected;
+        } else if (Array.isArray(expected)) {
+          return expected.join(',');
+        } else {
+          return JSON.stringify(expected, null, 2);
+        }
+      };
       let doesMatch = (
         actual: LSPMessage,
-        expected: string | [string, string],
+        expected: string | [string, string] | LSPMessage,
       ) => {
         if (typeof expected === 'string') {
-          return Builder.doesMessageMatch(actual, expected);
+          return Builder.doesMessageFuzzyMatch(actual, expected);
+        } else if (Array.isArray(expected) && expected.length === 2) {
+          return Builder.doesMessageFuzzyMatch(
+            actual,
+            expected[0],
+            expected[1],
+          );
         } else {
-          return Builder.doesMessageMatch(actual, expected[0], expected[1]);
+          return Builder.doesMessageMatch(actual, expected);
         }
       };
       for (let iActual = 0; iActual < actualMessages.length; iActual++) {
-        if (
-          iExpect < expects.length &&
-          doesMatch(actualMessages[iActual], expects[iExpect])
-        ) {
-          actuals.push(expects[iExpect].toString());
+        let actual = actualMessages[iActual];
+        let expected = expects[iExpect];
+        if (expected !== undefined && doesMatch(actual, expected)) {
+          // it matches (possibly fuzzily), so we add the *expected* output
+          // to *actuals*, so that when we string diff it later, it matches.
+          // otherwise, the fuzzy expectation wouldn't match later.
+          actuals.push(expected);
           iExpect++;
-        } else if (
-          ignores.some(ignore => doesMatch(actualMessages[iActual], ignore))
-        ) {
+        } else if (ignores.some(ignore => doesMatch(actual, ignore))) {
           // ignore it
         } else {
-          actuals.push(actualMessages[iActual].method);
+          actuals.push(actual);
         }
       }
 
@@ -510,13 +535,20 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         method: 'verifyAllLSPMessagesInStep',
         args: [actuals, ignores],
       };
+
+      // don't ignore whitespace, since we used JSON.stringify to format
+      // both `expects` and `actuals`, whitespace is already normalized
+      // and differences are relevant (like within strings).
+      const ignoreWhitespace = false;
+
       return simpleDiffAssertion(
-        expects.join(','),
-        actuals.join(','),
+        expects.map(diffable).join('\n'),
+        actuals.map(diffable).join('\n'),
         assertLoc,
         reason,
         'messages',
         suggestion,
+        ignoreWhitespace,
       );
     });
     ret._readsIdeMessages = true;

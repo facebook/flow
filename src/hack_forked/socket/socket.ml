@@ -67,7 +67,7 @@ let unix_socket sock_name =
         sock)
   with Unix.Unix_error (err, _, _) ->
     Printf.eprintf "%s\n" (Unix.error_message err);
-    Exit_status.(exit Socket_error)
+    Exit.(exit Socket_error)
 
 (* The sockaddr_un structure puts a strict limit on the length of a socket
    address. This appears to be 104 chars on mac os x and 108 chars on my
@@ -98,7 +98,7 @@ let get_path path =
       let digest_part =
         if max_digest_length <= 0 then
           let () = Printf.eprintf "Socket name is too long: %S\n" filename in
-          raise Exit_status.(Exit_with Socket_error)
+          raise Exit.(Exit_with Socket_error)
         else if String.length digest > max_digest_length then
           String.sub digest 0 max_digest_length
         else

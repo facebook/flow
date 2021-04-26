@@ -9,6 +9,7 @@ open Utils_js
 
 type denormalized_file_data = {
   resolved_requires: Module_heaps.resolved_requires;
+  exports: Exports.t;
   hash: Xx.hash;
 }
 
@@ -18,6 +19,19 @@ type normalized_file_data = denormalized_file_data
 type parsed_file_data = {
   info: Module_heaps.info;
   normalized_file_data: normalized_file_data;
+  (* Right now there is no guarantee that this is Some, for two reasons:
+   * - We allow saved state to be saved from a lazy server, meaning that it's possible that *no*
+   *   files will have been merged, and therefore none will have a sig hash.
+   * - We do not typecheck all parsed files, so even on a full init some files may have None here.
+   *
+   * The sig hashes drive optimizations, so whether or not they are included for any given file
+   * should not affect correctness.
+   *
+   * The landscape around merging and sig hashing will change dramatically with types-first 2.0, so
+   * I think that it makes sense to wait for it before deciding upon any stronger invariant to
+   * enforce here.
+   *)
+  sig_hash: Xx.hash option;
 }
 
 (* We also need to store the info for unparsed files *)
@@ -27,9 +41,7 @@ type unparsed_file_data = {
 }
 
 type saved_state_dependency_graph =
-  | Classic_dep_graph of Utils_js.FilenameSet.t Utils_js.FilenameMap.t
-  | Types_first_dep_graph of
-      (Utils_js.FilenameSet.t * Utils_js.FilenameSet.t) Utils_js.FilenameMap.t
+  (Utils_js.FilenameSet.t * Utils_js.FilenameSet.t) Utils_js.FilenameMap.t
 
 (* This is the complete saved state data representation *)
 type saved_state_data = {
@@ -77,17 +89,12 @@ let update_dependency_graph_filenames f graph =
       map
       FilenameMap.empty
   in
-  match graph with
-  | Classic_dep_graph map ->
-    let update_value = update_set in
-    Classic_dep_graph (update_map update_value map)
-  | Types_first_dep_graph map ->
-    let update_value (sig_deps, impl_deps) =
-      let sig_deps = update_set sig_deps in
-      let impl_deps = update_set impl_deps in
-      (sig_deps, impl_deps)
-    in
-    Types_first_dep_graph (update_map update_value map)
+  let update_value (sig_deps, impl_deps) =
+    let sig_deps = update_set sig_deps in
+    let impl_deps = update_set impl_deps in
+    (sig_deps, impl_deps)
+  in
+  update_map update_value graph
 
 (* It's simplest if the build ID is always the same length. Let's use 16, since that happens to
  * be the size of the build ID hash. *)
@@ -193,13 +200,8 @@ end = struct
     in
     { info with Module_heaps.module_name }
 
-  let normalize_parsed_data ~normalizer parsed_file_data =
-    (* info *)
-    let info = normalize_info ~normalizer parsed_file_data.info in
-    (* resolved_requires *)
-    let { Module_heaps.resolved_modules; phantom_dependents; hash } =
-      parsed_file_data.normalized_file_data.resolved_requires
-    in
+  let normalize_resolved_requires
+      ~normalizer { Module_heaps.resolved_modules; phantom_dependents; hash } =
     let phantom_dependents =
       SSet.map (FileNormalizer.normalize_path normalizer) phantom_dependents
     in
@@ -208,12 +210,16 @@ end = struct
         (modulename_map_fn ~f:(FileNormalizer.normalize_file_key normalizer))
         resolved_modules
     in
-    let resolved_requires = { Module_heaps.resolved_modules; phantom_dependents; hash } in
-    {
-      info;
-      normalized_file_data =
-        { resolved_requires; hash = parsed_file_data.normalized_file_data.hash };
-    }
+    { Module_heaps.resolved_modules; phantom_dependents; hash }
+
+  let normalize_file_data ~normalizer { resolved_requires; exports; hash } =
+    let resolved_requires = normalize_resolved_requires ~normalizer resolved_requires in
+    { resolved_requires; exports; hash }
+
+  let normalize_parsed_data ~normalizer { info; normalized_file_data; sig_hash } =
+    let info = normalize_info ~normalizer info in
+    let normalized_file_data = normalize_file_data ~normalizer normalized_file_data in
+    { info; normalized_file_data; sig_hash }
 
   (* Collect all the data for a single parsed file *)
   let collect_normalized_data_for_parsed_file ~normalizer ~reader fn parsed_heaps =
@@ -224,8 +230,10 @@ end = struct
           {
             resolved_requires =
               Module_heaps.Reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.ok fn;
+            exports = Parsing_heaps.Reader.get_exports_unsafe ~reader fn;
             hash = Parsing_heaps.Reader.get_file_hash_unsafe ~reader fn;
           };
+        sig_hash = Context_heaps.Reader.sig_hash_opt ~reader fn;
       }
     in
     let relative_fn = FileNormalizer.normalize_file_key normalizer fn in
@@ -254,11 +262,9 @@ end = struct
   (* The builtin flowlibs are excluded from the saved state. The server which loads the saved state
    * will extract and typecheck its own builtin flowlibs *)
   let is_not_in_flowlib ~options =
-    match (Options.file_options options).Files.default_lib_dir with
-    | None -> (fun _ -> true) (* There are no flowlibs *)
-    | Some root ->
-      let root_str = Path.to_string root in
-      (fun f -> not (Files.is_prefix root_str f))
+    let file_options = Options.file_options options in
+    let is_in_flowlib = Files.is_in_flowlib file_options in
+    (fun f -> not (is_in_flowlib f))
 
   let normalize_error_set ~normalizer = Flow_error.ErrorSet.map (normalize_error ~normalizer)
 
@@ -326,24 +332,18 @@ end = struct
         dependency_info |> Dependency_info.implementation_dependency_graph |> FilenameGraph.to_map
       in
       let dependency_graph =
-        if Dependency_info.is_types_first dependency_info then begin
-          let sig_map =
-            dependency_info |> Dependency_info.sig_dependency_graph |> FilenameGraph.to_map
-          in
-          (* The maps should have the same entries. Enforce this by asserting that they have the
-           * same size, and then by using `FilenameMap.find` below to ensure that each `impl_map`
-           * entry has a corresponding `sig_map` entry. *)
-          assert (FilenameMap.cardinal sig_map = FilenameMap.cardinal impl_map);
-          let combined_map =
-            FilenameMap.mapi
-              (fun file impl_deps ->
-                let sig_deps = FilenameMap.find file sig_map in
-                (sig_deps, impl_deps))
-              impl_map
-          in
-          Types_first_dep_graph combined_map
-        end else
-          Classic_dep_graph impl_map
+        let sig_map =
+          dependency_info |> Dependency_info.sig_dependency_graph |> FilenameGraph.to_map
+        in
+        (* The maps should have the same entries. Enforce this by asserting that they have the
+         * same size, and then by using `FilenameMap.find` below to ensure that each `impl_map`
+         * entry has a corresponding `sig_map` entry. *)
+        assert (FilenameMap.cardinal sig_map = FilenameMap.cardinal impl_map);
+        FilenameMap.mapi
+          (fun file impl_deps ->
+            let sig_deps = FilenameMap.find file sig_map in
+            (sig_deps, impl_deps))
+          impl_map
       in
 
       normalize_dependency_graph ~normalizer dependency_graph
@@ -439,7 +439,7 @@ module Load : sig
     profiling:Profiling_js.running ->
     saved_state_data Lwt.t
 
-  val denormalize_parsed_data : root:string -> normalized_file_data -> denormalized_file_data
+  val denormalize_file_data : root:string -> normalized_file_data -> denormalized_file_data
 end = struct
   module FileDenormalizer : sig
     type t
@@ -514,22 +514,23 @@ end = struct
   let denormalize_info_nocache ~root info =
     denormalize_info_generic ~denormalize:(denormalize_file_key_nocache ~root) info
 
-  (* Turns all the relative paths in a file's data back into absolute paths.
-   *
-   * We do our best to avoid reading the file system (which Path.make will do) *)
-  let denormalize_parsed_data ~root file_data =
-    (* resolved_requires *)
-    let { Module_heaps.resolved_modules; phantom_dependents; hash } = file_data.resolved_requires in
+  let denormalize_resolved_requires
+      ~root { Module_heaps.resolved_modules; phantom_dependents; hash = _ } =
+    (* We do our best to avoid reading the file system (which Path.make will do) *)
     let phantom_dependents = SSet.map (Files.absolute_path root) phantom_dependents in
     let resolved_modules =
       SMap.map (modulename_map_fn ~f:(denormalize_file_key_nocache ~root)) resolved_modules
     in
-    let resolved_requires = { Module_heaps.resolved_modules; phantom_dependents; hash } in
-    { resolved_requires; hash = file_data.hash }
+    Module_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependents
 
-  let partially_denormalize_parsed_data ~denormalizer { info; normalized_file_data } =
+  (** Turns all the relative paths in a file's data back into absolute paths. *)
+  let denormalize_file_data ~root { resolved_requires; exports; hash } =
+    let resolved_requires = denormalize_resolved_requires ~root resolved_requires in
+    { resolved_requires; exports; hash }
+
+  let partially_denormalize_parsed_data ~denormalizer { info; normalized_file_data; sig_hash } =
     let info = denormalize_info ~denormalizer info in
-    { info; normalized_file_data }
+    { info; normalized_file_data; sig_hash }
 
   let progress_fn real_total ~total:_ ~start ~length:_ =
     MonitorRPC.status_update
@@ -696,4 +697,4 @@ let load ~workers ~saved_state_filename ~options =
   Profiling_js.with_profiling_lwt ~label:"LoadSavedState" ~should_print_summary (fun profiling ->
       Load.load ~workers ~saved_state_filename ~options ~profiling)
 
-let denormalize_parsed_data = Load.denormalize_parsed_data
+let denormalize_file_data = Load.denormalize_file_data

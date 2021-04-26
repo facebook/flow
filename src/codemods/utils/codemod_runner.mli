@@ -5,9 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+[@@@warning "-67"]
+
 type 'a unit_result = ('a, ALoc.t * Error_message.internal_error) result
 
-type ('a, 'ctx) abstract_visitor = (Loc.t, Loc.t) Flow_ast.Program.t -> 'ctx -> 'a
+type ('a, 'ctx) abstract_visitor =
+  options:Options.t -> (Loc.t, Loc.t) Flow_ast.Program.t -> 'ctx -> 'a
 
 (** TypedRunner - This runner does a full local typecheck and makes available the
     typed AST as well as the full context to each job. This runner is needed for
@@ -61,7 +64,7 @@ module type TYPED_RUNNER_WITH_PREPASS_CONFIG = sig
 
   val store_precheck_result : prepass_result unit_result Utils_js.FilenameMap.t -> unit
 
-  val visit : (Loc.t, Loc.t) Flow_ast.Program.t -> Codemod_context.Typed.t -> accumulator
+  val visit : (accumulator, Codemod_context.Typed.t) abstract_visitor
 end
 
 module type RUNNABLE = sig

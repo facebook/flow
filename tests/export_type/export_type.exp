@@ -140,15 +140,6 @@ References:
              ^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- types_only.js:10:6
-
-Cannot build a typed interface for this module. You should annotate the exports of this module with types.
-`standaloneType2` is not a value. [signature-verification-failure]
-
-   10| type standaloneType2 = number;
-            ^^^^^^^^^^^^^^^
-
-
 Error ----------------------------------------------------------------------------------------------- types_only.js:11:9
 
 Cannot reference type `standaloneType2` [1] from a value position. [type-as-value]
@@ -171,15 +162,6 @@ Cannot export the value `num` as a type. [export-value-as-type]
                    ^^^
 
 
-Error ----------------------------------------------------------------------------------- values_as_type_exports.js:6:10
-
-Cannot build a typed interface for this module. You should annotate the exports of this module with types. `fun` is not
-a type. [signature-verification-failure]
-
-   6| function fun(): void {}
-               ^^^
-
-
 Error ----------------------------------------------------------------------------------- values_as_type_exports.js:7:14
 
 Cannot export the value `fun` as a type. [export-value-as-type]
@@ -188,5 +170,14 @@ Cannot export the value `fun` as a type. [export-value-as-type]
                    ^^^
 
 
+Error ------------------------------------------------------------------------------- values_as_type_exports_dep.js:4:16
 
-Found 15 errors
+Cannot use `num` as a type because it is an `any`-typed value. Type `num` properly, so it is no longer `any`-typed, to
+use it as an annotation. [value-as-type]
+
+   4| declare var x: num; // x is converted to any when exported, due to error
+                     ^^^
+
+
+
+Found 14 errors

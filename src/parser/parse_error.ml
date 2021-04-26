@@ -70,6 +70,7 @@ type t =
   | InvalidLHSInExponentiation
   | InvalidLHSInForIn
   | InvalidLHSInForOf
+  | InvalidIndexedAccess of { has_bracket: bool }
   | ExpectedPatternFoundExpression
   | MultipleDefaultsInSwitch
   | NoCatchOrFinally
@@ -111,6 +112,7 @@ type t =
   | DeclareAsync
   | DeclareClassElement
   | DeclareClassFieldInitializer
+  | DeclareOpaqueTypeInitializer
   | DeclareExportLet
   | DeclareExportConst
   | DeclareExportType
@@ -289,6 +291,14 @@ module PP = struct
     | InvalidLHSInExponentiation -> "Invalid left-hand side in exponentiation expression"
     | InvalidLHSInForIn -> "Invalid left-hand side in for-in"
     | InvalidLHSInForOf -> "Invalid left-hand side in for-of"
+    | InvalidIndexedAccess { has_bracket } ->
+      let msg =
+        if has_bracket then
+          "Remove the period."
+        else
+          "Indexed access uses bracket notation."
+      in
+      Printf.sprintf "Invalid indexed access. %s Use the format `T[K]`." msg
     | ExpectedPatternFoundExpression ->
       "Expected an object pattern, array pattern, or an identifier but "
       ^ "found an expression instead"
@@ -348,7 +358,10 @@ module PP = struct
     | DeclareAsync ->
       "async is an implementation detail and isn't necessary for your declare function statement. It is sufficient for your declare function to just have a Promise return type."
     | DeclareClassElement -> "`declare` modifier can only appear on class fields."
-    | DeclareClassFieldInitializer -> "Initializers are not allowed in a `declare`."
+    | DeclareClassFieldInitializer ->
+      "Unexpected token `=`. Initializers are not allowed in a `declare`."
+    | DeclareOpaqueTypeInitializer ->
+      "Unexpected token `=`. Initializers are not allowed in a `declare opaque type`."
     | DeclareExportLet -> "`declare export let` is not supported. Use `declare export var` instead."
     | DeclareExportConst ->
       "`declare export const` is not supported. Use `declare export var` instead."

@@ -6,7 +6,7 @@
 
 var React = require('react');
 
-const Comp: Class<React$Component<any, {...}>> & {defaultProps: void,...} = React.createClass(Object.freeze({}));
+const Comp: Class<React$Component<any, { ... }>> & { defaultProps: void, ... } = React.createClass(Object.freeze({}));
 
 module.exports = Comp;
 
@@ -33,8 +33,8 @@ module.exports = (): React.Element<"div"> => div;
 >>> ./no-import.js
 // @flow
 
-import type {ComponentType} from "React";
-import type {ComponentType as $IMPORTED_TYPE$_ComponentType_1} from "./fake-react";import { foo } from "./lib";
+import type { ComponentType } from "react";
+import type { ComponentType as $IMPORTED_TYPE$_ComponentType_1 } from "./fake-react";import { foo } from "./lib";
 import { bar } from "./fake-react";
 
 export function my_foo(): ComponentType<any> {
@@ -60,10 +60,10 @@ const XShape = {
   x: PropTypes.number.isRequired
 };
 const FooShape = {
-  foo: (PropTypes.shape(XShape).isRequired: React$PropType$Primitive$Required<{x: number,...}>)
+  foo: (PropTypes.shape(XShape).isRequired: React$PropType$Primitive$Required<{ x: number, ... }>)
 };
 
-const Bar: React$PropType$Primitive<{foo: {x: number,...},...}> = PropTypes.shape(FooShape);
+const Bar: React$PropType$Primitive<{ foo: { x: number, ... }, ... }> = PropTypes.shape(FooShape);
 
 module.exports = {
   FooShape,
@@ -127,7 +127,7 @@ Warnings:
 
 var React = require('react');
 
-const Comp: Class<React$Component<any, {...}>> & {defaultProps: void,...} = React.createClass(Object.freeze({}));
+const Comp: Class<React$Component<any, { ... }>> & { defaultProps: void, ... } = React.createClass(Object.freeze({}));
 
 module.exports = Comp;
 
@@ -154,7 +154,7 @@ module.exports = (): React$Element<"div"> => div;
 >>> ./no-import.js
 // @flow
 
-import type {ComponentType} from "./fake-react";import { foo } from "./lib";
+import type { ComponentType } from "./fake-react";import { foo } from "./lib";
 import { bar } from "./fake-react";
 
 export function my_foo(): ComponentType<any> {
@@ -180,10 +180,10 @@ const XShape = {
   x: PropTypes.number.isRequired
 };
 const FooShape = {
-  foo: (PropTypes.shape(XShape).isRequired: React$PropType$Primitive$Required<{x: number,...}>)
+  foo: (PropTypes.shape(XShape).isRequired: React$PropType$Primitive$Required<{ x: number, ... }>)
 };
 
-const Bar: React$PropType$Primitive<{foo: {x: number,...},...}> = PropTypes.shape(FooShape);
+const Bar: React$PropType$Primitive<{ foo: { x: number, ... }, ... }> = PropTypes.shape(FooShape);
 
 module.exports = {
   FooShape,
@@ -204,7 +204,7 @@ module.exports = (): {
   componentType_2: React.ComponentType<React.ComponentType<number>>,
   elementConfig: React.ElementConfig<number>,
   elementRef: React.ElementRef<number>,
-  ...,
+  ...
 } => ({
   componentType_1,
   componentType_2,
@@ -228,10 +228,10 @@ module.exports = (): {
 
 >>> ./no-import.js
 3,4c3
-< import type {ComponentType} from "React";
-< import type {ComponentType as $IMPORTED_TYPE$_ComponentType_1} from "./fake-react";import { foo } from "./lib";
+< import type { ComponentType } from "react";
+< import type { ComponentType as $IMPORTED_TYPE$_ComponentType_1 } from "./fake-react";import { foo } from "./lib";
 ---
-> import type {ComponentType} from "./fake-react";import { foo } from "./lib";
+> import type { ComponentType } from "./fake-react";import { foo } from "./lib";
 10c9
 < export function my_bar(): $IMPORTED_TYPE$_ComponentType_1<any> {
 ---
@@ -245,6 +245,6 @@ module.exports = (): {
 14c14,15
 < |} => ({
 ---
->   ...,
+>   ...
 > } => ({
 

@@ -316,7 +316,29 @@
               "typeAnnotation":null,
               "optional":false
             },
-            "init":true
+            "init":{
+              "type":"Literal",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":15,"column":60},"end":{"line":15,"column":76}},
+                  "range":[443,459],
+                  "value":" 5.4 T bool "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":15,"column":38},"end":{"line":15,"column":54}},
+                  "range":[421,437],
+                  "value":" 5.3 L bool "
+                }
+              ],
+              "loc":{"source":null,"start":{"line":15,"column":55},"end":{"line":15,"column":59}},
+              "range":[438,442],
+              "value":true,
+              "raw":"true"
+            }
           }
         ],
         "explicitType":false,

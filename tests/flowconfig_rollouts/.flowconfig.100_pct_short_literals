@@ -1,0 +1,5 @@
+[rollouts]
+short_literals=100% on, 0% off
+
+[options]
+(short_literals=on) max_literal_length=10

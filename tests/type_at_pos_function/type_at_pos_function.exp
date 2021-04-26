@@ -344,7 +344,7 @@ function-poly-4.js:7:7 = {
   "end":9
 }
 function-poly-4.js:9:7 = {
-  "type":"{|m: <T>(x: T) => {|f: T|}|}",
+  "type":"{|m<T>(x: T): {|f: T|}|}",
   "reasons":[],
   "loc":{
     "source":"function-poly-4.js",

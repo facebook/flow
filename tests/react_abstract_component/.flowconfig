@@ -1,4 +1,3 @@
 [options]
-types_first=false
 no_flowlib=false
 all=true

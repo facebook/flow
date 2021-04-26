@@ -409,6 +409,8 @@ type ('loc, 'a) annot =
 
   | PropertyType of {loc: 'loc; obj: 'a; prop: string}
   | ElementType of {loc: 'loc; obj: 'a; elem: 'a}
+  | OptionalIndexedAccessNonMaybeType of {loc: 'loc; obj: 'a; index: 'a}
+  | OptionalIndexedAccessResultType of {loc: 'loc; non_maybe_result: 'a; void_loc: 'loc}
   | NonMaybeType of 'loc * 'a
   | Shape of 'loc * 'a
   | Diff of 'loc * 'a * 'a

@@ -1,3 +1,3 @@
 /* @flow */
 
-declare var BAZ: {stuff?: (x: number) => void} | void;
+declare var BAZ: {stuff?: (x: number) => void, ...} | void;

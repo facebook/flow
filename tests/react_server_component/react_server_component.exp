@@ -1,0 +1,303 @@
+Error ------------------------------------------------------------------------------------------------ badImport.js:2:23
+
+Do not import `#flow-internal-react-server-module` directly. Instead, ensure you are in a React Server file and import
+`react` normally.
+
+   2| const React = require('#flow-internal-react-server-module');
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- test.hybrid.js:11:58
+
+Cannot create `Component` element because: [incompatible-type]
+ - Either inexact object type [1] is incompatible with exact `React.Element` [2].
+ - Or an unknown property that may exist on the inexact object type [3] is incompatible with object type [2].
+ - Or an unknown property that may exist on the inexact object type [3] is incompatible with
+   `React.TransportObject` [4].
+
+   test.hybrid.js:11:58
+   11| <Component num={3} exactObject={{foo: 3}} inexactObject={inexactObject} fn={() => {}} />; // Error
+                                                                ^^^^^^^^^^^^^ [3]
+
+References:
+   test.hybrid.js:8:28
+    8| declare var inexactObject: {...};
+                                  ^^^^^ [1]
+   <BUILTINS>/react.js:29:5
+   29|   | React$Element<React$ElementType>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:31:5
+   31|   | React$TransportObject;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error --------------------------------------------------------------------------------------------- test.hybrid.js:11:77
+
+Cannot create `Component` element because: [incompatible-type]
+ - Either inexact function [1] is incompatible with exact object type [2].
+ - Or function [1] is incompatible with indexed `React.TransportObject` [3].
+
+   test.hybrid.js:11:77
+   11| <Component num={3} exactObject={{foo: 3}} inexactObject={inexactObject} fn={() => {}} />; // Error
+                                                                                   ^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:29:5
+   29|   | React$Element<React$ElementType>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:31:5
+   31|   | React$TransportObject;
+           ^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- test.hybrid.js:13:2
+
+Cannot create `Component` element because inexact props [1] is incompatible with exact `Props` [2]. [incompatible-exact]
+
+   test.hybrid.js:13:2
+   13| <Component {...inexactObject} num={3} exactObject={{foo: 3}} />; // Error, inexact may have unknown prop
+        ^^^^^^^^^
+
+References:
+   test.hybrid.js:13:1
+   13| <Component {...inexactObject} num={3} exactObject={{foo: 3}} />; // Error, inexact may have unknown prop
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   component.js:11:35
+   11| module.exports = function (props: Props): React.Node { return null }
+                                         ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- test.hybrid.js:13:2
+
+Cannot create `Component` element because: [incompatible-type]
+ - Either an unknown property that may exist on the inexact props [1] is incompatible with object type [2].
+ - Or an unknown property that may exist on the inexact props [1] is incompatible with `React.TransportObject` [3].
+
+   test.hybrid.js:13:2
+   13| <Component {...inexactObject} num={3} exactObject={{foo: 3}} />; // Error, inexact may have unknown prop
+        ^^^^^^^^^
+
+References:
+   test.hybrid.js:13:1
+   13| <Component {...inexactObject} num={3} exactObject={{foo: 3}} />; // Error, inexact may have unknown prop
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:29:5
+   29|   | React$Element<React$ElementType>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:31:5
+   31|   | React$TransportObject;
+           ^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- test.hybrid.js:14:2
+
+Cannot create `IndexedComponent` element because: [incompatible-type]
+ - Either inexact function type [1] is incompatible with exact object type [2].
+ - Or function type [1] is incompatible with indexed `React.TransportObject` [3].
+
+   test.hybrid.js:14:2
+   14| <IndexedComponent {...indexedObjectBad} num={3} exactObject={{foo: 3}} />; // Error
+        ^^^^^^^^^^^^^^^^
+
+References:
+   test.hybrid.js:9:42
+    9| declare var indexedObjectBad: {[string]: () => void};
+                                                ^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:29:5
+   29|   | React$Element<React$ElementType>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:31:5
+   31|   | React$TransportObject;
+           ^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- test.hybrid.js:14:2
+
+Cannot create `IndexedComponent` element because in property `key`: [incompatible-type]
+ - Either function type [1] is incompatible with string [2].
+ - Or function type [1] is incompatible with number [3].
+
+   test.hybrid.js:14:2
+    14| <IndexedComponent {...indexedObjectBad} num={3} exactObject={{foo: 3}} />; // Error
+         ^^^^^^^^^^^^^^^^
+
+References:
+   test.hybrid.js:9:42
+     9| declare var indexedObjectBad: {[string]: () => void};
+                                                 ^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:206:26
+   206| declare type React$Key = string | number;
+                                 ^^^^^^ [2]
+   <BUILTINS>/react.js:206:35
+   206| declare type React$Key = string | number;
+                                          ^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- test.hybrid.js:19:32
+
+Cannot create `InexactComponent` element because: [incompatible-type]
+ - Either inexact function [1] is incompatible with exact object type [2].
+ - Or function [1] is incompatible with indexed `React.TransportObject` [3].
+
+   test.hybrid.js:19:32
+   19| <InexactComponent foo={3} bar={() => {}} />; // Inexact Props type is ok, but function passed is not
+                                      ^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:29:5
+   29|   | React$Element<React$ElementType>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:31:5
+   31|   | React$TransportObject;
+           ^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- test.hybrid.js:20:2
+
+Cannot create `InexactComponent` element because: [incompatible-type]
+ - Either an unknown property that may exist on the inexact props [1] is incompatible with object type [2].
+ - Or an unknown property that may exist on the inexact props [1] is incompatible with `React.TransportObject` [3].
+
+   test.hybrid.js:20:2
+   20| <InexactComponent {...inexactObject} foo={3} />; // Error
+        ^^^^^^^^^^^^^^^^
+
+References:
+   test.hybrid.js:20:1
+   20| <InexactComponent {...inexactObject} foo={3} />; // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:29:5
+   29|   | React$Element<React$ElementType>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:31:5
+   31|   | React$TransportObject;
+           ^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- transport_type.js:19:2
+
+Cannot cast `inexactObject` to `TransportValue` because: [incompatible-cast]
+ - Either inexact object type [1] is incompatible with exact `React.Element` [2].
+ - Or an unknown property that may exist on the inexact object type [3] is incompatible with object type [2].
+ - Or an unknown property that may exist on the inexact object type [3] is incompatible with
+   `React.TransportObject` [4].
+
+   transport_type.js:19:2
+   19| (inexactObject: TransportValue); // Error
+        ^^^^^^^^^^^^^ [3]
+
+References:
+   transport_type.js:3:28
+    3| declare var inexactObject: {...};
+                                  ^^^^^ [1]
+   <BUILTINS>/react.js:29:5
+   29|   | React$Element<React$ElementType>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:31:5
+   31|   | React$TransportObject;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------- transport_type.js:20:2
+
+Cannot cast `fn` to `TransportValue` because: [incompatible-cast]
+ - Either inexact function type [1] is incompatible with exact object type [2].
+ - Or function type [1] is incompatible with indexed `React.TransportObject` [3].
+
+   transport_type.js:20:2
+   20| (fn: TransportValue); // Error
+        ^^
+
+References:
+   transport_type.js:4:17
+    4| declare var fn: () => void;
+                       ^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:29:5
+   29|   | React$Element<React$ElementType>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:31:5
+   31|   | React$TransportObject;
+           ^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- transport_type.js:21:2
+
+Cannot cast `hasInexactObj` to `TransportValue` because: [incompatible-cast]
+ - Either property `foo` is missing in `React.Element` [1] but exists in object type [2].
+ - Or property `foo` is missing in `React.Element` [1] but exists in object type [3] in property `foo`.
+ - Or property `foo` is missing in `React.Element` [1] but exists in object type [4] in property `foo` of property
+   `foo`.
+ - Or property `foo` is missing in `React.Element` [1] but exists in object type [5] in property `foo` of property `foo`
+   of property `foo`.
+ - Or inexact object type [6] is incompatible with exact `React.Element` [1] in property `foo` of property `foo` of
+   property `foo` of property `foo`.
+ - Or an unknown property that may exist on the inexact object type [6] is incompatible with object type [1] in property
+   `foo` of property `foo` of property `foo` of property `foo`.
+ - Or an unknown property that may exist on the inexact object type [6] is incompatible with `React.TransportObject` [7]
+   in property `foo` of property `foo` of property `foo` of property `foo`.
+
+   transport_type.js:21:2
+   21| (hasInexactObj: TransportValue); // Error
+        ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:29:5
+   29|   | React$Element<React$ElementType>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   transport_type.js:5:28
+    5| declare var hasInexactObj: {| foo: {| foo: {| foo: {| foo: {...} |}|}|} |};
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   transport_type.js:5:36
+    5| declare var hasInexactObj: {| foo: {| foo: {| foo: {| foo: {...} |}|}|} |};
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   transport_type.js:5:44
+    5| declare var hasInexactObj: {| foo: {| foo: {| foo: {| foo: {...} |}|}|} |};
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   transport_type.js:5:52
+    5| declare var hasInexactObj: {| foo: {| foo: {| foo: {| foo: {...} |}|}|} |};
+                                                          ^^^^^^^^^^^^^^^^ [5]
+   transport_type.js:5:60
+    5| declare var hasInexactObj: {| foo: {| foo: {| foo: {| foo: {...} |}|}|} |};
+                                                                  ^^^^^ [6]
+   <BUILTINS>/react.js:31:5
+   31|   | React$TransportObject;
+           ^^^^^^^^^^^^^^^^^^^^^ [7]
+
+
+Error ------------------------------------------------------------------------------------------- transport_type.js:24:2
+
+Cannot cast `hasOneIncompatibleValue` to `TransportValue` because: [incompatible-cast]
+ - Either property `bar` is missing in `React.Element` [1] but exists in object type [2].
+ - Or inexact function type [3] is incompatible with exact object type [1] in property `qux`.
+ - Or function type [3] is incompatible with indexed `React.TransportObject` [4] in property `qux`.
+
+   transport_type.js:24:2
+   24| (hasOneIncompatibleValue: TransportValue); //Error
+        ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:29:5
+   29|   | React$Element<React$ElementType>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   transport_type.js:12:38
+                                            v-
+   12| declare var hasOneIncompatibleValue: {|
+   13|   foo: number,
+   14|   bar: ?React$Element<any>,
+   15|   baz?: number,
+   16|   qux: () => any,
+   17| |}
+       -^ [2]
+   transport_type.js:16:8
+   16|   qux: () => any,
+              ^^^^^^^^^ [3]
+   <BUILTINS>/react.js:31:5
+   31|   | React$TransportObject;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+
+Found 13 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

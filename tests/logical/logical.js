@@ -522,3 +522,17 @@ function logical20(x: {y: string} & {}): void {
 function logical21(x: {y: string} & {}): void {
   ((x && x.y): number); // error, x.y is a string (no error about x)
 }
+
+function logical22() {
+    type indirection1 = ?number;
+    type indirection2 = ?string;
+    declare var a: indirection1 | indirection2;
+
+    ((a ?? false): empty); // should error on `a` and `false`
+
+    type indirection3 = 0;
+    type indirection4 = "";
+    declare var b: indirection3 | indirection4;
+
+    ((b && false): empty); // should only error on `b`
+}

@@ -1,0 +1,3 @@
+// @flow
+
+type FbtElement = number;

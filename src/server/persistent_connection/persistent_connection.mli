@@ -10,6 +10,12 @@ type t
 
 type single_client
 
+module Client_config : sig
+  type t = { suggest_autoimports: bool }
+
+  val suggest_autoimports : t -> bool
+end
+
 val empty : t
 
 val add_client : LspProt.client_id -> Lsp.Initialize.params -> unit
@@ -63,14 +69,16 @@ val client_did_change :
 
 val client_did_close : single_client -> filenames:string Nel.t -> bool
 
-val get_opened_files : t -> SSet.t
+val client_did_change_configuration : single_client -> Client_config.t -> unit
+
 (** Returns the set of all opened files across all clients.
     It's not meaningful to talk about the *content* of those opened files in
     cases where clients differ. *)
+val get_opened_files : t -> SSet.t
 
-val get_file : single_client -> string -> File_input.t
 (** Returns either FileContent for this file if it was opened by the persistent
     client, or FileName if it wasn't. *)
+val get_file : single_client -> string -> File_input.t
 
 val get_client : LspProt.client_id -> single_client option
 
@@ -78,15 +86,9 @@ val get_id : single_client -> LspProt.client_id
 
 val lsp_initialize_params : single_client -> Lsp.Initialize.params
 
-type type_contents_artifacts =
-  Context.t
-  * Docblock.t
-  * File_sig.With_Loc.t
-  * File_sig.With_Loc.tolerable_error list
-  * (Loc.t, Loc.t) Flow_ast.Program.t
-  * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
-  * (Loc.t * Parse_error.t) list
+val client_config : single_client -> Client_config.t
 
-val type_contents_cache : single_client -> (type_contents_artifacts, string) result FilenameCache.t
+val type_parse_artifacts_cache :
+  single_client -> (Types_js_types.file_artifacts, Flow_error.ErrorSet.t) result FilenameCache.t
 
-val clear_type_contents_caches : unit -> unit
+val clear_type_parse_artifacts_caches : unit -> unit

@@ -1,0 +1,17 @@
+{
+  "name": "flow-enums-runtime",
+  "version": "0.0.3",
+  "description": "Runtime to be use with the Flow Enums transform.",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/flow.git"
+  },
+  "devDependencies": {
+    "jest": "^26.6.3"
+  }
+}

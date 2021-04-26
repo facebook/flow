@@ -39,8 +39,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- overload.js:7:30
 
-Cannot get `"".match(...)[0]` because an index signature declaring the expected key / value type is missing in null [1].
-[incompatible-use]
+Cannot get `"".match(...)[0]` because null [1] does not have properties. [incompatible-use]
 
    overload.js:7:30
       7| var x1: number = "".match(0)[0];
@@ -86,8 +85,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- overload.js:8:38
 
-Cannot get `"".match(...)[0]` because an index signature declaring the expected key / value type is missing in null [1].
-[incompatible-use]
+Cannot get `"".match(...)[0]` because null [1] does not have properties. [incompatible-use]
 
    overload.js:8:38
       8| var x2: number = "".match(/pattern/)[0];

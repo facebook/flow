@@ -40,3 +40,10 @@ type RI4 = empty & RI4;
 type RI5 = RI5 & number;
 type RI6 = number & RI6;
 type RI7 = RI7 & RI7;
+
+
+// Fbt
+
+const React = require('react');
+
+<fbt desc={""}/>;

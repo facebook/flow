@@ -29,13 +29,18 @@ export default (suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('foobar', {}).verifyAllLSPMessagesInStep(
-        [['foobar', '{unexpected error}']],
+        ['foobar'],
         [...lspIgnoreStatusAndCancellation],
       ),
       lspNotification('barfoo', {})
-        .waitUntilLSPMessage(2000, 'barfoo')
+        .waitUntilLSPMessage(2000, 'telemetry/event')
         .verifyAllLSPMessagesInStep(
-          [['telemetry/event', '{not implemented}']],
+          [
+            {
+              method: 'telemetry/event',
+              params: {type: 1, message: 'Unhandled method barfoo'},
+            },
+          ],
           [...lspIgnoreStatusAndCancellation],
         ),
     ]).waitForRecheck(true),
@@ -47,13 +52,18 @@ export default (suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('foobar', {}).verifyAllLSPMessagesInStep(
-        [['foobar', '{unexpected error}']],
+        ['foobar'],
         [...lspIgnoreStatusAndCancellation],
       ),
       lspNotification('barfoo', {})
-        .waitUntilLSPMessage(2000, 'barfoo')
+        .waitUntilLSPMessage(2000, 'telemetry/event')
         .verifyAllLSPMessagesInStep(
-          [['telemetry/event', '{not implemented}']],
+          [
+            {
+              method: 'telemetry/event',
+              params: {type: 1, message: 'Unhandled method barfoo'},
+            },
+          ],
           [...lspIgnoreStatusAndCancellation],
         ),
     ]).waitForRecheck(false),
@@ -352,11 +362,9 @@ export default (suite(
         [''],
         [...lspIgnoreStatusAndCancellation],
       ),
-      lspRequestAndWaitUntilResponse('textDocument/typeCoverage', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/coverage2.js'},
-      })
+      lspRequestAndWaitUntilResponse('telemetry/rage', {})
         .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation])
-        .timeout(2000),
+        .timeout(10000),
     ]).waitForRecheck(true),
 
     test('telemetry/rage will return with wait_for_recheck=false', [
@@ -365,14 +373,12 @@ export default (suite(
         [''],
         [...lspIgnoreStatusAndCancellation],
       ),
-      lspRequestAndWaitUntilResponse('textDocument/typeCoverage', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/coverage2.js'},
-      })
+      lspRequestAndWaitUntilResponse('telemetry/rage', {})
         .verifyAllLSPMessagesInStep(
-          [['textDocument/typeCoverage', '{Use @flow}']],
+          ['telemetry/rage'],
           [...lspIgnoreStatusAndCancellation],
         )
-        .timeout(2000),
+        .timeout(10000),
     ]).waitForRecheck(false),
   ],
 ): Suite);

@@ -133,11 +133,9 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
       begin
         match status with
         | Unix.WEXITED exit_status ->
-          let exit_type =
-            (try Some (FlowExitStatus.error_type exit_status) with Not_found -> None)
-          in
+          let exit_type = (try Some (Exit.error_type exit_status) with Not_found -> None) in
           let exit_status_string =
-            Base.Option.value_map ~default:"Invalid_exit_code" ~f:FlowExitStatus.to_string exit_type
+            Base.Option.value_map ~default:"Invalid_exit_code" ~f:Exit.to_string exit_type
           in
           Logger.error
             "File watcher (%s) exited with code %s (%d)"
@@ -203,6 +201,16 @@ end = struct
         let rev = J.get_string_val "rev" ~default:"<UNKNOWN REV>" metadata in
         (distance, rev)
 
+    let log_state_enter name metadata =
+      FlowEventLogger.file_watcher_event_started
+        ~name
+        ~data:(Base.Option.value_map ~f:Hh_json.json_to_string ~default:"" metadata)
+
+    let log_state_leave name metadata =
+      FlowEventLogger.file_watcher_event_finished
+        ~name
+        ~data:(Base.Option.value_map ~f:Hh_json.json_to_string ~default:"" metadata)
+
     let broadcast env =
       if not (SSet.is_empty env.files) then Lwt_condition.broadcast env.changes_condition ()
 
@@ -263,7 +271,7 @@ end = struct
                     old_mergebase
                     new_mergebase;
                   env.mergebase <- Some new_mergebase;
-                  env.metadata <- { env.metadata with MonitorProt.changed_mergebase = true };
+                  env.metadata <- { MonitorProt.changed_mergebase = true };
                   env.finished_an_hg_update <- false;
                   Lwt.return_unit
                 | _ -> Lwt.return_unit
@@ -276,11 +284,13 @@ end = struct
             (match name with
             | "hg.update" ->
               let (distance, rev) = extract_hg_update_metadata metadata in
+              log_state_enter name metadata;
               Logger.info
                 "Watchman reports an hg.update just started. Moving %s revs from %s"
                 distance
                 rev
             | _ when List.mem name env.init_settings.Watchman.defer_states ->
+              log_state_enter name metadata;
               Logger.info
                 "Watchman reports %s just started. Filesystem notifications are paused."
                 name;
@@ -292,20 +302,15 @@ end = struct
             (match name with
             | "hg.update" ->
               let (distance, rev) = extract_hg_update_metadata metadata in
-              env.metadata <-
-                MonitorProt.
-                  {
-                    env.metadata with
-                    total_update_distance =
-                      env.metadata.total_update_distance + int_of_string distance;
-                  };
               env.finished_an_hg_update <- true;
+              log_state_leave name metadata;
               Logger.info
                 "Watchman reports an hg.update just finished. Moved %s revs to %s"
                 distance
                 rev;
               Lwt.return env
             | _ when List.mem name env.init_settings.Watchman.defer_states ->
+              log_state_leave name metadata;
               Logger.info "Watchman reports %s ended. Filesystem notifications resumed." name;
               StatusStream.file_watcher_ready ();
               Lwt.return env
@@ -324,8 +329,16 @@ end = struct
         Lwt.return env
 
     let catch _ exn =
-      let exn = Exception.to_exn exn in
-      Logger.error ~exn "Uncaught exception in Watchman listening loop";
+      (match Exception.to_exn exn with
+      | Exit.(Exit_with Watchman_failed)
+      | Watchman.Watchman_restarted ->
+        (* expected error *)
+        ()
+      | _ ->
+        let msg = Exception.to_string exn in
+        EventLogger.watchman_uncaught_failure
+          ("Uncaught exception in Watchman listening loop: " ^ msg);
+        Logger.error ~exn:(Exception.to_exn exn) "Uncaught exception in Watchman listening loop");
 
       (* By exiting this loop we'll let the server know that something went wrong with Watchman *)
       Lwt.return_unit
@@ -372,7 +385,7 @@ end = struct
         init_thread <- Some (Watchman.init settings)
 
       method wait_for_init ~timeout =
-        let go () =
+        let go_exn () =
           let%lwt watchman = Base.Option.value_exn init_thread in
           init_thread <- None;
 
@@ -384,7 +397,7 @@ end = struct
             let (waiter, wakener) = Lwt.task () in
             let new_env =
               {
-                instance = Watchman.Watchman_alive watchman;
+                instance = watchman;
                 files = SSet.empty;
                 listening_thread =
                   (let%lwt env = waiter in
@@ -418,6 +431,17 @@ end = struct
               Lwt.return (Error (Printf.sprintf "Failed to initialize watchman: %s" msg)))
           | None -> Lwt.return (Error "Failed to initialize watchman")
         in
+        let go () =
+          try%lwt go_exn () with
+          | Lwt.Canceled as exn -> Exception.(reraise (wrap exn))
+          | exn ->
+            let e = Exception.wrap exn in
+            let str = Exception.get_ctor_string e in
+            let stack = Exception.get_full_backtrace_string 500 e in
+            let msg = Printf.sprintf "Failed to initialize watchman: %s\n%s" str stack in
+            EventLogger.watchman_uncaught_failure msg;
+            Lwt.return (Error msg)
+        in
         match timeout with
         | Some timeout ->
           (try%lwt Lwt_unix.with_timeout timeout go
@@ -445,11 +469,7 @@ end = struct
         let env = self#get_env in
         Logger.info "Canceling Watchman listening thread & closing connection";
         Lwt.cancel env.listening_thread;
-        Watchman.with_instance
-          env.instance
-          ~try_to_restart:false
-          ~on_alive:Watchman.close
-          ~on_dead:(fun _ -> Lwt.return_unit)
+        Watchman.close env.instance
 
       method waitpid =
         (* If watchman dies, we can start it back up again and use clockspec to make sure we didn't

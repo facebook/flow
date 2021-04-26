@@ -42,6 +42,8 @@ val apply_changes_unsafe : string -> Lsp.DidChange.textDocumentContentChangeEven
 
 val pos_compare : Lsp.position -> Lsp.position -> int
 
+val ranges_overlap : Lsp.range -> Lsp.range -> bool
+
 type range_overlap =
   | Selection_before_start_of_squiggle
   | Selection_overlaps_start_of_squiggle
@@ -65,11 +67,15 @@ val get_root : Lsp.Initialize.params -> string
 
 val supports_codeActionKinds : Lsp.Initialize.params -> Lsp.CodeActionKind.t list
 
+val supports_configuration : Lsp.Initialize.params -> bool
+
 val supports_status : Lsp.Initialize.params -> bool
 
 val supports_snippets : Lsp.Initialize.params -> bool
 
 val supports_preselect : Lsp.Initialize.params -> bool
+
+val supports_completion_item_label_details : Lsp.Initialize.params -> bool
 
 val supports_connectionStatus : Lsp.Initialize.params -> bool
 

@@ -37,6 +37,10 @@ let main
     (lazy_mode : Options.lazy_mode option)
     (autostop : bool)
     (() : unit) : unit =
+  (* always set `quiet`, since the LSP doesn't want any log spew. this only applies to the
+     `start` command and does not imply a quiet server, which will still write to its log
+     file. *)
+  let quiet = true in
   let connect_params =
     {
       retries = 0;
@@ -48,7 +52,7 @@ let main
       lazy_mode;
       shm_flags;
       ignore_version = false;
-      quiet = false;
+      quiet;
       on_mismatch = Choose_newest;
     }
   in

@@ -18,13 +18,23 @@ export default (suite(
     test('invalid_method', [
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('foobar', {}).verifyAllLSPMessagesInStep(
-        [['foobar', '{unexpected error}']],
+        [
+          {
+            method: 'foobar',
+            error: {message: 'Unhandled method foobar', code: -32601},
+          },
+        ],
         [...lspIgnoreStatusAndCancellation],
       ),
       lspNotification('barfoo', {})
-        .waitUntilLSPMessage(2000, 'barfoo')
+        .waitUntilLSPMessage(2000, 'telemetry/event')
         .verifyAllLSPMessagesInStep(
-          [['telemetry/event', '{not implemented}']],
+          [
+            {
+              method: 'telemetry/event',
+              params: {type: 1, message: 'Unhandled method barfoo'},
+            },
+          ],
           [...lspIgnoreStatusAndCancellation],
         ),
     ]),
@@ -217,7 +227,7 @@ export default (suite(
       addFiles('coverage2.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/typeCoverage', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_DIR>/coverage2.js'},
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/coverage2.js'},
       }).verifyAllLSPMessagesInStep(
         [['textDocument/typeCoverage', '{Use @flow}']],
         [...lspIgnoreStatusAndCancellation],

@@ -41,8 +41,9 @@ module Trailing_commas = struct
 end
 
 type opts = {
-  preserve_formatting: bool;
   bracket_spacing: bool;
+  preserve_formatting: bool;
+  single_quotes: bool;
   trailing_commas: Trailing_commas.t;
 }
 
@@ -56,30 +57,34 @@ type expression_context = {
   group: expression_context_group;
 }
 
+(** certain contexts where the left parenthesis matters. this is set back to [Normal_left]
+    as soon as we output something (see [context_after_token]). *)
 and expression_context_left =
   | Normal_left
-  | In_expression_statement (* `(function x(){});` would become a declaration *)
-  | In_tagged_template (* `(new a)``` would become `new (a``)` *)
-  | In_plus_op (* `x+(+y)` would become `(x++)y` *)
-  | In_minus_op
+  | In_expression_statement  (** [(function x(){});] would become a declaration w/o the paren **)
+  | In_tagged_template  (** [(new a)``] would become [new (a``)] w/o the paren *)
+  | In_plus_op  (** [x+(+y)] would become [(x++)y] w/o the paren *)
+  | In_minus_op  (** [x-(-y)] would become [(x--)y] w/o the paren *)
 
-(* `x-(-y)` would become `(x--)y` *)
 and expression_context_group =
   | Normal_group
-  | In_arrow_func (* `() => ({a: b})` would become `() => {a: b}` *)
-  | In_for_init
-
-(* `for ((x in y);;);` would become a for-in *)
+  | In_arrow_func  (** [() => ({a: b})] would be a block w/ a labeled statement w/o the parens *)
+  | In_for_init  (** [for ((x in y);;);] would become a for-in w/o the parens *)
 
 let default_opts =
-  { preserve_formatting = false; bracket_spacing = true; trailing_commas = Trailing_commas.All }
+  {
+    bracket_spacing = true;
+    preserve_formatting = false;
+    single_quotes = false;
+    trailing_commas = Trailing_commas.All;
+  }
 
 let normal_context = { left = Normal_left; group = Normal_group }
 
-(* Some contexts only matter to the left-most token. If we output some other
-   token, like an `=`, then we can reset the context. Note that all contexts
-   reset when wrapped in parens, brackets, braces, etc, so we don't need to call
-   this in those cases, we can just set it back to Normal. *)
+(** Some contexts only matter to the left-most token. If we output some other
+    token, like an `=`, then we can reset the context. Note that all contexts
+    reset when wrapped in parens, brackets, braces, etc, so we don't need to call
+    this in those cases, we can just set it back to Normal. *)
 let context_after_token ctxt = { ctxt with left = Normal_left }
 
 (* JS layout helpers *)
@@ -310,12 +315,20 @@ let better_quote =
       in
       count acc str (pred i)
   in
-  fun str ->
-    let (double, single) = count (0, 0) str (String.length str - 1) in
-    if double > single then
-      "'"
+  fun ~prefer_single_quotes str ->
+    let (double_count, single_count) = count (0, 0) str (String.length str - 1) in
+    let double = ("\"", double_count) in
+    let single = ("'", single_count) in
+    let (preferred, alternate) =
+      if prefer_single_quotes then
+        (single, double)
+      else
+        (double, single)
+    in
+    if snd preferred > snd alternate then
+      fst alternate
     else
-      "\""
+      fst preferred
 
 let utf8_escape =
   (* a null character can be printed as \x00 or \0. but if the next character is an ASCII digit,
@@ -864,7 +877,7 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
                     ]);
                statement_after_test ~opts ~pretty_semicolon body;
              ]
-      | S.ImportDeclaration import -> import_declaration loc import
+      | S.ImportDeclaration import -> import_declaration ~opts loc import
       | S.ExportNamedDeclaration export -> export_declaration ~opts loc export
       | S.ExportDefaultDeclaration export -> export_default_declaration ~opts loc export
       | S.TypeAlias typeAlias -> type_alias ~opts ~declare:false loc typeAlias
@@ -1016,7 +1029,6 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
                end;
              ]
       | E.Binary { E.Binary.operator; left; right; comments } ->
-        let module B = E.Binary in
         layout_node_with_comments_opt loc comments
         @@ fuse_with_space
              [
@@ -1330,7 +1342,7 @@ and literal ~opts loc { Ast.Literal.raw; value; comments } =
   | _ when opts.preserve_formatting -> Atom raw
   | Number num -> number_literal ~in_member_object:false raw num
   | String str ->
-    let quote = better_quote str in
+    let quote = better_quote ~prefer_single_quotes:opts.single_quotes str in
     fuse [Atom quote; Atom (utf8_escape ~quote str); Atom quote]
   | RegExp { RegExp.pattern; flags } ->
     let flags = flags |> String_utils.to_list |> List.sort Char.compare |> String_utils.of_list in
@@ -1423,8 +1435,9 @@ and member ?(optional = false) ~opts ~precedence ~ctxt member_node loc =
          property_layout_with_delims;
        ]
 
-and string_literal (loc, { Ast.StringLiteral.value; comments; _ }) =
-  let quote = better_quote value in
+and string_literal ~opts (loc, { Ast.StringLiteral.value; comments; _ }) =
+  let prefer_single_quotes = opts.single_quotes in
+  let quote = better_quote ~prefer_single_quotes value in
   source_location_with_comments
     ?comments
     (loc, fuse [Atom quote; Atom (utf8_escape ~quote value); Atom quote])
@@ -2729,13 +2742,13 @@ and jsx_child ~opts (loc, child) =
       | None -> None
     end
 
-and partition_specifiers default specifiers =
+and partition_specifiers ~opts default specifiers =
   let open Ast.Statement.ImportDeclaration in
   let (special, named) =
     match specifiers with
     | Some (ImportNamespaceSpecifier (loc, id)) -> ([import_namespace_specifier (loc, id)], None)
     | Some (ImportNamedSpecifiers named_specifiers) ->
-      ([], Some (import_named_specifiers named_specifiers))
+      ([], Some (import_named_specifiers ~opts named_specifiers))
     | None -> ([], None)
   in
   match default with
@@ -2761,17 +2774,19 @@ and import_named_specifier { Ast.Statement.ImportDeclaration.kind; local; remote
       | None -> Empty);
     ]
 
-and import_named_specifiers named_specifiers =
+and import_named_specifiers ~opts named_specifiers =
   group
     [
       new_list
         ~wrap:(Atom "{", Atom "}")
         ~sep:(Atom ",")
+        ~wrap_spaces:opts.bracket_spacing
         (Base.List.map ~f:import_named_specifier named_specifiers);
     ]
 
 and import_declaration
-    loc { Ast.Statement.ImportDeclaration.import_kind; source; specifiers; default; comments } =
+    ~opts loc { Ast.Statement.ImportDeclaration.import_kind; source; specifiers; default; comments }
+    =
   let s_from = fuse [Atom "from"; pretty_space] in
   let module I = Ast.Statement.ImportDeclaration in
   layout_node_with_comments_opt loc comments
@@ -2786,7 +2801,7 @@ and import_declaration
               | I.ImportValue -> Empty
             end;
             begin
-              match (partition_specifiers default specifiers, import_kind) with
+              match (partition_specifiers ~opts default specifiers, import_kind) with
               (* No export specifiers *)
               (* `import 'module-name';` *)
               | (([], None), I.ImportValue) -> pretty_space
@@ -2802,14 +2817,14 @@ and import_declaration
               | ((special, Some named), _) ->
                 fuse [space; fuse_list ~sep:(Atom ",") (special @ [named]); pretty_space; s_from]
             end;
-            string_literal source;
+            string_literal ~opts source;
           ])
 
-and export_source ~prefix = function
-  | Some lit -> fuse [prefix; Atom "from"; pretty_space; string_literal lit]
+and export_source ~opts ~prefix = function
+  | Some lit -> fuse [prefix; Atom "from"; pretty_space; string_literal ~opts lit]
   | None -> Empty
 
-and export_specifier source =
+and export_specifier ~opts source =
   let open Ast.Statement.ExportNamedDeclaration in
   function
   | ExportSpecifiers specifiers ->
@@ -2820,6 +2835,7 @@ and export_specifier source =
             new_list
               ~wrap:(Atom "{", Atom "}")
               ~sep:(Atom ",")
+              ~wrap_spaces:opts.bracket_spacing
               (List.map
                  (fun (loc, { ExportSpecifier.local; exported }) ->
                    source_location_with_comments
@@ -2835,17 +2851,21 @@ and export_specifier source =
                          ] ))
                  specifiers);
           ];
-        export_source ~prefix:pretty_space source;
+        export_source ~opts ~prefix:pretty_space source;
       ]
   | ExportBatchSpecifier (loc, Some ident) ->
     fuse
       [
         source_location_with_comments
           (loc, fuse [Atom "*"; pretty_space; Atom "as"; space; identifier ident]);
-        export_source ~prefix:space source;
+        export_source ~opts ~prefix:space source;
       ]
   | ExportBatchSpecifier (loc, None) ->
-    fuse [source_location_with_comments (loc, Atom "*"); export_source ~prefix:pretty_space source]
+    fuse
+      [
+        source_location_with_comments (loc, Atom "*");
+        export_source ~opts ~prefix:pretty_space source;
+      ]
 
 and export_declaration
     ~opts
@@ -2869,7 +2889,7 @@ and export_declaration
                       | Ast.Statement.ExportValue -> Empty
                     end;
                     pretty_space;
-                    export_specifier source specifier;
+                    export_specifier ~opts source specifier;
                   ])
            | (_, _) -> failwith "Invalid export declaration"
          end;
@@ -3445,27 +3465,19 @@ and type_object ?(sep = Atom ",") ~opts loc { Ast.Type.Object.exact; properties;
       loc
   in
   let num_props = List.length properties in
-  let internal_comments =
-    match internal_comments comments with
-    | None -> []
-    | Some comments -> [comments]
-  in
-  let props =
-    Base.List.mapi
+  let internal_comments = internal_comments comments in
+  let has_internal_comments = Base.Option.is_some internal_comments in
+  let rev_props =
+    Base.List.rev_mapi
       ~f:(fun i property ->
         let prop_layout =
           (* Add trailing comma to last property *)
           if
             i = num_props - 1
-            && internal_comments = []
+            && (not (has_internal_comments || inexact))
             && Trailing_commas.enabled_for_types opts.trailing_commas
           then
-            let sep =
-              if inexact then
-                sep
-              else
-                if_break sep Empty
-            in
+            let sep = if_break sep Empty in
             fuse [type_object_property ~opts property; sep]
           else
             type_object_property ~opts property
@@ -3475,26 +3487,47 @@ and type_object ?(sep = Atom ",") ~opts loc { Ast.Type.Object.exact; properties;
           prop_layout ))
       properties
   in
-  (* Add internal comments *)
-  let props = props @ internal_comments in
-  let props = list_with_newlines ~sep ~sep_linebreak props in
-  let props =
-    if inexact then
-      props @ [if_break sep_linebreak Empty; Atom "..."; if_break sep Empty]
-    else
-      props
+  (* Add internal comments and the inexact ellipsis *)
+  let rev_props =
+    match (internal_comments, inexact) with
+    | (Some (loc, junk, layout), true) ->
+      let has_trailing_line_comment =
+        match comments with
+        | Some { Ast.Syntax.internal; _ } ->
+          (match Base.List.rev internal with
+          | (_, { Ast.Comment.kind = Ast.Comment.Line; _ }) :: _ -> true
+          | _ -> false)
+        | None -> false
+      in
+      let linebreak =
+        if has_trailing_line_comment then
+          (* line comments have their own linebreak, so if the comment
+             right before the ellipsis is a line comment, don't add
+             another linebreak. *)
+          Empty
+        else
+          sep_linebreak
+      in
+      (loc, junk, fuse [layout; linebreak; Atom "..."]) :: rev_props
+    | (Some comments, false) -> comments :: rev_props
+    | (None, true) -> (loc, (None, None), Atom "...") :: rev_props
+    | (None, false) -> rev_props
   in
+  let props = Base.List.rev rev_props in
   (* If first prop is on a different line then pretty print with line breaks *)
   let break =
-    match properties with
+    match props with
     | [] -> None
-    | first_prop :: _ ->
-      if Loc.(loc.start.line < (prop_loc first_prop).start.line) then
+    | (first_loc, _, _) :: _ ->
+      if Loc.(loc.start.line < first_loc.start.line) then
         Some pretty_hardline
+      else if opts.bracket_spacing then
+        Some pretty_line
       else
         None
   in
   let props_layout =
+    let props = list_with_newlines ~sep ~sep_linebreak props in
     wrap_and_indent ?break (fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"]) props
   in
   layout_node_with_comments_opt loc comments @@ group [props_layout]
@@ -3536,6 +3569,17 @@ and type_generic ~opts loc { Ast.Type.Generic.id; targs; comments } =
   in
   layout_node_with_comments_opt loc comments
   @@ fuse [generic_identifier id; option (type_args ~opts) targs]
+
+and type_indexed_access
+    ?(optional = false) ~opts loc { Ast.Type.IndexedAccess._object; index; comments } =
+  let left_delim =
+    if optional then
+      Atom "?.["
+    else
+      Atom "["
+  in
+  layout_node_with_comments_opt loc comments
+  @@ fuse [type_ ~opts _object; left_delim; type_ ~opts index; Atom "]"]
 
 and type_nullable ~opts loc { Ast.Type.Nullable.argument; comments } =
   layout_node_with_comments_opt loc comments (fuse [Atom "?"; type_with_parens ~opts argument])
@@ -3595,6 +3639,9 @@ and type_ ~opts ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Interface i -> type_interface ~opts loc i
       | T.Array t -> type_array ~opts loc t
       | T.Generic generic -> type_generic ~opts loc generic
+      | T.IndexedAccess indexed_access -> type_indexed_access ~opts loc indexed_access
+      | T.OptionalIndexedAccess { T.OptionalIndexedAccess.indexed_access; optional } ->
+        type_indexed_access ~optional ~opts loc indexed_access
       | T.Union t -> type_union ~opts loc t
       | T.Intersection t -> type_intersection ~opts loc t
       | T.Typeof t -> type_typeof ~opts loc t
@@ -3768,7 +3815,7 @@ and declare_module ~opts loc { Ast.Statement.DeclareModule.id; body; kind = _; c
           begin
             match id with
             | Ast.Statement.DeclareModule.Identifier id -> identifier id
-            | Ast.Statement.DeclareModule.Literal lit -> string_literal lit
+            | Ast.Statement.DeclareModule.Literal lit -> string_literal ~opts lit
           end;
           pretty_space;
           block ~opts body;
@@ -3829,6 +3876,12 @@ and declare_export_declaration
     source_location_with_comments
       ?comments
       ( loc,
-        fuse [Atom "declare"; space; Atom "export"; pretty_space; export_specifier source specifier]
-      )
+        fuse
+          [
+            Atom "declare";
+            space;
+            Atom "export";
+            pretty_space;
+            export_specifier ~opts source specifier;
+          ] )
   | (_, _) -> failwith "Invalid declare export declaration"

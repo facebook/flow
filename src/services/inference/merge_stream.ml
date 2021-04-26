@@ -35,7 +35,7 @@ open Utils_js
 
 type element = Component of File_key.t Nel.t
 
-type 'a merge_result = (File_key.t * 'a) list
+type 'a merge_result = (File_key.t * bool * 'a) list
 
 type node = {
   component: File_key.t Nel.t;
@@ -43,6 +43,7 @@ type node = {
   (* the number of leaders this node is currently blocking on *)
   mutable blocking: int;
   mutable recheck: bool;
+  has_old_sig_cx: bool;
   size: int;
 }
 
@@ -52,7 +53,6 @@ type 'a t = {
   num_workers: int;
   total_components: int;
   total_files: int;
-  arch: Options.arch;
   mutable ready_components: int;
   mutable ready_files: int;
   mutable blocked_components: int;
@@ -61,7 +61,7 @@ type 'a t = {
   mutable merged_files: int;
   mutable skipped_components: int;
   mutable skipped_files: int;
-  intermediate_result_callback: 'a merge_result Lazy.t -> unit;
+  mutable new_or_changed_files: FilenameSet.t;
 }
 
 let add_ready node stream =
@@ -92,18 +92,15 @@ let bucket_size stream =
 
 let is_done stream = stream.blocked_components = 0
 
-let create
-    ~num_workers
-    ~arch
-    ~sig_dependency_graph
-    ~leader_map
-    ~component_map
-    ~recheck_leader_set
-    ~intermediate_result_callback =
+let create ~num_workers ~reader ~sig_dependency_graph ~leader_map ~component_map ~recheck_leader_set
+    =
   (* create node for each component *)
   let graph =
     FilenameMap.mapi
       (fun leader component ->
+        (* This runs after we have oldified the files to be merged, so we have to check if there
+         * is an old version of the sig cx to get useful results. *)
+        let has_old_sig_cx = Context_heaps.Mutator_reader.sig_cx_mem_old ~reader leader in
         {
           component;
           (* computed later *)
@@ -111,6 +108,7 @@ let create
           (* computed later *)
           blocking = 0;
           recheck = FilenameSet.mem leader recheck_leader_set;
+          has_old_sig_cx;
           size = Nel.length component;
         })
       component_map
@@ -147,7 +145,6 @@ let create
       num_workers;
       total_components;
       total_files;
-      arch;
       ready_components = 0;
       ready_files = 0;
       blocked_components = 0;
@@ -156,7 +153,7 @@ let create
       merged_files = 0;
       skipped_components = 0;
       skipped_files = 0;
-      intermediate_result_callback;
+      new_or_changed_files = FilenameSet.empty;
     }
   in
   (* calculate the components ready to schedule and blocked counts *)
@@ -174,13 +171,8 @@ let create
 
 let update_server_status stream =
   let status =
-    match stream.arch with
-    | Options.Classic ->
-      ServerStatus.(
-        Merging_progress { finished = stream.merged_files; total = Some stream.total_files })
-    | Options.TypesFirst _ ->
-      ServerStatus.(
-        Merging_types_progress { finished = stream.merged_files; total = Some stream.total_files })
+    ServerStatus.(
+      Merging_progress { finished = stream.merged_files; total = Some stream.total_files })
   in
   MonitorRPC.status_update status
 
@@ -202,7 +194,7 @@ let next stream =
         Bucket.Wait
     | components -> Bucket.Job components
 
-let merge ~master_mutator ~reader stream =
+let merge ~master_mutator stream =
   (* If a component is unchanged, either because we merged it and the sig hash
    * was unchanged or because the component was skipped entirely, we need to
    * revive the shared heap entires corresponding to the component. These heap
@@ -213,13 +205,39 @@ let merge ~master_mutator ~reader stream =
     |> FilenameSet.of_list
     |> Context_heaps.Merge_context_mutator.revive_files master_mutator
   in
+  let mark_new_or_changed node =
+    stream.new_or_changed_files <-
+      node.component
+      |> Nel.fold_left (fun acc x -> FilenameSet.add x acc) stream.new_or_changed_files
+  in
   (* Record that a component was merged (or skipped) and recursively unblock its
    * dependents. If a dependent has no more unmerged dependencies, make it
    * available for scheduling. *)
-  let rec push diff node =
+  let rec push ~diff node =
     stream.merged_components <- stream.merged_components + 1;
     stream.merged_files <- stream.merged_files + node.size;
-    if not diff then revive node;
+    if diff then
+      (* If the new sighash is different from the old one, mark the component as new or changed.
+       * This gets used downstream to drive recheck opts for the check phase. *)
+      mark_new_or_changed node
+    else if node.has_old_sig_cx then
+      (* If the new sighash is the same as the old one, AND there was previously a sig cx for
+       * this component, then revive it, since the newly computed sig cx was not written (see
+       * Context_heaps.add_merge_on_diff). *)
+      revive node
+    else
+      (* Otherwise, there was no difference in sighash between the new and old, AND there was no
+       * old sig cx. This only happens when we load sighashes from the saved state, so we have the
+       * old sighash but not the old sig context. In this case, we write the new sig context (again,
+       * see Context_heaps.add_merge_on_diff), but if we called `revive` here it would get deleted,
+       * since there is no old one to revive.
+       *
+       * We also don't want to mark this as new or changed, since it's really neither. We leave it
+       * out of that set in order to allow recheck opts to fire in the check phase.
+       *
+       * This else branch could be omitted; it's just a vessel for this comment.
+       *)
+      ();
     FilenameMap.iter (fun _ node -> unblock diff node) node.dependents
   and unblock diff node =
     (* dependent blocked on one less *)
@@ -232,7 +250,9 @@ let merge ~master_mutator ~reader stream =
     if node.blocking = 0 then (
       stream.blocked_components <- stream.blocked_components - 1;
       stream.blocked_files <- stream.blocked_files - node.size;
-      if node.recheck then
+      (* If this node has no old sig context, we need to force it to be merged. This can happen
+       * when we load sig hashes from the saved state. *)
+      if node.recheck || not node.has_old_sig_cx then
         add_ready node stream
       else
         skip node
@@ -240,15 +260,13 @@ let merge ~master_mutator ~reader stream =
   and skip node =
     stream.skipped_components <- stream.skipped_components + 1;
     stream.skipped_files <- stream.skipped_files + node.size;
-    push false node
+    push ~diff:false node
   in
   fun merged acc ->
-    stream.intermediate_result_callback (lazy merged);
     List.iter
-      (fun (leader_f, _) ->
+      (fun (leader_f, diff, _) ->
         let node = FilenameMap.find leader_f stream.graph in
-        let diff = Context_heaps.Mutator_reader.sig_hash_changed ~reader leader_f in
-        push diff node)
+        push ~diff node)
       merged;
     update_server_status stream;
     List.rev_append merged acc
@@ -258,6 +276,4 @@ let total_files stream = stream.total_files
 
 let skipped_count stream = stream.skipped_files
 
-(* See explanation in Context_heaps for why calling this function at the end of merge returns files
-   whose signatures are new or have changed. *)
-let sig_new_or_changed = Context_heaps.Merge_context_mutator.unrevived_files
+let sig_new_or_changed stream = stream.new_or_changed_files

@@ -9,7 +9,7 @@ open Utils_js
 module Server_files = Server_files_js
 
 type args = {
-  shared_mem_config: SharedMem_js.config;
+  shared_mem_config: SharedMem.config;
   options: Options.t;
   init_id: string;
   logging_context: FlowEventLogger.logging_context;
@@ -34,7 +34,7 @@ let open_log_file file =
       Sys.rename file old_file
     with e ->
       let e = Exception.wrap e in
-      Utils.prerr_endlinef
+      prerr_endlinef
         "Log rotate: failed to move '%s' to '%s'\n%s"
         file
         old_file
@@ -51,7 +51,7 @@ let register_entry_point
     (main :
       init_id:string ->
       monitor_channels:MonitorRPC.channels ->
-      shared_mem_config:SharedMem_js.config ->
+      shared_mem_config:SharedMem.config ->
       Options.t ->
       unit) : entry_point =
   Daemon.register_entry_point (new_entry_point ()) (fun args monitor_channels ->
@@ -99,7 +99,7 @@ let daemonize ~init_id ~log_file ~shared_mem_config ~argv ~options ~file_watcher
   let lock = Server_files.lock_file ~flowconfig_name ~tmp_dir root in
   ( if not (Lock.check lock) then
     let msg = spf "Error: There is already a server running for %s" (Path.to_string root) in
-    FlowExitStatus.(exit ~msg Lock_stolen) );
+    Exit.(exit ~msg Lock_stolen) );
 
   let null_fd = Daemon.null_fd () in
   let log_fd = open_log_file log_file in

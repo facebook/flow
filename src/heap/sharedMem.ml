@@ -29,6 +29,11 @@ type heap = (nativeint, Bigarray.nativeint_elt, Bigarray.c_layout) Bigarray.Arra
  * Internally, these are all just ints, so be careful! *)
 type _ addr = int
 
+type effort =
+  [ `aggressive
+  | `always_TEST
+  ]
+
 let heap_ref : heap option ref = ref None
 
 exception Out_of_shared_memory
@@ -71,11 +76,14 @@ let connect handle ~worker_id =
   heap_ref := Some heap
 
 (*****************************************************************************)
-(* The shared memory garbage collector. It must be called every time we
- * free data (cf hh_shared.c for the underlying C implementation).
- *)
+(* The current state of the incremental GC. *)
 (*****************************************************************************)
-external hh_collect : unit -> unit = "hh_collect"
+type gc_phase =
+  | Phase_idle
+  | Phase_mark
+  | Phase_sweep
+
+external gc_phase : unit -> gc_phase = "hh_gc_phase"
 
 (*****************************************************************************)
 (* The size of the dynamically allocated shared memory section *)
@@ -83,9 +91,40 @@ external hh_collect : unit -> unit = "hh_collect"
 external heap_size : unit -> int = "hh_used_heap_size"
 
 (*****************************************************************************)
-(* Part of the heap not reachable from hashtable entries. *)
+(* The size of any new allocations since the previous full collection cycle *)
 (*****************************************************************************)
-external wasted_heap_size : unit -> int = "hh_wasted_heap_size"
+external new_alloc_size : unit -> int = "hh_new_alloc_size"
+
+(*****************************************************************************)
+(* The size of all free space in shared memory *)
+(*****************************************************************************)
+external free_size : unit -> int = "hh_free_heap_size"
+
+(*****************************************************************************)
+(* Force a new GC cycle to start. Precondition: gc_phase must be Phase_idle *)
+(*****************************************************************************)
+external start_cycle : unit -> unit = "hh_start_cycle"
+
+(*****************************************************************************)
+(* Perform a fixed amount of marking work. The return value is the unused work
+ * budget. If marking completed in the given budget, the returned value will be
+ * greater than 0. Precondition: gc_phase must be Phase_mark. *)
+(*****************************************************************************)
+external mark_slice : int -> int = "hh_mark_slice"
+
+(*****************************************************************************)
+(* Perform a fixed amount of sweeping work. The return value is the unused work
+ * budget. If weeping completed in the given budget, the returned value will be
+ * greater than 0. Precondition: gc_phase must be Phase_sweep. *)
+(*****************************************************************************)
+external sweep_slice : int -> int = "hh_sweep_slice"
+
+(*****************************************************************************)
+(* Compact the heap, sliding objects "to the left" over any free objects
+ * discovered during the previous full mark and sweep. Precondition: gc_phase
+ * must be Phase_idle. *)
+(*****************************************************************************)
+external hh_compact : unit -> unit = "hh_compact"
 
 (*****************************************************************************)
 (* The logging level for shared memory statistics *)
@@ -105,34 +144,86 @@ external hash_stats : unit -> table_stats = "hh_hash_stats"
 (*****************************************************************************)
 let init_done () = EventLogger.sharedmem_init_done (heap_size ())
 
-let should_collect (effort : [ `gentle | `aggressive | `always_TEST ]) =
-  let overhead =
-    match effort with
-    | `always_TEST -> 1.0
-    | `aggressive -> 1.2
-    | `gentle -> 2.0
-  in
-  let used = heap_size () in
-  let wasted = wasted_heap_size () in
-  let reachable = used - wasted in
-  used >= truncate (float reachable *. overhead)
+let on_compact = ref (fun _ _ -> ())
 
-let collect (effort : [ `gentle | `aggressive | `always_TEST ]) =
-  let old_size = heap_size () in
-  Stats.update_max_heap_size old_size;
-  let start_t = Unix.gettimeofday () in
-  (* The wrapper is used to run the function in a worker instead of master. *)
-  if should_collect effort then hh_collect ();
-  let new_size = heap_size () in
-  let time_taken = Unix.gettimeofday () -. start_t in
-  if old_size <> new_size then (
-    Hh_logger.log
-      "Sharedmem GC: %d bytes before; %d bytes after; in %f seconds"
-      old_size
-      new_size
-      time_taken;
-    EventLogger.sharedmem_gc_ran effort old_size new_size time_taken
-  )
+let compact_helper () =
+  let k = !on_compact () in
+  hh_compact ();
+  k ()
+
+(* GC will attempt to keep the overhead of garbage to no more than 20%. Before
+ * we actually mark and sweep, however, we don't know how much garbage there is,
+ * so we estimate.
+ *
+ * To estimate the amount of garbage, we consider all "new" allocations --
+ * allocations since the previous mark+sweep -- to be garbage. We add that
+ * number to the known free space. If that is at least 20% of the total space,
+ * we will kick of a new mark and sweep pass. *)
+let should_collect () =
+  let estimated_garbage = free_size () + new_alloc_size () in
+  estimated_garbage * 5 >= heap_size ()
+
+(* After a full mark and sweep, we want to compact the heap if the amount of
+ * free space is 20% of the scanned heap. *)
+let should_compact () =
+  let scanned_size = heap_size () - new_alloc_size () in
+  free_size () * 5 >= scanned_size
+
+(* Perform an incremental "slice" of GC work. The caller can control the amount
+ * of work performed by passing in a smaller or larger "work" budget. This
+ * function returns `true` when the GC phase was completed, and `false` if there
+ * is still more work to do. *)
+let collect_slice ?(force = false) work =
+  let work = ref work in
+
+  while !work > 0 do
+    match gc_phase () with
+    | Phase_idle ->
+      if force || should_collect () then
+        start_cycle ()
+      else
+        work := 0
+    | Phase_mark -> work := mark_slice !work
+    | Phase_sweep ->
+      ignore (sweep_slice !work);
+      work := 0
+  done;
+
+  let is_idle = gc_phase () = Phase_idle in
+
+  (* The GC will be in idle phase under two conditions: (1) we started in idle
+   * and did not start a new collect cycle, or (2) we just finished a sweep. In
+   * condition (1) should_compact should return false, so we will only possibly
+   * compact in condition (2), assuming 20% of the scanned heap is free. *)
+  if is_idle && should_compact () then compact_helper ();
+
+  is_idle
+
+(* Perform a full GC pass, or complete an in-progress GC pass. This call
+ * bypasses the `should_collect` heuristic and will instead always trigger a new
+ * mark and sweep pass if the GC is currently idle. *)
+let collect_full () =
+  while not (collect_slice ~force:true max_int) do
+    ()
+  done
+
+let finish_cycle () =
+  while gc_phase () == Phase_mark do
+    ignore (mark_slice max_int)
+  done;
+  while gc_phase () == Phase_sweep do
+    ignore (sweep_slice max_int)
+  done
+
+(* Perform a full compaction of shared memory, such that no heap space is
+ * wasted. We finish the current cycle, if one is in progress, then perform a
+ * full mark and sweep pass before collecting. This ensures that any "floating
+ * garbage" from a previous GC pass is also collected. *)
+let compact () =
+  finish_cycle ();
+  start_cycle ();
+  finish_cycle ();
+  compact_helper ()
 
 (* Compute size of values in the garbage-collected heap *)
 let value_size r =
@@ -210,7 +301,9 @@ module HashtblSegment (Key : Key) = struct
 
   let get_old k = get_hash (old_hash_of_key k)
 
-  let remove k = hh_remove (new_hash_of_key k)
+  let remove k =
+    let new_hash = new_hash_of_key k in
+    if hh_mem new_hash then hh_remove new_hash
 
   (* We oldify entries that might be changed by an operation, which involves
    * moving the address of the current heap value from the "new" key to the
@@ -806,7 +899,7 @@ module NewAPI = struct
     | Pattern_def_tag
     | Pattern_tag
     (* tags defined below this point are scanned for pointers *)
-    | Addr_map_tag (* 9 *)
+    | Addr_tbl_tag (* 9 *)
     | Checked_file_tag
 
   (* avoid unused constructor warning *)
@@ -816,13 +909,15 @@ module NewAPI = struct
   let tag_val : tag -> int = Obj.magic
 
   let mk_header tag size =
-    (* lower byte of header is reserved for tag, lsb will be set when converting
-     * to intnat before writing to shmem, see unsafe_write_header. *)
-    (tag_val tag lsl 1) lor (size lsl 7)
+    (* lower byte of header is reserved for 6-bit tag and 2 GC bits, OCaml
+     * representation of the header does not include the GC bits, which will be
+     * set when converting to intnat before writing to shmem, see
+     * unsafe_write_header. *)
+    tag_val tag lor (size lsl 6)
 
-  let obj_tag hd = (hd lsr 1) land 0x3F
+  let obj_tag hd = hd land 0x3F
 
-  let obj_size hd = hd lsr 7
+  let obj_size hd = hd lsr 6
 
   (* sizes *)
 
@@ -862,7 +957,7 @@ module NewAPI = struct
 
   let addr_tbl_header xs =
     let size = addr_tbl_size xs in
-    mk_header Addr_map_tag size
+    mk_header Addr_tbl_tag size
 
   let checked_file_header = mk_header Checked_file_tag checked_file_size
 
@@ -921,14 +1016,14 @@ module NewAPI = struct
    * must ensure that the given destination contains string data. *)
   external unsafe_read_string : _ addr -> int -> string = "hh_read_string"
 
-  (* Read a header from the heap. The low bit of the header word is always set,
-   * but when converting to an OCaml int we forfeit that bit to OCaml's own tag.
-   *)
+  (* Read a header from the heap. The low 2 bits of the header are reserved for
+   * GC and not used in OCaml. *)
   let read_header heap addr =
     let hd_nat = Array1.get heap addr in
-    (* double-check that the data looks like a header *)
+    (* Double-check that the data looks like a header. All reachable headers
+     * will have the lsb set. *)
     assert (Nativeint.(logand hd_nat 1n = 1n));
-    Nativeint.(to_int (shift_right_logical hd_nat 1))
+    Nativeint.(to_int (shift_right_logical hd_nat 2))
 
   let read_header_checked heap tag addr =
     let hd = read_header heap addr in
@@ -954,7 +1049,7 @@ module NewAPI = struct
 
   let read_addr_tbl_generic f addr init =
     let heap = get_heap () in
-    let hd = read_header_checked heap Addr_map_tag addr in
+    let hd = read_header_checked heap Addr_tbl_tag addr in
     init (obj_size hd) (fun i -> f (read_addr heap (addr + header_size + i)))
 
   let read_addr_tbl f addr = read_addr_tbl_generic f addr Array.init
@@ -1001,7 +1096,7 @@ module NewAPI = struct
    * bounds checked; caller must ensure the given destination has already been
    * allocated. *)
   let unsafe_write_header_at heap dst hd =
-    Array1.unsafe_set heap dst Nativeint.(logor 1n (shift_left (of_int hd) 1))
+    Array1.unsafe_set heap dst Nativeint.(logor 1n (shift_left (of_int hd) 2))
 
   (* Write an address at a specified address in the heap. This write is not
    * bounds checked; caller must ensure the given destination has already been

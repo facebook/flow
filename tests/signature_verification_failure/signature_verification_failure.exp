@@ -294,15 +294,6 @@ expression. [signature-verification-failure]
                         ^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- misc.js:22:10
-
-Cannot build a typed interface for this module. You should annotate the exports of this module with types. Unsupported
-kind of expression in predicate function: [signature-verification-failure]
-
-   22|   return (arg: boolean);
-                ^^^^^^^^^^^^^^
-
-
 Error ---------------------------------------------------------------------------------------------- obj-pattern.js:3:19
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
@@ -312,31 +303,31 @@ annotation at array pattern: [signature-verification-failure]
                         ^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------- obj_decl.js:3:14
+Error ------------------------------------------------------------------------------------------------- obj_decl.js:3:17
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at declaration of variable `a`: [signature-verification-failure]
+annotation at array pattern: [signature-verification-failure]
 
    3| export var { a } = (42: any);
-                   ^
+                      
 
 
-Error ------------------------------------------------------------------------------------------------- obj_decl.js:5:20
+Error ------------------------------------------------------------------------------------------------- obj_decl.js:5:23
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at declaration of variable `b`: [signature-verification-failure]
+annotation at array pattern: [signature-verification-failure]
 
    5| export var { '42': b } = (42: any);
-                         ^
+                            
 
 
-Error ------------------------------------------------------------------------------------------------- obj_decl.js:7:19
+Error ------------------------------------------------------------------------------------------------- obj_decl.js:7:22
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at declaration of variable `c`: [signature-verification-failure]
+annotation at array pattern: [signature-verification-failure]
 
    7| export var { [b]: c } = (42: any);
-                        ^
+                           
 
 
 Error ----------------------------------------------------------------------------------------------------- rest.js:3:33
@@ -346,15 +337,6 @@ annotation at array pattern: [signature-verification-failure]
 
    3| module.exports = (x: number, ...z) => {};
                                       ^
-
-
-Error --------------------------------------------------------------------------------------------------- sketchy.js:3:3
-
-Cannot build a typed interface for this module. You should annotate the exports of this module with types. Unexpected
-toplevel definition that needs hoisting: [signature-verification-failure]
-
-   3|   var x: number = 42;
-        ^^^^^^^^^^^^^^^^^^^
 
 
 Error --------------------------------------------------------------------------------------------------- tparam.js:5:15
@@ -392,4 +374,4 @@ annotation at declaration of variable `x`: [signature-verification-failure]
 
 
 
-Found 40 errors
+Found 38 errors

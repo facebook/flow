@@ -383,11 +383,7 @@ Trace:
   3: function f0(x) { g0(x) }
                       ^^ FunT [function]
   3: function f0(x) { g0(x) }
-                      ^^ ~> UseT(AssignVar, OpenT) [function] (from [not shown])
-  3: function f0(x) { g0(x) }
-                      ^^ OpenT [`g0`]
-  3: function f0(x) { g0(x) }
-                      ^^^^^ ~> CallT [call of `g0`]
+                      ^^^^^ ~> CallT [call of `g0`] (from [not shown])
 
 
 Error --------------------------------------------------------------------------------------------------- Traces.js:8:27
@@ -437,11 +433,7 @@ Trace:
   8: function f1(x, y) { g1(x, y) }
                          ^^ FunT [function]
   8: function f1(x, y) { g1(x, y) }
-                         ^^ ~> UseT(AssignVar, OpenT) [function] (from [not shown])
-  8: function f1(x, y) { g1(x, y) }
-                         ^^ OpenT [`g1`]
-  8: function f1(x, y) { g1(x, y) }
-                         ^^^^^^^^ ~> CallT [call of `g1`]
+                         ^^^^^^^^ ~> CallT [call of `g1`] (from [not shown])
 
 
 Error -------------------------------------------------------------------------------------------------- Traces.js:14:25

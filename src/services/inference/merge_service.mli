@@ -7,61 +7,46 @@
 
 open Utils_js
 
+type duration = float
+
 type 'a unit_result = ('a, ALoc.t * Error_message.internal_error) result
 
-type 'a file_keyed_result = File_key.t * 'a unit_result
+type merge_result = Error_suppressions.t * duration
 
-type error_acc =
+type check_type_result =
+  Context.t * File_sig.With_ALoc.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
+
+type check_error_result =
   Flow_error.ErrorSet.t
   * Flow_error.ErrorSet.t
   * Error_suppressions.t
-  * Coverage_response.file_coverage FilenameMap.t option
-  * float
+  * Coverage_response.file_coverage
+  * duration
 
-type type_acc =
-  ( Context.t
-  * File_sig.With_ALoc.t FilenameMap.t
-  * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t Utils_js.FilenameMap.t )
-  option
-
-type acc = type_acc * error_acc
-
-(* Time to check *)
-
-type 'a merge_job_results = 'a file_keyed_result list
-
-type 'a merge_job =
-  worker_mutator:Context_heaps.Merge_context_mutator.worker_mutator ->
-  options:Options.t ->
-  reader:Mutator_state_reader.t ->
-  File_key.t Nel.t ->
-  'a unit_result
+type check_result = check_type_result * check_error_result
 
 type sig_opts_data = {
   skipped_count: int;
   sig_new_or_changed: FilenameSet.t;
 }
 
-type 'a merge_results = 'a merge_job_results * sig_opts_data
+type 'a merge_results = (File_key.t * bool * 'a unit_result) list * sig_opts_data
 
-type merge_context_result =
-  | MergeResult of {
-      cx: Context.t;
-      master_cx: Context.sig_t;
-    }
-  | CheckResult of {
-      cx: Context.t;
-      other_cxs: Context.t list;
-      master_cx: Context.sig_t;
-      file_sigs: File_sig.With_ALoc.t FilenameMap.t;
-      typed_asts: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t FilenameMap.t;
-      coverage: Coverage_response.file_coverage FilenameMap.t;
-    }
+type 'a merge_job =
+  worker_mutator:Context_heaps.Merge_context_mutator.worker_mutator ->
+  options:Options.t ->
+  reader:Mutator_state_reader.t ->
+  File_key.t Nel.t ->
+  bool * 'a unit_result
 
 val merge_context :
-  options:Options.t -> reader:Abstract_state_reader.t -> File_key.t Nel.t -> merge_context_result
+  options:Options.t ->
+  reader:Abstract_state_reader.t ->
+  Context.master_context ->
+  File_key.t Nel.t ->
+  Context.t
 
-val merge_contents_context :
+val check_contents_context :
   reader:State_reader.t ->
   Options.t ->
   File_key.t ->
@@ -75,7 +60,6 @@ val merge_runner :
   master_mutator:Context_heaps.Merge_context_mutator.master_mutator ->
   worker_mutator:Context_heaps.Merge_context_mutator.worker_mutator ->
   reader:Mutator_state_reader.t ->
-  intermediate_result_callback:('a merge_job_results Lazy.t -> unit) ->
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
   sig_dependency_graph:FilenameSet.t FilenameMap.t ->
@@ -87,13 +71,16 @@ val merge :
   master_mutator:Context_heaps.Merge_context_mutator.master_mutator ->
   worker_mutator:Context_heaps.Merge_context_mutator.worker_mutator ->
   reader:Mutator_state_reader.t ->
-  intermediate_result_callback:(error_acc merge_job_results Lazy.t -> unit) ->
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
   sig_dependency_graph:FilenameSet.t FilenameMap.t ->
   component_map:File_key.t Nel.t FilenameMap.t ->
   recheck_set:FilenameSet.t ->
-  error_acc merge_results Lwt.t
+  merge_result option merge_results Lwt.t
 
-val check :
-  Options.t -> reader:Module_heaps.Mutator_reader.reader -> File_key.t -> acc file_keyed_result
+val mk_check :
+  Options.t ->
+  reader:Module_heaps.Mutator_reader.reader ->
+  unit ->
+  File_key.t ->
+  check_result option unit_result

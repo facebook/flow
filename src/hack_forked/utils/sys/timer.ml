@@ -57,9 +57,10 @@ let rec get_next_timer ~exns =
   else
     let timer = TimerQueue.pop queue in
     (* Skip cancelled timers *)
-    if ISet.mem timer.id !cancelled then
+    if ISet.mem timer.id !cancelled then begin
+      cancelled := ISet.remove timer.id !cancelled;
       get_next_timer ~exns
-    else
+    end else
       let interval = timer.target_time -. Unix.gettimeofday () in
       if interval <= 0.0 then
         let exns =

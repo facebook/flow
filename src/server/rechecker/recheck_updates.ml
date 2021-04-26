@@ -11,7 +11,7 @@ let spf = Printf.sprintf
 
 type error = {
   msg: string;
-  exit_status: FlowExitStatus.t;
+  exit_status: Exit.t;
 }
 
 let is_incompatible_package_json ~options ~reader =
@@ -42,6 +42,24 @@ let is_incompatible_package_json ~options ~reader =
     else
       Module_js.Compatible
 
+(** determines whether the flowconfig changed in a way that requires restarting
+
+    this is currently very coarse: any textual change will invalidate it, even just
+    a comment. but this does prevent restarting when the file is merely touched,
+    which is a relatively common occurrence with source control or build scripts.
+
+    the ideal solution is to process updates to the config incrementally.for
+    example, adding a new ignore dir could be processed the same way deleting
+    all of those files would be handled. *)
+let is_incompatible_flowconfig_change ~options config_path =
+  let old_hash = Options.flowconfig_hash options in
+  let new_hash = FlowConfig.get_hash ~allow_cache:false config_path |> Xx.to_string in
+  if not (String.equal old_hash new_hash) then
+    let () = Hh_logger.error "Flowconfig hash changed from %S to %S" old_hash new_hash in
+    true
+  else
+    false
+
 (* This function takes a set of filenames. We have been told that these files have changed. The
  * main job of this function is to tell
  *
@@ -64,11 +82,15 @@ let process_updates ?(skip_incompatible = false) ~options ~libs updates =
     let want = Files.wanted ~options:file_options all_libs in
     Ok () >>= fun () ->
     (* Die if the .flowconfig changed *)
-    if (not skip_incompatible) && SSet.mem config_path updates then
+    if
+      (not skip_incompatible)
+      && SSet.mem config_path updates
+      && is_incompatible_flowconfig_change ~options config_path
+    then
       Error
         {
           msg = spf "%s changed in an incompatible way. Exiting." config_path;
-          exit_status = FlowExitStatus.Flowconfig_changed;
+          exit_status = Exit.Flowconfig_changed;
         }
     else
       Ok () >>= fun () ->
@@ -97,7 +119,7 @@ let process_updates ?(skip_incompatible = false) ~options ~libs updates =
         Error
           {
             msg = spf "%s\nPackages changed in an incompatible way. Exiting." messages;
-            exit_status = FlowExitStatus.Server_out_of_date;
+            exit_status = Exit.Server_out_of_date;
           }
       else
         Ok () >>= fun () ->
@@ -122,7 +144,7 @@ let process_updates ?(skip_incompatible = false) ~options ~libs updates =
           Error
             {
               msg = spf "%s\nLib files changed in an incompatible way. Exiting" messages;
-              exit_status = FlowExitStatus.Server_out_of_date;
+              exit_status = Exit.Server_out_of_date;
             }
         else
           Ok () >>= fun () ->

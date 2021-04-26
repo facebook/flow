@@ -55,17 +55,17 @@ end
 module UriSet = Set.Make (DocumentUri)
 module UriMap = WrappedMap.Make (DocumentUri)
 
+(** A position is between two characters like an 'insert' cursor in a editor *)
 type position = {
   line: int;  (** line position in a document [zero-based] *)
   character: int;  (** character offset on a line in a document [zero-based] *)
 }
-(** A position is between two characters like an 'insert' cursor in a editor *)
 
+(** A range is comparable to a selection in an editor *)
 type range = {
   start: position;  (** the range's start position *)
   end_: position;  (** the range's end position [exclusive] *)
 }
-(** A range is comparable to a selection in an editor *)
 
 (** Represents a location inside a resource, such as a line inside a text file *)
 module Location = struct
@@ -261,7 +261,6 @@ module MessageType = struct
 end
 
 module CodeActionKind = struct
-  type t = string * string list
   (** The kind of a code action.
       Kinds are a hierarchical list of identifiers separated by `.`, e.g.
       `"refactor.extract.function"`.
@@ -271,6 +270,7 @@ module CodeActionKind = struct
       functions for creation, membership, printing.
       Module CodeAction below also references this module as Kind.
    *)
+  type t = string * string list
 
   (** is x of kind k? *)
   let is_kind : t -> t -> bool =
@@ -355,6 +355,23 @@ module SignatureHelpClientCapabilities = struct
   and parameterInformation = { labelOffsetSupport: bool }
 end
 
+module CompletionOptions = struct
+  type completionItem = {
+    labelDetailsSupport: bool;
+        (** The server has support for completion item label details (see also
+            `CompletionItemLabelDetails`) when receiving a completion item in
+            a resolve call.
+
+            @since 3.17.0 - proposed state *)
+  }
+
+  type t = {
+    resolveProvider: bool;  (** server resolves extra info on demand *)
+    triggerCharacters: string list;
+    completionItem: completionItem;
+  }
+end
+
 (** Initialize request, method="initialize" *)
 module Initialize = struct
   type textDocumentSyncKind =
@@ -392,7 +409,10 @@ module Initialize = struct
 
   and workspaceClientCapabilities = {
     applyEdit: bool;  (** client supports appling batch edits *)
+    configuration: bool;  (** client supports workspace/configuration requests *)
     workspaceEdit: workspaceEdit;
+    didChangeConfiguration: dynamicRegistration;
+        (** client supports workspace/didChangeConfiguration notifications *)
     didChangeWatchedFiles: dynamicRegistration; (* omitted: other dynamic-registration fields *)
   }
 
@@ -410,20 +430,21 @@ module Initialize = struct
     signatureHelp: SignatureHelpClientCapabilities.t;
   }
 
+  (** synchronization capabilities say what messages the client is capable
+      of sending, should be be so asked by the server.
+      We use the "can_" prefix for OCaml naming reasons; it's absent in LSP *)
   and synchronization = {
     can_willSave: bool;  (** client can send textDocument/willSave *)
     can_willSaveWaitUntil: bool;  (** textDoc.../willSaveWaitUntil *)
     can_didSave: bool;  (** textDocument/didSave *)
   }
-  (** synchronization capabilities say what messages the client is capable
-      of sending, should be be so asked by the server.
-      We use the "can_" prefix for OCaml naming reasons; it's absent in LSP *)
 
   and completion = { completionItem: completionItem }
 
   and completionItem = {
     snippetSupport: bool;  (** client can do snippets as insert text *)
     preselectSupport: bool;  (** client supports the preselect property *)
+    labelDetailsSupport: bool;  (** proposed for 3.17 *)
   }
 
   and windowClientCapabilities = {
@@ -434,10 +455,11 @@ module Initialize = struct
     connectionStatus: bool;  (** Nuclide-specific: client supports telemetry/connectionStatus *)
   }
 
+  (** What capabilities the server provides *)
   and server_capabilities = {
     textDocumentSync: textDocumentSyncOptions;  (** how to sync *)
     hoverProvider: bool;
-    completionProvider: completionOptions option;
+    completionProvider: CompletionOptions.t option;
     signatureHelpProvider: signatureHelpOptions option;
     definitionProvider: bool;
     typeDefinitionProvider: bool;
@@ -456,12 +478,6 @@ module Initialize = struct
     implementationProvider: bool;
     typeCoverageProvider: bool;  (** nuclide-specific *)
     rageProvider: bool;  (** nuclide-specific *)
-  }
-  (** What capabilities the server provides *)
-
-  and completionOptions = {
-    resolveProvider: bool;  (** server resolves extra info on demand *)
-    completion_triggerCharacters: string list;  (** wire "triggerCharacters" *)
   }
 
   and signatureHelpOptions = {
@@ -486,6 +502,9 @@ module Initialize = struct
     commands: Command.name list;  (** the commands to be executed on the server *)
   }
 
+  (** text document sync options say what messages the server requests the
+      client to send. We use the "want_" prefix for OCaml naming reasons;
+      this prefix is absent in LSP. *)
   and textDocumentSyncOptions = {
     want_openClose: bool;
     (* textDocument/didOpen+didClose *)
@@ -496,19 +515,16 @@ module Initialize = struct
     (* textDoc.../willSaveWaitUntil *)
     want_didSave: saveOptions option; (* textDocument/didSave *)
   }
-  (** text document sync options say what messages the server requests the
-      client to send. We use the "want_" prefix for OCaml naming reasons;
-      this prefix is absent in LSP. *)
 
   (* full only on open. Wire "Incremental" *)
   and saveOptions = { includeText: bool  (** the client should include content on save *) }
 end
 
-module Shutdown = struct end
 (** Shutdown request, method="shutdown" *)
+module Shutdown = struct end
 
-module Exit = struct end
 (** Exit notification, method="exit" *)
+module Exit = struct end
 
 (** Rage request, method="telemetry/rage" *)
 module Rage = struct
@@ -623,6 +639,11 @@ module DidChange = struct
   }
 end
 
+(** Configuration changed notification, method="workspace/didChangeConfiguration" *)
+module DidChangeConfiguration = struct
+  type params = { settings: Hh_json.json }
+end
+
 (** Watched files changed notification, method="workspace/didChangeWatchedFiles" *)
 module DidChangeWatchedFiles = struct
   type registerOptions = { watchers: fileSystemWatcher list }
@@ -700,6 +721,15 @@ module CodeActionRequest = struct
   }
 end
 
+(** proposed for 3.17: https://github.com/microsoft/vscode/issues/39441 *)
+module CompletionItemLabelDetails = struct
+  type t = {
+    parameters: string option;
+    qualifier: string option;
+    type_: string option;
+  }
+end
+
 (* Completion request, method="textDocument/completion" *)
 module Completion = struct
   (* These numbers should match
@@ -770,6 +800,7 @@ module Completion = struct
 
   and completionItem = {
     label: string;  (** the label in the UI *)
+    labelDetails: CompletionItemLabelDetails.t option;  (** proposed for 3.17 *)
     kind: completionItemKind option;  (** tells editor which icon to use *)
     detail: string option;  (** human-readable string like type/symbol info *)
     documentation: markedString list option;  (** human-readable doc-comment *)
@@ -789,6 +820,18 @@ module CompletionItemResolve = struct
   type params = Completion.completionItem
 
   and result = Completion.completionItem
+end
+
+(* Configuration request, method="workspace/configuration" *)
+module Configuration = struct
+  type params = { items: item list }
+
+  and item = {
+    scope_uri: DocumentUri.t option;
+    section: string option;
+  }
+
+  and result = Hh_json.json list
 end
 
 (* Workspace Symbols request, method="workspace/symbol" *)
@@ -1107,26 +1150,27 @@ module Error = struct
   exception LspException of t
 end
 
-type lsp_registration_options =
-  | DidChangeWatchedFilesRegistrationOptions of DidChangeWatchedFiles.registerOptions
-
-(* Register capability request, method="client/registerCapability" *)
+(** Register capability request, method="client/registerCapability" *)
 module RegisterCapability = struct
   type params = { registrations: registration list }
 
   and registration = {
     id: string;
     method_: string;
-    registerOptions: lsp_registration_options;
+    registerOptions: options;
   }
 
-  let make_registration (registerOptions : lsp_registration_options) : registration =
+  and options =
+    | DidChangeConfiguration  (** has no options *)
+    | DidChangeWatchedFiles of DidChangeWatchedFiles.registerOptions
+
+  let make_registration (registerOptions : options) : registration =
     (* The ID field is arbitrary but unique per type of capability (for future
        deregistering, which we don't do). *)
     let (id, method_) =
       match registerOptions with
-      | DidChangeWatchedFilesRegistrationOptions _ ->
-        ("did-change-watched-files", "workspace/didChangeWatchedFiles")
+      | DidChangeConfiguration -> ("did-change-configuration", "workspace/didChangeConfiguration")
+      | DidChangeWatchedFiles _ -> ("did-change-watched-files", "workspace/didChangeWatchedFiles")
     in
     { id; method_; registerOptions }
 end
@@ -1146,6 +1190,7 @@ type lsp_request =
   | CodeActionRequest of CodeActionRequest.params
   | CompletionRequest of Completion.params
   | CompletionItemResolveRequest of CompletionItemResolve.params
+  | ConfigurationRequest of Configuration.params
   | SignatureHelpRequest of SignatureHelp.params
   | WorkspaceSymbolRequest of WorkspaceSymbol.params
   | DocumentSymbolRequest of DocumentSymbol.params
@@ -1173,6 +1218,7 @@ type lsp_result =
   | CodeActionResult of CodeAction.result
   | CompletionResult of Completion.result
   | CompletionItemResolveResult of CompletionItemResolve.result
+  | ConfigurationResult of Configuration.result
   | SignatureHelpResult of SignatureHelp.result
   | WorkspaceSymbolResult of WorkspaceSymbol.result
   | DocumentSymbolResult of DocumentSymbol.result
@@ -1189,6 +1235,7 @@ type lsp_result =
   | RenameResult of Rename.result
   | DocumentCodeLensResult of DocumentCodeLens.result
   | ExecuteCommandResult of ExecuteCommand.result
+  | RegisterCapabilityResult
   (* the string is a stacktrace *)
   | ErrorResult of Error.t * string
 
@@ -1200,6 +1247,7 @@ type lsp_notification =
   | DidCloseNotification of DidClose.params
   | DidSaveNotification of DidSave.params
   | DidChangeNotification of DidChange.params
+  | DidChangeConfigurationNotification of DidChangeConfiguration.params
   | DidChangeWatchedFilesNotification of DidChangeWatchedFiles.params
   | LogMessageNotification of LogMessage.params
   | TelemetryNotification of LogMessage.params (* LSP allows 'any' but we only send these *)
@@ -1222,6 +1270,8 @@ and 'a lsp_error_handler = Error.t * string -> 'a -> 'a
 and 'a lsp_result_handler =
   | ShowMessageHandler of (ShowMessageRequest.result -> 'a -> 'a)
   | ShowStatusHandler of (ShowStatus.result -> 'a -> 'a)
+  | ConfigurationHandler of (Configuration.result -> 'a -> 'a)
+  | VoidHandler
 
 module IdKey = struct
   type t = lsp_id

@@ -12,6 +12,7 @@ module Typed = struct
     metadata: Context.metadata;
     options: Options.t;
     full_cx: Context.t;
+    master_cx: Context.master_context;
     typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
     docblock: Docblock.t;
     iteration: int;

@@ -19,12 +19,6 @@ can be overridden with command line flags.
 * [`all`](#toc-all-boolean)
 * [`babel_loose_array_spread`](#toc-babel-loose-array-spread-boolean)
 * [`emoji`](#toc-emoji-boolean)
-* [`esproposal.class_instance_fields`](#toc-esproposal-class-instance-fields-enable-ignore-warn)
-* [`esproposal.class_static_fields`](#toc-esproposal-class-static-fields-enable-ignore-warn)
-* [`esproposal.decorators`](#toc-esproposal-decorators-ignore-warn)
-* [`esproposal.export_star_as`](#toc-esproposal-export-star-as-enable-ignore-warn)
-* [`esproposal.optional_chaining`](#toc-esproposal-optional-chaining-enable-ignore-warn)
-* [`esproposal.nullish_coalescing`](#toc-esproposal-nullish-coalescing-enable-ignore-warn)
 * [`exact_by_default`](#toc-exact-by-default-boolean)
 * [`experimental.const_params`](#toc-experimental-const-params-boolean)
 * [`include_warnings`](#toc-include-warnings-boolean)
@@ -48,13 +42,21 @@ can be overridden with command line flags.
 * [`sharedmemory.hash_table_pow`](#toc-sharedmemory-hash-table-pow-unsigned-integer)
 * [`sharedmemory.heap_size`](#toc-sharedmemory-heap-size-unsigned-integer)
 * [`sharedmemory.log_level`](#toc-sharedmemory-log-level-unsigned-integer)
-* [`strip_root`](#toc-strip-root-boolean)
-* [`suppress_comment`](#toc-suppress-comment-regex)
 * [`suppress_type`](#toc-suppress-type-string)
 * [`temp_dir`](#toc-temp-dir-string)
 * [`traces`](#toc-traces-integer)
+
+The following options are deprecated and have been removed in the latest version of Flow:
+* [`strip_root`](#toc-strip-root-boolean)
+* [`suppress_comment`](#toc-suppress-comment-regex)
 * [`types_first`](#toc-types-first-boolean)
 * [`well_formed_exports`](#toc-well-formed-exports-boolean)
+* [`esproposal.class_instance_fields`](#toc-esproposal-class-instance-fields-enable-ignore-warn)
+* [`esproposal.class_static_fields`](#toc-esproposal-class-static-fields-enable-ignore-warn)
+* [`esproposal.decorators`](#toc-esproposal-decorators-ignore-warn)
+* [`esproposal.export_star_as`](#toc-esproposal-export-star-as-enable-ignore-warn)
+* [`esproposal.optional_chaining`](#toc-esproposal-optional-chaining-enable-ignore-warn)
+* [`esproposal.nullish_coalescing`](#toc-esproposal-nullish-coalescing-enable-ignore-warn)
 
 #### `all` _`(boolean)`_ <a class="toc" id="toc-all-boolean" href="#toc-all-boolean"></a>
 
@@ -81,72 +83,6 @@ Set this to `true` to add emoji to the status messages that Flow
 outputs when it's busy checking your project.
 
 The default value for `emoji` is `false`.
-
-#### `esproposal.class_instance_fields` _`(enable|ignore|warn)`_ <a class="toc" id="toc-esproposal-class-instance-fields-enable-ignore-warn" href="#toc-esproposal-class-instance-fields-enable-ignore-warn"></a>
-
-Set this to `warn` to indicate that Flow should give a warning on use of
-instance [class fields](https://github.com/tc39/proposal-class-public-fields)
-per the pending spec.
-
-You may also set this to `ignore` to indicate that Flow should simply ignore
-the syntax (i.e. Flow will not use this syntax to indicate the presence of a
-property on instances of the class).
-
-The default value of this option is `enable`, which allows use of this proposed
-syntax.
-
-#### `esproposal.class_static_fields` _`(enable|ignore|warn)`_ <a class="toc" id="toc-esproposal-class-static-fields-enable-ignore-warn" href="#toc-esproposal-class-static-fields-enable-ignore-warn"></a>
-
-Set this to `warn` to indicate that Flow should give a warning on use of static
-[class fields](https://github.com/tc39/proposal-class-public-fields)
-per the pending spec.
-
-You may also set this to `ignore` to indicate that Flow should simply ignore
-the syntax (i.e. Flow will not use this syntax to indicate the presence of a
-static property on the class).
-
-The default value of this option is `enable`, which allows use of this proposed
-syntax.
-
-#### `esproposal.decorators` _`(ignore|warn)`_ <a class="toc" id="toc-esproposal-decorators-ignore-warn" href="#toc-esproposal-decorators-ignore-warn"></a>
-
-Set this to `ignore` to indicate that Flow should ignore decorators.
-
-The default value of this option is `warn`, which gives a warning on use since
-this proposal is still very early-stage.
-
-#### `esproposal.export_star_as` _`(enable|ignore|warn)`_ <a class="toc" id="toc-esproposal-export-star-as-enable-ignore-warn" href="#toc-esproposal-export-star-as-enable-ignore-warn"></a>
-
-Set this to `enable` to indicate that Flow should support the `export * as`
-syntax from [leebyron's proposal](https://github.com/leebyron/ecmascript-more-export-from).
-
-You may also set this to `ignore` to indicate that Flow should simply ignore
-the syntax. The default value of this option is `warn`, which gives a warning
-on use since this proposal is still very early-stage.
-
-#### `esproposal.optional_chaining` _`(enable|ignore|warn)`_ <a class="toc" id="toc-esproposal-optional-chaining-enable-ignore-warn" href="#toc-esproposal-optional-chaining-enable-ignore-warn"></a>
-
-Set this to `enable` to indicate that Flow should support the use of
-[optional chaining](https://github.com/tc39/proposal-optional-chaining)
-per the pending spec.
-
-You may also set this to `ignore` to indicate that Flow should simply ignore
-the syntax.
-
-The default value of this option is `warn`, which gives a warning on
-use since this proposal is still very early-stage.
-
-#### `esproposal.nullish_coalescing` _`(enable|ignore|warn)`_ <a class="toc" id="toc-esproposal-nullish-coalescing-enable-ignore-warn" href="#toc-esproposal-nullish-coalescing-enable-ignore-warn"></a>
-
-Set this to `enable` to indicate that Flow should support the use of
-[nullish coalescing](https://github.com/tc39/proposal-nullish-coalescing)
-per the pending spec.
-
-You may also set this to `ignore` to indicate that Flow should simply ignore
-the syntax.
-
-The default value of this option is `warn`, which gives a warning on
-use since this proposal is still very early-stage.
 
 #### `exact_by_default` _`(boolean)`_ <a class="toc" id="toc-exact-by-default-boolean" href="#toc-exact-by-default-boolean"></a>
 
@@ -427,47 +363,6 @@ serialized into and deserialized out of shared memory.
 
 By default this is 0.
 
-#### `strip_root` _`(boolean)`_ {% until 0.48 %} <a class="toc" id="toc-strip-root-boolean" href="#toc-strip-root-boolean"></a>
-
-Obsolete. Set this to `true` to always strip the root directory from file paths
-in error messages when using `--json`, `--from emacs`, and `--from vim`.
-Do not use this option. Instead, pass the command line flag `--strip-root`.
-
-By default this is `false`.
-
-#### `suppress_comment` _`(regex)`_ {% until 0.126 %} <a class="toc" id="toc-suppress-comment-regex" href="#toc-suppress-comment-regex"></a>
-
-Defines a magical comment that suppresses any Flow errors on the following
-line. For example:
-
-```
-suppress_comment= \\(.\\|\n\\)*\\$FlowFixMe
-```
-
-will match a comment like this:
-
-```
-// $FlowFixMe: suppressing this error until we can refactor
-var x : string = 123;
-```
-
-and suppress the error. If there is no error on the next line (the suppression
-is unnecessary), an "Unused suppression" warning will be shown instead.
-
-If no suppression comments are specified in your config, Flow will apply one
-default: `// $FlowFixMe`.
-
-> **Note:** You can specify `suppress_comment` multiple times. If you do define
-> any `suppress_comment`s, the built-in `$FlowFixMe` suppression will be erased
-> in favor of the regexps you specify. If you wish to use `$FlowFixMe` with
-> some additional custom suppression comments, you must manually specify
-> `\\(.\\|\n\\)*\\$FlowFixMe` in your custom list of suppressions.
-
-> **Note:** In version v0.127.0, the option to specify the suppression comment
-> syntax was removed. `$FlowFixMe`, `$FlowIssue`, `$FlowExpectedError`,
-> and `$FlowIgnore` became the only standard suppressions.
-
-
 #### `suppress_type` _`(string)`_ <a class="toc" id="toc-suppress-type-string" href="#toc-suppress-type-string"></a>
 
 This option lets you alias `any` with a given string. This is useful for
@@ -510,7 +405,47 @@ Enables traces on all error output (showing additional details about the flow
 of types through the system), to the depth specified. This can be very
 expensive, so is disabled by default.
 
-#### `types_first` _`(boolean)`_ <a class="toc" id="toc-types-first-boolean" href="#toc-types-first-boolean"></a> {% since 0.125.0 %}
+#### `strip_root` _`(boolean)`_ {% until 0.48 %} <a class="toc" id="toc-strip-root-boolean" href="#toc-strip-root-boolean"></a>
+
+Obsolete. Set this to `true` to always strip the root directory from file paths
+in error messages when using `--json`, `--from emacs`, and `--from vim`.
+Do not use this option. Instead, pass the command line flag `--strip-root`.
+
+By default this is `false`.
+
+#### `suppress_comment` _`(regex)`_ {% until 0.126 %} <a class="toc" id="toc-suppress-comment-regex" href="#toc-suppress-comment-regex"></a>
+
+Defines a magical comment that suppresses any Flow errors on the following
+line. For example:
+
+```
+suppress_comment= \\(.\\|\n\\)*\\$FlowFixMe
+```
+
+will match a comment like this:
+
+```
+// $FlowFixMe: suppressing this error until we can refactor
+var x : string = 123;
+```
+
+and suppress the error. If there is no error on the next line (the suppression
+is unnecessary), an "Unused suppression" warning will be shown instead.
+
+If no suppression comments are specified in your config, Flow will apply one
+default: `// $FlowFixMe`.
+
+> **Note:** You can specify `suppress_comment` multiple times. If you do define
+> any `suppress_comment`s, the built-in `$FlowFixMe` suppression will be erased
+> in favor of the regexps you specify. If you wish to use `$FlowFixMe` with
+> some additional custom suppression comments, you must manually specify
+> `\\(.\\|\n\\)*\\$FlowFixMe` in your custom list of suppressions.
+
+> **Note:** In version v0.127.0, the option to specify the suppression comment
+> syntax was removed. `$FlowFixMe`, `$FlowIssue`, `$FlowExpectedError`,
+> and `$FlowIgnore` became the only standard suppressions.
+
+#### `types_first` _`(boolean)`_ {% since 0.125.0 %} {% until 0.142 %} <a class="toc" id="toc-types-first-boolean" href="#toc-types-first-boolean"></a>
 
 For more on types-first mode, see the [types-first docs](/en/docs/lang/types-first/).
 
@@ -521,7 +456,7 @@ using type annotations at module boundaries.
 
 The default value for `types_first` is `true` (as of version 0.134).
 
-#### `well_formed_exports` _`(boolean)`_ <a class="toc" id="toc-well-formed-exports-boolean" href="#toc-well-formed-exports-boolean"></a> {% since 0.125.0 %}
+#### `well_formed_exports` _`(boolean)`_ {% since 0.125.0 %} {% until 0.142 %} <a class="toc" id="toc-well-formed-exports-boolean" href="#toc-well-formed-exports-boolean"></a>
 
 Enforce the following restrictions on file exports:
 * Statements manipulating `module.exports` and the `exports` alias may only appear
@@ -535,7 +470,7 @@ This option is set to `true` by default, since it is implied by [`types_first`](
 but the option is useful on its own when upgrading a project from classic mode to
 types-first mode.
 
-#### `well_formed_exports.includes` _`(string)`_ {% since 0.128.0 %} <a class="toc" id="toc-well-formed-exports-includes-string" href="#toc-well-formed-exports-includes-string"></a>
+#### `well_formed_exports.includes` _`(string)`_ {% since 0.128.0 %} {% until 0.142 %} <a class="toc" id="toc-well-formed-exports-includes-string" href="#toc-well-formed-exports-includes-string"></a>
 
 
 Limit the scope of the `well_formed_exports` requirement to a specific directory
@@ -552,3 +487,69 @@ The purpose of this option is to help prepare a codebase for Flow types-first mo
 See [this section](#toc-seal-your-intermediate-results) for more.
 
 Between versions v0.125.0 and v0.127.0, this option was named `well_formed_exports.whitelist`.
+
+#### `esproposal.class_instance_fields` _`(enable|ignore|warn)`_ {% until 0.148 %} <a class="toc" id="toc-esproposal-class-instance-fields-enable-ignore-warn" href="#toc-esproposal-class-instance-fields-enable-ignore-warn"></a>
+
+Set this to `warn` to indicate that Flow should give a warning on use of
+instance [class fields](https://github.com/tc39/proposal-class-public-fields)
+per the pending spec.
+
+You may also set this to `ignore` to indicate that Flow should simply ignore
+the syntax (i.e. Flow will not use this syntax to indicate the presence of a
+property on instances of the class).
+
+The default value of this option is `enable`, which allows use of this proposed
+syntax.
+
+#### `esproposal.class_static_fields` _`(enable|ignore|warn)`_ {% until 0.148 %} <a class="toc" id="toc-esproposal-class-static-fields-enable-ignore-warn" href="#toc-esproposal-class-static-fields-enable-ignore-warn"></a>
+
+Set this to `warn` to indicate that Flow should give a warning on use of static
+[class fields](https://github.com/tc39/proposal-class-public-fields)
+per the pending spec.
+
+You may also set this to `ignore` to indicate that Flow should simply ignore
+the syntax (i.e. Flow will not use this syntax to indicate the presence of a
+static property on the class).
+
+The default value of this option is `enable`, which allows use of this proposed
+syntax.
+
+#### `esproposal.decorators` _`(ignore|warn)`_ {% until 0.148 %} <a class="toc" id="toc-esproposal-decorators-ignore-warn" href="#toc-esproposal-decorators-ignore-warn"></a>
+
+Set this to `ignore` to indicate that Flow should ignore decorators.
+
+The default value of this option is `warn`, which gives a warning on use since
+this proposal is still very early-stage.
+
+#### `esproposal.export_star_as` _`(enable|ignore|warn)`_ {% until 0.148 %} <a class="toc" id="toc-esproposal-export-star-as-enable-ignore-warn" href="#toc-esproposal-export-star-as-enable-ignore-warn"></a>
+
+Set this to `enable` to indicate that Flow should support the `export * as`
+syntax from [leebyron's proposal](https://github.com/leebyron/ecmascript-more-export-from).
+
+You may also set this to `ignore` to indicate that Flow should simply ignore
+the syntax. The default value of this option is `warn`, which gives a warning
+on use since this proposal is still very early-stage.
+
+#### `esproposal.optional_chaining` _`(enable|ignore|warn)`_ {% until 0.148 %} <a class="toc" id="toc-esproposal-optional-chaining-enable-ignore-warn" href="#toc-esproposal-optional-chaining-enable-ignore-warn"></a>
+
+Set this to `enable` to indicate that Flow should support the use of
+[optional chaining](https://github.com/tc39/proposal-optional-chaining)
+per the pending spec.
+
+You may also set this to `ignore` to indicate that Flow should simply ignore
+the syntax.
+
+The default value of this option is `warn`, which gives a warning on
+use since this proposal is still very early-stage.
+
+#### `esproposal.nullish_coalescing` _`(enable|ignore|warn)`_ {% until 0.148 %} <a class="toc" id="toc-esproposal-nullish-coalescing-enable-ignore-warn" href="#toc-esproposal-nullish-coalescing-enable-ignore-warn"></a>
+
+Set this to `enable` to indicate that Flow should support the use of
+[nullish coalescing](https://github.com/tc39/proposal-nullish-coalescing)
+per the pending spec.
+
+You may also set this to `ignore` to indicate that Flow should simply ignore
+the syntax.
+
+The default value of this option is `warn`, which gives a warning on
+use since this proposal is still very early-stage.

@@ -5,3 +5,6 @@
 [libs]
 
 [options]
+
+facebook.fbt=FbtElement
+no_flowlib=false

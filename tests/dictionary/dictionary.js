@@ -246,7 +246,7 @@ function subtype_dict_to_obj(
 }
 
 function subtype_obj_to_dict(
-  x: {p:B},
+  x: {| p:B |},
 ) {
   let a: {[k:string]:A} = x; // error
   a.p = new A; // x.p no longer B
@@ -260,7 +260,7 @@ function subtype_obj_to_dict(
 // Only props in l which are not in u must match indexer, but must do so
 // exactly.
 function subtype_obj_to_mixed(
-  x: {p:B, x:X},
+  x: {| p:B, x:X |},
 ) {
   let a: {[k:string]:A,x:X} = x; // error (as above), but exclusive of x
   let b: {[k:string]:B,x:X} = x; // ok,
@@ -302,19 +302,19 @@ function subtype_dict_to_optional_c(
 }
 
 function subtype_optional_a_to_dict(
-  x: {p?:A},
+  x: {| p?:A |},
 ): {[k:string]:B} { // error: A ~> B
   return x;
 }
 
 function subtype_optional_b_to_dict(
-  x: {p?:B},
+  x: {| p?:B |},
 ): {[k:string]:B} { // ok
   return x;
 }
 
 function subtype_optional_c_to_dict(
-  x: {p?:C},
+  x: {| p?:C |},
 ): {[k:string]:B} { // error: C ~> B
   return x;
 }

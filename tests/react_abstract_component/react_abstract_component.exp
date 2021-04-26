@@ -318,11 +318,11 @@ References:
    create_element.js:15:32
     15| const refBad = React.createRef<string>();
                                        ^^^^^^ [2]
-   <BUILTINS>/react.js:249:6
-   249|   ): {|current: null | T|};
+   <BUILTINS>/react.js:264:6
+   264|   ): {|current: null | T|};
              ^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:198:6
-   198|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:213:6
+   213|   | ((React$ElementRef<ElementType> | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -337,11 +337,11 @@ Cannot create `C` element because in property `key`: [incompatible-type]
                                                         ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:191:26
-   191| declare type React$Key = string | number;
+   <BUILTINS>/react.js:206:26
+   206| declare type React$Key = string | number;
                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:191:35
-   191| declare type React$Key = string | number;
+   <BUILTINS>/react.js:206:35
+   206| declare type React$Key = string | number;
                                           ^^^^^^ [3]
 
 
@@ -439,24 +439,6 @@ References:
    error_positioning/error_positioning.js:24:4
    24| ): MockFn<TArguments, TReturn>
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error --------------------------------------------------------------------- error_positioning/error_positioning.js:39:13
-
-Cannot create `C` element because property `component` is missing in object type [1] but exists in props [2] in property
-`component`. [prop-missing]
-
-   error_positioning/error_positioning.js:39:13
-   39| const _a = <C component={View}></ C>;
-                   ^
-
-References:
-   error_positioning/View.js:4:54
-    4| type ViewNativeComponentType = Class<React.Component<{||}>>;
-                                                            ^^^^ [1]
-   error_positioning/C.js:16:7
-   16|       <Component {...this.props} />
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- function_lower.js:7:2
@@ -585,8 +567,8 @@ Cannot call `x.displayName.toString` because property `toString` is missing in n
                         ^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:131:17
-   131|   displayName?: ?string,
+   <BUILTINS>/react.js:146:17
+   146|   displayName?: ?string,
                         ^^^^^^^ [1]
 
 
@@ -599,8 +581,8 @@ Cannot call `x.displayName.toString` because property `toString` is missing in u
                         ^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:131:17
-   131|   displayName?: ?string,
+   <BUILTINS>/react.js:146:17
+   146|   displayName?: ?string,
                         ^^^^^^^ [1]
 
 
@@ -628,16 +610,16 @@ Cannot get `x.definitelyNotHere` because property `definitelyNotHere` is missing
             ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:130:47
+   <BUILTINS>/react.js:145:47
                                                       v
-   130| declare type React$AbstractComponentStatics = {
-   131|   displayName?: ?string,
-   132|   // This is only on function components, but trying to access name when
-   133|   // displayName is undefined is a common pattern.
-   134|   name?: ?string,
-   135|   propTypes?: {[string] : any, ...},
-   136|   ...
-   137| };
+   145| declare type React$AbstractComponentStatics = {
+   146|   displayName?: ?string,
+   147|   // This is only on function components, but trying to access name when
+   148|   // displayName is undefined is a common pattern.
+   149|   name?: ?string,
+   150|   propTypes?: {[string] : any, ...},
+   151|   ...
+   152| };
         ^ [1]
 
 
@@ -650,8 +632,8 @@ Cannot assign `3` to `x.displayName` because number [1] is incompatible with str
                           ^ [1]
 
 References:
-   <BUILTINS>/react.js:131:18
-   131|   displayName?: ?string,
+   <BUILTINS>/react.js:146:18
+   146|   displayName?: ?string,
                          ^^^^^^ [2]
 
 
@@ -681,8 +663,8 @@ References:
    strict.js:4:11
      4| const c = <Component f = {3}/>;
                   ^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:172:29
-   172|   | React$AbstractComponent<empty, mixed>;
+   <BUILTINS>/react.js:187:29
+   187|   | React$AbstractComponent<empty, mixed>;
                                     ^^^^^ [2]
 
 
@@ -714,8 +696,8 @@ Cannot call `foo` with `ref` bound to `a` because mixed [1] is incompatible with
             ^^^
 
 References:
-   <BUILTINS>/react.js:172:36
-   172|   | React$AbstractComponent<empty, mixed>;
+   <BUILTINS>/react.js:187:36
+   187|   | React$AbstractComponent<empty, mixed>;
                                            ^^^^^ [1]
    strict.js:7:26
      7| declare function foo(a: ?React$Component<any, any>): void;
@@ -731,39 +713,31 @@ Property `notOnEitherSFCOrClass` is missing in `React.AbstractComponentStatics` 
               ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:130:47
+   <BUILTINS>/react.js:145:47
                                                       v
-   130| declare type React$AbstractComponentStatics = {
-   131|   displayName?: ?string,
-   132|   // This is only on function components, but trying to access name when
-   133|   // displayName is undefined is a common pattern.
-   134|   name?: ?string,
-   135|   propTypes?: {[string] : any, ...},
-   136|   ...
-   137| };
+   145| declare type React$AbstractComponentStatics = {
+   146|   displayName?: ?string,
+   147|   // This is only on function components, but trying to access name when
+   148|   // displayName is undefined is a common pattern.
+   149|   name?: ?string,
+   150|   propTypes?: {[string] : any, ...},
+   151|   ...
+   152| };
         ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- type_visitor.js:10:18
 
-Missing type annotation for `Config`. `Config` is a type parameter declared in function type [1] and was implicitly
-instantiated at call of `HOC` [2]. [missing-annot]
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. [signature-verification-failure]
 
-   type_visitor.js:10:18
    10| module.exports = HOC(A); // Error, missing annotation only for Config
-                        ^^^^^^ [2]
-
-References:
-   type_visitor.js:4:21
-                           v----------------------
-    4| declare function HOC<Config: {}, Instance>(
-    5|     x: React.AbstractComponent<Config, Instance>,
-    6| ): React.AbstractComponent<Config, Instance>;
-       -------------------------------------------^ [1]
+                        ^^^^^^
 
 
 
-Found 45 errors
+Found 44 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

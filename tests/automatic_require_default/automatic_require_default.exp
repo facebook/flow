@@ -3,13 +3,13 @@ Error --------------------------------------------------------------------------
 Cannot get `Default.T` because property `T` is missing in `Number` [1]. [prop-missing]
 
    imports.js:11:14
-   11| (1 : Default.T); // error T missing in number
-                    ^
+    11| (1 : Default.T); // error T missing in number
+                     ^
 
 References:
-   default_export.js:3:16
-    3| export default 1;
-                      ^ [1]
+   <BUILTINS>/core.js:363:15
+   363| declare class Number {
+                      ^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- react.js:10:13
@@ -21,8 +21,8 @@ Cannot get `React.NotAType` because property `NotAType` is missing in module `re
                     ^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:455:27
-   455|   declare module.exports: $Exports<'react'>;
+   <BUILTINS>/react.js:469:27
+   469|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 

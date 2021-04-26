@@ -50,6 +50,7 @@ type error_code =
   | IncompatibleCast
   | IncompatibleExact
   | IncompatibleExtend
+  | IncompatibleFunctionIndexer
   | IncompatibleIndexer
   | IncompatibleReturn
   | IncompatibleShape
@@ -58,6 +59,7 @@ type error_code =
   | IncompatibleTypeArg
   | IncompatibleUse
   | IncompatibleVariance
+  | IndexedAccessNotEnabled
   | InvalidCallUtil
   | InvalidCharsetTypeArg
   | InvalidCompare
@@ -99,6 +101,7 @@ type error_code =
   | MissingExport
   | MissingTypeArg
   | MixedImportAndRequire
+  | ToplevelLibraryImport
   | ModuleTypeConflict
   | NameAlreadyBound
   | NonConstVarExport
@@ -125,10 +128,12 @@ type error_code =
   | SketchyNumberAnd
   | Speculation
   | SpeculationAmbiguous
+  | SuperOutsideMethod
   | ThisInExportedFunction
   | TypeAsValue
   | UnclearAddition
   | UnclearType
+  | UnderconstrainedImplicitInstantiation
   | UninitializedInstanceProperty
   | UnnecessaryInvariant
   | UnnecessaryOptionalChain
@@ -211,6 +216,7 @@ let string_of_code : error_code -> string = function
   | IncompatibleCast -> "incompatible-cast"
   | IncompatibleExact -> "incompatible-exact"
   | IncompatibleExtend -> "incompatible-extend"
+  | IncompatibleFunctionIndexer -> "incompatible-function-indexer"
   | IncompatibleIndexer -> "incompatible-indexer"
   | IncompatibleReturn -> "incompatible-return"
   | IncompatibleShape -> "incompatible-shape"
@@ -219,6 +225,7 @@ let string_of_code : error_code -> string = function
   | IncompatibleTypeArg -> "incompatible-type-arg"
   | IncompatibleUse -> "incompatible-use"
   | IncompatibleVariance -> "incompatible-variance"
+  | IndexedAccessNotEnabled -> "indexed-access-off"
   | InvalidCallUtil -> "invalid-call-util"
   | InvalidCharsetTypeArg -> "invalid-charset-type-arg"
   | InvalidCompare -> "invalid-compare"
@@ -286,10 +293,13 @@ let string_of_code : error_code -> string = function
   | SketchyNumberAnd -> "sketchy-number-and"
   | Speculation -> "speculation"
   | SpeculationAmbiguous -> "speculation-ambiguous"
+  | SuperOutsideMethod -> "super-outside-method"
   | ThisInExportedFunction -> "this-in-exported-function"
+  | ToplevelLibraryImport -> "toplevel-library-import"
   | TypeAsValue -> "type-as-value"
   | UnclearAddition -> "unclear-addition"
   | UnclearType -> "unclear-type"
+  | UnderconstrainedImplicitInstantiation -> "underconstrained-implicit-instantiation"
   | UninitializedInstanceProperty -> "uninitialized-instance-property"
   | UnnecessaryInvariant -> "unnecessary-invariant"
   | UnnecessaryOptionalChain -> "unnecessary-optional-chain"

@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Type
+open Trust
 
-type ident = Type.ident
+type ident = int
 
 type bounds
 

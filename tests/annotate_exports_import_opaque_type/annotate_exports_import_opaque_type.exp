@@ -4,7 +4,7 @@
 >>> ./main.js
 // @flow
 
-'use strict';import type {O} from "./lib";
+'use strict';import type { O } from "./lib";
 
 const o = require('./lib');
 
@@ -44,7 +44,7 @@ Warnings:
 >>> ./main.js
 // @flow
 
-'use strict';import type {O} from "./lib";
+'use strict';import type { O } from "./lib";
 
 const o = require('./lib');
 

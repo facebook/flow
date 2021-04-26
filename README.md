@@ -47,9 +47,9 @@
 
 Flow works with:
 
-* macOS
-* Linux (64-bit)
-* Windows (64-bit, Windows 10 recommended)
+* macOS (x86_64)
+* Linux (x86_64 and arm64)
+* Windows (x86_64, Windows 10 recommended)
 
 There are [binary distributions](https://github.com/facebook/flow/releases) for each of these platforms and you can also build it from source on any of them as well.
 
@@ -65,57 +65,63 @@ Flow-typed JavaScript can use this to generate Flow's syntax tree with annotated
 
 ## Building Flow from source
 
-Flow is written in OCaml (OCaml 4.07.1 is required).
+Flow is written in OCaml (OCaml 4.09.1 is required).
 
-1. Install [`opam`](https://opam.ocaml.org):
+1. Install system dependencies:
 
-  - Mac: `brew install opam`
-  - Debian: `sudo apt-get install opam`
-  - Other Linux: see [opam docs](https://opam.ocaml.org/doc/Install.html)
-  - Windows: see [OCaml for Windows docs](https://fdopen.github.io/opam-repository-mingw/installation/)
+    - Mac: `brew install opam`
+    - Debian: `sudo apt-get install opam`
+    - Other Linux: see [opam docs](https://opam.ocaml.org/doc/Install.html)
+    - Windows: [cygwin](https://cygwin.com/) and a number of dependencies like `make`, `gcc` and `g++` are required.
+
+      One way to install everything is to install [Chocolaty](https://chocolatey.org/) and then run `.\scripts\windows\install_deps.ps1` and `.\scripts\windows\install_opam.ps1`. Otherwise, see the "Manual Installation" section of [OCaml for Windows docs](https://fdopen.github.io/opam-repository-mingw/installation/) and install all of the packages listed in our `install_deps.ps1`.
+
+      The remainder of these instructions should be run inside the Cygwin shell: `C:\tools\cygwin\Cygwin`. Then `cd /cygdrive/c/Users/you/path/to/checkout`.
 
 2. Validate the `opam` version is `2.x.x`:
 
-  ```sh
-  opam --version
-  ```
+    ```sh
+    opam --version
+    ```
 
-  The following instructions expect `2.x.x`.
-  Should your package manager have installed a `1.x.x` version,
-  please refer to the [opam docs](https://opam.ocaml.org/doc/Install.html) to install a newer version manually.
+    The following instructions expect `2.x.x`. Should your package manager have installed a `1.x.x` version, please refer to the [opam docs](https://opam.ocaml.org/doc/Install.html) to install a newer version manually.
 
 3. Initialize `opam`:
 
-  ```sh
-  opam init
-  ```
+    ```sh
+    # on Mac and Linux:
+    opam init
 
-4. Install OCaml and Flow's dependencies:
+    # on Windows:
+    scripts/windows/init_opam.sh
+    ```
 
-  ```sh
-  # from within this git checkout
-  opam switch create . --deps-only -y
-  ```
+4. Install Flow's OCaml dependencies:
+
+    ```sh
+    # from within this git checkout
+    make deps
+    ```
 
 5. Build the `flow` binary:
 
-  ```sh
-  eval $(opam env)
-  make
-  ```
+    ```sh
+    eval $(opam env)
+    make
+    ```
 
-  This produces the `bin/flow` binary.
+    This produces the `bin/flow` binary.
 
 6. Build `flow.js` (optional):
 
-  ```sh
-  opam install -y js_of_ocaml.3.4.0
-  make js
-  ```
+    ```sh
+    opam install -y js_of_ocaml.3.7.1
+    make js
+    ```
 
-  This produces `bin/flow.js`.
+    This produces `bin/flow.js`.
 
-  The Flow parser can also be compiled to JavaScript. [Read how here](src/parser/README.md).
+    The Flow parser can also be compiled to JavaScript. [Read how here](src/parser/README.md).
 
 ## Running the tests
 

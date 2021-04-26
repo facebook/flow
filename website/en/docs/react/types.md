@@ -270,6 +270,16 @@ type ElementType =
   | React.ComponentType<any>;
 ```
 
+## `React.MixedElement` <a class="toc" id="toc-react-mixedelement" href="#toc-react-mixedelement"></a>
+
+The most general type of all React elements (similar to `mixed` for all values). `React.MixedElement` is defined as
+`React.Element<React.ElementType>`.
+
+A common use case of this type is when we want to annotate an element with a type that hides the element details. For example
+```js
+const element: React.MixedElement = <div />;
+```
+
 ## `React.Key` <a class="toc" id="toc-react-key" href="#toc-react-key"></a>
 
 The type of the key prop on React elements. It is a union of strings and

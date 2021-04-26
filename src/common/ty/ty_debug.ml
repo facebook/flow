@@ -44,7 +44,7 @@ let ctor_of_provenance = function
 let dump_symbol { sym_provenance; sym_def_loc; sym_name; _ } =
   Utils_js.spf
     "%s (%s:%s)"
-    sym_name
+    (Reason.display_string_of_name sym_name)
     (ctor_of_provenance sym_provenance)
     (Reason.string_of_aloc sym_def_loc)
 
@@ -147,7 +147,8 @@ and dump_prop ~depth = function
   | SpreadProp t -> dump_spread ~depth t
 
 and dump_named_prop ~depth x = function
-  | Field { t; polarity; optional } -> dump_field ~depth x t polarity optional
+  | Field { t; polarity; optional } ->
+    dump_field ~depth (Reason.display_string_of_name x) t polarity optional
   | Method t -> dump_fun_t ~depth t
   | Get t -> spf "get %s" (dump_t ~depth t)
   | Set t -> spf "get %s" (dump_t ~depth t)
@@ -218,9 +219,9 @@ and dump_t ?(depth = 10) t =
     | Num (Some x) -> spf "Num (%s)" x
     | Num None -> "Num"
     | NumLit s -> spf "\"%s\"" s
-    | Str (Some x) -> spf "Str (%s)" x
+    | Str (Some x) -> spf "Str (%s)" (Reason.display_string_of_name x)
     | Str None -> "Str"
-    | StrLit s -> spf "\"%s\"" s
+    | StrLit s -> spf "\"%s\"" (Reason.display_string_of_name s)
     | Bool (Some x) -> spf "Bool (%b)" x
     | Bool None -> "Bool"
     | BoolLit b -> spf "\"%b\"" b
@@ -243,6 +244,12 @@ and dump_t ?(depth = 10) t =
         (spf "{ %s %s }" (dump_list (dump_prop ~depth) if_props) dict)
     | TypeOf v -> spf "Typeof (%s)" (builtin_value v)
     | Utility u -> dump_utility ~depth u
+    | IndexedAccess { _object; index; optional } ->
+      spf
+        "IndexedAccess (%s) (%s) (optional=%b)"
+        (dump_t ~depth _object)
+        (dump_t ~depth index)
+        optional
     | Mu (i, t) -> spf "Mu (%d, %s)" i (dump_t ~depth t)
     | CharSet s -> spf "CharSet (%s)" s
 
@@ -262,7 +269,8 @@ and dump_module ~depth name exports _default =
   spf "Module(%s, %s)" name exports
 
 and dump_decl ~depth = function
-  | VariableDecl (name, t) -> spf "VariableDecl (%s, %s)" name (dump_t ~depth t)
+  | VariableDecl (name, t) ->
+    spf "VariableDecl (%s, %s)" (Reason.display_string_of_name name) (dump_t ~depth t)
   | TypeAliasDecl { import; name; tparams; type_ } ->
     spf
       "TypeAlias (import=%b, %s, %s, %s)"
@@ -315,6 +323,7 @@ let string_of_ctor_t = function
   | InlineInterface _ -> "InlineInterface"
   | TypeOf _ -> "Typeof"
   | Utility _ -> "Utility"
+  | IndexedAccess _ -> "IndexedAccess"
   | Mu _ -> "Mu"
   | CharSet _ -> "CharSet"
 
@@ -340,7 +349,7 @@ let json_of_elt ~strip_root =
       JSON_Object
         [
           ("provenance", json_of_provenance sym_def_loc sym_provenance);
-          ("name", JSON_String sym_name);
+          ("name", JSON_String (Reason.display_string_of_name sym_name));
         ])
   in
   let json_of_builtin_value =
@@ -372,9 +381,8 @@ let json_of_elt ~strip_root =
       | Str _
       | Bool _ ->
         []
-      | NumLit s
-      | StrLit s ->
-        [("literal", JSON_String s)]
+      | NumLit s -> [("literal", JSON_String s)]
+      | StrLit s -> [("literal", JSON_String (Reason.display_string_of_name s))]
       | BoolLit b -> [("literal", JSON_Bool b)]
       | Fun f -> json_of_fun_t f
       | Obj o -> json_of_obj_t o
@@ -397,13 +405,18 @@ let json_of_elt ~strip_root =
           ])
       | TypeOf b -> [("name", json_of_builtin_value b)]
       | Utility u -> json_of_utility u
+      | IndexedAccess { _object; index; optional } ->
+        [
+          ("object", json_of_t _object); ("index", json_of_t index); ("optional", JSON_Bool optional);
+        ]
       | Mu (i, t) -> [("mu_var", int_ i); ("type", json_of_t t)]
       | CharSet s -> [("literal", JSON_String s)])
   and json_of_tvar (RVar i) = Hh_json.[("id", int_ i)]
   and json_of_generic (s, k, targs_opt) =
     json_of_targs targs_opt
     @ [
-        ("type", json_of_symbol s); ("kind", Hh_json.JSON_String (Ty.debug_string_of_generic_kind k));
+        ("type", json_of_symbol s);
+        ("generic_kind", Hh_json.JSON_String (Ty.debug_string_of_generic_kind k));
       ]
   and json_of_fun_t { fun_params; fun_rest_param; fun_return; fun_type_params; fun_static } =
     let open Hh_json in
@@ -470,19 +483,23 @@ let json_of_elt ~strip_root =
     Hh_json.(
       JSON_Object
         (match prop with
-        | NamedProp { name; prop; from_proto } ->
+        | NamedProp { name; prop; from_proto; def_loc } ->
           [
             ("kind", JSON_String "NamedProp");
             ( "prop",
               JSON_Object
                 [
-                  ("name", JSON_String name);
+                  ("name", JSON_String (Reason.display_string_of_name name));
                   ("prop", json_of_named_prop prop);
                   ("from_proto", JSON_Bool from_proto);
+                  ( "def_loc",
+                    match def_loc with
+                    | None -> JSON_Null
+                    | Some loc -> JSON_String (Reason.string_of_aloc loc) );
                 ] );
           ]
         | CallProp ft ->
-          [("kind", JSON_String "NamedProp"); ("prop", JSON_Object (json_of_fun_t ft))]
+          [("kind", JSON_String "CallProp"); ("prop", JSON_Object (json_of_fun_t ft))]
         | SpreadProp t -> [("kind", JSON_String "SpreadProp"); ("prop", json_of_t t)]))
   and json_of_dict { dict_polarity; dict_name; dict_key; dict_value } =
     Hh_json.(
@@ -499,7 +516,7 @@ let json_of_elt ~strip_root =
         (match p with
         | Field { t; polarity; optional } ->
           [
-            ("kind", JSON_String "field");
+            ("kind", JSON_String "Field");
             ("type", json_of_t t);
             ("polarity", json_of_polarity polarity);
             ("optional", JSON_Bool optional);
@@ -525,7 +542,8 @@ let json_of_elt ~strip_root =
   let json_of_decl =
     let open Hh_json in
     function
-    | VariableDecl (name, t) -> [("name", JSON_String name); ("type_", json_of_t t)]
+    | VariableDecl (name, t) ->
+      [("name", JSON_String (Reason.display_string_of_name name)); ("type_", json_of_t t)]
     | TypeAliasDecl { name; tparams; type_; _ } ->
       [
         ("name", json_of_symbol name);

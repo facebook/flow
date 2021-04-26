@@ -20,8 +20,8 @@ end
 module Entry : sig
   type value_kind =
     | Const of const_binding_kind
-    | Let of let_binding_kind
-    | Var of var_binding_kind
+    | Let of (let_binding_kind * non_const_specialization)
+    | Var of non_const_specialization
 
   and const_binding_kind =
     | ConstImportBinding
@@ -31,16 +31,15 @@ module Entry : sig
 
   and let_binding_kind =
     | LetVarBinding
-    | ConstlikeLetVarBinding
     | ClassNameBinding
     | CatchParamBinding
     | FunctionBinding
     | ParamBinding
-    | ConstlikeParamBinding
 
-  and var_binding_kind =
-    | VarBinding
-    | ConstlikeVarBinding
+  and non_const_specialization =
+    | Havocable
+    | NotWrittenByClosure
+    | ConstLike
 
   val string_of_let_binding_kind : let_binding_kind -> string
 
@@ -53,6 +52,7 @@ module Entry : sig
     value_assign_loc: ALoc.t;
     specific: Type.t;
     general: Type.annotated_or_inferred;
+    closure_writes: (Loc_collections.ALocSet.t * Type.t) option;
   }
 
   type type_binding_kind =
@@ -73,21 +73,24 @@ module Entry : sig
 
   val new_class : ALoc.id -> Type.Properties.id -> Type.Properties.id -> t
 
-  val new_value : value_kind -> State.t -> Type.t -> Type.annotated_or_inferred -> ALoc.t -> t
-
   val new_const :
     loc:ALoc.t -> ?state:State.t -> ?kind:const_binding_kind -> Type.annotated_or_inferred -> t
 
   val new_import : loc:ALoc.t -> Type.t -> t
 
   val new_let :
-    loc:ALoc.t -> ?state:State.t -> ?kind:let_binding_kind -> Type.annotated_or_inferred -> t
+    loc:ALoc.t ->
+    ?state:State.t ->
+    ?kind:let_binding_kind * non_const_specialization ->
+    ?closure_writes:Loc_collections.ALocSet.t * Type.t ->
+    Type.annotated_or_inferred ->
+    t
 
   val new_var :
     loc:ALoc.t ->
     ?state:State.t ->
-    ?kind:var_binding_kind ->
     ?specific:Type.t ->
+    ?closure_writes:Loc_collections.ALocSet.t * Type.t ->
     Type.annotated_or_inferred ->
     t
 
@@ -111,9 +114,9 @@ module Entry : sig
 
   val state_of_value : value_binding -> State.t
 
-  val havoc : string -> t -> t
+  val havoc : ?on_call:(Type.t -> Type.t -> Type.t -> Type.t) -> Reason.name -> t -> t
 
-  val reset : ALoc.t -> string -> t -> t
+  val reset : ALoc.t -> Reason.name -> t -> t
 
   val is_lex : t -> bool
 end
@@ -145,7 +148,7 @@ type refi_binding = {
 type t = {
   id: int;
   kind: kind;
-  mutable entries: Entry.t SMap.t;
+  mutable entries: Entry.t NameUtils.Map.t;
   mutable refis: refi_binding Key_map.t;
   mutable declare_func_annots: (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation SMap.t;
 }
@@ -158,17 +161,15 @@ val fresh_lex : unit -> t
 
 val clone : t -> t
 
-val iter_entries : (SMap.key -> Entry.t -> unit) -> t -> unit
+val iter_entries : (Reason.name -> Entry.t -> unit) -> t -> unit
 
-val update_entries : (SMap.key -> Entry.t -> Entry.t) -> t -> unit
+val update_entries : (Reason.name -> Entry.t -> Entry.t) -> t -> unit
 
-val add_entry : SMap.key -> Entry.t -> t -> unit
+val add_entry : Reason.name -> Entry.t -> t -> unit
 
-val remove_entry : SMap.key -> t -> unit
+val remove_entry : Reason.name -> t -> unit
 
-val get_entry : SMap.key -> t -> Entry.t option
-
-val havoc_entry : SMap.key -> t -> unit
+val get_entry : Reason.name -> t -> Entry.t option
 
 val update_refis : (Key_map.key -> refi_binding -> refi_binding) -> t -> unit
 

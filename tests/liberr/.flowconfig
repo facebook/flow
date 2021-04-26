@@ -5,4 +5,8 @@
 [libs]
 libs/
 
+[lints]
+
 [options]
+
+[strict]

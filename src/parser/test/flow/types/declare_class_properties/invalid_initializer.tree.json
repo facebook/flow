@@ -2,7 +2,7 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":2,"column":20},"end":{"line":2,"column":21}},
-      "message":"Initializers are not allowed in a `declare`."
+      "message":"Unexpected token `=`. Initializers are not allowed in a `declare`."
     }
   ],
   "type":"Program",

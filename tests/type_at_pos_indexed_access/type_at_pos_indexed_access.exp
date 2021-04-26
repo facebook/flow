@@ -1,0 +1,10 @@
+test.js:3:6
+Flags:
+type T = O["a"]
+test.js:3:6,3:6
+
+test.js:8:6
+Flags:
+type S = M?.["a"]
+test.js:8:6,8:6
+

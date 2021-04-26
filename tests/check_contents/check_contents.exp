@@ -9,6 +9,59 @@ Unexpected end of input
 
 
 Found 1 error
+docblock_error.js
+Error ------------------------------------------------------------------------------------------- docblock_error.js:1:10
+
+Unexpected `@flow` declaration. Only one per file is allowed. [duplicate-flow-decl]
+
+   1| // @flow @flow
+               ^^^^^
+
+
+
+Found 1 error
+docblock_error_with_syntax_error.js
+Error ------------------------------------------------------------------------- docblock_error_with_syntax_error.js:1:10
+
+Unexpected `@flow` declaration. Only one per file is allowed. [duplicate-flow-decl]
+
+   1| // @flow @flow
+               ^^^^^
+
+
+Error -------------------------------------------------------------------------- docblock_error_with_syntax_error.js:4:1
+
+Unexpected end of input
+
+   4|
+      
+
+
+
+Found 2 errors
+docblock_error_with_module_type_conflict.js
+Error ----------------------------------------------------------------- docblock_error_with_module_type_conflict.js:1:10
+
+Unexpected `@flow` declaration. Only one per file is allowed. [duplicate-flow-decl]
+
+   1| // @flow @flow
+               ^^^^^
+
+
+
+Found 1 error
+module_type_conflict.js
+Error -------------------------------------------------------------------------------------- module_type_conflict.js:5:1
+
+Unable to determine module type (CommonJS vs ES) if both an export statement and `module.exports` are used in the same
+module! [module-type-conflict]
+
+   5| module.exports.bar = function (): void {}
+      ^^^^^^^^^^^^^^
+
+
+
+Found 1 error
 syntax_error.js (no filename)
 Error ------------------------------------------------------------------------------------------------------------ -:4:1
 
@@ -87,3 +140,8 @@ annotation at function return: [signature-verification-failure]
 
 
 Found 1 error
+
+
+json.json
+
+No errors!

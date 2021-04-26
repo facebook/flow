@@ -32,7 +32,8 @@ val recheck :
   file_watcher_metadata:MonitorProt.file_watcher_metadata ->
   recheck_reasons:LspProt.recheck_reason list ->
   will_be_checked_files:CheckedSet.t ref ->
-  ((profiling:Profiling_js.finished -> unit) * ServerStatus.summary_info * ServerEnv.env) Lwt.t
+  ((profiling:Profiling_js.finished -> unit Lwt.t) * ServerStatus.summary_info * ServerEnv.env)
+  Lwt.t
 
 (* initial (full) check *)
 val full_check :
@@ -43,45 +44,33 @@ val full_check :
   ServerEnv.env ->
   (ServerEnv.env * string option) Lwt.t
 
-val type_contents :
+val parse_contents :
+  options:Options.t ->
+  profiling:Profiling_js.running ->
+  (* contents *)
+  string ->
+  (* fake file-/module name *)
+  File_key.t ->
+  (Types_js_types.parse_artifacts option * Flow_error.ErrorSet.t) Lwt.t
+
+val type_parse_artifacts :
   options:Options.t ->
   env:ServerEnv.env ->
   profiling:Profiling_js.running ->
-  string ->
-  (* contents *)
-  File_key.t ->
   (* fake file-/module name *)
-  ( Context.t
-    * Docblock.t
-    * File_sig.With_Loc.t
-    * File_sig.With_Loc.tolerable_error list
-    * (Loc.t, Loc.t) Flow_ast.Program.t
-    * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
-    * (Loc.t * Parse_error.t) list,
-    string )
-  result
-  Lwt.t
+  File_key.t ->
+  Types_js_types.parse_artifacts option * Flow_error.ErrorSet.t ->
+  (Types_js_types.file_artifacts, Flow_error.ErrorSet.t) result Lwt.t
 
-val typecheck_contents :
+val printable_errors_of_file_artifacts_result :
   options:Options.t ->
   env:ServerEnv.env ->
-  profiling:Profiling_js.running ->
-  string ->
-  (* contents *)
-  File_key.t ->
   (* fake file-/module name *)
-  ( ( Context.t
-    * (Loc.t, Loc.t) Flow_ast.Program.t
-    * File_sig.With_Loc.t
-    * File_sig.With_Loc.tolerable_error list
-    * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t )
-    option
-  * Errors.ConcreteLocPrintableErrorSet.t
-  * (* errors *)
-    Errors.ConcreteLocPrintableErrorSet.t )
-  Lwt.t
-
-(* warnings *)
+  File_key.t ->
+  (Types_js_types.file_artifacts, Flow_error.ErrorSet.t) result ->
+  (* errors *)
+  Errors.ConcreteLocPrintableErrorSet.t * (* warnings *)
+                                          Errors.ConcreteLocPrintableErrorSet.t
 
 val ensure_checked_dependencies :
   options:Options.t ->

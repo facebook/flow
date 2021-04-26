@@ -19,13 +19,13 @@ val substring : string -> int -> int -> t
 
 val subbytes : bytes -> int -> int -> t
 
-val channel : Pervasives.in_channel -> int -> t
+val channel : Stdlib.in_channel -> int -> t
 
 val file : string -> t
 
-val output : Pervasives.out_channel -> t -> unit
+val output : Stdlib.out_channel -> t -> unit
 
-val input : Pervasives.in_channel -> t
+val input : Stdlib.in_channel -> t
 
 val to_hex : t -> string
 

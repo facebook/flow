@@ -15,7 +15,7 @@ let mk_module_t cx reason =
   ModuleT
     ( reason,
       {
-        exports_tmap = Context.make_export_map cx SMap.empty;
+        exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
         cjs_export = None;
         has_every_named_export = false;
       },
@@ -33,7 +33,7 @@ let mk_module_t cx reason =
 let mk_commonjs_module_t cx reason_exports_module reason export_t =
   let exporttypes =
     {
-      exports_tmap = Context.make_export_map cx SMap.empty;
+      exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
       cjs_export = Some export_t;
       has_every_named_export = false;
     }
@@ -76,47 +76,6 @@ let import_ns cx reason source =
   Tvar.mk_where cx reason (fun t ->
       Flow.flow cx (module_t, ImportModuleNsT (reason, t, Context.is_strict cx)))
 
-(**
- * Given an exported default declaration, identify nameless declarations and
- * name them with a special internal name that can be used to reference them
- * when assigning the export value.
- *
- * Paired with function which undoes this, for typed AST construction
- *)
-let nameify_default_export_decl decl =
-  let open Flow_ast.Statement in
-  let identity x = x in
-  match decl with
-  | (loc, FunctionDeclaration func_decl) ->
-    let open Flow_ast.Function in
-    if func_decl.id <> None then
-      (decl, identity)
-    else
-      ( ( loc,
-          FunctionDeclaration
-            {
-              func_decl with
-              id = Some (Flow_ast_utils.ident_of_source (loc, internal_name "*default*"));
-            } ),
-        (function
-        | (x, FunctionDeclaration func_decl) -> (x, FunctionDeclaration { func_decl with id = None })
-        | _ -> failwith "expected FunctionDeclaration") )
-  | (loc, ClassDeclaration class_decl) ->
-    let open Flow_ast.Class in
-    if class_decl.id <> None then
-      (decl, identity)
-    else
-      ( ( loc,
-          ClassDeclaration
-            {
-              class_decl with
-              id = Some (Flow_ast_utils.ident_of_source (loc, internal_name "*default*"));
-            } ),
-        (function
-        | (x, ClassDeclaration class_decl) -> (x, ClassDeclaration { class_decl with id = None })
-        | _ -> failwith "expected ClassDeclaration") )
-  | _ -> (decl, identity)
-
 (* Module exports are treated differently than `exports`. The latter is a
    variable that is implicitly set to the empty object at the top of a
    module. As such, properties can be added to it throughout the module,
@@ -150,9 +109,17 @@ let export_star cx loc ns =
   | Ok () -> ()
   | Error msg -> Flow.add_output cx msg
 
-let export_type cx = Module_info.export_type (Context.module_info cx)
+let export_type cx name = Module_info.export_type (Context.module_info cx) name
 
 let export_type_star cx = Module_info.export_type_star (Context.module_info cx)
+
+let export_binding cx name loc = function
+  | Flow_ast.Statement.ExportValue ->
+    let t = Env.var_ref ~lookup_mode:Env.LookupMode.ForValue cx name loc in
+    export cx name loc t
+  | Flow_ast.Statement.ExportType ->
+    let t = Env.var_ref ~lookup_mode:Env.LookupMode.ForType cx name loc in
+    export_type cx name (Some loc) t
 
 (* After we have seen all the export statements in a module, this function will
  * calculate a ModuleT type (or a tvar that resolves to one) describing the

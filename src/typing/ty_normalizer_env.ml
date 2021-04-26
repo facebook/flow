@@ -27,16 +27,6 @@ type options = {
    * WARNING: This can cause a blow-up in the size of the produced types.
    *)
   expand_type_aliases: bool;
-  (* MergedT is somewhat unconventional. It introduces UseT's that the
-   * normalizer is not intended to handle. If this flag is set to true, all
-   * instances of MergedT will fall through and return Top. Otherwise, we
-   * attempt to convert the use_t's under the MergedT. This operation only
-   * succeeds if the use is a UseT and the underlying type is successfully
-   * normalized.
-   *
-   * Pick `true` if the result does not need to be "parseable", e.g. coverage.
-   *)
-  fall_through_merged: bool;
   (* The normalizer keeps a stack of type parameters that are in scope. This stack
    * may contain the same name twice (but with different associated locations).
    * This is a case of shadowing. For certain uses of normalized types (e.g. suggest)
@@ -87,7 +77,6 @@ let default_options =
     evaluate_type_destructors = false;
     expand_internal_types = false;
     expand_type_aliases = false;
-    fall_through_merged = false;
     flag_shadowed_type_params = false;
     merge_bot_and_any_kinds = true;
     omit_targ_defaults = false;
@@ -145,7 +134,7 @@ type t = {
      to `T` even though it's now out of scope. In this case we need to fall back to
      the actual bounds and return those instead. So the normalized type here would
      be: Empty | Mixed, which simplifies to Mixed. *)
-  tparams: (ALoc.t * string) list;
+  tparams_rev: Type.typeparam list;
   (* In determining whether a symbol is Local, Imported, Remote, etc, it is
      useful to keep a map of imported names and the corresponding
      location available. We can then make this decision by comparing the
@@ -173,14 +162,12 @@ type t = {
   under_type_alias: SymbolSet.t;
 }
 
-let init ~options ~genv ~tparams ~imported_names =
-  { options; genv; depth = 0; tparams; imported_names; under_type_alias = SymbolSet.empty }
+let init ~options ~genv ~tparams_rev ~imported_names =
+  { options; genv; depth = 0; tparams_rev; imported_names; under_type_alias = SymbolSet.empty }
 
 let descend e = { e with depth = e.depth + 1 }
 
 let get_cx e = e.genv.cx
-
-let fall_through_merged e = e.options.fall_through_merged
 
 let expand_internal_types e = e.options.expand_internal_types
 
@@ -200,7 +187,7 @@ let merge_bot_and_any_kinds e = e.options.merge_bot_and_any_kinds
 
 let current_file e = e.genv.file
 
-let add_typeparam env typeparam = { env with tparams = typeparam :: env.tparams }
+let add_typeparam env typeparam = { env with tparams_rev = typeparam :: env.tparams_rev }
 
 let set_type_alias name e = { e with under_type_alias = SymbolSet.add name e.under_type_alias }
 

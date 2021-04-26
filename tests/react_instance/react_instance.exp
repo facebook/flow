@@ -78,8 +78,8 @@ Cannot get `any.yep2` because property `yep2` (did you mean `yep1`?) is missing 
 
 References:
    lib/jsx.js:4:15
-   4|     instance: {yep1: true},
-                    ^^^^^^^^^^^^ [1]
+   4|     instance: {yep1: true, ...},
+                    ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ intrinsic.js:7:32
@@ -92,8 +92,8 @@ Cannot get `any.nope` because property `nope` is missing in object type [1]. [pr
 
 References:
    lib/jsx.js:4:15
-   4|     instance: {yep1: true},
-                    ^^^^^^^^^^^^ [1]
+   4|     instance: {yep1: true, ...},
+                    ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ intrinsic.js:8:32
@@ -105,9 +105,9 @@ Cannot get `any.yep1` because property `yep1` (did you mean `yep2`?) is missing 
                                      ^^^^
 
 References:
-   lib/jsx.js:8:15
-   8|     instance: {yep2: true},
-                    ^^^^^^^^^^^^ [1]
+   lib/jsx.js:9:15
+   9|     instance: {yep2: true, ...},
+                    ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- intrinsic.js:10:32
@@ -119,9 +119,9 @@ Cannot get `any.nope` because property `nope` is missing in object type [1]. [pr
                                       ^^^^
 
 References:
-   lib/jsx.js:8:15
-    8|     instance: {yep2: true},
-                     ^^^^^^^^^^^^ [1]
+   lib/jsx.js:9:15
+    9|     instance: {yep2: true, ...},
+                     ^^^^^^^^^^^^^^^^^ [1]
 
 
 

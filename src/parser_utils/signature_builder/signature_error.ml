@@ -6,7 +6,6 @@
  *)
 
 type 'loc t =
-  | ExpectedSort of Signature_builder_kind.Sort.t * string * 'loc
   | ExpectedAnnotation of 'loc * Expected_annotation_sort.t
   | UnexpectedObjectKey of 'loc * 'loc
   | UnexpectedArraySpread of 'loc * 'loc
@@ -14,9 +13,6 @@ type 'loc t =
   | EmptyArray of 'loc
   | EmptyObject of 'loc
   | UnexpectedExpression of 'loc * Flow_ast_utils.ExpressionSort.t
-  | SketchyToplevelDef of 'loc
-  | UnsupportedPredicateExpression of 'loc
-  | TODO of string * 'loc
 [@@deriving show, iter, map]
 
 let compare = Stdlib.compare

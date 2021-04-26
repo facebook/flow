@@ -64,7 +64,7 @@ let check_subcommand =
     | Some file ->
       ( if not (Sys.file_exists file) then
         let msg = Utils_js.spf "Could not find file %s" file in
-        FlowExitStatus.(exit ~msg Could_not_find_flowconfig) );
+        Exit.(exit ~msg Could_not_find_flowconfig) );
       let root = Path.make (Filename.dirname file) in
       (file, root |> Path.to_string)
     | None ->
@@ -87,12 +87,12 @@ let check_subcommand =
   in
   let exit_with_json ~pretty json =
     Hh_json.(
-      FlowExitStatus.(
+      Exit.(
         let code = Invalid_flowconfig in
-        let json = JSON_Object (("errors", json) :: FlowExitStatus.json_props_of_t code) in
+        let json = JSON_Object (("errors", json) :: Exit.json_props_of_t code) in
         Hh_json.print_json_endline ~pretty json;
-        FlowExitStatus.unset_json_mode ();
-        FlowExitStatus.(exit code)))
+        Exit.unset_json_mode ();
+        Exit.(exit code)))
   in
   let main flowconfig_name json pretty root ignore_version file () =
     let (file, root) = find_flowconfig flowconfig_name root file in

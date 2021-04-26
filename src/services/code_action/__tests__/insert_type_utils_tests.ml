@@ -18,7 +18,7 @@ let tests =
            let t_exp = Num None in
            assert_equal ~ctxt ~printer:Ty.show t_exp (stylize t_in) );
          ( "stylize_union_string_with_string_literal" >:: fun ctxt ->
-           let t_in = Union (StrLit "foo", Str None, []) in
+           let t_in = Union (StrLit (Reason.OrdinaryName "foo"), Str None, []) in
            let t_exp = Str None in
            assert_equal ~ctxt ~printer:Ty.show t_exp (stylize t_in) );
          ( "stylize_union_true_and_false" >:: fun ctxt ->

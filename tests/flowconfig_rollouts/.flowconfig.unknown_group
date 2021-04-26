@@ -1,5 +1,5 @@
 [rollouts]
-verify_sig=0% on, 100% off
+short_literals=0% on, 100% off
 
 [options]
-(verify_sig=potato) well_formed_exports=true
+(short_literals=potato) max_literal_length=10

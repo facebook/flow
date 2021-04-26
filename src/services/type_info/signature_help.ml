@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Parsing_heaps_utils
+let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc
 
 let parameter_name is_opt name =
   let opt =
@@ -91,7 +91,7 @@ let func_details ~jsdoc ~exact_by_default params rest_param return =
 (* given a Loc.t within a function call, returns the type of the function being called *)
 module Callee_finder = struct
   type t = {
-    tparams: (ALoc.t * string) list;
+    tparams_rev: Type.typeparam list;
     type_: Type.t;
     active_parameter: int;
     loc: Loc.t;
@@ -108,15 +108,10 @@ module Callee_finder = struct
     | [] -> i
     | Flow_ast.Expression.(Expression ((arg_loc, _), _) | Spread (arg_loc, _)) :: rest ->
       let arg_loc = loc_of_aloc ~reader arg_loc in
-      (* if the cursor is within this arg, we obviously found it. if it's immediately after,
-         then we're between the arg and the comma/closing paren. if it's before the arg,
+      (* if the cursor is within this arg, we obviously found it. if it's before the arg,
          but hasn't been found by earlier args, then we must be in the whitespace before
          the current arg, so we found it. *)
-      if
-        Reason.in_range cursor arg_loc
-        || cursor.Loc.start = arg_loc.Loc._end
-        || Loc.compare cursor arg_loc < 0
-      then
+      if Reason.in_range cursor arg_loc || Loc.compare cursor arg_loc < 0 then
         i
       else
         find_argument ~reader cursor rest (i + 1)
@@ -160,8 +155,8 @@ module Callee_finder = struct
 
           let active_parameter = find_argument ~reader cursor arguments 0 in
           let loc = loc_of_aloc ~reader callee_loc in
-          this#annot_with_tparams (fun tparams ->
-              raise (Found (Some { tparams; type_ = t; active_parameter; loc })))
+          this#annot_with_tparams (fun ~tparams_rev ->
+              raise (Found (Some { tparams_rev; type_ = t; active_parameter; loc })))
         else
           super#call annot expr
 
@@ -186,15 +181,14 @@ module Callee_finder = struct
       let _ = finder#program typed_ast in
       None
     with
-    | Found (Some { tparams; type_; active_parameter; loc }) ->
-      Some ({ Type.TypeScheme.tparams; type_ }, active_parameter, loc)
+    | Found (Some { tparams_rev; type_; active_parameter; loc }) ->
+      Some ({ Type.TypeScheme.tparams_rev; type_ }, active_parameter, loc)
     | Found None -> None
 end
 
 let ty_normalizer_options =
   Ty_normalizer_env.
     {
-      fall_through_merged = true;
       expand_internal_types = true;
       expand_type_aliases = false;
       flag_shadowed_type_params = true;

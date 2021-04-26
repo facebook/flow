@@ -73,7 +73,7 @@ let force_recheck flowconfig_name (args : args) connect_flags =
       Hh_json.(print_json_endline ~pretty:(args.json = Some Pretty) (JSON_Object properties))
   end;
 
-  FlowExitStatus.(exit No_error)
+  Exit.(exit No_error)
 
 let rec find_parent_that_exists path =
   if Sys.file_exists path then
@@ -94,7 +94,7 @@ let main base_flags connect_flags json pretty root profile focus input_file file
     | (None, (None | Some [])) ->
       CommandSpec.usage spec;
       let msg = "FILES may be omitted if and only if --input-file is used" in
-      FlowExitStatus.(exit ~msg Commandline_usage_error)
+      Exit.(exit ~msg Commandline_usage_error)
     | _ -> ()
   end;
 

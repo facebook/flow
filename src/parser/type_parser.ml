@@ -184,21 +184,59 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     let t = primary env in
     postfix_with env t
 
-  and postfix_with env t =
-    if (not (Peek.is_line_terminator env)) && Expect.maybe env T_LBRACKET then
-      let t =
-        with_loc
-          ~start_loc:(fst t)
-          (fun env ->
-            Expect.token env T_RBRACKET;
+  and postfix_with ?(in_optional_indexed_access = false) env t =
+    if Peek.is_line_terminator env then
+      t
+    else
+      match Peek.token env with
+      | T_PLING_PERIOD ->
+        Eat.token env;
+        Expect.token env T_LBRACKET;
+        postfix_brackets ~in_optional_indexed_access:true ~optional_indexed_access:true env t
+      | T_LBRACKET ->
+        Eat.token env;
+        postfix_brackets ~in_optional_indexed_access ~optional_indexed_access:false env t
+      | T_PERIOD ->
+        (match Peek.ith_token ~i:1 env with
+        | T_LBRACKET ->
+          error env (Parse_error.InvalidIndexedAccess { has_bracket = true });
+          Expect.token env T_PERIOD;
+          Expect.token env T_LBRACKET;
+          postfix_brackets ~in_optional_indexed_access ~optional_indexed_access:false env t
+        | _ ->
+          error env (Parse_error.InvalidIndexedAccess { has_bracket = false });
+          t)
+      | _ -> t
+
+  and postfix_brackets ~in_optional_indexed_access ~optional_indexed_access env t =
+    let t =
+      with_loc
+        ~start_loc:(fst t)
+        (fun env ->
+          (* Legacy Array syntax `Foo[]` *)
+          if (not optional_indexed_access) && Eat.maybe env T_RBRACKET then
             let trailing = Eat.trailing_comments env in
             Type.Array
-              { Type.Array.argument = t; comments = Flow_ast_utils.mk_comments_opt ~trailing () })
-          env
-      in
-      postfix_with env t
-    else
-      t
+              { Type.Array.argument = t; comments = Flow_ast_utils.mk_comments_opt ~trailing () }
+          else
+            let index = _type env in
+            Expect.token env T_RBRACKET;
+            let trailing = Eat.trailing_comments env in
+            let indexed_access =
+              {
+                Type.IndexedAccess._object = t;
+                index;
+                comments = Flow_ast_utils.mk_comments_opt ~trailing ();
+              }
+            in
+            if in_optional_indexed_access then
+              Type.OptionalIndexedAccess
+                { Type.OptionalIndexedAccess.indexed_access; optional = optional_indexed_access }
+            else
+              Type.IndexedAccess indexed_access)
+        env
+    in
+    postfix_with env ~in_optional_indexed_access t
 
   and primary env =
     let loc = Peek.loc env in
@@ -389,7 +427,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         let name = Parse.identifier env in
         Eat.pop_lex_mode env;
         if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
-        let optional = Expect.maybe env T_PLING in
+        let optional = Eat.maybe env T_PLING in
         Expect.token env T_COLON;
         let annot = _type env in
         { Type.Function.Param.name = Some name; annot; optional })
@@ -627,7 +665,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         with_loc
           ~start_loc
           (fun env ->
-            let optional = Expect.maybe env T_PLING in
+            let optional = Eat.maybe env T_PLING in
             Expect.token env T_COLON;
             let value = _type env in
             Type.Object.Property.
@@ -744,7 +782,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                 in
                 (false, true, value, [])
               | _ ->
-                let optional = Expect.maybe env T_PLING in
+                let optional = Eat.maybe env T_PLING in
                 let trailing = Eat.trailing_comments env in
                 Expect.token env T_COLON;
                 let value = _type env in
@@ -1196,7 +1234,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
 
   and raw_generic_with_identifier =
     let rec identifier env (q_loc, qualification) =
-      if Peek.token env = T_PERIOD then
+      if Peek.token env = T_PERIOD && Peek.ith_is_type_identifier ~i:1 env then
         let (loc, q) =
           with_loc
             ~start_loc:q_loc
@@ -1274,6 +1312,19 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         Array { t with Array.comments = merge_comments comments }
       | Generic ({ Generic.comments; _ } as t) ->
         Generic { t with Generic.comments = merge_comments comments }
+      | IndexedAccess ({ IndexedAccess.comments; _ } as t) ->
+        IndexedAccess { t with IndexedAccess.comments = merge_comments comments }
+      | OptionalIndexedAccess
+          {
+            OptionalIndexedAccess.indexed_access = { IndexedAccess.comments; _ } as indexed_access;
+            optional;
+          } ->
+        OptionalIndexedAccess
+          {
+            OptionalIndexedAccess.indexed_access =
+              { indexed_access with IndexedAccess.comments = merge_comments comments };
+            optional;
+          }
       | Union ({ Union.comments; _ } as t) ->
         Union { t with Union.comments = merge_comments comments }
       | Intersection ({ Intersection.comments; _ } as t) ->

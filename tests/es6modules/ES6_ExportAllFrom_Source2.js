@@ -3,4 +3,4 @@
  * @flow
  */
 
-export var numberValue2 = 1;
+export const numberValue2 = 1;
