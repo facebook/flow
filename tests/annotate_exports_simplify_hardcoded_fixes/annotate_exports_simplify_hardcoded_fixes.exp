@@ -4,7 +4,7 @@
 >>> ./a.js
 // @flow
 
-import type { Element } from "React";declare function f(): React$Element<'a'> | React$Element<'b'>;
+import type { Element } from "react";declare function f(): React$Element<'a'> | React$Element<'b'>;
 
 module.exports = (f(): Element<"a"> | Element<"b">);
 
@@ -50,7 +50,7 @@ module.exports = (f(): React$Element<"a"> | React$Element<"b">);
 === Diff between codemod-ed & autofix-ed ===
 >>> ./a.js
 3c3
-< import type { Element } from "React";declare function f(): React$Element<'a'> | React$Element<'b'>;
+< import type { Element } from "react";declare function f(): React$Element<'a'> | React$Element<'b'>;
 ---
 > declare function f(): React$Element<'a'> | React$Element<'b'>;
 5c5

@@ -33,7 +33,7 @@ module.exports = (): React.Element<"div"> => div;
 >>> ./no-import.js
 // @flow
 
-import type { ComponentType } from "React";
+import type { ComponentType } from "react";
 import type { ComponentType as $IMPORTED_TYPE$_ComponentType_1 } from "./fake-react";import { foo } from "./lib";
 import { bar } from "./fake-react";
 
@@ -228,7 +228,7 @@ module.exports = (): {
 
 >>> ./no-import.js
 3,4c3
-< import type { ComponentType } from "React";
+< import type { ComponentType } from "react";
 < import type { ComponentType as $IMPORTED_TYPE$_ComponentType_1 } from "./fake-react";import { foo } from "./lib";
 ---
 > import type { ComponentType } from "./fake-react";import { foo } from "./lib";
