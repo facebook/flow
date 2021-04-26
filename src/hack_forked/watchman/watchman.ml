@@ -7,7 +7,6 @@
 
 open Base
 open Utils
-module Let_syntax = Lwt.Infix.Let_syntax
 
 (*
  * Module for us to interface with Watchman, a file watching service.
@@ -450,7 +449,7 @@ let has_watchman_restarted_since ~debug_logging ~conn ~timeout ~watch_root ~cloc
             ];
         ])
   in
-  let%bind response = request ~debug_logging ~conn ~timeout query in
+  let%lwt response = request ~debug_logging ~conn ~timeout query in
   let result =
     match Hh_json_helpers.Jget.bool_opt (Some response) "is_fresh_instance" with
     | Some has_restarted -> Ok has_restarted
@@ -484,7 +483,7 @@ let prepend_relative_path_term ~relative_path ~terms =
 let get_clockspec ~debug_logging ~conn ~watch_root prior_clockspec =
   match prior_clockspec with
   | Some clockspec ->
-    let%bind has_restarted =
+    let%lwt has_restarted =
       has_watchman_restarted_since
         ~debug_logging
         ~conn
@@ -501,14 +500,14 @@ let get_clockspec ~debug_logging ~conn ~watch_root prior_clockspec =
       Hh_logger.error "%s" err;
       raise Exit.(Exit_with Watchman_failed))
   | None ->
-    let%map response =
+    let%lwt response =
       request
         ~debug_logging
         ~conn
         ~timeout:None (* the whole init process should be wrapped in a timeout *)
         (clock watch_root)
     in
-    J.get_string_val "clock" response
+    Lwt.return (J.get_string_val "clock" response)
 
 (** Watch this root
 
@@ -519,11 +518,11 @@ let get_clockspec ~debug_logging ~conn ~watch_root prior_clockspec =
     not existing. *)
 let watch_project ~debug_logging ~conn ~timeout root =
   let query = J.strlist ["watch-project"; Path.to_string root] in
-  let%map response =
+  let%lwt response =
     catch
       ~f:(fun () ->
-        let%map response = request ~debug_logging ~conn ~timeout query in
-        Some response)
+        let%lwt response = request ~debug_logging ~conn ~timeout query in
+        Lwt.return (Some response))
       ~catch:(fun exn ->
         (match Exception.to_exn exn with
         | Watchman_error _
@@ -540,11 +539,11 @@ let watch_project ~debug_logging ~conn ~timeout root =
         Lwt.return None)
   in
   match response with
-  | None -> None
+  | None -> Lwt.return None
   | Some response ->
     let watch_root = J.get_string_val "watch" response in
     let relative_path = J.get_string_val "relative_path" ~default:"" response in
-    Some (watch_root, relative_path)
+    Lwt.return (Some (watch_root, relative_path))
 
 let re_init
     ?prior_clockspec
@@ -558,17 +557,17 @@ let re_init
       subscription_prefix;
       sync_timeout;
     } =
-  let%bind conn = open_connection () in
-  let%bind (watched_path_expression_terms, watch_roots, failed_paths) =
+  let%lwt conn = open_connection () in
+  let%lwt (watched_path_expression_terms, watch_roots, failed_paths) =
     Lwt_list.fold_left_s
       (fun (terms, watch_roots, failed_paths) path ->
         let timeout = None (* the whole init process should be wrapped in a timeout *) in
-        match%map watch_project ~debug_logging ~conn ~timeout path with
-        | None -> (terms, watch_roots, SSet.add (Path.to_string path) failed_paths)
+        match%lwt watch_project ~debug_logging ~conn ~timeout path with
+        | None -> Lwt.return (terms, watch_roots, SSet.add (Path.to_string path) failed_paths)
         | Some (watch_root, relative_path) ->
           let terms = prepend_relative_path_term ~relative_path ~terms in
           let watch_roots = SSet.add watch_root watch_roots in
-          (terms, watch_roots, failed_paths))
+          Lwt.return (terms, watch_roots, failed_paths))
       (Some [], SSet.empty, SSet.empty)
       roots
   in
@@ -598,7 +597,7 @@ let re_init
            "Can't watch paths across multiple Watchman watch_roots. Found %d watch_roots"
            (SSet.cardinal watch_roots))
   in
-  let%bind clockspec = get_clockspec ~debug_logging ~conn ~watch_root prior_clockspec in
+  let%lwt clockspec = get_clockspec ~debug_logging ~conn ~watch_root prior_clockspec in
   let watched_path_expression_terms =
     Option.map watched_path_expression_terms ~f:(J.pred "anyof")
   in
@@ -622,7 +621,7 @@ let re_init
       subscription = Printf.sprintf "%s.%d" subscription_prefix (Unix.getpid ());
     }
   in
-  let%map response =
+  let%lwt response =
     request
       ~debug_logging
       ~conn
@@ -630,13 +629,13 @@ let re_init
       (subscribe ~mode:subscribe_mode ~states:defer_states env)
   in
   ignore response;
-  env
+  Lwt.return env
 
 let init settings =
   catch
     ~f:(fun () ->
-      let%map v = re_init settings in
-      Some (Watchman_alive v))
+      let%lwt v = re_init settings in
+      Lwt.return (Some (Watchman_alive v)))
     ~catch:(fun exn ->
       Hh_logger.exception_ ~prefix:"Watchman init: " exn;
       match Exception.unwrap exn with
@@ -707,11 +706,11 @@ let maybe_restart_instance instance =
       Lwt.return instance
 
 let close_channel_on_instance env =
-  let%map () = close_connection env.conn in
-  dead_env_from_alive env
+  let%lwt () = close_connection env.conn in
+  Lwt.return (dead_env_from_alive env)
 
 let with_instance instance ~try_to_restart ~on_alive ~on_dead =
-  let%bind instance =
+  let%lwt instance =
     if try_to_restart then
       maybe_restart_instance instance
     else
@@ -745,12 +744,12 @@ let call_on_instance :
   let on_alive' ~on_dead source f env =
     catch
       ~f:(fun () ->
-        let%map (env, result) = f env in
-        (Watchman_alive env, result))
+        let%lwt (env, result) = f env in
+        Lwt.return (Watchman_alive env, result))
       ~catch:(fun exn ->
         Hh_logger.exception_ ~prefix:("Watchman " ^ source ^ ": ") exn;
         let close_channel_on_instance' env =
-          let%bind env = close_channel_on_instance env in
+          let%lwt env = close_channel_on_instance env in
           on_dead' on_dead env
         in
         let log_died msg =
@@ -858,9 +857,9 @@ let get_changes ?deadline instance =
             Float.max timeout 0.0)
       in
       let debug_logging = env.settings.debug_logging in
-      let%map response = blocking_read ~debug_logging ~timeout ~conn:env.conn in
+      let%lwt response = blocking_read ~debug_logging ~timeout ~conn:env.conn in
       let (env, result) = transform_asynchronous_get_changes_response env response in
-      (env, Watchman_pushed result))
+      Lwt.return (env, Watchman_pushed result))
 
 let get_mergebase_and_changes ~timeout instance =
   call_on_instance
@@ -868,17 +867,20 @@ let get_mergebase_and_changes ~timeout instance =
     "get_mergebase_and_changes"
     ~on_dead:(fun _dead_env -> Error "Failed to connect to Watchman to get mergebase")
     ~on_alive:(fun env ->
-      let%map response =
+      let%lwt response =
         request
           ~timeout
           ~debug_logging:env.settings.debug_logging
           (get_changes_since_mergebase_query env)
       in
-      match extract_mergebase response with
-      | Some (_clock, mergebase) ->
-        let changes = extract_file_names env response in
-        (env, Ok (mergebase, changes))
-      | None -> (env, Error "Failed to extract mergebase from response"))
+      let result =
+        match extract_mergebase response with
+        | Some (_clock, mergebase) ->
+          let changes = extract_file_names env response in
+          (env, Ok (mergebase, changes))
+        | None -> (env, Error "Failed to extract mergebase from response")
+      in
+      Lwt.return result)
 
 module Testing = struct
   type nonrec env = env
@@ -901,16 +903,17 @@ module Testing = struct
     Lwt.return (reader, oc)
 
   let get_test_env () =
-    let%map conn = get_test_conn () in
-    {
-      settings = test_settings;
-      conn;
-      watch_root = "/path/to/root";
-      clockspec = "";
-      watched_path_expression_terms =
-        Some (J.pred "anyof" [J.strlist ["dirname"; "foo"]; J.strlist ["name"; "foo"]]);
-      subscription = "dummy_prefix.123456789";
-    }
+    let%lwt conn = get_test_conn () in
+    Lwt.return
+      {
+        settings = test_settings;
+        conn;
+        watch_root = "/path/to/root";
+        clockspec = "";
+        watched_path_expression_terms =
+          Some (J.pred "anyof" [J.strlist ["dirname"; "foo"]; J.strlist ["name"; "foo"]]);
+        subscription = "dummy_prefix.123456789";
+      }
 
   let transform_asynchronous_get_changes_response env json =
     transform_asynchronous_get_changes_response env json
