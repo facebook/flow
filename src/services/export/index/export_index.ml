@@ -10,13 +10,52 @@ type kind =
   | Named
   | NamedType
   | Namespace
+[@@deriving show, ord]
 
-and source =
+type source =
   | Global
   | Builtin of string  (** [Builtin "foo"] refers to a `declare module "foo"` lib *)
   | File_key of File_key.t
+[@@deriving show]
 
-and export = source * kind [@@deriving show, ord]
+(** Custom ordering where the "kind" (LibFile vs SourceFile vs JsonFile, etc) does
+    not matter, and we compare filenames without extensions, so that something like
+    [Foo.example.js] sorts _after_ [Foo.js] even though [e] comes before [j]; the
+    extension is less important than the rest of the basename and we should suggest
+    [import ... from 'Foo'] before [import ... from 'Foo.example']. *)
+let compare_file_key a b =
+  let open File_key in
+  let a = to_string a in
+  let b = to_string b in
+  let k = String.compare (Filename.chop_extension a) (Filename.chop_extension b) in
+  if k <> 0 then
+    k
+  else
+    String.compare a b
+
+(** Custom ordering where [declare module] comes first, followed by source files,
+    followed by globals.
+
+    When importing, builtins are more commonly used and so are more
+    likely to be what you want than a source file that shadows the name. Globals
+    are unlikely to be what you want and come last.
+
+    TODO: this is a very coarse ranking. We could do much better. For example, we
+    could track how commonly used each export is. For example, the `Promise` global
+    is probably far more common than any source file exporting the same name. *)
+let compare_source a b =
+  match (a, b) with
+  | (Builtin a, Builtin b) -> String.compare a b
+  (* builtins first *)
+  | (Builtin _, _) -> -1
+  | (_, Builtin _) -> 1
+  | (Global, Global) -> 0
+  (* globals last *)
+  | (Global, _) -> 1
+  | (_, Global) -> -1
+  | (File_key a, File_key b) -> compare_file_key a b
+
+type export = source * kind [@@deriving show, ord]
 
 module ExportSet = struct
   include Set.Make (struct
