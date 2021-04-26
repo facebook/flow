@@ -210,16 +210,16 @@ let tests =
       assert_statement_string
         ~ctxt
         ~pretty:true
-        "type T = {\n  a: any,\n  /*I1*/\n  /*I2*/\n  ...,\n};";
+        "type T = {\n  a: any,\n  /*I1*/\n  /*I2*/\n  ...\n};";
       assert_statement
         ~ctxt
         ~pretty:true
-        "type T = {\n  a: any,\n  \n  /*I1*/\n  /*I2*/\n  ...,\n};"
-        (statement_of_string "type T = {\n  a: any,\n  ...,\n  /*I1*/\n  /*I2*/\n};");
+        "type T = {\n  a: any,\n  \n  /*I1*/\n  /*I2*/\n  ...\n};"
+        (statement_of_string "type T = {\n  a: any,\n  ...\n  /*I1*/\n  /*I2*/\n};");
       assert_statement_string
         ~ctxt
         ~pretty:true
-        "type T = {\n  a: any,\n  /*I1*/\n  \n  /*I2*/\n  ...,\n};";
+        "type T = {\n  a: any,\n  /*I1*/\n  \n  /*I2*/\n  ...\n};";
       (* Leading comments on variance nodes are included in comment bounds of property *)
       assert_statement_string ~ctxt ~pretty:true "type T = {\n  +a: any,\n  //L\n  +b: any,\n};" );
     ( "parenthesized_expression" >:: fun ctxt ->

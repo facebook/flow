@@ -13,7 +13,7 @@ module.exports = (foo(): {| f: number |});
 
 declare function foo(): { f: number; ... };
 
-module.exports = (foo(): { f: number,... });
+module.exports = (foo(): { f: number, ... });
 
 >>> Launching report...
 
@@ -58,7 +58,7 @@ module.exports = (foo(): { f: number });
 
 declare function foo(): { f: number; ... };
 
-module.exports = (foo(): { f: number,... });
+module.exports = (foo(): { f: number, ... });
 
 >>> Launching report...
 

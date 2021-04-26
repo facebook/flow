@@ -104,7 +104,7 @@ Warnings:
 // @flow
 
 module.exports = {
-  a: (): { x: string,... } => {
+  a: (): { x: string, ... } => {
   return {
     x:
       // comment
@@ -116,7 +116,7 @@ module.exports = {
 >>> ./b.js
 // @flow
 
-function foo(): { f: number, g: number, h: string,... } {
+function foo(): { f: number, g: number, h: string, ... } {
   // Comment 0
   const x = {
     // Comment 1
@@ -154,7 +154,7 @@ function foo() {
   };
 }
 
-export const foo_: { "": number, "-": number, "\ud83d\ude0a": number,... } = foo();
+export const foo_: { "": number, "-": number, "\ud83d\ude0a": number, ... } = foo();
 
 declare var b: {
   '-': 1,
@@ -174,17 +174,17 @@ export const bar_: { [1]: 4, "": 2, "-": 1, "\ud83d\ude0a": 3 } = bar();
 4c4
 <   a: (): {| x: string |} => {
 ---
->   a: (): { x: string,... } => {
+>   a: (): { x: string, ... } => {
 
 >>> ./b.js
 3c3
 < function foo(): {| f: number, g: number, h: string |} {
 ---
-> function foo(): { f: number, g: number, h: string,... } {
+> function foo(): { f: number, g: number, h: string, ... } {
 
 >>> ./d.js
 12c12
 < export const foo_: {| "": number, "-": number, "\ud83d\ude0a": number |} = foo();
 ---
-> export const foo_: { "": number, "-": number, "\ud83d\ude0a": number,... } = foo();
+> export const foo_: { "": number, "-": number, "\ud83d\ude0a": number, ... } = foo();
 

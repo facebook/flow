@@ -56,7 +56,7 @@ Warnings:
 type Inexact = { data: string; type: string; }
 type Exact = {| data: string; type: string; |}
 
-function foo(): Array<{ data: string, type: string,... }> {
+function foo(): Array<{ data: string, type: string, ... }> {
   return [
     {data: "", type: ""},
     {data: "", type: ""},
@@ -74,5 +74,5 @@ module.exports = foo;
 6c6
 < function foo(): Array<{| data: string, type: string |}> {
 ---
-> function foo(): Array<{ data: string, type: string,... }> {
+> function foo(): Array<{ data: string, type: string, ... }> {
 

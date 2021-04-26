@@ -63,7 +63,7 @@ module.exports = (foo(): {
   f7: void,
   f8: void,
   f9: void,
-  ...,
+  ...
 });
 
 
@@ -83,6 +83,6 @@ module.exports = (foo(): {
 >   f7: void,
 >   f8: void,
 >   f9: void,
->   ...,
+>   ...
 > });
 

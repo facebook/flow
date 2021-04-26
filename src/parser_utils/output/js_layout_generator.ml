@@ -3465,27 +3465,19 @@ and type_object ?(sep = Atom ",") ~opts loc { Ast.Type.Object.exact; properties;
       loc
   in
   let num_props = List.length properties in
-  let internal_comments =
-    match internal_comments comments with
-    | None -> []
-    | Some comments -> [comments]
-  in
-  let props =
-    Base.List.mapi
+  let internal_comments = internal_comments comments in
+  let has_internal_comments = Base.Option.is_some internal_comments in
+  let rev_props =
+    Base.List.rev_mapi
       ~f:(fun i property ->
         let prop_layout =
           (* Add trailing comma to last property *)
           if
             i = num_props - 1
-            && internal_comments = []
+            && (not (has_internal_comments || inexact))
             && Trailing_commas.enabled_for_types opts.trailing_commas
           then
-            let sep =
-              if inexact then
-                sep
-              else
-                if_break sep Empty
-            in
+            let sep = if_break sep Empty in
             fuse [type_object_property ~opts property; sep]
           else
             type_object_property ~opts property
@@ -3495,21 +3487,39 @@ and type_object ?(sep = Atom ",") ~opts loc { Ast.Type.Object.exact; properties;
           prop_layout ))
       properties
   in
-  (* Add internal comments *)
-  let props = props @ internal_comments in
-  let props = list_with_newlines ~sep ~sep_linebreak props in
-  let props =
-    if inexact then
-      props @ [if_break sep_linebreak Empty; Atom "..."; if_break sep Empty]
-    else
-      props
+  (* Add internal comments and the inexact ellipsis *)
+  let rev_props =
+    match (internal_comments, inexact) with
+    | (Some (loc, junk, layout), true) ->
+      let has_trailing_line_comment =
+        match comments with
+        | Some { Ast.Syntax.internal; _ } ->
+          (match Base.List.rev internal with
+          | (_, { Ast.Comment.kind = Ast.Comment.Line; _ }) :: _ -> true
+          | _ -> false)
+        | None -> false
+      in
+      let linebreak =
+        if has_trailing_line_comment then
+          (* line comments have their own linebreak, so if the comment
+             right before the ellipsis is a line comment, don't add
+             another linebreak. *)
+          Empty
+        else
+          sep_linebreak
+      in
+      (loc, junk, fuse [layout; linebreak; Atom "..."]) :: rev_props
+    | (Some comments, false) -> comments :: rev_props
+    | (None, true) -> (loc, (None, None), Atom "...") :: rev_props
+    | (None, false) -> rev_props
   in
+  let props = Base.List.rev rev_props in
   (* If first prop is on a different line then pretty print with line breaks *)
   let break =
-    match properties with
+    match props with
     | [] -> None
-    | first_prop :: _ ->
-      if Loc.(loc.start.line < (prop_loc first_prop).start.line) then
+    | (first_loc, _, _) :: _ ->
+      if Loc.(loc.start.line < first_loc.start.line) then
         Some pretty_hardline
       else if opts.bracket_spacing then
         Some pretty_line
@@ -3517,6 +3527,7 @@ and type_object ?(sep = Atom ",") ~opts loc { Ast.Type.Object.exact; properties;
         None
   in
   let props_layout =
+    let props = list_with_newlines ~sep ~sep_linebreak props in
     wrap_and_indent ?break (fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"]) props
   in
   layout_node_with_comments_opt loc comments @@ group [props_layout]
