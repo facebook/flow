@@ -646,6 +646,31 @@ and merge_annot file = function
           TypeDestructorT
             (use_op, reason, Type.ElementType { index_type = elem; is_indexed_access = false }),
           id ))
+  | OptionalIndexedAccessNonMaybeType { loc; obj; index } ->
+    let reason = Reason.(mk_reason (RIndexedAccess { optional = true }) loc) in
+    let object_type = merge file obj in
+    let index_type = merge file index in
+    let object_reason = TypeUtil.reason_of_t object_type in
+    let index_reason = TypeUtil.reason_of_t index_type in
+    let use_op =
+      Type.Op (Type.IndexedTypeAccess { _object = object_reason; index = index_reason })
+    in
+    let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+    Type.EvalT
+      ( object_type,
+        Type.TypeDestructorT (use_op, reason, Type.OptionalIndexedAccessNonMaybeType { index_type }),
+        id )
+  | OptionalIndexedAccessResultType { loc; non_maybe_result; void_loc } ->
+    let reason = Reason.(mk_reason (RIndexedAccess { optional = true }) loc) in
+    let void_reason = Reason.(mk_reason RVoid void_loc) in
+    let non_maybe_result_type = merge file non_maybe_result in
+    Type.EvalT
+      ( non_maybe_result_type,
+        Type.TypeDestructorT
+          ( Type.unknown_use (* not used *),
+            reason,
+            Type.OptionalIndexedAccessResultType { void_reason } ),
+        Type.Eval.generate_id () )
   | NonMaybeType (loc, t) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "$NonMaybeType")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
