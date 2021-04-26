@@ -21,38 +21,10 @@ orbs:
         steps:
           - run:
               name: Install dependencies
-              command: |
-                choco install --no-progress cygwin cyg-get 7zip
-                setx /M PATH $($Env:PATH + ';C:\Program Files\7-Zip')
-                if (-not $?) { throw "Failed to install cygwin" }
-                cyg-get rsync patch diffutils curl make zip unzip git m4 perl mingw64-x86_64-gcc-core mingw64-x86_64-gcc-g++ mingw-w64-x86_64-gcc-libs
-                if (-not $?) { throw "Failed to install deps from cygwin" }
-                $local_packages = "$Env:TEMP\flow\cygwin"
-                New-Item -ItemType Directory $local_packages
-                (New-Object System.Net.WebClient).DownloadFile("https://mirrors.kernel.org/sourceware/cygwin/x86_64/release/mingw64-x86_64-binutils/mingw64-x86_64-binutils-2.35.2-1.tar.xz", "$local_packages\mingw64-x86_64-binutils-2.35.2-1.tar.xz")
-                if (-not $?) { throw "Failed to download mingw64-x86_64-binutils-2.35.2-1" }
-                7z.exe x "$local_packages\mingw64-x86_64-binutils-2.35.2-1.tar.xz" -o"$local_packages" -y
-                7z.exe x "$local_packages\mingw64-x86_64-binutils-2.35.2-1.tar" -o"C:\tools\cygwin" -y
+              command: .\scripts\windows\install_deps.ps1
           - run:
               name: Install opam
-              command: |
-                $install_dir = "$Env:TEMP\flow\opam_installer"
-                New-Item -ItemType Directory $install_dir
-                echo "Downloading opam64.tar.xz"
-                (New-Object System.Net.WebClient).DownloadFile("https://github.com/fdopen/opam-repository-mingw/releases/download/0.0.0.2/opam64.tar.xz", "$install_dir\opam64.tar.xz")
-                echo "Extracting opam64.tar.xz"
-                $out_dir = "$install_dir".Replace("\", "/")
-                C:\tools\cygwin\bin\tar.exe -x --force-local -f $install_dir\opam64.tar.xz -C "$out_dir"
-                echo "Installing opam"
-                C:\tools\cygwin\bin\bash.exe -l "$install_dir\opam64\install.sh"
-                echo "Done"
-      init:
-        steps:
-          - run:
-              name: Init opam
-              shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
-              command: |
-                [ -d ~/.opam ] || opam init default 'https://github.com/fdopen/opam-repository-mingw.git#opam2' --bare --disable-sandboxing
+              command: .\scripts\windows\install_opam.ps1
       create_switch:
         steps:
           - run:
@@ -323,13 +295,13 @@ jobs:
       - FLOW_TMP_DIR: 'C:\tmp\flow'
       - OPAMDOWNLOADJOBS: 1
     steps:
+      - attach_workspace:
+          at: .
       - run:
           name: Set up workspace
           command: |
             New-Item -ItemType Directory $Env:FLOW_TMP_DIR
       - opam_windows/install
-      - attach_workspace:
-          at: .
       - run:
           name: Create cache breaker
           shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
@@ -343,7 +315,9 @@ jobs:
       - restore_cache:
           keys:
           - opam-cache-{{ arch }}-{{ checksum "C:/tmp/flow/opamcachebreaker" }}
-      - opam_windows/init
+      - run:
+          name: Init opam
+          command: .\scripts\windows\init_opam.ps1
       - opam_windows/create_switch
       - save_cache:
           key: opam-cache-{{ arch }}-{{ checksum "C:/tmp/flow/opamcachebreaker" }}
@@ -355,9 +329,6 @@ jobs:
           shell: C:/tools/cygwin/bin/bash.exe -leo pipefail
           environment:
             PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
-            CC: x86_64-w64-mingw32-gcc
-            CXX: x86_64-w64-mingw32-g++
-            AR: x86_64-w64-mingw32-gcc-ar
           command: |
              cd /cygdrive/c/Users/circleci/project
              eval $(opam env)
