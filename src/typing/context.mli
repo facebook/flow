@@ -510,7 +510,7 @@ val eval_id_cache :
 
 val eval_repos_cache : 'phase t_ -> (Type.t * Type.defer_use_t * Type.Eval.id, Type.t) Hashtbl.t
 
-val fix_cache : 'phase t_ -> (Reason.t * Type.t, Type.t) Hashtbl.t
+val fix_cache : 'phase t_ -> (bool * Type.t, Type.t) Hashtbl.t
 
 val spread_cache : 'phase t_ -> Spread_cache.t
 

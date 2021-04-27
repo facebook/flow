@@ -100,14 +100,14 @@ module Eval = struct
 end
 
 module Fix = struct
-  let find cx reason i =
+  let find cx is_this i =
     let cache = Context.fix_cache cx in
-    let cache_key = (reason, i) in
+    let cache_key = (is_this, i) in
     Hashtbl.find_opt cache cache_key
 
-  let add cx reason i tvar =
+  let add cx is_this i tvar =
     let cache = Context.fix_cache cx in
-    let cache_key = (reason, i) in
+    let cache_key = (is_this, i) in
     Hashtbl.add cache cache_key tvar
 end
 

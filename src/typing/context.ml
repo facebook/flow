@@ -170,7 +170,7 @@ type 'phase component_t_ = {
   eval_id_cache:
     (Type.Eval.id, Type.t) Hashtbl.t * (Type.t * Type.defer_use_t, Type.Eval.id) Hashtbl.t;
   eval_repos_cache: (Type.t * Type.defer_use_t * Type.Eval.id, Type.t) Hashtbl.t;
-  fix_cache: (Reason.t * Type.t, Type.t) Hashtbl.t;
+  fix_cache: (bool * Type.t, Type.t) Hashtbl.t;
   spread_cache: Spread_cache.t;
   speculation_state: Speculation_state.t;
   (* Post-inference checks *)
