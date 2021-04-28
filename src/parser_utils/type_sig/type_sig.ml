@@ -22,19 +22,14 @@
  * avoid record label conflicts.
  *)
 
-(* TODO: Run ocamlformat and fix all the detached comments. *)
-[@@@ocamlformat "disable=true"]
-
-type 'a smap = 'a SMap.t
-[@@deriving map, show {with_path = false}]
+type 'a smap = 'a SMap.t [@@deriving map, show { with_path = false }]
 
 let iter_smap f = SMap.iter (fun _ x -> f x)
 
 (* The PPX generated map functions will use the non-tail-recursive List.map
  * implementation. Use this type instead if the list might be very long. For
  * example, codegen can produce unions that are very large. *)
-type 'a tailrec_list = 'a list
-[@@deriving iter, show {with_path = false}]
+type 'a tailrec_list = 'a list [@@deriving iter, show { with_path = false }]
 
 let map_tailrec_list f xs = Base.List.map ~f xs
 
@@ -64,52 +59,60 @@ type ('key, 'loc, 'a) predicate =
   | SentinelVoidP of 'key * string * 'loc
   | SentinelExprP of 'key * string * 'a
   | LatentP of 'a * ('key * int) Nel.t
-  [@@deriving iter, map, show {with_path = false}]
+[@@deriving iter, map, show { with_path = false }]
 
-type ('loc, 'a) tparam = TParam of {
-  name_loc: 'loc;
-  name: string;
-  polarity: Polarity.t;
-  bound: 'a option;
-  default: 'a option;
-} [@@deriving iter, map, show {with_path = false}]
+type ('loc, 'a) tparam =
+  | TParam of {
+      name_loc: 'loc;
+      name: string;
+      polarity: Polarity.t;
+      bound: 'a option;
+      default: 'a option;
+    }
+[@@deriving iter, map, show { with_path = false }]
 
 type ('loc, 'a) tparams =
   | Mono
   | Poly of 'loc * ('loc, 'a) tparam * ('loc, 'a) tparam list
-  [@@deriving iter, map, show {with_path = false}]
+[@@deriving iter, map, show { with_path = false }]
 
-type 'a fun_param = FunParam of {
-  name: string option;
-  t: 'a;
-} [@@deriving iter, map, show {with_path = false}]
+type 'a fun_param =
+  | FunParam of {
+      name: string option;
+      t: 'a;
+    }
+[@@deriving iter, map, show { with_path = false }]
 
-type ('loc, 'a) fun_rest_param = FunRestParam of {
-  name: string option;
-  loc: 'loc;
-  t: 'a;
-} [@@deriving iter, map, show {with_path = false}]
+type ('loc, 'a) fun_rest_param =
+  | FunRestParam of {
+      name: string option;
+      loc: 'loc;
+      t: 'a;
+    }
+[@@deriving iter, map, show { with_path = false }]
 
-type ('loc, 'a) fun_sig = FunSig of {
-  tparams: ('loc, 'a) tparams;
-  params: 'a fun_param list;
-  rest_param: ('loc, 'a) fun_rest_param option;
-  this_param: 'a option;
-  return: 'a;
-  predicate: ('loc * (string, 'loc, 'a) predicate option) option;
-} [@@deriving iter, map, show {with_path = false}]
+type ('loc, 'a) fun_sig =
+  | FunSig of {
+      tparams: ('loc, 'a) tparams;
+      params: 'a fun_param list;
+      rest_param: ('loc, 'a) fun_rest_param option;
+      this_param: 'a option;
+      return: 'a;
+      predicate: ('loc * (string, 'loc, 'a) predicate option) option;
+    }
+[@@deriving iter, map, show { with_path = false }]
 
 type ('loc, 'a) obj_annot_proto =
   | ObjAnnotImplicitProto
   | ObjAnnotExplicitProto of 'loc * 'a
-  | ObjAnnotCallable of {ts_rev: 'a Nel.t} (* implies function proto *)
-  [@@deriving iter, map, show {with_path = false}]
+  | ObjAnnotCallable of { ts_rev: 'a Nel.t } (* implies function proto *)
+[@@deriving iter, map, show { with_path = false }]
 
 type ('loc, 'a) accessor =
   | Get of 'loc * 'a
   | Set of 'loc * 'a
   | GetSet of 'loc * 'a * 'loc * 'a
-  [@@deriving iter, map, show {with_path = false}]
+[@@deriving iter, map, show { with_path = false }]
 
 type ('loc, 'a) obj_value_prop =
   | ObjValueField of 'loc * 'a * Polarity.t
@@ -121,7 +124,7 @@ type ('loc, 'a) obj_value_prop =
       generator: bool;
       def: ('loc, 'a) fun_sig;
     }
-  [@@deriving iter, map, show {with_path = false}]
+[@@deriving iter, map, show { with_path = false }]
 
 type ('loc, 'a) obj_annot_prop =
   | ObjAnnotField of 'loc * 'a * Polarity.t
@@ -131,20 +134,22 @@ type ('loc, 'a) obj_annot_prop =
       fn_loc: 'loc;
       def: ('loc, 'a) fun_sig;
     }
-  [@@deriving iter, map, show {with_path = false}]
+[@@deriving iter, map, show { with_path = false }]
 
 type ('loc, 'a) interface_prop =
   | InterfaceField of 'loc option * 'a * Polarity.t
   | InterfaceAccess of ('loc, 'a) accessor
   | InterfaceMethod of ('loc * 'loc * ('loc, 'a) fun_sig) Nel.t
-  [@@deriving iter, map, show {with_path = false}]
+[@@deriving iter, map, show { with_path = false }]
 
-type 'a obj_annot_dict = ObjDict of {
-  name: string option;
-  polarity: Polarity.t;
-  key: 'a;
-  value: 'a;
-} [@@deriving iter, map, show {with_path = false}]
+type 'a obj_annot_dict =
+  | ObjDict of {
+      name: string option;
+      polarity: Polarity.t;
+      key: 'a;
+      value: 'a;
+    }
+[@@deriving iter, map, show { with_path = false }]
 
 type ('loc, 'a) obj_spread_annot_elem =
   | ObjSpreadAnnotElem of 'a
@@ -152,12 +157,12 @@ type ('loc, 'a) obj_spread_annot_elem =
       dict: 'a obj_annot_dict option;
       props: ('loc, 'a) obj_annot_prop smap;
     }
-  [@@deriving iter, map, show {with_path = false}]
+[@@deriving iter, map, show { with_path = false }]
 
 type ('loc, 'a) obj_value_spread_elem =
   | ObjValueSpreadElem of 'a
   | ObjValueSpreadSlice of ('loc, 'a) obj_value_prop smap
-  [@@deriving iter, map, show {with_path = false}]
+[@@deriving iter, map, show { with_path = false }]
 
 type ('loc, 'a) class_extends =
   | ClassExplicitExtends of {
@@ -171,7 +176,7 @@ type ('loc, 'a) class_extends =
     }
   | ClassImplicitExtends
   | ObjectPrototypeExtendsNull
-  [@@deriving iter, map, show {with_path = false}]
+[@@deriving iter, map, show { with_path = false }]
 
 type ('loc, 'a) class_mixins =
   | ClassMixin of {
@@ -183,41 +188,47 @@ type ('loc, 'a) class_mixins =
       t: 'a;
       targs: 'a list;
     }
-  [@@deriving iter, map, show {with_path = false}]
+[@@deriving iter, map, show { with_path = false }]
 
-type ('loc, 'a) class_sig = ClassSig of {
-  tparams: ('loc, 'a) tparams;
-  extends: ('loc, 'a) class_extends;
-  implements: 'a list;
-  static_props: ('loc, 'a) obj_value_prop smap;
-  proto_props: ('loc, 'a) obj_value_prop smap;
-  own_props: ('loc, 'a) obj_value_prop smap;
-} [@@deriving iter, map, show {with_path = false}]
+type ('loc, 'a) class_sig =
+  | ClassSig of {
+      tparams: ('loc, 'a) tparams;
+      extends: ('loc, 'a) class_extends;
+      implements: 'a list;
+      static_props: ('loc, 'a) obj_value_prop smap;
+      proto_props: ('loc, 'a) obj_value_prop smap;
+      own_props: ('loc, 'a) obj_value_prop smap;
+    }
+[@@deriving iter, map, show { with_path = false }]
 
-type ('loc, 'a) declare_class_sig = DeclareClassSig of {
-  tparams: ('loc, 'a) tparams;
-  extends: ('loc, 'a) class_extends;
-  mixins: ('loc, 'a) class_mixins list;
-  implements: 'a list;
-  static_props: ('loc, 'a) interface_prop smap;
-  own_props: ('loc, 'a) interface_prop smap;
-  proto_props: ('loc, 'a) interface_prop smap;
-  static_calls: 'a list;
-  calls: 'a list;
-} [@@deriving iter, map, show {with_path = false}]
+type ('loc, 'a) declare_class_sig =
+  | DeclareClassSig of {
+      tparams: ('loc, 'a) tparams;
+      extends: ('loc, 'a) class_extends;
+      mixins: ('loc, 'a) class_mixins list;
+      implements: 'a list;
+      static_props: ('loc, 'a) interface_prop smap;
+      own_props: ('loc, 'a) interface_prop smap;
+      proto_props: ('loc, 'a) interface_prop smap;
+      static_calls: 'a list;
+      calls: 'a list;
+    }
+[@@deriving iter, map, show { with_path = false }]
 
-type ('loc, 'a) interface_sig = InterfaceSig of {
-  extends: 'a list;
-  props: ('loc, 'a) interface_prop smap;
-  calls: 'a list;
-} [@@deriving iter, map, show {with_path = false}]
+type ('loc, 'a) interface_sig =
+  | InterfaceSig of {
+      extends: 'a list;
+      props: ('loc, 'a) interface_prop smap;
+      calls: 'a list;
+    }
+[@@deriving iter, map, show { with_path = false }]
 
 type enum_rep =
   | BoolRep of bool option
   | NumberRep of { truthy: bool }
   | StringRep of { truthy: bool }
   | SymbolRep
-  [@@deriving iter, map, show {with_path = false}]
+[@@deriving iter, map, show { with_path = false }]
 
 (* Definitions represent the structure of things which can be found when
  * resolving a name, or as in the case of exports, a module reference.
@@ -288,33 +299,35 @@ type ('loc, 'a) def =
       id_loc: 'loc;
       name: string;
     }
-  [@@deriving iter, map, show {with_path = false}]
+[@@deriving iter, map, show { with_path = false }]
 
 (* These accessors will compile to code that does not have a branch because
  * id_loc and name have the same offset for each constructor. *)
 let def_id_loc = function
-  | TypeAlias {id_loc; _}
-  | OpaqueType {id_loc; _}
-  | Interface {id_loc; _}
-  | ClassBinding {id_loc; _}
-  | DeclareClassBinding {id_loc; _}
-  | FunBinding {id_loc; _}
-  | DeclareFun {id_loc; _}
-  | Variable {id_loc; _} -> id_loc
-  | EnumBinding {id_loc; _} -> id_loc
-  | DisabledEnumBinding {id_loc; _} -> id_loc
+  | TypeAlias { id_loc; _ }
+  | OpaqueType { id_loc; _ }
+  | Interface { id_loc; _ }
+  | ClassBinding { id_loc; _ }
+  | DeclareClassBinding { id_loc; _ }
+  | FunBinding { id_loc; _ }
+  | DeclareFun { id_loc; _ }
+  | Variable { id_loc; _ } ->
+    id_loc
+  | EnumBinding { id_loc; _ } -> id_loc
+  | DisabledEnumBinding { id_loc; _ } -> id_loc
 
 let def_name = function
-  | TypeAlias {name; _}
-  | OpaqueType {name; _}
-  | Interface {name; _}
-  | ClassBinding {name; _}
-  | DeclareClassBinding {name; _}
-  | FunBinding {name; _}
-  | DeclareFun {name; _}
-  | Variable {name; _} -> name
-  | EnumBinding {name; _} -> name
-  | DisabledEnumBinding {name; _} -> name
+  | TypeAlias { name; _ }
+  | OpaqueType { name; _ }
+  | Interface { name; _ }
+  | ClassBinding { name; _ }
+  | DeclareClassBinding { name; _ }
+  | FunBinding { name; _ }
+  | DeclareFun { name; _ }
+  | Variable { name; _ } ->
+    name
+  | EnumBinding { name; _ } -> name
+  | DisabledEnumBinding { name; _ } -> name
 
 (* The signature extractor relies heavily on annotations, but will extract
  * signatures corresponding to some literal expressions as well. The
@@ -350,13 +363,13 @@ type ('loc, 'a) value =
       elems_rev: ('loc, 'a) obj_value_spread_elem Nel.t;
     }
   | ArrayLit of 'loc * 'a * 'a tailrec_list
-  [@@deriving iter, map, show {with_path = false}]
+[@@deriving iter, map, show { with_path = false }]
 
 type 'a obj_kind =
   | ExactObj
   | InexactObj
   | IndexedObj of 'a obj_annot_dict
-  [@@deriving iter, map, show {with_path = false}]
+[@@deriving iter, map, show { with_path = false }]
 
 type ('loc, 'a) annot =
   | Any of 'loc
@@ -369,48 +382,71 @@ type ('loc, 'a) annot =
   | BigInt of 'loc
   | String of 'loc
   | Boolean of 'loc
-
-  | Exists of {loc: 'loc; force: bool}
-
+  | Exists of {
+      loc: 'loc;
+      force: bool;
+    }
   | Optional of 'a
   | Maybe of 'loc * 'a
-  | Union of {loc: 'loc; t0: 'a; t1: 'a; ts: 'a tailrec_list}
-  | Intersection of {loc: 'loc; t0: 'a; t1: 'a; ts: 'a tailrec_list}
-
-  | Tuple of {loc: 'loc; ts: 'a tailrec_list}
+  | Union of {
+      loc: 'loc;
+      t0: 'a;
+      t1: 'a;
+      ts: 'a tailrec_list;
+    }
+  | Intersection of {
+      loc: 'loc;
+      t0: 'a;
+      t1: 'a;
+      ts: 'a tailrec_list;
+    }
+  | Tuple of {
+      loc: 'loc;
+      ts: 'a tailrec_list;
+    }
   | Array of 'loc * 'a
   | ReadOnlyArray of 'loc * 'a
-
   | SingletonString of 'loc * string
   | SingletonNumber of 'loc * float * string
   | SingletonBigInt of 'loc * string
   | SingletonBoolean of 'loc * bool
-
   | Typeof of {
       loc: 'loc;
       qname: string list;
       t: 'a;
     }
-
   | Bound of {
       ref_loc: 'loc;
       name: string;
     }
-
   | TEMPORARY_Number of 'loc * float * string
   | TEMPORARY_String of 'loc * string
   | TEMPORARY_LongString of 'loc
   | TEMPORARY_Boolean of 'loc * bool
   | TEMPORARY_Object of 'a
   | TEMPORARY_Array of 'loc * 'a
-
   | AnyWithLowerBound of 'loc * 'a
   | AnyWithUpperBound of 'loc * 'a
-
-  | PropertyType of {loc: 'loc; obj: 'a; prop: string}
-  | ElementType of {loc: 'loc; obj: 'a; elem: 'a}
-  | OptionalIndexedAccessNonMaybeType of {loc: 'loc; obj: 'a; index: 'a}
-  | OptionalIndexedAccessResultType of {loc: 'loc; non_maybe_result: 'a; void_loc: 'loc}
+  | PropertyType of {
+      loc: 'loc;
+      obj: 'a;
+      prop: string;
+    }
+  | ElementType of {
+      loc: 'loc;
+      obj: 'a;
+      elem: 'a;
+    }
+  | OptionalIndexedAccessNonMaybeType of {
+      loc: 'loc;
+      obj: 'a;
+      index: 'a;
+    }
+  | OptionalIndexedAccessResultType of {
+      loc: 'loc;
+      non_maybe_result: 'a;
+      void_loc: 'loc;
+    }
   | NonMaybeType of 'loc * 'a
   | Shape of 'loc * 'a
   | Diff of 'loc * 'a * 'a
@@ -420,27 +456,46 @@ type ('loc, 'a) annot =
   | Exact of 'loc * 'a
   | Rest of 'loc * 'a * 'a
   | ExportsT of 'loc * string
-  | Call of {loc: 'loc; fn: 'a; args: 'a list}
-  | TupleMap of {loc: 'loc; tup: 'a; fn: 'a}
-  | ObjMap of {loc: 'loc; obj: 'a; fn: 'a}
-  | ObjMapi of {loc: 'loc; obj: 'a; fn: 'a}
-
+  | Call of {
+      loc: 'loc;
+      fn: 'a;
+      args: 'a list;
+    }
+  | TupleMap of {
+      loc: 'loc;
+      tup: 'a;
+      fn: 'a;
+    }
+  | ObjMap of {
+      loc: 'loc;
+      obj: 'a;
+      fn: 'a;
+    }
+  | ObjMapi of {
+      loc: 'loc;
+      obj: 'a;
+      fn: 'a;
+    }
   | CharSet of 'loc * string
-
   | ClassT of 'loc * 'a
-
   | Function_apply of 'loc
   | Function_bind of 'loc
   | Function_call of 'loc
   | Object_assign of 'loc
   | Object_getPrototypeOf of 'loc
   | Object_setPrototypeOf of 'loc
-
   | Compose of 'loc
   | ComposeReverse of 'loc
-
-  | ReactAbstractComponent of {loc: 'loc; config: 'a; instance: 'a}
-  | ReactConfig of {loc: 'loc; props: 'a; default: 'a}
+  | ReactAbstractComponent of {
+      loc: 'loc;
+      config: 'a;
+      instance: 'a;
+    }
+  | ReactConfig of {
+      loc: 'loc;
+      props: 'a;
+      default: 'a;
+    }
   | ReactPropTypePrimitive of 'loc * 'a
   | ReactPropTypePrimitiveRequired of 'loc * 'a
   | ReactPropTypeArrayOf of 'loc
@@ -456,39 +511,36 @@ type ('loc, 'a) annot =
   | ReactElementProps of 'loc * 'a
   | ReactElementConfig of 'loc * 'a
   | ReactElementRef of 'loc * 'a
-
   | FacebookismIdx of 'loc
   | FacebookismTypeAssertIs of 'loc
   | FacebookismTypeAssertThrows of 'loc
   | FacebookismTypeAssertWraps of 'loc
-
   | FlowDebugPrint of 'loc
   | FlowDebugThrow of 'loc
   | FlowDebugSleep of 'loc
-
   | Pred of 'loc * int
-  | Refine of {loc: 'loc; base: 'a; fn_pred: 'a; index: int}
-
+  | Refine of {
+      loc: 'loc;
+      base: 'a;
+      fn_pred: 'a;
+      index: int;
+    }
   | Trusted of 'loc * 'a
   | Private of 'loc * 'a
-
   | FunAnnot of 'loc * ('loc, 'a) fun_sig
-
   | ObjAnnot of {
       loc: 'loc;
       obj_kind: 'a obj_kind;
       props: ('loc, 'a) obj_annot_prop smap;
       proto: ('loc, 'a) obj_annot_proto;
     }
-
   | ObjSpreadAnnot of {
       loc: 'loc;
       exact: bool;
       elems_rev: ('loc, 'a) obj_spread_annot_elem Nel.t;
     }
-
   | InlineInterface of 'loc * ('loc, 'a) interface_sig
-  [@@deriving iter, map, show {with_path = false}]
+[@@deriving iter, map, show { with_path = false }]
 
 (* Along with literal expressions, the signature extractor also encodes some
  * operations over values and annotations, like unary operators and
@@ -497,7 +549,7 @@ type 'a op =
   | GetProp of string
   | GetElem of 'a
   | Unary of Flow_ast.Expression.Unary.operator
-  [@@deriving iter, map, show {with_path = false}]
+[@@deriving iter, map, show { with_path = false }]
 
 (* Parsing out a signature can fail. There are three interesting failure modes,
  * which are all conflated in this type.
@@ -515,6 +567,6 @@ type 'a op =
 type 'loc errno =
   | CheckError
   | SigError of 'loc Signature_error.t
-  [@@deriving show {with_path = false}, map]
+[@@deriving show { with_path = false }, map]
 
-type 'loc error = 'loc * 'loc errno [@@deriving show {with_path = false}]
+type 'loc error = 'loc * 'loc errno [@@deriving show { with_path = false }]
