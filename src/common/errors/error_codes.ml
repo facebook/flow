@@ -128,7 +128,6 @@ type error_code =
   | SketchyNumberAnd
   | Speculation
   | SpeculationAmbiguous
-  | SuperOutsideMethod
   | ThisInExportedFunction
   | TypeAsValue
   | UnclearAddition
@@ -293,7 +292,6 @@ let string_of_code : error_code -> string = function
   | SketchyNumberAnd -> "sketchy-number-and"
   | Speculation -> "speculation"
   | SpeculationAmbiguous -> "speculation-ambiguous"
-  | SuperOutsideMethod -> "super-outside-method"
   | ThisInExportedFunction -> "this-in-exported-function"
   | ToplevelLibraryImport -> "toplevel-library-import"
   | TypeAsValue -> "type-as-value"

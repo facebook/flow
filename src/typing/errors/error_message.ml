@@ -222,7 +222,6 @@ and 'loc t' =
   | EInvalidImportStarUse of 'loc * 'loc virtual_reason
   | ENonConstVarExport of 'loc * 'loc virtual_reason option
   | EThisInExportedFunction of 'loc
-  | ESuperOutsideMethod of 'loc
   | EMixedImportAndRequire of 'loc * 'loc virtual_reason
   | EToplevelLibraryImport of 'loc
   | EExportRenamedDefault of {
@@ -816,7 +815,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInvalidImportStarUse (loc, r) -> EInvalidImportStarUse (f loc, map_reason r)
   | ENonConstVarExport (loc, r) -> ENonConstVarExport (f loc, Base.Option.map ~f:map_reason r)
   | EThisInExportedFunction loc -> EThisInExportedFunction (f loc)
-  | ESuperOutsideMethod loc -> ESuperOutsideMethod (f loc)
   | EMixedImportAndRequire (loc, r) -> EMixedImportAndRequire (f loc, map_reason r)
   | EToplevelLibraryImport loc -> EToplevelLibraryImport (f loc)
   | EExportRenamedDefault { loc; name; is_reexport } ->
@@ -1134,7 +1132,6 @@ let util_use_op_of_msg nope util = function
   | EInvalidImportStarUse _
   | ENonConstVarExport _
   | EThisInExportedFunction _
-  | ESuperOutsideMethod _
   | EMixedImportAndRequire _
   | EToplevelLibraryImport _
   | EExportRenamedDefault _
@@ -1309,7 +1306,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInvalidImportStarUse (loc, _)
   | ENonConstVarExport (loc, _)
   | EThisInExportedFunction loc
-  | ESuperOutsideMethod loc
   | EMixedImportAndRequire (loc, _)
   | EToplevelLibraryImport loc
   | EExportRenamedDefault { loc; _ }
@@ -2559,8 +2555,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       }
   | EThisInExportedFunction _ ->
     Normal { features = [text "Cannot use "; code "this"; text " in an exported function."] }
-  | ESuperOutsideMethod _ ->
-    Normal { features = [text "Cannot use "; code "super"; text " outside of a class method."] }
   | EMixedImportAndRequire (_, import_reason) ->
     Normal
       {
@@ -3757,7 +3751,6 @@ let error_code_of_message err : error_code option =
   | ESpeculationAmbiguous _ -> Some SpeculationAmbiguous
   | EStrictLookupFailed _ -> Some Error_codes.PropMissing
   | EThisInExportedFunction _ -> Some ThisInExportedFunction
-  | ESuperOutsideMethod _ -> Some SuperOutsideMethod
   | EExportRenamedDefault _ -> Some ExportRenamedDefault
   | ETooFewTypeArgs (_, _, _) -> Some MissingTypeArg
   | ETooManyTypeArgs (_, _, _) -> Some ExtraTypeArg

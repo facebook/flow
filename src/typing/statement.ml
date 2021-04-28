@@ -7527,46 +7527,25 @@ and mk_class_sig =
          Class_sig.t containing this field, as that is when the initializer expression
          gets checked.
     *)
-    let mk_field =
-      let super_finder =
-        object (this)
-          inherit [bool, ALoc.t] Flow_ast_visitor.visitor ~init:false
-
-          method! super_expression _ node =
-            this#set_acc true;
-            node
-
-          method! class_ _ x = x
-        end
+    let mk_field cx tparams_map reason annot ~field_annot init =
+      let (annot_or_inferred, annot_ast) = Anno.mk_type_annotation cx tparams_map reason annot in
+      let annot_t = type_t_of_annotated_or_inferred annot_or_inferred in
+      let (field, get_init) =
+        match init with
+        | Ast.Class.Property.Declared -> (Annot annot_t, Fn.const Ast.Class.Property.Declared)
+        | Ast.Class.Property.Uninitialized ->
+          (Annot annot_t, Fn.const Ast.Class.Property.Uninitialized)
+        | Ast.Class.Property.Initialized expr ->
+          let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
+          let return_t = mk_inference_target_with_annots annot_or_inferred field_annot in
+          ( Infer
+              ( Func_stmt_sig.field_initializer tparams_map reason expr return_t,
+                (fun (_, _, value_opt) -> value_ref := Some (Base.Option.value_exn value_opt)) ),
+            fun () ->
+              Ast.Class.Property.Initialized
+                (Base.Option.value !value_ref ~default:(Tast_utils.error_mapper#expression expr)) )
       in
-
-      let found_super_in_expression expr =
-        let r = super_finder#eval super_finder#expression expr in
-        super_finder#set_acc false;
-        r
-      in
-      fun cx tparams_map reason annot ~field_annot init ->
-        let (annot_or_inferred, annot_ast) = Anno.mk_type_annotation cx tparams_map reason annot in
-        let annot_t = type_t_of_annotated_or_inferred annot_or_inferred in
-        let (field, get_init) =
-          match init with
-          | Ast.Class.Property.Declared -> (Annot annot_t, Fn.const Ast.Class.Property.Declared)
-          | Ast.Class.Property.Uninitialized ->
-            (Annot annot_t, Fn.const Ast.Class.Property.Uninitialized)
-          | Ast.Class.Property.Initialized expr ->
-            if found_super_in_expression expr then
-              Flow.add_output cx Error_message.(ESuperOutsideMethod (fst expr));
-            let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
-            let return_t = mk_inference_target_with_annots annot_or_inferred field_annot in
-            ( Infer
-                ( Func_stmt_sig.field_initializer tparams_map reason expr return_t,
-                  (fun (_, _, value_opt) -> value_ref := Some (Base.Option.value_exn value_opt)) ),
-              fun () ->
-                Ast.Class.Property.Initialized
-                  (Base.Option.value !value_ref ~default:(Tast_utils.error_mapper#expression expr))
-            )
-        in
-        (field, annot_t, annot_ast, get_init)
+      (field, annot_t, annot_ast, get_init)
     in
     let mk_method ~method_annot = mk_func_sig ~annot:method_annot in
     let mk_extends ~class_annot cx tparams_map = function
