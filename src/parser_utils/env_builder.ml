@@ -41,6 +41,7 @@ struct
     | Undefined
     | Maybe
     | InstanceOf of L.t
+    | IsArray
   [@@deriving show { with_path = false }]
 
   let merge_and ref1 ref2 = And (ref1, ref2)
@@ -265,6 +266,37 @@ struct
         | BitAnd ->
           ignore @@ this#binary loc expr
 
+      method call_refinement loc call =
+        match call with
+        | {
+         Flow_ast.Expression.Call.callee =
+           ( _,
+             Flow_ast.Expression.Member
+               {
+                 Flow_ast.Expression.Member._object =
+                   ( _,
+                     Flow_ast.Expression.Identifier
+                       (_, { Flow_ast.Identifier.name = "Array"; comments = _ }) );
+                 property =
+                   Flow_ast.Expression.Member.PropertyIdentifier
+                     (_, { Flow_ast.Identifier.name = "isArray"; comments = _ });
+                 comments = _;
+               } );
+         targs = _;
+         arguments =
+           ( _,
+             {
+               Flow_ast.Expression.ArgList.arguments = [Flow_ast.Expression.Expression arg];
+               comments = _;
+             } );
+         comments = _;
+        } ->
+          ignore @@ this#expression arg;
+          (match key arg with
+          | None -> ()
+          | Some name -> this#add_refinement name IsArray)
+        | _ -> ignore @@ this#call loc call
+
       method expression_refinement ((loc, expr) as expression) =
         let open Flow_ast.Expression in
         match expr with
@@ -280,9 +312,11 @@ struct
         | Binary binary ->
           this#binary_refinement loc binary;
           expression
+        | Call call ->
+          this#call_refinement loc call;
+          expression
         | Array _
         | ArrowFunction _
-        | Call _
         | Class _
         | Comprehension _
         | Conditional _

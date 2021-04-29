@@ -159,4 +159,9 @@ let x = null;
                "let x = undefined;
 (x instanceof Object) && x"
                LocMap.(empty |> add (mk_loc (2, 25) (2, 26)) (InstanceOf (mk_loc (2, 14) (2, 20))));
+         "Array.isArray"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(Array.isArray(x)) && x"
+               LocMap.(empty |> add (mk_loc (2, 22) (2, 23)) IsArray);
        ]
