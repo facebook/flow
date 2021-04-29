@@ -4995,43 +4995,42 @@ struct
         (*********)
         | ( DefT (enum_reason, trust, EnumObjectT ({ members; _ } as enum)),
             GetPropT (_, access_reason, Named (prop_reason, member_name), tout) ) ->
-          (* We guarantee in the parser that enum member names won't start with lowercase
-           * "a" through "z", these are reserved for methods. *)
-          let is_not_enum_name = function
-            | OrdinaryName name ->
-              (not @@ Base.String.is_empty name) && Base.Char.is_lowercase name.[0]
-            | InternalName _
-            | InternalModuleName _ ->
-              (* TODO this should probably be true, but for now I'm setting it to false to preserve
-               * previous behavior *)
-              false
-          in
-          if is_not_enum_name member_name then
-            rec_flow
-              cx
-              trace
-              (enum_proto cx trace ~reason:access_reason (enum_reason, trust, enum), u)
-          else if NameUtils.smap_mem member_name members then
-            let enum_type =
-              reposition
-                cx
-                ~trace
-                (aloc_of_reason access_reason)
-                (mk_enum_type ~loc:(def_aloc_of_reason enum_reason) ~trust enum)
-            in
-            rec_flow_t cx trace ~use_op:unknown_use (enum_type, OpenT tout)
-          else
+          let error_invalid_access ~suggestion =
             let member_reason = replace_desc_reason (RIdentifier member_name) prop_reason in
-            let suggestion =
-              (* TODO consider only offering a suggestion if `member_name` is an OrdinaryName *)
-              typo_suggestion (SMap.keys members) (display_string_of_name member_name)
-            in
             add_output
               cx
               ~trace
               (Error_message.EEnumInvalidMemberAccess
                  { member_name = Some member_name; suggestion; reason = member_reason; enum_reason });
             rec_flow_t cx trace ~use_op:unknown_use (AnyT.error access_reason, OpenT tout)
+          in
+          (* We guarantee in the parser that enum member names won't start with lowercase
+           * "a" through "z", these are reserved for methods. *)
+          let is_valid_member_name name =
+            Base.String.is_empty name || (not @@ Base.Char.is_lowercase name.[0])
+          in
+          (match member_name with
+          | OrdinaryName name when is_valid_member_name name ->
+            if SMap.mem name members then
+              let enum_type =
+                reposition
+                  cx
+                  ~trace
+                  (aloc_of_reason access_reason)
+                  (mk_enum_type ~loc:(def_aloc_of_reason enum_reason) ~trust enum)
+              in
+              rec_flow_t cx trace ~use_op:unknown_use (enum_type, OpenT tout)
+            else
+              let suggestion = typo_suggestion (SMap.keys members) name in
+              error_invalid_access ~suggestion
+          | OrdinaryName _ ->
+            rec_flow
+              cx
+              trace
+              (enum_proto cx trace ~reason:access_reason (enum_reason, trust, enum), u)
+          | InternalName _
+          | InternalModuleName _ ->
+            error_invalid_access ~suggestion:None)
         | (DefT (_, _, EnumObjectT _), TestPropT (reason, _, prop, tout)) ->
           rec_flow cx trace (l, GetPropT (Op (GetProperty reason), reason, prop, tout))
         | (DefT (enum_reason, trust, EnumObjectT enum), MethodT (_, _, lookup_reason, Named _, _, _))
