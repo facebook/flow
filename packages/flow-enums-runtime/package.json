@@ -1,6 +1,6 @@
 {
   "name": "flow-enums-runtime",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Runtime to be use with the Flow Enums transform.",
   "main": "index.js",
   "license": "MIT",
