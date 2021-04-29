@@ -25,6 +25,32 @@ and key_of_identifier (_, { Flow_ast.Identifier.name; comments = _ }) =
   else
     Some name
 
+let is_number_literal node =
+  let open Flow_ast in
+  match node with
+  | Expression.Literal { Literal.value = Literal.Number _; _ }
+  | Expression.Unary
+      {
+        Expression.Unary.operator = Expression.Unary.Minus;
+        argument = (_, Expression.Literal { Literal.value = Literal.Number _; _ });
+        comments = _;
+      } ->
+    true
+  | _ -> false
+
+let extract_number_literal node =
+  let open Flow_ast in
+  match node with
+  | Expression.Literal { Literal.value = Literal.Number _; raw; comments = _ } -> raw
+  | Expression.Unary
+      {
+        Expression.Unary.operator = Expression.Unary.Minus;
+        argument = (_, Expression.Literal { Literal.value = Literal.Number _; raw; _ });
+        comments = _;
+      } ->
+    "-" ^ raw
+  | _ -> Utils_js.assert_false "not a number literal"
+
 module Make
     (L : Loc_sig.S)
     (Ssa_api : Ssa_api.S with module L = L)
