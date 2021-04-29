@@ -176,4 +176,124 @@ let x = null;
                  |> add (mk_loc (3, 6) (3, 7)) (Not Truthy)
                  |> add (mk_loc (4, 7) (4, 8)) (Not Truthy)
                  |> add (mk_loc (4, 13) (4, 14)) (Not (Or (Truthy, Truthy))));
+         "typeof_bool"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x == \"boolean\") && x"
+               LocMap.(empty |> add (mk_loc (2, 27) (2, 28)) BoolR);
+         "not_typeof_bool"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x != \"boolean\") && x"
+               LocMap.(empty |> add (mk_loc (2, 27) (2, 28)) (Not BoolR));
+         "typeof_number"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x == \"number\") && x"
+               LocMap.(empty |> add (mk_loc (2, 26) (2, 27)) NumberR);
+         "not_typeof_number"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x != \"number\") && x"
+               LocMap.(empty |> add (mk_loc (2, 26) (2, 27)) (Not NumberR));
+         "typeof_function"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x == \"function\") && x"
+               LocMap.(empty |> add (mk_loc (2, 28) (2, 29)) FunctionR);
+         "not_typeof_function"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x != \"function\") && x"
+               LocMap.(empty |> add (mk_loc (2, 28) (2, 29)) (Not FunctionR));
+         "typeof_object"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x == \"object\") && x"
+               LocMap.(empty |> add (mk_loc (2, 26) (2, 27)) ObjectR);
+         "not_typeof_object"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x != \"object\") && x"
+               LocMap.(empty |> add (mk_loc (2, 26) (2, 27)) (Not ObjectR));
+         "typeof_string"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x == \"string\") && x"
+               LocMap.(empty |> add (mk_loc (2, 26) (2, 27)) StringR);
+         "not_typeof_string"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x != \"string\") && x"
+               LocMap.(empty |> add (mk_loc (2, 26) (2, 27)) (Not StringR));
+         "typeof_symbol"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x == \"symbol\") && x"
+               LocMap.(empty |> add (mk_loc (2, 26) (2, 27)) SymbolR);
+         "not_typeof_symbol"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x != \"symbol\") && x"
+               LocMap.(empty |> add (mk_loc (2, 26) (2, 27)) (Not SymbolR));
+         "typeof_bool_template"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x == `boolean`) && x"
+               LocMap.(empty |> add (mk_loc (2, 27) (2, 28)) BoolR);
+         "not_typeof_bool_template"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x != `boolean`) && x"
+               LocMap.(empty |> add (mk_loc (2, 27) (2, 28)) (Not BoolR));
+         "typeof_number_template"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x == `number`) && x"
+               LocMap.(empty |> add (mk_loc (2, 26) (2, 27)) NumberR);
+         "not_typeof_number_template"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x != `number`) && x"
+               LocMap.(empty |> add (mk_loc (2, 26) (2, 27)) (Not NumberR));
+         "typeof_function_template"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x == `function`) && x"
+               LocMap.(empty |> add (mk_loc (2, 28) (2, 29)) FunctionR);
+         "not_typeof_function_template"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x != `function`) && x"
+               LocMap.(empty |> add (mk_loc (2, 28) (2, 29)) (Not FunctionR));
+         "typeof_object_template"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x == `object`) && x"
+               LocMap.(empty |> add (mk_loc (2, 26) (2, 27)) ObjectR);
+         "not_typeof_object_template"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x != `object`) && x"
+               LocMap.(empty |> add (mk_loc (2, 26) (2, 27)) (Not ObjectR));
+         "typeof_string_template"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x == `string`) && x"
+               LocMap.(empty |> add (mk_loc (2, 26) (2, 27)) StringR);
+         "not_typeof_string_template"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x != `string`) && x"
+               LocMap.(empty |> add (mk_loc (2, 26) (2, 27)) (Not StringR));
+         "typeof_symbol_template"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x == `symbol`) && x"
+               LocMap.(empty |> add (mk_loc (2, 26) (2, 27)) SymbolR);
+         "not_typeof_symbol_template"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(typeof x != `symbol`) && x"
+               LocMap.(empty |> add (mk_loc (2, 26) (2, 27)) (Not SymbolR));
        ]

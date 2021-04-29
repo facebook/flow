@@ -208,9 +208,80 @@ struct
             in
             this#add_refinement name refinement
 
+      method typeof_test arg typename sense =
+        ignore @@ this#expression arg;
+        let refinement =
+          match typename with
+          | "boolean" -> Some BoolR
+          | "function" -> Some FunctionR
+          | "number" -> Some NumberR
+          | "object" -> Some ObjectR
+          | "string" -> Some StringR
+          | "symbol" -> Some SymbolR
+          | "undefined" -> Some Undefined
+          | _ -> None
+        in
+        match (refinement, key arg) with
+        | (Some ref, Some name) ->
+          let refinement =
+            if sense then
+              ref
+            else
+              Not ref
+          in
+          this#add_refinement name refinement
+        | _ -> ()
+
       method eq_test ~strict ~sense left right =
         let open Flow_ast in
         match (left, right) with
+        (* typeof expr ==/=== string *)
+        | ( ( _,
+              Expression.Unary
+                { Expression.Unary.operator = Expression.Unary.Typeof; argument; comments = _ } ),
+            (_, Expression.Literal { Literal.value = Literal.String s; _ }) )
+        | ( (_, Expression.Literal { Literal.value = Literal.String s; _ }),
+            ( _,
+              Expression.Unary
+                { Expression.Unary.operator = Expression.Unary.Typeof; argument; comments = _ } ) )
+        | ( ( _,
+              Expression.Unary
+                { Expression.Unary.operator = Expression.Unary.Typeof; argument; comments = _ } ),
+            ( _,
+              Expression.TemplateLiteral
+                {
+                  Expression.TemplateLiteral.quasis =
+                    [
+                      ( _,
+                        {
+                          Expression.TemplateLiteral.Element.value =
+                            { Expression.TemplateLiteral.Element.cooked = s; _ };
+                          _;
+                        } );
+                    ];
+                  expressions = [];
+                  comments = _;
+                } ) )
+        | ( ( _,
+              Expression.TemplateLiteral
+                {
+                  Expression.TemplateLiteral.quasis =
+                    [
+                      ( _,
+                        {
+                          Expression.TemplateLiteral.Element.value =
+                            { Expression.TemplateLiteral.Element.cooked = s; _ };
+                          _;
+                        } );
+                    ];
+                  expressions = [];
+                  comments = _;
+                } ),
+            ( _,
+              Expression.Unary
+                { Expression.Unary.operator = Expression.Unary.Typeof; argument; comments = _ } ) )
+          ->
+          this#typeof_test argument s sense
         (* expr op null *)
         | ((_, Expression.Literal { Literal.value = Literal.Null; _ }), expr)
         | (expr, (_, Expression.Literal { Literal.value = Literal.Null; _ })) ->
