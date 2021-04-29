@@ -5,16 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type refinement =
-  | And of refinement * refinement
-  | Or of refinement * refinement
-  | Not of refinement
-  | Truthy
-  | Null
-  | Undefined
-  | Maybe
-[@@deriving show { with_path = false }]
-
 (* These functions are adapted from typing/refinement.ml. Eventually, this will be the only place
  * where refinement logic lives, so jmbrown is ok with this temporary duplication while he is
  * fleshing out the refinement features of EnvBuilder
@@ -41,6 +31,17 @@ module Make
     (Scope_builder : Scope_builder_sig.S with module L = L) =
 struct
   module Ssa_builder = Ssa_builder.Make (L) (Ssa_api) (Scope_builder)
+
+  type refinement =
+    | And of refinement * refinement
+    | Or of refinement * refinement
+    | Not of refinement
+    | Truthy
+    | Null
+    | Undefined
+    | Maybe
+    | InstanceOf of L.t
+  [@@deriving show { with_path = false }]
 
   let merge_and ref1 ref2 = And (ref1, ref2)
 

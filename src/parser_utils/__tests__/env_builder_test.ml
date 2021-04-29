@@ -20,7 +20,7 @@ let mk_ssa_builder_test contents expected_values ctxt =
           Printf.sprintf
             "%s => { %s }"
             (Loc.debug_to_string read_loc)
-            (Env_builder.show_refinement refinement))
+            (Env_builder.With_Loc.show_refinement refinement))
         kvlist
     in
     Printf.sprintf "[ %s ]" (String.concat "; " strlist)
@@ -36,7 +36,7 @@ let mk_ssa_builder_test contents expected_values ctxt =
 let mk_write (pos1, pos2) = Ssa_api.Write (mk_loc pos1 pos2)
 
 let tests =
-  let open Env_builder in
+  let open Env_builder.With_Loc in
   "env_builder"
   >::: [
          "logical_expr"
