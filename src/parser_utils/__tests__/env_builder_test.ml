@@ -154,4 +154,9 @@ let x = null;
                "let x = undefined;
 (x !== void 0) && x"
                LocMap.(empty |> add (mk_loc (2, 18) (2, 19)) (Not Undefined));
+         "instanceof"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(x instanceof Object) && x"
+               LocMap.(empty |> add (mk_loc (2, 25) (2, 26)) (InstanceOf (mk_loc (2, 14) (2, 20))));
        ]

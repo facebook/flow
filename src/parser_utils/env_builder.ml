@@ -227,6 +227,15 @@ struct
           ignore @@ this#expression left;
           ignore @@ this#expression right
 
+      method instance_test expr instance =
+        ignore @@ this#expression expr;
+        ignore @@ this#expression instance;
+        match key expr with
+        | None -> ()
+        | Some name ->
+          let (loc, _) = instance in
+          this#add_refinement name (InstanceOf loc)
+
       method binary_refinement loc expr =
         let open Flow_ast.Expression.Binary in
         let { operator; left; right; comments = _ } = expr in
@@ -236,9 +245,7 @@ struct
         | NotEqual -> this#eq_test ~strict:false ~sense:false left right
         | StrictEqual -> this#eq_test ~strict:true ~sense:true left right
         | StrictNotEqual -> this#eq_test ~strict:true ~sense:false left right
-        | Instanceof ->
-          (* TODO *)
-          ignore @@ this#binary loc expr
+        | Instanceof -> this#instance_test left right
         | LessThan
         | LessThanEqual
         | GreaterThan
