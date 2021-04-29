@@ -42,6 +42,12 @@ struct
     | Maybe
     | InstanceOf of L.t
     | IsArray
+    | BoolR
+    | FunctionR
+    | NumberR
+    | ObjectR
+    | StringR
+    | SymbolR
   [@@deriving show { with_path = false }]
 
   let merge_and ref1 ref2 = And (ref1, ref2)
