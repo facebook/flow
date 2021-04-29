@@ -1,3 +1,26 @@
+### 0.150.0
+
+New Features:
+
+* Suggest string literals in autocomplete in positions where string literal unions are expected.
+
+Notable bug fixes:
+
+* Use bracket syntax for autocomplete when autocompleting a property name that is not a valid identifier.
+* Require the "main" property of `package.json` to have a valid Flow extension for the file to be considered.
+* Fall back to `.js` extensions even when a module name looks like a resource file (e.g. `./a.svg` will look to `./a.svg.js`).
+* Fix a crash that occurred when checking a `this` parameter with a generic.
+* Make `$NonMaybeType<empty>` evaluate to `empty`.
+* Honor format config options in more cases in code actions and codemods.
+* Fix `PointerCapture` library definitions (thanks @malectro!).
+
+Misc:
+
+* Remove experimental `observedBits` param to React's `useContext` libdef.
+* Add caching to live errors and signature help, to speed up IDE interactions (currently behind temporary flags).
+* Introduce `format.bracket_spacing` option which affects code output (such as code actions).
+* Improve the sorting of autoimport suggestions that have the same name, so that the module's file extension is not considered.
+
 ### 0.149.0
 
 New Features:
