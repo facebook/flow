@@ -296,4 +296,9 @@ let x = null;
                "let x = undefined;
 (typeof x != `symbol`) && x"
                LocMap.(empty |> add (mk_loc (2, 26) (2, 27)) (Not SymbolR));
+         "singleton_bool"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(x === true) && x"
+               LocMap.(empty |> add (mk_loc (2, 16) (2, 17)) (SingletonBoolR true));
        ]

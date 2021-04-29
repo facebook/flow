@@ -235,6 +235,19 @@ struct
           this#add_refinement name refinement
         | _ -> ()
 
+      method literal_test ~strict ~sense expr refinement =
+        ignore @@ this#expression expr;
+        match key expr with
+        | Some name when strict ->
+          let refinement =
+            if sense then
+              refinement
+            else
+              Not refinement
+          in
+          this#add_refinement name refinement
+        | _ -> ()
+
       method eq_test ~strict ~sense left right =
         let open Flow_ast in
         match (left, right) with
@@ -285,6 +298,10 @@ struct
                 { Expression.Unary.operator = Expression.Unary.Typeof; argument; comments = _ } ) )
           ->
           this#typeof_test argument s sense
+        (* bool equality *)
+        | ((_, Expression.Literal { Literal.value = Literal.Boolean lit; _ }), expr)
+        | (expr, (_, Expression.Literal { Literal.value = Literal.Boolean lit; _ })) ->
+          this#literal_test ~strict ~sense expr (SingletonBoolR lit)
         (* expr op null *)
         | ((_, Expression.Literal { Literal.value = Literal.Null; _ }), expr)
         | (expr, (_, Expression.Literal { Literal.value = Literal.Null; _ })) ->
