@@ -301,4 +301,14 @@ let x = null;
                "let x = undefined;
 (x === true) && x"
                LocMap.(empty |> add (mk_loc (2, 16) (2, 17)) (SingletonBoolR true));
+         "singleton_str"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(x === \"str\") && x"
+               LocMap.(empty |> add (mk_loc (2, 17) (2, 18)) (SingletonStrR "str"));
+         "singleton_str_template"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(x === `str`) && x"
+               LocMap.(empty |> add (mk_loc (2, 17) (2, 18)) (SingletonStrR "str"));
        ]

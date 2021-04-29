@@ -302,6 +302,40 @@ struct
         | ((_, Expression.Literal { Literal.value = Literal.Boolean lit; _ }), expr)
         | (expr, (_, Expression.Literal { Literal.value = Literal.Boolean lit; _ })) ->
           this#literal_test ~strict ~sense expr (SingletonBoolR lit)
+        (* string equality *)
+        | ((_, Expression.Literal { Literal.value = Literal.String lit; _ }), expr)
+        | (expr, (_, Expression.Literal { Literal.value = Literal.String lit; _ }))
+        | ( expr,
+            ( _,
+              Expression.TemplateLiteral
+                {
+                  Expression.TemplateLiteral.quasis =
+                    [
+                      ( _,
+                        {
+                          Expression.TemplateLiteral.Element.value =
+                            { Expression.TemplateLiteral.Element.cooked = lit; _ };
+                          _;
+                        } );
+                    ];
+                  _;
+                } ) )
+        | ( ( _,
+              Expression.TemplateLiteral
+                {
+                  Expression.TemplateLiteral.quasis =
+                    [
+                      ( _,
+                        {
+                          Expression.TemplateLiteral.Element.value =
+                            { Expression.TemplateLiteral.Element.cooked = lit; _ };
+                          _;
+                        } );
+                    ];
+                  _;
+                } ),
+            expr ) ->
+          this#literal_test ~strict ~sense expr (SingletonStrR lit)
         (* expr op null *)
         | ((_, Expression.Literal { Literal.value = Literal.Null; _ }), expr)
         | (expr, (_, Expression.Literal { Literal.value = Literal.Null; _ })) ->
