@@ -297,6 +297,18 @@ struct
           | Some name -> this#add_refinement name IsArray)
         | _ -> ignore @@ this#call loc call
 
+      method unary_refinement
+          loc ({ Flow_ast.Expression.Unary.operator; argument; comments = _ } as unary) =
+        match operator with
+        | Flow_ast.Expression.Unary.Not ->
+          this#push_refinement_scope IMap.empty;
+          ignore @@ this#expression_refinement argument;
+          this#negate_new_refinements ();
+          let new_refinements = this#peek_new_refinements () in
+          this#pop_refinement_scope ();
+          this#merge_self_refinement_scope new_refinements
+        | _ -> ignore @@ this#unary_expression loc unary
+
       method expression_refinement ((loc, expr) as expression) =
         let open Flow_ast.Expression in
         match expr with
@@ -314,6 +326,9 @@ struct
           expression
         | Call call ->
           this#call_refinement loc call;
+          expression
+        | Unary unary ->
+          this#unary_refinement loc unary;
           expression
         | Array _
         | ArrowFunction _
@@ -338,7 +353,6 @@ struct
         | TemplateLiteral _
         | TypeCast _
         | This _
-        | Unary _
         | Update _
         | Yield _ ->
           this#expression expression

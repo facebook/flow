@@ -164,4 +164,16 @@ let x = null;
                "let x = undefined;
 (Array.isArray(x)) && x"
                LocMap.(empty |> add (mk_loc (2, 22) (2, 23)) IsArray);
+         "unary_negation"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(!Array.isArray(x)) && x;
+!x && x;
+!(x || x) && x;"
+               LocMap.(
+                 empty
+                 |> add (mk_loc (2, 23) (2, 24)) (Not IsArray)
+                 |> add (mk_loc (3, 6) (3, 7)) (Not Truthy)
+                 |> add (mk_loc (4, 7) (4, 8)) (Not Truthy)
+                 |> add (mk_loc (4, 13) (4, 14)) (Not (Or (Truthy, Truthy))));
        ]
