@@ -362,6 +362,13 @@ struct
                 } ),
             expr ) ->
           this#literal_test ~strict ~sense expr (SingletonStrR lit)
+        (* number equality *)
+        | ((_, number_literal), expr) when is_number_literal number_literal ->
+          let raw = extract_number_literal number_literal in
+          this#literal_test ~strict ~sense expr (SingletonNumR raw)
+        | (expr, (_, number_literal)) when is_number_literal number_literal ->
+          let raw = extract_number_literal number_literal in
+          this#literal_test ~strict ~sense expr (SingletonNumR raw)
         (* expr op null *)
         | ((_, Expression.Literal { Literal.value = Literal.Null; _ }), expr)
         | (expr, (_, Expression.Literal { Literal.value = Literal.Null; _ })) ->
