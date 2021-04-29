@@ -134,4 +134,24 @@ x || (x || x)"
 let x = null;
 (x !== undefined) && x"
                LocMap.empty;
+         "eq_void"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(x == void 0) && x"
+               LocMap.(empty |> add (mk_loc (2, 17) (2, 18)) Maybe);
+         "neq_void"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(x != void 0) && x"
+               LocMap.(empty |> add (mk_loc (2, 17) (2, 18)) (Not Maybe));
+         "strict_eq_void"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(x === void 0) && x"
+               LocMap.(empty |> add (mk_loc (2, 18) (2, 19)) Undefined);
+         "strit_neq_void"
+         >:: mk_ssa_builder_test
+               "let x = undefined;
+(x !== void 0) && x"
+               LocMap.(empty |> add (mk_loc (2, 18) (2, 19)) (Not Undefined));
        ]

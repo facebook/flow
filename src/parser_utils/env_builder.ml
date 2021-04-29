@@ -179,13 +179,13 @@ struct
           in
           this#add_refinement name refinement
 
-      method undefined_test ~sense ~strict expr =
+      method void_test ~sense ~strict ~check_for_bound_undefined expr =
         ignore @@ this#expression expr;
         match key expr with
         | None -> ()
         | Some name ->
           (* Only add the refinement if undefined is not re-bound *)
-          if SMap.find_opt "undefined" this#ssa_env = None then
+          if (not check_for_bound_undefined) || SMap.find_opt "undefined" this#ssa_env = None then
             let refinement =
               if strict then
                 Undefined
@@ -207,12 +207,21 @@ struct
         | ((_, Expression.Literal { Literal.value = Literal.Null; _ }), expr)
         | (expr, (_, Expression.Literal { Literal.value = Literal.Null; _ })) ->
           this#null_test ~sense ~strict expr
-        | ( (_, Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ })),
+        (* expr op undefined *)
+        | ( ( ( _,
+                Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ })
+              ) as undefined ),
             expr )
         | ( expr,
-            (_, Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ }))
-          ) ->
-          this#undefined_test ~sense ~strict expr
+            ( ( _,
+                Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ })
+              ) as undefined ) ) ->
+          ignore @@ this#expression undefined;
+          this#void_test ~sense ~strict ~check_for_bound_undefined:true expr
+        (* expr op void(...) *)
+        | ((_, Expression.Unary { Expression.Unary.operator = Expression.Unary.Void; _ }), expr)
+        | (expr, (_, Expression.Unary { Expression.Unary.operator = Expression.Unary.Void; _ })) ->
+          this#void_test ~sense ~strict ~check_for_bound_undefined:false expr
         | _ ->
           ignore @@ this#expression left;
           ignore @@ this#expression right
