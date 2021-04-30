@@ -71,6 +71,7 @@ type t =
   | InvalidLHSInForIn
   | InvalidLHSInForOf
   | InvalidIndexedAccess of { has_bracket: bool }
+  | InvalidOptionalIndexedAccess
   | ExpectedPatternFoundExpression
   | MultipleDefaultsInSwitch
   | NoCatchOrFinally
@@ -299,6 +300,8 @@ module PP = struct
           "Indexed access uses bracket notation."
       in
       Printf.sprintf "Invalid indexed access. %s Use the format `T[K]`." msg
+    | InvalidOptionalIndexedAccess ->
+      "Invalid optional indexed access. Indexed access uses bracket notation. Use the format `T?.[K]`."
     | ExpectedPatternFoundExpression ->
       "Expected an object pattern, array pattern, or an identifier but "
       ^ "found an expression instead"

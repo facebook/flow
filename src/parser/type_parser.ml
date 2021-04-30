@@ -191,6 +191,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
       match Peek.token env with
       | T_PLING_PERIOD ->
         Eat.token env;
+        if Peek.token env <> T_LBRACKET then error env Parse_error.InvalidOptionalIndexedAccess;
         Expect.token env T_LBRACKET;
         postfix_brackets ~in_optional_indexed_access:true ~optional_indexed_access:true env t
       | T_LBRACKET ->
