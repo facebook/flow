@@ -369,4 +369,43 @@ let tests =
                LocMap.(
                  empty
                  |> add (mk_loc (1, 58) (1, 59)) [Ssa_api.uninitialized; mk_write (1, 40) (1, 41)]);
+         "arrow"
+         >:: mk_ssa_builder_test
+               "(x) => { let y = x; return y }"
+               LocMap.(
+                 empty
+                 |> add (mk_loc (1, 17) (1, 18)) [mk_write (1, 1) (1, 2)]
+                 |> add (mk_loc (1, 27) (1, 28)) [mk_write (1, 13) (1, 14)]);
+         "destructuring"
+         >:: mk_ssa_builder_test
+               "let {a, b} = {a : 3, b : 4}; let c = a; let d = b;"
+               LocMap.(
+                 empty
+                 |> add (mk_loc (1, 37) (1, 38)) [mk_write (1, 5) (1, 6)]
+                 |> add (mk_loc (1, 48) (1, 49)) [mk_write (1, 8) (1, 9)]);
+         "rest_param"
+         >:: mk_ssa_builder_test
+               "(...y) => { return y }"
+               LocMap.(empty |> add (mk_loc (1, 19) (1, 20)) [mk_write (1, 4) (1, 5)]);
+         "spread"
+         >:: mk_ssa_builder_test
+               "let y = {}; let x = {...y}; "
+               LocMap.(empty |> add (mk_loc (1, 24) (1, 25)) [mk_write (1, 4) (1, 5)]);
+         "param_defaults"
+         >:: mk_ssa_builder_test
+               "function foo({x, y} = {x : 3, y : 3}) { return x + y; }"
+               LocMap.(
+                 empty
+                 |> add (mk_loc (1, 47) (1, 48)) [mk_write (1, 14) (1, 15)]
+                 |> add (mk_loc (1, 51) (1, 52)) [mk_write (1, 17) (1, 18)]);
+         (* The following tests are wrong and use ES6/Flow features not yet supported by the ssa builder
+          * These are being compiled here for future reference to be fixed later
+          *)
+         "enums"
+         >:: mk_ssa_builder_test
+               "enum E {A, B}; let a = E.A;"
+               LocMap.(
+                 empty
+                 |> add (mk_loc (1, 5) (1, 6)) [Ssa_api.uninitialized]
+                 |> add (mk_loc (1, 23) (1, 24)) [Ssa_api.uninitialized]);
        ]
