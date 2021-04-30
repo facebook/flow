@@ -1240,8 +1240,8 @@ References:
    exhaustive-check.js:3:6
       3| enum E {
               ^ [2]
-   <BUILTINS>/core.js:2449:3
-   2449|   isValid(input: ?TRepresentation): boolean,
+   <BUILTINS>/core.js:2450:3
+   2450|   isValid(input: ?TRepresentation): boolean,
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -1841,12 +1841,12 @@ Cannot use `A` as a type. Enum members are not separate types. Only the enum its
                      ^^^
 
 
-Error -------------------------------------------------------------------------------------------------- methods.js:26:3
+Error -------------------------------------------------------------------------------------------------- methods.js:27:3
 
 Cannot get `E.nonExistent` because property `nonExistent` is missing in `$EnumProto` [1]. [prop-missing]
 
-   methods.js:26:3
-     26| E.nonExistent; // Error
+   methods.js:27:3
+     27| E.nonExistent; // Error
            ^^^^^^^^^^^
 
 References:
@@ -1854,19 +1854,20 @@ References:
                                                    v-
    2447| type $EnumProto<TEnum, TRepresentation> = {|
    2448|   cast(input: ?TRepresentation): void | TEnum,
-   2449|   isValid(input: ?TRepresentation): boolean,
-   2450|   members(): Iterable<TEnum>,
-   2451|   __proto__: null,
-   2452| |}
+   2449|   getName(input: TEnum): string,
+   2450|   isValid(input: ?TRepresentation): boolean,
+   2451|   members(): Iterable<TEnum>,
+   2452|   __proto__: null,
+   2453| |}
          -^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- methods.js:29:3
+Error -------------------------------------------------------------------------------------------------- methods.js:30:3
 
 Cannot call `E.nonExistent` because property `nonExistent` is missing in `$EnumProto` [1]. [prop-missing]
 
-   methods.js:29:3
-     29| E.nonExistent(); // Error
+   methods.js:30:3
+     30| E.nonExistent(); // Error
            ^^^^^^^^^^^
 
 References:
@@ -1874,19 +1875,20 @@ References:
                                                    v-
    2447| type $EnumProto<TEnum, TRepresentation> = {|
    2448|   cast(input: ?TRepresentation): void | TEnum,
-   2449|   isValid(input: ?TRepresentation): boolean,
-   2450|   members(): Iterable<TEnum>,
-   2451|   __proto__: null,
-   2452| |}
+   2449|   getName(input: TEnum): string,
+   2450|   isValid(input: ?TRepresentation): boolean,
+   2451|   members(): Iterable<TEnum>,
+   2452|   __proto__: null,
+   2453| |}
          -^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- methods.js:32:3
+Error -------------------------------------------------------------------------------------------------- methods.js:33:3
 
 An index signature declaring the expected key / value type is missing in enum `E` [1]. [incompatible-use]
 
-   methods.js:32:3
-   32| E['members'](); // Error
+   methods.js:33:3
+   33| E['members'](); // Error
          ^^^^^^^^^
 
 References:
@@ -1895,12 +1897,12 @@ References:
             ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- methods.js:35:3
+Error -------------------------------------------------------------------------------------------------- methods.js:36:3
 
 Cannot call `E.A` because property `A` is missing in `$EnumProto` [1]. [prop-missing]
 
-   methods.js:35:3
-     35| E.A(); // Error
+   methods.js:36:3
+     36| E.A(); // Error
            ^
 
 References:
@@ -1908,19 +1910,20 @@ References:
                                                    v-
    2447| type $EnumProto<TEnum, TRepresentation> = {|
    2448|   cast(input: ?TRepresentation): void | TEnum,
-   2449|   isValid(input: ?TRepresentation): boolean,
-   2450|   members(): Iterable<TEnum>,
-   2451|   __proto__: null,
-   2452| |}
+   2449|   getName(input: TEnum): string,
+   2450|   isValid(input: ?TRepresentation): boolean,
+   2451|   members(): Iterable<TEnum>,
+   2452|   __proto__: null,
+   2453| |}
          -^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- methods.js:38:3
+Error -------------------------------------------------------------------------------------------------- methods.js:39:3
 
 Cannot call `E.toString` because property `toString` is missing in `$EnumProto` [1]. [prop-missing]
 
-   methods.js:38:3
-     38| E.toString(); // Error
+   methods.js:39:3
+     39| E.toString(); // Error
            ^^^^^^^^
 
 References:
@@ -1928,11 +1931,29 @@ References:
                                                    v-
    2447| type $EnumProto<TEnum, TRepresentation> = {|
    2448|   cast(input: ?TRepresentation): void | TEnum,
-   2449|   isValid(input: ?TRepresentation): boolean,
-   2450|   members(): Iterable<TEnum>,
-   2451|   __proto__: null,
-   2452| |}
+   2449|   getName(input: TEnum): string,
+   2450|   isValid(input: ?TRepresentation): boolean,
+   2451|   members(): Iterable<TEnum>,
+   2452|   __proto__: null,
+   2453| |}
          -^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- methods.js:42:2
+
+Cannot cast `E.getName(...)` to boolean because string [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   methods.js:42:2
+     42| (E.getName(E.B): boolean); // Error - wrong type
+          ^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:2449:26
+   2449|   getName(input: TEnum): string,
+                                  ^^^^^^ [1]
+   methods.js:42:18
+     42| (E.getName(E.B): boolean); // Error - wrong type
+                          ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:15:4
@@ -3311,7 +3332,7 @@ References:
 
 
 
-Found 201 errors
+Found 202 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

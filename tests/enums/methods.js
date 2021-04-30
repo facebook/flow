@@ -14,6 +14,7 @@ E.cast(maybeString);
 const b: Iterable<E> = E.members();
 const c: boolean = E.isValid('A');
 E.isValid(maybeString);
+const s: string = E.getName(E.A);
 
 const cast: (string) => void | E = E.cast;
 const members: () => Iterable<E> = E.members;
@@ -36,3 +37,6 @@ E.A(); // Error
 
 // Object.prototype is not in the prototype chain
 E.toString(); // Error
+
+// `getName` errors
+(E.getName(E.B): boolean); // Error - wrong type
