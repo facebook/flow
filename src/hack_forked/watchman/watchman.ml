@@ -93,13 +93,6 @@ let assert_no_error obj =
   | Some error ->
     EventLogger.watchman_error error;
     raise @@ Watchman_error error);
-  (match Jget.bool_opt obj "canceled" with
-  | None
-  | Some false ->
-    ()
-  | Some true ->
-    EventLogger.watchman_error "Subscription canceled by watchman";
-    raise @@ Subscription_canceled_by_watchman);
   ()
 
 (* Verifies that a watchman response is valid JSON and free from common errors *)
@@ -519,7 +512,6 @@ let watch_project ~debug_logging ~conn ~timeout root =
       ~catch:(fun exn ->
         (match Exception.to_exn exn with
         | Watchman_error _
-        | Subscription_canceled_by_watchman
         | Hh_json.Syntax_error _ ->
           (* These exceptions are logged already in `request` *)
           ()
@@ -816,6 +808,13 @@ let make_mergebase_changed_response env data =
     let response = Changed_merge_base (mergebase, files, clock) in
     Ok (env, response)
 
+let subscription_is_cancelled data =
+  match Jget.bool_opt (Some data) "canceled" with
+  | None
+  | Some false ->
+    false
+  | Some true -> true
+
 let transform_asynchronous_get_changes_response env data =
   match data with
   | None -> (env, Files_changed SSet.empty)
@@ -824,11 +823,14 @@ let transform_asynchronous_get_changes_response env data =
       match make_mergebase_changed_response env data with
       | Ok (env, response) -> (env, response)
       | Error _ ->
-        env.clockspec <- Jget.string_exn (Some data) "clock";
         if is_fresh_instance data then (
           Hh_logger.log "Watchman server is fresh instance. Exiting.";
           raise Exit.(Exit_with Watchman_fresh_instance)
+        ) else if subscription_is_cancelled data then (
+          EventLogger.watchman_error "Subscription canceled by watchman";
+          raise Subscription_canceled_by_watchman
         ) else (
+          env.clockspec <- Jget.string_exn (Some data) "clock";
           match Jget.string_opt (Some data) "state-enter" with
           | Some state -> (env, make_state_change_response `Enter state data)
           | None ->
