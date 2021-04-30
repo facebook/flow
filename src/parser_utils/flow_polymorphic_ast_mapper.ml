@@ -1324,14 +1324,14 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method jsx_opening_element (elem : ('M, 'T) Ast.JSX.Opening.t) : ('N, 'U) Ast.JSX.Opening.t =
       let open Ast.JSX.Opening in
       let (annot, { name; self_closing; attributes }) = elem in
-      let name' = this#jsx_name name in
+      let name' = this#jsx_element_name name in
       let attributes' = Base.List.map ~f:this#jsx_opening_attribute attributes in
       (this#on_loc_annot annot, { name = name'; self_closing; attributes = attributes' })
 
     method jsx_closing_element (elem : ('M, 'T) Ast.JSX.Closing.t) : ('N, 'U) Ast.JSX.Closing.t =
       let open Ast.JSX.Closing in
       let (annot, { name }) = elem in
-      let name' = this#jsx_name name in
+      let name' = this#jsx_element_name name in
       (this#on_loc_annot annot, { name = name' })
 
     method jsx_opening_attribute (jsx_attr : ('M, 'T) Ast.JSX.Opening.attribute)
@@ -1405,7 +1405,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = Base.Option.map ~f:this#syntax comments in
       { expression = expression'; comments = comments' }
 
-    method jsx_name (name : ('M, 'T) Ast.JSX.name) : ('N, 'U) Ast.JSX.name =
+    method jsx_element_name (name : ('M, 'T) Ast.JSX.name) : ('N, 'U) Ast.JSX.name =
       let open Ast.JSX in
       match name with
       | Identifier id -> Identifier (this#jsx_identifier id)

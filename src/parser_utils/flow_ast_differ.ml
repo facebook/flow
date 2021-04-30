@@ -1432,10 +1432,10 @@ let program
     if self_close1 != self_close2 then
       None
     else
-      let name_diff = diff_if_changed_ret_opt jsx_name name1 name2 in
+      let name_diff = diff_if_changed_ret_opt jsx_element_name name1 name2 in
       let attrs_diff = diff_and_recurse_no_trivial jsx_opening_attribute attrs1 attrs2 in
       join_diff_list [name_diff; attrs_diff]
-  and jsx_name (name1 : (Loc.t, Loc.t) Ast.JSX.name) (name2 : (Loc.t, Loc.t) Ast.JSX.name) :
+  and jsx_element_name (name1 : (Loc.t, Loc.t) Ast.JSX.name) (name2 : (Loc.t, Loc.t) Ast.JSX.name) :
       node change list option =
     let open Ast.JSX in
     match (name1, name2) with
@@ -1491,7 +1491,7 @@ let program
     let open Ast.JSX.Closing in
     let (_, { name = name1 }) = elem1 in
     let (_, { name = name2 }) = elem2 in
-    diff_if_changed_ret_opt jsx_name name1 name2
+    diff_if_changed_ret_opt jsx_element_name name1 name2
   and jsx_opening_attribute
       (jsx_attr1 : (Loc.t, Loc.t) Ast.JSX.Opening.attribute)
       (jsx_attr2 : (Loc.t, Loc.t) Ast.JSX.Opening.attribute) : node change list option =

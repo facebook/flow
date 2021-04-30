@@ -336,7 +336,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method jsx_member_expression_object :
       ('M, 'T) Ast.JSX.MemberExpression._object -> ('N, 'U) Ast.JSX.MemberExpression._object
 
-    method jsx_name : ('M, 'T) Ast.JSX.name -> ('N, 'U) Ast.JSX.name
+    method jsx_element_name : ('M, 'T) Ast.JSX.name -> ('N, 'U) Ast.JSX.name
 
     method jsx_namespaced_name :
       ('M, 'T) Flow_ast.JSX.NamespacedName.t -> ('N, 'U) Ast.JSX.NamespacedName.t

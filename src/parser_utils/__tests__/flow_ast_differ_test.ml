@@ -143,7 +143,7 @@ class useless_mapper =
     method! jsx_opening_element (elem : (Loc.t, Loc.t) Ast.JSX.Opening.t) =
       let open Ast.JSX.Opening in
       let (loc, { name; self_closing; attributes }) = elem in
-      let name' = this#jsx_name name in
+      let name' = this#jsx_element_name name in
       let self_closing' =
         match name' with
         | Ast.JSX.Identifier (_, { Ast.JSX.Identifier.name = id_name; comments = _ }) ->

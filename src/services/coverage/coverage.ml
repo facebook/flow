@@ -346,9 +346,9 @@ class ['a, 'l, 't] coverage_folder ~(f : 'l -> 't -> 'a -> 'a) ~(init : 'a) =
     method! class_identifier i = i
 
     (* skip this *)
-    method! jsx_name name =
+    method! jsx_element_name name =
       let open Ast.JSX in
-      let name = super#jsx_name name in
+      let name = super#jsx_element_name name in
       match name with
       | MemberExpression (loc, { MemberExpression.property = ((_, t), _); _ }) ->
         acc <- f loc t acc;

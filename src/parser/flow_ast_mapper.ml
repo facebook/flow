@@ -1691,7 +1691,7 @@ class ['loc] mapper =
     method jsx_opening_element (elem : ('loc, 'loc) Ast.JSX.Opening.t) =
       let open Ast.JSX.Opening in
       let (loc, { name; self_closing; attributes }) = elem in
-      let name' = this#jsx_name name in
+      let name' = this#jsx_element_name name in
       let attributes' = map_list this#jsx_opening_attribute attributes in
       if name == name' && attributes == attributes' then
         elem
@@ -1701,7 +1701,7 @@ class ['loc] mapper =
     method jsx_closing_element (elem : ('loc, 'loc) Ast.JSX.Closing.t) =
       let open Ast.JSX.Closing in
       let (loc, { name }) = elem in
-      let name' = this#jsx_name name in
+      let name' = this#jsx_element_name name in
       if name == name' then
         elem
       else
@@ -1787,7 +1787,7 @@ class ['loc] mapper =
       else
         { expression = expression'; comments = comments' }
 
-    method jsx_name (name : ('loc, 'loc) Ast.JSX.name) =
+    method jsx_element_name (name : ('loc, 'loc) Ast.JSX.name) =
       let open Ast.JSX in
       let name' =
         match name with

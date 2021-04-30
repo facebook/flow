@@ -6001,7 +6001,7 @@ and jsx_title cx opening_element children closing_element locs =
       (t, MemberExpression member', attributes', children)
     | (MemberExpression member, Options.Jsx_pragma _, _) ->
       let t = Unsoundness.at InferenceHooks loc_element in
-      let name' = Tast_utils.error_mapper#jsx_name name in
+      let name' = Tast_utils.error_mapper#jsx_element_name name in
       let el_name = jsx_title_member_to_string member in
       let reason = mk_reason (RJSXElement (Some el_name)) loc_element in
       let (_o, attributes', _, children) = jsx_mk_props cx reason el_name attributes children in
@@ -6009,7 +6009,7 @@ and jsx_title cx opening_element children closing_element locs =
     | (NamespacedName namespace, _, _) ->
       (* TODO? covers namespaced names as element names *)
       let t = Unsoundness.at InferenceHooks loc_element in
-      let name' = Tast_utils.error_mapper#jsx_name name in
+      let name' = Tast_utils.error_mapper#jsx_element_name name in
       let el_name = jsx_title_namespaced_name_to_string namespace in
       let reason = mk_reason (RJSXElement (Some el_name)) loc_element in
       let (_o, attributes', _, children) = jsx_mk_props cx reason el_name attributes children in
@@ -6061,7 +6061,7 @@ and jsx_match_closing_element =
       NamespacedName (match_namespaced_names o_nname c_nname)
     | (MemberExpression o_mexp, MemberExpression c_mexp) ->
       MemberExpression (match_member_expressions o_mexp c_mexp)
-    | (_, _) -> Tast_utils.error_mapper#jsx_name c_name
+    | (_, _) -> Tast_utils.error_mapper#jsx_element_name c_name
 
 and jsx_mk_props cx reason name attributes children =
   let open Ast.JSX in
