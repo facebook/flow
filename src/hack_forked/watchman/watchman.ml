@@ -391,35 +391,18 @@ let rec request ~debug_logging ?conn ~timeout json =
     in
     Lwt.return @@ sanitize_watchman_response ~debug_logging line
 
-let has_input ~timeout reader =
-  let fd = Buffered_line_reader_lwt.get_fd reader in
-  match timeout with
-  | None -> Lwt.return @@ Lwt_unix.readable fd
-  | Some timeout ->
-    (try%lwt
-       Lwt_unix.with_timeout timeout @@ fun () ->
-       let%lwt () = Lwt_unix.wait_read fd in
-       Lwt.return true
-     with Lwt_unix.Timeout -> Lwt.return false)
-
-let blocking_read ~debug_logging ~timeout ~conn:(reader, _) =
-  let%lwt ready = has_input ~timeout reader in
-  if not ready then
-    match timeout with
-    | None -> Lwt.return None
-    | _ -> raise Timeout
-  else
-    let%lwt output =
-      let read_timeout = 40.0 in
-      try%lwt
-        Lwt_unix.with_timeout read_timeout @@ fun () ->
-        Buffered_line_reader_lwt.get_next_line reader
-      with
-      | Lwt_unix.Timeout ->
-        raise (Watchman_error (spf "Timed out reading payload after %f seconds" read_timeout))
-      | End_of_file -> raise (Watchman_error "Connection closed")
-    in
-    Lwt.return @@ Some (sanitize_watchman_response ~debug_logging output)
+let blocking_read ~debug_logging ~conn:(reader, _) =
+  let%lwt () = Lwt_unix.wait_read (Buffered_line_reader_lwt.get_fd reader) in
+  let%lwt output =
+    let read_timeout = 40.0 in
+    try%lwt
+      Lwt_unix.with_timeout read_timeout @@ fun () -> Buffered_line_reader_lwt.get_next_line reader
+    with
+    | Lwt_unix.Timeout ->
+      raise (Watchman_error (spf "Timed out reading payload after %f seconds" read_timeout))
+    | End_of_file -> raise (Watchman_error "Connection closed")
+  in
+  Lwt.return @@ Some (sanitize_watchman_response ~debug_logging output)
 
 (****************************************************************************)
 (* Initialization, reinitialization *)
@@ -845,19 +828,14 @@ let transform_asynchronous_get_changes_response env data =
         )
     end
 
-let get_changes ?deadline instance =
+let get_changes instance =
   call_on_instance
     instance
     "get_changes"
     ~on_dead:(fun _ -> Watchman_unavailable)
     ~on_alive:(fun env ->
-      let timeout =
-        Option.map deadline (fun deadline ->
-            let timeout = deadline -. Unix.time () in
-            Float.max timeout 0.0)
-      in
       let debug_logging = env.settings.debug_logging in
-      let%lwt response = blocking_read ~debug_logging ~timeout ~conn:env.conn in
+      let%lwt response = blocking_read ~debug_logging ~conn:env.conn in
       let (env, result) = transform_asynchronous_get_changes_response env response in
       Lwt.return (env, Watchman_pushed result))
 

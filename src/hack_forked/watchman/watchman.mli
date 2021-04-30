@@ -73,7 +73,7 @@ val get_mergebase_and_changes :
   watchman_instance ->
   (watchman_instance * (string * SSet.t, string) Stdlib.result) Lwt.t
 
-val get_changes : ?deadline:float -> watchman_instance -> (watchman_instance * changes) Lwt.t
+val get_changes : watchman_instance -> (watchman_instance * changes) Lwt.t
 
 val close : watchman_instance -> unit Lwt.t
 
