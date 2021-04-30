@@ -1789,19 +1789,11 @@ class ['loc] mapper =
 
     method jsx_element_name (name : ('loc, 'loc) Ast.JSX.name) =
       let open Ast.JSX in
-      let name' =
-        match name with
-        | Identifier id -> Identifier (this#jsx_identifier id)
-        | NamespacedName namespaced_name ->
-          NamespacedName (this#jsx_namespaced_name namespaced_name)
-        | MemberExpression member_exp -> MemberExpression (this#jsx_member_expression member_exp)
-      in
-      (* structural equality since it's easier than checking equality in each branch of the match
-       * above *)
-      if name = name' then
-        name
-      else
-        name'
+      match name with
+      | Identifier ident -> id this#jsx_identifier ident name (fun ident -> Identifier ident)
+      | NamespacedName ns -> id this#jsx_namespaced_name ns name (fun ns -> NamespacedName ns)
+      | MemberExpression expr ->
+        id this#jsx_member_expression expr name (fun expr -> MemberExpression expr)
 
     method jsx_namespaced_name (namespaced_name : ('loc, 'loc) Ast.JSX.NamespacedName.t) =
       let open Ast.JSX in
