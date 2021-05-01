@@ -23,7 +23,7 @@
 
 Flow is a static typechecker for JavaScript. To find out more about Flow, check out [flow.org](https://flow.org/).
 
-For a background on the project, please read [this overview](https://flow.org/en/docs/lang/).
+For more background information on the project, please read [this overview](https://flow.org/en/docs/lang/).
 
 ## Contents
 
@@ -47,7 +47,7 @@ There are [binary distributions](https://github.com/facebook/flow/releases) for 
 
 ## Using Flow
 
-Check out the [installation instructions](https://flow.org/en/docs/install/), and then [how to get started](https://flow.org/en/docs/usage/).
+Check out the [installation instructions](https://flow.org/en/docs/install/), and then the usage docs(https://flow.org/en/docs/usage/).
 
 ## Using Flow's parser from JavaScript
 
@@ -66,7 +66,7 @@ Flow is written in OCaml (OCaml 4.09.1 is required).
     - Other Linux: see [opam docs](https://opam.ocaml.org/doc/Install.html)
     - Windows: [cygwin](https://cygwin.com/) and a number of dependencies like `make`, `gcc` and `g++` are required.
 
-      One way to install everything is to install [Chocolaty](https://chocolatey.org/) and then run `.\scripts\windows\install_deps.ps1` and `.\scripts\windows\install_opam.ps1`. Otherwise, see the "Manual Installation" section of [OCaml for Windows docs](https://fdopen.github.io/opam-repository-mingw/installation/) and install all of the packages listed in our `install_deps.ps1`.
+      One way to install everything is to install [Chocolatey](https://chocolatey.org/) and then run `.\scripts\windows\install_deps.ps1` and `.\scripts\windows\install_opam.ps1`. Otherwise, see the "Manual Installation" section of [OCaml for Windows docs](https://fdopen.github.io/opam-repository-mingw/installation/) and install all of the packages listed in our `install_deps.ps1`.
 
       The remainder of these instructions should be run inside the Cygwin shell: `C:\tools\cygwin\Cygwin`. Then `cd /cygdrive/c/Users/you/path/to/checkout`.
 
