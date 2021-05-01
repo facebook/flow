@@ -1790,10 +1790,18 @@ class ['loc] mapper =
     method jsx_element_name (name : ('loc, 'loc) Ast.JSX.name) =
       let open Ast.JSX in
       match name with
-      | Identifier ident -> id this#jsx_identifier ident name (fun ident -> Identifier ident)
-      | NamespacedName ns -> id this#jsx_namespaced_name ns name (fun ns -> NamespacedName ns)
+      | Identifier ident ->
+        id this#jsx_element_name_identifier ident name (fun ident -> Identifier ident)
+      | NamespacedName ns ->
+        id this#jsx_element_name_namespaced ns name (fun ns -> NamespacedName ns)
       | MemberExpression expr ->
-        id this#jsx_member_expression expr name (fun expr -> MemberExpression expr)
+        id this#jsx_element_name_member_expression expr name (fun expr -> MemberExpression expr)
+
+    method jsx_element_name_identifier ident = this#jsx_identifier ident
+
+    method jsx_element_name_namespaced ns = this#jsx_namespaced_name ns
+
+    method jsx_element_name_member_expression expr = this#jsx_member_expression expr
 
     method jsx_namespaced_name (namespaced_name : ('loc, 'loc) Ast.JSX.NamespacedName.t) =
       let open Ast.JSX in
@@ -1809,26 +1817,22 @@ class ['loc] mapper =
     method jsx_member_expression (member_exp : ('loc, 'loc) Ast.JSX.MemberExpression.t) =
       let open Ast.JSX in
       let (loc, { MemberExpression._object; MemberExpression.property }) = member_exp in
-      let _object' =
-        match _object with
-        | MemberExpression.Identifier id ->
-          let id' = this#jsx_identifier id in
-          if id' == id then
-            _object
-          else
-            MemberExpression.Identifier id'
-        | MemberExpression.MemberExpression nested_exp ->
-          let nested_exp' = this#jsx_member_expression nested_exp in
-          if nested_exp' == nested_exp then
-            _object
-          else
-            MemberExpression.MemberExpression nested_exp'
-      in
+      let _object' = this#jsx_member_expression_object _object in
       let property' = this#jsx_identifier property in
       if _object == _object' && property == property' then
         member_exp
       else
         (loc, MemberExpression.{ _object = _object'; property = property' })
+
+    method jsx_member_expression_object (_object : ('loc, 'loc) Ast.JSX.MemberExpression._object) =
+      let open Ast.JSX.MemberExpression in
+      match _object with
+      | Identifier ident ->
+        id this#jsx_member_expression_identifier ident _object (fun ident -> Identifier ident)
+      | MemberExpression nested_exp ->
+        id this#jsx_member_expression nested_exp _object (fun exp -> MemberExpression exp)
+
+    method jsx_member_expression_identifier ident = this#jsx_element_name_identifier ident
 
     method jsx_identifier (id : ('loc, 'loc) Ast.JSX.Identifier.t) =
       let open Ast.JSX.Identifier in

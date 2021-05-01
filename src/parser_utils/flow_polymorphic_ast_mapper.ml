@@ -1408,9 +1408,17 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method jsx_element_name (name : ('M, 'T) Ast.JSX.name) : ('N, 'U) Ast.JSX.name =
       let open Ast.JSX in
       match name with
-      | Identifier id -> Identifier (this#jsx_identifier id)
-      | NamespacedName namespaced_name -> NamespacedName (this#jsx_namespaced_name namespaced_name)
-      | MemberExpression member_exp -> MemberExpression (this#jsx_member_expression member_exp)
+      | Identifier id -> Identifier (this#jsx_element_name_identifier id)
+      | NamespacedName namespaced_name ->
+        NamespacedName (this#jsx_element_name_namespaced namespaced_name)
+      | MemberExpression member_exp ->
+        MemberExpression (this#jsx_element_name_member_expression member_exp)
+
+    method jsx_element_name_identifier ident = this#jsx_identifier ident
+
+    method jsx_element_name_namespaced ns = this#jsx_namespaced_name ns
+
+    method jsx_element_name_member_expression expr = this#jsx_member_expression expr
 
     method jsx_namespaced_name (namespaced_name : ('M, 'T) Ast.JSX.NamespacedName.t)
         : ('N, 'U) Ast.JSX.NamespacedName.t =
@@ -1434,11 +1442,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.JSX.MemberExpression in
       match _object with
       | Identifier id ->
-        let id' = this#jsx_identifier id in
+        let id' = this#jsx_member_expression_identifier id in
         Identifier id'
       | MemberExpression nested_exp ->
         let nested_exp' = this#jsx_member_expression nested_exp in
         MemberExpression nested_exp'
+
+    method jsx_member_expression_identifier id = this#jsx_element_name_identifier id
 
     method jsx_identifier ((annot, id) : ('M, 'T) Ast.JSX.Identifier.t)
         : ('N, 'U) Ast.JSX.Identifier.t =
