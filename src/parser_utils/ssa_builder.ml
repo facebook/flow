@@ -462,10 +462,14 @@ struct
         this#any_identifier loc x;
         super#identifier ident
 
-      method! jsx_identifier (ident : (L.t, L.t) Ast.JSX.Identifier.t) =
+      method! jsx_element_name_identifier (ident : (L.t, L.t) Ast.JSX.Identifier.t) =
         let (loc, { Ast.JSX.Identifier.name; comments = _ }) = ident in
         this#any_identifier loc name;
         super#jsx_identifier ident
+
+      method! jsx_element_name_namespaced ns =
+        (* TODO: what identifiers does `<foo:bar />` read? *)
+        super#jsx_element_name_namespaced ns
 
       (* Order of evaluation matters *)
       method! assignment _loc (expr : (L.t, L.t) Ast.Expression.Assignment.t) =

@@ -95,7 +95,7 @@ class property_assignment (property_names : SSet.t) =
 
     method! identifier (ident : (ALoc.t, ALoc.t) Ast.Identifier.t) = ident
 
-    method! jsx_identifier (ident : (ALoc.t, ALoc.t) Ast.JSX.Identifier.t) = ident
+    method! jsx_element_name_identifier (ident : (ALoc.t, ALoc.t) Ast.JSX.Identifier.t) = ident
 
     method! member loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Member.t) =
       match expr with

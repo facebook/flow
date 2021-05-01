@@ -177,11 +177,15 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         uses <- expr :: uses;
         expr
 
-      method! jsx_identifier (id : (L.t, L.t) Ast.JSX.Identifier.t) =
+      method! jsx_element_name_identifier (id : (L.t, L.t) Ast.JSX.Identifier.t) =
         let open Ast.JSX.Identifier in
         let (loc, { name; comments = _ }) = id in
         uses <- Flow_ast_utils.ident_of_source (loc, name) :: uses;
         id
+
+      method! jsx_element_name_namespaced ns =
+        (* TODO: what identifiers does `<foo:bar />` read? *)
+        super#jsx_element_name_namespaced ns
 
       method! type_alias loc alias =
         if not with_types then

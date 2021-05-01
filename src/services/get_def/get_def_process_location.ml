@@ -178,9 +178,10 @@ class searcher
         attributes;
       super#jsx_opening_element elt
 
-    method! jsx_identifier (((loc, type_), { Flow_ast.JSX.Identifier.name; comments = _ }) as id) =
+    method! jsx_element_name_identifier
+        (((loc, type_), { Flow_ast.JSX.Identifier.name; comments = _ }) as id) =
       if this#covers_target loc then this#request (Get_def_request.Identifier { name; loc; type_ });
-      super#jsx_identifier id
+      super#jsx_element_name_identifier id
 
     method! pattern ?kind (((_, t), p) as pat) =
       let open Flow_ast.Pattern in

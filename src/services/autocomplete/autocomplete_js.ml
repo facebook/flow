@@ -101,7 +101,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       else
         super#t_identifier ident
 
-    method! jsx_identifier (((ac_loc, type_), { Flow_ast.JSX.Identifier.name; _ }) as ident) =
+    method! jsx_element_name_identifier
+        (((ac_loc, type_), { Flow_ast.JSX.Identifier.name; _ }) as ident) =
       if this#covers_target ac_loc then this#find ac_loc name (Ac_id (default_ac_id type_));
       ident
 
