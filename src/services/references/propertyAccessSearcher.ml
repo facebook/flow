@@ -31,9 +31,9 @@ class property_access_searcher name =
       end;
       super#object_key key
 
-    method! pattern_object_property ?kind (prop : (Loc.t, Loc.t) Ast.Pattern.Object.Property.t') =
+    method! pattern_object_property ?kind (prop : (Loc.t, Loc.t) Ast.Pattern.Object.Property.t) =
       let open Ast.Pattern.Object.Property in
-      let { key; _ } = prop in
+      let (_loc, { key; _ }) = prop in
       begin
         match key with
         | Identifier (_, { Ast.Identifier.name = id; comments = _ }) when id = name ->

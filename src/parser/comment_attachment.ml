@@ -693,7 +693,7 @@ let object_pattern_property_comment_bounds loc property =
 
 let switch_case_comment_bounds (loc, case) =
   let collector = new comment_bounds_collector ~loc in
-  ignore (collector#switch_case loc case);
+  ignore (collector#switch_case (loc, case));
   collector#comment_bounds
 
 let function_param_comment_bounds (loc, param) =

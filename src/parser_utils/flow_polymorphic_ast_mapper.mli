@@ -310,6 +310,14 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method jsx_attribute : ('M, 'T) Flow_ast.JSX.Attribute.t -> ('N, 'U) Ast.JSX.Attribute.t
 
+    method jsx_attribute_name : ('M, 'T) Ast.JSX.Attribute.name -> ('N, 'U) Ast.JSX.Attribute.name
+
+    method jsx_attribute_name_identifier :
+      ('M, 'T) Flow_ast.JSX.Identifier.t -> ('N, 'U) Flow_ast.JSX.Identifier.t
+
+    method jsx_attribute_name_namespaced :
+      ('M, 'T) Flow_ast.JSX.NamespacedName.t -> ('N, 'U) Flow_ast.JSX.NamespacedName.t
+
     method jsx_attribute_value :
       ('M, 'T) Ast.JSX.Attribute.value -> ('N, 'U) Ast.JSX.Attribute.value
 

@@ -195,10 +195,10 @@ class useless_mapper =
           child
       | _ -> super#jsx_child child
 
-    method! variance (variance : Loc.t Ast.Variance.t option) =
+    method! variance (variance : Loc.t Ast.Variance.t) =
       let open Ast.Variance in
       match variance with
-      | Some (loc, { kind = Minus; comments }) -> Some (loc, { kind = Plus; comments })
+      | (loc, { kind = Minus; comments }) -> (loc, { kind = Plus; comments })
       | _ -> variance
 
     method! call_type_args (loc, targs) =
@@ -235,7 +235,7 @@ class useless_mapper =
       let ((loc, opt') as opt) = super#object_property_type opt in
       let { key; variance; _ } = opt' in
       let key' = this#object_key key in
-      let variance' = this#variance variance in
+      let variance' = this#variance_opt variance in
       if key' == key && variance' == variance then
         opt
       else
@@ -265,14 +265,14 @@ class insert_variance_mapper =
       let open Ast.Type.TypeParam in
       let ((loc, tparam') as orig) = super#type_param tparam in
       let { variance; _ } = tparam' in
-      let variance' = this#variance_ loc variance in
+      let variance' = this#variance_opt_ loc variance in
       if variance == variance' then
         orig
       else
         (loc, { tparam' with variance = variance' })
 
     (* New variance method with a different type signature that allows us to insert a loc *)
-    method variance_ (loc : Loc.t) (variance : Loc.t Ast.Variance.t option) =
+    method variance_opt_ (loc : Loc.t) (variance : Loc.t Ast.Variance.t option) =
       let open Ast.Variance in
       match variance with
       | None -> Some (loc, { kind = Plus; comments = None })
@@ -283,7 +283,7 @@ class delete_variance_mapper =
   object
     inherit [Loc.t] Flow_ast_mapper.mapper
 
-    method! variance (variance : Loc.t Ast.Variance.t option) =
+    method! variance_opt (variance : Loc.t Ast.Variance.t option) =
       let open Ast.Variance in
       match variance with
       | Some (_loc, { kind = Minus; comments = _ }) -> None

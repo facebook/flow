@@ -862,6 +862,10 @@ and Statement : sig
       [@@deriving show]
     end
 
+    module ExportBatchSpecifier : sig
+      type 'M t = 'M * ('M, 'M) Identifier.t option [@@deriving show]
+    end
+
     type ('M, 'T) t = {
       declaration: ('M, 'T) Statement.t option;
       specifiers: 'M specifier option;
@@ -872,7 +876,7 @@ and Statement : sig
 
     and 'M specifier =
       | ExportSpecifiers of 'M ExportSpecifier.t list
-      | ExportBatchSpecifier of 'M * ('M, 'M) Identifier.t option
+      | ExportBatchSpecifier of 'M ExportBatchSpecifier.t
     [@@deriving show]
   end
 

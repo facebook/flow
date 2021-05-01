@@ -258,7 +258,7 @@ let expand_loc_with_comments loc node =
     | Expression expr -> bounds expr (fun collect expr -> collect#expression expr)
     | Pattern pat -> bounds pat (fun collect pat -> collect#pattern pat)
     | Params params -> bounds params (fun collect params -> collect#function_params params)
-    | Variance var -> bounds var (fun collect var -> collect#variance (Some var))
+    | Variance var -> bounds var (fun collect var -> collect#variance var)
     | Type ty -> bounds ty (fun collect ty -> collect#type_ ty)
     | TypeParam tparam -> bounds tparam (fun collect tparam -> collect#type_param tparam)
     | TypeAnnotation annot

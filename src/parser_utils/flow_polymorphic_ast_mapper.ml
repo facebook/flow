@@ -1353,13 +1353,19 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method jsx_attribute (attr : ('M, 'T) Ast.JSX.Attribute.t) : ('N, 'U) Ast.JSX.Attribute.t =
       let open Ast.JSX.Attribute in
       let (annot, { name; value }) = attr in
-      let name' =
-        match name with
-        | Identifier id -> Identifier (this#jsx_identifier id)
-        | NamespacedName nname -> NamespacedName (this#jsx_namespaced_name nname)
-      in
+      let name' = this#jsx_attribute_name name in
       let value' = Base.Option.map ~f:this#jsx_attribute_value value in
       (this#on_loc_annot annot, { name = name'; value = value' })
+
+    method jsx_attribute_name (name : ('M, 'T) Ast.JSX.Attribute.name) =
+      let open Ast.JSX.Attribute in
+      match name with
+      | Identifier id -> Identifier (this#jsx_attribute_name_identifier id)
+      | NamespacedName nname -> NamespacedName (this#jsx_attribute_name_namespaced nname)
+
+    method jsx_attribute_name_identifier id = this#jsx_identifier id
+
+    method jsx_attribute_name_namespaced nname = this#jsx_namespaced_name nname
 
     method jsx_attribute_value (value : ('M, 'T) Ast.JSX.Attribute.value)
         : ('N, 'U) Ast.JSX.Attribute.value =

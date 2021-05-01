@@ -372,10 +372,7 @@ module FindProviders (L : Loc_sig.S) = struct
         let (rev_cases', env') =
           Base.List.fold cases ~init:([], env0) ~f:(fun (acc_cases, acc_env) case ->
               let (case', acc_env) =
-                this#accumulate_branch_env
-                  (env0, cx)
-                  (fun () -> map_loc this#switch_case case)
-                  acc_env
+                this#accumulate_branch_env (env0, cx) (fun () -> this#switch_case case) acc_env
               in
               (case' :: acc_cases, acc_env))
         in

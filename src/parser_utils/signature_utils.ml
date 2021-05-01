@@ -29,7 +29,7 @@ module Procedure_decider = struct
       method! function_body_any (body : (Loc.t, Loc.t) Flow_ast.Function.body) =
         begin
           match body with
-          | Flow_ast.Function.BodyBlock (loc, block) -> ignore @@ this#function_body loc block
+          | Flow_ast.Function.BodyBlock block -> ignore @@ this#function_body block
           | Flow_ast.Function.BodyExpression _ -> this#no
         end;
         body
