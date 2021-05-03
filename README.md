@@ -47,7 +47,7 @@ There are [binary distributions](https://github.com/facebook/flow/releases) for 
 
 ## Using Flow
 
-Check out the [installation instructions](https://flow.org/en/docs/install/), and then the usage docs(https://flow.org/en/docs/usage/).
+Check out the [installation instructions](https://flow.org/en/docs/install/), and then [the usage docs](https://flow.org/en/docs/usage/).
 
 ## Using Flow's parser from JavaScript
 
