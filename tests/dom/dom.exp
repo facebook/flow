@@ -523,8 +523,8 @@ Cannot get `form.action` because property `action` is missing in null [1]. [inco
               ^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3549:27
-   3549|   form: HTMLFormElement | null;
+   <BUILTINS>/dom.js:3551:27
+   3551|   form: HTMLFormElement | null;
                                    ^^^^ [1]
 
 
@@ -537,8 +537,8 @@ Cannot get `item.value` because property `value` is missing in null [1]. [incomp
               ^^^^^
 
 References:
-   <BUILTINS>/dom.js:3567:44
-   3567|   item(index: number): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3569:44
+   3569|   item(index: number): HTMLOptionElement | null;
                                                     ^^^^ [1]
 
 
@@ -551,8 +551,8 @@ Cannot get `item.value` because property `value` is missing in null [1]. [incomp
               ^^^^^
 
 References:
-   <BUILTINS>/dom.js:3568:48
-   3568|   namedItem(name: string): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3570:48
+   3570|   namedItem(name: string): HTMLOptionElement | null;
                                                         ^^^^ [1]
 
 
@@ -1096,11 +1096,11 @@ literal union [2] in the return value. [incompatible-call]
                                                                     ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:4033:1
+   <BUILTINS>/dom.js:4035:1
          v--------------------------------
-   4033| typeof NodeFilter.FILTER_ACCEPT |
-   4034| typeof NodeFilter.FILTER_REJECT |
-   4035| typeof NodeFilter.FILTER_SKIP;
+   4035| typeof NodeFilter.FILTER_ACCEPT |
+   4036| typeof NodeFilter.FILTER_REJECT |
+   4037| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -1114,11 +1114,11 @@ literal union [2] in the return value of property `acceptNode`. [incompatible-ca
                                                                                   ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:4033:1
+   <BUILTINS>/dom.js:4035:1
          v--------------------------------
-   4033| typeof NodeFilter.FILTER_ACCEPT |
-   4034| typeof NodeFilter.FILTER_REJECT |
-   4035| typeof NodeFilter.FILTER_SKIP;
+   4035| typeof NodeFilter.FILTER_ACCEPT |
+   4036| typeof NodeFilter.FILTER_REJECT |
+   4037| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -1174,11 +1174,11 @@ union [2] in the return value. [incompatible-call]
                                                                   ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:4033:1
+   <BUILTINS>/dom.js:4035:1
          v--------------------------------
-   4033| typeof NodeFilter.FILTER_ACCEPT |
-   4034| typeof NodeFilter.FILTER_REJECT |
-   4035| typeof NodeFilter.FILTER_SKIP;
+   4035| typeof NodeFilter.FILTER_ACCEPT |
+   4036| typeof NodeFilter.FILTER_REJECT |
+   4037| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -1192,11 +1192,11 @@ literal union [2] in the return value of property `acceptNode`. [incompatible-ca
                                                                                 ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:4033:1
+   <BUILTINS>/dom.js:4035:1
          v--------------------------------
-   4033| typeof NodeFilter.FILTER_ACCEPT |
-   4034| typeof NodeFilter.FILTER_REJECT |
-   4035| typeof NodeFilter.FILTER_SKIP;
+   4035| typeof NodeFilter.FILTER_ACCEPT |
+   4036| typeof NodeFilter.FILTER_REJECT |
+   4037| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
