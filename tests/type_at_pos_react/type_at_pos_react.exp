@@ -44,10 +44,7 @@ lazy_ref.js:19:9 = Promise<{|default: React$AbstractComponent<empty, void>|}>
 lazy_ref.js:19:9,19:9
 react_component.js:3:9 = module "react" {
   declare var version: string;
-  declare var useTransition: (config: ?TimeoutConfig) => [
-    (() => void) => void,
-    boolean
-  ];
+  declare var useTransition: () => [boolean, (() => void) => void];
   declare var useState: <S>(initialState: ((() => S) | S)) => [
     S,
     ((((S) => S) | S)) => void
@@ -79,13 +76,14 @@ react_component.js:3:9 = module "react" {
     create: () => MaybeCleanUpFn,
     inputs?: ?$ReadOnlyArray<mixed>
   ) => void;
-  declare var useDeferredValue: <T>(value: T, config: ?TimeoutConfig) => T;
+  declare var useDeferredValue: <T>(value: T) => T;
   declare var useDebugValue: (value: any) => void;
   declare var useContext: <T>(context: React$Context<T>) => T;
   declare var useCallback: <T: (...args: $ReadOnlyArray<empty>) => mixed>(
     callback: T,
     inputs: ?$ReadOnlyArray<mixed>
   ) => T;
+  declare var startTransition: (() => void) => void;
   declare var memo: <Config, Instance = mixed>(
     component: React$AbstractComponent<Config, Instance>,
     equal?: (Config, Config) => boolean

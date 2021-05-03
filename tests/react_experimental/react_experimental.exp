@@ -1,80 +1,92 @@
-Error ------------------------------------------------------------------------------------ useDeferredValue_hook.js:7:30
+Error ------------------------------------------------------------------------------------------ startTransition.js:10:7
 
-Cannot call `React.useDeferredValue` with object literal bound to `config` because property `timeoutMs` is missing in
-object literal [1] but exists in `TimeoutConfig` [2]. [incompatible-call]
+Cannot call `React.startTransition` because function [1] requires another argument. [incompatible-call]
 
-   useDeferredValue_hook.js:7:30
-     7| React.useDeferredValue(true, {}); // Error: property `timeoutMs` is missing in object literal but exists in `SuspenseConfig`
-                                     ^^ [1]
-
-References:
-   <BUILTINS>/react.js:395:13
-   395|     config: TimeoutConfig | void | null,
-                    ^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------ useDeferredValue_hook.js:9:30
-
-Cannot call `React.useDeferredValue` with object literal bound to `config` because property `foo` is missing in
-`TimeoutConfig` [1] but exists in object literal [2]. [incompatible-call]
-
-   useDeferredValue_hook.js:9:30
-     9| React.useDeferredValue(true, {foo: 1}); // Error: property `foo` is missing in `SuspenseConfig`
-                                     ^^^^^^^^ [2]
+   startTransition.js:10:7
+    10| React.startTransition(); // Error: function requires another argument
+              ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:395:13
-   395|     config: TimeoutConfig | void | null,
-                    ^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:397:42
+   397|   declare export function startTransition(() => void): void;
+                                                 ^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------ useDeferredValue_hook.js:8:30
+
+Cannot call `React.useDeferredValue` because no more than 1 argument is expected by function type [1]. [extra-arg]
+
+   useDeferredValue_hook.js:8:30
+     8| React.useDeferredValue(true, {}); // Error: no more than 1 argument is expected by function type
+                                     ^^
+
+References:
+   <BUILTINS>/react.js:393:43
+   393|   declare export function useDeferredValue<T>(value: T): T;
+                                                  ^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------- useTransition_hook.js:7:21
 
-Cannot call `React.useTransition` with object literal bound to `config` because property `timeoutMs` is missing in
-object literal [1] but exists in `TimeoutConfig` [2]. [incompatible-call]
+Cannot call `React.useTransition` because no arguments are expected by function type [1]. [extra-arg]
 
    useTransition_hook.js:7:21
-     7| React.useTransition({}); // Error: property `timeoutMs` is missing in object literal but exists in `SuspenseConfig`
-                            ^^ [1]
+     7| React.useTransition({}); // Error: no arguments are expected by function type
+                            ^^
 
 References:
-   <BUILTINS>/react.js:399:13
-   399|     config: TimeoutConfig | void | null,
-                    ^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:395:40
+   395|   declare export function useTransition(): [boolean, (() => void) => void];
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------- useTransition_hook.js:9:21
+Error --------------------------------------------------------------------------------------- useTransition_hook.js:14:2
 
-Cannot call `React.useTransition` with object literal bound to `config` because property `foo` is missing in
-`TimeoutConfig` [1] but exists in object literal [2]. [incompatible-call]
+Cannot cast `isPending` to function type because boolean [1] is incompatible with function type [2]. [incompatible-cast]
 
-   useTransition_hook.js:9:21
-     9| React.useTransition({foo: 1}); // Error: property `foo` is missing in `SuspenseConfig`
-                            ^^^^^^^^ [2]
-
-References:
-   <BUILTINS>/react.js:399:13
-   399|     config: TimeoutConfig | void | null,
-                    ^^^^^^^^^^^^^ [1]
-
-
-Error -------------------------------------------------------------------------------------- useTransition_hook.js:15:17
-
-Cannot call `startTransition` with `true` bound to the first parameter because boolean [1] is incompatible with function
-type [2]. [incompatible-call]
-
-   useTransition_hook.js:15:17
-    15| startTransition(true); // error
-                        ^^^^ [1]
+   useTransition_hook.js:14:2
+    14| (isPending: (() => void) => void); // Error: boolean is incompatible with function type
+         ^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:400:8
-   400|   ): [(() => void) => void, boolean];
-               ^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:395:45
+   395|   declare export function useTransition(): [boolean, (() => void) => void];
+                                                    ^^^^^^^ [1]
+   useTransition_hook.js:14:13
+    14| (isPending: (() => void) => void); // Error: boolean is incompatible with function type
+                    ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- useTransition_hook.js:15:2
+
+Cannot cast `startTransition` to boolean because function type [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   useTransition_hook.js:15:2
+    15| (startTransition: boolean); // Error: function type is incompatible with boolean
+         ^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:395:54
+   395|   declare export function useTransition(): [boolean, (() => void) => void];
+                                                             ^^^^^^^^^^^^^^^^^^^^ [1]
+   useTransition_hook.js:15:19
+    15| (startTransition: boolean); // Error: function type is incompatible with boolean
+                          ^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- useTransition_hook.js:18:1
+
+Cannot call `startTransition` because function [1] requires another argument. [incompatible-call]
+
+   useTransition_hook.js:18:1
+    18| startTransition(); // Error: function requires another argument
+        ^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:395:54
+   395|   declare export function useTransition(): [boolean, (() => void) => void];
+                                                             ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 
-Found 5 errors
-
-Only showing the most relevant union/intersection branches.
-To see all branches, re-run Flow with --show-all-branches
+Found 6 errors

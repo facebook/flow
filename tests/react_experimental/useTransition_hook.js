@@ -4,12 +4,15 @@ import React from 'react';
 
 React.useTransition(); // Ok
 
-React.useTransition({}); // Error: property `timeoutMs` is missing in object literal but exists in `SuspenseConfig`
+React.useTransition({}); // Error: no arguments are expected by function type
 
-React.useTransition({foo: 1}); // Error: property `foo` is missing in `SuspenseConfig`
+const [isPending, startTransition] = React.useTransition(); // OK
 
-const [startTransition, isPending] = React.useTransition({timeoutMs: 1000}); // Ok
 (isPending: boolean); // Ok
+(startTransition: (() => void) => void); // Ok
+
+(isPending: (() => void) => void); // Error: boolean is incompatible with function type
+(startTransition: boolean); // Error: function type is incompatible with boolean
 
 startTransition(() => {}); // Ok
-startTransition(true); // error
+startTransition(); // Error: function requires another argument
