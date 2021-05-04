@@ -717,29 +717,6 @@ let call_on_instance :
           EventLogger.watchman_died_caught msg
         in
         match Exception.unwrap exn with
-        | Sys_error msg when String.equal msg "Broken pipe" ->
-          log_died ("Watchman Pipe broken.\n" ^ Exception.get_full_backtrace_string 500 exn);
-          close_channel_on_instance' env
-        | Sys_error msg when String.equal msg "Connection reset by peer" ->
-          log_died
-            ("Watchman connection reset by peer.\n" ^ Exception.get_full_backtrace_string 500 exn);
-          close_channel_on_instance' env
-        | Sys_error msg when String.equal msg "Bad file descriptor" ->
-          (* This happens when watchman is tearing itself down after we
-           * retrieved a sock address and connected to the sock address. That's
-           * because Unix.open_connection (via Timeout.open_connection) doesn't
-           * error even when the sock adddress is no longer valid and actually -
-           * it returns a channel that will error at some later time when you
-           * actually try to do anything with it (write to it, or even get the
-           * file descriptor of it). I'm pretty sure we don't need to close the
-           * channel when that happens since we never had a useable channel
-           * to start with. *)
-          log_died ("Watchman bad file descriptor.\n" ^ Exception.get_full_backtrace_string 500 exn);
-          on_dead' on_dead (dead_env_from_alive env)
-        | End_of_file ->
-          log_died
-            ("Watchman connection End_of_file.\n" ^ Exception.get_full_backtrace_string 500 exn);
-          close_channel_on_instance' env
         | Watchman_error msg ->
           log_died (Printf.sprintf "Watchman error: %s. Closing channel" msg);
           close_channel_on_instance' env
