@@ -80,40 +80,33 @@ type changes =
 module Jget = Hh_json_helpers.Jget
 module J = Hh_json_helpers.AdhocJsonHelpers
 
-(* Looks for common errors in watchman responses *)
-let assert_no_error obj =
-  let obj = Some obj in
-  (match Jget.string_opt obj "warning" with
-  | None -> ()
-  | Some warning ->
-    EventLogger.watchman_warning warning;
-    Hh_logger.log "Watchman warning: %s\n" warning);
-  (match Jget.string_opt obj "error" with
-  | None -> ()
-  | Some error ->
-    EventLogger.watchman_error error;
-    raise @@ Watchman_error error);
-  ()
+let json_of_string str =
+  try Ok (Hh_json.json_of_string str)
+  with Hh_json.Syntax_error err ->
+    let msg = spf "Failed to parse string as JSON: %s" err in
+    Error msg
 
-(* Verifies that a watchman response is valid JSON and free from common errors *)
-let sanitize_watchman_response ~debug_logging output =
-  if debug_logging then Hh_logger.info "Watchman response: %s" output;
-  let response =
-    try Hh_json.json_of_string output
-    with e ->
-      let exn = Exception.wrap e in
-      let msg = spf "Failed to parse string as JSON: %s" output in
-      EventLogger.watchman_error
-        (spf
-           "%s\nEXCEPTION:%s\nSTACK:%s\n"
-           msg
-           (Exception.get_ctor_string exn)
-           (Exception.get_backtrace_string exn));
-      Hh_logger.error ~exn "%s" msg;
-      Exception.reraise exn
+(** Parses a watchman response into JSON and checks for errors *)
+let parse_response =
+  let log_warnings obj =
+    match Jget.string_opt (Some obj) "warning" with
+    | None -> ()
+    | Some warning ->
+      EventLogger.watchman_warning warning;
+      Hh_logger.log "Watchman warning: %s\n" warning
   in
-  assert_no_error response;
-  response
+  (* Looks for common errors in watchman responses *)
+  let handle_errors obj =
+    match Jget.string_opt (Some obj) "error" with
+    | None -> Ok obj
+    | Some error -> Error error
+  in
+  fun ~debug_logging output ->
+    if debug_logging then Hh_logger.info "Watchman response: %s" output;
+    let open Result.Let_syntax in
+    let%bind json = json_of_string output in
+    log_warnings json;
+    handle_errors json
 
 type conn = Buffered_line_reader_lwt.t * Lwt_io.output_channel
 
@@ -382,7 +375,11 @@ let rec request ~debug_logging ?conn ~timeout json =
     let%lwt line =
       with_timeout timeout @@ fun () -> Buffered_line_reader_lwt.get_next_line reader
     in
-    Lwt.return @@ sanitize_watchman_response ~debug_logging line
+    (match parse_response ~debug_logging line with
+    | Ok response -> Lwt.return response
+    | Error msg ->
+      EventLogger.watchman_error msg;
+      raise (Watchman_error msg))
 
 let blocking_read ~debug_logging ~conn:(reader, _) =
   let%lwt () =
@@ -405,7 +402,11 @@ let blocking_read ~debug_logging ~conn:(reader, _) =
       raise (Watchman_error (spf "Timed out reading payload after %f seconds" read_timeout))
     | End_of_file -> raise (Watchman_error "Connection closed")
   in
-  Lwt.return @@ Some (sanitize_watchman_response ~debug_logging output)
+  match parse_response ~debug_logging output with
+  | Ok response -> Lwt.return (Some response)
+  | Error msg ->
+    EventLogger.watchman_error msg;
+    raise (Watchman_error msg)
 
 (****************************************************************************)
 (* Initialization, reinitialization *)
