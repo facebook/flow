@@ -178,10 +178,7 @@ end = struct
 
   let get_mergebase_and_changes env =
     if env.should_track_mergebase then (
-      let%lwt (instance, mergebase_and_changes) =
-        (* callers should provide their own timeout *)
-        Watchman.(get_mergebase_and_changes ~timeout:None env.instance)
-      in
+      let%lwt (instance, mergebase_and_changes) = Watchman.get_mergebase_and_changes env.instance in
       env.instance <- instance;
       match mergebase_and_changes with
       | Ok mergebase_and_changes -> Lwt.return (Ok (Some mergebase_and_changes))

@@ -662,13 +662,8 @@ module KeepAliveLoop = LwtLoop.Make (struct
     Lwt.return (monitor_options, restart_reason)
 
   let catch _ exn =
-    match Exception.unwrap exn with
-    | Watchman.Timeout ->
-      let msg = Printf.sprintf "Watchman timed out.\n%s" (Exception.to_string exn) in
-      Exit.(exit ~msg Watchman_error)
-    | _ ->
-      Logger.error ~exn:(Exception.to_exn exn) "Exception in KeepAliveLoop";
-      Exception.reraise exn
+    Logger.error ~exn:(Exception.to_exn exn) "Exception in KeepAliveLoop";
+    Exception.reraise exn
 end)
 
 let setup_signal_handlers =

@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-exception Timeout
-
 exception Watchman_error of string
 
 exception Subscription_canceled_by_watchman
@@ -69,9 +67,7 @@ type watchman_instance
 val init : init_settings -> watchman_instance option Lwt.t
 
 val get_mergebase_and_changes :
-  timeout:timeout ->
-  watchman_instance ->
-  (watchman_instance * (string * SSet.t, string) Stdlib.result) Lwt.t
+  watchman_instance -> (watchman_instance * (string * SSet.t, string) Stdlib.result) Lwt.t
 
 val get_changes : watchman_instance -> (watchman_instance * changes) Lwt.t
 
