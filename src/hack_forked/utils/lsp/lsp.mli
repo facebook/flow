@@ -237,6 +237,10 @@ module CodeActionClientCapabilities : sig
   }
 end
 
+module SelectionRangeClientCapabilities : sig
+  type t = { dynamicRegistration: bool }
+end
+
 module SignatureHelpClientCapabilities : sig
   type t = {
     dynamicRegistration: bool;
@@ -320,6 +324,7 @@ module Initialize : sig
     completion: completion;
     codeAction: CodeActionClientCapabilities.t;
     signatureHelp: SignatureHelpClientCapabilities.t;
+    selectionRange: SelectionRangeClientCapabilities.t;
   }
 
   and synchronization = {
@@ -360,6 +365,7 @@ module Initialize : sig
     documentLinkProvider: documentLinkOptions option;
     executeCommandProvider: executeCommandOptions option;
     implementationProvider: bool;
+    selectionRangeProvider: bool;
     typeCoverageProvider: bool;
     rageProvider: bool;
   }
@@ -790,6 +796,20 @@ module DocumentOnTypeFormatting : sig
   }
 end
 
+module SelectionRange : sig
+  type params = {
+    textDocument: TextDocumentIdentifier.t;
+    positions: position list;
+  }
+
+  type selection_range = {
+    range: range;
+    parent: selection_range option;
+  }
+
+  type result = selection_range list
+end
+
 module SignatureHelp : sig
   module TriggerKind : sig
     type t =
@@ -985,6 +1005,7 @@ type lsp_request =
   | CompletionRequest of Completion.params
   | CompletionItemResolveRequest of CompletionItemResolve.params
   | ConfigurationRequest of Configuration.params
+  | SelectionRangeRequest of SelectionRange.params
   | SignatureHelpRequest of SignatureHelp.params
   | WorkspaceSymbolRequest of WorkspaceSymbol.params
   | DocumentSymbolRequest of DocumentSymbol.params
@@ -1013,6 +1034,7 @@ type lsp_result =
   | CompletionResult of Completion.result
   | CompletionItemResolveResult of CompletionItemResolve.result
   | ConfigurationResult of Configuration.result
+  | SelectionRangeResult of SelectionRange.result
   | SignatureHelpResult of SignatureHelp.result
   | WorkspaceSymbolResult of WorkspaceSymbol.result
   | DocumentSymbolResult of DocumentSymbol.result

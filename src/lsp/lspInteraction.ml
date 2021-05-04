@@ -31,6 +31,7 @@ type trigger =
   | Rage
   | Rename
   | ServerConnected
+  | SelectionRange
   | SignatureHelp
   | TypeCoverage
   | ExecuteCommand
@@ -97,6 +98,7 @@ let string_of_trigger = function
   | Rage -> "Rage"
   | Rename -> "Rename"
   | ServerConnected -> "ServerConnected"
+  | SelectionRange -> "SelectionRange"
   | SignatureHelp -> "SignatureHelp"
   | TypeCoverage -> "TypeCoverage"
   | ExecuteCommand -> "ExecuteCommand"
@@ -139,6 +141,7 @@ let source_of_trigger = function
   | Hover
   | Rage
   | Rename
+  | SelectionRange
   | SignatureHelp
   | TypeCoverage
   | ExecuteCommand ->
@@ -279,6 +282,7 @@ let trigger_of_lsp_msg =
   | RequestMessage (_, RageRequest) -> Some Rage
   | RequestMessage (_, RenameRequest _) -> Some Rename
   | RequestMessage (_, TypeCoverageRequest _) -> Some TypeCoverage
+  | RequestMessage (_, SelectionRangeRequest _) -> Some SelectionRange
   | RequestMessage (_, SignatureHelpRequest _) -> Some SignatureHelp
   | RequestMessage (_, ExecuteCommandRequest _) -> Some ExecuteCommand
   (* Requests which we don't care about. Some are unsupported and some are sent from the lsp to
@@ -309,6 +313,7 @@ let trigger_of_lsp_msg =
   | ResponseMessage (_, CompletionResult _)
   | ResponseMessage (_, CompletionItemResolveResult _)
   | ResponseMessage (_, ConfigurationResult _)
+  | ResponseMessage (_, SelectionRangeResult _)
   | ResponseMessage (_, SignatureHelpResult _)
   | ResponseMessage (_, WorkspaceSymbolResult _)
   | ResponseMessage (_, DocumentSymbolResult _)

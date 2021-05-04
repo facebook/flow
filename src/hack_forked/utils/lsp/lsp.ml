@@ -340,6 +340,10 @@ module CodeActionClientCapabilities = struct
   }
 end
 
+module SelectionRangeClientCapabilities = struct
+  type t = { dynamicRegistration: bool }
+end
+
 module SignatureHelpClientCapabilities = struct
   type t = {
     dynamicRegistration: bool;
@@ -428,6 +432,7 @@ module Initialize = struct
     codeAction: CodeActionClientCapabilities.t;
     (* omitted: dynamic-registration fields *)
     signatureHelp: SignatureHelpClientCapabilities.t;
+    selectionRange: SelectionRangeClientCapabilities.t;
   }
 
   (** synchronization capabilities say what messages the client is capable
@@ -476,6 +481,7 @@ module Initialize = struct
     documentLinkProvider: documentLinkOptions option;
     executeCommandProvider: executeCommandOptions option;
     implementationProvider: bool;
+    selectionRangeProvider: bool;
     typeCoverageProvider: bool;  (** nuclide-specific *)
     rageProvider: bool;  (** nuclide-specific *)
   }
@@ -969,6 +975,21 @@ module DocumentOnTypeFormatting = struct
   }
 end
 
+(** Selection Range request, method="textDocument/selectionRange" *)
+module SelectionRange = struct
+  type params = {
+    textDocument: TextDocumentIdentifier.t;
+    positions: position list;
+  }
+
+  type selection_range = {
+    range: range;
+    parent: selection_range option;
+  }
+
+  type result = selection_range list
+end
+
 (* Document Signature Help request, method="textDocument/signatureHelp" *)
 module SignatureHelp = struct
   module TriggerKind = struct
@@ -1191,6 +1212,7 @@ type lsp_request =
   | CompletionRequest of Completion.params
   | CompletionItemResolveRequest of CompletionItemResolve.params
   | ConfigurationRequest of Configuration.params
+  | SelectionRangeRequest of SelectionRange.params
   | SignatureHelpRequest of SignatureHelp.params
   | WorkspaceSymbolRequest of WorkspaceSymbol.params
   | DocumentSymbolRequest of DocumentSymbol.params
@@ -1219,6 +1241,7 @@ type lsp_result =
   | CompletionResult of Completion.result
   | CompletionItemResolveResult of CompletionItemResolve.result
   | ConfigurationResult of Configuration.result
+  | SelectionRangeResult of SelectionRange.result
   | SignatureHelpResult of SignatureHelp.result
   | WorkspaceSymbolResult of WorkspaceSymbol.result
   | DocumentSymbolResult of DocumentSymbol.result

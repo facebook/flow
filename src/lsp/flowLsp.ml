@@ -669,6 +669,7 @@ let do_initialize params : Initialize.result =
         documentLinkProvider = None;
         executeCommandProvider = Some { commands = [Command.Command "log"] };
         implementationProvider = false;
+        selectionRangeProvider = false;
         typeCoverageProvider = true;
         rageProvider = true;
       };

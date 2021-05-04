@@ -26,6 +26,7 @@ type trigger =
   | Rage
   | Rename
   | ServerConnected
+  | SelectionRange
   | SignatureHelp
   | TypeCoverage
   | ExecuteCommand

@@ -76,6 +76,9 @@ type t = {
   of_register_capability_params: t -> RegisterCapability.params -> RegisterCapability.params;
   of_rename_params: t -> Rename.params -> Rename.params;
   of_rename_result: t -> Rename.result -> Rename.result;
+  of_selection_range: t -> SelectionRange.selection_range -> SelectionRange.selection_range;
+  of_selection_range_params: t -> SelectionRange.params -> SelectionRange.params;
+  of_selection_range_result: t -> SelectionRange.result -> SelectionRange.result;
   of_signature_help_params: t -> SignatureHelp.params -> SignatureHelp.params;
   of_signature_help_result: t -> SignatureHelp.result -> SignatureHelp.result;
   of_show_message_params: t -> ShowMessage.params -> ShowMessage.params;
@@ -416,6 +419,8 @@ let default_mapper =
           CompletionItemResolveResult (mapper.of_completion_item mapper result)
         | ConfigurationResult result ->
           ConfigurationResult (mapper.of_configuration_result mapper result)
+        | SelectionRangeResult result ->
+          SelectionRangeResult (mapper.of_selection_range_result mapper result)
         | SignatureHelpResult result ->
           SignatureHelpResult (mapper.of_signature_help_result mapper result)
         | WorkspaceSymbolResult result ->
@@ -468,6 +473,8 @@ let default_mapper =
           CompletionItemResolveRequest (mapper.of_completion_item mapper params)
         | ConfigurationRequest params ->
           ConfigurationRequest (mapper.of_configuration_params mapper params)
+        | SelectionRangeRequest params ->
+          SelectionRangeRequest (mapper.of_selection_range_params mapper params)
         | SignatureHelpRequest params ->
           SignatureHelpRequest (mapper.of_signature_help_params mapper params)
         | WorkspaceSymbolRequest params ->
@@ -527,6 +534,16 @@ let default_mapper =
         let textDocument = mapper.of_text_document_identifier mapper textDocument in
         { Rename.textDocument; position; newName });
     of_rename_result = (fun mapper result -> mapper.of_workspace_edit mapper result);
+    of_selection_range_params =
+      (fun mapper { SelectionRange.textDocument; positions } ->
+        let textDocument = mapper.of_text_document_identifier mapper textDocument in
+        { SelectionRange.textDocument; positions });
+    of_selection_range =
+      (fun mapper { SelectionRange.range; parent } ->
+        let range = mapper.of_range mapper range in
+        let parent = Base.Option.map ~f:(mapper.of_selection_range mapper) parent in
+        { SelectionRange.range; parent });
+    of_selection_range_result = (fun mapper -> Base.List.map ~f:(mapper.of_selection_range mapper));
     of_signature_help_params =
       (fun mapper { SignatureHelp.loc; context } ->
         let loc = mapper.of_text_document_position_params mapper loc in

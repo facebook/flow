@@ -331,6 +331,25 @@ let parse_didChange (params : json option) : DidChange.params =
         |> List.map ~f:parse_textDocumentContentChangeEvent;
     })
 
+module SelectionRangeFmt = struct
+  open SelectionRange
+  open Hh_json
+
+  let params_of_json (json : json option) : params =
+    {
+      textDocument = Jget.obj_exn json "textDocument" |> parse_textDocumentIdentifier;
+      positions = Jget.array_d json "positions" ~default:[] |> List.map ~f:parse_position;
+    }
+
+  let rec json_of_selection_range { range; parent } =
+    Jprint.object_opt
+      [("range", Some (print_range range)); ("parent", Option.map json_of_selection_range parent)]
+
+  let json_of_result (t : result) : json =
+    let ranges = List.map ~f:json_of_selection_range t in
+    JSON_Array ranges
+end
+
 (************************************************************************)
 (* textDocument/signatureHelp notification                              *)
 (************************************************************************)
@@ -1018,6 +1037,12 @@ module CodeActionClientCapabilitiesFmt = struct
     }
 end
 
+module SelectionRangeClientCapabilitiesFmt = struct
+  open SelectionRangeClientCapabilities
+
+  let of_json json = { dynamicRegistration = Jget.bool_d json "dynamicRegistration" ~default:false }
+end
+
 module SignatureHelpClientCapabilitiesFmt = struct
   open SignatureHelpClientCapabilities
 
@@ -1104,6 +1129,8 @@ let parse_initialize (params : json option) : Initialize.params =
         synchronization = Jget.obj_opt json "synchronization" |> parse_synchronization;
         completion = Jget.obj_opt json "completion" |> parse_completion;
         codeAction = Jget.obj_opt json "codeAction" |> CodeActionClientCapabilitiesFmt.of_json;
+        selectionRange =
+          Jget.obj_opt json "selectionRange" |> SelectionRangeClientCapabilitiesFmt.of_json;
         signatureHelp =
           Jget.obj_opt json "signatureHelp" |> SignatureHelpClientCapabilitiesFmt.of_json;
       }
@@ -1328,6 +1355,7 @@ let request_name_to_string (request : lsp_request) : string =
   | CompletionRequest _ -> "textDocument/completion"
   | CompletionItemResolveRequest _ -> "completionItem/resolve"
   | ConfigurationRequest _ -> "workspace/configuration"
+  | SelectionRangeRequest _ -> "textDocument/selectionRange"
   | SignatureHelpRequest _ -> "textDocument/signatureHelp"
   | DefinitionRequest _ -> "textDocument/definition"
   | TypeDefinitionRequest _ -> "textDocument/typeDefinition"
@@ -1357,6 +1385,7 @@ let result_name_to_string (result : lsp_result) : string =
   | CompletionResult _ -> "textDocument/completion"
   | CompletionItemResolveResult _ -> "completionItem/resolve"
   | ConfigurationResult _ -> "workspace/configuration"
+  | SelectionRangeResult _ -> "textDocument/selectionRange"
   | SignatureHelpResult _ -> "textDocument/signatureHelp"
   | DefinitionResult _ -> "textDocument/definition"
   | TypeDefinitionResult _ -> "textDocument/typeDefinition"
@@ -1433,6 +1462,7 @@ let parse_lsp_request (method_ : string) (params : json option) : lsp_request =
   | "textDocument/onTypeFormatting" ->
     DocumentOnTypeFormattingRequest (parse_documentOnTypeFormatting params)
   | "textDocument/codeLens" -> DocumentCodeLensRequest (parse_documentCodeLens params)
+  | "textDocument/selectionRange" -> SelectionRangeRequest (SelectionRangeFmt.params_of_json params)
   | "textDocument/signatureHelp" -> SignatureHelpRequest (SignatureHelpFmt.of_json params)
   | "telemetry/rage" -> RageRequest
   | "workspace/executeCommand" -> ExecuteCommandRequest (parse_executeCommand params)
@@ -1480,6 +1510,7 @@ let parse_lsp_result (request : lsp_request) (result : json) : lsp_result =
   | CodeActionRequest _
   | CompletionRequest _
   | CompletionItemResolveRequest _
+  | SelectionRangeRequest _
   | SignatureHelpRequest _
   | DefinitionRequest _
   | TypeDefinitionRequest _
@@ -1542,6 +1573,7 @@ let print_lsp_request (id : lsp_id) (request : lsp_request) : json =
     | CodeLensResolveRequest _
     | CompletionRequest _
     | CompletionItemResolveRequest _
+    | SelectionRangeRequest _
     | SignatureHelpRequest _
     | DefinitionRequest _
     | TypeDefinitionRequest _
@@ -1594,6 +1626,7 @@ let print_lsp_response ?include_error_stack_trace ~key (id : lsp_id) (result : l
     | RenameResult r -> print_documentRename r
     | DocumentCodeLensResult r -> print_documentCodeLens ~key r
     | ExecuteCommandResult r -> print_executeCommand r
+    | SelectionRangeResult r -> SelectionRangeFmt.json_of_result r
     | SignatureHelpResult r -> SignatureHelpFmt.to_json r
     | ShowMessageRequestResult _
     | ShowStatusResult _
