@@ -1,4 +1,9 @@
-# Flow
+<p align="center">
+  <img src="https://scontent.famd1-1.fna.fbcdn.net/v/t39.2365-6/47963403_2276942729207149_7966349449934929920_n.svg?_nc_cat=111&_nc_sid=ad8a9d&_nc_ohc=of3NcNTMKgAAX_Pc37f&_nc_ht=scontent.famd1-1.fna&oh=d0083184e8d39984e36d0af002c4d5e6&oe=5F6C80A2" alt="logo" width="15%" /> 
+</p>
+<h1 align="center">
+  Flow
+</h1>
 <p align="center">
   <a href="https://circleci.com/gh/facebook/flow/tree/master">
     <img src="https://circleci.com/gh/facebook/flow/tree/master.svg?style=shield" alt="CircleCI" />
@@ -18,12 +23,14 @@
   <a href="https://discordapp.com/invite/8ezwRUK">
      <img alt="Join Discord Chat" src="https://img.shields.io/discord/539606376339734558.svg?label=discord&logo=discord&logoColor=white">
   </a>
+  <p align="center">
+    Flow is a static typechecker for JavaScript. To find out more about Flow, check out <a href="https://flow.org/">flow.org</a>.
+  </p>
+  <p align="center">
+    For a background on the project, please read <a href="https://flow.org/en/docs/lang/">this overview</a>.
+  </p>
 </p>
 
-
-Flow is a static typechecker for JavaScript. To find out more about Flow, check out [flow.org](https://flow.org/).
-
-For a background on the project, please read [this overview](https://flow.org/en/docs/lang/).
 
 ## Contents
 
