@@ -10,25 +10,46 @@ open Test_utils
 module LocMap = Loc_collections.LocMap
 module LocSet = Loc_collections.LocSet
 
+let printer with_locs locmap =
+  let print_locs locs =
+    if with_locs then
+      LocSet.elements locs
+      |> List.map Loc.debug_to_string
+      |> String.concat ", "
+      |> Printf.sprintf "[%s], "
+    else
+      ""
+  in
+  let kvlist = LocMap.bindings locmap in
+  let strlist =
+    Base.List.map
+      ~f:(fun (read_loc, (locs, refinement)) ->
+        Printf.sprintf
+          "%s => { %s%s }"
+          (Loc.debug_to_string read_loc)
+          (print_locs locs)
+          (Env_builder.With_Loc.show_refinement_kind refinement))
+      kvlist
+  in
+  Printf.sprintf "[ %s ]" (String.concat "; " strlist)
+
 let mk_ssa_builder_test contents expected_values ctxt =
   let refined_reads = Env_builder.With_Loc.program (parse contents) in
-  let printer locmap =
-    let kvlist = LocMap.bindings locmap in
-    let strlist =
-      Base.List.map
-        ~f:(fun (read_loc, refinement) ->
-          Printf.sprintf
-            "%s => { %s }"
-            (Loc.debug_to_string read_loc)
-            (Env_builder.With_Loc.show_refinement refinement))
-        kvlist
-    in
-    Printf.sprintf "[ %s ]" (String.concat "; " strlist)
-  in
+  let expected_values = LocMap.map (fun refkind -> (LocSet.empty, refkind)) expected_values in
   assert_equal
     ~ctxt
-    ~cmp:(eq printer)
-    ~printer
+    ~cmp:(eq (printer false))
+    ~printer:(printer false)
+    ~msg:"SSA values don't match!"
+    expected_values
+    refined_reads
+
+let mk_ssa_builder_location_test contents expected_values ctxt =
+  let refined_reads = Env_builder.With_Loc.program (parse contents) in
+  assert_equal
+    ~ctxt
+    ~cmp:(eq (printer true))
+    ~printer:(printer true)
     ~msg:"SSA values don't match!"
     expected_values
     refined_reads
@@ -40,32 +61,42 @@ let tests =
   "env_builder"
   >::: [
          "logical_expr"
-         >:: mk_ssa_builder_test
+         >:: mk_ssa_builder_location_test
                "let x = null;
 let y = null;
 (x && (y = x)) + x"
-               LocMap.(empty |> add (mk_loc (3, 11) (3, 12)) Truthy);
+               LocMap.(
+                 empty
+                 |> add (mk_loc (3, 11) (3, 12)) (LocSet.singleton (mk_loc (3, 1) (3, 2)), Truthy));
          "logical_expr_successive"
-         >:: mk_ssa_builder_test
+         >:: mk_ssa_builder_location_test
                "let x = null;
 x && (x && x)"
                LocMap.(
                  empty
-                 |> add (mk_loc (2, 6) (2, 7)) Truthy
-                 |> add (mk_loc (2, 11) (2, 12)) (And (Truthy, Truthy)));
+                 |> add (mk_loc (2, 6) (2, 7)) (LocSet.singleton (mk_loc (2, 0) (2, 1)), Truthy)
+                 |> add
+                      (mk_loc (2, 11) (2, 12))
+                      ( LocSet.of_list [mk_loc (2, 0) (2, 1); mk_loc (2, 6) (2, 7)],
+                        And (Truthy, Truthy) ));
          "logical_or"
-         >:: mk_ssa_builder_test
+         >:: mk_ssa_builder_location_test
                "let x = null;
 x || x"
-               LocMap.(empty |> add (mk_loc (2, 5) (2, 6)) (Not Truthy));
+               LocMap.(
+                 empty
+                 |> add (mk_loc (2, 5) (2, 6)) (LocSet.singleton (mk_loc (2, 0) (2, 1)), Not Truthy));
          "logical_nested_right"
-         >:: mk_ssa_builder_test
+         >:: mk_ssa_builder_location_test
                "let x = null;
 x || (x || x)"
                LocMap.(
                  empty
-                 |> add (mk_loc (2, 6) (2, 7)) (Not Truthy)
-                 |> add (mk_loc (2, 11) (2, 12)) (And (Not Truthy, Not Truthy)));
+                 |> add (mk_loc (2, 6) (2, 7)) (LocSet.singleton (mk_loc (2, 0) (2, 1)), Not Truthy)
+                 |> add
+                      (mk_loc (2, 11) (2, 12))
+                      ( LocSet.of_list [mk_loc (2, 0) (2, 1); mk_loc (2, 6) (2, 7)],
+                        And (Not Truthy, Not Truthy) ));
          "logical_nested"
          >:: mk_ssa_builder_test
                "let x = null;

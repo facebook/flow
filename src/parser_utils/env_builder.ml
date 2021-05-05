@@ -58,10 +58,10 @@ module Make
 struct
   module Ssa_builder = Ssa_builder.Make (L) (Ssa_api) (Scope_builder)
 
-  type refinement =
-    | And of refinement * refinement
-    | Or of refinement * refinement
-    | Not of refinement
+  type refinement_kind =
+    | And of refinement_kind * refinement_kind
+    | Or of refinement_kind * refinement_kind
+    | Not of refinement_kind
     | Truthy
     | Null
     | Undefined
@@ -79,9 +79,11 @@ struct
     | SingletonNumR of string
   [@@deriving show { with_path = false }]
 
-  let merge_and ref1 ref2 = And (ref1, ref2)
+  type refinement = L.LSet.t * refinement_kind
 
-  let merge_or ref1 ref2 = Or (ref1, ref2)
+  let merge_and (locs1, ref1) (locs2, ref2) = (L.LSet.union locs1 locs2, And (ref1, ref2))
+
+  let merge_or (locs1, ref1) (locs2, ref2) = (L.LSet.union locs1 locs2, Or (ref1, ref2))
 
   class env_builder =
     object (this)
@@ -101,7 +103,7 @@ struct
 
       method private negate_new_refinements () =
         let head = List.hd expression_refinement_scopes in
-        let head' = IMap.map (fun v -> Not v) head in
+        let head' = IMap.map (fun (l, v) -> (l, Not v)) head in
         expression_refinement_scopes <- head' :: List.tl expression_refinement_scopes
 
       method private peek_new_refinements () = List.hd expression_refinement_scopes
@@ -134,11 +136,12 @@ struct
               match (IMap.find_opt key refinement_scope, refinement) with
               | (None, _) -> refinement
               | (Some refinement, None) -> Some refinement
-              | (Some refinement, Some refinement') -> Some (And (refinement, refinement')))
+              | (Some (l, refinement), Some (l', refinement')) ->
+                Some (L.LSet.union l l', And (refinement, refinement')))
             None
             expression_refinement_scopes
 
-      method private add_refinement name refinement =
+      method private add_refinement name ((loc, kind) as refinement) =
         let writes_to_loc = SMap.find name this#ssa_env in
         match expression_refinement_scopes with
         | scope :: scopes ->
@@ -147,16 +150,16 @@ struct
               (Ssa_builder.Val.id_of_val writes_to_loc)
               (function
                 | None -> Some refinement
-                | Some r' -> Some (And (r', refinement)))
+                | Some (l', r') -> Some (L.LSet.union loc l', And (r', kind)))
               scope
           in
           expression_refinement_scopes <- scope' :: scopes
         | _ -> failwith "Tried to add a refinement when no scope was on the stack"
 
-      method identifier_refinement ((_loc, ident) as identifier) =
+      method identifier_refinement ((loc, ident) as identifier) =
         ignore @@ this#identifier identifier;
         let { Flow_ast.Identifier.name; _ } = ident in
-        this#add_refinement name Truthy
+        this#add_refinement name (L.LSet.singleton loc, Truthy)
 
       method assignment_refinement loc assignment =
         ignore @@ this#assignment loc assignment;
@@ -165,7 +168,7 @@ struct
         | ( _,
             Flow_ast.Pattern.Identifier
               { Flow_ast.Pattern.Identifier.name = (_, { Flow_ast.Identifier.name; _ }); _ } ) ->
-          this#add_refinement name Truthy
+          this#add_refinement name (L.LSet.singleton loc, Truthy)
         | _ -> ()
 
       method logical_refinement expr =
@@ -197,7 +200,7 @@ struct
         this#merge_self_refinement_scope refinement_scope;
         this#merge_self_ssa_env env1
 
-      method null_test ~strict ~sense expr =
+      method null_test ~strict ~sense loc expr =
         ignore @@ this#expression expr;
         match key expr with
         | None -> ()
@@ -214,9 +217,9 @@ struct
             else
               Not refinement
           in
-          this#add_refinement name refinement
+          this#add_refinement name (L.LSet.singleton loc, refinement)
 
-      method void_test ~sense ~strict ~check_for_bound_undefined expr =
+      method void_test ~sense ~strict ~check_for_bound_undefined loc expr =
         ignore @@ this#expression expr;
         match key expr with
         | None -> ()
@@ -235,9 +238,9 @@ struct
               else
                 Not refinement
             in
-            this#add_refinement name refinement
+            this#add_refinement name (L.LSet.singleton loc, refinement)
 
-      method typeof_test arg typename sense =
+      method typeof_test loc arg typename sense =
         ignore @@ this#expression arg;
         let refinement =
           match typename with
@@ -258,10 +261,10 @@ struct
             else
               Not ref
           in
-          this#add_refinement name refinement
+          this#add_refinement name (L.LSet.singleton loc, refinement)
         | _ -> ()
 
-      method literal_test ~strict ~sense expr refinement =
+      method literal_test ~strict ~sense loc expr refinement =
         ignore @@ this#expression expr;
         match key expr with
         | Some name when strict ->
@@ -271,10 +274,10 @@ struct
             else
               Not refinement
           in
-          this#add_refinement name refinement
+          this#add_refinement name (L.LSet.singleton loc, refinement)
         | _ -> ()
 
-      method eq_test ~strict ~sense left right =
+      method eq_test ~strict ~sense loc left right =
         let open Flow_ast in
         match (left, right) with
         (* typeof expr ==/=== string *)
@@ -323,11 +326,11 @@ struct
               Expression.Unary
                 { Expression.Unary.operator = Expression.Unary.Typeof; argument; comments = _ } ) )
           ->
-          this#typeof_test argument s sense
+          this#typeof_test loc argument s sense
         (* bool equality *)
         | ((_, Expression.Literal { Literal.value = Literal.Boolean lit; _ }), expr)
         | (expr, (_, Expression.Literal { Literal.value = Literal.Boolean lit; _ })) ->
-          this#literal_test ~strict ~sense expr (SingletonBoolR lit)
+          this#literal_test ~strict ~sense loc expr (SingletonBoolR lit)
         (* string equality *)
         | ((_, Expression.Literal { Literal.value = Literal.String lit; _ }), expr)
         | (expr, (_, Expression.Literal { Literal.value = Literal.String lit; _ }))
@@ -361,18 +364,18 @@ struct
                   _;
                 } ),
             expr ) ->
-          this#literal_test ~strict ~sense expr (SingletonStrR lit)
+          this#literal_test ~strict ~sense loc expr (SingletonStrR lit)
         (* number equality *)
         | ((_, number_literal), expr) when is_number_literal number_literal ->
           let raw = extract_number_literal number_literal in
-          this#literal_test ~strict ~sense expr (SingletonNumR raw)
+          this#literal_test ~strict ~sense loc expr (SingletonNumR raw)
         | (expr, (_, number_literal)) when is_number_literal number_literal ->
           let raw = extract_number_literal number_literal in
-          this#literal_test ~strict ~sense expr (SingletonNumR raw)
+          this#literal_test ~strict ~sense loc expr (SingletonNumR raw)
         (* expr op null *)
         | ((_, Expression.Literal { Literal.value = Literal.Null; _ }), expr)
         | (expr, (_, Expression.Literal { Literal.value = Literal.Null; _ })) ->
-          this#null_test ~sense ~strict expr
+          this#null_test ~sense ~strict loc expr
         (* expr op undefined *)
         | ( ( ( _,
                 Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ })
@@ -383,34 +386,34 @@ struct
                 Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ })
               ) as undefined ) ) ->
           ignore @@ this#expression undefined;
-          this#void_test ~sense ~strict ~check_for_bound_undefined:true expr
+          this#void_test ~sense ~strict ~check_for_bound_undefined:true loc expr
         (* expr op void(...) *)
         | ((_, Expression.Unary { Expression.Unary.operator = Expression.Unary.Void; _ }), expr)
         | (expr, (_, Expression.Unary { Expression.Unary.operator = Expression.Unary.Void; _ })) ->
-          this#void_test ~sense ~strict ~check_for_bound_undefined:false expr
+          this#void_test ~sense ~strict ~check_for_bound_undefined:false loc expr
         | _ ->
           ignore @@ this#expression left;
           ignore @@ this#expression right
 
-      method instance_test expr instance =
+      method instance_test loc expr instance =
         ignore @@ this#expression expr;
         ignore @@ this#expression instance;
         match key expr with
         | None -> ()
         | Some name ->
-          let (loc, _) = instance in
-          this#add_refinement name (InstanceOf loc)
+          let (inst_loc, _) = instance in
+          this#add_refinement name (L.LSet.singleton loc, InstanceOf inst_loc)
 
       method binary_refinement loc expr =
         let open Flow_ast.Expression.Binary in
         let { operator; left; right; comments = _ } = expr in
         match operator with
         (* == and != refine if lhs or rhs is an ident and other side is null *)
-        | Equal -> this#eq_test ~strict:false ~sense:true left right
-        | NotEqual -> this#eq_test ~strict:false ~sense:false left right
-        | StrictEqual -> this#eq_test ~strict:true ~sense:true left right
-        | StrictNotEqual -> this#eq_test ~strict:true ~sense:false left right
-        | Instanceof -> this#instance_test left right
+        | Equal -> this#eq_test ~strict:false ~sense:true loc left right
+        | NotEqual -> this#eq_test ~strict:false ~sense:false loc left right
+        | StrictEqual -> this#eq_test ~strict:true ~sense:true loc left right
+        | StrictNotEqual -> this#eq_test ~strict:true ~sense:false loc left right
+        | Instanceof -> this#instance_test loc left right
         | LessThan
         | LessThanEqual
         | GreaterThan
@@ -458,7 +461,7 @@ struct
           ignore @@ this#expression arg;
           (match key arg with
           | None -> ()
-          | Some name -> this#add_refinement name IsArray)
+          | Some name -> this#add_refinement name (L.LSet.singleton loc, IsArray))
         | _ -> ignore @@ this#call loc call
 
       method unary_refinement
