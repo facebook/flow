@@ -307,43 +307,47 @@ let get_sockname () =
     let msg = spf "get-sockname stopped with %s signal" signal in
     Lwt.return (Error (Socket_unavailable { msg }))
 
-let get_sockname_exn () =
-  match%lwt get_sockname () with
-  | Ok sockname -> Lwt.return sockname
-  | Error err -> raise_error err
-
 (** Opens a connection to the watchman process through the socket *)
-let open_connection () =
-  let%lwt sockname = get_sockname_exn () in
-  let (ic, oc) =
-    try
-      if Sys.unix then
-        (* Yes, I know that Unix.open_connection uses the same fd for input and output. But I don't
-         * want to hardcode that assumption here. So let's pretend like ic and oc might be back by
-         * different fds *)
-        Unix.open_connection (Unix.ADDR_UNIX sockname)
-      else
-        (* On Windows, however, named pipes behave like regular files from the client's perspective.
-         * We just open the file and create in/out channels for it. The file permissions attribute
-         * is not needed because the file should exist already but we have to pass something. *)
-        let fd = Unix.openfile sockname [Unix.O_RDWR] 0o640 in
-        (Unix.in_channel_of_descr fd, Unix.out_channel_of_descr fd)
+let open_connection =
+  (* Opens a Unix socket. Could raise a [Unix.Unix_error]. *)
+  let open_socket_exn sockname =
+    if Sys.unix then
+      (* Yes, I know that Unix.open_connection uses the same fd for input and output. But I don't
+       * want to hardcode that assumption here. So let's pretend like ic and oc might be back by
+       * different fds *)
+      Unix.open_connection (Unix.ADDR_UNIX sockname)
+    else
+      (* On Windows, however, named pipes behave like regular files from the client's perspective.
+       * We just open the file and create in/out channels for it. The file permissions attribute
+       * is not needed because the file should exist already but we have to pass something. *)
+      let fd = Unix.openfile sockname [Unix.O_RDWR] 0o640 in
+      (Unix.in_channel_of_descr fd, Unix.out_channel_of_descr fd)
+  in
+  let open_socket sockname =
+    try Ok (open_socket_exn sockname)
     with Unix.Unix_error (error, _, _) ->
       let msg = spf "%s (socket: %s)" (Unix.error_message error) sockname in
-      EventLogger.watchman_error msg;
-      raise (Watchman_error msg)
+      Error (Socket_unavailable { msg })
   in
-  let reader =
-    Unix.descr_of_in_channel ic
-    |> Lwt_unix.of_unix_file_descr ~blocking:true
-    |> Buffered_line_reader_lwt.create
+  let connection_of_sockname sockname =
+    let open Result.Let_syntax in
+    let%bind (ic, oc) = open_socket sockname in
+    let reader =
+      Unix.descr_of_in_channel ic
+      |> Lwt_unix.of_unix_file_descr ~blocking:true
+      |> Buffered_line_reader_lwt.create
+    in
+    let oc =
+      Unix.descr_of_out_channel oc
+      |> Lwt_unix.of_unix_file_descr ~blocking:true
+      |> Lwt_io.of_fd ~mode:Lwt_io.output
+    in
+    Ok (reader, oc)
   in
-  let oc =
-    Unix.descr_of_out_channel oc
-    |> Lwt_unix.of_unix_file_descr ~blocking:true
-    |> Lwt_io.of_fd ~mode:Lwt_io.output
-  in
-  Lwt.return (reader, oc)
+  fun () ->
+    match%lwt get_sockname () with
+    | Ok sockname -> Lwt.return (connection_of_sockname sockname)
+    | Error _ as err -> Lwt.return err
 
 let close_connection (reader, oc) =
   let ic = Buffered_line_reader_lwt.get_fd reader in
@@ -363,16 +367,18 @@ let close_connection (reader, oc) =
   Lwt.return_unit
 
 let with_watchman_conn f =
-  let%lwt conn = open_connection () in
-  let%lwt result =
-    try%lwt f conn
-    with e ->
-      let e = Exception.wrap e in
-      let%lwt () = close_connection conn in
-      Exception.reraise e
-  in
-  let%lwt () = close_connection conn in
-  Lwt.return result
+  match%lwt open_connection () with
+  | Ok conn ->
+    let%lwt result =
+      try%lwt f conn
+      with e ->
+        let e = Exception.wrap e in
+        let%lwt () = close_connection conn in
+        Exception.reraise e
+    in
+    let%lwt () = close_connection conn in
+    Lwt.return result
+  | Error err -> raise_error err
 
 (* Sends a request to watchman and returns the response. If we don't have a connection,
  * a new connection will be created before the request and destroyed after the response *)
@@ -539,7 +545,11 @@ let re_init
       subscription_prefix;
       sync_timeout;
     } =
-  let%lwt conn = open_connection () in
+  let%lwt conn =
+    match%lwt open_connection () with
+    | Ok conn -> Lwt.return conn
+    | Error err -> raise_error err
+  in
   let%lwt (watched_path_expression_terms, watch_roots, failed_paths) =
     Lwt_list.fold_left_s
       (fun (terms, watch_roots, failed_paths) path ->
