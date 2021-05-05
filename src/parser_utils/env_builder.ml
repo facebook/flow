@@ -567,6 +567,21 @@ struct
   let program program =
     let (_, _, refined_reads) = program_with_scope ~ignore_toplevel:false program in
     refined_reads
+
+  let refiners_of_use program loc =
+    let (_, vals, refis) = program_with_scope ~ignore_toplevel:false program in
+    let writes = Ssa_api.write_locs_of_read_loc vals loc in
+    let refi_locs =
+      L.LMap.find_opt loc refis |> Base.Option.value_map ~f:fst ~default:L.LSet.empty
+    in
+    L.LSet.union
+      refi_locs
+      ( Base.List.filter_map
+          ~f:(function
+            | Ssa_api.Uninitialized -> None
+            | Ssa_api.Write l -> Some l)
+          writes
+      |> L.LSet.of_list )
 end
 
 module With_Loc = Make (Loc_sig.LocS) (Ssa_api.With_Loc) (Scope_builder.With_Loc)

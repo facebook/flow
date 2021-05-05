@@ -10,16 +10,13 @@ open Test_utils
 module LocMap = Loc_collections.LocMap
 module LocSet = Loc_collections.LocSet
 
+let print_locs locs =
+  LocSet.elements locs
+  |> List.map Loc.debug_to_string
+  |> String.concat ", "
+  |> Printf.sprintf "[%s]"
+
 let printer with_locs locmap =
-  let print_locs locs =
-    if with_locs then
-      LocSet.elements locs
-      |> List.map Loc.debug_to_string
-      |> String.concat ", "
-      |> Printf.sprintf "[%s], "
-    else
-      ""
-  in
   let kvlist = LocMap.bindings locmap in
   let strlist =
     Base.List.map
@@ -27,7 +24,10 @@ let printer with_locs locmap =
         Printf.sprintf
           "%s => { %s%s }"
           (Loc.debug_to_string read_loc)
-          (print_locs locs)
+          ( if with_locs then
+            Printf.sprintf "%s, " (print_locs locs)
+          else
+            "" )
           (Env_builder.With_Loc.show_refinement_kind refinement))
       kvlist
   in
@@ -53,6 +53,17 @@ let mk_ssa_builder_location_test contents expected_values ctxt =
     ~msg:"SSA values don't match!"
     expected_values
     refined_reads
+
+let mk_refiner_of_use_test contents target_loc expected_values ctxt =
+  let locs = Env_builder.With_Loc.refiners_of_use (parse contents) target_loc in
+
+  assert_equal
+    ~ctxt
+    ~cmp:(eq print_locs)
+    ~printer:print_locs
+    ~msg:"Refiner locations don't match!"
+    expected_values
+    locs
 
 let mk_write (pos1, pos2) = Ssa_api.Write (mk_loc pos1 pos2)
 
@@ -352,4 +363,22 @@ let x = null;
                "let x = undefined;
 (x === -3) && x"
                LocMap.(empty |> add (mk_loc (2, 14) (2, 15)) (SingletonNumR "-3"));
+         "refiner_of_use_1"
+         >:: mk_refiner_of_use_test
+               "let x = 42;
+(x && x)"
+               (mk_loc (2, 6) (2, 7))
+               (LocSet.of_list [mk_loc (1, 4) (1, 5); mk_loc (2, 1) (2, 2)]);
+         "refiner_of_use_2"
+         >:: mk_refiner_of_use_test
+               "
+function f() {
+  let x = 42;
+  if (condition) {
+    x = false;
+  }
+  (x !== true && x);
+}"
+               (mk_loc (7, 17) (7, 18))
+               (LocSet.of_list [mk_loc (3, 6) (3, 7); mk_loc (5, 4) (5, 5); mk_loc (7, 3) (7, 13)]);
        ]
