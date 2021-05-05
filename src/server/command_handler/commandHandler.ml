@@ -542,28 +542,42 @@ let dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructo
 
 let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust file_input =
   if Options.trust_mode options = Options.NoTrust && trust then
-    Error
-      "Coverage cannot be run in trust mode if the server is not in trust mode. \n\nRestart the Flow server with --trust-mode=check' to enable this command."
+    ( Error
+        "Coverage cannot be run in trust mode if the server is not in trust mode. \n\nRestart the Flow server with --trust-mode=check' to enable this command.",
+      None )
     |> Lwt.return
   else
     let file = File_input.filename_of_file_input file_input in
     let file = File_key.SourceFile file in
-    File_input.content_of_file_input file_input %>>= fun content ->
-    try_with (fun () ->
-        let%lwt (file_artifacts_result, _did_hit_cache) =
-          let%lwt parse_result = Types_js.parse_contents ~options ~profiling content file in
-          type_parse_artifacts_with_cache
-            ~options
-            ~env
-            ~profiling
-            ~type_parse_artifacts_cache
-            file
-            parse_result
-        in
-        match file_artifacts_result with
-        | Ok (_, Typecheck_artifacts { cx; typed_ast }) ->
-          Lwt.return (Ok (Type_info_service.coverage ~cx ~typed_ast ~force ~trust file content))
-        | Error _parse_errors -> Lwt.return (Error "Couldn't parse file in parse_contents"))
+    match File_input.content_of_file_input file_input with
+    | Error e -> Lwt.return (Error e, None)
+    | Ok content ->
+      let%lwt result =
+        try_with_json (fun () ->
+            let%lwt (file_artifacts_result, did_hit_cache) =
+              let%lwt parse_result = Types_js.parse_contents ~options ~profiling content file in
+              type_parse_artifacts_with_cache
+                ~options
+                ~env
+                ~profiling
+                ~type_parse_artifacts_cache
+                file
+                parse_result
+            in
+            let extra_data =
+              let json_props = add_cache_hit_data_to_json [] did_hit_cache in
+              Hh_json.JSON_Object json_props
+            in
+            match file_artifacts_result with
+            | Ok (_, Typecheck_artifacts { cx; typed_ast }) ->
+              Lwt.return
+                (Ok
+                   ( Type_info_service.coverage ~cx ~typed_ast ~force ~trust file content,
+                     Some extra_data ))
+            | Error _parse_errors ->
+              Lwt.return (Error ("Couldn't parse file in parse_contents", Some extra_data)))
+      in
+      Lwt.return (split_result result)
 
 let batch_coverage ~options ~env ~trust ~batch =
   if Options.trust_mode options = Options.NoTrust && trust then
@@ -817,7 +831,7 @@ let handle_check_file ~options ~force ~input ~profiling ~env =
   Lwt.return (ServerProt.Response.CHECK_FILE response, None)
 
 let handle_coverage ~options ~force ~input ~trust ~profiling ~env =
-  let%lwt response =
+  let%lwt (response, _extra_data) =
     coverage ~options ~env ~profiling ~type_parse_artifacts_cache:None ~force ~trust input
   in
   Lwt.return (ServerProt.Response.COVERAGE response, None)
@@ -1940,7 +1954,7 @@ let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~clien
       | Error _ -> false)
     | Error _ -> false
   in
-  let%lwt result =
+  let%lwt (result, extra_data) =
     if is_flow then
       (* 'true' makes it report "unknown" for all exprs in non-flow files *)
       let force = Options.all options in
@@ -1949,8 +1963,9 @@ let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~clien
       in
       coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust:false file_input
     else
-      Lwt.return (Ok [])
+      Lwt.return (Ok [], None)
   in
+  let metadata = with_data ~extra_data metadata in
   match (is_flow, result) with
   | (false, _) ->
     let range = { start = { line = 0; character = 0 }; end_ = { line = 1; character = 0 } } in
