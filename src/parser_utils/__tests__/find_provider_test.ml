@@ -6,6 +6,7 @@
  *)
 
 open OUnit2
+open Test_utils
 
 let indent_len str =
   let len = String.length str in
@@ -63,6 +64,17 @@ let mk_provider_test var contents expected_msg ctxt =
     expected_msg
     (print_providers msg)
 
+let mk_provider_loc_test loc contents expected_msg ctxt =
+  let ast = parse contents in
+  let (scope, _) = Provider_api.LocProviders.find_providers ast in
+  let msg = Provider_api.LocProviders.providers_of_def scope loc in
+  assert_equal
+    ~ctxt
+    ~printer:(fun x -> x)
+    ~msg:"Results don't match!"
+    expected_msg
+    (print_providers msg)
+
 let tests =
   "find_providers"
   >::: [
@@ -73,6 +85,25 @@ let tests =
          var x;
          x = null;
          x = 42;
+         "
+               "[(2, 0) to (2, 1)], [(3, 0) to (3, 1)]";
+         "null_to_init2"
+         >:: mk_provider_test
+               "x"
+               "
+let x = null;
+x = 42;
+x = 100;
+         "
+               "[(1, 4) to (1, 5)], [(2, 0) to (2, 1)]";
+         "empty_to_null_to_init_loc"
+         >:: mk_provider_loc_test
+               (mk_loc (4, 0) (4, 1))
+               "
+         var x;
+         x = null;
+         x = 42;
+         x = 10;
          "
                "[(2, 0) to (2, 1)], [(3, 0) to (3, 1)]";
          "write_before_declare"

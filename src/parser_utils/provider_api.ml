@@ -7,7 +7,9 @@
 
 open Utils_js
 
-module Make (L : Loc_sig.S) : sig
+module type S = sig
+  module L : Loc_sig.S
+
   type scope
 
   type env = scope Nel.t
@@ -21,7 +23,12 @@ module Make (L : Loc_sig.S) : sig
   val find_providers : (L.t, L.t) Flow_ast.Program.t -> env
 
   val print_full_env : env -> string
-end = struct
+
+  val providers_of_def : scope -> L.t -> L.LSet.t option
+end
+
+module Make (L : Loc_sig.S) = struct
+  module L = L
   module Find_providers = Find_providers.FindProviders (L)
   open Find_providers
 
@@ -34,7 +41,20 @@ end = struct
   let all_exact_providers { providers; _ } =
     SMap.fold (fun _ { exact_locs; _ } acc -> L.LSet.union exact_locs acc) providers L.LSet.empty
 
+  let rec all_entries { entries; children; _ } =
+    SMap.values entries @ Base.List.concat_map ~f:all_entries (L.LMap.values children)
+
   let is_provider scope loc = L.LSet.mem loc (all_exact_providers scope)
+
+  let providers_of_def scope loc =
+    let all_entries = all_entries scope in
+    Base.List.find_map
+      ~f:(fun { provider_locs; declare_locs; def_locs; _ } ->
+        if L.LSet.mem loc declare_locs || L.LSet.mem loc def_locs then
+          Some provider_locs
+        else
+          None)
+      all_entries
 
   let get_providers_for_toplevel_var var ({ entries; _ }, _) =
     let entry = SMap.find_opt var entries in

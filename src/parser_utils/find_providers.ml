@@ -19,11 +19,21 @@ module FindProviders (L : Loc_sig.S) = struct
     | Var
     | Lex
 
-  (* Scope entry for a single variable, recording both its declaration site(s) and providers *)
+  (* Scope entry for a single variable, recording both its declaration site(s) and providers.
+      * declare_locs are locations where a variable is declared with `let`, `var`, `const`, etc.
+        In the vast majority of cases only one location will exist, but there can be multiple in
+        the case of `vars` with branching control flow (e.g. `if (c) { var x = 10 } else { var x = 20 }`
+        and overridden functions.
+      * def_locs are locations where a variable is written to, typically assignments and updates. In this
+        case, we exclude declarations--declare_locs and def_locs should be disjoint.
+      * provider_locs are what we're calculating in this module, and can be either declares or defs. We
+        expect that provider_locs is a subset of the union of def_locs and declare_locs.
+   *)
   type entry = {
     name: string;
     state: state;
     declare_locs: L.LSet.t;
+    def_locs: L.LSet.t;
     provider_locs: L.LSet.t;
   }
 
@@ -106,24 +116,30 @@ module FindProviders (L : Loc_sig.S) = struct
      based on where a new variable would live, this finds the set of entries in which some particular variable
      already exists. *)
   let find_entries_for_existing_variable var env =
-    let rec loop env rev_head =
+    let rec loop same_scope env rev_head =
       match env with
       | ({ entries; _ } as hd) :: tl when SMap.mem var entries ->
-        Some
-          ( entries,
-            fun entries ->
-              List.append (List.rev rev_head) (Nel.to_list ({ hd with entries }, tl))
-              |> Nel.of_list_exn )
-      (* If we don't see the variable before we leave a function scope, return None,
-       because an assignment inside a function can't be a provider for a variable defined outside *)
-      | { kind = Var; _ } :: _ -> None
-      | hd :: tl -> loop tl (hd :: rev_head)
+        ( entries,
+          same_scope,
+          fun entries ->
+            List.append (List.rev rev_head) (Nel.to_list ({ hd with entries }, tl))
+            |> Nel.of_list_exn )
+      (* If we don't see the variable before we leave a function scope, note that fact, since we can't add new providers
+         from an interior scope *)
+      | ({ kind = Var; _ } as hd) :: tl -> loop false tl (hd :: rev_head)
+      | hd :: tl -> loop same_scope tl (hd :: rev_head)
       | [] -> env_invariant_violated "Scope for variable not found"
     in
-    loop (Nel.to_list env) []
+    loop true (Nel.to_list env) []
 
   let empty_entry name =
-    { name; state = Uninitialized; provider_locs = L.LSet.empty; declare_locs = L.LSet.empty }
+    {
+      name;
+      state = Uninitialized;
+      provider_locs = L.LSet.empty;
+      declare_locs = L.LSet.empty;
+      def_locs = L.LSet.empty;
+    }
 
   let get_entry var entries = SMap.find_opt var entries |> Option.value ~default:(empty_entry var)
 
@@ -156,13 +172,26 @@ module FindProviders (L : Loc_sig.S) = struct
         entry1
       else
         match (entry1, entry2) with
-        | ( ({ state = state1; provider_locs = providers1; declare_locs = declares1; _ } as entry),
-            { state = state2; provider_locs = providers2; declare_locs = declares2; _ } ) ->
+        | ( {
+              name;
+              state = state1;
+              provider_locs = providers1;
+              declare_locs = declares1;
+              def_locs = defs1;
+            },
+            {
+              name = _;
+              state = state2;
+              provider_locs = providers2;
+              declare_locs = declares2;
+              def_locs = defs2;
+            } ) ->
           {
-            entry with
+            name;
             state = max state1 state2;
             provider_locs = L.LSet.union providers1 providers2;
             declare_locs = L.LSet.union declares1 declares2;
+            def_locs = L.LSet.union defs1 defs2;
           }
     in
     let rec join_scopes scope1 scope2 =
@@ -542,20 +571,27 @@ module FindProviders (L : Loc_sig.S) = struct
           else
             Initialized
         in
-        Base.Option.iter
-          (find_entries_for_existing_variable var env)
-          ~f:(fun (entries, reconstruct_env) ->
-            let ({ state = state'; provider_locs; _ } as entry) = get_entry var entries in
-            let env =
-              if state_lt state' state then
-                let provider_locs = L.LSet.add loc provider_locs in
-                let entries = SMap.add var { entry with state; provider_locs } entries in
-                let env = reconstruct_env entries in
-                update_provider_info var loc env
-              else
-                env
-            in
-            this#set_acc (env, cx))
+        let (entries, same_var_scope, reconstruct_env) =
+          find_entries_for_existing_variable var env
+        in
+        let ({ state = state'; provider_locs; def_locs; _ } as entry) = get_entry var entries in
+        let is_provider = same_var_scope && state_lt state' state in
+        let def_locs = L.LSet.add loc def_locs in
+        let (state, provider_locs) =
+          if is_provider then
+            (state, L.LSet.add loc provider_locs)
+          else
+            (state', provider_locs)
+        in
+        let entries = SMap.add var { entry with state; provider_locs; def_locs } entries in
+        let env = reconstruct_env entries in
+        let env =
+          if is_provider then
+            update_provider_info var loc env
+          else
+            env
+        in
+        this#set_acc (env, cx)
 
       method! assignment
           _loc ({ Ast.Expression.Assignment.operator; left; right; comments; _ } as expr) =
