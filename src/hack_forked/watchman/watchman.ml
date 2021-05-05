@@ -27,8 +27,14 @@ exception Watchman_restarted
 type error_severity =
   | Not_installed of { path: string }
   | Socket_unavailable of { msg: string }
+  | Response_error of {
+      request: string option;
+      response: string;
+      msg: string;
+    }
 
 let log_error ?request ?response msg =
+  let response = Option.map ~f:(String_utils.truncate 100000) response in
   let () = EventLogger.watchman_error ?request ?response msg in
   let () = Hh_logger.error "%s" msg in
   ()
@@ -40,6 +46,9 @@ let raise_error = function
     raise (Watchman_error msg)
   | Socket_unavailable { msg } ->
     let () = log_error msg in
+    raise (Watchman_error msg)
+  | Response_error { request; response; msg } ->
+    let () = log_error ?request ~response msg in
     raise (Watchman_error msg)
 
 type subscribe_mode =
@@ -378,7 +387,7 @@ let with_watchman_conn f =
     in
     let%lwt () = close_connection conn in
     Lwt.return result
-  | Error err -> raise_error err
+  | Error _ as err -> Lwt.return err
 
 (* Sends a request to watchman and returns the response. If we don't have a connection,
  * a new connection will be created before the request and destroyed after the response *)
@@ -387,12 +396,17 @@ let rec request ~debug_logging ?conn json =
   | None -> with_watchman_conn (fun conn -> request ~debug_logging ~conn json)
   | Some (reader, oc) ->
     let%lwt () = send_request ~debug_logging oc json in
-    let%lwt line = Buffered_line_reader_lwt.get_next_line reader in
-    (match parse_response ~debug_logging line with
-    | Ok response -> Lwt.return response
+    let%lwt response = Buffered_line_reader_lwt.get_next_line reader in
+    (match parse_response ~debug_logging response with
+    | Ok _ as result -> Lwt.return result
     | Error msg ->
-      EventLogger.watchman_error ~request:(Hh_json.json_to_string json) ~response:line msg;
-      raise (Watchman_error msg))
+      let request = Some (Hh_json.json_to_string json) in
+      Lwt.return (Error (Response_error { request; response; msg })))
+
+let request_exn ~debug_logging ?conn json =
+  match%lwt request ~debug_logging ?conn json with
+  | Ok result -> Lwt.return result
+  | Error err -> raise_error err
 
 let blocking_read ~debug_logging ~conn:(reader, _) =
   let%lwt () =
@@ -449,7 +463,7 @@ let has_watchman_restarted_since ~debug_logging ~conn ~watch_root ~clockspec =
             ];
         ])
   in
-  let%lwt response = request ~debug_logging ~conn query in
+  let%lwt response = request_exn ~debug_logging ~conn query in
   let result =
     match Hh_json_helpers.Jget.bool_opt (Some response) "is_fresh_instance" with
     | Some has_restarted -> Ok has_restarted
@@ -495,7 +509,7 @@ let get_clockspec ~debug_logging ~conn ~watch_root prior_clockspec =
       Hh_logger.error "%s" err;
       raise Exit.(Exit_with Watchman_failed))
   | None ->
-    let%lwt response = request ~debug_logging ~conn (clock watch_root) in
+    let%lwt response = request_exn ~debug_logging ~conn (clock watch_root) in
     Lwt.return (J.get_string_val "clock" response)
 
 (** Watch this root
@@ -510,7 +524,7 @@ let watch_project ~debug_logging ~conn root =
   let%lwt response =
     catch
       ~f:(fun () ->
-        let%lwt response = request ~debug_logging ~conn query in
+        let%lwt response = request_exn ~debug_logging ~conn query in
         Lwt.return (Some response))
       ~catch:(fun exn ->
         (match Exception.to_exn exn with
@@ -613,7 +627,7 @@ let re_init
     }
   in
   let%lwt response =
-    request ~debug_logging ~conn (subscribe ~mode:subscribe_mode ~states:defer_states env)
+    request_exn ~debug_logging ~conn (subscribe ~mode:subscribe_mode ~states:defer_states env)
   in
   ignore response;
   Lwt.return env
@@ -813,7 +827,9 @@ let get_mergebase_and_changes instance =
     ~on_dead:(fun _dead_env -> Error "Failed to connect to Watchman to get mergebase")
     ~on_alive:(fun env ->
       let%lwt response =
-        request ~debug_logging:env.settings.debug_logging (get_changes_since_mergebase_query env)
+        request_exn
+          ~debug_logging:env.settings.debug_logging
+          (get_changes_since_mergebase_query env)
       in
       let result =
         match extract_mergebase response with
