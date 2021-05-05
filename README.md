@@ -1,4 +1,10 @@
-# Flow
+<p align="center">
+  <img src="website/static/logo.png" alt="logo" width="15%" />
+</p>
+<h1 align="center">
+  <a href="https://flow.org/">Flow</a>
+</h1>
+
 <p align="center">
   <a href="https://circleci.com/gh/facebook/flow/tree/master">
     <img src="https://circleci.com/gh/facebook/flow/tree/master.svg?style=shield" alt="CircleCI" />
@@ -20,10 +26,12 @@
   </a>
 </p>
 
-
-Flow is a static typechecker for JavaScript. To find out more about Flow, check out [flow.org](https://flow.org/).
-
-For a background on the project, please read [this overview](https://flow.org/en/docs/lang/).
+<p align="center">
+  Flow is a static typechecker with a focus on <a href="https://philosophy.stackexchange.com/a/6993">soundness</a> for JavaScript. To find out more, check out <a href="https://flow.org/">flow.org</a>.
+</p>
+<p align="center">
+  For a background on the project, please read <a href="https://flow.org/en/docs/lang/">this overview</a>.
+</p>
 
 ## Contents
 
