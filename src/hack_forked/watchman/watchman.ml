@@ -392,7 +392,17 @@ let rec request ~debug_logging ?conn ~timeout json =
     Lwt.return @@ sanitize_watchman_response ~debug_logging line
 
 let blocking_read ~debug_logging ~conn:(reader, _) =
-  let%lwt () = Lwt_unix.wait_read (Buffered_line_reader_lwt.get_fd reader) in
+  let%lwt () =
+    try%lwt Lwt_unix.wait_read (Buffered_line_reader_lwt.get_fd reader)
+    with Unix.Unix_error (Unix.EBADF, _, _) ->
+      (* this is a curious error. it means that the file descriptor was already
+         closed via `Lwt_unix.close` before we called `wait_read`, and the only
+         place we do that is in `close_connection`. So that suggests that we're
+         calling `Watchman.close` and then still calling `blocking_read` on the
+         same instance again, but it's not clear where; we are cancelling those
+         promises. *)
+      raise (Watchman_error "Connection closed")
+  in
   let%lwt output =
     let read_timeout = 40.0 in
     try%lwt
