@@ -18,8 +18,6 @@ open Utils
  *   * Use the BSER protocol for enhanced performance
  *)
 
-exception Timeout
-
 exception Watchman_error of string
 
 exception Subscription_canceled_by_watchman
@@ -259,12 +257,6 @@ let is_fresh_instance obj =
 (* I/O stuff *)
 (****************************************************************************)
 
-let with_timeout timeout f =
-  match timeout with
-  | None -> f ()
-  | Some timeout ->
-    (try%lwt Lwt_unix.with_timeout timeout f with Lwt_unix.Timeout -> raise Timeout)
-
 (* Send a request to the watchman process *)
 let send_request ~debug_logging oc json =
   let json_str = Hh_json.(json_to_string json) in
@@ -353,8 +345,8 @@ let close_connection (reader, oc) =
   in
   Lwt.return_unit
 
-let with_watchman_conn ~timeout f =
-  let%lwt conn = with_timeout timeout open_connection in
+let with_watchman_conn f =
+  let%lwt conn = open_connection () in
   let%lwt result =
     try%lwt f conn
     with e ->
@@ -367,14 +359,12 @@ let with_watchman_conn ~timeout f =
 
 (* Sends a request to watchman and returns the response. If we don't have a connection,
  * a new connection will be created before the request and destroyed after the response *)
-let rec request ~debug_logging ?conn ~timeout json =
+let rec request ~debug_logging ?conn json =
   match conn with
-  | None -> with_watchman_conn ~timeout (fun conn -> request ~debug_logging ~conn ~timeout json)
+  | None -> with_watchman_conn (fun conn -> request ~debug_logging ~conn json)
   | Some (reader, oc) ->
     let%lwt () = send_request ~debug_logging oc json in
-    let%lwt line =
-      with_timeout timeout @@ fun () -> Buffered_line_reader_lwt.get_next_line reader
-    in
+    let%lwt line = Buffered_line_reader_lwt.get_next_line reader in
     (match parse_response ~debug_logging line with
     | Ok response -> Lwt.return response
     | Error msg ->
@@ -420,7 +410,7 @@ let blocking_read ~debug_logging ~conn:(reader, _) =
  * we'll instead send a small "query" request. It should always return 0 files, but it should
  * tell us whether the Watchman service has restarted since clockspec.
  *)
-let has_watchman_restarted_since ~debug_logging ~conn ~timeout ~watch_root ~clockspec =
+let has_watchman_restarted_since ~debug_logging ~conn ~watch_root ~clockspec =
   let hard_to_match_name = "irrelevant.potato" in
   let query =
     Hh_json.(
@@ -436,7 +426,7 @@ let has_watchman_restarted_since ~debug_logging ~conn ~timeout ~watch_root ~cloc
             ];
         ])
   in
-  let%lwt response = request ~debug_logging ~conn ~timeout query in
+  let%lwt response = request ~debug_logging ~conn query in
   let result =
     match Hh_json_helpers.Jget.bool_opt (Some response) "is_fresh_instance" with
     | Some has_restarted -> Ok has_restarted
@@ -471,12 +461,7 @@ let get_clockspec ~debug_logging ~conn ~watch_root prior_clockspec =
   match prior_clockspec with
   | Some clockspec ->
     let%lwt has_restarted =
-      has_watchman_restarted_since
-        ~debug_logging
-        ~conn
-        ~timeout:None (* the whole init process should be wrapped in a timeout *)
-        ~watch_root
-        ~clockspec
+      has_watchman_restarted_since ~debug_logging ~conn ~watch_root ~clockspec
     in
     (match has_restarted with
     | Ok true ->
@@ -487,13 +472,7 @@ let get_clockspec ~debug_logging ~conn ~watch_root prior_clockspec =
       Hh_logger.error "%s" err;
       raise Exit.(Exit_with Watchman_failed))
   | None ->
-    let%lwt response =
-      request
-        ~debug_logging
-        ~conn
-        ~timeout:None (* the whole init process should be wrapped in a timeout *)
-        (clock watch_root)
-    in
+    let%lwt response = request ~debug_logging ~conn (clock watch_root) in
     Lwt.return (J.get_string_val "clock" response)
 
 (** Watch this root
@@ -503,12 +482,12 @@ let get_clockspec ~debug_logging ~conn ~watch_root prior_clockspec =
 
     TODO: should return the error when it fails for reasons other than the path
     not existing. *)
-let watch_project ~debug_logging ~conn ~timeout root =
+let watch_project ~debug_logging ~conn root =
   let query = J.strlist ["watch-project"; Path.to_string root] in
   let%lwt response =
     catch
       ~f:(fun () ->
-        let%lwt response = request ~debug_logging ~conn ~timeout query in
+        let%lwt response = request ~debug_logging ~conn query in
         Lwt.return (Some response))
       ~catch:(fun exn ->
         (match Exception.to_exn exn with
@@ -547,8 +526,7 @@ let re_init
   let%lwt (watched_path_expression_terms, watch_roots, failed_paths) =
     Lwt_list.fold_left_s
       (fun (terms, watch_roots, failed_paths) path ->
-        let timeout = None (* the whole init process should be wrapped in a timeout *) in
-        match%lwt watch_project ~debug_logging ~conn ~timeout path with
+        match%lwt watch_project ~debug_logging ~conn path with
         | None -> Lwt.return (terms, watch_roots, SSet.add (Path.to_string path) failed_paths)
         | Some (watch_root, relative_path) ->
           let terms = prepend_relative_path_term ~relative_path ~terms in
@@ -608,11 +586,7 @@ let re_init
     }
   in
   let%lwt response =
-    request
-      ~debug_logging
-      ~conn
-      ~timeout:None (* the whole init process should be wrapped in a timeout *)
-      (subscribe ~mode:subscribe_mode ~states:defer_states env)
+    request ~debug_logging ~conn (subscribe ~mode:subscribe_mode ~states:defer_states env)
   in
   ignore response;
   Lwt.return env
@@ -662,14 +636,14 @@ let maybe_restart_instance instance =
       (* TODO: don't hardcode this timeout *)
       let timeout = 120. in
       match%lwt
-        with_timeout (Some timeout) @@ fun () ->
+        Lwt_unix.with_timeout timeout @@ fun () ->
         re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings
       with
       | env ->
         Hh_logger.log "Watchman connection reestablished.";
         EventLogger.watchman_connection_reestablished ();
         Lwt.return (Watchman_alive env)
-      | exception Timeout ->
+      | exception Lwt_unix.Timeout ->
         Hh_logger.log "Reestablishing watchman subscription timed out.";
         EventLogger.watchman_connection_reestablishment_failed
           (spf "Timed out after %f seconds" timeout);
@@ -766,9 +740,6 @@ let call_on_instance :
           log_died
             ("Watchman connection End_of_file.\n" ^ Exception.get_full_backtrace_string 500 exn);
           close_channel_on_instance' env
-        | Timeout ->
-          log_died "Watchman reading Timeout. Closing channel";
-          close_channel_on_instance' env
         | Watchman_error msg ->
           log_died (Printf.sprintf "Watchman error: %s. Closing channel" msg);
           close_channel_on_instance' env
@@ -852,17 +823,14 @@ let get_changes instance =
       let (env, result) = transform_asynchronous_get_changes_response env response in
       Lwt.return (env, Watchman_pushed result))
 
-let get_mergebase_and_changes ~timeout instance =
+let get_mergebase_and_changes instance =
   call_on_instance
     instance
     "get_mergebase_and_changes"
     ~on_dead:(fun _dead_env -> Error "Failed to connect to Watchman to get mergebase")
     ~on_alive:(fun env ->
       let%lwt response =
-        request
-          ~timeout
-          ~debug_logging:env.settings.debug_logging
-          (get_changes_since_mergebase_query env)
+        request ~debug_logging:env.settings.debug_logging (get_changes_since_mergebase_query env)
       in
       let result =
         match extract_mergebase response with
