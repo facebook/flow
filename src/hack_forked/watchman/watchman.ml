@@ -550,37 +550,20 @@ let get_clockspec ~debug_logging ~conn ~watch_root prior_clockspec =
 (** Watch this root
 
     If the path doesn't exist or the request errors for any other reason, this will
-    return [None]. Otherwise, returns the watch root and relative path to that root.
-
-    TODO: should return the error when it fails for reasons other than the path
-    not existing. *)
+    return [None]. Otherwise, returns the watch root and relative path to that root. *)
 let watch_project ~debug_logging ~conn root =
   let query = J.strlist ["watch-project"; Path.to_string root] in
-  let%lwt response =
-    catch
-      ~f:(fun () ->
-        let%lwt response = request_exn ~debug_logging ~conn query in
-        Lwt.return (Some response))
-      ~catch:(fun exn ->
-        (match Exception.to_exn exn with
-        | Watchman_error _
-        | Hh_json.Syntax_error _ ->
-          (* These exceptions are logged already in `request` *)
-          ()
-        | _ ->
-          EventLogger.watchman_error
-            (spf
-               "Unexpected error in watch_project: %s\n%s"
-               (Exception.get_ctor_string exn)
-               (Exception.get_full_backtrace_string 500 exn)));
-        Lwt.return None)
+  let%lwt response = request ~debug_logging ~conn query in
+  let result =
+    match response with
+    | Error (Response_error _) -> Ok None
+    | Error _ as err -> err
+    | Ok response ->
+      let watch_root = J.get_string_val "watch" response in
+      let relative_path = J.get_string_val "relative_path" ~default:"" response in
+      Ok (Some (watch_root, relative_path))
   in
-  match response with
-  | None -> Lwt.return None
-  | Some response ->
-    let watch_root = J.get_string_val "watch" response in
-    let relative_path = J.get_string_val "relative_path" ~default:"" response in
-    Lwt.return (Some (watch_root, relative_path))
+  Lwt.return result
 
 let re_init
     ?prior_clockspec
@@ -603,8 +586,9 @@ let re_init
     Lwt_list.fold_left_s
       (fun (terms, watch_roots, failed_paths) path ->
         match%lwt watch_project ~debug_logging ~conn path with
-        | None -> Lwt.return (terms, watch_roots, SSet.add (Path.to_string path) failed_paths)
-        | Some (watch_root, relative_path) ->
+        | Error err -> raise_error err
+        | Ok None -> Lwt.return (terms, watch_roots, SSet.add (Path.to_string path) failed_paths)
+        | Ok (Some (watch_root, relative_path)) ->
           let terms = prepend_relative_path_term ~relative_path ~terms in
           let watch_roots = SSet.add watch_root watch_roots in
           Lwt.return (terms, watch_roots, failed_paths))
