@@ -215,8 +215,7 @@ end = struct
       if not (SSet.is_empty env.files) then Lwt_condition.broadcast env.changes_condition ()
 
     let main env =
-      let deadline = Unix.time () +. 604800. in
-      let%lwt (instance, result) = Watchman.get_changes ~deadline env.instance in
+      let%lwt (instance, result) = Watchman.get_changes env.instance in
       env.instance <- instance;
       match result with
       | Watchman.Watchman_pushed pushed_changes ->
