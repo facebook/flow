@@ -1593,43 +1593,9 @@ struct
         | (OptionalT { reason = r; type_ = t; use_desc }, _) ->
           rec_flow cx trace (VoidT.why_with_use_desc ~use_desc r |> with_trust Trust.bogus_trust, u);
           rec_flow cx trace (t, u)
-        (*****************)
-        (* logical types *)
-        (*****************)
-
-        (* !x when x is of unknown truthiness *)
-        | (DefT (_, trust, BoolT None), NotT (reason, tout))
-        | (DefT (_, trust, StrT AnyLiteral), NotT (reason, tout))
-        | (DefT (_, trust, NumT AnyLiteral), NotT (reason, tout)) ->
-          rec_flow_t
-            ~use_op:unknown_use
-            cx
-            trace
-            (BoolT.at (aloc_of_reason reason) trust, OpenT tout)
-        (* !x when x is falsy *)
-        | (DefT (_, trust, BoolT (Some false)), NotT (reason, tout))
-        | (DefT (_, trust, SingletonBoolT false), NotT (reason, tout))
-        | (DefT (_, trust, StrT (Literal (_, OrdinaryName ""))), NotT (reason, tout))
-        | (DefT (_, trust, SingletonStrT (OrdinaryName "")), NotT (reason, tout))
-        | (DefT (_, trust, NumT (Literal (_, (0., _)))), NotT (reason, tout))
-        | (DefT (_, trust, SingletonNumT (0., _)), NotT (reason, tout))
-        | (DefT (_, trust, NullT), NotT (reason, tout))
-        | (DefT (_, trust, VoidT), NotT (reason, tout)) ->
-          let reason = replace_desc_reason (RBooleanLit true) reason in
-          rec_flow_t
-            ~use_op:unknown_use
-            cx
-            trace
-            (DefT (reason, trust, BoolT (Some true)), OpenT tout)
-        | (UnionT (_, rep), NotT _) -> flow_all_in_union cx trace rep u
-        (* !x when x is truthy *)
-        | (_, NotT (reason, tout)) ->
-          let reason = replace_desc_reason (RBooleanLit false) reason in
-          rec_flow_t
-            ~use_op:unknown_use
-            cx
-            trace
-            (DefT (reason, bogus_trust (), BoolT (Some false)), OpenT tout)
+        (**************************)
+        (* logical types - part A *)
+        (**************************)
         | (UnionT (_, rep), (AndT _ | OrT _ | NullishCoalesceT _))
           when not (UnionRep.is_optimized_finally rep) ->
           flow_all_in_union cx trace rep u
@@ -2371,6 +2337,42 @@ struct
         | (IntersectionT (r, rep), u) ->
           let unresolved = parts_to_replace cx u in
           SpeculationKit.prep_try_intersection cx trace (reason_of_use_t u) unresolved [] u r rep
+        (**************************)
+        (* logical types - part B *)
+        (**************************)
+
+        (* !x when x is of unknown truthiness *)
+        | (DefT (_, trust, BoolT None), NotT (reason, tout))
+        | (DefT (_, trust, StrT AnyLiteral), NotT (reason, tout))
+        | (DefT (_, trust, NumT AnyLiteral), NotT (reason, tout)) ->
+          rec_flow_t
+            ~use_op:unknown_use
+            cx
+            trace
+            (BoolT.at (aloc_of_reason reason) trust, OpenT tout)
+        (* !x when x is falsy *)
+        | (DefT (_, trust, BoolT (Some false)), NotT (reason, tout))
+        | (DefT (_, trust, SingletonBoolT false), NotT (reason, tout))
+        | (DefT (_, trust, StrT (Literal (_, OrdinaryName ""))), NotT (reason, tout))
+        | (DefT (_, trust, SingletonStrT (OrdinaryName "")), NotT (reason, tout))
+        | (DefT (_, trust, NumT (Literal (_, (0., _)))), NotT (reason, tout))
+        | (DefT (_, trust, SingletonNumT (0., _)), NotT (reason, tout))
+        | (DefT (_, trust, NullT), NotT (reason, tout))
+        | (DefT (_, trust, VoidT), NotT (reason, tout)) ->
+          let reason = replace_desc_reason (RBooleanLit true) reason in
+          rec_flow_t
+            ~use_op:unknown_use
+            cx
+            trace
+            (DefT (reason, trust, BoolT (Some true)), OpenT tout)
+        (* !x when x is truthy *)
+        | (_, NotT (reason, tout)) ->
+          let reason = replace_desc_reason (RBooleanLit false) reason in
+          rec_flow_t
+            ~use_op:unknown_use
+            cx
+            trace
+            (DefT (reason, bogus_trust (), BoolT (Some false)), OpenT tout)
         (************)
         (* matching *)
         (************)

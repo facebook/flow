@@ -43,6 +43,36 @@ References:
             ^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- unary.js:28:10
+
+Cannot return `!a` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
+[incompatible-return]
+
+   unary.js:28:10
+   28|   return !a; // error, true ~> false
+                ^^ [1]
+
+References:
+   unary.js:27:27
+   27| function x6(a: A<false>): false {
+                                 ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- unary.js:36:10
+
+Cannot return `!a` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
+[incompatible-return]
+
+   unary.js:36:10
+   36|   return !a; // error, true ~> false
+                ^^ [1]
+
+References:
+   unary.js:35:32
+   35| function x8(a: false & false): false {
+                                      ^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- update.js:12:5
 
 Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
@@ -238,4 +268,4 @@ Cannot update `xs[0]` because read-only arrays cannot be written to. [cannot-wri
 
 
 
-Found 19 errors
+Found 21 errors

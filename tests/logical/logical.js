@@ -536,3 +536,15 @@ function logical22() {
 
     ((b && false): empty); // should only error on `b`
 }
+
+/**
+ * Intersection on the left side of ||
+ */
+
+declare class RecordInstance<X> {}
+type RecordOf<Values: Object> = RecordInstance<Values> & Values;
+type Rec = RecordOf<{ f: number }>;
+
+function logical7f(a: ?Rec, b: Rec): Rec {
+    return a || b; // okay
+};

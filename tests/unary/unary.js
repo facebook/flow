@@ -17,3 +17,21 @@ function x4(y: string): boolean {
 }
 
 (-1: void); // error, number ~> void
+
+type A<X> = X;
+
+function x5(a: A<false>): true {
+  return !a; // ok
+};
+
+function x6(a: A<false>): false {
+  return !a; // error, true ~> false
+};
+
+function x7(a: false & false): true {
+  return !a; // ok
+};
+
+function x8(a: false & false): false {
+  return !a; // error, true ~> false
+};
