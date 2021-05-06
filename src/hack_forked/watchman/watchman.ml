@@ -393,7 +393,7 @@ let blocking_read ~debug_logging ~conn:(reader, _) =
     | End_of_file -> raise (Watchman_error "Connection closed")
   in
   match parse_response ~debug_logging output with
-  | Ok response -> Lwt.return (Some response)
+  | Ok response -> Lwt.return response
   | Error msg ->
     EventLogger.watchman_error ~response:(String_utils.truncate 100000 output) msg;
     raise (Watchman_error msg)
@@ -788,29 +788,24 @@ let subscription_is_cancelled data =
   | Some true -> true
 
 let transform_asynchronous_get_changes_response env data =
-  match data with
-  | None -> (env, Files_changed SSet.empty)
-  | Some data ->
-    begin
-      match make_mergebase_changed_response env data with
-      | Ok (env, response) -> (env, response)
-      | Error _ ->
-        if is_fresh_instance data then (
-          Hh_logger.log "Watchman server is fresh instance. Exiting.";
-          raise Exit.(Exit_with Watchman_fresh_instance)
-        ) else if subscription_is_cancelled data then (
-          EventLogger.watchman_error "Subscription canceled by watchman";
-          raise Subscription_canceled_by_watchman
-        ) else (
-          env.clockspec <- Jget.string_exn (Some data) "clock";
-          match Jget.string_opt (Some data) "state-enter" with
-          | Some state -> (env, make_state_change_response `Enter state data)
-          | None ->
-            (match Jget.string_opt (Some data) "state-leave" with
-            | Some state -> (env, make_state_change_response `Leave state data)
-            | None -> (env, Files_changed (extract_file_names env data)))
-        )
-    end
+  match make_mergebase_changed_response env data with
+  | Ok (env, response) -> (env, response)
+  | Error _ ->
+    if is_fresh_instance data then (
+      Hh_logger.log "Watchman server is fresh instance. Exiting.";
+      raise Exit.(Exit_with Watchman_fresh_instance)
+    ) else if subscription_is_cancelled data then (
+      EventLogger.watchman_error "Subscription canceled by watchman";
+      raise Subscription_canceled_by_watchman
+    ) else (
+      env.clockspec <- Jget.string_exn (Some data) "clock";
+      match Jget.string_opt (Some data) "state-enter" with
+      | Some state -> (env, make_state_change_response `Enter state data)
+      | None ->
+        (match Jget.string_opt (Some data) "state-leave" with
+        | Some state -> (env, make_state_change_response `Leave state data)
+        | None -> (env, Files_changed (extract_file_names env data)))
+    )
 
 let get_changes instance =
   call_on_instance
