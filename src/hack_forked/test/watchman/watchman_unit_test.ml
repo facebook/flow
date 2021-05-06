@@ -18,12 +18,12 @@ let parse_state_enter_response () =
   }"
   in
   let json = Hh_json.json_of_string ~strict:true json in
-  let%lwt (_, response) =
+  let%lwt response =
     let%lwt env = Watchman.Testing.get_test_env () in
     Lwt.return (Watchman.Testing.transform_asynchronous_get_changes_response env json)
   in
   match response with
-  | Watchman.State_enter ("mystate", _) -> Lwt.return true
+  | Ok (_, Watchman.State_enter ("mystate", _)) -> Lwt.return true
   | _ -> Lwt.return false
 
 let parse_state_leave_response () =
@@ -39,12 +39,12 @@ let parse_state_leave_response () =
   }"
   in
   let json = Hh_json.json_of_string ~strict:true json in
-  let%lwt (_, response) =
+  let%lwt response =
     let%lwt env = Watchman.Testing.get_test_env () in
     Lwt.return (Watchman.Testing.transform_asynchronous_get_changes_response env json)
   in
   match response with
-  | Watchman.State_leave ("mystate", _) -> Lwt.return true
+  | Ok (_, Watchman.State_leave ("mystate", _)) -> Lwt.return true
   | _ -> Lwt.return false
 
 let tests =
