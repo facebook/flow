@@ -38,13 +38,13 @@ Cannot call `images.sort` with function bound to `compareFn` because string [1] 
 return value. [incompatible-call]
 
    arrows.js:7:36
-     7|     images = images.sort((a, b) => (a.width - b.width) + "");
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+      7|     images = images.sort((a, b) => (a.width - b.width) + "");
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:996:38
-   996|     sort(compareFn?: (a: T, b: T) => number): Array<T>;
-                                             ^^^^^^ [2]
+   <BUILTINS>/core.js:1005:38
+   1005|     sort(compareFn?: (a: T, b: T) => number): Array<T>;
+                                              ^^^^^^ [2]
 
 
 

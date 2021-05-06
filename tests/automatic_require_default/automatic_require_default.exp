@@ -7,8 +7,8 @@ Cannot get `Default.T` because property `T` is missing in `Number` [1]. [prop-mi
                      ^
 
 References:
-   <BUILTINS>/core.js:363:15
-   363| declare class Number {
+   <BUILTINS>/core.js:372:15
+   372| declare class Number {
                       ^^^^^^ [1]
 
 

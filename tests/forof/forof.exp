@@ -41,8 +41,8 @@ Cannot cast `x` to number because string [1] is incompatible with number [2]. [i
               ^
 
 References:
-   <BUILTINS>/core.js:1069:28
-   1069|     @@iterator(): Iterator<string>;
+   <BUILTINS>/core.js:1078:28
+   1078|     @@iterator(): Iterator<string>;
                                     ^^^^^^ [1]
    forof.js:25:9
      25|     (x: number); // Error - string ~> number
@@ -58,8 +58,8 @@ Cannot cast `elem` to number because tuple type [1] is incompatible with number 
               ^^^^
 
 References:
-   <BUILTINS>/core.js:1698:28
-   1698|     @@iterator(): Iterator<[K, V]>;
+   <BUILTINS>/core.js:1707:28
+   1707|     @@iterator(): Iterator<[K, V]>;
                                     ^^^^^^ [1]
    forof.js:32:12
      32|     (elem: number); // Error - tuple ~> number
@@ -75,8 +75,8 @@ Cannot cast `elem` to number because tuple type [1] is incompatible with number 
               ^^^^
 
 References:
-   <BUILTINS>/core.js:1698:28
-   1698|     @@iterator(): Iterator<[K, V]>;
+   <BUILTINS>/core.js:1707:28
+   1707|     @@iterator(): Iterator<[K, V]>;
                                     ^^^^^^ [1]
    forof.js:39:12
      39|     (elem: number); // Error - tuple ~> number

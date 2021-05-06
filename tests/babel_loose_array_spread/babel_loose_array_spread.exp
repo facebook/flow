@@ -10,13 +10,13 @@ References:
    apply.js:3:11
       3| const it: Iterable<number> = [7,8,9];
                    ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:1051:22
+   <BUILTINS>/core.js:1060:22
                               v
-   1051| type $ArrayLike<T> = {
-   1052|   [indexer: number]: T,
-   1053|   length: number,
-   1054|   ...
-   1055| }
+   1060| type $ArrayLike<T> = {
+   1061|   [indexer: number]: T,
+   1062|   length: number,
+   1063|   ...
+   1064| }
          ^ [2]
 
 
@@ -32,8 +32,8 @@ References:
    compose.js:4:19
      4| declare var fns1: Iterable<(number) => number>;
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:678:15
-   678| declare class $ReadOnlyArray<+T> {
+   <BUILTINS>/core.js:687:15
+   687| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -49,8 +49,8 @@ References:
    iterables.js:1:11
      1| const it: Iterable<number> = [7,8,9];
                   ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:678:15
-   678| declare class $ReadOnlyArray<+T> {
+   <BUILTINS>/core.js:687:15
+   687| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -66,8 +66,8 @@ References:
    iterables.js:1:11
      1| const it: Iterable<number> = [7,8,9];
                   ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:678:15
-   678| declare class $ReadOnlyArray<+T> {
+   <BUILTINS>/core.js:687:15
+   687| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -83,8 +83,8 @@ References:
    iterables.js:1:11
      1| const it: Iterable<number> = [7,8,9];
                   ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:678:15
-   678| declare class $ReadOnlyArray<+T> {
+   <BUILTINS>/core.js:687:15
+   687| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -100,8 +100,8 @@ References:
    opaque.js:6:30
      6| export const opaqueIterable: OpaqueIterable = [];
                                      ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:678:15
-   678| declare class $ReadOnlyArray<+T> {
+   <BUILTINS>/core.js:687:15
+   687| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -117,8 +117,8 @@ References:
    opaque.js:6:30
      6| export const opaqueIterable: OpaqueIterable = [];
                                      ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:678:15
-   678| declare class $ReadOnlyArray<+T> {
+   <BUILTINS>/core.js:687:15
+   687| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -134,8 +134,8 @@ References:
    opaque.js:6:30
      6| export const opaqueIterable: OpaqueIterable = [];
                                      ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:678:15
-   678| declare class $ReadOnlyArray<+T> {
+   <BUILTINS>/core.js:687:15
+   687| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -151,8 +151,8 @@ References:
    maps.js:1:14
      1| const map1 = new Map();
                      ^^^^^^^^^ [1]
-   <BUILTINS>/core.js:678:15
-   678| declare class $ReadOnlyArray<+T> {
+   <BUILTINS>/core.js:687:15
+   687| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -168,8 +168,8 @@ References:
    maps.js:2:14
      2| const map2 = new Map();
                      ^^^^^^^^^ [1]
-   <BUILTINS>/core.js:678:15
-   678| declare class $ReadOnlyArray<+T> {
+   <BUILTINS>/core.js:687:15
+   687| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -185,8 +185,8 @@ References:
    maps.js:1:14
      1| const map1 = new Map();
                      ^^^^^^^^^ [1]
-   <BUILTINS>/core.js:678:15
-   678| declare class $ReadOnlyArray<+T> {
+   <BUILTINS>/core.js:687:15
+   687| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -202,8 +202,8 @@ References:
    maps.js:2:14
      2| const map2 = new Map();
                      ^^^^^^^^^ [1]
-   <BUILTINS>/core.js:678:15
-   678| declare class $ReadOnlyArray<+T> {
+   <BUILTINS>/core.js:687:15
+   687| declare class $ReadOnlyArray<+T> {
                       ^^^^^^^^^^^^^^ [2]
 
 

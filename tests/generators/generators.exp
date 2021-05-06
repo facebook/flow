@@ -42,8 +42,8 @@ References:
    class.js:23:39
      23|   *stmt_return_err(): Generator<void, number, void> {
                                                ^^^^^^ [2]
-   <BUILTINS>/core.js:1644:29
-   1644| interface Generator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1653:29
+   1653| interface Generator<+Yield,+Return,-Next> {
                                      ^^^^^^ [3]
 
 
@@ -108,14 +108,14 @@ of property `@@iterator`. [incompatible-type-arg]
                     ^^
 
 References:
-   <BUILTINS>/core.js:1637:38
-   1637| type Iterator<+T> = $Iterator<T,void,void>;
+   <BUILTINS>/core.js:1646:38
+   1646| type Iterator<+T> = $Iterator<T,void,void>;
                                               ^^^^ [1]
    class.js:125:42
     125| examples.delegate_next_iterable([]).next(""); // error: Iterator has no next value
                                                   ^^ [2]
-   <BUILTINS>/core.js:1633:37
-   1633| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1642:37
+   1642| interface $Iterator<+Yield,+Return,-Next> {
                                              ^^^^ [3]
 
 
@@ -282,8 +282,8 @@ References:
    generators.js:22:46
      22| function *stmt_return_err(): Generator<void, number, void> {
                                                       ^^^^^^ [2]
-   <BUILTINS>/core.js:1644:29
-   1644| interface Generator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1653:29
+   1653| interface Generator<+Yield,+Return,-Next> {
                                      ^^^^^^ [3]
 
 
@@ -399,14 +399,14 @@ of property `@@iterator`. [incompatible-type-arg]
                   ^^
 
 References:
-   <BUILTINS>/core.js:1637:38
-   1637| type Iterator<+T> = $Iterator<T,void,void>;
+   <BUILTINS>/core.js:1646:38
+   1646| type Iterator<+T> = $Iterator<T,void,void>;
                                               ^^^^ [1]
    generators.js:94:33
      94| delegate_next_iterable([]).next(""); // error: Iterator has no next value
                                          ^^ [2]
-   <BUILTINS>/core.js:1633:37
-   1633| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:1642:37
+   1642| interface $Iterator<+Yield,+Return,-Next> {
                                              ^^^^ [3]
 
 
@@ -541,8 +541,8 @@ Cannot cast `refuse_return_result.value` to string because undefined [1] is inco
             ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1624:14
-   1624|     +value?: Return,
+   <BUILTINS>/core.js:1633:14
+   1633|     +value?: Return,
                       ^^^^^^ [1]
    return.js:20:32
      20|   (refuse_return_result.value: string); // error: number | void ~> string
