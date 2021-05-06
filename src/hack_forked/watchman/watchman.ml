@@ -760,13 +760,14 @@ let call_on_instance :
     watchman_instance ->
     string ->
     on_dead:(dead_env -> 'a) ->
-    on_alive:(env -> (env * 'a) Lwt.t) ->
+    on_alive:(env -> (env * 'a, error_severity) Result.t Lwt.t) ->
     (watchman_instance * 'a) Lwt.t =
   let on_alive' ~on_dead source f env =
     catch
       ~f:(fun () ->
-        let%lwt (env, result) = f env in
-        Lwt.return (Watchman_alive env, result))
+        match%lwt f env with
+        | Ok (env, result) -> Lwt.return (Watchman_alive env, result)
+        | Error err -> raise_error err)
       ~catch:(fun exn ->
         Hh_logger.exception_ ~prefix:("Watchman " ^ source ^ ": ") exn;
         let close_channel_on_instance' env =
@@ -850,11 +851,11 @@ let get_changes instance =
     ~on_alive:(fun env ->
       let debug_logging = env.settings.debug_logging in
       match%lwt blocking_read ~debug_logging ~conn:env.conn with
+      | Error _ as err -> Lwt.return err
       | Ok response ->
         (match transform_asynchronous_get_changes_response env response with
-        | Ok (env, result) -> Lwt.return (env, Watchman_pushed result)
-        | Error err -> raise_error err)
-      | Error err -> raise_error err)
+        | Error _ as err -> Lwt.return err
+        | Ok (env, result) -> Lwt.return (Ok (env, Watchman_pushed result))))
 
 let get_mergebase_and_changes instance =
   call_on_instance
@@ -862,19 +863,23 @@ let get_mergebase_and_changes instance =
     "get_mergebase_and_changes"
     ~on_dead:(fun _dead_env -> Error "Failed to connect to Watchman to get mergebase")
     ~on_alive:(fun env ->
-      let%lwt response =
-        request_exn
-          ~debug_logging:env.settings.debug_logging
-          (get_changes_since_mergebase_query env)
-      in
-      let result =
-        match extract_mergebase response with
-        | Some (_clock, mergebase) ->
-          let changes = extract_file_names env response in
-          (env, Ok (mergebase, changes))
-        | None -> (env, Error "Failed to extract mergebase from response")
-      in
-      Lwt.return result)
+      let debug_logging = env.settings.debug_logging in
+      let query = get_changes_since_mergebase_query env in
+      match%lwt request ~debug_logging query with
+      | Error _ as err -> Lwt.return err
+      | Ok response ->
+        let result =
+          match extract_mergebase response with
+          | Some (_clock, mergebase) ->
+            let changes = extract_file_names env response in
+            Ok (env, Ok (mergebase, changes))
+          | None ->
+            let msg = "Failed to extract mergebase" in
+            let request = Some (Hh_json.json_to_string query) in
+            let response = Hh_json.json_to_string response in
+            Error (Response_error { request; response; msg })
+        in
+        Lwt.return result)
 
 module Testing = struct
   type nonrec env = env
