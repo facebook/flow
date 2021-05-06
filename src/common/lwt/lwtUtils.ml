@@ -45,3 +45,16 @@ let output_graph out strip_root graph =
       graph
   in
   Lwt_io.fprint out "}"
+
+(** [fold_result_s ~f ~init l] calls [f init x] for each [x] in [l], where [f] returns an
+    ['acc result Lwt.t], and the fold short circuits if an [Error] is returned. Each
+    promise returned by [f] is resolved sequentially (hence the [_s]), and if any
+    promise rejects, the entire fold rejects. This is like a combination of
+    [Base.List.fold_result] and [Lwt_list.fold_left_s]. *)
+let rec fold_result_s ~f ~init l =
+  match l with
+  | [] -> Lwt.return (Ok init)
+  | x :: l ->
+    (match%lwt f init x with
+    | Ok acc -> (fold_result_s [@ocaml.tailcall]) f acc l
+    | Error _ as err -> Lwt.return err)
