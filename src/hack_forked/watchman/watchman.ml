@@ -394,6 +394,21 @@ let with_watchman_conn f =
     Lwt.return result
   | Error _ as err -> Lwt.return err
 
+let read_line reader =
+  try%lwt
+    let%lwt line = Buffered_line_reader_lwt.get_next_line reader in
+    Lwt.return (Ok line)
+  with
+  | End_of_file ->
+    let msg = "Connection closed (end of file)" in
+    Lwt.return (Error (Socket_unavailable { msg }))
+  | Unix.Unix_error (Unix.EBADF, _, _) ->
+    let msg = "Connection closed (bad file descriptor)" in
+    Lwt.return (Error (Socket_unavailable { msg }))
+  | Unix.Unix_error (Unix.ECONNRESET, _, _) ->
+    let msg = "Connection closed (connection reset)" in
+    Lwt.return (Error (Socket_unavailable { msg }))
+
 (* Sends a request to watchman and returns the response. If we don't have a connection,
  * a new connection will be created before the request and destroyed after the response *)
 let rec request ~debug_logging ?conn json =
@@ -402,12 +417,14 @@ let rec request ~debug_logging ?conn json =
   | Some (reader, oc) ->
     (match%lwt send_request ~debug_logging oc json with
     | Ok () ->
-      let%lwt response = Buffered_line_reader_lwt.get_next_line reader in
-      (match parse_response ~debug_logging response with
-      | Ok _ as result -> Lwt.return result
-      | Error msg ->
-        let request = Some (Hh_json.json_to_string json) in
-        Lwt.return (Error (Response_error { request; response; msg })))
+      (match%lwt read_line reader with
+      | Ok response ->
+        (match parse_response ~debug_logging response with
+        | Ok _ as result -> Lwt.return result
+        | Error msg ->
+          let request = Some (Hh_json.json_to_string json) in
+          Lwt.return (Error (Response_error { request; response; msg })))
+      | Error _ as err -> Lwt.return err)
     | Error _ as err -> Lwt.return err)
 
 let request_exn ~debug_logging ?conn json =
@@ -427,20 +444,17 @@ let blocking_read ~debug_logging ~conn:(reader, _) =
          promises. *)
       raise (Watchman_error "Connection closed")
   in
-  let%lwt output =
-    let read_timeout = 40.0 in
-    try%lwt
-      Lwt_unix.with_timeout read_timeout @@ fun () -> Buffered_line_reader_lwt.get_next_line reader
-    with
-    | Lwt_unix.Timeout ->
-      raise (Watchman_error (spf "Timed out reading payload after %f seconds" read_timeout))
-    | End_of_file -> raise (Watchman_error "Connection closed")
-  in
-  match parse_response ~debug_logging output with
-  | Ok response -> Lwt.return response
-  | Error msg ->
-    EventLogger.watchman_error ~response:(String_utils.truncate 100000 output) msg;
-    raise (Watchman_error msg)
+  let read_timeout = 40.0 in
+  match%lwt Lwt_unix.with_timeout read_timeout @@ fun () -> read_line reader with
+  | exception Lwt_unix.Timeout ->
+    raise (Watchman_error (spf "Timed out reading payload after %f seconds" read_timeout))
+  | Error err -> raise_error err
+  | Ok output ->
+    (match parse_response ~debug_logging output with
+    | Ok response -> Lwt.return response
+    | Error msg ->
+      EventLogger.watchman_error ~response:(String_utils.truncate 100000 output) msg;
+      raise (Watchman_error msg))
 
 (****************************************************************************)
 (* Initialization, reinitialization *)
