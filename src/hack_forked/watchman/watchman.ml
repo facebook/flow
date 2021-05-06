@@ -24,6 +24,24 @@ exception Subscription_canceled_by_watchman
 
 exception Watchman_restarted
 
+type error_severity =
+  | Not_installed of { path: string }
+  | Socket_unavailable of { msg: string }
+
+let log_error ?request ?response msg =
+  let () = EventLogger.watchman_error ?request ?response msg in
+  let () = Hh_logger.error "%s" msg in
+  ()
+
+let raise_error = function
+  | Not_installed { path } ->
+    let msg = spf "watchman not found on PATH: %s" path in
+    let () = log_error msg in
+    raise (Watchman_error msg)
+  | Socket_unavailable { msg } ->
+    let () = log_error msg in
+    raise (Watchman_error msg)
+
 type subscribe_mode =
   | All_changes
   | Defer_changes
@@ -273,31 +291,30 @@ let get_sockname () =
   match status with
   | Unix.WEXITED 0 ->
     let json = Hh_json.json_of_string stdout in
-    Lwt.return @@ J.get_string_val "sockname" json
+    Lwt.return (Ok (J.get_string_val "sockname" json))
   | Unix.WEXITED 127 ->
-    let msg =
-      spf
-        "watchman not found on PATH: %s"
-        (Option.value (Sys_utils.getenv_path ()) ~default:"(not set)")
-    in
-    let () = EventLogger.watchman_error msg in
-    let () = Hh_logger.error "%s" msg in
-    raise (Watchman_error "watchman not found on PATH")
+    let path = Option.value (Sys_utils.getenv_path ()) ~default:"(not set)" in
+    Lwt.return (Error (Not_installed { path }))
   | Unix.WEXITED code ->
-    let () = EventLogger.watchman_error (spf "watchman exited code %d, stderr = %S" code stderr) in
-    raise (Watchman_error (spf "watchman exited code %d" code))
+    let msg = spf "get-sockname exited code %d, stderr = %S" code stderr in
+    Lwt.return (Error (Socket_unavailable { msg }))
   | Unix.WSIGNALED signal ->
-    let msg = spf "watchman signaled with %s signal" (PrintSignal.string_of_signal signal) in
-    let () = EventLogger.watchman_error msg in
-    raise (Watchman_error msg)
+    let signal = PrintSignal.string_of_signal signal in
+    let msg = spf "get-sockname signaled with %s signal" signal in
+    Lwt.return (Error (Socket_unavailable { msg }))
   | Unix.WSTOPPED signal ->
-    let msg = spf "watchman stopped with %s signal" (PrintSignal.string_of_signal signal) in
-    let () = EventLogger.watchman_error msg in
-    raise (Watchman_error msg)
+    let signal = PrintSignal.string_of_signal signal in
+    let msg = spf "get-sockname stopped with %s signal" signal in
+    Lwt.return (Error (Socket_unavailable { msg }))
+
+let get_sockname_exn () =
+  match%lwt get_sockname () with
+  | Ok sockname -> Lwt.return sockname
+  | Error err -> raise_error err
 
 (** Opens a connection to the watchman process through the socket *)
 let open_connection () =
-  let%lwt sockname = get_sockname () in
+  let%lwt sockname = get_sockname_exn () in
   let (ic, oc) =
     try
       if Sys.unix then
