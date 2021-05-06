@@ -565,6 +565,24 @@ let watch_project ~debug_logging ~conn root =
   in
   Lwt.return result
 
+(** Calls [watchman watch-project] on a list of paths to watch (e.g. all of the
+    include directories). The paths may be children of the actual watchman root,
+    in which case watch-project returns the watch root and relative path.
+    This function computes the set of terms that should be included in queries
+    against the root to filter it to only the relative paths we care about. *)
+let watch_paths ~debug_logging ~conn paths =
+  LwtUtils.fold_result_s
+    ~f:(fun (terms, watch_roots, failed_paths) path ->
+      match%lwt watch_project ~debug_logging ~conn path with
+      | Error _ as err -> Lwt.return err
+      | Ok None -> Lwt.return (Ok (terms, watch_roots, SSet.add (Path.to_string path) failed_paths))
+      | Ok (Some (watch_root, relative_path)) ->
+        let terms = prepend_relative_path_term ~relative_path ~terms in
+        let watch_roots = SSet.add watch_root watch_roots in
+        Lwt.return (Ok (terms, watch_roots, failed_paths)))
+    ~init:(Some [], SSet.empty, SSet.empty)
+    paths
+
 let re_init
     ?prior_clockspec
     {
@@ -583,17 +601,9 @@ let re_init
     | Error err -> raise_error err
   in
   let%lwt (watched_path_expression_terms, watch_roots, failed_paths) =
-    Lwt_list.fold_left_s
-      (fun (terms, watch_roots, failed_paths) path ->
-        match%lwt watch_project ~debug_logging ~conn path with
-        | Error err -> raise_error err
-        | Ok None -> Lwt.return (terms, watch_roots, SSet.add (Path.to_string path) failed_paths)
-        | Ok (Some (watch_root, relative_path)) ->
-          let terms = prepend_relative_path_term ~relative_path ~terms in
-          let watch_roots = SSet.add watch_root watch_roots in
-          Lwt.return (terms, watch_roots, failed_paths))
-      (Some [], SSet.empty, SSet.empty)
-      roots
+    match%lwt watch_paths ~debug_logging ~conn roots with
+    | Ok result -> Lwt.return result
+    | Error err -> raise_error err
   in
   (* The failed_paths are likely includes which don't exist on the filesystem, so watch_project
    * returned an error. Let's do a best effort attempt to infer the watch root and relative
