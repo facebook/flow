@@ -289,9 +289,14 @@ let send_request ~debug_logging oc json =
   let json_str = Hh_json.(json_to_string json) in
   if debug_logging then Hh_logger.info "Watchman request: %s" json_str;
 
-  (* Print the json with a newline and then flush *)
-  let%lwt () = Lwt_io.fprintl oc json_str in
-  Lwt_io.flush oc
+  try%lwt
+    (* Print the json with a newline and then flush *)
+    let%lwt () = Lwt_io.fprintl oc json_str in
+    let%lwt () = Lwt_io.flush oc in
+    Lwt.return (Ok ())
+  with Unix.Unix_error (Unix.EPIPE, _, _) ->
+    let msg = "Connection closed (EPIPE)" in
+    Lwt.return (Error (Socket_unavailable { msg }))
 
 let get_sockname () =
   let cmd = "watchman" in
@@ -395,13 +400,15 @@ let rec request ~debug_logging ?conn json =
   match conn with
   | None -> with_watchman_conn (fun conn -> request ~debug_logging ~conn json)
   | Some (reader, oc) ->
-    let%lwt () = send_request ~debug_logging oc json in
-    let%lwt response = Buffered_line_reader_lwt.get_next_line reader in
-    (match parse_response ~debug_logging response with
-    | Ok _ as result -> Lwt.return result
-    | Error msg ->
-      let request = Some (Hh_json.json_to_string json) in
-      Lwt.return (Error (Response_error { request; response; msg })))
+    (match%lwt send_request ~debug_logging oc json with
+    | Ok () ->
+      let%lwt response = Buffered_line_reader_lwt.get_next_line reader in
+      (match parse_response ~debug_logging response with
+      | Ok _ as result -> Lwt.return result
+      | Error msg ->
+        let request = Some (Hh_json.json_to_string json) in
+        Lwt.return (Error (Response_error { request; response; msg })))
+    | Error _ as err -> Lwt.return err)
 
 let request_exn ~debug_logging ?conn json =
   match%lwt request ~debug_logging ?conn json with
