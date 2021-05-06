@@ -669,23 +669,9 @@ let close_channel_on_instance env =
   let%lwt () = close_connection env.conn in
   Lwt.return (dead_env_from_alive env)
 
-let with_instance instance ~try_to_restart ~on_alive ~on_dead =
-  let%lwt instance =
-    if try_to_restart then
-      maybe_restart_instance instance
-    else
-      Lwt.return instance
-  in
-  match instance with
-  | Watchman_dead dead_env -> on_dead dead_env
-  | Watchman_alive env -> on_alive env
-
-let close instance =
-  with_instance
-    instance
-    ~try_to_restart:false
-    ~on_alive:(fun env -> close_connection env.conn)
-    ~on_dead:(fun _ -> Lwt.return_unit)
+let close = function
+  | Watchman_dead _ -> Lwt.return ()
+  | Watchman_alive env -> close_connection env.conn
 
 (** Calls f on the instance, maybe restarting it if its dead and maybe
    * reverting it to a dead state if things go south. For example, if watchman
@@ -700,7 +686,6 @@ let call_on_instance :
     on_dead:(dead_env -> 'a) ->
     on_alive:(env -> (env * 'a) Lwt.t) ->
     (watchman_instance * 'a) Lwt.t =
-  let on_dead' f dead_env = Lwt.return (Watchman_dead dead_env, f dead_env) in
   let on_alive' ~on_dead source f env =
     catch
       ~f:(fun () ->
@@ -710,7 +695,7 @@ let call_on_instance :
         Hh_logger.exception_ ~prefix:("Watchman " ^ source ^ ": ") exn;
         let close_channel_on_instance' env =
           let%lwt env = close_channel_on_instance env in
-          on_dead' on_dead env
+          on_dead env
         in
         let log_died msg =
           Hh_logger.log "%s" msg;
@@ -726,11 +711,10 @@ let call_on_instance :
         | _ -> Exception.reraise exn)
   in
   fun instance source ~on_dead ~on_alive ->
-    with_instance
-      instance
-      ~try_to_restart:true
-      ~on_dead:(on_dead' on_dead)
-      ~on_alive:(on_alive' ~on_dead source on_alive)
+    let on_dead dead_env = Lwt.return (Watchman_dead dead_env, on_dead dead_env) in
+    match%lwt maybe_restart_instance instance with
+    | Watchman_dead dead_env -> on_dead dead_env
+    | Watchman_alive env -> on_alive' ~on_dead source on_alive env
 
 let make_state_change_response state name data =
   let metadata = J.try_get_val "metadata" data in
