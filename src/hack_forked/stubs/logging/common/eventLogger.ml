@@ -53,7 +53,7 @@ let log_gc_stats () = ()
 
 let flush _ = ()
 
-let watchman_error _ = ()
+let watchman_error ?request:_ ?response:_ _ = ()
 
 let watchman_warning _ = ()
 

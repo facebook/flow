@@ -378,7 +378,7 @@ let rec request ~debug_logging ?conn ~timeout json =
     (match parse_response ~debug_logging line with
     | Ok response -> Lwt.return response
     | Error msg ->
-      EventLogger.watchman_error msg;
+      EventLogger.watchman_error ~request:(Hh_json.json_to_string json) ~response:line msg;
       raise (Watchman_error msg))
 
 let blocking_read ~debug_logging ~conn:(reader, _) =
@@ -405,7 +405,7 @@ let blocking_read ~debug_logging ~conn:(reader, _) =
   match parse_response ~debug_logging output with
   | Ok response -> Lwt.return (Some response)
   | Error msg ->
-    EventLogger.watchman_error msg;
+    EventLogger.watchman_error ~response:(String_utils.truncate 100000 output) msg;
     raise (Watchman_error msg)
 
 (****************************************************************************)
