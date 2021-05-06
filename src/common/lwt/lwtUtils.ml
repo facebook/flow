@@ -56,5 +56,5 @@ let rec fold_result_s ~f ~init l =
   | [] -> Lwt.return (Ok init)
   | x :: l ->
     (match%lwt f init x with
-    | Ok acc -> (fold_result_s [@ocaml.tailcall]) f acc l
+    | Ok init -> (fold_result_s [@ocaml.tailcall]) ~f ~init l
     | Error _ as err -> Lwt.return err)
