@@ -137,18 +137,23 @@ module Entry = struct
     new_value (Const ConstImportBinding) State.Initialized t (Type.Inferred t) loc
 
   let new_let
-      ~loc ?(state = State.Undeclared) ?(kind = (LetVarBinding, Havocable)) ?closure_writes general
-      =
+      ~loc
+      ?(state = State.Undeclared)
+      ?(kind = LetVarBinding)
+      ?(spec = Havocable)
+      ?closure_writes
+      general =
     let specific = TypeUtil.type_t_of_annotated_or_inferred general in
-    new_value (Let kind) state specific ?closure_writes general loc
+    new_value (Let (kind, spec)) state specific ?closure_writes general loc
 
-  let new_var ~loc ?(state = State.Undeclared) ?specific ?closure_writes general =
+  let new_var ~loc ?(state = State.Undeclared) ?specific ?closure_writes ?(spec = Havocable) general
+      =
     let specific =
       match specific with
       | Some t -> t
       | None -> TypeUtil.type_t_of_annotated_or_inferred general
     in
-    new_value (Var Havocable) state specific ?closure_writes general loc
+    new_value (Var spec) state specific ?closure_writes general loc
 
   let new_type_ type_binding_kind state loc type_ =
     Type { type_binding_kind; type_state = state; type_loc = loc; type_ }

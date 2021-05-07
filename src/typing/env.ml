@@ -382,6 +382,35 @@ let find_refi_in_var_scope key =
 
 (* helpers *)
 
+let promote_non_const cx name loc spec =
+  let (info, values) = Context.use_def cx in
+  if Reason.is_internal_name name then
+    (None, spec)
+  else if spec <> Entry.ConstLike && Invalidation_api.is_const_like info values loc then
+    (None, Entry.ConstLike)
+  else if spec <> Entry.NotWrittenByClosure then
+    let writes_by_closure = Invalidation_api.written_by_closure info values loc in
+    if ALocSet.is_empty writes_by_closure then
+      (None, Entry.NotWrittenByClosure)
+    else
+      (Some writes_by_closure, spec)
+  else
+    (None, spec)
+
+let mk_closure_writes cx name loc general spec =
+  let (writes_by_closure_opt, spec') = promote_non_const cx name loc spec in
+  let closure_writes =
+    match writes_by_closure_opt with
+    | Some writes_by_closure ->
+      let writes_by_closure_t =
+        Tvar.mk_where cx (mk_reason (RIdentifier name) loc) (fun tvar ->
+            Flow.flow_t cx (tvar, general))
+      in
+      Some (writes_by_closure, writes_by_closure_t)
+    | _ -> None
+  in
+  (spec', closure_writes)
+
 let binding_error msg cx name entry loc =
   Flow.add_output cx (Error_message.EBindingError (msg, loc, name, entry))
 
@@ -453,20 +482,31 @@ let bind_class cx class_id class_private_fields class_private_static_fields =
 
 (* bind var entry *)
 let bind_var_to_name ?(state = State.Declared) cx name t loc =
-  bind_entry cx name (Entry.new_var t ~loc ~state) loc
+  let (spec, closure_writes) =
+    mk_closure_writes cx name loc (TypeUtil.type_t_of_annotated_or_inferred t) Entry.Havocable
+  in
+  bind_entry cx name (Entry.new_var t ~loc ~state ~spec ?closure_writes) loc
 
 let bind_var ?state cx name t loc = bind_var_to_name ?state cx (OrdinaryName name) t loc
 
 (* bind let entry *)
 let bind_let ?(state = State.Undeclared) cx name t loc =
-  bind_entry cx (OrdinaryName name) (Entry.new_let t ~loc ~state) loc
+  let (spec, closure_writes) =
+    mk_closure_writes
+      cx
+      (OrdinaryName name)
+      loc
+      (TypeUtil.type_t_of_annotated_or_inferred t)
+      Entry.Havocable
+  in
+  bind_entry cx (OrdinaryName name) (Entry.new_let t ~loc ~state ~spec ?closure_writes) loc
 
 (* bind implicit let entry *)
 let bind_implicit_let ?(state = State.Undeclared) kind cx name t loc =
-  bind_entry cx name (Entry.new_let (Inferred t) ~kind ~loc ~state) loc
+  let (spec, closure_writes) = mk_closure_writes cx name loc t Entry.Havocable in
+  bind_entry cx name (Entry.new_let (Inferred t) ~kind ~loc ~state ~spec ?closure_writes) loc
 
-let bind_fun ?(state = State.Declared) =
-  bind_implicit_let ~state (Entry.FunctionBinding, Entry.Havocable)
+let bind_fun ?(state = State.Declared) = bind_implicit_let ~state Entry.FunctionBinding
 
 (* bind const entry *)
 let bind_const ?(state = State.Undeclared) cx name t loc =
@@ -507,7 +547,12 @@ let bind_declare_fun =
       let scope = peek_scope () in
       match Scope.get_entry (OrdinaryName name) scope with
       | None ->
-        let entry = Entry.new_var (Inferred t) ~loc ~state:State.Initialized in
+        let (spec, closure_writes) =
+          mk_closure_writes cx (OrdinaryName name) loc t Entry.Havocable
+        in
+        let entry =
+          Entry.new_var (Inferred t) ~loc ~state:State.Initialized ~spec ?closure_writes
+        in
         Scope.add_entry (OrdinaryName name) entry scope
       | Some prev ->
         Entry.(
@@ -530,6 +575,14 @@ let bind_declare_fun =
             (* declare function shadows some other kind of binding *)
             already_bound_error cx (OrdinaryName name) prev loc))
 
+let same_kind k1 k2 =
+  let open Entry in
+  match (k1, k2) with
+  | (Var _, Var _) -> true
+  | (Let (kind1, _), Let (kind2, _)) -> kind1 = kind2
+  | (Const kind1, Const kind2) -> kind1 = kind2
+  | _ -> false
+
 (* helper: move a Let/Const's entry's state from Undeclared to Declared.
    Only needed for let and const to push things into scope for potentially
    recursive internal refs: hoisted things (vars and types) become declared
@@ -540,7 +593,8 @@ let declare_value_entry kind cx name loc =
     Entry.(
       let (scope, entry) = find_entry cx name loc in
       match entry with
-      | Value v when Entry.kind_of_value v = kind && Entry.state_of_value v = State.Undeclared ->
+      | Value v
+        when same_kind (Entry.kind_of_value v) kind && Entry.state_of_value v = State.Undeclared ->
         let new_entry = Value { v with value_state = State.Declared } in
         Scope.add_entry name new_entry scope
       | _ -> already_bound_error cx name entry loc)
@@ -553,66 +607,8 @@ let declare_const = declare_value_entry Entry.(Const ConstVarBinding)
 
 let declare_implicit_const kind = declare_value_entry (Entry.Const kind)
 
-let promote_non_const cx name loc spec =
-  let (info, values) = Context.use_def cx in
-  if Reason.is_internal_name name then
-    (None, spec)
-  else if spec <> Entry.ConstLike && Invalidation_api.is_const_like info values loc then
-    (None, Entry.ConstLike)
-  else if spec <> Entry.NotWrittenByClosure then
-    let writes_by_closure = Invalidation_api.written_by_closure info values loc in
-    if ALocSet.is_empty writes_by_closure then
-      (None, Entry.NotWrittenByClosure)
-    else
-      (Some writes_by_closure, spec)
-  else
-    (None, spec)
-
-let initialized_value_entry cx name kind specific loc v =
-  Entry.(
-    let mk_closure_writes cx name loc general default_closure_writes writes_by_closure_opt =
-      match (default_closure_writes, writes_by_closure_opt) with
-      | (None, Some writes_by_closure) ->
-        let writes_by_closure_t =
-          Tvar.mk_where cx (mk_reason (RIdentifier name) loc) (fun tvar ->
-              Flow.flow_t cx (tvar, general))
-        in
-        Some (writes_by_closure, writes_by_closure_t)
-      | _ -> default_closure_writes
-    in
-    (* Maybe promote to const-like *)
-    let (closure_writes, new_kind) =
-      match kind with
-      | Var spec ->
-        let (writes_by_closure_opt, spec') = promote_non_const cx name loc spec in
-        ( mk_closure_writes
-            cx
-            name
-            loc
-            (TypeUtil.type_t_of_annotated_or_inferred v.general)
-            v.closure_writes
-            writes_by_closure_opt,
-          if spec' != spec then
-            Entry.(Var spec')
-          else
-            kind )
-      | Let (let_binding, spec) ->
-        let (writes_by_closure_opt, spec') = promote_non_const cx name loc spec in
-        ( mk_closure_writes
-            cx
-            name
-            loc
-            (TypeUtil.type_t_of_annotated_or_inferred v.general)
-            v.closure_writes
-            writes_by_closure_opt,
-          if spec' != spec then
-            Entry.(Let (let_binding, spec'))
-          else
-            kind )
-      | _ -> (None, kind)
-    in
-    Value
-      { v with Entry.kind = new_kind; value_state = State.Initialized; specific; closure_writes })
+let initialized_value_entry specific v =
+  Entry.Value { v with Entry.value_state = State.Initialized; specific }
 
 (* helper - update var entry to reflect assignment/initialization *)
 (* note: here is where we understand that a name can be multiply var-bound
@@ -641,7 +637,7 @@ let init_value_entry kind cx ~use_op name ~has_anno specific loc =
           else
             specific
         in
-        let new_entry = initialized_value_entry cx name kind specific loc v in
+        let new_entry = initialized_value_entry specific v in
         Scope.add_entry name new_entry scope
       | _ ->
         (* Incompatible or non-redeclarable new and previous entries.
@@ -689,15 +685,8 @@ let pseudo_init_declared_type cx name loc =
       | Value ({ Entry.kind = Let _ | Const _; value_state = State.(Undeclared | Declared); _ } as v)
         ->
         Changeset.Global.change_var (scope.id, name, Changeset.Write);
-        let kind = v.Entry.kind in
         let entry =
-          initialized_value_entry
-            cx
-            name
-            kind
-            (TypeUtil.type_t_of_annotated_or_inferred v.general)
-            loc
-            v
+          initialized_value_entry (TypeUtil.type_t_of_annotated_or_inferred v.general) v
         in
         Scope.add_entry name entry scope
       | _ ->

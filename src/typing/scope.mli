@@ -81,7 +81,8 @@ module Entry : sig
   val new_let :
     loc:ALoc.t ->
     ?state:State.t ->
-    ?kind:let_binding_kind * non_const_specialization ->
+    ?kind:let_binding_kind ->
+    ?spec:non_const_specialization ->
     ?closure_writes:Loc_collections.ALocSet.t * Type.t ->
     Type.annotated_or_inferred ->
     t
@@ -91,6 +92,7 @@ module Entry : sig
     ?state:State.t ->
     ?specific:Type.t ->
     ?closure_writes:Loc_collections.ALocSet.t * Type.t ->
+    ?spec:non_const_specialization ->
     Type.annotated_or_inferred ->
     t
 

@@ -1,145 +1,179 @@
-Error ------------------------------------------------------------------------------------------------- Closure.js:17:14
-
-Cannot call `takes_string` with `global_x` bound to `_` because number [1] is incompatible with string [2].
-[incompatible-call]
-
-   Closure.js:17:14
-   17| takes_string(global_x); // error (can't distinguish between calls to global_f and global_g)
-                    ^^^^^^^^
-
-References:
-   Closure.js:14:34
-   14| function global_g() { global_x = 42; } // blame
-                                        ^^ [1]
-   Closure.js:6:25
-    6| function takes_string(_:string) { }
-                               ^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------- Closure.js:20:14
 
 Cannot call `takes_string` with `global_x` bound to `_` because number [1] is incompatible with string [2].
 [incompatible-call]
 
    Closure.js:20:14
-   20| takes_string(global_x);
+   20| takes_string(global_x); // error (can't distinguish between calls to global_f and global_g)
                     ^^^^^^^^
 
 References:
-   Closure.js:14:34
-   14| function global_g() { global_x = 42; } // blame
-                                        ^^ [1]
-   Closure.js:6:25
-    6| function takes_string(_:string) { }
-                               ^^^^^^ [2]
+   Closure.js:16:14
+   16|   global_x = 42;
+                    ^^ [1]
+   Closure.js:7:26
+    7| function takes_string(_: string) {}
+                                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- Closure.js:35:16
+Error ------------------------------------------------------------------------------------------------- Closure.js:23:14
+
+Cannot call `takes_string` with `global_x` bound to `_` because number [1] is incompatible with string [2].
+[incompatible-call]
+
+   Closure.js:23:14
+   23| takes_string(global_x);
+                    ^^^^^^^^
+
+References:
+   Closure.js:16:14
+   16|   global_x = 42;
+                    ^^ [1]
+   Closure.js:7:26
+    7| function takes_string(_: string) {}
+                                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- Closure.js:39:16
 
 Cannot call `takes_string` with `local_x` bound to `_` because number [1] is incompatible with string [2].
 [incompatible-call]
 
-   Closure.js:35:16
-   35|   takes_string(local_x); // error (can't distinguish between calls to local_f and local_g)
+   Closure.js:39:16
+   39|   takes_string(local_x); // error (can't distinguish between calls to local_f and local_g)
                       ^^^^^^^
 
 References:
-   Closure.js:32:34
-   32|   function local_g() { local_x = 42; } // blame
-                                        ^^ [1]
-   Closure.js:6:25
-    6| function takes_string(_:string) { }
-                               ^^^^^^ [2]
+   Closure.js:35:15
+   35|     local_x = 42;
+                     ^^ [1]
+   Closure.js:7:26
+    7| function takes_string(_: string) {}
+                                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- Closure.js:38:16
+Error ------------------------------------------------------------------------------------------------- Closure.js:42:16
 
 Cannot call `takes_string` with `local_x` bound to `_` because number [1] is incompatible with string [2].
 [incompatible-call]
 
-   Closure.js:38:16
-   38|   takes_string(local_x); // error
+   Closure.js:42:16
+   42|   takes_string(local_x); // error
                       ^^^^^^^
 
 References:
-   Closure.js:32:34
-   32|   function local_g() { local_x = 42; } // blame
-                                        ^^ [1]
-   Closure.js:6:25
-    6| function takes_string(_:string) { }
-                               ^^^^^^ [2]
+   Closure.js:35:15
+   35|     local_x = 42;
+                     ^^ [1]
+   Closure.js:7:26
+    7| function takes_string(_: string) {}
+                                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- Closure.js:54:14
+Error ------------------------------------------------------------------------------------------------- Closure.js:60:14
 
 Cannot call `takes_string` with `global_y` bound to `_` because number [1] is incompatible with string [2].
 [incompatible-call]
 
-   Closure.js:54:14
-   54| takes_string(global_y); // error (can't distinguish between calls to global_o.f and global_o.g)
+   Closure.js:60:14
+   60| takes_string(global_y); // error (can't distinguish between calls to global_o.f and global_o.g)
                     ^^^^^^^^
 
 References:
-   Closure.js:50:30
-   50|   g: function() { global_y = 42; } // blame
-                                    ^^ [1]
-   Closure.js:6:25
-    6| function takes_string(_:string) { }
-                               ^^^^^^ [2]
+   Closure.js:55:16
+   55|     global_y = 42;
+                      ^^ [1]
+   Closure.js:7:26
+    7| function takes_string(_: string) {}
+                                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- Closure.js:57:14
+Error ------------------------------------------------------------------------------------------------- Closure.js:63:14
 
 Cannot call `takes_string` with `global_y` bound to `_` because number [1] is incompatible with string [2].
 [incompatible-call]
 
-   Closure.js:57:14
-   57| takes_string(global_y); // error
+   Closure.js:63:14
+   63| takes_string(global_y); // error
                     ^^^^^^^^
 
 References:
-   Closure.js:50:30
-   50|   g: function() { global_y = 42; } // blame
-                                    ^^ [1]
-   Closure.js:6:25
-    6| function takes_string(_:string) { }
-                               ^^^^^^ [2]
+   Closure.js:55:16
+   55|     global_y = 42;
+                      ^^ [1]
+   Closure.js:7:26
+    7| function takes_string(_: string) {}
+                                ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- Closure.js:74:16
-
-Cannot call `takes_string` with `local_y` bound to `_` because number [1] is incompatible with string [2].
-[incompatible-call]
-
-   Closure.js:74:16
-   74|   takes_string(local_y); // error (can't distinguish between calls to local_o.f and local_o.g)
-                      ^^^^^^^
-
-References:
-   Closure.js:70:31
-   70|     g: function() { local_y = 42; } // blame
-                                     ^^ [1]
-   Closure.js:6:25
-    6| function takes_string(_:string) { }
-                               ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- Closure.js:77:16
+Error ------------------------------------------------------------------------------------------------- Closure.js:81:16
 
 Cannot call `takes_string` with `local_y` bound to `_` because number [1] is incompatible with string [2].
 [incompatible-call]
 
-   Closure.js:77:16
-   77|   takes_string(local_y); // error
+   Closure.js:81:16
+   81|   takes_string(local_y); // error (can't distinguish between calls to local_o.f and local_o.g)
                       ^^^^^^^
 
 References:
-   Closure.js:70:31
-   70|     g: function() { local_y = 42; } // blame
-                                     ^^ [1]
-   Closure.js:6:25
-    6| function takes_string(_:string) { }
-                               ^^^^^^ [2]
+   Closure.js:76:17
+   76|       local_y = 42;
+                       ^^ [1]
+   Closure.js:7:26
+    7| function takes_string(_: string) {}
+                                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- Closure.js:84:16
+
+Cannot call `takes_string` with `local_y` bound to `_` because number [1] is incompatible with string [2].
+[incompatible-call]
+
+   Closure.js:84:16
+   84|   takes_string(local_y); // error
+                      ^^^^^^^
+
+References:
+   Closure.js:76:17
+   76|       local_y = 42;
+                       ^^ [1]
+   Closure.js:7:26
+    7| function takes_string(_: string) {}
+                                ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- Closure.js:95:4
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   Closure.js:95:4
+   95|   (x: string); // blame
+          ^
+
+References:
+   Closure.js:91:9
+   91|     x = 10;
+               ^^ [1]
+   Closure.js:95:7
+   95|   (x: string); // blame
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- Closure.js:105:6
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   Closure.js:105:6
+   105|     (x: string); // blame
+             ^
+
+References:
+   Closure.js:100:9
+   100|     x = 10;
+                ^^ [1]
+   Closure.js:105:9
+   105|     (x: string); // blame
+                ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- cond_havoc.js:12:10
@@ -194,4 +228,4 @@ References:
 
 
 
-Found 11 errors
+Found 13 errors

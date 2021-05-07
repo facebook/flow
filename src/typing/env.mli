@@ -57,13 +57,7 @@ val bind_var : ?state:State.t -> Context.t -> string -> Type.annotated_or_inferr
 val bind_let : ?state:State.t -> Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
 
 val bind_implicit_let :
-  ?state:State.t ->
-  Entry.let_binding_kind * Entry.non_const_specialization ->
-  Context.t ->
-  Reason.name ->
-  Type.t ->
-  ALoc.t ->
-  unit
+  ?state:State.t -> Entry.let_binding_kind -> Context.t -> Reason.name -> Type.t -> ALoc.t -> unit
 
 val bind_fun : ?state:State.t -> Context.t -> Reason.name -> Type.t -> ALoc.t -> unit
 

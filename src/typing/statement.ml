@@ -366,10 +366,9 @@ module Func_stmt_config = struct
         let kind = Entry.ConstParamBinding in
         Env.bind_implicit_const ~state:State.Initialized kind cx name t loc
       else
-        let (_, spec) = Env.promote_non_const cx (OrdinaryName name) loc Entry.Havocable in
         Env.bind_implicit_let
           ~state:State.Initialized
-          (Entry.ParamBinding, spec)
+          Entry.ParamBinding
           cx
           (OrdinaryName name)
           t
@@ -623,7 +622,7 @@ and statement_decl cx =
     let name = OrdinaryName name in
     let reason = mk_reason (RType name) name_loc in
     let tvar = Tvar.mk cx reason in
-    Env.bind_implicit_let Scope.Entry.(ClassNameBinding, Havocable) cx name tvar name_loc
+    Env.bind_implicit_let Scope.Entry.ClassNameBinding cx name tvar name_loc
   | ( (_, DeclareClass { DeclareClass.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ })
     | (_, DeclareInterface { Interface.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ })
     | ( _,
@@ -813,7 +812,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
               Scope.(
                 Env.bind_implicit_let
                   ~state:State.Initialized
-                  Entry.(CatchParamBinding, Havocable)
+                  Entry.(CatchParamBinding)
                   cx
                   (OrdinaryName name)
                   t
@@ -3517,7 +3516,7 @@ and expression_ ~cond ~annot cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression
     | Some _ ->
       let scope = Scope.fresh () in
       Scope.(
-        let kind = Entry.(ClassNameBinding, Havocable) in
+        let kind = Entry.ClassNameBinding in
         let entry =
           Entry.(new_let (annotated_todo tvar) ~loc:name_loc ~state:State.Declared ~kind)
         in
