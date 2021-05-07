@@ -669,7 +669,7 @@ let do_initialize params : Initialize.result =
         documentLinkProvider = None;
         executeCommandProvider = Some { commands = [Command.Command "log"] };
         implementationProvider = false;
-        selectionRangeProvider = false;
+        selectionRangeProvider = true;
         typeCoverageProvider = true;
         rageProvider = true;
       };
@@ -1096,6 +1096,19 @@ let do_documentSymbol flowconfig_name (state : state) (id : lsp_id) (params : Do
   let json =
     let key = command_key_of_state state in
     Lsp_fmt.print_lsp ~key (ResponseMessage (id, DocumentSymbolResult result))
+  in
+  to_stdout json;
+  state
+
+let do_selectionRange flowconfig_name (state : state) (id : lsp_id) (params : SelectionRange.params)
+    : state =
+  let { SelectionRange.textDocument = { TextDocumentIdentifier.uri }; positions } = params in
+  (* It's not our job to set live parse errors, so we ignore them *)
+  let (state, (ast, _live_parse_errors)) = parse_and_cache flowconfig_name state uri in
+  let response = SelectionRangeProvider.provide_selection_ranges positions ast in
+  let json =
+    let key = command_key_of_state state in
+    Lsp_fmt.print_lsp ~key ~include_error_stack_trace:false (ResponseMessage (id, response))
   in
   to_stdout json;
   state
@@ -1897,6 +1910,14 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
        busy or disconnected *)
     let interaction_id = start_interaction ~trigger:LspInteraction.DocumentSymbol state in
     let state = do_documentSymbol flowconfig_name state id params in
+    log_interaction ~ux:LspInteraction.Responded state interaction_id;
+    Ok (state, LogNeeded metadata)
+  | (_, Client_message (RequestMessage (id, SelectionRangeRequest params), metadata)) ->
+    (* selectionRange is handled in the client, not the server, since it's
+       purely syntax-driven and we'd like it to work even if the server is
+       busy or disconnected *)
+    let interaction_id = start_interaction ~trigger:LspInteraction.SelectionRange state in
+    let state = do_selectionRange flowconfig_name state id params in
     log_interaction ~ux:LspInteraction.Responded state interaction_id;
     Ok (state, LogNeeded metadata)
   | (Connected cenv, Client_message (c, metadata)) ->

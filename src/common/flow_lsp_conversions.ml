@@ -39,6 +39,9 @@ let loc_to_lsp_range (loc : Loc.t) : Lsp.range =
 
 let markup_string str = { Lsp.MarkupContent.kind = Lsp.MarkupKind.Markdown; value = str }
 
+let selection_range_of_loc ?parent (loc : Loc.t) : Lsp.SelectionRange.selection_range =
+  { Lsp.SelectionRange.range = loc_to_lsp_range loc; parent }
+
 let flow_signature_help_to_lsp
     (details : (ServerProt.Response.func_details_result list * int) option) :
     Lsp.SignatureHelp.result =

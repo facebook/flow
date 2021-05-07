@@ -1179,6 +1179,7 @@ let print_initialize ~key (r : Initialize.result) : json =
               ("hoverProvider", Some (JSON_Bool cap.hoverProvider));
               ( "completionProvider",
                 Base.Option.map cap.completionProvider ~f:CompletionOptionsFmt.to_json );
+              ("selectionRangeProvider", Some (JSON_Bool cap.selectionRangeProvider));
               ( "signatureHelpProvider",
                 Base.Option.map cap.signatureHelpProvider ~f:(fun shp ->
                     JSON_Object
