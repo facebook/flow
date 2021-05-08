@@ -4,9 +4,6 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-mkdir tmp
-cp test1.js tmp/
-
 printf "\\nServer should start in types-first mode\\n"
 start_flow . --saved-state-fetcher local --saved-state-no-fallback --lazy-mode fs
 
@@ -32,5 +29,3 @@ assert_errors "$FLOW" status --strip-root --no-auto-start
 show_skipping_stats_types_first "$FLOW_LOG_FILE"
 
 assert_ok "$FLOW" stop
-
-rm -rf tmp
