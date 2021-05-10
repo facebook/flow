@@ -7,8 +7,8 @@ Cannot call `ctx.moveTo` with `'0'` bound to `x` because string [1] is incompati
                         ^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:2198:13
-   2198|   moveTo(x: number, y: number): void;
+   <BUILTINS>/dom.js:2200:13
+   2200|   moveTo(x: number, y: number): void;
                      ^^^^^^ [2]
 
 
@@ -21,8 +21,8 @@ Cannot call `ctx.moveTo` with `'1'` bound to `y` because string [1] is incompati
                              ^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:2198:24
-   2198|   moveTo(x: number, y: number): void;
+   <BUILTINS>/dom.js:2200:24
+   2200|   moveTo(x: number, y: number): void;
                                 ^^^^^^ [2]
 
 
@@ -461,8 +461,8 @@ Cannot get `el.className` because property `className` is missing in null [1]. [
             ^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3127:43
-   3127|   [index: number | string]: HTMLElement | null;
+   <BUILTINS>/dom.js:3129:43
+   3129|   [index: number | string]: HTMLElement | null;
                                                    ^^^^ [1]
 
 
@@ -475,8 +475,8 @@ Cannot get `el.className` because property `className` is missing in null [1]. [
             ^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3127:43
-   3127|   [index: number | string]: HTMLElement | null;
+   <BUILTINS>/dom.js:3129:43
+   3129|   [index: number | string]: HTMLElement | null;
                                                    ^^^^ [1]
 
 
@@ -492,8 +492,8 @@ References:
    HTMLInputElement.js:7:28
       7|     el.setRangeText('foo', 123); // end is required
                                     ^^^ [1]
-   <BUILTINS>/dom.js:3508:45
-   3508|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
+   <BUILTINS>/dom.js:3510:45
+   3510|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
                                                      ^^^^ [2]
 
 
@@ -509,8 +509,8 @@ References:
    HTMLInputElement.js:10:38
      10|     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
                                               ^^^^^^^ [1]
-   <BUILTINS>/dom.js:3509:78
-   3509|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
+   <BUILTINS>/dom.js:3511:78
+   3511|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
                                                                                       ^^^^^^^^^^^^^ [2]
 
 
@@ -523,8 +523,8 @@ Cannot get `form.action` because property `action` is missing in null [1]. [inco
               ^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3571:27
-   3571|   form: HTMLFormElement | null;
+   <BUILTINS>/dom.js:3573:27
+   3573|   form: HTMLFormElement | null;
                                    ^^^^ [1]
 
 
@@ -537,8 +537,8 @@ Cannot get `item.value` because property `value` is missing in null [1]. [incomp
               ^^^^^
 
 References:
-   <BUILTINS>/dom.js:3589:44
-   3589|   item(index: number): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3591:44
+   3591|   item(index: number): HTMLOptionElement | null;
                                                     ^^^^ [1]
 
 
@@ -551,8 +551,8 @@ Cannot get `item.value` because property `value` is missing in null [1]. [incomp
               ^^^^^
 
 References:
-   <BUILTINS>/dom.js:3590:48
-   3590|   namedItem(name: string): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3592:48
+   3592|   namedItem(name: string): HTMLOptionElement | null;
                                                         ^^^^ [1]
 
 
@@ -695,8 +695,8 @@ References:
    path2d.js:16:33
      16|     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
                                          ^^^^ [1]
-   <BUILTINS>/dom.js:2063:83
-   2063|   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
+   <BUILTINS>/dom.js:2065:83
+   2065|   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
                                                                                            ^^^^^^ [2]
 
 
@@ -1096,11 +1096,11 @@ literal union [2] in the return value. [incompatible-call]
                                                                     ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:4055:1
+   <BUILTINS>/dom.js:4057:1
          v--------------------------------
-   4055| typeof NodeFilter.FILTER_ACCEPT |
-   4056| typeof NodeFilter.FILTER_REJECT |
-   4057| typeof NodeFilter.FILTER_SKIP;
+   4057| typeof NodeFilter.FILTER_ACCEPT |
+   4058| typeof NodeFilter.FILTER_REJECT |
+   4059| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -1114,11 +1114,11 @@ literal union [2] in the return value of property `acceptNode`. [incompatible-ca
                                                                                   ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:4055:1
+   <BUILTINS>/dom.js:4057:1
          v--------------------------------
-   4055| typeof NodeFilter.FILTER_ACCEPT |
-   4056| typeof NodeFilter.FILTER_REJECT |
-   4057| typeof NodeFilter.FILTER_SKIP;
+   4057| typeof NodeFilter.FILTER_ACCEPT |
+   4058| typeof NodeFilter.FILTER_REJECT |
+   4059| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -1174,11 +1174,11 @@ union [2] in the return value. [incompatible-call]
                                                                   ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:4055:1
+   <BUILTINS>/dom.js:4057:1
          v--------------------------------
-   4055| typeof NodeFilter.FILTER_ACCEPT |
-   4056| typeof NodeFilter.FILTER_REJECT |
-   4057| typeof NodeFilter.FILTER_SKIP;
+   4057| typeof NodeFilter.FILTER_ACCEPT |
+   4058| typeof NodeFilter.FILTER_REJECT |
+   4059| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -1192,11 +1192,11 @@ literal union [2] in the return value of property `acceptNode`. [incompatible-ca
                                                                                 ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:4055:1
+   <BUILTINS>/dom.js:4057:1
          v--------------------------------
-   4055| typeof NodeFilter.FILTER_ACCEPT |
-   4056| typeof NodeFilter.FILTER_REJECT |
-   4057| typeof NodeFilter.FILTER_SKIP;
+   4057| typeof NodeFilter.FILTER_ACCEPT |
+   4058| typeof NodeFilter.FILTER_REJECT |
+   4059| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
