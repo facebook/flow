@@ -69,12 +69,15 @@ let mk_source_of_use_test contents target_loc expected_values ctxt =
 let mk_order_test contents expected_values ctxt =
   let ((_, { Flow_ast.Program.statements; _ }) as program) = parse contents in
   let info = Env_builder.With_Loc.program_with_scope ~ignore_toplevel:false program in
-  let stmt_deps = Order_builder.With_Loc.calc_index_deps info statements in
-  let deps =
-    Base.List.map stmt_deps ~f:(fun (i, js) ->
-        ISet.elements js |> Base.List.map ~f:(Printf.sprintf "%d -> %d" i))
-    |> Base.List.concat
-    |> String.concat ", "
+  let deps = Order_builder.With_Loc.mk_order info statements in
+  let deps_string =
+    Base.List.map
+      ~f:(function
+        | (i, []) -> string_of_int i
+        | (i, js) ->
+          Utils_js.spf "cycle(%d,%s)" i (Base.List.map ~f:string_of_int js |> String.concat ","))
+      deps
+    |> String.concat " -> "
   in
   assert_equal
     ~ctxt
@@ -82,7 +85,7 @@ let mk_order_test contents expected_values ctxt =
     ~printer:(fun x -> x)
     ~msg:"Dependencies don't match!"
     expected_values
-    deps
+    deps_string
 
 let mk_write (pos1, pos2) = Ssa_api.Write (mk_loc pos1 pos2)
 
@@ -427,12 +430,31 @@ x = 20;
                (mk_loc (7, 0) (7, 1))
                (LocSet.of_list [mk_loc (4, 4) (4, 5)]);
          "order1" >:: mk_order_test "let x = 42;
-x;" "1 -> 0";
+x;" "0 -> 1";
          "order2" >:: mk_order_test "function f() { g() }
-function g(){ f() }" "0 -> 1, 1 -> 0";
+function g(){ f() }" "cycle(0,1)";
          "order3" >:: mk_order_test "
 let x = null;
 x = 42;
 x = 100;
-         " "2 -> 0, 2 -> 1";
+         " "0 -> 1 -> 2";
+         "order4"
+         >:: mk_order_test "
+function f() {
+  x;
+}
+var x = 42;
+var y = f();
+         " "1 -> 0 -> 2";
+         "order5"
+         >:: mk_order_test
+               "
+function havoc() {
+  x = 10;
+}
+var x = null;
+havoc();
+x;
+x = 42;"
+               "1 -> 4 -> 0 -> 2 -> 3";
        ]

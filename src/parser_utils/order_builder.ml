@@ -17,6 +17,7 @@ end
 module Make
     (L : Loc_sig.S)
     (Env_builder : Env_builder.S with module L = L)
+    (Scope_api : Scope_api_sig.S with module L = L)
     (Convert : ConvertLoc with module L = L) =
 struct
   module Provider_api = Env_builder.Provider_api
@@ -45,6 +46,16 @@ struct
         stmt
     end
 
+  module Tarjan =
+    Tarjan.Make
+      (struct
+        include IntKey
+
+        let to_string = string_of_int
+      end)
+      (IMap)
+      (ISet)
+
   let uses_of_statement env stmt =
     let finder = new use_finder env in
     finder#eval finder#statement stmt
@@ -61,10 +72,15 @@ struct
                 ISet.add j acc
               else
                 acc) ))
+
+  let mk_order env statements =
+    let deps = calc_index_deps env statements |> IMap.of_list in
+    let roots = IMap.keys deps |> ISet.of_list in
+    Tarjan.topsort ~roots deps |> List.rev
 end
 
 module With_Loc =
-  Make (Loc_sig.LocS) (Env_builder.With_Loc)
+  Make (Loc_sig.LocS) (Env_builder.With_Loc) (Scope_api.With_Loc)
     (struct
       module L = Loc_sig.LocS
 
