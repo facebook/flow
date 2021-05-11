@@ -92,6 +92,9 @@ module type S = sig
 
   val sources_of_use :
     Scope_api.info * Ssa_api.values * refinement L.LMap.t * Provider_api.env -> L.t -> L.LSet.t
+
+  val source_bindings :
+    Scope_api.info * Ssa_api.values * refinement L.LMap.t * Provider_api.env -> L.LSet.t L.LMap.t
 end
 
 module Make
@@ -668,6 +671,10 @@ module Make
       L.LMap.find_opt loc refis |> Base.Option.value_map ~f:fst ~default:L.LSet.empty
     in
     L.LSet.union refi_locs write_locs
+
+  let source_bindings ((_, vals, refis, _) as info) =
+    let keys = L.LSet.of_list (L.LMap.keys vals @ L.LMap.keys refis) in
+    L.LSet.fold (fun k acc -> L.LMap.add k (sources_of_use info k) acc) keys L.LMap.empty
 end
 
 module With_Loc = Make (Loc_sig.LocS) (Ssa_api.With_Loc) (Scope_api.With_Loc)
