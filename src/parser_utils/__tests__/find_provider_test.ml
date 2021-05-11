@@ -275,4 +275,7 @@ function ac() {}
 function ac() {}
 var ac = 42;
          " "[(1, 9) to (1, 11)]";
+         "undeclared" >:: mk_provider_test "x" "
+x = 10
+         " "[(1, 0) to (1, 1)]";
        ]

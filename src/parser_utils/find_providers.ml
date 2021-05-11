@@ -83,6 +83,15 @@ module FindProviders (L : Loc_sig.S) = struct
     | _ -> false
 
   (**** Functions for manipulating environments ****)
+  let empty_entry name =
+    {
+      name;
+      state = Uninitialized;
+      provider_locs = L.LSet.empty;
+      declare_locs = L.LSet.empty;
+      def_locs = L.LSet.empty;
+    }
+
   let env_invariant_violated s = failwith ("Environment invariant violated: " ^ s)
 
   (* This function finds the right set of entries to add a new variable to in the scope chain
@@ -115,31 +124,39 @@ module FindProviders (L : Loc_sig.S) = struct
   (* Similar to the above function, but rather than finding the set of entries and a replacement function for it
      based on where a new variable would live, this finds the set of entries in which some particular variable
      already exists. *)
-  let find_entries_for_existing_variable var env =
-    let rec loop same_scope env rev_head =
+  let find_entry_for_existing_variable var env =
+    let rec loop passed_var_scope env rev_head =
       match env with
       | ({ entries; _ } as hd) :: tl when SMap.mem var entries ->
-        ( entries,
-          same_scope,
-          fun entries ->
-            List.append (List.rev rev_head) (Nel.to_list ({ hd with entries }, tl))
+        ( SMap.find var entries,
+          Base.Option.is_none passed_var_scope,
+          fun entry ->
+            List.append
+              (List.rev rev_head)
+              (Nel.to_list ({ hd with entries = SMap.add var entry entries }, tl))
             |> Nel.of_list_exn )
       (* If we don't see the variable before we leave a function scope, note that fact, since we can't add new providers
-         from an interior scope *)
-      | ({ kind = Var; _ } as hd) :: tl -> loop false tl (hd :: rev_head)
-      | hd :: tl -> loop same_scope tl (hd :: rev_head)
-      | [] -> env_invariant_violated "Scope for variable not found"
+         from an interior scope, and lazily create an entry in this scope in case we *never* find a scope that it's native to. *)
+      | ({ entries; kind = Var; _ } as hd) :: tl ->
+        let create_invalid_entry =
+          lazy
+            ( empty_entry var,
+              fun entry ->
+                List.append
+                  (List.rev rev_head)
+                  (Nel.to_list ({ hd with entries = SMap.add var entry entries }, tl))
+                |> Nel.of_list_exn )
+        in
+        loop (Some create_invalid_entry) tl (hd :: rev_head)
+      | hd :: tl -> loop passed_var_scope tl (hd :: rev_head)
+      | [] ->
+        begin
+          match passed_var_scope with
+          | None -> env_invariant_violated (Utils_js.spf "Scope for variable %s not found" var)
+          | Some (lazy (entry, set_entry)) -> (entry, true, set_entry)
+        end
     in
-    loop true (Nel.to_list env) []
-
-  let empty_entry name =
-    {
-      name;
-      state = Uninitialized;
-      provider_locs = L.LSet.empty;
-      declare_locs = L.LSet.empty;
-      def_locs = L.LSet.empty;
-    }
+    loop None (Nel.to_list env) []
 
   let get_entry var entries = SMap.find_opt var entries |> Option.value ~default:(empty_entry var)
 
@@ -571,10 +588,11 @@ module FindProviders (L : Loc_sig.S) = struct
           else
             Initialized
         in
-        let (entries, same_var_scope, reconstruct_env) =
-          find_entries_for_existing_variable var env
+        let ( ({ state = state'; provider_locs; def_locs; _ } as entry),
+              same_var_scope,
+              reconstruct_env ) =
+          find_entry_for_existing_variable var env
         in
-        let ({ state = state'; provider_locs; def_locs; _ } as entry) = get_entry var entries in
         let is_provider = same_var_scope && state_lt state' state in
         let def_locs = L.LSet.add loc def_locs in
         let (state, provider_locs) =
@@ -583,8 +601,7 @@ module FindProviders (L : Loc_sig.S) = struct
           else
             (state', provider_locs)
         in
-        let entries = SMap.add var { entry with state; provider_locs; def_locs } entries in
-        let env = reconstruct_env entries in
+        let env = reconstruct_env { entry with state; provider_locs; def_locs } in
         let env =
           if is_provider then
             update_provider_info var loc env
