@@ -650,14 +650,13 @@ module Make
       method! pattern_identifier ?kind ident =
         let open Ssa_builder in
         let (loc, { Flow_ast.Identifier.name = x; comments = _ }) = ident in
+        let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) loc in
         begin
           match SMap.find_opt x ssa_env with
           | Some { val_ref; havoc } ->
-            val_ref := Val.one loc;
+            val_ref := Val.one reason;
             Havoc.(
-              havoc.locs <-
-                Base.Option.value_exn (Provider_api.providers_of_def provider_info loc)
-                |> L.LSet.elements)
+              havoc.locs <- Base.Option.value_exn (Provider_api.providers_of_def provider_info loc))
           | _ -> ()
         end;
         super#super_pattern_identifier ?kind ident
@@ -701,7 +700,7 @@ module Make
                 L.LSet.of_list
                 (Base.List.filter_map ~f:(function
                     | Ssa_api.Uninitialized -> None
-                    | Ssa_api.Write l -> Some l)))
+                    | Ssa_api.Write r -> Some (Reason.poly_loc_of_reason r))))
            ~default:L.LSet.empty
     in
     let refi_locs =

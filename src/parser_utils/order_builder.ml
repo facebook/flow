@@ -26,18 +26,20 @@ struct
     object (this)
       inherit [LocSet.t, L.t] Flow_ast_visitor.visitor ~init:LocSet.empty as super
 
-      method update_convert_acc set =
-        this#update_acc (L.LSet.fold (fun elt acc -> LocSet.add (Convert.convert elt) acc) set)
+      method update_convert_acc l =
+        this#update_acc (fun a ->
+            List.fold_left (fun acc loc -> LocSet.add (Convert.convert loc) acc) a l)
 
       method! identifier ((loc, _) as id) =
-        this#update_convert_acc (Env_builder.sources_of_use env loc);
+        this#update_convert_acc (Env_builder.sources_of_use env loc |> L.LSet.elements);
         id
 
       method! pattern_identifier ?kind ((loc, _) as id) =
         ignore kind;
         if not @@ Provider_api.is_provider providers loc then
           this#update_convert_acc
-            (Base.Option.value_exn (Provider_api.providers_of_def providers loc));
+            ( Base.Option.value_exn (Provider_api.providers_of_def providers loc)
+            |> List.map Reason.poly_loc_of_reason );
         id
 
       method! statement ((loc, _) as stmt) =

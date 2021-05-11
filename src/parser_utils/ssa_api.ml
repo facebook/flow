@@ -11,7 +11,7 @@ module type S = sig
   type read_loc = L.t
 
   type write_loc =
-    | Write of L.t
+    | Write of L.t Reason.virtual_reason
     | Uninitialized
 
   type write_locs = write_loc list
@@ -31,7 +31,7 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
   type read_loc = L.t
 
   type write_loc =
-    | Write of L.t
+    | Write of L.t Reason.virtual_reason
     | Uninitialized
 
   type write_locs = write_loc list
@@ -43,7 +43,15 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
   let write_locs_of_read_loc values read_loc = L.LMap.find read_loc values
 
   let is_dead_write_loc values loc =
-    not (L.LMap.exists (fun _read_loc write_locs -> List.mem (Write loc) write_locs) values)
+    not
+      (L.LMap.exists
+         (fun _ write_locs ->
+           Base.List.exists
+             ~f:(function
+               | Write r -> Reason.poly_loc_of_reason r = loc
+               | Uninitialized -> false)
+             write_locs)
+         values)
 end
 
 module With_Loc = Make (Loc_sig.LocS)
@@ -54,7 +62,12 @@ let print_values =
   let print_write_loc write_loc =
     match write_loc with
     | Uninitialized -> "(uninitialized)"
-    | Write loc -> Loc.debug_to_string loc
+    | Write reason ->
+      let loc = Reason.loc_of_reason reason in
+      Utils_js.spf
+        "%s: (%s)"
+        (Loc.debug_to_string loc)
+        Reason.(desc_of_reason reason |> string_of_desc)
   in
   fun values ->
     let kvlist = Loc_collections.LocMap.bindings values in

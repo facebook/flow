@@ -111,8 +111,6 @@ let mk_order_test contents expected_values ctxt =
     expected_values
     deps_string
 
-let mk_write (pos1, pos2) = Ssa_api.Write (mk_loc pos1 pos2)
-
 let tests =
   let open Env_builder.With_Loc in
   [

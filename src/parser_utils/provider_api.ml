@@ -24,7 +24,7 @@ module type S = sig
 
   val print_full_env : env -> string
 
-  val providers_of_def : scope -> L.t -> L.LSet.t option
+  val providers_of_def : scope -> L.t -> L.t Reason.virtual_reason list option
 end
 
 module Make (L : Loc_sig.S) = struct
@@ -49,9 +49,11 @@ module Make (L : Loc_sig.S) = struct
   let providers_of_def scope loc =
     let all_entries = all_entries scope in
     Base.List.find_map
-      ~f:(fun { provider_locs; declare_locs; def_locs; _ } ->
+      ~f:(fun { provider_locs; declare_locs; def_locs; name; _ } ->
         if L.LSet.mem loc declare_locs || L.LSet.mem loc def_locs then
-          Some provider_locs
+          Some
+            ( L.LSet.elements provider_locs
+            |> Base.List.map ~f:Reason.(mk_reason (RIdentifier (OrdinaryName name))) )
         else
           None)
       all_entries

@@ -7,6 +7,7 @@
 
 module Ast = Flow_ast
 open Hoister
+open Reason
 
 module Make
     (L : Loc_sig.S)
@@ -34,9 +35,9 @@ struct
 
     val merge : t -> t -> t
 
-    val one : L.t -> t
+    val one : L.t virtual_reason -> t
 
-    val all : L.t list -> t
+    val all : L.t virtual_reason list -> t
 
     val resolve : unresolved:t -> t -> unit
 
@@ -54,7 +55,7 @@ struct
 
     and write_state =
       | Uninitialized
-      | Loc of L.t
+      | Loc of L.t virtual_reason
       | PHI of write_state list
       | REF of ref_state ref
 
@@ -118,9 +119,9 @@ struct
         let vals = WriteSet.union (normalize t1.write_state) (normalize t2.write_state) in
         mk_with_write_state @@ join (WriteSet.elements vals)
 
-    let one loc = mk_with_write_state @@ Loc loc
+    let one reason = mk_with_write_state @@ Loc reason
 
-    let all locs = mk_with_write_state @@ join (Base.List.map ~f:(fun loc -> Loc loc) locs)
+    let all locs = mk_with_write_state @@ join (Base.List.map ~f:(fun reason -> Loc reason) locs)
 
     (* Resolving unresolved to t essentially models an equation of the form
        unresolved = t, where unresolved is a reference to an unknown and t is the
@@ -166,7 +167,7 @@ struct
       Base.List.map
         ~f:(function
           | Uninitialized -> Ssa_api.Uninitialized
-          | Loc loc -> Ssa_api.Write loc
+          | Loc r -> Ssa_api.Write r
           | REF { contents = Unresolved _ } -> failwith "An unresolved REF cannot be simplified"
           | PHI _
           | REF { contents = Resolved _ } ->
@@ -223,7 +224,7 @@ struct
     type t = {
       unresolved: Val.t;
       (* always REF *)
-      mutable locs: L.t list;
+      mutable locs: L.t Reason.virtual_reason list;
     }
   end
 
@@ -442,11 +443,12 @@ struct
       method! pattern_identifier ?kind (ident : (L.t, L.t) Ast.Identifier.t) =
         ignore kind;
         let (loc, { Ast.Identifier.name = x; comments = _ }) = ident in
+        let reason = mk_reason (RIdentifier (OrdinaryName x)) loc in
         begin
           match SMap.find_opt x ssa_env with
           | Some { val_ref; havoc } ->
-            val_ref := Val.one loc;
-            Havoc.(havoc.locs <- loc :: havoc.locs)
+            val_ref := Val.one reason;
+            Havoc.(havoc.locs <- reason :: havoc.locs)
           | _ -> ()
         end;
         super#identifier ident

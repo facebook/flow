@@ -25,7 +25,7 @@ struct
             List.fold_left
               (fun acc -> function
                 | Ssa_api.Uninitialized -> acc
-                | Ssa_api.Write loc -> L.LSet.add loc acc)
+                | Ssa_api.Write reason -> L.LSet.add (Reason.poly_loc_of_reason reason) acc)
               acc
               write_locs)
         uses
@@ -75,7 +75,8 @@ struct
   (* Some variables are unhavocable by making a function call but still can be havoced in other
      situations. `via_call` indicates whether the havocing operation is a call or something
      else (resetting an activation scope, yielding, entering a new scope *)
-  let should_invalidate ~all info values loc =
+  let should_invalidate ~all info values r =
+    let loc = Reason.poly_loc_of_reason r in
     (not (is_const_like info values loc))
     && (all || (not @@ L.LSet.is_empty (written_by_closure info values loc)))
 end

@@ -53,6 +53,17 @@ let print_providers prov =
       |> Base.List.map ~f:(Loc.debug_to_string ~include_source:false)
       |> String.concat "], [" )
 
+let print_providers_of_def prov =
+  match prov with
+  | None -> "[]"
+  | Some provider_locs ->
+    Utils_js.spf
+      "[%s]"
+      ( Base.List.map
+          ~f:(fun r -> Loc.debug_to_string ~include_source:false (Reason.poly_loc_of_reason r))
+          provider_locs
+      |> String.concat "], [" )
+
 let mk_provider_test var contents expected_msg ctxt =
   let ast = parse contents in
   let env = Provider_api.LocProviders.find_providers ast in
@@ -73,7 +84,7 @@ let mk_provider_loc_test loc contents expected_msg ctxt =
     ~printer:(fun x -> x)
     ~msg:"Results don't match!"
     expected_msg
-    (print_providers msg)
+    (print_providers_of_def msg)
 
 let tests =
   "find_providers"
