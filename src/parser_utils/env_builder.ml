@@ -51,11 +51,55 @@ let extract_number_literal node =
     "-" ^ raw
   | _ -> Utils_js.assert_false "not a number literal"
 
+module type S = sig
+  module L : Loc_sig.S
+
+  module Ssa_api : Ssa_api.S with module L = L
+
+  module Scope_builder : Scope_builder_sig.S with module L = L
+
+  type refinement_kind =
+    | And of refinement_kind * refinement_kind
+    | Or of refinement_kind * refinement_kind
+    | Not of refinement_kind
+    | Truthy
+    | Null
+    | Undefined
+    | Maybe
+    | InstanceOf of L.t
+    | IsArray
+    | BoolR
+    | FunctionR
+    | NumberR
+    | ObjectR
+    | StringR
+    | SymbolR
+    | SingletonBoolR of bool
+    | SingletonStrR of string
+    | SingletonNumR of string
+  [@@deriving show { with_path = false }]
+
+  type refinement = L.LSet.t * refinement_kind
+
+  val program_with_scope :
+    ?ignore_toplevel:bool ->
+    (L.t, L.t) Flow_ast.Program.t ->
+    Scope_builder.Acc.t * Ssa_api.values * refinement L.LMap.t
+
+  val program : (L.t, L.t) Flow_ast.Program.t -> refinement L.LMap.t
+
+  val refiners_of_use :
+    Scope_builder.Acc.t * Ssa_api.values * refinement L.LMap.t -> L.t -> L.LSet.t
+end
+
 module Make
     (L : Loc_sig.S)
     (Ssa_api : Ssa_api.S with module L = L)
-    (Scope_builder : Scope_builder_sig.S with module L = L) =
-struct
+    (Scope_builder : Scope_builder_sig.S with module L = L) :
+  S with module L = L and module Ssa_api = Ssa_api and module Scope_builder = Scope_builder = struct
+  module L = L
+  module Ssa_api = Ssa_api
+  module Scope_builder = Scope_builder
   module Ssa_builder = Ssa_builder.Make (L) (Ssa_api) (Scope_builder)
 
   type refinement_kind =
@@ -568,20 +612,22 @@ struct
     let (_, _, refined_reads) = program_with_scope ~ignore_toplevel:false program in
     refined_reads
 
-  let refiners_of_use program loc =
-    let (_, vals, refis) = program_with_scope ~ignore_toplevel:false program in
-    let writes = Ssa_api.write_locs_of_read_loc vals loc in
+  let refiners_of_use (_, vals, refis) loc =
+    let write_locs =
+      L.LMap.find_opt loc vals
+      |> Base.Option.value_map
+           ~f:
+             (Fn.compose
+                L.LSet.of_list
+                (Base.List.filter_map ~f:(function
+                    | Ssa_api.Uninitialized -> None
+                    | Ssa_api.Write l -> Some l)))
+           ~default:L.LSet.empty
+    in
     let refi_locs =
       L.LMap.find_opt loc refis |> Base.Option.value_map ~f:fst ~default:L.LSet.empty
     in
-    L.LSet.union
-      refi_locs
-      ( Base.List.filter_map
-          ~f:(function
-            | Ssa_api.Uninitialized -> None
-            | Ssa_api.Write l -> Some l)
-          writes
-      |> L.LSet.of_list )
+    L.LSet.union refi_locs write_locs
 end
 
 module With_Loc = Make (Loc_sig.LocS) (Ssa_api.With_Loc) (Scope_builder.With_Loc)
