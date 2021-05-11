@@ -285,12 +285,12 @@ class virtual ['a, 'phase] t =
           ExplicitArg t''
 
     method enum cx map_cx e =
-      let { enum_id; enum_name; members; representation_t; has_unknown_members } = e in
+      let { enum_id; members; representation_t; has_unknown_members } = e in
       let representation_t' = self#type_ cx map_cx representation_t in
       if representation_t' = representation_t then
         e
       else
-        { enum_id; enum_name; members; representation_t = representation_t'; has_unknown_members }
+        { enum_id; members; representation_t = representation_t'; has_unknown_members }
 
     method def_type cx map_cx t =
       match t with

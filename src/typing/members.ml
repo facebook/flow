@@ -553,7 +553,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
     Success (AugmentableSMap.augment prot_members ~with_bindings:members)
   | Success (DefT (enum_reason, trust, EnumObjectT enum)) ->
     let { members; representation_t; _ } = enum in
-    let enum_t = mk_enum_type ~loc:(def_aloc_of_reason enum_reason) ~trust enum in
+    let enum_t = mk_enum_type ~trust enum_reason enum in
     let proto_members =
       if exclude_proto_members then
         SMap.empty

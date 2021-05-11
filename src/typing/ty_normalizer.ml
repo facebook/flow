@@ -632,6 +632,7 @@ end = struct
   module Reason_utils = struct
     let local_type_alias_symbol env reason =
       match desc_of_reason ~unwrap:false reason with
+      | REnum name -> return (symbol_from_reason env reason (Reason.OrdinaryName name))
       | RTypeAlias (name, Some loc, _) ->
         return (symbol_from_loc env loc (Reason.OrdinaryName name))
       | RType name -> return (symbol_from_reason env reason name)
@@ -902,8 +903,8 @@ end = struct
           return Ty.(TypeOf FunProtoCall)
       | NullProtoT _ -> return Ty.Null
       | DefT (_, _, EnumObjectT _) -> terr ~kind:(UnexpectedTypeCtor "EnumObjectT") None
-      | DefT (reason, _, EnumT { enum_name; _ }) ->
-        let symbol = symbol_from_reason env reason (Reason.OrdinaryName enum_name) in
+      | DefT (reason, _, EnumT _) ->
+        let%bind symbol = Reason_utils.local_type_alias_symbol env reason in
         return (Ty.Generic (symbol, Ty.EnumKind, None))
       | DefT (_, _, CharSetT s) -> return (Ty.CharSet (String_utils.CharSet.to_string s))
       (* Top-level only *)
@@ -1962,9 +1963,8 @@ end = struct
           let%map symbol = Reason_utils.instance_symbol env r in
           Ty.Decl (Ty.ClassDecl (symbol, ps))
       in
-      let enum_decl ~env reason enum =
-        let { T.enum_name; _ } = enum in
-        let symbol = symbol_from_reason env reason (Reason.OrdinaryName enum_name) in
+      let enum_decl ~env reason =
+        let%bind symbol = Reason_utils.local_type_alias_symbol env reason in
         return (Ty.Decl Ty.(EnumDecl symbol))
       in
       let singleton_poly ~env ~orig_t tparams = function
@@ -2007,9 +2007,9 @@ end = struct
         | DefT (_, _, TypeT (ImportClassKind, DefT (r, _, InstanceT (static, super, _, inst)))) ->
           class_or_interface_decl ~env r None static super inst
         (* Enums *)
-        | DefT (reason, _, EnumObjectT enum)
-        | DefT (_, _, TypeT (ImportEnumKind, DefT (reason, _, EnumT enum))) ->
-          enum_decl ~env reason enum
+        | DefT (reason, _, EnumObjectT _)
+        | DefT (_, _, TypeT (ImportEnumKind, DefT (reason, _, EnumT _))) ->
+          enum_decl ~env reason
         (* Monomorphic Type Aliases *)
         | DefT (r, _, TypeT (kind, t)) ->
           let r =
@@ -2317,9 +2317,8 @@ end = struct
 
     and enum_t ~env reason trust enum =
       let { T.members; representation_t; _ } = enum in
-      let enum_ty = T.mk_enum_type ~loc:(def_aloc_of_reason reason) ~trust enum in
+      let enum_t = T.mk_enum_type ~trust reason enum in
       let proto_t =
-        let enum_t = T.mk_enum_type ~loc:(def_aloc_of_reason reason) ~trust enum in
         Flow_js.get_builtin_typeapp
           Env.(env.genv.cx)
           reason
@@ -2327,7 +2326,7 @@ end = struct
           [enum_t; representation_t]
       in
       let%bind proto_ty = type__ ~env ~proto:true ~imode:IMUnset proto_t in
-      let%map enum_ty = TypeConverter.convert_t ~env enum_ty in
+      let%map enum_ty = TypeConverter.convert_t ~env enum_t in
       let members_ty =
         List.map
           (fun (name, loc) ->

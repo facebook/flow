@@ -111,9 +111,9 @@ value to a boolean using `(<expression>: boolean)`. [incompatible-cast]
         ^^^^
 
 References:
-   cast.js:3:6
-    3| enum B of boolean {
-            ^ [1]
+   cast.js:64:17
+   64| declare var BS: typeof B | typeof S;
+                       ^^^^^^^^ [1]
    cast.js:66:17
    66| (BS.A: string | boolean); // Error
                        ^^^^^^^ [2]
@@ -129,9 +129,9 @@ value to a string using `(<expression>: string)`. [incompatible-cast]
         ^^^^
 
 References:
-   cast.js:13:6
-   13| enum S of string {
-            ^ [1]
+   cast.js:64:28
+   64| declare var BS: typeof B | typeof S;
+                                  ^^^^^^^^ [1]
    cast.js:66:8
    66| (BS.A: string | boolean); // Error
               ^^^^^^ [2]
@@ -1208,20 +1208,32 @@ References:
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:69:8
 
-Invalid enum member check at case. Check must be dot-access of a member of `E`, for example `case E.A:`.
+Invalid enum member check at case. Check must be dot-access of a member of `E` [1]. For example `case E.A:`.
 [invalid-exhaustive-check]
 
+   exhaustive-check.js:69:8
    69|   case x: // Error
               ^
+
+References:
+   exhaustive-check.js:3:6
+    3| enum E {
+            ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- exhaustive-check.js:75:10
 
-Invalid enum member check at case. Check must be dot-access of a member of `G`, for example `case G.A:`.
+Invalid enum member check at case. Check must be dot-access of a member of `G` [1]. For example `case G.A:`.
 [invalid-exhaustive-check]
 
+   exhaustive-check.js:75:10
    75|     case g: break; // Error
                 ^
+
+References:
+   exhaustive-check.js:73:15
+   73| function g(g: G) {
+                     ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:80:8
@@ -1247,11 +1259,17 @@ References:
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:80:8
 
-Invalid enum member check at case. Check must be dot-access of a member of `E`, for example `case E.A:`.
+Invalid enum member check at case. Check must be dot-access of a member of `E` [1]. For example `case E.A:`.
 [invalid-exhaustive-check]
 
+   exhaustive-check.js:80:8
    80|   case E.isValid: break; // Error
               ^^^^^^^^^
+
+References:
+   exhaustive-check.js:3:6
+    3| enum E {
+            ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:89:9
@@ -1751,9 +1769,9 @@ References:
    exhaustive-check.js:187:16
    187| function f8(x: M | N, X: typeof M | typeof N) {
                        ^ [2]
-   exhaustive-check.js:184:6
-   184| enum N {
-             ^ [3]
+   exhaustive-check.js:187:37
+   187| function f8(x: M | N, X: typeof M | typeof N) {
+                                            ^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:189:10
@@ -1772,9 +1790,9 @@ References:
    exhaustive-check.js:187:20
    187| function f8(x: M | N, X: typeof M | typeof N) {
                            ^ [2]
-   exhaustive-check.js:181:6
-   181| enum M {
-             ^ [3]
+   exhaustive-check.js:187:26
+   187| function f8(x: M | N, X: typeof M | typeof N) {
+                                 ^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:209:11
@@ -1825,20 +1843,32 @@ References:
 
 Error ------------------------------------------------------------------------------------------- member-as-type.js:8:16
 
-Cannot use `A` as a type. Enum members are not separate types. Only the enum itself, `E`, is a type.
+Cannot use `A` as a type. Enum members are not separate types. Only the enum itself, `E` [1], is a type.
 [enum-value-as-type]
 
+   member-as-type.js:8:16
    8| declare var x: E.A;
                      ^^^
+
+References:
+   member-as-type.js:3:6
+   3| enum E {
+           ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------ member-as-type.js:10:15
 
-Cannot use `A` as a type. Enum members are not separate types. Only the enum itself, `E`, is a type.
+Cannot use `A` as a type. Enum members are not separate types. Only the enum itself, `E` [1], is a type.
 [enum-value-as-type]
 
+   member-as-type.js:10:15
    10| function f(x: E.A) {
                      ^^^
+
+References:
+   member-as-type.js:3:6
+    3| enum E {
+            ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- methods.js:27:3

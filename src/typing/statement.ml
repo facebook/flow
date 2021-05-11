@@ -8513,7 +8513,7 @@ and enum_exhaustive_check_of_switch_cases cases_ast =
 
 and mk_enum cx ~enum_reason enum =
   let open Ast.Statement.EnumDeclaration in
-  let { id = (name_loc, { Ast.Identifier.name; _ }); body; comments = _ } = enum in
+  let { id = (name_loc, _); body; comments = _ } = enum in
   let defaulted_members =
     Base.List.fold
       ~init:SMap.empty
@@ -8622,4 +8622,4 @@ and mk_enum cx ~enum_reason enum =
       let reason = mk_reason (REnumRepresentation RSymbol) (aloc_of_reason enum_reason) in
       (DefT (reason, literal_trust (), SymbolT), defaulted_members members, has_unknown_members)
   in
-  { enum_id; enum_name = name; members; representation_t; has_unknown_members }
+  { enum_id; members; representation_t; has_unknown_members }

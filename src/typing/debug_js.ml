@@ -255,20 +255,12 @@ let rec dump_t_ : type phase. int * ISet.t -> phase Context.t_ -> Type.t -> stri
       p ~trust:(Some trust) ~extra:(spf "#%s" (ALoc.debug_to_string (class_id :> ALoc.t))) t
     | DefT (_, trust, TypeT (kind, arg)) ->
       p ~trust:(Some trust) ~extra:(spf "%s, %s" (string_of_type_t_kind kind) (kid arg)) t
+    | DefT (_, trust, EnumT { enum_id; members = _; representation_t = _; has_unknown_members = _ })
     | DefT
         ( _,
           trust,
-          EnumT { enum_id; enum_name; members = _; representation_t = _; has_unknown_members = _ }
-        )
-    | DefT
-        ( _,
-          trust,
-          EnumObjectT
-            { enum_id; enum_name; members = _; representation_t = _; has_unknown_members = _ } ) ->
-      p
-        ~trust:(Some trust)
-        ~extra:(spf "enum %s #%s" enum_name (ALoc.debug_to_string (enum_id :> ALoc.t)))
-        t
+          EnumObjectT { enum_id; members = _; representation_t = _; has_unknown_members = _ } ) ->
+      p ~trust:(Some trust) ~extra:(spf "enum #%s" (ALoc.debug_to_string (enum_id :> ALoc.t))) t
     | AnnotT (_, arg, use_desc) -> p ~extra:(spf "use_desc=%b, %s" use_desc (kid arg)) t
     | OpaqueT (_, { underlying_t = Some arg; _ }) -> p ~extra:(spf "%s" (kid arg)) t
     | OpaqueT _ -> p t
@@ -1705,18 +1697,10 @@ let dump_error_message =
         (string_of_aloc loc)
         (string_of_aloc prev_use_loc)
         (dump_reason cx enum_reason)
-    | EEnumInvalidObjectUtil { reason; enum_reason; enum_name } ->
-      spf
-        "EEnumInvalidObjectUtil (%s) (%s) (%s)"
-        (dump_reason cx reason)
-        (dump_reason cx enum_reason)
-        enum_name
-    | EEnumNotIterable { reason; enum_name; for_in } ->
-      spf
-        "EEnumNotIterable (%s) (%s) (%s)"
-        (dump_reason cx reason)
-        enum_name
-        (spf "for_in = %B" for_in)
+    | EEnumInvalidObjectUtil { reason; enum_reason } ->
+      spf "EEnumInvalidObjectUtil (%s) (%s)" (dump_reason cx reason) (dump_reason cx enum_reason)
+    | EEnumNotIterable { reason; for_in } ->
+      spf "EEnumNotIterable (%s) (%s)" (dump_reason cx reason) (spf "for_in = %B" for_in)
     | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->
       spf
         "EEnumMemberAlreadyChecked (%s) (%s) (%s) (%s)"
@@ -1737,14 +1721,14 @@ let dump_error_message =
         (String.concat ", " left_to_check)
     | EEnumUnknownNotChecked { reason; enum_reason } ->
       spf "EEnumUnknownNotChecked (%s) (%s)" (dump_reason cx reason) (dump_reason cx enum_reason)
-    | EEnumInvalidCheck { reason; enum_name; example_member } ->
+    | EEnumInvalidCheck { reason; enum_reason; example_member } ->
       spf
         "EEnumInvalidCheck (%s) (%s) (%s)"
         (dump_reason cx reason)
-        enum_name
+        (dump_reason cx enum_reason)
         (Base.Option.value ~default:"<None>" example_member)
-    | EEnumMemberUsedAsType { reason; enum_name } ->
-      spf "EEnumMemberUsedAsType (%s) (%s)" (dump_reason cx reason) enum_name
+    | EEnumMemberUsedAsType { reason; enum_reason } ->
+      spf "EEnumMemberUsedAsType (%s) (%s)" (dump_reason cx reason) (dump_reason cx enum_reason)
     | EEnumIncompatible { reason_lower; reason_upper; use_op; representation_type } ->
       spf
         "EEnumIncompatible { reason_lower = %s; reason_upper = %s; use_op = %s; representation_type = %s }"

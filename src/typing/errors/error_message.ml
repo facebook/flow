@@ -365,11 +365,9 @@ and 'loc t' =
   | EEnumInvalidObjectUtil of {
       reason: 'loc virtual_reason;
       enum_reason: 'loc virtual_reason;
-      enum_name: string;
     }
   | EEnumNotIterable of {
       reason: 'loc virtual_reason;
-      enum_name: string;
       for_in: bool;
     }
   | EEnumMemberAlreadyChecked of {
@@ -393,12 +391,12 @@ and 'loc t' =
     }
   | EEnumInvalidCheck of {
       reason: 'loc virtual_reason;
-      enum_name: string;
+      enum_reason: 'loc virtual_reason;
       example_member: string option;
     }
   | EEnumMemberUsedAsType of {
       reason: 'loc virtual_reason;
-      enum_name: string;
+      enum_reason: 'loc virtual_reason;
     }
   | EEnumIncompatible of {
       use_op: 'loc virtual_use_op;
@@ -927,11 +925,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EEnumMemberDuplicateValue { loc; prev_use_loc; enum_reason } ->
     EEnumMemberDuplicateValue
       { loc = f loc; prev_use_loc = f prev_use_loc; enum_reason = map_reason enum_reason }
-  | EEnumInvalidObjectUtil { reason; enum_reason; enum_name } ->
-    EEnumInvalidObjectUtil
-      { reason = map_reason reason; enum_reason = map_reason enum_reason; enum_name }
-  | EEnumNotIterable { reason; enum_name; for_in } ->
-    EEnumNotIterable { reason = map_reason reason; enum_name; for_in }
+  | EEnumInvalidObjectUtil { reason; enum_reason } ->
+    EEnumInvalidObjectUtil { reason = map_reason reason; enum_reason = map_reason enum_reason }
+  | EEnumNotIterable { reason; for_in } -> EEnumNotIterable { reason = map_reason reason; for_in }
   | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->
     EEnumMemberAlreadyChecked
       {
@@ -948,10 +944,11 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       { reason = map_reason reason; enum_reason = map_reason enum_reason; left_to_check }
   | EEnumUnknownNotChecked { reason; enum_reason } ->
     EEnumUnknownNotChecked { reason = map_reason reason; enum_reason = map_reason enum_reason }
-  | EEnumInvalidCheck { reason; enum_name; example_member } ->
-    EEnumInvalidCheck { reason = map_reason reason; enum_name; example_member }
-  | EEnumMemberUsedAsType { reason; enum_name } ->
-    EEnumMemberUsedAsType { reason = map_reason reason; enum_name }
+  | EEnumInvalidCheck { reason; enum_reason; example_member } ->
+    EEnumInvalidCheck
+      { reason = map_reason reason; enum_reason = map_reason enum_reason; example_member }
+  | EEnumMemberUsedAsType { reason; enum_reason } ->
+    EEnumMemberUsedAsType { reason = map_reason reason; enum_reason = map_reason enum_reason }
   | EEnumIncompatible { use_op; reason_lower; reason_upper; representation_type } ->
     EEnumIncompatible
       {
@@ -1458,6 +1455,13 @@ let mk_prop_message =
       [text "an index signature declaring the expected key / value type"]
     | Some "$call" -> [text "a call signature declaring the expected parameter / return type"]
     | Some prop -> [text "property "; code prop])
+
+let enum_name_of_reason reason =
+  match desc_of_reason reason with
+  | REnum name
+  | RType (OrdinaryName name) ->
+    Some name
+  | _ -> None
 
 let string_of_internal_error = function
   | PackageHeapNotFound pkg -> spf "package %S was not found in the PackageHeap!" pkg
@@ -3341,40 +3345,64 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | EEnumInvalidObjectUtil { reason; enum_reason; enum_name } ->
+  | EEnumInvalidObjectUtil { reason; enum_reason } ->
+    let suggestion =
+      match enum_name_of_reason enum_reason with
+      | Some enum_name ->
+        [
+          text " ";
+          text "You can use the enum's name ";
+          code enum_name;
+          text " as the type of its members.";
+        ]
+      | None -> []
+    in
     let features =
       [
         text "Cannot instantiate ";
         desc reason;
         text " because ";
         ref enum_reason;
-        text " is not an object. You can use the enum's name ";
-        code enum_name;
-        text " as the type of its members.";
+        text " is not an object.";
       ]
+      @ suggestion
     in
     Normal { features }
-  | EEnumNotIterable { reason; enum_name; for_in } ->
+  | EEnumNotIterable { reason; for_in } ->
     let features =
       if for_in then
+        let suggestion =
+          match enum_name_of_reason reason with
+          | Some enum_name ->
+            [
+              text " ";
+              text "You can use ";
+              code (spf "for (... of %s.members()) { ... }" enum_name);
+              text " to iterate over the enum's members.";
+            ]
+          | None -> []
+        in
         [
           text "Cannot iterate using a ";
           code "for...in";
           text " loop because ";
           ref reason;
-          text " is not an object, null, or undefined. ";
-          text "You can use ";
-          code (spf "for (... of %s.members()) { ... }" enum_name);
-          text " to iterate over the enum's members.";
+          text " is not an object, null, or undefined.";
         ]
+        @ suggestion
       else
-        [
-          desc reason;
-          text " is not an iterable. ";
-          text "You can use ";
-          code (spf "%s.members()" enum_name);
-          text " to get an iterator for the enum's members.";
-        ]
+        let suggestion =
+          match enum_name_of_reason reason with
+          | Some enum_name ->
+            [
+              text " ";
+              text "You can use ";
+              code (spf "%s.members()" enum_name);
+              text " to get an iterator for the enum's members.";
+            ]
+          | None -> []
+        in
+        [desc reason; text " is not an iterable."] @ suggestion
     in
     Normal { features }
   | EEnumMemberAlreadyChecked { reason; prev_check_reason; enum_reason; member_name } ->
@@ -3447,21 +3475,26 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | EEnumInvalidCheck { reason; enum_name; example_member } ->
-    let example_member = Base.Option.value ~default:"A" example_member in
+  | EEnumInvalidCheck { reason; enum_reason; example_member } ->
+    let suggestion =
+      match enum_name_of_reason enum_reason with
+      | Some enum_name ->
+        let example_member = Base.Option.value ~default:"A" example_member in
+        [text " "; text "For example "; code (spf "case %s.%s:" enum_name example_member); text "."]
+      | None -> []
+    in
     let features =
       [
         text "Invalid enum member check at ";
         desc reason;
         text ". Check must be dot-access of a member of ";
-        code enum_name;
-        text ", for example ";
-        code (spf "case %s.%s:" enum_name example_member);
+        ref enum_reason;
         text ".";
       ]
+      @ suggestion
     in
     Normal { features }
-  | EEnumMemberUsedAsType { reason; enum_name } ->
+  | EEnumMemberUsedAsType { reason; enum_reason } ->
     let features =
       [
         text "Cannot use ";
@@ -3469,7 +3502,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text " as a type. ";
         text "Enum members are not separate types. ";
         text "Only the enum itself, ";
-        code enum_name;
+        ref enum_reason;
         text ", is a type.";
       ]
     in

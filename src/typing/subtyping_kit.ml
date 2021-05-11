@@ -1543,10 +1543,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_unify cx trace ~use_op ~unify_any:true l u
     | (DefT (lreason, trust, EnumObjectT enum), DefT (_r, _, TypeT (_, t))) ->
       (* an enum object value annotation becomes the enum type *)
-      let enum_type = mk_enum_type ~loc:(aloc_of_reason lreason) ~trust enum in
+      let enum_type = mk_enum_type ~trust lreason enum in
       rec_unify cx trace ~use_op enum_type t
-    | (DefT (_, _, EnumT { enum_name; _ }), DefT (reason, _, TypeT _)) ->
-      add_output cx ~trace Error_message.(EEnumMemberUsedAsType { reason; enum_name })
+    | (DefT (enum_reason, _, EnumT _), DefT (reason, _, TypeT _)) ->
+      add_output cx ~trace Error_message.(EEnumMemberUsedAsType { reason; enum_reason })
     (* non-class/function values used in annotations are errors *)
     | (_, DefT (reason_use, _, TypeT _)) ->
       (match l with

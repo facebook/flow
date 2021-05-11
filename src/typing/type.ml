@@ -260,7 +260,6 @@ module rec TypeTerm : sig
 
   and enum_t = {
     enum_id: ALoc.id;
-    enum_name: string;
     members: ALoc.t SMap.t;
     representation_t: t;
     has_unknown_members: bool;
@@ -3674,9 +3673,15 @@ let apply_opt_use opt_use t_out =
   | OptGetElemT (u, r, t) -> GetElemT (u, r, t, t_out)
   | OptCallElemT (r1, r2, elt, call) -> CallElemT (r1, r2, elt, apply_opt_action call t_out)
 
-let mk_enum_type ~loc ~trust enum =
-  let { enum_name; _ } = enum in
-  let reason = mk_reason (RType (OrdinaryName enum_name)) loc in
+let mk_enum_type ~trust reason enum =
+  let reason =
+    update_desc_reason
+      (fun desc ->
+        match desc with
+        | REnum name -> RType (OrdinaryName name)
+        | _ -> desc)
+      reason
+  in
   DefT (reason, trust, EnumT enum)
 
 let call_of_method_app

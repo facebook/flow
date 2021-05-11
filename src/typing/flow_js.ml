@@ -4876,11 +4876,11 @@ struct
         | ((AnyT _ | ObjProtoT _), AssertForInRHST _) -> ()
         (* null/undefined are allowed *)
         | (DefT (_, _, (NullT | VoidT)), AssertForInRHST _) -> ()
-        | (DefT (enum_reason, _, EnumObjectT { enum_name; _ }), AssertForInRHST _) ->
+        | (DefT (enum_reason, _, EnumObjectT _), AssertForInRHST _) ->
           add_output
             cx
             ~trace
-            (Error_message.EEnumNotIterable { reason = enum_reason; enum_name; for_in = true })
+            (Error_message.EEnumNotIterable { reason = enum_reason; for_in = true })
         | (_, AssertForInRHST _) -> add_output cx ~trace (Error_message.EForInRHS (reason_of_t l))
         (********************)
         (* `instanceof` RHS *)
@@ -4896,11 +4896,11 @@ struct
         (***********************************)
         (* iterable (e.g. RHS of `for..of` *)
         (***********************************)
-        | (DefT (enum_reason, _, EnumObjectT { enum_name; _ }), AssertIterableT _) ->
+        | (DefT (enum_reason, _, EnumObjectT _), AssertIterableT _) ->
           add_output
             cx
             ~trace
-            (Error_message.EEnumNotIterable { reason = enum_reason; enum_name; for_in = false })
+            (Error_message.EEnumNotIterable { reason = enum_reason; for_in = false })
         | (_, AssertIterableT { use_op; reason; async; targs }) ->
           let iterable =
             if async then
@@ -5019,7 +5019,7 @@ struct
                   cx
                   ~trace
                   (aloc_of_reason access_reason)
-                  (mk_enum_type ~loc:(def_aloc_of_reason enum_reason) ~trust enum)
+                  (mk_enum_type ~trust enum_reason enum)
               in
               rec_flow_t cx trace ~use_op:unknown_use (enum_type, OpenT tout)
             else
@@ -5051,11 +5051,11 @@ struct
             cx
             ~trace
             (Error_message.EEnumModification { loc = aloc_of_reason op_reason; enum_reason })
-        | (DefT (enum_reason, _, EnumObjectT { enum_name; _ }), GetValuesT (op_reason, _)) ->
+        | (DefT (enum_reason, _, EnumObjectT _), GetValuesT (op_reason, _)) ->
           add_output
             cx
             ~trace
-            (Error_message.EEnumInvalidObjectUtil { reason = op_reason; enum_reason; enum_name })
+            (Error_message.EEnumInvalidObjectUtil { reason = op_reason; enum_reason })
         (* Entry point to exhaustive checking logic - when resolving the discriminant as an enum. *)
         | ( DefT (enum_reason, _, EnumT enum),
             EnumExhaustiveCheckT
@@ -5117,7 +5117,7 @@ struct
             ~default_case
             ~incomplete_out
             ~discriminant_after_check
-        | ( DefT (_, _, EnumT { enum_name; members; _ }),
+        | ( DefT (enum_reason, _, EnumT { members; _ }),
             EnumExhaustiveCheckT
               {
                 reason;
@@ -5128,7 +5128,9 @@ struct
           let example_member = SMap.choose_opt members |> Base.Option.map ~f:fst in
           List.iter
             (fun reason ->
-              add_output cx (Error_message.EEnumInvalidCheck { reason; enum_name; example_member }))
+              add_output
+                cx
+                (Error_message.EEnumInvalidCheck { reason; enum_reason; example_member }))
             reasons;
           enum_exhaustive_check_incomplete cx ~trace ~reason incomplete_out
         (* If the discriminant is empty, the check is successful. *)
@@ -7157,7 +7159,7 @@ struct
     (* fix this-abstracted class when used as a type *)
     | ThisClassT (r, i, this) -> Some (fix_this_class cx trace reason (r, i, this))
     | DefT (enum_reason, trust, EnumObjectT enum) ->
-      let enum_type = mk_enum_type ~loc:(aloc_of_reason enum_reason) ~trust enum in
+      let enum_type = mk_enum_type ~trust enum_reason enum in
       Some (DefT (reason, trust, TypeT (ImportEnumKind, enum_type)))
     | DefT (_, _, TypeT _) -> Some t
     | AnyT _ -> Some t
