@@ -155,7 +155,13 @@ module Make
 
       method private negate_new_refinements () =
         let head = List.hd expression_refinement_scopes in
-        let head' = IMap.map (fun (l, v) -> (l, Not v)) head in
+        let head' =
+          IMap.map
+            (function
+              | (l, Not v) -> (l, v)
+              | (l, v) -> (l, Not v))
+            head
+        in
         expression_refinement_scopes <- head' :: List.tl expression_refinement_scopes
 
       method private peek_new_refinements () = List.hd expression_refinement_scopes
@@ -242,16 +248,40 @@ module Make
         | _ -> ()
 
       method logical_refinement expr =
-        let { Flow_ast.Expression.Logical.operator; left; right; comments = _ } = expr in
+        let { Flow_ast.Expression.Logical.operator; left = (loc, _) as left; right; comments = _ } =
+          expr
+        in
         this#push_refinement_scope IMap.empty;
-        ignore @@ this#expression_refinement left;
+        let refinement_scope1 =
+          match operator with
+          | Flow_ast.Expression.Logical.Or
+          | Flow_ast.Expression.Logical.And ->
+            ignore (this#expression_refinement left);
+            this#peek_new_refinements ()
+          | Flow_ast.Expression.Logical.NullishCoalesce ->
+            (* If this overall expression is truthy, then either the LHS or the RHS has to be truthy.
+               If it's because the LHS is truthy, then the LHS also has to be non-maybe (this is of course
+               true by definition, but it's also true because of the nature of ??).
+               But if we're evaluating the RHS, the LHS doesn't have to be truthy, it just has to be
+               non-maybe. As a result, we do this weird dance of refinements so that when we traverse the
+               RHS we have done the null-test but the overall result of this expression includes both the
+               truthy and non-maybe qualities. *)
+            ignore (this#null_test ~strict:false ~sense:false loc left);
+            let nullish = this#peek_new_refinements () in
+            this#pop_refinement_scope ();
+            this#push_refinement_scope IMap.empty;
+            ignore (this#expression_refinement left);
+            let peek = this#peek_new_refinements () in
+            this#pop_refinement_scope ();
+            this#push_refinement_scope nullish;
+            this#merge_refinement_scopes ~merge:merge_and peek nullish
+        in
         let env1 = this#ssa_env in
-        let refinement_scope1 = this#peek_new_refinements () in
         (match operator with
-        | Flow_ast.Expression.Logical.Or -> this#negate_new_refinements ()
-        | Flow_ast.Expression.Logical.And -> ()
-        | Flow_ast.Expression.Logical.NullishCoalesce ->
-          failwith "TODO logical_refinement nullish coalescing");
+        | Flow_ast.Expression.Logical.NullishCoalesce
+        | Flow_ast.Expression.Logical.Or ->
+          this#negate_new_refinements ()
+        | Flow_ast.Expression.Logical.And -> ());
         this#push_refinement_scope IMap.empty;
         ignore @@ this#expression_refinement right;
         let refinement_scope2 = this#peek_new_refinements () in
@@ -261,8 +291,10 @@ module Make
         this#pop_refinement_scope ();
         let merge =
           match operator with
-          | Flow_ast.Expression.Logical.Or -> merge_or
-          | _ -> merge_and
+          | Flow_ast.Expression.Logical.NullishCoalesce
+          | Flow_ast.Expression.Logical.Or ->
+            merge_or
+          | Flow_ast.Expression.Logical.And -> merge_and
         in
         let refinement_scope =
           this#merge_refinement_scopes ~merge refinement_scope1 refinement_scope2
@@ -596,15 +628,20 @@ module Make
 
       method! logical _loc (expr : (L.t, L.t) Flow_ast.Expression.Logical.t) =
         let open Flow_ast.Expression.Logical in
-        let { operator; left; right; comments = _ } = expr in
+        let { operator; left = (loc, _) as left; right; comments = _ } = expr in
         this#push_refinement_scope IMap.empty;
-        ignore @@ this#expression_refinement left;
+        (match operator with
+        | Flow_ast.Expression.Logical.Or
+        | Flow_ast.Expression.Logical.And ->
+          ignore (this#expression_refinement left)
+        | Flow_ast.Expression.Logical.NullishCoalesce ->
+          ignore (this#null_test ~strict:false ~sense:false loc left));
         let env1 = this#ssa_env in
         (match operator with
-        | Flow_ast.Expression.Logical.Or -> this#negate_new_refinements ()
-        | Flow_ast.Expression.Logical.And -> ()
-        | Flow_ast.Expression.Logical.NullishCoalesce ->
-          failwith "nullish coalescing refinements are not yet implemented");
+        | Flow_ast.Expression.Logical.NullishCoalesce
+        | Flow_ast.Expression.Logical.Or ->
+          this#negate_new_refinements ()
+        | Flow_ast.Expression.Logical.And -> ());
         ignore @@ this#expression right;
         this#pop_refinement_scope ();
         this#merge_self_ssa_env env1;

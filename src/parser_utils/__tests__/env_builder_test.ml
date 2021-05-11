@@ -139,6 +139,23 @@ x && (x && x)"
 x || x"
           LocMap.(
             empty |> add (mk_loc (2, 5) (2, 6)) (LocSet.singleton (mk_loc (2, 0) (2, 1)), Not Truthy));
+    "logical_nc"
+    >:: mk_ssa_builder_location_test
+          "let x = null;
+x ?? x"
+          LocMap.(
+            empty |> add (mk_loc (2, 5) (2, 6)) (LocSet.singleton (mk_loc (2, 0) (2, 1)), Maybe));
+    "logical_nc_and"
+    >:: mk_ssa_builder_location_test
+          "let x = null;
+(x ?? x) && x"
+          LocMap.(
+            empty
+            |> add (mk_loc (2, 6) (2, 7)) (LocSet.of_list [mk_loc (2, 1) (2, 2)], Maybe)
+            |> add
+                 (mk_loc (2, 12) (2, 13))
+                 ( LocSet.of_list [mk_loc (2, 1) (2, 2); mk_loc (2, 6) (2, 7)],
+                   Or (And (Truthy, Not Maybe), Truthy) ));
     "logical_nested_right"
     >:: mk_ssa_builder_location_test
           "let x = null;
