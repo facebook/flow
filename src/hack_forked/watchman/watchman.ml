@@ -481,6 +481,10 @@ let has_watchman_restarted_since ~debug_logging ~conn ~watch_root ~clockspec =
               ("since", JSON_String clockspec);
               ("empty_on_fresh_instance", JSON_Bool true);
               ("expression", JSON_Array [JSON_String "name"; JSON_String hard_to_match_name]);
+              (* by default, watchman will wait up to 60s to synchronize with the filesystem.
+                 we don't care about the actual state of anything in this query, only whether
+                 it's a new watchman instance, so set it to 0 *)
+              ("sync_timeout", JSON_Number "0");
             ];
         ])
   in
