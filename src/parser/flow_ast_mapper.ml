@@ -725,7 +725,7 @@ class ['loc] mapper =
     method enum_declaration _loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
       let open Ast.Statement.EnumDeclaration in
       let { id = ident; body; comments } = enum in
-      let id' = this#identifier ident in
+      let id' = this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Const ident in
       let body' = this#enum_body body in
       let comments' = this#syntax_opt comments in
       if ident == id' && body == body' && comments == comments' then

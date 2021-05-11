@@ -398,14 +398,8 @@ let tests =
                  empty
                  |> add (mk_loc (1, 47) (1, 48)) [mk_write (1, 14) (1, 15)]
                  |> add (mk_loc (1, 51) (1, 52)) [mk_write (1, 17) (1, 18)]);
-         (* The following tests are wrong and use ES6/Flow features not yet supported by the ssa builder
-          * These are being compiled here for future reference to be fixed later
-          *)
          "enums"
          >:: mk_ssa_builder_test
                "enum E {A, B}; let a = E.A;"
-               LocMap.(
-                 empty
-                 |> add (mk_loc (1, 5) (1, 6)) [Ssa_api.uninitialized]
-                 |> add (mk_loc (1, 23) (1, 24)) [Ssa_api.uninitialized]);
+               LocMap.(empty |> add (mk_loc (1, 23) (1, 24)) [mk_write (1, 5) (1, 6)]);
        ]
