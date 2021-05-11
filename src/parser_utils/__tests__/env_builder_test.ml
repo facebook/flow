@@ -401,6 +401,30 @@ function f() {
 }"
                (mk_loc (7, 17) (7, 18))
                (LocSet.of_list [mk_loc (3, 6) (3, 7); mk_loc (5, 4) (5, 5); mk_loc (7, 3) (7, 13)]);
+         "constlike_havoc"
+         >:: mk_refiner_of_use_test
+               "
+function invalidate() {}
+
+var x = 10;
+invalidate();
+x;
+x = 20;
+"
+               (mk_loc (6, 0) (6, 1))
+               (LocSet.of_list [mk_loc (4, 4) (4, 5)]);
+         "nonconstlike_havoc"
+         >:: mk_refiner_of_use_test
+               "
+function invalidate() { x = null; }
+
+var x = 10;
+invalidate();
+x;
+x = 20;
+"
+               (mk_loc (6, 0) (6, 1))
+               (LocSet.of_list [mk_loc (2, 24) (2, 25); mk_loc (4, 4) (4, 5); mk_loc (7, 0) (7, 1)]);
          "order1" >:: mk_order_test "let x = 42;
 x;" "1 -> 0";
          "order2" >:: mk_order_test "function f() { g() }

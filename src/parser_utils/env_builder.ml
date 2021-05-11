@@ -56,7 +56,7 @@ module type S = sig
 
   module Ssa_api : Ssa_api.S with module L = L
 
-  module Scope_builder : Scope_builder_sig.S with module L = L
+  module Scope_api : Scope_api_sig.S with module L = L
 
   type refinement_kind =
     | And of refinement_kind * refinement_kind
@@ -84,23 +84,24 @@ module type S = sig
   val program_with_scope :
     ?ignore_toplevel:bool ->
     (L.t, L.t) Flow_ast.Program.t ->
-    Scope_builder.Acc.t * Ssa_api.values * refinement L.LMap.t
+    Scope_api.info * Ssa_api.values * refinement L.LMap.t
 
   val program : (L.t, L.t) Flow_ast.Program.t -> refinement L.LMap.t
 
-  val refiners_of_use :
-    Scope_builder.Acc.t * Ssa_api.values * refinement L.LMap.t -> L.t -> L.LSet.t
+  val refiners_of_use : Scope_api.info * Ssa_api.values * refinement L.LMap.t -> L.t -> L.LSet.t
 end
 
 module Make
     (L : Loc_sig.S)
     (Ssa_api : Ssa_api.S with module L = L)
-    (Scope_builder : Scope_builder_sig.S with module L = L) :
-  S with module L = L and module Ssa_api = Ssa_api and module Scope_builder = Scope_builder = struct
+    (Scope_api : Scope_api_sig.S with module L = Ssa_api.L) :
+  S with module L = L and module Ssa_api = Ssa_api and module Scope_api = Scope_api = struct
   module L = L
   module Ssa_api = Ssa_api
-  module Scope_builder = Scope_builder
+  module Scope_api = Scope_api
+  module Scope_builder = Scope_builder.Make (L) (Scope_api)
   module Ssa_builder = Ssa_builder.Make (L) (Ssa_api) (Scope_builder)
+  module Invalidation_api = Invalidation_api.Make (L) (Scope_api) (Ssa_api)
 
   type refinement_kind =
     | And of refinement_kind * refinement_kind
@@ -129,7 +130,7 @@ module Make
 
   let merge_or (locs1, ref1) (locs2, ref2) = (L.LSet.union locs1 locs2, Or (ref1, ref2))
 
-  class env_builder =
+  class env_builder (prepass_info, prepass_values) =
     object (this)
       inherit Ssa_builder.ssa_builder as super
 
@@ -199,6 +200,24 @@ module Make
           in
           expression_refinement_scopes <- scope' :: scopes
         | _ -> failwith "Tried to add a refinement when no scope was on the stack"
+
+      method! havoc_current_ssa_env ~all =
+        SMap.iter
+          (fun _x { Ssa_builder.val_ref; havoc = { Ssa_builder.Havoc.unresolved; locs } } ->
+            match locs with
+            | loc :: _ when Invalidation_api.should_invalidate ~all prepass_info prepass_values loc
+              ->
+              (* NOTE: havoc_env should already have all writes to x, so the only
+               additional thing that could come from ssa_env is "uninitialized." On
+               the other hand, we *dont* want to include "uninitialized" if it's no
+               longer in ssa_env, since that means that x has been initialized (and
+               there's no going back). *)
+              val_ref := Ssa_builder.Val.merge !val_ref unresolved
+            | [] ->
+              (* If we haven't yet seen a write to this variable, we always havoc *)
+              val_ref := Ssa_builder.Val.merge !val_ref unresolved
+            | _ -> ())
+          ssa_env
 
       method identifier_refinement ((loc, ident) as identifier) =
         ignore @@ this#identifier identifier;
@@ -597,7 +616,8 @@ module Make
   let program_with_scope ?(ignore_toplevel = false) program =
     let open Hoister in
     let (loc, _) = program in
-    let ssa_walk = new env_builder in
+    let prepass = Ssa_builder.program_with_scope ~ignore_toplevel program in
+    let ssa_walk = new env_builder prepass in
     let bindings =
       if ignore_toplevel then
         Bindings.empty
@@ -630,4 +650,4 @@ module Make
     L.LSet.union refi_locs write_locs
 end
 
-module With_Loc = Make (Loc_sig.LocS) (Ssa_api.With_Loc) (Scope_builder.With_Loc)
+module With_Loc = Make (Loc_sig.LocS) (Ssa_api.With_Loc) (Scope_api.With_Loc)

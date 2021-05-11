@@ -5,9 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Make (L : Loc_sig.S) (Scope_api : Scope_api_sig.S with module L = L) = struct
-  module Ssa_api = Ssa_api.Make (L)
-
+module Make
+    (L : Loc_sig.S)
+    (Scope_api : Scope_api_sig.S with module L = L)
+    (Ssa_api : Ssa_api.S with module L = L) =
+struct
   let is_const_like info values loc =
     let uses = Scope_api.uses_of_use info loc in
     (* We consider a binding to be const-like if all reads point to the same
@@ -73,11 +75,11 @@ module Make (L : Loc_sig.S) (Scope_api : Scope_api_sig.S with module L = L) = st
   (* Some variables are unhavocable by making a function call but still can be havoced in other
      situations. `via_call` indicates whether the havocing operation is a call or something
      else (resetting an activation scope, yielding, entering a new scope *)
-  let should_invalidate ~via_call info values loc =
+  let should_invalidate ~all info values loc =
     (not (is_const_like info values loc))
-    && ((not via_call) || (not @@ L.LSet.is_empty (written_by_closure info values loc)))
+    && (all || (not @@ L.LSet.is_empty (written_by_closure info values loc)))
 end
 
-module With_ALoc = Make (Loc_sig.ALocS) (Scope_api.With_ALoc)
-module With_Loc = Make (Loc_sig.LocS) (Scope_api.With_Loc)
+module With_ALoc = Make (Loc_sig.ALocS) (Scope_api.With_ALoc) (Ssa_api.With_ALoc)
+module With_Loc = Make (Loc_sig.LocS) (Scope_api.With_Loc) (Ssa_api.With_Loc)
 include With_ALoc
