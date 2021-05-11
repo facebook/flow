@@ -54,9 +54,9 @@ let mk_ssa_builder_location_test contents expected_values ctxt =
     expected_values
     refined_reads
 
-let mk_refiner_of_use_test contents target_loc expected_values ctxt =
+let mk_source_of_use_test contents target_loc expected_values ctxt =
   let info = Env_builder.With_Loc.program_with_scope ~ignore_toplevel:false (parse contents) in
-  let locs = Env_builder.With_Loc.refiners_of_use info target_loc in
+  let locs = Env_builder.With_Loc.sources_of_use info target_loc in
 
   assert_equal
     ~ctxt
@@ -68,9 +68,8 @@ let mk_refiner_of_use_test contents target_loc expected_values ctxt =
 
 let mk_order_test contents expected_values ctxt =
   let ((_, { Flow_ast.Program.statements; _ }) as program) = parse contents in
-  let (scope, _) = Provider_api.LocProviders.find_providers program in
   let info = Env_builder.With_Loc.program_with_scope ~ignore_toplevel:false program in
-  let stmt_deps = Order_builder.With_Loc.calc_index_deps info scope statements in
+  let stmt_deps = Order_builder.With_Loc.calc_index_deps info statements in
   let deps =
     Base.List.map stmt_deps ~f:(fun (i, js) ->
         ISet.elements js |> Base.List.map ~f:(Printf.sprintf "%d -> %d" i))
@@ -383,14 +382,14 @@ let x = null;
                "let x = undefined;
 (x === -3) && x"
                LocMap.(empty |> add (mk_loc (2, 14) (2, 15)) (SingletonNumR "-3"));
-         "refiner_of_use_1"
-         >:: mk_refiner_of_use_test
+         "source_of_use_1"
+         >:: mk_source_of_use_test
                "let x = 42;
 (x && x)"
                (mk_loc (2, 6) (2, 7))
                (LocSet.of_list [mk_loc (1, 4) (1, 5); mk_loc (2, 1) (2, 2)]);
-         "refiner_of_use_2"
-         >:: mk_refiner_of_use_test
+         "source_of_use_2"
+         >:: mk_source_of_use_test
                "
 function f() {
   let x = 42;
@@ -402,29 +401,31 @@ function f() {
                (mk_loc (7, 17) (7, 18))
                (LocSet.of_list [mk_loc (3, 6) (3, 7); mk_loc (5, 4) (5, 5); mk_loc (7, 3) (7, 13)]);
          "constlike_havoc"
-         >:: mk_refiner_of_use_test
+         >:: mk_source_of_use_test
                "
 function invalidate() {}
 
 var x = 10;
+x = 4;
 invalidate();
 x;
 x = 20;
 "
-               (mk_loc (6, 0) (6, 1))
-               (LocSet.of_list [mk_loc (4, 4) (4, 5)]);
+               (mk_loc (7, 0) (7, 1))
+               (LocSet.of_list [mk_loc (5, 0) (5, 1)]);
          "nonconstlike_havoc"
-         >:: mk_refiner_of_use_test
+         >:: mk_source_of_use_test
                "
 function invalidate() { x = null; }
 
 var x = 10;
+x = 4;
 invalidate();
 x;
 x = 20;
 "
-               (mk_loc (6, 0) (6, 1))
-               (LocSet.of_list [mk_loc (2, 24) (2, 25); mk_loc (4, 4) (4, 5); mk_loc (7, 0) (7, 1)]);
+               (mk_loc (7, 0) (7, 1))
+               (LocSet.of_list [mk_loc (4, 4) (4, 5)]);
          "order1" >:: mk_order_test "let x = 42;
 x;" "1 -> 0";
          "order2" >:: mk_order_test "function f() { g() }

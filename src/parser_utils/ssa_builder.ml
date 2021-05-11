@@ -451,6 +451,15 @@ struct
         end;
         super#identifier ident
 
+      (* Needed because a child class, Env_builder, is going to override the specific
+         behavior of pattern_identifier from the Ssa_builder, but still needs to depend
+         on the Scope_builder behavior *)
+      method super_pattern_identifier
+          ?(kind : Ast.Statement.VariableDeclaration.kind option)
+          (ident : (L.t, L.t) Ast.Identifier.t) =
+        ignore kind;
+        super#identifier ident
+
       (* read *)
       method any_identifier (loc : L.t) (x : string) =
         match SMap.find_opt x ssa_env with

@@ -58,6 +58,8 @@ module type S = sig
 
   module Scope_api : Scope_api_sig.S with module L = L
 
+  module Provider_api : Provider_api.S with module L = L
+
   type refinement_kind =
     | And of refinement_kind * refinement_kind
     | Or of refinement_kind * refinement_kind
@@ -84,11 +86,12 @@ module type S = sig
   val program_with_scope :
     ?ignore_toplevel:bool ->
     (L.t, L.t) Flow_ast.Program.t ->
-    Scope_api.info * Ssa_api.values * refinement L.LMap.t
+    Scope_api.info * Ssa_api.values * refinement L.LMap.t * Provider_api.env
 
   val program : (L.t, L.t) Flow_ast.Program.t -> refinement L.LMap.t
 
-  val refiners_of_use : Scope_api.info * Ssa_api.values * refinement L.LMap.t -> L.t -> L.LSet.t
+  val sources_of_use :
+    Scope_api.info * Ssa_api.values * refinement L.LMap.t * Provider_api.env -> L.t -> L.LSet.t
 end
 
 module Make
@@ -102,6 +105,7 @@ module Make
   module Scope_builder = Scope_builder.Make (L) (Scope_api)
   module Ssa_builder = Ssa_builder.Make (L) (Ssa_api) (Scope_builder)
   module Invalidation_api = Invalidation_api.Make (L) (Scope_api) (Ssa_api)
+  module Provider_api = Provider_api.Make (L)
 
   type refinement_kind =
     | And of refinement_kind * refinement_kind
@@ -130,7 +134,7 @@ module Make
 
   let merge_or (locs1, ref1) (locs2, ref2) = (L.LSet.union locs1 locs2, Or (ref1, ref2))
 
-  class env_builder (prepass_info, prepass_values) =
+  class env_builder (prepass_info, prepass_values) (provider_info, _) =
     object (this)
       inherit Ssa_builder.ssa_builder as super
 
@@ -212,10 +216,10 @@ module Make
                the other hand, we *dont* want to include "uninitialized" if it's no
                longer in ssa_env, since that means that x has been initialized (and
                there's no going back). *)
-              val_ref := Ssa_builder.Val.merge !val_ref unresolved
+              val_ref := unresolved
             | [] ->
               (* If we haven't yet seen a write to this variable, we always havoc *)
-              val_ref := Ssa_builder.Val.merge !val_ref unresolved
+              val_ref := unresolved
             | _ -> ())
           ssa_env
 
@@ -603,6 +607,21 @@ module Make
         this#merge_self_ssa_env env1;
         expr
 
+      method! pattern_identifier ?kind ident =
+        let open Ssa_builder in
+        let (loc, { Flow_ast.Identifier.name = x; comments = _ }) = ident in
+        begin
+          match SMap.find_opt x ssa_env with
+          | Some { val_ref; havoc } ->
+            val_ref := Val.one loc;
+            Havoc.(
+              havoc.locs <-
+                Base.Option.value_exn (Provider_api.providers_of_def provider_info loc)
+                |> L.LSet.elements)
+          | _ -> ()
+        end;
+        super#super_pattern_identifier ?kind ident
+
       (* This method is called during every read of an identifier. We need to ensure that
        * if the identifier is refined that we record the refiner as the write that reaches
        * this read *)
@@ -617,7 +636,8 @@ module Make
     let open Hoister in
     let (loc, _) = program in
     let prepass = Ssa_builder.program_with_scope ~ignore_toplevel program in
-    let ssa_walk = new env_builder prepass in
+    let providers = Provider_api.find_providers program in
+    let ssa_walk = new env_builder prepass providers in
     let bindings =
       if ignore_toplevel then
         Bindings.empty
@@ -626,13 +646,13 @@ module Make
         hoist#eval hoist#program program
     in
     ignore @@ ssa_walk#with_bindings loc bindings ssa_walk#program program;
-    (ssa_walk#acc, ssa_walk#values, ssa_walk#refined_reads)
+    (ssa_walk#acc, ssa_walk#values, ssa_walk#refined_reads, providers)
 
   let program program =
-    let (_, _, refined_reads) = program_with_scope ~ignore_toplevel:false program in
+    let (_, _, refined_reads, _) = program_with_scope ~ignore_toplevel:false program in
     refined_reads
 
-  let refiners_of_use (_, vals, refis) loc =
+  let sources_of_use (_, vals, refis, _) loc =
     let write_locs =
       L.LMap.find_opt loc vals
       |> Base.Option.value_map
