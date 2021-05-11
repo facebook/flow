@@ -3,6 +3,6 @@
 export type T = string;
 
 
-module.exports = true;
+export const x = true;
 
 (null: string);

@@ -3,6 +3,6 @@
 export type T = boolean;
 
 
-module.exports = true;
+export const x = true;
 
 (null: string);
