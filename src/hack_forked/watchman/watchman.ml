@@ -502,20 +502,19 @@ let has_watchman_restarted_since ~debug_logging ~conn ~watch_root ~clockspec =
             ];
         ])
   in
-  let%lwt response = request_exn ~debug_logging ~conn query in
-  let result =
-    match Hh_json_helpers.Jget.bool_opt (Some response) "is_fresh_instance" with
-    | Some has_restarted -> Ok has_restarted
+  match%lwt request ~debug_logging ~conn query with
+  | Ok response ->
+    (match Hh_json_helpers.Jget.bool_opt (Some response) "is_fresh_instance" with
+    | Some has_restarted -> Lwt.return (Ok has_restarted)
     | None ->
       (* The response to this query **always** should include the `is_fresh_instance` boolean
        * property. If it is missing then something has gone wrong with Watchman. Since we can't
        * prove that Watchman has not restarted, we must treat this as an error. *)
-      Error
-        (spf
-           "Invalid Watchman response to `empty_on_fresh_instance` query:\n%s"
-           (Hh_json.json_to_string ~pretty:true response))
-  in
-  Lwt.return result
+      let msg = "Expected an is_fresh_instance property" in
+      let request = Some (Hh_json.json_to_string query) in
+      let response = Hh_json.json_to_string response in
+      Lwt.return (Error (Response_error { request; response; msg })))
+  | Error _ as err -> Lwt.return err
 
 let prepend_relative_path_term ~relative_path ~terms =
   match terms with
@@ -544,9 +543,7 @@ let get_clockspec ~debug_logging ~conn ~watch_root prior_clockspec =
       Hh_logger.error "Watchman server restarted so we may have missed some updates";
       raise Watchman_restarted
     | Ok false -> Lwt.return clockspec
-    | Error err ->
-      Hh_logger.error "%s" err;
-      raise Exit.(Exit_with Watchman_failed))
+    | Error err -> raise_error err)
   | None ->
     let%lwt response = request_exn ~debug_logging ~conn (clock watch_root) in
     Lwt.return (J.get_string_val "clock" response)
