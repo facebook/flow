@@ -815,7 +815,7 @@ module Options_flags = struct
     temp_dir: string option;
     traces: int option;
     trust_mode: Options.trust_mode option;
-    new_check: bool;
+    new_check: bool option;
     abstract_locations: bool;
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
@@ -946,7 +946,7 @@ let options_flags =
              ( "The maximum time in seconds to attempt to typecheck a file or cycle of files. "
              ^ "0 means no timeout (default: 100)" )
            ~env:"FLOW_MERGE_TIMEOUT"
-      |> flag "--new-check" no_arg ~doc:""
+      |> flag "--new-check" (optional bool) ~doc:"" ~env:"FLOW_NEW_CHECK"
       |> flag
            "--abstract-locations"
            no_arg
@@ -1198,7 +1198,9 @@ let make_options
     in
     Base.Option.value lazy_mode ~default
   in
-  let opt_new_check = options_flags.new_check || FlowConfig.new_check flowconfig in
+  let opt_new_check =
+    Base.Option.value options_flags.new_check ~default:(FlowConfig.new_check flowconfig)
+  in
   let opt_abstract_locations =
     options_flags.abstract_locations
     || Base.Option.value (FlowConfig.abstract_locations flowconfig) ~default:true

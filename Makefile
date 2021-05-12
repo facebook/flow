@@ -87,6 +87,7 @@ MODULES=\
   src/common\
   src/common/audit\
   src/common/build_id\
+  src/common/cycle_hash\
   src/common/errors\
   src/common/exit\
   src/common/exit_status\
