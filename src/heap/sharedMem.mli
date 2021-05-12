@@ -371,4 +371,26 @@ module NewAPI : sig
   val read_pattern_def : pattern_def addr -> string
 
   val read_pattern : pattern addr -> string
+
+  (* hashes *)
+
+  val read_type_export_hash : type_export addr -> int64
+
+  val read_cjs_exports_hash : cjs_exports addr -> int64
+
+  val read_cjs_module_hash : cjs_module_info addr -> int64
+
+  val read_es_export_hash : es_export addr -> int64
+
+  val read_es_module_hash : es_module_info addr -> int64
+
+  val write_type_export_hash : type_export addr -> int64 -> unit
+
+  val write_cjs_exports_hash : cjs_exports addr -> int64 -> unit
+
+  val write_cjs_module_hash : cjs_module_info addr -> int64 -> unit
+
+  val write_es_export_hash : es_export addr -> int64 -> unit
+
+  val write_es_module_hash : es_module_info addr -> int64 -> unit
 end
