@@ -612,21 +612,6 @@ let re_init
     | Ok result -> Lwt.return result
     | Error err -> raise_error err
   in
-  (* The failed_paths are likely includes which don't exist on the filesystem, so watch_project
-   * returned an error. Let's do a best effort attempt to infer the watch root and relative
-   * path for each bad include *)
-  let watched_path_expression_terms =
-    SSet.fold
-      (fun path terms ->
-        String_utils.(
-          match SSet.find_first_opt (fun root -> string_starts_with path root) watch_roots with
-          | None -> failwith (spf "Cannot deduce watch root for path %s" path)
-          | Some root ->
-            let relative_path = lstrip (lstrip path root) Caml.Filename.dir_sep in
-            prepend_relative_path_term ~relative_path ~terms))
-      failed_paths
-      watched_path_expression_terms
-  in
   (* All of our watched paths should have the same watch root. Let's assert that *)
   let watch_root =
     match SSet.elements watch_roots with
@@ -638,10 +623,25 @@ let re_init
            "Can't watch paths across multiple Watchman watch_roots. Found %d watch_roots"
            (SSet.cardinal watch_roots))
   in
-  let%lwt clockspec = get_clockspec ~debug_logging ~conn ~watch_root prior_clockspec in
+  (* The failed_paths are likely includes which don't exist on the filesystem, so watch_project
+   * returned an error. Let's do a best effort attempt to infer the relative
+   * path for each bad include *)
+  let watched_path_expression_terms =
+    SSet.fold
+      (fun path terms ->
+        let open String_utils in
+        if string_starts_with path watch_root then
+          let relative_path = lstrip (lstrip path watch_root) Caml.Filename.dir_sep in
+          prepend_relative_path_term ~relative_path ~terms
+        else
+          failwith (spf "Cannot deduce watch root for path %s" path))
+      failed_paths
+      watched_path_expression_terms
+  in
   let watched_path_expression_terms =
     Option.map watched_path_expression_terms ~f:(J.pred "anyof")
   in
+  let%lwt clockspec = get_clockspec ~debug_logging ~conn ~watch_root prior_clockspec in
   let env =
     {
       settings =
