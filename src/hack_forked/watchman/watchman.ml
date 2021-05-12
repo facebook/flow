@@ -35,6 +35,8 @@ type error_severity =
   | Fresh_instance
   | Subscription_canceled
   | Restarted
+  | Unknown_watch_root of { path: string }
+  | Unsupported_watch_roots of { roots: string list }
 
 let log_error ?request ?response msg =
   let response = Option.map ~f:(String_utils.truncate 100000) response in
@@ -62,6 +64,21 @@ let raise_error = function
   | Restarted ->
     Hh_logger.error "Watchman server restarted so we may have missed some updates";
     raise Watchman_restarted
+  | Unknown_watch_root { path } ->
+    let msg = spf "Cannot deduce watch root for path %s" path in
+    EventLogger.watchman_error msg;
+    failwith msg
+  | Unsupported_watch_roots { roots } ->
+    let msg =
+      match roots with
+      | [] -> "Cannot run watchman with fewer than 1 root"
+      | _ ->
+        spf
+          "Can't watch paths across multiple Watchman watch_roots. Found %d watch_roots"
+          (List.length roots)
+    in
+    EventLogger.watchman_error msg;
+    failwith msg
 
 type subscribe_mode =
   | All_changes
@@ -597,42 +614,41 @@ let watch_paths ~debug_logging ~conn paths =
     ~init:(Some [], SSet.empty, SSet.empty)
     paths
 
-let watch ~debug_logging ~conn roots =
-  let%lwt (watched_path_expression_terms, watch_roots, failed_paths) =
-    match%lwt watch_paths ~debug_logging ~conn roots with
-    | Ok result -> Lwt.return result
-    | Error err -> raise_error err
-  in
-  (* All of our watched paths should have the same watch root. Let's assert that *)
-  let watch_root =
-    match SSet.elements watch_roots with
-    | [] -> failwith "Cannot run watchman with fewer than 1 root"
-    | [watch_root] -> watch_root
-    | _ ->
-      failwith
-        (spf
-           "Can't watch paths across multiple Watchman watch_roots. Found %d watch_roots"
-           (SSet.cardinal watch_roots))
-  in
+let watch =
   (* The failed_paths are likely includes which don't exist on the filesystem, so watch_project
-   * returned an error. Let's do a best effort attempt to infer the relative
-   * path for each bad include *)
-  let watched_path_expression_terms =
-    SSet.fold
-      (fun path terms ->
+    returned an error. Let's do a best effort attempt to infer the relative path for each bad
+    include. *)
+  let guess_missing_relative_paths terms watch_root failed_paths =
+    let failed_paths = SSet.elements failed_paths in
+    List.fold_result
+      ~f:(fun terms path ->
         let open String_utils in
         if string_starts_with path watch_root then
           let relative_path = lstrip (lstrip path watch_root) Caml.Filename.dir_sep in
-          prepend_relative_path_term ~relative_path ~terms
+          Ok (prepend_relative_path_term ~relative_path ~terms)
         else
-          failwith (spf "Cannot deduce watch root for path %s" path))
+          Error (Unknown_watch_root { path }))
+      ~init:terms
       failed_paths
-      watched_path_expression_terms
   in
-  let watched_path_expression_terms =
-    Option.map watched_path_expression_terms ~f:(J.pred "anyof")
+  (* All of our watched paths should have the same watch root. Let's assert that *)
+  let consolidate_watch_roots watch_roots =
+    match SSet.elements watch_roots with
+    | [watch_root] -> Ok watch_root
+    | roots -> Error (Unsupported_watch_roots { roots })
   in
-  Lwt.return { watch_root; watched_path_expression_terms }
+  fun ~debug_logging ~conn roots ->
+    match%lwt watch_paths ~debug_logging ~conn roots with
+    | Ok (terms, watch_roots, failed_paths) ->
+      (match consolidate_watch_roots watch_roots with
+      | Ok watch_root ->
+        (match guess_missing_relative_paths terms watch_root failed_paths with
+        | Ok terms ->
+          let watched_path_expression_terms = Option.map terms ~f:(J.pred "anyof") in
+          Lwt.return (Ok { watch_root; watched_path_expression_terms })
+        | Error _ as err -> Lwt.return err)
+      | Error _ as err -> Lwt.return err)
+    | Error _ as err -> Lwt.return err
 
 let re_init
     ?prior_clockspec
@@ -651,7 +667,11 @@ let re_init
     | Ok conn -> Lwt.return conn
     | Error err -> raise_error err
   in
-  let%lwt watch = watch ~debug_logging ~conn roots in
+  let%lwt watch =
+    match%lwt watch ~debug_logging ~conn roots with
+    | Ok watch -> Lwt.return watch
+    | Error err -> raise_error err
+  in
   let%lwt clockspec = get_clockspec ~debug_logging ~conn ~watch prior_clockspec in
   let env =
     {
