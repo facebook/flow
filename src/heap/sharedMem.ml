@@ -841,6 +841,8 @@ module NewAPI = struct
 
   type 'a addr_tbl
 
+  type 'a opt
+
   type checked_file
 
   type exports
@@ -935,9 +937,7 @@ module NewAPI = struct
 
   let exports_size def = string_size def
 
-  let export_def_size = function
-    | None -> 0
-    | Some def -> string_size def
+  let export_def_size def = string_size def
 
   let module_ref_size ref = string_size ref
 
@@ -966,7 +966,7 @@ module NewAPI = struct
     mk_header Exports_tag size
 
   let export_def_header def =
-    let size = export_def_size (Some def) in
+    let size = export_def_size def in
     mk_header Export_def_tag size
 
   let module_ref_header ref =
@@ -1054,13 +1054,15 @@ module NewAPI = struct
 
   let read_addr_tbl f addr = read_addr_tbl_generic f addr Array.init
 
-  let read_exports addr = read_string_generic Exports_tag addr
-
-  let read_export_def addr =
+  let read_opt f addr =
     if addr = null_addr then
       None
     else
-      Some (read_string_generic Export_def_tag addr)
+      Some (f addr)
+
+  let read_exports addr = read_string_generic Exports_tag addr
+
+  let read_export_def addr = read_string_generic Export_def_tag addr
 
   let read_module_ref addr = read_string_generic Module_ref_tag addr
 
@@ -1164,12 +1166,10 @@ module NewAPI = struct
     unsafe_write_string chunk exports;
     heap_exports
 
-  let write_export_def chunk = function
-    | None -> null_addr
-    | Some def ->
-      let heap_def = write_header chunk (export_def_header def) in
-      unsafe_write_string chunk def;
-      heap_def
+  let write_export_def chunk def =
+    let heap_def = write_header chunk (export_def_header def) in
+    unsafe_write_string chunk def;
+    heap_def
 
   let write_module_ref chunk ref =
     let heap_ref = write_header chunk (module_ref_header ref) in
@@ -1206,4 +1206,8 @@ module NewAPI = struct
         unsafe_write_addr_at chunk.heap (map + header_size + i) addr)
       xs;
     map
+
+  let write_opt f chunk = function
+    | None -> null_addr
+    | Some x -> f chunk x
 end
