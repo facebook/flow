@@ -38,6 +38,8 @@ module TypeSigHeap =
 
 type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
 
+type checked_file_addr = Heap.checked_file SharedMem.addr
+
 let write_type_sig type_sig =
   let open Type_sig_collections in
   let {
@@ -293,6 +295,8 @@ module type READER = sig
 
   val get_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.t
 
+  val get_type_sig_addr_unsafe : reader:reader -> File_key.t -> checked_file_addr
+
   val get_type_sig_unsafe : reader:reader -> File_key.t -> type_sig
 
   val get_file_hash_unsafe : reader:reader -> File_key.t -> Xx.hash
@@ -364,6 +368,11 @@ end = struct
     match get_file_sig ~reader file with
     | Some file_sig -> file_sig
     | None -> raise (Requires_not_found (File_key.to_string file))
+
+  let get_type_sig_addr_unsafe ~reader:_ file =
+    match TypeSigHeap.get file with
+    | Some addr -> addr
+    | None -> raise (Type_sig_not_found (File_key.to_string file))
 
   let get_type_sig_unsafe ~reader:_ file =
     match TypeSigHeap.get file with
@@ -512,13 +521,14 @@ module Reader : READER with type reader = State_reader.t = struct
     else
       FileSigHeap.get key
 
-  let get_type_sig ~reader:_ key =
-    let addr_opt =
-      if should_use_oldified key then
-        TypeSigHeap.get_old key
-      else
-        TypeSigHeap.get key
-    in
+  let get_type_sig_addr ~reader:_ key =
+    if should_use_oldified key then
+      TypeSigHeap.get_old key
+    else
+      TypeSigHeap.get key
+
+  let get_type_sig ~reader key =
+    let addr_opt = get_type_sig_addr ~reader key in
     Base.Option.map ~f:read_type_sig addr_opt
 
   let get_file_hash ~reader:_ key =
@@ -551,6 +561,11 @@ module Reader : READER with type reader = State_reader.t = struct
     match get_file_sig ~reader file with
     | Some file_sig -> file_sig
     | None -> raise (Requires_not_found (File_key.to_string file))
+
+  let get_type_sig_addr_unsafe ~reader file =
+    match get_type_sig_addr ~reader file with
+    | Some addr -> addr
+    | None -> raise (Type_sig_not_found (File_key.to_string file))
 
   let get_type_sig_unsafe ~reader file =
     match get_type_sig ~reader file with
@@ -625,6 +640,11 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_file_sig_unsafe ~reader
     | State_reader reader -> Reader.get_file_sig_unsafe ~reader
+
+  let get_type_sig_addr_unsafe ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_type_sig_addr_unsafe ~reader
+    | State_reader reader -> Reader.get_type_sig_addr_unsafe ~reader
 
   let get_type_sig_unsafe ~reader =
     match reader with
