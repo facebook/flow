@@ -43,7 +43,7 @@ type node = {
   (* the number of leaders this node is currently blocking on *)
   mutable blocking: int;
   mutable recheck: bool;
-  has_old_sig_cx: bool;
+  has_old_state: bool;
   size: int;
 }
 
@@ -99,16 +99,21 @@ let create ~num_workers ~reader ~sig_dependency_graph ~leader_map ~component_map
     FilenameMap.mapi
       (fun leader component ->
         (* This runs after we have oldified the files to be merged, so we have to check if there
-         * is an old version of the sig cx to get useful results. *)
-        let has_old_sig_cx = Context_heaps.Mutator_reader.sig_cx_mem_old ~reader leader in
+         * is an old version of the state to get useful results. We check for the old leader state
+         * instead of sig context because new check mode does not store sig contexts, but both modes
+         * store leader information during merge. *)
+        let has_old_state = Context_heaps.Mutator_reader.leader_mem_old ~reader leader in
+        (* If this node has no old state, we need to force it to be merged. This can happen
+         * when we load sig hashes from the saved state. *)
+        let recheck = FilenameSet.mem leader recheck_leader_set || not has_old_state in
         {
           component;
           (* computed later *)
           dependents = FilenameMap.empty;
           (* computed later *)
           blocking = 0;
-          recheck = FilenameSet.mem leader recheck_leader_set;
-          has_old_sig_cx;
+          recheck;
+          has_old_state;
           size = Nel.length component;
         })
       component_map
@@ -220,7 +225,7 @@ let merge ~master_mutator stream =
       (* If the new sighash is different from the old one, mark the component as new or changed.
        * This gets used downstream to drive recheck opts for the check phase. *)
       mark_new_or_changed node
-    else if node.has_old_sig_cx then
+    else if node.has_old_state then
       (* If the new sighash is the same as the old one, AND there was previously a sig cx for
        * this component, then revive it, since the newly computed sig cx was not written (see
        * Context_heaps.add_merge_on_diff). *)
@@ -250,9 +255,7 @@ let merge ~master_mutator stream =
     if node.blocking = 0 then (
       stream.blocked_components <- stream.blocked_components - 1;
       stream.blocked_files <- stream.blocked_files - node.size;
-      (* If this node has no old sig context, we need to force it to be merged. This can happen
-       * when we load sig hashes from the saved state. *)
-      if node.recheck || not node.has_old_sig_cx then
+      if node.recheck then
         add_ready node stream
       else
         skip node
