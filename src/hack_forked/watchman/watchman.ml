@@ -32,6 +32,8 @@ type error_severity =
       response: string;
       msg: string;
     }
+  | Fresh_instance
+  | Subscription_canceled
 
 let log_error ?request ?response msg =
   let response = Option.map ~f:(String_utils.truncate 100000) response in
@@ -50,6 +52,12 @@ let raise_error = function
   | Response_error { request; response; msg } ->
     let () = log_error ?request ~response msg in
     raise (Watchman_error msg)
+  | Fresh_instance ->
+    Hh_logger.log "Watchman server is fresh instance. Exiting.";
+    raise Exit.(Exit_with Watchman_fresh_instance)
+  | Subscription_canceled ->
+    EventLogger.watchman_error "Subscription canceled by watchman";
+    raise Subscription_canceled_by_watchman
 
 type subscribe_mode =
   | All_changes
@@ -797,12 +805,12 @@ let extract_mergebase data =
 
 let make_mergebase_changed_response env data =
   match extract_mergebase data with
-  | None -> Error "Failed to extract mergebase"
+  | None -> None
   | Some (clock, mergebase) ->
     let files = extract_file_names env data in
     env.clockspec <- clock;
     let response = Changed_merge_base (mergebase, files, clock) in
-    Ok (env, response)
+    Some (env, response)
 
 let subscription_is_cancelled data =
   match Jget.bool_opt (Some data) "canceled" with
@@ -813,22 +821,20 @@ let subscription_is_cancelled data =
 
 let transform_asynchronous_get_changes_response env data =
   match make_mergebase_changed_response env data with
-  | Ok (env, response) -> (env, response)
-  | Error _ ->
-    if is_fresh_instance data then (
-      Hh_logger.log "Watchman server is fresh instance. Exiting.";
-      raise Exit.(Exit_with Watchman_fresh_instance)
-    ) else if subscription_is_cancelled data then (
-      EventLogger.watchman_error "Subscription canceled by watchman";
-      raise Subscription_canceled_by_watchman
-    ) else (
+  | Some (env, response) -> Ok (env, response)
+  | None ->
+    if is_fresh_instance data then
+      Error Fresh_instance
+    else if subscription_is_cancelled data then
+      Error Subscription_canceled
+    else (
       env.clockspec <- Jget.string_exn (Some data) "clock";
       match Jget.string_opt (Some data) "state-enter" with
-      | Some state -> (env, make_state_change_response `Enter state data)
+      | Some state -> Ok (env, make_state_change_response `Enter state data)
       | None ->
         (match Jget.string_opt (Some data) "state-leave" with
-        | Some state -> (env, make_state_change_response `Leave state data)
-        | None -> (env, Files_changed (extract_file_names env data)))
+        | Some state -> Ok (env, make_state_change_response `Leave state data)
+        | None -> Ok (env, Files_changed (extract_file_names env data)))
     )
 
 let get_changes instance =
@@ -840,8 +846,9 @@ let get_changes instance =
       let debug_logging = env.settings.debug_logging in
       match%lwt blocking_read ~debug_logging ~conn:env.conn with
       | Ok response ->
-        let (env, result) = transform_asynchronous_get_changes_response env response in
-        Lwt.return (env, Watchman_pushed result)
+        (match transform_asynchronous_get_changes_response env response with
+        | Ok (env, result) -> Lwt.return (env, Watchman_pushed result)
+        | Error err -> raise_error err)
       | Error err -> raise_error err)
 
 let get_mergebase_and_changes instance =
@@ -866,6 +873,8 @@ let get_mergebase_and_changes instance =
 
 module Testing = struct
   type nonrec env = env
+
+  type nonrec error_severity = error_severity
 
   let test_settings =
     {
