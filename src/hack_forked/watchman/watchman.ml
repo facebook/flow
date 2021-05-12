@@ -157,6 +157,14 @@ let catch ~f ~catch =
 (** This number is totally arbitrary. Just need some cap. *)
 let max_reinit_attempts = 8
 
+(** Watchman watches a single root folder, and we may only care about some paths
+    within it. All queries have to be against the root, and include terms to
+    limit it to just the sub-paths we want. *)
+type watch = {
+  watch_root: string;
+  watched_path_expression_terms: Hh_json.json option;
+}
+
 type dead_env = {
   (* Will reuse original settings to reinitializing watchman subscription. *)
   prior_settings: init_settings;
@@ -175,8 +183,7 @@ type env = {
   conn: conn;
   settings: init_settings;
   subscription: string;
-  watch_root: string;
-  watched_path_expression_terms: Hh_json.json option;
+  watch: watch;
 }
 
 let dead_env_from_alive env =
@@ -190,7 +197,7 @@ let dead_env_from_alive env =
      * server had to be started. See also "is_fresh_instance" on watchman's
      * "since" response. *)
     prior_clockspec = env.clockspec;
-    prior_watch_root = env.watch_root;
+    prior_watch_root = env.watch.watch_root;
   }
 
 type watchman_instance =
@@ -216,7 +223,7 @@ let project_bool m =
   | Ok (v, _) -> v
   | Error _ -> false
 
-let clock root = J.strlist ["clock"; root]
+let clock { watch_root; _ } = J.strlist ["clock"; watch_root]
 
 type watch_command =
   | Subscribe
@@ -231,7 +238,7 @@ let request_json ?(extra_kv = []) ?(extra_expressions = []) watchman_command env
       | Query -> "query"
     in
     let header =
-      [JSON_String command; JSON_String env.watch_root]
+      [JSON_String command; JSON_String env.watch.watch_root]
       @
       match watchman_command with
       | Subscribe -> [JSON_String env.subscription]
@@ -239,7 +246,7 @@ let request_json ?(extra_kv = []) ?(extra_expressions = []) watchman_command env
     in
     let expressions = extra_expressions @ env.settings.expression_terms in
     let expressions =
-      match env.watched_path_expression_terms with
+      match env.watch.watched_path_expression_terms with
       | Some terms -> terms :: expressions
       | None -> expressions
     in
@@ -547,11 +554,11 @@ let prepend_relative_path_term ~relative_path ~terms =
     Some (J.strlist ["dirname"; relative_path] :: J.strlist ["name"; relative_path] :: terms)
 
 (** Gets the clockspec. Uses the clockspec from the prior connection if one exists. *)
-let get_clockspec ~debug_logging ~conn ~watch_root prior_clockspec =
+let get_clockspec ~debug_logging ~conn ~watch prior_clockspec =
   match prior_clockspec with
   | Some clockspec -> Lwt.return clockspec
   | None ->
-    let%lwt response = request_exn ~debug_logging ~conn (clock watch_root) in
+    let%lwt response = request_exn ~debug_logging ~conn (clock watch) in
     Lwt.return (J.get_string_val "clock" response)
 
 (** Watch this root
@@ -590,23 +597,7 @@ let watch_paths ~debug_logging ~conn paths =
     ~init:(Some [], SSet.empty, SSet.empty)
     paths
 
-let re_init
-    ?prior_clockspec
-    {
-      debug_logging;
-      defer_states;
-      expression_terms;
-      mergebase_with;
-      roots;
-      subscribe_mode;
-      subscription_prefix;
-      sync_timeout;
-    } =
-  let%lwt conn =
-    match%lwt open_connection () with
-    | Ok conn -> Lwt.return conn
-    | Error err -> raise_error err
-  in
+let watch ~debug_logging ~conn roots =
   let%lwt (watched_path_expression_terms, watch_roots, failed_paths) =
     match%lwt watch_paths ~debug_logging ~conn roots with
     | Ok result -> Lwt.return result
@@ -641,7 +632,27 @@ let re_init
   let watched_path_expression_terms =
     Option.map watched_path_expression_terms ~f:(J.pred "anyof")
   in
-  let%lwt clockspec = get_clockspec ~debug_logging ~conn ~watch_root prior_clockspec in
+  Lwt.return { watch_root; watched_path_expression_terms }
+
+let re_init
+    ?prior_clockspec
+    {
+      debug_logging;
+      defer_states;
+      expression_terms;
+      mergebase_with;
+      roots;
+      subscribe_mode;
+      subscription_prefix;
+      sync_timeout;
+    } =
+  let%lwt conn =
+    match%lwt open_connection () with
+    | Ok conn -> Lwt.return conn
+    | Error err -> raise_error err
+  in
+  let%lwt watch = watch ~debug_logging ~conn roots in
+  let%lwt clockspec = get_clockspec ~debug_logging ~conn ~watch prior_clockspec in
   let env =
     {
       settings =
@@ -656,8 +667,7 @@ let re_init
           sync_timeout;
         };
       conn;
-      watch_root;
-      watched_path_expression_terms;
+      watch;
       clockspec;
       subscription = Printf.sprintf "%s.%d" subscription_prefix (Unix.getpid ());
     }
@@ -692,7 +702,7 @@ let extract_file_names env json =
          [])
   |> List.map ~f:(fun json ->
          let s = Hh_json.get_string_exn json in
-         let abs = Caml.Filename.concat env.watch_root s in
+         let abs = Caml.Filename.concat env.watch.watch_root s in
          abs)
   |> SSet.of_list
 
@@ -913,10 +923,13 @@ module Testing = struct
       {
         settings = test_settings;
         conn;
-        watch_root = "/path/to/root";
         clockspec = "";
-        watched_path_expression_terms =
-          Some (J.pred "anyof" [J.strlist ["dirname"; "foo"]; J.strlist ["name"; "foo"]]);
+        watch =
+          {
+            watch_root = "/path/to/root";
+            watched_path_expression_terms =
+              Some (J.pred "anyof" [J.strlist ["dirname"; "foo"]; J.strlist ["name"; "foo"]]);
+          };
         subscription = "dummy_prefix.123456789";
       }
 
