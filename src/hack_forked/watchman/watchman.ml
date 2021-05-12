@@ -34,6 +34,7 @@ type error_severity =
     }
   | Fresh_instance
   | Subscription_canceled
+  | Restarted
 
 let log_error ?request ?response msg =
   let response = Option.map ~f:(String_utils.truncate 100000) response in
@@ -58,6 +59,9 @@ let raise_error = function
   | Subscription_canceled ->
     EventLogger.watchman_error "Subscription canceled by watchman";
     raise Subscription_canceled_by_watchman
+  | Restarted ->
+    Hh_logger.error "Watchman server restarted so we may have missed some updates";
+    raise Watchman_restarted
 
 type subscribe_mode =
   | All_changes
@@ -159,6 +163,7 @@ type dead_env = {
   reinit_attempts: int;
   dead_since: float;
   prior_clockspec: string;
+  prior_watch_root: string;
 }
 
 type env = {
@@ -185,6 +190,7 @@ let dead_env_from_alive env =
      * server had to be started. See also "is_fresh_instance" on watchman's
      * "since" response. *)
     prior_clockspec = env.clockspec;
+    prior_watch_root = env.watch_root;
   }
 
 type watchman_instance =
@@ -514,7 +520,18 @@ let has_watchman_restarted_since ~debug_logging ~conn ~watch_root ~clockspec =
       let request = Some (Hh_json.json_to_string query) in
       let response = Hh_json.json_to_string response in
       Lwt.return (Error (Response_error { request; response; msg })))
+  | Error (Response_error _) ->
+    (* if this simple query failed, it is because the root isn't being watched, so it may have
+       missed updates. *)
+    Lwt.return (Ok true)
   | Error _ as err -> Lwt.return err
+
+let has_watchman_restarted dead_env =
+  with_watchman_conn (fun conn ->
+      let debug_logging = dead_env.prior_settings.debug_logging in
+      let clockspec = dead_env.prior_clockspec in
+      let watch_root = dead_env.prior_watch_root in
+      has_watchman_restarted_since ~debug_logging ~conn ~watch_root ~clockspec)
 
 let prepend_relative_path_term ~relative_path ~terms =
   match terms with
@@ -529,21 +546,10 @@ let prepend_relative_path_term ~relative_path ~terms =
      * is a file now, might it become a directory later? I'm not aware of aterm which will watch for either a file or a directory, so let's add two terms *)
     Some (J.strlist ["dirname"; relative_path] :: J.strlist ["name"; relative_path] :: terms)
 
-(** Gets the current clockspec. If we have a prior clockspec, we make sure it's still valid by
-    checking whether watchman has restarted and may have missed updates; if we don't have a
-    prior clockspec, grab the current clock. *)
+(** Gets the clockspec. Uses the clockspec from the prior connection if one exists. *)
 let get_clockspec ~debug_logging ~conn ~watch_root prior_clockspec =
   match prior_clockspec with
-  | Some clockspec ->
-    let%lwt has_restarted =
-      has_watchman_restarted_since ~debug_logging ~conn ~watch_root ~clockspec
-    in
-    (match has_restarted with
-    | Ok true ->
-      Hh_logger.error "Watchman server restarted so we may have missed some updates";
-      raise Watchman_restarted
-    | Ok false -> Lwt.return clockspec
-    | Error err -> raise_error err)
+  | Some clockspec -> Lwt.return clockspec
   | None ->
     let%lwt response = request_exn ~debug_logging ~conn (clock watch_root) in
     Lwt.return (J.get_string_val "clock" response)
@@ -708,7 +714,10 @@ let maybe_restart_instance instance =
       let timeout = 120. in
       match%lwt
         Lwt_unix.with_timeout timeout @@ fun () ->
-        re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings
+        match%lwt has_watchman_restarted dead_env with
+        | Ok false -> re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings
+        | Ok true -> raise_error Restarted
+        | Error err -> raise_error err
       with
       | env ->
         Hh_logger.log "Watchman connection reestablished.";
