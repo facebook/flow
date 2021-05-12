@@ -159,6 +159,9 @@ module NewAPI : sig
    * array of addresses to string objects. *)
   type 'a addr_tbl
 
+  (* Phantom type tag for optional objects. *)
+  type 'a opt
+
   (* Phantom type tag for checked file objects. A checked file contains
    * references to the filename, any local definitions, exports, etc. *)
   type checked_file
@@ -222,7 +225,7 @@ module NewAPI : sig
 
   val exports_size : string -> size
 
-  val export_def_size : string option -> size
+  val export_def_size : string -> size
 
   val local_def_size : string -> size
 
@@ -241,11 +244,13 @@ module NewAPI : sig
 
   val write_addr_tbl : (chunk -> 'a -> 'k addr) -> chunk -> 'a array -> 'k addr_tbl addr
 
+  val write_opt : (chunk -> 'a -> 'k addr) -> chunk -> 'a option -> 'k opt addr
+
   val write_checked_file :
     chunk ->
     heap_string addr ->
     exports addr ->
-    export_def addr ->
+    export_def opt addr ->
     module_ref addr_tbl addr ->
     local_def addr_tbl addr ->
     remote_ref addr_tbl addr ->
@@ -255,7 +260,7 @@ module NewAPI : sig
 
   val write_exports : chunk -> string -> exports addr
 
-  val write_export_def : chunk -> string option -> export_def addr
+  val write_export_def : chunk -> string -> export_def addr
 
   val write_module_ref : chunk -> string -> module_ref addr
 
@@ -273,7 +278,7 @@ module NewAPI : sig
 
   val file_exports : checked_file addr -> exports addr
 
-  val file_export_def : checked_file addr -> export_def addr
+  val file_export_def : checked_file addr -> export_def opt addr
 
   val file_module_refs : checked_file addr -> module_ref addr_tbl addr
 
@@ -294,6 +299,8 @@ module NewAPI : sig
 
   val read_addr_tbl : ('k addr -> 'a) -> 'k addr_tbl addr -> 'a array
 
+  val read_opt : ('a addr -> 'b) -> 'a opt addr -> 'b option
+
   val read_exports : exports addr -> string
 
   val read_module_ref : module_ref addr -> string
@@ -302,7 +309,7 @@ module NewAPI : sig
 
   val read_local_def : local_def addr -> string
 
-  val read_export_def : export_def addr -> string option
+  val read_export_def : export_def addr -> string
 
   val read_pattern_def : pattern_def addr -> string
 
