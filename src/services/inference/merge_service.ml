@@ -162,8 +162,7 @@ let merge_context ~options ~reader master_cx component =
           ALoc.of_loc (ALoc.to_loc aloc_table aloc)
     in
     let {
-      Packed_type_sig.Module.exports;
-      export_def;
+      Packed_type_sig.Module.module_kind;
       module_refs;
       local_defs;
       remote_refs;
@@ -179,7 +178,54 @@ let merge_context ~options ~reader master_cx component =
     in
     let visit_exports file_rec =
       let merged = ref None in
-      let exports = Pack.map_exports aloc exports in
+      let mk_exports reason =
+        match module_kind with
+        | Pack.CJSModule { type_exports; exports; info } ->
+          let (Pack.CJSModuleInfo { type_export_keys; type_stars; strict }) =
+            Pack.map_cjs_module_info aloc info
+          in
+          let type_exports =
+            let f acc name export =
+              let export =
+                lazy
+                  ( Pack.map_type_export aloc export
+                  |> Merge.merge_type_export (Lazy.force file_rec) reason )
+              in
+              SMap.add name export acc
+            in
+            Base.Array.fold2_exn ~init:SMap.empty ~f type_export_keys type_exports
+          in
+          let exports =
+            let f def = lazy (Pack.map_packed aloc def |> Merge.merge (Lazy.force file_rec)) in
+            Option.map f exports
+          in
+          Merge.CJSExports { type_exports; exports; type_stars; strict }
+        | Pack.ESModule { type_exports; exports; info } ->
+          let (Pack.ESModuleInfo { type_export_keys; export_keys; type_stars; stars; strict }) =
+            Pack.map_es_module_info aloc info
+          in
+          let type_exports =
+            let f acc name export =
+              let export =
+                lazy
+                  ( Pack.map_type_export aloc export
+                  |> Merge.merge_type_export (Lazy.force file_rec) reason )
+              in
+              SMap.add name export acc
+            in
+            Base.Array.fold2_exn ~init:SMap.empty ~f type_export_keys type_exports
+          in
+          let exports =
+            let f acc name export =
+              let export =
+                lazy (Pack.map_export aloc export |> Merge.merge_export (Lazy.force file_rec))
+              in
+              SMap.add name export acc
+            in
+            Base.Array.fold2_exn ~init:SMap.empty ~f export_keys exports
+          in
+          Merge.ESExports { type_exports; exports; type_stars; stars; strict }
+      in
       fun () ->
         match !merged with
         | Some t -> t
@@ -188,14 +234,9 @@ let merge_context ~options ~reader master_cx component =
           let reason = Reason.(mk_reason RExports file_loc) in
           Tvar.mk_where cx reason (fun tvar ->
               merged := Some tvar;
+              let exports = mk_exports reason in
               let t = Merge.merge_exports (Lazy.force file_rec) reason exports in
               Flow_js.unify cx tvar t)
-    in
-    let visit_export_def file_rec export_def =
-      lazy
-        (match export_def with
-        | None -> None
-        | Some def -> Some (Merge.merge (Lazy.force file_rec) (Pack.map_packed aloc def)))
     in
     let visit_def file_rec def =
       let merged = ref None in
@@ -245,7 +286,6 @@ let merge_context ~options ~reader master_cx component =
           cx;
           dependencies;
           exports = visit_exports file_rec;
-          export_def = visit_export_def file_rec export_def;
           local_defs = Local_defs.map (visit_def file_rec) local_defs;
           remote_refs = Remote_refs.map (visit_remote_ref file_rec) remote_refs;
           pattern_defs = Pattern_defs.map (visit_packed file_rec) pattern_defs;

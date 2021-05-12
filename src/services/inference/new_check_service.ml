@@ -295,30 +295,83 @@ let mk_check_file ~options ~reader () =
     in
 
     let exports file_rec =
-      let t =
+      let file_loc = ALoc.of_loc { Loc.none with Loc.source = Some file_key } in
+      let reason = Reason.(mk_reason RExports file_loc) in
+      let type_export addr =
         lazy
-          (let exports = deserialize (Heap.read_exports (Heap.file_exports file_addr)) in
-           let reason =
-             let file_loc = ALoc.of_loc { Loc.none with Loc.source } in
-             Reason.(mk_reason RExports file_loc)
-           in
-           let resolved =
-             lazy (Pack.map_exports aloc exports |> Merge.merge_exports (Lazy.force file_rec) reason)
-           in
-           mk_sig_tvar cx reason resolved)
+          ( Heap.read_type_export addr
+          |> deserialize
+          |> Pack.map_type_export aloc
+          |> Merge.merge_type_export (Lazy.force file_rec) reason )
       in
-      (fun () -> Lazy.force t)
-    in
-
-    let export_def file_rec =
-      lazy
-        (match Heap.read_opt Heap.read_export_def (Heap.file_export_def file_addr) with
-        | None -> None
-        | Some def_str ->
-          let t =
-            deserialize def_str |> Pack.map_packed aloc |> Merge.merge (Lazy.force file_rec)
-          in
-          Some t)
+      let cjs_exports addr =
+        lazy
+          ( Heap.read_cjs_exports addr
+          |> deserialize
+          |> Pack.map_packed aloc
+          |> Merge.merge (Lazy.force file_rec) )
+      in
+      let es_export addr =
+        lazy
+          ( Heap.read_es_export addr
+          |> deserialize
+          |> Pack.map_export aloc
+          |> Merge.merge_export (Lazy.force file_rec) )
+      in
+      let cjs_exports addr =
+        let (Pack.CJSModuleInfo { type_export_keys; type_stars; strict }) =
+          Heap.cjs_module_info addr
+          |> Heap.read_cjs_module_info
+          |> deserialize
+          |> Pack.map_cjs_module_info aloc
+        in
+        let type_exports =
+          let addr = Heap.cjs_module_type_exports addr in
+          Heap.read_addr_tbl type_export addr
+        in
+        let exports =
+          let addr = Heap.cjs_module_exports addr in
+          Heap.read_opt cjs_exports addr
+        in
+        let type_exports =
+          let f acc name export = SMap.add name export acc in
+          Base.Array.fold2_exn ~init:SMap.empty ~f type_export_keys type_exports
+        in
+        Merge.CJSExports { type_exports; exports; type_stars; strict }
+      in
+      let es_exports addr =
+        let (Pack.ESModuleInfo { type_export_keys; export_keys; type_stars; stars; strict }) =
+          Heap.es_module_info addr
+          |> Heap.read_es_module_info
+          |> deserialize
+          |> Pack.map_es_module_info aloc
+        in
+        let type_exports =
+          let addr = Heap.es_module_type_exports addr in
+          Heap.read_addr_tbl type_export addr
+        in
+        let exports =
+          let addr = Heap.es_module_exports addr in
+          Heap.read_addr_tbl es_export addr
+        in
+        let type_exports =
+          let f acc name export = SMap.add name export acc in
+          Base.Array.fold2_exn ~init:SMap.empty ~f type_export_keys type_exports
+        in
+        let exports =
+          let f acc name export = SMap.add name export acc in
+          Base.Array.fold2_exn ~init:SMap.empty ~f export_keys exports
+        in
+        Merge.ESExports { type_exports; exports; type_stars; stars; strict }
+      in
+      let resolved =
+        lazy
+          ( Heap.file_module file_addr
+          |> Heap.read_dyn_module cjs_exports es_exports
+          |> Merge.merge_exports (Lazy.force file_rec) reason )
+      in
+      let t = mk_sig_tvar cx reason resolved in
+      (fun () -> t)
     in
 
     let local_def file_rec addr =
@@ -426,7 +479,6 @@ let mk_check_file ~options ~reader () =
           cx;
           dependencies;
           exports = exports file_rec;
-          export_def = export_def file_rec;
           local_defs = local_defs file_rec;
           remote_refs = remote_refs file_rec;
           pattern_defs = pattern_defs file_rec;
