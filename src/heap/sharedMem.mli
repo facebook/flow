@@ -166,14 +166,19 @@ module NewAPI : sig
    * references to the filename, any local definitions, exports, etc. *)
   type checked_file
 
-  (* Phantom type tag for exports objects. Exports describe the externally
-   * visible interface to a checked file. *)
-  type exports
+  type type_export
 
-  (* Phantom type tag for export definitions. Export definitions are the
-   * CommonJS export value of a CJS module, or the default export of an ES
-   * module. *)
-  type export_def
+  type cjs_exports
+
+  type cjs_module_info
+
+  type cjs_module
+
+  type es_export
+
+  type es_module_info
+
+  type es_module
 
   (* Phantom type tag for module references. A module reference is the string
    * argument to a require() call or import statement. This is needed to resolve
@@ -219,13 +224,23 @@ module NewAPI : sig
 
   val checked_file_size : size
 
+  val type_export_size : string -> size
+
+  val cjs_exports_size : string -> size
+
+  val cjs_module_info_size : string -> size
+
+  val cjs_module_size : size
+
+  val es_export_size : string -> size
+
+  val es_module_info_size : string -> size
+
+  val es_module_size : size
+
   val module_ref_size : string -> size
 
   val remote_ref_size : string -> size
-
-  val exports_size : string -> size
-
-  val export_def_size : string -> size
 
   val local_def_size : string -> size
 
@@ -238,6 +253,14 @@ module NewAPI : sig
    * allocated space. *)
   val alloc : size -> (chunk -> 'a) -> 'a
 
+  (* dyn module *)
+
+  type dyn_module
+
+  val dyn_cjs_module : cjs_module addr -> dyn_module addr
+
+  val dyn_es_module : es_module addr -> dyn_module addr
+
   (* write *)
 
   val write_string : chunk -> string -> heap_string addr
@@ -246,20 +269,39 @@ module NewAPI : sig
 
   val write_opt : (chunk -> 'a -> 'k addr) -> chunk -> 'a option -> 'k opt addr
 
+  val write_type_export : chunk -> string -> type_export addr
+
+  val write_cjs_exports : chunk -> string -> cjs_exports addr
+
+  val write_cjs_module_info : chunk -> string -> cjs_module_info addr
+
+  val write_cjs_module :
+    chunk ->
+    cjs_module_info addr ->
+    cjs_exports opt addr ->
+    type_export addr_tbl addr ->
+    cjs_module addr
+
+  val write_es_export : chunk -> string -> es_export addr
+
+  val write_es_module_info : chunk -> string -> es_module_info addr
+
+  val write_es_module :
+    chunk ->
+    es_module_info addr ->
+    es_export addr_tbl addr ->
+    type_export addr_tbl addr ->
+    es_module addr
+
   val write_checked_file :
     chunk ->
-    exports addr ->
-    export_def opt addr ->
+    dyn_module addr ->
     module_ref addr_tbl addr ->
     local_def addr_tbl addr ->
     remote_ref addr_tbl addr ->
     pattern_def addr_tbl addr ->
     pattern addr_tbl addr ->
     checked_file addr
-
-  val write_exports : chunk -> string -> exports addr
-
-  val write_export_def : chunk -> string -> export_def addr
 
   val write_module_ref : chunk -> string -> module_ref addr
 
@@ -273,9 +315,7 @@ module NewAPI : sig
 
   (* getters *)
 
-  val file_exports : checked_file addr -> exports addr
-
-  val file_export_def : checked_file addr -> export_def opt addr
+  val file_module : checked_file addr -> dyn_module addr
 
   val file_module_refs : checked_file addr -> module_ref addr_tbl addr
 
@@ -286,6 +326,18 @@ module NewAPI : sig
   val file_pattern_defs : checked_file addr -> pattern_def addr_tbl addr
 
   val file_patterns : checked_file addr -> pattern addr_tbl addr
+
+  val cjs_module_exports : cjs_module addr -> cjs_exports opt addr
+
+  val cjs_module_type_exports : cjs_module addr -> type_export addr_tbl addr
+
+  val cjs_module_info : cjs_module addr -> cjs_module_info addr
+
+  val es_module_exports : es_module addr -> es_export addr_tbl addr
+
+  val es_module_type_exports : es_module addr -> type_export addr_tbl addr
+
+  val es_module_info : es_module addr -> es_module_info addr
 
   (* read *)
 
@@ -298,15 +350,23 @@ module NewAPI : sig
 
   val read_opt : ('a addr -> 'b) -> 'a opt addr -> 'b option
 
-  val read_exports : exports addr -> string
+  val read_dyn_module : (cjs_module addr -> 'a) -> (es_module addr -> 'a) -> dyn_module addr -> 'a
+
+  val read_type_export : type_export addr -> string
+
+  val read_cjs_exports : cjs_exports addr -> string
+
+  val read_cjs_module_info : cjs_module_info addr -> string
+
+  val read_es_export : es_export addr -> string
+
+  val read_es_module_info : es_module_info addr -> string
 
   val read_module_ref : module_ref addr -> string
 
   val read_remote_ref : remote_ref addr -> string
 
   val read_local_def : local_def addr -> string
-
-  val read_export_def : export_def addr -> string
 
   val read_pattern_def : pattern_def addr -> string
 

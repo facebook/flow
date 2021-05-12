@@ -49,12 +49,26 @@ end = struct
   let iteri = Array.iteri
 end
 
+type exports =
+  | CJSExports of {
+      type_exports: (ALoc.t option * Type.t) Lazy.t SMap.t;
+      exports: Type.t Lazy.t option;
+      type_stars: (ALoc.t * Module_refs.index) list;
+      strict: bool;
+    }
+  | ESExports of {
+      type_exports: (ALoc.t option * Type.t) Lazy.t SMap.t;
+      exports: (ALoc.t option * Type.t) Lazy.t SMap.t;
+      type_stars: (ALoc.t * Module_refs.index) list;
+      stars: (ALoc.t * Module_refs.index) list;
+      strict: bool;
+    }
+
 type file = {
   key: File_key.t;
   cx: Context.t;
   dependencies: (string * (ALoc.t -> Type.t)) Module_refs.t;
   exports: unit -> Type.t;
-  export_def: Type.t option Lazy.t;
   local_defs: (unit -> ALoc.t * string * Type.t) Local_defs.t;
   remote_refs: (unit -> ALoc.t * string * Type.t) Remote_refs.t;
   patterns: Type.t Lazy.t Patterns.t;
@@ -356,22 +370,7 @@ let rec merge_tyref file f = function
     in
     merge_tyref file f qualification
 
-let merge_export file = function
-  | Pack.ExportRef ref -> merge_ref file (fun t ref_loc _ -> (Some ref_loc, t)) ref
-  | Pack.ExportBinding index ->
-    let (loc, _name, t) = visit (Local_defs.get file.local_defs index) in
-    (Some loc, t)
-  | Pack.ExportDefault { default_loc } ->
-    let t = Option.value_exn (Lazy.force file.export_def) in
-    (Some default_loc, t)
-  | Pack.ExportDefaultBinding { default_loc; index } ->
-    let (_loc, _name, t) = visit (Local_defs.get file.local_defs index) in
-    (Some default_loc, t)
-  | Pack.ExportFrom index ->
-    let (loc, _name, t) = visit (Remote_refs.get file.remote_refs index) in
-    (Some loc, t)
-
-let merge_export_type file reason = function
+let merge_type_export file reason = function
   | Pack.ExportTypeRef ref ->
     let f t ref_loc name =
       let t = file.export_type reason name t in
@@ -444,25 +443,25 @@ let merge_exports =
     (fun file reason stars acc -> loop file reason acc stars)
   in
   fun file reason -> function
-    | Pack.CJSExports { types; type_stars; strict } ->
-      let value =
-        match Lazy.force file.export_def with
-        | Some t -> t
+    | CJSExports { type_exports; exports; type_stars; strict } ->
+      let exports =
+        match exports with
+        | Some (lazy t) -> t
         | None -> Obj_type.mk_unsealed file.cx reason
       in
-      let types = SMap.map (merge_export_type file reason) types |> NameUtils.namemap_of_smap in
+      let type_exports = SMap.map Lazy.force type_exports |> NameUtils.namemap_of_smap in
       let type_stars = List.map (merge_star file) type_stars in
-      mk_commonjs_module_t file reason strict value
-      |> export_named file reason Type.ExportType types
+      mk_commonjs_module_t file reason strict exports
+      |> export_named file reason Type.ExportType type_exports
       |> copy_star_exports file reason ([], type_stars)
-    | Pack.ESExports { names; types; stars; type_stars; strict } ->
-      let names = SMap.map (merge_export file) names |> NameUtils.namemap_of_smap in
-      let types = SMap.map (merge_export_type file reason) types |> NameUtils.namemap_of_smap in
+    | ESExports { type_exports; exports; stars; type_stars; strict } ->
+      let exports = SMap.map Lazy.force exports |> NameUtils.namemap_of_smap in
+      let type_exports = SMap.map Lazy.force type_exports |> NameUtils.namemap_of_smap in
       let stars = List.map (merge_star file) stars in
       let type_stars = List.map (merge_star file) type_stars in
       mk_es_module_t file reason strict
-      |> export_named file reason Type.ExportValue names
-      |> export_named file reason Type.ExportType types
+      |> export_named file reason Type.ExportValue exports
+      |> export_named file reason Type.ExportType type_exports
       |> copy_star_exports file reason (stars, type_stars)
 
 let rec merge file = function
@@ -1684,6 +1683,21 @@ let merge_def file reason = function
   | DisabledEnumBinding _ -> Type.AnyT.error reason
   | EnumBinding { id_loc; name; rep; members; has_unknown_members } ->
     merge_enum file reason id_loc name rep members has_unknown_members
+
+let merge_export file = function
+  | Pack.ExportRef ref -> merge_ref file (fun t ref_loc _ -> (Some ref_loc, t)) ref
+  | Pack.ExportBinding index ->
+    let (loc, _name, t) = visit (Local_defs.get file.local_defs index) in
+    (Some loc, t)
+  | Pack.ExportDefault { default_loc; def } ->
+    let t = merge file def in
+    (Some default_loc, t)
+  | Pack.ExportDefaultBinding { default_loc; index } ->
+    let (_loc, _name, t) = visit (Local_defs.get file.local_defs index) in
+    (Some default_loc, t)
+  | Pack.ExportFrom index ->
+    let (loc, _name, t) = visit (Remote_refs.get file.remote_refs index) in
+    (Some loc, t)
 
 let merge_file file =
   let module_t = visit file.exports in
