@@ -298,10 +298,10 @@ let get_changes_since_mergebase_query env =
   in
   request_json ~extra_kv Query env
 
-let subscribe ~mode ~states env =
-  let states = "hg.update" :: states in
+let subscribe env =
+  let states = "hg.update" :: env.settings.defer_states in
   let (since, mode) =
-    match mode with
+    match env.settings.subscribe_mode with
     | All_changes -> (Hh_json.JSON_String env.clockspec, [])
     | Defer_changes -> (Hh_json.JSON_String env.clockspec, [("defer", J.strlist states)])
     | Drop_changes -> (Hh_json.JSON_String env.clockspec, [("drop", J.strlist states)])
@@ -650,51 +650,22 @@ let watch =
       | Error _ as err -> Lwt.return err)
     | Error _ as err -> Lwt.return err
 
-let re_init
-    ?prior_clockspec
-    {
-      debug_logging;
-      defer_states;
-      expression_terms;
-      mergebase_with;
-      roots;
-      subscribe_mode;
-      subscription_prefix;
-      sync_timeout;
-    } =
+let re_init ?prior_clockspec settings =
+  let debug_logging = settings.debug_logging in
   let%lwt conn =
     match%lwt open_connection () with
     | Ok conn -> Lwt.return conn
     | Error err -> raise_error err
   in
   let%lwt watch =
-    match%lwt watch ~debug_logging ~conn roots with
+    match%lwt watch ~debug_logging ~conn settings.roots with
     | Ok watch -> Lwt.return watch
     | Error err -> raise_error err
   in
   let%lwt clockspec = get_clockspec ~debug_logging ~conn ~watch prior_clockspec in
-  let env =
-    {
-      settings =
-        {
-          debug_logging;
-          defer_states;
-          expression_terms;
-          mergebase_with;
-          roots;
-          subscribe_mode;
-          subscription_prefix;
-          sync_timeout;
-        };
-      conn;
-      watch;
-      clockspec;
-      subscription = Printf.sprintf "%s.%d" subscription_prefix (Unix.getpid ());
-    }
-  in
-  let%lwt response =
-    request_exn ~debug_logging ~conn (subscribe ~mode:subscribe_mode ~states:defer_states env)
-  in
+  let subscription = Printf.sprintf "%s.%d" settings.subscription_prefix (Unix.getpid ()) in
+  let env = { settings; conn; watch; clockspec; subscription } in
+  let%lwt response = request_exn ~debug_logging ~conn (subscribe env) in
   ignore response;
   Lwt.return env
 
