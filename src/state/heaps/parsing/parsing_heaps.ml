@@ -27,16 +27,122 @@ module ALocTableHeap =
       let description = "ALocTable"
     end)
 
-type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
+module Heap = SharedMem.NewAPI
 
 module TypeSigHeap =
-  SharedMem.NoCache
+  SharedMem.NoCacheAddr
     (File_key)
     (struct
-      type t = type_sig
-
-      let description = "TypeSig"
+      type t = Heap.checked_file
     end)
+
+type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
+
+let write_type_sig type_sig =
+  let open Type_sig_collections in
+  let {
+    Packed_type_sig.Module.exports;
+    export_def;
+    module_refs;
+    local_defs;
+    remote_refs;
+    pattern_defs;
+    patterns;
+  } =
+    type_sig
+  in
+  let serialize x = Marshal.to_string x [] in
+  let exports = serialize exports in
+  let export_def = Base.Option.map ~f:serialize export_def in
+  let module_refs = Module_refs.to_array module_refs in
+  let local_defs = Local_defs.to_array_map serialize local_defs in
+  let remote_refs = Remote_refs.to_array_map serialize remote_refs in
+  let pattern_defs = Pattern_defs.to_array_map serialize pattern_defs in
+  let patterns = Patterns.to_array_map serialize patterns in
+  let open Heap in
+  let array_size f xs =
+    if Array.length xs = 0 then
+      0
+    else
+      let size = header_size + addr_tbl_size xs in
+      Array.fold_left (fun size x -> size + header_size + f x) size xs
+  in
+  let opt_size f = Base.Option.value_map ~default:0 ~f:(fun x -> header_size + f x) in
+  let size =
+    (2 * header_size)
+    + checked_file_size
+    + exports_size exports
+    + opt_size export_def_size export_def
+    + array_size module_ref_size module_refs
+    + array_size local_def_size local_defs
+    + array_size remote_ref_size remote_refs
+    + array_size pattern_def_size pattern_defs
+    + array_size pattern_size patterns
+  in
+  alloc size (fun chunk ->
+      let exports = write_exports chunk exports in
+      let export_def = write_opt write_export_def chunk export_def in
+      let module_refs = write_addr_tbl write_module_ref chunk module_refs in
+      let local_defs = write_addr_tbl write_local_def chunk local_defs in
+      let remote_refs = write_addr_tbl write_remote_ref chunk remote_refs in
+      let pattern_defs = write_addr_tbl write_pattern_def chunk pattern_defs in
+      let patterns = write_addr_tbl write_pattern chunk patterns in
+      write_checked_file
+        chunk
+        exports
+        export_def
+        module_refs
+        local_defs
+        remote_refs
+        pattern_defs
+        patterns)
+
+let read_type_sig file =
+  let open Type_sig_collections in
+  let open Heap in
+  let deserialize x = Marshal.from_string x 0 in
+  let module_refs =
+    let addr = file_module_refs file in
+    read_addr_tbl_generic read_module_ref addr Module_refs.init
+  in
+  let exports =
+    let addr = file_exports file in
+    deserialize (read_exports addr)
+  in
+  let export_def =
+    let f addr = deserialize (read_export_def addr) in
+    let addr = file_export_def file in
+    read_opt f addr
+  in
+  let local_defs =
+    let f addr = deserialize (read_local_def addr) in
+    let addr = file_local_defs file in
+    read_addr_tbl_generic f addr Local_defs.init
+  in
+  let remote_refs =
+    let f addr = deserialize (read_remote_ref addr) in
+    let addr = file_remote_refs file in
+    read_addr_tbl_generic f addr Remote_refs.init
+  in
+  let pattern_defs =
+    let f addr = deserialize (read_pattern_def addr) in
+    let addr = file_pattern_defs file in
+    read_addr_tbl_generic f addr Pattern_defs.init
+  in
+  let patterns =
+    let f addr = deserialize (read_pattern addr) in
+    let addr = file_patterns file in
+    read_addr_tbl_generic f addr Patterns.init
+  in
+  {
+    Packed_type_sig.Module.exports;
+    export_def;
+    module_refs;
+    local_defs;
+    remote_refs;
+    pattern_defs;
+    patterns;
+  }
 
 (* There's some redundancy in the visitors here, but an attempt to avoid repeated code led,
  * inexplicably, to a shared heap size regression under types-first: D15481813 *)
@@ -128,7 +234,7 @@ module ParsingHeaps = struct
         DocblockHeap.add file info;
         ExportsHeap.add file exports;
         FileSigHeap.add file file_sig;
-        TypeSigHeap.add file type_sig;
+        TypeSigHeap.add file (write_type_sig type_sig);
         ALocTableHeap.add file aloc_table)
 
   let oldify_batch files =
@@ -261,7 +367,7 @@ end = struct
 
   let get_type_sig_unsafe ~reader:_ file =
     match TypeSigHeap.get file with
-    | Some type_sig -> type_sig
+    | Some addr -> read_type_sig addr
     | None -> raise (Type_sig_not_found (File_key.to_string file))
 
   let get_file_hash_unsafe ~reader file =
@@ -407,10 +513,13 @@ module Reader : READER with type reader = State_reader.t = struct
       FileSigHeap.get key
 
   let get_type_sig ~reader:_ key =
-    if should_use_oldified key then
-      TypeSigHeap.get_old key
-    else
-      TypeSigHeap.get key
+    let addr_opt =
+      if should_use_oldified key then
+        TypeSigHeap.get_old key
+      else
+        TypeSigHeap.get key
+    in
+    Base.Option.map ~f:read_type_sig addr_opt
 
   let get_file_hash ~reader:_ key =
     if should_use_oldified key then
