@@ -1046,9 +1046,12 @@ module NewAPI = struct
   let read_string addr = read_string_generic String_tag addr
 
   let read_addr_tbl_generic f addr init =
-    let heap = get_heap () in
-    let hd = read_header_checked heap Addr_tbl_tag addr in
-    init (obj_size hd) (fun i -> f (read_addr heap (addr + header_size + i)))
+    if addr = null_addr then
+      init 0 (fun _ -> failwith "empty")
+    else
+      let heap = get_heap () in
+      let hd = read_header_checked heap Addr_tbl_tag addr in
+      init (obj_size hd) (fun i -> f (read_addr heap (addr + header_size + i)))
 
   let read_addr_tbl f addr = read_addr_tbl_generic f addr Array.init
 
@@ -1192,15 +1195,18 @@ module NewAPI = struct
     heap_pattern
 
   let write_addr_tbl f chunk xs =
-    let hd = addr_tbl_header xs in
-    let map = write_header chunk hd in
-    chunk.next_addr <- chunk.next_addr + obj_size hd;
-    Array.iteri
-      (fun i x ->
-        let addr = f chunk x in
-        unsafe_write_addr_at chunk.heap (map + header_size + i) addr)
-      xs;
-    map
+    if Array.length xs = 0 then
+      null_addr
+    else
+      let hd = addr_tbl_header xs in
+      let map = write_header chunk hd in
+      chunk.next_addr <- chunk.next_addr + obj_size hd;
+      Array.iteri
+        (fun i x ->
+          let addr = f chunk x in
+          unsafe_write_addr_at chunk.heap (map + header_size + i) addr)
+        xs;
+      map
 
   let write_opt f chunk = function
     | None -> null_addr
