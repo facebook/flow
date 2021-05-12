@@ -933,7 +933,7 @@ module NewAPI = struct
 
   let addr_tbl_size xs = addr_size * Array.length xs
 
-  let checked_file_size = 8 * addr_size
+  let checked_file_size = 7 * addr_size
 
   let exports_size def = string_size def
 
@@ -991,21 +991,19 @@ module NewAPI = struct
 
   (* offsets *)
 
-  let filename_addr file = file + 1
+  let exports_addr file = file + 1
 
-  let exports_addr file = file + 2
+  let export_def_addr file = file + 2
 
-  let export_def_addr file = file + 3
+  let module_refs_addr file = file + 3
 
-  let module_refs_addr file = file + 4
+  let local_defs_addr file = file + 4
 
-  let local_defs_addr file = file + 5
+  let remote_refs_addr file = file + 5
 
-  let remote_refs_addr file = file + 6
+  let pattern_defs_addr file = file + 6
 
-  let pattern_defs_addr file = file + 7
-
-  let patterns_addr file = file + 8
+  let patterns_addr file = file + 7
 
   (* read *)
 
@@ -1075,8 +1073,6 @@ module NewAPI = struct
   let read_pattern addr = read_string_generic Pattern_tag addr
 
   (* getters *)
-
-  let file_name file = read_addr (get_heap ()) (filename_addr file)
 
   let file_exports file = read_addr (get_heap ()) (exports_addr file)
 
@@ -1149,9 +1145,8 @@ module NewAPI = struct
     heap_string
 
   let write_checked_file
-      chunk filename exports export_def module_refs local_defs remote_refs pattern_defs patterns =
+      chunk exports export_def module_refs local_defs remote_refs pattern_defs patterns =
     let checked_file = write_header chunk checked_file_header in
-    unsafe_write_addr chunk filename;
     unsafe_write_addr chunk exports;
     unsafe_write_addr chunk export_def;
     unsafe_write_addr chunk module_refs;

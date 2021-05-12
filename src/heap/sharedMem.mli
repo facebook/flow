@@ -248,7 +248,6 @@ module NewAPI : sig
 
   val write_checked_file :
     chunk ->
-    heap_string addr ->
     exports addr ->
     export_def opt addr ->
     module_ref addr_tbl addr ->
@@ -273,8 +272,6 @@ module NewAPI : sig
   val write_pattern : chunk -> string -> pattern addr
 
   (* getters *)
-
-  val file_name : checked_file addr -> heap_string addr
 
   val file_exports : checked_file addr -> exports addr
 
