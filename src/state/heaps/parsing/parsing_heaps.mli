@@ -7,6 +7,8 @@
 
 type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
 
+type checked_file_addr = SharedMem.NewAPI.checked_file SharedMem.addr
+
 module type READER = sig
   type reader
 
@@ -31,6 +33,8 @@ module type READER = sig
   val get_exports_unsafe : reader:reader -> File_key.t -> Exports.t
 
   val get_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.t
+
+  val get_type_sig_addr_unsafe : reader:reader -> File_key.t -> checked_file_addr
 
   val get_type_sig_unsafe : reader:reader -> File_key.t -> type_sig
 
