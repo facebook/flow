@@ -5107,3 +5107,40 @@ let%expect_test "optional_indexed_access" =
                    elem = (Annot (SingletonString ([1:27-30], "b")))});
               void_loc = [1:16-26]})}
   |}]
+
+let%expect_test "cjs_export_type_star" =
+  print_sig {|
+    export type * from 'foo';
+    export type * from 'bar';
+  |};
+  [%expect {|
+    CJSModule {type_exports = [||]; exports = None;
+      info =
+      CJSModuleInfo {type_export_keys = [||];
+        type_stars = [([2:12-13], 1); ([1:12-13], 0)];
+        strict = true}}
+
+    Module refs:
+    0. foo
+    1. bar |}]
+
+let%expect_test "es_export_star" =
+  print_sig {|
+    export type * from 'foo';
+    export type * from 'bar';
+    export * from 'baz';
+    export * from 'qux';
+  |};
+  [%expect {|
+    ESModule {type_exports = [||]; exports = [||];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = [([2:12-13], 1); ([1:12-13], 0)];
+        export_keys = [||]; stars = [([4:7-8], 3); ([3:7-8], 2)];
+        strict = true}}
+
+    Module refs:
+    0. foo
+    1. bar
+    2. baz
+    3. qux |}]
