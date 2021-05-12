@@ -1,3 +1,24 @@
+### 0.151.0
+
+New Features:
+* Add Smart Select IDE feature. This allows you to expand or shrink your selection based on the surrounding code. For example you might expand from an identifier to the containing expression, to the whole statement. In vscode, you can do this via ctrl+shift+cmd+(left or right arrow).
+* Add Enum `getName(value: TEnum): string` method. Given a value of the enum type, this returns the string representation of the name of the member. You will also need to update to the latest `flow-enums-runtime` package.
+
+Notable bug fixes:
+* Update `annotate-exports` codemod to add lowercase `react` instead of `React` (thanks @meandmax!).
+
+Misc:
+* Improve developer setup on Windows by exposing internal setup scripts and updating the Windows setup `README.md`.
+* Enable `cache_live_errors_artifacts` and `cache_signature_help_artifacts` config options by default.
+* Improve performance and reliability of Watchman integration.
+* Error for use of `super` outside of `class` methods added in `0.148.0` has been removed.
+
+Library Definitions:
+* Update React types for React 18 release.
+* Update the `Map`, `WeakMap`, `Set` and `WeakSet` constructors' iterable param to be optional as per the [ECMAScript spec](https://tc39.es/ecma262/#sec-map-iterable).
+* Add typing for `PageTransitionEvent` as per the [HTML spec](https://html.spec.whatwg.org/multipage/browsing-the-web.html#pagetransitionevent) (thanks @bripkens!).
+* Added support for `stepUp` and `stepDown` in `HTMLInputElement` declaration as per the [HTML spec](https://html.spec.whatwg.org/multipage/input.html#dom-input-stepup).
+
 ### 0.150.0
 
 New Features:
