@@ -17,8 +17,7 @@ type t = export list [@@deriving show { with_path = false }]
 
 module Export_sig = struct
   type 'loc t = {
-    exports: 'loc Type_sig_pack.exports option;
-    export_def: 'loc Type_sig_pack.packed option;
+    module_kind: 'loc Type_sig_pack.module_kind option;
     module_refs: string Type_sig_collections.Module_refs.t;
     local_defs: 'loc Type_sig_pack.packed_def Type_sig_collections.Local_defs.t;
     remote_refs: 'loc Type_sig_pack.remote_ref Type_sig_collections.Remote_refs.t;
@@ -28,8 +27,7 @@ module Export_sig = struct
 
   let of_module
       {
-        Packed_type_sig.Module.exports;
-        export_def;
+        Packed_type_sig.Module.module_kind;
         module_refs;
         local_defs;
         remote_refs;
@@ -37,8 +35,7 @@ module Export_sig = struct
         patterns;
       } =
     {
-      exports = Some exports;
-      export_def;
+      module_kind = Some module_kind;
       module_refs;
       local_defs;
       remote_refs;
@@ -48,8 +45,7 @@ module Export_sig = struct
 
   let of_builtins ~module_refs ~local_defs ~remote_refs =
     {
-      exports = None;
-      export_def = None;
+      module_kind = None;
       module_refs;
       local_defs;
       remote_refs;
@@ -57,10 +53,9 @@ module Export_sig = struct
       patterns = None;
     }
 
-  let of_builtin_module ~module_refs ~local_defs ~remote_refs ~exports ~export_def =
+  let of_builtin_module ~module_refs ~local_defs ~remote_refs ~module_kind =
     {
-      exports = Some exports;
-      export_def;
+      module_kind = Some module_kind;
       module_refs;
       local_defs;
       remote_refs;
@@ -237,7 +232,7 @@ let empty_seen = Type_sig_collections.Local_defs.IndexSet.empty
 module ESM = struct
   open Type_sig_pack
 
-  let fold_name type_sig name value acc =
+  let fold_name type_sig acc name value =
     match value with
     | ExportRef ref ->
       let acc = Eval.ref type_sig empty_seen ref |> add_named_type acc name in
@@ -257,7 +252,7 @@ module ESM = struct
          can't be imported. *)
       acc
 
-  let fold_type name value acc =
+  let fold_type acc name value =
     match value with
     | ExportTypeRef _
     | ExportTypeBinding _ ->
@@ -268,11 +263,13 @@ module ESM = struct
          can't be imported. *)
       acc
 
-  let exports type_sig names types stars type_stars =
+  let exports type_sig type_exports exports info =
     (* TODO: re-exports *)
-    ignore stars;
-    ignore type_stars;
-    [] |> SMap.fold (fold_name type_sig) names |> SMap.fold fold_type types
+    let (ESModuleInfo { type_export_keys; export_keys; type_stars = _; stars = _; strict = _ }) =
+      info
+    in
+    let acc = Base.Array.fold2_exn ~init:[] ~f:(fold_name type_sig) export_keys exports in
+    Base.Array.fold2_exn ~init:acc ~f:fold_type type_export_keys type_exports
 end
 
 module CJS = struct
@@ -331,31 +328,27 @@ module CJS = struct
     | Eval.Nothing ->
       acc
 
-  let add_default_exports type_sig acc =
-    match type_sig.Export_sig.export_def with
+  let add_default_exports type_sig acc = function
     | Some module_exports -> Default :: add_named_exports acc type_sig module_exports
     | None -> acc
 
-  let add_type_exports types acc =
-    SMap.fold
-      (fun name value acc ->
-        let open Type_sig_pack in
-        match value with
-        | ExportTypeRef _
-        | ExportTypeBinding _ ->
-          NamedType name :: acc
-        | ExportTypeFrom _ ->
-          (* TODO: ExportTypeFrom defines aliases, which we don't handle yet. TS
-             keeps track of them and only suggests them if the re-exported thing
-             can't be imported. *)
-          acc)
-      types
+  let fold_type acc name value =
+    let open Type_sig_pack in
+    match value with
+    | ExportTypeRef _
+    | ExportTypeBinding _ ->
+      NamedType name :: acc
+    | ExportTypeFrom _ ->
+      (* TODO: ExportTypeFrom defines aliases, which we don't handle yet. TS
+         keeps track of them and only suggests them if the re-exported thing
+         can't be imported. *)
       acc
 
-  let exports type_sig types type_stars =
+  let exports type_sig type_exports exports info =
     (* TODO: re-exports *)
-    ignore type_stars;
-    [] |> add_default_exports type_sig |> add_type_exports types
+    let (CJSModuleInfo { type_export_keys; type_stars = _; strict = _ }) = info in
+    let acc = add_default_exports type_sig [] exports in
+    Base.Array.fold2_exn ~init:acc ~f:fold_type type_export_keys type_exports
 end
 
 let add_global =
@@ -384,11 +377,11 @@ let add_global =
       add_named name (NamedType name :: acc)
 
 let of_sig export_sig : t =
-  match export_sig.Export_sig.exports with
-  | Some (Type_sig_pack.ESExports { names; types; stars; type_stars; strict = _ }) ->
-    ESM.exports export_sig names types stars type_stars
-  | Some (Type_sig_pack.CJSExports { types; type_stars; strict = _ }) ->
-    CJS.exports export_sig types type_stars
+  match export_sig.Export_sig.module_kind with
+  | Some (Type_sig_pack.ESModule { type_exports; exports; info }) ->
+    ESM.exports export_sig type_exports exports info
+  | Some (Type_sig_pack.CJSModule { type_exports; exports; info }) ->
+    CJS.exports export_sig type_exports exports info
   | None -> failwith "unexpected exports in global scope"
 
 let of_module type_sig : t = type_sig |> Export_sig.of_module |> of_sig
@@ -399,9 +392,9 @@ let of_builtins { Packed_type_sig.Builtins.modules; module_refs; local_defs; rem
   []
   |> SMap.fold (add_global global_sig) globals
   |> SMap.fold
-       (fun name { Packed_type_sig.Builtins.loc = _; exports; export_def } acc ->
+       (fun name { Packed_type_sig.Builtins.loc = _; module_kind } acc ->
          let export_sig =
-           Export_sig.of_builtin_module ~module_refs ~local_defs ~remote_refs ~exports ~export_def
+           Export_sig.of_builtin_module ~module_refs ~local_defs ~remote_refs ~module_kind
          in
          Module (name, of_sig export_sig) :: acc)
        modules

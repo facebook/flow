@@ -843,11 +843,21 @@ module NewAPI = struct
 
   type 'a opt
 
+  type type_export
+
+  type cjs_exports
+
+  type cjs_module_info
+
+  type cjs_module
+
+  type es_export
+
+  type es_module_info
+
+  type es_module
+
   type checked_file
-
-  type exports
-
-  type export_def
 
   type module_ref
 
@@ -885,6 +895,26 @@ module NewAPI = struct
    * internal use of null should be hidden from callers of this module. *)
   let null_addr = 0
 
+  (* dyn *)
+
+  (* A `dyn addr` is a valid address pointing to some value, but we don't know
+   * what it is. We can go from a dyn to a specific address type by inspecting
+   * the tag in the header of the object. *)
+  type dyn
+
+  let dyn : _ addr -> dyn addr = Obj.magic
+
+  (* dyn module *)
+
+  (* A `dyn_module addr` is a valid address pointing to either a cjs module or
+   * an es module, but we don't know which one. As with `dyn`, we can look at
+   * the tag at runtime to specialize. *)
+  type dyn_module
+
+  let dyn_cjs_module : cjs_module addr -> dyn_module addr = dyn
+
+  let dyn_es_module : cjs_module addr -> dyn_module addr = dyn
+
   (* header utils *)
 
   (* The integer values corresponding to these tags are encoded in the low byte
@@ -893,16 +923,21 @@ module NewAPI = struct
   type tag =
     | Serialized_tag
     | String_tag
-    | Exports_tag
-    | Export_def_tag
+    | Type_export_tag
+    | CJS_exports_tag
+    | CJS_module_info_tag
+    | ES_export_tag
+    | ES_module_info_tag
     | Module_ref_tag
     | Remote_ref_tag
     | Local_def_tag
     | Pattern_def_tag
     | Pattern_tag
     (* tags defined below this point are scanned for pointers *)
-    | Addr_tbl_tag (* 9 *)
+    | Addr_tbl_tag (* 12 *)
     | Checked_file_tag
+    | CJS_module_tag
+    | ES_module_tag
 
   (* avoid unused constructor warning *)
   let () = ignore Serialized_tag
@@ -933,11 +968,21 @@ module NewAPI = struct
 
   let addr_tbl_size xs = addr_size * Array.length xs
 
-  let checked_file_size = 7 * addr_size
+  let checked_file_size = 6 * addr_size
 
-  let exports_size def = string_size def
+  let type_export_size export = string_size export
 
-  let export_def_size def = string_size def
+  let cjs_exports_size exports = string_size exports
+
+  let cjs_module_info_size info = string_size info
+
+  let cjs_module_size = 3 * addr_size
+
+  let es_export_size export = string_size export
+
+  let es_module_info_size info = string_size info
+
+  let es_module_size = 3 * addr_size
 
   let module_ref_size ref = string_size ref
 
@@ -961,13 +1006,29 @@ module NewAPI = struct
 
   let checked_file_header = mk_header Checked_file_tag checked_file_size
 
-  let exports_header exports =
-    let size = exports_size exports in
-    mk_header Exports_tag size
+  let type_export_header export =
+    let size = type_export_size export in
+    mk_header Type_export_tag size
 
-  let export_def_header def =
-    let size = export_def_size def in
-    mk_header Export_def_tag size
+  let cjs_exports_header export =
+    let size = cjs_exports_size export in
+    mk_header CJS_exports_tag size
+
+  let cjs_module_info_header info =
+    let size = cjs_module_info_size info in
+    mk_header CJS_module_info_tag size
+
+  let cjs_module_header = mk_header CJS_module_tag cjs_module_size
+
+  let es_export_header export =
+    let size = es_export_size export in
+    mk_header ES_export_tag size
+
+  let es_module_info_header info =
+    let size = es_module_info_size info in
+    mk_header ES_module_info_tag size
+
+  let es_module_header = mk_header ES_module_tag es_module_size
 
   let module_ref_header ref =
     let size = module_ref_size ref in
@@ -991,19 +1052,17 @@ module NewAPI = struct
 
   (* offsets *)
 
-  let exports_addr file = file + 1
+  let module_addr file = file + 1
 
-  let export_def_addr file = file + 2
+  let module_refs_addr file = file + 2
 
-  let module_refs_addr file = file + 3
+  let local_defs_addr file = file + 3
 
-  let local_defs_addr file = file + 4
+  let remote_refs_addr file = file + 4
 
-  let remote_refs_addr file = file + 5
+  let pattern_defs_addr file = file + 5
 
-  let pattern_defs_addr file = file + 6
-
-  let patterns_addr file = file + 7
+  let patterns_addr file = file + 6
 
   (* read *)
 
@@ -1061,9 +1120,26 @@ module NewAPI = struct
     else
       Some (f addr)
 
-  let read_exports addr = read_string_generic Exports_tag addr
+  let read_dyn_module f g addr =
+    let heap = get_heap () in
+    let hd = read_header heap addr in
+    let tag = obj_tag hd in
+    if tag = tag_val CJS_module_tag then
+      f addr
+    else if tag = tag_val ES_module_tag then
+      g addr
+    else
+      assert false
 
-  let read_export_def addr = read_string_generic Export_def_tag addr
+  let read_type_export addr = read_string_generic Type_export_tag addr
+
+  let read_cjs_exports addr = read_string_generic CJS_exports_tag addr
+
+  let read_cjs_module_info addr = read_string_generic CJS_module_info_tag addr
+
+  let read_es_export addr = read_string_generic ES_export_tag addr
+
+  let read_es_module_info addr = read_string_generic ES_module_info_tag addr
 
   let read_module_ref addr = read_string_generic Module_ref_tag addr
 
@@ -1077,9 +1153,7 @@ module NewAPI = struct
 
   (* getters *)
 
-  let file_exports file = read_addr (get_heap ()) (exports_addr file)
-
-  let file_export_def file = read_addr (get_heap ()) (export_def_addr file)
+  let file_module file = read_addr (get_heap ()) (module_addr file)
 
   let file_module_refs file = read_addr (get_heap ()) (module_refs_addr file)
 
@@ -1090,6 +1164,18 @@ module NewAPI = struct
   let file_pattern_defs file = read_addr (get_heap ()) (pattern_defs_addr file)
 
   let file_patterns file = read_addr (get_heap ()) (patterns_addr file)
+
+  let cjs_module_info m = read_addr (get_heap ()) (m + 1)
+
+  let cjs_module_exports m = read_addr (get_heap ()) (m + 2)
+
+  let cjs_module_type_exports m = read_addr (get_heap ()) (m + 3)
+
+  let es_module_info m = read_addr (get_heap ()) (m + 1)
+
+  let es_module_exports m = read_addr (get_heap ()) (m + 2)
+
+  let es_module_type_exports m = read_addr (get_heap ()) (m + 3)
 
   (* write *)
 
@@ -1147,27 +1233,54 @@ module NewAPI = struct
     unsafe_write_string chunk s;
     heap_string
 
-  let write_checked_file
-      chunk exports export_def module_refs local_defs remote_refs pattern_defs patterns =
-    let checked_file = write_header chunk checked_file_header in
+  let write_type_export chunk export =
+    let addr = write_header chunk (type_export_header export) in
+    unsafe_write_string chunk export;
+    addr
+
+  let write_cjs_exports chunk exports =
+    let addr = write_header chunk (cjs_exports_header exports) in
+    unsafe_write_string chunk exports;
+    addr
+
+  let write_cjs_module_info chunk info =
+    let addr = write_header chunk (cjs_module_info_header info) in
+    unsafe_write_string chunk info;
+    addr
+
+  let write_cjs_module chunk info exports type_exports =
+    let addr = write_header chunk cjs_module_header in
+    unsafe_write_addr chunk info;
     unsafe_write_addr chunk exports;
-    unsafe_write_addr chunk export_def;
+    unsafe_write_addr chunk type_exports;
+    addr
+
+  let write_es_export chunk export =
+    let addr = write_header chunk (es_export_header export) in
+    unsafe_write_string chunk export;
+    addr
+
+  let write_es_module_info chunk info =
+    let addr = write_header chunk (es_module_info_header info) in
+    unsafe_write_string chunk info;
+    addr
+
+  let write_es_module chunk info exports type_exports =
+    let addr = write_header chunk es_module_header in
+    unsafe_write_addr chunk info;
+    unsafe_write_addr chunk exports;
+    unsafe_write_addr chunk type_exports;
+    addr
+
+  let write_checked_file chunk dyn_module module_refs local_defs remote_refs pattern_defs patterns =
+    let checked_file = write_header chunk checked_file_header in
+    unsafe_write_addr chunk dyn_module;
     unsafe_write_addr chunk module_refs;
     unsafe_write_addr chunk local_defs;
     unsafe_write_addr chunk remote_refs;
     unsafe_write_addr chunk pattern_defs;
     unsafe_write_addr chunk patterns;
     checked_file
-
-  let write_exports chunk exports =
-    let heap_exports = write_header chunk (exports_header exports) in
-    unsafe_write_string chunk exports;
-    heap_exports
-
-  let write_export_def chunk def =
-    let heap_def = write_header chunk (export_def_header def) in
-    unsafe_write_string chunk def;
-    heap_def
 
   let write_module_ref chunk ref =
     let heap_ref = write_header chunk (module_ref_header ref) in

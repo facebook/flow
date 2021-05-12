@@ -47,8 +47,8 @@ let pack_builtins (locs, (tbls, globals, modules)) =
   let modules =
     SMap.map
       (fun m ->
-        let (loc, exports, export_def) = Pack.pack_builtin_module cx m in
-        { Packed_type_sig.Builtins.loc; exports; export_def })
+        let (loc, module_kind) = Pack.pack_builtin_module cx m in
+        { Packed_type_sig.Builtins.loc; module_kind })
       modules
   in
   ( cx.Pack.errs,
@@ -104,12 +104,11 @@ let pack (locs, file_loc, (tbls, exports)) =
   let remote_refs = Remote_refs.copy Pack.pack_remote_binding remote_refs in
   let pattern_defs = Pattern_defs.copy (Pack.pack_parsed cx) pattern_defs in
   let patterns = Patterns.copy Pack.pack_pattern patterns in
-  let (exports, export_def) = Pack.pack_exports cx file_loc exports in
+  let module_kind = Pack.pack_exports cx file_loc exports in
   ( cx.Pack.errs,
     locs,
     {
-      Packed_type_sig.Module.exports;
-      export_def;
+      Packed_type_sig.Module.module_kind;
       module_refs;
       local_defs;
       remote_refs;
