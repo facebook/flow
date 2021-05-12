@@ -962,6 +962,8 @@ module NewAPI = struct
 
   let addr_size = 1
 
+  let hash_size = 1
+
   (* Obj used as an efficient way to get at the word size of an OCaml string
    * directly from the block header, since that's the size we need. *)
   let string_size s = Obj.size (Obj.repr s)
@@ -970,17 +972,17 @@ module NewAPI = struct
 
   let checked_file_size = 6 * addr_size
 
-  let type_export_size export = string_size export
+  let type_export_size export = hash_size + string_size export
 
-  let cjs_exports_size exports = string_size exports
+  let cjs_exports_size exports = hash_size + string_size exports
 
-  let cjs_module_info_size info = string_size info
+  let cjs_module_info_size info = hash_size + string_size info
 
   let cjs_module_size = 3 * addr_size
 
-  let es_export_size export = string_size export
+  let es_export_size export = hash_size + string_size export
 
-  let es_module_info_size info = string_size info
+  let es_module_info_size info = hash_size + string_size info
 
   let es_module_size = 3 * addr_size
 
@@ -1096,13 +1098,13 @@ module NewAPI = struct
     assert (Nativeint.(logand addr_nat 1n = 0n));
     Nativeint.(to_int (shift_right_logical addr_nat 3))
 
-  let read_string_generic tag addr =
+  let read_string_generic tag addr offset =
     let hd = read_header_checked (get_heap ()) tag addr in
-    let offset = addr + header_size in
-    let length = obj_size hd in
-    unsafe_read_string offset length
+    let str_addr = addr + header_size + offset in
+    let str_length = obj_size hd - offset in
+    unsafe_read_string str_addr str_length
 
-  let read_string addr = read_string_generic String_tag addr
+  let read_string addr = read_string_generic String_tag addr 0
 
   let read_addr_tbl_generic f addr init =
     if addr = null_addr then
@@ -1131,25 +1133,25 @@ module NewAPI = struct
     else
       assert false
 
-  let read_type_export addr = read_string_generic Type_export_tag addr
+  let read_type_export addr = read_string_generic Type_export_tag addr hash_size
 
-  let read_cjs_exports addr = read_string_generic CJS_exports_tag addr
+  let read_cjs_exports addr = read_string_generic CJS_exports_tag addr hash_size
 
-  let read_cjs_module_info addr = read_string_generic CJS_module_info_tag addr
+  let read_cjs_module_info addr = read_string_generic CJS_module_info_tag addr hash_size
 
-  let read_es_export addr = read_string_generic ES_export_tag addr
+  let read_es_export addr = read_string_generic ES_export_tag addr hash_size
 
-  let read_es_module_info addr = read_string_generic ES_module_info_tag addr
+  let read_es_module_info addr = read_string_generic ES_module_info_tag addr hash_size
 
-  let read_module_ref addr = read_string_generic Module_ref_tag addr
+  let read_module_ref addr = read_string_generic Module_ref_tag addr 0
 
-  let read_remote_ref addr = read_string_generic Remote_ref_tag addr
+  let read_remote_ref addr = read_string_generic Remote_ref_tag addr 0
 
-  let read_local_def addr = read_string_generic Local_def_tag addr
+  let read_local_def addr = read_string_generic Local_def_tag addr 0
 
-  let read_pattern_def addr = read_string_generic Pattern_def_tag addr
+  let read_pattern_def addr = read_string_generic Pattern_def_tag addr 0
 
-  let read_pattern addr = read_string_generic Pattern_tag addr
+  let read_pattern addr = read_string_generic Pattern_tag addr 0
 
   (* getters *)
 
@@ -1191,6 +1193,11 @@ module NewAPI = struct
   let unsafe_write_addr_at heap dst addr =
     Array1.unsafe_set heap dst Nativeint.(shift_left (of_int addr) 3)
 
+  (* Write a 64-bit hash at a specified address in the heap. This write is not
+   * bounds checked; caller must ensure the given destination has already been
+   * allocated. *)
+  let unsafe_write_hash_at heap dst hash = Array1.unsafe_set heap dst (Int64.to_nativeint hash)
+
   (* Write a string at the specified address in the heap. This write is not
    * bounds checked; caller must ensure the given destination has already been
    * allocated. *)
@@ -1209,6 +1216,13 @@ module NewAPI = struct
   let unsafe_write_addr chunk addr =
     unsafe_write_addr_at chunk.heap chunk.next_addr addr;
     chunk.next_addr <- chunk.next_addr + addr_size
+
+  (* Write a 64-bit hash into the given chunk and advance the chunk address.
+   * This write is not bounds checked; caller must ensure the given destination
+   * has already been allocated. *)
+  let unsafe_write_hash chunk hash =
+    unsafe_write_hash_at chunk.heap chunk.next_addr hash;
+    chunk.next_addr <- chunk.next_addr + hash_size
 
   (* Write a string into the given chunk and advance the chunk address. This
    * write is not bounds checked; caller must ensure the given destination has
@@ -1235,16 +1249,19 @@ module NewAPI = struct
 
   let write_type_export chunk export =
     let addr = write_header chunk (type_export_header export) in
+    unsafe_write_hash chunk 0L;
     unsafe_write_string chunk export;
     addr
 
   let write_cjs_exports chunk exports =
     let addr = write_header chunk (cjs_exports_header exports) in
+    unsafe_write_hash chunk 0L;
     unsafe_write_string chunk exports;
     addr
 
   let write_cjs_module_info chunk info =
     let addr = write_header chunk (cjs_module_info_header info) in
+    unsafe_write_hash chunk 0L;
     unsafe_write_string chunk info;
     addr
 
@@ -1257,11 +1274,13 @@ module NewAPI = struct
 
   let write_es_export chunk export =
     let addr = write_header chunk (es_export_header export) in
+    unsafe_write_hash chunk 0L;
     unsafe_write_string chunk export;
     addr
 
   let write_es_module_info chunk info =
     let addr = write_header chunk (es_module_info_header info) in
+    unsafe_write_hash chunk 0L;
     unsafe_write_string chunk info;
     addr
 
@@ -1324,4 +1343,34 @@ module NewAPI = struct
   let write_opt f chunk = function
     | None -> null_addr
     | Some x -> f chunk x
+
+  (* hashes *)
+
+  let read_hash addr =
+    let heap = get_heap () in
+    Int64.of_nativeint (Array1.get heap (addr + header_size))
+
+  let write_hash addr hash =
+    let heap = get_heap () in
+    unsafe_write_hash_at heap (addr + header_size) hash
+
+  let read_type_export_hash = read_hash
+
+  let read_cjs_exports_hash = read_hash
+
+  let read_cjs_module_hash = read_hash
+
+  let read_es_export_hash = read_hash
+
+  let read_es_module_hash = read_hash
+
+  let write_type_export_hash = write_hash
+
+  let write_cjs_exports_hash = write_hash
+
+  let write_cjs_module_hash = write_hash
+
+  let write_es_export_hash = write_hash
+
+  let write_es_module_hash = write_hash
 end
