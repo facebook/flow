@@ -196,11 +196,12 @@ let mk_check_file ~options ~reader () =
   let open Type_sig_collections in
   let module Merge = Type_sig_merge in
   let module Pack = Type_sig_pack in
+  let module Heap = SharedMem.NewAPI in
   let audit = Expensive.ok in
 
   let get_file = Module_heaps.Reader_dispatcher.get_file ~reader ~audit in
   let get_docblock_unsafe = Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader in
-  let get_type_sig_unsafe = Parsing_heaps.Reader_dispatcher.get_type_sig_unsafe ~reader in
+  let get_type_sig_unsafe = Parsing_heaps.Reader_dispatcher.get_type_sig_addr_unsafe ~reader in
   let get_info_unsafe = Module_heaps.Reader_dispatcher.get_info_unsafe ~reader ~audit in
   let get_aloc_table_unsafe = Parsing_heaps.Reader_dispatcher.get_aloc_table_unsafe ~reader in
   let find_leader = Context_heaps.Reader_dispatcher.find_leader ~reader in
@@ -208,7 +209,7 @@ let mk_check_file ~options ~reader () =
 
   let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
   let ccx_cache : (File_key.t, Context.component_t) Hashtbl.t = Hashtbl.create 0 in
-  let file_cache : (File_key.t, Merge.file) Hashtbl.t = Hashtbl.create 0 in
+  let file_cache : (Heap.checked_file SharedMem.addr, Merge.file) Hashtbl.t = Hashtbl.create 0 in
 
   let base_metadata = Context.metadata_of_options options in
 
@@ -250,12 +251,13 @@ let mk_check_file ~options ~reader () =
       else
         unchecked_module_t cx mref
   and sig_module_t cx file_key _loc =
+    let file_addr = get_type_sig_unsafe file_key in
     let file =
-      match Hashtbl.find_opt file_cache file_key with
+      match Hashtbl.find_opt file_cache file_addr with
       | Some file -> file
       | None ->
-        let file = dep_file file_key in
-        Hashtbl.add file_cache file_key file;
+        let file = dep_file file_key file_addr in
+        Hashtbl.add file_cache file_addr file;
         file
     in
     let t = file.Merge.exports () in
@@ -265,7 +267,7 @@ let mk_check_file ~options ~reader () =
    * convert signatures into types. This function reads the signature for a file
    * from shared memory and creates thunks (either lazy tvars or lazy types)
    * that resolve to types. *)
-  and dep_file file_key =
+  and dep_file file_key file_addr =
     let source = Some file_key in
 
     let aloc (loc : Locs.index) = ALoc.ALocRepresentationDoNotUse.make_keyed source (loc :> int) in
@@ -280,78 +282,107 @@ let mk_check_file ~options ~reader () =
 
     let cx = create_dep_cx file_key in
 
-    (* Currently, Flow stores type signatures as a single, serialized OCaml
-     * value in shared memory. This means that we fetch and deserialize the
-     * entire type signature for a file when we need any part of it. Once type
-     * signatures are stored more granularly in the shared heap, we can change
-     * this logic read signature data from the heap granularly as well. *)
-    let {
-      Packed_type_sig.Module.exports;
-      export_def;
-      module_refs;
-      local_defs;
-      remote_refs;
-      pattern_defs;
-      patterns;
-    } =
-      get_type_sig_unsafe file_key
-    in
+    let deserialize x = Marshal.from_string x 0 in
 
     let dependencies =
-      let f mref =
+      let f addr =
+        let mref = Heap.read_module_ref addr in
         let provider = find_resolved_module file_key mref in
         (mref, dep_module_t cx mref provider)
       in
-      Module_refs.map f module_refs
+      let addr = Heap.file_module_refs file_addr in
+      Heap.read_addr_tbl_generic f addr Module_refs.init
     in
 
     let exports file_rec =
-      let reason =
-        let file_loc = ALoc.of_loc { Loc.none with Loc.source } in
-        Reason.(mk_reason RExports file_loc)
+      let t =
+        lazy
+          (let exports = deserialize (Heap.read_exports (Heap.file_exports file_addr)) in
+           let reason =
+             let file_loc = ALoc.of_loc { Loc.none with Loc.source } in
+             Reason.(mk_reason RExports file_loc)
+           in
+           let resolved =
+             lazy (Pack.map_exports aloc exports |> Merge.merge_exports (Lazy.force file_rec) reason)
+           in
+           mk_sig_tvar cx reason resolved)
       in
-      let resolved =
-        lazy (Pack.map_exports aloc exports |> Merge.merge_exports (Lazy.force file_rec) reason)
-      in
-      let t = mk_sig_tvar cx reason resolved in
-      (fun () -> t)
+      (fun () -> Lazy.force t)
     in
 
     let export_def file_rec =
       lazy
-        (match export_def with
+        (match Heap.read_opt Heap.read_export_def (Heap.file_export_def file_addr) with
         | None -> None
-        | Some def -> Some (Pack.map_packed aloc def |> Merge.merge (Lazy.force file_rec)))
+        | Some def_str ->
+          let t =
+            deserialize def_str |> Pack.map_packed aloc |> Merge.merge (Lazy.force file_rec)
+          in
+          Some t)
     in
 
-    let local_def file_rec def =
-      let def = Pack.map_packed_def aloc def in
-      let reason = Merge.def_reason def in
-      let resolved = lazy (Merge.merge_def (Lazy.force file_rec) reason def) in
-      let t = mk_sig_tvar cx reason resolved in
-      fun () ->
-        let loc = Type_sig.def_id_loc def in
-        let name = Type_sig.def_name def in
-        (loc, name, t)
+    let local_def file_rec addr =
+      let thunk =
+        lazy
+          (let def = Pack.map_packed_def aloc (deserialize (Heap.read_local_def addr)) in
+           let loc = Type_sig.def_id_loc def in
+           let name = Type_sig.def_name def in
+           let reason = Merge.def_reason def in
+           let resolved = lazy (Merge.merge_def (Lazy.force file_rec) reason def) in
+           let t = mk_sig_tvar cx reason resolved in
+           (loc, name, t))
+      in
+      (fun () -> Lazy.force thunk)
     in
 
-    let remote_ref file_rec remote_ref =
-      let remote_ref = Pack.map_remote_ref aloc remote_ref in
-      let reason = Merge.remote_ref_reason remote_ref in
-      let resolved = lazy (Merge.merge_remote_ref (Lazy.force file_rec) reason remote_ref) in
-      let t = mk_sig_tvar cx reason resolved in
-      fun () ->
-        let loc = Pack.remote_ref_loc remote_ref in
-        let name = Pack.remote_ref_name remote_ref in
-        (loc, name, t)
+    let remote_ref file_rec addr =
+      let thunk =
+        lazy
+          (let remote_ref = Pack.map_remote_ref aloc (deserialize (Heap.read_remote_ref addr)) in
+           let loc = Pack.remote_ref_loc remote_ref in
+           let name = Pack.remote_ref_name remote_ref in
+           let reason = Merge.remote_ref_reason remote_ref in
+           let resolved = lazy (Merge.merge_remote_ref (Lazy.force file_rec) reason remote_ref) in
+           let t = mk_sig_tvar cx reason resolved in
+           (loc, name, t))
+      in
+      (fun () -> Lazy.force thunk)
     in
 
-    let pattern_def file_rec def =
-      lazy (Pack.map_packed aloc def |> Merge.merge (Lazy.force file_rec))
+    let pattern_def file_rec addr =
+      lazy
+        ( Heap.read_pattern_def addr
+        |> deserialize
+        |> Pack.map_packed aloc
+        |> Merge.merge (Lazy.force file_rec) )
     in
 
-    let pattern file_rec p =
-      lazy (Pack.map_pattern aloc p |> Merge.merge_pattern (Lazy.force file_rec))
+    let pattern file_rec addr =
+      lazy
+        ( Heap.read_pattern addr
+        |> deserialize
+        |> Pack.map_pattern aloc
+        |> Merge.merge_pattern (Lazy.force file_rec) )
+    in
+
+    let local_defs file_rec =
+      let addr = Heap.file_local_defs file_addr in
+      Heap.read_addr_tbl_generic (local_def file_rec) addr Local_defs.init
+    in
+
+    let remote_refs file_rec =
+      let addr = Heap.file_remote_refs file_addr in
+      Heap.read_addr_tbl_generic (remote_ref file_rec) addr Remote_refs.init
+    in
+
+    let pattern_defs file_rec =
+      let addr = Heap.file_pattern_defs file_addr in
+      Heap.read_addr_tbl_generic (pattern_def file_rec) addr Pattern_defs.init
+    in
+
+    let patterns file_rec =
+      let addr = Heap.file_patterns file_addr in
+      Heap.read_addr_tbl_generic (pattern file_rec) addr Patterns.init
     in
 
     let reposition loc t =
@@ -396,10 +427,10 @@ let mk_check_file ~options ~reader () =
           dependencies;
           exports = exports file_rec;
           export_def = export_def file_rec;
-          local_defs = Local_defs.map (local_def file_rec) local_defs;
-          remote_refs = Remote_refs.map (remote_ref file_rec) remote_refs;
-          pattern_defs = Pattern_defs.map (pattern_def file_rec) pattern_defs;
-          patterns = Patterns.map (pattern file_rec) patterns;
+          local_defs = local_defs file_rec;
+          remote_refs = remote_refs file_rec;
+          pattern_defs = pattern_defs file_rec;
+          patterns = patterns file_rec;
           reposition;
           mk_instance;
           qualify_type;
