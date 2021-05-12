@@ -332,6 +332,322 @@ let merge_context ~options ~reader master_cx component =
 
   cx
 
+let sig_hash =
+  let open Type_sig_collections in
+  let open Type_sig_hash in
+  let module Heap = SharedMem.NewAPI in
+  let module P = Type_sig_pack in
+  let deserialize x = Marshal.from_string x 0 in
+
+  (* The module type of a resource dependency only depends on the file
+   * extension. See Import_export.mk_resource_module_t *)
+  let resource_dep f =
+    let ext =
+      match Utils_js.extension_of_filename f with
+      | Some ext -> ext
+      | None -> failwith "resource file without extension"
+    in
+    let hash = Xx.hash ext 0L in
+    Resource (fun () -> hash)
+  in
+
+  (* A dependency which is not part of the cycle has already been merged and its
+   * hashes are stored in shared memory. We can create a checked_dep record
+   * containing accessors to those hashes.
+   *
+   * It might be useful to cache this for re-use across files in a component or
+   * components in a merge batch, but this performs well enough without caching
+   * for now. *)
+  let acyclic_dep =
+    let type_export addr () = Heap.read_type_export_hash addr in
+    let cjs_exports addr () = Heap.read_cjs_exports_hash addr in
+    let es_export addr () = Heap.read_es_export_hash addr in
+    let cjs_module file_key addr =
+      let filename = Fun.const (Xx.hash (File_key.to_string file_key) 0L) in
+      let info_addr = Heap.cjs_module_info addr in
+      let (P.CJSModuleInfo { type_export_keys; type_stars = _; strict = _ }) =
+        Heap.read_cjs_module_info info_addr |> deserialize
+      in
+      let type_exports =
+        let addr = Heap.cjs_module_type_exports addr in
+        Heap.read_addr_tbl type_export addr
+      in
+      let exports =
+        let addr = Heap.cjs_module_exports addr in
+        Heap.read_opt cjs_exports addr
+      in
+      let ns () = Heap.read_cjs_module_hash info_addr in
+      let type_exports =
+        let f acc name export = SMap.add name export acc in
+        Base.Array.fold2_exn ~init:SMap.empty ~f type_export_keys type_exports
+      in
+      CJS { filename; type_exports; exports; ns }
+    in
+    let es_module file_key addr =
+      let filename = Fun.const (Xx.hash (File_key.to_string file_key) 0L) in
+      let info_addr = Heap.es_module_info addr in
+      let (P.ESModuleInfo { type_export_keys; export_keys; type_stars = _; stars = _; strict = _ })
+          =
+        Heap.read_es_module_info info_addr |> deserialize
+      in
+      let type_exports =
+        let addr = Heap.es_module_type_exports addr in
+        Heap.read_addr_tbl type_export addr
+      in
+      let exports =
+        let addr = Heap.es_module_exports addr in
+        Heap.read_addr_tbl es_export addr
+      in
+      let ns () = Heap.read_es_module_hash info_addr in
+      let type_exports =
+        let f acc name export = SMap.add name export acc in
+        Base.Array.fold2_exn ~init:SMap.empty ~f type_export_keys type_exports
+      in
+      let exports =
+        let f acc name export = SMap.add name export acc in
+        Base.Array.fold2_exn ~init:SMap.empty ~f export_keys exports
+      in
+      ES { filename; type_exports; exports; ns }
+    in
+    fun ~reader dep_key ->
+      let file_addr = Parsing_heaps.Reader_dispatcher.get_type_sig_addr_unsafe ~reader dep_key in
+      let addr = Heap.file_module file_addr in
+      Heap.read_dyn_module (cjs_module dep_key) (es_module dep_key) addr
+  in
+
+  (* Create a Type_sig_hash.checked_dep record for a file in the merged component. *)
+  let cyclic_dep file_key file_addr file =
+    let filename = Fun.const (Xx.hash (File_key.to_string file_key) 0L) in
+
+    let type_export addr =
+      let read_hash () = Heap.read_type_export_hash addr in
+      let write_hash hash = Heap.write_type_export_hash addr hash in
+      let export = Heap.read_type_export addr in
+      write_hash (Xx.hash export 0L);
+      let export = deserialize export in
+      let visit edge _ = visit_type_export edge file export in
+      Cycle_hash.create_node visit read_hash write_hash
+    in
+
+    let cjs_exports addr =
+      let read_hash () = Heap.read_cjs_exports_hash addr in
+      let write_hash hash = Heap.write_cjs_exports_hash addr hash in
+      let exports = Heap.read_cjs_exports addr in
+      write_hash (Xx.hash exports 0L);
+      let exports = deserialize exports in
+      let visit edge dep_edge = visit_packed edge dep_edge file exports in
+      Cycle_hash.create_node visit read_hash write_hash
+    in
+
+    let es_export addr =
+      let read_hash () = Heap.read_es_export_hash addr in
+      let write_hash hash = Heap.write_es_export_hash addr hash in
+      let export = Heap.read_es_export addr in
+      write_hash (Xx.hash export 0L);
+      let export = deserialize export in
+      let visit edge dep_edge = visit_export edge dep_edge file export in
+      Cycle_hash.create_node visit read_hash write_hash
+    in
+
+    let cjs_module addr =
+      let info_addr = Heap.cjs_module_info addr in
+      let info = Heap.read_cjs_module_info info_addr in
+      let (P.CJSModuleInfo { type_export_keys; type_stars; strict = _ }) = deserialize info in
+      let type_exports =
+        let addr = Heap.cjs_module_type_exports addr in
+        Heap.read_addr_tbl type_export addr
+      in
+      let exports =
+        let addr = Heap.cjs_module_exports addr in
+        Heap.read_opt cjs_exports addr
+      in
+      let ns =
+        let visit edge dep_edge =
+          Array.iter edge type_exports;
+          Option.iter edge exports;
+          List.iter (fun (_, index) -> edge_import_ns edge dep_edge file index) type_stars
+        in
+        let read_hash () = Heap.read_cjs_module_hash info_addr in
+        let write_hash hash = Heap.write_cjs_module_hash info_addr hash in
+        write_hash (Xx.hash info 0L);
+        Cycle_hash.create_node visit read_hash write_hash
+      in
+      let type_exports =
+        let f acc name export = SMap.add name export acc in
+        Base.Array.fold2_exn ~init:SMap.empty ~f type_export_keys type_exports
+      in
+      CJS { filename; type_exports; exports; ns }
+    in
+
+    let es_module addr =
+      let info_addr = Heap.es_module_info addr in
+      let info = Heap.read_es_module_info info_addr in
+      let (P.ESModuleInfo { type_export_keys; export_keys; type_stars; stars; strict = _ }) =
+        deserialize info
+      in
+      let type_exports =
+        let addr = Heap.es_module_type_exports addr in
+        Heap.read_addr_tbl type_export addr
+      in
+      let exports =
+        let addr = Heap.es_module_exports addr in
+        Heap.read_addr_tbl es_export addr
+      in
+      let ns =
+        let addr = Heap.es_module_info addr in
+        let visit edge dep_edge =
+          Array.iter edge type_exports;
+          Array.iter edge exports;
+          List.iter (fun (_, index) -> edge_import_ns edge dep_edge file index) type_stars;
+          List.iter (fun (_, index) -> edge_import_ns edge dep_edge file index) stars
+        in
+        let read_hash () = Heap.read_es_module_hash addr in
+        let write_hash hash = Heap.write_es_module_hash addr hash in
+        write_hash (Xx.hash info 0L);
+        Cycle_hash.create_node visit read_hash write_hash
+      in
+      let type_exports =
+        let f acc name export = SMap.add name export acc in
+        Base.Array.fold2_exn ~init:SMap.empty ~f type_export_keys type_exports
+      in
+      let exports =
+        let f acc name export = SMap.add name export acc in
+        Base.Array.fold2_exn ~init:SMap.empty ~f export_keys exports
+      in
+      ES { filename; type_exports; exports; ns }
+    in
+
+    let addr = Heap.file_module file_addr in
+    Heap.read_dyn_module cjs_module es_module addr
+  in
+
+  let file_dependency ~reader component_rec component_map file_key mref =
+    let open Module_heaps in
+    let mname = Module_js.find_resolved_module ~reader ~audit:Expensive.ok file_key mref in
+    match Reader_dispatcher.get_file ~reader ~audit:Expensive.ok mname with
+    | None -> Unchecked
+    | Some (File_key.ResourceFile f) -> resource_dep f
+    | Some dep ->
+      let info = Reader_dispatcher.get_info_unsafe ~reader ~audit:Expensive.ok dep in
+      if info.checked && info.parsed then
+        match FilenameMap.find_opt dep component_map with
+        | Some i -> Cyclic (lazy (Lazy.force component_rec).(i))
+        | None -> Acyclic (lazy (acyclic_dep ~reader dep))
+      else
+        Unchecked
+  in
+
+  (* Create a Type_sig_hash.file record for a file in the merged component. *)
+  let component_file ~reader component_rec component_map file_key =
+    let file_addr = Parsing_heaps.Reader_dispatcher.get_type_sig_addr_unsafe ~reader file_key in
+
+    let dependencies =
+      let f addr =
+        let mref = Heap.read_module_ref addr in
+        file_dependency ~reader component_rec component_map file_key mref
+      in
+      let addr = Heap.file_module_refs file_addr in
+      Heap.read_addr_tbl_generic f addr Module_refs.init
+    in
+
+    let local_defs file_rec =
+      let f addr =
+        let def = Heap.read_local_def addr in
+        let hash = ref (Xx.hash def 0L) in
+        let def = deserialize def in
+        let visit edge dep_edge = visit_def edge dep_edge (Lazy.force file_rec) def in
+        let read_hash () = !hash in
+        let write_hash = ( := ) hash in
+        Cycle_hash.create_node visit read_hash write_hash
+      in
+      let addr = Heap.file_local_defs file_addr in
+      Heap.read_addr_tbl_generic f addr Local_defs.init
+    in
+
+    let remote_refs file_rec =
+      let f addr =
+        let remote_ref = Heap.read_remote_ref addr in
+        let hash = ref (Xx.hash remote_ref 0L) in
+        let remote_ref = deserialize remote_ref in
+        let visit edge dep_edge = visit_remote_ref edge dep_edge (Lazy.force file_rec) remote_ref in
+        let read_hash () = !hash in
+        let write_hash = ( := ) hash in
+        Cycle_hash.create_node visit read_hash write_hash
+      in
+      let addr = Heap.file_remote_refs file_addr in
+      Heap.read_addr_tbl_generic f addr Remote_refs.init
+    in
+
+    let pattern_defs file_rec =
+      let f addr =
+        let def = Heap.read_pattern_def addr in
+        let hash = ref (Xx.hash def 0L) in
+        let def = deserialize def in
+        let visit edge dep_edge = visit_packed edge dep_edge (Lazy.force file_rec) def in
+        let read_hash () = !hash in
+        let write_hash = ( := ) hash in
+        Cycle_hash.create_node visit read_hash write_hash
+      in
+      let addr = Heap.file_pattern_defs file_addr in
+      Heap.read_addr_tbl_generic f addr Pattern_defs.init
+    in
+
+    let patterns file_rec =
+      let f addr =
+        let pattern = Heap.read_pattern addr in
+        let hash = ref (Xx.hash pattern 0L) in
+        let pattern = deserialize pattern in
+        let visit f _ = visit_pattern f (Lazy.force file_rec) pattern in
+        let read_hash () = !hash in
+        let write_hash = ( := ) hash in
+        Cycle_hash.create_node visit read_hash write_hash
+      in
+      let addr = Heap.file_patterns file_addr in
+      Heap.read_addr_tbl_generic f addr Patterns.init
+    in
+
+    let rec file_rec =
+      lazy
+        {
+          dependencies;
+          local_defs = local_defs file_rec;
+          remote_refs = remote_refs file_rec;
+          pattern_defs = pattern_defs file_rec;
+          patterns = patterns file_rec;
+        }
+    in
+
+    cyclic_dep file_key file_addr (Lazy.force file_rec)
+  in
+
+  fun ~reader component ->
+    (* Built a reverse lookup to detect in-cycle dependencies. *)
+    let component = Array.of_list (Nel.to_list component) in
+    let component_map =
+      let acc = ref FilenameMap.empty in
+      Array.iteri (fun i file -> acc := FilenameMap.add file i !acc) component;
+      !acc
+    in
+
+    (* Create array of Type_sig_hash.checked_dep records, which we can use to
+     * traverse the graph of signature dependencies. *)
+    let rec component_rec =
+      lazy (Array.map (component_file ~reader component_rec component_map) component)
+    in
+
+    (* Compute component hash by visiting graph starting at namespace root of
+     * each file. The component hash is an unordered combination of each file's
+     * hash. *)
+    let cx = Cycle_hash.create_cx () in
+    let component_hash = ref 0L in
+    Array.iter
+      (fun (CJS { ns; _ } | ES { ns; _ }) ->
+        Cycle_hash.root cx ns;
+        let file_hash = Cycle_hash.read_hash ns in
+        component_hash := Int64.logxor file_hash !component_hash)
+      (Lazy.force component_rec);
+    !component_hash
+
 (* Entry point for merging a component *)
 let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component) =
   let start_time = Unix.gettimeofday () in
@@ -353,6 +669,10 @@ let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component
     let diff = false in
     (diff, Ok None)
   else if Options.new_check options then
+    let hash =
+      let reader = Abstract_state_reader.Mutator_state_reader reader in
+      sig_hash ~reader component
+    in
     let metadata = Context.metadata_of_options options in
     let lint_severities = Options.lint_severities options in
     let strict_mode = Options.strict_mode options in
@@ -370,20 +690,22 @@ let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component
             Parsing_heaps.Mutator_reader.get_ast_unsafe ~reader file
           in
           Type_inference_js.scan_for_suppressions cx lint_severities comments;
-          Context_heaps.Merge_context_mutator.add_leader worker_mutator leader_f file;
           cx)
         component
     in
     let suppressions = Context.error_suppressions cx in
+    let diff =
+      Context_heaps.Merge_context_mutator.add_merge_on_diff_no_context worker_mutator component hash
+    in
     let duration = Unix.gettimeofday () -. start_time in
-    (true, Ok (Some (suppressions, duration)))
+    (diff, Ok (Some (suppressions, duration)))
   else
     let reader = Abstract_state_reader.Mutator_state_reader reader in
     let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
     let cx = merge_context ~options ~reader master_cx component in
     let suppressions = Context.error_suppressions cx in
     let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in
-    let md5 = Merge_js.sig_context cx module_refs in
+    let hash = Merge_js.sig_context cx module_refs in
     Context.clear_master_shared cx master_cx;
     let diff =
       Context_heaps.Merge_context_mutator.add_merge_on_diff
@@ -391,7 +713,7 @@ let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component
         worker_mutator
         cx
         component
-        md5
+        hash
     in
     let duration = Unix.gettimeofday () -. start_time in
     (diff, Ok (Some (suppressions, duration)))

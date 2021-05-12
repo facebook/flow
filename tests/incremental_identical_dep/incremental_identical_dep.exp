@@ -1,0 +1,38 @@
+Error ------------------------------------------------------------------------------------------------------ thud.js:3:2
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   thud.js:3:2
+   3| (x: string);
+       ^
+
+References:
+   foo.js:2:16
+   2| export default 0
+                     ^ [1]
+   thud.js:3:5
+   3| (x: string);
+          ^^^^^^ [2]
+
+
+
+Found 1 error
+Error ------------------------------------------------------------------------------------------------------ thud.js:3:2
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   thud.js:3:2
+   3| (x: string);
+       ^
+
+References:
+   bar.js:2:16
+   2| export default 0
+                     ^ [1]
+   thud.js:3:5
+   3| (x: string);
+          ^^^^^^ [2]
+
+
+
+Found 1 error

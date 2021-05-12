@@ -1,0 +1,38 @@
+Error --------------------------------------------------------------------------------------------------------- c.js:5:2
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   c.js:5:2
+   5| (x: string);
+       ^
+
+References:
+   foo/a.js:5:16
+   5| export default 0;
+                     ^ [1]
+   c.js:5:5
+   5| (x: string);
+          ^^^^^^ [2]
+
+
+
+Found 1 error
+Error --------------------------------------------------------------------------------------------------------- c.js:5:2
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   c.js:5:2
+   5| (x: string);
+       ^
+
+References:
+   bar/a.js:5:16
+   5| export default 0;
+                     ^ [1]
+   c.js:5:5
+   5| (x: string);
+          ^^^^^^ [2]
+
+
+
+Found 1 error

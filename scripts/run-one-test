@@ -150,7 +150,7 @@ start_flow_unsafe () {
       PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
       "$FLOW" start "$root" \
         $flowlib --wait \
-        $new_check_flag \
+        --new-check "$new_check" \
         --wait-for-recheck "$wait_for_recheck" \
         --saved-state-fetcher "local" \
         --saved-state-no-fallback \
@@ -168,7 +168,7 @@ start_flow_unsafe () {
     PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
     "$FLOW" start "$root" \
       $flowlib --wait --wait-for-recheck "$wait_for_recheck" \
-      $new_check_flag \
+      --new-check "$new_check" \
       --file-watcher "$file_watcher" \
       --log-file "$abs_log_file" \
       --monitor-log-file "$abs_monitor_log_file" \
@@ -284,11 +284,6 @@ runtest() {
         start_args=""
         file_watcher="none"
         wait_for_recheck="true"
-        if [[ "$new_check" -eq 1 ]]; then
-          new_check_flag="--new-check"
-        else
-          new_check_flag=""
-        fi
         if [ -e ".testconfig" ]
         then
             # auto_start
@@ -377,7 +372,7 @@ runtest() {
             # start server and wait
             "$FLOW" start "$root" \
               $flowlib --wait \
-              $new_check_flag \
+              --new-check "$new_check" \
               --wait-for-recheck "$wait_for_recheck" \
               --lazy-mode none \
               --file-watcher "$file_watcher" \
@@ -407,7 +402,7 @@ runtest() {
               # default command is check with configurable --no-flowlib
               "$FLOW" check . \
                 $flowlib --strip-root --show-all-errors \
-                $new_check_flag \
+                --new-check "$new_check" \
                  1>> "$abs_out_file" 2>> "$stderr_dest"
               st=$?
             fi
@@ -436,7 +431,7 @@ runtest() {
             "$FLOW" "codemod" "annotate-exports" \
                 $flowlib \
                 ${cmd_args[*]} \
-                $new_check_flag \
+                --new-check "$new_check" \
                 --strip-root \
                 --quiet \
                 --input-file "$input_file" \
