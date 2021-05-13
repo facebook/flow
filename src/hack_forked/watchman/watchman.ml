@@ -206,7 +206,7 @@ type env = {
 let dead_env_from_alive env =
   {
     prior_settings = env.settings;
-    dead_since = Unix.time ();
+    dead_since = Unix.gettimeofday ();
     reinit_attempts = 0;
     (* When we start a new watchman connection, we continue to use the prior
      * clockspec. If the same watchman server is still alive, then all is
@@ -700,7 +700,7 @@ let extract_file_names env json =
 let within_backoff_time attempts time =
   let attempts = min attempts 3 in
   let offset = 4 * (2 ** attempts) in
-  Float.(Unix.time () >= time +. of_int offset)
+  Float.(Unix.gettimeofday () >= time +. of_int offset)
 
 let maybe_restart_instance instance =
   match instance with
@@ -722,7 +722,8 @@ let maybe_restart_instance instance =
       with
       | env ->
         Hh_logger.log "Watchman connection reestablished.";
-        EventLogger.watchman_connection_reestablished ();
+        let downtime = Unix.gettimeofday () -. dead_env.dead_since in
+        EventLogger.watchman_connection_reestablished downtime;
         Lwt.return (Watchman_alive env)
       | exception Lwt_unix.Timeout ->
         Hh_logger.log "Reestablishing watchman subscription timed out.";
