@@ -427,4 +427,11 @@ let tests =
          >:: mk_ssa_builder_test
                "enum E {A, B}; let a = E.A;"
                LocMap.(empty |> add (mk_loc (1, 23) (1, 24)) [mk_write (1, 5) (1, 6) "E"]);
+         "instance_of"
+         >:: mk_ssa_builder_test
+               "class A {}; let x = undefined; (x instanceof A)"
+               LocMap.(
+                 empty
+                 |> add (mk_loc (1, 32) (1, 33)) [mk_write (1, 16) (1, 17) "x"]
+                 |> add (mk_loc (1, 45) (1, 46)) [mk_write (1, 6) (1, 7) "A"]);
        ]
