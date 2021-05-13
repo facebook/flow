@@ -332,12 +332,25 @@ let merge_context ~options ~reader master_cx component =
 
   cx
 
-let sig_hash =
+let sig_hash ~root =
   let open Type_sig_collections in
   let open Type_sig_hash in
   let module Heap = SharedMem.NewAPI in
   let module P = Type_sig_pack in
   let deserialize x = Marshal.from_string x 0 in
+
+  let hash_file_key file_key =
+    let file_string =
+      match file_key with
+      | File_key.LibFile path
+      | File_key.SourceFile path
+      | File_key.JsonFile path
+      | File_key.ResourceFile path ->
+        Files.relative_path (Path.to_string root) path
+      | File_key.Builtins -> File_key.to_string file_key
+    in
+    Xx.hash file_string 0L
+  in
 
   (* The module type of a resource dependency only depends on the file
    * extension. See Import_export.mk_resource_module_t *)
@@ -363,7 +376,7 @@ let sig_hash =
     let cjs_exports addr () = Heap.read_cjs_exports_hash addr in
     let es_export addr () = Heap.read_es_export_hash addr in
     let cjs_module file_key addr =
-      let filename = Fun.const (Xx.hash (File_key.to_string file_key) 0L) in
+      let filename = Fun.const (hash_file_key file_key) in
       let info_addr = Heap.cjs_module_info addr in
       let (P.CJSModuleInfo { type_export_keys; type_stars = _; strict = _ }) =
         Heap.read_cjs_module_info info_addr |> deserialize
@@ -384,7 +397,7 @@ let sig_hash =
       CJS { filename; type_exports; exports; ns }
     in
     let es_module file_key addr =
-      let filename = Fun.const (Xx.hash (File_key.to_string file_key) 0L) in
+      let filename = Fun.const (hash_file_key file_key) in
       let info_addr = Heap.es_module_info addr in
       let (P.ESModuleInfo { type_export_keys; export_keys; type_stars = _; stars = _; strict = _ })
           =
@@ -417,7 +430,7 @@ let sig_hash =
 
   (* Create a Type_sig_hash.checked_dep record for a file in the merged component. *)
   let cyclic_dep file_key file_addr file =
-    let filename = Fun.const (Xx.hash (File_key.to_string file_key) 0L) in
+    let filename = Fun.const (hash_file_key file_key) in
 
     let type_export addr =
       let read_hash () = Heap.read_type_export_hash addr in
@@ -671,7 +684,8 @@ let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component
   else if Options.new_check options then
     let hash =
       let reader = Abstract_state_reader.Mutator_state_reader reader in
-      sig_hash ~reader component
+      let root = Options.root options in
+      sig_hash ~root ~reader component
     in
     let metadata = Context.metadata_of_options options in
     let lint_severities = Options.lint_severities options in
