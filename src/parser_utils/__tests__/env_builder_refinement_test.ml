@@ -43,42 +43,120 @@ let%expect_test "logical_expr" =
   print_ssa_test {|let x = null;
 let y = null;
 (x && (y = x)) + x|};
-  [%expect {| [ (3, 11) to (3, 12) => { [(3, 1) to (3, 2)], Truthy } ] |}]
+  [%expect {|
+    [ (3, 11) to (3, 12) => { [(3, 1) to (3, 2)], (Truthy
+       { Loc.source = None; start = { Loc.line = 3; column = 1 };
+         _end = { Loc.line = 3; column = 2 } }) } ] |}]
 
 let%expect_test "logical_expr_successive" =
   print_ssa_test {|let x = null;
 x && (x && x)|};
-  [%expect {| [ (2, 6) to (2, 7) => { [(2, 0) to (2, 1)], Truthy }; (2, 11) to (2, 12) => { [(2, 0) to (2, 1), (2, 6) to (2, 7)], (And (Truthy, Truthy)) } ] |}]
+  [%expect {|
+    [ (2, 6) to (2, 7) => { [(2, 0) to (2, 1)], (Truthy
+       { Loc.source = None; start = { Loc.line = 2; column = 0 };
+         _end = { Loc.line = 2; column = 1 } }) }; (2, 11) to (2, 12) => { [(2, 0) to (2, 1), (2, 6) to (2, 7)], (And (
+       (Truthy
+          { Loc.source = None; start = { Loc.line = 2; column = 0 };
+            _end = { Loc.line = 2; column = 1 } }),
+       (Truthy
+          { Loc.source = None; start = { Loc.line = 2; column = 6 };
+            _end = { Loc.line = 2; column = 7 } })
+       )) } ] |}]
 
 let%expect_test "logical_or" =
   print_ssa_test {|let x = null;
 x || x|};
-  [%expect {| [ (2, 5) to (2, 6) => { [(2, 0) to (2, 1)], (Not Truthy) } ] |}]
+  [%expect {|
+    [ (2, 5) to (2, 6) => { [(2, 0) to (2, 1)], (Not
+       (Truthy
+          { Loc.source = None; start = { Loc.line = 2; column = 0 };
+            _end = { Loc.line = 2; column = 1 } })) } ] |}]
 
 let%expect_test "logical_nc_and" =
   print_ssa_test {|let x = null;
 (x ?? x) && x|};
-  [%expect {| [ (2, 6) to (2, 7) => { [(2, 1) to (2, 2)], Maybe }; (2, 12) to (2, 13) => { [(2, 1) to (2, 2), (2, 6) to (2, 7)], (Or ((And (Truthy, (Not Maybe))), Truthy)) } ] |}]
+  [%expect {|
+    [ (2, 6) to (2, 7) => { [(2, 1) to (2, 2)], Maybe }; (2, 12) to (2, 13) => { [(2, 1) to (2, 2), (2, 6) to (2, 7)], (Or (
+       (And (
+          (Truthy
+             { Loc.source = None; start = { Loc.line = 2; column = 1 };
+               _end = { Loc.line = 2; column = 2 } }),
+          (Not Maybe))),
+       (Truthy
+          { Loc.source = None; start = { Loc.line = 2; column = 6 };
+            _end = { Loc.line = 2; column = 7 } })
+       )) } ] |}]
 
 let%expect_test "logical_nested_right" =
   print_ssa_test {|let x = null;
 x || (x || x)|};
-  [%expect {| [ (2, 6) to (2, 7) => { [(2, 0) to (2, 1)], (Not Truthy) }; (2, 11) to (2, 12) => { [(2, 0) to (2, 1), (2, 6) to (2, 7)], (And ((Not Truthy), (Not Truthy))) } ] |}]
+  [%expect {|
+    [ (2, 6) to (2, 7) => { [(2, 0) to (2, 1)], (Not
+       (Truthy
+          { Loc.source = None; start = { Loc.line = 2; column = 0 };
+            _end = { Loc.line = 2; column = 1 } })) }; (2, 11) to (2, 12) => { [(2, 0) to (2, 1), (2, 6) to (2, 7)], (And (
+       (Not
+          (Truthy
+             { Loc.source = None; start = { Loc.line = 2; column = 0 };
+               _end = { Loc.line = 2; column = 1 } })),
+       (Not
+          (Truthy
+             { Loc.source = None; start = { Loc.line = 2; column = 6 };
+               _end = { Loc.line = 2; column = 7 } }))
+       )) } ] |}]
 
 let%expect_test "logical_nested" =
   print_ssa_test {|let x = null;
 (x || x) && x|};
-  [%expect {| [ (2, 6) to (2, 7) => { [(2, 1) to (2, 2)], (Not Truthy) }; (2, 12) to (2, 13) => { [(2, 1) to (2, 2), (2, 6) to (2, 7)], (Or (Truthy, Truthy)) } ] |}]
+  [%expect {|
+    [ (2, 6) to (2, 7) => { [(2, 1) to (2, 2)], (Not
+       (Truthy
+          { Loc.source = None; start = { Loc.line = 2; column = 1 };
+            _end = { Loc.line = 2; column = 2 } })) }; (2, 12) to (2, 13) => { [(2, 1) to (2, 2), (2, 6) to (2, 7)], (Or (
+       (Truthy
+          { Loc.source = None; start = { Loc.line = 2; column = 1 };
+            _end = { Loc.line = 2; column = 2 } }),
+       (Truthy
+          { Loc.source = None; start = { Loc.line = 2; column = 6 };
+            _end = { Loc.line = 2; column = 7 } })
+       )) } ] |}]
 
 let%expect_test "logical_nested2" =
   print_ssa_test {|let x = null;
 (x && x) || (x && x)|};
-  [%expect {| [ (2, 6) to (2, 7) => { [(2, 1) to (2, 2)], Truthy }; (2, 13) to (2, 14) => { [(2, 1) to (2, 2), (2, 6) to (2, 7)], (Not (And (Truthy, Truthy))) }; (2, 18) to (2, 19) => { [(2, 1) to (2, 2), (2, 6) to (2, 7), (2, 13) to (2, 14)], (And ((Not (And (Truthy, Truthy))), Truthy)) } ] |}]
+  [%expect {|
+    [ (2, 6) to (2, 7) => { [(2, 1) to (2, 2)], (Truthy
+       { Loc.source = None; start = { Loc.line = 2; column = 1 };
+         _end = { Loc.line = 2; column = 2 } }) }; (2, 13) to (2, 14) => { [(2, 1) to (2, 2), (2, 6) to (2, 7)], (Not
+       (And (
+          (Truthy
+             { Loc.source = None; start = { Loc.line = 2; column = 1 };
+               _end = { Loc.line = 2; column = 2 } }),
+          (Truthy
+             { Loc.source = None; start = { Loc.line = 2; column = 6 };
+               _end = { Loc.line = 2; column = 7 } })
+          ))) }; (2, 18) to (2, 19) => { [(2, 1) to (2, 2), (2, 6) to (2, 7), (2, 13) to (2, 14)], (And (
+       (Not
+          (And (
+             (Truthy
+                { Loc.source = None; start = { Loc.line = 2; column = 1 };
+                  _end = { Loc.line = 2; column = 2 } }),
+             (Truthy
+                { Loc.source = None; start = { Loc.line = 2; column = 6 };
+                  _end = { Loc.line = 2; column = 7 } })
+             ))),
+       (Truthy
+          { Loc.source = None; start = { Loc.line = 2; column = 13 };
+            _end = { Loc.line = 2; column = 14 } })
+       )) } ] |}]
 
 let%expect_test "assignment_truthy" =
   print_ssa_test {|let x = null;
 (x = null) && x|};
-  [%expect {| [ (2, 14) to (2, 15) => { [(2, 1) to (2, 9)], Truthy } ] |}]
+  [%expect {|
+    [ (2, 14) to (2, 15) => { [(2, 1) to (2, 9)], (Truthy
+       { Loc.source = None; start = { Loc.line = 2; column = 1 };
+         _end = { Loc.line = 2; column = 2 } }) } ] |}]
 
 let%expect_test "eq_null" =
   print_ssa_test {|let x = null;
@@ -164,27 +242,56 @@ let%expect_test "unary_negation" =
 (!Array.isArray(x)) && x;
 !x && x;
 !(x || x) && x;|};
-  [%expect {| [ (2, 23) to (2, 24) => { [(2, 2) to (2, 18)], (Not IsArray) }; (3, 6) to (3, 7) => { [(3, 1) to (3, 2)], (Not Truthy) }; (4, 7) to (4, 8) => { [(4, 2) to (4, 3)], (Not Truthy) }; (4, 13) to (4, 14) => { [(4, 2) to (4, 3), (4, 7) to (4, 8)], (Not (Or (Truthy, Truthy))) } ] |}]
+  [%expect {|
+    [ (2, 23) to (2, 24) => { [(2, 2) to (2, 18)], (Not IsArray) }; (3, 6) to (3, 7) => { [(3, 1) to (3, 2)], (Not
+       (Truthy
+          { Loc.source = None; start = { Loc.line = 3; column = 1 };
+            _end = { Loc.line = 3; column = 2 } })) }; (4, 7) to (4, 8) => { [(4, 2) to (4, 3)], (Not
+       (Truthy
+          { Loc.source = None; start = { Loc.line = 4; column = 2 };
+            _end = { Loc.line = 4; column = 3 } })) }; (4, 13) to (4, 14) => { [(4, 2) to (4, 3), (4, 7) to (4, 8)], (Not
+       (Or (
+          (Truthy
+             { Loc.source = None; start = { Loc.line = 4; column = 2 };
+               _end = { Loc.line = 4; column = 3 } }),
+          (Truthy
+             { Loc.source = None; start = { Loc.line = 4; column = 7 };
+               _end = { Loc.line = 4; column = 8 } })
+          ))) } ] |}]
 
 let%expect_test "typeof_bool" =
   print_ssa_test {|let x = undefined;
 (typeof x == "boolean") && x|};
-  [%expect {| [ (2, 27) to (2, 28) => { [(2, 1) to (2, 22)], BoolR } ] |}]
+  [%expect {|
+    [ (2, 27) to (2, 28) => { [(2, 1) to (2, 22)], (BoolR
+       { Loc.source = None; start = { Loc.line = 2; column = 1 };
+         _end = { Loc.line = 2; column = 22 } }) } ] |}]
 
 let%expect_test "not_typeof_bool" =
   print_ssa_test {|let x = undefined;
 (typeof x != "boolean") && x|};
-  [%expect {| [ (2, 27) to (2, 28) => { [(2, 1) to (2, 22)], (Not BoolR) } ] |}]
+  [%expect {|
+    [ (2, 27) to (2, 28) => { [(2, 1) to (2, 22)], (Not
+       (BoolR
+          { Loc.source = None; start = { Loc.line = 2; column = 1 };
+            _end = { Loc.line = 2; column = 22 } })) } ] |}]
 
 let%expect_test "typeof_number" =
   print_ssa_test {|let x = undefined;
 (typeof x == "number") && x|};
-  [%expect {| [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], NumberR } ] |}]
+  [%expect {|
+    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (NumberR
+       { Loc.source = None; start = { Loc.line = 2; column = 1 };
+         _end = { Loc.line = 2; column = 21 } }) } ] |}]
 
 let%expect_test "not_typeof_number" =
   print_ssa_test {|let x = undefined;
 (typeof x != "number") && x|};
-  [%expect {| [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (Not NumberR) } ] |}]
+  [%expect {|
+    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (Not
+       (NumberR
+          { Loc.source = None; start = { Loc.line = 2; column = 1 };
+            _end = { Loc.line = 2; column = 21 } })) } ] |}]
 
 let%expect_test "typeof_function" =
   print_ssa_test {|let x = undefined;
@@ -209,42 +316,70 @@ let%expect_test "not_typeof_object" =
 let%expect_test "typeof_string" =
   print_ssa_test {|let x = undefined;
 (typeof x == "string") && x|};
-  [%expect {| [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], StringR } ] |}]
+  [%expect {|
+    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (StringR
+       { Loc.source = None; start = { Loc.line = 2; column = 1 };
+         _end = { Loc.line = 2; column = 21 } }) } ] |}]
 
 let%expect_test "not_typeof_string" =
   print_ssa_test {|let x = undefined;
 (typeof x != "string") && x|};
-  [%expect {| [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (Not StringR) } ] |}]
+  [%expect {|
+    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (Not
+       (StringR
+          { Loc.source = None; start = { Loc.line = 2; column = 1 };
+            _end = { Loc.line = 2; column = 21 } })) } ] |}]
 
 let%expect_test "typeof_symbol" =
   print_ssa_test {|let x = undefined;
 (typeof x == "symbol") && x|};
-  [%expect {| [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], SymbolR } ] |}]
+  [%expect {|
+    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (SymbolR
+       { Loc.source = None; start = { Loc.line = 2; column = 1 };
+         _end = { Loc.line = 2; column = 21 } }) } ] |}]
 
 let%expect_test "not_typeof_symbol" =
   print_ssa_test {|let x = undefined;
 (typeof x != "symbol") && x|};
-  [%expect {| [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (Not SymbolR) } ] |}]
+  [%expect {|
+    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (Not
+       (SymbolR
+          { Loc.source = None; start = { Loc.line = 2; column = 1 };
+            _end = { Loc.line = 2; column = 21 } })) } ] |}]
 
 let%expect_test "typeof_bool_template" =
   print_ssa_test {|let x = undefined;
 (typeof x == `boolean`) && x|};
-  [%expect {| [ (2, 27) to (2, 28) => { [(2, 1) to (2, 22)], BoolR } ] |}]
+  [%expect {|
+    [ (2, 27) to (2, 28) => { [(2, 1) to (2, 22)], (BoolR
+       { Loc.source = None; start = { Loc.line = 2; column = 1 };
+         _end = { Loc.line = 2; column = 22 } }) } ] |}]
 
 let%expect_test "not_typeof_bool_template" =
   print_ssa_test {|let x = undefined;
 (typeof x != `boolean`) && x|};
-  [%expect {| [ (2, 27) to (2, 28) => { [(2, 1) to (2, 22)], (Not BoolR) } ] |}]
+  [%expect {|
+    [ (2, 27) to (2, 28) => { [(2, 1) to (2, 22)], (Not
+       (BoolR
+          { Loc.source = None; start = { Loc.line = 2; column = 1 };
+            _end = { Loc.line = 2; column = 22 } })) } ] |}]
 
 let%expect_test "typeof_number_template" =
   print_ssa_test {|let x = undefined;
 (typeof x == `number`) && x|};
-  [%expect {| [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], NumberR } ] |}]
+  [%expect {|
+    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (NumberR
+       { Loc.source = None; start = { Loc.line = 2; column = 1 };
+         _end = { Loc.line = 2; column = 21 } }) } ] |}]
 
 let%expect_test "not_typeof_number_template" =
   print_ssa_test {|let x = undefined;
 (typeof x != `number`) && x|};
-  [%expect {| [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (Not NumberR) } ] |}]
+  [%expect {|
+    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (Not
+       (NumberR
+          { Loc.source = None; start = { Loc.line = 2; column = 1 };
+            _end = { Loc.line = 2; column = 21 } })) } ] |}]
 
 let%expect_test "typeof_function_template" =
   print_ssa_test {|let x = undefined;
@@ -269,44 +404,83 @@ let%expect_test "not_typeof_object_template" =
 let%expect_test "typeof_string_template" =
   print_ssa_test {|let x = undefined;
 (typeof x == `string`) && x|};
-  [%expect {| [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], StringR } ] |}]
+  [%expect {|
+    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (StringR
+       { Loc.source = None; start = { Loc.line = 2; column = 1 };
+         _end = { Loc.line = 2; column = 21 } }) } ] |}]
 
 let%expect_test "not_typeof_string_template" =
   print_ssa_test {|let x = undefined;
 (typeof x != `string`) && x|};
-  [%expect {| [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (Not StringR) } ] |}]
+  [%expect {|
+    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (Not
+       (StringR
+          { Loc.source = None; start = { Loc.line = 2; column = 1 };
+            _end = { Loc.line = 2; column = 21 } })) } ] |}]
 
 let%expect_test "typeof_symbol_template" =
   print_ssa_test {|let x = undefined;
 (typeof x == `symbol`) && x|};
-  [%expect {| [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], SymbolR } ] |}]
+  [%expect {|
+    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (SymbolR
+       { Loc.source = None; start = { Loc.line = 2; column = 1 };
+         _end = { Loc.line = 2; column = 21 } }) } ] |}]
 
 let%expect_test "not_typeof_symbol_template" =
   print_ssa_test {|let x = undefined;
 (typeof x != `symbol`) && x|};
-  [%expect {| [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (Not SymbolR) } ] |}]
+  [%expect {|
+    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (Not
+       (SymbolR
+          { Loc.source = None; start = { Loc.line = 2; column = 1 };
+            _end = { Loc.line = 2; column = 21 } })) } ] |}]
 
 let%expect_test "singleton_bool" =
   print_ssa_test {|let x = undefined;
 (x === true) && x|};
-  [%expect {| [ (2, 16) to (2, 17) => { [(2, 1) to (2, 11)], (SingletonBoolR true) } ] |}]
+  [%expect {|
+    [ (2, 16) to (2, 17) => { [(2, 1) to (2, 11)], SingletonBoolR {
+      loc =
+      { Loc.source = None; start = { Loc.line = 2; column = 7 };
+        _end = { Loc.line = 2; column = 11 } };
+      sense = true; lit = true} } ] |}]
 
 let%expect_test "singleton_str" =
   print_ssa_test {|let x = undefined;
 (x === "str") && x|};
-  [%expect{| [ (2, 17) to (2, 18) => { [(2, 1) to (2, 12)], (SingletonStrR "str") } ] |}]
+  [%expect{|
+    [ (2, 17) to (2, 18) => { [(2, 1) to (2, 12)], SingletonStrR {
+      loc =
+      { Loc.source = None; start = { Loc.line = 2; column = 7 };
+        _end = { Loc.line = 2; column = 12 } };
+      sense = true; lit = "str"} } ] |}]
 
 let%expect_test "singleton_str_template" =
   print_ssa_test {|let x = undefined;
 (x === `str`) && x|};
-  [%expect {| [ (2, 17) to (2, 18) => { [(2, 1) to (2, 12)], (SingletonStrR "str") } ] |}]
+  [%expect {|
+    [ (2, 17) to (2, 18) => { [(2, 1) to (2, 12)], SingletonStrR {
+      loc =
+      { Loc.source = None; start = { Loc.line = 2; column = 7 };
+        _end = { Loc.line = 2; column = 12 } };
+      sense = true; lit = "str"} } ] |}]
 
 let%expect_test "singleton_num" =
   print_ssa_test {|let x = undefined;
 (x === 3) && x|};
-  [%expect {| [ (2, 13) to (2, 14) => { [(2, 1) to (2, 8)], (SingletonNumR "3") } ] |}]
+  [%expect {|
+    [ (2, 13) to (2, 14) => { [(2, 1) to (2, 8)], SingletonNumR {
+      loc =
+      { Loc.source = None; start = { Loc.line = 2; column = 7 };
+        _end = { Loc.line = 2; column = 8 } };
+      sense = true; lit = (3., "3")} } ] |}]
 
 let%expect_test "singleton_num_neg" =
   print_ssa_test {|let x = undefined;
 (x === -3) && x|};
-  [%expect {| [ (2, 14) to (2, 15) => { [(2, 1) to (2, 9)], (SingletonNumR "-3") } ] |}]
+  [%expect {|
+    [ (2, 14) to (2, 15) => { [(2, 1) to (2, 9)], SingletonNumR {
+      loc =
+      { Loc.source = None; start = { Loc.line = 2; column = 7 };
+        _end = { Loc.line = 2; column = 9 } };
+      sense = true; lit = (-3., "-3")} } ] |}]

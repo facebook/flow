@@ -41,14 +41,14 @@ let is_number_literal node =
 let extract_number_literal node =
   let open Flow_ast in
   match node with
-  | Expression.Literal { Literal.value = Literal.Number _; raw; comments = _ } -> raw
+  | Expression.Literal { Literal.value = Literal.Number lit; raw; comments = _ } -> (lit, raw)
   | Expression.Unary
       {
         Expression.Unary.operator = Expression.Unary.Minus;
-        argument = (_, Expression.Literal { Literal.value = Literal.Number _; raw; _ });
+        argument = (_, Expression.Literal { Literal.value = Literal.Number lit; raw; _ });
         comments = _;
       } ->
-    "-" ^ raw
+    (-.lit, "-" ^ raw)
   | _ -> Utils_js.assert_false "not a number literal"
 
 module type S = sig
@@ -64,21 +64,33 @@ module type S = sig
     | And of refinement_kind * refinement_kind
     | Or of refinement_kind * refinement_kind
     | Not of refinement_kind
-    | Truthy
+    | Truthy of L.t
     | Null
     | Undefined
     | Maybe
     | InstanceOf of L.t
     | IsArray
-    | BoolR
+    | BoolR of L.t
     | FunctionR
-    | NumberR
+    | NumberR of L.t
     | ObjectR
-    | StringR
-    | SymbolR
-    | SingletonBoolR of bool
-    | SingletonStrR of string
-    | SingletonNumR of string
+    | StringR of L.t
+    | SymbolR of L.t
+    | SingletonBoolR of {
+        loc: L.t;
+        sense: bool;
+        lit: bool;
+      }
+    | SingletonStrR of {
+        loc: L.t;
+        sense: bool;
+        lit: string;
+      }
+    | SingletonNumR of {
+        loc: L.t;
+        sense: bool;
+        lit: float * string;
+      }
   [@@deriving show { with_path = false }]
 
   type refinement = L.LSet.t * refinement_kind
@@ -114,21 +126,33 @@ module Make
     | And of refinement_kind * refinement_kind
     | Or of refinement_kind * refinement_kind
     | Not of refinement_kind
-    | Truthy
+    | Truthy of L.t
     | Null
     | Undefined
     | Maybe
     | InstanceOf of L.t
     | IsArray
-    | BoolR
+    | BoolR of L.t
     | FunctionR
-    | NumberR
+    | NumberR of L.t
     | ObjectR
-    | StringR
-    | SymbolR
-    | SingletonBoolR of bool
-    | SingletonStrR of string
-    | SingletonNumR of string
+    | StringR of L.t
+    | SymbolR of L.t
+    | SingletonBoolR of {
+        loc: L.t;
+        sense: bool;
+        lit: bool;
+      }
+    | SingletonStrR of {
+        loc: L.t;
+        sense: bool;
+        lit: string;
+      }
+    | SingletonNumR of {
+        loc: L.t;
+        sense: bool;
+        lit: float * string;
+      }
   [@@deriving show { with_path = false }]
 
   type refinement = L.LSet.t * refinement_kind
@@ -235,16 +259,16 @@ module Make
       method identifier_refinement ((loc, ident) as identifier) =
         ignore @@ this#identifier identifier;
         let { Flow_ast.Identifier.name; _ } = ident in
-        this#add_refinement name (L.LSet.singleton loc, Truthy)
+        this#add_refinement name (L.LSet.singleton loc, Truthy loc)
 
       method assignment_refinement loc assignment =
         ignore @@ this#assignment loc assignment;
         let open Flow_ast.Expression.Assignment in
         match assignment.left with
-        | ( _,
+        | ( id_loc,
             Flow_ast.Pattern.Identifier
               { Flow_ast.Pattern.Identifier.name = (_, { Flow_ast.Identifier.name; _ }); _ } ) ->
-          this#add_refinement name (L.LSet.singleton loc, Truthy)
+          this#add_refinement name (L.LSet.singleton loc, Truthy id_loc)
         | _ -> ()
 
       method logical_refinement expr =
@@ -346,12 +370,12 @@ module Make
         ignore @@ this#expression arg;
         let refinement =
           match typename with
-          | "boolean" -> Some BoolR
+          | "boolean" -> Some (BoolR loc)
           | "function" -> Some FunctionR
-          | "number" -> Some NumberR
+          | "number" -> Some (NumberR loc)
           | "object" -> Some ObjectR
-          | "string" -> Some StringR
-          | "symbol" -> Some SymbolR
+          | "string" -> Some (StringR loc)
+          | "symbol" -> Some (SymbolR loc)
           | "undefined" -> Some Undefined
           | _ -> None
         in
@@ -430,14 +454,14 @@ module Make
           ->
           this#typeof_test loc argument s sense
         (* bool equality *)
-        | ((_, Expression.Literal { Literal.value = Literal.Boolean lit; _ }), expr)
-        | (expr, (_, Expression.Literal { Literal.value = Literal.Boolean lit; _ })) ->
-          this#literal_test ~strict ~sense loc expr (SingletonBoolR lit)
+        | ((lit_loc, Expression.Literal { Literal.value = Literal.Boolean lit; _ }), expr)
+        | (expr, (lit_loc, Expression.Literal { Literal.value = Literal.Boolean lit; _ })) ->
+          this#literal_test ~strict ~sense loc expr (SingletonBoolR { loc = lit_loc; sense; lit })
         (* string equality *)
-        | ((_, Expression.Literal { Literal.value = Literal.String lit; _ }), expr)
-        | (expr, (_, Expression.Literal { Literal.value = Literal.String lit; _ }))
+        | ((lit_loc, Expression.Literal { Literal.value = Literal.String lit; _ }), expr)
+        | (expr, (lit_loc, Expression.Literal { Literal.value = Literal.String lit; _ }))
         | ( expr,
-            ( _,
+            ( lit_loc,
               Expression.TemplateLiteral
                 {
                   Expression.TemplateLiteral.quasis =
@@ -451,7 +475,7 @@ module Make
                     ];
                   _;
                 } ) )
-        | ( ( _,
+        | ( ( lit_loc,
               Expression.TemplateLiteral
                 {
                   Expression.TemplateLiteral.quasis =
@@ -466,14 +490,24 @@ module Make
                   _;
                 } ),
             expr ) ->
-          this#literal_test ~strict ~sense loc expr (SingletonStrR lit)
+          this#literal_test ~strict ~sense loc expr (SingletonStrR { loc = lit_loc; sense; lit })
         (* number equality *)
-        | ((_, number_literal), expr) when is_number_literal number_literal ->
+        | ((lit_loc, number_literal), expr) when is_number_literal number_literal ->
           let raw = extract_number_literal number_literal in
-          this#literal_test ~strict ~sense loc expr (SingletonNumR raw)
-        | (expr, (_, number_literal)) when is_number_literal number_literal ->
+          this#literal_test
+            ~strict
+            ~sense
+            loc
+            expr
+            (SingletonNumR { loc = lit_loc; sense; lit = raw })
+        | (expr, (lit_loc, number_literal)) when is_number_literal number_literal ->
           let raw = extract_number_literal number_literal in
-          this#literal_test ~strict ~sense loc expr (SingletonNumR raw)
+          this#literal_test
+            ~strict
+            ~sense
+            loc
+            expr
+            (SingletonNumR { loc = lit_loc; sense; lit = raw })
         (* expr op null *)
         | ((_, Expression.Literal { Literal.value = Literal.Null; _ }), expr)
         | (expr, (_, Expression.Literal { Literal.value = Literal.Null; _ })) ->
