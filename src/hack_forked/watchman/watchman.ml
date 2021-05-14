@@ -484,11 +484,6 @@ let rec request ~debug_logging ?conn json =
       | Error _ as err -> Lwt.return err)
     | Error _ as err -> Lwt.return err)
 
-let request_exn ~debug_logging ?conn json =
-  match%lwt request ~debug_logging ?conn json with
-  | Ok result -> Lwt.return result
-  | Error err -> raise_error err
-
 let wait_read reader =
   match%lwt Lwt_unix.wait_read (Buffered_line_reader_lwt.get_fd reader) with
   | () -> Lwt.return (Ok ())
@@ -663,32 +658,26 @@ let watch =
     | Error _ as err -> Lwt.return err
 
 let re_init ?prior_clockspec settings =
+  let open Lwt_result.Infix in
   let debug_logging = settings.debug_logging in
-  let%lwt conn =
-    match%lwt open_connection () with
-    | Ok conn -> Lwt.return conn
-    | Error err -> raise_error err
-  in
-  let%lwt watch =
-    match%lwt watch ~debug_logging ~conn settings.roots with
-    | Ok watch -> Lwt.return watch
-    | Error err -> raise_error err
-  in
-  let%lwt clockspec =
-    match%lwt get_clockspec ~debug_logging ~conn ~watch prior_clockspec with
-    | Ok clockspec -> Lwt.return clockspec
-    | Error err -> raise_error err
-  in
+  open_connection () >>= fun conn ->
+  watch ~debug_logging ~conn settings.roots >>= fun watch ->
+  get_clockspec ~debug_logging ~conn ~watch prior_clockspec >>= fun clockspec ->
   let subscription = Printf.sprintf "%s.%d" settings.subscription_prefix (Unix.getpid ()) in
   let env = { settings; conn; watch; clockspec; subscription } in
-  let%lwt response = request_exn ~debug_logging ~conn (subscribe env) in
+  request ~debug_logging ~conn (subscribe env) >>= fun response ->
   ignore response;
-  Lwt.return env
+  Lwt.return (Ok env)
+
+let re_init_exn ?prior_clockspec settings =
+  match%lwt re_init ?prior_clockspec settings with
+  | Ok env -> Lwt.return env
+  | Error err -> raise_error err
 
 let init settings =
   catch
     ~f:(fun () ->
-      let%lwt v = re_init settings in
+      let%lwt v = re_init_exn settings in
       Lwt.return (Some (Watchman_alive v)))
     ~catch:(fun exn ->
       Hh_logger.exception_ ~prefix:"Watchman init: " exn;
@@ -732,7 +721,7 @@ let maybe_restart_instance instance =
       match%lwt
         Lwt_unix.with_timeout timeout @@ fun () ->
         match%lwt has_watchman_restarted dead_env with
-        | Ok false -> re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings
+        | Ok false -> re_init_exn ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings
         | Ok true -> raise_error Restarted
         | Error err -> raise_error err
       with
