@@ -43,5 +43,6 @@ The second argument to `flow.parse` is the options object. Currently supported o
 * `esproposal_export_star_as` (boolean, default `false`) - enable parsing of `export * as` syntax
 * `esproposal_nullish_coalescing` (boolean, default `false`) - enable parsing of nullish coalescing (`??`)
 * `esproposal_optional_chaining` (boolean, default `false`) - enable parsing of optional chaining (`?.`)
+* `tokens` (boolean, default `false`) - include a list of all parsed tokens in a top-level `tokens` property
 * `types` (boolean, default `true`) - enable parsing of Flow types
 * `use_strict` (boolean, default `false`) - treat the file as strict, without needing a "use strict" directive
