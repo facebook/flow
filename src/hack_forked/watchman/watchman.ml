@@ -240,6 +240,19 @@ let project_bool m =
   | Ok (v, _) -> v
   | Error _ -> false
 
+let response_error_of_json ?query ~response msg =
+  let request = Option.map ~f:Hh_json.json_to_string query in
+  let response = Hh_json.json_to_string response in
+  Response_error { request; response; msg }
+
+let get_string_prop ?query prop json =
+  let open Hh_json.Access in
+  match return json >>= get_string prop with
+  | Ok (result, _keytrace) -> Ok result
+  | Error err ->
+    let msg = access_failure_to_string err in
+    Error (response_error_of_json ?query ~response:json msg)
+
 let clock { watch_root; _ } = J.strlist ["clock"; watch_root]
 
 type watch_command =
@@ -541,9 +554,7 @@ let has_watchman_restarted_since ~debug_logging ~conn ~watch_root ~clockspec =
        * property. If it is missing then something has gone wrong with Watchman. Since we can't
        * prove that Watchman has not restarted, we must treat this as an error. *)
       let msg = "Expected an is_fresh_instance property" in
-      let request = Some (Hh_json.json_to_string query) in
-      let response = Hh_json.json_to_string response in
-      Lwt.return (Error (Response_error { request; response; msg })))
+      Lwt.return (Error (response_error_of_json ~query ~response msg)))
   | Error (Response_error _) ->
     (* if this simple query failed, it is because the root isn't being watched, so it may have
        missed updates. *)
@@ -573,10 +584,11 @@ let prepend_relative_path_term ~relative_path ~terms =
 (** Gets the clockspec. Uses the clockspec from the prior connection if one exists. *)
 let get_clockspec ~debug_logging ~conn ~watch prior_clockspec =
   match prior_clockspec with
-  | Some clockspec -> Lwt.return clockspec
+  | Some clockspec -> Lwt.return (Ok clockspec)
   | None ->
-    let%lwt response = request_exn ~debug_logging ~conn (clock watch) in
-    Lwt.return (J.get_string_val "clock" response)
+    let query = clock watch in
+    let%lwt response = request ~debug_logging ~conn query in
+    Lwt.return (Result.bind ~f:(get_string_prop ~query "clock") response)
 
 (** Watch this root
 
@@ -662,7 +674,11 @@ let re_init ?prior_clockspec settings =
     | Ok watch -> Lwt.return watch
     | Error err -> raise_error err
   in
-  let%lwt clockspec = get_clockspec ~debug_logging ~conn ~watch prior_clockspec in
+  let%lwt clockspec =
+    match%lwt get_clockspec ~debug_logging ~conn ~watch prior_clockspec with
+    | Ok clockspec -> Lwt.return clockspec
+    | Error err -> raise_error err
+  in
   let subscription = Printf.sprintf "%s.%d" settings.subscription_prefix (Unix.getpid ()) in
   let env = { settings; conn; watch; clockspec; subscription } in
   let%lwt response = request_exn ~debug_logging ~conn (subscribe env) in
@@ -879,11 +895,7 @@ let get_mergebase_and_changes instance =
           | Some (_clock, mergebase) ->
             let changes = extract_file_names env response in
             Ok (env, Ok (mergebase, changes))
-          | None ->
-            let msg = "Failed to extract mergebase" in
-            let request = Some (Hh_json.json_to_string query) in
-            let response = Hh_json.json_to_string response in
-            Error (Response_error { request; response; msg })
+          | None -> Error (response_error_of_json ~query ~response "Failed to extract mergebase")
         in
         Lwt.return result)
 
