@@ -1237,7 +1237,11 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                    Abnormal.catch_stmts_control_flow_exception (fun () ->
                        Toplevels.toplevels statement cx consequent)
                  in
-                 if added_default && Base.Option.is_none test then
+                 if
+                   added_default
+                   && Base.Option.is_none test
+                   && Base.Option.is_none !fallthrough_case
+                 then
                    Env.init_let
                      cx
                      ~use_op:unknown_use

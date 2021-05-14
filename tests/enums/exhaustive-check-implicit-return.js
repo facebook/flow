@@ -46,6 +46,7 @@ function c(x: E, y: F): number { // OK
         case F.D:
           return 2;
       }
+      break;
     case E.B:
       switch (y) {
         case F.C:
@@ -53,6 +54,7 @@ function c(x: E, y: F): number { // OK
         case F.D:
           return 4;
       }
+      break;
   }
 }
 
@@ -120,6 +122,7 @@ function h(x: E, y: F): number { // OK
         case F.D:
           return 4;
       }
+      break;
   }
 }
 
@@ -206,5 +209,13 @@ async function v(x: E): Promise<number> { // Error: switch isn't exhaustive
   switch (x) { // Error
     case E.A:
       return 1;
+  }
+}
+
+function w(x: E): number { // Error: number not compatible with implicitly returned undefined
+  switch (x) {
+    case E.A:
+      return 1;
+    case E.B:
   }
 }
