@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Base.Result.Let_syntax
 module FilenameSet = Utils_js.FilenameSet
 
 let spf = Printf.sprintf
@@ -60,6 +61,93 @@ let is_incompatible_flowconfig_change ~options config_path =
   else
     false
 
+(** Checks whether [updates] includes the flowconfig, and if so whether the change can
+    be handled incrementally (returns [Ok ()]) or we need to restart (returns [Error]) *)
+let check_for_flowconfig_change ~options ~skip_incompatible config_path updates =
+  if
+    (not skip_incompatible)
+    && SSet.mem config_path updates
+    && is_incompatible_flowconfig_change ~options config_path
+  then
+    Error
+      {
+        msg = spf "%s changed in an incompatible way. Exiting." config_path;
+        exit_status = Exit.Flowconfig_changed;
+      }
+  else
+    Ok ()
+
+let check_for_package_json_changes ~is_incompatible_package_json ~skip_incompatible updates =
+  let incompatible_packages =
+    updates
+    |> SSet.elements
+    |> ListUtils.filter_map (fun file ->
+           match is_incompatible_package_json file with
+           | Module_js.Compatible -> None
+           | Module_js.Incompatible reason -> Some (file, reason))
+  in
+  if (not skip_incompatible) && incompatible_packages <> [] then
+    let messages =
+      incompatible_packages
+      |> List.rev_map (fun (file, reason) ->
+             spf
+               "Modified package: %s (%s)"
+               file
+               (Module_js.string_of_package_incompatible_reason reason))
+      |> String.concat "\n"
+    in
+    Error
+      {
+        msg = spf "%s\nPackages changed in an incompatible way. Exiting." messages;
+        exit_status = Exit.Server_out_of_date;
+      }
+  else
+    Ok ()
+
+(** Check if the file's hash has changed *)
+let did_content_change ~reader filename =
+  let file = File_key.LibFile filename in
+  match Sys_utils.cat_or_failed filename with
+  | None -> true (* Failed to read lib file *)
+  | Some content -> not (Parsing_service_js.does_content_match_file_hash ~reader file content)
+
+let check_for_lib_changes ~reader ~all_libs ~root ~skip_incompatible updates =
+  let flow_typed_path = Path.to_string (Files.get_flowtyped_path root) in
+  let is_changed_lib filename =
+    let is_lib = SSet.mem filename all_libs || filename = flow_typed_path in
+    is_lib && did_content_change ~reader filename
+  in
+  let libs = updates |> SSet.filter is_changed_lib in
+  if (not skip_incompatible) && not (SSet.is_empty libs) then
+    let messages =
+      SSet.elements libs |> List.rev_map (spf "Modified lib file: %s") |> String.concat "\n"
+    in
+    Error
+      {
+        msg = spf "%s\nLib files changed in an incompatible way. Exiting" messages;
+        exit_status = Exit.Server_out_of_date;
+      }
+  else
+    Ok ()
+
+let filter_wanted_updates ~file_options ~sroot ~want updates =
+  let is_flow_file = Files.is_flow_file ~options:file_options in
+  SSet.fold
+    (fun f acc ->
+      if
+        is_flow_file f
+        (* note: is_included may be expensive. check in-root match first. *)
+        && (String_utils.string_starts_with f sroot || Files.is_included file_options f)
+        && (* removes excluded and lib files. the latter are already filtered *)
+        want f
+      then
+        let filename = Files.filename_from_string ~options:file_options f in
+        FilenameSet.add filename acc
+      else
+        acc)
+    updates
+    FilenameSet.empty
+
 (* This function takes a set of filenames. We have been told that these files have changed. The
  * main job of this function is to tell
  *
@@ -68,100 +156,27 @@ let is_incompatible_flowconfig_change ~options config_path =
  *    changed or the .flowconfig changed. Maybe one day we'll learn to incrementally check those
  *    changes, but for now we just need to exit and restart from scratch *)
 let process_updates ?(skip_incompatible = false) ~options ~libs updates =
-  Base.Result.(
-    let reader = State_reader.create () in
-    let file_options = Options.file_options options in
-    let all_libs =
-      let known_libs = libs in
-      let (_, maybe_new_libs) = Files.init file_options in
-      SSet.union known_libs maybe_new_libs
-    in
-    let root = Options.root options in
-    let config_path = Server_files_js.config_file (Options.flowconfig_name options) root in
-    let sroot = Path.to_string root in
-    let want = Files.wanted ~options:file_options all_libs in
-    Ok () >>= fun () ->
-    (* Die if the .flowconfig changed *)
-    if
-      (not skip_incompatible)
-      && SSet.mem config_path updates
-      && is_incompatible_flowconfig_change ~options config_path
-    then
-      Error
-        {
-          msg = spf "%s changed in an incompatible way. Exiting." config_path;
-          exit_status = Exit.Flowconfig_changed;
-        }
-    else
-      Ok () >>= fun () ->
-      let is_incompatible_package_json =
-        is_incompatible_package_json ~options ~reader ~want ~sroot ~file_options
-      in
-      (* Die if a package.json changed in an incompatible way *)
-      let incompatible_packages =
-        updates
-        |> SSet.elements
-        |> ListUtils.filter_map (fun file ->
-               match is_incompatible_package_json file with
-               | Module_js.Compatible -> None
-               | Module_js.Incompatible reason -> Some (file, reason))
-      in
-      if (not skip_incompatible) && incompatible_packages <> [] then
-        let messages =
-          incompatible_packages
-          |> List.rev_map (fun (file, reason) ->
-                 spf
-                   "Modified package: %s (%s)"
-                   file
-                   (Module_js.string_of_package_incompatible_reason reason))
-          |> String.concat "\n"
-        in
-        Error
-          {
-            msg = spf "%s\nPackages changed in an incompatible way. Exiting." messages;
-            exit_status = Exit.Server_out_of_date;
-          }
-      else
-        Ok () >>= fun () ->
-        let flow_typed_path = Path.to_string (Files.get_flowtyped_path root) in
-        let is_changed_lib filename =
-          let is_lib = SSet.mem filename all_libs || filename = flow_typed_path in
-          is_lib
-          &&
-          let file = File_key.LibFile filename in
-          match Sys_utils.cat_or_failed filename with
-          | None -> true (* Failed to read lib file *)
-          | Some content ->
-            (* Check if the lib file's hash has changed *)
-            not (Parsing_service_js.does_content_match_file_hash ~reader file content)
-        in
-        (* Die if a lib file changed *)
-        let libs = updates |> SSet.filter is_changed_lib in
-        if (not skip_incompatible) && not (SSet.is_empty libs) then
-          let messages =
-            SSet.elements libs |> List.rev_map (spf "Modified lib file: %s") |> String.concat "\n"
-          in
-          Error
-            {
-              msg = spf "%s\nLib files changed in an incompatible way. Exiting" messages;
-              exit_status = Exit.Server_out_of_date;
-            }
-        else
-          Ok () >>= fun () ->
-          let is_flow_file = Files.is_flow_file ~options:file_options in
-          Ok
-            (SSet.fold
-               (fun f acc ->
-                 if
-                   is_flow_file f
-                   (* note: is_included may be expensive. check in-root match first. *)
-                   && (String_utils.string_starts_with f sroot || Files.is_included file_options f)
-                   && (* removes excluded and lib files. the latter are already filtered *)
-                   want f
-                 then
-                   let filename = Files.filename_from_string ~options:file_options f in
-                   FilenameSet.add filename acc
-                 else
-                   acc)
-               updates
-               FilenameSet.empty))
+  let reader = State_reader.create () in
+  let file_options = Options.file_options options in
+  let all_libs =
+    let known_libs = libs in
+    let (_, maybe_new_libs) = Files.init file_options in
+    SSet.union known_libs maybe_new_libs
+  in
+  let root = Options.root options in
+  let config_path = Server_files_js.config_file (Options.flowconfig_name options) root in
+  let sroot = Path.to_string root in
+  let want = Files.wanted ~options:file_options all_libs in
+  let is_incompatible_package_json =
+    is_incompatible_package_json ~options ~reader ~want ~sroot ~file_options
+  in
+  (* Die if the .flowconfig changed *)
+  let%bind () = check_for_flowconfig_change ~options ~skip_incompatible config_path updates in
+  (* Die if a package.json changed in an incompatible way *)
+  let%bind () =
+    check_for_package_json_changes ~is_incompatible_package_json ~skip_incompatible updates
+  in
+  (* Die if a lib file changed *)
+  let%bind () = check_for_lib_changes ~reader ~all_libs ~root ~skip_incompatible updates in
+  (* Return only the updates we care about *)
+  Ok (filter_wanted_updates ~file_options ~sroot ~want updates)
