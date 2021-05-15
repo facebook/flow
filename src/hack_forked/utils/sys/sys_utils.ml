@@ -571,12 +571,17 @@ let rec waitpid_non_intr flags pid =
 
 (* Exposing this for a unit test *)
 let find_oom_in_dmesg_output pid name lines =
-  let re = Str.regexp (Printf.sprintf "Out of memory: Kill process \\([0-9]+\\) (%s)" name) in
+  (* oomd: "Memory cgroup out of memory: Killed process 4083583 (flow)" (https://facebookmicrosites.github.io/oomd/)
+     oomkiller: "Out of memory: Kill process 4083583 (flow)" *)
+  let re =
+    Str.regexp (Printf.sprintf "[Oo]ut of memory: Kill\\(ed\\)? process \\([0-9]+\\) (%s)" name)
+  in
+  let pid = string_of_int pid in
   List.exists lines (fun line ->
       try
         ignore @@ Str.search_forward re line 0;
-        let pid_s = Str.matched_group 1 line in
-        int_of_string pid_s = pid
+        let pid_s = Str.matched_group 2 line in
+        pid_s = pid
       with Not_found -> false)
 
 let check_dmesg_for_oom pid name =
