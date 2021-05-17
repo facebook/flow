@@ -379,18 +379,25 @@ let local_value_identifiers
 
 (* Roughly collects upper bounds of a type.
  * This logic will be changed or made unnecessary once we have contextual typing *)
-let rec upper_bounds_of_t ~cx : Type.t -> Type.t list =
-  let open Base.List.Let_syntax in
-  function
-  | Type.OpenT (_, id) ->
-    let%bind use = Flow_js_utils.possible_uses cx id in
-    upper_bounds_of_use_t ~cx use
-  | t -> return t
-
-and upper_bounds_of_use_t ~cx : Type.use_t -> Type.t list = function
-  | Type.ReposLowerT (_, _, use) -> upper_bounds_of_use_t ~cx use
-  | Type.UseT (_, t) -> upper_bounds_of_t ~cx t
-  | _ -> []
+let upper_bound_t_of_t ~cx =
+  let rec upper_bounds_of_t : Type.t -> Type.t list =
+    let open Base.List.Let_syntax in
+    function
+    | Type.OpenT (_, id) ->
+      let%bind use = Flow_js_utils.possible_uses cx id in
+      upper_bounds_of_use_t use
+    | t -> return t
+  and upper_bounds_of_use_t : Type.use_t -> Type.t list = function
+    | Type.ReposLowerT (_, _, use) -> upper_bounds_of_use_t use
+    | Type.UseT (_, t) -> upper_bounds_of_t t
+    | _ -> []
+  in
+  fun lb_type ->
+    let reason = TypeUtil.reason_of_t lb_type in
+    match upper_bounds_of_t lb_type with
+    | [] -> Type.MixedT.make reason (Trust.bogus_trust ())
+    | [upper_bound] -> upper_bound
+    | ub1 :: ub2 :: ubs -> Type.IntersectionT (reason, Type.InterRep.make ub1 ub2 ubs)
 
 let rec literals_of_ty acc ty =
   match ty with
@@ -402,24 +409,15 @@ let rec literals_of_ty acc ty =
   | Ty.Bool _ -> Ty.BoolLit true :: Ty.BoolLit false :: acc
   | _ -> acc
 
-let autocomplete_literals ~cx ~genv ~tparams_rev ~ac_loc lb_type =
-  let upper_bounds = upper_bounds_of_t ~cx lb_type in
-  let schemes =
-    Base.List.map upper_bounds ~f:(fun type_ -> ((), { Type.TypeScheme.tparams_rev; type_ }))
-  in
+let autocomplete_literals ~cx ~genv ~tparams_rev ~ac_loc ~upper_bound =
+  let scheme = { Type.TypeScheme.tparams_rev; type_ = upper_bound } in
   let options = { ty_normalizer_options with Ty_normalizer_env.expand_type_aliases = true } in
-  let upper_bound_tys =
-    Ty_normalizer.from_schemes ~options ~genv schemes
-    |> Base.List.map ~f:snd
-    |> Base.List.filter_map ~f:Base.Result.ok
-    |> Base.List.filter_map ~f:(function
-           | Ty.Type t -> Some t
-           | Ty.Decl _ -> None)
-  in
   let upper_bound_ty =
-    match upper_bound_tys with
-    | [] -> Ty.Top
-    | ub_ty :: ub_tys -> Ty.mk_inter (ub_ty, ub_tys) |> Ty_utils.simplify_type ~merge_kinds:false
+    match Ty_normalizer.from_scheme ~options ~genv scheme with
+    | Ok (Ty.Type ty) -> ty
+    | Ok (Ty.Decl _)
+    | Error _ ->
+      Ty.Top
   in
   (* TODO: since we're inserting values, we shouldn't really be using the Ty_printer *)
   let exact_by_default = Context.exact_by_default cx in
@@ -428,7 +426,7 @@ let autocomplete_literals ~cx ~genv ~tparams_rev ~ac_loc lb_type =
   Base.List.map literals ~f:(fun ty ->
       let name = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty in
       (* TODO: if we had both the expanded and unexpanded type alias, we'd
-          use the unexpanded alias for `ty` and the expanded literal for `name`. *)
+        use the unexpanded alias for `ty` and the expanded literal for `name`. *)
       autocomplete_create_result
         ~insert_text:name
         ~rank:0
@@ -532,7 +530,8 @@ let autocomplete_id
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let exact_by_default = Context.exact_by_default cx in
   let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig in
-  let results = autocomplete_literals ~cx ~genv ~tparams_rev ~ac_loc type_ in
+  let upper_bound = upper_bound_t_of_t ~cx type_ in
+  let results = autocomplete_literals ~cx ~genv ~tparams_rev ~ac_loc ~upper_bound in
   let rank =
     if results = [] then
       0
@@ -1273,7 +1272,8 @@ let autocomplete_get_results
         let genv =
           Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig
         in
-        let items = autocomplete_literals ~cx ~genv ~tparams_rev ~ac_loc lit_type in
+        let upper_bound = upper_bound_t_of_t ~cx lit_type in
+        let items = autocomplete_literals ~cx ~genv ~tparams_rev ~ac_loc ~upper_bound in
         let result = ServerProt.Response.Completion.{ items; is_incomplete = false } in
         ("Acliteral", AcResult { result; errors_to_log = [] })
       | Ac_id { include_super; include_this; type_ } ->
