@@ -136,7 +136,7 @@ let autocomplete
     let (line, column) = cursor in
     AutocompleteService_js.add_autocomplete_token contents line column
   in
-  Autocomplete_js.autocomplete_set_hooks ~trigger_character ~cursor:cursor_loc;
+  Autocomplete_js.autocomplete_set_hooks ~cursor:cursor_loc;
   let%lwt file_artifacts_result =
     let%lwt parse_result = Types_js.parse_contents ~options ~profiling contents path in
     Types_js.type_parse_artifacts ~options ~env ~profiling path parse_result

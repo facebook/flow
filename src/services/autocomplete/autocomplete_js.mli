@@ -49,6 +49,6 @@ val process_location :
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   process_location_result option
 
-val autocomplete_set_hooks : trigger_character:string option -> cursor:Loc.t -> unit
+val autocomplete_set_hooks : cursor:Loc.t -> unit
 
 val autocomplete_unset_hooks : unit -> unit

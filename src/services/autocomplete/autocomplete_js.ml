@@ -421,14 +421,11 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       | _ -> super#type_ t
   end
 
-let autocomplete_id from_trigger_character ~cursor _cx _ac_name ac_loc =
-  covers_target cursor ac_loc && not from_trigger_character
+let autocomplete_id ~cursor _cx _ac_name ac_loc = covers_target cursor ac_loc
 
-let autocomplete_literal from_trigger_character ~cursor _cx ac_loc =
-  covers_target cursor ac_loc && not from_trigger_character
+let autocomplete_literal ~cursor _cx ac_loc = covers_target cursor ac_loc
 
-let autocomplete_object_key from_trigger_character ~cursor _cx _ac_name ac_loc =
-  covers_target cursor ac_loc && not from_trigger_character
+let autocomplete_object_key ~cursor _cx _ac_name ac_loc = covers_target cursor ac_loc
 
 let autocomplete_member ~cursor _cx _ac_name ac_loc _this_t = covers_target cursor ac_loc
 
@@ -440,13 +437,11 @@ let process_location ~trigger_character ~cursor ~typed_ast =
     None
   with Found f -> Some f
 
-let autocomplete_set_hooks ~trigger_character ~cursor =
-  Type_inference_hooks_js.set_id_hook (autocomplete_id (trigger_character <> None) ~cursor);
-  Type_inference_hooks_js.set_literal_hook
-    (autocomplete_literal (trigger_character <> None) ~cursor);
-  Type_inference_hooks_js.set_obj_prop_decl_hook
-    (autocomplete_object_key (trigger_character <> None) ~cursor);
+let autocomplete_set_hooks ~cursor =
+  Type_inference_hooks_js.set_id_hook (autocomplete_id ~cursor);
+  Type_inference_hooks_js.set_literal_hook (autocomplete_literal ~cursor);
+  Type_inference_hooks_js.set_obj_prop_decl_hook (autocomplete_object_key ~cursor);
   Type_inference_hooks_js.set_member_hook (autocomplete_member ~cursor);
   Type_inference_hooks_js.set_jsx_hook (autocomplete_jsx ~cursor)
 
-let autocomplete_unset_hooks () = Type_inference_hooks_js.reset_hooks ()
+let autocomplete_unset_hooks = Type_inference_hooks_js.reset_hooks
