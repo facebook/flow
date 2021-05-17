@@ -548,61 +548,62 @@ export default (suite(
     ]),
     test('Errors with Loc.none', [
       lspStartAndConnect(),
-      addFiles('empty.js', 'importsFakeSymbol.js').waitUntilLSPMessage(
-        9000,
-        'textDocument/publishDiagnostics',
-        JSON.stringify({
-          uri: '<PLACEHOLDER_PROJECT_URL>/importsFakeSymbol.js',
-          diagnostics: [
+      addFiles('empty.js', 'importsFakeSymbol.js')
+        .waitUntilLSPMessage(
+          9000,
+          'textDocument/publishDiagnostics',
+          'property `foo` is missing in  exports [1].',
+        )
+        .verifyAllLSPMessagesInStep(
+          [
             {
-              range: {
-                start: {
-                  line: 2,
-                  character: 7,
-                },
-                end: {
-                  line: 2,
-                  character: 10,
-                },
+              method: 'textDocument/publishDiagnostics',
+              params: {
+                uri: '<PLACEHOLDER_PROJECT_URL>/importsFakeSymbol.js',
+                diagnostics: [
+                  {
+                    range: {
+                      start: {line: 2, character: 7},
+                      end: {line: 2, character: 10},
+                    },
+                    severity: 1,
+                    code: 'prop-missing',
+                    source: 'Flow',
+                    message: 'property `foo` is missing in  exports [1].',
+                    relatedInformation: [
+                      {
+                        location: {
+                          uri: '<PLACEHOLDER_PROJECT_URL>/empty.js',
+                          range: {
+                            start: {line: 0, character: 0},
+                            end: {line: 0, character: 0},
+                          },
+                        },
+                        message: '[1] exports',
+                      },
+                    ],
+                    relatedLocations: [
+                      {
+                        location: {
+                          uri: '<PLACEHOLDER_PROJECT_URL>/empty.js',
+                          range: {
+                            start: {line: 0, character: 0},
+                            end: {line: 0, character: 0},
+                          },
+                        },
+                        message: '[1] exports',
+                      },
+                    ],
+                  },
+                ],
               },
-              severity: 1,
-              code: 'InferError',
-              source: 'Flow',
-              message: 'property `foo` is missing in  exports [1].',
-              relatedInformation: [
-                {
-                  location: {
-                    uri: '<PLACEHOLDER_PROJECT_URL>/empty.js',
-                    range: {
-                      start: {
-                        line: 0,
-                        character: 0,
-                      },
-                      end: {
-                        line: 0,
-                        character: 0,
-                      },
-                    },
-                  },
-                  message: '[1] exports',
-                },
-              ],
-              relatedLocations: [
-                {
-                  location: {
-                    uri: '<PLACEHOLDER_PROJECT_URL>/empty.js',
-                    range: {
-                      start: {line: 0, character: 0},
-                      end: {line: 0, character: 0},
-                    },
-                  },
-                  message: '[1] exports',
-                },
-              ],
             },
           ],
-        }),
-      ),
+          [
+            'textDocument/publishDiagnostics',
+            ...lspIgnoreStatusAndCancellation,
+          ],
+        ),
     ]),
   ],
 ): Suite);
