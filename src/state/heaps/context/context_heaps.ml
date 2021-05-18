@@ -183,7 +183,7 @@ end = struct
     (* Ideally we'd assert that leader_f is a member of the oldified files, but it's a little too
      * expensive to send the set of oldified files to the worker *)
     let leader_f = Nel.hd component in
-    let ccx = Context.make_ccx () in
+    let ccx = Context.(make_ccx (empty_master_cx ())) in
     let cx =
       let metadata = Context.metadata_of_options options in
       (* This context is only used to add *something* to the sighash when we encounter an unexpected

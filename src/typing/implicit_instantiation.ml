@@ -307,17 +307,12 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
     in
     (tparams_map, marked_tparams, bounds_map)
 
-  let merge_builtins cx sig_cx master_cx =
-    let { Context.master_sig_cx; builtins } = master_cx in
-    Context.merge_into sig_cx master_sig_cx;
-    Context.set_builtins cx builtins
-
   let fold init_cx master_cx ~f ~init ~post implicit_instantiation_checks =
     let file = Context.file init_cx in
     let metadata = Context.metadata init_cx in
     let aloc_table = Utils_js.FilenameMap.find file (Context.aloc_tables init_cx) in
     let module_ref = Files.module_ref file in
-    let ccx = Context.make_ccx () in
+    let ccx = Context.make_ccx master_cx in
     let cx =
       Context.make
         ccx
@@ -342,8 +337,6 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
     Context.set_call_props cx reducer#get_reduced_call_props;
     Context.set_export_maps cx reducer#get_reduced_export_maps;
     Context.set_evaluated cx reducer#get_reduced_evaluated;
-
-    merge_builtins cx ccx master_cx;
 
     let r =
       Base.List.fold_left

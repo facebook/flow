@@ -106,13 +106,16 @@ type 'phase sig_t_ = 'phase Type.TypeContext.t
 
 type sig_t = Type.Constraint.infer_phase Type.TypeContext.t
 
-type master_context = {
-  master_sig_cx: sig_t;
+type 'phase master_context_ = {
+  master_sig_cx: 'phase sig_t_;
   builtins: Builtins.t;
 }
 
+type master_context = Type.Constraint.infer_phase master_context_
+
 type 'phase component_t_ = {
   mutable sig_cx: 'phase sig_t_;
+  mutable builtins: Builtins.t;
   (* mapping from keyed alocs to concrete locations *)
   mutable aloc_tables: ALoc.table Lazy.t Utils_js.FilenameMap.t;
   (* map from goal ids to types *)
@@ -177,7 +180,6 @@ type 'phase component_t_ = {
   mutable literal_subtypes: (Type.t * Type.use_t) list;
   mutable matching_props: (Reason.reason * string * Type.t * Type.t) list;
   mutable implicit_instantiation_checks: Implicit_instantiation_check.t list;
-  mutable builtins: Builtins.t;
 }
 
 type component_t = Type.Constraint.infer_phase component_t_
@@ -301,9 +303,12 @@ let empty_sig_cx =
     module_map = NameUtils.Map.empty;
   }
 
-let make_ccx () =
+let empty_master_cx () = { master_sig_cx = empty_sig_cx; builtins = Builtins.empty () }
+
+let make_ccx master_cx =
   {
-    sig_cx = empty_sig_cx;
+    sig_cx = master_cx.master_sig_cx;
+    builtins = master_cx.builtins;
     aloc_tables = Utils_js.FilenameMap.empty;
     goal_map = IMap.empty;
     type_graph = Graph_explorer.new_graph ();
@@ -334,7 +339,6 @@ let make_ccx () =
     fix_cache = Hashtbl.create 0;
     spread_cache = Hashtbl.create 0;
     speculation_state = ref [];
-    builtins = Builtins.empty ();
   }
 
 (* create a new context structure.
@@ -685,8 +689,6 @@ let set_use_def cx use_def = cx.use_def <- use_def
 let set_local_env cx exported_locals = cx.exported_locals <- exported_locals
 
 let set_module_map cx module_map = cx.ccx.sig_cx <- { cx.ccx.sig_cx with module_map }
-
-let set_builtins cx builtins = cx.ccx.builtins <- builtins
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
    the master sig context. Why? The master sig context, which contains global
