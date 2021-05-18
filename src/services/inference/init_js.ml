@@ -193,7 +193,7 @@ let error_set_to_filemap err_set =
    returns list of (lib file, success) pairs.
 *)
 let init ~options ~reader lib_files =
-  let ccx = Context.make_ccx () in
+  let ccx = Context.(make_ccx (empty_master_cx ())) in
   let master_cx =
     let metadata =
       Context.(

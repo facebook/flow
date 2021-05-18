@@ -42,10 +42,12 @@ type 'phase sig_t_ = 'phase Type.TypeContext.t
 
 type sig_t = Type.Constraint.infer_phase sig_t_
 
-type master_context = {
-  master_sig_cx: sig_t;
+type 'phase master_context_ = {
+  master_sig_cx: 'phase sig_t_;
   builtins: Builtins.t;
 }
+
+type master_context = Type.Constraint.infer_phase master_context_
 
 type metadata = {
   (* local *)
@@ -131,7 +133,9 @@ type subst_cache_err =
   | ETooFewTypeArgs of ALoc.t Reason.virtual_reason * int
   | ETooManyTypeArgs of ALoc.t Reason.virtual_reason * int
 
-val make_ccx : unit -> 'phase component_t_
+val empty_master_cx : unit -> _ master_context_
+
+val make_ccx : 'phase master_context_ -> 'phase component_t_
 
 val make :
   'phase component_t_ ->
@@ -400,8 +404,6 @@ val set_use_def : 'phase t_ -> Scope_api.With_ALoc.info * Ssa_api.With_ALoc.valu
 val set_module_map : 'phase t_ -> Type.t NameUtils.Map.t -> unit
 
 val set_local_env : 'phase t_ -> ALocSet.t SMap.t option -> unit
-
-val set_builtins : 'phase t_ -> Builtins.t -> unit
 
 val clear_master_shared : 'phase t_ -> master_context -> unit
 

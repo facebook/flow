@@ -57,7 +57,7 @@ let merge_context ~options ~reader master_cx component =
   let module Pack = Type_sig_pack in
   let module Merge = Type_sig_merge in
   (* make sig context, shared by all file contexts in component *)
-  let ccx = Context.make_ccx () in
+  let ccx = Context.make_ccx master_cx in
 
   (* create per-file contexts *)
   let metadata = Context.metadata_of_options options in
@@ -315,11 +315,6 @@ let merge_context ~options ~reader master_cx component =
 
   (* pick out leader/representative cx *)
   let { Merge.cx; _ } = component.(0) in
-
-  (* create builtins, merge master cx *)
-  Context.merge_into ccx master_cx.Context.master_sig_cx;
-  let builtins = master_cx.Context.builtins in
-  Context.set_builtins cx builtins;
 
   (* scan for suppressions *)
   scan_for_component_suppressions
@@ -690,7 +685,7 @@ let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component
     let metadata = Context.metadata_of_options options in
     let lint_severities = Options.lint_severities options in
     let strict_mode = Options.strict_mode options in
-    let ccx = Context.make_ccx () in
+    let ccx = Context.(make_ccx (empty_master_cx ())) in
     let (cx, _) =
       Nel.map
         (fun file ->

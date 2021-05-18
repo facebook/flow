@@ -213,12 +213,6 @@ let mk_check_file ~options ~reader () =
 
   let base_metadata = Context.metadata_of_options options in
 
-  let connect_builtins ccx cx =
-    let open Context in
-    merge_into ccx master_cx.master_sig_cx;
-    set_builtins cx master_cx.builtins
-  in
-
   (* Create a merging context for a dependency of a checked file. These contexts
    * are used when converting signatures to types. *)
   let create_dep_cx file_key =
@@ -227,14 +221,15 @@ let mk_check_file ~options ~reader () =
     let metadata = Context.docblock_overrides docblock base_metadata in
     let module_ref = Reason.OrdinaryName (Files.module_ref file_key) in
     let aloc_table = lazy (get_aloc_table_unsafe file_key) in
-    match Hashtbl.find_opt ccx_cache leader with
-    | Some ccx -> Context.make ccx metadata file_key aloc_table module_ref Context.Checking
-    | None ->
-      let ccx = Context.make_ccx () in
-      Hashtbl.add ccx_cache leader ccx;
-      let cx = Context.make ccx metadata file_key aloc_table module_ref Context.Checking in
-      connect_builtins ccx cx;
-      cx
+    let ccx =
+      match Hashtbl.find_opt ccx_cache leader with
+      | Some ccx -> ccx
+      | None ->
+        let ccx = Context.make_ccx master_cx in
+        Hashtbl.add ccx_cache leader ccx;
+        ccx
+    in
+    Context.make ccx metadata file_key aloc_table module_ref Context.Checking
   in
 
   (* Create a type representing the exports of a dependency. For checked
@@ -503,11 +498,10 @@ let mk_check_file ~options ~reader () =
   in
 
   fun file_key requires ast comments file_sig docblock aloc_table ->
-    let ccx = Context.make_ccx () in
+    let ccx = Context.make_ccx master_cx in
     let metadata = Context.docblock_overrides docblock base_metadata in
     let module_ref = Reason.OrdinaryName (Files.module_ref file_key) in
     let cx = Context.make ccx metadata file_key aloc_table module_ref Context.Checking in
-    connect_builtins ccx cx;
     let lint_severities = get_lint_severities metadata options in
     Type_inference_js.add_require_tvars cx file_sig;
     Context.set_local_env cx file_sig.File_sig.With_ALoc.exported_locals;

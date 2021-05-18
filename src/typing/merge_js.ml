@@ -83,12 +83,6 @@ module ImplicitInstantiationKit : Implicit_instantiation.KIT = Implicit_instanti
          (Reason.aloc_of_reason tparam_binder_reason, msg))
 end)
 
-(* Connect the builtins object in master_cx to the builtins reference in some
-   arbitrary cx. *)
-let implicit_require cx master_cx =
-  let builtins = master_cx.Context.builtins in
-  Context.set_builtins cx builtins
-
 (* Connect the export of cx_from to its import in cx. *)
 let explicit_impl_require cx (cx_from, m, loc) =
   let from_t = Context.find_module_sig cx_from m in
@@ -390,10 +384,6 @@ let detect_literal_subtypes =
         Flow_js.flow cx (t, u))
       checks
 
-let merge_builtins cx sig_cx master_cx =
-  Context.merge_into sig_cx master_cx.Context.master_sig_cx;
-  implicit_require cx master_cx
-
 let get_lint_severities metadata strict_mode lint_severities =
   if metadata.Context.strict || metadata.Context.strict_local then
     StrictModeSettings.fold
@@ -449,14 +439,11 @@ let post_merge_checks cx master_cx ast tast metadata file_sig =
    and optimized.
 *)
 let check_file ~options filename reqs dep_cxs master_cx ast comments file_sig docblock aloc_table =
-  let ccx = Context.make_ccx () in
+  let ccx = Context.make_ccx master_cx in
   let metadata = Context.docblock_overrides docblock options.metadata in
   let module_ref = Reason.OrdinaryName (Files.module_ref filename) in
   let cx = Context.make ccx metadata filename aloc_table module_ref Context.Checking in
   let lint_severities = get_lint_severities metadata options.strict_mode options.lint_severities in
-
-  (* Builtins *)
-  merge_builtins cx ccx master_cx;
 
   (* Imports *)
   Type_inference_js.add_require_tvars cx file_sig;
