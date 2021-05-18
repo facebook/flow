@@ -768,7 +768,8 @@ let mk_check_file options ~reader () =
   let process =
     if Options.new_check options then
       let reader = Abstract_state_reader.Mutator_state_reader reader in
-      New_check_service.mk_check_file ~options ~reader ()
+      let cache = New_check_cache.create ~capacity:1000 in
+      New_check_service.mk_check_file ~options ~reader ~cache ()
     else
       let options =
         {
@@ -840,7 +841,8 @@ let check_contents_context ~reader options file ast docblock file_sig =
     SMap.fold f require_loc_map []
   in
   if Options.new_check options then
-    let check_file = New_check_service.mk_check_file ~options ~reader () in
+    let cache = New_check_cache.create ~capacity:1000 in
+    let check_file = New_check_service.mk_check_file ~options ~reader ~cache () in
     check_file file required ast comments file_sig docblock aloc_table
   else
     let options =
