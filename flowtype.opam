@@ -12,6 +12,7 @@ depends: [
   "base" {>= "v0.12.2"}
   "base-unix"
   "base-bytes"
+  "core_kernel" {>= "v0.12.2"}
   "dtoa" {>= "0.3.1"}
   "ocamlbuild" {build}
   "ocamlfind" {build}

@@ -2,6 +2,7 @@
   (name flow_service_inference)
   (wrapped false)
   (libraries
+    core_kernel
     flow_common
     flow_common_utils_filename_cache
     flow_exit_status

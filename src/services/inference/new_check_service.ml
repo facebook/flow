@@ -192,7 +192,7 @@ let get_lint_severities metadata options =
  * function which can be called repeatedly. The returned function closes over an
  * environment which defines caches that can be re-used when checking multiple
  * files. *)
-let mk_check_file ~options ~reader () =
+let mk_check_file ~options ~reader ~cache () =
   let open Type_sig_collections in
   let module Merge = Type_sig_merge in
   let module Pack = Type_sig_pack in
@@ -208,27 +208,16 @@ let mk_check_file ~options ~reader () =
   let find_resolved_module = Module_js.find_resolved_module ~reader ~audit in
 
   let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
-  let ccx_cache : (File_key.t, Context.component_t) Hashtbl.t = Hashtbl.create 0 in
-  let file_cache : (Heap.checked_file SharedMem.addr, Merge.file) Hashtbl.t = Hashtbl.create 0 in
 
   let base_metadata = Context.metadata_of_options options in
 
   (* Create a merging context for a dependency of a checked file. These contexts
    * are used when converting signatures to types. *)
-  let create_dep_cx file_key =
-    let leader = find_leader file_key in
+  let create_dep_cx file_key ccx =
     let docblock = get_docblock_unsafe file_key in
     let metadata = Context.docblock_overrides docblock base_metadata in
     let module_ref = Reason.OrdinaryName (Files.module_ref file_key) in
     let aloc_table = lazy (get_aloc_table_unsafe file_key) in
-    let ccx =
-      match Hashtbl.find_opt ccx_cache leader with
-      | Some ccx -> ccx
-      | None ->
-        let ccx = Context.make_ccx master_cx in
-        Hashtbl.add ccx_cache leader ccx;
-        ccx
-    in
     Context.make ccx metadata file_key aloc_table module_ref Context.Checking
   in
 
@@ -246,14 +235,8 @@ let mk_check_file ~options ~reader () =
       else
         unchecked_module_t cx mref
   and sig_module_t cx file_key _loc =
-    let file_addr = get_type_sig_unsafe file_key in
     let file =
-      match Hashtbl.find_opt file_cache file_addr with
-      | Some file -> file
-      | None ->
-        let file = dep_file file_key file_addr in
-        Hashtbl.add file_cache file_addr file;
-        file
+      New_check_cache.find_or_create cache ~find_leader ~master_cx ~create_file:dep_file file_key
     in
     let t = file.Merge.exports () in
     copy_into cx file.Merge.cx t;
@@ -262,7 +245,7 @@ let mk_check_file ~options ~reader () =
    * convert signatures into types. This function reads the signature for a file
    * from shared memory and creates thunks (either lazy tvars or lazy types)
    * that resolve to types. *)
-  and dep_file file_key file_addr =
+  and dep_file file_key ccx =
     let source = Some file_key in
 
     let aloc (loc : Locs.index) = ALoc.ALocRepresentationDoNotUse.make_keyed source (loc :> int) in
@@ -275,9 +258,11 @@ let mk_check_file ~options ~reader () =
         (fun loc -> aloc loc |> ALoc.to_loc aloc_table |> ALoc.of_loc)
     in
 
-    let cx = create_dep_cx file_key in
+    let cx = create_dep_cx file_key ccx in
 
     let deserialize x = Marshal.from_string x 0 in
+
+    let file_addr = get_type_sig_unsafe file_key in
 
     let dependencies =
       let f addr =
