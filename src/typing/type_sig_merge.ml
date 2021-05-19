@@ -11,44 +11,6 @@ module Pack = Type_sig_pack
 module Option = Base.Option
 module Fn = Base.Fn
 
-module Component : sig
-  type 'a t
-
-  type index = private int
-
-  val make : 'a Nel.t -> (index -> 'a -> 'b) -> 'b t
-
-  val leader : 'a t -> 'a
-
-  val get : 'a t -> index -> 'a
-
-  val map : ('a -> 'b) -> 'a t -> 'b t
-
-  val iter : ('a -> unit) -> 'a t -> unit
-
-  val iteri : (index -> 'a -> unit) -> 'a t -> unit
-end = struct
-  type 'a t = 'a array
-
-  type index = int
-
-  let make (x, xs) f =
-    let len = 1 + List.length xs in
-    let component = Array.make len (f 0 x) in
-    List.iteri (fun i x -> component.(i + 1) <- f (i + 1) x) xs;
-    component
-
-  external get : 'a t -> index -> 'a = "%array_unsafe_get"
-
-  let leader xs = get xs 0
-
-  let map = Array.map
-
-  let iter = Array.iter
-
-  let iteri = Array.iteri
-end
-
 type exports =
   | CJSExports of {
       type_exports: (ALoc.t option * Type.t) Lazy.t SMap.t;
