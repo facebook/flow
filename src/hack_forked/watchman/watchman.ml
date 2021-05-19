@@ -18,7 +18,7 @@ open Utils
  *   * Use the BSER protocol for enhanced performance
  *)
 
-exception Watchman_error of string
+exception Watchman_error
 
 exception Subscription_canceled_by_watchman
 
@@ -55,10 +55,10 @@ let raise_error = function
     raise Config_problem
   | Socket_unavailable { msg } ->
     let () = log_error msg in
-    raise (Watchman_error msg)
+    raise Watchman_error
   | Response_error { request; response; msg } ->
     let () = log_error ?request ~response msg in
-    raise (Watchman_error msg)
+    raise Watchman_error
   | Fresh_instance ->
     Hh_logger.log "Watchman server is fresh instance. Exiting.";
     raise Exit.(Exit_with Watchman_fresh_instance)
@@ -793,17 +793,9 @@ let call_on_instance :
           let%lwt env = close_channel_on_instance env in
           on_dead env
         in
-        let log_died msg =
-          Hh_logger.log "%s" msg;
-          EventLogger.watchman_died_caught msg
-        in
         match Exception.unwrap exn with
-        | Watchman_error msg ->
-          log_died (Printf.sprintf "Watchman error: %s. Closing channel" msg);
-          close_channel_on_instance' env
-        | Subscription_canceled_by_watchman ->
-          log_died "Watchman cancelled our subscription. Closing channel";
-          close_channel_on_instance' env
+        | Watchman_error -> close_channel_on_instance' env
+        | Subscription_canceled_by_watchman -> close_channel_on_instance' env
         | Config_problem ->
           (* this only happens during (re)init, so we don't need to handle it here.
              it's unexpected if it happens, so reraising it like other unexpected
