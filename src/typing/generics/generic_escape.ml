@@ -18,10 +18,9 @@ type acc = {
   use_op: use_op;
 }
 
-class escape_finder
-  ~gcx ~(add_output : 'phase Context.t_ -> ?trace:Type.trace -> Error_message.t -> unit) =
+class escape_finder ~gcx ~(add_output : Context.t -> ?trace:Type.trace -> Error_message.t -> unit) =
   object (self)
-    inherit [acc, 'phase] Type_visitor.t as super
+    inherit [acc] Type_visitor.t as super
 
     method scan_for_generics cx tvar_ids ~top_level_reason ~annot_reason scope_id use_op seen ty =
       let { seen; _ } =
@@ -150,9 +149,7 @@ class escape_finder
   end
 
 let scan_for_escapes
-    (cx : 'phase Context.t_)
-    ~(add_output : 'phase Context.t_ -> ?trace:Type.trace -> Error_message.t -> unit)
-    ast =
+    cx ~(add_output : Context.t -> ?trace:Type.trace -> Error_message.t -> unit) ast =
   let scan_for_escapes_in_scope escape_finder scope_id scoped_tvars =
     let scan_tvar var_id annot_reason seen =
       let scan_type ty (_, use_op) seen =

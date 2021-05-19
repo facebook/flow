@@ -62,29 +62,29 @@ type def =
    *)
   | Id
 
-type 'phase hook_state_t = {
-  id_hook: 'phase Context.t_ -> string -> ALoc.t -> bool;
-  literal_hook: 'phase Context.t_ -> ALoc.t -> bool;
-  lval_hook: 'phase Context.t_ -> string -> ALoc.t -> def -> unit;
-  member_hook: 'phase Context.t_ -> string -> ALoc.t -> Type.t -> bool;
+type hook_state_t = {
+  id_hook: Context.t -> string -> ALoc.t -> bool;
+  literal_hook: Context.t -> ALoc.t -> bool;
+  lval_hook: Context.t -> string -> ALoc.t -> def -> unit;
+  member_hook: Context.t -> string -> ALoc.t -> Type.t -> bool;
   (* TODO: This is inconsistent with the way the id/member hooks work, but we
      currently don't need a way to override call types, so it simplifies
      things a bit *)
-  call_hook: 'phase Context.t_ -> string -> ALoc.t -> Type.t -> unit;
-  jsx_hook: 'phase Context.t_ -> string -> ALoc.t -> bool;
+  call_hook: Context.t -> string -> ALoc.t -> Type.t -> unit;
+  jsx_hook: Context.t -> string -> ALoc.t -> bool;
   class_member_decl_hook:
-    'phase Context.t_ -> Type.t (* self *) -> bool (* static *) -> string -> ALoc.t -> unit;
-  obj_prop_decl_hook: 'phase Context.t_ -> string -> ALoc.t -> bool;
-  obj_type_prop_decl_hook: 'phase Context.t_ -> string -> ALoc.t -> unit;
+    Context.t -> Type.t (* self *) -> bool (* static *) -> string -> ALoc.t -> unit;
+  obj_prop_decl_hook: Context.t -> string -> ALoc.t -> bool;
+  obj_type_prop_decl_hook: Context.t -> string -> ALoc.t -> unit;
   (* Called when ObjT 1 ~> ObjT 2 *)
-  obj_to_obj_hook: 'phase Context.t_ -> Type.t (* ObjT 1 *) -> Type.t (* ObjT 2 *) -> unit;
+  obj_to_obj_hook: Context.t -> Type.t (* ObjT 1 *) -> Type.t (* ObjT 2 *) -> unit;
   (* Called when InstanceT ~> ObjT *)
-  instance_to_obj_hook: 'phase Context.t_ -> Type.t (* InstanceT *) -> Type.t (* ObjT *) -> unit;
+  instance_to_obj_hook: Context.t -> Type.t (* InstanceT *) -> Type.t (* ObjT *) -> unit;
   (* Dispatched with "default" for default exports *)
   export_named_hook: string (* name *) -> ALoc.t -> unit;
 }
 
-let nop_hook_state : Type.Constraint.infer_phase hook_state_t =
+let nop_hook_state =
   {
     id_hook = id_nop;
     literal_hook = literal_nop;

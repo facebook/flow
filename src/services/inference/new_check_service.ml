@@ -43,7 +43,7 @@ let copier =
   let open Type in
   let open Constraint in
   object (self)
-    inherit [Context.t, infer_phase] Type_visitor.t as super
+    inherit [Context.t] Type_visitor.t as super
 
     (* Copying a tvar produces a FullyResolved tvar in the dst cx, which
      * contains an unevaluated thunk. The laziness here makes the copying

@@ -60,7 +60,7 @@ let merge_trust_var constr =
 
 class context_optimizer ~no_lowers =
   object (self)
-    inherit [Polarity.t, Type.Constraint.infer_phase] Type_mapper.t_with_uses as super
+    inherit [Polarity.t] Type_mapper.t_with_uses as super
 
     val sig_hash = Xx.init 0L
 
@@ -87,7 +87,7 @@ class context_optimizer ~no_lowers =
 
     val mutable reduced_module_map = NameUtils.Map.empty
 
-    val mutable reduced_graph : Type.Constraint.infer_phase Type.Constraint.node IMap.t = IMap.empty
+    val mutable reduced_graph : Type.Constraint.node IMap.t = IMap.empty
 
     val mutable reduced_trust_graph = IMap.empty
 

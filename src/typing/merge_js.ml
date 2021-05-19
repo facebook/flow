@@ -286,7 +286,7 @@ let check_implicit_instantiations cx master_cx =
 class resolver_visitor =
   let no_lowers _cx r = Type.Unsoundness.merged_any r in
   object (self)
-    inherit [unit, Type.Constraint.infer_phase] Type_mapper.t_with_uses as super
+    inherit [unit] Type_mapper.t_with_uses as super
 
     method! type_ cx map_cx t =
       let open Type in

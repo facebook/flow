@@ -5,32 +5,32 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-class ['a, 'phase] t :
+class ['a] t :
   object
     (* Only exposing a few methods for now. *)
-    method type_ : 'phase Context.t_ -> Polarity.t -> 'a -> Type.t -> 'a
+    method type_ : Context.t -> Polarity.t -> 'a -> Type.t -> 'a
 
-    method def_type : 'phase Context.t_ -> Polarity.t -> 'a -> Type.def_t -> 'a
+    method def_type : Context.t -> Polarity.t -> 'a -> Type.def_t -> 'a
 
-    method targ : 'phase Context.t_ -> Polarity.t -> 'a -> Type.targ -> 'a
+    method targ : Context.t -> Polarity.t -> 'a -> Type.targ -> 'a
 
-    method use_type_ : 'phase Context.t_ -> 'a -> Type.use_t -> 'a
+    method use_type_ : Context.t -> 'a -> Type.use_t -> 'a
 
-    method tvar : 'phase Context.t_ -> Polarity.t -> 'a -> Reason.reason -> Type.ident -> 'a
+    method tvar : Context.t -> Polarity.t -> 'a -> Reason.reason -> Type.ident -> 'a
 
-    method props : 'phase Context.t_ -> Polarity.t -> 'a -> Type.Properties.id -> 'a
+    method props : Context.t -> Polarity.t -> 'a -> Type.Properties.id -> 'a
 
-    method prop : 'phase Context.t_ -> Polarity.t -> 'a -> Type.property -> 'a
+    method prop : Context.t -> Polarity.t -> 'a -> Type.property -> 'a
 
-    method call_prop : 'phase Context.t_ -> Polarity.t -> 'a -> int -> 'a
+    method call_prop : Context.t -> Polarity.t -> 'a -> int -> 'a
 
-    method exports : 'phase Context.t_ -> Polarity.t -> 'a -> Type.Exports.id -> 'a
+    method exports : Context.t -> Polarity.t -> 'a -> Type.Exports.id -> 'a
 
-    method eval_id : 'phase Context.t_ -> Polarity.t -> 'a -> Type.Eval.id -> 'a
+    method eval_id : Context.t -> Polarity.t -> 'a -> Type.Eval.id -> 'a
 
-    method fun_type : 'phase Context.t_ -> Polarity.t -> 'a -> Type.funtype -> 'a
+    method fun_type : Context.t -> Polarity.t -> 'a -> Type.funtype -> 'a
 
-    method dict_type : 'phase Context.t_ -> Polarity.t -> 'a -> Type.dicttype -> 'a
+    method dict_type : Context.t -> Polarity.t -> 'a -> Type.dicttype -> 'a
 
-    method destructor : 'phase Context.t_ -> 'a -> Type.destructor -> 'a
+    method destructor : Context.t -> 'a -> Type.destructor -> 'a
   end

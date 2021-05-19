@@ -74,7 +74,7 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
    *)
   class implicit_instantiation_visitor ~bounds_map =
     object (self)
-      inherit [Marked.t * SSet.t, Type.Constraint.infer_phase] Type_visitor.t as super
+      inherit [Marked.t * SSet.t] Type_visitor.t as super
 
       method! type_ cx pole ((marked, tparam_names) as acc) =
         function

@@ -6,7 +6,7 @@
  *)
 
 val scan_for_suppressions :
-  'phase Context.t_ -> Severity.severity LintSettings.t -> Loc.t Flow_ast.Comment.t list -> unit
+  Context.t -> Severity.severity LintSettings.t -> Loc.t Flow_ast.Comment.t list -> unit
 
 val add_require_tvars : Context.t -> File_sig.With_ALoc.t -> unit
 

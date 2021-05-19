@@ -496,8 +496,7 @@ let exact_obj_error cx trace obj_kind ~use_op ~exact_reason l =
 
 (** TODO: (1) Define a more general partial equality, that takes into
     account unified type variables. (2) Get rid of UnionRep.quick_mem. **)
-let union_optimization_guard :
-    type phase. phase Context.t_ -> (Type.t -> Type.t -> bool) -> Type.t -> Type.t -> bool =
+let union_optimization_guard =
   (* Compare l to u. Flatten both unions and then check that each element
      of l is comparable to an element of u. Note that the comparator need not
      be symmetric. *)
@@ -506,7 +505,7 @@ let union_optimization_guard :
     Type_mapper.union_flatten cx lts
     |> Base.List.for_all ~f:(fun t1 -> Base.List.exists ~f:(comparator t1) ts2)
   in
-  let rec union_optimization_guard_impl seen (cx : phase Context.t_) comparator l u =
+  let rec union_optimization_guard_impl seen cx comparator l u =
     match (l, u) with
     | (UnionT (_, rep1), UnionT (_, rep2)) ->
       rep1 = rep2
@@ -538,7 +537,7 @@ let union_optimization_guard :
       end
     | _ -> false
   in
-  (fun (cx : phase Context.t_) -> union_optimization_guard_impl TypeSet.empty cx)
+  union_optimization_guard_impl TypeSet.empty
 
 (* Optimization where an union is a subset of another. Equality modulo
  * reasons is important for this optimization to be effective, since types
@@ -573,7 +572,7 @@ let iter_resolve_union ~f cx trace reason rep upper =
 (** Harness for testing parameterized types. Given a test function and a list
     of type params, replace the type params with GenericTs and run the test function.
   *)
-let check_with_generics : Context.t -> Type.typeparam list -> (Type.t SMap.t -> 'a) -> 'a =
+let check_with_generics : 'a. Context.t -> Type.typeparam list -> (Type.t SMap.t -> 'a) -> 'a =
   (* New generics mode: generate a GenericT from a generic *)
   let generic_bound cx prev_map { bound; name; reason = param_reason; is_this = _; _ } =
     let param_loc = aloc_of_reason param_reason in

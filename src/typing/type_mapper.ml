@@ -18,8 +18,8 @@ let maybe_known f x =
         Known x''
     | Unknown x -> Unknown x)
 
-let unwrap_type : type phase. phase Context.t_ -> Type.t -> Type.t =
-  let rec unwrap seen (cx : phase Context.t_) t =
+let unwrap_type =
+  let rec unwrap seen cx t =
     match t with
     | OpenT (_, id) ->
       if ISet.mem id !seen then
@@ -42,8 +42,8 @@ let unwrap_type : type phase. phase Context.t_ -> Type.t -> Type.t =
 
 (* NOTE: While union flattening could be performed at any time, it is most effective when we know
    that all tvars have been resolved. *)
-let union_flatten : type phase. phase Context.t_ -> Type.t list -> Type.t list =
-  let rec union_flatten (cx : phase Context.t_) seen ts = Base.List.(ts >>= flatten cx seen)
+let union_flatten =
+  let rec union_flatten cx seen ts = Base.List.(ts >>= flatten cx seen)
   and flatten cx seen t =
     match t with
     | OpenT (_, id) ->
@@ -78,9 +78,9 @@ let union_flatten : type phase. phase Context.t_ -> Type.t list -> Type.t list =
  * each sub-part.
  *)
 
-class virtual ['a, 'phase] t =
+class virtual ['a] t =
   object (self)
-    method type_ (cx : 'phase Context.t_) (map_cx : 'a) t =
+    method type_ cx (map_cx : 'a) t =
       match t with
       | OpenT (r, id) ->
         let id' = self#tvar cx map_cx r id in
@@ -272,7 +272,7 @@ class virtual ['a, 'phase] t =
       else
         (r, tvar')
 
-    method virtual tvar : 'phase Context.t_ -> 'a -> Reason.t -> Type.ident -> Type.ident
+    method virtual tvar : Context.t -> 'a -> Reason.t -> Type.ident -> Type.ident
 
     method targ cx map_cx t =
       match t with
@@ -633,7 +633,7 @@ class virtual ['a, 'phase] t =
       | DebugSleep ->
         kind
 
-    method virtual exports : 'phase Context.t_ -> 'a -> Type.Exports.id -> Type.Exports.id
+    method virtual exports : Context.t -> 'a -> Type.Exports.id -> Type.Exports.id
 
     method obj_flags cx map_cx flags =
       match flags.obj_kind with
@@ -660,7 +660,7 @@ class virtual ['a, 'phase] t =
       else
         { flags = flags'; props_tmap = props_tmap'; proto_t = proto_t'; call_t = call_t' }
 
-    method virtual call_prop : 'phase Context.t_ -> 'a -> int -> int
+    method virtual call_prop : Context.t -> 'a -> int -> int
 
     method dict_type cx map_cx ({ dict_name; key; value; dict_polarity } as t) =
       let key' = self#type_ cx map_cx key in
@@ -715,7 +715,7 @@ class virtual ['a, 'phase] t =
         if upper' != t.upper then t.upper <- upper';
         t)
 
-    method virtual use_type : 'phase Context.t_ -> 'a -> Type.use_t -> Type.use_t
+    method virtual use_type : Context.t -> 'a -> Type.use_t -> Type.use_t
 
     method predicate cx map_cx p =
       match p with
@@ -796,9 +796,9 @@ class virtual ['a, 'phase] t =
         else
           ObjectMapi t''
 
-    method virtual props : 'phase Context.t_ -> 'a -> Properties.id -> Properties.id
+    method virtual props : Context.t -> 'a -> Properties.id -> Properties.id
 
-    method virtual eval_id : 'phase Context.t_ -> 'a -> Eval.id -> Eval.id
+    method virtual eval_id : Context.t -> 'a -> Eval.id -> Eval.id
 
     method prop cx map_cx prop =
       match prop with
@@ -835,9 +835,9 @@ class virtual ['a, 'phase] t =
           GetSet (l1, t1', l2, t2')
   end
 
-class virtual ['a, 'phase] t_with_uses =
+class virtual ['a] t_with_uses =
   object (self)
-    inherit ['a, 'phase] t as _super
+    inherit ['a] t as _super
 
     method use_type cx map_cx t =
       match t with

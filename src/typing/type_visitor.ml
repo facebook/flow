@@ -18,9 +18,9 @@ let pole_TODO = Polarity.Neutral
    WARNING: This is only a partial implementation, sufficient for current
    purposes but intended to be completed in a later diff.
 *)
-class ['a, 'phase] t =
+class ['a] t =
   object (self)
-    method type_ (cx : 'phase Context.t_) pole (acc : 'a) =
+    method type_ cx pole (acc : 'a) =
       function
       | OpenT (r, id) -> self#tvar cx pole acc r id
       | DefT (_, _, t) -> self#def_type cx pole acc t

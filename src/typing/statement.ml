@@ -7987,7 +7987,7 @@ and mk_func_sig =
   let free_bound_ts cx t =
     let finder =
       object (_self)
-        inherit [Loc_collections.ALocSet.t, Type.Constraint.infer_phase] Type_visitor.t as super
+        inherit [Loc_collections.ALocSet.t] Type_visitor.t as super
 
         val mutable tparams : string list = []
 

@@ -1491,23 +1491,19 @@ and Constraint : sig
 
   (***************************************)
 
-  type infer_phase = private InferPhase [@@deriving eq, show]
-
-  type resolved_phase = private ResolvedPhase [@@deriving eq, show]
-
-  type 'phase node =
+  type node =
     | Goto of ident
-    | Root of 'phase root
+    | Root of root
 
-  and 'phase root = {
+  and root = {
     rank: int;
-    constraints: 'phase constraints Lazy.t;
+    constraints: constraints Lazy.t;
   }
 
-  and _ constraints =
-    | Resolved : TypeTerm.use_op * TypeTerm.t -> infer_phase constraints
-    | Unresolved : bounds -> infer_phase constraints
-    | FullyResolved : TypeTerm.use_op * TypeTerm.t Lazy.t -> 'phase constraints
+  and constraints =
+    | Resolved of TypeTerm.use_op * TypeTerm.t
+    | Unresolved of bounds
+    | FullyResolved of TypeTerm.use_op * TypeTerm.t Lazy.t
 
   and bounds = {
     mutable lower: (TypeTerm.trace * TypeTerm.use_op) TypeMap.t;
@@ -1516,11 +1512,11 @@ and Constraint : sig
     mutable uppertvars: (TypeTerm.trace * TypeTerm.use_op) IMap.t;
   }
 
-  val new_unresolved_root : unit -> infer_phase node
+  val new_unresolved_root : unit -> node
 
-  val types_of : 'phase constraints -> TypeTerm.t list
+  val types_of : constraints -> TypeTerm.t list
 
-  val uses_of : 'phase constraints -> TypeTerm.use_t list
+  val uses_of : constraints -> TypeTerm.use_t list
 end = struct
   module UseTypeKey = struct
     type speculation_id = int
@@ -1533,10 +1529,6 @@ end = struct
   end
 
   module UseTypeMap = WrappedMap.Make (UseTypeKey)
-
-  type infer_phase = private InferPhase [@@deriving eq, show]
-
-  type resolved_phase = private ResolvedPhase [@@deriving eq, show]
 
   (** Type variables are unknowns, and we are ultimately interested in constraints
       on their solutions for type inference.
@@ -1551,9 +1543,9 @@ end = struct
       - A Root node holds the actual non-trivial state of a tvar, represented by a
       root structure (see below).
    **)
-  type 'phase node =
+  type node =
     | Goto of ident
-    | Root of 'phase root
+    | Root of root
 
   (** A root structure carries the actual non-trivial state of a tvar, and
       consists of:
@@ -1569,9 +1561,9 @@ end = struct
       - constraints, which carry type information that narrows down the possible
       solutions of the tvar (see below).  **)
 
-  and 'phase root = {
+  and root = {
     rank: int;
-    constraints: 'phase constraints Lazy.t;
+    constraints: constraints Lazy.t;
   }
 
   (** Constraints carry type information that narrows down the possible solutions
@@ -1585,10 +1577,10 @@ end = struct
       other tvars as upper and lower bounds (see below).
    **)
 
-  and _ constraints =
-    | Resolved : TypeTerm.use_op * TypeTerm.t -> infer_phase constraints
-    | Unresolved : bounds -> infer_phase constraints
-    | FullyResolved : TypeTerm.use_op * TypeTerm.t Lazy.t -> 'phase constraints
+  and constraints =
+    | Resolved of TypeTerm.use_op * TypeTerm.t
+    | Unresolved of bounds
+    | FullyResolved of TypeTerm.use_op * TypeTerm.t Lazy.t
 
   (** The bounds structure carries the evolving constraints on the solution of an
       unresolved tvar.
@@ -1628,13 +1620,13 @@ end = struct
 
   (* For any constraints, return a list of def types that form either the lower
      bounds of the solution, or a singleton containing the solution itself. *)
-  let types_of : type phase. phase constraints -> TypeTerm.t list = function
+  let types_of = function
     | Unresolved { lower; _ } -> TypeMap.keys lower
     | Resolved (_, t)
     | FullyResolved (_, (lazy t)) ->
       [t]
 
-  let uses_of : type phase. phase constraints -> TypeTerm.use_t list = function
+  let uses_of = function
     | Unresolved { upper; _ } -> Base.List.map ~f:fst (UseTypeMap.keys upper)
     | Resolved (use_op, t)
     | FullyResolved (use_op, (lazy t)) ->
@@ -1642,9 +1634,9 @@ end = struct
 end
 
 and TypeContext : sig
-  type 'phase t = {
+  type t = {
     (* map from tvar ids to nodes (type info structures) *)
-    graph: 'phase Constraint.node IMap.t;
+    graph: Constraint.node IMap.t;
     (* map from tvar ids to trust nodes *)
     trust_graph: Trust_constraint.node IMap.t;
     (* obj types point to mutable property maps *)
