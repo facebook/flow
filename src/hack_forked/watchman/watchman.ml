@@ -42,32 +42,21 @@ type error_severity =
       failed_paths: string list;  (** paths we tried to watch but couldn't figure out the root for *)
     }
 
-let log_error ?request ?response msg =
+let log ?request ?response msg =
   let response = Option.map ~f:(String_utils.truncate 100000) response in
   let () = EventLogger.watchman_error ?request ?response msg in
   let () = Hh_logger.error "%s" msg in
   ()
 
-let raise_error = function
+let log_error = function
   | Not_installed { path } ->
     let msg = spf "watchman not found on PATH: %s" path in
-    let () = log_error msg in
-    raise Config_problem
-  | Socket_unavailable { msg } ->
-    let () = log_error msg in
-    raise Watchman_error
-  | Response_error { request; response; msg } ->
-    let () = log_error ?request ~response msg in
-    raise Watchman_error
-  | Fresh_instance ->
-    Hh_logger.log "Watchman server is fresh instance. Exiting.";
-    raise Exit.(Exit_with Watchman_fresh_instance)
-  | Subscription_canceled ->
-    EventLogger.watchman_error "Subscription canceled by watchman";
-    raise Subscription_canceled_by_watchman
-  | Restarted ->
-    Hh_logger.error "Watchman server restarted so we may have missed some updates";
-    raise Watchman_restarted
+    log msg
+  | Socket_unavailable { msg } -> log msg
+  | Response_error { request; response; msg } -> log ?request ~response msg
+  | Fresh_instance -> Hh_logger.log "Watchman server is fresh instance. Exiting."
+  | Subscription_canceled -> log "Subscription canceled by watchman"
+  | Restarted -> Hh_logger.error "Watchman server restarted so we may have missed some updates"
   | Unsupported_watch_roots { roots; failed_paths } ->
     let msg =
       match roots with
@@ -78,8 +67,18 @@ let raise_error = function
           (List.length roots)
           (String.concat ~sep:"\n" roots)
     in
-    let () = log_error msg in
-    raise Config_problem
+    log msg
+
+let raise_error err =
+  log_error err;
+  match err with
+  | Not_installed _ -> raise Config_problem
+  | Socket_unavailable _ -> raise Watchman_error
+  | Response_error _ -> raise Watchman_error
+  | Fresh_instance -> raise Exit.(Exit_with Watchman_fresh_instance)
+  | Subscription_canceled -> raise Subscription_canceled_by_watchman
+  | Restarted -> raise Watchman_restarted
+  | Unsupported_watch_roots _ -> raise Config_problem
 
 type subscribe_mode =
   | All_changes
@@ -683,18 +682,11 @@ let re_init_exn ?prior_clockspec settings =
   | Error err -> raise_error err
 
 let init settings =
-  catch
-    ~f:(fun () ->
-      let%lwt v = re_init_exn settings in
-      Lwt.return (Some (Watchman_alive v)))
-    ~catch:(fun exn ->
-      Hh_logger.exception_ ~prefix:"Watchman init: " exn;
-      match Exception.unwrap exn with
-      (* Avoid swallowing these *)
-      | Exit.Exit_with _
-      | Watchman_restarted ->
-        Exception.reraise exn
-      | _ -> Lwt.return None)
+  match%lwt re_init settings with
+  | Ok env -> Lwt.return (Some (Watchman_alive env))
+  | Error err ->
+    log_error err;
+    Lwt.return None
 
 let extract_file_names env json =
   let open Hh_json.Access in
