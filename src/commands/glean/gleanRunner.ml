@@ -525,7 +525,13 @@ let local_declaration_references ~root ~write_root ~scope_info =
       let open Base.List.Let_syntax in
       let%bind loc = Nel.to_list def.Scope_builder.Api.Def.locs in
       let declaration = Declaration.{ name = def.Scope_builder.Api.Def.actual_name; loc } in
-      let%bind loc = Loc_sig.LocS.LSet.elements uses in
+      let%bind use_loc = Loc_sig.LocS.LSet.elements uses in
+      let%bind loc =
+        if Loc.equal use_loc loc then
+          []
+        else
+          return use_loc
+      in
       let ref = LocalDeclarationReference.{ declaration; loc } in
       let json = LocalDeclarationReference.to_json ~root ~write_root ref in
       return json
