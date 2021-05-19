@@ -57,8 +57,6 @@ let watchman_error ?request:_ ?response:_ _ = ()
 
 let watchman_warning _ = ()
 
-let watchman_died_caught _ = ()
-
 let watchman_uncaught_failure _ = ()
 
 let watchman_connection_reestablished _ = ()

@@ -5,10 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-exception Watchman_error of string
-
-exception Subscription_canceled_by_watchman
-
 exception Watchman_restarted
 
 type subscribe_mode =
