@@ -690,11 +690,6 @@ let re_init ?prior_clockspec settings =
   ignore response;
   Lwt.return (Ok env)
 
-let re_init_exn ?prior_clockspec settings =
-  match%lwt re_init ?prior_clockspec settings with
-  | Ok env -> Lwt.return env
-  | Error err -> raise_error err
-
 let backoff_delay attempts =
   let attempts = min attempts 3 in
   Float.of_int (4 * (2 ** attempts))
@@ -735,6 +730,24 @@ let within_backoff_time attempts time =
   let delay = backoff_delay attempts in
   Float.(Unix.gettimeofday () >= time +. delay)
 
+let re_init_dead_env dead_env =
+  (* Give watchman 2 minutes to start up, plus sync_timeout (in milliseconds!) to sync.
+     TODO: use `file_watcher.timeout` config instead (careful, it's in seconds) *)
+  let timeout = Option.value ~default:0 dead_env.prior_settings.sync_timeout + 120000 in
+  try%lwt
+    Lwt_unix.with_timeout (Float.of_int timeout /. 1000.) @@ fun () ->
+    match%lwt has_watchman_restarted dead_env with
+    | Ok false -> re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings
+    | Ok true -> Lwt.return (Error Restarted)
+    | Error _ as err -> Lwt.return err
+  with Lwt_unix.Timeout ->
+    Lwt.return (Error (Socket_unavailable { msg = spf "Timed out after %ds" timeout }))
+
+let re_init_dead_env_exn dead_env =
+  match%lwt re_init_dead_env dead_env with
+  | Ok env -> Lwt.return env
+  | Error err -> raise_error err
+
 let maybe_restart_instance instance =
   match instance with
   | Watchman_alive _ -> Lwt.return instance
@@ -744,25 +757,12 @@ let maybe_restart_instance instance =
       raise Exit.(Exit_with Watchman_failed)
     else if within_backoff_time dead_env.reinit_attempts dead_env.dead_since then (
       let () = Hh_logger.log "Attemping to reestablish watchman subscription" in
-      (* TODO: don't hardcode this timeout *)
-      let timeout = 120. in
-      match%lwt
-        Lwt_unix.with_timeout timeout @@ fun () ->
-        match%lwt has_watchman_restarted dead_env with
-        | Ok false -> re_init_exn ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings
-        | Ok true -> raise_error Restarted
-        | Error err -> raise_error err
-      with
+      match%lwt re_init_dead_env_exn dead_env with
       | env ->
         Hh_logger.log "Watchman connection reestablished.";
         let downtime = Unix.gettimeofday () -. dead_env.dead_since in
         EventLogger.watchman_connection_reestablished downtime;
         Lwt.return (Watchman_alive env)
-      | exception Lwt_unix.Timeout ->
-        Hh_logger.log "Reestablishing watchman subscription timed out.";
-        EventLogger.watchman_connection_reestablishment_failed
-          (spf "Timed out after %f seconds" timeout);
-        Lwt.return (Watchman_dead { dead_env with reinit_attempts = dead_env.reinit_attempts + 1 })
       | exception ((Lwt.Canceled | Exit.Exit_with _ | Watchman_restarted) as exn) ->
         (* Avoid swallowing these *)
         Exception.reraise (Exception.wrap exn)
