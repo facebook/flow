@@ -73,12 +73,12 @@ val close : watchman_instance -> unit Lwt.t
 module Testing : sig
   type env
 
-  type error_severity
+  type error_kind
 
   val get_test_env : unit -> env Lwt.t
 
   val test_settings : init_settings
 
   val transform_asynchronous_get_changes_response :
-    env -> Hh_json.json -> (env * pushed_changes, error_severity) Result.t
+    env -> Hh_json.json -> (env * pushed_changes, error_kind) Result.t
 end

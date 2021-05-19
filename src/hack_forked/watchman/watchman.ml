@@ -26,7 +26,7 @@ exception Watchman_restarted
 
 exception Config_problem
 
-type error_severity =
+type error_kind =
   | Not_installed of { path: string }
   | Socket_unavailable of { msg: string }
   | Response_error of {
@@ -41,6 +41,11 @@ type error_severity =
       roots: string list;  (** roots returned by watch-project. either 0 or >1 items. *)
       failed_paths: string list;  (** paths we tried to watch but couldn't figure out the root for *)
     }
+
+type error_severity =
+  | Retryable_error
+  | Fatal_error
+  | Restarted_error
 
 let log ?request ?response msg =
   let response = Option.map ~f:(String_utils.truncate 100000) response in
@@ -68,6 +73,15 @@ let log_error = function
           (String.concat ~sep:"\n" roots)
     in
     log msg
+
+let severity_of_error = function
+  | Not_installed _ -> Fatal_error
+  | Socket_unavailable _ -> Retryable_error
+  | Response_error _ -> Retryable_error
+  | Fresh_instance -> Restarted_error
+  | Subscription_canceled -> Retryable_error
+  | Restarted -> Restarted_error
+  | Unsupported_watch_roots _ -> Fatal_error
 
 let raise_error err =
   log_error err;
@@ -681,12 +695,27 @@ let re_init_exn ?prior_clockspec settings =
   | Ok env -> Lwt.return env
   | Error err -> raise_error err
 
-let init settings =
-  match%lwt re_init settings with
-  | Ok env -> Lwt.return (Some (Watchman_alive env))
-  | Error err ->
-    log_error err;
-    Lwt.return None
+let backoff_delay attempts =
+  let attempts = min attempts 3 in
+  Float.of_int (4 * (2 ** attempts))
+
+let init =
+  let rec init_rec ~retry_attempt settings =
+    match%lwt re_init settings with
+    | Ok env -> Lwt.return (Some (Watchman_alive env))
+    | Error err ->
+      log_error err;
+      (match severity_of_error err with
+      | Fatal_error -> Lwt.return None
+      | Restarted_error -> Lwt.return None
+      | Retryable_error ->
+        if retry_attempt >= max_reinit_attempts then
+          Lwt.return None
+        else
+          let%lwt () = Lwt_unix.sleep (backoff_delay retry_attempt) in
+          init_rec ~retry_attempt:(retry_attempt + 1) settings)
+  in
+  (fun settings -> init_rec ~retry_attempt:0 settings)
 
 let extract_file_names env json =
   let open Hh_json.Access in
@@ -703,9 +732,8 @@ let extract_file_names env json =
   |> SSet.of_list
 
 let within_backoff_time attempts time =
-  let attempts = min attempts 3 in
-  let offset = 4 * (2 ** attempts) in
-  Float.(Unix.gettimeofday () >= time +. of_int offset)
+  let delay = backoff_delay attempts in
+  Float.(Unix.gettimeofday () >= time +. delay)
 
 let maybe_restart_instance instance =
   match instance with
@@ -771,7 +799,7 @@ let call_on_instance :
     watchman_instance ->
     string ->
     on_dead:(dead_env -> 'a) ->
-    on_alive:(env -> (env * 'a, error_severity) Result.t Lwt.t) ->
+    on_alive:(env -> (env * 'a, error_kind) Result.t Lwt.t) ->
     (watchman_instance * 'a) Lwt.t =
   let on_alive' ~on_dead source f env =
     catch
@@ -888,7 +916,7 @@ let get_mergebase_and_changes instance =
 module Testing = struct
   type nonrec env = env
 
-  type nonrec error_severity = error_severity
+  type nonrec error_kind = error_kind
 
   let test_settings =
     {
