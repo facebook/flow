@@ -2905,20 +2905,6 @@ struct
           let reason_op = reason_of_use_t u in
           begin
             match u with
-            | UseT (use_op, DefT (_, _, TypeT _)) ->
-              ignore use_op;
-
-              (* TODO: add use op to missing type arg error? *)
-              add_output
-                cx
-                ~trace
-                (Error_message.EMissingTypeArgs
-                   {
-                     reason_tapp;
-                     reason_arity = mk_poly_arity_reason tparams_loc;
-                     min_arity = poly_minimum_arity ids;
-                     max_arity = Nel.length ids;
-                   })
             (* Special case for `_ instanceof C` where C is polymorphic *)
             | PredicateT ((RightP (InstanceofTest, _) | NotP (RightP (InstanceofTest, _))), _) ->
               let l =

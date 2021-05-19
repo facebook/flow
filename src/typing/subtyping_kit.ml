@@ -1047,6 +1047,18 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (_, ThisClassT (r, i, this)) ->
       let reason = reason_of_t l in
       rec_flow cx trace (l, UseT (use_op, fix_this_class cx trace reason (r, i, this)))
+    | (DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; _ }), DefT (_, _, TypeT _)) ->
+      (* TODO: add use op to missing type arg error? *)
+      add_output
+        cx
+        ~trace
+        (Error_message.EMissingTypeArgs
+           {
+             reason_tapp;
+             reason_arity = mk_poly_arity_reason tparams_loc;
+             min_arity = poly_minimum_arity ids;
+             max_arity = Nel.length ids;
+           })
     (*
      * This rule is hit when a polymorphic type appears outside a
      * type application expression - i.e. not followed by a type argument list
@@ -1058,28 +1070,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
      *)
     | (DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }), _) ->
       let reason_op = reason_of_t u in
-      begin
-        match u with
-        | DefT (_, _, TypeT _) ->
-          ignore use_op;
-
-          (* TODO: add use op to missing type arg error? *)
-          add_output
-            cx
-            ~trace
-            (Error_message.EMissingTypeArgs
-               {
-                 reason_tapp;
-                 reason_arity = mk_poly_arity_reason tparams_loc;
-                 min_arity = poly_minimum_arity ids;
-                 max_arity = Nel.length ids;
-               })
-        | _ ->
-          let t_ =
-            instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, ids, t)
-          in
-          rec_flow_t cx trace ~use_op (t_, u)
-      end
+      let t_ = instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, ids, t) in
+      rec_flow_t cx trace ~use_op (t_, u)
     (* when a this-abstracted class flows to upper bounds, fix the class *)
     | (ThisClassT (r, i, this), _) ->
       let reason = reason_of_t u in
