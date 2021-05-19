@@ -46,6 +46,8 @@ val merge_context :
   File_key.t Nel.t ->
   Context.t
 
+val check_contents_cache : New_check_cache.t
+
 val check_contents_context :
   reader:State_reader.t ->
   Options.t ->

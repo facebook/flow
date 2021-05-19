@@ -821,6 +821,14 @@ let mk_check_file options ~reader () =
     else
       None
 
+(* This cache is used in check_contents_context below. When we check the
+ * contents of a file, we create types from the signatures of dependencies.
+ *
+ * Note that this cache needs to be invaliated when files change. We can use the
+ * set of changed files (determined by the merge stream's signature hashing) to
+ * invalidate file-by-file when a recheck transaction commits. *)
+let check_contents_cache = New_check_cache.create ~capacity:1000
+
 (* Variation of merge_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
 let check_contents_context ~reader options file ast docblock file_sig =
@@ -841,7 +849,7 @@ let check_contents_context ~reader options file ast docblock file_sig =
     SMap.fold f require_loc_map []
   in
   if Options.new_check options then
-    let cache = New_check_cache.create ~capacity:1000 in
+    let cache = check_contents_cache in
     let check_file = New_check_service.mk_check_file ~options ~reader ~cache () in
     check_file file required ast comments file_sig docblock aloc_table
   else

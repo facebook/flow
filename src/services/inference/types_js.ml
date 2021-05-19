@@ -2185,6 +2185,22 @@ end = struct
     in
     Base.Option.iter merge_internal_error ~f:(Hh_logger.error "%s");
 
+    (* Merge_service.check_contents_cache contains type information for
+     * dependencies. The set of files in sig_new_or_changed have meaningfully
+     * changed and we should invalidate the caches for those files.
+     *
+     * Note that this invalidation happens after the transaction commits. While
+     * a transaction is running, we maintain a consistent view of the type state
+     * before this recheck started. *)
+    Transaction.add
+      ~commit:(fun () ->
+        FilenameSet.iter
+          (New_check_cache.remove Merge_service.check_contents_cache)
+          sig_new_or_changed;
+        Lwt.return_unit)
+      ~rollback:(fun () -> Lwt.return_unit)
+      transaction;
+
     let%lwt ( errors,
               coverage,
               time_to_check_merged,
