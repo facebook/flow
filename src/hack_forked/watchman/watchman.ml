@@ -35,8 +35,10 @@ type error_severity =
   | Fresh_instance
   | Subscription_canceled
   | Restarted
-  | Unknown_watch_root of { path: string }
-  | Unsupported_watch_roots of { roots: string list }
+  | Unsupported_watch_roots of {
+      roots: string list;  (** roots returned by watch-project. either 0 or >1 items. *)
+      failed_paths: string list;  (** paths we tried to watch but couldn't figure out the root for *)
+    }
 
 let log_error ?request ?response msg =
   let response = Option.map ~f:(String_utils.truncate 100000) response in
@@ -64,18 +66,15 @@ let raise_error = function
   | Restarted ->
     Hh_logger.error "Watchman server restarted so we may have missed some updates";
     raise Watchman_restarted
-  | Unknown_watch_root { path } ->
-    let msg = spf "Cannot deduce watch root for path %s" path in
-    EventLogger.watchman_error msg;
-    failwith msg
-  | Unsupported_watch_roots { roots } ->
+  | Unsupported_watch_roots { roots; failed_paths } ->
     let msg =
       match roots with
-      | [] -> "Cannot run watchman with fewer than 1 root"
+      | [] -> spf "Cannot deduce watch root for paths:\n%s" (String.concat ~sep:"\n" failed_paths)
       | _ ->
         spf
-          "Can't watch paths across multiple Watchman watch_roots. Found %d watch_roots"
+          "Can't watch paths across multiple Watchman watch_roots. Found %d watch roots:\n%s"
           (List.length roots)
+          (String.concat ~sep:"\n" roots)
     in
     EventLogger.watchman_error msg;
     failwith msg
@@ -627,27 +626,34 @@ let watch =
     include. *)
   let guess_missing_relative_paths terms watch_root failed_paths =
     let failed_paths = SSet.elements failed_paths in
-    List.fold_result
-      ~f:(fun terms path ->
-        let open String_utils in
-        if string_starts_with path watch_root then
-          let relative_path = lstrip (lstrip path watch_root) Caml.Filename.dir_sep in
-          Ok (prepend_relative_path_term ~relative_path ~terms)
-        else
-          Error (Unknown_watch_root { path }))
-      ~init:terms
-      failed_paths
+    let (terms, failed_paths) =
+      List.fold
+        ~f:(fun (terms, failed_paths) path ->
+          let open String_utils in
+          if string_starts_with path watch_root then
+            let relative_path = lstrip (lstrip path watch_root) Caml.Filename.dir_sep in
+            (prepend_relative_path_term ~relative_path ~terms, failed_paths)
+          else
+            (terms, path :: failed_paths))
+        ~init:(terms, [])
+        failed_paths
+    in
+    match failed_paths with
+    | [] -> Ok terms
+    | _ -> Error (Unsupported_watch_roots { roots = []; failed_paths })
   in
   (* All of our watched paths should have the same watch root. Let's assert that *)
-  let consolidate_watch_roots watch_roots =
+  let consolidate_watch_roots watch_roots failed_paths =
     match SSet.elements watch_roots with
     | [watch_root] -> Ok watch_root
-    | roots -> Error (Unsupported_watch_roots { roots })
+    | roots ->
+      let failed_paths = SSet.elements failed_paths in
+      Error (Unsupported_watch_roots { roots; failed_paths })
   in
   fun ~debug_logging ~conn roots ->
     match%lwt watch_paths ~debug_logging ~conn roots with
     | Ok (terms, watch_roots, failed_paths) ->
-      (match consolidate_watch_roots watch_roots with
+      (match consolidate_watch_roots watch_roots failed_paths with
       | Ok watch_root ->
         (match guess_missing_relative_paths terms watch_root failed_paths with
         | Ok terms ->
