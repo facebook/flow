@@ -289,4 +289,18 @@ var ac = 42;
          "undeclared" >:: mk_provider_test "x" "
 x = 10
          " "[(1, 0) to (1, 1)]";
+         "inc" >:: mk_provider_test "x" "
+var x;
+x++;
+         " "[(2, 0) to (2, 1)]";
+         "pluseq" >:: mk_provider_test "x" "
+var x;
+x += 42;
+         " "[(2, 0) to (2, 1)]";
+         "destruct1" >:: mk_provider_test "x" "
+var { a: x } = 10;
+         " "[(1, 9) to (1, 10)]";
+         "destruct2" >:: mk_provider_test "a" "
+var { a: x } = 10;
+         " "[]";
        ]

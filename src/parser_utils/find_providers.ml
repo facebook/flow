@@ -465,6 +465,33 @@ module FindProviders (L : Loc_sig.S) = struct
           stmt
         else
           { block = block'; handler = handler'; finalizer = finalizer'; comments = comments' }
+
+      (* read and write (when the argument is an identifier) *)
+      method! update_expression _loc (expr : (L.t, L.t) Ast.Expression.Update.t) =
+        let open Ast.Expression.Update in
+        let { argument; operator = _; prefix = _; comments = _ } = expr in
+        begin
+          match argument with
+          | (_, Ast.Expression.Identifier x) ->
+            (* given `x++`, read x then write x *)
+            ignore @@ this#identifier x;
+            ignore @@ this#pattern_identifier x
+          | _ ->
+            (* given `o.x++`, read o *)
+            ignore @@ this#expression argument
+        end;
+        expr
+
+      (* Don't call pattern_identifier on property keys--either it will have been called twice, or incorrectly.
+        The example to consider is
+          { a1: a } = ...
+        pattern_object_property_identifier_key will be called on a1, but a1 is not a variable in scope, its a property on the
+        RHS object. On the other hand, a is a variable in scope, which will be visited by pattern_object_property_pattern.
+        If we didn't rename a1, we'd visit a1 with both pattern_object_property_identifier_key and
+        pattern_object_property_pattern, so it's safe to only visit it with the latter. *)
+      method! pattern_object_property_identifier_key ?kind (key : ('loc, 'loc) Ast.Identifier.t) =
+        ignore kind;
+        key
     end
 
   (****** pass 1 *******)
@@ -611,31 +638,23 @@ module FindProviders (L : Loc_sig.S) = struct
         this#set_acc (env, cx)
 
       method! assignment
-          _loc ({ Ast.Expression.Assignment.operator; left; right; comments; _ } as expr) =
-        match operator with
-        | Some _ -> expr
-        | None ->
-          let null_assign =
-            match right with
-            | (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Null; _ }) -> true
-            | _ -> false
-          in
-          let left' =
-            this#in_context
-              ~mod_cx:(fun _cx -> { null_assign })
-              (fun () -> this#assignment_pattern left)
-          in
-          let right' = this#expression right in
-          let comments' = this#syntax_opt comments in
-          if left == left' && right == right' && comments == comments' then
-            expr
-          else
-            {
-              expr with
-              Ast.Expression.Assignment.left = left';
-              right = right';
-              comments = comments';
-            }
+          _loc ({ Ast.Expression.Assignment.operator = _; left; right; comments; _ } as expr) =
+        let null_assign =
+          match right with
+          | (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Null; _ }) -> true
+          | _ -> false
+        in
+        let left' =
+          this#in_context
+            ~mod_cx:(fun _cx -> { null_assign })
+            (fun () -> this#assignment_pattern left)
+        in
+        let right' = this#expression right in
+        let comments' = this#syntax_opt comments in
+        if left == left' && right == right' && comments == comments' then
+          expr
+        else
+          { expr with Ast.Expression.Assignment.left = left'; right = right'; comments = comments' }
 
       method! pattern_identifier ?kind ((loc, { Ast.Identifier.name; comments = _ }) as ident) =
         begin
