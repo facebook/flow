@@ -36,7 +36,6 @@ type error_kind =
     }
   | Fresh_instance
   | Subscription_canceled
-  | Restarted
   | Unsupported_watch_roots of {
       roots: string list;  (** roots returned by watch-project. either 0 or >1 items. *)
       failed_paths: string list;  (** paths we tried to watch but couldn't figure out the root for *)
@@ -59,9 +58,8 @@ let log_error = function
     log msg
   | Socket_unavailable { msg } -> log msg
   | Response_error { request; response; msg } -> log ?request ~response msg
-  | Fresh_instance -> Hh_logger.log "Watchman server is fresh instance. Exiting."
+  | Fresh_instance -> Hh_logger.error "Watchman server restarted so we may have missed some updates"
   | Subscription_canceled -> log "Subscription canceled by watchman"
-  | Restarted -> Hh_logger.error "Watchman server restarted so we may have missed some updates"
   | Unsupported_watch_roots { roots; failed_paths } ->
     let msg =
       match roots with
@@ -80,7 +78,6 @@ let severity_of_error = function
   | Response_error _ -> Retryable_error
   | Fresh_instance -> Restarted_error
   | Subscription_canceled -> Retryable_error
-  | Restarted -> Restarted_error
   | Unsupported_watch_roots _ -> Fatal_error
 
 let raise_error err =
@@ -89,9 +86,8 @@ let raise_error err =
   | Not_installed _ -> raise Config_problem
   | Socket_unavailable _ -> raise Watchman_error
   | Response_error _ -> raise Watchman_error
-  | Fresh_instance -> raise Exit.(Exit_with Watchman_fresh_instance)
+  | Fresh_instance -> raise Watchman_restarted
   | Subscription_canceled -> raise Subscription_canceled_by_watchman
-  | Restarted -> raise Watchman_restarted
   | Unsupported_watch_roots _ -> raise Config_problem
 
 type subscribe_mode =
@@ -738,7 +734,7 @@ let re_init_dead_env dead_env =
     Lwt_unix.with_timeout (Float.of_int timeout /. 1000.) @@ fun () ->
     match%lwt has_watchman_restarted dead_env with
     | Ok false -> re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings
-    | Ok true -> Lwt.return (Error Restarted)
+    | Ok true -> Lwt.return (Error Fresh_instance)
     | Error _ as err -> Lwt.return err
   with Lwt_unix.Timeout ->
     Lwt.return (Error (Socket_unavailable { msg = spf "Timed out after %ds" timeout }))
