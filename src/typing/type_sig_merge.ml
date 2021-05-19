@@ -110,7 +110,7 @@ let eval_unary file loc t =
   | U.Delete -> Type.BoolT.at loc trust
   | U.Await ->
     let reason = Reason.(mk_reason (RCustom "await") loc) in
-    let await = Flow_js.get_builtin file.cx (Reason.OrdinaryName "$await") reason in
+    let await = Flow_js_utils.lookup_builtin_strict file.cx (Reason.OrdinaryName "$await") reason in
     (* TODO: use_op *)
     let use_op = Type.unknown_use in
     Tvar.mk_no_wrap_where file.cx reason (fun tout ->
@@ -139,13 +139,15 @@ let eval file loc t = function
 let async_void_return file loc =
   let t = Type.VoidT.at loc trust in
   let reason = Reason.(mk_reason (RCustom "async return") loc) in
-  Flow_js.get_builtin_typeapp
+  Flow_js_utils.lookup_builtin_typeapp
     file.cx
     reason
     (Reason.OrdinaryName "Promise")
     [
       Tvar.mk_derivable_where file.cx reason (fun tvar ->
-          let funt = Flow_js.get_builtin file.cx (Reason.OrdinaryName "$await") reason in
+          let funt =
+            Flow_js_utils.lookup_builtin_strict file.cx (Reason.OrdinaryName "$await") reason
+          in
           let callt = Type.mk_functioncalltype reason None [Type.Arg t] (Type.open_tvar tvar) in
           let reason =
             Reason.repos_reason (Reason.aloc_of_reason (TypeUtil.reason_of_t t)) reason
@@ -310,7 +312,7 @@ let merge_ref : 'a. _ -> (_ -> _ -> _ -> 'a) -> _ -> 'a =
     f t ref_loc name
   | Pack.BuiltinRef { ref_loc; name } ->
     let reason = Reason.(mk_reason (RIdentifier (Reason.OrdinaryName name)) ref_loc) in
-    let t = Flow_js.get_builtin file.cx (Reason.OrdinaryName name) reason in
+    let t = Flow_js_utils.lookup_builtin_strict file.cx (Reason.OrdinaryName name) reason in
     f t ref_loc name
 
 let rec merge_tyref file f = function
@@ -450,11 +452,11 @@ let rec merge file = function
     let ns_reason = Reason.(mk_reason (RModule (OrdinaryName mref)) loc) in
     let ns_t = import_ns file ns_reason loc index in
     let reason = Reason.(mk_annot_reason RAsyncImport loc) in
-    Flow_js.get_builtin_typeapp file.cx reason (Reason.OrdinaryName "Promise") [ns_t]
+    Flow_js_utils.lookup_builtin_typeapp file.cx reason (Reason.OrdinaryName "Promise") [ns_t]
   | Pack.ModuleRef { loc; index } ->
     let t = require file loc index in
     let reason = Reason.(mk_reason (RCustom "module reference") loc) in
-    Flow_js.get_builtin_typeapp file.cx reason (Reason.OrdinaryName "$Flow$ModuleRef") [t]
+    Flow_js_utils.lookup_builtin_typeapp file.cx reason (Reason.OrdinaryName "$Flow$ModuleRef") [t]
 
 and merge_annot file = function
   | Any loc -> Type.AnyT.at Type.AnnotatedAny loc
@@ -680,7 +682,7 @@ and merge_annot file = function
   | ExportsT (loc, ref) ->
     let reason = Reason.(mk_annot_reason (RModule (OrdinaryName ref)) loc) in
     let m_name = Reason.internal_module_name ref in
-    let module_t = Flow_js.lookup_builtin_strict file.cx m_name reason in
+    let module_t = Flow_js_utils.lookup_builtin_strict file.cx m_name reason in
     Tvar.mk_where file.cx reason (fun tout ->
         Flow_js.flow file.cx (module_t, Type.CJSRequireT (reason, tout, false)))
   | Call { loc; fn; args } ->

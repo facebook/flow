@@ -9588,12 +9588,7 @@ struct
   (* Looks up a builtin and errors if it is not found. Does not add an entry that requires a
    * write later. *)
   and lookup_builtin_strict cx x reason =
-    let builtins = Context.builtins cx in
-    let builtin =
-      Builtins.get_builtin builtins x ~on_missing:(fun () ->
-          add_output cx (Error_message.EBuiltinLookupFailed { reason; name = Some x });
-          AnyT.error_of_kind UnresolvedName reason)
-    in
+    let builtin = Flow_js_utils.lookup_builtin_strict cx x reason in
     Tvar.mk_where cx reason (fun t -> flow_t cx (builtin, t))
 
   (* Looks up a builtin and returns the default if it is not found.
