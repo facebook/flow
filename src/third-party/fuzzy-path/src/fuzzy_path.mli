@@ -27,7 +27,7 @@ type match_result = {
 
   (** A number in the range (0-1]. Higher scores are more relevant.
       0 denotes "no match" and will never be returned. *)
-  score: int;
+  score: float;
 }
 
 type t
