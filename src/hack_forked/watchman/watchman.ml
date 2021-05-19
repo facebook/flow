@@ -24,6 +24,8 @@ exception Subscription_canceled_by_watchman
 
 exception Watchman_restarted
 
+exception Config_problem
+
 type error_severity =
   | Not_installed of { path: string }
   | Socket_unavailable of { msg: string }
@@ -50,7 +52,7 @@ let raise_error = function
   | Not_installed { path } ->
     let msg = spf "watchman not found on PATH: %s" path in
     let () = log_error msg in
-    raise (Watchman_error msg)
+    raise Config_problem
   | Socket_unavailable { msg } ->
     let () = log_error msg in
     raise (Watchman_error msg)
@@ -76,8 +78,8 @@ let raise_error = function
           (List.length roots)
           (String.concat ~sep:"\n" roots)
     in
-    EventLogger.watchman_error msg;
-    failwith msg
+    let () = log_error msg in
+    raise Config_problem
 
 type subscribe_mode =
   | All_changes
@@ -802,6 +804,11 @@ let call_on_instance :
         | Subscription_canceled_by_watchman ->
           log_died "Watchman cancelled our subscription. Closing channel";
           close_channel_on_instance' env
+        | Config_problem ->
+          (* this only happens during (re)init, so we don't need to handle it here.
+             it's unexpected if it happens, so reraising it like other unexpected
+             exceptions, for explictness. *)
+          Exception.reraise exn
         | _ -> Exception.reraise exn)
   in
   fun instance source ~on_dead ~on_alive ->
