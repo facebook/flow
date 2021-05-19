@@ -2616,7 +2616,9 @@ and object_prop cx ~object_annot acc prop =
       ( prop_loc,
         Property.Init
           {
-            key = Property.Identifier (loc, { Ast.Identifier.name; comments }) as key;
+            key =
+              ( Property.Identifier (loc, { Ast.Identifier.name; _ })
+              | Property.Literal (loc, { Ast.Literal.value = Ast.Literal.String name; _ }) ) as key;
             value = v;
             shorthand;
           } ) ->
@@ -2625,16 +2627,8 @@ and object_prop cx ~object_annot acc prop =
         let t = Unsoundness.at InferenceHooks loc in
         let key = translate_identifier_or_literal_key t key in
         (* don't add `name` to `acc` because `name` is the autocomplete token *)
-        if shorthand then
-          let value =
-            ((loc, t), Ast.Expression.Identifier ((loc, t), { Ast.Identifier.name; comments }))
-          in
-          (acc, key, value)
-        else
-          let (((_, _t), _) as value) =
-            expression cx ~annot:(annot_decompose_todo object_annot) v
-          in
-          (acc, key, value)
+        let (((_, _t), _) as value) = expression cx ~annot:(annot_decompose_todo object_annot) v in
+        (acc, key, value)
       else
         let (((_, t), _) as value) = expression cx ~annot:(annot_decompose_todo object_annot) v in
         let key = translate_identifier_or_literal_key t key in
@@ -2646,23 +2640,6 @@ and object_prop cx ~object_annot acc prop =
         (acc, key, value)
     in
     (acc, Property (prop_loc, Property.Init { key; value; shorthand }))
-  (* string literal prop *)
-  | Property
-      ( prop_loc,
-        Property.Init
-          {
-            key = Property.Literal (loc, { Ast.Literal.value = Ast.Literal.String name; _ }) as key;
-            value = v;
-            shorthand;
-          } ) ->
-    let (((_, t), _) as v) = expression cx ~annot:(annot_decompose_todo object_annot) v in
-    ( ObjectExpressionAcc.add_prop
-        (Properties.add_field (OrdinaryName name) Polarity.Neutral (Some loc) t)
-        acc,
-      Property
-        ( prop_loc,
-          Property.Init { key = translate_identifier_or_literal_key t key; value = v; shorthand } )
-    )
   (* named method *)
   | Property
       ( prop_loc,
