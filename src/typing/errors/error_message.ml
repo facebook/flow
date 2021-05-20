@@ -423,6 +423,7 @@ and 'loc t' =
       reason_l: 'loc virtual_reason;
       bound: string;
     }
+  | EClassToObject of 'loc virtual_reason * 'loc virtual_reason * 'loc virtual_use_op
 
 and 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;
@@ -974,6 +975,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EImplicitInstantiationUnderconstrainedError { reason_call; reason_l; bound } ->
     EImplicitInstantiationUnderconstrainedError
       { reason_call = map_reason reason_call; reason_l = map_reason reason_l; bound }
+  | EClassToObject (r1, r2, op) -> EClassToObject (map_reason r1, map_reason r2, map_use_op op)
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1186,8 +1188,9 @@ let util_use_op_of_msg nope util = function
   | EAssignExportedConstLikeBinding _
   | EMalformedCode _
   | EImplicitInstantiationTemporaryError _
-  | EImportInternalReactServerModule _
-  | EImplicitInstantiationUnderconstrainedError _ ->
+  | EImplicitInstantiationUnderconstrainedError _
+  | EClassToObject _
+  | EImportInternalReactServerModule _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1396,7 +1399,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEscapedGeneric _
   | EIncompatibleProp _
   | EIncompatible _
-  | ECannotResolveOpenTvar _ ->
+  | ECannotResolveOpenTvar _
+  | EClassToObject _ ->
     None
 
 let kind_of_msg =
@@ -3567,6 +3571,18 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             ref reason_l;
           ];
       }
+  | EClassToObject (reason_class, reason_obj, use_op) ->
+    let features =
+      [
+        ref reason_class;
+        text " is not a subtype of ";
+        ref reason_obj;
+        text ". Class instances are not subtypes of object types; consider rewriting ";
+        ref reason_obj;
+        text " as an interface";
+      ]
+    in
+    UseOp { loc = loc_of_reason reason_class; features; use_op }
 
 let is_lint_error = function
   | EUntypedTypeImport _
@@ -3822,6 +3838,7 @@ let error_code_of_message err : error_code option =
   | EAnyValueUsedAsType _
   | EValueUsedAsType _ ->
     Some ValueAsType
+  | EClassToObject _ -> Some ClassObject
   (* lints should match their lint name *)
   | EUntypedTypeImport _
   | EUntypedImport _

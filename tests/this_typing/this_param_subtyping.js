@@ -3,10 +3,10 @@
 class A {
     x : number
     y : number
-    foo (this : {x : number}) {}
+    foo (this : interface {x : number}) {}
 }
 class B extends A {
-    foo (this : {y : number}) {}
+    foo (this : interface {y : number}) {}
 }
 
 

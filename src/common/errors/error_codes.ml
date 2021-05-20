@@ -20,6 +20,7 @@ type error_code =
   | CannotSpreadInterface
   | CannotWrite
   | CannotWriteEnum
+  | ClassObject
   | DefaultImportAccess
   | DeprecatedType
   | DeprecatedUtility
@@ -185,6 +186,7 @@ let string_of_code : error_code -> string = function
   | CannotSpreadInterface -> "cannot-spread-interface"
   | CannotWrite -> "cannot-write"
   | CannotWriteEnum -> "cannot-write-enum"
+  | ClassObject -> "class-object-subtyping"
   | DefaultImportAccess -> "default-import-access"
   | DeprecatedType -> "deprecated-type"
   | DeprecatedUtility -> "deprecated-utility"

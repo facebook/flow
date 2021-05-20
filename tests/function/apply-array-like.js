@@ -4,8 +4,9 @@ function test(a: string, b: string): number {
 
 test.apply("", "foo"); // error: string ~> object
 declare class MyArrayLike<T> {
+  +[index: number]: T;
+  @@iterator(): Iterator<T>;
   length: number;
-  [index: number]: T;
 }
 var x = new MyArrayLike<string>();
 test.apply("", x);

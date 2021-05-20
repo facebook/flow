@@ -1,6 +1,6 @@
 /* @flow */
 
-type Foo = {
+type Foo = interface {
   a: string;    // exists in TestClass
   b: string;    // doesn't exist
   c?: ?string;  // exists in TestClass, optional

@@ -4,19 +4,19 @@ class A {
   prop: boolean;
   static prop : boolean;
 
-  method(this: {prop: boolean}): string {
+  method(this: interface {prop: boolean}): string {
     return this.prop; // Error - number ~> string
   }
 
-  static staticMethod(this: {prop: boolean}): string {
+  static staticMethod(this: interface {prop: boolean}): string {
     return this.prop; // Error - number ~> string
   }
 
-  propUnboundNonMethod : (this: {prop: boolean}) => string = function(this: {prop: boolean}): string {
+  propUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
     return this.prop; // Error - number ~> string
   }
 
-  static staticPropUnboundNonMethod : (this: {prop: boolean}) => string = function(this: {prop: boolean}): string {
+  static staticPropUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
     return this.prop; // Error - number ~> string
   }
 }

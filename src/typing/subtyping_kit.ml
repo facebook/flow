@@ -1319,6 +1319,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             InstanceT
               (_, super, _, { own_props = lown; proto_props = lproto; inst_call_t = lcall; _ }) ),
         DefT (ureason, _, ObjT { props_tmap = uflds; proto_t = uproto; call_t = ucall; _ }) ) ->
+      add_output cx ~trace (Error_message.EClassToObject (lreason, ureason, use_op));
       let u_deft = u in
       Type_inference_hooks_js.dispatch_instance_to_obj_hook cx l u_deft;
 

@@ -289,6 +289,25 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- request.js:6:35
 
+Cannot call `Request` with `c` bound to `init` because `Request` [1] is not a subtype of `RequestOptions` [2]. Class
+instances are not subtypes of object types; consider rewriting `RequestOptions` [2] as an interface.
+[class-object-subtyping]
+
+   request.js:6:35
+      6| const e: Request = new Request(b, c); // incorrect
+                                           ^
+
+References:
+   request.js:4:10
+      4| const c: Request = new Request(b); // correct
+                  ^^^^^^^ [1]
+   <BUILTINS>/bom.js:1506:44
+   1506|     constructor(input: RequestInfo, init?: RequestOptions): void;
+                                                    ^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- request.js:6:35
+
 Cannot call `Request` with `c` bound to `init` because property `signal` is read-only in `Request` [1] but writable in
 `RequestOptions` [2]. [incompatible-variance]
 
@@ -916,7 +935,7 @@ References:
 
 
 
-Found 52 errors
+Found 53 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

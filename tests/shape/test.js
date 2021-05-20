@@ -24,7 +24,7 @@ class PointC {
   y: number;
 }
 
-type IPoint = {
+type IPoint = interface {
   x: number;
   y: number;
 }
@@ -36,17 +36,17 @@ declare var ps: $Shape<IPoint>;
 (pc: IPoint);
 (pc: $Shape<IPoint>);
 (pc: $Shape<PointB>);
-(pc: {x : number});
+(pc: interface {x : number});
 (pc: $Shape<{x : number}>); // error
 
 (pi: PointC); // error
 (pi: $Shape<PointC>);
-(pi: {x : number});
+(pi: interface {x : number});
 (pi: $Shape<{x : number}>); // error
 
 (ps: PointC); // error
 (ps: IPoint);
-(ps: {x : number});
+(ps: interface {x : number});
 (ps: $Shape<{x : number}>); // error
 
 class C {
@@ -91,7 +91,7 @@ class Two {
   }
 }
 
-type Three = { foo : number, constructor() : () => void }
+type Three = interface { foo : number, constructor(string) : void}
 
 let one = new One(3);
 let two = new Two();

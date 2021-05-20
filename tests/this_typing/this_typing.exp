@@ -7,12 +7,12 @@ Cannot return `this.prop` because boolean [1] is incompatible with string [2]. [
                  ^^^^^^^^^
 
 References:
-   class_method.js:7:23
-   7|   method(this: {prop: boolean}): string {
-                            ^^^^^^^ [1]
-   class_method.js:7:34
-   7|   method(this: {prop: boolean}): string {
-                                       ^^^^^^ [2]
+   class_method.js:7:33
+   7|   method(this: interface {prop: boolean}): string {
+                                      ^^^^^^^ [1]
+   class_method.js:7:44
+   7|   method(this: interface {prop: boolean}): string {
+                                                 ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- class_method.js:12:12
@@ -24,12 +24,12 @@ Cannot return `this.prop` because boolean [1] is incompatible with string [2]. [
                   ^^^^^^^^^
 
 References:
-   class_method.js:11:36
-   11|   static staticMethod(this: {prop: boolean}): string {
-                                          ^^^^^^^ [1]
-   class_method.js:11:47
-   11|   static staticMethod(this: {prop: boolean}): string {
-                                                     ^^^^^^ [2]
+   class_method.js:11:46
+   11|   static staticMethod(this: interface {prop: boolean}): string {
+                                                    ^^^^^^^ [1]
+   class_method.js:11:57
+   11|   static staticMethod(this: interface {prop: boolean}): string {
+                                                               ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- class_method.js:16:12
@@ -41,12 +41,12 @@ Cannot return `this.prop` because boolean [1] is incompatible with string [2]. [
                   ^^^^^^^^^
 
 References:
-   class_method.js:15:84
-   15|   propUnboundNonMethod : (this: {prop: boolean}) => string = function(this: {prop: boolean}): string {
-                                                                                          ^^^^^^^ [1]
-   class_method.js:15:95
-   15|   propUnboundNonMethod : (this: {prop: boolean}) => string = function(this: {prop: boolean}): string {
-                                                                                                     ^^^^^^ [2]
+   class_method.js:15:104
+   15|   propUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
+                                                                                                              ^^^^^^^ [1]
+   class_method.js:15:115
+   15|   propUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
+                                                                                                                         ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- class_method.js:20:12
@@ -58,12 +58,12 @@ Cannot return `this.prop` because boolean [1] is incompatible with string [2]. [
                   ^^^^^^^^^
 
 References:
-   class_method.js:19:97
-   19|   static staticPropUnboundNonMethod : (this: {prop: boolean}) => string = function(this: {prop: boolean}): string {
-                                                                                                       ^^^^^^^ [1]
-   class_method.js:19:108
-   19|   static staticPropUnboundNonMethod : (this: {prop: boolean}) => string = function(this: {prop: boolean}): string {
-                                                                                                                  ^^^^^^ [2]
+   class_method.js:19:117
+   19|   static staticPropUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
+                                                                                                                           ^^^^^^^ [1]
+   class_method.js:19:128
+   19|   static staticPropUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
+                                                                                                                                      ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- class_method.js:27:18
@@ -75,14 +75,14 @@ Cannot call `{...}.method` because number [1] is incompatible with boolean [2] i
                         ^^^ [1]
 
 References:
-   class_method.js:7:23
-    7|   method(this: {prop: boolean}): string {
-                             ^^^^^^^ [2]
+   class_method.js:7:33
+    7|   method(this: interface {prop: boolean}): string {
+                                       ^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- class_method.js:29:10
 
-Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in object type [2].
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
 [prop-missing]
 
    class_method.js:29:10
@@ -91,8 +91,8 @@ Cannot call `{...}.method` because property `prop` is missing in object literal 
 
 References:
    class_method.js:7:16
-    7|   method(this: {prop: boolean}): string {
-                      ^^^^^^^^^^^^^^^ [2]
+    7|   method(this: interface {prop: boolean}): string {
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- class_method.js:34:18
@@ -104,14 +104,14 @@ Cannot call `{...}.method` because number [1] is incompatible with boolean [2] i
                         ^^^ [1]
 
 References:
-   class_method.js:11:36
-   11|   static staticMethod(this: {prop: boolean}): string {
-                                          ^^^^^^^ [2]
+   class_method.js:11:46
+   11|   static staticMethod(this: interface {prop: boolean}): string {
+                                                    ^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- class_method.js:36:10
 
-Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in object type [2].
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
 [prop-missing]
 
    class_method.js:36:10
@@ -120,8 +120,8 @@ Cannot call `{...}.method` because property `prop` is missing in object literal 
 
 References:
    class_method.js:11:29
-   11|   static staticMethod(this: {prop: boolean}): string {
-                                   ^^^^^^^^^^^^^^^ [2]
+   11|   static staticMethod(this: interface {prop: boolean}): string {
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- class_method.js:41:18
@@ -133,14 +133,14 @@ Cannot call `{...}.method` because number [1] is incompatible with boolean [2] i
                         ^^^ [1]
 
 References:
-   class_method.js:15:40
-   15|   propUnboundNonMethod : (this: {prop: boolean}) => string = function(this: {prop: boolean}): string {
-                                              ^^^^^^^ [2]
+   class_method.js:15:50
+   15|   propUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
+                                                        ^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- class_method.js:43:10
 
-Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in object type [2].
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
 [prop-missing]
 
    class_method.js:43:10
@@ -149,8 +149,8 @@ Cannot call `{...}.method` because property `prop` is missing in object literal 
 
 References:
    class_method.js:15:33
-   15|   propUnboundNonMethod : (this: {prop: boolean}) => string = function(this: {prop: boolean}): string {
-                                       ^^^^^^^^^^^^^^^ [2]
+   15|   propUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- class_method.js:48:19
@@ -162,14 +162,14 @@ Cannot call `{...}.method` because number [1] is incompatible with boolean [2] i
                          ^^^ [1]
 
 References:
-   class_method.js:19:53
-   19|   static staticPropUnboundNonMethod : (this: {prop: boolean}) => string = function(this: {prop: boolean}): string {
-                                                           ^^^^^^^ [2]
+   class_method.js:19:63
+   19|   static staticPropUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
+                                                                     ^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- class_method.js:50:11
 
-Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in object type [2].
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
 [prop-missing]
 
    class_method.js:50:11
@@ -178,8 +178,8 @@ Cannot call `{...}.method` because property `prop` is missing in object literal 
 
 References:
    class_method.js:19:46
-   19|   static staticPropUnboundNonMethod : (this: {prop: boolean}) => string = function(this: {prop: boolean}): string {
-                                                    ^^^^^^^^^^^^^^^ [2]
+   19|   static staticPropUnboundNonMethod : (this: interface {prop: boolean}) => string = function(this: interface {prop: boolean}): string {
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- class_poly_method.js:20:2
@@ -240,14 +240,14 @@ Cannot call `{...}.method` because boolean [1] is incompatible with number [2] i
                         ^^^^ [1]
 
 References:
-   declare_class_method.js:7:23
-    7|   method(this: {prop: number}): string;
-                             ^^^^^^ [2]
+   declare_class_method.js:7:33
+    7|   method(this: interface {prop: number}): string;
+                                       ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ declare_class_method.js:21:10
 
-Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in object type [2].
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
 [prop-missing]
 
    declare_class_method.js:21:10
@@ -256,8 +256,8 @@ Cannot call `{...}.method` because property `prop` is missing in object literal 
 
 References:
    declare_class_method.js:7:16
-    7|   method(this: {prop: number}): string;
-                      ^^^^^^^^^^^^^^ [2]
+    7|   method(this: interface {prop: number}): string;
+                      ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ declare_class_method.js:26:18
@@ -269,14 +269,14 @@ Cannot call `{...}.method` because boolean [1] is incompatible with number [2] i
                         ^^^^ [1]
 
 References:
-   declare_class_method.js:9:36
-    9|   static staticMethod(this: {prop: number}): string;
-                                          ^^^^^^ [2]
+   declare_class_method.js:9:46
+    9|   static staticMethod(this: interface {prop: number}): string;
+                                                    ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ declare_class_method.js:28:10
 
-Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in object type [2].
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
 [prop-missing]
 
    declare_class_method.js:28:10
@@ -285,8 +285,8 @@ Cannot call `{...}.method` because property `prop` is missing in object literal 
 
 References:
    declare_class_method.js:9:29
-    9|   static staticMethod(this: {prop: number}): string;
-                                   ^^^^^^^^^^^^^^ [2]
+    9|   static staticMethod(this: interface {prop: number}): string;
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ declare_class_method.js:33:18
@@ -298,14 +298,14 @@ Cannot call `{...}.method` because boolean [1] is incompatible with number [2] i
                         ^^^^ [1]
 
 References:
-   declare_class_method.js:11:39
-   11|   propUnboundNonMethod: (this: {prop: number}) => string;
-                                             ^^^^^^ [2]
+   declare_class_method.js:11:49
+   11|   propUnboundNonMethod: (this: interface {prop: number}) => string;
+                                                       ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ declare_class_method.js:35:10
 
-Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in object type [2].
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
 [prop-missing]
 
    declare_class_method.js:35:10
@@ -314,8 +314,8 @@ Cannot call `{...}.method` because property `prop` is missing in object literal 
 
 References:
    declare_class_method.js:11:32
-   11|   propUnboundNonMethod: (this: {prop: number}) => string;
-                                      ^^^^^^^^^^^^^^ [2]
+   11|   propUnboundNonMethod: (this: interface {prop: number}) => string;
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ declare_class_method.js:40:19
@@ -327,14 +327,14 @@ Cannot call `{...}.method` because boolean [1] is incompatible with number [2] i
                          ^^^^ [1]
 
 References:
-   declare_class_method.js:13:52
-   13|   static staticPropUnboundNonMethod: (this: {prop: number}) => string;
-                                                          ^^^^^^ [2]
+   declare_class_method.js:13:62
+   13|   static staticPropUnboundNonMethod: (this: interface {prop: number}) => string;
+                                                                    ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ declare_class_method.js:42:11
 
-Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in object type [2].
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
 [prop-missing]
 
    declare_class_method.js:42:11
@@ -343,8 +343,8 @@ Cannot call `{...}.method` because property `prop` is missing in object literal 
 
 References:
    declare_class_method.js:13:45
-   13|   static staticPropUnboundNonMethod: (this: {prop: number}) => string;
-                                                   ^^^^^^^^^^^^^^ [2]
+   13|   static staticPropUnboundNonMethod: (this: interface {prop: number}) => string;
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- declare_function.js:14:19
@@ -827,14 +827,14 @@ Cannot call `{...}.method` because boolean [1] is incompatible with number [2] i
                         ^^^^ [1]
 
 References:
-   interface.js:6:23
-    6|   method(this: {prop: number}): string;
-                             ^^^^^^ [2]
+   interface.js:6:33
+    6|   method(this: interface {prop: number}): string;
+                                       ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- interface.js:18:10
 
-Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in object type [2].
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
 [prop-missing]
 
    interface.js:18:10
@@ -843,8 +843,8 @@ Cannot call `{...}.method` because property `prop` is missing in object literal 
 
 References:
    interface.js:6:16
-    6|   method(this: {prop: number}): string;
-                      ^^^^^^^^^^^^^^ [2]
+    6|   method(this: interface {prop: number}): string;
+                      ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- interface.js:23:18
@@ -856,14 +856,14 @@ Cannot call `{...}.method` because boolean [1] is incompatible with number [2] i
                         ^^^^ [1]
 
 References:
-   interface.js:8:39
-    8|   propUnboundNonMethod: (this: {prop: number}) => string;
-                                             ^^^^^^ [2]
+   interface.js:8:49
+    8|   propUnboundNonMethod: (this: interface {prop: number}) => string;
+                                                       ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- interface.js:25:10
 
-Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in object type [2].
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
 [prop-missing]
 
    interface.js:25:10
@@ -872,8 +872,8 @@ Cannot call `{...}.method` because property `prop` is missing in object literal 
 
 References:
    interface.js:8:32
-    8|   propUnboundNonMethod: (this: {prop: number}) => string;
-                                      ^^^^^^^^^^^^^^ [2]
+    8|   propUnboundNonMethod: (this: interface {prop: number}) => string;
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:8:17

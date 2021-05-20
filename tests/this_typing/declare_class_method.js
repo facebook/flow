@@ -4,13 +4,13 @@ declare class A {
   prop : number,
   static prop : number,
 
-  method(this: {prop: number}): string;
+  method(this: interface {prop: number}): string;
 
-  static staticMethod(this: {prop: number}): string;
+  static staticMethod(this: interface {prop: number}): string;
 
-  propUnboundNonMethod: (this: {prop: number}) => string;
+  propUnboundNonMethod: (this: interface {prop: number}) => string;
 
-  static staticPropUnboundNonMethod: (this: {prop: number}) => string;
+  static staticPropUnboundNonMethod: (this: interface {prop: number}) => string;
 }
 
 // All ok - {prop: 123} is a subtype of {prop: number}

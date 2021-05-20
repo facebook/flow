@@ -30,14 +30,14 @@ type D = string | {a: string} | {a: {b: string}};
 ({a: 42}: D);
 ({a: {b: 42}}: D);
 
-type E = X | {p: string};
+type E = X | interface {p: string};
 (42: E);
 (new X(): E);
 (new Y(): E);
 (new Z(): E);
 ({p: true}: E);
 
-type F = {p: string} | $ReadOnlyArray<string> | [string, string];
+type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
 (42: F);
 ({p: 42}: F);
 ({}: F);
@@ -52,5 +52,5 @@ type G = string | Z;
 (42: G);
 ({}: G);
 
-type M = W<string> | {p: string};
+type M = W<string> | interface {p: string};
 ((new W(): W<number>): M);

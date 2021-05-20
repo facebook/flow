@@ -1,0 +1,107 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:24:2
+
+Cannot cast `a` to `O` because `A` [1] is not a subtype of `O` [2]. Class instances are not subtypes of object types;
+consider rewriting `O` [2] as an interface. [class-object-subtyping]
+
+   test.js:24:2
+   24| (a : O); // error
+        ^
+
+References:
+   test.js:19:17
+   19| declare var a : A;
+                       ^ [1]
+   test.js:24:6
+   24| (a : O); // error
+            ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:28:2
+
+Cannot cast `o` to `A` because `O` [1] is incompatible with `A` [2]. [incompatible-cast]
+
+   test.js:28:2
+   28| (o : A); // error
+        ^
+
+References:
+   test.js:20:17
+   20| declare var o : O;
+                       ^ [1]
+   test.js:28:6
+   28| (o : A); // error
+            ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:32:2
+
+Cannot cast `i` to `A` because `I` [1] is incompatible with `A` [2]. [incompatible-cast]
+
+   test.js:32:2
+   32| (i : A); // error
+        ^
+
+References:
+   test.js:21:17
+   21| declare var i : I;
+                       ^ [1]
+   test.js:32:6
+   32| (i : A); // error
+            ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:33:2
+
+Cannot cast `i` to `O` because `I` [1] is not a subtype of `O` [2]. Class instances are not subtypes of object types;
+consider rewriting `O` [2] as an interface. [class-object-subtyping]
+
+   test.js:33:2
+   33| (i : O); // error
+        ^
+
+References:
+   test.js:21:17
+   21| declare var i : I;
+                       ^ [1]
+   test.js:33:6
+   33| (i : O); // error
+            ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:36:2
+
+Cannot cast `t` to `A` because `T` [1] is incompatible with `A` [2]. [incompatible-cast]
+
+   test.js:36:2
+   36| (t : A); // error
+        ^
+
+References:
+   test.js:22:17
+   22| declare var t : T;
+                       ^ [1]
+   test.js:36:6
+   36| (t : A); // error
+            ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:37:2
+
+Cannot cast `t` to `O` because `T` [1] is not a subtype of `O` [2]. Class instances are not subtypes of object types;
+consider rewriting `O` [2] as an interface. [class-object-subtyping]
+
+   test.js:37:2
+   37| (t : O); // error
+        ^
+
+References:
+   test.js:22:17
+   22| declare var t : T;
+                       ^ [1]
+   test.js:37:6
+   37| (t : O); // error
+            ^ [2]
+
+
+
+Found 6 errors

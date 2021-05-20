@@ -38,14 +38,14 @@ d({a: 42});
 d({a: {b: 42}});
 
 declare function e(x: X): void;
-declare function e(x: {p: string}): void;
+declare function e(x: interface {p: string}): void;
 e(42);
 e(new X());
 e(new Y());
 e(new Z());
 e({p: true});
 
-declare function f(x: {p: string}): void;
+declare function f(x: interface {p: string}): void;
 declare function f(x: $ReadOnlyArray<string>): void;
 declare function f(x: [string, string]): void;
 f(42);
@@ -80,5 +80,5 @@ declare function k(a: string, b: {p: number}): void;
 k(1, {p: 2});
 
 declare function m(x: W<string>): void;
-declare function m(x: {p: string}): void;
+declare function m(x: interface {p: string}): void;
 m((new W(): W<number>));

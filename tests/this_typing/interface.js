@@ -3,9 +3,9 @@
 interface A {
   prop : number,
 
-  method(this: {prop: number}): string;
+  method(this: interface {prop: number}): string;
 
-  propUnboundNonMethod: (this: {prop: number}) => string;
+  propUnboundNonMethod: (this: interface {prop: number}) => string;
 }
 
 declare var AImpl: A;
