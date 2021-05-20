@@ -75,10 +75,33 @@ struct
   (* Some variables are unhavocable by making a function call but still can be havoced in other
      situations. `via_call` indicates whether the havocing operation is a call or something
      else (resetting an activation scope, yielding, entering a new scope *)
-  let should_invalidate ~all info values r =
+
+  let mk_caches () = (ref L.LMap.empty, ref L.LMap.empty)
+
+  let should_invalidate ~all (const_like_cache, written_by_closure_cache) info values r =
     let loc = Reason.poly_loc_of_reason r in
-    (not (is_const_like info values loc))
-    && (all || (not @@ L.LSet.is_empty (written_by_closure info values loc)))
+    let const_like =
+      match L.LMap.find_opt loc !const_like_cache with
+      | Some b -> b
+      | None ->
+        let b = is_const_like info values loc in
+        const_like_cache := L.LMap.add loc b !const_like_cache;
+        b
+    in
+    if const_like then
+      false
+    else if all then
+      true
+    else
+      let not_written_by_closure =
+        match L.LMap.find_opt loc !written_by_closure_cache with
+        | Some b -> b
+        | None ->
+          let b = L.LSet.is_empty (written_by_closure info values loc) in
+          written_by_closure_cache := L.LMap.add loc b !written_by_closure_cache;
+          b
+      in
+      not not_written_by_closure
 end
 
 module With_ALoc = Make (Loc_sig.ALocS) (Scope_api.With_ALoc) (Ssa_api.With_ALoc)

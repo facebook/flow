@@ -176,6 +176,8 @@ module Make
     object (this)
       inherit Ssa_builder.ssa_builder as super
 
+      val invalidation_caches = Invalidation_api.mk_caches ()
+
       val mutable expression_refinement_scopes = []
 
       val mutable refined_reads = L.LMap.empty
@@ -270,8 +272,13 @@ module Make
         SMap.iter
           (fun _x { Ssa_builder.val_ref; havoc = { Ssa_builder.Havoc.unresolved; locs } } ->
             match locs with
-            | loc :: _ when Invalidation_api.should_invalidate ~all prepass_info prepass_values loc
-              ->
+            | loc :: _
+              when Invalidation_api.should_invalidate
+                     ~all
+                     invalidation_caches
+                     prepass_info
+                     prepass_values
+                     loc ->
               (* NOTE: havoc_env should already have all writes to x, so the only
                additional thing that could come from ssa_env is "uninitialized." On
                the other hand, we *dont* want to include "uninitialized" if it's no
