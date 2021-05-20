@@ -16,9 +16,13 @@ type warning = int * string
 
 type error = int * string
 
-val get : ?allow_cache:bool -> string -> (config * warning list, error) result
+type config_result = (config * warning list, error) result
+
+val get : ?allow_cache:bool -> string -> config_result
 
 val get_hash : ?allow_cache:bool -> string -> Xx.hash
+
+val get_with_hash : ?allow_cache:bool -> string -> config_result * Xx.hash
 
 val empty_config : config
 

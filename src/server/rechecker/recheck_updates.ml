@@ -43,6 +43,33 @@ let is_incompatible_package_json ~options ~reader =
     else
       Module_js.Compatible
 
+let get_updated_flowconfig config_path =
+  let (config, hash) = FlowConfig.get_with_hash ~allow_cache:false config_path in
+  match config with
+  | Ok (config, _warnings) -> Ok (config, hash)
+  | Error _ ->
+    Error
+      {
+        msg = spf "%s changed in an incompatible way. Exiting." config_path;
+        exit_status = Exit.Flowconfig_changed;
+      }
+
+let assert_compatible_flowconfig_version =
+  let not_satisfied version_constraint =
+    not (Semver.satisfies ~include_prereleases:true version_constraint Flow_version.version)
+  in
+  fun config ->
+    match FlowConfig.required_version config with
+    | Some version_constraint when not_satisfied version_constraint ->
+      let msg =
+        spf
+          "Wrong version of Flow. The config specifies version %s but this is version %s"
+          version_constraint
+          Flow_version.version
+      in
+      Error { msg; exit_status = Exit.Flowconfig_changed }
+    | _ -> Ok ()
+
 (** determines whether the flowconfig changed in a way that requires restarting
 
     this is currently very coarse: any textual change will invalidate it, even just
@@ -52,30 +79,29 @@ let is_incompatible_package_json ~options ~reader =
     the ideal solution is to process updates to the config incrementally.for
     example, adding a new ignore dir could be processed the same way deleting
     all of those files would be handled. *)
-let is_incompatible_flowconfig_change ~options config_path =
+let assert_compatible_flowconfig_change ~options config_path =
   let old_hash = Options.flowconfig_hash options in
-  let new_hash = FlowConfig.get_hash ~allow_cache:false config_path |> Xx.to_string in
-  if not (String.equal old_hash new_hash) then
-    let () = Hh_logger.error "Flowconfig hash changed from %S to %S" old_hash new_hash in
-    true
+  let%bind (new_config, new_hash) = get_updated_flowconfig config_path in
+  let new_hash = Xx.to_string new_hash in
+  if String.equal old_hash new_hash then
+    Ok ()
   else
-    false
-
-(** Checks whether [updates] includes the flowconfig, and if so whether the change can
-    be handled incrementally (returns [Ok ()]) or we need to restart (returns [Error]) *)
-let check_for_flowconfig_change ~options ~skip_incompatible config_path updates =
-  if
-    (not skip_incompatible)
-    && SSet.mem config_path updates
-    && is_incompatible_flowconfig_change ~options config_path
-  then
+    let () = Hh_logger.error "Flowconfig hash changed from %S to %S" old_hash new_hash in
+    let%bind () = assert_compatible_flowconfig_version new_config in
     Error
       {
         msg = spf "%s changed in an incompatible way. Exiting." config_path;
         exit_status = Exit.Flowconfig_changed;
       }
-  else
+
+(** Checks whether [updates] includes the flowconfig, and if so whether the change can
+    be handled incrementally (returns [Ok ()]) or we need to restart (returns [Error]) *)
+let check_for_flowconfig_change ~options ~skip_incompatible config_path updates =
+  let config_changed = (not skip_incompatible) && SSet.mem config_path updates in
+  if not config_changed then
     Ok ()
+  else
+    assert_compatible_flowconfig_change ~options config_path
 
 let check_for_package_json_changes ~is_incompatible_package_json ~skip_incompatible updates =
   let incompatible_packages =
