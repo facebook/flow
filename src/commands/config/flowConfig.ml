@@ -773,6 +773,8 @@ type config = {
   version: string option;
 }
 
+type config_result = (config * warning list, error) result
+
 module Pp : sig
   val config : out_channel -> config -> unit
 end = struct
@@ -1202,6 +1204,10 @@ let get ?allow_cache filename =
 let get_hash ?allow_cache filename =
   let (_, _, hash) = get_from_cache ?allow_cache filename in
   hash
+
+let get_with_hash ?allow_cache filename =
+  let (_, config, hash) = get_from_cache ?allow_cache filename in
+  (config, hash)
 
 (* Accessors *)
 
