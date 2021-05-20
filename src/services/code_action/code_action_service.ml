@@ -240,6 +240,34 @@ let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
       files
       []
 
+let replace_obj_with_interface ~options ~diagnostics ~ast ~original uri loc =
+  let open Lsp in
+  let open Autofix_interface in
+  match replace_object_at_target ast loc with
+  | new_ast ->
+    let diff = mk_diff ast new_ast in
+    let opts = layout_options options in
+    let edits =
+      Replacement_printer.mk_loc_patch_ast_differ ~opts diff
+      |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+    in
+    CodeAction.Action
+      {
+        CodeAction.title = Utils_js.spf "Rewrite %s as an interface" original;
+        kind = CodeActionKind.quickfix;
+        (* Handing back the diagnostics we were given is a placeholder for
+              eventually generating the diagnostics for the errors we are fixing *)
+        diagnostics;
+        action =
+          CodeAction.BothEditThenCommand
+            ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+              {
+                Command.title = "";
+                command = Command.Command "log";
+                arguments = [Hh_json.JSON_String "replace_obj_with_interface"];
+              } );
+      }
+
 let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri loc =
   Flow_error.ErrorSet.fold
     (fun error actions ->
@@ -269,6 +297,28 @@ let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri l
             uri
             loc
           @ actions
+        else
+          actions
+      | Error_message.EClassToObject (reason_class, reason_obj, _) ->
+        let error_loc = Reason.loc_of_reason reason_class in
+        if Loc.contains error_loc loc then
+          let obj_loc = Reason.def_loc_of_reason reason_obj in
+          let original =
+            reason_obj |> Reason.desc_of_reason ~unwrap:false |> Reason.string_of_desc
+          in
+          let (ast, uri) =
+            let src = Loc.source obj_loc in
+            let ast_src = fst ast |> Loc.source in
+            if ast_src <> src then
+              (* load ast of upstream file
+               In order to appear in an error, a loc must have a source *)
+              let source_file = Base.Option.value_exn src in
+              ( Parsing_heaps.Reader.get_ast_unsafe ~reader source_file,
+                source_file |> File_key.to_string |> File_url.create |> Lsp.DocumentUri.of_string )
+            else
+              (ast, uri)
+          in
+          replace_obj_with_interface ~diagnostics ~ast ~options ~original uri obj_loc :: actions
         else
           actions
       | error_message ->

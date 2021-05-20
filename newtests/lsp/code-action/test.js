@@ -409,5 +409,414 @@ export default (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('provide codeAction for ClassObject errors', [
+      addFile('class-object-subtype.js.ignored', 'class-object-subtype.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/class-object-subtype.js',
+        },
+        range: {
+          start: {
+            line: 8,
+            character: 4,
+          },
+          end: {
+            line: 8,
+            character: 11,
+          },
+        },
+        context: {
+          diagnostics: [
+            {
+              range: {
+                start: {
+                  line: 8,
+                  character: 4,
+                },
+                end: {
+                  line: 8,
+                  character: 11,
+                },
+              },
+              message:
+                'Cannot call foo with new A() bound to x because cannot subtype class A [1] with object type [2]. Please use an interface instead.',
+              severity: 1,
+              code: 'InferError',
+              source: 'Flow',
+            },
+          ],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Rewrite object type as an interface',
+                kind: 'quickfix',
+                diagnostics: [
+                  {
+                    range: {
+                      start: {
+                        line: 8,
+                        character: 4,
+                      },
+                      end: {
+                        line: 8,
+                        character: 11,
+                      },
+                    },
+                    severity: 1,
+                    code: 'InferError',
+                    source: 'Flow',
+                    message:
+                      'Cannot call foo with new A() bound to x because cannot subtype class A [1] with object type [2]. Please use an interface instead.',
+                    relatedInformation: [],
+                    relatedLocations: [],
+                  },
+                ],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/class-object-subtype.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 6,
+                            character: 17,
+                          },
+                          end: {
+                            line: 6,
+                            character: 35,
+                          },
+                        },
+                        newText: 'interface { x: number }',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: ['replace_obj_with_interface'],
+                },
+              },
+            ],
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+    ]),
+    test('provide codeAction for nested ClassObject errors', [
+      addFile('class-object-subtype.js.ignored', 'class-object-subtype.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/class-object-subtype.js',
+        },
+        range: {
+          start: {
+            line: 12,
+            character: 9,
+          },
+          end: {
+            line: 12,
+            character: 16,
+          },
+        },
+        context: {
+          diagnostics: [
+            {
+              range: {
+                start: {
+                  line: 12,
+                  character: 9,
+                },
+                end: {
+                  line: 12,
+                  character: 16,
+                },
+              },
+              message:
+                'Cannot call `bar` with object literal bound to `_` because cannot subtype class  `A` [1] with  object type [2]. Please use an interface instead in property `i`.',
+              severity: 1,
+              code: 'InferError',
+              source: 'Flow',
+            },
+          ],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Rewrite object type as an interface',
+                kind: 'quickfix',
+                diagnostics: [
+                  {
+                    range: {
+                      start: {
+                        line: 12,
+                        character: 9,
+                      },
+                      end: {
+                        line: 12,
+                        character: 16,
+                      },
+                    },
+                    severity: 1,
+                    code: 'InferError',
+                    source: 'Flow',
+                    message:
+                      'Cannot call `bar` with object literal bound to `_` because cannot subtype class  `A` [1] with  object type [2]. Please use an interface instead in property `i`.',
+                    relatedInformation: [],
+                    relatedLocations: [],
+                  },
+                ],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/class-object-subtype.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 10,
+                            character: 23,
+                          },
+                          end: {
+                            line: 10,
+                            character: 39,
+                          },
+                        },
+                        newText: 'interface { x: number }',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: ['replace_obj_with_interface'],
+                },
+              },
+            ],
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+    ]),
+    test('provide codeAction for aliased ClassObject errors', [
+      addFile('class-object-subtype.js.ignored', 'class-object-subtype.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/class-object-subtype.js',
+        },
+        range: {
+          start: {
+            line: 18,
+            character: 4,
+          },
+          end: {
+            line: 18,
+            character: 11,
+          },
+        },
+        context: {
+          diagnostics: [
+            {
+              range: {
+                start: {
+                  line: 18,
+                  character: 4,
+                },
+                end: {
+                  line: 18,
+                  character: 4,
+                },
+              },
+              message:
+                'Cannot call `baz` with object literal bound to `_` because cannot subtype class  `A` [1] with  object type [2]. Please use an interface instead in property `i`.',
+              severity: 1,
+              code: 'InferError',
+              source: 'Flow',
+            },
+          ],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Rewrite `T` as an interface',
+                kind: 'quickfix',
+                diagnostics: [
+                  {
+                    range: {
+                      start: {
+                        line: 18,
+                        character: 4,
+                      },
+                      end: {
+                        line: 18,
+                        character: 4,
+                      },
+                    },
+                    severity: 1,
+                    code: 'InferError',
+                    source: 'Flow',
+                    message:
+                      'Cannot call `baz` with object literal bound to `_` because cannot subtype class  `A` [1] with  object type [2]. Please use an interface instead in property `i`.',
+                    relatedInformation: [],
+                    relatedLocations: [],
+                  },
+                ],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/class-object-subtype.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 14,
+                            character: 9,
+                          },
+                          end: {
+                            line: 14,
+                            character: 27,
+                          },
+                        },
+                        newText: 'interface { x: number }',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: ['replace_obj_with_interface'],
+                },
+              },
+            ],
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+    ]),
+    test('provide codeAction for cross-file ClassObject errors', [
+      addFile('class-object-subtype.js.ignored', 'class-object-subtype.js'),
+      addFile('lib.js.ignored', 'lib.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/class-object-subtype.js',
+        },
+        range: {
+          start: {
+            line: 22,
+            character: 4,
+          },
+          end: {
+            line: 22,
+            character: 11,
+          },
+        },
+        context: {
+          diagnostics: [
+            {
+              range: {
+                start: {
+                  line: 22,
+                  character: 4,
+                },
+                end: {
+                  line: 22,
+                  character: 11,
+                },
+              },
+              message:
+                'Cannot call `qux` with object literal bound to `_` because cannot subtype class  `A` [1] with  object type [2]. Please use an interface instead in property `i`.',
+              severity: 1,
+              code: 'InferError',
+              source: 'Flow',
+            },
+          ],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Rewrite object type as an interface',
+                kind: 'quickfix',
+                diagnostics: [
+                  {
+                    range: {
+                      start: {
+                        line: 22,
+                        character: 4,
+                      },
+                      end: {
+                        line: 22,
+                        character: 11,
+                      },
+                    },
+                    severity: 1,
+                    code: 'InferError',
+                    source: 'Flow',
+                    message:
+                      'Cannot call `qux` with object literal bound to `_` because cannot subtype class  `A` [1] with  object type [2]. Please use an interface instead in property `i`.',
+                    relatedInformation: [],
+                    relatedLocations: [],
+                  },
+                ],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/lib.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 2,
+                            character: 24,
+                          },
+                          end: {
+                            line: 2,
+                            character: 42,
+                          },
+                        },
+                        newText: 'interface { x: number }',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: ['replace_obj_with_interface'],
+                },
+              },
+            ],
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+    ]),
   ],
 ): Suite);

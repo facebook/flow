@@ -351,8 +351,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 9, character: 15},
-                      end: {line: 9, character: 15},
+                      start: {
+                        line: 9,
+                        character: 15,
+                      },
+                      end: {
+                        line: 9,
+                        character: 15,
+                      },
                     },
                     newText: 'aFunction',
                   },
@@ -362,7 +368,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
-                      {token: 'AUTO332', completion: 'aFunction'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'aFunction',
+                      },
                     ],
                   },
                 },
@@ -374,8 +383,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 9, character: 15},
-                      end: {line: 9, character: 15},
+                      start: {
+                        line: 9,
+                        character: 15,
+                      },
+                      end: {
+                        line: 9,
+                        character: 15,
+                      },
                     },
                     newText: 'foo',
                   },
@@ -385,7 +400,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
-                      {token: 'AUTO332', completion: 'foo'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'foo',
+                      },
                     ],
                   },
                 },
@@ -397,8 +415,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 9, character: 15},
-                      end: {line: 9, character: 15},
+                      start: {
+                        line: 9,
+                        character: 15,
+                      },
+                      end: {
+                        line: 9,
+                        character: 15,
+                      },
                     },
                     newText: 'x',
                   },
@@ -408,7 +432,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'local value identifier',
-                      {token: 'AUTO332', completion: 'x'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'x',
+                      },
                     ],
                   },
                 },
@@ -420,8 +447,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 9, character: 15},
-                      end: {line: 9, character: 15},
+                      start: {
+                        line: 9,
+                        character: 15,
+                      },
+                      end: {
+                        line: 9,
+                        character: 15,
+                      },
                     },
                     newText: 'this',
                   },
@@ -431,7 +464,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'this',
-                      {token: 'AUTO332', completion: 'this'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'this',
+                      },
                     ],
                   },
                 },
@@ -439,7 +475,11 @@ export default (suite(
             },
           },
         ],
-        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
       ),
     ]),
     test('textDocument/completion triggered by space in jsx', [

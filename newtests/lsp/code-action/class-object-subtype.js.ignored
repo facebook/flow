@@ -1,0 +1,23 @@
+//@flow
+
+class A {
+    x : number
+}
+
+function foo(_ : { x : number, ...}) {}
+
+foo(new A());
+
+function bar(_ : { i : {x: number, ...} }) {}
+
+bar({i : new A()})
+
+type T = { x : number, ...}
+
+function baz(_ : T) {}
+
+baz(new A())
+
+import {qux} from './lib.js';
+
+qux(new A())
