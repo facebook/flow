@@ -22,7 +22,7 @@ module Make
 struct
   module Provider_api = Env_builder.Provider_api
 
-  class use_finder ((_, _, _, (providers, _)) as env) =
+  class use_finder ({ Env_builder.providers = (providers, _); _ } as env) =
     object (this)
       inherit [LocSet.t, L.t] Flow_ast_visitor.visitor ~init:LocSet.empty as super
 
@@ -87,4 +87,12 @@ module With_Loc =
       module L = Loc_sig.LocS
 
       let convert loc = loc
+    end)
+
+module With_ALoc =
+  Make (Loc_sig.ALocS) (Env_builder.With_ALoc) (Scope_api.With_ALoc)
+    (struct
+      module L = Loc_sig.ALocS
+
+      let convert = ALoc.to_loc_exn
     end)

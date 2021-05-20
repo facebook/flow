@@ -95,18 +95,21 @@ module type S = sig
 
   type refinement = L.LSet.t * refinement_kind
 
-  val program_with_scope :
-    ?ignore_toplevel:bool ->
-    (L.t, L.t) Flow_ast.Program.t ->
-    Scope_api.info * Ssa_api.values * refinement L.LMap.t * Provider_api.env
+  type env_info = {
+    scopes: Scope_api.info;
+    ssa_values: Ssa_api.values;
+    env_values: Ssa_api.values;
+    refinements: refinement L.LMap.t;
+    providers: Provider_api.env;
+  }
+
+  val program_with_scope : ?ignore_toplevel:bool -> (L.t, L.t) Flow_ast.Program.t -> env_info
 
   val program : (L.t, L.t) Flow_ast.Program.t -> refinement L.LMap.t
 
-  val sources_of_use :
-    Scope_api.info * Ssa_api.values * refinement L.LMap.t * Provider_api.env -> L.t -> L.LSet.t
+  val sources_of_use : env_info -> L.t -> L.LSet.t
 
-  val source_bindings :
-    Scope_api.info * Ssa_api.values * refinement L.LMap.t * Provider_api.env -> L.LSet.t L.LMap.t
+  val source_bindings : env_info -> L.LSet.t L.LMap.t
 end
 
 module Make
@@ -156,6 +159,14 @@ module Make
   [@@deriving show { with_path = false }]
 
   type refinement = L.LSet.t * refinement_kind
+
+  type env_info = {
+    scopes: Scope_api.info;
+    ssa_values: Ssa_api.values;
+    env_values: Ssa_api.values;
+    refinements: refinement L.LMap.t;
+    providers: Provider_api.env;
+  }
 
   let merge_and (locs1, ref1) (locs2, ref2) = (L.LSet.union locs1 locs2, And (ref1, ref2))
 
@@ -730,7 +741,9 @@ module Make
   let program_with_scope ?(ignore_toplevel = false) program =
     let open Hoister in
     let (loc, _) = program in
-    let prepass = Ssa_builder.program_with_scope ~ignore_toplevel program in
+    let ((scopes, ssa_values) as prepass) =
+      Ssa_builder.program_with_scope ~ignore_toplevel program
+    in
     let providers = Provider_api.find_providers program in
     let ssa_walk = new env_builder prepass providers in
     let bindings =
@@ -741,13 +754,19 @@ module Make
         hoist#eval hoist#program program
     in
     ignore @@ ssa_walk#with_bindings loc bindings ssa_walk#program program;
-    (ssa_walk#acc, ssa_walk#values, ssa_walk#refined_reads, providers)
+    {
+      scopes;
+      ssa_values;
+      env_values = ssa_walk#values;
+      refinements = ssa_walk#refined_reads;
+      providers;
+    }
 
   let program program =
-    let (_, _, refined_reads, _) = program_with_scope ~ignore_toplevel:false program in
-    refined_reads
+    let { refinements; _ } = program_with_scope ~ignore_toplevel:false program in
+    refinements
 
-  let sources_of_use (_, vals, refis, _) loc =
+  let sources_of_use { env_values = vals; refinements = refis; _ } loc =
     let write_locs =
       L.LMap.find_opt loc vals
       |> Base.Option.value_map
@@ -764,9 +783,11 @@ module Make
     in
     L.LSet.union refi_locs write_locs
 
-  let source_bindings ((_, vals, refis, _) as info) =
+  let source_bindings ({ env_values = vals; refinements = refis; _ } as info) =
     let keys = L.LSet.of_list (L.LMap.keys vals @ L.LMap.keys refis) in
     L.LSet.fold (fun k acc -> L.LMap.add k (sources_of_use info k) acc) keys L.LMap.empty
 end
 
 module With_Loc = Make (Loc_sig.LocS) (Ssa_api.With_Loc) (Scope_api.With_Loc)
+module With_ALoc = Make (Loc_sig.ALocS) (Ssa_api.With_ALoc) (Scope_api.With_ALoc)
+include With_ALoc
