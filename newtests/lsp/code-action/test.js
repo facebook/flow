@@ -818,5 +818,141 @@ export default (suite(
         ],
       ),
     ]),
+    test('provide codeAction for MethodUnbinding errors', [
+      addFile('method-unbinding.js.ignored', 'method-unbinding.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/method-unbinding.js',
+        },
+        range: {
+          start: {
+            line: 6,
+            character: 8,
+          },
+          end: {
+            line: 6,
+            character: 9,
+          },
+        },
+        context: {
+          diagnostics: [
+            {
+              range: {
+                start: {
+                  line: 6,
+                  character: 8,
+                },
+                end: {
+                  line: 6,
+                  character: 9,
+                },
+              },
+              message:
+                'Cannot get `(new A).f` because  property `f` [1] cannot be unbound from the  context [2] where it was defined.',
+              severity: 1,
+              code: 'InferError',
+              source: 'Flow',
+            },
+          ],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          [
+            'textDocument/codeAction',
+            JSON.stringify([
+              {
+                title: 'Rewrite function as an arrow function',
+                kind: 'quickfix',
+                diagnostics: [
+                  {
+                    range: {
+                      start: {line: 6, character: 8},
+                      end: {line: 6, character: 9},
+                    },
+                    severity: 1,
+                    code: 'InferError',
+                    source: 'Flow',
+                    message:
+                      'Cannot get `(new A).f` because  property `f` [1] cannot be unbound from the  context [2] where it was defined.',
+                    relatedInformation: [],
+                    relatedLocations: [],
+                  },
+                ],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/method-unbinding.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 2,
+                            character: 0,
+                          },
+                          end: {
+                            line: 4,
+                            character: 1,
+                          },
+                        },
+                        newText:
+                          'class A {\n  f = (x: number): number => {\n    return x;\n  };\n}',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: ['replace_method_with_arrow'],
+                },
+              },
+            ]),
+          ],
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('ignore method unbinding when super is used', [
+      addFile('method-unbinding.js.ignored', 'method-unbinding.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/method-unbinding.js',
+        },
+        range: {
+          start: {
+            line: 6,
+            character: 8,
+          },
+          end: {
+            line: 6,
+            character: 9,
+          },
+        },
+        context: {
+          diagnostics: [
+            {
+              range: {
+                start: {
+                  line: 12,
+                  character: 8,
+                },
+                end: {
+                  line: 12,
+                  character: 9,
+                },
+              },
+              message:
+                'Cannot get `(new B).f` because  property `f` [1] cannot be unbound from the  context [2] where it was defined.',
+              severity: 1,
+              code: 'InferError',
+              source: 'Flow',
+            },
+          ],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [['textDocument/codeAction', '[]']],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
   ],
 ): Suite);

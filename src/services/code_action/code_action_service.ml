@@ -240,10 +240,23 @@ let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
       files
       []
 
-let replace_obj_with_interface ~options ~diagnostics ~ast ~original uri loc =
+let autofix_in_upstream_file
+    ~reader ~diagnostics ~ast ~options ~title ~transform ~diagnostic_title uri loc =
+  let (ast, uri) =
+    let src = Loc.source loc in
+    let ast_src = fst ast |> Loc.source in
+    if ast_src <> src then
+      (* load ast of upstream file
+        In order to appear in an error, a loc must have a source *)
+      let source_file = Base.Option.value_exn src in
+      ( Parsing_heaps.Reader.get_ast_unsafe ~reader source_file,
+        source_file |> File_key.to_string |> File_url.create |> Lsp.DocumentUri.of_string )
+    else
+      (ast, uri)
+  in
+  let mk_diff ast new_ast = Flow_ast_differ.(program Standard ast new_ast) in
   let open Lsp in
-  let open Autofix_interface in
-  match replace_object_at_target ast loc with
+  match transform ast loc with
   | new_ast ->
     let diff = mk_diff ast new_ast in
     let opts = layout_options options in
@@ -253,7 +266,7 @@ let replace_obj_with_interface ~options ~diagnostics ~ast ~original uri loc =
     in
     CodeAction.Action
       {
-        CodeAction.title = Utils_js.spf "Rewrite %s as an interface" original;
+        CodeAction.title;
         kind = CodeActionKind.quickfix;
         (* Handing back the diagnostics we were given is a placeholder for
               eventually generating the diagnostics for the errors we are fixing *)
@@ -264,7 +277,7 @@ let replace_obj_with_interface ~options ~diagnostics ~ast ~original uri loc =
               {
                 Command.title = "";
                 command = Command.Command "log";
-                arguments = [Hh_json.JSON_String "replace_obj_with_interface"];
+                arguments = [Hh_json.JSON_String diagnostic_title];
               } );
       }
 
@@ -306,19 +319,41 @@ let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri l
           let original =
             reason_obj |> Reason.desc_of_reason ~unwrap:false |> Reason.string_of_desc
           in
-          let (ast, uri) =
-            let src = Loc.source obj_loc in
-            let ast_src = fst ast |> Loc.source in
-            if ast_src <> src then
-              (* load ast of upstream file
-               In order to appear in an error, a loc must have a source *)
-              let source_file = Base.Option.value_exn src in
-              ( Parsing_heaps.Reader.get_ast_unsafe ~reader source_file,
-                source_file |> File_key.to_string |> File_url.create |> Lsp.DocumentUri.of_string )
-            else
-              (ast, uri)
+          let title = Utils_js.spf "Rewrite %s as an interface" original in
+          let diagnostic_title = "replace_obj_with_interface" in
+          autofix_in_upstream_file
+            ~reader
+            ~diagnostics
+            ~ast
+            ~options
+            ~title
+            ~diagnostic_title
+            ~transform:Autofix_interface.replace_object_at_target
+            uri
+            obj_loc
+          :: actions
+        else
+          actions
+      | Error_message.EMethodUnbinding { reason_op; reason_prop; _ } ->
+        let error_loc = Reason.loc_of_reason reason_op in
+        if Loc.contains error_loc loc then
+          let method_loc = Reason.def_loc_of_reason reason_prop in
+          let original =
+            reason_prop |> Reason.desc_of_reason ~unwrap:false |> Reason.string_of_desc
           in
-          replace_obj_with_interface ~diagnostics ~ast ~options ~original uri obj_loc :: actions
+          let title = Utils_js.spf "Rewrite %s as an arrow function" original in
+          let diagnostic_title = "replace_method_with_arrow" in
+          autofix_in_upstream_file
+            ~reader
+            ~diagnostics
+            ~ast
+            ~options
+            ~title
+            ~diagnostic_title
+            ~transform:Autofix_method.replace_method_at_target
+            uri
+            method_loc
+          :: actions
         else
           actions
       | error_message ->

@@ -38,5 +38,3 @@ class mapper target =
 let replace_object_at_target ast loc =
   let mapper = new mapper loc in
   mapper#program ast
-
-let mk_diff ast new_ast = Flow_ast_differ.(program Standard ast new_ast)

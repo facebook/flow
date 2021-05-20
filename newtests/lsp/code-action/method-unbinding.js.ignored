@@ -1,0 +1,13 @@
+//@flow
+
+class A {
+    f(x : number) : number { return x }
+}
+
+(new A).f;
+
+class B extends class { f() {}} {
+    f(x) : void { super.f }
+}
+
+(new B).f;
