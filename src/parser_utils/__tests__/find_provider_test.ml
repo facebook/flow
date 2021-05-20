@@ -77,8 +77,8 @@ let mk_provider_test var contents expected_msg ctxt =
 
 let mk_provider_loc_test loc contents expected_msg ctxt =
   let ast = parse contents in
-  let (scope, _) = Provider_api.LocProviders.find_providers ast in
-  let msg = Provider_api.LocProviders.providers_of_def scope loc in
+  let info = Provider_api.LocProviders.find_providers ast in
+  let msg = Provider_api.LocProviders.providers_of_def info loc in
   assert_equal
     ~ctxt
     ~printer:(fun x -> x)

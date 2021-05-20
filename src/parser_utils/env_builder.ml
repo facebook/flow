@@ -100,7 +100,7 @@ module type S = sig
     ssa_values: Ssa_api.values;
     env_values: Ssa_api.values;
     refinements: refinement L.LMap.t;
-    providers: Provider_api.env;
+    providers: Provider_api.info;
   }
 
   val program_with_scope : ?ignore_toplevel:bool -> (L.t, L.t) Flow_ast.Program.t -> env_info
@@ -165,14 +165,14 @@ module Make
     ssa_values: Ssa_api.values;
     env_values: Ssa_api.values;
     refinements: refinement L.LMap.t;
-    providers: Provider_api.env;
+    providers: Provider_api.info;
   }
 
   let merge_and (locs1, ref1) (locs2, ref2) = (L.LSet.union locs1 locs2, And (ref1, ref2))
 
   let merge_or (locs1, ref1) (locs2, ref2) = (L.LSet.union locs1 locs2, Or (ref1, ref2))
 
-  class env_builder (prepass_info, prepass_values) (provider_info, _) =
+  class env_builder (prepass_info, prepass_values) provider_info =
     object (this)
       inherit Ssa_builder.ssa_builder as super
 

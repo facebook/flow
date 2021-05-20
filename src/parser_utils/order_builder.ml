@@ -22,7 +22,7 @@ module Make
 struct
   module Provider_api = Env_builder.Provider_api
 
-  class use_finder ({ Env_builder.providers = (providers, _); _ } as env) =
+  class use_finder ({ Env_builder.providers; _ } as env) =
     object (this)
       inherit [LocSet.t, L.t] Flow_ast_visitor.visitor ~init:LocSet.empty as super
 

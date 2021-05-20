@@ -10,63 +10,66 @@ open Utils_js
 module type S = sig
   module L : Loc_sig.S
 
-  type scope
+  type info
 
-  type env = scope Nel.t
+  val is_provider : info -> L.t -> bool
 
-  val empty_scope : scope
+  val get_providers_for_toplevel_var : string -> info -> L.LSet.t option
 
-  val is_provider : scope -> L.t -> bool
+  val find_providers : (L.t, L.t) Flow_ast.Program.t -> info
 
-  val get_providers_for_toplevel_var : string -> env -> L.LSet.t option
+  val print_full_env : info -> string
 
-  val find_providers : (L.t, L.t) Flow_ast.Program.t -> env
-
-  val print_full_env : env -> string
-
-  val providers_of_def : scope -> L.t -> L.t Reason.virtual_reason list option
+  val providers_of_def : info -> L.t -> L.t Reason.virtual_reason list option
 end
 
-module Make (L : Loc_sig.S) = struct
+module Make (L : Loc_sig.S) : S with module L = L = struct
   module L = L
   module Find_providers = Find_providers.FindProviders (L)
   open Find_providers
 
-  type scope = Find_providers.scope
+  module EntrySet = Set.Make (struct
+    type t = entry
 
-  type env = Find_providers.env
+    let compare { entry_id = id1; _ } { entry_id = id2; _ } = Id.compare id1 id2
+  end)
 
-  let empty_scope = new_scope ~kind:Var
+  type info = {
+    all_entries: EntrySet.t;
+    all_exact_providers: L.LSet.t;
+    raw_env: env;
+  }
 
   let all_exact_providers { providers; _ } =
     SMap.fold (fun _ { exact_locs; _ } acc -> L.LSet.union exact_locs acc) providers L.LSet.empty
 
   let rec all_entries { entries; children; _ } =
-    SMap.values entries @ Base.List.concat_map ~f:all_entries (L.LMap.values children)
+    L.LMap.fold (fun _ child acc -> EntrySet.union (all_entries child) acc) children EntrySet.empty
+    |> SMap.fold (fun _ entry acc -> EntrySet.add entry acc) entries
 
-  let is_provider scope loc = L.LSet.mem loc (all_exact_providers scope)
+  let is_provider { all_exact_providers; _ } loc = L.LSet.mem loc all_exact_providers
 
-  let providers_of_def scope loc =
-    let all_entries = all_entries scope in
+  let providers_of_def { all_entries; _ } loc =
     Base.List.find_map
-      ~f:(fun { provider_locs; declare_locs; def_locs; name; _ } ->
+      ~f:(fun { declare_locs; def_locs; provider_locs; name; _ } ->
         if L.LSet.mem loc declare_locs || L.LSet.mem loc def_locs then
           Some
             ( L.LSet.elements provider_locs
             |> Base.List.map ~f:Reason.(mk_reason (RIdentifier (OrdinaryName name))) )
         else
           None)
-      all_entries
+      (EntrySet.elements all_entries)
 
-  let get_providers_for_toplevel_var var ({ entries; _ }, _) =
+  let get_providers_for_toplevel_var var { raw_env = ({ entries; _ }, _); _ } =
     let entry = SMap.find_opt var entries in
     Base.Option.map ~f:(fun { provider_locs; _ } -> provider_locs) entry
 
   let find_providers (_, program) =
     let env = find_declaration_statements program in
-    find_provider_statements env program
+    let ((hd, _) as env) = find_provider_statements env program in
+    { all_entries = all_entries hd; all_exact_providers = all_exact_providers hd; raw_env = env }
 
-  let print_full_env env =
+  let print_full_env { raw_env = env; _ } =
     let rec ptabs count =
       if count = 0 then
         ""

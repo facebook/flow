@@ -9,6 +9,25 @@ open Flow_ast_mapper
 module Ast = Flow_ast
 
 module FindProviders (L : Loc_sig.S) = struct
+  module Id : sig
+    type t
+
+    val new_id : unit -> t
+
+    val compare : t -> t -> int
+  end = struct
+    type t = int
+
+    let cur = ref 0
+
+    let new_id () =
+      let id = !cur in
+      cur := !cur + 1;
+      id
+
+    let compare = Int.compare
+  end
+
   (**** Data structures for environments ****)
   type state =
     | Initialized
@@ -30,6 +49,7 @@ module FindProviders (L : Loc_sig.S) = struct
         expect that provider_locs is a subset of the union of def_locs and declare_locs.
    *)
   type entry = {
+    entry_id: Id.t;
     name: string;
     state: state;
     declare_locs: L.LSet.t;
@@ -85,6 +105,7 @@ module FindProviders (L : Loc_sig.S) = struct
   (**** Functions for manipulating environments ****)
   let empty_entry name =
     {
+      entry_id = Id.new_id ();
       name;
       state = Uninitialized;
       provider_locs = L.LSet.empty;
@@ -190,21 +211,25 @@ module FindProviders (L : Loc_sig.S) = struct
       else
         match (entry1, entry2) with
         | ( {
-              name;
+              entry_id;
+              name = name1;
               state = state1;
               provider_locs = providers1;
               declare_locs = declares1;
               def_locs = defs1;
             },
             {
-              name = _;
+              entry_id = _;
+              name = name2;
               state = state2;
               provider_locs = providers2;
               declare_locs = declares2;
               def_locs = defs2;
             } ) ->
+          assert (name1 = name2);
           {
-            name;
+            entry_id;
+            name = name1;
             state = max state1 state2;
             provider_locs = L.LSet.union providers1 providers2;
             declare_locs = L.LSet.union declares1 declares2;
