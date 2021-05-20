@@ -33,6 +33,8 @@ struct
 
     val uninitialized : unit -> t
 
+    val new_id : unit -> int
+
     val merge : t -> t -> t
 
     val one : L.t virtual_reason -> t
@@ -64,16 +66,20 @@ struct
       write_state: write_state;
     }
 
-    let mk_with_write_state write_state =
+    let new_id () =
       let id = !curr_id in
       curr_id := !curr_id + 1;
+      id
+
+    let mk_with_write_state write_state =
+      let id = new_id () in
       { id; write_state }
 
     let mk_unresolved id = mk_with_write_state @@ REF (ref (Unresolved id))
 
     let empty () = mk_with_write_state @@ PHI []
 
-    let uninitialized () = mk_with_write_state @@ Uninitialized
+    let uninitialized () = mk_with_write_state Uninitialized
 
     let join = function
       | [] -> PHI []

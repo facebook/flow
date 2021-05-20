@@ -187,6 +187,27 @@ f();
 "
           (mk_loc (6, 19) (6, 20))
           (LocSet.of_list [mk_loc (4, 0) (4, 1); mk_loc (6, 1) (6, 15)]);
+    "global1" >:: mk_source_of_use_test "
+x
+" (mk_loc (2, 0) (2, 1)) (LocSet.of_list []);
+    "global2"
+    >:: mk_source_of_use_test
+          "
+(x && x)
+"
+          (mk_loc (2, 6) (2, 7))
+          (LocSet.of_list [mk_loc (2, 1) (2, 2)]);
+    "global_havoc"
+    >:: mk_source_of_use_test
+          "
+(x && function() { x })
+"
+          (mk_loc (2, 19) (2, 20))
+          (LocSet.of_list []);
+    "global_merge"
+    >:: mk_source_of_use_test "
+(x || foo) && x;
+" (mk_loc (2, 19) (2, 20)) (LocSet.of_list []);
     "order1" >:: mk_order_test "let x = 42;
 x;" "0 -> 1";
     "order2" >:: mk_order_test "function f() { g() }

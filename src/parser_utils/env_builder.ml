@@ -169,6 +169,8 @@ module Make
 
       val mutable refined_reads = L.LMap.empty
 
+      val mutable globals_env = SMap.empty
+
       method refined_reads : refinement L.LMap.t = refined_reads
 
       method private push_refinement_scope scope =
@@ -208,11 +210,14 @@ module Make
         this#push_refinement_scope scope
 
       method private find_refinement name =
-        let writes = SMap.find_opt name this#ssa_env in
+        let writes =
+          match SMap.find_opt name this#ssa_env with
+          | Some v -> Some (Ssa_builder.Val.id_of_val v)
+          | None -> SMap.find_opt name globals_env
+        in
         match writes with
         | None -> None
-        | Some writes ->
-          let key = Ssa_builder.Val.id_of_val writes in
+        | Some key ->
           List.fold_left
             (fun refinement refinement_scope ->
               match (IMap.find_opt key refinement_scope, refinement) with
@@ -224,12 +229,16 @@ module Make
             expression_refinement_scopes
 
       method private add_refinement name ((loc, kind) as refinement) =
-        let writes_to_loc = SMap.find name this#ssa_env in
+        let val_id =
+          match SMap.find_opt name this#ssa_env with
+          | Some writes_to_loc -> Ssa_builder.Val.id_of_val writes_to_loc
+          | None -> this#add_global name
+        in
         match expression_refinement_scopes with
         | scope :: scopes ->
           let scope' =
             IMap.update
-              (Ssa_builder.Val.id_of_val writes_to_loc)
+              val_id
               (function
                 | None -> Some refinement
                 | Some (l', r') -> Some (L.LSet.union loc l', And (r', kind)))
@@ -237,6 +246,14 @@ module Make
           in
           expression_refinement_scopes <- scope' :: scopes
         | _ -> failwith "Tried to add a refinement when no scope was on the stack"
+
+      method add_global name =
+        match SMap.find_opt name globals_env with
+        | Some id -> id
+        | None ->
+          let id = Ssa_builder.Val.new_id () in
+          globals_env <- SMap.add name id globals_env;
+          id
 
       method! havoc_current_ssa_env ~all =
         SMap.iter
@@ -254,7 +271,12 @@ module Make
               (* If we haven't yet seen a write to this variable, we always havoc *)
               val_ref := unresolved
             | _ -> ())
-          ssa_env
+          ssa_env;
+        globals_env <- SMap.empty
+
+      method! havoc_uninitialized_ssa_env =
+        super#havoc_uninitialized_ssa_env;
+        globals_env <- SMap.empty
 
       method identifier_refinement ((loc, ident) as identifier) =
         ignore @@ this#identifier identifier;
