@@ -68,8 +68,6 @@ type t =
   | Socket_error
   (* The hack code might throw this *)
   | Dfind_died
-  (* The hack code might throw this *)
-  | Dfind_unresponsive
   (* A fatal error with Watchman *)
   | Watchman_error
   (* A fatal error with Watchman (TODO: dedupe with Watchman_error) *)
@@ -128,7 +126,6 @@ let error_code = function
   | Missing_flowlib -> 97
   | Socket_error -> 98
   | Dfind_died -> 99
-  | Dfind_unresponsive -> 100
   | Watchman_error -> 101
   | Hash_table_full -> 102
   | Heap_full -> 103
@@ -170,7 +167,6 @@ let error_type = function
   | 97 -> Missing_flowlib
   | 98 -> Socket_error
   | 99 -> Dfind_died
-  | 100 -> Dfind_unresponsive
   | 101 -> Watchman_error
   | 102 -> Hash_table_full
   | 103 -> Heap_full
@@ -213,7 +209,6 @@ let to_string = function
   | Socket_error -> "Socket_error"
   | Missing_flowlib -> "Missing_flowlib"
   | Dfind_died -> "Dfind_died"
-  | Dfind_unresponsive -> "Dfind_unresponsive"
   | Watchman_error -> "Watchman_error"
   | Watchman_failed -> "Watchman_failed"
   | Watchman_fresh_instance -> "Watchman_fresh_instance"

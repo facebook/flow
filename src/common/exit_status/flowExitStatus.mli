@@ -36,7 +36,6 @@ type t =
   | Restart
   | Socket_error
   | Dfind_died
-  | Dfind_unresponsive
   | Watchman_error
   | Watchman_failed
   | Watchman_fresh_instance

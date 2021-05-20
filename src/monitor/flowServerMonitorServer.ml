@@ -528,9 +528,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
         (* Lock lost - only monitor should use this *)
         | Socket_error
         (* Failed to set up socket - only monitor should use this *)
-        | Dfind_died
-        (* Any file watcher died (it's misnamed) - only monitor should use this *)
-        | Dfind_unresponsive (* Not used anymore *) ->
+        | Dfind_died (* Any file watcher died (it's misnamed) - only monitor should use this *) ->
           (true, None)
         (**** Things the server might exit with which the monitor can survive ****)
         | Server_out_of_date (* Server needs to restart, but monitor can survive *) ->
