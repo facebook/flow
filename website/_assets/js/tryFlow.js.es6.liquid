@@ -544,6 +544,7 @@ function createEditor(
       state.flow.then(function() {
         removeClass(resultsNode, 'show-loading');
       });
+      validate(state.flow, model, onFlowErrors);
     });
   });
 }
