@@ -116,7 +116,7 @@ export default class RunQueue {
       this.builder,
       suiteName,
       this.suites[suiteName],
-      this.reportStatus.bind(this, suiteName),
+      (status, details) => this.reportStatus(suiteName, status, details),
     );
     var end_time = new Date().getTime() / 1000;
     this.results[suiteName] = suiteResult;

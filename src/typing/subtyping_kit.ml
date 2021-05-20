@@ -299,6 +299,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                     ts = [];
                     propref;
                     lookup_action = LookupProp (use_op, up);
+                    method_accessible = true;
                     ids = None;
                   } )
           | _ ->
@@ -327,6 +328,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                       ts = [];
                       propref;
                       lookup_action = LookupProp (use_op, up);
+                      method_accessible = true;
                       ids = None;
                     } )));
 
@@ -912,6 +914,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
             ts = [];
             propref;
             lookup_action = MatchProp (use_op, t);
+            method_accessible = true;
             ids = Some Properties.Set.empty;
           }
       in
@@ -1384,6 +1387,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                         ts = [];
                         propref;
                         lookup_action = LookupProp (use_op, up);
+                        method_accessible = false;
                         ids = Some (Properties.Set.of_list [lown; lproto]);
                       } ) ));
 

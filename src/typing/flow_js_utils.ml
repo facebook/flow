@@ -420,11 +420,12 @@ let error_message_kind_of_upper = function
   | use_t -> Error_message.IncompatibleUnclassified (string_of_use_ctor use_t)
 
 let use_op_of_lookup_action = function
-  | ReadProp { use_op; _ } -> Some use_op
-  | WriteProp { use_op; _ } -> Some use_op
-  | LookupProp (use_op, _) -> Some use_op
-  | SuperProp (use_op, _) -> Some use_op
-  | MatchProp (use_op, _) -> Some use_op
+  | ReadProp { use_op; _ }
+  | WriteProp { use_op; _ }
+  | LookupProp (use_op, _)
+  | SuperProp (use_op, _)
+  | MatchProp (use_op, _) ->
+    use_op
 
 exception SpeculativeError of Error_message.t
 

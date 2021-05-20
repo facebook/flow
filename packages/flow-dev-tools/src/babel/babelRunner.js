@@ -55,7 +55,7 @@ async function transformDir(
       return read.pipe(write);
     }
     const chunks = [];
-    read.on('data', chunks.push.bind(chunks));
+    read.on('data', chunk => chunks.push(chunk));
     read.on('end', () => {
       const {code} = transformSource(Buffer.concat(chunks), babelOptions);
       write.end(code);

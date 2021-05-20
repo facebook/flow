@@ -1750,6 +1750,12 @@ let dump_error_message =
       spf "EImportInternalReactServerModule (%s)" (string_of_aloc loc)
     | EImplicitInstantiationUnderconstrainedError _ -> "EImplicitInstantiationUnderconstrainedError"
     | EClassToObject _ -> "EClassToObject"
+    | EMethodUnbinding { use_op; reason_prop; reason_op } ->
+      spf
+        "EMethodUnbinding (%s) (%s) (%s)"
+        (string_of_use_op use_op)
+        (dump_reason cx reason_op)
+        (dump_reason cx reason_prop)
 
 module Verbose = struct
   let print_if_verbose_lazy cx trace ?(delim = "") ?(indent = 0) (lines : string list Lazy.t) =

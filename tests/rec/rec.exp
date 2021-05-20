@@ -360,6 +360,21 @@ References:
                                          ^^^^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test5.js:8:27
+
+Cannot get `Array.prototype.concat` because property `concat` [1] cannot be unbound from the context [2] where it was
+defined. [method-unbinding]
+
+   test5.js:8:27
+     8|     arr = Array.prototype.concat.apply([], arr);
+                                  ^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:698:5
+   698|     concat<S, Item: $ReadOnlyArray<S> | S>(...items: Array<Item>): Array<T | S>;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- test9.js:13:2
 
 Cannot cast `o` to `O` because number [1] is incompatible with string [2] in property `x`. [incompatible-cast]
@@ -395,4 +410,4 @@ References:
 
 
 
-Found 23 errors
+Found 24 errors

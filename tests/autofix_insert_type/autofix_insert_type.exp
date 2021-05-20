@@ -95,7 +95,7 @@ class-3.js 9 15
 // @flow
 
 class A {
-  m(): this {
+  m : () => A = () => {
     return this;
   }
 }

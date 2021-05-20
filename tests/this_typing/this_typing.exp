@@ -66,6 +66,24 @@ References:
                                                                                                                                       ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- class_method.js:25:43
+
+Cannot get `(new A()).method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   class_method.js:25:43
+   25| let _1 = {prop : true, method : (new A()).method }.method();
+                                                 ^^^^^^ [1]
+
+References:
+   class_method.js:7:3
+         v------------------------------------------------
+    7|   method(this: interface {prop: boolean}): string {
+    8|     return this.prop; // Error - number ~> string
+    9|   }
+         ^ [2]
+
+
 Error -------------------------------------------------------------------------------------------- class_method.js:27:18
 
 Cannot call `{...}.method` because number [1] is incompatible with boolean [2] in property `prop`. [incompatible-call]
@@ -78,6 +96,24 @@ References:
    class_method.js:7:33
     7|   method(this: interface {prop: boolean}): string {
                                        ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- class_method.js:27:42
+
+Cannot get `(new A()).method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   class_method.js:27:42
+   27| let _2 = {prop : 123, method : (new A()).method }.method(); // Error - bool ~> number
+                                                ^^^^^^ [1]
+
+References:
+   class_method.js:7:3
+         v------------------------------------------------
+    7|   method(this: interface {prop: boolean}): string {
+    8|     return this.prop; // Error - number ~> string
+    9|   }
+         ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- class_method.js:29:10
@@ -93,6 +129,24 @@ References:
    class_method.js:7:16
     7|   method(this: interface {prop: boolean}): string {
                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- class_method.js:29:30
+
+Cannot get `(new A()).method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   class_method.js:29:30
+   29| let _3 = {method : (new A()).method }.method(); // Error prop missing
+                                    ^^^^^^ [1]
+
+References:
+   class_method.js:7:3
+         v------------------------------------------------
+    7|   method(this: interface {prop: boolean}): string {
+    8|     return this.prop; // Error - number ~> string
+    9|   }
+         ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- class_method.js:34:18
@@ -216,6 +270,42 @@ References:
                      ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------- class_poly_method.js:24:3
+
+Cannot get `n.method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   class_poly_method.js:24:3
+   24| n.method.bind(s); // TODO: error (number incompatible with string)
+         ^^^^^^ [1]
+
+References:
+   class_poly_method.js:9:3
+         v----------------------
+    9|   method(this: A<N>): N {
+   10|     return this.prop;
+   11|   }
+         ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- class_poly_method.js:25:3
+
+Cannot get `s.method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   class_poly_method.js:25:3
+   25| s.method.bind(n); //  TODO: error (number incompatible with string)
+         ^^^^^^ [1]
+
+References:
+   class_poly_method.js:9:3
+         v----------------------
+    9|   method(this: A<N>): N {
+   10|     return this.prop;
+   11|   }
+         ^ [2]
+
+
 Error ---------------------------------------------------------------------------------------- class_poly_method.js:29:5
 
 Cannot define method `foo` [1] on `B` because `T` [2] is incompatible with `X` [2] in type argument `T` [2].
@@ -229,6 +319,21 @@ References:
    class_poly_method.js:28:17
    28| declare class B<T> {
                        ^ [2]
+
+
+Error ------------------------------------------------------------------------------------ declare_class_method.js:17:42
+
+Cannot get `(new A()).method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   declare_class_method.js:17:42
+   17| let _1 = {prop : 123, method : (new A()).method }.method();
+                                                ^^^^^^ [1]
+
+References:
+   declare_class_method.js:7:3
+    7|   method(this: interface {prop: number}): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ declare_class_method.js:19:18
@@ -245,6 +350,21 @@ References:
                                        ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------ declare_class_method.js:19:43
+
+Cannot get `(new A()).method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   declare_class_method.js:19:43
+   19| let _2 = {prop : true, method : (new A()).method }.method(); // Error - bool ~> number
+                                                 ^^^^^^ [1]
+
+References:
+   declare_class_method.js:7:3
+    7|   method(this: interface {prop: number}): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------ declare_class_method.js:21:10
 
 Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
@@ -258,6 +378,21 @@ References:
    declare_class_method.js:7:16
     7|   method(this: interface {prop: number}): string;
                       ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ declare_class_method.js:21:30
+
+Cannot get `(new A()).method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   declare_class_method.js:21:30
+   21| let _3 = {method : (new A()).method }.method(); // Error prop missing
+                                    ^^^^^^ [1]
+
+References:
+   declare_class_method.js:7:3
+    7|   method(this: interface {prop: number}): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ declare_class_method.js:26:18
@@ -818,6 +953,21 @@ References:
                       ^^^^^^ [3]
 
 
+Error ----------------------------------------------------------------------------------------------- interface.js:14:38
+
+Cannot get `AImpl.method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   interface.js:14:38
+   14| let _1 = {prop : 123, method : AImpl.method }.method();
+                                            ^^^^^^ [1]
+
+References:
+   interface.js:6:3
+    6|   method(this: interface {prop: number}): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------- interface.js:16:18
 
 Cannot call `{...}.method` because boolean [1] is incompatible with number [2] in property `prop`. [incompatible-call]
@@ -830,6 +980,21 @@ References:
    interface.js:6:33
     6|   method(this: interface {prop: number}): string;
                                        ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- interface.js:16:39
+
+Cannot get `AImpl.method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   interface.js:16:39
+   16| let _2 = {prop : true, method : AImpl.method }.method(); // Error - bool ~> number
+                                             ^^^^^^ [1]
+
+References:
+   interface.js:6:3
+    6|   method(this: interface {prop: number}): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- interface.js:18:10
@@ -845,6 +1010,21 @@ References:
    interface.js:6:16
     6|   method(this: interface {prop: number}): string;
                       ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- interface.js:18:26
+
+Cannot get `AImpl.method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   interface.js:18:26
+   18| let _3 = {method : AImpl.method }.method(); // Error prop missing
+                                ^^^^^^ [1]
+
+References:
+   interface.js:6:3
+    6|   method(this: interface {prop: number}): string;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- interface.js:23:18
@@ -1051,4 +1231,4 @@ References:
 
 
 
-Found 66 errors
+Found 77 errors

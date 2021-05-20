@@ -379,7 +379,15 @@ class ['a] t =
         let acc = List.fold_left (self#type_ cx pole_TODO) acc ts2 in
         acc
       | LookupT
-          { lookup_kind = kind; ts; propref = prop; lookup_action = action; reason = _; ids = _ } ->
+          {
+            lookup_kind = kind;
+            ts;
+            propref = prop;
+            lookup_action = action;
+            reason = _;
+            ids = _;
+            method_accessible = _;
+          } ->
         let acc = self#lookup_kind cx acc kind in
         let acc = List.fold_left (self#type_ cx pole_TODO) acc ts in
         let acc = self#propref cx acc prop in

@@ -194,7 +194,7 @@ class-2.js:9:9 = {
   "end":9
 }
 class-2.js:10:9 = {
-  "type":"() => A",
+  "type":"empty",
   "reasons":[],
   "loc":{
     "source":"class-2.js",
@@ -269,7 +269,7 @@ class-3.js:9:9 = {
   "end":9
 }
 class-3.js:10:9 = {
-  "type":"() => B",
+  "type":"empty",
   "reasons":[],
   "loc":{
     "source":"class-3.js",

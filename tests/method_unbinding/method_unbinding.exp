@@ -1,0 +1,392 @@
+Error -------------------------------------------------------------------------------------------- complex_types.js:14:1
+
+Cannot get `a.m` because: [incompatible-use]
+ - Either property `m` [1] cannot be unbound from the context [2] where it was defined.
+ - Or property `m` [1] cannot be unbound from the context [3] where it was defined.
+
+   complex_types.js:14:1
+   14| a.m; // err
+       ^^^
+
+References:
+   complex_types.js:14:3
+   14| a.m; // err
+         ^ [1]
+   complex_types.js:4:5
+    4|     m() : void
+           ^^^^^^^^^^ [2]
+   complex_types.js:8:5
+    8|     m() : void
+           ^^^^^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- complex_types.js:15:3
+
+Cannot get `b.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   complex_types.js:15:3
+   15| b.m; // err
+         ^ [1]
+
+References:
+   complex_types.js:4:5
+    4|     m() : void
+           ^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- complex_types.js:15:3
+
+Cannot get `b.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   complex_types.js:15:3
+   15| b.m; // err
+         ^ [1]
+
+References:
+   complex_types.js:8:5
+    8|     m() : void
+           ^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- complex_types.js:16:6
+
+All branches are incompatible: [incompatible-use]
+ - Either property `m` [1] cannot be unbound from the context [2] where it was defined.
+ - Or property `m` [1] cannot be unbound from the context [3] where it was defined.
+
+   complex_types.js:16:6
+   16| let {m : ma} = a; // err
+            ^ [1]
+
+References:
+   complex_types.js:4:5
+    4|     m() : void
+           ^^^^^^^^^^ [2]
+   complex_types.js:8:5
+    8|     m() : void
+           ^^^^^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- complex_types.js:17:6
+
+property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+
+   complex_types.js:17:6
+   17| let {m : mb} = b; // err
+            ^ [1]
+
+References:
+   complex_types.js:4:5
+    4|     m() : void
+           ^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- complex_types.js:17:6
+
+property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+
+   complex_types.js:17:6
+   17| let {m : mb} = b; // err
+            ^ [1]
+
+References:
+   complex_types.js:8:5
+    8|     m() : void
+           ^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- complex_types.js:29:3
+
+Cannot get `d.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   complex_types.js:29:3
+   29| d.m; // err
+         ^ [1]
+
+References:
+   complex_types.js:4:5
+    4|     m() : void
+           ^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- complex_types.js:33:6
+
+property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+
+   complex_types.js:33:6
+   33| let {m : md} = d; // err
+            ^ [1]
+
+References:
+   complex_types.js:4:5
+    4|     m() : void
+           ^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- destructors.js:8:17
+
+Cannot instantiate `$PropertyType` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   destructors.js:8:17
+   8| declare var m : $PropertyType<A, "m">; // ok bc this does not actually unbind anything at runtime
+                      ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   destructors.js:4:5
+   4|     m() : void {}
+          ^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:35:3
+
+Cannot get `a.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   test.js:35:3
+   35| a.m; // err
+         ^ [1]
+
+References:
+   test.js:4:5
+    4|     m() {}
+           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:38:3
+
+Cannot get `b.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   test.js:38:3
+   38| b.m; // err
+         ^ [1]
+
+References:
+   test.js:4:5
+    4|     m() {}
+           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:40:3
+
+Cannot get `b.x` because property `x` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   test.js:40:3
+   40| b.x; // err
+         ^ [1]
+
+References:
+   test.js:9:5
+    9|     x() {}
+           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:42:3
+
+Cannot get `i.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   test.js:42:3
+   42| i.m; // err
+         ^ [1]
+
+References:
+   test.js:13:5
+   13|     m() : void;
+           ^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:45:3
+
+Cannot get `j.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   test.js:45:3
+   45| j.m; // err
+         ^ [1]
+
+References:
+   test.js:18:5
+   18|     m() : void;
+           ^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:51:6
+
+property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+
+   test.js:51:6
+   51| let {m : mb} = b; // err
+            ^ [1]
+
+References:
+   test.js:4:5
+    4|     m() {}
+           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:52:6
+
+property `x` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+
+   test.js:52:6
+   52| let {x : xb} = b; // err
+            ^ [1]
+
+References:
+   test.js:9:5
+    9|     x() {}
+           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:55:6
+
+property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+
+   test.js:55:6
+   55| let {m : ma} = a; // err
+            ^ [1]
+
+References:
+   test.js:4:5
+    4|     m() {}
+           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:58:6
+
+property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+
+   test.js:58:6
+   58| let {m : mi} = i; // err
+            ^ [1]
+
+References:
+   test.js:13:5
+   13|     m() : void;
+           ^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:61:6
+
+property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+
+   test.js:61:6
+   61| let {m : mj} = j; // err
+            ^ [1]
+
+References:
+   test.js:18:5
+   18|     m() : void;
+           ^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:85:10
+
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. `I` [2] cannot be spread
+because interfaces do not track the own-ness of their properties. Try using an object type instead.
+[cannot-spread-interface]
+
+   test.js:85:10
+   85| let x3 = {...i}; // cannot spread interface
+                ^^^^^^ [1]
+
+References:
+   test.js:29:17
+   29| declare var i : I;
+                       ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:86:10
+
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. `J` [2] cannot be spread
+because interfaces do not track the own-ness of their properties. Try using an object type instead.
+[cannot-spread-interface]
+
+   test.js:86:10
+   86| let x4 = {...j}; // cannot spread interface
+                ^^^^^^ [1]
+
+References:
+   test.js:30:17
+   30| declare var j : J;
+                       ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:89:7
+
+property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+
+   test.js:89:7
+   89| if (a.m) {} // err
+             ^ [1]
+
+References:
+   test.js:4:5
+    4|     m() {}
+           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:92:7
+
+property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+
+   test.js:92:7
+   92| if (b.m) {} // err
+             ^ [1]
+
+References:
+   test.js:4:5
+    4|     m() {}
+           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:94:7
+
+property `x` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+
+   test.js:94:7
+   94| if (b.x) {} // err
+             ^ [1]
+
+References:
+   test.js:9:5
+    9|     x() {}
+           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:96:7
+
+property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+
+   test.js:96:7
+   96| if (j.m) {} // err
+             ^ [1]
+
+References:
+   test.js:18:5
+   18|     m() : void;
+           ^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:99:7
+
+property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+
+   test.js:99:7
+   99| if (i.m) {} // err
+             ^ [1]
+
+References:
+   test.js:13:5
+   13|     m() : void;
+           ^^^^^^^^^^ [2]
+
+
+
+Found 26 errors

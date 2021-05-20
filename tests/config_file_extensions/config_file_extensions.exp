@@ -12,5 +12,20 @@ References:
           ^^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------ test.js.es6:14:19
 
-Found 1 error
+Cannot get `Object.prototype.toString` because property `toString` [1] cannot be unbound from the context [2] where it
+was defined. [method-unbinding]
+
+   test.js.es6:14:19
+    14| (Object.prototype.toString: Function);
+                          ^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:236:5
+   236|     toString(): string;
+            ^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 2 errors

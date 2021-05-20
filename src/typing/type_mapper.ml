@@ -1209,6 +1209,7 @@ class virtual ['a] t_with_uses =
             ts = tlist;
             propref = prop;
             lookup_action = action;
+            method_accessible;
             ids;
           } ->
         let lookup' = self#lookup_kind cx map_cx lookup in
@@ -1225,6 +1226,7 @@ class virtual ['a] t_with_uses =
               ts = tlist';
               propref = prop';
               lookup_action = action';
+              method_accessible;
               ids;
             }
       | ObjAssignToT (op, r, t1, t2, obj_assign) ->

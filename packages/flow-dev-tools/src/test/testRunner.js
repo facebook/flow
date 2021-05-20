@@ -67,6 +67,8 @@ function startWatchAndRun(suites, args) {
   };
 
   const startListeningForShortcuts = () => {
+    // $FlowFixMe[prop-missing]
+    // $FlowFixMe[method-unbinding]
     if (typeof process.stdin.setRawMode === 'function') {
       (process.stdin.setRawMode: any).call(process.stdin, true);
       process.stdin.resume();
@@ -78,6 +80,8 @@ function startWatchAndRun(suites, args) {
   };
 
   const stopListeningForShortcuts = () => {
+    // $FlowFixMe[prop-missing]
+    // $FlowFixMe[method-unbinding]
     if (typeof process.stdin.setRawMode === 'function') {
       (process.stdin.setRawMode: any).call(process.stdin, false);
       process.stdin.resume();

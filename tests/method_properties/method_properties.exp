@@ -26,6 +26,21 @@ References:
             ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------------ test.js:8:9
+
+Cannot get `(new C).foo` because property `foo` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   test.js:8:9
+   8| (new C).foo.x;
+              ^^^ [1]
+
+References:
+   test.js:3:3
+   3|   foo() { }
+        ^^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:13:6
 
 Cannot call `foo.bar` because undefined [1] is not a function. [not-a-function]
@@ -55,4 +70,4 @@ References:
 
 
 
-Found 4 errors
+Found 5 errors

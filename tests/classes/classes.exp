@@ -1,18 +1,16 @@
-Error --------------------------------------------------------------------------------------------------------- B.js:6:2
+Error --------------------------------------------------------------------------------------------------------- B.js:6:4
 
-Cannot cast `b.foo` to number because function type [1] is incompatible with number [2]. [incompatible-cast]
+Cannot get `b.foo` because property `foo` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
 
-   B.js:6:2
+   B.js:6:4
    6| (b.foo: number); // error, number !~> function
-       ^^^^^
+         ^^^ [1]
 
 References:
    A.js:2:3
    2|   foo(x:number):void { }
-        ^^^^^^^^^^^^^^^^^^^^^^ [1]
-   B.js:6:9
-   6| (b.foo: number); // error, number !~> function
-              ^^^^^^ [2]
+        ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------------- C.js:4:9
@@ -48,6 +46,21 @@ References:
    C.js:8:9
    8| (c.foo: number); // error, number !~> function
               ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------------- C.js:8:4
+
+Cannot get `c.foo` because property `foo` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   C.js:8:4
+   8| (c.foo: number); // error, number !~> function
+         ^^^ [1]
+
+References:
+   C.js:4:3
+   4|   foo(x:string):void { }
+        ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------------- D.js:3:9
@@ -290,4 +303,4 @@ References:
 
 
 
-Found 19 errors
+Found 20 errors

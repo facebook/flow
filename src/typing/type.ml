@@ -605,6 +605,7 @@ module rec TypeTerm : sig
         propref: propref;
         lookup_action: lookup_action;
         ids: Properties.Set.t option;
+        method_accessible: bool;
       }
     (* operations on objects *)
 

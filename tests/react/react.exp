@@ -120,35 +120,32 @@ References:
                            ^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- create_class.js:15:14
+Error -------------------------------------------------------------------------------------------- create_class.js:15:10
 
-Cannot assign `0` to `this.p` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `0` to `this.p` because property `p` is missing in global object [1]. [prop-missing]
 
-   create_class.js:15:14
+   create_class.js:15:10
    15|     this.p = 0; // error: number ~> string
-                    ^ [1]
+                ^
 
 References:
-   create_class.js:13:6
-   13|   p: "",
-            ^^ [2]
+   create_class.js:15:5
+   15|     this.p = 0; // error: number ~> string
+           ^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- create_class.js:48:6
+Error -------------------------------------------------------------------------------------------- create_class.js:48:11
 
-Cannot cast `this.foo` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+Cannot get `this.foo` because property `foo` is missing in global object [1]. [prop-missing]
 
+   create_class.js:48:11
+   48|     (this.foo: string); // error: number ~> string
+                 ^^^
+
+References:
    create_class.js:48:6
    48|     (this.foo: string); // error: number ~> string
-            ^^^^^^^^
-
-References:
-   create_class.js:46:8
-   46|   foo: 0,
-              ^ [1]
-   create_class.js:48:16
-   48|     (this.foo: string); // error: number ~> string
-                      ^^^^^^ [2]
+            ^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- create_class.js:71:11

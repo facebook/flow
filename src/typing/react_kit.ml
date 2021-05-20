@@ -124,6 +124,7 @@ let get_intrinsic
           ts = [];
           propref;
           lookup_action = LookupProp (unknown_use, prop);
+          method_accessible = true;
           ids = Some Properties.Set.empty;
         } )
 
@@ -159,6 +160,7 @@ let lookup_defaults cx trace component ~reason_op ~rec_flow upper pole =
           ts = [];
           propref;
           lookup_action = action;
+          method_accessible = true;
           ids = Some Properties.Set.empty;
         } )
 
@@ -605,6 +607,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                 ts = [];
                 propref;
                 lookup_action = action;
+                method_accessible = true;
                 ids = Some Properties.Set.empty;
               } )
       in
@@ -648,6 +651,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                 ts = [];
                 propref;
                 lookup_action = action;
+                method_accessible = true;
                 ids = Some Properties.Set.empty;
               } )
       in

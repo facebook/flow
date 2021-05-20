@@ -32,6 +32,21 @@ References:
                   ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- class.js:7:10
+
+Cannot get `(new C()).m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   class.js:7:10
+   7| (new C().m: empty); // err
+               ^ [1]
+
+References:
+   class.js:4:3
+   4|   m() {};
+        ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- class_dep.js:3:2
 
 Cannot cast `C.m` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
@@ -64,6 +79,21 @@ References:
    class_dep.js:4:13
    4| (new C().m: empty); // err
                   ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ class_dep.js:4:10
+
+Cannot get `(new C()).m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   class_dep.js:4:10
+   4| (new C().m: empty); // err
+               ^ [1]
+
+References:
+   class.js:4:3
+   4|   m() {};
+        ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- declare_class.js:6:2
@@ -100,6 +130,21 @@ References:
                   ^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- declare_class.js:7:10
+
+Cannot get `(new C()).m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   declare_class.js:7:10
+   7| (new C().m: empty); // err
+               ^ [1]
+
+References:
+   declare_class.js:4:3
+   4|   m(): void;
+        ^^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------- declare_class_dep.js:3:2
 
 Cannot cast `C.m` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
@@ -134,6 +179,21 @@ References:
                   ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------- declare_class_dep.js:4:10
+
+Cannot get `(new C()).m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   declare_class_dep.js:4:10
+   4| (new C().m: empty); // err
+               ^ [1]
+
+References:
+   declare_class.js:4:3
+   4|   m(): void;
+        ^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- interface.js:6:2
 
 Cannot cast `o.m` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
@@ -151,6 +211,21 @@ References:
             ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- interface.js:6:4
+
+Cannot get `o.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   interface.js:6:4
+   6| (o.m: empty); // err
+         ^ [1]
+
+References:
+   interface.js:3:3
+   3|   m(): void,
+        ^^^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- interface_dep.js:3:2
 
 Cannot cast `o.m` to empty because function type [1] is incompatible with empty [2]. [incompatible-cast]
@@ -166,6 +241,21 @@ References:
    interface_dep.js:3:7
    3| (o.m: empty); // err
             ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- interface_dep.js:3:4
+
+Cannot get `o.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   interface_dep.js:3:4
+   3| (o.m: empty); // err
+         ^ [1]
+
+References:
+   interface.js:3:3
+   3|   m(): void,
+        ^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- obj_lit.js:3:2
@@ -237,4 +327,4 @@ References:
 
 
 
-Found 14 errors
+Found 20 errors

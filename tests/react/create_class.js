@@ -11,7 +11,7 @@ const A = React.createClass({
 
 const B = React.createClass({
   p: "",
-  m() {
+  m : () => {
     this.p = 0; // error: number ~> string
   },
   mm() {
@@ -44,7 +44,7 @@ const D = React.createClass({
 
 const E = React.createClass({
   foo: 0,
-  m() {
+  m : () => {
     (this.foo: string); // error: number ~> string
   },
   mm() {

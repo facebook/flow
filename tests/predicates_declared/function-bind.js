@@ -7,7 +7,7 @@
 //    (including `havoc`) should be retained.
 
 class C {
-  m() {
+  m = () => {
     return true;
   }
   a: 1;

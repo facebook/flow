@@ -424,6 +424,11 @@ and 'loc t' =
       bound: string;
     }
   | EClassToObject of 'loc virtual_reason * 'loc virtual_reason * 'loc virtual_use_op
+  | EMethodUnbinding of {
+      use_op: 'loc virtual_use_op;
+      reason_prop: 'loc virtual_reason;
+      reason_op: 'loc virtual_reason;
+    }
 
 and 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;
@@ -976,6 +981,13 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EImplicitInstantiationUnderconstrainedError
       { reason_call = map_reason reason_call; reason_l = map_reason reason_l; bound }
   | EClassToObject (r1, r2, op) -> EClassToObject (map_reason r1, map_reason r2, map_use_op op)
+  | EMethodUnbinding { use_op; reason_op; reason_prop } ->
+    EMethodUnbinding
+      {
+        use_op = map_use_op use_op;
+        reason_op = map_reason reason_op;
+        reason_prop = map_reason reason_prop;
+      }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1188,9 +1200,10 @@ let util_use_op_of_msg nope util = function
   | EAssignExportedConstLikeBinding _
   | EMalformedCode _
   | EImplicitInstantiationTemporaryError _
+  | EImportInternalReactServerModule _
   | EImplicitInstantiationUnderconstrainedError _
   | EClassToObject _
-  | EImportInternalReactServerModule _ ->
+  | EMethodUnbinding _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1400,6 +1413,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EIncompatibleProp _
   | EIncompatible _
   | ECannotResolveOpenTvar _
+  | EMethodUnbinding _
   | EClassToObject _ ->
     None
 
@@ -3583,6 +3597,17 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     UseOp { loc = loc_of_reason reason_class; features; use_op }
+  | EMethodUnbinding { use_op; reason_op; reason_prop } ->
+    let context = Errors.Friendly.(Reference ([Text "context"], def_loc_of_reason reason_prop)) in
+    UseOp
+      {
+        loc = loc_of_reason reason_op;
+        features =
+          [
+            ref reason_op; text " cannot be unbound from the "; context; text " where it was defined";
+          ];
+        use_op;
+      }
 
 let is_lint_error = function
   | EUntypedTypeImport _
@@ -3839,6 +3864,7 @@ let error_code_of_message err : error_code option =
   | EValueUsedAsType _ ->
     Some ValueAsType
   | EClassToObject _ -> Some ClassObject
+  | EMethodUnbinding _ -> Some MethodUnbinding
   (* lints should match their lint name *)
   | EUntypedTypeImport _
   | EUntypedImport _
