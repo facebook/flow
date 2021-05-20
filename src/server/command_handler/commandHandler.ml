@@ -1786,10 +1786,7 @@ let handle_persistent_signaturehelp_lsp
     let%lwt (file_artifacts_result, did_hit_cache) =
       let%lwt parse_result = Types_js.parse_contents ~options ~profiling contents path in
       let type_parse_artifacts_cache =
-        if Options.cache_signature_help_artifacts options then
-          Some (Persistent_connection.type_parse_artifacts_cache client)
-        else
-          None
+        Some (Persistent_connection.type_parse_artifacts_cache client)
       in
       type_parse_artifacts_with_cache
         ~options
@@ -2266,10 +2263,7 @@ let handle_live_errors_request =
                     Lwt.return (Error parse_errs, None)
                   else
                     let type_parse_artifacts_cache =
-                      if Options.cache_live_errors_artifacts options then
-                        Some (Persistent_connection.type_parse_artifacts_cache client)
-                      else
-                        None
+                      Some (Persistent_connection.type_parse_artifacts_cache client)
                     in
                     type_parse_artifacts_with_cache
                       ~options

@@ -67,10 +67,6 @@ val babel_loose_array_spread : config -> bool
 
 val check_updates_against_providers : config -> bool
 
-val cache_live_errors_artifacts : config -> bool
-
-val cache_signature_help_artifacts : config -> bool
-
 val disable_live_non_parse_errors : config -> bool
 
 val emoji : config -> bool
