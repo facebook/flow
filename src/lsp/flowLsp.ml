@@ -105,6 +105,7 @@ type initialized_env = {
   i_open_files: open_file_info Lsp.UriMap.t;
   i_errors: LspErrors.t;
   i_config: Hh_json.json;
+  i_flowconfig: FlowConfig.config;
 }
 
 and disconnected_env = {
@@ -164,19 +165,6 @@ let to_stdout (json : Hh_json.json) : unit =
   let s = Hh_json.json_to_string json ^ "\r\n\r\n" in
   Http_lite.write_message stdout s
 
-let get_current_version flowconfig_name (root : Path.t) : string option =
-  Server_files_js.config_file flowconfig_name root
-  |> read_config_or_exit ~allow_cache:false
-  |> FlowConfig.required_version
-
-let is_lazy_mode_set_in_flowconfig flowconfig_name (root : Path.t) : bool =
-  let lazy_mode =
-    Server_files_js.config_file flowconfig_name root
-    |> read_config_or_exit ~allow_cache:false
-    |> FlowConfig.lazy_mode
-  in
-  lazy_mode <> None
-
 let get_ienv (state : state) : initialized_env option =
   match state with
   | Connected cenv -> Some cenv.c_ienv
@@ -194,6 +182,9 @@ let update_ienv f state =
 
 let get_root (state : state) : Path.t option =
   get_ienv state |> Base.Option.map ~f:(fun ienv -> ienv.i_root)
+
+let get_flowconfig (state : state) : FlowConfig.config option =
+  get_ienv state |> Base.Option.map ~f:(fun ienv -> ienv.i_flowconfig)
 
 (** Returns a key that is appended to command names to make them "unique".
 
@@ -1020,7 +1011,7 @@ let live_syntax_errors_enabled (state : state) =
     and store them in the state;
     or it's an unopened file in which case we'll retrieve parse results but
     won't store them. *)
-let parse_and_cache flowconfig_name (state : state) (uri : Lsp.DocumentUri.t) :
+let parse_and_cache (state : state) (uri : Lsp.DocumentUri.t) :
     state * ((Loc.t, Loc.t) Flow_ast.Program.t * Lsp.PublishDiagnostics.diagnostic list option) =
   (* The way flow compilation works in the flow server is that parser options
      are permissive to allow all constructs, so that parsing works well; if
@@ -1029,12 +1020,9 @@ let parse_and_cache flowconfig_name (state : state) (uri : Lsp.DocumentUri.t) :
      (not as parse errors). We'll do the same here, with permissive parsing
      and only reporting parse errors. *)
   let parse_options =
-    let root = get_root state in
+    let flowconfig_opt = get_flowconfig state in
     let use_strict =
-      Base.Option.value_map root ~default:false ~f:(fun root ->
-          Server_files_js.config_file flowconfig_name root
-          |> read_config_or_exit
-          |> FlowConfig.modules_are_use_strict)
+      Base.Option.value_map ~default:false ~f:FlowConfig.modules_are_use_strict flowconfig_opt
     in
     Some
       Parser_env.
@@ -1087,11 +1075,10 @@ let parse_and_cache flowconfig_name (state : state) (uri : Lsp.DocumentUri.t) :
     let (open_ast, _) = parse file in
     (state, (open_ast, None))
 
-let do_documentSymbol flowconfig_name (state : state) (id : lsp_id) (params : DocumentSymbol.params)
-    : state =
+let do_documentSymbol (state : state) (id : lsp_id) (params : DocumentSymbol.params) : state =
   let uri = params.DocumentSymbol.textDocument.TextDocumentIdentifier.uri in
   (* It's not do_documentSymbol's job to set live parse errors, so we ignore them *)
-  let (state, (ast, _live_parse_errors)) = parse_and_cache flowconfig_name state uri in
+  let (state, (ast, _live_parse_errors)) = parse_and_cache state uri in
   let result = Flow_lsp_conversions.flow_ast_to_lsp_symbols ~uri ast in
   let json =
     let key = command_key_of_state state in
@@ -1100,11 +1087,10 @@ let do_documentSymbol flowconfig_name (state : state) (id : lsp_id) (params : Do
   to_stdout json;
   state
 
-let do_selectionRange flowconfig_name (state : state) (id : lsp_id) (params : SelectionRange.params)
-    : state =
+let do_selectionRange (state : state) (id : lsp_id) (params : SelectionRange.params) : state =
   let { SelectionRange.textDocument = { TextDocumentIdentifier.uri }; positions } = params in
   (* It's not our job to set live parse errors, so we ignore them *)
-  let (state, (ast, _live_parse_errors)) = parse_and_cache flowconfig_name state uri in
+  let (state, (ast, _live_parse_errors)) = parse_and_cache state uri in
   let response = SelectionRangeProvider.provide_selection_ranges positions ast in
   let json =
     let key = command_key_of_state state in
@@ -1449,7 +1435,6 @@ let log_interaction ~ux state id =
   LspInteraction.log ~end_state ~ux ~id
 
 let do_live_diagnostics
-    flowconfig_name
     (state : state)
     (trigger : LspInteraction.trigger option)
     (metadata : LspProt.metadata)
@@ -1469,7 +1454,7 @@ let do_live_diagnostics
   in
   let interaction_id = start_interaction ~trigger state in
   (* reparse the file and write it into the state's editor_open_files as needed *)
-  let (state, (_, live_parse_errors)) = parse_and_cache flowconfig_name state uri in
+  let (state, (_, live_parse_errors)) = parse_and_cache state uri in
   (* Set the live parse errors *)
   let (state, ux) =
     match live_parse_errors with
@@ -1498,9 +1483,13 @@ let do_live_diagnostics
   state
 
 let try_connect flowconfig_name (env : disconnected_env) : state =
+  let flowconfig =
+    Server_files_js.config_file flowconfig_name env.d_ienv.i_root
+    |> read_config_or_exit ~enforce_warnings:false ~allow_cache:false
+  in
   (* If the version in .flowconfig has changed under our feet then we mustn't
      connect. We'll terminate and trust the editor to relaunch an ok version. *)
-  let current_version = get_current_version flowconfig_name env.d_ienv.i_root in
+  let current_version = FlowConfig.required_version flowconfig in
   if env.d_ienv.i_version <> current_version then (
     let prev_version_str = Base.Option.value env.d_ienv.i_version ~default:"[None]" in
     let current_version_str = Base.Option.value current_version ~default:"[None]" in
@@ -1518,7 +1507,7 @@ let try_connect flowconfig_name (env : disconnected_env) : state =
     let connect_params =
       (* If the .flowconfig has explicitly set lazy_mode, then we don't want to override that if we
          start a new server *)
-      if is_lazy_mode_set_in_flowconfig flowconfig_name env.d_ienv.i_root then
+      if Base.Option.is_some (FlowConfig.lazy_mode flowconfig) then
         { env.d_ienv.i_connect_params with lazy_mode = None }
       else
         env.d_ienv.i_connect_params
@@ -1598,7 +1587,7 @@ let try_connect flowconfig_name (env : disconnected_env) : state =
     (* Generate live errors for the newly opened files *)
     Lsp.UriMap.fold
       (fun uri _ state ->
-        do_live_diagnostics flowconfig_name state (Some LspInteraction.ServerConnected) metadata uri)
+        do_live_diagnostics state (Some LspInteraction.ServerConnected) metadata uri)
       env.d_ienv.i_open_files
       new_state
   (* Server_missing means the lock file is absent, because the server isn't running *)
@@ -1745,7 +1734,10 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
       Client_message (RequestMessage (id, InitializeRequest i_initialize_params), metadata) ) ->
     let i_root = Lsp_helpers.get_root i_initialize_params |> Path.make in
     let flowconfig =
-      Server_files_js.config_file flowconfig_name i_root |> read_config_or_exit ~allow_cache:false
+      Server_files_js.config_file flowconfig_name i_root
+      (* TODO: use FlowConfig.get directly and send errors/warnings to the client instead
+         of logging to stderr and exiting. *)
+      |> read_config_or_exit ~enforce_warnings:false ~allow_cache:false
     in
     let i_custom_initialize_params =
       { liveNonParseErrors = not (FlowConfig.disable_live_non_parse_errors flowconfig) }
@@ -1767,6 +1759,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
         i_open_files = Lsp.UriMap.empty;
         i_errors = LspErrors.empty;
         i_config = Hh_json.JSON_Null;
+        i_flowconfig = flowconfig;
       }
     in
     FlowInteractionLogger.set_server_config
@@ -1909,7 +1902,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
        purely syntax-driven and we'd like it to work even if the server is
        busy or disconnected *)
     let interaction_id = start_interaction ~trigger:LspInteraction.DocumentSymbol state in
-    let state = do_documentSymbol flowconfig_name state id params in
+    let state = do_documentSymbol state id params in
     log_interaction ~ux:LspInteraction.Responded state interaction_id;
     Ok (state, LogNeeded metadata)
   | (_, Client_message (RequestMessage (id, SelectionRangeRequest params), metadata)) ->
@@ -1917,7 +1910,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
        purely syntax-driven and we'd like it to work even if the server is
        busy or disconnected *)
     let interaction_id = start_interaction ~trigger:LspInteraction.SelectionRange state in
-    let state = do_selectionRange flowconfig_name state id params in
+    let state = do_selectionRange state id params in
     log_interaction ~ux:LspInteraction.Responded state interaction_id;
     Ok (state, LogNeeded metadata)
   | (Connected cenv, Client_message (c, metadata)) ->
@@ -1940,7 +1933,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
       Base.Option.value_map
         changed_live_uri
         ~default:state
-        ~f:(do_live_diagnostics flowconfig_name state trigger metadata)
+        ~f:(do_live_diagnostics state trigger metadata)
     in
     Ok (state, LogDeferred)
   | (_, Client_message (RequestMessage (id, RageRequest), metadata)) ->
@@ -1972,7 +1965,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
             Base.Option.value_map
               changed_live_uri
               ~default:state
-              ~f:(do_live_diagnostics flowconfig_name state trigger metadata)
+              ~f:(do_live_diagnostics state trigger metadata)
           in
           state)
     in
