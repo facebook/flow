@@ -145,6 +145,13 @@ type event =
   | Client_message of Lsp.lsp_message * LspProt.metadata
   | Tick  (** once per second, on idle *)
 
+(** Reads the flowconfig directly from disk, and without enforcing warnings.
+    We only care about connecting to the server, and will let the server
+    enforce warnings.  *)
+let read_flowconfig_from_disk flowconfig_name root =
+  Server_files_js.config_file flowconfig_name root
+  |> read_config_or_exit ~enforce_warnings:false ~allow_cache:false
+
 let string_of_state (state : state) : string =
   match state with
   | Pre_init _ -> "Pre_init"
@@ -1320,7 +1327,10 @@ let do_rage flowconfig_name (state : state) : Rage.result =
       match ienv with
       | None -> items
       | Some ienv ->
-        let start_env = CommandUtils.make_env flowconfig_name ienv.i_connect_params ienv.i_root in
+        let flowconfig = read_flowconfig_from_disk flowconfig_name ienv.i_root in
+        let start_env =
+          CommandUtils.make_env flowconfig flowconfig_name ienv.i_connect_params ienv.i_root
+        in
         let tmp_dir = start_env.CommandConnect.tmp_dir in
         let server_log_file = Path.make start_env.CommandConnect.log_file in
         (* monitor log file isn't retained anywhere. But since flow lsp doesn't
@@ -1483,10 +1493,7 @@ let do_live_diagnostics
   state
 
 let try_connect flowconfig_name (env : disconnected_env) : state =
-  let flowconfig =
-    Server_files_js.config_file flowconfig_name env.d_ienv.i_root
-    |> read_config_or_exit ~enforce_warnings:false ~allow_cache:false
-  in
+  let flowconfig = read_flowconfig_from_disk flowconfig_name env.d_ienv.i_root in
   (* If the version in .flowconfig has changed under our feet then we mustn't
      connect. We'll terminate and trust the editor to relaunch an ok version. *)
   let current_version = FlowConfig.required_version flowconfig in
@@ -1512,7 +1519,7 @@ let try_connect flowconfig_name (env : disconnected_env) : state =
       else
         env.d_ienv.i_connect_params
     in
-    CommandUtils.make_env flowconfig_name connect_params env.d_ienv.i_root
+    CommandUtils.make_env flowconfig flowconfig_name connect_params env.d_ienv.i_root
   in
   let client_handshake =
     SocketHandshake.
@@ -1733,12 +1740,9 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
   | ( Pre_init i_connect_params,
       Client_message (RequestMessage (id, InitializeRequest i_initialize_params), metadata) ) ->
     let i_root = Lsp_helpers.get_root i_initialize_params |> Path.make in
-    let flowconfig =
-      Server_files_js.config_file flowconfig_name i_root
-      (* TODO: use FlowConfig.get directly and send errors/warnings to the client instead
-         of logging to stderr and exiting. *)
-      |> read_config_or_exit ~enforce_warnings:false ~allow_cache:false
-    in
+    (* TODO: use FlowConfig.get directly and send errors/warnings to the client instead
+        of logging to stderr and exiting. *)
+    let flowconfig = read_flowconfig_from_disk flowconfig_name i_root in
     let i_custom_initialize_params =
       { liveNonParseErrors = not (FlowConfig.disable_live_non_parse_errors flowconfig) }
     in

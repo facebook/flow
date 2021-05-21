@@ -31,6 +31,7 @@ let main (module Runnable : Codemod_runner.RUNNABLE) codemod_flags () =
           options_flags = option_values;
           saved_state_options_flags;
           shm_flags;
+          ignore_version;
           write;
           repeat;
           log_level;
@@ -56,7 +57,9 @@ let main (module Runnable : Codemod_runner.RUNNABLE) codemod_flags () =
         Exit.(exit ~msg Could_not_find_flowconfig)
   in
   let (flowconfig, flowconfig_hash) =
-    CommandUtils.read_config_and_hash_or_exit (Server_files_js.config_file flowconfig_name root)
+    CommandUtils.read_config_and_hash_or_exit
+      ~enforce_warnings:(not ignore_version)
+      (Server_files_js.config_file flowconfig_name root)
   in
   let shared_mem_config = CommandUtils.shm_config shm_flags flowconfig in
   let options =

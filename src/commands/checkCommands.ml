@@ -238,7 +238,9 @@ module FocusCheckCommand = struct
           | x :: _ -> Some x )
     in
     let (flowconfig, flowconfig_hash) =
-      read_config_and_hash_or_exit (Server_files_js.config_file flowconfig_name root)
+      read_config_and_hash_or_exit
+        ~enforce_warnings:(not ignore_version)
+        (Server_files_js.config_file flowconfig_name root)
     in
     let options =
       let lazy_mode = Some Options.NON_LAZY_MODE in

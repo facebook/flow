@@ -470,7 +470,7 @@ let flowconfig_multi_warn rev_errs =
   in
   prerr_endline msg
 
-let read_config_or_exit ?(enforce_warnings = true) ?allow_cache flowconfig_path =
+let read_config_or_exit ~enforce_warnings ?allow_cache flowconfig_path =
   match FlowConfig.get ?allow_cache flowconfig_path with
   | Ok (config, []) -> config
   | Ok (config, warnings) ->
@@ -481,8 +481,8 @@ let read_config_or_exit ?(enforce_warnings = true) ?allow_cache flowconfig_path 
     config
   | Error err -> flowconfig_multi_error [err]
 
-let read_config_and_hash_or_exit ?enforce_warnings ?allow_cache flowconfig_path =
-  let config = read_config_or_exit ?enforce_warnings ?allow_cache flowconfig_path in
+let read_config_and_hash_or_exit ~enforce_warnings ?allow_cache flowconfig_path =
+  let config = read_config_or_exit ~enforce_warnings ?allow_cache flowconfig_path in
   (* allow cache here because we just read the config, don't need to do it again *)
   let hash = FlowConfig.get_hash ~allow_cache:true flowconfig_path |> Xx.to_string in
   (config, hash)
@@ -1327,9 +1327,7 @@ let make_options
       };
   }
 
-let make_env flowconfig_name connect_flags root =
-  let flowconfig_path = Server_files_js.config_file flowconfig_name root in
-  let flowconfig = read_config_or_exit flowconfig_path in
+let make_env flowconfig flowconfig_name connect_flags root =
   let normalize dir = Path.(dir |> make |> to_string) in
   let tmp_dir =
     Base.Option.value_map
@@ -1370,10 +1368,6 @@ let make_env flowconfig_name connect_flags root =
     flowconfig_name;
     rerun_on_mismatch;
   }
-
-let connect ~flowconfig_name ~client_handshake connect_flags root =
-  let env = make_env flowconfig_name connect_flags root in
-  CommandConnect.connect ~flowconfig_name ~client_handshake env
 
 let rec search_for_root config start recursion_limit : Path.t option =
   if start = Path.parent start then
@@ -1559,11 +1553,8 @@ let rec connect_and_make_request flowconfig_name =
   in
   let eprintf_with_spinner fmt = Printf.ksprintf eprintf_with_spinner fmt in
   (* Waits for a response over the socket. If the connection dies, this will throw an exception *)
-  let rec wait_for_response ?timeout ~quiet ~root (ic : Timeout.in_channel) =
-    let use_emoji =
-      Tty.supports_emoji ()
-      && Server_files_js.config_file flowconfig_name root |> read_config_or_exit |> FlowConfig.emoji
-    in
+  let rec wait_for_response ?timeout ~quiet ~emoji ~root (ic : Timeout.in_channel) =
+    let use_emoji = Tty.supports_emoji () && emoji in
     let response : MonitorProt.monitor_to_client_message =
       try Marshal_tools.from_fd_with_preamble ?timeout (Timeout.descr_of_in_channel ic) with
       | Unix.Unix_error ((Unix.EPIPE | Unix.ECONNRESET), _, _) ->
@@ -1589,7 +1580,7 @@ let rec connect_and_make_request flowconfig_name =
       Base.Option.iter status_string (fun status_string ->
           if not quiet then eprintf_with_spinner "Please wait. %s" status_string);
 
-      wait_for_response ?timeout ~quiet ~root ic
+      wait_for_response ?timeout ~quiet ~emoji ~root ic
     | MonitorProt.Data response ->
       if (not quiet) && Tty.spinner_used () then Tty.print_clear_line stderr;
       response
@@ -1624,10 +1615,20 @@ let rec connect_and_make_request flowconfig_name =
         },
         { SocketHandshake.client_type = SocketHandshake.Ephemeral } )
     in
+
+    let flowconfig =
+      let path = Server_files_js.config_file flowconfig_name root in
+      (* let the server enforce flowconfig warnings; we only care about the flowconfig
+         as far as it pertains to connecting to the server. *)
+      let enforce_warnings = false in
+      read_config_or_exit ~enforce_warnings path
+    in
+
     (* connect handles timeouts itself *)
-    let (ic, oc) = connect ~flowconfig_name ~client_handshake connect_flags root in
+    let env = make_env flowconfig flowconfig_name connect_flags root in
+    let (ic, oc) = CommandConnect.connect ~flowconfig_name ~client_handshake env in
     send_command ?timeout oc request;
-    try wait_for_response ?timeout ~quiet ~root ic
+    try wait_for_response ?timeout ~quiet ~emoji:env.CommandConnect.emoji ~root ic
     with End_of_file ->
       if not quiet then
         eprintf_with_spinner
@@ -1768,6 +1769,7 @@ type codemod_params =
       options_flags: Options_flags.t;
       saved_state_options_flags: Saved_state_flags.t;
       shm_flags: shared_mem_params;
+      ignore_version: bool;
       write: bool;
       repeat: bool;
       log_level: Hh_logger.Level.t option;
@@ -1782,6 +1784,7 @@ let collect_codemod_flags
     options_flags
     saved_state_options_flags
     shm_flags
+    ignore_version
     write
     repeat
     log_level
@@ -1798,6 +1801,7 @@ let collect_codemod_flags
         options_flags;
         saved_state_options_flags;
         shm_flags;
+        ignore_version;
         write;
         repeat;
         log_level;
@@ -1828,6 +1832,7 @@ let codemod_flags prev =
     |> saved_state_flags
     |> shm_flags
     |> from_flag
+    |> ignore_version_flag
     |> flag "--write" no_arg ~doc:"Edit files in place"
     |> flag "--repeat" no_arg ~doc:"Run this codemod repeatedly until no more files change"
     |> flag

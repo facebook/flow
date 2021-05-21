@@ -24,6 +24,7 @@ let spec =
       CommandSpec.ArgSpec.(
         empty
         |> base_flags
+        |> ignore_version_flag
         |> strip_root_flag
         |> ignore_flag
         |> include_flag
@@ -114,8 +115,7 @@ let rec iter_get_next ~f get_next =
     List.iter f result;
     iter_get_next ~f get_next
 
-let make_options ~flowconfig_name ~root ~ignore_flag ~include_flag ~untyped_flag ~declaration_flag =
-  let flowconfig = read_config_or_exit (Server_files_js.config_file flowconfig_name root) in
+let make_options ~flowconfig ~root ~ignore_flag ~include_flag ~untyped_flag ~declaration_flag =
   let temp_dir = Path.make (FlowConfig.temp_dir flowconfig) in
   let includes = CommandUtils.list_of_string_arg include_flag in
   let ignores = CommandUtils.list_of_string_arg ignore_flag in
@@ -191,6 +191,7 @@ let get_next_append_const get_next const =
 
 let main
     base_flags
+    ignore_version
     strip_root
     ignore_flag
     include_flag
@@ -226,8 +227,13 @@ let main
           Some first_file
         | _ -> None))
   in
+  let flowconfig =
+    read_config_or_exit
+      ~enforce_warnings:(not ignore_version)
+      (Server_files_js.config_file flowconfig_name root)
+  in
   let options =
-    make_options ~flowconfig_name ~root ~ignore_flag ~include_flag ~untyped_flag ~declaration_flag
+    make_options ~flowconfig ~root ~ignore_flag ~include_flag ~untyped_flag ~declaration_flag
   in
   (* Turn on --no-flowlib by default, so that flow ls never reports flowlib files *)
   let options = { options with Files.default_lib_dir = None } in
