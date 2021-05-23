@@ -5,29 +5,28 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type object_source =
-  | ObjectType of Type.t
-  | ObjectRequireLoc of ALoc.t
+type ('M, 'T) object_source =
+  | ObjectType of 'T
+  | ObjectRequireLoc of 'M
 
 (* source loc *)
 
-type member_info = {
+type ('M, 'T) member_info = {
   prop_name: string;
-  object_source: object_source;
+  object_source: ('M, 'T) object_source;
 }
 
-type t =
+type ('M, 'T) t =
   | Identifier of {
       name: string;
-      loc: ALoc.t;
-      type_: Type.t;
+      loc: 'T;
     }
-  | Type of Type.t
-  | Typeof of Type.t
-  | Member of member_info
-  | Require of (ALoc.t * string) * ALoc.t
+  | Type of 'T
+  | Typeof of 'T
+  | Member of ('M, 'T) member_info
+  | Require of ('M * string) * 'M
   | JsxAttribute of {
-      component_t: Type.t;
+      component_t: 'T;
       name: string;
-      loc: ALoc.t;
+      loc: 'M;
     }

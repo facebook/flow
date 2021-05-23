@@ -5,15 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-(*
-   `Ok request` =
-     the given loc is in a symbol for which it makes sense to ask for a definition,
-     process `request` to get to the definition
-   Error loc =
-     the given loc is in a symbol which is its own definition,
-     `loc` is the loc of the symbol
-*)
-exception Result of (Get_def_request.t, ALoc.t) result
+(* stops walking the tree *)
+exception Found
+
+(*  This type is distinct from the one raised by the searcher because
+   it would never make sense for the searcher to raise LocNotFound *)
+type ('M, 'T) result =
+  | OwnDef of 'M
+  | Request of ('M, 'T) Get_def_request.t
+  | LocNotFound
 
 (**
  * Determines if the given expression is a `require()` call, or a member expression
@@ -27,28 +27,35 @@ let rec is_require ~is_legit_require expr =
       Call
         {
           Call.callee = (_, Identifier (_, { Flow_ast.Identifier.name = "require"; _ }));
-          arguments = (_, { ArgList.arguments = Expression ((source_loc, _), _) :: _; _ });
+          arguments = (_, { ArgList.arguments = Expression (source_annot, _) :: _; _ });
           _;
         } )
-    when is_legit_require source_loc ->
+    when is_legit_require source_annot ->
     true
   | _ -> false
 
-let type_of_jsx_name =
+let annot_of_jsx_name =
   let open Flow_ast.JSX in
   function
-  | Identifier ((_, t), _)
-  | NamespacedName (_, NamespacedName.{ name = ((_, t), _); _ })
-  | MemberExpression (_, MemberExpression.{ property = ((_, t), _); _ }) ->
-    t
+  | Identifier (annot, _)
+  | NamespacedName (_, NamespacedName.{ name = (annot, _); _ })
+  | MemberExpression (_, MemberExpression.{ property = (annot, _); _ }) ->
+    annot
 
-class searcher
-  ~(is_legit_require : ALoc.t -> bool) ~(module_ref_prefix : string option) (target_loc : Loc.t) =
+class ['M, 'T] searcher
+  ~(is_legit_require : 'T -> bool)
+  ~(module_ref_prefix : string option)
+  ~(covers_target : 'M -> bool)
+  ~(loc_of_annot : 'T -> 'M) =
+  let annot_covers_target annot = covers_target (loc_of_annot annot) in
   object (this)
-    inherit
-      [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper as super
+    inherit ['M, 'T, 'M, 'T] Flow_polymorphic_ast_mapper.mapper as super
 
     val mutable in_require_declarator = false
+
+    val mutable found_loc_ = LocNotFound
+
+    method found_loc = found_loc_
 
     method with_in_require_declarator value f =
       let was_in_require_declarator = in_require_declarator in
@@ -57,25 +64,29 @@ class searcher
       in_require_declarator <- was_in_require_declarator;
       result
 
-    method on_loc_annot (x : ALoc.t) = x
+    method on_loc_annot (x : 'M) = x
 
-    method on_type_annot (x : ALoc.t * Type.t) = x
+    method on_type_annot (x : 'T) = x
 
-    method covers_target loc = Reason.in_range target_loc (ALoc.to_loc_exn loc)
+    method own_def : 'a. 'M -> 'a =
+      fun x ->
+        found_loc_ <- OwnDef x;
+        raise Found
 
-    method own_def : 'a. ALoc.t -> 'a = (fun x -> raise (Result (Error x)))
-
-    method request : 'a. Get_def_request.t -> 'a = (fun x -> raise (Result (Ok x)))
+    method request : 'a. ('M, 'T) Get_def_request.t -> 'a =
+      fun x ->
+        found_loc_ <- Request x;
+        raise Found
 
     method! variable_declarator
         ~kind ((_, { Flow_ast.Statement.VariableDeclaration.Declarator.id; init }) as x) =
       (* If a variable declarator's initializer contains `require()`, then we want to jump
          through it into the imported module. To do this, we set the `in_require_declarator`
          flag, which we use when we visit the id, in lieu of parent pointers. *)
-      let ((id_loc, _), _) = id in
+      let (id_annot, _) = id in
       let has_require =
         match init with
-        | Some init when is_require ~is_legit_require init && this#covers_target id_loc -> true
+        | Some init when is_require ~is_legit_require init && annot_covers_target id_annot -> true
         | _ -> false
       in
       this#with_in_require_declarator has_require (fun () -> super#variable_declarator ~kind x)
@@ -84,27 +95,27 @@ class searcher
       let open Flow_ast.Statement.ImportDeclaration in
       let { source = (source_loc, { Flow_ast.StringLiteral.value = module_name; _ }); _ } = decl in
       let res = super#import_declaration import_loc decl in
-      if this#covers_target import_loc then
+      if covers_target import_loc then
         this#request (Get_def_request.Require ((source_loc, module_name), import_loc));
       res
 
     method! import_named_specifier ~import_kind decl =
       let open Flow_ast.Statement.ImportDeclaration in
-      let { local; remote = ((remote_loc, t), _); kind } = decl in
+      let { local; remote = (remote_annot, _); kind } = decl in
       ( if
-        this#covers_target remote_loc
-        || Base.Option.exists local ~f:(fun ((local_loc, _), _) -> this#covers_target local_loc)
+        annot_covers_target remote_annot
+        || Base.Option.exists local ~f:(fun (local_annot, _) -> annot_covers_target local_annot)
       then
         match (kind, import_kind) with
         | (Some ImportTypeof, _)
         | (_, ImportTypeof) ->
-          this#request (Get_def_request.Typeof t)
-        | _ -> this#request (Get_def_request.Type t) );
+          this#request (Get_def_request.Typeof remote_annot)
+        | _ -> this#request (Get_def_request.Type remote_annot) );
       decl
 
     method! import_default_specifier decl =
-      let ((loc, t), _) = decl in
-      if this#covers_target loc then this#request (Get_def_request.Type t);
+      let (annot, _) = decl in
+      if annot_covers_target annot then this#request (Get_def_request.Type annot);
       decl
 
     method! import_namespace_specifier id = id
@@ -116,7 +127,7 @@ class searcher
       | Some (source_loc, { Flow_ast.StringLiteral.value = module_name; _ }) ->
         let { specifiers; _ } = decl in
         Base.Option.iter ~f:(this#export_specifier_with_loc ~source_loc) specifiers;
-        if this#covers_target export_loc then
+        if covers_target export_loc then
           this#request (Get_def_request.Require ((source_loc, module_name), export_loc));
         decl
 
@@ -135,26 +146,26 @@ class searcher
         Get_def_request.(
           Member { prop_name = local_name; object_source = ObjectRequireLoc source_loc })
       in
-      if this#covers_target specifier_loc then this#request result
+      if covers_target specifier_loc then this#request result
 
     method! member expr =
       let open Flow_ast.Expression.Member in
       let { _object; property; comments = _ } = expr in
       begin
         match property with
-        | PropertyIdentifier ((loc, _), { Flow_ast.Identifier.name; _ }) when this#covers_target loc
+        | PropertyIdentifier (annot, { Flow_ast.Identifier.name; _ }) when annot_covers_target annot
           ->
-          let ((_, t), _) = _object in
+          let (obj_annot, _) = _object in
           let result =
-            Get_def_request.(Member { prop_name = name; object_source = ObjectType t })
+            Get_def_request.(Member { prop_name = name; object_source = ObjectType obj_annot })
           in
           this#request result
         | _ -> ()
       end;
       super#member expr
 
-    method! t_identifier (((loc, type_), { Flow_ast.Identifier.name; _ }) as id) =
-      if this#covers_target loc then this#request (Get_def_request.Identifier { name; loc; type_ });
+    method! t_identifier ((loc, { Flow_ast.Identifier.name; _ }) as id) =
+      if annot_covers_target loc then this#request (Get_def_request.Identifier { name; loc });
       super#t_identifier id
 
     method! jsx_opening_element elt =
@@ -166,24 +177,25 @@ class searcher
               ( _,
                 {
                   Attribute.name =
-                    Attribute.Identifier
-                      ((loc, _), { Identifier.name = attribute_name; comments = _ });
+                    Attribute.Identifier (annot, { Identifier.name = attribute_name; comments = _ });
                   _;
                 } )
-            when this#covers_target loc ->
+            when annot_covers_target annot ->
+            let loc = loc_of_annot annot in
             this#request
               (Get_def_request.JsxAttribute
-                 { component_t = type_of_jsx_name component_name; name = attribute_name; loc })
+                 { component_t = annot_of_jsx_name component_name; name = attribute_name; loc })
           | _ -> ())
         attributes;
       super#jsx_opening_element elt
 
     method! jsx_element_name_identifier
-        (((loc, type_), { Flow_ast.JSX.Identifier.name; comments = _ }) as id) =
-      if this#covers_target loc then this#request (Get_def_request.Identifier { name; loc; type_ });
+        ((annot, { Flow_ast.JSX.Identifier.name; comments = _ }) as id) =
+      if annot_covers_target annot then
+        this#request (Get_def_request.Identifier { name; loc = annot });
       super#jsx_element_name_identifier id
 
-    method! pattern ?kind (((_, t), p) as pat) =
+    method! pattern ?kind ((pat_annot, p) as pat) =
       let open Flow_ast.Pattern in
       ( if not in_require_declarator then
         match p with
@@ -196,10 +208,15 @@ class searcher
                   match key with
                   | Property.Literal
                       (loc, { Flow_ast.Literal.value = Flow_ast.Literal.String name; _ })
-                  | Property.Identifier ((loc, _), { Flow_ast.Identifier.name; _ })
-                    when this#covers_target loc ->
+                    when covers_target loc ->
                     this#request
-                      Get_def_request.(Member { prop_name = name; object_source = ObjectType t })
+                      Get_def_request.(
+                        Member { prop_name = name; object_source = ObjectType pat_annot })
+                  | Property.Identifier (id_annot, { Flow_ast.Identifier.name; _ })
+                    when annot_covers_target id_annot ->
+                    this#request
+                      Get_def_request.(
+                        Member { prop_name = name; object_source = ObjectType pat_annot })
                   | _ -> ()
                 end
               | _ -> ())
@@ -207,15 +224,15 @@ class searcher
         | _ -> () );
       super#pattern ?kind pat
 
-    method! t_pattern_identifier ?kind ((loc, t), name) =
-      if kind != None && this#covers_target loc then
+    method! t_pattern_identifier ?kind (annot, name) =
+      if kind != None && annot_covers_target annot then
         if in_require_declarator then
-          this#request (Get_def_request.Type t)
+          this#request (Get_def_request.Type annot)
         else
-          this#own_def loc;
-      super#t_pattern_identifier ?kind ((loc, t), name)
+          this#own_def (loc_of_annot annot);
+      super#t_pattern_identifier ?kind (annot, name)
 
-    method! expression ((loc, t), expr) =
+    method! expression (annot, expr) =
       match (expr, module_ref_prefix) with
       | ( Flow_ast.Expression.(
             Call
@@ -227,7 +244,7 @@ class searcher
                       Flow_ast.Expression.ArgList.arguments =
                         [
                           Expression
-                            ( (source_loc, _),
+                            ( source_annot,
                               Literal Flow_ast.Literal.{ value = String module_name; _ } );
                         ];
                       comments = _;
@@ -235,17 +252,20 @@ class searcher
                 _;
               }),
           _ )
-        when this#covers_target loc && is_legit_require source_loc ->
+        when annot_covers_target annot && is_legit_require source_annot ->
+        let loc = loc_of_annot annot in
+        let source_loc = loc_of_annot source_annot in
         this#request (Get_def_request.Require ((source_loc, module_name), loc))
       | (Flow_ast.Expression.Literal Flow_ast.Literal.{ value = String str; _ }, Some prefix)
-        when this#covers_target loc && Base.String.is_prefix str ~prefix ->
+        when annot_covers_target annot && Base.String.is_prefix str ~prefix ->
+        let loc = loc_of_annot annot in
         this#request (Get_def_request.Require ((loc, str), loc))
-      | _ -> super#expression ((loc, t), expr)
+      | _ -> super#expression (annot, expr)
 
     (* object keys would normally hit this#t_identifier; this circumvents that. *)
     method! object_key_identifier id =
-      let ((loc, _), _) = id in
-      if this#covers_target loc then this#own_def loc;
+      let (annot, _) = id in
+      if annot_covers_target annot then this#own_def (loc_of_annot annot);
       id
 
     (* for object properties using the shorthand {variableName} syntax,
@@ -259,19 +279,17 @@ class searcher
       super#object_property prop
   end
 
-(*  This type is distinct from the one raised by the searcher because
-   it would never make sense for the searcher to raise LocNotFound *)
-type result =
-  | OwnDef of ALoc.t
-  | Request of Get_def_request.t
-  | LocNotFound
+let process_location ~loc_of_annot ~ast ~is_legit_require ~module_ref_prefix ~covers_target =
+  let searcher = new searcher ~loc_of_annot ~is_legit_require ~module_ref_prefix ~covers_target in
+  (try ignore (searcher#program ast) with Found -> ());
+  searcher#found_loc
 
-let process_location ~typed_ast ~is_legit_require ~module_ref_prefix loc =
-  let searcher = new searcher ~is_legit_require ~module_ref_prefix loc in
-  try
-    ignore (searcher#program typed_ast);
-    LocNotFound
-  with Result info ->
-    (match info with
-    | Ok request -> Request request
-    | Error loc -> OwnDef loc)
+let process_location_in_ast ~ast ~is_legit_require ~module_ref_prefix loc =
+  let loc_of_annot loc = loc in
+  let covers_target test_loc = Reason.in_range loc test_loc in
+  process_location ~loc_of_annot ~is_legit_require ~ast ~module_ref_prefix ~covers_target
+
+let process_location_in_typed_ast ~typed_ast ~is_legit_require ~module_ref_prefix loc =
+  let loc_of_annot (loc, _) = loc in
+  let covers_target test_loc = Reason.in_range loc (ALoc.to_loc_exn test_loc) in
+  process_location ~loc_of_annot ~is_legit_require ~ast:typed_ast ~module_ref_prefix ~covers_target

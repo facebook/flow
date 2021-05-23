@@ -45,8 +45,8 @@ class type_killer (reader : Parsing_heaps.Reader.reader) =
   end
 
 let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
-    Get_def_request.t -> (Loc.t, string) result = function
-  | Get_def_request.Identifier { name = _; loc = aloc; type_ } ->
+    (ALoc.t, ALoc.t * Type.t) Get_def_request.t -> (Loc.t, string) result = function
+  | Get_def_request.Identifier { name = _; loc = (aloc, type_) } ->
     let loc = loc_of_aloc ~reader aloc in
     let ast = (new type_killer reader)#program typed_ast in
     let scope_info = Scope_builder.program ~with_types:true ast in
@@ -66,17 +66,17 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
             ~cx
             ~is_legit_require
             ~typed_ast
-            (Get_def_request.Type type_)
+            (Get_def_request.Type (aloc, type_))
         | _ :: _ :: _ -> Error "Scope builder found multiple matching identifiers"
       end)
   | Get_def_request.(Member { prop_name = name; object_source }) ->
     let obj_t =
       match object_source with
-      | Get_def_request.ObjectType t -> t
+      | Get_def_request.ObjectType (_loc, t) -> t
       | Get_def_request.ObjectRequireLoc loc -> Context.find_require cx loc
     in
     extract_member_def ~reader cx obj_t name
-  | Get_def_request.(Type v | Typeof v) as request ->
+  | Get_def_request.(Type (_, v) | Typeof (_, v)) as request ->
     (* here lies the difference between "Go to Definition" and "Go to Type Definition":
       the former should stop on annot_loc (where the value was annotated), while the
       latter should jump to the def_loc (where the type was defined).
@@ -153,7 +153,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
              "Internal Flow Error: Expected ModuleT for %S, but got %S!"
              name
              (string_of_ctor module_t))))
-  | Get_def_request.JsxAttribute { component_t; name; loc } ->
+  | Get_def_request.JsxAttribute { component_t = (_, component_t); name; loc } ->
     let reason = Reason.mk_reason (Reason.RCustom name) loc in
     let props_object =
       Tvar.mk_where cx reason (fun tvar ->
@@ -166,11 +166,11 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
       ~cx
       ~is_legit_require
       ~typed_ast
-      Get_def_request.(Member { prop_name = name; object_source = ObjectType props_object })
+      Get_def_request.(Member { prop_name = name; object_source = ObjectType (loc, props_object) })
 
 let get_def ~options ~reader ~cx ~file_sig ~typed_ast requested_loc =
   let require_aloc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
-  let is_legit_require source_aloc =
+  let is_legit_require (source_aloc, _) =
     SMap.exists
       (fun _ alocs ->
         Nel.exists (fun aloc -> loc_of_aloc ~reader aloc = loc_of_aloc ~reader source_aloc) alocs)
@@ -179,7 +179,7 @@ let get_def ~options ~reader ~cx ~file_sig ~typed_ast requested_loc =
   let module_ref_prefix = Context.haste_module_ref_prefix cx in
   let rec loop req_loc =
     let open Get_def_process_location in
-    match process_location ~is_legit_require ~typed_ast ~module_ref_prefix req_loc with
+    match process_location_in_typed_ast ~is_legit_require ~typed_ast ~module_ref_prefix req_loc with
     | OwnDef aloc -> Def (loc_of_aloc ~reader aloc)
     | Request request ->
       (match process_request ~options ~reader ~cx ~is_legit_require ~typed_ast request with

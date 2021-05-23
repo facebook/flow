@@ -5,14 +5,29 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type result =
-  | OwnDef of ALoc.t
-  | Request of Get_def_request.t
+type ('M, 'T) result =
+  | OwnDef of 'M
+  | Request of ('M, 'T) Get_def_request.t
   | LocNotFound
 
 val process_location :
-  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
-  is_legit_require:(ALoc.t -> bool) ->
+  loc_of_annot:('T -> 'M) ->
+  ast:('M, 'T) Flow_ast.Program.t ->
+  is_legit_require:('T -> bool) ->
+  module_ref_prefix:string option ->
+  covers_target:('M -> bool) ->
+  ('M, 'T) result
+
+val process_location_in_ast :
+  ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
+  is_legit_require:(Loc.t -> bool) ->
   module_ref_prefix:string option ->
   Loc.t ->
-  result
+  (Loc.t, Loc.t) result
+
+val process_location_in_typed_ast :
+  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
+  is_legit_require:(ALoc.t * Type.t -> bool) ->
+  module_ref_prefix:string option ->
+  Loc.t ->
+  (ALoc.t, ALoc.t * Type.t) result
