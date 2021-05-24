@@ -177,13 +177,11 @@ end = struct
   }
 
   let get_mergebase_and_changes env =
-    if env.should_track_mergebase then (
-      let%lwt (instance, mergebase_and_changes) = Watchman.get_mergebase_and_changes env.instance in
-      env.instance <- instance;
-      match mergebase_and_changes with
+    if env.should_track_mergebase then
+      match%lwt Watchman.get_mergebase_and_changes env.instance with
       | Ok mergebase_and_changes -> Lwt.return (Ok (Some mergebase_and_changes))
       | Error msg -> Lwt.return (Error msg)
-    ) else
+    else
       Lwt.return (Ok None)
 
   module WatchmanListenLoop = LwtLoop.Make (struct

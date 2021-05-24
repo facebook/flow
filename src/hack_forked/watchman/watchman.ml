@@ -890,24 +890,27 @@ let get_changes instance =
         | Ok (env, result) -> Lwt.return (Ok (env, Watchman_pushed result))))
 
 let get_mergebase_and_changes instance =
-  call_on_instance
-    instance
-    "get_mergebase_and_changes"
-    ~on_dead:(fun _dead_env -> Error "Failed to connect to Watchman to get mergebase")
-    ~on_alive:(fun env ->
-      let debug_logging = env.settings.debug_logging in
-      let query = get_changes_since_mergebase_query env in
+  match instance with
+  | Watchman_dead _ -> Lwt.return (Error "Failed to connect to Watchman to get mergebase")
+  | Watchman_alive env ->
+    let debug_logging = env.settings.debug_logging in
+    let query = get_changes_since_mergebase_query env in
+    let%lwt response =
       match%lwt request ~debug_logging query with
       | Error _ as err -> Lwt.return err
       | Ok response ->
-        let result =
-          match extract_mergebase response with
-          | Some (_clock, mergebase) ->
-            let changes = extract_file_names env response in
-            Ok (env, Ok (mergebase, changes))
-          | None -> Error (response_error_of_json ~query ~response "Failed to extract mergebase")
-        in
-        Lwt.return result)
+        (match extract_mergebase response with
+        | Some (_clock, mergebase) ->
+          let changes = extract_file_names env response in
+          Lwt.return (Ok (mergebase, changes))
+        | None ->
+          Lwt.return (Error (response_error_of_json ~query ~response "Failed to extract mergebase")))
+    in
+    (match response with
+    | Ok _ as ok -> Lwt.return ok
+    | Error err ->
+      log_error err;
+      Lwt.return (Error "Failed to query mergebase from Watchman"))
 
 module Testing = struct
   type nonrec env = env

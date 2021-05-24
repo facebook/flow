@@ -62,8 +62,7 @@ type watchman_instance
 
 val init : init_settings -> watchman_instance option Lwt.t
 
-val get_mergebase_and_changes :
-  watchman_instance -> (watchman_instance * (string * SSet.t, string) Stdlib.result) Lwt.t
+val get_mergebase_and_changes : watchman_instance -> (string * SSet.t, string) Result.t Lwt.t
 
 val get_changes : watchman_instance -> (watchman_instance * changes) Lwt.t
 
