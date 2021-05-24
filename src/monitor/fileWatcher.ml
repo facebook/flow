@@ -189,6 +189,8 @@ end = struct
 
     type acc = env
 
+    exception Exit_loop
+
     let extract_hg_update_metadata = function
       | None -> ("<UNKNOWN>", "<UNKNOWN REV>")
       | Some metadata ->
@@ -210,7 +212,13 @@ end = struct
       if not (SSet.is_empty env.files) then Lwt_condition.broadcast env.changes_condition ()
 
     let main env =
-      let%lwt (instance, result) = Watchman.get_changes env.instance in
+      let%lwt (instance, result) =
+        match%lwt Watchman.get_changes env.instance with
+        | Ok (instance, result) -> Lwt.return (instance, result)
+        | Error Watchman.Dead
+        | Error Watchman.Restarted ->
+          raise Exit_loop
+      in
       env.instance <- instance;
       match result with
       | Watchman.Watchman_pushed pushed_changes ->
@@ -324,9 +332,8 @@ end = struct
 
     let catch _ exn =
       (match Exception.to_exn exn with
-      | Exit.(Exit_with Watchman_failed)
-      | Watchman.Watchman_restarted ->
-        (* expected error *)
+      | Exit_loop ->
+        Logger.error "Watchman unavailable. Exiting...";
         ()
       | _ ->
         let msg = Exception.to_string exn in
