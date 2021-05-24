@@ -60,20 +60,18 @@ type failure =
   | Dead
   | Restarted
 
-type watchman_instance
+type env
 
-val init : init_settings -> watchman_instance option Lwt.t
+val init : init_settings -> env option Lwt.t
 
-val get_mergebase_and_changes : watchman_instance -> (string * SSet.t, string) Result.t Lwt.t
+val get_mergebase_and_changes : env -> (string * SSet.t, string) Result.t Lwt.t
 
-val get_changes : watchman_instance -> (watchman_instance * pushed_changes, failure) Result.t Lwt.t
+val get_changes : env -> (env * pushed_changes, failure) Result.t Lwt.t
 
-val close : watchman_instance -> unit Lwt.t
+val close : env -> unit Lwt.t
 
 (* Expose some things for testing. *)
 module Testing : sig
-  type env
-
   type error_kind
 
   val get_test_env : unit -> env Lwt.t
