@@ -18,10 +18,6 @@ open Utils
  *   * Use the BSER protocol for enhanced performance
  *)
 
-exception Watchman_error
-
-exception Subscription_canceled_by_watchman
-
 exception Watchman_restarted
 
 exception Config_problem
@@ -79,16 +75,6 @@ let severity_of_error = function
   | Fresh_instance -> Restarted_error
   | Subscription_canceled -> Retryable_error
   | Unsupported_watch_roots _ -> Fatal_error
-
-let raise_error err =
-  log_error err;
-  match err with
-  | Not_installed _ -> raise Config_problem
-  | Socket_unavailable _ -> raise Watchman_error
-  | Response_error _ -> raise Watchman_error
-  | Fresh_instance -> raise Watchman_restarted
-  | Subscription_canceled -> raise Subscription_canceled_by_watchman
-  | Unsupported_watch_roots _ -> raise Config_problem
 
 type subscribe_mode =
   | All_changes
@@ -173,13 +159,6 @@ let parse_response =
     handle_errors json
 
 type conn = Buffered_line_reader_lwt.t * Lwt_io.output_channel
-
-let catch ~f ~catch =
-  Lwt.catch f (fun exn ->
-      let e = Exception.wrap exn in
-      match exn with
-      | Lwt.Canceled -> Exception.reraise e
-      | _ -> catch e)
 
 (** This number is totally arbitrary. Just need some cap. *)
 let max_reinit_attempts = 8
@@ -784,37 +763,30 @@ let close = function
    * taking too long. *)
 let call_on_instance :
     watchman_instance ->
-    string ->
     on_dead:(dead_env -> 'a) ->
     on_alive:(env -> (env * 'a, error_kind) Result.t Lwt.t) ->
     (watchman_instance * 'a) Lwt.t =
-  let on_alive' ~on_dead source f env =
-    catch
-      ~f:(fun () ->
-        match%lwt f env with
-        | Ok (env, result) -> Lwt.return (Watchman_alive env, result)
-        | Error err -> raise_error err)
-      ~catch:(fun exn ->
-        Hh_logger.exception_ ~prefix:("Watchman " ^ source ^ ": ") exn;
-        let close_channel_on_instance' env =
-          let%lwt env = close_channel_on_instance env in
-          on_dead env
-        in
-        match Exception.unwrap exn with
-        | Watchman_error -> close_channel_on_instance' env
-        | Subscription_canceled_by_watchman -> close_channel_on_instance' env
-        | Config_problem ->
-          (* this only happens during (re)init, so we don't need to handle it here.
-             it's unexpected if it happens, so reraising it like other unexpected
-             exceptions, for explictness. *)
-          Exception.reraise exn
-        | _ -> Exception.reraise exn)
+  let on_alive' ~on_dead f env =
+    match%lwt f env with
+    | Ok (env, result) -> Lwt.return (Watchman_alive env, result)
+    | Error err ->
+      log_error err;
+      (match err with
+      | Not_installed _
+      | Unsupported_watch_roots _ ->
+        raise Config_problem
+      | Fresh_instance -> raise Watchman_restarted
+      | Socket_unavailable _
+      | Response_error _
+      | Subscription_canceled ->
+        let%lwt env = close_channel_on_instance env in
+        on_dead env)
   in
-  fun instance source ~on_dead ~on_alive ->
+  fun instance ~on_dead ~on_alive ->
     let on_dead dead_env = Lwt.return (Watchman_dead dead_env, on_dead dead_env) in
     match%lwt maybe_restart_instance instance with
     | Watchman_dead dead_env -> on_dead dead_env
-    | Watchman_alive env -> on_alive' ~on_dead source on_alive env
+    | Watchman_alive env -> on_alive' ~on_dead on_alive env
 
 let make_state_change_response state name data =
   let metadata = J.try_get_val "metadata" data in
@@ -869,7 +841,6 @@ let transform_asynchronous_get_changes_response env data =
 let get_changes instance =
   call_on_instance
     instance
-    "get_changes"
     ~on_dead:(fun _ -> Watchman_unavailable)
     ~on_alive:(fun env ->
       let debug_logging = env.settings.debug_logging in
