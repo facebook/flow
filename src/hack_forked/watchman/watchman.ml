@@ -739,11 +739,6 @@ let re_init_dead_env dead_env =
   with Lwt_unix.Timeout ->
     Lwt.return (Error (Socket_unavailable { msg = spf "Timed out after %ds" timeout }))
 
-let re_init_dead_env_exn dead_env =
-  match%lwt re_init_dead_env dead_env with
-  | Ok env -> Lwt.return env
-  | Error err -> raise_error err
-
 let maybe_restart_instance instance =
   match instance with
   | Watchman_alive _ -> Lwt.return instance
@@ -753,26 +748,22 @@ let maybe_restart_instance instance =
       raise Exit.(Exit_with Watchman_failed)
     else if within_backoff_time dead_env.reinit_attempts dead_env.dead_since then (
       let () = Hh_logger.log "Attemping to reestablish watchman subscription" in
-      match%lwt re_init_dead_env_exn dead_env with
-      | env ->
+      match%lwt re_init_dead_env dead_env with
+      | Ok env ->
         Hh_logger.log "Watchman connection reestablished.";
         let downtime = Unix.gettimeofday () -. dead_env.dead_since in
         EventLogger.watchman_connection_reestablished downtime;
         Lwt.return (Watchman_alive env)
-      | exception ((Lwt.Canceled | Exit.Exit_with _ | Watchman_restarted) as exn) ->
-        (* Avoid swallowing these *)
-        Exception.reraise (Exception.wrap exn)
-      | exception e ->
-        let exn = Exception.wrap e in
-        Hh_logger.exception_ ~prefix:"Reestablishing watchman subscription failed: " exn;
-        let exn_str =
-          Printf.sprintf
-            "%s\nBacktrace: %s"
-            (Exception.get_ctor_string exn)
-            (Exception.get_full_backtrace_string 500 exn)
-        in
-        EventLogger.watchman_connection_reestablishment_failed exn_str;
-        Lwt.return (Watchman_dead { dead_env with reinit_attempts = dead_env.reinit_attempts + 1 })
+      | Error err ->
+        log_error err;
+        (match severity_of_error err with
+        | Fatal_error ->
+          let () = Hh_logger.error "Watchman cannot be restarted. Exiting." in
+          raise Exit.(Exit_with Watchman_failed)
+        | Restarted_error -> raise Watchman_restarted
+        | Retryable_error ->
+          Lwt.return
+            (Watchman_dead { dead_env with reinit_attempts = dead_env.reinit_attempts + 1 }))
     ) else
       Lwt.return instance
 
