@@ -755,41 +755,6 @@ let close = function
   | Watchman_dead _ -> Lwt.return ()
   | Watchman_alive env -> close_connection env.conn
 
-(** Calls f on the instance, maybe restarting it if its dead and maybe
-   * reverting it to a dead state if things go south. For example, if watchman
-   * shuts the connection on us, or shuts down, or crashes, we revert to a dead
-   * instance, upon which a restart will be attempted down the road.
-   * Alternatively, we also proactively revert to a dead instance if it appears
-   * to be unresponsive (Timeout), and if reading the payload from it is
-   * taking too long. *)
-let call_on_instance :
-    watchman_instance ->
-    f:(env -> (env * 'a, error_kind) Result.t Lwt.t) ->
-    (watchman_instance * 'a, failure) Result.t Lwt.t =
-  let rec call_rec ~retry_attempts ~f instance =
-    match instance with
-    | Watchman_alive env ->
-      (match%lwt f env with
-      | Ok (env, result) -> Lwt.return (Ok (Watchman_alive env, result))
-      | Error err ->
-        log_error err;
-        (match severity_of_error err with
-        | Fatal_error -> Lwt.return (Error Dead)
-        | Restarted_error -> Lwt.return (Error Restarted)
-        | Retryable_error ->
-          if retry_attempts >= max_retry_attempts then (
-            Hh_logger.error "Watchman has failed %d times in a row. Giving up." retry_attempts;
-            Lwt.return (Error Dead)
-          ) else
-            let%lwt dead_env = close_channel_on_instance env in
-            call_rec ~retry_attempts:(retry_attempts + 1) ~f (Watchman_dead dead_env)))
-    | Watchman_dead dead_env ->
-      (match%lwt re_init_dead_env dead_env with
-      | Ok env -> call_rec ~retry_attempts ~f (Watchman_alive env)
-      | Error _ as err -> Lwt.return err)
-  in
-  (fun instance ~f -> call_rec ~retry_attempts:0 ~f instance)
-
 let make_state_change_response state name data =
   let metadata = J.try_get_val "metadata" data in
   match state with
@@ -840,15 +805,39 @@ let transform_asynchronous_get_changes_response env data =
         | None -> Ok (env, Files_changed (extract_file_names env data)))
     )
 
-let get_changes instance =
-  call_on_instance instance ~f:(fun env ->
+let get_changes =
+  let rec call_rec ~retry_attempts instance =
+    match instance with
+    | Watchman_alive env ->
       let debug_logging = env.settings.debug_logging in
-      match%lwt blocking_read ~debug_logging ~conn:env.conn with
-      | Error _ as err -> Lwt.return err
-      | Ok response ->
-        (match transform_asynchronous_get_changes_response env response with
+      let%lwt changes =
+        match%lwt blocking_read ~debug_logging ~conn:env.conn with
         | Error _ as err -> Lwt.return err
-        | Ok (env, result) -> Lwt.return (Ok (env, result))))
+        | Ok response ->
+          (match transform_asynchronous_get_changes_response env response with
+          | Error _ as err -> Lwt.return err
+          | Ok (env, result) -> Lwt.return (Ok (env, result)))
+      in
+      (match changes with
+      | Ok (env, result) -> Lwt.return (Ok (Watchman_alive env, result))
+      | Error err ->
+        log_error err;
+        (match severity_of_error err with
+        | Fatal_error -> Lwt.return (Error Dead)
+        | Restarted_error -> Lwt.return (Error Restarted)
+        | Retryable_error ->
+          if retry_attempts >= max_retry_attempts then (
+            Hh_logger.error "Watchman has failed %d times in a row. Giving up." retry_attempts;
+            Lwt.return (Error Dead)
+          ) else
+            let%lwt dead_env = close_channel_on_instance env in
+            call_rec ~retry_attempts:(retry_attempts + 1) (Watchman_dead dead_env)))
+    | Watchman_dead dead_env ->
+      (match%lwt re_init_dead_env dead_env with
+      | Ok env -> call_rec ~retry_attempts (Watchman_alive env)
+      | Error _ as err -> Lwt.return err)
+  in
+  (fun instance -> call_rec ~retry_attempts:0 instance)
 
 let get_mergebase_and_changes instance =
   match instance with
