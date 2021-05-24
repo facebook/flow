@@ -18,8 +18,6 @@ open Utils
  *   * Use the BSER protocol for enhanced performance
  *)
 
-exception Watchman_restarted
-
 type error_kind =
   | Not_installed of { path: string }
   | Socket_unavailable of { msg: string }
@@ -788,14 +786,6 @@ let call_on_instance :
     | Watchman_dead dead_env -> on_dead dead_env
     | Watchman_alive env -> on_alive' ~on_dead on_alive env
 
-let call_on_instance_exn instance ~on_dead ~on_alive =
-  match%lwt call_on_instance instance ~on_dead ~on_alive with
-  | Ok (instance, result) -> Lwt.return (instance, result)
-  | Error Dead ->
-    let () = Hh_logger.error "Watchman cannot be restarted. Exiting." in
-    raise Exit.(Exit_with Watchman_failed)
-  | Error Restarted -> raise Watchman_restarted
-
 let make_state_change_response state name data =
   let metadata = J.try_get_val "metadata" data in
   match state with
@@ -847,7 +837,7 @@ let transform_asynchronous_get_changes_response env data =
     )
 
 let get_changes instance =
-  call_on_instance_exn
+  call_on_instance
     instance
     ~on_dead:(fun _ -> Watchman_unavailable)
     ~on_alive:(fun env ->
