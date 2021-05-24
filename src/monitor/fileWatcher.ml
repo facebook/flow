@@ -212,123 +212,108 @@ end = struct
       if not (SSet.is_empty env.files) then Lwt_condition.broadcast env.changes_condition ()
 
     let main env =
-      let%lwt (instance, result) =
+      let%lwt (instance, pushed_changes) =
         match%lwt Watchman.get_changes env.instance with
-        | Ok (instance, result) -> Lwt.return (instance, result)
+        | Ok (instance, pushed_changes) -> Lwt.return (instance, pushed_changes)
         | Error Watchman.Dead
         | Error Watchman.Restarted ->
           raise Exit_loop
       in
       env.instance <- instance;
-      match result with
-      | Watchman.Watchman_pushed pushed_changes ->
-        begin
-          match pushed_changes with
-          | Watchman.Files_changed new_files ->
-            env.files <- SSet.union env.files new_files;
-            let%lwt () =
-              (*
-               ******* GOAL *******
-               *
-               * We want to know when an N-files-changed notification is due to the user changing
-               * their mergebase with master. This could be due to pulling master & rebasing their
-               * work onto the new master, or just moving from one commit to another.
-               *
-               ******* PREVIOUS SOLUTION *******
-               *
-               * Unfortunately, Watchman's mercurial integration is racy and not to be trusted.
-               * Previously we tried this:
-               *
-               * 1. Keep a count of how many transactions are currently in progress
-               * 2. When hg.update ends, wait for the transaction count to drop to 0
-               * 3. When there are 0 in-progress transactions, then query for the mergebase
-               *
-               * This worked pretty well, but looking at some logs I would see step 3 would not
-               * always fire. Maybe we were missing some state_leave notifications. Also, the
-               * source control people aren't confident that waiting for the transactions to
-               * is a strong guarantee.
-               *
-               ******* CURRENT SOLUTION *******
-               *
-               * So this is a more simple solution. It's based around the assumption that once
-               * Watchman tells us that N files have changed, things have settled down enough
-               * that it's safe to query for the mergebase. And since querying for the mergebase
-               * is expensive, we only do so when we see an hg.update. After an hg.update it's
-               * more acceptable to delay a file-changed notification than after a user saves a
-               * file in the IDE
-               *)
-              if env.finished_an_hg_update then
-                let%lwt new_mergebase =
-                  match%lwt get_mergebase_and_changes env with
-                  | Ok mergebase_and_changes -> Lwt.return mergebase_and_changes
-                  | Error msg ->
-                    (* TODO: handle this more gracefully than `failwith` *)
-                    failwith msg
-                in
-                match (new_mergebase, env.mergebase) with
-                | (Some (new_mergebase, _changes), Some old_mergebase)
-                  when new_mergebase <> old_mergebase ->
-                  Logger.info
-                    "Watchman reports mergebase changed from %S to %S"
-                    old_mergebase
-                    new_mergebase;
-                  env.mergebase <- Some new_mergebase;
-                  env.metadata <- { MonitorProt.changed_mergebase = true };
-                  env.finished_an_hg_update <- false;
-                  Lwt.return_unit
-                | _ -> Lwt.return_unit
-              else
-                Lwt.return_unit
+      match pushed_changes with
+      | Watchman.Files_changed new_files ->
+        env.files <- SSet.union env.files new_files;
+        let%lwt () =
+          (*
+           ******* GOAL *******
+           *
+           * We want to know when an N-files-changed notification is due to the user changing
+           * their mergebase with master. This could be due to pulling master & rebasing their
+           * work onto the new master, or just moving from one commit to another.
+           *
+           ******* PREVIOUS SOLUTION *******
+           *
+           * Unfortunately, Watchman's mercurial integration is racy and not to be trusted.
+           * Previously we tried this:
+           *
+           * 1. Keep a count of how many transactions are currently in progress
+           * 2. When hg.update ends, wait for the transaction count to drop to 0
+           * 3. When there are 0 in-progress transactions, then query for the mergebase
+           *
+           * This worked pretty well, but looking at some logs I would see step 3 would not
+           * always fire. Maybe we were missing some state_leave notifications. Also, the
+           * source control people aren't confident that waiting for the transactions to
+           * is a strong guarantee.
+           *
+           ******* CURRENT SOLUTION *******
+           *
+           * So this is a more simple solution. It's based around the assumption that once
+           * Watchman tells us that N files have changed, things have settled down enough
+           * that it's safe to query for the mergebase. And since querying for the mergebase
+           * is expensive, we only do so when we see an hg.update. After an hg.update it's
+           * more acceptable to delay a file-changed notification than after a user saves a
+           * file in the IDE
+           *)
+          if env.finished_an_hg_update then
+            let%lwt new_mergebase =
+              match%lwt get_mergebase_and_changes env with
+              | Ok mergebase_and_changes -> Lwt.return mergebase_and_changes
+              | Error msg ->
+                (* TODO: handle this more gracefully than `failwith` *)
+                failwith msg
             in
-            broadcast env;
-            Lwt.return env
-          | Watchman.State_enter (name, metadata) ->
-            (match name with
-            | "hg.update" ->
-              let (distance, rev) = extract_hg_update_metadata metadata in
-              log_state_enter name metadata;
+            match (new_mergebase, env.mergebase) with
+            | (Some (new_mergebase, _changes), Some old_mergebase)
+              when new_mergebase <> old_mergebase ->
               Logger.info
-                "Watchman reports an hg.update just started. Moving %s revs from %s"
-                distance
-                rev
-            | _ when List.mem name env.init_settings.Watchman.defer_states ->
-              log_state_enter name metadata;
-              Logger.info
-                "Watchman reports %s just started. Filesystem notifications are paused."
-                name;
-              StatusStream.file_watcher_deferred name;
-              ()
-            | _ -> ());
-            Lwt.return env
-          | Watchman.State_leave (name, metadata) ->
-            (match name with
-            | "hg.update" ->
-              let (distance, rev) = extract_hg_update_metadata metadata in
-              env.finished_an_hg_update <- true;
-              log_state_leave name metadata;
-              Logger.info
-                "Watchman reports an hg.update just finished. Moved %s revs to %s"
-                distance
-                rev;
-              Lwt.return env
-            | _ when List.mem name env.init_settings.Watchman.defer_states ->
-              log_state_leave name metadata;
-              Logger.info "Watchman reports %s ended. Filesystem notifications resumed." name;
-              StatusStream.file_watcher_ready ();
-              Lwt.return env
-            | _ -> Lwt.return env)
-          | Watchman.Changed_merge_base _ ->
-            failwith "We're not using an scm aware subscription, so we should never get these"
-        end
-      | Watchman.Watchman_unavailable ->
-        (* TODO (glevi) - Should we die if we get this for too long? *)
-        Logger.error "Watchman unavailable. Retrying...";
-
-        (* Watchman.get_changes will restart the connection. However it has some backoff
-         * built in and will do nothing if called too early. That turns this LwtLoop module into a
-         * busy wait. So let's add a sleep here to yield and prevent spamming the logs too much. *)
-        let%lwt () = Lwt_unix.sleep 1.0 in
+                "Watchman reports mergebase changed from %S to %S"
+                old_mergebase
+                new_mergebase;
+              env.mergebase <- Some new_mergebase;
+              env.metadata <- { MonitorProt.changed_mergebase = true };
+              env.finished_an_hg_update <- false;
+              Lwt.return_unit
+            | _ -> Lwt.return_unit
+          else
+            Lwt.return_unit
+        in
+        broadcast env;
         Lwt.return env
+      | Watchman.State_enter (name, metadata) ->
+        (match name with
+        | "hg.update" ->
+          let (distance, rev) = extract_hg_update_metadata metadata in
+          log_state_enter name metadata;
+          Logger.info
+            "Watchman reports an hg.update just started. Moving %s revs from %s"
+            distance
+            rev
+        | _ when List.mem name env.init_settings.Watchman.defer_states ->
+          log_state_enter name metadata;
+          Logger.info "Watchman reports %s just started. Filesystem notifications are paused." name;
+          StatusStream.file_watcher_deferred name;
+          ()
+        | _ -> ());
+        Lwt.return env
+      | Watchman.State_leave (name, metadata) ->
+        (match name with
+        | "hg.update" ->
+          let (distance, rev) = extract_hg_update_metadata metadata in
+          env.finished_an_hg_update <- true;
+          log_state_leave name metadata;
+          Logger.info
+            "Watchman reports an hg.update just finished. Moved %s revs to %s"
+            distance
+            rev;
+          Lwt.return env
+        | _ when List.mem name env.init_settings.Watchman.defer_states ->
+          log_state_leave name metadata;
+          Logger.info "Watchman reports %s ended. Filesystem notifications resumed." name;
+          StatusStream.file_watcher_ready ();
+          Lwt.return env
+        | _ -> Lwt.return env)
+      | Watchman.Changed_merge_base _ ->
+        failwith "We're not using an scm aware subscription, so we should never get these"
 
     let catch _ exn =
       (match Exception.to_exn exn with

@@ -66,7 +66,7 @@ val init : init_settings -> watchman_instance option Lwt.t
 
 val get_mergebase_and_changes : watchman_instance -> (string * SSet.t, string) Result.t Lwt.t
 
-val get_changes : watchman_instance -> (watchman_instance * changes, failure) Result.t Lwt.t
+val get_changes : watchman_instance -> (watchman_instance * pushed_changes, failure) Result.t Lwt.t
 
 val close : watchman_instance -> unit Lwt.t
 
