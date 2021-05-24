@@ -168,9 +168,16 @@ module Make
     providers: Provider_api.info;
   }
 
-  let merge_and (locs1, ref1) (locs2, ref2) = (L.LSet.union locs1 locs2, And (ref1, ref2))
+  type refinement_chain =
+    | BASE of refinement
+    | SUCCESSIVE of refinement_chain * int
+    | AND of int * int
+    | OR of int * int
+    | NOT of int
 
-  let merge_or (locs1, ref1) (locs2, ref2) = (L.LSet.union locs1 locs2, Or (ref1, ref2))
+  let merge_and ref1 ref2 = AND (ref1, ref2)
+
+  let merge_or ref1 ref2 = OR (ref1, ref2)
 
   class env_builder (prepass_info, prepass_values) provider_info =
     object (this)
@@ -178,7 +185,17 @@ module Make
 
       val invalidation_caches = Invalidation_api.mk_caches ()
 
-      val mutable expression_refinement_scopes = []
+      (* Maps SSA ids to refinement ids. This mapping contains _all_ the refinements reachable at
+       * any point in the code. The latest_refinement maps keep track of which entries to read. *)
+      val mutable refinement_heap = IMap.empty
+
+      (* Stack mapping SSA ids to refinement ids. TODO: Use a ValMap.t list instead of an IMap.t list so that
+       * ocaml warns us if we conflate ssa and refinement ids. 
+       * We push new entries onto the stack when we enter a new refinement scope. This lets us
+       * easily do things like negate refinements. It is critical that refinements in one layer of this stack
+       * do not refer to refinements in other layers of this stack so that negations do not propagate to
+       * refinements that appeared before the new scope. This invariant is maintained by add_refinement. *)
+      val mutable latest_refinements = []
 
       val mutable refined_reads = L.LMap.empty
 
@@ -186,41 +203,56 @@ module Make
 
       method refined_reads : refinement L.LMap.t = refined_reads
 
-      method private push_refinement_scope scope =
-        expression_refinement_scopes <- scope :: expression_refinement_scopes
+      val mutable curr_id = 0
 
-      method private pop_refinement_scope () =
-        expression_refinement_scopes <- List.tl expression_refinement_scopes
+      method private new_id () =
+        let new_id = curr_id in
+        curr_id <- curr_id + 1;
+        new_id
+
+      method private push_refinement_scope new_latest_refinements =
+        latest_refinements <- new_latest_refinements :: latest_refinements
+
+      method private pop_refinement_scope () = latest_refinements <- List.tl latest_refinements
+
+      method private peek_new_refinements () = List.hd latest_refinements
 
       method private negate_new_refinements () =
-        let head = List.hd expression_refinement_scopes in
-        let head' =
+        (* For each new ssa_id -> refinement_id we need to make a new_refinement_id and map 
+         * ssa_id -> new_refinement_id  and new_refinement_id -> NOT refinement_id *)
+        let head = List.hd latest_refinements in
+        let new_latest_refinements =
           IMap.map
-            (function
-              | (l, Not v) -> (l, v)
-              | (l, v) -> (l, Not v))
+            (fun ref_id ->
+              let new_id = this#new_id () in
+              let new_ref = NOT ref_id in
+              refinement_heap <- IMap.add new_id new_ref refinement_heap;
+              new_id)
             head
         in
-        expression_refinement_scopes <- head' :: List.tl expression_refinement_scopes
+        latest_refinements <- new_latest_refinements :: List.tl latest_refinements
 
-      method private peek_new_refinements () = List.hd expression_refinement_scopes
+      method private merge_self_refinement_scope new_refinements =
+        let head = List.hd latest_refinements in
+        let head' =
+          IMap.merge
+            (fun _ latest1 latest2 ->
+              match (latest1, latest2) with
+              | (_, None) -> latest1
+              | (_, Some _) -> latest2)
+            head
+            new_refinements
+        in
+        latest_refinements <- head' :: List.tl latest_refinements
 
-      method private merge_refinement_scopes ~merge scope1 scope2 =
-        IMap.merge
-          (fun _ ref1 ref2 ->
-            match (ref1, ref2) with
-            | (Some ref1, Some ref2) -> Some (merge ref1 ref2)
-            | (Some ref, _) -> Some ref
-            | (_, Some ref) -> Some ref
-            | _ -> None)
-          scope1
-          scope2
-
-      method private merge_self_refinement_scope scope1 =
-        let scope2 = this#peek_new_refinements () in
-        let scope = this#merge_refinement_scopes ~merge:merge_and scope1 scope2 in
-        this#pop_refinement_scope ();
-        this#push_refinement_scope scope
+      method private find_refinement_ids ssa_id =
+        List.fold_left
+          (fun acc refs ->
+            match IMap.find_opt ssa_id refs with
+            | None -> acc
+            | Some id -> id :: acc)
+          []
+          latest_refinements
 
       method private find_refinement name =
         let writes =
@@ -230,35 +262,41 @@ module Make
         in
         match writes with
         | None -> None
-        | Some key ->
+        | Some ssa_id ->
+          let refinement_ids = this#find_refinement_ids ssa_id in
           List.fold_left
-            (fun refinement refinement_scope ->
-              match (IMap.find_opt key refinement_scope, refinement) with
-              | (None, _) -> refinement
-              | (Some refinement, None) -> Some refinement
-              | (Some (l, refinement), Some (l', refinement')) ->
-                Some (L.LSet.union l l', And (refinement, refinement')))
+            (fun acc id ->
+              match (acc, IMap.find_opt id refinement_heap) with
+              | (None, x) -> x
+              | (x, None) -> x
+              | (Some x, Some _) -> Some (SUCCESSIVE (x, id)))
             None
-            expression_refinement_scopes
+            (List.rev refinement_ids)
 
-      method private add_refinement name ((loc, kind) as refinement) =
-        let val_id =
+      method private add_refinement name refinement =
+        let ssa_id =
           match SMap.find_opt name this#ssa_env with
           | Some writes_to_loc -> Ssa_builder.Val.id_of_val writes_to_loc
           | None -> this#add_global name
         in
-        match expression_refinement_scopes with
-        | scope :: scopes ->
-          let scope' =
-            IMap.update
-              val_id
-              (function
-                | None -> Some refinement
-                | Some (l', r') -> Some (L.LSet.union loc l', And (r', kind)))
-              scope
-          in
-          expression_refinement_scopes <- scope' :: scopes
-        | _ -> failwith "Tried to add a refinement when no scope was on the stack"
+        let new_id = this#new_id () in
+        let head = List.hd latest_refinements in
+        (* Note we are not using find_refinement_ids. We do not want this refinement to
+         * refer to refinements in previous scopes. This is an important invariant to maintain:
+         * refinements in one scope should not refer to refinements in another scope. If there
+         * was a refinement in a previous scope, then when we _read_ the refinement we will combine
+         * the refinement from the previous scope into the refinement in the current scope via SUCCESSIVE.
+         * TODO: assert this invariant at runtime
+         *)
+        let old_id = IMap.find_opt ssa_id head in
+        latest_refinements <- IMap.add ssa_id new_id head :: List.tl latest_refinements;
+        let new_refinement =
+          match old_id with
+          | Some old_id -> SUCCESSIVE (BASE refinement, old_id)
+          | _ -> BASE refinement
+        in
+        let new_expression_refinements = IMap.add new_id new_refinement refinement_heap in
+        refinement_heap <- new_expression_refinements
 
       method add_global name =
         match SMap.find_opt name globals_env with
@@ -311,17 +349,47 @@ module Make
           this#add_refinement name (L.LSet.singleton loc, Truthy id_loc)
         | _ -> ()
 
+      method private merge_refinement_scopes ~merge lhs_latest_refinements rhs_latest_refinements =
+        let new_latest_refinements =
+          IMap.merge
+            (fun _ ref1 ref2 ->
+              match (ref1, ref2) with
+              | (None, None) -> None
+              | (Some ref, None) -> Some ref
+              | (None, Some ref) -> Some ref
+              | (Some ref1, Some ref2) ->
+                let new_ref = merge ref1 ref2 in
+                let new_id = this#new_id () in
+                refinement_heap <- IMap.add new_id new_ref refinement_heap;
+                Some new_id)
+            lhs_latest_refinements
+            rhs_latest_refinements
+        in
+        this#merge_self_refinement_scope new_latest_refinements
+
       method logical_refinement expr =
         let { Flow_ast.Expression.Logical.operator; left = (loc, _) as left; right; comments = _ } =
           expr
         in
         this#push_refinement_scope IMap.empty;
-        let refinement_scope1 =
+        let (lhs_latest_refinements, rhs_latest_refinements, env1) =
           match operator with
           | Flow_ast.Expression.Logical.Or
           | Flow_ast.Expression.Logical.And ->
-            ignore (this#expression_refinement left);
-            this#peek_new_refinements ()
+            ignore @@ this#expression_refinement left;
+            let lhs_latest_refinements = this#peek_new_refinements () in
+            (match operator with
+            | Flow_ast.Expression.Logical.Or -> this#negate_new_refinements ()
+            | _ -> ());
+            let env1 = this#ssa_env in
+            this#push_refinement_scope IMap.empty;
+            ignore @@ this#expression_refinement right;
+            let rhs_latest_refinements = this#peek_new_refinements () in
+            (* Pop LHS refinement scope *)
+            this#pop_refinement_scope ();
+            (* Pop RHS refinement scope *)
+            this#pop_refinement_scope ();
+            (lhs_latest_refinements, rhs_latest_refinements, env1)
           | Flow_ast.Expression.Logical.NullishCoalesce ->
             (* If this overall expression is truthy, then either the LHS or the RHS has to be truthy.
                If it's because the LHS is truthy, then the LHS also has to be non-maybe (this is of course
@@ -331,39 +399,30 @@ module Make
                RHS we have done the null-test but the overall result of this expression includes both the
                truthy and non-maybe qualities. *)
             ignore (this#null_test ~strict:false ~sense:false loc left);
+            let env1 = this#ssa_env in
             let nullish = this#peek_new_refinements () in
-            this#pop_refinement_scope ();
+            this#negate_new_refinements ();
             this#push_refinement_scope IMap.empty;
-            ignore (this#expression_refinement left);
-            let peek = this#peek_new_refinements () in
+            ignore (this#expression_refinement right);
+            let rhs_latest_refinements = this#peek_new_refinements () in
+            this#pop_refinement_scope ();
             this#pop_refinement_scope ();
             this#push_refinement_scope nullish;
-            this#merge_refinement_scopes ~merge:merge_and peek nullish
+            (match key left with
+            | None -> ()
+            | Some name -> this#add_refinement name (L.LSet.singleton loc, Truthy loc));
+            let lhs_latest_refinements = this#peek_new_refinements () in
+            this#pop_refinement_scope ();
+            (lhs_latest_refinements, rhs_latest_refinements, env1)
         in
-        let env1 = this#ssa_env in
-        (match operator with
-        | Flow_ast.Expression.Logical.NullishCoalesce
-        | Flow_ast.Expression.Logical.Or ->
-          this#negate_new_refinements ()
-        | Flow_ast.Expression.Logical.And -> ());
-        this#push_refinement_scope IMap.empty;
-        ignore @@ this#expression_refinement right;
-        let refinement_scope2 = this#peek_new_refinements () in
-        (* Pop RHS scope *)
-        this#pop_refinement_scope ();
-        (* Pop LHS scope *)
-        this#pop_refinement_scope ();
         let merge =
           match operator with
-          | Flow_ast.Expression.Logical.NullishCoalesce
-          | Flow_ast.Expression.Logical.Or ->
+          | Flow_ast.Expression.Logical.Or
+          | Flow_ast.Expression.Logical.NullishCoalesce ->
             merge_or
           | Flow_ast.Expression.Logical.And -> merge_and
         in
-        let refinement_scope =
-          this#merge_refinement_scopes ~merge refinement_scope1 refinement_scope2
-        in
-        this#merge_self_refinement_scope refinement_scope;
+        this#merge_refinement_scopes merge lhs_latest_refinements rhs_latest_refinements;
         this#merge_self_ssa_env env1
 
       method null_test ~strict ~sense loc expr =
@@ -647,9 +706,9 @@ module Make
           this#push_refinement_scope IMap.empty;
           ignore @@ this#expression_refinement argument;
           this#negate_new_refinements ();
-          let new_refinements = this#peek_new_refinements () in
+          let negated_refinements = this#peek_new_refinements () in
           this#pop_refinement_scope ();
-          this#merge_self_refinement_scope new_refinements
+          this#merge_self_refinement_scope negated_refinements
         | _ -> ignore @@ this#unary_expression loc unary
 
       method expression_refinement ((loc, expr) as expression) =
@@ -735,6 +794,25 @@ module Make
         end;
         super#super_pattern_identifier ?kind ident
 
+      method private chain_to_refinement =
+        function
+        | BASE refinement -> refinement
+        | SUCCESSIVE (refinement_chain, id) ->
+          let (locs1, ref1) = this#chain_to_refinement (IMap.find id refinement_heap) in
+          let (locs2, ref2) = this#chain_to_refinement refinement_chain in
+          (L.LSet.union locs1 locs2, And (ref1, ref2))
+        | AND (id1, id2) ->
+          let (locs1, ref1) = this#chain_to_refinement (IMap.find id1 refinement_heap) in
+          let (locs2, ref2) = this#chain_to_refinement (IMap.find id2 refinement_heap) in
+          (L.LSet.union locs1 locs2, And (ref1, ref2))
+        | OR (id1, id2) ->
+          let (locs1, ref1) = this#chain_to_refinement (IMap.find id1 refinement_heap) in
+          let (locs2, ref2) = this#chain_to_refinement (IMap.find id2 refinement_heap) in
+          (L.LSet.union locs1 locs2, Or (ref1, ref2))
+        | NOT id ->
+          let (locs, ref) = this#chain_to_refinement (IMap.find id refinement_heap) in
+          (locs, Not ref)
+
       (* This method is called during every read of an identifier. We need to ensure that
        * if the identifier is refined that we record the refiner as the write that reaches
        * this read *)
@@ -742,7 +820,9 @@ module Make
         super#any_identifier loc name;
         match this#find_refinement name with
         | None -> ()
-        | Some refinement -> refined_reads <- L.LMap.add loc refinement refined_reads
+        | Some refinement_chain ->
+          let refinement = this#chain_to_refinement refinement_chain in
+          refined_reads <- L.LMap.add loc refinement refined_reads
     end
 
   let program_with_scope ?(ignore_toplevel = false) program =

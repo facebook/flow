@@ -76,16 +76,24 @@ let%expect_test "logical_nc_and" =
   print_ssa_test {|let x = null;
 (x ?? x) && x|};
   [%expect {|
-    [ (2, 6) to (2, 7) => { [(2, 1) to (2, 2)], Maybe }; (2, 12) to (2, 13) => { [(2, 1) to (2, 2), (2, 6) to (2, 7)], (Or (
-       (And (
+    [ (2, 6) to (2, 7) => { [(2, 1) to (2, 2)], (Not (Not Maybe)) }; (2, 12) to (2, 13) => { [(2, 1) to (2, 2), (2, 6) to (2, 7)], (Or (
+       (And ((Not Maybe),
           (Truthy
              { Loc.source = None; start = { Loc.line = 2; column = 1 };
-               _end = { Loc.line = 2; column = 2 } }),
-          (Not Maybe))),
+               _end = { Loc.line = 2; column = 2 } })
+          )),
        (Truthy
           { Loc.source = None; start = { Loc.line = 2; column = 6 };
             _end = { Loc.line = 2; column = 7 } })
        )) } ] |}]
+
+let%expect_test "logical_nc_no_key" =
+  print_ssa_test {|let x = null;
+((x != null) ?? x) && x|};
+  [%expect {|
+    [ (2, 22) to (2, 23) => { [(2, 16) to (2, 17)], (Truthy
+       { Loc.source = None; start = { Loc.line = 2; column = 16 };
+         _end = { Loc.line = 2; column = 17 } }) } ] |}]
 
 let%expect_test "logical_nested_right" =
   print_ssa_test {|let x = null;
