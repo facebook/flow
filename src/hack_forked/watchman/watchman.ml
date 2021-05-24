@@ -20,8 +20,6 @@ open Utils
 
 exception Watchman_restarted
 
-exception Config_problem
-
 type error_kind =
   | Not_installed of { path: string }
   | Socket_unavailable of { msg: string }
@@ -41,6 +39,10 @@ type error_severity =
   | Retryable_error
   | Fatal_error
   | Restarted_error
+
+type failure =
+  | Dead
+  | Restarted
 
 let log ?request ?response msg =
   let response = Option.map ~f:(String_utils.truncate 100000) response in
@@ -720,11 +722,10 @@ let re_init_dead_env dead_env =
 
 let maybe_restart_instance instance =
   match instance with
-  | Watchman_alive _ -> Lwt.return instance
+  | Watchman_alive _ -> Lwt.return (Ok instance)
   | Watchman_dead dead_env ->
     if dead_env.reinit_attempts >= max_reinit_attempts then
-      let () = Hh_logger.log "Ran out of watchman reinit attempts. Exiting." in
-      raise Exit.(Exit_with Watchman_failed)
+      Lwt.return (Error Dead)
     else if within_backoff_time dead_env.reinit_attempts dead_env.dead_since then (
       let () = Hh_logger.log "Attemping to reestablish watchman subscription" in
       match%lwt re_init_dead_env dead_env with
@@ -732,19 +733,17 @@ let maybe_restart_instance instance =
         Hh_logger.log "Watchman connection reestablished.";
         let downtime = Unix.gettimeofday () -. dead_env.dead_since in
         EventLogger.watchman_connection_reestablished downtime;
-        Lwt.return (Watchman_alive env)
+        Lwt.return (Ok (Watchman_alive env))
       | Error err ->
         log_error err;
         (match severity_of_error err with
-        | Fatal_error ->
-          let () = Hh_logger.error "Watchman cannot be restarted. Exiting." in
-          raise Exit.(Exit_with Watchman_failed)
-        | Restarted_error -> raise Watchman_restarted
+        | Fatal_error -> Lwt.return (Error Dead)
+        | Restarted_error -> Lwt.return (Error Restarted)
         | Retryable_error ->
           Lwt.return
-            (Watchman_dead { dead_env with reinit_attempts = dead_env.reinit_attempts + 1 }))
+            (Ok (Watchman_dead { dead_env with reinit_attempts = dead_env.reinit_attempts + 1 })))
     ) else
-      Lwt.return instance
+      Lwt.return (Ok instance)
 
 let close_channel_on_instance env =
   let%lwt () = close_connection env.conn in
@@ -765,17 +764,17 @@ let call_on_instance :
     watchman_instance ->
     on_dead:(dead_env -> 'a) ->
     on_alive:(env -> (env * 'a, error_kind) Result.t Lwt.t) ->
-    (watchman_instance * 'a) Lwt.t =
+    (watchman_instance * 'a, failure) Result.t Lwt.t =
   let on_alive' ~on_dead f env =
     match%lwt f env with
-    | Ok (env, result) -> Lwt.return (Watchman_alive env, result)
+    | Ok (env, result) -> Lwt.return (Ok (Watchman_alive env, result))
     | Error err ->
       log_error err;
       (match err with
       | Not_installed _
       | Unsupported_watch_roots _ ->
-        raise Config_problem
-      | Fresh_instance -> raise Watchman_restarted
+        Lwt.return (Error Dead)
+      | Fresh_instance -> Lwt.return (Error Restarted)
       | Socket_unavailable _
       | Response_error _
       | Subscription_canceled ->
@@ -783,10 +782,19 @@ let call_on_instance :
         on_dead env)
   in
   fun instance ~on_dead ~on_alive ->
-    let on_dead dead_env = Lwt.return (Watchman_dead dead_env, on_dead dead_env) in
-    match%lwt maybe_restart_instance instance with
+    let open Lwt_result.Infix in
+    let on_dead dead_env = Lwt.return (Ok (Watchman_dead dead_env, on_dead dead_env)) in
+    maybe_restart_instance instance >>= function
     | Watchman_dead dead_env -> on_dead dead_env
     | Watchman_alive env -> on_alive' ~on_dead on_alive env
+
+let call_on_instance_exn instance ~on_dead ~on_alive =
+  match%lwt call_on_instance instance ~on_dead ~on_alive with
+  | Ok (instance, result) -> Lwt.return (instance, result)
+  | Error Dead ->
+    let () = Hh_logger.error "Watchman cannot be restarted. Exiting." in
+    raise Exit.(Exit_with Watchman_failed)
+  | Error Restarted -> raise Watchman_restarted
 
 let make_state_change_response state name data =
   let metadata = J.try_get_val "metadata" data in
@@ -839,7 +847,7 @@ let transform_asynchronous_get_changes_response env data =
     )
 
 let get_changes instance =
-  call_on_instance
+  call_on_instance_exn
     instance
     ~on_dead:(fun _ -> Watchman_unavailable)
     ~on_alive:(fun env ->
