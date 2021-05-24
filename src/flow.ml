@@ -85,7 +85,7 @@ end = struct
     FlowEventLogger.set_command (Some command_string);
 
     let init_id = Random_id.short_string () in
-    FlowEventLogger.init_flow_command ~init_id ~version:Flow_version.version;
+    FlowEventLogger.init_flow_command ~init_id;
 
     CommandUtils.run_command command argv
 end

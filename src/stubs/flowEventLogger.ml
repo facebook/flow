@@ -68,9 +68,9 @@ let init_done
     _profiling =
   ()
 
-let init_flow_command ~init_id:_ ~version:_ = ()
+let init_flow_command ~init_id:_ = ()
 
-let init_worker ~init_id:_ ~version:_ _ = ()
+let init_worker ~init_id:_ _ = ()
 
 let should_log () = false
 

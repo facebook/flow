@@ -76,7 +76,7 @@ let register_entry_point
       (* It makes the logs easier if all server logs have the "command" column set to "server",
        * regardless of whether they were started with `flow start` or `flow server` *)
       FlowEventLogger.set_command (Some "server");
-      FlowEventLogger.init_flow_command ~init_id ~version:Flow_version.version;
+      FlowEventLogger.init_flow_command ~init_id;
 
       let root = Options.root options in
       let tmp_dir = Options.temp_dir options in
