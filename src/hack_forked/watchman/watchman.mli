@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-exception Watchman_restarted
-
 type subscribe_mode =
   | All_changes
   | Defer_changes
@@ -58,13 +56,17 @@ type changes =
   | Watchman_unavailable
   | Watchman_pushed of pushed_changes
 
+type failure =
+  | Dead
+  | Restarted
+
 type watchman_instance
 
 val init : init_settings -> watchman_instance option Lwt.t
 
 val get_mergebase_and_changes : watchman_instance -> (string * SSet.t, string) Result.t Lwt.t
 
-val get_changes : watchman_instance -> (watchman_instance * changes) Lwt.t
+val get_changes : watchman_instance -> (watchman_instance * changes, failure) Result.t Lwt.t
 
 val close : watchman_instance -> unit Lwt.t
 
