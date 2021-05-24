@@ -164,7 +164,7 @@ module WatchmanFileWatcher : sig
   class watchman : Options.t -> FlowServerMonitorOptions.watchman_options -> watcher
 end = struct
   type env = {
-    mutable instance: Watchman.watchman_instance;
+    mutable instance: Watchman.env;
     mutable files: SSet.t;
     mutable metadata: MonitorProt.file_watcher_metadata;
     mutable mergebase: string option;

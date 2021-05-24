@@ -682,7 +682,7 @@ let backoff_delay attempts =
 let init =
   let rec init_rec ~reinit_attempts settings =
     match%lwt re_init settings with
-    | Ok env -> Lwt.return (Some (Watchman_alive env))
+    | Ok env -> Lwt.return (Some env)
     | Error err ->
       log_error err;
       (match severity_of_error err with
@@ -751,9 +751,7 @@ let close_channel_on_instance env =
   let%lwt () = close_connection env.conn in
   Lwt.return (dead_env_from_alive env)
 
-let close = function
-  | Watchman_dead _ -> Lwt.return ()
-  | Watchman_alive env -> close_connection env.conn
+let close env = close_connection env.conn
 
 let make_state_change_response state name data =
   let metadata = J.try_get_val "metadata" data in
@@ -819,7 +817,7 @@ let get_changes =
           | Ok (env, result) -> Lwt.return (Ok (env, result)))
       in
       (match changes with
-      | Ok (env, result) -> Lwt.return (Ok (Watchman_alive env, result))
+      | Ok _ as ok -> Lwt.return ok
       | Error err ->
         log_error err;
         (match severity_of_error err with
@@ -837,34 +835,29 @@ let get_changes =
       | Ok env -> call_rec ~retry_attempts (Watchman_alive env)
       | Error _ as err -> Lwt.return err)
   in
-  (fun instance -> call_rec ~retry_attempts:0 instance)
+  (fun env -> call_rec ~retry_attempts:0 (Watchman_alive env))
 
-let get_mergebase_and_changes instance =
-  match instance with
-  | Watchman_dead _ -> Lwt.return (Error "Failed to connect to Watchman to get mergebase")
-  | Watchman_alive env ->
-    let debug_logging = env.settings.debug_logging in
-    let query = get_changes_since_mergebase_query env in
-    let%lwt response =
-      match%lwt request ~debug_logging query with
-      | Error _ as err -> Lwt.return err
-      | Ok response ->
-        (match extract_mergebase response with
-        | Some (_clock, mergebase) ->
-          let changes = extract_file_names env response in
-          Lwt.return (Ok (mergebase, changes))
-        | None ->
-          Lwt.return (Error (response_error_of_json ~query ~response "Failed to extract mergebase")))
-    in
-    (match response with
-    | Ok _ as ok -> Lwt.return ok
-    | Error err ->
-      log_error err;
-      Lwt.return (Error "Failed to query mergebase from Watchman"))
+let get_mergebase_and_changes env =
+  let debug_logging = env.settings.debug_logging in
+  let query = get_changes_since_mergebase_query env in
+  let%lwt response =
+    match%lwt request ~debug_logging query with
+    | Error _ as err -> Lwt.return err
+    | Ok response ->
+      (match extract_mergebase response with
+      | Some (_clock, mergebase) ->
+        let changes = extract_file_names env response in
+        Lwt.return (Ok (mergebase, changes))
+      | None ->
+        Lwt.return (Error (response_error_of_json ~query ~response "Failed to extract mergebase")))
+  in
+  match response with
+  | Ok _ as ok -> Lwt.return ok
+  | Error err ->
+    log_error err;
+    Lwt.return (Error "Failed to query mergebase from Watchman")
 
 module Testing = struct
-  type nonrec env = env
-
   type nonrec error_kind = error_kind
 
   let test_settings =
