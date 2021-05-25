@@ -51,10 +51,17 @@ module ObjectExpressionAcc = struct
     tail: element list;
     proto: Type.t option;
     obj_sealed: bool;
+    obj_key_autocomplete: bool;
   }
 
   let empty ~allow_sealed =
-    { obj_pmap = NameUtils.Map.empty; tail = []; proto = None; obj_sealed = allow_sealed }
+    {
+      obj_pmap = NameUtils.Map.empty;
+      tail = [];
+      proto = None;
+      obj_sealed = allow_sealed;
+      obj_key_autocomplete = false;
+    }
 
   let empty_slice = Slice { slice_pmap = NameUtils.Map.empty }
 
@@ -80,6 +87,10 @@ module ObjectExpressionAcc = struct
 
   let sealed acc = acc.obj_sealed
 
+  let set_obj_key_autocomplete acc = { acc with obj_key_autocomplete = true }
+
+  let obj_key_autocomplete acc = acc.obj_key_autocomplete
+
   let elements_rev acc =
     match head_slice acc with
     | Some slice -> (slice, acc.tail)
@@ -93,12 +104,16 @@ module ObjectExpressionAcc = struct
   let mk_object_from_spread_acc cx acc reason ~frozen ~default_proto ~empty_unsealed =
     let mk_object reason ?(proto = default_proto) ~sealed props =
       let obj_kind =
-        if sealed || frozen then
+        if sealed || frozen || obj_key_autocomplete acc then
           Exact
         else
           UnsealedInFile (ALoc.source (Reason.aloc_of_reason reason))
       in
-      Obj_type.mk_with_proto cx reason ~obj_kind ~frozen ~props proto
+      let obj_t = Obj_type.mk_with_proto cx reason ~obj_kind ~frozen ~props proto in
+      if obj_key_autocomplete acc then
+        Tvar.mk_where cx reason (fun tvar -> Flow_js.flow_t cx (obj_t, tvar))
+      else
+        obj_t
     in
     let sealed = sealed acc in
     match elements_rev acc with
@@ -2627,6 +2642,7 @@ and object_prop cx ~object_annot acc prop =
         let t = Unsoundness.at InferenceHooks loc in
         let key = translate_identifier_or_literal_key t key in
         (* don't add `name` to `acc` because `name` is the autocomplete token *)
+        let acc = ObjectExpressionAcc.set_obj_key_autocomplete acc in
         let (((_, _t), _) as value) = expression cx ~annot:(annot_decompose_todo object_annot) v in
         (acc, key, value)
       else

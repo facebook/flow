@@ -16,7 +16,8 @@ type autocomplete_type =
   | Ac_binding  (** binding identifiers introduce new names *)
   | Ac_comment  (** inside a comment *)
   | Ac_id of ac_id  (** identifier references *)
-  | Ac_key  (** object key, not supported yet *)
+  | Ac_enum  (** identifier in enum declaration *)
+  | Ac_key of { obj_type: Type.t }  (** object key *)
   | Ac_literal of { lit_type: Type.t }  (** inside a literal like a string or regex *)
   | Ac_module  (** a module name *)
   | Ac_type  (** type identifiers *)
@@ -305,16 +306,9 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
         this#find loc raw (Ac_literal { lit_type })
       | _ -> super#object_key key
 
-    (* we don't currently autocomplete object keys *)
-    method! object_key_identifier (((loc, _), Flow_ast.Identifier.{ name; _ }) as ident) =
-      if this#covers_target loc then
-        this#find loc name Ac_key
-      else
-        ident
-
     method! enum_identifier ((loc, Flow_ast.Identifier.{ name; _ }) as ident) =
       if this#covers_target loc then
-        this#find loc name Ac_key
+        this#find loc name Ac_enum
       else
         ident
 
@@ -392,7 +386,39 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
         (this#on_type_annot annot, Member (this#member_with_loc loc member))
       | (((loc, _) as annot), OptionalMember opt_member) ->
         (this#on_type_annot annot, OptionalMember (this#optional_member_with_loc loc opt_member))
+      | (((_, obj_type) as annot), Object obj) ->
+        (this#on_type_annot annot, Object (this#object_with_type obj_type obj))
       | _ -> super#expression expr
+
+    method object_with_type obj_type obj =
+      let open Flow_ast.Expression.Object in
+      let { properties; comments } = obj in
+      Base.Option.iter ~f:(fun syntax -> ignore (this#syntax_with_internal syntax)) comments;
+      Base.List.iter
+        ~f:(fun prop -> ignore (this#object_property_or_spread_property_with_type obj_type prop))
+        properties;
+      obj
+
+    method object_property_or_spread_property_with_type obj_type prop =
+      let open Flow_ast.Expression.Object in
+      match prop with
+      | Property p -> Property (this#object_property_with_type obj_type p)
+      | SpreadProperty s -> SpreadProperty (this#spread_property s)
+
+    method object_property_with_type obj_type prop =
+      let open Flow_ast.Expression.Object.Property in
+      (match snd prop with
+      | Init
+          {
+            key =
+              ( Identifier ((loc, _), Flow_ast.Identifier.{ name = token; _ })
+              | Literal ((loc, _), Flow_ast.Literal.{ raw = token; _ }) );
+            _;
+          }
+        when this#covers_target loc ->
+        this#find loc token (Ac_key { obj_type })
+      | _ -> ());
+      this#object_property prop
 
     method! template_literal_element elem =
       match elem with

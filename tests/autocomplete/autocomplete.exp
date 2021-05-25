@@ -928,11 +928,11 @@ Flags: --pretty
 
 object_literal.js:5:16
 Flags: --pretty
-{"result":[]}
+{"result":[{"name":"bar","type":"number"},{"name":"foo","type":"string"}]}
 
 object_literal.js:7:17
 Flags: --pretty
-{"result":[]}
+{"result":[{"name":"bar","type":"number"},{"name":"foo","type":"string"}]}
 
 optional_object.js:3:5
 Flags: --pretty
@@ -7432,6 +7432,47 @@ Flags: --pretty
     {"name":"f","type":"(Union) => void"},
     {"name":"g","type":"(Union) => void"},
     {"name":"x","type":"empty"}
+  ]
+}
+
+upper_bounds_6.js:5:5
+Flags: --pretty
+{
+  "result":[
+    {"name":"Symbol.iterator","type":"any"},
+    {"name":"bar","type":"string"},
+    {"name":"foo","type":"number"},
+    {"name":"\"foo.bar\"","type":"boolean"}
+  ]
+}
+
+upper_bounds_7.js:5:13
+Flags: --pretty
+{"result":[{"name":"bar","type":"string"},{"name":"baz","type":"boolean"}]}
+
+upper_bounds_8.js:5:6
+Flags: --pretty
+{
+  "result":[
+    {"name":"bar","type":"string"},
+    {"name":"foo","type":"number"},
+    {"name":"\"foo.bar\"","type":"boolean"}
+  ]
+}
+
+upper_bounds_9.js:5:14
+Flags: --pretty
+{
+  "result":[{"name":"bar","type":"string"},{"name":"\"foo.bar\"","type":"boolean"}]
+}
+
+upper_bounds_10.js:19:16
+Flags: --pretty
+{
+  "result":[
+    {"name":"blue","type":"number"},
+    {"name":"indigo","type":"number"},
+    {"name":"yellow","type":"number"}
   ]
 }
 

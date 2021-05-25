@@ -1245,6 +1245,88 @@ let autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparam
   AcResult
     { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log }
 
+let autocomplete_object_key
+    ~reader ~options ~cx ~file_sig ~typed_ast ~token obj_type ac_aloc ~tparams_rev =
+  let ac_loc =
+    let ac_loc = loc_of_aloc ~reader ac_aloc |> remove_autocomplete_token_from_loc in
+    (* If the token is a string literal, then the end of the token may be inaccurate
+     * due to parse errors. See tests/autocomplete/bracket_syntax_3.js for example. *)
+    match token.[0] with
+    | '\''
+    | '"' ->
+      Loc.{ ac_loc with _end = ac_loc.start }
+    | _ -> ac_loc
+  in
+  let exact_by_default = Context.exact_by_default cx in
+  let exclude_keys =
+    match
+      members_of_type
+        ~reader
+        ~exclude_proto_members:true
+        cx
+        file_sig
+        typed_ast
+        obj_type
+        ~tparams_rev
+    with
+    | Error _ -> SSet.empty
+    | Ok (mems, _, _) -> mems |> Base.List.map ~f:(fun (name, _, _) -> name) |> SSet.of_list
+  in
+  let upper_bound = upper_bound_t_of_t ~cx obj_type in
+  match
+    members_of_type
+      ~reader
+      ~exclude_keys
+      ~exclude_proto_members:true
+      cx
+      file_sig
+      typed_ast
+      upper_bound
+      ~tparams_rev
+  with
+  | Error err -> AcFatalError err
+  | Ok (mems, errors_to_log, _in_idx) ->
+    let items =
+      mems
+      |> Base.List.map ~f:(fun (name, documentation, Ty_members.{ ty; _ }) ->
+             let rank = 0 in
+             let name_is_valid_identifier = Parser_flow.string_is_valid_identifier_name name in
+             if name_is_valid_identifier then
+               autocomplete_create_result
+                 ~rank
+                 ?documentation
+                 ~exact_by_default
+                 ~log_info:"object key"
+                 (name, ac_loc)
+                 ty
+             else
+               let insert_text =
+                 let expression =
+                   match Base.String.chop_prefix ~prefix:"@@" name with
+                   | None -> Ast_builder.Expressions.literal (Ast_builder.Literals.string name)
+                   | Some symbol ->
+                     Ast_builder.Expressions.member_expression_ident_by_name
+                       (Ast_builder.Expressions.identifier "Symbol")
+                       symbol
+                 in
+                 expression
+                 |> Js_layout_generator.expression
+                      ~opts:(Code_action_service.layout_options options)
+                 |> Pretty_printer.print ~source_maps:None ~skip_endline:true
+                 |> Source.contents
+               in
+               autocomplete_create_result
+                 ~insert_text
+                 ~rank
+                 ?documentation
+                 ~exact_by_default
+                 ~log_info:"bracket syntax object key"
+                 (insert_text, ac_loc)
+                 ty)
+    in
+    let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
+    AcResult { result; errors_to_log }
+
 let autocomplete_get_results
     ~env ~options ~reader ~cx ~file_sig ~ast ~typed_ast ~imports trigger_character cursor =
   let file_sig = File_sig.abstractify_locs file_sig in
@@ -1263,10 +1345,19 @@ let autocomplete_get_results
       | Ac_module ->
         (* TODO: complete module names *)
         ("Acmodule", AcEmpty "Module")
-      | Ac_key ->
-        (* TODO: complete object keys based on their upper bounds *)
-        let result = { ServerProt.Response.Completion.items = []; is_incomplete = false } in
-        ("Ackey", AcResult { result; errors_to_log = [] })
+      | Ac_enum -> ("Acenum", AcEmpty "Enum")
+      | Ac_key { obj_type } ->
+        ( "Ackey",
+          autocomplete_object_key
+            ~reader
+            ~options
+            ~cx
+            ~file_sig
+            ~typed_ast
+            ~token
+            obj_type
+            ac_loc
+            ~tparams_rev )
       | Ac_literal { lit_type } ->
         let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
         let genv =

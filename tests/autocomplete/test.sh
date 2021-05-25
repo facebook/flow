@@ -116,3 +116,8 @@ queries_in_file autocomplete "upper_bounds_2.js" --lsp
 queries_in_file autocomplete "upper_bounds_3.js" --pretty
 queries_in_file autocomplete "upper_bounds_4.js" --pretty
 queries_in_file autocomplete "upper_bounds_5.js" --pretty
+queries_in_file autocomplete "upper_bounds_6.js" --pretty
+queries_in_file autocomplete "upper_bounds_7.js" --pretty
+queries_in_file autocomplete "upper_bounds_8.js" --pretty
+queries_in_file autocomplete "upper_bounds_9.js" --pretty
+queries_in_file autocomplete "upper_bounds_10.js" --pretty
