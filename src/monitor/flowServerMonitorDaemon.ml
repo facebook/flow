@@ -38,7 +38,7 @@ let register_entry_point (start : start_function) : entry_point =
       LoggingUtils.set_hh_logger_min_level monitor_options.FlowServerMonitorOptions.server_options;
       FlowEventLogger.restore_context logging_context;
       FlowEventLogger.set_command (Some "monitor");
-      FlowEventLogger.init_flow_command ~init_id ~version:Flow_version.version;
+      FlowEventLogger.init_flow_command ~init_id;
 
       let out_fd = Daemon.descr_of_out_channel oc in
       start ~waiting_fd:out_fd monitor_options)

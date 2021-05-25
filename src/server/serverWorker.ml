@@ -29,8 +29,7 @@ module ServerWorkerState = struct
     Flow_server_profile.init_from_id profile_id;
 
     let init_id = init_id ^ "." ^ Random_id.short_string () in
-    let version = Flow_version.version in
-    FlowEventLogger.init_worker ~init_id ~version (Unix.gettimeofday ());
+    FlowEventLogger.init_worker ~init_id (Unix.gettimeofday ());
 
     match log_filename with
     | None -> ()
