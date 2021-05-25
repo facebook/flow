@@ -25,6 +25,15 @@ val text_edits_of_import :
   Export_index.source ->
   text_edits option
 
+type ast_transform_of_error = {
+  title: string;
+  diagnostic_title: string;
+  transform: (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> (Loc.t, Loc.t) Flow_ast.Program.t;
+  target_loc: Loc.t;
+}
+
+val ast_transform_of_error : ?loc:Loc.t -> Loc.t Error_message.t' -> ast_transform_of_error option
+
 val code_actions_at_loc :
   options:Options.t ->
   env:ServerEnv.env ->

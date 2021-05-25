@@ -281,6 +281,53 @@ let autofix_in_upstream_file
               } );
       }
 
+type ast_transform_of_error = {
+  title: string;
+  diagnostic_title: string;
+  transform: (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> (Loc.t, Loc.t) Flow_ast.Program.t;
+  target_loc: Loc.t;
+}
+
+let loc_opt_intersects ?loc ~error_loc =
+  match loc with
+  | None -> true
+  | Some loc -> Loc.intersects error_loc loc
+
+let ast_transform_of_error ?loc = function
+  | Error_message.EClassToObject (reason_class, reason_obj, _) ->
+    let error_loc = Reason.loc_of_reason reason_class in
+    if loc_opt_intersects ~error_loc ?loc then
+      let obj_loc = Reason.def_loc_of_reason reason_obj in
+      let original = reason_obj |> Reason.desc_of_reason ~unwrap:false |> Reason.string_of_desc in
+      let title = Utils_js.spf "Rewrite %s as an interface" original in
+      let diagnostic_title = "replace_obj_with_interface" in
+      Some
+        {
+          title;
+          diagnostic_title;
+          transform = Autofix_interface.replace_object_at_target;
+          target_loc = obj_loc;
+        }
+    else
+      None
+  | Error_message.EMethodUnbinding { reason_op; reason_prop; _ } ->
+    let error_loc = Reason.loc_of_reason reason_op in
+    if loc_opt_intersects ~error_loc ?loc then
+      let method_loc = Reason.def_loc_of_reason reason_prop in
+      let original = reason_prop |> Reason.desc_of_reason ~unwrap:false |> Reason.string_of_desc in
+      let title = Utils_js.spf "Rewrite %s as an arrow function" original in
+      let diagnostic_title = "replace_method_with_arrow" in
+      Some
+        {
+          title;
+          diagnostic_title;
+          transform = Autofix_method.replace_method_at_target;
+          target_loc = method_loc;
+        }
+    else
+      None
+  | _ -> None
+
 let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri loc =
   Flow_error.ErrorSet.fold
     (fun error actions ->
@@ -312,50 +359,6 @@ let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri l
           @ actions
         else
           actions
-      | Error_message.EClassToObject (reason_class, reason_obj, _) ->
-        let error_loc = Reason.loc_of_reason reason_class in
-        if Loc.contains error_loc loc then
-          let obj_loc = Reason.def_loc_of_reason reason_obj in
-          let original =
-            reason_obj |> Reason.desc_of_reason ~unwrap:false |> Reason.string_of_desc
-          in
-          let title = Utils_js.spf "Rewrite %s as an interface" original in
-          let diagnostic_title = "replace_obj_with_interface" in
-          autofix_in_upstream_file
-            ~reader
-            ~diagnostics
-            ~ast
-            ~options
-            ~title
-            ~diagnostic_title
-            ~transform:Autofix_interface.replace_object_at_target
-            uri
-            obj_loc
-          :: actions
-        else
-          actions
-      | Error_message.EMethodUnbinding { reason_op; reason_prop; _ } ->
-        let error_loc = Reason.loc_of_reason reason_op in
-        if Loc.contains error_loc loc then
-          let method_loc = Reason.def_loc_of_reason reason_prop in
-          let original =
-            reason_prop |> Reason.desc_of_reason ~unwrap:false |> Reason.string_of_desc
-          in
-          let title = Utils_js.spf "Rewrite %s as an arrow function" original in
-          let diagnostic_title = "replace_method_with_arrow" in
-          autofix_in_upstream_file
-            ~reader
-            ~diagnostics
-            ~ast
-            ~options
-            ~title
-            ~diagnostic_title
-            ~transform:Autofix_method.replace_method_at_target
-            uri
-            method_loc
-          :: actions
-        else
-          actions
       | error_message ->
         (match error_message |> Error_message.friendly_message_of_msg with
         | Error_message.PropMissing
@@ -365,7 +368,21 @@ let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri l
             create_suggestion ~diagnostics ~original ~suggestion uri error_loc :: actions
           else
             actions
-        | _ -> actions))
+        | _ ->
+          (match ast_transform_of_error ~loc error_message with
+          | None -> actions
+          | Some { title; diagnostic_title; transform; target_loc } ->
+            autofix_in_upstream_file
+              ~reader
+              ~diagnostics
+              ~ast
+              ~options
+              ~title
+              ~diagnostic_title
+              ~transform
+              uri
+              target_loc
+            :: actions)))
     errors
     []
 

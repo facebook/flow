@@ -1,0 +1,14 @@
+>>> upstream.js (#changes: 2)
+//@flow
+
+export class Foo {
+  f = (x: number): number => {
+    return x;
+  };
+}
+
+export type T = interface {
+  x: string,
+}
+
+>>> Launching report...

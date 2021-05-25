@@ -30,6 +30,7 @@ end = struct
       DumpTypesCommand.command;
       FindModuleCommand.command;
       FindRefsCommand.command;
+      FixCommand.command;
       ForceRecheckCommand.command;
       GetDefCommand.command;
       GetImportsCommand.command;
