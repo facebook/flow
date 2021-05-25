@@ -1,3 +1,4 @@
+flow fix
 >>> upstream.js (#changes: 2)
 //@flow
 
@@ -8,6 +9,21 @@ export class Foo {
 }
 
 export type T = interface {
+  x: string,
+}
+
+>>> Launching report...
+flow fix --error-codes method-unbinding
+>>> upstream.js (#changes: 1)
+//@flow
+
+export class Foo {
+  f = (x: number): number => {
+    return x;
+  };
+}
+
+export type T = {
   x: string,
 }
 

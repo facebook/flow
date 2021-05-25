@@ -7,15 +7,6 @@
 
 open Utils_js
 
-let spec =
-  CommandSpec.
-    {
-      name = "fix";
-      doc = "Apply all known error fixes";
-      usage = Printf.sprintf "%s fix [OPTION]... [FILE]\n" CommandUtils.exe_name;
-      args = ArgSpec.empty |> CommandUtils.codemod_flags;
-    }
-
 (* transformable errors are a subset of all errors; specifically,
  * the errors for which Code_action_service.ast_transform_of_error = Some _ *)
 type transformable_error = Loc.t Error_message.t'
@@ -39,7 +30,11 @@ let union_transformable_errors_maps :
 
 let reader = State_reader.create ()
 
-module FixCodemod = struct
+module type FIX_CODEMOD_OPTIONS = sig
+  val error_codes : string list option
+end
+
+module FixCodemod (Opts : FIX_CODEMOD_OPTIONS) = struct
   type accumulator = unit
 
   type prepass_state = unit
@@ -49,6 +44,19 @@ module FixCodemod = struct
   let prepass_init () = ()
 
   let prepass_run cx () _file _reader _file_sig _typed_ast =
+    let should_include_error =
+      match Opts.error_codes with
+      | None
+      | Some [] ->
+        Base.Fn.const true
+      | Some codes ->
+        fun error_message ->
+          (match Error_message.error_code_of_message error_message with
+          | None -> false
+          | Some error_code ->
+            let error_code_string = Error_codes.string_of_code error_code in
+            Base.List.exists codes ~f:(fun code -> code = error_code_string))
+    in
     Flow_error.ErrorSet.fold
       (fun error acc ->
         let error_message =
@@ -57,11 +65,11 @@ module FixCodemod = struct
           |> Error_message.map_loc_of_error_message (Parsing_heaps.Reader.loc_of_aloc ~reader)
         in
         match Code_action_service.ast_transform_of_error error_message with
-        | None -> acc
-        | Some Code_action_service.{ target_loc; _ } ->
+        | Some Code_action_service.{ target_loc; _ } when should_include_error error_message ->
           let file_key = Base.Option.value_exn (Loc.source target_loc) in
           let transformable_error_map = FilenameMap.singleton file_key [error_message] in
-          union_transformable_errors_maps transformable_error_map acc)
+          union_transformable_errors_maps transformable_error_map acc
+        | _ -> acc)
       (Context.errors cx)
       FilenameMap.empty
 
@@ -98,8 +106,36 @@ module FixCodemod = struct
            end))
 end
 
-let main komodo_flags () =
-  let module Runner = Codemod_runner.MakeTypedRunnerWithPrepass (FixCodemod) in
+let spec =
+  CommandSpec.
+    {
+      name = "fix";
+      doc = "Apply all known error fixes";
+      usage = Printf.sprintf "%s fix [OPTION]... [FILE]\n" CommandUtils.exe_name;
+      args =
+        ( ArgSpec.empty
+        |> CommandUtils.codemod_flags
+        |> ArgSpec.(
+             flag
+               "--error-codes"
+               (list_of string)
+               ~doc:"Codes of errors to fix. If omitted, all fixable errors will be fixed.") );
+    }
+
+let main (CommandUtils.Codemod_params ({ anon; _ } as codemod_params)) error_codes () =
+  let komodo_flags =
+    let anon =
+      match anon with
+      | None
+      | Some [] ->
+        Some ["."]
+      | _ -> anon
+    in
+    CommandUtils.Codemod_params { codemod_params with anon }
+  in
+  let module Runner = Codemod_runner.MakeTypedRunnerWithPrepass (FixCodemod (struct
+    let error_codes = error_codes
+  end)) in
   CodemodCommand.main (module Runner) komodo_flags ()
 
 let command = CommandSpec.command spec main
