@@ -184,7 +184,6 @@ type watch = {
 type dead_env = {
   (* Will reuse original settings to reinitializing watchman subscription. *)
   prior_settings: init_settings;
-  reinit_attempts: int;
   dead_since: float;
   prior_clockspec: string;
   prior_watch_root: string;
@@ -206,7 +205,6 @@ let dead_env_from_alive env =
   {
     prior_settings = env.settings;
     dead_since = Unix.gettimeofday ();
-    reinit_attempts = 0;
     (* When we start a new watchman connection, we continue to use the prior
      * clockspec. If the same watchman server is still alive, then all is
      * good. If not, the clockspec allows us to detect whether a new watchman
@@ -215,18 +213,6 @@ let dead_env_from_alive env =
     prior_clockspec = env.clockspec;
     prior_watch_root = env.watch.watch_root;
   }
-
-type watchman_instance =
-  (* Indicates a dead watchman instance (most likely due to chef upgrading,
-   * reconfiguration, or a user terminating watchman, or a timeout reading
-   * from the connection) detected by, for example, a pipe error or a timeout.
-   *
-   * TODO: Currently fallback to a Watchman_dead is only handled in calls
-   * wrapped by the with_crash_record. Pipe errors elsewhere (for example
-   * during request) will still result in Hack exiting. Need to cover those
-   * cases too. *)
-  | Watchman_dead of dead_env
-  | Watchman_alive of env
 
 (****************************************************************************)
 (* JSON methods. *)
@@ -663,6 +649,24 @@ let watch =
       | Error _ as err -> Lwt.return err)
     | Error _ as err -> Lwt.return err
 
+let rec with_retry ~max_attempts ?(attempt = 0) ?(on_retry = (fun _ -> Lwt_result.return)) f x =
+  match%lwt f x with
+  | Ok _ as ok -> Lwt.return ok
+  | Error err ->
+    log_error err;
+    (match severity_of_error err with
+    | Fatal_error -> Lwt.return (Error Dead)
+    | Restarted_error -> Lwt.return (Error Restarted)
+    | Retryable_error ->
+      if attempt >= max_attempts then (
+        Hh_logger.error "Watchman has failed %d times in a row. Giving up." attempt;
+        Lwt.return (Error Dead)
+      ) else (
+        match%lwt on_retry attempt x with
+        | Ok x -> with_retry ~max_attempts ~attempt:(attempt + 1) ~on_retry f x
+        | Error _ as err -> Lwt.return err
+      ))
+
 let re_init ?prior_clockspec settings =
   let open Lwt_result.Infix in
   let debug_logging = settings.debug_logging in
@@ -679,23 +683,14 @@ let backoff_delay attempts =
   let attempts = min attempts 3 in
   Float.of_int (4 * (2 ** attempts))
 
-let init =
-  let rec init_rec ~reinit_attempts settings =
-    match%lwt re_init settings with
-    | Ok env -> Lwt.return (Some env)
-    | Error err ->
-      log_error err;
-      (match severity_of_error err with
-      | Fatal_error -> Lwt.return None
-      | Restarted_error -> Lwt.return None
-      | Retryable_error ->
-        if reinit_attempts >= max_reinit_attempts then
-          Lwt.return None
-        else
-          let%lwt () = Lwt_unix.sleep (backoff_delay reinit_attempts) in
-          init_rec ~reinit_attempts:(reinit_attempts + 1) settings)
+let init settings =
+  let on_retry attempt settings =
+    let%lwt () = Lwt_unix.sleep (backoff_delay attempt) in
+    Lwt.return (Ok settings)
   in
-  (fun settings -> init_rec ~reinit_attempts:0 settings)
+  match%lwt with_retry ~max_attempts:max_reinit_attempts ~on_retry re_init settings with
+  | Ok env -> Lwt.return (Some env)
+  | Error _ -> Lwt.return None
 
 let extract_file_names env json =
   let open Hh_json.Access in
@@ -711,41 +706,37 @@ let extract_file_names env json =
          abs)
   |> SSet.of_list
 
-let re_init_dead_env_once dead_env =
-  (* Give watchman 2 minutes to start up, plus sync_timeout (in milliseconds!) to sync.
+let re_init_dead_env =
+  let on_retry attempt dead_env =
+    let backoff = backoff_delay attempt in
+    let () = Hh_logger.info "Waiting %fs before reestablishing watchman subscription" backoff in
+    let%lwt () = Lwt_unix.sleep backoff in
+    Lwt.return (Ok dead_env)
+  in
+  let re_init_dead_env_once dead_env =
+    let () = Hh_logger.log "Attemping to reestablish watchman subscription" in
+    (* Give watchman 2 minutes to start up, plus sync_timeout (in milliseconds!) to sync.
      TODO: use `file_watcher.timeout` config instead (careful, it's in seconds) *)
-  let timeout = Option.value ~default:0 dead_env.prior_settings.sync_timeout + 120000 in
-  try%lwt
-    Lwt_unix.with_timeout (Float.of_int timeout /. 1000.) @@ fun () ->
-    match%lwt has_watchman_restarted dead_env with
-    | Ok false -> re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings
-    | Ok true -> Lwt.return (Error Fresh_instance)
+    let timeout = Option.value ~default:0 dead_env.prior_settings.sync_timeout + 120000 in
+    try%lwt
+      Lwt_unix.with_timeout (Float.of_int timeout /. 1000.) @@ fun () ->
+      match%lwt has_watchman_restarted dead_env with
+      | Ok false -> re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings
+      | Ok true -> Lwt.return (Error Fresh_instance)
+      | Error _ as err -> Lwt.return err
+    with Lwt_unix.Timeout ->
+      Lwt.return (Error (Socket_unavailable { msg = spf "Timed out after %ds" timeout }))
+  in
+  fun dead_env ->
+    match%lwt
+      with_retry ~max_attempts:max_reinit_attempts ~on_retry re_init_dead_env_once dead_env
+    with
+    | Ok env ->
+      Hh_logger.log "Watchman connection reestablished.";
+      let downtime = Unix.gettimeofday () -. dead_env.dead_since in
+      EventLogger.watchman_connection_reestablished downtime;
+      Lwt.return (Ok env)
     | Error _ as err -> Lwt.return err
-  with Lwt_unix.Timeout ->
-    Lwt.return (Error (Socket_unavailable { msg = spf "Timed out after %ds" timeout }))
-
-let rec re_init_dead_env dead_env =
-  let reinit_attempts = dead_env.reinit_attempts in
-  let backoff = backoff_delay reinit_attempts in
-  let () = Hh_logger.info "Waiting %fs before reestablishing watchman subscription" backoff in
-  let%lwt () = Lwt_unix.sleep backoff in
-  let () = Hh_logger.log "Attemping to reestablish watchman subscription" in
-  match%lwt re_init_dead_env_once dead_env with
-  | Ok env ->
-    Hh_logger.log "Watchman connection reestablished.";
-    let downtime = Unix.gettimeofday () -. dead_env.dead_since in
-    EventLogger.watchman_connection_reestablished downtime;
-    Lwt.return (Ok env)
-  | Error err ->
-    log_error err;
-    (match severity_of_error err with
-    | Fatal_error -> Lwt.return (Error Dead)
-    | Restarted_error -> Lwt.return (Error Restarted)
-    | Retryable_error ->
-      if reinit_attempts >= max_reinit_attempts then
-        Lwt.return (Error Dead)
-      else
-        re_init_dead_env { dead_env with reinit_attempts = reinit_attempts + 1 })
 
 let close_channel_on_instance env =
   let%lwt () = close_connection env.conn in
@@ -804,43 +795,29 @@ let transform_asynchronous_get_changes_response env data =
     )
 
 let get_changes =
-  let rec call_rec ~retry_attempts instance =
-    match instance with
-    | Watchman_alive env ->
-      let debug_logging = env.settings.debug_logging in
-      let%lwt changes =
-        match%lwt blocking_read ~debug_logging ~conn:env.conn with
-        | Error _ as err -> Lwt.return err
-        | Ok response ->
-          (match transform_asynchronous_get_changes_response env response with
-          | Error _ as err -> Lwt.return err
-          | Ok (env, result) -> Lwt.return (Ok (env, result)))
-      in
-      (match changes with
-      | Ok _ as ok -> Lwt.return ok
-      | Error err ->
-        log_error err;
-        (match severity_of_error err with
-        | Fatal_error -> Lwt.return (Error Dead)
-        | Restarted_error -> Lwt.return (Error Restarted)
-        | Retryable_error ->
-          if retry_attempts >= max_retry_attempts then (
-            Hh_logger.error "Watchman has failed %d times in a row. Giving up." retry_attempts;
-            Lwt.return (Error Dead)
-          ) else
-            let%lwt dead_env = close_channel_on_instance env in
-            call_rec ~retry_attempts:(retry_attempts + 1) (Watchman_dead dead_env)))
-    | Watchman_dead dead_env ->
-      (match%lwt re_init_dead_env dead_env with
-      | Ok env -> call_rec ~retry_attempts (Watchman_alive env)
-      | Error _ as err -> Lwt.return err)
+  let on_retry _attempt env =
+    let%lwt dead_env = close_channel_on_instance env in
+    re_init_dead_env dead_env
   in
-  (fun env -> call_rec ~retry_attempts:0 (Watchman_alive env))
+  let wait_for_changes env =
+    let debug_logging = env.settings.debug_logging in
+    match%lwt blocking_read ~debug_logging ~conn:env.conn with
+    | Error _ as err -> Lwt.return err
+    | Ok response ->
+      (match transform_asynchronous_get_changes_response env response with
+      | Error _ as err -> Lwt.return err
+      | Ok (env, result) -> Lwt.return (Ok (env, result)))
+  in
+  (fun env -> with_retry ~max_attempts:max_retry_attempts ~on_retry wait_for_changes env)
 
-let get_mergebase_and_changes env =
-  let debug_logging = env.settings.debug_logging in
-  let query = get_changes_since_mergebase_query env in
-  let%lwt response =
+let get_mergebase_and_changes =
+  let on_retry attempt env =
+    let%lwt () = Lwt_unix.sleep (backoff_delay attempt) in
+    Lwt.return (Ok env)
+  in
+  let run_query env =
+    let debug_logging = env.settings.debug_logging in
+    let query = get_changes_since_mergebase_query env in
     match%lwt request ~debug_logging query with
     | Error _ as err -> Lwt.return err
     | Ok response ->
@@ -851,11 +828,7 @@ let get_mergebase_and_changes env =
       | None ->
         Lwt.return (Error (response_error_of_json ~query ~response "Failed to extract mergebase")))
   in
-  match response with
-  | Ok _ as ok -> Lwt.return ok
-  | Error err ->
-    log_error err;
-    Lwt.return (Error "Failed to query mergebase from Watchman")
+  (fun env -> with_retry ~max_attempts:max_retry_attempts ~on_retry run_query env)
 
 module Testing = struct
   type nonrec error_kind = error_kind

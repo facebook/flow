@@ -187,7 +187,9 @@ end = struct
     if env.should_track_mergebase then
       match%lwt Watchman.get_mergebase_and_changes env.instance with
       | Ok mergebase_and_changes -> Lwt.return (Ok (Some mergebase_and_changes))
-      | Error msg -> Lwt.return (Error msg)
+      | Error Watchman.Dead
+      | Error Watchman.Restarted ->
+        Lwt.return (Error "Failed to query mergebase from Watchman")
     else
       Lwt.return (Ok None)
 
