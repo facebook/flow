@@ -64,7 +64,7 @@ type env
 
 val init : init_settings -> env option Lwt.t
 
-val get_mergebase_and_changes : env -> (string * SSet.t, string) Result.t Lwt.t
+val get_mergebase_and_changes : env -> (string * SSet.t, failure) Result.t Lwt.t
 
 val get_changes : env -> (env * pushed_changes, failure) Result.t Lwt.t
 
