@@ -9,6 +9,11 @@ module Logger = FlowServerMonitorLogger
 
 exception FileWatcherDied of Exception.t
 
+type exit_reason =
+  | Watcher_stopped
+  | Watcher_died
+  | Watcher_missed_changes
+
 (* TODO - Push-based API for dfind. While the FileWatcher API is push based, dfind is faking it
  * by polling every seconds.
  *
@@ -30,7 +35,7 @@ class type watcher =
 
     method stop : unit Lwt.t
 
-    method waitpid : unit Lwt.t
+    method waitpid : exit_reason Lwt.t
 
     method getpid : int option
   end
@@ -153,7 +158,7 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
             self#name
             (PrintSignal.string_of_signal signal)
       end;
-      Lwt.return_unit
+      Lwt.return Watcher_died
 
     method getpid =
       let dfind = self#get_dfind in
@@ -163,6 +168,8 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
 module WatchmanFileWatcher : sig
   class watchman : Options.t -> FlowServerMonitorOptions.watchman_options -> watcher
 end = struct
+  exception Watchman_failure of Watchman.failure
+
   type env = {
     mutable instance: Watchman.env;
     mutable files: SSet.t;
@@ -170,7 +177,7 @@ end = struct
     mutable mergebase: string option;
     mutable finished_an_hg_update: bool;
     mutable is_initial: bool;
-    listening_thread: unit Lwt.t;
+    listening_thread: exit_reason Lwt.t;
     changes_condition: unit Lwt_condition.t;
     init_settings: Watchman.init_settings;
     should_track_mergebase: bool;
@@ -188,8 +195,6 @@ end = struct
     module J = Hh_json_helpers.AdhocJsonHelpers
 
     type acc = env
-
-    exception Exit_loop
 
     let extract_hg_update_metadata = function
       | None -> ("<UNKNOWN>", "<UNKNOWN REV>")
@@ -215,9 +220,7 @@ end = struct
       let%lwt (instance, pushed_changes) =
         match%lwt Watchman.get_changes env.instance with
         | Ok (instance, pushed_changes) -> Lwt.return (instance, pushed_changes)
-        | Error Watchman.Dead
-        | Error Watchman.Restarted ->
-          raise Exit_loop
+        | Error failure -> raise (Watchman_failure failure)
       in
       env.instance <- instance;
       match pushed_changes with
@@ -316,19 +319,30 @@ end = struct
         failwith "We're not using an scm aware subscription, so we should never get these"
 
     let catch _ exn =
-      (match Exception.to_exn exn with
-      | Exit_loop ->
+      match Exception.to_exn exn with
+      | Watchman_failure _ ->
         Logger.error "Watchman unavailable. Exiting...";
-        ()
+        Exception.reraise exn
       | _ ->
         let msg = Exception.to_string exn in
         EventLogger.watchman_uncaught_failure
           ("Uncaught exception in Watchman listening loop: " ^ msg);
-        Logger.error ~exn:(Exception.to_exn exn) "Uncaught exception in Watchman listening loop");
-
-      (* By exiting this loop we'll let the server know that something went wrong with Watchman *)
-      Lwt.return_unit
+        Logger.error ~exn:(Exception.to_exn exn) "Uncaught exception in Watchman listening loop";
+        raise (Watchman_failure Watchman.Dead)
   end)
+
+  let listen env =
+    match%lwt WatchmanListenLoop.run env with
+    | () ->
+      (* the loop was canceled (stopped intentionally) *)
+      Lwt.return Watcher_stopped
+    | exception Watchman_failure failure ->
+      let reason =
+        match failure with
+        | Watchman.Dead -> Watcher_died
+        | Watchman.Restarted -> Watcher_missed_changes
+      in
+      Lwt.return reason
 
   class watchman
     (server_options : Options.t) (watchman_options : FlowServerMonitorOptions.watchman_options) :
@@ -387,7 +401,7 @@ end = struct
                 files = SSet.empty;
                 listening_thread =
                   (let%lwt env = waiter in
-                   WatchmanListenLoop.run env);
+                   listen env);
                 mergebase = None;
                 is_initial = true;
                 finished_an_hg_update = false;
@@ -469,15 +483,16 @@ end = struct
         (* waitpid should return a thread that resolves when the listening_thread resolves. So why
          * don't we just return the listening_thread?
          *
-         * It's because we need to return a cancelable thread. The listening_thread will resolve to
-         * unit when it is canceled. That is the wrong behavior.
+         * It's because we need to return a cancelable thread. The listening_thread will be fulfilled
+         * with [Watcher_stopped] when it is canceled, rather than rejected with [Lwt.Canceled] like
+         * normal. That is the wrong behavior.
          *
          * So how do we wrap the listening_thread in a cancelable thread? By running it
          * asynchronously, having it signal when it resolves, and waiting for the signal *)
         let signal = Lwt_condition.create () in
         Lwt.async (fun () ->
-            let%lwt () = env.listening_thread in
-            Lwt_condition.signal signal ();
+            let%lwt result = env.listening_thread in
+            Lwt_condition.signal signal result;
             Lwt.return_unit);
 
         Lwt_condition.wait signal

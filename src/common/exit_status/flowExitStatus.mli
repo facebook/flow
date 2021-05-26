@@ -38,7 +38,7 @@ type t =
   | Dfind_died
   | Watchman_error
   | Watchman_failed
-  | Watchman_fresh_instance
+  | File_watcher_missed_changes
   | Hash_table_full
   | Heap_full
   | EventLogger_restart_out_of_retries

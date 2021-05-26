@@ -73,7 +73,7 @@ type t =
   (* A fatal error with Watchman (TODO: dedupe with Watchman_error) *)
   | Watchman_failed
   (* Watchman restarted *)
-  | Watchman_fresh_instance
+  | File_watcher_missed_changes
   (* Shared memory hash table is full *)
   | Hash_table_full
   (* Shared memory heap is full *)
@@ -130,7 +130,7 @@ let error_code = function
   | Hash_table_full -> 102
   | Heap_full -> 103
   | Watchman_failed -> 104
-  | Watchman_fresh_instance -> 105
+  | File_watcher_missed_changes -> 105
   | EventLogger_restart_out_of_retries -> 108
   | Unknown_error -> 110
 
@@ -171,7 +171,7 @@ let error_type = function
   | 102 -> Hash_table_full
   | 103 -> Heap_full
   | 104 -> Watchman_failed
-  | 105 -> Watchman_fresh_instance
+  | 105 -> File_watcher_missed_changes
   | 108 -> EventLogger_restart_out_of_retries
   | 110 -> Unknown_error
   | _ -> raise Not_found
@@ -211,7 +211,7 @@ let to_string = function
   | Dfind_died -> "Dfind_died"
   | Watchman_error -> "Watchman_error"
   | Watchman_failed -> "Watchman_failed"
-  | Watchman_fresh_instance -> "Watchman_fresh_instance"
+  | File_watcher_missed_changes -> "File_watcher_missed_changes"
   | Unknown_error -> "Unknown_error"
   | Commandline_usage_error -> "Commandline_usage_error"
   | No_input -> "No_input"
