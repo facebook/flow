@@ -50,7 +50,7 @@ let exit ?error ~msg exit_status =
     waiter
   else (
     exiting := true;
-    Logger.info "Monitor is exiting (%s)" msg;
+    Logger.info "Monitor is exiting code %d (%s)" (Exit.error_code exit_status) msg;
     Logger.info "Broadcasting to threads and waiting 1 second for them to exit";
     Lwt_condition.broadcast ExitSignal.signal (exit_status, msg);
 
@@ -324,12 +324,12 @@ end = struct
      * or failed *)
     Lwt.join [t.watcher#stop; ServerConnection.close_immediately t.connection]
 
-  let handle_file_watcher_exit ?error ?msg watcher =
+  let handle_file_watcher_exit ?error ?msg ?(code = Exit.Dfind_died) watcher =
     (* TODO (glevi) - We probably don't need to make the monitor exit when the file watcher dies.
      * We could probably just restart it. For dfind, we'd also need to start a new server, but for
      * watchman we probably could just start a new watchman daemon and use the clockspec *)
     let msg = Base.Option.value ~default:(spf "File watcher (%s) died" watcher#name) msg in
-    exit ?error ~msg Exit.Dfind_died
+    exit ?error ~msg code
 
   (** `close_if_open fd` closes the `fd` file descriptor, ignoring errors if it's already closed.
 
@@ -441,7 +441,13 @@ end = struct
           (Exception.get_ctor_string exn, Utils.Callstack (Exception.get_backtrace_string exn))
         in
         handle_file_watcher_exit ~error watcher
-      | () -> handle_file_watcher_exit watcher
+      | FileWatcher.Watcher_stopped ->
+        (* file watcher was shut down intentionally, i.e. watcher#stop *)
+        Lwt.return_unit
+      | FileWatcher.Watcher_died -> handle_file_watcher_exit watcher
+      | FileWatcher.Watcher_missed_changes ->
+        let msg = spf "File watcher (%s) missed changes" watcher#name in
+        handle_file_watcher_exit ~code:Exit.File_watcher_missed_changes ~msg watcher
     in
     StatusStream.file_watcher_ready ();
 
@@ -509,7 +515,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
         (* We ran into an issue with Watchman *)
         | Watchman_failed
         (* We ran into an issue with Watchman *)
-        | Watchman_fresh_instance
+        | File_watcher_missed_changes
         (* Watchman restarted. We probably could survive this by recrawling *)
         | Hash_table_full
         (* The hash table is full. It accumulates cruft, so restarting _might_ help, but
