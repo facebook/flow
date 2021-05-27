@@ -1,0 +1,44 @@
+
+Server should start in non-lazy mode
+
+Server should not be in lazy mode
+No errors!
+
+Server should successfully save the saved state
+
+Server should stop after saving the saved state
+
+Server should start in lazy mode from the saved state
+
+Server should have no errors because it's lazy
+No errors!
+
+The Flow server is currently in filesystem lazy mode and is only checking 0/2 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+Server should (but does not) display the type error in B.js after a modification to A.js
+No errors!
+
+The Flow server is currently in filesystem lazy mode and is only checking 2/2 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+This is the type error it should display
+Error --------------------------------------------------------------------------------------------------------- B.js:5:2
+
+Cannot cast `foo()` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   B.js:5:2
+   5| (foo(): number);
+       ^^^^^
+
+References:
+   A.js:3:24
+   3| export function foo(): string {
+                             ^^^^^^ [1]
+   B.js:5:9
+   5| (foo(): number);
+              ^^^^^^ [2]
+
+
+
+Found 1 error
