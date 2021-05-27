@@ -120,7 +120,7 @@ let explicit_decl_require cx (m, loc, resolved_m) =
       resolved_m_name
   in
   let m_name_internal = m_name |> Reason.internal_module_name in
-  let from_t = Flow_js_utils.lookup_builtin_strict cx m_name_internal reason in
+  let from_t = Flow_js.lookup_builtin_strict cx m_name_internal reason in
 
   (* flow the declared module type to importing context *)
   let to_t = Context.find_require cx loc in
