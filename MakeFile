@@ -1,0 +1,1 @@
+bash ./runtests.sh bin/flow
