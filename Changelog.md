@@ -1,3 +1,19 @@
+### 0.152.0
+
+Likely to cause new Flow errors:
+* Fixed an issue with refinement invalidation for variables without initializers or that are written to before they're declared. You may see both new errors from improved invalidations, and some unnecessary invalidations will be removed.
+
+Notable bug fixes:
+* Fixed the behavior of unary not operator on type applications
+
+Library Definitions:
+* Add `Symbol.asyncIterator` (thanks @goodmind)
+* Add missing methods to `HTMLTableSectionElement` (thanks @vitoreiji)
+* Fix nullability of various DOM table properties
+* Fix type of `MediaRecorder` constructor options
+* Improve node `crypto` types (thanks @juodumas)
+* Improve node `cluster.worker` type (thanks @magicmark)
+
 ### 0.151.0
 
 New Features:
