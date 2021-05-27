@@ -1,6 +1,6 @@
 {
   "name": "flow-parser-bin",
-  "version": "0.151.3",
+  "version": "0.152.0",
   "description": "The Flow JavaScript parser, via bindings to the native OCaml implementation",
   "main": "index.js",
   "repository": "https://github.com/facebook/flow.git",
