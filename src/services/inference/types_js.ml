@@ -1407,7 +1407,7 @@ let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~file_watche
     (* Only watchman mode might restart *)
     Lwt.return_none
   | Options.LAZY_MODE_WATCHMAN ->
-    let { MonitorProt.changed_mergebase } = file_watcher_metadata in
+    let { MonitorProt.changed_mergebase; missed_changes = _ } = file_watcher_metadata in
     Hh_logger.info
       "File watcher %s mergebase"
       ( if changed_mergebase then

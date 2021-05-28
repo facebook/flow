@@ -181,6 +181,7 @@ end = struct
     changes_condition: unit Lwt_condition.t;
     init_settings: Watchman.init_settings;
     should_track_mergebase: bool;
+    survive_restarts: bool;
   }
 
   let get_mergebase_and_changes env =
@@ -218,11 +219,48 @@ end = struct
     let broadcast env =
       if not (SSet.is_empty env.files) then Lwt_condition.broadcast env.changes_condition ()
 
+    (** When watchman restarts, we miss any filesystem changes that might happen while it's
+        down. To re-synchronize, we need to recheck all of the files that could have changed
+        while it wasn't watching:
+
+        1) a file that was previously unchanged is now changed
+        2) a changed file changed again
+        3) a previously changed file was reverted
+        4) the mergebase changed, changing some committed files
+
+        Since we can ask watchman for the changes since mergebase, it can tell us about
+        (1) and (2). We handle (3) separately, by setting [missed_changes = true] which
+        triggers a recheck of all focused (i.e. previously changed) files. But we can't
+        handle (4): watchman can't tell us all the files that changed between the two
+        mergebase commits (`hg` can, but it's not worth implementing this). so if the
+        mergebase changes, we restart. *)
+    let handle_restart env =
+      StatusStream.file_watcher_deferred "Watchman restart";
+      match%lwt get_mergebase_and_changes env with
+      | Ok mergebase_and_changes ->
+        (match (mergebase_and_changes, env.mergebase) with
+        | (Some { Watchman.clock; mergebase; changes }, Some old_mergebase)
+          when mergebase = old_mergebase ->
+          Logger.info "Watchman restarted, but the mergebase didn't change.";
+          Watchman.force_update_clockspec clock env.instance;
+          env.metadata <- { env.metadata with MonitorProt.missed_changes = true };
+          StatusStream.file_watcher_ready ();
+          Lwt.return (Some (env.instance, Watchman.Files_changed changes))
+        | _ -> Lwt.return None)
+      | Error _ -> Lwt.return None
+
     let main env =
       let%lwt (instance, pushed_changes) =
         match%lwt Watchman.get_changes env.instance with
         | Ok (instance, pushed_changes) -> Lwt.return (instance, pushed_changes)
-        | Error failure -> raise (Watchman_failure failure)
+        | Error Watchman.Dead -> raise (Watchman_failure Watchman.Dead)
+        | Error Watchman.Restarted ->
+          if env.survive_restarts then
+            match%lwt handle_restart env with
+            | Some (instance, pushed_changes) -> Lwt.return (instance, pushed_changes)
+            | None -> raise (Watchman_failure Watchman.Restarted)
+          else
+            raise (Watchman_failure Watchman.Restarted)
       in
       env.instance <- instance;
       match pushed_changes with
@@ -268,14 +306,11 @@ end = struct
                 failwith msg
             in
             match (new_mergebase, env.mergebase) with
-            | (Some (new_mergebase, _changes), Some old_mergebase)
-              when new_mergebase <> old_mergebase ->
-              Logger.info
-                "Watchman reports mergebase changed from %S to %S"
-                old_mergebase
-                new_mergebase;
-              env.mergebase <- Some new_mergebase;
-              env.metadata <- { MonitorProt.changed_mergebase = true };
+            | (Some { Watchman.mergebase; changes = _; clock = _ }, Some old_mergebase)
+              when mergebase <> old_mergebase ->
+              Logger.info "Watchman reports mergebase changed from %S to %S" old_mergebase mergebase;
+              env.mergebase <- Some mergebase;
+              env.metadata <- { env.metadata with MonitorProt.changed_mergebase = true };
               env.finished_an_hg_update <- false;
               Lwt.return_unit
             | _ -> Lwt.return_unit
@@ -364,7 +399,13 @@ end = struct
         | Some env -> env
 
       method start_init =
-        let { FlowServerMonitorOptions.debug; defer_states; mergebase_with; sync_timeout } =
+        let {
+          FlowServerMonitorOptions.debug;
+          defer_states;
+          mergebase_with;
+          sync_timeout;
+          survive_restarts = _;
+        } =
           watchman_options
         in
         let file_options = Options.file_options server_options in
@@ -394,6 +435,7 @@ end = struct
           let should_track_mergebase =
             Options.lazy_mode server_options = Options.LAZY_MODE_WATCHMAN
           in
+          let survive_restarts = watchman_options.FlowServerMonitorOptions.survive_restarts in
           match watchman with
           | Some watchman ->
             let (waiter, wakener) = Lwt.task () in
@@ -411,13 +453,14 @@ end = struct
                 metadata = MonitorProt.empty_file_watcher_metadata;
                 init_settings = Base.Option.value_exn init_settings;
                 should_track_mergebase;
+                survive_restarts;
               }
             in
             (match%lwt get_mergebase_and_changes new_env with
             | Ok mergebase_and_changes ->
               let (mergebase, files) =
                 match mergebase_and_changes with
-                | Some (mergebase, changes) ->
+                | Some { Watchman.mergebase; changes; clock = _ } ->
                   Logger.info
                     "Watchman reports the initial mergebase as %S, and %d changes"
                     mergebase
