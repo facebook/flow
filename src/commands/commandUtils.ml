@@ -1713,11 +1713,15 @@ let choose_file_watcher
       | Some x -> x
       | None -> default_file_watcher_mergebase_with
     in
+    let survive_restarts =
+      Base.Option.value ~default:false (FlowConfig.watchman_survive_restarts flowconfig)
+    in
     FlowServerMonitorOptions.Watchman
       {
         FlowServerMonitorOptions.debug = file_watcher_debug;
         defer_states;
         mergebase_with;
+        survive_restarts;
         sync_timeout;
       }
 

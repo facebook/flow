@@ -58,6 +58,11 @@ and recheck_files =
   | ChangedFiles of SSet.t
   | FilesToForceFocusedAndRecheck of SSet.t
   | CheckedSetToForce of CheckedSet.t
+  | FilesToResync of SSet.t
+      (** When the file watcher restarts, it can miss changes so we need to recheck
+          all of these files. This differs subtly from [ChangedFiles] because they
+          didn't necessarily change, and we want to run the recheck even if they
+          didn't, because we also need to recheck ServerEnv's checked files. *)
 
 (* Files which have changed *)
 let (recheck_stream, push_recheck_msg) = Lwt_stream.create ()
@@ -73,6 +78,10 @@ let push_files_to_force_focused_and_recheck ?callback ~reason forced_focused_fil
 
 let push_checked_set_to_force ?callback ~reason checked_set =
   push_recheck_msg ?callback ~reason (CheckedSetToForce checked_set)
+
+let push_files_to_resync_after_file_watcher_restart
+    ?metadata ?callback ~reason changed_since_mergebase =
+  push_recheck_msg ?metadata ?callback ~reason (FilesToResync changed_since_mergebase)
 
 let pop_next_workload () = WorkloadStream.pop workload_stream
 
@@ -163,6 +172,16 @@ let recheck_fetch ~process_updates ~get_forced =
                    workload with
                    files_to_force = CheckedSet.union checked_set workload.files_to_force;
                  } )
+             | FilesToResync changed_since_mergebase ->
+               let updates = process_updates ?skip_incompatible changed_since_mergebase in
+               (* we don't know yet whether there's anything to recheck. even if [updates]
+                   is empty, the server also needs to check the existing checked files, so
+                   we always return [false] here. *)
+               ( false,
+                 {
+                   workload with
+                   files_to_recheck = FilenameSet.union updates workload.files_to_recheck;
+                 } )
            in
            let workload =
              match callback with
@@ -178,12 +197,11 @@ let recheck_fetch ~process_updates ~get_forced =
            let workload =
              { workload with recheck_reasons_rev = recheck_reason :: workload.recheck_reasons_rev }
            in
-           MonitorProt.(
-             match file_watcher_metadata with
-             | None -> workload
-             | Some { changed_mergebase } ->
-               let changed_mergebase = changed_mergebase || workload.metadata.changed_mergebase in
-               { workload with metadata = { changed_mergebase } }))
+           match file_watcher_metadata with
+           | None -> workload
+           | Some metadata ->
+             let metadata = MonitorProt.merge_file_watcher_metadata metadata workload.metadata in
+             { workload with metadata })
 
 let get_and_clear_recheck_workload ~process_updates ~get_forced =
   recheck_fetch ~process_updates ~get_forced;

@@ -127,6 +127,12 @@ type changes =
   | Watchman_unavailable
   | Watchman_pushed of pushed_changes
 
+type mergebase_and_changes = {
+  clock: clock;
+  mergebase: string;
+  changes: SSet.t;
+}
+
 module Jget = Hh_json_helpers.Jget
 module J = Hh_json_helpers.AdhocJsonHelpers
 
@@ -822,13 +828,15 @@ let get_mergebase_and_changes =
     | Error _ as err -> Lwt.return err
     | Ok response ->
       (match extract_mergebase response with
-      | Some (_clock, mergebase) ->
+      | Some (clock, mergebase) ->
         let changes = extract_file_names env response in
-        Lwt.return (Ok (mergebase, changes))
+        Lwt.return (Ok { clock; mergebase; changes })
       | None ->
         Lwt.return (Error (response_error_of_json ~query ~response "Failed to extract mergebase")))
   in
   (fun env -> with_retry ~max_attempts:max_retry_attempts ~on_retry run_query env)
+
+let force_update_clockspec clock env = env.clockspec <- clock
 
 module Testing = struct
   type nonrec error_kind = error_kind

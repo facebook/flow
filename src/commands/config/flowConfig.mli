@@ -221,6 +221,8 @@ val watchman_defer_states : config -> string list
 
 val watchman_mergebase_with : config -> string option
 
+val watchman_survive_restarts : config -> bool option
+
 val wait_for_recheck : config -> bool
 
 val weak : config -> bool
