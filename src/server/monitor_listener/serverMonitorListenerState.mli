@@ -37,6 +37,13 @@ val push_checked_set_to_force :
   CheckedSet.t ->
   unit
 
+val push_files_to_resync_after_file_watcher_restart :
+  ?metadata:MonitorProt.file_watcher_metadata ->
+  ?callback:(Profiling_js.finished option -> unit) ->
+  reason:LspProt.recheck_reason ->
+  SSet.t ->
+  unit
+
 val cancellation_requests : Lsp.IdSet.t ref
 
 (* APIs to wait *)

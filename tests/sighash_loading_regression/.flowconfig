@@ -1,0 +1,7 @@
+[ignore]
+<PROJECT_ROOT>/tmp*
+
+[options]
+experimental.abstract_locations=true
+experimental.new_check=true
+saved_state.load_sighashes=true
