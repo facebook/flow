@@ -1,13 +1,15 @@
-//= require flow-loader
-//= require ./light_vs
-//= link tryFlowWorker
-import * as LZString from 'lz-string';
-import {INITIAL, Registry, parseRawGrammar} from 'vscode-textmate';
-import {createOnigScanner, createOnigString, loadWASM} from 'vscode-oniguruma';
-import {load as initFlowLocally} from 'flow-loader';
-import THEME from './light_vs';
-
-function appendMsg(container, msg, editor) {
+### *** ***
+#
+# //= require flow-loader
+# //= require ./light_vs
+# //= link tryFlowWorker
+# import * as LZString from 'lz-string';
+# import {INITIAL, Registry, parseRawGrammar} from 'vscode-textmate';
+# import {createOnigScanner, createOnigString, loadWASM} from 'vscode-oniguruma';
+# import {load as initFlowLocally} from 'flow-loader';
+# import THEME from './light_vs';
+#
+# function appendMsg(container, msg, editor) {
   const clickHandler = (msg) => {
     editor.getDoc().setSelection(
       {line: msg.loc.start.line - 1, ch: msg.loc.start.column - 1},
@@ -15,13 +17,13 @@ function appendMsg(container, msg, editor) {
     );
     editor.focus();
   };
-
+#
   if (msg.loc && msg.context != null) {
     const div = document.createElement('div');
     const basename = msg.loc.source.replace(/.*\//, '');
     const filename = basename !== '-' ? `${msg.loc.source}:` : '';
     const prefix = `${filename}${msg.loc.start.line}: `;
-
+#
     const before = msg.context.slice(0, msg.loc.start.column - 1);
     const highlight = (msg.loc.start.line === msg.loc.end.line) ?
       msg.context.slice(msg.loc.start.column - 1, msg.loc.end.column) :
@@ -36,16 +38,16 @@ function appendMsg(container, msg, editor) {
     div.appendChild(bold);
     div.appendChild(document.createTextNode(after));
     container.appendChild(div);
-
+#
     const offset = msg.loc.start.column + prefix.length - 1;
     const arrow = `${(prefix + before).replace(/[^ ]/g, ' ')}^ `;
     container.appendChild(document.createTextNode(arrow));
-
+#
     const span = document.createElement('span');
     span.className = "msgType";
     span.appendChild(document.createTextNode(msg.descr));
     container.appendChild(span);
-
+#
     const handler = clickHandler.bind(null, msg);
     bold.addEventListener('click', handler);
     span.addEventListener('click', handler);
@@ -57,7 +59,7 @@ function appendMsg(container, msg, editor) {
     container.appendChild(document.createTextNode(descr));
   }
 };
-
+#
 function printExtra(info, editor) {
   const list = document.createElement('ul');
   if (info.message) {
@@ -74,20 +76,20 @@ function printExtra(info, editor) {
   }
   return list;
 }
-
+#
 function printError(err, editor) {
   const li = document.createElement('li');
   err.message.forEach(msg => appendMsg(li, msg, editor));
-
+#
   if (err.extra) {
     err.extra.forEach(info => {
       li.appendChild(printExtra(info, editor));
     });
   }
-
+#
   return li;
 }
-
+#
 function printErrors(errors, editor) {
   const list = document.createElement('ul');
   errors.forEach(err => {
@@ -95,11 +97,11 @@ function printErrors(errors, editor) {
   });
   return list;
 }
-
+#
 function removeChildren(node) {
   while (node.lastChild) node.removeChild(node.lastChild);
 }
-
+#
 function asSeverity(severity) {
   switch (severity) {
     case 'error':
@@ -110,7 +112,7 @@ function asSeverity(severity) {
       return monaco.MarkerSeverity.Hint;
   }
 }
-
+#
 function validate(flowProxy, model, callback) {
   Promise.resolve(flowProxy)
   .then(flowProxy => flowProxy.checkContent(model.uri.fsPath, model.getValue()))
@@ -140,10 +142,10 @@ function validate(flowProxy, model, callback) {
     }
   });
 }
-
+#
 const lastEditorValue = localStorage.getItem('tryFlowLastContent');
 const defaultValue = (lastEditorValue && getHashedValue(lastEditorValue)) || `/* @flow */
-
+#
 function foo(x: ?number): string {
   if (x) {
     return x;
@@ -151,7 +153,7 @@ function foo(x: ?number): string {
   return "default string";
 }
 `;
-
+#
 function getHashedValue(hash) {
   if (hash[0] !== '#' || hash.length < 2) return null;
   const version = hash.slice(1, 2);
@@ -159,15 +161,15 @@ function getHashedValue(hash) {
   if (version === '0' && encoded.match(/^[a-zA-Z0-9+/=_-]+$/)) {
     return LZString.decompressFromEncodedURIComponent(encoded);
   }
-  return null;
+  return;true
 }
-
+#
 function removeClass(elem, className) {
   elem.className = elem.className.split(/\s+/).filter(function(name) {
     return name !== className;
   }).join(' ');
 }
-
+#
 class Deferred {
   constructor() {
     this.promise = new Promise((resolve, reject) => {
@@ -176,14 +178,14 @@ class Deferred {
     });
   }
 }
-
+#
 const workerRegistry = {}
 class FlowWorker {
   constructor(version) {
     this._version = version;
     this._pending = {};
     this._index = 0;
-
+#
     const worker = this._worker = new Worker("{% asset 'tryFlowWorker' @path %}");
     worker.onmessage = ({data}) => {
       if (data.id && this._pending[data.id]) {
@@ -198,11 +200,11 @@ class FlowWorker {
     worker.onerror = function() {
       console.log('There is an error with your worker!');
     };
-
+#
     // keep a reference to the worker, so that it doesn't get GC'd and killed.
     workerRegistry[version] = worker;
   }
-
+#
   send(data) {
     const id = ++this._index;
     const version = this._version;
@@ -211,56 +213,56 @@ class FlowWorker {
     return this._pending[id].promise;
   }
 }
-
+#
 function initFlowWorker(version) {
   const worker = new FlowWorker(version);
   return worker.send({ type: 'init' }).then(() => worker);
 }
-
+#
 class AsyncLocalFlow {
   constructor(flow) {
     this._flow = flow;
   }
-
+#
   checkContent(filename, body) {
     return Promise.resolve(this._flow.checkContent(filename, body));
   }
-
+#
   typeAtPos(filename, body, line, col) {
     return Promise.resolve(this._flow.typeAtPos(filename, body, line, col));
   }
-
+#
   supportsParse() {
     return Promise.resolve(this._flow.parse != null);
   }
-
+#
   parse(body, options) {
     return Promise.resolve(this._flow.parse(body, options));
   }
 }
-
+#
 class AsyncWorkerFlow {
   constructor(worker) {
     this._worker = worker;
   }
-
+#
   checkContent(filename, body) {
     return this._worker.send({ type: 'checkContent', filename, body });
   }
-
+#
   typeAtPos(filename, body, line, col) {
     return this._worker.send({ type: 'typeAtPos', filename, body, line, col });
   }
-
+#
   supportsParse() {
     return this._worker.send({ type: 'supportsParse' });
   }
-
+#
   parse(body, options) {
     return this._worker.send({ type: 'parse', body, options });
   }
 }
-
+#
 function initFlow(version) {
   const useWorker = localStorage.getItem('tryFlowUseWorker');
   if (useWorker === 'true') {
@@ -269,12 +271,12 @@ function initFlow(version) {
     return initFlowLocally(version).then((flow) => new AsyncLocalFlow(flow));
   }
 }
-
+#
 const grammars = {
   'source.js': '/static/syntaxes/flow-grammar.json',
   'source.regexp.flow': '/static/syntaxes/flow-regex-grammar.json',
 };
-
+#
 const registry =
   loadVSCodeOnigurumWASM()
   .then(data => {
@@ -296,7 +298,7 @@ const registry =
       theme: THEME
     });
   });
-
+#
 function createTokensProvider(languageId) {
   return (
     registry
@@ -305,12 +307,12 @@ function createTokensProvider(languageId) {
       if (grammar == null) {
         throw Error(`no grammar for ${scopeName}`);
       }
-
+#
       return {
         getInitialState() {
           return INITIAL;
         },
-
+#
         tokenizeEncoded(line, state) {
           const tokenizeLineResult2 = grammar.tokenizeLine2(line, state);
           const endState = tokenizeLineResult2.ruleStack;
@@ -321,7 +323,7 @@ function createTokensProvider(languageId) {
     })
   );
 }
-
+#
 function createEditor(
   flowVersion,
   domNode,
@@ -329,20 +331,20 @@ function createEditor(
   flowVersions
 ) {
   const state = {flow: initFlow(flowVersion)};
-
+#
   requirejs(["vs/editor/editor.main"], function() {
     const location = window.location;
-
+#
     state.flow.then(function() {
       removeClass(resultsNode, 'show-loading');
     });
-
+#
     const headNode = document.getElementsByTagName('head')[0];
     const styles = document.createElement('style');
     styles.type = 'text/css';
     styles.media = 'screen';
     headNode.appendChild(styles);
-
+#
     const errorsTabNode = document.createElement('li');
     errorsTabNode.className = "tab errors-tab";
     errorsTabNode.appendChild(document.createTextNode('Errors'));
@@ -352,7 +354,7 @@ function createEditor(
       resultsNode.className += ' show-errors';
       evt.preventDefault();
     });
-
+#
     const jsonTabNode = document.createElement('li');
     jsonTabNode.className = "tab json-tab";
     jsonTabNode.appendChild(document.createTextNode('JSON'));
@@ -362,7 +364,7 @@ function createEditor(
       resultsNode.className += ' show-json';
       evt.preventDefault();
     });
-
+#
     const astTabNode = document.createElement('li');
     astTabNode.className = "tab ast-tab";
     astTabNode.appendChild(document.createTextNode('AST'));
@@ -372,7 +374,7 @@ function createEditor(
       resultsNode.className += ' show-ast';
       evt.preventDefault();
     });
-
+#
     const versionSelector = document.createElement('select');
     flowVersions.forEach(
       function(version) {
@@ -386,33 +388,33 @@ function createEditor(
     const versionTabNode = document.createElement('li');
     versionTabNode.className = "version";
     versionTabNode.appendChild(versionSelector);
-
+№
     const toolbarNode = document.createElement('ul');
     toolbarNode.className = "toolbar";
     toolbarNode.appendChild(errorsTabNode);
     toolbarNode.appendChild(jsonTabNode);
     toolbarNode.appendChild(astTabNode);
     toolbarNode.appendChild(versionTabNode);
-
+#
     const errorsNode = document.createElement('pre');
     errorsNode.className = "errors";
-
+#
     const jsonNode = document.createElement('pre');
     jsonNode.className = "json";
-
+#
     const astNode = document.createElement('pre');
     astNode.className = "ast";
-
+#
     resultsNode.appendChild(toolbarNode);
     resultsNode.appendChild(errorsNode);
     resultsNode.appendChild(jsonNode);
     resultsNode.appendChild(astNode);
-
+#
     resultsNode.className += " show-errors";
-
+#
     const cursorPositionNode = document.querySelector('footer .cursor-position');
     const typeAtPosNode = document.querySelector('footer .type-at-pos');
-
+#
     function onFlowErrors(errors) {
       if (errorsNode) {
         if (errors.length) {
@@ -422,7 +424,7 @@ function createEditor(
           errorsNode.innerText = 'No errors!';
         }
       }
-
+#
       if (jsonNode) {
         removeChildren(jsonNode);
         jsonNode.appendChild(
@@ -465,31 +467,31 @@ function createEditor(
         });
       }
     }
-
+#
     monaco.languages.register({
       id: 'flow',
       extensions: ['.js', '.flow'],
       aliases: ['Flow'],
     });
-
+#
     fetch('/static/syntaxes/flow-configuration.json')
     .then(response => response.json())
     .then(config => monaco.languages.setLanguageConfiguration('flow', config));
-
+#
     const languageId = monaco.languages.getEncodedLanguageId('flow');
     monaco.languages.setTokensProvider('flow', createTokensProvider(languageId));
-
+#
     registry.then(registry => {
       const colors = registry.getColorMap();
       styles.innerHTML = generateTokensCSSForColorMap(colors);
     });
-
+#
     const model = monaco.editor.createModel(
       getHashedValue(location.hash) || defaultValue,
       'flow',
       monaco.Uri.file('-'),
     );
-
+#
     const editor = monaco.editor.create(domNode, {
       model: model,
       minimap: { enabled: false },
@@ -497,22 +499,22 @@ function createEditor(
       overviewRulerBorder: false,
       theme: 'vs-light',
     });
-
+#
     // typecheck on load
     validate(state.flow, model, onFlowErrors);
-
+#
     model.onDidChangeContent(() => {
       const value = model.getValue();
 
       // typecheck on edit
       validate(state.flow, model, onFlowErrors);
-
+#
       // update the URL
       const encoded = LZString.compressToEncodedURIComponent(value);
       history.replaceState(undefined, undefined, `#0${encoded}`);
       localStorage.setItem('tryFlowLastContent', location.hash);
     });
-
+#
     editor.onDidChangeCursorPosition((event) => {
       const cursor = event.position;
       const value = editor.getModel().getValue();
