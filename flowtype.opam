@@ -9,20 +9,20 @@ doc: "https://flow.org/en/docs/getting-started/"
 bug-reports: "https://github.com/facebook/flow/issues"
 depends: [
   "ocaml" {>= "4.09.1"}
-  "base" {>= "v0.12.2"}
+  "base" {>= "v0.14.1"}
   "base-unix"
   "base-bytes"
-  "core_kernel" {>= "v0.12.2"}
-  "dtoa" {>= "0.3.1"}
+  "core_kernel" {>= "v0.14.1"}
+  "dtoa" {>= "0.3.2"}
   "ocamlbuild" {build}
   "ocamlfind" {build}
   "ounit2" {with-test}
-  "sedlex" {>= "2.1"}
-  "lwt" {>= "4.5.0" & < "5.0.0"}
-  "lwt_log" {>= "1.1.0"}
+  "sedlex" {>= "2.3"}
+  "lwt" {>= "5.4.0"}
+  "lwt_log" {>= "1.1.1"}
   "lwt_ppx"
   "ppxlib"
-  "ppx_let" {>= "0.11.0"}
+  "ppx_let" {>= "0.14.0"}
   "ppx_deriving" {build}
   "ppx_gen_rec" {build}
   "visitors" {build}

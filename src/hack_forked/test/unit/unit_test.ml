@@ -66,5 +66,5 @@ let run_only tests names =
   run_all tests
 
 let main tests =
-  let names = Option.value (List.tl @@ Array.to_list Sys.argv) ~default:[] in
+  let names = Option.value (List.tl @@ Array.to_list (Sys.get_argv ())) ~default:[] in
   run_only tests names
