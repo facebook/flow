@@ -56,6 +56,12 @@ type changes =
   | Watchman_unavailable
   | Watchman_pushed of pushed_changes
 
+type mergebase_and_changes = {
+  clock: clock;
+  mergebase: string;
+  changes: SSet.t;
+}
+
 type failure =
   | Dead
   | Restarted
@@ -64,11 +70,13 @@ type env
 
 val init : init_settings -> env option Lwt.t
 
-val get_mergebase_and_changes : env -> (string * SSet.t, failure) Result.t Lwt.t
+val get_mergebase_and_changes : env -> (mergebase_and_changes, failure) Result.t Lwt.t
 
 val get_changes : env -> (env * pushed_changes, failure) Result.t Lwt.t
 
 val close : env -> unit Lwt.t
+
+val force_update_clockspec : clock -> env -> unit
 
 (* Expose some things for testing. *)
 module Testing : sig

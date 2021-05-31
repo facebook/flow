@@ -9,12 +9,18 @@
  * to which request a given response is replying *)
 type request_id = string
 
-type file_watcher_metadata = { changed_mergebase: bool }
+type file_watcher_metadata = {
+  changed_mergebase: bool;
+  missed_changes: bool;
+}
 
-let empty_file_watcher_metadata = { changed_mergebase = false }
+let empty_file_watcher_metadata = { changed_mergebase = false; missed_changes = false }
 
 let merge_file_watcher_metadata a b =
-  { changed_mergebase = a.changed_mergebase || b.changed_mergebase }
+  {
+    changed_mergebase = a.changed_mergebase || b.changed_mergebase;
+    missed_changes = a.missed_changes || b.missed_changes;
+  }
 
 type please_die_reason = MonitorExiting of (Exit.t * string)
 

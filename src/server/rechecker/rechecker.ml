@@ -203,11 +203,20 @@ let rec recheck_single
     let will_be_checked_files = ref (CheckedSet.union env.ServerEnv.checked_files files_to_force) in
     let get_forced () = !will_be_checked_files in
     let workload = get_and_clear_recheck_workload ~process_updates ~get_forced in
-    let files_to_recheck = FilenameSet.union files_to_recheck workload.files_to_recheck in
-    let files_to_force = CheckedSet.union files_to_force workload.files_to_force in
     let file_watcher_metadata =
       MonitorProt.merge_file_watcher_metadata file_watcher_metadata workload.metadata
     in
+    let files_to_recheck = FilenameSet.union files_to_recheck workload.files_to_recheck in
+    let files_to_recheck =
+      if file_watcher_metadata.MonitorProt.missed_changes then
+        (* If the file watcher missed some changes, it's possible that previously-modified
+           files have been reverted when it wasn't watching. Since previously-modified
+           files are focused, we recheck all focused files. *)
+        FilenameSet.union files_to_recheck (CheckedSet.focused env.checked_files)
+      else
+        files_to_recheck
+    in
+    let files_to_force = CheckedSet.union files_to_force workload.files_to_force in
     let recheck_reasons_list_rev = workload.recheck_reasons_rev :: recheck_reasons_list_rev in
     if FilenameSet.is_empty files_to_recheck && CheckedSet.is_empty files_to_force then (
       List.iter (fun callback -> callback None) workload.profiling_callbacks;
