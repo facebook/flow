@@ -238,8 +238,9 @@ let read_single_message_into_queue_wait (message_queue : queue) : queue_message 
     with End_of_file as e ->
       (* This is different from when the client hangs up. It handles the case
          that the daemon process exited: for example, if it was killed. *)
-      let message = Printexc.to_string e in
-      let stack = Printexc.get_backtrace () in
+      let e = Exception.wrap e in
+      let message = Exception.get_ctor_string e in
+      let stack = Exception.get_full_backtrace_string 500 e in
       Lwt.return (Fatal_exception { Marshal_tools.message; stack })
   in
   Queue.push message message_queue.messages;
