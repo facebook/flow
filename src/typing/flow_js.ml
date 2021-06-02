@@ -9765,8 +9765,7 @@ struct
    * Does not add an entry that requires a
    * write later. *)
   and lookup_builtin_with_default cx x default =
-    let builtins = Context.builtins cx in
-    let builtin = Builtins.get_builtin builtins x ~on_missing:(fun () -> default) in
+    let builtin = Flow_js_utils.lookup_builtin_with_default cx x default in
     Tvar.mk_where cx (reason_of_t default) (fun t -> flow_t cx (builtin, t))
 
   and get_builtin_typeapp cx ?trace reason x targs =

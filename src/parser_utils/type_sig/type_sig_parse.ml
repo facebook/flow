@@ -2541,8 +2541,16 @@ let rec expression opts scope locs (loc, expr) =
       object_literal opts scope locs loc ~frozen:false properties
   | E.Array { E.Array.elements; comments = _ } -> array_literal opts scope locs loc elements
   | E.Unary { E.Unary.operator; argument; comments = _ } ->
-    let t = expression opts scope locs argument in
-    Eval (loc, t, Unary operator)
+    begin
+      match operator with
+      | E.Unary.Await ->
+        (* This is already a parse error *)
+        let e = Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Unary) in
+        Err (loc, SigError e)
+      | _ ->
+        let t = expression opts scope locs argument in
+        Eval (loc, t, Unary operator)
+    end
   | E.Binary { E.Binary.operator; left = _; right = _; comments = _ } -> binary loc operator
   | E.Update { E.Update.operator; argument = _; prefix = _; comments = _ } -> update loc operator
   | E.Sequence { E.Sequence.expressions; comments = _ } ->
