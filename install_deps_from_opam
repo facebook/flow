@@ -1,0 +1,12 @@
+/bin/bash -eo pipefail
+make deps
+Makefile:573: *** missing separator.  Stop.
+
+Exited with code exit status 2
+CircleCI received exit code 2
+
+
+
+
+
+
