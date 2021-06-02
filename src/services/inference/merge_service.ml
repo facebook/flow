@@ -55,7 +55,7 @@ let scan_for_component_suppressions ~options ~get_ast_unsafe component =
 
 let merge_context ~options ~reader master_cx component =
   let module Pack = Type_sig_pack in
-  let module Merge = Type_sig_merge in
+  let module Merge = Type_sig_merge.Make (Tvar) (Flow_js) in
   (* make sig context, shared by all file contexts in component *)
   let ccx = Context.make_ccx master_cx in
 
@@ -110,7 +110,7 @@ let merge_context ~options ~reader master_cx component =
   let mk_cyclic_module_t component_rec i _loc =
     let (lazy component) = component_rec in
     let file = component.(i) in
-    file.Merge.exports ()
+    file.Type_sig_merge.exports ()
   in
   let mk_acyclic_module_t dep =
     let dep_cx = get_dep_cx dep in
@@ -199,7 +199,7 @@ let merge_context ~options ~reader master_cx component =
             let f def = lazy (Pack.map_packed aloc def |> Merge.merge (Lazy.force file_rec)) in
             Option.map f exports
           in
-          Merge.CJSExports { type_exports; exports; type_stars; strict }
+          Type_sig_merge.CJSExports { type_exports; exports; type_stars; strict }
         | Pack.ESModule { type_exports; exports; info } ->
           let (Pack.ESModuleInfo { type_export_keys; export_keys; type_stars; stars; strict }) =
             Pack.map_es_module_info aloc info
@@ -224,7 +224,7 @@ let merge_context ~options ~reader master_cx component =
             in
             Base.Array.fold2_exn ~init:SMap.empty ~f export_keys exports
           in
-          Merge.ESExports { type_exports; exports; type_stars; stars; strict }
+          Type_sig_merge.ESExports { type_exports; exports; type_stars; stars; strict }
       in
       fun () ->
         match !merged with
@@ -248,7 +248,7 @@ let merge_context ~options ~reader master_cx component =
           match !merged with
           | Some t -> t
           | None ->
-            let reason = Merge.def_reason def in
+            let reason = Type_sig_merge.def_reason def in
             Tvar.mk_where cx reason (fun tvar ->
                 merged := Some tvar;
                 let t = Merge.merge_def (Lazy.force file_rec) reason def in
@@ -266,7 +266,7 @@ let merge_context ~options ~reader master_cx component =
           match !merged with
           | Some t -> t
           | None ->
-            let reason = Merge.remote_ref_reason remote_ref in
+            let reason = Type_sig_merge.remote_ref_reason remote_ref in
             Tvar.mk_where cx reason (fun tvar ->
                 merged := Some tvar;
                 let t = Merge.merge_remote_ref (Lazy.force file_rec) reason remote_ref in
@@ -282,7 +282,7 @@ let merge_context ~options ~reader master_cx component =
     let rec file_rec =
       lazy
         {
-          Merge.key = file_key;
+          Type_sig_merge.key = file_key;
           cx;
           dependencies;
           exports = visit_exports file_rec;
@@ -314,7 +314,7 @@ let merge_context ~options ~reader master_cx component =
   in
 
   (* pick out leader/representative cx *)
-  let { Merge.cx; _ } = component.(0) in
+  let { Type_sig_merge.cx; _ } = component.(0) in
 
   (* scan for suppressions *)
   scan_for_component_suppressions

@@ -194,7 +194,7 @@ let get_lint_severities metadata options =
  * files. *)
 let mk_check_file ~options ~reader ~cache () =
   let open Type_sig_collections in
-  let module Merge = Type_sig_merge in
+  let module Merge = Type_sig_merge.Make (Tvar) (Flow_js) in
   let module Pack = Type_sig_pack in
   let module Heap = SharedMem.NewAPI in
   let audit = Expensive.ok in
@@ -238,8 +238,8 @@ let mk_check_file ~options ~reader ~cache () =
     let file =
       New_check_cache.find_or_create cache ~find_leader ~master_cx ~create_file:dep_file file_key
     in
-    let t = file.Merge.exports () in
-    copy_into cx file.Merge.cx t;
+    let t = file.Type_sig_merge.exports () in
+    copy_into cx file.Type_sig_merge.cx t;
     t
   (* Create a Type_sig_merge.file record for a dependency, which we use to
    * convert signatures into types. This function reads the signature for a file
@@ -317,7 +317,7 @@ let mk_check_file ~options ~reader ~cache () =
           let f acc name export = SMap.add name export acc in
           Base.Array.fold2_exn ~init:SMap.empty ~f type_export_keys type_exports
         in
-        Merge.CJSExports { type_exports; exports; type_stars; strict }
+        Type_sig_merge.CJSExports { type_exports; exports; type_stars; strict }
       in
       let es_exports addr =
         let (Pack.ESModuleInfo { type_export_keys; export_keys; type_stars; stars; strict }) =
@@ -342,7 +342,7 @@ let mk_check_file ~options ~reader ~cache () =
           let f acc name export = SMap.add name export acc in
           Base.Array.fold2_exn ~init:SMap.empty ~f export_keys exports
         in
-        Merge.ESExports { type_exports; exports; type_stars; stars; strict }
+        Type_sig_merge.ESExports { type_exports; exports; type_stars; stars; strict }
       in
       let resolved =
         lazy
@@ -360,7 +360,7 @@ let mk_check_file ~options ~reader ~cache () =
           (let def = Pack.map_packed_def aloc (deserialize (Heap.read_local_def addr)) in
            let loc = Type_sig.def_id_loc def in
            let name = Type_sig.def_name def in
-           let reason = Merge.def_reason def in
+           let reason = Type_sig_merge.def_reason def in
            let resolved = lazy (Merge.merge_def (Lazy.force file_rec) reason def) in
            let t = mk_sig_tvar cx reason resolved in
            (loc, name, t))
@@ -374,7 +374,7 @@ let mk_check_file ~options ~reader ~cache () =
           (let remote_ref = Pack.map_remote_ref aloc (deserialize (Heap.read_remote_ref addr)) in
            let loc = Pack.remote_ref_loc remote_ref in
            let name = Pack.remote_ref_name remote_ref in
-           let reason = Merge.remote_ref_reason remote_ref in
+           let reason = Type_sig_merge.remote_ref_reason remote_ref in
            let resolved = lazy (Merge.merge_remote_ref (Lazy.force file_rec) reason remote_ref) in
            let t = mk_sig_tvar cx reason resolved in
            (loc, name, t))
@@ -455,7 +455,7 @@ let mk_check_file ~options ~reader ~cache () =
     let rec file_rec =
       lazy
         {
-          Merge.key = file_key;
+          Type_sig_merge.key = file_key;
           cx;
           dependencies;
           exports = exports file_rec;
