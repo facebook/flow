@@ -54,7 +54,7 @@ let log_error = function
     log msg
   | Socket_unavailable { msg } -> log msg
   | Response_error { request; response; msg } -> log ?request ~response msg
-  | Fresh_instance -> Hh_logger.error "Watchman server restarted so we may have missed some updates"
+  | Fresh_instance -> log "Watchman server restarted so we may have missed some updates"
   | Subscription_canceled -> log "Subscription canceled by watchman"
   | Unsupported_watch_roots { roots; failed_paths } ->
     let msg =
