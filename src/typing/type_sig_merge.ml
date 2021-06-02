@@ -157,17 +157,8 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
     | U.Void -> Type.VoidT.at loc trust
     | U.Delete -> Type.BoolT.at loc trust
     | U.Await ->
-      let reason = Reason.(mk_reason (RCustom "await") loc) in
-      let await =
-        Flow_js_utils.lookup_builtin_strict file.cx (Reason.OrdinaryName "$await") reason
-      in
-      (* TODO: use_op *)
-      let use_op = Type.unknown_use in
-      Tvar.mk_no_wrap_where file.cx reason (fun tout ->
-          ConsGen.flow
-            file.cx
-            ( await,
-              Type.CallT (use_op, reason, Type.mk_functioncalltype reason None [Type.Arg t] tout) ))
+      (* This is a parse error *)
+      Type.(AnyT.at (AnyError None) loc)
 
   let eval file loc t = function
     | Unary op -> eval_unary file loc t op
@@ -187,23 +178,11 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
           ConsGen.flow file.cx (t, Type.GetElemT (use_op, reason, index, tout)))
 
   let async_void_return file loc =
-    let t = Type.VoidT.at loc trust in
-    let reason = Reason.(mk_reason (RCustom "async return") loc) in
     Flow_js_utils.lookup_builtin_typeapp
       file.cx
-      reason
+      Reason.(mk_reason (RCustom "async return") loc)
       (Reason.OrdinaryName "Promise")
-      [
-        Tvar.mk_derivable_where file.cx reason (fun tvar ->
-            let funt =
-              Flow_js_utils.lookup_builtin_strict file.cx (Reason.OrdinaryName "$await") reason
-            in
-            let callt = Type.mk_functioncalltype reason None [Type.Arg t] (Type.open_tvar tvar) in
-            let reason =
-              Reason.repos_reason (Reason.aloc_of_reason (TypeUtil.reason_of_t t)) reason
-            in
-            ConsGen.flow file.cx (funt, Type.CallT (Type.unknown_use, reason, callt)));
-      ]
+      [Type.VoidT.at loc trust]
 
   let add_default_constructor reason extends props =
     match extends with
