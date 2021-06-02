@@ -327,14 +327,14 @@ let get_next_event
     | Connected { c_conn; _ } ->
       let server_fd = Timeout.descr_of_in_channel c_conn.ic in
       let (fds, _, _) =
-        try Unix.select [server_fd; client_fd] [] [] 1.0
+        try Sys_utils.select_non_intr [server_fd; client_fd] [] [] 1.0
         with Unix.Unix_error (Unix.EBADF, _, _) as e ->
           (* Either the server died or the Jsonrpc died. Figure out which one *)
           let exn = Exception.wrap e in
           let edata = edata_of_exception exn in
           let server_died =
             try
-              let _ = Unix.select [client_fd] [] [] 0.0 in
+              let _ = Sys_utils.select_non_intr [client_fd] [] [] 0.0 in
               false
             with Unix.Unix_error (Unix.EBADF, _, _) -> true
           in
@@ -352,7 +352,7 @@ let get_next_event
         Lwt.return event
     | _ ->
       let (fds, _, _) =
-        try Unix.select [client_fd] [] [] 1.0
+        try Sys_utils.select_non_intr [client_fd] [] [] 1.0
         with Unix.Unix_error (Unix.EBADF, _, _) as e ->
           (* Jsonrpc process died. This is unrecoverable *)
           let exn = Exception.wrap e in
