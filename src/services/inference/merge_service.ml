@@ -53,9 +53,44 @@ let scan_for_component_suppressions ~options ~get_ast_unsafe component =
       Type_inference_js.scan_for_suppressions cx lint_severities all_comments)
     component
 
+module ConsGen : Type_sig_merge.CONS_GEN = struct
+  let flow = Flow_js.flow
+
+  let flow_t = Flow_js.flow_t
+
+  let mk_typeof_annotation = Flow_js.mk_typeof_annotation
+
+  let reposition cx loc t = Flow_js.reposition cx loc t
+
+  let mk_instance cx reason t = Flow_js.mk_instance cx reason t
+
+  let qualify_type cx reason propname t =
+    let use_op = Type.(Op (GetProperty reason)) in
+    Tvar.mk_no_wrap_where cx reason (fun tvar ->
+        Flow_js.flow cx (t, Type.GetPropT (use_op, reason, propname, tvar)))
+
+  let assert_export_is_type cx reason name t =
+    Tvar.mk_where cx reason (fun tvar ->
+        let name = Reason.OrdinaryName name in
+        Flow_js.flow cx (t, Type.AssertExportIsTypeT (reason, name, tvar)))
+
+  let unify_with cx reason f =
+    Tvar.mk_where cx reason (fun tvar ->
+        let t = f tvar in
+        Flow_js.unify cx tvar t)
+end
+
+[@@@warning "-60"]
+
+(* Don't use Flow_js directly from Merge_service. Instead, encode the respective
+ * logic in ConsGen. *)
+module Flow_js = struct end
+
+[@@@warning "+60"]
+
 let merge_context ~options ~reader master_cx component =
   let module Pack = Type_sig_pack in
-  let module Merge = Type_sig_merge.Make (Tvar) (Flow_js) in
+  let module Merge = Type_sig_merge.Make (Tvar) (ConsGen) in
   (* make sig context, shared by all file contexts in component *)
   let ccx = Context.make_ccx master_cx in
 
@@ -232,11 +267,10 @@ let merge_context ~options ~reader master_cx component =
         | None ->
           let file_loc = ALoc.of_loc { Loc.none with Loc.source = Some file_key } in
           let reason = Reason.(mk_reason RExports file_loc) in
-          Tvar.mk_where cx reason (fun tvar ->
+          ConsGen.unify_with cx reason (fun tvar ->
               merged := Some tvar;
               let exports = mk_exports reason in
-              let t = Merge.merge_exports (Lazy.force file_rec) reason exports in
-              Flow_js.unify cx tvar t)
+              Merge.merge_exports (Lazy.force file_rec) reason exports)
     in
     let visit_def file_rec def =
       let merged = ref None in
@@ -249,10 +283,9 @@ let merge_context ~options ~reader master_cx component =
           | Some t -> t
           | None ->
             let reason = Type_sig_merge.def_reason def in
-            Tvar.mk_where cx reason (fun tvar ->
+            ConsGen.unify_with cx reason (fun tvar ->
                 merged := Some tvar;
-                let t = Merge.merge_def (Lazy.force file_rec) reason def in
-                Flow_js.unify cx tvar t)
+                Merge.merge_def (Lazy.force file_rec) reason def)
         in
         (loc, name, t)
     in
@@ -267,10 +300,9 @@ let merge_context ~options ~reader master_cx component =
           | Some t -> t
           | None ->
             let reason = Type_sig_merge.remote_ref_reason remote_ref in
-            Tvar.mk_where cx reason (fun tvar ->
+            ConsGen.unify_with cx reason (fun tvar ->
                 merged := Some tvar;
-                let t = Merge.merge_remote_ref (Lazy.force file_rec) reason remote_ref in
-                Flow_js.unify cx tvar t)
+                Merge.merge_remote_ref (Lazy.force file_rec) reason remote_ref)
         in
         (loc, name, t)
     in
@@ -290,18 +322,6 @@ let merge_context ~options ~reader master_cx component =
           remote_refs = Remote_refs.map (visit_remote_ref file_rec) remote_refs;
           pattern_defs = Pattern_defs.map (visit_packed file_rec) pattern_defs;
           patterns = Patterns.map (visit_pattern file_rec) patterns;
-          reposition = (fun loc t -> Flow_js.reposition cx loc t);
-          mk_instance = (fun reason t -> Flow_js.mk_instance cx reason t);
-          qualify_type =
-            (fun reason propname t ->
-              let use_op = Type.(Op (GetProperty reason)) in
-              Tvar.mk_no_wrap_where cx reason (fun tvar ->
-                  Flow_js.flow cx (t, Type.GetPropT (use_op, reason, propname, tvar))));
-          export_type =
-            (fun reason name t ->
-              Tvar.mk_where cx reason (fun tvar ->
-                  let name = Reason.OrdinaryName name in
-                  Flow_js.flow cx (t, Type.AssertExportIsTypeT (reason, name, tvar))));
         }
     in
     Lazy.force file_rec

@@ -188,13 +188,60 @@ let get_lint_severities metadata options =
   let strict_mode = Options.strict_mode options in
   Merge_js.get_lint_severities metadata strict_mode lint_severities
 
+module ConsGen : Type_sig_merge.CONS_GEN = struct
+  include Flow_js
+
+  let assert_export_is_type cx reason name t =
+    let open Type in
+    let f tvar =
+      let name = Reason.OrdinaryName name in
+      Flow_js.flow cx (t, AssertExportIsTypeT (reason, name, tvar))
+    in
+    mk_lazy_tvar cx reason f
+
+  let qualify_type cx reason propname t =
+    let open Type in
+    let f tvar =
+      let use_op = Type.(Op (GetProperty reason)) in
+      Flow_js.flow cx (t, GetPropT (use_op, reason, propname, open_tvar tvar))
+    in
+    mk_lazy_tvar cx reason f
+
+  let reposition cx loc t =
+    let reason = Reason.repos_reason loc (TypeUtil.reason_of_t t) in
+    let resolved = lazy (Flow_js.reposition cx loc t) in
+    mk_sig_tvar cx reason resolved
+
+  let mk_instance cx reason c =
+    let open Type in
+    let f tvar =
+      let type_t = DefT (reason, bogus_trust (), TypeT (InstanceKind, tvar)) in
+      Flow_js.flow cx (c, UseT (unknown_use, type_t))
+    in
+    let tvar = mk_lazy_tvar cx reason f in
+    AnnotT (reason, tvar, false)
+
+  let unify_with cx reason f =
+    Tvar.mk_where cx reason (fun tvar ->
+        let t = f tvar in
+        Flow_js.unify cx tvar t)
+end
+
+[@@@warning "-60"]
+
+(* Don't use Flow_js directly from New_check_service. Instead, encode the respective
+ * logic in ConsGen. *)
+module Flow_js = struct end
+
+[@@@warning "+60"]
+
 (* This function is designed to be applied up to the unit argument and returns a
  * function which can be called repeatedly. The returned function closes over an
  * environment which defines caches that can be re-used when checking multiple
  * files. *)
 let mk_check_file ~options ~reader ~cache () =
   let open Type_sig_collections in
-  let module Merge = Type_sig_merge.Make (Tvar) (Flow_js) in
+  let module Merge = Type_sig_merge.Make (Tvar) (ConsGen) in
   let module Pack = Type_sig_pack in
   let module Heap = SharedMem.NewAPI in
   let audit = Expensive.ok in
@@ -418,40 +465,6 @@ let mk_check_file ~options ~reader ~cache () =
       Heap.read_addr_tbl_generic (pattern file_rec) addr Patterns.init
     in
 
-    let reposition loc t =
-      let reason = Reason.repos_reason loc (TypeUtil.reason_of_t t) in
-      let resolved = lazy (Flow_js.reposition cx loc t) in
-      mk_sig_tvar cx reason resolved
-    in
-
-    let mk_instance reason c =
-      let open Type in
-      let f tvar =
-        let type_t = DefT (reason, bogus_trust (), TypeT (InstanceKind, tvar)) in
-        Flow_js.flow cx (c, UseT (unknown_use, type_t))
-      in
-      let tvar = mk_lazy_tvar cx reason f in
-      AnnotT (reason, tvar, false)
-    in
-
-    let qualify_type reason propname t =
-      let open Type in
-      let f tvar =
-        let use_op = Type.(Op (GetProperty reason)) in
-        Flow_js.flow cx (t, GetPropT (use_op, reason, propname, open_tvar tvar))
-      in
-      mk_lazy_tvar cx reason f
-    in
-
-    let export_type reason name t =
-      let open Type in
-      let f tvar =
-        let name = Reason.OrdinaryName name in
-        Flow_js.flow cx (t, AssertExportIsTypeT (reason, name, tvar))
-      in
-      mk_lazy_tvar cx reason f
-    in
-
     let rec file_rec =
       lazy
         {
@@ -463,10 +476,6 @@ let mk_check_file ~options ~reader ~cache () =
           remote_refs = remote_refs file_rec;
           pattern_defs = pattern_defs file_rec;
           patterns = patterns file_rec;
-          reposition;
-          mk_instance;
-          qualify_type;
-          export_type;
         }
     in
     Lazy.force file_rec
@@ -477,7 +486,7 @@ let mk_check_file ~options ~reader ~cache () =
     let connect loc =
       let module_t = module_t loc in
       let require_t = Context.find_require cx loc in
-      Flow_js.flow_t cx (module_t, require_t)
+      ConsGen.flow_t cx (module_t, require_t)
     in
     Nel.iter connect locs
   in

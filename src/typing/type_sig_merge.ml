@@ -39,10 +39,6 @@ type file = {
   remote_refs: (unit -> ALoc.t * string * Type.t) Remote_refs.t;
   patterns: Type.t Lazy.t Patterns.t;
   pattern_defs: Type.t Lazy.t Pattern_defs.t;
-  reposition: ALoc.t -> Type.t -> Type.t;
-  mk_instance: Reason.t -> Type.t -> Type.t;
-  qualify_type: Reason.t -> Type.propref -> Type.t -> Type.t;
-  export_type: Reason.t -> string -> Type.t -> Type.t;
 }
 
 let visit f = f ()
@@ -92,6 +88,8 @@ let trust = Trust.bogus_trust ()
 module type CONS_GEN = sig
   val flow : Context.t -> Type.t * Type.use_t -> unit
 
+  val flow_t : Context.t -> Type.t * Type.t -> unit
+
   val mk_typeof_annotation :
     Context.t ->
     ?trace:Type.trace ->
@@ -100,6 +98,16 @@ module type CONS_GEN = sig
     ?internal:bool ->
     Type.t ->
     Type.t
+
+  val reposition : Context.t -> ALoc.t -> Type.t -> Type.t
+
+  val mk_instance : Context.t -> Reason.t -> Type.t -> Type.t
+
+  val qualify_type : Context.t -> Reason.t -> Type.propref -> Type.t -> Type.t
+
+  val assert_export_is_type : Context.t -> Reason.t -> string -> Type.t -> Type.t
+
+  val unify_with : Context.t -> Reason.t -> (Type.t -> Type.t) -> Type.t
 end
 
 module type TVAR = sig
@@ -333,11 +341,11 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
     match ref with
     | Pack.LocalRef { ref_loc; index } ->
       let (_loc, name, t) = visit (Local_defs.get file.local_defs index) in
-      let t = file.reposition ref_loc t in
+      let t = ConsGen.reposition file.cx ref_loc t in
       f t ref_loc name
     | Pack.RemoteRef { ref_loc; index } ->
       let (_loc, name, t) = visit (Remote_refs.get file.remote_refs index) in
-      let t = file.reposition ref_loc t in
+      let t = ConsGen.reposition file.cx ref_loc t in
       f t ref_loc name
     | Pack.BuiltinRef { ref_loc; name } ->
       let reason = Reason.(mk_reason (RIdentifier (Reason.OrdinaryName name)) ref_loc) in
@@ -355,7 +363,7 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
         let id_reason = Reason.(mk_reason (RType (OrdinaryName name)) id_loc) in
         let reason_op = Reason.(mk_reason (RType (OrdinaryName qname)) loc) in
         let propname = Type.Named (id_reason, Reason.OrdinaryName name) in
-        let t = file.qualify_type reason_op propname t in
+        let t = ConsGen.qualify_type file.cx reason_op propname t in
         f t loc names
       in
       merge_tyref file f qualification
@@ -363,13 +371,13 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
   let merge_type_export file reason = function
     | Pack.ExportTypeRef ref ->
       let f t ref_loc name =
-        let t = file.export_type reason name t in
+        let t = ConsGen.assert_export_is_type file.cx reason name t in
         (Some ref_loc, t)
       in
       merge_ref file f ref
     | Pack.ExportTypeBinding index ->
       let (loc, name, t) = visit (Local_defs.get file.local_defs index) in
-      let t = file.export_type reason name t in
+      let t = ConsGen.assert_export_is_type file.cx reason name t in
       (Some loc, t)
     | Pack.ExportTypeFrom index ->
       let (loc, _name, t) = visit (Remote_refs.get file.remote_refs index) in
@@ -461,7 +469,7 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
     | Pack.TyRef name ->
       let f t ref_loc (name, _) =
         let reason = Reason.(mk_annot_reason (RType (Reason.OrdinaryName name)) ref_loc) in
-        file.mk_instance reason t
+        ConsGen.mk_instance file.cx reason t
       in
       merge_tyref file f name
     | Pack.TyRefApp { loc; name; targs } ->
