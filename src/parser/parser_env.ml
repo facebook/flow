@@ -418,6 +418,7 @@ let enter_function env ~async ~generator =
     in_function = true;
     in_loop = false;
     in_switch = false;
+    in_export = false;
     labels = SSet.empty;
     allow_await = async;
     allow_yield = generator;

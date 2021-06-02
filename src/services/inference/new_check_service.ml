@@ -171,7 +171,7 @@ let unknown_module_t cx mref provider =
     if react_server_module_err then
       Flow_js.add_output cx (Error_message.EImportInternalReactServerModule loc);
     let reason = Reason.mk_reason desc loc in
-    Flow_js.lookup_builtin_strict cx m_name reason
+    Flow_js_utils.lookup_builtin_strict cx m_name reason
 
 let resource_module_t cx f loc = Import_export.mk_resource_module_t cx loc f
 
@@ -181,12 +181,59 @@ let unchecked_module_t cx mref =
   fun loc ->
     let reason = Reason.mk_reason desc loc in
     let default = Type.(AnyT (reason, Untyped)) in
-    Flow_js.lookup_builtin_with_default cx m_name default
+    Flow_js_utils.lookup_builtin_with_default cx m_name default
 
 let get_lint_severities metadata options =
   let lint_severities = Options.lint_severities options in
   let strict_mode = Options.strict_mode options in
   Merge_js.get_lint_severities metadata strict_mode lint_severities
+
+module ConsGen : Type_sig_merge.CONS_GEN = struct
+  include Flow_js
+
+  let assert_export_is_type cx reason name t =
+    let open Type in
+    let f tvar =
+      let name = Reason.OrdinaryName name in
+      Flow_js.flow cx (t, AssertExportIsTypeT (reason, name, tvar))
+    in
+    mk_lazy_tvar cx reason f
+
+  let qualify_type cx reason propname t =
+    let open Type in
+    let f tvar =
+      let use_op = Type.(Op (GetProperty reason)) in
+      Flow_js.flow cx (t, GetPropT (use_op, reason, propname, open_tvar tvar))
+    in
+    mk_lazy_tvar cx reason f
+
+  let reposition cx loc t =
+    let reason = Reason.repos_reason loc (TypeUtil.reason_of_t t) in
+    let resolved = lazy (Flow_js.reposition cx loc t) in
+    mk_sig_tvar cx reason resolved
+
+  let mk_instance cx reason c =
+    let open Type in
+    let f tvar =
+      let type_t = DefT (reason, bogus_trust (), TypeT (InstanceKind, tvar)) in
+      Flow_js.flow cx (c, UseT (unknown_use, type_t))
+    in
+    let tvar = mk_lazy_tvar cx reason f in
+    AnnotT (reason, tvar, false)
+
+  let unify_with cx reason f =
+    Tvar.mk_where cx reason (fun tvar ->
+        let t = f tvar in
+        Flow_js.unify cx tvar t)
+end
+
+[@@@warning "-60"]
+
+(* Don't use Flow_js directly from New_check_service. Instead, encode the respective
+ * logic in ConsGen. *)
+module Flow_js = struct end
+
+[@@@warning "+60"]
 
 (* This function is designed to be applied up to the unit argument and returns a
  * function which can be called repeatedly. The returned function closes over an
@@ -194,7 +241,7 @@ let get_lint_severities metadata options =
  * files. *)
 let mk_check_file ~options ~reader ~cache () =
   let open Type_sig_collections in
-  let module Merge = Type_sig_merge in
+  let module Merge = Type_sig_merge.Make (Tvar) (ConsGen) in
   let module Pack = Type_sig_pack in
   let module Heap = SharedMem.NewAPI in
   let audit = Expensive.ok in
@@ -238,8 +285,8 @@ let mk_check_file ~options ~reader ~cache () =
     let file =
       New_check_cache.find_or_create cache ~find_leader ~master_cx ~create_file:dep_file file_key
     in
-    let t = file.Merge.exports () in
-    copy_into cx file.Merge.cx t;
+    let t = file.Type_sig_merge.exports () in
+    copy_into cx file.Type_sig_merge.cx t;
     t
   (* Create a Type_sig_merge.file record for a dependency, which we use to
    * convert signatures into types. This function reads the signature for a file
@@ -317,7 +364,7 @@ let mk_check_file ~options ~reader ~cache () =
           let f acc name export = SMap.add name export acc in
           Base.Array.fold2_exn ~init:SMap.empty ~f type_export_keys type_exports
         in
-        Merge.CJSExports { type_exports; exports; type_stars; strict }
+        Type_sig_merge.CJSExports { type_exports; exports; type_stars; strict }
       in
       let es_exports addr =
         let (Pack.ESModuleInfo { type_export_keys; export_keys; type_stars; stars; strict }) =
@@ -342,7 +389,7 @@ let mk_check_file ~options ~reader ~cache () =
           let f acc name export = SMap.add name export acc in
           Base.Array.fold2_exn ~init:SMap.empty ~f export_keys exports
         in
-        Merge.ESExports { type_exports; exports; type_stars; stars; strict }
+        Type_sig_merge.ESExports { type_exports; exports; type_stars; stars; strict }
       in
       let resolved =
         lazy
@@ -360,7 +407,7 @@ let mk_check_file ~options ~reader ~cache () =
           (let def = Pack.map_packed_def aloc (deserialize (Heap.read_local_def addr)) in
            let loc = Type_sig.def_id_loc def in
            let name = Type_sig.def_name def in
-           let reason = Merge.def_reason def in
+           let reason = Type_sig_merge.def_reason def in
            let resolved = lazy (Merge.merge_def (Lazy.force file_rec) reason def) in
            let t = mk_sig_tvar cx reason resolved in
            (loc, name, t))
@@ -374,7 +421,7 @@ let mk_check_file ~options ~reader ~cache () =
           (let remote_ref = Pack.map_remote_ref aloc (deserialize (Heap.read_remote_ref addr)) in
            let loc = Pack.remote_ref_loc remote_ref in
            let name = Pack.remote_ref_name remote_ref in
-           let reason = Merge.remote_ref_reason remote_ref in
+           let reason = Type_sig_merge.remote_ref_reason remote_ref in
            let resolved = lazy (Merge.merge_remote_ref (Lazy.force file_rec) reason remote_ref) in
            let t = mk_sig_tvar cx reason resolved in
            (loc, name, t))
@@ -418,44 +465,10 @@ let mk_check_file ~options ~reader ~cache () =
       Heap.read_addr_tbl_generic (pattern file_rec) addr Patterns.init
     in
 
-    let reposition loc t =
-      let reason = Reason.repos_reason loc (TypeUtil.reason_of_t t) in
-      let resolved = lazy (Flow_js.reposition cx loc t) in
-      mk_sig_tvar cx reason resolved
-    in
-
-    let mk_instance reason c =
-      let open Type in
-      let f tvar =
-        let type_t = DefT (reason, bogus_trust (), TypeT (InstanceKind, tvar)) in
-        Flow_js.flow cx (c, UseT (unknown_use, type_t))
-      in
-      let tvar = mk_lazy_tvar cx reason f in
-      AnnotT (reason, tvar, false)
-    in
-
-    let qualify_type reason propname t =
-      let open Type in
-      let f tvar =
-        let use_op = Type.(Op (GetProperty reason)) in
-        Flow_js.flow cx (t, GetPropT (use_op, reason, propname, open_tvar tvar))
-      in
-      mk_lazy_tvar cx reason f
-    in
-
-    let export_type reason name t =
-      let open Type in
-      let f tvar =
-        let name = Reason.OrdinaryName name in
-        Flow_js.flow cx (t, AssertExportIsTypeT (reason, name, tvar))
-      in
-      mk_lazy_tvar cx reason f
-    in
-
     let rec file_rec =
       lazy
         {
-          Merge.key = file_key;
+          Type_sig_merge.key = file_key;
           cx;
           dependencies;
           exports = exports file_rec;
@@ -463,10 +476,6 @@ let mk_check_file ~options ~reader ~cache () =
           remote_refs = remote_refs file_rec;
           pattern_defs = pattern_defs file_rec;
           patterns = patterns file_rec;
-          reposition;
-          mk_instance;
-          qualify_type;
-          export_type;
         }
     in
     Lazy.force file_rec
@@ -477,7 +486,7 @@ let mk_check_file ~options ~reader ~cache () =
     let connect loc =
       let module_t = module_t loc in
       let require_t = Context.find_require cx loc in
-      Flow_js.flow_t cx (module_t, require_t)
+      ConsGen.flow_t cx (module_t, require_t)
     in
     Nel.iter connect locs
   in

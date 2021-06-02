@@ -325,14 +325,14 @@ let get_next_event
     | Connected { c_conn; _ } ->
       let server_fd = Timeout.descr_of_in_channel c_conn.ic in
       let (fds, _, _) =
-        try Unix.select [server_fd; client_fd] [] [] 1.0
+        try Sys_utils.select_non_intr [server_fd; client_fd] [] [] 1.0
         with Unix.Unix_error (Unix.EBADF, _, _) as e ->
           (* Either the server died or the Jsonrpc died. Figure out which one *)
           let exn = Exception.wrap e in
           let edata = edata_of_exception exn in
           let server_died =
             try
-              let _ = Unix.select [client_fd] [] [] 0.0 in
+              let _ = Sys_utils.select_non_intr [client_fd] [] [] 0.0 in
               false
             with Unix.Unix_error (Unix.EBADF, _, _) -> true
           in
@@ -350,7 +350,7 @@ let get_next_event
         Lwt.return event
     | _ ->
       let (fds, _, _) =
-        try Unix.select [client_fd] [] [] 1.0
+        try Sys_utils.select_non_intr [client_fd] [] [] 1.0
         with Unix.Unix_error (Unix.EBADF, _, _) as e ->
           (* Jsonrpc process died. This is unrecoverable *)
           let exn = Exception.wrap e in
@@ -1492,6 +1492,25 @@ let do_live_diagnostics
 
   state
 
+let get_local_request_handler ienv (id, result) =
+  match IdMap.find_opt id ienv.i_outstanding_local_handlers with
+  | Some (handle, handle_error) ->
+    let i_outstanding_local_handlers = IdMap.remove id ienv.i_outstanding_local_handlers in
+    let i_outstanding_local_requests = IdMap.remove id ienv.i_outstanding_local_requests in
+    let ienv = { ienv with i_outstanding_local_handlers; i_outstanding_local_requests } in
+    let handler =
+      match (result, handle) with
+      | (ShowMessageRequestResult result, ShowMessageHandler handle) -> handle result
+      | (ShowStatusResult result, ShowStatusHandler handle) -> handle result
+      | (ConfigurationResult result, ConfigurationHandler handle) -> handle result
+      | (RegisterCapabilityResult, VoidHandler) -> (fun state -> state)
+      | (ErrorResult (e, msg), _) -> handle_error (e, msg)
+      | _ ->
+        failwith (Printf.sprintf "Response %s has mistyped handler" (result_name_to_string result))
+    in
+    Some (ienv, handler)
+  | None -> None
+
 let try_connect flowconfig_name (env : disconnected_env) : state =
   let flowconfig = read_flowconfig_from_disk flowconfig_name env.d_ienv.i_root in
   (* If the version in .flowconfig has changed under our feet then we mustn't
@@ -1870,37 +1889,21 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     let ienv =
       Base.Option.value_exn ~message:"Didn't expect an LSP response yet" (get_ienv state)
     in
-    begin
-      try
-        (* was it a response to a request issued by lspCommand? *)
-        let (handle, handle_error) = IdMap.find id ienv.i_outstanding_local_handlers in
-        let i_outstanding_local_handlers = IdMap.remove id ienv.i_outstanding_local_handlers in
-        let i_outstanding_local_requests = IdMap.remove id ienv.i_outstanding_local_requests in
-        let ienv = { ienv with i_outstanding_local_handlers; i_outstanding_local_requests } in
-        let state = update_ienv (fun _ -> ienv) state in
-        match (result, handle) with
-        | (ShowMessageRequestResult result, ShowMessageHandler handle) ->
-          Ok (handle result state, LogNotNeeded)
-        | (ShowStatusResult result, ShowStatusHandler handle) ->
-          Ok (handle result state, LogNotNeeded)
-        | (ConfigurationResult result, ConfigurationHandler handle) ->
-          Ok (handle result state, LogNotNeeded)
-        | (RegisterCapabilityResult, VoidHandler) -> Ok (state, LogNotNeeded)
-        | (ErrorResult (e, msg), _) -> Ok (handle_error (e, msg) state, LogNotNeeded)
-        | _ ->
-          failwith (Printf.sprintf "Response %s has mistyped handler" (message_name_to_string c))
-      with Not_found ->
-        (* if not, it must be a response to a request issued by the server *)
-        (match state with
-        | Connected cenv ->
-          let (state, _) = track_to_server state c in
-          let wrapped = decode_wrapped id in
-          (* only forward responses if they're to current server *)
-          if wrapped.server_id = cenv.c_ienv.i_server_id then send_lsp_to_server cenv metadata c;
-          Ok (state, LogNotNeeded)
-        | _ ->
-          failwith (Printf.sprintf "Response %s has missing handler" (message_name_to_string c)))
-    end
+    (* was it a response to a request issued by lspCommand? *)
+    (match get_local_request_handler ienv (id, result) with
+    | Some (ienv, handler) ->
+      let state = update_ienv (fun _ -> ienv) state in
+      Ok (handler state, LogNotNeeded)
+    | None ->
+      (* if not, it must be a response to a request issued by the server *)
+      (match state with
+      | Connected cenv ->
+        let (state, _) = track_to_server state c in
+        let wrapped = decode_wrapped id in
+        (* only forward responses if they're to current server *)
+        if wrapped.server_id = cenv.c_ienv.i_server_id then send_lsp_to_server cenv metadata c;
+        Ok (state, LogNotNeeded)
+      | _ -> failwith (Printf.sprintf "Response %s has missing handler" (message_name_to_string c))))
   | (_, Client_message (RequestMessage (id, DocumentSymbolRequest params), metadata)) ->
     (* documentSymbols is handled in the client, not the server, since it's
        purely syntax-driven and we'd like it to work even if the server is

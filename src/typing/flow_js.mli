@@ -108,10 +108,6 @@ val add_output : Context.t -> ?trace:Type.trace -> Error_message.t -> unit
 
 val get_builtin : Context.t -> ?trace:Type.trace -> name -> reason -> Type.t
 
-val lookup_builtin_strict : Context.t -> name -> reason -> Type.t
-
-val lookup_builtin_with_default : Context.t -> name -> Type.t -> Type.t
-
 val get_builtin_type : Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> name -> Type.t
 
 val set_builtin : Context.t -> ?trace:Type.trace -> name -> Type.t -> unit

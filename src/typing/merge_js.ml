@@ -136,7 +136,7 @@ let explicit_unchecked_require cx (m, loc) =
   let reason = Reason.(mk_reason (RUntypedModule m) loc) in
   let m_name = Reason.internal_module_name m in
   let default_t = Type.AnyT (reason, Type.Untyped) in
-  let from_t = Flow_js.lookup_builtin_with_default cx m_name default_t in
+  let from_t = Flow_js_utils.lookup_builtin_with_default cx m_name default_t in
 
   (* flow the declared module type to importing context *)
   let to_t = Context.find_require cx loc in
