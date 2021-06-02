@@ -682,6 +682,10 @@ let lookup_builtin_strict cx x reason =
       add_output cx (Error_message.EBuiltinLookupFailed { reason; name = Some x });
       AnyT.error_of_kind UnresolvedName reason)
 
+let lookup_builtin_with_default cx x default =
+  let builtins = Context.builtins cx in
+  Builtins.get_builtin builtins x ~on_missing:(fun () -> default)
+
 let lookup_builtin_typeapp cx reason x targs =
   let t = lookup_builtin_strict cx x reason in
   typeapp reason t targs

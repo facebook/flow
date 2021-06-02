@@ -104,7 +104,7 @@ let merge_context ~options ~reader master_cx component =
     let builtin_name = Reason.internal_module_name (Modulename.to_string mname) in
     fun loc ->
       let reason = Reason.mk_reason desc loc in
-      Flow_js.lookup_builtin_strict cx builtin_name reason
+      Flow_js_utils.lookup_builtin_strict cx builtin_name reason
   in
   let mk_resource_module_t cx filename loc = Import_export.mk_resource_module_t cx loc filename in
   let mk_cyclic_module_t component_rec i _loc =
@@ -123,7 +123,7 @@ let merge_context ~options ~reader master_cx component =
     fun loc ->
       let reason = Reason.(mk_reason desc loc) in
       let default = Type.(AnyT (reason, Untyped)) in
-      Flow_js.lookup_builtin_with_default cx builtin_name default
+      Flow_js_utils.lookup_builtin_with_default cx builtin_name default
   in
   let file_dependency component_rec cx file_key mref =
     let open Module_heaps in

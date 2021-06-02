@@ -171,7 +171,7 @@ let unknown_module_t cx mref provider =
     if react_server_module_err then
       Flow_js.add_output cx (Error_message.EImportInternalReactServerModule loc);
     let reason = Reason.mk_reason desc loc in
-    Flow_js.lookup_builtin_strict cx m_name reason
+    Flow_js_utils.lookup_builtin_strict cx m_name reason
 
 let resource_module_t cx f loc = Import_export.mk_resource_module_t cx loc f
 
@@ -181,7 +181,7 @@ let unchecked_module_t cx mref =
   fun loc ->
     let reason = Reason.mk_reason desc loc in
     let default = Type.(AnyT (reason, Untyped)) in
-    Flow_js.lookup_builtin_with_default cx m_name default
+    Flow_js_utils.lookup_builtin_with_default cx m_name default
 
 let get_lint_severities metadata options =
   let lint_severities = Options.lint_severities options in
