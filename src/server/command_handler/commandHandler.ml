@@ -1494,7 +1494,7 @@ let mk_lsp_error_response ~ret ~id ~reason ?stack metadata =
 let handle_persistent_canceled ~ret ~id ~metadata ~client:_ ~profiling:_ =
   let e = { Error.code = Error.RequestCancelled; message = "cancelled"; data = None } in
   let response = ResponseMessage (id, ErrorResult (e, "")) in
-  let metadata = with_error metadata ~reason:"cancelled" in
+  let metadata = with_error ~stack:(Utils.Callstack "") ~reason:"cancelled" metadata in
   Lwt.return (ret, LspProt.LspFromServer (Some response), metadata)
 
 let handle_persistent_subscribe ~reader ~options ~metadata ~client ~profiling ~env =
