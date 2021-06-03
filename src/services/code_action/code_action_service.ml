@@ -326,7 +326,23 @@ let ast_transform_of_error ?loc = function
         }
     else
       None
-  | _ -> None
+  | error_message ->
+    (match error_message |> Error_message.friendly_message_of_msg with
+    | Error_message.PropMissing
+        { loc = error_loc; suggestion = Some suggestion; prop = Some prop_name; _ } ->
+      if loc_opt_intersects ~error_loc ?loc then
+        let title = Printf.sprintf "Replace `%s` with `%s`" prop_name suggestion in
+        let diagnostic_title = "replace_prop_typo_at_target" in
+        Some
+          {
+            title;
+            diagnostic_title;
+            transform = Autofix_prop_typo.replace_prop_typo_at_target ~fixed_prop_name:suggestion;
+            target_loc = error_loc;
+          }
+      else
+        None
+    | _ -> None)
 
 let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri loc =
   Flow_error.ErrorSet.fold
@@ -360,29 +376,20 @@ let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri l
         else
           actions
       | error_message ->
-        (match error_message |> Error_message.friendly_message_of_msg with
-        | Error_message.PropMissing
-            { loc = error_loc; suggestion = Some suggestion; prop = Some prop_name; _ } ->
-          if Loc.intersects error_loc loc then
-            let original = Printf.sprintf "`%s`" prop_name in
-            create_suggestion ~diagnostics ~original ~suggestion uri error_loc :: actions
-          else
-            actions
-        | _ ->
-          (match ast_transform_of_error ~loc error_message with
-          | None -> actions
-          | Some { title; diagnostic_title; transform; target_loc } ->
-            autofix_in_upstream_file
-              ~reader
-              ~diagnostics
-              ~ast
-              ~options
-              ~title
-              ~diagnostic_title
-              ~transform
-              uri
-              target_loc
-            :: actions)))
+        (match ast_transform_of_error ~loc error_message with
+        | None -> actions
+        | Some { title; diagnostic_title; transform; target_loc } ->
+          autofix_in_upstream_file
+            ~reader
+            ~diagnostics
+            ~ast
+            ~options
+            ~title
+            ~diagnostic_title
+            ~transform
+            uri
+            target_loc
+          :: actions))
     errors
     []
 

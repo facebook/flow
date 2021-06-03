@@ -47,7 +47,7 @@ export default (suite(
         [...lspIgnoreStatusAndCancellation],
       ),
     ]),
-    test('provide codeAction for PropMissing errors', [
+    test('provide codeAction for PropMissing errors with dot syntax', [
       addFile('prop-missing.js.ignored', 'prop-missing.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
@@ -134,11 +134,108 @@ export default (suite(
                 command: {
                   title: '',
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: [
-                    'textDocument/codeAction',
-                    'typo',
-                    'Replace `faceboy` with `facebook`',
-                  ],
+                  arguments: ['replace_prop_typo_at_target'],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('provide codeAction for PropMissing errors with bracket syntax', [
+      addFile(
+        'prop-missing-bracket-syntax.js.ignored',
+        'prop-missing-bracket-syntax.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/prop-missing-bracket-syntax.js',
+        },
+        range: {
+          start: {
+            line: 3,
+            character: 2,
+          },
+          end: {
+            line: 3,
+            character: 11,
+          },
+        },
+        context: {
+          diagnostics: [
+            {
+              range: {
+                start: {
+                  line: 3,
+                  character: 2,
+                },
+                end: {
+                  line: 3,
+                  character: 11,
+                },
+              },
+              message:
+                'Cannot get `x.faceboy` because property `faceboy` (did you mean `facebook`?) is missing in  object type [1].',
+              severity: 1,
+              code: 'InferError',
+              source: 'Flow',
+            },
+          ],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Replace `faceboy` with `facebook`',
+                kind: 'quickfix',
+                diagnostics: [
+                  {
+                    range: {
+                      start: {
+                        line: 3,
+                        character: 2,
+                      },
+                      end: {
+                        line: 3,
+                        character: 11,
+                      },
+                    },
+                    severity: 1,
+                    code: 'InferError',
+                    source: 'Flow',
+                    message:
+                      'Cannot get `x.faceboy` because property `faceboy` (did you mean `facebook`?) is missing in  object type [1].',
+                    relatedInformation: [],
+                    relatedLocations: [],
+                  },
+                ],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/prop-missing-bracket-syntax.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 3,
+                            character: 2,
+                          },
+                          end: {
+                            line: 3,
+                            character: 11,
+                          },
+                        },
+                        newText: '"facebook"',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: ['replace_prop_typo_at_target'],
                 },
               },
             ],
