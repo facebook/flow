@@ -48,7 +48,7 @@ module Opts = struct
     babel_loose_array_spread: bool;
     check_updates_against_providers: bool;
     disable_live_non_parse_errors: bool;
-    emoji: bool;
+    emoji: bool option;
     enable_const_params: bool;
     enforce_local_inference_annotations: bool;
     enforce_strict_call_arity: bool;
@@ -171,7 +171,7 @@ module Opts = struct
       babel_loose_array_spread = false;
       check_updates_against_providers = false;
       disable_live_non_parse_errors = false;
-      emoji = false;
+      emoji = None;
       enable_const_params = false;
       enforce_local_inference_annotations = false;
       enforce_strict_call_arity = true;
@@ -625,7 +625,7 @@ module Opts = struct
       ("all", boolean (fun opts v -> Ok { opts with all = v }));
       ("autoimports", boolean (fun opts v -> Ok { opts with autoimports = Some v }));
       ("babel_loose_array_spread", babel_loose_array_spread_parser);
-      ("emoji", boolean (fun opts v -> Ok { opts with emoji = v }));
+      ("emoji", boolean (fun opts v -> Ok { opts with emoji = Some v }));
       ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = v }));
       ("experimental.abstract_locations", abstract_locations_parser);
       ("experimental.const_params", boolean (fun opts v -> Ok { opts with enable_const_params = v }));
