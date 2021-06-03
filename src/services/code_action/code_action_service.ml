@@ -296,6 +296,20 @@ let loc_opt_intersects ?loc ~error_loc =
   | Some loc -> Loc.intersects error_loc loc
 
 let ast_transform_of_error ?loc = function
+  | Error_message.EEnumInvalidMemberAccess { reason; suggestion = Some fixed_prop_name; _ } ->
+    let error_loc = Reason.loc_of_reason reason in
+    if loc_opt_intersects ~error_loc ?loc then
+      let original_prop_name = reason |> Reason.desc_of_reason |> Reason.string_of_desc in
+      let title = Printf.sprintf "Replace %s with `%s`" original_prop_name fixed_prop_name in
+      Some
+        {
+          title;
+          diagnostic_title = "replace_enum_prop_typo_at_target";
+          transform = Autofix_prop_typo.replace_prop_typo_at_target ~fixed_prop_name;
+          target_loc = error_loc;
+        }
+    else
+      None
   | Error_message.EClassToObject (reason_class, reason_obj, _) ->
     let error_loc = Reason.loc_of_reason reason_class in
     if loc_opt_intersects ~error_loc ?loc then
@@ -353,13 +367,6 @@ let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri l
         Flow_error.msg_of_error error
         |> Error_message.map_loc_of_error_message (Parsing_heaps.Reader.loc_of_aloc ~reader)
       with
-      | Error_message.EEnumInvalidMemberAccess { reason; suggestion = Some suggestion; _ } ->
-        let error_loc = Reason.loc_of_reason reason in
-        if Loc.intersects error_loc loc then
-          let original = reason |> Reason.desc_of_reason |> Reason.string_of_desc in
-          create_suggestion ~diagnostics ~original ~suggestion uri error_loc :: actions
-        else
-          actions
       | Error_message.EBuiltinLookupFailed { reason; name = Some name }
         when Options.autoimports options ->
         let error_loc = Reason.loc_of_reason reason in

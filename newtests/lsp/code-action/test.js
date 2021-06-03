@@ -346,7 +346,7 @@ export default (suite(
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                   arguments: [
                     'textDocument/codeAction',
-                    'typo',
+                    'replace_enum_prop_typo_at_target',
                     'Replace `Foobat` with `Foobar`',
                   ],
                 },
