@@ -277,7 +277,9 @@ let autofix_in_upstream_file
               {
                 Command.title = "";
                 command = Command.Command "log";
-                arguments = [Hh_json.JSON_String diagnostic_title];
+                arguments =
+                  ["textDocument/codeAction"; diagnostic_title; title]
+                  |> List.map (fun str -> Hh_json.JSON_String str);
               } );
       }
 

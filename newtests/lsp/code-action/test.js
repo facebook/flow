@@ -134,7 +134,11 @@ export default (suite(
                 command: {
                   title: '',
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: ['replace_prop_typo_at_target'],
+                  arguments: [
+                    'textDocument/codeAction',
+                    'replace_prop_typo_at_target',
+                    'Replace `faceboy` with `facebook`',
+                  ],
                 },
               },
             ],
@@ -235,7 +239,11 @@ export default (suite(
                 command: {
                   title: '',
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: ['replace_prop_typo_at_target'],
+                  arguments: [
+                    'textDocument/codeAction',
+                    'replace_prop_typo_at_target',
+                    'Replace `faceboy` with `facebook`',
+                  ],
                 },
               },
             ],
@@ -595,7 +603,11 @@ export default (suite(
                 command: {
                   title: '',
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: ['replace_obj_with_interface'],
+                  arguments: [
+                    'textDocument/codeAction',
+                    'replace_obj_with_interface',
+                    'Rewrite object type as an interface',
+                  ],
                 },
               },
             ],
@@ -697,7 +709,11 @@ export default (suite(
                 command: {
                   title: '',
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: ['replace_obj_with_interface'],
+                  arguments: [
+                    'textDocument/codeAction',
+                    'replace_obj_with_interface',
+                    'Rewrite object type as an interface',
+                  ],
                 },
               },
             ],
@@ -799,7 +815,11 @@ export default (suite(
                 command: {
                   title: '',
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: ['replace_obj_with_interface'],
+                  arguments: [
+                    'textDocument/codeAction',
+                    'replace_obj_with_interface',
+                    'Rewrite `T` as an interface',
+                  ],
                 },
               },
             ],
@@ -902,7 +922,11 @@ export default (suite(
                 command: {
                   title: '',
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: ['replace_obj_with_interface'],
+                  arguments: [
+                    'textDocument/codeAction',
+                    'replace_obj_with_interface',
+                    'Rewrite object type as an interface',
+                  ],
                 },
               },
             ],
@@ -999,7 +1023,11 @@ export default (suite(
                 command: {
                   title: '',
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: ['replace_method_with_arrow'],
+                  arguments: [
+                    'textDocument/codeAction',
+                    'replace_method_with_arrow',
+                    'Rewrite function as an arrow function',
+                  ],
                 },
               },
             ]),
