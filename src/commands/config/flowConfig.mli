@@ -73,7 +73,7 @@ val check_updates_against_providers : config -> bool
 
 val disable_live_non_parse_errors : config -> bool
 
-val emoji : config -> bool
+val emoji : config -> bool option
 
 val enable_const_params : config -> bool
 
