@@ -181,6 +181,8 @@ val react_server_component_exts : config -> SSet.t
 
 val recursion_limit : config -> int
 
+val refactor : config -> bool option
+
 val root_name : config -> string option
 
 val run_post_inference_implicit_instantiation : config -> bool
