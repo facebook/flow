@@ -1363,7 +1363,7 @@ let make_env flowconfig flowconfig_name connect_flags root =
     shm_log_level = connect_flags.shm_flags.shm_log_level;
     log_file;
     ignore_version = connect_flags.ignore_version;
-    emoji = FlowConfig.emoji flowconfig;
+    emoji = Base.Option.value (FlowConfig.emoji flowconfig) ~default:false;
     quiet = connect_flags.quiet;
     flowconfig_name;
     rerun_on_mismatch;
