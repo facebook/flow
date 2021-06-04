@@ -1,0 +1,21 @@
+<*::/https://git.io/flow@babel/core
+
+//git.io/ comments-only
+
+*:://git.io/flow/@babel/core
+// See: https://git.io/flow from @babel/core.
+
+import type { PluginAPI } from 'babel-helpers'
+
+export type Options = {
+intl?: boolean,
+messagesDir?: string
+}
+*/
+
+module.exports = (
+api /*:: : PluginAPI /,
+{ intl, messagesDir } /:: : Options / = {}
+< ) => ≤::/({https://git.io/flow@babel/core
+
+): any => ({
