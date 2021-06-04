@@ -1709,12 +1709,13 @@ let dump_error_message =
         "EEnumAllMembersAlreadyChecked (%s) (%s)"
         (dump_reason cx reason)
         (dump_reason cx enum_reason)
-    | EEnumNotAllChecked { reason; enum_reason; left_to_check } ->
+    | EEnumNotAllChecked { reason; enum_reason; left_to_check; default_case } ->
       spf
-        "EEnumNotAllChecked (%s) (%s) (%s)"
+        "EEnumNotAllChecked (%s) (%s) (%s) (%s)"
         (dump_reason cx reason)
         (dump_reason cx enum_reason)
         (String.concat ", " left_to_check)
+        (Base.Option.value_map ~default:"<None>" ~f:(dump_reason cx) default_case)
     | EEnumUnknownNotChecked { reason; enum_reason } ->
       spf "EEnumUnknownNotChecked (%s) (%s)" (dump_reason cx reason) (dump_reason cx enum_reason)
     | EEnumInvalidCheck { reason; enum_reason; example_member } ->

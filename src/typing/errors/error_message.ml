@@ -384,6 +384,7 @@ and 'loc t' =
       reason: 'loc virtual_reason;
       enum_reason: 'loc virtual_reason;
       left_to_check: string list;
+      default_case: 'loc virtual_reason option;
     }
   | EEnumUnknownNotChecked of {
       reason: 'loc virtual_reason;
@@ -945,9 +946,14 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EEnumAllMembersAlreadyChecked { reason; enum_reason } ->
     EEnumAllMembersAlreadyChecked
       { reason = map_reason reason; enum_reason = map_reason enum_reason }
-  | EEnumNotAllChecked { reason; enum_reason; left_to_check } ->
+  | EEnumNotAllChecked { reason; enum_reason; left_to_check; default_case } ->
     EEnumNotAllChecked
-      { reason = map_reason reason; enum_reason = map_reason enum_reason; left_to_check }
+      {
+        reason = map_reason reason;
+        enum_reason = map_reason enum_reason;
+        left_to_check;
+        default_case = Option.map map_reason default_case;
+      }
   | EEnumUnknownNotChecked { reason; enum_reason } ->
     EEnumUnknownNotChecked { reason = map_reason reason; enum_reason = map_reason enum_reason }
   | EEnumInvalidCheck { reason; enum_reason; example_member } ->
@@ -1434,6 +1440,8 @@ let kind_of_msg =
     | ESignatureVerification _ -> LintError Lints.SignatureVerificationFailure
     | EImplicitInexactObject _ -> LintError Lints.ImplicitInexactObject
     | EAmbiguousObjectType _ -> LintError Lints.AmbiguousObjectType
+    | EEnumNotAllChecked { default_case = Some _; _ } ->
+      LintError Lints.RequireExplicitEnumSwitchCases
     | EUninitializedInstanceProperty _ -> LintError Lints.UninitializedInstanceProperty
     | EBadDefaultImportAccess _ -> LintError Lints.DefaultImportAccess
     | EBadDefaultImportDestructuring _ -> LintError Lints.DefaultImportAccess
@@ -3451,7 +3459,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | EEnumNotAllChecked { reason; enum_reason; left_to_check } ->
+  | EEnumNotAllChecked { reason; enum_reason; left_to_check; default_case } ->
     let left_to_check_features =
       match left_to_check with
       | [member_to_check] ->
@@ -3471,9 +3479,22 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         (text "the members " :: members_features)
         @ [text " of enum "; ref enum_reason; text " have"]
     in
+    let default_features =
+      match default_case with
+      | Some default_reason ->
+        [
+          text " The ";
+          ref default_reason;
+          text " does not check for the missing members as the ";
+          code (Lints.string_of_kind Lints.RequireExplicitEnumSwitchCases);
+          text " lint has been enabled.";
+        ]
+      | None -> []
+    in
     let features =
       (text "Incomplete exhaustive check: " :: left_to_check_features)
       @ [text " not been considered in check of "; desc reason; text "."]
+      @ default_features
     in
     Normal { features }
   | EEnumUnknownNotChecked { reason; enum_reason } ->
@@ -3623,6 +3644,7 @@ let is_lint_error = function
   | EUnnecessaryInvariant _
   | EImplicitInexactObject _
   | EAmbiguousObjectType _
+  | EEnumNotAllChecked { default_case = Some _; _ }
   | EUninitializedInstanceProperty _ ->
     true
   | _ -> false
@@ -3736,7 +3758,8 @@ let error_code_of_message err : error_code option =
   | EEnumMemberDuplicateValue _ -> Some DuplicateEnumInit
   | EEnumMemberUsedAsType _ -> Some EnumValueAsType
   | EEnumModification _ -> Some CannotWriteEnum
-  | EEnumNotAllChecked _ -> Some InvalidExhaustiveCheck
+  | EEnumNotAllChecked { default_case = None; _ } -> Some InvalidExhaustiveCheck
+  | EEnumNotAllChecked { default_case = Some _; _ } -> Some RequireExplicitEnumSwitchCases
   | EEnumUnknownNotChecked _ -> Some InvalidExhaustiveCheck
   | EEscapedGeneric _ -> Some EscapedGeneric
   | EExpectedBooleanLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
