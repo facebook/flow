@@ -7304,12 +7304,17 @@ struct
       in
       let (left_over, _) = List.fold_left check_member (members, SMap.empty) checks in
       (match (SMap.is_empty left_over, default_case, has_unknown_members) with
-      | (false, None, _) ->
+      | (false, _, _) ->
         add_output
           cx
           ~trace
           (Error_message.EEnumNotAllChecked
-             { reason = check_reason; enum_reason; left_to_check = SMap.keys left_over });
+             {
+               reason = check_reason;
+               enum_reason;
+               left_to_check = SMap.keys left_over;
+               default_case;
+             });
         enum_exhaustive_check_incomplete cx ~trace ~reason:check_reason incomplete_out
       (* When we have unknown members, a default is required even when we've checked all known members. *)
       | (true, None, true) ->

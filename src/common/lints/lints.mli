@@ -39,6 +39,7 @@ type lint_kind =
   | ImplicitInexactObject
   | UninitializedInstanceProperty
   | AmbiguousObjectType
+  | RequireExplicitEnumSwitchCases
   | DefaultImportAccess
   | InvalidImportStarUse
   | NonConstVarExport

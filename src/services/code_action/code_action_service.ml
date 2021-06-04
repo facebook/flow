@@ -331,6 +331,24 @@ let ast_transform_of_error ?loc = function
           }
       else
         None
+    | Error_message.IncompatibleUse
+        { loc = error_loc; upper_kind = Error_message.IncompatibleGetPropT _; reason_lower; _ } ->
+      (match (loc_opt_intersects ~error_loc ?loc, Reason.desc_of_reason reason_lower) with
+      | (true, ((Reason.RVoid | Reason.RNull | Reason.RVoidedNull | Reason.RNullOrVoid) as r)) ->
+        let title =
+          Printf.sprintf
+            "Add optional chaining for object that might be `%s`"
+            (Reason.string_of_desc r)
+        in
+        let diagnostic_title = "add_optional_chaining" in
+        Some
+          {
+            title;
+            diagnostic_title;
+            transform = Autofix_optional_chaining.add_optional_chaining;
+            target_loc = error_loc;
+          }
+      | _ -> None)
     | _ -> None)
 
 let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri loc =
