@@ -503,7 +503,7 @@ export default (suite(
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                   arguments: [
                     'textDocument/codeAction',
-                    'typo',
+                    'fix_parse_error',
                     "Replace `>` with `{'>'}`",
                   ],
                 },

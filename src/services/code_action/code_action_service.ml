@@ -43,33 +43,6 @@ let autofix_exports_code_actions
   else
     []
 
-let create_suggestion ~diagnostics ~original ~suggestion uri loc =
-  let open Lsp in
-  let title = Printf.sprintf "Replace %s with `%s`" original suggestion in
-  let error_range = Flow_lsp_conversions.loc_to_lsp_range loc in
-  let relevant_diagnostics =
-    diagnostics |> List.filter (fun PublishDiagnostics.{ range; _ } -> range = error_range)
-  in
-  let textEdit = TextEdit.{ range = error_range; newText = suggestion } in
-  CodeAction.Action
-    CodeAction.
-      {
-        title;
-        kind = CodeActionKind.quickfix;
-        diagnostics = relevant_diagnostics;
-        action =
-          CodeAction.BothEditThenCommand
-            ( WorkspaceEdit.{ changes = UriMap.singleton uri [textEdit] },
-              {
-                (* https://github.com/microsoft/language-server-protocol/issues/933 *)
-                Command.title = "";
-                command = Command.Command "log";
-                arguments =
-                  ["textDocument/codeAction"; "typo"; title]
-                  |> List.map (fun str -> Hh_json.JSON_String str);
-              } );
-      }
-
 let main_of_package ~reader package_dir =
   let json_path = package_dir ^ "/package.json" in
   match Package_heaps.Reader.get_package ~reader json_path with
@@ -408,8 +381,30 @@ let code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors =
       match parse_error with
       | (error_loc, Parse_error.UnexpectedTokenWithSuggestion (token, suggestion)) ->
         if Loc.intersects error_loc loc then
-          let original = Printf.sprintf "`%s`" token in
-          create_suggestion ~diagnostics ~original ~suggestion uri error_loc :: acc
+          let title = Printf.sprintf "Replace `%s` with `%s`" token suggestion in
+          let error_range = Flow_lsp_conversions.loc_to_lsp_range error_loc in
+          let open Lsp in
+          let relevant_diagnostics =
+            diagnostics |> List.filter (fun PublishDiagnostics.{ range; _ } -> range = error_range)
+          in
+          let textEdit = TextEdit.{ range = error_range; newText = suggestion } in
+          CodeAction.Action
+            {
+              CodeAction.title;
+              kind = CodeActionKind.quickfix;
+              diagnostics = relevant_diagnostics;
+              action =
+                CodeAction.BothEditThenCommand
+                  ( WorkspaceEdit.{ changes = UriMap.singleton uri [textEdit] },
+                    {
+                      Command.title = "";
+                      command = Command.Command "log";
+                      arguments =
+                        ["textDocument/codeAction"; "fix_parse_error"; title]
+                        |> List.map (fun str -> Hh_json.JSON_String str);
+                    } );
+            }
+          :: acc
         else
           acc
       | _ -> acc)
