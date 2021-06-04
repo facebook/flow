@@ -1,3 +1,22 @@
+Error ------------------------------------------------------------------------------------- not-fully-exhaustive.js:21:9
+
+Incomplete exhaustive check: the members `C` and `B` of enum `U` [1] have not been considered in check of `u`. The
+default case [2] does not check for the missing members as the `require-explicit-enum-switch-cases` lint has been
+enabled. [require-explicit-enum-switch-cases]
+
+   not-fully-exhaustive.js:21:9
+   21| switch (u) { // Error
+               ^
+
+References:
+   not-fully-exhaustive.js:10:16
+   10| declare var u: U;
+                      ^ [1]
+   not-fully-exhaustive.js:23:3
+   23|   default: break;
+         ^^^^^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------ unknown-members.js:30:9
 
 Incomplete exhaustive check: the member `B` of enum `E` [1] has not been considered in check of `x`.
@@ -62,4 +81,4 @@ References:
 
 
 
-Found 4 errors
+Found 5 errors

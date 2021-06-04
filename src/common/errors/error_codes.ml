@@ -122,6 +122,7 @@ type error_code =
   | ReassignImport
   | ReferenceBeforeDeclaration
   | RefineAsValue
+  | RequireExplicitEnumSwitchCases
   | SignatureVerificationFailure
   | SketchyNullBool
   | SketchyNullMixed
@@ -160,6 +161,7 @@ let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.ImplicitInexactObject -> ImplicitInexactObject
   | Lints.UninitializedInstanceProperty -> UninitializedInstanceProperty
   | Lints.AmbiguousObjectType -> AmbiguousObjectType
+  | Lints.RequireExplicitEnumSwitchCases -> RequireExplicitEnumSwitchCases
   | Lints.SketchyNumber Lints.SketchyNumberAnd -> SketchyNumberAnd
   | Lints.SketchyNull (Lints.SketchyNullBool | Lints.SketchyNullEnumBool) -> SketchyNullBool
   | Lints.SketchyNull (Lints.SketchyNullString | Lints.SketchyNullEnumString) -> SketchyNullString
@@ -288,6 +290,7 @@ let string_of_code : error_code -> string = function
   | ReassignImport -> "reassign-import"
   | ReferenceBeforeDeclaration -> "reference-before-declaration"
   | RefineAsValue -> "refine-as-value"
+  | RequireExplicitEnumSwitchCases -> "require-explicit-enum-switch-cases"
   | SignatureVerificationFailure -> "signature-verification-failure"
   | SketchyNullBool -> "sketchy-null-bool"
   | SketchyNullMixed -> "sketchy-null-mixed"
