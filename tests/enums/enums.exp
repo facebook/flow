@@ -1995,6 +1995,25 @@ References:
                           ^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------- not-fully-exhaustive.js:19:9
+
+Incomplete exhaustive check: the members `C` and `B` of enum `E` [1] have not been considered in check of `e`. The
+default case [2] does not check for the missing members as the `require-explicit-enum-switch-cases` lint has been
+enabled. [require-explicit-enum-switch-cases]
+
+   not-fully-exhaustive.js:19:9
+   19| switch (e) { // Error
+               ^
+
+References:
+   not-fully-exhaustive.js:9:16
+    9| declare var e: E;
+                      ^ [1]
+   not-fully-exhaustive.js:21:3
+   21|   default: break;
+         ^^^^^^^^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------- refinement.js:15:4
 
 Cannot cast `bVoidable` to `B` because undefined [1] is incompatible with `B` [2]. [incompatible-cast]
@@ -3371,7 +3390,7 @@ References:
 
 
 
-Found 203 errors
+Found 204 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

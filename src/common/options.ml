@@ -108,6 +108,7 @@ type t = {
   opt_react_runtime: react_runtime;
   opt_react_server_component_exts: SSet.t;
   opt_recursion_limit: int;
+  opt_refactor: bool;
   opt_root_name: string option;
   opt_root: Path.t;
   opt_run_post_inference_implicit_instantiation: bool;
@@ -223,6 +224,8 @@ let react_runtime opts = opts.opt_react_runtime
 let react_server_component_exts opts = opts.opt_react_server_component_exts
 
 let recursion_limit opts = opts.opt_recursion_limit
+
+let refactor opts = opts.opt_refactor
 
 let root opts = opts.opt_root
 

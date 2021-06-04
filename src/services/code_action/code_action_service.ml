@@ -43,33 +43,6 @@ let autofix_exports_code_actions
   else
     []
 
-let create_suggestion ~diagnostics ~original ~suggestion uri loc =
-  let open Lsp in
-  let title = Printf.sprintf "Replace %s with `%s`" original suggestion in
-  let error_range = Flow_lsp_conversions.loc_to_lsp_range loc in
-  let relevant_diagnostics =
-    diagnostics |> List.filter (fun PublishDiagnostics.{ range; _ } -> range = error_range)
-  in
-  let textEdit = TextEdit.{ range = error_range; newText = suggestion } in
-  CodeAction.Action
-    CodeAction.
-      {
-        title;
-        kind = CodeActionKind.quickfix;
-        diagnostics = relevant_diagnostics;
-        action =
-          CodeAction.BothEditThenCommand
-            ( WorkspaceEdit.{ changes = UriMap.singleton uri [textEdit] },
-              {
-                (* https://github.com/microsoft/language-server-protocol/issues/933 *)
-                Command.title = "";
-                command = Command.Command "log";
-                arguments =
-                  ["textDocument/codeAction"; "typo"; title]
-                  |> List.map (fun str -> Hh_json.JSON_String str);
-              } );
-      }
-
 let main_of_package ~reader package_dir =
   let json_path = package_dir ^ "/package.json" in
   match Package_heaps.Reader.get_package ~reader json_path with
@@ -277,7 +250,9 @@ let autofix_in_upstream_file
               {
                 Command.title = "";
                 command = Command.Command "log";
-                arguments = [Hh_json.JSON_String diagnostic_title];
+                arguments =
+                  ["textDocument/codeAction"; diagnostic_title; title]
+                  |> List.map (fun str -> Hh_json.JSON_String str);
               } );
       }
 
@@ -294,6 +269,20 @@ let loc_opt_intersects ?loc ~error_loc =
   | Some loc -> Loc.intersects error_loc loc
 
 let ast_transform_of_error ?loc = function
+  | Error_message.EEnumInvalidMemberAccess { reason; suggestion = Some fixed_prop_name; _ } ->
+    let error_loc = Reason.loc_of_reason reason in
+    if loc_opt_intersects ~error_loc ?loc then
+      let original_prop_name = reason |> Reason.desc_of_reason |> Reason.string_of_desc in
+      let title = Printf.sprintf "Replace %s with `%s`" original_prop_name fixed_prop_name in
+      Some
+        {
+          title;
+          diagnostic_title = "replace_enum_prop_typo_at_target";
+          transform = Autofix_prop_typo.replace_prop_typo_at_target ~fixed_prop_name;
+          target_loc = error_loc;
+        }
+    else
+      None
   | Error_message.EClassToObject (reason_class, reason_obj, _) ->
     let error_loc = Reason.loc_of_reason reason_class in
     if loc_opt_intersects ~error_loc ?loc then
@@ -326,7 +315,41 @@ let ast_transform_of_error ?loc = function
         }
     else
       None
-  | _ -> None
+  | error_message ->
+    (match error_message |> Error_message.friendly_message_of_msg with
+    | Error_message.PropMissing
+        { loc = error_loc; suggestion = Some suggestion; prop = Some prop_name; _ } ->
+      if loc_opt_intersects ~error_loc ?loc then
+        let title = Printf.sprintf "Replace `%s` with `%s`" prop_name suggestion in
+        let diagnostic_title = "replace_prop_typo_at_target" in
+        Some
+          {
+            title;
+            diagnostic_title;
+            transform = Autofix_prop_typo.replace_prop_typo_at_target ~fixed_prop_name:suggestion;
+            target_loc = error_loc;
+          }
+      else
+        None
+    | Error_message.IncompatibleUse
+        { loc = error_loc; upper_kind = Error_message.IncompatibleGetPropT _; reason_lower; _ } ->
+      (match (loc_opt_intersects ~error_loc ?loc, Reason.desc_of_reason reason_lower) with
+      | (true, ((Reason.RVoid | Reason.RNull | Reason.RVoidedNull | Reason.RNullOrVoid) as r)) ->
+        let title =
+          Printf.sprintf
+            "Add optional chaining for object that might be `%s`"
+            (Reason.string_of_desc r)
+        in
+        let diagnostic_title = "add_optional_chaining" in
+        Some
+          {
+            title;
+            diagnostic_title;
+            transform = Autofix_optional_chaining.add_optional_chaining;
+            target_loc = error_loc;
+          }
+      | _ -> None)
+    | _ -> None)
 
 let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri loc =
   Flow_error.ErrorSet.fold
@@ -335,13 +358,6 @@ let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri l
         Flow_error.msg_of_error error
         |> Error_message.map_loc_of_error_message (Parsing_heaps.Reader.loc_of_aloc ~reader)
       with
-      | Error_message.EEnumInvalidMemberAccess { reason; suggestion = Some suggestion; _ } ->
-        let error_loc = Reason.loc_of_reason reason in
-        if Loc.intersects error_loc loc then
-          let original = reason |> Reason.desc_of_reason |> Reason.string_of_desc in
-          create_suggestion ~diagnostics ~original ~suggestion uri error_loc :: actions
-        else
-          actions
       | Error_message.EBuiltinLookupFailed { reason; name = Some name }
         when Options.autoimports options ->
         let error_loc = Reason.loc_of_reason reason in
@@ -360,29 +376,20 @@ let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri l
         else
           actions
       | error_message ->
-        (match error_message |> Error_message.friendly_message_of_msg with
-        | Error_message.PropMissing
-            { loc = error_loc; suggestion = Some suggestion; prop = Some prop_name; _ } ->
-          if Loc.intersects error_loc loc then
-            let original = Printf.sprintf "`%s`" prop_name in
-            create_suggestion ~diagnostics ~original ~suggestion uri error_loc :: actions
-          else
-            actions
-        | _ ->
-          (match ast_transform_of_error ~loc error_message with
-          | None -> actions
-          | Some { title; diagnostic_title; transform; target_loc } ->
-            autofix_in_upstream_file
-              ~reader
-              ~diagnostics
-              ~ast
-              ~options
-              ~title
-              ~diagnostic_title
-              ~transform
-              uri
-              target_loc
-            :: actions)))
+        (match ast_transform_of_error ~loc error_message with
+        | None -> actions
+        | Some { title; diagnostic_title; transform; target_loc } ->
+          autofix_in_upstream_file
+            ~reader
+            ~diagnostics
+            ~ast
+            ~options
+            ~title
+            ~diagnostic_title
+            ~transform
+            uri
+            target_loc
+          :: actions))
     errors
     []
 
@@ -392,8 +399,30 @@ let code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors =
       match parse_error with
       | (error_loc, Parse_error.UnexpectedTokenWithSuggestion (token, suggestion)) ->
         if Loc.intersects error_loc loc then
-          let original = Printf.sprintf "`%s`" token in
-          create_suggestion ~diagnostics ~original ~suggestion uri error_loc :: acc
+          let title = Printf.sprintf "Replace `%s` with `%s`" token suggestion in
+          let error_range = Flow_lsp_conversions.loc_to_lsp_range error_loc in
+          let open Lsp in
+          let relevant_diagnostics =
+            diagnostics |> List.filter (fun PublishDiagnostics.{ range; _ } -> range = error_range)
+          in
+          let textEdit = TextEdit.{ range = error_range; newText = suggestion } in
+          CodeAction.Action
+            {
+              CodeAction.title;
+              kind = CodeActionKind.quickfix;
+              diagnostics = relevant_diagnostics;
+              action =
+                CodeAction.BothEditThenCommand
+                  ( WorkspaceEdit.{ changes = UriMap.singleton uri [textEdit] },
+                    {
+                      Command.title = "";
+                      command = Command.Command "log";
+                      arguments =
+                        ["textDocument/codeAction"; "fix_parse_error"; title]
+                        |> List.map (fun str -> Hh_json.JSON_String str);
+                    } );
+            }
+          :: acc
         else
           acc
       | _ -> acc)

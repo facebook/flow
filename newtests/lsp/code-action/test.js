@@ -47,7 +47,165 @@ export default (suite(
         [...lspIgnoreStatusAndCancellation],
       ),
     ]),
-    test('provide codeAction for PropMissing errors', [
+    test('provide codeAction for adding optional chaining', [
+      addFile('add-optional-chaining.js.ignored', 'add-optional-chaining.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/add-optional-chaining.js',
+        },
+        range: {
+          start: {
+            line: 3,
+            character: 4,
+          },
+          end: {
+            line: 3,
+            character: 7,
+          },
+        },
+        context: {
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Add optional chaining for object that might be `null`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/add-optional-chaining.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 3,
+                            character: 0,
+                          },
+                          end: {
+                            line: 3,
+                            character: 7,
+                          },
+                        },
+                        newText: '(foo?.bar)',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'add_optional_chaining',
+                    'Add optional chaining for object that might be `null`',
+                  ],
+                },
+              },
+              {
+                title:
+                  'Add optional chaining for object that might be `undefined`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/add-optional-chaining.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 3,
+                            character: 0,
+                          },
+                          end: {
+                            line: 3,
+                            character: 7,
+                          },
+                        },
+                        newText: '(foo?.bar)',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'add_optional_chaining',
+                    'Add optional chaining for object that might be `undefined`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        [],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/add-optional-chaining.js',
+        },
+        range: {
+          start: {
+            line: 5,
+            character: 7,
+          },
+          end: {
+            line: 5,
+            character: 10,
+          },
+        },
+        context: {
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Add optional chaining for object that might be `null`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/add-optional-chaining.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 5,
+                            character: 0,
+                          },
+                          end: {
+                            line: 5,
+                            character: 10,
+                          },
+                        },
+                        newText: '(nested?.foo)',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'add_optional_chaining',
+                    'Add optional chaining for object that might be `null`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        [],
+      ),
+    ]),
+    test('provide codeAction for PropMissing errors with dot syntax', [
       addFile('prop-missing.js.ignored', 'prop-missing.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
@@ -136,7 +294,112 @@ export default (suite(
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                   arguments: [
                     'textDocument/codeAction',
-                    'typo',
+                    'replace_prop_typo_at_target',
+                    'Replace `faceboy` with `facebook`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('provide codeAction for PropMissing errors with bracket syntax', [
+      addFile(
+        'prop-missing-bracket-syntax.js.ignored',
+        'prop-missing-bracket-syntax.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/prop-missing-bracket-syntax.js',
+        },
+        range: {
+          start: {
+            line: 3,
+            character: 2,
+          },
+          end: {
+            line: 3,
+            character: 11,
+          },
+        },
+        context: {
+          diagnostics: [
+            {
+              range: {
+                start: {
+                  line: 3,
+                  character: 2,
+                },
+                end: {
+                  line: 3,
+                  character: 11,
+                },
+              },
+              message:
+                'Cannot get `x.faceboy` because property `faceboy` (did you mean `facebook`?) is missing in  object type [1].',
+              severity: 1,
+              code: 'InferError',
+              source: 'Flow',
+            },
+          ],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Replace `faceboy` with `facebook`',
+                kind: 'quickfix',
+                diagnostics: [
+                  {
+                    range: {
+                      start: {
+                        line: 3,
+                        character: 2,
+                      },
+                      end: {
+                        line: 3,
+                        character: 11,
+                      },
+                    },
+                    severity: 1,
+                    code: 'InferError',
+                    source: 'Flow',
+                    message:
+                      'Cannot get `x.faceboy` because property `faceboy` (did you mean `facebook`?) is missing in  object type [1].',
+                    relatedInformation: [],
+                    relatedLocations: [],
+                  },
+                ],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/prop-missing-bracket-syntax.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 3,
+                            character: 2,
+                          },
+                          end: {
+                            line: 3,
+                            character: 11,
+                          },
+                        },
+                        newText: '"facebook"',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'replace_prop_typo_at_target',
                     'Replace `faceboy` with `facebook`',
                   ],
                 },
@@ -241,7 +504,7 @@ export default (suite(
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                   arguments: [
                     'textDocument/codeAction',
-                    'typo',
+                    'replace_enum_prop_typo_at_target',
                     'Replace `Foobat` with `Foobar`',
                   ],
                 },
@@ -398,7 +661,7 @@ export default (suite(
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                   arguments: [
                     'textDocument/codeAction',
-                    'typo',
+                    'fix_parse_error',
                     "Replace `>` with `{'>'}`",
                   ],
                 },
@@ -498,7 +761,11 @@ export default (suite(
                 command: {
                   title: '',
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: ['replace_obj_with_interface'],
+                  arguments: [
+                    'textDocument/codeAction',
+                    'replace_obj_with_interface',
+                    'Rewrite object type as an interface',
+                  ],
                 },
               },
             ],
@@ -600,7 +867,11 @@ export default (suite(
                 command: {
                   title: '',
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: ['replace_obj_with_interface'],
+                  arguments: [
+                    'textDocument/codeAction',
+                    'replace_obj_with_interface',
+                    'Rewrite object type as an interface',
+                  ],
                 },
               },
             ],
@@ -702,7 +973,11 @@ export default (suite(
                 command: {
                   title: '',
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: ['replace_obj_with_interface'],
+                  arguments: [
+                    'textDocument/codeAction',
+                    'replace_obj_with_interface',
+                    'Rewrite `T` as an interface',
+                  ],
                 },
               },
             ],
@@ -805,7 +1080,11 @@ export default (suite(
                 command: {
                   title: '',
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: ['replace_obj_with_interface'],
+                  arguments: [
+                    'textDocument/codeAction',
+                    'replace_obj_with_interface',
+                    'Rewrite object type as an interface',
+                  ],
                 },
               },
             ],
@@ -902,7 +1181,11 @@ export default (suite(
                 command: {
                   title: '',
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: ['replace_method_with_arrow'],
+                  arguments: [
+                    'textDocument/codeAction',
+                    'replace_method_with_arrow',
+                    'Rewrite function as an arrow function',
+                  ],
                 },
               },
             ]),
