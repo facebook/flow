@@ -14,3 +14,4 @@
 
 [options]
 emoji=true
+experimental.refactor=true

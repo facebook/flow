@@ -47,6 +47,164 @@ export default (suite(
         [...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('provide codeAction for adding optional chaining', [
+      addFile('add-optional-chaining.js.ignored', 'add-optional-chaining.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/add-optional-chaining.js',
+        },
+        range: {
+          start: {
+            line: 3,
+            character: 4,
+          },
+          end: {
+            line: 3,
+            character: 7,
+          },
+        },
+        context: {
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Add optional chaining for object that might be `null`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/add-optional-chaining.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 3,
+                            character: 0,
+                          },
+                          end: {
+                            line: 3,
+                            character: 7,
+                          },
+                        },
+                        newText: '(foo?.bar)',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'add_optional_chaining',
+                    'Add optional chaining for object that might be `null`',
+                  ],
+                },
+              },
+              {
+                title:
+                  'Add optional chaining for object that might be `undefined`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/add-optional-chaining.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 3,
+                            character: 0,
+                          },
+                          end: {
+                            line: 3,
+                            character: 7,
+                          },
+                        },
+                        newText: '(foo?.bar)',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'add_optional_chaining',
+                    'Add optional chaining for object that might be `undefined`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        [],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/add-optional-chaining.js',
+        },
+        range: {
+          start: {
+            line: 5,
+            character: 7,
+          },
+          end: {
+            line: 5,
+            character: 10,
+          },
+        },
+        context: {
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Add optional chaining for object that might be `null`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/add-optional-chaining.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 5,
+                            character: 0,
+                          },
+                          end: {
+                            line: 5,
+                            character: 10,
+                          },
+                        },
+                        newText: '(nested?.foo)',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'add_optional_chaining',
+                    'Add optional chaining for object that might be `null`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        [],
+      ),
+    ]),
     test('provide codeAction for PropMissing errors with dot syntax', [
       addFile('prop-missing.js.ignored', 'prop-missing.js'),
       lspStartAndConnect(),

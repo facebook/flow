@@ -39,6 +39,7 @@ type lint_kind =
   | ImplicitInexactObject
   | UninitializedInstanceProperty
   | AmbiguousObjectType
+  | RequireExplicitEnumSwitchCases
   | DefaultImportAccess
   | InvalidImportStarUse
   | NonConstVarExport
@@ -77,6 +78,7 @@ let string_of_kind = function
   | ImplicitInexactObject -> "implicit-inexact-object"
   | UninitializedInstanceProperty -> "uninitialized-instance-property"
   | AmbiguousObjectType -> "ambiguous-object-type"
+  | RequireExplicitEnumSwitchCases -> "require-explicit-enum-switch-cases"
   | DefaultImportAccess -> "default-import-access"
   | InvalidImportStarUse -> "invalid-import-star-use"
   | NonConstVarExport -> "non-const-var-export"
@@ -114,6 +116,7 @@ let kinds_of_string = function
   | "signature-verification-failure" -> Some [SignatureVerificationFailure]
   | "implicit-inexact-object" -> Some [ImplicitInexactObject]
   | "ambiguous-object-type" -> Some [AmbiguousObjectType]
+  | "require-explicit-enum-switch-cases" -> Some [RequireExplicitEnumSwitchCases]
   | "uninitialized-instance-property" -> Some [UninitializedInstanceProperty]
   | "default-import-access" -> Some [DefaultImportAccess]
   | "invalid-import-star-use" -> Some [InvalidImportStarUse]
