@@ -322,7 +322,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         codeAction: {
           codeActionLiteralSupport: {
             codeActionKind: {
-              valueSet: ['quickfix'],
+              valueSet: ['quickfix', 'refactor.extract'],
             },
           },
         },
