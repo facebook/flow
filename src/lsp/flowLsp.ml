@@ -620,15 +620,31 @@ let subscribe_to_config_changes (ienv : initialized_env) : initialized_env =
 
 (************************************************************************)
 
-let do_initialize params : Initialize.result =
+let do_initialize flowconfig params : Initialize.result =
   let open Initialize in
   let codeActionProvider =
-    (* currently the only code actions we provide are quickfixes which use CodeAction literals *)
     let supports_quickfixes =
       Lsp_helpers.supports_codeActionKinds params |> List.exists ~f:(( = ) CodeActionKind.quickfix)
     in
-    if supports_quickfixes then
-      CodeActionOptions { codeActionKinds = [CodeActionKind.quickfix] }
+    let supports_refactor_extract =
+      Lsp_helpers.supports_codeActionKinds params
+      |> List.exists ~f:(( = ) CodeActionKind.refactor_extract)
+      && FlowConfig.refactor flowconfig |> Option.value ~default:false
+    in
+    let supported_code_action_kinds =
+      if supports_quickfixes then
+        [CodeActionKind.quickfix]
+      else
+        []
+    in
+    let supported_code_action_kinds =
+      if supports_refactor_extract then
+        CodeActionKind.refactor_extract :: supported_code_action_kinds
+      else
+        supported_code_action_kinds
+    in
+    if List.length supported_code_action_kinds > 0 then
+      CodeActionOptions { codeActionKinds = supported_code_action_kinds }
     else
       CodeActionBool false
   in
@@ -1810,7 +1826,9 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
                data = Some Hh_json.(JSON_Object [("retry", JSON_Bool false)]);
              })
     end;
-    let response = ResponseMessage (id, InitializeResult (do_initialize i_initialize_params)) in
+    let response =
+      ResponseMessage (id, InitializeResult (do_initialize flowconfig i_initialize_params))
+    in
     let json =
       let key = command_key_of_ienv d_ienv in
       Lsp_fmt.print_lsp ~key response
