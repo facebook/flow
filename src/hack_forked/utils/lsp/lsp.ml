@@ -309,6 +309,8 @@ module CodeActionKind = struct
   (** Some of the constants defined by the spec *)
   let quickfix = kind_of_string "quickfix"
 
+  let refactor_extract = kind_of_string "refactor.extract"
+
   (** Document wide code actions *)
   let source = kind_of_string "source"
 end
