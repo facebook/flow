@@ -520,7 +520,10 @@ struct
                 (* given `o.x += e`, read o then read e *)
                 ignore @@ this#assignment_pattern left;
                 ignore @@ this#expression right
-              | (_, (Object _ | Array _)) -> failwith "unexpected AST node"
+              | (_, (Object _ | Array _)) ->
+                (* This is an invalid expression that will cause a runtime error, but we still visit
+                   the subexpressions to find other errors *)
+                ignore @@ this#expression right
             end
         end;
         expr
@@ -544,7 +547,9 @@ struct
                 (* `var x;` is not a write of `x` *)
                 ()
             end
-          | (_, Expression _) -> failwith "unexpected AST node"
+          | (_, Expression _) ->
+            (* This is an invalid expression that will cause a runtime error, so we skip the left hand side *)
+            ignore @@ Base.Option.map ~f:this#expression init
         end;
         decl
 

@@ -296,7 +296,7 @@ val voidable_checks : t -> voidable_check list
 
 val implicit_instantiation_checks : t -> Implicit_instantiation_check.t list
 
-val use_def : t -> Scope_api.With_ALoc.info * Ssa_api.With_ALoc.values
+val use_def : t -> Env_builder.env_info option
 
 val pid_prefix : t -> string
 
@@ -384,7 +384,7 @@ val set_exists_checks : t -> ExistsCheck.t ALocMap.t -> unit
 
 val set_exists_excuses : t -> ExistsCheck.t ALocMap.t -> unit
 
-val set_use_def : t -> Scope_api.With_ALoc.info * Ssa_api.With_ALoc.values -> unit
+val set_use_def : t -> Env_builder.env_info -> unit
 
 val set_module_map : t -> Type.t NameUtils.Map.t -> unit
 

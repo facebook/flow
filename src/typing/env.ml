@@ -383,19 +383,22 @@ let find_refi_in_var_scope key =
 (* helpers *)
 
 let promote_non_const cx name loc spec =
-  let (info, values) = Context.use_def cx in
   if Reason.is_internal_name name then
     (None, spec)
-  else if spec <> Entry.ConstLike && Invalidation_api.is_const_like info values loc then
-    (None, Entry.ConstLike)
-  else if spec <> Entry.NotWrittenByClosure then
-    let writes_by_closure = Invalidation_api.written_by_closure info values loc in
-    if ALocSet.is_empty writes_by_closure then
-      (None, Entry.NotWrittenByClosure)
-    else
-      (Some writes_by_closure, spec)
   else
-    (None, spec)
+    match Context.use_def cx with
+    | Some { Env_builder.scopes = info; ssa_values = values; _ } ->
+      if spec <> Entry.ConstLike && Invalidation_api.is_const_like info values loc then
+        (None, Entry.ConstLike)
+      else if spec <> Entry.NotWrittenByClosure then
+        let writes_by_closure = Invalidation_api.written_by_closure info values loc in
+        if ALocSet.is_empty writes_by_closure then
+          (None, Entry.NotWrittenByClosure)
+        else
+          (Some writes_by_closure, spec)
+      else
+        (None, spec)
+    | None -> (None, spec)
 
 let mk_closure_writes cx name loc general spec =
   let (writes_by_closure_opt, spec') = promote_non_const cx name loc spec in

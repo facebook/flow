@@ -7,7 +7,6 @@
 
 open Type.TypeContext
 module ALocMap = Loc_collections.ALocMap
-module Scope_api = Scope_api.With_ALoc
 
 exception Props_not_found of Type.Properties.id
 
@@ -200,7 +199,7 @@ type t = {
   mutable require_map: Type.t ALocMap.t;
   trust_constructor: unit -> Trust.trust_rep;
   mutable declare_module_ref: Module_info.t option;
-  mutable use_def: Scope_api.info * Ssa_api.With_ALoc.values;
+  mutable use_def: Env_builder.env_info option;
   mutable exported_locals: Loc_collections.ALocSet.t SMap.t option;
 }
 
@@ -282,8 +281,6 @@ let docblock_overrides docblock_info metadata =
   in
   metadata
 
-let empty_use_def = (Scope_api.{ max_distinct = 0; scopes = IMap.empty }, ALocMap.empty)
-
 let empty_sig_cx =
   {
     graph = IMap.empty;
@@ -360,7 +357,7 @@ let make ccx metadata file aloc_table module_ref phase =
     require_map = ALocMap.empty;
     trust_constructor = Trust.literal_trust;
     declare_module_ref = None;
-    use_def = empty_use_def;
+    use_def = None;
     exported_locals = None;
   }
 
@@ -676,7 +673,7 @@ let set_exists_checks cx exists_checks = cx.ccx.exists_checks <- exists_checks
 
 let set_exists_excuses cx exists_excuses = cx.ccx.exists_excuses <- exists_excuses
 
-let set_use_def cx use_def = cx.use_def <- use_def
+let set_use_def cx use_def = cx.use_def <- Some use_def
 
 let set_local_env cx exported_locals = cx.exported_locals <- exported_locals
 
