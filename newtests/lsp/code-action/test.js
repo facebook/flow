@@ -142,7 +142,7 @@ export default (suite(
             ],
           },
         ],
-        [],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
@@ -202,7 +202,7 @@ export default (suite(
             ],
           },
         ],
-        [],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide codeAction for PropMissing errors with dot syntax', [
