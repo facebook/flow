@@ -214,6 +214,8 @@ module CodeActionKind : sig
 
   val quickfix : t
 
+  val refactor_extract : t
+
   val source : t
 end
 

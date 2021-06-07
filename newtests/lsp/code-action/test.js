@@ -16,12 +16,66 @@ export default (suite(
     addFile,
     lspIgnoreStatusAndCancellation,
   }) => [
-    test('initialize with quickfix support', [
+    test('initialize with code actions support', [
       lspStart({needsFlowServer: false}),
       lspRequestAndWaitUntilResponse(
         'initialize',
         lspInitializeParams,
       ).verifyAllLSPMessagesInStep(
+        [
+          [
+            'initialize',
+            '{"codeActionProvider":{"codeActionKinds":["refactor.extract","quickfix"]}}',
+          ],
+        ],
+        [...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('initialize without quickfix support', [
+      lspStart({needsFlowServer: false}),
+      lspRequestAndWaitUntilResponse('initialize', {
+        ...lspInitializeParams,
+        capabilities: {
+          ...lspInitializeParams.capabilities,
+          textDocument: {
+            ...lspInitializeParams.capabilities.textDocument,
+            codeAction: {
+              codeActionLiteralSupport: {
+                codeActionKind: {
+                  valueSet: ['refactor.extract'],
+                },
+              },
+            },
+          },
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          [
+            'initialize',
+            '{"codeActionProvider":{"codeActionKinds":["refactor.extract"]}}',
+          ],
+        ],
+        [...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('initialize without refactor.extract support', [
+      lspStart({needsFlowServer: false}),
+      lspRequestAndWaitUntilResponse('initialize', {
+        ...lspInitializeParams,
+        capabilities: {
+          ...lspInitializeParams.capabilities,
+          textDocument: {
+            ...lspInitializeParams.capabilities.textDocument,
+            codeAction: {
+              codeActionLiteralSupport: {
+                codeActionKind: {
+                  valueSet: ['quickfix'],
+                },
+              },
+            },
+          },
+        },
+      }).verifyAllLSPMessagesInStep(
         [
           [
             'initialize',
@@ -31,7 +85,7 @@ export default (suite(
         [...lspIgnoreStatusAndCancellation],
       ),
     ]),
-    test('initialize without quickfix support', [
+    test('initialize without any code actions support', [
       lspStart({needsFlowServer: false}),
       lspRequestAndWaitUntilResponse('initialize', {
         ...lspInitializeParams,
@@ -142,7 +196,7 @@ export default (suite(
             ],
           },
         ],
-        [],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
         textDocument: {
@@ -202,7 +256,7 @@ export default (suite(
             ],
           },
         ],
-        [],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('provide codeAction for PropMissing errors with dot syntax', [
