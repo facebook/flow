@@ -174,7 +174,7 @@ let stub_metadata ~root ~checked =
     react_runtime = Options.ReactRuntimeClassic;
     react_server_component_exts = SSet.empty;
     recursion_limit = 10000;
-    reorder_checking = false;
+    reorder_checking = Options.Lexical;
     root;
     run_post_inference_implicit_instantiation = false;
     strict_es6_import_export = false;

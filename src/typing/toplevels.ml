@@ -104,7 +104,7 @@ module DependencyOrdering : Ordering with type loc = ALoc.t = struct
   let make cx stmts =
     match Context.use_def cx with
     | None -> None
-    | Some _ when not @@ Context.reorder_checking cx -> None
+    | Some _ when Context.reorder_checking cx = Options.Lexical -> None
     | Some info ->
       let int_loc =
         Base.List.foldi ~f:(fun i int_loc (loc, _) -> IMap.add i loc int_loc) ~init:IMap.empty stmts
@@ -135,20 +135,23 @@ module DependencyOrdering : Ordering with type loc = ALoc.t = struct
             (order, seen))
           deps
       in
-      let order =
-        IMap.fold
-          (fun i set acc ->
-            ALocMap.add
-              (IMap.find i int_loc)
-              (ISet.fold
-                 (fun j set_acc -> ALocSet.add (IMap.find j int_loc) set_acc)
-                 set
-                 ALocSet.empty)
-              acc)
-          order
-          ALocMap.empty
-      in
-      Some order
+      if Context.reorder_checking cx = Options.LexicalWithDependencyValidation then
+        None
+      else
+        let order =
+          IMap.fold
+            (fun i set acc ->
+              ALocMap.add
+                (IMap.find i int_loc)
+                (ISet.fold
+                   (fun j set_acc -> ALocSet.add (IMap.find j int_loc) set_acc)
+                   set
+                   ALocSet.empty)
+                acc)
+            order
+            ALocMap.empty
+        in
+        Some order
 
   let compare t ((l1, _) as l) ((l2, _) as r) =
     match t with

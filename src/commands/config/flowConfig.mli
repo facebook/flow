@@ -185,7 +185,7 @@ val refactor : config -> bool option
 
 val root_name : config -> string option
 
-val reorder_checking : config -> bool
+val reorder_checking : config -> Options.order_mode
 
 val run_post_inference_implicit_instantiation : config -> bool
 

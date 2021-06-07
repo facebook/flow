@@ -103,7 +103,7 @@ module Opts = struct
     react_server_component_exts: SSet.t;
     recursion_limit: int;
     refactor: bool option;
-    reorder_checking: bool;
+    reorder_checking: Options.order_mode;
     root_name: string option;
     run_post_inference_implicit_instantiation: bool;
     saved_state_fetcher: Options.saved_state_fetcher;
@@ -229,7 +229,7 @@ module Opts = struct
       react_server_component_exts;
       recursion_limit = 10000;
       refactor = None;
-      reorder_checking = false;
+      reorder_checking = Options.Lexical;
       root_name = None;
       run_post_inference_implicit_instantiation = false;
       saved_state_fetcher = Options.Dummy_fetcher;
@@ -418,7 +418,14 @@ module Opts = struct
   let check_updates_against_providers =
     boolean (fun opts v -> Ok { opts with check_updates_against_providers = v })
 
-  let reorder_checking_parser = boolean (fun opts v -> Ok { opts with reorder_checking = v })
+  let reorder_checking_parser =
+    enum
+      [
+        ("lexical", Options.Lexical);
+        ("dependency", Options.Dependency);
+        ("lexical_with_dependency_validation", Options.LexicalWithDependencyValidation);
+      ]
+      (fun opts v -> Ok { opts with reorder_checking = v })
 
   let post_inference_implicit_instantiation_parser =
     boolean (fun opts v -> Ok { opts with run_post_inference_implicit_instantiation = v })

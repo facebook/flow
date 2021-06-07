@@ -1,2 +1,2 @@
 [options]
-experimental.reorder_checking=true
+experimental.reorder_checking=dependency

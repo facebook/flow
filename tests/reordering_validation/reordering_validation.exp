@@ -1,0 +1,41 @@
+Error ------------------------------------------------------------------------------------------------------- err.js:3:1
+
+Dependency cycle detected
+
+      v-------------
+   3| function f() {
+   4|   g()
+   5| }
+      ^
+
+
+Error ------------------------------------------------------------------------------------------------------- err.js:6:1
+
+Dependency cycle detected
+
+      v-------------
+   6| function g() {
+   7|   f()
+   8| }
+      ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:9:28
+
+Cannot cast `y` to empty because null [1] is incompatible with empty [2]. [incompatible-cast]
+
+   test.js:9:28
+   9| (typeof y !== 'number' && (y: empty)); // Errors because we don't actually reorder
+                                 ^
+
+References:
+   test.js:7:9
+   7| var y = null;
+              ^^^^ [1]
+   test.js:9:31
+   9| (typeof y !== 'number' && (y: empty)); // Errors because we don't actually reorder
+                                    ^^^^^ [2]
+
+
+
+Found 3 errors

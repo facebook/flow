@@ -52,7 +52,7 @@ type metadata = {
   react_runtime: Options.react_runtime;
   react_server_component_exts: SSet.t;
   recursion_limit: int;
-  reorder_checking: bool;
+  reorder_checking: Options.order_mode;
   root: Path.t;
   run_post_inference_implicit_instantiation: bool;
   strict_es6_import_export: bool;

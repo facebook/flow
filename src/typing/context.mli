@@ -73,7 +73,7 @@ type metadata = {
   react_runtime: Options.react_runtime;
   react_server_component_exts: SSet.t;
   recursion_limit: int;
-  reorder_checking: bool;
+  reorder_checking: Options.order_mode;
   root: Path.t;
   run_post_inference_implicit_instantiation: bool;
   strict_es6_import_export: bool;
@@ -183,7 +183,7 @@ val enforce_local_inference_annotations : t -> bool
 
 val check_updates_against_providers : t -> bool
 
-val reorder_checking : t -> bool
+val reorder_checking : t -> Options.order_mode
 
 val run_post_inference_implicit_instantiation : t -> bool
 

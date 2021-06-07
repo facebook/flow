@@ -35,6 +35,11 @@ type trust_mode =
   | CheckTrust
   | SilentTrust
 
+type order_mode =
+  | Lexical
+  | Dependency
+  | LexicalWithDependencyValidation
+
 type react_runtime =
   | ReactRuntimeAutomatic
   | ReactRuntimeClassic
@@ -109,7 +114,7 @@ type t = {
   opt_react_server_component_exts: SSet.t;
   opt_recursion_limit: int;
   opt_refactor: bool;
-  opt_reorder_checking: bool;
+  opt_reorder_checking: order_mode;
   opt_root_name: string option;
   opt_root: Path.t;
   opt_run_post_inference_implicit_instantiation: bool;
