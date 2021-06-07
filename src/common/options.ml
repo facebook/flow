@@ -109,6 +109,7 @@ type t = {
   opt_react_server_component_exts: SSet.t;
   opt_recursion_limit: int;
   opt_refactor: bool;
+  opt_reorder_checking: bool;
   opt_root_name: string option;
   opt_root: Path.t;
   opt_run_post_inference_implicit_instantiation: bool;
@@ -238,6 +239,8 @@ let facebook_fbt opts = opts.opt_facebook_fbt
 let facebook_module_interop opts = opts.opt_facebook_module_interop
 
 let gc_worker opts = opts.opt_gc_worker
+
+let reorder_checking opts = opts.opt_reorder_checking
 
 let run_post_inference_implicit_instantiation opts =
   opts.opt_run_post_inference_implicit_instantiation

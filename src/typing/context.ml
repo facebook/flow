@@ -52,6 +52,7 @@ type metadata = {
   react_runtime: Options.react_runtime;
   react_server_component_exts: SSet.t;
   recursion_limit: int;
+  reorder_checking: bool;
   root: Path.t;
   run_post_inference_implicit_instantiation: bool;
   strict_es6_import_export: bool;
@@ -237,6 +238,7 @@ let metadata_of_options options =
     react_runtime = Options.react_runtime options;
     react_server_component_exts = Options.react_server_component_exts options;
     recursion_limit = Options.recursion_limit options;
+    reorder_checking = Options.reorder_checking options;
     root = Options.root options;
     run_post_inference_implicit_instantiation =
       Options.run_post_inference_implicit_instantiation options;
@@ -437,6 +439,8 @@ let exact_by_default cx = cx.metadata.exact_by_default
 let enforce_local_inference_annotations cx = cx.metadata.enforce_local_inference_annotations
 
 let check_updates_against_providers cx = cx.metadata.check_updates_against_providers
+
+let reorder_checking cx = cx.metadata.reorder_checking
 
 let run_post_inference_implicit_instantiation cx =
   cx.metadata.run_post_inference_implicit_instantiation

@@ -42,6 +42,7 @@ let metadata =
     react_runtime = Options.ReactRuntimeClassic;
     react_server_component_exts = SSet.empty;
     recursion_limit = 10000;
+    reorder_checking = false;
     root = Path.dummy_path;
     run_post_inference_implicit_instantiation = false;
     strict_es6_import_export = false;
