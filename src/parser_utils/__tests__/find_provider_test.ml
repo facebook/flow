@@ -303,4 +303,48 @@ var { a: x } = 10;
          "destruct2" >:: mk_provider_test "a" "
 var { a: x } = 10;
          " "[]";
+         "loop1"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 9) (1, 10))
+               "
+for (var x of [1,2,3]) { };
+         "
+               "[(1, 9) to (1, 10)]";
+         "loop1a"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 9) (1, 10))
+               "
+for (var x of [1,2,3]) { x=3; };
+         "
+               "[(1, 9) to (1, 10)]";
+         "loop2"
+         >:: mk_provider_test
+               "x"
+               "
+var x = null;
+for (x of [1,2,3]) { };
+         "
+               "[(1, 4) to (1, 5)], [(2, 5) to (2, 6)]";
+         "loop3"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 9) (1, 10))
+               "
+for (var x in {a: 'a'}) { };
+         "
+               "[(1, 9) to (1, 10)]";
+         "loop3a"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 9) (1, 10))
+               "
+for (var x in {a: 'a'}) { x=3; };
+         "
+               "[(1, 9) to (1, 10)]";
+         "loop4"
+         >:: mk_provider_test
+               "x"
+               "
+var x = null;
+for (x in {a: 'a'}) { };
+         "
+               "[(1, 4) to (1, 5)], [(2, 5) to (2, 6)]";
        ]

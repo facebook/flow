@@ -30,6 +30,7 @@ module FindProviders (L : Loc_sig.S) = struct
 
   (**** Data structures for environments ****)
   type state =
+    | Annotated
     | Initialized
     | NullInitialized
     | Uninitialized
@@ -87,6 +88,9 @@ module FindProviders (L : Loc_sig.S) = struct
 
   let max init1 init2 =
     match (init1, init2) with
+    | (Annotated, _)
+    | (_, Annotated) ->
+      Annotated
     | (Initialized, _)
     | (_, Initialized) ->
       Initialized
@@ -99,7 +103,8 @@ module FindProviders (L : Loc_sig.S) = struct
     match (l, r) with
     | _ when l = r -> false
     | (Uninitialized, _) -> true
-    | (_, Initialized) -> true
+    | (_, Annotated) -> true
+    | (NullInitialized, Initialized) -> true
     | _ -> false
 
   (**** Functions for manipulating environments ****)
@@ -353,49 +358,27 @@ module FindProviders (L : Loc_sig.S) = struct
           id = ident;
           params;
           body;
-          async;
-          generator;
+          async = _;
+          generator = _;
           predicate;
           return;
           tparams;
-          sig_loc;
+          sig_loc = _;
           comments;
         } =
           expr
         in
-        let ident' = map_opt this#function_identifier ident in
+        let _ident' = map_opt this#function_identifier ident in
         this#enter_scope
           Var
           (fun _ _ ->
-            let params' = this#function_params params in
-            let return' = this#type_annotation_hint return in
-            let body' = this#function_body_any body in
-            let predicate' = map_opt this#predicate predicate in
-            let tparams' = map_opt this#type_params tparams in
-            let comments' = this#syntax_opt comments in
-            if
-              ident == ident'
-              && params == params'
-              && body == body'
-              && predicate = predicate'
-              && return == return'
-              && tparams == tparams'
-              && comments == comments'
-            then
-              expr
-            else
-              {
-                id = ident';
-                params = params';
-                return = return';
-                body = body';
-                async;
-                generator;
-                predicate = predicate';
-                tparams = tparams';
-                sig_loc;
-                comments = comments';
-              })
+            let _params' = this#function_params params in
+            let _return' = this#type_annotation_hint return in
+            let _body' = this#function_body_any body in
+            let _predicate' = map_opt this#predicate predicate in
+            let _tparams' = map_opt this#type_params tparams in
+            let _comments' = this#syntax_opt comments in
+            expr)
           loc
           expr
 
@@ -411,12 +394,12 @@ module FindProviders (L : Loc_sig.S) = struct
       method! if_statement _loc (stmt : ('loc, 'loc) Ast.Statement.If.t) =
         let open Ast.Statement.If in
         let { test; consequent; alternate; comments } = stmt in
-        let test' = this#predicate_expression test in
+        let _test' = this#predicate_expression test in
 
         let (env0, cx) = this#acc in
-        let consequent' = this#if_consequent_statement ~has_else:(alternate <> None) consequent in
+        let _consequent' = this#if_consequent_statement ~has_else:(alternate <> None) consequent in
         let (env1, _) = this#acc in
-        let (alternate', env2) =
+        let (_alternate', env2) =
           this#accumulate_branch_env
             (env0, cx)
             (fun () -> map_opt (map_loc this#if_alternate_statement) alternate)
@@ -424,21 +407,13 @@ module FindProviders (L : Loc_sig.S) = struct
         in
         this#set_acc (env2, cx);
 
-        let comments' = this#syntax_opt comments in
-        if
-          test == test'
-          && consequent == consequent'
-          && alternate == alternate'
-          && comments == comments'
-        then
-          stmt
-        else
-          { test = test'; consequent = consequent'; alternate = alternate'; comments = comments' }
+        let _comments' = this#syntax_opt comments in
+        stmt
 
       method! switch _loc (switch : ('loc, 'loc) Ast.Statement.Switch.t) =
         let open Ast.Statement.Switch in
         let { discriminant; cases; comments } = switch in
-        let discriminant' = this#expression discriminant in
+        let _discriminant' = this#expression discriminant in
         let (env0, cx) = this#acc in
         let (rev_cases', env') =
           Base.List.fold cases ~init:([], env0) ~f:(fun (acc_cases, acc_env) case ->
@@ -447,21 +422,18 @@ module FindProviders (L : Loc_sig.S) = struct
               in
               (case' :: acc_cases, acc_env))
         in
-        let cases' = List.rev rev_cases' in
+        let _cases' = List.rev rev_cases' in
         this#set_acc (env', cx);
-        let comments' = this#syntax_opt comments in
-        if discriminant == discriminant' && cases == cases' && comments == comments' then
-          switch
-        else
-          { discriminant = discriminant'; cases = cases'; comments = comments' }
+        let _comments' = this#syntax_opt comments in
+        switch
 
       method! try_catch _loc (stmt : ('loc, 'loc) Ast.Statement.Try.t) =
         let open Ast.Statement.Try in
         let { block; handler; finalizer; comments } = stmt in
         let (env0, cx) = this#acc in
-        let block' = map_loc this#block block in
+        let _block' = map_loc this#block block in
         let (env', _) = this#acc in
-        let (handler', env') =
+        let (_handler', env') =
           this#accumulate_branch_env
             (env0, cx)
             (fun () ->
@@ -471,7 +443,7 @@ module FindProviders (L : Loc_sig.S) = struct
               | None -> handler)
             env'
         in
-        let (finalizer', env') =
+        let (_finalizer', env') =
           this#accumulate_branch_env
             (env0, cx)
             (fun () ->
@@ -483,13 +455,8 @@ module FindProviders (L : Loc_sig.S) = struct
             env'
         in
         this#set_acc (env', cx);
-        let comments' = this#syntax_opt comments in
-        if
-          block == block' && handler == handler' && finalizer == finalizer' && comments == comments'
-        then
-          stmt
-        else
-          { block = block'; handler = handler'; finalizer = finalizer'; comments = comments' }
+        let _comments' = this#syntax_opt comments in
+        stmt
 
       (* read and write (when the argument is an identifier) *)
       method! update_expression _loc (expr : (L.t, L.t) Ast.Expression.Update.t) =
@@ -577,7 +544,7 @@ module FindProviders (L : Loc_sig.S) = struct
         in
         let init_state =
           match (init, annot) with
-          | (_, Some (Ast.Type.Available _)) -> Initialized
+          | (_, Some (Ast.Type.Available _)) -> Annotated
           | (None, _) -> Uninitialized
           | (Some (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Null; _ }), _) ->
             NullInitialized
@@ -596,6 +563,87 @@ module FindProviders (L : Loc_sig.S) = struct
         else
           (loc, { Ast.Statement.VariableDeclaration.Declarator.id = id'; init = init' })
 
+      method! function_declaration loc (expr : ('loc, 'loc) Ast.Function.t) =
+        let open Ast.Function in
+        let {
+          id = ident;
+          params;
+          body;
+          async = _;
+          generator = _;
+          predicate;
+          return;
+          tparams;
+          sig_loc = _;
+          comments;
+        } =
+          expr
+        in
+        let init_state =
+          match return with
+          | Ast.Type.Available _ -> Annotated
+          | _ -> Initialized
+        in
+
+        let _ident' =
+          map_opt
+            (fun id ->
+              this#in_context
+                ~mod_cx:(fun _cx -> { init_state })
+                (fun () -> this#function_identifier id))
+            ident
+        in
+        this#enter_scope
+          Var
+          (fun _ _ ->
+            let _params' = this#function_params params in
+            let _return' = this#type_annotation_hint return in
+            let _body' = this#function_body_any body in
+            let _predicate' = map_opt this#predicate predicate in
+            let _tparams' = map_opt this#type_params tparams in
+            let _comments' = this#syntax_opt comments in
+            expr)
+          loc
+          expr
+
+      method! function_ _loc (expr : ('loc, 'loc) Ast.Function.t) =
+        let open Ast.Function in
+        let {
+          id = ident;
+          params;
+          body;
+          async = _;
+          generator = _;
+          predicate;
+          return;
+          tparams;
+          sig_loc = _;
+          comments;
+        } =
+          expr
+        in
+        let init_state =
+          match return with
+          | Ast.Type.Available _ -> Annotated
+          | _ -> Initialized
+        in
+
+        let _ident' =
+          map_opt
+            (fun id ->
+              this#in_context
+                ~mod_cx:(fun _cx -> { init_state })
+                (fun () -> this#function_identifier id))
+            ident
+        in
+        let _params' = this#function_params params in
+        let _return' = this#type_annotation_hint return in
+        let _body' = this#function_body_any body in
+        let _predicate' = map_opt this#predicate predicate in
+        let _tparams' = map_opt this#type_params tparams in
+        let _comments' = this#syntax_opt comments in
+        expr
+
       method! pattern_identifier ?kind ((loc, { Ast.Identifier.name; comments = _ }) as ident) =
         begin
           match kind with
@@ -603,6 +651,56 @@ module FindProviders (L : Loc_sig.S) = struct
           | _ -> ()
         end;
         super#identifier ident
+
+      method! for_in_left_declaration left =
+        let (_, decl) = left in
+        let { Flow_ast.Statement.VariableDeclaration.declarations; kind; comments = _ } = decl in
+        (match declarations with
+        | [(_, { Flow_ast.Statement.VariableDeclaration.Declarator.id; init = _ })] ->
+          let open Flow_ast.Pattern in
+          (match id with
+          | (_, (Identifier _ | Object _ | Array _)) ->
+            let init_state =
+              let open Ast.Pattern in
+              match id with
+              | (_, Array { Array.annot = Ast.Type.Available _; _ })
+              | (_, Object { Object.annot = Ast.Type.Available _; _ })
+              | (_, Identifier { Identifier.annot = Ast.Type.Available _; _ }) ->
+                Annotated
+              | _ -> Initialized
+            in
+            ignore
+            @@ this#in_context
+                 ~mod_cx:(fun _cx -> { init_state })
+                 (fun () -> this#variable_declarator_pattern ~kind id)
+          | _ -> failwith "unexpected AST node")
+        | _ -> failwith "Syntactically valid for-in loops must have exactly one left declaration");
+        left
+
+      method! for_of_left_declaration left =
+        let (_, decl) = left in
+        let { Flow_ast.Statement.VariableDeclaration.declarations; kind; comments = _ } = decl in
+        (match declarations with
+        | [(_, { Flow_ast.Statement.VariableDeclaration.Declarator.id; init = _ })] ->
+          let open Flow_ast.Pattern in
+          (match id with
+          | (_, (Identifier _ | Object _ | Array _)) ->
+            let init_state =
+              let open Ast.Pattern in
+              match id with
+              | (_, Array { Array.annot = Ast.Type.Available _; _ })
+              | (_, Object { Object.annot = Ast.Type.Available _; _ })
+              | (_, Identifier { Identifier.annot = Ast.Type.Available _; _ }) ->
+                Annotated
+              | _ -> Initialized
+            in
+            ignore
+            @@ this#in_context
+                 ~mod_cx:(fun _cx -> { init_state })
+                 (fun () -> this#variable_declarator_pattern ~kind id)
+          | _ -> failwith "unexpected AST node")
+        | _ -> failwith "Syntactically valid for-in loops must have exactly one left declaration");
+        left
     end
 
   let find_declaration_statements { Ast.Program.statements; _ } =
@@ -669,17 +767,14 @@ module FindProviders (L : Loc_sig.S) = struct
           | (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Null; _ }) -> true
           | _ -> false
         in
-        let left' =
+        let _left' =
           this#in_context
             ~mod_cx:(fun _cx -> { null_assign })
             (fun () -> this#assignment_pattern left)
         in
-        let right' = this#expression right in
-        let comments' = this#syntax_opt comments in
-        if left == left' && right == right' && comments == comments' then
-          expr
-        else
-          { expr with Ast.Expression.Assignment.left = left'; right = right'; comments = comments' }
+        let _right' = this#expression right in
+        let _comments' = this#syntax_opt comments in
+        expr
 
       method! pattern_identifier ?kind ((loc, { Ast.Identifier.name; comments = _ }) as ident) =
         begin

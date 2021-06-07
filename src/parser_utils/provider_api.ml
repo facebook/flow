@@ -40,8 +40,8 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
     raw_env: env;
   }
 
-  let all_exact_providers { providers; _ } =
-    SMap.fold (fun _ { exact_locs; _ } acc -> L.LSet.union exact_locs acc) providers L.LSet.empty
+  let all_exact_providers entries =
+    EntrySet.fold (fun { provider_locs; _ } -> L.LSet.union provider_locs) entries L.LSet.empty
 
   let rec all_entries { entries; children; _ } =
     L.LMap.fold (fun _ child acc -> EntrySet.union (all_entries child) acc) children EntrySet.empty
@@ -67,7 +67,8 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
   let find_providers (_, program) =
     let env = find_declaration_statements program in
     let ((hd, _) as env) = find_provider_statements env program in
-    { all_entries = all_entries hd; all_exact_providers = all_exact_providers hd; raw_env = env }
+    let all_entries = all_entries hd in
+    { all_entries; all_exact_providers = all_exact_providers all_entries; raw_env = env }
 
   let print_full_env { raw_env = env; _ } =
     let rec ptabs count =
