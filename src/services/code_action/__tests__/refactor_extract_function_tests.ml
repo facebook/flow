@@ -147,6 +147,87 @@ foo(a + b);
         } );
   ]
 
+let assert_allow_refactor_extraction ~ctxt expected source extract_range =
+  let ast = parse source in
+  let extracted_statements = Refactor_extract_function.extract_statements ast extract_range in
+  let actual =
+    Refactor_extract_function.allow_refactor_extraction ast extract_range extracted_statements
+  in
+  assert_equal ~ctxt expected actual
+
+let allow_refactor_extraction_tests =
+  [
+    ( "allow_refactor_extraction_linear" >:: fun ctxt ->
+      let source =
+        {|
+        const a = 3;
+        let b = 4;
+        console.log("I should not be selected");
+      |}
+      in
+      (* Exact match should be allowed *)
+      assert_allow_refactor_extraction
+        ~ctxt
+        true
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 2; column = 8 };
+          _end = { Loc.line = 3; column = 18 };
+        };
+      (* Include a few whitespaces before and after, and it should still be allowed. *)
+      assert_allow_refactor_extraction
+        ~ctxt
+        true
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 2; column = 8 };
+          _end = { Loc.line = 4; column = 2 };
+        };
+      (* Partially selected statements are not allowed. *)
+      assert_allow_refactor_extraction
+        ~ctxt
+        false
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 2; column = 8 };
+          _end = { Loc.line = 4; column = 20 };
+        } );
+    ( "allow_refactor_extraction_nested" >:: fun ctxt ->
+      let source =
+        {|
+        const a = 3;
+        {
+          let b = 4;
+          foo(a + b);
+        }
+        console.log("I should not be selected");
+      |}
+      in
+      (* Selecting full block is allowed. *)
+      assert_allow_refactor_extraction
+        ~ctxt
+        false
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 2; column = 8 };
+          _end = { Loc.line = 5; column = 9 };
+        };
+      (* Partially selecting a block is not allowed *)
+      assert_allow_refactor_extraction
+        ~ctxt
+        false
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 2; column = 8 };
+          _end = { Loc.line = 4; column = 20 };
+        } );
+  ]
+
 let create_extracted_function_tests =
   [
     ( "create_extracted_function_basic" >:: fun ctxt ->
@@ -178,5 +259,6 @@ let tests =
   "refactor_extract_function"
   >::: [
          "extract_statements" >::: extract_statements_tests;
+         "allow_refactor_extraction" >::: allow_refactor_extraction_tests;
          "create_extracted_function" >::: create_extracted_function_tests;
        ]
