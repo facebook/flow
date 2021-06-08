@@ -15,7 +15,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- C.js:4:9
 
-Cannot extend `B` [1] with `C` because string [2] is incompatible with number [3] in the first argument of property
+Cannot extend `B` [1] with `C` because string [2] is incompatible with number [3] in the first parameter of property
 `foo`. [incompatible-extend]
 
    C.js:4:9

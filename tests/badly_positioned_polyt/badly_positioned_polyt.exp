@@ -1,7 +1,7 @@
 Error ---------------------------------------------------------------------------------------------- concretize.js:10:16
 
 Cannot create `C1` element because `EventTarget` [1] is incompatible with `C1` [2] in type argument `T` [3] of the first
-argument of property `onKeyDown`. [incompatible-type-arg]
+parameter of property `onKeyDown`. [incompatible-type-arg]
 
    concretize.js:10:16
    10| <C1 onKeyDown={_onKeyDown} />;
@@ -22,7 +22,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- concretize.js:10:16
 
 Cannot create `C1` element because `EventTarget` [1] is incompatible with `C1` [2] in type argument `T` of the first
-argument of property `onKeyDown`. [incompatible-type-arg]
+parameter of property `onKeyDown`. [incompatible-type-arg]
 
    concretize.js:10:16
    10| <C1 onKeyDown={_onKeyDown} />;

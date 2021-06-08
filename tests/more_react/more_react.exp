@@ -1,3 +1,48 @@
+Error ----------------------------------------------------------------------------------------------- App.react.js:27:18
+
+Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   App.react.js:27:18
+   27|     var x = this.props.x;
+                        ^^^^^
+
+References:
+   <BUILTINS>/react.js:59:3
+   59|   render(): React$Node;
+         ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- App.react.js:28:18
+
+Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   App.react.js:28:18
+   28|     var y = this.props.y;
+                        ^^^^^
+
+References:
+   <BUILTINS>/react.js:59:3
+   59|   render(): React$Node;
+         ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- App.react.js:29:18
+
+Cannot get `this.state` because property `state` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   App.react.js:29:18
+   29|     var z = this.state.z;
+                        ^^^^^
+
+References:
+   <BUILTINS>/react.js:59:3
+   59|   render(): React$Node;
+         ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------- App.react.js:36:14
 
 Cannot call `foo` with `z` bound to `p` because number [1] is incompatible with string [2]. [incompatible-call]
@@ -293,4 +338,4 @@ References:
 
 
 
-Found 16 errors
+Found 19 errors

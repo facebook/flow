@@ -3948,13 +3948,14 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       let reason_lookup = mk_reason (RProperty (Some (OrdinaryName name))) callee_loc in
       let reason_prop = mk_reason (RProperty (Some (OrdinaryName name))) ploc in
       let super_t = super_ cx super_loc in
+      let meth_generic_this = this_ cx loc { This.comments = None } in
       let (targts, targs) = convert_call_targs_opt cx targs in
       let (argts, arguments_ast) = arg_list cx arguments in
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super_t;
       let prop_t = Tvar.mk cx reason_prop in
       let lhs_t =
         Tvar.mk_no_wrap_where cx reason (fun t ->
-            let funtype = mk_methodcalltype targts argts t in
+            let funtype = mk_methodcalltype ~meth_generic_this targts argts t in
             let use_op =
               Op
                 (FunCallMethod
@@ -8154,7 +8155,16 @@ and mk_function id cx ~annot ~general reason func =
     Scope.Entry.new_let (Inferred t) ~loc ~state:Scope.State.Initialized
   in
   let this_recipe fparams =
-    let default = Tvar.mk cx (mk_reason RThis loc) in
+    let default =
+      if
+        Signature_utils.This_finder.found_this_in_body_or_params
+          func.Ast.Function.body
+          func.Ast.Function.params
+      then
+        Tvar.mk cx (mk_reason RThis loc)
+      else
+        Type.implicit_mixed_this reason
+    in
     (* If `this` is a bound type variable, we cannot create the type here, and
        instead must wait until `check_with_generics` to instantiate the type.
        However, the default behavior of `this` still depends on how it

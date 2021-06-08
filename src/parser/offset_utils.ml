@@ -149,7 +149,7 @@ let line_lengths table =
     (fun (prev_line_end, lengths_rev) line ->
       let line_end = line.(Array.length line - 1) in
       (line_end, (line_end - prev_line_end) :: lengths_rev))
-    (0, [])
+    (-1, [])
     table
   |> snd
   |> List.rev

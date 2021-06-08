@@ -48,3 +48,28 @@ let is_munged_property_name = function
   | Reason.InternalName _
   | Reason.InternalModuleName _ ->
     false
+
+module This_finder = struct
+  class ['a] finder =
+    object (this)
+      inherit [bool, 'a] visitor ~init:false
+
+      method! this_expression _ node =
+        this#set_acc true;
+        node
+
+      (* Any mentions of `this` in these constructs would reference
+       the `this` within those structures, so we ignore them *)
+      method! class_ _ x = x
+
+      method! function_declaration _ x = x
+
+      method! function_expression _ x = x
+    end
+
+  let found_this_in_body_or_params
+      (body : ('a, 'a) Flow_ast.Function.body) (params : ('a, 'a) Flow_ast.Function.Params.t) =
+    let finder = new finder in
+    (* If this appears in parameter defaults it still counts *)
+    finder#eval finder#function_body_any body || finder#eval finder#function_params params
+end

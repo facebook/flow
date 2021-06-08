@@ -207,7 +207,14 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
             let return = Type.VoidT.why reason trust in
             let statics = Type.dummy_static reason in
             let proto = Type.dummy_prototype in
-            let funtype = Type.mk_boundfunctiontype [] return ~rest_param:None ~def_reason:reason in
+            let funtype =
+              Type.mk_boundfunctiontype
+                []
+                return
+                ~this:Type.bound_function_dummy_this
+                ~rest_param:None
+                ~def_reason:reason
+            in
             Some Type.(Method (None, DefT (reason, trust, FunT (statics, proto, funtype))))
           | prop -> prop)
         props
@@ -1152,7 +1159,7 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
        * TODO Fix once T71257430 is closed. *)
       let reason = Reason.(mk_reason RFunctionType fn_loc) in
       let statics = Type.dummy_static reason in
-      let t = merge_fun file reason def statics in
+      let t = merge_fun ~ignore_this_when_subtyping:true file reason def statics in
       Type.Method (Some id_loc, t)
 
   and merge_obj_annot_prop file = function
@@ -1175,7 +1182,7 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
       let merge_method fn_loc def =
         let reason = Reason.(mk_reason RFunctionType fn_loc) in
         let statics = Type.dummy_static reason in
-        merge_fun file reason def statics
+        merge_fun ~ignore_this_when_subtyping:true file reason def statics
       in
       let finish = function
         | (t, []) -> t
@@ -1495,7 +1502,11 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
     Type.OpenPredT { reason; base_t; m_pos; m_neg }
 
   and merge_fun
-      file reason (FunSig { tparams; params; rest_param; this_param; return; predicate }) statics =
+      ?(ignore_this_when_subtyping = false)
+      file
+      reason
+      (FunSig { tparams; params; rest_param; this_param; return; predicate })
+      statics =
     let prototype =
       let reason = Reason.(update_desc_reason (Fn.const RPrototype) reason) in
       Type.Unsoundness.function_proto_any reason
@@ -1530,7 +1541,7 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
       let open Type in
       let funtype =
         {
-          this_t;
+          this_t = (this_t, not ignore_this_when_subtyping);
           params;
           rest_param;
           return_t = return;

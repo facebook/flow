@@ -63,7 +63,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:11:17
 
-Cannot extend `A` [1] with `B` because string [2] is incompatible with number [3] in the first argument of property
+Cannot extend `A` [1] with `B` because string [2] is incompatible with number [3] in the first parameter of property
 `foo`. [incompatible-extend]
 
    test.js:11:17

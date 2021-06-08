@@ -1000,8 +1000,14 @@ module rec TypeTerm : sig
   and fun_rest_param = string option * ALoc.t * t
 
   (* used by FunT *)
+  (* FunTs carry around two `this` types, one to be used during subtyping and
+     one to be treated as the param when the function is called. This is to allow
+     more lenient subtyping between class methods without sacrificing soundness
+     when calling functions. If subtype_this_t is None, param_this_t is used
+     for both operations *)
   and funtype = {
-    this_t: t;
+    this_t: t * bool;
+    (* use for subtyping? *)
     params: fun_param list;
     rest_param: fun_rest_param option;
     return_t: t;
@@ -3546,6 +3552,9 @@ let bound_function_dummy_this = locationless_reason RDummyThis |> Unsoundness.bo
 
 let dummy_this = locationless_reason RDummyThis |> MixedT.make |> with_trust bogus_trust
 
+let implicit_mixed_this r =
+  update_desc_reason (fun desc -> RImplicitThis desc) r |> MixedT.make |> with_trust bogus_trust
+
 let global_this reason =
   let reason = replace_desc_reason (RCustom "global object") reason in
   ObjProtoT reason
@@ -3553,9 +3562,17 @@ let global_this reason =
 let default_obj_assign_kind = ObjAssign { assert_exact = false }
 
 (* A method type is a function type with `this` specified. *)
-let mk_methodtype this_t tins ~rest_param ~def_reason ?params_names ?(is_predicate = false) tout =
+let mk_methodtype
+    this_t
+    ?(subtyping = true)
+    tins
+    ~rest_param
+    ~def_reason
+    ?params_names
+    ?(is_predicate = false)
+    tout =
   {
-    this_t;
+    this_t = (this_t, subtyping);
     params =
       (match params_names with
       | None -> Base.List.map ~f:(fun t -> (None, t)) tins
@@ -3580,7 +3597,7 @@ let mk_methodcalltype targs args ?meth_generic_this ?(meth_strict_arity = true) 
    explicitly annotated we model this unsoundly using `any`, but if it is
    then we create a methodtype with a specific `this` type.  *)
 
-let mk_boundfunctiontype ?(this = bound_function_dummy_this) = mk_methodtype this
+let mk_boundfunctiontype ~this = mk_methodtype this
 
 (* A function type is a method type whose `this` parameter has been
    bound to to the global object. Currently, if the function's `this` parameter is not

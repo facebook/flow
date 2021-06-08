@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ namespace.js:3:23
 
-Cannot assign function to `f` because string [1] is incompatible with number [2] in the first argument.
+Cannot assign function to `f` because string [1] is incompatible with number [2] in the first parameter.
 [incompatible-type]
 
    namespace.js:3:23

@@ -64,7 +64,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `FancyButton` element because in property `ref`: [incompatible-type]
  - Either property `current` is missing in function [1] but exists in object type [2].
- - Or `HTMLDivElement` [3] is incompatible with `HTMLButtonElement` [4] in the first argument.
+ - Or `HTMLDivElement` [3] is incompatible with `HTMLButtonElement` [4] in the first parameter.
 
    forwardRef.js:23:39
     23| const _g =  <FancyButton foo={3} ref={(x: null | HTMLDivElement) => x} />; // Incorrect ref type
