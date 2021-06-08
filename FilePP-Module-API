@@ -1,0 +1,115 @@
+< #,$,*.
+# $,*.
+# *.
+# *
+#
+### ***FILEPP MODULE API***
+The behaviour of filepp can be modified or extended through the use of modules. filepp modules are in fact perl(1) modules, and the rest of this section assumes the reader has a knowledge of Perl.
+filepp modules are perl(1) modules which extend or modify filepp's behaviour by either calling or replacing filepp's internal functions. filepp has the Perl package name Filepp so its internal functions can be called within modules either as Filepp::function() or just function(). Any of filepp's internal functions can be called or replaced from within a filepp module, the most useful ones are:
+
+## *Debug($string,$number)
+# *Print $string as debugging information if debugging is enabled. $number is optional and can be used to set the debugging level at which $string should be printed, lower numbers being higher priority. Command line option d prints all debugging info for 2 and below, option dd prints all debugging information for 3 and below and option dl prints all debugging information for 1 and below. If $number is not provided, defaults to 1.
+# *AddProcessor($function,$pos,$type)
+# *Allows the module to add a function named $function to filepp's processing chain. The processing chain is a set of functions which are run on each line of a file as it is processed. The default functions in the processing chain are ParseKeywords which does keyword parsing and ReplaceDefines which does macro replacement. Further functions can be added to the chain, with each function taking a string (the current line) as input and returning the processed string as output.
+# *By default, or if $pos is set to 0, the processor is added to the end of the processing chain. 
+# *.If $,*.pos is set to 1 the processor is added to the start of the processing chain.
+
+$type controls what the processor is run on. There are three options for this, 0 (default): the processor runs on everything passed to the processing chain; 1: the processor runs on full lines only; 2: the processor runs on part lines only (a part line is the text following a keyword such as if which needs to be parsed for macros).
+
+Both $pos and $type are optional parameters.
+
+AddProcessorAfter($function,$existing,$type)
+Adds function $function to the processing chain directly after existing processor $existing. If $existing is not found then $function is added to the end of the processing chain. Regular expression matching is used to compare $existing with the names of the functions in the processing chain.
+$type is optional.
+
+AddProcessorBefore($function,$existing,$type)
+Adds function $function to the processing chain directly before existing processor $existing. If $existing is not found then $function is added to the start of the processing chain. Regular expression matching is used to compare $existing with the names of the functions in the processing chain.
+$type is optional.
+
+RemoveProcessor($function)
+Removes the processor function $function from the processing chain.
+$string=ReplaceDefines($string)
+Replaces all macros in $string with their definitions and returns the processed string.
+AddKeyword($string,$function)
+Add the keyword named $string. When the keyword is found in text processing the function named $function will be run with everything following the keyword passed as a single argument.
+RemoveKeyword($string)
+Removes the keyword named $string.
+RemoveAllKeywords()
+Removes all the keywords currently defined for filepp (used for the -k command line option).
+AddIfword($string)
+Adds keyword named $string to Ifword list. An Ifword takes in the string following the keyword and optionally parses it, returning a 1 if the string parses to true and 0 for false. The default Ifwords are if, ifdef and ifndef.
+RemoveIfword($string)
+Removes keyword named $string from Ifword list (note: this does NOT remove the keyword, use RemoveKeyword for that).
+AddElseword($string)
+Adds keyword named $string to Elseword list. An Elseword takes in the string following the keyword and optionally parses it, returning a 1 if the string parses to true and 0 for false. The default Elsewords are else and elif.
+RemoveElseword($string)
+Removes keyword named $string from Elseword list.
+AddEndifword($string)
+Adds keyword named $string to Endifword list. An Endifword should return a 1 to indicate successful termination of the if block. If the Endifword returns 0 the Endifword is ignored and filepp assumes the current if block carries on after the Endifword. The default Endifword is endif.
+RemoveEndifword($string)
+Removes keyword named $string from Endifword list.
+AddIncludePath($string)
+Adds the include path $string to the list of directories to search for include files (used for the -I command line option).
+AddModulePath($string)
+Adds the path $string to the list of directories to search for filepp modules (used for the -M command line option).
+AddOpenInputFunc($function)
+Adds a $function to a list of functions to be run each time a new base input file is opened.
+AddCloseInputFunc($function)
+Adds a $function to a list of functions to be run each time a new base input file is closed.
+AddOpenOutputFunc($function)
+Adds a $function to a list of functions to be run each time an output file is opened.
+AddCloseOutputFunc($function)
+Adds a $function to a list of functions to be run each time an output file is closed.
+AddInputFile($string)
+Adds another input file to the list of files to be processed (used for adding input files at the command line).
+ChangeOutputFile($string)
+Closes the current output file and attempts to open a new one named $string.
+SetKeywordchar($string)
+Set the initial keyword char to $string (used for the -kc command line option).
+SetContchar($string)
+Set the line continuation char to $string (used for the -lc command line option).
+SetContrepchar($string)
+Set the line continuation replacement char to $string (used for the -lr command line option).
+SetOptLineEndchar($string)
+Set the optional keyword line end character to $string (used for the -lec command line option).
+SetBlankSupp(1/0)
+Turns blank-line suppression on/off (1 = suppress, 0 = don't suppress). When blank-line suppression is on, blank lines in input files will not be copied to the output. Unlike the corresponding command-line option (-b), this function can also have effect in the top-level file. The setting of blank-line suppression applies to the current file being processed and all files included in the current file.
+ResetBlankSupp()
+Resets blank-line suppression to the command-line specified value. This only affects the output of blank lines from the current file being processed and all files included in the current file. In the top-level file, this always turns blank-line suppression off.
+SetEatTrail($string)
+If $string is a macro, whenever the macro is replaced all blank space between the macro's replacement and the next character on the line will be eaten. For example, if macro foo is defined to bar and foo has been set to have it's trail eaten, the following:
+
+ eat my foo trail
+
+is replaced with
+
+
+ eat my bartrail
+
+CheckEatTrail($string)
+Returns 1 if macro $string will have it's tail eaten, 0 otherwise.
+SetEnvchar($string)
+Set the prefix of environment variables converted to macros (envchar) to $string (used for -ec and -ecn command line options).
+DefineEnv()
+Define all environment variables as macros with prefix envchar (used for -e command line option).
+SetOutput(1/0)
+Turns writing of parsed input file to output file on/off. This takes either 1 (output on) or 0 (output off) as input. When the output is turned off, the only output produced from filepp will be that generated by modules.
+SetWordBoundaries(1/0)
+Turns on(1) or off(0) word boundary checking when replacing macros (used for the -w command line option).
+SetCharPerlre(1/0)
+Turns on(1) or off(0) allowing of keyword prefix char and line continuation char to be Perl regular expressions (used for the -re command line option).
+UndefAll()
+Undefines all currently defined macros, including predefined ones (used for the -u command line option).
+UseModule($string)
+Loads a perl(1) module named $string using the Perl command require (used for the -m command line option).
+SetParseLineEnd($function)
+Sets the function to determine if line continuation should be done on current line to $function.
+$string=GetNextLine()
+Returns the next line (after line continuation has been dealt with) of the input file currently being processed. Returns NULL for end of file.
+Write($string)
+Writes $string to the current output file.
+Output($string)
+Conditionally writes $string to the current output file. If output is turned on then writes $string. Output is toggled off/on using SetOutput function.
+In addition all the standard filepp keywords have equivalent functions which optionally take a single argument. The functions have the same name as the keyword, only with a capital first letter (eg: #define string calls the function Define(string)).
+
+A full description of the Parse function and all the other filepp internal functions is beyond the scope of this man page. The filepp script is well commented and hopefully readable by a Perl programmer, so use the source Luke!

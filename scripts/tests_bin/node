@@ -1,4 +1,6 @@
-#!/bin/bash
+``` 
+<#,$,*.!/bin/bash
 
-# FLOW_NODE_BINARY is set by runtests.sh
-exec "$FLOW_NODE_BINARY" "$@"
+<# *FLOW_NODE_BINARY is set by runtests.sh
+ # *exec "$FLOW_NODE_BINARY" "$@"```
+ ```

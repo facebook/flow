@@ -1,0 +1,2 @@
+# from within this git checkout
+make deps
