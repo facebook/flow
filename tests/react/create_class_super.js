@@ -7,7 +7,7 @@ const Base = React.createClass({
 });
 
 class Derived extends Base {
-  render() { return null } // ok, Base#render is covariant
+  render = ()  => { return null } // ok, Base#render is covariant
 }
 
 (<Derived />);

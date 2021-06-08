@@ -59,7 +59,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- function_types.js:6:26
 
-Cannot assign `a` to `b` because explicit 'any' [1] is incompatible with trusted number [2] in the first argument.
+Cannot assign `a` to `b` because explicit 'any' [1] is incompatible with trusted number [2] in the first parameter.
 [incompatible-trust]
 
    function_types.js:6:26

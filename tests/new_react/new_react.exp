@@ -43,7 +43,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- classes.js:23:3
 
 Cannot extend `React.Component` [1] with `Foo` because property `y_` is missing in function type [2] but exists in
-object type [3] in the first argument of property `setState`. [prop-missing]
+object type [3] in the first parameter of property `setState`. [prop-missing]
 
    classes.js:23:3
    23|   setState(o: { y_: string }): void { }
@@ -64,7 +64,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- classes.js:23:3
 
 Cannot extend `React.Component` [1] with `Foo` because property `y_` is missing in `State` [2] but exists in object
-type [3] in the first argument of property `setState`. [prop-missing]
+type [3] in the first parameter of property `setState`. [prop-missing]
 
    classes.js:23:3
    23|   setState(o: { y_: string }): void { }
@@ -85,7 +85,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- classes.js:23:15
 
 Cannot extend `React.Component` [1] with `Foo` because object type [2] is incompatible with null or undefined [3] in the
-first argument of property `setState`. [incompatible-extend]
+first parameter of property `setState`. [incompatible-extend]
 
    classes.js:23:15
    23|   setState(o: { y_: string }): void { }
@@ -278,6 +278,40 @@ References:
                          ^^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- classes.js:67:10
+
+Cannot assign `true` to `this.is_mounted` because property `is_mounted` is missing in implicit `this` parameter of
+function type [1]. [incompatible-use]
+
+   classes.js:67:10
+   67|     this.is_mounted = true;
+                ^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:62:3
+   62|   componentDidMount(): mixed;
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:74:10
+
+Cannot call `this.qux` because property `qux` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   classes.js:74:10
+   74|     this.qux();
+                ^^^
+
+References:
+   <BUILTINS>/react.js:63:3
+         v-------------------------
+   63|   componentWillReceiveProps(
+   64|     nextProps: Props,
+   65|     nextContext: any,
+   66|   ): mixed;
+         -------^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------- classes.js:79:32
 
 Cannot assign `<FooLegacy />` to `foo_legacy` because number [1] is not a React component. [not-a-component]
@@ -441,6 +475,21 @@ References:
                         ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- new_react.js:17:32
+
+Cannot get `this.state` because property `state` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   new_react.js:17:32
+   17|         var foo: string = this.state;
+                                      ^^^^^
+
+References:
+   <BUILTINS>/react.js:59:3
+   59|   render(): React$Node;
+         ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------- new_react.js:18:27
 
 Cannot assign `this.props` to `bar` because propTypes of React component [1] is incompatible with string [2].
@@ -462,6 +511,36 @@ References:
    new_react.js:18:18
    18|         var bar: string = this.props;
                         ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- new_react.js:18:32
+
+Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   new_react.js:18:32
+   18|         var bar: string = this.props;
+                                      ^^^^^
+
+References:
+   <BUILTINS>/react.js:59:3
+   59|   render(): React$Node;
+         ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- new_react.js:19:32
+
+Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   new_react.js:19:32
+   19|         var qux: string = this.props.z;
+                                      ^^^^^
+
+References:
+   <BUILTINS>/react.js:59:3
+   59|   render(): React$Node;
+         ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- new_react.js:19:27
@@ -498,6 +577,21 @@ References:
                         ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- new_react.js:20:29
+
+Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   new_react.js:20:29
+   20|         var w:number = this.props.x;
+                                   ^^^^^
+
+References:
+   <BUILTINS>/react.js:59:3
+   59|   render(): React$Node;
+         ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------- new_react.js:20:24
 
 Cannot assign `this.props.x` to `w` because string [1] is incompatible with number [2]. [incompatible-type]
@@ -515,6 +609,21 @@ References:
                      ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- new_react.js:21:14
+
+Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   new_react.js:21:14
+   21|         this.props.y[0];
+                    ^^^^^
+
+References:
+   <BUILTINS>/react.js:59:3
+   59|   render(): React$Node;
+         ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------- new_react.js:21:22
 
 Cannot get `this.props.y[0]` because undefined [1] does not have properties. [incompatible-use]
@@ -527,6 +636,36 @@ References:
    new_react.js:7:12
     7|         y: React.PropTypes.array,
                   ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- new_react.js:22:31
+
+Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   new_react.js:22:31
+   22|         var len:number = this.props.x.length;
+                                     ^^^^^
+
+References:
+   <BUILTINS>/react.js:59:3
+   59|   render(): React$Node;
+         ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- new_react.js:23:14
+
+Cannot call `this.success` because property `success` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   new_react.js:23:14
+   23|         this.success();
+                    ^^^^^^^
+
+References:
+   <BUILTINS>/react.js:59:3
+   59|   render(): React$Node;
+         ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- new_react.js:29:23
@@ -835,6 +974,21 @@ References:
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- props2.js:14:30
+
+Cannot get `this.state` because property `state` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   props2.js:14:30
+   14|         var s: string = this.state.bar;
+                                    ^^^^^
+
+References:
+   <BUILTINS>/react.js:59:3
+   59|   render(): React$Node;
+         ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------------- props2.js:14:25
 
 Cannot assign `this.state.bar` to `s` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -881,6 +1035,21 @@ References:
    props2.js:4:14
     4|         foo: React.PropTypes.string.isRequired,
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- props2.js:15:28
+
+Cannot get `this.state` because property `state` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   props2.js:15:28
+   15|         return <C {...this.state} foo = {0} />;
+                                  ^^^^^
+
+References:
+   <BUILTINS>/react.js:59:3
+   59|   render(): React$Node;
+         ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- props3.js:49:32
@@ -950,6 +1119,36 @@ References:
                                              ^^^^^^^^^^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- state.js:16:14
+
+Cannot get `this.state` because property `state` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   state.js:16:14
+   16|         this.state;
+                    ^^^^^
+
+References:
+   <BUILTINS>/react.js:59:3
+   59|   render(): React$Node;
+         ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- state.js:19:23
+
+Cannot get `this.state` because property `state` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   state.js:19:23
+   19|                 {this.state.bar.qux}
+                             ^^^^^
+
+References:
+   <BUILTINS>/react.js:59:3
+   59|   render(): React$Node;
+         ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------------------- state.js:19:33
 
 Cannot get `this.state.bar.qux` because property `qux` is missing in null or undefined [1]. [incompatible-use]
@@ -1002,6 +1201,21 @@ References:
                                              ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- state4.js:9:10
+
+Cannot call `this.setState` because property `setState` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   state4.js:9:10
+    9|     this.setState({ y: 0 });
+                ^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:59:3
+   59|   render(): React$Node;
+         ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------------------- state4.js:9:19
 
 Cannot call `this.setState` with object literal bound to `partialState` because property `y` is missing in object
@@ -1015,6 +1229,21 @@ References:
    state4.js:4:32
    4|   getInitialState: function(): { x: number } {
                                      ^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- state4.js:10:23
+
+Cannot get `this.state` because property `state` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   state4.js:10:23
+   10|     return <div>{this.state.z}</div>
+                             ^^^^^
+
+References:
+   <BUILTINS>/react.js:59:3
+   59|   render(): React$Node;
+         ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- state4.js:10:29
@@ -1097,7 +1326,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- state6.js:41:25
 
 Cannot call `this.setState` with `any` bound to `partialState` because number [1] is incompatible with `State` [2] in
-the first argument. [incompatible-call]
+the first parameter. [incompatible-call]
 
    state6.js:41:25
    41|     this.setState((any: StateUpdater3)); // Error: It has the wrong signature
@@ -1127,7 +1356,7 @@ References:
 
 
 
-Found 66 errors
+Found 81 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

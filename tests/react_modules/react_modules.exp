@@ -1,3 +1,18 @@
+Error ------------------------------------------------------------------------------------ createclass-callsite.js:12:23
+
+Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   createclass-callsite.js:12:23
+   12|     return <div>{this.props.name}</div>;
+                             ^^^^^
+
+References:
+   <BUILTINS>/react.js:59:3
+   59|   render(): React$Node;
+         ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------ createclass-callsite.js:20:10
 
 Cannot create `Hello` element because property `name` is missing in props [1] but exists in object type [2].
@@ -35,6 +50,21 @@ References:
     8|     name: React.PropTypes.string.isRequired,
     9|   },
          ^ [2]
+
+
+Error -------------------------------------------------------------------------------------- createclass-module.js:11:23
+
+Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   createclass-module.js:11:23
+   11|     return <div>{this.props.name}</div>;
+                             ^^^^^
+
+References:
+   <BUILTINS>/react.js:59:3
+   59|   render(): React$Node;
+         ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------- es6class-proptypes-callsite.js:20:10
@@ -109,4 +139,4 @@ References:
 
 
 
-Found 6 errors
+Found 8 errors

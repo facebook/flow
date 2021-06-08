@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- annot.js:4:44
 
-Cannot assign `foo` to `bar` because string [1] is incompatible with number [2] in the first argument.
+Cannot assign `foo` to `bar` because string [1] is incompatible with number [2] in the first parameter.
 [incompatible-type]
 
    annot.js:4:44

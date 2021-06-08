@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- file1.js:4:17
 
-Cannot assign function to `bar` because string [1] is incompatible with number [2] in the first argument.
+Cannot assign function to `bar` because string [1] is incompatible with number [2] in the first parameter.
 [incompatible-type]
 
    file1.js:4:17

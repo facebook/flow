@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------- cross_module/app.js:5:24
 
 Cannot call `fn` with function bound to `arg` because number [1] is incompatible with string [2] in property `a` of the
-first argument. [incompatible-call]
+first parameter. [incompatible-call]
 
    cross_module/app.js:5:24
    5| const app = fn((o: {a: number, b: number}) => {});

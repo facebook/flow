@@ -964,7 +964,7 @@ Flags: --pretty
     {"name":"?.entries","type":"void | (() => Iterator<[number, T]>)"},
     {
       "name":"?.every",
-      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => boolean)"
+      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => boolean)"
     },
     {
       "name":"?.fill",
@@ -972,24 +972,24 @@ Flags: --pretty
     },
     {
       "name":"?.filter",
-      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => Array<T>)"
+      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => Array<T>)"
     },
     {
       "name":"?.find",
-      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => (T | void))"
+      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => (T | void))"
     },
     {
       "name":"?.findIndex",
-      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => number)"
+      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => number)"
     },
     {"name":"?.flat","type":"void | ((depth: number) => Array<mixed>)"},
     {
       "name":"?.flatMap",
-      "type":"void | (<U>(callbackfn: (value: T, index: number, array: Array<T>) => ($ReadOnlyArray<U> | U), thisArg?: mixed) => Array<U>)"
+      "type":"void | (<U, This>(callbackfn: (value: T, index: number, array: Array<T>) => ($ReadOnlyArray<U> | U), thisArg: This) => Array<U>)"
     },
     {
       "name":"?.forEach",
-      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => void)"
+      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => void)"
     },
     {"name":"?.hasOwnProperty","type":"void | ((prop: mixed) => boolean)"},
     {
@@ -1010,7 +1010,7 @@ Flags: --pretty
     {"name":"?.length","type":"void | number"},
     {
       "name":"?.map",
-      "type":"void | (<U>(callbackfn: (value: T, index: number, array: Array<T>) => U, thisArg?: mixed) => Array<U>)"
+      "type":"void | (<U, This>(callbackfn: (value: T, index: number, array: Array<T>) => U, thisArg: This) => Array<U>)"
     },
     {"name":"?.pop","type":"void | (() => T)"},
     {"name":"?.propertyIsEnumerable","type":"void | ((prop: mixed) => boolean)"},
@@ -1028,7 +1028,7 @@ Flags: --pretty
     {"name":"?.slice","type":"void | ((start?: number, end?: number) => Array<T>)"},
     {
       "name":"?.some",
-      "type":"void | ((callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => boolean)"
+      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => boolean)"
     },
     {
       "name":"?.sort",
@@ -1062,29 +1062,29 @@ Flags: --pretty
     {"name":"entries","type":"() => Iterator<[number, T]>"},
     {
       "name":"every",
-      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => boolean"
+      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => boolean"
     },
     {"name":"fill","type":"(value: T, begin?: number, end?: number) => Array<T>"},
     {
       "name":"filter",
-      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => Array<T>"
+      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => Array<T>"
     },
     {
       "name":"find",
-      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => (T | void)"
+      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => (T | void)"
     },
     {
       "name":"findIndex",
-      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => number"
+      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => number"
     },
     {"name":"flat","type":"(depth: number) => Array<mixed>"},
     {
       "name":"flatMap",
-      "type":"<U>(callbackfn: (value: T, index: number, array: Array<T>) => ($ReadOnlyArray<U> | U), thisArg?: mixed) => Array<U>"
+      "type":"<U, This>(callbackfn: (value: T, index: number, array: Array<T>) => ($ReadOnlyArray<U> | U), thisArg: This) => Array<U>"
     },
     {
       "name":"forEach",
-      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => void"
+      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => void"
     },
     {"name":"hasOwnProperty","type":"(prop: mixed) => boolean"},
     {
@@ -1105,7 +1105,7 @@ Flags: --pretty
     {"name":"length","type":"number"},
     {
       "name":"map",
-      "type":"<U>(callbackfn: (value: T, index: number, array: Array<T>) => U, thisArg?: mixed) => Array<U>"
+      "type":"<U, This>(callbackfn: (value: T, index: number, array: Array<T>) => U, thisArg: This) => Array<U>"
     },
     {"name":"pop","type":"() => T"},
     {"name":"propertyIsEnumerable","type":"(prop: mixed) => boolean"},
@@ -1123,7 +1123,7 @@ Flags: --pretty
     {"name":"slice","type":"(start?: number, end?: number) => Array<T>"},
     {
       "name":"some",
-      "type":"(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg?: mixed) => boolean"
+      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => mixed, thisArg: This) => boolean"
     },
     {"name":"sort","type":"(compareFn?: (a: T, b: T) => number) => Array<T>"},
     {

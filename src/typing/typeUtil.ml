@@ -877,3 +877,9 @@ let union_of_ts reason ts =
 let annotated_or_inferred_of_option ~default = function
   | Some t -> Annotated t
   | None -> Inferred default
+
+let subtype_this_of_function { this_t = (this, subtyping); _ } =
+  if subtyping then
+    this
+  else
+    reason_of_t this |> implicit_mixed_this

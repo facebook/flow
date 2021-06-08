@@ -543,7 +543,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- request.js:24:10
 
-Cannot call `h.text().then` because `Buffer` [1] is incompatible with string [2] in the first argument.
+Cannot call `h.text().then` because `Buffer` [1] is incompatible with string [2] in the first parameter.
 [incompatible-call]
 
    request.js:24:10
@@ -561,7 +561,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- request.js:26:17
 
-Cannot call `h.arrayBuffer().then` because `ArrayBuffer` [1] is incompatible with `Buffer` [2] in the first argument.
+Cannot call `h.arrayBuffer().then` because `ArrayBuffer` [1] is incompatible with `Buffer` [2] in the first parameter.
 [incompatible-call]
 
    request.js:26:17
@@ -715,7 +715,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ response.js:42:10
 
-Cannot call `h.text().then` because `Buffer` [1] is incompatible with string [2] in the first argument.
+Cannot call `h.text().then` because `Buffer` [1] is incompatible with string [2] in the first parameter.
 [incompatible-call]
 
    response.js:42:10
@@ -733,7 +733,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ response.js:44:17
 
-Cannot call `h.arrayBuffer().then` because `ArrayBuffer` [1] is incompatible with `Buffer` [2] in the first argument.
+Cannot call `h.arrayBuffer().then` because `ArrayBuffer` [1] is incompatible with `Buffer` [2] in the first parameter.
 [incompatible-call]
 
    response.js:44:17

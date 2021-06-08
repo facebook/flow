@@ -16,7 +16,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- api.js:11:24
 
 Cannot call `Children.map` with function bound to `fn` because string [1] is incompatible with number [2] in the first
-argument. [incompatible-call]
+parameter. [incompatible-call]
 
    api.js:11:24
    11| na(Children.map(a, (x: string) => (x: string))); // Error

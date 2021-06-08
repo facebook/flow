@@ -1205,7 +1205,36 @@ module Make (Flow : INPUT) : OUTPUT = struct
               use_op
             | _ -> use_op )
       in
-      rec_flow cx trace (ft2.this_t, UseT (use_op, ft1.this_t));
+
+      begin
+        let use_op =
+          Frame (FunParam { n = 0; name = Some "this"; lower = lreason; upper = ureason }, use_op)
+        in
+        let (this_param1, subtyping1) = ft1.this_t in
+        let (this_param2, subtyping2) = ft2.this_t in
+        match (subtyping1, subtyping2) with
+        (* Both methods *)
+        | (false, false) ->
+          rec_flow
+            cx
+            trace
+            (subtype_this_of_function ft2, UseT (use_op, subtype_this_of_function ft1))
+        (* lower bound method, upper bound function
+           This is always banned, as it would allow methods to be unbound through casting *)
+        | (false, true) ->
+          add_output
+            cx
+            ~trace
+            (Error_message.EMethodUnbinding
+               { use_op; reason_op = lreason; reason_prop = reason_of_t this_param1 });
+          rec_flow cx trace (this_param2, UseT (use_op, subtype_this_of_function ft1))
+        (* lower bound function, upper bound method.
+           Ok as long as the types match up *)
+        | (true, false)
+        (* Both functions *)
+        | (true, true) ->
+          rec_flow cx trace (this_param2, UseT (use_op, this_param1))
+      end;
       let args = List.rev_map (fun (_, t) -> Arg t) ft2.params in
       let args =
         List.rev

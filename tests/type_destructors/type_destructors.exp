@@ -453,7 +453,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tvar3.js:21:10
 
-Cannot cast `fn2(...)` to function type because `A` [1] is incompatible with `B` [2] in the first argument.
+Cannot cast `fn2(...)` to function type because `A` [1] is incompatible with `B` [2] in the first parameter.
 [incompatible-cast]
 
    tvar3.js:21:10
@@ -502,7 +502,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tvar3.js:23:13
 
-Cannot cast `fn4(...)` to function type because `B` [1] is incompatible with `C` [2] in the first argument.
+Cannot cast `fn4(...)` to function type because `B` [1] is incompatible with `C` [2] in the first parameter.
 [incompatible-cast]
 
    tvar3.js:23:13
@@ -551,7 +551,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tvar3.js:26:2
 
-Cannot cast `fn6(...)` to function type because `A` [1] is incompatible with `B` [2] in the first argument.
+Cannot cast `fn6(...)` to function type because `A` [1] is incompatible with `B` [2] in the first parameter.
 [incompatible-cast]
 
    tvar3.js:26:2
@@ -603,7 +603,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tvar3.js:27:13
 
-Cannot call `fn7` with function bound to `y` because `B` [1] is incompatible with `A` [2] in the first argument.
+Cannot call `fn7` with function bound to `y` because `B` [1] is incompatible with `A` [2] in the first parameter.
 [incompatible-call]
 
    tvar3.js:27:13
@@ -618,7 +618,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tvar3.js:28:2
 
-Cannot cast `fn8(...)` to function type because `B` [1] is incompatible with `C` [2] in the first argument.
+Cannot cast `fn8(...)` to function type because `B` [1] is incompatible with `C` [2] in the first parameter.
 [incompatible-cast]
 
    tvar3.js:28:2
@@ -653,7 +653,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tvar3.js:28:13
 
-Cannot call `fn8` with function bound to `y` because `B` [1] is incompatible with `A` [2] in the first argument.
+Cannot call `fn8` with function bound to `y` because `B` [1] is incompatible with `A` [2] in the first parameter.
 [incompatible-call]
 
    tvar3.js:28:13

@@ -407,8 +407,11 @@ class virtual ['a] t =
         { exports_tmap = exports_tmap'; cjs_export = cjs_export'; has_every_named_export }
 
     method fun_type
-        cx map_cx ({ this_t; params; rest_param; return_t; is_predicate; def_reason } as t) =
-      let this_t' = self#type_ cx map_cx this_t in
+        cx
+        map_cx
+        ({ this_t = (this, subtyping); params; rest_param; return_t; is_predicate; def_reason } as t)
+        =
+      let this' = self#type_ cx map_cx this in
       let params' =
         ListUtils.ident_map
           (fun ((name, t) as param) ->
@@ -430,12 +433,11 @@ class virtual ['a] t =
             Some (name, loc, t')
       in
       let return_t' = self#type_ cx map_cx return_t in
-      if
-        this_t' == this_t && return_t' == return_t && params' == params && rest_param' == rest_param
+      if this' == this && return_t' == return_t && params' == params && rest_param' == rest_param
       then
         t
       else
-        let this_t = this_t' in
+        let this_t = (this', subtyping) in
         let return_t = return_t' in
         let params = params' in
         let rest_param = rest_param' in

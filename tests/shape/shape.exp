@@ -186,7 +186,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:101:2
 
-Cannot cast `one` to `Three` because number [1] is incompatible with string [2] in the first argument of property
+Cannot cast `one` to `Three` because number [1] is incompatible with string [2] in the first parameter of property
 `constructor`. [incompatible-cast]
 
    test.js:101:2

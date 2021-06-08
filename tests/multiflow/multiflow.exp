@@ -209,7 +209,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ jsx.js:34:3
 
 Cannot create `ExpectsProps` element because property `name` is missing in object type [1] but exists in object type [2]
-in the first argument. [incompatible-use]
+in the first parameter. [incompatible-use]
 
    jsx.js:34:3
    34| (<ExpectsProps />); // Error - missing prop
