@@ -90,7 +90,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- B.js:8:47
 
-Cannot assign function to `c` because number [1] is incompatible with string [2] in the first argument.
+Cannot assign function to `c` because number [1] is incompatible with string [2] in the first parameter.
 [incompatible-type]
 
    B.js:8:47
@@ -136,7 +136,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- C.js:13:10
 
-Cannot return `x` because number [1] is incompatible with string [2] in the first argument. [incompatible-return]
+Cannot return `x` because number [1] is incompatible with string [2] in the first parameter. [incompatible-return]
 
    C.js:13:10
    13|   return x;

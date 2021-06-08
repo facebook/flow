@@ -703,7 +703,7 @@ References:
 Error ----------------------------------------------------------------------------------------- registerElement.js:52:19
 
 Cannot call `document.registerElement` with object literal bound to `options` because string [1] is incompatible with
-null [2] in the second argument of property `prototype.attributeChangedCallback`. [incompatible-call]
+null [2] in the second parameter of property `prototype.attributeChangedCallback`. [incompatible-call]
 
    registerElement.js:52:19
     52|           oldVal: string, // Error: This might be null
@@ -718,7 +718,7 @@ References:
 Error ----------------------------------------------------------------------------------------- registerElement.js:53:19
 
 Cannot call `document.registerElement` with object literal bound to `options` because string [1] is incompatible with
-null [2] in the third argument of property `prototype.attributeChangedCallback`. [incompatible-call]
+null [2] in the third parameter of property `prototype.attributeChangedCallback`. [incompatible-call]
 
    registerElement.js:53:19
     53|           newVal: string, // Error: This might be null

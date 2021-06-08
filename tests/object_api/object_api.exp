@@ -187,7 +187,7 @@ References:
 Error ---------------------------------------------------------------------------------------- object_prototype.js:26:32
 
 Cannot assign `a.toString` to `aToString` because function type [1] cannot be unbound from the context [1] where it was
-defined in the `this` argument. [method-unbinding]
+defined in the `this` parameter. [method-unbinding]
 
    object_prototype.js:26:32
     26| var aToString : () => string = a.toString;
@@ -314,7 +314,7 @@ References:
 Error ---------------------------------------------------------------------------------------- object_prototype.js:63:51
 
 Cannot assign `a.hasOwnProperty` to `aHasOwnProperty` because function type [1] cannot be unbound from the context [1]
-where it was defined in the `this` argument. [method-unbinding]
+where it was defined in the `this` parameter. [method-unbinding]
 
    object_prototype.js:63:51
     63| var aHasOwnProperty : (prop: string) => boolean = a.hasOwnProperty;
@@ -382,7 +382,7 @@ References:
 Error ---------------------------------------------------------------------------------------- object_prototype.js:88:57
 
 Cannot assign `a.propertyIsEnumerable` to `aPropertyIsEnumerable` because function type [1] cannot be unbound from the
-context [1] where it was defined in the `this` argument. [method-unbinding]
+context [1] where it was defined in the `this` parameter. [method-unbinding]
 
    object_prototype.js:88:57
     88| var aPropertyIsEnumerable : (prop: string) => boolean = a.propertyIsEnumerable;
@@ -506,7 +506,7 @@ References:
 Error --------------------------------------------------------------------------------------- object_prototype.js:142:38
 
 Cannot assign `a.toLocaleString` to `aToLocaleString` because function type [1] cannot be unbound from the context [1]
-where it was defined in the `this` argument. [method-unbinding]
+where it was defined in the `this` parameter. [method-unbinding]
 
    object_prototype.js:142:38
    142| var aToLocaleString : () => string = a.toLocaleString;
@@ -562,7 +562,7 @@ References:
 Error --------------------------------------------------------------------------------------- object_prototype.js:151:39
 
 Cannot assign `x.toLocaleString` to `xToLocaleString2` because function type [1] cannot be unbound from the context [1]
-where it was defined in the `this` argument. [method-unbinding]
+where it was defined in the `this` parameter. [method-unbinding]
 
    object_prototype.js:151:39
     151| var xToLocaleString2 : () => number = x.toLocaleString; // error

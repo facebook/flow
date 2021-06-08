@@ -508,6 +508,13 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
               `Root (op, None, message)
             | Frame (ArrayElementCompatibility { lower; _ }, use_op) ->
               `Frame (lower, use_op, [text "array element"])
+            | Frame (FunParam { n; lower; name; _ }, (Frame (FunCompatibility _, _) as use_op)) ->
+              let arg =
+                match name with
+                | Some "this" -> [text "the "; code "this"; text " parameter"]
+                | _ -> [text "the "; text (Utils_js.ordinal n); text " parameter"]
+              in
+              `Frame (lower, use_op, arg)
             | Frame (FunParam { n; lower; name; _ }, use_op) ->
               let arg =
                 match name with

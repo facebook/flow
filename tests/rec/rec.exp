@@ -88,7 +88,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:12
 
-Cannot return function because property `e` is missing in `B` [1] but exists in `A` [2] in the first argument.
+Cannot return function because property `e` is missing in `B` [1] but exists in `A` [2] in the first parameter.
 [prop-missing]
 
    issue6155.js:15:12
@@ -106,7 +106,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:12
 
-Cannot return function because property `e` is missing in `C` [1] but exists in `A` [2] in the first argument.
+Cannot return function because property `e` is missing in `C` [1] but exists in `A` [2] in the first parameter.
 [prop-missing]
 
    issue6155.js:15:12
@@ -124,7 +124,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:12
 
-Cannot return function because property `k` is missing in `A` [1] but exists in `B` [2] in the first argument.
+Cannot return function because property `k` is missing in `A` [1] but exists in `B` [2] in the first parameter.
 [prop-missing]
 
    issue6155.js:15:12
@@ -142,7 +142,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:12
 
-Cannot return function because property `k` is missing in `C` [1] but exists in `B` [2] in the first argument.
+Cannot return function because property `k` is missing in `C` [1] but exists in `B` [2] in the first parameter.
 [prop-missing]
 
    issue6155.js:15:12
@@ -160,7 +160,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:12
 
-Cannot return function because property `v` is missing in `A` [1] but exists in `B` [2] in the first argument.
+Cannot return function because property `v` is missing in `A` [1] but exists in `B` [2] in the first parameter.
 [prop-missing]
 
    issue6155.js:15:12
@@ -178,7 +178,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:12
 
-Cannot return function because property `v` is missing in `C` [1] but exists in `B` [2] in the first argument.
+Cannot return function because property `v` is missing in `C` [1] but exists in `B` [2] in the first parameter.
 [prop-missing]
 
    issue6155.js:15:12
@@ -197,7 +197,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:13
 
 Cannot return function because string literal `a` [1] is incompatible with string literal `b` [2] in property `kind` of
-the first argument. [incompatible-return]
+the first parameter. [incompatible-return]
 
    issue6155.js:15:13
    15|     return (type) => cases[type.kind](type);
@@ -215,7 +215,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:13
 
 Cannot return function because string literal `a` [1] is incompatible with string literal `c` [2] in property `kind` of
-the first argument. [incompatible-return]
+the first parameter. [incompatible-return]
 
    issue6155.js:15:13
    15|     return (type) => cases[type.kind](type);
@@ -233,7 +233,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:13
 
 Cannot return function because string literal `b` [1] is incompatible with string literal `c` [2] in property `kind` of
-the first argument. [incompatible-return]
+the first parameter. [incompatible-return]
 
    issue6155.js:15:13
    15|     return (type) => cases[type.kind](type);

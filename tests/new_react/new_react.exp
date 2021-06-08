@@ -43,7 +43,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- classes.js:23:3
 
 Cannot extend `React.Component` [1] with `Foo` because property `y_` is missing in function type [2] but exists in
-object type [3] in the first argument of property `setState`. [prop-missing]
+object type [3] in the first parameter of property `setState`. [prop-missing]
 
    classes.js:23:3
    23|   setState(o: { y_: string }): void { }
@@ -64,7 +64,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- classes.js:23:3
 
 Cannot extend `React.Component` [1] with `Foo` because property `y_` is missing in `State` [2] but exists in object
-type [3] in the first argument of property `setState`. [prop-missing]
+type [3] in the first parameter of property `setState`. [prop-missing]
 
    classes.js:23:3
    23|   setState(o: { y_: string }): void { }
@@ -85,7 +85,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- classes.js:23:15
 
 Cannot extend `React.Component` [1] with `Foo` because object type [2] is incompatible with null or undefined [3] in the
-first argument of property `setState`. [incompatible-extend]
+first parameter of property `setState`. [incompatible-extend]
 
    classes.js:23:15
    23|   setState(o: { y_: string }): void { }
@@ -1326,7 +1326,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- state6.js:41:25
 
 Cannot call `this.setState` with `any` bound to `partialState` because number [1] is incompatible with `State` [2] in
-the first argument. [incompatible-call]
+the first parameter. [incompatible-call]
 
    state6.js:41:25
    41|     this.setState((any: StateUpdater3)); // Error: It has the wrong signature

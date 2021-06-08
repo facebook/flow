@@ -14,7 +14,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- createContext.js:18:24
 
-Cannot create `Consumer` element because literal union [1] is incompatible with string [2] in the first argument of
+Cannot create `Consumer` element because literal union [1] is incompatible with string [2] in the first parameter of
 property `children`. [incompatible-type]
 
    createContext.js:18:24
@@ -29,7 +29,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- createContext.js:24:22
 
-Cannot create `Consumer` element because literal union [1] is incompatible with string [2] in the first argument of
+Cannot create `Consumer` element because literal union [1] is incompatible with string [2] in the first parameter of
 property `children`. [incompatible-type]
 
    createContext.js:24:22
@@ -2848,7 +2848,7 @@ References:
 Error ---------------------------------------------------------------------------------------- proptypes_builtins.js:7:2
 
 Cannot cast `React.PropTypes.arrayOf` to `NoFun` because `ReactPropsCheckType` [1] is incompatible with mixed [2] in the
-first argument. [incompatible-cast]
+first parameter. [incompatible-cast]
 
    proptypes_builtins.js:7:2
      7| (React.PropTypes.arrayOf : NoFun);
@@ -2902,7 +2902,7 @@ References:
 Error --------------------------------------------------------------------------------------- proptypes_builtins.js:15:2
 
 Cannot cast `React.PropTypes.objectOf` to `NoFun` because `ReactPropsCheckType` [1] is incompatible with mixed [2] in
-the first argument. [incompatible-cast]
+the first parameter. [incompatible-cast]
 
    proptypes_builtins.js:15:2
     15| (React.PropTypes.objectOf : NoFun);
@@ -2938,7 +2938,7 @@ References:
 Error --------------------------------------------------------------------------------------- proptypes_builtins.js:19:2
 
 Cannot cast `React.PropTypes.oneOf` to `NoFun` because array type [1] is incompatible with mixed [2] in the first
-argument. [incompatible-cast]
+parameter. [incompatible-cast]
 
    proptypes_builtins.js:19:2
     19| (React.PropTypes.oneOf : NoFun);
@@ -2974,7 +2974,7 @@ References:
 Error --------------------------------------------------------------------------------------- proptypes_builtins.js:23:2
 
 Cannot cast `React.PropTypes.oneOfType` to `NoFun` because array type [1] is incompatible with mixed [2] in the first
-argument. [incompatible-cast]
+parameter. [incompatible-cast]
 
    proptypes_builtins.js:23:2
     23| (React.PropTypes.oneOfType : NoFun);
@@ -3010,7 +3010,7 @@ References:
 Error --------------------------------------------------------------------------------------- proptypes_builtins.js:27:2
 
 Cannot cast `React.PropTypes.shape` to `NoFun` because object type [1] is incompatible with mixed [2] in the first
-argument. [incompatible-cast]
+parameter. [incompatible-cast]
 
    proptypes_builtins.js:27:2
     27| (React.PropTypes.shape : NoFun);
@@ -3080,7 +3080,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- ref.js:12:11
 
-Cannot create `Foo` element because number [1] is incompatible with `Foo` [2] in the first argument of property `ref`.
+Cannot create `Foo` element because number [1] is incompatible with `Foo` [2] in the first parameter of property `ref`.
 [incompatible-type]
 
    ref.js:12:11
@@ -3132,7 +3132,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- ref.js:23:16
 
-Cannot create `FooExact` element because number [1] is incompatible with `FooExact` [2] in the first argument of
+Cannot create `FooExact` element because number [1] is incompatible with `FooExact` [2] in the first parameter of
 property `ref`. [incompatible-type]
 
    ref.js:23:16

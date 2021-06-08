@@ -369,7 +369,7 @@ References:
 Error ---------------------------------------------------------------------------- loc-primary-for-covariant-ops.js:8:16
 
 Cannot cast `any` to function type because number [1] is incompatible with string [2] in property `p` of the first
-argument. [incompatible-cast]
+parameter. [incompatible-cast]
 
    loc-primary-for-covariant-ops.js:8:16
    8| ((any: (x: {p: number}) => void): (x: {p: string}) => void);

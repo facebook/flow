@@ -18,7 +18,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- compatible.js:14:10
 
 Cannot return `x` because function type [1] cannot be unbound from the context [1] where it was defined in the `this`
-argument of property `toString`. [method-unbinding]
+parameter of property `toString`. [method-unbinding]
 
    compatible.js:14:10
     14|   return x;
@@ -95,7 +95,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- dictionary.js:95:10
 
 Cannot return `o` because function type [1] cannot be unbound from the context [1] where it was defined in the `this`
-argument of property `toString`. [method-unbinding]
+parameter of property `toString`. [method-unbinding]
 
    dictionary.js:95:10
     95|   return o; // ok

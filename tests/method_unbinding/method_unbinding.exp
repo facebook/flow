@@ -144,7 +144,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- destructors.js:10:2
 
 Cannot cast `m` to function type because function [1] cannot be unbound from the context [2] where it was defined in the
-`this` argument. [method-unbinding]
+`this` parameter. [method-unbinding]
 
    destructors.js:10:2
    10| (m : () => void); // use required to force EvalT to evaluate

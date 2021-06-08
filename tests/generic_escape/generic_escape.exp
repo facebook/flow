@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- alias.js:9:2
 
 Cannot cast function to `Tr` because function type [1] contains type variable `Return` [2] which cannot escape from the
-scope in which it was defined [3] (try adding a type annotation to `f` [4]) in the first argument. [escaped-generic]
+scope in which it was defined [3] (try adding a type annotation to `f` [4]) in the first parameter. [escaped-generic]
 
    alias.js:9:2
         v-----
@@ -724,7 +724,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:44:12
 
-Cannot return `g` because undefined [1] is incompatible with boolean [2] in the first argument. [incompatible-return]
+Cannot return `g` because undefined [1] is incompatible with boolean [2] in the first parameter. [incompatible-return]
 
    misc.js:44:12
    44|     return g;
