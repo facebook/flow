@@ -482,7 +482,7 @@ let do_parse ~parse_options ~info content file =
               tolerable_errors
               sig_errors
           in
-          let file_sig = File_sig.With_Loc.verified (Some !env) exports_info in
+          let file_sig = File_sig.With_Loc.verified !env exports_info in
           Parse_ok { ast; file_sig; type_sig; aloc_table; tolerable_errors; parse_errors; exports })
   with
   | Parse_error.Error (first_parse_error :: _) -> Parse_fail (Parse_error first_parse_error)

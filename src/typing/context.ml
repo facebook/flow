@@ -201,7 +201,7 @@ type t = {
   trust_constructor: unit -> Trust.trust_rep;
   mutable declare_module_ref: Module_info.t option;
   mutable use_def: Env_builder.env_info option;
-  mutable exported_locals: Loc_collections.ALocSet.t SMap.t option;
+  mutable exported_locals: Loc_collections.ALocSet.t SMap.t;
 }
 
 let metadata_of_options options =
@@ -360,7 +360,7 @@ let make ccx metadata file aloc_table module_ref phase =
     trust_constructor = Trust.literal_trust;
     declare_module_ref = None;
     use_def = None;
-    exported_locals = None;
+    exported_locals = SMap.empty;
   }
 
 let sig_cx cx = cx.ccx.sig_cx
