@@ -152,15 +152,15 @@ react_component.js:3:9 = module "react" {
   type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
   declare var Children: {
     count(children: ChildrenArray<any>): number,
-    forEach<T>(
+    forEach<T, This>(
       children: ChildrenArray<T>,
       fn: (child: T, index: number) => mixed,
-      thisArg?: mixed
+      thisArg: This
     ): void,
-    map<T, U>(
+    map<T, U, This>(
       children: ChildrenArray<T>,
       fn: (child: $NonMaybeType<T>, index: number) => U,
-      thisArg?: mixed
+      thisArg: This
     ): Array<$NonMaybeType<U>>,
     only<T>(children: ChildrenArray<T>): $NonMaybeType<T>,
     toArray<T>(children: ChildrenArray<T>): Array<$NonMaybeType<T>>,

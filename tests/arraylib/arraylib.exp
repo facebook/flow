@@ -181,6 +181,23 @@ References:
                                             ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- callback_this.js:8:18
+
+Cannot get `this.y` because property `y` is missing in undefined [1]. [incompatible-use]
+
+   callback_this.js:8:18
+   8|             this.y; // error, function has wrong this
+                       ^
+
+References:
+   callback_this.js:7:18
+                       v------------------------
+   7|         this.x = this.x.map(function (z) {
+   8|             this.y; // error, function has wrong this
+   9|         });
+              -^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- flat.js:5:34
 
 Cannot assign `arr1.flat()` to `result1_1` because number [1] is incompatible with string [2] in array element.
@@ -378,4 +395,4 @@ Cannot assign `7` to `t.length` because property `length` is not writable. [cann
 
 
 
-Found 24 errors
+Found 25 errors
