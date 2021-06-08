@@ -1107,7 +1107,14 @@ let rec convert cx tparams_map =
       in
       (Class_type_sig.empty id reason None tparams_map super, extend_asts)
     in
-    let (iface_sig, property_asts) = add_interface_properties cx tparams_map properties iface_sig in
+    let (iface_sig, property_asts) =
+      add_interface_properties
+        cx
+        tparams_map
+        properties
+        ~this:Type.bound_function_dummy_this
+        iface_sig
+    in
     Class_type_sig.check_with_generics
       cx
       (fun iface_sig ->
@@ -1800,7 +1807,7 @@ and mk_interface_super cx tparams_map (loc, { Ast.Type.Generic.id; targs; commen
   in
   (typeapp, (loc, { Ast.Type.Generic.id; targs; comments }))
 
-and add_interface_properties cx tparams_map properties s =
+and add_interface_properties cx ~this tparams_map properties s =
   Class_type_sig.(
     let (x, rev_prop_asts) =
       List.fold_left
@@ -1849,7 +1856,7 @@ and add_interface_properties cx tparams_map properties s =
                         (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
                       Ast.Type.Object.Property.Init (func_loc, Ast.Type.Function func) ) ->
                     let (fsig, func_ast) = mk_func_sig cx tparams_map loc func in
-                    let ft = Func_type_sig.methodtype cx Type.bound_function_dummy_this fsig in
+                    let ft = Func_type_sig.methodtype cx this fsig in
                     let append_method =
                       match (static, name) with
                       | (false, "constructor") -> append_constructor (Some id_loc)
@@ -2065,7 +2072,14 @@ let mk_interface_sig cx reason decl =
     in
     (* TODO: interfaces don't have a name field, or even statics *)
     let iface_sig = add_name_field iface_sig in
-    let (iface_sig, properties) = add_interface_properties cx tparams_map properties iface_sig in
+    let (iface_sig, properties) =
+      add_interface_properties
+        cx
+        tparams_map
+        properties
+        ~this:Type.bound_function_dummy_this
+        iface_sig
+    in
     ( iface_sig,
       self,
       {
@@ -2170,7 +2184,12 @@ let mk_declare_class_sig =
       (* All classes have a static "name" property. *)
       let iface_sig = add_name_field iface_sig in
       let (iface_sig, properties) =
-        add_interface_properties cx tparams_map_with_this properties iface_sig
+        add_interface_properties
+          cx
+          tparams_map_with_this
+          properties
+          ~this:(implicit_mixed_this (reason_of_t this_t))
+          iface_sig
       in
       (* Add a default ctor if we don't have a ctor and won't inherit one from a super *)
       let iface_sig =

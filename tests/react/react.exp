@@ -289,6 +289,21 @@ References:
                              ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- create_class.js:133:11
+
+Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   create_class.js:133:11
+   133|     (this.props.foo: empty); // string ~> empty
+                  ^^^^^
+
+References:
+   <BUILTINS>/react.js:60:3
+    60|   componentWillMount(): mixed;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- create_class.js:133:6
 
 Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
@@ -306,6 +321,21 @@ References:
                              ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- create_class.js:137:11
+
+Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   create_class.js:137:11
+   137|     (this.props.foo: empty); // string ~> empty
+                  ^^^^^
+
+References:
+   <BUILTINS>/react.js:62:3
+    62|   componentDidMount(): mixed;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- create_class.js:137:6
 
 Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
@@ -321,6 +351,25 @@ References:
    create_class.js:137:22
    137|     (this.props.foo: empty); // string ~> empty
                              ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- create_class.js:141:11
+
+Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   create_class.js:141:11
+   141|     (this.props.foo: empty); // string ~> empty
+                  ^^^^^
+
+References:
+   <BUILTINS>/react.js:63:3
+          v-------------------------
+    63|   componentWillReceiveProps(
+    64|     nextProps: Props,
+    65|     nextContext: any,
+    66|   ): mixed;
+          -------^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- create_class.js:141:6
@@ -357,6 +406,26 @@ References:
                             ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- create_class.js:146:11
+
+Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   create_class.js:146:11
+   146|     (this.props.foo: empty); // string ~> empty
+                  ^^^^^
+
+References:
+   <BUILTINS>/react.js:71:3
+          v---------------------
+    71|   shouldComponentUpdate(
+    72|     nextProps: Props,
+    73|     nextState: State,
+    74|     nextContext: any,
+    75|   ): boolean;
+          ---------^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- create_class.js:146:6
 
 Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
@@ -372,6 +441,26 @@ References:
    create_class.js:146:22
    146|     (this.props.foo: empty); // string ~> empty
                              ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- create_class.js:147:11
+
+Cannot get `this.state` because property `state` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   create_class.js:147:11
+   147|     (this.state.bar: empty); // number ~> empty
+                  ^^^^^
+
+References:
+   <BUILTINS>/react.js:71:3
+          v---------------------
+    71|   shouldComponentUpdate(
+    72|     nextProps: Props,
+    73|     nextState: State,
+    74|     nextContext: any,
+    75|   ): boolean;
+          ---------^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- create_class.js:147:6
@@ -439,6 +528,26 @@ References:
              ^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- create_class.js:153:11
+
+Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   create_class.js:153:11
+   153|     (this.props.foo: empty); // string ~> empty
+                  ^^^^^
+
+References:
+   <BUILTINS>/react.js:76:3
+          v-------------------
+    76|   componentWillUpdate(
+    77|     nextProps: Props,
+    78|     nextState: State,
+    79|     nextContext: any,
+    80|   ): mixed;
+          -------^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- create_class.js:153:6
 
 Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
@@ -454,6 +563,26 @@ References:
    create_class.js:153:22
    153|     (this.props.foo: empty); // string ~> empty
                              ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- create_class.js:154:11
+
+Cannot get `this.state` because property `state` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   create_class.js:154:11
+   154|     (this.state.bar: empty); // number ~> empty
+                  ^^^^^
+
+References:
+   <BUILTINS>/react.js:76:3
+          v-------------------
+    76|   componentWillUpdate(
+    77|     nextProps: Props,
+    78|     nextState: State,
+    79|     nextContext: any,
+    80|   ): mixed;
+          -------^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- create_class.js:154:6
@@ -507,6 +636,26 @@ References:
                             ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- create_class.js:160:11
+
+Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   create_class.js:160:11
+   160|     (this.props.foo: empty); // string ~> empty
+                  ^^^^^
+
+References:
+   <BUILTINS>/react.js:86:3
+          v------------------
+    86|   componentDidUpdate(
+    87|     prevProps: Props,
+    88|     prevState: State,
+    89|     prevContext: any,
+    90|   ): mixed;
+          -------^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- create_class.js:160:6
 
 Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
@@ -522,6 +671,26 @@ References:
    create_class.js:160:22
    160|     (this.props.foo: empty); // string ~> empty
                              ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- create_class.js:161:11
+
+Cannot get `this.state` because property `state` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   create_class.js:161:11
+   161|     (this.state.bar: empty); // number ~> empty
+                  ^^^^^
+
+References:
+   <BUILTINS>/react.js:86:3
+          v------------------
+    86|   componentDidUpdate(
+    87|     prevProps: Props,
+    88|     prevState: State,
+    89|     prevContext: any,
+    90|   ): mixed;
+          -------^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- create_class.js:161:6
@@ -575,6 +744,21 @@ References:
                             ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- create_class.js:167:11
+
+Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   create_class.js:167:11
+   167|     (this.props.foo: empty); // string ~> empty
+                  ^^^^^
+
+References:
+   <BUILTINS>/react.js:91:3
+    91|   componentWillUnmount(): mixed;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- create_class.js:167:6
 
 Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
@@ -590,6 +774,21 @@ References:
    create_class.js:167:22
    167|     (this.props.foo: empty); // string ~> empty
                              ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- create_class.js:168:11
+
+Cannot get `this.state` because property `state` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   create_class.js:168:11
+   168|     (this.state.bar: empty); // number ~> empty
+                  ^^^^^
+
+References:
+   <BUILTINS>/react.js:91:3
+    91|   componentWillUnmount(): mixed;
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- create_class.js:168:6
@@ -2244,6 +2443,21 @@ References:
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------- proptype_missing.js:29:26
+
+Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   proptype_missing.js:29:26
+   29|     return <div id={this.props.name} />;
+                                ^^^^^
+
+References:
+   <BUILTINS>/react.js:59:3
+   59|   render(): React$Node;
+         ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------- proptype_objectOf.js:13:21
 
 Cannot create `Example` element because property `obj` is missing in props [1] but exists in propTypes of React
@@ -2435,6 +2649,51 @@ Cannot call `React.PropTypes.oneOf` because number [1] is not an array. [invalid
 
    76|     p: React.PropTypes.oneOf(0), // error: expected array, got 0
                                     ^ [1]
+
+
+Error -------------------------------------------------------------------------------------- proptype_oneOfType.js:12:21
+
+Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   proptype_oneOfType.js:12:21
+   12|     if (typeof this.props.prop === "string") {
+                           ^^^^^
+
+References:
+   <BUILTINS>/react.js:59:3
+   59|   render(): React$Node;
+         ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- proptype_oneOfType.js:13:25
+
+Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   proptype_oneOfType.js:13:25
+   13|       return <div>{this.props.prop}</div>
+                               ^^^^^
+
+References:
+   <BUILTINS>/react.js:59:3
+   59|   render(): React$Node;
+         ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- proptype_oneOfType.js:15:25
+
+Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
+[incompatible-use]
+
+   proptype_oneOfType.js:15:25
+   15|       return <div>{this.props.prop.toFixed(2)}</div>
+                               ^^^^^
+
+References:
+   <BUILTINS>/react.js:59:3
+   59|   render(): React$Node;
+         ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------- proptype_oneOfType.js:23:21
@@ -4193,7 +4452,7 @@ References:
 
 
 
-Found 234 errors
+Found 249 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
