@@ -44,3 +44,21 @@ let baz2 = function () {};
 function this_default(
     x : number = this.y // do not infer mixed here, this counts as the function body
 ) {}
+
+interface I {
+    m() : void;
+}
+
+declare var i : I;
+
+//$FlowExpectedError[method-unbinding]
+(foo : typeof i.m); // mixed incompatible with number
+
+//$FlowExpectedError[method-unbinding]
+(i.m : () => void); // ok
+
+//$FlowExpectedError[method-unbinding]
+(i.m  : (this : mixed) => void); // ok
+
+//$FlowExpectedError[method-unbinding]
+(i.m  : (this : empty) => void); // ok

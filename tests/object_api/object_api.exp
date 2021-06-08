@@ -184,6 +184,21 @@ References:
                      ^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------- object_prototype.js:26:32
+
+Cannot assign `a.toString` to `aToString` because function type [1] cannot be unbound from the context [1] where it was
+defined in the `this` argument. [method-unbinding]
+
+   object_prototype.js:26:32
+    26| var aToString : () => string = a.toString;
+                                       ^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:236:5
+   236|     toString(): string;
+            ^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------- object_prototype.js:31:3
 
 Cannot assign function to `b.toString` because property `toString` is not writable. [cannot-write]
@@ -296,6 +311,21 @@ References:
                              ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------- object_prototype.js:63:51
+
+Cannot assign `a.hasOwnProperty` to `aHasOwnProperty` because function type [1] cannot be unbound from the context [1]
+where it was defined in the `this` argument. [method-unbinding]
+
+   object_prototype.js:63:51
+    63| var aHasOwnProperty : (prop: string) => boolean = a.hasOwnProperty;
+                                                          ^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:222:5
+   222|     hasOwnProperty(prop: mixed): boolean;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------- object_prototype.js:68:3
 
 Cannot assign function to `b.hasOwnProperty` because property `hasOwnProperty` is not writable. [cannot-write]
@@ -347,6 +377,21 @@ References:
    <BUILTINS>/core.js:222:5
    222|     hasOwnProperty(prop: mixed): boolean;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- object_prototype.js:88:57
+
+Cannot assign `a.propertyIsEnumerable` to `aPropertyIsEnumerable` because function type [1] cannot be unbound from the
+context [1] where it was defined in the `this` argument. [method-unbinding]
+
+   object_prototype.js:88:57
+    88| var aPropertyIsEnumerable : (prop: string) => boolean = a.propertyIsEnumerable;
+                                                                ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:232:5
+   232|     propertyIsEnumerable(prop: mixed): boolean;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- object_prototype.js:93:3
@@ -458,6 +503,21 @@ References:
             ^^^^^^^^^^^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------- object_prototype.js:142:38
+
+Cannot assign `a.toLocaleString` to `aToLocaleString` because function type [1] cannot be unbound from the context [1]
+where it was defined in the `this` argument. [method-unbinding]
+
+   object_prototype.js:142:38
+   142| var aToLocaleString : () => string = a.toLocaleString;
+                                             ^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:234:5
+   234|     toLocaleString(): string;
+            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------- object_prototype.js:147:3
 
 Cannot assign function to `b.toLocaleString` because property `toLocaleString` is not writable. [cannot-write]
@@ -497,6 +557,21 @@ References:
    <BUILTINS>/core.js:1491:5
    1491|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- object_prototype.js:151:39
+
+Cannot assign `x.toLocaleString` to `xToLocaleString2` because function type [1] cannot be unbound from the context [1]
+where it was defined in the `this` argument. [method-unbinding]
+
+   object_prototype.js:151:39
+    151| var xToLocaleString2 : () => number = x.toLocaleString; // error
+                                               ^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:1491:5
+   1491|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------- object_prototype.js:151:39
@@ -625,4 +700,4 @@ References:
 
 
 
-Found 43 errors
+Found 48 errors

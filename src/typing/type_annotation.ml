@@ -1112,7 +1112,7 @@ let rec convert cx tparams_map =
         cx
         tparams_map
         properties
-        ~this:Type.bound_function_dummy_this
+        ~this:(implicit_mixed_this reason)
         iface_sig
     in
     Class_type_sig.check_with_generics
@@ -2077,7 +2077,7 @@ let mk_interface_sig cx reason decl =
         cx
         tparams_map
         properties
-        ~this:Type.bound_function_dummy_this
+        ~this:(implicit_mixed_this reason)
         iface_sig
     in
     ( iface_sig,

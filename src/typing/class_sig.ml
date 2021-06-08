@@ -406,7 +406,7 @@ module Make (F : Func_sig.S) = struct
   let to_prop_map cx =
     SMap.map to_field %> NameUtils.namemap_of_smap %> Context.generate_property_map cx
 
-  let elements cx ~this ?constructor ?(ignore_this = false) s super =
+  let elements cx ~this ?constructor s super =
     (* To determine the default `this` parameter for a method without `this` annotation, we
       default to the instance/static `this` type *)
     let this_default (x : F.t) =
@@ -418,10 +418,7 @@ module Make (F : Func_sig.S) = struct
       | (None, Class _) -> Type.implicit_mixed_this x.F.reason
       | (Some _, Class _) ->
         TypeUtil.mod_reason_of_t Reason.(update_desc_reason (fun desc -> RImplicitThis desc)) this
-      | (_, Interface _) ->
-        (* TODO: Interfaces trivially have no bodies, update their `this` inference
-      accodingly *)
-        Type.bound_function_dummy_this
+      | (_, Interface _) -> x.F.reason |> Type.implicit_mixed_this
     in
     let methods =
       (* If this is an overloaded method, create an intersection, attributed
@@ -433,8 +430,7 @@ module Make (F : Func_sig.S) = struct
         (fun _name xs ->
           let ms =
             Nel.rev_map
-              (fun (loc, x, _, set_type) ->
-                (loc, F.methodtype cx ~ignore_this (this_default x) x, set_type))
+              (fun (loc, x, _, set_type) -> (loc, F.methodtype cx (this_default x) x, set_type))
               xs
           in
           (* Keep track of these before intersections are merged, to enable
@@ -518,10 +514,10 @@ module Make (F : Func_sig.S) = struct
     Tvar.mk_derivable_where cx reason (fun tvar ->
         Flow.flow cx (c, SpecializeT (unknown_use, reason, reason, None, targs, tvar)))
 
-  let statictype ~ignore_this cx static_proto x =
+  let statictype cx static_proto x =
     let s = x.static in
     let (inited_fields, fields, methods, call) =
-      elements cx ~ignore_this ~this:(this_or_mixed x |> TypeUtil.class_type) s x.super
+      elements cx ~this:(this_or_mixed x |> TypeUtil.class_type) s x.super
     in
     let props =
       SMap.union fields methods ~combine:(fun _ _ ->
@@ -541,7 +537,7 @@ module Make (F : Func_sig.S) = struct
       | DefT (_, _, ObjT o) -> (inited_fields, o)
       | _ -> failwith "statics must be an ObjT")
 
-  let insttype cx ~ignore_this ~initialized_static_fields s =
+  let insttype cx ~initialized_static_fields s =
     let constructor =
       (* Constructors do not bind `this` *)
       let ts =
@@ -565,7 +561,7 @@ module Make (F : Func_sig.S) = struct
         (Type.TypeParams.to_list s.tparams)
     in
     let (initialized_fields, fields, methods, call) =
-      elements cx ~ignore_this ~this:(this_or_mixed s) ?constructor s.instance s.super
+      elements cx ~this:(this_or_mixed s) ?constructor s.instance s.super
     in
     {
       Type.class_id = s.id;
@@ -691,7 +687,7 @@ module Make (F : Func_sig.S) = struct
       in
       (super, static_proto)
 
-  let thistype ~ignore_this cx x =
+  let thistype cx x =
     let { static = { reason = sreason; _ }; instance = { reason; _ }; _ } = x in
     let (super, static_proto) = supertype cx x in
     let implements =
@@ -709,8 +705,8 @@ module Make (F : Func_sig.S) = struct
             | Some targs -> TypeUtil.typeapp_annot annot_loc c targs)
           implements
     in
-    let (initialized_static_fields, static_objtype) = statictype ~ignore_this cx static_proto x in
-    let insttype = insttype ~ignore_this cx ~initialized_static_fields x in
+    let (initialized_static_fields, static_objtype) = statictype cx static_proto x in
+    let insttype = insttype cx ~initialized_static_fields x in
     let open Type in
     let static = DefT (sreason, bogus_trust (), ObjT static_objtype) in
     DefT (reason, bogus_trust (), InstanceT (static, super, implements, insttype))
@@ -719,7 +715,7 @@ module Make (F : Func_sig.S) = struct
     let open Type in
     let self =
       match x.super with
-      | Interface _ -> thistype ~ignore_this:false cx x
+      | Interface _ -> thistype cx x
       | Class { this_t; _ } -> this_t
     in
     let check_method msig ~static name id_loc =
@@ -760,7 +756,7 @@ module Make (F : Func_sig.S) = struct
     match x.super with
     | Interface _ -> ()
     | Class { implements; _ } ->
-      let this = thistype ~ignore_this:true cx x in
+      let this = thistype cx x in
       let reason = x.instance.reason in
       let open Type in
       let open TypeUtil in
@@ -790,12 +786,12 @@ module Make (F : Func_sig.S) = struct
        dynamic dispatch enforces that the method is called on the right subclass
        at runtime even if the static type is a supertype. *)
     let (_, own, proto, _call) =
-      elements ~ignore_this:true ~this:(this_or_mixed x) cx ?constructor:None x.instance x.super
+      elements ~this:(this_or_mixed x) cx ?constructor:None x.instance x.super
     in
     let static =
       (* NOTE: The own, proto maps are disjoint by construction. *)
       let (_, own, proto, _call) =
-        elements ~ignore_this:true ~this:(this_or_mixed x |> class_type) cx x.static x.super
+        elements ~this:(this_or_mixed x |> class_type) cx x.static x.super
       in
       SMap.union own proto
     in
@@ -837,7 +833,7 @@ module Make (F : Func_sig.S) = struct
   (* TODO: Ideally we should check polarity for all class types, but this flag is
      flipped off for interface/declare class currently. *)
   let classtype cx ?(check_polarity = true) x =
-    let this = thistype ~ignore_this:false cx x in
+    let this = thistype cx x in
     let tparams_with_this =
       this_tparam x |> Base.Option.value_map ~default:x.tparams ~f:(tparams_with_this x.tparams)
     in
@@ -977,8 +973,6 @@ module Make (F : Func_sig.S) = struct
                SMap.iter (field instance_this_recipe super) s.fields;
                SMap.iter (field instance_this_recipe super) s.private_fields;
                SMap.iter (field instance_this_recipe super) s.proto_fields))
-
-  let thistype = thistype ~ignore_this:false
 
   module This = struct
     let is_bound_to_empty { super; _ } =

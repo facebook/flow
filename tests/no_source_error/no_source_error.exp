@@ -11,28 +11,13 @@ References:
    no_source.js:17:20
    17|     const x: Array<Foo> = [];
                           ^^^ [1]
-   no_source.js:15:8
-   15|   z(x: FooPlus): boolean { return true; }
-              ^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- no_source.js:18:19
-
-Cannot get `this.z` because property `z` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   no_source.js:18:19
-   18|     x.filter(this.z);
-                         ^ [1]
-
-References:
-   no_source.js:15:3
-   15|   z(x: FooPlus): boolean { return true; }
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   no_source.js:15:12
+   15|   +z : (x: FooPlus) => boolean = (x) => { return true; }
+                  ^^^^^^^ [2]
 
 
 
-Found 2 errors
+Found 1 error
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

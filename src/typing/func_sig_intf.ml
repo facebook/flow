@@ -111,7 +111,7 @@ module type S = sig
                                             t -> Type.t
 
   (** Create a function type for class/interface methods. *)
-  val methodtype : Context.t -> ?ignore_this:bool -> (* this *) Type.t -> t -> Type.t
+  val methodtype : Context.t -> (* this *) Type.t -> t -> Type.t
 
   (** Create a type of the return expression of a getter function.
 
