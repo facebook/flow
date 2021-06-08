@@ -13,8 +13,8 @@ let parse contents =
   in
   ast
 
-let pretty_print_statement statement_layout =
-  let source = Pretty_printer.print ~source_maps:None ~skip_endline:true statement_layout in
+let pretty_print layout =
+  let source = Pretty_printer.print ~source_maps:None ~skip_endline:true layout in
   Source.contents source
 
 let assert_extracted ~ctxt expected source extract_range =
@@ -23,7 +23,7 @@ let assert_extracted ~ctxt expected source extract_range =
   let extracted_statements_str =
     extracted_statements
     |> Js_layout_generator.statement_list ~opts:Js_layout_generator.default_opts
-    |> List.map pretty_print_statement
+    |> List.map pretty_print
     |> String.concat ""
     |> String.trim
   in
@@ -147,4 +147,36 @@ foo(a + b);
         } );
   ]
 
-let tests = "refactor_extract_function" >::: ["extract_statements" >::: extract_statements_tests]
+let create_extracted_function_tests =
+  [
+    ( "create_extracted_function_basic" >:: fun ctxt ->
+      let statements =
+        [
+          (Loc.none, Flow_ast.Statement.(Break { Break.label = None; comments = None }));
+          (Loc.none, Flow_ast.Statement.(Continue { Continue.label = None; comments = None }));
+        ]
+      in
+      let generated_function_string =
+        ( Loc.none,
+          Flow_ast.Statement.FunctionDeclaration
+            (Refactor_extract_function.create_extracted_function statements) )
+        |> Js_layout_generator.statement ~opts:Js_layout_generator.default_opts
+        |> pretty_print
+      in
+      let expected_function_string =
+        String.trim {|
+function newFunction() {
+  break;
+  continue;
+}
+      |}
+      in
+      assert_equal ~ctxt ~printer:(fun x -> x) expected_function_string generated_function_string );
+  ]
+
+let tests =
+  "refactor_extract_function"
+  >::: [
+         "extract_statements" >::: extract_statements_tests;
+         "create_extracted_function" >::: create_extracted_function_tests;
+       ]
