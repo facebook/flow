@@ -10,20 +10,21 @@
 module Ast = Flow_ast
 module Flow = Flow_js
 module Tast_utils = Typed_ast_utils
+open Loc_collections
 
 module type Ordering = sig
   type t
 
   type loc
 
-  val make : (loc, loc) Ast.Statement.t list -> t
+  val make : Context.t -> (loc, loc) Ast.Statement.t list -> t
 
   val compare : t -> (loc, loc) Ast.Statement.t -> (loc, loc) Ast.Statement.t -> int
 end
 
 module Toplevels (Order : Ordering with type loc = ALoc.t) = struct
   let toplevels statement cx stmts =
-    let ordering = Order.make stmts in
+    let ordering = Order.make cx stmts in
     (* Enumerate and sort statements using the order specified *)
     let stmts =
       Base.List.mapi stmts ~f:(fun i s -> (i, s))
@@ -85,15 +86,85 @@ module Toplevels (Order : Ordering with type loc = ALoc.t) = struct
     | None -> stmts
 end
 
-module LexicalOrdering : Ordering with type loc = ALoc.t = struct
+module LexicalOrdering : Ordering with type loc = ALoc.t and type t = unit = struct
   type t = unit
 
   type loc = ALoc.t
 
-  let make _ = ()
+  let make _ _ = ()
 
   let compare _ (l1, _) (l2, _) = Loc.compare (ALoc.to_loc_exn l1) (ALoc.to_loc_exn l2)
 end
 
+module DependencyOrdering : Ordering with type loc = ALoc.t = struct
+  type t = ALocSet.t ALocMap.t option
+
+  type loc = ALoc.t
+
+  let make cx stmts =
+    match Context.use_def cx with
+    | None -> None
+    | Some _ when Context.reorder_checking cx = Options.Lexical -> None
+    | Some info ->
+      let int_loc =
+        Base.List.foldi ~f:(fun i int_loc (loc, _) -> IMap.add i loc int_loc) ~init:IMap.empty stmts
+      in
+      let deps = Order_builder.With_ALoc.mk_order info stmts in
+      let (order, _) =
+        Base.List.fold_right
+          ~init:(IMap.empty, ISet.empty)
+          ~f:(fun (first, rest) (order, seen) ->
+            let set =
+              match rest with
+              | [] -> ISet.singleton first
+              | _ :: _ ->
+                let set = ISet.of_list (first :: rest) in
+                ISet.iter
+                  (fun i ->
+                    let loc = IMap.find i int_loc in
+                    Flow.add_output
+                      cx
+                      (Error_message.EDebugPrint
+                         ( Reason.mk_reason (Reason.RCustom "statement") loc,
+                           "Dependency cycle detected" )))
+                  set;
+                set
+            in
+            let order = ISet.fold (fun i -> IMap.add i seen) set order in
+            let seen = ISet.union set seen in
+            (order, seen))
+          deps
+      in
+      if Context.reorder_checking cx = Options.LexicalWithDependencyValidation then
+        None
+      else
+        let order =
+          IMap.fold
+            (fun i set acc ->
+              ALocMap.add
+                (IMap.find i int_loc)
+                (ISet.fold
+                   (fun j set_acc -> ALocSet.add (IMap.find j int_loc) set_acc)
+                   set
+                   ALocSet.empty)
+                acc)
+            order
+            ALocMap.empty
+        in
+        Some order
+
+  let compare t ((l1, _) as l) ((l2, _) as r) =
+    match t with
+    | Some order ->
+      if ALocSet.mem l2 (ALocMap.find l1 order) then
+        -1
+      else if ALocSet.mem l1 (ALocMap.find l2 order) then
+        1
+      else
+        LexicalOrdering.compare () l r
+    | None -> LexicalOrdering.compare () l r
+end
+
 module LexicalToplevels = Toplevels (LexicalOrdering)
-include LexicalToplevels
+module DependencyToplevels = Toplevels (DependencyOrdering)
+include DependencyToplevels

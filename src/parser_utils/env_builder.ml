@@ -60,6 +60,10 @@ module type S = sig
 
   module Provider_api : Provider_api.S with module L = L
 
+  type abrupt_kind
+
+  exception AbruptCompletionExn of abrupt_kind
+
   type refinement_kind =
     | And of refinement_kind * refinement_kind
     | Or of refinement_kind * refinement_kind
@@ -124,6 +128,10 @@ module Make
   module Ssa_builder = Ssa_builder.Make (L) (Ssa_api) (Scope_builder)
   module Invalidation_api = Invalidation_api.Make (L) (Scope_api) (Ssa_api)
   module Provider_api = Provider_api.Make (L)
+
+  type abrupt_kind = Ssa_builder.AbruptCompletion.t
+
+  exception AbruptCompletionExn = Ssa_builder.AbruptCompletion.Exn
 
   type refinement_kind =
     | And of refinement_kind * refinement_kind

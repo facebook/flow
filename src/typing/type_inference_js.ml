@@ -402,7 +402,8 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
 
   let module_ref = Context.module_ref cx in
   begin
-    try Context.set_use_def cx @@ Ssa_builder.With_ALoc.program_with_scope aloc_ast with _ -> ()
+    try Context.set_use_def cx @@ Env_builder.program_with_scope aloc_ast
+    with Env_builder.AbruptCompletionExn _ -> ()
   end;
 
   let reason_exports_module =
