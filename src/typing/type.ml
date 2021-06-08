@@ -3546,6 +3546,9 @@ let bound_function_dummy_this = locationless_reason RDummyThis |> Unsoundness.bo
 
 let dummy_this = locationless_reason RDummyThis |> MixedT.make |> with_trust bogus_trust
 
+let implicit_mixed_this r =
+  update_desc_reason (fun desc -> RImplicitThis desc) r |> MixedT.make |> with_trust bogus_trust
+
 let global_this reason =
   let reason = replace_desc_reason (RCustom "global object") reason in
   ObjProtoT reason

@@ -8154,7 +8154,16 @@ and mk_function id cx ~annot ~general reason func =
     Scope.Entry.new_let (Inferred t) ~loc ~state:Scope.State.Initialized
   in
   let this_recipe fparams =
-    let default = Tvar.mk cx (mk_reason RThis loc) in
+    let default =
+      if
+        Signature_utils.This_finder.found_this_in_body_or_params
+          func.Ast.Function.body
+          func.Ast.Function.params
+      then
+        Tvar.mk cx (mk_reason RThis loc)
+      else
+        Type.implicit_mixed_this reason
+    in
     (* If `this` is a bound type variable, we cannot create the type here, and
        instead must wait until `check_with_generics` to instantiate the type.
        However, the default behavior of `this` still depends on how it
