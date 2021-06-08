@@ -3948,13 +3948,14 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
       let reason_lookup = mk_reason (RProperty (Some (OrdinaryName name))) callee_loc in
       let reason_prop = mk_reason (RProperty (Some (OrdinaryName name))) ploc in
       let super_t = super_ cx super_loc in
+      let meth_generic_this = this_ cx loc { This.comments = None } in
       let (targts, targs) = convert_call_targs_opt cx targs in
       let (argts, arguments_ast) = arg_list cx arguments in
       Type_inference_hooks_js.dispatch_call_hook cx name ploc super_t;
       let prop_t = Tvar.mk cx reason_prop in
       let lhs_t =
         Tvar.mk_no_wrap_where cx reason (fun t ->
-            let funtype = mk_methodcalltype targts argts t in
+            let funtype = mk_methodcalltype ~meth_generic_this targts argts t in
             let use_op =
               Op
                 (FunCallMethod

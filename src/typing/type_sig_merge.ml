@@ -207,7 +207,14 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
             let return = Type.VoidT.why reason trust in
             let statics = Type.dummy_static reason in
             let proto = Type.dummy_prototype in
-            let funtype = Type.mk_boundfunctiontype [] return ~rest_param:None ~def_reason:reason in
+            let funtype =
+              Type.mk_boundfunctiontype
+                []
+                return
+                ~this:Type.bound_function_dummy_this
+                ~rest_param:None
+                ~def_reason:reason
+            in
             Some Type.(Method (None, DefT (reason, trust, FunT (statics, proto, funtype))))
           | prop -> prop)
         props

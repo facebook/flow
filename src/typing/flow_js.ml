@@ -3654,8 +3654,14 @@ struct
                     method_accessible;
                     ids =
                       Base.Option.map ids ~f:(fun ids ->
-                          Properties.Set.add instance.own_props ids
-                          |> Properties.Set.add instance.proto_props);
+                          if
+                            Properties.Set.mem instance.own_props ids
+                            || Properties.Set.mem instance.proto_props ids
+                          then
+                            ids
+                          else
+                            Properties.Set.add instance.own_props ids
+                            |> Properties.Set.add instance.proto_props);
                   } )
           | Some p ->
             (match p with
@@ -6008,6 +6014,13 @@ struct
         |> Base.Option.value_map ~default:false ~f:(fun id ->
                rec_flow cx trace (GenericT { reason; name; bound; id }, u);
                true)
+      (* The ClassT operation should commute with GenericT; that is, GenericT(ClassT(x)) = ClassT(GenericT(x)) *)
+      | DefT (r, tr, ClassT bound) ->
+        rec_flow
+          cx
+          trace
+          (DefT (r, tr, ClassT (GenericT { reason = reason_of_t bound; name; bound; id })), u);
+        true
       | KeysT _ ->
         rec_flow
           cx
@@ -6118,6 +6131,11 @@ struct
         else
           wait_for_concrete_bound ()
       | ElemT _ ->
+        if is_concrete bound && not (is_literal_type bound) then
+          distribute_union_intersection ()
+        else
+          wait_for_concrete_bound ()
+      | MethodT _ ->
         if is_concrete bound && not (is_literal_type bound) then
           distribute_union_intersection ()
         else

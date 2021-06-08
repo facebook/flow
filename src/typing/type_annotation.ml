@@ -1849,7 +1849,7 @@ and add_interface_properties cx tparams_map properties s =
                         (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
                       Ast.Type.Object.Property.Init (func_loc, Ast.Type.Function func) ) ->
                     let (fsig, func_ast) = mk_func_sig cx tparams_map loc func in
-                    let ft = Func_type_sig.methodtype cx fsig in
+                    let ft = Func_type_sig.methodtype cx Type.bound_function_dummy_this fsig in
                     let append_method =
                       match (static, name) with
                       | (false, "constructor") -> append_constructor (Some id_loc)

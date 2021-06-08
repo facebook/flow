@@ -356,6 +356,13 @@ module Make (F : Func_sig.S) = struct
     | Class { this_tparam; _ } -> Some this_tparam
     | Interface _ -> None
 
+  let this_t x =
+    match x.super with
+    | Class { this_t; _ } -> Some this_t
+    | Interface _ -> None
+
+  let this_or_mixed = this_t %> Base.Option.value ~default:Type.dummy_this
+
   let tparams_with_this tparams this_tp =
     (* Use the loc for the original tparams, or just the loc for the this type if there are no
     * tparams *)
@@ -399,7 +406,17 @@ module Make (F : Func_sig.S) = struct
   let to_prop_map cx =
     SMap.map to_field %> NameUtils.namemap_of_smap %> Context.generate_property_map cx
 
-  let elements cx ?constructor ?(ignore_this = false) s =
+  let elements cx ~this ?constructor ?(ignore_this = false) s =
+    (* To determine the default `this` parameter for a method without `this` annotation, we
+      default to the instance/static `this` type *)
+    let this_default (x : F.t) =
+      match x.F.body with
+      | Some _ ->
+        TypeUtil.mod_reason_of_t Reason.(update_desc_reason (fun desc -> RImplicitThis desc)) this
+      (* TODO: Interfaces and declared classes trivially have no bodies, update their `this` inference
+      accodingly *)
+      | None -> Type.bound_function_dummy_this
+    in
     let methods =
       (* If this is an overloaded method, create an intersection, attributed
          to the first declared function signature. If there is a single
@@ -410,7 +427,8 @@ module Make (F : Func_sig.S) = struct
         (fun _name xs ->
           let ms =
             Nel.rev_map
-              (fun (loc, x, _, set_type) -> (loc, F.methodtype ~ignore_this cx x, set_type))
+              (fun (loc, x, _, set_type) ->
+                (loc, F.methodtype cx ~ignore_this (this_default x) x, set_type))
               xs
           in
           (* Keep track of these before intersections are merged, to enable
@@ -496,7 +514,9 @@ module Make (F : Func_sig.S) = struct
 
   let statictype cx static_proto x =
     let s = x.static in
-    let (inited_fields, fields, methods, call) = elements cx s in
+    let (inited_fields, fields, methods, call) =
+      elements cx ~this:(this_or_mixed x |> TypeUtil.class_type) s
+    in
     let props =
       SMap.union fields methods ~combine:(fun _ _ ->
           Utils_js.assert_false
@@ -517,7 +537,10 @@ module Make (F : Func_sig.S) = struct
 
   let insttype cx ~initialized_static_fields s =
     let constructor =
-      let ts = List.rev_map (fun (loc, t, _, _) -> (loc, F.methodtype cx t)) s.constructor in
+      (* Constructors do not bind `this` *)
+      let ts =
+        List.rev_map (fun (loc, t, _, _) -> (loc, F.methodtype cx Type.dummy_this t)) s.constructor
+      in
       match ts with
       | [] -> None
       | [x] -> Some x
@@ -535,7 +558,9 @@ module Make (F : Func_sig.S) = struct
           (name, reason, t, polarity))
         (Type.TypeParams.to_list s.tparams)
     in
-    let (initialized_fields, fields, methods, call) = elements cx ?constructor s.instance in
+    let (initialized_fields, fields, methods, call) =
+      elements cx ~this:(this_or_mixed s) ?constructor s.instance
+    in
     {
       Type.class_id = s.id;
       type_args;
@@ -758,10 +783,14 @@ module Make (F : Func_sig.S) = struct
     (* The this parameter of a class method is irrelvant for class subtyping, since
        dynamic dispatch enforces that the method is called on the right subclass
        at runtime even if the static type is a supertype. *)
-    let (_, own, proto, _call) = elements ~ignore_this:true cx ?constructor:None x.instance in
+    let (_, own, proto, _call) =
+      elements ~ignore_this:true ~this:(this_or_mixed x) cx ?constructor:None x.instance
+    in
     let static =
       (* NOTE: The own, proto maps are disjoint by construction. *)
-      let (_, own, proto, _call) = elements ~ignore_this:true cx x.static in
+      let (_, own, proto, _call) =
+        elements ~ignore_this:true ~this:(this_or_mixed x |> class_type) cx x.static
+      in
       SMap.union own proto
     in
     SMap.iter
@@ -883,23 +912,13 @@ module Make (F : Func_sig.S) = struct
             (this_t, TypeUtil.class_type this_t, super, static_super)
         in
 
-        let instance_this_recipe fparams =
-          let t =
-            F.this_param fparams
-            |> TypeUtil.annotated_or_inferred_of_option ~default:instance_this_default
-          in
+        let this_recipe default fparams =
+          let t = F.this_param fparams |> TypeUtil.annotated_or_inferred_of_option ~default in
           let this = new_entry t in
           (TypeUtil.type_t_of_annotated_or_inferred t, this)
         in
-
-        let static_this_recipe fparams =
-          let t =
-            F.this_param fparams
-            |> TypeUtil.annotated_or_inferred_of_option ~default:static_this_default
-          in
-          let this = new_entry t in
-          (TypeUtil.type_t_of_annotated_or_inferred t, this)
-        in
+        let instance_this_recipe = this_recipe instance_this_default in
+        let static_this_recipe = this_recipe static_this_default in
 
         (* Bind private fields to the environment *)
         Env.bind_class cx x.id private_property_map (to_prop_map cx x.static.private_fields);
