@@ -393,7 +393,7 @@
 [0m[0m
 [0m[31mError ------------------------------------------------------------------------------------- function-primary-loc.js:25:8[0m[0m
 [0m[0m
-[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mthe[0m[0m [0m[0m[0m[0mfirst[0m[0m[0m[0m [0m[0margument[0m[0m[0m[0m [0m[0mof[0m[0m
+[0m[0mCannot[0m[0m [0m[0mcast[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mliteral[0m[0m[0m[0m [0m[0mto[0m[0m [0m[0m[0m[0mobject[0m[0m [0m[0mtype[0m[0m[0m[0m [0m[0mbecause[0m[0m[0m[0m [0m[0m[0m[0;4mnumber[0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m[0m[0m [0m[0mis[0m[0m [0m[0mincompatible[0m[0m [0m[0mwith[0m[0m [0m[0m[0m[0;4mstring[0m[0m [0m[0;2m[[0m[36m2[0m[0;2m][0m[0m[0m[0m [0m[0min[0m[0m [0m[0m[0m[0mthe[0m[0m [0m[0m[0m[0mfirst[0m[0m[0m[0m [0m[0mparameter[0m[0m[0m[0m [0m[0mof[0m[0m
 [0m[0m[0m[0mproperty[0m[0m [0m[0m[0m[0;1mfn2[0m[0m.[0m[0m[0m[0m [0m[0m[[0m[0mincompatible-cast[0m[0m][0m[0m
 [0m[0m
 [0m[0m [0m[0;2m[[0m[36m1[0m[0;2m][0m[0m [0m[0m[0m[0;2m16[0m[0;2m|[0m[0m [0m[0;2mdeclare function myFn2(x: [0m[36mnumber[0m[0;2m): void;[0m[0m

@@ -701,7 +701,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:56:16
 
-Cannot extend `Base2` [1] with `Override2` because `this` [2] is incompatible with `Base2` [3] in the first argument of
+Cannot extend `Base2` [1] with `Override2` because `this` [2] is incompatible with `Base2` [3] in the first parameter of
 property `grault`. [incompatible-extend]
 
    test.js:56:16

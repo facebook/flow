@@ -105,7 +105,7 @@ module Make (F : Func_params.S) = struct
     in
     let funtype =
       {
-        Type.this_t = F.this fparams |> Base.Option.value ~default:this_default;
+        Type.this_t = (F.this fparams |> Base.Option.value ~default:this_default, true);
         params = F.value fparams;
         rest_param = F.rest fparams;
         return_t = TypeUtil.type_t_of_annotated_or_inferred return_t;
@@ -118,17 +118,12 @@ module Make (F : Func_params.S) = struct
     Flow.unify cx t knot;
     t
 
-  let methodtype cx ?(ignore_this = false) { reason; tparams; fparams; return_t; _ } =
+  let methodtype cx this_default { reason; tparams; fparams; return_t; _ } =
     let params = F.value fparams in
     let (params_names, params_tlist) = List.split params in
     let rest_param = F.rest fparams in
     let def_reason = reason in
-    let this =
-      if ignore_this then
-        Some Type.(MixedT.why reason (bogus_trust ()))
-      else
-        F.this fparams
-    in
+    let param_this_t = F.this fparams |> Base.Option.value ~default:this_default in
     let t =
       DefT
         ( reason,
@@ -137,7 +132,8 @@ module Make (F : Func_params.S) = struct
             ( dummy_static reason,
               dummy_prototype,
               mk_boundfunctiontype
-                ?this
+                ~this:param_this_t
+                ~subtyping:false
                 params_tlist
                 ~rest_param
                 ~def_reason

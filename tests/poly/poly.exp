@@ -145,7 +145,7 @@ References:
 Error ------------------------------------------------------------------------------------------- error_position.js:11:2
 
 Cannot cast `foo` to `typeof bar` because property `x` is missing in `Props` [1] but exists in `Props2` [2] in the first
-argument. [prop-missing]
+parameter. [prop-missing]
 
    error_position.js:11:2
    11| (foo : typeof bar);
@@ -383,7 +383,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:8:10
 
-Cannot extend `C` [1] with `D` because number [2] is incompatible with `X` [3] in the first argument of property `foo`.
+Cannot extend `C` [1] with `D` because number [2] is incompatible with `X` [3] in the first parameter of property `foo`.
 [incompatible-extend]
 
    test.js:8:10

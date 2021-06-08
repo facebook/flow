@@ -37,7 +37,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:9:46
 
 Cannot assign `<Component />` to `z` because property `bar` is missing in `Props` [1] but exists in object type [2] in
-the first argument of type argument `ElementType` [3]. [prop-missing]
+the first parameter of type argument `ElementType` [3]. [prop-missing]
 
    test.js:9:46
      9| const z: React$Element<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
@@ -58,7 +58,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:9:46
 
 Cannot assign `<Component />` to `z` because property `foo` is missing in object type [1] but exists in `Props` [2] in
-the first argument of type argument `ElementType` [3]. [prop-missing]
+the first parameter of type argument `ElementType` [3]. [prop-missing]
 
    test.js:9:46
      9| const z: React$Element<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar

@@ -1,0 +1,124 @@
+Error -------------------------------------------------------------------------------------------- class_methods.js:8:10
+
+Cannot call `{...}.method` because object literal [1] is incompatible with `A` [2]. [incompatible-call]
+
+   class_methods.js:8:10
+   8| let _1 = {prop : "", method : (new A()).x }.method(); // object incompatible with A
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   class_methods.js:3:7
+   3| class A {
+            ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- class_methods.js:8:41
+
+Cannot get `(new A()).x` because property `x` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   class_methods.js:8:41
+   8| let _1 = {prop : "", method : (new A()).x }.method(); // object incompatible with A
+                                              ^ [1]
+
+References:
+   class_methods.js:5:5
+   5|     x() : number { return this.prop; }
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- class_methods.js:15:10
+
+Cannot call `{...}.method` because object literal [1] is incompatible with `B` [2]. [incompatible-call]
+
+   class_methods.js:15:10
+   15| let _2 = {prop : "", method : (new B()).x }.method(); // object incompatible with B
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   class_methods.js:10:7
+   10| class B {
+             ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- class_methods.js:15:41
+
+Cannot get `(new B()).x` because property `x` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   class_methods.js:15:41
+   15| let _2 = {prop : "", method : (new B()).x }.method(); // object incompatible with B
+                                               ^ [1]
+
+References:
+   class_methods.js:12:5
+   12|     x() : number { return 3; }
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- class_methods.js:23:15
+
+Cannot get `(new A).x` because property `x` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   class_methods.js:23:15
+   23| c.x = (new A).x;
+                     ^ [1]
+
+References:
+   class_methods.js:5:5
+    5|     x() : number { return this.prop; }
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- class_methods.js:24:2
+
+Cannot call `c.x` because `C` [1] is incompatible with `A` [2]. [incompatible-call]
+
+   class_methods.js:24:2
+   24| (c.x()); // C incompatible with A
+        ^
+
+References:
+   class_methods.js:22:9
+   22| let c = new C();
+               ^^^^^^^ [1]
+   class_methods.js:3:7
+    3| class A {
+             ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- class_methods.js:30:22
+
+Cannot get `this.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   class_methods.js:30:22
+   30|         let m = this.m;
+                            ^ [1]
+
+References:
+   class_methods.js:28:5
+   28|     m() { return this.x }
+           ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- class_methods.js:31:17
+
+Cannot call `m` because global object [1] is incompatible with `this` [2]. [incompatible-call]
+
+   class_methods.js:31:17
+   31|         let z = m(); // global object incompatible with D
+                       ^
+
+References:
+   class_methods.js:31:17
+   31|         let z = m(); // global object incompatible with D
+                       ^^^ [1]
+   class_methods.js:26:7
+   26| class D {
+             ^ [2]
+
+
+
+Found 8 errors

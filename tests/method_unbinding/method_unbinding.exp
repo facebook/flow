@@ -141,6 +141,24 @@ References:
           ^^^^^^^^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- destructors.js:10:2
+
+Cannot cast `m` to function type because function [1] cannot be unbound from the context [2] where it was defined in the
+`this` parameter. [method-unbinding]
+
+   destructors.js:10:2
+   10| (m : () => void); // use required to force EvalT to evaluate
+        ^
+
+References:
+   destructors.js:4:5
+    4|     m() : void {}
+           ^^^^^^^^^^^^^ [1]
+   destructors.js:3:7
+    3| class A {
+             ^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:35:3
 
 Cannot get `a.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
@@ -389,4 +407,4 @@ References:
 
 
 
-Found 26 errors
+Found 27 errors

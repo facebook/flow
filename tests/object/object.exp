@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ obj.js:8:68
 
-Cannot call method `defineProperty` because boolean [1] is incompatible with string [2] in the first argument of
+Cannot call method `defineProperty` because boolean [1] is incompatible with string [2] in the first parameter of
 property `set`. [incompatible-call]
 
    obj.js:8:68
@@ -15,7 +15,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ obj.js:8:68
 
-Cannot call method `defineProperty` because boolean [1] is incompatible with number [2] in the first argument of
+Cannot call method `defineProperty` because boolean [1] is incompatible with number [2] in the first parameter of
 property `set`. [incompatible-call]
 
    obj.js:8:68

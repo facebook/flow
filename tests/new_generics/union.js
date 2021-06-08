@@ -1,6 +1,6 @@
 //@flow
 
-function f1<X: number | string, Y: X | boolean>(x: X, y: Y) {
+function f1<X: boolean, Y: X | boolean>(x: X, y: Y) {
   (x: number | string);
   (x: number | string | boolean);
   (x: X);

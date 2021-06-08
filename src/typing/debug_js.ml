@@ -194,7 +194,7 @@ let rec dump_t_ (depth, tvars) cx t =
         ~extra:
           (spf
              "<this: %s>(%s) => %s"
-             (kid this_t)
+             (kid (fst this_t))
              (String.concat "; " (Base.List.map ~f:(fun (_, t) -> kid t) params))
              (kid return_t))
         t

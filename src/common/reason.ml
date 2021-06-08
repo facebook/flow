@@ -158,6 +158,7 @@ type 'loc virtual_reason_desc =
   | RNoSuper
   | RDummyPrototype
   | RDummyThis
+  | RImplicitThis of 'loc virtual_reason_desc
   | RTupleMap
   | RObjectMap
   | RObjectMapi
@@ -322,6 +323,7 @@ let rec map_desc_locs f = function
   | RMatchingProp (s, desc) -> RMatchingProp (s, map_desc_locs f desc)
   | RTrusted desc -> RTrusted (map_desc_locs f desc)
   | RPrivate desc -> RPrivate (map_desc_locs f desc)
+  | RImplicitThis desc -> RImplicitThis (map_desc_locs f desc)
   | ( RObjectPatternRestProp | RArrayPatternRestProp | RCommonJSExports _ | RModule _
     | ROptionalChain | RReactProps | RReactElement _ | RReactClass | RReactComponent | RReactStatics
     | RReactDefaultProps | RReactState | RReactPropTypes | RReactChildren ) as r ->
@@ -634,6 +636,7 @@ let rec string_of_desc = function
   | RNoSuper -> "empty super object"
   | RDummyPrototype -> "empty prototype object"
   | RDummyThis -> "bound `this` in method"
+  | RImplicitThis desc -> spf "implicit `this` parameter of %s" (string_of_desc desc)
   | RTupleMap -> "`$TupleMap`"
   | RObjectMap -> "`$ObjMap`"
   | RObjectMapi -> "`$ObjMapi`"
@@ -1419,6 +1422,7 @@ let classification_of_reason r =
   | RNoSuper
   | RDummyPrototype
   | RDummyThis
+  | RImplicitThis _
   | RTupleMap
   | RObjectMap
   | RObjectMapi

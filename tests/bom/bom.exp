@@ -656,7 +656,7 @@ References:
 Error ---------------------------------------------------------------------------------------- MutationObserver.js:12:26
 
 Cannot call `MutationObserver` with function bound to `callback` because number [1] is incompatible with array type [2]
-in the first argument. [incompatible-call]
+in the first parameter. [incompatible-call]
 
    MutationObserver.js:12:26
     12| new MutationObserver((n: number) => {}); // incorrect
