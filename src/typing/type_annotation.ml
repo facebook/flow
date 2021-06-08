@@ -1037,7 +1037,7 @@ let rec convert cx tparams_map =
             ( statics_t,
               mk_reason RPrototype loc |> Unsoundness.function_proto_any,
               {
-                this_t;
+                this_t = (this_t, true);
                 params = List.rev rev_params;
                 rest_param;
                 return_t;

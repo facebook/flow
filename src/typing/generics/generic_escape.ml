@@ -95,7 +95,7 @@ class escape_finder ~gcx ~(add_output : Context.t -> ?trace:Type.trace -> Error_
         acc
 
     method! fun_type cx pole acc ft =
-      let { this_t; _ } = ft in
+      let { this_t = (this, subtyping); _ } = ft in
       (* Don't check this_t. It's hard to see how a generic `this_t` escaping could lead to problems,
          and without the ability to annotate the `this_t` type of a function, any errors that arose would
          be difficult to fix *)
@@ -103,7 +103,10 @@ class escape_finder ~gcx ~(add_output : Context.t -> ?trace:Type.trace -> Error_
         cx
         pole
         acc
-        { ft with this_t = VoidT.at (aloc_of_reason @@ reason_of_t this_t) (literal_trust ()) }
+        {
+          ft with
+          this_t = (VoidT.at (aloc_of_reason @@ reason_of_t this) (literal_trust ()), subtyping);
+        }
 
     method! tvar cx pole ({ seen; tvar_ids; annot_reason; use_op; top_level_reason; _ } as acc) r id
         =

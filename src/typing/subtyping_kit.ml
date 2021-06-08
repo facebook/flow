@@ -1205,7 +1205,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
               use_op
             | _ -> use_op )
       in
-      rec_flow cx trace (ft2.this_t, UseT (use_op, ft1.this_t));
+      rec_flow cx trace (subtype_this_of_function ft2, UseT (use_op, subtype_this_of_function ft1));
       let args = List.rev_map (fun (_, t) -> Arg t) ft2.params in
       let args =
         List.rev

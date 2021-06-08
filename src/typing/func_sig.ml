@@ -105,7 +105,7 @@ module Make (F : Func_params.S) = struct
     in
     let funtype =
       {
-        Type.this_t = F.this fparams |> Base.Option.value ~default:this_default;
+        Type.this_t = (F.this fparams |> Base.Option.value ~default:this_default, true);
         params = F.value fparams;
         rest_param = F.rest fparams;
         return_t = TypeUtil.type_t_of_annotated_or_inferred return_t;

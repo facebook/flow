@@ -1537,7 +1537,7 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
       let open Type in
       let funtype =
         {
-          this_t;
+          this_t = (this_t, true);
           params;
           rest_param;
           return_t = return;

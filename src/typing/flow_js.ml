@@ -1410,7 +1410,8 @@ struct
                   ( dummy_static reason,
                     mk_reason RPrototype fun_loc |> Unsoundness.function_proto_any,
                     {
-                      this_t = mk_reason RThis fun_loc |> MixedT.make |> with_trust bogus_trust;
+                      this_t =
+                        (mk_reason RThis fun_loc |> MixedT.make |> with_trust bogus_trust, true);
                       params = [(Some "value", MixedT.at fun_loc |> with_trust bogus_trust)];
                       rest_param = None;
                       return_t;
@@ -3122,7 +3123,7 @@ struct
         (* FunT ~> CallT *)
         | (DefT (reason_fundef, _, FunT (_, _, funtype)), CallT (use_op, reason_callsite, calltype))
           ->
-          let { this_t = o1; params = _; return_t = t1; _ } = funtype in
+          let { this_t = (o1, _); params = _; return_t = t1; _ } = funtype in
           let {
             call_this_t = o2;
             call_targs;
@@ -3517,7 +3518,7 @@ struct
         (****************************************************************)
         (* function types derive objects through explicit instantiation *)
         (****************************************************************)
-        | ( DefT (lreason, _, FunT (_, proto, ({ this_t = this; return_t = ret; _ } as ft))),
+        | ( DefT (lreason, _, FunT (_, proto, ({ this_t = (this, _); return_t = ret; _ } as ft))),
             ConstructorT (use_op, reason_op, targs, args, t) ) ->
           (* TODO: closure *)
           (* create new object **)
@@ -4742,7 +4743,7 @@ struct
           let call_targs = None in
           let funtype = { funtype with call_this_t; call_targs; call_args_tlist } in
           rec_flow cx trace (func, BindT (use_op, reason_op, funtype, false))
-        | ( DefT (reason, _, FunT (_, _, ({ this_t = o1; _ } as ft))),
+        | ( DefT (reason, _, FunT (_, _, ({ this_t = (o1, _); _ } as ft))),
             BindT (use_op, reason_op, calltype, _) ) ->
           let {
             call_this_t = o2;
@@ -6193,12 +6194,12 @@ struct
 
   and any_prop_to_function
       use_op
-      { this_t; params; rest_param; return_t; is_predicate = _; def_reason = _ }
+      { this_t = (this, _); params; rest_param; return_t; is_predicate = _; def_reason = _ }
       covariant
       contravariant =
     List.iter (snd %> contravariant ~use_op) params;
     Base.Option.iter ~f:(fun (_, _, t) -> contravariant ~use_op t) rest_param;
-    contravariant ~use_op this_t;
+    contravariant ~use_op this;
     covariant ~use_op return_t
 
   (* types trapped for any propagation. Returns true if this function handles the any case, either
@@ -9009,7 +9010,7 @@ struct
           |> ignore
         | (DefT (_, _, FunT (_, _, funtype1)), DefT (_, _, FunT (_, _, funtype2)))
           when List.length funtype1.params = List.length funtype2.params ->
-          rec_unify cx trace ~use_op funtype1.this_t funtype2.this_t;
+          rec_unify cx trace ~use_op (fst funtype1.this_t) (fst funtype2.this_t);
           List.iter2
             (fun (_, t1) (_, t2) -> rec_unify cx trace ~use_op t1 t2)
             funtype1.params
