@@ -235,7 +235,7 @@ val require_map : t -> Type.t ALocMap.t
 
 val module_map : t -> Type.t NameUtils.Map.t
 
-val exported_locals : t -> ALocSet.t SMap.t option
+val exported_locals : t -> ALocSet.t SMap.t
 
 val module_ref : t -> Reason.name
 
@@ -391,7 +391,7 @@ val set_use_def : t -> Env_builder.env_info -> unit
 
 val set_module_map : t -> Type.t NameUtils.Map.t -> unit
 
-val set_local_env : t -> ALocSet.t SMap.t option -> unit
+val set_local_env : t -> ALocSet.t SMap.t -> unit
 
 val clear_master_shared : t -> master_context -> unit
 

@@ -896,16 +896,15 @@ let get_refinement cx key loc =
 *)
 let check_exported_let_bound_reassignment op cx name entry loc =
   let open Entry in
-  match (op, entry, Context.exported_locals cx) with
+  match (op, entry) with
   | ( Changeset.Write,
       Value
         {
           Entry.kind = Let Entry.(((ClassNameBinding | FunctionBinding) as binding_kind), _);
           value_declare_loc;
           _;
-        },
-      Some exported_locals ) ->
-    (match NameUtils.smap_find_opt name exported_locals with
+        } ) ->
+    (match NameUtils.smap_find_opt name (Context.exported_locals cx) with
     | Some loc_set when ALocSet.mem value_declare_loc loc_set ->
       let reason = mk_reason (RType name) value_declare_loc in
       Flow.add_output

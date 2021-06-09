@@ -20,8 +20,7 @@ struct
   type 'info t' = {
     module_sig: 'info module_sig';
     declare_modules: (L.t * 'info module_sig') SMap.t;
-    (* Some map in types-first, None in classic *)
-    exported_locals: L.LSet.t SMap.t option;
+    exported_locals: L.LSet.t SMap.t;
   }
 
   and 'info module_sig' = {
@@ -144,7 +143,7 @@ struct
     }
 
   let mk_file_sig info =
-    { module_sig = mk_module_sig info; declare_modules = SMap.empty; exported_locals = None }
+    { module_sig = mk_module_sig info; declare_modules = SMap.empty; exported_locals = SMap.empty }
 
   let init_exports_info = { module_kind_info = CommonJSInfo []; type_exports_named_info = [] }
 
@@ -1163,9 +1162,7 @@ struct
             declare_modules
         in
         let exported_locals' =
-          OptionUtils.ident_map
-            (SMapUtils.ident_map (L.LSetUtils.ident_map this#loc))
-            exported_locals
+          (SMapUtils.ident_map (L.LSetUtils.ident_map this#loc)) exported_locals
         in
         if module_sig == module_sig' && declare_modules == declare_modules' then
           file_sig
@@ -1575,17 +1572,12 @@ let abstractify_locs : With_Loc.t -> With_ALoc.t =
   let abstractify_declare_modules =
     SMap.map (fun (loc, module_sig) -> (ALoc.of_loc loc, abstractify_module_sig module_sig))
   in
-  let abstractify_local_env = function
-    | Some exported_locals ->
-      Some
-        (SMap.map
-           (fun loc_set ->
-             Loc_collections.LocSet.fold
-               (fun loc acc -> Loc_collections.ALocSet.add (ALoc.of_loc loc) acc)
-               loc_set
-               Loc_collections.ALocSet.empty)
-           exported_locals)
-    | None -> None
+  let abstractify_local_env =
+    SMap.map (fun loc_set ->
+        Loc_collections.LocSet.fold
+          (fun loc acc -> Loc_collections.ALocSet.add (ALoc.of_loc loc) acc)
+          loc_set
+          Loc_collections.ALocSet.empty)
   in
   fun { WL.module_sig; declare_modules; exported_locals } ->
     {
