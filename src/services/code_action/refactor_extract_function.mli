@@ -15,3 +15,6 @@ val create_extracted_function :
 
 val replace_statements_with_new_function_call :
   (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t list -> (Loc.t, Loc.t) Flow_ast.Program.t option
+
+val provide_available_refactor :
+  (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> (Loc.t, Loc.t) Flow_ast.Program.t option

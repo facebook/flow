@@ -111,3 +111,11 @@ let replace_statements_with_new_function_call ast extracted_statements_locations
       new new_function_call_replacer insert_new_function_call_loc rest_statements_loc_union
     in
     Some (replacer#program ast)
+
+let provide_available_refactor ast extract_range =
+  let extracted_statements = extract_statements ast extract_range in
+  let extracted_statements_locations = List.map fst extracted_statements in
+  if allow_refactor_extraction ast extract_range extracted_statements_locations then
+    replace_statements_with_new_function_call ast extracted_statements_locations
+  else
+    None

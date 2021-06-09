@@ -1,0 +1,8 @@
+//@flow
+
+function fooBar() {
+  console.log('abcdefg');
+  console.log('foo');
+  console.log('bar');
+  console.log('hijklmn');
+}

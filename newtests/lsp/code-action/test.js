@@ -1291,5 +1291,113 @@ export default (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('provide codeAction for basic extract function', [
+      addFile(
+        'refactor-extract-function-basic.js.ignored',
+        'refactor-extract-function-basic.js',
+      ),
+      lspStartAndConnect(),
+      // Partial selection is not allowed and gives no results.
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-basic.js',
+        },
+        range: {
+          start: {
+            line: 4,
+            character: 2,
+          },
+          end: {
+            line: 5,
+            character: 15,
+          },
+        },
+        context: {
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [],
+          },
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+      // Full selection is allowed and gives one result.
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-basic.js',
+        },
+        range: {
+          start: {
+            line: 4,
+            character: 2,
+          },
+          end: {
+            line: 5,
+            character: 21,
+          },
+        },
+        context: {
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Extract to function in module scope',
+                kind: 'refactor.extract',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-basic.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 4,
+                            character: 2,
+                          },
+                          end: {
+                            line: 4,
+                            character: 20,
+                          },
+                        },
+                        newText: '(newFunction())',
+                      },
+                      {
+                        range: {
+                          start: {
+                            line: 5,
+                            character: 2,
+                          },
+                          end: {
+                            line: 5,
+                            character: 21,
+                          },
+                        },
+                        newText: '',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'refactor_extract_function',
+                    'Extract to function in module scope',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
   ],
 ): Suite);

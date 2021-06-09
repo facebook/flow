@@ -43,6 +43,41 @@ let autofix_exports_code_actions
   else
     []
 
+let extract_function_refactor_code_actions ~options ~ast uri loc =
+  if Options.refactor options then
+    match Refactor_extract_function.provide_available_refactor ast loc with
+    | None -> []
+    | Some new_ast ->
+      let diff = Insert_type.mk_diff ast new_ast in
+      let opts = layout_options options in
+      let edits =
+        Replacement_printer.mk_loc_patch_ast_differ ~opts diff
+        |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+      in
+      let title = "Extract to function in module scope" in
+      let diagnostic_title = "refactor_extract_function" in
+      let open Lsp in
+      [
+        CodeAction.Action
+          {
+            CodeAction.title;
+            kind = CodeActionKind.refactor_extract;
+            diagnostics = [];
+            action =
+              CodeAction.BothEditThenCommand
+                ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                  {
+                    Command.title = "";
+                    command = Command.Command "log";
+                    arguments =
+                      ["textDocument/codeAction"; diagnostic_title; title]
+                      |> List.map (fun str -> Hh_json.JSON_String str);
+                  } );
+          };
+      ]
+  else
+    []
+
 let main_of_package ~reader package_dir =
   let json_path = package_dir ^ "/package.json" in
   match Package_heaps.Reader.get_package ~reader json_path with
@@ -459,6 +494,7 @@ let code_actions_at_loc
       ~diagnostics
       uri
       loc
+    @ extract_function_refactor_code_actions ~options ~ast uri loc
   in
   let error_fixes =
     code_actions_of_errors
