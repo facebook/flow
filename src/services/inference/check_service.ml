@@ -229,7 +229,7 @@ end
 
 [@@@warning "-60"]
 
-(* Don't use Flow_js directly from New_check_service. Instead, encode the respective
+(* Don't use Flow_js directly from Check_service. Instead, encode the respective
  * logic in ConsGen. *)
 module Flow_js = struct end
 

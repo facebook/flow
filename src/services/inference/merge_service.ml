@@ -437,7 +437,7 @@ let mk_check_file options ~reader () =
   let check_file =
     let reader = Abstract_state_reader.Mutator_state_reader reader in
     let cache = New_check_cache.create ~capacity:1000 in
-    New_check_service.mk_check_file ~options ~reader ~cache ()
+    Check_service.mk_check_file ~options ~reader ~cache ()
   in
   fun file ->
     let start_time = Unix.gettimeofday () in
@@ -504,7 +504,7 @@ let check_contents_context ~reader options file ast docblock file_sig =
     SMap.fold f require_loc_map []
   in
   let cache = check_contents_cache in
-  let check_file = New_check_service.mk_check_file ~options ~reader ~cache () in
+  let check_file = Check_service.mk_check_file ~options ~reader ~cache () in
   check_file file required ast comments file_sig docblock aloc_table
 
 (* Wrap a potentially slow operation with a timer that fires every interval seconds. When it fires,
