@@ -39,12 +39,7 @@ type 'a merge_job =
   File_key.t Nel.t ->
   bool * 'a unit_result
 
-val merge_context :
-  options:Options.t ->
-  reader:Abstract_state_reader.t ->
-  Context.master_context ->
-  File_key.t Nel.t ->
-  Context.t
+val sig_hash : root:Path.t -> reader:Abstract_state_reader.t -> File_key.t Nel.t -> Xx.hash
 
 val check_contents_cache : New_check_cache.t
 

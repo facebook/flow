@@ -181,19 +181,11 @@ let merge_job ~worker_mutator ~options ~reader component =
   let leader = Nel.hd component in
   let reader = Abstract_state_reader.Mutator_state_reader reader in
   let diff =
-    if Module_js.checked_file ~reader ~audit:Expensive.ok leader then (
-      let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
-      let cx = Merge_service.merge_context ~options ~reader master_cx component in
-      let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in
-      let md5 = Merge_js.sig_context cx module_refs in
-      Context.clear_master_shared cx master_cx;
-      Context_heaps.Merge_context_mutator.add_merge_on_diff
-        ~audit:Expensive.ok
-        worker_mutator
-        cx
-        component
-        md5
-    ) else
+    if Module_js.checked_file ~reader ~audit:Expensive.ok leader then
+      let root = Options.root options in
+      let hash = Merge_service.sig_hash ~root ~reader component in
+      Context_heaps.Merge_context_mutator.add_merge_on_diff_no_context worker_mutator component hash
+    else
       false
   in
   (diff, Ok ())
