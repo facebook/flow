@@ -1,0 +1,6 @@
+(library 
+ (name fuzzy_path)
+ (wrapped false)
+ (foreign_archives ../fuzzy-path)
+ (c_library_flags -lstdc++)
+)

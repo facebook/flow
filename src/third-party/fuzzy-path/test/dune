@@ -1,0 +1,4 @@
+(executable
+ (name test)
+ (libraries fuzzy_path ounit)
+ )
