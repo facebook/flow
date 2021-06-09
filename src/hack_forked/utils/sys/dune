@@ -1,19 +1,16 @@
 (library
-  (name sys_utils)
-  (wrapped false)
-  (libraries
-    collections
-    disk
-    str
-    unix
-    utils_core)
-  (c_names
-    files
-    gc_profiling
-    getrusage
-    handle_stubs
-    nproc
-    priorities
-    processor_info
-    realpath
-    sysinfo))
+ (name sys_utils)
+ (wrapped false)
+ (libraries collections disk str unix utils_core)
+ (foreign_stubs
+  (language c)
+  (names
+   files
+   gc_profiling
+   getrusage
+   handle_stubs
+   nproc
+   priorities
+   processor_info
+   realpath
+   sysinfo)))
