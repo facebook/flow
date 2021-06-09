@@ -815,7 +815,6 @@ module Options_flags = struct
     temp_dir: string option;
     traces: int option;
     trust_mode: Options.trust_mode option;
-    new_check: bool option;
     abstract_locations: bool;
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
@@ -872,7 +871,6 @@ let options_flags =
       temp_dir
       quiet
       merge_timeout
-      new_check
       abstract_locations
       include_suppressions
       trust_mode =
@@ -901,7 +899,6 @@ let options_flags =
         quiet;
         merge_timeout;
         trust_mode;
-        new_check;
         abstract_locations;
         include_suppressions;
       }
@@ -946,7 +943,6 @@ let options_flags =
              ( "The maximum time in seconds to attempt to typecheck a file or cycle of files. "
              ^ "0 means no timeout (default: 100)" )
            ~env:"FLOW_MERGE_TIMEOUT"
-      |> flag "--new-check" (optional bool) ~doc:"" ~env:"FLOW_NEW_CHECK"
       |> flag
            "--abstract-locations"
            no_arg
@@ -1198,9 +1194,6 @@ let make_options
     in
     Base.Option.value lazy_mode ~default
   in
-  let opt_new_check =
-    Base.Option.value options_flags.new_check ~default:(FlowConfig.new_check flowconfig)
-  in
   let opt_abstract_locations =
     options_flags.abstract_locations
     || Base.Option.value (FlowConfig.abstract_locations flowconfig) ~default:true
@@ -1291,7 +1284,8 @@ let make_options
     opt_node_resolver_allow_root_relative = FlowConfig.node_resolver_allow_root_relative flowconfig;
     opt_node_resolver_root_relative_dirnames =
       FlowConfig.node_resolver_root_relative_dirnames flowconfig;
-    opt_new_check;
+    (* TODO: remove option which is always `true` *)
+    opt_new_check = true;
     opt_abstract_locations;
     opt_include_suppressions = options_flags.include_suppressions;
     opt_trust_mode =

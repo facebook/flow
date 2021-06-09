@@ -93,7 +93,6 @@ module Opts = struct
     module_system: Options.module_system;
     modules_are_use_strict: bool;
     munge_underscores: bool;
-    new_check: bool;
     no_flowlib: bool;
     node_main_fields: string list;
     node_resolver_allow_root_relative: bool;
@@ -219,7 +218,6 @@ module Opts = struct
       module_system = Options.Node;
       modules_are_use_strict = false;
       munge_underscores = false;
-      new_check = true;
       no_flowlib = false;
       node_main_fields = ["main"];
       node_resolver_allow_root_relative = false;
@@ -366,7 +364,13 @@ module Opts = struct
 
   let mapping fn = opt (fun str -> optparse_mapping str >>= fn)
 
-  let new_check_parser = boolean (fun opts v -> Ok { opts with new_check = v })
+  (* TODO: remove once .flowconfigs no longer use this setting *)
+  let new_check_parser =
+    boolean (fun opts v ->
+        if v then
+          Ok opts
+        else
+          Error "New check mode can no longer be disabled.")
 
   let max_files_checked_per_worker_parser =
     uint (fun opts v -> Ok { opts with max_files_checked_per_worker = v })
@@ -1379,8 +1383,6 @@ let traces c = c.options.Opts.traces
 let trust_mode c = c.options.Opts.trust_mode
 
 let type_asserts c = c.options.Opts.type_asserts
-
-let new_check c = c.options.Opts.new_check
 
 let required_version c = c.version
 

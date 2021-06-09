@@ -26,8 +26,6 @@ show_help() {
   echo "        quiet output (hides status, just prints results)"
   echo "    -s"
   echo "        test saved state"
-  echo "    -x"
-  echo "        test new check"
   echo "    -v"
   echo "        verbose output (shows skipped tests)"
   echo "    -h"
@@ -41,13 +39,12 @@ export FLOW_NODE_BINARY=${FLOW_NODE_BINARY:-${NODE_BINARY:-$(which node)}}
 OPTIND=1
 record=0
 saved_state=0
-new_check=0
 verbose=0
 quiet=0
 relative="$THIS_DIR"
 list_tests=0
-export saved_state filter new_check
-while getopts "b:d:f:lqrsxt:vh?" opt; do
+export saved_state filter
+while getopts "b:d:f:lqrst:vh?" opt; do
   case "$opt" in
   b)
     FLOW="$OPTARG"
@@ -74,9 +71,6 @@ while getopts "b:d:f:lqrsxt:vh?" opt; do
     saved_state=1
     printf "Testing saved state by running all tests using saved state\\n"
     ;;
-  x)
-    new_check=1
-    ;;
   v)
     verbose=1
     ;;
@@ -94,8 +88,6 @@ shift $((OPTIND-1))
 if [ -n "$specific_test" ]; then
   if [[ "$saved_state" -eq 1 ]]; then
     specific_test=$(echo $specific_test | sed 's/\(.*\)-saved-state$/\1/')
-  elif [[ "$new_check" -eq 1 ]]; then
-    specific_test=$(echo $specific_test | sed 's/\(.*\)-new-check$/\1/')
   fi
 
   filter="^$specific_test$"
@@ -255,8 +247,6 @@ if [[ "$list_tests" -eq 1 ]]; then
 
       if [[ "$saved_state" -eq 1 ]]; then
         echo "$name-saved-state"
-      elif [[ "$new_check" -eq 1 ]]; then
-        echo "$name-new-check"
       else
         echo "$name"
       fi
