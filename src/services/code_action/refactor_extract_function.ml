@@ -87,10 +87,10 @@ let extract_statements ast extract_range =
   let collector = new statements_collector extract_range in
   collector#eval collector#program ast |> List.rev
 
-let allow_refactor_extraction ast extract_range extracted_statements =
+let allow_refactor_extraction ast extract_range extracted_statements_locations =
   let visitor = new touched_statements_loc_visitor extract_range in
   let touched_range = visitor#eval visitor#program ast in
-  let selected_range = extracted_statements |> List.map fst |> List.fold_left union_loc None in
+  let selected_range = List.fold_left union_loc None extracted_statements_locations in
   selected_range = touched_range
 
 let create_extracted_function statements =

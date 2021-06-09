@@ -8,8 +8,7 @@
 val extract_statements :
   (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> (Loc.t, Loc.t) Flow_ast.Statement.t list
 
-val allow_refactor_extraction :
-  (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> (Loc.t, Loc.t) Flow_ast.Statement.t list -> bool
+val allow_refactor_extraction : (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> Loc.t list -> bool
 
 val create_extracted_function :
   (Loc.t, Loc.t) Flow_ast.Statement.t list -> (Loc.t, Loc.t) Flow_ast.Function.t

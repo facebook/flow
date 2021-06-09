@@ -149,9 +149,14 @@ foo(a + b);
 
 let assert_allow_refactor_extraction ~ctxt expected source extract_range =
   let ast = parse source in
-  let extracted_statements = Refactor_extract_function.extract_statements ast extract_range in
+  let extracted_statements_locations =
+    Refactor_extract_function.extract_statements ast extract_range |> List.map fst
+  in
   let actual =
-    Refactor_extract_function.allow_refactor_extraction ast extract_range extracted_statements
+    Refactor_extract_function.allow_refactor_extraction
+      ast
+      extract_range
+      extracted_statements_locations
   in
   assert_equal ~ctxt expected actual
 
