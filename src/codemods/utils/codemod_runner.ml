@@ -184,7 +184,7 @@ let merge_job ~worker_mutator ~options ~reader component =
     if Module_js.checked_file ~reader ~audit:Expensive.ok leader then
       let root = Options.root options in
       let hash = Merge_service.sig_hash ~root ~reader component in
-      Context_heaps.Merge_context_mutator.add_merge_on_diff_no_context worker_mutator component hash
+      Context_heaps.Merge_context_mutator.add_merge_on_diff worker_mutator component hash
     else
       false
   in

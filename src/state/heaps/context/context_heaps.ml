@@ -18,18 +18,7 @@ module MasterContextHeap =
       let description = "MasterContext"
     end)
 
-module SigContextHeap =
-  SharedMem.WithCache
-    (File_key)
-    (struct
-      type t = Context.sig_t
-
-      let description = "SigContext"
-    end)
-
 let master_cx_ref : Context.master_context option ref = ref None
-
-let add_sig_context = Expensive.wrap SigContextHeap.add
 
 let add_master ~audit master_cx =
   WorkerCancel.with_no_cancellations (fun () ->
@@ -60,19 +49,16 @@ module LeaderHeap =
 let oldify_merge_batch files =
   WorkerCancel.with_no_cancellations (fun () ->
       LeaderHeap.oldify_batch files;
-      SigContextHeap.oldify_batch files;
       SigHashHeap.oldify_batch files)
 
 let remove_old_merge_batch files =
   WorkerCancel.with_no_cancellations (fun () ->
       LeaderHeap.remove_old_batch files;
-      SigContextHeap.remove_old_batch files;
       SigHashHeap.remove_old_batch files)
 
 let revive_merge_batch files =
   WorkerCancel.with_no_cancellations (fun () ->
       LeaderHeap.revive_batch files;
-      SigContextHeap.revive_batch files;
       SigHashHeap.revive_batch files)
 
 module Init_master_context_mutator : sig
@@ -90,13 +76,9 @@ module Merge_context_mutator : sig
 
   val create : Transaction.t -> Utils_js.FilenameSet.t -> master_mutator * worker_mutator
 
-  val add_merge_on_diff :
-    (worker_mutator -> Context.t -> File_key.t Nel.t -> Xx.hash -> bool) Expensive.t
+  val add_merge_on_diff : worker_mutator -> File_key.t Nel.t -> Xx.hash -> bool
 
-  val add_merge_on_diff_no_context : worker_mutator -> File_key.t Nel.t -> Xx.hash -> bool
-
-  val add_merge_on_exn :
-    (options:Options.t -> worker_mutator -> File_key.t Nel.t -> bool) Expensive.t
+  val add_merge_on_exn : worker_mutator -> File_key.t Nel.t -> bool
 
   val revive_files : master_mutator -> Utils_js.FilenameSet.t -> unit
 end = struct
@@ -131,35 +113,10 @@ end = struct
 
         (master_mutator, worker_mutator))
 
-  (* While merging, we must keep LeaderHeap, SigContextHeap, and SigHashHeap in
-     sync, sometimes creating new entries and sometimes reusing old entries. *)
+  (* While merging, we must keep LeaderHeap and SigHashHeap in sync, sometimes
+   * creating new entries and sometimes reusing old entries. *)
 
-  (* Add a sig only if it has not changed meaningfully, and return the result of
-     that check. *)
-  let add_merge_on_diff ~audit () leader_cx component_files xx =
-    let leader_f = Context.file leader_cx in
-    (* Ideally we'd assert that leader_f is a member of the oldified files, but it's a little too
-     * expensive to send the set of oldified files to the worker *)
-    let diff =
-      match SigHashHeap.get_old leader_f with
-      | None -> true
-      | Some xx_old -> xx <> xx_old
-    in
-    let has_old_sig_cx = lazy (SigContextHeap.mem_old leader_f) in
-    WorkerCancel.with_no_cancellations (fun () ->
-        (* The component might not have an old sig context, but is still marked as unchanged.
-         * This can happen when we load sig hashes from the saved state. Normally, if a component is
-         * unchanged, we skip writing the sig cx and instead just revive the old one, but in this
-         * case there is no old one so we have to write it. *)
-        if diff || not (Lazy.force has_old_sig_cx) then (
-          (* Ideally we'd assert that each file is a member of the oldified files too *)
-          Nel.iter (fun f -> LeaderHeap.add f leader_f) component_files;
-          add_sig_context ~audit leader_f (Context.sig_cx leader_cx);
-          SigHashHeap.add leader_f xx
-        ));
-    diff
-
-  let add_merge_on_diff_no_context () component xx =
+  let add_merge_on_diff () component xx =
     let leader_f = Nel.hd component in
     let diff =
       match SigHashHeap.get_old leader_f with
@@ -179,34 +136,11 @@ end = struct
         ));
     diff
 
-  let add_merge_on_exn ~audit ~options () component =
-    (* Ideally we'd assert that leader_f is a member of the oldified files, but it's a little too
-     * expensive to send the set of oldified files to the worker *)
+  let add_merge_on_exn () component =
     let leader_f = Nel.hd component in
-    let ccx = Context.(make_ccx (empty_master_cx ())) in
-    let cx =
-      let metadata = Context.metadata_of_options options in
-      (* This context is only used to add *something* to the sighash when we encounter an unexpected
-       * exception during typechecking. It doesn't really matter what we choose, so we might as well
-       * make it the empty table. *)
-      let aloc_table = lazy (ALoc.make_table leader_f) in
-      let module_ref = Files.module_ref leader_f in
-      Context.make ccx metadata leader_f aloc_table (Reason.OrdinaryName module_ref) Context.Merging
-    in
-    let module_refs =
-      Nel.map
-        (fun f ->
-          let module_ref = Files.module_ref f in
-          let module_t = Type.AnyT.locationless (Type.AnyError None) in
-          Context.add_module cx (Reason.OrdinaryName module_ref) module_t;
-          module_ref)
-        component
-    in
-    let (xx, _) =
-      let no_lowers _ r = Type.Unsoundness.merged_any r in
-      Context_optimizer.reduce_context cx ~no_lowers (Nel.to_list module_refs)
-    in
-    add_merge_on_diff ~audit () cx component xx
+    WorkerCancel.with_no_cancellations (fun () ->
+        Nel.iter (fun f -> LeaderHeap.add f leader_f) component);
+    true
 
   let revive_files oldified_files files =
     (* Every file in files should be in the oldified set *)
@@ -219,20 +153,12 @@ end
 module type READER = sig
   type reader
 
-  val find_sig : reader:reader -> File_key.t -> Context.sig_t
-
   val find_leader : reader:reader -> File_key.t -> File_key.t
 
   val sig_hash_opt : reader:reader -> File_key.t -> Xx.hash option
 
   val find_master : reader:reader -> Context.master_context
 end
-
-let find_sig ~get_sig ~reader:_ file =
-  assert (file <> File_key.Builtins);
-  match get_sig file with
-  | Some cx -> cx
-  | None -> raise (Key_not_found ("SigContextHeap", File_key.to_string file))
 
 let find_master ~reader:_ =
   match !master_cx_ref with
@@ -254,8 +180,6 @@ module Mutator_reader : sig
   val leader_mem_old : reader:reader -> File_key.t -> bool
 end = struct
   type reader = Mutator_state_reader.t
-
-  let find_sig = find_sig ~get_sig:SigContextHeap.get
 
   let find_leader ~reader:_ file =
     match LeaderHeap.get file with
@@ -285,12 +209,6 @@ module Reader : READER with type reader = State_reader.t = struct
     | None -> false
     | Some oldified_files -> FilenameSet.mem file !oldified_files
 
-  let find_sig ~reader file =
-    if should_use_oldified file then
-      find_sig ~get_sig:SigContextHeap.get_old ~reader file
-    else
-      find_sig ~get_sig:SigContextHeap.get ~reader file
-
   let find_leader ~reader:_ file =
     let leader =
       if should_use_oldified file then
@@ -315,11 +233,6 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
   type reader = Abstract_state_reader.t
 
   open Abstract_state_reader
-
-  let find_sig ~reader =
-    match reader with
-    | Mutator_state_reader reader -> Mutator_reader.find_sig ~reader
-    | State_reader reader -> Reader.find_sig ~reader
 
   let find_leader ~reader =
     match reader with
