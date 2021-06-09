@@ -101,11 +101,10 @@ class Bar { method(input: string) { /* ... */ } }
 let test: Foo = new Bar(); // Error!
 ```
 
-If you wanted to use a class structurally you could do that by mixing them with
-objects as interfaces:
+If you wanted to use a class structurally you could do that using an interface:
 
 ```js
-type Interface = {
+interface Interface {
   method(value: string): void;
 };
 
