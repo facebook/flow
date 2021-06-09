@@ -41,7 +41,7 @@ type 'a merge_job =
 
 val sig_hash : root:Path.t -> reader:Abstract_state_reader.t -> File_key.t Nel.t -> Xx.hash
 
-val check_contents_cache : New_check_cache.t
+val check_contents_cache : Check_cache.t
 
 val check_contents_context :
   reader:State_reader.t ->

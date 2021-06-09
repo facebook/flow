@@ -436,7 +436,7 @@ let mk_check_file options ~reader () =
   let get_docblock_unsafe = Parsing_heaps.Mutator_reader.get_docblock_unsafe ~reader in
   let check_file =
     let reader = Abstract_state_reader.Mutator_state_reader reader in
-    let cache = New_check_cache.create ~capacity:1000 in
+    let cache = Check_cache.create ~capacity:1000 in
     Check_service.mk_check_file ~options ~reader ~cache ()
   in
   fun file ->
@@ -482,7 +482,7 @@ let mk_check_file options ~reader () =
  * Note that this cache needs to be invaliated when files change. We can use the
  * set of changed files (determined by the merge stream's signature hashing) to
  * invalidate file-by-file when a recheck transaction commits. *)
-let check_contents_cache = New_check_cache.create ~capacity:1000
+let check_contents_cache = Check_cache.create ~capacity:1000
 
 (* Variation of merge_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)

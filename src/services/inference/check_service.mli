@@ -20,8 +20,4 @@ type check_file =
   Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
 
 val mk_check_file :
-  options:Options.t ->
-  reader:Abstract_state_reader.t ->
-  cache:New_check_cache.t ->
-  unit ->
-  check_file
+  options:Options.t -> reader:Abstract_state_reader.t -> cache:Check_cache.t -> unit -> check_file

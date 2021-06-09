@@ -283,7 +283,7 @@ let mk_check_file ~options ~reader ~cache () =
         unchecked_module_t cx mref
   and sig_module_t cx file_key _loc =
     let file =
-      New_check_cache.find_or_create cache ~find_leader ~master_cx ~create_file:dep_file file_key
+      Check_cache.find_or_create cache ~find_leader ~master_cx ~create_file:dep_file file_key
     in
     let t = file.Type_sig_merge.exports () in
     copy_into cx file.Type_sig_merge.cx t;

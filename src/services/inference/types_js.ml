@@ -2194,9 +2194,7 @@ end = struct
      * before this recheck started. *)
     Transaction.add
       ~commit:(fun () ->
-        FilenameSet.iter
-          (New_check_cache.remove Merge_service.check_contents_cache)
-          sig_new_or_changed;
+        FilenameSet.iter (Check_cache.remove Merge_service.check_contents_cache) sig_new_or_changed;
         Lwt.return_unit)
       ~rollback:(fun () -> Lwt.return_unit)
       transaction;
