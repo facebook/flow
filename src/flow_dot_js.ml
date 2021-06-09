@@ -227,45 +227,36 @@ let init_builtins filenames =
       )
 
 let infer_and_merge ~root filename ast file_sig =
-  (* this is a VERY pared-down version of Merge_service.merge_strict_context.
-     it relies on the JS version only supporting libs + 1 file, so every
-     module you can require() must come from a lib; this skips resolving
-     module names and just adds them all to the `decls` list. *)
+  (* create cx *)
   let master_cx = get_master_cx root in
-  let reqs =
-    let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
-    SMap.fold
-      (fun module_name locs reqs ->
-        let m = Modulename.String module_name in
-        let locs = locs |> Nel.to_list |> Loc_collections.ALocSet.of_list in
-        Merge_js.Reqs.add_decl module_name (locs, m) reqs)
-      require_loc_map
-      Merge_js.Reqs.empty
+  let ccx = Context.make_ccx master_cx in
+  let metadata = stub_metadata ~root ~checked:true in
+  (* flow.js does not use abstract locations, so we will never force the thunk *)
+  let aloc_table = lazy (raise (Parsing_heaps_exceptions.ALoc_table_not_found "")) in
+  let module_ref = Reason.OrdinaryName (Files.module_ref filename) in
+  let cx = Context.make ccx metadata filename aloc_table module_ref Context.Checking in
+  (* connect requires *)
+  Type_inference_js.add_require_tvars cx file_sig;
+  let connect_requires mref =
+    let module_name = Reason.internal_module_name mref in
+    Nel.iter (fun loc ->
+        let reason = Reason.(mk_reason (RCustom mref) loc) in
+        let module_t = Flow_js_utils.lookup_builtin_strict cx module_name reason in
+        let require_t = Context.find_require cx loc in
+        Flow_js.flow_t cx (module_t, require_t))
   in
+  SMap.iter connect_requires File_sig.With_ALoc.(require_loc_map file_sig.module_sig);
+  (* infer ast *)
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
   let ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
-  (* TODO (nmote, sainati) - Exceptions should mainly be used for exceptional code flows. We
-   * shouldn't use them to decide whether or not to use abstract locations. We should pass through
-   * whatever options we need instead *)
-  let aloc_table = lazy (raise (Parsing_heaps_exceptions.ALoc_table_not_found "")) in
-  let options =
-    {
-      Merge_js.metadata = stub_metadata ~root ~checked:true;
-      lint_severities = LintSettings.empty_severities;
-      strict_mode = StrictModeSettings.empty;
-    }
+  let lint_severities =
+    let base_severities = LintSettings.empty_severities in
+    let strict_mode = StrictModeSettings.empty in
+    Merge_js.get_lint_severities metadata strict_mode base_severities
   in
-  Merge_js.check_file
-    ~options
-    filename
-    reqs
-    []
-    master_cx
-    ast
-    comments
-    file_sig
-    stub_docblock
-    aloc_table
+  let typed_ast = Type_inference_js.infer_ast cx filename comments ast ~lint_severities in
+  Merge_js.post_merge_checks cx master_cx ast typed_ast metadata file_sig;
+  (cx, typed_ast)
 
 let check_content ~filename ~content =
   let stdin_file = Some (Path.make_unsafe filename, content) in
