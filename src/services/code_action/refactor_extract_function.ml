@@ -51,6 +51,38 @@ class touched_statements_loc_visitor (extract_range : Loc.t) =
         stmt
   end
 
+class new_function_call_replacer insert_new_function_call_loc rest_statements_loc_union =
+  object (this)
+    inherit [Loc.t] Flow_ast_mapper.mapper as super
+
+    method private should_be_replaced_by_function_call loc =
+      Loc.equal insert_new_function_call_loc loc
+
+    method private inserted_function_call_loc () =
+      match rest_statements_loc_union with
+      | None -> insert_new_function_call_loc
+      | Some rest_union -> Loc.btwn insert_new_function_call_loc rest_union
+
+    method private should_be_replaced_by_empty loc =
+      match rest_statements_loc_union with
+      | Some rest_statements_loc_union -> Loc.contains rest_statements_loc_union loc
+      | None -> false
+
+    method! statement_fork_point stmt =
+      let (statement_loc, _) = stmt in
+      let open Ast_builder in
+      if this#should_be_replaced_by_function_call statement_loc then
+        [
+          Statements.expression
+            ~loc:(this#inserted_function_call_loc ())
+            (Expressions.call (Expressions.identifier "newFunction"));
+        ]
+      else if this#should_be_replaced_by_empty statement_loc then
+        []
+      else
+        super#statement_fork_point stmt
+  end
+
 let extract_statements ast extract_range =
   let collector = new statements_collector extract_range in
   collector#eval collector#program ast |> List.rev
@@ -69,3 +101,13 @@ let create_extracted_function statements =
   (* TODO: make it async if body contains await *)
   (* TODO: make it a generator if body contains yield *)
   Ast_builder.Functions.make ~id ~params ~body ()
+
+let replace_statements_with_new_function_call ast extracted_statements_locations =
+  match extracted_statements_locations with
+  | [] -> None
+  | insert_new_function_call_loc :: rest_statements_locations ->
+    let rest_statements_loc_union = List.fold_left union_loc None rest_statements_locations in
+    let replacer =
+      new new_function_call_replacer insert_new_function_call_loc rest_statements_loc_union
+    in
+    Some (replacer#program ast)
