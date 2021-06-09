@@ -17,7 +17,6 @@ end
 module Make
     (L : Loc_sig.S)
     (Env_builder : Env_builder.S with module L = L)
-    (Scope_api : Scope_api_sig.S with module L = L)
     (Convert : ConvertLoc with module L = L) =
 struct
   module Provider_api = Env_builder.Provider_api
@@ -82,7 +81,7 @@ struct
 end
 
 module With_Loc =
-  Make (Loc_sig.LocS) (Env_builder.With_Loc) (Scope_api.With_Loc)
+  Make (Loc_sig.LocS) (Env_builder.With_Loc)
     (struct
       module L = Loc_sig.LocS
 
@@ -90,7 +89,7 @@ module With_Loc =
     end)
 
 module With_ALoc =
-  Make (Loc_sig.ALocS) (Env_builder.With_ALoc) (Scope_api.With_ALoc)
+  Make (Loc_sig.ALocS) (Env_builder.With_ALoc)
     (struct
       module L = Loc_sig.ALocS
 
