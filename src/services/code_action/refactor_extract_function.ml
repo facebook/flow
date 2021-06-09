@@ -13,15 +13,15 @@ class statements_collector (extract_range : Loc.t) =
 
     method! statement stmt =
       let (statement_loc, _) = stmt in
-      if Loc.contains statement_loc extract_range then
-        (* If the range is completely contained in the statement,
-           we should recursve deeper to find smaller nested statements that are contained in the range. *)
-        super#statement stmt
-      else if Loc.contains extract_range statement_loc then
+      if Loc.contains extract_range statement_loc then
         let () = super#set_acc (stmt :: acc) in
         (* If the statement is already completely contained in the range, do not recursve deeper
            to collect more nested ones. *)
         stmt
+      else if Loc.contains statement_loc extract_range then
+        (* If the range is completely contained in the statement,
+           we should recursve deeper to find smaller nested statements that are contained in the range. *)
+        super#statement stmt
       else
         (* If all other cases (disjoint, intersect), we should not go deeper to avoid partially
            collecting statements from a nested block. *)

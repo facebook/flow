@@ -31,8 +31,27 @@ let assert_extracted ~ctxt expected source extract_range =
 
 let extract_statements_tests =
   [
+    (* Exactly select the first statement. *)
+    ( "extract_statements_linear_exact_one_statement" >:: fun ctxt ->
+      let source =
+        {|
+        const a = 3;
+        let b = 4;
+        console.log("I should not be selected");
+      |}
+      in
+      let expected = "const a = 3;" in
+      assert_extracted
+        ~ctxt
+        expected
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 2; column = 8 };
+          _end = { Loc.line = 2; column = 20 };
+        } );
     (* Exactly select the first two statements. *)
-    ( "extract_statements_linear_exact" >:: fun ctxt ->
+    ( "extract_statements_linear_exact_multiple_statements" >:: fun ctxt ->
       let source =
         {|
         const a = 3;
