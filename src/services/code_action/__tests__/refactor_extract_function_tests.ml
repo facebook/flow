@@ -19,15 +19,27 @@ let pretty_print layout =
 
 let assert_extracted ~ctxt expected source extract_range =
   let ast = parse source in
-  let extracted_statements = Refactor_extract_function.extract_statements ast extract_range in
   let extracted_statements_str =
-    extracted_statements
-    |> Js_layout_generator.statement_list ~opts:Js_layout_generator.default_opts
-    |> List.map pretty_print
-    |> String.concat ""
-    |> String.trim
+    match Refactor_extract_function.extract_statements ast extract_range with
+    | None -> None
+    | Some extracted_statements ->
+      Some
+        ( extracted_statements
+        |> Js_layout_generator.statement_list ~opts:Js_layout_generator.default_opts
+        |> List.map pretty_print
+        |> String.concat ""
+        |> String.trim )
   in
-  assert_equal ~ctxt ~printer:(fun x -> x) (String.trim expected) extracted_statements_str
+  let expected =
+    match expected with
+    | None -> None
+    | Some s -> Some (String.trim s)
+  in
+  let printer = function
+    | None -> "not_allowed"
+    | Some s -> s
+  in
+  assert_equal ~ctxt ~printer expected extracted_statements_str
 
 let extract_statements_tests =
   [
@@ -40,7 +52,7 @@ let extract_statements_tests =
         console.log("I should not be selected");
       |}
       in
-      let expected = "const a = 3;" in
+      let expected = Some "const a = 3;" in
       assert_extracted
         ~ctxt
         expected
@@ -59,7 +71,7 @@ let extract_statements_tests =
         console.log("I should not be selected");
       |}
       in
-      let expected = {|
+      let expected = Some {|
 const a = 3;
 let b = 4;
       |} in
@@ -72,7 +84,29 @@ let b = 4;
           start = { Loc.line = 2; column = 8 };
           _end = { Loc.line = 3; column = 18 };
         } );
-    (* Same as above, but move the start forwardso that `const a = 3;` is not selected in full. *)
+    (* Exactly select the first two statements, but with some whitespaces. *)
+    ( "extract_statements_linear_multiple_statements_with_whitespaces" >:: fun ctxt ->
+      let source =
+        {|
+        const a = 3;
+        let b = 4;
+        console.log("I should not be selected");
+      |}
+      in
+      let expected = Some {|
+const a = 3;
+let b = 4;
+      |} in
+      assert_extracted
+        ~ctxt
+        expected
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 2; column = 0 };
+          _end = { Loc.line = 4; column = 0 };
+        } );
+    (* Partially select a statement is not alllowed. *)
     ( "extract_statements_linear_partial" >:: fun ctxt ->
       let source =
         {|
@@ -81,10 +115,9 @@ let b = 4;
         console.log("I should not be selected");
       |}
       in
-      let expected = "let b = 4;" in
       assert_extracted
         ~ctxt
-        expected
+        None
         source
         {
           Loc.source = None;
@@ -103,7 +136,7 @@ let b = 4;
         console.log("I should not be selected");
       |}
       in
-      let expected = {|
+      let expected = Some {|
 const a = 3;
 {
   let b = 4;
@@ -131,7 +164,7 @@ foo(a + b);
         console.log("I should not be selected");
       |}
       in
-      let expected = "let b = 4;" in
+      let expected = Some "let b = 4;" in
       assert_extracted
         ~ctxt
         expected
@@ -141,8 +174,7 @@ foo(a + b);
           start = { Loc.line = 4; column = 0 };
           _end = { Loc.line = 4; column = 20 };
         } );
-    (* Select part of the statements from a nested block.
-       Partially selected block should be dropped. *)
+    (* Selecting part of the statements from a nested block is not allowed *)
     ( "extract_statements_from_nested_partial" >:: fun ctxt ->
       let source =
         {|
@@ -154,106 +186,9 @@ foo(a + b);
         console.log("I should not be selected");
       |}
       in
-      let expected = "const a = 3;" in
       assert_extracted
         ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 8 };
-          _end = { Loc.line = 4; column = 20 };
-        } );
-  ]
-
-let assert_allow_refactor_extraction ~ctxt expected source extract_range =
-  let ast = parse source in
-  let extracted_statements_locations =
-    Refactor_extract_function.extract_statements ast extract_range |> List.map fst
-  in
-  let actual =
-    Refactor_extract_function.allow_refactor_extraction
-      ast
-      extract_range
-      extracted_statements_locations
-  in
-  assert_equal ~ctxt expected actual
-
-let allow_refactor_extraction_tests =
-  [
-    ( "allow_refactor_extraction_linear" >:: fun ctxt ->
-      let source =
-        {|
-        const a = 3;
-        let b = 4;
-        console.log("I should not be selected");
-      |}
-      in
-      (* Exact match should be allowed *)
-      assert_allow_refactor_extraction
-        ~ctxt
-        true
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 8 };
-          _end = { Loc.line = 3; column = 18 };
-        };
-      (* Exact match a single statement should be allowed *)
-      assert_allow_refactor_extraction
-        ~ctxt
-        true
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 8 };
-          _end = { Loc.line = 2; column = 20 };
-        };
-      (* Include a few whitespaces before and after, and it should still be allowed. *)
-      assert_allow_refactor_extraction
-        ~ctxt
-        true
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 8 };
-          _end = { Loc.line = 4; column = 2 };
-        };
-      (* Partially selected statements are not allowed. *)
-      assert_allow_refactor_extraction
-        ~ctxt
-        false
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 8 };
-          _end = { Loc.line = 4; column = 20 };
-        } );
-    ( "allow_refactor_extraction_nested" >:: fun ctxt ->
-      let source =
-        {|
-        const a = 3;
-        {
-          let b = 4;
-          foo(a + b);
-        }
-        console.log("I should not be selected");
-      |}
-      in
-      (* Selecting full block is allowed. *)
-      assert_allow_refactor_extraction
-        ~ctxt
-        false
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 8 };
-          _end = { Loc.line = 5; column = 9 };
-        };
-      (* Partially selecting a block is not allowed *)
-      assert_allow_refactor_extraction
-        ~ctxt
-        false
+        None
         source
         {
           Loc.source = None;
@@ -485,7 +420,6 @@ let tests =
   "refactor_extract_function"
   >::: [
          "extract_statements" >::: extract_statements_tests;
-         "allow_refactor_extraction" >::: allow_refactor_extraction_tests;
          "create_extracted_function" >::: create_extracted_function_tests;
          "replace_statements_with_new_function_call"
          >::: replace_statements_with_new_function_call_tests;

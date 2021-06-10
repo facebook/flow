@@ -7,14 +7,27 @@
 
 (* Collect all statements that are completely within the selection. *)
 class statements_collector (extract_range : Loc.t) =
-  object (_this)
-    inherit
-      [(Loc.t, Loc.t) Flow_ast.Statement.t list, Loc.t] Flow_ast_visitor.visitor ~init:[] as super
+  object (this)
+    inherit [Loc.t] Flow_ast_mapper.mapper as super
+
+    val mutable _collected_statements = Some []
+
+    method private collect_statement stmt =
+      _collected_statements <-
+        (match _collected_statements with
+        | None -> None
+        | Some acc -> Some (stmt :: acc))
+
+    (* `Some collected_statements`, None` when extraction is not allowed based on user selection. *)
+    method collected_statements () =
+      match _collected_statements with
+      | Some collected_statements -> Some (List.rev collected_statements)
+      | None -> None
 
     method! statement stmt =
       let (statement_loc, _) = stmt in
       if Loc.contains extract_range statement_loc then
-        let () = super#set_acc (stmt :: acc) in
+        let () = this#collect_statement stmt in
         (* If the statement is already completely contained in the range, do not recursve deeper
            to collect more nested ones. *)
         stmt
@@ -22,9 +35,12 @@ class statements_collector (extract_range : Loc.t) =
         (* If the range is completely contained in the statement,
            we should recursve deeper to find smaller nested statements that are contained in the range. *)
         super#statement stmt
+      else if Loc.intersects extract_range statement_loc then
+        (* When there is intersection, it means that the selection is not allowed for extraction. *)
+        let () = _collected_statements <- None in
+        stmt
       else
-        (* If all other cases (disjoint, intersect), we should not go deeper to avoid partially
-           collecting statements from a nested block. *)
+        (* If disjoint, the statement and nested ones do not need to be collected. *)
         stmt
   end
 
@@ -32,25 +48,6 @@ let union_loc acc loc =
   match acc with
   | None -> Some loc
   | Some existing_loc -> Some (Loc.btwn existing_loc loc)
-
-(* Compute the union of all the statement locations that are touched by the selection. *)
-class touched_statements_loc_visitor (extract_range : Loc.t) =
-  object (this)
-    inherit [Loc.t option, Loc.t] Flow_ast_visitor.visitor ~init:None as super
-
-    method private union_loc loc = super#set_acc (union_loc acc loc)
-
-    method! statement stmt =
-      let (statement_loc, _) = stmt in
-      if Loc.contains statement_loc extract_range && not (Loc.equal statement_loc extract_range)
-      then
-        super#statement stmt
-      else if Loc.intersects extract_range statement_loc then
-        let () = this#union_loc statement_loc in
-        stmt
-      else
-        stmt
-  end
 
 class new_function_call_replacer insert_new_function_call_loc rest_statements_loc_union =
   object (this)
@@ -86,13 +83,8 @@ class new_function_call_replacer insert_new_function_call_loc rest_statements_lo
 
 let extract_statements ast extract_range =
   let collector = new statements_collector extract_range in
-  collector#eval collector#program ast |> List.rev
-
-let allow_refactor_extraction ast extract_range extracted_statements_locations =
-  let visitor = new touched_statements_loc_visitor extract_range in
-  let touched_range = visitor#eval visitor#program ast in
-  let selected_range = List.fold_left union_loc None extracted_statements_locations in
-  selected_range = touched_range
+  let _ = collector#program ast in
+  collector#collected_statements ()
 
 let create_extracted_function statements =
   let id = Some (Ast_builder.Identifiers.identifier "newFunction") in
@@ -130,11 +122,10 @@ let insert_function_to_toplevel (program_loc, program) extracted_statements =
       } )
 
 let provide_available_refactor ast extract_range =
-  let extracted_statements = extract_statements ast extract_range in
-  let extracted_statements_locations = List.map fst extracted_statements in
-  if allow_refactor_extraction ast extract_range extracted_statements_locations then
-    match replace_statements_with_new_function_call ast extracted_statements_locations with
+  match extract_statements ast extract_range with
+  | None -> None
+  | Some extracted_statements ->
+    let extracted_statements_locations = List.map fst extracted_statements in
+    (match replace_statements_with_new_function_call ast extracted_statements_locations with
     | None -> None
-    | Some new_ast -> Some (insert_function_to_toplevel new_ast extracted_statements)
-  else
-    None
+    | Some new_ast -> Some (insert_function_to_toplevel new_ast extracted_statements))
