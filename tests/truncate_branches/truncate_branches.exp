@@ -1,0 +1,633 @@
+Error ---------------------------------------------------------------------------------------------------- file.js:106:2
+
+Cannot cast `x` to `T` because: [incompatible-cast]
+ - Either string [1] is incompatible with string literal `a1` [2].
+ - Or string [1] is incompatible with string literal `a2` [3].
+ - Or string [1] is incompatible with string literal `a3` [4].
+ - Or string [1] is incompatible with string literal `a4` [5].
+ - Or string [1] is incompatible with string literal `a5` [6].
+ - Or string [1] is incompatible with string literal `a6` [7].
+ - Or string [1] is incompatible with string literal `a7` [8].
+ - Or string [1] is incompatible with string literal `a8` [9].
+ - Or string [1] is incompatible with string literal `a9` [10].
+ - Or string [1] is incompatible with string literal `a10` [11].
+ - Or string [1] is incompatible with string literal `a11` [12].
+ - Or string [1] is incompatible with string literal `a12` [13].
+ - Or string [1] is incompatible with string literal `a13` [14].
+ - Or string [1] is incompatible with string literal `a14` [15].
+ - Or string [1] is incompatible with string literal `a15` [16].
+ - Or string [1] is incompatible with string literal `a16` [17].
+ - Or string [1] is incompatible with string literal `a17` [18].
+ - Or string [1] is incompatible with string literal `a18` [19].
+ - Or string [1] is incompatible with string literal `a19` [20].
+ - Or string [1] is incompatible with string literal `a20` [21].
+ - Or string [1] is incompatible with string literal `a21` [22].
+ - Or string [1] is incompatible with string literal `a22` [23].
+ - Or string [1] is incompatible with string literal `a23` [24].
+ - Or string [1] is incompatible with string literal `a24` [25].
+ - Or string [1] is incompatible with string literal `a25` [26].
+ - Or string [1] is incompatible with string literal `a26` [27].
+ - Or string [1] is incompatible with string literal `a27` [28].
+ - Or string [1] is incompatible with string literal `a28` [29].
+ - Or string [1] is incompatible with string literal `a29` [30].
+ - Or string [1] is incompatible with string literal `a30` [31].
+ - Or string [1] is incompatible with string literal `a31` [32].
+ - Or string [1] is incompatible with string literal `a32` [33].
+ - Or string [1] is incompatible with string literal `a33` [34].
+ - Or string [1] is incompatible with string literal `a34` [35].
+ - Or string [1] is incompatible with string literal `a35` [36].
+ - Or string [1] is incompatible with string literal `a36` [37].
+ - Or string [1] is incompatible with string literal `a37` [38].
+ - Or string [1] is incompatible with string literal `a38` [39].
+ - Or string [1] is incompatible with string literal `a39` [40].
+ - Or string [1] is incompatible with string literal `a40` [41].
+ - Or string [1] is incompatible with string literal `a41` [42].
+ - Or string [1] is incompatible with string literal `a42` [43].
+ - Or string [1] is incompatible with string literal `a43` [44].
+ - Or string [1] is incompatible with string literal `a44` [45].
+ - Or string [1] is incompatible with string literal `a45` [46].
+ - Or string [1] is incompatible with string literal `a46` [47].
+ - Or string [1] is incompatible with string literal `a47` [48].
+ - Or string [1] is incompatible with string literal `a48` [49].
+ - Or string [1] is incompatible with string literal `a49` [50].
+ - Or string [1] is incompatible with string literal `a50` [51].
+ - Only showing the the first 50 branches. To see all branches, re-run Flow with --show-all-branches.
+
+   file.js:106:2
+   106| (x: T); // error
+         ^
+
+References:
+   file.js:105:16
+   105| declare var x: string;
+                       ^^^^^^ [1]
+   file.js:4:5
+     4|   | 'a1'
+            ^^^^ [2]
+   file.js:5:5
+     5|   | 'a2'
+            ^^^^ [3]
+   file.js:6:5
+     6|   | 'a3'
+            ^^^^ [4]
+   file.js:7:5
+     7|   | 'a4'
+            ^^^^ [5]
+   file.js:8:5
+     8|   | 'a5'
+            ^^^^ [6]
+   file.js:9:5
+     9|   | 'a6'
+            ^^^^ [7]
+   file.js:10:5
+    10|   | 'a7'
+            ^^^^ [8]
+   file.js:11:5
+    11|   | 'a8'
+            ^^^^ [9]
+   file.js:12:5
+    12|   | 'a9'
+            ^^^^ [10]
+   file.js:13:5
+    13|   | 'a10'
+            ^^^^^ [11]
+   file.js:14:5
+    14|   | 'a11'
+            ^^^^^ [12]
+   file.js:15:5
+    15|   | 'a12'
+            ^^^^^ [13]
+   file.js:16:5
+    16|   | 'a13'
+            ^^^^^ [14]
+   file.js:17:5
+    17|   | 'a14'
+            ^^^^^ [15]
+   file.js:18:5
+    18|   | 'a15'
+            ^^^^^ [16]
+   file.js:19:5
+    19|   | 'a16'
+            ^^^^^ [17]
+   file.js:20:5
+    20|   | 'a17'
+            ^^^^^ [18]
+   file.js:21:5
+    21|   | 'a18'
+            ^^^^^ [19]
+   file.js:22:5
+    22|   | 'a19'
+            ^^^^^ [20]
+   file.js:23:5
+    23|   | 'a20'
+            ^^^^^ [21]
+   file.js:24:5
+    24|   | 'a21'
+            ^^^^^ [22]
+   file.js:25:5
+    25|   | 'a22'
+            ^^^^^ [23]
+   file.js:26:5
+    26|   | 'a23'
+            ^^^^^ [24]
+   file.js:27:5
+    27|   | 'a24'
+            ^^^^^ [25]
+   file.js:28:5
+    28|   | 'a25'
+            ^^^^^ [26]
+   file.js:29:5
+    29|   | 'a26'
+            ^^^^^ [27]
+   file.js:30:5
+    30|   | 'a27'
+            ^^^^^ [28]
+   file.js:31:5
+    31|   | 'a28'
+            ^^^^^ [29]
+   file.js:32:5
+    32|   | 'a29'
+            ^^^^^ [30]
+   file.js:33:5
+    33|   | 'a30'
+            ^^^^^ [31]
+   file.js:34:5
+    34|   | 'a31'
+            ^^^^^ [32]
+   file.js:35:5
+    35|   | 'a32'
+            ^^^^^ [33]
+   file.js:36:5
+    36|   | 'a33'
+            ^^^^^ [34]
+   file.js:37:5
+    37|   | 'a34'
+            ^^^^^ [35]
+   file.js:38:5
+    38|   | 'a35'
+            ^^^^^ [36]
+   file.js:39:5
+    39|   | 'a36'
+            ^^^^^ [37]
+   file.js:40:5
+    40|   | 'a37'
+            ^^^^^ [38]
+   file.js:41:5
+    41|   | 'a38'
+            ^^^^^ [39]
+   file.js:42:5
+    42|   | 'a39'
+            ^^^^^ [40]
+   file.js:43:5
+    43|   | 'a40'
+            ^^^^^ [41]
+   file.js:44:5
+    44|   | 'a41'
+            ^^^^^ [42]
+   file.js:45:5
+    45|   | 'a42'
+            ^^^^^ [43]
+   file.js:46:5
+    46|   | 'a43'
+            ^^^^^ [44]
+   file.js:47:5
+    47|   | 'a44'
+            ^^^^^ [45]
+   file.js:48:5
+    48|   | 'a45'
+            ^^^^^ [46]
+   file.js:49:5
+    49|   | 'a46'
+            ^^^^^ [47]
+   file.js:50:5
+    50|   | 'a47'
+            ^^^^^ [48]
+   file.js:51:5
+    51|   | 'a48'
+            ^^^^^ [49]
+   file.js:52:5
+    52|   | 'a49'
+            ^^^^^ [50]
+   file.js:53:5
+    53|   | 'a50'
+            ^^^^^ [51]
+
+
+
+Found 1 error
+Error ---------------------------------------------------------------------------------------------------- file.js:106:2
+
+Cannot cast `x` to `T` because: [incompatible-cast]
+ - Either string [1] is incompatible with string literal `a1` [2].
+ - Or string [1] is incompatible with string literal `a2` [3].
+ - Or string [1] is incompatible with string literal `a3` [4].
+ - Or string [1] is incompatible with string literal `a4` [5].
+ - Or string [1] is incompatible with string literal `a5` [6].
+ - Or string [1] is incompatible with string literal `a6` [7].
+ - Or string [1] is incompatible with string literal `a7` [8].
+ - Or string [1] is incompatible with string literal `a8` [9].
+ - Or string [1] is incompatible with string literal `a9` [10].
+ - Or string [1] is incompatible with string literal `a10` [11].
+ - Or string [1] is incompatible with string literal `a11` [12].
+ - Or string [1] is incompatible with string literal `a12` [13].
+ - Or string [1] is incompatible with string literal `a13` [14].
+ - Or string [1] is incompatible with string literal `a14` [15].
+ - Or string [1] is incompatible with string literal `a15` [16].
+ - Or string [1] is incompatible with string literal `a16` [17].
+ - Or string [1] is incompatible with string literal `a17` [18].
+ - Or string [1] is incompatible with string literal `a18` [19].
+ - Or string [1] is incompatible with string literal `a19` [20].
+ - Or string [1] is incompatible with string literal `a20` [21].
+ - Or string [1] is incompatible with string literal `a21` [22].
+ - Or string [1] is incompatible with string literal `a22` [23].
+ - Or string [1] is incompatible with string literal `a23` [24].
+ - Or string [1] is incompatible with string literal `a24` [25].
+ - Or string [1] is incompatible with string literal `a25` [26].
+ - Or string [1] is incompatible with string literal `a26` [27].
+ - Or string [1] is incompatible with string literal `a27` [28].
+ - Or string [1] is incompatible with string literal `a28` [29].
+ - Or string [1] is incompatible with string literal `a29` [30].
+ - Or string [1] is incompatible with string literal `a30` [31].
+ - Or string [1] is incompatible with string literal `a31` [32].
+ - Or string [1] is incompatible with string literal `a32` [33].
+ - Or string [1] is incompatible with string literal `a33` [34].
+ - Or string [1] is incompatible with string literal `a34` [35].
+ - Or string [1] is incompatible with string literal `a35` [36].
+ - Or string [1] is incompatible with string literal `a36` [37].
+ - Or string [1] is incompatible with string literal `a37` [38].
+ - Or string [1] is incompatible with string literal `a38` [39].
+ - Or string [1] is incompatible with string literal `a39` [40].
+ - Or string [1] is incompatible with string literal `a40` [41].
+ - Or string [1] is incompatible with string literal `a41` [42].
+ - Or string [1] is incompatible with string literal `a42` [43].
+ - Or string [1] is incompatible with string literal `a43` [44].
+ - Or string [1] is incompatible with string literal `a44` [45].
+ - Or string [1] is incompatible with string literal `a45` [46].
+ - Or string [1] is incompatible with string literal `a46` [47].
+ - Or string [1] is incompatible with string literal `a47` [48].
+ - Or string [1] is incompatible with string literal `a48` [49].
+ - Or string [1] is incompatible with string literal `a49` [50].
+ - Or string [1] is incompatible with string literal `a50` [51].
+ - Or string [1] is incompatible with string literal `a51` [52].
+ - Or string [1] is incompatible with string literal `a52` [53].
+ - Or string [1] is incompatible with string literal `a53` [54].
+ - Or string [1] is incompatible with string literal `a54` [55].
+ - Or string [1] is incompatible with string literal `a55` [56].
+ - Or string [1] is incompatible with string literal `a56` [57].
+ - Or string [1] is incompatible with string literal `a57` [58].
+ - Or string [1] is incompatible with string literal `a58` [59].
+ - Or string [1] is incompatible with string literal `a59` [60].
+ - Or string [1] is incompatible with string literal `a60` [61].
+ - Or string [1] is incompatible with string literal `a61` [62].
+ - Or string [1] is incompatible with string literal `a62` [63].
+ - Or string [1] is incompatible with string literal `a63` [64].
+ - Or string [1] is incompatible with string literal `a64` [65].
+ - Or string [1] is incompatible with string literal `a65` [66].
+ - Or string [1] is incompatible with string literal `a66` [67].
+ - Or string [1] is incompatible with string literal `a67` [68].
+ - Or string [1] is incompatible with string literal `a68` [69].
+ - Or string [1] is incompatible with string literal `a69` [70].
+ - Or string [1] is incompatible with string literal `a70` [71].
+ - Or string [1] is incompatible with string literal `a71` [72].
+ - Or string [1] is incompatible with string literal `a72` [73].
+ - Or string [1] is incompatible with string literal `a73` [74].
+ - Or string [1] is incompatible with string literal `a74` [75].
+ - Or string [1] is incompatible with string literal `a75` [76].
+ - Or string [1] is incompatible with string literal `a76` [77].
+ - Or string [1] is incompatible with string literal `a77` [78].
+ - Or string [1] is incompatible with string literal `a78` [79].
+ - Or string [1] is incompatible with string literal `a79` [80].
+ - Or string [1] is incompatible with string literal `a80` [81].
+ - Or string [1] is incompatible with string literal `a81` [82].
+ - Or string [1] is incompatible with string literal `a82` [83].
+ - Or string [1] is incompatible with string literal `a83` [84].
+ - Or string [1] is incompatible with string literal `a84` [85].
+ - Or string [1] is incompatible with string literal `a85` [86].
+ - Or string [1] is incompatible with string literal `a86` [87].
+ - Or string [1] is incompatible with string literal `a87` [88].
+ - Or string [1] is incompatible with string literal `a88` [89].
+ - Or string [1] is incompatible with string literal `a89` [90].
+ - Or string [1] is incompatible with string literal `a90` [91].
+ - Or string [1] is incompatible with string literal `a91` [92].
+ - Or string [1] is incompatible with string literal `a92` [93].
+ - Or string [1] is incompatible with string literal `a93` [94].
+ - Or string [1] is incompatible with string literal `a94` [95].
+ - Or string [1] is incompatible with string literal `a95` [96].
+ - Or string [1] is incompatible with string literal `a96` [97].
+ - Or string [1] is incompatible with string literal `a97` [98].
+ - Or string [1] is incompatible with string literal `a98` [99].
+ - Or string [1] is incompatible with string literal `a99` [100].
+ - Or string [1] is incompatible with string literal `a100` [101].
+
+   file.js:106:2
+   106| (x: T); // error
+         ^
+
+References:
+   file.js:105:16
+   105| declare var x: string;
+                       ^^^^^^ [1]
+   file.js:4:5
+     4|   | 'a1'
+            ^^^^ [2]
+   file.js:5:5
+     5|   | 'a2'
+            ^^^^ [3]
+   file.js:6:5
+     6|   | 'a3'
+            ^^^^ [4]
+   file.js:7:5
+     7|   | 'a4'
+            ^^^^ [5]
+   file.js:8:5
+     8|   | 'a5'
+            ^^^^ [6]
+   file.js:9:5
+     9|   | 'a6'
+            ^^^^ [7]
+   file.js:10:5
+    10|   | 'a7'
+            ^^^^ [8]
+   file.js:11:5
+    11|   | 'a8'
+            ^^^^ [9]
+   file.js:12:5
+    12|   | 'a9'
+            ^^^^ [10]
+   file.js:13:5
+    13|   | 'a10'
+            ^^^^^ [11]
+   file.js:14:5
+    14|   | 'a11'
+            ^^^^^ [12]
+   file.js:15:5
+    15|   | 'a12'
+            ^^^^^ [13]
+   file.js:16:5
+    16|   | 'a13'
+            ^^^^^ [14]
+   file.js:17:5
+    17|   | 'a14'
+            ^^^^^ [15]
+   file.js:18:5
+    18|   | 'a15'
+            ^^^^^ [16]
+   file.js:19:5
+    19|   | 'a16'
+            ^^^^^ [17]
+   file.js:20:5
+    20|   | 'a17'
+            ^^^^^ [18]
+   file.js:21:5
+    21|   | 'a18'
+            ^^^^^ [19]
+   file.js:22:5
+    22|   | 'a19'
+            ^^^^^ [20]
+   file.js:23:5
+    23|   | 'a20'
+            ^^^^^ [21]
+   file.js:24:5
+    24|   | 'a21'
+            ^^^^^ [22]
+   file.js:25:5
+    25|   | 'a22'
+            ^^^^^ [23]
+   file.js:26:5
+    26|   | 'a23'
+            ^^^^^ [24]
+   file.js:27:5
+    27|   | 'a24'
+            ^^^^^ [25]
+   file.js:28:5
+    28|   | 'a25'
+            ^^^^^ [26]
+   file.js:29:5
+    29|   | 'a26'
+            ^^^^^ [27]
+   file.js:30:5
+    30|   | 'a27'
+            ^^^^^ [28]
+   file.js:31:5
+    31|   | 'a28'
+            ^^^^^ [29]
+   file.js:32:5
+    32|   | 'a29'
+            ^^^^^ [30]
+   file.js:33:5
+    33|   | 'a30'
+            ^^^^^ [31]
+   file.js:34:5
+    34|   | 'a31'
+            ^^^^^ [32]
+   file.js:35:5
+    35|   | 'a32'
+            ^^^^^ [33]
+   file.js:36:5
+    36|   | 'a33'
+            ^^^^^ [34]
+   file.js:37:5
+    37|   | 'a34'
+            ^^^^^ [35]
+   file.js:38:5
+    38|   | 'a35'
+            ^^^^^ [36]
+   file.js:39:5
+    39|   | 'a36'
+            ^^^^^ [37]
+   file.js:40:5
+    40|   | 'a37'
+            ^^^^^ [38]
+   file.js:41:5
+    41|   | 'a38'
+            ^^^^^ [39]
+   file.js:42:5
+    42|   | 'a39'
+            ^^^^^ [40]
+   file.js:43:5
+    43|   | 'a40'
+            ^^^^^ [41]
+   file.js:44:5
+    44|   | 'a41'
+            ^^^^^ [42]
+   file.js:45:5
+    45|   | 'a42'
+            ^^^^^ [43]
+   file.js:46:5
+    46|   | 'a43'
+            ^^^^^ [44]
+   file.js:47:5
+    47|   | 'a44'
+            ^^^^^ [45]
+   file.js:48:5
+    48|   | 'a45'
+            ^^^^^ [46]
+   file.js:49:5
+    49|   | 'a46'
+            ^^^^^ [47]
+   file.js:50:5
+    50|   | 'a47'
+            ^^^^^ [48]
+   file.js:51:5
+    51|   | 'a48'
+            ^^^^^ [49]
+   file.js:52:5
+    52|   | 'a49'
+            ^^^^^ [50]
+   file.js:53:5
+    53|   | 'a50'
+            ^^^^^ [51]
+   file.js:54:5
+    54|   | 'a51'
+            ^^^^^ [52]
+   file.js:55:5
+    55|   | 'a52'
+            ^^^^^ [53]
+   file.js:56:5
+    56|   | 'a53'
+            ^^^^^ [54]
+   file.js:57:5
+    57|   | 'a54'
+            ^^^^^ [55]
+   file.js:58:5
+    58|   | 'a55'
+            ^^^^^ [56]
+   file.js:59:5
+    59|   | 'a56'
+            ^^^^^ [57]
+   file.js:60:5
+    60|   | 'a57'
+            ^^^^^ [58]
+   file.js:61:5
+    61|   | 'a58'
+            ^^^^^ [59]
+   file.js:62:5
+    62|   | 'a59'
+            ^^^^^ [60]
+   file.js:63:5
+    63|   | 'a60'
+            ^^^^^ [61]
+   file.js:64:5
+    64|   | 'a61'
+            ^^^^^ [62]
+   file.js:65:5
+    65|   | 'a62'
+            ^^^^^ [63]
+   file.js:66:5
+    66|   | 'a63'
+            ^^^^^ [64]
+   file.js:67:5
+    67|   | 'a64'
+            ^^^^^ [65]
+   file.js:68:5
+    68|   | 'a65'
+            ^^^^^ [66]
+   file.js:69:5
+    69|   | 'a66'
+            ^^^^^ [67]
+   file.js:70:5
+    70|   | 'a67'
+            ^^^^^ [68]
+   file.js:71:5
+    71|   | 'a68'
+            ^^^^^ [69]
+   file.js:72:5
+    72|   | 'a69'
+            ^^^^^ [70]
+   file.js:73:5
+    73|   | 'a70'
+            ^^^^^ [71]
+   file.js:74:5
+    74|   | 'a71'
+            ^^^^^ [72]
+   file.js:75:5
+    75|   | 'a72'
+            ^^^^^ [73]
+   file.js:76:5
+    76|   | 'a73'
+            ^^^^^ [74]
+   file.js:77:5
+    77|   | 'a74'
+            ^^^^^ [75]
+   file.js:78:5
+    78|   | 'a75'
+            ^^^^^ [76]
+   file.js:79:5
+    79|   | 'a76'
+            ^^^^^ [77]
+   file.js:80:5
+    80|   | 'a77'
+            ^^^^^ [78]
+   file.js:81:5
+    81|   | 'a78'
+            ^^^^^ [79]
+   file.js:82:5
+    82|   | 'a79'
+            ^^^^^ [80]
+   file.js:83:5
+    83|   | 'a80'
+            ^^^^^ [81]
+   file.js:84:5
+    84|   | 'a81'
+            ^^^^^ [82]
+   file.js:85:5
+    85|   | 'a82'
+            ^^^^^ [83]
+   file.js:86:5
+    86|   | 'a83'
+            ^^^^^ [84]
+   file.js:87:5
+    87|   | 'a84'
+            ^^^^^ [85]
+   file.js:88:5
+    88|   | 'a85'
+            ^^^^^ [86]
+   file.js:89:5
+    89|   | 'a86'
+            ^^^^^ [87]
+   file.js:90:5
+    90|   | 'a87'
+            ^^^^^ [88]
+   file.js:91:5
+    91|   | 'a88'
+            ^^^^^ [89]
+   file.js:92:5
+    92|   | 'a89'
+            ^^^^^ [90]
+   file.js:93:5
+    93|   | 'a90'
+            ^^^^^ [91]
+   file.js:94:5
+    94|   | 'a91'
+            ^^^^^ [92]
+   file.js:95:5
+    95|   | 'a92'
+            ^^^^^ [93]
+   file.js:96:5
+    96|   | 'a93'
+            ^^^^^ [94]
+   file.js:97:5
+    97|   | 'a94'
+            ^^^^^ [95]
+   file.js:98:5
+    98|   | 'a95'
+            ^^^^^ [96]
+   file.js:99:5
+    99|   | 'a96'
+            ^^^^^ [97]
+   file.js:100:5
+   100|   | 'a97'
+            ^^^^^ [98]
+   file.js:101:5
+   101|   | 'a98'
+            ^^^^^ [99]
+   file.js:102:5
+   102|   | 'a99'
+            ^^^^^ [100]
+   file.js:103:5
+   103|   | 'a100';
+            ^^^^^^ [101]
+
+
+
+Found 1 error

@@ -515,21 +515,32 @@ module Friendly = struct
               (hidden_branches, [])
               (List.rev speculation_errors_rev)
           in
-          ( hidden_branches,
-            error.loc,
-            {
-              group_message = message;
-              group_message_list =
-                Base.List.mapi
-                  ~f:(fun i message_group ->
-                    append_group_message
-                      ( if i = 0 then
-                        [text "Either"]
-                      else
-                        [text "Or"] )
-                      message_group)
-                  group_message_list;
-            } ))
+          let group_message_list =
+            Base.List.mapi
+              ~f:(fun i message_group ->
+                append_group_message
+                  ( if i = 0 then
+                    [text "Either"]
+                  else
+                    [text "Or"] )
+                  message_group)
+              group_message_list
+          in
+          let group_message_list =
+            if (not show_all_branches) && List.length group_message_list > 50 then
+              let message =
+                {
+                  group_message =
+                    message_of_string
+                      "Only showing the the first 50 branches. To see all branches, re-run Flow with --show-all-branches.";
+                  group_message_list = [];
+                }
+              in
+              Base.List.rev_append (List.rev (Base.List.take group_message_list 50)) [message]
+            else
+              group_message_list
+          in
+          (hidden_branches, error.loc, { group_message = message; group_message_list }))
     in
     (* Partially apply loop with the state it needs. Have fun! *)
     loop ~hidden_branches:false []
