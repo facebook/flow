@@ -1,8 +1,8 @@
 (library
   (name fsevents)
   (wrapped false)
-  (c_names
-    fsevents_stubs)
+  (foreign_stubs (language c) (names
+    fsevents_stubs))
   (c_library_flags
     -framework CoreServices
     -framework CoreFoundation)
