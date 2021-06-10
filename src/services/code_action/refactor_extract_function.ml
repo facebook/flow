@@ -113,10 +113,28 @@ let replace_statements_with_new_function_call ast extracted_statements_locations
     in
     Some (replacer#program ast)
 
+let insert_function_to_toplevel (program_loc, program) extracted_statements =
+  (* Put extracted function to two lines after the end of program to have nice format. *)
+  let new_function_loc = Loc.(cursor program_loc.source (program_loc._end.line + 2) 0) in
+  ( program_loc,
+    Flow_ast.Program.
+      {
+        program with
+        statements =
+          program.statements
+          @ [
+              ( new_function_loc,
+                Flow_ast.Statement.FunctionDeclaration
+                  (create_extracted_function extracted_statements) );
+            ];
+      } )
+
 let provide_available_refactor ast extract_range =
   let extracted_statements = extract_statements ast extract_range in
   let extracted_statements_locations = List.map fst extracted_statements in
   if allow_refactor_extraction ast extract_range extracted_statements_locations then
-    replace_statements_with_new_function_call ast extracted_statements_locations
+    match replace_statements_with_new_function_call ast extracted_statements_locations with
+    | None -> None
+    | Some new_ast -> Some (insert_function_to_toplevel new_ast extracted_statements)
   else
     None

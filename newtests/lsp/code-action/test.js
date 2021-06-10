@@ -1380,6 +1380,20 @@ export default (suite(
                         },
                         newText: '',
                       },
+                      {
+                        range: {
+                          start: {
+                            line: 7,
+                            character: 1,
+                          },
+                          end: {
+                            line: 7,
+                            character: 1,
+                          },
+                        },
+                        newText:
+                          'function newFunction() {\n  console.log("foo");\n  console.log("bar");\n}',
+                      },
                     ],
                   },
                 },

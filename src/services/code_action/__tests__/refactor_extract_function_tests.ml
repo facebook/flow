@@ -398,6 +398,89 @@ function test() {
         ] );
   ]
 
+let assert_refactored ~ctxt expected source extract_range =
+  let ast = parse source in
+  let actual =
+    match Refactor_extract_function.provide_available_refactor ast extract_range with
+    | None -> ""
+    | Some ast' ->
+      ast'
+      |> Js_layout_generator.program
+           ~opts:Js_layout_generator.default_opts
+           ~preserve_docblock:true
+           ~checksum:None
+      |> pretty_print
+      |> String.trim
+  in
+  let expected =
+    match expected with
+    | None -> ""
+    | Some s -> String.trim s
+  in
+  assert_equal ~ctxt ~printer:(fun x -> x) expected actual
+
+let provide_available_refactor_tests =
+  [
+    ( "single_line_extract" >:: fun ctxt ->
+      let source =
+        {|
+        const a = 3;
+        let b = 4;
+        console.log("I should not be selected");
+        |}
+      in
+      let expected =
+        Some
+          {|
+newFunction();
+let b = 4;
+console.log("I should not be selected");
+
+function newFunction() {
+  const a = 3;
+}
+|}
+      in
+      assert_refactored
+        ~ctxt
+        expected
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 2; column = 8 };
+          _end = { Loc.line = 2; column = 20 };
+        } );
+    ( "multi_line_extract" >:: fun ctxt ->
+      let source =
+        {|
+        const a = 3;
+        let b = 4;
+        console.log("I should not be selected");
+        |}
+      in
+      let expected =
+        Some
+          {|
+newFunction();
+console.log("I should not be selected");
+
+function newFunction() {
+  const a = 3;
+  let b = 4;
+}
+|}
+      in
+      assert_refactored
+        ~ctxt
+        expected
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 2; column = 8 };
+          _end = { Loc.line = 3; column = 18 };
+        } );
+  ]
+
 let tests =
   "refactor_extract_function"
   >::: [
@@ -406,4 +489,5 @@ let tests =
          "create_extracted_function" >::: create_extracted_function_tests;
          "replace_statements_with_new_function_call"
          >::: replace_statements_with_new_function_call_tests;
+         "provide_available_refactor" >::: provide_available_refactor_tests;
        ]
