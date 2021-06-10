@@ -359,12 +359,13 @@ jobs:
     executor: linux-node
     environment:
       FLOW_RUNTESTS_PARALLELISM: 8
+    parallelism: 50
     steps:
       - attach_workspace:
           at: ~/flow
       - run:
           name: Run tests
-          command: ./runtests.sh bin/linux/flow | cat
+          command: ./runtests.sh -l bin/linux/flow | circleci tests split | xargs -n 1 -I% ./runtests.sh -t "%" bin/linux/flow | cat
 
   runtests_linux_arm64:
     executor: linux-arm64
