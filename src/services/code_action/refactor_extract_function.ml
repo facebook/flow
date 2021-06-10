@@ -42,7 +42,8 @@ class touched_statements_loc_visitor (extract_range : Loc.t) =
 
     method! statement stmt =
       let (statement_loc, _) = stmt in
-      if Loc.contains statement_loc extract_range then
+      if Loc.contains statement_loc extract_range && not (Loc.equal statement_loc extract_range)
+      then
         super#statement stmt
       else if Loc.intersects extract_range statement_loc then
         let () = this#union_loc statement_loc in

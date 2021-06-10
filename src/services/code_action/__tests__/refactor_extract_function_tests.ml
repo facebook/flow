@@ -199,6 +199,16 @@ let allow_refactor_extraction_tests =
           start = { Loc.line = 2; column = 8 };
           _end = { Loc.line = 3; column = 18 };
         };
+      (* Exact match a single statement should be allowed *)
+      assert_allow_refactor_extraction
+        ~ctxt
+        true
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 2; column = 8 };
+          _end = { Loc.line = 2; column = 20 };
+        };
       (* Include a few whitespaces before and after, and it should still be allowed. *)
       assert_allow_refactor_extraction
         ~ctxt
