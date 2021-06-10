@@ -1251,7 +1251,6 @@ let make_options
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_enums = FlowConfig.enums flowconfig;
     opt_enums_with_unknown_members = FlowConfig.enums_with_unknown_members flowconfig;
-    opt_this_annot = FlowConfig.this_annot flowconfig;
     opt_exact_by_default = FlowConfig.exact_by_default flowconfig;
     opt_facebook_fbs = FlowConfig.facebook_fbs flowconfig;
     opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;

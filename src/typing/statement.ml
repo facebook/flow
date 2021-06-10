@@ -7847,10 +7847,7 @@ and mk_class_sig =
 and mk_func_sig =
   let predicate_function_kind cx loc params =
     let open Error_message in
-    let (_, { Ast.Function.Params.params; rest; this_; comments = _ }) = params in
-    if not @@ Context.enable_this_annot cx then
-      Base.Option.iter this_ ~f:(fun (this_loc, _) ->
-          Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
+    let (_, { Ast.Function.Params.params; rest; this_ = _; comments = _ }) = params in
     let kind = Func_sig.Predicate in
     let kind =
       List.fold_left
@@ -7943,9 +7940,6 @@ and mk_func_sig =
     Func_stmt_config.This { t; loc; annot = (annot_loc, annot) }
   in
   let mk_params cx ~annot tparams_map (loc, { Ast.Function.Params.params; rest; this_; comments }) =
-    if not @@ Context.enable_this_annot cx then
-      Base.Option.iter this_ ~f:(fun (this_loc, _) ->
-          Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
     let fparams =
       Func_stmt_params.empty (fun params rest this_ ->
           Some (loc, { Ast.Function.Params.params; rest; this_; comments }))
@@ -8246,9 +8240,6 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
             in
             (l, Ast.Pattern.Identifier name')
         in
-        if not @@ Context.enable_this_annot cx then
-          Base.Option.iter this_ ~f:(fun (this_loc, _) ->
-              Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
         let params =
           Base.List.map
             ~f:(fun param ->
@@ -8336,9 +8327,6 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                   )
                 | _ -> assert_false "Function declaration AST has unexpected shape"
               in
-              if not @@ Context.enable_this_annot cx then
-                Base.Option.iter this_ ~f:(fun (this_loc, _) ->
-                    Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
               let params =
                 Base.List.map
                   ~f:(fun (_, { Ast.Function.Param.argument; default }) ->

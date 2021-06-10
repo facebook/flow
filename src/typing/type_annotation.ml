@@ -974,9 +974,6 @@ let rec convert cx tparams_map =
           tparams;
           comments = func_comments;
         } ) ->
-    if not @@ Context.enable_this_annot cx then
-      Base.Option.iter this_ ~f:(fun (this_loc, _) ->
-          Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
     let (tparams, tparams_map, tparams_ast) = mk_type_param_declarations cx ~tparams_map tparams in
     let (rev_params, rev_param_asts) =
       List.fold_left
@@ -1617,8 +1614,6 @@ and mk_func_sig =
   in
   let add_this cx tparams_map x this_param =
     let (this_loc, { ThisParam.annot = (loc, annot); comments }) = this_param in
-    if not @@ Context.enable_this_annot cx then
-      Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc);
     let (((_, t), _) as annot') = convert cx tparams_map annot in
     let this = (t, (this_loc, { Ast.Type.Function.ThisParam.annot = (loc, annot'); comments })) in
     Func_type_params.add_this this x

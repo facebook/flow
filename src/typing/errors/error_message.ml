@@ -211,7 +211,6 @@ and 'loc t' =
   | EUninitializedInstanceProperty of 'loc * Lints.property_assignment_kind
   | EExperimentalEnums of 'loc
   | EExperimentalEnumsWithUnknownMembers of 'loc
-  | EExperimentalThisAnnot of 'loc
   | EIndexedAccessNotEnabled of 'loc
   | EUnsafeGetSet of 'loc
   | EIndeterminateModuleType of 'loc
@@ -810,7 +809,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUninitializedInstanceProperty (loc, e) -> EUninitializedInstanceProperty (f loc, e)
   | EExperimentalEnums loc -> EExperimentalEnums (f loc)
   | EExperimentalEnumsWithUnknownMembers loc -> EExperimentalEnumsWithUnknownMembers (f loc)
-  | EExperimentalThisAnnot loc -> EExperimentalThisAnnot (f loc)
   | EIndexedAccessNotEnabled loc -> EIndexedAccessNotEnabled (f loc)
   | EIndeterminateModuleType loc -> EIndeterminateModuleType (f loc)
   | EBadExportPosition loc -> EBadExportPosition (f loc)
@@ -1139,7 +1137,6 @@ let util_use_op_of_msg nope util = function
   | EUninitializedInstanceProperty _
   | EExperimentalEnums _
   | EExperimentalEnumsWithUnknownMembers _
-  | EExperimentalThisAnnot _
   | EIndexedAccessNotEnabled _
   | EIndeterminateModuleType _
   | EBadExportPosition _
@@ -1331,7 +1328,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EIndeterminateModuleType loc
   | EExperimentalEnums loc
   | EExperimentalEnumsWithUnknownMembers loc
-  | EExperimentalThisAnnot loc
   | EIndexedAccessNotEnabled loc
   | EUnsafeGetSet loc
   | EUninitializedInstanceProperty (loc, _)
@@ -1457,7 +1453,6 @@ let kind_of_msg =
     | EUnsafeGetSet _
     | EExperimentalEnums _
     | EExperimentalEnumsWithUnknownMembers _
-    | EExperimentalThisAnnot _
     | EIndexedAccessNotEnabled _
     | EIndeterminateModuleType _
     | EUnreachable _
@@ -2477,24 +2472,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text "Remove the ";
         code "...";
         text " from your enum declaration.";
-      ]
-    in
-    Normal { features }
-  | EExperimentalThisAnnot _ ->
-    let features =
-      [
-        text "Experimental ";
-        code "this";
-        text " annotation. ";
-        text "You may opt-in to using ";
-        code "this";
-        text " annotations by putting ";
-        code "experimental.this_annot=true";
-        text " into the ";
-        code "[options]";
-        text " section of your ";
-        code ".flowconfig";
-        text ".";
       ]
     in
     Normal { features }
@@ -3767,7 +3744,6 @@ let error_code_of_message err : error_code option =
   | EExpectedStringLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExperimentalEnums _ -> Some IllegalEnum
   | EExperimentalEnumsWithUnknownMembers _ -> Some IllegalEnum
-  | EExperimentalThisAnnot _ -> Some IllegalThisAnnot
   | EExponentialSpread _ -> Some ExponentialSpread
   | EExportsAnnot _ -> Some InvalidExportsTypeArg
   | EExportValueAsType (_, _) -> Some ExportValueAsType

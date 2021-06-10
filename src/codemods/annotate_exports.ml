@@ -123,7 +123,6 @@ module SignatureVerification = struct
         exact_by_default = Options.exact_by_default options;
         module_ref_prefix = Options.haste_module_ref_prefix options;
         enable_enums = Options.enums options;
-        enable_this_annot = Options.this_annot options;
       }
     in
     let (sig_errors, locs, _) =

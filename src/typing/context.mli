@@ -60,7 +60,6 @@ type metadata = {
   enable_enums: bool;
   enable_enums_with_unknown_members: bool;
   enable_indexed_access: bool;
-  enable_this_annot: bool;
   enforce_strict_call_arity: bool;
   enforce_local_inference_annotations: bool;
   exact_by_default: bool;
@@ -164,8 +163,6 @@ val enable_enums : t -> bool
 val enable_enums_with_unknown_members : t -> bool
 
 val enable_indexed_access : t -> bool
-
-val enable_this_annot : t -> bool
 
 val enforce_strict_call_arity : t -> bool
 

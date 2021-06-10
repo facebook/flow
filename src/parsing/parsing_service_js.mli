@@ -77,7 +77,6 @@ type parse_options = {
   parse_max_literal_len: int;
   parse_exact_by_default: bool;
   parse_enable_enums: bool;
-  parse_enable_this_annot: bool;
   parse_node_main_fields: string list;
 }
 

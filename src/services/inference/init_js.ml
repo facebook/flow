@@ -149,7 +149,6 @@ let load_lib_files ~ccx ~options ~reader files =
           exact_by_default = Options.exact_by_default options;
           module_ref_prefix = Options.haste_module_ref_prefix options;
           enable_enums = Options.enums options;
-          enable_this_annot = Options.this_annot options;
         }
       in
       let (_builtin_errors, _builtin_locs, builtins) =

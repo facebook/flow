@@ -127,7 +127,6 @@ type t = {
   opt_strip_root: bool;
   opt_suppress_types: SSet.t;
   opt_temp_dir: string;
-  opt_this_annot: bool;
   opt_traces: int;
   opt_trust_mode: trust_mode;
   opt_type_asserts: bool;
@@ -167,8 +166,6 @@ let enums_with_unknown_members opts = opts.opt_enums_with_unknown_members
 let format_bracket_spacing opts = opts.opt_format.opt_bracket_spacing
 
 let format_single_quotes opts = opts.opt_format.opt_single_quotes
-
-let this_annot opts = opts.opt_this_annot
 
 let exact_by_default opts = opts.opt_exact_by_default
 

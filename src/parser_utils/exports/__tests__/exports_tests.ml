@@ -66,7 +66,6 @@ let sig_opts =
     exact_by_default = true;
     module_ref_prefix = None;
     enable_enums = true;
-    enable_this_annot = true;
   }
 
 let print_index exports =

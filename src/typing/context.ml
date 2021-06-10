@@ -39,7 +39,6 @@ type metadata = {
   enable_enums: bool;
   enable_enums_with_unknown_members: bool;
   enable_indexed_access: bool;
-  enable_this_annot: bool;
   enforce_strict_call_arity: bool;
   enforce_local_inference_annotations: bool;
   exact_by_default: bool;
@@ -223,7 +222,6 @@ let metadata_of_options options =
     enable_enums = Options.enums options;
     enable_enums_with_unknown_members = Options.enums_with_unknown_members options;
     enable_indexed_access = Options.enable_indexed_access options;
-    enable_this_annot = Options.this_annot options;
     enforce_strict_call_arity = Options.enforce_strict_call_arity options;
     check_updates_against_providers = Options.check_updates_against_providers options;
     enforce_local_inference_annotations = Options.enforce_local_inference_annotations options;
@@ -421,8 +419,6 @@ let enable_enums cx = cx.metadata.enable_enums
 let enable_enums_with_unknown_members cx = cx.metadata.enable_enums_with_unknown_members
 
 let enable_indexed_access cx = cx.metadata.enable_indexed_access
-
-let enable_this_annot cx = cx.metadata.enable_this_annot
 
 let enforce_strict_call_arity cx = cx.metadata.enforce_strict_call_arity
 

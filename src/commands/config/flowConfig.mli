@@ -85,8 +85,6 @@ val enums : config -> bool
 
 val enums_with_unknown_members : config -> bool
 
-val this_annot : config -> bool
-
 val exact_by_default : config -> bool
 
 val facebook_fbs : config -> string option

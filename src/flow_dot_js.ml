@@ -160,7 +160,6 @@ let stub_metadata ~root ~checked =
     enable_enums = true;
     enable_enums_with_unknown_members = true;
     enable_indexed_access = true;
-    enable_this_annot = true;
     enforce_local_inference_annotations = false;
     enforce_strict_call_arity = true;
     exact_by_default = false;

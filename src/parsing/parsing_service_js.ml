@@ -93,7 +93,6 @@ type parse_options = {
   parse_max_literal_len: int;
   parse_exact_by_default: bool;
   parse_enable_enums: bool;
-  parse_enable_this_annot: bool;
   parse_node_main_fields: string list;
 }
 
@@ -387,7 +386,6 @@ let do_parse ~parse_options ~info content file =
     parse_max_literal_len = max_literal_len;
     parse_exact_by_default = exact_by_default;
     parse_enable_enums = enable_enums;
-    parse_enable_this_annot = enable_this_annot;
     parse_node_main_fields = node_main_fields;
   } =
     parse_options
@@ -445,7 +443,6 @@ let do_parse ~parse_options ~info content file =
               exact_by_default;
               module_ref_prefix;
               enable_enums;
-              enable_this_annot;
             }
           in
           let (sig_errors, locs, type_sig) =
@@ -787,7 +784,6 @@ let make_parse_options_internal
     parse_max_literal_len = Options.max_literal_length options;
     parse_exact_by_default = Options.exact_by_default options;
     parse_enable_enums = Options.enums options;
-    parse_enable_this_annot = Options.this_annot options;
     parse_node_main_fields = Options.node_main_fields options;
   }
 
