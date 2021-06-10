@@ -100,7 +100,8 @@ type T =
   | 'a97'
   | 'a98'
   | 'a99'
-  | 'a100';
+  | 'a100'
+  | () => void;
 
 declare var x: string;
 (x: T); // error

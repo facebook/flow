@@ -1,4 +1,4 @@
-Error ---------------------------------------------------------------------------------------------------- file.js:106:2
+Error ---------------------------------------------------------------------------------------------------- file.js:107:2
 
 Cannot cast `x` to `T` because: [incompatible-cast]
  - Either string [1] is incompatible with string literal `a1` [2].
@@ -53,13 +53,13 @@ Cannot cast `x` to `T` because: [incompatible-cast]
  - Or string [1] is incompatible with string literal `a50` [51].
  - Only showing the the first 50 branches. To see all branches, re-run Flow with --show-all-branches.
 
-   file.js:106:2
-   106| (x: T); // error
+   file.js:107:2
+   107| (x: T); // error
          ^
 
 References:
-   file.js:105:16
-   105| declare var x: string;
+   file.js:106:16
+   106| declare var x: string;
                        ^^^^^^ [1]
    file.js:4:5
      4|   | 'a1'
@@ -215,7 +215,10 @@ References:
 
 
 Found 1 error
-Error ---------------------------------------------------------------------------------------------------- file.js:106:2
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches
+Error ---------------------------------------------------------------------------------------------------- file.js:107:2
 
 Cannot cast `x` to `T` because: [incompatible-cast]
  - Either string [1] is incompatible with string literal `a1` [2].
@@ -318,14 +321,15 @@ Cannot cast `x` to `T` because: [incompatible-cast]
  - Or string [1] is incompatible with string literal `a98` [99].
  - Or string [1] is incompatible with string literal `a99` [100].
  - Or string [1] is incompatible with string literal `a100` [101].
+ - Or string [1] is incompatible with function type [102].
 
-   file.js:106:2
-   106| (x: T); // error
+   file.js:107:2
+   107| (x: T); // error
          ^
 
 References:
-   file.js:105:16
-   105| declare var x: string;
+   file.js:106:16
+   106| declare var x: string;
                        ^^^^^^ [1]
    file.js:4:5
      4|   | 'a1'
@@ -625,8 +629,11 @@ References:
    102|   | 'a99'
             ^^^^^ [100]
    file.js:103:5
-   103|   | 'a100';
+   103|   | 'a100'
             ^^^^^^ [101]
+   file.js:104:5
+   104|   | () => void;
+            ^^^^^^^^^^ [102]
 
 
 
