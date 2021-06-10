@@ -2318,12 +2318,13 @@ end = struct
     and enum_t ~env reason trust enum =
       let { T.members; representation_t; _ } = enum in
       let enum_t = T.mk_enum_type ~trust reason enum in
+      let enum_object_t = T.DefT (reason, trust, T.EnumObjectT enum) in
       let proto_t =
         Flow_js.get_builtin_typeapp
           Env.(env.genv.cx)
           reason
           (OrdinaryName "$EnumProto")
-          [enum_t; representation_t]
+          [enum_object_t; enum_t; representation_t]
       in
       let%bind proto_ty = type__ ~env ~proto:true ~imode:IMUnset proto_t in
       let%map enum_ty = TypeConverter.convert_t ~env enum_t in

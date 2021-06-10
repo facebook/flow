@@ -5061,9 +5061,20 @@ struct
             error_invalid_access ~suggestion:None)
         | (DefT (_, _, EnumObjectT _), TestPropT (reason, _, prop, tout)) ->
           rec_flow cx trace (l, GetPropT (Op (GetProperty reason), reason, prop, tout))
-        | (DefT (enum_reason, trust, EnumObjectT enum), MethodT (_, _, lookup_reason, Named _, _, _))
-          ->
-          rec_flow cx trace (enum_proto cx trace ~reason:lookup_reason (enum_reason, trust, enum), u)
+        | ( DefT (enum_reason, trust, EnumObjectT enum),
+            MethodT (use_op, call_reason, lookup_reason, (Named _ as propref), action, prop_t) ) ->
+          let t =
+            Tvar.mk_no_wrap_where cx lookup_reason (fun tout ->
+                rec_flow
+                  cx
+                  trace
+                  ( enum_proto cx trace ~reason:lookup_reason (enum_reason, trust, enum),
+                    GetPropT (use_op, lookup_reason, propref, tout) ))
+          in
+          Base.Option.iter
+            ~f:(fun prop_t -> rec_flow_t cx trace ~use_op:unknown_use (t, prop_t))
+            prop_t;
+          rec_flow cx trace (t, apply_method_action use_op call_reason l action)
         | (DefT (enum_reason, _, EnumObjectT _), GetElemT (_, _, elem, _)) ->
           let reason = reason_of_t elem in
           add_output
@@ -7293,9 +7304,15 @@ struct
   (* enums *)
   (*********)
   and enum_proto cx trace ~reason (enum_reason, trust, enum) =
+    let enum_object_t = DefT (enum_reason, trust, EnumObjectT enum) in
     let enum_t = DefT (enum_reason, trust, EnumT enum) in
     let { representation_t; _ } = enum in
-    get_builtin_typeapp cx ~trace reason (OrdinaryName "$EnumProto") [enum_t; representation_t]
+    get_builtin_typeapp
+      cx
+      ~trace
+      reason
+      (OrdinaryName "$EnumProto")
+      [enum_object_t; enum_t; representation_t]
 
   and enum_exhaustive_check
       cx
