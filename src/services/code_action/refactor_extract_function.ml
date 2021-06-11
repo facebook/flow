@@ -95,16 +95,6 @@ let create_extracted_function statements =
   (* TODO: make it a generator if body contains yield *)
   Ast_builder.Functions.make ~id ~params ~body ()
 
-let replace_statements_with_new_function_call ast extracted_statements_locations =
-  match extracted_statements_locations with
-  | [] -> None
-  | insert_new_function_call_loc :: rest_statements_locations ->
-    let rest_statements_loc_union = List.fold_left union_loc None rest_statements_locations in
-    let replacer =
-      new new_function_call_replacer insert_new_function_call_loc rest_statements_loc_union
-    in
-    Some (replacer#program ast)
-
 let insert_function_to_toplevel (program_loc, program) extracted_statements =
   (* Put extracted function to two lines after the end of program to have nice format. *)
   let new_function_loc = Loc.(cursor program_loc.source (program_loc._end.line + 2) 0) in
@@ -126,6 +116,11 @@ let provide_available_refactor ast extract_range =
   | None -> None
   | Some extracted_statements ->
     let extracted_statements_locations = List.map fst extracted_statements in
-    (match replace_statements_with_new_function_call ast extracted_statements_locations with
-    | None -> None
-    | Some new_ast -> Some (insert_function_to_toplevel new_ast extracted_statements))
+    (match extracted_statements_locations with
+    | [] -> None
+    | insert_new_function_call_loc :: rest_statements_locations ->
+      let rest_statements_loc_union = List.fold_left union_loc None rest_statements_locations in
+      let replacer =
+        new new_function_call_replacer insert_new_function_call_loc rest_statements_loc_union
+      in
+      Some (insert_function_to_toplevel (replacer#program ast) extracted_statements))

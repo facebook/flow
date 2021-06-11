@@ -224,115 +224,6 @@ function newFunction() {
       assert_equal ~ctxt ~printer:(fun x -> x) expected_function_string generated_function_string );
   ]
 
-let assert_replaced ~ctxt expected source extracted_statements_locations =
-  let ast = parse source in
-  let actual =
-    match
-      Refactor_extract_function.replace_statements_with_new_function_call
-        ast
-        extracted_statements_locations
-    with
-    | None -> ""
-    | Some ast' ->
-      ast'
-      |> Js_layout_generator.program
-           ~opts:Js_layout_generator.default_opts
-           ~preserve_docblock:true
-           ~checksum:None
-      |> pretty_print
-      |> String.trim
-  in
-  let expected =
-    match expected with
-    | None -> ""
-    | Some s -> String.trim s
-  in
-  assert_equal ~ctxt ~printer:(fun x -> x) expected actual
-
-let replace_statements_with_new_function_call_tests =
-  [
-    ( "replace_statements_with_new_function_call_one_statement" >:: fun ctxt ->
-      let source =
-        {|
-        function test() {
-          console.log("I should not be selected");
-          const a = 3;
-          let b = 4;
-          console.log("I should not be selected");
-        }
-      |}
-      in
-      let expected =
-        {|
-function test() {
-  console.log("I should not be selected");
-  newFunction();
-  let b = 4;
-  console.log("I should not be selected");
-}
-      |}
-      in
-      assert_replaced
-        ~ctxt
-        (Some expected)
-        source
-        [
-          {
-            Loc.source = None;
-            start = { Loc.line = 4; column = 10 };
-            _end = { Loc.line = 4; column = 22 };
-          };
-        ] );
-    ( "replace_statements_with_new_function_call_multiple_statements" >:: fun ctxt ->
-      let source =
-        {|
-        function test() {
-          console.log("I should not be selected");
-          const a = 3;
-          let b = 4;
-          let c = 5;
-          let d = 6;
-          console.log("I should not be selected");
-        }
-      |}
-      in
-      let expected =
-        {|
-function test() {
-  console.log("I should not be selected");
-  newFunction();
-  console.log("I should not be selected");
-}
-      |}
-      in
-      assert_replaced
-        ~ctxt
-        (Some expected)
-        source
-        [
-          {
-            Loc.source = None;
-            start = { Loc.line = 4; column = 10 };
-            _end = { Loc.line = 4; column = 22 };
-          };
-          {
-            Loc.source = None;
-            start = { Loc.line = 5; column = 10 };
-            _end = { Loc.line = 5; column = 20 };
-          };
-          {
-            Loc.source = None;
-            start = { Loc.line = 6; column = 10 };
-            _end = { Loc.line = 6; column = 20 };
-          };
-          {
-            Loc.source = None;
-            start = { Loc.line = 7; column = 10 };
-            _end = { Loc.line = 7; column = 20 };
-          };
-        ] );
-  ]
-
 let assert_refactored ~ctxt expected source extract_range =
   let ast = parse source in
   let actual =
@@ -359,22 +250,28 @@ let provide_available_refactor_tests =
     ( "single_line_extract" >:: fun ctxt ->
       let source =
         {|
-        const a = 3;
-        let b = 4;
-        console.log("I should not be selected");
-        |}
+        function test() {
+          console.log("I should not be selected");
+          const a = 3;
+          let b = 4;
+          console.log("I should not be selected");
+        }
+      |}
       in
       let expected =
         Some
           {|
-newFunction();
-let b = 4;
-console.log("I should not be selected");
+function test() {
+  console.log("I should not be selected");
+  newFunction();
+  let b = 4;
+  console.log("I should not be selected");
+}
 
 function newFunction() {
   const a = 3;
 }
-|}
+      |}
       in
       assert_refactored
         ~ctxt
@@ -382,28 +279,38 @@ function newFunction() {
         source
         {
           Loc.source = None;
-          start = { Loc.line = 2; column = 8 };
-          _end = { Loc.line = 2; column = 20 };
+          start = { Loc.line = 4; column = 10 };
+          _end = { Loc.line = 4; column = 22 };
         } );
     ( "multi_line_extract" >:: fun ctxt ->
       let source =
         {|
-        const a = 3;
-        let b = 4;
-        console.log("I should not be selected");
-        |}
+        function test() {
+          console.log("I should not be selected");
+          const a = 3;
+          let b = 4;
+          let c = 5;
+          let d = 6;
+          console.log("I should not be selected");
+        }
+      |}
       in
       let expected =
         Some
           {|
-newFunction();
-console.log("I should not be selected");
+function test() {
+  console.log("I should not be selected");
+  newFunction();
+  console.log("I should not be selected");
+}
 
 function newFunction() {
   const a = 3;
   let b = 4;
+  let c = 5;
+  let d = 6;
 }
-|}
+      |}
       in
       assert_refactored
         ~ctxt
@@ -411,8 +318,8 @@ function newFunction() {
         source
         {
           Loc.source = None;
-          start = { Loc.line = 2; column = 8 };
-          _end = { Loc.line = 3; column = 18 };
+          start = { Loc.line = 4; column = 10 };
+          _end = { Loc.line = 7; column = 20 };
         } );
   ]
 
@@ -421,7 +328,5 @@ let tests =
   >::: [
          "extract_statements" >::: extract_statements_tests;
          "create_extracted_function" >::: create_extracted_function_tests;
-         "replace_statements_with_new_function_call"
-         >::: replace_statements_with_new_function_call_tests;
          "provide_available_refactor" >::: provide_available_refactor_tests;
        ]
