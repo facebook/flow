@@ -1,3 +1,25 @@
+Error ----------------------------------------------------------------------------------------------- positining.js:40:3
+
+Cannot call `a.push` because property `push` is missing in undefined [1]. [incompatible-use]
+
+   positining.js:40:3
+   40| a.push("");
+         ^^^^
+
+References:
+   positining.js:32:16
+   32|     get(): V | void;
+                      ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- positining.js:43:13
+
+Cannot call `map.set` with `new A()` bound to `value` because property `push` is missing in `A` [1]. [prop-missing]
+
+   43|     map.set(new A());
+                   ^^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:18:6
 
 Cannot create `Foo` element because number [1] is incompatible with boolean [2] in property `a`. [incompatible-type]
@@ -13,4 +35,4 @@ References:
 
 
 
-Found 1 error
+Found 3 errors

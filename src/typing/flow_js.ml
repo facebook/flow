@@ -8494,6 +8494,10 @@ struct
               | MatchingProp _
               | UnknownUse ->
                 false)
+            | UnifyFlip when not should_replace ->
+              (match root_of_op2 with
+              | TypeApplication _ -> true
+              | _ -> should_replace)
             | _ -> should_replace)
           op2
       in
