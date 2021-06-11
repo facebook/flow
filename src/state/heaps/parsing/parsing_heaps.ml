@@ -339,6 +339,8 @@ module type READER = sig
 
   val get_file_sig : reader:reader -> File_key.t -> File_sig.With_Loc.t option
 
+  val get_type_sig : reader:reader -> File_key.t -> type_sig option
+
   val get_file_hash : reader:reader -> File_key.t -> Xx.hash option
 
   val get_ast_unsafe : reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t
@@ -396,6 +398,11 @@ end = struct
 
   let get_file_sig ~reader:_ = FileSigHeap.get
 
+  let get_type_sig ~reader:_ file =
+    match TypeSigHeap.get file with
+    | Some addr -> Some (read_type_sig addr)
+    | None -> None
+
   let get_file_hash ~reader:_ = FileHashHeap.get
 
   let get_old_file_hash ~reader:_ = FileHashHeap.get_old
@@ -430,9 +437,9 @@ end = struct
     | Some addr -> addr
     | None -> raise (Type_sig_not_found (File_key.to_string file))
 
-  let get_type_sig_unsafe ~reader:_ file =
-    match TypeSigHeap.get file with
-    | Some addr -> read_type_sig addr
+  let get_type_sig_unsafe ~reader file =
+    match get_type_sig ~reader file with
+    | Some type_sig -> type_sig
     | None -> raise (Type_sig_not_found (File_key.to_string file))
 
   let get_file_hash_unsafe ~reader file =
@@ -666,6 +673,11 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_file_sig ~reader
     | State_reader reader -> Reader.get_file_sig ~reader
+
+  let get_type_sig ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_type_sig ~reader
+    | State_reader reader -> Reader.get_type_sig ~reader
 
   let get_file_hash ~reader =
     match reader with
