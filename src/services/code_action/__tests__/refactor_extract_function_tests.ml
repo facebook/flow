@@ -227,23 +227,26 @@ function newFunction() {
 let assert_refactored ~ctxt expected source extract_range =
   let ast = parse source in
   let actual =
-    match Refactor_extract_function.provide_available_refactor ast extract_range with
-    | None -> ""
-    | Some ast' ->
-      ast'
-      |> Js_layout_generator.program
-           ~opts:Js_layout_generator.default_opts
-           ~preserve_docblock:true
-           ~checksum:None
-      |> pretty_print
-      |> String.trim
+    Refactor_extract_function.provide_available_refactors ast extract_range
+    |> List.map (fun (title, ast') ->
+           ( title,
+             ast'
+             |> Js_layout_generator.program
+                  ~opts:Js_layout_generator.default_opts
+                  ~preserve_docblock:true
+                  ~checksum:None
+             |> pretty_print
+             |> String.trim ))
   in
-  let expected =
-    match expected with
-    | None -> ""
-    | Some s -> String.trim s
+  let expected : (string * string) list =
+    List.map (fun (title, s) -> (title, String.trim s)) expected
   in
-  assert_equal ~ctxt ~printer:(fun x -> x) expected actual
+  let printer refactors =
+    refactors
+    |> List.map (fun (title, program_string) -> Printf.sprintf "// %s\n\n%s\n" title program_string)
+    |> String.concat "\n"
+  in
+  assert_equal ~ctxt ~printer expected actual
 
 let provide_available_refactor_tests =
   [
@@ -259,8 +262,9 @@ let provide_available_refactor_tests =
       |}
       in
       let expected =
-        Some
-          {|
+        [
+          ( "Extract to function in module scope",
+            {|
 function test() {
   console.log("I should not be selected");
   newFunction();
@@ -272,6 +276,8 @@ function newFunction() {
   const a = 3;
 }
       |}
+          );
+        ]
       in
       assert_refactored
         ~ctxt
@@ -296,8 +302,9 @@ function newFunction() {
       |}
       in
       let expected =
-        Some
-          {|
+        [
+          ( "Extract to function in module scope",
+            {|
 function test() {
   console.log("I should not be selected");
   newFunction();
@@ -311,6 +318,8 @@ function newFunction() {
   let d = 6;
 }
       |}
+          );
+        ]
       in
       assert_refactored
         ~ctxt

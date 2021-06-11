@@ -94,26 +94,27 @@ let create_extracted_function statements =
 let insert_function_to_toplevel (program_loc, program) extracted_statements =
   (* Put extracted function to two lines after the end of program to have nice format. *)
   let new_function_loc = Loc.(cursor program_loc.source (program_loc._end.line + 2) 0) in
-  ( program_loc,
-    Flow_ast.Program.
-      {
-        program with
-        statements =
-          program.statements
-          @ [
-              ( new_function_loc,
-                Flow_ast.Statement.FunctionDeclaration
-                  (create_extracted_function extracted_statements) );
-            ];
-      } )
+  ( "Extract to function in module scope",
+    ( program_loc,
+      Flow_ast.Program.
+        {
+          program with
+          statements =
+            program.statements
+            @ [
+                ( new_function_loc,
+                  Flow_ast.Statement.FunctionDeclaration
+                    (create_extracted_function extracted_statements) );
+              ];
+        } ) )
 
-let provide_available_refactor ast extract_range =
+let provide_available_refactors ast extract_range =
   match extract_statements ast extract_range with
-  | None -> None
+  | None -> []
   | Some extracted_statements ->
     let extracted_statements_locations = List.map fst extracted_statements in
     (match extracted_statements_locations with
-    | [] -> None
+    | [] -> []
     | insert_new_function_call_loc :: rest_statements_locations ->
       let rest_statements_loc_union = List.fold_left union_loc None rest_statements_locations in
       let statements_loc_union =
@@ -127,4 +128,5 @@ let provide_available_refactor ast extract_range =
           rest_statements_loc_union
           statements_loc_union
       in
-      Some (insert_function_to_toplevel (replacer#program ast) extracted_statements))
+      let new_ast = replacer#program ast in
+      [insert_function_to_toplevel new_ast extracted_statements])

@@ -45,36 +45,34 @@ let autofix_exports_code_actions
 
 let extract_function_refactor_code_actions ~options ~ast uri loc =
   if Options.refactor options then
-    match Refactor_extract_function.provide_available_refactor ast loc with
-    | None -> []
-    | Some new_ast ->
+    let lsp_action_from_refactor (title, new_ast) =
       let diff = Insert_type.mk_diff ast new_ast in
       let opts = layout_options options in
       let edits =
         Replacement_printer.mk_loc_patch_ast_differ ~opts diff
         |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
       in
-      let title = "Extract to function in module scope" in
       let diagnostic_title = "refactor_extract_function" in
       let open Lsp in
-      [
-        CodeAction.Action
-          {
-            CodeAction.title;
-            kind = CodeActionKind.refactor_extract;
-            diagnostics = [];
-            action =
-              CodeAction.BothEditThenCommand
-                ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
-                  {
-                    Command.title = "";
-                    command = Command.Command "log";
-                    arguments =
-                      ["textDocument/codeAction"; diagnostic_title; title]
-                      |> List.map (fun str -> Hh_json.JSON_String str);
-                  } );
-          };
-      ]
+      CodeAction.Action
+        {
+          CodeAction.title;
+          kind = CodeActionKind.refactor_extract;
+          diagnostics = [];
+          action =
+            CodeAction.BothEditThenCommand
+              ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                {
+                  Command.title = "";
+                  command = Command.Command "log";
+                  arguments =
+                    ["textDocument/codeAction"; diagnostic_title; title]
+                    |> List.map (fun str -> Hh_json.JSON_String str);
+                } );
+        }
+    in
+    Refactor_extract_function.provide_available_refactors ast loc
+    |> List.map lsp_action_from_refactor
   else
     []
 
