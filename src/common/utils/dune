@@ -9,4 +9,4 @@
     string ; hack
     sys_utils ; hack
     lwt)
-  (preprocess (pps lwt_ppx)))
+  (preprocess (pps lwt_ppx ppx_deriving.std)))

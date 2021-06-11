@@ -4,6 +4,7 @@
   (libraries
     collections
     lwt
+    utils_core
   )
   (preprocess (pps lwt_ppx))
 )
