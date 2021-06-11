@@ -6,7 +6,6 @@
  *)
 
 module Ast = Flow_ast
-module ALocIDSet = Loc_collections.ALocIDSet
 open Utils_js
 open Sys_utils
 
@@ -450,18 +449,6 @@ let do_parse ~parse_options ~info content file =
             let strict = Docblock.is_strict info in
             Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
           in
-          let env = ref ALocIDSet.empty in
-          let () =
-            let open Type_sig in
-            let { Packed_type_sig.Module.local_defs; _ } = type_sig in
-            let source = Some file in
-            let f def =
-              let loc : Type_sig_collections.Locs.index = def_id_loc def in
-              let id = ALoc.ALocRepresentationDoNotUse.make_id source (loc :> int) in
-              env := ALocIDSet.add id !env
-            in
-            Type_sig_collections.Local_defs.iter f local_defs
-          in
           let aloc_table =
             Type_sig_collections.Locs.to_array locs
             |> ALoc.ALocRepresentationDoNotUse.make_table file
@@ -478,7 +465,7 @@ let do_parse ~parse_options ~info content file =
               tolerable_errors
               sig_errors
           in
-          let file_sig = File_sig.With_Loc.verified !env exports_info in
+          let file_sig = File_sig.With_Loc.map_unit_file_sig exports_info in
           Parse_ok { ast; file_sig; type_sig; aloc_table; tolerable_errors; parse_errors; exports })
   with
   | Parse_error.Error (first_parse_error :: _) -> Parse_fail (Parse_error first_parse_error)

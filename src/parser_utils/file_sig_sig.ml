@@ -20,7 +20,6 @@ module type S = sig
   type 'info t' = {
     module_sig: 'info module_sig';
     declare_modules: (L.t * 'info module_sig') SMap.t;
-    exported_locals: Loc_collections.ALocIDSet.t;
   }
 
   (* We can extract the observable interface of a module by extracting information
@@ -218,7 +217,7 @@ module type S = sig
     module_ref_prefix:string option ->
     (t * tolerable_error list, error) result
 
-  val verified : Loc_collections.ALocIDSet.t -> exports_info t' -> t
+  val map_unit_file_sig : exports_info t' -> t
 
   (* Use for debugging; not for exposing info to the end user *)
   val to_string : t -> string

@@ -8,7 +8,6 @@
 module Ast_utils = Flow_ast_utils
 module Ast = Flow_ast
 module Result = Base.Result
-module ALocIDSet = Loc_collections.ALocIDSet
 open Flow_ast_visitor
 
 module Make
@@ -21,8 +20,6 @@ struct
   type 'info t' = {
     module_sig: 'info module_sig';
     declare_modules: (L.t * 'info module_sig') SMap.t;
-    (* excluded from ppx show result, will be removed imminently *)
-    exported_locals: ALocIDSet.t; [@opaque]
   }
 
   and 'info module_sig' = {
@@ -144,12 +141,7 @@ struct
       info;
     }
 
-  let mk_file_sig info =
-    {
-      module_sig = mk_module_sig info;
-      declare_modules = SMap.empty;
-      exported_locals = ALocIDSet.empty;
-    }
+  let mk_file_sig info = { module_sig = mk_module_sig info; declare_modules = SMap.empty }
 
   let init_exports_info = { module_kind_info = CommonJSInfo []; type_exports_named_info = [] }
 
@@ -1143,21 +1135,17 @@ struct
             (loc, module_sig'))
           declare_modules
       in
-      { file_sig with module_sig = module_sig'; declare_modules = declare_modules' }
+      { module_sig = module_sig'; declare_modules = declare_modules' }
 
   let program ~ast ~module_ref_prefix =
     match program_with_exports_info ~ast ~module_ref_prefix with
     | Ok (file_sig, errs) -> Ok (map_unit_file_sig file_sig, errs)
     | Error e -> Error e
 
-  let verified env file_sig =
-    let file_sig = map_unit_file_sig file_sig in
-    { file_sig with exported_locals = env }
-
   class mapper =
     object (this)
       method file_sig (file_sig : t) =
-        let { module_sig; declare_modules; exported_locals } = file_sig in
+        let { module_sig; declare_modules } = file_sig in
         let module_sig' = this#module_sig module_sig in
         let declare_modules' =
           SMapUtils.ident_map
@@ -1170,7 +1158,7 @@ struct
         if module_sig == module_sig' && declare_modules == declare_modules' then
           file_sig
         else
-          { module_sig = module_sig'; declare_modules = declare_modules'; exported_locals }
+          { module_sig = module_sig'; declare_modules = declare_modules' }
 
       method module_sig (module_sig : module_sig) =
         let { requires; module_kind; type_exports_named; type_exports_star; info = () } =
@@ -1571,9 +1559,8 @@ let abstractify_locs : With_Loc.t -> With_ALoc.t =
   let abstractify_declare_modules =
     SMap.map (fun (loc, module_sig) -> (ALoc.of_loc loc, abstractify_module_sig module_sig))
   in
-  fun { WL.module_sig; declare_modules; exported_locals } ->
+  fun { WL.module_sig; declare_modules } ->
     {
       WA.module_sig = abstractify_module_sig module_sig;
       declare_modules = abstractify_declare_modules declare_modules;
-      exported_locals;
     }

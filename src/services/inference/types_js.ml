@@ -1113,9 +1113,10 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
 (* Another special case, similar assumptions as above. *)
 
 (** TODO: handle case when file+contents don't agree with file system state **)
-let merge_contents ~options ~env ~reader filename info (ast, file_sig) =
+let merge_contents ~options ~env ~reader filename info ast file_sig type_sig =
   let%lwt () = ensure_checked_dependencies ~options ~reader ~env filename file_sig in
-  Lwt.return (Merge_service.check_contents_context ~reader options filename ast info file_sig)
+  Lwt.return
+    (Merge_service.check_contents_context ~reader options filename ast info file_sig type_sig)
 
 let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifacts =
   (* Callers have already had a chance to inspect parse errors, so they are not included here.
@@ -1193,10 +1194,10 @@ let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifact
   (errors, warnings)
 
 let file_artifacts_of_parse_artifacts ~options ~env ~reader ~profiling ~filename ~parse_artifacts =
-  let (Parse_artifacts { docblock; ast; file_sig; _ }) = parse_artifacts in
+  let (Parse_artifacts { docblock; ast; file_sig; type_sig; _ }) = parse_artifacts in
   let%lwt (cx, typed_ast) =
     Memory_utils.with_memory_timer_lwt ~options "MergeContents" profiling (fun () ->
-        merge_contents ~options ~env ~reader filename docblock (ast, file_sig))
+        merge_contents ~options ~env ~reader filename docblock ast file_sig type_sig)
   in
   Lwt.return (parse_artifacts, Typecheck_artifacts { cx; typed_ast })
 
