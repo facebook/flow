@@ -1,0 +1,14 @@
+(library
+ (name flow_index)
+ (wrapped false)
+ (libraries
+  flow_typing
+  flow_typing_type
+  fuzzy_path
+  flow_procs
+  flow_state_readers
+  flow_state_heaps_module
+  flow_state_heaps_parsing
+  flow_monitor_rpc)
+ (preprocess
+  (pps ppx_deriving.std)))
