@@ -5,7 +5,7 @@
     flow_common
     flow_parser
     flow_parser_utils
-    flow_shared_mem
+    ; flow_shared_mem
     flow_state_heaps_parsing_exceptions
     flow_state_readers
     xx
