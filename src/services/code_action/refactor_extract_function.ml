@@ -49,17 +49,13 @@ let union_loc acc loc =
   | None -> Some loc
   | Some existing_loc -> Some (Loc.btwn existing_loc loc)
 
-class new_function_call_replacer insert_new_function_call_loc rest_statements_loc_union =
+class new_function_call_replacer
+  insert_new_function_call_loc rest_statements_loc_union statements_loc_union =
   object (this)
     inherit [Loc.t] Flow_ast_mapper.mapper as super
 
     method private should_be_replaced_by_function_call loc =
       Loc.equal insert_new_function_call_loc loc
-
-    method private inserted_function_call_loc () =
-      match rest_statements_loc_union with
-      | None -> insert_new_function_call_loc
-      | Some rest_union -> Loc.btwn insert_new_function_call_loc rest_union
 
     method private should_be_replaced_by_empty loc =
       match rest_statements_loc_union with
@@ -72,7 +68,7 @@ class new_function_call_replacer insert_new_function_call_loc rest_statements_lo
       if this#should_be_replaced_by_function_call statement_loc then
         [
           Statements.expression
-            ~loc:(this#inserted_function_call_loc ())
+            ~loc:statements_loc_union
             (Expressions.call (Expressions.identifier "newFunction"));
         ]
       else if this#should_be_replaced_by_empty statement_loc then
@@ -120,7 +116,15 @@ let provide_available_refactor ast extract_range =
     | [] -> None
     | insert_new_function_call_loc :: rest_statements_locations ->
       let rest_statements_loc_union = List.fold_left union_loc None rest_statements_locations in
+      let statements_loc_union =
+        match rest_statements_loc_union with
+        | None -> insert_new_function_call_loc
+        | Some loc -> Loc.btwn insert_new_function_call_loc loc
+      in
       let replacer =
-        new new_function_call_replacer insert_new_function_call_loc rest_statements_loc_union
+        new new_function_call_replacer
+          insert_new_function_call_loc
+          rest_statements_loc_union
+          statements_loc_union
       in
       Some (insert_function_to_toplevel (replacer#program ast) extracted_statements))
