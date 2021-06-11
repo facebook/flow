@@ -356,4 +356,6 @@ module ALocRepresentationDoNotUse = struct
     { file; map }
 
   let make_keyed = Repr.of_key
+
+  let make_id = Repr.of_key
 end
