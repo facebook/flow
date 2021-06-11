@@ -1,4 +1,5 @@
 (library
   (name flow_typing_polarity)
   (wrapped false)
+  (preprocess (pps ppx_deriving.std))
 )

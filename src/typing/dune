@@ -1,3 +1,5 @@
+(copy_files generics/*.ml)
+(copy_files generics/*.mli)
 (library
   (name flow_typing_changeset)
   (wrapped false)
@@ -44,7 +46,7 @@
 (library
   (name flow_typing_type)
   (wrapped false)
-  (modules type typeUtil source_or_generated_id)
+  (modules type typeUtil source_or_generated_id generic trust_constraint)
   (libraries
     flow_common
     flow_typing_changeset
@@ -58,7 +60,8 @@
 (library
   (name flow_typing)
   (wrapped false)
-  (modules (:standard \ changeset key key_map trust type typeUtil scope source_or_generated_id))
+  (modules (:standard \ changeset key key_map trust type typeUtil scope source_or_generated_id generic trust_constraint
+    resolvable_type_job))
   (libraries
     flow_common
     flow_common_errors
@@ -74,6 +77,6 @@
     worker_cancel ; hack
     xx
   )
-  (modules_without_implementation partition resolvable_type_job)
+  (modules_without_implementation partition )
   (preprocess (pps ppx_let))
 )
