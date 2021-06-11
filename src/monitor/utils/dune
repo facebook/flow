@@ -3,6 +3,7 @@
   (wrapped false)
   (libraries
     flow_common
+    flow_exit
     flow_exit_status
     lwt
   )

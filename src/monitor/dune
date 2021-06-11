@@ -14,7 +14,6 @@
     flow_server
     flow_server_files
     flow_server_watchman_expression_terms
-    flow_shared_mem
     lwt.unix
     semver
     socket
