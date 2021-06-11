@@ -2,6 +2,7 @@
  (name flow_exports)
  (wrapped false)
  (libraries
+  flow_type_sig
   flow_parser_utils
   cycle_hash
   dtoa
