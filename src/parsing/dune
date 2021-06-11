@@ -2,9 +2,9 @@
   (name flow_parsing)
   (wrapped false)
   (libraries
-    flow_common
+    flow_common    
     flow_monitor_rpc
-    flow_parser_utils
+    flow_exports
     flow_procs
     flow_state_heaps_parsing
     flow_state_readers
