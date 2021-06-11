@@ -95,134 +95,62 @@ end = struct
     default: bool;
   }
 
-  open File_sig.With_Loc
+  open Type_sig
+  open Type_sig_collections
+  module P = Type_sig_pack
 
   (* NOTE The checks below are only based on the name. Ideally we'd also match
-   * with def_loc as well, but this is not available for every case. *)
+   * with def_loc as well. This was not available for every case originally,
+   * when this was based on types-first 1.0 export info. *)
 
-  let from_cjs_exports_def_list ~use_mode defs remote_name =
-    let open Ast.Expression in
-    match defs with
+  let packed_ref_name type_sig ref =
+    let { Packed_type_sig.Module.local_defs; remote_refs; _ } = type_sig in
+    match ref with
+    | P.LocalRef { index; _ } ->
+      let def = Local_defs.get local_defs index in
+      def_name def
+    | P.RemoteRef { index; _ } ->
+      let remote_ref = Remote_refs.get remote_refs index in
+      P.remote_ref_name remote_ref
+    | P.BuiltinRef { name; _ } -> name
+
+  let from_cjs_module_exports import_kind type_sig exports remote_name =
+    match exports with
     (* module.exports = C; *)
     (* module.exports = class C ...; *)
-    | [
-     SetModuleExportsDef
-       ( _,
-         ( Identifier (_, { Ast.Identifier.name; _ })
-         | Class { Ast.Class.id = Some (_, { Ast.Identifier.name; _ }); _ } ) );
-    ]
-      when remote_name = name (* heuristic *) ->
-      Some { import_kind = AstHelper.mk_import_declaration_kind use_mode; default = true }
-    (* module.exports = new C(); *)
-    | [
-     SetModuleExportsDef
-       ( _,
-         ( New
-             {
-               Ast.Expression.New.callee =
-                 (_, Ast.Expression.Identifier (_, { Ast.Identifier.name; _ }));
-               targs = None;
-               _;
-             }
-         (* A previous codemod iteration might add the following cast:
-          *   module.exports = (new C(): C);
-          * This catches this pattern. *)
-         | TypeCast
-             {
-               TypeCast.expression =
-                 ( _,
-                   New
-                     {
-                       Ast.Expression.New.callee =
-                         (_, Ast.Expression.Identifier (_, { Ast.Identifier.name; _ }));
-                       targs = None;
-                       _;
-                     } );
-               annot = _;
-               comments = _;
-             } ) );
-    ]
-      when remote_name = name ->
-      Some
-        {
-          (* This is the only way we can import this. *)
-          import_kind = Ast.Statement.ImportDeclaration.ImportTypeof;
-          default = true;
-        }
-    | [
-     SetModuleExportsDef
-       (_,  (* module.exports = { C, ... } *)
-       Object { Ast.Expression.Object.properties; _ });
-    ] ->
-      if
-        List.exists
-          (function
-            | Object.Property
-                ( _,
-                  Object.Property.Init
-                    { key = Object.Property.Identifier (_, { Ast.Identifier.name; _ }); _ } ) ->
-              remote_name = name
-            | _ -> false)
-          properties
-      then
-        Some { import_kind = AstHelper.mk_import_declaration_kind use_mode; default = false }
-      else
-        None
+    | Some (P.Ref ref) when packed_ref_name type_sig ref = remote_name ->
+      Some { import_kind; default = true }
+    (* module.exports = (new C(): C) *)
+    | Some (P.TyRef (P.Unqualified ref)) when packed_ref_name type_sig ref = remote_name ->
+      (* This is the only way we can import this. *)
+      let import_kind = Ast.Statement.ImportDeclaration.ImportTypeof in
+      Some { import_kind; default = true }
+    (* module.exports = { C, ... } *)
+    | Some (P.Value (ObjLit { props; _ })) when SMap.mem remote_name props ->
+      Some { import_kind; default = false }
     | _ -> None
 
-  let from_es_export_def_list ~use_mode defs remote_name =
-    if
-      List.exists
-        (function
-          | DeclareExportDef decl ->
-            Ast.Statement.(
-              (match decl with
-              | DeclareExportDeclaration.NamedType
-                  (_, { TypeAlias.id = (_, { Ast.Identifier.name; _ }); _ })
-              | DeclareExportDeclaration.NamedOpaqueType
-                  (_, { OpaqueType.id = (_, { Ast.Identifier.name; _ }); _ })
-              | DeclareExportDeclaration.Class
-                  (_, { DeclareClass.id = (_, { Ast.Identifier.name; _ }); _ }) ->
-                name = remote_name
-              | _ -> false))
-          | ExportNamedDef decl ->
-            Ast.Statement.(
-              (match decl with
-              | (_, TypeAlias { TypeAlias.id = (_, { Ast.Identifier.name; _ }); _ })
-              | (_, DeclareTypeAlias { TypeAlias.id = (_, { Ast.Identifier.name; _ }); _ })
-              | (_, OpaqueType { OpaqueType.id = (_, { Ast.Identifier.name; _ }); _ })
-              | (_, InterfaceDeclaration { Interface.id = (_, { Ast.Identifier.name; _ }); _ })
-              | (_, ClassDeclaration { Ast.Class.id = Some (_, { Ast.Identifier.name; _ }); _ })
-              | (_, DeclareClass { DeclareClass.id = (_, { Ast.Identifier.name; _ }); _ }) ->
-                name = remote_name
-              | _ -> false))
-          | ExportDefaultDef _ -> false)
-        defs
-    then
-      Some { import_kind = AstHelper.mk_import_declaration_kind use_mode; default = false }
+  let from_export_keys import_kind keys remote_name =
+    if Array.exists (String.equal remote_name) keys then
+      Some { import_kind; default = false }
     else
       None
 
-  let from_module_kind_info ~use_mode module_kind_info remote_name =
-    match module_kind_info with
-    | CommonJSInfo defs -> from_cjs_exports_def_list ~use_mode defs remote_name
-    | ESInfo defs -> from_es_export_def_list ~use_mode defs remote_name
-
-  let from_type_exports_named ~use_mode type_exports_named remote_name =
-    if
-      List.exists
-        (function
-          | (_name, (_, TypeExportNamed { loc = _; kind = NamedDeclaration })) -> false
-          | ( _,
-              ( _,
-                TypeExportNamed { loc = _; kind = NamedSpecifier { local = (_, name); source = _ } }
-              ) ) ->
-            name = remote_name)
-        type_exports_named
-    then
-      Some { import_kind = AstHelper.mk_import_declaration_kind use_mode; default = false }
-    else
-      None
+  let from_type_sig import_kind type_sig remote_name =
+    let { Packed_type_sig.Module.module_kind; _ } = type_sig in
+    match module_kind with
+    | P.CJSModule { exports; info = P.CJSModuleInfo { type_export_keys; _ }; _ } ->
+      Utils_js.lazy_seq
+        [
+          lazy (from_cjs_module_exports import_kind type_sig exports remote_name);
+          lazy (from_export_keys import_kind type_export_keys remote_name);
+        ]
+    | P.ESModule { info = P.ESModuleInfo { export_keys; type_export_keys; _ }; _ } ->
+      Utils_js.lazy_seq
+        [
+          lazy (from_export_keys import_kind export_keys remote_name);
+          lazy (from_export_keys import_kind type_export_keys remote_name);
+        ]
 
   (* NOTE Here we assume 'react' is available as a library *)
   let from_react loc =
@@ -239,43 +167,27 @@ end = struct
     else
       None
 
-  let from_exports_info ~use_mode exports_info loc remote_name =
-    let { module_sig; declare_modules = _; _ } = exports_info in
-    let { info; requires = _; module_kind = _; type_exports_named; type_exports_star = _ } =
-      module_sig
-    in
-    let { module_kind_info; type_exports_named_info } = info in
-    let import_info_opt =
-      Utils_js.lazy_seq
-        [
-          lazy (from_module_kind_info ~use_mode module_kind_info remote_name);
-          lazy (from_es_export_def_list ~use_mode type_exports_named_info remote_name);
-          lazy (from_type_exports_named ~use_mode type_exports_named remote_name);
-          lazy (from_react loc);
-          lazy (from_react_redux loc);
-        ]
-    in
-    match import_info_opt with
-    | Some import_info -> Ok import_info
-    | None -> Error (Error.No_matching_export (remote_name, loc))
-
-  let from_exports_info_result ~use_mode exports_info_result loc remote_name =
-    match exports_info_result with
-    | Error (IndeterminateModuleType _) -> Error Error.Indeterminate_module_type
-    | Ok (exports_info, _) -> from_exports_info ~use_mode exports_info loc remote_name
-
   (* Try to find out whether a given symbol is exported and what kind of import
    * we need to use for it. *)
   let resolve use_mode loc name =
-    File_sig.With_Loc.(
-      match ALoc.source loc with
-      | None -> Error Error.Loc_source_none
-      | Some remote_file ->
-        (match Parsing_heaps.Reader.get_ast ~reader:(State_reader.create ()) remote_file with
-        | None -> Error Error.Parsing_heaps_get_ast_error
-        | Some ast ->
-          let exports_info = program_with_exports_info ~ast ~module_ref_prefix:None in
-          from_exports_info_result ~use_mode exports_info loc name))
+    match ALoc.source loc with
+    | None -> Error Error.Loc_source_none
+    | Some remote_file ->
+      (match Parsing_heaps.Reader.get_type_sig ~reader:(State_reader.create ()) remote_file with
+      | None -> Error Error.Parsing_heaps_get_sig_error
+      | Some type_sig ->
+        let import_kind = AstHelper.mk_import_declaration_kind use_mode in
+        let import_info_opt =
+          Utils_js.lazy_seq
+            [
+              lazy (from_type_sig import_kind type_sig name);
+              lazy (from_react loc);
+              lazy (from_react_redux loc);
+            ]
+        in
+        (match import_info_opt with
+        | None -> Error (Error.No_matching_export (name, loc))
+        | Some import_info -> Ok import_info))
 end
 
 module ImportsHelper : sig
