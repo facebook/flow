@@ -1,6 +1,7 @@
 (library
  (name fsnotify_Windows)
  (wrapped false)
+ (enabled_if (= %{os_type} Win32))
  (foreign_stubs
   (language c)
   (names fsnotify_stubs))
