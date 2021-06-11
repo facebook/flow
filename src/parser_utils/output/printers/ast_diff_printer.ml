@@ -93,4 +93,12 @@ let rec edits_of_changes ?(opts = Js_layout_generator.default_opts) changes =
   | (loc1, Replace (_, Statement item)) :: (loc2, Insert { items; _ }) :: tl
     when Loc.equal (Loc.end_loc loc1) loc2 && is_statement_list items ->
     (loc1, text_of_statement_list ~opts (Statement item :: items)) :: edits_of_changes ~opts tl
+  (* Detect the case when we want to replace a list of statements with a single statement.
+     The AST diffing algorithm will translate this into a replace followed by a delete.
+     We should coalesce this into a single replace spanning both the replace and delete with
+     the replacement, so that we can avoid an empty line being printed in the place of deleted
+     statements. *)
+  | (loc1, Replace (old_node, (Statement (new_loc, _) as new_node))) :: (loc2, Delete _) :: tl
+    when Loc.contains new_loc (Loc.btwn loc1 loc2) ->
+    edits_of_changes ~opts ((new_loc, Replace (old_node, new_node)) :: tl)
   | hd :: tl -> edit_of_change ~opts hd :: edits_of_changes ~opts tl
