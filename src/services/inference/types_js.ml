@@ -160,9 +160,10 @@ let do_parse_wrapper ~options filename contents =
   (* override docblock info *)
   let docblock = Docblock.set_flow_mode_for_ide_command docblock in
   match parse_result with
-  | Parsing_service_js.Parse_ok { ast; file_sig; tolerable_errors; parse_errors; _ } ->
+  | Parsing_service_js.Parse_ok { ast; file_sig; type_sig; tolerable_errors; parse_errors; _ } ->
     Parsed
-      (Parse_artifacts { docblock; docblock_errors; ast; file_sig; tolerable_errors; parse_errors })
+      (Parse_artifacts
+         { docblock; docblock_errors; ast; file_sig; type_sig; tolerable_errors; parse_errors })
   | Parsing_service_js.Parse_fail fails ->
     let errors =
       match fails with
