@@ -115,7 +115,7 @@ let process_prop_refs ~reader cx potential_refs file_key prop_def_info name =
 let property_find_refs_in_file ~reader options ast_info file_key def_info name =
   let potential_refs : Type.t ALocMap.t ref = ref ALocMap.empty in
   let potential_matching_literals : (Loc.t * Type.t) list ref = ref [] in
-  let (ast, file_sig, info) = ast_info in
+  let (ast, file_sig, _, info) = ast_info in
   let info = Docblock.set_flow_mode_for_ide_command info in
   let local_defs =
     Nel.to_list (all_locs_of_property_def_info def_info)
@@ -149,7 +149,7 @@ let property_find_refs_in_file ~reader options ast_info file_key def_info name =
 
 let export_find_refs_in_file ~reader ast_info file_key def_loc =
   File_sig.(
-    let (_, file_sig, _) = ast_info in
+    let (_, file_sig, _, _) = ast_info in
     let is_relevant module_ref =
       Loc.source def_loc = file_key_of_module_ref ~reader file_key module_ref
     in
@@ -177,7 +177,7 @@ let export_find_refs_in_file ~reader ast_info file_key def_loc =
     Ok locs)
 
 let add_related_bindings ast_info refs =
-  let (ast, file_sig, _) = ast_info in
+  let (ast, file_sig, _, _) = ast_info in
   let locs = Base.List.map ~f:snd refs in
   let related_bindings = ImportExportSymbols.find_related_symbols file_sig locs in
   List.fold_left
@@ -307,7 +307,7 @@ let find_related_defs_in_file ~reader options name file =
   Type_inference_hooks_js.set_obj_to_obj_hook hook;
   Type_inference_hooks_js.set_instance_to_obj_hook hook;
   let cx_result =
-    get_ast_result ~reader file >>| fun (ast, file_sig, docblock) ->
+    get_ast_result ~reader file >>| fun (ast, file_sig, _, docblock) ->
     Merge_service.check_contents_context ~reader options file ast docblock file_sig
   in
   unset_hooks ();

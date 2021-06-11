@@ -420,7 +420,7 @@ let add_literal_properties literal_key_info def_info =
 let get_def_info ~reader ~options env profiling file_key ast_info loc :
     (def_info option, string) result Lwt.t =
   let props_access_info = ref (Ok None) in
-  let (ast, file_sig, info) = ast_info in
+  let (ast, file_sig, _, info) = ast_info in
   (* Check if it's an exported symbol *)
   let loc = Base.Option.value (ImportExportSymbols.find_related_symbol file_sig loc) ~default:loc in
   let info = Docblock.set_flow_mode_for_ide_command info in
