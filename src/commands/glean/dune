@@ -1,0 +1,21 @@
+(library
+ (name flow_glean)
+ (wrapped false)
+ (libraries
+  flow_parser
+  collections
+  sys_utils
+  flow_common
+  flow_common_modulename
+  flow_typing_type
+  flow_parser_utils
+  flow_state_heaps_parsing
+  flow_typing
+  flow_state_heaps_module
+  flow_service_jsdoc
+  flow_service_inference_module
+  flow_codemod_utils
+  flow_commands_utils
+  flow_commands)
+ (preprocess
+  (pps ppx_let)))
