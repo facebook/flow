@@ -1,31 +1,33 @@
 (library
-  (name flow_server_rechecker)
-  (wrapped false)
-  (modules :standard \ recheck_updates)
-  (libraries
-    flow_common
-    flow_exit_status
-    flow_server_env
-    flow_server_error_collator
-    flow_server_files
-    flow_server_monitor_listener_state
-    flow_server_rechecker_updates
-    flow_service_inference
-    flow_service_inference_module
-  )
-  (preprocess (pps lwt_ppx))
-)
+ (name flow_server_rechecker)
+ (wrapped false)
+ (modules :standard \ recheck_updates)
+ (libraries
+  flow_config
+  flow_common
+  flow_exit_status
+  flow_server_env
+  flow_server_error_collator
+  flow_server_files
+  flow_server_monitor_listener_state
+  flow_server_rechecker_updates
+  flow_service_inference
+  flow_service_inference_module)
+ (preprocess
+  (pps lwt_ppx)))
 
 (library
-  (name flow_server_rechecker_updates)
-  (wrapped false)
-  (modules recheck_updates)
-  (libraries
-    flow_common
-    flow_exit_status
-    flow_parsing
-    flow_server_files
-    flow_service_inference_module
-  )
-  (preprocess (pps lwt_ppx)) ; See T41851208
-)
+ (name flow_server_rechecker_updates)
+ (wrapped false)
+ (modules recheck_updates)
+ (libraries
+  flow_config
+  flow_common
+  flow_exit_status
+  flow_parsing
+  flow_server_files
+  flow_service_inference_module)
+ (preprocess
+  (pps lwt_ppx ppx_let))
+ ; See T41851208
+ )

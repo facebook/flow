@@ -1,12 +1,11 @@
 (library
-  (name flow_server_env)
-  (wrapped false)
-  (libraries
-    flow_common
-    flow_common_utils_checked_set
-    flow_parser
-    flow_procs
-    flow_server_persistent_connection
-    flow_typing
-  )
-)
+ (name flow_server_env)
+ (wrapped false)
+ (libraries
+  flow_export
+  flow_common
+  flow_common_utils_checked_set
+  flow_parser
+  flow_procs
+  flow_server_persistent_connection
+  flow_typing))

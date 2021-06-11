@@ -12,5 +12,6 @@
     flow_server_utils
     flow_typing
     lsp ; hack
+    flow_exit
   )
 )
