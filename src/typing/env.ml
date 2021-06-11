@@ -904,13 +904,11 @@ let check_exported_let_bound_reassignment op cx name entry loc =
           value_declare_loc;
           _;
         } ) ->
-    (match NameUtils.smap_find_opt name (Context.exported_locals cx) with
-    | Some loc_set when ALocSet.mem value_declare_loc loc_set ->
+    if Context.is_exported_local cx value_declare_loc then
       let reason = mk_reason (RType name) value_declare_loc in
       Flow.add_output
         cx
         Error_message.(EAssignExportedConstLikeBinding { loc; definition = reason; binding_kind })
-    | _ -> ())
   | _ -> ()
 
 (* helper: update let or var entry *)

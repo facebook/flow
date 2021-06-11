@@ -7,6 +7,7 @@
 
 open Type.TypeContext
 module ALocMap = Loc_collections.ALocMap
+module ALocIDSet = Loc_collections.ALocIDSet
 
 exception Props_not_found of Type.Properties.id
 
@@ -200,7 +201,7 @@ type t = {
   trust_constructor: unit -> Trust.trust_rep;
   mutable declare_module_ref: Module_info.t option;
   mutable use_def: Env_builder.env_info option;
-  mutable exported_locals: Loc_collections.ALocSet.t SMap.t;
+  mutable exported_locals: ALocIDSet.t;
 }
 
 let metadata_of_options options =
@@ -358,7 +359,7 @@ let make ccx metadata file aloc_table module_ref phase =
     trust_constructor = Trust.literal_trust;
     declare_module_ref = None;
     use_def = None;
-    exported_locals = SMap.empty;
+    exported_locals = ALocIDSet.empty;
   }
 
 let sig_cx cx = cx.ccx.sig_cx
@@ -553,8 +554,6 @@ let voidable_checks cx = cx.ccx.voidable_checks
 let implicit_instantiation_checks cx = cx.ccx.implicit_instantiation_checks
 
 let use_def cx = cx.use_def
-
-let exported_locals cx = cx.exported_locals
 
 let automatic_require_default cx = cx.metadata.automatic_require_default
 
@@ -832,6 +831,8 @@ let generate_poly_id cx =
   nominal
 
 let make_source_poly_id cx aloc = make_aloc_id cx aloc |> Type.Poly.id_of_aloc_id
+
+let is_exported_local cx aloc = ALocIDSet.mem (make_aloc_id cx aloc) cx.exported_locals
 
 (* Copy context from cx_other to cx *)
 let merge_into ccx sig_cx_other =

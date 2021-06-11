@@ -6,6 +6,7 @@
  *)
 
 module Ast = Flow_ast
+module ALocIDSet = Loc_collections.ALocIDSet
 open Utils_js
 open Sys_utils
 
@@ -449,17 +450,15 @@ let do_parse ~parse_options ~info content file =
             let strict = Docblock.is_strict info in
             Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
           in
-          let env = ref SMap.empty in
+          let env = ref ALocIDSet.empty in
           let () =
             let open Type_sig in
             let { Packed_type_sig.Module.local_defs; _ } = type_sig in
+            let source = Some file in
             let f def =
-              let name = def_name def in
-              let loc = def_id_loc def in
-              let loc = Type_sig_collections.Locs.get locs loc in
-              let locs = Loc_collections.LocSet.singleton loc in
-              let combine = Loc_collections.LocSet.union in
-              env := SMap.add name locs ~combine !env
+              let loc : Type_sig_collections.Locs.index = def_id_loc def in
+              let id = ALoc.ALocRepresentationDoNotUse.make_id source (loc :> int) in
+              env := ALocIDSet.add id !env
             in
             Type_sig_collections.Local_defs.iter f local_defs
           in

@@ -8,6 +8,7 @@
 module Ast_utils = Flow_ast_utils
 module Ast = Flow_ast
 module Result = Base.Result
+module ALocIDSet = Loc_collections.ALocIDSet
 open Flow_ast_visitor
 
 module Make
@@ -20,7 +21,8 @@ struct
   type 'info t' = {
     module_sig: 'info module_sig';
     declare_modules: (L.t * 'info module_sig') SMap.t;
-    exported_locals: L.LSet.t SMap.t;
+    (* excluded from ppx show result, will be removed imminently *)
+    exported_locals: ALocIDSet.t; [@opaque]
   }
 
   and 'info module_sig' = {
@@ -143,7 +145,11 @@ struct
     }
 
   let mk_file_sig info =
-    { module_sig = mk_module_sig info; declare_modules = SMap.empty; exported_locals = SMap.empty }
+    {
+      module_sig = mk_module_sig info;
+      declare_modules = SMap.empty;
+      exported_locals = ALocIDSet.empty;
+    }
 
   let init_exports_info = { module_kind_info = CommonJSInfo []; type_exports_named_info = [] }
 
@@ -1161,17 +1167,10 @@ struct
               (loc, module_sig))
             declare_modules
         in
-        let exported_locals' =
-          (SMapUtils.ident_map (L.LSetUtils.ident_map this#loc)) exported_locals
-        in
         if module_sig == module_sig' && declare_modules == declare_modules' then
           file_sig
         else
-          {
-            module_sig = module_sig';
-            declare_modules = declare_modules';
-            exported_locals = exported_locals';
-          }
+          { module_sig = module_sig'; declare_modules = declare_modules'; exported_locals }
 
       method module_sig (module_sig : module_sig) =
         let { requires; module_kind; type_exports_named; type_exports_star; info = () } =
@@ -1572,16 +1571,9 @@ let abstractify_locs : With_Loc.t -> With_ALoc.t =
   let abstractify_declare_modules =
     SMap.map (fun (loc, module_sig) -> (ALoc.of_loc loc, abstractify_module_sig module_sig))
   in
-  let abstractify_local_env =
-    SMap.map (fun loc_set ->
-        Loc_collections.LocSet.fold
-          (fun loc acc -> Loc_collections.ALocSet.add (ALoc.of_loc loc) acc)
-          loc_set
-          Loc_collections.ALocSet.empty)
-  in
   fun { WL.module_sig; declare_modules; exported_locals } ->
     {
       WA.module_sig = abstractify_module_sig module_sig;
       declare_modules = abstractify_declare_modules declare_modules;
-      exported_locals = abstractify_local_env exported_locals;
+      exported_locals;
     }
