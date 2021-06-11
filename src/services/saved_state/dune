@@ -15,6 +15,7 @@
     flow_typing
     sys_utils ; hack
     xx
+    flow_state_heaps_context
   )
   (preprocess (pps lwt_ppx))
 )
