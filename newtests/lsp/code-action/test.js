@@ -1407,6 +1407,66 @@ export default (suite(
                   ],
                 },
               },
+              {
+                title: "Extract to inner function in function 'fooBar'",
+                kind: 'refactor.extract',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-basic.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 4,
+                            character: 2,
+                          },
+                          end: {
+                            line: 4,
+                            character: 20,
+                          },
+                        },
+                        newText: '(newFunction())',
+                      },
+                      {
+                        range: {
+                          start: {
+                            line: 5,
+                            character: 2,
+                          },
+                          end: {
+                            line: 5,
+                            character: 21,
+                          },
+                        },
+                        newText: '',
+                      },
+                      {
+                        range: {
+                          start: {
+                            line: 6,
+                            character: 25,
+                          },
+                          end: {
+                            line: 6,
+                            character: 25,
+                          },
+                        },
+                        newText:
+                          'function newFunction() {\n  console.log("foo");\n  console.log("bar");\n}',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'refactor_extract_function',
+                    "Extract to inner function in function 'fooBar'",
+                  ],
+                },
+              },
             ],
           },
         ],

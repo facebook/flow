@@ -77,6 +77,38 @@ class new_function_call_replacer
         super#statement_fork_point stmt
   end
 
+class insertion_function_body_loc_collector statements_loc =
+  object (_this)
+    inherit [(string * Loc.t) list, Loc.t] Flow_ast_visitor.visitor ~init:[] as super
+
+    method! function_ loc function_declaration =
+      let open Flow_ast in
+      match function_declaration with
+      | {
+       Function.id = Some (_, { Identifier.name; _ });
+       body = Function.BodyBlock (block_loc, _);
+       _;
+      }
+        when Loc.contains block_loc statements_loc ->
+        let () = super#set_acc ((name, block_loc) :: acc) in
+        super#function_ loc function_declaration
+      | _ -> super#function_ loc function_declaration
+  end
+
+class insert_new_function_in_function_body_mapper
+  target_function_body_loc function_declaration_statement =
+  object (_this)
+    inherit [Loc.t] Flow_ast_mapper.mapper as super
+
+    method! function_body block =
+      let open Flow_ast.Statement.Block in
+      let (body_loc, body) = block in
+      if Loc.equal body_loc target_function_body_loc then
+        (body_loc, { body with body = body.body @ [function_declaration_statement] })
+      else
+        super#function_body block
+  end
+
 let extract_statements ast extract_range =
   let collector = new statements_collector extract_range in
   let _ = collector#program ast in
@@ -108,6 +140,19 @@ let insert_function_to_toplevel (program_loc, program) extracted_statements =
               ];
         } ) )
 
+let insert_function_as_inner_functions ast extracted_statements statements_loc_union =
+  let collector = new insertion_function_body_loc_collector statements_loc_union in
+  let create_refactor (title, target_function_body_loc) =
+    let mapper =
+      new insert_new_function_in_function_body_mapper
+        target_function_body_loc
+        ( Loc.none,
+          Flow_ast.Statement.FunctionDeclaration (create_extracted_function extracted_statements) )
+    in
+    (Printf.sprintf "Extract to inner function in function '%s'" title, mapper#program ast)
+  in
+  collector#eval collector#program ast |> List.map create_refactor
+
 let provide_available_refactors ast extract_range =
   match extract_statements ast extract_range with
   | None -> []
@@ -129,4 +174,5 @@ let provide_available_refactors ast extract_range =
           statements_loc_union
       in
       let new_ast = replacer#program ast in
-      [insert_function_to_toplevel new_ast extracted_statements])
+      insert_function_to_toplevel new_ast extracted_statements
+      :: insert_function_as_inner_functions new_ast extracted_statements statements_loc_union)

@@ -277,6 +277,19 @@ function newFunction() {
 }
       |}
           );
+          ( "Extract to inner function in function 'test'",
+            {|
+function test() {
+  console.log("I should not be selected");
+  newFunction();
+  let b = 4;
+  console.log("I should not be selected");
+  function newFunction() {
+    const a = 3;
+  }
+}
+|}
+          );
         ]
       in
       assert_refactored
@@ -319,6 +332,21 @@ function newFunction() {
 }
       |}
           );
+          ( "Extract to inner function in function 'test'",
+            {|
+function test() {
+  console.log("I should not be selected");
+  newFunction();
+  console.log("I should not be selected");
+  function newFunction() {
+    const a = 3;
+    let b = 4;
+    let c = 5;
+    let d = 6;
+  }
+}
+|}
+          );
         ]
       in
       assert_refactored
@@ -329,6 +357,144 @@ function newFunction() {
           Loc.source = None;
           start = { Loc.line = 4; column = 10 };
           _end = { Loc.line = 7; column = 20 };
+        } );
+    ( "very_nested_extract" >:: fun ctxt ->
+      let source =
+        {|
+        function level1() {
+          function level2() {
+            function level3() {
+              function level4() {
+                console.log("I should not be selected");
+                const a = 3;
+                let b = 4;
+                let c = 5;
+                let d = 6;
+                console.log("I should not be selected");
+              }
+            }
+          }
+        }
+      |}
+      in
+      let expected =
+        [
+          ( "Extract to function in module scope",
+            {|
+function level1() {
+  function level2() {
+    function level3() {
+      function level4() {
+        console.log("I should not be selected");
+        newFunction();
+        console.log("I should not be selected");
+      }
+    }
+  }
+}
+
+function newFunction() {
+  const a = 3;
+  let b = 4;
+  let c = 5;
+  let d = 6;
+}
+|}
+          );
+          ( "Extract to inner function in function 'level4'",
+            {|
+function level1() {
+  function level2() {
+    function level3() {
+      function level4() {
+        console.log("I should not be selected");
+        newFunction();
+        console.log("I should not be selected");
+        function newFunction() {
+          const a = 3;
+          let b = 4;
+          let c = 5;
+          let d = 6;
+        }
+      }
+    }
+  }
+}
+|}
+          );
+          ( "Extract to inner function in function 'level3'",
+            {|
+function level1() {
+  function level2() {
+    function level3() {
+      function level4() {
+        console.log("I should not be selected");
+        newFunction();
+        console.log("I should not be selected");
+      }
+      function newFunction() {
+        const a = 3;
+        let b = 4;
+        let c = 5;
+        let d = 6;
+      }
+    }
+  }
+}
+|}
+          );
+          ( "Extract to inner function in function 'level2'",
+            {|
+function level1() {
+  function level2() {
+    function level3() {
+      function level4() {
+        console.log("I should not be selected");
+        newFunction();
+        console.log("I should not be selected");
+      }
+    }
+    function newFunction() {
+      const a = 3;
+      let b = 4;
+      let c = 5;
+      let d = 6;
+    }
+  }
+}
+|}
+          );
+          ( "Extract to inner function in function 'level1'",
+            {|
+function level1() {
+  function level2() {
+    function level3() {
+      function level4() {
+        console.log("I should not be selected");
+        newFunction();
+        console.log("I should not be selected");
+      }
+    }
+  }
+  function newFunction() {
+    const a = 3;
+    let b = 4;
+    let c = 5;
+    let d = 6;
+  }
+}
+|}
+          );
+        ]
+      in
+      assert_refactored
+        ~ctxt
+        expected
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 7; column = 16 };
+          _end = { Loc.line = 10; column = 26 };
         } );
   ]
 
