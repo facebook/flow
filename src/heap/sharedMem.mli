@@ -101,10 +101,22 @@ module type DebugCacheType = sig
   val get_size : unit -> int
 end
 
-module type DebugLocalCache = sig
+module type LocalCache = sig
+  type key
+
+  type value
+
   module DebugL1 : DebugCacheType
 
   module DebugL2 : DebugCacheType
+
+  val add : key -> value -> unit
+
+  val get : key -> value option
+
+  val remove : key -> unit
+
+  val clear : unit -> unit
 end
 
 module type WithCache = sig
@@ -114,8 +126,11 @@ module type WithCache = sig
 
   val get_no_cache : key -> value option
 
-  module DebugCache : DebugLocalCache
+  module DebugCache : LocalCache with type key = key and type value = value
 end
+
+module LocalCache (Key : Key) (Value : Value) :
+  LocalCache with type key = Key.t and type value = Value.t
 
 module WithCache (Key : Key) (Value : Value) :
   WithCache with type key = Key.t and type value = Value.t and module KeySet = Set.Make(Key)

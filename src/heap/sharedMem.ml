@@ -398,14 +398,10 @@ module type NoCache = sig
   val revive_batch : KeySet.t -> unit
 end
 
-module type DebugLocalCache = sig
+module type LocalCache = sig
   module DebugL1 : DebugCacheType
 
   module DebugL2 : DebugCacheType
-end
-
-module type LocalCache = sig
-  include DebugLocalCache
 
   type key
 
@@ -427,7 +423,7 @@ module type WithCache = sig
 
   val get_no_cache : key -> value option
 
-  module DebugCache : DebugLocalCache
+  module DebugCache : LocalCache with type key = key and type value = value
 end
 
 (*****************************************************************************)
@@ -680,11 +676,15 @@ end
 let invalidate_callback_list = ref []
 
 module LocalCache (Key : Key) (Value : Value) :
-  LocalCache with type key := Key.t and type value := Value.t = struct
-  module Config = struct
-    type key = Key.t
+  LocalCache with type key = Key.t and type value = Value.t = struct
+  type key = Key.t
 
-    type value = Value.t
+  type value = Value.t
+
+  module Config = struct
+    type nonrec key = key
+
+    type nonrec value = value
 
     let capacity = 1000
   end
