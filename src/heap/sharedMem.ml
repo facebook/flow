@@ -675,19 +675,10 @@ end
 
 let invalidate_callback_list = ref []
 
-module LocalCache (Key : Key) (Value : Value) :
-  LocalCache with type key = Key.t and type value = Value.t = struct
-  type key = Key.t
+module LocalCache (Config : CacheConfig) = struct
+  type key = Config.key
 
-  type value = Value.t
-
-  module Config = struct
-    type nonrec key = key
-
-    type nonrec value = value
-
-    let capacity = 1000
-  end
+  type value = Config.value
 
   (* Young values cache *)
   module L1 = OrderedCache (Config)
@@ -740,7 +731,14 @@ struct
   type value = Direct.value
 
   module KeySet = Direct.KeySet
-  module Cache = LocalCache (Key) (Value)
+
+  module Cache = LocalCache (struct
+    type nonrec key = key
+
+    type nonrec value = value
+
+    let capacity = 1000
+  end)
 
   (* This is exposed for tests *)
   module DebugCache = Cache

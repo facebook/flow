@@ -119,6 +119,14 @@ module type LocalCache = sig
   val clear : unit -> unit
 end
 
+module type CacheConfig = sig
+  type key
+
+  type value
+
+  val capacity : int
+end
+
 module type WithCache = sig
   include NoCache
 
@@ -129,8 +137,8 @@ module type WithCache = sig
   module DebugCache : LocalCache with type key = key and type value = value
 end
 
-module LocalCache (Key : Key) (Value : Value) :
-  LocalCache with type key = Key.t and type value = Value.t
+module LocalCache (Config : CacheConfig) :
+  LocalCache with type key = Config.key and type value = Config.value
 
 module WithCache (Key : Key) (Value : Value) :
   WithCache with type key = Key.t and type value = Value.t and module KeySet = Set.Make(Key)
