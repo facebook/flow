@@ -722,15 +722,6 @@ module LocalCache (Key : Key) (Value : Value) :
   let clear () =
     L1.clear ();
     L2.clear ()
-
-  let () =
-    invalidate_callback_list :=
-      begin
-        fun () ->
-        L1.clear ();
-        L2.clear ()
-      end
-      :: !invalidate_callback_list
 end
 
 (*****************************************************************************)
