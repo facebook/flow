@@ -740,5 +740,3 @@ end = struct
 
   let add_exports = ExportsHeap.add
 end
-
-let add_aloc_table = ALocTableHeap.add

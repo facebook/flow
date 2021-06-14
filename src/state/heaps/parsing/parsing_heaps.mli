@@ -90,7 +90,3 @@ module From_saved_state : sig
 
   val add_exports : File_key.t -> Exports.t -> unit
 end
-
-(* Temporary API. This is needed for the types-first 2.0 demo, which produces
- * these tables separately from the parse phase. *)
-val add_aloc_table : File_key.t -> ALoc.table -> unit
