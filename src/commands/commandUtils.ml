@@ -16,18 +16,15 @@ let run_command command argv =
     print_endline (CommandSpec.string_of_usage command);
     Exit.(exit No_error)
   | CommandSpec.Failed_to_parse (arg_name, msg) ->
+    let is_pretty_or_json_arg s =
+      String_utils.string_starts_with s "--pretty" || String_utils.string_starts_with s "--json"
+    in
     begin
-      try
-        let json_arg =
-          Base.List.find_exn
-            ~f:(fun s ->
-              String_utils.string_starts_with s "--pretty"
-              || String_utils.string_starts_with s "--json")
-            argv
-        in
+      match Base.List.find ~f:is_pretty_or_json_arg argv with
+      | Some json_arg ->
         let pretty = String_utils.string_starts_with json_arg "--pretty" in
         Exit.set_json_mode ~pretty
-      with Not_found -> ()
+      | None -> ()
     end;
     let msg =
       Utils_js.spf
