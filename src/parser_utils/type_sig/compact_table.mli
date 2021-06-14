@@ -84,6 +84,8 @@ module Make () : sig
 
   val splice : 'a node -> ('a builder -> 'b) -> 'b
 
+  val value : 'a node -> 'a
+
   val modify : 'a node -> ('a -> 'a) -> unit
 
   (* If this node has already been marked, does nothing. Otherwise calls the

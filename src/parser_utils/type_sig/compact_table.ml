@@ -60,6 +60,8 @@ module Make () = struct
     end;
     x
 
+  let value node = node.data
+
   let modify node f = node.data <- f node.data
 
   let mark node f =

@@ -805,15 +805,13 @@ module Scope = struct
               (fun name binding ->
                 match binding with
                 | LocalBinding node ->
-                  Local_defs.modify node (fun def ->
-                      (match def with
-                      | VarBinding _
-                      | DeclareClassBinding _
-                      | DeclareFunBinding _ ->
-                        Exports.cjs_declare_module_set_prop name node exports
-                      | TypeBinding _ -> Exports.add_type name (ExportTypeBinding node) exports
-                      | _ -> ());
-                      def)
+                  (match Local_defs.value node with
+                  | VarBinding _
+                  | DeclareClassBinding _
+                  | DeclareFunBinding _ ->
+                    Exports.cjs_declare_module_set_prop name node exports
+                  | TypeBinding _ -> Exports.add_type name (ExportTypeBinding node) exports
+                  | _ -> ())
                 | RemoteBinding _ -> ())
               names)
           scope
