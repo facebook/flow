@@ -17,3 +17,4 @@ module ALocIDS = struct
 end
 
 module ALocIDSet = Set.Make (ALocIDS)
+module ALocIDMap = Map.Make (ALocIDS)

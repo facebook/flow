@@ -5,7 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Let_syntax = struct
+  let return x = Some x
+
+  let bind x ~f = Base.Option.( >>= ) x f
+
+  let map x ~f = Base.Option.( >>| ) x f
+end
+
 module Ast = Flow_ast
+module ALocIDMap = Loc_collections.ALocIDMap
 
 module SymbolMap = WrappedMap.Make (struct
   type t = Ty_symbol.symbol
@@ -126,6 +135,25 @@ let mapper ~default_any ~preserve_literals ~max_type_size (ask : Codemod_context
         Ok ty
       | Error e -> Error e
 
+    (* Returns None if the existential is not in a generic position (ie not recorded
+     * in exists_instantiations table *)
+    method private get_exists_instantiation_from_table ccx loc =
+      let { Codemod_context.Typed.full_cx = cx; file; file_sig; typed_ast; _ } = ccx in
+      let aloc = ALoc.of_loc loc in
+      let%bind ts =
+        ALocIDMap.find_opt (Context.make_aloc_id cx aloc) (Context.exists_instantiations cx)
+      in
+      let type_ = TypeUtil.union_of_ts (Reason.mk_reason Reason.RExistential aloc) ts in
+      let%bind { Type.TypeScheme.tparams_rev; _ } =
+        Typed_ast_utils.find_exact_match_annotation typed_ast aloc
+      in
+      (* Existential under type params *)
+      let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~file_sig ~typed_ast in
+      let scheme = { Type.TypeScheme.tparams_rev; type_ } in
+      match Ty_normalizer.from_scheme ~options:norm_opts ~genv scheme with
+      | Ok ty -> Some (Ok ty)
+      | Error e -> Some (Error (Codemod_context.Typed.NormalizationError e))
+
     (**
      * Try to infer type of existentials
      *)
@@ -164,7 +192,11 @@ let mapper ~default_any ~preserve_literals ~max_type_size (ask : Codemod_context
                 comments;
               } )
       | (loc, Ast.Type.Exists comments) ->
-        let ty = Codemod_context.Typed.ty_at_loc norm_opts ask loc in
+        let ty =
+          match this#get_exists_instantiation_from_table ask loc with
+          | Some ty_result -> ty_result
+          | None -> Codemod_context.Typed.ty_at_loc norm_opts ask loc
+        in
         let new_type =
           match ty with
           (* For existentials that Flow cannot determine the type of, it

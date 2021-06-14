@@ -499,3 +499,7 @@ val spread_cache : t -> Spread_cache.t
 val speculation_state : t -> Speculation_state.t
 
 val speculation_id : t -> (int * int) option
+
+val exists_instantiations : t -> Type.t list ALocIDMap.t
+
+val add_exists_instantiation : t -> ALoc.t -> Type.t -> unit

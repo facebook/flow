@@ -87,9 +87,11 @@ let substituter =
               | Some param_t -> param_t
             end
           | ExistsT reason ->
-            if force then
-              Tvar.mk cx reason
-            else
+            if force then (
+              let t = Tvar.mk cx reason in
+              Context.add_exists_instantiation cx (Reason.aloc_of_reason reason) t;
+              t
+            ) else
               t
           | DefT (reason, trust, PolyT { tparams_loc; tparams = xs; t_out = inner; _ }) ->
             let (xs, map, changed) =

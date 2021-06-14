@@ -19,7 +19,7 @@ function fn3<T: {x: number, ...}>(a: T): boolean {
 }
 fn3<{| x: number, y: number |}>({x: 0, y: 1});
 
-function fn4<T>(x: T): mixed {
+function fn4<T>(x: T): T {
   return x;
 }
 
@@ -38,7 +38,7 @@ arr.push('test');
 const arr2: Array<number | string> = [1, 'test'];
 
 class TestClass {
-  x: mixed;
+  x: number;
   constructor() {
     this.x = 1;
   }
@@ -48,6 +48,17 @@ class TestClass {
 function search(entry: SearchableEntry<any>): void{
 }
 
+
+>>> generic.js (#changes: 1)
+// @flow
+
+class C<X> { f: X }
+
+class D extends C<string> {
+    m() {
+        this.f = "";
+    }
+}
 
 >>> react.js (#changes: 2)
 //@flow
@@ -68,10 +79,10 @@ class TestComponent {
 >>> Launching report...
 
 Stats:
-  Files changed:                            3
-  Number of annotations added:             11
-  Total size of annotations:               16
-  Number of mixed added:                    2
+  Files changed:                            4
+  Number of annotations added:             12
+  Total size of annotations:               17
+  Number of mixed added:                    0
 
 Errors:
   Missing annot./normalizer error:          0

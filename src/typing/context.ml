@@ -8,6 +8,7 @@
 open Type.TypeContext
 module ALocMap = Loc_collections.ALocMap
 module ALocIDSet = Loc_collections.ALocIDSet
+module ALocIDMap = Loc_collections.ALocIDMap
 
 exception Props_not_found of Type.Properties.id
 
@@ -172,6 +173,8 @@ type component_t = {
   fix_cache: (bool * Type.t, Type.t) Hashtbl.t;
   spread_cache: Spread_cache.t;
   speculation_state: Speculation_state.t;
+  (* TODO remove when existential type is gone *)
+  mutable exists_instantiations: Type.t list ALocIDMap.t;
   (* Post-inference checks *)
   mutable literal_subtypes: (Type.t * Type.use_t) list;
   mutable matching_props: (Reason.reason * string * Type.t * Type.t) list;
@@ -315,6 +318,7 @@ let make_ccx master_cx =
     exists_excuses = ALocMap.empty;
     voidable_checks = [];
     implicit_instantiation_checks = [];
+    exists_instantiations = ALocIDMap.empty;
     test_prop_hits_and_misses = IMap.empty;
     computed_property_states = IMap.empty;
     spread_widened_types = IMap.empty;
@@ -552,6 +556,8 @@ let exists_excuses cx = cx.ccx.exists_excuses
 let voidable_checks cx = cx.ccx.voidable_checks
 
 let implicit_instantiation_checks cx = cx.ccx.implicit_instantiation_checks
+
+let exists_instantiations cx = cx.ccx.exists_instantiations
 
 let use_def cx = cx.use_def
 
@@ -833,6 +839,15 @@ let generate_poly_id cx =
 let make_source_poly_id cx aloc = make_aloc_id cx aloc |> Type.Poly.id_of_aloc_id
 
 let is_exported_local cx aloc = ALocIDSet.mem (make_aloc_id cx aloc) cx.exported_locals
+
+let add_exists_instantiation cx loc t =
+  let id = make_aloc_id cx loc in
+  let ts =
+    match ALocIDMap.find_opt id cx.ccx.exists_instantiations with
+    | Some ts -> t :: ts
+    | None -> [t]
+  in
+  cx.ccx.exists_instantiations <- ALocIDMap.add id ts cx.ccx.exists_instantiations
 
 (* Copy context from cx_other to cx *)
 let merge_into ccx sig_cx_other =
