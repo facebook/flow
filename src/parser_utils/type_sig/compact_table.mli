@@ -117,4 +117,14 @@ module Make () : sig
   val to_array_map : ('a -> 'b) -> 'a t -> 'b array
 
   module IndexSet : Set.S with type elt = index
+
+  module Interned : sig
+    type 'a builder
+
+    val create : unit -> 'a builder
+
+    val push : 'a builder -> 'a -> 'a node
+
+    val compact : 'a builder -> 'a indexed
+  end
 end

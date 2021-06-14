@@ -143,7 +143,6 @@ and 'loc exports =
 and 'loc scope =
   | Global of {
       mutable names: 'loc binding_node SMap.t;
-      mutable mrefs: module_ref_node SMap.t;
       tables: 'loc tables;
       mutable modules: ('loc loc_node * 'loc exports) SMap.t;
     }
@@ -154,7 +153,6 @@ and 'loc scope =
     }
   | Module of {
       mutable names: 'loc binding_node SMap.t;
-      mutable mrefs: module_ref_node SMap.t;
       tables: 'loc tables;
       exports: 'loc exports;
     }
@@ -165,7 +163,7 @@ and 'loc scope =
 
 and 'loc tables = {
   local_defs: 'loc local_binding Local_defs.builder;
-  module_refs: string Module_refs.builder;
+  module_refs: string Module_refs.Interned.builder;
   remote_refs: 'loc remote_binding Remote_refs.builder;
   pattern_defs: 'loc parsed Pattern_defs.builder;
   patterns: 'loc pattern Patterns.builder;
@@ -443,24 +441,17 @@ module Scope = struct
   let create_tables () =
     {
       local_defs = Local_defs.create ();
-      module_refs = Module_refs.create ();
+      module_refs = Module_refs.Interned.create ();
       remote_refs = Remote_refs.create ();
       pattern_defs = Pattern_defs.create ();
       patterns = Patterns.create ();
     }
 
   let create_global () =
-    Global
-      { tables = create_tables (); mrefs = SMap.empty; names = SMap.empty; modules = SMap.empty }
+    Global { tables = create_tables (); names = SMap.empty; modules = SMap.empty }
 
   let create_module ~strict =
-    Module
-      {
-        tables = create_tables ();
-        mrefs = SMap.empty;
-        names = SMap.empty;
-        exports = Exports.create ~strict;
-      }
+    Module { tables = create_tables (); names = SMap.empty; exports = Exports.create ~strict }
 
   let push_lex parent = Lexical { parent; names = SMap.empty }
 
@@ -502,7 +493,7 @@ module Scope = struct
       with_tables f parent
 
   let builtins_exn = function
-    | Global { tables; mrefs = _; names; modules } -> (tables, names, modules)
+    | Global { tables; names; modules } -> (tables, names, modules)
     | DeclareModule _
     | Module _
     | Lexical _ ->
@@ -601,24 +592,8 @@ module Scope = struct
     | Lexical { parent; _ }
     | DeclareModule { parent; _ } ->
       push_module_ref name parent
-    | Global scope ->
-      begin
-        match SMap.find_opt name scope.mrefs with
-        | Some mref -> mref
-        | None ->
-          let mref = Module_refs.push scope.tables.module_refs name in
-          scope.mrefs <- SMap.add name mref scope.mrefs;
-          mref
-      end
-    | Module scope ->
-      begin
-        match SMap.find_opt name scope.mrefs with
-        | Some mref -> mref
-        | None ->
-          let mref = Module_refs.push scope.tables.module_refs name in
-          scope.mrefs <- SMap.add name mref scope.mrefs;
-          mref
-      end
+    | Global scope -> Module_refs.Interned.push scope.tables.module_refs name
+    | Module scope -> Module_refs.Interned.push scope.tables.module_refs name
 
   let push_local_def def = with_tables (fun tbls -> Local_defs.push tbls.local_defs def)
 

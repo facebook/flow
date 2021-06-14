@@ -161,4 +161,23 @@ module Make () = struct
 
     let compare a b = a - b
   end)
+
+  module Interned = struct
+    type nonrec 'a builder = {
+      table: ('a, 'a node) Hashtbl.t;
+      builder: 'a builder;
+    }
+
+    let create () = { table = Hashtbl.create 0; builder = create () }
+
+    let push { table; builder } data =
+      match Hashtbl.find_opt table data with
+      | Some node -> node
+      | None ->
+        let node = push builder data in
+        Hashtbl.add table data node;
+        node
+
+    let compact { builder; _ } = compact builder
+  end
 end

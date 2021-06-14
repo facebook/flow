@@ -34,7 +34,7 @@ let pack_builtins (locs, (tbls, globals, modules)) =
   SMap.iter (fun _ m -> Mark.mark_builtin_module m) modules;
   (* compact *)
   let locs = Locs.compact locs in
-  let module_refs = Module_refs.compact module_refs in
+  let module_refs = Module_refs.Interned.compact module_refs in
   let local_defs = Local_defs.compact local_defs in
   let remote_refs = Remote_refs.compact remote_refs in
   (* copy *)
@@ -91,7 +91,7 @@ let pack (locs, file_loc, (tbls, exports)) =
   Mark.mark_exports file_loc exports;
   (* compact *)
   let locs = Locs.compact ~merge:merge_locs locs in
-  let module_refs = Module_refs.compact module_refs in
+  let module_refs = Module_refs.Interned.compact module_refs in
   let local_defs = Local_defs.compact local_defs in
   let remote_refs = Remote_refs.compact remote_refs in
   let pattern_defs = Pattern_defs.compact pattern_defs in
