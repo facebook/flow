@@ -142,24 +142,6 @@ let show_id _ = "<opaque>"
 
 let of_loc = Repr.of_loc
 
-let keyify table rev_table loc =
-  match Repr.kind loc with
-  | Repr.Keyed -> failwith "Cannot keyify a location which is already keyed"
-  | Repr.ALocNone -> loc
-  | Repr.Concrete ->
-    let underlying_loc = Repr.to_loc_exn loc |> RelativeLoc.of_loc in
-    let source = Repr.source loc in
-    if source <> Some table.file then failwith "keyify: File mismatch between location and table";
-    let key =
-      try Hashtbl.find rev_table underlying_loc
-      with Not_found ->
-        let key = ResizableArray.size table.map in
-        ResizableArray.push table.map underlying_loc;
-        Hashtbl.add rev_table underlying_loc key;
-        key
-    in
-    Repr.of_key source key
-
 let to_loc_exn = Repr.to_loc_exn
 
 let to_loc table loc =

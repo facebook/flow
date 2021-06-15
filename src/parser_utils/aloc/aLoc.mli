@@ -20,16 +20,6 @@ type t [@@deriving show]
 (* Creates an ALoc.t with a concrete underlying representation *)
 val of_loc : Loc.t -> t
 
-(* Takes an ALoc.t with a concrete underlying representation and makes it keyed.
- *
- * Preconditions:
- * - The given location cannot have already been keyified.
- * - The file key with which the table was created must match the `source` of the given location.
- *   - This also implies that locations with `None` as the source cannot be keyified. This
- *     could be relaxed in the future if necessary.
- * *)
-val keyify : table -> reverse_table -> t -> t
-
 (* Takes an ALoc.t with a concrete underlying representation and finds
  * the existing keyed representation for it from a reverse table
  *
