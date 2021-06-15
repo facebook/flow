@@ -39,7 +39,3 @@ val get : string -> t -> Export_index.ExportSet.t
 val get_values : string -> t -> Export_index.ExportSet.t
 
 val get_types : string -> t -> Export_index.ExportSet.t
-
-val pp : Format.formatter -> t -> unit 
-
-val show : t -> string
