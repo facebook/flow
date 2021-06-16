@@ -5,6 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+(* This module is responsible for building a mapping from variable reads to the
+ * writes those reads. This is used in type checking to determine if a variable is
+ * const-like, but the env_builder is used to build the type checking envrionment. 
+ * The env_builder copied much of the implementation here, but with sufficient divergence
+ * to warrant forking the implementation.
+ * If you're here to add support for a new syntax feature, you'll likely
+ * need to modify the env_builder as well, but not necessarily with identical changes.*)
+
 module Ast = Flow_ast
 open Hoister
 open Reason
@@ -307,7 +315,7 @@ struct
 
       method empty_ssa_env : Env.t = SMap.map (fun _ -> Val.empty ()) ssa_env
 
-      method havoc_current_ssa_env ~all:_ =
+      method havoc_current_ssa_env =
         SMap.iter
           (fun _x { val_ref; havoc } ->
             (* NOTE: havoc_env should already have all writes to x, so the only
@@ -457,15 +465,6 @@ struct
             Havoc.(havoc.locs <- reason :: havoc.locs)
           | _ -> ()
         end;
-        super#identifier ident
-
-      (* Needed because a child class, Env_builder, is going to override the specific
-         behavior of pattern_identifier from the Ssa_builder, but still needs to depend
-         on the Scope_builder behavior *)
-      method super_pattern_identifier
-          ?(kind : Ast.Statement.VariableDeclaration.kind option)
-          (ident : (L.t, L.t) Ast.Identifier.t) =
-        ignore kind;
         super#identifier ident
 
       (* read *)
@@ -1017,7 +1016,7 @@ struct
                    overkill. We can be more precise but still correct by collecting all
                    possible writes in the try-block and merging them with the state when
                    entering the try-block. *)
-                this#havoc_current_ssa_env ~all:false;
+                this#havoc_current_ssa_env;
                 let catch_completion_state =
                   this#run_to_completion (fun () -> ignore @@ this#catch_clause loc clause)
                 in
@@ -1039,7 +1038,7 @@ struct
                    all possible writes in the handler and merging them with the state
                    when entering the handler (which in turn should already account for
                    any contributions by the try-block). *)
-                this#havoc_current_ssa_env ~all:false;
+                this#havoc_current_ssa_env;
                 ignore @@ this#block loc block
               | None -> ()
             end;
@@ -1085,7 +1084,7 @@ struct
 
       method! call loc (expr : (L.t, L.t) Ast.Expression.Call.t) =
         ignore @@ super#call loc expr;
-        this#havoc_current_ssa_env ~all:false;
+        this#havoc_current_ssa_env;
         expr
 
       method! new_ _loc (expr : (L.t, L.t) Ast.Expression.New.t) =
@@ -1093,7 +1092,7 @@ struct
         let { callee; targs = _; arguments; comments = _ } = expr in
         ignore @@ this#expression callee;
         ignore @@ Flow_ast_mapper.map_opt this#call_arguments arguments;
-        this#havoc_current_ssa_env ~all:false;
+        this#havoc_current_ssa_env;
         expr
 
       method! unary_expression _loc (expr : (L.t, L.t) Ast.Expression.Unary.t) =
@@ -1102,14 +1101,14 @@ struct
           ignore @@ this#expression argument;
           begin
             match operator with
-            | Await -> this#havoc_current_ssa_env ~all:false
+            | Await -> this#havoc_current_ssa_env
             | _ -> ()
           end;
           expr)
 
       method! yield loc (expr : ('loc, 'loc) Ast.Expression.Yield.t) =
         ignore @@ super#yield loc expr;
-        this#havoc_current_ssa_env ~all:true;
+        this#havoc_current_ssa_env;
         expr
 
       (* Labeled statements handle labeled breaks, but also push labeled continues
