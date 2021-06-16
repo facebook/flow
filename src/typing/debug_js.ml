@@ -904,7 +904,6 @@ and dump_use_t_ (depth, tvars) cx t =
              (String.concat "; " (Base.List.map ~f:kid resolved))
              (String.concat "; " (Base.List.map ~f:kid unresolved))
              (use_kid upper))
-    | ModuleExportsAssignT (_, _, _) -> p t
 
 and dump_tvar_ (depth, tvars) cx id =
   if ISet.mem id tvars then

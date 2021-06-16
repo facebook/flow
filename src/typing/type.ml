@@ -619,9 +619,6 @@ module rec TypeTerm : sig
     | ObjTestProtoT of reason * t_out
     (* test that something is object-like, returning a default type otherwise *)
     | ObjTestT of reason * t * t
-    (* Assign properties to module.exports. The only interesting case is when module.exports is a
-       function type, where we set the statics field of the function type. *)
-    | ModuleExportsAssignT of reason * t * t
     (* assignment rest element in array pattern *)
     | ArrRestT of use_op * reason * int * t
     (* Guarded unification *)
@@ -3459,7 +3456,6 @@ let string_of_use_ctor = function
   | DestructuringT _ -> "DestructuringT"
   | CreateObjWithComputedPropT _ -> "CreateObjWithComputedPropT"
   | ResolveUnionT _ -> "ResolveUnionT"
-  | ModuleExportsAssignT _ -> "ModuleExportsAssignT"
   | FilterOptionalT _ -> "FilterOptionalT"
   | FilterMaybeT _ -> "FilterMaybeT"
   | SealGenericT _ -> "SealGenericT"

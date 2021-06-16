@@ -140,7 +140,6 @@ and reason_of_use_t = function
   | SpecializeT (_, _, reason, _, _, _) -> reason
   | StrictEqT { reason; _ } -> reason
   | ObjKitT (_, reason, _, _, _) -> reason
-  | ModuleExportsAssignT (reason, _, _) -> reason
   | SubstOnPredT (_, reason, _, _) -> reason
   | SuperT (_, reason, _) -> reason
   | TestPropT (reason, _, _, _) -> reason
@@ -331,7 +330,6 @@ and mod_reason_of_use_t f = function
     StrictEqT { reason = f reason; cond_context; flip; arg }
   | ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
     ObjKitT (use_op, f reason, resolve_tool, tool, tout)
-  | ModuleExportsAssignT (reason, ts, t) -> ModuleExportsAssignT (f reason, ts, t)
   | SubstOnPredT (use_op, reason, subst, t) -> SubstOnPredT (use_op, f reason, subst, t)
   | SuperT (op, reason, inst) -> SuperT (op, f reason, inst)
   | TestPropT (reason, id, n, t) -> TestPropT (f reason, id, n, t)
@@ -488,7 +486,6 @@ let rec util_use_op_of_use_t :
   | ReactPropsToOut _
   | ReactInToProps _
   | DestructuringT _
-  | ModuleExportsAssignT _
   | CreateObjWithComputedPropT _
   | ResolveUnionT _
   | EnumExhaustiveCheckT _

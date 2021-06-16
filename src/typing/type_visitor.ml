@@ -655,10 +655,6 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc value in
         let acc = self#tout cx pole_TODO acc tout_tvar in
         acc
-      | ModuleExportsAssignT (_, t, tout) ->
-        let acc = self#type_ cx pole_TODO acc t in
-        let acc = self#type_ cx pole_TODO acc tout in
-        acc
       | ResolveUnionT { reason = _; resolved; unresolved; upper; id = _ } ->
         let acc = List.fold_left (self#type_ cx pole_TODO) acc resolved in
         let acc = List.fold_left (self#type_ cx pole_TODO) acc unresolved in

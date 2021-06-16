@@ -1543,13 +1543,6 @@ class virtual ['a] t_with_uses =
           t
         else
           ExtendsUseT (use_op, r, tlist', t1', t2')
-      | ModuleExportsAssignT (r, t', t_out) ->
-        let t'' = self#type_ cx map_cx t' in
-        let t_out' = self#type_ cx map_cx t_out in
-        if t' == t'' && t_out == t_out' then
-          t
-        else
-          ModuleExportsAssignT (r, t'', t_out')
       | DestructuringT (r, k, s, t', id) ->
         let s' = self#selector cx map_cx s in
         let t'' = self#tout cx map_cx t' in

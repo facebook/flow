@@ -4604,20 +4604,6 @@ struct
             GetPropT (_, _, Named (_, OrdinaryName "prototype"), tout) ) ->
           let instance = reposition cx ~trace (aloc_of_reason reason) instance in
           rec_flow_t cx trace ~use_op:unknown_use (instance, OpenT tout)
-        (***************************************************************************)
-        (* assignment of properties to module.exports;                             *)
-        (* the only interesting case is where functions may have their statics set *)
-        (***************************************************************************)
-        | (_, ModuleExportsAssignT (_, assign, tout)) ->
-          let l' =
-            match l with
-            | DefT (r, trust, FunT (statics, proto, ft)) ->
-              let reason = reason_of_t statics in
-              let statics' = mod_reason_of_t (fun _ -> reason) assign in
-              DefT (r, trust, FunT (statics', proto, ft))
-            | _ -> l
-          in
-          rec_flow_t cx trace ~use_op:unknown_use (l', tout)
         (***************************************************************)
         (* functions may be called by passing a receiver and arguments *)
         (***************************************************************)
@@ -6317,7 +6303,6 @@ struct
     | SentinelPropTestT _
     | SetElemT _
     | SetPropT _
-    | ModuleExportsAssignT _
     | SpecializeT _
     | SubstOnPredT _
     (* Should be impossible. We only generate these with OpenPredTs. *)
