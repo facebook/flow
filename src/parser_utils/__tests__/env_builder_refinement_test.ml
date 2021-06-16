@@ -373,3 +373,25 @@ let%expect_test "singleton_num_neg" =
 (x === -3) && x|};
   [%expect {|
     [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 14) to (2, 15) => { {refinement = -3; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "sentinel_lit" =
+  print_ssa_test {|let x = undefined;
+(x.foo === 3) && x|}; 
+    [%expect {| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 17) to (2, 18) => { {refinement = SentinelR foo; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "sentinel_lit_indexed " =
+  print_ssa_test {|let x = undefined;
+(x["foo"] === 3) && x|};
+    [%expect {| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 20) to (2, 21) => { {refinement = SentinelR foo; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "sentinel_nonlit" =
+  print_ssa_test {|let x = undefined;
+let y = undefined;
+(x.foo === y) && x|};
+    [%expect {| [ (3, 1) to (3, 2) => { (1, 4) to (1, 5): (`x`) }; (3, 17) to (3, 18) => { {refinement = SentinelR foo; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "sentinel_nonlit_indexed" =
+  print_ssa_test {|let x = undefined;
+let y = undefined;
+(x["foo"] === y) && x|};
+    [%expect {| [ (3, 1) to (3, 2) => { (1, 4) to (1, 5): (`x`) }; (3, 20) to (3, 21) => { {refinement = SentinelR foo; writes = (1, 4) to (1, 5): (`x`)} } ] |}]

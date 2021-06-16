@@ -110,6 +110,7 @@ module type S = sig
         sense: bool;
         lit: float * string;
       }
+    | SentinelR of string
   [@@deriving show { with_path = false }]
 
   val show_refinement_kind_without_locs : refinement_kind -> string
@@ -144,7 +145,9 @@ module Make
   module Scope_builder = Scope_builder.Make (L) (Scope_api)
   module Ssa_builder = Ssa_builder.Make (L) (Ssa_api) (Scope_builder)
   module Invalidation_api = Invalidation_api.Make (L) (Scope_api) (Ssa_api)
-  module Provider_api = Provider_api.Make (L)
+
+  module Provider_api : Provider_api.S with module L = L = Provider_api.Make (L)
+
   module Env_api = Env_api.Make (L)
   open Scope_builder
 
@@ -183,6 +186,7 @@ module Make
         sense: bool;
         lit: float * string;
       }
+    | SentinelR of string
   [@@deriving show { with_path = false }]
 
   let rec show_refinement_kind_without_locs = function
@@ -220,6 +224,7 @@ module Make
         Printf.sprintf "Not (%s)" lit
       else
         lit
+    | SentinelR prop -> Printf.sprintf "SentinelR %s" prop
 
   type refinement = L.LSet.t * refinement_kind
 
@@ -1313,6 +1318,7 @@ module Make
 
       method null_test ~strict ~sense loc expr =
         ignore @@ this#expression expr;
+        this#maybe_sentinel_refinement ~sense loc expr;
         match key expr with
         | None -> ()
         | Some name ->
@@ -1332,6 +1338,7 @@ module Make
 
       method void_test ~sense ~strict ~check_for_bound_undefined loc expr =
         ignore @@ this#expression expr;
+        this#maybe_sentinel_refinement ~sense loc expr;
         match key expr with
         | None -> ()
         | Some name ->
@@ -1353,6 +1360,7 @@ module Make
 
       method typeof_test loc arg typename sense =
         ignore @@ this#expression arg;
+        this#maybe_sentinel_refinement ~sense loc arg;
         let refinement =
           match typename with
           | "boolean" -> Some (BoolR loc)
@@ -1377,6 +1385,7 @@ module Make
 
       method literal_test ~strict ~sense loc expr refinement =
         ignore @@ this#expression expr;
+        this#maybe_sentinel_refinement ~sense loc expr;
         match key expr with
         | Some name when strict ->
           let refinement =
@@ -1386,6 +1395,32 @@ module Make
               Not refinement
           in
           this#add_refinement name (L.LSet.singleton loc, refinement)
+        | _ -> ()
+
+      method maybe_sentinel_refinement ~sense loc expr =
+        let open Flow_ast in
+        match expr with
+        | ( _,
+            Expression.Member
+              {
+                Expression.Member._object;
+                property =
+                  ( Expression.Member.PropertyIdentifier (_, { Identifier.name = prop_name; _ })
+                  | Expression.Member.PropertyExpression
+                      (_, Expression.Literal { Literal.value = Literal.String prop_name; _ }) );
+                _;
+              } ) ->
+          (match key _object with
+          | Some name ->
+            let refinement = SentinelR prop_name in
+            let refinement =
+              if sense then
+                refinement
+              else
+                Not refinement
+            in
+            this#add_refinement name (L.LSet.singleton loc, refinement)
+          | None -> ())
         | _ -> ()
 
       method eq_test ~strict ~sense loc left right =
@@ -1512,6 +1547,10 @@ module Make
         | ((_, Expression.Unary { Expression.Unary.operator = Expression.Unary.Void; _ }), expr)
         | (expr, (_, Expression.Unary { Expression.Unary.operator = Expression.Unary.Void; _ })) ->
           this#void_test ~sense ~strict ~check_for_bound_undefined:false loc expr
+        | (((_, Expression.Member _) as expr), _)
+        | (_, ((_, Expression.Member _) as expr)) ->
+          ignore @@ this#expression expr;
+          this#maybe_sentinel_refinement ~sense loc expr
         | _ ->
           ignore @@ this#expression left;
           ignore @@ this#expression right
