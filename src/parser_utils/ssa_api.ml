@@ -76,7 +76,7 @@ let print_values =
         ~f:(fun (read_loc, write_locs) ->
           Printf.sprintf
             "%s => { %s }"
-            (Loc.debug_to_string read_loc)
+            (L.debug_to_string read_loc)
             (String.concat ", " @@ Base.List.map ~f:print_write_loc write_locs))
         kvlist
     in

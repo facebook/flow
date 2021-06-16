@@ -9,241 +9,188 @@ open Test_utils
 module LocMap = Loc_collections.LocMap
 module LocSet = Loc_collections.LocSet
 
-let print_locs locs =
-  LocSet.elements locs
-  |> List.map (Loc.debug_to_string ~include_source:false)
-  |> String.concat ", "
-  |> Printf.sprintf "[%s]"
-
-let printer with_locs locmap =
-  let kvlist = LocMap.bindings locmap in
-  let strlist =
-    Base.List.map
-      ~f:(fun (read_loc, (locs, refinement)) ->
-        Printf.sprintf
-          "%s => { %s%s }"
-          (Loc.debug_to_string read_loc)
-          ( if with_locs then
-            Printf.sprintf "%s, " (print_locs locs)
-          else
-            "" )
-          (Env_builder.With_Loc.show_refinement_kind refinement))
-      kvlist
+let print_values refinement_of_id =
+  let open Env_builder.With_Loc.Env_api in
+  let rec print_value write_loc =
+    match write_loc with
+    | Uninitialized -> "(uninitialized)"
+    | Write reason ->
+      let loc = Reason.poly_loc_of_reason reason in
+      Utils_js.spf
+        "%s: (%s)"
+        (L.debug_to_string loc)
+        Reason.(desc_of_reason reason |> string_of_desc)
+    | Refinement { refinement_id; writes } ->
+      let refinement = refinement_of_id refinement_id in
+      let refinement_str =
+        Env_builder.With_Loc.show_refinement_kind_without_locs (snd refinement)
+      in
+      let writes_str = String.concat "," (List.map print_value writes) in
+      Printf.sprintf "{refinement = %s; writes = %s}" refinement_str writes_str
   in
-  Printf.printf "[ %s ]" (String.concat "; " strlist)
+  fun values ->
+    let kvlist = L.LMap.bindings values in
+    let strlist =
+      Base.List.map
+        ~f:(fun (read_loc, write_locs) ->
+          Printf.sprintf
+            "%s => { %s }"
+            (L.debug_to_string read_loc)
+            (String.concat ", " @@ Base.List.map ~f:print_value write_locs))
+        kvlist
+    in
+    Printf.printf "[ %s ]" (String.concat "; " strlist)
 
 (* TODO: ocamlformat mangles the ppx syntax. *)
 [@@@ocamlformat "disable=true"]
 
 let print_ssa_test contents =
-  let refined_reads = Env_builder.With_Loc.program (parse contents) in
-  printer true refined_reads
+  let refined_reads, refinement_of_id = Env_builder.With_Loc.program (parse contents) in
+  print_values refinement_of_id refined_reads
 
 let%expect_test "logical_expr" =
   print_ssa_test {|let x = null;
 let y = null;
 (x && (y = x)) + x|};
   [%expect {|
-    [ (3, 11) to (3, 12) => { [(3, 1) to (3, 2)], (Truthy
-       { Loc.source = None; start = { Loc.line = 3; column = 1 };
-         _end = { Loc.line = 3; column = 2 } }) } ] |}]
+    [ (3, 1) to (3, 2) => { (1, 4) to (1, 5): (`x`) }; (3, 11) to (3, 12) => { {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)} }; (3, 17) to (3, 18) => { (1, 4) to (1, 5): (`x`) } ] |}]
 
 let%expect_test "logical_expr_successive" =
   print_ssa_test {|let x = null;
 x && (x && x)|};
   [%expect {|
-    [ (2, 6) to (2, 7) => { [(2, 0) to (2, 1)], (Truthy
-       { Loc.source = None; start = { Loc.line = 2; column = 0 };
-         _end = { Loc.line = 2; column = 1 } }) }; (2, 11) to (2, 12) => { [(2, 0) to (2, 1), (2, 6) to (2, 7)], (And (
-       (Truthy
-          { Loc.source = None; start = { Loc.line = 2; column = 0 };
-            _end = { Loc.line = 2; column = 1 } }),
-       (Truthy
-          { Loc.source = None; start = { Loc.line = 2; column = 6 };
-            _end = { Loc.line = 2; column = 7 } })
-       )) } ] |}]
+    [ (2, 0) to (2, 1) => { (1, 4) to (1, 5): (`x`) }; (2, 6) to (2, 7) => { {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)} }; (2, 11) to (2, 12) => { {refinement = Truthy; writes = {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)}} } ] |}]
 
 let%expect_test "logical_or" =
   print_ssa_test {|let x = null;
 x || x|};
   [%expect {|
-    [ (2, 5) to (2, 6) => { [(2, 0) to (2, 1)], (Not
-       (Truthy
-          { Loc.source = None; start = { Loc.line = 2; column = 0 };
-            _end = { Loc.line = 2; column = 1 } })) } ] |}]
+    [ (2, 0) to (2, 1) => { (1, 4) to (1, 5): (`x`) }; (2, 5) to (2, 6) => { {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "logical_nc_and" =
   print_ssa_test {|let x = null;
 (x ?? x) && x|};
-  [%expect {|
-    [ (2, 6) to (2, 7) => { [(2, 1) to (2, 2)], (Not (Not Maybe)) }; (2, 12) to (2, 13) => { [(2, 1) to (2, 2), (2, 6) to (2, 7)], (Or (
-       (And ((Not Maybe),
-          (Truthy
-             { Loc.source = None; start = { Loc.line = 2; column = 1 };
-               _end = { Loc.line = 2; column = 2 } })
-          )),
-       (Truthy
-          { Loc.source = None; start = { Loc.line = 2; column = 6 };
-            _end = { Loc.line = 2; column = 7 } })
-       )) } ] |}]
+  [%expect{| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 6) to (2, 7) => { {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`x`)} }; (2, 12) to (2, 13) => { {refinement = Or (And (Not (Maybe), Truthy), Truthy); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "logical_nc_no_key" =
   print_ssa_test {|let x = null;
 ((x != null) ?? x) && x|};
   [%expect {|
-    [ (2, 22) to (2, 23) => { [(2, 16) to (2, 17)], (Truthy
-       { Loc.source = None; start = { Loc.line = 2; column = 16 };
-         _end = { Loc.line = 2; column = 17 } }) } ] |}]
+    [ (2, 2) to (2, 3) => { (1, 4) to (1, 5): (`x`) }; (2, 16) to (2, 17) => { (1, 4) to (1, 5): (`x`) }; (2, 22) to (2, 23) => { {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "logical_nested_right" =
   print_ssa_test {|let x = null;
 x || (x || x)|};
   [%expect {|
-    [ (2, 6) to (2, 7) => { [(2, 0) to (2, 1)], (Not
-       (Truthy
-          { Loc.source = None; start = { Loc.line = 2; column = 0 };
-            _end = { Loc.line = 2; column = 1 } })) }; (2, 11) to (2, 12) => { [(2, 0) to (2, 1), (2, 6) to (2, 7)], (And (
-       (Not
-          (Truthy
-             { Loc.source = None; start = { Loc.line = 2; column = 0 };
-               _end = { Loc.line = 2; column = 1 } })),
-       (Not
-          (Truthy
-             { Loc.source = None; start = { Loc.line = 2; column = 6 };
-               _end = { Loc.line = 2; column = 7 } }))
-       )) } ] |}]
+    [ (2, 0) to (2, 1) => { (1, 4) to (1, 5): (`x`) }; (2, 6) to (2, 7) => { {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)} }; (2, 11) to (2, 12) => { {refinement = Not (Truthy); writes = {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)}} } ] |}]
 
 let%expect_test "logical_nested" =
   print_ssa_test {|let x = null;
-(x || x) && x|};
+(x || (x != null)) && x|};
   [%expect {|
-    [ (2, 6) to (2, 7) => { [(2, 1) to (2, 2)], (Not
-       (Truthy
-          { Loc.source = None; start = { Loc.line = 2; column = 1 };
-            _end = { Loc.line = 2; column = 2 } })) }; (2, 12) to (2, 13) => { [(2, 1) to (2, 2), (2, 6) to (2, 7)], (Or (
-       (Truthy
-          { Loc.source = None; start = { Loc.line = 2; column = 1 };
-            _end = { Loc.line = 2; column = 2 } }),
-       (Truthy
-          { Loc.source = None; start = { Loc.line = 2; column = 6 };
-            _end = { Loc.line = 2; column = 7 } })
-       )) } ] |}]
+    [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 7) to (2, 8) => { {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)} }; (2, 22) to (2, 23) => { {refinement = Or (Truthy, Not (Maybe)); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "logical_nested2" =
   print_ssa_test {|let x = null;
 (x && x) || (x && x)|};
   [%expect {|
-    [ (2, 6) to (2, 7) => { [(2, 1) to (2, 2)], (Truthy
-       { Loc.source = None; start = { Loc.line = 2; column = 1 };
-         _end = { Loc.line = 2; column = 2 } }) }; (2, 13) to (2, 14) => { [(2, 1) to (2, 2), (2, 6) to (2, 7)], (Not
-       (And (
-          (Truthy
-             { Loc.source = None; start = { Loc.line = 2; column = 1 };
-               _end = { Loc.line = 2; column = 2 } }),
-          (Truthy
-             { Loc.source = None; start = { Loc.line = 2; column = 6 };
-               _end = { Loc.line = 2; column = 7 } })
-          ))) }; (2, 18) to (2, 19) => { [(2, 1) to (2, 2), (2, 6) to (2, 7), (2, 13) to (2, 14)], (And (
-       (Not
-          (And (
-             (Truthy
-                { Loc.source = None; start = { Loc.line = 2; column = 1 };
-                  _end = { Loc.line = 2; column = 2 } }),
-             (Truthy
-                { Loc.source = None; start = { Loc.line = 2; column = 6 };
-                  _end = { Loc.line = 2; column = 7 } })
-             ))),
-       (Truthy
-          { Loc.source = None; start = { Loc.line = 2; column = 13 };
-            _end = { Loc.line = 2; column = 14 } })
-       )) } ] |}]
+    [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 6) to (2, 7) => { {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)} }; (2, 13) to (2, 14) => { {refinement = Not (And (Truthy, Truthy)); writes = (1, 4) to (1, 5): (`x`)} }; (2, 18) to (2, 19) => { {refinement = Truthy; writes = {refinement = Not (And (Truthy, Truthy)); writes = (1, 4) to (1, 5): (`x`)}} } ] |}]
 
 let%expect_test "assignment_truthy" =
   print_ssa_test {|let x = null;
 (x = null) && x|};
   [%expect {|
-    [ (2, 14) to (2, 15) => { [(2, 1) to (2, 9)], (Truthy
-       { Loc.source = None; start = { Loc.line = 2; column = 1 };
-         _end = { Loc.line = 2; column = 2 } }) } ] |}]
+    [ (2, 14) to (2, 15) => { {refinement = Truthy; writes = (2, 1) to (2, 2): (`x`)} } ] |}]
 
 let%expect_test "eq_null" =
   print_ssa_test {|let x = null;
 (x == null) && x|};
-  [%expect {| [ (2, 15) to (2, 16) => { [(2, 1) to (2, 10)], Maybe } ] |}]
+  [%expect {|
+    [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 15) to (2, 16) => { {refinement = Maybe; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "neq_null" =
   print_ssa_test {|let x = null;
 (x != null) && x|};
-  [%expect {| [ (2, 15) to (2, 16) => { [(2, 1) to (2, 10)], (Not Maybe) } ] |}]
+  [%expect {|
+    [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 15) to (2, 16) => { {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "strict_eq_null" =
   print_ssa_test {|let x = null;
 (x === null) && x|};
-  [%expect {| [ (2, 16) to (2, 17) => { [(2, 1) to (2, 11)], Null } ] |}]
+  [%expect {|
+    [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 16) to (2, 17) => { {refinement = Null; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "strict_neq_null" =
   print_ssa_test {|let x = null;
 (x !== null) && x|};
-  [%expect {| [ (2, 16) to (2, 17) => { [(2, 1) to (2, 11)], (Not Null) } ] |}]
+  [%expect {|
+    [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 16) to (2, 17) => { {refinement = Not (Null); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "eq_undefined" =
   print_ssa_test {|let x = undefined;
 (x == undefined) && x|};
-  [%expect {| [ (2, 20) to (2, 21) => { [(2, 1) to (2, 15)], Maybe } ] |}]
+  [%expect {|
+    [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 20) to (2, 21) => { {refinement = Maybe; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "neq_undefined" =
   print_ssa_test {|let x = undefined;
 (x != undefined) && x|};
-  [%expect {| [ (2, 20) to (2, 21) => { [(2, 1) to (2, 15)], (Not Maybe) } ] |}]
+  [%expect {|
+    [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 20) to (2, 21) => { {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "strict_eq_undefined" =
   print_ssa_test {|let x = undefined;
 (x === undefined) && x|};
-  [%expect {| [ (2, 21) to (2, 22) => { [(2, 1) to (2, 16)], Undefined } ] |}]
+  [%expect {|
+    [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 21) to (2, 22) => { {refinement = Undefined; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "strict_neq_undefined" =
   print_ssa_test {|let x = undefined;
 (x !== undefined) && x|};
-  [%expect {| [ (2, 21) to (2, 22) => { [(2, 1) to (2, 16)], (Not Undefined) } ] |}]
+  [%expect {|
+    [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 21) to (2, 22) => { {refinement = Not (Undefined); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "undefined_already_bound" =
   print_ssa_test {|let undefined = 3;
 let x = null;
 (x !== undefined) && x|};
-  [%expect {| [  ] |}]
+  [%expect {| [ (3, 1) to (3, 2) => { (2, 4) to (2, 5): (`x`) }; (3, 7) to (3, 16) => { (1, 4) to (1, 13): (`undefined`) }; (3, 21) to (3, 22) => { (2, 4) to (2, 5): (`x`) } ] |}]
 
 let%expect_test "eq_void" =
   print_ssa_test {|let x = undefined;
 (x == void 0) && x|};
-  [%expect {| [ (2, 17) to (2, 18) => { [(2, 1) to (2, 12)], Maybe } ] |}]
+  [%expect {|
+    [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 17) to (2, 18) => { {refinement = Maybe; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "neq_void" =
   print_ssa_test {|let x = undefined;
 (x != void 0) && x|};
-  [%expect {| [ (2, 17) to (2, 18) => { [(2, 1) to (2, 12)], (Not Maybe) } ] |}]
+  [%expect {|
+    [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 17) to (2, 18) => { {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "strict_eq_void" =
   print_ssa_test {|let x = undefined;
 (x === void 0) && x|};
-  [%expect {| [ (2, 18) to (2, 19) => { [(2, 1) to (2, 13)], Undefined } ] |}]
+  [%expect {|
+    [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 18) to (2, 19) => { {refinement = Undefined; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "strict_neq_void" =
   print_ssa_test {|let x = undefined;
 (x !== void 0) && x|};
-  [%expect {| [ (2, 18) to (2, 19) => { [(2, 1) to (2, 13)], (Not Undefined) } ] |}]
+  [%expect {|
+    [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 18) to (2, 19) => { {refinement = Not (Undefined); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "instanceof" =
   print_ssa_test {|let x = undefined;
 (x instanceof Object) && x|};
   [%expect {|
-    [ (2, 25) to (2, 26) => { [(2, 1) to (2, 20)], (InstanceOf
-       { Loc.source = None; start = { Loc.line = 2; column = 14 };
-         _end = { Loc.line = 2; column = 20 } }) } ] |}]
+    [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 25) to (2, 26) => { {refinement = instanceof; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "Array.isArray" =
   print_ssa_test {|let x = undefined;
 (Array.isArray(x)) && x|};
-  [%expect {| [ (2, 22) to (2, 23) => { [(2, 1) to (2, 17)], IsArray } ] |}]
+  [%expect {|
+    [ (2, 15) to (2, 16) => { (1, 4) to (1, 5): (`x`) }; (2, 22) to (2, 23) => { {refinement = isArray; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "unary_negation" =
   print_ssa_test {|let x = undefined;
@@ -251,244 +198,178 @@ let%expect_test "unary_negation" =
 !x && x;
 !(x || x) && x;|};
   [%expect {|
-    [ (2, 23) to (2, 24) => { [(2, 2) to (2, 18)], (Not IsArray) }; (3, 6) to (3, 7) => { [(3, 1) to (3, 2)], (Not
-       (Truthy
-          { Loc.source = None; start = { Loc.line = 3; column = 1 };
-            _end = { Loc.line = 3; column = 2 } })) }; (4, 7) to (4, 8) => { [(4, 2) to (4, 3)], (Not
-       (Truthy
-          { Loc.source = None; start = { Loc.line = 4; column = 2 };
-            _end = { Loc.line = 4; column = 3 } })) }; (4, 13) to (4, 14) => { [(4, 2) to (4, 3), (4, 7) to (4, 8)], (Not
-       (Or (
-          (Truthy
-             { Loc.source = None; start = { Loc.line = 4; column = 2 };
-               _end = { Loc.line = 4; column = 3 } }),
-          (Truthy
-             { Loc.source = None; start = { Loc.line = 4; column = 7 };
-               _end = { Loc.line = 4; column = 8 } })
-          ))) } ] |}]
+    [ (2, 16) to (2, 17) => { (1, 4) to (1, 5): (`x`) }; (2, 23) to (2, 24) => { {refinement = Not (isArray); writes = (1, 4) to (1, 5): (`x`)} }; (3, 1) to (3, 2) => { (1, 4) to (1, 5): (`x`) }; (3, 6) to (3, 7) => { {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)} }; (4, 2) to (4, 3) => { (1, 4) to (1, 5): (`x`) }; (4, 7) to (4, 8) => { {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)} }; (4, 13) to (4, 14) => { {refinement = Not (Or (Truthy, Truthy)); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "typeof_bool" =
   print_ssa_test {|let x = undefined;
 (typeof x == "boolean") && x|};
   [%expect {|
-    [ (2, 27) to (2, 28) => { [(2, 1) to (2, 22)], (BoolR
-       { Loc.source = None; start = { Loc.line = 2; column = 1 };
-         _end = { Loc.line = 2; column = 22 } }) } ] |}]
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 27) to (2, 28) => { {refinement = bool; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "not_typeof_bool" =
   print_ssa_test {|let x = undefined;
 (typeof x != "boolean") && x|};
   [%expect {|
-    [ (2, 27) to (2, 28) => { [(2, 1) to (2, 22)], (Not
-       (BoolR
-          { Loc.source = None; start = { Loc.line = 2; column = 1 };
-            _end = { Loc.line = 2; column = 22 } })) } ] |}]
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 27) to (2, 28) => { {refinement = Not (bool); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "typeof_number" =
   print_ssa_test {|let x = undefined;
 (typeof x == "number") && x|};
   [%expect {|
-    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (NumberR
-       { Loc.source = None; start = { Loc.line = 2; column = 1 };
-         _end = { Loc.line = 2; column = 21 } }) } ] |}]
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 26) to (2, 27) => { {refinement = number; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "not_typeof_number" =
   print_ssa_test {|let x = undefined;
 (typeof x != "number") && x|};
   [%expect {|
-    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (Not
-       (NumberR
-          { Loc.source = None; start = { Loc.line = 2; column = 1 };
-            _end = { Loc.line = 2; column = 21 } })) } ] |}]
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 26) to (2, 27) => { {refinement = Not (number); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "typeof_function" =
   print_ssa_test {|let x = undefined;
 (typeof x == "function") && x|};
-  [%expect {| [ (2, 28) to (2, 29) => { [(2, 1) to (2, 23)], FunctionR } ] |}]
+  [%expect {|
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 28) to (2, 29) => { {refinement = function; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "not_typeof_function" =
   print_ssa_test {|let x = undefined;
 (typeof x != "function") && x|};
-  [%expect {| [ (2, 28) to (2, 29) => { [(2, 1) to (2, 23)], (Not FunctionR) } ] |}]
+  [%expect {|
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 28) to (2, 29) => { {refinement = Not (function); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "typeof_object" =
   print_ssa_test {|let x = undefined;
 (typeof x == "object") && x|};
-  [%expect {| [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], ObjectR } ] |}]
+  [%expect {|
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 26) to (2, 27) => { {refinement = object; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "not_typeof_object" =
   print_ssa_test {|let x = undefined;
 (typeof x != "object") && x|};
-  [%expect {| [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (Not ObjectR) } ] |}]
+  [%expect {|
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 26) to (2, 27) => { {refinement = Not (object); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "typeof_string" =
   print_ssa_test {|let x = undefined;
 (typeof x == "string") && x|};
   [%expect {|
-    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (StringR
-       { Loc.source = None; start = { Loc.line = 2; column = 1 };
-         _end = { Loc.line = 2; column = 21 } }) } ] |}]
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 26) to (2, 27) => { {refinement = string; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "not_typeof_string" =
   print_ssa_test {|let x = undefined;
 (typeof x != "string") && x|};
   [%expect {|
-    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (Not
-       (StringR
-          { Loc.source = None; start = { Loc.line = 2; column = 1 };
-            _end = { Loc.line = 2; column = 21 } })) } ] |}]
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 26) to (2, 27) => { {refinement = Not (string); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "typeof_symbol" =
   print_ssa_test {|let x = undefined;
 (typeof x == "symbol") && x|};
   [%expect {|
-    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (SymbolR
-       { Loc.source = None; start = { Loc.line = 2; column = 1 };
-         _end = { Loc.line = 2; column = 21 } }) } ] |}]
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 26) to (2, 27) => { {refinement = symbol; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "not_typeof_symbol" =
   print_ssa_test {|let x = undefined;
 (typeof x != "symbol") && x|};
   [%expect {|
-    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (Not
-       (SymbolR
-          { Loc.source = None; start = { Loc.line = 2; column = 1 };
-            _end = { Loc.line = 2; column = 21 } })) } ] |}]
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 26) to (2, 27) => { {refinement = Not (symbol); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "typeof_bool_template" =
   print_ssa_test {|let x = undefined;
 (typeof x == `boolean`) && x|};
   [%expect {|
-    [ (2, 27) to (2, 28) => { [(2, 1) to (2, 22)], (BoolR
-       { Loc.source = None; start = { Loc.line = 2; column = 1 };
-         _end = { Loc.line = 2; column = 22 } }) } ] |}]
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 27) to (2, 28) => { {refinement = bool; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "not_typeof_bool_template" =
   print_ssa_test {|let x = undefined;
 (typeof x != `boolean`) && x|};
   [%expect {|
-    [ (2, 27) to (2, 28) => { [(2, 1) to (2, 22)], (Not
-       (BoolR
-          { Loc.source = None; start = { Loc.line = 2; column = 1 };
-            _end = { Loc.line = 2; column = 22 } })) } ] |}]
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 27) to (2, 28) => { {refinement = Not (bool); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "typeof_number_template" =
   print_ssa_test {|let x = undefined;
 (typeof x == `number`) && x|};
   [%expect {|
-    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (NumberR
-       { Loc.source = None; start = { Loc.line = 2; column = 1 };
-         _end = { Loc.line = 2; column = 21 } }) } ] |}]
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 26) to (2, 27) => { {refinement = number; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "not_typeof_number_template" =
   print_ssa_test {|let x = undefined;
 (typeof x != `number`) && x|};
   [%expect {|
-    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (Not
-       (NumberR
-          { Loc.source = None; start = { Loc.line = 2; column = 1 };
-            _end = { Loc.line = 2; column = 21 } })) } ] |}]
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 26) to (2, 27) => { {refinement = Not (number); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "typeof_function_template" =
   print_ssa_test {|let x = undefined;
 (typeof x == `function`) && x|};
-  [%expect {| [ (2, 28) to (2, 29) => { [(2, 1) to (2, 23)], FunctionR } ] |}]
+  [%expect {|
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 28) to (2, 29) => { {refinement = function; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "not_typeof_function_template" =
   print_ssa_test {|let x = undefined;
 (typeof x != `function`) && x|};
-  [%expect {| [ (2, 28) to (2, 29) => { [(2, 1) to (2, 23)], (Not FunctionR) } ] |}]
+  [%expect {|
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 28) to (2, 29) => { {refinement = Not (function); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "typeof_object_template" =
   print_ssa_test {|let x = undefined;
 (typeof x == `object`) && x|};
-  [%expect {| [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], ObjectR } ] |}]
+  [%expect {|
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 26) to (2, 27) => { {refinement = object; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "not_typeof_object_template" =
   print_ssa_test {|let x = undefined;
 (typeof x != `object`) && x|};
-  [%expect {| [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (Not ObjectR) } ] |}]
+  [%expect {|
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 26) to (2, 27) => { {refinement = Not (object); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "typeof_string_template" =
   print_ssa_test {|let x = undefined;
 (typeof x == `string`) && x|};
   [%expect {|
-    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (StringR
-       { Loc.source = None; start = { Loc.line = 2; column = 1 };
-         _end = { Loc.line = 2; column = 21 } }) } ] |}]
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 26) to (2, 27) => { {refinement = string; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "not_typeof_string_template" =
   print_ssa_test {|let x = undefined;
 (typeof x != `string`) && x|};
   [%expect {|
-    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (Not
-       (StringR
-          { Loc.source = None; start = { Loc.line = 2; column = 1 };
-            _end = { Loc.line = 2; column = 21 } })) } ] |}]
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 26) to (2, 27) => { {refinement = Not (string); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "typeof_symbol_template" =
   print_ssa_test {|let x = undefined;
 (typeof x == `symbol`) && x|};
   [%expect {|
-    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (SymbolR
-       { Loc.source = None; start = { Loc.line = 2; column = 1 };
-         _end = { Loc.line = 2; column = 21 } }) } ] |}]
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 26) to (2, 27) => { {refinement = symbol; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "not_typeof_symbol_template" =
   print_ssa_test {|let x = undefined;
 (typeof x != `symbol`) && x|};
   [%expect {|
-    [ (2, 26) to (2, 27) => { [(2, 1) to (2, 21)], (Not
-       (SymbolR
-          { Loc.source = None; start = { Loc.line = 2; column = 1 };
-            _end = { Loc.line = 2; column = 21 } })) } ] |}]
+    [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (2, 26) to (2, 27) => { {refinement = Not (symbol); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "singleton_bool" =
   print_ssa_test {|let x = undefined;
 (x === true) && x|};
   [%expect {|
-    [ (2, 16) to (2, 17) => { [(2, 1) to (2, 11)], SingletonBoolR {
-      loc =
-      { Loc.source = None; start = { Loc.line = 2; column = 7 };
-        _end = { Loc.line = 2; column = 11 } };
-      sense = true; lit = true} } ] |}]
+    [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 16) to (2, 17) => { {refinement = true; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "singleton_str" =
   print_ssa_test {|let x = undefined;
 (x === "str") && x|};
   [%expect{|
-    [ (2, 17) to (2, 18) => { [(2, 1) to (2, 12)], SingletonStrR {
-      loc =
-      { Loc.source = None; start = { Loc.line = 2; column = 7 };
-        _end = { Loc.line = 2; column = 12 } };
-      sense = true; lit = "str"} } ] |}]
+    [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 17) to (2, 18) => { {refinement = str; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "singleton_str_template" =
   print_ssa_test {|let x = undefined;
 (x === `str`) && x|};
   [%expect {|
-    [ (2, 17) to (2, 18) => { [(2, 1) to (2, 12)], SingletonStrR {
-      loc =
-      { Loc.source = None; start = { Loc.line = 2; column = 7 };
-        _end = { Loc.line = 2; column = 12 } };
-      sense = true; lit = "str"} } ] |}]
+    [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 17) to (2, 18) => { {refinement = str; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "singleton_num" =
   print_ssa_test {|let x = undefined;
 (x === 3) && x|};
   [%expect {|
-    [ (2, 13) to (2, 14) => { [(2, 1) to (2, 8)], SingletonNumR {
-      loc =
-      { Loc.source = None; start = { Loc.line = 2; column = 7 };
-        _end = { Loc.line = 2; column = 8 } };
-      sense = true; lit = (3., "3")} } ] |}]
+    [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 13) to (2, 14) => { {refinement = 3; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "singleton_num_neg" =
   print_ssa_test {|let x = undefined;
 (x === -3) && x|};
   [%expect {|
-    [ (2, 14) to (2, 15) => { [(2, 1) to (2, 9)], SingletonNumR {
-      loc =
-      { Loc.source = None; start = { Loc.line = 2; column = 7 };
-        _end = { Loc.line = 2; column = 9 } };
-      sense = true; lit = (-3., "-3")} } ] |}]
+    [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 14) to (2, 15) => { {refinement = -3; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
