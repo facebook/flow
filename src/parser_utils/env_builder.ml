@@ -80,15 +80,15 @@ module type S = sig
   exception AbruptCompletionExn of abrupt_kind
 
   type refinement_kind =
-    | And of refinement_kind * refinement_kind
-    | Or of refinement_kind * refinement_kind
-    | Not of refinement_kind
-    | Truthy of L.t
-    | Null
-    | Undefined
-    | Maybe
-    | InstanceOf of L.t
-    | IsArray
+    | AndR of refinement_kind * refinement_kind
+    | OrR of refinement_kind * refinement_kind
+    | NotR of refinement_kind
+    | TruthyR of L.t
+    | NullR
+    | UndefinedR
+    | MaybeR
+    | InstanceOfR of L.t
+    | IsArrayR
     | BoolR of L.t
     | FunctionR
     | NumberR of L.t
@@ -156,15 +156,15 @@ module Make
   exception AbruptCompletionExn = Ssa_builder.AbruptCompletion.Exn
 
   type refinement_kind =
-    | And of refinement_kind * refinement_kind
-    | Or of refinement_kind * refinement_kind
-    | Not of refinement_kind
-    | Truthy of L.t
-    | Null
-    | Undefined
-    | Maybe
-    | InstanceOf of L.t
-    | IsArray
+    | AndR of refinement_kind * refinement_kind
+    | OrR of refinement_kind * refinement_kind
+    | NotR of refinement_kind
+    | TruthyR of L.t
+    | NullR
+    | UndefinedR
+    | MaybeR
+    | InstanceOfR of L.t
+    | IsArrayR
     | BoolR of L.t
     | FunctionR
     | NumberR of L.t
@@ -190,23 +190,23 @@ module Make
   [@@deriving show { with_path = false }]
 
   let rec show_refinement_kind_without_locs = function
-    | And (l, r) ->
+    | AndR (l, r) ->
       Printf.sprintf
         "And (%s, %s)"
         (show_refinement_kind_without_locs l)
         (show_refinement_kind_without_locs r)
-    | Or (l, r) ->
+    | OrR (l, r) ->
       Printf.sprintf
         "Or (%s, %s)"
         (show_refinement_kind_without_locs l)
         (show_refinement_kind_without_locs r)
-    | Not r -> Printf.sprintf "Not (%s)" (show_refinement_kind_without_locs r)
-    | Truthy _ -> "Truthy"
-    | Null -> "Null"
-    | Undefined -> "Undefined"
-    | Maybe -> "Maybe"
-    | InstanceOf _ -> "instanceof"
-    | IsArray -> "isArray"
+    | NotR r -> Printf.sprintf "Not (%s)" (show_refinement_kind_without_locs r)
+    | TruthyR _ -> "Truthy"
+    | NullR -> "Null"
+    | UndefinedR -> "Undefined"
+    | MaybeR -> "Maybe"
+    | InstanceOfR _ -> "instanceof"
+    | IsArrayR -> "isArray"
     | BoolR _ -> "bool"
     | FunctionR -> "function"
     | NumberR _ -> "number"
@@ -1221,7 +1221,7 @@ module Make
       method identifier_refinement ((loc, ident) as identifier) =
         ignore @@ this#identifier identifier;
         let { Flow_ast.Identifier.name; _ } = ident in
-        this#add_refinement name (L.LSet.singleton loc, Truthy loc)
+        this#add_refinement name (L.LSet.singleton loc, TruthyR loc)
 
       method assignment_refinement loc assignment =
         ignore @@ this#assignment loc assignment;
@@ -1230,7 +1230,7 @@ module Make
         | ( id_loc,
             Flow_ast.Pattern.Identifier
               { Flow_ast.Pattern.Identifier.name = (_, { Flow_ast.Identifier.name; _ }); _ } ) ->
-          this#add_refinement name (L.LSet.singleton loc, Truthy id_loc)
+          this#add_refinement name (L.LSet.singleton loc, TruthyR id_loc)
         | _ -> ()
 
       method private merge_refinement_scopes
@@ -1297,7 +1297,7 @@ module Make
             this#push_refinement_scope SMap.empty;
             (match key left with
             | None -> ()
-            | Some name -> this#add_refinement name (L.LSet.singleton loc, Truthy loc));
+            | Some name -> this#add_refinement name (L.LSet.singleton loc, TruthyR loc));
             let truthy_refinements = this#peek_new_refinements () in
             this#pop_refinement_scope ();
             this#push_refinement_scope SMap.empty;
@@ -1324,15 +1324,15 @@ module Make
         | Some name ->
           let refinement =
             if strict then
-              Null
+              NullR
             else
-              Maybe
+              MaybeR
           in
           let refinement =
             if sense then
               refinement
             else
-              Not refinement
+              NotR refinement
           in
           this#add_refinement name (L.LSet.singleton loc, refinement)
 
@@ -1346,15 +1346,15 @@ module Make
           if (not check_for_bound_undefined) || SMap.find_opt "undefined" this#ssa_env = None then
             let refinement =
               if strict then
-                Undefined
+                UndefinedR
               else
-                Maybe
+                MaybeR
             in
             let refinement =
               if sense then
                 refinement
               else
-                Not refinement
+                NotR refinement
             in
             this#add_refinement name (L.LSet.singleton loc, refinement)
 
@@ -1369,7 +1369,7 @@ module Make
           | "object" -> Some ObjectR
           | "string" -> Some (StringR loc)
           | "symbol" -> Some (SymbolR loc)
-          | "undefined" -> Some Undefined
+          | "undefined" -> Some UndefinedR
           | _ -> None
         in
         match (refinement, key arg) with
@@ -1378,7 +1378,7 @@ module Make
             if sense then
               ref
             else
-              Not ref
+              NotR ref
           in
           this#add_refinement name (L.LSet.singleton loc, refinement)
         | _ -> ()
@@ -1392,7 +1392,7 @@ module Make
             if sense then
               refinement
             else
-              Not refinement
+              NotR refinement
           in
           this#add_refinement name (L.LSet.singleton loc, refinement)
         | _ -> ()
@@ -1417,7 +1417,7 @@ module Make
               if sense then
                 refinement
               else
-                Not refinement
+                NotR refinement
             in
             this#add_refinement name (L.LSet.singleton loc, refinement)
           | None -> ())
@@ -1562,7 +1562,7 @@ module Make
         | None -> ()
         | Some name ->
           let (inst_loc, _) = instance in
-          this#add_refinement name (L.LSet.singleton loc, InstanceOf inst_loc)
+          this#add_refinement name (L.LSet.singleton loc, InstanceOfR inst_loc)
 
       method binary_refinement loc expr =
         let open Flow_ast.Expression.Binary in
@@ -1621,7 +1621,7 @@ module Make
           ignore @@ this#expression arg;
           (match key arg with
           | None -> ()
-          | Some name -> this#add_refinement name (L.LSet.singleton loc, IsArray))
+          | Some name -> this#add_refinement name (L.LSet.singleton loc, IsArrayR))
         | _ -> ignore @@ this#call loc call
 
       method unary_refinement
@@ -1711,14 +1711,14 @@ module Make
         | AND (id1, id2) ->
           let (locs1, ref1) = this#chain_to_refinement (IMap.find id1 refinement_heap) in
           let (locs2, ref2) = this#chain_to_refinement (IMap.find id2 refinement_heap) in
-          (L.LSet.union locs1 locs2, And (ref1, ref2))
+          (L.LSet.union locs1 locs2, AndR (ref1, ref2))
         | OR (id1, id2) ->
           let (locs1, ref1) = this#chain_to_refinement (IMap.find id1 refinement_heap) in
           let (locs2, ref2) = this#chain_to_refinement (IMap.find id2 refinement_heap) in
-          (L.LSet.union locs1 locs2, Or (ref1, ref2))
+          (L.LSet.union locs1 locs2, OrR (ref1, ref2))
         | NOT id ->
           let (locs, ref) = this#chain_to_refinement (IMap.find id refinement_heap) in
-          (locs, Not ref)
+          (locs, NotR ref)
 
       method refinement_of_id id =
         let chain = IMap.find id refinement_heap in
