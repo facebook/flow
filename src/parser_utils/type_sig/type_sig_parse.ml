@@ -1802,12 +1802,6 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
         Annot (TEMPORARY_Array (loc, t))
       | _ -> Err (loc, CheckError)
     end
-  (* These annotations are only used internally by the sig AST and should not
-     appear directly in user code. These are no longer necessary, as we no
-     longer need to create a sig AST. *)
-  | "$TEMPORARY$Object$freeze"
-  | "$TEMPORARY$function" ->
-    Err (loc, CheckError)
   | "$ReadOnlyArray" ->
     begin
       match targs with

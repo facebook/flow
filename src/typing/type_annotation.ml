@@ -374,12 +374,6 @@ let rec convert cx tparams_map =
                 (DefT (replace_desc_reason RBoolean r, trust, BoolT (Some bool)))
                 targs
             | _ -> error_type cx loc (Error_message.EUnexpectedTemporaryBaseType loc) t_ast)
-      | "$TEMPORARY$Object$freeze" ->
-        check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-            let (ts, targs) = convert_type_params () in
-            let t = convert_temporary_object ~frozen:true (List.hd ts) in
-            (* TODO fix targs *)
-            reconstruct_ast t targs)
       | "$TEMPORARY$module$exports$assign" ->
         check_type_arg_arity cx loc t_ast targs 2 (fun () ->
             let (ts, targs) = convert_type_params () in
@@ -392,57 +386,10 @@ let rec convert cx tparams_map =
               in
               reconstruct_ast tout targs
             | _ -> assert false)
-      | "$TEMPORARY$function" ->
-        check_type_arg_arity cx loc t_ast targs 2 (fun () ->
-            let (ts, targs) = convert_type_params () in
-            match ts with
-            | [annot; assign] ->
-              begin
-                match (annot, assign) with
-                | (DefT (r, trust, FunT (statics, proto, ft)), DefT (_, objtrust, ObjT objtype)) ->
-                  let reason = reason_of_t statics in
-                  let statics' =
-                    DefT (reason, objtrust, ObjT { objtype with proto_t = FunProtoT reason })
-                  in
-                  let t = DefT (r, trust, FunT (statics', proto, ft)) in
-                  reconstruct_ast t targs
-                | ( DefT
-                      ( poly_r,
-                        poly_trust,
-                        PolyT
-                          {
-                            tparams_loc;
-                            tparams;
-                            t_out = DefT (r, trust, FunT (statics, proto, ft));
-                            id;
-                          } ),
-                    DefT (_, objtrust, ObjT objtype) ) ->
-                  let reason = reason_of_t statics in
-                  let statics' =
-                    DefT (reason, objtrust, ObjT { objtype with proto_t = FunProtoT reason })
-                  in
-                  let t =
-                    DefT
-                      ( poly_r,
-                        poly_trust,
-                        PolyT
-                          {
-                            tparams_loc;
-                            tparams;
-                            t_out = DefT (r, trust, FunT (statics', proto, ft));
-                            id;
-                          } )
-                  in
-                  reconstruct_ast t targs
-                | _ ->
-                  (* fall back *)
-                  reconstruct_ast annot targs
-              end
-            | _ -> assert false)
       | "$TEMPORARY$object" ->
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
             let (ts, targs) = convert_type_params () in
-            let t = convert_temporary_object ~frozen:false (List.hd ts) in
+            let t = convert_temporary_object (List.hd ts) in
             reconstruct_ast t targs)
       | "$TEMPORARY$array" ->
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
@@ -1162,34 +1109,21 @@ and convert_opt cx tparams_map ast_opt =
   let t_opt = Base.Option.map ~f:(fun ((_, x), _) -> x) tast_opt in
   (t_opt, tast_opt)
 
-and convert_temporary_object ~frozen =
-  let desc =
-    if frozen then
-      RFrozen RObjectLit
-    else
-      RObjectLit
-  in
-  function
+and convert_temporary_object = function
   | ExactT (_, DefT (r, trust, ObjT o))
   | DefT (r, trust, ObjT o) ->
-    let r = replace_desc_reason desc r in
+    let r = replace_desc_reason RObjectLit r in
     let obj_kind =
       match o.flags.obj_kind with
       | Indexed _ -> o.flags.obj_kind
       | _ -> Exact
     in
-    DefT (r, trust, ObjT { o with flags = { obj_kind; frozen } })
+    DefT (r, trust, ObjT { o with flags = { obj_kind; frozen = false } })
   | EvalT (l, TypeDestructorT (use_op, r, SpreadType (_, ts, head_slice)), id) ->
-    let r = replace_desc_reason desc r in
+    let r = replace_desc_reason RObjectLit r in
     let target =
       let open Type.Object.Spread in
-      let make_seal =
-        if frozen then
-          Frozen
-        else
-          Sealed
-      in
-      Value { make_seal }
+      Value { make_seal = Sealed }
     in
     EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id)
   | t -> t
