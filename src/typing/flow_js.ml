@@ -9610,8 +9610,13 @@ struct
             FunT
               ( dummy_static bound_reason,
                 dummy_prototype,
-                mk_methodtype dummy_this params_tlist return_t ~rest_param ~def_reason ~params_names
-              ) )
+                mk_methodtype
+                  (dummy_this (aloc_of_reason reason_op))
+                  params_tlist
+                  return_t
+                  ~rest_param
+                  ~def_reason
+                  ~params_names ) )
       in
       rec_flow_t cx trace ~use_op:unknown_use (funt, tout)
     in

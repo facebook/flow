@@ -3544,9 +3544,9 @@ let dummy_static = update_desc_reason (fun desc -> RStatics desc) %> Unsoundness
 
 let dummy_prototype = ObjProtoT (locationless_reason RDummyPrototype)
 
-let bound_function_dummy_this = locationless_reason RDummyThis |> Unsoundness.bound_fn_this_any
+let bound_function_dummy_this loc = mk_reason RDummyThis loc |> Unsoundness.bound_fn_this_any
 
-let dummy_this = locationless_reason RDummyThis |> MixedT.make |> with_trust bogus_trust
+let dummy_this loc = mk_reason RDummyThis loc |> MixedT.make |> with_trust bogus_trust
 
 let implicit_mixed_this r =
   update_desc_reason (fun desc -> RImplicitThis desc) r |> MixedT.make |> with_trust bogus_trust

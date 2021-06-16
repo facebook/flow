@@ -211,7 +211,7 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
               Type.mk_boundfunctiontype
                 []
                 return
-                ~this:Type.bound_function_dummy_this
+                ~this:(Type.bound_function_dummy_this (Reason.aloc_of_reason reason))
                 ~rest_param:None
                 ~def_reason:reason
             in
@@ -1528,7 +1528,7 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
     in
     let this_t =
       match this_param with
-      | None -> Type.bound_function_dummy_this
+      | None -> Type.bound_function_dummy_this (Reason.aloc_of_reason reason)
       | Some t -> merge file t
     in
     let return = merge file return in

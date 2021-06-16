@@ -8186,7 +8186,7 @@ and mk_arrow cx ~annot reason func =
     function_decl has already done the necessary checking of `this` in
     the body of the function. Now we want to avoid re-binding `this` to
     objects through which the function may be called. *)
-    (dummy_this, this)
+    (dummy_this loc, this)
   in
   let (fun_type, reconstruct_ast) = function_decl id cx ~annot reason func this_recipe super in
   (fun_type, reconstruct_ast fun_type)

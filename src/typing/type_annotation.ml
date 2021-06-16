@@ -929,7 +929,7 @@ let rec convert cx tparams_map =
     in
     let (this_t, this_param_ast) =
       match this_ with
-      | None -> (bound_function_dummy_this, None)
+      | None -> (bound_function_dummy_this params_loc, None)
       | Some (this_loc, { Function.ThisParam.annot = (loc, annot); comments }) ->
         let (((_, this_t), _) as annot) = convert cx tparams_map annot in
         (this_t, Some (this_loc, { Function.ThisParam.annot = (loc, annot); comments }))
