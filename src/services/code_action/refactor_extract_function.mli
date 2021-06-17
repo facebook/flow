@@ -26,8 +26,5 @@ val undefined_variables_after_extraction :
   extracted_statements_loc:Loc.t ->
   string list
 
-val create_extracted_function :
-  (Loc.t, Loc.t) Flow_ast.Statement.t list -> (Loc.t, Loc.t) Flow_ast.Function.t
-
 val provide_available_refactors :
   (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> (string * (Loc.t, Loc.t) Flow_ast.Program.t) list

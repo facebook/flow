@@ -394,33 +394,6 @@ let undefined_variables_after_extraction_tests =
           } );
   ]
 
-let create_extracted_function_tests =
-  [
-    ( "create_extracted_function_basic" >:: fun ctxt ->
-      let statements =
-        [
-          (Loc.none, Flow_ast.Statement.(Break { Break.label = None; comments = None }));
-          (Loc.none, Flow_ast.Statement.(Continue { Continue.label = None; comments = None }));
-        ]
-      in
-      let generated_function_string =
-        ( Loc.none,
-          Flow_ast.Statement.FunctionDeclaration
-            (Refactor_extract_function.create_extracted_function statements) )
-        |> Js_layout_generator.statement ~opts:Js_layout_generator.default_opts
-        |> pretty_print
-      in
-      let expected_function_string =
-        String.trim {|
-function newFunction() {
-  break;
-  continue;
-}
-      |}
-      in
-      assert_equal ~ctxt ~printer:(fun x -> x) expected_function_string generated_function_string );
-  ]
-
 let assert_refactored ~ctxt expected source extract_range =
   let ast = parse source in
   let actual =
@@ -701,6 +674,5 @@ let tests =
          "extract_statements" >::: extract_statements_tests;
          "collect_relevant_defs_with_scope" >::: collect_relevant_defs_with_scope_tests;
          "undefined_variables_after_extraction" >::: undefined_variables_after_extraction_tests;
-         "create_extracted_function" >::: create_extracted_function_tests;
          "provide_available_refactor" >::: provide_available_refactor_tests;
        ]
