@@ -14,12 +14,16 @@
     mem_profile
     worker
     workerController)
+  (preprocess (pps lwt_ppx))  
   (libraries
     base
     flow_exit_status
+    flow_exit
+    flow_common
     heap_shared_mem
     marshal_tools
     procs_bucket
     procfs
+    lwt.unix
     sys_utils
     worker_cancel))

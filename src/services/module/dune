@@ -10,6 +10,7 @@
     flow_state_locals_module
     flow_state_readers
     flow_typing
+    flow_package
   )
   (preprocess (pps lwt_ppx))
 )

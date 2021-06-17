@@ -6,7 +6,8 @@
     flow_common_modulename
     flow_parser_utils
     flow_procs
-    flow_shared_mem
+    xx
+    ; flow_shared_mem
     flow_state_readers
     collections ; hack
   )

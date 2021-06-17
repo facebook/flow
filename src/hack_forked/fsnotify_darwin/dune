@@ -1,5 +1,6 @@
 (library
   (name fsnotify_Darwin)
+  (enabled_if (= %{system} macosx))
   (wrapped false)
   (libraries
     fsevents

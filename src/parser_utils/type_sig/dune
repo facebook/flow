@@ -1,17 +1,16 @@
 (library
- (name flow_parser_utils)
+ (name flow_type_sig)
  (wrapped false)
  (libraries
+  flow_parser_utils
   cycle_hash
   dtoa
   flow_common
   flow_common_utils
   flow_common_utils_loc_utils
-  flow_common_tarjan
   flow_parser
   flow_parser_utils_signature_builder
   flow_typing_polarity
-  hh_json ; hack
-  )
+  hh_json)
  (preprocess
   (pps ppx_let ppx_deriving.std)))

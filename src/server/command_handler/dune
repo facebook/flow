@@ -18,6 +18,7 @@
     flow_service_type_info
     flow_state_heaps_module
     flow_typing
+    flow_code_action
   )
   (preprocess (pps lwt_ppx))
 )
