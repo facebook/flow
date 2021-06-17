@@ -1800,6 +1800,24 @@ module Make
         this#merge_self_ssa_env env1;
         expr
 
+      method! conditional _loc (expr : (L.t, L.t) Flow_ast.Expression.Conditional.t) =
+        let open Flow_ast.Expression.Conditional in
+        let { test; consequent; alternate; comments = _ } = expr in
+        this#push_refinement_scope SMap.empty;
+        ignore @@ this#expression_refinement test;
+        let test_refinements = this#peek_new_refinements () in
+        let env0 = this#ssa_env_without_latest_refinements in
+        ignore @@ this#expression consequent;
+        let env1 = this#ssa_env_without_latest_refinements in
+        this#pop_refinement_scope ();
+        this#reset_ssa_env env0;
+        this#push_refinement_scope test_refinements;
+        this#negate_new_refinements ();
+        ignore @@ this#expression alternate;
+        this#pop_refinement_scope ();
+        this#merge_self_ssa_env env1;
+        expr
+
       method private chain_to_refinement =
         function
         | BASE refinement -> refinement

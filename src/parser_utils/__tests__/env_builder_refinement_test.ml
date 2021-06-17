@@ -430,3 +430,8 @@ let%expect_test "optional_chain_standalone" =
   print_ssa_test {|let x = undefined;
 x?.foo && x|}; 
     [%expect {| [ (2, 10) to (2, 11) => { {refinement = And (SentinelR foo, Not (Maybe)); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "conditional_expression" =
+  print_ssa_test {|let x = undefined;
+(x ? x: x) && x|}; 
+    [%expect {| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 5) to (2, 6) => { {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)} }; (2, 8) to (2, 9) => { {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)} }; (2, 14) to (2, 15) => { (1, 4) to (1, 5): (`x`) } ] |}]
