@@ -57,20 +57,7 @@
  *    .3 = end_column }
  *)
 
-(* unsigned leb128-ish encoding *)
-let add_int =
-  let rec loop buf i =
-    let byte = i land 0x7F in
-    let i = i lsr 7 in
-    if i != 0 then begin
-      Buffer.add_int8 buf (byte land 0x80);
-      loop buf i
-    end else
-      Buffer.add_int8 buf byte
-  in
-  fun buf i ->
-    assert (i >= 0);
-    loop buf i
+let add_int buf i = Leb128.Unsigned.write (Buffer.add_int8 buf) i
 
 let write_loc_start buf tag_adjust prev_column rline column =
   if rline = 0 then
@@ -131,17 +118,7 @@ let unpack source init packed =
     Char.code c
   in
 
-  let read_int =
-    let rec loop result shift =
-      let byte = read_i8 () in
-      let result = result lor ((byte land 0x7F) lsl shift) in
-      if byte land 0x80 = 0 then
-        result
-      else
-        loop result (shift + 7)
-    in
-    (fun () -> loop 0 0)
-  in
+  let read_int () = Leb128.Unsigned.read read_i8 in
 
   let read_loc () =
     let tag = read_i8 () in
