@@ -909,18 +909,24 @@ module Make
         this#raise_abrupt_completion AbruptCompletion.throw
 
       (** Control flow **)
-      method! if_statement _loc (stmt : (L.t, L.t) Ast.Statement.If.t) =
-        let open Ast.Statement.If in
+      method! if_statement _loc stmt =
+        let open Flow_ast.Statement.If in
         let { test; consequent; alternate; _ } = stmt in
-        ignore @@ this#expression test;
-        let env0 = this#ssa_env in
+        this#push_refinement_scope SMap.empty;
+        ignore @@ this#expression_refinement test;
+        let test_refinements = this#peek_new_refinements () in
+        let env0 = this#ssa_env_without_latest_refinements in
         (* collect completions and environments of every branch *)
         let then_completion_state =
           this#run_to_completion (fun () ->
               ignore @@ this#if_consequent_statement ~has_else:(alternate <> None) consequent)
         in
-        let env1 = this#ssa_env in
+        let then_env_no_refinements = this#ssa_env_without_latest_refinements in
+        let then_env_with_refinements = this#ssa_env in
+        this#pop_refinement_scope ();
         this#reset_ssa_env env0;
+        this#push_refinement_scope test_refinements;
+        this#negate_new_refinements ();
         let else_completion_state =
           this#run_to_completion (fun () ->
               ignore
@@ -930,12 +936,35 @@ module Make
                    alternate)
         in
         (* merge environments *)
-        this#merge_self_ssa_env env1;
+        let else_env_no_refinements = this#ssa_env_without_latest_refinements in
+        let else_env_with_refinements = this#ssa_env in
+        this#pop_refinement_scope ();
+        this#reset_ssa_env env0;
+        this#merge_if_statement_envs
+          (then_env_no_refinements, then_env_with_refinements)
+          (else_env_no_refinements, else_env_with_refinements);
 
         (* merge completions *)
         let if_completion_states = (then_completion_state, [else_completion_state]) in
         this#merge_completion_states if_completion_states;
         stmt
+
+      method merge_if_statement_envs (env1, refined_env1) (env2, refined_env2) : unit =
+        (* We only want to merge the refined environments from the two branches of an if-statement
+         * if there was an assignment in one of the branches. Otherwise, merging the positive and
+         * negative branches of the refinement into a union would be unnecessary work to
+         * reconstruct the original type *)
+        SMap.iter
+          (fun name { val_ref; _ } ->
+            let value1 = SMap.find name env1 in
+            let value2 = SMap.find name env2 in
+            if Val.id_of_val value1 = Val.id_of_val value2 then
+              val_ref := value1
+            else
+              let refined_value1 = SMap.find name refined_env1 in
+              let refined_value2 = SMap.find name refined_env2 in
+              val_ref := Val.merge refined_value1 refined_value2)
+          ssa_env
 
       method! while_ _loc stmt = stmt
 

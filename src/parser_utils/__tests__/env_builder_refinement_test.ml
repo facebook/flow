@@ -435,3 +435,93 @@ let%expect_test "conditional_expression" =
   print_ssa_test {|let x = undefined;
 (x ? x: x) && x|}; 
     [%expect {| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 5) to (2, 6) => { {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)} }; (2, 8) to (2, 9) => { {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)} }; (2, 14) to (2, 15) => { (1, 4) to (1, 5): (`x`) } ] |}]
+
+let%expect_test "if_else_statement" =
+  print_ssa_test {|let x = undefined;
+if (x) {
+  x;
+} else {
+  x;
+}
+x;|};
+    [%expect {| [ (2, 4) to (2, 5) => { (1, 4) to (1, 5): (`x`) }; (3, 2) to (3, 3) => { {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)} }; (5, 2) to (5, 3) => { {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)} }; (7, 0) to (7, 1) => { (1, 4) to (1, 5): (`x`) } ] |}]
+
+let%expect_test "if_no_else_statement" =
+  print_ssa_test {|let x = undefined;
+if (x) {
+  x;
+} 
+x;|};
+    [%expect {| [ (2, 4) to (2, 5) => { (1, 4) to (1, 5): (`x`) }; (3, 2) to (3, 3) => { {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)} }; (5, 0) to (5, 1) => { (1, 4) to (1, 5): (`x`) } ] |}]
+
+let%expect_test "if_no_else_statement_with_assignment" =
+  print_ssa_test {|let x = undefined;
+if (x !== null) {
+  x = null;
+} 
+x;|};
+    [%expect {| [ (2, 4) to (2, 5) => { (1, 4) to (1, 5): (`x`) }; (5, 0) to (5, 1) => { (3, 2) to (3, 3): (`x`), {refinement = Not (Not (Null)); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "if_throw_else_statement" =
+  print_ssa_test {|let x = undefined;
+if (x) {
+  throw 'error';
+} else {
+  x;
+}
+x;|};
+    [%expect {| [ (2, 4) to (2, 5) => { (1, 4) to (1, 5): (`x`) }; (5, 2) to (5, 3) => { {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)} }; (7, 0) to (7, 1) => { {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "if_else_throw_statement" =
+  print_ssa_test {|let x = undefined;
+if (x) {
+  x;
+} else {
+  throw 'error';
+}
+x;|};
+    [%expect {| [ (2, 4) to (2, 5) => { (1, 4) to (1, 5): (`x`) }; (3, 2) to (3, 3) => { {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)} }; (7, 0) to (7, 1) => { {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "if_return_else_statement" =
+  print_ssa_test {|function f() {
+  let x = undefined;
+  if (x) {
+    return;
+  } else {
+    x;
+  }
+  x;
+}
+|};
+    [%expect {| [ (3, 6) to (3, 7) => { (2, 6) to (2, 7): (`x`) }; (6, 4) to (6, 5) => { {refinement = Not (Truthy); writes = (2, 6) to (2, 7): (`x`)} }; (8, 2) to (8, 3) => { {refinement = Not (Truthy); writes = (2, 6) to (2, 7): (`x`)} } ] |}]
+
+let%expect_test "if_else_return_statement" =
+  print_ssa_test {|function f() {
+  let x = undefined;
+  if (x) {
+    x;
+  } else {
+    return;
+  }
+  x;
+}
+|};
+    [%expect {| [ (3, 6) to (3, 7) => { (2, 6) to (2, 7): (`x`) }; (4, 4) to (4, 5) => { {refinement = Truthy; writes = (2, 6) to (2, 7): (`x`)} }; (8, 2) to (8, 3) => { {refinement = Truthy; writes = (2, 6) to (2, 7): (`x`)} } ] |}]
+
+let%expect_test "nested_if_else_statement" =
+  print_ssa_test {|let x = undefined;
+if (x) {
+  if (x === null) {
+    throw 'error';
+  }
+  x; 
+} else {
+  if (x === null) {
+    x;
+  } else {
+    throw 'error';
+  }
+  x;
+}
+x;|};
+    [%expect {| [ (2, 4) to (2, 5) => { (1, 4) to (1, 5): (`x`) }; (3, 6) to (3, 7) => { {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)} }; (6, 2) to (6, 3) => { {refinement = Not (Null); writes = {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)}} }; (8, 6) to (8, 7) => { {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)} }; (9, 4) to (9, 5) => { {refinement = Null; writes = {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)}} }; (13, 2) to (13, 3) => { {refinement = Null; writes = {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)}} }; (15, 0) to (15, 1) => { {refinement = Not (Null); writes = {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)}}, {refinement = Null; writes = {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)}} } ] |}]
