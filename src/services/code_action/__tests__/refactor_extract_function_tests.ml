@@ -197,6 +197,90 @@ foo(a + b);
         } );
   ]
 
+let assert_relevant_defs ~ctxt ~expected source extracted_statements_loc =
+  let ast = parse source in
+  let scope_info = Scope_builder.program ~with_types:false ast in
+  let actual =
+    Refactor_extract_function.collect_relevant_defs_with_scope ~scope_info ~extracted_statements_loc
+    |> List.map
+         (fun ({ Scope_api.With_Loc.Def.actual_name; _ }, { Scope_api.With_Loc.Scope.defs; _ }) ->
+           assert_bool "scope does not contain def" (SMap.mem actual_name defs);
+           actual_name)
+    |> List.sort String.compare
+  in
+  let expected = List.sort String.compare expected in
+  assert_equal ~ctxt ~printer:(String.concat ", ") expected actual
+
+let collect_relevant_defs_with_scope_tests =
+  [
+    ( "used_defs_toplevel" >:: fun ctxt ->
+      let source =
+        {|
+        const a = 3;
+        let b = 4;
+        console.log(a + b);
+      |}
+      in
+      assert_relevant_defs
+        ~ctxt
+        ~expected:["a"; "b"]
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 4; column = 8 };
+          _end = { Loc.line = 4; column = 27 };
+        } );
+    ( "used_defs_in_function" >:: fun ctxt ->
+      let source =
+        {|
+        const a = 3;
+        let b = 4;
+        function test() {
+          return a + b;
+        }
+        console.log("I should not be selected");
+      |}
+      in
+      assert_relevant_defs
+        ~ctxt
+        ~expected:["a"; "b"]
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 5; column = 10 };
+          _end = { Loc.line = 5; column = 23 };
+        } );
+    ( "used_defs_in_many_scopes" >:: fun ctxt ->
+      let source =
+        {|
+        const a = 3;
+        function level1() {
+          const b = 4;
+          function level2() {
+            function level3() {
+              const d = 6;
+              function level4() {
+                const e = 7;
+                return a + b + c + d + e;
+              }
+            }
+            var c = 5;
+          }
+        }
+        console.log("I should not be selected");
+      |}
+      in
+      assert_relevant_defs
+        ~ctxt
+        ~expected:["a"; "b"; "c"; "d"; "e"]
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 10; column = 16 };
+          _end = { Loc.line = 10; column = 49 };
+        } );
+  ]
+
 let create_extracted_function_tests =
   [
     ( "create_extracted_function_basic" >:: fun ctxt ->
@@ -502,6 +586,7 @@ let tests =
   "refactor_extract_function"
   >::: [
          "extract_statements" >::: extract_statements_tests;
+         "collect_relevant_defs_with_scope" >::: collect_relevant_defs_with_scope_tests;
          "create_extracted_function" >::: create_extracted_function_tests;
          "provide_available_refactor" >::: provide_available_refactor_tests;
        ]

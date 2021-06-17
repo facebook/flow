@@ -5,6 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Scope_api = Scope_api.With_Loc
+open Loc_collections
+
 (* Collect all statements that are completely within the selection. *)
 class statements_collector (extract_range : Loc.t) =
   object (this)
@@ -113,6 +116,35 @@ let extract_statements ast extract_range =
   let collector = new statements_collector extract_range in
   let _ = collector#program ast in
   collector#collected_statements ()
+
+let collect_relevant_defs_with_scope ~scope_info ~extracted_statements_loc =
+  let used_defs_within_extracted_statements =
+    IMap.fold
+      (fun _ { Scope_api.Scope.locals; _ } acc ->
+        LocMap.fold
+          (fun use def acc ->
+            if Loc.contains extracted_statements_loc use then
+              Scope_api.DefMap.add def () acc
+            else
+              acc)
+          locals
+          acc)
+      scope_info.Scope_api.scopes
+      Scope_api.DefMap.empty
+  in
+  IMap.fold
+    (fun _ scope acc ->
+      let { Scope_api.Scope.defs; _ } = scope in
+      SMap.fold
+        (fun _ def acc ->
+          if Scope_api.DefMap.mem def used_defs_within_extracted_statements then
+            (def, scope) :: acc
+          else
+            acc)
+        defs
+        acc)
+    scope_info.Scope_api.scopes
+    []
 
 let create_extracted_function statements =
   let id = Some (Ast_builder.Identifiers.identifier "newFunction") in
