@@ -53,7 +53,7 @@ let union_loc acc loc =
   | Some existing_loc -> Some (Loc.btwn existing_loc loc)
 
 class new_function_call_replacer
-  insert_new_function_call_loc rest_statements_loc_union statements_loc_union =
+  insert_new_function_call_loc rest_statements_loc_union extracted_statements_loc =
   object (this)
     inherit [Loc.t] Flow_ast_mapper.mapper as super
 
@@ -71,7 +71,7 @@ class new_function_call_replacer
       if this#should_be_replaced_by_function_call statement_loc then
         [
           Statements.expression
-            ~loc:statements_loc_union
+            ~loc:extracted_statements_loc
             (Expressions.call (Expressions.identifier "newFunction"));
         ]
       else if this#should_be_replaced_by_empty statement_loc then
@@ -80,7 +80,7 @@ class new_function_call_replacer
         super#statement_fork_point stmt
   end
 
-class insertion_function_body_loc_collector statements_loc =
+class insertion_function_body_loc_collector extracted_statements_loc =
   object (_this)
     inherit [(string * Loc.t) list, Loc.t] Flow_ast_visitor.visitor ~init:[] as super
 
@@ -92,7 +92,7 @@ class insertion_function_body_loc_collector statements_loc =
        body = Function.BodyBlock (block_loc, _);
        _;
       }
-        when Loc.contains block_loc statements_loc ->
+        when Loc.contains block_loc extracted_statements_loc ->
         let () = super#set_acc ((name, block_loc) :: acc) in
         super#function_ loc function_declaration
       | _ -> super#function_ loc function_declaration
@@ -202,8 +202,8 @@ let insert_function_to_toplevel (program_loc, program) extracted_statements =
               ];
         } ) )
 
-let insert_function_as_inner_functions ast extracted_statements statements_loc_union =
-  let collector = new insertion_function_body_loc_collector statements_loc_union in
+let insert_function_as_inner_functions ast extracted_statements extracted_statements_loc =
+  let collector = new insertion_function_body_loc_collector extracted_statements_loc in
   let create_refactor (title, target_function_body_loc) =
     let mapper =
       new insert_new_function_in_function_body_mapper
@@ -224,7 +224,7 @@ let provide_available_refactors ast extract_range =
     | [] -> []
     | insert_new_function_call_loc :: rest_statements_locations ->
       let rest_statements_loc_union = List.fold_left union_loc None rest_statements_locations in
-      let statements_loc_union =
+      let extracted_statements_loc =
         match rest_statements_loc_union with
         | None -> insert_new_function_call_loc
         | Some loc -> Loc.btwn insert_new_function_call_loc loc
@@ -233,8 +233,8 @@ let provide_available_refactors ast extract_range =
         new new_function_call_replacer
           insert_new_function_call_loc
           rest_statements_loc_union
-          statements_loc_union
+          extracted_statements_loc
       in
       let new_ast = replacer#program ast in
       insert_function_to_toplevel new_ast extracted_statements
-      :: insert_function_as_inner_functions new_ast extracted_statements statements_loc_union)
+      :: insert_function_as_inner_functions new_ast extracted_statements extracted_statements_loc)
