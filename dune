@@ -1,7 +1,7 @@
 (env
   (dev
-    (flags (:standard  -w -6-50 -error-style short ))
-    ; Use the default settings whicih is more strict
+    (flags (:standard -w @a-4-6-20-29-35-41-42-44-45-48-50 ))
+    ; TODO: Use the default settings which is more strict
     ; warning 6 should be turned on later
     ; this is needed to make the diff clean
     ; warning 50 is not a big deal
