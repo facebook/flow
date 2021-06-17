@@ -1748,6 +1748,12 @@ module Make
         | Unary unary ->
           this#unary_refinement loc unary;
           expression
+        | Member _
+        | OptionalMember _ ->
+          (* TODO: this refinement is technically incorrect when negated until we also track that the
+           * property access is truthy, but that is a heap refinement. *)
+          this#default_optional_chain_refinement_handler ~sense:true loc (loc, expr);
+          expression
         | Array _
         | ArrowFunction _
         | Class _
@@ -1760,11 +1766,9 @@ module Make
         | JSXFragment _
         | Literal _
         | MetaProperty _
-        | Member _
         | New _
         | Object _
         | OptionalCall _
-        | OptionalMember _
         | Sequence _
         | Super _
         | TaggedTemplate _

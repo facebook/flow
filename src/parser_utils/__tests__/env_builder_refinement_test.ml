@@ -420,3 +420,13 @@ let%expect_test "optional_base_call" =
   print_ssa_test {|let x = undefined;
 (x?.().foo?.bar.baz?.qux === 3) && x|}; 
     [%expect {| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 35) to (2, 36) => { (1, 4) to (1, 5): (`x`) } ] |}]
+
+let%expect_test "sentinel_standalone" =
+  print_ssa_test {|let x = undefined;
+x.foo && x|}; 
+    [%expect {| [ (2, 9) to (2, 10) => { {refinement = SentinelR foo; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "optional_chain_standalone" =
+  print_ssa_test {|let x = undefined;
+x?.foo && x|}; 
+    [%expect {| [ (2, 10) to (2, 11) => { {refinement = And (SentinelR foo, Not (Maybe)); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
