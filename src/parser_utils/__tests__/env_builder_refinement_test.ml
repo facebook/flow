@@ -395,3 +395,28 @@ let%expect_test "sentinel_nonlit_indexed" =
 let y = undefined;
 (x["foo"] === y) && x|};
     [%expect {| [ (3, 1) to (3, 2) => { (1, 4) to (1, 5): (`x`) }; (3, 20) to (3, 21) => { {refinement = SentinelR foo; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "optional_chain_lit" =
+  print_ssa_test {|let x = undefined;
+(x?.foo === 3) && x|}; 
+    [%expect{| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 18) to (2, 19) => { {refinement = And (SentinelR foo, Not (Maybe)); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "optional_chain_member_base" =
+  print_ssa_test {|let x = undefined;
+(x.foo?.bar === 3) && x|}; 
+    [%expect {| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 22) to (2, 23) => { (1, 4) to (1, 5): (`x`) } ] |}]
+
+let%expect_test "optional_chain_with_call" =
+  print_ssa_test {|let x = undefined;
+(x?.foo().bar === 3) && x|}; 
+    [%expect {| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 24) to (2, 25) => { {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "optional_multiple_chains" =
+  print_ssa_test {|let x = undefined;
+(x?.foo?.bar.baz?.qux === 3) && x|}; 
+    [%expect {| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 32) to (2, 33) => { {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "optional_base_call" =
+  print_ssa_test {|let x = undefined;
+(x?.().foo?.bar.baz?.qux === 3) && x|}; 
+    [%expect {| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 35) to (2, 36) => { (1, 4) to (1, 5): (`x`) } ] |}]

@@ -38,6 +38,38 @@ and key_of_identifier (_, { Flow_ast.Identifier.name; comments = _ }) =
   else
     Some name
 
+type optional_chain_state =
+  | NewChain
+  | ContinueChain
+  | NonOptional
+
+let property_of_sentinel_refinement { Flow_ast.Expression.Member.property; _ } =
+  let open Flow_ast in
+  match property with
+  | Expression.Member.PropertyIdentifier (_, { Identifier.name = prop_name; _ })
+  | Expression.Member.PropertyExpression
+      (_, Expression.Literal { Literal.value = Literal.String prop_name; _ }) ->
+    Some prop_name
+  | _ -> None
+
+let rec key_of_optional_chain expr =
+  let open Flow_ast.Expression in
+  match expr with
+  | (_, Call _) -> None
+  | (_, Member _) -> None
+  | ( _,
+      OptionalMember
+        {
+          OptionalMember.member =
+            { Member._object = (_, Identifier (_, { Flow_ast.Identifier.name; _ })); _ };
+          _;
+        } ) ->
+    Some name
+  | (_, OptionalMember { OptionalMember.member = { Member._object = subject; _ }; _ })
+  | (_, OptionalCall { OptionalCall.call = { Call.callee = subject; _ }; _ }) ->
+    key_of_optional_chain subject
+  | _ -> None
+
 let is_number_literal node =
   let open Flow_ast in
   match node with
@@ -1212,10 +1244,25 @@ module Make
         | Some { val_ref; _ } ->
           let ssa_id = Val.id_of_val !val_ref in
           let head = List.hd latest_refinements in
-          assert (not (SMap.mem name head));
-          let head' = SMap.add name { ssa_id; refinement_id } head in
+          let latest_refinement =
+            match SMap.find_opt name head with
+            | None -> { ssa_id; refinement_id }
+            | Some { ssa_id = prev_ssa_id; refinement_id = prev_refinement_id } ->
+              let { val_ref; _ } = SMap.find name ssa_env in
+              let unrefined = Val.unrefine prev_refinement_id !val_ref in
+              let unrefined_id = Val.id_of_val unrefined in
+              if unrefined_id = prev_ssa_id then (
+                let new_refinement_id = this#new_id () in
+                let new_chain = AND (prev_refinement_id, refinement_id) in
+                refinement_heap <- IMap.add new_refinement_id new_chain refinement_heap;
+                val_ref := unrefined;
+                { ssa_id = prev_ssa_id; refinement_id = new_refinement_id }
+              ) else
+                { ssa_id; refinement_id }
+          in
+          let head' = SMap.add name latest_refinement head in
           latest_refinements <- head' :: List.tl latest_refinements;
-          val_ref := Val.refinement refinement_id !val_ref
+          val_ref := Val.refinement latest_refinement.refinement_id !val_ref
         | None -> global_TODO
 
       method identifier_refinement ((loc, ident) as identifier) =
@@ -1318,7 +1365,7 @@ module Make
 
       method null_test ~strict ~sense loc expr =
         ignore @@ this#expression expr;
-        this#maybe_sentinel_refinement ~sense loc expr;
+        let optional_chain_refinement = this#maybe_sentinel_and_chain_refinement ~sense loc expr in
         match key expr with
         | None -> ()
         | Some name ->
@@ -1334,16 +1381,29 @@ module Make
             else
               NotR refinement
           in
-          this#add_refinement name (L.LSet.singleton loc, refinement)
+          this#add_refinement name (L.LSet.singleton loc, refinement);
+          (match optional_chain_refinement with
+          | Some name ->
+            (* Optional chaining with ==/=== null can be tricky. If the value before ? is
+             * null or undefined then the entire chain evaluates to undefined. That leaves us
+             * with these cases:
+             * a?.b === null THEN a non-maybe and a.b null ELSE a maybe or a.b non-null 
+             * a?.b == null THEN no refinement ELSE a non maybe and a.b non-null 
+             * TODO: figure out how to model the negation of an optional chain refinement without
+             * introducing a second mapping for the negation of refinements.
+             *)
+            if (strict && sense) || ((not sense) && not strict) then
+              this#add_refinement name (L.LSet.singleton loc, NotR MaybeR)
+          | None -> ())
 
       method void_test ~sense ~strict ~check_for_bound_undefined loc expr =
         ignore @@ this#expression expr;
-        this#maybe_sentinel_refinement ~sense loc expr;
+        let optional_chain_refinement = this#maybe_sentinel_and_chain_refinement ~sense loc expr in
         match key expr with
         | None -> ()
         | Some name ->
           (* Only add the refinement if undefined is not re-bound *)
-          if (not check_for_bound_undefined) || SMap.find_opt "undefined" this#ssa_env = None then
+          if (not check_for_bound_undefined) || SMap.find_opt "undefined" this#ssa_env = None then (
             let refinement =
               if strict then
                 UndefinedR
@@ -1356,11 +1416,26 @@ module Make
               else
                 NotR refinement
             in
-            this#add_refinement name (L.LSet.singleton loc, refinement)
+            this#add_refinement name (L.LSet.singleton loc, refinement);
+            match optional_chain_refinement with
+            | None -> ()
+            | Some name ->
+              (* Optional chaining against void is also difficult... (see null_test)
+               * a?.b === undefined THEN a maybe or a.b is undefined ELSE a non-maybe and a.b not undefined
+               * a?.b == undefined THEN a maybe or a.b maybe ELSE a non-maybe and a.b not undefined
+               * TODO: we can't model this disjunction without heap refinements, so until then we
+               * won't add any refinements for the sense && strict and sense && not strict cases *)
+              if not sense then this#add_refinement name (L.LSet.singleton loc, NotR MaybeR)
+          )
+
+      method default_optional_chain_refinement_handler ~sense loc expr =
+        match this#maybe_sentinel_and_chain_refinement ~sense loc expr with
+        | None -> ()
+        | Some name -> this#add_refinement name (L.LSet.singleton loc, NotR MaybeR)
 
       method typeof_test loc arg typename sense =
         ignore @@ this#expression arg;
-        this#maybe_sentinel_refinement ~sense loc arg;
+        this#default_optional_chain_refinement_handler ~sense loc arg;
         let refinement =
           match typename with
           | "boolean" -> Some (BoolR loc)
@@ -1385,7 +1460,7 @@ module Make
 
       method literal_test ~strict ~sense loc expr refinement =
         ignore @@ this#expression expr;
-        this#maybe_sentinel_refinement ~sense loc expr;
+        this#default_optional_chain_refinement_handler ~sense loc expr;
         match key expr with
         | Some name when strict ->
           let refinement =
@@ -1397,9 +1472,15 @@ module Make
           this#add_refinement name (L.LSet.singleton loc, refinement)
         | _ -> ()
 
-      method maybe_sentinel_refinement ~sense loc expr =
+      method maybe_sentinel_and_chain_refinement ~sense loc expr =
         let open Flow_ast in
-        match expr with
+        let expr' =
+          match expr with
+          | (loc, Expression.OptionalMember { Expression.OptionalMember.member; _ }) ->
+            (loc, Expression.Member member)
+          | _ -> expr
+        in
+        (match expr' with
         | ( _,
             Expression.Member
               {
@@ -1421,7 +1502,12 @@ module Make
             in
             this#add_refinement name (L.LSet.singleton loc, refinement)
           | None -> ())
-        | _ -> ()
+        | _ -> ());
+        (* We return the refinement to the callers to handle specially. null_test and void_test have the
+         * most interesting behaviors *)
+        match key_of_optional_chain expr with
+        | Some name -> Some name
+        | None -> None
 
       method eq_test ~strict ~sense loc left right =
         let open Flow_ast in
@@ -1550,7 +1636,12 @@ module Make
         | (((_, Expression.Member _) as expr), _)
         | (_, ((_, Expression.Member _) as expr)) ->
           ignore @@ this#expression expr;
-          this#maybe_sentinel_refinement ~sense loc expr
+          (* Member expressions compared against non-literals that include
+           * an optional chain cannot refine like we do in literal cases. The
+           * non-literal value we are comparing against may be null or undefined,
+           * in which case we'd need to use the special case behavior. Since we can't
+           * know at this point, we conservatively do not refine at all *)
+          ignore @@ this#maybe_sentinel_and_chain_refinement ~sense loc expr
         | _ ->
           ignore @@ this#expression left;
           ignore @@ this#expression right
