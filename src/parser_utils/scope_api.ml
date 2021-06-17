@@ -154,6 +154,15 @@ module Make (L : Loc_sig.S) = struct
     try IMap.find scope_id info.scopes
     with Not_found -> failwith ("Scope " ^ string_of_int scope_id ^ " not found")
 
+  let rec scope_within info scope_id s =
+    match s.Scope.parent with
+    | None -> false
+    | Some p ->
+      if p = scope_id then
+        true
+      else
+        scope_within info scope_id (scope info p)
+
   let scope_of_loc info scope_loc =
     let scopes =
       IMap.fold

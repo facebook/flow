@@ -15,6 +15,17 @@ val collect_relevant_defs_with_scope :
   extracted_statements_loc:Loc.t ->
   (Scope_api.Def.t * Scope_api.Scope.t) list
 
+(* After moving extracted statements into a function into another scope, some variables might
+   become undefined since original definition exists in inner scopes.
+   This function computes such list from the scope information of definitions and the location
+   of the scope to put the extracted function. *)
+val undefined_variables_after_extraction :
+  scope_info:Scope_api.info ->
+  relevant_defs_with_scope:(Scope_api.Def.t * Scope_api.Scope.t) list ->
+  new_function_target_scope_loc:Loc.t ->
+  extracted_statements_loc:Loc.t ->
+  string list
+
 val create_extracted_function :
   (Loc.t, Loc.t) Flow_ast.Statement.t list -> (Loc.t, Loc.t) Flow_ast.Function.t
 

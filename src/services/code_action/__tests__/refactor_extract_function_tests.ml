@@ -281,6 +281,119 @@ let collect_relevant_defs_with_scope_tests =
         } );
   ]
 
+let assert_undefined_variables
+    ~ctxt ~expected ~source ~new_function_target_scope_loc ~extracted_statements_loc =
+  let ast = parse source in
+  let scope_info = Scope_builder.program ~with_types:false ast in
+  let relevant_defs_with_scope =
+    Refactor_extract_function.collect_relevant_defs_with_scope ~scope_info ~extracted_statements_loc
+  in
+  let actual =
+    Refactor_extract_function.undefined_variables_after_extraction
+      ~scope_info
+      ~relevant_defs_with_scope
+      ~new_function_target_scope_loc
+      ~extracted_statements_loc
+    |> List.sort String.compare
+  in
+  let expected = List.sort String.compare expected in
+  assert_equal ~ctxt ~printer:(String.concat ", ") expected actual
+
+let undefined_variables_after_extraction_tests =
+  [
+    ( "basic_function_extract_to_toplevel" >:: fun ctxt ->
+      let source =
+        {|
+        const a = 3;
+        let b = a;
+        function test() {
+          const c = 4;
+          console.log(b + c);
+        }
+      |}
+      in
+      assert_undefined_variables
+        ~ctxt
+        ~expected:["c"]
+        ~source
+        ~new_function_target_scope_loc:
+          {
+            Loc.source = None;
+            start = { Loc.line = 2; column = 8 };
+            _end = { Loc.line = 7; column = 9 };
+          }
+        ~extracted_statements_loc:
+          {
+            Loc.source = None;
+            start = { Loc.line = 6; column = 10 };
+            _end = { Loc.line = 6; column = 29 };
+          } );
+    ( "basic_function_extract_to_function" >:: fun ctxt ->
+      let source =
+        {|
+        const a = 3;
+        let b = a;
+        function test() {
+          const c = 4;
+          console.log(b + c);
+        }
+      |}
+      in
+      assert_undefined_variables
+        ~ctxt
+        ~expected:[]
+        ~source
+        ~new_function_target_scope_loc:
+          {
+            Loc.source = None;
+            start = { Loc.line = 4; column = 24 };
+            _end = { Loc.line = 7; column = 9 };
+          }
+        ~extracted_statements_loc:
+          {
+            Loc.source = None;
+            start = { Loc.line = 6; column = 10 };
+            _end = { Loc.line = 6; column = 29 };
+          } );
+    ( "deeply_nested_extract_to_inner_function" >:: fun ctxt ->
+      let source =
+        {|
+        const a = 3;
+        let b = a;
+        function level1() {
+          const c = 4;
+          function level2() {
+            const e = d;
+            {
+              const f = 3;
+              const level3 = () => {
+                return b + c + d + e + f + level2() + level3();
+              }
+            }
+          }
+          var d = b + c;
+          return level2();
+        }
+      |}
+      in
+      assert_undefined_variables
+        ~ctxt
+        ~expected:["f"; "level3"]
+        ~source
+        ~new_function_target_scope_loc:
+          {
+            Loc.source = None;
+            start = { Loc.line = 6; column = 28 };
+            _end = { Loc.line = 14; column = 11 };
+          }
+        ~extracted_statements_loc:
+          {
+            Loc.source = None;
+            start = { Loc.line = 11; column = 16 };
+            _end = { Loc.line = 11; column = 63 };
+          } );
+  ]
+
 let create_extracted_function_tests =
   [
     ( "create_extracted_function_basic" >:: fun ctxt ->
@@ -587,6 +700,7 @@ let tests =
   >::: [
          "extract_statements" >::: extract_statements_tests;
          "collect_relevant_defs_with_scope" >::: collect_relevant_defs_with_scope_tests;
+         "undefined_variables_after_extraction" >::: undefined_variables_after_extraction_tests;
          "create_extracted_function" >::: create_extracted_function_tests;
          "provide_available_refactor" >::: provide_available_refactor_tests;
        ]

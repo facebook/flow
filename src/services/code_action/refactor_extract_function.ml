@@ -146,6 +146,36 @@ let collect_relevant_defs_with_scope ~scope_info ~extracted_statements_loc =
     scope_info.Scope_api.scopes
     []
 
+let undefined_variables_after_extraction
+    ~scope_info ~relevant_defs_with_scope ~new_function_target_scope_loc ~extracted_statements_loc =
+  let new_function_target_scopes =
+    Scope_api.scope_of_loc scope_info new_function_target_scope_loc
+  in
+  let to_undefined_variable (def, def_scope) =
+    let { Scope_api.Def.locs = (def_loc, _); actual_name; _ } = def in
+    if Loc.contains extracted_statements_loc def_loc then
+      (* Variables defined inside the extracted statements are locally defined. *)
+      None
+    else
+      (* If a definition is completely nested within the scope of the function to put `newFunction`
+         definition, then the definition will be unusable when the statements are moving to this
+         higher function scope that does not have the definition.
+         This is the indicator that the variable will be undefined. *)
+      let def_scope_is_within_function_scope function_scope =
+        Scope_api.scope_within scope_info function_scope def_scope
+      in
+      (* Some of the nodes like functions might have two scopes, one for name and one for body with
+         the relation name scope > body scope.
+         We must check using `List.for_all` instead of `List.exists`, since a def might be exactly
+         in the body scope, and `def_scope_is_within_function_scope name_scope body_scope` will be
+         true, which incorrectly decides that a variable is undefined. *)
+      if List.for_all def_scope_is_within_function_scope new_function_target_scopes then
+        Some actual_name
+      else
+        None
+  in
+  List.filter_map to_undefined_variable relevant_defs_with_scope
+
 let create_extracted_function statements =
   let id = Some (Ast_builder.Identifiers.identifier "newFunction") in
   (* TODO: add parameters from locally undefined variables within statements *)
