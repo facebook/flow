@@ -2,6 +2,7 @@
  (name flow_type_sig)
  (wrapped false)
  (libraries
+  leb128
   flow_parser_utils
   cycle_hash
   dtoa

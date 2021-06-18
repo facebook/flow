@@ -1,8 +1,14 @@
 (library
-  (name flow_parser)
-  (wrapped false)
-  (modules (:standard \ flow_parser_js flow_parser_dot_js))
-  (libraries
-    sedlex
-    wtf8)
-  (preprocess (pps ppx_gen_rec ppx_deriving.std sedlex.ppx)))
+ (name flow_parser)
+ (wrapped false)
+ (modules
+  (:standard \ flow_parser_js flow_parser_dot_js))
+ (libraries sedlex wtf8)
+ (preprocess
+  (pps ppx_gen_rec ppx_deriving.std sedlex.ppx)))
+
+(executable
+ (name flow_parser_dot_js)
+ (modes js)
+ (modules flow_parser_js flow_parser_dot_js)
+ (libraries flow_parser js_of_ocaml))
