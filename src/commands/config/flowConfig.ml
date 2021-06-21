@@ -47,7 +47,7 @@ module Opts = struct
     automatic_require_default: bool;
     babel_loose_array_spread: bool;
     check_updates_against_providers: bool;
-    disable_live_non_parse_errors: bool;
+    disable_live_non_parse_errors: bool option;
     emoji: bool option;
     enable_const_params: bool;
     enforce_local_inference_annotations: bool;
@@ -170,7 +170,7 @@ module Opts = struct
       automatic_require_default = false;
       babel_loose_array_spread = false;
       check_updates_against_providers = false;
-      disable_live_non_parse_errors = false;
+      disable_live_non_parse_errors = None;
       emoji = None;
       enable_const_params = false;
       enforce_local_inference_annotations = false;
@@ -442,7 +442,7 @@ module Opts = struct
     boolean (fun opts v -> Ok { opts with babel_loose_array_spread = v })
 
   let disable_live_non_parse_errors_parser =
-    boolean (fun opts v -> Ok { opts with disable_live_non_parse_errors = v })
+    boolean (fun opts v -> Ok { opts with disable_live_non_parse_errors = Some v })
 
   let enforce_strict_call_arity_parser =
     boolean (fun opts v -> Ok { opts with enforce_strict_call_arity = v })
