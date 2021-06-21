@@ -27,7 +27,14 @@ struct
 
       method update_convert_acc l =
         this#update_acc (fun a ->
-            List.fold_left (fun acc loc -> LocSet.add (Convert.convert loc) acc) a l)
+            List.fold_left
+              (fun acc elt ->
+                if not @@ Provider_api.is_provider_of_annotated providers elt then
+                  LocSet.add (Convert.convert elt) acc
+                else
+                  acc)
+              a
+              l)
 
       method! identifier ((loc, _) as id) =
         this#update_convert_acc (Env_builder.sources_of_use env loc |> L.LSet.elements);

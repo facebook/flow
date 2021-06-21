@@ -17,3 +17,10 @@ invalidate_y();
 (typeof y !== 'number' && (y: empty)); // Doesn't error because we've reordered this statement below `y = 42`
 y = 42;
 (y: number);
+
+
+
+function k() {
+  return h;
+}
+var h: number = k()
