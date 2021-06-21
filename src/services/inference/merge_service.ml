@@ -510,7 +510,27 @@ let check_contents_context ~reader options file ast docblock file_sig type_sig =
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
   let ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let file_sig = File_sig.abstractify_locs file_sig in
-  let aloc_table = lazy (Parsing_heaps.Reader.get_aloc_table_unsafe ~reader file) in
+  (* Loading an aloc_table is unusual for check contents! During check, we use
+   * this aloc table for two purposes: (1) to compare concrete and keyed alocs
+   * which might be equivalent and (2) to create ALoc.id values which always
+   * have the same representation for equivalent locations.
+   *
+   * If this file is in a cycle, an aloc table will exist and we will
+   * successfully fetch it for use in cases (1) and (2). However, in the common
+   * case of no cycles, an aloc table may not exist yet, which will cause an
+   * exception in the (2) case. The (1) case, where a concrete and keyed
+   * location are equivalent, will not occur.
+   *
+   * Catching the exception provides reasonable behavior, but is not the true
+   * fix. Instead, if check-contents needs to deal with cycles, the cyclic
+   * dependency on `file` should come from the freshly parsed type sig data, not
+   * whatever data is in the heap, and the aloc table should also come from the
+   * fresh parse. *)
+  let aloc_table =
+    lazy
+      (try Parsing_heaps.Reader.get_aloc_table_unsafe ~reader file
+       with Parsing_heaps_exceptions.ALoc_table_not_found _ -> ALoc.make_table file)
+  in
   let exported_locals = get_exported_locals file type_sig in
   let reader = Abstract_state_reader.State_reader reader in
   let required =

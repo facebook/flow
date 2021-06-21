@@ -335,28 +335,13 @@ let make_ccx master_cx =
     speculation_state = ref [];
   }
 
-(* create a new context structure.
-   Flow_js.fresh_context prepares for actual use.
-*)
 let make ccx metadata file aloc_table module_ref phase =
   ccx.aloc_tables <- Utils_js.FilenameMap.add file aloc_table ccx.aloc_tables;
-  let rev_aloc_table =
-    lazy
-      (try Lazy.force aloc_table |> ALoc.reverse_table
-       with
-       (* If we aren't in abstract locations mode, or are in a libdef, we
-          won't have an aloc table, so we just create an empty reverse
-          table. We handle this exception here rather than explicitly
-          making an optional version of the get_aloc_table function for
-          simplicity. *)
-       | Parsing_heaps_exceptions.ALoc_table_not_found _ ->
-         ALoc.make_empty_reverse_table ())
-  in
   {
     ccx;
     file;
     phase;
-    rev_aloc_table;
+    rev_aloc_table = lazy (ALoc.reverse_table (Lazy.force aloc_table));
     metadata;
     module_info = Module_info.empty_cjs_module module_ref;
     require_map = ALocMap.empty;
