@@ -26,7 +26,9 @@ type autocomplete_type =
       obj_type: Type.t;
       in_optional_chain: bool;
       bracket_syntax: ac_id option;
-      member_loc: Loc.t option; (* loc of `.foo` or `[foo]` *)
+      (* loc of `.foo` or `[foo]` *)
+      member_loc: Loc.t option;
+      is_type_annotation: bool;
     }  (** member expressions *)
   | Ac_jsx_element of { type_: Type.t }  (** JSX element name *)
   | Ac_jsx_attribute of {

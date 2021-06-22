@@ -242,7 +242,13 @@ let rec convert cx tparams_map =
     ( (loc, DefT (r, infer_trust cx, ArrT (ArrayAT (elemt, None)))),
       Array { Array.argument = t_ast; comments } )
   | (loc, (StringLiteral { Ast.StringLiteral.value; _ } as t_ast)) ->
-    ((loc, mk_singleton_string cx loc value), t_ast)
+    let t =
+      if Type_inference_hooks_js.dispatch_literal_hook cx loc then
+        Tvar.mk cx (mk_reason (RCustom "literal") loc)
+      else
+        mk_singleton_string cx loc value
+    in
+    ((loc, t), t_ast)
   | (loc, (NumberLiteral { Ast.NumberLiteral.value; raw; _ } as t_ast)) ->
     ((loc, mk_singleton_number cx loc value raw), t_ast)
   | (loc, (BigIntLiteral { Ast.BigIntLiteral.bigint; _ } as t_ast)) ->
