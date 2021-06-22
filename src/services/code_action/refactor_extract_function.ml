@@ -52,26 +52,6 @@ let union_loc acc loc =
   | None -> Some loc
   | Some existing_loc -> Some (Loc.btwn existing_loc loc)
 
-class new_function_call_replacer extracted_statements_loc =
-  object (_this)
-    inherit [Loc.t] Flow_ast_mapper.mapper as super
-
-    method! statement_fork_point stmt =
-      let (statement_loc, _) = stmt in
-      let open Ast_builder in
-      if Loc.contains extracted_statements_loc statement_loc then
-        if Loc.equal (Loc.start_loc extracted_statements_loc) (Loc.start_loc statement_loc) then
-          [
-            Statements.expression
-              ~loc:extracted_statements_loc
-              (Expressions.call (Expressions.identifier "newFunction"));
-          ]
-        else
-          []
-      else
-        super#statement_fork_point stmt
-  end
-
 class insertion_function_body_loc_collector extracted_statements_loc =
   object (_this)
     inherit [(string * Loc.t) list, Loc.t] Flow_ast_visitor.visitor ~init:[] as super
@@ -90,7 +70,7 @@ class insertion_function_body_loc_collector extracted_statements_loc =
       | _ -> super#function_ loc function_declaration
   end
 
-class insert_new_function_in_body_mapper target_body_loc function_declaration_statement =
+class refactor_mapper target_body_loc extracted_statements_loc function_declaration_statement =
   object (_this)
     inherit [Loc.t] Flow_ast_mapper.mapper as super
 
@@ -101,7 +81,8 @@ class insert_new_function_in_body_mapper target_body_loc function_declaration_st
           Flow_ast.Program.
             {
               program_body with
-              statements = program_body.statements @ [function_declaration_statement];
+              statements =
+                super#statement_list program_body.statements @ [function_declaration_statement];
             } )
       else
         super#program program
@@ -110,9 +91,25 @@ class insert_new_function_in_body_mapper target_body_loc function_declaration_st
       let open Flow_ast.Statement.Block in
       let (body_loc, body) = block in
       if Loc.equal body_loc target_body_loc then
-        (body_loc, { body with body = body.body @ [function_declaration_statement] })
+        ( body_loc,
+          { body with body = super#statement_list body.body @ [function_declaration_statement] } )
       else
         super#function_body block
+
+    method! statement_fork_point stmt =
+      let (statement_loc, _) = stmt in
+      let open Ast_builder in
+      if Loc.contains extracted_statements_loc statement_loc then
+        if Loc.equal (Loc.start_loc extracted_statements_loc) (Loc.start_loc statement_loc) then
+          [
+            Statements.expression
+              ~loc:extracted_statements_loc
+              (Expressions.call (Expressions.identifier "newFunction"));
+          ]
+        else
+          []
+      else
+        super#statement_fork_point stmt
   end
 
 let extract_statements ast extract_range =
@@ -192,8 +189,8 @@ let create_extracted_function ~undefined_variables ~extracted_statements =
   Ast_builder.Functions.make ~id ~params ~body ()
 
 let insert_function_to_toplevel
-    ~scope_info ~relevant_defs_with_scope ~new_ast ~extracted_statements ~extracted_statements_loc =
-  let (program_loc, _) = new_ast in
+    ~scope_info ~relevant_defs_with_scope ~ast ~extracted_statements ~extracted_statements_loc =
+  let (program_loc, _) = ast in
   let undefined_variables =
     undefined_variables_after_extraction
       ~scope_info
@@ -204,16 +201,17 @@ let insert_function_to_toplevel
   (* Put extracted function to two lines after the end of program to have nice format. *)
   let new_function_loc = Loc.(cursor program_loc.source (program_loc._end.line + 2) 0) in
   let mapper =
-    new insert_new_function_in_body_mapper
+    new refactor_mapper
       program_loc
+      extracted_statements_loc
       ( new_function_loc,
         Flow_ast.Statement.FunctionDeclaration
           (create_extracted_function ~undefined_variables ~extracted_statements) )
   in
-  ("Extract to function in module scope", mapper#program new_ast)
+  ("Extract to function in module scope", mapper#program ast)
 
 let insert_function_as_inner_functions
-    ~scope_info ~relevant_defs_with_scope ~new_ast ~extracted_statements ~extracted_statements_loc =
+    ~scope_info ~relevant_defs_with_scope ~ast ~extracted_statements ~extracted_statements_loc =
   let collector = new insertion_function_body_loc_collector extracted_statements_loc in
   let create_refactor (title, target_function_body_loc) =
     let undefined_variables =
@@ -224,15 +222,16 @@ let insert_function_as_inner_functions
         ~extracted_statements_loc
     in
     let mapper =
-      new insert_new_function_in_body_mapper
+      new refactor_mapper
         target_function_body_loc
+        extracted_statements_loc
         ( Loc.none,
           Flow_ast.Statement.FunctionDeclaration
             (create_extracted_function ~undefined_variables ~extracted_statements) )
     in
-    (Printf.sprintf "Extract to inner function in function '%s'" title, mapper#program new_ast)
+    (Printf.sprintf "Extract to inner function in function '%s'" title, mapper#program ast)
   in
-  collector#eval collector#program new_ast |> List.map create_refactor
+  collector#eval collector#program ast |> List.map create_refactor
 
 let provide_available_refactors ast extract_range =
   match extract_statements ast extract_range with
@@ -248,8 +247,6 @@ let provide_available_refactors ast extract_range =
         | None -> insert_new_function_call_loc
         | Some loc -> Loc.btwn insert_new_function_call_loc loc
       in
-      let replacer = new new_function_call_replacer extracted_statements_loc in
-      let new_ast = replacer#program ast in
       let scope_info = Scope_builder.program ~with_types:false ast in
       let relevant_defs_with_scope =
         collect_relevant_defs_with_scope ~scope_info ~extracted_statements_loc
@@ -257,12 +254,12 @@ let provide_available_refactors ast extract_range =
       insert_function_to_toplevel
         ~scope_info
         ~relevant_defs_with_scope
-        ~new_ast
+        ~ast
         ~extracted_statements
         ~extracted_statements_loc
       :: insert_function_as_inner_functions
            ~scope_info
            ~relevant_defs_with_scope
-           ~new_ast
+           ~ast
            ~extracted_statements
            ~extracted_statements_loc)
