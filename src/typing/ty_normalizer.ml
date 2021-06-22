@@ -1764,7 +1764,12 @@ end = struct
       | T.TypeMap (T.ObjectMapi t') ->
         let%map ty' = type__ ~env t' in
         Ty.Utility (Ty.ObjMapi (ty, ty'))
-      | T.PropertyType k -> return (Ty.Utility (Ty.PropertyType (ty, Ty.StrLit k)))
+      | T.PropertyType { name; is_indexed_access } ->
+        let name' = Ty.StrLit name in
+        if is_indexed_access then
+          return @@ Ty.IndexedAccess { _object = ty; index = name'; optional = false }
+        else
+          return @@ Ty.Utility (Ty.PropertyType (ty, name'))
       | T.TypeMap (T.TupleMap t') ->
         let%map ty' = type__ ~env t' in
         Ty.Utility (Ty.TupleMap (ty, ty'))

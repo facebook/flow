@@ -642,7 +642,12 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
       let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
       Type.(
         EvalT
-          (obj, TypeDestructorT (use_op, reason, Type.PropertyType (Reason.OrdinaryName prop)), id))
+          ( obj,
+            TypeDestructorT
+              ( use_op,
+                reason,
+                Type.PropertyType { name = Reason.OrdinaryName prop; is_indexed_access = false } ),
+            id ))
     | ElementType { loc; obj; elem } ->
       let reason = Reason.(mk_reason (RType (OrdinaryName "$ElementType")) loc) in
       let use_op = Type.Op (Type.TypeApplication { type' = reason }) in

@@ -266,7 +266,8 @@ let rec convert cx tparams_map =
         in
         let destructor =
           match index with
-          | (_, StringLiteral { Ast.StringLiteral.value; _ }) -> PropertyType (OrdinaryName value)
+          | (_, StringLiteral { Ast.StringLiteral.value; _ }) ->
+            PropertyType { name = OrdinaryName value; is_indexed_access = true }
           | _ -> ElementType { index_type; is_indexed_access = true }
         in
         EvalT (object_type, TypeDestructorT (use_op, reason, destructor), mk_eval_id cx loc)
@@ -427,7 +428,12 @@ let rec convert cx tparams_map =
               let reason = mk_reason (RType (OrdinaryName "$PropertyType")) loc in
               reconstruct_ast
                 (EvalT
-                   (t, TypeDestructorT (use_op reason, reason, PropertyType key), mk_eval_id cx loc))
+                   ( t,
+                     TypeDestructorT
+                       ( use_op reason,
+                         reason,
+                         PropertyType { name = key; is_indexed_access = false } ),
+                     mk_eval_id cx loc ))
                 targs
             | _ -> error_type cx loc (Error_message.EPropertyTypeAnnot loc) t_ast)
       (* $ElementType<T, string> acts as the type of the string elements in object
