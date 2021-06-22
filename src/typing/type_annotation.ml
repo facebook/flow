@@ -264,10 +264,12 @@ let rec convert cx tparams_map =
           Op
             (IndexedTypeAccess { _object = reason_of_t object_type; index = reason_of_t index_type })
         in
-        EvalT
-          ( object_type,
-            TypeDestructorT (use_op, reason, ElementType { index_type; is_indexed_access = true }),
-            mk_eval_id cx loc )
+        let destructor =
+          match index with
+          | (_, StringLiteral { Ast.StringLiteral.value; _ }) -> PropertyType (OrdinaryName value)
+          | _ -> ElementType { index_type; is_indexed_access = true }
+        in
+        EvalT (object_type, TypeDestructorT (use_op, reason, destructor), mk_eval_id cx loc)
     in
     ((loc, t), IndexedAccess { IndexedAccess._object; index; comments })
   | (loc, OptionalIndexedAccess ia) ->

@@ -49,3 +49,21 @@ type ArrNonexistant = Arr[boolean]; // Error
 
 (1: void['x']); // Error
 (1: null['x']); // Error
+
+type O = {
+  [number]: boolean;
+  foo: string;
+  bar: number;
+}
+(1: O['bar']); // OK
+(true: O[number]); // OK
+('xx': O['bar']); // Error
+
+declare class C {
+  [number]: boolean;
+  foo: string;
+  bar: number;
+}
+(1: C['bar']); // OK
+(true: C[number]); // OK
+('xx': C['bar']); // Error

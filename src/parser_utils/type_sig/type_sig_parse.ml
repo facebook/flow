@@ -1238,8 +1238,12 @@ and annot_with_loc opts scope tbls xs (loc, t) =
     | T.Generic g -> maybe_special_generic opts scope tbls xs loc g
     | T.IndexedAccess { T.IndexedAccess._object; index; _ } ->
       let obj = annot opts scope tbls xs _object in
-      let elem = annot opts scope tbls xs index in
-      Annot (ElementType { loc; obj; elem })
+      (match index with
+      | (_, T.StringLiteral { Ast.StringLiteral.value; _ }) ->
+        Annot (PropertyType { loc; obj; prop = value })
+      | _ ->
+        let elem = annot opts scope tbls xs index in
+        Annot (ElementType { loc; obj; elem }))
     | T.OptionalIndexedAccess ia ->
       let (_, result) = optional_indexed_access opts scope tbls xs (loc, ia) in
       result

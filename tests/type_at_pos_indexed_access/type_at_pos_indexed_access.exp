@@ -1,6 +1,6 @@
 test.js:3:6
 Flags:
-type T = O["a"]
+type T = $PropertyType<O, "a">
 test.js:3:6,3:6
 
 test.js:8:6
