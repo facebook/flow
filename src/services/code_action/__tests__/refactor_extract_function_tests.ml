@@ -666,6 +666,162 @@ function level1() {
           start = { Loc.line = 7; column = 16 };
           _end = { Loc.line = 10; column = 26 };
         } );
+    ( "very_nested_extract_with_variables" >:: fun ctxt ->
+      let source =
+        {|
+        const a = 3;
+        function level1() {
+          let b = 4;
+          function level2() {
+            let c = 5;
+            function level3() {
+              let d = 6;
+              {
+                let e = 7;
+                function level4() {
+                  let f = 8;
+                  console.log(a + b + c + d + e + f);
+                }
+              }
+            }
+          }
+        }
+      |}
+      in
+      let expected =
+        [
+          ( "Extract to function in module scope",
+            {|
+const a = 3;
+function level1() {
+  let b = 4;
+  function level2() {
+    let c = 5;
+    function level3() {
+      let d = 6;
+      {
+        let e = 7;
+        function level4() {
+          let f = 8;
+          newFunction();
+        }
+      }
+    }
+  }
+}
+
+function newFunction(b, c, d, e, f) {
+  console.log(a + b + c + d + e + f);
+}
+|}
+          );
+          ( "Extract to inner function in function 'level4'",
+            {|
+const a = 3;
+function level1() {
+  let b = 4;
+  function level2() {
+    let c = 5;
+    function level3() {
+      let d = 6;
+      {
+        let e = 7;
+        function level4() {
+          let f = 8;
+          newFunction();
+          function newFunction() {
+            console.log(a + b + c + d + e + f);
+          }
+        }
+      }
+    }
+  }
+}
+|}
+          );
+          ( "Extract to inner function in function 'level3'",
+            {|
+const a = 3;
+function level1() {
+  let b = 4;
+  function level2() {
+    let c = 5;
+    function level3() {
+      let d = 6;
+      {
+        let e = 7;
+        function level4() {
+          let f = 8;
+          newFunction();
+        }
+      }
+      function newFunction(e, f) {
+        console.log(a + b + c + d + e + f);
+      }
+    }
+  }
+}
+|}
+          );
+          ( "Extract to inner function in function 'level2'",
+            {|
+const a = 3;
+function level1() {
+  let b = 4;
+  function level2() {
+    let c = 5;
+    function level3() {
+      let d = 6;
+      {
+        let e = 7;
+        function level4() {
+          let f = 8;
+          newFunction();
+        }
+      }
+    }
+    function newFunction(d, e, f) {
+      console.log(a + b + c + d + e + f);
+    }
+  }
+}
+|}
+          );
+          ( "Extract to inner function in function 'level1'",
+            {|
+const a = 3;
+function level1() {
+  let b = 4;
+  function level2() {
+    let c = 5;
+    function level3() {
+      let d = 6;
+      {
+        let e = 7;
+        function level4() {
+          let f = 8;
+          newFunction();
+        }
+      }
+    }
+  }
+  function newFunction(c, d, e, f) {
+    console.log(a + b + c + d + e + f);
+  }
+}
+|}
+          );
+        ]
+      in
+      assert_refactored
+        ~ctxt
+        expected
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 13; column = 18 };
+          _end = { Loc.line = 13; column = 53 };
+        } );
   ]
 
 let tests =
