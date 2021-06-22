@@ -37,7 +37,7 @@ let string_of_selector = function
 
 let string_of_destructor = function
   | NonMaybeType -> "NonMaybeType"
-  | PropertyType x -> spf "PropertyType %s" (display_string_of_name x)
+  | PropertyType { name; _ } -> spf "PropertyType %s" (display_string_of_name name)
   | ElementType _ -> "ElementType"
   | OptionalIndexedAccessNonMaybeType _ -> "OptionalIndexedAccessNonMaybeType"
   | OptionalIndexedAccessResultType _ -> "OptionalIndexedAccessResultType"

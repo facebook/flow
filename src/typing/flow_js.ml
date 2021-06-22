@@ -6977,9 +6977,9 @@ struct
              * want to carry a `use_op`. We want whatever `use_op` the tout is used with
              * to win. *)
             FilterMaybeT (unknown_use, OpenT tout)
-          | PropertyType x ->
-            let reason_op = replace_desc_reason (RProperty (Some x)) reason in
-            GetPropT (use_op, reason, Named (reason_op, x), tout)
+          | PropertyType { name; _ } ->
+            let reason_op = replace_desc_reason (RProperty (Some name)) reason in
+            GetPropT (use_op, reason, Named (reason_op, name), tout)
           | ElementType { index_type; _ } -> GetElemT (use_op, reason, index_type, tout)
           | OptionalIndexedAccessNonMaybeType { index_type } ->
             OptionalIndexedAccessT { use_op; reason; index_type; tout_tvar = tout }

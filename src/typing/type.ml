@@ -1299,7 +1299,11 @@ module rec TypeTerm : sig
 
   and destructor =
     | NonMaybeType
-    | PropertyType of name
+    | PropertyType of {
+        name: name;
+        (* For type normalizer purposes - in the future PropertyType will be removed. *)
+        is_indexed_access: bool;
+      }
     | ElementType of {
         index_type: t;
         (* For type normalizer purposes - in the future ElementType will be removed. *)
