@@ -78,8 +78,17 @@ let text_of_nodes ~opts ~separator ~leading_separator nodes =
 
 let edit_of_change ~opts = function
   | (loc, Replace (_, new_node)) -> (loc, text_of_node ~opts new_node)
-  | (loc, Insert { items; _ }) when is_statement_list items ->
-    (loc, text_of_statement_list ~opts items)
+  | (loc, Insert { items; separator; leading_separator }) when is_statement_list items ->
+    let text = text_of_statement_list ~opts items in
+    if leading_separator then
+      let sep =
+        match separator with
+        | Some str -> str
+        | None -> "\n"
+      in
+      (loc, sep ^ text)
+    else
+      (loc, text)
   | (loc, Insert { items; separator; leading_separator }) ->
     (loc, text_of_nodes ~opts ~separator ~leading_separator items)
   | (loc, Delete _) -> (loc, "")

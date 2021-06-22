@@ -1392,7 +1392,7 @@ export default (suite(
                           },
                         },
                         newText:
-                          'function newFunction() {\n  console.log("foo");\n  console.log("bar");\n}',
+                          '\nfunction newFunction() {\n  console.log("foo");\n  console.log("bar");\n}',
                       },
                     ],
                   },
