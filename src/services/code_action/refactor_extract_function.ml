@@ -70,7 +70,11 @@ class insertion_function_body_loc_collector extracted_statements_loc =
       | _ -> super#function_ loc function_declaration
   end
 
-class refactor_mapper target_body_loc extracted_statements_loc function_declaration_statement =
+class refactor_mapper
+  ~target_body_loc
+  ~extracted_statements_loc
+  ~function_call_statement
+  ~function_declaration_statement =
   object (_this)
     inherit [Loc.t] Flow_ast_mapper.mapper as super
 
@@ -98,14 +102,9 @@ class refactor_mapper target_body_loc extracted_statements_loc function_declarat
 
     method! statement_fork_point stmt =
       let (statement_loc, _) = stmt in
-      let open Ast_builder in
       if Loc.contains extracted_statements_loc statement_loc then
         if Loc.equal (Loc.start_loc extracted_statements_loc) (Loc.start_loc statement_loc) then
-          [
-            Statements.expression
-              ~loc:extracted_statements_loc
-              (Expressions.call (Expressions.identifier "newFunction"));
-          ]
+          [function_call_statement]
         else
           []
       else
@@ -188,6 +187,17 @@ let create_extracted_function ~undefined_variables ~extracted_statements =
   (* TODO: make it a generator if body contains yield *)
   Ast_builder.Functions.make ~id ~params ~body ()
 
+let create_extracted_function_call ~undefined_variables ~extracted_statements_loc =
+  let open Ast_builder in
+  Statements.expression
+    ~loc:extracted_statements_loc
+    (Expressions.call
+       ~args:
+         ( undefined_variables
+         |> List.map (fun v -> v |> Expressions.identifier |> Expressions.expression)
+         |> Expressions.arg_list )
+       (Expressions.identifier "newFunction"))
+
 let insert_function_to_toplevel
     ~scope_info ~relevant_defs_with_scope ~ast ~extracted_statements ~extracted_statements_loc =
   let (program_loc, _) = ast in
@@ -202,11 +212,14 @@ let insert_function_to_toplevel
   let new_function_loc = Loc.(cursor program_loc.source (program_loc._end.line + 2) 0) in
   let mapper =
     new refactor_mapper
-      program_loc
-      extracted_statements_loc
-      ( new_function_loc,
-        Flow_ast.Statement.FunctionDeclaration
-          (create_extracted_function ~undefined_variables ~extracted_statements) )
+      ~target_body_loc:program_loc
+      ~extracted_statements_loc
+      ~function_call_statement:
+        (create_extracted_function_call ~undefined_variables ~extracted_statements_loc)
+      ~function_declaration_statement:
+        ( new_function_loc,
+          Flow_ast.Statement.FunctionDeclaration
+            (create_extracted_function ~undefined_variables ~extracted_statements) )
   in
   ("Extract to function in module scope", mapper#program ast)
 
@@ -223,11 +236,14 @@ let insert_function_as_inner_functions
     in
     let mapper =
       new refactor_mapper
-        target_function_body_loc
-        extracted_statements_loc
-        ( Loc.none,
-          Flow_ast.Statement.FunctionDeclaration
-            (create_extracted_function ~undefined_variables ~extracted_statements) )
+        ~target_body_loc:target_function_body_loc
+        ~extracted_statements_loc
+        ~function_call_statement:
+          (create_extracted_function_call ~undefined_variables ~extracted_statements_loc)
+        ~function_declaration_statement:
+          ( Loc.none,
+            Flow_ast.Statement.FunctionDeclaration
+              (create_extracted_function ~undefined_variables ~extracted_statements) )
     in
     (Printf.sprintf "Extract to inner function in function '%s'" title, mapper#program ast)
   in

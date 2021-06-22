@@ -703,7 +703,7 @@ function level1() {
         let e = 7;
         function level4() {
           let f = 8;
-          newFunction();
+          newFunction(b, c, d, e, f);
         }
       }
     }
@@ -752,7 +752,7 @@ function level1() {
         let e = 7;
         function level4() {
           let f = 8;
-          newFunction();
+          newFunction(e, f);
         }
       }
       function newFunction(e, f) {
@@ -776,7 +776,7 @@ function level1() {
         let e = 7;
         function level4() {
           let f = 8;
-          newFunction();
+          newFunction(d, e, f);
         }
       }
     }
@@ -800,7 +800,7 @@ function level1() {
         let e = 7;
         function level4() {
           let f = 8;
-          newFunction();
+          newFunction(c, d, e, f);
         }
       }
     }
