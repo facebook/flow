@@ -98,15 +98,26 @@ class insertion_function_body_loc_collector extracted_statements_loc =
       | _ -> super#function_ loc function_declaration
   end
 
-class insert_new_function_in_function_body_mapper
-  target_function_body_loc function_declaration_statement =
+class insert_new_function_in_body_mapper target_body_loc function_declaration_statement =
   object (_this)
     inherit [Loc.t] Flow_ast_mapper.mapper as super
+
+    method! program program =
+      let (program_loc, program_body) = program in
+      if Loc.equal program_loc target_body_loc then
+        ( program_loc,
+          Flow_ast.Program.
+            {
+              program_body with
+              statements = program_body.statements @ [function_declaration_statement];
+            } )
+      else
+        super#program program
 
     method! function_body block =
       let open Flow_ast.Statement.Block in
       let (body_loc, body) = block in
-      if Loc.equal body_loc target_function_body_loc then
+      if Loc.equal body_loc target_body_loc then
         (body_loc, { body with body = body.body @ [function_declaration_statement] })
       else
         super#function_body block
@@ -189,11 +200,8 @@ let create_extracted_function ~undefined_variables ~extracted_statements =
   Ast_builder.Functions.make ~id ~params ~body ()
 
 let insert_function_to_toplevel
-    ~scope_info
-    ~relevant_defs_with_scope
-    ~new_ast:(program_loc, program)
-    ~extracted_statements
-    ~extracted_statements_loc =
+    ~scope_info ~relevant_defs_with_scope ~new_ast ~extracted_statements ~extracted_statements_loc =
+  let (program_loc, _) = new_ast in
   let undefined_variables =
     undefined_variables_after_extraction
       ~scope_info
@@ -203,19 +211,14 @@ let insert_function_to_toplevel
   in
   (* Put extracted function to two lines after the end of program to have nice format. *)
   let new_function_loc = Loc.(cursor program_loc.source (program_loc._end.line + 2) 0) in
-  ( "Extract to function in module scope",
-    ( program_loc,
-      Flow_ast.Program.
-        {
-          program with
-          statements =
-            program.statements
-            @ [
-                ( new_function_loc,
-                  Flow_ast.Statement.FunctionDeclaration
-                    (create_extracted_function ~undefined_variables ~extracted_statements) );
-              ];
-        } ) )
+  let mapper =
+    new insert_new_function_in_body_mapper
+      program_loc
+      ( new_function_loc,
+        Flow_ast.Statement.FunctionDeclaration
+          (create_extracted_function ~undefined_variables ~extracted_statements) )
+  in
+  ("Extract to function in module scope", mapper#program new_ast)
 
 let insert_function_as_inner_functions
     ~scope_info ~relevant_defs_with_scope ~new_ast ~extracted_statements ~extracted_statements_loc =
@@ -229,7 +232,7 @@ let insert_function_as_inner_functions
         ~extracted_statements_loc
     in
     let mapper =
-      new insert_new_function_in_function_body_mapper
+      new insert_new_function_in_body_mapper
         target_function_body_loc
         ( Loc.none,
           Flow_ast.Statement.FunctionDeclaration
