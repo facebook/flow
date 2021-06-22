@@ -52,30 +52,22 @@ let union_loc acc loc =
   | None -> Some loc
   | Some existing_loc -> Some (Loc.btwn existing_loc loc)
 
-class new_function_call_replacer
-  insert_new_function_call_loc rest_statements_loc_union extracted_statements_loc =
-  object (this)
+class new_function_call_replacer extracted_statements_loc =
+  object (_this)
     inherit [Loc.t] Flow_ast_mapper.mapper as super
-
-    method private should_be_replaced_by_function_call loc =
-      Loc.equal insert_new_function_call_loc loc
-
-    method private should_be_replaced_by_empty loc =
-      match rest_statements_loc_union with
-      | Some rest_statements_loc_union -> Loc.contains rest_statements_loc_union loc
-      | None -> false
 
     method! statement_fork_point stmt =
       let (statement_loc, _) = stmt in
       let open Ast_builder in
-      if this#should_be_replaced_by_function_call statement_loc then
-        [
-          Statements.expression
-            ~loc:extracted_statements_loc
-            (Expressions.call (Expressions.identifier "newFunction"));
-        ]
-      else if this#should_be_replaced_by_empty statement_loc then
-        []
+      if Loc.contains extracted_statements_loc statement_loc then
+        if Loc.equal (Loc.start_loc extracted_statements_loc) (Loc.start_loc statement_loc) then
+          [
+            Statements.expression
+              ~loc:extracted_statements_loc
+              (Expressions.call (Expressions.identifier "newFunction"));
+          ]
+        else
+          []
       else
         super#statement_fork_point stmt
   end
@@ -256,12 +248,7 @@ let provide_available_refactors ast extract_range =
         | None -> insert_new_function_call_loc
         | Some loc -> Loc.btwn insert_new_function_call_loc loc
       in
-      let replacer =
-        new new_function_call_replacer
-          insert_new_function_call_loc
-          rest_statements_loc_union
-          extracted_statements_loc
-      in
+      let replacer = new new_function_call_replacer extracted_statements_loc in
       let new_ast = replacer#program ast in
       let scope_info = Scope_builder.program ~with_types:false ast in
       let relevant_defs_with_scope =
