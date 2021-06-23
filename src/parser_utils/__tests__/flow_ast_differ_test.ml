@@ -240,6 +240,53 @@ class useless_mapper =
         opt
       else
         (loc, { opt' with key = key'; variance = variance' })
+
+    method! enum_defaulted_member (member : Loc.t Ast.Statement.EnumDeclaration.DefaultedMember.t) =
+      let open Ast.Statement.EnumDeclaration.DefaultedMember in
+      let (loc, { id }) = member in
+      match id with
+      | (loc', { Ast.Identifier.name = "On"; comments }) ->
+        (loc, { id = (loc', Ast.Identifier.{ name = "Enabled"; comments }) })
+      | _ -> member
+
+    method! enum_string_member
+        (member :
+          (Loc.t Ast.StringLiteral.t, Loc.t) Ast.Statement.EnumDeclaration.InitializedMember.t) =
+      let open Ast.Statement.EnumDeclaration.InitializedMember in
+      let (loc, { id; init }) = member in
+      match init with
+      | (loc', Ast.StringLiteral.{ value; raw = _; comments }) when String.equal "on" value ->
+        ( loc,
+          {
+            id;
+            init = (loc', Ast.StringLiteral.{ value = "'enabled'"; raw = "'enabled'"; comments });
+          } )
+      | _ -> member
+
+    method! enum_number_member
+        (member :
+          (Loc.t Ast.NumberLiteral.t, Loc.t) Ast.Statement.EnumDeclaration.InitializedMember.t) =
+      let open Ast.Statement.EnumDeclaration.InitializedMember in
+      let (loc, { id; init }) = member in
+      match init with
+      | (loc', Ast.NumberLiteral.{ value = 1.0; raw; comments = None }) ->
+        ( loc,
+          {
+            id;
+            init =
+              ( loc',
+                Ast_builder.number_literal
+                  ~comments:
+                    Ast.Syntax.
+                      {
+                        leading = [];
+                        trailing = [Ast_builder.Comments.line " a comment"];
+                        internal = ();
+                      }
+                  1.0
+                  raw );
+          } )
+      | _ -> member
   end
 
 class literal_mapper =
@@ -3009,5 +3056,47 @@ import type { there as here } from \"new_import2\";const x: (() => number) = (bl
              ~edits:[((21, 27), "gotRenamed")]
              ~source
              ~expected:"declare class C { f: gotRenamed }"
+             ~mapper:(new useless_mapper) );
+         ( "enum_declaration_unchanged" >:: fun ctxt ->
+           let source = "enum Status {On, Off}" in
+           (* use an unrelated mapper to ensure enums are not affected *)
+           assert_edits_equal
+             ctxt
+             ~edits:[]
+             ~source
+             ~expected:"enum Status {On, Off}"
+             ~mapper:(new literal_mapper) );
+         ( "enum_comments_unchanged" >:: fun ctxt ->
+           let source = "enum Status {On, Off // internal comment\n}" in
+           (* use an unrelated mapper to ensure enums are not affected *)
+           assert_edits_equal
+             ctxt
+             ~edits:[]
+             ~source
+             ~expected:"enum Status {On, Off // internal comment\n}"
+             ~mapper:(new literal_mapper) );
+         ( "enum_declaration_defaulted_string" >:: fun ctxt ->
+           let source = "enum Status {On, Off}" in
+           assert_edits_equal
+             ctxt
+             ~edits:[((13, 15), "Enabled")]
+             ~source
+             ~expected:"enum Status {Enabled, Off}"
+             ~mapper:(new useless_mapper) );
+         ( "enum_declaration_string" >:: fun ctxt ->
+           let source = "enum Status {On = 'on', Off = 'off'}" in
+           assert_edits_equal
+             ctxt
+             ~edits:[((18, 22), "'enabled'")]
+             ~source
+             ~expected:"enum Status {On = 'enabled', Off = 'off'}"
+             ~mapper:(new useless_mapper) );
+         ( "enum_add_comment" >:: fun ctxt ->
+           let source = "enum Status {On = 1, Off = 2}" in
+           assert_edits_equal
+             ctxt
+             ~edits:[((19, 19), "// a comment\n")]
+             ~source
+             ~expected:"enum Status {On = 1// a comment\n, Off = 2}"
              ~mapper:(new useless_mapper) );
        ]
