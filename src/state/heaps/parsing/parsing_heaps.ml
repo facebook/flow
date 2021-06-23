@@ -33,7 +33,7 @@ type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
 
 type checked_file_addr = Heap.checked_file SharedMem.addr
 
-let write_type_sig locs type_sig =
+let write_type_sig docblock locs type_sig =
   let open Type_sig_collections in
   let {
     Packed_type_sig.Module.module_kind;
@@ -46,6 +46,7 @@ let write_type_sig locs type_sig =
     type_sig
   in
   let serialize x = Marshal.to_string x [] in
+  let docblock = serialize docblock in
   let aloc_table = Packed_locs.pack (Locs.length locs) (fun f -> Locs.iter f locs) in
   let module_refs = Module_refs.to_array module_refs in
   let local_defs = Local_defs.to_array_map serialize local_defs in
@@ -103,8 +104,9 @@ let write_type_sig locs type_sig =
       (size, write)
   in
   let size =
-    (2 * header_size)
+    (3 * header_size)
     + checked_file_size
+    + docblock_size docblock
     + aloc_table_size aloc_table
     + module_size
     + array_size module_ref_size module_refs
@@ -114,6 +116,7 @@ let write_type_sig locs type_sig =
     + array_size pattern_size patterns
   in
   alloc size (fun chunk ->
+      let docblock = write_docblock chunk docblock in
       let aloc_table = write_aloc_table chunk aloc_table in
       let dyn_module = write_module chunk in
       let module_refs = write_addr_tbl write_module_ref chunk module_refs in
@@ -123,6 +126,7 @@ let write_type_sig locs type_sig =
       let patterns = write_addr_tbl write_pattern chunk patterns in
       write_checked_file
         chunk
+        docblock
         aloc_table
         dyn_module
         module_refs
@@ -130,6 +134,11 @@ let write_type_sig locs type_sig =
         remote_refs
         pattern_defs
         patterns)
+
+let read_docblock file_addr =
+  let open Heap in
+  let deserialize x = Marshal.from_string x 0 in
+  file_docblock file_addr |> read_docblock |> deserialize
 
 let read_aloc_table file_key file_addr =
   let open Heap in
@@ -239,15 +248,6 @@ let loc_decompactifier source =
 
 let decompactify_loc file ast = (loc_decompactifier (Some file))#program ast
 
-module DocblockHeap =
-  SharedMem.NoCache
-    (File_key)
-    (struct
-      type t = Docblock.t
-
-      let description = "Docblock"
-    end)
-
 module FileSigHeap =
   SharedMem.WithCache
     (File_key)
@@ -306,17 +306,15 @@ module ParsingHeaps = struct
   let add file ~exports info ast file_sig locs type_sig =
     WorkerCancel.with_no_cancellations (fun () ->
         ASTHeap.add file (compactify_loc ast);
-        DocblockHeap.add file info;
         ExportsHeap.add file exports;
         FileSigHeap.add file file_sig;
-        TypeSigHeap.add file (write_type_sig locs type_sig))
+        TypeSigHeap.add file (write_type_sig info locs type_sig))
 
   let oldify_batch files =
     WorkerCancel.with_no_cancellations (fun () ->
         ASTHeap.oldify_batch files;
         TypeSigHeap.oldify_batch files;
         FilenameSet.iter ALocTableCache.remove files;
-        DocblockHeap.oldify_batch files;
         ExportsHeap.oldify_batch files;
         FileSigHeap.oldify_batch files;
         FileHashHeap.oldify_batch files)
@@ -325,7 +323,6 @@ module ParsingHeaps = struct
     WorkerCancel.with_no_cancellations (fun () ->
         ASTHeap.remove_old_batch files;
         TypeSigHeap.remove_old_batch files;
-        DocblockHeap.remove_old_batch files;
         ExportsHeap.remove_old_batch files;
         FileSigHeap.remove_old_batch files;
         FileHashHeap.remove_old_batch files)
@@ -335,7 +332,6 @@ module ParsingHeaps = struct
         ASTHeap.revive_batch files;
         TypeSigHeap.revive_batch files;
         FilenameSet.iter ALocTableCache.remove files;
-        DocblockHeap.revive_batch files;
         ExportsHeap.revive_batch files;
         FileSigHeap.revive_batch files;
         FileHashHeap.revive_batch files)
@@ -405,7 +401,12 @@ end = struct
     let ast = ASTHeap.get key in
     Base.Option.map ~f:(decompactify_loc key) ast
 
-  let get_docblock ~reader:_ = DocblockHeap.get
+  let get_type_sig_addr ~reader:_ = TypeSigHeap.get
+
+  let get_docblock ~reader file =
+    match get_type_sig_addr ~reader file with
+    | Some addr -> Some (read_docblock addr)
+    | None -> None
 
   let get_exports ~reader:_ = ExportsHeap.get
 
@@ -453,8 +454,8 @@ end = struct
     | Some file_sig -> file_sig
     | None -> raise (Requires_not_found (File_key.to_string file))
 
-  let get_type_sig_addr_unsafe ~reader:_ file =
-    match TypeSigHeap.get file with
+  let get_type_sig_addr_unsafe ~reader file =
+    match get_type_sig_addr ~reader file with
     | Some addr -> addr
     | None -> raise (Type_sig_not_found (File_key.to_string file))
 
@@ -597,11 +598,16 @@ module Reader : READER with type reader = State_reader.t = struct
           Some aloc_table
         | None -> None)
 
-  let get_docblock ~reader:_ key =
+  let get_type_sig_addr ~reader:_ key =
     if should_use_oldified key then
-      DocblockHeap.get_old key
+      TypeSigHeap.get_old key
     else
-      DocblockHeap.get key
+      TypeSigHeap.get key
+
+  let get_docblock ~reader key =
+    match get_type_sig_addr ~reader key with
+    | Some addr -> Some (read_docblock addr)
+    | None -> None
 
   let get_exports ~reader:_ key =
     if should_use_oldified key then
@@ -614,12 +620,6 @@ module Reader : READER with type reader = State_reader.t = struct
       FileSigHeap.get_old key
     else
       FileSigHeap.get key
-
-  let get_type_sig_addr ~reader:_ key =
-    if should_use_oldified key then
-      TypeSigHeap.get_old key
-    else
-      TypeSigHeap.get key
 
   let get_type_sig ~reader key =
     let addr_opt = get_type_sig_addr ~reader key in

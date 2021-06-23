@@ -830,6 +830,8 @@ module NewAPI = struct
 
   type 'a opt
 
+  type docblock
+
   type aloc_table
 
   type type_export
@@ -916,6 +918,7 @@ module NewAPI = struct
   type tag =
     | Serialized_tag
     | String_tag
+    | Docblock_tag
     | ALoc_table_tag
     | Type_export_tag
     | CJS_exports_tag
@@ -964,9 +967,11 @@ module NewAPI = struct
 
   let addr_tbl_size xs = addr_size * Array.length xs
 
+  let docblock_size = string_size
+
   let aloc_table_size = string_size
 
-  let checked_file_size = 7 * addr_size
+  let checked_file_size = 8 * addr_size
 
   let type_export_size export = hash_size + string_size export
 
@@ -1001,6 +1006,10 @@ module NewAPI = struct
   let addr_tbl_header xs =
     let size = addr_tbl_size xs in
     mk_header Addr_tbl_tag size
+
+  let docblock_header docblock =
+    let size = docblock_size docblock in
+    mk_header Docblock_tag size
 
   let aloc_table_header tbl =
     let size = aloc_table_size tbl in
@@ -1054,19 +1063,21 @@ module NewAPI = struct
 
   (* offsets *)
 
-  let aloc_table_addr file = addr_offset file 1
+  let docblock_addr file = addr_offset file 1
 
-  let module_addr file = addr_offset file 2
+  let aloc_table_addr file = addr_offset file 2
 
-  let module_refs_addr file = addr_offset file 3
+  let module_addr file = addr_offset file 3
 
-  let local_defs_addr file = addr_offset file 4
+  let module_refs_addr file = addr_offset file 4
 
-  let remote_refs_addr file = addr_offset file 5
+  let local_defs_addr file = addr_offset file 5
 
-  let pattern_defs_addr file = addr_offset file 6
+  let remote_refs_addr file = addr_offset file 6
 
-  let patterns_addr file = addr_offset file 7
+  let pattern_defs_addr file = addr_offset file 7
+
+  let patterns_addr file = addr_offset file 8
 
   (* read *)
 
@@ -1125,6 +1136,8 @@ module NewAPI = struct
     else
       Some (f addr)
 
+  let read_docblock addr = read_string_generic Docblock_tag addr 0
+
   let read_aloc_table addr = read_string_generic ALoc_table_tag addr 0
 
   let read_dyn_module f g addr =
@@ -1159,6 +1172,8 @@ module NewAPI = struct
   let read_pattern addr = read_string_generic Pattern_tag addr 0
 
   (* getters *)
+
+  let file_docblock file = read_addr (get_heap ()) (docblock_addr file)
 
   let file_aloc_table file = read_addr (get_heap ()) (aloc_table_addr file)
 
@@ -1256,6 +1271,11 @@ module NewAPI = struct
     unsafe_write_string chunk s;
     heap_string
 
+  let write_docblock chunk docblock =
+    let addr = write_header chunk (docblock_header docblock) in
+    unsafe_write_string chunk docblock;
+    addr
+
   let write_aloc_table chunk tbl =
     let addr = write_header chunk (aloc_table_header tbl) in
     unsafe_write_string chunk tbl;
@@ -1306,8 +1326,10 @@ module NewAPI = struct
     addr
 
   let write_checked_file
-      chunk aloc_table dyn_module module_refs local_defs remote_refs pattern_defs patterns =
+      chunk docblock aloc_table dyn_module module_refs local_defs remote_refs pattern_defs patterns
+      =
     let checked_file = write_header chunk checked_file_header in
+    unsafe_write_addr chunk docblock;
     unsafe_write_addr chunk aloc_table;
     unsafe_write_addr chunk dyn_module;
     unsafe_write_addr chunk module_refs;

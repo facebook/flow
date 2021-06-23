@@ -185,6 +185,10 @@ module NewAPI : sig
   (* Phantom type tag for optional objects. *)
   type 'a opt
 
+  (* Phantom type tag for docblock, which contains information contained in the
+   * leading comment of a file. *)
+  type docblock
+
   (* Phantom type tag for aloc table. An aloc table provides the concrete
    * location for a given keyed location in a signature. *)
   type aloc_table
@@ -249,6 +253,8 @@ module NewAPI : sig
 
   val addr_tbl_size : 'a array -> size
 
+  val docblock_size : string -> size
+
   val aloc_table_size : string -> size
 
   val checked_file_size : size
@@ -298,6 +304,8 @@ module NewAPI : sig
 
   val write_opt : (chunk -> 'a -> 'k addr) -> chunk -> 'a option -> 'k opt addr
 
+  val write_docblock : chunk -> string -> docblock addr
+
   val write_aloc_table : chunk -> string -> aloc_table addr
 
   val write_type_export : chunk -> string -> type_export addr
@@ -326,6 +334,7 @@ module NewAPI : sig
 
   val write_checked_file :
     chunk ->
+    docblock addr ->
     aloc_table addr ->
     dyn_module addr ->
     module_ref addr_tbl addr ->
@@ -346,6 +355,8 @@ module NewAPI : sig
   val write_pattern : chunk -> string -> pattern addr
 
   (* getters *)
+
+  val file_docblock : checked_file addr -> docblock addr
 
   val file_aloc_table : checked_file addr -> aloc_table addr
 
@@ -383,6 +394,8 @@ module NewAPI : sig
   val read_addr_tbl : ('k addr -> 'a) -> 'k addr_tbl addr -> 'a array
 
   val read_opt : ('a addr -> 'b) -> 'a opt addr -> 'b option
+
+  val read_docblock : docblock addr -> string
 
   val read_aloc_table : aloc_table addr -> string
 
