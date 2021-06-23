@@ -144,7 +144,7 @@ export default (suite(
                             character: 7,
                           },
                         },
-                        newText: '(foo?.bar)',
+                        newText: 'foo?.bar',
                       },
                     ],
                   },
@@ -178,7 +178,7 @@ export default (suite(
                             character: 7,
                           },
                         },
-                        newText: '(foo?.bar)',
+                        newText: 'foo?.bar',
                       },
                     ],
                   },
@@ -1365,7 +1365,7 @@ export default (suite(
                             character: 20,
                           },
                         },
-                        newText: '(newFunction())',
+                        newText: 'newFunction()',
                       },
                       {
                         range: {
@@ -1425,7 +1425,7 @@ export default (suite(
                             character: 20,
                           },
                         },
-                        newText: '(newFunction())',
+                        newText: 'newFunction()',
                       },
                       {
                         range: {

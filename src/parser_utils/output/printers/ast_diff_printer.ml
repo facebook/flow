@@ -18,10 +18,10 @@ let layout_of_node ~opts = function
   | BooleanLiteral (loc, lit) -> Js_layout_generator.boolean_literal_type loc lit
   | Statement stmt -> Js_layout_generator.statement ~opts stmt
   | Program ast -> Js_layout_generator.program ~preserve_docblock:true ~checksum:None ast
+  (* Do not wrap expression in parentheses for cases where we know parentheses are not needed. *)
+  | Expression (expr, (StatementParent _ | SlotParent)) -> Js_layout_generator.expression ~opts expr
   | Expression (expr, _) ->
-    (* Wrap the expression in parentheses because we don't know what context we are in. *)
-    (* TODO keep track of the expression context for printing, which will only insert parens when
-     * actually needed. *)
+    (* TODO use expression context for printing to insert parens when actually needed. *)
     Layout.fuse [Layout.Atom "("; Js_layout_generator.expression ~opts expr; Layout.Atom ")"]
   | Pattern pat -> Js_layout_generator.pattern ~opts pat
   | Params params -> Js_layout_generator.function_params ~opts params
