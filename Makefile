@@ -100,6 +100,7 @@ MODULES=\
   src/common/lwt\
   src/common/modulename\
   src/common/monad\
+  src/common/packed_locs\
   src/common/profiling\
   src/common/semver\
   src/common/span\

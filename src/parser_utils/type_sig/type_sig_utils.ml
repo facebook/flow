@@ -67,13 +67,7 @@ let parse_module ~strict source opts ast =
   (tbls, file_loc, Scope.exports_exn scope)
 
 let merge_locs loc0 loc1 =
-  let k = Loc.(pos_cmp loc0.start loc1.start) in
-  let k =
-    if k = 0 then
-      Loc.(pos_cmp loc1._end loc0._end)
-    else
-      k
-  in
+  let k = Packed_locs.compare_locs loc0 loc1 in
   if k < 0 then
     None
   else if k = 0 then

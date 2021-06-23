@@ -57,6 +57,14 @@
  *    .3 = end_column }
  *)
 
+let compare_locs loc0 loc1 =
+  let open Loc in
+  let k = pos_cmp loc0.start loc1.start in
+  if k = 0 then
+    pos_cmp loc1._end loc0._end
+  else
+    k
+
 let add_int buf i = Leb128.Unsigned.write (Buffer.add_int8 buf) i
 
 let write_loc_start buf tag_adjust prev_column rline column =
