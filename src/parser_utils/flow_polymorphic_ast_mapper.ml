@@ -540,7 +540,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.EnumDeclaration.BooleanBody in
       let { members; explicit_type; has_unknown_members; comments } = body in
       let members' = Base.List.map ~f:this#enum_boolean_member members in
-      let comments' = Base.Option.map ~f:this#syntax comments in
+      let comments' = Base.Option.map ~f:this#syntax_with_internal comments in
       { members = members'; explicit_type; has_unknown_members; comments = comments' }
 
     method enum_number_body (body : 'M Ast.Statement.EnumDeclaration.NumberBody.t)
@@ -548,7 +548,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.EnumDeclaration.NumberBody in
       let { members; explicit_type; has_unknown_members; comments } = body in
       let members' = Base.List.map ~f:this#enum_number_member members in
-      let comments' = Base.Option.map ~f:this#syntax comments in
+      let comments' = Base.Option.map ~f:this#syntax_with_internal comments in
       { members = members'; explicit_type; has_unknown_members; comments = comments' }
 
     method enum_string_body (body : 'M Ast.Statement.EnumDeclaration.StringBody.t)
@@ -560,7 +560,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Defaulted members -> Defaulted (Base.List.map ~f:this#enum_defaulted_member members)
         | Initialized members -> Initialized (Base.List.map ~f:this#enum_string_member members)
       in
-      let comments' = Base.Option.map ~f:this#syntax comments in
+      let comments' = Base.Option.map ~f:this#syntax_with_internal comments in
       { members = members'; explicit_type; has_unknown_members; comments = comments' }
 
     method enum_symbol_body (body : 'M Ast.Statement.EnumDeclaration.SymbolBody.t)
@@ -568,7 +568,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.EnumDeclaration.SymbolBody in
       let { members; has_unknown_members; comments } = body in
       let members' = Base.List.map ~f:this#enum_defaulted_member members in
-      let comments' = Base.Option.map ~f:this#syntax comments in
+      let comments' = Base.Option.map ~f:this#syntax_with_internal comments in
       { members = members'; has_unknown_members; comments = comments' }
 
     method enum_defaulted_member (member : 'M Ast.Statement.EnumDeclaration.DefaultedMember.t)
