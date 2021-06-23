@@ -175,6 +175,24 @@ let undefined_variables_after_extraction
   in
   List.filter_map to_undefined_variable relevant_defs_with_scope |> List.rev
 
+let collect_escaping_local_defs ~scope_info ~extracted_statements_loc =
+  SSet.empty
+  |> IMap.fold
+       (fun _ { Scope_api.Scope.locals; _ } acc ->
+         LocMap.fold
+           (fun use { Scope_api.Def.locs = (def_loc, _); actual_name; _ } acc ->
+             if
+               Loc.contains extracted_statements_loc def_loc
+               && not (Loc.contains extracted_statements_loc use)
+             then
+               SSet.add actual_name acc
+             else
+               acc)
+           locals
+           acc)
+       scope_info.Scope_api.scopes
+  |> SSet.elements
+
 let create_extracted_function ~undefined_variables ~extracted_statements =
   let id = Some (Ast_builder.Identifiers.identifier "newFunction") in
   let params =

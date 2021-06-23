@@ -394,6 +394,121 @@ let undefined_variables_after_extraction_tests =
           } );
   ]
 
+let assert_escaping_locally_defined_variables ~ctxt ~expected source extracted_statements_loc =
+  let ast = parse source in
+  let scope_info = Scope_builder.program ~with_types:false ast in
+  let actual =
+    Refactor_extract_function.collect_escaping_local_defs ~scope_info ~extracted_statements_loc
+    |> List.sort String.compare
+  in
+  let expected = List.sort String.compare expected in
+  assert_equal ~ctxt ~printer:(String.concat ", ") expected actual
+
+let escaping_locally_defined_variables_tests =
+  [
+    ( "non_escaping" >:: fun ctxt ->
+      let source =
+        {|
+        // selected start
+        const a = 3;
+        const b = a;
+        // selected end
+        console.log("not using a and b");
+      |}
+      in
+      assert_escaping_locally_defined_variables
+        ~ctxt
+        ~expected:[]
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 2; column = 8 };
+          _end = { Loc.line = 4; column = 20 };
+        } );
+    ( "all_escaping" >:: fun ctxt ->
+      let source =
+        {|
+        // selected start
+        const a = 3;
+        const b = a;
+        // selected end
+        console.log(a+b);
+      |}
+      in
+      assert_escaping_locally_defined_variables
+        ~ctxt
+        ~expected:["a"; "b"]
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 2; column = 8 };
+          _end = { Loc.line = 4; column = 20 };
+        } );
+    ( "escaping_with_hoisting" >:: fun ctxt ->
+      let source =
+        {|
+        console.log(test());
+        // selected start
+        const a = 3;
+        function test() { return a; }
+        // selected end
+      |}
+      in
+      assert_escaping_locally_defined_variables
+        ~ctxt
+        ~expected:["test"]
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 3; column = 8 };
+          _end = { Loc.line = 5; column = 37 };
+        } );
+    ( "escaping_with_shadowing" >:: fun ctxt ->
+      let source =
+        {|
+        const a = 3;
+        function test() { const a = 3; return a; }
+      |}
+      in
+      assert_escaping_locally_defined_variables
+        ~ctxt
+        ~expected:[]
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 2; column = 8 };
+          _end = { Loc.line = 2; column = 20 };
+        } );
+    ( "escaping_with_hoising_shadowing_nested_scopes" >:: fun ctxt ->
+      let source =
+        {|
+        const a = 3;
+        function level1() {
+          const b = 4;
+          const c = b + 4;
+          const d = c + b;
+          {
+            return c + level2();
+          }
+
+          function level2() {
+            const d = 5;
+            return c + d;
+          }
+        }
+      |}
+      in
+      assert_escaping_locally_defined_variables
+        ~ctxt
+        ~expected:["c"]
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 4; column = 22 };
+          _end = { Loc.line = 6; column = 26 };
+        } );
+  ]
+
 let assert_refactored ~ctxt expected source extract_range =
   let ast = parse source in
   let actual =
@@ -830,5 +945,6 @@ let tests =
          "extract_statements" >::: extract_statements_tests;
          "collect_relevant_defs_with_scope" >::: collect_relevant_defs_with_scope_tests;
          "undefined_variables_after_extraction" >::: undefined_variables_after_extraction_tests;
+         "escaping_locally_defined_variables" >::: escaping_locally_defined_variables_tests;
          "provide_available_refactor" >::: provide_available_refactor_tests;
        ]

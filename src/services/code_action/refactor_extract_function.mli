@@ -26,5 +26,8 @@ val undefined_variables_after_extraction :
   extracted_statements_loc:Loc.t ->
   string list
 
+val collect_escaping_local_defs :
+  scope_info:Scope_api.info -> extracted_statements_loc:Loc.t -> string list
+
 val provide_available_refactors :
   (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> (string * (Loc.t, Loc.t) Flow_ast.Program.t) list
