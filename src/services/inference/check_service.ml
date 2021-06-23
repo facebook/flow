@@ -248,7 +248,6 @@ let mk_check_file ~options ~reader ~cache () =
   let audit = Expensive.ok in
 
   let get_file = Module_heaps.Reader_dispatcher.get_file ~reader ~audit in
-  let get_docblock_unsafe = Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader in
   let get_type_sig_unsafe = Parsing_heaps.Reader_dispatcher.get_type_sig_addr_unsafe ~reader in
   let get_info_unsafe = Module_heaps.Reader_dispatcher.get_info_unsafe ~reader ~audit in
   let get_aloc_table_unsafe = Parsing_heaps.Reader_dispatcher.get_aloc_table_unsafe ~reader in
@@ -261,8 +260,7 @@ let mk_check_file ~options ~reader ~cache () =
 
   (* Create a merging context for a dependency of a checked file. These contexts
    * are used when converting signatures to types. *)
-  let create_dep_cx file_key ccx =
-    let docblock = get_docblock_unsafe file_key in
+  let create_dep_cx file_key docblock ccx =
     let metadata = Context.docblock_overrides docblock base_metadata in
     let module_ref = Reason.OrdinaryName (Files.module_ref file_key) in
     let aloc_table = lazy (get_aloc_table_unsafe file_key) in
@@ -306,11 +304,13 @@ let mk_check_file ~options ~reader ~cache () =
         (fun loc -> aloc loc |> ALoc.to_loc aloc_table |> ALoc.of_loc)
     in
 
-    let cx = create_dep_cx file_key ccx in
-
     let deserialize x = Marshal.from_string x 0 in
 
     let file_addr = get_type_sig_unsafe file_key in
+
+    let docblock = Heap.file_docblock file_addr |> Heap.read_docblock |> deserialize in
+
+    let cx = create_dep_cx file_key docblock ccx in
 
     let dependencies =
       let f addr =
