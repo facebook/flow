@@ -193,31 +193,91 @@ let collect_escaping_local_defs ~scope_info ~extracted_statements_loc =
        scope_info.Scope_api.scopes
   |> SSet.elements
 
-let create_extracted_function ~undefined_variables ~extracted_statements =
-  let id = Some (Ast_builder.Identifiers.identifier "newFunction") in
+let create_extracted_function ~undefined_variables ~escaping_definitions ~extracted_statements =
+  let open Ast_builder in
+  let id = Some (Identifiers.identifier "newFunction") in
   let params =
     undefined_variables
-    |> List.map (fun v -> v |> Ast_builder.Patterns.identifier |> Ast_builder.Functions.param)
-    |> Ast_builder.Functions.params
+    |> List.map (fun v -> v |> Patterns.identifier |> Functions.param)
+    |> Functions.params
   in
-  let body = Ast_builder.Functions.body extracted_statements in
+  let body_statements =
+    match escaping_definitions with
+    | [] -> extracted_statements
+    | [only_escaping_definition] ->
+      extracted_statements
+      @ [Statements.return (Some (Expressions.identifier only_escaping_definition))]
+    | _ ->
+      extracted_statements
+      @ [
+          Statements.return
+            (Some
+               (Expressions.object_
+                  ( escaping_definitions
+                  |> List.map (fun def ->
+                         Expressions.object_property
+                           ~shorthand:true
+                           (Expressions.object_property_key def)
+                           (Expressions.identifier def)) )));
+        ]
+  in
+  let body = Functions.body body_statements in
   (* TODO: make it async if body contains await *)
   (* TODO: make it a generator if body contains yield *)
-  Ast_builder.Functions.make ~id ~params ~body ()
+  Functions.make ~id ~params ~body ()
 
-let create_extracted_function_call ~undefined_variables ~extracted_statements_loc =
+let create_extracted_function_call
+    ~undefined_variables ~escaping_definitions ~extracted_statements_loc =
   let open Ast_builder in
-  Statements.expression
-    ~loc:extracted_statements_loc
-    (Expressions.call
-       ~args:
-         ( undefined_variables
-         |> List.map (fun v -> v |> Expressions.identifier |> Expressions.expression)
-         |> Expressions.arg_list )
-       (Expressions.identifier "newFunction"))
+  let call =
+    Expressions.call
+      ~loc:extracted_statements_loc
+      ~args:
+        ( undefined_variables
+        |> List.map (fun v -> v |> Expressions.identifier |> Expressions.expression)
+        |> Expressions.arg_list )
+      (Expressions.identifier "newFunction")
+  in
+  match escaping_definitions with
+  | [] -> Statements.expression ~loc:extracted_statements_loc call
+  | [only_escaping_definition] ->
+    Statements.const_declaration
+      ~loc:extracted_statements_loc
+      [Statements.variable_declarator ~init:call only_escaping_definition]
+  | _ ->
+    Statements.const_declaration
+      ~loc:extracted_statements_loc
+      [
+        Statements.variable_declarator_generic
+          Flow_ast.Pattern.
+            ( Loc.none,
+              Object
+                {
+                  Object.properties =
+                    escaping_definitions
+                    |> List.map (fun def ->
+                           Object.Property
+                             ( Loc.none,
+                               {
+                                 Object.Property.key =
+                                   Object.Property.Identifier (Identifiers.identifier def);
+                                 pattern = Patterns.identifier def;
+                                 default = None;
+                                 shorthand = true;
+                               } ));
+                  annot = Flow_ast.Type.Missing Loc.none;
+                  comments = None;
+                } )
+          (Some call);
+      ]
 
 let insert_function_to_toplevel
-    ~scope_info ~relevant_defs_with_scope ~ast ~extracted_statements ~extracted_statements_loc =
+    ~scope_info
+    ~relevant_defs_with_scope
+    ~escaping_definitions
+    ~ast
+    ~extracted_statements
+    ~extracted_statements_loc =
   let (program_loc, _) = ast in
   let undefined_variables =
     undefined_variables_after_extraction
@@ -233,16 +293,27 @@ let insert_function_to_toplevel
       ~target_body_loc:program_loc
       ~extracted_statements_loc
       ~function_call_statement:
-        (create_extracted_function_call ~undefined_variables ~extracted_statements_loc)
+        (create_extracted_function_call
+           ~undefined_variables
+           ~escaping_definitions
+           ~extracted_statements_loc)
       ~function_declaration_statement:
         ( new_function_loc,
           Flow_ast.Statement.FunctionDeclaration
-            (create_extracted_function ~undefined_variables ~extracted_statements) )
+            (create_extracted_function
+               ~undefined_variables
+               ~escaping_definitions
+               ~extracted_statements) )
   in
   ("Extract to function in module scope", mapper#program ast)
 
 let insert_function_as_inner_functions
-    ~scope_info ~relevant_defs_with_scope ~ast ~extracted_statements ~extracted_statements_loc =
+    ~scope_info
+    ~relevant_defs_with_scope
+    ~escaping_definitions
+    ~ast
+    ~extracted_statements
+    ~extracted_statements_loc =
   let collector = new insertion_function_body_loc_collector extracted_statements_loc in
   let create_refactor (title, target_function_body_loc) =
     let undefined_variables =
@@ -257,11 +328,17 @@ let insert_function_as_inner_functions
         ~target_body_loc:target_function_body_loc
         ~extracted_statements_loc
         ~function_call_statement:
-          (create_extracted_function_call ~undefined_variables ~extracted_statements_loc)
+          (create_extracted_function_call
+             ~undefined_variables
+             ~escaping_definitions
+             ~extracted_statements_loc)
         ~function_declaration_statement:
           ( Loc.none,
             Flow_ast.Statement.FunctionDeclaration
-              (create_extracted_function ~undefined_variables ~extracted_statements) )
+              (create_extracted_function
+                 ~undefined_variables
+                 ~escaping_definitions
+                 ~extracted_statements) )
     in
     (Printf.sprintf "Extract to inner function in function '%s'" title, mapper#program ast)
   in
@@ -285,15 +362,20 @@ let provide_available_refactors ast extract_range =
       let relevant_defs_with_scope =
         collect_relevant_defs_with_scope ~scope_info ~extracted_statements_loc
       in
+      let escaping_definitions =
+        collect_escaping_local_defs ~scope_info ~extracted_statements_loc
+      in
       insert_function_to_toplevel
         ~scope_info
         ~relevant_defs_with_scope
+        ~escaping_definitions
         ~ast
         ~extracted_statements
         ~extracted_statements_loc
       :: insert_function_as_inner_functions
            ~scope_info
            ~relevant_defs_with_scope
+           ~escaping_definitions
            ~ast
            ~extracted_statements
            ~extracted_statements_loc)

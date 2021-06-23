@@ -643,6 +643,35 @@ function test() {
           start = { Loc.line = 4; column = 10 };
           _end = { Loc.line = 7; column = 20 };
         } );
+    ( "single_escaping_def_extract" >:: fun ctxt ->
+      let source = {|
+        const a = 3;
+        console.log(a);
+      |} in
+      let expected =
+        [
+          ( "Extract to function in module scope",
+            {|
+const a = newFunction();
+console.log(a);
+
+function newFunction() {
+  const a = 3;
+  return a;
+}
+      |}
+          );
+        ]
+      in
+      assert_refactored
+        ~ctxt
+        expected
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 2; column = 8 };
+          _end = { Loc.line = 2; column = 20 };
+        } );
     ( "very_nested_extract" >:: fun ctxt ->
       let source =
         {|
@@ -795,7 +824,10 @@ function level1() {
                 let e = 7;
                 function level4() {
                   let f = 8;
-                  console.log(a + b + c + d + e + f);
+                  const g = 3;
+                  const h = 4;
+                  console.log(a + b + c + d + e + f + g + h);
+                  return f + g + h;
                 }
               }
             }
@@ -818,7 +850,8 @@ function level1() {
         let e = 7;
         function level4() {
           let f = 8;
-          newFunction(b, c, d, e, f);
+          const {g, h} = newFunction(b, c, d, e, f);
+          return f + g + h;
         }
       }
     }
@@ -826,7 +859,10 @@ function level1() {
 }
 
 function newFunction(b, c, d, e, f) {
-  console.log(a + b + c + d + e + f);
+  const g = 3;
+  const h = 4;
+  console.log(a + b + c + d + e + f + g + h);
+  return { g, h };
 }
 |}
           );
@@ -843,9 +879,13 @@ function level1() {
         let e = 7;
         function level4() {
           let f = 8;
-          newFunction();
+          const {g, h} = newFunction();
+          return f + g + h;
           function newFunction() {
-            console.log(a + b + c + d + e + f);
+            const g = 3;
+            const h = 4;
+            console.log(a + b + c + d + e + f + g + h);
+            return { g, h };
           }
         }
       }
@@ -867,11 +907,15 @@ function level1() {
         let e = 7;
         function level4() {
           let f = 8;
-          newFunction(e, f);
+          const {g, h} = newFunction(e, f);
+          return f + g + h;
         }
       }
       function newFunction(e, f) {
-        console.log(a + b + c + d + e + f);
+        const g = 3;
+        const h = 4;
+        console.log(a + b + c + d + e + f + g + h);
+        return { g, h };
       }
     }
   }
@@ -891,12 +935,16 @@ function level1() {
         let e = 7;
         function level4() {
           let f = 8;
-          newFunction(d, e, f);
+          const {g, h} = newFunction(d, e, f);
+          return f + g + h;
         }
       }
     }
     function newFunction(d, e, f) {
-      console.log(a + b + c + d + e + f);
+      const g = 3;
+      const h = 4;
+      console.log(a + b + c + d + e + f + g + h);
+      return { g, h };
     }
   }
 }
@@ -915,13 +963,17 @@ function level1() {
         let e = 7;
         function level4() {
           let f = 8;
-          newFunction(c, d, e, f);
+          const {g, h} = newFunction(c, d, e, f);
+          return f + g + h;
         }
       }
     }
   }
   function newFunction(c, d, e, f) {
-    console.log(a + b + c + d + e + f);
+    const g = 3;
+    const h = 4;
+    console.log(a + b + c + d + e + f + g + h);
+    return { g, h };
   }
 }
 |}
@@ -935,7 +987,7 @@ function level1() {
         {
           Loc.source = None;
           start = { Loc.line = 13; column = 18 };
-          _end = { Loc.line = 13; column = 53 };
+          _end = { Loc.line = 15; column = 61 };
         } );
   ]
 
