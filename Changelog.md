@@ -1,3 +1,23 @@
+### 0.154.0
+
+Likely to cause new Flow errors:
+* Added type checking for `this` parameters of functions (see https://medium.com/flow-type/sound-typing-for-this-in-flow-d62db2af969e).
+
+New Features:
+* Added codemod to cleanup the use of soon to be deprecated existential type (e.g. `*`). It can be run via `flow codemod replace-existentials --write .`.
+* Added IDE quickfix for optional chaining when accessing an object that is nullable.
+
+Notable bug fixes:
+* Fixed crash related to a missing method unbinding error case.
+* Fixed crash from calling the flow binary with an unknown argument.
+
+Library Definitions:
+* Fix MediaSource readyState to match the spec, "opened" -> "open" (thanks @sompylasar).
+
+Misc:
+* Remove `experimental.this_annot` config option and permanently enable now that our core lib defs rely on this feature.
+* Remove prevously defaulted on `new_check` config option for the new check mode that uses significantly less RAM for large projects.
+
 ### 0.153.0
 
 Likely to cause new Flow errors:
