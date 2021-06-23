@@ -27,6 +27,13 @@ type diff_algorithm =
   | Trivial
   | Standard
 
+type expression_node_parent =
+  | StatementParent of (Loc.t, Loc.t) Flow_ast.Statement.t
+  | ExpressionParent of (Loc.t, Loc.t) Flow_ast.Expression.t
+  | SlotParent
+  | SpreadParent
+[@@deriving show]
+
 type node =
   | Raw of string
   | Comment of Loc.t Flow_ast.Comment.t
@@ -37,7 +44,7 @@ type node =
   | BooleanLiteral of Loc.t * Loc.t Flow_ast.BooleanLiteral.t
   | Statement of (Loc.t, Loc.t) Flow_ast.Statement.t
   | Program of (Loc.t, Loc.t) Flow_ast.Program.t
-  | Expression of (Loc.t, Loc.t) Flow_ast.Expression.t
+  | Expression of ((Loc.t, Loc.t) Flow_ast.Expression.t * expression_node_parent)
   | Pattern of (Loc.t, Loc.t) Flow_ast.Pattern.t
   | Params of (Loc.t, Loc.t) Flow_ast.Function.Params.t
   | Variance of Loc.t Flow_ast.Variance.t
