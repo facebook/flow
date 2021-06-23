@@ -337,6 +337,13 @@ module ALocRepresentationDoNotUse = struct
     Array.iter (fun loc -> ResizableArray.push map (RelativeLoc.of_loc loc)) locs;
     { file; map }
 
+  let init_table file len f =
+    let map = ResizableArray.make len in
+    for _ = 0 to len - 1 do
+      ResizableArray.push map (RelativeLoc.of_loc (f ()))
+    done;
+    { file; map }
+
   let make_keyed = Repr.of_key
 
   let make_id = Repr.of_key

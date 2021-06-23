@@ -185,6 +185,10 @@ module NewAPI : sig
   (* Phantom type tag for optional objects. *)
   type 'a opt
 
+  (* Phantom type tag for aloc table. An aloc table provides the concrete
+   * location for a given keyed location in a signature. *)
+  type aloc_table
+
   (* Phantom type tag for checked file objects. A checked file contains
    * references to the filename, any local definitions, exports, etc. *)
   type checked_file
@@ -245,6 +249,8 @@ module NewAPI : sig
 
   val addr_tbl_size : 'a array -> size
 
+  val aloc_table_size : string -> size
+
   val checked_file_size : size
 
   val type_export_size : string -> size
@@ -292,6 +298,8 @@ module NewAPI : sig
 
   val write_opt : (chunk -> 'a -> 'k addr) -> chunk -> 'a option -> 'k opt addr
 
+  val write_aloc_table : chunk -> string -> aloc_table addr
+
   val write_type_export : chunk -> string -> type_export addr
 
   val write_cjs_exports : chunk -> string -> cjs_exports addr
@@ -318,6 +326,7 @@ module NewAPI : sig
 
   val write_checked_file :
     chunk ->
+    aloc_table addr ->
     dyn_module addr ->
     module_ref addr_tbl addr ->
     local_def addr_tbl addr ->
@@ -337,6 +346,8 @@ module NewAPI : sig
   val write_pattern : chunk -> string -> pattern addr
 
   (* getters *)
+
+  val file_aloc_table : checked_file addr -> aloc_table addr
 
   val file_module : checked_file addr -> dyn_module addr
 
@@ -372,6 +383,8 @@ module NewAPI : sig
   val read_addr_tbl : ('k addr -> 'a) -> 'k addr_tbl addr -> 'a array
 
   val read_opt : ('a addr -> 'b) -> 'a opt addr -> 'b option
+
+  val read_aloc_table : aloc_table addr -> string
 
   val read_dyn_module : (cjs_module addr -> 'a) -> (es_module addr -> 'a) -> dyn_module addr -> 'a
 

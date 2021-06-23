@@ -94,6 +94,7 @@ MODULES=\
   src/common/errors\
   src/common/exit\
   src/common/exit_status\
+  src/common/leb128\
   src/common/lints\
   src/common/logging_utils\
   src/common/lwt\

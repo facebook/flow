@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type locs_tbl = Loc.t Type_sig_collections.Locs.t
+
 type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
 
 type checked_file_addr = SharedMem.NewAPI.checked_file SharedMem.addr
@@ -65,8 +67,8 @@ type worker_mutator = {
     Docblock.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t ->
     File_sig.With_Loc.t ->
+    locs_tbl ->
     type_sig ->
-    ALoc.table ->
     unit;
   add_hash: File_key.t -> Xx.hash -> unit;
 }
