@@ -96,7 +96,7 @@ let load_lib_files
            match parse_content lib_file lib_content with
            | Ok (ast, file_sig) ->
              (* Lib files use only concrete locations, so this is not used. *)
-             let aloc_table = lazy (ALoc.make_table lib_file) in
+             let aloc_table = lazy (ALoc.empty_table lib_file) in
              let cx =
                Context.make
                  ccx
@@ -198,7 +198,7 @@ let init_builtins filenames =
   let ccx = Context.(make_ccx (empty_master_cx ())) in
   let master_cx =
     (* Lib files use only concrete locations, so this is not used. *)
-    let aloc_table = lazy (ALoc.make_table File_key.Builtins) in
+    let aloc_table = lazy (ALoc.empty_table File_key.Builtins) in
     Context.make
       ccx
       (stub_metadata ~root ~checked:false)

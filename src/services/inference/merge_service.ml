@@ -529,7 +529,7 @@ let check_contents_context ~reader options file ast docblock file_sig type_sig =
   let aloc_table =
     lazy
       (try Parsing_heaps.Reader.get_aloc_table_unsafe ~reader file
-       with Parsing_heaps_exceptions.ALoc_table_not_found _ -> ALoc.make_table file)
+       with Parsing_heaps_exceptions.ALoc_table_not_found _ -> ALoc.empty_table file)
   in
   let exported_locals = get_exported_locals file type_sig in
   let reader = Abstract_state_reader.State_reader reader in

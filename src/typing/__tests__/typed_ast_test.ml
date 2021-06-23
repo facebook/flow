@@ -136,7 +136,7 @@ let before_and_after_stmts file_name =
         (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)))
     in
     let cx =
-      let aloc_table = lazy (ALoc.make_table file_key) in
+      let aloc_table = lazy (ALoc.empty_table file_key) in
       let ccx = Context.(make_ccx master_cx) in
       Context.make
         ccx

@@ -197,7 +197,7 @@ type t = {
   ccx: component_t;
   file: File_key.t;
   phase: phase;
-  rev_aloc_table: ALoc.reverse_table Lazy.t;
+  aloc_table: ALoc.table Lazy.t;
   metadata: metadata;
   module_info: Module_info.t;
   mutable require_map: Type.t ALocMap.t;
@@ -341,7 +341,7 @@ let make ccx metadata file aloc_table module_ref phase =
     ccx;
     file;
     phase;
-    rev_aloc_table = lazy (ALoc.reverse_table (Lazy.force aloc_table));
+    aloc_table;
     metadata;
     module_info = Module_info.empty_cjs_module module_ref;
     require_map = ALocMap.empty;
@@ -786,7 +786,7 @@ let has_export cx id name = find_exports cx id |> NameUtils.Map.mem name
 let set_export cx id name t = find_exports cx id |> NameUtils.Map.add name t |> add_export_map cx id
 
 (* constructors *)
-let make_aloc_id cx aloc = ALoc.id_of_aloc cx.rev_aloc_table aloc
+let make_aloc_id cx aloc = ALoc.id_of_aloc cx.aloc_table aloc
 
 let make_generic_id cx name loc = Generic.make_bound_id (make_aloc_id cx loc) name
 

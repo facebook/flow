@@ -70,7 +70,7 @@ let infer_lib_file ~ccx ~options ~exclude_syms lib_file ast file_sig =
       { metadata with checked = false; weak = false })
   in
   (* Lib files use only concrete locations, so this is not used. *)
-  let aloc_table = lazy (ALoc.make_table lib_file) in
+  let aloc_table = lazy (ALoc.empty_table lib_file) in
   let cx =
     Context.make
       ccx
@@ -200,7 +200,7 @@ let init ~options ~reader lib_files =
         { metadata with checked = false; weak = false })
     in
     (* Lib files use only concrete locations, so this is not used. *)
-    let aloc_table = lazy (ALoc.make_table File_key.Builtins) in
+    let aloc_table = lazy (ALoc.empty_table File_key.Builtins) in
     Context.make
       ccx
       metadata

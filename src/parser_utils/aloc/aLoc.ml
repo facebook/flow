@@ -9,27 +9,16 @@ type table = {
   (* This is not strictly necessary, but it allows us to check that the location source matches the
    * table source, to avoid confusing issues if we try a lookup with the wrong table. *)
   file: File_key.t;
-  map: RelativeLoc.t ResizableArray.t;
+  locs: Loc.t array;
 }
 
-let make_table file =
-  {
-    file;
-    (* TODO maybe start with a rough estimate of the number of locations? *)
-    map = ResizableArray.make 32;
-  }
-
-let shrink_table table = ResizableArray.shrink table.map
+let empty_table file = { file; locs = [||] }
 
 type key = int
 
 let compare_key : key -> key -> int = Stdlib.compare
 
 let string_of_key = string_of_int
-
-type reverse_table = (RelativeLoc.t, key) Hashtbl.t
-
-let make_empty_reverse_table () = Hashtbl.create 0
 
 module Repr : sig
   type t
@@ -149,17 +138,10 @@ let to_loc table loc =
     let source = Repr.source loc in
     let key = Repr.get_key_exn loc in
     let table = Lazy.force table in
-    if Some table.file <> source then
-      failwith "to_loc_safe: File mismatch between location and table"
+    if Some table.file = source then
+      table.locs.(key)
     else
-      match ResizableArray.get table.map key with
-      | Some loc -> RelativeLoc.to_loc loc source
-      | None ->
-        failwith
-          (Printf.sprintf
-             "Unable to look up location with key %S for file %S"
-             (string_of_key key)
-             (File_key.to_string table.file))
+      failwith "to_loc_safe: File mismatch between location and table"
   else
     Repr.to_loc_exn loc
 
@@ -305,25 +287,24 @@ type id = t
 
 let id_none = none
 
-let id_of_aloc rev_table loc =
-  match Repr.kind loc with
+let id_of_aloc table aloc =
+  match Repr.kind aloc with
   | Repr.Keyed
   | Repr.ALocNone ->
-    loc
+    aloc
   | Repr.Concrete ->
-    let underlying_loc = Repr.to_loc_exn loc |> RelativeLoc.of_loc in
-    (match Hashtbl.find_opt (Lazy.force rev_table) underlying_loc with
+    let (lazy { locs; _ }) = table in
+    let loc = Repr.to_loc_exn aloc in
+    (match Base.Array.binary_search locs ~compare:Packed_locs.compare_locs `First_equal_to loc with
     | Some key ->
       begin
-        match Repr.source loc with
-        | Some source -> Repr.of_key (Some source) key
+        match Repr.source aloc with
+        | Some _ as source -> Repr.of_key source key
         | None -> failwith "Unexpectedly encountered a location without a source"
       end
-    | None -> loc)
+    | None -> aloc)
 
 let equal_id a b = quick_compare a b = 0
-
-let reverse_table table = ResizableArray.to_hashtbl table.map
 
 module ALocRepresentationDoNotUse = struct
   let is_keyed = Repr.is_keyed
@@ -332,17 +313,11 @@ module ALocRepresentationDoNotUse = struct
 
   let string_of_key = string_of_key
 
-  let make_table file locs =
-    let map = ResizableArray.make (Array.length locs) in
-    Array.iter (fun loc -> ResizableArray.push map (RelativeLoc.of_loc loc)) locs;
-    { file; map }
+  let make_table file locs = { file; locs }
 
   let init_table file len f =
-    let map = ResizableArray.make len in
-    for _ = 0 to len - 1 do
-      ResizableArray.push map (RelativeLoc.of_loc (f ()))
-    done;
-    { file; map }
+    let locs = Array.init len (fun _ -> f ()) in
+    { file; locs }
 
   let make_keyed = Repr.of_key
 
