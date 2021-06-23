@@ -240,7 +240,7 @@ let loc_decompactifier source =
 let decompactify_loc file ast = (loc_decompactifier (Some file))#program ast
 
 module DocblockHeap =
-  SharedMem.WithCache
+  SharedMem.NoCache
     (File_key)
     (struct
       type t = Docblock.t
