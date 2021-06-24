@@ -6,7 +6,8 @@ layout: guide
 
 A type like `number`, `boolean`, or `string` describes a set of possible
 values. A `number` describes every possible number, so a single number
-(such as `42`) would be a *subtype* of the `number` type.
+(such as `42`) would be a *subtype* of the `number` type. Conversely, `number`
+would be a *supertype* of the type `42`.
 
 If we want to know whether one type is the subtype of another, we need to look at
 all the possible values for both types and figure out if the other has a
@@ -108,7 +109,7 @@ let objectA: ObjectA = objectB; // Error!
 ```
 
 If these values on the object happen to be other objects, we would have to
-compare those against one another. We need to compare every value 
+compare those against one another. We need to compare every value
 recursively until we can decide if we have a subtype or not.
 
 #### Subtypes of functions <a class="toc" id="toc-subtypes-of-functions" href="#toc-subtypes-of-functions"></a>

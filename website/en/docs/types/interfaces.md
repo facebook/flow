@@ -96,7 +96,8 @@ same features.
 
 ##### Interface Methods <a class="toc" id="toc-interface-methods" href="#toc-interface-methods"></a>
 
-You can add methods to interfaces following the same syntax as class methods.
+You can add methods to interfaces following the same syntax as class methods. Any `this` parameters you
+provide are also subject to the same restrictions as class methods.
 
 ```js
 interface MyInterface {

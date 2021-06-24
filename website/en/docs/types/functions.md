@@ -207,20 +207,26 @@ async function method(): Promise<number> {
 ### Function `this` <a class="toc" id="toc-function-this" href="#toc-function-this"></a>
 
 Every function in JavaScript can be called with a special context named `this`.
-You can call a function with any context that you want.
-
-In Flow you don't type annotate `this` and Flow will check whatever context you
-call the function with.
+You can call a function with any context that you want. Flow allows you to annotate
+the type for this context by adding a special parameter at the start of the function's parameter list:
 
 ```js
-function method() {
-  return this;
+// @flow
+function method<T>(this: { x: T }) : T {
+  return this.x;
 }
 
-var num: number = method.call(42);
-// $ExpectError
-var str: string = method.call(42);
+var num: number = method.call({x : 42});
+var str: string = method.call({x : 42}); // error
 ```
+
+This parameter has no effect at runtime, and is erased along with types when Flow is transformed into JavaScript.
+When present, `this` parameters must always appear at the very beginning of the function's parameter list, and must
+have an annotation. Additionally, [arrow functions](./#toc-arrow-functions) may not have a `this` parameter annotation, as
+these functions bind their `this` parameter at the definition site, rather than the call site.
+
+If an explicit `this` parameter is not provided, Flow will attempt to infer one based on usage. If `this` is not mentioned
+in the body of the function, Flow will infer `mixed` for its `this` parameter.
 
 ### Predicate Functions <a class="toc" id="toc-predicate-functions" href="#toc-predicate-functions"></a>
 

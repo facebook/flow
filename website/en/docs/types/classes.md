@@ -34,6 +34,18 @@ class MyClass {
 }
 ```
 
+Also just like regular functions, class methods may have `this` annotations as well.
+However, if one is not provided, Flow will infer the class instance type (or the class type for static methods)
+instead of `mixed`. When an explicit `this` parameter is provided, it must be a [supertype](../../lang/subtypes/) of
+the class instance type (or class type for static methods).
+
+```js
+class MyClass {
+  method(this : interface { x : string }): void { /* ... */ } // x is missing in `MyClass`
+}
+```
+
+
 Unlike class properties, however, class methods cannot be unbound or rebound from
 the class on which you defined them. So all of the following are errors in Flow:
 
