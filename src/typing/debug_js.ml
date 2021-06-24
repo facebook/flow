@@ -1744,6 +1744,8 @@ let dump_error_message =
         (dump_reason cx reason)
         (ListUtils.to_string ", " (dump_reason cx) blame_reasons)
     | EMalformedCode loc -> spf "EMalformedCode (%s)" (string_of_aloc loc)
+    | EObjectThisReference (loc, r) ->
+      spf "EObjectThisReference (%s, %s)" (string_of_aloc loc) (dump_reason cx r)
     | EImplicitInstantiationTemporaryError _ -> "EImplicitInstantiationTemporaryError"
     | EImportInternalReactServerModule loc ->
       spf "EImportInternalReactServerModule (%s)" (string_of_aloc loc)

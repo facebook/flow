@@ -53,7 +53,7 @@ class E {
     };
     const t = {
       prop: 1,
-      n() { this.prop = 1; }  // OK
+      n() { t.prop = 1; }  // OK
     };
   }
 

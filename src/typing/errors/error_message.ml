@@ -429,6 +429,7 @@ and 'loc t' =
       reason_prop: 'loc virtual_reason;
       reason_op: 'loc virtual_reason;
     }
+  | EObjectThisReference of 'loc * 'loc virtual_reason
 
 and 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;
@@ -992,6 +993,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reason_op = map_reason reason_op;
         reason_prop = map_reason reason_prop;
       }
+  | EObjectThisReference (loc, r) -> EObjectThisReference (f loc, map_reason r)
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1206,7 +1208,8 @@ let util_use_op_of_msg nope util = function
   | EImportInternalReactServerModule _
   | EImplicitInstantiationUnderconstrainedError _
   | EClassToObject _
-  | EMethodUnbinding _ ->
+  | EMethodUnbinding _
+  | EObjectThisReference _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1350,6 +1353,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EAssignExportedConstLikeBinding { loc; _ }
   | EMalformedCode loc
   | EImplicitInstantiationTemporaryError (loc, _)
+  | EObjectThisReference (loc, _)
   | EImportInternalReactServerModule loc ->
     Some loc
   | EImplicitInstantiationUnderconstrainedError { reason_call; _ } ->
@@ -3558,6 +3562,23 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text ".";
           ];
       }
+  | EObjectThisReference (_, reason) ->
+    Normal
+      {
+        features =
+          [
+            text "Cannot reference ";
+            code "this";
+            text " from within ";
+            ref reason;
+            text ". For safety, Flow restricts access to ";
+            code "this";
+            text " inside object methods since these methods may be unbound and rebound.";
+            text " Consider replacing the reference to ";
+            code "this";
+            text " with the name of the object, or rewriting the object as a class.";
+          ];
+      }
   | EImplicitInstantiationTemporaryError (_, msg) -> Normal { features = [text msg] }
   | EImportInternalReactServerModule _ ->
     Normal
@@ -3853,6 +3874,7 @@ let error_code_of_message err : error_code option =
   | EUnsupportedSetProto _ -> Some CannotWrite
   | EUnsupportedSyntax (_, _) -> Some UnsupportedSyntax
   | EImplicitInstantiationUnderconstrainedError _ -> Some UnderconstrainedImplicitInstantiation
+  | EObjectThisReference _ -> Some ObjectThisReference
   | EMalformedCode _
   | EImplicitInstantiationTemporaryError _
   | EUnusedSuppression _

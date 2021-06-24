@@ -2,7 +2,7 @@
 
 var obj = {
   n(y) {
-    return this.m(y);
+    return obj.m(y);
   },
   m(x) {
     return "";

@@ -206,7 +206,7 @@ object-0.js 7 6
 
 var obj = {
   n(y) {
-    return this.m(y);
+    return obj.m(y);
   },
   m(x: number) {
     return "";
@@ -220,7 +220,7 @@ object-1.js 7 8
 
 var obj = {
   'n'(y) {
-    return this.m(y);
+    return obj.m(y);
   },
   'm'(x: number) {
     return "";
@@ -361,7 +361,7 @@ replacement-dictionary.js 3 3 --strategy=generalize
 No errors!
 replacement-object.js 2 16
 // @flow
-var obj = {n(y): string {return this.m(y);},m(x) {return "";}}
+var obj = {n(y): string {return obj.m(y);},m(x) {return "";}}
 obj.n(0)
 
 
@@ -514,7 +514,7 @@ function f(x: MyObject) {
 No errors!
 replacement-object.js 2 5 --strategy=generalize
 // @flow
-var obj: { m(x: number): string, n(y: number): string, ... } = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: { m(x: number): string, n(y: number): string, ... } = {n(y) {return obj.m(y);},m(x) {return "";}}
 obj.n(0)
 
 
@@ -527,7 +527,7 @@ obj.n(0)
 No errors!
 replacement-object.js 2 6 --strategy=specialize
 // @flow
-var obj: {| m(x: number): string, n(y: number): string |} = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: {| m(x: number): string, n(y: number): string |} = {n(y) {return obj.m(y);},m(x) {return "";}}
 obj.n(0)
 
 
@@ -539,7 +539,7 @@ obj.n(0)
 // This is kinda trailing whitespace
 No errors!
 // @flow
-var obj: { m(x: number): string, n(y: number): string, ... } = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: { m(x: number): string, n(y: number): string, ... } = {n(y) {return obj.m(y);},m(x) {return "";}}
 obj.n(0)
 
 
@@ -551,7 +551,7 @@ obj.n(0)
 // This is kinda trailing whitespace
 replacement-object.js 2 8 --strategy=fixme
 // @flow
-var obj: {| m(x: number): string, n(y: number): string |} = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: {| m(x: number): string, n(y: number): string |} = {n(y) {return obj.m(y);},m(x) {return "";}}
 obj.n(0)
 
 
@@ -564,7 +564,7 @@ obj.n(0)
 No errors!
 replacement-object.js 2 5 2 8 --strategy=generalize
 // @flow
-var obj: { m(x: number): string, n(y: number): string, ... } = {n(y) {return this.m(y);},m(x) {return "";}}
+var obj: { m(x: number): string, n(y: number): string, ... } = {n(y) {return obj.m(y);},m(x) {return "";}}
 obj.n(0)
 
 

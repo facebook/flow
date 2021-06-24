@@ -283,6 +283,49 @@ let might_have_nonvoid_return loc function_ast =
   let finder = new return_finder in
   finder#eval (finder#function_ loc) function_ast
 
+class object_this_finder =
+  object (this)
+    inherit
+      [Loc_collections.ALocSet.t, ALoc.t] Flow_ast_visitor.visitor
+        ~init:Loc_collections.ALocSet.empty
+
+    method! this_expression loc node =
+      this#update_acc (Loc_collections.ALocSet.add loc);
+      node
+
+    (* Any mentions of `this` in these constructs would reference
+      the `this` within those structures, so we ignore them *)
+    method! class_ _ x = x
+
+    method! function_declaration _ x = x
+
+    method! function_expression _ x = x
+
+    (* We call this before entering every object we traverse,
+       so there is no need to inspect nested objects *)
+    method! object_ _ x = x
+  end
+
+let error_on_this_uses_in_object_methods cx =
+  let open Ast in
+  let open Expression in
+  Base.List.iter ~f:(function
+      | Object.Property (prop_loc, Object.Property.Method { key; value = (_, func); _ }) ->
+        let finder = new object_this_finder in
+        finder#eval (finder#function_ prop_loc) func
+        |> Loc_collections.ALocSet.iter (fun loc ->
+               let reason =
+                 match key with
+                 | Object.Property.Identifier (_, { Identifier.name; _ })
+                 | Object.Property.PrivateName
+                     (_, { PrivateName.id = (_, { Identifier.name; _ }); _ })
+                 | Object.Property.Literal (_, { Literal.raw = name; _ }) ->
+                   mk_reason (RMethod (Some name)) prop_loc
+                 | _ -> mk_reason (RMethod None) prop_loc
+               in
+               Flow_js.add_output cx (Error_message.EObjectThisReference (loc, reason)))
+      | _ -> ())
+
 module Func_stmt_config = struct
   type 'T ast = (ALoc.t, 'T) Ast.Function.Params.t
 
@@ -3137,6 +3180,7 @@ and expression_ ~cond ~annot cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression
   | Member _ -> subscript ~cond cx ex
   | OptionalMember _ -> subscript ~cond cx ex
   | Object { Object.properties; comments } ->
+    error_on_this_uses_in_object_methods cx properties;
     let reason = mk_reason RObjectLit loc in
     let (t, properties) = object_ ~annot ~frozen:false cx reason properties in
     ((loc, t), Object { Object.properties; comments })

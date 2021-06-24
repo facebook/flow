@@ -88,6 +88,26 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- create_class.js:7:6
 
+Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:7:6
+   7|     (this.props.foo: empty); // error: string ~> empty
+           ^^^^
+
+References:
+   create_class.js:6:3
+        v----
+   6|   m() {
+   7|     (this.props.foo: empty); // error: string ~> empty
+   8|     (this.props.bar: empty); // error: number ~> empty
+   9|   }
+        ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- create_class.js:7:6
+
 Cannot cast `this.props.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:7:6
@@ -101,6 +121,26 @@ References:
    create_class.js:7:22
    7|     (this.props.foo: empty); // error: string ~> empty
                            ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- create_class.js:8:6
+
+Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:8:6
+   8|     (this.props.bar: empty); // error: number ~> empty
+           ^^^^
+
+References:
+   create_class.js:6:3
+        v----
+   6|   m() {
+   7|     (this.props.foo: empty); // error: string ~> empty
+   8|     (this.props.bar: empty); // error: number ~> empty
+   9|   }
+        ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- create_class.js:8:6
@@ -134,6 +174,63 @@ References:
            ^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------- create_class.js:18:5
+
+Cannot reference `this` from within method `mm` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:18:5
+   18|     this.m.apply(null); // OK: this.m is autobound, so `this.p` will always be found
+           ^^^^
+
+References:
+   create_class.js:17:3
+         v-----
+   17|   mm() {
+   18|     this.m.apply(null); // OK: this.m is autobound, so `this.p` will always be found
+   19|   }
+         ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- create_class.js:27:5
+
+Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:27:5
+   27|     this.state.foo; // OK: state is unknown
+           ^^^^
+
+References:
+   create_class.js:26:3
+         v----
+   26|   m() {
+   27|     this.state.foo; // OK: state is unknown
+   28|   }
+         ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- create_class.js:41:5
+
+Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:41:5
+   41|     this.state.foo; // OK: state is unknown (due to unknown mixin)
+           ^^^^
+
+References:
+   create_class.js:40:3
+         v----
+   40|   m() {
+   41|     this.state.foo; // OK: state is unknown (due to unknown mixin)
+   42|   }
+         ^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- create_class.js:48:11
 
 Cannot get `this.foo` because property `foo` is missing in global object [1]. [prop-missing]
@@ -146,6 +243,67 @@ References:
    create_class.js:48:6
    48|     (this.foo: string); // error: number ~> string
             ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- create_class.js:61:5
+
+Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:61:5
+   61|     this.state.foo;
+           ^^^^
+
+References:
+   create_class.js:60:3
+         v----
+   60|   m() {
+   61|     this.state.foo;
+   62|     this.state.bar;
+   63|   },
+         ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- create_class.js:62:5
+
+Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:62:5
+   62|     this.state.bar;
+           ^^^^
+
+References:
+   create_class.js:60:3
+         v----
+   60|   m() {
+   61|     this.state.foo;
+   62|     this.state.bar;
+   63|   },
+         ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- create_class.js:71:6
+
+Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:71:6
+   71|     (this.mixins: mixed); // error: property `mixins` not found
+            ^^^^
+
+References:
+   create_class.js:70:3
+         v----
+   70|   m() {
+   71|     (this.mixins: mixed); // error: property `mixins` not found
+   72|     (this.autobind: mixed); // error: property `autobind` not found
+   73|     (this.statics: mixed); // error: property `statics` not found
+   74|   },
+         ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- create_class.js:71:11
@@ -172,6 +330,27 @@ References:
        -^ [1]
 
 
+Error --------------------------------------------------------------------------------------------- create_class.js:72:6
+
+Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:72:6
+   72|     (this.autobind: mixed); // error: property `autobind` not found
+            ^^^^
+
+References:
+   create_class.js:70:3
+         v----
+   70|   m() {
+   71|     (this.mixins: mixed); // error: property `mixins` not found
+   72|     (this.autobind: mixed); // error: property `autobind` not found
+   73|     (this.statics: mixed); // error: property `statics` not found
+   74|   },
+         ^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- create_class.js:72:11
 
 Cannot get `this.autobind` because property `autobind` is missing in React component [1]. [prop-missing]
@@ -194,6 +373,27 @@ References:
    74|   },
    75| });
        -^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- create_class.js:73:6
+
+Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:73:6
+   73|     (this.statics: mixed); // error: property `statics` not found
+            ^^^^
+
+References:
+   create_class.js:70:3
+         v----
+   70|   m() {
+   71|     (this.mixins: mixed); // error: property `mixins` not found
+   72|     (this.autobind: mixed); // error: property `autobind` not found
+   73|     (this.statics: mixed); // error: property `statics` not found
+   74|   },
+         ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- create_class.js:73:11
@@ -223,6 +423,26 @@ References:
 
 Error --------------------------------------------------------------------------------------------- create_class.js:80:6
 
+Cannot reference `this` from within method `getDefaultProps` [1]. For safety, Flow restricts access to `this` inside
+object methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name
+of the object, or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:80:6
+   80|     (this.q: empty); // error: number ~> empty
+            ^^^^
+
+References:
+   create_class.js:79:3
+         v------------------
+   79|   getDefaultProps() {
+   80|     (this.q: empty); // error: number ~> empty
+   81|     return {};
+   82|   },
+         ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- create_class.js:80:6
+
 Cannot cast `this.q` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:80:6
@@ -236,6 +456,63 @@ References:
    create_class.js:80:14
    80|     (this.q: empty); // error: number ~> empty
                     ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- create_class.js:88:6
+
+Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:88:6
+   88|     (this.props.foo: empty); // OK
+            ^^^^
+
+References:
+   create_class.js:87:3
+         v----
+   87|   m() {
+   88|     (this.props.foo: empty); // OK
+   89|   }
+         ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- create_class.js:95:14
+
+Cannot reference `this` from within method `getInitialState` [1]. For safety, Flow restricts access to `this` inside
+object methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name
+of the object, or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:95:14
+   95|       return this.constructor.calculateState();
+                    ^^^^
+
+References:
+   create_class.js:94:5
+           v------------------
+   94|     getInitialState() {
+   95|       return this.constructor.calculateState();
+   96|     },
+           ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- create_class.js:104:6
+
+Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:104:6
+   104|     (this.state.foo: empty); // number ~> empty
+             ^^^^
+
+References:
+   create_class.js:103:3
+          v----
+   103|   m() {
+   104|     (this.state.foo: empty); // number ~> empty
+   105|   },
+          ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- create_class.js:104:6
@@ -253,6 +530,66 @@ References:
    create_class.js:104:22
    104|     (this.state.foo: empty); // number ~> empty
                              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- create_class.js:113:5
+
+Cannot reference `this` from within method `getInitialState` [1]. For safety, Flow restricts access to `this` inside
+object methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name
+of the object, or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:113:5
+   113|     this.mm(); // cause error in mm below
+            ^^^^
+
+References:
+   create_class.js:112:3
+          v------------------
+   112|   getInitialState() {
+   113|     this.mm(); // cause error in mm below
+   114|     return this.props;
+   115|   },
+          ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- create_class.js:114:12
+
+Cannot reference `this` from within method `getInitialState` [1]. For safety, Flow restricts access to `this` inside
+object methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name
+of the object, or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:114:12
+   114|     return this.props;
+                   ^^^^
+
+References:
+   create_class.js:112:3
+          v------------------
+   112|   getInitialState() {
+   113|     this.mm(); // cause error in mm below
+   114|     return this.props;
+   115|   },
+          ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- create_class.js:117:6
+
+Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:117:6
+   117|     (this.props.foo: empty); // string ~> empty
+             ^^^^
+
+References:
+   create_class.js:116:3
+          v----
+   116|   m() {
+   117|     (this.props.foo: empty); // string ~> empty
+   118|     (this.state.foo: empty); // string ~> empty
+   119|   },
+          ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- create_class.js:117:6
@@ -274,6 +611,26 @@ References:
 
 Error -------------------------------------------------------------------------------------------- create_class.js:118:6
 
+Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:118:6
+   118|     (this.state.foo: empty); // string ~> empty
+             ^^^^
+
+References:
+   create_class.js:116:3
+          v----
+   116|   m() {
+   117|     (this.props.foo: empty); // string ~> empty
+   118|     (this.state.foo: empty); // string ~> empty
+   119|   },
+          ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- create_class.js:118:6
+
 Cannot cast `this.state.foo` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
 
    create_class.js:118:6
@@ -287,6 +644,45 @@ References:
    create_class.js:118:22
    118|     (this.state.foo: empty); // string ~> empty
                              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- create_class.js:121:5
+
+Cannot reference `this` from within method `mm` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:121:5
+   121|     this.state.foo; // error: property fo not found (called by getInitialState)
+            ^^^^
+
+References:
+   create_class.js:120:3
+          v-----
+   120|   mm() {
+   121|     this.state.foo; // error: property fo not found (called by getInitialState)
+   122|   }
+          ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- create_class.js:133:6
+
+Cannot reference `this` from within method `componentWillMount` [1]. For safety, Flow restricts access to `this` inside
+object methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name
+of the object, or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:133:6
+   133|     (this.props.foo: empty); // string ~> empty
+             ^^^^
+
+References:
+   create_class.js:132:3
+          v---------------------
+   132|   componentWillMount() {
+   133|     (this.props.foo: empty); // string ~> empty
+   134|     return 0; // number ~> mixed
+   135|   },
+          ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- create_class.js:133:11
@@ -321,6 +717,26 @@ References:
                              ^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- create_class.js:137:6
+
+Cannot reference `this` from within method `componentDidMount` [1]. For safety, Flow restricts access to `this` inside
+object methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name
+of the object, or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:137:6
+   137|     (this.props.foo: empty); // string ~> empty
+             ^^^^
+
+References:
+   create_class.js:136:3
+          v--------------------
+   136|   componentDidMount() {
+   137|     (this.props.foo: empty); // string ~> empty
+   138|     return 0; // number ~> mixed
+   139|   },
+          ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- create_class.js:137:11
 
 Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
@@ -351,6 +767,27 @@ References:
    create_class.js:137:22
    137|     (this.props.foo: empty); // string ~> empty
                              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- create_class.js:141:6
+
+Cannot reference `this` from within method `componentWillReceiveProps` [1]. For safety, Flow restricts access to `this`
+inside object methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with
+the name of the object, or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:141:6
+   141|     (this.props.foo: empty); // string ~> empty
+             ^^^^
+
+References:
+   create_class.js:140:3
+          v-------------------------------------
+   140|   componentWillReceiveProps(nextProps) {
+   141|     (this.props.foo: empty); // string ~> empty
+   142|     (nextProps.foo: empty); // string ~> empty
+   143|     return 0; // number ~> mixed
+   144|   },
+          ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- create_class.js:141:11
@@ -406,6 +843,29 @@ References:
                             ^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- create_class.js:146:6
+
+Cannot reference `this` from within method `shouldComponentUpdate` [1]. For safety, Flow restricts access to `this`
+inside object methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with
+the name of the object, or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:146:6
+   146|     (this.props.foo: empty); // string ~> empty
+             ^^^^
+
+References:
+   create_class.js:145:3
+          v--------------------------------------------
+   145|   shouldComponentUpdate(nextProps, nextState) {
+   146|     (this.props.foo: empty); // string ~> empty
+   147|     (this.state.bar: empty); // number ~> empty
+   148|     (nextProps.foo: empty); // string ~> empty
+   149|     (nextState.bar: empty); // number ~> empty
+   150|     return 0; // number ~> bool
+   151|   },
+          ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- create_class.js:146:11
 
 Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
@@ -441,6 +901,29 @@ References:
    create_class.js:146:22
    146|     (this.props.foo: empty); // string ~> empty
                              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- create_class.js:147:6
+
+Cannot reference `this` from within method `shouldComponentUpdate` [1]. For safety, Flow restricts access to `this`
+inside object methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with
+the name of the object, or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:147:6
+   147|     (this.state.bar: empty); // number ~> empty
+             ^^^^
+
+References:
+   create_class.js:145:3
+          v--------------------------------------------
+   145|   shouldComponentUpdate(nextProps, nextState) {
+   146|     (this.props.foo: empty); // string ~> empty
+   147|     (this.state.bar: empty); // number ~> empty
+   148|     (nextProps.foo: empty); // string ~> empty
+   149|     (nextState.bar: empty); // number ~> empty
+   150|     return 0; // number ~> bool
+   151|   },
+          ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- create_class.js:147:11
@@ -528,6 +1011,29 @@ References:
              ^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- create_class.js:153:6
+
+Cannot reference `this` from within method `componentWillUpdate` [1]. For safety, Flow restricts access to `this` inside
+object methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name
+of the object, or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:153:6
+   153|     (this.props.foo: empty); // string ~> empty
+             ^^^^
+
+References:
+   create_class.js:152:3
+          v------------------------------------------
+   152|   componentWillUpdate(nextProps, nextState) {
+   153|     (this.props.foo: empty); // string ~> empty
+   154|     (this.state.bar: empty); // number ~> empty
+   155|     (nextProps.foo: empty); // string ~> empty
+   156|     (nextState.bar: empty); // number ~> empty
+   157|     return 0; // number ~> void
+   158|   },
+          ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- create_class.js:153:11
 
 Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
@@ -563,6 +1069,29 @@ References:
    create_class.js:153:22
    153|     (this.props.foo: empty); // string ~> empty
                              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- create_class.js:154:6
+
+Cannot reference `this` from within method `componentWillUpdate` [1]. For safety, Flow restricts access to `this` inside
+object methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name
+of the object, or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:154:6
+   154|     (this.state.bar: empty); // number ~> empty
+             ^^^^
+
+References:
+   create_class.js:152:3
+          v------------------------------------------
+   152|   componentWillUpdate(nextProps, nextState) {
+   153|     (this.props.foo: empty); // string ~> empty
+   154|     (this.state.bar: empty); // number ~> empty
+   155|     (nextProps.foo: empty); // string ~> empty
+   156|     (nextState.bar: empty); // number ~> empty
+   157|     return 0; // number ~> void
+   158|   },
+          ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- create_class.js:154:11
@@ -636,6 +1165,29 @@ References:
                             ^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- create_class.js:160:6
+
+Cannot reference `this` from within method `componentDidUpdate` [1]. For safety, Flow restricts access to `this` inside
+object methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name
+of the object, or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:160:6
+   160|     (this.props.foo: empty); // string ~> empty
+             ^^^^
+
+References:
+   create_class.js:159:3
+          v-----------------------------------------
+   159|   componentDidUpdate(nextProps, nextState) {
+   160|     (this.props.foo: empty); // string ~> empty
+   161|     (this.state.bar: empty); // number ~> empty
+   162|     (nextProps.foo: empty); // string ~> empty
+   163|     (nextState.bar: empty); // number ~> empty
+   164|     return 0; // number ~> void
+   165|   },
+          ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- create_class.js:160:11
 
 Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
@@ -671,6 +1223,29 @@ References:
    create_class.js:160:22
    160|     (this.props.foo: empty); // string ~> empty
                              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- create_class.js:161:6
+
+Cannot reference `this` from within method `componentDidUpdate` [1]. For safety, Flow restricts access to `this` inside
+object methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name
+of the object, or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:161:6
+   161|     (this.state.bar: empty); // number ~> empty
+             ^^^^
+
+References:
+   create_class.js:159:3
+          v-----------------------------------------
+   159|   componentDidUpdate(nextProps, nextState) {
+   160|     (this.props.foo: empty); // string ~> empty
+   161|     (this.state.bar: empty); // number ~> empty
+   162|     (nextProps.foo: empty); // string ~> empty
+   163|     (nextState.bar: empty); // number ~> empty
+   164|     return 0; // number ~> void
+   165|   },
+          ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- create_class.js:161:11
@@ -744,6 +1319,27 @@ References:
                             ^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- create_class.js:167:6
+
+Cannot reference `this` from within method `componentWillUnmount` [1]. For safety, Flow restricts access to `this`
+inside object methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with
+the name of the object, or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:167:6
+   167|     (this.props.foo: empty); // string ~> empty
+             ^^^^
+
+References:
+   create_class.js:166:3
+          v-----------------------
+   166|   componentWillUnmount() {
+   167|     (this.props.foo: empty); // string ~> empty
+   168|     (this.state.bar: empty); // number ~> empty
+   169|     return 0; // number ~> void
+   170|   },
+          ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- create_class.js:167:11
 
 Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
@@ -774,6 +1370,27 @@ References:
    create_class.js:167:22
    167|     (this.props.foo: empty); // string ~> empty
                              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- create_class.js:168:6
+
+Cannot reference `this` from within method `componentWillUnmount` [1]. For safety, Flow restricts access to `this`
+inside object methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with
+the name of the object, or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:168:6
+   168|     (this.state.bar: empty); // number ~> empty
+             ^^^^
+
+References:
+   create_class.js:166:3
+          v-----------------------
+   166|   componentWillUnmount() {
+   167|     (this.props.foo: empty); // string ~> empty
+   168|     (this.state.bar: empty); // number ~> empty
+   169|     return 0; // number ~> void
+   170|   },
+          ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- create_class.js:168:11
@@ -844,6 +1461,44 @@ References:
         -^ [1]
 
 
+Error ------------------------------------------------------------------------- create_class_initial_state_sealed.js:6:5
+
+Cannot reference `this` from within method `f` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class_initial_state_sealed.js:6:5
+   6|     this.setState({ q: 0 });
+          ^^^^
+
+References:
+   create_class_initial_state_sealed.js:5:3
+        v----
+   5|   f() {
+   6|     this.setState({ q: 0 });
+   7|   },
+        ^ [1]
+
+
+Error ------------------------------------------------------------------------- create_class_initial_state_sealed.js:9:6
+
+Cannot reference `this` from within method `g` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class_initial_state_sealed.js:9:6
+    9|     (this.state.q: empty); // number ~> empty
+            ^^^^
+
+References:
+   create_class_initial_state_sealed.js:8:3
+         v----
+    8|   g() {
+    9|     (this.state.q: empty); // number ~> empty
+   10|   }
+         ^ [1]
+
+
 Error ------------------------------------------------------------------------- create_class_initial_state_sealed.js:9:6
 
 Cannot cast `this.state.q` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -859,6 +1514,44 @@ References:
    create_class_initial_state_sealed.js:9:20
    9|     (this.state.q: empty); // number ~> empty
                          ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------ create_class_initial_state_sealed.js:19:5
+
+Cannot reference `this` from within method `f` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class_initial_state_sealed.js:19:5
+   19|     this.setState({ q: 0 });
+           ^^^^
+
+References:
+   create_class_initial_state_sealed.js:18:3
+         v----
+   18|   f() {
+   19|     this.setState({ q: 0 });
+   20|   },
+         ^ [1]
+
+
+Error ------------------------------------------------------------------------ create_class_initial_state_sealed.js:22:6
+
+Cannot reference `this` from within method `g` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class_initial_state_sealed.js:22:6
+   22|     (this.state.q: empty); // number ~> empty
+            ^^^^
+
+References:
+   create_class_initial_state_sealed.js:21:3
+         v----
+   21|   g() {
+   22|     (this.state.q: empty); // number ~> empty
+   23|   }
+         ^ [1]
 
 
 Error ------------------------------------------------------------------------ create_class_initial_state_sealed.js:22:6
@@ -878,6 +1571,44 @@ References:
                           ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------ create_class_initial_state_sealed.js:32:5
+
+Cannot reference `this` from within method `f` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class_initial_state_sealed.js:32:5
+   32|     this.setState({ q: 0 });
+           ^^^^
+
+References:
+   create_class_initial_state_sealed.js:31:3
+         v----
+   31|   f() {
+   32|     this.setState({ q: 0 });
+   33|   },
+         ^ [1]
+
+
+Error ------------------------------------------------------------------------ create_class_initial_state_sealed.js:35:6
+
+Cannot reference `this` from within method `g` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class_initial_state_sealed.js:35:6
+   35|     (this.state.q: empty); // number ~> empty
+            ^^^^
+
+References:
+   create_class_initial_state_sealed.js:34:3
+         v----
+   34|   g() {
+   35|     (this.state.q: empty); // number ~> empty
+   36|   }
+         ^ [1]
+
+
 Error ------------------------------------------------------------------------ create_class_initial_state_sealed.js:35:6
 
 Cannot cast `this.state.q` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -895,6 +1626,25 @@ References:
                           ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------ create_class_initial_state_sealed.js:45:5
+
+Cannot reference `this` from within method `f` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class_initial_state_sealed.js:45:5
+   45|     this.setState({ q: 0 }); // property `q` not found
+           ^^^^
+
+References:
+   create_class_initial_state_sealed.js:44:3
+         v----
+   44|   f() {
+   45|     this.setState({ q: 0 }); // property `q` not found
+   46|   },
+         ^ [1]
+
+
 Error ----------------------------------------------------------------------- create_class_initial_state_sealed.js:45:19
 
 Cannot call `this.setState` with object literal bound to `partialState` because property `q` is missing in object
@@ -910,6 +1660,25 @@ References:
                             ^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------ create_class_initial_state_sealed.js:48:6
+
+Cannot reference `this` from within method `g` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class_initial_state_sealed.js:48:6
+   48|     (this.state.q: empty); // property `q` not found
+            ^^^^
+
+References:
+   create_class_initial_state_sealed.js:47:3
+         v----
+   47|   g() {
+   48|     (this.state.q: empty); // property `q` not found
+   49|   }
+         ^ [1]
+
+
 Error ----------------------------------------------------------------------- create_class_initial_state_sealed.js:48:17
 
 Cannot get `this.state.q` because property `q` is missing in object type [1]. [prop-missing]
@@ -922,6 +1691,44 @@ References:
    create_class_initial_state_sealed.js:41:22
    41|   getInitialState(): { p: number } {
                             ^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------ create_class_initial_state_sealed.js:63:5
+
+Cannot reference `this` from within method `f` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class_initial_state_sealed.js:63:5
+   63|     this.setState({ baz: 0 });
+           ^^^^
+
+References:
+   create_class_initial_state_sealed.js:62:3
+         v----
+   62|   f() {
+   63|     this.setState({ baz: 0 });
+   64|   },
+         ^ [1]
+
+
+Error ------------------------------------------------------------------------ create_class_initial_state_sealed.js:66:6
+
+Cannot reference `this` from within method `g` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class_initial_state_sealed.js:66:6
+   66|     (this.state.baz: empty); // number ~> empty
+            ^^^^
+
+References:
+   create_class_initial_state_sealed.js:65:3
+         v----
+   65|   g() {
+   66|     (this.state.baz: empty); // number ~> empty
+   67|   }
+         ^ [1]
 
 
 Error ------------------------------------------------------------------------ create_class_initial_state_sealed.js:66:6
@@ -941,6 +1748,25 @@ References:
                             ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------ create_class_initial_state_sealed.js:81:5
+
+Cannot reference `this` from within method `f` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class_initial_state_sealed.js:81:5
+   81|     this.setState({ baz: 0 }); // property `baz`  not found
+           ^^^^
+
+References:
+   create_class_initial_state_sealed.js:80:3
+         v----
+   80|   f() {
+   81|     this.setState({ baz: 0 }); // property `baz`  not found
+   82|   },
+         ^ [1]
+
+
 Error ----------------------------------------------------------------------- create_class_initial_state_sealed.js:81:19
 
 Cannot call `this.setState` with object literal bound to `partialState` because property `baz` (did you mean `bar`?) is
@@ -954,6 +1780,25 @@ References:
    create_class_initial_state_sealed.js:73:24
    73|     getInitialState(): { foo: number } {
                               ^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------ create_class_initial_state_sealed.js:84:6
+
+Cannot reference `this` from within method `g` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class_initial_state_sealed.js:84:6
+   84|     (this.state.baz: empty); // property `baz` not found
+            ^^^^
+
+References:
+   create_class_initial_state_sealed.js:83:3
+         v----
+   83|   g() {
+   84|     (this.state.baz: empty); // property `baz` not found
+   85|   }
+         ^ [1]
 
 
 Error ----------------------------------------------------------------------- create_class_initial_state_sealed.js:84:17
@@ -2443,6 +3288,88 @@ References:
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------- proptype_instanceOf.js:25:6
+
+Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   proptype_instanceOf.js:25:6
+   25|     (this.props.x.x: empty); // OK, T instantiated to `any`
+            ^^^^
+
+References:
+   proptype_instanceOf.js:24:3
+         v----
+   24|   m() {
+   25|     (this.props.x.x: empty); // OK, T instantiated to `any`
+   26|   }
+         ^ [1]
+
+
+Error -------------------------------------------------------------------------------------- proptype_instanceOf.js:39:6
+
+Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   proptype_instanceOf.js:39:6
+   39|     (this.props.x.x: empty); // OK, T instantiated to `any`
+            ^^^^
+
+References:
+   proptype_instanceOf.js:38:3
+         v----
+   38|   m() {
+   39|     (this.props.x.x: empty); // OK, T instantiated to `any`
+   40|   }
+         ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- proptype_missing.js:21:13
+
+Cannot reference `this` from within method `getID` [1]. For safety, Flow restricts access to `this` inside object
+methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the
+object, or rewriting the object as a class. [object-this-reference]
+
+   proptype_missing.js:21:13
+   21|     switch (this.props.name) {
+                   ^^^^
+
+References:
+   proptype_missing.js:18:3
+         v----------------
+   18|   getID(): string {
+   19|     // So this would have been an error in 0.21.0 if we didn't make this.props
+   20|     // Object
+   21|     switch (this.props.name) {
+   22|       case 'a': return 'Bob';
+   23|       default: return 'Alice';
+   24|     }
+   25|   },
+         ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- proptype_missing.js:29:21
+
+Cannot reference `this` from within method `render` [1]. For safety, Flow restricts access to `this` inside object
+methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the
+object, or rewriting the object as a class. [object-this-reference]
+
+   proptype_missing.js:29:21
+   29|     return <div id={this.props.name} />;
+                           ^^^^
+
+References:
+   proptype_missing.js:27:3
+         v---------
+   27|   render() {
+   28|     // But this never errored
+   29|     return <div id={this.props.name} />;
+   30|   }
+         ^ [1]
+
+
 Error ---------------------------------------------------------------------------------------- proptype_missing.js:29:26
 
 Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
@@ -2651,6 +3578,29 @@ Cannot call `React.PropTypes.oneOf` because number [1] is not an array. [invalid
                                     ^ [1]
 
 
+Error -------------------------------------------------------------------------------------- proptype_oneOfType.js:12:16
+
+Cannot reference `this` from within method `render` [1]. For safety, Flow restricts access to `this` inside object
+methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the
+object, or rewriting the object as a class. [object-this-reference]
+
+   proptype_oneOfType.js:12:16
+   12|     if (typeof this.props.prop === "string") {
+                      ^^^^
+
+References:
+   proptype_oneOfType.js:11:3
+         v---------
+   11|   render() {
+   12|     if (typeof this.props.prop === "string") {
+   13|       return <div>{this.props.prop}</div>
+   14|     } else {
+   15|       return <div>{this.props.prop.toFixed(2)}</div>
+   16|     }
+   17|   }
+         ^ [1]
+
+
 Error -------------------------------------------------------------------------------------- proptype_oneOfType.js:12:21
 
 Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
@@ -2666,6 +3616,29 @@ References:
          ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------- proptype_oneOfType.js:13:20
+
+Cannot reference `this` from within method `render` [1]. For safety, Flow restricts access to `this` inside object
+methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the
+object, or rewriting the object as a class. [object-this-reference]
+
+   proptype_oneOfType.js:13:20
+   13|       return <div>{this.props.prop}</div>
+                          ^^^^
+
+References:
+   proptype_oneOfType.js:11:3
+         v---------
+   11|   render() {
+   12|     if (typeof this.props.prop === "string") {
+   13|       return <div>{this.props.prop}</div>
+   14|     } else {
+   15|       return <div>{this.props.prop.toFixed(2)}</div>
+   16|     }
+   17|   }
+         ^ [1]
+
+
 Error -------------------------------------------------------------------------------------- proptype_oneOfType.js:13:25
 
 Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
@@ -2679,6 +3652,29 @@ References:
    <BUILTINS>/react.js:59:3
    59|   render(): React$Node;
          ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- proptype_oneOfType.js:15:20
+
+Cannot reference `this` from within method `render` [1]. For safety, Flow restricts access to `this` inside object
+methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the
+object, or rewriting the object as a class. [object-this-reference]
+
+   proptype_oneOfType.js:15:20
+   15|       return <div>{this.props.prop.toFixed(2)}</div>
+                          ^^^^
+
+References:
+   proptype_oneOfType.js:11:3
+         v---------
+   11|   render() {
+   12|     if (typeof this.props.prop === "string") {
+   13|       return <div>{this.props.prop}</div>
+   14|     } else {
+   15|       return <div>{this.props.prop.toFixed(2)}</div>
+   16|     }
+   17|   }
+         ^ [1]
 
 
 Error -------------------------------------------------------------------------------------- proptype_oneOfType.js:15:25
@@ -2809,6 +3805,25 @@ object literal [1] is not a React propType. [invalid-prop-type]
                                          ^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- proptype_shape.js:20:6
+
+Cannot reference `this` from within method `f` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   proptype_shape.js:20:6
+   20|     (this.props.foo.baz: string);
+            ^^^^
+
+References:
+   proptype_shape.js:19:3
+         v----
+   19|   f() {
+   20|     (this.props.foo.baz: string);
+   21|   },
+         ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------ proptype_shape.js:20:21
 
 Cannot get `this.props.foo.baz` because property `baz` (did you mean `bar`?) is missing in object type [1].
@@ -2827,6 +3842,25 @@ References:
            ------------^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- proptype_shape.js:24:5
+
+Cannot reference `this` from within method `g` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   proptype_shape.js:24:5
+   24|     this.props.foo.baz = 0;
+           ^^^^
+
+References:
+   proptype_shape.js:23:3
+         v----
+   23|   g() {
+   24|     this.props.foo.baz = 0;
+   25|   }
+         ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------ proptype_shape.js:24:20
 
 Cannot assign `0` to `this.props.foo.baz` because property `baz` (did you mean `bar`?) is missing in object type [1].
@@ -2843,6 +3877,25 @@ References:
    15|       bar: React.PropTypes.string.isRequired,
    16|     }).isRequired,
            ------------^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- proptype_shape.js:33:6
+
+Cannot reference `this` from within method `f` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   proptype_shape.js:33:6
+   33|     (this.props.foo.bar: empty); // OK
+            ^^^^
+
+References:
+   proptype_shape.js:32:3
+         v----
+   32|   f() {
+   33|     (this.props.foo.bar: empty); // OK
+   34|   },
+         ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- proptypes_builtins.js:7:2
@@ -3043,6 +4096,25 @@ References:
                               ^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------- proptypes_sealed.js:18:6
+
+Cannot reference `this` from within method `f` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   proptypes_sealed.js:18:6
+   18|     (this.props.baz: string);
+            ^^^^
+
+References:
+   proptypes_sealed.js:17:3
+         v----
+   17|   f() {
+   18|     (this.props.baz: string);
+   19|   },
+         ^ [1]
+
+
 Error ---------------------------------------------------------------------------------------- proptypes_sealed.js:18:17
 
 Cannot get `this.props.baz` because property `baz` is missing in propTypes of React component [1]. [prop-missing]
@@ -3057,6 +4129,25 @@ References:
    13|   propTypes: {
    14|     foo: React.PropTypes.string.isRequired,
    15|   },
+         ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- proptypes_sealed.js:22:5
+
+Cannot reference `this` from within method `g` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   proptypes_sealed.js:22:5
+   22|     this.props.baz = 0;
+           ^^^^
+
+References:
+   proptypes_sealed.js:21:3
+         v----
+   21|   g() {
+   22|     this.props.baz = 0;
+   23|   }
          ^ [1]
 
 
@@ -4452,7 +5543,7 @@ References:
 
 
 
-Found 249 errors
+Found 303 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

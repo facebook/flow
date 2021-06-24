@@ -115,6 +115,7 @@ type error_code =
   | NotAnArray
   | NotAnObject
   | NotIterable
+  | ObjectThisReference
   | PropMissing
   | ReassignConst
   | ReassignEnum
@@ -282,6 +283,7 @@ let string_of_code : error_code -> string = function
   | NotAnArray -> "not-an-array"
   | NotAnObject -> "not-an-object"
   | NotIterable -> "not-iterable"
+  | ObjectThisReference -> "object-this-reference"
   | PropMissing -> "prop-missing"
   | ReassignConst -> "reassign-const"
   | ReassignEnum -> "reassign-enum"
