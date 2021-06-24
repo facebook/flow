@@ -776,6 +776,81 @@ function newFunction() {
           start = { Loc.line = 1; column = 0 };
           _end = { Loc.line = 1; column = 39 };
         } );
+    ( "return_no_extract" >:: fun ctxt ->
+      let source =
+        {|
+        function test() {
+          // selection start
+          const a = 1;
+          {
+            return;
+          }
+          const b = 2;
+          // selection end
+        }
+      |}
+      in
+      assert_refactored
+        ~ctxt
+        []
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 4; column = 10 };
+          _end = { Loc.line = 8; column = 22 };
+        } );
+    ( "yield_no_extract" >:: fun ctxt ->
+      let source =
+        {|
+        function* test() {
+          // selection start
+          const a = 1;
+          {
+            yield;
+          }
+          const b = 2;
+          // selection end
+        }
+      |}
+      in
+      assert_refactored
+        ~ctxt
+        []
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 4; column = 10 };
+          _end = { Loc.line = 8; column = 22 };
+        } );
+    ( "label_no_extract" >:: fun ctxt ->
+      assert_refactored
+        ~ctxt
+        []
+        "const a = 1; {label:test();}"
+        {
+          Loc.source = None;
+          start = { Loc.line = 1; column = 0 };
+          _end = { Loc.line = 1; column = 40 };
+        } );
+    ( "simple_break_continue_no_extract" >:: fun ctxt ->
+      assert_refactored
+        ~ctxt
+        []
+        "while (true) {break;}"
+        {
+          Loc.source = None;
+          start = { Loc.line = 1; column = 12 };
+          _end = { Loc.line = 1; column = 30 };
+        };
+      assert_refactored
+        ~ctxt
+        []
+        "while (true) {continue;}"
+        {
+          Loc.source = None;
+          start = { Loc.line = 1; column = 12 };
+          _end = { Loc.line = 1; column = 30 };
+        } );
     ( "very_nested_extract" >:: fun ctxt ->
       let source =
         {|

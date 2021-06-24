@@ -58,7 +58,11 @@ class extracted_statements_information_collector =
 
     val mutable _async = false
 
+    val mutable _has_unwrapped_control_flow = false
+
     method is_async = _async
+
+    method has_unwrapped_control_flow = _has_unwrapped_control_flow
 
     method! function_ loc function_node =
       if Flow_ast.Function.(function_node.async) then
@@ -70,6 +74,26 @@ class extracted_statements_information_collector =
     method! for_of_statement loc statement =
       if Flow_ast.Statement.ForOf.(statement.await) then _async <- true;
       super#for_of_statement loc statement
+
+    method! return loc statement =
+      _has_unwrapped_control_flow <- true;
+      super#return loc statement
+
+    method! yield loc statement =
+      _has_unwrapped_control_flow <- true;
+      super#yield loc statement
+
+    method! break loc statement =
+      _has_unwrapped_control_flow <- true;
+      super#break loc statement
+
+    method! continue loc statement =
+      _has_unwrapped_control_flow <- true;
+      super#continue loc statement
+
+    method! labeled_statement loc statement =
+      _has_unwrapped_control_flow <- true;
+      super#labeled_statement loc statement
 
     method! unary_expression loc unary_expr =
       let open Flow_ast.Expression.Unary in
@@ -386,43 +410,46 @@ let provide_available_refactors ast extract_range =
   match extract_statements ast extract_range with
   | None -> []
   | Some extracted_statements ->
-    let extracted_statements_locations = List.map fst extracted_statements in
-    (match extracted_statements_locations with
-    | [] -> []
-    | insert_new_function_call_loc :: rest_statements_locations ->
-      let rest_statements_loc_union = List.fold_left union_loc None rest_statements_locations in
-      let extracted_statements_loc =
-        match rest_statements_loc_union with
-        | None -> insert_new_function_call_loc
-        | Some loc -> Loc.btwn insert_new_function_call_loc loc
-      in
-      let information_collector = new extracted_statements_information_collector in
-      let () =
-        List.iter
-          (fun statement -> statement |> information_collector#statement |> ignore)
-          extracted_statements
-      in
-      let async_function = information_collector#is_async in
-      let scope_info = Scope_builder.program ~with_types:false ast in
-      let relevant_defs_with_scope =
-        collect_relevant_defs_with_scope ~scope_info ~extracted_statements_loc
-      in
-      let escaping_definitions =
-        collect_escaping_local_defs ~scope_info ~extracted_statements_loc
-      in
-      insert_function_to_toplevel
-        ~scope_info
-        ~relevant_defs_with_scope
-        ~escaping_definitions
-        ~async_function
-        ~ast
-        ~extracted_statements
-        ~extracted_statements_loc
-      :: insert_function_as_inner_functions
-           ~scope_info
-           ~relevant_defs_with_scope
-           ~escaping_definitions
-           ~async_function
-           ~ast
-           ~extracted_statements
-           ~extracted_statements_loc)
+    let information_collector = new extracted_statements_information_collector in
+    let () =
+      List.iter
+        (fun statement -> information_collector#statement statement |> ignore)
+        extracted_statements
+    in
+    if information_collector#has_unwrapped_control_flow then
+      []
+    else
+      let extracted_statements_locations = List.map fst extracted_statements in
+      (match extracted_statements_locations with
+      | [] -> []
+      | insert_new_function_call_loc :: rest_statements_locations ->
+        let rest_statements_loc_union = List.fold_left union_loc None rest_statements_locations in
+        let extracted_statements_loc =
+          match rest_statements_loc_union with
+          | None -> insert_new_function_call_loc
+          | Some loc -> Loc.btwn insert_new_function_call_loc loc
+        in
+        let async_function = information_collector#is_async in
+        let scope_info = Scope_builder.program ~with_types:false ast in
+        let relevant_defs_with_scope =
+          collect_relevant_defs_with_scope ~scope_info ~extracted_statements_loc
+        in
+        let escaping_definitions =
+          collect_escaping_local_defs ~scope_info ~extracted_statements_loc
+        in
+        insert_function_to_toplevel
+          ~scope_info
+          ~relevant_defs_with_scope
+          ~escaping_definitions
+          ~async_function
+          ~ast
+          ~extracted_statements
+          ~extracted_statements_loc
+        :: insert_function_as_inner_functions
+             ~scope_info
+             ~relevant_defs_with_scope
+             ~escaping_definitions
+             ~async_function
+             ~ast
+             ~extracted_statements
+             ~extracted_statements_loc)
