@@ -143,13 +143,29 @@ class insertion_class_body_loc_collector extracted_statements_loc =
         super#class_ loc class_declaration
   end
 
-class refactor_mapper
+class replace_original_statements_mapper ~extracted_statements_loc ~function_call_statement =
+  object (_this)
+    inherit [Loc.t] Flow_ast_mapper.mapper as super
+
+    method! statement_fork_point stmt =
+      let (statement_loc, _) = stmt in
+      if Loc.contains extracted_statements_loc statement_loc then
+        if Loc.equal (Loc.start_loc extracted_statements_loc) (Loc.start_loc statement_loc) then
+          [function_call_statement]
+        else
+          []
+      else
+        super#statement_fork_point stmt
+  end
+
+class extract_to_function_refactor_mapper
   ~target_body_loc
   ~extracted_statements_loc
   ~function_call_statement
   ~function_declaration_statement =
   object (_this)
-    inherit [Loc.t] Flow_ast_mapper.mapper as super
+    inherit
+      replace_original_statements_mapper ~extracted_statements_loc ~function_call_statement as super
 
     method! program program =
       let (program_loc, program_body) = program in
@@ -172,16 +188,6 @@ class refactor_mapper
           { body with body = super#statement_list body.body @ [function_declaration_statement] } )
       else
         super#function_body block
-
-    method! statement_fork_point stmt =
-      let (statement_loc, _) = stmt in
-      if Loc.contains extracted_statements_loc statement_loc then
-        if Loc.equal (Loc.start_loc extracted_statements_loc) (Loc.start_loc statement_loc) then
-          [function_call_statement]
-        else
-          []
-      else
-        super#statement_fork_point stmt
   end
 
 let extract_statements ast extract_range =
@@ -372,7 +378,7 @@ let insert_function_to_toplevel
   (* Put extracted function to two lines after the end of program to have nice format. *)
   let new_function_loc = Loc.(cursor program_loc.source (program_loc._end.line + 2) 0) in
   let mapper =
-    new refactor_mapper
+    new extract_to_function_refactor_mapper
       ~target_body_loc:program_loc
       ~extracted_statements_loc
       ~function_call_statement:
@@ -410,7 +416,7 @@ let insert_function_as_inner_functions
         ~extracted_statements_loc
     in
     let mapper =
-      new refactor_mapper
+      new extract_to_function_refactor_mapper
         ~target_body_loc:target_function_body_loc
         ~extracted_statements_loc
         ~function_call_statement:
