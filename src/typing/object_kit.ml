@@ -31,24 +31,33 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
 
   exception CannotSpreadError of Error_message.t
 
-  let mk_object_type ~def_reason ~exact_reason ~invalidate_aliases flags call id proto generics =
+  let mk_object_type
+      ~def_reason ~exact_reason ~invalidate_aliases ~interface flags call id proto generics =
     let def_reason =
       if invalidate_aliases then
         update_desc_reason invalidate_rtype_alias def_reason
       else
         def_reason
     in
-    let t = DefT (def_reason, bogus_trust (), ObjT (mk_objecttype ~flags ~call id proto)) in
-    (* Wrap the final type in an `ExactT` if we have an exact flag *)
     let (t, reason) =
-      Base.Option.value_map
-        ~f:(fun exact_reason ->
-          if Obj_type.is_legacy_exact_DO_NOT_USE flags.obj_kind then
-            (ExactT (exact_reason, t), exact_reason)
-          else
-            (t, def_reason))
-        ~default:(t, def_reason)
-        exact_reason
+      match interface with
+      | Some (static, inst) ->
+        let inst = { inst with own_props = id } in
+        (* Implemented/super interfaces are folded into the property map computed by the slice, so
+           we effectively flatten the hierarchy in the output *)
+        ( DefT (def_reason, bogus_trust (), InstanceT (static, ObjProtoT def_reason, [], inst)),
+          def_reason )
+      | None ->
+        let t = DefT (def_reason, bogus_trust (), ObjT (mk_objecttype ~flags ~call id proto)) in
+        (* Wrap the final type in an `ExactT` if we have an exact flag *)
+        Base.Option.value_map
+          ~f:(fun exact_reason ->
+            if Obj_type.is_legacy_exact_DO_NOT_USE flags.obj_kind then
+              (ExactT (exact_reason, t), exact_reason)
+            else
+              (t, def_reason))
+          ~default:(t, def_reason)
+          exact_reason
     in
     Generic.make_spread_id generics
     |> Base.Option.value_map ~default:t ~f:(fun id ->
@@ -259,10 +268,22 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               reason
               ( _inline1,
                 inexact_reason1,
-                { Object.reason = r1; props = props1; flags = flags1; generics = generics1 } )
+                {
+                  Object.reason = r1;
+                  props = props1;
+                  flags = flags1;
+                  generics = generics1;
+                  interface = _;
+                } )
               ( inline2,
                 _inexact_reason2,
-                { Object.reason = r2; props = props2; flags = flags2; generics = generics2 } ) =
+                {
+                  Object.reason = r2;
+                  props = props2;
+                  flags = flags2;
+                  generics = generics2;
+                  interface = _;
+                } ) =
             let exact1 = Obj_type.is_legacy_exact_DO_NOT_USE flags1.obj_kind in
             let exact2 = Obj_type.is_legacy_exact_DO_NOT_USE flags2.obj_kind in
             let dict1 = Obj_type.get_dict_opt flags1.obj_kind in
@@ -431,7 +452,11 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 | _ -> inexact_reason1
               in
               (match props with
-              | Ok props -> Ok (false, inexact_reason, { Object.reason; props; flags; generics })
+              | Ok props ->
+                Ok
+                  ( false,
+                    inexact_reason,
+                    { Object.reason; props; flags; generics; interface = None } )
               | Error e -> Error e)
           in
           let resolved_of_acc_element = function
@@ -444,14 +469,15 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               in
               let flags = { obj_kind; frozen = false } in
               let props = NameUtils.Map.mapi (read_prop reason flags) prop_map in
-              Nel.one (true, None, { Object.reason; props; flags; generics })
+              Nel.one (true, None, { Object.reason; props; flags; generics; interface = None })
           in
           let spread cx trace ~use_op reason = function
             | (x, []) -> Ok (resolved_of_acc_element x)
             | (x0, (x1 :: xs : Object.Spread.acc_element list)) ->
               merge_result (spread2 cx trace ~use_op reason) resolved_of_acc_element x0 (x1, xs)
           in
-          let mk_object cx reason target { Object.reason = _; props; flags; generics } =
+          let mk_object
+              cx reason target { Object.reason = _; props; flags; generics; interface = _ } =
             let props =
               NameUtils.Map.map
                 (fun (t, _, is_method) ->
@@ -488,6 +514,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               ~def_reason:reason
               ~exact_reason:(Some reason)
               ~invalidate_aliases:true
+              ~interface:None
               flags
               call
               id
@@ -498,7 +525,13 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             let reason = update_desc_reason invalidate_rtype_alias reason in
             let { todo_rev; acc; spread_id; union_reason; curr_resolve_idx } = state in
             Nel.iter
-              (fun { Object.reason = r; props = _; flags = { obj_kind; _ }; generics = _ } ->
+              (fun {
+                     Object.reason = r;
+                     props = _;
+                     flags = { obj_kind; _ };
+                     generics = _;
+                     interface = _;
+                   } ->
                 match options with
                 | Annot { make_exact } when make_exact && obj_kind = Inexact ->
                   add_output
@@ -620,8 +653,20 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               ~use_op
               reason
               merge_mode
-              { Object.reason = r1; props = props1; flags = flags1; generics = generics1 }
-              { Object.reason = r2; props = props2; flags = flags2; generics = generics2 } =
+              {
+                Object.reason = r1;
+                props = props1;
+                flags = flags1;
+                generics = generics1;
+                interface = _;
+              }
+              {
+                Object.reason = r2;
+                props = props2;
+                flags = flags2;
+                generics = generics2;
+                interface = _;
+              } =
             let dict1 = Obj_type.get_dict_opt flags1.obj_kind in
             let dict2 = Obj_type.get_dict_opt flags2.obj_kind in
             let props =
@@ -832,6 +877,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               ~def_reason:r1
               ~exact_reason:(Some r1)
               ~invalidate_aliases:true
+              ~interface:None
               flags
               call
               id
@@ -873,7 +919,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       let object_read_only =
         let polarity = Polarity.Positive in
         let mk_read_only_object cx reason slice =
-          let { Object.reason = r; props; flags; generics } = slice in
+          let { Object.reason = r; props; flags; generics; interface } = slice in
           let props =
             NameUtils.Map.map
               (fun (t, _, is_method) ->
@@ -899,6 +945,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             ~def_reason:r
             ~exact_reason:(Some reason)
             ~invalidate_aliases:true
+            ~interface
             flags
             call
             id
@@ -918,7 +965,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       (* Object Rep *)
       (**************)
       let object_rep =
-        let mk_object cx reason { Object.reason = r; props; flags; generics } =
+        let mk_object cx reason { Object.reason = r; props; flags; generics; interface = _ } =
           (* TODO(jmbrown): Add polarity information to props *)
           let polarity = Polarity.Neutral in
           let props =
@@ -946,6 +993,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             ~def_reason:r
             ~exact_reason:(Some reason)
             ~invalidate_aliases:true
+            ~interface:None
             flags
             call
             id
@@ -964,7 +1012,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       (* Object Widen *)
       (****************)
       let object_widen =
-        let mk_object cx reason { Object.reason = r; props; flags; generics } =
+        let mk_object cx reason { Object.reason = r; props; flags; generics; interface = _ } =
           let polarity = Polarity.Neutral in
           let props =
             NameUtils.Map.map
@@ -991,6 +1039,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             ~def_reason:r
             ~exact_reason:None
             ~invalidate_aliases:true
+            ~interface:None
             flags
             call
             id
@@ -1128,7 +1177,13 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               let flags = { obj_kind; frozen = false } in
               let props = NameUtils.Map.map (fun (t, m) -> (t, true, m)) pmap' in
               let slice' =
-                { Object.reason = slice.Object.reason; props; flags; generics = widest.generics }
+                {
+                  Object.reason = slice.Object.reason;
+                  props;
+                  flags;
+                  generics = widest.generics;
+                  interface = None;
+                }
               in
               Context.spread_widened_types_add_widest cx widened_id slice';
               let obj = mk_object cx slice.Object.reason slice' in
@@ -1157,6 +1212,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               props = config_props;
               flags = config_flags;
               generics = config_generics;
+              interface = _;
             } =
               config
             in
@@ -1187,6 +1243,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                     props = defaults_props;
                     flags = defaults_flags;
                     generics = defaults_generics;
+                    interface = _;
                   } ->
                 let defaults_dict = Obj_type.get_dict_opt defaults_flags.obj_kind in
                 (* Merge our props and default props. *)
@@ -1351,6 +1408,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               ~def_reason:reason
               ~exact_reason:(Some reason)
               ~invalidate_aliases:false
+              ~interface:None
               flags
               call
               id
@@ -1414,8 +1472,20 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
        *)
       let intersect2
           reason
-          { Object.reason = r1; props = props1; flags = flags1; generics = generics1 }
-          { Object.reason = r2; props = props2; flags = flags2; generics = generics2 } =
+          {
+            Object.reason = r1;
+            props = props1;
+            flags = flags1;
+            generics = generics1;
+            interface = _;
+          }
+          {
+            Object.reason = r2;
+            props = props2;
+            flags = flags2;
+            generics = generics2;
+            interface = _;
+          } =
         let dict1 = Obj_type.get_dict_opt flags1.obj_kind in
         let dict2 = Obj_type.get_dict_opt flags2.obj_kind in
         let intersection t1 t2 =
@@ -1491,7 +1561,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
       let intersect2_with_reason reason intersection_loc x1 x2 =
         let (props, flags, generics) = intersect2 reason x1 x2 in
         let reason = mk_reason RObjectType intersection_loc in
-        Object.{ reason; props; flags; generics }
+        Object.{ reason; props; flags; generics; interface = None }
       in
       let resolved cx trace use_op reason resolve_tool tool tout x =
         match resolve_tool with
@@ -1513,7 +1583,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             let resolve_tool = Resolve (List (todo, done_rev, join)) in
             rec_flow cx trace (t, ObjKitT (use_op, reason, resolve_tool, tool, tout)))
       in
-      let object_slice cx r id flags generics =
+      let object_slice cx ~interface r id flags generics =
         let props = Context.find_props cx id in
         let props = NameUtils.Map.mapi (read_prop r flags) props in
         let obj_kind =
@@ -1528,9 +1598,9 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             flags.obj_kind
         in
         let flags = { flags with obj_kind } in
-        { Object.reason = r; props; flags; generics }
+        { Object.reason = r; props; flags; generics; interface }
       in
-      let interface_slice cx r id generics =
+      let interface_slice cx r intf id generics =
         let (id, obj_kind) =
           let props = Context.find_props cx id in
           (* TODO $-prefixed names should be internal *)
@@ -1552,7 +1622,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           | _ -> (id, Inexact)
         in
         let flags = { frozen = false; obj_kind } in
-        object_slice cx r id flags generics
+        object_slice cx ~interface:(Some intf) r id flags generics
       in
       let resolve cx trace use_op reason resolve_tool tool tout t =
         let (t_generic_id, t) =
@@ -1569,13 +1639,15 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         match t with
         (* We extract the props from an ObjT. *)
         | DefT (r, _, ObjT { props_tmap; Type.flags; _ }) ->
-          let x = Nel.one (object_slice cx r props_tmap flags t_generic_id) in
+          let x = Nel.one (object_slice cx ~interface:None r props_tmap flags t_generic_id) in
           resolved cx trace use_op reason resolve_tool tool tout x
         (* We take the fields from an InstanceT excluding methods (because methods
          * are always on the prototype). We also want to resolve fields from the
          * InstanceT's super class so we recurse. *)
-        | DefT (r, _, InstanceT (_, super, _, { own_props; inst_kind; _ })) ->
-          let resolve_tool = Super (interface_slice cx r own_props t_generic_id, resolve_tool) in
+        | DefT (r, _, InstanceT (static, super, _, ({ own_props; inst_kind; _ } as inst))) ->
+          let resolve_tool =
+            Super (interface_slice cx r (static, inst) own_props t_generic_id, resolve_tool)
+          in
           begin
             match (tool, inst_kind) with
             | (Spread _, InterfaceKind _)
@@ -1618,7 +1690,14 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
         | DefT (_, _, (NullT | VoidT)) ->
           let flags = { frozen = true; obj_kind = Exact } in
           let x =
-            Nel.one { Object.reason; props = NameUtils.Map.empty; flags; generics = t_generic_id }
+            Nel.one
+              {
+                Object.reason;
+                props = NameUtils.Map.empty;
+                flags;
+                generics = t_generic_id;
+                interface = None;
+              }
           in
           resolved cx trace use_op reason resolve_tool tool tout x
         (* TODO(jmbrown): Investigate if these cases can be used for ReactConfig/ObjecRep/Rest.
@@ -1634,7 +1713,14 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                | _ -> false ->
           let flags = { frozen = true; obj_kind = Exact } in
           let x =
-            Nel.one { Object.reason; props = NameUtils.Map.empty; flags; generics = t_generic_id }
+            Nel.one
+              {
+                Object.reason;
+                props = NameUtils.Map.empty;
+                flags;
+                generics = t_generic_id;
+                interface = None;
+              }
           in
           resolved cx trace use_op reason resolve_tool tool tout x
         (* mixed is treated as {[string]: mixed} except in type spread and react config checking, where
@@ -1653,7 +1739,14 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             | Spread _
             | ObjectRep
             | ReactConfig _ ->
-              Nel.one { Object.reason; props = NameUtils.Map.empty; flags; generics = t_generic_id }
+              Nel.one
+                {
+                  Object.reason;
+                  props = NameUtils.Map.empty;
+                  flags;
+                  generics = t_generic_id;
+                  interface = None;
+                }
             | _ ->
               let flags =
                 {
@@ -1668,7 +1761,14 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                       };
                 }
               in
-              Nel.one { Object.reason; props = NameUtils.Map.empty; flags; generics = t_generic_id }
+              Nel.one
+                {
+                  Object.reason;
+                  props = NameUtils.Map.empty;
+                  flags;
+                  generics = t_generic_id;
+                  interface = None;
+                }
           in
           resolved cx trace use_op reason resolve_tool tool tout x
         (* If we see an empty then propagate empty to tout. *)
@@ -1684,12 +1784,14 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             (Error_message.EInvalidObjectKit { reason = reason_of_t t; reason_op = reason; use_op })
       in
       let super cx trace use_op reason resolve_tool tool tout acc = function
-        | DefT (r, _, InstanceT (_, super, _, { own_props; _ })) ->
-          let slice = interface_slice cx r own_props Generic.spread_empty in
+        | DefT (r, _, InstanceT (st, super, _, ({ own_props; _ } as inst))) ->
+          let interface = (st, inst) in
+          let { Object.reason; _ } = acc in
+          let slice = interface_slice cx r interface own_props Generic.spread_empty in
           let acc = intersect2 reason acc slice in
           let acc =
             let (props, flags, generics) = acc in
-            { Object.reason; props; flags; generics }
+            { Object.reason; props; flags; generics; interface = Some interface }
           in
           let resolve_tool = Super (acc, resolve_tool) in
           rec_flow cx trace (super, ObjKitT (use_op, reason, resolve_tool, tool, tout))

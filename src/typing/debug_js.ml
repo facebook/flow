@@ -494,7 +494,7 @@ and dump_use_t_ (depth, tvars) cx t =
       | CreateClass (tool, knot, tout) ->
         spf "CreateClass (%s, %s)" (create_class tool knot) (kid tout))
   in
-  let slice { Object.reason = _; props; flags = { obj_kind; _ }; generics = _ } =
+  let slice { Object.reason = _; props; flags = { obj_kind; _ }; generics = _; interface = _ } =
     let xs =
       match obj_kind with
       | Indexed { dict_polarity = p; _ } -> [Polarity.sigil p ^ "[]"]
@@ -538,7 +538,7 @@ and dump_use_t_ (depth, tvars) cx t =
       | Some d -> Indexed d
     in
     let flags = { obj_kind; frozen = false } in
-    slice { Object.reason; props; flags; generics = Generic.spread_empty }
+    slice { Object.reason; props; flags; generics = Generic.spread_empty; interface = None }
   in
   let object_kit =
     Object.(

@@ -928,10 +928,16 @@ class ['a] t =
           let acc = Nel.fold_left (Nel.fold_left (self#object_kit_slice cx)) acc rs in
           acc)
 
-    method private object_kit_slice cx acc { Object.reason = _; props; flags; generics = _ } =
+    method private object_kit_slice
+        cx acc { Object.reason = _; props; flags; generics = _; interface } =
       let acc = self#namemap (fun acc (t, _, _) -> self#type_ cx pole_TODO acc t) acc props in
       let acc = self#obj_flags cx pole_TODO acc flags in
-      acc
+      match interface with
+      | Some (static, insttype) ->
+        let acc = self#type_ cx pole_TODO acc static in
+        let acc = self#inst_type cx pole_TODO acc insttype in
+        acc
+      | None -> acc
 
     method private object_kit_spread_operand_slice
         cx acc { Object.Spread.reason = _; prop_map; dict; generics = _ } =

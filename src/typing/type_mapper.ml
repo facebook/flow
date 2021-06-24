@@ -2014,6 +2014,15 @@ class virtual ['a] t_with_uses =
           else
             CreateClass (tool', knot', t''))
 
+    method private instance_slice cx map_cx t =
+      let (st, instt) = t in
+      let st' = self#type_ cx map_cx st in
+      let instt' = self#inst_type cx map_cx instt in
+      if st' == st && instt' == instt then
+        t
+      else
+        (st', instt')
+
     method object_kit_resolve_tool cx map_cx t =
       Object.(
         match t with
@@ -2023,16 +2032,19 @@ class virtual ['a] t_with_uses =
             t
           else
             Resolve r'
-        | Super ({ Object.reason; props; flags; generics }, r) ->
+        | Super ({ Object.reason; props; flags; generics; interface }, r) ->
           let flags' = self#obj_flags cx map_cx flags in
           let props' =
             NameUtils.Map.ident_map (fun (t, b1, b2) -> (self#type_ cx map_cx t, b1, b2)) props
           in
+          let interface' = OptionUtils.ident_map (self#instance_slice cx map_cx) interface in
           let r' = self#resolve cx map_cx r in
-          if flags' == flags && r' == r && props' == props then
+          if flags' == flags && r' == r && props' == props && interface == interface' then
             t
           else
-            Super ({ reason; Object.props = props'; flags = flags'; generics }, r'))
+            Super
+              ( { reason; Object.props = props'; flags = flags'; generics; interface = interface' },
+                r' ))
 
     method object_kit_tool cx map_cx tool =
       Object.(
@@ -2320,13 +2332,15 @@ class virtual ['a] t_with_uses =
       else
         (t', own, meth)
 
-    method object_kit_slice cx map_cx ({ Object.reason = _; props; flags; generics = _ } as slice) =
+    method object_kit_slice
+        cx map_cx ({ Object.reason = _; props; flags; generics = _; interface } as slice) =
       let props' = NameUtils.Map.ident_map (self#resolved_prop cx map_cx) props in
       let flags' = self#obj_flags cx map_cx flags in
-      if props' == props && flags' == flags then
+      let interface' = OptionUtils.ident_map (self#instance_slice cx map_cx) interface in
+      if props' == props && flags' == flags && interface' == interface then
         slice
       else
-        { slice with Object.props = props'; flags = flags' }
+        { slice with Object.props = props'; flags = flags'; interface = interface' }
 
     method object_kit_acc_element cx map_cx el =
       Object.Spread.(

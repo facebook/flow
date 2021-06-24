@@ -2613,6 +2613,7 @@ and Object : sig
     props: props;
     flags: TypeTerm.flags;
     generics: Generic.spread_id;
+    interface: (TypeTerm.static * TypeTerm.insttype) option;
   }
 
   and props = prop NameUtils.Map.t

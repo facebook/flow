@@ -733,8 +733,33 @@ References:
                ^^^^^^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- utility.js:12:3
 
-Found 47 errors
+Cannot assign `3` to `x.foo` because property `foo` is not writable. [cannot-write]
+
+   12| x.foo = 3; // error as expected
+         ^^^
+
+
+Error -------------------------------------------------------------------------------------------------- utility.js:35:2
+
+Cannot cast `b` to `$ReadOnly` because property `qux` is missing in `B` [1] but exists in `K` [2]. [prop-missing]
+
+   utility.js:35:2
+   35| (b : $ReadOnly<K>); // error
+        ^
+
+References:
+   utility.js:21:9
+   21| let b = new B();
+               ^^^^^^^ [1]
+   utility.js:35:16
+   35| (b : $ReadOnly<K>); // error
+                      ^ [2]
+
+
+
+Found 49 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
