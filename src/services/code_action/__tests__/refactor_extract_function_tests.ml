@@ -923,6 +923,26 @@ function newFunction() {
           start = { Loc.line = 1; column = 12 };
           _end = { Loc.line = 1; column = 30 };
         } );
+    ( "basic_class_method_extract" >:: fun ctxt ->
+      assert_refactored
+        ~ctxt
+        []
+        "class A { test1() { this.test1(); } }"
+        {
+          Loc.source = None;
+          start = { Loc.line = 1; column = 20 };
+          _end = { Loc.line = 1; column = 33 };
+        } );
+    ( "basic_class_method_extract" >:: fun ctxt ->
+      assert_refactored
+        ~ctxt
+        []
+        "class A { test1() { super.test1(); } }"
+        {
+          Loc.source = None;
+          start = { Loc.line = 1; column = 20 };
+          _end = { Loc.line = 1; column = 34 };
+        } );
     ( "very_nested_extract" >:: fun ctxt ->
       let source =
         {|

@@ -56,13 +56,20 @@ class extracted_statements_information_collector =
   object (_this)
     inherit [Loc.t] Flow_ast_mapper.mapper as super
 
+    val mutable _in_class = false
+
     val mutable _async = false
 
     val mutable _has_unwrapped_control_flow = false
 
+    method in_class = _in_class
+
     method is_async = _async
 
     method has_unwrapped_control_flow = _has_unwrapped_control_flow
+
+    (* Do not recurse down into nested classes. *)
+    method! class_ _loc class_node = class_node
 
     method! function_ loc function_node =
       if Flow_ast.Function.(function_node.async) then
@@ -94,6 +101,14 @@ class extracted_statements_information_collector =
     method! labeled_statement loc statement =
       _has_unwrapped_control_flow <- true;
       super#labeled_statement loc statement
+
+    method! this_expression loc this_expr =
+      _in_class <- true;
+      super#this_expression loc this_expr
+
+    method! super_expression loc super_expr =
+      _in_class <- true;
+      super#super_expression loc super_expr
 
     method! unary_expression loc unary_expr =
       let open Flow_ast.Expression.Unary in
@@ -462,6 +477,7 @@ let provide_available_refactors ast extract_range =
           | Some loc -> Loc.btwn insert_new_function_call_loc loc
         in
         let async_function = information_collector#is_async in
+        let in_class = information_collector#in_class in
         let scope_info = Scope_builder.program ~with_types:false ast in
         let relevant_defs_with_scope =
           collect_relevant_defs_with_scope ~scope_info ~extracted_statements_loc
@@ -469,19 +485,22 @@ let provide_available_refactors ast extract_range =
         let escaping_definitions =
           collect_escaping_local_defs ~scope_info ~extracted_statements_loc
         in
-        insert_function_to_toplevel
-          ~scope_info
-          ~relevant_defs_with_scope
-          ~escaping_definitions
-          ~async_function
-          ~ast
-          ~extracted_statements
-          ~extracted_statements_loc
-        :: insert_function_as_inner_functions
-             ~scope_info
-             ~relevant_defs_with_scope
-             ~escaping_definitions
-             ~async_function
-             ~ast
-             ~extracted_statements
-             ~extracted_statements_loc)
+        if in_class then
+          []
+        else
+          insert_function_to_toplevel
+            ~scope_info
+            ~relevant_defs_with_scope
+            ~escaping_definitions
+            ~async_function
+            ~ast
+            ~extracted_statements
+            ~extracted_statements_loc
+          :: insert_function_as_inner_functions
+               ~scope_info
+               ~relevant_defs_with_scope
+               ~escaping_definitions
+               ~async_function
+               ~ast
+               ~extracted_statements
+               ~extracted_statements_loc)
