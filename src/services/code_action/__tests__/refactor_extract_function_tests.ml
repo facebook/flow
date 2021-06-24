@@ -923,6 +923,117 @@ function newFunction() {
           start = { Loc.line = 1; column = 12 };
           _end = { Loc.line = 1; column = 30 };
         } );
+    ( "continue_in_switch_no_extract" >:: fun ctxt ->
+      let source =
+        {|
+      while (true) {
+        // selection start
+        switch (true) {default:continue;}
+        // seletion end
+      }
+
+      |}
+      in
+      assert_refactored
+        ~ctxt
+        []
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 3; column = 8 };
+          _end = { Loc.line = 5; column = 23 };
+        } );
+    ( "wrapped_break_continue_with_label_no_extracts" >:: fun ctxt ->
+      assert_refactored
+        ~ctxt
+        []
+        "label:while (true) {break label;}"
+        {
+          Loc.source = None;
+          start = { Loc.line = 1; column = 0 };
+          _end = { Loc.line = 1; column = 50 };
+        };
+      assert_refactored
+        ~ctxt
+        []
+        "label:while (true) {continue label;}"
+        {
+          Loc.source = None;
+          start = { Loc.line = 1; column = 0 };
+          _end = { Loc.line = 1; column = 50 };
+        } );
+    ( "wrapped_break_continue_switch_has_extracts" >:: fun ctxt ->
+      let expected =
+        [
+          ( "Extract to function in module scope",
+            {|
+newFunction();
+
+function newFunction() {
+  while (true) {
+    break;
+  }
+}
+|} );
+        ]
+      in
+      assert_refactored
+        ~ctxt
+        expected
+        "while (true) {break;}"
+        {
+          Loc.source = None;
+          start = { Loc.line = 1; column = 0 };
+          _end = { Loc.line = 1; column = 30 };
+        };
+      let expected =
+        [
+          ( "Extract to function in module scope",
+            {|
+newFunction();
+
+function newFunction() {
+  while (true) {
+    continue;
+  }
+}
+|} );
+        ]
+      in
+      assert_refactored
+        ~ctxt
+        expected
+        "while (true) {continue;}"
+        {
+          Loc.source = None;
+          start = { Loc.line = 1; column = 0 };
+          _end = { Loc.line = 1; column = 30 };
+        };
+      let expected =
+        [
+          ( "Extract to function in module scope",
+            {|
+newFunction();
+
+function newFunction() {
+  switch (true) {
+    default:
+      break;
+  }
+}
+|}
+          );
+        ]
+      in
+      assert_refactored
+        ~ctxt
+        expected
+        "switch (true) {default:break;}"
+        {
+          Loc.source = None;
+          start = { Loc.line = 1; column = 0 };
+          _end = { Loc.line = 1; column = 40 };
+        } );
     ( "basic_class_method_extract" >:: fun ctxt ->
       assert_refactored
         ~ctxt

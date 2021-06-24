@@ -53,7 +53,7 @@ let union_loc acc loc =
   | Some existing_loc -> Some (Loc.btwn existing_loc loc)
 
 class extracted_statements_information_collector =
-  object (_this)
+  object (this)
     inherit [Loc.t] Flow_ast_mapper.mapper as super
 
     val mutable _in_class = false
@@ -61,6 +61,18 @@ class extracted_statements_information_collector =
     val mutable _async = false
 
     val mutable _has_unwrapped_control_flow = false
+
+    val mutable _inside_loop = false
+
+    val mutable _inside_switch = false
+
+    method private inside_loop : 'a. (Loc.t -> 'a -> 'a) -> Loc.t -> 'a -> 'a =
+      fun f loc statement ->
+        let old_inside_loop = _inside_loop in
+        _inside_loop <- true;
+        let statement = f loc statement in
+        _inside_loop <- old_inside_loop;
+        statement
 
     method in_class = _in_class
 
@@ -80,7 +92,20 @@ class extracted_statements_information_collector =
 
     method! for_of_statement loc statement =
       if Flow_ast.Statement.ForOf.(statement.await) then _async <- true;
-      super#for_of_statement loc statement
+      this#inside_loop super#for_of_statement loc statement
+
+    method! for_in_statement loc statement = this#inside_loop super#for_in_statement loc statement
+
+    method! do_while loc statement = this#inside_loop super#do_while loc statement
+
+    method! while_ loc statement = this#inside_loop super#while_ loc statement
+
+    method! switch loc statement =
+      let old_inside_switch = _inside_switch in
+      _inside_switch <- true;
+      let statement = super#switch loc statement in
+      _inside_switch <- old_inside_switch;
+      statement
 
     method! return loc statement =
       _has_unwrapped_control_flow <- true;
@@ -91,11 +116,14 @@ class extracted_statements_information_collector =
       super#yield loc statement
 
     method! break loc statement =
-      _has_unwrapped_control_flow <- true;
+      let open Flow_ast.Statement.Break in
+      if ((not _inside_loop) && not _inside_switch) || statement.label != None then
+        _has_unwrapped_control_flow <- true;
       super#break loc statement
 
     method! continue loc statement =
-      _has_unwrapped_control_flow <- true;
+      let open Flow_ast.Statement.Continue in
+      if (not _inside_loop) || statement.label != None then _has_unwrapped_control_flow <- true;
       super#continue loc statement
 
     method! labeled_statement loc statement =
