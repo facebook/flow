@@ -14,7 +14,10 @@ type 'a unit_result = ('a, ALoc.t * Error_message.internal_error) result
 type merge_result = Error_suppressions.t * duration
 
 type check_type_result =
-  Context.t * File_sig.With_ALoc.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
+  Context.t
+  * Type_sig_collections.Locs.index Packed_type_sig.Module.t
+  * File_sig.With_ALoc.t
+  * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
 
 type check_error_result =
   Flow_error.ErrorSet.t
@@ -492,7 +495,8 @@ let mk_check_file options ~reader () =
           severity_cover
       in
       let duration = Unix.gettimeofday () -. start_time in
-      Some ((cx, file_sig, typed_ast), (errors, warnings, suppressions, coverage, duration))
+      Some
+        ((cx, type_sig, file_sig, typed_ast), (errors, warnings, suppressions, coverage, duration))
     else
       None
 

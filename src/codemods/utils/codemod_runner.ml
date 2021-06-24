@@ -200,7 +200,7 @@ let check_job ~visit ~iteration ~reader ~options acc roots =
     (fun acc file ->
       match check file with
       | Ok None -> acc
-      | Ok (Some ((full_cx, file_sig, typed_ast), _)) ->
+      | Ok (Some ((full_cx, type_sig, file_sig, typed_ast), _)) ->
         let reader = Abstract_state_reader.Mutator_state_reader reader in
         let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
         let ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
@@ -208,6 +208,7 @@ let check_job ~visit ~iteration ~reader ~options acc roots =
         let ccx =
           {
             Codemod_context.Typed.file;
+            type_sig;
             file_sig;
             metadata;
             options;
@@ -331,7 +332,7 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
       (fun acc file ->
         match check file with
         | Ok None -> acc
-        | Ok (Some ((cx, file_sig, typed_ast), _)) ->
+        | Ok (Some ((cx, _, file_sig, typed_ast), _)) ->
           let result = C.prepass_run cx state file reader file_sig typed_ast in
           FilenameMap.add file (Ok result) acc
         | Error e -> FilenameMap.add file (Error e) acc)
