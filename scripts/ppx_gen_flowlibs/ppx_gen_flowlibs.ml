@@ -20,8 +20,11 @@ let get_libs dir =
   Sys.readdir dir
   |> Array.fold_left
        (fun acc file ->
-         let contents = Script_utils.string_of_file (Filename.concat dir file) in
-         (file, contents) :: acc)
+         if Filename.check_suffix file ".js" then
+           let contents = Script_utils.string_of_file (Filename.concat dir file) in
+           (file, contents) :: acc
+         else
+           acc)
        []
 
 (* Turn the (name, contents) list into a PPX ast (string * string) array
