@@ -10,6 +10,14 @@ module Scope_api = Scope_api.With_Loc
 val extract_statements :
   (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> (Loc.t, Loc.t) Flow_ast.Statement.t list option
 
+(* Find the smallest containing class of the extracted statements.
+   This is the only valid extraction location
+   if we want to extract to a method and call this.newMethod(); *)
+val find_closest_enclosing_class_scope :
+  ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
+  extracted_statements_loc:Loc.t ->
+  (string option * Loc.t) option
+
 val collect_relevant_defs_with_scope :
   scope_info:Scope_api.info ->
   extracted_statements_loc:Loc.t ->

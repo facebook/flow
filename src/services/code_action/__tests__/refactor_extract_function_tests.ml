@@ -197,6 +197,78 @@ foo(a + b);
         } );
   ]
 
+let assert_closest_enclosing_class_scope ~ctxt ?expected source extracted_statements_loc =
+  let ast = parse source in
+  let actual =
+    Refactor_extract_function.find_closest_enclosing_class_scope ~ast ~extracted_statements_loc
+  in
+  let printer = function
+    | None -> "None"
+    | Some (id, loc) ->
+      Printf.sprintf "%s: %s" (Option.value ~default:"anonymous" id) (Loc.show loc)
+  in
+  assert_equal ~ctxt ~printer expected actual
+
+let find_closest_enclosing_class_scope_tests =
+  let source =
+    {|
+console.log("0");
+export default class {
+  test1() {
+    console.log("1");
+    class Level2 {
+      test2() {
+        console.log("2");
+      }
+    }
+  }
+}
+  |}
+  in
+  [
+    ( "without_enclosing_class_scope" >:: fun ctxt ->
+      assert_closest_enclosing_class_scope
+        ~ctxt
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 2; column = 0 };
+          _end = { Loc.line = 2; column = 17 };
+        } );
+    ( "mid_enclosing_class_scope" >:: fun ctxt ->
+      assert_closest_enclosing_class_scope
+        ~ctxt
+        ~expected:
+          ( None,
+            {
+              Loc.source = None;
+              start = { Loc.line = 3; column = 21 };
+              _end = { Loc.line = 12; column = 1 };
+            } )
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 5; column = 4 };
+          _end = { Loc.line = 10; column = 5 };
+        } );
+    ( "inner_most_enclosing_class_scope" >:: fun ctxt ->
+      assert_closest_enclosing_class_scope
+        ~ctxt
+        ~expected:
+          ( Some "Level2",
+            {
+              Loc.source = None;
+              start = { Loc.line = 6; column = 17 };
+              _end = { Loc.line = 10; column = 5 };
+            } )
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 8; column = 8 };
+          _end = { Loc.line = 8; column = 25 };
+        } );
+  ]
+
 let assert_relevant_defs ~ctxt ~expected source extracted_statements_loc =
   let ast = parse source in
   let scope_info = Scope_builder.program ~with_types:false ast in
@@ -1174,6 +1246,7 @@ let tests =
   "refactor_extract_function"
   >::: [
          "extract_statements" >::: extract_statements_tests;
+         "find_closest_enclosing_class_scope" >::: find_closest_enclosing_class_scope_tests;
          "collect_relevant_defs_with_scope" >::: collect_relevant_defs_with_scope_tests;
          "undefined_variables_after_extraction" >::: undefined_variables_after_extraction_tests;
          "escaping_locally_defined_variables" >::: escaping_locally_defined_variables_tests;

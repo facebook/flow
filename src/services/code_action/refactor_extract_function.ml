@@ -121,6 +121,28 @@ class insertion_function_body_loc_collector extracted_statements_loc =
       | _ -> super#function_ loc function_declaration
   end
 
+class insertion_class_body_loc_collector extracted_statements_loc =
+  object
+    inherit [(string option * Loc.t) option, Loc.t] Flow_ast_visitor.visitor ~init:None as super
+
+    method! class_ loc class_declaration =
+      if Loc.contains extracted_statements_loc loc then
+        (* When the class is nested inside the extracted statements, we stop recursing down. *)
+        class_declaration
+      else if Loc.contains loc extracted_statements_loc then (
+        let open Flow_ast in
+        let { Class.id; body = (body_loc, _); _ } = class_declaration in
+        let id =
+          match id with
+          | None -> None
+          | Some (_, { Identifier.name; _ }) -> Some name
+        in
+        super#set_acc (Some (id, body_loc));
+        super#class_ loc class_declaration
+      ) else
+        super#class_ loc class_declaration
+  end
+
 class refactor_mapper
   ~target_body_loc
   ~extracted_statements_loc
@@ -166,6 +188,10 @@ let extract_statements ast extract_range =
   let collector = new statements_collector extract_range in
   let _ = collector#program ast in
   collector#collected_statements ()
+
+let find_closest_enclosing_class_scope ~ast ~extracted_statements_loc =
+  let collector = new insertion_class_body_loc_collector extracted_statements_loc in
+  collector#eval collector#program ast
 
 let collect_relevant_defs_with_scope ~scope_info ~extracted_statements_loc =
   let used_defs_within_extracted_statements =
