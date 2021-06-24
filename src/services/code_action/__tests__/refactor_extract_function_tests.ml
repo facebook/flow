@@ -672,6 +672,110 @@ function newFunction() {
           start = { Loc.line = 2; column = 8 };
           _end = { Loc.line = 2; column = 20 };
         } );
+    ( "async_expression_extract" >:: fun ctxt ->
+      let source =
+        {|
+        const test = async () => {
+          // selection start
+          const a = 3;
+          let b = 4;
+          await b;
+          let d = 6;
+        };
+      |}
+      in
+      let expected =
+        [
+          ( "Extract to function in module scope",
+            {|
+const test = (async () => {
+  await newFunction();
+});
+
+async function newFunction() {
+  // selection start
+  const a = 3;
+  let b = 4;
+  await b;
+  let d = 6;
+}
+      |}
+          );
+        ]
+      in
+      assert_refactored
+        ~ctxt
+        expected
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 4; column = 10 };
+          _end = { Loc.line = 7; column = 20 };
+        } );
+    ( "async_for_of_extract" >:: fun ctxt ->
+      let source =
+        {|
+        const test = async () => {
+          // selection start
+          const a = 3;
+          { for await (const b of []) {} }
+          let d = 6;
+        };
+      |}
+      in
+      let expected =
+        [
+          ( "Extract to function in module scope",
+            {|
+const test = (async () => {
+  await newFunction();
+});
+
+async function newFunction() {
+  // selection start
+  const a = 3;
+  {
+    for await (const b of []) {}
+  }
+  let d = 6;
+}
+      |}
+          );
+        ]
+      in
+      assert_refactored
+        ~ctxt
+        expected
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 4; column = 10 };
+          _end = { Loc.line = 6; column = 20 };
+        } );
+    ( "await_in_async_function_extract" >:: fun ctxt ->
+      let source = "const test = async () => await promise;" in
+      let expected =
+        [
+          ( "Extract to function in module scope",
+            {|
+newFunction();
+
+function newFunction() {
+  const test = (async () => await promise);
+}
+|}
+          );
+        ]
+      in
+      assert_refactored
+        ~ctxt
+        expected
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 1; column = 0 };
+          _end = { Loc.line = 1; column = 39 };
+        } );
     ( "very_nested_extract" >:: fun ctxt ->
       let source =
         {|

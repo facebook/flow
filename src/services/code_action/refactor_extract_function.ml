@@ -52,6 +52,33 @@ let union_loc acc loc =
   | None -> Some loc
   | Some existing_loc -> Some (Loc.btwn existing_loc loc)
 
+class extracted_statements_information_collector =
+  object (_this)
+    inherit [Loc.t] Flow_ast_mapper.mapper as super
+
+    val mutable _async = false
+
+    method is_async = _async
+
+    method! function_ loc function_node =
+      if Flow_ast.Function.(function_node.async) then
+        (* Do not recurse down to look for await if the function is async. *)
+        function_node
+      else
+        super#function_ loc function_node
+
+    method! for_of_statement loc statement =
+      if Flow_ast.Statement.ForOf.(statement.await) then _async <- true;
+      super#for_of_statement loc statement
+
+    method! unary_expression loc unary_expr =
+      let open Flow_ast.Expression.Unary in
+      (match unary_expr with
+      | { operator = Await; _ } -> _async <- true
+      | _ -> ());
+      super#unary_expression loc unary_expr
+  end
+
 class insertion_function_body_loc_collector extracted_statements_loc =
   object (_this)
     inherit [(string * Loc.t) list, Loc.t] Flow_ast_visitor.visitor ~init:[] as super
@@ -193,7 +220,8 @@ let collect_escaping_local_defs ~scope_info ~extracted_statements_loc =
        scope_info.Scope_api.scopes
   |> SSet.elements
 
-let create_extracted_function ~undefined_variables ~escaping_definitions ~extracted_statements =
+let create_extracted_function
+    ~undefined_variables ~escaping_definitions ~async_function ~extracted_statements =
   let open Ast_builder in
   let id = Some (Identifiers.identifier "newFunction") in
   let params =
@@ -222,12 +250,10 @@ let create_extracted_function ~undefined_variables ~escaping_definitions ~extrac
         ]
   in
   let body = Functions.body body_statements in
-  (* TODO: make it async if body contains await *)
-  (* TODO: make it a generator if body contains yield *)
-  Functions.make ~id ~params ~body ()
+  Functions.make ~id ~params ~async:async_function ~body ()
 
 let create_extracted_function_call
-    ~undefined_variables ~escaping_definitions ~extracted_statements_loc =
+    ~undefined_variables ~escaping_definitions ~async_function ~extracted_statements_loc =
   let open Ast_builder in
   let call =
     Expressions.call
@@ -237,6 +263,12 @@ let create_extracted_function_call
         |> List.map (fun v -> v |> Expressions.identifier |> Expressions.expression)
         |> Expressions.arg_list )
       (Expressions.identifier "newFunction")
+  in
+  let call =
+    if async_function then
+      Expressions.unary ~op:Flow_ast.Expression.Unary.Await call
+    else
+      call
   in
   match escaping_definitions with
   | [] -> Statements.expression ~loc:extracted_statements_loc call
@@ -275,6 +307,7 @@ let insert_function_to_toplevel
     ~scope_info
     ~relevant_defs_with_scope
     ~escaping_definitions
+    ~async_function
     ~ast
     ~extracted_statements
     ~extracted_statements_loc =
@@ -296,6 +329,7 @@ let insert_function_to_toplevel
         (create_extracted_function_call
            ~undefined_variables
            ~escaping_definitions
+           ~async_function
            ~extracted_statements_loc)
       ~function_declaration_statement:
         ( new_function_loc,
@@ -303,6 +337,7 @@ let insert_function_to_toplevel
             (create_extracted_function
                ~undefined_variables
                ~escaping_definitions
+               ~async_function
                ~extracted_statements) )
   in
   ("Extract to function in module scope", mapper#program ast)
@@ -311,6 +346,7 @@ let insert_function_as_inner_functions
     ~scope_info
     ~relevant_defs_with_scope
     ~escaping_definitions
+    ~async_function
     ~ast
     ~extracted_statements
     ~extracted_statements_loc =
@@ -331,6 +367,7 @@ let insert_function_as_inner_functions
           (create_extracted_function_call
              ~undefined_variables
              ~escaping_definitions
+             ~async_function
              ~extracted_statements_loc)
         ~function_declaration_statement:
           ( Loc.none,
@@ -338,6 +375,7 @@ let insert_function_as_inner_functions
               (create_extracted_function
                  ~undefined_variables
                  ~escaping_definitions
+                 ~async_function
                  ~extracted_statements) )
     in
     (Printf.sprintf "Extract to inner function in function '%s'" title, mapper#program ast)
@@ -358,6 +396,13 @@ let provide_available_refactors ast extract_range =
         | None -> insert_new_function_call_loc
         | Some loc -> Loc.btwn insert_new_function_call_loc loc
       in
+      let information_collector = new extracted_statements_information_collector in
+      let () =
+        List.iter
+          (fun statement -> statement |> information_collector#statement |> ignore)
+          extracted_statements
+      in
+      let async_function = information_collector#is_async in
       let scope_info = Scope_builder.program ~with_types:false ast in
       let relevant_defs_with_scope =
         collect_relevant_defs_with_scope ~scope_info ~extracted_statements_loc
@@ -369,6 +414,7 @@ let provide_available_refactors ast extract_range =
         ~scope_info
         ~relevant_defs_with_scope
         ~escaping_definitions
+        ~async_function
         ~ast
         ~extracted_statements
         ~extracted_statements_loc
@@ -376,6 +422,7 @@ let provide_available_refactors ast extract_range =
            ~scope_info
            ~relevant_defs_with_scope
            ~escaping_definitions
+           ~async_function
            ~ast
            ~extracted_statements
            ~extracted_statements_loc)
