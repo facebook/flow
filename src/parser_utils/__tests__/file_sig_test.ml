@@ -698,7 +698,7 @@ let tests =
            let { declare_modules; _ } = visit source in
            let modules = declare_modules in
            assert_equal ~ctxt 1 (SMap.cardinal modules);
-           let (loc, { requires; module_kind; type_exports_named; type_exports_star; info = () }) =
+           let (loc, { requires; module_kind; type_exports_named; type_exports_star }) =
              SMap.find "foo" modules
            in
            assert_substring_equal ~ctxt source source loc;

@@ -427,10 +427,9 @@ let do_parse ~parse_options ~info content file =
            recognize and process a custom `keyMirror` function that makes an enum out of the keys
            of an object. *)
         let facebook_keyMirror = true in
-        let exports_info = File_sig.With_Loc.program_with_exports_info ~ast ~module_ref_prefix in
-        (match exports_info with
+        (match File_sig.With_Loc.program ~ast ~module_ref_prefix with
         | Error e -> Parse_fail (File_sig_error e)
-        | Ok (exports_info, tolerable_errors) ->
+        | Ok (file_sig, tolerable_errors) ->
           let sig_opts =
             {
               Type_sig_parse.type_asserts;
@@ -461,7 +460,6 @@ let do_parse ~parse_options ~info content file =
               tolerable_errors
               sig_errors
           in
-          let file_sig = File_sig.With_Loc.map_unit_file_sig exports_info in
           Parse_ok { ast; file_sig; locs; type_sig; tolerable_errors; parse_errors; exports })
   with
   | Parse_error.Error (first_parse_error :: _) -> Parse_fail (Parse_error first_parse_error)
