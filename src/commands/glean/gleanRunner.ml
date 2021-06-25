@@ -50,6 +50,10 @@ let remove_dot_flow_suffix = function
     Module.File (Base.Option.value ~default:file (Base.String.chop_suffix ~suffix:".flow" file))
   | module_ -> module_
 
+let module_of_module_ref ~resolved_requires ~root ~write_root module_ref =
+  SMap.find module_ref resolved_requires.Module_heaps.resolved_modules
+  |> Module.of_modulename ~root ~write_root
+
 let source_of_type_exports
     ~root ~write_root ~file ~file_sig_with_exports_info ~type_declaration_map ~resolved_requires =
   let open File_sig.With_Loc in
@@ -106,10 +110,7 @@ let source_of_type_exports
       return SourceOfTypeExport.{ moduleTypeExport; source }
     | NamedSpecifier { local = (_, local_name); source = Some (_, module_ref) } ->
       let source =
-        let module_ =
-          SMap.find module_ref resolved_requires.Module_heaps.resolved_modules
-          |> Module.of_modulename ~root ~write_root
-        in
+        let module_ = module_of_module_ref ~resolved_requires ~root ~write_root module_ref in
         let typeExport = TypeExport.Named local_name in
         SourceOfTypeExport.ModuleTypeExport ModuleTypeExport.{ module_; typeExport }
       in
@@ -118,10 +119,7 @@ let source_of_type_exports
   (* export type * from 'module' *)
   let star_exports_info =
     let%bind (_, ExportStar { source = (_, module_ref); _ }) = type_exports_star in
-    let remote_module =
-      SMap.find module_ref resolved_requires.Module_heaps.resolved_modules
-      |> Module.of_modulename ~root ~write_root
-    in
+    let remote_module = module_of_module_ref ~resolved_requires ~root ~write_root module_ref in
     let typeExport = TypeExport.Star remote_module in
     let moduleTypeExport = ModuleTypeExport.{ module_; typeExport } in
     let source = SourceOfTypeExport.ModuleNamespace remote_module in
@@ -140,10 +138,7 @@ let type_import_declarations ~root ~write_root ~reader ~resolved_requires ~file_
   let type_declaration_map = ref SMap.empty in
   (match%bind file_sig.module_sig.requires with
   | Import { source = (_, module_ref); types; typesof; typesof_ns; _ } ->
-    let module_ =
-      SMap.find module_ref resolved_requires.Module_heaps.resolved_modules
-      |> Module.of_modulename ~root ~write_root
-    in
+    let module_ = module_of_module_ref ~resolved_requires ~root ~write_root module_ref in
     let types_info =
       let%bind (export_name, local) = SMap.elements types in
       let typeExport = TypeExport.Named export_name in
@@ -237,10 +232,7 @@ let import_declarations ~root ~write_root ~reader ~resolved_requires ~file_sig =
   let open Base.List.Let_syntax in
   (match%bind file_sig.module_sig.requires with
   | Require { source = (_, module_ref); bindings; _ } ->
-    let module_ =
-      SMap.find module_ref resolved_requires.Module_heaps.resolved_modules
-      |> Module.of_modulename ~root ~write_root
-    in
+    let module_ = module_of_module_ref ~resolved_requires ~root ~write_root module_ref in
     (match bindings with
     | None -> []
     | Some (BindIdent (aloc, name)) ->
@@ -267,10 +259,7 @@ let import_declarations ~root ~write_root ~reader ~resolved_requires ~file_sig =
   | Import0 _ ->
     []
   | Import { source = (_, module_ref); named; ns; _ } ->
-    let module_ =
-      SMap.find module_ref resolved_requires.Module_heaps.resolved_modules
-      |> Module.of_modulename ~root ~write_root
-    in
+    let module_ = module_of_module_ref ~resolved_requires ~root ~write_root module_ref in
     let named_import_declarations =
       let%bind (export_name, local) = SMap.elements named in
       let export = export_of_export_name export_name in
@@ -329,16 +318,14 @@ let source_of_exports ~root ~write_root ~loc_source ~type_sig ~resolved_requires
     | Import { index; remote; _ } ->
       let module_ =
         let module_ref = Type_sig_collections.Module_refs.get module_refs index in
-        SMap.find module_ref resolved_requires.Module_heaps.resolved_modules
-        |> Module.of_modulename ~root ~write_root
+        module_of_module_ref ~resolved_requires ~root ~write_root module_ref
       in
       let export = Export.Named remote in
       return (SourceOfExport.ModuleExport ModuleExport.{ module_; export })
     | ImportNs { index; _ } ->
       let module_ =
         let module_ref = Type_sig_collections.Module_refs.get module_refs index in
-        SMap.find module_ref resolved_requires.Module_heaps.resolved_modules
-        |> Module.of_modulename ~root ~write_root
+        module_of_module_ref ~resolved_requires ~root ~write_root module_ref
       in
       return (SourceOfExport.ModuleNamespace module_)
     | ImportType _
@@ -486,8 +473,7 @@ let source_of_exports ~root ~write_root ~loc_source ~type_sig ~resolved_requires
         let%bind (_, index) = stars in
         let star_module =
           let module_ref = Type_sig_collections.Module_refs.get module_refs index in
-          SMap.find module_ref resolved_requires.Module_heaps.resolved_modules
-          |> Module.of_modulename ~root ~write_root
+          module_of_module_ref ~resolved_requires ~root ~write_root module_ref
         in
         let moduleExport =
           let export = Export.Star star_module in
