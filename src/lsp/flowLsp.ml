@@ -664,7 +664,7 @@ let do_initialize flowconfig params : Initialize.result =
           Some
             {
               CompletionOptions.resolveProvider = false;
-              triggerCharacters = ["."; " "];
+              triggerCharacters = ["."; " "; "["];
               completionItem = { CompletionOptions.labelDetailsSupport = true };
             };
         signatureHelpProvider = Some { sighelp_triggerCharacters = ["("; ","] };
