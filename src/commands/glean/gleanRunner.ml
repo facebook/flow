@@ -54,79 +54,91 @@ let module_of_module_ref ~resolved_requires ~root ~write_root module_ref =
   SMap.find module_ref resolved_requires.Module_heaps.resolved_modules
   |> Module.of_modulename ~root ~write_root
 
-let source_of_type_exports
-    ~root ~write_root ~file ~file_sig_with_exports_info ~type_declaration_map ~resolved_requires =
-  let open File_sig.With_Loc in
-  let {
-    module_sig = { info = { type_exports_named_info; _ }; type_exports_named; type_exports_star; _ };
-    _;
-  } =
-    file_sig_with_exports_info
-  in
-  let module_ = Module.of_file_key ~root ~write_root file |> remove_dot_flow_suffix in
+let loc_of_index ~loc_source ~reader (i : Type_sig_collections.Locs.index) : Loc.t =
+  (i :> int)
+  |> ALoc.ALocRepresentationDoNotUse.make_keyed loc_source
+  |> Parsing_heaps.Reader.loc_of_aloc ~reader
+
+let loc_of_def ~loc_source ~reader packed_def =
+  let idx = Type_sig.def_id_loc packed_def in
+  loc_of_index ~loc_source ~reader idx
+
+let source_of_type_exports ~root ~write_root ~file ~reader ~loc_source ~type_sig ~resolved_requires
+    =
+  let Packed_type_sig.Module.{ module_kind; module_refs; local_defs; remote_refs; _ } = type_sig in
   let open Base.List.Let_syntax in
-  (* export type foo = bar *)
-  let export_declarations_info =
-    match%bind type_exports_named_info with
-    | DeclareExportDef
-        Flow_ast.Statement.(
-          DeclareExportDeclaration.(
-            ( NamedType (_, TypeAlias.{ id; _ })
-            | NamedOpaqueType (_, OpaqueType.{ id; _ })
-            | Interface (_, Interface.{ id; _ }) )))
-    | ExportNamedDef
-        Flow_ast.Statement.
-          ( _,
-            ( TypeAlias TypeAlias.{ id; _ }
-            | OpaqueType OpaqueType.{ id; _ }
-            | InterfaceDeclaration Interface.{ id; _ } ) ) ->
-      let (loc, Flow_ast.Identifier.{ name; _ }) = id in
-      let source = SourceOfTypeExport.TypeDeclaration TypeDeclaration.{ name; loc } in
-      let moduleTypeExport =
-        let typeExport = TypeExport.Named name in
-        ModuleTypeExport.{ module_; typeExport }
+  let open Type_sig_pack in
+  let source_of_remote_ref = function
+    | ImportType { index; remote; _ } ->
+      let module_ =
+        let module_ref = Type_sig_collections.Module_refs.get module_refs index in
+        module_of_module_ref ~resolved_requires ~root ~write_root module_ref
       in
-      return SourceOfTypeExport.{ source; moduleTypeExport }
-    | DeclareExportDef
-        Flow_ast.Statement.DeclareExportDeclaration.(
-          Variable _ | Function _ | Class _ | DefaultType _)
-    | ExportDefaultDef _
-    | ExportNamedDef _ ->
+      let typeExport = TypeExport.Named remote in
+      return (SourceOfTypeExport.ModuleTypeExport ModuleTypeExport.{ module_; typeExport })
+    | ImportTypeof { id_loc; name; _ } ->
+      let loc = loc_of_index ~loc_source ~reader id_loc in
+      return (SourceOfTypeExport.TypeDeclaration TypeDeclaration.{ name; loc })
+    | ImportTypeofNs { index; _ } ->
+      let module_ =
+        let module_ref = Type_sig_collections.Module_refs.get module_refs index in
+        module_of_module_ref ~resolved_requires ~root ~write_root module_ref
+      in
+      return (SourceOfTypeExport.ModuleNamespace module_)
+    | Import _
+    | ImportNs _ ->
       []
   in
-  (* export type {foo} *)
-  let named_exports_info =
-    let%bind (export_name, (_, TypeExportNamed { kind; _ })) = type_exports_named in
-    let moduleTypeExport =
-      ModuleTypeExport.{ module_; typeExport = TypeExport.Named export_name }
+  let source_of_packed_ref = function
+    | LocalRef { index; _ } ->
+      let packed_def = Type_sig_collections.Local_defs.get local_defs index in
+      let name = Type_sig.def_name packed_def in
+      let loc = loc_of_def ~loc_source ~reader packed_def in
+      return (SourceOfTypeExport.TypeDeclaration TypeDeclaration.{ name; loc })
+    | RemoteRef { index; _ } ->
+      let remote_ref = Type_sig_collections.Remote_refs.get remote_refs index in
+      source_of_remote_ref remote_ref
+    | BuiltinRef { ref_loc; name } ->
+      let loc = loc_of_index ~loc_source ~reader ref_loc in
+      let source = SourceOfTypeExport.TypeDeclaration TypeDeclaration.{ name; loc } in
+      return source
+  in
+  let module_ = Module.of_file_key ~root ~write_root file |> remove_dot_flow_suffix in
+  match module_kind with
+  | CJSModule { type_exports; info = CJSModuleInfo { type_export_keys; type_stars; _ }; _ }
+  | ESModule { type_exports; info = ESModuleInfo { type_export_keys; type_stars; _ }; _ } ->
+    let star_type_exports =
+      let%bind (_, index) = type_stars in
+      let module_ref = Type_sig_collections.Module_refs.get module_refs index in
+      let remote_module = module_of_module_ref ~resolved_requires ~root ~write_root module_ref in
+      let typeExport = TypeExport.Star remote_module in
+      let moduleTypeExport = ModuleTypeExport.{ module_; typeExport } in
+      let source = SourceOfTypeExport.ModuleNamespace remote_module in
+      return SourceOfTypeExport.{ source; moduleTypeExport }
     in
-    match kind with
-    | NamedDeclaration -> [] (* info for this export was collected in `export_declarations_info` *)
-    | NamedSpecifier { local = (_, name); source = None } ->
+    let non_star_type_exports =
+      let%bind (type_export, type_export_key) =
+        Base.List.zip_exn (Array.to_list type_exports) (Array.to_list type_export_keys)
+      in
+      let typeExport = TypeExport.Named type_export_key in
+      let moduleTypeExport = ModuleTypeExport.{ module_; typeExport } in
       let%bind source =
-        let%bind loc = SMap.find_opt name type_declaration_map |> Base.Option.to_list in
-        return (SourceOfTypeExport.TypeDeclaration TypeDeclaration.{ loc; name })
+        match type_export with
+        | ExportTypeRef packed_ref -> source_of_packed_ref packed_ref
+        | ExportTypeBinding index ->
+          let packed_def = Type_sig_collections.Local_defs.get local_defs index in
+          let name = Type_sig.def_name packed_def in
+          let loc = Type_sig.def_id_loc packed_def |> loc_of_index ~loc_source ~reader in
+          return (SourceOfTypeExport.TypeDeclaration TypeDeclaration.{ name; loc })
+        | ExportTypeFrom index ->
+          let remote_ref = Type_sig_collections.Remote_refs.get remote_refs index in
+          source_of_remote_ref remote_ref
       in
-      return SourceOfTypeExport.{ moduleTypeExport; source }
-    | NamedSpecifier { local = (_, local_name); source = Some (_, module_ref) } ->
-      let source =
-        let module_ = module_of_module_ref ~resolved_requires ~root ~write_root module_ref in
-        let typeExport = TypeExport.Named local_name in
-        SourceOfTypeExport.ModuleTypeExport ModuleTypeExport.{ module_; typeExport }
-      in
-      return SourceOfTypeExport.{ moduleTypeExport; source }
-  in
-  (* export type * from 'module' *)
-  let star_exports_info =
-    let%bind (_, ExportStar { source = (_, module_ref); _ }) = type_exports_star in
-    let remote_module = module_of_module_ref ~resolved_requires ~root ~write_root module_ref in
-    let typeExport = TypeExport.Star remote_module in
-    let moduleTypeExport = ModuleTypeExport.{ module_; typeExport } in
-    let source = SourceOfTypeExport.ModuleNamespace remote_module in
-    return SourceOfTypeExport.{ source; moduleTypeExport }
-  in
-  export_declarations_info @ named_exports_info @ star_exports_info
-  |> Base.List.map ~f:(SourceOfTypeExport.to_json ~root ~write_root)
+      return SourceOfTypeExport.{ source; moduleTypeExport }
+    in
+    Base.List.map
+      ~f:(SourceOfTypeExport.to_json ~root ~write_root)
+      (star_type_exports @ non_star_type_exports)
 
 let export_of_export_name = function
   | "default" -> Export.Default
@@ -279,15 +291,6 @@ let import_declarations ~root ~write_root ~reader ~resolved_requires ~file_sig =
     in
     namespace_import_declarations @ named_import_declarations)
   |> Base.List.map ~f:(ImportDeclaration.to_json ~root ~write_root)
-
-let loc_of_index ~loc_source ~reader (i : Type_sig_collections.Locs.index) : Loc.t =
-  (i :> int)
-  |> ALoc.ALocRepresentationDoNotUse.make_keyed loc_source
-  |> Parsing_heaps.Reader.loc_of_aloc ~reader
-
-let loc_of_def ~loc_source ~reader packed_def =
-  let idx = Type_sig.def_id_loc packed_def in
-  loc_of_index ~loc_source ~reader idx
 
 let loc_of_obj_value_prop ~loc_source ~reader =
   let open Type_sig in
@@ -714,7 +717,6 @@ let make ~output_dir ~write_root =
         ctx
       in
       let root = Options.root options in
-      let module_ref_prefix = Options.haste_module_ref_prefix options in
       let reader = State_reader.create () in
       let resolved_requires =
         Module_heaps.Reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.warn file
@@ -737,24 +739,21 @@ let make ~output_dir ~write_root =
         type_import_declarations ~root ~write_root ~reader ~resolved_requires ~file_sig
       in
       let type_declaration_map = SMap.union type_declaration_map_1 type_declaration_map_2 in
-      let (source_of_export, source_of_type_export) =
-        match File_sig.With_Loc.program_with_exports_info ~ast ~module_ref_prefix with
-        | Error _ -> ([], [])
-        | Ok (file_sig_with_exports_info, _) ->
-          ( source_of_exports
-              ~root
-              ~write_root
-              ~loc_source:(fst ast |> Loc.source)
-              ~type_sig
-              ~resolved_requires
-              ~reader,
-            source_of_type_exports
-              ~root
-              ~write_root
-              ~file
-              ~file_sig_with_exports_info
-              ~type_declaration_map
-              ~resolved_requires )
+      (* TODO: remove all type_declaration_map code *)
+      ignore type_declaration_map;
+      let loc_source = fst ast |> Loc.source in
+      let source_of_export =
+        source_of_exports ~root ~write_root ~loc_source ~type_sig ~resolved_requires ~reader
+      in
+      let source_of_type_export =
+        source_of_type_exports
+          ~root
+          ~write_root
+          ~file
+          ~reader
+          ~loc_source
+          ~type_sig
+          ~resolved_requires
       in
       let local_declaration_reference =
         local_declaration_references ~root ~write_root ~scope_info
