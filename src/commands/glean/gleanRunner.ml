@@ -7,29 +7,6 @@
 
 module TypeScheme = Type.TypeScheme
 
-module TypeOfLoc = struct
-  exception Found of Type.t
-
-  class type_of_loc_searcher ~reader search_loc =
-    object
-      inherit [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
-
-      method on_loc_annot x = x
-
-      method on_type_annot (aloc, t) =
-        if Parsing_heaps.Reader.loc_of_aloc ~reader aloc = search_loc then
-          raise (Found t)
-        else
-          (aloc, t)
-    end
-
-  let f ~reader ~typed_ast loc =
-    try
-      ignore ((new type_of_loc_searcher ~reader loc)#program typed_ast);
-      []
-    with Found t -> [t]
-end
-
 class member_searcher add_member =
   object (this)
     inherit Typed_ast_utils.type_parameter_mapper
@@ -314,210 +291,214 @@ let import_declarations ~root ~write_root ~reader ~resolved_requires ~file_sig =
     namespace_import_declarations @ named_import_declarations)
   |> Base.List.map ~f:(ImportDeclaration.to_json ~root ~write_root)
 
-let source_of_exports
-    ~root
-    ~write_root
-    ~ast_loc
-    ~file_sig_with_exports_info
-    ~file_sig
-    ~scope_info
-    ~resolved_requires
-    ~typed_ast
-    ~full_cx
-    ~reader =
-  let open File_sig.With_Loc in
-  let { module_sig = { info = { module_kind_info; _ }; module_kind; _ }; _ } =
-    file_sig_with_exports_info
-  in
-  let def_of_variable loc =
-    Base.Option.map
-      (Scope_builder.Api.def_of_use_opt scope_info loc)
-      ~f:(fun Scope_builder.Api.Def.{ locs; _ } -> Nel.hd locs)
-  in
-  (* if an expression is just a variable, return the declaration of that variable *)
-  let rec decl_of_exp = function
-    | Flow_ast.(_, Expression.Identifier (id_loc, Identifier.{ name; _ })) ->
-      Base.Option.map (def_of_variable id_loc) ~f:(fun loc -> Declaration.{ loc; name })
-    | Flow_ast.(_, Expression.(TypeCast TypeCast.{ expression; _ })) -> decl_of_exp expression
-    | _ -> None
-  in
-  let module_ =
-    Module.of_loc_source ~root ~write_root ast_loc.Loc.source |> remove_dot_flow_suffix
-  in
+let loc_of_index ~loc_source ~reader (i : Type_sig_collections.Locs.index) : Loc.t =
+  (i :> int)
+  |> ALoc.ALocRepresentationDoNotUse.make_keyed loc_source
+  |> Parsing_heaps.Reader.loc_of_aloc ~reader
+
+let loc_of_def ~loc_source ~reader packed_def =
+  let idx = Type_sig.def_id_loc packed_def in
+  loc_of_index ~loc_source ~reader idx
+
+let loc_of_obj_value_prop ~loc_source ~reader =
+  let open Type_sig in
+  function
+  | ObjValueField (index, _, _)
+  | ObjValueAccess (Get (index, _))
+  | ObjValueAccess (Set (index, _))
+  | ObjValueAccess (GetSet (_, _, index, _))
+  | ObjValueMethod { id_loc = index; _ } ->
+    loc_of_index ~loc_source ~reader index
+
+let loc_of_obj_annot_prop ~loc_source ~reader =
+  let open Type_sig in
+  function
+  | ObjAnnotField (index, _, _)
+  | ObjAnnotAccess (Get (index, _))
+  | ObjAnnotAccess (Set (index, _))
+  | ObjAnnotAccess (GetSet (_, _, index, _))
+  | ObjAnnotMethod { id_loc = index; _ } ->
+    loc_of_index ~loc_source ~reader index
+
+let source_of_exports ~root ~write_root ~loc_source ~type_sig ~resolved_requires ~reader =
+  let Packed_type_sig.Module.{ module_kind; local_defs; remote_refs; module_refs; _ } = type_sig in
   let open Base.List.Let_syntax in
-  (match module_kind_info with
-  | CommonJSInfo cjs_exports ->
-    let member_exports_of_loc loc =
-      let%bind module_exports_t = TypeOfLoc.f ~reader ~typed_ast loc in
-      let%bind Ty_members.{ members; _ } =
-        Ty_members.extract
-          ~include_proto_members:false
-          ~cx:full_cx
-          ~typed_ast
-          ~file_sig
-          TypeScheme.{ tparams_rev = []; type_ = module_exports_t }
-        |> Base.Result.ok
-        |> Base.Option.to_list
+  let open Type_sig_pack in
+  let module_ = Module.of_loc_source ~root ~write_root loc_source |> remove_dot_flow_suffix in
+  let source_of_remote_ref = function
+    | Import { index; remote; _ } ->
+      let module_ =
+        let module_ref = Type_sig_collections.Module_refs.get module_refs index in
+        SMap.find module_ref resolved_requires.Module_heaps.resolved_modules
+        |> Module.of_modulename ~root ~write_root
       in
-      let%bind (name, Ty_members.{ def_loc; _ }) = NameUtils.Map.elements members in
-      (* TODO consider excluding internal names *)
-      let name = Reason.display_string_of_name name in
-      let moduleExport = ModuleExport.{ module_; export = Export.CommonJSMember name } in
-      let%bind aloc = Base.Option.to_list def_loc in
-      let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
-      let source = SourceOfExport.MemberDeclaration MemberDeclaration.{ name; loc } in
-      return SourceOfExport.{ moduleExport; source }
-    in
-    (match%bind cjs_exports with
-    | DeclareModuleExportsDef (_, (loc, _)) ->
-      let overall_export =
-        let moduleExport = ModuleExport.{ module_; export = Export.CommonJS } in
-        let source = SourceOfExport.MemberDeclaration MemberDeclaration.{ name = "exports"; loc } in
-        SourceOfExport.{ moduleExport; source }
+      let export = Export.Named remote in
+      return (SourceOfExport.ModuleExport ModuleExport.{ module_; export })
+    | ImportNs { index; _ } ->
+      let module_ =
+        let module_ref = Type_sig_collections.Module_refs.get module_refs index in
+        SMap.find module_ref resolved_requires.Module_heaps.resolved_modules
+        |> Module.of_modulename ~root ~write_root
       in
-      let member_exports = member_exports_of_loc loc in
-      overall_export :: member_exports
-    | SetModuleExportsDef ((loc, _) as exp) ->
-      let overall_export =
-        let moduleExport = ModuleExport.{ module_; export = Export.CommonJS } in
-        let source =
-          match decl_of_exp exp with
-          | None -> SourceOfExport.MemberDeclaration MemberDeclaration.{ name = "exports"; loc }
-          | Some decl -> SourceOfExport.Declaration decl
-        in
-        SourceOfExport.{ moduleExport; source }
-      in
-      let member_exports = member_exports_of_loc loc in
-      overall_export :: member_exports
-    | AddModuleExportsDef ((loc, name), exp) ->
-      let export = Export.CommonJSMember name in
-      let moduleExport = ModuleExport.{ module_; export } in
+      return (SourceOfExport.ModuleNamespace module_)
+    | ImportType _
+    | ImportTypeof _
+    | ImportTypeofNs _ ->
+      []
+  in
+  let source_of_packed_ref = function
+    | LocalRef { index; _ } ->
       let source =
-        match decl_of_exp exp with
-        | None -> SourceOfExport.MemberDeclaration MemberDeclaration.{ name; loc }
-        | Some decl -> SourceOfExport.Declaration decl
+        let packed_def = Type_sig_collections.Local_defs.get local_defs index in
+        let name = Type_sig.def_name packed_def in
+        let loc = loc_of_def ~loc_source ~reader packed_def in
+        SourceOfExport.Declaration Declaration.{ name; loc }
       in
-      return SourceOfExport.{ moduleExport; source })
-  | ESInfo es_exports ->
-    (* info about exports like `export <declaration>` *)
-    let export_declarations_info =
-      let defs_of_stmt_loc stmt_loc =
-        let%bind scope = Scope_builder.Api.scope_of_loc scope_info ast_loc in
-        let Scope_builder.Api.Scope.{ defs; _ } = Scope_builder.Api.scope scope_info scope in
-        let%bind (name, Scope_builder.Api.Def.{ locs; _ }) = SMap.elements defs in
-        let%bind loc =
-          Base.List.filter (Nel.to_list locs) ~f:(fun def_loc -> Loc.contains stmt_loc def_loc)
-        in
-        return (loc, name)
-      in
-      match%bind es_exports with
-      | DeclareExportDef
-          Flow_ast.Statement.(
-            DeclareExportDeclaration.(
-              ( Variable (_, DeclareVariable.{ id; _ })
-              | Function (_, DeclareFunction.{ id; _ })
-              | Class (_, DeclareClass.{ id; _ }) ))) ->
-        let (loc, Flow_ast.Identifier.{ name; _ }) = id in
-        let moduleExport = ModuleExport.{ module_; export = Export.Named name } in
-        let source = SourceOfExport.Declaration Declaration.{ loc; name } in
-        return SourceOfExport.{ moduleExport; source }
-      | DeclareExportDef Flow_ast.Statement.DeclareExportDeclaration.(DefaultType (loc, _)) ->
-        let moduleExport = ModuleExport.{ module_; export = Export.Default } in
-        let source = SourceOfExport.Declaration Declaration.{ loc; name = "default" } in
-        return SourceOfExport.{ moduleExport; source }
-      | DeclareExportDef
-          Flow_ast.Statement.DeclareExportDeclaration.(
-            NamedType _ | NamedOpaqueType _ | Interface _) ->
-        []
-      | ExportDefaultDef export_default_declaration ->
-        let export = Export.Default in
-        (match export_default_declaration with
-        | Flow_ast.Statement.ExportDefaultDeclaration.Expression exp ->
-          let moduleExport = ModuleExport.{ module_; export = Export.Default } in
-          let%bind declaration =
-            match decl_of_exp exp with
-            | None ->
-              let%bind loc =
-                match module_kind with
-                | CommonJS _ -> failwith "unreachable"
-                | ES { named; _ } ->
-                  (match%bind named with
-                  | (_, (_, ExportDefault { default_loc; _ })) -> return default_loc
-                  | _ -> [])
-              in
-              return Declaration.{ loc; name = "default" }
-            | Some decl -> return decl
+      return source
+    | RemoteRef { index; _ } ->
+      let remote_ref = Type_sig_collections.Remote_refs.get remote_refs index in
+      let%bind source = source_of_remote_ref remote_ref in
+      return source
+    | BuiltinRef { ref_loc; name } ->
+      let loc = loc_of_index ~loc_source ~reader ref_loc in
+      let source = SourceOfExport.Declaration Declaration.{ name; loc } in
+      return source
+  in
+  let sources_of_all_exports =
+    match module_kind with
+    | CJSModule { exports; _ } ->
+      let open Type_sig in
+      let rec soes_of_packed_value = function
+        | ObjLit { props; _ } ->
+          let%bind (name, prop) = SMap.bindings props in
+          let moduleExport =
+            let export = Export.CommonJSMember name in
+            ModuleExport.{ module_; export }
           in
-          let source = SourceOfExport.Declaration declaration in
+          let source =
+            let loc = loc_of_obj_value_prop ~loc_source ~reader prop in
+            SourceOfExport.MemberDeclaration MemberDeclaration.{ name; loc }
+          in
           return SourceOfExport.{ moduleExport; source }
-        | Flow_ast.Statement.ExportDefaultDeclaration.Declaration (stmt_loc, _) ->
-          let%bind (loc, name) = defs_of_stmt_loc stmt_loc in
-          let source = SourceOfExport.Declaration Declaration.{ loc; name } in
-          let moduleExport = ModuleExport.{ module_; export } in
-          return SourceOfExport.{ moduleExport; source })
-      | ExportNamedDef (stmt_loc, _) ->
-        let%bind (loc, name) = defs_of_stmt_loc stmt_loc in
-        let source = SourceOfExport.Declaration Declaration.{ loc; name } in
-        let export = Export.Named name in
-        let moduleExport = ModuleExport.{ module_; export } in
-        return SourceOfExport.{ moduleExport; source }
-    in
-    (* info about other exports, like `export { foo as bar }` *)
-    let export_specifiers_info =
-      match module_kind with
-      | CommonJS _ -> failwith "unreachable"
-      | ES { named; star } ->
-        let named_exports =
-          let%bind (remote, (_, export)) = named in
-          let moduleExport = ModuleExport.{ module_; export = Export.Named remote } in
-          match export with
-          | ExportDefault _
-          | ExportNamed { kind = NamedDeclaration; _ } ->
-            (* already collected info for this export in `export_declarations_info` *)
-            []
-          | ExportNamed { kind = NamedSpecifier { local = (local_loc, local_name); source }; _ } ->
-            (match source with
-            | None ->
-              let%bind source =
-                let%bind loc = def_of_variable local_loc |> Base.Option.to_list in
-                let name = local_name in
-                return (SourceOfExport.Declaration Declaration.{ loc; name })
-              in
-              return SourceOfExport.{ moduleExport; source }
-            | Some (_, module_ref) ->
-              let source =
-                let module_ =
-                  SMap.find module_ref resolved_requires.Module_heaps.resolved_modules
-                  |> Module.of_modulename ~root ~write_root
-                in
-                let export = Export.Named local_name in
-                SourceOfExport.ModuleExport ModuleExport.{ module_; export }
-              in
-              return SourceOfExport.{ moduleExport; source })
-          | ExportNs { source = (_, module_ref); _ } ->
-            let source =
-              let module_ =
-                SMap.find module_ref resolved_requires.Module_heaps.resolved_modules
-                |> Module.of_modulename ~root ~write_root
-              in
-              SourceOfExport.ModuleNamespace module_
+        | _ -> []
+      and soes_of_packed_def ~seen = function
+        | Variable { def; _ } -> soes_of_packed ~seen def
+        | _ -> []
+      and soes_of_packed_annot = function
+        | ObjAnnot { props; _ } ->
+          let%bind (name, prop) = SMap.bindings props in
+          let moduleExport =
+            let export = Export.CommonJSMember name in
+            ModuleExport.{ module_; export }
+          in
+          let source =
+            let loc = loc_of_obj_annot_prop ~loc_source ~reader prop in
+            SourceOfExport.MemberDeclaration MemberDeclaration.{ name; loc }
+          in
+          return SourceOfExport.{ moduleExport; source }
+        | _ -> []
+      and soes_of_packed ~seen = function
+        | Value packed_value -> soes_of_packed_value packed_value
+        | Ref packed_ref ->
+          let overall_source_of_exports =
+            let moduleExport =
+              let export = Export.CommonJS in
+              ModuleExport.{ module_; export }
             in
+            let%bind source = source_of_packed_ref packed_ref in
             return SourceOfExport.{ moduleExport; source }
-        in
-        let star_exports =
-          let%bind (_, ExportStar { source = (_, module_ref); _ }) = star in
-          let namespace_module =
-            SMap.find module_ref resolved_requires.Module_heaps.resolved_modules
-            |> Module.of_modulename ~root ~write_root
           in
-          let moduleExport = ModuleExport.{ module_; export = Export.Star namespace_module } in
-          let source = SourceOfExport.ModuleNamespace namespace_module in
-          return SourceOfExport.{ moduleExport; source }
+          let member_source_of_exports =
+            match packed_ref with
+            | LocalRef { index; _ } when not (ISet.mem (index :> int) seen) ->
+              let packed_def = Type_sig_collections.Local_defs.get local_defs index in
+              soes_of_packed_def ~seen:(ISet.add (index :> int) seen) packed_def
+            | _ -> []
+          in
+          overall_source_of_exports @ member_source_of_exports
+        | Annot packed_annot -> soes_of_packed_annot packed_annot
+        | TyRef _ ->
+          (* if we want to, we could follow TyRefs through to Annots *)
+          []
+        | _ -> []
+      in
+      let%bind exports = Base.Option.to_list exports in
+      soes_of_packed ~seen:ISet.empty exports
+    | ESModule { exports; info = ESModuleInfo { export_keys; stars; _ }; _ } ->
+      let sources_of_non_star_exports =
+        let%bind (es_export, export_key) =
+          exports |> Array.mapi (fun i export -> (export, export_keys.(i))) |> Array.to_list
         in
-        named_exports @ star_exports
-    in
-    export_declarations_info @ export_specifiers_info)
-  |> Base.List.map ~f:(SourceOfExport.to_json ~root ~write_root)
+        match es_export with
+        | ExportRef packed_ref ->
+          let export = Export.Named export_key in
+          let moduleExport = ModuleExport.{ module_; export } in
+          let%bind source = source_of_packed_ref packed_ref in
+          return SourceOfExport.{ moduleExport; source }
+        | ExportBinding index ->
+          let packed_def = Type_sig_collections.Local_defs.get local_defs index in
+          let name = Type_sig.def_name packed_def in
+          let moduleExport =
+            let export = Export.Named name in
+            ModuleExport.{ module_; export }
+          in
+          let source =
+            let loc = loc_of_def ~loc_source ~reader packed_def in
+            SourceOfExport.Declaration Declaration.{ name; loc }
+          in
+          return SourceOfExport.{ moduleExport; source }
+        | ExportDefault { def; default_loc } ->
+          let moduleExport =
+            let export = Export.Default in
+            ModuleExport.{ module_; export }
+          in
+          let%bind source =
+            match def with
+            | Ref packed_ref -> source_of_packed_ref packed_ref
+            | _ ->
+              let name = "default" in
+              let loc = loc_of_index ~loc_source ~reader default_loc in
+              return (SourceOfExport.Declaration Declaration.{ name; loc })
+          in
+          return SourceOfExport.{ moduleExport; source }
+        | ExportDefaultBinding { index; _ } ->
+          let moduleExport =
+            let export = Export.Default in
+            ModuleExport.{ module_; export }
+          in
+          let source =
+            let packed_def = Type_sig_collections.Local_defs.get local_defs index in
+            let name = Type_sig.def_name packed_def in
+            let loc = loc_of_def ~loc_source ~reader packed_def in
+            SourceOfExport.Declaration Declaration.{ name; loc }
+          in
+          return SourceOfExport.{ moduleExport; source }
+        | ExportFrom index ->
+          let moduleExport =
+            let export = Export.Named export_key in
+            ModuleExport.{ module_; export }
+          in
+          let remote_ref = Type_sig_collections.Remote_refs.get remote_refs index in
+          let%bind source = source_of_remote_ref remote_ref in
+          return SourceOfExport.{ moduleExport; source }
+      in
+      let sources_of_star_exports =
+        let%bind (_, index) = stars in
+        let star_module =
+          let module_ref = Type_sig_collections.Module_refs.get module_refs index in
+          SMap.find module_ref resolved_requires.Module_heaps.resolved_modules
+          |> Module.of_modulename ~root ~write_root
+        in
+        let moduleExport =
+          let export = Export.Star star_module in
+          ModuleExport.{ module_; export }
+        in
+        let source = SourceOfExport.ModuleNamespace star_module in
+        return SourceOfExport.{ moduleExport; source }
+      in
+      sources_of_star_exports @ sources_of_non_star_exports
+  in
+  Base.List.map ~f:(SourceOfExport.to_json ~root ~write_root) sources_of_all_exports
 
 let local_declaration_references ~root ~write_root ~scope_info =
   let add_uses_of_def def uses acc =
@@ -743,7 +724,9 @@ let make ~output_dir ~write_root =
       { report; combine; empty }
 
     let visit ~options ast ctx =
-      let Codemod_context.Typed.{ typed_ast; full_cx; file; file_sig; docblock; _ } = ctx in
+      let Codemod_context.Typed.{ typed_ast; full_cx; file; file_sig; docblock; type_sig; _ } =
+        ctx
+      in
       let root = Options.root options in
       let module_ref_prefix = Options.haste_module_ref_prefix options in
       let reader = State_reader.create () in
@@ -775,14 +758,10 @@ let make ~output_dir ~write_root =
           ( source_of_exports
               ~root
               ~write_root
-              ~ast_loc:(fst ast)
-              ~file_sig_with_exports_info
-              ~file_sig
-              ~scope_info
+              ~loc_source:(fst ast |> Loc.source)
+              ~type_sig
               ~resolved_requires
-              ~typed_ast
-              ~reader
-              ~full_cx,
+              ~reader,
             source_of_type_exports
               ~root
               ~write_root
