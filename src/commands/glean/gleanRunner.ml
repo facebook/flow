@@ -147,7 +147,6 @@ let export_of_export_name = function
 let type_import_declarations ~root ~write_root ~reader ~resolved_requires ~file_sig =
   let open File_sig.With_ALoc in
   let open Base.List.Let_syntax in
-  let type_declaration_map = ref SMap.empty in
   (match%bind file_sig.module_sig.requires with
   | Import { source = (_, module_ref); types; typesof; typesof_ns; _ } ->
     let module_ = module_of_module_ref ~resolved_requires ~root ~write_root module_ref in
@@ -159,7 +158,6 @@ let type_import_declarations ~root ~write_root ~reader ~resolved_requires ~file_
       let%bind { local_loc; _ } = Nel.to_list locs in
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader local_loc in
       let typeDeclaration = TypeDeclaration.{ name; loc } in
-      type_declaration_map := SMap.add name loc !type_declaration_map;
       return TypeImportDeclaration.{ import; typeDeclaration }
     in
     let typesof_info =
@@ -170,7 +168,6 @@ let type_import_declarations ~root ~write_root ~reader ~resolved_requires ~file_
       let%bind { local_loc; _ } = Nel.to_list locs in
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader local_loc in
       let typeDeclaration = TypeDeclaration.{ name; loc } in
-      type_declaration_map := SMap.add name loc !type_declaration_map;
       return TypeImportDeclaration.{ import; typeDeclaration }
     in
     let typesof_ns_info =
@@ -178,7 +175,6 @@ let type_import_declarations ~root ~write_root ~reader ~resolved_requires ~file_
       let import = TypeImportDeclaration.ModuleTypeof module_ in
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
       let typeDeclaration = TypeDeclaration.{ loc; name } in
-      type_declaration_map := SMap.add name loc !type_declaration_map;
       return TypeImportDeclaration.{ import; typeDeclaration }
     in
     types_info @ typesof_info @ typesof_ns_info
@@ -187,7 +183,6 @@ let type_import_declarations ~root ~write_root ~reader ~resolved_requires ~file_
   | Import0 _ ->
     [])
   |> Base.List.map ~f:(TypeImportDeclaration.to_json ~root ~write_root)
-  |> fun type_import_declarations -> (type_import_declarations, !type_declaration_map)
 
 let type_declaration_references ~root ~write_root ~reader ~full_cx ~typed_ast =
   let results = ref [] in
@@ -583,17 +578,13 @@ class declaration_info_collector ~scope_info ~reader ~add_var_info ~add_member_i
 let declaration_infos ~root ~write_root ~scope_info ~file ~file_sig ~full_cx ~reader ~typed_ast ~ast
     =
   let infos = ref [] in
-  let type_declaration_map = ref SMap.empty in
   let add_info kind ~tparams_rev name loc type_ =
     let scheme = TypeScheme.{ tparams_rev; type_ } in
     infos := ((kind, name, loc), scheme) :: !infos
   in
   let add_var_info = add_info `Declaration in
   let add_member_info = add_info `MemberDeclaration in
-  let add_type_info ~tparams_rev name loc type_ =
-    type_declaration_map := SMap.add name loc !type_declaration_map;
-    add_info `TypeDeclaration ~tparams_rev name loc type_
-  in
+  let add_type_info = add_info `TypeDeclaration in
   ignore
     ((new declaration_info_collector
         ~scope_info
@@ -620,38 +611,37 @@ let declaration_infos ~root ~write_root ~scope_info ~file ~file_sig ~full_cx ~re
   in
   let exact_by_default = Context.exact_by_default full_cx in
   let documentations = Find_documentation.def_loc_to_comment_loc_map ast in
-  ( Base.List.fold
-      (Ty_normalizer.from_schemes ~options ~genv !infos)
-      ~init:([], [], [])
-      ~f:(fun (var_infos, member_infos, type_infos) ((kind, name, loc), elt_result) ->
-        let documentation = Loc_sig.LocS.LMap.find_opt loc documentations in
-        match elt_result with
-        | Error _ -> (var_infos, member_infos, type_infos)
-        | Ok elt ->
-          let type_ = Ty_printer.string_of_elt ~exact_by_default elt in
-          (match kind with
-          | `Declaration ->
-            let declaration = Declaration.{ name; loc } in
-            let var_info =
-              DeclarationInfo.{ declaration; type_; documentation }
-              |> DeclarationInfo.to_json ~root ~write_root
-            in
-            (var_info :: var_infos, member_infos, type_infos)
-          | `MemberDeclaration ->
-            let memberDeclaration = MemberDeclaration.{ name; loc } in
-            let member_info =
-              MemberDeclarationInfo.{ memberDeclaration; type_; documentation }
-              |> MemberDeclarationInfo.to_json ~root ~write_root
-            in
-            (var_infos, member_info :: member_infos, type_infos)
-          | `TypeDeclaration ->
-            let typeDeclaration = TypeDeclaration.{ name; loc } in
-            let type_info =
-              TypeDeclarationInfo.{ typeDeclaration; type_; documentation }
-              |> TypeDeclarationInfo.to_json ~root ~write_root
-            in
-            (var_infos, member_infos, type_info :: type_infos))),
-    !type_declaration_map )
+  Base.List.fold
+    (Ty_normalizer.from_schemes ~options ~genv !infos)
+    ~init:([], [], [])
+    ~f:(fun (var_infos, member_infos, type_infos) ((kind, name, loc), elt_result) ->
+      let documentation = Loc_sig.LocS.LMap.find_opt loc documentations in
+      match elt_result with
+      | Error _ -> (var_infos, member_infos, type_infos)
+      | Ok elt ->
+        let type_ = Ty_printer.string_of_elt ~exact_by_default elt in
+        (match kind with
+        | `Declaration ->
+          let declaration = Declaration.{ name; loc } in
+          let var_info =
+            DeclarationInfo.{ declaration; type_; documentation }
+            |> DeclarationInfo.to_json ~root ~write_root
+          in
+          (var_info :: var_infos, member_infos, type_infos)
+        | `MemberDeclaration ->
+          let memberDeclaration = MemberDeclaration.{ name; loc } in
+          let member_info =
+            MemberDeclarationInfo.{ memberDeclaration; type_; documentation }
+            |> MemberDeclarationInfo.to_json ~root ~write_root
+          in
+          (var_infos, member_info :: member_infos, type_infos)
+        | `TypeDeclaration ->
+          let typeDeclaration = TypeDeclaration.{ name; loc } in
+          let type_info =
+            TypeDeclarationInfo.{ typeDeclaration; type_; documentation }
+            |> TypeDeclarationInfo.to_json ~root ~write_root
+          in
+          (var_infos, member_infos, type_info :: type_infos)))
 
 let file_of_string_modules ~root ~write_root ~options ~docblock ~file:file_key =
   let open Base.List.Let_syntax in
@@ -722,8 +712,7 @@ let make ~output_dir ~write_root =
         Module_heaps.Reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.warn file
       in
       let scope_info = Scope_builder.program ~with_types:false ast in
-      let ( (declaration_info, member_declaration_info, type_declaration_info),
-            type_declaration_map_1 ) =
+      let (declaration_info, member_declaration_info, type_declaration_info) =
         declaration_infos
           ~scope_info
           ~root
@@ -735,12 +724,9 @@ let make ~output_dir ~write_root =
           ~typed_ast
           ~ast
       in
-      let (type_import_declaration, type_declaration_map_2) =
+      let type_import_declaration =
         type_import_declarations ~root ~write_root ~reader ~resolved_requires ~file_sig
       in
-      let type_declaration_map = SMap.union type_declaration_map_1 type_declaration_map_2 in
-      (* TODO: remove all type_declaration_map code *)
-      ignore type_declaration_map;
       let loc_source = fst ast |> Loc.source in
       let source_of_export =
         source_of_exports ~root ~write_root ~loc_source ~type_sig ~resolved_requires ~reader
