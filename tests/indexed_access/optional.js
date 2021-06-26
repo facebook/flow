@@ -89,3 +89,30 @@ type Before = Later?.['a'];
 (0: Before); // OK
 (undefined: Before); // OK
 type Later = ?{a: number};
+
+type O = ?{
+  [number]: boolean;
+  foo: string;
+  bar: number;
+  nested: {
+    goop: number,
+  },
+}
+(1: O?.['bar']); // OK
+(true: O?.[number]); // OK
+('xx': O?.['bar']); // Error
+(1: O?.['nested']['goop']); // OK
+
+declare class Cx {
+  [number]: boolean;
+  foo: string;
+  bar: number;
+  nested: {
+    goop: number,
+  },
+}
+type C = ?Cx;
+(1: C?.['bar']); // OK
+(true: C?.[number]); // OK
+('xx': C?.['bar']); // Error
+(1: C?.['nested']['goop']); // OK

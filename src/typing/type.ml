@@ -832,7 +832,7 @@ module rec TypeTerm : sig
     | OptionalIndexedAccessT of {
         use_op: use_op;
         reason: reason;
-        index_type: t;
+        index: optional_indexed_access_index;
         tout_tvar: tvar;
       }
 
@@ -1309,7 +1309,7 @@ module rec TypeTerm : sig
         (* For type normalizer purposes - in the future ElementType will be removed. *)
         is_indexed_access: bool;
       }
-    | OptionalIndexedAccessNonMaybeType of { index_type: t }
+    | OptionalIndexedAccessNonMaybeType of { index: optional_indexed_access_index }
     | OptionalIndexedAccessResultType of { void_reason: reason }
     | Bind of t
     | ReadOnlyType
@@ -1323,6 +1323,10 @@ module rec TypeTerm : sig
     | ReactElementConfigType
     | ReactElementRefType
     | ReactConfigType of t
+
+  and optional_indexed_access_index =
+    | OptionalIndexedAccessStrLitIndex of name
+    | OptionalIndexedAccessTypeIndex of t
 
   and type_map =
     | TupleMap of t

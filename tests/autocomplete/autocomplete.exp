@@ -7846,9 +7846,9 @@ Flags: --lsp
 }
 {
   "label":"T",
-  "labelDetails":{"type":"type T = empty"},
+  "labelDetails":{"type":"type T = any | void"},
   "kind":13,
-  "detail":"type T = empty",
+  "detail":"type T = any | void",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{

@@ -771,7 +771,10 @@ and dump_use_t_ (depth, tvars) cx t =
     | ObjTestT _ -> p t
     | OptionalChainT { t_out; voided_out; _ } ->
       p ~extra:(spf "%s, %s" (use_kid t_out) (kid voided_out)) t
-    | OptionalIndexedAccessT { index_type; _ } -> p ~extra:(kid index_type) t
+    | OptionalIndexedAccessT { index = OptionalIndexedAccessTypeIndex index_type; _ } ->
+      p ~extra:(kid index_type) t
+    | OptionalIndexedAccessT { index = OptionalIndexedAccessStrLitIndex name; _ } ->
+      p ~extra:(display_string_of_name name) t
     | OrT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (tout y)) t
     | PredicateT (pred, arg) ->
       p ~reason:false ~extra:(spf "%s, %s" (string_of_predicate pred) (tout arg)) t

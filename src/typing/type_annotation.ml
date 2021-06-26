@@ -1938,12 +1938,22 @@ and optional_indexed_access cx loc ~tparams_map { T.OptionalIndexedAccess.indexe
     let lhs_reason = reason_of_t object_t in
     let use_op = Op (IndexedTypeAccess { _object = lhs_reason; index = index_reason }) in
     let non_maybe_destructor =
-      if optional then
-        TypeDestructorT (use_op, reason, OptionalIndexedAccessNonMaybeType { index_type })
-      else
-        TypeDestructorT (use_op, reason, ElementType { index_type; is_indexed_access = true })
+      match index with
+      | (_, Ast.Type.StringLiteral { Ast.StringLiteral.value; _ }) ->
+        let name = OrdinaryName value in
+        if optional then
+          OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessStrLitIndex name }
+        else
+          PropertyType { name; is_indexed_access = true }
+      | _ ->
+        if optional then
+          OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessTypeIndex index_type }
+        else
+          ElementType { index_type; is_indexed_access = true }
     in
-    let non_maybe_result_t = EvalT (object_t, non_maybe_destructor, mk_eval_id cx loc) in
+    let non_maybe_result_t =
+      EvalT (object_t, TypeDestructorT (use_op, reason, non_maybe_destructor), mk_eval_id cx loc)
+    in
     let void_reason = replace_desc_reason RVoid lhs_reason in
     let result_t =
       EvalT

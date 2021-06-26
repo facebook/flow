@@ -1469,7 +1469,7 @@ struct
           rec_flow_t ~use_op cx trace (EmptyT.why r trust, OpenT tout_tvar)
         | ((MaybeT (_, t) | OptionalT { type_ = t; _ }), OptionalIndexedAccessT _) ->
           rec_flow cx trace (t, u)
-        | (UnionT (_, rep), OptionalIndexedAccessT { use_op; reason; index_type; tout_tvar }) ->
+        | (UnionT (_, rep), OptionalIndexedAccessT { use_op; reason; index; tout_tvar }) ->
           let (t0, (t1, ts)) = UnionRep.members_nel rep in
           let f t =
             AnnotT
@@ -1478,16 +1478,24 @@ struct
                     rec_flow
                       cx
                       trace
-                      (t, OptionalIndexedAccessT { use_op; reason; index_type; tout_tvar = tvar })),
+                      (t, OptionalIndexedAccessT { use_op; reason; index; tout_tvar = tvar })),
                 false )
           in
           let rep = UnionRep.make (f t0) (f t1) (Base.List.map ts ~f) in
           rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) (OpenT tout_tvar)
-        | (_, OptionalIndexedAccessT { use_op; reason; index_type; tout_tvar })
+        | (_, OptionalIndexedAccessT { use_op; reason; index; tout_tvar })
           when match l with
                | IntersectionT _ -> false
                | _ -> true ->
-          rec_flow cx trace (l, GetElemT (use_op, reason, index_type, tout_tvar))
+          let u =
+            match index with
+            | OptionalIndexedAccessStrLitIndex name ->
+              let reason_op = replace_desc_reason (RProperty (Some name)) reason in
+              GetPropT (use_op, reason, Named (reason_op, name), tout_tvar)
+            | OptionalIndexedAccessTypeIndex index_type ->
+              GetElemT (use_op, reason, index_type, tout_tvar)
+          in
+          rec_flow cx trace (l, u)
         (*************)
         (* invariant *)
         (*************)
@@ -6981,8 +6989,8 @@ struct
             let reason_op = replace_desc_reason (RProperty (Some name)) reason in
             GetPropT (use_op, reason, Named (reason_op, name), tout)
           | ElementType { index_type; _ } -> GetElemT (use_op, reason, index_type, tout)
-          | OptionalIndexedAccessNonMaybeType { index_type } ->
-            OptionalIndexedAccessT { use_op; reason; index_type; tout_tvar = tout }
+          | OptionalIndexedAccessNonMaybeType { index } ->
+            OptionalIndexedAccessT { use_op; reason; index; tout_tvar = tout }
           | OptionalIndexedAccessResultType { void_reason } ->
             let void = VoidT.why void_reason |> with_trust bogus_trust in
             ResolveUnionT

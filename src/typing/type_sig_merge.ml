@@ -670,10 +670,15 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
         Type.Op (Type.IndexedTypeAccess { _object = object_reason; index = index_reason })
       in
       let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+      let index =
+        match index with
+        | Pack.Annot (SingletonString (_, str)) ->
+          Type.OptionalIndexedAccessStrLitIndex (Reason.OrdinaryName str)
+        | _ -> Type.OptionalIndexedAccessTypeIndex index_type
+      in
       Type.EvalT
         ( object_type,
-          Type.TypeDestructorT
-            (use_op, reason, Type.OptionalIndexedAccessNonMaybeType { index_type }),
+          Type.TypeDestructorT (use_op, reason, Type.OptionalIndexedAccessNonMaybeType { index }),
           id )
     | OptionalIndexedAccessResultType { loc; non_maybe_result; void_loc } ->
       let reason = Reason.(mk_reason (RIndexedAccess { optional = true }) loc) in

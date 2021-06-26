@@ -1751,9 +1751,13 @@ end = struct
           Ty.IndexedAccess { _object = ty; index = index_type'; optional = false }
         else
           Ty.Utility (Ty.ElementType (ty, index_type'))
-      | T.OptionalIndexedAccessNonMaybeType { index_type } ->
-        let%map index_type' = type__ ~env index_type in
-        Ty.IndexedAccess { _object = ty; index = index_type'; optional = true }
+      | T.OptionalIndexedAccessNonMaybeType { index } ->
+        let%map index' =
+          match index with
+          | T.OptionalIndexedAccessTypeIndex index_type -> type__ ~env index_type
+          | T.OptionalIndexedAccessStrLitIndex name -> return @@ Ty.StrLit name
+        in
+        Ty.IndexedAccess { _object = ty; index = index'; optional = true }
       | T.OptionalIndexedAccessResultType _ -> return ty
       | T.CallType ts ->
         let%map tys = mapM (type__ ~env) ts in

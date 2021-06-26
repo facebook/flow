@@ -236,9 +236,10 @@ and collect_of_destructor ?log_unresolved cx acc = function
   | NonMaybeType -> acc
   | PropertyType _ -> acc
   | ElementType { index_type; _ } -> collect_of_type ?log_unresolved cx acc index_type
-  | OptionalIndexedAccessNonMaybeType { index_type } ->
-    collect_of_type ?log_unresolved cx acc index_type
   | OptionalIndexedAccessResultType _ -> acc
+  | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessTypeIndex index_type } ->
+    collect_of_type ?log_unresolved cx acc index_type
+  | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessStrLitIndex _ } -> acc
   | Bind t -> collect_of_type ?log_unresolved cx acc t
   | ReadOnlyType -> acc
   | SpreadType (_, ts, head_slice) ->
