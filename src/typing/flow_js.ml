@@ -2118,7 +2118,7 @@ struct
           let rep = UnionRep.make (f t0) (f t1) (Base.List.map ts ~f) in
           rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) (OpenT tout)
         | (UnionT _, ObjKitT (use_op, reason, resolve_tool, tool, tout)) ->
-          ObjectKit.run cx trace ~use_op reason resolve_tool tool tout l
+          ObjectKit.run trace cx use_op reason resolve_tool tool ~tout l
         | ( UnionT (r, _),
             CreateObjWithComputedPropT { reason; value = _; tout_tvar = (tout_reason, tout_id) } )
           ->
@@ -2334,7 +2334,7 @@ struct
         | (IntersectionT _, ReposLowerT (reason, use_desc, u)) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         | (IntersectionT _, ObjKitT (use_op, reason, resolve_tool, tool, tout)) ->
-          ObjectKit.run cx trace ~use_op reason resolve_tool tool tout l
+          ObjectKit.run trace cx use_op reason resolve_tool tool ~tout l
         | (IntersectionT _, SealGenericT { reason = _; id; name; cont }) ->
           let reason = reason_of_t l in
           continue cx trace (GenericT { reason; id; name; bound = l }) cont
@@ -4468,7 +4468,7 @@ struct
         (* object kit *)
         (**************)
         | (_, ObjKitT (use_op, reason, resolve_tool, tool, tout)) ->
-          ObjectKit.run cx trace ~use_op reason resolve_tool tool tout l
+          ObjectKit.run trace cx use_op reason resolve_tool tool ~tout l
         (**************************************************)
         (* function types can be mapped over a structure  *)
         (**************************************************)
