@@ -15,8 +15,6 @@ exception Require_not_found of string
 
 exception Module_not_found of string
 
-exception Tvar_not_found of Type.ident
-
 (* The Context module defines types for data which is passed around during type
  * checking, providing access to commonly needed state. The data is layered
  * according to their lifetimes and falls into three categories: *)

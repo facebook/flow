@@ -20,8 +20,6 @@ exception Require_not_found of string
 
 exception Module_not_found of string
 
-exception Tvar_not_found of Type.ident
-
 type metadata = {
   (* local *)
   checked: bool;
@@ -453,7 +451,7 @@ let find_require cx loc =
 let find_module cx m = find_module_sig (sig_cx cx) m
 
 let find_tvar cx id =
-  (try IMap.find id cx.ccx.sig_cx.graph with Not_found -> raise (Tvar_not_found id))
+  (try IMap.find id cx.ccx.sig_cx.graph with Not_found -> raise (Union_find.Tvar_not_found id))
 
 let mem_nominal_poly_id cx id = Type.Poly.Set.mem id cx.ccx.nominal_poly_ids
 
@@ -848,52 +846,31 @@ let merge_into ccx sig_cx_other =
       trust_graph = IMap.union sig_cx_other.trust_graph sig_cx.trust_graph;
     }
 
-(* Find the constraints of a type variable in the graph.
-
-   Recall that type variables are either roots or goto nodes. (See
-   Constraint for details.) If the type variable is a root, the
-   constraints are stored with the type variable. Otherwise, the type variable
-   is a goto node, and it points to another type variable: a linked list of such
-   type variables must be traversed until a root is reached. *)
-let rec find_graph cx id =
-  let (_, constraints) = find_constraints cx id in
+let find_graph cx id =
+  let (graph', constraints) = Type.Constraint.find_graph cx.ccx.sig_cx.graph id in
+  cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph = graph' };
   constraints
 
-and find_constraints cx id =
-  let (root_id, root) = find_root cx id in
-  (root_id, root.Type.Constraint.constraints)
+let find_constraints cx id =
+  let (graph', root_id, constraints) = Type.Constraint.find_constraints cx.ccx.sig_cx.graph id in
+  cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph = graph' };
+  (root_id, constraints)
 
-(* Find the root of a type variable, potentially traversing a chain of type
-   variables, while short-circuiting all the type variables in the chain to the
-   root during traversal to speed up future traversals. *)
-and find_root cx id =
-  Type.Constraint.(
-    match IMap.find_opt id (graph cx) with
-    | Some (Goto next_id) ->
-      let (root_id, root) = find_root cx next_id in
-      if root_id != next_id then
-        add_tvar cx id (Goto root_id)
-      else
-        ();
-      (root_id, root)
-    | Some (Root root) -> (id, root)
-    | None ->
-      let msg =
-        Utils_js.spf "find_root: tvar %d not found in file %s" id (File_key.to_string @@ file cx)
-      in
-      Utils_js.assert_false msg)
+let find_root cx id =
+  let (graph', root_id, constraints) = Type.Constraint.find_root cx.ccx.sig_cx.graph id in
+  cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph = graph' };
+  (root_id, constraints)
 
 let rec find_resolved cx t_in =
   match t_in with
   | Type.OpenT (_, id) ->
-    Type.Constraint.(
-      begin
-        match Lazy.force (find_graph cx id) with
-        | Resolved (_, t)
-        | FullyResolved (_, (lazy t)) ->
-          Some t
-        | Unresolved _ -> None
-      end)
+    begin
+      match Lazy.force (find_graph cx id) with
+      | Type.Constraint.Resolved (_, t)
+      | Type.Constraint.FullyResolved (_, (lazy t)) ->
+        Some t
+      | Type.Constraint.Unresolved _ -> None
+    end
   | Type.AnnotT (_, t, _) -> find_resolved cx t
   | t -> Some t
 
