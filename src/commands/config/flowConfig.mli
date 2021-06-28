@@ -61,7 +61,7 @@ val enabled_rollouts : config -> string SMap.t
 (* options *)
 val abstract_locations : config -> bool option
 
-val all : config -> bool
+val all : config -> bool option
 
 val autoimports : config -> bool option
 

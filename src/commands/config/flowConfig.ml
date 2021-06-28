@@ -42,7 +42,7 @@ module Opts = struct
 
   type t = {
     abstract_locations: bool option;
-    all: bool;
+    all: bool option;
     autoimports: bool option;
     automatic_require_default: bool option;
     babel_loose_array_spread: bool;
@@ -165,7 +165,7 @@ module Opts = struct
   let default_options =
     {
       abstract_locations = None;
-      all = false;
+      all = None;
       autoimports = None;
       automatic_require_default = None;
       babel_loose_array_spread = false;
@@ -637,7 +637,7 @@ module Opts = struct
 
   let parsers =
     [
-      ("all", boolean (fun opts v -> Ok { opts with all = v }));
+      ("all", boolean (fun opts v -> Ok { opts with all = Some v }));
       ("autoimports", boolean (fun opts v -> Ok { opts with autoimports = Some v }));
       ("babel_loose_array_spread", babel_loose_array_spread_parser);
       ("emoji", boolean (fun opts v -> Ok { opts with emoji = Some v }));
@@ -813,7 +813,8 @@ end = struct
         let options = config.options in
         if options.module_system <> default_options.module_system then
           pp_opt o "module.system" (module_system options.module_system);
-        if options.all <> default_options.all then pp_opt o "all" (string_of_bool options.all);
+        if options.all <> default_options.all then
+          pp_opt o "all" (string_of_bool (Base.Option.value options.all ~default:false));
         if options.weak <> default_options.weak then pp_opt o "weak" (string_of_bool options.weak);
         if options.temp_dir <> default_options.temp_dir then pp_opt o "temp_dir" options.temp_dir;
         if options.include_warnings <> default_options.include_warnings then

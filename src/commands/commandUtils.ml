@@ -1216,7 +1216,7 @@ let make_options
     opt_root_name = FlowConfig.root_name flowconfig;
     opt_debug = options_flags.debug;
     opt_verbose = options_flags.verbose;
-    opt_all = options_flags.all || FlowConfig.all flowconfig;
+    opt_all = options_flags.all || Base.Option.value (FlowConfig.all flowconfig) ~default:false;
     opt_babel_loose_array_spread = FlowConfig.babel_loose_array_spread flowconfig;
     opt_wait_for_recheck;
     opt_weak = options_flags.weak || FlowConfig.weak flowconfig;
