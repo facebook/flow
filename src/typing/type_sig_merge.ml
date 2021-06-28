@@ -106,8 +106,6 @@ module type CONS_GEN = sig
   val qualify_type : Context.t -> Reason.t -> Type.propref -> Type.t -> Type.t
 
   val assert_export_is_type : Context.t -> Reason.t -> string -> Type.t -> Type.t
-
-  val unify_with : Context.t -> Reason.t -> (Type.t -> Type.t) -> Type.t
 end
 
 module type TVAR = sig

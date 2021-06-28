@@ -221,11 +221,6 @@ module ConsGen : Type_sig_merge.CONS_GEN = struct
     in
     let tvar = mk_lazy_tvar cx reason f in
     AnnotT (reason, tvar, false)
-
-  let unify_with cx reason f =
-    Tvar.mk_where cx reason (fun tvar ->
-        let t = f tvar in
-        Flow_js.unify cx tvar t)
 end
 
 [@@@warning "-60"]
