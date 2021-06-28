@@ -44,7 +44,7 @@ module Opts = struct
     abstract_locations: bool option;
     all: bool;
     autoimports: bool option;
-    automatic_require_default: bool;
+    automatic_require_default: bool option;
     babel_loose_array_spread: bool;
     check_updates_against_providers: bool;
     disable_live_non_parse_errors: bool option;
@@ -167,7 +167,7 @@ module Opts = struct
       abstract_locations = None;
       all = false;
       autoimports = None;
-      automatic_require_default = false;
+      automatic_require_default = None;
       babel_loose_array_spread = false;
       check_updates_against_providers = false;
       disable_live_non_parse_errors = None;
@@ -436,7 +436,7 @@ module Opts = struct
     boolean (fun opts v -> Ok { opts with abstract_locations = Some v })
 
   let automatic_require_default_parser =
-    boolean (fun opts v -> Ok { opts with automatic_require_default = v })
+    boolean (fun opts v -> Ok { opts with automatic_require_default = Some v })
 
   let babel_loose_array_spread_parser =
     boolean (fun opts v -> Ok { opts with babel_loose_array_spread = v })

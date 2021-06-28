@@ -65,7 +65,7 @@ val all : config -> bool
 
 val autoimports : config -> bool option
 
-val automatic_require_default : config -> bool
+val automatic_require_default : config -> bool option
 
 val babel_loose_array_spread : config -> bool
 

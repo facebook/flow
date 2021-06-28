@@ -1298,7 +1298,8 @@ let make_options
       Base.List.map
         ~f:(Files.expand_project_root_token ~root)
         (FlowConfig.strict_es6_import_export_excludes flowconfig);
-    opt_automatic_require_default = FlowConfig.automatic_require_default flowconfig;
+    opt_automatic_require_default =
+      Base.Option.value (FlowConfig.automatic_require_default flowconfig) ~default:false;
     opt_format;
     opt_autoimports = Base.Option.value (FlowConfig.autoimports flowconfig) ~default:false;
     opt_flowconfig_hash = flowconfig_hash;
