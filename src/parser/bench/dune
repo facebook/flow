@@ -1,0 +1,7 @@
+(executable
+ (name bench)
+ (libraries flow_parser unix
+ 
+ )
+ ; (instrumentation (backend landmarks ))
+ )
