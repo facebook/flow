@@ -61,29 +61,9 @@ end = struct
 
   let create lex_env mode =
     let lex_env = Lex_env.clone lex_env in
-    { la_results = [||]; la_num_lexed = 0; la_lex_mode = mode; la_lex_env = lex_env }
+    { la_results = [|None; None|]; la_num_lexed = 0; la_lex_mode = mode; la_lex_env = lex_env }
 
-  let next_power_of_two n =
-    let rec f i =
-      if i >= n then
-        i
-      else
-        f (i * 2)
-    in
-    f 1
 
-  (* resize the tokens array to have at least n elements *)
-  let grow t n =
-    if Array.length t.la_results < n then
-      let new_size = next_power_of_two n in
-      let filler i =
-        if i < Array.length t.la_results then
-          t.la_results.(i)
-        else
-          None
-      in
-      let new_arr = Array.init new_size filler in
-      t.la_results <- new_arr
 
   (* precondition: there is enough room in t.la_results for the result *)
   let lex t =
@@ -103,7 +83,6 @@ end = struct
     t.la_num_lexed <- t.la_num_lexed + 1
 
   let lex_until t i =
-    grow t (i + 1);
     while t.la_num_lexed <= i do
       lex t
     done
@@ -129,7 +108,7 @@ end = struct
   (* Throws away the first peeked-at token, shifting any subsequent tokens up *)
   let junk t =
     lex_until t 0;
-    if t.la_num_lexed > 1 then Array.blit t.la_results 1 t.la_results 0 (t.la_num_lexed - 1);
+    if t.la_num_lexed > 1 then t.la_results.(0) <- t.la_results.(1);
     t.la_results.(t.la_num_lexed - 1) <- None;
     t.la_num_lexed <- t.la_num_lexed - 1
 end
