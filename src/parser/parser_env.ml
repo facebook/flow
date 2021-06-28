@@ -38,14 +38,15 @@ end
  * - Refactor this to memoize all requested lookahead, so we aren't lexing the
  *   same token multiple times.
  *)
-let maximum_lookahead = 2
 
 module Lookahead : sig
   type t
 
   val create : Lex_env.t -> Lex_mode.t -> t
 
-  val peek : t -> int -> Lex_result.t
+  val peek_0 : t -> Lex_result.t
+
+  val peek_1 : t -> Lex_result.t 
 
   val lex_env : t -> int -> Lex_env.t
 
@@ -113,6 +114,10 @@ end = struct
     | Some (_, result) -> result
     (* only happens if there is a defect in the lookahead module *)
     | None -> failwith "Lookahead.peek failed"
+
+  let peek_0 t = peek t 0
+
+  let peek_1 t = peek t 1
 
   let lex_env t i =
     lex_until t i;
@@ -357,9 +362,15 @@ let add_used_private env name loc =
 let consume_comments_until env pos = env.consumed_comments_pos := pos
 
 (* lookahead: *)
-let lookahead ~i env =
-  assert (i < maximum_lookahead);
-  Lookahead.peek !(env.lookahead) i
+let [@inline] lookahead_0 env = Lookahead.peek_0 !(env.lookahead)
+
+let [@inline] lookahead_1 env = Lookahead.peek_1 !(env.lookahead)
+
+let [@inline] lookahead ~i env =
+  match i with 
+  | 0 -> lookahead_0 env 
+  | 1 -> lookahead_1 env 
+  | _ -> assert false 
 
 (* functional operations: *)
 let with_strict in_strict_mode env = { env with in_strict_mode }
