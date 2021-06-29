@@ -108,10 +108,17 @@ end = struct
 
   (* Throws away the first peeked-at token, shifting any subsequent tokens up *)
   let junk t =
-    lex_until t 0;
-    if t.la_num_lexed > 1 then t.la_results.(0) <- t.la_results.(1);
-    t.la_results.(t.la_num_lexed - 1) <- None;
-    t.la_num_lexed <- t.la_num_lexed - 1
+    match t.la_results.(1) with 
+    | None -> 
+        (match t.la_results.(0) with 
+        | None ->  ignore (lex t)
+        | Some _ -> ());
+        t.la_results.(0) <- None; 
+        t.la_num_lexed <- 0
+    | Some _ -> 
+      t.la_results.(0) <- t.la_results.(1);
+      t.la_results.(1) <- None ; 
+      t.la_num_lexed <- 1 
 end
 
 type token_sink_result = {
