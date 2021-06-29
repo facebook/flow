@@ -2000,5 +2000,528 @@ export default (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('textDocument/completion triggered by `[` - expression', [
+      addFile('bracket.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/bracket.js'},
+        position: {line: 12, character: 12},
+        context: {triggerKind: 2, triggerCharacter: '['},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/completion',
+            result: {
+              isIncomplete: false,
+              items: [
+                {
+                  label: '"a"',
+                  kind: 6,
+                  detail: 'number',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 12,
+                        character: 12,
+                      },
+                      end: {
+                        line: 12,
+                        character: 12,
+                      },
+                    },
+                    newText: '"a"',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'bracket syntax member',
+                      {
+                        token: 'AUTO332',
+                        completion: '"a"',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '"b"',
+                  kind: 6,
+                  detail: 'string',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 12,
+                        character: 12,
+                      },
+                      end: {
+                        line: 12,
+                        character: 12,
+                      },
+                    },
+                    newText: '"b"',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'bracket syntax member',
+                      {
+                        token: 'AUTO332',
+                        completion: '"b"',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '"hasOwnProperty"',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Determines whether an object has a property with the specified name.',
+                  },
+                  sortText: '00000000000000000001',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 12,
+                        character: 12,
+                      },
+                      end: {
+                        line: 12,
+                        character: 12,
+                      },
+                    },
+                    newText: '"hasOwnProperty"',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'bracket syntax member',
+                      {
+                        token: 'AUTO332',
+                        completion: '"hasOwnProperty"',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '"isPrototypeOf"',
+                  kind: 3,
+                  detail: '(o: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      "Determines whether an object exists in another object's prototype chain.",
+                  },
+                  sortText: '00000000000000000001',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 12,
+                        character: 12,
+                      },
+                      end: {
+                        line: 12,
+                        character: 12,
+                      },
+                    },
+                    newText: '"isPrototypeOf"',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'bracket syntax member',
+                      {
+                        token: 'AUTO332',
+                        completion: '"isPrototypeOf"',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '"propertyIsEnumerable"',
+                  kind: 3,
+                  detail: '(prop: mixed) => boolean',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Determines whether a specified property is enumerable.',
+                  },
+                  sortText: '00000000000000000001',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 12,
+                        character: 12,
+                      },
+                      end: {
+                        line: 12,
+                        character: 12,
+                      },
+                    },
+                    newText: '"propertyIsEnumerable"',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'bracket syntax member',
+                      {
+                        token: 'AUTO332',
+                        completion: '"propertyIsEnumerable"',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '"toLocaleString"',
+                  kind: 3,
+                  detail: '() => string',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Returns a date converted to a string using the current locale.',
+                  },
+                  sortText: '00000000000000000001',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 12,
+                        character: 12,
+                      },
+                      end: {
+                        line: 12,
+                        character: 12,
+                      },
+                    },
+                    newText: '"toLocaleString"',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'bracket syntax member',
+                      {
+                        token: 'AUTO332',
+                        completion: '"toLocaleString"',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '"toString"',
+                  kind: 3,
+                  detail: '() => string',
+                  documentation: {
+                    kind: 'markdown',
+                    value: 'Returns a string representation of an object.',
+                  },
+                  sortText: '00000000000000000001',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 12,
+                        character: 12,
+                      },
+                      end: {
+                        line: 12,
+                        character: 12,
+                      },
+                    },
+                    newText: '"toString"',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'bracket syntax member',
+                      {
+                        token: 'AUTO332',
+                        completion: '"toString"',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '"valueOf"',
+                  kind: 3,
+                  detail: '() => mixed',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Returns the primitive value of the specified object.',
+                  },
+                  sortText: '00000000000000000001',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 12,
+                        character: 12,
+                      },
+                      end: {
+                        line: 12,
+                        character: 12,
+                      },
+                    },
+                    newText: '"valueOf"',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'bracket syntax member',
+                      {
+                        token: 'AUTO332',
+                        completion: '"valueOf"',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'a',
+                  kind: 6,
+                  detail: 'empty',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 12,
+                        character: 12,
+                      },
+                      end: {
+                        line: 12,
+                        character: 12,
+                      },
+                    },
+                    newText: 'a',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {
+                        token: 'AUTO332',
+                        completion: 'a',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'o',
+                  kind: 6,
+                  detail: '{|a: number, b: string|}',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 12,
+                        character: 12,
+                      },
+                      end: {
+                        line: 12,
+                        character: 12,
+                      },
+                    },
+                    newText: 'o',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'local value identifier',
+                      {
+                        token: 'AUTO332',
+                        completion: 'o',
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('textDocument/completion triggered by `[` - type (indexed access)', [
+      addFile('bracket.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/bracket.js'},
+        position: {line: 14, character: 11},
+        context: {triggerKind: 2, triggerCharacter: '['},
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/completion',
+            result: {
+              isIncomplete: false,
+              items: [
+                {
+                  label: '"bar"',
+                  kind: 6,
+                  detail: 'string',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: '"bar"',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'bracket syntax member',
+                      {
+                        token: 'AUTO332',
+                        completion: '"bar"',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: '"foo"',
+                  kind: 6,
+                  detail: 'boolean',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: '"foo"',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'bracket syntax member',
+                      {
+                        token: 'AUTO332',
+                        completion: '"foo"',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'T',
+                  kind: 13,
+                  detail: 'type T = {|bar: string, foo: boolean|}',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'T',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type: local type identifier',
+                      {
+                        token: 'AUTO332',
+                        completion: 'T',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'B',
+                  kind: 13,
+                  detail: 'type B = empty',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'B',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type: local type identifier',
+                      {
+                        token: 'AUTO332',
+                        completion: 'B',
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
+      ),
+    ]),
   ],
 ): Suite);
