@@ -49,7 +49,7 @@ module Lookahead : sig
   val peek_1 : t -> Lex_result.t
 
   val lex_env_0 : t -> Lex_env.t
-  
+
   val junk : t -> unit
 end = struct
   type t = {
@@ -61,9 +61,7 @@ end = struct
 
   let create lex_env mode =
     let lex_env = Lex_env.clone lex_env in
-    { la_results = [|None; None|]; la_num_lexed = 0; la_lex_mode = mode; la_lex_env = lex_env }
-
-
+    { la_results = [| None; None |]; la_num_lexed = 0; la_lex_mode = mode; la_lex_env = lex_env }
 
   (* precondition: there is enough room in t.la_results for the result *)
   let lex t =
@@ -104,7 +102,9 @@ end = struct
     | Some (lex_env, _) -> lex_env
     (* only happens if there is a defect in the lookahead module *)
     | None -> failwith "Lookahead.peek failed"
+
   let lex_env_0 t = lex_env t 0
+
   (* Throws away the first peeked-at token, shifting any subsequent tokens up *)
   let junk t =
     lex_until t 0;
@@ -341,15 +341,15 @@ let add_used_private env name loc =
 let consume_comments_until env pos = env.consumed_comments_pos := pos
 
 (* lookahead: *)
-let [@inline] lookahead_0 env = Lookahead.peek_0 !(env.lookahead)
+let[@inline] lookahead_0 env = Lookahead.peek_0 !(env.lookahead)
 
-let [@inline] lookahead_1 env = Lookahead.peek_1 !(env.lookahead)
+let[@inline] lookahead_1 env = Lookahead.peek_1 !(env.lookahead)
 
-let [@inline] lookahead ~i env =
-  match i with 
-  | 0 -> lookahead_0 env 
-  | 1 -> lookahead_1 env 
-  | _ -> assert false 
+let[@inline] lookahead ~i env =
+  match i with
+  | 0 -> lookahead_0 env
+  | 1 -> lookahead_1 env
+  | _ -> assert false
 
 (* functional operations: *)
 let with_strict in_strict_mode env = { env with in_strict_mode }
@@ -610,7 +610,6 @@ module Peek = struct
       (fun ({ Loc.start; _ }, _) -> Loc.pos_cmp !(env.consumed_comments_pos) start <= 0)
       comments
 
-
   let token env = ith_token ~i:0 env
 
   let loc env = ith_loc ~i:0 env
@@ -634,7 +633,7 @@ module Peek = struct
       (fun ({ Loc.start; _ }, _) -> Loc.pos_cmp start !(env.consumed_comments_pos) < 0)
       comments
 
-  let lex_env env = Lookahead.lex_env_0  !(env.lookahead)
+  let lex_env env = Lookahead.lex_env_0 !(env.lookahead)
 
   (* True if there is a line terminator before the next token *)
   let ith_is_line_terminator ~i env =
