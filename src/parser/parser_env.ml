@@ -46,10 +46,10 @@ module Lookahead : sig
 
   val peek_0 : t -> Lex_result.t
 
-  val peek_1 : t -> Lex_result.t 
+  val peek_1 : t -> Lex_result.t
 
-  val lex_env : t -> int -> Lex_env.t
-
+  val lex_env_0 : t -> Lex_env.t
+  
   val junk : t -> unit
 end = struct
   type t = {
@@ -104,7 +104,7 @@ end = struct
     | Some (lex_env, _) -> lex_env
     (* only happens if there is a defect in the lookahead module *)
     | None -> failwith "Lookahead.peek failed"
-
+  let lex_env_0 t = lex_env t 0
   (* Throws away the first peeked-at token, shifting any subsequent tokens up *)
   let junk t =
     lex_until t 0;
@@ -610,7 +610,6 @@ module Peek = struct
       (fun ({ Loc.start; _ }, _) -> Loc.pos_cmp !(env.consumed_comments_pos) start <= 0)
       comments
 
-  let ith_lex_env ~i env = Lookahead.lex_env !(env.lookahead) i
 
   let token env = ith_token ~i:0 env
 
@@ -635,7 +634,7 @@ module Peek = struct
       (fun ({ Loc.start; _ }, _) -> Loc.pos_cmp start !(env.consumed_comments_pos) < 0)
       comments
 
-  let lex_env env = ith_lex_env ~i:0 env
+  let lex_env env = Lookahead.lex_env_0  !(env.lookahead)
 
   (* True if there is a line terminator before the next token *)
   let ith_is_line_terminator ~i env =
