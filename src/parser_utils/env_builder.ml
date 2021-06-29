@@ -1247,7 +1247,43 @@ module Make
           ~continues;
         stmt
 
-      method! scoped_for_statement _loc stmt = stmt
+      method! scoped_for_statement _loc stmt =
+        let open Flow_ast.Statement.For in
+        let { init; test; update; body; comments = _ } = stmt in
+        let continues = AbruptCompletion.continue None :: env_state.possible_labeled_continues in
+        let scout () =
+          ignore @@ Flow_ast_mapper.map_opt this#for_statement_init init;
+          ignore @@ Flow_ast_mapper.map_opt this#expression test;
+          let loop_completion_state =
+            this#run_to_completion (fun () -> ignore @@ this#statement body)
+          in
+          let loop_completion_state = this#handle_continues loop_completion_state continues in
+          match loop_completion_state with
+          | None -> ignore @@ Flow_ast_mapper.map_opt this#expression update
+          | Some _ -> ()
+        in
+        let visit_guard_and_body () =
+          ignore @@ Flow_ast_mapper.map_opt this#for_statement_init init;
+          ignore @@ Flow_ast_mapper.map_opt this#expression_refinement test;
+          let guard_refinements = this#peek_new_refinements () in
+          let post_guard_no_refinements_env = this#ssa_env_without_latest_refinements in
+          let loop_completion_state =
+            this#run_to_completion (fun () -> ignore @@ this#statement body)
+          in
+          let loop_completion_state = this#handle_continues loop_completion_state continues in
+          (match loop_completion_state with
+          | None -> ignore @@ Flow_ast_mapper.map_opt this#expression update
+          | Some _ -> ());
+          (guard_refinements, Some post_guard_no_refinements_env, loop_completion_state)
+        in
+        let make_completion_states loop_completion_state = (None, [loop_completion_state]) in
+        this#env_loop
+          ~scout
+          ~visit_guard_and_body
+          ~make_completion_states
+          ~auto_handle_continues:true
+          ~continues;
+        stmt
 
       method! scoped_for_in_statement _loc stmt = stmt
 
