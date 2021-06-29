@@ -76,13 +76,15 @@ end = struct
       | Lex_mode.REGEXP -> Flow_lexer.regexp lex_env
     in
     let cloned_env = Lex_env.clone lex_env in
+    let result = (cloned_env, lex_result) in
     t.la_lex_env <- lex_env;
-    t.la_results.(t.la_num_lexed) <- Some (cloned_env, lex_result);
-    t.la_num_lexed <- t.la_num_lexed + 1
+    t.la_results.(t.la_num_lexed) <- Some result;
+    t.la_num_lexed <- t.la_num_lexed + 1;
+    result
 
   let lex_until t i =
     while t.la_num_lexed <= i do
-      lex t
+      ignore (lex t)
     done
 
   let peek t i =
@@ -92,18 +94,17 @@ end = struct
     (* only happens if there is a defect in the lookahead module *)
     | None -> failwith "Lookahead.peek failed"
 
-  let peek_0 t = peek t 0
+  let peek_0 t =
+    match t.la_results.(0) with
+    | Some (_, result) -> result
+    | None -> snd (lex t)
 
   let peek_1 t = peek t 1
 
-  let lex_env t i =
-    lex_until t i;
-    match t.la_results.(i) with
+  let lex_env_0 t =
+    match t.la_results.(0) with
     | Some (lex_env, _) -> lex_env
-    (* only happens if there is a defect in the lookahead module *)
-    | None -> failwith "Lookahead.peek failed"
-
-  let lex_env_0 t = lex_env t 0
+    | None -> fst (lex t)
 
   (* Throws away the first peeked-at token, shifting any subsequent tokens up *)
   let junk t =
