@@ -287,7 +287,14 @@ module Make
      a reference to something that is unknown at a particular point in the AST
      during traversal, but will be known by the time traversal is complete. *)
   module Val : sig
-    type t
+    type t = {
+      id: int;
+      write_state: write_state;
+    }
+
+    and write_state
+
+    module WriteSet : Set.S with type elt = write_state
 
     val mk_unresolved : unit -> t
 
@@ -310,6 +317,10 @@ module Make
     val refinement : int -> t -> t
 
     val unrefine : int -> t -> t
+
+    val unrefine_deeply : int -> t -> t
+
+    val normalize_through_refinements : write_state -> WriteSet.t
   end = struct
     let curr_id = ref 0
 
@@ -355,6 +366,23 @@ module Make
     let uninitialized () = mk_with_write_state Uninitialized
 
     let refinement refinement_id val_t = mk_with_write_state @@ Refinement { refinement_id; val_t }
+
+    let rec unrefine_deeply_write_state id write_state =
+      match write_state with
+      | Refinement { refinement_id; val_t } when refinement_id = id ->
+        unrefine_deeply_write_state id val_t.write_state
+      | Refinement { refinement_id; val_t } ->
+        let val_t' = mk_with_write_state @@ unrefine_deeply_write_state id val_t.write_state in
+        Refinement { refinement_id; val_t = val_t' }
+      | PHI ts ->
+        let ts' = ListUtils.ident_map (unrefine_deeply_write_state id) ts in
+        if ts' == ts then
+          write_state
+        else
+          PHI ts'
+      | _ -> write_state
+
+    let unrefine_deeply id t = mk_with_write_state @@ unrefine_deeply_write_state id t.write_state
 
     let unrefine id t =
       match t.write_state with
@@ -405,6 +433,26 @@ module Make
          smaller over time as terms remain close to their final normal forms. *)
         let vals = WriteSet.union (normalize t1.write_state) (normalize t2.write_state) in
         mk_with_write_state @@ join (WriteSet.elements vals)
+
+    let rec normalize_through_refinements (t : write_state) : WriteSet.t =
+      match t with
+      | Uninitialized
+      | Loc _
+      | REF { contents = Unresolved _ } ->
+        WriteSet.singleton t
+      | PHI ts ->
+        List.fold_left
+          (fun vals' t ->
+            let vals = normalize t in
+            WriteSet.union vals' vals)
+          WriteSet.empty
+          ts
+      | REF ({ contents = Resolved t } as r) ->
+        let vals = normalize t in
+        let t' = join (WriteSet.elements vals) in
+        r := Resolved t';
+        vals
+      | Refinement { val_t; _ } -> normalize_through_refinements val_t.write_state
 
     let one reason = mk_with_write_state @@ Loc reason
 
@@ -747,10 +795,16 @@ module Make
 
       method expecting_abrupt_completions f =
         let saved = env_state.abrupt_completion_envs in
+        let saved_latest_refinements = env_state.latest_refinements in
         env_state <- { env_state with abrupt_completion_envs = [] };
         this#run f ~finally:(fun () ->
             let abrupt_completion_envs = List.rev_append saved env_state.abrupt_completion_envs in
-            env_state <- { env_state with abrupt_completion_envs })
+            env_state <-
+              {
+                env_state with
+                abrupt_completion_envs;
+                latest_refinements = saved_latest_refinements;
+              })
 
       (* Given multiple completion states, (re)raise if all of them are the same
          abrupt completion. This function is called at merge points. *)
@@ -981,7 +1035,170 @@ module Make
               val_ref := Val.merge refined_value1 refined_value2)
           env_state.ssa_env
 
-      method! while_ _loc stmt = stmt
+      method with_env_state f =
+        let pre_state = env_state in
+        let pre_env = this#ssa_env in
+        let result = f () in
+        env_state <- pre_state;
+        (* It's not enough to just restore the old env_state, since the ssa_env itself contains
+         * refs. We need to call reset_ssa_env to _fully_ reset the env_state *)
+        this#reset_ssa_env pre_env;
+        result
+
+      (* Functions called inside scout_changed_vars are responsible for popping any refinement
+       * scopes they may introduce
+       *)
+      method scout_changed_vars ~scout =
+        (* Calling scout may have side effects, like adding new abrupt completions. We
+         * need to be sure to restore the old abrupt completion envs after scouting,
+         * because a scout should be followed-up by a run that revisits everything visited by
+         * the scout. with_env_state will ensure that all mutable state is restored. *)
+        this#with_env_state (fun () ->
+            let pre_env = this#ssa_env in
+            scout ();
+            let post_env = this#ssa_env in
+            SMap.fold
+              (fun name env_val1 acc ->
+                let env_val2 = SMap.find name pre_env in
+                let normalized_val1 = Val.normalize_through_refinements env_val1.Val.write_state in
+                let normalized_val2 = Val.normalize_through_refinements env_val2.Val.write_state in
+                if Val.WriteSet.equal normalized_val1 normalized_val2 then
+                  acc
+                else
+                  name :: acc)
+              post_env
+              [])
+
+      method havoc_changed_vars changed_vars =
+        List.iter
+          (fun name ->
+            let { val_ref; havoc = { Havoc.unresolved; _ } } = SMap.find name env_state.ssa_env in
+            val_ref := unresolved)
+          changed_vars
+
+      method handle_continues loop_completion_state continues =
+        this#run_to_completion (fun () ->
+            this#commit_abrupt_completion_matching
+              (AbruptCompletion.mem continues)
+              loop_completion_state)
+
+      (* After a loop we need to negate the loop guard and apply the refinement. The
+       * targets of those refinements may have been changed by the loop, but that
+       * doesn't matter. The only way to get out of the loop is for the negation of
+       * the refinement to hold, so we apply that negation even though the ssa_id might
+       * not match.
+       *
+       * The exception here is, of course, if we break out of the loop. If we break
+       * inside the loop then we should not negate the refinements because it is
+       * possible that we just exited the loop by breaking.
+       *
+       * We don't need to check for continues because they are handled before this point.
+       * We don't check for throw/return because then we wouldn't proceed to the line
+       * after the loop anyway. *)
+      method post_loop_refinements refinements =
+        if not AbruptCompletion.(mem (List.map fst env_state.abrupt_completion_envs) (break None))
+        then
+          refinements
+          |> SMap.iter (fun name { refinement_id; ssa_id = _ } ->
+                 let { val_ref; _ } = SMap.find name env_state.ssa_env in
+                 let new_refinement_id = this#new_id () in
+                 env_state <-
+                   {
+                     env_state with
+                     refinement_heap =
+                       IMap.add new_refinement_id (NOT refinement_id) env_state.refinement_heap;
+                   };
+                 val_ref := Val.refinement new_refinement_id !val_ref)
+
+      (*
+       * Unlike the ssa_builder, the env_builder does not create REF unresolved
+       * Val.ts to model the write states of variables in loops. This approach
+       * would cause a lot of cycles in the ordering algorithm, which means
+       * we'd need to ask for a lot of annotations. Moreover, it's not clear where
+       * those annotations should go.
+       *
+       * Instead, we scout the body of the loop to find which variables are
+       * written to. If a variable is written, then we havoc that variable
+       * before entering the loop. This does not apply to variables that are
+       * only refined.
+       *
+       * After visiting the body, we reset the state in the ssa environment,
+       * havoc any vars that need to be havoced, and then visit the body again.
+       * After that we negate the refinements on the loop guard.
+       *
+       * Here's how each function param should be implemented:
+       * scout: Visit the guard and any updaters if applicable, then visit the body
+       * make_completion_states: given the loop completion state, give the list of
+       *   possible completion states for the loop. For do while loops this is different
+       *   than regular while loops, so those two implementations may be instructive.
+       *)
+      method env_loop ~scout ~visit_guard_and_body ~make_completion_states ~merge_post_guard_state =
+        this#expecting_abrupt_completions (fun () ->
+            let continues =
+              AbruptCompletion.continue None :: env_state.possible_labeled_continues
+            in
+
+            (* Scout the body for changed vars *)
+            let changed_vars = this#scout_changed_vars ~scout in
+
+            (* We havoc the changed vars in order to prevent loops in the EnvBuilder writes-graph,
+             * which would require a fix-point analysis that would not be compatible with
+             * local type inference *)
+            this#havoc_changed_vars changed_vars;
+
+            (* Now we push a refinement scope and visit the guard/body. At the end, we completely
+             * get rid of refinements introduced by the guard, even if they occur in a PHI node, to
+             * ensure that the refinement does not escape the loop via something like 
+             * control flow. For example:
+             * while (x != null) {
+             *   if (x == 3) {
+             *     x = 4; 
+             *   }
+             * }
+             * x; // Don't want x to be a PHI of x != null and x = 4.
+             *)
+            this#push_refinement_scope SMap.empty;
+            let (guard_refinements, env_after_test_no_refinements, loop_completion_state) =
+              visit_guard_and_body ()
+            in
+            let loop_completion_state = this#handle_continues loop_completion_state continues in
+            this#pop_refinement_scope_after_loop ();
+
+            (* We either enter the loop body or we don't *)
+            if merge_post_guard_state then this#merge_self_ssa_env env_after_test_no_refinements;
+            this#post_loop_refinements guard_refinements;
+
+            let completion_states = make_completion_states loop_completion_state in
+            let completion_state =
+              this#run_to_completion (fun () -> this#merge_completion_states completion_states)
+            in
+            this#commit_abrupt_completion_matching
+              AbruptCompletion.(mem [break None])
+              completion_state)
+
+      method! while_ _loc (stmt : (L.t, L.t) Flow_ast.Statement.While.t) =
+        let open Flow_ast.Statement.While in
+        let { test; body; comments = _ } = stmt in
+        let scout () =
+          ignore @@ this#expression test;
+          ignore @@ this#run_to_completion (fun () -> ignore @@ this#statement body)
+        in
+        let visit_guard_and_body () =
+          ignore @@ this#expression_refinement test;
+          let guard_refinements = this#peek_new_refinements () in
+          let post_guard_no_refinements_env = this#ssa_env_without_latest_refinements in
+          let loop_completion_state =
+            this#run_to_completion (fun () -> ignore @@ this#statement body)
+          in
+          (guard_refinements, post_guard_no_refinements_env, loop_completion_state)
+        in
+        let make_completion_states loop_completion_state = (None, [loop_completion_state]) in
+        this#env_loop
+          ~scout
+          ~visit_guard_and_body
+          ~make_completion_states
+          ~merge_post_guard_state:true;
+        stmt
 
       method! do_while _loc stmt = stmt
 
@@ -1243,6 +1460,19 @@ module Make
                let ssa_id = Val.id_of_val !val_ref in
                if ssa_id = latest_refinement.ssa_id then
                  val_ref := Val.refinement latest_refinement.refinement_id !val_ref)
+
+      (* See pop_refinement_scope. The only difference here is that we unrefine values deeply
+       * instead of just at the top level. The reason for this is that intermediate control-flow
+       * can introduce refinement writes into phi nodes, and we don't want those refinements to
+       * escape the scope of the loop. You may find it instructive to change the calls to
+       * just pop_refinement_scope to see the behavioral differences *)
+      method private pop_refinement_scope_after_loop () =
+        let refinements = List.hd env_state.latest_refinements in
+        env_state <- { env_state with latest_refinements = List.tl env_state.latest_refinements };
+        refinements
+        |> SMap.iter (fun name latest_refinement ->
+               let { val_ref; _ } = SMap.find name env_state.ssa_env in
+               val_ref := Val.unrefine_deeply latest_refinement.refinement_id !val_ref)
 
       (* When a refinement scope ends, we need to undo the refinement applied to the
        * variables mentioned in the latest_refinements head. Some of these values may no
