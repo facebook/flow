@@ -3,5 +3,5 @@
  (libraries flow_parser unix
  
  )
- ; (instrumentation (backend landmarks ))
+ (instrumentation (backend landmarks ))
  )
