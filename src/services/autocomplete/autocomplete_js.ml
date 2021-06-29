@@ -16,6 +16,7 @@ type autocomplete_type =
   | Ac_binding  (** binding identifiers introduce new names *)
   | Ac_comment  (** inside a comment *)
   | Ac_id of ac_id  (** identifier references *)
+  | Ac_class_key  (** class method name or property name *)
   | Ac_enum  (** identifier in enum declaration *)
   | Ac_key of { obj_type: Type.t }  (** object key *)
   | Ac_literal of { lit_type: Type.t }  (** inside a literal like a string or regex *)
@@ -317,6 +318,18 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       | Literal (loc, Flow_ast.Literal.{ raw; _ }) when this#covers_target loc ->
         this#find loc raw (Ac_literal { lit_type = Type.(AnyT.at Untyped loc) })
       | _ -> super#pattern_object_property_key ?kind key
+
+    method! class_key key =
+      let open Flow_ast.Expression.Object.Property in
+      match key with
+      | Identifier ((loc, _), { Flow_ast.Identifier.name; _ })
+      | Literal ((loc, _), Flow_ast.Literal.{ raw = name; _ })
+        when this#covers_target loc ->
+        this#find loc name Ac_class_key
+      | PrivateName (loc, { Flow_ast.PrivateName.id = (_, { Flow_ast.Identifier.name; _ }); _ })
+        when this#covers_target loc ->
+        this#find loc ("#" ^ name) Ac_class_key
+      | _ -> super#class_key key
 
     method! object_key key =
       let open Flow_ast.Expression.Object.Property in

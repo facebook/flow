@@ -285,19 +285,23 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       | PrivateField (annot, field) ->
         PrivateField (this#on_type_annot annot, this#class_private_field field)
 
+    method class_key key = this#object_key key
+
     method class_method (meth : ('M, 'T) Ast.Class.Method.t') : ('N, 'U) Ast.Class.Method.t' =
       let open Ast.Class.Method in
       let { kind; key; value; static; decorators; comments } = meth in
-      let key' = this#object_key key in
+      let key' = this#class_method_key key in
       let value' = (this#on_loc_annot * this#function_expression) value in
       let decorators' = Base.List.map ~f:this#class_decorator decorators in
       let comments' = Base.Option.map ~f:this#syntax comments in
       { kind; key = key'; value = value'; static; decorators = decorators'; comments = comments' }
 
+    method class_method_key key = this#class_key key
+
     method class_property (prop : ('M, 'T) Ast.Class.Property.t') : ('N, 'U) Ast.Class.Property.t' =
       let open Ast.Class.Property in
       let { key; value; annot; static; variance; comments } = prop in
-      let key' = this#object_key key in
+      let key' = this#class_property_key key in
       let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
       let variance' = Base.Option.map ~f:this#variance variance in
@@ -310,6 +314,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         variance = variance';
         comments = comments';
       }
+
+    method class_property_key key = this#class_key key
 
     method class_property_value (value : ('M, 'T) Ast.Class.Property.value)
         : ('N, 'U) Ast.Class.Property.value =

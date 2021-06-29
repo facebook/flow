@@ -70,12 +70,21 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method class_implements_interface :
       ('M, 'T) Flow_ast.Class.Implements.Interface.t -> ('N, 'U) Ast.Class.Implements.Interface.t
 
+    method class_key :
+      ('M, 'T) Ast.Expression.Object.Property.key -> ('N, 'U) Ast.Expression.Object.Property.key
+
     method class_method : ('M, 'T) Ast.Class.Method.t' -> ('N, 'U) Ast.Class.Method.t'
+
+    method class_method_key :
+      ('M, 'T) Ast.Expression.Object.Property.key -> ('N, 'U) Ast.Expression.Object.Property.key
 
     method class_private_field :
       ('M, 'T) Ast.Class.PrivateField.t' -> ('N, 'U) Ast.Class.PrivateField.t'
 
     method class_property : ('M, 'T) Ast.Class.Property.t' -> ('N, 'U) Ast.Class.Property.t'
+
+    method class_property_key :
+      ('M, 'T) Ast.Expression.Object.Property.key -> ('N, 'U) Ast.Expression.Object.Property.key
 
     method class_property_value :
       ('M, 'T) Ast.Class.Property.value -> ('N, 'U) Ast.Class.Property.value

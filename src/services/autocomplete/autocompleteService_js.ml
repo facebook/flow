@@ -1359,6 +1359,9 @@ let autocomplete_get_results
       | Ac_ignored -> ("Empty", AcEmpty "Ignored")
       | Ac_comment -> ("Empty", AcEmpty "Comment")
       | Ac_jsx_text -> ("Empty", AcEmpty "JSXText")
+      | Ac_class_key ->
+        (* TODO: include superclass keys *)
+        ("Ac_class_key", AcEmpty "ClassKey")
       | Ac_module ->
         (* TODO: complete module names *)
         ("Acmodule", AcEmpty "Module")
