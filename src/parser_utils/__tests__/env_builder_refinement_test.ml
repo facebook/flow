@@ -599,3 +599,69 @@ while (x != null) {
 }
 x;|};
     [%expect {| [ (2, 7) to (2, 8) => { (1, 4) to (1, 5): (`x`) }; (3, 6) to (3, 7) => { {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)} }; (6, 2) to (6, 3) => { {refinement = Not (3); writes = {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)}} }; (8, 0) to (8, 1) => { {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`x`),{refinement = 3; writes = (1, 4) to (1, 5): (`x`)},{refinement = Not (3); writes = (1, 4) to (1, 5): (`x`)}} } ] |}]
+
+let%expect_test "do_while" =
+  print_ssa_test {|let x = undefined;
+do {
+  x;
+} while (x != null);
+x;|};
+    [%expect {| [ (3, 2) to (3, 3) => { (1, 4) to (1, 5): (`x`) }; (4, 9) to (4, 10) => { (1, 4) to (1, 5): (`x`) }; (5, 0) to (5, 1) => { {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "do_while_break_with_control_flow_writes" =
+  print_ssa_test {|let x = undefined;
+let y = undefined;
+do {
+  if (y == null) {
+    break;
+  }
+  y;
+} while (x != null);
+y;
+x;|};
+    [%expect {| [ (4, 6) to (4, 7) => { (2, 4) to (2, 5): (`y`) }; (7, 2) to (7, 3) => { {refinement = Not (Maybe); writes = (2, 4) to (2, 5): (`y`)} }; (8, 9) to (8, 10) => { (1, 4) to (1, 5): (`x`) }; (9, 0) to (9, 1) => { {refinement = Maybe; writes = (2, 4) to (2, 5): (`y`)}, {refinement = Not (Maybe); writes = (2, 4) to (2, 5): (`y`)} }; (10, 0) to (10, 1) => { (1, 4) to (1, 5): (`x`) } ] |}]
+
+let%expect_test "do_while_with_runtime_writes" =
+  print_ssa_test {|let x = undefined;
+let y = undefined;
+do {
+  if (y == null) {
+    x = 2;
+  }
+  y;
+} while (x != null);
+y;
+x;|};
+    [%expect {| [ (4, 6) to (4, 7) => { (2, 4) to (2, 5): (`y`) }; (7, 2) to (7, 3) => { (2, 4) to (2, 5): (`y`) }; (8, 9) to (8, 10) => { (1, 4) to (1, 5): (`x`), (5, 4) to (5, 5): (`x`) }; (9, 0) to (9, 1) => { (2, 4) to (2, 5): (`y`) }; (10, 0) to (10, 1) => { {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`x`),(5, 4) to (5, 5): (`x`)} } ] |}]
+
+let%expect_test "do_while_continue" =
+  print_ssa_test {|let x = undefined;
+do {
+  continue;
+} while (x != null);
+x;|};
+    [%expect {| [ (4, 9) to (4, 10) => { (1, 4) to (1, 5): (`x`) }; (5, 0) to (5, 1) => { {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "do_while_continue_with_control_flow_writes" =
+  print_ssa_test {|let x = undefined;
+let y = undefined;
+do {
+  if (y == null) {
+    continue;
+  }
+  y;
+} while (x != null);
+y;
+x;|};
+    [%expect {| [ (4, 6) to (4, 7) => { (2, 4) to (2, 5): (`y`) }; (7, 2) to (7, 3) => { {refinement = Not (Maybe); writes = (2, 4) to (2, 5): (`y`)} }; (8, 9) to (8, 10) => { (1, 4) to (1, 5): (`x`) }; (9, 0) to (9, 1) => { {refinement = Maybe; writes = (2, 4) to (2, 5): (`y`)}, {refinement = Not (Maybe); writes = (2, 4) to (2, 5): (`y`)} }; (10, 0) to (10, 1) => { {refinement = Not (Not (Maybe)); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "do_while_phi_node_refinement" =
+  print_ssa_test {|let x = undefined;
+do {
+  if (x === 3) {
+    continue;
+  }
+  x;
+} while (x != null);
+x;|};
+    [%expect {| [ (3, 6) to (3, 7) => { (1, 4) to (1, 5): (`x`) }; (6, 2) to (6, 3) => { {refinement = Not (3); writes = (1, 4) to (1, 5): (`x`)} }; (7, 9) to (7, 10) => { {refinement = 3; writes = (1, 4) to (1, 5): (`x`)}, {refinement = Not (3); writes = (1, 4) to (1, 5): (`x`)} }; (8, 0) to (8, 1) => { {refinement = Not (Not (Maybe)); writes = {refinement = 3; writes = (1, 4) to (1, 5): (`x`)},{refinement = Not (3); writes = (1, 4) to (1, 5): (`x`)}} } ] |}]

@@ -1126,18 +1126,24 @@ module Make
        * havoc any vars that need to be havoced, and then visit the body again.
        * After that we negate the refinements on the loop guard.
        *
-       * Here's how each function param should be implemented:
+       * Here's how each param should be used:
        * scout: Visit the guard and any updaters if applicable, then visit the body
+       * visit_guard_and_body: Visit the guard with a refinement scope, any updaters
+       *   if applicable, and then visit the body. Return a tuple of the guard
+       *   refinement scope, the env after the guard with no refinements, and the loop
+       *   completion state.
        * make_completion_states: given the loop completion state, give the list of
        *   possible completion states for the loop. For do while loops this is different
        *   than regular while loops, so those two implementations may be instructive.
+       * auto_handle_continues: Every loop needs to filter out continue completion states.
+       *   The default behavior is to do that filtering at the end of the body.
+       *   If you need to handle continues before that, like in a do/while loop, then
+       *   set this to false. Ensure that you handle continues in both the scouting and
+       *   main passes.
        *)
-      method env_loop ~scout ~visit_guard_and_body ~make_completion_states ~merge_post_guard_state =
+      method env_loop
+          ~scout ~visit_guard_and_body ~make_completion_states ~auto_handle_continues ~continues =
         this#expecting_abrupt_completions (fun () ->
-            let continues =
-              AbruptCompletion.continue None :: env_state.possible_labeled_continues
-            in
-
             (* Scout the body for changed vars *)
             let changed_vars = this#scout_changed_vars ~scout in
 
@@ -1161,11 +1167,18 @@ module Make
             let (guard_refinements, env_after_test_no_refinements, loop_completion_state) =
               visit_guard_and_body ()
             in
-            let loop_completion_state = this#handle_continues loop_completion_state continues in
+            let loop_completion_state =
+              if auto_handle_continues then
+                this#handle_continues loop_completion_state continues
+              else
+                loop_completion_state
+            in
             this#pop_refinement_scope_after_loop ();
 
             (* We either enter the loop body or we don't *)
-            if merge_post_guard_state then this#merge_self_ssa_env env_after_test_no_refinements;
+            (match env_after_test_no_refinements with
+            | None -> ()
+            | Some env -> this#merge_self_ssa_env env);
             this#post_loop_refinements guard_refinements;
 
             let completion_states = make_completion_states loop_completion_state in
@@ -1190,17 +1203,49 @@ module Make
           let loop_completion_state =
             this#run_to_completion (fun () -> ignore @@ this#statement body)
           in
-          (guard_refinements, post_guard_no_refinements_env, loop_completion_state)
+          (guard_refinements, Some post_guard_no_refinements_env, loop_completion_state)
         in
         let make_completion_states loop_completion_state = (None, [loop_completion_state]) in
+        let continues = AbruptCompletion.continue None :: env_state.possible_labeled_continues in
         this#env_loop
           ~scout
           ~visit_guard_and_body
           ~make_completion_states
-          ~merge_post_guard_state:true;
+          ~auto_handle_continues:true
+          ~continues;
         stmt
 
-      method! do_while _loc stmt = stmt
+      method! do_while _loc stmt =
+        let open Flow_ast.Statement.DoWhile in
+        let { test; body; comments = _ } = stmt in
+        let continues = AbruptCompletion.continue None :: env_state.possible_labeled_continues in
+        let scout () =
+          let loop_completion_state =
+            this#run_to_completion (fun () -> ignore @@ this#statement body)
+          in
+          ignore @@ this#handle_continues loop_completion_state continues;
+          match loop_completion_state with
+          | None -> ignore @@ this#expression test
+          | Some _ -> ()
+        in
+        let visit_guard_and_body () =
+          let loop_completion_state =
+            this#run_to_completion (fun () -> ignore @@ this#statement body)
+          in
+          let loop_completion_state = this#handle_continues loop_completion_state continues in
+          (match loop_completion_state with
+          | None -> ignore @@ this#expression_refinement test
+          | Some _ -> ());
+          (this#peek_new_refinements (), None, loop_completion_state)
+        in
+        let make_completion_states loop_completion_state = (loop_completion_state, []) in
+        this#env_loop
+          ~scout
+          ~visit_guard_and_body
+          ~make_completion_states
+          ~auto_handle_continues:false
+          ~continues;
+        stmt
 
       method! scoped_for_statement _loc stmt = stmt
 
