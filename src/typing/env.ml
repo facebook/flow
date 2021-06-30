@@ -229,6 +229,13 @@ let init_env ?(exclude_syms = NameUtils.Set.empty) module_scope =
   push_var_scope global_scope;
   push_var_scope module_scope
 
+let save_excluded_symbols () =
+  let ex = !exclude_symbols in
+  set_exclude_symbols NameUtils.Set.empty;
+  ex
+
+let restore_excluded_symbols ex = set_exclude_symbols ex
+
 (* replace the current env with the passed one.
    envs must be congruent - we measure length as a quick check,
    with a more thorough check on env merge/copy *)

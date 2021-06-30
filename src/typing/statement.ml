@@ -2222,6 +2222,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       module_scope;
 
     Env.push_var_scope module_scope;
+    let excluded_symbols = Env.save_excluded_symbols () in
     Context.push_declare_module cx (Module_info.empty_cjs_module module_ref);
 
     let (elements_ast, elements_abnormal) =
@@ -2296,6 +2297,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
 
     Context.pop_declare_module cx;
     Env.pop_var_scope ();
+    Env.restore_excluded_symbols excluded_symbols;
 
     ast
   | (loc, DeclareExportDeclaration decl) ->
