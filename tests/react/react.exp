@@ -245,6 +245,26 @@ References:
             ^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- create_class.js:51:37
+
+Cannot reference `this` from within method `mm` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   create_class.js:51:37
+   51|     var props: { m(): void } = { m: this.m };
+                                           ^^^^
+
+References:
+   create_class.js:50:3
+         v-----
+   50|   mm() {
+   51|     var props: { m(): void } = { m: this.m };
+   52|     props.m(); // OK: this.m is autobound, so `this.foo` will always be found
+   53|   }
+         ^ [1]
+
+
 Error --------------------------------------------------------------------------------------------- create_class.js:61:5
 
 Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
@@ -5543,7 +5563,7 @@ References:
 
 
 
-Found 303 errors
+Found 304 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -259,5 +259,58 @@ References:
                              ^^^^^^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:79:19
 
-Found 12 errors
+Cannot reference `this` from within method `m` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   test.js:79:19
+   79|     let x = { f : this }; // error, point to m
+                         ^^^^
+
+References:
+   test.js:78:3
+         v----
+   78|   m() {
+   79|     let x = { f : this }; // error, point to m
+   80|     let y = ({ f() { this }}) // error, point to f
+   81|     let z = ({ f() { let z = { f: this } }}) // error, point to f
+   82|   }
+         ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:80:22
+
+Cannot reference `this` from within method `f` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   test.js:80:22
+   80|     let y = ({ f() { this }}) // error, point to f
+                            ^^^^
+
+References:
+   test.js:80:16
+   80|     let y = ({ f() { this }}) // error, point to f
+                      ^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:81:35
+
+Cannot reference `this` from within method `f` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   test.js:81:35
+   81|     let z = ({ f() { let z = { f: this } }}) // error, point to f
+                                         ^^^^
+
+References:
+   test.js:81:16
+   81|     let z = ({ f() { let z = { f: this } }}) // error, point to f
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 15 errors

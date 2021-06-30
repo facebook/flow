@@ -300,10 +300,6 @@ class object_this_finder =
     method! function_declaration _ x = x
 
     method! function_expression _ x = x
-
-    (* We call this before entering every object we traverse,
-       so there is no need to inspect nested objects *)
-    method! object_ _ x = x
   end
 
 let error_on_this_uses_in_object_methods cx =

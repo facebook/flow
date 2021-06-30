@@ -73,3 +73,11 @@ let a = {
         let h = [this]; // fine
     }
 }
+
+let x = {
+  m() {
+    let x = { f : this }; // error, point to m
+    let y = ({ f() { this }}) // error, point to f
+    let z = ({ f() { let z = { f: this } }}) // error, point to f
+  }
+}
