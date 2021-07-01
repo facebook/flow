@@ -1361,24 +1361,11 @@ export default (suite(
                             character: 2,
                           },
                           end: {
-                            line: 4,
-                            character: 20,
-                          },
-                        },
-                        newText: 'newFunction()',
-                      },
-                      {
-                        range: {
-                          start: {
-                            line: 5,
-                            character: 2,
-                          },
-                          end: {
                             line: 5,
                             character: 21,
                           },
                         },
-                        newText: '',
+                        newText: 'newFunction();',
                       },
                       {
                         range: {
@@ -1421,24 +1408,11 @@ export default (suite(
                             character: 2,
                           },
                           end: {
-                            line: 4,
-                            character: 20,
-                          },
-                        },
-                        newText: 'newFunction()',
-                      },
-                      {
-                        range: {
-                          start: {
-                            line: 5,
-                            character: 2,
-                          },
-                          end: {
                             line: 5,
                             character: 21,
                           },
                         },
-                        newText: '',
+                        newText: 'newFunction();',
                       },
                       {
                         range: {

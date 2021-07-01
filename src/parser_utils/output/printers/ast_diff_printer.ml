@@ -110,4 +110,24 @@ let rec edits_of_changes ?(opts = Js_layout_generator.default_opts) changes =
   | (loc1, Replace (old_node, (Statement (new_loc, _) as new_node))) :: (loc2, Delete _) :: tl
     when Loc.contains new_loc (Loc.btwn loc1 loc2) ->
     edits_of_changes ~opts ((new_loc, Replace (old_node, new_node)) :: tl)
+  (* Similar to the case above, but sometimes we have diff patterns like:
+     expr1; // expr replaced by expr2, not the entire statement
+     s2;    // deleted
+     s3;    // deleted
+     // ...
+
+     This case changes the diff on (expr1, expr2) to be (expr1;, expr2;), so it can be coalesced
+     with later deleted statements like above.
+   *)
+  | ( loc1,
+      Replace
+        ( old_node,
+          Expression
+            ( (new_loc, _),
+              StatementParent (_, (Flow_ast.Statement.Expression _ as expression_statement)) ) ) )
+    :: (loc2, Delete _) :: tl
+    when Loc.contains new_loc (Loc.btwn loc1 loc2) ->
+    edits_of_changes
+      ~opts
+      ((new_loc, Replace (old_node, Statement (new_loc, expression_statement))) :: tl)
   | hd :: tl -> edit_of_change ~opts hd :: edits_of_changes ~opts tl
