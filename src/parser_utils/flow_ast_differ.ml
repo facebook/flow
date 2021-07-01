@@ -706,7 +706,7 @@ let program
         | ( Ast.Statement.ExportDefaultDeclaration.Expression e1,
             Ast.Statement.ExportDefaultDeclaration.Expression e2 ) ->
           expression
-            ~parent:(StatementParent (loc, Ast.Statement.ExportDefaultDeclaration export1))
+            ~parent:(StatementParent (loc, Ast.Statement.ExportDefaultDeclaration export2))
             e1
             e2
           |> Base.Option.return
@@ -960,7 +960,7 @@ let program
     let expr_diff =
       Some
         (diff_if_changed
-           (expression ~parent:(StatementParent (loc, Ast.Statement.If if1)))
+           (expression ~parent:(StatementParent (loc, Ast.Statement.If if2)))
            test1
            test2)
     in
@@ -988,7 +988,7 @@ let program
     let { _object = _object2; body = body2; comments = comments2 } = with2 in
     let _object_diff =
       diff_if_changed
-        (expression ~parent:(StatementParent (loc, Ast.Statement.With with1)))
+        (expression ~parent:(StatementParent (loc, Ast.Statement.With with2)))
         _object1
         _object2
     in
@@ -1256,7 +1256,7 @@ let program
     else
       let expression_diff =
         Some
-          (expression ~parent:(StatementParent (loc, Ast.Statement.Expression stmt1)) expr1 expr2)
+          (expression ~parent:(StatementParent (loc, Ast.Statement.Expression stmt2)) expr1 expr2)
       in
       let comments_diff = syntax_opt loc comments1 comments2 in
       join_diff_list [expression_diff; comments_diff]
@@ -1377,7 +1377,7 @@ let program
     let { tag = tag2; quasi = (quasi_loc2, quasi2); comments = comments2 } = t_tmpl2 in
     let tag_diff =
       diff_if_changed
-        (expression ~parent:(ExpressionParent (loc, Ast.Expression.TaggedTemplate t_tmpl1)))
+        (expression ~parent:(ExpressionParent (loc, Ast.Expression.TaggedTemplate t_tmpl2)))
         tag1
         tag2
     in
@@ -1396,7 +1396,7 @@ let program
     let quasis_diff = diff_and_recurse_no_trivial template_literal_element quasis1 quasis2 in
     let exprs_diff =
       diff_and_recurse_nonopt_no_trivial
-        (expression ~parent:(ExpressionParent (loc1, Ast.Expression.TemplateLiteral t_lit1)))
+        (expression ~parent:(ExpressionParent (loc1, Ast.Expression.TemplateLiteral t_lit2)))
         exprs1
         exprs2
     in
@@ -1641,7 +1641,7 @@ let program
       let pat_diff = diff_if_changed pattern pat1 pat2 in
       let exp_diff =
         diff_if_changed
-          (expression ~parent:(ExpressionParent (loc, Ast.Expression.Assignment assn1)))
+          (expression ~parent:(ExpressionParent (loc, Ast.Expression.Assignment assn2)))
           exp1
           exp2
       in
@@ -1714,7 +1714,7 @@ let program
     if op1 != op2 then
       None
     else
-      let parent = ExpressionParent (loc, Ast.Expression.Binary b1) in
+      let parent = ExpressionParent (loc, Ast.Expression.Binary b2) in
       let left_diff = diff_if_changed (expression ~parent) left1 left2 in
       let right_diff = diff_if_changed (expression ~parent) right1 right2 in
       let comments_diff = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
@@ -1730,7 +1730,7 @@ let program
       None
     else
       Some
-        (comments @ expression ~parent:(ExpressionParent (loc, Ast.Expression.Unary u1)) arg1 arg2)
+        (comments @ expression ~parent:(ExpressionParent (loc, Ast.Expression.Unary u2)) arg1 arg2)
   and identifier (id1 : (Loc.t, Loc.t) Ast.Identifier.t) (id2 : (Loc.t, Loc.t) Ast.Identifier.t) :
       node change list =
     let (old_loc, { Ast.Identifier.name = name1; comments = comments1 }) = id1 in
@@ -1750,7 +1750,7 @@ let program
     let open Ast.Expression.Conditional in
     let { test = test1; consequent = cons1; alternate = alt1; comments = comments1 } = c1 in
     let { test = test2; consequent = cons2; alternate = alt2; comments = comments2 } = c2 in
-    let parent = ExpressionParent (loc, Ast.Expression.Conditional c1) in
+    let parent = ExpressionParent (loc, Ast.Expression.Conditional c2) in
     let test_diff = diff_if_changed (expression ~parent) test1 test2 in
     let cons_diff = diff_if_changed (expression ~parent) cons1 cons2 in
     let alt_diff = diff_if_changed (expression ~parent) alt1 alt2 in
@@ -1768,7 +1768,7 @@ let program
     let callee =
       Some
         (diff_if_changed
-           (expression ~parent:(ExpressionParent (loc, Ast.Expression.New new1)))
+           (expression ~parent:(ExpressionParent (loc, Ast.Expression.New new2)))
            callee1
            callee2)
     in
@@ -1783,7 +1783,7 @@ let program
     let obj =
       Some
         (diff_if_changed
-           (expression ~parent:(ExpressionParent (loc, Ast.Expression.Member member1)))
+           (expression ~parent:(ExpressionParent (loc, Ast.Expression.Member member2)))
            obj1
            obj2)
     in
@@ -1817,7 +1817,7 @@ let program
     let callee =
       Some
         (diff_if_changed
-           (expression ~parent:(ExpressionParent (loc, Ast.Expression.Call call1)))
+           (expression ~parent:(ExpressionParent (loc, Ast.Expression.Call call2)))
            callee1
            callee2)
     in
@@ -1885,7 +1885,7 @@ let program
     let { left = left1; right = right1; operator = operator1; comments = comments1 } = expr1 in
     let { left = left2; right = right2; operator = operator2; comments = comments2 } = expr2 in
     if operator1 == operator2 then
-      let parent = ExpressionParent (loc, Ast.Expression.Logical expr1) in
+      let parent = ExpressionParent (loc, Ast.Expression.Logical expr2) in
       let left = diff_if_changed (expression ~parent) left1 left2 in
       let right = diff_if_changed (expression ~parent) right1 right2 in
       let comments = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
@@ -1905,7 +1905,7 @@ let program
     let { expressions = exps2; comments = comments2 } = seq2 in
     let expressions_diff =
       diff_and_recurse_nonopt_no_trivial
-        (expression ~parent:(ExpressionParent (loc, Ast.Expression.Sequence seq1)))
+        (expression ~parent:(ExpressionParent (loc, Ast.Expression.Sequence seq2)))
         exps1
         exps2
     in
@@ -1923,7 +1923,7 @@ let program
       stmt2
     in
     let init = diff_if_changed_opt for_statement_init init1 init2 in
-    let parent = StatementParent (loc, Ast.Statement.For stmt1) in
+    let parent = StatementParent (loc, Ast.Statement.For stmt2) in
     let test = diff_if_changed_nonopt_fn (expression ~parent) test1 test2 in
     let update = diff_if_changed_nonopt_fn (expression ~parent) update1 update2 in
     let body = Some (diff_if_changed statement body1 body2) in
@@ -1962,7 +1962,7 @@ let program
     let right =
       Some
         (diff_if_changed
-           (expression ~parent:(StatementParent (loc, Ast.Statement.ForIn stmt1)))
+           (expression ~parent:(StatementParent (loc, Ast.Statement.ForIn stmt2)))
            right1
            right2)
     in
@@ -1994,7 +1994,7 @@ let program
     let { body = body2; test = test2; comments = comments2 } = stmt2 in
     let test =
       diff_if_changed
-        (expression ~parent:(StatementParent (loc, Ast.Statement.While stmt1)))
+        (expression ~parent:(StatementParent (loc, Ast.Statement.While stmt2)))
         test1
         test2
     in
@@ -2022,7 +2022,7 @@ let program
     let right =
       Some
         (diff_if_changed
-           (expression ~parent:(StatementParent (loc, Ast.Statement.ForOf stmt1)))
+           (expression ~parent:(StatementParent (loc, Ast.Statement.ForOf stmt2)))
            right1
            right2)
     in
@@ -2055,7 +2055,7 @@ let program
     let body = diff_if_changed statement body1 body2 in
     let test =
       diff_if_changed
-        (expression ~parent:(StatementParent (loc, Ast.Statement.DoWhile stmt1)))
+        (expression ~parent:(StatementParent (loc, Ast.Statement.DoWhile stmt2)))
         test1
         test2
     in
@@ -2089,7 +2089,7 @@ let program
       [
         comments;
         diff_if_changed_nonopt_fn
-          (expression ~parent:(StatementParent (loc, Ast.Statement.Return stmt1)))
+          (expression ~parent:(StatementParent (loc, Ast.Statement.Return stmt2)))
           argument1
           argument2;
       ]
@@ -2102,7 +2102,7 @@ let program
     let { argument = argument2; comments = comments2 } = stmt2 in
     let argument =
       diff_if_changed
-        (expression ~parent:(StatementParent (loc, Ast.Statement.Throw stmt1)))
+        (expression ~parent:(StatementParent (loc, Ast.Statement.Throw stmt2)))
         argument1
         argument2
     in
@@ -2129,7 +2129,7 @@ let program
     let discriminant =
       Some
         (diff_if_changed
-           (expression ~parent:(StatementParent (loc, Ast.Statement.Switch stmt1)))
+           (expression ~parent:(StatementParent (loc, Ast.Statement.Switch stmt2)))
            discriminant1
            discriminant2)
     in
@@ -2991,7 +2991,7 @@ let program
     let { expression = expr2; annot = annot2; comments = comments2 } = type_cast2 in
     let expr =
       diff_if_changed
-        (expression ~parent:(ExpressionParent (loc, Ast.Expression.TypeCast type_cast1)))
+        (expression ~parent:(ExpressionParent (loc, Ast.Expression.TypeCast type_cast2)))
         expr1
         expr2
     in
@@ -3023,7 +3023,7 @@ let program
       None
     else
       let argument =
-        expression ~parent:(ExpressionParent (loc, Ast.Expression.Update update1)) arg1 arg2
+        expression ~parent:(ExpressionParent (loc, Ast.Expression.Update update2)) arg1 arg2
       in
       let comments = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
       Some (argument @ comments)
@@ -3062,7 +3062,7 @@ let program
     let argument =
       Some
         (diff_if_changed
-           (expression ~parent:(ExpressionParent (loc, Ast.Expression.Import import1)))
+           (expression ~parent:(ExpressionParent (loc, Ast.Expression.Import import2)))
            argument1
            argument2)
     in
