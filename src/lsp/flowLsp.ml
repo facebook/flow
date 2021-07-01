@@ -664,7 +664,7 @@ let do_initialize flowconfig params : Initialize.result =
           Some
             {
               CompletionOptions.resolveProvider = false;
-              triggerCharacters = ["."; " "];
+              triggerCharacters = ["."; " "; "["];
               completionItem = { CompletionOptions.labelDetailsSupport = true };
             };
         signatureHelpProvider = Some { sighelp_triggerCharacters = ["("; ","] };
@@ -1779,7 +1779,11 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
         of logging to stderr and exiting. *)
     let flowconfig = read_flowconfig_from_disk flowconfig_name i_root in
     let i_custom_initialize_params =
-      { liveNonParseErrors = not (FlowConfig.disable_live_non_parse_errors flowconfig) }
+      {
+        liveNonParseErrors =
+          not
+            (Base.Option.value (FlowConfig.disable_live_non_parse_errors flowconfig) ~default:false);
+      }
     in
     let d_ienv =
       {

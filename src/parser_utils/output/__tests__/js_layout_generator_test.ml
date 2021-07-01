@@ -2358,6 +2358,39 @@ let tests =
              assert_output ~ctxt "enum E of symbol{A,B,}" layout;
              let pretty_output = "enum E of symbol {\n" ^ "  A,\n" ^ "  B,\n" ^ "}" in
              assert_output ~ctxt ~pretty:true pretty_output layout) );
+         ( "enum_with_unknown_members" >:: fun ctxt ->
+           S.EnumDeclarations.(
+             let layout =
+               Js_layout_generator.statement ~opts
+               @@ S.enum_declaration
+                    (I.identifier "E")
+                    (symbol_body
+                       ~has_unknown_members:true
+                       [defaulted_member (I.identifier "A"); defaulted_member (I.identifier "B")])
+             in
+             assert_output ~ctxt "enum E of symbol{A,B,...}" layout;
+             let pretty_output = "enum E of symbol {\n" ^ "  A,\n" ^ "  B,\n" ^ "  ...\n" ^ "}" in
+             assert_output ~ctxt ~pretty:true pretty_output layout) );
+         ( "enum_with_internal_comment" >:: fun ctxt ->
+           S.EnumDeclarations.(
+             let layout =
+               Js_layout_generator.statement ~opts
+               @@ S.enum_declaration
+                    (I.identifier "E")
+                    (symbol_body
+                       ~comments:
+                         Flow_ast.Syntax.
+                           {
+                             leading = [];
+                             trailing = [];
+                             internal =
+                               [Ast_builder.Comments.line ~on_newline:true " internal comment"];
+                           }
+                       [defaulted_member (I.identifier "A"); defaulted_member (I.identifier "B")])
+             in
+             assert_output ~ctxt "enum E of symbol{A,B,// internal comment\n}" layout;
+             let pretty_output = "enum E of symbol {\n  A,\n  B,\n  // internal comment\n  \n}" in
+             assert_output ~ctxt ~pretty:true pretty_output layout) );
          ( "arrow_function_with_function_return_type" >:: fun ctxt ->
            assert_expression_string ~ctxt "():((x)=>y)=>{}";
            assert_expression_string ~ctxt "():((x)=>y)%checks=>{}";

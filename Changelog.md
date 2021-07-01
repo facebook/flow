@@ -1,3 +1,50 @@
+### 0.154.0
+
+Likely to cause new Flow errors:
+* Added type checking for `this` parameters of functions (see https://medium.com/flow-type/sound-typing-for-this-in-flow-d62db2af969e).
+
+New Features:
+* Added codemod to cleanup the use of soon to be deprecated existential type (e.g. `*`). It can be run via `flow codemod replace-existentials --write .`.
+* Added IDE quickfix for optional chaining when accessing an object that is nullable.
+
+Notable bug fixes:
+* Fixed crash related to a missing method unbinding error case.
+* Fixed crash from calling the flow binary with an unknown argument.
+
+Library Definitions:
+* Fix MediaSource readyState to match the spec, "opened" -> "open" (thanks @sompylasar).
+
+Misc:
+* Remove `experimental.this_annot` config option and permanently enable now that our core lib defs rely on this feature.
+* Remove prevously defaulted on `new_check` config option for the new check mode that uses significantly less RAM for large projects.
+
+### 0.153.0
+
+Likely to cause new Flow errors:
+* Enforce that interfaces are supertypes of objects and classes. Also prevent objects from being a supertype of a class.
+* Improve soundness of `this` typing by banning the unbinding of class methods (see https://medium.com/flow-type/sound-typing-for-this-in-flow-d62db2af969e).
+
+New Features:
+* You can require an exhaustive check of an enum in a switch statement that includes a default branch. This is enabled with the comment `// flowlint-next-line require-explicit-enum-switch-cases:error`.
+* Autocomplete for object keys.
+* Introduce a `flow fix` command to apply autofixes from the command line to a list of files.
+* Enable a new check mode that uses significantly less RAM for large projects.
+
+Notable bug fixes:
+* Fix a bug that allowed nested anonymous functions inside a default export.
+* Using the `--ignore-version` flag also prevents Flow from crashing when an invalid option is in the `.flowconfig`.
+
+Library Definitions:
+* Support the `options` parameter for `require.resolve`. (thanks @skeggse)
+* Return a TypedArray instead of `void` from TypedArray `sort` function. (thanks @goodmind)
+* Return a `DOMStringList` instead of a string array from `IDBDatabase.objectStoreNames`. (thanks @bnelo12)
+
+Misc:
+* Add `--binary` to the `flow version` command to see the path to the current binary.
+* Prevent the LSP from exiting when an invalid option is in the `.flowconfig`.
+* Autofix for a `method-unbinding` error to replace the method with an arrow function.
+* Autofix for a `class-object-subtyping` error to replace the object type with an interface.
+
 ### 0.152.0
 
 Likely to cause new Flow errors:

@@ -728,7 +728,7 @@ and Statement : sig
         members: ('M BooleanLiteral.t, 'M) InitializedMember.t list;
         explicit_type: bool;
         has_unknown_members: bool;
-        comments: ('M, unit) Syntax.t option;
+        comments: ('M, 'M Comment.t list) Syntax.t option;
       }
       [@@deriving show]
     end
@@ -738,7 +738,7 @@ and Statement : sig
         members: ('M NumberLiteral.t, 'M) InitializedMember.t list;
         explicit_type: bool;
         has_unknown_members: bool;
-        comments: ('M, unit) Syntax.t option;
+        comments: ('M, 'M Comment.t list) Syntax.t option;
       }
       [@@deriving show]
     end
@@ -748,7 +748,7 @@ and Statement : sig
         members: ('M StringLiteral.t, 'M) members;
         explicit_type: bool;
         has_unknown_members: bool;
-        comments: ('M, unit) Syntax.t option;
+        comments: ('M, 'M Comment.t list) Syntax.t option;
       }
 
       and ('I, 'M) members =
@@ -761,7 +761,7 @@ and Statement : sig
       type 'M t = {
         members: 'M DefaultedMember.t list;
         has_unknown_members: bool;
-        comments: ('M, unit) Syntax.t option;
+        comments: ('M, 'M Comment.t list) Syntax.t option;
       }
       [@@deriving show]
     end

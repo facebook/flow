@@ -160,9 +160,10 @@ let do_parse_wrapper ~options filename contents =
   (* override docblock info *)
   let docblock = Docblock.set_flow_mode_for_ide_command docblock in
   match parse_result with
-  | Parsing_service_js.Parse_ok { ast; file_sig; tolerable_errors; parse_errors; _ } ->
+  | Parsing_service_js.Parse_ok { ast; file_sig; type_sig; tolerable_errors; parse_errors; _ } ->
     Parsed
-      (Parse_artifacts { docblock; docblock_errors; ast; file_sig; tolerable_errors; parse_errors })
+      (Parse_artifacts
+         { docblock; docblock_errors; ast; file_sig; type_sig; tolerable_errors; parse_errors })
   | Parsing_service_js.Parse_fail fails ->
     let errors =
       match fails with
@@ -1112,9 +1113,10 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
 (* Another special case, similar assumptions as above. *)
 
 (** TODO: handle case when file+contents don't agree with file system state **)
-let merge_contents ~options ~env ~reader filename info (ast, file_sig) =
+let merge_contents ~options ~env ~reader filename info ast file_sig type_sig =
   let%lwt () = ensure_checked_dependencies ~options ~reader ~env filename file_sig in
-  Lwt.return (Merge_service.check_contents_context ~reader options filename ast info file_sig)
+  Lwt.return
+    (Merge_service.check_contents_context ~reader options filename ast info file_sig type_sig)
 
 let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifacts =
   (* Callers have already had a chance to inspect parse errors, so they are not included here.
@@ -1192,10 +1194,10 @@ let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifact
   (errors, warnings)
 
 let file_artifacts_of_parse_artifacts ~options ~env ~reader ~profiling ~filename ~parse_artifacts =
-  let (Parse_artifacts { docblock; ast; file_sig; _ }) = parse_artifacts in
+  let (Parse_artifacts { docblock; ast; file_sig; type_sig; _ }) = parse_artifacts in
   let%lwt (cx, typed_ast) =
     Memory_utils.with_memory_timer_lwt ~options "MergeContents" profiling (fun () ->
-        merge_contents ~options ~env ~reader filename docblock (ast, file_sig))
+        merge_contents ~options ~env ~reader filename docblock ast file_sig type_sig)
   in
   Lwt.return (parse_artifacts, Typecheck_artifacts { cx; typed_ast })
 
@@ -2194,9 +2196,7 @@ end = struct
      * before this recheck started. *)
     Transaction.add
       ~commit:(fun () ->
-        FilenameSet.iter
-          (New_check_cache.remove Merge_service.check_contents_cache)
-          sig_new_or_changed;
+        FilenameSet.iter (Check_cache.remove Merge_service.check_contents_cache) sig_new_or_changed;
         Lwt.return_unit)
       ~rollback:(fun () -> Lwt.return_unit)
       transaction;

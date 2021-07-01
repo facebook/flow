@@ -16,18 +16,15 @@ let run_command command argv =
     print_endline (CommandSpec.string_of_usage command);
     Exit.(exit No_error)
   | CommandSpec.Failed_to_parse (arg_name, msg) ->
+    let is_pretty_or_json_arg s =
+      String_utils.string_starts_with s "--pretty" || String_utils.string_starts_with s "--json"
+    in
     begin
-      try
-        let json_arg =
-          Base.List.find_exn
-            ~f:(fun s ->
-              String_utils.string_starts_with s "--pretty"
-              || String_utils.string_starts_with s "--json")
-            argv
-        in
+      match Base.List.find ~f:is_pretty_or_json_arg argv with
+      | Some json_arg ->
         let pretty = String_utils.string_starts_with json_arg "--pretty" in
         Exit.set_json_mode ~pretty
-      with Not_found -> ()
+      | None -> ()
     end;
     let msg =
       Utils_js.spf
@@ -815,7 +812,6 @@ module Options_flags = struct
     temp_dir: string option;
     traces: int option;
     trust_mode: Options.trust_mode option;
-    new_check: bool option;
     abstract_locations: bool;
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
@@ -872,7 +868,6 @@ let options_flags =
       temp_dir
       quiet
       merge_timeout
-      new_check
       abstract_locations
       include_suppressions
       trust_mode =
@@ -901,7 +896,6 @@ let options_flags =
         quiet;
         merge_timeout;
         trust_mode;
-        new_check;
         abstract_locations;
         include_suppressions;
       }
@@ -946,7 +940,6 @@ let options_flags =
              ( "The maximum time in seconds to attempt to typecheck a file or cycle of files. "
              ^ "0 means no timeout (default: 100)" )
            ~env:"FLOW_MERGE_TIMEOUT"
-      |> flag "--new-check" (optional bool) ~doc:"" ~env:"FLOW_NEW_CHECK"
       |> flag
            "--abstract-locations"
            no_arg
@@ -1198,9 +1191,6 @@ let make_options
     in
     Base.Option.value lazy_mode ~default
   in
-  let opt_new_check =
-    Base.Option.value options_flags.new_check ~default:(FlowConfig.new_check flowconfig)
-  in
   let opt_abstract_locations =
     options_flags.abstract_locations
     || Base.Option.value (FlowConfig.abstract_locations flowconfig) ~default:true
@@ -1226,7 +1216,7 @@ let make_options
     opt_root_name = FlowConfig.root_name flowconfig;
     opt_debug = options_flags.debug;
     opt_verbose = options_flags.verbose;
-    opt_all = options_flags.all || FlowConfig.all flowconfig;
+    opt_all = options_flags.all || Base.Option.value (FlowConfig.all flowconfig) ~default:false;
     opt_babel_loose_array_spread = FlowConfig.babel_loose_array_spread flowconfig;
     opt_wait_for_recheck;
     opt_weak = options_flags.weak || FlowConfig.weak flowconfig;
@@ -1258,7 +1248,6 @@ let make_options
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_enums = FlowConfig.enums flowconfig;
     opt_enums_with_unknown_members = FlowConfig.enums_with_unknown_members flowconfig;
-    opt_this_annot = FlowConfig.this_annot flowconfig;
     opt_exact_by_default = FlowConfig.exact_by_default flowconfig;
     opt_facebook_fbs = FlowConfig.facebook_fbs flowconfig;
     opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;
@@ -1291,7 +1280,6 @@ let make_options
     opt_node_resolver_allow_root_relative = FlowConfig.node_resolver_allow_root_relative flowconfig;
     opt_node_resolver_root_relative_dirnames =
       FlowConfig.node_resolver_root_relative_dirnames flowconfig;
-    opt_new_check;
     opt_abstract_locations;
     opt_include_suppressions = options_flags.include_suppressions;
     opt_trust_mode =
@@ -1310,7 +1298,8 @@ let make_options
       Base.List.map
         ~f:(Files.expand_project_root_token ~root)
         (FlowConfig.strict_es6_import_export_excludes flowconfig);
-    opt_automatic_require_default = FlowConfig.automatic_require_default flowconfig;
+    opt_automatic_require_default =
+      Base.Option.value (FlowConfig.automatic_require_default flowconfig) ~default:false;
     opt_format;
     opt_autoimports = Base.Option.value (FlowConfig.autoimports flowconfig) ~default:false;
     opt_flowconfig_hash = flowconfig_hash;

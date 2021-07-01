@@ -74,7 +74,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ optional.js:10:21
 
-Cannot access string literal `bar` on indexed access because undefined [1] does not have properties. [incompatible-use]
+Cannot access string literal `bar` on indexed access because property `bar` is missing in undefined [1].
+[incompatible-use]
 
    optional.js:10:21
    10| type X = Obj['foo']['bar']; // Error - access `bar` on undefined
@@ -105,7 +106,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ optional.js:20:12
 
-Cannot access string literal `b` on indexed access because null or undefined [1] does not have properties.
+Cannot access string literal `b` on indexed access because property `b` is missing in null or undefined [1].
 [incompatible-use]
 
    optional.js:20:12
@@ -120,7 +121,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ optional.js:21:23
 
-Cannot access string literal `c` on optional indexed access because null or undefined [1] does not have properties.
+Cannot access string literal `c` on optional indexed access because property `c` is missing in null or undefined [1].
 [incompatible-use]
 
    optional.js:21:23
@@ -135,7 +136,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ optional.js:22:21
 
-Cannot access string literal `c` on optional indexed access because undefined [1] does not have properties.
+Cannot access string literal `c` on optional indexed access because property `c` is missing in undefined [1].
 [incompatible-use]
 
    optional.js:22:21
@@ -473,6 +474,34 @@ References:
                          ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ optional.js:103:2
+
+Cannot cast `'xx'` to optional indexed access because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   optional.js:103:2
+   103| ('xx': O?.['bar']); // Error
+         ^^^^ [1]
+
+References:
+   optional.js:96:8
+    96|   bar: number;
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ optional.js:117:2
+
+Cannot cast `'xx'` to optional indexed access because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   optional.js:117:2
+   117| ('xx': C?.['bar']); // Error
+         ^^^^ [1]
+
+References:
+   optional.js:109:8
+   109|   bar: number;
+               ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------- optional_import.js:5:2
 
 Cannot cast `true` to optional indexed access because boolean [1] is incompatible with number [2]. [incompatible-cast]
@@ -584,7 +613,7 @@ Cannot access boolean on `Arr` because boolean [1] is not an array index. [incom
 
 Error ---------------------------------------------------------------------------------------------------- test.js:50:10
 
-Cannot access string literal `x` on undefined because undefined [1] does not have properties. [incompatible-use]
+Cannot access string literal `x` on undefined because property `x` is missing in undefined [1]. [incompatible-use]
 
    test.js:50:10
    50| (1: void['x']); // Error
@@ -598,7 +627,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:51:10
 
-Cannot access string literal `x` on null because null [1] does not have properties. [incompatible-use]
+Cannot access string literal `x` on null because property `x` is missing in null [1]. [incompatible-use]
 
    test.js:51:10
    51| (1: null['x']); // Error
@@ -610,8 +639,36 @@ References:
            ^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:60:2
 
-Found 42 errors
+Cannot cast `'xx'` to indexed access because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:60:2
+   60| ('xx': O['bar']); // Error
+        ^^^^ [1]
+
+References:
+   test.js:56:8
+   56|   bar: number;
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:69:2
+
+Cannot cast `'xx'` to indexed access because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:69:2
+   69| ('xx': C['bar']); // Error
+        ^^^^ [1]
+
+References:
+   test.js:65:8
+   65|   bar: number;
+              ^^^^^^ [2]
+
+
+
+Found 46 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

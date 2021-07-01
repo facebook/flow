@@ -1,6 +1,7 @@
 Error ---------------------------------------------------------------------------- destructured_param_default_dep.js:4:3
 
-Cannot call `f` with `0` bound to `_` because number [1] is incompatible with object type [2]. [incompatible-call]
+Cannot call `f` with `0` bound to the first parameter because number [1] is incompatible with object type [2].
+[incompatible-call]
 
    destructured_param_default_dep.js:4:3
    4| f(0); // error

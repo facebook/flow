@@ -61,17 +61,17 @@ val enabled_rollouts : config -> string SMap.t
 (* options *)
 val abstract_locations : config -> bool option
 
-val all : config -> bool
+val all : config -> bool option
 
 val autoimports : config -> bool option
 
-val automatic_require_default : config -> bool
+val automatic_require_default : config -> bool option
 
 val babel_loose_array_spread : config -> bool
 
 val check_updates_against_providers : config -> bool
 
-val disable_live_non_parse_errors : config -> bool
+val disable_live_non_parse_errors : config -> bool option
 
 val emoji : config -> bool option
 
@@ -84,8 +84,6 @@ val enforce_strict_call_arity : config -> bool
 val enums : config -> bool
 
 val enums_with_unknown_members : config -> bool
-
-val this_annot : config -> bool
 
 val exact_by_default : config -> bool
 
@@ -212,8 +210,6 @@ val traces : config -> int
 val trust_mode : config -> Options.trust_mode
 
 val type_asserts : config -> bool
-
-val new_check : config -> bool
 
 val watchman_sync_timeout : config -> int option
 

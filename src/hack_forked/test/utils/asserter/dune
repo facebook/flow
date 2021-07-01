@@ -3,5 +3,4 @@
   (modules asserter)
   (libraries
     hh_json
-    relative_path
     str))

@@ -6,8 +6,6 @@
  *)
 
 open Utils_js
-open Loc_collections
-module Reqs = Merge_js.Reqs
 
 type duration = float
 
@@ -16,7 +14,10 @@ type 'a unit_result = ('a, ALoc.t * Error_message.internal_error) result
 type merge_result = Error_suppressions.t * duration
 
 type check_type_result =
-  Context.t * File_sig.With_ALoc.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
+  Context.t
+  * Type_sig_collections.Locs.index Packed_type_sig.Module.t
+  * File_sig.With_ALoc.t
+  * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
 
 type check_error_result =
   Flow_error.ErrorSet.t
@@ -40,312 +41,6 @@ type 'a merge_job =
   reader:Mutator_state_reader.t ->
   File_key.t Nel.t ->
   bool * 'a unit_result
-
-let scan_for_component_suppressions ~options ~get_ast_unsafe component =
-  let lint_severities = Options.lint_severities options in
-  let strict_mode = Options.strict_mode options in
-  Array.iter
-    (fun file ->
-      let { Type_sig_merge.key; cx; _ } = file in
-      let (_, { Flow_ast.Program.all_comments; _ }) = get_ast_unsafe key in
-      let metadata = Context.metadata cx in
-      let lint_severities = Merge_js.get_lint_severities metadata strict_mode lint_severities in
-      Type_inference_js.scan_for_suppressions cx lint_severities all_comments)
-    component
-
-module ConsGen : Type_sig_merge.CONS_GEN = struct
-  let flow = Flow_js.flow
-
-  let flow_t = Flow_js.flow_t
-
-  let mk_typeof_annotation = Flow_js.mk_typeof_annotation
-
-  let reposition cx loc t = Flow_js.reposition cx loc t
-
-  let mk_instance cx reason t = Flow_js.mk_instance cx reason t
-
-  let qualify_type cx reason propname t =
-    let use_op = Type.(Op (GetProperty reason)) in
-    Tvar.mk_no_wrap_where cx reason (fun tvar ->
-        Flow_js.flow cx (t, Type.GetPropT (use_op, reason, propname, tvar)))
-
-  let assert_export_is_type cx reason name t =
-    Tvar.mk_where cx reason (fun tvar ->
-        let name = Reason.OrdinaryName name in
-        Flow_js.flow cx (t, Type.AssertExportIsTypeT (reason, name, tvar)))
-
-  let unify_with cx reason f =
-    Tvar.mk_where cx reason (fun tvar ->
-        let t = f tvar in
-        Flow_js.unify cx tvar t)
-end
-
-[@@@warning "-60"]
-
-(* Don't use Flow_js directly from Merge_service. Instead, encode the respective
- * logic in ConsGen. *)
-module Flow_js = struct end
-
-[@@@warning "+60"]
-
-let merge_context ~options ~reader master_cx component =
-  let module Pack = Type_sig_pack in
-  let module Merge = Type_sig_merge.Make (Tvar) (ConsGen) in
-  (* make sig context, shared by all file contexts in component *)
-  let ccx = Context.make_ccx master_cx in
-
-  (* create per-file contexts *)
-  let metadata = Context.metadata_of_options options in
-  let create_cx file aloc_table =
-    let docblock = Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader file in
-    let metadata = Context.docblock_overrides docblock metadata in
-    let module_ref = Files.module_ref file in
-    Context.make ccx metadata file aloc_table (Reason.OrdinaryName module_ref) Context.Merging
-  in
-
-  (* build a reverse lookup, used to detect in-cycle dependencies *)
-  let component = Array.of_list (Nel.to_list component) in
-  let component_map =
-    let acc = ref FilenameMap.empty in
-    Array.iteri (fun i file -> acc := FilenameMap.add file i !acc) component;
-    !acc
-  in
-
-  (* dependencies *)
-  let get_leader =
-    let cache = Hashtbl.create 0 in
-    fun file ->
-      match Hashtbl.find_opt cache file with
-      | Some leader -> leader
-      | None ->
-        let leader = Context_heaps.Reader_dispatcher.find_leader ~reader file in
-        Hashtbl.add cache file leader;
-        leader
-  in
-  let get_dep_cx =
-    let cache = Hashtbl.create 0 in
-    fun file ->
-      let leader = get_leader file in
-      match Hashtbl.find_opt cache leader with
-      | Some dep_sig -> dep_sig
-      | None ->
-        let dep_sig = Context_heaps.Reader_dispatcher.find_sig ~reader leader in
-        Context.merge_into ccx dep_sig;
-        Hashtbl.add cache leader dep_sig;
-        dep_sig
-  in
-  let mk_builtin_module_t cx mref mname =
-    let desc = Reason.RCustom mref in
-    let builtin_name = Reason.internal_module_name (Modulename.to_string mname) in
-    fun loc ->
-      let reason = Reason.mk_reason desc loc in
-      Flow_js_utils.lookup_builtin_strict cx builtin_name reason
-  in
-  let mk_resource_module_t cx filename loc = Import_export.mk_resource_module_t cx loc filename in
-  let mk_cyclic_module_t component_rec i _loc =
-    let (lazy component) = component_rec in
-    let file = component.(i) in
-    file.Type_sig_merge.exports ()
-  in
-  let mk_acyclic_module_t dep =
-    let dep_cx = get_dep_cx dep in
-    let dep_exports = Context.find_module_sig dep_cx (Files.module_ref dep) in
-    (fun _loc -> dep_exports)
-  in
-  let mk_legacy_unchecked_module cx mref =
-    let desc = Reason.RCustom mref in
-    let builtin_name = Reason.internal_module_name mref in
-    fun loc ->
-      let reason = Reason.(mk_reason desc loc) in
-      let default = Type.(AnyT (reason, Untyped)) in
-      Flow_js_utils.lookup_builtin_with_default cx builtin_name default
-  in
-  let file_dependency component_rec cx file_key mref =
-    let open Module_heaps in
-    let mname = Module_js.find_resolved_module ~reader ~audit:Expensive.ok file_key mref in
-    let dep_opt = Reader_dispatcher.get_file ~reader ~audit:Expensive.ok mname in
-    let mk_module_t =
-      match dep_opt with
-      | None -> mk_builtin_module_t cx mref mname
-      | Some (File_key.ResourceFile filename) -> mk_resource_module_t cx filename
-      | Some dep ->
-        let info = Reader_dispatcher.get_info_unsafe ~reader ~audit:Expensive.ok dep in
-        if info.checked && info.parsed then
-          match FilenameMap.find_opt dep component_map with
-          | Some i -> mk_cyclic_module_t component_rec i
-          | None -> mk_acyclic_module_t dep
-        else
-          mk_legacy_unchecked_module cx mref
-    in
-    (mref, mk_module_t)
-  in
-
-  (* read type_sig from heap and create file record for merge *)
-  let abstract_locations = Options.abstract_locations options in
-  let component_file component_rec file_key =
-    let open Type_sig_collections in
-    let aloc_table =
-      lazy (Parsing_heaps.Reader_dispatcher.get_aloc_table_unsafe ~reader file_key)
-    in
-    let aloc =
-      let source = Some file_key in
-      fun (loc : Locs.index) ->
-        let aloc = ALoc.ALocRepresentationDoNotUse.make_keyed source (loc :> int) in
-        if abstract_locations then
-          aloc
-        else
-          ALoc.of_loc (ALoc.to_loc aloc_table aloc)
-    in
-    let {
-      Packed_type_sig.Module.module_kind;
-      module_refs;
-      local_defs;
-      remote_refs;
-      pattern_defs;
-      patterns;
-    } =
-      Parsing_heaps.Reader_dispatcher.get_type_sig_unsafe ~reader file_key
-    in
-    let cx = create_cx file_key aloc_table in
-    let visit_packed file_rec def =
-      let def = Pack.map_packed aloc def in
-      lazy (Merge.merge (Lazy.force file_rec) def)
-    in
-    let visit_exports file_rec =
-      let merged = ref None in
-      let mk_exports reason =
-        match module_kind with
-        | Pack.CJSModule { type_exports; exports; info } ->
-          let (Pack.CJSModuleInfo { type_export_keys; type_stars; strict }) =
-            Pack.map_cjs_module_info aloc info
-          in
-          let type_exports =
-            let f acc name export =
-              let export =
-                lazy
-                  ( Pack.map_type_export aloc export
-                  |> Merge.merge_type_export (Lazy.force file_rec) reason )
-              in
-              SMap.add name export acc
-            in
-            Base.Array.fold2_exn ~init:SMap.empty ~f type_export_keys type_exports
-          in
-          let exports =
-            let f def = lazy (Pack.map_packed aloc def |> Merge.merge (Lazy.force file_rec)) in
-            Option.map f exports
-          in
-          Type_sig_merge.CJSExports { type_exports; exports; type_stars; strict }
-        | Pack.ESModule { type_exports; exports; info } ->
-          let (Pack.ESModuleInfo { type_export_keys; export_keys; type_stars; stars; strict }) =
-            Pack.map_es_module_info aloc info
-          in
-          let type_exports =
-            let f acc name export =
-              let export =
-                lazy
-                  ( Pack.map_type_export aloc export
-                  |> Merge.merge_type_export (Lazy.force file_rec) reason )
-              in
-              SMap.add name export acc
-            in
-            Base.Array.fold2_exn ~init:SMap.empty ~f type_export_keys type_exports
-          in
-          let exports =
-            let f acc name export =
-              let export =
-                lazy (Pack.map_export aloc export |> Merge.merge_export (Lazy.force file_rec))
-              in
-              SMap.add name export acc
-            in
-            Base.Array.fold2_exn ~init:SMap.empty ~f export_keys exports
-          in
-          Type_sig_merge.ESExports { type_exports; exports; type_stars; stars; strict }
-      in
-      fun () ->
-        match !merged with
-        | Some t -> t
-        | None ->
-          let file_loc = ALoc.of_loc { Loc.none with Loc.source = Some file_key } in
-          let reason = Reason.(mk_reason RExports file_loc) in
-          ConsGen.unify_with cx reason (fun tvar ->
-              merged := Some tvar;
-              let exports = mk_exports reason in
-              Merge.merge_exports (Lazy.force file_rec) reason exports)
-    in
-    let visit_def file_rec def =
-      let merged = ref None in
-      let def = Pack.map_packed_def aloc def in
-      fun () ->
-        let loc = Type_sig.def_id_loc def in
-        let name = Type_sig.def_name def in
-        let t =
-          match !merged with
-          | Some t -> t
-          | None ->
-            let reason = Type_sig_merge.def_reason def in
-            ConsGen.unify_with cx reason (fun tvar ->
-                merged := Some tvar;
-                Merge.merge_def (Lazy.force file_rec) reason def)
-        in
-        (loc, name, t)
-    in
-    let visit_remote_ref file_rec remote_ref =
-      let merged = ref None in
-      let remote_ref = Pack.map_remote_ref aloc remote_ref in
-      fun () ->
-        let loc = Pack.remote_ref_loc remote_ref in
-        let name = Pack.remote_ref_name remote_ref in
-        let t =
-          match !merged with
-          | Some t -> t
-          | None ->
-            let reason = Type_sig_merge.remote_ref_reason remote_ref in
-            ConsGen.unify_with cx reason (fun tvar ->
-                merged := Some tvar;
-                Merge.merge_remote_ref (Lazy.force file_rec) reason remote_ref)
-        in
-        (loc, name, t)
-    in
-    let visit_pattern file_rec pattern =
-      let pattern = Pack.map_pattern aloc pattern in
-      lazy (Merge.merge_pattern (Lazy.force file_rec) pattern)
-    in
-    let dependencies = Module_refs.map (file_dependency component_rec cx file_key) module_refs in
-    let rec file_rec =
-      lazy
-        {
-          Type_sig_merge.key = file_key;
-          cx;
-          dependencies;
-          exports = visit_exports file_rec;
-          local_defs = Local_defs.map (visit_def file_rec) local_defs;
-          remote_refs = Remote_refs.map (visit_remote_ref file_rec) remote_refs;
-          pattern_defs = Pattern_defs.map (visit_packed file_rec) pattern_defs;
-          patterns = Patterns.map (visit_pattern file_rec) patterns;
-        }
-    in
-    Lazy.force file_rec
-  in
-
-  (* create component for merge *)
-  let component =
-    let rec component_rec = lazy (Array.map (component_file component_rec) component) in
-    Lazy.force component_rec
-  in
-
-  (* pick out leader/representative cx *)
-  let { Type_sig_merge.cx; _ } = component.(0) in
-
-  (* scan for suppressions *)
-  scan_for_component_suppressions
-    ~options
-    ~get_ast_unsafe:(Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader)
-    component;
-
-  (* merge *)
-  Array.iter Merge.merge_file component;
-
-  cx
 
 let sig_hash ~root =
   let open Type_sig_collections in
@@ -696,7 +391,7 @@ let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component
   if not info.Module_heaps.checked then
     let diff = false in
     (diff, Ok None)
-  else if Options.new_check options then
+  else
     let hash =
       let reader = Abstract_state_reader.Mutator_state_reader reader in
       let root = Options.root options in
@@ -724,53 +419,25 @@ let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component
     in
     let suppressions = Context.error_suppressions cx in
     let diff =
-      Context_heaps.Merge_context_mutator.add_merge_on_diff_no_context worker_mutator component hash
-    in
-    let duration = Unix.gettimeofday () -. start_time in
-    (diff, Ok (Some (suppressions, duration)))
-  else
-    let reader = Abstract_state_reader.Mutator_state_reader reader in
-    let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
-    let cx = merge_context ~options ~reader master_cx component in
-    let suppressions = Context.error_suppressions cx in
-    let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in
-    let hash = Merge_js.sig_context cx module_refs in
-    Context.clear_master_shared cx master_cx;
-    let diff =
-      Context_heaps.Merge_context_mutator.add_merge_on_diff
-        ~audit:Expensive.ok
-        worker_mutator
-        cx
-        component
-        hash
+      Context_heaps.Merge_context_mutator.add_merge_on_diff worker_mutator component hash
     in
     let duration = Unix.gettimeofday () -. start_time in
     (diff, Ok (Some (suppressions, duration)))
 
-let reqs_of_file ~reader required =
-  List.fold_left
-    (fun (dep_cxs, reqs) (r, locs, resolved_r) ->
-      let locs = locs |> Nel.to_list |> ALocSet.of_list in
-      let open Module_heaps in
-      match Reader_dispatcher.get_file ~reader ~audit:Expensive.ok resolved_r with
-      | Some (File_key.ResourceFile f) -> (dep_cxs, Reqs.add_res f locs reqs)
-      | Some dep ->
-        let info = Reader_dispatcher.get_info_unsafe ~reader ~audit:Expensive.ok dep in
-        if info.checked && info.parsed then
-          (* checked implementation exists *)
-          let m = Files.module_ref dep in
-          (* look up impl sig_context *)
-          let leader = Context_heaps.Reader_dispatcher.find_leader ~reader dep in
-          let dep_cx = Context_heaps.Reader_dispatcher.find_sig ~reader leader in
-          (dep_cx :: dep_cxs, Reqs.add_dep_impl m (dep_cx, locs) reqs)
-        else
-          (* unchecked implementation exists *)
-          (dep_cxs, Reqs.add_unchecked r locs reqs)
-      | None ->
-        (* implementation doesn't exist *)
-        (dep_cxs, Reqs.add_decl r (locs, resolved_r) reqs))
-    ([], Reqs.empty)
-    required
+let get_exported_locals file_key type_sig =
+  let acc = ref Loc_collections.ALocIDSet.empty in
+  let source = Some file_key in
+  let () =
+    let open Type_sig in
+    let { Packed_type_sig.Module.local_defs; _ } = type_sig in
+    let f def =
+      let iloc : Type_sig_collections.Locs.index = def_id_loc def in
+      let id = ALoc.ALocRepresentationDoNotUse.make_id source (iloc :> int) in
+      acc := Loc_collections.ALocIDSet.add id !acc
+    in
+    Type_sig_collections.Local_defs.iter f local_defs
+  in
+  !acc
 
 let mk_check_file options ~reader () =
   let get_ast_unsafe file =
@@ -783,35 +450,24 @@ let mk_check_file options ~reader () =
   let get_file_sig_unsafe file =
     Parsing_heaps.Mutator_reader.get_file_sig_unsafe ~reader file |> File_sig.abstractify_locs
   in
+  let get_type_sig_unsafe file = Parsing_heaps.Mutator_reader.get_type_sig_unsafe ~reader file in
   let get_aloc_table_unsafe = Parsing_heaps.Mutator_reader.get_aloc_table_unsafe ~reader in
   let get_docblock_unsafe = Parsing_heaps.Mutator_reader.get_docblock_unsafe ~reader in
-  let process =
-    if Options.new_check options then
-      let reader = Abstract_state_reader.Mutator_state_reader reader in
-      let cache = New_check_cache.create ~capacity:1000 in
-      New_check_service.mk_check_file ~options ~reader ~cache ()
-    else
-      let options =
-        {
-          Merge_js.metadata = Context.metadata_of_options options;
-          lint_severities = Options.lint_severities options;
-          strict_mode = Options.strict_mode options;
-        }
-      in
-      fun file required ->
-        let master_cx = Context_heaps.Mutator_reader.find_master ~reader in
-        let reader = Abstract_state_reader.Mutator_state_reader reader in
-        let (dep_cxs, reqs) = reqs_of_file ~reader required in
-        Merge_js.check_file ~options file reqs dep_cxs master_cx
+  let check_file =
+    let reader = Abstract_state_reader.Mutator_state_reader reader in
+    let cache = Check_cache.create ~capacity:1000 in
+    Check_service.mk_check_file ~options ~reader ~cache ()
   in
   fun file ->
     let start_time = Unix.gettimeofday () in
     let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
     if info.Module_heaps.checked then
       let (comments, ast) = get_ast_unsafe file in
+      let type_sig = get_type_sig_unsafe file in
       let file_sig = get_file_sig_unsafe file in
       let docblock = get_docblock_unsafe file in
       let aloc_table = lazy (get_aloc_table_unsafe file) in
+      let exported_locals = get_exported_locals file type_sig in
       let requires =
         let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
         let reader = Abstract_state_reader.Mutator_state_reader reader in
@@ -821,7 +477,9 @@ let mk_check_file options ~reader () =
         in
         SMap.fold f require_loc_map []
       in
-      let (cx, typed_ast) = process file requires ast comments file_sig docblock aloc_table in
+      let (cx, typed_ast) =
+        check_file file requires ast comments file_sig docblock aloc_table exported_locals
+      in
       let coverage = Coverage.file_coverage ~full_cx:cx typed_ast in
       let errors = Context.errors cx in
       let suppressions = Context.error_suppressions cx in
@@ -837,7 +495,8 @@ let mk_check_file options ~reader () =
           severity_cover
       in
       let duration = Unix.gettimeofday () -. start_time in
-      Some ((cx, file_sig, typed_ast), (errors, warnings, suppressions, coverage, duration))
+      Some
+        ((cx, type_sig, file_sig, typed_ast), (errors, warnings, suppressions, coverage, duration))
     else
       None
 
@@ -847,15 +506,36 @@ let mk_check_file options ~reader () =
  * Note that this cache needs to be invaliated when files change. We can use the
  * set of changed files (determined by the merge stream's signature hashing) to
  * invalidate file-by-file when a recheck transaction commits. *)
-let check_contents_cache = New_check_cache.create ~capacity:1000
+let check_contents_cache = Check_cache.create ~capacity:1000
 
 (* Variation of merge_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
-let check_contents_context ~reader options file ast docblock file_sig =
+let check_contents_context ~reader options file ast docblock file_sig type_sig =
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
   let ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let file_sig = File_sig.abstractify_locs file_sig in
-  let aloc_table = lazy (Parsing_heaps.Reader.get_aloc_table_unsafe ~reader file) in
+  (* Loading an aloc_table is unusual for check contents! During check, we use
+   * this aloc table for two purposes: (1) to compare concrete and keyed alocs
+   * which might be equivalent and (2) to create ALoc.id values which always
+   * have the same representation for equivalent locations.
+   *
+   * If this file is in a cycle, an aloc table will exist and we will
+   * successfully fetch it for use in cases (1) and (2). However, in the common
+   * case of no cycles, an aloc table may not exist yet, which will cause an
+   * exception in the (2) case. The (1) case, where a concrete and keyed
+   * location are equivalent, will not occur.
+   *
+   * Catching the exception provides reasonable behavior, but is not the true
+   * fix. Instead, if check-contents needs to deal with cycles, the cyclic
+   * dependency on `file` should come from the freshly parsed type sig data, not
+   * whatever data is in the heap, and the aloc table should also come from the
+   * fresh parse. *)
+  let aloc_table =
+    lazy
+      (try Parsing_heaps.Reader.get_aloc_table_unsafe ~reader file
+       with Parsing_heaps_exceptions.ALoc_table_not_found _ -> ALoc.empty_table file)
+  in
+  let exported_locals = get_exported_locals file type_sig in
   let reader = Abstract_state_reader.State_reader reader in
   let required =
     let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
@@ -868,35 +548,9 @@ let check_contents_context ~reader options file ast docblock file_sig =
     in
     SMap.fold f require_loc_map []
   in
-  if Options.new_check options then
-    let cache = check_contents_cache in
-    let check_file = New_check_service.mk_check_file ~options ~reader ~cache () in
-    check_file file required ast comments file_sig docblock aloc_table
-  else
-    let options =
-      {
-        Merge_js.metadata = Context.metadata_of_options options;
-        lint_severities = Options.lint_severities options;
-        strict_mode = Options.strict_mode options;
-      }
-    in
-    let (dep_cxs, reqs) =
-      try reqs_of_file ~reader required with
-      | Key_not_found _ -> failwith "not all dependencies are ready yet, aborting..."
-      | e -> raise e
-    in
-    let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
-    Merge_js.check_file
-      ~options
-      file
-      reqs
-      dep_cxs
-      master_cx
-      ast
-      comments
-      file_sig
-      docblock
-      aloc_table
+  let cache = check_contents_cache in
+  let check_file = Check_service.mk_check_file ~options ~reader ~cache () in
+  check_file file required ast comments file_sig docblock aloc_table exported_locals
 
 (* Wrap a potentially slow operation with a timer that fires every interval seconds. When it fires,
  * it calls ~on_timer. When the operation finishes, the timer is cancelled *)
@@ -967,11 +621,7 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
           let exn_str = Printf.sprintf "%s: %s" files (Exception.to_string exc) in
           (* Ensure heaps are in a good state before continuing. *)
           let diff =
-            Context_heaps.Merge_context_mutator.add_merge_on_exn
-              ~audit:Expensive.ok
-              ~options
-              worker_mutator
-              component
+            Context_heaps.Merge_context_mutator.add_merge_on_exn worker_mutator component
           in
 
           (* In dev mode, fail hard, but log and continue in prod. *)

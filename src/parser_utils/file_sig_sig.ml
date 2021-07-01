@@ -17,22 +17,20 @@ module type S = sig
    * This representation is a bit broad, because implementation files generally
    * should not contain declare modules and declaration files (libdefs) are all
    * coalesced into a single module (builtins). *)
-  type 'info t' = {
-    module_sig: 'info module_sig';
-    declare_modules: (L.t * 'info module_sig') SMap.t;
-    exported_locals: L.LSet.t SMap.t option;
+  type t = {
+    module_sig: module_sig;
+    declare_modules: (L.t * module_sig) SMap.t;
   }
 
   (* We can extract the observable interface of a module by extracting information
    * about what it requires and what it exports. *)
-  and 'info module_sig' = {
+  and module_sig = {
     requires: require list;
     module_kind: module_kind;
-    type_exports_named: (string * (L.t * type_export)) list;
     (* export type {A, B as C} [from x] *)
-    type_exports_star: (L.t * export_star) list;
+    type_exports_named: (string * (L.t * type_export)) list;
     (* export type * from "foo" *)
-    info: 'info; (* useful to carry information that might eventually be erased *)
+    type_exports_star: (L.t * export_star) list;
   }
 
   (* We track information about dependencies for each unique module reference in a
@@ -174,51 +172,14 @@ module type S = sig
     | SignatureVerificationError of L.t Signature_error.t
   [@@deriving show]
 
-  type exports_info = {
-    module_kind_info: module_kind_info;
-    type_exports_named_info: es_export_def list;
-  }
-
-  and module_kind_info =
-    | CommonJSInfo of cjs_exports_def list
-    | ESInfo of es_export_def list
-
-  and cjs_exports_def =
-    | DeclareModuleExportsDef of (L.t, L.t) Flow_ast.Type.annotation
-    | SetModuleExportsDef of (L.t, L.t) Flow_ast.Expression.t
-    | AddModuleExportsDef of L.t Flow_ast_utils.ident * (L.t, L.t) Flow_ast.Expression.t
-
-  and es_export_def =
-    | DeclareExportDef of (L.t, L.t) Flow_ast.Statement.DeclareExportDeclaration.declaration
-    | ExportDefaultDef of (L.t, L.t) Flow_ast.Statement.ExportDefaultDeclaration.declaration
-    | ExportNamedDef of (L.t, L.t) Flow_ast.Statement.t
-  [@@deriving show]
-
   type error = IndeterminateModuleType of L.t
 
-  type exports_t = exports_info t' [@@deriving show]
-
-  val program_with_exports_info :
-    ast:(L.t, L.t) Flow_ast.Program.t ->
-    module_ref_prefix:string option ->
-    (exports_t * tolerable_error list, error) result
-
-  (* Use for debugging; not for exposing info to the end user *)
-  val exports_info_to_string : exports_info -> string
-
-  (* Applications may not care about the info carried by signatures. *)
-  type module_sig = unit module_sig' [@@deriving show]
-
-  type t = unit t' [@@deriving show]
-
-  val init : t
+  val empty : t
 
   val program :
     ast:(L.t, L.t) Flow_ast.Program.t ->
     module_ref_prefix:string option ->
     (t * tolerable_error list, error) result
-
-  val verified : L.LSet.t SMap.t option -> exports_info t' -> t
 
   (* Use for debugging; not for exposing info to the end user *)
   val to_string : t -> string

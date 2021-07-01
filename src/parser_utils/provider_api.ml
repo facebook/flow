@@ -21,6 +21,8 @@ module type S = sig
   val print_full_env : info -> string
 
   val providers_of_def : info -> L.t -> L.t Reason.virtual_reason list option
+
+  val is_provider_of_annotated : info -> L.t -> bool
 end
 
 module Make (L : Loc_sig.S) : S with module L = L = struct
@@ -37,6 +39,7 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
   type info = {
     all_entries: EntrySet.t;
     all_exact_providers: L.LSet.t;
+    all_annotated_providers: L.LSet.t;
     raw_env: env;
   }
 
@@ -48,6 +51,18 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
     |> SMap.fold (fun _ entry acc -> EntrySet.add entry acc) entries
 
   let is_provider { all_exact_providers; _ } loc = L.LSet.mem loc all_exact_providers
+
+  let all_annotated_providers entries =
+    EntrySet.fold
+      (function
+        | { state = Find_providers.Annotated; provider_locs; _ } ->
+          (fun acc -> L.LSet.union provider_locs acc)
+        | _ -> (fun acc -> acc))
+      entries
+      L.LSet.empty
+
+  let is_provider_of_annotated { all_annotated_providers; _ } loc =
+    L.LSet.mem loc all_annotated_providers
 
   let providers_of_def { all_entries; _ } loc =
     Base.List.find_map
@@ -68,7 +83,12 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
     let env = find_declaration_statements program in
     let ((hd, _) as env) = find_provider_statements env program in
     let all_entries = all_entries hd in
-    { all_entries; all_exact_providers = all_exact_providers all_entries; raw_env = env }
+    {
+      all_entries;
+      all_exact_providers = all_exact_providers all_entries;
+      all_annotated_providers = all_annotated_providers all_entries;
+      raw_env = env;
+    }
 
   let print_full_env { raw_env = env; _ } =
     let rec ptabs count =

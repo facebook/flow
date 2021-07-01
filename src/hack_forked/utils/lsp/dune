@@ -7,6 +7,7 @@
     file_url
     hh_json
     jsonrpc
+    flow_exit_status
     utils_core)
   (preprocess
     (pps lwt_ppx ppx_deriving.std ppx_deriving.enum)))

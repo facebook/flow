@@ -171,7 +171,7 @@ object-0.js
 
 var obj = {
   n(y: number): string {
-    return this.m(y);
+    return obj.m(y);
   },
   m(x: number): string {
     return "";
@@ -184,7 +184,7 @@ object-1.js
 
 var obj = {
   'n'(y: number): string {
-    return this.m(y);
+    return obj.m(y);
   },
   'm'(x: number): string {
     return "";
@@ -344,7 +344,7 @@ function /*Random*/ test /*weird*/ (x: number): string /*Comments*/ {
 } // END */
 replacement-object.js
 // @flow
-var obj = {n(y: number): string {return this.m(y);},m(x: number): string {return "";}}
+var obj = {n(y: number): string {return obj.m(y);},m(x: number): string {return "";}}
 obj.n(0)
 
 

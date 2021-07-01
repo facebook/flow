@@ -18,10 +18,10 @@ let layout_of_node ~opts = function
   | BooleanLiteral (loc, lit) -> Js_layout_generator.boolean_literal_type loc lit
   | Statement stmt -> Js_layout_generator.statement ~opts stmt
   | Program ast -> Js_layout_generator.program ~preserve_docblock:true ~checksum:None ast
-  | Expression expr ->
-    (* Wrap the expression in parentheses because we don't know what context we are in. *)
-    (* TODO keep track of the expression context for printing, which will only insert parens when
-     * actually needed. *)
+  (* Do not wrap expression in parentheses for cases where we know parentheses are not needed. *)
+  | Expression (expr, (StatementParent _ | SlotParent)) -> Js_layout_generator.expression ~opts expr
+  | Expression (expr, _) ->
+    (* TODO use expression context for printing to insert parens when actually needed. *)
     Layout.fuse [Layout.Atom "("; Js_layout_generator.expression ~opts expr; Layout.Atom ")"]
   | Pattern pat -> Js_layout_generator.pattern ~opts pat
   | Params params -> Js_layout_generator.function_params ~opts params
@@ -78,8 +78,17 @@ let text_of_nodes ~opts ~separator ~leading_separator nodes =
 
 let edit_of_change ~opts = function
   | (loc, Replace (_, new_node)) -> (loc, text_of_node ~opts new_node)
-  | (loc, Insert { items; _ }) when is_statement_list items ->
-    (loc, text_of_statement_list ~opts items)
+  | (loc, Insert { items; separator; leading_separator }) when is_statement_list items ->
+    let text = text_of_statement_list ~opts items in
+    if leading_separator then
+      let sep =
+        match separator with
+        | Some str -> str
+        | None -> "\n"
+      in
+      (loc, sep ^ text)
+    else
+      (loc, text)
   | (loc, Insert { items; separator; leading_separator }) ->
     (loc, text_of_nodes ~opts ~separator ~leading_separator items)
   | (loc, Delete _) -> (loc, "")
@@ -93,4 +102,32 @@ let rec edits_of_changes ?(opts = Js_layout_generator.default_opts) changes =
   | (loc1, Replace (_, Statement item)) :: (loc2, Insert { items; _ }) :: tl
     when Loc.equal (Loc.end_loc loc1) loc2 && is_statement_list items ->
     (loc1, text_of_statement_list ~opts (Statement item :: items)) :: edits_of_changes ~opts tl
+  (* Detect the case when we want to replace a list of statements with a single statement.
+     The AST diffing algorithm will translate this into a replace followed by a delete.
+     We should coalesce this into a single replace spanning both the replace and delete with
+     the replacement, so that we can avoid an empty line being printed in the place of deleted
+     statements. *)
+  | (loc1, Replace (old_node, (Statement (new_loc, _) as new_node))) :: (loc2, Delete _) :: tl
+    when Loc.contains new_loc (Loc.btwn loc1 loc2) ->
+    edits_of_changes ~opts ((new_loc, Replace (old_node, new_node)) :: tl)
+  (* Similar to the case above, but sometimes we have diff patterns like:
+     expr1; // expr replaced by expr2, not the entire statement
+     s2;    // deleted
+     s3;    // deleted
+     // ...
+
+     This case changes the diff on (expr1, expr2) to be (expr1;, expr2;), so it can be coalesced
+     with later deleted statements like above.
+   *)
+  | ( loc1,
+      Replace
+        ( old_node,
+          Expression
+            ( (new_loc, _),
+              StatementParent (_, (Flow_ast.Statement.Expression _ as expression_statement)) ) ) )
+    :: (loc2, Delete _) :: tl
+    when Loc.contains new_loc (Loc.btwn loc1 loc2) ->
+    edits_of_changes
+      ~opts
+      ((new_loc, Replace (old_node, Statement (new_loc, expression_statement))) :: tl)
   | hd :: tl -> edit_of_change ~opts hd :: edits_of_changes ~opts tl

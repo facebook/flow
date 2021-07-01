@@ -3,6 +3,7 @@
   (modules
     flow)
   (libraries
+    flow_glean
     flow_commands
     flow_exit_status
     flow_extra_commands

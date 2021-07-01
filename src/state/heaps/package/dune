@@ -1,0 +1,4 @@
+(library
+ (name flow_package)
+ (wrapped false)
+ (libraries flow_parser_utils heap_shared_mem flow_state_readers))

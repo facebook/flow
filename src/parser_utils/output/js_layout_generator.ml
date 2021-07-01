@@ -2261,6 +2261,12 @@ and enum_declaration loc { Ast.Statement.EnumDeclaration.id; body; comments } =
     else
       []
   in
+  let enum_internal_comments comments =
+    Base.Option.value_map
+      ~default:[]
+      ~f:(fun (_, _, layout) -> [layout])
+      (internal_comments comments)
+  in
   let body =
     match body with
     | (loc, BooleanBody { BooleanBody.members; explicit_type; has_unknown_members; comments }) ->
@@ -2271,6 +2277,7 @@ and enum_declaration loc { Ast.Statement.EnumDeclaration.id; body; comments } =
           layout_node_with_comments_opt loc comments
           @@ wrap_body
           @@ Base.List.map ~f:boolean_member members
+          @ enum_internal_comments comments
           @ unknown_members has_unknown_members;
         ]
     | (loc, NumberBody { NumberBody.members; explicit_type; has_unknown_members; comments }) ->
@@ -2281,6 +2288,7 @@ and enum_declaration loc { Ast.Statement.EnumDeclaration.id; body; comments } =
           layout_node_with_comments_opt loc comments
           @@ wrap_body
           @@ Base.List.map ~f:number_member members
+          @ enum_internal_comments comments
           @ unknown_members has_unknown_members;
         ]
     | (loc, StringBody { StringBody.members; explicit_type; has_unknown_members; comments }) ->
@@ -2292,9 +2300,14 @@ and enum_declaration loc { Ast.Statement.EnumDeclaration.id; body; comments } =
           @@ wrap_body
           @@
           match members with
-          | StringBody.Defaulted members -> Base.List.map ~f:defaulted_member members
+          | StringBody.Defaulted members ->
+            Base.List.map ~f:defaulted_member members
+            @ enum_internal_comments comments
+            @ unknown_members has_unknown_members
           | StringBody.Initialized members ->
-            Base.List.map ~f:string_member members @ unknown_members has_unknown_members );
+            Base.List.map ~f:string_member members
+            @ enum_internal_comments comments
+            @ unknown_members has_unknown_members );
         ]
     | (loc, SymbolBody { SymbolBody.members; has_unknown_members; comments }) ->
       fuse
@@ -2304,6 +2317,7 @@ and enum_declaration loc { Ast.Statement.EnumDeclaration.id; body; comments } =
           layout_node_with_comments_opt loc comments
           @@ wrap_body
           @@ Base.List.map ~f:defaulted_member members
+          @ enum_internal_comments comments
           @ unknown_members has_unknown_members;
         ]
   in

@@ -1096,11 +1096,11 @@ literal union [2] in the return value. [incompatible-call]
                                                                     ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:4065:1
+   <BUILTINS>/dom.js:4066:1
          v--------------------------------
-   4065| typeof NodeFilter.FILTER_ACCEPT |
-   4066| typeof NodeFilter.FILTER_REJECT |
-   4067| typeof NodeFilter.FILTER_SKIP;
+   4066| typeof NodeFilter.FILTER_ACCEPT |
+   4067| typeof NodeFilter.FILTER_REJECT |
+   4068| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -1114,11 +1114,11 @@ literal union [2] in the return value of property `acceptNode`. [incompatible-ca
                                                                                   ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:4065:1
+   <BUILTINS>/dom.js:4066:1
          v--------------------------------
-   4065| typeof NodeFilter.FILTER_ACCEPT |
-   4066| typeof NodeFilter.FILTER_REJECT |
-   4067| typeof NodeFilter.FILTER_SKIP;
+   4066| typeof NodeFilter.FILTER_ACCEPT |
+   4067| typeof NodeFilter.FILTER_REJECT |
+   4068| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -1174,11 +1174,11 @@ union [2] in the return value. [incompatible-call]
                                                                   ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:4065:1
+   <BUILTINS>/dom.js:4066:1
          v--------------------------------
-   4065| typeof NodeFilter.FILTER_ACCEPT |
-   4066| typeof NodeFilter.FILTER_REJECT |
-   4067| typeof NodeFilter.FILTER_SKIP;
+   4066| typeof NodeFilter.FILTER_ACCEPT |
+   4067| typeof NodeFilter.FILTER_REJECT |
+   4068| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -1192,11 +1192,11 @@ literal union [2] in the return value of property `acceptNode`. [incompatible-ca
                                                                                 ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:4065:1
+   <BUILTINS>/dom.js:4066:1
          v--------------------------------
-   4065| typeof NodeFilter.FILTER_ACCEPT |
-   4066| typeof NodeFilter.FILTER_REJECT |
-   4067| typeof NodeFilter.FILTER_SKIP;
+   4066| typeof NodeFilter.FILTER_ACCEPT |
+   4067| typeof NodeFilter.FILTER_REJECT |
+   4068| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 

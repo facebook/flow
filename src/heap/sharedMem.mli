@@ -101,10 +101,30 @@ module type DebugCacheType = sig
   val get_size : unit -> int
 end
 
-module type DebugLocalCache = sig
+module type LocalCache = sig
+  type key
+
+  type value
+
   module DebugL1 : DebugCacheType
 
   module DebugL2 : DebugCacheType
+
+  val add : key -> value -> unit
+
+  val get : key -> value option
+
+  val remove : key -> unit
+
+  val clear : unit -> unit
+end
+
+module type CacheConfig = sig
+  type key
+
+  type value
+
+  val capacity : int
 end
 
 module type WithCache = sig
@@ -114,8 +134,11 @@ module type WithCache = sig
 
   val get_no_cache : key -> value option
 
-  module DebugCache : DebugLocalCache
+  module DebugCache : LocalCache with type key = key and type value = value
 end
+
+module LocalCache (Config : CacheConfig) :
+  LocalCache with type key = Config.key and type value = Config.value
 
 module WithCache (Key : Key) (Value : Value) :
   WithCache with type key = Key.t and type value = Value.t and module KeySet = Set.Make(Key)
@@ -161,6 +184,14 @@ module NewAPI : sig
 
   (* Phantom type tag for optional objects. *)
   type 'a opt
+
+  (* Phantom type tag for docblock, which contains information contained in the
+   * leading comment of a file. *)
+  type docblock
+
+  (* Phantom type tag for aloc table. An aloc table provides the concrete
+   * location for a given keyed location in a signature. *)
+  type aloc_table
 
   (* Phantom type tag for checked file objects. A checked file contains
    * references to the filename, any local definitions, exports, etc. *)
@@ -222,6 +253,10 @@ module NewAPI : sig
 
   val addr_tbl_size : 'a array -> size
 
+  val docblock_size : string -> size
+
+  val aloc_table_size : string -> size
+
   val checked_file_size : size
 
   val type_export_size : string -> size
@@ -269,6 +304,10 @@ module NewAPI : sig
 
   val write_opt : (chunk -> 'a -> 'k addr) -> chunk -> 'a option -> 'k opt addr
 
+  val write_docblock : chunk -> string -> docblock addr
+
+  val write_aloc_table : chunk -> string -> aloc_table addr
+
   val write_type_export : chunk -> string -> type_export addr
 
   val write_cjs_exports : chunk -> string -> cjs_exports addr
@@ -295,6 +334,8 @@ module NewAPI : sig
 
   val write_checked_file :
     chunk ->
+    docblock addr ->
+    aloc_table addr ->
     dyn_module addr ->
     module_ref addr_tbl addr ->
     local_def addr_tbl addr ->
@@ -314,6 +355,10 @@ module NewAPI : sig
   val write_pattern : chunk -> string -> pattern addr
 
   (* getters *)
+
+  val file_docblock : checked_file addr -> docblock addr
+
+  val file_aloc_table : checked_file addr -> aloc_table addr
 
   val file_module : checked_file addr -> dyn_module addr
 
@@ -349,6 +394,10 @@ module NewAPI : sig
   val read_addr_tbl : ('k addr -> 'a) -> 'k addr_tbl addr -> 'a array
 
   val read_opt : ('a addr -> 'b) -> 'a opt addr -> 'b option
+
+  val read_docblock : docblock addr -> string
+
+  val read_aloc_table : aloc_table addr -> string
 
   val read_dyn_module : (cjs_module addr -> 'a) -> (es_module addr -> 'a) -> dyn_module addr -> 'a
 

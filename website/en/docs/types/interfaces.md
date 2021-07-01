@@ -41,6 +41,17 @@ const foo: Serializable = new Foo(); // Works!
 const bar: Serializable = new Bar(); // Works!
 ```
 
+You can also declare an anonymous interface:
+
+```js
+// @flow
+class Foo {
+  a : number
+}
+
+(new Foo() : interface { a : number });
+```
+
 You can also use `implements` to tell Flow that you want the class to match an
 interface. This prevents you from making incompatible changes when editing the
 class.
@@ -85,7 +96,8 @@ same features.
 
 ##### Interface Methods <a class="toc" id="toc-interface-methods" href="#toc-interface-methods"></a>
 
-You can add methods to interfaces following the same syntax as object methods.
+You can add methods to interfaces following the same syntax as class methods. Any `this` parameters you
+provide are also subject to the same restrictions as class methods.
 
 ```js
 interface MyInterface {
@@ -93,9 +105,11 @@ interface MyInterface {
 }
 ```
 
+Also like [class methods](../classes/#toc-class-methods), interface methods must also remain bound to the interface on which they were defined.
+
 ##### Interface Properties <a class="toc" id="toc-interface-properties" href="#toc-interface-properties"></a>
 
-You can add properties to interfaces following the same syntax as object
+You can add properties to interfaces following the same syntax as class
 properties.
 
 ```js
@@ -182,12 +196,14 @@ This allows you to pass a more specific type in place of that property.
 
 ```js
 // @flow
-// $ExpectError
 interface Invariant {  property: number | string }
 interface Covariant { +readOnly: number | string }
 
-var value1: Invariant = { property: 42 }; // Error!
-var value2: Covariant = { readOnly: 42 }; // Works!
+var x : { property : number } = { property : 42 };
+var y : { readOnly : number } = { readOnly : 42 };
+
+var value1: Invariant = x; // Error!
+var value2: Covariant = y; // Works
 ```
 
 Because of how covariance works, covariant properties also become read-only

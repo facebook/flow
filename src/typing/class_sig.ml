@@ -361,7 +361,7 @@ module Make (F : Func_sig.S) = struct
     | Class { this_t; _ } -> Some this_t
     | Interface _ -> None
 
-  let this_or_mixed = this_t %> Base.Option.value ~default:Type.dummy_this
+  let this_or_mixed loc = this_t %> Base.Option.value ~default:(Type.dummy_this loc)
 
   let tparams_with_this tparams this_tp =
     (* Use the loc for the original tparams, or just the loc for the this type if there are no
@@ -517,7 +517,8 @@ module Make (F : Func_sig.S) = struct
   let statictype cx static_proto x =
     let s = x.static in
     let (inited_fields, fields, methods, call) =
-      elements cx ~this:(this_or_mixed x |> TypeUtil.class_type) s x.super
+      let loc = aloc_of_reason x.static.reason in
+      elements cx ~this:(this_or_mixed loc x |> TypeUtil.class_type) s x.super
     in
     let props =
       SMap.union fields methods ~combine:(fun _ _ ->
@@ -541,7 +542,10 @@ module Make (F : Func_sig.S) = struct
     let constructor =
       (* Constructors do not bind `this` *)
       let ts =
-        List.rev_map (fun (loc, t, _, _) -> (loc, F.methodtype cx Type.dummy_this t)) s.constructor
+        List.rev_map
+          (fun (loc, t, _, _) ->
+            (loc, F.methodtype cx (Type.dummy_this (aloc_of_reason s.instance.reason)) t))
+          s.constructor
       in
       match ts with
       | [] -> None
@@ -561,7 +565,8 @@ module Make (F : Func_sig.S) = struct
         (Type.TypeParams.to_list s.tparams)
     in
     let (initialized_fields, fields, methods, call) =
-      elements cx ~this:(this_or_mixed s) ?constructor s.instance s.super
+      let loc = aloc_of_reason s.instance.reason in
+      elements cx ~this:(this_or_mixed loc s) ?constructor s.instance s.super
     in
     {
       Type.class_id = s.id;
@@ -785,13 +790,14 @@ module Make (F : Func_sig.S) = struct
     (* The this parameter of a class method is irrelvant for class subtyping, since
        dynamic dispatch enforces that the method is called on the right subclass
        at runtime even if the static type is a supertype. *)
+    let inst_loc = aloc_of_reason reason in
     let (_, own, proto, _call) =
-      elements ~this:(this_or_mixed x) cx ?constructor:None x.instance x.super
+      elements ~this:(this_or_mixed inst_loc x) cx ?constructor:None x.instance x.super
     in
     let static =
       (* NOTE: The own, proto maps are disjoint by construction. *)
       let (_, own, proto, _call) =
-        elements ~this:(this_or_mixed x |> class_type) cx x.static x.super
+        elements ~this:(this_or_mixed inst_loc x |> class_type) cx x.static x.super
       in
       SMap.union own proto
     in

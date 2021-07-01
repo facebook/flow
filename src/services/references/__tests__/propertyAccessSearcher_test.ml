@@ -25,7 +25,6 @@ let run ctxt expected name content =
         parse_max_literal_len = 0;
         parse_exact_by_default = false;
         parse_enable_enums = false;
-        parse_enable_this_annot = false;
         parse_node_main_fields = [];
       }
     in

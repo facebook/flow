@@ -42,12 +42,12 @@ module Opts = struct
 
   type t = {
     abstract_locations: bool option;
-    all: bool;
+    all: bool option;
     autoimports: bool option;
-    automatic_require_default: bool;
+    automatic_require_default: bool option;
     babel_loose_array_spread: bool;
     check_updates_against_providers: bool;
-    disable_live_non_parse_errors: bool;
+    disable_live_non_parse_errors: bool option;
     emoji: bool option;
     enable_const_params: bool;
     enforce_local_inference_annotations: bool;
@@ -93,7 +93,6 @@ module Opts = struct
     module_system: Options.module_system;
     modules_are_use_strict: bool;
     munge_underscores: bool;
-    new_check: bool;
     no_flowlib: bool;
     node_main_fields: string list;
     node_resolver_allow_root_relative: bool;
@@ -115,7 +114,6 @@ module Opts = struct
     strict_es6_import_export: bool;
     suppress_types: SSet.t;
     temp_dir: string;
-    this_annot: bool;
     traces: int;
     trust_mode: Options.trust_mode;
     type_asserts: bool;
@@ -167,12 +165,12 @@ module Opts = struct
   let default_options =
     {
       abstract_locations = None;
-      all = false;
+      all = None;
       autoimports = None;
-      automatic_require_default = false;
+      automatic_require_default = None;
       babel_loose_array_spread = false;
       check_updates_against_providers = false;
-      disable_live_non_parse_errors = false;
+      disable_live_non_parse_errors = None;
       emoji = None;
       enable_const_params = false;
       enforce_local_inference_annotations = false;
@@ -203,7 +201,7 @@ module Opts = struct
       haste_use_name_reducers = false;
       ignore_non_literal_requires = false;
       include_warnings = false;
-      indexed_access = false;
+      indexed_access = true;
       lazy_mode = None;
       log_file = None;
       max_files_checked_per_worker = 100;
@@ -219,7 +217,6 @@ module Opts = struct
       module_system = Options.Node;
       modules_are_use_strict = false;
       munge_underscores = false;
-      new_check = true;
       no_flowlib = false;
       node_main_fields = ["main"];
       node_resolver_allow_root_relative = false;
@@ -241,7 +238,6 @@ module Opts = struct
       strict_es6_import_export_excludes = [];
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       temp_dir = default_temp_dir;
-      this_annot = true;
       traces = 0;
       trust_mode = Options.NoTrust;
       type_asserts = false;
@@ -366,7 +362,13 @@ module Opts = struct
 
   let mapping fn = opt (fun str -> optparse_mapping str >>= fn)
 
-  let new_check_parser = boolean (fun opts v -> Ok { opts with new_check = v })
+  (* TODO: remove once .flowconfigs no longer use this setting *)
+  let new_check_parser =
+    boolean (fun opts v ->
+        if v then
+          Ok opts
+        else
+          Error "New check mode can no longer be disabled.")
 
   let max_files_checked_per_worker_parser =
     uint (fun opts v -> Ok { opts with max_files_checked_per_worker = v })
@@ -434,13 +436,13 @@ module Opts = struct
     boolean (fun opts v -> Ok { opts with abstract_locations = Some v })
 
   let automatic_require_default_parser =
-    boolean (fun opts v -> Ok { opts with automatic_require_default = v })
+    boolean (fun opts v -> Ok { opts with automatic_require_default = Some v })
 
   let babel_loose_array_spread_parser =
     boolean (fun opts v -> Ok { opts with babel_loose_array_spread = v })
 
   let disable_live_non_parse_errors_parser =
-    boolean (fun opts v -> Ok { opts with disable_live_non_parse_errors = v })
+    boolean (fun opts v -> Ok { opts with disable_live_non_parse_errors = Some v })
 
   let enforce_strict_call_arity_parser =
     boolean (fun opts v -> Ok { opts with enforce_strict_call_arity = v })
@@ -635,7 +637,7 @@ module Opts = struct
 
   let parsers =
     [
-      ("all", boolean (fun opts v -> Ok { opts with all = v }));
+      ("all", boolean (fun opts v -> Ok { opts with all = Some v }));
       ("autoimports", boolean (fun opts v -> Ok { opts with autoimports = Some v }));
       ("babel_loose_array_spread", babel_loose_array_spread_parser);
       ("emoji", boolean (fun opts v -> Ok { opts with emoji = Some v }));
@@ -658,7 +660,6 @@ module Opts = struct
       ("experimental.strict_call_arity", enforce_strict_call_arity_parser);
       ("experimental.strict_es6_import_export.excludes", strict_es6_import_export_excludes_parser);
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
-      ("experimental.this_annot", boolean (fun opts v -> Ok { opts with this_annot = v }));
       ("experimental.type_asserts", boolean (fun opts v -> Ok { opts with type_asserts = v }));
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
@@ -812,7 +813,8 @@ end = struct
         let options = config.options in
         if options.module_system <> default_options.module_system then
           pp_opt o "module.system" (module_system options.module_system);
-        if options.all <> default_options.all then pp_opt o "all" (string_of_bool options.all);
+        if options.all <> default_options.all then
+          pp_opt o "all" (string_of_bool (Base.Option.value options.all ~default:false));
         if options.weak <> default_options.weak then pp_opt o "weak" (string_of_bool options.weak);
         if options.temp_dir <> default_options.temp_dir then pp_opt o "temp_dir" options.temp_dir;
         if options.include_warnings <> default_options.include_warnings then
@@ -1270,8 +1272,6 @@ let enums c = c.options.Opts.enums
 
 let enums_with_unknown_members c = c.options.Opts.enums_with_unknown_members
 
-let this_annot c = c.options.Opts.this_annot
-
 let exact_by_default c = c.options.Opts.exact_by_default
 
 let file_watcher c = c.options.Opts.file_watcher
@@ -1379,8 +1379,6 @@ let traces c = c.options.Opts.traces
 let trust_mode c = c.options.Opts.trust_mode
 
 let type_asserts c = c.options.Opts.type_asserts
-
-let new_check c = c.options.Opts.new_check
 
 let required_version c = c.version
 

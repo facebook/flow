@@ -551,7 +551,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
     let members = extract_members_as_map ~exclude_proto_members cx static in
     let prot_members = extract_members_as_map ~exclude_proto_members cx proto in
     Success (AugmentableSMap.augment prot_members ~with_bindings:members)
-  | Success (DefT (enum_reason, trust, EnumObjectT enum)) ->
+  | Success (DefT (enum_reason, trust, EnumObjectT enum) as enum_object_t) ->
     let { members; representation_t; _ } = enum in
     let enum_t = mk_enum_type ~trust enum_reason enum in
     let proto_members =
@@ -559,7 +559,11 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
         SMap.empty
       else
         let proto =
-          get_builtin_typeapp cx enum_reason (OrdinaryName "$EnumProto") [enum_t; representation_t]
+          get_builtin_typeapp
+            cx
+            enum_reason
+            (OrdinaryName "$EnumProto")
+            [enum_object_t; enum_t; representation_t]
         in
         (* `$EnumProto` has a null proto, so we set `exclude_proto_members` to true *)
         extract_members_as_map ~exclude_proto_members:true cx proto

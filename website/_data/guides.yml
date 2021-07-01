@@ -41,6 +41,7 @@
     - path: "/docs/types/unions/"
     - path: "/docs/types/intersections/"
 
+    - path: "/docs/types/indexed-access/"
     - path: "/docs/types/typeof/"
     - path: "/docs/types/casting/"
     - path: "/docs/types/utilities/"

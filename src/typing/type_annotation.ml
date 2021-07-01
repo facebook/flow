@@ -242,7 +242,13 @@ let rec convert cx tparams_map =
     ( (loc, DefT (r, infer_trust cx, ArrT (ArrayAT (elemt, None)))),
       Array { Array.argument = t_ast; comments } )
   | (loc, (StringLiteral { Ast.StringLiteral.value; _ } as t_ast)) ->
-    ((loc, mk_singleton_string cx loc value), t_ast)
+    let t =
+      if Type_inference_hooks_js.dispatch_literal_hook cx loc then
+        Tvar.mk cx (mk_reason (RCustom "literal") loc)
+      else
+        mk_singleton_string cx loc value
+    in
+    ((loc, t), t_ast)
   | (loc, (NumberLiteral { Ast.NumberLiteral.value; raw; _ } as t_ast)) ->
     ((loc, mk_singleton_number cx loc value raw), t_ast)
   | (loc, (BigIntLiteral { Ast.BigIntLiteral.bigint; _ } as t_ast)) ->
@@ -264,10 +270,13 @@ let rec convert cx tparams_map =
           Op
             (IndexedTypeAccess { _object = reason_of_t object_type; index = reason_of_t index_type })
         in
-        EvalT
-          ( object_type,
-            TypeDestructorT (use_op, reason, ElementType { index_type; is_indexed_access = true }),
-            mk_eval_id cx loc )
+        let destructor =
+          match index with
+          | (_, StringLiteral { Ast.StringLiteral.value; _ }) ->
+            PropertyType { name = OrdinaryName value; is_indexed_access = true }
+          | _ -> ElementType { index_type; is_indexed_access = true }
+        in
+        EvalT (object_type, TypeDestructorT (use_op, reason, destructor), mk_eval_id cx loc)
     in
     ((loc, t), IndexedAccess { IndexedAccess._object; index; comments })
   | (loc, OptionalIndexedAccess ia) ->
@@ -374,75 +383,10 @@ let rec convert cx tparams_map =
                 (DefT (replace_desc_reason RBoolean r, trust, BoolT (Some bool)))
                 targs
             | _ -> error_type cx loc (Error_message.EUnexpectedTemporaryBaseType loc) t_ast)
-      | "$TEMPORARY$Object$freeze" ->
-        check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-            let (ts, targs) = convert_type_params () in
-            let t = convert_temporary_object ~frozen:true (List.hd ts) in
-            (* TODO fix targs *)
-            reconstruct_ast t targs)
-      | "$TEMPORARY$module$exports$assign" ->
-        check_type_arg_arity cx loc t_ast targs 2 (fun () ->
-            let (ts, targs) = convert_type_params () in
-            match ts with
-            | [annot; assign] ->
-              let reason = reason_of_t annot in
-              let tout =
-                Tvar.mk_where cx reason (fun tvar ->
-                    Flow.flow cx (annot, ModuleExportsAssignT (reason, assign, tvar)))
-              in
-              reconstruct_ast tout targs
-            | _ -> assert false)
-      | "$TEMPORARY$function" ->
-        check_type_arg_arity cx loc t_ast targs 2 (fun () ->
-            let (ts, targs) = convert_type_params () in
-            match ts with
-            | [annot; assign] ->
-              begin
-                match (annot, assign) with
-                | (DefT (r, trust, FunT (statics, proto, ft)), DefT (_, objtrust, ObjT objtype)) ->
-                  let reason = reason_of_t statics in
-                  let statics' =
-                    DefT (reason, objtrust, ObjT { objtype with proto_t = FunProtoT reason })
-                  in
-                  let t = DefT (r, trust, FunT (statics', proto, ft)) in
-                  reconstruct_ast t targs
-                | ( DefT
-                      ( poly_r,
-                        poly_trust,
-                        PolyT
-                          {
-                            tparams_loc;
-                            tparams;
-                            t_out = DefT (r, trust, FunT (statics, proto, ft));
-                            id;
-                          } ),
-                    DefT (_, objtrust, ObjT objtype) ) ->
-                  let reason = reason_of_t statics in
-                  let statics' =
-                    DefT (reason, objtrust, ObjT { objtype with proto_t = FunProtoT reason })
-                  in
-                  let t =
-                    DefT
-                      ( poly_r,
-                        poly_trust,
-                        PolyT
-                          {
-                            tparams_loc;
-                            tparams;
-                            t_out = DefT (r, trust, FunT (statics', proto, ft));
-                            id;
-                          } )
-                  in
-                  reconstruct_ast t targs
-                | _ ->
-                  (* fall back *)
-                  reconstruct_ast annot targs
-              end
-            | _ -> assert false)
       | "$TEMPORARY$object" ->
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
             let (ts, targs) = convert_type_params () in
-            let t = convert_temporary_object ~frozen:false (List.hd ts) in
+            let t = convert_temporary_object (List.hd ts) in
             reconstruct_ast t targs)
       | "$TEMPORARY$array" ->
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
@@ -490,7 +434,12 @@ let rec convert cx tparams_map =
               let reason = mk_reason (RType (OrdinaryName "$PropertyType")) loc in
               reconstruct_ast
                 (EvalT
-                   (t, TypeDestructorT (use_op reason, reason, PropertyType key), mk_eval_id cx loc))
+                   ( t,
+                     TypeDestructorT
+                       ( use_op reason,
+                         reason,
+                         PropertyType { name = key; is_indexed_access = false } ),
+                     mk_eval_id cx loc ))
                 targs
             | _ -> error_type cx loc (Error_message.EPropertyTypeAnnot loc) t_ast)
       (* $ElementType<T, string> acts as the type of the string elements in object
@@ -974,9 +923,6 @@ let rec convert cx tparams_map =
           tparams;
           comments = func_comments;
         } ) ->
-    if not @@ Context.enable_this_annot cx then
-      Base.Option.iter this_ ~f:(fun (this_loc, _) ->
-          Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
     let (tparams, tparams_map, tparams_ast) = mk_type_param_declarations cx ~tparams_map tparams in
     let (rev_params, rev_param_asts) =
       List.fold_left
@@ -997,7 +943,7 @@ let rec convert cx tparams_map =
     in
     let (this_t, this_param_ast) =
       match this_ with
-      | None -> (bound_function_dummy_this, None)
+      | None -> (bound_function_dummy_this params_loc, None)
       | Some (this_loc, { Function.ThisParam.annot = (loc, annot); comments }) ->
         let (((_, this_t), _) as annot) = convert cx tparams_map annot in
         (this_t, Some (this_loc, { Function.ThisParam.annot = (loc, annot); comments }))
@@ -1165,34 +1111,21 @@ and convert_opt cx tparams_map ast_opt =
   let t_opt = Base.Option.map ~f:(fun ((_, x), _) -> x) tast_opt in
   (t_opt, tast_opt)
 
-and convert_temporary_object ~frozen =
-  let desc =
-    if frozen then
-      RFrozen RObjectLit
-    else
-      RObjectLit
-  in
-  function
+and convert_temporary_object = function
   | ExactT (_, DefT (r, trust, ObjT o))
   | DefT (r, trust, ObjT o) ->
-    let r = replace_desc_reason desc r in
+    let r = replace_desc_reason RObjectLit r in
     let obj_kind =
       match o.flags.obj_kind with
       | Indexed _ -> o.flags.obj_kind
       | _ -> Exact
     in
-    DefT (r, trust, ObjT { o with flags = { obj_kind; frozen } })
+    DefT (r, trust, ObjT { o with flags = { obj_kind; frozen = false } })
   | EvalT (l, TypeDestructorT (use_op, r, SpreadType (_, ts, head_slice)), id) ->
-    let r = replace_desc_reason desc r in
+    let r = replace_desc_reason RObjectLit r in
     let target =
       let open Type.Object.Spread in
-      let make_seal =
-        if frozen then
-          Frozen
-        else
-          Sealed
-      in
-      Value { make_seal }
+      Value { make_seal = Sealed }
     in
     EvalT (l, TypeDestructorT (use_op, r, SpreadType (target, ts, head_slice)), id)
   | t -> t
@@ -1617,8 +1550,6 @@ and mk_func_sig =
   in
   let add_this cx tparams_map x this_param =
     let (this_loc, { ThisParam.annot = (loc, annot); comments }) = this_param in
-    if not @@ Context.enable_this_annot cx then
-      Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc);
     let (((_, t), _) as annot') = convert cx tparams_map annot in
     let this = (t, (this_loc, { Ast.Type.Function.ThisParam.annot = (loc, annot'); comments })) in
     Func_type_params.add_this this x
@@ -2007,12 +1938,22 @@ and optional_indexed_access cx loc ~tparams_map { T.OptionalIndexedAccess.indexe
     let lhs_reason = reason_of_t object_t in
     let use_op = Op (IndexedTypeAccess { _object = lhs_reason; index = index_reason }) in
     let non_maybe_destructor =
-      if optional then
-        TypeDestructorT (use_op, reason, OptionalIndexedAccessNonMaybeType { index_type })
-      else
-        TypeDestructorT (use_op, reason, ElementType { index_type; is_indexed_access = true })
+      match index with
+      | (_, Ast.Type.StringLiteral { Ast.StringLiteral.value; _ }) ->
+        let name = OrdinaryName value in
+        if optional then
+          OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessStrLitIndex name }
+        else
+          PropertyType { name; is_indexed_access = true }
+      | _ ->
+        if optional then
+          OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessTypeIndex index_type }
+        else
+          ElementType { index_type; is_indexed_access = true }
     in
-    let non_maybe_result_t = EvalT (object_t, non_maybe_destructor, mk_eval_id cx loc) in
+    let non_maybe_result_t =
+      EvalT (object_t, TypeDestructorT (use_op, reason, non_maybe_destructor), mk_eval_id cx loc)
+    in
     let void_reason = replace_desc_reason RVoid lhs_reason in
     let result_t =
       EvalT

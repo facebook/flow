@@ -4,5 +4,6 @@
   (modules
     socket)
   (libraries
+    flow_exit
     opaque_digest
     sys_utils))

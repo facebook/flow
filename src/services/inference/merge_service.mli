@@ -14,7 +14,10 @@ type 'a unit_result = ('a, ALoc.t * Error_message.internal_error) result
 type merge_result = Error_suppressions.t * duration
 
 type check_type_result =
-  Context.t * File_sig.With_ALoc.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
+  Context.t
+  * Type_sig_collections.Locs.index Packed_type_sig.Module.t
+  * File_sig.With_ALoc.t
+  * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
 
 type check_error_result =
   Flow_error.ErrorSet.t
@@ -39,14 +42,9 @@ type 'a merge_job =
   File_key.t Nel.t ->
   bool * 'a unit_result
 
-val merge_context :
-  options:Options.t ->
-  reader:Abstract_state_reader.t ->
-  Context.master_context ->
-  File_key.t Nel.t ->
-  Context.t
+val sig_hash : root:Path.t -> reader:Abstract_state_reader.t -> File_key.t Nel.t -> Xx.hash
 
-val check_contents_cache : New_check_cache.t
+val check_contents_cache : Check_cache.t
 
 val check_contents_context :
   reader:State_reader.t ->
@@ -55,6 +53,7 @@ val check_contents_context :
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   Docblock.t ->
   File_sig.With_Loc.t ->
+  Type_sig_collections.Locs.index Packed_type_sig.Module.t ->
   Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
 
 val merge_runner :

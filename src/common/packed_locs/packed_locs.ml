@@ -57,73 +57,36 @@
  *    .3 = end_column }
  *)
 
-(* Buffer.add_uint8 was added in OCaml 4.08, but we're still on 4.07.
- * TODO: Delete this and just use Buffer once we update. *)
-module Buf : sig
-  type t
+let compare_locs loc0 loc1 =
+  let open Loc in
+  let k = pos_cmp loc0.start loc1.start in
+  if k = 0 then
+    pos_cmp loc1._end loc0._end
+  else
+    k
 
-  val create : unit -> t
-
-  val add_i8 : t -> int -> unit
-
-  val contents : t -> string
-end = struct
-  type t = {
-    mutable bytes: bytes;
-    mutable length: int;
-  }
-
-  let create () = { bytes = Bytes.create 16; length = 0 }
-
-  external unsafe_set_int8 : bytes -> int -> int -> unit = "%bytes_unsafe_set"
-
-  let add_i8 buf i =
-    if buf.length = Bytes.length buf.bytes then begin
-      let new_bytes = Bytes.create (buf.length * 2) in
-      Bytes.blit buf.bytes 0 new_bytes 0 buf.length;
-      buf.bytes <- new_bytes
-    end;
-    unsafe_set_int8 buf.bytes buf.length i;
-    buf.length <- buf.length + 1
-
-  let contents buf = Bytes.sub_string buf.bytes 0 buf.length
-end
-
-(* unsigned leb128-ish encoding *)
-let add_int =
-  let rec loop buf i =
-    let byte = i land 0x7F in
-    let i = i lsr 7 in
-    if i != 0 then begin
-      Buf.add_i8 buf (byte land 0x80);
-      loop buf i
-    end else
-      Buf.add_i8 buf byte
-  in
-  fun buf i ->
-    assert (i >= 0);
-    loop buf i
+let add_int buf i = Leb128.Unsigned.write (Buffer.add_int8 buf) i
 
 let write_loc_start buf tag_adjust prev_column rline column =
   if rline = 0 then
     let rcolumn = column - prev_column in
     if rcolumn < 0x40 then
-      Buf.add_i8 buf (tag_adjust + rcolumn)
+      Buffer.add_int8 buf (tag_adjust + rcolumn)
     else begin
-      Buf.add_i8 buf (tag_adjust + 0x40);
+      Buffer.add_int8 buf (tag_adjust + 0x40);
       add_int buf (rcolumn - 0x40)
     end
   else if rline < 0x3F then begin
-    Buf.add_i8 buf (tag_adjust + 0x40 + rline);
+    Buffer.add_int8 buf (tag_adjust + 0x40 + rline);
     add_int buf column
   end else begin
-    Buf.add_i8 buf (tag_adjust + 0x7F);
+    Buffer.add_int8 buf (tag_adjust + 0x7F);
     add_int buf (rline - 0x3F);
     add_int buf column
   end
 
 let pack len iter =
-  let buf = Buf.create () in
+  let buf = Buffer.create 16 in
   let prev_line = ref 0 in
   let prev_column = ref 0 in
   add_int buf len;
@@ -143,7 +106,7 @@ let pack len iter =
       end;
       prev_line := loc.start.line;
       prev_column := loc.start.column);
-  Buf.contents buf
+  Buffer.contents buf
 
 let mk_loc source start_line start_column end_line end_column =
   {
@@ -163,17 +126,7 @@ let unpack source init packed =
     Char.code c
   in
 
-  let read_int =
-    let rec loop result shift =
-      let byte = read_i8 () in
-      let result = result lor ((byte land 0x7F) lsl shift) in
-      if byte land 0x80 = 0 then
-        result
-      else
-        loop result (shift + 7)
-    in
-    (fun () -> loop 0 0)
-  in
+  let read_int () = Leb128.Unsigned.read read_i8 in
 
   let read_loc () =
     let tag = read_i8 () in

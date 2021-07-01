@@ -240,6 +240,53 @@ class useless_mapper =
         opt
       else
         (loc, { opt' with key = key'; variance = variance' })
+
+    method! enum_defaulted_member (member : Loc.t Ast.Statement.EnumDeclaration.DefaultedMember.t) =
+      let open Ast.Statement.EnumDeclaration.DefaultedMember in
+      let (loc, { id }) = member in
+      match id with
+      | (loc', { Ast.Identifier.name = "On"; comments }) ->
+        (loc, { id = (loc', Ast.Identifier.{ name = "Enabled"; comments }) })
+      | _ -> member
+
+    method! enum_string_member
+        (member :
+          (Loc.t Ast.StringLiteral.t, Loc.t) Ast.Statement.EnumDeclaration.InitializedMember.t) =
+      let open Ast.Statement.EnumDeclaration.InitializedMember in
+      let (loc, { id; init }) = member in
+      match init with
+      | (loc', Ast.StringLiteral.{ value; raw = _; comments }) when String.equal "on" value ->
+        ( loc,
+          {
+            id;
+            init = (loc', Ast.StringLiteral.{ value = "'enabled'"; raw = "'enabled'"; comments });
+          } )
+      | _ -> member
+
+    method! enum_number_member
+        (member :
+          (Loc.t Ast.NumberLiteral.t, Loc.t) Ast.Statement.EnumDeclaration.InitializedMember.t) =
+      let open Ast.Statement.EnumDeclaration.InitializedMember in
+      let (loc, { id; init }) = member in
+      match init with
+      | (loc', Ast.NumberLiteral.{ value = 1.0; raw; comments = None }) ->
+        ( loc,
+          {
+            id;
+            init =
+              ( loc',
+                Ast_builder.number_literal
+                  ~comments:
+                    Ast.Syntax.
+                      {
+                        leading = [];
+                        trailing = [Ast_builder.Comments.line " a comment"];
+                        internal = ();
+                      }
+                  1.0
+                  raw );
+          } )
+      | _ -> member
   end
 
 class literal_mapper =
@@ -847,9 +894,9 @@ let tests =
            let source = "function foo() { (5 - 3); 4; (6 + 4); }" in
            assert_edits_equal
              ctxt
-             ~edits:[((26, 27), "5"); ((30, 35), "(6 - 5)")]
+             ~edits:[((26, 27), "5"); ((30, 35), "6 - 5")]
              ~source
-             ~expected:"function foo() { (5 - 3); 5; ((6 - 5)); }"
+             ~expected:"function foo() { (5 - 3); 5; (6 - 5); }"
              ~mapper:(new useless_mapper) );
          ( "class" >:: fun ctxt ->
            let source = "class Foo { bar() { 4; } }" in
@@ -1072,17 +1119,17 @@ let tests =
            let source = "new foo<>()" in
            assert_edits_equal
              ctxt
-             ~edits:[((0, 11), "(new foo<any>())")]
+             ~edits:[((0, 11), "new foo<any>()")]
              ~source
-             ~expected:"(new foo<any>())"
+             ~expected:"new foo<any>()"
              ~mapper:(new insert_call_type_args) );
          ( "new_type_param_implicit" >:: fun ctxt ->
            let source = "new foo<_>()" in
            assert_edits_equal
              ctxt
-             ~edits:[((0, 12), "(new foo<any>())")]
+             ~edits:[((0, 12), "new foo<any>()")]
              ~source
-             ~expected:"(new foo<any>())"
+             ~expected:"new foo<any>()"
              ~mapper:(new useless_mapper) );
          ( "member" >:: fun ctxt ->
            let source = "rename.a" in
@@ -1120,9 +1167,9 @@ let tests =
            let source = "+rename" in
            assert_edits_equal
              ctxt
-             ~edits:[((0, 7), "(-gotRenamed)")]
+             ~edits:[((0, 7), "-gotRenamed")]
              ~source
-             ~expected:"(-gotRenamed)"
+             ~expected:"-gotRenamed"
              ~mapper:(new useless_mapper) );
          ( "block" >:: fun ctxt ->
            let source = "{ 2; 4; 10; rename; }" in
@@ -1699,9 +1746,9 @@ let tests =
            let source = "function foo() { /* comment */ (5 - 3); 4; (6 + 4); /* comment */}" in
            assert_edits_equal
              ctxt
-             ~edits:[((40, 41), "5"); ((44, 49), "(6 - 5)")]
+             ~edits:[((40, 41), "5"); ((44, 49), "6 - 5")]
              ~source
-             ~expected:"function foo() { /* comment */ (5 - 3); 5; ((6 - 5)); /* comment */}"
+             ~expected:"function foo() { /* comment */ (5 - 3); 5; (6 - 5); /* comment */}"
              ~mapper:(new useless_mapper) );
          ( "fn_default_export" >:: fun ctxt ->
            let source = "export default function foo() { let x = rename; }" in
@@ -1996,9 +2043,9 @@ let tests =
            let source = "a ?? b" in
            assert_edits_equal
              ctxt
-             ~edits:[((0, 6), "(a || b)")]
+             ~edits:[((0, 6), "a || b")]
              ~source
-             ~expected:"(a || b)"
+             ~expected:"a || b"
              ~mapper:(new useless_mapper) );
          ( "insert_import_split" >:: fun ctxt ->
            let source = "5 - (2 + 2)" in
@@ -2202,17 +2249,17 @@ let tests =
            let source = "<selfClosing></selfClosing>" in
            assert_edits_equal
              ctxt
-             ~edits:[((0, 27), "(<selfClosing />)")]
+             ~edits:[((0, 27), "<selfClosing />")]
              ~source
-             ~expected:"(<selfClosing />)"
+             ~expected:"<selfClosing />"
              ~mapper:(new useless_mapper) );
          ( "jsx_element_from_self_closing" >:: fun ctxt ->
            let source = "<notSelfClosing />" in
            assert_edits_equal
              ctxt
-             ~edits:[((0, 18), "(<notSelfClosing></notSelfClosing>)")]
+             ~edits:[((0, 18), "<notSelfClosing></notSelfClosing>")]
              ~source
-             ~expected:"(<notSelfClosing></notSelfClosing>)"
+             ~expected:"<notSelfClosing></notSelfClosing>"
              ~mapper:(new useless_mapper) );
          ( "jsx_element_attribute_name" >:: fun ctxt ->
            let source = "<Component rename={1} />" in
@@ -2234,9 +2281,9 @@ let tests =
            let source = "<Component someProp={4 + 4} />" in
            assert_edits_equal
              ctxt
-             ~edits:[((21, 26), "(5 - 5)")]
+             ~edits:[((21, 26), "5 - 5")]
              ~source
-             ~expected:"<Component someProp={(5 - 5)} />"
+             ~expected:"<Component someProp={5 - 5} />"
              ~mapper:(new useless_mapper) );
          ( "jsx_element_attribute_name_and_value" >:: fun ctxt ->
            let source = "<Component rename={4} />" in
@@ -2653,9 +2700,9 @@ let tests =
            let source = "--rename" in
            assert_edits_equal
              ctxt
-             ~edits:[((0, 8), "(++gotRenamed)")]
+             ~edits:[((0, 8), "++gotRenamed")]
              ~source
-             ~expected:"(++gotRenamed)"
+             ~expected:"++gotRenamed"
              ~mapper:(new useless_mapper) );
          ( "update_arrow_function_single_param" >:: fun ctxt ->
            let source = "const x = bla => { return 0; };" in
@@ -2974,9 +3021,9 @@ import type { there as here } from \"new_import2\";const x: (() => number) = (bl
            let source = "(a, b, c, d)" in
            assert_edits_equal
              ctxt
-             ~edits:[((1, 11), "(a, b, c, d, a, b, c, d)")]
+             ~edits:[((1, 11), "a, b, c, d, a, b, c, d")]
              ~source
-             ~expected:"((a, b, c, d, a, b, c, d))"
+             ~expected:"(a, b, c, d, a, b, c, d)"
              ~mapper:(new double_sequence_mapper) );
          ( "declare_class_id" >:: fun ctxt ->
            let source = "declare class rename { }" in
@@ -3009,5 +3056,47 @@ import type { there as here } from \"new_import2\";const x: (() => number) = (bl
              ~edits:[((21, 27), "gotRenamed")]
              ~source
              ~expected:"declare class C { f: gotRenamed }"
+             ~mapper:(new useless_mapper) );
+         ( "enum_declaration_unchanged" >:: fun ctxt ->
+           let source = "enum Status {On, Off}" in
+           (* use an unrelated mapper to ensure enums are not affected *)
+           assert_edits_equal
+             ctxt
+             ~edits:[]
+             ~source
+             ~expected:"enum Status {On, Off}"
+             ~mapper:(new literal_mapper) );
+         ( "enum_comments_unchanged" >:: fun ctxt ->
+           let source = "enum Status {On, Off // internal comment\n}" in
+           (* use an unrelated mapper to ensure enums are not affected *)
+           assert_edits_equal
+             ctxt
+             ~edits:[]
+             ~source
+             ~expected:"enum Status {On, Off // internal comment\n}"
+             ~mapper:(new literal_mapper) );
+         ( "enum_declaration_defaulted_string" >:: fun ctxt ->
+           let source = "enum Status {On, Off}" in
+           assert_edits_equal
+             ctxt
+             ~edits:[((13, 15), "Enabled")]
+             ~source
+             ~expected:"enum Status {Enabled, Off}"
+             ~mapper:(new useless_mapper) );
+         ( "enum_declaration_string" >:: fun ctxt ->
+           let source = "enum Status {On = 'on', Off = 'off'}" in
+           assert_edits_equal
+             ctxt
+             ~edits:[((18, 22), "'enabled'")]
+             ~source
+             ~expected:"enum Status {On = 'enabled', Off = 'off'}"
+             ~mapper:(new useless_mapper) );
+         ( "enum_add_comment" >:: fun ctxt ->
+           let source = "enum Status {On = 1, Off = 2}" in
+           assert_edits_equal
+             ctxt
+             ~edits:[((19, 19), "// a comment\n")]
+             ~source
+             ~expected:"enum Status {On = 1// a comment\n, Off = 2}"
              ~mapper:(new useless_mapper) );
        ]

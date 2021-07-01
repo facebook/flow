@@ -1,0 +1,11 @@
+(executables
+ (names run_tests parse_test262)
+ (libraries
+  unix
+  flow_parser
+  str
+  sys_utils
+  hh_json
+  default_injector_config
+  flow_parser_utils))
+

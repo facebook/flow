@@ -7,6 +7,7 @@
     flow_server_protocol
     lwt.unix
     utils_core
+    flow_service_inference
   )
   (preprocess (pps lwt_ppx))
 )

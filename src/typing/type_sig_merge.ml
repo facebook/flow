@@ -106,8 +106,6 @@ module type CONS_GEN = sig
   val qualify_type : Context.t -> Reason.t -> Type.propref -> Type.t -> Type.t
 
   val assert_export_is_type : Context.t -> Reason.t -> string -> Type.t -> Type.t
-
-  val unify_with : Context.t -> Reason.t -> (Type.t -> Type.t) -> Type.t
 end
 
 module type TVAR = sig
@@ -211,7 +209,7 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
               Type.mk_boundfunctiontype
                 []
                 return
-                ~this:Type.bound_function_dummy_this
+                ~this:(Type.bound_function_dummy_this (Reason.aloc_of_reason reason))
                 ~rest_param:None
                 ~def_reason:reason
             in
@@ -642,7 +640,12 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
       let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
       Type.(
         EvalT
-          (obj, TypeDestructorT (use_op, reason, Type.PropertyType (Reason.OrdinaryName prop)), id))
+          ( obj,
+            TypeDestructorT
+              ( use_op,
+                reason,
+                Type.PropertyType { name = Reason.OrdinaryName prop; is_indexed_access = false } ),
+            id ))
     | ElementType { loc; obj; elem } ->
       let reason = Reason.(mk_reason (RType (OrdinaryName "$ElementType")) loc) in
       let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
@@ -665,10 +668,15 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
         Type.Op (Type.IndexedTypeAccess { _object = object_reason; index = index_reason })
       in
       let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+      let index =
+        match index with
+        | Pack.Annot (SingletonString (_, str)) ->
+          Type.OptionalIndexedAccessStrLitIndex (Reason.OrdinaryName str)
+        | _ -> Type.OptionalIndexedAccessTypeIndex index_type
+      in
       Type.EvalT
         ( object_type,
-          Type.TypeDestructorT
-            (use_op, reason, Type.OptionalIndexedAccessNonMaybeType { index_type }),
+          Type.TypeDestructorT (use_op, reason, Type.OptionalIndexedAccessNonMaybeType { index }),
           id )
     | OptionalIndexedAccessResultType { loc; non_maybe_result; void_loc } ->
       let reason = Reason.(mk_reason (RIndexedAccess { optional = true }) loc) in
@@ -1528,7 +1536,7 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
     in
     let this_t =
       match this_param with
-      | None -> Type.bound_function_dummy_this
+      | None -> Type.bound_function_dummy_this (Reason.aloc_of_reason reason)
       | Some t -> merge file t
     in
     let return = merge file return in

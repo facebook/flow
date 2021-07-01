@@ -58,27 +58,6 @@ let mk_sources_test contents expected_values ctxt =
     expected_values
     use_kinds
 
-let mk_ssa_builder_test contents expected_values ctxt =
-  let refined_reads = Env_builder.With_Loc.program (parse contents) in
-  let expected_values = LocMap.map (fun refkind -> (LocSet.empty, refkind)) expected_values in
-  assert_equal
-    ~ctxt
-    ~cmp:(eq (printer false))
-    ~printer:(printer false)
-    ~msg:"SSA values don't match!"
-    expected_values
-    refined_reads
-
-let mk_ssa_builder_location_test contents expected_values ctxt =
-  let refined_reads = Env_builder.With_Loc.program (parse contents) in
-  assert_equal
-    ~ctxt
-    ~cmp:(eq (printer true))
-    ~printer:(printer true)
-    ~msg:"SSA values don't match!"
-    expected_values
-    refined_reads
-
 let mk_source_of_use_test contents target_loc expected_values ctxt =
   let info = Env_builder.With_Loc.program_with_scope ~ignore_toplevel:false (parse contents) in
   let locs = Env_builder.With_Loc.sources_of_use info target_loc in
@@ -187,6 +166,9 @@ f();
 "
           (mk_loc (6, 19) (6, 20))
           (LocSet.of_list [mk_loc (4, 0) (4, 1); mk_loc (6, 1) (6, 15)]);
+    (* These tests are intentionally commented out in this diff so that Jordan can
+     * address handling globals in the EnvBuilder given the new way of modeling
+     * refinements as writes
     "global1" >:: mk_source_of_use_test "
 x
 " (mk_loc (2, 0) (2, 1)) (LocSet.of_list []);
@@ -207,7 +189,7 @@ x
     "global_merge"
     >:: mk_source_of_use_test "
 (x || foo) && x;
-" (mk_loc (2, 19) (2, 20)) (LocSet.of_list []);
+" (mk_loc (2, 19) (2, 20)) (LocSet.of_list []); *)
     "order1" >:: mk_order_test "let x = 42;
 x;" "0 -> 1";
     "order2" >:: mk_order_test "function f() { g() }

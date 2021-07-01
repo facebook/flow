@@ -500,29 +500,16 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:73:15
 
-Cannot cast `'Diamonds'` to `SuiteEnum` because: [incompatible-cast]
- - Either string [1] is incompatible with string literal `Spades` [2].
- - Or string [1] is incompatible with string literal `Hearts` [3].
- - Or string [1] is incompatible with string literal `Diamonds` [4].
- - Or string [1] is incompatible with string literal `Clubs` [5].
+Cannot cast `'Diamonds'` to `SuiteEnum` because string [1] is incompatible with literal union [2]. [incompatible-cast]
 
    object_types.js:73:15
    73| (('Diamonds': string): SuiteEnum); // Error: the `string` type is to general and
                      ^^^^^^ [1]
 
 References:
-   object_types.js:52:11
-   52|   SPADES: 'Spades',
-                 ^^^^^^^^ [2]
-   object_types.js:51:11
-   51|   HEARTS: 'Hearts',
-                 ^^^^^^^^ [3]
-   object_types.js:49:13
-   49|   DIAMONDS: 'Diamonds',
-                   ^^^^^^^^^^ [4]
-   object_types.js:50:10
-   50|   CLUBS: 'Clubs',
-                ^^^^^^^ [5]
+   object_types.js:73:24
+   73| (('Diamonds': string): SuiteEnum); // Error: the `string` type is to general and
+                              ^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- object_types.js:79:12
@@ -557,29 +544,17 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:81:25
 
-Cannot call `magicTrick` with `'Diamonds'` bound to `suite` because: [incompatible-call]
- - Either string [1] is incompatible with string literal `Spades` [2].
- - Or string [1] is incompatible with string literal `Hearts` [3].
- - Or string [1] is incompatible with string literal `Diamonds` [4].
- - Or string [1] is incompatible with string literal `Clubs` [5].
+Cannot call `magicTrick` with `'Diamonds'` bound to `suite` because string [1] is incompatible with literal union [2].
+[incompatible-call]
 
    object_types.js:81:25
    81| magicTrick(('Diamonds': string)); // Error: the `string` type is to general and
                                ^^^^^^ [1]
 
 References:
-   object_types.js:52:11
-   52|   SPADES: 'Spades',
-                 ^^^^^^^^ [2]
-   object_types.js:51:11
-   51|   HEARTS: 'Hearts',
-                 ^^^^^^^^ [3]
-   object_types.js:49:13
-   49|   DIAMONDS: 'Diamonds',
-                   ^^^^^^^^^^ [4]
-   object_types.js:50:10
-   50|   CLUBS: 'Clubs',
-                ^^^^^^^ [5]
+   object_types.js:64:28
+   64| function magicTrick(suite: SuiteEnum) {
+                                  ^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- object_types.js:95:2
@@ -614,29 +589,17 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_types.js:97:15
 
-Cannot cast `'Diamonds'` to `FrozenSuiteEnum` because: [incompatible-cast]
- - Either string [1] is incompatible with string literal `Spades` [2].
- - Or string [1] is incompatible with string literal `Hearts` [3].
- - Or string [1] is incompatible with string literal `Diamonds` [4].
- - Or string [1] is incompatible with string literal `Clubs` [5].
+Cannot cast `'Diamonds'` to `FrozenSuiteEnum` because string [1] is incompatible with literal union [2].
+[incompatible-cast]
 
    object_types.js:97:15
    97| (('Diamonds': string): FrozenSuiteEnum); // Error: `string` is too general
                      ^^^^^^ [1]
 
 References:
-   object_types.js:90:11
-   90|   SPADES: 'Spades',
-                 ^^^^^^^^ [2]
-   object_types.js:89:11
-   89|   HEARTS: 'Hearts',
-                 ^^^^^^^^ [3]
-   object_types.js:87:13
-   87|   DIAMONDS: 'Diamonds',
-                   ^^^^^^^^^^ [4]
-   object_types.js:88:10
-   88|   CLUBS: 'Clubs',
-                ^^^^^^^ [5]
+   object_types.js:97:24
+   97| (('Diamonds': string): FrozenSuiteEnum); // Error: `string` is too general
+                              ^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- object_types.js:107:2

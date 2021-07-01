@@ -14,6 +14,8 @@ npm-debug.log
 /tests/*/*.err
 *.swp
 *.swo
+*.o
+*.a
 flow.odocl
 flow.docdir
 *~
@@ -21,6 +23,8 @@ flow.docdir
 /flowlib.rc
 .merlin
 /test-results
-
+*.log
+*.cache
+.vscode/
 # This is an alias of flow-remove-types that we generate during publishing
 /packages/flow-node

@@ -7,6 +7,8 @@
 
 open Type.TypeContext
 module ALocMap = Loc_collections.ALocMap
+module ALocIDSet = Loc_collections.ALocIDSet
+module ALocIDMap = Loc_collections.ALocIDMap
 
 exception Props_not_found of Type.Properties.id
 
@@ -17,8 +19,6 @@ exception Exports_not_found of Type.Exports.id
 exception Require_not_found of string
 
 exception Module_not_found of string
-
-exception Tvar_not_found of Type.ident
 
 type metadata = {
   (* local *)
@@ -39,7 +39,6 @@ type metadata = {
   enable_enums: bool;
   enable_enums_with_unknown_members: bool;
   enable_indexed_access: bool;
-  enable_this_annot: bool;
   enforce_strict_call_arity: bool;
   enforce_local_inference_annotations: bool;
   exact_by_default: bool;
@@ -172,6 +171,8 @@ type component_t = {
   fix_cache: (bool * Type.t, Type.t) Hashtbl.t;
   spread_cache: Spread_cache.t;
   speculation_state: Speculation_state.t;
+  (* TODO remove when existential type is gone *)
+  mutable exists_instantiations: Type.t list ALocIDMap.t;
   (* Post-inference checks *)
   mutable literal_subtypes: (Type.t * Type.use_t) list;
   mutable matching_props: (Reason.reason * string * Type.t * Type.t) list;
@@ -194,14 +195,14 @@ type t = {
   ccx: component_t;
   file: File_key.t;
   phase: phase;
-  rev_aloc_table: ALoc.reverse_table Lazy.t;
+  aloc_table: ALoc.table Lazy.t;
   metadata: metadata;
   module_info: Module_info.t;
   mutable require_map: Type.t ALocMap.t;
   trust_constructor: unit -> Trust.trust_rep;
   mutable declare_module_ref: Module_info.t option;
   mutable use_def: Env_builder.env_info option;
-  mutable exported_locals: Loc_collections.ALocSet.t SMap.t option;
+  mutable exported_locals: ALocIDSet.t;
 }
 
 let metadata_of_options options =
@@ -223,7 +224,6 @@ let metadata_of_options options =
     enable_enums = Options.enums options;
     enable_enums_with_unknown_members = Options.enums_with_unknown_members options;
     enable_indexed_access = Options.enable_indexed_access options;
-    enable_this_annot = Options.this_annot options;
     enforce_strict_call_arity = Options.enforce_strict_call_arity options;
     check_updates_against_providers = Options.check_updates_against_providers options;
     enforce_local_inference_annotations = Options.enforce_local_inference_annotations options;
@@ -316,6 +316,7 @@ let make_ccx master_cx =
     exists_excuses = ALocMap.empty;
     voidable_checks = [];
     implicit_instantiation_checks = [];
+    exists_instantiations = ALocIDMap.empty;
     test_prop_hits_and_misses = IMap.empty;
     computed_property_states = IMap.empty;
     spread_widened_types = IMap.empty;
@@ -332,35 +333,20 @@ let make_ccx master_cx =
     speculation_state = ref [];
   }
 
-(* create a new context structure.
-   Flow_js.fresh_context prepares for actual use.
-*)
 let make ccx metadata file aloc_table module_ref phase =
   ccx.aloc_tables <- Utils_js.FilenameMap.add file aloc_table ccx.aloc_tables;
-  let rev_aloc_table =
-    lazy
-      (try Lazy.force aloc_table |> ALoc.reverse_table
-       with
-       (* If we aren't in abstract locations mode, or are in a libdef, we
-          won't have an aloc table, so we just create an empty reverse
-          table. We handle this exception here rather than explicitly
-          making an optional version of the get_aloc_table function for
-          simplicity. *)
-       | Parsing_heaps_exceptions.ALoc_table_not_found _ ->
-         ALoc.make_empty_reverse_table ())
-  in
   {
     ccx;
     file;
     phase;
-    rev_aloc_table;
+    aloc_table;
     metadata;
     module_info = Module_info.empty_cjs_module module_ref;
     require_map = ALocMap.empty;
     trust_constructor = Trust.literal_trust;
     declare_module_ref = None;
     use_def = None;
-    exported_locals = None;
+    exported_locals = ALocIDSet.empty;
   }
 
 let sig_cx cx = cx.ccx.sig_cx
@@ -422,8 +408,6 @@ let enable_enums_with_unknown_members cx = cx.metadata.enable_enums_with_unknown
 
 let enable_indexed_access cx = cx.metadata.enable_indexed_access
 
-let enable_this_annot cx = cx.metadata.enable_this_annot
-
 let enforce_strict_call_arity cx = cx.metadata.enforce_strict_call_arity
 
 let errors cx = cx.ccx.errors
@@ -467,7 +451,7 @@ let find_require cx loc =
 let find_module cx m = find_module_sig (sig_cx cx) m
 
 let find_tvar cx id =
-  (try IMap.find id cx.ccx.sig_cx.graph with Not_found -> raise (Tvar_not_found id))
+  (try IMap.find id cx.ccx.sig_cx.graph with Not_found -> raise (Union_find.Tvar_not_found id))
 
 let mem_nominal_poly_id cx id = Type.Poly.Set.mem id cx.ccx.nominal_poly_ids
 
@@ -556,9 +540,9 @@ let voidable_checks cx = cx.ccx.voidable_checks
 
 let implicit_instantiation_checks cx = cx.ccx.implicit_instantiation_checks
 
-let use_def cx = cx.use_def
+let exists_instantiations cx = cx.ccx.exists_instantiations
 
-let exported_locals cx = cx.exported_locals
+let use_def cx = cx.use_def
 
 let automatic_require_default cx = cx.metadata.automatic_require_default
 
@@ -800,7 +784,7 @@ let has_export cx id name = find_exports cx id |> NameUtils.Map.mem name
 let set_export cx id name t = find_exports cx id |> NameUtils.Map.add name t |> add_export_map cx id
 
 (* constructors *)
-let make_aloc_id cx aloc = ALoc.id_of_aloc cx.rev_aloc_table aloc
+let make_aloc_id cx aloc = ALoc.id_of_aloc cx.aloc_table aloc
 
 let make_generic_id cx name loc = Generic.make_bound_id (make_aloc_id cx loc) name
 
@@ -837,6 +821,17 @@ let generate_poly_id cx =
 
 let make_source_poly_id cx aloc = make_aloc_id cx aloc |> Type.Poly.id_of_aloc_id
 
+let is_exported_local cx aloc = ALocIDSet.mem (make_aloc_id cx aloc) cx.exported_locals
+
+let add_exists_instantiation cx loc t =
+  let id = make_aloc_id cx loc in
+  let ts =
+    match ALocIDMap.find_opt id cx.ccx.exists_instantiations with
+    | Some ts -> t :: ts
+    | None -> [t]
+  in
+  cx.ccx.exists_instantiations <- ALocIDMap.add id ts cx.ccx.exists_instantiations
+
 (* Copy context from cx_other to cx *)
 let merge_into ccx sig_cx_other =
   let sig_cx = ccx.sig_cx in
@@ -851,52 +846,31 @@ let merge_into ccx sig_cx_other =
       trust_graph = IMap.union sig_cx_other.trust_graph sig_cx.trust_graph;
     }
 
-(* Find the constraints of a type variable in the graph.
-
-   Recall that type variables are either roots or goto nodes. (See
-   Constraint for details.) If the type variable is a root, the
-   constraints are stored with the type variable. Otherwise, the type variable
-   is a goto node, and it points to another type variable: a linked list of such
-   type variables must be traversed until a root is reached. *)
-let rec find_graph cx id =
-  let (_, constraints) = find_constraints cx id in
+let find_graph cx id =
+  let (graph', constraints) = Type.Constraint.find_graph cx.ccx.sig_cx.graph id in
+  cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph = graph' };
   constraints
 
-and find_constraints cx id =
-  let (root_id, root) = find_root cx id in
-  (root_id, root.Type.Constraint.constraints)
+let find_constraints cx id =
+  let (graph', root_id, constraints) = Type.Constraint.find_constraints cx.ccx.sig_cx.graph id in
+  cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph = graph' };
+  (root_id, constraints)
 
-(* Find the root of a type variable, potentially traversing a chain of type
-   variables, while short-circuiting all the type variables in the chain to the
-   root during traversal to speed up future traversals. *)
-and find_root cx id =
-  Type.Constraint.(
-    match IMap.find_opt id (graph cx) with
-    | Some (Goto next_id) ->
-      let (root_id, root) = find_root cx next_id in
-      if root_id != next_id then
-        add_tvar cx id (Goto root_id)
-      else
-        ();
-      (root_id, root)
-    | Some (Root root) -> (id, root)
-    | None ->
-      let msg =
-        Utils_js.spf "find_root: tvar %d not found in file %s" id (File_key.to_string @@ file cx)
-      in
-      Utils_js.assert_false msg)
+let find_root cx id =
+  let (graph', root_id, constraints) = Type.Constraint.find_root cx.ccx.sig_cx.graph id in
+  cx.ccx.sig_cx <- { cx.ccx.sig_cx with graph = graph' };
+  (root_id, constraints)
 
 let rec find_resolved cx t_in =
   match t_in with
   | Type.OpenT (_, id) ->
-    Type.Constraint.(
-      begin
-        match Lazy.force (find_graph cx id) with
-        | Resolved (_, t)
-        | FullyResolved (_, (lazy t)) ->
-          Some t
-        | Unresolved _ -> None
-      end)
+    begin
+      match Lazy.force (find_graph cx id) with
+      | Type.Constraint.Resolved (_, t)
+      | Type.Constraint.FullyResolved (_, (lazy t)) ->
+        Some t
+      | Type.Constraint.Unresolved _ -> None
+    end
   | Type.AnnotT (_, t, _) -> find_resolved cx t
   | t -> Some t
 

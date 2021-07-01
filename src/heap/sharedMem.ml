@@ -23,7 +23,7 @@ type table_stats = {
   slots: int;
 }
 
-type heap = (nativeint, Bigarray.nativeint_elt, Bigarray.c_layout) Bigarray.Array1.t
+type heap = (char, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
 
 (* Phantom type parameter provides type-safety to callers of this API.
  * Internally, these are all just ints, so be careful! *)
@@ -398,14 +398,10 @@ module type NoCache = sig
   val revive_batch : KeySet.t -> unit
 end
 
-module type DebugLocalCache = sig
+module type LocalCache = sig
   module DebugL1 : DebugCacheType
 
   module DebugL2 : DebugCacheType
-end
-
-module type LocalCache = sig
-  include DebugLocalCache
 
   type key
 
@@ -427,7 +423,7 @@ module type WithCache = sig
 
   val get_no_cache : key -> value option
 
-  module DebugCache : DebugLocalCache
+  module DebugCache : LocalCache with type key = key and type value = value
 end
 
 (*****************************************************************************)
@@ -679,15 +675,10 @@ end
 
 let invalidate_callback_list = ref []
 
-module LocalCache (Key : Key) (Value : Value) :
-  LocalCache with type key := Key.t and type value := Value.t = struct
-  module Config = struct
-    type key = Key.t
+module LocalCache (Config : CacheConfig) = struct
+  type key = Config.key
 
-    type value = Value.t
-
-    let capacity = 1000
-  end
+  type value = Config.value
 
   (* Young values cache *)
   module L1 = OrderedCache (Config)
@@ -722,15 +713,6 @@ module LocalCache (Key : Key) (Value : Value) :
   let clear () =
     L1.clear ();
     L2.clear ()
-
-  let () =
-    invalidate_callback_list :=
-      begin
-        fun () ->
-        L1.clear ();
-        L2.clear ()
-      end
-      :: !invalidate_callback_list
 end
 
 (*****************************************************************************)
@@ -749,7 +731,14 @@ struct
   type value = Direct.value
 
   module KeySet = Direct.KeySet
-  module Cache = LocalCache (Key) (Value)
+
+  module Cache = LocalCache (struct
+    type nonrec key = key
+
+    type nonrec value = value
+
+    let capacity = 1000
+  end)
 
   (* This is exposed for tests *)
   module DebugCache = Cache
@@ -829,8 +818,6 @@ struct
 end
 
 module NewAPI = struct
-  open Bigarray
-
   type chunk = {
     heap: heap;
     mutable next_addr: int;
@@ -842,6 +829,10 @@ module NewAPI = struct
   type 'a addr_tbl
 
   type 'a opt
+
+  type docblock
+
+  type aloc_table
 
   type type_export
 
@@ -871,6 +862,10 @@ module NewAPI = struct
 
   type size = int
 
+  let bsize_wsize bsize = bsize * Sys.word_size / 8
+
+  let addr_offset addr size = addr + bsize_wsize size
+
   let get_heap () =
     match !heap_ref with
     | None -> failwith "get_heap: not connected"
@@ -884,7 +879,7 @@ module NewAPI = struct
     let x = f chunk in
     (* Ensure allocated space was initialized. *)
     assert (chunk.remaining_size = 0);
-    assert (chunk.next_addr = addr + size);
+    assert (chunk.next_addr = addr_offset addr size);
     x
 
   (* Addresses are relative to the hashtbl pointer, so the null address actually
@@ -923,6 +918,8 @@ module NewAPI = struct
   type tag =
     | Serialized_tag
     | String_tag
+    | Docblock_tag
+    | ALoc_table_tag
     | Type_export_tag
     | CJS_exports_tag
     | CJS_module_info_tag
@@ -934,7 +931,7 @@ module NewAPI = struct
     | Pattern_def_tag
     | Pattern_tag
     (* tags defined below this point are scanned for pointers *)
-    | Addr_tbl_tag (* 12 *)
+    | Addr_tbl_tag (* 13 *)
     | Checked_file_tag
     | CJS_module_tag
     | ES_module_tag
@@ -970,7 +967,11 @@ module NewAPI = struct
 
   let addr_tbl_size xs = addr_size * Array.length xs
 
-  let checked_file_size = 6 * addr_size
+  let docblock_size = string_size
+
+  let aloc_table_size = string_size
+
+  let checked_file_size = 8 * addr_size
 
   let type_export_size export = hash_size + string_size export
 
@@ -1005,6 +1006,14 @@ module NewAPI = struct
   let addr_tbl_header xs =
     let size = addr_tbl_size xs in
     mk_header Addr_tbl_tag size
+
+  let docblock_header docblock =
+    let size = docblock_size docblock in
+    mk_header Docblock_tag size
+
+  let aloc_table_header tbl =
+    let size = aloc_table_size tbl in
+    mk_header ALoc_table_tag size
 
   let checked_file_header = mk_header Checked_file_tag checked_file_size
 
@@ -1054,17 +1063,21 @@ module NewAPI = struct
 
   (* offsets *)
 
-  let module_addr file = file + 1
+  let docblock_addr file = addr_offset file 1
 
-  let module_refs_addr file = file + 2
+  let aloc_table_addr file = addr_offset file 2
 
-  let local_defs_addr file = file + 3
+  let module_addr file = addr_offset file 3
 
-  let remote_refs_addr file = file + 4
+  let module_refs_addr file = addr_offset file 4
 
-  let pattern_defs_addr file = file + 5
+  let local_defs_addr file = addr_offset file 5
 
-  let patterns_addr file = file + 6
+  let remote_refs_addr file = addr_offset file 6
+
+  let pattern_defs_addr file = addr_offset file 7
+
+  let patterns_addr file = addr_offset file 8
 
   (* read *)
 
@@ -1075,34 +1088,35 @@ module NewAPI = struct
    * must ensure that the given destination contains string data. *)
   external unsafe_read_string : _ addr -> int -> string = "hh_read_string"
 
+  (* Read int64 from given byte offset in the heap. This is bounds checked. *)
+  external read_int64 : heap -> int -> int64 = "%caml_bigstring_get64"
+
   (* Read a header from the heap. The low 2 bits of the header are reserved for
    * GC and not used in OCaml. *)
   let read_header heap addr =
-    let hd_nat = Array1.get heap addr in
+    let hd64 = read_int64 heap addr in
     (* Double-check that the data looks like a header. All reachable headers
      * will have the lsb set. *)
-    assert (Nativeint.(logand hd_nat 1n = 1n));
-    Nativeint.(to_int (shift_right_logical hd_nat 2))
+    assert (Int64.(logand hd64 1L = 1L));
+    Int64.(to_int (shift_right_logical hd64 2))
 
   let read_header_checked heap tag addr =
     let hd = read_header heap addr in
     assert_tag hd tag;
     hd
 
-  (* Read an address from the heap. In the heap, we store word-aligned byte
-   * offsets, but in OCaml we prefer word offsets. As with Val_addr when passing
-   * back addresses from C, we perform the byte->word offset conversion here. *)
+  (* Read an address from the heap. *)
   let read_addr heap addr =
-    let addr_nat = Array1.get heap addr in
+    let addr64 = read_int64 heap addr in
     (* double-check that the data looks like an address *)
-    assert (Nativeint.(logand addr_nat 1n = 0n));
-    Nativeint.(to_int (shift_right_logical addr_nat 3))
+    assert (Int64.logand addr64 1L = 0L);
+    Int64.to_int addr64
 
   let read_string_generic tag addr offset =
     let hd = read_header_checked (get_heap ()) tag addr in
-    let str_addr = addr + header_size + offset in
-    let str_length = obj_size hd - offset in
-    unsafe_read_string str_addr str_length
+    let str_addr = addr_offset addr (header_size + offset) in
+    let str_size = obj_size hd - offset in
+    unsafe_read_string str_addr str_size
 
   let read_string addr = read_string_generic String_tag addr 0
 
@@ -1112,7 +1126,7 @@ module NewAPI = struct
     else
       let heap = get_heap () in
       let hd = read_header_checked heap Addr_tbl_tag addr in
-      init (obj_size hd) (fun i -> f (read_addr heap (addr + header_size + i)))
+      init (obj_size hd) (fun i -> f (read_addr heap (addr_offset addr (header_size + i))))
 
   let read_addr_tbl f addr = read_addr_tbl_generic f addr Array.init
 
@@ -1121,6 +1135,10 @@ module NewAPI = struct
       None
     else
       Some (f addr)
+
+  let read_docblock addr = read_string_generic Docblock_tag addr 0
+
+  let read_aloc_table addr = read_string_generic ALoc_table_tag addr 0
 
   let read_dyn_module f g addr =
     let heap = get_heap () in
@@ -1155,6 +1173,10 @@ module NewAPI = struct
 
   (* getters *)
 
+  let file_docblock file = read_addr (get_heap ()) (docblock_addr file)
+
+  let file_aloc_table file = read_addr (get_heap ()) (aloc_table_addr file)
+
   let file_module file = read_addr (get_heap ()) (module_addr file)
 
   let file_module_refs file = read_addr (get_heap ()) (module_refs_addr file)
@@ -1167,36 +1189,38 @@ module NewAPI = struct
 
   let file_patterns file = read_addr (get_heap ()) (patterns_addr file)
 
-  let cjs_module_info m = read_addr (get_heap ()) (m + 1)
+  let cjs_module_info m = read_addr (get_heap ()) (addr_offset m 1)
 
-  let cjs_module_exports m = read_addr (get_heap ()) (m + 2)
+  let cjs_module_exports m = read_addr (get_heap ()) (addr_offset m 2)
 
-  let cjs_module_type_exports m = read_addr (get_heap ()) (m + 3)
+  let cjs_module_type_exports m = read_addr (get_heap ()) (addr_offset m 3)
 
-  let es_module_info m = read_addr (get_heap ()) (m + 1)
+  let es_module_info m = read_addr (get_heap ()) (addr_offset m 1)
 
-  let es_module_exports m = read_addr (get_heap ()) (m + 2)
+  let es_module_exports m = read_addr (get_heap ()) (addr_offset m 2)
 
-  let es_module_type_exports m = read_addr (get_heap ()) (m + 3)
+  let es_module_type_exports m = read_addr (get_heap ()) (addr_offset m 3)
 
   (* write *)
+
+  (* Write int64 to given byte offset in the heap. This is not bounds checked. *)
+  external unsafe_write_int64 : heap -> int -> int64 -> unit = "%caml_bigstring_set64u"
 
   (* Write a header at a specified address in the heap. This write is not
    * bounds checked; caller must ensure the given destination has already been
    * allocated. *)
   let unsafe_write_header_at heap dst hd =
-    Array1.unsafe_set heap dst Nativeint.(logor 1n (shift_left (of_int hd) 2))
+    unsafe_write_int64 heap dst Int64.(logor 1L (shift_left (of_int hd) 2))
 
   (* Write an address at a specified address in the heap. This write is not
    * bounds checked; caller must ensure the given destination has already been
    * allocated. *)
-  let unsafe_write_addr_at heap dst addr =
-    Array1.unsafe_set heap dst Nativeint.(shift_left (of_int addr) 3)
+  let unsafe_write_addr_at heap dst addr = unsafe_write_int64 heap dst (Int64.of_int addr)
 
   (* Write a 64-bit hash at a specified address in the heap. This write is not
    * bounds checked; caller must ensure the given destination has already been
    * allocated. *)
-  let unsafe_write_hash_at heap dst hash = Array1.unsafe_set heap dst (Int64.to_nativeint hash)
+  let unsafe_write_hash_at = unsafe_write_int64
 
   (* Write a string at the specified address in the heap. This write is not
    * bounds checked; caller must ensure the given destination has already been
@@ -1208,28 +1232,28 @@ module NewAPI = struct
    * already been allocated. *)
   let unsafe_write_header chunk hd =
     unsafe_write_header_at chunk.heap chunk.next_addr hd;
-    chunk.next_addr <- chunk.next_addr + header_size
+    chunk.next_addr <- addr_offset chunk.next_addr header_size
 
   (* Write an address into the given chunk and advance the chunk address. This
    * write is not bounds checked; caller must ensure the given destination has
    * already been allocated. *)
   let unsafe_write_addr chunk addr =
     unsafe_write_addr_at chunk.heap chunk.next_addr addr;
-    chunk.next_addr <- chunk.next_addr + addr_size
+    chunk.next_addr <- addr_offset chunk.next_addr addr_size
 
   (* Write a 64-bit hash into the given chunk and advance the chunk address.
    * This write is not bounds checked; caller must ensure the given destination
    * has already been allocated. *)
   let unsafe_write_hash chunk hash =
     unsafe_write_hash_at chunk.heap chunk.next_addr hash;
-    chunk.next_addr <- chunk.next_addr + hash_size
+    chunk.next_addr <- addr_offset chunk.next_addr hash_size
 
   (* Write a string into the given chunk and advance the chunk address. This
    * write is not bounds checked; caller must ensure the given destination has
    * already been allocated. *)
   let unsafe_write_string chunk s =
     unsafe_write_string_at chunk.next_addr s;
-    chunk.next_addr <- chunk.next_addr + string_size s
+    chunk.next_addr <- addr_offset chunk.next_addr (string_size s)
 
   (* Consume space in the chunk for the object described by the given header,
    * write header, advance chunk address, and return address to the header. This
@@ -1246,6 +1270,16 @@ module NewAPI = struct
     let heap_string = write_header chunk (string_header s) in
     unsafe_write_string chunk s;
     heap_string
+
+  let write_docblock chunk docblock =
+    let addr = write_header chunk (docblock_header docblock) in
+    unsafe_write_string chunk docblock;
+    addr
+
+  let write_aloc_table chunk tbl =
+    let addr = write_header chunk (aloc_table_header tbl) in
+    unsafe_write_string chunk tbl;
+    addr
 
   let write_type_export chunk export =
     let addr = write_header chunk (type_export_header export) in
@@ -1291,8 +1325,12 @@ module NewAPI = struct
     unsafe_write_addr chunk type_exports;
     addr
 
-  let write_checked_file chunk dyn_module module_refs local_defs remote_refs pattern_defs patterns =
+  let write_checked_file
+      chunk docblock aloc_table dyn_module module_refs local_defs remote_refs pattern_defs patterns
+      =
     let checked_file = write_header chunk checked_file_header in
+    unsafe_write_addr chunk docblock;
+    unsafe_write_addr chunk aloc_table;
     unsafe_write_addr chunk dyn_module;
     unsafe_write_addr chunk module_refs;
     unsafe_write_addr chunk local_defs;
@@ -1332,11 +1370,11 @@ module NewAPI = struct
     else
       let hd = addr_tbl_header xs in
       let map = write_header chunk hd in
-      chunk.next_addr <- chunk.next_addr + obj_size hd;
+      chunk.next_addr <- addr_offset chunk.next_addr (obj_size hd);
       Array.iteri
         (fun i x ->
           let addr = f chunk x in
-          unsafe_write_addr_at chunk.heap (map + header_size + i) addr)
+          unsafe_write_addr_at chunk.heap (addr_offset map (header_size + i)) addr)
         xs;
       map
 
@@ -1348,11 +1386,11 @@ module NewAPI = struct
 
   let read_hash addr =
     let heap = get_heap () in
-    Int64.of_nativeint (Array1.get heap (addr + header_size))
+    read_int64 heap (addr_offset addr header_size)
 
   let write_hash addr hash =
     let heap = get_heap () in
-    unsafe_write_hash_at heap (addr + header_size) hash
+    unsafe_write_hash_at heap (addr_offset addr header_size) hash
 
   let read_type_export_hash = read_hash
 

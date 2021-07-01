@@ -7476,3 +7476,393 @@ Flags: --pretty
   ]
 }
 
+indexed-access-1.js:7:12
+Flags: --lsp
+{
+  "label":"\"bar\"",
+  "labelDetails":{"type":"string | void"},
+  "kind":13,
+  "detail":"string | void",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"\"bar\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"bar\""}
+    ]
+  }
+}
+{
+  "label":"\"foo\"",
+  "labelDetails":{"type":"number"},
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"\"foo\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"foo\""}
+    ]
+  }
+}
+{
+  "label":"K",
+  "labelDetails":{"type":"type K = \"foo\""},
+  "kind":13,
+  "detail":"type K = \"foo\"",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"K"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"K"}
+    ]
+  }
+}
+{
+  "label":"O",
+  "labelDetails":{"type":"type O = {bar?: string, foo: number, ...}"},
+  "kind":13,
+  "detail":"type O = {bar?: string, foo: number, ...}",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"O"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"O"}
+    ]
+  }
+}
+{
+  "label":"T",
+  "labelDetails":{"type":"type T = empty"},
+  "kind":13,
+  "detail":"type T = empty",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"T"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"T"}
+    ]
+  }
+}
+
+indexed-access-2.js:4:13
+Flags: --lsp
+{
+  "label":"\"bar\"",
+  "labelDetails":{"type":"string | void"},
+  "kind":13,
+  "detail":"string | void",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"\"bar\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"bar\""}
+    ]
+  }
+}
+{
+  "label":"\"foo\"",
+  "labelDetails":{"type":"number"},
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"\"foo\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"foo\""}
+    ]
+  }
+}
+{
+  "label":"O",
+  "labelDetails":{"type":"type O = {bar?: string, foo: number, ...}"},
+  "kind":13,
+  "detail":"type O = {bar?: string, foo: number, ...}",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"O"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"O"}
+    ]
+  }
+}
+{
+  "label":"T",
+  "labelDetails":{"type":"type T = any"},
+  "kind":13,
+  "detail":"type T = any",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"T"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"T"}
+    ]
+  }
+}
+
+indexed-access-optional-1.js:7:14
+Flags: --lsp
+{
+  "label":"\"bar\"",
+  "labelDetails":{"type":"void | string"},
+  "kind":13,
+  "detail":"void | string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"\"bar\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"bar\""}
+    ]
+  }
+}
+{
+  "label":"\"foo\"",
+  "labelDetails":{"type":"number"},
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"\"foo\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"foo\""}
+    ]
+  }
+}
+{
+  "label":"K",
+  "labelDetails":{"type":"type K = \"foo\""},
+  "kind":13,
+  "detail":"type K = \"foo\"",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"K"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"K"}
+    ]
+  }
+}
+{
+  "label":"O",
+  "labelDetails":{"type":"type O = ?{bar?: string, foo: number, ...}"},
+  "kind":13,
+  "detail":"type O = ?{bar?: string, foo: number, ...}",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"O"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"O"}
+    ]
+  }
+}
+{
+  "label":"T",
+  "labelDetails":{"type":"type T = empty"},
+  "kind":13,
+  "detail":"type T = empty",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"T"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"T"}
+    ]
+  }
+}
+
+indexed-access-optional-2.js:4:15
+Flags: --lsp
+{
+  "label":"\"bar\"",
+  "labelDetails":{"type":"void | string"},
+  "kind":13,
+  "detail":"void | string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"\"bar\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"bar\""}
+    ]
+  }
+}
+{
+  "label":"\"foo\"",
+  "labelDetails":{"type":"number"},
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"\"foo\""
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "bracket syntax member",
+      {"token":null,"completion":"\"foo\""}
+    ]
+  }
+}
+{
+  "label":"O",
+  "labelDetails":{"type":"type O = {bar?: string, foo: number, ...} | void"},
+  "kind":13,
+  "detail":"type O = {bar?: string, foo: number, ...} | void",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"O"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"O"}
+    ]
+  }
+}
+{
+  "label":"T",
+  "labelDetails":{"type":"type T = any | void"},
+  "kind":13,
+  "detail":"type T = any | void",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"T"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: local type identifier",
+      {"token":null,"completion":"T"}
+    ]
+  }
+}
+

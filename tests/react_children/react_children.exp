@@ -1366,9 +1366,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- text.js:52:14
 
-Cannot create `TextLiteral` element because in property `children`: [incompatible-type]
- - Either children array [1] is incompatible with string literal `foo` [2].
- - Or children array [1] is incompatible with string literal `bar` [3].
+Cannot create `TextLiteral` element because children array [1] is incompatible with literal union [2] in property
+`children`. [incompatible-type]
 
    text.js:52:14
    52| <TextLiteral>{'foo'}  </TextLiteral>; // Error: Spaces are not trimmed.
@@ -1377,17 +1376,13 @@ Cannot create `TextLiteral` element because in property `children`: [incompatibl
 References:
    text.js:7:54
     7| class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
-                                                            ^^^^^ [2]
-   text.js:7:62
-    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
-                                                                    ^^^^^ [3]
+                                                            ^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- text.js:53:14
 
-Cannot create `TextLiteral` element because in property `children`: [incompatible-type]
- - Either children array [1] is incompatible with string literal `foo` [2].
- - Or children array [1] is incompatible with string literal `bar` [3].
+Cannot create `TextLiteral` element because children array [1] is incompatible with literal union [2] in property
+`children`. [incompatible-type]
 
    text.js:53:14
    53| <TextLiteral>  {'foo'}</TextLiteral>; // Error: Spaces are not trimmed.
@@ -1396,10 +1391,7 @@ Cannot create `TextLiteral` element because in property `children`: [incompatibl
 References:
    text.js:7:54
     7| class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
-                                                            ^^^^^ [2]
-   text.js:7:62
-    7| class TextLiteral extends React.Component<{children: 'foo' | 'bar'}, void> {}
-                                                                    ^^^^^ [3]
+                                                            ^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- tuple.js:9:2

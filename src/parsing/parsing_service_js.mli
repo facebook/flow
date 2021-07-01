@@ -16,8 +16,8 @@ type result =
   | Parse_ok of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
       file_sig: File_sig.With_Loc.t;
+      locs: Parsing_heaps.locs_tbl;
       type_sig: Parsing_heaps.type_sig;
-      aloc_table: ALoc.table;
       tolerable_errors: File_sig.With_Loc.tolerable_error list;
       parse_errors: parse_error list;
       exports: Exports.t;
@@ -77,7 +77,6 @@ type parse_options = {
   parse_max_literal_len: int;
   parse_exact_by_default: bool;
   parse_enable_enums: bool;
-  parse_enable_this_annot: bool;
   parse_node_main_fields: string list;
 }
 

@@ -23,18 +23,18 @@ let parse_lib opts scope locs ast =
 let parse_libs opts ordered_asts =
   let open Parse in
   let scope = Scope.create_global () in
-  let locs = Locs.create () in
-  List.iter (parse_lib opts scope locs) ordered_asts;
-  (locs, Scope.builtins_exn scope)
+  let tbls = create_tables () in
+  List.iter (parse_lib opts scope tbls) ordered_asts;
+  (tbls, Scope.builtins_exn scope)
 
-let pack_builtins (locs, (tbls, globals, modules)) =
-  let { Parse.module_refs; local_defs; remote_refs; _ } = tbls in
+let pack_builtins (tbls, (globals, modules)) =
+  let { Parse.locs; module_refs; local_defs; remote_refs; _ } = tbls in
   (* mark *)
   SMap.iter (fun _ b -> Mark.mark_binding b) globals;
   SMap.iter (fun _ m -> Mark.mark_builtin_module m) modules;
   (* compact *)
   let locs = Locs.compact locs in
-  let module_refs = Module_refs.compact module_refs in
+  let module_refs = Module_refs.Interned.compact module_refs in
   let local_defs = Local_defs.compact local_defs in
   let remote_refs = Remote_refs.compact remote_refs in
   (* copy *)
@@ -61,19 +61,13 @@ let parse_module ~strict source opts ast =
   let open Parse in
   let (_, { Flow_ast.Program.statements = stmts; _ }) = ast in
   let scope = Scope.create_module ~strict in
-  let locs = Locs.create () in
-  let file_loc = Locs.push locs { Loc.none with Loc.source } in
-  List.iter (statement opts scope locs) stmts;
-  (locs, file_loc, Scope.exports_exn scope)
+  let tbls = create_tables () in
+  let file_loc = push_loc tbls { Loc.none with Loc.source } in
+  List.iter (statement opts scope tbls) stmts;
+  (tbls, file_loc, Scope.exports_exn scope)
 
 let merge_locs loc0 loc1 =
-  let k = Loc.(pos_cmp loc0.start loc1.start) in
-  let k =
-    if k = 0 then
-      Loc.(pos_cmp loc1._end loc0._end)
-    else
-      k
-  in
+  let k = Packed_locs.compare_locs loc0 loc1 in
   if k < 0 then
     None
   else if k = 0 then
@@ -85,13 +79,13 @@ let merge_locs loc0 loc1 =
       (Loc.debug_to_string ~include_source:true loc0)
       (Loc.debug_to_string ~include_source:true loc1)
 
-let pack (locs, file_loc, (tbls, exports)) =
-  let { Parse.module_refs; local_defs; remote_refs; pattern_defs; patterns } = tbls in
+let pack (tbls, file_loc, exports) =
+  let { Parse.locs; module_refs; local_defs; remote_refs; pattern_defs; patterns } = tbls in
   (* mark *)
   Mark.mark_exports file_loc exports;
   (* compact *)
   let locs = Locs.compact ~merge:merge_locs locs in
-  let module_refs = Module_refs.compact module_refs in
+  let module_refs = Module_refs.Interned.compact module_refs in
   let local_defs = Local_defs.compact local_defs in
   let remote_refs = Remote_refs.compact remote_refs in
   let pattern_defs = Pattern_defs.compact pattern_defs in

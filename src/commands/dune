@@ -33,6 +33,7 @@
     commandUtils
   )
   (libraries
+    flow_monitor
     flow_command_spec
     flow_commands_connect
     flow_common
@@ -43,7 +44,6 @@
     flow_flowlib
     flow_server
     flow_server_files
-    flow_shared_mem
     find ; hack
   )
 )

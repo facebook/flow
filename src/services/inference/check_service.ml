@@ -17,6 +17,7 @@ type check_file =
   File_sig.With_ALoc.t ->
   Docblock.t ->
   ALoc.table Lazy.t ->
+  Loc_collections.ALocIDSet.t ->
   Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
 
 (* Check will lazily create types for the checked file's dependencies. These
@@ -220,16 +221,11 @@ module ConsGen : Type_sig_merge.CONS_GEN = struct
     in
     let tvar = mk_lazy_tvar cx reason f in
     AnnotT (reason, tvar, false)
-
-  let unify_with cx reason f =
-    Tvar.mk_where cx reason (fun tvar ->
-        let t = f tvar in
-        Flow_js.unify cx tvar t)
 end
 
 [@@@warning "-60"]
 
-(* Don't use Flow_js directly from New_check_service. Instead, encode the respective
+(* Don't use Flow_js directly from Check_service. Instead, encode the respective
  * logic in ConsGen. *)
 module Flow_js = struct end
 
@@ -247,7 +243,6 @@ let mk_check_file ~options ~reader ~cache () =
   let audit = Expensive.ok in
 
   let get_file = Module_heaps.Reader_dispatcher.get_file ~reader ~audit in
-  let get_docblock_unsafe = Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader in
   let get_type_sig_unsafe = Parsing_heaps.Reader_dispatcher.get_type_sig_addr_unsafe ~reader in
   let get_info_unsafe = Module_heaps.Reader_dispatcher.get_info_unsafe ~reader ~audit in
   let get_aloc_table_unsafe = Parsing_heaps.Reader_dispatcher.get_aloc_table_unsafe ~reader in
@@ -260,8 +255,7 @@ let mk_check_file ~options ~reader ~cache () =
 
   (* Create a merging context for a dependency of a checked file. These contexts
    * are used when converting signatures to types. *)
-  let create_dep_cx file_key ccx =
-    let docblock = get_docblock_unsafe file_key in
+  let create_dep_cx file_key docblock ccx =
     let metadata = Context.docblock_overrides docblock base_metadata in
     let module_ref = Reason.OrdinaryName (Files.module_ref file_key) in
     let aloc_table = lazy (get_aloc_table_unsafe file_key) in
@@ -283,7 +277,7 @@ let mk_check_file ~options ~reader ~cache () =
         unchecked_module_t cx mref
   and sig_module_t cx file_key _loc =
     let file =
-      New_check_cache.find_or_create cache ~find_leader ~master_cx ~create_file:dep_file file_key
+      Check_cache.find_or_create cache ~find_leader ~master_cx ~create_file:dep_file file_key
     in
     let t = file.Type_sig_merge.exports () in
     copy_into cx file.Type_sig_merge.cx t;
@@ -305,11 +299,13 @@ let mk_check_file ~options ~reader ~cache () =
         (fun loc -> aloc loc |> ALoc.to_loc aloc_table |> ALoc.of_loc)
     in
 
-    let cx = create_dep_cx file_key ccx in
-
     let deserialize x = Marshal.from_string x 0 in
 
     let file_addr = get_type_sig_unsafe file_key in
+
+    let docblock = Heap.file_docblock file_addr |> Heap.read_docblock |> deserialize in
+
+    let cx = create_dep_cx file_key docblock ccx in
 
     let dependencies =
       let f addr =
@@ -491,14 +487,14 @@ let mk_check_file ~options ~reader ~cache () =
     Nel.iter connect locs
   in
 
-  fun file_key requires ast comments file_sig docblock aloc_table ->
+  fun file_key requires ast comments file_sig docblock aloc_table exported_locals ->
     let ccx = Context.make_ccx master_cx in
     let metadata = Context.docblock_overrides docblock base_metadata in
     let module_ref = Reason.OrdinaryName (Files.module_ref file_key) in
     let cx = Context.make ccx metadata file_key aloc_table module_ref Context.Checking in
     let lint_severities = get_lint_severities metadata options in
     Type_inference_js.add_require_tvars cx file_sig;
-    Context.set_local_env cx file_sig.File_sig.With_ALoc.exported_locals;
+    Context.set_local_env cx exported_locals;
     List.iter (connect_require cx) requires;
     let typed_ast = Type_inference_js.infer_ast cx file_key comments ast ~lint_severities in
     Merge_js.post_merge_checks cx master_cx ast typed_ast metadata file_sig;

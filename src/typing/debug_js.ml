@@ -37,7 +37,7 @@ let string_of_selector = function
 
 let string_of_destructor = function
   | NonMaybeType -> "NonMaybeType"
-  | PropertyType x -> spf "PropertyType %s" (display_string_of_name x)
+  | PropertyType { name; _ } -> spf "PropertyType %s" (display_string_of_name name)
   | ElementType _ -> "ElementType"
   | OptionalIndexedAccessNonMaybeType _ -> "OptionalIndexedAccessNonMaybeType"
   | OptionalIndexedAccessResultType _ -> "OptionalIndexedAccessResultType"
@@ -494,7 +494,7 @@ and dump_use_t_ (depth, tvars) cx t =
       | CreateClass (tool, knot, tout) ->
         spf "CreateClass (%s, %s)" (create_class tool knot) (kid tout))
   in
-  let slice { Object.reason = _; props; flags = { obj_kind; _ }; generics = _ } =
+  let slice { Object.reason = _; props; flags = { obj_kind; _ }; generics = _; interface = _ } =
     let xs =
       match obj_kind with
       | Indexed { dict_polarity = p; _ } -> [Polarity.sigil p ^ "[]"]
@@ -538,7 +538,7 @@ and dump_use_t_ (depth, tvars) cx t =
       | Some d -> Indexed d
     in
     let flags = { obj_kind; frozen = false } in
-    slice { Object.reason; props; flags; generics = Generic.spread_empty }
+    slice { Object.reason; props; flags; generics = Generic.spread_empty; interface = None }
   in
   let object_kit =
     Object.(
@@ -771,7 +771,10 @@ and dump_use_t_ (depth, tvars) cx t =
     | ObjTestT _ -> p t
     | OptionalChainT { t_out; voided_out; _ } ->
       p ~extra:(spf "%s, %s" (use_kid t_out) (kid voided_out)) t
-    | OptionalIndexedAccessT { index_type; _ } -> p ~extra:(kid index_type) t
+    | OptionalIndexedAccessT { index = OptionalIndexedAccessTypeIndex index_type; _ } ->
+      p ~extra:(kid index_type) t
+    | OptionalIndexedAccessT { index = OptionalIndexedAccessStrLitIndex name; _ } ->
+      p ~extra:(display_string_of_name name) t
     | OrT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (tout y)) t
     | PredicateT (pred, arg) ->
       p ~reason:false ~extra:(spf "%s, %s" (string_of_predicate pred) (tout arg)) t
@@ -904,7 +907,6 @@ and dump_use_t_ (depth, tvars) cx t =
              (String.concat "; " (Base.List.map ~f:kid resolved))
              (String.concat "; " (Base.List.map ~f:kid unresolved))
              (use_kid upper))
-    | ModuleExportsAssignT (_, _, _) -> p t
 
 and dump_tvar_ (depth, tvars) cx id =
   if ISet.mem id tvars then
@@ -935,7 +937,7 @@ and dump_tvar_ (depth, tvars) cx id =
                        (fun (use_t, _) _ acc -> dump_use_t_ (depth - 1, stack) cx use_t :: acc)
                        upper
                        [])))
-      with Context.Tvar_not_found _ -> spf "Not Found: %d" id)
+      with Union_find.Tvar_not_found _ -> spf "Not Found: %d" id)
 
 and dump_prop_ (depth, tvars) cx p =
   let kid t = dump_t_ (depth, tvars) cx t in
@@ -1451,7 +1453,6 @@ let dump_error_message =
     | EExperimentalEnums loc -> spf "EExperimentalEnums (%s)" (string_of_aloc loc)
     | EExperimentalEnumsWithUnknownMembers loc ->
       spf "EExperimentalEnumsWithUnknownMembers (%s)" (string_of_aloc loc)
-    | EExperimentalThisAnnot loc -> spf "EExperimentalThisAnnot (%s)" (string_of_aloc loc)
     | EIndexedAccessNotEnabled loc -> spf "EIndexedAccessNotEnabled (%s)" (string_of_aloc loc)
     | EIndeterminateModuleType loc -> spf "EIndeterminateModuleType (%s)" (string_of_aloc loc)
     | EBadExportPosition loc -> spf "EBadExportPosition (%s)" (string_of_aloc loc)
@@ -1746,6 +1747,8 @@ let dump_error_message =
         (dump_reason cx reason)
         (ListUtils.to_string ", " (dump_reason cx) blame_reasons)
     | EMalformedCode loc -> spf "EMalformedCode (%s)" (string_of_aloc loc)
+    | EObjectThisReference (loc, r) ->
+      spf "EObjectThisReference (%s, %s)" (string_of_aloc loc) (dump_reason cx r)
     | EImplicitInstantiationTemporaryError _ -> "EImplicitInstantiationTemporaryError"
     | EImportInternalReactServerModule loc ->
       spf "EImportInternalReactServerModule (%s)" (string_of_aloc loc)

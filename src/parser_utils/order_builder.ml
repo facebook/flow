@@ -17,7 +17,6 @@ end
 module Make
     (L : Loc_sig.S)
     (Env_builder : Env_builder.S with module L = L)
-    (Scope_api : Scope_api_sig.S with module L = L)
     (Convert : ConvertLoc with module L = L) =
 struct
   module Provider_api = Env_builder.Provider_api
@@ -28,7 +27,14 @@ struct
 
       method update_convert_acc l =
         this#update_acc (fun a ->
-            List.fold_left (fun acc loc -> LocSet.add (Convert.convert loc) acc) a l)
+            List.fold_left
+              (fun acc elt ->
+                if not @@ Provider_api.is_provider_of_annotated providers elt then
+                  LocSet.add (Convert.convert elt) acc
+                else
+                  acc)
+              a
+              l)
 
       method! identifier ((loc, _) as id) =
         this#update_convert_acc (Env_builder.sources_of_use env loc |> L.LSet.elements);
@@ -82,7 +88,7 @@ struct
 end
 
 module With_Loc =
-  Make (Loc_sig.LocS) (Env_builder.With_Loc) (Scope_api.With_Loc)
+  Make (Loc_sig.LocS) (Env_builder.With_Loc)
     (struct
       module L = Loc_sig.LocS
 
@@ -90,7 +96,7 @@ module With_Loc =
     end)
 
 module With_ALoc =
-  Make (Loc_sig.ALocS) (Env_builder.With_ALoc) (Scope_api.With_ALoc)
+  Make (Loc_sig.ALocS) (Env_builder.With_ALoc)
     (struct
       module L = Loc_sig.ALocS
 

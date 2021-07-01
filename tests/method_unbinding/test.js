@@ -98,3 +98,14 @@ if (j.n) {} // ok
 
 if (i.m) {} // err
 if (i.n) {} // ok
+
+
+type T = {
+  f: string => void,
+};
+
+import X from './lib.js';
+
+const ob : T = {
+    f: X.method,
+};

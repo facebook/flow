@@ -283,6 +283,45 @@ let might_have_nonvoid_return loc function_ast =
   let finder = new return_finder in
   finder#eval (finder#function_ loc) function_ast
 
+class object_this_finder =
+  object (this)
+    inherit
+      [Loc_collections.ALocSet.t, ALoc.t] Flow_ast_visitor.visitor
+        ~init:Loc_collections.ALocSet.empty
+
+    method! this_expression loc node =
+      this#update_acc (Loc_collections.ALocSet.add loc);
+      node
+
+    (* Any mentions of `this` in these constructs would reference
+      the `this` within those structures, so we ignore them *)
+    method! class_ _ x = x
+
+    method! function_declaration _ x = x
+
+    method! function_expression _ x = x
+  end
+
+let error_on_this_uses_in_object_methods cx =
+  let open Ast in
+  let open Expression in
+  Base.List.iter ~f:(function
+      | Object.Property (prop_loc, Object.Property.Method { key; value = (_, func); _ }) ->
+        let finder = new object_this_finder in
+        finder#eval (finder#function_ prop_loc) func
+        |> Loc_collections.ALocSet.iter (fun loc ->
+               let reason =
+                 match key with
+                 | Object.Property.Identifier (_, { Identifier.name; _ })
+                 | Object.Property.PrivateName
+                     (_, { PrivateName.id = (_, { Identifier.name; _ }); _ })
+                 | Object.Property.Literal (_, { Literal.raw = name; _ }) ->
+                   mk_reason (RMethod (Some name)) prop_loc
+                 | _ -> mk_reason (RMethod None) prop_loc
+               in
+               Flow_js.add_output cx (Error_message.EObjectThisReference (loc, reason)))
+      | _ -> ())
+
 module Func_stmt_config = struct
   type 'T ast = (ALoc.t, 'T) Ast.Function.Params.t
 
@@ -2183,6 +2222,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       module_scope;
 
     Env.push_var_scope module_scope;
+    let excluded_symbols = Env.save_excluded_symbols () in
     Context.push_declare_module cx (Module_info.empty_cjs_module module_ref);
 
     let (elements_ast, elements_abnormal) =
@@ -2257,6 +2297,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
 
     Context.pop_declare_module cx;
     Env.pop_var_scope ();
+    Env.restore_excluded_symbols excluded_symbols;
 
     ast
   | (loc, DeclareExportDeclaration decl) ->
@@ -3137,6 +3178,7 @@ and expression_ ~cond ~annot cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression
   | Member _ -> subscript ~cond cx ex
   | OptionalMember _ -> subscript ~cond cx ex
   | Object { Object.properties; comments } ->
+    error_on_this_uses_in_object_methods cx properties;
     let reason = mk_reason RObjectLit loc in
     let (t, properties) = object_ ~annot ~frozen:false cx reason properties in
     ((loc, t), Object { Object.properties; comments })
@@ -7847,10 +7889,7 @@ and mk_class_sig =
 and mk_func_sig =
   let predicate_function_kind cx loc params =
     let open Error_message in
-    let (_, { Ast.Function.Params.params; rest; this_; comments = _ }) = params in
-    if not @@ Context.enable_this_annot cx then
-      Base.Option.iter this_ ~f:(fun (this_loc, _) ->
-          Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
+    let (_, { Ast.Function.Params.params; rest; this_ = _; comments = _ }) = params in
     let kind = Func_sig.Predicate in
     let kind =
       List.fold_left
@@ -7943,9 +7982,6 @@ and mk_func_sig =
     Func_stmt_config.This { t; loc; annot = (annot_loc, annot) }
   in
   let mk_params cx ~annot tparams_map (loc, { Ast.Function.Params.params; rest; this_; comments }) =
-    if not @@ Context.enable_this_annot cx then
-      Base.Option.iter this_ ~f:(fun (this_loc, _) ->
-          Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
     let fparams =
       Func_stmt_params.empty (fun params rest this_ ->
           Some (loc, { Ast.Function.Params.params; rest; this_; comments }))
@@ -8192,7 +8228,7 @@ and mk_arrow cx ~annot reason func =
     function_decl has already done the necessary checking of `this` in
     the body of the function. Now we want to avoid re-binding `this` to
     objects through which the function may be called. *)
-    (dummy_this, this)
+    (dummy_this loc, this)
   in
   let (fun_type, reconstruct_ast) = function_decl id cx ~annot reason func this_recipe super in
   (fun_type, reconstruct_ast fun_type)
@@ -8246,9 +8282,6 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
             in
             (l, Ast.Pattern.Identifier name')
         in
-        if not @@ Context.enable_this_annot cx then
-          Base.Option.iter this_ ~f:(fun (this_loc, _) ->
-              Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
         let params =
           Base.List.map
             ~f:(fun param ->
@@ -8336,9 +8369,6 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                   )
                 | _ -> assert_false "Function declaration AST has unexpected shape"
               in
-              if not @@ Context.enable_this_annot cx then
-                Base.Option.iter this_ ~f:(fun (this_loc, _) ->
-                    Flow_js.add_output cx (Error_message.EExperimentalThisAnnot this_loc));
               let params =
                 Base.List.map
                   ~f:(fun (_, { Ast.Function.Param.argument; default }) ->

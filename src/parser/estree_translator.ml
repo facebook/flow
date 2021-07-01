@@ -1038,7 +1038,7 @@ with type t = Impl.t = struct
         | (loc, BooleanBody { BooleanBody.members; explicit_type; has_unknown_members; comments })
           ->
           node
-            ?comments
+            ?comments:(format_internal_comments comments)
             "EnumBooleanBody"
             loc
             [
@@ -1055,7 +1055,7 @@ with type t = Impl.t = struct
             ]
         | (loc, NumberBody { NumberBody.members; explicit_type; has_unknown_members; comments }) ->
           node
-            ?comments
+            ?comments:(format_internal_comments comments)
             "EnumNumberBody"
             loc
             [
@@ -1085,7 +1085,7 @@ with type t = Impl.t = struct
                 initialized_members
           in
           node
-            ?comments
+            ?comments:(format_internal_comments comments)
             "EnumStringBody"
             loc
             [
@@ -1095,7 +1095,7 @@ with type t = Impl.t = struct
             ]
         | (loc, SymbolBody { SymbolBody.members; has_unknown_members; comments }) ->
           node
-            ?comments
+            ?comments:(format_internal_comments comments)
             "EnumSymbolBody"
             loc
             [

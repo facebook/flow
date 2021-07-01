@@ -42,7 +42,6 @@ type error_code =
   | IllegalKey
   | IllegalNewArray
   | IllegalThis
-  | IllegalThisAnnot
   | IllegalTypeof
   | ImplicitInexactObject
   | ImportTypeAsValue
@@ -116,6 +115,7 @@ type error_code =
   | NotAnArray
   | NotAnObject
   | NotIterable
+  | ObjectThisReference
   | PropMissing
   | ReassignConst
   | ReassignEnum
@@ -207,7 +207,6 @@ let string_of_code : error_code -> string = function
   | ExtraTypeArg -> "extra-type-arg"
   | FunctionPredicate -> "function-predicate"
   | IllegalEnum -> "illegal-enum"
-  | IllegalThisAnnot -> "illegal-this-annot"
   | IllegalGetSet -> "illegal-get-set"
   | IllegalKey -> "illegal-key"
   | IllegalNewArray -> "illegal-new-array"
@@ -284,6 +283,7 @@ let string_of_code : error_code -> string = function
   | NotAnArray -> "not-an-array"
   | NotAnObject -> "not-an-object"
   | NotIterable -> "not-iterable"
+  | ObjectThisReference -> "object-this-reference"
   | PropMissing -> "prop-missing"
   | ReassignConst -> "reassign-const"
   | ReassignEnum -> "reassign-enum"

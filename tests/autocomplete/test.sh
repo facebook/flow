@@ -121,3 +121,7 @@ queries_in_file autocomplete "upper_bounds_7.js" --pretty
 queries_in_file autocomplete "upper_bounds_8.js" --pretty
 queries_in_file autocomplete "upper_bounds_9.js" --pretty
 queries_in_file autocomplete "upper_bounds_10.js" --pretty
+queries_in_file autocomplete "indexed-access-1.js" --lsp
+queries_in_file autocomplete "indexed-access-2.js" --lsp
+queries_in_file autocomplete "indexed-access-optional-1.js" --lsp
+queries_in_file autocomplete "indexed-access-optional-2.js" --lsp

@@ -2489,9 +2489,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:24:4
 
-Cannot cast `s.a` to union type because: [incompatible-cast]
- - Either number [1] is incompatible with null [2].
- - Or number [1] is incompatible with undefined [3].
+Cannot cast `s.a` to union type because number [1] is incompatible with literal union [2]. [incompatible-cast]
 
    refinements2.js:24:4
    24|   (s.a: (null | void)); // no for two reasons
@@ -2503,10 +2501,7 @@ References:
                      ^^^^^^ [1]
    refinements2.js:24:10
    24|   (s.a: (null | void)); // no for two reasons
-                ^^^^ [2]
-   refinements2.js:24:17
-   24|   (s.a: (null | void)); // no for two reasons
-                       ^^^^ [3]
+                ^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:24:6
@@ -2542,9 +2537,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:34:4
 
-Cannot cast `s.a` to union type because: [incompatible-cast]
- - Either number [1] is incompatible with null [2].
- - Or number [1] is incompatible with undefined [3].
+Cannot cast `s.a` to union type because number [1] is incompatible with literal union [2]. [incompatible-cast]
 
    refinements2.js:34:4
    34|   (s.a: (null | void)); // no for two reasons
@@ -2556,10 +2549,7 @@ References:
                      ^^^^^^ [1]
    refinements2.js:34:10
    34|   (s.a: (null | void)); // no for two reasons
-                ^^^^ [2]
-   refinements2.js:34:17
-   34|   (s.a: (null | void)); // no for two reasons
-                       ^^^^ [3]
+                ^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:34:6
@@ -2595,9 +2585,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:38:4
 
-Cannot cast `s.a` to union type because: [incompatible-cast]
- - Either number [1] is incompatible with null [2].
- - Or number [1] is incompatible with undefined [3].
+Cannot cast `s.a` to union type because number [1] is incompatible with literal union [2]. [incompatible-cast]
 
    refinements2.js:38:4
    38|   (s.a: (null | void)); // no for two reasons
@@ -2609,10 +2597,7 @@ References:
                      ^^^^^^ [1]
    refinements2.js:38:10
    38|   (s.a: (null | void)); // no for two reasons
-                ^^^^ [2]
-   refinements2.js:38:17
-   38|   (s.a: (null | void)); // no for two reasons
-                       ^^^^ [3]
+                ^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:38:6
@@ -2665,9 +2650,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:46:4
 
-Cannot cast `s.a` to union type because: [incompatible-cast]
- - Either number [1] is incompatible with null [2].
- - Or number [1] is incompatible with undefined [3].
+Cannot cast `s.a` to union type because number [1] is incompatible with literal union [2]. [incompatible-cast]
 
    refinements2.js:46:4
    46|   (s.a: (null | void)); // no for two reasons
@@ -2679,10 +2662,7 @@ References:
                      ^^^^^^ [1]
    refinements2.js:46:10
    46|   (s.a: (null | void)); // no for two reasons
-                ^^^^ [2]
-   refinements2.js:46:17
-   46|   (s.a: (null | void)); // no for two reasons
-                       ^^^^ [3]
+                ^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:46:6

@@ -661,6 +661,25 @@ module Make (Flow : INPUT) : OUTPUT = struct
               | BoolT (Some _)
               | SingletonStrT _ | SingletonNumT _ | SingletonBoolT _ | VoidT | NullT ) ) ->
           shortcut_enum cx trace reason_op use_op l rep
+        (* Types that are definitely incompatible with enums, after the above case. *)
+        | DefT
+            ( _,
+              _,
+              ( NumT _ | StrT _ | MixedT _ | SymbolT | FunT _ | ObjT _ | ArrT _ | ClassT _
+              | InstanceT _ | CharSetT _ | TypeT _ | PolyT _ | ReactAbstractComponentT _ | EnumT _
+              | EnumObjectT _ ) )
+          when Base.Option.is_some (UnionRep.check_enum rep) ->
+          add_output
+            cx
+            ~trace
+            (Error_message.EIncompatibleWithUseOp
+               {
+                 reason_lower = TypeUtil.reason_of_t l;
+                 reason_upper =
+                   UnionRep.specialized_reason ~reason_of_t:TypeUtil.reason_of_t reason_op rep;
+                 use_op;
+               });
+          true
         | DefT (_, _, ObjT _)
         | ExactT (_, DefT (_, _, ObjT _)) ->
           shortcut_disjoint_union cx trace reason_op use_op l rep

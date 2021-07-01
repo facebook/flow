@@ -1751,9 +1751,13 @@ end = struct
           Ty.IndexedAccess { _object = ty; index = index_type'; optional = false }
         else
           Ty.Utility (Ty.ElementType (ty, index_type'))
-      | T.OptionalIndexedAccessNonMaybeType { index_type } ->
-        let%map index_type' = type__ ~env index_type in
-        Ty.IndexedAccess { _object = ty; index = index_type'; optional = true }
+      | T.OptionalIndexedAccessNonMaybeType { index } ->
+        let%map index' =
+          match index with
+          | T.OptionalIndexedAccessTypeIndex index_type -> type__ ~env index_type
+          | T.OptionalIndexedAccessStrLitIndex name -> return @@ Ty.StrLit name
+        in
+        Ty.IndexedAccess { _object = ty; index = index'; optional = true }
       | T.OptionalIndexedAccessResultType _ -> return ty
       | T.CallType ts ->
         let%map tys = mapM (type__ ~env) ts in
@@ -1764,7 +1768,12 @@ end = struct
       | T.TypeMap (T.ObjectMapi t') ->
         let%map ty' = type__ ~env t' in
         Ty.Utility (Ty.ObjMapi (ty, ty'))
-      | T.PropertyType k -> return (Ty.Utility (Ty.PropertyType (ty, Ty.StrLit k)))
+      | T.PropertyType { name; is_indexed_access } ->
+        let name' = Ty.StrLit name in
+        if is_indexed_access then
+          return @@ Ty.IndexedAccess { _object = ty; index = name'; optional = false }
+        else
+          return @@ Ty.Utility (Ty.PropertyType (ty, name'))
       | T.TypeMap (T.TupleMap t') ->
         let%map ty' = type__ ~env t' in
         Ty.Utility (Ty.TupleMap (ty, ty'))
@@ -2318,12 +2327,13 @@ end = struct
     and enum_t ~env reason trust enum =
       let { T.members; representation_t; _ } = enum in
       let enum_t = T.mk_enum_type ~trust reason enum in
+      let enum_object_t = T.DefT (reason, trust, T.EnumObjectT enum) in
       let proto_t =
         Flow_js.get_builtin_typeapp
           Env.(env.genv.cx)
           reason
           (OrdinaryName "$EnumProto")
-          [enum_t; representation_t]
+          [enum_object_t; enum_t; representation_t]
       in
       let%bind proto_ty = type__ ~env ~proto:true ~imode:IMUnset proto_t in
       let%map enum_ty = TypeConverter.convert_t ~env enum_t in

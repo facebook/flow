@@ -519,7 +519,8 @@ class virtual ['a] t =
       match t with
       | NonMaybeType
       | PropertyType _
-      | OptionalIndexedAccessResultType _ ->
+      | OptionalIndexedAccessResultType _
+      | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessStrLitIndex _ } ->
         t
       | ElementType { index_type; is_indexed_access } ->
         let index_type' = self#type_ cx map_cx index_type in
@@ -527,12 +528,12 @@ class virtual ['a] t =
           t
         else
           ElementType { index_type = index_type'; is_indexed_access }
-      | OptionalIndexedAccessNonMaybeType { index_type } ->
+      | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessTypeIndex index_type } ->
         let index_type' = self#type_ cx map_cx index_type in
         if index_type' == index_type then
           t
         else
-          OptionalIndexedAccessNonMaybeType { index_type = index_type' }
+          OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessTypeIndex index_type' }
       | Bind t' ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then
@@ -1486,13 +1487,22 @@ class virtual ['a] t_with_uses =
         else
           OptionalChainT
             { reason; lhs_reason; this_t = this_t'; t_out = t_out'; voided_out = voided_out' }
-      | OptionalIndexedAccessT { use_op; reason; index_type; tout_tvar } ->
-        let index_type' = self#type_ cx map_cx index_type in
+      | OptionalIndexedAccessT { use_op; reason; index; tout_tvar } ->
         let tout_tvar' = self#tout cx map_cx tout_tvar in
-        if index_type' == index_type && tout_tvar' == tout_tvar then
+        let index' =
+          match index with
+          | OptionalIndexedAccessStrLitIndex _ -> index
+          | OptionalIndexedAccessTypeIndex index_type ->
+            let index_type' = self#type_ cx map_cx index_type in
+            if index_type' == index_type then
+              index
+            else
+              OptionalIndexedAccessTypeIndex index_type'
+        in
+        if index' == index && tout_tvar' == tout_tvar then
           t
         else
-          OptionalIndexedAccessT { use_op; reason; index_type; tout_tvar }
+          OptionalIndexedAccessT { use_op; reason; index = index'; tout_tvar = tout_tvar' }
       | InvariantT _ -> t
       | CallLatentPredT (r, b, i, t1, t2) ->
         let t1' = self#type_ cx map_cx t1 in
@@ -1543,13 +1553,6 @@ class virtual ['a] t_with_uses =
           t
         else
           ExtendsUseT (use_op, r, tlist', t1', t2')
-      | ModuleExportsAssignT (r, t', t_out) ->
-        let t'' = self#type_ cx map_cx t' in
-        let t_out' = self#type_ cx map_cx t_out in
-        if t' == t'' && t_out == t_out' then
-          t
-        else
-          ModuleExportsAssignT (r, t'', t_out')
       | DestructuringT (r, k, s, t', id) ->
         let s' = self#selector cx map_cx s in
         let t'' = self#tout cx map_cx t' in
@@ -2021,6 +2024,15 @@ class virtual ['a] t_with_uses =
           else
             CreateClass (tool', knot', t''))
 
+    method private instance_slice cx map_cx t =
+      let (st, instt) = t in
+      let st' = self#type_ cx map_cx st in
+      let instt' = self#inst_type cx map_cx instt in
+      if st' == st && instt' == instt then
+        t
+      else
+        (st', instt')
+
     method object_kit_resolve_tool cx map_cx t =
       Object.(
         match t with
@@ -2030,16 +2042,19 @@ class virtual ['a] t_with_uses =
             t
           else
             Resolve r'
-        | Super ({ Object.reason; props; flags; generics }, r) ->
+        | Super ({ Object.reason; props; flags; generics; interface }, r) ->
           let flags' = self#obj_flags cx map_cx flags in
           let props' =
             NameUtils.Map.ident_map (fun (t, b1, b2) -> (self#type_ cx map_cx t, b1, b2)) props
           in
+          let interface' = OptionUtils.ident_map (self#instance_slice cx map_cx) interface in
           let r' = self#resolve cx map_cx r in
-          if flags' == flags && r' == r && props' == props then
+          if flags' == flags && r' == r && props' == props && interface == interface' then
             t
           else
-            Super ({ reason; Object.props = props'; flags = flags'; generics }, r'))
+            Super
+              ( { reason; Object.props = props'; flags = flags'; generics; interface = interface' },
+                r' ))
 
     method object_kit_tool cx map_cx tool =
       Object.(
@@ -2327,13 +2342,15 @@ class virtual ['a] t_with_uses =
       else
         (t', own, meth)
 
-    method object_kit_slice cx map_cx ({ Object.reason = _; props; flags; generics = _ } as slice) =
+    method object_kit_slice
+        cx map_cx ({ Object.reason = _; props; flags; generics = _; interface } as slice) =
       let props' = NameUtils.Map.ident_map (self#resolved_prop cx map_cx) props in
       let flags' = self#obj_flags cx map_cx flags in
-      if props' == props && flags' == flags then
+      let interface' = OptionUtils.ident_map (self#instance_slice cx map_cx) interface in
+      if props' == props && flags' == flags && interface' == interface then
         slice
       else
-        { slice with Object.props = props'; flags = flags' }
+        { slice with Object.props = props'; flags = flags'; interface = interface' }
 
     method object_kit_acc_element cx map_cx el =
       Object.Spread.(

@@ -197,6 +197,7 @@ class ['a] t =
       function
       | NonMaybeType
       | OptionalIndexedAccessResultType _
+      | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessStrLitIndex _ }
       | PropertyType _
       | ValuesType
       | ReadOnlyType
@@ -206,7 +207,8 @@ class ['a] t =
         acc
       | ReactConfigType default_props -> self#type_ cx pole_TODO acc default_props
       | ElementType { index_type; _ } -> self#type_ cx pole_TODO acc index_type
-      | OptionalIndexedAccessNonMaybeType { index_type } -> self#type_ cx pole_TODO acc index_type
+      | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessTypeIndex index_type } ->
+        self#type_ cx pole_TODO acc index_type
       | Bind t -> self#type_ cx pole_TODO acc t
       | SpreadType (_, ts, head_slice) ->
         let acc = self#list (self#object_kit_spread_operand cx) acc ts in
@@ -557,9 +559,11 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc this_t in
         let acc = self#use_type_ cx acc t_out in
         self#type_ cx pole_TODO acc voided_out
-      | OptionalIndexedAccessT { index_type; tout_tvar; _ } ->
+      | OptionalIndexedAccessT { index = OptionalIndexedAccessTypeIndex index_type; tout_tvar; _ }
+        ->
         let acc = self#type_ cx pole_TODO acc index_type in
         self#tout cx pole_TODO acc tout_tvar
+      | OptionalIndexedAccessT { index = OptionalIndexedAccessStrLitIndex _; _ } -> acc
       | InvariantT _ -> acc
       | CallLatentPredT (_, _, _, t1, t2)
       | CallOpenPredT (_, _, _, t1, t2) ->
@@ -654,10 +658,6 @@ class ['a] t =
       | CreateObjWithComputedPropT { reason = _; value; tout_tvar } ->
         let acc = self#type_ cx pole_TODO acc value in
         let acc = self#tout cx pole_TODO acc tout_tvar in
-        acc
-      | ModuleExportsAssignT (_, t, tout) ->
-        let acc = self#type_ cx pole_TODO acc t in
-        let acc = self#type_ cx pole_TODO acc tout in
         acc
       | ResolveUnionT { reason = _; resolved; unresolved; upper; id = _ } ->
         let acc = List.fold_left (self#type_ cx pole_TODO) acc resolved in
@@ -932,10 +932,16 @@ class ['a] t =
           let acc = Nel.fold_left (Nel.fold_left (self#object_kit_slice cx)) acc rs in
           acc)
 
-    method private object_kit_slice cx acc { Object.reason = _; props; flags; generics = _ } =
+    method private object_kit_slice
+        cx acc { Object.reason = _; props; flags; generics = _; interface } =
       let acc = self#namemap (fun acc (t, _, _) -> self#type_ cx pole_TODO acc t) acc props in
       let acc = self#obj_flags cx pole_TODO acc flags in
-      acc
+      match interface with
+      | Some (static, insttype) ->
+        let acc = self#type_ cx pole_TODO acc static in
+        let acc = self#inst_type cx pole_TODO acc insttype in
+        acc
+      | None -> acc
 
     method private object_kit_spread_operand_slice
         cx acc { Object.Spread.reason = _; prop_map; dict; generics = _ } =

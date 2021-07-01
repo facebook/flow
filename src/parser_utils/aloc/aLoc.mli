@@ -7,40 +7,26 @@
 
 type table
 
-val make_table : File_key.t -> table
-
-val shrink_table : table -> unit
-
-type reverse_table
-
 type key
 
 type t [@@deriving show]
 
+type id = private t [@@deriving show]
+
+val empty_table : File_key.t -> table
+
 (* Creates an ALoc.t with a concrete underlying representation *)
 val of_loc : Loc.t -> t
 
-(* Takes an ALoc.t with a concrete underlying representation and makes it keyed.
- *
- * Preconditions:
- * - The given location cannot have already been keyified.
- * - The file key with which the table was created must match the `source` of the given location.
- *   - This also implies that locations with `None` as the source cannot be keyified. This
- *     could be relaxed in the future if necessary.
- * *)
-val keyify : table -> reverse_table -> t -> t
-
-(* Takes an ALoc.t with a concrete underlying representation and finds
- * the existing keyed representation for it from a reverse table
- *
- * Preconditions:
- * - The file key with which the table was created must match the `source` of the given location.
- * *)
-type id = private t [@@deriving show]
-
 val id_none : id
 
-val id_of_aloc : reverse_table Lazy.t -> t -> id
+(* Takes an ALoc.t with a concrete underlying representation and finds
+ * the existing keyed representation for it from a reverse table lookup.
+ *
+ * Preconditions:
+ * - The file key with which the table was created must match the `source` of the given location.
+ * *)
+val id_of_aloc : table Lazy.t -> t -> id
 
 val equal_id : id -> id -> bool
 
@@ -90,10 +76,6 @@ val concretize_equal : table Lazy.t Utils_js.FilenameMap.t -> t -> t -> bool
  * bad person. *)
 val debug_to_string : ?include_source:bool -> t -> string
 
-val reverse_table : table -> reverse_table
-
-val make_empty_reverse_table : unit -> reverse_table
-
 (* Exposes the internal representation of an ALoc.t. Typechecking behavior should not be
  * made to depend on this module. If you find yourself tempted to use anything here, really think
  * through your options. *)
@@ -107,5 +89,9 @@ module ALocRepresentationDoNotUse : sig
 
   val make_table : File_key.t -> Loc.t array -> table
 
+  val init_table : File_key.t -> int -> (unit -> Loc.t) -> table
+
   val make_keyed : File_key.t option -> int -> t
+
+  val make_id : File_key.t option -> int -> id
 end

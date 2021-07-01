@@ -34,6 +34,28 @@ class MyClass {
 }
 ```
 
+Also just like regular functions, class methods may have `this` annotations as well.
+However, if one is not provided, Flow will infer the class instance type (or the class type for static methods)
+instead of `mixed`. When an explicit `this` parameter is provided, it must be a [supertype](../../lang/subtypes/) of
+the class instance type (or class type for static methods).
+
+```js
+class MyClass {
+  method(this : interface { x : string }): void { /* ... */ } // x is missing in `MyClass`
+}
+```
+
+
+Unlike class properties, however, class methods cannot be unbound or rebound from
+the class on which you defined them. So all of the following are errors in Flow:
+
+```js
+let c = new MyClass();
+c.method;
+let {method} = c;
+c.method.bind({});
+```
+
 ##### Class Fields (Properties) <a class="toc" id="toc-class-fields-properties" href="#toc-class-fields-properties"></a>
 
 Whenever you want to use a class field in Flow you must first give it an
@@ -73,11 +95,11 @@ function func_we_use_everywhere (x: number): number {
 class MyClass {
   static constant: number;
   static helper: (number) => number;
-  method: number => number;
+  function_property: number => number;
 }
 MyClass.helper = func_we_use_everywhere
 MyClass.constant = 42
-MyClass.prototype.method = func_we_use_everywhere
+MyClass.prototype.function_property = func_we_use_everywhere
 ```
 
 Flow also supports using the [class properties syntax](https://tc39.github.io/proposal-class-public-fields/).

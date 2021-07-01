@@ -283,7 +283,7 @@ typedef uintnat hh_tag_t;
 
 // Keep these in sync with "tag" type definition in sharedMem.ml
 #define Serialized_tag 0
-#define Addr_tbl_tag 12
+#define Addr_tbl_tag 13
 
 static _Bool should_scan(hh_tag_t tag) {
   // By convention, tags below Addr_tbl_tag contain no pointers, whereas
@@ -338,20 +338,6 @@ static _Bool should_scan(hh_tag_t tag) {
 // making addrs point to the first field, and accessing the header at a -1 word
 // offset instead.
 #define Obj_field(addr, i) ((addr) + ((i) + 1) * WORD_SIZE)
-
-// In OCaml, we can read and write to shared memory by either (a) calling into C
-// functions, passing along an address or by (b) indexing into a Bigarray with
-// the "nativeint" element kind.
-//
-// The Bigarray API naturally requires word offsets for indexing operations into
-// word-sized elements. To accomplish this, we convert between byte offsets and
-// OCaml-encoded word offsets when passing address from C into OCaml, and vice
-// versa.
-//
-// Use these macros instead of Val_long/Long_val when dealing with addrs across
-// the OCaml/C boundary.
-#define Val_addr(addr) (Val_long((addr) / WORD_SIZE))
-#define Addr_val(v) (Long_val(v) * WORD_SIZE)
 
 // Each heap entry starts with a word-sized header. The header encodes the size
 // (in words) of the entry in the heap and the capacity (in words) of the buffer
@@ -742,8 +728,8 @@ static void define_mappings(int page_bsize) {
 static value alloc_heap_bigarray(void) {
   CAMLparam0();
   CAMLlocal1(heap);
-  int heap_flags = CAML_BA_NATIVE_INT | CAML_BA_C_LAYOUT | CAML_BA_EXTERNAL;
-  intnat heap_dim[1] = {Wsize_bsize(info->hashtbl_bsize + info->heap_bsize)};
+  int heap_flags = CAML_BA_CHAR | CAML_BA_C_LAYOUT | CAML_BA_EXTERNAL;
+  intnat heap_dim[1] = {info->hashtbl_bsize + info->heap_bsize};
   heap = caml_ba_alloc(heap_flags, 1, hashtbl, heap_dim);
   CAMLreturn(heap);
 }
@@ -1397,7 +1383,7 @@ static addr_t hh_alloc(size_t wsize) {
 CAMLprim value hh_ml_alloc(value wsize) {
   CAMLparam1(wsize);
   addr_t addr = hh_alloc(Long_val(wsize));
-  CAMLreturn(Val_addr(addr));
+  CAMLreturn(Val_long(addr));
 }
 
 /*****************************************************************************/
@@ -1494,7 +1480,7 @@ CAMLprim value hh_store_ocaml(value v) {
   free(compressed);
 
   result = caml_alloc_tuple(3);
-  Store_field(result, 0, Val_addr(Addr_of_ptr(entry)));
+  Store_field(result, 0, Val_long(Addr_of_ptr(entry)));
   Store_field(result, 1, Val_long(compressed_size));
   Store_field(result, 2, Val_long(serialized_size));
 
@@ -1539,7 +1525,7 @@ CAMLprim value hh_add(value key, value addr) {
 
   helt_t elt;
   elt.hash = get_hash(key);
-  elt.addr = Addr_val(addr);
+  elt.addr = Long_val(addr);
 
   size_t hashtbl_slots = info->hashtbl_slots;
   unsigned int slot = elt.hash & (hashtbl_slots - 1);
@@ -1661,7 +1647,7 @@ CAMLprim value hh_deserialize(value addr_val) {
   CAMLlocal1(result);
   check_should_exit();
 
-  heap_entry_t *entry = Entry_of_addr(Addr_val(addr_val));
+  heap_entry_t *entry = Entry_of_addr(Long_val(addr_val));
   size_t compressed_bsize = entry_compressed_bsize(entry);
   size_t decompress_capacity = Entry_decompress_capacity(entry->header);
 
@@ -1689,7 +1675,7 @@ CAMLprim value hh_get(value key) {
 
   unsigned int slot = find_slot(key);
   assert(hashtbl[slot].hash == get_hash(key));
-  CAMLreturn(Val_addr(hashtbl[slot].addr));
+  CAMLreturn(Val_long(hashtbl[slot].addr));
 }
 
 /*****************************************************************************/
@@ -1697,7 +1683,7 @@ CAMLprim value hh_get(value key) {
 /*****************************************************************************/
 CAMLprim value hh_get_size(value addr_val) {
   CAMLparam1(addr_val);
-  heap_entry_t *entry = Entry_of_addr(Addr_val(addr_val));
+  heap_entry_t *entry = Entry_of_addr(Long_val(addr_val));
   size_t compressed_bsize = entry_compressed_bsize(entry);
   CAMLreturn(Val_long(compressed_bsize));
 }
@@ -1769,7 +1755,7 @@ CAMLprim value hh_remove(value key) {
 /*****************************************************************************/
 
 CAMLprim value hh_write_string(value addr, value s) {
-  memcpy(Ptr_of_addr(Addr_val(addr)), String_val(s), Bosize_val(s));
+  memcpy(Ptr_of_addr(Long_val(addr)), String_val(s), Bosize_val(s));
   return Val_unit;
 }
 
@@ -1784,6 +1770,6 @@ CAMLprim value hh_read_string(value addr, value wsize) {
   CAMLparam2(addr, wsize);
   CAMLlocal1(s);
   s = caml_alloc(Long_val(wsize), String_tag);
-  memcpy(String_val(s), Ptr_of_addr(Addr_val(addr)), Bsize_wsize(Long_val(wsize)));
+  memcpy(String_val(s), Ptr_of_addr(Long_val(addr)), Bsize_wsize(Long_val(wsize)));
   CAMLreturn(s);
 }

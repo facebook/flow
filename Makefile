@@ -94,11 +94,13 @@ MODULES=\
   src/common/errors\
   src/common/exit\
   src/common/exit_status\
+  src/common/leb128\
   src/common/lints\
   src/common/logging_utils\
   src/common/lwt\
   src/common/modulename\
   src/common/monad\
+  src/common/packed_locs\
   src/common/profiling\
   src/common/semver\
   src/common/span\

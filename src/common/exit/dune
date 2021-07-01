@@ -1,0 +1,7 @@
+(library
+  (name flow_exit)
+  (wrapped false)
+  (libraries
+    flow_exit_status
+  )
+)

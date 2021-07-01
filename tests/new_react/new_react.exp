@@ -215,6 +215,25 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:57:21
 
+Cannot reference `this` from within method `qux` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   classes.js:57:21
+   57|     var _: string = this.props.x;
+                           ^^^^
+
+References:
+   classes.js:56:3
+         v------------
+   56|   qux(): void {
+   57|     var _: string = this.props.x;
+   58|   },
+         ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:57:21
+
 Cannot assign `this.props.x` to `_` because number [1] is incompatible with string [2]. [incompatible-type]
 
    classes.js:57:21
@@ -278,6 +297,25 @@ References:
                          ^^^^^^^^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- classes.js:67:5
+
+Cannot reference `this` from within method `componentDidMount` [1]. For safety, Flow restricts access to `this` inside
+object methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name
+of the object, or rewriting the object as a class. [object-this-reference]
+
+   classes.js:67:5
+   67|     this.is_mounted = true;
+           ^^^^
+
+References:
+   classes.js:66:3
+         v--------------------------
+   66|   componentDidMount(): void {
+   67|     this.is_mounted = true;
+   68|   },
+         ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------- classes.js:67:10
 
 Cannot assign `true` to `this.is_mounted` because property `is_mounted` is missing in implicit `this` parameter of
@@ -291,6 +329,28 @@ References:
    <BUILTINS>/react.js:62:3
    62|   componentDidMount(): mixed;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- classes.js:74:5
+
+Cannot reference `this` from within method `componentWillReceiveProps` [1]. For safety, Flow restricts access to `this`
+inside object methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with
+the name of the object, or rewriting the object as a class. [object-this-reference]
+
+   classes.js:74:5
+   74|     this.qux();
+           ^^^^
+
+References:
+   classes.js:70:3
+         v-------------------------
+   70|   componentWillReceiveProps(
+   71|     nextProps: Object,
+   72|     nextContext: any
+   73|   ): void {
+   74|     this.qux();
+   75|   },
+         ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:74:10
@@ -460,6 +520,32 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- new_react.js:17:27
 
+Cannot reference `this` from within method `render` [1]. For safety, Flow restricts access to `this` inside object
+methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the
+object, or rewriting the object as a class. [object-this-reference]
+
+   new_react.js:17:27
+   17|         var foo: string = this.state;
+                                 ^^^^
+
+References:
+   new_react.js:16:5
+           v---------
+   16|     render() {
+   17|         var foo: string = this.state;
+   18|         var bar: string = this.props;
+   19|         var qux: string = this.props.z;
+   20|         var w:number = this.props.x;
+   21|         this.props.y[0];
+   22|         var len:number = this.props.x.length;
+   23|         this.success();
+   24|         return <div/>;
+   25|     }
+           ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- new_react.js:17:27
+
 Cannot assign `this.state` to `foo` because null [1] is incompatible with string [2]. [incompatible-type]
 
    new_react.js:17:27
@@ -488,6 +574,32 @@ References:
    <BUILTINS>/react.js:59:3
    59|   render(): React$Node;
          ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- new_react.js:18:27
+
+Cannot reference `this` from within method `render` [1]. For safety, Flow restricts access to `this` inside object
+methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the
+object, or rewriting the object as a class. [object-this-reference]
+
+   new_react.js:18:27
+   18|         var bar: string = this.props;
+                                 ^^^^
+
+References:
+   new_react.js:16:5
+           v---------
+   16|     render() {
+   17|         var foo: string = this.state;
+   18|         var bar: string = this.props;
+   19|         var qux: string = this.props.z;
+   20|         var w:number = this.props.x;
+   21|         this.props.y[0];
+   22|         var len:number = this.props.x.length;
+   23|         this.success();
+   24|         return <div/>;
+   25|     }
+           ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- new_react.js:18:27
@@ -526,6 +638,32 @@ References:
    <BUILTINS>/react.js:59:3
    59|   render(): React$Node;
          ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- new_react.js:19:27
+
+Cannot reference `this` from within method `render` [1]. For safety, Flow restricts access to `this` inside object
+methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the
+object, or rewriting the object as a class. [object-this-reference]
+
+   new_react.js:19:27
+   19|         var qux: string = this.props.z;
+                                 ^^^^
+
+References:
+   new_react.js:16:5
+           v---------
+   16|     render() {
+   17|         var foo: string = this.state;
+   18|         var bar: string = this.props;
+   19|         var qux: string = this.props.z;
+   20|         var w:number = this.props.x;
+   21|         this.props.y[0];
+   22|         var len:number = this.props.x.length;
+   23|         this.success();
+   24|         return <div/>;
+   25|     }
+           ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- new_react.js:19:32
@@ -577,6 +715,32 @@ References:
                         ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- new_react.js:20:24
+
+Cannot reference `this` from within method `render` [1]. For safety, Flow restricts access to `this` inside object
+methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the
+object, or rewriting the object as a class. [object-this-reference]
+
+   new_react.js:20:24
+   20|         var w:number = this.props.x;
+                              ^^^^
+
+References:
+   new_react.js:16:5
+           v---------
+   16|     render() {
+   17|         var foo: string = this.state;
+   18|         var bar: string = this.props;
+   19|         var qux: string = this.props.z;
+   20|         var w:number = this.props.x;
+   21|         this.props.y[0];
+   22|         var len:number = this.props.x.length;
+   23|         this.success();
+   24|         return <div/>;
+   25|     }
+           ^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------- new_react.js:20:29
 
 Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
@@ -609,6 +773,32 @@ References:
                      ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ new_react.js:21:9
+
+Cannot reference `this` from within method `render` [1]. For safety, Flow restricts access to `this` inside object
+methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the
+object, or rewriting the object as a class. [object-this-reference]
+
+   new_react.js:21:9
+   21|         this.props.y[0];
+               ^^^^
+
+References:
+   new_react.js:16:5
+           v---------
+   16|     render() {
+   17|         var foo: string = this.state;
+   18|         var bar: string = this.props;
+   19|         var qux: string = this.props.z;
+   20|         var w:number = this.props.x;
+   21|         this.props.y[0];
+   22|         var len:number = this.props.x.length;
+   23|         this.success();
+   24|         return <div/>;
+   25|     }
+           ^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------- new_react.js:21:14
 
 Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
@@ -638,6 +828,32 @@ References:
                   ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------- new_react.js:22:26
+
+Cannot reference `this` from within method `render` [1]. For safety, Flow restricts access to `this` inside object
+methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the
+object, or rewriting the object as a class. [object-this-reference]
+
+   new_react.js:22:26
+   22|         var len:number = this.props.x.length;
+                                ^^^^
+
+References:
+   new_react.js:16:5
+           v---------
+   16|     render() {
+   17|         var foo: string = this.state;
+   18|         var bar: string = this.props;
+   19|         var qux: string = this.props.z;
+   20|         var w:number = this.props.x;
+   21|         this.props.y[0];
+   22|         var len:number = this.props.x.length;
+   23|         this.success();
+   24|         return <div/>;
+   25|     }
+           ^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------- new_react.js:22:31
 
 Cannot get `this.props` because property `props` is missing in implicit `this` parameter of function type [1].
@@ -651,6 +867,32 @@ References:
    <BUILTINS>/react.js:59:3
    59|   render(): React$Node;
          ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ new_react.js:23:9
+
+Cannot reference `this` from within method `render` [1]. For safety, Flow restricts access to `this` inside object
+methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the
+object, or rewriting the object as a class. [object-this-reference]
+
+   new_react.js:23:9
+   23|         this.success();
+               ^^^^
+
+References:
+   new_react.js:16:5
+           v---------
+   16|     render() {
+   17|         var foo: string = this.state;
+   18|         var bar: string = this.props;
+   19|         var qux: string = this.props.z;
+   20|         var w:number = this.props.x;
+   21|         this.props.y[0];
+   22|         var len:number = this.props.x.length;
+   23|         this.success();
+   24|         return <div/>;
+   25|     }
+           ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- new_react.js:23:14
@@ -1201,6 +1443,26 @@ References:
                                              ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- state4.js:9:5
+
+Cannot reference `this` from within method `render` [1]. For safety, Flow restricts access to `this` inside object
+methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the
+object, or rewriting the object as a class. [object-this-reference]
+
+   state4.js:9:5
+    9|     this.setState({ y: 0 });
+           ^^^^
+
+References:
+   state4.js:8:3
+         v---------
+    8|   render() {
+    9|     this.setState({ y: 0 });
+   10|     return <div>{this.state.z}</div>
+   11|   }
+         ^ [1]
+
+
 Error --------------------------------------------------------------------------------------------------- state4.js:9:10
 
 Cannot call `this.setState` because property `setState` is missing in implicit `this` parameter of function type [1].
@@ -1229,6 +1491,26 @@ References:
    state4.js:4:32
    4|   getInitialState: function(): { x: number } {
                                      ^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- state4.js:10:18
+
+Cannot reference `this` from within method `render` [1]. For safety, Flow restricts access to `this` inside object
+methods since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the
+object, or rewriting the object as a class. [object-this-reference]
+
+   state4.js:10:18
+   10|     return <div>{this.state.z}</div>
+                        ^^^^
+
+References:
+   state4.js:8:3
+         v---------
+    8|   render() {
+    9|     this.setState({ y: 0 });
+   10|     return <div>{this.state.z}</div>
+   11|   }
+         ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- state4.js:10:23
@@ -1356,7 +1638,7 @@ References:
 
 
 
-Found 81 errors
+Found 93 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

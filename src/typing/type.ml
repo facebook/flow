@@ -619,9 +619,6 @@ module rec TypeTerm : sig
     | ObjTestProtoT of reason * t_out
     (* test that something is object-like, returning a default type otherwise *)
     | ObjTestT of reason * t * t
-    (* Assign properties to module.exports. The only interesting case is when module.exports is a
-       function type, where we set the statics field of the function type. *)
-    | ModuleExportsAssignT of reason * t * t
     (* assignment rest element in array pattern *)
     | ArrRestT of use_op * reason * int * t
     (* Guarded unification *)
@@ -835,7 +832,7 @@ module rec TypeTerm : sig
     | OptionalIndexedAccessT of {
         use_op: use_op;
         reason: reason;
-        index_type: t;
+        index: optional_indexed_access_index;
         tout_tvar: tvar;
       }
 
@@ -1302,13 +1299,17 @@ module rec TypeTerm : sig
 
   and destructor =
     | NonMaybeType
-    | PropertyType of name
+    | PropertyType of {
+        name: name;
+        (* For type normalizer purposes - in the future PropertyType will be removed. *)
+        is_indexed_access: bool;
+      }
     | ElementType of {
         index_type: t;
         (* For type normalizer purposes - in the future ElementType will be removed. *)
         is_indexed_access: bool;
       }
-    | OptionalIndexedAccessNonMaybeType of { index_type: t }
+    | OptionalIndexedAccessNonMaybeType of { index: optional_indexed_access_index }
     | OptionalIndexedAccessResultType of { void_reason: reason }
     | Bind of t
     | ReadOnlyType
@@ -1322,6 +1323,10 @@ module rec TypeTerm : sig
     | ReactElementConfigType
     | ReactElementRefType
     | ReactConfigType of t
+
+  and optional_indexed_access_index =
+    | OptionalIndexedAccessStrLitIndex of name
+    | OptionalIndexedAccessTypeIndex of t
 
   and type_map =
     | TupleMap of t
@@ -1482,183 +1487,6 @@ module rec TypeTerm : sig
   type trace = trace_step list * int
 end =
   TypeTerm
-
-and Constraint : sig
-  module UseTypeKey : sig
-    type speculation_id = int
-
-    type case_id = int
-
-    type t = TypeTerm.use_t * (speculation_id * case_id) option
-
-    val compare : t -> t -> int
-  end
-
-  module UseTypeMap : WrappedMap.S with type key = UseTypeKey.t
-
-  (***************************************)
-
-  type node =
-    | Goto of ident
-    | Root of root
-
-  and root = {
-    rank: int;
-    constraints: constraints Lazy.t;
-  }
-
-  and constraints =
-    | Resolved of TypeTerm.use_op * TypeTerm.t
-    | Unresolved of bounds
-    | FullyResolved of TypeTerm.use_op * TypeTerm.t Lazy.t
-
-  and bounds = {
-    mutable lower: (TypeTerm.trace * TypeTerm.use_op) TypeMap.t;
-    mutable upper: TypeTerm.trace UseTypeMap.t;
-    mutable lowertvars: (TypeTerm.trace * TypeTerm.use_op) IMap.t;
-    mutable uppertvars: (TypeTerm.trace * TypeTerm.use_op) IMap.t;
-  }
-
-  val new_unresolved_root : unit -> node
-
-  val types_of : constraints -> TypeTerm.t list
-
-  val uses_of : constraints -> TypeTerm.use_t list
-end = struct
-  module UseTypeKey = struct
-    type speculation_id = int
-
-    type case_id = int
-
-    type t = TypeTerm.use_t * (speculation_id * case_id) option
-
-    let compare = Stdlib.compare
-  end
-
-  module UseTypeMap = WrappedMap.Make (UseTypeKey)
-
-  (** Type variables are unknowns, and we are ultimately interested in constraints
-      on their solutions for type inference.
-
-      Type variables form nodes in a "union-find" forest: each tree denotes a set
-      of type variables that are considered by the type system to be equivalent.
-
-      There are two kinds of nodes: Goto nodes and Root nodes.
-
-      - All Goto nodes of a tree point, directly or indirectly, to the Root node
-      of the tree.
-      - A Root node holds the actual non-trivial state of a tvar, represented by a
-      root structure (see below).
-   **)
-  type node =
-    | Goto of ident
-    | Root of root
-
-  (** A root structure carries the actual non-trivial state of a tvar, and
-      consists of:
-
-      - rank, which is a quantity roughly corresponding to the longest chain of
-      gotos pointing to the tvar. It's an implementation detail of the unification
-      algorithm that simply has to do with efficiently finding the root of a tree.
-      We merge a tree with another tree by converting the root with the lower rank
-      to a goto node, and making it point to the root with the higher rank. See
-      http://en.wikipedia.org/wiki/Disjoint-set_data_structure for more details on
-      this data structure and supported operations.
-
-      - constraints, which carry type information that narrows down the possible
-      solutions of the tvar (see below).  **)
-
-  and root = {
-    rank: int;
-    constraints: constraints Lazy.t;
-  }
-
-  (** Constraints carry type information that narrows down the possible solutions
-      of tvar, and are of two kinds:
-
-      - A Resolved constraint contains a concrete type that is considered by the
-      type system to be the solution of the tvar carrying the constraint. In other
-      words, the tvar is equivalent to this concrete type in all respects.
-
-      - Unresolved constraints contain bounds that carry both concrete types and
-      other tvars as upper and lower bounds (see below).
-   **)
-
-  and constraints =
-    | Resolved of TypeTerm.use_op * TypeTerm.t
-    | Unresolved of bounds
-    | FullyResolved of TypeTerm.use_op * TypeTerm.t Lazy.t
-
-  (** The bounds structure carries the evolving constraints on the solution of an
-      unresolved tvar.
-
-      - upper and lower hold concrete upper and lower bounds, respectively. At any
-      point in analysis the aggregate lower bound of a tvar is (conceptually) the
-      union of the concrete types in lower, and the aggregate upper bound is
-      (conceptually) the intersection of the concrete types in upper. (Upper and
-      lower are maps, with the types as keys, and trace information as values.)
-
-      - lowertvars and uppertvars hold tvars which are also (latent) lower and
-      upper bounds, respectively. See the __flow function for how these structures
-      are populated and operated on.  Here the map keys are tvar ids, with trace
-      info as values.
-
-      The use_op in the lower TypeMap represents the use_op when a lower bound
-      was added.
-   **)
-  and bounds = {
-    mutable lower: (TypeTerm.trace * TypeTerm.use_op) TypeMap.t;
-    mutable upper: TypeTerm.trace UseTypeMap.t;
-    mutable lowertvars: (TypeTerm.trace * TypeTerm.use_op) IMap.t;
-    mutable uppertvars: (TypeTerm.trace * TypeTerm.use_op) IMap.t;
-  }
-
-  let new_bounds () =
-    {
-      lower = TypeMap.empty;
-      upper = UseTypeMap.empty;
-      lowertvars = IMap.empty;
-      uppertvars = IMap.empty;
-    }
-
-  let new_unresolved_root () =
-    let constraints = Lazy.from_val (Unresolved (new_bounds ())) in
-    Root { rank = 0; constraints }
-
-  (* For any constraints, return a list of def types that form either the lower
-     bounds of the solution, or a singleton containing the solution itself. *)
-  let types_of = function
-    | Unresolved { lower; _ } -> TypeMap.keys lower
-    | Resolved (_, t)
-    | FullyResolved (_, (lazy t)) ->
-      [t]
-
-  let uses_of = function
-    | Unresolved { upper; _ } -> Base.List.map ~f:fst (UseTypeMap.keys upper)
-    | Resolved (use_op, t)
-    | FullyResolved (use_op, (lazy t)) ->
-      [TypeTerm.UseT (use_op, t)]
-end
-
-and TypeContext : sig
-  type t = {
-    (* map from tvar ids to nodes (type info structures) *)
-    graph: Constraint.node IMap.t;
-    (* map from tvar ids to trust nodes *)
-    trust_graph: Trust_constraint.node IMap.t;
-    (* obj types point to mutable property maps *)
-    property_maps: Properties.map;
-    (* indirection to support context opt *)
-    call_props: TypeTerm.t IMap.t;
-    (* modules point to mutable export maps *)
-    export_maps: Exports.map;
-    (* map from evaluation ids to types *)
-    evaluated: TypeTerm.t Eval.Map.t;
-    (* map from module names to their types *)
-    module_map: TypeTerm.t NameUtils.Map.t;
-  }
-end =
-  TypeContext
 
 and UnionEnum : sig
   type t =
@@ -2612,6 +2440,7 @@ and Object : sig
     props: props;
     flags: TypeTerm.flags;
     generics: Generic.spread_id;
+    interface: (TypeTerm.static * TypeTerm.insttype) option;
   }
 
   and props = prop NameUtils.Map.t
@@ -2805,6 +2634,106 @@ and React : sig
     | CreateClass of CreateClass.tool * CreateClass.knot * TypeTerm.t_out
 end =
   React
+
+module Constraint = struct
+  module UseTypeKey = struct
+    type speculation_id = int
+
+    type case_id = int
+
+    type t = TypeTerm.use_t * (speculation_id * case_id) option
+
+    let compare = Stdlib.compare
+  end
+
+  module UseTypeMap = WrappedMap.Make (UseTypeKey)
+
+  (** Constraints carry type information that narrows down the possible solutions
+      of tvar, and are of two kinds:
+
+      - A Resolved constraint contains a concrete type that is considered by the
+        type system to be the solution of the tvar carrying the constraint. In other
+        words, the tvar is equivalent to this concrete type in all respects.
+
+      - Unresolved constraints contain bounds that carry both concrete types and
+        other tvars as upper and lower bounds (see below). *)
+  type constraints =
+    | Resolved of TypeTerm.use_op * TypeTerm.t
+    | Unresolved of bounds
+    | FullyResolved of TypeTerm.use_op * TypeTerm.t Lazy.t
+
+  (** The bounds structure carries the evolving constraints on the solution of an
+      unresolved tvar.
+
+      - upper and lower hold concrete upper and lower bounds, respectively. At any
+        point in analysis the aggregate lower bound of a tvar is (conceptually) the
+        union of the concrete types in lower, and the aggregate upper bound is
+        (conceptually) the intersection of the concrete types in upper. (Upper and
+        lower are maps, with the types as keys, and trace information as values.)
+
+      - lowertvars and uppertvars hold tvars which are also (latent) lower and
+        upper bounds, respectively. See the __flow function for how these structures
+        are populated and operated on.  Here the map keys are tvar ids, with trace
+        info as values.
+
+      The use_op in the lower TypeMap represents the use_op when a lower bound
+      was added. *)
+  and bounds = {
+    mutable lower: (TypeTerm.trace * TypeTerm.use_op) TypeMap.t;
+    mutable upper: TypeTerm.trace UseTypeMap.t;
+    mutable lowertvars: (TypeTerm.trace * TypeTerm.use_op) IMap.t;
+    mutable uppertvars: (TypeTerm.trace * TypeTerm.use_op) IMap.t;
+  }
+
+  include Union_find.Make (struct
+    type t = constraints
+  end)
+
+  let new_bounds () =
+    {
+      lower = TypeMap.empty;
+      upper = UseTypeMap.empty;
+      lowertvars = IMap.empty;
+      uppertvars = IMap.empty;
+    }
+
+  let new_unresolved_root () =
+    let constraints = Lazy.from_val (Unresolved (new_bounds ())) in
+    Root { rank = 0; constraints }
+
+  (* For any constraints, return a list of def types that form either the lower
+     bounds of the solution, or a singleton containing the solution itself. *)
+  let types_of : constraints -> TypeTerm.t list = function
+    | Unresolved { lower; _ } -> TypeMap.keys lower
+    | Resolved (_, t)
+    | FullyResolved (_, (lazy t)) ->
+      [t]
+
+  let uses_of : constraints -> TypeTerm.use_t list = function
+    | Unresolved { upper; _ } -> Base.List.map ~f:fst (UseTypeMap.keys upper)
+    | Resolved (use_op, t)
+    | FullyResolved (use_op, (lazy t)) ->
+      [TypeTerm.UseT (use_op, t)]
+end
+
+module TypeContext = struct
+  type t = {
+    (* map from tvar ids to nodes (type info structures) *)
+    graph: Constraint.node IMap.t;
+    (* map from tvar ids to trust nodes *)
+    trust_graph: Trust_constraint.node IMap.t;
+    (* obj types point to mutable property maps *)
+    property_maps: Properties.map;
+    (* indirection to support context opt *)
+    call_props: TypeTerm.t IMap.t;
+    (* modules point to mutable export maps *)
+    export_maps: Exports.map;
+    (* map from evaluation ids to types *)
+    evaluated: TypeTerm.t Eval.Map.t;
+    (* map from module names to their types *)
+    module_map: TypeTerm.t NameUtils.Map.t;
+  }
+end
 
 module FlowSet = struct
   type t = UseTypeSet.t TypeMap.t
@@ -3459,7 +3388,6 @@ let string_of_use_ctor = function
   | DestructuringT _ -> "DestructuringT"
   | CreateObjWithComputedPropT _ -> "CreateObjWithComputedPropT"
   | ResolveUnionT _ -> "ResolveUnionT"
-  | ModuleExportsAssignT _ -> "ModuleExportsAssignT"
   | FilterOptionalT _ -> "FilterOptionalT"
   | FilterMaybeT _ -> "FilterMaybeT"
   | SealGenericT _ -> "SealGenericT"
@@ -3548,9 +3476,9 @@ let dummy_static = update_desc_reason (fun desc -> RStatics desc) %> Unsoundness
 
 let dummy_prototype = ObjProtoT (locationless_reason RDummyPrototype)
 
-let bound_function_dummy_this = locationless_reason RDummyThis |> Unsoundness.bound_fn_this_any
+let bound_function_dummy_this loc = mk_reason RDummyThis loc |> Unsoundness.bound_fn_this_any
 
-let dummy_this = locationless_reason RDummyThis |> MixedT.make |> with_trust bogus_trust
+let dummy_this loc = mk_reason RDummyThis loc |> MixedT.make |> with_trust bogus_trust
 
 let implicit_mixed_this r =
   update_desc_reason (fun desc -> RImplicitThis desc) r |> MixedT.make |> with_trust bogus_trust

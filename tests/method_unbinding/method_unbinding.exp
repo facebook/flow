@@ -406,5 +406,20 @@ References:
            ^^^^^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:110:8
 
-Found 27 errors
+Cannot assign object literal to `ob` because function type [1] cannot be unbound from the context [1] where it was
+defined in the `this` parameter of property `f`. [method-unbinding]
+
+   test.js:110:8
+   110|     f: X.method,
+               ^^^^^^^^
+
+References:
+   lib.js:12:3
+    12|   static method(): void {}
+          ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 28 errors

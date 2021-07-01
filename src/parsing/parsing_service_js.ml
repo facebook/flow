@@ -13,8 +13,8 @@ type result =
   | Parse_ok of {
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
       file_sig: File_sig.With_Loc.t;
+      locs: Parsing_heaps.locs_tbl;
       type_sig: Parsing_heaps.type_sig;
-      aloc_table: ALoc.table;
       tolerable_errors: File_sig.With_Loc.tolerable_error list;
       parse_errors: parse_error list;
       exports: Exports.t;
@@ -93,7 +93,6 @@ type parse_options = {
   parse_max_literal_len: int;
   parse_exact_by_default: bool;
   parse_enable_enums: bool;
-  parse_enable_this_annot: bool;
   parse_node_main_fields: string list;
 }
 
@@ -387,7 +386,6 @@ let do_parse ~parse_options ~info content file =
     parse_max_literal_len = max_literal_len;
     parse_exact_by_default = exact_by_default;
     parse_enable_enums = enable_enums;
-    parse_enable_this_annot = enable_this_annot;
     parse_node_main_fields = node_main_fields;
   } =
     parse_options
@@ -429,10 +427,9 @@ let do_parse ~parse_options ~info content file =
            recognize and process a custom `keyMirror` function that makes an enum out of the keys
            of an object. *)
         let facebook_keyMirror = true in
-        let exports_info = File_sig.With_Loc.program_with_exports_info ~ast ~module_ref_prefix in
-        (match exports_info with
+        (match File_sig.With_Loc.program ~ast ~module_ref_prefix with
         | Error e -> Parse_fail (File_sig_error e)
-        | Ok (exports_info, tolerable_errors) ->
+        | Ok (file_sig, tolerable_errors) ->
           let sig_opts =
             {
               Type_sig_parse.type_asserts;
@@ -445,30 +442,11 @@ let do_parse ~parse_options ~info content file =
               exact_by_default;
               module_ref_prefix;
               enable_enums;
-              enable_this_annot;
             }
           in
           let (sig_errors, locs, type_sig) =
             let strict = Docblock.is_strict info in
             Type_sig_utils.parse_and_pack_module ~strict sig_opts (Some file) ast
-          in
-          let env = ref SMap.empty in
-          let () =
-            let open Type_sig in
-            let { Packed_type_sig.Module.local_defs; _ } = type_sig in
-            let f def =
-              let name = def_name def in
-              let loc = def_id_loc def in
-              let loc = Type_sig_collections.Locs.get locs loc in
-              let locs = Loc_collections.LocSet.singleton loc in
-              let combine = Loc_collections.LocSet.union in
-              env := SMap.add name locs ~combine !env
-            in
-            Type_sig_collections.Local_defs.iter f local_defs
-          in
-          let aloc_table =
-            Type_sig_collections.Locs.to_array locs
-            |> ALoc.ALocRepresentationDoNotUse.make_table file
           in
           let exports = Exports.of_module type_sig in
           let tolerable_errors =
@@ -482,8 +460,7 @@ let do_parse ~parse_options ~info content file =
               tolerable_errors
               sig_errors
           in
-          let file_sig = File_sig.With_Loc.verified (Some !env) exports_info in
-          Parse_ok { ast; file_sig; type_sig; aloc_table; tolerable_errors; parse_errors; exports })
+          Parse_ok { ast; file_sig; locs; type_sig; tolerable_errors; parse_errors; exports })
   with
   | Parse_error.Error (first_parse_error :: _) -> Parse_fail (Parse_error first_parse_error)
   | e ->
@@ -572,18 +549,10 @@ let reducer
           begin
             match do_parse ~parse_options ~info content file with
             | Parse_ok
-                { ast; file_sig; exports; type_sig; aloc_table; tolerable_errors; parse_errors = _ }
-              ->
+                { ast; file_sig; exports; locs; type_sig; tolerable_errors; parse_errors = _ } ->
               (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
                  ignore any parse errors we get here. *)
-              worker_mutator.Parsing_heaps.add_file
-                file
-                ~exports
-                info
-                ast
-                file_sig
-                type_sig
-                aloc_table;
+              worker_mutator.Parsing_heaps.add_file file ~exports info ast file_sig locs type_sig;
               let parse_ok = FilenameMap.add file tolerable_errors parse_results.parse_ok in
               { parse_results with parse_ok }
             | Parse_fail converted ->
@@ -787,7 +756,6 @@ let make_parse_options_internal
     parse_max_literal_len = Options.max_literal_length options;
     parse_exact_by_default = Options.exact_by_default options;
     parse_enable_enums = Options.enums options;
-    parse_enable_this_annot = Options.this_annot options;
     parse_node_main_fields = Options.node_main_fields options;
   }
 

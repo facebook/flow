@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type locs_tbl = Loc.t Type_sig_collections.Locs.t
+
 type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
 
 type checked_file_addr = SharedMem.NewAPI.checked_file SharedMem.addr
@@ -21,6 +23,8 @@ module type READER = sig
   val get_exports : reader:reader -> File_key.t -> Exports.t option
 
   val get_file_sig : reader:reader -> File_key.t -> File_sig.With_Loc.t option
+
+  val get_type_sig : reader:reader -> File_key.t -> type_sig option
 
   val get_file_hash : reader:reader -> File_key.t -> Xx.hash option
 
@@ -63,8 +67,8 @@ type worker_mutator = {
     Docblock.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t ->
     File_sig.With_Loc.t ->
+    locs_tbl ->
     type_sig ->
-    ALoc.table ->
     unit;
   add_hash: File_key.t -> Xx.hash -> unit;
 }
@@ -88,7 +92,3 @@ module From_saved_state : sig
 
   val add_exports : File_key.t -> Exports.t -> unit
 end
-
-(* Temporary API. This is needed for the types-first 2.0 demo, which produces
- * these tables separately from the parse phase. *)
-val add_aloc_table : File_key.t -> ALoc.table -> unit

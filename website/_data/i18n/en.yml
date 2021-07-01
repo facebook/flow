@@ -281,6 +281,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/types/tuples/":
   title: "Tuple Types"
   description: "Typing tuple-like array values"
+"/docs/types/indexed-access/":
+  title: "Indexed Access Types"
+  description: "Get the type of a property from an object, array, or tuple type"
 "/docs/types/typeof/":
   title: "Typeof Types"
   description: "Getting the internal type of a value"

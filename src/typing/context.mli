@@ -15,8 +15,6 @@ exception Require_not_found of string
 
 exception Module_not_found of string
 
-exception Tvar_not_found of Type.ident
-
 (* The Context module defines types for data which is passed around during type
  * checking, providing access to commonly needed state. The data is layered
  * according to their lifetimes and falls into three categories: *)
@@ -60,7 +58,6 @@ type metadata = {
   enable_enums: bool;
   enable_enums_with_unknown_members: bool;
   enable_indexed_access: bool;
-  enable_this_annot: bool;
   enforce_strict_call_arity: bool;
   enforce_local_inference_annotations: bool;
   exact_by_default: bool;
@@ -165,8 +162,6 @@ val enable_enums_with_unknown_members : t -> bool
 
 val enable_indexed_access : t -> bool
 
-val enable_this_annot : t -> bool
-
 val enforce_strict_call_arity : t -> bool
 
 val errors : t -> Flow_error.ErrorSet.t
@@ -234,8 +229,6 @@ val module_kind : t -> Module_info.kind
 val require_map : t -> Type.t ALocMap.t
 
 val module_map : t -> Type.t NameUtils.Map.t
-
-val exported_locals : t -> ALocSet.t SMap.t option
 
 val module_ref : t -> Reason.name
 
@@ -391,7 +384,9 @@ val set_use_def : t -> Env_builder.env_info -> unit
 
 val set_module_map : t -> Type.t NameUtils.Map.t -> unit
 
-val set_local_env : t -> ALocSet.t SMap.t option -> unit
+val set_local_env : t -> ALocIDSet.t -> unit
+
+val is_exported_local : t -> ALoc.t -> bool
 
 val clear_master_shared : t -> master_context -> unit
 
@@ -502,3 +497,7 @@ val spread_cache : t -> Spread_cache.t
 val speculation_state : t -> Speculation_state.t
 
 val speculation_id : t -> (int * int) option
+
+val exists_instantiations : t -> Type.t list ALocIDMap.t
+
+val add_exists_instantiation : t -> ALoc.t -> Type.t -> unit

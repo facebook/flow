@@ -16,6 +16,7 @@ type autocomplete_type =
   | Ac_binding  (** binding identifiers introduce new names *)
   | Ac_comment  (** inside a comment *)
   | Ac_id of ac_id  (** identifier references *)
+  | Ac_class_key  (** class method name or property name *)
   | Ac_enum  (** identifier in enum declaration *)
   | Ac_key of { obj_type: Type.t }  (** object key *)
   | Ac_literal of { lit_type: Type.t }  (** inside a literal like a string or regex *)
@@ -26,7 +27,9 @@ type autocomplete_type =
       obj_type: Type.t;
       in_optional_chain: bool;
       bracket_syntax: ac_id option;
-      member_loc: Loc.t option; (* loc of `.foo` or `[foo]` *)
+      (* loc of `.foo` or `[foo]` *)
+      member_loc: Loc.t option;
+      is_type_annotation: bool;
     }  (** member expressions *)
   | Ac_jsx_element of { type_: Type.t }  (** JSX element name *)
   | Ac_jsx_attribute of {
@@ -118,7 +121,14 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
           this#find
             prop_loc
             name
-            (Ac_member { obj_type; in_optional_chain = false; bracket_syntax = None; member_loc })
+            (Ac_member
+               {
+                 obj_type;
+                 in_optional_chain = false;
+                 bracket_syntax = None;
+                 member_loc;
+                 is_type_annotation = false;
+               })
         | PropertyExpression
             ( (prop_loc, type_),
               Flow_ast.Expression.(
@@ -134,6 +144,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                  in_optional_chain = false;
                  bracket_syntax = Some (default_ac_id type_);
                  member_loc;
+                 is_type_annotation = false;
                })
         | _ -> ()
       end;
@@ -153,7 +164,14 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
           this#find
             prop_loc
             name
-            (Ac_member { obj_type; in_optional_chain = true; bracket_syntax = None; member_loc })
+            (Ac_member
+               {
+                 obj_type;
+                 in_optional_chain = true;
+                 bracket_syntax = None;
+                 member_loc;
+                 is_type_annotation = false;
+               })
         | PropertyExpression
             ( (prop_loc, type_),
               Flow_ast.Expression.(
@@ -169,6 +187,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                  in_optional_chain = true;
                  bracket_syntax = Some (default_ac_id type_);
                  member_loc;
+                 is_type_annotation = false;
                })
         | _ -> ()
       end;
@@ -201,6 +220,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                        in_optional_chain = false;
                        bracket_syntax = None;
                        member_loc = None;
+                       is_type_annotation = false;
                      })
               | _ -> ())
             properties
@@ -298,6 +318,18 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       | Literal (loc, Flow_ast.Literal.{ raw; _ }) when this#covers_target loc ->
         this#find loc raw (Ac_literal { lit_type = Type.(AnyT.at Untyped loc) })
       | _ -> super#pattern_object_property_key ?kind key
+
+    method! class_key key =
+      let open Flow_ast.Expression.Object.Property in
+      match key with
+      | Identifier ((loc, _), { Flow_ast.Identifier.name; _ })
+      | Literal ((loc, _), Flow_ast.Literal.{ raw = name; _ })
+        when this#covers_target loc ->
+        this#find loc name Ac_class_key
+      | PrivateName (loc, { Flow_ast.PrivateName.id = (_, { Flow_ast.Identifier.name; _ }); _ })
+        when this#covers_target loc ->
+        this#find loc ("#" ^ name) Ac_class_key
+      | _ -> super#class_key key
 
     method! object_key key =
       let open Flow_ast.Expression.Object.Property in
@@ -436,6 +468,74 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
         this#find loc raw Ac_module
       | _ -> super#import_declaration decl_loc decl
 
+    method indexed_access_type_with_loc loc ia =
+      let open Flow_ast in
+      let { Type.IndexedAccess._object; index; _ } = ia in
+      let ((obj_loc, obj_type), _) = _object in
+      (match index with
+      | ( (index_loc, index_type),
+          ( Type.StringLiteral { StringLiteral.raw = token; _ }
+          | Type.Generic
+              {
+                Type.Generic.id =
+                  Type.Generic.Identifier.Unqualified (_, { Identifier.name = token; _ });
+                _;
+              } ) )
+        when this#covers_target index_loc ->
+        this#find
+          index_loc
+          token
+          (Ac_member
+             {
+               obj_type;
+               in_optional_chain = false;
+               bracket_syntax = Some (default_ac_id index_type);
+               member_loc = Some (compute_member_loc ~expr_loc:loc ~obj_loc);
+               is_type_annotation = true;
+             })
+      | _ -> ());
+      super#indexed_access_type ia
+
+    method optional_indexed_access_type_with_loc loc ia =
+      let open Flow_ast in
+      let {
+        Type.OptionalIndexedAccess.indexed_access = { Type.IndexedAccess._object; index; comments };
+        optional;
+        _;
+      } =
+        ia
+      in
+      let ((obj_loc, obj_type), _) = _object in
+      (match index with
+      | ( (index_loc, index_type),
+          ( Type.StringLiteral { StringLiteral.raw = token; _ }
+          | Type.Generic
+              {
+                Type.Generic.id =
+                  Type.Generic.Identifier.Unqualified (_, { Identifier.name = token; _ });
+                _;
+              } ) )
+        when this#covers_target index_loc ->
+        this#find
+          index_loc
+          token
+          (Ac_member
+             {
+               obj_type;
+               in_optional_chain = true;
+               bracket_syntax = Some (default_ac_id index_type);
+               member_loc = Some (compute_member_loc ~expr_loc:loc ~obj_loc);
+               is_type_annotation = true;
+             })
+      | _ -> ());
+      (* The reason we don't simply call `super#optional_indexed_access` is because that would
+       * call `this#indexed_access`, which would be redundant. *)
+      {
+        Type.OptionalIndexedAccess.indexed_access =
+          { Type.IndexedAccess._object = this#type_ _object; index = this#type_ index; comments };
+        optional;
+      }
+
     method! type_ t =
       let open Flow_ast.Type in
       match t with
@@ -444,6 +544,11 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
           | NumberLiteral Flow_ast.NumberLiteral.{ raw; _ } ) )
         when this#covers_target loc ->
         this#find loc raw (Ac_literal { lit_type })
+      | (((loc, _) as annot), IndexedAccess ia) ->
+        (this#on_type_annot annot, IndexedAccess (this#indexed_access_type_with_loc loc ia))
+      | (((loc, _) as annot), OptionalIndexedAccess ia) ->
+        ( this#on_type_annot annot,
+          OptionalIndexedAccess (this#optional_indexed_access_type_with_loc loc ia) )
       | _ -> super#type_ t
   end
 

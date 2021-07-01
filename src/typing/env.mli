@@ -41,6 +41,10 @@ val init_env : ?exclude_syms:NameUtils.Set.t -> Scope.t -> unit
 
 val update_env : ALoc.t -> t -> unit
 
+val save_excluded_symbols : unit -> NameUtils.Set.t
+
+val restore_excluded_symbols : NameUtils.Set.t -> unit
+
 (***)
 
 val promote_non_const :

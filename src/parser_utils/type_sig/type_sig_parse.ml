@@ -33,7 +33,6 @@ type options = {
   exact_by_default: bool;
   module_ref_prefix: string option;
   enable_enums: bool;
-  enable_this_annot: bool;
 }
 
 (* This type encodes the fixed point of parsed signatures. Of particular note
@@ -144,8 +143,6 @@ and 'loc exports =
 and 'loc scope =
   | Global of {
       mutable names: 'loc binding_node SMap.t;
-      mutable mrefs: module_ref_node SMap.t;
-      tables: 'loc tables;
       mutable modules: ('loc loc_node * 'loc exports) SMap.t;
     }
   | DeclareModule of {
@@ -155,22 +152,12 @@ and 'loc scope =
     }
   | Module of {
       mutable names: 'loc binding_node SMap.t;
-      mutable mrefs: module_ref_node SMap.t;
-      tables: 'loc tables;
       exports: 'loc exports;
     }
   | Lexical of {
       mutable names: 'loc binding_node SMap.t;
       parent: 'loc scope;
     }
-
-and 'loc tables = {
-  local_defs: 'loc local_binding Local_defs.builder;
-  module_refs: string Module_refs.builder;
-  remote_refs: 'loc remote_binding Remote_refs.builder;
-  pattern_defs: 'loc parsed Pattern_defs.builder;
-  patterns: 'loc pattern Patterns.builder;
-}
 
 (* When resolving names in the next phase, it will become possible to visit a
  * given binding multiple times, or even circularly. The node indirection here,
@@ -311,6 +298,39 @@ and 'loc pattern_def_node = 'loc parsed Pattern_defs.node
 
 and 'loc pattern_node = 'loc pattern Patterns.node
 
+and 'loc tables = {
+  locs: 'loc Locs.builder;
+  local_defs: 'loc local_binding Local_defs.builder;
+  module_refs: string Module_refs.Interned.builder;
+  remote_refs: 'loc remote_binding Remote_refs.builder;
+  pattern_defs: 'loc parsed Pattern_defs.builder;
+  patterns: 'loc pattern Patterns.builder;
+}
+
+let create_tables () =
+  {
+    locs = Locs.create ();
+    local_defs = Local_defs.create ();
+    module_refs = Module_refs.Interned.create ();
+    remote_refs = Remote_refs.create ();
+    pattern_defs = Pattern_defs.create ();
+    patterns = Patterns.create ();
+  }
+
+let push_loc tbls = Locs.push tbls.locs
+
+let push_local_def tbls = Local_defs.push tbls.local_defs
+
+let push_module_ref tbls = Module_refs.Interned.push tbls.module_refs
+
+let push_remote_ref tbls = Remote_refs.push tbls.remote_refs
+
+let push_pattern_def tbls = Pattern_defs.push tbls.pattern_defs
+
+let push_pattern tbls = Patterns.push tbls.patterns
+
+let splice tbls id_loc f = Locs.splice id_loc (fun locs -> f { tbls with locs })
+
 let polarity = function
   | None -> Polarity.Neutral
   | Some (_, { Ast.Variance.kind = Ast.Variance.Plus; comments = _ }) -> Polarity.Positive
@@ -441,27 +461,9 @@ module Exports = struct
 end
 
 module Scope = struct
-  let create_tables () =
-    {
-      local_defs = Local_defs.create ();
-      module_refs = Module_refs.create ();
-      remote_refs = Remote_refs.create ();
-      pattern_defs = Pattern_defs.create ();
-      patterns = Patterns.create ();
-    }
+  let create_global () = Global { names = SMap.empty; modules = SMap.empty }
 
-  let create_global () =
-    Global
-      { tables = create_tables (); mrefs = SMap.empty; names = SMap.empty; modules = SMap.empty }
-
-  let create_module ~strict =
-    Module
-      {
-        tables = create_tables ();
-        mrefs = SMap.empty;
-        names = SMap.empty;
-        exports = Exports.create ~strict;
-      }
+  let create_module ~strict = Module { names = SMap.empty; exports = Exports.create ~strict }
 
   let push_lex parent = Lexical { parent; names = SMap.empty }
 
@@ -495,22 +497,15 @@ module Scope = struct
     | Lexical _ ->
       ()
 
-  let rec with_tables f = function
-    | Module scope -> f scope.tables
-    | Global scope -> f scope.tables
-    | Lexical { parent; _ }
-    | DeclareModule { parent; _ } ->
-      with_tables f parent
-
   let builtins_exn = function
-    | Global { tables; mrefs = _; names; modules } -> (tables, names, modules)
+    | Global { names; modules } -> (names, modules)
     | DeclareModule _
     | Module _
     | Lexical _ ->
       raise Not_found
 
   let exports_exn = function
-    | Module { tables; exports; _ } -> (tables, exports)
+    | Module { exports; _ } -> exports
     | Global _
     | DeclareModule _
     | Lexical _ ->
@@ -598,71 +593,43 @@ module Scope = struct
       else
         find_host parent b
 
-  let rec push_module_ref name = function
-    | Lexical { parent; _ }
-    | DeclareModule { parent; _ } ->
-      push_module_ref name parent
-    | Global scope ->
-      begin
-        match SMap.find_opt name scope.mrefs with
-        | Some mref -> mref
-        | None ->
-          let mref = Module_refs.push scope.tables.module_refs name in
-          scope.mrefs <- SMap.add name mref scope.mrefs;
-          mref
-      end
-    | Module scope ->
-      begin
-        match SMap.find_opt name scope.mrefs with
-        | Some mref -> mref
-        | None ->
-          let mref = Module_refs.push scope.tables.module_refs name in
-          scope.mrefs <- SMap.add name mref scope.mrefs;
-          mref
-      end
-
-  let push_local_def def = with_tables (fun tbls -> Local_defs.push tbls.local_defs def)
-
-  let push_remote_ref ref = with_tables (fun tbls -> Remote_refs.push tbls.remote_refs ref)
-
-  let push_pattern_def def = with_tables (fun tbls -> Pattern_defs.push tbls.pattern_defs def)
-
-  let push_pattern p = with_tables (fun tbls -> Patterns.push tbls.patterns p)
-
-  let bind_local scope name def =
+  let bind_local scope tbls name def =
     let host = find_host scope def in
-    let node = push_local_def def host in
+    let node = push_local_def tbls def in
     add host name (LocalBinding node)
 
-  let bind_remote scope name ref =
-    let node = push_remote_ref ref scope in
+  let bind_remote scope tbls name ref =
+    let node = push_remote_ref tbls ref in
     add scope name (RemoteBinding node)
 
-  let bind_type scope id_loc name def = bind_local scope name (TypeBinding { id_loc; def })
+  let bind_type scope tbls id_loc name def =
+    bind_local scope tbls name (TypeBinding { id_loc; def })
 
-  let bind_class scope id_loc name def = bind_local scope name (ClassBinding { id_loc; name; def })
+  let bind_class scope tbls id_loc name def =
+    bind_local scope tbls name (ClassBinding { id_loc; name; def })
 
-  let bind_declare_class scope id_loc name def =
-    bind_local scope name (DeclareClassBinding { id_loc; name; def })
+  let bind_declare_class scope tbls id_loc name def =
+    bind_local scope tbls name (DeclareClassBinding { id_loc; name; def })
 
-  let bind_enum scope id_loc name def = bind_local scope name (EnumBinding { id_loc; name; def })
+  let bind_enum scope tbls id_loc name def =
+    bind_local scope tbls name (EnumBinding { id_loc; name; def })
 
-  let bind_function scope id_loc fn_loc name ~async ~generator def =
+  let bind_function scope tbls id_loc fn_loc name ~async ~generator def =
     let statics = SMap.empty in
-    bind_local scope name (FunBinding { id_loc; name; async; generator; fn_loc; def; statics })
+    bind_local scope tbls name (FunBinding { id_loc; name; async; generator; fn_loc; def; statics })
 
   (* Multiple declared functions with the same name in the same scope define an
    * overloaded function. Note that declared functions are block scoped, so we
    * don't need to walk the scope chain since the scope argument is certainly
    * the host scope. *)
-  let bind_declare_function scope id_loc fn_loc name def =
+  let bind_declare_function scope tbls id_loc fn_loc name def =
     modify_names
       (SMap.update name (fun binding_opt ->
            match binding_opt with
            | None ->
              let defs_rev = Nel.one (id_loc, fn_loc, def) in
              let def = DeclareFunBinding { name; defs_rev } in
-             let node = push_local_def def scope in
+             let node = push_local_def tbls def in
              Some (LocalBinding node)
            | Some (RemoteBinding _) -> binding_opt
            | Some (LocalBinding node) ->
@@ -674,30 +641,34 @@ module Scope = struct
              binding_opt))
       scope
 
-  let bind_var scope kind id_loc name def =
-    bind_local scope name (value_binding kind id_loc name def)
+  let bind_var scope tbls kind id_loc name def =
+    bind_local scope tbls name (value_binding kind id_loc name def)
 
-  let bind_const scope id_loc name def =
-    bind_local scope name (LetConstBinding { id_loc; name; def })
+  let bind_const scope tbls id_loc name def =
+    bind_local scope tbls name (LetConstBinding { id_loc; name; def })
 
-  let bind_const_ref scope id_loc name ref_loc ref_name ref_scope =
+  let bind_const_ref scope tbls id_loc name ref_loc ref_name ref_scope =
     let ref = Ref { ref_loc; name = ref_name; scope = ref_scope; resolved = None } in
-    bind_local scope name (ConstRefBinding { id_loc; name; ref })
+    bind_local scope tbls name (ConstRefBinding { id_loc; name; ref })
 
-  let bind_const_fun scope id_loc name loc ~async ~generator def =
+  let bind_const_fun scope tbls id_loc name loc ~async ~generator def =
     let statics = SMap.empty in
-    bind_local scope name (ConstFunBinding { id_loc; name; loc; async; generator; def; statics })
+    bind_local
+      scope
+      tbls
+      name
+      (ConstFunBinding { id_loc; name; loc; async; generator; def; statics })
 
-  let bind_declare_var scope id_loc name def =
-    bind_local scope name (VarBinding { id_loc; name; def })
+  let bind_declare_var scope tbls id_loc name def =
+    bind_local scope tbls name (VarBinding { id_loc; name; def })
 
-  let bind_import scope kind id_loc ~local ~remote mref =
-    let mref = push_module_ref mref scope in
-    bind_remote scope local (import_binding kind id_loc local mref ~remote)
+  let bind_import scope tbls kind id_loc ~local ~remote mref =
+    let mref = push_module_ref tbls mref in
+    bind_remote scope tbls local (import_binding kind id_loc local mref ~remote)
 
-  let bind_import_ns scope kind id_loc name mref =
-    let mref = push_module_ref mref scope in
-    bind_remote scope name (import_ns_binding kind id_loc name mref)
+  let bind_import_ns scope tbls kind id_loc name mref =
+    let mref = push_module_ref tbls mref in
+    bind_remote scope tbls name (import_ns_binding kind id_loc name mref)
 
   let rec assign_binding =
     let f prop_name prop def =
@@ -735,7 +706,7 @@ module Scope = struct
       vref
     | x -> x
 
-  let export_ref scope locs kind ~local ~exported =
+  let export_ref scope tbls kind ~local ~exported =
     let (ref_loc, name, exported) =
       match exported with
       | None ->
@@ -745,7 +716,7 @@ module Scope = struct
         let (_, { Ast.Identifier.name; comments = _ }) = local in
         (id_loc, name, exported)
     in
-    let ref_loc = Locs.push locs ref_loc in
+    let ref_loc = push_loc tbls ref_loc in
     let ref = Ref { ref_loc; name; scope; resolved = None } in
     let f =
       match kind with
@@ -774,8 +745,8 @@ module Scope = struct
     let f = Exports.add "default" (ExportDefaultBinding { default_loc; name; binding }) in
     modify_exports f scope
 
-  let export_from scope locs kind mref ~local ~exported =
-    let mref = push_module_ref mref scope in
+  let export_from scope tbls kind mref ~local ~exported =
+    let mref = push_module_ref tbls mref in
     let (id_loc, name, remote) =
       match exported with
       | None ->
@@ -785,28 +756,28 @@ module Scope = struct
         let (_, { Ast.Identifier.name = remote; comments = _ }) = local in
         (id_loc, name, remote)
     in
-    let id_loc = Locs.push locs id_loc in
+    let id_loc = push_loc tbls id_loc in
     let f =
       match kind with
       | Ast.Statement.ExportType ->
-        let node = push_remote_ref (ImportTypeBinding { id_loc; name; mref; remote }) scope in
+        let node = push_remote_ref tbls (ImportTypeBinding { id_loc; name; mref; remote }) in
         Exports.add_type name (ExportTypeFrom node)
       | Ast.Statement.ExportValue ->
-        let node = push_remote_ref (ImportBinding { id_loc; name; mref; remote }) scope in
+        let node = push_remote_ref tbls (ImportBinding { id_loc; name; mref; remote }) in
         Exports.add name (ExportFrom node)
     in
     modify_exports f scope
 
-  let export_ns scope kind mref id_loc name =
+  let export_ns scope tbls kind mref id_loc name =
     match kind with
     | Ast.Statement.ExportType -> failwith "unexpected export type * as"
     | Ast.Statement.ExportValue ->
-      let mref = push_module_ref mref scope in
-      let node = push_remote_ref (ImportNsBinding { id_loc; name; mref }) scope in
+      let mref = push_module_ref tbls mref in
+      let node = push_remote_ref tbls (ImportNsBinding { id_loc; name; mref }) in
       modify_exports (Exports.add name (ExportFrom node)) scope
 
-  let export_star scope kind loc mref =
-    let mref = push_module_ref mref scope in
+  let export_star scope tbls kind loc mref =
+    let mref = push_module_ref tbls mref in
     let add =
       match kind with
       | Ast.Statement.ExportType -> Exports.add_type_star
@@ -834,15 +805,13 @@ module Scope = struct
               (fun name binding ->
                 match binding with
                 | LocalBinding node ->
-                  Local_defs.modify node (fun def ->
-                      (match def with
-                      | VarBinding _
-                      | DeclareClassBinding _
-                      | DeclareFunBinding _ ->
-                        Exports.cjs_declare_module_set_prop name node exports
-                      | TypeBinding _ -> Exports.add_type name (ExportTypeBinding node) exports
-                      | _ -> ());
-                      def)
+                  (match Local_defs.value node with
+                  | VarBinding _
+                  | DeclareClassBinding _
+                  | DeclareFunBinding _ ->
+                    Exports.cjs_declare_module_set_prop name node exports
+                  | TypeBinding _ -> Exports.add_type name (ExportTypeBinding node) exports
+                  | _ -> ())
                 | RemoteBinding _ -> ())
               names)
           scope
@@ -1200,40 +1169,40 @@ let rec sequence f = function
   | _ :: exprs -> sequence f exprs
 
 let typeof =
-  let rec finish locs typeof_loc t qname = function
+  let rec finish tbls typeof_loc t qname = function
     | [] -> Annot (Typeof { loc = typeof_loc; qname; t })
     | (id_loc, x) :: chain ->
-      let id_loc = Locs.push locs id_loc in
+      let id_loc = push_loc tbls id_loc in
       let t = Eval (id_loc, t, GetProp x) in
-      finish locs typeof_loc t (x :: qname) chain
+      finish tbls typeof_loc t (x :: qname) chain
   in
-  let rec loop scope locs typeof_loc chain = function
+  let rec loop scope tbls typeof_loc chain = function
     | T.Generic.Identifier.Qualified
         ( _,
           {
             T.Generic.Identifier.qualification;
             id = (id_loc, { Ast.Identifier.name; comments = _ });
           } ) ->
-      loop scope locs typeof_loc ((id_loc, name) :: chain) qualification
+      loop scope tbls typeof_loc ((id_loc, name) :: chain) qualification
     | T.Generic.Identifier.Unqualified id ->
       let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
-      let id_loc = Locs.push locs id_loc in
+      let id_loc = push_loc tbls id_loc in
       let t = val_ref scope id_loc name in
-      finish locs typeof_loc t [name] chain
+      finish tbls typeof_loc t [name] chain
   in
-  fun scope locs typeof_loc -> function
+  fun scope tbls typeof_loc -> function
     | (_, T.Generic { T.Generic.id; targs = None; comments = _ }) ->
-      loop scope locs typeof_loc [] id
+      loop scope tbls typeof_loc [] id
     | (loc, _) ->
-      let loc = Locs.push locs loc in
+      let loc = push_loc tbls loc in
       Err (loc, CheckError)
 
-let rec annot opts scope locs xs (loc, t) =
-  let (_, annot) = annot_with_loc opts scope locs xs (loc, t) in
+let rec annot opts scope tbls xs (loc, t) =
+  let (_, annot) = annot_with_loc opts scope tbls xs (loc, t) in
   annot
 
-and annot_with_loc opts scope locs xs (loc, t) =
-  let loc = Locs.push locs loc in
+and annot_with_loc opts scope tbls xs (loc, t) =
+  let loc = push_loc tbls loc in
   let annot =
     match t with
     | T.Any _ -> Annot (Any loc)
@@ -1252,49 +1221,53 @@ and annot_with_loc opts scope locs xs (loc, t) =
     | T.BigIntLiteral { Ast.BigIntLiteral.bigint; _ } -> Annot (SingletonBigInt (loc, bigint))
     | T.BooleanLiteral { Ast.BooleanLiteral.value; _ } -> Annot (SingletonBoolean (loc, value))
     | T.Nullable { T.Nullable.argument; _ } ->
-      Annot (Maybe (loc, annot opts scope locs xs argument))
-    | T.Array { T.Array.argument; _ } -> Annot (Array (loc, annot opts scope locs xs argument))
+      Annot (Maybe (loc, annot opts scope tbls xs argument))
+    | T.Array { T.Array.argument; _ } -> Annot (Array (loc, annot opts scope tbls xs argument))
     | T.Function f ->
-      let def = function_type opts scope locs xs f in
+      let def = function_type opts scope tbls xs f in
       Annot (FunAnnot (loc, def))
-    | T.Object o -> object_type opts scope locs xs loc o
+    | T.Object o -> object_type opts scope tbls xs loc o
     | T.Interface
         {
           T.Interface.body = (_, { T.Object.properties; exact = _; inexact = _; comments = _ });
           extends;
           comments = _;
         } ->
-      let def = interface_def opts scope locs xs extends properties in
+      let def = interface_def opts scope tbls xs extends properties in
       Annot (InlineInterface (loc, def))
-    | T.Generic g -> maybe_special_generic opts scope locs xs loc g
+    | T.Generic g -> maybe_special_generic opts scope tbls xs loc g
     | T.IndexedAccess { T.IndexedAccess._object; index; _ } ->
-      let obj = annot opts scope locs xs _object in
-      let elem = annot opts scope locs xs index in
-      Annot (ElementType { loc; obj; elem })
+      let obj = annot opts scope tbls xs _object in
+      (match index with
+      | (_, T.StringLiteral { Ast.StringLiteral.value; _ }) ->
+        Annot (PropertyType { loc; obj; prop = value })
+      | _ ->
+        let elem = annot opts scope tbls xs index in
+        Annot (ElementType { loc; obj; elem }))
     | T.OptionalIndexedAccess ia ->
-      let (_, result) = optional_indexed_access opts scope locs xs (loc, ia) in
+      let (_, result) = optional_indexed_access opts scope tbls xs (loc, ia) in
       result
     | T.Tuple { T.Tuple.types; _ } ->
-      let ts_rev = List.rev_map (annot opts scope locs xs) types in
+      let ts_rev = List.rev_map (annot opts scope tbls xs) types in
       Annot (Tuple { loc; ts = List.rev ts_rev })
     | T.Union { T.Union.types = (t0, t1, ts); _ } ->
-      let t0 = annot opts scope locs xs t0 in
-      let t1 = annot opts scope locs xs t1 in
-      let ts_rev = List.rev_map (annot opts scope locs xs) ts in
+      let t0 = annot opts scope tbls xs t0 in
+      let t1 = annot opts scope tbls xs t1 in
+      let ts_rev = List.rev_map (annot opts scope tbls xs) ts in
       Annot (Union { loc; t0; t1; ts = List.rev ts_rev })
     | T.Intersection { T.Intersection.types = (t0, t1, ts); _ } ->
-      let t0 = annot opts scope locs xs t0 in
-      let t1 = annot opts scope locs xs t1 in
-      let ts_rev = List.rev_map (annot opts scope locs xs) ts in
+      let t0 = annot opts scope tbls xs t0 in
+      let t1 = annot opts scope tbls xs t1 in
+      let ts_rev = List.rev_map (annot opts scope tbls xs) ts in
       Annot (Intersection { loc; t0; t1; ts = List.rev ts_rev })
-    | T.Typeof { T.Typeof.argument = t; _ } -> typeof scope locs loc t
+    | T.Typeof { T.Typeof.argument = t; _ } -> typeof scope tbls loc t
     | T.Exists _ ->
       let force = SSet.is_empty xs in
       Annot (Exists { loc; force })
   in
   (loc, annot)
 
-and function_type opts scope locs xs f : ('loc loc_node, 'loc parsed) fun_sig =
+and function_type opts scope tbls xs f =
   let module F = T.Function in
   let {
     F.tparams = tps;
@@ -1304,23 +1277,23 @@ and function_type opts scope locs xs f : ('loc loc_node, 'loc parsed) fun_sig =
   } =
     f
   in
-  let (xs, tparams) = tparams opts scope locs xs tps in
-  let this_param = function_type_this_param opts scope locs xs this_ in
-  let params = function_type_params opts scope locs xs ps in
-  let rest_param = function_type_rest_param opts scope locs xs rp in
-  let return = annot opts scope locs xs r in
+  let (xs, tparams) = tparams opts scope tbls xs tps in
+  let this_param = function_type_this_param opts scope tbls xs this_ in
+  let params = function_type_params opts scope tbls xs ps in
+  let rest_param = function_type_rest_param opts scope tbls xs rp in
+  let return = annot opts scope tbls xs r in
   FunSig { tparams; params; rest_param; this_param; return; predicate = None }
 
 and function_type_params =
   let module F = T.Function in
-  let param opts scope locs xs (_, p) =
+  let param opts scope tbls xs (_, p) =
     let { F.Param.name = id; annot = t; optional } = p in
     let name =
       match id with
       | None -> None
       | Some id -> Some (id_name id)
     in
-    let t = annot opts scope locs xs t in
+    let t = annot opts scope tbls xs t in
     let t =
       if optional then
         Annot (Optional t)
@@ -1329,20 +1302,20 @@ and function_type_params =
     in
     FunParam { name; t }
   in
-  let rec loop opts scope locs xs acc = function
+  let rec loop opts scope tbls xs acc = function
     | [] -> List.rev acc
     | p :: ps ->
-      let p = param opts scope locs xs p in
-      loop opts scope locs xs (p :: acc) ps
+      let p = param opts scope tbls xs p in
+      loop opts scope tbls xs (p :: acc) ps
   in
-  (fun opts scope locs xs ps -> loop opts scope locs xs [] ps)
+  (fun opts scope tbls xs ps -> loop opts scope tbls xs [] ps)
 
-and function_type_rest_param opts scope locs xs =
+and function_type_rest_param opts scope tbls xs =
   let module F = T.Function in
   function
   | None -> None
   | Some (loc, { F.RestParam.argument = p; comments = _ }) ->
-    let loc = Locs.push locs loc in
+    let loc = push_loc tbls loc in
     let (_, { F.Param.name = id; annot = t; optional }) = p in
     ignore optional;
     (* allowed by the parser, but semantically void *)
@@ -1351,29 +1324,29 @@ and function_type_rest_param opts scope locs xs =
       | None -> None
       | Some id -> Some (id_name id)
     in
-    let t = annot opts scope locs xs t in
+    let t = annot opts scope tbls xs t in
     Some (FunRestParam { name; loc; t })
 
-and function_type_this_param opts scope locs xs =
+and function_type_this_param opts scope tbls xs =
   let module F = T.Function in
   function
   | None -> None
   | Some (_, { F.ThisParam.annot = (_, t); comments = _ }) ->
-    let t = annot opts scope locs xs t in
+    let t = annot opts scope tbls xs t in
     Some t
 
-and getter_type opts scope locs xs id_loc f =
+and getter_type opts scope tbls xs id_loc f =
   let module F = T.Function in
   let { F.return = r; _ } = f in
-  Get (id_loc, annot opts scope locs xs r)
+  Get (id_loc, annot opts scope tbls xs r)
 
-and setter_type opts scope locs xs id_loc f =
+and setter_type opts scope tbls xs id_loc f =
   let module F = T.Function in
   let { F.params = (_, { F.Params.params; _ }); _ } = f in
   match params with
   | [(_, p)] ->
     let { F.Param.annot = t; optional; _ } = p in
-    let t = annot opts scope locs xs t in
+    let t = annot opts scope tbls xs t in
     let t =
       if optional then
         Annot (Optional t)
@@ -1386,15 +1359,15 @@ and setter_type opts scope locs xs id_loc f =
 and object_type =
   let module O = T.Object in
   let module Acc = ObjAnnotAcc in
-  let add_method opts scope locs xs acc id_loc name = function
+  let add_method opts scope tbls xs acc id_loc name = function
     | (fn_loc, T.Function f) ->
-      let fn_loc = Locs.push locs fn_loc in
-      let id_loc = Locs.push locs id_loc in
-      let def = function_type opts scope locs xs f in
+      let fn_loc = push_loc tbls fn_loc in
+      let id_loc = push_loc tbls id_loc in
+      let def = function_type opts scope tbls xs f in
       Acc.add_method name id_loc fn_loc def acc
     | _ -> failwith "unexpected method"
   in
-  let prop opts scope locs xs acc p =
+  let prop opts scope tbls xs acc p =
     let { O.Property.key; value; optional; static = _; proto = _; _method; variance; comments = _ }
         =
       p
@@ -1407,11 +1380,11 @@ and object_type =
         | P.Identifier (id_loc, { Ast.Identifier.name; comments = _ })
         | P.Literal (id_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) ->
           if _method then
-            add_method opts scope locs xs acc id_loc name t
+            add_method opts scope tbls xs acc id_loc name t
           else
-            let id_loc = Locs.push locs id_loc in
-            let loc = Locs.push locs (fst t) in
-            let t = annot opts scope locs xs t in
+            let id_loc = push_loc tbls id_loc in
+            let loc = push_loc tbls (fst t) in
+            let t = annot opts scope tbls xs t in
             if name = "__proto__" && (not optional) && variance = None then
               Acc.add_proto (loc, t) acc
             else
@@ -1432,8 +1405,8 @@ and object_type =
       begin
         match key with
         | P.Identifier (id_loc, { Ast.Identifier.name; comments = _ }) ->
-          let id_loc = Locs.push locs id_loc in
-          let getter = getter_type opts scope locs xs id_loc f in
+          let id_loc = push_loc tbls id_loc in
+          let getter = getter_type opts scope tbls xs id_loc f in
           Acc.add_accessor name getter acc
         | _ -> acc (* unsupported getter syntax *)
       end
@@ -1442,40 +1415,40 @@ and object_type =
       begin
         match key with
         | P.Identifier (id_loc, { Ast.Identifier.name; comments = _ }) ->
-          let id_loc = Locs.push locs id_loc in
-          let setter = setter_type opts scope locs xs id_loc f in
+          let id_loc = push_loc tbls id_loc in
+          let setter = setter_type opts scope tbls xs id_loc f in
           Acc.add_accessor name setter acc
         | _ -> acc (* unsupported setter syntax *)
       end
   in
-  let spread opts scope locs xs acc p =
+  let spread opts scope tbls xs acc p =
     let { O.SpreadProperty.argument = t; comments = _ } = p in
-    Acc.add_spread (annot opts scope locs xs t) acc
+    Acc.add_spread (annot opts scope tbls xs t) acc
   in
-  let dict opts scope locs xs acc p =
+  let dict opts scope tbls xs acc p =
     let { O.Indexer.id; key = k; value = v; static = _; variance; comments = _ } = p in
     let name =
       match id with
       | None -> None
       | Some id -> Some (id_name id)
     in
-    let key = annot opts scope locs xs k in
-    let value = annot opts scope locs xs v in
+    let key = annot opts scope tbls xs k in
+    let value = annot opts scope tbls xs v in
     let d = ObjDict { name; polarity = polarity variance; key; value } in
     Acc.add_dict d acc
   in
-  let call opts scope locs xs acc p =
+  let call opts scope tbls xs acc p =
     let { O.CallProperty.value = (fn_loc, f); static = _; comments = _ } = p in
-    let fn_loc = Locs.push locs fn_loc in
-    let def = function_type opts scope locs xs f in
+    let fn_loc = push_loc tbls fn_loc in
+    let def = function_type opts scope tbls xs f in
     let t = Annot (FunAnnot (fn_loc, def)) in
     Acc.add_call t acc
   in
-  let slot opts scope locs xs acc p =
+  let slot opts scope tbls xs acc p =
     let { O.InternalSlot.id; value; optional; static = _; _method = _; comments = _ } = p in
     let name = id_name id in
     if name = "call" then
-      let t = annot opts scope locs xs value in
+      let t = annot opts scope tbls xs value in
       let t =
         if optional then
           Annot (Optional t)
@@ -1487,37 +1460,37 @@ and object_type =
       acc
     (* unsupported slot name *)
   in
-  fun opts scope locs xs loc o ->
+  fun opts scope tbls xs loc o ->
     let { O.exact; inexact; properties; comments = _ } = o in
     let exact = exact || ((not inexact) && opts.exact_by_default) in
     let acc =
       List.fold_left
         (fun acc -> function
-          | O.Property (_, p) -> prop opts scope locs xs acc p
-          | O.SpreadProperty (_, p) -> spread opts scope locs xs acc p
-          | O.Indexer (_, p) -> dict opts scope locs xs acc p
-          | O.CallProperty (_, p) -> call opts scope locs xs acc p
-          | O.InternalSlot (_, p) -> slot opts scope locs xs acc p)
+          | O.Property (_, p) -> prop opts scope tbls xs acc p
+          | O.SpreadProperty (_, p) -> spread opts scope tbls xs acc p
+          | O.Indexer (_, p) -> dict opts scope tbls xs acc p
+          | O.CallProperty (_, p) -> call opts scope tbls xs acc p
+          | O.InternalSlot (_, p) -> slot opts scope tbls xs acc p)
         Acc.empty
         properties
     in
     Acc.object_type loc ~exact acc
 
-and interface_def opts scope locs xs extends properties =
+and interface_def opts scope tbls xs extends properties =
   let module Acc = InterfaceAcc in
   let extends =
     List.map
       (fun (loc, g) ->
-        let loc = Locs.push locs loc in
-        generic opts scope locs xs loc g)
+        let loc = push_loc tbls loc in
+        generic opts scope tbls xs loc g)
       extends
   in
-  Acc.empty |> interface_props opts scope locs xs properties |> Acc.interface_def extends
+  Acc.empty |> interface_props opts scope tbls xs properties |> Acc.interface_def extends
 
 and interface_props =
   let module O = Ast.Type.Object in
   let module Acc = InterfaceAcc in
-  let prop opts scope locs xs acc p =
+  let prop opts scope tbls xs acc p =
     let { O.Property.key; value; optional; static = _; proto = _; _method; variance; comments = _ }
         =
       p
@@ -1531,14 +1504,14 @@ and interface_props =
     | P.Identifier (id_loc, { Ast.Identifier.name; comments = _ }) ->
       (match (_method, value) with
       | (true, O.Property.Init (fn_loc, Ast.Type.Function fn)) ->
-        let fn_loc = Locs.push locs fn_loc in
-        let id_loc = Locs.push locs id_loc in
-        let def = function_type opts scope locs xs fn in
+        let fn_loc = push_loc tbls fn_loc in
+        let id_loc = push_loc tbls id_loc in
+        let def = function_type opts scope tbls xs fn in
         Acc.append_method name id_loc fn_loc def acc
       | (true, _) -> acc (* unexpected non-function method *)
       | (false, O.Property.Init t) ->
-        let id_loc = Locs.push locs id_loc in
-        let t = annot opts scope locs xs t in
+        let id_loc = push_loc tbls id_loc in
+        let t = annot opts scope tbls xs t in
         let t =
           if optional then
             Annot (Optional t)
@@ -1548,32 +1521,32 @@ and interface_props =
         let polarity = polarity variance in
         Acc.add_field name id_loc polarity t acc
       | (_, O.Property.Get (_, fn)) ->
-        let id_loc = Locs.push locs id_loc in
-        let getter = getter_type opts scope locs xs id_loc fn in
+        let id_loc = push_loc tbls id_loc in
+        let getter = getter_type opts scope tbls xs id_loc fn in
         Acc.add_accessor name getter acc
       | (_, O.Property.Set (_, fn)) ->
-        let id_loc = Locs.push locs id_loc in
-        let setter = setter_type opts scope locs xs id_loc fn in
+        let id_loc = push_loc tbls id_loc in
+        let setter = setter_type opts scope tbls xs id_loc fn in
         Acc.add_accessor name setter acc)
   in
-  let dict opts scope locs xs acc p =
+  let dict opts scope tbls xs acc p =
     let { O.Indexer.id = _; key; value; static = _; variance; comments = _ } = p in
-    let k = annot opts scope locs xs key in
-    let v = annot opts scope locs xs value in
+    let k = annot opts scope tbls xs key in
+    let v = annot opts scope tbls xs value in
     Acc.add_indexer (polarity variance) k v acc
   in
-  let call opts scope locs xs acc p =
+  let call opts scope tbls xs acc p =
     let { O.CallProperty.value = (fn_loc, fn); static = _; comments = _ } = p in
-    let fn_loc = Locs.push locs fn_loc in
-    let def = function_type opts scope locs xs fn in
+    let fn_loc = push_loc tbls fn_loc in
+    let def = function_type opts scope tbls xs fn in
     let t = Annot (FunAnnot (fn_loc, def)) in
     Acc.append_call t acc
   in
-  let slot opts scope locs xs acc p =
+  let slot opts scope tbls xs acc p =
     let { O.InternalSlot.id; value; optional; static = _; _method = _; comments = _ } = p in
     let name = id_name id in
     if name = "call" then
-      let t = annot opts scope locs xs value in
+      let t = annot opts scope tbls xs value in
       let t =
         if optional then
           Annot (Optional t)
@@ -1585,13 +1558,13 @@ and interface_props =
       acc
     (* unsupported slot name *)
   in
-  fun opts scope locs xs properties acc ->
+  fun opts scope tbls xs properties acc ->
     List.fold_left
       (fun acc -> function
-        | O.Property (_, p) -> prop opts scope locs xs acc p
-        | O.Indexer (_, p) -> dict opts scope locs xs acc p
-        | O.CallProperty (_, p) -> call opts scope locs xs acc p
-        | O.InternalSlot (_, p) -> slot opts scope locs xs acc p
+        | O.Property (_, p) -> prop opts scope tbls xs acc p
+        | O.Indexer (_, p) -> dict opts scope tbls xs acc p
+        | O.CallProperty (_, p) -> call opts scope tbls xs acc p
+        | O.InternalSlot (_, p) -> slot opts scope tbls xs acc p
         | O.SpreadProperty _ -> acc (* no spread in interface *))
       acc
       properties
@@ -1599,7 +1572,7 @@ and interface_props =
 and declare_class_props =
   let module O = Ast.Type.Object in
   let module Acc = DeclareClassAcc in
-  let prop opts scope locs xs acc p =
+  let prop opts scope tbls xs acc p =
     let { O.Property.key; value; optional; static; proto; _method; variance; comments = _ } = p in
     let module P = Ast.Expression.Object.Property in
     match key with
@@ -1610,14 +1583,14 @@ and declare_class_props =
     | P.Identifier (id_loc, { Ast.Identifier.name; comments = _ }) ->
       (match (_method, value) with
       | (true, O.Property.Init (fn_loc, Ast.Type.Function fn)) ->
-        let fn_loc = Locs.push locs fn_loc in
-        let id_loc = Locs.push locs id_loc in
-        let def = function_type opts scope locs xs fn in
+        let fn_loc = push_loc tbls fn_loc in
+        let id_loc = push_loc tbls id_loc in
+        let def = function_type opts scope tbls xs fn in
         Acc.append_method ~static name id_loc fn_loc def acc
       | (true, _) -> acc (* unexpected non-function method *)
       | (false, O.Property.Init t) ->
-        let id_loc = Locs.push locs id_loc in
-        let t = annot opts scope locs xs t in
+        let id_loc = push_loc tbls id_loc in
+        let t = annot opts scope tbls xs t in
         let t =
           if optional then
             Annot (Optional t)
@@ -1630,32 +1603,32 @@ and declare_class_props =
         else
           Acc.add_field ~static name id_loc polarity t acc
       | (_, O.Property.Get (_, fn)) ->
-        let id_loc = Locs.push locs id_loc in
-        let getter = getter_type opts scope locs xs id_loc fn in
+        let id_loc = push_loc tbls id_loc in
+        let getter = getter_type opts scope tbls xs id_loc fn in
         Acc.add_accessor ~static name getter acc
       | (_, O.Property.Set (_, fn)) ->
-        let id_loc = Locs.push locs id_loc in
-        let setter = setter_type opts scope locs xs id_loc fn in
+        let id_loc = push_loc tbls id_loc in
+        let setter = setter_type opts scope tbls xs id_loc fn in
         Acc.add_accessor ~static name setter acc)
   in
-  let dict opts scope locs xs acc p =
+  let dict opts scope tbls xs acc p =
     let { O.Indexer.id = _; key; value; static; variance; comments = _ } = p in
-    let k = annot opts scope locs xs key in
-    let v = annot opts scope locs xs value in
+    let k = annot opts scope tbls xs key in
+    let v = annot opts scope tbls xs value in
     Acc.add_indexer ~static (polarity variance) k v acc
   in
-  let call opts scope locs xs acc p =
+  let call opts scope tbls xs acc p =
     let { O.CallProperty.value = (fn_loc, fn); static; comments = _ } = p in
-    let fn_loc = Locs.push locs fn_loc in
-    let def = function_type opts scope locs xs fn in
+    let fn_loc = push_loc tbls fn_loc in
+    let def = function_type opts scope tbls xs fn in
     let t = Annot (FunAnnot (fn_loc, def)) in
     Acc.append_call ~static t acc
   in
-  let slot opts scope locs xs acc p =
+  let slot opts scope tbls xs acc p =
     let { O.InternalSlot.id; value; optional; static; _method = _; comments = _ } = p in
     let name = id_name id in
     if name = "call" then
-      let t = annot opts scope locs xs value in
+      let t = annot opts scope tbls xs value in
       let t =
         if optional then
           Annot (Optional t)
@@ -1667,74 +1640,74 @@ and declare_class_props =
       acc
     (* unsupported slot name *)
   in
-  fun opts scope locs xs properties acc ->
+  fun opts scope tbls xs properties acc ->
     List.fold_left
       (fun acc -> function
-        | O.Property (_, p) -> prop opts scope locs xs acc p
-        | O.Indexer (_, p) -> dict opts scope locs xs acc p
-        | O.CallProperty (_, p) -> call opts scope locs xs acc p
-        | O.InternalSlot (_, p) -> slot opts scope locs xs acc p
+        | O.Property (_, p) -> prop opts scope tbls xs acc p
+        | O.Indexer (_, p) -> dict opts scope tbls xs acc p
+        | O.CallProperty (_, p) -> call opts scope tbls xs acc p
+        | O.InternalSlot (_, p) -> slot opts scope tbls xs acc p
         | O.SpreadProperty _ -> acc (* no spread in interface / declare class *))
       acc
       properties
 
-and nominal_type opts scope locs xs loc name = function
+and nominal_type opts scope tbls xs loc name = function
   | None -> TyRef name
   | Some (_, { Ast.Type.TypeArgs.arguments = targs; comments = _ }) ->
-    let targs = List.map (annot opts scope locs xs) targs in
+    let targs = List.map (annot opts scope tbls xs) targs in
     TyRefApp { loc; name; targs }
 
 and generic_id =
-  let rec finish locs tyname = function
+  let rec finish tbls tyname = function
     | [] -> tyname
     | (loc, id_loc, name) :: chain ->
-      let id_loc = Locs.push locs id_loc in
+      let id_loc = push_loc tbls id_loc in
       let tyname = Qualified { loc; id_loc; name; qualification = tyname } in
-      finish locs tyname chain
+      finish tbls tyname chain
   in
-  fun scope locs xs chain ->
+  fun scope tbls xs chain ->
     let module G = T.Generic in
     function
     | G.Identifier.Qualified (qloc, { G.Identifier.qualification; id }) ->
       let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
-      let qloc = Locs.push locs qloc in
+      let qloc = push_loc tbls qloc in
       let chain = (qloc, id_loc, name) :: chain in
-      generic_id scope locs xs chain qualification
+      generic_id scope tbls xs chain qualification
     | G.Identifier.Unqualified id ->
       let (ref_loc, { Ast.Identifier.name; comments = _ }) = id in
       (* Type params in scope should be handled before generic_id. *)
       assert (not (SSet.mem name xs));
-      let ref_loc = Locs.push locs ref_loc in
+      let ref_loc = push_loc tbls ref_loc in
       let tyname = Unqualified (Ref { ref_loc; name; scope; resolved = None }) in
-      finish locs tyname chain
+      finish tbls tyname chain
 
-and generic opts scope locs xs loc g =
+and generic opts scope tbls xs loc g =
   let module G = T.Generic in
   let { G.id; targs; comments = _ } = g in
-  let tyname = generic_id scope locs xs [] id in
-  nominal_type opts scope locs xs loc tyname targs
+  let tyname = generic_id scope tbls xs [] id in
+  nominal_type opts scope tbls xs loc tyname targs
 
-and maybe_special_generic opts scope locs xs loc g =
+and maybe_special_generic opts scope tbls xs loc g =
   let module G = T.Generic in
   let { G.id; targs; comments = _ } = g in
   match id with
   | G.Identifier.Qualified (qloc, { G.Identifier.qualification; id }) ->
     let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
-    let qloc = Locs.push locs qloc in
-    let tyname = generic_id scope locs xs [(qloc, id_loc, name)] qualification in
-    nominal_type opts scope locs xs loc tyname targs
+    let qloc = push_loc tbls qloc in
+    let tyname = generic_id scope tbls xs [(qloc, id_loc, name)] qualification in
+    nominal_type opts scope tbls xs loc tyname targs
   | G.Identifier.Unqualified (ref_loc, { Ast.Identifier.name; comments = _ }) ->
-    let ref_loc = Locs.push locs ref_loc in
-    maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc name
+    let ref_loc = push_loc tbls ref_loc in
+    maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc name
 
-and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
+and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
   let open Ast.Type.TypeArgs in
   function
   | "Array" ->
     begin
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
-        let t = annot opts scope locs xs t in
+        let t = annot opts scope tbls xs t in
         Annot (Array (loc, t))
       | _ -> Err (loc, CheckError)
     end
@@ -1742,7 +1715,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
-        let t = annot opts scope locs xs t in
+        let t = annot opts scope tbls xs t in
         Annot (ClassT (loc, t))
       | _ -> Err (loc, CheckError)
     end
@@ -1794,7 +1767,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [(loc, T.NumberLiteral { Ast.NumberLiteral.value; raw; _ })]; _ }) ->
-        let loc = Locs.push locs loc in
+        let loc = push_loc tbls loc in
         Annot (TEMPORARY_Number (loc, value, raw))
       | _ -> Err (loc, CheckError)
     end
@@ -1802,7 +1775,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [(loc, T.StringLiteral { Ast.StringLiteral.value = s; _ })]; _ }) ->
-        let loc = Locs.push locs loc in
+        let loc = push_loc tbls loc in
         if opts.max_literal_len = 0 || String.length s <= opts.max_literal_len then
           Annot (TEMPORARY_String (loc, s))
         else
@@ -1813,7 +1786,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [(loc, T.BooleanLiteral { Ast.BooleanLiteral.value; _ })]; _ }) ->
-        let loc = Locs.push locs loc in
+        let loc = push_loc tbls loc in
         Annot (TEMPORARY_Boolean (loc, value))
       | _ -> Err (loc, CheckError)
     end
@@ -1821,7 +1794,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
-        let t = annot opts scope locs xs t in
+        let t = annot opts scope tbls xs t in
         Annot (TEMPORARY_Object t)
       | _ -> Err (loc, CheckError)
     end
@@ -1829,21 +1802,15 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
-        let t = annot opts scope locs xs t in
+        let t = annot opts scope tbls xs t in
         Annot (TEMPORARY_Array (loc, t))
       | _ -> Err (loc, CheckError)
     end
-  (* These annotations are only used internally by the sig AST and should not
-     appear directly in user code. These are no longer necessary, as we no
-     longer need to create a sig AST. *)
-  | "$TEMPORARY$Object$freeze"
-  | "$TEMPORARY$function" ->
-    Err (loc, CheckError)
   | "$ReadOnlyArray" ->
     begin
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
-        let t = annot opts scope locs xs t in
+        let t = annot opts scope tbls xs t in
         Annot (ReadOnlyArray (loc, t))
       | _ -> Err (loc, CheckError)
     end
@@ -1851,7 +1818,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
-        let t = annot opts scope locs xs t in
+        let t = annot opts scope tbls xs t in
         Annot (AnyWithLowerBound (loc, t))
       | _ -> Err (loc, CheckError)
     end
@@ -1859,7 +1826,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
-        let t = annot opts scope locs xs t in
+        let t = annot opts scope tbls xs t in
         Annot (AnyWithUpperBound (loc, t))
       | _ -> Err (loc, CheckError)
     end
@@ -1867,10 +1834,10 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [obj; (_, T.StringLiteral { Ast.StringLiteral.value; _ })]; _ }) ->
-        let obj = annot opts scope locs xs obj in
+        let obj = annot opts scope tbls xs obj in
         Annot (PropertyType { loc; obj; prop = value })
       | Some (_, { arguments = [_; (loc, _)]; _ }) ->
-        let loc = Locs.push locs loc in
+        let loc = push_loc tbls loc in
         Err (loc, CheckError)
       | _ -> Err (loc, CheckError)
     end
@@ -1878,8 +1845,8 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [obj; elem]; _ }) ->
-        let obj = annot opts scope locs xs obj in
-        let elem = annot opts scope locs xs elem in
+        let obj = annot opts scope tbls xs obj in
+        let elem = annot opts scope tbls xs elem in
         Annot (ElementType { loc; obj; elem })
       | _ -> Err (loc, CheckError)
     end
@@ -1887,7 +1854,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
-        let t = annot opts scope locs xs t in
+        let t = annot opts scope tbls xs t in
         Annot (NonMaybeType (loc, t))
       | _ -> Err (loc, CheckError)
     end
@@ -1895,7 +1862,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
-        let t = annot opts scope locs xs t in
+        let t = annot opts scope tbls xs t in
         Annot (Shape (loc, t))
       | _ -> Err (loc, CheckError)
     end
@@ -1903,8 +1870,8 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [t1; t2]; _ }) ->
-        let t1 = annot opts scope locs xs t1 in
-        let t2 = annot opts scope locs xs t2 in
+        let t1 = annot opts scope tbls xs t1 in
+        let t2 = annot opts scope tbls xs t2 in
         Annot (Diff (loc, t1, t2))
       | _ -> Err (loc, CheckError)
     end
@@ -1912,7 +1879,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
-        let t = annot opts scope locs xs t in
+        let t = annot opts scope tbls xs t in
         Annot (ReadOnly (loc, t))
       | _ -> Err (loc, CheckError)
     end
@@ -1921,7 +1888,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
-        let t = annot opts scope locs xs t in
+        let t = annot opts scope tbls xs t in
         Annot (Keys (loc, t))
       | _ -> Err (loc, CheckError)
     end
@@ -1929,7 +1896,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
-        let t = annot opts scope locs xs t in
+        let t = annot opts scope tbls xs t in
         Annot (Values (loc, t))
       | _ -> Err (loc, CheckError)
     end
@@ -1937,7 +1904,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
-        let t = annot opts scope locs xs t in
+        let t = annot opts scope tbls xs t in
         Annot (Exact (loc, t))
       | _ -> Err (loc, CheckError)
     end
@@ -1945,8 +1912,8 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [t1; t2]; _ }) ->
-        let t1 = annot opts scope locs xs t1 in
-        let t2 = annot opts scope locs xs t2 in
+        let t1 = annot opts scope tbls xs t1 in
+        let t2 = annot opts scope tbls xs t2 in
         Annot (Rest (loc, t1, t2))
       | _ -> Err (loc, CheckError)
     end
@@ -1955,15 +1922,15 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
       match targs with
       | Some (_, { arguments = [(_, T.StringLiteral { Ast.StringLiteral.value; _ })]; _ }) ->
         Annot (ExportsT (loc, value))
-      | Some (_, { arguments = [(loc, _)]; _ }) -> Err (Locs.push locs loc, CheckError)
+      | Some (_, { arguments = [(loc, _)]; _ }) -> Err (push_loc tbls loc, CheckError)
       | _ -> Err (loc, CheckError)
     end
   | "$Call" ->
     begin
       match targs with
       | Some (_, { arguments = fn :: args; _ }) ->
-        let fn = annot opts scope locs xs fn in
-        let args = List.map (annot opts scope locs xs) args in
+        let fn = annot opts scope tbls xs fn in
+        let args = List.map (annot opts scope tbls xs) args in
         Annot (Call { loc; fn; args })
       | _ -> Err (loc, CheckError)
     end
@@ -1971,8 +1938,8 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [tup; fn]; _ }) ->
-        let tup = annot opts scope locs xs tup in
-        let fn = annot opts scope locs xs fn in
+        let tup = annot opts scope tbls xs tup in
+        let fn = annot opts scope tbls xs fn in
         Annot (TupleMap { loc; tup; fn })
       | _ -> Err (loc, CheckError)
     end
@@ -1980,8 +1947,8 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [obj; fn]; _ }) ->
-        let obj = annot opts scope locs xs obj in
-        let fn = annot opts scope locs xs fn in
+        let obj = annot opts scope tbls xs obj in
+        let fn = annot opts scope tbls xs fn in
         Annot (ObjMap { loc; obj; fn })
       | _ -> Err (loc, CheckError)
     end
@@ -1989,8 +1956,8 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [obj; fn]; _ }) ->
-        let obj = annot opts scope locs xs obj in
-        let fn = annot opts scope locs xs fn in
+        let obj = annot opts scope tbls xs obj in
+        let fn = annot opts scope tbls xs fn in
         Annot (ObjMapi { loc; obj; fn })
       | _ -> Err (loc, CheckError)
     end
@@ -2000,7 +1967,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
       | Some (_, { arguments = [(_, T.StringLiteral { Ast.StringLiteral.value; _ })]; _ }) ->
         Annot (CharSet (loc, value))
       | Some (_, { arguments = [(loc, _)]; _ }) ->
-        let loc = Locs.push locs loc in
+        let loc = push_loc tbls loc in
         Err (loc, CheckError)
       | _ -> Err (loc, CheckError)
     end
@@ -2008,8 +1975,8 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [config; instance]; _ }) ->
-        let config = annot opts scope locs xs config in
-        let instance = annot opts scope locs xs instance in
+        let config = annot opts scope tbls xs config in
+        let instance = annot opts scope tbls xs instance in
         Annot (ReactAbstractComponent { loc; config; instance })
       | _ -> Err (loc, CheckError)
     end
@@ -2017,8 +1984,8 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [props; default]; _ }) ->
-        let props = annot opts scope locs xs props in
-        let default = annot opts scope locs xs default in
+        let props = annot opts scope tbls xs props in
+        let default = annot opts scope tbls xs default in
         Annot (ReactConfig { loc; props; default })
       | _ -> Err (loc, CheckError)
     end
@@ -2026,7 +1993,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
-        let t = annot opts scope locs xs t in
+        let t = annot opts scope tbls xs t in
         Annot (ReactPropTypePrimitive (loc, t))
       | _ -> Err (loc, CheckError)
     end
@@ -2034,7 +2001,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
-        let t = annot opts scope locs xs t in
+        let t = annot opts scope tbls xs t in
         Annot (ReactPropTypePrimitiveRequired (loc, t))
       | _ -> Err (loc, CheckError)
     end
@@ -2096,7 +2063,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
-        let t = annot opts scope locs xs t in
+        let t = annot opts scope tbls xs t in
         Annot (ReactElementFactory (loc, t))
       | _ -> Err (loc, CheckError)
     end
@@ -2104,7 +2071,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
-        let t = annot opts scope locs xs t in
+        let t = annot opts scope tbls xs t in
         Annot (ReactElementProps (loc, t))
       | _ -> Err (loc, CheckError)
     end
@@ -2112,7 +2079,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
-        let t = annot opts scope locs xs t in
+        let t = annot opts scope tbls xs t in
         Annot (ReactElementConfig (loc, t))
       | _ -> Err (loc, CheckError)
     end
@@ -2120,7 +2087,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
-        let t = annot opts scope locs xs t in
+        let t = annot opts scope tbls xs t in
         Annot (ReactElementRef (loc, t))
       | _ -> Err (loc, CheckError)
     end
@@ -2185,7 +2152,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
         let n = Base.Int.of_float value in
         Annot (Pred (loc, n))
       | Some (_, { arguments = [(loc, _)]; _ }) ->
-        let loc = Locs.push locs loc in
+        let loc = push_loc tbls loc in
         Err (loc, CheckError)
       | _ -> Err (loc, CheckError)
     end
@@ -2195,11 +2162,11 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
       | Some
           (_, { arguments = [base; pred; (_, T.NumberLiteral { Ast.NumberLiteral.value; _ })]; _ })
         ->
-        let base = annot opts scope locs xs base in
-        let fn_pred = annot opts scope locs xs pred in
+        let base = annot opts scope tbls xs base in
+        let fn_pred = annot opts scope tbls xs pred in
         Annot (Refine { loc; base; fn_pred; index = Base.Int.of_float value })
       | Some (_, { arguments = [_; _; (loc, _)]; _ }) ->
-        let loc = Locs.push locs loc in
+        let loc = push_loc tbls loc in
         Err (loc, CheckError)
       | _ -> Err (loc, CheckError)
     end
@@ -2207,7 +2174,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
-        let t = annot opts scope locs xs t in
+        let t = annot opts scope tbls xs t in
         Annot (Trusted (loc, t))
       | _ -> Err (loc, CheckError)
     end
@@ -2215,7 +2182,7 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
     begin
       match targs with
       | Some (_, { arguments = [t]; _ }) ->
-        let t = annot opts scope locs xs t in
+        let t = annot opts scope tbls xs t in
         Annot (Private (loc, t))
       | _ -> Err (loc, CheckError)
     end
@@ -2226,19 +2193,19 @@ and maybe_special_unqualified_generic opts scope locs xs loc targs ref_loc =
       Annot (Bound { ref_loc; name })
     else
       let name = Unqualified (Ref { ref_loc; name; scope; resolved = None }) in
-      nominal_type opts scope locs xs loc name targs
+      nominal_type opts scope tbls xs loc name targs
 
 and tparams =
   let module T = T.TypeParam in
-  let bound opts scope locs xs = function
-    | Ast.Type.Available (_, t) -> Some (annot opts scope locs xs t)
+  let bound opts scope tbls xs = function
+    | Ast.Type.Available (_, t) -> Some (annot opts scope tbls xs t)
     | Ast.Type.Missing _ -> None
   in
-  let default opts scope locs xs = function
-    | Some t -> Some (annot opts scope locs xs t)
+  let default opts scope tbls xs = function
+    | Some t -> Some (annot opts scope tbls xs t)
     | None -> None
   in
-  let tparam opts scope locs xs tp =
+  let tparam opts scope tbls xs tp =
     let ( _,
           {
             T.name = (name_loc, { Ast.Identifier.name; comments = _ });
@@ -2248,12 +2215,12 @@ and tparams =
           } ) =
       tp
     in
-    let name_loc = Locs.push locs name_loc in
-    let bound = bound opts scope locs xs b in
-    let default = default opts scope locs xs d in
+    let name_loc = push_loc tbls name_loc in
+    let bound = bound opts scope tbls xs b in
+    let default = default opts scope tbls xs d in
     TParam { name_loc; name; polarity = polarity v; bound; default }
   in
-  let rec loop opts scope locs tparams_loc xs acc = function
+  let rec loop opts scope tbls tparams_loc xs acc = function
     | [] ->
       ( xs,
         begin
@@ -2262,28 +2229,28 @@ and tparams =
           | tp :: tps -> Poly (tparams_loc, tp, tps)
         end )
     | tp :: tps ->
-      let (TParam { name; _ } as tp) = tparam opts scope locs xs tp in
+      let (TParam { name; _ } as tp) = tparam opts scope tbls xs tp in
       let xs = SSet.add name xs in
-      loop opts scope locs tparams_loc xs (tp :: acc) tps
+      loop opts scope tbls tparams_loc xs (tp :: acc) tps
   in
-  fun opts scope locs xs -> function
+  fun opts scope tbls xs -> function
     | None -> (xs, Mono)
     | Some (tparams_loc, { Ast.Type.TypeParams.params = tps; comments = _ }) ->
-      let tparams_loc = Locs.push locs tparams_loc in
-      loop opts scope locs tparams_loc xs [] tps
+      let tparams_loc = push_loc tbls tparams_loc in
+      loop opts scope tbls tparams_loc xs [] tps
 
 and optional_indexed_access
-    opts scope locs xs (loc, { T.OptionalIndexedAccess.indexed_access; optional }) =
+    opts scope tbls xs (loc, { T.OptionalIndexedAccess.indexed_access; optional }) =
   let { T.IndexedAccess._object; index; comments = _ } = indexed_access in
   let (obj_loc, obj) =
     match _object with
     | (loc, T.OptionalIndexedAccess ia) ->
-      let loc = Locs.push locs loc in
-      let (obj, _) = optional_indexed_access opts scope locs xs (loc, ia) in
+      let loc = push_loc tbls loc in
+      let (obj, _) = optional_indexed_access opts scope tbls xs (loc, ia) in
       (loc, obj)
-    | _ -> annot_with_loc opts scope locs xs _object
+    | _ -> annot_with_loc opts scope tbls xs _object
   in
-  let index = annot opts scope locs xs index in
+  let index = annot opts scope tbls xs index in
   let non_maybe_result =
     if optional then
       Annot (OptionalIndexedAccessNonMaybeType { loc; obj; index })
@@ -2295,33 +2262,33 @@ and optional_indexed_access
   in
   (non_maybe_result, result)
 
-let annot_or_hint ~sort ~err_loc opts scope locs xs = function
-  | Ast.Type.Available (_, t) -> annot opts scope locs xs t
+let annot_or_hint ~sort ~err_loc opts scope tbls xs = function
+  | Ast.Type.Available (_, t) -> annot opts scope tbls xs t
   | Ast.Type.Missing loc ->
     let err_loc =
       match err_loc with
       | Some err_loc -> err_loc
-      | None -> Locs.push locs loc
+      | None -> push_loc tbls loc
     in
     Err (err_loc, SigError (Signature_error.ExpectedAnnotation (err_loc, sort)))
 
 let class_implements =
   let module C = Ast.Class in
-  let rec loop opts scope locs xs acc = function
+  let rec loop opts scope tbls xs acc = function
     | [] -> List.rev acc
     | (loc, { C.Implements.Interface.id; targs }) :: rest ->
       let (ref_loc, { Ast.Identifier.name; comments = _ }) = id in
-      let loc = Locs.push locs loc in
-      let ref_loc = Locs.push locs ref_loc in
+      let loc = push_loc tbls loc in
+      let ref_loc = push_loc tbls ref_loc in
       let name = Unqualified (Ref { ref_loc; name; scope; resolved = None }) in
-      let t = nominal_type opts scope locs xs loc name targs in
-      loop opts scope locs xs (t :: acc) rest
+      let t = nominal_type opts scope tbls xs loc name targs in
+      loop opts scope tbls xs (t :: acc) rest
   in
-  fun opts scope locs xs -> function
+  fun opts scope tbls xs -> function
     | None -> []
-    | Some (_, { C.Implements.interfaces; comments = _ }) -> loop opts scope locs xs [] interfaces
+    | Some (_, { C.Implements.interfaces; comments = _ }) -> loop opts scope tbls xs [] interfaces
 
-let getter_def opts scope locs xs id_loc f =
+let getter_def opts scope tbls xs id_loc f =
   let module F = Ast.Function in
   let { F.return = r; _ } = f in
   let t =
@@ -2330,13 +2297,13 @@ let getter_def opts scope locs xs id_loc f =
       ~sort:Expected_annotation_sort.FunctionReturn
       opts
       scope
-      locs
+      tbls
       xs
       r
   in
   Get (id_loc, t)
 
-let setter_def opts scope locs xs id_loc f =
+let setter_def opts scope tbls xs id_loc f =
   let module F = Ast.Function in
   let module P = Ast.Pattern in
   let { F.params = (_, { F.Params.params; _ }); _ } = f in
@@ -2344,25 +2311,25 @@ let setter_def opts scope locs xs id_loc f =
   | [
    (param_loc, { F.Param.argument = (_, P.Identifier { P.Identifier.annot = t; _ }); default = _ });
   ] ->
-    let param_loc = Locs.push locs param_loc in
+    let param_loc = push_loc tbls param_loc in
     let t =
       annot_or_hint
         ~err_loc:(Some param_loc)
         ~sort:Expected_annotation_sort.ArrayPattern (* seems wrong, matches original behavior *)
         opts
         scope
-        locs
+        tbls
         xs
         t
     in
     Set (id_loc, t)
   | _ -> failwith "unexpected setter"
 
-let string_literal opts scope loc s =
+let string_literal opts tbls loc s =
   match opts.module_ref_prefix with
   | Some prefix when String_utils.string_starts_with s prefix ->
     let name = String_utils.lstrip s prefix in
-    let mref = Scope.push_module_ref name scope in
+    let mref = push_module_ref tbls name in
     ModuleRef { loc; mref }
   | _ ->
     if opts.max_literal_len = 0 || String.length s <= opts.max_literal_len then
@@ -2370,10 +2337,10 @@ let string_literal opts scope loc s =
     else
       Value (LongStringLit loc)
 
-let literal opts scope loc value raw =
+let literal opts tbls loc value raw =
   let module L = Ast.Literal in
   match value with
-  | L.String s -> string_literal opts scope loc s
+  | L.String s -> string_literal opts tbls loc s
   | L.Number n -> Value (NumberLit (loc, n, raw))
   | L.BigInt _ ->
     (* There's no reason we can't support these in signatures, but they are also
@@ -2389,18 +2356,18 @@ let literal opts scope loc value raw =
         SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Literal))
       )
 
-let template_literal opts scope loc quasis =
+let template_literal opts tbls loc quasis =
   let module T = Ast.Expression.TemplateLiteral in
   match quasis with
   | [(_, { T.Element.value = { T.Element.raw = _; cooked = s }; tail = _ })] ->
-    string_literal opts scope loc s
+    string_literal opts tbls loc s
   | _ -> Value (StringVal loc)
 
 let key_mirror =
   let module O = Ast.Expression.Object in
   let module P = O.Property in
   let module Acc = ObjectLiteralAcc in
-  let rec loop locs loc acc = function
+  let rec loop tbls loc acc = function
     | [] -> Acc.object_lit loc ~frozen:false acc
     | p :: ps ->
       (match p with
@@ -2414,7 +2381,7 @@ let key_mirror =
                 value = _;
                 shorthand = _;
               } ) ->
-        let id_loc = Locs.push locs id_loc in
+        let id_loc = push_loc tbls id_loc in
         let acc =
           if name = "__proto__" then
             acc
@@ -2422,21 +2389,21 @@ let key_mirror =
             let t = Annot (SingletonString (id_loc, name)) in
             Acc.add_field name id_loc t acc
         in
-        loop locs loc acc ps
+        loop tbls loc acc ps
       | O.Property (prop_loc, _)
       | O.SpreadProperty (prop_loc, _) ->
-        let prop_loc = Locs.push locs prop_loc in
+        let prop_loc = push_loc tbls prop_loc in
         Err (loc, SigError (Signature_error.UnexpectedObjectKey (loc, prop_loc))))
   in
-  (fun locs loc properties -> loop locs loc Acc.empty properties)
+  (fun tbls loc properties -> loop tbls loc Acc.empty properties)
 
-let jsx_element opts locs loc elem =
+let jsx_element opts tbls loc elem =
   let module J = Ast.JSX in
   let { J.opening_element; closing_element = _; children = _; comments = _ } = elem in
   let (_, { J.Opening.name; self_closing = _; attributes = _ }) = opening_element in
   match (name, opts.facebook_fbt) with
   | (J.Identifier (ref_loc, { J.Identifier.name = "fbt"; comments = _ }), Some custom_jsx_type) ->
-    let ref_loc = Locs.push locs ref_loc in
+    let ref_loc = push_loc tbls ref_loc in
     BuiltinTyRef { ref_loc; name = custom_jsx_type }
   | _ ->
     Err
@@ -2483,63 +2450,63 @@ let update loc =
   | Decrement ->
     Value (NumberVal loc)
 
-let rec expression opts scope locs (loc, expr) =
+let rec expression opts scope tbls (loc, expr) =
   let module E = Ast.Expression in
-  let loc = Locs.push locs loc in
+  let loc = push_loc tbls loc in
   match expr with
-  | E.Literal { Ast.Literal.value; raw; comments = _ } -> literal opts scope loc value raw
+  | E.Literal { Ast.Literal.value; raw; comments = _ } -> literal opts tbls loc value raw
   | E.TemplateLiteral { E.TemplateLiteral.quasis; expressions = _; comments = _ } ->
-    template_literal opts scope loc quasis
+    template_literal opts tbls loc quasis
   | E.Identifier id ->
     let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
-    let id_loc = Locs.push locs id_loc in
+    let id_loc = push_loc tbls id_loc in
     val_ref scope id_loc name
   | E.Member { E.Member._object; property; comments = _ } ->
-    member opts scope locs _object loc property
+    member opts scope tbls _object loc property
   | E.Class c ->
     begin
       match c.Ast.Class.id with
       | Some (id_loc, { Ast.Identifier.name; comments = _ }) ->
-        let id_loc = Locs.push locs id_loc in
+        let id_loc = push_loc tbls id_loc in
         let scope = Scope.push_lex scope in
-        let def = lazy (Locs.splice id_loc (fun locs -> class_def opts scope locs c)) in
-        Scope.bind_class scope id_loc name def;
+        let def = lazy (splice tbls id_loc (fun tbls -> class_def opts scope tbls c)) in
+        Scope.bind_class scope tbls id_loc name def;
         val_ref scope id_loc name
       | None ->
-        let def = class_def opts scope locs c in
+        let def = class_def opts scope tbls c in
         Value (ClassExpr (loc, def))
     end
   | E.Function f ->
     let { Ast.Function.id; async; generator; sig_loc; _ } = f in
-    let sig_loc = Locs.push locs sig_loc in
+    let sig_loc = push_loc tbls sig_loc in
     begin
       match id with
       | Some (id_loc, { Ast.Identifier.name; comments = _ }) ->
-        let id_loc = Locs.push locs id_loc in
+        let id_loc = push_loc tbls id_loc in
         let scope = Scope.push_lex scope in
         let def =
-          lazy (Locs.splice id_loc (fun locs -> function_def opts scope locs SSet.empty f))
+          lazy (splice tbls id_loc (fun tbls -> function_def opts scope tbls SSet.empty f))
         in
-        Scope.bind_function scope id_loc sig_loc name ~async ~generator def;
+        Scope.bind_function scope tbls id_loc sig_loc name ~async ~generator def;
         val_ref scope id_loc name
       | None ->
-        let def = function_def opts scope locs SSet.empty f in
+        let def = function_def opts scope tbls SSet.empty f in
         let statics = SMap.empty in
         Value (FunExpr { loc = sig_loc; async; generator; def; statics })
     end
   | E.ArrowFunction f ->
     let { Ast.Function.async; generator; _ } = f in
-    let def = function_def opts scope locs SSet.empty f in
+    let def = function_def opts scope tbls SSet.empty f in
     let statics = SMap.empty in
     Value (FunExpr { loc; async; generator; def; statics })
   | E.TypeCast { E.TypeCast.expression = _; annot = (_, t); comments = _ } ->
-    annot opts scope locs SSet.empty t
+    annot opts scope tbls SSet.empty t
   | E.Object { E.Object.properties; comments = _ } ->
     if properties = [] then
       Err (loc, SigError (Signature_error.EmptyObject loc))
     else
-      object_literal opts scope locs loc ~frozen:false properties
-  | E.Array { E.Array.elements; comments = _ } -> array_literal opts scope locs loc elements
+      object_literal opts scope tbls loc ~frozen:false properties
+  | E.Array { E.Array.elements; comments = _ } -> array_literal opts scope tbls loc elements
   | E.Unary { E.Unary.operator; argument; comments = _ } ->
     begin
       match operator with
@@ -2548,19 +2515,19 @@ let rec expression opts scope locs (loc, expr) =
         let e = Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Unary) in
         Err (loc, SigError e)
       | _ ->
-        let t = expression opts scope locs argument in
+        let t = expression opts scope tbls argument in
         Eval (loc, t, Unary operator)
     end
   | E.Binary { E.Binary.operator; left = _; right = _; comments = _ } -> binary loc operator
   | E.Update { E.Update.operator; argument = _; prefix = _; comments = _ } -> update loc operator
   | E.Sequence { E.Sequence.expressions; comments = _ } ->
-    sequence (expression opts scope locs) expressions
+    sequence (expression opts scope tbls) expressions
   | E.Assignment { E.Assignment.operator; right; _ } ->
     begin
       match operator with
       | None ->
         (* This is sketchy: the RHS may have side effects that are not tracked! *)
-        expression opts scope locs right
+        expression opts scope tbls right
       | Some _ ->
         Err
           ( loc,
@@ -2588,7 +2555,7 @@ let rec expression opts scope locs (loc, expr) =
     begin
       match mref with
       | Some mref ->
-        let mref = Scope.push_module_ref mref scope in
+        let mref = push_module_ref tbls mref in
         Require { loc; mref }
       | None ->
         (* error cases: explicit targs / non-literal require *)
@@ -2619,8 +2586,8 @@ let rec expression opts scope locs (loc, expr) =
     (* TODO: Similar to the "require" case above, we should only special-case
      * this call "Object" is not in scope. Again, we should fix the existing
      * signature builder first. *)
-    let obj_loc = Locs.push locs obj_loc in
-    object_literal opts scope locs obj_loc ~frozen:true properties
+    let obj_loc = push_loc tbls obj_loc in
+    object_literal opts scope tbls obj_loc ~frozen:true properties
   | E.Call
       {
         E.Call.callee = (_, E.Identifier (_, { Ast.Identifier.name = "keyMirror"; comments = _ }));
@@ -2639,9 +2606,9 @@ let rec expression opts scope locs (loc, expr) =
      * possible to ensure that it resolves to the expected function. If not,
      * we should document this limitation along with the flag to enable this
      * behavior. *)
-    let obj_loc = Locs.push locs obj_loc in
-    key_mirror locs obj_loc properties
-  | E.JSXElement elem -> jsx_element opts locs loc elem
+    let obj_loc = push_loc tbls obj_loc in
+    key_mirror tbls obj_loc properties
+  | E.JSXElement elem -> jsx_element opts tbls loc elem
   | E.Import { E.Import.argument = (_, e); comments = _ } ->
     begin
       match extract_string_literal e with
@@ -2649,7 +2616,7 @@ let rec expression opts scope locs (loc, expr) =
         (* error case: non-literal require *)
         Annot (Any loc)
       | Some mref ->
-        let mref = Scope.push_module_ref mref scope in
+        let mref = push_module_ref tbls mref in
         ImportDynamic { loc; mref }
     end
   | E.Call _ ->
@@ -2727,28 +2694,28 @@ let rec expression opts scope locs (loc, expr) =
 and member =
   let module E = Ast.Expression in
   let module M = E.Member in
-  let prop_op opts scope locs = function
+  let prop_op opts scope tbls = function
     | M.PropertyIdentifier id -> GetProp (id_name id)
     | M.PropertyExpression expr ->
-      let t = expression opts scope locs expr in
+      let t = expression opts scope tbls expr in
       GetElem t
     | M.PropertyPrivateName _ -> failwith "unexpected private name outside class"
   in
-  let rec finish opts scope locs t = function
+  let rec finish opts scope tbls t = function
     | [] -> t
     | (loc, property) :: chain ->
-      let op = prop_op opts scope locs property in
-      finish opts scope locs (Eval (loc, t, op)) chain
+      let op = prop_op opts scope tbls property in
+      finish opts scope tbls (Eval (loc, t, op)) chain
   in
-  let rec loop ~toplevel_loc opts scope locs chain (loc, expr) =
+  let rec loop ~toplevel_loc opts scope tbls chain (loc, expr) =
     match expr with
     | E.Identifier (id_loc, { Ast.Identifier.name; comments = _ }) ->
-      let id_loc = Locs.push locs id_loc in
+      let id_loc = push_loc tbls id_loc in
       let t = val_ref scope id_loc name in
-      finish opts scope locs t chain
+      finish opts scope tbls t chain
     | E.Member { E.Member._object; property; comments = _ } ->
-      let loc = Locs.push locs loc in
-      loop ~toplevel_loc opts scope locs ((loc, property) :: chain) _object
+      let loc = push_loc tbls loc in
+      loop ~toplevel_loc opts scope tbls ((loc, property) :: chain) _object
     | _ ->
       Err
         ( toplevel_loc,
@@ -2756,24 +2723,24 @@ and member =
             (Signature_error.UnexpectedExpression
                (toplevel_loc, Flow_ast_utils.ExpressionSort.Member)) )
   in
-  (fun opts scope locs obj loc prop -> loop ~toplevel_loc:loc opts scope locs [(loc, prop)] obj)
+  (fun opts scope tbls obj loc prop -> loop ~toplevel_loc:loc opts scope tbls [(loc, prop)] obj)
 
 and function_def =
   let module F = Ast.Function in
-  let param opts scope locs xs (loc, p) =
+  let param opts scope tbls xs (loc, p) =
     let module P = Ast.Pattern in
     let { F.Param.argument = (_, patt); default } = p in
     match patt with
     | P.Identifier { P.Identifier.name = id; annot = t; optional } ->
       let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
-      let loc = Locs.push locs id_loc in
+      let loc = push_loc tbls id_loc in
       let t =
         annot_or_hint
           ~err_loc:(Some loc)
           ~sort:Expected_annotation_sort.ArrayPattern (*Seems wrong, matches original behavior*)
           opts
           scope
-          locs
+          tbls
           xs
           t
       in
@@ -2786,25 +2753,14 @@ and function_def =
       FunParam { name = Some name; t }
     | P.Object { P.Object.annot = t; properties = _; comments = _ }
     | P.Array { P.Array.annot = t; elements = _; comments = _ } ->
-      let loc = Locs.push locs loc in
-      (* Use the name "_" to match types-first behavior if there is a default.
-       * Because types-first must create a sig AST, it needs to generate a name
-       * in order to insert the ? indicating an optional param.
-       *
-       * TODO Just use None once T71257430 is closed. *)
-      let name =
-        if default <> None then
-          Some "_"
-        else
-          None
-      in
+      let loc = push_loc tbls loc in
       let t =
         annot_or_hint
           ~err_loc:(Some loc)
           ~sort:Expected_annotation_sort.ArrayPattern
           opts
           scope
-          locs
+          tbls
           xs
           t
       in
@@ -2814,37 +2770,37 @@ and function_def =
         else
           t
       in
-      FunParam { name; t }
+      FunParam { name = None; t }
     | P.Expression _ -> failwith "unexpected expression pattern"
   in
-  let rec params opts scope locs xs acc = function
+  let rec params opts scope tbls xs acc = function
     | [] -> List.rev acc
     | p :: ps ->
-      let p = param opts scope locs xs p in
-      params opts scope locs xs (p :: acc) ps
+      let p = param opts scope tbls xs p in
+      params opts scope tbls xs (p :: acc) ps
   in
-  let this_param opts scope locs xs = function
+  let this_param opts scope tbls xs = function
     | None -> None
     | Some (_, { F.ThisParam.annot = (_, t); comments = _ }) ->
-      let t = annot opts scope locs xs t in
+      let t = annot opts scope tbls xs t in
       Some t
   in
-  let rest_param opts scope locs xs = function
+  let rest_param opts scope tbls xs = function
     | None -> None
     | Some (param_loc, { F.RestParam.argument = (_, p); comments = _ }) ->
       let module P = Ast.Pattern in
       (match p with
       | P.Identifier { P.Identifier.name = (id_loc, _) as id; annot = t; optional = _ } ->
-        let loc = Locs.push locs param_loc in
+        let loc = push_loc tbls param_loc in
         let name = Some (id_name id) in
-        let id_loc = Locs.push locs id_loc in
+        let id_loc = push_loc tbls id_loc in
         let t =
           annot_or_hint
             ~err_loc:(Some id_loc) (* TODO: this seems wrong but matches TF1.0 *)
             ~sort:Expected_annotation_sort.ArrayPattern
             opts
             scope
-            locs
+            tbls
             xs
             t
         in
@@ -2855,10 +2811,10 @@ and function_def =
         None)
     (* unexpected rest param pattern *)
   in
-  let return opts scope locs xs ~async ~generator body = function
-    | Ast.Type.Available (_, t) -> annot opts scope locs xs t
+  let return opts scope tbls xs ~async ~generator body = function
+    | Ast.Type.Available (_, t) -> annot opts scope tbls xs t
     | Ast.Type.Missing loc ->
-      let loc = Locs.push locs loc in
+      let loc = push_loc tbls loc in
       if generator || not (Signature_utils.Procedure_decider.is body) then
         Err
           ( loc,
@@ -2869,7 +2825,7 @@ and function_def =
       else
         Annot (Void loc)
   in
-  let predicate opts scope locs ps body =
+  let predicate opts scope tbls ps body =
     let module P = Ast.Type.Predicate in
     let module S = Ast.Statement in
     function
@@ -2886,7 +2842,7 @@ and function_def =
               comments = _;
             } )
       | F.BodyExpression ((loc, _) as expr) ->
-        let loc = Locs.push locs loc in
+        let loc = push_loc tbls loc in
         let pnames =
           List.fold_left
             (fun acc p ->
@@ -2899,10 +2855,10 @@ and function_def =
             SSet.empty
             ps
         in
-        Some (loc, predicate opts scope locs pnames expr)
+        Some (loc, predicate opts scope tbls pnames expr)
       | _ -> None)
   in
-  fun opts scope locs xs f ->
+  fun opts scope tbls xs f ->
     let {
       F.id = _;
       tparams = tps;
@@ -2917,15 +2873,15 @@ and function_def =
     } =
       f
     in
-    let (xs, tparams) = tparams opts scope locs xs tps in
-    let this_param = this_param opts scope locs xs this_ in
-    let params = params opts scope locs xs [] ps in
-    let rest_param = rest_param opts scope locs xs rp in
-    let return = return opts scope locs xs ~async ~generator body r in
-    let predicate = predicate opts scope locs ps body p in
+    let (xs, tparams) = tparams opts scope tbls xs tps in
+    let this_param = this_param opts scope tbls xs this_ in
+    let params = params opts scope tbls xs [] ps in
+    let rest_param = rest_param opts scope tbls xs rp in
+    let return = return opts scope tbls xs ~async ~generator body r in
+    let predicate = predicate opts scope tbls ps body p in
     FunSig { tparams; params; rest_param; this_param; return; predicate }
 
-and predicate opts scope locs pnames =
+and predicate opts scope tbls pnames =
   let open Option.Let_syntax in
   let module E = Ast.Expression in
   let module I = Ast.Identifier in
@@ -2955,7 +2911,7 @@ and predicate opts scope locs pnames =
     match test with
     | `Exists loc -> ExistsP (key, Some loc)
     | `Instanceof right ->
-      let t = expression opts scope locs right in
+      let t = expression opts scope tbls right in
       InstanceofP (key, t)
     | `IsArray -> ArrP key
     | `Eq (eq_loc, sense, eq_test) ->
@@ -3049,7 +3005,7 @@ and predicate opts scope locs pnames =
       refine (`Eq (eq_loc, sense, `Typeof typename)) expr
     | ((loc, E.Literal { Ast.Literal.value; raw; _ }), expr)
     | (expr, (loc, E.Literal { Ast.Literal.value; raw; _ })) ->
-      let loc = Locs.push locs loc in
+      let loc = push_loc tbls loc in
       let%bind test = literal_test ~strict loc raw value in
       refine (`Eq (eq_loc, sense, test)) expr
     | ((loc, E.TemplateLiteral { T.quasis; expressions = []; _ }), expr)
@@ -3057,7 +3013,7 @@ and predicate opts scope locs pnames =
       if strict then
         match quasis with
         | [(_, { T.Element.value = { T.Element.cooked = x; _ }; _ })] ->
-          let loc = Locs.push locs loc in
+          let loc = push_loc tbls loc in
           refine (`Eq (eq_loc, sense, `String (loc, x))) expr
         | _ -> None
       else
@@ -3065,7 +3021,7 @@ and predicate opts scope locs pnames =
     | ((loc, E.Unary { E.Unary.operator = E.Unary.Minus; argument = (_, lit); _ }), expr)
     | (expr, (loc, E.Unary { E.Unary.operator = E.Unary.Minus; argument = (_, lit); _ })) ->
       if strict then
-        let loc = Locs.push locs loc in
+        let loc = push_loc tbls loc in
         let%bind (x, raw) = extract_number_literal lit in
         refine (`Eq (eq_loc, sense, `Number (loc, -.x, "-" ^ raw))) expr
       else
@@ -3075,7 +3031,7 @@ and predicate opts scope locs pnames =
     | ((loc, E.Identifier (_, { I.name = "undefined"; _ })), expr)
     | (expr, (loc, E.Identifier (_, { I.name = "undefined"; _ }))) ->
       (* TODO: should not refine if undefined is shadowed *)
-      let loc = Locs.push locs loc in
+      let loc = push_loc tbls loc in
       let eq_test =
         if strict then
           `Void loc
@@ -3087,7 +3043,7 @@ and predicate opts scope locs pnames =
     | (expr, (_, E.Member { E.Member._object = (_, E.Identifier id); property; _ })) ->
       let%bind key = refinement_key id in
       let%map prop = refinement_prop property in
-      let t = expression opts scope locs expr in
+      let t = expression opts scope tbls expr in
       SentinelExprP (key, prop, t)
     | _ -> None
   in
@@ -3095,12 +3051,12 @@ and predicate opts scope locs pnames =
     let open E.Logical in
     function
     | And ->
-      let p1 = predicate opts scope locs pnames expr1 in
-      let p2 = predicate opts scope locs pnames expr2 in
+      let p1 = predicate opts scope tbls pnames expr1 in
+      let p2 = predicate opts scope tbls pnames expr2 in
       Option.merge p1 p2 ~f:(fun p1 p2 -> AndP (p1, p2))
     | Or ->
-      let p1 = predicate opts scope locs pnames expr1 in
-      let p2 = predicate opts scope locs pnames expr2 in
+      let p1 = predicate opts scope tbls pnames expr1 in
+      let p2 = predicate opts scope tbls pnames expr2 in
       Option.merge p1 p2 ~f:(fun p1 p2 -> OrP (p1, p2))
     | NullishCoalesce -> None
   in
@@ -3108,7 +3064,7 @@ and predicate opts scope locs pnames =
     let module U = E.Unary in
     function
     | U.Not ->
-      let%map p = predicate opts scope locs pnames expr in
+      let%map p = predicate opts scope tbls pnames expr in
       NotP p
     | U.Minus
     | U.Plus
@@ -3150,7 +3106,7 @@ and predicate opts scope locs pnames =
     let finish = function
       | [] -> None
       | x :: xs ->
-        let t = expression opts scope locs callee in
+        let t = expression opts scope tbls callee in
         Some (LatentP (t, (x, xs)))
     in
     let f acc i = function
@@ -3180,7 +3136,7 @@ and predicate opts scope locs pnames =
       | (_, { E.ArgList.arguments; comments = _ }) -> loop [] 0 arguments
   in
   fun (loc, expr) ->
-    let loc = Locs.push locs loc in
+    let loc = push_loc tbls loc in
     match expr with
     | E.Identifier id -> refine_id (`Exists loc) id
     | E.Logical { E.Logical.operator; left; right; comments = _ } -> logical left right operator
@@ -3192,18 +3148,18 @@ and predicate opts scope locs pnames =
 and class_def =
   let module C = Ast.Class in
   let module Acc = ClassAcc in
-  let mk_extends opts scope locs xs = function
+  let mk_extends opts scope tbls xs = function
     | None -> ClassImplicitExtends
     | Some (loc, { C.Extends.expr; targs; comments = _ }) ->
-      let loc = Locs.push locs loc in
-      let t = expression opts scope locs expr in
+      let loc = push_loc tbls loc in
+      let t = expression opts scope tbls expr in
       (match targs with
       | None -> ClassExplicitExtends { loc; t }
       | Some (_, { Ast.Type.TypeArgs.arguments = targs; comments = _ }) ->
-        let targs = List.map (annot opts scope locs xs) targs in
+        let targs = List.map (annot opts scope tbls xs) targs in
         ClassExplicitExtendsApp { loc; t; targs })
   in
-  let props opts scope locs xs elements acc =
+  let props opts scope tbls xs elements acc =
     List.fold_left
       (fun acc ->
         let module P = Ast.Expression.Object.Property in
@@ -3225,17 +3181,17 @@ and class_def =
             | C.Method.Method
             | C.Method.Constructor ->
               let { Ast.Function.async; generator; _ } = fn in
-              let fn_loc = Locs.push locs fn_loc in
-              let id_loc = Locs.push locs id_loc in
-              let def = function_def opts scope locs xs fn in
+              let fn_loc = push_loc tbls fn_loc in
+              let id_loc = push_loc tbls id_loc in
+              let def = function_def opts scope tbls xs fn in
               Acc.add_method ~static name id_loc fn_loc ~async ~generator def acc
             | C.Method.Get ->
-              let id_loc = Locs.push locs id_loc in
-              let getter = getter_def opts scope locs xs id_loc fn in
+              let id_loc = push_loc tbls id_loc in
+              let getter = getter_def opts scope tbls xs id_loc fn in
               Acc.add_accessor ~static name getter acc
             | C.Method.Set ->
-              let id_loc = Locs.push locs id_loc in
-              let setter = setter_def opts scope locs xs id_loc fn in
+              let id_loc = push_loc tbls id_loc in
+              let setter = setter_def opts scope tbls xs id_loc fn in
               Acc.add_accessor ~static name setter acc
           end
         | C.Body.Property
@@ -3254,15 +3210,15 @@ and class_def =
             let (id_loc, t) =
               match t with
               | Ast.Type.Available (_, t) ->
-                let id_loc = Locs.push locs id_loc in
-                (id_loc, annot opts scope locs xs t)
+                let id_loc = push_loc tbls id_loc in
+                (id_loc, annot opts scope tbls xs t)
               | Ast.Type.Missing loc ->
                 if opts.ignore_static_propTypes && static && name = "propTypes" then
-                  let id_loc = Locs.push locs id_loc in
-                  let loc = Locs.push locs loc in
+                  let id_loc = push_loc tbls id_loc in
+                  let loc = push_loc tbls loc in
                   (id_loc, Annot (Any loc))
                 else
-                  let prop_loc = Locs.push locs prop_loc in
+                  let prop_loc = push_loc tbls prop_loc in
                   let res =
                     Err
                       ( prop_loc,
@@ -3270,7 +3226,7 @@ and class_def =
                           (Signature_error.ExpectedAnnotation
                              (prop_loc, Expected_annotation_sort.Property { name })) )
                   in
-                  let id_loc = Locs.push locs id_loc in
+                  let id_loc = push_loc tbls id_loc in
                   (id_loc, res)
             in
             Acc.add_field ~static name id_loc (polarity variance) t acc
@@ -3288,7 +3244,7 @@ and class_def =
       acc
       elements
   in
-  fun opts scope locs decl ->
+  fun opts scope tbls decl ->
     let {
       Ast.Class.id = _;
       body = (_, { Ast.Class.Body.body = elements; comments = _ });
@@ -3300,17 +3256,17 @@ and class_def =
     } =
       decl
     in
-    let (xs, tparams) = tparams opts scope locs SSet.empty tps in
+    let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
     let xs = SSet.add "this" xs in
-    let extends = mk_extends opts scope locs xs extends in
-    let implements = class_implements opts scope locs xs implements in
-    Acc.empty |> props opts scope locs xs elements |> Acc.class_def tparams extends implements
+    let extends = mk_extends opts scope tbls xs extends in
+    let implements = class_implements opts scope tbls xs implements in
+    Acc.empty |> props opts scope tbls xs elements |> Acc.class_def tparams extends implements
 
 and object_literal =
   let module O = Ast.Expression.Object in
   let module P = O.Property in
   let module Acc = ObjectLiteralAcc in
-  let prop opts scope locs acc prop_loc = function
+  let prop opts scope tbls acc prop_loc = function
     | P.Init
         {
           key =
@@ -3319,9 +3275,9 @@ and object_literal =
           value;
           shorthand = _;
         } ->
-      let id_loc = Locs.push locs id_loc in
-      let loc = Locs.push locs (fst value) in
-      let t = expression opts scope locs value in
+      let id_loc = push_loc tbls id_loc in
+      let loc = push_loc tbls (fst value) in
+      let t = expression opts scope tbls value in
       if name = "__proto__" then
         Acc.add_proto (loc, t) acc
       else
@@ -3334,9 +3290,9 @@ and object_literal =
           value = (_, fn);
         } ->
       let { Ast.Function.async; generator; _ } = fn in
-      let fn_loc = Locs.push locs prop_loc in
-      let id_loc = Locs.push locs id_loc in
-      let def = function_def opts scope locs SSet.empty fn in
+      let fn_loc = push_loc tbls prop_loc in
+      let id_loc = push_loc tbls id_loc in
+      let def = function_def opts scope tbls SSet.empty fn in
       Acc.add_method name id_loc fn_loc ~async ~generator def acc
     | P.Get
         {
@@ -3346,8 +3302,8 @@ and object_literal =
           value = (_, fn);
           comments = _;
         } ->
-      let id_loc = Locs.push locs id_loc in
-      let getter = getter_def opts scope locs SSet.empty id_loc fn in
+      let id_loc = push_loc tbls id_loc in
+      let getter = getter_def opts scope tbls SSet.empty id_loc fn in
       Acc.add_accessor name getter acc
     | P.Set
         {
@@ -3357,8 +3313,8 @@ and object_literal =
           value = (_, fn);
           comments = _;
         } ->
-      let id_loc = Locs.push locs id_loc in
-      let setter = setter_def opts scope locs SSet.empty id_loc fn in
+      let id_loc = push_loc tbls id_loc in
+      let setter = setter_def opts scope tbls SSet.empty id_loc fn in
       Acc.add_accessor name setter acc
     | P.Init { key = P.Literal _; _ }
     | P.Method { key = P.Literal _; _ }
@@ -3377,31 +3333,31 @@ and object_literal =
     | P.Set { key = P.PrivateName _; _ } ->
       failwith "unexpected private field in object literal"
   in
-  let spread opts scope locs acc p =
+  let spread opts scope tbls acc p =
     let { O.SpreadProperty.argument = e; comments = _ } = p in
-    let t = expression opts scope locs e in
+    let t = expression opts scope tbls e in
     Acc.add_spread t acc
   in
-  let rec loop opts scope locs loc ~frozen acc = function
+  let rec loop opts scope tbls loc ~frozen acc = function
     | [] -> Acc.object_lit loc ~frozen acc
     | p :: ps ->
       (match p with
       | O.SpreadProperty (_, p) ->
-        let acc = spread opts scope locs acc p in
-        loop opts scope locs loc ~frozen acc ps
+        let acc = spread opts scope tbls acc p in
+        loop opts scope tbls loc ~frozen acc ps
       | O.Property (prop_loc, P.Init { key = P.Computed _; _ })
       | O.Property (prop_loc, P.Method { key = P.Computed _; _ }) ->
         (* TODO: Instead of stopping at the first unexpected key, we should
          * accumulate a list of all signature errors in the object literal, so
          * the user can fix all of the errors at once instead of one-by-one. *)
-        let prop_loc = Locs.push locs prop_loc in
+        let prop_loc = push_loc tbls prop_loc in
         Err (loc, SigError (Signature_error.UnexpectedObjectKey (loc, prop_loc)))
       | O.Property (prop_loc, p) ->
-        let acc = prop opts scope locs acc prop_loc p in
-        loop opts scope locs loc ~frozen acc ps)
+        let acc = prop opts scope tbls acc prop_loc p in
+        loop opts scope tbls loc ~frozen acc ps)
   in
-  fun opts scope locs loc ~frozen properties ->
-    loop opts scope locs loc ~frozen Acc.empty properties
+  fun opts scope tbls loc ~frozen properties ->
+    loop opts scope tbls loc ~frozen Acc.empty properties
 
 and array_literal =
   let module E = Ast.Expression in
@@ -3409,31 +3365,31 @@ and array_literal =
     | [] -> Err (loc, SigError (Signature_error.EmptyArray loc))
     | t :: ts -> Value (ArrayLit (loc, t, ts))
   in
-  let rec loop opts scope locs loc acc = function
+  let rec loop opts scope tbls loc acc = function
     | [] -> finish loc (List.rev acc)
     | elem :: elems ->
       (match elem with
       | E.Array.Hole _ -> Err (loc, SigError (Signature_error.UnexpectedArrayHole loc))
       | E.Array.Expression expr ->
-        let t = expression opts scope locs expr in
-        loop opts scope locs loc (t :: acc) elems
+        let t = expression opts scope tbls expr in
+        loop opts scope tbls loc (t :: acc) elems
       | E.Array.Spread (spread_loc, _) ->
-        let spread_loc = Locs.push locs spread_loc in
+        let spread_loc = push_loc tbls spread_loc in
         Err (loc, SigError (Signature_error.UnexpectedArraySpread (loc, spread_loc))))
   in
-  (fun opts scope locs loc elements -> loop opts scope locs loc [] elements)
+  (fun opts scope tbls loc elements -> loop opts scope tbls loc [] elements)
 
-let rec member_expr_of_generic_id scope locs chain =
+let rec member_expr_of_generic_id scope tbls chain =
   let module G = Ast.Type.Generic in
   function
   | G.Identifier.Qualified (loc, { G.Identifier.qualification; id }) ->
-    let loc = Locs.push locs loc in
+    let loc = push_loc tbls loc in
     let name = id_name id in
     let chain = (loc, name) :: chain in
-    member_expr_of_generic_id scope locs chain qualification
+    member_expr_of_generic_id scope tbls chain qualification
   | G.Identifier.Unqualified id ->
     let (ref_loc, { Ast.Identifier.name; comments = _ }) = id in
-    let ref_loc = Locs.push locs ref_loc in
+    let ref_loc = push_loc tbls ref_loc in
     List.fold_left
       (fun t (loc, name) -> Eval (loc, t, GetProp name))
       (val_ref scope ref_loc name)
@@ -3449,36 +3405,36 @@ let declare_class_def =
     | None -> false
     | Some source -> File_key.is_lib_file source
   in
-  let mk_extends opts scope locs xs id = function
+  let mk_extends opts scope tbls xs id = function
     | None ->
       if is_object_builtin_libdef id then
         ObjectPrototypeExtendsNull
       else
         ClassImplicitExtends
     | Some (loc, { Ast.Type.Generic.id; targs; comments = _ }) ->
-      let loc = Locs.push locs loc in
-      let t = member_expr_of_generic_id scope locs [] id in
+      let loc = push_loc tbls loc in
+      let t = member_expr_of_generic_id scope tbls [] id in
       (match targs with
       | None -> ClassExplicitExtends { loc; t }
       | Some (_, { Ast.Type.TypeArgs.arguments = targs; comments = _ }) ->
-        let targs = List.map (annot opts scope locs xs) targs in
+        let targs = List.map (annot opts scope tbls xs) targs in
         ClassExplicitExtendsApp { loc; t; targs })
   in
-  let rec mk_mixins opts scope locs xs acc = function
+  let rec mk_mixins opts scope tbls xs acc = function
     | [] -> List.rev acc
     | (loc, { Ast.Type.Generic.id; targs; comments = _ }) :: ms ->
-      let loc = Locs.push locs loc in
-      let t = member_expr_of_generic_id scope locs [] id in
+      let loc = push_loc tbls loc in
+      let t = member_expr_of_generic_id scope tbls [] id in
       let m =
         match targs with
         | None -> ClassMixin { loc; t }
         | Some (_, { Ast.Type.TypeArgs.arguments = targs; comments = _ }) ->
-          let targs = List.map (annot opts scope locs xs) targs in
+          let targs = List.map (annot opts scope tbls xs) targs in
           ClassMixinApp { loc; t; targs }
       in
-      mk_mixins opts scope locs xs (m :: acc) ms
+      mk_mixins opts scope tbls xs (m :: acc) ms
   in
-  fun opts scope locs decl ->
+  fun opts scope tbls decl ->
     let {
       Ast.Statement.DeclareClass.id;
       tparams = tps;
@@ -3490,87 +3446,87 @@ let declare_class_def =
     } =
       decl
     in
-    let (xs, tparams) = tparams opts scope locs SSet.empty tps in
+    let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
     let xs = SSet.add "this" xs in
-    let extends = mk_extends opts scope locs xs id extends in
-    let mixins = mk_mixins opts scope locs xs [] mixins in
-    let implements = class_implements opts scope locs xs implements in
+    let extends = mk_extends opts scope tbls xs id extends in
+    let mixins = mk_mixins opts scope tbls xs [] mixins in
+    let implements = class_implements opts scope tbls xs implements in
     Acc.empty
-    |> declare_class_props opts scope locs xs properties
+    |> declare_class_props opts scope tbls xs properties
     |> Acc.declare_class_def tparams extends mixins implements
 
-let rec pattern opts scope locs f def (_, p) =
+let rec pattern opts scope tbls f def (_, p) =
   let module P = Ast.Pattern in
   match p with
   | P.Identifier { P.Identifier.name = id; annot = _; optional = _ } ->
     let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
-    let id_loc = Locs.push locs id_loc in
+    let id_loc = push_loc tbls id_loc in
     f id_loc name def
   | P.Object { P.Object.properties; annot = _; comments = _ } ->
-    object_pattern opts scope locs f def properties
+    object_pattern opts scope tbls f def properties
   | P.Array { P.Array.elements; annot = _; comments = _ } ->
-    array_pattern opts scope locs f def elements
+    array_pattern opts scope tbls f def elements
   | P.Expression _ -> failwith "unexpected expression pattern"
 
 and object_pattern =
   let module O = Ast.Pattern.Object in
-  let prop opts scope locs f def xs = function
+  let prop opts scope tbls f def xs = function
     | O.Property (_, { O.Property.key; pattern = p; default = _; shorthand = _ }) ->
       let (xs, def) =
         match key with
         | O.Property.Identifier (id_loc, { Ast.Identifier.name; comments = _ })
         | O.Property.Literal (id_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) ->
-          let id_loc = Locs.push locs id_loc in
-          let def = Scope.push_pattern (PropP { id_loc; name; def }) scope in
+          let id_loc = push_loc tbls id_loc in
+          let def = push_pattern tbls (PropP { id_loc; name; def }) in
           (name :: xs, def)
         | O.Property.Computed (_, { Ast.ComputedKey.expression = expr; comments = _ }) ->
-          let t = expression opts scope locs expr in
-          let elem = Scope.push_pattern_def t scope in
-          let def = Scope.push_pattern (ComputedP { elem; def }) scope in
+          let t = expression opts scope tbls expr in
+          let elem = push_pattern_def tbls t in
+          let def = push_pattern tbls (ComputedP { elem; def }) in
           (xs, def)
         | O.Property.Literal (loc, _) ->
-          let loc = Locs.push locs loc in
-          let def = Scope.push_pattern (UnsupportedLiteralP loc) scope in
+          let loc = push_loc tbls loc in
+          let def = push_pattern tbls (UnsupportedLiteralP loc) in
           (xs, def)
       in
-      pattern opts scope locs f def p;
+      pattern opts scope tbls f def p;
       xs
     | O.RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments = _ }) ->
-      let loc = Locs.push locs loc in
-      let def = Scope.push_pattern (ObjRestP { loc; xs; def }) scope in
-      pattern opts scope locs f def p;
+      let loc = push_loc tbls loc in
+      let def = push_pattern tbls (ObjRestP { loc; xs; def }) in
+      pattern opts scope tbls f def p;
       xs
   in
-  let rec loop opts scope locs f def xs = function
+  let rec loop opts scope tbls f def xs = function
     | [] -> ()
     | p :: ps ->
-      let xs = prop opts scope locs f def xs p in
-      loop opts scope locs f def xs ps
+      let xs = prop opts scope tbls f def xs p in
+      loop opts scope tbls f def xs ps
   in
-  (fun opts scope locs f def props -> loop opts scope locs f def [] props)
+  (fun opts scope tbls f def props -> loop opts scope tbls f def [] props)
 
 and array_pattern =
   let module A = Ast.Pattern.Array in
-  let elem opts scope locs f def i = function
+  let elem opts scope tbls f def i = function
     | A.Hole _ -> ()
     | A.Element (loc, { A.Element.argument = p; default = _ }) ->
-      let loc = Locs.push locs loc in
-      let def = Scope.push_pattern (IndexP { loc; i; def }) scope in
-      pattern opts scope locs f def p
+      let loc = push_loc tbls loc in
+      let def = push_pattern tbls (IndexP { loc; i; def }) in
+      pattern opts scope tbls f def p
     | A.RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments = _ }) ->
-      let loc = Locs.push locs loc in
-      let def = Scope.push_pattern (ArrRestP { loc; i; def }) scope in
-      pattern opts scope locs f def p
+      let loc = push_loc tbls loc in
+      let def = push_pattern tbls (ArrRestP { loc; i; def }) in
+      pattern opts scope tbls f def p
   in
-  let rec loop opts scope locs f def i = function
+  let rec loop opts scope tbls f def i = function
     | [] -> ()
     | e :: es ->
-      elem opts scope locs f def i e;
-      loop opts scope locs f def (succ i) es
+      elem opts scope tbls f def i e;
+      loop opts scope tbls f def (succ i) es
   in
-  (fun opts scope locs f def elems -> loop opts scope locs f def 0 elems)
+  (fun opts scope tbls f def elems -> loop opts scope tbls f def 0 elems)
 
-let type_alias_decl opts scope locs decl =
+let type_alias_decl opts scope tbls decl =
   let {
     Ast.Statement.TypeAlias.id = (id_loc, { Ast.Identifier.name; comments = _ });
     tparams = tps;
@@ -3579,17 +3535,17 @@ let type_alias_decl opts scope locs decl =
   } =
     decl
   in
-  let id_loc = Locs.push locs id_loc in
+  let id_loc = push_loc tbls id_loc in
   let def =
     lazy
-      (Locs.splice id_loc (fun locs ->
-           let (xs, tparams) = tparams opts scope locs SSet.empty tps in
-           let body = annot opts scope locs xs t in
+      (splice tbls id_loc (fun tbls ->
+           let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
+           let body = annot opts scope tbls xs t in
            TypeAlias { id_loc; name; tparams; body }))
   in
-  Scope.bind_type scope id_loc name def
+  Scope.bind_type scope tbls id_loc name def
 
-let opaque_type_decl opts scope locs decl =
+let opaque_type_decl opts scope tbls decl =
   let {
     Ast.Statement.OpaqueType.id = (id_loc, { Ast.Identifier.name; comments = _ });
     tparams = tps;
@@ -3599,155 +3555,155 @@ let opaque_type_decl opts scope locs decl =
   } =
     decl
   in
-  let id_loc = Locs.push locs id_loc in
+  let id_loc = push_loc tbls id_loc in
   let def =
     lazy
-      (Locs.splice id_loc (fun locs ->
-           let (xs, tparams) = tparams opts scope locs SSet.empty tps in
-           let bound = Base.Option.map ~f:(annot opts scope locs xs) supertype in
-           let body = Base.Option.map ~f:(annot opts scope locs xs) impltype in
+      (splice tbls id_loc (fun tbls ->
+           let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
+           let bound = Base.Option.map ~f:(annot opts scope tbls xs) supertype in
+           let body = Base.Option.map ~f:(annot opts scope tbls xs) impltype in
            OpaqueType { id_loc; name; tparams; bound; body }))
   in
-  Scope.bind_type scope id_loc name def
+  Scope.bind_type scope tbls id_loc name def
 
-let rec const_var_init_decl opts scope locs id_loc name expr =
+let rec const_var_init_decl opts scope tbls id_loc name expr =
   let module E = Ast.Expression in
   match expr with
   (* const x = id *)
   | (_, E.Identifier (ref_loc, { Ast.Identifier.name = ref_name; comments = _ })) ->
-    let ref_loc = Locs.push locs ref_loc in
-    Scope.bind_const_ref scope id_loc name ref_loc ref_name scope
+    let ref_loc = push_loc tbls ref_loc in
+    Scope.bind_const_ref scope tbls id_loc name ref_loc ref_name scope
   (* const x = function *)
   | (_, E.Function f) ->
     let { Ast.Function.id = fn_id; async; generator; sig_loc; _ } = f in
-    let sig_loc = Locs.push locs sig_loc in
+    let sig_loc = push_loc tbls sig_loc in
     begin
       match fn_id with
       | Some (fn_id_loc, { Ast.Identifier.name = fn_name; comments = _ }) ->
-        let fn_id_loc = Locs.push locs fn_id_loc in
+        let fn_id_loc = push_loc tbls fn_id_loc in
         let fn_scope = Scope.push_lex scope in
         let def =
-          lazy (Locs.splice fn_id_loc (fun locs -> function_def opts fn_scope locs SSet.empty f))
+          lazy (splice tbls fn_id_loc (fun tbls -> function_def opts fn_scope tbls SSet.empty f))
         in
-        Scope.bind_function fn_scope fn_id_loc sig_loc fn_name ~async ~generator def;
-        Scope.bind_const_ref scope id_loc name fn_id_loc fn_name fn_scope
+        Scope.bind_function fn_scope tbls fn_id_loc sig_loc fn_name ~async ~generator def;
+        Scope.bind_const_ref scope tbls id_loc name fn_id_loc fn_name fn_scope
       | None ->
         let def =
-          lazy (Locs.splice sig_loc (fun locs -> function_def opts scope locs SSet.empty f))
+          lazy (splice tbls sig_loc (fun tbls -> function_def opts scope tbls SSet.empty f))
         in
-        Scope.bind_const_fun scope id_loc name sig_loc ~async ~generator def
+        Scope.bind_const_fun scope tbls id_loc name sig_loc ~async ~generator def
     end
   (* const x = arrow function *)
   | (loc, E.ArrowFunction f) ->
     let { Ast.Function.async; generator; _ } = f in
-    let loc = Locs.push locs loc in
-    let def = lazy (Locs.splice loc (fun locs -> function_def opts scope locs SSet.empty f)) in
-    Scope.bind_const_fun scope id_loc name loc ~async ~generator def
+    let loc = push_loc tbls loc in
+    let def = lazy (splice tbls loc (fun tbls -> function_def opts scope tbls SSet.empty f)) in
+    Scope.bind_const_fun scope tbls id_loc name loc ~async ~generator def
   (* const x = a, b *)
   | (_, E.Sequence { E.Sequence.expressions; comments = _ }) ->
-    sequence (const_var_init_decl opts scope locs id_loc name) expressions
+    sequence (const_var_init_decl opts scope tbls id_loc name) expressions
   (* const x = ... fallback *)
   | _ ->
-    let def = lazy (Locs.splice id_loc (fun locs -> expression opts scope locs expr)) in
-    Scope.bind_const scope id_loc name def
+    let def = lazy (splice tbls id_loc (fun tbls -> expression opts scope tbls expr)) in
+    Scope.bind_const scope tbls id_loc name def
 
-let variable_decl opts scope locs kind decl =
+let variable_decl opts scope tbls kind decl =
   let module V = Ast.Statement.VariableDeclaration in
   let module P = Ast.Pattern in
   let (_, { V.Declarator.id = p; init }) = decl in
   match snd p with
   | P.Identifier { P.Identifier.name; annot; optional = _ } ->
     let (id_loc, { Ast.Identifier.name; comments = _ }) = name in
-    let id_loc = Locs.push locs id_loc in
+    let id_loc = push_loc tbls id_loc in
     begin
       match (kind, annot, init) with
       (* const x = ... special cases *)
       | (V.Const, Ast.Type.Missing _, Some expr) ->
-        const_var_init_decl opts scope locs id_loc name expr
+        const_var_init_decl opts scope tbls id_loc name expr
       | _ ->
         let def =
           lazy
-            (Locs.splice id_loc (fun locs ->
+            (splice tbls id_loc (fun tbls ->
                  annot_or_hint
                    ~err_loc:(Some id_loc)
                    ~sort:(Expected_annotation_sort.VariableDefinition { name })
                    opts
                    scope
-                   locs
+                   tbls
                    SSet.empty
                    annot))
         in
-        Scope.bind_var scope kind id_loc name def
+        Scope.bind_var scope tbls kind id_loc name def
     end
   | P.Object { P.Object.annot; _ }
   | P.Array { P.Array.annot; _ } ->
     let f id_loc name p =
       let def = lazy (Pattern p) in
-      Scope.bind_var scope kind id_loc name def
+      Scope.bind_var scope tbls kind id_loc name def
     in
     let splice_loc_ref = ref None in
     let pattern_def =
       lazy
         (let splice_loc = Option.value_exn !splice_loc_ref in
          let def =
-           Locs.splice splice_loc (fun locs ->
+           splice tbls splice_loc (fun tbls ->
                match (kind, annot, init) with
-               | (V.Const, Ast.Type.Missing _, Some expr) -> expression opts scope locs expr
+               | (V.Const, Ast.Type.Missing _, Some expr) -> expression opts scope tbls expr
                | _ ->
                  annot_or_hint
                    ~err_loc:None
                    ~sort:Expected_annotation_sort.ArrayPattern
                    opts
                    scope
-                   locs
+                   tbls
                    SSet.empty
                    annot)
          in
-         Scope.push_pattern_def def scope)
+         push_pattern_def tbls def)
     in
-    let def = Scope.push_pattern (PDef pattern_def) scope in
-    pattern opts scope locs f def p;
-    splice_loc_ref := Some (Locs.tail_exn locs)
+    let def = push_pattern tbls (PDef pattern_def) in
+    pattern opts scope tbls f def p;
+    splice_loc_ref := Some (Locs.tail_exn tbls.locs)
   | P.Expression _ -> failwith "unexpected expression pattern"
 
-let variable_decls opts scope locs decl =
+let variable_decls opts scope tbls decl =
   let { Ast.Statement.VariableDeclaration.kind; declarations; comments = _ } = decl in
-  List.iter (variable_decl opts scope locs kind) declarations
+  List.iter (variable_decl opts scope tbls kind) declarations
 
-let class_decl opts scope locs decl =
+let class_decl opts scope tbls decl =
   let id = Base.Option.value_exn decl.Ast.Class.id in
   let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
-  let id_loc = Locs.push locs id_loc in
-  let def = lazy (Locs.splice id_loc (fun locs -> class_def opts scope locs decl)) in
-  Scope.bind_class scope id_loc name def
+  let id_loc = push_loc tbls id_loc in
+  let def = lazy (splice tbls id_loc (fun tbls -> class_def opts scope tbls decl)) in
+  Scope.bind_class scope tbls id_loc name def
 
-let function_decl opts scope locs decl =
+let function_decl opts scope tbls decl =
   let { Ast.Function.id; async; generator; sig_loc; _ } = decl in
   let (id_loc, { Ast.Identifier.name; comments = _ }) = Base.Option.value_exn id in
-  let sig_loc = Locs.push locs sig_loc in
-  let id_loc = Locs.push locs id_loc in
-  let def = lazy (Locs.splice id_loc (fun locs -> function_def opts scope locs SSet.empty decl)) in
-  Scope.bind_function scope id_loc sig_loc name ~async ~generator def
+  let sig_loc = push_loc tbls sig_loc in
+  let id_loc = push_loc tbls id_loc in
+  let def = lazy (splice tbls id_loc (fun tbls -> function_def opts scope tbls SSet.empty decl)) in
+  Scope.bind_function scope tbls id_loc sig_loc name ~async ~generator def
 
-let declare_variable_decl opts scope locs decl =
+let declare_variable_decl opts scope tbls decl =
   let { Ast.Statement.DeclareVariable.id; annot = t; comments = _ } = decl in
   let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
-  let id_loc = Locs.push locs id_loc in
+  let id_loc = push_loc tbls id_loc in
   let def =
     lazy
-      (Locs.splice id_loc (fun locs ->
+      (splice tbls id_loc (fun tbls ->
            annot_or_hint
              ~err_loc:(Some id_loc)
              ~sort:(Expected_annotation_sort.VariableDefinition { name })
              opts
              scope
-             locs
+             tbls
              SSet.empty
              t))
   in
-  Scope.bind_declare_var scope id_loc name def
+  Scope.bind_declare_var scope tbls id_loc name def
 
-let declare_function_decl opts scope locs decl =
+let declare_function_decl opts scope tbls decl =
   let {
     Ast.Statement.DeclareFunction.id = (id_loc, { Ast.Identifier.name; comments = _ });
     annot = (_, (fn_loc, t));
@@ -3756,11 +3712,11 @@ let declare_function_decl opts scope locs decl =
   } =
     decl
   in
-  let id_loc = Locs.push locs id_loc in
-  let fn_loc = Locs.push locs fn_loc in
+  let id_loc = push_loc tbls id_loc in
+  let fn_loc = push_loc tbls fn_loc in
   let def =
     lazy
-      (Locs.splice fn_loc (fun locs ->
+      (splice tbls fn_loc (fun tbls ->
            let module T = Ast.Type in
            match t with
            | T.Function
@@ -3770,17 +3726,17 @@ let declare_function_decl opts scope locs decl =
                  return = r;
                  comments = _;
                } ->
-             let (xs, tparams) = tparams opts scope locs SSet.empty tps in
-             let this_param = function_type_this_param opts scope locs xs this_ in
-             let params = function_type_params opts scope locs xs ps in
-             let rest_param = function_type_rest_param opts scope locs xs rp in
-             let return = annot opts scope locs xs r in
+             let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
+             let this_param = function_type_this_param opts scope tbls xs this_ in
+             let params = function_type_params opts scope tbls xs ps in
+             let rest_param = function_type_rest_param opts scope tbls xs rp in
+             let return = annot opts scope tbls xs r in
              let predicate =
                let module P = T.Predicate in
                match p with
                | None -> None
                | Some (loc, { P.kind = P.Declared expr; _ }) ->
-                 let loc = Locs.push locs loc in
+                 let loc = push_loc tbls loc in
                  let pnames =
                    List.fold_left
                      (fun acc p ->
@@ -3791,7 +3747,7 @@ let declare_function_decl opts scope locs decl =
                      SSet.empty
                      ps
                  in
-                 Some (loc, predicate opts scope locs pnames expr)
+                 Some (loc, predicate opts scope tbls pnames expr)
                | Some (_, { P.kind = P.Inferred; _ }) ->
                  (* inferred predicate not allowed in declared function *)
                  None
@@ -3799,15 +3755,15 @@ let declare_function_decl opts scope locs decl =
              FunSig { tparams; params; rest_param; this_param; return; predicate }
            | _ -> failwith "unexpected declare function annot"))
   in
-  Scope.bind_declare_function scope id_loc fn_loc name def
+  Scope.bind_declare_function scope tbls id_loc fn_loc name def
 
-let declare_class_decl opts scope locs decl =
+let declare_class_decl opts scope tbls decl =
   let (id_loc, { Ast.Identifier.name; comments = _ }) = decl.Ast.Statement.DeclareClass.id in
-  let id_loc = Locs.push locs id_loc in
-  let def = lazy (Locs.splice id_loc (fun locs -> declare_class_def opts scope locs decl)) in
-  Scope.bind_declare_class scope id_loc name def
+  let id_loc = push_loc tbls id_loc in
+  let def = lazy (splice tbls id_loc (fun tbls -> declare_class_def opts scope tbls decl)) in
+  Scope.bind_declare_class scope tbls id_loc name def
 
-let import_decl _opts scope locs decl =
+let import_decl _opts scope tbls decl =
   let module I = Ast.Statement.ImportDeclaration in
   let {
     I.source = (_, { Ast.StringLiteral.value = mref; _ });
@@ -3822,15 +3778,15 @@ let import_decl _opts scope locs decl =
     match default with
     | None -> ()
     | Some (id_loc, { Ast.Identifier.name = local; comments = _ }) ->
-      let id_loc = Locs.push locs id_loc in
-      Scope.bind_import scope kind id_loc ~local ~remote:"default" mref
+      let id_loc = push_loc tbls id_loc in
+      Scope.bind_import scope tbls kind id_loc ~local ~remote:"default" mref
   end;
   match specifiers with
   | None -> ()
   | Some (I.ImportNamespaceSpecifier (_, id)) ->
     let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
-    let id_loc = Locs.push locs id_loc in
-    Scope.bind_import_ns scope kind id_loc name mref
+    let id_loc = push_loc tbls id_loc in
+    Scope.bind_import_ns scope tbls kind id_loc name mref
   | Some (I.ImportNamedSpecifiers specifiers) ->
     List.iter
       (fun specifier ->
@@ -3851,11 +3807,11 @@ let import_decl _opts scope locs decl =
           | Some (id_loc, { Ast.Identifier.name; comments = _ }) -> (id_loc, name)
           | None -> (remote_id_loc, remote)
         in
-        let local_id_loc = Locs.push locs local_id_loc in
-        Scope.bind_import scope kind local_id_loc ~local ~remote mref)
+        let local_id_loc = push_loc tbls local_id_loc in
+        Scope.bind_import scope tbls kind local_id_loc ~local ~remote mref)
       specifiers
 
-let interface_decl opts scope locs decl =
+let interface_decl opts scope tbls decl =
   let {
     Ast.Statement.Interface.id = (id_loc, { Ast.Identifier.name; comments = _ });
     tparams = tps;
@@ -3865,28 +3821,28 @@ let interface_decl opts scope locs decl =
   } =
     decl
   in
-  let id_loc = Locs.push locs id_loc in
+  let id_loc = push_loc tbls id_loc in
   let def =
     lazy
-      (Locs.splice id_loc (fun locs ->
-           let (xs, tparams) = tparams opts scope locs SSet.empty tps in
-           let def = interface_def opts scope locs xs extends properties in
+      (splice tbls id_loc (fun tbls ->
+           let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
+           let def = interface_def opts scope tbls xs extends properties in
            Interface { id_loc; name; tparams; def }))
   in
-  Scope.bind_type scope id_loc name def
+  Scope.bind_type scope tbls id_loc name def
 
 let enum_decl =
   let module E = Ast.Statement.EnumDeclaration in
-  let defaulted_member locs members member =
+  let defaulted_member tbls members member =
     let (loc, { E.DefaultedMember.id }) = member in
     let (_, { Ast.Identifier.name; comments = _ }) = id in
-    let loc = Locs.push locs loc in
+    let loc = push_loc tbls loc in
     SMap.add name loc members
   in
-  let initialized_member f locs (rep, members) member =
+  let initialized_member f tbls (rep, members) member =
     let (loc, { E.InitializedMember.id; init }) = member in
     let (_, { Ast.Identifier.name; comments = _ }) = id in
-    let loc = Locs.push locs loc in
+    let loc = push_loc tbls loc in
     let rep = f rep init in
     let members = SMap.add name loc members in
     (rep, members)
@@ -3914,71 +3870,71 @@ let enum_decl =
   let boolean_member = initialized_member boolean_rep in
   let string_member = initialized_member string_rep in
   let number_member = initialized_member number_rep in
-  let defaulted_members locs = List.fold_left (defaulted_member locs) SMap.empty in
-  let initialized_members locs f rep = List.fold_left (f locs) (rep, SMap.empty) in
-  let string_enum_def locs has_unknown_members = function
+  let defaulted_members tbls = List.fold_left (defaulted_member tbls) SMap.empty in
+  let initialized_members tbls f rep = List.fold_left (f tbls) (rep, SMap.empty) in
+  let string_enum_def tbls has_unknown_members = function
     | E.StringBody.Initialized members ->
-      let (truthy, members) = initialized_members locs string_member true members in
+      let (truthy, members) = initialized_members tbls string_member true members in
       (StringRep { truthy }, members, has_unknown_members)
     | E.StringBody.Defaulted members ->
-      let members = defaulted_members locs members in
+      let members = defaulted_members tbls members in
       (StringRep { truthy = true }, members, has_unknown_members)
   in
-  let enum_def locs = function
+  let enum_def tbls = function
     | E.BooleanBody { E.BooleanBody.members; has_unknown_members; _ } ->
-      let (lit, members) = initialized_members locs boolean_member None members in
+      let (lit, members) = initialized_members tbls boolean_member None members in
       (BoolRep lit, members, has_unknown_members)
     | E.NumberBody { E.NumberBody.members; has_unknown_members; _ } ->
-      let (truthy, members) = initialized_members locs number_member true members in
+      let (truthy, members) = initialized_members tbls number_member true members in
       (NumberRep { truthy }, members, has_unknown_members)
     | E.StringBody { E.StringBody.members; has_unknown_members; _ } ->
-      string_enum_def locs has_unknown_members members
+      string_enum_def tbls has_unknown_members members
     | E.SymbolBody { E.SymbolBody.members; has_unknown_members; _ } ->
-      let members = defaulted_members locs members in
+      let members = defaulted_members tbls members in
       (SymbolRep, members, has_unknown_members)
   in
-  fun opts scope locs decl ->
+  fun opts scope tbls decl ->
     let { E.id; body = (_, body); comments = _ } = decl in
     let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
-    let id_loc = Locs.push locs id_loc in
+    let id_loc = push_loc tbls id_loc in
     let def =
       if opts.enable_enums then
-        Some (lazy (Locs.splice id_loc (fun locs -> enum_def locs body)))
+        Some (lazy (splice tbls id_loc (fun tbls -> enum_def tbls body)))
       else
         None
     in
-    Scope.bind_enum scope id_loc name def
+    Scope.bind_enum scope tbls id_loc name def
 
-let export_named_decl opts scope locs kind =
+let export_named_decl opts scope tbls kind =
   let module S = Ast.Statement in
   function
   | S.FunctionDeclaration f ->
-    function_decl opts scope locs f;
+    function_decl opts scope tbls f;
     Scope.export_binding scope kind (Base.Option.value_exn f.Ast.Function.id)
   | S.ClassDeclaration c ->
-    class_decl opts scope locs c;
+    class_decl opts scope tbls c;
     Scope.export_binding scope kind (Base.Option.value_exn c.Ast.Class.id)
   | S.TypeAlias t ->
-    type_alias_decl opts scope locs t;
+    type_alias_decl opts scope tbls t;
     Scope.export_binding scope kind t.S.TypeAlias.id
   | S.OpaqueType t ->
-    opaque_type_decl opts scope locs t;
+    opaque_type_decl opts scope tbls t;
     Scope.export_binding scope kind t.S.OpaqueType.id
   | S.InterfaceDeclaration i ->
-    interface_decl opts scope locs i;
+    interface_decl opts scope tbls i;
     Scope.export_binding scope kind i.S.Interface.id
   | S.VariableDeclaration decl ->
-    variable_decls opts scope locs decl;
+    variable_decls opts scope tbls decl;
     Flow_ast_utils.fold_bindings_of_variable_declarations
       (fun () id _ -> Scope.export_binding scope kind id)
       ()
       decl.S.VariableDeclaration.declarations
   | S.EnumDeclaration e ->
-    enum_decl opts scope locs e;
+    enum_decl opts scope tbls e;
     Scope.export_binding scope kind e.S.EnumDeclaration.id
   | _ -> failwith "unexpected export declaration"
 
-let declare_export_decl opts scope locs default =
+let declare_export_decl opts scope tbls default =
   let module S = Ast.Statement in
   let module D = S.DeclareExportDeclaration in
   let export_maybe_default_binding id =
@@ -3988,72 +3944,72 @@ let declare_export_decl opts scope locs default =
   in
   function
   | D.Variable (_, v) ->
-    declare_variable_decl opts scope locs v;
+    declare_variable_decl opts scope tbls v;
     Scope.export_binding scope S.ExportValue v.S.DeclareVariable.id
   | D.Function (_, f) ->
-    declare_function_decl opts scope locs f;
+    declare_function_decl opts scope tbls f;
     export_maybe_default_binding f.S.DeclareFunction.id
   | D.Class (_, c) ->
-    declare_class_decl opts scope locs c;
+    declare_class_decl opts scope tbls c;
     export_maybe_default_binding c.S.DeclareClass.id
   | D.DefaultType t ->
     let default_loc = Base.Option.value_exn default in
-    let def = annot opts scope locs SSet.empty t in
+    let def = annot opts scope tbls SSet.empty t in
     Scope.export_default scope default_loc def
   | D.NamedType (_, t) ->
-    type_alias_decl opts scope locs t;
+    type_alias_decl opts scope tbls t;
     Scope.export_binding scope S.ExportType t.S.TypeAlias.id
   | D.NamedOpaqueType (_, t) ->
-    opaque_type_decl opts scope locs t;
+    opaque_type_decl opts scope tbls t;
     Scope.export_binding scope S.ExportType t.S.OpaqueType.id
   | D.Interface (_, i) ->
-    interface_decl opts scope locs i;
+    interface_decl opts scope tbls i;
     Scope.export_binding scope S.ExportType i.S.Interface.id
 
 let export_default_decl =
   let module S = Ast.Statement in
   let module D = S.ExportDefaultDeclaration in
-  let export_default_class opts scope locs default_loc loc decl =
+  let export_default_class opts scope tbls default_loc loc decl =
     match decl.Ast.Class.id with
     | Some id ->
-      class_decl opts scope locs decl;
+      class_decl opts scope tbls decl;
       Scope.export_default_binding scope default_loc id
     | None ->
-      let def = class_def opts scope locs decl in
+      let def = class_def opts scope tbls decl in
       let def = Value (ClassExpr (loc, def)) in
       Scope.export_default scope default_loc def
   in
-  let export_default_fun opts scope locs default_loc loc decl =
+  let export_default_fun opts scope tbls default_loc loc decl =
     let { Ast.Function.id; async; generator; _ } = decl in
     match id with
     | Some id ->
-      function_decl opts scope locs decl;
+      function_decl opts scope tbls decl;
       Scope.export_default_binding scope default_loc id
     | None ->
-      let def = function_def opts scope locs SSet.empty decl in
+      let def = function_def opts scope tbls SSet.empty decl in
       let statics = SMap.empty in
       let def = Value (FunExpr { loc; async; generator; def; statics }) in
       Scope.export_default scope default_loc def
   in
-  fun opts scope locs decl ->
+  fun opts scope tbls decl ->
     let { D.default = default_loc; declaration; comments = _ } = decl in
-    let default_loc = Locs.push locs default_loc in
+    let default_loc = push_loc tbls default_loc in
     match declaration with
     | D.Declaration (loc, S.ClassDeclaration decl) ->
-      let loc = Locs.push locs loc in
-      export_default_class opts scope locs default_loc loc decl
+      let loc = push_loc tbls loc in
+      export_default_class opts scope tbls default_loc loc decl
     | D.Declaration (loc, S.FunctionDeclaration decl) ->
-      let loc = Locs.push locs loc in
-      export_default_fun opts scope locs default_loc loc decl
+      let loc = push_loc tbls loc in
+      export_default_fun opts scope tbls default_loc loc decl
     | D.Declaration (_, S.EnumDeclaration decl) ->
-      enum_decl opts scope locs decl;
+      enum_decl opts scope tbls decl;
       Scope.export_default_binding scope default_loc decl.S.EnumDeclaration.id
     | D.Declaration _ -> failwith "unexpected default export declaration"
     | D.Expression expr ->
-      let def = expression opts scope locs expr in
+      let def = expression opts scope tbls expr in
       Scope.export_default scope default_loc def
 
-let export_specifiers scope locs kind source =
+let export_specifiers scope tbls kind source =
   let module S = Ast.Statement in
   let module E = S.ExportNamedDeclaration in
   let source =
@@ -4065,18 +4021,18 @@ let export_specifiers scope locs kind source =
   | E.ExportBatchSpecifier (_, Some id) ->
     let mref = Base.Option.value_exn source in
     let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
-    let id_loc = Locs.push locs id_loc in
-    Scope.export_ns scope kind mref id_loc name
+    let id_loc = push_loc tbls id_loc in
+    Scope.export_ns scope tbls kind mref id_loc name
   | E.ExportBatchSpecifier (loc, None) ->
-    let loc = Locs.push locs loc in
+    let loc = push_loc tbls loc in
     let mref = Base.Option.value_exn source in
-    Scope.export_star scope kind loc mref
+    Scope.export_star scope tbls kind loc mref
   | E.ExportSpecifiers specifiers ->
     List.iter
       (fun (_, { E.ExportSpecifier.local; exported }) ->
         match source with
-        | None -> Scope.export_ref scope locs kind ~local ~exported
-        | Some mref -> Scope.export_from scope locs kind mref ~local ~exported)
+        | None -> Scope.export_ref scope tbls kind ~local ~exported
+        | Some mref -> Scope.export_from scope tbls kind mref ~local ~exported)
       specifiers
 
 let assignment =
@@ -4084,7 +4040,7 @@ let assignment =
   let module A = E.Assignment in
   let module P = Ast.Pattern in
   let module I = Ast.Identifier in
-  fun opts scope locs { A.operator; left = (_, left); right; comments = _ } ->
+  fun opts scope tbls { A.operator; left = (_, left); right; comments = _ } ->
     match (operator, left) with
     (* module.exports = ... *)
     | ( None,
@@ -4098,7 +4054,7 @@ let assignment =
                 comments = _;
               } ) )
       when Scope.lookup scope object_name = None ->
-      let t = expression opts scope locs right in
+      let t = expression opts scope tbls right in
       Scope.cjs_clobber scope t
     (* exports.foo = ... *)
     | ( None,
@@ -4131,8 +4087,8 @@ let assignment =
                 comments = _;
               } ) )
       when Scope.lookup scope object_name = None ->
-      let id_loc = Locs.push locs id_loc in
-      let t = expression opts scope locs right in
+      let id_loc = push_loc tbls id_loc in
+      let t = expression opts scope tbls right in
       Scope.cjs_set_prop scope name (id_loc, t)
     (* id.foo = ... *)
     | ( None,
@@ -4144,51 +4100,51 @@ let assignment =
                 property = E.Member.PropertyIdentifier (id_loc, { I.name = prop_name; comments = _ });
                 comments = _;
               } ) ) ->
-      let id_loc = Locs.push locs id_loc in
-      let t = expression opts scope locs right in
+      let id_loc = push_loc tbls id_loc in
+      let t = expression opts scope tbls right in
       Scope.assign_binding prop_name (id_loc, t) name scope
     | _ ->
       (* TODO: Assignment expressions can alter the actual type of something in
        * a way that is currently invisible to the signature extractor. *)
       ()
 
-let rec statement opts scope locs (loc, stmt) =
+let rec statement opts scope tbls (loc, stmt) =
   let module S = Ast.Statement in
   match stmt with
-  | S.TypeAlias decl -> type_alias_decl opts scope locs decl
-  | S.DeclareTypeAlias decl -> type_alias_decl opts scope locs decl
-  | S.OpaqueType decl -> opaque_type_decl opts scope locs decl
-  | S.DeclareOpaqueType decl -> opaque_type_decl opts scope locs decl
-  | S.ClassDeclaration decl -> class_decl opts scope locs decl
-  | S.DeclareClass decl -> declare_class_decl opts scope locs decl
-  | S.InterfaceDeclaration decl -> interface_decl opts scope locs decl
-  | S.DeclareInterface decl -> interface_decl opts scope locs decl
-  | S.FunctionDeclaration decl -> function_decl opts scope locs decl
-  | S.DeclareFunction decl -> declare_function_decl opts scope locs decl
+  | S.TypeAlias decl -> type_alias_decl opts scope tbls decl
+  | S.DeclareTypeAlias decl -> type_alias_decl opts scope tbls decl
+  | S.OpaqueType decl -> opaque_type_decl opts scope tbls decl
+  | S.DeclareOpaqueType decl -> opaque_type_decl opts scope tbls decl
+  | S.ClassDeclaration decl -> class_decl opts scope tbls decl
+  | S.DeclareClass decl -> declare_class_decl opts scope tbls decl
+  | S.InterfaceDeclaration decl -> interface_decl opts scope tbls decl
+  | S.DeclareInterface decl -> interface_decl opts scope tbls decl
+  | S.FunctionDeclaration decl -> function_decl opts scope tbls decl
+  | S.DeclareFunction decl -> declare_function_decl opts scope tbls decl
   | S.ImportDeclaration decl ->
     (match scope with
     | Global _ ->
       (* this is illegal. it should be caught in the parser. *)
       ()
-    | _ -> import_decl opts scope locs decl)
+    | _ -> import_decl opts scope tbls decl)
   | S.ExportNamedDeclaration decl ->
     let module E = S.ExportNamedDeclaration in
     let { E.export_kind = kind; source; specifiers; declaration; comments = _ } = decl in
     begin
       match declaration with
       | None -> ()
-      | Some (_, stmt) -> export_named_decl opts scope locs kind stmt
+      | Some (_, stmt) -> export_named_decl opts scope tbls kind stmt
     end;
     begin
       match specifiers with
       | None -> ()
-      | Some specifiers -> export_specifiers scope locs kind source specifiers
+      | Some specifiers -> export_specifiers scope tbls kind source specifiers
     end
   (* walk lex scopes to collect hoisted names in scope *)
   | S.Block { S.Block.body; _ } ->
     let scope = Scope.push_lex scope in
-    List.iter (statement opts scope locs) body
-  | S.DoWhile { S.DoWhile.body; _ } -> statement opts scope locs body
+    List.iter (statement opts scope tbls) body
+  | S.DoWhile { S.DoWhile.body; _ } -> statement opts scope tbls body
   | S.For { S.For.init; body; _ } ->
     let scope =
       match init with
@@ -4196,44 +4152,44 @@ let rec statement opts scope locs (loc, stmt) =
       | Some (S.For.InitExpression _) -> scope
       | Some (S.For.InitDeclaration (_, decl)) ->
         let scope = Scope.push_lex scope in
-        variable_decls opts scope locs decl;
+        variable_decls opts scope tbls decl;
         scope
     in
-    statement opts scope locs body
+    statement opts scope tbls body
   | S.ForIn { S.ForIn.left; body; _ } ->
     let scope =
       match left with
       | S.ForIn.LeftPattern _ -> scope
       | S.ForIn.LeftDeclaration (_, decl) ->
         let scope = Scope.push_lex scope in
-        variable_decls opts scope locs decl;
+        variable_decls opts scope tbls decl;
         scope
     in
-    statement opts scope locs body
+    statement opts scope tbls body
   | S.ForOf { S.ForOf.left; body; _ } ->
     let scope =
       match left with
       | S.ForOf.LeftPattern _ -> scope
       | S.ForOf.LeftDeclaration (_, decl) ->
         let scope = Scope.push_lex scope in
-        variable_decls opts scope locs decl;
+        variable_decls opts scope tbls decl;
         scope
     in
-    statement opts scope locs body
+    statement opts scope tbls body
   | S.If { S.If.consequent; alternate; _ } ->
-    statement opts scope locs consequent;
+    statement opts scope tbls consequent;
     begin
       match alternate with
       | None -> ()
-      | Some (_, { S.If.Alternate.body; comments = _ }) -> statement opts scope locs body
+      | Some (_, { S.If.Alternate.body; comments = _ }) -> statement opts scope tbls body
     end
   | S.Switch { S.Switch.cases; _ } ->
     let scope = Scope.push_lex scope in
     List.iter
-      (fun (_, { S.Switch.Case.consequent; _ }) -> List.iter (statement opts scope locs) consequent)
+      (fun (_, { S.Switch.Case.consequent; _ }) -> List.iter (statement opts scope tbls) consequent)
       cases
   | S.Try { S.Try.block = b; handler; finalizer; comments = _ } ->
-    let block (loc, b) = statement opts scope locs (loc, S.Block b) in
+    let block (loc, b) = statement opts scope tbls (loc, S.Block b) in
     block b;
     begin
       match handler with
@@ -4245,33 +4201,33 @@ let rec statement opts scope locs (loc, stmt) =
       | None -> ()
       | Some b -> block b
     end
-  | S.While { S.While.body; _ } -> statement opts scope locs body
-  | S.Labeled { S.Labeled.body; _ } -> statement opts scope locs body
-  | S.VariableDeclaration decl -> variable_decls opts scope locs decl
-  | S.DeclareVariable decl -> declare_variable_decl opts scope locs decl
+  | S.While { S.While.body; _ } -> statement opts scope tbls body
+  | S.Labeled { S.Labeled.body; _ } -> statement opts scope tbls body
+  | S.VariableDeclaration decl -> variable_decls opts scope tbls decl
+  | S.DeclareVariable decl -> declare_variable_decl opts scope tbls decl
   | S.DeclareExportDeclaration decl ->
     let module D = S.DeclareExportDeclaration in
     let { D.default; declaration; specifiers; source; comments = _ } = decl in
-    let default = Option.map ~f:(fun loc -> Locs.push locs loc) default in
+    let default = Option.map ~f:(fun loc -> push_loc tbls loc) default in
     begin
       match declaration with
       | None -> ()
-      | Some decl -> declare_export_decl opts scope locs default decl
+      | Some decl -> declare_export_decl opts scope tbls default decl
     end;
     begin
       match specifiers with
       | None -> ()
-      | Some specifiers -> export_specifiers scope locs S.ExportValue source specifiers
+      | Some specifiers -> export_specifiers scope tbls S.ExportValue source specifiers
     end
-  | S.ExportDefaultDeclaration decl -> export_default_decl opts scope locs decl
+  | S.ExportDefaultDeclaration decl -> export_default_decl opts scope tbls decl
   | S.Expression
       { S.Expression.expression = (_, Ast.Expression.Assignment a); directive = _; comments = _ } ->
-    assignment opts scope locs a
+    assignment opts scope tbls a
   | S.DeclareModuleExports { S.DeclareModuleExports.annot = (_, t); comments = _ } ->
-    let t = annot opts scope locs SSet.empty t in
+    let t = annot opts scope tbls SSet.empty t in
     Scope.cjs_clobber scope t
   | S.DeclareModule { S.DeclareModule.id; body; kind = _; comments = _ } ->
-    let loc = Locs.push locs loc in
+    let loc = push_loc tbls loc in
     let name =
       match id with
       | S.DeclareModule.Identifier id -> id_name id
@@ -4279,9 +4235,9 @@ let rec statement opts scope locs (loc, stmt) =
     in
     let scope = Scope.push_declare_module loc name scope in
     let (_, { S.Block.body = stmts; comments = _ }) = body in
-    List.iter (statement opts scope locs) stmts;
+    List.iter (statement opts scope tbls) stmts;
     Scope.finalize_declare_module_exports_exn scope
-  | S.EnumDeclaration decl -> enum_decl opts scope locs decl
+  | S.EnumDeclaration decl -> enum_decl opts scope tbls decl
   (* unsupported *)
   | S.With _ -> ()
   (* statements that won't introduce a top-level type or name in module scope *)

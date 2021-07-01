@@ -191,7 +191,19 @@ module Classes = struct
 
   let implements ?targs id = (Loc.none, { Implements.Interface.id; targs })
 
-  (* TODO: add method_ and property *)
+  let method_ ?comments ?(decorators = []) ?(static = false) ~id function_ =
+    Body.Method
+      ( Loc.none,
+        {
+          Method.kind = Method.Method;
+          key = Ast.Expression.Object.Property.Identifier (Identifiers.identifier id);
+          value = (Loc.none, function_);
+          static;
+          decorators;
+          comments;
+        } )
+
+  (* TODO: add property *)
   let make ?comments ?super ?(implements = []) ?id elements =
     let extends =
       match super with

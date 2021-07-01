@@ -229,6 +229,13 @@ let init_env ?(exclude_syms = NameUtils.Set.empty) module_scope =
   push_var_scope global_scope;
   push_var_scope module_scope
 
+let save_excluded_symbols () =
+  let ex = !exclude_symbols in
+  set_exclude_symbols NameUtils.Set.empty;
+  ex
+
+let restore_excluded_symbols ex = set_exclude_symbols ex
+
 (* replace the current env with the passed one.
    envs must be congruent - we measure length as a quick check,
    with a more thorough check on env merge/copy *)
@@ -896,22 +903,19 @@ let get_refinement cx key loc =
 *)
 let check_exported_let_bound_reassignment op cx name entry loc =
   let open Entry in
-  match (op, entry, Context.exported_locals cx) with
+  match (op, entry) with
   | ( Changeset.Write,
       Value
         {
           Entry.kind = Let Entry.(((ClassNameBinding | FunctionBinding) as binding_kind), _);
           value_declare_loc;
           _;
-        },
-      Some exported_locals ) ->
-    (match NameUtils.smap_find_opt name exported_locals with
-    | Some loc_set when ALocSet.mem value_declare_loc loc_set ->
+        } ) ->
+    if Context.is_exported_local cx value_declare_loc then
       let reason = mk_reason (RType name) value_declare_loc in
       Flow.add_output
         cx
         Error_message.(EAssignExportedConstLikeBinding { loc; definition = reason; binding_kind })
-    | _ -> ())
   | _ -> ()
 
 (* helper: update let or var entry *)

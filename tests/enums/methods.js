@@ -40,3 +40,11 @@ E.toString(); // Error
 
 // `getName` errors
 (E.getName(E.B): boolean); // Error - wrong type
+
+// `this` must be the enum object
+const o = {
+  cast: E.cast,
+};
+o.cast('x'); // Error
+E.cast('x'); // OK
+o.cast.call(E, 'x'); // OK

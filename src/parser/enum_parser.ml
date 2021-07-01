@@ -27,6 +27,7 @@ end = struct
     members: members;
     seen_names: SSet.t;
     has_unknown_members: bool;
+    internal_comments: Loc.t Comment.t list;
   }
 
   type init =
@@ -39,7 +40,13 @@ end = struct
   let empty_members =
     { boolean_members = []; number_members = []; string_members = []; defaulted_members = [] }
 
-  let empty_acc = { members = empty_members; seen_names = SSet.empty; has_unknown_members = false }
+  let empty_acc =
+    {
+      members = empty_members;
+      seen_names = SSet.empty;
+      has_unknown_members = false;
+      internal_comments = [];
+    }
 
   let end_of_member_init env =
     match Peek.token env with
@@ -191,9 +198,12 @@ end = struct
           string_members = List.rev acc.members.string_members;
           defaulted_members = List.rev acc.members.defaulted_members;
         },
-        acc.has_unknown_members )
+        acc.has_unknown_members,
+        acc.internal_comments )
     | T_ELLIPSIS ->
       let loc = Peek.loc env in
+      (* Internal comments may appear before the ellipsis *)
+      let internal_comments = Peek.comments env in
       Eat.token env;
       (match Peek.token env with
       | T_RCURLY
@@ -210,7 +220,11 @@ end = struct
         in
         error_at env (loc, Parse_error.EnumInvalidEllipsis { trailing_comma })
       | _ -> error_at env (loc, Parse_error.EnumInvalidEllipsis { trailing_comma = false }));
-      enum_members ~enum_name ~explicit_type { acc with has_unknown_members = true } env
+      enum_members
+        ~enum_name
+        ~explicit_type
+        { acc with has_unknown_members = true; internal_comments }
+        env
     | _ ->
       let acc = enum_member ~enum_name ~explicit_type acc env in
       (match Peek.token env with
@@ -296,7 +310,10 @@ end = struct
             []
         in
         Expect.token env T_LCURLY;
-        let (members, has_unknown_members) = enum_members ~enum_name ~explicit_type empty_acc env in
+        let (members, has_unknown_members, internal) =
+          enum_members ~enum_name ~explicit_type empty_acc env
+        in
+        let internal = internal @ Peek.comments env in
         Expect.token env T_RCURLY;
         let trailing =
           match Peek.token env with
@@ -306,7 +323,7 @@ end = struct
           | _ when Peek.is_line_terminator env -> Eat.comments_until_next_line env
           | _ -> []
         in
-        let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+        let comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal in
         let body =
           match explicit_type with
           | Some Enum_common.Boolean ->

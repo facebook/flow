@@ -181,19 +181,11 @@ let merge_job ~worker_mutator ~options ~reader component =
   let leader = Nel.hd component in
   let reader = Abstract_state_reader.Mutator_state_reader reader in
   let diff =
-    if Module_js.checked_file ~reader ~audit:Expensive.ok leader then (
-      let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
-      let cx = Merge_service.merge_context ~options ~reader master_cx component in
-      let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in
-      let md5 = Merge_js.sig_context cx module_refs in
-      Context.clear_master_shared cx master_cx;
-      Context_heaps.Merge_context_mutator.add_merge_on_diff
-        ~audit:Expensive.ok
-        worker_mutator
-        cx
-        component
-        md5
-    ) else
+    if Module_js.checked_file ~reader ~audit:Expensive.ok leader then
+      let root = Options.root options in
+      let hash = Merge_service.sig_hash ~root ~reader component in
+      Context_heaps.Merge_context_mutator.add_merge_on_diff worker_mutator component hash
+    else
       false
   in
   (diff, Ok ())
@@ -208,7 +200,7 @@ let check_job ~visit ~iteration ~reader ~options acc roots =
     (fun acc file ->
       match check file with
       | Ok None -> acc
-      | Ok (Some ((full_cx, file_sig, typed_ast), _)) ->
+      | Ok (Some ((full_cx, type_sig, file_sig, typed_ast), _)) ->
         let reader = Abstract_state_reader.Mutator_state_reader reader in
         let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
         let ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
@@ -216,6 +208,7 @@ let check_job ~visit ~iteration ~reader ~options acc roots =
         let ccx =
           {
             Codemod_context.Typed.file;
+            type_sig;
             file_sig;
             metadata;
             options;
@@ -339,7 +332,7 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
       (fun acc file ->
         match check file with
         | Ok None -> acc
-        | Ok (Some ((cx, file_sig, typed_ast), _)) ->
+        | Ok (Some ((cx, _, file_sig, typed_ast), _)) ->
           let result = C.prepass_run cx state file reader file_sig typed_ast in
           FilenameMap.add file (Ok result) acc
         | Error e -> FilenameMap.add file (Error e) acc)

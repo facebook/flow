@@ -2,6 +2,7 @@
   (name flow_parser_utils_aloc)
   (wrapped false)
   (libraries
+    packed_locs
     flow_common_utils
     flow_parser)
   (preprocess (pps ppx_deriving.std)))

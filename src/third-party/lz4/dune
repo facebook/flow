@@ -1,5 +1,6 @@
 (library
-  (name lz4)
-  (preprocess no_preprocessing)
-  (c_names lz4 lz4frame lz4hc xxhash)
-)
+ (name lz4)
+ (preprocess no_preprocessing)
+ (foreign_stubs
+  (language c)
+  (names lz4 lz4frame lz4hc xxhash)))

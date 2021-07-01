@@ -1469,7 +1469,7 @@ struct
           rec_flow_t ~use_op cx trace (EmptyT.why r trust, OpenT tout_tvar)
         | ((MaybeT (_, t) | OptionalT { type_ = t; _ }), OptionalIndexedAccessT _) ->
           rec_flow cx trace (t, u)
-        | (UnionT (_, rep), OptionalIndexedAccessT { use_op; reason; index_type; tout_tvar }) ->
+        | (UnionT (_, rep), OptionalIndexedAccessT { use_op; reason; index; tout_tvar }) ->
           let (t0, (t1, ts)) = UnionRep.members_nel rep in
           let f t =
             AnnotT
@@ -1478,16 +1478,24 @@ struct
                     rec_flow
                       cx
                       trace
-                      (t, OptionalIndexedAccessT { use_op; reason; index_type; tout_tvar = tvar })),
+                      (t, OptionalIndexedAccessT { use_op; reason; index; tout_tvar = tvar })),
                 false )
           in
           let rep = UnionRep.make (f t0) (f t1) (Base.List.map ts ~f) in
           rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) (OpenT tout_tvar)
-        | (_, OptionalIndexedAccessT { use_op; reason; index_type; tout_tvar })
+        | (_, OptionalIndexedAccessT { use_op; reason; index; tout_tvar })
           when match l with
                | IntersectionT _ -> false
                | _ -> true ->
-          rec_flow cx trace (l, GetElemT (use_op, reason, index_type, tout_tvar))
+          let u =
+            match index with
+            | OptionalIndexedAccessStrLitIndex name ->
+              let reason_op = replace_desc_reason (RProperty (Some name)) reason in
+              GetPropT (use_op, reason, Named (reason_op, name), tout_tvar)
+            | OptionalIndexedAccessTypeIndex index_type ->
+              GetElemT (use_op, reason, index_type, tout_tvar)
+          in
+          rec_flow cx trace (l, u)
         (*************)
         (* invariant *)
         (*************)
@@ -2110,7 +2118,7 @@ struct
           let rep = UnionRep.make (f t0) (f t1) (Base.List.map ts ~f) in
           rec_unify cx trace ~use_op:unknown_use (UnionT (reason, rep)) (OpenT tout)
         | (UnionT _, ObjKitT (use_op, reason, resolve_tool, tool, tout)) ->
-          ObjectKit.run cx trace ~use_op reason resolve_tool tool tout l
+          ObjectKit.run trace cx use_op reason resolve_tool tool ~tout l
         | ( UnionT (r, _),
             CreateObjWithComputedPropT { reason; value = _; tout_tvar = (tout_reason, tout_id) } )
           ->
@@ -2326,7 +2334,7 @@ struct
         | (IntersectionT _, ReposLowerT (reason, use_desc, u)) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         | (IntersectionT _, ObjKitT (use_op, reason, resolve_tool, tool, tout)) ->
-          ObjectKit.run cx trace ~use_op reason resolve_tool tool tout l
+          ObjectKit.run trace cx use_op reason resolve_tool tool ~tout l
         | (IntersectionT _, SealGenericT { reason = _; id; name; cont }) ->
           let reason = reason_of_t l in
           continue cx trace (GenericT { reason; id; name; bound = l }) cont
@@ -4460,7 +4468,7 @@ struct
         (* object kit *)
         (**************)
         | (_, ObjKitT (use_op, reason, resolve_tool, tool, tout)) ->
-          ObjectKit.run cx trace ~use_op reason resolve_tool tool tout l
+          ObjectKit.run trace cx use_op reason resolve_tool tool ~tout l
         (**************************************************)
         (* function types can be mapped over a structure  *)
         (**************************************************)
@@ -4604,20 +4612,6 @@ struct
             GetPropT (_, _, Named (_, OrdinaryName "prototype"), tout) ) ->
           let instance = reposition cx ~trace (aloc_of_reason reason) instance in
           rec_flow_t cx trace ~use_op:unknown_use (instance, OpenT tout)
-        (***************************************************************************)
-        (* assignment of properties to module.exports;                             *)
-        (* the only interesting case is where functions may have their statics set *)
-        (***************************************************************************)
-        | (_, ModuleExportsAssignT (_, assign, tout)) ->
-          let l' =
-            match l with
-            | DefT (r, trust, FunT (statics, proto, ft)) ->
-              let reason = reason_of_t statics in
-              let statics' = mod_reason_of_t (fun _ -> reason) assign in
-              DefT (r, trust, FunT (statics', proto, ft))
-            | _ -> l
-          in
-          rec_flow_t cx trace ~use_op:unknown_use (l', tout)
         (***************************************************************)
         (* functions may be called by passing a receiver and arguments *)
         (***************************************************************)
@@ -5061,9 +5055,20 @@ struct
             error_invalid_access ~suggestion:None)
         | (DefT (_, _, EnumObjectT _), TestPropT (reason, _, prop, tout)) ->
           rec_flow cx trace (l, GetPropT (Op (GetProperty reason), reason, prop, tout))
-        | (DefT (enum_reason, trust, EnumObjectT enum), MethodT (_, _, lookup_reason, Named _, _, _))
-          ->
-          rec_flow cx trace (enum_proto cx trace ~reason:lookup_reason (enum_reason, trust, enum), u)
+        | ( DefT (enum_reason, trust, EnumObjectT enum),
+            MethodT (use_op, call_reason, lookup_reason, (Named _ as propref), action, prop_t) ) ->
+          let t =
+            Tvar.mk_no_wrap_where cx lookup_reason (fun tout ->
+                rec_flow
+                  cx
+                  trace
+                  ( enum_proto cx trace ~reason:lookup_reason (enum_reason, trust, enum),
+                    GetPropT (use_op, lookup_reason, propref, tout) ))
+          in
+          Base.Option.iter
+            ~f:(fun prop_t -> rec_flow_t cx trace ~use_op:unknown_use (t, prop_t))
+            prop_t;
+          rec_flow cx trace (t, apply_method_action use_op call_reason l action)
         | (DefT (enum_reason, _, EnumObjectT _), GetElemT (_, _, elem, _)) ->
           let reason = reason_of_t elem in
           add_output
@@ -6306,7 +6311,6 @@ struct
     | SentinelPropTestT _
     | SetElemT _
     | SetPropT _
-    | ModuleExportsAssignT _
     | SpecializeT _
     | SubstOnPredT _
     (* Should be impossible. We only generate these with OpenPredTs. *)
@@ -6981,12 +6985,12 @@ struct
              * want to carry a `use_op`. We want whatever `use_op` the tout is used with
              * to win. *)
             FilterMaybeT (unknown_use, OpenT tout)
-          | PropertyType x ->
-            let reason_op = replace_desc_reason (RProperty (Some x)) reason in
-            GetPropT (use_op, reason, Named (reason_op, x), tout)
+          | PropertyType { name; _ } ->
+            let reason_op = replace_desc_reason (RProperty (Some name)) reason in
+            GetPropT (use_op, reason, Named (reason_op, name), tout)
           | ElementType { index_type; _ } -> GetElemT (use_op, reason, index_type, tout)
-          | OptionalIndexedAccessNonMaybeType { index_type } ->
-            OptionalIndexedAccessT { use_op; reason; index_type; tout_tvar = tout }
+          | OptionalIndexedAccessNonMaybeType { index } ->
+            OptionalIndexedAccessT { use_op; reason; index; tout_tvar = tout }
           | OptionalIndexedAccessResultType { void_reason } ->
             let void = VoidT.why void_reason |> with_trust bogus_trust in
             ResolveUnionT
@@ -7293,9 +7297,15 @@ struct
   (* enums *)
   (*********)
   and enum_proto cx trace ~reason (enum_reason, trust, enum) =
+    let enum_object_t = DefT (enum_reason, trust, EnumObjectT enum) in
     let enum_t = DefT (enum_reason, trust, EnumT enum) in
     let { representation_t; _ } = enum in
-    get_builtin_typeapp cx ~trace reason (OrdinaryName "$EnumProto") [enum_t; representation_t]
+    get_builtin_typeapp
+      cx
+      ~trace
+      reason
+      (OrdinaryName "$EnumProto")
+      [enum_object_t; enum_t; representation_t]
 
   and enum_exhaustive_check
       cx
@@ -8477,6 +8487,10 @@ struct
               | MatchingProp _
               | UnknownUse ->
                 false)
+            | UnifyFlip when not should_replace ->
+              (match root_of_op2 with
+              | TypeApplication _ -> true
+              | _ -> should_replace)
             | _ -> should_replace)
           op2
       in
@@ -9604,8 +9618,13 @@ struct
             FunT
               ( dummy_static bound_reason,
                 dummy_prototype,
-                mk_methodtype dummy_this params_tlist return_t ~rest_param ~def_reason ~params_names
-              ) )
+                mk_methodtype
+                  (dummy_this (aloc_of_reason reason_op))
+                  params_tlist
+                  return_t
+                  ~rest_param
+                  ~def_reason
+                  ~params_names ) )
       in
       rec_flow_t cx trace ~use_op:unknown_use (funt, tout)
     in

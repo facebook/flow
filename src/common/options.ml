@@ -104,7 +104,6 @@ type t = {
   opt_module: module_system;
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
-  opt_new_check: bool;
   opt_node_main_fields: string list;
   opt_node_resolver_allow_root_relative: bool;
   opt_node_resolver_root_relative_dirnames: string list;
@@ -128,7 +127,6 @@ type t = {
   opt_strip_root: bool;
   opt_suppress_types: SSet.t;
   opt_temp_dir: string;
-  opt_this_annot: bool;
   opt_traces: int;
   opt_trust_mode: trust_mode;
   opt_type_asserts: bool;
@@ -146,8 +144,6 @@ let autoimports opts = opts.opt_autoimports
 let automatic_require_default opts = opts.opt_automatic_require_default
 
 let babel_loose_array_spread opts = opts.opt_babel_loose_array_spread
-
-let new_check opts = opts.opt_new_check
 
 let max_literal_length opts = opts.opt_max_literal_length
 
@@ -170,8 +166,6 @@ let enums_with_unknown_members opts = opts.opt_enums_with_unknown_members
 let format_bracket_spacing opts = opts.opt_format.opt_bracket_spacing
 
 let format_single_quotes opts = opts.opt_format.opt_single_quotes
-
-let this_annot opts = opts.opt_this_annot
 
 let exact_by_default opts = opts.opt_exact_by_default
 
