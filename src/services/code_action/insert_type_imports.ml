@@ -25,7 +25,7 @@ module Modules = struct
     List.fold_left
       (fun acc (k, v) -> SMap.add k v acc)
       SMap.empty
-      Annotate_exports_hardcoded_module_fixes.files_to_modules
+      Hardcoded_module_fixes.files_to_modules
 
   (* Relativize module name if in the same folder, or use haste paths, or fail *)
   let resolve file module_name =
@@ -34,22 +34,26 @@ module Modules = struct
     | Modulename.Filename f ->
       let f = File_key.to_string f in
       let local_file = Filename.basename f in
-      let dep_folder = Filename.dirname f in
-      let this_folder = Filename.dirname (File_key.to_string file) in
-      (* remove .flow extension if there is one *)
-      let local_file =
-        if Filename.extension local_file = "flow" then
-          Filename.chop_extension local_file
-        else
-          local_file
-      in
-      (* remove .js extension *)
-      let local_file = Filename.chop_extension local_file in
-      if dep_folder = this_folder then
-        Filename.concat "./" local_file
+      (* Use hardcoded fix if there is one *)
+      if SMap.mem local_file paths then
+        SMap.find local_file paths
       else
-        let relative_dir = Files.relative_path this_folder dep_folder in
-        Filename.concat relative_dir local_file
+        let dep_folder = Filename.dirname f in
+        let this_folder = Filename.dirname (File_key.to_string file) in
+        (* remove .flow extension if there is one *)
+        let local_file =
+          if Filename.extension local_file = "flow" then
+            Filename.chop_extension local_file
+          else
+            local_file
+        in
+        (* remove .js extension *)
+        let local_file = Filename.chop_extension local_file in
+        if dep_folder = this_folder then
+          Filename.concat "./" local_file
+        else
+          let relative_dir = Files.relative_path this_folder dep_folder in
+          Filename.concat relative_dir local_file
 end
 
 module AstHelper = struct
