@@ -52,16 +52,18 @@ module Lookahead : sig
 
   val junk : t -> unit
 end = struct
+  type la_result = (Lex_env.t * Lex_result.t) option
+
   type t = {
-    mutable la_results: (Lex_env.t * Lex_result.t) option array;
-    mutable la_num_lexed: int;
+    mutable la_results_0: la_result;
+    mutable la_results_1: la_result;
     la_lex_mode: Lex_mode.t;
     mutable la_lex_env: Lex_env.t;
   }
 
   let create lex_env mode =
     let lex_env = Lex_env.clone lex_env in
-    { la_results = [| None; None |]; la_num_lexed = 0; la_lex_mode = mode; la_lex_env = lex_env }
+    { la_results_0 = None; la_results_1 = None; la_lex_mode = mode; la_lex_env = lex_env }
 
   (* precondition: there is enough room in t.la_results for the result *)
   let lex t =
@@ -78,39 +80,40 @@ end = struct
     let cloned_env = Lex_env.clone lex_env in
     let result = (cloned_env, lex_result) in
     t.la_lex_env <- lex_env;
-    t.la_results.(t.la_num_lexed) <- Some result;
-    t.la_num_lexed <- t.la_num_lexed + 1;
+    begin
+      match t.la_results_0 with
+      | None -> t.la_results_0 <- Some result
+      | Some _ -> t.la_results_1 <- Some result
+    end;
     result
 
   let peek_0 t =
-    match t.la_results.(0) with
+    match t.la_results_0 with
     | Some (_, result) -> result
     | None -> snd (lex t)
 
   let peek_1 t =
-    (match t.la_results.(0) with
+    (match t.la_results_0 with
     | None -> ignore (lex t)
     | Some _ -> ());
-    match t.la_results.(1) with
+    match t.la_results_1 with
     | None -> snd (lex t)
     | Some (_, result) -> result
 
   let lex_env_0 t =
-    match t.la_results.(0) with
+    match t.la_results_0 with
     | Some (lex_env, _) -> lex_env
     | None -> fst (lex t)
 
   (* Throws away the first peeked-at token, shifting any subsequent tokens up *)
   let junk t =
-    match t.la_results.(1) with
+    match t.la_results_1 with
     | None ->
       ignore (peek_0 t);
-      t.la_results.(0) <- None;
-      t.la_num_lexed <- 0
+      t.la_results_0 <- None
     | Some _ ->
-      t.la_results.(0) <- t.la_results.(1);
-      t.la_results.(1) <- None;
-      t.la_num_lexed <- 1
+      t.la_results_0 <- t.la_results_1;
+      t.la_results_1 <- None
 end
 
 type token_sink_result = {
