@@ -110,9 +110,7 @@ end = struct
   let junk t =
     match t.la_results.(1) with 
     | None -> 
-        (match t.la_results.(0) with 
-        | None ->  ignore (lex t)
-        | Some _ -> ());
+        ignore (peek_0 t);
         t.la_results.(0) <- None; 
         t.la_num_lexed <- 0
     | Some _ -> 
