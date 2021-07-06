@@ -82,24 +82,18 @@ end = struct
     t.la_num_lexed <- t.la_num_lexed + 1;
     result
 
-  let lex_until t i =
-    while t.la_num_lexed <= i do
-      ignore (lex t)
-    done
-
-  let peek t i =
-    lex_until t i;
-    match t.la_results.(i) with
-    | Some (_, result) -> result
-    (* only happens if there is a defect in the lookahead module *)
-    | None -> failwith "Lookahead.peek failed"
-
   let peek_0 t =
     match t.la_results.(0) with
     | Some (_, result) -> result
     | None -> snd (lex t)
 
-  let peek_1 t = peek t 1
+  let peek_1 t =
+    (match t.la_results.(0) with
+    | None -> ignore (lex t)
+    | Some _ -> ());
+    match t.la_results.(1) with
+    | None -> snd (lex t)
+    | Some (_, result) -> result
 
   let lex_env_0 t =
     match t.la_results.(0) with
@@ -108,15 +102,15 @@ end = struct
 
   (* Throws away the first peeked-at token, shifting any subsequent tokens up *)
   let junk t =
-    match t.la_results.(1) with 
-    | None -> 
-        ignore (peek_0 t);
-        t.la_results.(0) <- None; 
-        t.la_num_lexed <- 0
-    | Some _ -> 
+    match t.la_results.(1) with
+    | None ->
+      ignore (peek_0 t);
+      t.la_results.(0) <- None;
+      t.la_num_lexed <- 0
+    | Some _ ->
       t.la_results.(0) <- t.la_results.(1);
-      t.la_results.(1) <- None ; 
-      t.la_num_lexed <- 1 
+      t.la_results.(1) <- None;
+      t.la_num_lexed <- 1
 end
 
 type token_sink_result = {
