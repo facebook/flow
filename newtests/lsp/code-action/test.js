@@ -634,11 +634,11 @@ export default (suite(
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/parse-error.js'},
         range: {
           start: {
-            line: 2,
+            line: 4,
             character: 6,
           },
           end: {
-            line: 2,
+            line: 4,
             character: 6,
           },
         },
@@ -647,11 +647,11 @@ export default (suite(
             {
               range: {
                 start: {
-                  line: 2,
+                  line: 4,
                   character: 6,
                 },
                 end: {
-                  line: 2,
+                  line: 4,
                   character: 7,
                 },
               },
@@ -675,11 +675,11 @@ export default (suite(
                   {
                     range: {
                       start: {
-                        line: 2,
+                        line: 4,
                         character: 6,
                       },
                       end: {
-                        line: 2,
+                        line: 4,
                         character: 7,
                       },
                     },
@@ -697,11 +697,11 @@ export default (suite(
                       {
                         range: {
                           start: {
-                            line: 2,
+                            line: 4,
                             character: 6,
                           },
                           end: {
-                            line: 2,
+                            line: 4,
                             character: 7,
                           },
                         },

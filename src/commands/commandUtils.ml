@@ -1301,7 +1301,7 @@ let make_options
     opt_automatic_require_default =
       Base.Option.value (FlowConfig.automatic_require_default flowconfig) ~default:false;
     opt_format;
-    opt_autoimports = Base.Option.value (FlowConfig.autoimports flowconfig) ~default:false;
+    opt_autoimports = Base.Option.value (FlowConfig.autoimports flowconfig) ~default:true;
     opt_flowconfig_hash = flowconfig_hash;
     opt_gc_worker =
       {
