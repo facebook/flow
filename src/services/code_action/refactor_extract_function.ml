@@ -387,23 +387,50 @@ let undefined_variables_after_extraction
   in
   List.filter_map to_undefined_variable defs_with_scopes_of_local_uses |> List.rev
 
-let collect_escaping_local_defs ~scope_info ~extracted_statements_loc =
-  SSet.empty
-  |> IMap.fold
-       (fun _ { Scope_api.Scope.locals; _ } acc ->
-         LocMap.fold
-           (fun use { Scope_api.Def.locs = (def_loc, _); actual_name; _ } acc ->
-             if
-               Loc.contains extracted_statements_loc def_loc
-               && not (Loc.contains extracted_statements_loc use)
-             then
-               SSet.add actual_name acc
-             else
-               acc)
-           locals
-           acc)
-       scope_info.Scope_api.scopes
-  |> SSet.elements
+type escaping_definitions = {
+  escaping_variables: string list;
+  has_external_writes: bool;
+}
+
+let collect_escaping_local_defs ~scope_info ~ssa_values ~extracted_statements_loc =
+  let (escaping_variables, has_external_writes) =
+    IMap.fold
+      (fun _ { Scope_api.Scope.locals; _ } acc ->
+        LocMap.fold
+          (fun use def acc ->
+            let { Scope_api.Def.locs = (def_loc, _); actual_name; _ } = def in
+            if
+              Loc.contains extracted_statements_loc def_loc
+              && not (Loc.contains extracted_statements_loc use)
+            then
+              let (variables, has_external_writes) = acc in
+              ( SSet.add actual_name variables,
+                has_external_writes
+                ||
+                match LocMap.find_opt use ssa_values with
+                | None ->
+                  (* use is a write. *)
+                  (* Since we already know the use is outside of extracted statements,
+                     we know this is an external write *)
+                  true
+                | Some write_locs ->
+                  (* use is a read *)
+                  (* find writes pointed to by the read, modulo initialization *)
+                  List.exists
+                    (function
+                      | Ssa_api.Uninitialized -> false
+                      | Ssa_api.Write reason ->
+                        let write_loc = Reason.poly_loc_of_reason reason in
+                        not (Loc.contains extracted_statements_loc write_loc))
+                    write_locs )
+            else
+              acc)
+          locals
+          acc)
+      scope_info.Scope_api.scopes
+      (SSet.empty, false)
+  in
+  { escaping_variables = SSet.elements escaping_variables; has_external_writes }
 
 let create_extracted_function
     ~undefined_variables
@@ -419,7 +446,9 @@ let create_extracted_function
     |> List.map (fun v -> v |> Patterns.identifier |> Functions.param)
     |> Functions.params
   in
-  let returned_variables = escaping_definitions @ vars_with_shadowed_local_reassignments in
+  let returned_variables =
+    escaping_definitions.escaping_variables @ vars_with_shadowed_local_reassignments
+  in
   let body_statements =
     match returned_variables with
     | [] -> extracted_statements
@@ -479,11 +508,13 @@ let create_extracted_function_call
     if has_vars_with_shadowed_local_reassignments then
       List.map
         (fun v -> Statements.let_declaration [Statements.variable_declarator v])
-        escaping_definitions
+        escaping_definitions.escaping_variables
     else
       []
   in
-  let returned_variables = escaping_definitions @ vars_with_shadowed_local_reassignments in
+  let returned_variables =
+    escaping_definitions.escaping_variables @ vars_with_shadowed_local_reassignments
+  in
   let function_call_statement_with_collector =
     match returned_variables with
     | [] -> Statements.expression ~loc:extracted_statements_loc call
@@ -493,9 +524,11 @@ let create_extracted_function_call
           ~loc:extracted_statements_loc
           (Expressions.assignment (Patterns.identifier only_returned_variable) call)
       else
-        Statements.const_declaration
-          ~loc:extracted_statements_loc
-          [Statements.variable_declarator ~init:call only_returned_variable]
+        let declarations = [Statements.variable_declarator ~init:call only_returned_variable] in
+        if escaping_definitions.has_external_writes then
+          Statements.let_declaration ~loc:extracted_statements_loc declarations
+        else
+          Statements.const_declaration ~loc:extracted_statements_loc declarations
     | _ ->
       let pattern =
         Flow_ast.Pattern.
@@ -521,9 +554,11 @@ let create_extracted_function_call
       if has_vars_with_shadowed_local_reassignments then
         Statements.expression ~loc:extracted_statements_loc (Expressions.assignment pattern call)
       else
-        Statements.const_declaration
-          ~loc:extracted_statements_loc
-          [Statements.variable_declarator_generic pattern (Some call)]
+        let declarations = [Statements.variable_declarator_generic pattern (Some call)] in
+        if escaping_definitions.has_external_writes then
+          Statements.let_declaration ~loc:extracted_statements_loc declarations
+        else
+          Statements.const_declaration ~loc:extracted_statements_loc declarations
   in
   let_declarations @ [function_call_statement_with_collector]
 
@@ -695,7 +730,7 @@ let provide_available_refactors ast extract_range =
           collect_relevant_defs_with_scope ~scope_info ~ssa_values ~extracted_statements_loc
         in
         let escaping_definitions =
-          collect_escaping_local_defs ~scope_info ~extracted_statements_loc
+          collect_escaping_local_defs ~scope_info ~ssa_values ~extracted_statements_loc
         in
         let extract_to_method_refactors =
           insert_method

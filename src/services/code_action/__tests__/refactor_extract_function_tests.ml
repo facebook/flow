@@ -534,15 +534,23 @@ let undefined_variables_after_extraction_tests =
           } );
   ]
 
-let assert_escaping_locally_defined_variables ~ctxt ~expected source extracted_statements_loc =
+let assert_escaping_locally_defined_variables
+    ~ctxt ~expected_variables ~expected_has_external_writes source extracted_statements_loc =
   let ast = parse source in
-  let scope_info = Scope_builder.program ~with_types:false ast in
-  let actual =
-    Refactor_extract_function.collect_escaping_local_defs ~scope_info ~extracted_statements_loc
-    |> List.sort String.compare
+  let (scope_info, ssa_values) = Ssa_builder.program_with_scope ast in
+  let {
+    Refactor_extract_function.escaping_variables;
+    has_external_writes = actual_has_external_writes;
+  } =
+    Refactor_extract_function.collect_escaping_local_defs
+      ~scope_info
+      ~ssa_values
+      ~extracted_statements_loc
   in
-  let expected = List.sort String.compare expected in
-  assert_equal ~ctxt ~printer:(String.concat ", ") expected actual
+  let actual_variables = List.sort String.compare escaping_variables in
+  let expected_variables = List.sort String.compare expected_variables in
+  assert_equal ~ctxt ~printer:(String.concat ", ") expected_variables actual_variables;
+  assert_equal ~ctxt ~printer:string_of_bool expected_has_external_writes actual_has_external_writes
 
 let escaping_locally_defined_variables_tests =
   [
@@ -558,7 +566,8 @@ let escaping_locally_defined_variables_tests =
       in
       assert_escaping_locally_defined_variables
         ~ctxt
-        ~expected:[]
+        ~expected_variables:[]
+        ~expected_has_external_writes:false
         source
         {
           Loc.source = None;
@@ -577,7 +586,8 @@ let escaping_locally_defined_variables_tests =
       in
       assert_escaping_locally_defined_variables
         ~ctxt
-        ~expected:["a"; "b"]
+        ~expected_variables:["a"; "b"]
+        ~expected_has_external_writes:false
         source
         {
           Loc.source = None;
@@ -596,12 +606,35 @@ let escaping_locally_defined_variables_tests =
       in
       assert_escaping_locally_defined_variables
         ~ctxt
-        ~expected:["test"]
+        ~expected_variables:["test"]
+        ~expected_has_external_writes:false
         source
         {
           Loc.source = None;
           start = { Loc.line = 3; column = 8 };
           _end = { Loc.line = 5; column = 37 };
+        } );
+    ( "escaping_with_hoisting_in_function" >:: fun ctxt ->
+      let source =
+        {|
+        function foo() {
+          console.log(test());
+          // selected start
+          const a = 3;
+          function test() { return a; }
+          // selected end
+        }
+      |}
+      in
+      assert_escaping_locally_defined_variables
+        ~ctxt
+        ~expected_variables:["test"]
+        ~expected_has_external_writes:false
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 4; column = 10 };
+          _end = { Loc.line = 6; column = 39 };
         } );
     ( "escaping_with_shadowing" >:: fun ctxt ->
       let source =
@@ -612,7 +645,8 @@ let escaping_locally_defined_variables_tests =
       in
       assert_escaping_locally_defined_variables
         ~ctxt
-        ~expected:[]
+        ~expected_variables:[]
+        ~expected_has_external_writes:false
         source
         {
           Loc.source = None;
@@ -640,12 +674,31 @@ let escaping_locally_defined_variables_tests =
       in
       assert_escaping_locally_defined_variables
         ~ctxt
-        ~expected:["c"]
+        ~expected_variables:["c"]
+        ~expected_has_external_writes:false
         source
         {
           Loc.source = None;
           start = { Loc.line = 4; column = 22 };
           _end = { Loc.line = 6; column = 26 };
+        } );
+    ( "escaping_with_external_assignments" >:: fun ctxt ->
+      let source =
+        {|
+        let a = 3, b = 2; // selected
+        a = 2;
+        console.log(b);
+      |}
+      in
+      assert_escaping_locally_defined_variables
+        ~ctxt
+        ~expected_variables:["a"; "b"]
+        ~expected_has_external_writes:true
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 2; column = 8 };
+          _end = { Loc.line = 2; column = 37 };
         } );
   ]
 
@@ -884,6 +937,72 @@ function newFunction() {
           Loc.source = None;
           start = { Loc.line = 3; column = 8 };
           _end = { Loc.line = 4; column = 33 };
+        } );
+    ( "external_reassignment_single_return_extract" >:: fun ctxt ->
+      let source =
+        {|
+        let fooo = 3; // selected
+        const a = 3;
+        fooo = a + 2;
+      |}
+      in
+      let expected =
+        [
+          ( "Extract to function in module scope",
+            {|
+let fooo = newFunction();
+const a = 3;
+fooo = a + 2;
+
+function newFunction() {
+  let fooo = 3; // selected
+  return fooo;
+}
+      |}
+          );
+        ]
+      in
+      assert_refactored
+        ~ctxt
+        expected
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 2; column = 8 };
+          _end = { Loc.line = 2; column = 33 };
+        } );
+    ( "external_reassignment_multiple_returns_extract" >:: fun ctxt ->
+      let source =
+        {|
+        let fooo = 3; // selected
+        const a = 3; // selected
+        fooo = a + 2;
+      |}
+      in
+      let expected =
+        [
+          ( "Extract to function in module scope",
+            {|
+let {a, fooo} = newFunction();
+fooo = a + 2;
+
+function newFunction() {
+  let fooo = 3; // selected
+  const a = 3; // selected
+  return { a, fooo };
+}
+      |}
+          );
+        ]
+      in
+      assert_refactored
+        ~ctxt
+        expected
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 2; column = 8 };
+          _end = { Loc.line = 3; column = 32 };
         } );
     ( "async_expression_extract" >:: fun ctxt ->
       let source =

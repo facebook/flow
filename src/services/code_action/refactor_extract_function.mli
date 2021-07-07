@@ -46,8 +46,19 @@ val undefined_variables_after_extraction :
   extracted_statements_loc:Loc.t ->
   string list
 
+type escaping_definitions = {
+  (* A list of variable names that are defined inside the extracted statements,
+     but have uses outside of them.  *)
+  escaping_variables: string list;
+  (* Whether any of the escaping variables has another write outside of extracted statements. *)
+  has_external_writes: bool;
+}
+
 val collect_escaping_local_defs :
-  scope_info:Scope_api.info -> extracted_statements_loc:Loc.t -> string list
+  scope_info:Scope_api.info ->
+  ssa_values:Ssa_api.values ->
+  extracted_statements_loc:Loc.t ->
+  escaping_definitions
 
 val provide_available_refactors :
   (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> (string * (Loc.t, Loc.t) Flow_ast.Program.t) list
