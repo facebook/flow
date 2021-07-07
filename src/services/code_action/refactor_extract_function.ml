@@ -187,7 +187,7 @@ class insertion_class_body_loc_collector extracted_statements_loc =
         super#class_ loc class_declaration
   end
 
-class replace_original_statements_mapper ~extracted_statements_loc ~function_call_statement =
+class replace_original_statements_mapper ~extracted_statements_loc ~function_call_statements =
   object (_this)
     inherit [Loc.t] Flow_ast_mapper.mapper as super
 
@@ -195,7 +195,7 @@ class replace_original_statements_mapper ~extracted_statements_loc ~function_cal
       let (statement_loc, _) = stmt in
       if Loc.contains extracted_statements_loc statement_loc then
         if Loc.equal (Loc.start_loc extracted_statements_loc) (Loc.start_loc statement_loc) then
-          [function_call_statement]
+          function_call_statements
         else
           []
       else
@@ -205,11 +205,11 @@ class replace_original_statements_mapper ~extracted_statements_loc ~function_cal
 class extract_to_function_refactor_mapper
   ~target_body_loc
   ~extracted_statements_loc
-  ~function_call_statement
+  ~function_call_statements
   ~function_declaration_statement =
   object (_this)
     inherit
-      replace_original_statements_mapper ~extracted_statements_loc ~function_call_statement as super
+      replace_original_statements_mapper ~extracted_statements_loc ~function_call_statements as super
 
     method! program program =
       let (program_loc, program_body) = program in
@@ -235,10 +235,10 @@ class extract_to_function_refactor_mapper
   end
 
 class extract_to_method_refactor_mapper
-  ~target_body_loc ~extracted_statements_loc ~function_call_statement ~method_declaration =
+  ~target_body_loc ~extracted_statements_loc ~function_call_statements ~method_declaration =
   object (_this)
     inherit
-      replace_original_statements_mapper ~extracted_statements_loc ~function_call_statement as super
+      replace_original_statements_mapper ~extracted_statements_loc ~function_call_statements as super
 
     method! class_body block =
       let open Flow_ast.Class.Body in
@@ -464,38 +464,41 @@ let create_extracted_function_call
     else
       call
   in
-  match escaping_definitions with
-  | [] -> Statements.expression ~loc:extracted_statements_loc call
-  | [only_escaping_definition] ->
-    Statements.const_declaration
-      ~loc:extracted_statements_loc
-      [Statements.variable_declarator ~init:call only_escaping_definition]
-  | _ ->
-    Statements.const_declaration
-      ~loc:extracted_statements_loc
-      [
-        Statements.variable_declarator_generic
-          Flow_ast.Pattern.
-            ( Loc.none,
-              Object
-                {
-                  Object.properties =
-                    escaping_definitions
-                    |> List.map (fun def ->
-                           Object.Property
-                             ( Loc.none,
-                               {
-                                 Object.Property.key =
-                                   Object.Property.Identifier (Identifiers.identifier def);
-                                 pattern = Patterns.identifier def;
-                                 default = None;
-                                 shorthand = true;
-                               } ));
-                  annot = Flow_ast.Type.Missing Loc.none;
-                  comments = None;
-                } )
-          (Some call);
-      ]
+  let function_call_statement_with_collector =
+    match escaping_definitions with
+    | [] -> Statements.expression ~loc:extracted_statements_loc call
+    | [only_escaping_definition] ->
+      Statements.const_declaration
+        ~loc:extracted_statements_loc
+        [Statements.variable_declarator ~init:call only_escaping_definition]
+    | _ ->
+      Statements.const_declaration
+        ~loc:extracted_statements_loc
+        [
+          Statements.variable_declarator_generic
+            Flow_ast.Pattern.
+              ( Loc.none,
+                Object
+                  {
+                    Object.properties =
+                      escaping_definitions
+                      |> List.map (fun def ->
+                             Object.Property
+                               ( Loc.none,
+                                 {
+                                   Object.Property.key =
+                                     Object.Property.Identifier (Identifiers.identifier def);
+                                   pattern = Patterns.identifier def;
+                                   default = None;
+                                   shorthand = true;
+                                 } ));
+                    annot = Flow_ast.Type.Missing Loc.none;
+                    comments = None;
+                  } )
+            (Some call);
+        ]
+  in
+  [function_call_statement_with_collector]
 
 let insert_function_to_toplevel
     ~scope_info
@@ -519,7 +522,7 @@ let insert_function_to_toplevel
     new extract_to_function_refactor_mapper
       ~target_body_loc:program_loc
       ~extracted_statements_loc
-      ~function_call_statement:
+      ~function_call_statements:
         (create_extracted_function_call
            ~undefined_variables
            ~escaping_definitions
@@ -559,7 +562,7 @@ let insert_function_as_inner_functions
       new extract_to_function_refactor_mapper
         ~target_body_loc:target_function_body_loc
         ~extracted_statements_loc
-        ~function_call_statement:
+        ~function_call_statements:
           (create_extracted_function_call
              ~undefined_variables
              ~escaping_definitions
@@ -602,7 +605,7 @@ let insert_method
       new extract_to_method_refactor_mapper
         ~target_body_loc
         ~extracted_statements_loc
-        ~function_call_statement:
+        ~function_call_statements:
           (create_extracted_function_call
              ~undefined_variables
              ~escaping_definitions
