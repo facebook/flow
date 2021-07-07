@@ -6,6 +6,7 @@
  *)
 
 module Scope_api = Scope_api.With_Loc
+module Ssa_api = Ssa_api.With_Loc
 
 val extract_statements :
   (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> (Loc.t, Loc.t) Flow_ast.Statement.t list option
@@ -18,10 +19,21 @@ val find_closest_enclosing_class_scope :
   extracted_statements_loc:Loc.t ->
   (string option * Loc.t) option
 
+type relevant_defs = {
+  (* All the definitions that are used by the extracted statements, along with their scopes. *)
+  defs_with_scopes_of_local_uses: (Scope_api.Def.t * Scope_api.Scope.t) list;
+  (* All the variables that have been reassigned within the extracted statements that
+     would be shadowed after refactor. *)
+  vars_with_shadowed_local_reassignments: string list;
+}
+
+(* Finding lists of definitions relevant to refactor analysis.
+   See the type definition of `relevant_defs` for more information. *)
 val collect_relevant_defs_with_scope :
   scope_info:Scope_api.info ->
+  ssa_values:Ssa_api.values ->
   extracted_statements_loc:Loc.t ->
-  (Scope_api.Def.t * Scope_api.Scope.t) list
+  relevant_defs
 
 (* After moving extracted statements into a function into another scope, some variables might
    become undefined since original definition exists in inner scopes.
@@ -29,7 +41,7 @@ val collect_relevant_defs_with_scope :
    of the scope to put the extracted function. *)
 val undefined_variables_after_extraction :
   scope_info:Scope_api.info ->
-  relevant_defs_with_scope:(Scope_api.Def.t * Scope_api.Scope.t) list ->
+  defs_with_scopes_of_local_uses:(Scope_api.Def.t * Scope_api.Scope.t) list ->
   new_function_target_scope_loc:Loc.t ->
   extracted_statements_loc:Loc.t ->
   string list

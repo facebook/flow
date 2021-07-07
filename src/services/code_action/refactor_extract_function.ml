@@ -6,6 +6,7 @@
  *)
 
 module Scope_api = Scope_api.With_Loc
+module Ssa_api = Ssa_api.With_Loc
 open Loc_collections
 
 (* Collect all statements that are completely within the selection. *)
@@ -261,37 +262,103 @@ let find_closest_enclosing_class_scope ~ast ~extracted_statements_loc =
   let collector = new insertion_class_body_loc_collector extracted_statements_loc in
   collector#eval collector#program ast
 
-let collect_relevant_defs_with_scope ~scope_info ~extracted_statements_loc =
-  let used_defs_within_extracted_statements =
+type relevant_defs = {
+  defs_with_scopes_of_local_uses: (Scope_api.Def.t * Scope_api.Scope.t) list;
+  vars_with_shadowed_local_reassignments: string list;
+}
+
+let collect_relevant_defs_with_scope ~scope_info ~ssa_values ~extracted_statements_loc =
+  let ( used_defs_within_extracted_statements,
+        shadowed_local_reassignments_within_extracted_statements ) =
     IMap.fold
       (fun _ { Scope_api.Scope.locals; _ } acc ->
         LocMap.fold
-          (fun use def acc ->
+          (fun use def ((used_def_acc, shadowed_local_reassignment_acc) as acc) ->
             if Loc.contains extracted_statements_loc use then
-              Scope_api.DefMap.add def () acc
+              (Scope_api.DefMap.add def () used_def_acc, shadowed_local_reassignment_acc)
             else
-              acc)
+              (* We do not need to worry about a local reassignment if the variable is only used
+                 within extracted statements, since all uses will still read the correct modified
+                 value within extracted statements.
+
+                 e.g. We have
+
+                 ```
+                 // extracted statements start
+                 let a = 3;
+                 a = 4;
+                 console.log(a);
+                 // extracted statements end
+                 // no more uses of `a`
+                 ```
+
+                 Then refactor it into
+
+                 ```
+                 newFunction();
+
+                 function newFunction() {
+                   let a = 3;
+                   a = 4;
+                   console.log(a);
+                 }
+                 ```
+
+                 does not change the semantics.
+                 *)
+              let def_loc = fst def.Scope_api.Def.locs in
+              if not (Loc.contains extracted_statements_loc def_loc) then
+                let has_local_reassignment =
+                  (* Find whether there is a local write within the selected statements,
+                     while there is already a def outside of them.
+                     If there is a local write, we know the variable has been mutated locally. *)
+                  match LocMap.find_opt use ssa_values with
+                  | None -> false
+                  | Some writes ->
+                    List.exists
+                      (function
+                        | Ssa_api.Uninitialized -> false
+                        | Ssa_api.Write reason ->
+                          let write_loc = Reason.poly_loc_of_reason reason in
+                          Loc.contains extracted_statements_loc write_loc)
+                      writes
+                in
+                if has_local_reassignment then
+                  ( used_def_acc,
+                    SSet.add def.Scope_api.Def.actual_name shadowed_local_reassignment_acc )
+                else
+                  acc
+              else
+                acc)
           locals
           acc)
       scope_info.Scope_api.scopes
-      Scope_api.DefMap.empty
+      (Scope_api.DefMap.empty, SSet.empty)
   in
-  IMap.fold
-    (fun _ scope acc ->
-      let { Scope_api.Scope.defs; _ } = scope in
-      SMap.fold
-        (fun _ def acc ->
-          if Scope_api.DefMap.mem def used_defs_within_extracted_statements then
-            (def, scope) :: acc
-          else
+  {
+    defs_with_scopes_of_local_uses =
+      IMap.fold
+        (fun _ scope acc ->
+          let { Scope_api.Scope.defs; _ } = scope in
+          SMap.fold
+            (fun _ def acc ->
+              if Scope_api.DefMap.mem def used_defs_within_extracted_statements then
+                (def, scope) :: acc
+              else
+                acc)
+            defs
             acc)
-        defs
-        acc)
-    scope_info.Scope_api.scopes
-    []
+        scope_info.Scope_api.scopes
+        [];
+    vars_with_shadowed_local_reassignments =
+      SSet.elements shadowed_local_reassignments_within_extracted_statements;
+  }
 
 let undefined_variables_after_extraction
-    ~scope_info ~relevant_defs_with_scope ~new_function_target_scope_loc ~extracted_statements_loc =
+    ~scope_info
+    ~defs_with_scopes_of_local_uses
+    ~new_function_target_scope_loc
+    ~extracted_statements_loc =
   let new_function_target_scopes =
     Scope_api.scope_of_loc scope_info new_function_target_scope_loc
   in
@@ -318,7 +385,7 @@ let undefined_variables_after_extraction
       else
         None
   in
-  List.filter_map to_undefined_variable relevant_defs_with_scope |> List.rev
+  List.filter_map to_undefined_variable defs_with_scopes_of_local_uses |> List.rev
 
 let collect_escaping_local_defs ~scope_info ~extracted_statements_loc =
   SSet.empty
@@ -432,7 +499,7 @@ let create_extracted_function_call
 
 let insert_function_to_toplevel
     ~scope_info
-    ~relevant_defs_with_scope
+    ~defs_with_scopes_of_local_uses
     ~escaping_definitions
     ~async_function
     ~ast
@@ -442,7 +509,7 @@ let insert_function_to_toplevel
   let undefined_variables =
     undefined_variables_after_extraction
       ~scope_info
-      ~relevant_defs_with_scope
+      ~defs_with_scopes_of_local_uses
       ~new_function_target_scope_loc:program_loc
       ~extracted_statements_loc
   in
@@ -473,7 +540,7 @@ let insert_function_to_toplevel
 
 let insert_function_as_inner_functions
     ~scope_info
-    ~relevant_defs_with_scope
+    ~defs_with_scopes_of_local_uses
     ~escaping_definitions
     ~async_function
     ~ast
@@ -484,7 +551,7 @@ let insert_function_as_inner_functions
     let undefined_variables =
       undefined_variables_after_extraction
         ~scope_info
-        ~relevant_defs_with_scope
+        ~defs_with_scopes_of_local_uses
         ~new_function_target_scope_loc:target_function_body_loc
         ~extracted_statements_loc
     in
@@ -515,7 +582,7 @@ let insert_function_as_inner_functions
 
 let insert_method
     ~scope_info
-    ~relevant_defs_with_scope
+    ~defs_with_scopes_of_local_uses
     ~escaping_definitions
     ~async_function
     ~ast
@@ -527,7 +594,7 @@ let insert_method
     let undefined_variables =
       undefined_variables_after_extraction
         ~scope_info
-        ~relevant_defs_with_scope
+        ~defs_with_scopes_of_local_uses
         ~new_function_target_scope_loc:target_body_loc
         ~extracted_statements_loc
     in
@@ -584,9 +651,9 @@ let provide_available_refactors ast extract_range =
         in
         let async_function = information_collector#is_async in
         let in_class = information_collector#in_class in
-        let scope_info = Scope_builder.program ~with_types:false ast in
-        let relevant_defs_with_scope =
-          collect_relevant_defs_with_scope ~scope_info ~extracted_statements_loc
+        let (scope_info, ssa_values) = Ssa_builder.program_with_scope ast in
+        let { defs_with_scopes_of_local_uses; _ } =
+          collect_relevant_defs_with_scope ~scope_info ~ssa_values ~extracted_statements_loc
         in
         let escaping_definitions =
           collect_escaping_local_defs ~scope_info ~extracted_statements_loc
@@ -594,7 +661,7 @@ let provide_available_refactors ast extract_range =
         let extract_to_method_refactors =
           insert_method
             ~scope_info
-            ~relevant_defs_with_scope
+            ~defs_with_scopes_of_local_uses
             ~escaping_definitions
             ~async_function
             ~ast
@@ -607,7 +674,7 @@ let provide_available_refactors ast extract_range =
           extract_to_method_refactors
           @ insert_function_to_toplevel
               ~scope_info
-              ~relevant_defs_with_scope
+              ~defs_with_scopes_of_local_uses
               ~escaping_definitions
               ~async_function
               ~ast
@@ -615,7 +682,7 @@ let provide_available_refactors ast extract_range =
               ~extracted_statements_loc
             :: insert_function_as_inner_functions
                  ~scope_info
-                 ~relevant_defs_with_scope
+                 ~defs_with_scopes_of_local_uses
                  ~escaping_definitions
                  ~async_function
                  ~ast

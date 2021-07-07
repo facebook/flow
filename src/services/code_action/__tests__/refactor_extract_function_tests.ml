@@ -269,19 +269,45 @@ export default class {
         } );
   ]
 
-let assert_relevant_defs ~ctxt ~expected source extracted_statements_loc =
+let assert_relevant_defs
+    ~ctxt
+    ~expected_defs_of_local_uses
+    ~expected_vars_with_shadowed_local_reassignments
+    source
+    extracted_statements_loc =
   let ast = parse source in
-  let scope_info = Scope_builder.program ~with_types:false ast in
-  let actual =
-    Refactor_extract_function.collect_relevant_defs_with_scope ~scope_info ~extracted_statements_loc
+  let (scope_info, ssa_values) = Ssa_builder.program_with_scope ast in
+  let {
+    Refactor_extract_function.defs_with_scopes_of_local_uses;
+    vars_with_shadowed_local_reassignments;
+  } =
+    Refactor_extract_function.collect_relevant_defs_with_scope
+      ~scope_info
+      ~ssa_values
+      ~extracted_statements_loc
+  in
+  let actual_defs_of_local_uses =
+    defs_with_scopes_of_local_uses
     |> List.map
          (fun ({ Scope_api.With_Loc.Def.actual_name; _ }, { Scope_api.With_Loc.Scope.defs; _ }) ->
            assert_bool "scope does not contain def" (SMap.mem actual_name defs);
            actual_name)
     |> List.sort String.compare
   in
-  let expected = List.sort String.compare expected in
-  assert_equal ~ctxt ~printer:(String.concat ", ") expected actual
+  let actual_vars_with_shadowed_local_reassignments =
+    List.sort String.compare vars_with_shadowed_local_reassignments
+  in
+  let expected_defs_of_local_uses = List.sort String.compare expected_defs_of_local_uses in
+  let expected_vars_with_shadowed_local_reassignments =
+    List.sort String.compare expected_vars_with_shadowed_local_reassignments
+  in
+  let printer = String.concat ", " in
+  assert_equal ~ctxt ~printer expected_defs_of_local_uses actual_defs_of_local_uses;
+  assert_equal
+    ~ctxt
+    ~printer
+    expected_vars_with_shadowed_local_reassignments
+    actual_vars_with_shadowed_local_reassignments
 
 let collect_relevant_defs_with_scope_tests =
   [
@@ -295,7 +321,8 @@ let collect_relevant_defs_with_scope_tests =
       in
       assert_relevant_defs
         ~ctxt
-        ~expected:["a"; "b"]
+        ~expected_defs_of_local_uses:["a"; "b"]
+        ~expected_vars_with_shadowed_local_reassignments:[]
         source
         {
           Loc.source = None;
@@ -315,7 +342,8 @@ let collect_relevant_defs_with_scope_tests =
       in
       assert_relevant_defs
         ~ctxt
-        ~expected:["a"; "b"]
+        ~expected_defs_of_local_uses:["a"; "b"]
+        ~expected_vars_with_shadowed_local_reassignments:[]
         source
         {
           Loc.source = None;
@@ -344,26 +372,66 @@ let collect_relevant_defs_with_scope_tests =
       in
       assert_relevant_defs
         ~ctxt
-        ~expected:["a"; "b"; "c"; "d"; "e"]
+        ~expected_defs_of_local_uses:["a"; "b"; "c"; "d"; "e"]
+        ~expected_vars_with_shadowed_local_reassignments:[]
         source
         {
           Loc.source = None;
           start = { Loc.line = 10; column = 16 };
           _end = { Loc.line = 10; column = 49 };
         } );
+    ( "basic_def_with_shadowed_local_reassignment" >:: fun ctxt ->
+      let source =
+        {|
+        let a = 4;
+        a = 3; // selected
+        console.log(a);
+      |}
+      in
+      assert_relevant_defs
+        ~ctxt
+        ~expected_defs_of_local_uses:["a"]
+        ~expected_vars_with_shadowed_local_reassignments:["a"]
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 3; column = 8 };
+          _end = { Loc.line = 3; column = 26 };
+        } );
+    ( "basic_def_without_shadowed_local_reassignment" >:: fun ctxt ->
+      let source =
+        {|
+        let a = 4; // selected
+        a = 3; // selected
+        console.log(a);
+      |}
+      in
+      assert_relevant_defs
+        ~ctxt
+        ~expected_defs_of_local_uses:["a"]
+        ~expected_vars_with_shadowed_local_reassignments:[]
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 2; column = 8 };
+          _end = { Loc.line = 3; column = 26 };
+        } );
   ]
 
 let assert_undefined_variables
     ~ctxt ~expected ~source ~new_function_target_scope_loc ~extracted_statements_loc =
   let ast = parse source in
-  let scope_info = Scope_builder.program ~with_types:false ast in
-  let relevant_defs_with_scope =
-    Refactor_extract_function.collect_relevant_defs_with_scope ~scope_info ~extracted_statements_loc
+  let (scope_info, ssa_values) = Ssa_builder.program_with_scope ast in
+  let { Refactor_extract_function.defs_with_scopes_of_local_uses; _ } =
+    Refactor_extract_function.collect_relevant_defs_with_scope
+      ~scope_info
+      ~ssa_values
+      ~extracted_statements_loc
   in
   let actual =
     Refactor_extract_function.undefined_variables_after_extraction
       ~scope_info
-      ~relevant_defs_with_scope
+      ~defs_with_scopes_of_local_uses
       ~new_function_target_scope_loc
       ~extracted_statements_loc
     |> List.sort String.compare
