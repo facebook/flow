@@ -1,3 +1,16 @@
+### 0.155.0
+
+Likely to cause new Flow errors:
+* Ban the use of `this` inside of object methods (see https://medium.com/flow-type/sound-typing-for-this-in-flow-d62db2af969e).
+
+Notable bug fixes:
+* Fix a bug with name collisions in declared modules (fixes #8604).
+* Prevent showing identifiers for autocomplete of method names.
+* Preserve interfaces when used with the `$ReadOnly` utility
+
+Library Definitions:
+* Add support for fs promises (thanks @atabel).
+
 ### 0.154.0
 
 Likely to cause new Flow errors:
