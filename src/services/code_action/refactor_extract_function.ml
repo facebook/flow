@@ -406,7 +406,12 @@ let collect_escaping_local_defs ~scope_info ~extracted_statements_loc =
   |> SSet.elements
 
 let create_extracted_function
-    ~undefined_variables ~escaping_definitions ~async_function ~name ~extracted_statements =
+    ~undefined_variables
+    ~escaping_definitions
+    ~vars_with_shadowed_local_reassignments
+    ~async_function
+    ~name
+    ~extracted_statements =
   let open Ast_builder in
   let id = Some (Identifiers.identifier name) in
   let params =
@@ -414,19 +419,20 @@ let create_extracted_function
     |> List.map (fun v -> v |> Patterns.identifier |> Functions.param)
     |> Functions.params
   in
+  let returned_variables = escaping_definitions @ vars_with_shadowed_local_reassignments in
   let body_statements =
-    match escaping_definitions with
+    match returned_variables with
     | [] -> extracted_statements
-    | [only_escaping_definition] ->
+    | [only_returned_variable] ->
       extracted_statements
-      @ [Statements.return (Some (Expressions.identifier only_escaping_definition))]
+      @ [Statements.return (Some (Expressions.identifier only_returned_variable))]
     | _ ->
       extracted_statements
       @ [
           Statements.return
             (Some
                (Expressions.object_
-                  ( escaping_definitions
+                  ( returned_variables
                   |> List.map (fun def ->
                          Expressions.object_property
                            ~shorthand:true
@@ -438,8 +444,12 @@ let create_extracted_function
   Functions.make ~id ~params ~async:async_function ~body ()
 
 let create_extracted_function_call
-    ~undefined_variables ~escaping_definitions ~async_function ~is_method ~extracted_statements_loc
-    =
+    ~undefined_variables
+    ~escaping_definitions
+    ~vars_with_shadowed_local_reassignments
+    ~async_function
+    ~is_method
+    ~extracted_statements_loc =
   let open Ast_builder in
   let call =
     let caller =
@@ -464,46 +474,64 @@ let create_extracted_function_call
     else
       call
   in
-  let function_call_statement_with_collector =
-    match escaping_definitions with
-    | [] -> Statements.expression ~loc:extracted_statements_loc call
-    | [only_escaping_definition] ->
-      Statements.const_declaration
-        ~loc:extracted_statements_loc
-        [Statements.variable_declarator ~init:call only_escaping_definition]
-    | _ ->
-      Statements.const_declaration
-        ~loc:extracted_statements_loc
-        [
-          Statements.variable_declarator_generic
-            Flow_ast.Pattern.
-              ( Loc.none,
-                Object
-                  {
-                    Object.properties =
-                      escaping_definitions
-                      |> List.map (fun def ->
-                             Object.Property
-                               ( Loc.none,
-                                 {
-                                   Object.Property.key =
-                                     Object.Property.Identifier (Identifiers.identifier def);
-                                   pattern = Patterns.identifier def;
-                                   default = None;
-                                   shorthand = true;
-                                 } ));
-                    annot = Flow_ast.Type.Missing Loc.none;
-                    comments = None;
-                  } )
-            (Some call);
-        ]
+  let has_vars_with_shadowed_local_reassignments = vars_with_shadowed_local_reassignments <> [] in
+  let let_declarations =
+    if has_vars_with_shadowed_local_reassignments then
+      List.map
+        (fun v -> Statements.let_declaration [Statements.variable_declarator v])
+        escaping_definitions
+    else
+      []
   in
-  [function_call_statement_with_collector]
+  let returned_variables = escaping_definitions @ vars_with_shadowed_local_reassignments in
+  let function_call_statement_with_collector =
+    match returned_variables with
+    | [] -> Statements.expression ~loc:extracted_statements_loc call
+    | [only_returned_variable] ->
+      if has_vars_with_shadowed_local_reassignments then
+        Statements.expression
+          ~loc:extracted_statements_loc
+          (Expressions.assignment (Patterns.identifier only_returned_variable) call)
+      else
+        Statements.const_declaration
+          ~loc:extracted_statements_loc
+          [Statements.variable_declarator ~init:call only_returned_variable]
+    | _ ->
+      let pattern =
+        Flow_ast.Pattern.
+          ( Loc.none,
+            Object
+              {
+                Object.properties =
+                  returned_variables
+                  |> List.map (fun def ->
+                         Object.Property
+                           ( Loc.none,
+                             {
+                               Object.Property.key =
+                                 Object.Property.Identifier (Identifiers.identifier def);
+                               pattern = Patterns.identifier def;
+                               default = None;
+                               shorthand = true;
+                             } ));
+                annot = Flow_ast.Type.Missing Loc.none;
+                comments = None;
+              } )
+      in
+      if has_vars_with_shadowed_local_reassignments then
+        Statements.expression ~loc:extracted_statements_loc (Expressions.assignment pattern call)
+      else
+        Statements.const_declaration
+          ~loc:extracted_statements_loc
+          [Statements.variable_declarator_generic pattern (Some call)]
+  in
+  let_declarations @ [function_call_statement_with_collector]
 
 let insert_function_to_toplevel
     ~scope_info
     ~defs_with_scopes_of_local_uses
     ~escaping_definitions
+    ~vars_with_shadowed_local_reassignments
     ~async_function
     ~ast
     ~extracted_statements
@@ -526,6 +554,7 @@ let insert_function_to_toplevel
         (create_extracted_function_call
            ~undefined_variables
            ~escaping_definitions
+           ~vars_with_shadowed_local_reassignments
            ~async_function
            ~is_method:false
            ~extracted_statements_loc)
@@ -535,6 +564,7 @@ let insert_function_to_toplevel
             (create_extracted_function
                ~undefined_variables
                ~escaping_definitions
+               ~vars_with_shadowed_local_reassignments
                ~async_function
                ~name:"newFunction"
                ~extracted_statements) )
@@ -545,6 +575,7 @@ let insert_function_as_inner_functions
     ~scope_info
     ~defs_with_scopes_of_local_uses
     ~escaping_definitions
+    ~vars_with_shadowed_local_reassignments
     ~async_function
     ~ast
     ~extracted_statements
@@ -566,6 +597,7 @@ let insert_function_as_inner_functions
           (create_extracted_function_call
              ~undefined_variables
              ~escaping_definitions
+             ~vars_with_shadowed_local_reassignments
              ~async_function
              ~is_method:false
              ~extracted_statements_loc)
@@ -575,6 +607,7 @@ let insert_function_as_inner_functions
               (create_extracted_function
                  ~undefined_variables
                  ~escaping_definitions
+                 ~vars_with_shadowed_local_reassignments
                  ~async_function
                  ~name:"newFunction"
                  ~extracted_statements) )
@@ -587,6 +620,7 @@ let insert_method
     ~scope_info
     ~defs_with_scopes_of_local_uses
     ~escaping_definitions
+    ~vars_with_shadowed_local_reassignments
     ~async_function
     ~ast
     ~extracted_statements
@@ -609,6 +643,7 @@ let insert_method
           (create_extracted_function_call
              ~undefined_variables
              ~escaping_definitions
+             ~vars_with_shadowed_local_reassignments
              ~async_function
              ~is_method:true
              ~extracted_statements_loc)
@@ -618,6 +653,7 @@ let insert_method
              (create_extracted_function
                 ~undefined_variables
                 ~escaping_definitions
+                ~vars_with_shadowed_local_reassignments
                 ~async_function
                 ~name:"newMethod"
                 ~extracted_statements))
@@ -655,7 +691,7 @@ let provide_available_refactors ast extract_range =
         let async_function = information_collector#is_async in
         let in_class = information_collector#in_class in
         let (scope_info, ssa_values) = Ssa_builder.program_with_scope ast in
-        let { defs_with_scopes_of_local_uses; _ } =
+        let { defs_with_scopes_of_local_uses; vars_with_shadowed_local_reassignments } =
           collect_relevant_defs_with_scope ~scope_info ~ssa_values ~extracted_statements_loc
         in
         let escaping_definitions =
@@ -666,6 +702,7 @@ let provide_available_refactors ast extract_range =
             ~scope_info
             ~defs_with_scopes_of_local_uses
             ~escaping_definitions
+            ~vars_with_shadowed_local_reassignments
             ~async_function
             ~ast
             ~extracted_statements
@@ -679,6 +716,7 @@ let provide_available_refactors ast extract_range =
               ~scope_info
               ~defs_with_scopes_of_local_uses
               ~escaping_definitions
+              ~vars_with_shadowed_local_reassignments
               ~async_function
               ~ast
               ~extracted_statements
@@ -687,6 +725,7 @@ let provide_available_refactors ast extract_range =
                  ~scope_info
                  ~defs_with_scopes_of_local_uses
                  ~escaping_definitions
+                 ~vars_with_shadowed_local_reassignments
                  ~async_function
                  ~ast
                  ~extracted_statements

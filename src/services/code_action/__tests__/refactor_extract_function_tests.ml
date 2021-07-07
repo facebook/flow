@@ -812,6 +812,79 @@ function newFunction() {
           start = { Loc.line = 2; column = 8 };
           _end = { Loc.line = 2; column = 20 };
         } );
+    ( "local_reassignment_single_return_extract" >:: fun ctxt ->
+      let source =
+        {|
+        let fooo = 3;
+        const a = 3;
+        fooo = a + 2; // selected
+        console.log(a + fooo);
+      |}
+      in
+      let expected =
+        [
+          ( "Extract to function in module scope",
+            {|
+let fooo = 3;
+const a = 3;
+fooo = newFunction();
+console.log(a + fooo);
+
+function newFunction() {
+  fooo = a + 2; // selected
+  return fooo;
+}
+
+      |}
+          );
+        ]
+      in
+      assert_refactored
+        ~ctxt
+        expected
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 4; column = 8 };
+          _end = { Loc.line = 4; column = 33 };
+        } );
+    ( "local_reassignment_mixed_return_extract" >:: fun ctxt ->
+      let source =
+        {|
+        let fooo = 3;
+        const a = 3; // selected
+        fooo = a + 2; // selected
+        console.log(a + fooo);
+      |}
+      in
+      let expected =
+        [
+          ( "Extract to function in module scope",
+            {|
+let fooo = 3;
+let a;
+
+({a, fooo} = newFunction());
+console.log(a + fooo);
+
+function newFunction() {
+  const a = 3; // selected
+  fooo = a + 2; // selected
+  return { a, fooo };
+}
+      |}
+          );
+        ]
+      in
+      assert_refactored
+        ~ctxt
+        expected
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 3; column = 8 };
+          _end = { Loc.line = 4; column = 33 };
+        } );
     ( "async_expression_extract" >:: fun ctxt ->
       let source =
         {|
