@@ -1037,22 +1037,142 @@ function newFunction() {
     ( "basic_class_method_extract" >:: fun ctxt ->
       assert_refactored
         ~ctxt
-        []
+        [
+          ( "Extract to method in class 'A'",
+            {|
+class A {
+  test1() {
+    this.newMethod();
+  }
+  newMethod() {
+    this.test1();
+  }
+}
+        |}
+          );
+        ]
         "class A { test1() { this.test1(); } }"
         {
           Loc.source = None;
           start = { Loc.line = 1; column = 20 };
           _end = { Loc.line = 1; column = 33 };
-        } );
-    ( "basic_class_method_extract" >:: fun ctxt ->
+        };
       assert_refactored
         ~ctxt
-        []
+        [
+          ( "Extract to method in class 'A'",
+            {|
+class A {
+  test1() {
+    this.newMethod();
+  }
+  newMethod() {
+    super.test1();
+  }
+}
+        |}
+          );
+        ]
         "class A { test1() { super.test1(); } }"
         {
           Loc.source = None;
           start = { Loc.line = 1; column = 20 };
           _end = { Loc.line = 1; column = 34 };
+        };
+      assert_refactored
+        ~ctxt
+        [
+          ( "Extract to method in class 'A'",
+            {|
+class A {
+  test1() {
+    this.newMethod();
+  }
+  newMethod() {
+    console.log();
+  }
+}
+        |}
+          );
+          ( "Extract to function in module scope",
+            {|
+class A {
+  test1() {
+    newFunction();
+  }
+}
+
+function newFunction() {
+  console.log();
+}
+          |}
+          );
+        ]
+        "class A { test1() { console.log(); } }"
+        {
+          Loc.source = None;
+          start = { Loc.line = 1; column = 20 };
+          _end = { Loc.line = 1; column = 34 };
+        } );
+    ( "class_method_with_parameters_and_return_extract" >:: fun ctxt ->
+      let source =
+        {|
+        export default class {
+          constructor() { this.v = 1; }
+          test1() {
+            class B {
+              constructor(v1: number, v2: number) {
+                console.log(v1, v2);
+              }
+              test2() {
+                console.log('test');
+              }
+            }
+            const a = 2;
+            const b = new B(this.v, a); // selected
+            b.test2();
+          }
+        }
+      |}
+      in
+      let expected =
+        [
+          ( "Extract to method in anonymous class declaration",
+            {|
+export default class {
+  constructor() {
+    this.v = 1;
+  }
+  test1() {
+    class B {
+      constructor(v1: number, v2: number) {
+        console.log(v1, v2);
+      }
+      test2() {
+        console.log("test");
+      }
+    }
+    const a = 2;
+    const b = this.newMethod(B, a);
+    b.test2();
+  }
+  newMethod(B, a) {
+    const b = new B(this.v, a); // selected
+    return b;
+  }
+}
+      |}
+          );
+        ]
+      in
+      assert_refactored
+        ~ctxt
+        expected
+        source
+        {
+          Loc.source = None;
+          start = { Loc.line = 14; column = 12 };
+          _end = { Loc.line = 14; column = 51 };
         } );
     ( "very_nested_extract" >:: fun ctxt ->
       let source =

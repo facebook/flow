@@ -233,6 +233,25 @@ class extract_to_function_refactor_mapper
         super#function_body block
   end
 
+class extract_to_method_refactor_mapper
+  ~target_body_loc ~extracted_statements_loc ~function_call_statement ~method_declaration =
+  object (_this)
+    inherit
+      replace_original_statements_mapper ~extracted_statements_loc ~function_call_statement as super
+
+    method! class_body block =
+      let open Flow_ast.Class.Body in
+      let (body_loc, body) = block in
+      if Loc.equal body_loc target_body_loc then
+        ( body_loc,
+          {
+            body with
+            body = Flow_ast_mapper.map_list super#class_element body.body @ [method_declaration];
+          } )
+      else
+        super#class_body block
+  end
+
 let extract_statements ast extract_range =
   let collector = new statements_collector extract_range in
   let _ = collector#program ast in
@@ -320,9 +339,9 @@ let collect_escaping_local_defs ~scope_info ~extracted_statements_loc =
   |> SSet.elements
 
 let create_extracted_function
-    ~undefined_variables ~escaping_definitions ~async_function ~extracted_statements =
+    ~undefined_variables ~escaping_definitions ~async_function ~name ~extracted_statements =
   let open Ast_builder in
-  let id = Some (Identifiers.identifier "newFunction") in
+  let id = Some (Identifiers.identifier name) in
   let params =
     undefined_variables
     |> List.map (fun v -> v |> Patterns.identifier |> Functions.param)
@@ -352,16 +371,25 @@ let create_extracted_function
   Functions.make ~id ~params ~async:async_function ~body ()
 
 let create_extracted_function_call
-    ~undefined_variables ~escaping_definitions ~async_function ~extracted_statements_loc =
+    ~undefined_variables ~escaping_definitions ~async_function ~is_method ~extracted_statements_loc
+    =
   let open Ast_builder in
   let call =
+    let caller =
+      if is_method then
+        (Loc.none, Flow_ast.Expression.(This { This.comments = None }))
+        |> Expressions.member ~property:"newMethod"
+        |> Expressions.member_expression
+      else
+        Expressions.identifier "newFunction"
+    in
     Expressions.call
       ~loc:extracted_statements_loc
       ~args:
         ( undefined_variables
         |> List.map (fun v -> v |> Expressions.identifier |> Expressions.expression)
         |> Expressions.arg_list )
-      (Expressions.identifier "newFunction")
+      caller
   in
   let call =
     if async_function then
@@ -429,6 +457,7 @@ let insert_function_to_toplevel
            ~undefined_variables
            ~escaping_definitions
            ~async_function
+           ~is_method:false
            ~extracted_statements_loc)
       ~function_declaration_statement:
         ( new_function_loc,
@@ -437,6 +466,7 @@ let insert_function_to_toplevel
                ~undefined_variables
                ~escaping_definitions
                ~async_function
+               ~name:"newFunction"
                ~extracted_statements) )
   in
   ("Extract to function in module scope", mapper#program ast)
@@ -467,6 +497,7 @@ let insert_function_as_inner_functions
              ~undefined_variables
              ~escaping_definitions
              ~async_function
+             ~is_method:false
              ~extracted_statements_loc)
         ~function_declaration_statement:
           ( Loc.none,
@@ -475,11 +506,58 @@ let insert_function_as_inner_functions
                  ~undefined_variables
                  ~escaping_definitions
                  ~async_function
+                 ~name:"newFunction"
                  ~extracted_statements) )
     in
     (Printf.sprintf "Extract to inner function in function '%s'" title, mapper#program ast)
   in
   collector#eval collector#program ast |> List.map create_refactor
+
+let insert_method
+    ~scope_info
+    ~relevant_defs_with_scope
+    ~escaping_definitions
+    ~async_function
+    ~ast
+    ~extracted_statements
+    ~extracted_statements_loc =
+  match find_closest_enclosing_class_scope ~ast ~extracted_statements_loc with
+  | None -> []
+  | Some (id, target_body_loc) ->
+    let undefined_variables =
+      undefined_variables_after_extraction
+        ~scope_info
+        ~relevant_defs_with_scope
+        ~new_function_target_scope_loc:target_body_loc
+        ~extracted_statements_loc
+    in
+    let mapper =
+      new extract_to_method_refactor_mapper
+        ~target_body_loc
+        ~extracted_statements_loc
+        ~function_call_statement:
+          (create_extracted_function_call
+             ~undefined_variables
+             ~escaping_definitions
+             ~async_function
+             ~is_method:true
+             ~extracted_statements_loc)
+        ~method_declaration:
+          (Ast_builder.Classes.method_
+             ~id:"newMethod"
+             (create_extracted_function
+                ~undefined_variables
+                ~escaping_definitions
+                ~async_function
+                ~name:"newMethod"
+                ~extracted_statements))
+    in
+    let title =
+      match id with
+      | None -> "Extract to method in anonymous class declaration"
+      | Some id -> Printf.sprintf "Extract to method in class '%s'" id
+    in
+    [(title, mapper#program ast)]
 
 let provide_available_refactors ast extract_range =
   match extract_statements ast extract_range with
@@ -513,10 +591,8 @@ let provide_available_refactors ast extract_range =
         let escaping_definitions =
           collect_escaping_local_defs ~scope_info ~extracted_statements_loc
         in
-        if in_class then
-          []
-        else
-          insert_function_to_toplevel
+        let extract_to_method_refactors =
+          insert_method
             ~scope_info
             ~relevant_defs_with_scope
             ~escaping_definitions
@@ -524,11 +600,24 @@ let provide_available_refactors ast extract_range =
             ~ast
             ~extracted_statements
             ~extracted_statements_loc
-          :: insert_function_as_inner_functions
-               ~scope_info
-               ~relevant_defs_with_scope
-               ~escaping_definitions
-               ~async_function
-               ~ast
-               ~extracted_statements
-               ~extracted_statements_loc)
+        in
+        if in_class then
+          extract_to_method_refactors
+        else
+          extract_to_method_refactors
+          @ insert_function_to_toplevel
+              ~scope_info
+              ~relevant_defs_with_scope
+              ~escaping_definitions
+              ~async_function
+              ~ast
+              ~extracted_statements
+              ~extracted_statements_loc
+            :: insert_function_as_inner_functions
+                 ~scope_info
+                 ~relevant_defs_with_scope
+                 ~escaping_definitions
+                 ~async_function
+                 ~ast
+                 ~extracted_statements
+                 ~extracted_statements_loc)
