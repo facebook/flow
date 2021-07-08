@@ -43,7 +43,7 @@ let autofix_exports_code_actions
   else
     []
 
-let extract_function_refactor_code_actions ~options ~ast uri loc =
+let extract_function_refactor_code_actions ~options ~ast ~typed_ast ~parsing_heap_reader uri loc =
   if Options.refactor options then
     let lsp_action_from_refactor (title, new_ast) =
       let diff = Insert_type.mk_diff ast new_ast in
@@ -71,7 +71,11 @@ let extract_function_refactor_code_actions ~options ~ast uri loc =
                 } );
         }
     in
-    Refactor_extract_function.provide_available_refactors ast loc
+    Refactor_extract_function.provide_available_refactors
+      ~ast
+      ~typed_ast
+      ~parsing_heap_reader
+      ~extract_range:loc
     |> List.map lsp_action_from_refactor
   else
     []
@@ -492,7 +496,13 @@ let code_actions_at_loc
       ~diagnostics
       uri
       loc
-    @ extract_function_refactor_code_actions ~options ~ast uri loc
+    @ extract_function_refactor_code_actions
+        ~options
+        ~ast
+        ~typed_ast
+        ~parsing_heap_reader:reader
+        uri
+        loc
   in
   let error_fixes =
     code_actions_of_errors

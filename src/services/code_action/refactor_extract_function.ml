@@ -285,7 +285,7 @@ let insert_method
     in
     [(title, new_ast)]
 
-let provide_available_refactors ast extract_range =
+let provide_available_refactors ~ast ~typed_ast:_ ~parsing_heap_reader:_ ~extract_range =
   match StatementsExtractor.extract ast extract_range with
   | None -> []
   | Some extracted_statements ->

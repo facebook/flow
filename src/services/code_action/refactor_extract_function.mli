@@ -6,4 +6,8 @@
  *)
 
 val provide_available_refactors :
-  (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> (string * (Loc.t, Loc.t) Flow_ast.Program.t) list
+  ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
+  typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
+  parsing_heap_reader:Parsing_heaps.Reader.reader ->
+  extract_range:Loc.t ->
+  (string * (Loc.t, Loc.t) Flow_ast.Program.t) list
