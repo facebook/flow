@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Ast = Flow_ast
 module Utils = Insert_type_utils
 module Import = Insert_type_imports
 module ImportsHelper = Import.ImportsHelper
