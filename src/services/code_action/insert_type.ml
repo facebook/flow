@@ -223,16 +223,7 @@ let path_of_loc ?(error = Error "no path for location") (loc : Loc.t) : (string,
 (* This class maps each node that contains the target until a node is contained
    by the target *)
 
-class mapper
-  ?(size_limit = 30)
-  ~ambiguity_strategy
-  ~strict
-  ~normalize
-  ~ty_lookup
-  ~exact_by_default
-  ~imports_react
-  ~remote_converter
-  target =
+class mapper ~strict ~synth_type target =
   let target_is_point = Utils.is_point target in
   object (this)
     inherit [Loc.t] Flow_ast_contains_mapper.mapper as super
@@ -245,44 +236,7 @@ class mapper
 
     method loc_annot_contains_target = this#target_contained_by
 
-    (* If we can't fix the type annotation we insert the type anyway which will fail to typecheck
-       but might provide a hint as to what the type is. *)
-    method private try_to_fix_imports ty =
-      match remote_converter#type_ ty with
-      | Ok ty -> ty
-      | Error e ->
-        (* TODO: surface these errors to user *)
-        Hh_logger.error "Insert type: %s" (Insert_type_utils.Error.serialize e);
-        ty
-
-    method private synth_type location =
-      let scheme = ty_lookup location in
-      let process ty =
-        let () =
-          match Utils.Validator.validate_type ~size_limit ty with
-          | (_, error :: _) ->
-            (* TODO surface all errors *)
-            let error_message = Utils.Error.serialize_validation_error error in
-            let err = FailedToValidateType { error; error_message } in
-            raise (expected err)
-          | (_, []) -> ()
-        in
-        remove_ambiguous_types ~ambiguity_strategy ~exact_by_default ty location
-      in
-      let ty =
-        match normalize location scheme with
-        | Ty.Type ty -> process ty
-        | Ty.Decl (Ty.ClassDecl (name, _)) ->
-          let ty = Ty.TypeOf (Ty.TSymbol name) in
-          process ty
-        | _ ->
-          let err = FailedToNormalize (location, "Non-type") in
-          raise (expected err)
-      in
-      let ty = this#try_to_fix_imports ty in
-      (location, serialize ~imports_react ~exact_by_default location ty)
-
-    method private synth_type_annotation_hint loc = Flow_ast.Type.Available (this#synth_type loc)
+    method private synth_type_annotation_hint loc = Flow_ast.Type.Available (synth_type loc)
 
     (* If a type is missing and in the range of target then add a type annotation hint *)
     method private update_type_annotation_hint ?type_loc ?(check_loc = false) annot =
@@ -383,7 +337,7 @@ class mapper
       let open Flow_ast.Expression in
       if this#target_contained_by l then
         if this#is_target l then
-          (l, TypeCast TypeCast.{ expression = e; annot = this#synth_type l; comments = None })
+          (l, TypeCast TypeCast.{ expression = e; annot = synth_type l; comments = None })
         else
           super#expression e
       else
@@ -415,6 +369,62 @@ let normalize ~full_cx ~file_sig ~typed_ast ~expand_aliases ~omit_targ_defaults 
     | FailureNoMatch -> raise @@ unexpected @@ FailedToNormalizeNoMatch
     | FailureUnparseable (loc, _, msg) -> raise @@ expected @@ FailedToNormalize (loc, msg)
     | Success (_, ty) -> ty)
+
+let synth_type
+    ?(size_limit = 30)
+    ~full_cx
+    ~file_sig
+    ~typed_ast
+    ~expand_aliases
+    ~omit_targ_defaults
+    ~ambiguity_strategy
+    ~remote_converter
+    type_loc
+    type_scheme =
+  let exact_by_default = Context.exact_by_default full_cx in
+  let imports_react = ImportsHelper.imports_react file_sig in
+  let process ty =
+    let () =
+      match Utils.Validator.validate_type ~size_limit ty with
+      | (_, error :: _) ->
+        (* TODO surface all errors *)
+        let error_message = Utils.Error.serialize_validation_error error in
+        let err = FailedToValidateType { error; error_message } in
+        raise (expected err)
+      | (_, []) -> ()
+    in
+    remove_ambiguous_types ~ambiguity_strategy ~exact_by_default ty type_loc
+  in
+  let ty =
+    match
+      normalize
+        ~full_cx
+        ~file_sig
+        ~typed_ast
+        ~expand_aliases
+        ~omit_targ_defaults
+        type_loc
+        type_scheme
+    with
+    | Ty.Type ty -> process ty
+    | Ty.Decl (Ty.ClassDecl (name, _)) ->
+      let ty = Ty.TypeOf (Ty.TSymbol name) in
+      process ty
+    | _ ->
+      let err = FailedToNormalize (type_loc, "Non-type") in
+      raise (expected err)
+  in
+  (* If we can't fix the type annotation we insert the type anyway which will fail to typecheck
+     but might provide a hint as to what the type is. *)
+  let import_fixed_ty =
+    match remote_converter#type_ ty with
+    | Ok ty -> ty
+    | Error e ->
+      (* TODO: surface these errors to user *)
+      Hh_logger.error "Insert type: %s" (Insert_type_utils.Error.serialize e);
+      ty
+  in
+  (type_loc, serialize ~imports_react ~exact_by_default type_loc import_fixed_ty)
 
 let type_to_string t =
   Js_layout_generator.type_ ~opts:Js_layout_generator.default_opts t
@@ -486,9 +496,6 @@ let insert_type
     ast
     target =
   let file_sig = File_sig.abstractify_locs file_sig in
-  let exact_by_default = Context.exact_by_default full_cx in
-  let ty_lookup = type_lookup_at_location typed_ast in
-  let normalize = normalize ~full_cx ~file_sig ~typed_ast ~expand_aliases ~omit_targ_defaults in
   let file =
     match target.Loc.source with
     | Some source -> source
@@ -501,18 +508,19 @@ let insert_type
       let rc = new ImportsHelper.remote_converter ~iteration:0 ~file ~reserved_names:SSet.empty in
       (rc, add_imports rc)
   in
-  let imports_react = ImportsHelper.imports_react file_sig in
-  let mapper =
-    new mapper
-      ~normalize
-      ~ty_lookup
-      ~strict
+  let synth_type location =
+    synth_type
+      ~full_cx
+      ~file_sig
+      ~typed_ast
+      ~expand_aliases
+      ~omit_targ_defaults
       ~ambiguity_strategy
-      ~imports_react
-      ~exact_by_default
       ~remote_converter
-      target
+      location
+      (type_lookup_at_location typed_ast location)
   in
+  let mapper = new mapper ~strict ~synth_type target in
   let (loc, ast') = mapper#program ast in
   let statements = maybe_add_imports ast'.Flow_ast.Program.statements in
   (loc, { ast' with Flow_ast.Program.statements })
