@@ -26,13 +26,13 @@ References:
    profiler.js:17:12
     17| const _b = <React.Profiler />; // Error, id and onRender are required
                    ^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:416:56
+   <BUILTINS>/react.js:418:56
                                                                v-
-   416|   declare export var Profiler: React$AbstractComponent<{|
-   417|     children?: React$Node,
-   418|     id: string,
-   419|     onRender: ProfilerOnRenderFnType,
-   420|   |}, void>;
+   418|   declare export var Profiler: React$AbstractComponent<{|
+   419|     children?: React$Node,
+   420|     id: string,
+   421|     onRender: ProfilerOnRenderFnType,
+   422|   |}, void>;
           -^ [2]
 
 
@@ -49,13 +49,13 @@ References:
    profiler.js:17:12
     17| const _b = <React.Profiler />; // Error, id and onRender are required
                    ^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:416:56
+   <BUILTINS>/react.js:418:56
                                                                v-
-   416|   declare export var Profiler: React$AbstractComponent<{|
-   417|     children?: React$Node,
-   418|     id: string,
-   419|     onRender: ProfilerOnRenderFnType,
-   420|   |}, void>;
+   418|   declare export var Profiler: React$AbstractComponent<{|
+   419|     children?: React$Node,
+   420|     id: string,
+   421|     onRender: ProfilerOnRenderFnType,
+   422|   |}, void>;
           -^ [2]
 
 

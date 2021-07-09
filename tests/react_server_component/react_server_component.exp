@@ -23,11 +23,11 @@ References:
    test.hybrid.js:8:28
     8| declare var inexactObject: {...};
                                   ^^^^^ [1]
-   <BUILTINS>/react.js:29:5
-   29|   | React$Element<React$ElementType>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:31:5
-   31|   | React$TransportObject;
+   31|   | React$Element<React$ElementType>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:33:5
+   33|   | React$TransportObject;
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -42,11 +42,11 @@ Cannot create `Component` element because: [incompatible-type]
                                                                                    ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:29:5
-   29|   | React$Element<React$ElementType>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:31:5
-   31|   | React$TransportObject;
+   31|   | React$Element<React$ElementType>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:33:5
+   33|   | React$TransportObject;
            ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -81,11 +81,11 @@ References:
    test.hybrid.js:13:1
    13| <Component {...inexactObject} num={3} exactObject={{foo: 3}} />; // Error, inexact may have unknown prop
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:29:5
-   29|   | React$Element<React$ElementType>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:31:5
-   31|   | React$TransportObject;
+   31|   | React$Element<React$ElementType>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:33:5
+   33|   | React$TransportObject;
            ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -103,11 +103,11 @@ References:
    test.hybrid.js:9:42
     9| declare var indexedObjectBad: {[string]: () => void};
                                                 ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:29:5
-   29|   | React$Element<React$ElementType>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:31:5
-   31|   | React$TransportObject;
+   31|   | React$Element<React$ElementType>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:33:5
+   33|   | React$TransportObject;
            ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -125,11 +125,11 @@ References:
    test.hybrid.js:9:42
      9| declare var indexedObjectBad: {[string]: () => void};
                                                  ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:206:26
-   206| declare type React$Key = string | number;
+   <BUILTINS>/react.js:208:26
+   208| declare type React$Key = string | number;
                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:206:35
-   206| declare type React$Key = string | number;
+   <BUILTINS>/react.js:208:35
+   208| declare type React$Key = string | number;
                                           ^^^^^^ [3]
 
 
@@ -144,11 +144,11 @@ Cannot create `InexactComponent` element because: [incompatible-type]
                                       ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:29:5
-   29|   | React$Element<React$ElementType>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:31:5
-   31|   | React$TransportObject;
+   31|   | React$Element<React$ElementType>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:33:5
+   33|   | React$TransportObject;
            ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -166,11 +166,11 @@ References:
    test.hybrid.js:20:1
    20| <InexactComponent {...inexactObject} foo={3} />; // Error
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:29:5
-   29|   | React$Element<React$ElementType>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:31:5
-   31|   | React$TransportObject;
+   31|   | React$Element<React$ElementType>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:33:5
+   33|   | React$TransportObject;
            ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -190,11 +190,11 @@ References:
    transport_type.js:3:28
     3| declare var inexactObject: {...};
                                   ^^^^^ [1]
-   <BUILTINS>/react.js:29:5
-   29|   | React$Element<React$ElementType>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:31:5
-   31|   | React$TransportObject;
+   31|   | React$Element<React$ElementType>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:33:5
+   33|   | React$TransportObject;
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -212,11 +212,11 @@ References:
    transport_type.js:4:17
     4| declare var fn: () => void;
                        ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:29:5
-   29|   | React$Element<React$ElementType>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:31:5
-   31|   | React$TransportObject;
+   31|   | React$Element<React$ElementType>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:33:5
+   33|   | React$TransportObject;
            ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -241,8 +241,8 @@ Cannot cast `hasInexactObj` to `TransportValue` because: [incompatible-cast]
         ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:29:5
-   29|   | React$Element<React$ElementType>
+   <BUILTINS>/react.js:31:5
+   31|   | React$Element<React$ElementType>
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    transport_type.js:5:28
     5| declare var hasInexactObj: {| foo: {| foo: {| foo: {| foo: {...} |}|}|} |};
@@ -259,8 +259,8 @@ References:
    transport_type.js:5:60
     5| declare var hasInexactObj: {| foo: {| foo: {| foo: {| foo: {...} |}|}|} |};
                                                                   ^^^^^ [6]
-   <BUILTINS>/react.js:31:5
-   31|   | React$TransportObject;
+   <BUILTINS>/react.js:33:5
+   33|   | React$TransportObject;
            ^^^^^^^^^^^^^^^^^^^^^ [7]
 
 
@@ -276,8 +276,8 @@ Cannot cast `hasOneIncompatibleValue` to `TransportValue` because: [incompatible
         ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:29:5
-   29|   | React$Element<React$ElementType>
+   <BUILTINS>/react.js:31:5
+   31|   | React$Element<React$ElementType>
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    transport_type.js:12:38
                                             v-
@@ -291,8 +291,8 @@ References:
    transport_type.js:16:8
    16|   qux: () => any,
               ^^^^^^^^^ [3]
-   <BUILTINS>/react.js:31:5
-   31|   | React$TransportObject;
+   <BUILTINS>/react.js:33:5
+   33|   | React$TransportObject;
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 

@@ -2728,8 +2728,8 @@ References:
    tagged_union.js:107:37
    107|     x: Array<string>, y: string, z: number, q: boolean,
                                             ^^^^^^ [2]
-   <BUILTINS>/core.js:474:5
-   474|     toString(radix?: number): string;
+   <BUILTINS>/core.js:476:5
+   476|     toString(radix?: number): string;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -2777,8 +2777,8 @@ References:
    tagged_union.js:107:48
    107|     x: Array<string>, y: string, z: number, q: boolean,
                                                        ^^^^^^^ [2]
-   <BUILTINS>/core.js:367:5
-   367|     valueOf(): boolean;
+   <BUILTINS>/core.js:369:5
+   369|     valueOf(): boolean;
             ^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -2826,8 +2826,8 @@ References:
    tagged_union.js:108:32
    108|     r: Object, s: Function, t: () => void
                                        ^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:351:17
-   351|     proto call: Function$Prototype$Call; // (thisArg: any, ...argArray: Array<any>) => any
+   <BUILTINS>/core.js:353:17
+   353|     proto call: Function$Prototype$Call; // (thisArg: any, ...argArray: Array<any>) => any
                         ^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -3760,8 +3760,8 @@ Cannot get `x[0]` because an index signature declaring the expected key / value 
             ^^^^
 
 References:
-   <BUILTINS>/core.js:363:15
-   363| declare class Boolean {
+   <BUILTINS>/core.js:365:15
+   365| declare class Boolean {
                       ^^^^^^^ [1]
 
 
