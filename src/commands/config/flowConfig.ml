@@ -45,7 +45,7 @@ module Opts = struct
     all: bool option;
     autoimports: bool option;
     automatic_require_default: bool option;
-    babel_loose_array_spread: bool;
+    babel_loose_array_spread: bool option;
     check_updates_against_providers: bool;
     disable_live_non_parse_errors: bool option;
     emoji: bool option;
@@ -168,7 +168,7 @@ module Opts = struct
       all = None;
       autoimports = None;
       automatic_require_default = None;
-      babel_loose_array_spread = false;
+      babel_loose_array_spread = None;
       check_updates_against_providers = false;
       disable_live_non_parse_errors = None;
       emoji = None;
@@ -439,7 +439,7 @@ module Opts = struct
     boolean (fun opts v -> Ok { opts with automatic_require_default = Some v })
 
   let babel_loose_array_spread_parser =
-    boolean (fun opts v -> Ok { opts with babel_loose_array_spread = v })
+    boolean (fun opts v -> Ok { opts with babel_loose_array_spread = Some v })
 
   let disable_live_non_parse_errors_parser =
     boolean (fun opts v -> Ok { opts with disable_live_non_parse_errors = Some v })
