@@ -5,11 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type binding = Export_index.kind * string
+type bindings =
+  | Default of string
+  | Named of string list
+  | NamedType of string list
+  | Namespace of string
 
 val add_import :
   options:Js_layout_generator.opts ->
-  binding:binding ->
+  bindings:bindings ->
   from:string ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   (Loc.t * string) list

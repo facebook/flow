@@ -196,10 +196,16 @@ let text_edits_of_import ~options ~reader ~src_dir ~ast kind name source =
       | Export_index.NamedType -> Printf.sprintf "Import type from %s" from
       | Export_index.Namespace -> Printf.sprintf "Import * from %s" from
     in
-    let binding = (kind, name) in
+    let bindings =
+      match kind with
+      | Export_index.Default -> Autofix_imports.Default name
+      | Export_index.Named -> Autofix_imports.Named [name]
+      | Export_index.NamedType -> Autofix_imports.NamedType [name]
+      | Export_index.Namespace -> Autofix_imports.Namespace name
+    in
     let edits =
       let options = layout_options options in
-      Autofix_imports.add_import ~options ~binding ~from ast
+      Autofix_imports.add_import ~options ~bindings ~from ast
       |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
     in
     Some { title; edits; from }
