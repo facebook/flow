@@ -144,35 +144,54 @@ let create_extracted_function_call
   in
   let_declarations @ [function_call_statement_with_collector]
 
-let insert_function_to_toplevel
+let create_refactor
     ~scope_info
     ~defs_with_scopes_of_local_uses
     ~escaping_definitions
     ~vars_with_shadowed_local_reassignments
     ~async_function
+    ~is_method
     ~ast
     ~extracted_statements
-    ~extracted_statements_loc =
-  let (program_loc, _) = ast in
+    ~extracted_statements_loc
+    ~target_body_loc =
   let undefined_variables =
     VariableAnalysis.undefined_variables_after_extraction
       ~scope_info
       ~defs_with_scopes_of_local_uses
-      ~new_function_target_scope_loc:program_loc
+      ~new_function_target_scope_loc:target_body_loc
       ~extracted_statements_loc
   in
-  let new_ast =
-    RefactorProgramMappers.extract_to_function
-      ~target_body_loc:program_loc
+  let function_call_statements =
+    create_extracted_function_call
+      ~undefined_variables
+      ~escaping_definitions
+      ~vars_with_shadowed_local_reassignments
+      ~async_function
+      ~is_method
       ~extracted_statements_loc
-      ~function_call_statements:
-        (create_extracted_function_call
-           ~undefined_variables
-           ~escaping_definitions
-           ~vars_with_shadowed_local_reassignments
-           ~async_function
-           ~is_method:false
-           ~extracted_statements_loc)
+  in
+  if is_method then
+    RefactorProgramMappers.extract_to_method
+      ~target_body_loc
+      ~extracted_statements_loc
+      ~function_call_statements
+      ~method_declaration:
+        (Ast_builder.Classes.method_
+           ~id:"newMethod"
+           (create_extracted_function
+              ~undefined_variables
+              ~escaping_definitions
+              ~vars_with_shadowed_local_reassignments
+              ~async_function
+              ~name:"newMethod"
+              ~extracted_statements))
+      ast
+  else
+    RefactorProgramMappers.extract_to_function
+      ~target_body_loc
+      ~extracted_statements_loc
+      ~function_call_statements
       ~function_declaration_statement:
         ( Loc.none,
           Flow_ast.Statement.FunctionDeclaration
@@ -184,104 +203,55 @@ let insert_function_to_toplevel
                ~name:"newFunction"
                ~extracted_statements) )
       ast
-  in
-  ("Extract to function in module scope", new_ast)
 
-let insert_function_as_inner_functions
+let available_refactors
     ~scope_info
     ~defs_with_scopes_of_local_uses
     ~escaping_definitions
     ~vars_with_shadowed_local_reassignments
     ~async_function
+    ~in_class
     ~ast
     ~extracted_statements
     ~extracted_statements_loc =
-  let create_refactor (title, target_function_body_loc) =
-    let undefined_variables =
-      VariableAnalysis.undefined_variables_after_extraction
-        ~scope_info
-        ~defs_with_scopes_of_local_uses
-        ~new_function_target_scope_loc:target_function_body_loc
-        ~extracted_statements_loc
-    in
-    let new_ast =
-      RefactorProgramMappers.extract_to_function
-        ~target_body_loc:target_function_body_loc
-        ~extracted_statements_loc
-        ~function_call_statements:
-          (create_extracted_function_call
-             ~undefined_variables
-             ~escaping_definitions
-             ~vars_with_shadowed_local_reassignments
-             ~async_function
-             ~is_method:false
-             ~extracted_statements_loc)
-        ~function_declaration_statement:
-          ( Loc.none,
-            Flow_ast.Statement.FunctionDeclaration
-              (create_extracted_function
-                 ~undefined_variables
-                 ~escaping_definitions
-                 ~vars_with_shadowed_local_reassignments
-                 ~async_function
-                 ~name:"newFunction"
-                 ~extracted_statements) )
-        ast
-    in
-    (Printf.sprintf "Extract to inner function in function '%s'" title, new_ast)
+  let create_refactor =
+    create_refactor
+      ~scope_info
+      ~defs_with_scopes_of_local_uses
+      ~escaping_definitions
+      ~vars_with_shadowed_local_reassignments
+      ~async_function
+      ~ast
+      ~extracted_statements
+      ~extracted_statements_loc
   in
-  LocationCollectors.collect_function_inserting_locs ~ast ~extracted_statements_loc
-  |> List.map create_refactor
-
-let insert_method
-    ~scope_info
-    ~defs_with_scopes_of_local_uses
-    ~escaping_definitions
-    ~vars_with_shadowed_local_reassignments
-    ~async_function
-    ~ast
-    ~extracted_statements
-    ~extracted_statements_loc =
-  match LocationCollectors.find_closest_enclosing_class_scope ~ast ~extracted_statements_loc with
-  | None -> []
-  | Some (id, target_body_loc) ->
-    let undefined_variables =
-      VariableAnalysis.undefined_variables_after_extraction
-        ~scope_info
-        ~defs_with_scopes_of_local_uses
-        ~new_function_target_scope_loc:target_body_loc
-        ~extracted_statements_loc
+  let extract_to_method_refactors =
+    match LocationCollectors.find_closest_enclosing_class_scope ~ast ~extracted_statements_loc with
+    | None -> []
+    | Some (id, target_body_loc) ->
+      let new_ast = create_refactor ~is_method:true ~target_body_loc in
+      let title =
+        match id with
+        | None -> "Extract to method in anonymous class declaration"
+        | Some id -> Printf.sprintf "Extract to method in class '%s'" id
+      in
+      [(title, new_ast)]
+  in
+  if in_class then
+    extract_to_method_refactors
+  else
+    let create_inner_function_refactor (title, target_body_loc) =
+      ( Printf.sprintf "Extract to inner function in function '%s'" title,
+        create_refactor ~is_method:false ~target_body_loc )
     in
-    let new_ast =
-      RefactorProgramMappers.extract_to_method
-        ~target_body_loc
-        ~extracted_statements_loc
-        ~function_call_statements:
-          (create_extracted_function_call
-             ~undefined_variables
-             ~escaping_definitions
-             ~vars_with_shadowed_local_reassignments
-             ~async_function
-             ~is_method:true
-             ~extracted_statements_loc)
-        ~method_declaration:
-          (Ast_builder.Classes.method_
-             ~id:"newMethod"
-             (create_extracted_function
-                ~undefined_variables
-                ~escaping_definitions
-                ~vars_with_shadowed_local_reassignments
-                ~async_function
-                ~name:"newMethod"
-                ~extracted_statements))
-        ast
+    let extract_to_functions_refactors =
+      ( "Extract to function in module scope",
+        create_refactor ~is_method:false ~target_body_loc:(fst ast) )
+      :: List.map
+           create_inner_function_refactor
+           (LocationCollectors.collect_function_inserting_locs ~ast ~extracted_statements_loc)
     in
-    let title =
-      match id with
-      | None -> "Extract to method in anonymous class declaration"
-      | Some id -> Printf.sprintf "Extract to method in class '%s'" id
-    in
-    [(title, new_ast)]
+    extract_to_method_refactors @ extract_to_functions_refactors
 
 let provide_available_refactors ~ast ~typed_ast:_ ~parsing_heap_reader:_ ~extract_range =
   match StatementsExtractor.extract ast extract_range with
@@ -319,36 +289,13 @@ let provide_available_refactors ~ast ~typed_ast:_ ~parsing_heap_reader:_ ~extrac
             ~ssa_values
             ~extracted_statements_loc
         in
-        let extract_to_method_refactors =
-          insert_method
-            ~scope_info
-            ~defs_with_scopes_of_local_uses
-            ~escaping_definitions
-            ~vars_with_shadowed_local_reassignments
-            ~async_function
-            ~ast
-            ~extracted_statements
-            ~extracted_statements_loc
-        in
-        if in_class then
-          extract_to_method_refactors
-        else
-          extract_to_method_refactors
-          @ insert_function_to_toplevel
-              ~scope_info
-              ~defs_with_scopes_of_local_uses
-              ~escaping_definitions
-              ~vars_with_shadowed_local_reassignments
-              ~async_function
-              ~ast
-              ~extracted_statements
-              ~extracted_statements_loc
-            :: insert_function_as_inner_functions
-                 ~scope_info
-                 ~defs_with_scopes_of_local_uses
-                 ~escaping_definitions
-                 ~vars_with_shadowed_local_reassignments
-                 ~async_function
-                 ~ast
-                 ~extracted_statements
-                 ~extracted_statements_loc)
+        available_refactors
+          ~scope_info
+          ~defs_with_scopes_of_local_uses
+          ~escaping_definitions
+          ~vars_with_shadowed_local_reassignments
+          ~async_function
+          ~in_class
+          ~ast
+          ~extracted_statements
+          ~extracted_statements_loc)
