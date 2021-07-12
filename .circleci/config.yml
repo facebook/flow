@@ -133,6 +133,44 @@ jobs:
           root: .
           paths: .
 
+  build_js:
+    executor: linux-opam
+    steps:
+      - attach_workspace:
+          at: ~/flow
+      - make-opam-cachebreaker
+      - restore-opam-cache
+      - run:
+          name: Init opam
+          command: .circleci/opam_init.sh
+      - create-opam-switch
+      - run:
+          name: Install extra deps from opam
+          command: opam install js_of_ocaml.3.7.1 | cat
+      - save-opam-cache
+      - run:
+          name: Build flow.js
+          command: opam exec -- make js
+      - run:
+          name: Build flow_parser.js
+          command: opam exec -- make -C src/parser js
+      - run:
+          name: Create artifacts
+          command: |
+            mkdir -p dist
+            cp src/parser/flow_parser.js dist/flow_parser.js
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bin/flow.js
+            - dist/flow_parser.js
+      - store_artifacts:
+          path: bin/flow.js
+          destination: flow.js
+      - store_artifacts:
+          path: dist/flow_parser.js
+          destination: flow_parser.js
+
   build_linux:
     executor: linux-opam
     steps:
@@ -157,37 +195,22 @@ jobs:
           name: Build libflowparser
           command: opam exec -- make -C src/parser dist/libflowparser.zip
       - run:
-          name: Build flow.js
-          command: opam exec -- make js
-      - run:
-          name: Build flow_parser.js
-          command: opam exec -- make -C src/parser js
-      - run:
           name: Create artifacts
           command: |
             cp dist/flow.zip dist/flow-linux64.zip
             cp src/parser/dist/libflowparser.zip dist/libflowparser-linux64.zip
-            cp src/parser/flow_parser.js dist/flow_parser.js
       - persist_to_workspace:
           root: .
           paths:
             - bin/linux/flow
-            - bin/flow.js
             - dist/flow-linux64.zip
             - dist/libflowparser-linux64.zip
-            - dist/flow_parser.js
       - store_artifacts:
           path: dist/flow-linux64.zip
           destination: flow-linux64.zip
       - store_artifacts:
           path: dist/libflowparser-linux64.zip
           destination: libflowparser-linux64.zip
-      - store_artifacts:
-          path: bin/flow.js
-          destination: flow.js
-      - store_artifacts:
-          path: dist/flow_parser.js
-          destination: flow_parser.js
 
   build_linux_arm64:
     executor: linux-arm64
@@ -655,6 +678,9 @@ workflows:
   build_and_test:
     jobs:
       - checkout
+      - build_js:
+          requires:
+            - checkout
       - build_linux:
           requires:
             - checkout
@@ -696,6 +722,7 @@ workflows:
             - build_win
       - npm_pack:
           requires:
+            - build_js
             - build_linux
             - build_linux_arm64
             - build_macos
@@ -706,6 +733,7 @@ workflows:
       - website_deploy:
           requires:
             - build_linux
+            - build_js
           filters:
             branches:
               only: master
@@ -714,6 +742,10 @@ workflows:
     jobs:
       - checkout:
           <<: *run_on_release_tags
+      - build_js:
+          <<: *run_on_release_tags
+          requires:
+            - checkout
       - build_linux:
           <<: *run_on_release_tags
           requires:
@@ -733,6 +765,7 @@ workflows:
       - npm_pack:
           <<: *run_on_release_tags
           requires:
+            - build_js
             - build_linux
             - build_linux_arm64
             - build_macos
@@ -766,4 +799,4 @@ workflows:
       - try_flow_deploy:
           <<: *run_on_release_tags
           requires:
-            - build_linux
+            - build_js
