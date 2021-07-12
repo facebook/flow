@@ -48,6 +48,8 @@ let parse contents =
   let (ast, _errors) = Parser_flow.program ~parse_options contents in
   ast
 
+let named_binding ?local_name remote_name = { Autofix_imports.local_name; remote_name }
+
 let offset_of_position str { Loc.line; column } =
   let rec helper init line column =
     if line = 1 then
@@ -101,7 +103,7 @@ let assert_patch ~ctxt ?bracket_spacing ?single_quotes expected bindings from co
 let add_import_tests =
   [
     ( "import_named_no_existing" >:: fun ctxt ->
-      let binding = Autofix_imports.Named ["foo"] in
+      let binding = Autofix_imports.Named [named_binding "foo"] in
       let from = "./foo" in
       let contents = {|
         foo
@@ -117,7 +119,7 @@ let add_import_tests =
       assert_patch ~ctxt ~single_quotes:true expected binding from contents );
 
     ( "import_named_above_existing" >:: fun ctxt ->
-      let binding = Autofix_imports.Named ["foo"] in
+      let binding = Autofix_imports.Named [named_binding "foo"] in
       let from = "./foo" in
       let contents = {|
         import { zzz } from "./zzz";
@@ -133,7 +135,7 @@ let add_import_tests =
       assert_patch ~ctxt expected binding from contents );
 
     ( "import_named_below_existing" >:: fun ctxt ->
-      let binding = Autofix_imports.Named ["foo"] in
+      let binding = Autofix_imports.Named [named_binding "foo"] in
       let from = "./foo" in
       let contents = {|
         import { bar } from "./bar";
@@ -149,7 +151,7 @@ let add_import_tests =
       assert_patch ~ctxt expected binding from contents );
 
     ( "import_named_sorted_existing" >:: fun ctxt ->
-      let binding = Autofix_imports.Named ["baz"] in
+      let binding = Autofix_imports.Named [named_binding "baz"] in
       let from = "./baz" in
       let contents = {|
         import { bar } from "./bar";
@@ -167,7 +169,7 @@ let add_import_tests =
       assert_patch ~ctxt expected binding from contents );
 
     ( "import_named_unsorted_existing" >:: fun ctxt ->
-      let binding = Autofix_imports.Named ["baz"] in
+      let binding = Autofix_imports.Named [named_binding "baz"] in
       let from = "./baz" in
       let contents = {|
         import { foo } from "./foo";
@@ -185,7 +187,7 @@ let add_import_tests =
       assert_patch ~ctxt expected binding from contents );
 
     ( "import_named_in_existing" >:: fun ctxt ->
-      let binding = Autofix_imports.Named ["foo"] in
+      let binding = Autofix_imports.Named [named_binding "foo"] in
       let from = "./foo" in
       let contents = {|
         import { bar } from "./foo";
@@ -204,7 +206,7 @@ let add_import_tests =
       assert_patch ~ctxt ~single_quotes:true expected binding from contents );
 
     ( "import_multiple_named_in_existing" >:: fun ctxt ->
-      let binding = Autofix_imports.Named ["foo"; "baz"] in
+      let binding = Autofix_imports.Named [named_binding "foo"; named_binding ~local_name:"bazz" "baz"] in
       let from = "./foo" in
       let contents = {|
         import { bar } from "./foo";
@@ -212,14 +214,14 @@ let add_import_tests =
         foo
       |} in
       let expected = {|
-        import { bar, baz, foo } from "./foo";
+        import { bar, baz as bazz, foo } from "./foo";
 
         foo
       |} in
       assert_patch ~ctxt expected binding from contents);
 
     ( "import_named_below_existing_default" >:: fun ctxt ->
-      let binding = (Autofix_imports.Named ["foo"]) in
+      let binding = (Autofix_imports.Named [named_binding "foo"]) in
       let from = "./foo" in
       let contents = {|
         import Foo from "./foo";
@@ -235,7 +237,7 @@ let add_import_tests =
       assert_patch ~ctxt expected binding from contents );
 
     ( "import_named_below_existing_type" >:: fun ctxt ->
-      let binding = (Autofix_imports.Named ["foo"]) in
+      let binding = (Autofix_imports.Named [named_binding "foo"]) in
       let from = "./foo" in
       let contents = {|
         import type { IFoo } from "./foo";
@@ -281,7 +283,7 @@ let add_import_tests =
       assert_patch ~ctxt expected binding from contents );
 
     ( "import_type_no_existing" >:: fun ctxt ->
-      let binding = Autofix_imports.NamedType ["IFoo"] in
+      let binding = Autofix_imports.NamedType [named_binding "IFoo"] in
       let from = "./foo" in
       let contents = {|
         foo
@@ -294,7 +296,7 @@ let add_import_tests =
       assert_patch ~ctxt expected binding from contents );
 
     ( "import_type_in_existing_type" >:: fun ctxt ->
-      let binding = Autofix_imports.NamedType ["IBar"] in
+      let binding = Autofix_imports.NamedType [named_binding "IBar"] in
       let from = "./foo" in
       let contents = {|
         import type { IFoo } from "./foo";
@@ -305,7 +307,7 @@ let add_import_tests =
       assert_patch ~ctxt expected binding from contents );
 
     ( "import_type_in_existing_type_unsorted" >:: fun ctxt ->
-      let binding = Autofix_imports.NamedType ["IBar"] in
+      let binding = Autofix_imports.NamedType [named_binding "IBar"] in
       let from = "./foo" in
       let contents = {|
         import type { IFoo, IBaz } from "./foo";
@@ -316,7 +318,7 @@ let add_import_tests =
       assert_patch ~ctxt expected binding from contents );
 
     ( "import_type_above_existing_named" >:: fun ctxt ->
-      let binding = Autofix_imports.NamedType ["IFoo"] in
+      let binding = Autofix_imports.NamedType [named_binding "IFoo"] in
       let from = "./foo" in
       let contents = {|
         import { foo } from "./foo";
@@ -333,7 +335,7 @@ let add_import_tests =
       assert_patch ~ctxt expected binding from contents );
 
     ( "import_type_above_existing_default" >:: fun ctxt ->
-      let binding = Autofix_imports.NamedType ["IFoo"] in
+      let binding = Autofix_imports.NamedType [named_binding "IFoo"] in
       let from = "./foo" in
       let contents = {|
         import foo from "./foo";
@@ -350,7 +352,7 @@ let add_import_tests =
       assert_patch ~ctxt expected binding from contents );
 
     ( "import_type_unsorted_existing" >:: fun ctxt ->
-      let binding = Autofix_imports.NamedType ["IBaz"] in
+      let binding = Autofix_imports.NamedType [named_binding "IBaz"] in
       let from = "./baz" in
       let contents = {|
         import { foo } from "./foo";
@@ -433,7 +435,7 @@ let add_import_tests =
       assert_patch ~ctxt expected binding from contents );
 
     ( "import_multiple_named_after_namespace" >:: fun ctxt ->
-      let binding = Autofix_imports.Named ["useContext"] in
+      let binding = Autofix_imports.Named [named_binding "useContext"] in
       let from = "react" in
       let contents = {|
         import * as React from "react";
@@ -450,7 +452,7 @@ let add_import_tests =
       assert_patch ~ctxt expected binding from contents );
 
     ( "insert_after_flow_comment" >:: fun ctxt ->
-      let binding = Autofix_imports.Named ["foo"] in
+      let binding = Autofix_imports.Named [named_binding "foo"] in
       let from = "./foo" in
       let contents = {|
         // @flow
@@ -467,7 +469,7 @@ let add_import_tests =
       assert_patch ~ctxt expected binding from contents );
 
     ( "insert_after_directives" >:: fun ctxt ->
-      let binding = Autofix_imports.Named ["foo"] in
+      let binding = Autofix_imports.Named [named_binding "foo"] in
       let from = "./foo" in
       let contents = {|
         // @flow
@@ -488,7 +490,7 @@ let add_import_tests =
       assert_patch ~ctxt expected binding from contents );
 
     ( "bracket_spacing" >:: fun ctxt ->
-      let binding = Autofix_imports.Named ["foo"] in
+      let binding = Autofix_imports.Named [named_binding "foo"] in
       let from = "./foo" in
       let contents = {|
         foo

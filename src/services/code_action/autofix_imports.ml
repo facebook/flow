@@ -7,10 +7,15 @@
 
 open Flow_ast
 
+type named_binding = {
+  remote_name: string;
+  local_name: string option;
+}
+
 type bindings =
   | Default of string
-  | Named of string list
-  | NamedType of string list
+  | Named of named_binding list
+  | NamedType of named_binding list
   | Namespace of string
 
 type change =
@@ -76,7 +81,14 @@ let mk_named_import ?loc ?comments ~import_kind ~from names =
   let open Ast_builder in
   let specifiers =
     let specifiers =
-      List.map (fun name -> Statements.named_import_specifier (Identifiers.identifier name)) names
+      List.map
+        (fun { remote_name; local_name } ->
+          let remote = Identifiers.identifier remote_name in
+          match local_name with
+          | None -> Statements.named_import_specifier remote
+          | Some name ->
+            Statements.named_import_specifier ~local:(Identifiers.identifier name) remote)
+        names
     in
     Some (Statement.ImportDeclaration.ImportNamedSpecifiers specifiers)
   in
@@ -219,8 +231,12 @@ let update_import ~options ~bindings stmt =
         in
         let new_specifiers =
           List.map
-            (fun bound_name ->
-              { kind; local = None; remote = Ast_builder.Identifiers.identifier bound_name })
+            (fun { remote_name; local_name } ->
+              {
+                kind;
+                local = Base.Option.map ~f:Ast_builder.Identifiers.identifier local_name;
+                remote = Ast_builder.Identifiers.identifier remote_name;
+              })
             bound_names
         in
         let new_specifiers =

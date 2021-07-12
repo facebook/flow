@@ -199,8 +199,10 @@ let text_edits_of_import ~options ~reader ~src_dir ~ast kind name source =
     let bindings =
       match kind with
       | Export_index.Default -> Autofix_imports.Default name
-      | Export_index.Named -> Autofix_imports.Named [name]
-      | Export_index.NamedType -> Autofix_imports.NamedType [name]
+      | Export_index.Named ->
+        Autofix_imports.Named [{ Autofix_imports.remote_name = name; local_name = None }]
+      | Export_index.NamedType ->
+        Autofix_imports.NamedType [{ Autofix_imports.remote_name = name; local_name = None }]
       | Export_index.Namespace -> Autofix_imports.Namespace name
     in
     let edits =

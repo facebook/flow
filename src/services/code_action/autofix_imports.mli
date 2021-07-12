@@ -5,10 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type named_binding = {
+  remote_name: string;
+  local_name: string option;
+}
+
 type bindings =
   | Default of string
-  | Named of string list
-  | NamedType of string list
+  | Named of named_binding list
+  | NamedType of named_binding list
   | Namespace of string
 
 val add_import :
