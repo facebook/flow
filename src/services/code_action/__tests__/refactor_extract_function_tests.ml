@@ -61,7 +61,6 @@ function test() {
   let b = 4;
   console.log("I should not be selected");
 }
-
 function newFunction() {
   const a = 3;
 }
@@ -113,7 +112,6 @@ function test() {
   newFunction();
   console.log("I should not be selected");
 }
-
 function newFunction() {
   const a = 3;
   let b = 4;
@@ -159,7 +157,6 @@ function test() {
             {|
 const a = newFunction();
 console.log(a);
-
 function newFunction() {
   const a = 3;
   return a;
@@ -194,7 +191,6 @@ let fooo = 3;
 const a = 3;
 fooo = newFunction();
 console.log(a + fooo);
-
 function newFunction() {
   fooo = a + 2; // selected
   return fooo;
@@ -231,7 +227,6 @@ let a;
 
 ({a, fooo} = newFunction());
 console.log(a + fooo);
-
 function newFunction() {
   const a = 3; // selected
   fooo = a + 2; // selected
@@ -265,7 +260,6 @@ function newFunction() {
 let fooo = newFunction();
 const a = 3;
 fooo = a + 2;
-
 function newFunction() {
   let fooo = 3; // selected
   return fooo;
@@ -297,7 +291,6 @@ function newFunction() {
             {|
 let {a, fooo} = newFunction();
 fooo = a + 2;
-
 function newFunction() {
   let fooo = 3; // selected
   const a = 3; // selected
@@ -335,7 +328,6 @@ function newFunction() {
 const test = (async () => {
   await newFunction();
 });
-
 async function newFunction() {
   // selection start
   const a = 3;
@@ -374,7 +366,6 @@ async function newFunction() {
 const test = (async () => {
   await newFunction();
 });
-
 async function newFunction() {
   // selection start
   const a = 3;
@@ -403,7 +394,6 @@ async function newFunction() {
           ( "Extract to function in module scope",
             {|
 newFunction();
-
 function newFunction() {
   const test = (async () => await promise);
 }
@@ -540,7 +530,6 @@ function newFunction() {
           ( "Extract to function in module scope",
             {|
 newFunction();
-
 function newFunction() {
   while (true) {
     break;
@@ -563,7 +552,6 @@ function newFunction() {
           ( "Extract to function in module scope",
             {|
 newFunction();
-
 function newFunction() {
   while (true) {
     continue;
@@ -586,7 +574,6 @@ function newFunction() {
           ( "Extract to function in module scope",
             {|
 newFunction();
-
 function newFunction() {
   switch (true) {
     default:
@@ -673,7 +660,6 @@ class A {
     newFunction();
   }
 }
-
 function newFunction() {
   console.log();
 }
@@ -780,7 +766,6 @@ function level1() {
     }
   }
 }
-
 function newFunction() {
   const a = 3;
   let b = 4;
@@ -931,7 +916,6 @@ function level1() {
     }
   }
 }
-
 function newFunction(b, c, d, e, f) {
   const g = 3;
   const h = 4;

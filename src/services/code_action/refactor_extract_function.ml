@@ -161,8 +161,6 @@ let insert_function_to_toplevel
       ~new_function_target_scope_loc:program_loc
       ~extracted_statements_loc
   in
-  (* Put extracted function to two lines after the end of program to have nice format. *)
-  let new_function_loc = Loc.(cursor program_loc.source (program_loc._end.line + 2) 0) in
   let new_ast =
     RefactorProgramMappers.extract_to_function
       ~target_body_loc:program_loc
@@ -176,7 +174,7 @@ let insert_function_to_toplevel
            ~is_method:false
            ~extracted_statements_loc)
       ~function_declaration_statement:
-        ( new_function_loc,
+        ( Loc.none,
           Flow_ast.Statement.FunctionDeclaration
             (create_extracted_function
                ~undefined_variables
