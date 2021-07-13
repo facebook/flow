@@ -17,6 +17,7 @@ can be overridden with command line flags.
 ### Available options <a class="toc" id="toc-available-options" href="#toc-available-options"></a>
 
 * [`all`](#toc-all-boolean)
+* [`autoimports`](#toc-autoimports-boolean)
 * [`babel_loose_array_spread`](#toc-babel-loose-array-spread-boolean)
 * [`emoji`](#toc-emoji-boolean)
 * [`exact_by_default`](#toc-exact-by-default-boolean)
@@ -63,6 +64,12 @@ The following options are deprecated and have been removed in the latest version
 Set this to `true` to check all files, not just those with `@flow`.
 
 The default value for `all` is `false`.
+
+#### `autoimports` _`(boolean)`_ <a class="toc" id="toc-autoimports-boolean" href="#toc-autoimports-boolean"></a> {% since 0.143.0 %}
+
+When enabled, IDE autocomplete suggests the exports of other files, and the necessary `import` statements are automatically inserted. A "quick fix" code action is also provided on undefined variables that suggests matching imports.
+
+The default value for `autoimports` is `true` as of Flow v0.155.0.
 
 #### `babel_loose_array_spread` _`(boolean)`_ <a class="toc" id="toc-babel-loose-array-spread-boolean" href="#toc-babel-loose-array-spread-boolean"></a>
 

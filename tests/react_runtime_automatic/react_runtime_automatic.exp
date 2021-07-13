@@ -50,8 +50,8 @@ References:
    test.js:5:28
      5| function Component2(props: {| bar: number |}): React$Node { return null }
                                    ^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:193:29
-   193| declare type React$Element<+ElementType: React$ElementType> = {|
+   <BUILTINS>/react.js:195:29
+   195| declare type React$Element<+ElementType: React$ElementType> = {|
                                     ^^^^^^^^^^^ [3]
 
 
@@ -71,8 +71,8 @@ References:
    test.js:4:27
      4| function Component(props: Props): React$Node { return null }
                                   ^^^^^ [2]
-   <BUILTINS>/react.js:193:29
-   193| declare type React$Element<+ElementType: React$ElementType> = {|
+   <BUILTINS>/react.js:195:29
+   195| declare type React$Element<+ElementType: React$ElementType> = {|
                                     ^^^^^^^^^^^ [3]
 
 

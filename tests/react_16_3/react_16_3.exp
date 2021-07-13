@@ -49,14 +49,14 @@ References:
    forwardRef.js:19:32
     19| const badRef = React.createRef<HTMLDivElement>();
                                        ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:207:15
-   207|     instance: HTMLButtonElement,
+   <BUILTINS>/react-dom.js:208:15
+   208|     instance: HTMLButtonElement,
                       ^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:264:6
-   264|   ): {|current: null | T|};
+   <BUILTINS>/react.js:266:6
+   266|   ): {|current: null | T|};
              ^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:213:6
-   213|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:215:6
+   215|   | ((React$ElementRef<ElementType> | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -71,14 +71,14 @@ Cannot create `FancyButton` element because in property `ref`: [incompatible-typ
                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:212:5
-   212|   | { -current: React$ElementRef<ElementType> | null, ... }
+   <BUILTINS>/react.js:214:5
+   214|   | { -current: React$ElementRef<ElementType> | null, ... }
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    forwardRef.js:23:50
     23| const _g =  <FancyButton foo={3} ref={(x: null | HTMLDivElement) => x} />; // Incorrect ref type
                                                          ^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react-dom.js:207:15
-   207|     instance: HTMLButtonElement,
+   <BUILTINS>/react-dom.js:208:15
+   208|     instance: HTMLButtonElement,
                       ^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -104,11 +104,11 @@ References:
    forwardRef.js:41:57
     41| const badUnionRef = React.createRef<HTMLButtonElement | HTMLDivElement>();
                                                                 ^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:264:6
-   264|   ): {|current: null | T|};
+   <BUILTINS>/react.js:266:6
+   266|   ): {|current: null | T|};
              ^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:213:6
-   213|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:215:6
+   215|   | ((React$ElementRef<ElementType> | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 

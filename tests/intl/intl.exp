@@ -23,8 +23,8 @@ Cannot call `Intl.Collator` with `1` bound to `locales` because number [1] is in
                      ^ [1]
 
 References:
-   <BUILTINS>/intl.js:18:21
-   18| type Intl$Locales = Intl$Locale | Intl$Locale[]
+   <BUILTINS>/intl.js:20:21
+   20| type Intl$Locales = Intl$Locale | Intl$Locale[]
                            ^^^^^^^^^^^ [2]
 
 
@@ -38,8 +38,8 @@ union [2] in property `localeMatcher`. [incompatible-call]
                         ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/intl.js:48:19
-   48|   localeMatcher?: 'lookup' | 'best fit',
+   <BUILTINS>/intl.js:50:19
+   50|   localeMatcher?: 'lookup' | 'best fit',
                          ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -53,8 +53,8 @@ union [2] in property `usage`. [incompatible-call]
                 ^^^^^^ [1]
 
 References:
-   <BUILTINS>/intl.js:49:11
-   49|   usage?: 'sort' | 'search',
+   <BUILTINS>/intl.js:51:11
+   51|   usage?: 'sort' | 'search',
                  ^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -68,8 +68,8 @@ union [2] in property `sensitivity`. [incompatible-call]
                       ^^ [1]
 
 References:
-   <BUILTINS>/intl.js:50:17
-   50|   sensitivity?: 'base' | 'accent' | 'case' | 'variant',
+   <BUILTINS>/intl.js:52:17
+   52|   sensitivity?: 'base' | 'accent' | 'case' | 'variant',
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -83,8 +83,8 @@ property `ignorePunctuation`. [incompatible-call]
                             ^^^^ [1]
 
 References:
-   <BUILTINS>/intl.js:51:23
-   51|   ignorePunctuation?: boolean,
+   <BUILTINS>/intl.js:53:23
+   53|   ignorePunctuation?: boolean,
                              ^^^^^^^ [2]
 
 
@@ -98,8 +98,8 @@ in property `numeric`. [incompatible-call]
                   ^ [1]
 
 References:
-   <BUILTINS>/intl.js:52:13
-   52|   numeric?: boolean,
+   <BUILTINS>/intl.js:54:13
+   54|   numeric?: boolean,
                    ^^^^^^^ [2]
 
 
@@ -113,8 +113,8 @@ union [2] in property `caseFirst`. [incompatible-call]
                     ^^^^^^ [1]
 
 References:
-   <BUILTINS>/intl.js:53:15
-   53|   caseFirst?: 'upper' | 'lower' | 'false',
+   <BUILTINS>/intl.js:55:15
+   55|   caseFirst?: 'upper' | 'lower' | 'false',
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -151,8 +151,8 @@ Cannot call `Intl.DateTimeFormat` with `1` bound to `locales` because number [1]
                            ^ [1]
 
 References:
-   <BUILTINS>/intl.js:18:21
-   18| type Intl$Locales = Intl$Locale | Intl$Locale[]
+   <BUILTINS>/intl.js:20:21
+   20| type Intl$Locales = Intl$Locale | Intl$Locale[]
                            ^^^^^^^^^^^ [2]
 
 
@@ -166,8 +166,8 @@ union [2] in property `localeMatcher`. [incompatible-call]
                          ^^^^^^ [1]
 
 References:
-   <BUILTINS>/intl.js:101:19
-   101|   localeMatcher?: 'lookup' | 'best fit',
+   <BUILTINS>/intl.js:103:19
+   103|   localeMatcher?: 'lookup' | 'best fit',
                           ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -181,8 +181,8 @@ string [2] in property `timeZone`. [incompatible-call]
                     ^ [1]
 
 References:
-   <BUILTINS>/intl.js:102:14
-   102|   timeZone?: string,
+   <BUILTINS>/intl.js:104:14
+   104|   timeZone?: string,
                      ^^^^^^ [2]
 
 
@@ -196,8 +196,8 @@ boolean [2] in property `hour12`. [incompatible-call]
                   ^^ [1]
 
 References:
-   <BUILTINS>/intl.js:103:12
-   103|   hour12?: boolean,
+   <BUILTINS>/intl.js:105:12
+   105|   hour12?: boolean,
                    ^^^^^^^ [2]
 
 
@@ -211,8 +211,8 @@ union [2] in property `formatMatcher`. [incompatible-call]
                          ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/intl.js:104:19
-   104|   formatMatcher?: 'basic' | 'best fit',
+   <BUILTINS>/intl.js:106:19
+   106|   formatMatcher?: 'basic' | 'best fit',
                           ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -226,8 +226,8 @@ union [2] in property `weekday`. [incompatible-call]
                    ^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/intl.js:105:13
-   105|   weekday?: 'narrow' | 'short' | 'long',
+   <BUILTINS>/intl.js:107:13
+   107|   weekday?: 'narrow' | 'short' | 'long',
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -241,8 +241,8 @@ union [2] in property `era`. [incompatible-call]
                ^^ [1]
 
 References:
-   <BUILTINS>/intl.js:106:9
-   106|   era?: 'narrow' | 'short' | 'long',
+   <BUILTINS>/intl.js:108:9
+   108|   era?: 'narrow' | 'short' | 'long',
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -256,8 +256,8 @@ union [2] in property `year`. [incompatible-call]
                 ^^ [1]
 
 References:
-   <BUILTINS>/intl.js:107:10
-   107|   year?: 'numeric' | '2-digit',
+   <BUILTINS>/intl.js:109:10
+   109|   year?: 'numeric' | '2-digit',
                  ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -271,8 +271,8 @@ union [2] in property `month`. [incompatible-call]
                  ^^ [1]
 
 References:
-   <BUILTINS>/intl.js:108:11
-   108|   month?: 'numeric' | '2-digit' | 'narrow' | 'short' | 'long',
+   <BUILTINS>/intl.js:110:11
+   110|   month?: 'numeric' | '2-digit' | 'narrow' | 'short' | 'long',
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -286,8 +286,8 @@ union [2] in property `day`. [incompatible-call]
                ^^ [1]
 
 References:
-   <BUILTINS>/intl.js:109:9
-   109|   day?: 'numeric' | '2-digit',
+   <BUILTINS>/intl.js:111:9
+   111|   day?: 'numeric' | '2-digit',
                 ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -301,8 +301,8 @@ union [2] in property `hour`. [incompatible-call]
                 ^^ [1]
 
 References:
-   <BUILTINS>/intl.js:110:10
-   110|   hour?: 'numeric' | '2-digit',
+   <BUILTINS>/intl.js:112:10
+   112|   hour?: 'numeric' | '2-digit',
                  ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -316,8 +316,8 @@ union [2] in property `minute`. [incompatible-call]
                   ^^^^^^ [1]
 
 References:
-   <BUILTINS>/intl.js:111:12
-   111|   minute?: 'numeric' | '2-digit',
+   <BUILTINS>/intl.js:113:12
+   113|   minute?: 'numeric' | '2-digit',
                    ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -331,8 +331,8 @@ union [2] in property `second`. [incompatible-call]
                   ^^^^^^^ [1]
 
 References:
-   <BUILTINS>/intl.js:112:12
-   112|   second?: 'numeric' | '2-digit',
+   <BUILTINS>/intl.js:114:12
+   114|   second?: 'numeric' | '2-digit',
                    ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -346,8 +346,8 @@ union [2] in property `timeZoneName`. [incompatible-call]
                         ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/intl.js:113:18
-   113|   timeZoneName?: 'short' | 'long',
+   <BUILTINS>/intl.js:115:18
+   115|   timeZoneName?: 'short' | 'long',
                          ^^^^^^^^^^^^^^^^ [2]
 
 
@@ -369,8 +369,8 @@ Cannot assign `Intl.getCanonicalLocales()` to `a` because array type [1] is inco
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/intl.js:13:53
-   13|   getCanonicalLocales?: (locales?: Intl$Locales) => Intl$Locale[],
+   <BUILTINS>/intl.js:15:53
+   15|   getCanonicalLocales?: (locales?: Intl$Locales) => Intl$Locale[],
                                                            ^^^^^^^^^^^^^ [1]
    intl.js:2:10
     2| const a: string = Intl.getCanonicalLocales(); // incorrect
@@ -386,8 +386,8 @@ Cannot call `Intl.getCanonicalLocales` because undefined [1] is not a function. 
                               ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/intl.js:13:25
-   13|   getCanonicalLocales?: (locales?: Intl$Locales) => Intl$Locale[],
+   <BUILTINS>/intl.js:15:25
+   15|   getCanonicalLocales?: (locales?: Intl$Locales) => Intl$Locale[],
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -400,8 +400,8 @@ Cannot assign `getCanonicalLocales()` to `b` because array type [1] is incompati
                            ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/intl.js:13:53
-   13|   getCanonicalLocales?: (locales?: Intl$Locales) => Intl$Locale[],
+   <BUILTINS>/intl.js:15:53
+   15|   getCanonicalLocales?: (locales?: Intl$Locales) => Intl$Locale[],
                                                            ^^^^^^^^^^^^^ [1]
    intl.js:5:12
     5|   const b: string = getCanonicalLocales(); // incorrect
@@ -419,11 +419,11 @@ Cannot call `getCanonicalLocales` with `null` bound to `locales` because: [incom
                                                  ^^^^ [1]
 
 References:
-   <BUILTINS>/intl.js:18:21
-   18| type Intl$Locales = Intl$Locale | Intl$Locale[]
+   <BUILTINS>/intl.js:20:21
+   20| type Intl$Locales = Intl$Locale | Intl$Locale[]
                            ^^^^^^^^^^^ [2]
-   <BUILTINS>/intl.js:18:35
-   18| type Intl$Locales = Intl$Locale | Intl$Locale[]
+   <BUILTINS>/intl.js:20:35
+   20| type Intl$Locales = Intl$Locale | Intl$Locale[]
                                          ^^^^^^^^^^^^^ [3]
 
 
@@ -437,8 +437,8 @@ string [2] in array element. [incompatible-call]
                                                    ^ [1]
 
 References:
-   <BUILTINS>/intl.js:18:35
-   18| type Intl$Locales = Intl$Locale | Intl$Locale[]
+   <BUILTINS>/intl.js:20:35
+   20| type Intl$Locales = Intl$Locale | Intl$Locale[]
                                          ^^^^^^^^^^^ [2]
 
 
@@ -452,8 +452,8 @@ string [2] in array element. [incompatible-call]
                                                       ^ [1]
 
 References:
-   <BUILTINS>/intl.js:18:35
-   18| type Intl$Locales = Intl$Locale | Intl$Locale[]
+   <BUILTINS>/intl.js:20:35
+   20| type Intl$Locales = Intl$Locale | Intl$Locale[]
                                          ^^^^^^^^^^^ [2]
 
 
@@ -466,16 +466,16 @@ Cannot get `Intl.Unknown` because property `Unknown` is missing in object type [
                       ^^^^^^^
 
 References:
-   <BUILTINS>/intl.js:8:19
+   <BUILTINS>/intl.js:10:19
                          v
-    8| declare var Intl: {
-    9|   Collator: Class<Intl$Collator>,
-   10|   DateTimeFormat: Class<Intl$DateTimeFormat>,
-   11|   NumberFormat: Class<Intl$NumberFormat>,
-   12|   PluralRules: ?Class<Intl$PluralRules>,
-   13|   getCanonicalLocales?: (locales?: Intl$Locales) => Intl$Locale[],
-   14|   ...
-   15| }
+   10| declare var Intl: {
+   11|   Collator: Class<Intl$Collator>,
+   12|   DateTimeFormat: Class<Intl$DateTimeFormat>,
+   13|   NumberFormat: Class<Intl$NumberFormat>,
+   14|   PluralRules: ?Class<Intl$PluralRules>,
+   15|   getCanonicalLocales?: (locales?: Intl$Locales) => Intl$Locale[],
+   16|   ...
+   17| }
        ^ [1]
 
 
@@ -504,8 +504,8 @@ Cannot call `Intl.NumberFormat` with `1` bound to `locales` because number [1] i
                          ^ [1]
 
 References:
-   <BUILTINS>/intl.js:18:21
-   18| type Intl$Locales = Intl$Locale | Intl$Locale[]
+   <BUILTINS>/intl.js:20:21
+   20| type Intl$Locales = Intl$Locale | Intl$Locale[]
                            ^^^^^^^^^^^ [2]
 
 
@@ -519,8 +519,8 @@ union [2] in property `localeMatcher`. [incompatible-call]
                          ^^^^^^ [1]
 
 References:
-   <BUILTINS>/intl.js:149:19
-   149|   localeMatcher?: 'lookup' | 'best fit',
+   <BUILTINS>/intl.js:151:19
+   151|   localeMatcher?: 'lookup' | 'best fit',
                           ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -534,8 +534,8 @@ union [2] in property `style`. [incompatible-call]
                  ^^^^^^^ [1]
 
 References:
-   <BUILTINS>/intl.js:150:11
-   150|   style?: 'decimal' | 'currency' | 'percent',
+   <BUILTINS>/intl.js:152:11
+   152|   style?: 'decimal' | 'currency' | 'percent',
                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -549,8 +549,8 @@ string [2] in property `currency`. [incompatible-call]
                     ^^^ [1]
 
 References:
-   <BUILTINS>/intl.js:151:14
-   151|   currency?: string,
+   <BUILTINS>/intl.js:153:14
+   153|   currency?: string,
                      ^^^^^^ [2]
 
 
@@ -564,8 +564,8 @@ union [2] in property `currencyDisplay`. [incompatible-call]
                            ^^^^^ [1]
 
 References:
-   <BUILTINS>/intl.js:152:21
-   152|   currencyDisplay?: 'symbol' | 'code' | 'name',
+   <BUILTINS>/intl.js:154:21
+   154|   currencyDisplay?: 'symbol' | 'code' | 'name',
                             ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -579,8 +579,8 @@ boolean [2] in property `useGrouping`. [incompatible-call]
                        ^ [1]
 
 References:
-   <BUILTINS>/intl.js:153:17
-   153|   useGrouping?: boolean,
+   <BUILTINS>/intl.js:155:17
+   155|   useGrouping?: boolean,
                         ^^^^^^^ [2]
 
 
@@ -594,8 +594,8 @@ number [2] in property `minimumIntegerDigits`. [incompatible-call]
                                 ^^ [1]
 
 References:
-   <BUILTINS>/intl.js:154:26
-   154|   minimumIntegerDigits?: number,
+   <BUILTINS>/intl.js:156:26
+   156|   minimumIntegerDigits?: number,
                                  ^^^^^^ [2]
 
 
@@ -609,8 +609,8 @@ number [2] in property `minimumFractionDigits`. [incompatible-call]
                                  ^^ [1]
 
 References:
-   <BUILTINS>/intl.js:155:27
-   155|   minimumFractionDigits?: number,
+   <BUILTINS>/intl.js:157:27
+   157|   minimumFractionDigits?: number,
                                   ^^^^^^ [2]
 
 
@@ -624,8 +624,8 @@ in property `maximumFractionDigits`. [incompatible-call]
                                  ^^^^ [1]
 
 References:
-   <BUILTINS>/intl.js:156:27
-   156|   maximumFractionDigits?: number,
+   <BUILTINS>/intl.js:158:27
+   158|   maximumFractionDigits?: number,
                                   ^^^^^^ [2]
 
 
@@ -639,8 +639,8 @@ number [2] in property `minimumSignificantDigits`. [incompatible-call]
                                     ^^ [1]
 
 References:
-   <BUILTINS>/intl.js:157:30
-   157|   minimumSignificantDigits?: number,
+   <BUILTINS>/intl.js:159:30
+   159|   minimumSignificantDigits?: number,
                                      ^^^^^^ [2]
 
 
@@ -654,8 +654,8 @@ in property `maximumSignificantDigits`. [incompatible-call]
                                     ^^^^ [1]
 
 References:
-   <BUILTINS>/intl.js:158:30
-   158|   maximumSignificantDigits?: number,
+   <BUILTINS>/intl.js:160:30
+   160|   maximumSignificantDigits?: number,
                                      ^^^^^^ [2]
 
 
@@ -676,8 +676,8 @@ Cannot call `Intl.PluralRules` because null or undefined [1] is not a function. 
                       ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/intl.js:12:16
-   12|   PluralRules: ?Class<Intl$PluralRules>,
+   <BUILTINS>/intl.js:14:16
+   14|   PluralRules: ?Class<Intl$PluralRules>,
                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -691,8 +691,8 @@ statics of `Intl$PluralRules` [1]. [prop-missing]
                        ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/intl.js:162:15
-   162| declare class Intl$PluralRules {
+   <BUILTINS>/intl.js:164:15
+   164| declare class Intl$PluralRules {
                       ^^^^^^^^^^^^^^^^ [1]
 
 
@@ -706,8 +706,8 @@ of `Intl$PluralRules` [1]. [prop-missing]
                     ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/intl.js:162:15
-   162| declare class Intl$PluralRules {
+   <BUILTINS>/intl.js:164:15
+   164| declare class Intl$PluralRules {
                       ^^^^^^^^^^^^^^^^ [1]
 
 
@@ -721,8 +721,8 @@ Cannot call `PluralRules` with `1` bound to `locales` because number [1] is inco
                          ^ [1]
 
 References:
-   <BUILTINS>/intl.js:18:21
-   18| type Intl$Locales = Intl$Locale | Intl$Locale[]
+   <BUILTINS>/intl.js:20:21
+   20| type Intl$Locales = Intl$Locale | Intl$Locale[]
                            ^^^^^^^^^^^ [2]
 
 
@@ -736,8 +736,8 @@ union [2] in property `localeMatcher`. [incompatible-call]
                            ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/intl.js:188:19
-   188|   localeMatcher?: 'lookup' | 'best fit',
+   <BUILTINS>/intl.js:190:19
+   190|   localeMatcher?: 'lookup' | 'best fit',
                           ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -751,8 +751,8 @@ union [2] in property `type`. [incompatible-call]
                   ^^^^^^^ [1]
 
 References:
-   <BUILTINS>/intl.js:189:10
-   189|   type?: 'cardinal' | 'ordinal',
+   <BUILTINS>/intl.js:191:10
+   191|   type?: 'cardinal' | 'ordinal',
                  ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -766,8 +766,8 @@ property `minimumIntegerDigits`. [incompatible-call]
                                   ^^ [1]
 
 References:
-   <BUILTINS>/intl.js:190:26
-   190|   minimumIntegerDigits?: number,
+   <BUILTINS>/intl.js:192:26
+   192|   minimumIntegerDigits?: number,
                                  ^^^^^^ [2]
 
 
@@ -784,8 +784,8 @@ References:
    plural_rules.js:7:13
      7|   const c = new PluralRules(); // correct
                     ^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/intl.js:193:30
-   193|   minimumSignificantDigits?: number,
+   <BUILTINS>/intl.js:195:30
+   195|   minimumSignificantDigits?: number,
                                      ^^^^^^ [2]
 
 
@@ -799,8 +799,8 @@ property `maximumSignificantDigits`. [incompatible-call]
                                       ^^ [1]
 
 References:
-   <BUILTINS>/intl.js:194:30
-   194|   maximumSignificantDigits?: number,
+   <BUILTINS>/intl.js:196:30
+   196|   maximumSignificantDigits?: number,
                                      ^^^^^^ [2]
 
 
@@ -827,8 +827,8 @@ Cannot call `(new PluralRules()).select` because function [1] requires another a
                             ^^^^^^
 
 References:
-   <BUILTINS>/intl.js:168:3
-   168|   select (number): Intl$PluralRule;
+   <BUILTINS>/intl.js:170:3
+   170|   select (number): Intl$PluralRule;
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -842,8 +842,8 @@ Cannot call `PluralRules.getCanonicalLocales` because property `getCanonicalLoca
                       ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/intl.js:162:15
-   162| declare class Intl$PluralRules {
+   <BUILTINS>/intl.js:164:15
+   164| declare class Intl$PluralRules {
                       ^^^^^^^^^^^^^^^^ [1]
 
 
@@ -857,8 +857,8 @@ string [2]. [incompatible-call]
                                         ^ [1]
 
 References:
-   <BUILTINS>/intl.js:18:21
-   18| type Intl$Locales = Intl$Locale | Intl$Locale[]
+   <BUILTINS>/intl.js:20:21
+   20| type Intl$Locales = Intl$Locale | Intl$Locale[]
                            ^^^^^^^^^^^ [2]
 
 

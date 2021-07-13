@@ -1217,7 +1217,8 @@ let make_options
     opt_debug = options_flags.debug;
     opt_verbose = options_flags.verbose;
     opt_all = options_flags.all || Base.Option.value (FlowConfig.all flowconfig) ~default:false;
-    opt_babel_loose_array_spread = FlowConfig.babel_loose_array_spread flowconfig;
+    opt_babel_loose_array_spread =
+      Base.Option.value (FlowConfig.babel_loose_array_spread flowconfig) ~default:false;
     opt_wait_for_recheck;
     opt_weak = options_flags.weak || FlowConfig.weak flowconfig;
     opt_traces = Base.Option.value options_flags.traces ~default:(FlowConfig.traces flowconfig);
@@ -1301,7 +1302,7 @@ let make_options
     opt_automatic_require_default =
       Base.Option.value (FlowConfig.automatic_require_default flowconfig) ~default:false;
     opt_format;
-    opt_autoimports = Base.Option.value (FlowConfig.autoimports flowconfig) ~default:false;
+    opt_autoimports = Base.Option.value (FlowConfig.autoimports flowconfig) ~default:true;
     opt_flowconfig_hash = flowconfig_hash;
     opt_gc_worker =
       {

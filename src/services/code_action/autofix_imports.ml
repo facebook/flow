@@ -7,7 +7,16 @@
 
 open Flow_ast
 
-type binding = Export_index.kind * string
+type named_binding = {
+  remote_name: string;
+  local_name: string option;
+}
+
+type bindings =
+  | Default of string
+  | Named of named_binding list
+  | NamedType of named_binding list
+  | Namespace of string
 
 type change =
   | Above of { skip_line: bool }
@@ -68,11 +77,20 @@ let mk_default_import ?loc ?comments ~from name =
     ~specifiers:None
     ?comments
 
-let mk_named_import ?loc ?comments ~import_kind ~from name =
+let mk_named_import ?loc ?comments ~import_kind ~from names =
   let open Ast_builder in
   let specifiers =
-    let specifier = Statements.named_import_specifier (Identifiers.identifier name) in
-    Some (Statement.ImportDeclaration.ImportNamedSpecifiers [specifier])
+    let specifiers =
+      List.map
+        (fun { remote_name; local_name } ->
+          let remote = Identifiers.identifier remote_name in
+          match local_name with
+          | None -> Statements.named_import_specifier remote
+          | Some name ->
+            Statements.named_import_specifier ~local:(Identifiers.identifier name) remote)
+        names
+    in
+    Some (Statement.ImportDeclaration.ImportNamedSpecifiers specifiers)
   in
   Statements.import_declaration
     ?loc
@@ -96,14 +114,14 @@ let mk_namespace_import ?loc ?comments ~from name =
     ~specifiers
     ?comments
 
-let mk_import ~binding ~from =
-  match binding with
-  | (Export_index.Default, id_name) -> mk_default_import ~from id_name
-  | (Export_index.Named, id_name) ->
-    mk_named_import ~import_kind:Statement.ImportDeclaration.ImportValue ~from id_name
-  | (Export_index.NamedType, id_name) ->
-    mk_named_import ~import_kind:Statement.ImportDeclaration.ImportType ~from id_name
-  | (Export_index.Namespace, id_name) -> mk_namespace_import ~from id_name
+let mk_import ~bindings ~from =
+  match bindings with
+  | Default id_name -> mk_default_import ~from id_name
+  | Named id_names ->
+    mk_named_import ~import_kind:Statement.ImportDeclaration.ImportValue ~from id_names
+  | NamedType id_names ->
+    mk_named_import ~import_kind:Statement.ImportDeclaration.ImportType ~from id_names
+  | Namespace id_name -> mk_namespace_import ~from id_name
 
 (* TODO: support inserting requires
     let require_call =
@@ -112,7 +130,7 @@ let mk_import ~binding ~from =
       call ~args (identifier "require")
     in
     let declarator =
-      match binding with
+      match bindings with
       | Default id_name ->
         (* TODO: should add .default depending on facebook_module_interop *)
         variable_declarator id_name ~init:require_call
@@ -159,9 +177,10 @@ let compare_specifiers a b =
   let { remote = (_, { Identifier.name = b_name; comments = _ }); _ } = b in
   String.compare a_name b_name
 
-let insert_import ~options ~binding ~from = string_of_statement ~options (mk_import ~binding ~from)
+let insert_import ~options ~bindings ~from =
+  string_of_statement ~options (mk_import ~bindings ~from)
 
-let update_import ~options ~binding stmt =
+let update_import ~options ~bindings stmt =
   let open Statement in
   let open Statement.ImportDeclaration in
   let loc =
@@ -171,10 +190,9 @@ let update_import ~options ~binding stmt =
   match stmt with
   | (_, ImportDeclaration { import_kind; source; default; specifiers; comments }) ->
     let edit =
-      let (kind, bound_name) = binding in
-      match (kind, default, specifiers) with
-      | (Export_index.Default, Some (_, { Identifier.name; _ }), _)
-      | ( Export_index.Namespace,
+      match (bindings, default, specifiers) with
+      | (Default bound_name, Some (_, { Identifier.name; _ }), _)
+      | ( Namespace bound_name,
           None,
           Some (ImportNamespaceSpecifier (_, (_, { Identifier.name; _ }))) ) ->
         if bound_name = name then
@@ -185,7 +203,7 @@ let update_import ~options ~binding stmt =
              an `import Foo from 'foo'` anyway. (and similar for `import * as Baz ...`) *)
           let new_stmt =
             let (_, { StringLiteral.value = from; _ }) = source in
-            insert_import ~options ~binding ~from
+            insert_import ~options ~bindings ~from
           in
           let change =
             if String.compare bound_name name < 0 then
@@ -194,31 +212,42 @@ let update_import ~options ~binding stmt =
               Below { skip_line = false }
           in
           (change, new_stmt)
-      | (Export_index.Default, None, Some _) ->
+      | (Default _, None, Some _) ->
         (* a `import {bar} from 'foo'` or `import * as Foo from 'foo'` already exists.
          rather than change it to `import Foo, {bar} from 'foo'`, we choose to insert
          a separate import. TODO: maybe make this a config option? *)
         let new_stmt =
           let (_, { StringLiteral.value = from; _ }) = source in
-          insert_import ~options ~binding ~from
+          insert_import ~options ~bindings ~from
         in
         (Above { skip_line = false }, new_stmt)
-      | (Export_index.Named, _, Some (ImportNamedSpecifiers specifiers))
-      | (Export_index.NamedType, _, Some (ImportNamedSpecifiers specifiers)) ->
+      | (Named bound_names, _, Some (ImportNamedSpecifiers specifiers))
+      | (NamedType bound_names, _, Some (ImportNamedSpecifiers specifiers)) ->
         let open ImportDeclaration in
         let kind =
-          match (import_kind, kind) with
-          | (ImportValue, Export_index.NamedType) -> Some ImportType
+          match (import_kind, bindings) with
+          | (ImportValue, NamedType _) -> Some ImportType
           | _ -> None
         in
-        let new_specifier =
-          { kind; local = None; remote = Ast_builder.Identifiers.identifier bound_name }
+        let new_specifiers =
+          List.map
+            (fun { remote_name; local_name } ->
+              {
+                kind;
+                local = Base.Option.map ~f:Ast_builder.Identifiers.identifier local_name;
+                remote = Ast_builder.Identifiers.identifier remote_name;
+              })
+            bound_names
         in
         let new_specifiers =
           if Base.List.is_sorted ~compare:compare_specifiers specifiers then
-            sorted_insert ~cmp:compare_specifiers new_specifier specifiers
+            List.fold_left
+              (fun specifiers new_specifier ->
+                sorted_insert ~cmp:compare_specifiers new_specifier specifiers)
+              specifiers
+              new_specifiers
           else
-            specifiers @ [new_specifier]
+            specifiers @ new_specifiers
         in
         let specifiers = Some (ImportNamedSpecifiers new_specifiers) in
         let stmt =
@@ -226,19 +255,19 @@ let update_import ~options ~binding stmt =
         in
         let edit = string_of_statement ~options stmt in
         (Replace, edit)
-      | (Export_index.Named, Some _, _)
-      | (Export_index.Named, None, Some (ImportNamespaceSpecifier _))
-      | (Export_index.NamedType, Some _, _)
-      | (Export_index.NamedType, None, Some (ImportNamespaceSpecifier _))
-      | (Export_index.Namespace, Some _, _)
-      | (Export_index.Namespace, None, Some (ImportNamedSpecifiers _)) ->
+      | (Named _, Some _, _)
+      | (Named _, None, Some (ImportNamespaceSpecifier _))
+      | (NamedType _, Some _, _)
+      | (NamedType _, None, Some (ImportNamespaceSpecifier _))
+      | (Namespace _, Some _, _)
+      | (Namespace _, None, Some (ImportNamedSpecifiers _)) ->
         (* trying to insert a named specifier, but a default or namespace import already
          exists. rather than change it to `import Foo, {bar} from 'foo'`, we choose to
          insert a separate import `import {bar} from 'foo'`.
          TODO: maybe make this a config option? *)
         let new_stmt =
           let (_, { StringLiteral.value = from; _ }) = source in
-          insert_import ~options ~binding ~from
+          insert_import ~options ~bindings ~from
         in
         (Below { skip_line = false }, new_stmt)
       | (_, None, None) -> failwith "unexpected import with neither a default nor specifiers"
@@ -323,33 +352,30 @@ let insertion_point ~imports ~body import =
       (* above first body statement *)
       (loc, Above { skip_line = true }))
 
-let kind_matches_binding binding import_kind =
+let kind_matches_bindings bindings import_kind =
   let open ImportKind in
-  let open Export_index in
-  let (export_kind, _name) = binding in
   (* TODO: confirm CJS/ESM interop, depends on flowconfig *)
-  match (import_kind, export_kind) with
-  | (ImportType, NamedType) -> true
-  | (ImportType, (Default | Named | Namespace)) -> false
-  | (Require, Default) -> true
-  | (Require, (Named | NamedType | Namespace)) -> false
-  | (ImportValue, NamedType) -> false
-  | (ImportValue, (Default | Named | Namespace)) -> true
+  match (import_kind, bindings) with
+  | (ImportType, NamedType _) -> true
+  | (ImportType, (Default _ | Named _ | Namespace _)) -> false
+  | (Require, Default _) -> true
+  | (Require, (Named _ | NamedType _ | Namespace _)) -> false
+  | (ImportValue, NamedType _) -> false
+  | (ImportValue, (Default _ | Named _ | Namespace _)) -> true
 
-let existing_import ~binding ~from imports =
-  let (export_kind, _name) = binding in
+let existing_import ~bindings ~from imports =
   let open Statement in
   let potentials =
     Base.List.filter
       ~f:(fun stmt ->
-        kind_matches_binding binding (ImportKind.of_statement stmt)
+        kind_matches_bindings bindings (ImportKind.of_statement stmt)
         && ImportSource.of_statement stmt = from)
       imports
   in
-  let binding_type_matches ~default ~specifiers =
-    match (export_kind, default, specifiers) with
-    | (Export_index.Default, Some _, _) -> true
-    | (Export_index.Named, _, Some (ImportDeclaration.ImportNamedSpecifiers _)) -> true
+  let bindings_type_matches ~default ~specifiers =
+    match (bindings, default, specifiers) with
+    | (Default _, Some _, _) -> true
+    | (Named _, _, Some (ImportDeclaration.ImportNamedSpecifiers _)) -> true
     | _ -> false
   in
   let rec closest potentials =
@@ -359,22 +385,22 @@ let existing_import ~binding ~from imports =
     | stmt :: stmts ->
       (match stmt with
       | (_, ImportDeclaration { ImportDeclaration.default; specifiers; _ })
-        when binding_type_matches ~default ~specifiers ->
+        when bindings_type_matches ~default ~specifiers ->
         Some stmt
       | _ -> closest stmts)
   in
   closest potentials
 
-let add_import ~options ~binding ~from ast : (Loc.t * string) list =
+let add_import ~options ~bindings ~from ast : (Loc.t * string) list =
   let (Flow_ast_differ.Partitioned { directives = _; imports; body }) =
     let (_, { Program.statements; _ }) = ast in
     Flow_ast_differ.partition_imports statements
   in
   let (loc, edit) =
-    match existing_import ~binding ~from imports with
-    | Some stmt -> update_import ~options ~binding stmt
+    match existing_import ~bindings ~from imports with
+    | Some stmt -> update_import ~options ~bindings stmt
     | None ->
-      let new_import = mk_import ~binding ~from in
+      let new_import = mk_import ~bindings ~from in
       let (loc, change) = insertion_point ~imports ~body new_import in
       (loc, (change, string_of_statement ~options new_import))
   in

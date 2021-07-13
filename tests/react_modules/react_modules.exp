@@ -8,8 +8,8 @@ Cannot get `this.props` because property `props` is missing in implicit `this` p
                              ^^^^^
 
 References:
-   <BUILTINS>/react.js:59:3
-   59|   render(): React$Node;
+   <BUILTINS>/react.js:61:3
+   61|   render(): React$Node;
          ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -62,8 +62,8 @@ Cannot get `this.props` because property `props` is missing in implicit `this` p
                              ^^^^^
 
 References:
-   <BUILTINS>/react.js:59:3
-   59|   render(): React$Node;
+   <BUILTINS>/react.js:61:3
+   61|   render(): React$Node;
          ^^^^^^^^^^^^^^^^^^^^ [1]
 
 

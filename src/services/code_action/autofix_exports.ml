@@ -38,7 +38,10 @@ let fix_signature_verification_error_at_loc ?remote_converter ~full_cx ~file_sig
 let fix_signature_verification_errors ~file_key ~full_cx ~file_sig ~typed_ast =
   let open Insert_type in
   let remote_converter =
-    new ImportsHelper.remote_converter ~iteration:0 ~file:file_key ~reserved_names:SSet.empty
+    new Insert_type_imports.ImportsHelper.remote_converter
+      ~iteration:0
+      ~file:file_key
+      ~reserved_names:SSet.empty
   in
   let try_it loc (ast, it_errs) =
     try

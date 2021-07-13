@@ -21,8 +21,8 @@ Cannot use `React.Component` [1] with fewer than 1 type argument. [missing-type-
                         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:41:30
-   41| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:43:30
+   43| declare class React$Component<Props, State = void> {
                                     ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -35,8 +35,8 @@ Cannot use `React.Component` [1] with fewer than 1 type argument. [missing-type-
                         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:41:30
-   41| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:43:30
+   43| declare class React$Component<Props, State = void> {
                                     ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -53,8 +53,8 @@ References:
    classes.js:7:19
     7| class Foo extends React.Component<Props, State> {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:50:37
-   50|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
+   <BUILTINS>/react.js:52:37
+   52|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    classes.js:23:15
    23|   setState(o: { y_: string }): void { }
@@ -95,8 +95,8 @@ References:
    classes.js:7:19
     7| class Foo extends React.Component<Props, State> {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:50:19
-   50|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
+   <BUILTINS>/react.js:52:19
+   52|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
                          ^^^^^^^^^^^^^^ [3]
 
 
@@ -173,8 +173,8 @@ References:
    classes.js:39:15
     39| var foo: $jsx<number> = <Foo/>;
                       ^^^^^^ [1]
-   <BUILTINS>/react.js:186:5
-   186|   | string
+   <BUILTINS>/react.js:188:5
+   188|   | string
             ^^^^^^ [2]
 
 
@@ -258,8 +258,8 @@ Property `y_` is missing in function type [1] but exists in object type [2]. [pr
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:50:37
-   50|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
+   <BUILTINS>/react.js:52:37
+   52|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    classes.js:64:15
    64|   setState(o: { y_: string }): void { },
@@ -292,8 +292,8 @@ object type [1] is incompatible with null or undefined [2]. [incompatible-type]
                      ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:50:19
-   50|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
+   <BUILTINS>/react.js:52:19
+   52|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
                          ^^^^^^^^^^^^^^ [2]
 
 
@@ -326,8 +326,8 @@ function type [1]. [incompatible-use]
                 ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:62:3
-   62|   componentDidMount(): mixed;
+   <BUILTINS>/react.js:64:3
+   64|   componentDidMount(): mixed;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -363,12 +363,12 @@ Cannot call `this.qux` because property `qux` is missing in implicit `this` para
                 ^^^
 
 References:
-   <BUILTINS>/react.js:63:3
+   <BUILTINS>/react.js:65:3
          v-------------------------
-   63|   componentWillReceiveProps(
-   64|     nextProps: Props,
-   65|     nextContext: any,
-   66|   ): mixed;
+   65|   componentWillReceiveProps(
+   66|     nextProps: Props,
+   67|     nextContext: any,
+   68|   ): mixed;
          -------^ [1]
 
 
@@ -399,8 +399,8 @@ References:
    classes.js:79:22
     79| var foo_legacy: $jsx<number> = <FooLegacy/>;
                              ^^^^^^ [1]
-   <BUILTINS>/react.js:186:5
-   186|   | string
+   <BUILTINS>/react.js:188:5
+   188|   | string
             ^^^^^^ [2]
 
 
@@ -571,8 +571,8 @@ Cannot get `this.state` because property `state` is missing in implicit `this` p
                                       ^^^^^
 
 References:
-   <BUILTINS>/react.js:59:3
-   59|   render(): React$Node;
+   <BUILTINS>/react.js:61:3
+   61|   render(): React$Node;
          ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -635,8 +635,8 @@ Cannot get `this.props` because property `props` is missing in implicit `this` p
                                       ^^^^^
 
 References:
-   <BUILTINS>/react.js:59:3
-   59|   render(): React$Node;
+   <BUILTINS>/react.js:61:3
+   61|   render(): React$Node;
          ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -676,8 +676,8 @@ Cannot get `this.props` because property `props` is missing in implicit `this` p
                                       ^^^^^
 
 References:
-   <BUILTINS>/react.js:59:3
-   59|   render(): React$Node;
+   <BUILTINS>/react.js:61:3
+   61|   render(): React$Node;
          ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -751,8 +751,8 @@ Cannot get `this.props` because property `props` is missing in implicit `this` p
                                    ^^^^^
 
 References:
-   <BUILTINS>/react.js:59:3
-   59|   render(): React$Node;
+   <BUILTINS>/react.js:61:3
+   61|   render(): React$Node;
          ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -809,8 +809,8 @@ Cannot get `this.props` because property `props` is missing in implicit `this` p
                     ^^^^^
 
 References:
-   <BUILTINS>/react.js:59:3
-   59|   render(): React$Node;
+   <BUILTINS>/react.js:61:3
+   61|   render(): React$Node;
          ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -864,8 +864,8 @@ Cannot get `this.props` because property `props` is missing in implicit `this` p
                                      ^^^^^
 
 References:
-   <BUILTINS>/react.js:59:3
-   59|   render(): React$Node;
+   <BUILTINS>/react.js:61:3
+   61|   render(): React$Node;
          ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -905,8 +905,8 @@ Cannot call `this.success` because property `success` is missing in implicit `th
                     ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:59:3
-   59|   render(): React$Node;
+   <BUILTINS>/react.js:61:3
+   61|   render(): React$Node;
          ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -956,8 +956,8 @@ Cannot assign `C.displayName` to `x` because null or undefined [1] is incompatib
                         ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:102:24
-   102|   static displayName?: ?string;
+   <BUILTINS>/react.js:104:24
+   104|   static displayName?: ?string;
                                ^^^^^^^ [1]
    new_react.js:32:8
     32| var x: number = C.displayName;
@@ -973,8 +973,8 @@ Cannot assign `C.displayName` to `x` because undefined [1] is incompatible with 
                         ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:102:24
-   102|   static displayName?: ?string;
+   <BUILTINS>/react.js:104:24
+   104|   static displayName?: ?string;
                                ^^^^^^^ [1]
    new_react.js:32:8
     32| var x: number = C.displayName;
@@ -990,8 +990,8 @@ Cannot assign `C.displayName` to `x` because string [1] is incompatible with num
                         ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:102:25
-   102|   static displayName?: ?string;
+   <BUILTINS>/react.js:104:25
+   104|   static displayName?: ?string;
                                 ^^^^^^ [1]
    new_react.js:32:8
     32| var x: number = C.displayName;
@@ -1226,8 +1226,8 @@ Cannot get `this.state` because property `state` is missing in implicit `this` p
                                     ^^^^^
 
 References:
-   <BUILTINS>/react.js:59:3
-   59|   render(): React$Node;
+   <BUILTINS>/react.js:61:3
+   61|   render(): React$Node;
          ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -1289,8 +1289,8 @@ Cannot get `this.state` because property `state` is missing in implicit `this` p
                                   ^^^^^
 
 References:
-   <BUILTINS>/react.js:59:3
-   59|   render(): React$Node;
+   <BUILTINS>/react.js:61:3
+   61|   render(): React$Node;
          ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -1304,8 +1304,8 @@ Cannot get `React.PropTypes.imaginaryType` because property `imaginaryType` is m
                                        ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:242:33
-   242|   declare export var PropTypes: ReactPropTypes;
+   <BUILTINS>/react.js:244:33
+   244|   declare export var PropTypes: ReactPropTypes;
                                         ^^^^^^^^^^^^^^ [1]
 
 
@@ -1319,13 +1319,13 @@ Cannot get `React.PropTypes.string.inRequired` because property `inRequired` (di
                                               ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:476:39
+   <BUILTINS>/react.js:478:39
                                               v
-   476| type ReactPropsChainableTypeChecker = {
-   477|   (props: any, propName: string, componentName: string, href?: string): ?Error,
-   478|   isRequired: ReactPropsCheckType,
-   479|   ...
-   480| };
+   478| type ReactPropsChainableTypeChecker = {
+   479|   (props: any, propName: string, componentName: string, href?: string): ?Error,
+   480|   isRequired: ReactPropsCheckType,
+   481|   ...
+   482| };
         ^ [1]
 
 
@@ -1371,8 +1371,8 @@ Cannot get `this.state` because property `state` is missing in implicit `this` p
                     ^^^^^
 
 References:
-   <BUILTINS>/react.js:59:3
-   59|   render(): React$Node;
+   <BUILTINS>/react.js:61:3
+   61|   render(): React$Node;
          ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -1386,8 +1386,8 @@ Cannot get `this.state` because property `state` is missing in implicit `this` p
                              ^^^^^
 
 References:
-   <BUILTINS>/react.js:59:3
-   59|   render(): React$Node;
+   <BUILTINS>/react.js:61:3
+   61|   render(): React$Node;
          ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -1473,8 +1473,8 @@ Cannot call `this.setState` because property `setState` is missing in implicit `
                 ^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:59:3
-   59|   render(): React$Node;
+   <BUILTINS>/react.js:61:3
+   61|   render(): React$Node;
          ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -1523,8 +1523,8 @@ Cannot get `this.state` because property `state` is missing in implicit `this` p
                              ^^^^^
 
 References:
-   <BUILTINS>/react.js:59:3
-   59|   render(): React$Node;
+   <BUILTINS>/react.js:61:3
+   61|   render(): React$Node;
          ^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -1551,8 +1551,8 @@ Cannot get `this.state.x` because property `x` is missing in undefined [1]. [inc
                              ^
 
 References:
-   <BUILTINS>/react.js:41:46
-   41| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:43:46
+   43| declare class React$Component<Props, State = void> {
                                                     ^^^^ [1]
 
 

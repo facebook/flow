@@ -36,8 +36,8 @@ with number [2] in property `bar`. [incompatible-call]
           --^
 
 References:
-   <BUILTINS>/core.js:474:31
-   474|     toString(radix?: number): string;
+   <BUILTINS>/core.js:476:31
+   476|     toString(radix?: number): string;
                                       ^^^^^^ [1]
    Bad.js:8:8
      8|   bar: number,

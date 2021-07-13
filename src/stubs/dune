@@ -34,7 +34,7 @@
 (library
   (name codemod_annotate_exports_hardcoded)
   (wrapped false)
-  (modules annotate_exports_hardcoded_expr_fixes annotate_exports_hardcoded_module_fixes)
+  (modules annotate_exports_hardcoded_expr_fixes hardcoded_module_fixes)
   (libraries
     flow_parser)
 )
