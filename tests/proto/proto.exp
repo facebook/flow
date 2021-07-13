@@ -478,8 +478,8 @@ property `constructor` [1] cannot be unbound from the context [2] where it was d
                                          ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1547:5
-   1547|     constructor (message?: mixed): void;
+   <BUILTINS>/core.js:1549:5
+   1549|     constructor (message?: mixed): void;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 

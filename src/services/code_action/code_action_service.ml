@@ -43,7 +43,7 @@ let autofix_exports_code_actions
   else
     []
 
-let extract_function_refactor_code_actions ~options ~ast uri loc =
+let extract_function_refactor_code_actions ~options ~ast ~typed_ast ~parsing_heap_reader uri loc =
   if Options.refactor options then
     let lsp_action_from_refactor (title, new_ast) =
       let diff = Insert_type.mk_diff ast new_ast in
@@ -71,7 +71,11 @@ let extract_function_refactor_code_actions ~options ~ast uri loc =
                 } );
         }
     in
-    Refactor_extract_function.provide_available_refactors ast loc
+    Refactor_extract_function.provide_available_refactors
+      ~ast
+      ~typed_ast
+      ~parsing_heap_reader
+      ~extract_range:loc
     |> List.map lsp_action_from_refactor
   else
     []
@@ -192,10 +196,18 @@ let text_edits_of_import ~options ~reader ~src_dir ~ast kind name source =
       | Export_index.NamedType -> Printf.sprintf "Import type from %s" from
       | Export_index.Namespace -> Printf.sprintf "Import * from %s" from
     in
-    let binding = (kind, name) in
+    let bindings =
+      match kind with
+      | Export_index.Default -> Autofix_imports.Default name
+      | Export_index.Named ->
+        Autofix_imports.Named [{ Autofix_imports.remote_name = name; local_name = None }]
+      | Export_index.NamedType ->
+        Autofix_imports.NamedType [{ Autofix_imports.remote_name = name; local_name = None }]
+      | Export_index.Namespace -> Autofix_imports.Namespace name
+    in
     let edits =
       let options = layout_options options in
-      Autofix_imports.add_import ~options ~binding ~from ast
+      Autofix_imports.add_import ~options ~bindings ~from ast
       |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
     in
     Some { title; edits; from }
@@ -492,7 +504,13 @@ let code_actions_at_loc
       ~diagnostics
       uri
       loc
-    @ extract_function_refactor_code_actions ~options ~ast uri loc
+    @ extract_function_refactor_code_actions
+        ~options
+        ~ast
+        ~typed_ast
+        ~parsing_heap_reader:reader
+        uri
+        loc
   in
   let error_fixes =
     code_actions_of_errors

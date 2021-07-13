@@ -18,6 +18,113 @@ let pretty_print layout =
   let source = Pretty_printer.print ~source_maps:None ~skip_endline:true layout in
   Source.contents source
 
+let stub_metadata ~root ~checked =
+  {
+    Context.checked (* local *);
+    munge_underscores = false;
+    verbose = None;
+    weak = false;
+    jsx = Options.Jsx_react;
+    strict = false;
+    strict_local = false;
+    include_suppressions = false;
+    (* global *)
+    automatic_require_default = false;
+    babel_loose_array_spread = false;
+    check_updates_against_providers = false;
+    max_literal_length = 100;
+    enable_const_params = false;
+    enable_enums = true;
+    enable_enums_with_unknown_members = true;
+    enable_indexed_access = true;
+    enforce_local_inference_annotations = false;
+    enforce_strict_call_arity = true;
+    exact_by_default = false;
+    facebook_fbs = None;
+    facebook_fbt = None;
+    facebook_module_interop = false;
+    haste_module_ref_prefix = None;
+    ignore_non_literal_requires = false;
+    max_trace_depth = 0;
+    max_workers = 0;
+    react_runtime = Options.ReactRuntimeClassic;
+    react_server_component_exts = SSet.empty;
+    recursion_limit = 10000;
+    reorder_checking = Options.Lexical;
+    root;
+    run_post_inference_implicit_instantiation = false;
+    strict_es6_import_export = false;
+    strict_es6_import_export_excludes = [];
+    strip_root = true;
+    suppress_types = SSet.empty;
+    trust_mode = Options.NoTrust;
+    type_asserts = false;
+  }
+
+let dummy_filename = File_key.SourceFile ""
+
+let dummy_context =
+  let root = Path.dummy_path in
+  let master_cx = Context.empty_master_cx () in
+  let () =
+    let reason =
+      let loc = ALoc.none in
+      let desc = Reason.RCustom "Explicit any used in refactor_extract_functioon tests" in
+      Reason.mk_reason desc loc
+    in
+    (* Add builtins that will be used by tests. *)
+    Builtins.set_builtin
+      ~flow_t:(fun _ -> ())
+      master_cx.Context.builtins
+      (Reason.OrdinaryName "console")
+      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
+    Builtins.set_builtin
+      ~flow_t:(fun _ -> ())
+      master_cx.Context.builtins
+      (Reason.OrdinaryName "Object")
+      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
+    Builtins.set_builtin
+      ~flow_t:(fun _ -> ())
+      master_cx.Context.builtins
+      (Reason.OrdinaryName "Generator")
+      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
+    Builtins.set_builtin
+      ~flow_t:(fun _ -> ())
+      master_cx.Context.builtins
+      (Reason.OrdinaryName "Promise")
+      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
+    Builtins.set_builtin
+      ~flow_t:(fun _ -> ())
+      master_cx.Context.builtins
+      (Reason.OrdinaryName "promise")
+      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
+    Builtins.set_builtin
+      ~flow_t:(fun _ -> ())
+      master_cx.Context.builtins
+      (Reason.OrdinaryName "$await")
+      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)));
+    Builtins.set_builtin
+      ~flow_t:(fun _ -> ())
+      master_cx.Context.builtins
+      (Reason.OrdinaryName "$AsyncIterable")
+      (Type.AnyT (reason, Type.AnyError (Some Type.UnresolvedName)))
+  in
+  let ccx = Context.make_ccx master_cx in
+  let metadata = stub_metadata ~root ~checked:true in
+  let aloc_table = lazy (ALoc.empty_table dummy_filename) in
+  let module_ref = Reason.OrdinaryName (Files.module_ref dummy_filename) in
+  Context.make ccx metadata dummy_filename aloc_table module_ref Context.Checking
+
+let typed_ast_of_ast ast =
+  let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
+  let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
+  Type_inference_js.infer_ast
+    ~lint_severities:LintSettings.empty_severities
+    dummy_context
+    dummy_filename
+    comments
+    aloc_ast
+
 let extract_statements_tests =
   let assert_extracted ~ctxt expected source extract_range =
     let ast = parse source in

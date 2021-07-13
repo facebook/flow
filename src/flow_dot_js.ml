@@ -230,8 +230,8 @@ let infer_and_merge ~root filename ast file_sig =
   let master_cx = get_master_cx root in
   let ccx = Context.make_ccx master_cx in
   let metadata = stub_metadata ~root ~checked:true in
-  (* flow.js does not use abstract locations, so we will never force the thunk *)
-  let aloc_table = lazy (raise (Parsing_heaps_exceptions.ALoc_table_not_found "")) in
+  (* flow.js does not use abstract locations, so this is not used *)
+  let aloc_table = lazy (ALoc.empty_table filename) in
   let module_ref = Reason.OrdinaryName (Files.module_ref filename) in
   let cx = Context.make ccx metadata filename aloc_table module_ref Context.Checking in
   (* connect requires *)

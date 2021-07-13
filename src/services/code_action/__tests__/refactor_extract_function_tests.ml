@@ -6,21 +6,18 @@
  *)
 
 open OUnit2
-
-let parse contents =
-  let (ast, _) =
-    Parser_flow.program ~parse_options:(Some Parser_env.default_parse_options) contents
-  in
-  ast
-
-let pretty_print layout =
-  let source = Pretty_printer.print ~source_maps:None ~skip_endline:true layout in
-  Source.contents source
+open Refactor_extract_utils_tests
 
 let assert_refactored ~ctxt expected source extract_range =
   let ast = parse source in
+  let typed_ast = typed_ast_of_ast ast in
+  let parsing_heap_reader = State_reader.create () in
   let actual =
-    Refactor_extract_function.provide_available_refactors ast extract_range
+    Refactor_extract_function.provide_available_refactors
+      ~ast
+      ~typed_ast
+      ~parsing_heap_reader
+      ~extract_range
     |> List.map (fun (title, ast') ->
            ( title,
              ast'
@@ -64,7 +61,6 @@ function test() {
   let b = 4;
   console.log("I should not be selected");
 }
-
 function newFunction() {
   const a = 3;
 }
@@ -116,7 +112,6 @@ function test() {
   newFunction();
   console.log("I should not be selected");
 }
-
 function newFunction() {
   const a = 3;
   let b = 4;
@@ -162,7 +157,6 @@ function test() {
             {|
 const a = newFunction();
 console.log(a);
-
 function newFunction() {
   const a = 3;
   return a;
@@ -197,7 +191,6 @@ let fooo = 3;
 const a = 3;
 fooo = newFunction();
 console.log(a + fooo);
-
 function newFunction() {
   fooo = a + 2; // selected
   return fooo;
@@ -234,7 +227,6 @@ let a;
 
 ({a, fooo} = newFunction());
 console.log(a + fooo);
-
 function newFunction() {
   const a = 3; // selected
   fooo = a + 2; // selected
@@ -268,7 +260,6 @@ function newFunction() {
 let fooo = newFunction();
 const a = 3;
 fooo = a + 2;
-
 function newFunction() {
   let fooo = 3; // selected
   return fooo;
@@ -300,7 +291,6 @@ function newFunction() {
             {|
 let {a, fooo} = newFunction();
 fooo = a + 2;
-
 function newFunction() {
   let fooo = 3; // selected
   const a = 3; // selected
@@ -338,7 +328,6 @@ function newFunction() {
 const test = (async () => {
   await newFunction();
 });
-
 async function newFunction() {
   // selection start
   const a = 3;
@@ -377,7 +366,6 @@ async function newFunction() {
 const test = (async () => {
   await newFunction();
 });
-
 async function newFunction() {
   // selection start
   const a = 3;
@@ -406,7 +394,6 @@ async function newFunction() {
           ( "Extract to function in module scope",
             {|
 newFunction();
-
 function newFunction() {
   const test = (async () => await promise);
 }
@@ -429,10 +416,10 @@ function newFunction() {
         function test() {
           // selection start
           const a = 1;
+          const b = 2;
           {
             return;
           }
-          const b = 2;
           // selection end
         }
       |}
@@ -473,11 +460,11 @@ function newFunction() {
       assert_refactored
         ~ctxt
         []
-        "const a = 1; {label:test();}"
+        "const a = 1; {label:test();} function test() {}"
         {
           Loc.source = None;
           start = { Loc.line = 1; column = 0 };
-          _end = { Loc.line = 1; column = 40 };
+          _end = { Loc.line = 1; column = 60 };
         } );
     ( "simple_break_continue_no_extract" >:: fun ctxt ->
       assert_refactored
@@ -543,7 +530,6 @@ function newFunction() {
           ( "Extract to function in module scope",
             {|
 newFunction();
-
 function newFunction() {
   while (true) {
     break;
@@ -566,7 +552,6 @@ function newFunction() {
           ( "Extract to function in module scope",
             {|
 newFunction();
-
 function newFunction() {
   while (true) {
     continue;
@@ -589,7 +574,6 @@ function newFunction() {
           ( "Extract to function in module scope",
             {|
 newFunction();
-
 function newFunction() {
   switch (true) {
     default:
@@ -676,7 +660,6 @@ class A {
     newFunction();
   }
 }
-
 function newFunction() {
   console.log();
 }
@@ -783,7 +766,6 @@ function level1() {
     }
   }
 }
-
 function newFunction() {
   const a = 3;
   let b = 4;
@@ -934,7 +916,6 @@ function level1() {
     }
   }
 }
-
 function newFunction(b, c, d, e, f) {
   const g = 3;
   const h = 4;

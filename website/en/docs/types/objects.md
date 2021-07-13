@@ -75,6 +75,46 @@ acceptsObject({ foo: null });      // Error!
 acceptsObject({});                 // Works!
 ```
 
+### Object methods <a class="toc" id="toc-object-methods" href="#toc-object-methods"></a>
+
+Method syntax in objects has the same runtime behavior as a function property. These two objects are equivalent at runtime:
+
+```js
+// @flow
+let a = {
+  foo : function () { return 3; }
+};
+let b = {
+  foo() { return 3; }
+}
+```
+
+However, despite their equivalent runtime behavior, Flow checks them slightly differently. In particular, object
+properties written with method syntax are read-only; Flow will not allow you to write a new value to them.
+
+```js
+// @flow
+let b = {
+  foo() { return 3; }
+}
+b.foo = () => { return 2; } // Error!
+```
+
+Additionally, object methods do not allow the use of `this` in their bodies, in order to guarantee simple behavior
+for their `this` parameters. Prefer to reference the object by name instead of using `this`.
+
+```js
+// @flow
+let a = {
+  x : 3,
+  foo() { return this.x; } // error!
+}
+let b = {
+  x : 3,
+  foo() { return b.x; } // works!
+}
+```
+
 ## Object type inference <a class="toc" id="toc-object-type-inference" href="#toc-object-type-inference"></a>
 
 Flow can infer the type of object literals in two different ways depending on
@@ -328,7 +368,7 @@ function add(id: number, name: string) {
 ### `Object` Type <a class="toc" id="toc-object-type" href="#toc-object-type"></a>
 
 > NOTE: For new code, prefer `any` or `{ [key: string]: any}`. `Object` is an alias to [`any`](../any/) and will
-> be deprecated and removed in a future version of Flow. 
+> be deprecated and removed in a future version of Flow.
 
 Sometimes it is useful to write types that accept arbitrary objects, for
 those you should write `{}` like this:

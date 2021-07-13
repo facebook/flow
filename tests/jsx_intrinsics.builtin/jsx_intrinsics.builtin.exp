@@ -50,8 +50,8 @@ References:
    main.js:6:47
     6| class CustomComponent extends React.Component<{prop: string}, void> {}
                                                      ^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:41:31
-   41| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:43:31
+   43| declare class React$Component<Props, State = void> {
                                      ^^^^^ [3]
 
 
@@ -71,8 +71,8 @@ References:
    main.js:13:38
    13| var c: Element<Class<React.Component<{prop1: string}, void>>> =
                                             ^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:41:31
-   41| declare class React$Component<Props, State = void> {
+   <BUILTINS>/react.js:43:31
+   43| declare class React$Component<Props, State = void> {
                                      ^^^^^ [3]
 
 
