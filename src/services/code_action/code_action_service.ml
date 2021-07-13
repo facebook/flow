@@ -43,40 +43,47 @@ let autofix_exports_code_actions
   else
     []
 
-let extract_function_refactor_code_actions ~options ~ast ~typed_ast ~parsing_heap_reader uri loc =
+let extract_function_refactor_code_actions
+    ~options ~ast ~full_cx ~file_sig ~typed_ast ~reader uri loc =
   if Options.refactor options then
-    let lsp_action_from_refactor (title, new_ast) =
-      let diff = Insert_type.mk_diff ast new_ast in
-      let opts = layout_options options in
-      let edits =
-        Replacement_printer.mk_loc_patch_ast_differ ~opts diff
-        |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+    match loc.Loc.source with
+    | None -> []
+    | Some file ->
+      let lsp_action_from_refactor (title, new_ast) =
+        let diff = Insert_type.mk_diff ast new_ast in
+        let opts = layout_options options in
+        let edits =
+          Replacement_printer.mk_loc_patch_ast_differ ~opts diff
+          |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+        in
+        let diagnostic_title = "refactor_extract_function" in
+        let open Lsp in
+        CodeAction.Action
+          {
+            CodeAction.title;
+            kind = CodeActionKind.refactor_extract;
+            diagnostics = [];
+            action =
+              CodeAction.BothEditThenCommand
+                ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                  {
+                    Command.title = "";
+                    command = Command.Command "log";
+                    arguments =
+                      ["textDocument/codeAction"; diagnostic_title; title]
+                      |> List.map (fun str -> Hh_json.JSON_String str);
+                  } );
+          }
       in
-      let diagnostic_title = "refactor_extract_function" in
-      let open Lsp in
-      CodeAction.Action
-        {
-          CodeAction.title;
-          kind = CodeActionKind.refactor_extract;
-          diagnostics = [];
-          action =
-            CodeAction.BothEditThenCommand
-              ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
-                {
-                  Command.title = "";
-                  command = Command.Command "log";
-                  arguments =
-                    ["textDocument/codeAction"; diagnostic_title; title]
-                    |> List.map (fun str -> Hh_json.JSON_String str);
-                } );
-        }
-    in
-    Refactor_extract_function.provide_available_refactors
-      ~ast
-      ~typed_ast
-      ~parsing_heap_reader
-      ~extract_range:loc
-    |> List.map lsp_action_from_refactor
+      Refactor_extract_function.provide_available_refactors
+        ~ast
+        ~full_cx
+        ~file
+        ~file_sig:(File_sig.abstractify_locs file_sig)
+        ~typed_ast
+        ~reader
+        ~extract_range:loc
+      |> List.map lsp_action_from_refactor
   else
     []
 
@@ -507,8 +514,10 @@ let code_actions_at_loc
     @ extract_function_refactor_code_actions
         ~options
         ~ast
+        ~full_cx:cx
+        ~file_sig
         ~typed_ast
-        ~parsing_heap_reader:reader
+        ~reader
         uri
         loc
   in

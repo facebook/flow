@@ -546,6 +546,7 @@ let undefined_variables_after_extraction_tests =
         ~defs_with_scopes_of_local_uses
         ~new_function_target_scope_loc
         ~extracted_statements_loc
+      |> List.map fst
       |> List.sort String.compare
     in
     let expected = List.sort String.compare expected in

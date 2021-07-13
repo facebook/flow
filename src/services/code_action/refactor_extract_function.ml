@@ -6,6 +6,7 @@
  *)
 
 open Refactor_extract_utils
+open Loc_collections
 
 let union_loc acc loc =
   match acc with
@@ -13,6 +14,7 @@ let union_loc acc loc =
   | Some existing_loc -> Some (Loc.btwn existing_loc loc)
 
 let create_extracted_function
+    ~type_synthesizer
     ~undefined_variables
     ~escaping_definitions
     ~vars_with_shadowed_local_reassignments
@@ -23,7 +25,13 @@ let create_extracted_function
   let id = Some (Identifiers.identifier name) in
   let params =
     undefined_variables
-    |> List.map (fun v -> v |> Patterns.identifier |> Functions.param)
+    |> List.map (fun (v, loc) ->
+           let annot =
+             match type_synthesizer loc with
+             | None -> Flow_ast.Type.Missing Loc.none
+             | Some type_ -> Flow_ast.Type.Available (Loc.none, type_)
+           in
+           Patterns.identifier ~annot v |> Functions.param)
     |> Functions.params
   in
   let returned_variables =
@@ -74,7 +82,7 @@ let create_extracted_function_call
       ~loc:extracted_statements_loc
       ~args:
         ( undefined_variables
-        |> List.map (fun v -> v |> Expressions.identifier |> Expressions.expression)
+        |> List.map (fun (v, _) -> v |> Expressions.identifier |> Expressions.expression)
         |> Expressions.arg_list )
       caller
   in
@@ -149,6 +157,7 @@ let create_refactor
     ~defs_with_scopes_of_local_uses
     ~escaping_definitions
     ~vars_with_shadowed_local_reassignments
+    ~type_synthesizer_context
     ~async_function
     ~is_method
     ~ast
@@ -162,6 +171,10 @@ let create_refactor
       ~new_function_target_scope_loc:target_body_loc
       ~extracted_statements_loc
   in
+  let { TypeSynthesizer.type_synthesizer; _ } =
+    TypeSynthesizer.create_type_synthesizer_with_import_adder type_synthesizer_context
+  in
+  (* Put extracted function to two lines after the end of program to have nice format. *)
   let function_call_statements =
     create_extracted_function_call
       ~undefined_variables
@@ -180,6 +193,7 @@ let create_refactor
         (Ast_builder.Classes.method_
            ~id:"newMethod"
            (create_extracted_function
+              ~type_synthesizer
               ~undefined_variables
               ~escaping_definitions
               ~vars_with_shadowed_local_reassignments
@@ -196,6 +210,7 @@ let create_refactor
         ( Loc.none,
           Flow_ast.Statement.FunctionDeclaration
             (create_extracted_function
+               ~type_synthesizer
                ~undefined_variables
                ~escaping_definitions
                ~vars_with_shadowed_local_reassignments
@@ -209,6 +224,7 @@ let available_refactors
     ~defs_with_scopes_of_local_uses
     ~escaping_definitions
     ~vars_with_shadowed_local_reassignments
+    ~type_synthesizer_context
     ~async_function
     ~in_class
     ~ast
@@ -220,6 +236,7 @@ let available_refactors
       ~defs_with_scopes_of_local_uses
       ~escaping_definitions
       ~vars_with_shadowed_local_reassignments
+      ~type_synthesizer_context
       ~async_function
       ~ast
       ~extracted_statements
@@ -253,7 +270,7 @@ let available_refactors
     in
     extract_to_method_refactors @ extract_to_functions_refactors
 
-let provide_available_refactors ~ast ~typed_ast:_ ~parsing_heap_reader:_ ~extract_range =
+let provide_available_refactors ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader ~extract_range =
   match StatementsExtractor.extract ast extract_range with
   | None -> []
   | Some extracted_statements ->
@@ -283,6 +300,20 @@ let provide_available_refactors ~ast ~typed_ast:_ ~parsing_heap_reader:_ ~extrac
             ~ssa_values
             ~extracted_statements_loc
         in
+        let type_synthesizer_context =
+          let locs =
+            defs_with_scopes_of_local_uses
+            |> List.map (fun ({ Scope_api.Def.locs = (def_loc, _); _ }, _) -> def_loc)
+            |> LocSet.of_list
+          in
+          TypeSynthesizer.create_synthesizer_context
+            ~full_cx
+            ~file
+            ~file_sig
+            ~typed_ast
+            ~reader
+            ~locs
+        in
         let escaping_definitions =
           VariableAnalysis.collect_escaping_local_defs
             ~scope_info
@@ -294,6 +325,7 @@ let provide_available_refactors ~ast ~typed_ast:_ ~parsing_heap_reader:_ ~extrac
           ~defs_with_scopes_of_local_uses
           ~escaping_definitions
           ~vars_with_shadowed_local_reassignments
+          ~type_synthesizer_context
           ~async_function
           ~in_class
           ~ast

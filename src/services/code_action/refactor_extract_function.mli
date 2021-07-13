@@ -7,7 +7,10 @@
 
 val provide_available_refactors :
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
+  full_cx:Context.t ->
+  file:File_key.t ->
+  file_sig:File_sig.With_ALoc.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
-  parsing_heap_reader:Parsing_heaps.Reader.reader ->
+  reader:Parsing_heaps.Reader.reader ->
   extract_range:Loc.t ->
   (string * (Loc.t, Loc.t) Flow_ast.Program.t) list

@@ -436,7 +436,7 @@ module VariableAnalysis = struct
          in the body scope, and `def_scope_is_within_function_scope name_scope body_scope` will be
          true, which incorrectly decides that a variable is undefined. *)
         if List.for_all def_scope_is_within_function_scope new_function_target_scopes then
-          Some actual_name
+          Some (actual_name, def_loc)
         else
           None
     in

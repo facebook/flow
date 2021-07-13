@@ -81,7 +81,7 @@ module VariableAnalysis : sig
     defs_with_scopes_of_local_uses:(Scope_api.Def.t * Scope_api.Scope.t) list ->
     new_function_target_scope_loc:Loc.t ->
     extracted_statements_loc:Loc.t ->
-    string list
+    (string * Loc.t) list
 
   type escaping_definitions = {
     (* A list of variable names that are defined inside the extracted statements,

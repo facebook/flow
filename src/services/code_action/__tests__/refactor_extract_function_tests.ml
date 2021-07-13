@@ -11,12 +11,15 @@ open Refactor_extract_utils_tests
 let assert_refactored ~ctxt expected source extract_range =
   let ast = parse source in
   let typed_ast = typed_ast_of_ast ast in
-  let parsing_heap_reader = State_reader.create () in
+  let reader = State_reader.create () in
   let actual =
     Refactor_extract_function.provide_available_refactors
       ~ast
+      ~full_cx:dummy_context
+      ~file:dummy_filename
+      ~file_sig:(file_sig_of_ast ast)
       ~typed_ast
-      ~parsing_heap_reader
+      ~reader
       ~extract_range
     |> List.map (fun (title, ast') ->
            ( title,
@@ -714,7 +717,7 @@ export default class {
     const b = this.newMethod(B, a);
     b.test2();
   }
-  newMethod(B, a) {
+  newMethod(B: typeof B, a: number) {
     const b = new B(this.v, a); // selected
     return b;
   }
@@ -916,7 +919,7 @@ function level1() {
     }
   }
 }
-function newFunction(b, c, d, e, f) {
+function newFunction(b: number, c: number, d: number, e: number, f: number) {
   const g = 3;
   const h = 4;
   console.log(a + b + c + d + e + f + g + h);
@@ -969,7 +972,7 @@ function level1() {
           return f + g + h;
         }
       }
-      function newFunction(e, f) {
+      function newFunction(e: number, f: number) {
         const g = 3;
         const h = 4;
         console.log(a + b + c + d + e + f + g + h);
@@ -998,7 +1001,7 @@ function level1() {
         }
       }
     }
-    function newFunction(d, e, f) {
+    function newFunction(d: number, e: number, f: number) {
       const g = 3;
       const h = 4;
       console.log(a + b + c + d + e + f + g + h);
@@ -1027,7 +1030,7 @@ function level1() {
       }
     }
   }
-  function newFunction(c, d, e, f) {
+  function newFunction(c: number, d: number, e: number, f: number) {
     const g = 3;
     const h = 4;
     console.log(a + b + c + d + e + f + g + h);
