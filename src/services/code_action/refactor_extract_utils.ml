@@ -487,3 +487,73 @@ module VariableAnalysis = struct
     in
     { escaping_variables = SSet.elements escaping_variables; has_external_writes }
 end
+
+module TypeSynthesizer = struct
+  type synthesizer_context = {
+    full_cx: Context.t;
+    file: File_key.t;
+    file_sig: File_sig.With_ALoc.t;
+    typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
+    type_at_loc_map: Type.TypeScheme.t LocMap.t;
+  }
+
+  class type_collector reader (locs : LocSet.t) =
+    object (this)
+      inherit Typed_ast_utils.type_parameter_mapper
+
+      val mutable acc = LocMap.empty
+
+      method! on_loc_annot x = x
+
+      method! on_type_annot x = x
+
+      method collected_types = acc
+
+      method private collect_type_at_loc ~tparams_rev loc t =
+        acc <- LocMap.add loc { Type.TypeScheme.tparams_rev; type_ = t } acc
+
+      method! t_identifier (((aloc, t), _) as ident) =
+        let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
+        if LocSet.mem loc locs then this#annot_with_tparams (this#collect_type_at_loc loc t);
+        ident
+    end
+
+  let create_synthesizer_context ~full_cx ~file ~file_sig ~typed_ast ~reader ~locs =
+    let collector = new type_collector reader locs in
+    ignore (collector#program typed_ast);
+    let type_at_loc_map = collector#collected_types in
+    { full_cx; file; file_sig; typed_ast; type_at_loc_map }
+
+  type type_synthesizer_with_import_adder = {
+    type_synthesizer: Loc.t -> (Loc.t, Loc.t) Flow_ast.Type.t option;
+    added_imports: unit -> (string * Autofix_imports.bindings) list;
+  }
+
+  let create_type_synthesizer_with_import_adder
+      { full_cx; file; file_sig; typed_ast; type_at_loc_map } =
+    let remote_converter =
+      new Insert_type_imports.ImportsHelper.remote_converter
+        ~iteration:0
+        ~file
+        ~reserved_names:SSet.empty
+    in
+    let type_synthesizer loc =
+      match LocMap.find_opt loc type_at_loc_map with
+      | None -> None
+      | Some type_scheme ->
+        let (_, type_) =
+          Insert_type.synth_type
+            ~full_cx
+            ~file_sig
+            ~typed_ast
+            ~expand_aliases:true
+            ~omit_targ_defaults:false
+            ~ambiguity_strategy:Autofix_options.Generalize
+            ~remote_converter
+            loc
+            type_scheme
+        in
+        Some type_
+    in
+    { type_synthesizer; added_imports = (fun () -> remote_converter#to_import_bindings) }
+end

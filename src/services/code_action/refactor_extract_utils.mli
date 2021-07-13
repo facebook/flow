@@ -97,3 +97,25 @@ module VariableAnalysis : sig
     extracted_statements_loc:Loc.t ->
     escaping_definitions
 end
+
+module TypeSynthesizer : sig
+  (* An object of all the information needed to provide and transform parameter type annotations. *)
+  type synthesizer_context
+
+  val create_synthesizer_context :
+    full_cx:Context.t ->
+    file:File_key.t ->
+    file_sig:File_sig.With_ALoc.t ->
+    typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.Program.t ->
+    reader:Parsing_heaps.Reader.reader ->
+    locs:Loc_collections.LocSet.t ->
+    synthesizer_context
+
+  type type_synthesizer_with_import_adder = {
+    type_synthesizer: Loc.t -> (Loc.t, Loc.t) Flow_ast.Type.t option;
+    added_imports: unit -> (string * Autofix_imports.bindings) list;
+  }
+
+  val create_type_synthesizer_with_import_adder :
+    synthesizer_context -> type_synthesizer_with_import_adder
+end
