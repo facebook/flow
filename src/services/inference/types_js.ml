@@ -179,7 +179,7 @@ let do_parse_wrapper ~options filename contents =
           match docblock_errors with
           | [] ->
             (* Even with `~fail:false`, `do_parse` cannot currently recover from file sig errors, so
-          * we must handle them here. *)
+               * we must handle them here. *)
             File_sig_error err
           | _ ->
             (* See comments on parse_contents_return type for an explanation of this behavior *)
@@ -1592,9 +1592,9 @@ end = struct
     let files_to_force = CheckedSet.diff files_to_force env.ServerEnv.checked_files in
     (* split updates into deleted files and modified files *)
     (* NOTE: We use the term "modified" in the same sense as the underlying file
-       system: a modified file exists, and in relation to an old file system
-       state, a modified file could be any of "new," "changed," or "unchanged."
-    **)
+          system: a modified file exists, and in relation to an old file system
+          state, a modified file could be any of "new," "changed," or "unchanged."
+       **)
     let (modified, deleted) =
       FilenameSet.partition (fun f -> Sys.file_exists (File_key.to_string f)) updates
     in
@@ -1681,122 +1681,122 @@ end = struct
       (FilenameSet.cardinal unchanged);
 
     (* Here's where the interesting part of rechecking begins. Before diving into
-       code, let's think through the problem independently.
+          code, let's think through the problem independently.
 
-       Note that changing a file can be conceptually thought of as deleting the
-       file and then adding it back as a new file. While such a reduction might
-       miss optimization opportunities (so we don't actually implement it), it
-       simplifies thinking about correctness.
+          Note that changing a file can be conceptually thought of as deleting the
+          file and then adding it back as a new file. While such a reduction might
+          miss optimization opportunities (so we don't actually implement it), it
+          simplifies thinking about correctness.
 
-       We focus on dependency management. Specifically, we discuss how to
-       correctly update InfoHeap and NameHeap, and calculate the set of unchanged
-       files whose imports might resolve to different files. (With these results,
-       the remaining part of rechecking is relatively simple.)
+          We focus on dependency management. Specifically, we discuss how to
+          correctly update InfoHeap and NameHeap, and calculate the set of unchanged
+          files whose imports might resolve to different files. (With these results,
+          the remaining part of rechecking is relatively simple.)
 
-       Recall that InfoHeap maps file names in FS to module names in MS, where
-       each file name in FS must exist, different file names may map to the same
-       module name, and every module name in MS is mapped to by at least one file
-       name; and NameHeap maps module names in MS to file names in FS, where the
-       file name mapped to by a module name must map back to the same module name
-       in InfoHeap. A file's imports might resolve to different files if the
-       corresponding modules map to different files in NameHeap.
+          Recall that InfoHeap maps file names in FS to module names in MS, where
+          each file name in FS must exist, different file names may map to the same
+          module name, and every module name in MS is mapped to by at least one file
+          name; and NameHeap maps module names in MS to file names in FS, where the
+          file name mapped to by a module name must map back to the same module name
+          in InfoHeap. A file's imports might resolve to different files if the
+          corresponding modules map to different files in NameHeap.
 
-       Deleting a file
-       ===============
+          Deleting a file
+          ===============
 
-       Suppose that a file D is deleted. Let D |-> m in InfoHeap, and m |-> F in
-       NameHeap.
+          Suppose that a file D is deleted. Let D |-> m in InfoHeap, and m |-> F in
+          NameHeap.
 
-       Remove D |-> m from InfoHeap.
+          Remove D |-> m from InfoHeap.
 
-       If F = D, then remove m |-> F from NameHeap and mark m "dirty": any file
-       importing m will be affected. If other files map to m in InfoHeap, map m
-       to one of those files in NameHeap.
+          If F = D, then remove m |-> F from NameHeap and mark m "dirty": any file
+          importing m will be affected. If other files map to m in InfoHeap, map m
+          to one of those files in NameHeap.
 
-       Adding a file
-       =============
+          Adding a file
+          =============
 
-       Suppose that a new file N is added.
+          Suppose that a new file N is added.
 
-       Map N to some module name, say m, in InfoHeap. If m is not mapped to any
-       file in NameHeap, add m |-> N to NameHeap and mark m "dirty." Otherwise,
-       decide whether to replace the existing mapping to m |-> N in NameHeap, and
-       pessimistically assuming it might be, mark m "dirty."
+          Map N to some module name, say m, in InfoHeap. If m is not mapped to any
+          file in NameHeap, add m |-> N to NameHeap and mark m "dirty." Otherwise,
+          decide whether to replace the existing mapping to m |-> N in NameHeap, and
+          pessimistically assuming it might be, mark m "dirty."
 
-       Changing a file
-       =============
+          Changing a file
+          =============
 
-       What happens when a file C is changed? Suppose that C |-> m in InfoHeap,
-       and m |-> F in NameHeap.
+          What happens when a file C is changed? Suppose that C |-> m in InfoHeap,
+          and m |-> F in NameHeap.
 
-       Optimistically, C continues to map to m in InfoHeap and we do nothing.
+          Optimistically, C continues to map to m in InfoHeap and we do nothing.
 
-       However, let's pessimistically assume that C maps to a different m' in
-       InfoHeap. Considering C deleted and added back as new, we must remove C
-       |-> m from InfoHeap and add C |-> m' to InfoHeap. If F = C, then remove m
-       |-> F from NameHeap and mark m "dirty." If other files map to m in
-       InfoHeap, map m to one of those files in NameHeap. If m' is not mapped to
-       any file in NameHeap, add m' |-> C to NameHeap and mark m' "dirty."
-       Otherwise, decide whether to replace the existing mapping to m' |-> C in
-       NameHeap, and mark m' "dirty."
+          However, let's pessimistically assume that C maps to a different m' in
+          InfoHeap. Considering C deleted and added back as new, we must remove C
+          |-> m from InfoHeap and add C |-> m' to InfoHeap. If F = C, then remove m
+          |-> F from NameHeap and mark m "dirty." If other files map to m in
+          InfoHeap, map m to one of those files in NameHeap. If m' is not mapped to
+          any file in NameHeap, add m' |-> C to NameHeap and mark m' "dirty."
+          Otherwise, decide whether to replace the existing mapping to m' |-> C in
+          NameHeap, and mark m' "dirty."
 
-       Summary
-       =======
+          Summary
+          =======
 
-       Summarizing, if an existing file F1 is changed or deleted, and F1 |-> m in
-       InfoHeap and m |-> F in NameHeap, and F1 = F, then mark m "dirty." And if
-       a new file or a changed file F2 now maps to m' in InfoHeap, mark m' "dirty."
+          Summarizing, if an existing file F1 is changed or deleted, and F1 |-> m in
+          InfoHeap and m |-> F in NameHeap, and F1 = F, then mark m "dirty." And if
+          a new file or a changed file F2 now maps to m' in InfoHeap, mark m' "dirty."
 
-       Ideally, any module name that does not map to a different file in NameHeap
-       should not be considered "dirty."
+          Ideally, any module name that does not map to a different file in NameHeap
+          should not be considered "dirty."
 
-       In terms of implementation:
+          In terms of implementation:
 
-       Deleted file
-       ============
+          Deleted file
+          ============
 
-       Say it pointed to module OLD_M
+          Say it pointed to module OLD_M
 
-       1. need to repick a provider for OLD_M *if OLD_M's current provider is this
-       file*
-       2. files that depend on OLD_M need to be rechecked if:
-         a. the provider for OLD_M is **replaced** or **removed**; or
-         b. the provider for OLD_M is **unchanged**, but is a _changed file_
+          1. need to repick a provider for OLD_M *if OLD_M's current provider is this
+          file*
+          2. files that depend on OLD_M need to be rechecked if:
+            a. the provider for OLD_M is **replaced** or **removed**; or
+            b. the provider for OLD_M is **unchanged**, but is a _changed file_
 
-       New file
-       ========
+          New file
+          ========
 
-       Say it points to module NEW_M
+          Say it points to module NEW_M
 
-       1. need to repick a provider for NEW_M
-       2. files that depend on NEW_M need to be rechecked if:
-         a. the provider for NEW_M is **added** or **replaced**; or
-         b. the provider for NEW_M is **unchanged**, but is a _changed file_
+          1. need to repick a provider for NEW_M
+          2. files that depend on NEW_M need to be rechecked if:
+            a. the provider for NEW_M is **added** or **replaced**; or
+            b. the provider for NEW_M is **unchanged**, but is a _changed file_
 
-       Changed file
-       ============
+          Changed file
+          ============
 
-       Say it pointed to module OLD_M, now points to module NEW_M
+          Say it pointed to module OLD_M, now points to module NEW_M
 
-       * Is OLD_M different from NEW_M? *(= delete the file, then add it back)*
+          * Is OLD_M different from NEW_M? *(= delete the file, then add it back)*
 
-       1. need to repick providers for OLD_M *if OLD_M's current provider is this
-       file*.
-       2. files that depend on OLD_M need to be rechecked if:
-         a. the provider for OLD_M is **replaced** or **removed**; or
-         b. the provider for OLD_M is **unchanged**, but is a _changed file_
-       3. need to repick a provider for NEW_M
-       4. files that depend on NEW_M need to be rechecked if:
-         a. the provider for NEW_M is **added** or **replaced**; or
-         b. the provider for NEW_M is **unchanged**, but is a _changed file_
+          1. need to repick providers for OLD_M *if OLD_M's current provider is this
+          file*.
+          2. files that depend on OLD_M need to be rechecked if:
+            a. the provider for OLD_M is **replaced** or **removed**; or
+            b. the provider for OLD_M is **unchanged**, but is a _changed file_
+          3. need to repick a provider for NEW_M
+          4. files that depend on NEW_M need to be rechecked if:
+            a. the provider for NEW_M is **added** or **replaced**; or
+            b. the provider for NEW_M is **unchanged**, but is a _changed file_
 
-       * TODO: Is OLD_M the same as NEW_M?
+          * TODO: Is OLD_M the same as NEW_M?
 
-       1. *don't repick a provider!*
-       2. files that depend on OLD_M need to be rechecked if: OLD_M's current provider
-       is a _changed file_
+          1. *don't repick a provider!*
+          2. files that depend on OLD_M need to be rechecked if: OLD_M's current provider
+          is a _changed file_
 
-    **)
+       **)
 
     (* remember old modules *)
     let unchanged_checked =
@@ -2639,7 +2639,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
 
   let should_force_recheck = Options.saved_state_force_recheck options in
   (* We know that all the files in updates have changed since the saved state was generated. We
-    * have two ways to deal with them: *)
+     * have two ways to deal with them: *)
   if Options.lazy_mode options = Options.NON_LAZY_MODE || should_force_recheck then begin
     if FilenameSet.is_empty updates || not libs_ok then
       (* Don't recheck if the libs are not ok *)
@@ -2671,8 +2671,8 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
       Lwt.return (env, libs_ok)
   end else
     (* In lazy mode, we try to avoid the fanout problem. All we really want to do in lazy mode
-      * is to update the dependency graph and stuff like that. We don't actually want to merge
-      * anything yet. *)
+       * is to update the dependency graph and stuff like that. We don't actually want to merge
+       * anything yet. *)
     let recheck_reasons = [LspProt.Lazy_init_update_deps] in
     let%lwt env =
       let rec try_update updated_files =

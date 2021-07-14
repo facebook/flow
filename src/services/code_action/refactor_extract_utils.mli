@@ -60,12 +60,12 @@ module VariableAnalysis : sig
     (* All the definitions that are used by the extracted statements, along with their scopes. *)
     defs_with_scopes_of_local_uses: (Scope_api.Def.t * Scope_api.Scope.t) list;
     (* All the variables that have been reassigned within the extracted statements that
-     would be shadowed after refactor. *)
+       would be shadowed after refactor. *)
     vars_with_shadowed_local_reassignments: string list;
   }
 
   (* Finding lists of definitions relevant to refactor analysis.
-   See the type definition of `relevant_defs` for more information. *)
+     See the type definition of `relevant_defs` for more information. *)
   val collect_relevant_defs_with_scope :
     scope_info:Scope_api.info ->
     ssa_values:Ssa_api.values ->
@@ -73,9 +73,9 @@ module VariableAnalysis : sig
     relevant_defs
 
   (* After moving extracted statements into a function into another scope, some variables might
-   become undefined since original definition exists in inner scopes.
-   This function computes such list from the scope information of definitions and the location
-   of the scope to put the extracted function. *)
+     become undefined since original definition exists in inner scopes.
+     This function computes such list from the scope information of definitions and the location
+     of the scope to put the extracted function. *)
   val undefined_variables_after_extraction :
     scope_info:Scope_api.info ->
     defs_with_scopes_of_local_uses:(Scope_api.Def.t * Scope_api.Scope.t) list ->
@@ -85,7 +85,7 @@ module VariableAnalysis : sig
 
   type escaping_definitions = {
     (* A list of variable names that are defined inside the extracted statements,
-     but have uses outside of them.  *)
+       but have uses outside of them. *)
     escaping_variables: string list;
     (* Whether any of the escaping variables has another write outside of extracted statements. *)
     has_external_writes: bool;

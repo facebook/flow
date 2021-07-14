@@ -629,8 +629,8 @@ module KeepAliveLoop = LwtLoop.Make (struct
         Lwt.return_none
     | Unix.WSTOPPED signal ->
       (* If a Flow server has been stopped but hasn't exited then what should we do? I suppose we
-        * could try to signal it to resume. Or we could wait for it to start up again. But killing
-        * it and starting a new server seems easier *)
+         * could try to signal it to resume. Or we could wait for it to start up again. But killing
+         * it and starting a new server seems easier *)
       Logger.error
         "Flow server (pid %d) was stopped with %s signal. Sending sigkill"
         pid

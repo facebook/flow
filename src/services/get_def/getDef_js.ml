@@ -78,11 +78,11 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
     extract_member_def ~reader cx obj_t name
   | Get_def_request.(Type (_, v) | Typeof (_, v)) as request ->
     (* here lies the difference between "Go to Definition" and "Go to Type Definition":
-      the former should stop on annot_loc (where the value was annotated), while the
-      latter should jump to the def_loc (where the type was defined).
+       the former should stop on annot_loc (where the value was annotated), while the
+       latter should jump to the def_loc (where the type was defined).
 
-      for now, we only implement Go to Definition; if we want to do Go to Type
-      Definition, it would ignore the annot loc. *)
+       for now, we only implement Go to Definition; if we want to do Go to Type
+       Definition, it would ignore the annot loc. *)
     let rec loop =
       let open Type in
       function
@@ -96,8 +96,8 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
         | Get_def_request.Typeof _ -> loop t
         | _ ->
           (* `annot_aloc` is set when an AnnotT is the result of an actual source annotation;
-           it's not set when it's the result of a synthesized `typeof` from Signature_builder.
-           see `Flow_js.mk_typeof_annotation ~internal:true` *)
+             it's not set when it's the result of a synthesized `typeof` from Signature_builder.
+             see `Flow_js.mk_typeof_annotation ~internal:true` *)
           (match Reason.annot_aloc_of_reason r with
           | Some aloc -> Ok (loc_of_aloc ~reader aloc)
           | None -> loop t))
@@ -136,7 +136,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
       (match module_t with
       | ModuleT (_, { cjs_export; _ }, _) ->
         (* If we have a location for the cjs export, go there. Otherwise
-          * fall back to just the top of the file *)
+           * fall back to just the top of the file *)
         let loc =
           match cjs_export with
           | Some t -> TypeUtil.loc_of_t t |> loc_of_aloc ~reader (* This can return Loc.none *)

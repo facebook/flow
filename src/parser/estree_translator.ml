@@ -1447,8 +1447,8 @@ with type t = Impl.t = struct
          coordinated with Babel, ast-types, etc. so keeping the status quo for
          now. Here's an example: *)
       (* node "FunctionTypeRestParam" loc [
-         "argument", function_type_param argument;
-       ] *)
+           "argument", function_type_param argument;
+         ] *)
       function_type_param ?comments argument
     and function_type_this_constraint (loc, { Type.Function.ThisParam.annot = (_, annot); comments })
         =

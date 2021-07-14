@@ -87,8 +87,8 @@ let index ~workers ~reader parsed : (Export_index.t * Export_index.t) Lwt.t =
         (to_add, to_remove)
       | file_key ->
         (* TODO: when a file changes, the below removes the file entirely and then adds
-           back the new info, even though much or all of it is probably still the same.
-          instead, diff the old and new exports and make minimal changes. *)
+            back the new info, even though much or all of it is probably still the same.
+           instead, diff the old and new exports and make minimal changes. *)
         let to_remove =
           (* get old exports so we can remove outdated entries *)
           match Module_heaps.Mutator_reader.get_old_info ~reader ~audit file_key with

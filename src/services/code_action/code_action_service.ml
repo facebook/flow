@@ -272,7 +272,7 @@ let autofix_in_upstream_file
     let ast_src = fst ast |> Loc.source in
     if ast_src <> src then
       (* load ast of upstream file
-        In order to appear in an error, a loc must have a source *)
+         In order to appear in an error, a loc must have a source *)
       let source_file = Base.Option.value_exn src in
       ( Parsing_heaps.Reader.get_ast_unsafe ~reader source_file,
         source_file |> File_key.to_string |> File_url.create |> Lsp.DocumentUri.of_string )

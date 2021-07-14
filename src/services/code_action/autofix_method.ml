@@ -17,7 +17,7 @@ module Super_finder = struct
         node
 
       (* Any mentions of `this` in these constructs would reference
-       the `this` within those structures, so we ignore them *)
+         the `this` within those structures, so we ignore them *)
       method! class_ _ x = x
 
       method! function_declaration _ x = x
@@ -40,7 +40,7 @@ module Arguments_finder = struct
         id
 
       (* Any mentions of `this` in these constructs would reference
-       the `this` within those structures, so we ignore them *)
+         the `this` within those structures, so we ignore them *)
       method! function_declaration _ x = x
 
       method! function_expression _ x = x

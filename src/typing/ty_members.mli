@@ -9,11 +9,11 @@ type 'a member_info = {
   ty: 'a;
   def_loc: ALoc.t option;
   (* Autocomplete ranks members from primitive prototypes below user-defined members.
-    * `from_proto` indicates that the member is from a primitive prototype. *)
+     * `from_proto` indicates that the member is from a primitive prototype. *)
   from_proto: bool;
   (* If a member came from a possibly-null/undefined object, autocomplete may suggest
-    * that the user use optional chaining to access it.
-    * `from_nullable` indicates that the member is from a possibly-null/undefined object. *)
+     * that the user use optional chaining to access it.
+     * `from_nullable` indicates that the member is from a possibly-null/undefined object. *)
   from_nullable: bool;
 }
 

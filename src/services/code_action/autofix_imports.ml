@@ -214,8 +214,8 @@ let update_import ~options ~bindings stmt =
           (change, new_stmt)
       | (Default _, None, Some _) ->
         (* a `import {bar} from 'foo'` or `import * as Foo from 'foo'` already exists.
-         rather than change it to `import Foo, {bar} from 'foo'`, we choose to insert
-         a separate import. TODO: maybe make this a config option? *)
+           rather than change it to `import Foo, {bar} from 'foo'`, we choose to insert
+           a separate import. TODO: maybe make this a config option? *)
         let new_stmt =
           let (_, { StringLiteral.value = from; _ }) = source in
           insert_import ~options ~bindings ~from
@@ -262,9 +262,9 @@ let update_import ~options ~bindings stmt =
       | (Namespace _, Some _, _)
       | (Namespace _, None, Some (ImportNamedSpecifiers _)) ->
         (* trying to insert a named specifier, but a default or namespace import already
-         exists. rather than change it to `import Foo, {bar} from 'foo'`, we choose to
-         insert a separate import `import {bar} from 'foo'`.
-         TODO: maybe make this a config option? *)
+           exists. rather than change it to `import Foo, {bar} from 'foo'`, we choose to
+           insert a separate import `import {bar} from 'foo'`.
+           TODO: maybe make this a config option? *)
         let new_stmt =
           let (_, { StringLiteral.value = from; _ }) = source in
           insert_import ~options ~bindings ~from

@@ -13,7 +13,7 @@ struct
   let is_const_like info values loc =
     let uses = Scope_api.uses_of_use info loc in
     (* We consider a binding to be const-like if all reads point to the same
-     write, modulo initialization. *)
+       write, modulo initialization. *)
     let writes =
       L.LSet.fold
         (fun use acc ->

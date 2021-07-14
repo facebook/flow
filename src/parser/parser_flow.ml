@@ -179,7 +179,7 @@ module rec Parse : PARSER = struct
     let open Statement in
     match Peek.token env with
     (* Remember kids, these look like statements but they're not
-      * statements... (see section 13) *)
+       * statements... (see section 13) *)
     | T_LET -> let_ env
     | T_CONST -> const env
     | _ when Peek.is_function env -> Declaration._function env

@@ -9,11 +9,11 @@ type 'a member_info = {
   ty: 'a;
   def_loc: ALoc.t option;
   (* Autocomplete ranks members from primitive prototypes below user-defined members.
-    * `from_proto` indicates that the member is from a primitive prototype. *)
+     * `from_proto` indicates that the member is from a primitive prototype. *)
   from_proto: bool;
   (* If a member came from a possibly-null/undefined object, autocomplete may suggest
-    * that the user use optional chaining to access it.
-    * `from_nullable` indicates that the member is from a possibly-null/undefined object. *)
+     * that the user use optional chaining to access it.
+     * `from_nullable` indicates that the member is from a possibly-null/undefined object. *)
   from_nullable: bool;
 }
 
@@ -107,9 +107,9 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
                 | ( Some { ty; from_proto = fp; from_nullable = fn; def_loc = dl },
                     Some { ty = tys; from_proto = fps; from_nullable = fns; def_loc = dls } ) ->
                   (* We say that a member formed by unioning other members should be treated:
-                    * - as from a prototype only if all its constituent members are.
-                    * - as from a nullable object if any of its constituent members are.
-                    * we say its def_loc is that of an arbitrary constituent member. *)
+                     * - as from a prototype only if all its constituent members are.
+                     * - as from a nullable object if any of its constituent members are.
+                     * we say its def_loc is that of an arbitrary constituent member. *)
                   Some
                     {
                       ty = Nel.cons ty tys;
@@ -152,9 +152,9 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
                 | ( Some { ty; from_proto = fp; from_nullable = fn; def_loc = dl },
                     Some { ty = tys; from_proto = fps; from_nullable = fns; def_loc = dls } ) ->
                   (* We say that a member formed by intersecting other members should be treated:
-                    * - as from a prototype only if all its constituent members are.
-                    * - as from a nullable object only if all its constituent members are.
-                    * we say its def_loc is that of an arbitrary constituent member. *)
+                     * - as from a prototype only if all its constituent members are.
+                     * - as from a nullable object only if all its constituent members are.
+                     * we say its def_loc is that of an arbitrary constituent member. *)
                   Some
                     {
                       ty = Nel.cons ty tys;

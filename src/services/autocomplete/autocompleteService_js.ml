@@ -426,7 +426,7 @@ let autocomplete_literals ~cx ~genv ~tparams_rev ~ac_loc ~upper_bound =
   Base.List.map literals ~f:(fun ty ->
       let name = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty in
       (* TODO: if we had both the expanded and unexpanded type alias, we'd
-        use the unexpanded alias for `ty` and the expanded literal for `name`. *)
+         use the unexpanded alias for `ty` and the expanded literal for `name`. *)
       autocomplete_create_result
         ~insert_text:name
         ~rank:0

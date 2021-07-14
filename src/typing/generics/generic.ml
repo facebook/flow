@@ -236,12 +236,12 @@ let rec satisfies ~printer id1 id2 =
   match (id1, id2) with
   | (Bound bound1, Bound bound2) -> bound_satisfies bound1 bound2
   (* A generic is interchangeable with a spread of itself,
-     as long as the spread doesn't contain other generics, and as long as the type bounds
-    are compatible too. Example:
+      as long as the spread doesn't contain other generics, and as long as the type bounds
+     are compatible too. Example:
 
-      function f<X: {}>(x: X): {...X} {
-        return x; // ok
-      }
+       function f<X: {}>(x: X): {...X} {
+         return x; // ok
+       }
   *)
   | (Bound bound1, Spread (bound2, [])) -> bound_satisfies bound1 bound2
   (* A 'bound' generic only represents one bound, so it can't
@@ -284,20 +284,20 @@ let rec satisfies ~printer id1 id2 =
     printer (lazy ["Generics unsatisfied: more elements in upper bound than lower bound"]);
     Upper id2
   (* When comparing two spreads, we drop the tail elements of the lower bound so that
-     its length matches the upper bound, and then we compare the elements pairwise. If they're
-     all satisfied, then the spreads are satisfied. Recall the invariant that any generic exists
-     only once in the spread list.
+      its length matches the upper bound, and then we compare the elements pairwise. If they're
+      all satisfied, then the spreads are satisfied. Recall the invariant that any generic exists
+      only once in the spread list.
 
-     function a<X: {}, Y: {}, Z: {}>(x: X, y: Y) {
-      ({...x, ...y}: {...X}); // should be error
-      ({...y, ...x}: {...X}); // yup
-      ({...x}: {...Y, ...X}); // nope
-      ({...y, ...x}: {...X, ...Y}); // should be error
-      ({...x, ...y}: {...X, ...Y}); // yup
-      ({...x, ...y}: {...X, ...Y, ...Y}); // yup
-      ({...x, ...y}: {...Y, ...X, ...Y}); // yup
-      ({...x, ...y}: {...X, ...Z, ...Y}); // nope
-    }
+      function a<X: {}, Y: {}, Z: {}>(x: X, y: Y) {
+       ({...x, ...y}: {...X}); // should be error
+       ({...y, ...x}: {...X}); // yup
+       ({...x}: {...Y, ...X}); // nope
+       ({...y, ...x}: {...X, ...Y}); // should be error
+       ({...x, ...y}: {...X, ...Y}); // yup
+       ({...x, ...y}: {...X, ...Y, ...Y}); // yup
+       ({...x, ...y}: {...Y, ...X, ...Y}); // yup
+       ({...x, ...y}: {...X, ...Z, ...Y}); // nope
+     }
   *)
   | (Spread s1, Spread s2) ->
     let s1 = Nel.to_list s1 in

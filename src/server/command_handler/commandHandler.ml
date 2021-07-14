@@ -1761,7 +1761,7 @@ let handle_persistent_signaturehelp_lsp
     | Some file_input -> file_input
     | None ->
       (* We must have failed to get the client when we first tried. We could throw here, but this is
-        * a little more defensive. The only danger here is that the file contents may have changed *)
+         * a little more defensive. The only danger here is that the file contents may have changed *)
       file_input_of_text_document_position ~client params.SignatureHelp.loc
   in
   let (line, col) = Flow_lsp_conversions.position_of_document_position params.SignatureHelp.loc in
@@ -2367,7 +2367,7 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
   | LspToServer (RequestMessage (id, _))
     when IdSet.mem id !ServerMonitorListenerState.cancellation_requests ->
     (* We don't do any work, we just immediately tell the monitor that this request was already
-      * canceled *)
+       * canceled *)
     Handle_persistent_immediately (handle_persistent_canceled ~ret:() ~id ~metadata)
   | Subscribe ->
     (* This mutates env, so it can't run in parallel *)
@@ -2420,14 +2420,14 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
       Handle_persistent_immediately (handle_persistent_did_close_notification_no_op ~metadata)
   | LspToServer (NotificationMessage (CancelRequestNotification params)) ->
     (* The general idea here is this:
-      *
-      * 1. As soon as we get a cancel notification, add the ID to the canceled requests set.
-      * 2. When a request comes in or runs with the canceled ID, cancel that request and immediately
-      *    respond that the request has been canceled.
-      * 3. When we go to run a request that has been canceled, skip it's normal handler and instead
-      *    respond that the request has been canceled.
-      * 4. When the nonparallelizable cancel notification workload finally runs, remove the ID from
-      *    the set. We're guaranteed that the canceled request will not show up later *)
+       *
+       * 1. As soon as we get a cancel notification, add the ID to the canceled requests set.
+       * 2. When a request comes in or runs with the canceled ID, cancel that request and immediately
+       *    respond that the request has been canceled.
+       * 3. When we go to run a request that has been canceled, skip it's normal handler and instead
+       *    respond that the request has been canceled.
+       * 4. When the nonparallelizable cancel notification workload finally runs, remove the ID from
+       *    the set. We're guaranteed that the canceled request will not show up later *)
     let id = params.CancelRequest.id in
     ServerMonitorListenerState.(cancellation_requests := IdSet.add id !cancellation_requests);
     Handle_nonparallelizable_persistent (handle_persistent_cancel_notification ~params ~metadata)
@@ -2486,7 +2486,7 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
       file_input_of_text_document_identifier_opt ~client_id textDocument
     in
     (* rename delegates to find-refs, which can be kind of slow and might mutate the env, so it
-      * can't run in parallel *)
+       * can't run in parallel *)
     Handle_nonparallelizable_persistent
       (handle_persistent_rename ~reader ~genv ~id ~params ~file_input ~metadata)
   | LspToServer (RequestMessage (id, RageRequest)) ->

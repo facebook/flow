@@ -42,8 +42,8 @@ let (process_fsnotify_event : DfindEnv.t -> SSet.t -> Fsnotify.event -> SSet.t) 
   DfindAddFile.path env path;
 
   (* Add everything new we found in this directory
-    * (empty when it's a regular file)
-    *)
+     * (empty when it's a regular file)
+  *)
   let dirty = SSet.union env.new_files dirty in
   dirty
 

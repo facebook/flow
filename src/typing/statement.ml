@@ -294,7 +294,7 @@ class object_this_finder =
       node
 
     (* Any mentions of `this` in these constructs would reference
-      the `this` within those structures, so we ignore them *)
+       the `this` within those structures, so we ignore them *)
     method! class_ _ x = x
 
     method! function_declaration _ x = x
@@ -1361,8 +1361,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         (* merge original changeset back in *)
         let _ = Changeset.Global.merge incoming_changes in
         (* abnormal exit: if every case exits abnormally the same way (or falls
-           through to a case that does), then the switch as a whole exits that way.
-          (as with if/else, we merge `throw` into `return` when both appear) *)
+            through to a case that does), then the switch as a whole exits that way.
+           (as with if/else, we merge `throw` into `return` when both appear) *)
         let uniform_switch_exit case_exits =
           let rec loop = function
             | (acc, fallthrough, []) ->
@@ -7558,7 +7558,7 @@ and mk_class cx class_loc ~class_annot ~name_loc ~general reason c =
    type. *)
 and mk_class_sig =
   Class_stmt_sig.(
-    (*  Given information about a field, returns:
+    (* Given information about a field, returns:
        - Class_sig.field representation of this field
        - typed AST of the field's type annotation
        - a function which will return a typed AST of the field's initializer expression.
@@ -7728,7 +7728,7 @@ and mk_class_sig =
                   reason
                   func
               in
-              (*  The body of a class method doesn't get checked until Class_sig.toplevels
+              (* The body of a class method doesn't get checked until Class_sig.toplevels
                  is called on the class sig (in this case c). The order of how the methods
                  were arranged in the class is lost by the time this happens, so rather
                  than attempting to return a list of method bodies from the Class_sig.toplevels
@@ -8225,9 +8225,9 @@ and mk_arrow cx ~annot reason func =
   let this_recipe _ =
     let (_, this) = Env.find_entry cx (internal_name "this") loc in
     (* Do not expose the type of `this` in the function's type. This call to
-    function_decl has already done the necessary checking of `this` in
-    the body of the function. Now we want to avoid re-binding `this` to
-    objects through which the function may be called. *)
+       function_decl has already done the necessary checking of `this` in
+       the body of the function. Now we want to avoid re-binding `this` to
+       objects through which the function may be called. *)
     (dummy_this loc, this)
   in
   let (fun_type, reconstruct_ast) = function_decl id cx ~annot reason func this_recipe super in

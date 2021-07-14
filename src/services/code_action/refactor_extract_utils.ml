@@ -34,11 +34,11 @@ module StatementsExtractor = struct
         if Loc.contains extract_range statement_loc then
           let () = this#collect_statement stmt in
           (* If the statement is already completely contained in the range, do not recursve deeper
-           to collect more nested ones. *)
+             to collect more nested ones. *)
           stmt
         else if Loc.contains statement_loc extract_range then
           (* If the range is completely contained in the statement,
-           we should recursve deeper to find smaller nested statements that are contained in the range. *)
+             we should recursve deeper to find smaller nested statements that are contained in the range. *)
           super#statement stmt
         else if Loc.intersects extract_range statement_loc then
           (* When there is intersection, it means that the selection is not allowed for extraction. *)
@@ -333,40 +333,40 @@ module VariableAnalysis = struct
                 (Scope_api.DefMap.add def () used_def_acc, shadowed_local_reassignment_acc)
               else
                 (* We do not need to worry about a local reassignment if the variable is only used
-                 within extracted statements, since all uses will still read the correct modified
-                 value within extracted statements.
+                   within extracted statements, since all uses will still read the correct modified
+                   value within extracted statements.
 
-                 e.g. We have
+                   e.g. We have
 
-                 ```
-                 // extracted statements start
-                 let a = 3;
-                 a = 4;
-                 console.log(a);
-                 // extracted statements end
-                 // no more uses of `a`
-                 ```
-
-                 Then refactor it into
-
-                 ```
-                 newFunction();
-
-                 function newFunction() {
+                   ```
+                   // extracted statements start
                    let a = 3;
                    a = 4;
                    console.log(a);
-                 }
-                 ```
+                   // extracted statements end
+                   // no more uses of `a`
+                   ```
 
-                 does not change the semantics.
-                 *)
+                   Then refactor it into
+
+                   ```
+                   newFunction();
+
+                   function newFunction() {
+                     let a = 3;
+                     a = 4;
+                     console.log(a);
+                   }
+                   ```
+
+                   does not change the semantics.
+                *)
                 let def_loc = fst def.Scope_api.Def.locs in
                 if not (Loc.contains extracted_statements_loc def_loc) then
                   let has_local_reassignment =
                     (* Find whether there is a local write within the selected statements,
-                     while there is already a def outside of them.
-                     If there is a local write, we know the variable has been mutated locally. *)
+                       while there is already a def outside of them.
+                       If there is a local write, we know the variable has been mutated locally. *)
                     match LocMap.find_opt use ssa_values with
                     | None -> false
                     | Some writes ->
@@ -424,17 +424,17 @@ module VariableAnalysis = struct
         None
       else
         (* If a definition is completely nested within the scope of the function to put `newFunction`
-         definition, then the definition will be unusable when the statements are moving to this
-         higher function scope that does not have the definition.
-         This is the indicator that the variable will be undefined. *)
+           definition, then the definition will be unusable when the statements are moving to this
+           higher function scope that does not have the definition.
+           This is the indicator that the variable will be undefined. *)
         let def_scope_is_within_function_scope function_scope =
           Scope_api.scope_within scope_info function_scope def_scope
         in
         (* Some of the nodes like functions might have two scopes, one for name and one for body with
-         the relation name scope > body scope.
-         We must check using `List.for_all` instead of `List.exists`, since a def might be exactly
-         in the body scope, and `def_scope_is_within_function_scope name_scope body_scope` will be
-         true, which incorrectly decides that a variable is undefined. *)
+           the relation name scope > body scope.
+           We must check using `List.for_all` instead of `List.exists`, since a def might be exactly
+           in the body scope, and `def_scope_is_within_function_scope name_scope body_scope` will be
+           true, which incorrectly decides that a variable is undefined. *)
         if List.for_all def_scope_is_within_function_scope new_function_target_scopes then
           Some (actual_name, def_loc)
         else
@@ -466,7 +466,7 @@ module VariableAnalysis = struct
                   | None ->
                     (* use is a write. *)
                     (* Since we already know the use is outside of extracted statements,
-                     we know this is an external write *)
+                       we know this is an external write *)
                     true
                   | Some write_locs ->
                     (* use is a read *)

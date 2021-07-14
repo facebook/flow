@@ -48,7 +48,7 @@ module FindProviders (L : Loc_sig.S) = struct
         case, we exclude declarations--declare_locs and def_locs should be disjoint.
       * provider_locs are what we're calculating in this module, and can be either declares or defs. We
         expect that provider_locs is a subset of the union of def_locs and declare_locs.
-   *)
+  *)
   type entry = {
     entry_id: Id.t;
     name: string;
@@ -59,15 +59,15 @@ module FindProviders (L : Loc_sig.S) = struct
   }
 
   (* This records, per variable and per scope, the locations of providers for that variable within the scope or any child scopes.
-   The exact_locs field records the precise location of the variable being provided, while relative_locs records the location of
-   the statement *within the current scope* in which the provider lives. For example, in a program like
+      The exact_locs field records the precise location of the variable being provided, while relative_locs records the location of
+      the statement *within the current scope* in which the provider lives. For example, in a program like
 
-   function f() {
-     if (condition) { var x = 42 };
-   }
+      function f() {
+        if (condition) { var x = 42 };
+      }
 
-  The lexical scope for `f` will contain a `local_providers` for `x`, which contains an `exact_locs` pointing to the actual VariableDeclaration
-  node, and a `relative_locs` pointing to the IfStatement.
+     The lexical scope for `f` will contain a `local_providers` for `x`, which contains an `exact_locs` pointing to the actual VariableDeclaration
+     node, and a `relative_locs` pointing to the IfStatement.
   *)
   type local_providers = {
     exact_locs: L.LSet.t;
@@ -75,8 +75,8 @@ module FindProviders (L : Loc_sig.S) = struct
   }
 
   (* Individual lexical scope. Entries are variables "native" to this scope,
-  children are the child scopes keyed by their locations, and local_providers
-  are as described above *)
+     children are the child scopes keyed by their locations, and local_providers
+     are as described above *)
   type scope = {
     kind: kind;
     entries: entry SMap.t;
@@ -121,16 +121,16 @@ module FindProviders (L : Loc_sig.S) = struct
   let env_invariant_violated s = failwith ("Environment invariant violated: " ^ s)
 
   (* This function finds the right set of entries to add a new variable to in the scope chain
-     based on whether it's a let, const, or var; it also returns a function to rebuild an environment
-     with a new set of entries for this place. This lets us update the environment at any point
-     in the stack functionally. For example,
+      based on whether it's a let, const, or var; it also returns a function to rebuild an environment
+      with a new set of entries for this place. This lets us update the environment at any point
+      in the stack functionally. For example,
 
-      let (entries, set_entries) = find_entries_for_new_variable kind env in
-      let new_entries = modify_entries entries in
-      let env = set_entries new_entries
+       let (entries, set_entries) = find_entries_for_new_variable kind env in
+       let new_entries = modify_entries entries in
+       let env = set_entries new_entries
 
-    This would produce a new version of `env` where the `entries` field in the scope where a new variable with the
-    appropriate `kind` would be added has been modified, but is otherwise the same as the original env.*)
+     This would produce a new version of `env` where the `entries` field in the scope where a new variable with the
+     appropriate `kind` would be added has been modified, but is otherwise the same as the original env.*)
   let find_entries_for_new_variable kind env =
     let rec loop env rev_head =
       match (env, kind) with
@@ -272,8 +272,8 @@ module FindProviders (L : Loc_sig.S) = struct
     | ( ({ providers = pchild; entries; _ } as child),
         ({ children; providers = pparent; _ } as parent) :: rest ) ->
       (* For all variables that aren't native to the child scope, update the parent scope's
-       provider_info with whatever providing information the child scope contains,
-       coarsening the relative_locs to point at the child scope as a whole. *)
+         provider_info with whatever providing information the child scope contains,
+         coarsening the relative_locs to point at the child scope as a whole. *)
       let pchild_promoted =
         SMap.filter (fun k _ -> not (SMap.mem k entries)) pchild
         |> SMap.map (fun { relative_locs = _; exact_locs } ->
@@ -289,9 +289,9 @@ module FindProviders (L : Loc_sig.S) = struct
     | (_, []) -> env_invariant_violated "Popping to empty stack"
 
   (* Root visitor. Uses the `enter_lex_child` function parameter to manipulate the environment when it dives into a scope,
-   and calls `exit_lex_child` when it leaves a scope. For branching statements -- If, Try, and Switch -- it uses the same
-   initial env when it explores each branch, and then joins them using `join_envs`. It also has a "context" `cx type, which
-   is not accumulated (unlike the env) but stores contextual information using `in_context`. *)
+     and calls `exit_lex_child` when it leaves a scope. For branching statements -- If, Try, and Switch -- it uses the same
+     initial env when it explores each branch, and then joins them using `join_envs`. It also has a "context" `cx type, which
+     is not accumulated (unlike the env) but stores contextual information using `in_context`. *)
   class ['cx] finder ~(env : env) ~(cx : 'cx) ~enter_lex_child =
     object (this)
       inherit [env * 'cx, L.t] Flow_ast_visitor.visitor ~init:(env, cx) as super
@@ -315,8 +315,8 @@ module FindProviders (L : Loc_sig.S) = struct
           res
 
       (* Use the `enter_lex_child` parameter to push a new scope onto the environment,
-      and then pop it off after calling `meth` using `exit_lex_child` (which is not a
-      parameter, but refers to the function defined above) *)
+         and then pop it off after calling `meth` using `exit_lex_child` (which is not a
+         parameter, but refers to the function defined above) *)
       method enter_scope : 'a. kind -> (L.t -> 'a -> 'a) -> L.t -> 'a -> 'a =
         fun kind meth loc item ->
           let (env, cx) = this#acc in
@@ -351,7 +351,7 @@ module FindProviders (L : Loc_sig.S) = struct
       method! function_expression = this#enter_scope Var super#function_expression
 
       (* The identifier of a function declaration belongs to the outer scope, but its parameters and body belong to its own scope--hence the annoying
-       need to write out the full visitor and only enter a var scope for its parameters and body *)
+         need to write out the full visitor and only enter a var scope for its parameters and body *)
       method! function_declaration loc (expr : ('loc, 'loc) Ast.Function.t) =
         let open Ast.Function in
         let {
@@ -383,14 +383,14 @@ module FindProviders (L : Loc_sig.S) = struct
           expr
 
       (* For the purposes of this analysis, we don't need to consider `if` statements without alternatives,
-       and similarly elsewhere we don't worry about merging the initial environment of e.g. loops with the
-       final environment from their bodies. It's ok if we're basing typechecking on statements that might not
-       be executed at runtime--if the only assignment to a variable is in a loop or a single-armed if, we still
-       consider it outside that context to have the type it was assigned to in context, even if at runtime the
-       assignment might not occur.
+         and similarly elsewhere we don't worry about merging the initial environment of e.g. loops with the
+         final environment from their bodies. It's ok if we're basing typechecking on statements that might not
+         be executed at runtime--if the only assignment to a variable is in a loop or a single-armed if, we still
+         consider it outside that context to have the type it was assigned to in context, even if at runtime the
+         assignment might not occur.
 
-       Because of this, we only need to join environments for multiply-branching statements, where different explicit
-       choices can be made by the programmer in each branch. *)
+         Because of this, we only need to join environments for multiply-branching statements, where different explicit
+         choices can be made by the programmer in each branch. *)
       method! if_statement _loc (stmt : ('loc, 'loc) Ast.Statement.If.t) =
         let open Ast.Statement.If in
         let { test; consequent; alternate; comments } = stmt in
@@ -475,12 +475,12 @@ module FindProviders (L : Loc_sig.S) = struct
         expr
 
       (* Don't call pattern_identifier on property keys--either it will have been called twice, or incorrectly.
-        The example to consider is
-          { a1: a } = ...
-        pattern_object_property_identifier_key will be called on a1, but a1 is not a variable in scope, its a property on the
-        RHS object. On the other hand, a is a variable in scope, which will be visited by pattern_object_property_pattern.
-        If we didn't rename a1, we'd visit a1 with both pattern_object_property_identifier_key and
-        pattern_object_property_pattern, so it's safe to only visit it with the latter. *)
+         The example to consider is
+           { a1: a } = ...
+         pattern_object_property_identifier_key will be called on a1, but a1 is not a variable in scope, its a property on the
+         RHS object. On the other hand, a is a variable in scope, which will be visited by pattern_object_property_pattern.
+         If we didn't rename a1, we'd visit a1 with both pattern_object_property_identifier_key and
+         pattern_object_property_pattern, so it's safe to only visit it with the latter. *)
       method! pattern_object_property_identifier_key ?kind (key : ('loc, 'loc) Ast.Identifier.t) =
         ignore kind;
         key
@@ -498,7 +498,7 @@ module FindProviders (L : Loc_sig.S) = struct
   type find_declarations_cx = { init_state: state }
 
   (* This visitor finds variable declarations and records them, and if the declaration includes an initialization or an annotation,
-   also marks them as providers. *)
+     also marks them as providers. *)
   class find_declarations ~env () =
     object (this)
       inherit
@@ -720,7 +720,7 @@ module FindProviders (L : Loc_sig.S) = struct
   type find_providers_cx = { null_assign: bool }
 
   (* This visitor finds variable assignments that are not declarations and adds them to the providers for that variable
-   if appropriate. *)
+     if appropriate. *)
   class find_providers ~env () =
     object (this)
       inherit
