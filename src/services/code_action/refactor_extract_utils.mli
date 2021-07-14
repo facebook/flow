@@ -61,7 +61,7 @@ module VariableAnalysis : sig
     defs_with_scopes_of_local_uses: (Scope_api.Def.t * Scope_api.Scope.t) list;
     (* All the variables that have been reassigned within the extracted statements that
        would be shadowed after refactor. *)
-    vars_with_shadowed_local_reassignments: string list;
+    vars_with_shadowed_local_reassignments: (string * Loc.t) list;
   }
 
   (* Finding lists of definitions relevant to refactor analysis.
@@ -86,7 +86,7 @@ module VariableAnalysis : sig
   type escaping_definitions = {
     (* A list of variable names that are defined inside the extracted statements,
        but have uses outside of them. *)
-    escaping_variables: string list;
+    escaping_variables: (string * Loc.t) list;
     (* Whether any of the escaping variables has another write outside of extracted statements. *)
     has_external_writes: bool;
   }

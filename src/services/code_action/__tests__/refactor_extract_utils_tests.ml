@@ -407,7 +407,7 @@ let collect_relevant_defs_with_scope_tests =
       |> List.sort String.compare
     in
     let actual_vars_with_shadowed_local_reassignments =
-      List.sort String.compare vars_with_shadowed_local_reassignments
+      vars_with_shadowed_local_reassignments |> List.map fst |> List.sort String.compare
     in
     let expected_defs_of_local_uses = List.sort String.compare expected_defs_of_local_uses in
     let expected_vars_with_shadowed_local_reassignments =
@@ -654,7 +654,7 @@ let escaping_locally_defined_variables_tests =
     let { VariableAnalysis.escaping_variables; has_external_writes = actual_has_external_writes } =
       VariableAnalysis.collect_escaping_local_defs ~scope_info ~ssa_values ~extracted_statements_loc
     in
-    let actual_variables = List.sort String.compare escaping_variables in
+    let actual_variables = escaping_variables |> List.map fst |> List.sort String.compare in
     let expected_variables = List.sort String.compare expected_variables in
     assert_equal ~ctxt ~printer:(String.concat ", ") expected_variables actual_variables;
     assert_equal

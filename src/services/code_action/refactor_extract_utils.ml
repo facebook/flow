@@ -319,7 +319,7 @@ end
 module VariableAnalysis = struct
   type relevant_defs = {
     defs_with_scopes_of_local_uses: (Scope_api.Def.t * Scope_api.Scope.t) list;
-    vars_with_shadowed_local_reassignments: string list;
+    vars_with_shadowed_local_reassignments: (string * Loc.t) list;
   }
 
   let collect_relevant_defs_with_scope ~scope_info ~ssa_values ~extracted_statements_loc =
@@ -380,7 +380,8 @@ module VariableAnalysis = struct
                   in
                   if has_local_reassignment then
                     ( used_def_acc,
-                      SSet.add def.Scope_api.Def.actual_name shadowed_local_reassignment_acc )
+                      SMap.add def.Scope_api.Def.actual_name def_loc shadowed_local_reassignment_acc
+                    )
                   else
                     acc
                 else
@@ -388,7 +389,7 @@ module VariableAnalysis = struct
             locals
             acc)
         scope_info.Scope_api.scopes
-        (Scope_api.DefMap.empty, SSet.empty)
+        (Scope_api.DefMap.empty, SMap.empty)
     in
     {
       defs_with_scopes_of_local_uses =
@@ -406,7 +407,7 @@ module VariableAnalysis = struct
           scope_info.Scope_api.scopes
           [];
       vars_with_shadowed_local_reassignments =
-        SSet.elements shadowed_local_reassignments_within_extracted_statements;
+        shadowed_local_reassignments_within_extracted_statements |> SMap.elements |> List.rev;
     }
 
   let undefined_variables_after_extraction
@@ -443,7 +444,7 @@ module VariableAnalysis = struct
     List.filter_map to_undefined_variable defs_with_scopes_of_local_uses |> List.rev
 
   type escaping_definitions = {
-    escaping_variables: string list;
+    escaping_variables: (string * Loc.t) list;
     has_external_writes: bool;
   }
 
@@ -459,7 +460,7 @@ module VariableAnalysis = struct
                 && not (Loc.contains extracted_statements_loc use)
               then
                 let (variables, has_external_writes) = acc in
-                ( SSet.add actual_name variables,
+                ( SMap.add actual_name def_loc variables,
                   has_external_writes
                   ||
                   match LocMap.find_opt use ssa_values with
@@ -483,9 +484,9 @@ module VariableAnalysis = struct
             locals
             acc)
         scope_info.Scope_api.scopes
-        (SSet.empty, false)
+        (SMap.empty, false)
     in
-    { escaping_variables = SSet.elements escaping_variables; has_external_writes }
+    { escaping_variables = escaping_variables |> SMap.elements |> List.rev; has_external_writes }
 end
 
 module TypeSynthesizer = struct

@@ -64,6 +64,9 @@ module Types = struct
   let object_ ?(loc = Loc.none) ?exact ?inexact properties =
     (loc, Ast.Type.Object (Objects.make ?exact ?inexact properties))
 
+  let type_args ?comments ?(loc = Loc.none) arguments =
+    (loc, { Ast.Type.TypeArgs.arguments; comments })
+
   let unqualified_generic ?comments ?(loc = Loc.none) ?targs name =
     ( loc,
       Ast.Type.Generic
@@ -161,7 +164,14 @@ module Functions = struct
 
   let body_expression expr = BodyExpression expr
 
-  let make ~id ?params:params_ ?(generator = false) ?(async = false) ?body:body_ () =
+  let make
+      ~id
+      ?params:params_
+      ?(return = Ast.Type.Missing Loc.none)
+      ?(generator = false)
+      ?(async = false)
+      ?body:body_
+      () =
     let params =
       match params_ with
       | Some ps -> ps
@@ -179,7 +189,7 @@ module Functions = struct
       async;
       generator;
       predicate = None;
-      return = Ast.Type.Missing Loc.none;
+      return;
       tparams = None;
       sig_loc = Loc.none;
       comments = None;

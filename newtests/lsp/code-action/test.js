@@ -1379,7 +1379,7 @@ export default (suite(
                           },
                         },
                         newText:
-                          '\nfunction newFunction() {\n  console.log("foo");\n  console.log("bar");\n}',
+                          '\nfunction newFunction(): void {\n  console.log("foo");\n  console.log("bar");\n}',
                       },
                     ],
                   },
@@ -1426,7 +1426,7 @@ export default (suite(
                           },
                         },
                         newText:
-                          'function newFunction() {\n  console.log("foo");\n  console.log("bar");\n}',
+                          'function newFunction(): void {\n  console.log("foo");\n  console.log("bar");\n}',
                       },
                     ],
                   },
@@ -1499,7 +1499,7 @@ export default (suite(
                           end: {line: 8, character: 1},
                         },
                         newText:
-                          '\nfunction newFunction(foo: Foo) {\n  console.log(foo);\n}',
+                          '\nfunction newFunction(foo: Foo): void {\n  console.log(foo);\n}',
                       },
                     ],
                   },
@@ -1534,7 +1534,7 @@ export default (suite(
                           end: {line: 7, character: 19},
                         },
                         newText:
-                          '\nfunction newFunction() {\n  console.log(foo);\n}',
+                          '\nfunction newFunction(): void {\n  console.log(foo);\n}',
                       },
                     ],
                   },
@@ -1596,7 +1596,7 @@ export default (suite(
                           end: {line: 8, character: 1},
                         },
                         newText:
-                          '\nfunction newFunction(getFoo2: () => Foo) {\n  const foo = getFoo2();\n  return foo;\n}',
+                          '\nfunction newFunction(getFoo2: () => Foo): Foo {\n  const foo = getFoo2();\n  return foo;\n}',
                       },
                     ],
                   },
@@ -1620,6 +1620,14 @@ export default (suite(
                     '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-import-type.js': [
                       {
                         range: {
+                          start: {line: 2, character: 0},
+                          end: {line: 2, character: 0},
+                        },
+                        newText:
+                          'import type { Foo } from "./refactor-extract-function-type-provider";\n\n',
+                      },
+                      {
+                        range: {
                           start: {line: 6, character: 14},
                           end: {line: 6, character: 21},
                         },
@@ -1631,7 +1639,7 @@ export default (suite(
                           end: {line: 7, character: 19},
                         },
                         newText:
-                          'function newFunction() {\n  const foo = getFoo2();\n  return foo;\n}',
+                          'function newFunction(): Foo {\n  const foo = getFoo2();\n  return foo;\n}',
                       },
                     ],
                   },

@@ -35,31 +35,52 @@ let create_extracted_function
     |> Functions.params
   in
   let returned_variables =
-    escaping_definitions.VariableAnalysis.escaping_variables
-    @ vars_with_shadowed_local_reassignments
+    List.map
+      (fun (v, loc) ->
+        (v, loc |> type_synthesizer |> Option.value ~default:(Loc.none, Flow_ast.Type.Any None)))
+      ( escaping_definitions.VariableAnalysis.escaping_variables
+      @ vars_with_shadowed_local_reassignments )
   in
-  let body_statements =
+  let (body_statements, return_type) =
     match returned_variables with
-    | [] -> extracted_statements
-    | [only_returned_variable] ->
-      extracted_statements
-      @ [Statements.return (Some (Expressions.identifier only_returned_variable))]
+    | [] -> (extracted_statements, (Loc.none, Flow_ast.Type.Void None))
+    | [(only_returned_variable, return_type)] ->
+      ( extracted_statements
+        @ [Statements.return (Some (Expressions.identifier only_returned_variable))],
+        return_type )
     | _ ->
-      extracted_statements
-      @ [
-          Statements.return
-            (Some
-               (Expressions.object_
-                  ( returned_variables
-                  |> List.map (fun def ->
-                         Expressions.object_property
-                           ~shorthand:true
-                           (Expressions.object_property_key def)
-                           (Expressions.identifier def)) )));
-        ]
+      ( extracted_statements
+        @ [
+            Statements.return
+              (Some
+                 (Expressions.object_
+                    ( returned_variables
+                    |> List.map (fun (def, _) ->
+                           Expressions.object_property
+                             ~shorthand:true
+                             (Expressions.object_property_key def)
+                             (Expressions.identifier def)) )));
+          ],
+        ( Loc.none,
+          Flow_ast.Type.Object
+            ( returned_variables
+            |> List.map (fun (v, type_) ->
+                   Flow_ast.Type.Object.Property
+                     (Types.Objects.property
+                        (Expressions.object_property_key v)
+                        (Flow_ast.Type.Object.Property.Init type_)))
+            |> Types.Objects.make ) ) )
+  in
+  let return_type =
+    if async_function then
+      Flow_ast.Type.Available
+        ( Types.unqualified_generic ~targs:(Types.type_args [return_type]) "Promise"
+        |> Types.annotation )
+    else
+      Flow_ast.Type.Available (Types.annotation return_type)
   in
   let body = Functions.body body_statements in
-  Functions.make ~id ~params ~async:async_function ~body ()
+  Functions.make ~id ~params ~return:return_type ~async:async_function ~body ()
 
 let create_extracted_function_call
     ~undefined_variables
@@ -96,7 +117,7 @@ let create_extracted_function_call
   let let_declarations =
     if has_vars_with_shadowed_local_reassignments then
       List.map
-        (fun v -> Statements.let_declaration [Statements.variable_declarator v])
+        (fun (v, _) -> Statements.let_declaration [Statements.variable_declarator v])
         escaping_definitions.VariableAnalysis.escaping_variables
     else
       []
@@ -108,7 +129,7 @@ let create_extracted_function_call
   let function_call_statement_with_collector =
     match returned_variables with
     | [] -> Statements.expression ~loc:extracted_statements_loc call
-    | [only_returned_variable] ->
+    | [(only_returned_variable, _)] ->
       if has_vars_with_shadowed_local_reassignments then
         Statements.expression
           ~loc:extracted_statements_loc
@@ -127,7 +148,7 @@ let create_extracted_function_call
               {
                 Object.properties =
                   returned_variables
-                  |> List.map (fun def ->
+                  |> List.map (fun (def, _) ->
                          Object.Property
                            ( Loc.none,
                              {
@@ -313,11 +334,24 @@ let provide_available_refactors ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader
             ~ssa_values
             ~extracted_statements_loc
         in
+        let escaping_definitions =
+          VariableAnalysis.collect_escaping_local_defs
+            ~scope_info
+            ~ssa_values
+            ~extracted_statements_loc
+        in
         let type_synthesizer_context =
           let locs =
             defs_with_scopes_of_local_uses
             |> List.map (fun ({ Scope_api.Def.locs = (def_loc, _); _ }, _) -> def_loc)
             |> LocSet.of_list
+          in
+          let locs =
+            List.fold_left
+              (fun acc (_, loc) -> LocSet.add loc acc)
+              locs
+              ( vars_with_shadowed_local_reassignments
+              @ escaping_definitions.VariableAnalysis.escaping_variables )
           in
           TypeSynthesizer.create_synthesizer_context
             ~full_cx
@@ -326,12 +360,6 @@ let provide_available_refactors ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader
             ~typed_ast
             ~reader
             ~locs
-        in
-        let escaping_definitions =
-          VariableAnalysis.collect_escaping_local_defs
-            ~scope_info
-            ~ssa_values
-            ~extracted_statements_loc
         in
         available_refactors
           ~scope_info
