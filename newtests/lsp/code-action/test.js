@@ -1447,5 +1447,210 @@ export default (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('provide codeAction for extract function with type imports', [
+      addFile(
+        'refactor-extract-function-type-provider.js.ignored',
+        'refactor-extract-function-type-provider.js',
+      ),
+      addFile(
+        'refactor-extract-function-import-type.js.ignored',
+        'refactor-extract-function-import-type.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri:
+            '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-import-type.js',
+        },
+        range: {start: {line: 7, character: 2}, end: {line: 7, character: 19}},
+        context: {
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Extract to function in module scope',
+                kind: 'refactor.extract',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-import-type.js': [
+                      {
+                        range: {
+                          start: {line: 2, character: 0},
+                          end: {line: 2, character: 0},
+                        },
+                        newText:
+                          'import type { Foo } from "./refactor-extract-function-type-provider";\n\n',
+                      },
+                      {
+                        range: {
+                          start: {line: 7, character: 2},
+                          end: {line: 7, character: 13},
+                        },
+                        newText: '(newFunction)',
+                      },
+                      {
+                        range: {
+                          start: {line: 8, character: 1},
+                          end: {line: 8, character: 1},
+                        },
+                        newText:
+                          '\nfunction newFunction(foo: Foo) {\n  console.log(foo);\n}',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'refactor_extract_function',
+                    'Extract to function in module scope',
+                  ],
+                },
+              },
+              {
+                title: "Extract to inner function in function 'test'",
+                kind: 'refactor.extract',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-import-type.js': [
+                      {
+                        range: {
+                          start: {line: 7, character: 2},
+                          end: {line: 7, character: 18},
+                        },
+                        newText: 'newFunction()',
+                      },
+                      {
+                        range: {
+                          start: {line: 7, character: 19},
+                          end: {line: 7, character: 19},
+                        },
+                        newText:
+                          '\nfunction newFunction() {\n  console.log(foo);\n}',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'refactor_extract_function',
+                    "Extract to inner function in function 'test'",
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri:
+            '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-import-type.js',
+        },
+        range: {start: {line: 6, character: 2}, end: {line: 6, character: 24}},
+        context: {
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Extract to function in module scope',
+                kind: 'refactor.extract',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-import-type.js': [
+                      {
+                        range: {
+                          start: {line: 2, character: 0},
+                          end: {line: 2, character: 0},
+                        },
+                        newText:
+                          'import type { Foo } from "./refactor-extract-function-type-provider";\n\n',
+                      },
+                      {
+                        range: {
+                          start: {line: 6, character: 14},
+                          end: {line: 6, character: 23},
+                        },
+                        newText: 'newFunction(getFoo2)',
+                      },
+                      {
+                        range: {
+                          start: {line: 8, character: 1},
+                          end: {line: 8, character: 1},
+                        },
+                        newText:
+                          '\nfunction newFunction(getFoo2: () => Foo) {\n  const foo = getFoo2();\n  return foo;\n}',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'refactor_extract_function',
+                    'Extract to function in module scope',
+                  ],
+                },
+              },
+              {
+                title: "Extract to inner function in function 'test'",
+                kind: 'refactor.extract',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-function-import-type.js': [
+                      {
+                        range: {
+                          start: {line: 6, character: 14},
+                          end: {line: 6, character: 21},
+                        },
+                        newText: 'newFunction',
+                      },
+                      {
+                        range: {
+                          start: {line: 7, character: 19},
+                          end: {line: 7, character: 19},
+                        },
+                        newText:
+                          'function newFunction() {\n  const foo = getFoo2();\n  return foo;\n}',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'refactor_extract_function',
+                    "Extract to inner function in function 'test'",
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
   ],
 ): Suite);

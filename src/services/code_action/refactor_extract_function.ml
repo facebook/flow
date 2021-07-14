@@ -171,7 +171,7 @@ let create_refactor
       ~new_function_target_scope_loc:target_body_loc
       ~extracted_statements_loc
   in
-  let { TypeSynthesizer.type_synthesizer; _ } =
+  let { TypeSynthesizer.type_synthesizer; added_imports } =
     TypeSynthesizer.create_type_synthesizer_with_import_adder type_synthesizer_context
   in
   (* Put extracted function to two lines after the end of program to have nice format. *)
@@ -184,40 +184,49 @@ let create_refactor
       ~is_method
       ~extracted_statements_loc
   in
-  if is_method then
-    RefactorProgramMappers.extract_to_method
-      ~target_body_loc
-      ~extracted_statements_loc
-      ~function_call_statements
-      ~method_declaration:
-        (Ast_builder.Classes.method_
-           ~id:"newMethod"
-           (create_extracted_function
-              ~type_synthesizer
-              ~undefined_variables
-              ~escaping_definitions
-              ~vars_with_shadowed_local_reassignments
-              ~async_function
-              ~name:"newMethod"
-              ~extracted_statements))
-      ast
-  else
-    RefactorProgramMappers.extract_to_function
-      ~target_body_loc
-      ~extracted_statements_loc
-      ~function_call_statements
-      ~function_declaration_statement:
-        ( Loc.none,
-          Flow_ast.Statement.FunctionDeclaration
-            (create_extracted_function
-               ~type_synthesizer
-               ~undefined_variables
-               ~escaping_definitions
-               ~vars_with_shadowed_local_reassignments
-               ~async_function
-               ~name:"newFunction"
-               ~extracted_statements) )
-      ast
+  let new_ast =
+    if is_method then
+      RefactorProgramMappers.extract_to_method
+        ~target_body_loc
+        ~extracted_statements_loc
+        ~function_call_statements
+        ~method_declaration:
+          (Ast_builder.Classes.method_
+             ~id:"newMethod"
+             (create_extracted_function
+                ~type_synthesizer
+                ~undefined_variables
+                ~escaping_definitions
+                ~vars_with_shadowed_local_reassignments
+                ~async_function
+                ~name:"newMethod"
+                ~extracted_statements))
+        ast
+    else
+      RefactorProgramMappers.extract_to_function
+        ~target_body_loc
+        ~extracted_statements_loc
+        ~function_call_statements
+        ~function_declaration_statement:
+          ( Loc.none,
+            Flow_ast.Statement.FunctionDeclaration
+              (create_extracted_function
+                 ~type_synthesizer
+                 ~undefined_variables
+                 ~escaping_definitions
+                 ~vars_with_shadowed_local_reassignments
+                 ~async_function
+                 ~name:"newFunction"
+                 ~extracted_statements) )
+        ast
+  in
+  (new_ast, added_imports ())
+
+type refactor = {
+  title: string;
+  new_ast: (Loc.t, Loc.t) Flow_ast.Program.t;
+  added_imports: (string * Autofix_imports.bindings) list;
+}
 
 let available_refactors
     ~scope_info
@@ -246,24 +255,28 @@ let available_refactors
     match LocationCollectors.find_closest_enclosing_class_scope ~ast ~extracted_statements_loc with
     | None -> []
     | Some (id, target_body_loc) ->
-      let new_ast = create_refactor ~is_method:true ~target_body_loc in
+      let (new_ast, added_imports) = create_refactor ~is_method:true ~target_body_loc in
       let title =
         match id with
         | None -> "Extract to method in anonymous class declaration"
         | Some id -> Printf.sprintf "Extract to method in class '%s'" id
       in
-      [(title, new_ast)]
+      [{ title; new_ast; added_imports }]
   in
   if in_class then
     extract_to_method_refactors
   else
     let create_inner_function_refactor (title, target_body_loc) =
-      ( Printf.sprintf "Extract to inner function in function '%s'" title,
-        create_refactor ~is_method:false ~target_body_loc )
+      let title = Printf.sprintf "Extract to inner function in function '%s'" title in
+      let (new_ast, added_imports) = create_refactor ~is_method:false ~target_body_loc in
+      { title; new_ast; added_imports }
+    in
+    let top_level_function_refactor =
+      let (new_ast, added_imports) = create_refactor ~is_method:false ~target_body_loc:(fst ast) in
+      { title = "Extract to function in module scope"; new_ast; added_imports }
     in
     let extract_to_functions_refactors =
-      ( "Extract to function in module scope",
-        create_refactor ~is_method:false ~target_body_loc:(fst ast) )
+      top_level_function_refactor
       :: List.map
            create_inner_function_refactor
            (LocationCollectors.collect_function_inserting_locs ~ast ~extracted_statements_loc)

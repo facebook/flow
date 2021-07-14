@@ -21,9 +21,9 @@ let assert_refactored ~ctxt expected source extract_range =
       ~typed_ast
       ~reader
       ~extract_range
-    |> List.map (fun (title, ast') ->
+    |> List.map (fun { Refactor_extract_function.title; new_ast; _ } ->
            ( title,
-             ast'
+             new_ast
              |> Js_layout_generator.program
                   ~opts:Js_layout_generator.default_opts
                   ~preserve_docblock:true

@@ -49,11 +49,12 @@ let extract_function_refactor_code_actions
     match loc.Loc.source with
     | None -> []
     | Some file ->
-      let lsp_action_from_refactor (title, new_ast) =
+      let lsp_action_from_refactor { Refactor_extract_function.title; new_ast; added_imports } =
         let diff = Insert_type.mk_diff ast new_ast in
         let opts = layout_options options in
         let edits =
-          Replacement_printer.mk_loc_patch_ast_differ ~opts diff
+          Autofix_imports.add_imports ~options:opts ~added_imports ast
+          @ Replacement_printer.mk_loc_patch_ast_differ ~opts diff
           |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
         in
         let diagnostic_title = "refactor_extract_function" in

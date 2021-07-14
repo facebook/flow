@@ -5,6 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type refactor = {
+  title: string;
+  new_ast: (Loc.t, Loc.t) Flow_ast.Program.t;
+  added_imports: (string * Autofix_imports.bindings) list;
+}
+
 val provide_available_refactors :
   ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
   full_cx:Context.t ->
@@ -13,4 +19,4 @@ val provide_available_refactors :
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   reader:Parsing_heaps.Reader.reader ->
   extract_range:Loc.t ->
-  (string * (Loc.t, Loc.t) Flow_ast.Program.t) list
+  refactor list
