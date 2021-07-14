@@ -13,7 +13,7 @@ let assert_refactored ~ctxt expected source extract_range =
   let typed_ast = typed_ast_of_ast ast in
   let reader = State_reader.create () in
   let actual =
-    Refactor_extract_function.provide_available_refactors
+    Refactor_extract.provide_available_refactors
       ~ast
       ~full_cx:dummy_context
       ~file:dummy_filename
@@ -21,7 +21,7 @@ let assert_refactored ~ctxt expected source extract_range =
       ~typed_ast
       ~reader
       ~extract_range
-    |> List.map (fun { Refactor_extract_function.title; new_ast; _ } ->
+    |> List.map (fun { Refactor_extract.title; new_ast; _ } ->
            ( title,
              new_ast
              |> Js_layout_generator.program
@@ -1069,5 +1069,4 @@ function level1() {
   ]
 
 let tests =
-  "refactor_extract_function"
-  >::: ["provide_available_refactor" >::: provide_available_refactor_tests]
+  "refactor_extract" >::: ["provide_available_refactor" >::: provide_available_refactor_tests]

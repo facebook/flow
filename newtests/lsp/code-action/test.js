@@ -1389,7 +1389,7 @@ export default (suite(
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                   arguments: [
                     'textDocument/codeAction',
-                    'refactor_extract_function',
+                    'refactor_extract',
                     'Extract to function in module scope',
                   ],
                 },
@@ -1436,7 +1436,7 @@ export default (suite(
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                   arguments: [
                     'textDocument/codeAction',
-                    'refactor_extract_function',
+                    'refactor_extract',
                     "Extract to inner function in function 'fooBar'",
                   ],
                 },
@@ -1509,7 +1509,7 @@ export default (suite(
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                   arguments: [
                     'textDocument/codeAction',
-                    'refactor_extract_function',
+                    'refactor_extract',
                     'Extract to function in module scope',
                   ],
                 },
@@ -1544,7 +1544,7 @@ export default (suite(
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                   arguments: [
                     'textDocument/codeAction',
-                    'refactor_extract_function',
+                    'refactor_extract',
                     "Extract to inner function in function 'test'",
                   ],
                 },
@@ -1606,7 +1606,7 @@ export default (suite(
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                   arguments: [
                     'textDocument/codeAction',
-                    'refactor_extract_function',
+                    'refactor_extract',
                     'Extract to function in module scope',
                   ],
                 },
@@ -1649,7 +1649,7 @@ export default (suite(
                   command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                   arguments: [
                     'textDocument/codeAction',
-                    'refactor_extract_function',
+                    'refactor_extract',
                     "Extract to inner function in function 'test'",
                   ],
                 },

@@ -43,13 +43,12 @@ let autofix_exports_code_actions
   else
     []
 
-let extract_function_refactor_code_actions
-    ~options ~ast ~full_cx ~file_sig ~typed_ast ~reader uri loc =
+let refactor_extract_code_actions ~options ~ast ~full_cx ~file_sig ~typed_ast ~reader uri loc =
   if Options.refactor options then
     match loc.Loc.source with
     | None -> []
     | Some file ->
-      let lsp_action_from_refactor { Refactor_extract_function.title; new_ast; added_imports } =
+      let lsp_action_from_refactor { Refactor_extract.title; new_ast; added_imports } =
         let diff = Insert_type.mk_diff ast new_ast in
         let opts = layout_options options in
         let edits =
@@ -57,7 +56,7 @@ let extract_function_refactor_code_actions
           @ Replacement_printer.mk_loc_patch_ast_differ ~opts diff
           |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
         in
-        let diagnostic_title = "refactor_extract_function" in
+        let diagnostic_title = "refactor_extract" in
         let open Lsp in
         CodeAction.Action
           {
@@ -76,7 +75,7 @@ let extract_function_refactor_code_actions
                   } );
           }
       in
-      Refactor_extract_function.provide_available_refactors
+      Refactor_extract.provide_available_refactors
         ~ast
         ~full_cx
         ~file
@@ -512,15 +511,7 @@ let code_actions_at_loc
       ~diagnostics
       uri
       loc
-    @ extract_function_refactor_code_actions
-        ~options
-        ~ast
-        ~full_cx:cx
-        ~file_sig
-        ~typed_ast
-        ~reader
-        uri
-        loc
+    @ refactor_extract_code_actions ~options ~ast ~full_cx:cx ~file_sig ~typed_ast ~reader uri loc
   in
   let error_fixes =
     code_actions_of_errors
