@@ -7,6 +7,7 @@
 
 [@@@warning "-39"] (* sedlex inserts some unnecessary `rec`s *)
 
+module Sedlexing = Flow_sedlexing
 open Token
 open Lex_env
 
@@ -315,7 +316,7 @@ let mk_bignum_singleton kind raw =
 
 let decode_identifier =
   let assert_valid_unicode_in_identifier env loc code =
-    let lexbuf = Sedlexing.from_int_array [| code |] in
+    let lexbuf = Sedlexing.from_int_code_point  code in
     match%sedlex lexbuf with
     | js_id_start -> env
     | js_id_continue -> env
@@ -432,7 +433,7 @@ let string_escape env lexbuf =
   | eof
   | '\\' ->
     let str = lexeme lexbuf in
-    let codes = Sedlexing.lexeme lexbuf |> Array.map Uchar.to_int in
+    let codes = Sedlexing.lexeme lexbuf (*|> Array.map Uchar.to_int*) in
     (env, str, codes, false)
   | ('x', hex_digit, hex_digit) ->
     let str = lexeme lexbuf in
@@ -489,7 +490,7 @@ let string_escape env lexbuf =
   | 'x'
   | '0' .. '7' ->
     let str = lexeme lexbuf in
-    let codes = Sedlexing.lexeme lexbuf |> Array.map Uchar.to_int in
+    let codes = Sedlexing.lexeme lexbuf (*|> Array.map Uchar.to_int*) in
     let env = illegal env (loc_of_lexbuf env lexbuf) in
     (env, str, codes, false)
   | line_terminator_sequence ->
@@ -498,7 +499,7 @@ let string_escape env lexbuf =
     (env, str, [||], false)
   | any ->
     let str = lexeme lexbuf in
-    let codes = Sedlexing.lexeme lexbuf |> Array.map Uchar.to_int in
+    let codes = Sedlexing.lexeme lexbuf (*|> Array.map Uchar.to_int*) in
     (env, str, codes, false)
   | _ -> failwith "unreachable"
 
