@@ -1,7 +1,9 @@
 (* The package sedlex is released under the terms of an MIT-like license. *)
 (* See the attached LICENSE file.                                         *)
 (* Copyright 2005, 2013 by Alain Frisch and LexiFi.                       *)
-
+external (.!()<-) : int array -> int -> int -> unit = "%array_unsafe_set"
+external (.!()) : int array -> int -> int = "%array_unsafe_get"
+external (.![]) : string -> int -> char = "%string_unsafe_get"
 exception InvalidCodepoint of int
 
 exception MalFormed
@@ -33,6 +35,22 @@ type lexbuf = {
   mutable finished: bool;
 }
 
+let lexbuf_clone (x : lexbuf) : lexbuf = {
+  buf = x.buf ; 
+  len = x.len ; 
+  offset = x.offset ; 
+  pos = x.pos ; 
+  curr_bol = x.curr_bol ;
+  curr_line = x.curr_line ;
+  start_pos = x.start_pos ; 
+  start_bol = x.start_bol ;
+  start_line = x.start_line;
+  marked_pos = x.marked_pos;
+  marked_bol = x.marked_bol;
+  marked_line = x.marked_line;
+  marked_val = x.marked_val;
+  finished = x.finished;
+}
 let empty_lexbuf =
   {
     buf = [||];
@@ -51,12 +69,6 @@ let empty_lexbuf =
     finished = false;
   }
 
-let set_position lexbuf position =
-  lexbuf.offset <- position.Lexing.pos_cnum - lexbuf.pos;
-  lexbuf.curr_bol <- position.Lexing.pos_bol;
-  lexbuf.curr_line <- position.Lexing.pos_lnum
-
-(* let set_filename lexbuf fname = lexbuf.filename <- fname *)
 
 let from_int_array a =
   let len = Array.length a in
@@ -74,7 +86,7 @@ let next lexbuf : Stdlib.Uchar.t option =
   if lexbuf.finished && lexbuf.pos = lexbuf.len then
     None
   else
-    let ret = lexbuf.buf.(lexbuf.pos) in
+    let ret = lexbuf.buf.!(lexbuf.pos) in
     lexbuf.pos <- lexbuf.pos + 1;
     if ret = 10 then new_line lexbuf;
     Some (Stdlib.Uchar.unsafe_of_int ret)
@@ -114,7 +126,7 @@ let sub_lexeme lexbuf pos len = Array.sub lexbuf.buf (lexbuf.start_pos + pos) le
 
 let lexeme lexbuf = Array.sub lexbuf.buf lexbuf.start_pos (lexbuf.pos - lexbuf.start_pos)
 
-let lexeme_char lexbuf pos = lexbuf.buf.(lexbuf.start_pos + pos)
+(* let lexeme_char lexbuf pos = lexbuf.buf.(lexbuf.start_pos + pos) *)
 
 module Utf8 = struct
   module Helper = struct
@@ -124,16 +136,16 @@ module Utf8 = struct
 
     let () =
       for i = 0 to 127 do
-        width.(i) <- 1
+        width.!(i) <- 1
       done;
       for i = 192 to 223 do
-        width.(i) <- 2
+        width.!(i) <- 2
       done;
       for i = 224 to 239 do
-        width.(i) <- 3
+        width.!(i) <- 3
       done;
       for i = 240 to 247 do
-        width.(i) <- 4
+        width.!(i) <- 4
       done
 
     let next s i =
@@ -141,22 +153,22 @@ module Utf8 = struct
       | '\000' .. '\127' as c -> Char.code c
       | '\192' .. '\223' as c ->
         let n1 = Char.code c in
-        let n2 = Char.code s.[i + 1] in
+        let n2 = Char.code s.![i + 1] in
         if n2 lsr 6 != 0b10 then raise MalFormed;
         ((n1 land 0x1f) lsl 6) lor (n2 land 0x3f)
       | '\224' .. '\239' as c ->
         let n1 = Char.code c in
-        let n2 = Char.code s.[i + 1] in
-        let n3 = Char.code s.[i + 2] in
+        let n2 = Char.code s.![i + 1] in
+        let n3 = Char.code s.![i + 2] in
         if n2 lsr 6 != 0b10 || n3 lsr 6 != 0b10 then raise MalFormed;
         let p = ((n1 land 0x0f) lsl 12) lor ((n2 land 0x3f) lsl 6) lor (n3 land 0x3f) in
         if p >= 0xd800 && p <= 0xdf00 then raise MalFormed;
         p
       | '\240' .. '\247' as c ->
         let n1 = Char.code c in
-        let n2 = Char.code s.[i + 1] in
-        let n3 = Char.code s.[i + 2] in
-        let n4 = Char.code s.[i + 3] in
+        let n2 = Char.code s.![i + 1] in
+        let n3 = Char.code s.![i + 2] in
+        let n4 = Char.code s.![i + 3] in
         if n2 lsr 6 != 0b10 || n3 lsr 6 != 0b10 || n4 lsr 6 != 0b10 then raise MalFormed;
         ((n1 land 0x07) lsl 18)
         lor ((n2 land 0x3f) lsl 12)
@@ -172,7 +184,7 @@ module Utf8 = struct
           else
             raise MalFormed
         else
-          let w = width.(Char.code s.[i]) in
+          let w = width.!(Char.code s.![i]) in
           if w > 0 then
             aux (succ n) (i + w)
           else
@@ -182,8 +194,8 @@ module Utf8 = struct
 
     let rec blit_to_int s spos a apos n =
       if n > 0 then begin
-        a.(apos) <- next s spos;
-        blit_to_int s (spos + width.(Char.code s.[spos])) a (succ apos) (pred n)
+        a.!(apos) <- next s spos;
+        blit_to_int s (spos + width.(Char.code s.![spos])) a (succ apos) (pred n)
       end
 
     let to_int_array s pos bytes =
@@ -196,7 +208,7 @@ module Utf8 = struct
       let b = Buffer.create (len * 4) in
       let rec aux apos len =
         if len > 0 then (
-          Buffer.add_utf_8_uchar b (Stdlib.Uchar.unsafe_of_int a.(apos));
+          Buffer.add_utf_8_uchar b (Stdlib.Uchar.unsafe_of_int a.!(apos));
           aux (succ apos) (pred len)
         ) else
           Buffer.contents b
