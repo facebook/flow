@@ -2715,6 +2715,7 @@ and object_prop cx ~object_annot acc prop =
         cx
         ~annot:(annot_decompose_todo object_annot)
         ~general:tvar
+        ~needs_this_param:false
         reason
         func
     in
@@ -2749,6 +2750,7 @@ and object_prop cx ~object_annot acc prop =
         None
         cx
         ~general:tvar
+        ~needs_this_param:false
         reason
         func
     in
@@ -2786,6 +2788,7 @@ and object_prop cx ~object_annot acc prop =
         cx
         ~annot:(annot_decompose_todo object_annot)
         ~general:tvar
+        ~needs_this_param:false
         reason
         func
     in
@@ -3455,7 +3458,9 @@ and expression_ ~cond ~annot cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression
     | _ -> ());
     let reason = func_reason ~async ~generator sig_loc in
     let tvar = Tvar.mk cx reason in
-    let (t, func) = mk_function_expression id cx ~annot reason ~general:tvar func in
+    let (t, func) =
+      mk_function_expression id cx ~annot reason ~needs_this_param:true ~general:tvar func
+    in
     Flow.flow_t cx (t, tvar);
     ((loc, t), Function func)
   | ArrowFunction func ->
@@ -7586,7 +7591,7 @@ and mk_class_sig =
       in
       (field, annot_t, annot_ast, get_init)
     in
-    let mk_method ~method_annot = mk_func_sig ~annot:method_annot in
+    let mk_method ~method_annot = mk_func_sig ~annot:method_annot ~needs_this_param:false in
     let mk_extends ~class_annot cx tparams_map = function
       | None -> (Implicit { null = false }, None)
       | Some (loc, { Ast.Class.Extends.expr; targs; comments }) ->
@@ -7981,6 +7986,18 @@ and mk_func_sig =
     let (((_, t), _) as annot) = Anno.convert cx tparams_map annot in
     Func_stmt_config.This { t; loc; annot = (annot_loc, annot) }
   in
+  let require_this_annot cx func param_loc = function
+    | None when Context.enforce_local_inference_annotations cx ->
+      if
+        Signature_utils.This_finder.found_this_in_body_or_params
+          func.Ast.Function.body
+          func.Ast.Function.params
+      then
+        RequireAnnot.add_missing_annotation_error
+          cx
+          (mk_reason (RImplicitThis (RFunction RNormal)) param_loc)
+    | _ -> ()
+  in
   let mk_params cx ~annot tparams_map (loc, { Ast.Function.Params.params; rest; this_; comments }) =
     let fparams =
       Func_stmt_params.empty (fun params rest this_ ->
@@ -8036,7 +8053,7 @@ and mk_func_sig =
     in
     finder#type_ cx Polarity.Neutral Loc_collections.ALocSet.empty t
   in
-  fun cx ~annot tparams_map reason func ->
+  fun cx ~annot ~needs_this_param tparams_map reason func ->
     let {
       Ast.Function.tparams;
       return;
@@ -8057,6 +8074,8 @@ and mk_func_sig =
       Anno.mk_type_param_declarations cx ~tparams_map tparams
     in
     let fparams = mk_params cx ~annot tparams_map params in
+    if needs_this_param then
+      require_this_annot cx func (fst params) Ast.Function.Params.((snd params).this_);
     let body = Some body in
     let ret_reason = mk_reason RReturn (Func_sig.return_loc func) in
     let (return_annotated_or_inferred, return) =
@@ -8144,8 +8163,10 @@ and mk_func_sig =
    signature consisting of type parameters, parameter types, parameter names,
    and return type, check the body against that signature by adding `this`
    and super` to the environment, and return the signature. *)
-and function_decl id cx ~annot reason func this_recipe super =
-  let (func_sig, reconstruct_func) = mk_func_sig cx ~annot SMap.empty reason func in
+and function_decl id cx ~annot ~needs_this_param reason func this_recipe super =
+  let (func_sig, reconstruct_func) =
+    mk_func_sig cx ~annot ~needs_this_param SMap.empty reason func
+  in
   let save_return = Abnormal.clear_saved Abnormal.Return in
   let save_throw = Abnormal.clear_saved Abnormal.Throw in
   let (this_t, params_ast, body_ast, _) =
@@ -8176,14 +8197,14 @@ and define_internal cx reason x =
 
 (* Process a function declaration, returning a (polymorphic) function type. *)
 and mk_function_declaration id cx ~general reason func =
-  mk_function id cx ~annot:annot_todo ~general reason func
+  mk_function id cx ~annot:annot_todo ~general ~needs_this_param:true reason func
 
 (* Process a function expression, returning a (polymorphic) function type. *)
-and mk_function_expression id cx ~annot ~general reason func =
-  mk_function id cx ~annot ~general reason func
+and mk_function_expression id cx ~annot ~general ~needs_this_param reason func =
+  mk_function id cx ~annot ~needs_this_param ~general reason func
 
 (* Internal helper function. Use `mk_function_declaration` and `mk_function_expression` instead. *)
-and mk_function id cx ~annot ~general reason func =
+and mk_function id cx ~annot ~general ~needs_this_param reason func =
   let loc = aloc_of_reason reason in
   (* Normally, functions do not have access to super. *)
   let super =
@@ -8214,7 +8235,9 @@ and mk_function id cx ~annot ~general reason func =
     let this = Scope.Entry.new_let t ~loc ~state:Scope.State.Initialized in
     (type_t_of_annotated_or_inferred t, this)
   in
-  let (fun_type, reconstruct_ast) = function_decl id cx ~annot reason func this_recipe super in
+  let (fun_type, reconstruct_ast) =
+    function_decl id cx ~needs_this_param ~annot reason func this_recipe super
+  in
   (fun_type, reconstruct_ast general)
 
 (* Process an arrow function, returning a (polymorphic) function type. *)
@@ -8230,7 +8253,9 @@ and mk_arrow cx ~annot reason func =
        objects through which the function may be called. *)
     (dummy_this loc, this)
   in
-  let (fun_type, reconstruct_ast) = function_decl id cx ~annot reason func this_recipe super in
+  let (fun_type, reconstruct_ast) =
+    function_decl id cx ~needs_this_param:false ~annot reason func this_recipe super
+  in
   (fun_type, reconstruct_ast fun_type)
 
 (* Transform predicate declare functions to functions whose body is the
