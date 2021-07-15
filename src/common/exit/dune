@@ -3,5 +3,6 @@
   (wrapped false)
   (libraries
     flow_exit_status
+    flow_logging
   )
 )
