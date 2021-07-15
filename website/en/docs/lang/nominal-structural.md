@@ -34,7 +34,7 @@ different names.
 
 #### Structural typing <a class="toc" id="toc-structural-typing" href="#toc-structural-typing"></a>
 
-Languages like OCaml, Haskell, and Elm have primarily structural type systems.
+Languages like OCaml, Go, and Elm have primarily structural type systems.
 
 ```js
 class Foo { method(input: string) { /* ... */ } }
@@ -44,7 +44,7 @@ let foo: Foo = new Bar(); // Works!
 ```
 
 Here you can see a pseudo-example of a structural type system passing when
-you're trying to put a Bar where a `Foo` is required because their structure is
+you're trying to put a `Bar` where a `Foo` is required because their structure is
 exactly the same.
 
 But as soon as you change the shape it will start to cause errors.
