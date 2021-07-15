@@ -495,7 +495,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
      * [T1, T2] ~> Array<Y>[U1] checks T1 ~> U1
      * [T1] ~> Array<Y>[U1, U2] checks T1 ~> U1
      * Array<X>[T1, T2] ~> Array<Y>[U1, U2] checks [T1, T2] ~> Array<Y>[U1, U2]
-
   *)
   let rec array_flow cx trace use_op lit1 r1 ?(index = 0) = function
     (* empty array / array literal / tuple flowing to array / array literal /

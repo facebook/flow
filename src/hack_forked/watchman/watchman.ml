@@ -409,8 +409,8 @@ let close_connection (reader, oc) =
   let ic = Buffered_line_reader_lwt.get_fd reader in
   let%lwt () =
     (* We call [close_connection] in [with_watchman_conn] even on error. Sometimes
-       those errors are because the connection was closed unexpectedly, so we should
-      ignore an already-closed connection (BADF) here. *)
+        those errors are because the connection was closed unexpectedly, so we should
+       ignore an already-closed connection (BADF) here. *)
     try%lwt Lwt_unix.close ic with Unix.Unix_error (Unix.EBADF, _, _) -> Lwt.return_unit
   in
   let%lwt () =
@@ -614,8 +614,8 @@ let watch_paths ~debug_logging ~conn paths =
 
 let watch =
   (* The failed_paths are likely includes which don't exist on the filesystem, so watch_project
-    returned an error. Let's do a best effort attempt to infer the relative path for each bad
-    include. *)
+     returned an error. Let's do a best effort attempt to infer the relative path for each bad
+     include. *)
   let guess_missing_relative_paths terms watch_root failed_paths =
     let failed_paths = SSet.elements failed_paths in
     let (terms, failed_paths) =
@@ -722,7 +722,7 @@ let re_init_dead_env =
   let re_init_dead_env_once dead_env =
     let () = Hh_logger.log "Attemping to reestablish watchman subscription" in
     (* Give watchman 2 minutes to start up, plus sync_timeout (in milliseconds!) to sync.
-     TODO: use `file_watcher.timeout` config instead (careful, it's in seconds) *)
+       TODO: use `file_watcher.timeout` config instead (careful, it's in seconds) *)
     let timeout = Option.value ~default:0 dead_env.prior_settings.sync_timeout + 120000 in
     try%lwt
       Lwt_unix.with_timeout (Float.of_int timeout /. 1000.) @@ fun () ->

@@ -118,7 +118,7 @@ let rec edits_of_changes ?(opts = Js_layout_generator.default_opts) changes =
 
      This case changes the diff on (expr1, expr2) to be (expr1;, expr2;), so it can be coalesced
      with later deleted statements like above.
-   *)
+  *)
   | ( loc1,
       Replace
         ( old_node,

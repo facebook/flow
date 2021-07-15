@@ -16,10 +16,18 @@ type bindings =
   | NamedType of named_binding list
   | Namespace of string
 
+val mk_import : bindings:bindings -> from:string -> (Loc.t, Loc.t) Flow_ast.Statement.t
+
 val add_import :
   options:Js_layout_generator.opts ->
   bindings:bindings ->
   from:string ->
+  (Loc.t, Loc.t) Flow_ast.Program.t ->
+  (Loc.t * string) list
+
+val add_imports :
+  options:Js_layout_generator.opts ->
+  added_imports:(string * bindings) list ->
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   (Loc.t * string) list
 

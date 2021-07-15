@@ -1,0 +1,9 @@
+//@flow
+
+import getFoo from './refactor-extract-function-type-provider';
+
+function test() {
+  const getFoo2 = getFoo;
+  const foo = getFoo2();
+  console.log(foo);
+}

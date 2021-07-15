@@ -365,12 +365,12 @@ module Make (F : Func_sig.S) = struct
 
   let tparams_with_this tparams this_tp =
     (* Use the loc for the original tparams, or just the loc for the this type if there are no
-    * tparams *)
+       * tparams *)
     let loc = Base.Option.value_map ~default:(aloc_of_reason this_tp.Type.reason) ~f:fst tparams in
     (* Add the type of `this` to the end of the list of type
-      parameters. Remember, order is important, since we don't have recursive
-      bounds (aka F-bounds): the bound of This refers to all the other type
-      parameters! *)
+       parameters. Remember, order is important, since we don't have recursive
+       bounds (aka F-bounds): the bound of This refers to all the other type
+       parameters! *)
     let tparams_lst = Type.TypeParams.to_list tparams @ [this_tp] in
     (* Obviously there is at least one element since we just added `this_tp` *)
     let tparams_nel = Base.Option.value_exn (Nel.of_list tparams_lst) in
@@ -408,12 +408,12 @@ module Make (F : Func_sig.S) = struct
 
   let elements cx ~this ?constructor s super =
     (* To determine the default `this` parameter for a method without `this` annotation, we
-      default to the instance/static `this` type *)
+       default to the instance/static `this` type *)
     let this_default (x : F.t) =
       match (x.F.body, super) with
       (* We can use mixed for declared class methods here for two reasons:
-        1) They can never be unbound
-        2) They have no body
+         1) They can never be unbound
+         2) They have no body
       *)
       | (None, Class _) -> Type.implicit_mixed_this x.F.reason
       | (Some _, Class _) ->
@@ -725,7 +725,7 @@ module Make (F : Func_sig.S) = struct
     in
     let check_method msig ~static name id_loc =
       (* The this parameter of the method, if annotated, must be a supertype
-        of the instance *)
+         of the instance *)
       F.check_with_generics
         cx
         (fun msig ->
@@ -899,8 +899,8 @@ module Make (F : Func_sig.S) = struct
               | Explicit (annot_loc, c, targs) ->
                 (* Eagerly specialize when there are no targs *)
                 (* TODO: We can also specialize when there are targs, because this
-             code executes within check_with_generics. However, the type normalizer
-             expects a PolyT here. *)
+                   code executes within check_with_generics. However, the type normalizer
+                   expects a PolyT here. *)
                 let c =
                   if targs = None then
                     specialize cx targs c

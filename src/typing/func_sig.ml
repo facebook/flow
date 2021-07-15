@@ -382,7 +382,7 @@ module Make (F : Func_params.S) = struct
 
     Env.update_env loc env;
 
-    (*  return a tuple of (function body AST option, field initializer AST option).
+    (* return a tuple of (function body AST option, field initializer AST option).
        - the function body option is Some _ if the func sig's body was Some, and
          None if the func sig's body was None.
        - the field initializer is Some expr' if the func sig's kind was FieldInit expr,

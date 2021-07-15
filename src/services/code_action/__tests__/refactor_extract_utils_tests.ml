@@ -7,6 +7,7 @@
 
 open OUnit2
 open Refactor_extract_utils
+open Loc_collections
 
 let parse contents =
   let (ast, _) =
@@ -62,6 +63,11 @@ let stub_metadata ~root ~checked =
   }
 
 let dummy_filename = File_key.SourceFile ""
+
+let file_sig_of_ast ast =
+  match File_sig.With_Loc.program ~ast ~module_ref_prefix:None with
+  | Ok (a, _) -> File_sig.abstractify_locs a
+  | Error _ -> failwith "failed to construct file signature"
 
 let dummy_context =
   let root = Path.dummy_path in
@@ -401,7 +407,7 @@ let collect_relevant_defs_with_scope_tests =
       |> List.sort String.compare
     in
     let actual_vars_with_shadowed_local_reassignments =
-      List.sort String.compare vars_with_shadowed_local_reassignments
+      vars_with_shadowed_local_reassignments |> List.map fst |> List.sort String.compare
     in
     let expected_defs_of_local_uses = List.sort String.compare expected_defs_of_local_uses in
     let expected_vars_with_shadowed_local_reassignments =
@@ -540,6 +546,7 @@ let undefined_variables_after_extraction_tests =
         ~defs_with_scopes_of_local_uses
         ~new_function_target_scope_loc
         ~extracted_statements_loc
+      |> List.map fst
       |> List.sort String.compare
     in
     let expected = List.sort String.compare expected in
@@ -647,7 +654,7 @@ let escaping_locally_defined_variables_tests =
     let { VariableAnalysis.escaping_variables; has_external_writes = actual_has_external_writes } =
       VariableAnalysis.collect_escaping_local_defs ~scope_info ~ssa_values ~extracted_statements_loc
     in
-    let actual_variables = List.sort String.compare escaping_variables in
+    let actual_variables = escaping_variables |> List.map fst |> List.sort String.compare in
     let expected_variables = List.sort String.compare expected_variables in
     assert_equal ~ctxt ~printer:(String.concat ", ") expected_variables actual_variables;
     assert_equal
@@ -805,6 +812,90 @@ let escaping_locally_defined_variables_tests =
         } );
   ]
 
+let type_synthesizer_tests =
+  let reader = State_reader.create () in
+  let create_context source locs =
+    let ast = parse source in
+    let typed_ast = typed_ast_of_ast ast in
+    let file_sig = file_sig_of_ast ast in
+    let locs = LocSet.of_list locs in
+    TypeSynthesizer.create_synthesizer_context
+      ~full_cx:dummy_context
+      ~file:dummy_filename
+      ~file_sig
+      ~typed_ast
+      ~reader
+      ~locs
+  in
+  let pretty_print_type = function
+    | Some type_ ->
+      type_ |> Js_layout_generator.type_ ~opts:Js_layout_generator.default_opts |> pretty_print
+    | None -> "<missing>"
+  in
+  [
+    ( "basic_test" >:: fun ctxt ->
+      let source =
+        {|
+        const a = 3;
+        const b = "2";
+        class C<T> {}
+        const c = new C<number>();
+        |}
+      in
+      let loc_of_a =
+        {
+          Loc.source = None;
+          start = { Loc.line = 2; column = 14 };
+          _end = { Loc.line = 2; column = 15 };
+        }
+      in
+      let loc_of_b =
+        {
+          Loc.source = None;
+          start = { Loc.line = 3; column = 14 };
+          _end = { Loc.line = 3; column = 15 };
+        }
+      in
+      let loc_of_c =
+        {
+          Loc.source = None;
+          start = { Loc.line = 5; column = 14 };
+          _end = { Loc.line = 5; column = 15 };
+        }
+      in
+      let loc_of_missing =
+        {
+          Loc.source = None;
+          start = { Loc.line = 6; column = 14 };
+          _end = { Loc.line = 6; column = 15 };
+        }
+      in
+      let context = create_context source [loc_of_a; loc_of_b; loc_of_c; loc_of_missing] in
+      let { TypeSynthesizer.type_synthesizer; _ } =
+        TypeSynthesizer.create_type_synthesizer_with_import_adder context
+      in
+      assert_equal
+        ~ctxt
+        ~printer:Base.Fn.id
+        "number"
+        (loc_of_a |> type_synthesizer |> pretty_print_type);
+      assert_equal
+        ~ctxt
+        ~printer:Base.Fn.id
+        "string"
+        (loc_of_b |> type_synthesizer |> pretty_print_type);
+      assert_equal
+        ~ctxt
+        ~printer:Base.Fn.id
+        "C<number>"
+        (loc_of_c |> type_synthesizer |> pretty_print_type);
+      assert_equal
+        ~ctxt
+        ~printer:Base.Fn.id
+        "<missing>"
+        (loc_of_missing |> type_synthesizer |> pretty_print_type) );
+  ]
+
 let tests =
   "refactor_extract_utils"
   >::: [
@@ -813,4 +904,5 @@ let tests =
          "collect_relevant_defs_with_scope" >::: collect_relevant_defs_with_scope_tests;
          "undefined_variables_after_extraction" >::: undefined_variables_after_extraction_tests;
          "escaping_locally_defined_variables" >::: escaping_locally_defined_variables_tests;
+         "type_synthesizer" >::: type_synthesizer_tests;
        ]

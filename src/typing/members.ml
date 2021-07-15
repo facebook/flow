@@ -369,7 +369,7 @@ let resolve_tvar cx (_, id) =
      code, or even we don't have enough type coverage. Irrespective of these
      changes, the above decision would continue to make sense: as errors
      become stricter, type resolution should become even more lenient to
-     improve failure tolerance.  *)
+     improve failure tolerance. *)
   List.fold_left
     (fun u t -> merge_type cx (t, u))
     (RAnyImplicit |> locationless_reason |> Unsoundness.unresolved_any)
@@ -582,7 +582,7 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
          members)
   | Success (UnionT (_, rep)) ->
     (* Union type should autocomplete for only the properties that are in
-      * every type in the intersection *)
+       * every type in the intersection *)
     let ts = UnionRep.members rep in
     let members =
       ts

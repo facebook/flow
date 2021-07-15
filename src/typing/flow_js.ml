@@ -606,33 +606,33 @@ struct
 
         (* TODO: This rule allows interpreting an object as a type!
 
-           It is currently used to work with modules that export named types,
-           e.g. 'react' or 'immutable'. For example, one can do
+              It is currently used to work with modules that export named types,
+              e.g. 'react' or 'immutable'. For example, one can do
 
-           `import type React from 'react'`
+              `import type React from 'react'`
 
-           followed by uses of `React` as a container of types in (say) type
-           definitions like
+              followed by uses of `React` as a container of types in (say) type
+              definitions like
 
-           `type C = React.Component<any,any,any>`
+              `type C = React.Component<any,any,any>`
 
-           Fortunately, in that case `React` is stored as a type binding in the
-           environment, so it cannot be used as a value.
+              Fortunately, in that case `React` is stored as a type binding in the
+              environment, so it cannot be used as a value.
 
-           However, removing this special case causes no loss of expressibility
-           (while making the model simpler). For example, in the above example we
-           can write
+              However, removing this special case causes no loss of expressibility
+              (while making the model simpler). For example, in the above example we
+              can write
 
-           `import type { Component } from 'react'`
+              `import type { Component } from 'react'`
 
-           followed by (say)
+              followed by (say)
 
-           `type C = Component<any,any,any>`
+              `type C = Component<any,any,any>`
 
-           Overall, we should be able to (at least conceptually) desugar `import
-           type` to `import` followed by `type`.
+              Overall, we should be able to (at least conceptually) desugar `import
+              type` to `import` followed by `type`.
 
-        **)
+           **)
         | ((ExactT (_, DefT (_, _, ObjT _)) | DefT (_, _, ObjT _)), ImportTypeT (_, "default", t))
           ->
           rec_flow_t ~use_op:unknown_use cx trace (l, t)
@@ -2351,7 +2351,7 @@ struct
         (* (After the above preprocessing step, try the branches of the intersection
            in turn, with the goal of selecting the correct branch. This process is
            reused for unions as well. See comments on try_union and
-           try_intersection.)  *)
+           try_intersection.) *)
         | (IntersectionT (r, rep), u) ->
           let unresolved = parts_to_replace cx u in
           SpeculationKit.prep_try_intersection cx trace (reason_of_use_t u) unresolved [] u r rep
@@ -3601,7 +3601,7 @@ struct
 
         (* TODO: Fix GetProtoT for InstanceT (and ClassT).
            The __proto__ object of an instance is an ObjT having the properties in
-           insttype.methods_tmap, not the super instance.  *)
+           insttype.methods_tmap, not the super instance. *)
         | (DefT (_, _, InstanceT (_, super, _, _)), GetProtoT (reason_op, t)) ->
           let proto = reposition cx ~trace (aloc_of_reason reason_op) super in
           rec_flow_t cx trace ~use_op:unknown_use (proto, OpenT t)
@@ -3899,58 +3899,58 @@ struct
           let loc = aloc_of_reason reason_call in
           add_output cx ~trace Error_message.(EInternal (loc, InstanceLookupComputed))
         (* In traditional type systems, object types are not extensible.  E.g., an
-           object {x: 0, y: ""} has type {x: number; y: string}. While it is
-           possible to narrow the object's type to hide some of its properties (aka
-           width subtyping), extending its type to model new properties is
-           impossible. This is not without reason: all object types would then be
-           equatable via subtyping, thereby making them unsound.
+              object {x: 0, y: ""} has type {x: number; y: string}. While it is
+              possible to narrow the object's type to hide some of its properties (aka
+              width subtyping), extending its type to model new properties is
+              impossible. This is not without reason: all object types would then be
+              equatable via subtyping, thereby making them unsound.
 
-           In JavaScript, on the other hand, objects can grow dynamically, and
-           doing so is a common idiom during initialization (i.e., before they
-           become available for general use). Objects that typically grow
-           dynamically include not only object literals, but also prototypes,
-           export objects, and so on. Thus, it is important to model this idiom.
+              In JavaScript, on the other hand, objects can grow dynamically, and
+              doing so is a common idiom during initialization (i.e., before they
+              become available for general use). Objects that typically grow
+              dynamically include not only object literals, but also prototypes,
+              export objects, and so on. Thus, it is important to model this idiom.
 
-           To balance utility and soundness, Flow's object types are extensible by
-           default, but become sealed as soon as they are subject to width
-           subtyping. However, implementing this simple idea needs a lot of care.
+              To balance utility and soundness, Flow's object types are extensible by
+              default, but become sealed as soon as they are subject to width
+              subtyping. However, implementing this simple idea needs a lot of care.
 
-           To ensure that aliases have the same underlying type, object types are
-           represented indirectly as pointers to records (rather than directly as
-           records). And to ensure that typing is independent of the order in which
-           fragments of code are analyzed, new property types can be added on gets
-           as well as sets (and due to indirection, the new property types become
-           immediately available to aliases).
+              To ensure that aliases have the same underlying type, object types are
+              represented indirectly as pointers to records (rather than directly as
+              records). And to ensure that typing is independent of the order in which
+              fragments of code are analyzed, new property types can be added on gets
+              as well as sets (and due to indirection, the new property types become
+              immediately available to aliases).
 
-           Looking up properties of an object, e.g. for the purposes of copying,
-           when it is not fully initialized is prone to races, and requires careful
-           manual reasoning about escape to avoid surprising results.
+              Looking up properties of an object, e.g. for the purposes of copying,
+              when it is not fully initialized is prone to races, and requires careful
+              manual reasoning about escape to avoid surprising results.
 
-           Prototypes cause further complications. In JavaScript, objects inherit
-           properties of their prototypes, and may override those properties. (This
-           is similar to subclasses inheriting and overriding methods of
-           superclasses.) At the same time, prototypes are extensible just as much
-           as the objects they derive are. In other words, we want to maintain the
-           invariant that an object's type is a subtype of its prototype's type,
-           while letting them be extensible by default. This invariant is achieved
-           by constraints that unify a property's type if and when that property
-           exists both on the object and its prototype.
+              Prototypes cause further complications. In JavaScript, objects inherit
+              properties of their prototypes, and may override those properties. (This
+              is similar to subclasses inheriting and overriding methods of
+              superclasses.) At the same time, prototypes are extensible just as much
+              as the objects they derive are. In other words, we want to maintain the
+              invariant that an object's type is a subtype of its prototype's type,
+              while letting them be extensible by default. This invariant is achieved
+              by constraints that unify a property's type if and when that property
+              exists both on the object and its prototype.
 
-           Here's some example code with type calculations in comments. (We use the
-           symbol >=> to denote a flow between a pair of types. The direction of
-           flow roughly matches the pattern 'rvalue' >=> 'lvalue'.)
+              Here's some example code with type calculations in comments. (We use the
+              symbol >=> to denote a flow between a pair of types. The direction of
+              flow roughly matches the pattern 'rvalue' >=> 'lvalue'.)
 
-           var o = {}; // o:T, UseT |-> {}
-           o.x = 4; // UseT |-> {x:X}, number >=> X
-           var s:string = o.x; // ERROR: number >=> string
+              var o = {}; // o:T, UseT |-> {}
+              o.x = 4; // UseT |-> {x:X}, number >=> X
+              var s:string = o.x; // ERROR: number >=> string
 
-           function F() { } // F.prototype:P, P |-> {}
-           var f = new F(); // f:O, O |-> {}&P
+              function F() { } // F.prototype:P, P |-> {}
+              var f = new F(); // f:O, O |-> {}&P
 
-           F.prototype.m = function() { this.y = 4; } // P |-> {m:M}, ... >=> M
-           f.m(); // O |-> {y:Y}&P, number >=> Y
+              F.prototype.m = function() { this.y = 4; } // P |-> {m:M}, ... >=> M
+              f.m(); // O |-> {y:Y}&P, number >=> Y
 
-        **)
+           **)
 
         (**********************************************************************)
         (* objects can be assigned, i.e., their properties can be set in bulk *)
@@ -5345,11 +5345,11 @@ struct
         | (GenericT { reason; bound; _ }, MethodT (use_op, call_r, lookup_r, propref, action, t_opt))
           ->
           (* Flow conflates the receiver with the this argument when calling a method.
-          We need to keep around the original GenericT because the method we are calling
-          might be expecting a generic (esp in the case of classes), but cannot use it
-          as the receiver to look up the type of the method on the object or class.
-          So we fix the this argument of the method to the generic but continue to
-          resolve the receiver until we can determine the method's type *)
+             We need to keep around the original GenericT because the method we are calling
+             might be expecting a generic (esp in the case of classes), but cannot use it
+             as the receiver to look up the type of the method on the object or class.
+             So we fix the this argument of the method to the generic but continue to
+             resolve the receiver until we can determine the method's type *)
           let action =
             match action with
             | CallM mct -> CallM { mct with meth_generic_this = Some l }
@@ -6512,7 +6512,7 @@ struct
       =
     match lower with
     (* Object <: Interface subtyping creates an object out of the interface to dispatch to the
-      existing object <: object logic *)
+       existing object <: object logic *)
     | DefT
         ( lreason,
           ltrust,

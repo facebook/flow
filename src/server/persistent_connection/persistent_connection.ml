@@ -30,7 +30,7 @@ let cache_max_size = 10
 
 let remove_cache_entry client filename =
   (* get_def, coverage, etc. all construct a File_key.SourceFile, which is then used as a key
-    * here. *)
+     * here. *)
   let file_key = File_key.SourceFile filename in
   FilenameCache.remove_entry file_key client.type_parse_artifacts_cache
 

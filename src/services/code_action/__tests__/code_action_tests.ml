@@ -19,7 +19,7 @@ let tests =
          Autofix_imports_tests.tests;
          Code_action_service_tests.tests;
          Insert_type_utils_tests.tests;
-         Refactor_extract_function_tests.tests;
+         Refactor_extract_tests.tests;
          Refactor_extract_utils_tests.tests;
          Validation_tests.tests;
        ]

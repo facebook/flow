@@ -286,7 +286,7 @@ let trigger_of_lsp_msg =
   | RequestMessage (_, SignatureHelpRequest _) -> Some SignatureHelp
   | RequestMessage (_, ExecuteCommandRequest _) -> Some ExecuteCommand
   (* Requests which we don't care about. Some are unsupported and some are sent from the lsp to
-    * the client *)
+     * the client *)
   | RequestMessage (_, CompletionItemResolveRequest _)
   | RequestMessage (_, ConfigurationRequest _)
   | RequestMessage (_, DocumentFormattingRequest _)

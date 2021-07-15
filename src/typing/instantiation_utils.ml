@@ -70,8 +70,8 @@ module TypeAppExpansion : sig
 
   val set : entry list -> unit
 end = struct
-  (* Array types function like type applications but are not implemented as such. Unless 
-     we decide to unify their implementation with regular typeapps, they need special 
+  (* Array types function like type applications but are not implemented as such. Unless
+     we decide to unify their implementation with regular typeapps, they need special
      handling here *)
   type root =
     | Type of Type.t

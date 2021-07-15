@@ -14,9 +14,9 @@ module ListenLoop = LwtLoop.Make (struct
 
   let kill_workers () =
     (* TODO - find a way to gracefully kill the workers. At the moment, if the workers are in the
-      * middle of a job this will lead to some log spew. We probably should send SIGTERM to each
-      * worker and set up a signal handler to kill the fork and exit gracefully. Might also want
-      * to use the SharedMem_js.cancel thingy *)
+       * middle of a job this will lead to some log spew. We probably should send SIGTERM to each
+       * worker and set up a signal handler to kill the fork and exit gracefully. Might also want
+       * to use the SharedMem_js.cancel thingy *)
     Hh_logger.info "Killing the worker processes";
     WorkerController.killall ()
 

@@ -45,9 +45,9 @@ let multi_threaded_call
   let acc = ref neutral in
   let merge_with_acc =
     (* Why do we need a lock? Well, we don't really know what is inside the merge function, and if
-      * something makes Lwt yield then we could end up with a race condition. At the moment, the
-      * merge function doesn't use Lwt, but it might in the future. Locking and unlocking is cheap,
-      * so I'm pre-emptively adding this lock *)
+       * something makes Lwt yield then we could end up with a race condition. At the moment, the
+       * merge function doesn't use Lwt, but it might in the future. Locking and unlocking is cheap,
+       * so I'm pre-emptively adding this lock *)
     let merge_mutex = Lwt_mutex.create () in
     fun result ->
       Lwt_mutex.with_lock merge_mutex (fun () ->
@@ -55,8 +55,8 @@ let multi_threaded_call
           Lwt.return_unit)
   in
   (* Our next() function may give us a job, say there are no more jobs left, or tell us to
-    * try again later. This signal is to wake up any workers who were told "try again later"
-    *)
+     * try again later. This signal is to wake up any workers who were told "try again later"
+  *)
   let wait_signal = Lwt_condition.create () in
   (* Returns None if there will never be any more jobs *)
   let rec get_job () =
@@ -77,7 +77,7 @@ let multi_threaded_call
       let%lwt result = WorkerController.call worker (fun xl -> job neutral xl) bucket in
       let%lwt () = merge_with_acc result in
       (* Wait means "ask again after a worker has finished and has merged its result". So now that
-        * we've merged our response, let's wake any other workers which are waiting for work *)
+         * we've merged our response, let's wake any other workers which are waiting for work *)
       Lwt_condition.broadcast wait_signal ();
       run_worker worker
   in
@@ -106,8 +106,8 @@ let multi_threaded_call
           worker_threads
       in
       (* For most exceptions, we want to propagate the exception as soon as one worker throws.
-        * However, for Canceled we want to wait for all the workers to process the Canceled.
-        * Lwt.join will wait for every thread to finish or fail *)
+         * However, for Canceled we want to wait for all the workers to process the Canceled.
+         * Lwt.join will wait for every thread to finish or fail *)
       (Lwt.join worker_threads)
         [%lwt.finally
           WorkerCancel.resume_workers ();

@@ -34,11 +34,11 @@ module StatementsExtractor = struct
         if Loc.contains extract_range statement_loc then
           let () = this#collect_statement stmt in
           (* If the statement is already completely contained in the range, do not recursve deeper
-           to collect more nested ones. *)
+             to collect more nested ones. *)
           stmt
         else if Loc.contains statement_loc extract_range then
           (* If the range is completely contained in the statement,
-           we should recursve deeper to find smaller nested statements that are contained in the range. *)
+             we should recursve deeper to find smaller nested statements that are contained in the range. *)
           super#statement stmt
         else if Loc.intersects extract_range statement_loc then
           (* When there is intersection, it means that the selection is not allowed for extraction. *)
@@ -319,7 +319,7 @@ end
 module VariableAnalysis = struct
   type relevant_defs = {
     defs_with_scopes_of_local_uses: (Scope_api.Def.t * Scope_api.Scope.t) list;
-    vars_with_shadowed_local_reassignments: string list;
+    vars_with_shadowed_local_reassignments: (string * Loc.t) list;
   }
 
   let collect_relevant_defs_with_scope ~scope_info ~ssa_values ~extracted_statements_loc =
@@ -333,40 +333,40 @@ module VariableAnalysis = struct
                 (Scope_api.DefMap.add def () used_def_acc, shadowed_local_reassignment_acc)
               else
                 (* We do not need to worry about a local reassignment if the variable is only used
-                 within extracted statements, since all uses will still read the correct modified
-                 value within extracted statements.
+                   within extracted statements, since all uses will still read the correct modified
+                   value within extracted statements.
 
-                 e.g. We have
+                   e.g. We have
 
-                 ```
-                 // extracted statements start
-                 let a = 3;
-                 a = 4;
-                 console.log(a);
-                 // extracted statements end
-                 // no more uses of `a`
-                 ```
-
-                 Then refactor it into
-
-                 ```
-                 newFunction();
-
-                 function newFunction() {
+                   ```
+                   // extracted statements start
                    let a = 3;
                    a = 4;
                    console.log(a);
-                 }
-                 ```
+                   // extracted statements end
+                   // no more uses of `a`
+                   ```
 
-                 does not change the semantics.
-                 *)
+                   Then refactor it into
+
+                   ```
+                   newFunction();
+
+                   function newFunction() {
+                     let a = 3;
+                     a = 4;
+                     console.log(a);
+                   }
+                   ```
+
+                   does not change the semantics.
+                *)
                 let def_loc = fst def.Scope_api.Def.locs in
                 if not (Loc.contains extracted_statements_loc def_loc) then
                   let has_local_reassignment =
                     (* Find whether there is a local write within the selected statements,
-                     while there is already a def outside of them.
-                     If there is a local write, we know the variable has been mutated locally. *)
+                       while there is already a def outside of them.
+                       If there is a local write, we know the variable has been mutated locally. *)
                     match LocMap.find_opt use ssa_values with
                     | None -> false
                     | Some writes ->
@@ -380,7 +380,8 @@ module VariableAnalysis = struct
                   in
                   if has_local_reassignment then
                     ( used_def_acc,
-                      SSet.add def.Scope_api.Def.actual_name shadowed_local_reassignment_acc )
+                      SMap.add def.Scope_api.Def.actual_name def_loc shadowed_local_reassignment_acc
+                    )
                   else
                     acc
                 else
@@ -388,7 +389,7 @@ module VariableAnalysis = struct
             locals
             acc)
         scope_info.Scope_api.scopes
-        (Scope_api.DefMap.empty, SSet.empty)
+        (Scope_api.DefMap.empty, SMap.empty)
     in
     {
       defs_with_scopes_of_local_uses =
@@ -406,7 +407,7 @@ module VariableAnalysis = struct
           scope_info.Scope_api.scopes
           [];
       vars_with_shadowed_local_reassignments =
-        SSet.elements shadowed_local_reassignments_within_extracted_statements;
+        shadowed_local_reassignments_within_extracted_statements |> SMap.elements |> List.rev;
     }
 
   let undefined_variables_after_extraction
@@ -424,26 +425,26 @@ module VariableAnalysis = struct
         None
       else
         (* If a definition is completely nested within the scope of the function to put `newFunction`
-         definition, then the definition will be unusable when the statements are moving to this
-         higher function scope that does not have the definition.
-         This is the indicator that the variable will be undefined. *)
+           definition, then the definition will be unusable when the statements are moving to this
+           higher function scope that does not have the definition.
+           This is the indicator that the variable will be undefined. *)
         let def_scope_is_within_function_scope function_scope =
           Scope_api.scope_within scope_info function_scope def_scope
         in
         (* Some of the nodes like functions might have two scopes, one for name and one for body with
-         the relation name scope > body scope.
-         We must check using `List.for_all` instead of `List.exists`, since a def might be exactly
-         in the body scope, and `def_scope_is_within_function_scope name_scope body_scope` will be
-         true, which incorrectly decides that a variable is undefined. *)
+           the relation name scope > body scope.
+           We must check using `List.for_all` instead of `List.exists`, since a def might be exactly
+           in the body scope, and `def_scope_is_within_function_scope name_scope body_scope` will be
+           true, which incorrectly decides that a variable is undefined. *)
         if List.for_all def_scope_is_within_function_scope new_function_target_scopes then
-          Some actual_name
+          Some (actual_name, def_loc)
         else
           None
     in
     List.filter_map to_undefined_variable defs_with_scopes_of_local_uses |> List.rev
 
   type escaping_definitions = {
-    escaping_variables: string list;
+    escaping_variables: (string * Loc.t) list;
     has_external_writes: bool;
   }
 
@@ -459,14 +460,14 @@ module VariableAnalysis = struct
                 && not (Loc.contains extracted_statements_loc use)
               then
                 let (variables, has_external_writes) = acc in
-                ( SSet.add actual_name variables,
+                ( SMap.add actual_name def_loc variables,
                   has_external_writes
                   ||
                   match LocMap.find_opt use ssa_values with
                   | None ->
                     (* use is a write. *)
                     (* Since we already know the use is outside of extracted statements,
-                     we know this is an external write *)
+                       we know this is an external write *)
                     true
                   | Some write_locs ->
                     (* use is a read *)
@@ -483,7 +484,77 @@ module VariableAnalysis = struct
             locals
             acc)
         scope_info.Scope_api.scopes
-        (SSet.empty, false)
+        (SMap.empty, false)
     in
-    { escaping_variables = SSet.elements escaping_variables; has_external_writes }
+    { escaping_variables = escaping_variables |> SMap.elements |> List.rev; has_external_writes }
+end
+
+module TypeSynthesizer = struct
+  type synthesizer_context = {
+    full_cx: Context.t;
+    file: File_key.t;
+    file_sig: File_sig.With_ALoc.t;
+    typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
+    type_at_loc_map: Type.TypeScheme.t LocMap.t;
+  }
+
+  class type_collector reader (locs : LocSet.t) =
+    object (this)
+      inherit Typed_ast_utils.type_parameter_mapper
+
+      val mutable acc = LocMap.empty
+
+      method! on_loc_annot x = x
+
+      method! on_type_annot x = x
+
+      method collected_types = acc
+
+      method private collect_type_at_loc ~tparams_rev loc t =
+        acc <- LocMap.add loc { Type.TypeScheme.tparams_rev; type_ = t } acc
+
+      method! t_identifier (((aloc, t), _) as ident) =
+        let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
+        if LocSet.mem loc locs then this#annot_with_tparams (this#collect_type_at_loc loc t);
+        ident
+    end
+
+  let create_synthesizer_context ~full_cx ~file ~file_sig ~typed_ast ~reader ~locs =
+    let collector = new type_collector reader locs in
+    ignore (collector#program typed_ast);
+    let type_at_loc_map = collector#collected_types in
+    { full_cx; file; file_sig; typed_ast; type_at_loc_map }
+
+  type type_synthesizer_with_import_adder = {
+    type_synthesizer: Loc.t -> (Loc.t, Loc.t) Flow_ast.Type.t option;
+    added_imports: unit -> (string * Autofix_imports.bindings) list;
+  }
+
+  let create_type_synthesizer_with_import_adder
+      { full_cx; file; file_sig; typed_ast; type_at_loc_map } =
+    let remote_converter =
+      new Insert_type_imports.ImportsHelper.remote_converter
+        ~iteration:0
+        ~file
+        ~reserved_names:SSet.empty
+    in
+    let type_synthesizer loc =
+      match LocMap.find_opt loc type_at_loc_map with
+      | None -> None
+      | Some type_scheme ->
+        let (_, type_) =
+          Insert_type.synth_type
+            ~full_cx
+            ~file_sig
+            ~typed_ast
+            ~expand_aliases:true
+            ~omit_targ_defaults:false
+            ~ambiguity_strategy:Autofix_options.Generalize
+            ~remote_converter
+            loc
+            type_scheme
+        in
+        Some type_
+    in
+    { type_synthesizer; added_imports = (fun () -> remote_converter#to_import_bindings) }
 end

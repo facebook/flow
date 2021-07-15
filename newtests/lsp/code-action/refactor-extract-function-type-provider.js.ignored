@@ -1,0 +1,4 @@
+//@flow
+
+export opaque type Foo = number;
+export default function getFoo(): Foo { return 0; }

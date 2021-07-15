@@ -425,12 +425,12 @@ module Make
         t1
       else
         (* Merging can easily lead to exponential blowup in size of terms if we're not careful. We
-         amortize costs by computing normal forms as sets of "atomic" terms, so that merging would
-         correspond to set union. (Atomic terms include Uninitialized, Loc _, and REF { contents =
-         Unresolved _ }.) Note that normal forms might change over time, as unresolved refs become
-         resolved; thus, we do not shortcut normalization of previously normalized terms. Still, we
-         expect (and have experimentally validated that) the cost of computing normal forms becomes
-         smaller over time as terms remain close to their final normal forms. *)
+           amortize costs by computing normal forms as sets of "atomic" terms, so that merging would
+           correspond to set union. (Atomic terms include Uninitialized, Loc _, and REF { contents =
+           Unresolved _ }.) Note that normal forms might change over time, as unresolved refs become
+           resolved; thus, we do not shortcut normalization of previously normalized terms. Still, we
+           expect (and have experimentally validated that) the cost of computing normal forms becomes
+           smaller over time as terms remain close to their final normal forms. *)
         let vals = WriteSet.union (normalize t1.write_state) (normalize t2.write_state) in
         mk_with_write_state @@ join (WriteSet.elements vals)
 
@@ -463,7 +463,7 @@ module Make
        known. Since the only non-trivial operation in t is joining, it is OK to
        erase any occurrences of unresolved in t: if t = unresolved | t' then
        unresolved = t is the same as unresolved = t'.
-       
+
        This can all go away if we can get rid of unresolved/REF *)
     let rec resolve ~unresolved t =
       match unresolved.write_state with
@@ -715,10 +715,10 @@ module Make
                      prepass_values
                      loc ->
               (* NOTE: havoc_env should already have all writes to x, so the only
-               additional thing that could come from ssa_env is "uninitialized." On
-               the other hand, we *dont* want to include "uninitialized" if it's no
-               longer in ssa_env, since that means that x has been initialized (and
-               there's no going back). *)
+                 additional thing that could come from ssa_env is "uninitialized." On
+                 the other hand, we *dont* want to include "uninitialized" if it's no
+                 longer in ssa_env, since that means that x has been initialized (and
+                 there's no going back). *)
               val_ref := unresolved
             | [] ->
               (* If we haven't yet seen a write to this variable, we always havoc *)

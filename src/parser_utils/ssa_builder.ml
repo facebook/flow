@@ -124,12 +124,12 @@ struct
         t1
       else
         (* Merging can easily lead to exponential blowup in size of terms if we're not careful. We
-         amortize costs by computing normal forms as sets of "atomic" terms, so that merging would
-         correspond to set union. (Atomic terms include Uninitialized, Loc _, and REF { contents =
-         Unresolved _ }.) Note that normal forms might change over time, as unresolved refs become
-         resolved; thus, we do not shortcut normalization of previously normalized terms. Still, we
-         expect (and have experimentally validated that) the cost of computing normal forms becomes
-         smaller over time as terms remain close to their final normal forms. *)
+           amortize costs by computing normal forms as sets of "atomic" terms, so that merging would
+           correspond to set union. (Atomic terms include Uninitialized, Loc _, and REF { contents =
+           Unresolved _ }.) Note that normal forms might change over time, as unresolved refs become
+           resolved; thus, we do not shortcut normalization of previously normalized terms. Still, we
+           expect (and have experimentally validated that) the cost of computing normal forms becomes
+           smaller over time as terms remain close to their final normal forms. *)
         let vals = WriteSet.union (normalize t1.write_state) (normalize t2.write_state) in
         mk_with_write_state @@ join (WriteSet.elements vals)
 

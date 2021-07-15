@@ -502,6 +502,22 @@ Missing an annotation on `x`. [missing-local-annot]
                         ^
 
 
+Error ----------------------------------------------------------------------------------------------------- this.js:2:13
+
+Missing an annotation on implicit `this` parameter of function. [missing-local-annot]
+
+   2| function foo() {return this.x;}
+                  ^^
+
+
+Error ---------------------------------------------------------------------------------------------------- this.js:18:18
+
+Missing an annotation on implicit `this` parameter of function. [missing-local-annot]
+
+   18| let f = function () { return this.x }
+                        ^^
+
+
 Error ---------------------------------------------------------------------------------------- try_catch_finally.js:8:16
 
 Missing an annotation on `x`. [missing-local-annot]
@@ -543,4 +559,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 65 errors
+Found 67 errors

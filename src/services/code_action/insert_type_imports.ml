@@ -208,6 +208,8 @@ module ImportsHelper : sig
          method type_ : Ty.t -> (Ty.t, Error.kind) result
 
          method to_import_stmts : unit -> (Loc.t, Loc.t) Ast.Statement.t list
+
+         method to_import_bindings : (string * Autofix_imports.bindings) list
        end
 
   val imports_react : File_sig.With_ALoc.t -> bool
@@ -443,6 +445,12 @@ end = struct
     let compare = Stdlib.compare
   end)
 
+  module BatchImportBindingsMap = WrappedMap.Make (struct
+    type t = Ast.Statement.ImportDeclaration.import_kind * string
+
+    let compare = Stdlib.compare
+  end)
+
   class remote_converter ~iteration ~file ~reserved_names =
     object (self)
       val mutable name_map = ImportedNameMap.empty
@@ -662,6 +670,63 @@ end = struct
             import_stmts
         in
         import_stmts
+
+      method to_import_bindings : (string * Autofix_imports.bindings) list =
+        let (bindings, named_map) =
+          let open Ast.Identifier in
+          ImportedNameMap.fold
+            (fun {
+                   ImportInfo.import_declaration =
+                     {
+                       import_kind;
+                       source = (_, { Ast.StringLiteral.value = from; _ });
+                       default;
+                       named_specifier;
+                     };
+                   _;
+                 }
+                 (default_acc, named_acc) ->
+              match (default, named_specifier) with
+              | ( None,
+                  Some
+                    {
+                      Ast.Statement.ImportDeclaration.remote = (_, { name = remote_name; _ });
+                      local;
+                      _;
+                    } ) ->
+                let named_binding =
+                  {
+                    Autofix_imports.remote_name;
+                    local_name =
+                      (match local with
+                      | None -> None
+                      | Some (_, { name; _ }) -> Some name);
+                  }
+                in
+                let named_bindings =
+                  match BatchImportBindingsMap.find_opt (import_kind, from) named_acc with
+                  | Some named_bindings -> named_binding :: named_bindings
+                  | None -> [named_binding]
+                in
+                ( default_acc,
+                  BatchImportBindingsMap.add (import_kind, from) named_bindings named_acc )
+              | (Some (_, { name; _ }), _) ->
+                ((from, Autofix_imports.Default name) :: default_acc, named_acc)
+              | _ -> (default_acc, named_acc))
+            name_map
+            ([], BatchImportBindingsMap.empty)
+        in
+        let bindings =
+          BatchImportBindingsMap.fold
+            (fun (import_kind, from) named_bindings acc ->
+              match import_kind with
+              | Ast.Statement.ImportDeclaration.ImportType ->
+                (from, Autofix_imports.NamedType named_bindings) :: acc
+              | _ -> (from, Autofix_imports.Named named_bindings) :: acc)
+            named_map
+            bindings
+        in
+        bindings
     end
 
   exception Found_react_import

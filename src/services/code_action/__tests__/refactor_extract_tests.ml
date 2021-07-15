@@ -11,16 +11,19 @@ open Refactor_extract_utils_tests
 let assert_refactored ~ctxt expected source extract_range =
   let ast = parse source in
   let typed_ast = typed_ast_of_ast ast in
-  let parsing_heap_reader = State_reader.create () in
+  let reader = State_reader.create () in
   let actual =
-    Refactor_extract_function.provide_available_refactors
+    Refactor_extract.provide_available_refactors
       ~ast
+      ~full_cx:dummy_context
+      ~file:dummy_filename
+      ~file_sig:(file_sig_of_ast ast)
       ~typed_ast
-      ~parsing_heap_reader
+      ~reader
       ~extract_range
-    |> List.map (fun (title, ast') ->
+    |> List.map (fun { Refactor_extract.title; new_ast; _ } ->
            ( title,
-             ast'
+             new_ast
              |> Js_layout_generator.program
                   ~opts:Js_layout_generator.default_opts
                   ~preserve_docblock:true
@@ -61,7 +64,7 @@ function test() {
   let b = 4;
   console.log("I should not be selected");
 }
-function newFunction() {
+function newFunction(): void {
   const a = 3;
 }
       |}
@@ -73,7 +76,7 @@ function test() {
   newFunction();
   let b = 4;
   console.log("I should not be selected");
-  function newFunction() {
+  function newFunction(): void {
     const a = 3;
   }
 }
@@ -112,7 +115,7 @@ function test() {
   newFunction();
   console.log("I should not be selected");
 }
-function newFunction() {
+function newFunction(): void {
   const a = 3;
   let b = 4;
   let c = 5;
@@ -126,7 +129,7 @@ function test() {
   console.log("I should not be selected");
   newFunction();
   console.log("I should not be selected");
-  function newFunction() {
+  function newFunction(): void {
     const a = 3;
     let b = 4;
     let c = 5;
@@ -157,7 +160,7 @@ function test() {
             {|
 const a = newFunction();
 console.log(a);
-function newFunction() {
+function newFunction(): number {
   const a = 3;
   return a;
 }
@@ -191,7 +194,7 @@ let fooo = 3;
 const a = 3;
 fooo = newFunction();
 console.log(a + fooo);
-function newFunction() {
+function newFunction(): number {
   fooo = a + 2; // selected
   return fooo;
 }
@@ -221,18 +224,18 @@ function newFunction() {
       let expected =
         [
           ( "Extract to function in module scope",
-            {|
+            {multiline|
 let fooo = 3;
 let a;
 
 ({a, fooo} = newFunction());
 console.log(a + fooo);
-function newFunction() {
+function newFunction(): {| a: number, fooo: number |} {
   const a = 3; // selected
   fooo = a + 2; // selected
   return { a, fooo };
 }
-      |}
+      |multiline}
           );
         ]
       in
@@ -260,7 +263,7 @@ function newFunction() {
 let fooo = newFunction();
 const a = 3;
 fooo = a + 2;
-function newFunction() {
+function newFunction(): number {
   let fooo = 3; // selected
   return fooo;
 }
@@ -288,15 +291,15 @@ function newFunction() {
       let expected =
         [
           ( "Extract to function in module scope",
-            {|
+            {multiline|
 let {a, fooo} = newFunction();
 fooo = a + 2;
-function newFunction() {
+function newFunction(): {| a: number, fooo: number |} {
   let fooo = 3; // selected
   const a = 3; // selected
   return { a, fooo };
 }
-      |}
+      |multiline}
           );
         ]
       in
@@ -328,7 +331,7 @@ function newFunction() {
 const test = (async () => {
   await newFunction();
 });
-async function newFunction() {
+async function newFunction(): Promise<void> {
   // selection start
   const a = 3;
   let b = 4;
@@ -366,7 +369,7 @@ async function newFunction() {
 const test = (async () => {
   await newFunction();
 });
-async function newFunction() {
+async function newFunction(): Promise<void> {
   // selection start
   const a = 3;
   {
@@ -394,7 +397,7 @@ async function newFunction() {
           ( "Extract to function in module scope",
             {|
 newFunction();
-function newFunction() {
+function newFunction(): void {
   const test = (async () => await promise);
 }
 |}
@@ -530,7 +533,7 @@ function newFunction() {
           ( "Extract to function in module scope",
             {|
 newFunction();
-function newFunction() {
+function newFunction(): void {
   while (true) {
     break;
   }
@@ -552,12 +555,13 @@ function newFunction() {
           ( "Extract to function in module scope",
             {|
 newFunction();
-function newFunction() {
+function newFunction(): void {
   while (true) {
     continue;
   }
 }
-|} );
+|}
+          );
         ]
       in
       assert_refactored
@@ -574,7 +578,7 @@ function newFunction() {
           ( "Extract to function in module scope",
             {|
 newFunction();
-function newFunction() {
+function newFunction(): void {
   switch (true) {
     default:
       break;
@@ -603,7 +607,7 @@ class A {
   test1() {
     this.newMethod();
   }
-  newMethod() {
+  newMethod(): void {
     this.test1();
   }
 }
@@ -625,7 +629,7 @@ class A {
   test1() {
     this.newMethod();
   }
-  newMethod() {
+  newMethod(): void {
     super.test1();
   }
 }
@@ -647,7 +651,7 @@ class A {
   test1() {
     this.newMethod();
   }
-  newMethod() {
+  newMethod(): void {
     console.log();
   }
 }
@@ -660,7 +664,7 @@ class A {
     newFunction();
   }
 }
-function newFunction() {
+function newFunction(): void {
   console.log();
 }
           |}
@@ -714,7 +718,7 @@ export default class {
     const b = this.newMethod(B, a);
     b.test2();
   }
-  newMethod(B, a) {
+  newMethod(B: typeof B, a: number): B {
     const b = new B(this.v, a); // selected
     return b;
   }
@@ -766,7 +770,7 @@ function level1() {
     }
   }
 }
-function newFunction() {
+function newFunction(): void {
   const a = 3;
   let b = 4;
   let c = 5;
@@ -783,7 +787,7 @@ function level1() {
         console.log("I should not be selected");
         newFunction();
         console.log("I should not be selected");
-        function newFunction() {
+        function newFunction(): void {
           const a = 3;
           let b = 4;
           let c = 5;
@@ -805,7 +809,7 @@ function level1() {
         newFunction();
         console.log("I should not be selected");
       }
-      function newFunction() {
+      function newFunction(): void {
         const a = 3;
         let b = 4;
         let c = 5;
@@ -827,7 +831,7 @@ function level1() {
         console.log("I should not be selected");
       }
     }
-    function newFunction() {
+    function newFunction(): void {
       const a = 3;
       let b = 4;
       let c = 5;
@@ -849,7 +853,7 @@ function level1() {
       }
     }
   }
-  function newFunction() {
+  function newFunction(): void {
     const a = 3;
     let b = 4;
     let c = 5;
@@ -897,7 +901,7 @@ function level1() {
       let expected =
         [
           ( "Extract to function in module scope",
-            {|
+            {multiline|
 const a = 3;
 function level1() {
   let b = 4;
@@ -916,16 +920,22 @@ function level1() {
     }
   }
 }
-function newFunction(b, c, d, e, f) {
+function newFunction(
+  b: number,
+  c: number,
+  d: number,
+  e: number,
+  f: number,
+): {| g: number, h: number |} {
   const g = 3;
   const h = 4;
   console.log(a + b + c + d + e + f + g + h);
   return { g, h };
 }
-|}
+|multiline}
           );
           ( "Extract to inner function in function 'level4'",
-            {|
+            {multiline|
 const a = 3;
 function level1() {
   let b = 4;
@@ -939,7 +949,7 @@ function level1() {
           let f = 8;
           const {g, h} = newFunction();
           return f + g + h;
-          function newFunction() {
+          function newFunction(): {| g: number, h: number |} {
             const g = 3;
             const h = 4;
             console.log(a + b + c + d + e + f + g + h);
@@ -950,10 +960,10 @@ function level1() {
     }
   }
 }
-|}
+|multiline}
           );
           ( "Extract to inner function in function 'level3'",
-            {|
+            {multiline|
 const a = 3;
 function level1() {
   let b = 4;
@@ -969,7 +979,7 @@ function level1() {
           return f + g + h;
         }
       }
-      function newFunction(e, f) {
+      function newFunction(e: number, f: number): {| g: number, h: number |} {
         const g = 3;
         const h = 4;
         console.log(a + b + c + d + e + f + g + h);
@@ -978,10 +988,10 @@ function level1() {
     }
   }
 }
-|}
+|multiline}
           );
           ( "Extract to inner function in function 'level2'",
-            {|
+            {multiline|
 const a = 3;
 function level1() {
   let b = 4;
@@ -998,7 +1008,11 @@ function level1() {
         }
       }
     }
-    function newFunction(d, e, f) {
+    function newFunction(
+      d: number,
+      e: number,
+      f: number,
+    ): {| g: number, h: number |} {
       const g = 3;
       const h = 4;
       console.log(a + b + c + d + e + f + g + h);
@@ -1006,10 +1020,10 @@ function level1() {
     }
   }
 }
-|}
+|multiline}
           );
           ( "Extract to inner function in function 'level1'",
-            {|
+            {multiline|
 const a = 3;
 function level1() {
   let b = 4;
@@ -1027,14 +1041,19 @@ function level1() {
       }
     }
   }
-  function newFunction(c, d, e, f) {
+  function newFunction(
+    c: number,
+    d: number,
+    e: number,
+    f: number,
+  ): {| g: number, h: number |} {
     const g = 3;
     const h = 4;
     console.log(a + b + c + d + e + f + g + h);
     return { g, h };
   }
 }
-|}
+|multiline}
           );
         ]
       in
@@ -1050,5 +1069,4 @@ function level1() {
   ]
 
 let tests =
-  "refactor_extract_function"
-  >::: ["provide_available_refactor" >::: provide_available_refactor_tests]
+  "refactor_extract" >::: ["provide_available_refactor" >::: provide_available_refactor_tests]
