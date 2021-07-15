@@ -21,6 +21,10 @@ install: test-bundler test-yarn
 flow_js:
 	(cd ..; make js)
 
+graphviz-images:
+	dot -Tsvg collections.dot -o static/collections.svg
+	dot -Tsvg collections-legend.dot -o static/collections-legend.svg
+
 static/master/flow.js:
 	mkdir -p $(dir $@)
 	(cd $(dir $@); cp "../../../bin/flow.js" "flow.js")
@@ -31,16 +35,16 @@ static/master/flowlib:
 
 copies: static/master/flow.js static/master/flowlib
 
-serve: test-jekyll flow_js copies
+serve: test-jekyll flow_js graphviz-images copies
 	@bundle exec jekyll serve --host="::" --port=8080
 
 build: test-jekyll copies
 	bundle exec jekyll build $(BUILD_FLAGS)
 
-serve-production: test-jekyll flow_js copies
+serve-production: test-jekyll flow_js graphviz-images copies
 	@JEKYLL_ENV=production bundle exec jekyll serve --host="::" --port=8080
 
-build-production: test-jekyll flow_js copies
+build-production: test-jekyll flow_js graphviz-images copies
 	@JEKYLL_ENV=production bundle exec jekyll build $(BUILD_FLAGS)
 
 # crowdin-sync: test-crowdin

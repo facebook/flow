@@ -1,0 +1,17 @@
+digraph Legend {
+  edge [
+    color="#7F7F7F"
+  ];
+  node [
+    label="Interface"
+    shape="box",
+    style="rounded, filled",
+    fontcolor="#FFFFFF",
+    color="#E8BD36"
+  ];
+  rankdir="LR";
+
+  Class1 [label="Class", color="#4A5659"];
+
+  Interface1 -> Class1 [label="Implemented by"];
+}
