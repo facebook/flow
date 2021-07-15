@@ -1,4 +1,5 @@
 # Flow
+
 <p align="center">
   <a href="https://circleci.com/gh/facebook/flow/tree/master">
     <img src="https://circleci.com/gh/facebook/flow/tree/master.svg?style=shield" alt="CircleCI" />
@@ -20,6 +21,7 @@
   </a>
 </p>
 
+<img src="website/favicon.svg" width="100">
 
 Flow is a static typechecker for JavaScript. To find out more about Flow, check out [flow.org](https://flow.org/).
 
