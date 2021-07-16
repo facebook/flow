@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
-
+module Sedlexing = Flow_sedlexing
 type t = {
   lex_source: File_key.t option;
   lex_lb: Sedlexing.lexbuf;
@@ -44,7 +44,7 @@ let new_lex_env lex_source lex_lb ~enable_types_in_comments =
 (* copy all the mutable things so that we have a distinct lexing environment
    that does not interfere with ordinary lexer operations *)
 let clone env =
-  let lex_lb = env.lex_lb |> Obj.repr |> Obj.dup |> Obj.obj in
+  let lex_lb = Sedlexing.lexbuf_clone env.lex_lb in
   { env with lex_lb }
 
 let get_and_clear_state env =

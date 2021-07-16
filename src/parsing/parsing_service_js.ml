@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
-
+module Sedlexing = Flow_sedlexing
 module Ast = Flow_ast
 open Utils_js
 open Sys_utils

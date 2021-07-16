@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
-
+module Sedlexing = Flow_sedlexing
 open Flow_ast
 module SSet = Set.Make (String)
 
@@ -38,51 +38,32 @@ end
  * - Refactor this to memoize all requested lookahead, so we aren't lexing the
  *   same token multiple times.
  *)
-let maximum_lookahead = 2
 
 module Lookahead : sig
   type t
 
   val create : Lex_env.t -> Lex_mode.t -> t
 
-  val peek : t -> int -> Lex_result.t
+  val peek_0 : t -> Lex_result.t
 
-  val lex_env : t -> int -> Lex_env.t
+  val peek_1 : t -> Lex_result.t
+
+  val lex_env_0 : t -> Lex_env.t
 
   val junk : t -> unit
 end = struct
+  type la_result = (Lex_env.t * Lex_result.t) option
+
   type t = {
-    mutable la_results: (Lex_env.t * Lex_result.t) option array;
-    mutable la_num_lexed: int;
+    mutable la_results_0: la_result;
+    mutable la_results_1: la_result;
     la_lex_mode: Lex_mode.t;
     mutable la_lex_env: Lex_env.t;
   }
 
   let create lex_env mode =
     let lex_env = Lex_env.clone lex_env in
-    { la_results = [||]; la_num_lexed = 0; la_lex_mode = mode; la_lex_env = lex_env }
-
-  let next_power_of_two n =
-    let rec f i =
-      if i >= n then
-        i
-      else
-        f (i * 2)
-    in
-    f 1
-
-  (* resize the tokens array to have at least n elements *)
-  let grow t n =
-    if Array.length t.la_results < n then
-      let new_size = next_power_of_two n in
-      let filler i =
-        if i < Array.length t.la_results then
-          t.la_results.(i)
-        else
-          None
-      in
-      let new_arr = Array.init new_size filler in
-      t.la_results <- new_arr
+    { la_results_0 = None; la_results_1 = None; la_lex_mode = mode; la_lex_env = lex_env }
 
   (* precondition: there is enough room in t.la_results for the result *)
   let lex t =
@@ -97,36 +78,42 @@ end = struct
       | Lex_mode.REGEXP -> Flow_lexer.regexp lex_env
     in
     let cloned_env = Lex_env.clone lex_env in
+    let result = (cloned_env, lex_result) in
     t.la_lex_env <- lex_env;
-    t.la_results.(t.la_num_lexed) <- Some (cloned_env, lex_result);
-    t.la_num_lexed <- t.la_num_lexed + 1
+    begin
+      match t.la_results_0 with
+      | None -> t.la_results_0 <- Some result
+      | Some _ -> t.la_results_1 <- Some result
+    end;
+    result
 
-  let lex_until t i =
-    grow t (i + 1);
-    while t.la_num_lexed <= i do
-      lex t
-    done
-
-  let peek t i =
-    lex_until t i;
-    match t.la_results.(i) with
+  let peek_0 t =
+    match t.la_results_0 with
     | Some (_, result) -> result
-    (* only happens if there is a defect in the lookahead module *)
-    | None -> failwith "Lookahead.peek failed"
+    | None -> snd (lex t)
 
-  let lex_env t i =
-    lex_until t i;
-    match t.la_results.(i) with
+  let peek_1 t =
+    (match t.la_results_0 with
+    | None -> ignore (lex t)
+    | Some _ -> ());
+    match t.la_results_1 with
+    | None -> snd (lex t)
+    | Some (_, result) -> result
+
+  let lex_env_0 t =
+    match t.la_results_0 with
     | Some (lex_env, _) -> lex_env
-    (* only happens if there is a defect in the lookahead module *)
-    | None -> failwith "Lookahead.peek failed"
+    | None -> fst (lex t)
 
   (* Throws away the first peeked-at token, shifting any subsequent tokens up *)
   let junk t =
-    lex_until t 0;
-    if t.la_num_lexed > 1 then Array.blit t.la_results 1 t.la_results 0 (t.la_num_lexed - 1);
-    t.la_results.(t.la_num_lexed - 1) <- None;
-    t.la_num_lexed <- t.la_num_lexed - 1
+    match t.la_results_1 with
+    | None ->
+      ignore (peek_0 t);
+      t.la_results_0 <- None
+    | Some _ ->
+      t.la_results_0 <- t.la_results_1;
+      t.la_results_1 <- None
 end
 
 type token_sink_result = {
@@ -357,9 +344,15 @@ let add_used_private env name loc =
 let consume_comments_until env pos = env.consumed_comments_pos := pos
 
 (* lookahead: *)
-let lookahead ~i env =
-  assert (i < maximum_lookahead);
-  Lookahead.peek !(env.lookahead) i
+let[@inline] lookahead_0 env = Lookahead.peek_0 !(env.lookahead)
+
+let[@inline] lookahead_1 env = Lookahead.peek_1 !(env.lookahead)
+
+let[@inline] lookahead ~i env =
+  match i with
+  | 0 -> lookahead_0 env
+  | 1 -> lookahead_1 env
+  | _ -> assert false
 
 (* functional operations: *)
 let with_strict in_strict_mode env = { env with in_strict_mode }
@@ -620,8 +613,6 @@ module Peek = struct
       (fun ({ Loc.start; _ }, _) -> Loc.pos_cmp !(env.consumed_comments_pos) start <= 0)
       comments
 
-  let ith_lex_env ~i env = Lookahead.lex_env !(env.lookahead) i
-
   let token env = ith_token ~i:0 env
 
   let loc env = ith_loc ~i:0 env
@@ -645,7 +636,7 @@ module Peek = struct
       (fun ({ Loc.start; _ }, _) -> Loc.pos_cmp start !(env.consumed_comments_pos) < 0)
       comments
 
-  let lex_env env = ith_lex_env ~i:0 env
+  let lex_env env = Lookahead.lex_env_0 !(env.lookahead)
 
   (* True if there is a line terminator before the next token *)
   let ith_is_line_terminator ~i env =
