@@ -103,3 +103,6 @@ stringify("foo");
 Because of the `typeof value === 'string'` check, Flow knows the `value` can
 only be a `string` inside of the `if` statement. This is known as a
 [refinement](../../lang/refinements/).
+
+## Mixed vs Any <a class="toc" id="toc-mixed-vs-any" href="#toc-mixed-vs-any"></a>
+`mixed` in contrast to  `any` are very similar. They both represent an undetermined value, but with `any` you can manipulate or call any function without prior type refinement. While `mixed` requires type refinement before usage.
