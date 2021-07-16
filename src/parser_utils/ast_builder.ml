@@ -64,6 +64,12 @@ module Types = struct
   let object_ ?(loc = Loc.none) ?exact ?inexact properties =
     (loc, Ast.Type.Object (Objects.make ?exact ?inexact properties))
 
+  let type_param ?(loc = Loc.none) ~bound ~variance ~default name =
+    (loc, { Ast.Type.TypeParam.name = Identifiers.identifier name; bound; variance; default })
+
+  let type_params ?comments ?(loc = Loc.none) params =
+    (loc, { Ast.Type.TypeParams.params; comments })
+
   let type_args ?comments ?(loc = Loc.none) arguments =
     (loc, { Ast.Type.TypeArgs.arguments; comments })
 
