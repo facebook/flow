@@ -84,15 +84,7 @@ function test() {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 4; column = 10 };
-          _end = { Loc.line = 4; column = 22 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (4, 10) (4, 22)) );
     ( "multi_line_extract" >:: fun ctxt ->
       let source =
         {|
@@ -140,15 +132,7 @@ function test() {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 4; column = 10 };
-          _end = { Loc.line = 7; column = 20 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (4, 10) (7, 20)) );
     ( "single_escaping_def_extract" >:: fun ctxt ->
       let source = {|
         const a = 3;
@@ -168,15 +152,7 @@ function newFunction(): number {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 8 };
-          _end = { Loc.line = 2; column = 20 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (2, 8) (2, 20)) );
     ( "local_reassignment_single_return_extract" >:: fun ctxt ->
       let source =
         {|
@@ -203,15 +179,7 @@ function newFunction(): number {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 4; column = 8 };
-          _end = { Loc.line = 4; column = 33 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (4, 8) (4, 33)) );
     ( "local_reassignment_mixed_return_extract" >:: fun ctxt ->
       let source =
         {|
@@ -239,15 +207,7 @@ function newFunction(): {| a: number, fooo: number |} {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 3; column = 8 };
-          _end = { Loc.line = 4; column = 33 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (3, 8) (4, 33)) );
     ( "external_reassignment_single_return_extract" >:: fun ctxt ->
       let source =
         {|
@@ -271,15 +231,7 @@ function newFunction(): number {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 8 };
-          _end = { Loc.line = 2; column = 33 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (2, 8) (2, 33)) );
     ( "external_reassignment_multiple_returns_extract" >:: fun ctxt ->
       let source =
         {|
@@ -303,15 +255,7 @@ function newFunction(): {| a: number, fooo: number |} {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 8 };
-          _end = { Loc.line = 3; column = 32 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (2, 8) (3, 32)) );
     ( "async_expression_extract" >:: fun ctxt ->
       let source =
         {|
@@ -342,15 +286,7 @@ async function newFunction(): Promise<void> {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 4; column = 10 };
-          _end = { Loc.line = 7; column = 20 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (4, 10) (7, 20)) );
     ( "async_for_of_extract" >:: fun ctxt ->
       let source =
         {|
@@ -381,15 +317,7 @@ async function newFunction(): Promise<void> {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 4; column = 10 };
-          _end = { Loc.line = 6; column = 20 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (4, 10) (6, 20)) );
     ( "await_in_async_function_extract" >:: fun ctxt ->
       let source = "const test = async () => await promise;" in
       let expected =
@@ -404,15 +332,7 @@ function newFunction(): void {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 0 };
-          _end = { Loc.line = 1; column = 39 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (1, 0) (1, 39)) );
     ( "return_no_extract" >:: fun ctxt ->
       let source =
         {|
@@ -427,15 +347,7 @@ function newFunction(): void {
         }
       |}
       in
-      assert_refactored
-        ~ctxt
-        []
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 4; column = 10 };
-          _end = { Loc.line = 8; column = 22 };
-        } );
+      assert_refactored ~ctxt [] source (mk_loc (4, 10) (8, 22)) );
     ( "yield_no_extract" >:: fun ctxt ->
       let source =
         {|
@@ -450,44 +362,16 @@ function newFunction(): void {
         }
       |}
       in
-      assert_refactored
-        ~ctxt
-        []
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 4; column = 10 };
-          _end = { Loc.line = 8; column = 22 };
-        } );
+      assert_refactored ~ctxt [] source (mk_loc (4, 10) (8, 22)) );
     ( "label_no_extract" >:: fun ctxt ->
       assert_refactored
         ~ctxt
         []
         "const a = 1; {label:test();} function test() {}"
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 0 };
-          _end = { Loc.line = 1; column = 60 };
-        } );
+        (mk_loc (1, 0) (1, 60)) );
     ( "simple_break_continue_no_extract" >:: fun ctxt ->
-      assert_refactored
-        ~ctxt
-        []
-        "while (true) {break;}"
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 12 };
-          _end = { Loc.line = 1; column = 30 };
-        };
-      assert_refactored
-        ~ctxt
-        []
-        "while (true) {continue;}"
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 12 };
-          _end = { Loc.line = 1; column = 30 };
-        } );
+      assert_refactored ~ctxt [] "while (true) {break;}" (mk_loc (1, 12) (1, 30));
+      assert_refactored ~ctxt [] "while (true) {continue;}" (mk_loc (1, 12) (1, 30)) );
     ( "continue_in_switch_no_extract" >:: fun ctxt ->
       let source =
         {|
@@ -499,34 +383,10 @@ function newFunction(): void {
 
       |}
       in
-      assert_refactored
-        ~ctxt
-        []
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 3; column = 8 };
-          _end = { Loc.line = 5; column = 23 };
-        } );
+      assert_refactored ~ctxt [] source (mk_loc (3, 8) (5, 23)) );
     ( "wrapped_break_continue_with_label_no_extracts" >:: fun ctxt ->
-      assert_refactored
-        ~ctxt
-        []
-        "label:while (true) {break label;}"
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 0 };
-          _end = { Loc.line = 1; column = 50 };
-        };
-      assert_refactored
-        ~ctxt
-        []
-        "label:while (true) {continue label;}"
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 0 };
-          _end = { Loc.line = 1; column = 50 };
-        } );
+      assert_refactored ~ctxt [] "label:while (true) {break label;}" (mk_loc (1, 0) (1, 50));
+      assert_refactored ~ctxt [] "label:while (true) {continue label;}" (mk_loc (1, 0) (1, 50)) );
     ( "wrapped_break_continue_switch_has_extracts" >:: fun ctxt ->
       let expected =
         [
@@ -541,15 +401,7 @@ function newFunction(): void {
 |} );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        "while (true) {break;}"
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 0 };
-          _end = { Loc.line = 1; column = 30 };
-        };
+      assert_refactored ~ctxt expected "while (true) {break;}" (mk_loc (1, 0) (1, 30));
       let expected =
         [
           ( "Extract to function in module scope",
@@ -564,15 +416,7 @@ function newFunction(): void {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        "while (true) {continue;}"
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 0 };
-          _end = { Loc.line = 1; column = 30 };
-        };
+      assert_refactored ~ctxt expected "while (true) {continue;}" (mk_loc (1, 0) (1, 30));
       let expected =
         [
           ( "Extract to function in module scope",
@@ -588,15 +432,7 @@ function newFunction(): void {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        "switch (true) {default:break;}"
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 0 };
-          _end = { Loc.line = 1; column = 40 };
-        } );
+      assert_refactored ~ctxt expected "switch (true) {default:break;}" (mk_loc (1, 0) (1, 40)) );
     ( "basic_class_method_extract" >:: fun ctxt ->
       assert_refactored
         ~ctxt
@@ -615,11 +451,7 @@ class A {
           );
         ]
         "class A { test1() { this.test1(); } }"
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 20 };
-          _end = { Loc.line = 1; column = 33 };
-        };
+        (mk_loc (1, 20) (1, 33));
       assert_refactored
         ~ctxt
         [
@@ -637,11 +469,7 @@ class A {
           );
         ]
         "class A { test1() { super.test1(); } }"
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 20 };
-          _end = { Loc.line = 1; column = 34 };
-        };
+        (mk_loc (1, 20) (1, 34));
       assert_refactored
         ~ctxt
         [
@@ -671,11 +499,7 @@ function newFunction(): void {
           );
         ]
         "class A { test1() { console.log(); } }"
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 20 };
-          _end = { Loc.line = 1; column = 34 };
-        } );
+        (mk_loc (1, 20) (1, 34)) );
     ( "class_method_with_parameters_and_return_extract" >:: fun ctxt ->
       let source =
         {|
@@ -727,15 +551,7 @@ export default class {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 14; column = 12 };
-          _end = { Loc.line = 14; column = 51 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (14, 12) (14, 51)) );
     ( "very_nested_extract" >:: fun ctxt ->
       let source =
         {|
@@ -864,15 +680,7 @@ function level1() {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 7; column = 16 };
-          _end = { Loc.line = 10; column = 26 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (7, 16) (10, 26)) );
     ( "very_nested_extract_with_variables" >:: fun ctxt ->
       let source =
         {|
@@ -1057,15 +865,7 @@ function level1() {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 13; column = 18 };
-          _end = { Loc.line = 15; column = 61 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (13, 18) (15, 61)) );
   ]
 
 let tests =
