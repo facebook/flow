@@ -931,7 +931,7 @@ module NewAPI = struct
     | Pattern_def_tag
     | Pattern_tag
     (* tags defined below this point are scanned for pointers *)
-    | Addr_tbl_tag (* 13 *)
+    | Addr_tbl_tag (* 14 *)
     | Checked_file_tag
     | CJS_module_tag
     | ES_module_tag
@@ -941,6 +941,9 @@ module NewAPI = struct
 
   (* constant constructors are integers *)
   let tag_val : tag -> int = Obj.magic
+
+  (* double-check integer value is consistent with hh_shared.c *)
+  let () = assert (tag_val Addr_tbl_tag = 14)
 
   let mk_header tag size =
     (* lower byte of header is reserved for 6-bit tag and 2 GC bits, OCaml
