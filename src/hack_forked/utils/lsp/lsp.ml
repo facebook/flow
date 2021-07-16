@@ -943,8 +943,9 @@ module DocumentFormatting = struct
   and formattingOptions = {
     tabSize: int;
     (* size of a tab in spaces *)
-    insertSpaces: bool; (* prefer spaces over tabs *)
-                        (* omitted: signature for further properties *)
+    insertSpaces: bool;
+        (* prefer spaces over tabs *)
+        (* omitted: signature for further properties *)
   }
 end
 

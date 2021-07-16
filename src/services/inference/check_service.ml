@@ -322,24 +322,24 @@ let mk_check_file ~options ~reader ~cache () =
       let reason = Reason.(mk_reason RExports file_loc) in
       let type_export addr =
         lazy
-          ( Heap.read_type_export addr
+          (Heap.read_type_export addr
           |> deserialize
           |> Pack.map_type_export aloc
-          |> Merge.merge_type_export (Lazy.force file_rec) reason )
+          |> Merge.merge_type_export (Lazy.force file_rec) reason)
       in
       let cjs_exports addr =
         lazy
-          ( Heap.read_cjs_exports addr
+          (Heap.read_cjs_exports addr
           |> deserialize
           |> Pack.map_packed aloc
-          |> Merge.merge (Lazy.force file_rec) )
+          |> Merge.merge (Lazy.force file_rec))
       in
       let es_export addr =
         lazy
-          ( Heap.read_es_export addr
+          (Heap.read_es_export addr
           |> deserialize
           |> Pack.map_export aloc
-          |> Merge.merge_export (Lazy.force file_rec) )
+          |> Merge.merge_export (Lazy.force file_rec))
       in
       let cjs_exports addr =
         let (Pack.CJSModuleInfo { type_export_keys; type_stars; strict }) =
@@ -389,9 +389,9 @@ let mk_check_file ~options ~reader ~cache () =
       in
       let resolved =
         lazy
-          ( Heap.file_module file_addr
+          (Heap.file_module file_addr
           |> Heap.read_dyn_module cjs_exports es_exports
-          |> Merge.merge_exports (Lazy.force file_rec) reason )
+          |> Merge.merge_exports (Lazy.force file_rec) reason)
       in
       let t = mk_sig_tvar cx reason resolved in
       (fun () -> t)
@@ -427,18 +427,18 @@ let mk_check_file ~options ~reader ~cache () =
 
     let pattern_def file_rec addr =
       lazy
-        ( Heap.read_pattern_def addr
+        (Heap.read_pattern_def addr
         |> deserialize
         |> Pack.map_packed aloc
-        |> Merge.merge (Lazy.force file_rec) )
+        |> Merge.merge (Lazy.force file_rec))
     in
 
     let pattern file_rec addr =
       lazy
-        ( Heap.read_pattern addr
+        (Heap.read_pattern addr
         |> deserialize
         |> Pack.map_pattern aloc
-        |> Merge.merge_pattern (Lazy.force file_rec) )
+        |> Merge.merge_pattern (Lazy.force file_rec))
     in
 
     let local_defs file_rec =

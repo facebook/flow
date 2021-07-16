@@ -24,10 +24,10 @@ let printer with_locs locmap =
         Printf.sprintf
           "%s => { %s%s }"
           (Loc.debug_to_string read_loc)
-          ( if with_locs then
+          (if with_locs then
             Printf.sprintf "%s, " (print_locs locs)
           else
-            "" )
+            "")
           (Env_builder.With_Loc.show_refinement_kind refinement))
       kvlist
   in

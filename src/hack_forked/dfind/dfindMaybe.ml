@@ -44,8 +44,8 @@ let handle_file_exn path = function
 
 (* Calls (f path), never fails, logs the nasty exceptions *)
 let call f path =
-  try f path
-  with e ->
+  try f path with
+  | e ->
     handle_file_exn path e;
     None
 

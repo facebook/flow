@@ -80,7 +80,8 @@ let start_flow_server env =
     | (_, status) ->
       let msg = "Could not start Flow server!" in
       Error (msg, Exit.Server_start_failed status)
-  with exn ->
+  with
+  | exn ->
     let exn = Exception.wrap exn in
     let msg =
       Printf.sprintf
@@ -122,8 +123,8 @@ let consume_retry retries =
  * initialization, etc *)
 let rec connect ~flowconfig_name ~client_handshake env retries start_time =
   let connect = connect ~flowconfig_name in
-  ( if retries.retries_remaining < 0 then
-    Exit.(exit ~msg:"\nOut of retries, exiting!" Out_of_retries) );
+  (if retries.retries_remaining < 0 then
+    Exit.(exit ~msg:"\nOut of retries, exiting!" Out_of_retries));
   let has_timed_out =
     match env.expiry with
     | None -> false
@@ -150,10 +151,10 @@ let rec connect ~flowconfig_name ~client_handshake env retries start_time =
         "The flow server %s (%d %s remaining): %s%!"
         busy_reason
         retries.retries_remaining
-        ( if retries.retries_remaining = 1 then
+        (if retries.retries_remaining = 1 then
           "retry"
         else
-          "retries" )
+          "retries")
         (Tty.spinner ());
     connect ~client_handshake env (consume_retry retries) start_time
   | Error CCS.(Build_id_mismatch Server_exited) ->
@@ -201,7 +202,8 @@ let rec connect ~flowconfig_name ~client_handshake env retries start_time =
           Utils_js.prerr_endlinef "Successfully killed server for `%s`" (Path.to_string env.root);
         let start_time = Unix.gettimeofday () in
         handle_missing_server ~flowconfig_name ~client_handshake env retries start_time
-      with CommandMeanKill.FailedToKill err ->
+      with
+      | CommandMeanKill.FailedToKill err ->
         begin
           if not env.quiet then
             match err with
@@ -226,10 +228,10 @@ and handle_missing_server ~flowconfig_name ~client_handshake env retries start_t
           Printf.eprintf
             "Failed to start a new flow server (%d %s remaining): %s%!"
             retries.retries_remaining
-            ( if retries.retries_remaining = 1 then
+            (if retries.retries_remaining = 1 then
               "retry"
             else
-              "retries" )
+              "retries")
             (Tty.spinner ());
         consume_retry retries
       | Error (msg, code) -> Exit.exit ~msg code

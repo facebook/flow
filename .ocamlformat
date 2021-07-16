@@ -14,7 +14,6 @@ field-space = tight-decl
 if-then-else = k-r
 indicate-nested-or-patterns = unsafe-no
 leading-nested-match-parens = true
-let-open = preserve
 margin = 100
 parens-tuple-patterns = always
 sequence-blank-line = preserve-one

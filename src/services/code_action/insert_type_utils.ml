@@ -489,10 +489,10 @@ module Validator = struct
           Ty.explicit_any
         | Ty.Any
             (Ty.Unsound
-              ( ( Ty.Constructor | Ty.DummyStatic | Ty.Existential | Ty.Exports
-                | Ty.FunctionPrototype | Ty.InferenceHooks | Ty.InstanceOfRefinement | Ty.Merged
-                | Ty.ResolveSpread | Ty.Unchecked | Ty.Unimplemented | Ty.UnresolvedType
-                | Ty.WeakContext ) as kind )) ->
+              (( Ty.Constructor | Ty.DummyStatic | Ty.Existential | Ty.Exports
+               | Ty.FunctionPrototype | Ty.InferenceHooks | Ty.InstanceOfRefinement | Ty.Merged
+               | Ty.ResolveSpread | Ty.Unchecked | Ty.Unimplemented | Ty.UnresolvedType
+               | Ty.WeakContext ) as kind)) ->
           env := Any_Unsound kind :: !env;
           Ty.explicit_any
         | Ty.Utility (Ty.ReactElementConfigType (Ty.Fun _)) ->
@@ -601,17 +601,16 @@ class patch_up_react_mapper ?(imports_react = false) () =
        * it is imported with the same mechanism we import other Remote symbols.
        * Otherwise, we refer to these names as 'React.NAME'. *)
       | Ty.Generic
-          ( ( {
-                Ty.sym_name =
-                  Reason.OrdinaryName
-                    ( ( "AbstractComponent" | "ChildrenArray" | "ComponentType" | "Config"
-                      | "Context" | "Element" | "ElementConfig" | "ElementProps" | "ElementRef"
-                      | "ElementType" | "Key" | "Node" | "Portal" | "Ref"
-                      | "StatelessFunctionalComponent" ) as name );
-                sym_provenance = Ty_symbol.Library { Ty_symbol.imported_as = None };
-                sym_def_loc;
-                _;
-              } as symbol ),
+          ( ({
+               Ty.sym_name =
+                 Reason.OrdinaryName
+                   (( "AbstractComponent" | "ChildrenArray" | "ComponentType" | "Config" | "Context"
+                    | "Element" | "ElementConfig" | "ElementProps" | "ElementRef" | "ElementType"
+                    | "Key" | "Node" | "Portal" | "Ref" | "StatelessFunctionalComponent" ) as name);
+               sym_provenance = Ty_symbol.Library { Ty_symbol.imported_as = None };
+               sym_def_loc;
+               _;
+             } as symbol),
             kind,
             args_opt )
         when is_react_loc sym_def_loc ->

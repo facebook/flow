@@ -137,8 +137,8 @@ module Jget = Hh_json_helpers.Jget
 module J = Hh_json_helpers.AdhocJsonHelpers
 
 let json_of_string str =
-  try Ok (Hh_json.json_of_string str)
-  with Hh_json.Syntax_error err ->
+  try Ok (Hh_json.json_of_string str) with
+  | Hh_json.Syntax_error err ->
     let msg = spf "Failed to parse string as JSON: %s" err in
     Error msg
 
@@ -280,12 +280,12 @@ let request_json ?(extra_kv = []) ?(extra_expressions = []) watchman_command env
     let directives =
       [
         JSON_Object
-          ( extra_kv
+          (extra_kv
           @ [
               ("fields", J.strlist ["name"]);
               (* Watchman doesn't allow an empty allof expression. But expressions is never empty *)
               ("expression", J.pred "allof" expressions);
-            ] );
+            ]);
       ]
     in
     let request = JSON_Array (header @ directives) in
@@ -336,7 +336,8 @@ let send_request ~debug_logging oc json =
     let%lwt () = Lwt_io.fprintl oc json_str in
     let%lwt () = Lwt_io.flush oc in
     Lwt.return (Ok ())
-  with Unix.Unix_error (Unix.EPIPE, _, _) ->
+  with
+  | Unix.Unix_error (Unix.EPIPE, _, _) ->
     let msg = "Connection closed (EPIPE)" in
     Lwt.return (Error (Socket_unavailable { msg }))
 
@@ -380,8 +381,8 @@ let open_connection =
       (Unix.in_channel_of_descr fd, Unix.out_channel_of_descr fd)
   in
   let open_socket sockname =
-    try Ok (open_socket_exn sockname)
-    with Unix.Unix_error (error, _, _) ->
+    try Ok (open_socket_exn sockname) with
+    | Unix.Unix_error (error, _, _) ->
       let msg = spf "%s (socket: %s)" (Unix.error_message error) sockname in
       Error (Socket_unavailable { msg })
   in
@@ -411,14 +412,16 @@ let close_connection (reader, oc) =
     (* We call [close_connection] in [with_watchman_conn] even on error. Sometimes
         those errors are because the connection was closed unexpectedly, so we should
        ignore an already-closed connection (BADF) here. *)
-    try%lwt Lwt_unix.close ic with Unix.Unix_error (Unix.EBADF, _, _) -> Lwt.return_unit
+    try%lwt Lwt_unix.close ic with
+    | Unix.Unix_error (Unix.EBADF, _, _) -> Lwt.return_unit
   in
   let%lwt () =
     (* As mention in [open_connection], if we open the connection with [Unix.open_connection],
        we use a single fd for both input and output. That means we might be trying to close
        it twice here. If so, this second close with throw. So let's catch that exception and
        ignore it. *)
-    try%lwt Lwt_io.close oc with Unix.Unix_error (Unix.EBADF, _, _) -> Lwt.return_unit
+    try%lwt Lwt_io.close oc with
+    | Unix.Unix_error (Unix.EBADF, _, _) -> Lwt.return_unit
   in
   Lwt.return_unit
 
@@ -426,8 +429,8 @@ let with_watchman_conn f =
   match%lwt open_connection () with
   | Ok conn ->
     let%lwt result =
-      try%lwt f conn
-      with e ->
+      try%lwt f conn with
+      | e ->
         let e = Exception.wrap e in
         let%lwt () = close_connection conn in
         Exception.reraise e
@@ -452,8 +455,8 @@ let read_line reader =
     Lwt.return (Error (Socket_unavailable { msg }))
 
 let read_line_with_timeout ~timeout reader =
-  try%lwt Lwt_unix.with_timeout timeout @@ fun () -> read_line reader
-  with Lwt_unix.Timeout ->
+  try%lwt Lwt_unix.with_timeout timeout @@ fun () -> read_line reader with
+  | Lwt_unix.Timeout ->
     let msg = spf "Timed out reading payload after %f seconds" timeout in
     Lwt.return (Error (Socket_unavailable { msg }))
 
@@ -730,7 +733,8 @@ let re_init_dead_env =
       | Ok false -> re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings
       | Ok true -> Lwt.return (Error Fresh_instance)
       | Error _ as err -> Lwt.return err
-    with Lwt_unix.Timeout ->
+    with
+    | Lwt_unix.Timeout ->
       Lwt.return (Error (Socket_unavailable { msg = spf "Timed out after %ds" timeout }))
   in
   fun dead_env ->

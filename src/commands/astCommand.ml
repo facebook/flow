@@ -184,7 +184,8 @@ let main
             let tokens_prop = ("tokens", JSON_Array (List.rev !tokens)) in
             JSON_Object (errors_prop :: tokens_prop :: params)
           | _ -> assert false
-      with Parse_error.Error l -> JSON_Object [("errors", Translate.errors l)]
+      with
+      | Parse_error.Error l -> JSON_Object [("errors", Translate.errors l)]
     in
     print_json_endline ~pretty results)
 

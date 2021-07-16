@@ -116,10 +116,10 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
     | NumLit raw -> Atom raw
     | BoolLit value ->
       Atom
-        ( if value then
+        (if value then
           "true"
         else
-          "false" )
+          "false")
     | InlineInterface { if_extends; if_props; if_dict } ->
       type_interface ~depth if_extends if_props if_dict
     | TypeOf pv -> fuse [Atom "typeof"; space; builtin_value pv]
@@ -148,10 +148,10 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
     fuse
       [
         Atom "any";
-        ( if depth = 1 && with_comments then
+        (if depth = 1 && with_comments then
           fuse [pretty_space; Atom kind |> wrap_in_parens]
         else
-          Empty );
+          Empty);
       ]
   and type_interface ~depth extends props dict =
     let extends =
@@ -195,10 +195,10 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
             fuse
               [
                 identifier (Reason.OrdinaryName id);
-                ( if prm_optional then
+                (if prm_optional then
                   Atom "?"
                 else
-                  Empty );
+                  Empty);
                 Atom ":";
                 pretty_space;
               ]
@@ -225,10 +225,10 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
                 [
                   variance_ polarity;
                   to_key (Reason.display_string_of_name key);
-                  ( if optional then
+                  (if optional then
                     Atom "?"
                   else
-                    Empty );
+                    Empty);
                   Atom ":";
                   pretty_space;
                   type_ ~depth t;

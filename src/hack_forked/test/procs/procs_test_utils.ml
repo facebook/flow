@@ -13,8 +13,8 @@ let entry =
 
 let try_finalize f x finally y =
   let res =
-    try f x
-    with exn ->
+    try f x with
+    | exn ->
       finally y;
       raise exn
   in

@@ -87,14 +87,16 @@ let test_single_exception_in_sync_callback () =
   try
     Timer.set_timer ~interval:0.0 ~callback:(fun () -> failwith "Boom") |> ignore;
     failwith "Expected set_timer to invoke callback immediately and throw"
-  with Failure msg -> msg = "Boom"
+  with
+  | Failure msg -> msg = "Boom"
 
 let test_single_exception_in_async_callback () =
   Timer.set_timer ~interval:0.1 ~callback:(fun () -> failwith "Boom") |> ignore;
   try
     Unix.sleep 1;
     failwith "Expected timer callback to throw when it fires"
-  with Failure msg -> msg = "Boom"
+  with
+  | Failure msg -> msg = "Boom"
 
 let test_mult_exception_in_async_callback () =
   Timer.set_timer ~interval:0.1 ~callback:(fun () -> failwith "BoomA") |> ignore;
@@ -103,7 +105,8 @@ let test_mult_exception_in_async_callback () =
   try
     Unix.sleep 1;
     failwith "Expected the various timer callbacks to throw"
-  with Failure msg -> msg = "BoomA" || msg = "BoomB" || msg = "BoomC"
+  with
+  | Failure msg -> msg = "BoomA" || msg = "BoomB" || msg = "BoomC"
 
 let test_cancelling_current_timer () =
   let result = ref [] in

@@ -94,10 +94,10 @@ let expect_compact expected =
     ~msg:
       (Printf.sprintf
          "Expected collection to be %sneeded"
-         ( if expected then
+         (if expected then
            ""
          else
-           "not " ))
+           "not "))
     (!actual = expected)
 
 let test_ops () =
@@ -135,7 +135,8 @@ let test_hashtbl_full_hh_add () =
   try
     add "8" "";
     expect ~msg:"Expected the hash table to be full" false
-  with SharedMem.Hash_table_full -> ()
+  with
+  | SharedMem.Hash_table_full -> ()
 
 let test_hashtbl_full_hh_move () =
   expect_stats ~nonempty:0 ~used:0;
@@ -154,7 +155,8 @@ let test_hashtbl_full_hh_move () =
   try
     oldify "0";
     expect ~msg:"Expected the hash table to be full" false
-  with SharedMem.Hash_table_full -> ()
+  with
+  | SharedMem.Hash_table_full -> ()
 
 (**
  * An important property to remember about the shared hash table is if a key
@@ -272,7 +274,8 @@ let test_full () =
   add "7" "";
   add "8" "";
   let passed = ref false in
-  (try add "9" "" with SharedMem.Hash_table_full -> passed := true);
+  (try add "9" "" with
+  | SharedMem.Hash_table_full -> passed := true);
   assert !passed
 
 let tests () =

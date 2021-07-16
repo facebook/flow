@@ -50,8 +50,8 @@ let register_entry_point (start : start_function) : entry_point =
  * initialization to complete *)
 let rec wait_loop ~should_wait child_pid ic =
   let msg : wait_msg =
-    try Marshal_tools.from_fd_with_preamble (Daemon.descr_of_in_channel ic)
-    with End_of_file ->
+    try Marshal_tools.from_fd_with_preamble (Daemon.descr_of_in_channel ic) with
+    | End_of_file ->
       (* The pipe broke before we got the all-clear from the monitor. What kind
        * of things could go wrong? Well we check the lock before forking the
        * monitor, but maybe by the time the monitor started someone else had
@@ -117,12 +117,13 @@ let daemonize ~wait ~on_spawn ~init_id ~monitor_options (entry_point : entry_poi
    * So for now let's make Windows 7 not crash. It seems like `flow start` on
    * Windows 7 doesn't actually leak stdio, so a no op is acceptable
    *)
-  ( if Sys.win32 then
+  (if Sys.win32 then
     Unix.(
       try
         set_close_on_exec stdout;
         set_close_on_exec stderr
-      with Unix_error (EINVAL, _, _) -> ()) );
+      with
+      | Unix_error (EINVAL, _, _) -> ()));
 
   let root_str =
     monitor_options.FlowServerMonitorOptions.server_options |> Options.root |> Path.to_string

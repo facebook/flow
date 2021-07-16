@@ -776,7 +776,8 @@ module Make
         try
           f ();
           None
-        with AbruptCompletion.Exn abrupt_completion -> Some abrupt_completion
+        with
+        | AbruptCompletion.Exn abrupt_completion -> Some abrupt_completion
 
       method from_completion =
         function
@@ -1998,14 +1999,12 @@ module Make
         | (expr, (_, Expression.Literal { Literal.value = Literal.Null; _ })) ->
           this#null_test ~sense ~strict loc expr
         (* expr op undefined *)
-        | ( ( ( _,
-                Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ })
-              ) as undefined ),
+        | ( ((_, Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ }))
+            as undefined),
             expr )
         | ( expr,
-            ( ( _,
-                Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ })
-              ) as undefined ) ) ->
+            ((_, Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ }))
+            as undefined) ) ->
           ignore @@ this#expression undefined;
           this#void_test ~sense ~strict ~check_for_bound_undefined:true loc expr
         (* expr op void(...) *)

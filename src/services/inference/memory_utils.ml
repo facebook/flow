@@ -104,7 +104,8 @@ let with_memory_timer_lwt =
         let%lwt ret = P.with_timer_lwt ~should_print ~timer ~f profiling in
         Lwt.cancel sampling_loop;
         Lwt.return ret
-      with exn ->
+      with
+      | exn ->
         let exn = Exception.wrap exn in
         Lwt.cancel sampling_loop;
         Exception.reraise exn

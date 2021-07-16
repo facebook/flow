@@ -67,7 +67,8 @@ let rec get_next_timer ~exns =
           try
             timer.callback ();
             exns
-          with exn -> exn :: exns
+          with
+          | exn -> exn :: exns
         in
         get_next_timer ~exns
       else
@@ -92,7 +93,8 @@ let rec ding_fries_are_done _ =
     try
       Base.Option.iter !current_timer ~f:(fun timer -> timer.callback ());
       []
-    with exn -> [exn]
+    with
+    | exn -> [exn]
   in
   current_timer := None;
   schedule ~exns ()

@@ -111,8 +111,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       | mode ->
         Some
           (Printf.sprintf
-             ( "The Flow server is currently in %s lazy mode and is only checking %d/%d files.\n"
-             ^^ "To learn more, visit flow.org/en/docs/lang/lazy-modes" )
+             ("The Flow server is currently in %s lazy mode and is only checking %d/%d files.\n"
+             ^^ "To learn more, visit flow.org/en/docs/lang/lazy-modes")
              Options.(
                match mode with
                | LAZY_MODE_FILESYSTEM -> "filesystem"

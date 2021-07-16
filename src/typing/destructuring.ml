@@ -280,8 +280,7 @@ let rec pattern cx ~(expr : expr) ~(f : callback) acc (loc, p) =
 
 and array_elements cx ~expr ~f acc =
   let open Ast.Pattern.Array in
-  Base.List.mapi ~f:(fun i ->
-    function
+  Base.List.mapi ~f:(fun i -> function
     | Hole loc -> Hole loc
     | Element (loc, { Element.argument = p; default = d }) ->
       let acc = array_element cx acc i loc in

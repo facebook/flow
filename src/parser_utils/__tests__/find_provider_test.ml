@@ -49,9 +49,9 @@ let print_providers prov =
   | Some provider_locs ->
     Utils_js.spf
       "[%s]"
-      ( Loc_collections.LocSet.elements provider_locs
+      (Loc_collections.LocSet.elements provider_locs
       |> Base.List.map ~f:(Loc.debug_to_string ~include_source:false)
-      |> String.concat "], [" )
+      |> String.concat "], [")
 
 let print_providers_of_def prov =
   match prov with
@@ -59,10 +59,10 @@ let print_providers_of_def prov =
   | Some provider_locs ->
     Utils_js.spf
       "[%s]"
-      ( Base.List.map
-          ~f:(fun r -> Loc.debug_to_string ~include_source:false (Reason.poly_loc_of_reason r))
-          provider_locs
-      |> String.concat "], [" )
+      (Base.List.map
+         ~f:(fun r -> Loc.debug_to_string ~include_source:false (Reason.poly_loc_of_reason r))
+         provider_locs
+      |> String.concat "], [")
 
 let mk_provider_test var contents expected_msg ctxt =
   let ast = parse contents in

@@ -1754,10 +1754,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           (spf
              "%n type %s."
              n
-             ( if n == 1 then
+             (if n == 1 then
                "argument"
              else
-               "arguments" ));
+               "arguments"));
       ]
     in
     Normal { features }
@@ -1772,10 +1772,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           (spf
              "%n type %s."
              n
-             ( if n == 1 then
+             (if n == 1 then
                "argument"
              else
-               "arguments" ));
+               "arguments"));
       ]
     in
     Normal { features }
@@ -1795,10 +1795,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             (spf
                "%n type %s."
                n
-               ( if n == 1 then
+               (if n == 1 then
                  "argument"
                else
-                 "arguments" ));
+                 "arguments"));
         ]
       in
       Normal { features }
@@ -1810,10 +1810,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           (spf
              "%n type %s."
              n
-             ( if n == 1 then
+             (if n == 1 then
                "argument"
              else
-               "arguments" ));
+               "arguments"));
       ]
     in
     Normal { features }
@@ -1846,10 +1846,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             (spf
                "%n type argument%s."
                n
-               ( if n == 1 then
+               (if n == 1 then
                  ""
                else
-                 "s" ));
+                 "s"));
         ]
       in
       Normal { features }
@@ -2040,10 +2040,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
               (spf
                  " only has %d element%s, so index %s is out of bounds"
                  length
-                 ( if length == 1 then
+                 (if length == 1 then
                    ""
                  else
-                   "s" )
+                   "s")
                  index);
           ];
         use_op;
@@ -2674,8 +2674,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       in
       let features =
         text "Cannot build a typed interface for this module. "
-        :: text "You should annotate the exports of this module with types. "
-        :: features
+        :: text "You should annotate the exports of this module with types. " :: features
       in
       Normal { features })
   | EUnreachable _ -> Normal { features = [text "Unreachable code."] }
@@ -2843,10 +2842,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           (spf
              "without at least %d argument%s."
              n
-             ( if n == 1 then
+             (if n == 1 then
                ""
              else
-               "s" ));
+               "s"));
       ]
     in
     Normal { features }
@@ -3450,15 +3449,14 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         let members_features =
           if number_to_check > 5 then
             let max_display_amount = 4 in
-            ( Base.List.take left_to_check max_display_amount
-            |> Base.List.bind ~f:(fun member -> [code member; text ", "]) )
+            (Base.List.take left_to_check max_display_amount
+            |> Base.List.bind ~f:(fun member -> [code member; text ", "]))
             @ [text (spf "and %d others" (number_to_check - max_display_amount))]
           else
             Friendly.conjunction_concat
               (Base.List.map ~f:(fun member -> [code member]) left_to_check)
         in
-        (text "the members " :: members_features)
-        @ [text " of enum "; ref enum_reason; text " have"]
+        text "the members " :: members_features @ [text " of enum "; ref enum_reason; text " have"]
     in
     let default_features =
       match default_case with
@@ -3473,7 +3471,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       | None -> []
     in
     let features =
-      (text "Incomplete exhaustive check: " :: left_to_check_features)
+      text "Incomplete exhaustive check: " :: left_to_check_features
       @ [text " not been considered in check of "; desc reason; text "."]
       @ default_features
     in

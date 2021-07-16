@@ -46,7 +46,10 @@ module ArgSpec = struct
 
   let apply_arg name arg_type f (values, main) =
     let (values, main) = f (values, main) in
-    let value = (try Some (SMap.find name values : string list) with Not_found -> None) in
+    let value =
+      try Some (SMap.find name values : string list) with
+      | Not_found -> None
+    in
     (values, main (arg_type.parse ~name value))
 
   let pop_anon spec =
@@ -81,9 +84,9 @@ module ArgSpec = struct
         (fun ~name -> function
           | Some [x] ->
             Some
-              (try int_of_string x
-               with Failure _ ->
-                 raise (Failed_to_parse (name, Utils_js.spf "expected an integer, got %S" x)))
+              (try int_of_string x with
+              | Failure _ ->
+                raise (Failed_to_parse (name, Utils_js.spf "expected an integer, got %S" x)))
           | _ -> None);
       arg = Arg;
     }
@@ -94,8 +97,8 @@ module ArgSpec = struct
         (fun ~name -> function
           | Some [x] ->
             let i =
-              try int_of_string x
-              with Failure _ ->
+              try int_of_string x with
+              | Failure _ ->
                 raise
                   (Failed_to_parse (name, Utils_js.spf "expected an unsigned integer, got %S" x))
             in
@@ -372,7 +375,8 @@ and parse_flag values spec arg args =
       parse values spec args
     | ArgSpec.Arg_Rest -> failwith "Not supported"
     | ArgSpec.Arg_Command -> failwith "Not supported"
-  with Not_found -> raise (Failed_to_parse (arg, "unknown option"))
+  with
+  | Not_found -> raise (Failed_to_parse (arg, "unknown option"))
 
 and parse_anon values spec arg args =
   let (anon, spec) = ArgSpec.pop_anon spec in

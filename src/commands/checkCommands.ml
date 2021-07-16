@@ -230,12 +230,12 @@ module FocusCheckCommand = struct
     let root =
       CommandUtils.guess_root
         flowconfig_name
-        ( if root <> None then
+        (if root <> None then
           root
         else
           match filenames with
           | [] -> None
-          | x :: _ -> Some x )
+          | x :: _ -> Some x)
     in
     let (flowconfig, flowconfig_hash) =
       read_config_and_hash_or_exit

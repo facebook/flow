@@ -58,8 +58,8 @@ end
 module PolyInstantiation = struct
   let find cx reason_tapp typeparam op_reason =
     let cache = Context.instantiation_cache cx in
-    try Hashtbl.find cache (reason_tapp, typeparam.reason, op_reason)
-    with _ ->
+    try Hashtbl.find cache (reason_tapp, typeparam.reason, op_reason) with
+    | _ ->
       let t = ImplicitTypeArgument.mk_targ cx typeparam (Nel.hd op_reason) reason_tapp in
       Hashtbl.add cache (reason_tapp, typeparam.reason, op_reason) t;
       t

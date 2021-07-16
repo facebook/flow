@@ -227,7 +227,8 @@ let system_diff ~f prefix =
         | code ->
           Utils_js.print_endlinef "diff read error code %d" code;
           Error "diff wasn't able to run for some reason"
-      with e ->
+      with
+      | e ->
         let e = Exception.wrap e in
         let msg = Exception.get_ctor_string e in
         Error msg

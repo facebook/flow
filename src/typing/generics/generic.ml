@@ -227,9 +227,8 @@ let rec satisfies ~printer id1 id2 =
       | None ->
         (* something in id2 wasn't satisfied *)
         printer
-          ( lazy
-            [spf "Generics unsatisfied, with %s unmatched on upper bound" (bound_to_string bound2)]
-            );
+          (lazy
+            [spf "Generics unsatisfied, with %s unmatched on upper bound" (bound_to_string bound2)]);
         Upper (Bound bound2)
   in
   printer (lazy [spf "Checking generics compatibility: %s ~> %s" (to_string id1) (to_string id2)]);
@@ -315,15 +314,15 @@ let rec satisfies ~printer id1 id2 =
         ~f:(fun acc id1 id2 ->
           acc
           &&
-          ( printer
-              ( lazy
-                [
-                  spf
-                    "Checking generics compatibility (from spread): %s ~> %s"
-                    (bound_to_string id1)
-                    (bound_to_string id2);
-                ] );
-            is_satisfied (bound_satisfies id1 id2) ))
+          (printer
+             (lazy
+               [
+                 spf
+                   "Checking generics compatibility (from spread): %s ~> %s"
+                   (bound_to_string id1)
+                   (bound_to_string id2);
+               ]);
+           is_satisfied (bound_satisfies id1 id2)))
         s1
         s2
         ~init:true

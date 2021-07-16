@@ -321,7 +321,8 @@ class ['A] comparator_ty =
       try
         this#on_t env t1 t2;
         0
-      with Difference n -> n
+      with
+      | Difference n -> n
 
     (* Take advantage of pointer equality at type nodes to short circut *)
     method! private on_t env x y =

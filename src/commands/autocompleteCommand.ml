@@ -61,7 +61,8 @@ let extract_cursor contents =
       prefix ^ suffix
     in
     (contents, Some cursor)
-  with Not_found -> (contents, None)
+  with
+  | Not_found -> (contents, None)
 
 let parse_args = function
   | None
@@ -150,12 +151,12 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck l
         results
         ~f:(fun { ServerProt.Response.Completion.items; is_incomplete = _ } ->
           List.iter
-            ( Flow_lsp_conversions.flow_completion_item_to_lsp
-                ~is_snippet_supported:true
-                ~is_preselect_supported:true
-                ~is_label_detail_supported:true
+            (Flow_lsp_conversions.flow_completion_item_to_lsp
+               ~is_snippet_supported:true
+               ~is_preselect_supported:true
+               ~is_label_detail_supported:true
             %> Lsp_fmt.print_completionItem ~key:"<PLACEHOLDER_PROJECT_URL>"
-            %> Hh_json.print_json_endline ~pretty:true )
+            %> Hh_json.print_json_endline ~pretty:true)
             items)
     else if json || pretty then
       results |> autocomplete_response_to_json ~strip_root |> Hh_json.print_json_endline ~pretty

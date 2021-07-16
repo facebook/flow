@@ -1616,10 +1616,10 @@ end = struct
           let%map t = type__ ~env t in
           generic_builtin_t
             (Reason.OrdinaryName
-               ( if is_req then
+               (if is_req then
                  "React$PropType$Primitive$Required"
                else
-                 "React$PropType$Primitive" ))
+                 "React$PropType$Primitive"))
             [t]
         | Complex ArrayOf -> return (builtin_t (Reason.OrdinaryName "React$PropType$ArrayOf"))
         | Complex InstanceOf -> return (builtin_t (Reason.OrdinaryName "React$PropType$ArrayOf"))
@@ -2310,7 +2310,7 @@ end = struct
       let%map obj_props =
         if include_proto_members then
           let%map super_ty = type__ ~env ~proto:true ~imode:IMInstance super in
-          (Ty.SpreadProp super_ty :: own_ty_props) @ proto_ty_props
+          Ty.SpreadProp super_ty :: own_ty_props @ proto_ty_props
         else
           return (own_ty_props @ proto_ty_props)
       in

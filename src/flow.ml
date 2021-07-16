@@ -79,7 +79,8 @@ end = struct
         (try
            let command = List.find (fun command -> CommandSpec.name command = subcmd) commands in
            (command, rest)
-         with Not_found -> (default_command, next :: rest))
+         with
+        | Not_found -> (default_command, next :: rest))
     in
 
     let command_string = CommandSpec.name command in
@@ -115,10 +116,10 @@ let _ =
     let msg =
       Utils.spf
         "Out of shared memory%s"
-        ( if bt = "" then
+        (if bt = "" then
           bt
         else
-          ":\n" ^ bt )
+          ":\n" ^ bt)
     in
     Exit.(exit ~msg Out_of_shared_memory)
   | e ->

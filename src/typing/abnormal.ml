@@ -145,11 +145,11 @@ let save ?(env = []) abnormal = abnormals := AbnormalMap.add abnormal env !abnor
     and return the current one *)
 let swap_saved abnormal value =
   let old = AbnormalMap.find_opt abnormal !abnormals in
-  ( if old <> value then
+  (if old <> value then
     abnormals :=
       match value with
       | None -> AbnormalMap.remove abnormal !abnormals
-      | Some env -> AbnormalMap.add abnormal env !abnormals );
+      | Some env -> AbnormalMap.add abnormal env !abnormals);
   old
 
 (** remove a given control flow directive's value,

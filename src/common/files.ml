@@ -63,7 +63,9 @@ let chop_flow_ext file =
   else
     None
 
-let is_directory path = (try Sys.is_directory path with Sys_error _ -> false)
+let is_directory path =
+  try Sys.is_directory path with
+  | Sys_error _ -> false
 
 let is_prefix prefix =
   let prefix_with_sep =
@@ -156,7 +158,8 @@ let kind_of_path path =
            | S_DIR -> Dir (realpath path, true)
            | _ -> Other
            (* Don't spew errors on broken symlinks *)
-         with Unix_error (ENOENT, _, _) -> Other)
+         with
+        | Unix_error (ENOENT, _, _) -> Other)
       | S_DIR -> Dir (path, false)
       | _ -> Other
     with
@@ -173,13 +176,14 @@ let can_read path =
   try
     let () = Unix.access path [Unix.R_OK] in
     true
-  with Unix.Unix_error (e, _, _) ->
+  with
+  | Unix.Unix_error (e, _, _) ->
     Printf.eprintf "Skipping %s: %s\n%!" path (Unix.error_message e);
     false
 
 let try_readdir path =
-  try Sys.readdir path
-  with Sys_error msg ->
+  try Sys.readdir path with
+  | Sys_error msg ->
     Printf.eprintf "Skipping %s\n%!" msg;
     [||]
 
@@ -627,7 +631,9 @@ let mkdirp path_str perm =
     (List.fold_left
        (fun path_str part ->
          let new_path_str = Filename.concat path_str part in
-         Unix.((try mkdir new_path_str perm with Unix_error (EEXIST, "mkdir", _) -> ()));
+         Unix.(
+           try mkdir new_path_str perm with
+           | Unix_error (EEXIST, "mkdir", _) -> ());
          new_path_str)
        path_prefix
        parts)

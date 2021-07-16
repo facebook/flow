@@ -16,7 +16,8 @@ let expect_throws e f x =
     let _ = f x in
     Caml.Printf.eprintf "Error. Did not throw expected: %s\n" (Exn.to_string e);
     false
-  with err ->
+  with
+  | err ->
     if Poly.(e <> err) then
       let () =
         Caml.Printf.eprintf
@@ -31,8 +32,8 @@ let expect_throws e f x =
 let run (name, f) =
   Caml.Printf.printf "Running %s ... %!" name;
   let result =
-    try f ()
-    with e ->
+    try f () with
+    | e ->
       let exn = Exception.wrap e in
       let () = Caml.Printf.printf "Exception %s\n" (Exception.get_ctor_string exn) in
       let () = Caml.Printf.printf "Backtrace %s\n" (Exception.get_backtrace_string exn) in
@@ -51,10 +52,10 @@ let for_all_non_shortcircuit tests f =
 let run_all (tests : (string * (unit -> bool)) list) =
   Exception.record_backtrace true;
   Caml.exit
-    ( if for_all_non_shortcircuit tests run then
+    (if for_all_non_shortcircuit tests run then
       0
     else
-      1 )
+      1)
 
 let run_only tests names =
   let f =

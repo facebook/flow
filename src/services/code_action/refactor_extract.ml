@@ -38,8 +38,8 @@ let create_extracted_function
     List.map
       (fun (v, loc) ->
         (v, loc |> type_synthesizer |> Option.value ~default:(Loc.none, Flow_ast.Type.Any None)))
-      ( escaping_definitions.VariableAnalysis.escaping_variables
-      @ vars_with_shadowed_local_reassignments )
+      (escaping_definitions.VariableAnalysis.escaping_variables
+      @ vars_with_shadowed_local_reassignments)
   in
   let (body_statements, return_type) =
     match returned_variables with
@@ -54,28 +54,28 @@ let create_extracted_function
             Statements.return
               (Some
                  (Expressions.object_
-                    ( returned_variables
+                    (returned_variables
                     |> List.map (fun (def, _) ->
                            Expressions.object_property
                              ~shorthand:true
                              (Expressions.object_property_key def)
-                             (Expressions.identifier def)) )));
+                             (Expressions.identifier def)))));
           ],
         ( Loc.none,
           Flow_ast.Type.Object
-            ( returned_variables
+            (returned_variables
             |> List.map (fun (v, type_) ->
                    Flow_ast.Type.Object.Property
                      (Types.Objects.property
                         (Expressions.object_property_key v)
                         (Flow_ast.Type.Object.Property.Init type_)))
-            |> Types.Objects.make ) ) )
+            |> Types.Objects.make) ) )
   in
   let return_type =
     if async_function then
       Flow_ast.Type.Available
-        ( Types.unqualified_generic ~targs:(Types.type_args [return_type]) "Promise"
-        |> Types.annotation )
+        (Types.unqualified_generic ~targs:(Types.type_args [return_type]) "Promise"
+        |> Types.annotation)
     else
       Flow_ast.Type.Available (Types.annotation return_type)
   in
@@ -102,9 +102,9 @@ let create_extracted_function_call
     Expressions.call
       ~loc:extracted_statements_loc
       ~args:
-        ( undefined_variables
+        (undefined_variables
         |> List.map (fun (v, _) -> v |> Expressions.identifier |> Expressions.expression)
-        |> Expressions.arg_list )
+        |> Expressions.arg_list)
       caller
   in
   let call =
@@ -298,9 +298,10 @@ let available_refactors
     in
     let extract_to_functions_refactors =
       top_level_function_refactor
-      :: List.map
-           create_inner_function_refactor
-           (LocationCollectors.collect_function_inserting_locs ~ast ~extracted_statements_loc)
+      ::
+      List.map
+        create_inner_function_refactor
+        (LocationCollectors.collect_function_inserting_locs ~ast ~extracted_statements_loc)
     in
     extract_to_method_refactors @ extract_to_functions_refactors
 
@@ -350,8 +351,8 @@ let provide_available_refactors ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader
             List.fold_left
               (fun acc (_, loc) -> LocSet.add loc acc)
               locs
-              ( vars_with_shadowed_local_reassignments
-              @ escaping_definitions.VariableAnalysis.escaping_variables )
+              (vars_with_shadowed_local_reassignments
+              @ escaping_definitions.VariableAnalysis.escaping_variables)
           in
           TypeSynthesizer.create_synthesizer_context
             ~full_cx

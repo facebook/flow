@@ -261,11 +261,11 @@ module Opts = struct
           let map =
             SMap.add
               key
-              ( (line_num, value)
-              ::
-              (match SMap.find_opt key map with
-              | Some values -> values
-              | None -> []) )
+              ((line_num, value)
+               ::
+               (match SMap.find_opt key map with
+               | Some values -> values
+               | None -> []))
               map
           in
           loop (Ok map) rest
@@ -310,21 +310,20 @@ module Opts = struct
         ?(multiple = false)
         (setter : t -> 'a -> (t, string) result)
         (values : raw_values)
-        config ->
-      ( let config =
-          match init with
-          | None -> config
-          | Some f -> f config
-        in
-        (* Error when duplicate options were incorrectly given *)
-        match (multiple, values) with
-        | (false, _ :: (dupe_ln, _) :: _) -> Error (dupe_ln, Duplicate_option)
-        | _ -> loop optparser setter values config
-        : (t, opt_error) result )
+        config : (t, opt_error) result ->
+      let config =
+        match init with
+        | None -> config
+        | Some f -> f config
+      in
+      (* Error when duplicate options were incorrectly given *)
+      match (multiple, values) with
+      | (false, _ :: (dupe_ln, _) :: _) -> Error (dupe_ln, Duplicate_option)
+      | _ -> loop optparser setter values config
 
   let optparse_string str =
-    try Ok (Scanf.unescaped str)
-    with Scanf.Scan_failure reason -> Error (spf "Invalid ocaml string: %s" reason)
+    try Ok (Scanf.unescaped str) with
+    | Scanf.Scan_failure reason -> Error (spf "Invalid ocaml string: %s" reason)
 
   let enum values =
     opt (fun str ->
@@ -386,11 +385,11 @@ module Opts = struct
       (fun opts v ->
         if String_utils.string_ends_with v Files.flow_ext then
           Error
-            ( "Cannot use file extension '"
+            ("Cannot use file extension '"
             ^ v
             ^ "' since it ends with the reserved extension '"
             ^ Files.flow_ext
-            ^ "'" )
+            ^ "'")
         else
           let module_file_exts = SSet.add v opts.module_file_exts in
           Ok { opts with module_file_exts })
@@ -750,10 +749,9 @@ module Opts = struct
         in
         loop acc rest
     in
-    fun (init : t) (lines : line list) ->
-      ( parse_lines lines >>= fun raw_options ->
-        loop (Ok (raw_options, init)) parsers >>= warn_on_unknown_opts
-        : (t * warning list, error) result )
+    fun (init : t) (lines : line list) : (t * warning list, error) result ->
+      parse_lines lines >>= fun raw_options ->
+      loop (Ok (raw_options, init)) parsers >>= warn_on_unknown_opts
 end
 
 type rollout = {

@@ -138,7 +138,10 @@ module Make (Extra : BASE_STATS) = struct
 
       (* This one does the actual annotation *)
       method private annotate_node
-          : 'a. Loc.t -> ty_or_type_ast -> (Loc.t * (Loc.t, Loc.t) Ast.Type.t -> 'a) ->
+          : 'a.
+            Loc.t ->
+            ty_or_type_ast ->
+            (Loc.t * (Loc.t, Loc.t) Ast.Type.t -> 'a) ->
             ('a, Error.kind) result =
         let run loc ty =
           let (acc', ty) =
@@ -186,8 +189,13 @@ module Make (Extra : BASE_STATS) = struct
             Ok (f (Loc.none, t))
 
       method private opt_annotate_inferred_type
-          : 'a. f:(Loc.t -> 'a -> ty_or_type_ast -> ('a, Error.kind) result) -> error:('a -> 'a) ->
-            Loc.t -> ty_or_type_ast -> 'a -> 'a =
+          : 'a.
+            f:(Loc.t -> 'a -> ty_or_type_ast -> ('a, Error.kind) result) ->
+            error:('a -> 'a) ->
+            Loc.t ->
+            ty_or_type_ast ->
+            'a ->
+            'a =
         fun ~f ~error loc ty x ->
           match f loc x ty with
           | Ok y ->
@@ -204,9 +212,14 @@ module Make (Extra : BASE_STATS) = struct
       (* The 'expr' parameter is used for hard-coding type annotations on expressions
        * matching annotate_exports_hardcoded_expr_fixes.expr_to_type_ast. *)
       method private opt_annotate
-          : 'a. f:(Loc.t -> 'a -> ty_or_type_ast -> ('a, Error.kind) result) -> error:('a -> 'a) ->
-            expr:(Loc.t, Loc.t) Ast.Expression.t option -> Loc.t ->
-            (Ty.t, Error.kind list * Ty.t) result -> 'a -> 'a =
+          : 'a.
+            f:(Loc.t -> 'a -> ty_or_type_ast -> ('a, Error.kind) result) ->
+            error:('a -> 'a) ->
+            expr:(Loc.t, Loc.t) Ast.Expression.t option ->
+            Loc.t ->
+            (Ty.t, Error.kind list * Ty.t) result ->
+            'a ->
+            'a =
         fun ~f ~error ~expr loc ty_entry x ->
           let hard_coded_ast_type =
             match expr with

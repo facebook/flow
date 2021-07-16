@@ -389,7 +389,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           let visit = new with_or_eval_visitor in
           visit#eval (visit#function_ loc) expr
         in
-        ( if not contains_with_or_eval then
+        (if not contains_with_or_eval then
           let open Ast.Function in
           let {
             id;
@@ -417,7 +417,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             (fun () ->
               run_opt this#function_identifier id;
               this#lambda loc params body)
-            () );
+            ());
 
         expr
     end

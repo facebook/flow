@@ -196,4 +196,5 @@ let get_term_cols () =
   if (not Sys.unix) || not (supports_color ()) then
     None
   else
-    try Some (int_of_string (Sys_utils.exec_read "tput cols")) with _ -> None
+    try Some (int_of_string (Sys_utils.exec_read "tput cols")) with
+    | _ -> None

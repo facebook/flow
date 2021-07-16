@@ -223,9 +223,8 @@ let lazy_flags prev =
               ("none", Options.NON_LAZY_MODE);
             ])
          ~doc:
-           ( "Which lazy mode to use: 'fs', 'watchman', 'ide' or 'none'. Use this flag to "
-           ^ "override the lazy mode set in the .flowconfig (which defaults to 'none' if not set)"
-           )
+           ("Which lazy mode to use: 'fs', 'watchman', 'ide' or 'none'. Use this flag to "
+           ^ "override the lazy mode set in the .flowconfig (which defaults to 'none' if not set)")
          ~env:"FLOW_LAZY_MODE")
 
 let input_file_flag verb prev =
@@ -235,10 +234,10 @@ let input_file_flag verb prev =
          "--input-file"
          string
          ~doc:
-           ( "File containing list of files to "
+           ("File containing list of files to "
            ^ verb
            ^ ", one per line. If -, list of files is "
-           ^ "read from the standard input." ))
+           ^ "read from the standard input."))
 
 type shared_mem_params = {
   shm_heap_size: int option;
@@ -322,8 +321,8 @@ let wait_for_recheck_flag prev =
          "--wait-for-recheck"
          (optional bool)
          ~doc:
-           ( "If the server is rechecking, wait for it to complete rather than run sooner using "
-           ^ "outdated data" ))
+           ("If the server is rechecking, wait for it to complete rather than run sooner using "
+           ^ "outdated data"))
 
 let path_flag prev =
   CommandSpec.ArgSpec.(
@@ -343,10 +342,10 @@ let verbose_flags =
         Some
           {
             Verbose.indent =
-              ( if indent then
+              (if indent then
                 2
               else
-                0 );
+                0);
             depth =
               (match depth with
               | Some n when n >= 0 -> n
@@ -937,8 +936,8 @@ let options_flags =
            "--merge-timeout"
            int
            ~doc:
-             ( "The maximum time in seconds to attempt to typecheck a file or cycle of files. "
-             ^ "0 means no timeout (default: 100)" )
+             ("The maximum time in seconds to attempt to typecheck a file or cycle of files. "
+             ^ "0 means no timeout (default: 100)")
            ~env:"FLOW_MERGE_TIMEOUT"
       |> flag
            "--abstract-locations"
@@ -1020,8 +1019,8 @@ let file_watcher_flag prev =
             ("watchman", FlowConfig.Watchman);
           ])
        ~doc:
-         ( "Which file watcher Flow should use (none, dfind, watchman). "
-         ^ "Flow will ignore file system events if this is set to none. (default: dfind)" )
+         ("Which file watcher Flow should use (none, dfind, watchman). "
+         ^ "Flow will ignore file system events if this is set to none. (default: dfind)")
   |> flag
        "--file-watcher-debug"
        no_arg
@@ -1079,7 +1078,10 @@ let no_cgroup_flag =
   let get_systemd_binary () =
     if Sys.unix then
       let ic = Unix.open_process_in "which systemd-run 2> /dev/null" in
-      let systemd_exe = (try Some (input_line ic) with _ -> None) in
+      let systemd_exe =
+        try Some (input_line ic) with
+        | _ -> None
+      in
       if Unix.close_process_in ic = Unix.WEXITED 0 then
         systemd_exe
       else
@@ -1113,13 +1115,7 @@ let no_cgroup_flag =
           | flow_exe :: command :: args -> flow_exe :: command :: "--no-cgroup" :: args
         in
         systemd_exe
-        :: "--quiet"
-        :: "--user"
-        :: "--scope"
-        :: "--slice"
-        :: "flow.slice"
-        :: "--"
-        :: flow_args
+        :: "--quiet" :: "--user" :: "--scope" :: "--slice" :: "flow.slice" :: "--" :: flow_args
         |> Array.of_list
         |> Unix.execv systemd_exe
   in
@@ -1506,7 +1502,8 @@ let parse_location_with_optional_filename spec path args =
     | _ -> exit ()
   in
   let (line, column) =
-    (try (int_of_string line, int_of_string column) with Failure _ -> exit ())
+    try (int_of_string line, int_of_string column) with
+    | Failure _ -> exit ()
   in
   let (line, column) = convert_input_pos (line, column) in
   (file, line, column)
@@ -1620,16 +1617,16 @@ let rec connect_and_make_request flowconfig_name =
     let env = make_env flowconfig flowconfig_name connect_flags root in
     let (ic, oc) = CommandConnect.connect ~flowconfig_name ~client_handshake env in
     send_command ?timeout oc request;
-    try wait_for_response ?timeout ~quiet ~emoji:env.CommandConnect.emoji ~root ic
-    with End_of_file ->
+    try wait_for_response ?timeout ~quiet ~emoji:env.CommandConnect.emoji ~root ic with
+    | End_of_file ->
       if not quiet then
         eprintf_with_spinner
           "Lost connection to the flow server (%d %s remaining)%!"
           retries
-          ( if retries = 1 then
+          (if retries = 1 then
             "retry"
           else
-            "retries" );
+            "retries");
       connect_and_make_request
         flowconfig_name
         ?timeout
@@ -1788,9 +1785,9 @@ let collect_codemod_flags
     input_file
     base_flag
     anon =
-  ( if (not write) && repeat then
+  (if (not write) && repeat then
     let msg = "Error: cannot run codemod with --repeat flag unless --write is also passed" in
-    Exit.(exit ~msg Commandline_usage_error) );
+    Exit.(exit ~msg Commandline_usage_error));
   let codemod_flags =
     Codemod_params
       {

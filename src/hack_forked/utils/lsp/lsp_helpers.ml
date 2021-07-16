@@ -316,7 +316,7 @@ let dismiss_diagnostics (writer : Jsonrpc.writer) (diagnostic_uris : UriSet.t) :
 let notify_connectionStatus
     (p : Lsp.Initialize.params) (writer : Jsonrpc.writer) (wasConnected : bool) (isConnected : bool)
     : bool =
-  ( if supports_connectionStatus p && wasConnected <> isConnected then
+  (if supports_connectionStatus p && wasConnected <> isConnected then
     let message = { Lsp.ConnectionStatus.isConnected } in
-    message |> print_connectionStatus |> Jsonrpc.notify writer "telemetry/connectionStatus" );
+    message |> print_connectionStatus |> Jsonrpc.notify writer "telemetry/connectionStatus");
   isConnected

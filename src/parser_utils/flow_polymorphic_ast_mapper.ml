@@ -889,8 +889,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       (annot', { arguments = arguments'; comments = comments' })
 
     method type_params_opt
-        : 'a. ('M, 'T) Ast.Type.TypeParams.t option ->
-          (('N, 'U) Ast.Type.TypeParams.t option -> 'a) -> 'a =
+        : 'a.
+          ('M, 'T) Ast.Type.TypeParams.t option ->
+          (('N, 'U) Ast.Type.TypeParams.t option -> 'a) ->
+          'a =
       fun tparams f ->
         let tparams' =
           Base.Option.map

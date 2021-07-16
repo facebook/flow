@@ -69,8 +69,8 @@ let open_connection ~timeout ~client_handshake sockaddr =
   | Some conn -> conn
   | None ->
     let conn =
-      try Socket.with_addr sockaddr @@ Timeout.open_connection ~timeout
-      with Unix.Unix_error (Unix.ENOENT, "connect", _) -> raise (ConnectError Missing_socket)
+      try Socket.with_addr sockaddr @@ Timeout.open_connection ~timeout with
+      | Unix.Unix_error (Unix.ENOENT, "connect", _) -> raise (ConnectError Missing_socket)
     in
     connections := SockMap.add sockaddr conn !connections;
 
@@ -106,8 +106,7 @@ let get_handshake ~timeout:_ sockaddr ic oc =
       let wire = (Marshal_tools.from_fd_with_preamble fd : server_handshake_wire) in
       let server_handshake =
         ( fst wire |> Hh_json.json_of_string |> json_to__monitor_to_client_1,
-          snd wire |> Base.Option.map ~f:(fun s -> (Marshal.from_string s 0 : monitor_to_client_2))
-        )
+          snd wire |> Base.Option.map ~f:(fun s : monitor_to_client_2 -> Marshal.from_string s 0) )
         (* Server invariant: it only sends us snd=Some if it knows client+server versions match *)
       in
       Ok (sockaddr, ic, oc, server_handshake)

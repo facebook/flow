@@ -62,9 +62,9 @@ let check_subcommand =
      --root and --flowconfig-name flags. *)
   let find_flowconfig flowconfig_name root = function
     | Some file ->
-      ( if not (Sys.file_exists file) then
+      (if not (Sys.file_exists file) then
         let msg = Utils_js.spf "Could not find file %s" file in
-        Exit.(exit ~msg Could_not_find_flowconfig) );
+        Exit.(exit ~msg Could_not_find_flowconfig));
       let root = Path.make (Filename.dirname file) in
       (file, root |> Path.to_string)
     | None ->

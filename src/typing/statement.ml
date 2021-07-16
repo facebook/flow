@@ -661,8 +661,8 @@ and statement_decl cx =
     Env.bind_declare_var cx (OrdinaryName name) t id_loc
   | ( loc,
       DeclareFunction
-        ( { DeclareFunction.id = (id_loc, { Ast.Identifier.name; comments = _ }); _ } as
-        declare_function ) ) ->
+        ({ DeclareFunction.id = (id_loc, { Ast.Identifier.name; comments = _ }); _ } as
+        declare_function) ) ->
     (match declare_function_to_function_declaration cx loc declare_function with
     | None ->
       let r = mk_reason (RIdentifier (OrdinaryName name)) id_loc in
@@ -720,8 +720,8 @@ and statement_decl cx =
           ()
         else
           failwith
-            ( "Parser Error: declare export default must always have an "
-            ^ "associated declaration or type!" )))
+            ("Parser Error: declare export default must always have an "
+            ^ "associated declaration or type!")))
   | (_, DeclareModuleExports _) -> ()
   | (_, ExportNamedDeclaration { ExportNamedDeclaration.declaration; _ }) ->
     (match declaration with
@@ -1020,8 +1020,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       in
       let ast = (top_loc, Labeled { Labeled.label = lab_ast; body = body_ast; comments }) in
       ignore
-        ( Abnormal.check_stmt_control_flow_exception (ast, body_abnormal)
-          : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t );
+        (Abnormal.check_stmt_control_flow_exception (ast, body_abnormal)
+          : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t);
 
       let newset = Changeset.Global.merge oldset in
       if Abnormal.swap_saved (Abnormal.Continue label) save_continue <> None then
@@ -1042,8 +1042,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       in
       let ast = (top_loc, Labeled { Labeled.label = lab_ast; body = body_ast; comments }) in
       ignore
-        ( Abnormal.check_stmt_control_flow_exception (ast, body_abnormal)
-          : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t );
+        (Abnormal.check_stmt_control_flow_exception (ast, body_abnormal)
+          : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t);
 
       let newset = Changeset.Global.merge oldset in
       if Abnormal.swap_saved (Abnormal.Break label) save_break <> None then Env.havoc_vars newset;
@@ -1327,12 +1327,11 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
                      None;
 
                  (* if we break to end, add effects to terminal state *)
-                 ( if breaks_to_end then
+                 (if breaks_to_end then
                    match break_opt with
                    | None ->
                      Flow.add_output cx Error_message.(EInternal (loc, BreakEnvMissingForCase))
-                   | Some break_env -> update_switch_state (break_env, case_writes, test_refis, loc)
-                 );
+                   | Some break_env -> update_switch_state (break_env, case_writes, test_refis, loc));
 
                  (* add negative refis of this case's test to common start env *)
                  (* TODO add API to do this without having to swap in env *)
@@ -1677,8 +1676,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     in
     (* if finally has abnormal control flow, we throw here *)
     ignore
-      ( Abnormal.check_stmt_control_flow_exception (ast, finally_abnormal)
-        : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t );
+      (Abnormal.check_stmt_control_flow_exception (ast, finally_abnormal)
+        : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t);
 
     (* other ways we throw due to try/catch abends *)
     begin
@@ -1888,11 +1887,11 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           match left with
           | ForIn.LeftDeclaration
               ( decl_loc,
-                ( {
-                    VariableDeclaration.kind;
-                    declarations = [(vdecl_loc, { VariableDeclaration.Declarator.id; init = None })];
-                    comments;
-                  } as decl ) ) ->
+                ({
+                   VariableDeclaration.kind;
+                   declarations = [(vdecl_loc, { VariableDeclaration.Declarator.id; init = None })];
+                   comments;
+                 } as decl) ) ->
             variable_decl cx decl;
             let right_ast = eval_right () in
             let (id_ast, _) =
@@ -2034,11 +2033,11 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           match left with
           | ForOf.LeftDeclaration
               ( decl_loc,
-                ( {
-                    VariableDeclaration.kind;
-                    declarations = [(vdecl_loc, { VariableDeclaration.Declarator.id; init = None })];
-                    comments;
-                  } as decl ) ) ->
+                ({
+                   VariableDeclaration.kind;
+                   declarations = [(vdecl_loc, { VariableDeclaration.Declarator.id; init = None })];
+                   comments;
+                 } as decl) ) ->
             variable_decl cx decl;
             let (elem_t, right_ast) = eval_right () in
             let (id_ast, _) = variable cx kind id None ~if_uninitialized:(fun _ -> elem_t) in
@@ -2289,8 +2288,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           } )
     in
     ignore
-      ( Abnormal.check_stmt_control_flow_exception (ast, elements_abnormal)
-        : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t );
+      (Abnormal.check_stmt_control_flow_exception (ast, elements_abnormal)
+        : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t);
 
     let t = Env.get_var_declared_type cx module_ref loc in
     Flow.flow_t cx (module_t, t);
@@ -2387,8 +2386,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     )
   | ( loc,
       ExportNamedDeclaration
-        ( { ExportNamedDeclaration.declaration; specifiers; source; export_kind; comments = _ } as
-        export_decl ) ) ->
+        ({ ExportNamedDeclaration.declaration; specifiers; source; export_kind; comments = _ } as
+        export_decl) ) ->
     let declaration =
       match declaration with
       | None -> None
@@ -2728,7 +2727,6 @@ and object_prop cx ~object_annot acc prop =
   (* We enable some unsafe support for getters and setters. The main unsafe bit
    *  is that we don't properly havok refinements when getter and setter methods
    *  are called. *)
-
   (* unsafe getter property *)
   | Property
       ( loc,
@@ -3865,10 +3863,9 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                 ArgList.arguments =
                   [
                     Expression
-                      ( ( source_loc,
-                          Ast.Expression.Literal
-                            { Ast.Literal.value = Ast.Literal.String module_name; _ } ) as lit_exp
-                      );
+                      (( source_loc,
+                         Ast.Expression.Literal
+                           { Ast.Literal.value = Ast.Literal.String module_name; _ } ) as lit_exp);
                   ];
                 comments;
               } ) ) ->
@@ -3882,21 +3879,21 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
                 ArgList.arguments =
                   [
                     Expression
-                      ( ( source_loc,
-                          TemplateLiteral
-                            {
-                              TemplateLiteral.quasis =
-                                [
-                                  ( _,
-                                    {
-                                      TemplateLiteral.Element.value =
-                                        { TemplateLiteral.Element.cooked = module_name; _ };
-                                      _;
-                                    } );
-                                ];
-                              expressions = [];
-                              comments = _;
-                            } ) as lit_exp );
+                      (( source_loc,
+                         TemplateLiteral
+                           {
+                             TemplateLiteral.quasis =
+                               [
+                                 ( _,
+                                   {
+                                     TemplateLiteral.Element.value =
+                                       { TemplateLiteral.Element.cooked = module_name; _ };
+                                     _;
+                                   } );
+                               ];
+                             expressions = [];
+                             comments = _;
+                           } ) as lit_exp);
                   ];
                 comments;
               } ) ) ->
@@ -4120,9 +4117,8 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
               {
                 ArgList.arguments =
                   Expression
-                    ( ( _,
-                        Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Boolean false; _ }
-                      ) as lit_exp )
+                    ((_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Boolean false; _ })
+                    as lit_exp)
                   :: arguments;
                 comments = args_comments;
               } ) ) ->
@@ -4528,12 +4524,12 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
        *)
       match (e', opt_state) with
       | ( Call
-            ( {
-                Call.callee = (callee_loc, OptionalMember { OptionalMember.member; optional });
-                targs = _;
-                arguments = _;
-                comments = _;
-              } as call ),
+            ({
+               Call.callee = (callee_loc, OptionalMember { OptionalMember.member; optional });
+               targs = _;
+               arguments = _;
+               comments = _;
+             } as call),
           (NewChain | ContinueChain) ) ->
         let receiver_ast member = OptionalMember { OptionalMember.member; optional } in
         let member_opt =
@@ -6112,10 +6108,10 @@ and jsx_mk_props cx reason name attributes children =
   let is_react = Context.jsx cx = Options.Jsx_react in
   let reason_props =
     replace_desc_reason
-      ( if is_react then
+      (if is_react then
         RReactProps
       else
-        RJSXElementProps name )
+        RJSXElementProps name)
       reason
   in
   (* Use the same reason for proto and the ObjT so we can walk the proto chain
@@ -6842,19 +6838,19 @@ and predicates_of_condition cx ~cond e =
           reconstruct_ast left right)
     | ( (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; comments }),
         ( str_loc,
-          ( Expression.TemplateLiteral
-              {
-                TemplateLiteral.quasis =
-                  [
-                    ( _,
-                      {
-                        TemplateLiteral.Element.value = { TemplateLiteral.Element.cooked = s; _ };
-                        _;
-                      } );
-                  ];
-                expressions = [];
-                comments = _;
-              } as lit_exp ) ) ) ->
+          (Expression.TemplateLiteral
+             {
+               TemplateLiteral.quasis =
+                 [
+                   ( _,
+                     {
+                       TemplateLiteral.Element.value = { TemplateLiteral.Element.cooked = s; _ };
+                       _;
+                     } );
+                 ];
+               expressions = [];
+               comments = _;
+             } as lit_exp) ) ) ->
       typeof_test loc sense argument s str_loc (fun argument ->
           let left_t = StrT.at typeof_loc |> with_trust bogus_trust in
           let left =
@@ -6865,19 +6861,19 @@ and predicates_of_condition cx ~cond e =
           let right = ((str_loc, right_t), lit_exp) in
           reconstruct_ast left right)
     | ( ( str_loc,
-          ( Expression.TemplateLiteral
-              {
-                TemplateLiteral.quasis =
-                  [
-                    ( _,
-                      {
-                        TemplateLiteral.Element.value = { TemplateLiteral.Element.cooked = s; _ };
-                        _;
-                      } );
-                  ];
-                expressions = [];
-                comments = _;
-              } as lit_exp ) ),
+          (Expression.TemplateLiteral
+             {
+               TemplateLiteral.quasis =
+                 [
+                   ( _,
+                     {
+                       TemplateLiteral.Element.value = { TemplateLiteral.Element.cooked = s; _ };
+                       _;
+                     } );
+                 ];
+               expressions = [];
+               comments = _;
+             } as lit_exp) ),
         (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; comments }) ) ->
       typeof_test loc sense argument s str_loc (fun argument ->
           let left_t = StrT.at str_loc |> with_trust bogus_trust in
@@ -6911,19 +6907,19 @@ and predicates_of_condition cx ~cond e =
         (fun expr -> reconstruct_ast expr val_ast)
     (* special case equality relations involving strings *)
     | (((lit_loc, Expression.Literal { Literal.value = Literal.String lit; _ }) as value), expr)
-    | ( ( ( _,
-            Expression.TemplateLiteral
-              {
-                TemplateLiteral.quasis =
-                  [
-                    ( lit_loc,
-                      {
-                        TemplateLiteral.Element.value = { TemplateLiteral.Element.cooked = lit; _ };
-                        _;
-                      } );
-                  ];
-                _;
-              } ) as value ),
+    | ( (( _,
+           Expression.TemplateLiteral
+             {
+               TemplateLiteral.quasis =
+                 [
+                   ( lit_loc,
+                     {
+                       TemplateLiteral.Element.value = { TemplateLiteral.Element.cooked = lit; _ };
+                       _;
+                     } );
+                 ];
+               _;
+             } ) as value),
         expr ) ->
       let (((_, val_t), _) as val_ast) = expression cx ~annot:None value in
       literal_test
@@ -6936,19 +6932,19 @@ and predicates_of_condition cx ~cond e =
         (fun expr -> reconstruct_ast val_ast expr)
     | (expr, ((lit_loc, Expression.Literal { Literal.value = Literal.String lit; _ }) as value))
     | ( expr,
-        ( ( _,
-            Expression.TemplateLiteral
-              {
-                TemplateLiteral.quasis =
-                  [
-                    ( lit_loc,
-                      {
-                        TemplateLiteral.Element.value = { TemplateLiteral.Element.cooked = lit; _ };
-                        _;
-                      } );
-                  ];
-                _;
-              } ) as value ) ) ->
+        (( _,
+           Expression.TemplateLiteral
+             {
+               TemplateLiteral.quasis =
+                 [
+                   ( lit_loc,
+                     {
+                       TemplateLiteral.Element.value = { TemplateLiteral.Element.cooked = lit; _ };
+                       _;
+                     } );
+                 ];
+               _;
+             } ) as value) ) ->
       let (((_, val_t), _) as val_ast) = expression cx ~annot:None value in
       literal_test
         loc
@@ -6982,7 +6978,6 @@ and predicates_of_condition cx ~cond e =
         (SingletonNumP (lit_loc, sense, (lit, raw)))
         (fun expr -> reconstruct_ast expr val_ast)
     (* TODO: add Type.predicate variant that tests number equality *)
-
     (* expr op null *)
     | (((_, Expression.Literal { Literal.value = Literal.Null; _ }) as null), expr) ->
       let (((_, null_t), _) as null_ast) = expression cx ~annot:None null in
@@ -7357,8 +7352,8 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
             [
               Expression e;
               Expression
-                ( (ploc, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String x; _ }) as
-                key );
+                ((ploc, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String x; _ }) as
+                key);
               Expression config;
             ];
           comments;

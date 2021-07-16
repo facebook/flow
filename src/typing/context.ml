@@ -354,8 +354,8 @@ let sig_cx cx = cx.ccx.sig_cx
 let trust_graph_sig sig_cx = sig_cx.trust_graph
 
 let find_module_sig sig_cx m =
-  try NameUtils.Map.find (Reason.OrdinaryName m) sig_cx.module_map
-  with Not_found -> raise (Module_not_found m)
+  try NameUtils.Map.find (Reason.OrdinaryName m) sig_cx.module_map with
+  | Not_found -> raise (Module_not_found m)
 
 (* modules *)
 
@@ -434,24 +434,26 @@ let file cx = cx.file
 let aloc_tables cx = cx.ccx.aloc_tables
 
 let find_props cx id =
-  try Type.Properties.Map.find id cx.ccx.sig_cx.property_maps
-  with Not_found -> raise (Props_not_found id)
+  try Type.Properties.Map.find id cx.ccx.sig_cx.property_maps with
+  | Not_found -> raise (Props_not_found id)
 
 let find_call cx id =
-  (try IMap.find id cx.ccx.sig_cx.call_props with Not_found -> raise (Call_not_found id))
+  try IMap.find id cx.ccx.sig_cx.call_props with
+  | Not_found -> raise (Call_not_found id)
 
 let find_exports cx id =
-  try Type.Exports.Map.find id cx.ccx.sig_cx.export_maps
-  with Not_found -> raise (Exports_not_found id)
+  try Type.Exports.Map.find id cx.ccx.sig_cx.export_maps with
+  | Not_found -> raise (Exports_not_found id)
 
 let find_require cx loc =
-  try ALocMap.find loc cx.require_map
-  with Not_found -> raise (Require_not_found (ALoc.debug_to_string ~include_source:true loc))
+  try ALocMap.find loc cx.require_map with
+  | Not_found -> raise (Require_not_found (ALoc.debug_to_string ~include_source:true loc))
 
 let find_module cx m = find_module_sig (sig_cx cx) m
 
 let find_tvar cx id =
-  (try IMap.find id cx.ccx.sig_cx.graph with Not_found -> raise (Union_find.Tvar_not_found id))
+  try IMap.find id cx.ccx.sig_cx.graph with
+  | Not_found -> raise (Union_find.Tvar_not_found id)
 
 let mem_nominal_poly_id cx id = Type.Poly.Set.mem id cx.ccx.nominal_poly_ids
 

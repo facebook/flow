@@ -153,7 +153,8 @@ module Friendly = struct
       try
         let k = String.index_from s i c in
         String.sub s i (k - i) :: loop (k + 1) c s
-      with Not_found -> [String.sub s i (String.length s - i)]
+      with
+      | Not_found -> [String.sub s i (String.length s - i)]
     in
     loop 0 c s
 
@@ -287,7 +288,7 @@ module Friendly = struct
 
   (* Adds some message to the beginning of a group message. *)
   let append_group_message message { group_message; group_message_list } =
-    { group_message = message @ (text " " :: uncapitalize group_message); group_message_list }
+    { group_message = message @ text " " :: uncapitalize group_message; group_message_list }
 
   (* Creates a message group from the error_message type. If show_all_branches
    * is false then we will hide speculation branches with a lower score. If any
@@ -369,13 +370,13 @@ module Friendly = struct
           if frames = [] then
             message
           else
-            message @ (text " in " :: frames)
+            message @ text " in " :: frames
         in
         (* Add the root to our error message when we are configured to show
          * the root. *)
         let message =
           match error.root with
-          | Some { root_message; _ } when show_root -> root_message @ (text " " :: message)
+          | Some { root_message; _ } when show_root -> root_message @ text " " :: message
           | _ -> message
         in
         (* Finish our error message with a period. But only if frames
@@ -402,7 +403,7 @@ module Friendly = struct
          * the root. *)
         let message =
           match error.root with
-          | Some { root_message; _ } when show_root -> root_message @ (text " " :: message)
+          | Some { root_message; _ } when show_root -> root_message @ text " " :: message
           | _ -> message
         in
         let message =
@@ -481,7 +482,7 @@ module Friendly = struct
                   if message = [] then
                     root_message
                   else
-                    root_message @ (text " " :: message)
+                    root_message @ text " " :: message
                 | _ -> message
               in
               (* Finish our error message with a colon. *)
@@ -519,10 +520,10 @@ module Friendly = struct
             Base.List.mapi
               ~f:(fun i message_group ->
                 append_group_message
-                  ( if i = 0 then
+                  (if i = 0 then
                     [text "Either"]
                   else
-                    [text "Or"] )
+                    [text "Or"])
                   message_group)
               group_message_list
           in
@@ -639,14 +640,14 @@ module Friendly = struct
     {
       messages = [BlameM (loc, message)];
       extra =
-        ( if not (IMap.is_empty references) then
+        (if not (IMap.is_empty references) then
           InfoLeaf [(Loc.none, ["References:"])]
-          :: ( references
-             |> IMap.bindings
-             |> Base.List.map ~f:(fun (id, loc) -> InfoLeaf [(loc, ["[" ^ string_of_int id ^ "]"])])
-             )
+          ::
+          (references
+          |> IMap.bindings
+          |> Base.List.map ~f:(fun (id, loc) -> InfoLeaf [(loc, ["[" ^ string_of_int id ^ "]"])]))
         else
-          [] );
+          []);
       error_codes =
         code_of_message error.message |> Base.Option.value_map ~f:(fun code -> [code]) ~default:[];
     }
@@ -718,7 +719,7 @@ type stdin_file = (Path.t * string) option
 let append_trace_reasons message_list trace_reasons =
   match trace_reasons with
   | [] -> message_list
-  | _ -> message_list @ (BlameM (Loc.none, "Trace:") :: trace_reasons)
+  | _ -> message_list @ BlameM (Loc.none, "Trace:") :: trace_reasons
 
 let default_style text = (Tty.Normal Tty.Default, text)
 
@@ -782,7 +783,8 @@ let get_lines ~start ~len content =
       List.rev acc
     else
       let next_newline =
-        (try String.index_from content pos '\n' with Not_found -> String.length content)
+        try String.index_from content pos '\n' with
+        | Not_found -> String.length content
       in
       let continue =
         if start < 0 then
@@ -828,7 +830,8 @@ let read_lines_in_file loc filename stdin_file =
            match lines with
            | [] -> None
            | first :: rest -> Some (first, rest))
-       with Invalid_argument _ -> None))
+       with
+      | Invalid_argument _ -> None))
 
 let file_of_source source =
   match source with
@@ -1075,7 +1078,8 @@ let collect_errors_into_groups max set =
         (0, [])
     in
     acc
-  with Interrupt_PrintableErrorSet_fold acc -> acc
+  with
+  | Interrupt_PrintableErrorSet_fold acc -> acc
 
 (* Human readable output *)
 module Cli_output = struct
@@ -1112,10 +1116,10 @@ module Cli_output = struct
           let prefix =
             Printf.sprintf
               ". See%s: "
-              ( if is_lib then
+              (if is_lib then
                 " lib"
               else
-                "" )
+                "")
           in
           let filename =
             if is_lib then
@@ -1181,7 +1185,7 @@ module Cli_output = struct
                 1
             in
             let underline = String.make underline_size '^' in
-            (line_number_style line_number_text :: highlighted_line)
+            line_number_style line_number_text :: highlighted_line
             @ [comment_style (Printf.sprintf "\n%s%s %s" padding underline s)]
             @ see_another_file ~is_lib filename
             @ [default_style "\n"]
@@ -1334,14 +1338,14 @@ module Cli_output = struct
     (* Construct the header by appending the constituent pieces. *)
     [
       severity_style
-        ( severity_name
+        (severity_name
         ^ " "
         ^ horizontal_line
-        ^ ( if filename_on_newline then
+        ^ (if filename_on_newline then
             "\n"
           else
-            " " )
-        ^ filename );
+            " ")
+        ^ filename);
       default_style "\n";
     ]
 
@@ -1675,7 +1679,8 @@ module Cli_output = struct
              * that space as the breakpoint. *)
             let bp =
               if breakable then
-                try Some (String.index str ' ') with Not_found -> None
+                try Some (String.index str ' ') with
+                | Not_found -> None
               else
                 None
             in
@@ -2015,15 +2020,15 @@ module Cli_output = struct
                       {
                         source = last_loc.source;
                         start =
-                          ( if pos_cmp loc.start last_loc.start < 0 then
+                          (if pos_cmp loc.start last_loc.start < 0 then
                             loc.start
                           else
-                            last_loc.start );
+                            last_loc.start);
                         _end =
-                          ( if pos_cmp loc._end last_loc._end > 0 then
+                          (if pos_cmp loc._end last_loc._end > 0 then
                             loc._end
                           else
-                            last_loc._end );
+                            last_loc._end);
                       }
                     in
                     loc :: acc
@@ -2083,9 +2088,7 @@ module Cli_output = struct
                      let width = width + 2 + String.length string_id in
                      let acc =
                        dim_style "["
-                       :: (Tty.Normal (get_tty_color id colors), string_id)
-                       :: dim_style "]"
-                       :: acc
+                       :: (Tty.Normal (get_tty_color id colors), string_id) :: dim_style "]" :: acc
                      in
                      (width, acc))
                    (1, [default_style " "])
@@ -2176,8 +2179,8 @@ module Cli_output = struct
                                    try
                                      ( String.sub line 0 split,
                                        String.sub line split (String.length line - split) )
-                                   with Invalid_argument _ ->
-                                     raise Oh_no_file_contents_have_changed
+                                   with
+                                   | Invalid_argument _ -> raise Oh_no_file_contents_have_changed
                                  in
                                  let acc = (style, left) :: acc in
                                  loop acc pos.column tags opened right
@@ -2212,10 +2215,10 @@ module Cli_output = struct
                                @ line_number
                                (* If the line is empty then strip the whitespace which would be
                                 * trailing whitespace anyways. *)
-                               @ ( if line = "" then
+                               @ (if line = "" then
                                    []
                                  else
-                                   [default_style " "] )
+                                   [default_style " "])
                                @ code_line
                                @ [default_style "\n"]
                              in
@@ -2226,9 +2229,10 @@ module Cli_output = struct
                            (Nel.to_list lines)
                        in
                        (tags, opened, Base.List.concat (List.rev code_frame) :: code_frames)
-                     with Oh_no_file_contents_have_changed ->
-                       (* Realized the file has changed, so skip this code frame *)
-                       (tags, opened, code_frames)))
+                     with
+                    | Oh_no_file_contents_have_changed ->
+                      (* Realized the file has changed, so skip this code frame *)
+                      (tags, opened, code_frames)))
                 (tags, [], [])
                 locs
             in
@@ -2241,11 +2245,12 @@ module Cli_output = struct
                 (List.fold_left
                    (fun acc code_frame ->
                      code_frame
-                     :: [
-                          default_style (String.make (gutter_width + max_line_number_length) ' ');
-                          dim_style ":";
-                          default_style "\n";
-                        ]
+                     ::
+                     [
+                       default_style (String.make (gutter_width + max_line_number_length) ' ');
+                       dim_style ":";
+                       default_style "\n";
+                     ]
                      :: acc)
                    [code_frame]
                    code_frames))
@@ -2770,7 +2775,8 @@ module Json_output = struct
         | CommentM _ -> "Comment"
       in
       ("descr", JSON_String desc)
-      :: ("type", JSON_String type_)
+      ::
+      ("type", JSON_String type_)
       ::
       (match loc with
       | None -> deprecated_json_props_of_loc ~strip_root Loc.none
@@ -2827,8 +2833,8 @@ module Json_output = struct
                 let end_len = max_len / 2 in
                 (* floor *)
                 Some
-                  ( Base.List.sub numbered_lines ~pos:0 ~len:start_len
-                  @ Base.List.sub numbered_lines ~pos:(num_lines - end_len) ~len:end_len )
+                  (Base.List.sub numbered_lines ~pos:0 ~len:start_len
+                  @ Base.List.sub numbered_lines ~pos:(num_lines - end_len) ~len:end_len)
             | None -> None))
       in
       match code_lines with
@@ -2861,13 +2867,13 @@ module Json_output = struct
         | InfoNode (infos, kids) -> (infos, Some kids)
       in
       JSON_Object
-        ( ("message", json_of_infos ~json_of_message infos)
-        ::
-        (match kids with
-        | None -> []
-        | Some kids ->
-          let kids = Base.List.map ~f:(json_of_info_tree ~json_of_message) kids in
-          [("children", JSON_Array kids)]) ))
+        (("message", json_of_infos ~json_of_message infos)
+         ::
+         (match kids with
+         | None -> []
+         | Some kids ->
+           let kids = Base.List.map ~f:(json_of_info_tree ~json_of_message) kids in
+           [("children", JSON_Array kids)])))
 
   let json_of_classic_error_props ~json_of_message error =
     Hh_json.(

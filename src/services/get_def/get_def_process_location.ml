@@ -102,15 +102,15 @@ class ['M, 'T] searcher
     method! import_named_specifier ~import_kind decl =
       let open Flow_ast.Statement.ImportDeclaration in
       let { local; remote = (remote_annot, _); kind } = decl in
-      ( if
-        annot_covers_target remote_annot
-        || Base.Option.exists local ~f:(fun (local_annot, _) -> annot_covers_target local_annot)
+      (if
+       annot_covers_target remote_annot
+       || Base.Option.exists local ~f:(fun (local_annot, _) -> annot_covers_target local_annot)
       then
         match (kind, import_kind) with
         | (Some ImportTypeof, _)
         | (_, ImportTypeof) ->
           this#request (Get_def_request.Typeof remote_annot)
-        | _ -> this#request (Get_def_request.Type remote_annot) );
+        | _ -> this#request (Get_def_request.Type remote_annot));
       decl
 
     method! import_default_specifier decl =
@@ -197,7 +197,7 @@ class ['M, 'T] searcher
 
     method! pattern ?kind ((pat_annot, p) as pat) =
       let open Flow_ast.Pattern in
-      ( if not in_require_declarator then
+      (if not in_require_declarator then
         match p with
         | Object { Object.properties; _ } ->
           List.iter
@@ -221,7 +221,7 @@ class ['M, 'T] searcher
                 end
               | _ -> ())
             properties
-        | _ -> () );
+        | _ -> ());
       super#pattern ?kind pat
 
     method! t_pattern_identifier ?kind (annot, name) =
@@ -281,7 +281,8 @@ class ['M, 'T] searcher
 
 let process_location ~loc_of_annot ~ast ~is_legit_require ~module_ref_prefix ~covers_target =
   let searcher = new searcher ~loc_of_annot ~is_legit_require ~module_ref_prefix ~covers_target in
-  (try ignore (searcher#program ast) with Found -> ());
+  (try ignore (searcher#program ast) with
+  | Found -> ());
   searcher#found_loc
 
 let process_location_in_ast ~ast ~is_legit_require ~module_ref_prefix loc =

@@ -257,19 +257,20 @@ let mk_num_singleton number_type raw =
     match number_type with
     | LEGACY_OCTAL ->
       begin
-        try Int64.to_float (Int64.of_string ("0o" ^ num))
-        with Failure _ -> failwith ("Invalid legacy octal " ^ num)
+        try Int64.to_float (Int64.of_string ("0o" ^ num)) with
+        | Failure _ -> failwith ("Invalid legacy octal " ^ num)
       end
     | BINARY
     | OCTAL ->
       begin
-        try Int64.to_float (Int64.of_string num)
-        with Failure _ -> failwith ("Invalid binary/octal " ^ num)
+        try Int64.to_float (Int64.of_string num) with
+        | Failure _ -> failwith ("Invalid binary/octal " ^ num)
       end
     | LEGACY_NON_OCTAL
     | NORMAL ->
       begin
-        try float_of_string num with Failure _ -> failwith ("Invalid number " ^ num)
+        try float_of_string num with
+        | Failure _ -> failwith ("Invalid number " ^ num)
       end
   in
   let value =
@@ -294,14 +295,14 @@ let mk_bignum_singleton kind raw =
     | BIG_OCTAL ->
       let postraw = bigint_strip_n num in
       begin
-        try Int64.to_float (Int64.of_string postraw)
-        with Failure _ -> failwith ("Invalid (lexer) bigint binary/octal " ^ postraw)
+        try Int64.to_float (Int64.of_string postraw) with
+        | Failure _ -> failwith ("Invalid (lexer) bigint binary/octal " ^ postraw)
       end
     | BIG_NORMAL ->
       let postraw = bigint_strip_n num in
       begin
-        try float_of_string postraw
-        with Failure _ -> failwith ("Invalid (lexer) bigint " ^ postraw)
+        try float_of_string postraw with
+        | Failure _ -> failwith ("Invalid (lexer) bigint " ^ postraw)
       end
   in
   let approx_value =

@@ -165,8 +165,8 @@ let file_cover source value = new_builder source value |> bake
  * location. Errors if queried for a file not contained in this cover. *)
 let find loc cover =
   let first_char = Loc.first_char loc in
-  try SpanMap.find first_char cover
-  with Not_found -> raise (Uncovered (Loc.debug_to_string ~include_source:true loc))
+  try SpanMap.find first_char cover with
+  | Not_found -> raise (Uncovered (Loc.debug_to_string ~include_source:true loc))
 
 let find_opt loc cover =
   let first_char = Loc.first_char loc in

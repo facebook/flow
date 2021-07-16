@@ -16,4 +16,5 @@ let from_raw_contents x =
   try
     let (_ : string) = to_hex x in
     Some x
-  with Invalid_argument _ -> None
+  with
+  | Invalid_argument _ -> None

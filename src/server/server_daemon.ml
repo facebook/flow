@@ -27,18 +27,19 @@ let open_log_file file =
    * foo.log.old. On Linux/OSX this is easy, we just call rename. On Windows,
    * the rename can fail if foo.log is open or if foo.log.old already exists.
    * Not a huge problem, we just need to be more intentional *)
-  ( if Sys.file_exists file then
+  (if Sys.file_exists file then
     let old_file = file ^ ".old" in
     try
       if Sys.file_exists old_file then Sys.remove old_file;
       Sys.rename file old_file
-    with e ->
+    with
+    | e ->
       let e = Exception.wrap e in
       prerr_endlinef
         "Log rotate: failed to move '%s' to '%s'\n%s"
         file
         old_file
-        (Exception.to_string e) );
+        (Exception.to_string e));
   Unix.openfile file [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_APPEND] 0o666
 
 let new_entry_point =
@@ -97,9 +98,9 @@ let daemonize ~init_id ~log_file ~shared_mem_config ~argv ~options ~file_watcher
   let tmp_dir = Options.temp_dir options in
   let flowconfig_name = Options.flowconfig_name options in
   let lock = Server_files.lock_file ~flowconfig_name ~tmp_dir root in
-  ( if not (Lock.check lock) then
+  (if not (Lock.check lock) then
     let msg = spf "Error: There is already a server running for %s" (Path.to_string root) in
-    Exit.(exit ~msg Lock_stolen) );
+    Exit.(exit ~msg Lock_stolen));
 
   let null_fd = Daemon.null_fd () in
   let log_fd = open_log_file log_file in
@@ -118,12 +119,13 @@ let daemonize ~init_id ~log_file ~shared_mem_config ~argv ~options ~file_watcher
    * So for now let's make Windows 7 not crash. It seems like `flow start` on
    * Windows 7 doesn't actually leak stdio, so a no op is acceptable
    *)
-  ( if Sys.win32 then
+  (if Sys.win32 then
     Unix.(
       try
         set_close_on_exec stdout;
         set_close_on_exec stderr
-      with Unix_error (EINVAL, _, _) -> ()) );
+      with
+      | Unix_error (EINVAL, _, _) -> ()));
   let name = spf "server master process watching %s" (Path.to_string root) in
   Daemon.spawn
     ~name

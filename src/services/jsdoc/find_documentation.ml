@@ -170,7 +170,8 @@ class documentation_searcher find =
       member
 
     method enum_initialized_member
-        : 'a. ('a, Loc.t) Flow_ast.Statement.EnumDeclaration.InitializedMember.t ->
+        : 'a.
+          ('a, Loc.t) Flow_ast.Statement.EnumDeclaration.InitializedMember.t ->
           ('a, Loc.t) Flow_ast.Statement.EnumDeclaration.InitializedMember.t =
       fun member ->
         let open Flow_ast.Statement.EnumDeclaration.InitializedMember in
@@ -237,7 +238,8 @@ let search_jsdoc def_loc ast =
   try
     ignore (searcher#program ast);
     None
-  with FoundJsdoc documentation -> Some documentation
+  with
+  | FoundJsdoc documentation -> Some documentation
 
 module Remove_types = struct
   class type_remover ~(reader : Parsing_heaps.Reader.reader) =

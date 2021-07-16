@@ -26,8 +26,8 @@ module Alarm_timeout = struct
     try
       let timer = Timer.set_timer ~interval:(float_of_int timeout) ~callback in
       let ret =
-        try do_ id
-        with exn ->
+        try do_ id with
+        | exn ->
           let stack = Printexc.get_raw_backtrace () in
           (* Any uncaught exception will cancel the timeout *)
           Timer.cancel_timer timer;
@@ -35,7 +35,8 @@ module Alarm_timeout = struct
       in
       Timer.cancel_timer timer;
       ret
-    with Timeout exn_id when exn_id = id -> on_timeout ()
+    with
+    | Timeout exn_id when exn_id = id -> on_timeout ()
 
   let check_timeout _ = ()
 
@@ -61,8 +62,8 @@ module Alarm_timeout = struct
      * behavior, however, by trying to read a byte afterwards, which WILL
      * raise End_of_file if the pipe has closed
      * http://caml.inria.fr/mantis/view.php?id=7142 *)
-    try Stdlib.input_value ic
-    with Failure msg as e ->
+    try Stdlib.input_value ic with
+    | Failure msg as e ->
       if msg = "input_value: truncated object" then Stdlib.input_char ic |> ignore;
       raise e
 
@@ -112,8 +113,8 @@ module Alarm_timeout = struct
   let read_process ~timeout ~on_timeout ~reader cmd args =
     let (ic, oc) = open_process cmd args in
     with_timeout ~timeout ~on_timeout ~do_:(fun timeout ->
-        try reader timeout ic oc
-        with exn ->
+        try reader timeout ic oc with
+        | exn ->
           close_in ic;
           close_out oc;
           raise exn)
@@ -142,7 +143,8 @@ module Select_timeout = struct
 
   let with_timeout ~timeout ~on_timeout ~do_ =
     let t = create (float timeout) in
-    (try do_ t with Timeout exn_id when exn_id = t.id -> on_timeout ())
+    try do_ t with
+    | Timeout exn_id when exn_id = t.id -> on_timeout ()
 
   let check_timeout t = if Unix.gettimeofday () > t.timeout then raise (Timeout t.id)
 
@@ -172,7 +174,9 @@ module Select_timeout = struct
 
   let close_in tic = Unix.close tic.fd
 
-  let close_in_noerr tic = (try Unix.close tic.fd with _ -> ())
+  let close_in_noerr tic =
+    try Unix.close tic.fd with
+    | _ -> ()
 
   let close_process_in tic =
     match tic.pid with
@@ -217,8 +221,8 @@ module Select_timeout = struct
         "This should be unreachable. How did select return with no fd when there is no timeout?"
     | ([_], _, _) ->
       let read =
-        try Unix.read tic.fd tic.buf tic.max (buffer_size - tic.max)
-        with Unix.Unix_error (Unix.EPIPE, _, _) -> raise End_of_file
+        try Unix.read tic.fd tic.buf tic.max (buffer_size - tic.max) with
+        | Unix.Unix_error (Unix.EPIPE, _, _) -> raise End_of_file
       in
       tic.max <- tic.max + read;
       read
@@ -374,8 +378,8 @@ module Select_timeout = struct
     Bytes.set data 6 (char_of_int b3);
     Bytes.set data 7 (char_of_int b4);
     begin
-      try unsafe_really_input ?timeout tic data 8 len
-      with End_of_file -> failwith "Select.input_value: truncated object."
+      try unsafe_really_input ?timeout tic data 8 len with
+      | End_of_file -> failwith "Select.input_value: truncated object."
     end;
     Marshal.from_bytes data 0
 
@@ -415,8 +419,8 @@ module Select_timeout = struct
       on_timeout ()
     in
     with_timeout ~timeout ~on_timeout ~do_:(fun timeout ->
-        try reader timeout tic oc
-        with exn ->
+        try reader timeout tic oc with
+        | exn ->
           Base.Option.iter ~f:Sys_utils.terminate_process tic.pid;
           tic.pid <- None;
           close_in tic;
@@ -531,15 +535,16 @@ let select = (module Select_timeout : S)
 
 let alarm = (module Alarm_timeout : S)
 
-include ( val if Sys.win32 then
-                select
-              else
-                alarm )
+include
+  (val if Sys.win32 then
+         select
+       else
+         alarm)
 
 let read_connection ~timeout ~on_timeout ~reader sockaddr =
   with_timeout ~timeout ~on_timeout ~do_:(fun timeout ->
       let (tic, oc) = open_connection ~timeout sockaddr in
-      try reader timeout tic oc
-      with exn ->
+      try reader timeout tic oc with
+      | exn ->
         close_out oc;
         raise exn)

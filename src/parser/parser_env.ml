@@ -207,8 +207,8 @@ let init_env ?(token_sink = None) ?(parse_options = None) source content =
   (* let lb = Sedlexing.Utf16.from_string
      content (Some Sedlexing.Utf16.Little_endian) in *)
   let (lb, errors) =
-    try (Sedlexing.Utf8.from_string content, [])
-    with Sedlexing.MalFormed ->
+    try (Sedlexing.Utf8.from_string content, []) with
+    | Sedlexing.MalFormed ->
       (Sedlexing.Utf8.from_string "", [({ Loc.none with Loc.source }, Parse_error.MalformedUnicode)])
   in
   let parse_options =
@@ -1144,7 +1144,8 @@ module Try = struct
 
   let to_parse env parse =
     let saved_state = save_state env in
-    (try success env saved_state (parse env) with Rollback -> rollback_state env saved_state)
+    try success env saved_state (parse env) with
+    | Rollback -> rollback_state env saved_state
 
   let or_else env ~fallback parse =
     match to_parse env parse with

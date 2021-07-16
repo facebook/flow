@@ -31,7 +31,8 @@ let tests =
              try%lwt
                let%lwt _lst = p in
                Lwt.return_none
-             with Failure s -> Lwt.return_some s
+             with
+             | Failure s -> Lwt.return_some s
            in
            assert_equal ~ctxt exn (Some "did not work");
            Lwt.return_unit );

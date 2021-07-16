@@ -316,8 +316,8 @@ let extract_docblock =
        * more context). At some point this should change back to consuming only
        * the first token. *)
       let lb =
-        try Sedlexing.Utf8.from_string content
-        with Sedlexing.MalFormed ->
+        try Sedlexing.Utf8.from_string content with
+        | Sedlexing.MalFormed ->
           Hh_logger.warn "File %s is malformed" (File_key.to_string filename);
           Sedlexing.Utf8.from_string ""
       in
@@ -500,8 +500,8 @@ let reducer
    * probably get the delete event anyway *)
   let content =
     let filename_string = File_key.to_string file in
-    try Some (cat filename_string)
-    with e ->
+    try Some (cat filename_string) with
+    | e ->
       let e = Exception.wrap e in
       prerr_endlinef
         "Parsing service failed to cat %s, so skipping it. Exception: %s"
@@ -614,10 +614,10 @@ let get_defaults ~types_mode ~use_strict options =
       types_mode
       (* force types when --all is set, but otherwise forbid them unless the file
          has @flow in it. *)
-      ( if Options.all options then
+      (if Options.all options then
         TypesAllowed
       else
-        TypesForbiddenByDefault )
+        TypesForbiddenByDefault)
   in
   let use_strict = opt_or_alternate use_strict (Options.modules_are_use_strict options) in
   let profile = Options.should_profile options in

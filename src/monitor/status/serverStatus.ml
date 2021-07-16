@@ -133,15 +133,15 @@ let render_emoji ~use_emoji ?(pad = After) emoji =
   if use_emoji then
     spf
       "%s%s %s"
-      ( if pad = Before then
+      (if pad = Before then
         " "
       else
-        "" )
+        "")
       (string_of_emoji emoji)
-      ( if pad = After then
+      (if pad = After then
         " "
       else
-        "" )
+        "")
   else
     ""
 
@@ -230,10 +230,10 @@ let string_of_status ?(use_emoji = false) ?(terse = false) status =
   in
   spf
     "%s%s"
-    ( if terse then
+    (if terse then
       ""
     else
-      "Server is " )
+      "Server is ")
     status_string
 
 (** Transition function for the status state machine. Given the current status and the event,

@@ -141,11 +141,11 @@ let extract_statements_tests =
       | None -> None
       | Some extracted_statements ->
         Some
-          ( extracted_statements
+          (extracted_statements
           |> Js_layout_generator.statement_list ~opts:Js_layout_generator.default_opts
           |> List.map pretty_print
           |> String.concat ""
-          |> String.trim )
+          |> String.trim)
     in
     let expected =
       match expected with

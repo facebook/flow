@@ -22,8 +22,8 @@ let rec iter_all threads =
     Lwt.return_unit
   else
     (* If any thread in threads fails during this nchoose, the whole all function will fail *)
-      let%lwt (_, sleeping_threads) = Lwt.nchoose_split threads in
-      iter_all sleeping_threads
+    let%lwt (_, sleeping_threads) = Lwt.nchoose_split threads in
+    iter_all sleeping_threads
 
 let get_value_unsafe thread =
   match Lwt.state thread with

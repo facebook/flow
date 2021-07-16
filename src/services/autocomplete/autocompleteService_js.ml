@@ -956,7 +956,7 @@ let autocomplete_member
       mems
       |> Base.List.map
            ~f:(fun (name, documentation, Ty_members.{ ty; from_proto; from_nullable; def_loc = _ })
-                   ->
+              ->
              let rank =
                if from_proto then
                  1

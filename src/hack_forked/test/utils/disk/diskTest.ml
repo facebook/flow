@@ -57,7 +57,8 @@ let test_write_needs_directory_tree dir =
     write_file ~dir ~file:basename ~contents:"hello";
     Printf.eprintf "Error: Expected exception didn't throw\n";
     false
-  with Disk_sig.Types.No_such_file_or_directory _ ->
+  with
+  | Disk_sig.Types.No_such_file_or_directory _ ->
     Sys_utils.mkdir_p (Path.to_string dir);
     write_file ~dir ~file:basename ~contents:"hello";
     Asserter.Bool_asserter.assert_equals

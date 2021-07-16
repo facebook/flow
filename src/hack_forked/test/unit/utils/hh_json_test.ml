@@ -11,7 +11,8 @@ let throws f =
   try
     let _ = f () in
     false
-  with _ -> true
+  with
+  | _ -> true
 
 let test_escape_unescape_data =
   [
@@ -36,7 +37,8 @@ let test_empty_string () =
   try
     ignore (Hh_json.json_of_string "");
     false
-  with Hh_json.Syntax_error _ -> true
+  with
+  | Hh_json.Syntax_error _ -> true
 
 let test_whitespace_string () =
   match Hh_json.json_of_string "\" \"" with

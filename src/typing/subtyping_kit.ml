@@ -505,7 +505,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
         (* general element1 = general element2 *)
         flow_to_mutable_child cx trace use_op lit1 e1 e2
     (* otherwise, lower bound is an empty tuple (nothing to do) *)
-
     (* non-empty array literal / tuple ~> empty array / array literal / tuple *)
     | (_, e1, [], e2) ->
       (* general element1 < general element2 *)
@@ -802,18 +801,18 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | _ -> flow_all_in_union cx trace rep (UseT (use_op, u))
       end
     | (UnionT (_, rep), _) ->
-      ( if Context.is_verbose cx then
+      (if Context.is_verbose cx then
         match u with
         | UnionT _ -> prerr_endline "UnionT ~> UnionT slow case"
         | IntersectionT _ -> prerr_endline "UnionT ~> IntersectionT slow case"
-        | _ -> () );
+        | _ -> ());
 
       flow_all_in_union cx trace rep (UseT (use_op, u))
     | (_, IntersectionT (_, rep)) ->
-      ( if Context.is_verbose cx then
+      (if Context.is_verbose cx then
         match l with
         | UnionT _ -> prerr_endline "IntersectionT ~> UnionT slow case"
-        | _ -> () );
+        | _ -> ());
       InterRep.members rep |> List.iter (fun t -> rec_flow cx trace (l, UseT (use_op, t)))
     (*
      * When a subtyping question involves a union appearing on the right or an
@@ -990,7 +989,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
      * overridden with a generic method, as long as the non-generic signature
      * can be derived as a specialization of the generic signature.
      *)
-
     (* some shortcuts **)
     | (DefT (_, _, PolyT { id = id1; _ }), DefT (_, _, PolyT { id = id2; _ }))
       when Poly.equal_id id1 id2 ->
@@ -1595,7 +1593,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let t = Context.find_call cx id in
       rec_flow cx trace (l, UseT (use_op, t))
     (* FunT ~> ObjT *)
-
     (*
      * Previously, call properties were stored in the props map, and were
      * checked against dictionary upper bounds. This is wrong, but useful for

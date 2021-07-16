@@ -73,14 +73,14 @@ module Make (L : Loc_sig.S) = struct
         (match parent with
         | Some i -> string_of_int i
         | None -> "")
-        ( ListUtils.assoc_to_string
-            ", "
-            (fun s -> s)
-            "="
-            (fun def -> L.debug_to_string @@ Nel.hd def.Def.locs)
-        @@ SMap.bindings defs )
-        ( ListUtils.assoc_to_string ", " L.debug_to_string "=" (fun def -> def.Def.actual_name)
-        @@ L.LMap.bindings locals )
+        (ListUtils.assoc_to_string
+           ", "
+           (fun s -> s)
+           "="
+           (fun def -> L.debug_to_string @@ Nel.hd def.Def.locs)
+        @@ SMap.bindings defs)
+        (ListUtils.assoc_to_string ", " L.debug_to_string "=" (fun def -> def.Def.actual_name)
+        @@ L.LMap.bindings locals)
     in
     fun info ->
       let { scopes; _ } = info in
@@ -146,13 +146,14 @@ module Make (L : Loc_sig.S) = struct
     try
       let def = def_of_use info use in
       uses_of_def info ?exclude_def def
-    with Missing_def _ -> L.LSet.empty
+    with
+    | Missing_def _ -> L.LSet.empty
 
   let def_is_unused info def = L.LSet.is_empty (uses_of_def info ~exclude_def:true def)
 
   let scope info scope_id =
-    try IMap.find scope_id info.scopes
-    with Not_found -> failwith ("Scope " ^ string_of_int scope_id ^ " not found")
+    try IMap.find scope_id info.scopes with
+    | Not_found -> failwith ("Scope " ^ string_of_int scope_id ^ " not found")
 
   let rec scope_within info scope_id s =
     match s.Scope.parent with

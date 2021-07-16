@@ -118,8 +118,8 @@ let create_persistent_connection ~client_fd ~close ~lsp_init_params =
   (* On exit, do our best to send all pending messages to the waiting client *)
   let close_on_exit =
     let%lwt _ = Lwt_condition.wait ExitSignal.signal in
-    (try PersistentConnection.write LspProt.(NotificationFromServer EOF) conn
-     with Lwt_stream.Closed -> ());
+    (try PersistentConnection.write LspProt.(NotificationFromServer EOF) conn with
+    | Lwt_stream.Closed -> ());
     PersistentConnection.flush_and_close conn
   in
   (* Lwt.pick returns the first thread to finish and cancels the rest. *)
@@ -141,10 +141,10 @@ let close client_fd () =
   (* Close the client_fd, regardless of whether or not we were able to shutdown the connection.
    * This prevents fd leaks *)
   Logger.debug "Shutting down and closing a socket client fd";
+  (* To be perfectly honest, it's not clear whether the SHUTDOWN_ALL is really needed. I mean,
+   * shutdown is useful to shutdown one direction of the socket, but if you're about to close
+   * it, does shutting down first actually make any difference? *)
   begin
-    (* To be perfectly honest, it's not clear whether the SHUTDOWN_ALL is really needed. I mean,
-     * shutdown is useful to shutdown one direction of the socket, but if you're about to close
-     * it, does shutting down first actually make any difference? *)
     try Lwt_unix.(shutdown client_fd SHUTDOWN_ALL) with
     (* Already closed *)
     | Unix.Unix_error ((Unix.EBADF | Unix.ENOTCONN), _, _) -> ()
@@ -164,8 +164,8 @@ let perform_handshake_and_get_client_handshake ~client_fd =
     (* handshake step 1: client sends handshake *)
     let%lwt (wire : client_handshake_wire) = Marshal_tools_lwt.from_fd_with_preamble client_fd in
     let client_handshake =
-      try fst wire |> Hh_json.json_of_string |> json_to__client_to_monitor_1
-      with exn ->
+      try fst wire |> Hh_json.json_of_string |> json_to__client_to_monitor_1 with
+      | exn ->
         Logger.error ~exn "Failed to parse JSON section of handshake: %s" (fst wire);
         default_client_to_monitor_1
     in
@@ -224,8 +224,8 @@ let perform_handshake_and_get_client_handshake ~client_fd =
        * So we can't have an unlimited number of clients. So if the new fd is too large, let's
        * reject it.
        * TODO(glevi): Figure out whether this check is needed for Windows *)
-        let%lwt () = respond Server_will_hangup (Some Server_has_too_many_clients) in
-        failwith (spf "Too many clients, so rejecting new connection (%d)" fd_as_int)
+      let%lwt () = respond Server_will_hangup (Some Server_has_too_many_clients) in
+      failwith (spf "Too many clients, so rejecting new connection (%d)" fd_as_int)
       (* Server still initializing *)
     else if not (StatusStream.ever_been_free ()) then
       let client = Base.Option.value_exn client in
@@ -311,7 +311,8 @@ module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct
         | Some { client_type = Persistent { lsp_init_params }; _ } ->
           create_persistent_connection ~client_fd ~close ~lsp_init_params
         | None -> close_without_autostop ())
-    with exn -> catch close_without_autostop exn
+    with
+    | exn -> catch close_without_autostop exn
 
   (* Autostop is meant to be "edge-triggered", i.e. when we transition  *)
   (* from 1 connections to 0 connections then it might stop the server. *)
@@ -333,7 +334,8 @@ module LegacySocketAcceptorLoop = SocketAcceptorLoop (struct
       let msg = "Client and server are different builds. Flow server is out of date. Exiting" in
       Logger.fatal "%s" msg;
       Server.stop Server.Legacy_client
-    with exn -> catch close exn
+    with
+    | exn -> catch close exn
 end)
 
 let run_legacy legacy_socket_fd =

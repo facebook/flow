@@ -190,8 +190,8 @@ module Layout_matcher = struct
   let nth_group n = function
     | Group xs as layout ->
       begin
-        try Ok (List.nth xs n)
-        with Failure _ -> Error ("couldn't get " ^ string_of_int n ^ "th Group element", layout)
+        try Ok (List.nth xs n) with
+        | Failure _ -> Error ("couldn't get " ^ string_of_int n ^ "th Group element", layout)
       end
     | x -> Error ("expected Group", x)
 
@@ -202,8 +202,8 @@ module Layout_matcher = struct
   let nth_fused n = function
     | Concat xs as layout ->
       begin
-        try Ok (List.nth xs n)
-        with Failure _ -> Error ("couldn't get " ^ string_of_int n ^ "th Concat element", layout)
+        try Ok (List.nth xs n) with
+        | Failure _ -> Error ("couldn't get " ^ string_of_int n ^ "th Concat element", layout)
       end
     | layout -> Error ("expected Concat", layout)
 
@@ -219,8 +219,8 @@ module Layout_matcher = struct
   let nth_sequence n = function
     | Sequence (_, xs) as layout ->
       begin
-        try Ok (List.nth xs n)
-        with Failure _ -> Error ("couldn't get " ^ string_of_int n ^ "th Layout element", layout)
+        try Ok (List.nth xs n) with
+        | Failure _ -> Error ("couldn't get " ^ string_of_int n ^ "th Layout element", layout)
       end
     | layout -> Error ("expected Sequence", layout)
 

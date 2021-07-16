@@ -94,12 +94,12 @@ module Make (Extra : BASE_STATS) = struct
           PreserveLiterals.enforce ~mode:preserve_literals t
         (* E.g. React$Element<'div'> will become React.Element<'div'> *)
         | Ty.Generic
-            ( ( {
-                  Ty.sym_name = Reason.OrdinaryName "React$Element";
-                  sym_provenance = Ty_symbol.Library _;
-                  sym_def_loc;
-                  _;
-                } as symbol ),
+            ( ({
+                 Ty.sym_name = Reason.OrdinaryName "React$Element";
+                 sym_provenance = Ty_symbol.Library _;
+                 sym_def_loc;
+                 _;
+               } as symbol),
               kind,
               (Some [(Ty.Str _ | Ty.StrLit _)] as args_opt) )
           when is_react_loc sym_def_loc ->
@@ -107,23 +107,23 @@ module Make (Extra : BASE_STATS) = struct
           this#on_t env Ty.(Generic (symbol, kind, args_opt))
         (* E.g. React$Element<typeof A> will become React.Node *)
         | Ty.Generic
-            ( ( {
-                  Ty.sym_name = Reason.OrdinaryName "React$Element";
-                  sym_provenance = Ty_symbol.Library _;
-                  sym_def_loc;
-                  _;
-                } as symbol ),
+            ( ({
+                 Ty.sym_name = Reason.OrdinaryName "React$Element";
+                 sym_provenance = Ty_symbol.Library _;
+                 sym_def_loc;
+                 _;
+               } as symbol),
               kind,
               Some _ )
           when is_react_loc sym_def_loc ->
           let symbol = { symbol with Ty.sym_name = Reason.OrdinaryName "Node" } in
           this#on_t env Ty.(Generic (symbol, kind, None))
         | Ty.Generic
-            ( ( {
-                  Ty.sym_name = Reason.OrdinaryName ("FbtElement" | "FbtResultBase");
-                  sym_provenance = Ty_symbol.Library _;
-                  _;
-                } as symbol ),
+            ( ({
+                 Ty.sym_name = Reason.OrdinaryName ("FbtElement" | "FbtResultBase");
+                 sym_provenance = Ty_symbol.Library _;
+                 _;
+               } as symbol),
               kind,
               None )
           when (Codemod_context.Typed.metadata cctx).Context.facebook_fbt = Some "FbtElement" ->

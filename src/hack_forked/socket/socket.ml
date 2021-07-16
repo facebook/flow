@@ -30,7 +30,8 @@ let with_addr addr f =
     let result = f sockaddr in
     let () = Sys.chdir cwd in
     result
-  with exn ->
+  with
+  | exn ->
     let exn = Exception.wrap exn in
     let () =
       match addr with
@@ -65,7 +66,8 @@ let unix_socket sock_name =
             close_out oc
         in
         sock)
-  with Unix.Unix_error (err, _, _) ->
+  with
+  | Unix.Unix_error (err, _, _) ->
     Printf.eprintf "%s\n" (Unix.error_message err);
     Exit.(exit Socket_error)
 

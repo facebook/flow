@@ -175,20 +175,20 @@ let calc_direct_dependents ~reader workers ~candidates ~root_files ~root_modules
     (* Get the modules provided by candidate files, the reverse dependency map
        for candidate files, and the subset of candidate files whose resolution
        paths may encounter new or changed modules. *)
-      let%lwt (module_dependents, resolution_path_files) =
-        calc_direct_dependents_utils ~reader workers candidates root_files
-      in
-      (* resolution_path_files, plus files that require root_modules *)
-      let direct_dependents =
-        Modulename.Set.fold
-          (fun m acc ->
-            match Modulename.Map.find_opt m module_dependents with
-            | None -> acc
-            | Some files -> List.fold_left (fun acc f -> FilenameSet.add f acc) acc files)
-          root_modules
-          resolution_path_files
-      in
-      Lwt.return direct_dependents
+    let%lwt (module_dependents, resolution_path_files) =
+      calc_direct_dependents_utils ~reader workers candidates root_files
+    in
+    (* resolution_path_files, plus files that require root_modules *)
+    let direct_dependents =
+      Modulename.Set.fold
+        (fun m acc ->
+          match Modulename.Map.find_opt m module_dependents with
+          | None -> acc
+          | Some files -> List.fold_left (fun acc f -> FilenameSet.add f acc) acc files)
+        root_modules
+        resolution_path_files
+    in
+    Lwt.return direct_dependents
 
 (* Calculate module dependencies. Since this involves a lot of reading from
    shared memory, it is useful to parallelize this process (leading to big

@@ -41,7 +41,8 @@ let get_files path dir_handle =
         paths := SSet.add path !paths
     done;
     assert false
-  with _ -> !paths
+  with
+  | _ -> !paths
 
 (* Gets rid of the '/' or '\' at the end of a directory name *)
 let normalize path =
@@ -87,7 +88,8 @@ let is_excluded path =
         else
           ());
     false
-  with Exit -> true
+  with
+  | Exit -> true
 
 let rec add_file links env path =
   let path = normalize path in
@@ -122,8 +124,12 @@ and add_new_file links env path =
       call (wrap Unix.opendir) path >>= fun dir_handle ->
       let files = get_files path dir_handle in
       SSet.iter (fun x -> ignore (add_file links env x)) files;
-      (try Unix.closedir dir_handle with _ -> ());
-      let prev_files = (try SMap.find path env.dirs with Not_found -> SSet.empty) in
+      (try Unix.closedir dir_handle with
+      | _ -> ());
+      let prev_files =
+        try SMap.find path env.dirs with
+        | Not_found -> SSet.empty
+      in
       let prev_files = SSet.union files prev_files in
       let files =
         SSet.fold
@@ -132,7 +138,8 @@ and add_new_file links env path =
             try
               let sub_dir = SMap.find file env.dirs in
               SSet.union sub_dir all_files
-            with Not_found -> SSet.add file all_files
+            with
+            | Not_found -> SSet.add file all_files
           end
           files
           prev_files

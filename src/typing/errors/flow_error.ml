@@ -88,7 +88,7 @@ let score_of_use_op use_op =
         | Error _ -> acc
         | Ok acc ->
           Ok
-            ( acc
+            (acc
             +
             match frame with
             (* Later params that error get a higher score. This roughly represents how
@@ -128,7 +128,7 @@ let score_of_use_op use_op =
              * rendered in error messages. So it doesn't necessarily signal anything
              * about the user's intent. *)
             | ImplicitTypeParam -> 0
-            | _ -> frame_score ))
+            | _ -> frame_score))
       use_op
   in
   match score with
@@ -428,8 +428,8 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
               `Root (op, Some prop, [text "Cannot call "; desc fn])
             | Frame
                 ( FunParam _,
-                  ( Op (Type.Speculation (Op (FunCall _ | FunCallMethod _ | JSXCreateElement _))) as
-                  use_op ) ) ->
+                  (Op (Type.Speculation (Op (FunCall _ | FunCallMethod _ | JSXCreateElement _))) as
+                  use_op) ) ->
               `Next use_op
             | Frame
                 ( FunParam { n; name; lower = lower'; _ },
@@ -721,7 +721,7 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
       let make_error loc message =
         let message =
           match additional_message with
-          | Some additional_message -> message @ (text ". " :: additional_message)
+          | Some additional_message -> message @ text ". " :: additional_message
           | None -> message
         in
         mk_use_op_error loc use_op message
@@ -811,12 +811,12 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
         | FunImplicitReturn { upper = return; _ } ->
           make_error
             (loc_of_reason lower)
-            ( [ref lower; text " is incompatible with "]
+            ([ref lower; text " is incompatible with "]
             @
             if Loc.compare (loc_of_reason return) (loc_of_reason upper) = 0 then
               [text "implicitly-returned "; desc upper]
             else
-              [ref upper] )
+              [ref upper])
         (* Default incompatibility. *)
         | _ ->
           begin
@@ -858,19 +858,19 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
         mk_use_op_error
           (loc_of_reason lower)
           use_op
-          ( [
-              text "`any` may have been passed into ";
-              ref lower;
-              text " and `any` is incompatible with ";
-              ref upper;
-              text ", and ";
-            ]
+          ([
+             text "`any` may have been passed into ";
+             ref lower;
+             text " and `any` is incompatible with ";
+             ref upper;
+             text ", and ";
+           ]
           @ [
               ref upper;
               text " may be passed into `any` and ";
               ref lower;
               text " is incompatible with `any`";
-            ] )
+            ])
       | (_, (RTrusted _ | RPrivate (RTrusted _))) ->
         mk_use_op_error
           (loc_of_reason lower)
@@ -1041,9 +1041,9 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
       mk_use_op_error
         (loc_of_reason lower)
         use_op
-        ( mk_prop_message prop
+        (mk_prop_message prop
         @ [text (" is " ^ expected ^ " in "); ref lower; text " but "]
-        @ [text (actual ^ " in "); ref upper] )
+        @ [text (actual ^ " in "); ref upper])
     in
     match (loc, friendly_message_of_msg msg) with
     | (Some loc, Error_message.Normal { features }) ->

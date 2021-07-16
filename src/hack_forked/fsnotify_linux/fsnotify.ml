@@ -86,7 +86,10 @@ let process_event env events event =
   | (_, _, _, None) -> events
   | (watch, type_list, _, Some filename) ->
     List.iter type_list check_event_type;
-    let wpath = (try WMap.find watch env.wpaths with _ -> assert false) in
+    let wpath =
+      try WMap.find watch env.wpaths with
+      | _ -> assert false
+    in
     let path = Filename.concat wpath filename in
     { path; wpath } :: events
 

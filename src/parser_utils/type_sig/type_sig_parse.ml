@@ -1565,7 +1565,8 @@ and interface_props =
         | O.Indexer (_, p) -> dict opts scope tbls xs acc p
         | O.CallProperty (_, p) -> call opts scope tbls xs acc p
         | O.InternalSlot (_, p) -> slot opts scope tbls xs acc p
-        | O.SpreadProperty _ -> acc (* no spread in interface *))
+        | O.SpreadProperty _ -> acc
+        (* no spread in interface *))
       acc
       properties
 
@@ -1647,7 +1648,8 @@ and declare_class_props =
         | O.Indexer (_, p) -> dict opts scope tbls xs acc p
         | O.CallProperty (_, p) -> call opts scope tbls xs acc p
         | O.InternalSlot (_, p) -> slot opts scope tbls xs acc p
-        | O.SpreadProperty _ -> acc (* no spread in interface / declare class *))
+        | O.SpreadProperty _ -> acc
+        (* no spread in interface / declare class *))
       acc
       properties
 
@@ -2983,10 +2985,10 @@ and predicate opts scope tbls pnames =
         None
     | L.Null ->
       Some
-        ( if strict then
+        (if strict then
           `Null loc
         else
-          `Maybe )
+          `Maybe)
     | L.Number x ->
       if strict then
         Some (`Number (loc, x, raw))

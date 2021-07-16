@@ -353,8 +353,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                f with
                autocomplete_type = Ac_id { id with include_super = true; include_this = true };
              })
-      | Found ({ autocomplete_type = Ac_member ({ bracket_syntax = Some id; _ } as member); _ } as f)
-        ->
+      | Found
+          ({ autocomplete_type = Ac_member ({ bracket_syntax = Some id; _ } as member); _ } as f) ->
         raise
           (Found
              {
@@ -371,8 +371,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       try super#function_expression x with
       | Found ({ autocomplete_type = Ac_id id; _ } as f) ->
         raise (Found { f with autocomplete_type = Ac_id { id with include_this = true } })
-      | Found ({ autocomplete_type = Ac_member ({ bracket_syntax = Some id; _ } as member); _ } as f)
-        ->
+      | Found
+          ({ autocomplete_type = Ac_member ({ bracket_syntax = Some id; _ } as member); _ } as f) ->
         raise
           (Found
              {
@@ -385,8 +385,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       try super#function_declaration x with
       | Found ({ autocomplete_type = Ac_id id; _ } as f) ->
         raise (Found { f with autocomplete_type = Ac_id { id with include_this = true } })
-      | Found ({ autocomplete_type = Ac_member ({ bracket_syntax = Some id; _ } as member); _ } as f)
-        ->
+      | Found
+          ({ autocomplete_type = Ac_member ({ bracket_syntax = Some id; _ } as member); _ } as f) ->
         raise
           (Found
              {
@@ -566,7 +566,8 @@ let process_location ~trigger_character ~cursor ~typed_ast =
   try
     ignore ((new process_request_searcher (trigger_character <> None) cursor)#program typed_ast);
     None
-  with Found f -> Some f
+  with
+  | Found f -> Some f
 
 let autocomplete_set_hooks ~cursor =
   Type_inference_hooks_js.set_id_hook (autocomplete_id ~cursor);

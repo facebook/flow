@@ -13,7 +13,8 @@ type args = {
 }
 
 let parse_range_arg range =
-  (try Semver.range_of_string range with Semver.Parse_error msg -> raise (Arg.Bad msg))
+  try Semver.range_of_string range with
+  | Semver.Parse_error msg -> raise (Arg.Bad msg)
 
 let parse_args () =
   let loose = ref false in
@@ -50,8 +51,8 @@ let main () =
           else
             str
         in
-        try Semver.version_of_string str :: acc
-        with Semver.Parse_error msg ->
+        try Semver.version_of_string str :: acc with
+        | Semver.Parse_error msg ->
           if verbose then prerr_endline msg;
           acc)
       []

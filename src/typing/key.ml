@@ -19,11 +19,11 @@ let rec string_of_key (base, projs) =
   Reason.display_string_of_name base
   ^ String.concat
       ""
-      ( List.rev projs
+      (List.rev projs
       |> Base.List.map ~f:(function
              | Prop name -> spf ".%s" name
              | PrivateField name -> spf "private.%s" name
-             | Elem expr -> spf "[%s]" (string_of_key expr)) )
+             | Elem expr -> spf "[%s]" (string_of_key expr)))
 
 (* true if the given key uses the given property name *)
 let rec uses_propname propname ~private_ (_base, proj) = proj_uses_propname ~private_ propname proj

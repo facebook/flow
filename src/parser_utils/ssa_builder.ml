@@ -373,7 +373,8 @@ struct
         try
           f ();
           None
-        with AbruptCompletion.Exn abrupt_completion -> Some abrupt_completion
+        with
+        | AbruptCompletion.Exn abrupt_completion -> Some abrupt_completion
 
       method from_completion =
         function

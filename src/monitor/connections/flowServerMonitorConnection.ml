@@ -92,7 +92,9 @@ module Make (ConnectionProcessor : CONNECTION_PROCESSOR) :
 
   let send_command conn command = conn.push_to_stream (Some command)
 
-  let close_stream conn = (try conn.push_to_stream None with Lwt_stream.Closed -> ())
+  let close_stream conn =
+    try conn.push_to_stream None with
+    | Lwt_stream.Closed -> ()
 
   let write ~msg conn = send_command conn (Write msg)
 
@@ -158,8 +160,8 @@ module Make (ConnectionProcessor : CONNECTION_PROCESSOR) :
 
     let main connection =
       let%lwt msg =
-        ( Marshal_tools_lwt.from_fd_with_preamble connection.in_fd
-          : ConnectionProcessor.in_message Lwt.t )
+        (Marshal_tools_lwt.from_fd_with_preamble connection.in_fd
+          : ConnectionProcessor.in_message Lwt.t)
       in
       let%lwt () = connection.on_read ~msg ~connection in
       Lwt.return connection
@@ -183,7 +185,10 @@ module Make (ConnectionProcessor : CONNECTION_PROCESSOR) :
       (* Lwt.wait creates a thread that can't be canceled *)
       let (wait_for_closed_thread, wakener) = Lwt.wait () in
       (* If we've already woken the thread, then do nothing *)
-      let wakeup () = (try Lwt.wakeup wakener () with Invalid_argument _ -> ()) in
+      let wakeup () =
+        try Lwt.wakeup wakener () with
+        | Invalid_argument _ -> ()
+      in
       (* On close, wake wait_for_closed_thread *)
       let close () =
         let%lwt () = close () in

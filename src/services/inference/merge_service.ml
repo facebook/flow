@@ -532,8 +532,8 @@ let check_contents_context ~reader options file ast docblock file_sig type_sig =
    * fresh parse. *)
   let aloc_table =
     lazy
-      (try Parsing_heaps.Reader.get_aloc_table_unsafe ~reader file
-       with Parsing_heaps_exceptions.ALoc_table_not_found _ -> ALoc.empty_table file)
+      (try Parsing_heaps.Reader.get_aloc_table_unsafe ~reader file with
+      | Parsing_heaps_exceptions.ALoc_table_not_found _ -> ALoc.empty_table file)
   in
   let exported_locals = get_exported_locals file type_sig in
   let reader = Abstract_state_reader.State_reader reader in
@@ -559,16 +559,16 @@ let with_async_logging_timer ~interval ~on_timer ~f =
   let timer = ref None in
   let cancel_timer () = Base.Option.iter ~f:Timer.cancel_timer !timer in
   let rec run_timer ?(first_run = false) () =
-    ( if not first_run then
+    (if not first_run then
       let run_time = Unix.gettimeofday () -. start_time in
-      on_timer run_time );
+      on_timer run_time);
     timer := Some (Timer.set_timer ~interval ~callback:run_timer)
   in
   (* Timer is unimplemented in Windows. *)
   if not Sys.win32 then run_timer ~first_run:true ();
   let ret =
-    try f ()
-    with e ->
+    try f () with
+    | e ->
       cancel_timer ();
       raise e
   in

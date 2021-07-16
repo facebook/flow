@@ -325,8 +325,8 @@ let get_next_event
     | Connected { c_conn; _ } ->
       let server_fd = Timeout.descr_of_in_channel c_conn.ic in
       let (fds, _, _) =
-        try Sys_utils.select_non_intr [server_fd; client_fd] [] [] 1.0
-        with Unix.Unix_error (Unix.EBADF, _, _) as e ->
+        try Sys_utils.select_non_intr [server_fd; client_fd] [] [] 1.0 with
+        | Unix.Unix_error (Unix.EBADF, _, _) as e ->
           (* Either the server died or the Jsonrpc died. Figure out which one *)
           let exn = Exception.wrap e in
           let edata = edata_of_exception exn in
@@ -334,7 +334,8 @@ let get_next_event
             try
               let _ = Sys_utils.select_non_intr [client_fd] [] [] 0.0 in
               false
-            with Unix.Unix_error (Unix.EBADF, _, _) -> true
+            with
+            | Unix.Unix_error (Unix.EBADF, _, _) -> true
           in
           if server_died then
             raise (Server_fatal_connection_exception edata)
@@ -350,8 +351,8 @@ let get_next_event
         Lwt.return event
     | _ ->
       let (fds, _, _) =
-        try Sys_utils.select_non_intr [client_fd] [] [] 1.0
-        with Unix.Unix_error (Unix.EBADF, _, _) as e ->
+        try Sys_utils.select_non_intr [client_fd] [] [] 1.0 with
+        | Unix.Unix_error (Unix.EBADF, _, _) as e ->
           (* Jsonrpc process died. This is unrecoverable *)
           let exn = Exception.wrap e in
           let edata = edata_of_exception exn in
@@ -808,8 +809,10 @@ let show_disconnected (code : FlowExit.t option) (message : string option) (env 
   Disconnected { env with d_ienv }
 
 let close_conn (env : connected_env) : unit =
-  (try Timeout.shutdown_connection env.c_conn.ic with _ -> ());
-  (try Timeout.close_in_noerr env.c_conn.ic with _ -> ())
+  (try Timeout.shutdown_connection env.c_conn.ic with
+  | _ -> ());
+  try Timeout.close_in_noerr env.c_conn.ic with
+  | _ -> ()
 
 (************************************************************************
  ** Tracking                                                           **
@@ -873,7 +876,8 @@ let track_to_server (state : state) (c : Lsp.lsp_message) : state * track_effect
     | (Some open_files, NotificationMessage (DidChangeNotification params)) ->
       let uri = params.DidChange.textDocument.VersionedTextDocumentIdentifier.uri in
       let { o_open_doc; _ } =
-        (try Lsp.UriMap.find uri open_files with Not_found -> raise (Changed_file_not_open uri))
+        try Lsp.UriMap.find uri open_files with
+        | Not_found -> raise (Changed_file_not_open uri)
       in
       let text = o_open_doc.TextDocumentItem.text in
       let text = Lsp_helpers.apply_changes_unsafe text params.DidChange.contentChanges in
@@ -1068,7 +1072,8 @@ let parse_and_cache (state : state) (uri : Lsp.DocumentUri.t) :
         let filename_opt = File_input.path_of_file_input file in
         let filekey = Base.Option.map filename_opt ~f:(fun fn -> File_key.SourceFile fn) in
         Parser_flow.program_file ~fail:false ~parse_options ~token_sink:None content filekey
-      with _ ->
+      with
+      | _ ->
         ((Loc.none, { Flow_ast.Program.statements = []; comments = None; all_comments = [] }), [])
     in
     ( program,
@@ -1186,22 +1191,22 @@ module RagePrint = struct
     addline
       b
       "i_outstanding_local_handlers="
-      ( ienv.i_outstanding_local_handlers
+      (ienv.i_outstanding_local_handlers
       |> IdMap.bindings
       |> List.map ~f:(fun (id, _handler) -> Lsp_fmt.id_to_string id)
-      |> String.concat "," );
+      |> String.concat ",");
     addline
       b
       "i_outstanding_local_requests="
-      ( ienv.i_outstanding_local_requests
+      (ienv.i_outstanding_local_requests
       |> IdMap.bindings
       |> List.map ~f:(fun (id, req) ->
              Printf.sprintf "%s:%s" (Lsp_fmt.id_to_string id) (Lsp_fmt.request_name_to_string req))
-      |> String.concat "," );
+      |> String.concat ",");
     addline
       b
       "i_outstanding_requests_from_server="
-      ( ienv.i_outstanding_requests_from_server
+      (ienv.i_outstanding_requests_from_server
       |> WrappedMap.bindings
       |> List.map ~f:(fun (id, req) ->
              Printf.sprintf
@@ -1209,7 +1214,7 @@ module RagePrint = struct
                id.server_id
                (Lsp_fmt.id_to_string id.message_id)
                (Lsp_fmt.request_name_to_string req))
-      |> String.concat "," );
+      |> String.concat ",");
     addline b "i_isConnected=" (ienv.i_isConnected |> string_of_bool);
     addline b "i_status=" (ienv.i_status |> string_of_show_status);
     addline b "i_open_files=" (ienv.i_open_files |> string_of_open_files);
@@ -1253,10 +1258,10 @@ module RagePrint = struct
     addline
       b
       "c_outstanding_requests_to_server="
-      ( cenv.c_outstanding_requests_to_server
+      (cenv.c_outstanding_requests_to_server
       |> IdSet.elements
       |> List.map ~f:Lsp_fmt.id_to_string
-      |> String.concat "," );
+      |> String.concat ",");
     ()
 
   let string_of_state (state : state) : string =
@@ -1306,11 +1311,11 @@ let do_rage flowconfig_name (state : state) : Rage.result =
         let pid = string_of_int pid in
         (* some systems have "pstack", some have "gstack", some have neither... *)
         let stack =
-          try Sys_utils.exec_read_lines ~reverse:true ("pstack " ^ pid)
-          with _ ->
+          try Sys_utils.exec_read_lines ~reverse:true ("pstack " ^ pid) with
+          | _ ->
             begin
-              try Sys_utils.exec_read_lines ~reverse:true ("gstack " ^ pid)
-              with e ->
+              try Sys_utils.exec_read_lines ~reverse:true ("gstack " ^ pid) with
+              | e ->
                 let e = Exception.wrap e in
                 ["unable to pstack - " ^ Exception.get_ctor_string e]
             end
@@ -1366,7 +1371,8 @@ let do_rage flowconfig_name (state : state) : Rage.result =
               PidLog.get_pids (Server_files_js.pids_file ~flowconfig_name ~tmp_dir ienv.i_root)
             in
             Base.List.fold pids ~init:items ~f:add_pid
-          with e ->
+          with
+          | e ->
             let e = Exception.wrap e in
             add_string items (Printf.sprintf "Failed to get PIDs: %s" (Exception.to_string e))
         in
@@ -1383,8 +1389,8 @@ let parse_json (state : state) (json : Jsonrpc.message) : lsp_message =
     let ienv =
       Base.Option.value_exn ~message:"Didn't expect an LSP response yet" (get_ienv state)
     in
-    try IdMap.find id ienv.i_outstanding_local_requests
-    with Not_found -> WrappedMap.find (decode_wrapped id) ienv.i_outstanding_requests_from_server
+    try IdMap.find id ienv.i_outstanding_local_requests with
+    | Not_found -> WrappedMap.find (decode_wrapped id) ienv.i_outstanding_requests_from_server
   in
   Lsp_fmt.parse_lsp json.Jsonrpc.json outstanding
 
@@ -1565,10 +1571,10 @@ let try_connect flowconfig_name (env : disconnected_env) : state =
           server_should_hangup_if_still_initializing = true;
           (* only exit if we'll restart it *)
           version_mismatch_strategy =
-            ( if env.d_autostart then
+            (if env.d_autostart then
               Stop_server_if_older
             else
-              SocketHandshake.Error_client );
+              SocketHandshake.Error_client);
         },
         { client_type = Persistent { lsp_init_params = env.d_ienv.i_initialize_params } } )
   in
@@ -1655,7 +1661,8 @@ let try_connect flowconfig_name (env : disconnected_env) : state =
         let root = start_env.CommandConnect.root in
         CommandMeanKill.mean_kill ~flowconfig_name ~tmp_dir root;
         show_connecting reason { env with d_server_status = None }
-      with CommandMeanKill.FailedToKill _ ->
+      with
+      | CommandMeanKill.FailedToKill _ ->
         let msg = "An old version of the Flow server is running. Please stop it." in
         show_disconnected None (Some msg) { env with d_server_status = None }
     end
@@ -1750,8 +1757,8 @@ and main_loop flowconfig_name (client : Jsonrpc.queue) (state : state) : unit Lw
 and main_handle flowconfig_name (state : state) (event : event) : state =
   let (client_duration, result) =
     with_timer (fun () ->
-        try main_handle_unsafe flowconfig_name state event
-        with e -> Error (state, Exception.wrap e))
+        try main_handle_unsafe flowconfig_name state event with
+        | e -> Error (state, Exception.wrap e))
   in
   match result with
   | Ok (state, LogNeeded metadata) ->
@@ -2145,10 +2152,10 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     let state =
       Connected cenv
       |> update_errors
-           ( if cenv.c_is_rechecking then
+           (if cenv.c_is_rechecking then
              LspErrors.add_streamed_server_errors_and_send to_stdout diagnostics
            else
-             LspErrors.set_finalized_server_errors_and_send to_stdout diagnostics )
+             LspErrors.set_finalized_server_errors_and_send to_stdout diagnostics)
     in
     Ok (state, LogNotNeeded)
   | ( Connected _,
@@ -2171,9 +2178,10 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
           ~data:
             Hh_json.(
               JSON_Object
-                ( ("uri", JSON_String (Lsp.DocumentUri.to_string uri))
-                :: ("error_count", JSON_Number (List.length live_diagnostics |> string_of_int))
-                :: metadata.LspProt.extra_data )
+                (("uri", JSON_String (Lsp.DocumentUri.to_string uri))
+                 ::
+                 ("error_count", JSON_Number (List.length live_diagnostics |> string_of_int))
+                 :: metadata.LspProt.extra_data)
               |> json_to_string)
           ~wall_start:metadata.LspProt.start_wall_time;
 

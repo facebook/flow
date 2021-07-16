@@ -166,16 +166,13 @@ module rec TypeTerm : sig
     | ModuleT of reason * exporttypes * bool (* is_strict *)
     (* Here's to the crazy ones. The misfits. The rebels. The troublemakers.
        The round pegs in the square holes. **)
-
     (* types that should never appear in signatures *)
     | InternalT of internal_t
     (* upper bound trigger for type destructors *)
     | TypeDestructorTriggerT of use_op * reason * (reason * bool) option * destructor * tvar
     (* Sigil representing functions that the type system is not expressive
        enough to annotate, so we customize their behavior internally. *)
-    | CustomFunT of reason * custom_fun_kind
-    (* Predicate types **)
-
+    | CustomFunT of reason * custom_fun_kind (* Predicate types **)
     (* `OpenPredT (reason, base_t, m_pos, m_neg)` wraps around a base type
        `base_t` and encodes additional information that hold in conditional
        contexts (in the form of logical predicates). This information is split
@@ -221,20 +218,18 @@ module rec TypeTerm : sig
        e.g. RegExp flags *)
     | CharSetT of String_utils.CharSet.t
     (* type aliases *)
-    | TypeT of type_t_kind * t
-    (* A polymorphic type is like a type-level "function" that, when applied to
-       lists of type arguments, generates types. Just like a function, a
-       polymorphic type has a list of type parameters, represented as bound
-       type variables. We say that type parameters are "universally quantified"
-       (or "universal"): every substitution of type arguments for type
-       parameters generates a type. Dually, we have "existentially quantified"
-       (or "existential") type variables: such a type variable denotes some,
-       possibly unknown, type. Universal type parameters may specify subtype
-       constraints ("bounds"), which must be satisfied by any types they may be
-       substituted by. Evaluation of existential types, which involves
-       generating fresh type variables, never happens under polymorphic types;
-       it is forced only when polymorphic types are applied. *)
-
+    | TypeT of type_t_kind * t (* A polymorphic type is like a type-level "function" that, when applied to
+                                  lists of type arguments, generates types. Just like a function, a
+                                  polymorphic type has a list of type parameters, represented as bound
+                                  type variables. We say that type parameters are "universally quantified"
+                                  (or "universal"): every substitution of type arguments for type
+                                  parameters generates a type. Dually, we have "existentially quantified"
+                                  (or "existential") type variables: such a type variable denotes some,
+                                  possibly unknown, type. Universal type parameters may specify subtype
+                                  constraints ("bounds"), which must be satisfied by any types they may be
+                                  substituted by. Evaluation of existential types, which involves
+                                  generating fresh type variables, never happens under polymorphic types;
+                                  it is forced only when polymorphic types are applied. *)
     (* polymorphic type *)
     | PolyT of {
         tparams_loc: ALoc.t;
@@ -606,9 +601,7 @@ module rec TypeTerm : sig
         lookup_action: lookup_action;
         ids: Properties.Set.t option;
         method_accessible: bool;
-      }
-    (* operations on objects *)
-
+      } (* operations on objects *)
     (* Resolves the object into which the properties are assigned *)
     | ObjAssignToT of use_op * reason * t * t * obj_assign_kind
     (* Resolves the object from which the properties are assigned *)
@@ -662,7 +655,8 @@ module rec TypeTerm : sig
         * (* local ModuleT *)
         (reason * exporttypes * bool)
         * (* is_strict *)
-          (* 't_out' to receive the resolved ModuleT *) t_out
+          (* 't_out' to receive the resolved ModuleT *)
+          t_out
     | CopyNamedExportsT of reason * t * t_out
     | CopyTypeExportsT of reason * t * t_out
     | ExportNamedT of
@@ -688,14 +682,11 @@ module rec TypeTerm : sig
         t_out: use_t;
         voided_out: t_out;
       }
-    | InvariantT of reason
-    (* Function predicate uses *)
-
+    | InvariantT of reason (* Function predicate uses *)
     (*
      * The following two uses are used when a predicate function is called to
      * establish a predicate over one of its arguments.
      *)
-
     (*
      * The intended use for CallLatentPredT is to flow a predicated function
      * type to it. This function will refine the unrefined argument of
@@ -1787,8 +1778,7 @@ end = struct
         | p -> p)
 
   let mapi_fields f =
-    NameUtils.Map.mapi (fun k ->
-      function
+    NameUtils.Map.mapi (fun k -> function
       | Field (loc, t, polarity) -> Field (loc, f k t, polarity)
       | p -> p)
 end

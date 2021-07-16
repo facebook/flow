@@ -14,8 +14,8 @@ let blocking_waitpid =
     let%lwt (pid_ret, status) = Lwt_unix.waitpid [Unix.WNOHANG; Unix.WUNTRACED] pid_to_wait_for in
     if pid_ret = 0 then
       (* Still hasn't exited. Let's wait .5s and try again *)
-        let%lwt () = Lwt_unix.sleep 0.5 in
-        damn_it_windows_impl pid_to_wait_for
+      let%lwt () = Lwt_unix.sleep 0.5 in
+      damn_it_windows_impl pid_to_wait_for
     else
       (* Ok, process has exited or died or something. *)
       Lwt.return (pid_ret, status)

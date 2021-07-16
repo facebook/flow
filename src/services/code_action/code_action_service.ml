@@ -592,7 +592,8 @@ let insert_type
         in
         let opts = layout_options options in
         Ok (mk_patch ~opts ast new_ast file_content)
-      with FailedToInsertType err -> Error (error_to_string err)
+      with
+      | FailedToInsertType err -> Error (error_to_string err)
     in
     Lwt.return result
   | Error _ as result ->

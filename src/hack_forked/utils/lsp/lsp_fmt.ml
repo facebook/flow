@@ -18,8 +18,8 @@ let parse_id (json : json) : lsp_id =
   match json with
   | JSON_Number s ->
     begin
-      try NumberId (int_of_string s)
-      with Failure _ ->
+      try NumberId (int_of_string s) with
+      | Failure _ ->
         raise
           (Error.LspException
              { Error.code = Error.ParseError; message = "float ids not allowed: " ^ s; data = None })
@@ -514,8 +514,8 @@ let parse_diagnostic (j : json option) : PublishDiagnostics.diagnostic =
       | Some (JSON_String s) -> StringCode s
       | Some (JSON_Number s) ->
         begin
-          try IntCode (int_of_string s)
-          with Failure _ ->
+          try IntCode (int_of_string s) with
+          | Failure _ ->
             raise
               (Error.LspException
                  {
@@ -1323,8 +1323,7 @@ let print_error ?(include_error_stack_trace = true) (e : Error.t) (stack : strin
   in
   let entries =
     ("code", int_ (Error.code_to_enum e.Error.code))
-    :: ("message", string_ e.Error.message)
-    :: entries
+    :: ("message", string_ e.Error.message) :: entries
   in
   JSON_Object entries
 

@@ -185,8 +185,8 @@ let standard_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_resul
         (* We are only removing the first element of the insertion. We make sure to indicate
            that the rest of the insert should have a leading separator between it and the replace. *)
         (i2, Replace (y, x))
-        :: convert_to_replace
-             ((i2, Insert { items = rst; separator; leading_separator = true }) :: t)
+        ::
+        convert_to_replace ((i2, Insert { items = rst; separator; leading_separator = true }) :: t)
       | h :: t -> h :: convert_to_replace t
     in
     (* Deletes are added for every element of old_list that does not have a
@@ -500,8 +500,11 @@ let program
   let diff_and_recurse_nonopt_no_trivial f = diff_and_recurse_nonopt f (fun _ -> None) in
   let join_diff_list = Some [] |> List.fold_left (Base.Option.map2 ~f:List.append) in
   let rec syntax_opt
-            : 'internal. Loc.t -> (Loc.t, 'internal) Ast.Syntax.t option ->
-              (Loc.t, 'internal) Ast.Syntax.t option -> node change list option =
+            : 'internal.
+              Loc.t ->
+              (Loc.t, 'internal) Ast.Syntax.t option ->
+              (Loc.t, 'internal) Ast.Syntax.t option ->
+              node change list option =
    fun loc s1 s2 ->
     let add_comments { Ast.Syntax.leading; trailing; internal = _ } =
       Loc.(
@@ -522,7 +525,9 @@ let program
     in
     diff_or_add_opt syntax add_comments s1 s2
   and syntax
-        : 'internal. (Loc.t, 'internal) Ast.Syntax.t -> (Loc.t, 'internal) Ast.Syntax.t ->
+        : 'internal.
+          (Loc.t, 'internal) Ast.Syntax.t ->
+          (Loc.t, 'internal) Ast.Syntax.t ->
           node change list option =
    fun s1 s2 ->
     let { Ast.Syntax.leading = leading1; trailing = trailing1; internal = _ } = s1 in
@@ -592,11 +597,11 @@ let program
               0
         >>= fun import_recurse ->
         body_diff
-        >>= ( List.length imports1
+        >>= (List.length imports1
             |> recurse_into_diff
                  (fun x y -> Some (statement x y))
                  (fun s -> Some (expand_statement_comment_bounds s, Statement s))
-                 stmts1 )
+                 stmts1)
         >>| fun body_recurse -> import_recurse @ body_recurse)
   and statement_list
       (stmts1 : (Loc.t, Loc.t) Ast.Statement.t list) (stmts2 : (Loc.t, Loc.t) Ast.Statement.t list)
@@ -1181,13 +1186,13 @@ let program
           } ) =
       prop2
     in
-    ( if key1 != key2 || s1 != s2 || var1 != var2 then
+    (if key1 != key2 || s1 != s2 || var1 != var2 then
       None
     else
       let vals = diff_if_changed_ret_opt class_property_value val1 val2 in
       let annots = Some (diff_if_changed type_annotation_hint annot1 annot2) in
       let comments = syntax_opt loc1 comments1 comments2 in
-      join_diff_list [vals; annots; comments] )
+      join_diff_list [vals; annots; comments])
     |> Base.Option.value ~default:[replace loc1 (ClassProperty prop1) (ClassProperty prop2)]
   and class_property_value val1 val2 : node change list option =
     let open Ast.Class.Property in

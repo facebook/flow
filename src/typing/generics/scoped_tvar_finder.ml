@@ -207,7 +207,7 @@ class finder cx =
         in
         ()
       in
-      ( if is_munged && not static then
+      (if is_munged && not static then
         (* Special case for munged properties *)
         ScopeHelper.in_class_prop_scope gcx this#set_gcx (fun () ->
             let () = check_prop () in
@@ -218,7 +218,7 @@ class finder cx =
         (* Here we actually install the tparams collected in `class_with_loc` into the scope *)
         ScopeHelper.in_class_prop_scope gcx this#set_gcx (fun () ->
             let (_ : (ml, tl) Ast.Class.Property.value) = this#class_property_value value in
-            ()) );
+            ()));
       prop
 
     method object_key_label key =
@@ -252,7 +252,7 @@ class finder cx =
         in
         ()
       in
-      ( if not static then
+      (if not static then
         ScopeHelper.in_class_prop_scope gcx this#set_gcx (fun () ->
             let (_ : (ml, tl) Ast.Class.Property.value) = this#class_property_value value in
             check_prop ())
@@ -260,7 +260,7 @@ class finder cx =
         let () = check_prop () in
         ScopeHelper.in_class_prop_scope gcx this#set_gcx (fun () ->
             let (_ : (ml, tl) Ast.Class.Property.value) = this#class_property_value value in
-            ()) );
+            ()));
       field
 
     method type_param_id tparam =

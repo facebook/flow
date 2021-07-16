@@ -823,10 +823,10 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
         @@ fuse
              [
                Atom "for";
-               ( if each then
+               (if each then
                  fuse [space; Atom "each"]
                else
-                 Empty );
+                 Empty);
                pretty_space;
                wrap_in_parens
                  (fuse_with_space
@@ -857,10 +857,10 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
         @@ fuse
              [
                Atom "for";
-               ( if await then
+               (if await then
                  fuse [space; Atom "await"]
                else
-                 Empty );
+                 Empty);
                pretty_space;
                wrap_in_parens
                  (fuse
@@ -1172,12 +1172,12 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
         @@ fuse
              [
                s_operator;
-               ( if needs_space then
+               (if needs_space then
                  match argument with
                  | (_, E.Sequence _) -> Empty
                  | _ -> space
                else
-                 Empty );
+                 Empty);
                expr;
              ]
       | E.Update { E.Update.operator; prefix; argument; comments } ->
@@ -1201,10 +1201,10 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
         @@ fuse
              [
                Atom "yield";
-               ( if delegate then
+               (if delegate then
                  Atom "*"
                else
-                 Empty );
+                 Empty);
                (match argument with
                | Some arg -> fuse [space; expression ~ctxt ~opts arg]
                | None -> Empty);
@@ -1360,10 +1360,10 @@ and boolean_literal_type loc { Ast.BooleanLiteral.value; comments } =
     loc
     comments
     (Atom
-       ( if value then
+       (if value then
          "true"
        else
-         "false" ))
+         "false"))
 
 and member ?(optional = false) ~opts ~precedence ~ctxt member_node loc =
   let { Ast.Expression.Member._object; property; comments } = member_node in
@@ -1559,10 +1559,10 @@ and pattern ?(ctxt = normal_context) ~opts ((loc, pat) : (Loc.t, Loc.t) Ast.Patt
         fuse
           [
             identifier name;
-            ( if optional then
+            (if optional then
               Atom "?"
             else
-              Empty );
+              Empty);
             hint (type_annotation ~opts) annot;
           ]
       | P.Expression expr -> expression ~ctxt ~opts expr )
@@ -1590,20 +1590,20 @@ and template_literal ~opts { Ast.Expression.TemplateLiteral.quasis; expressions;
           ( loc,
             fuse
               [
-                ( if i > 0 then
+                (if i > 0 then
                   Atom "}"
                 else
-                  Empty );
+                  Empty);
                 Atom raw;
-                ( if not tail then
+                (if not tail then
                   Atom "${"
                 else
-                  Empty );
+                  Empty);
               ] );
-        ( if not tail then
+        (if not tail then
           expression ~opts (List.nth expressions i)
         else
-          Empty );
+          Empty);
       ]
   in
   fuse [Atom "`"; fuse (List.mapi template_element quasis); Atom "`"]
@@ -1752,10 +1752,10 @@ and arrow_function
        [
          fuse_with_space
            [
-             ( if async then
+             (if async then
                Atom "async"
              else
-               Empty );
+               Empty);
              params_and_stuff;
            ];
          (* Babylon does not parse ():*=>{}` because it thinks the `*=` is an
@@ -1797,10 +1797,10 @@ and function_ ~opts loc func =
       fuse
         [
           Atom "function";
-          ( if generator then
+          (if generator then
             Atom "*"
           else
-            Empty );
+            Empty);
         ]
     in
     let id =
@@ -2023,10 +2023,10 @@ and class_method
       fuse
         [
           decorators_list ~opts decorators;
-          ( if static then
+          (if static then
             fuse [Atom "static"; space]
           else
-            Empty );
+            Empty);
           source_location_with_comments
             ( func_loc,
               function_base
@@ -2054,14 +2054,14 @@ and class_property_helper ~opts loc key value static annot variance_ comments =
       with_semicolon
         (fuse
            [
-             ( if declare then
+             (if declare then
                fuse [Atom "declare"; space]
              else
-               Empty );
-             ( if static then
+               Empty);
+             (if static then
                fuse [Atom "static"; space]
              else
-               Empty );
+               Empty);
              option variance variance_;
              key;
              hint (type_annotation ~opts) annot;
@@ -2242,10 +2242,10 @@ and enum_declaration loc { Ast.Statement.EnumDeclaration.id; body; comments } =
       (layout_node_with_comments_opt
          loc
          comments
-         ( if init_value then
+         (if init_value then
            Atom "true"
          else
-           Atom "false" ))
+           Atom "false"))
   in
   let number_member
       (_, { InitializedMember.id; init = (loc, { Ast.NumberLiteral.raw; comments; _ }) }) =
@@ -2296,7 +2296,7 @@ and enum_declaration loc { Ast.Statement.EnumDeclaration.id; body; comments } =
         [
           representation_type "string" explicit_type;
           pretty_space;
-          ( layout_node_with_comments_opt loc comments
+          (layout_node_with_comments_opt loc comments
           @@ wrap_body
           @@
           match members with
@@ -2307,7 +2307,7 @@ and enum_declaration loc { Ast.Statement.EnumDeclaration.id; body; comments } =
           | StringBody.Initialized members ->
             Base.List.map ~f:string_member members
             @ enum_internal_comments comments
-            @ unknown_members has_unknown_members );
+            @ unknown_members has_unknown_members);
         ]
     | (loc, SymbolBody { SymbolBody.members; has_unknown_members; comments }) ->
       fuse
@@ -2437,14 +2437,14 @@ and object_property ~opts property =
     let prefix =
       fuse
         [
-          ( if async then
+          (if async then
             fuse [Atom "async"; space]
           else
-            Empty );
-          ( if generator then
+            Empty);
+          (if generator then
             Atom "*"
           else
-            Empty );
+            Empty);
           s_key;
         ]
     in
@@ -2677,11 +2677,11 @@ and jsx_opening_helper ~opts loc nameOpt attributes =
           (match nameOpt with
           | Some name -> jsx_element_name name
           | None -> Empty);
-          ( if attributes <> [] then
+          (if attributes <> [] then
             Layout.Indent
               (fuse [line; join pretty_line (Base.List.map ~f:(jsx_opening_attr ~opts) attributes)])
           else
-            Empty );
+            Empty);
           Atom ">";
         ] )
 
@@ -2693,10 +2693,10 @@ and jsx_self_closing ~opts (loc, { Ast.JSX.Opening.name; attributes; self_closin
         [
           Atom "<";
           jsx_element_name name;
-          ( if attributes <> [] then
+          (if attributes <> [] then
             fuse [Layout.Indent (fuse [line; join pretty_line attributes]); pretty_line]
           else
-            pretty_space );
+            pretty_space);
           Atom "/>";
         ] )
 
@@ -3158,10 +3158,10 @@ and type_alias ~opts ~declare loc { Ast.Statement.TypeAlias.id; tparams; right; 
   @@ with_semicolon
        (fuse
           [
-            ( if declare then
+            (if declare then
               fuse [Atom "declare"; space]
             else
-              Empty );
+              Empty);
             Atom "type";
             space;
             identifier id;
@@ -3177,23 +3177,23 @@ and opaque_type
   layout_node_with_comments_opt loc comments
   @@ with_semicolon
        (fuse
-          ( [
-              ( if declare then
-                fuse [Atom "declare"; space]
-              else
-                Empty );
-              Atom "opaque type";
-              space;
-              identifier id;
-              option (type_parameter ~opts) tparams;
-            ]
+          ([
+             (if declare then
+               fuse [Atom "declare"; space]
+             else
+               Empty);
+             Atom "opaque type";
+             space;
+             identifier id;
+             option (type_parameter ~opts) tparams;
+           ]
           @ (match supertype with
             | Some t -> [Atom ":"; pretty_space; type_ ~opts t]
             | None -> [])
           @
           match impltype with
           | Some impltype -> [pretty_space; Atom "="; pretty_space; type_ ~opts impltype]
-          | None -> [] ))
+          | None -> []))
 
 and type_annotation ?(parens = false) ~opts (loc, t) =
   source_location_with_comments
@@ -3202,10 +3202,10 @@ and type_annotation ?(parens = false) ~opts (loc, t) =
         [
           Atom ":";
           pretty_space;
-          ( if parens then
+          (if parens then
             wrap_in_parens (type_ ~opts t)
           else
-            type_ ~opts t );
+            type_ ~opts t);
         ] )
 
 and type_predicate ~opts (loc, { Ast.Type.Predicate.kind; comments }) =
@@ -3244,10 +3244,10 @@ and type_union_or_intersection ~opts ~sep loc ts comments =
          let sep = fuse [sep; type_separator] in
          fuse
            [
-             ( if i = 0 then
+             (if i = 0 then
                IfBreak (sep, Empty)
              else
-               sep );
+               sep);
              type_with_parens ~opts t;
            ])
        ts)
@@ -3263,10 +3263,10 @@ and type_function_param ~opts (loc, { Ast.Type.Function.Param.name; annot; optio
               fuse
                 [
                   identifier id;
-                  ( if optional then
+                  (if optional then
                     Atom "?"
                   else
-                    Empty );
+                    Empty);
                   Atom ":";
                   pretty_space;
                 ]
@@ -3370,10 +3370,10 @@ and type_object_property ~opts =
               s_proto;
               option variance variance_;
               object_property_key ~opts key;
-              ( if optional then
+              (if optional then
                 Atom "?"
               else
-                Empty );
+                Empty);
               Atom ":";
               pretty_space;
               type_ ~opts t;
@@ -3407,10 +3407,10 @@ and type_object_property ~opts =
       ( loc,
         fuse
           [
-            ( if static then
+            (if static then
               fuse [Atom "static"; space]
             else
-              Empty );
+              Empty);
             option variance variance_;
             Atom "[";
             begin
@@ -3430,10 +3430,10 @@ and type_object_property ~opts =
       ( loc,
         fuse
           [
-            ( if static then
+            (if static then
               fuse [Atom "static"; space]
             else
-              Empty );
+              Empty);
             source_location_with_comments
               (call_loc, type_function ~opts ~sep:(Atom ":") call_loc func);
           ] )
@@ -3443,17 +3443,17 @@ and type_object_property ~opts =
       ( loc,
         fuse
           [
-            ( if static then
+            (if static then
               fuse [Atom "static"; space]
             else
-              Empty );
+              Empty);
             Atom "[[";
             identifier id;
             Atom "]]";
-            ( if optional then
+            (if optional then
               Atom "?"
             else
-              Empty );
+              Empty);
             Atom ":";
             pretty_space;
             type_ ~opts value;
@@ -3844,10 +3844,10 @@ and declare_export_declaration
       [
         Atom "export";
         space;
-        ( if Base.Option.is_some default then
+        (if Base.Option.is_some default then
           fuse [Atom "default"; space]
         else
-          Empty );
+          Empty);
       ]
   in
   match (declaration, specifiers) with

@@ -76,7 +76,8 @@ let main base_flags temp_dir quiet root () =
           done;
           if not quiet then
             prerr_endlinef "Successfully killed server for `%s`" (Path.to_string root)
-        with FailedToKillNicely ->
+        with
+        | FailedToKillNicely ->
           let msg = spf "Failed to kill server nicely for `%s`" root_s in
           Exit.(exit ~msg Kill_error)
       end
@@ -94,7 +95,8 @@ let main base_flags temp_dir quiet root () =
           CommandMeanKill.mean_kill ~flowconfig_name ~tmp_dir root;
           if not quiet then
             prerr_endlinef "Successfully killed server for `%s`" (Path.to_string root)
-        with CommandMeanKill.FailedToKill err ->
+        with
+        | CommandMeanKill.FailedToKill err ->
           if not quiet then (
             match err with
             | Some err -> prerr_endline err

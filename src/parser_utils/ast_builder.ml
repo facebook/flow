@@ -99,10 +99,10 @@ module Literals = struct
     {
       value = Boolean is_true;
       raw =
-        ( if is_true then
+        (if is_true then
           "true"
         else
-          "false" );
+          "false");
       comments;
     }
 end
@@ -253,10 +253,10 @@ module JSXs = struct
     {
       opening_element = (Loc.none, { Opening.name; self_closing; attributes });
       closing_element =
-        ( if self_closing then
+        (if self_closing then
           None
         else
-          Some (Loc.none, { Closing.name }) );
+          Some (Loc.none, { Closing.name }));
       children = (Loc.none, children);
       comments;
     }

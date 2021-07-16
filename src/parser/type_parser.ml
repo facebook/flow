@@ -583,11 +583,11 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     | _ ->
       let id = type_identifier env in
       Type
-        ( generic_type_with_identifier env id
+        (generic_type_with_identifier env id
         |> postfix_with env
         |> anon_function_without_parens_with env
         |> intersection_with env
-        |> union_with env )
+        |> union_with env)
 
   and function_or_group env =
     let start_loc = Peek.loc env in
@@ -714,10 +714,10 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
               {
                 key;
                 value =
-                  ( if is_getter then
+                  (if is_getter then
                     Get value
                   else
-                    Set value );
+                    Set value);
                 optional = false;
                 static = static <> None;
                 proto = false;
@@ -1037,8 +1037,8 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           let leading_key = Peek.comments env in
           (match object_key env with
           | ( _,
-              ( Expression.Object.Property.Identifier
-                  (_, { Identifier.name = ("get" | "set") as name; comments = _ }) as key ) ) ->
+              (Expression.Object.Property.Identifier
+                 (_, { Identifier.name = ("get" | "set") as name; comments = _ }) as key) ) ->
             begin
               match Peek.token env with
               | T_LESS_THAN
@@ -1079,10 +1079,10 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           let leading = Peek.comments env in
           Expect.token
             env
-            ( if exact then
+            (if exact then
               T_LCURLYBAR
             else
-              T_LCURLY );
+              T_LCURLY);
           let (properties, inexact, internal) =
             let env = with_no_anon_function_type false env in
             properties ~is_class ~allow_inexact ~exact ~allow_spread env ([], false, [])
@@ -1090,10 +1090,10 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           let internal = internal @ Peek.comments env in
           Expect.token
             env
-            ( if exact then
+            (if exact then
               T_RCURLYBAR
             else
-              T_RCURLY );
+              T_RCURLY);
           let trailing = Eat.trailing_comments env in
 
           (* inexact = true iff `...` was used to indicate inexactnes *)

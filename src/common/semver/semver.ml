@@ -23,19 +23,20 @@ exception Parse_error of string
 
 let version_of_string str =
   let lexbuf = Lexing.from_string str in
-  try Semver_parser.version Semver_lexer.token lexbuf
-  with Parsing.Parse_error -> raise (Parse_error ("Invalid version number: " ^ str))
+  try Semver_parser.version Semver_lexer.token lexbuf with
+  | Parsing.Parse_error -> raise (Parse_error ("Invalid version number: " ^ str))
 
 let range_of_string str =
   let lexbuf = Lexing.from_string str in
-  try Semver_parser.range Semver_lexer.token lexbuf
-  with Parsing.Parse_error -> raise (Parse_error ("Invalid range: " ^ str))
+  try Semver_parser.range Semver_lexer.token lexbuf with
+  | Parsing.Parse_error -> raise (Parse_error ("Invalid range: " ^ str))
 
 let is_valid_range range =
   try
     let _ = range_of_string range in
     true
-  with Parse_error _ -> false
+  with
+  | Parse_error _ -> false
 
 let satisfies ?include_prereleases (range : string) (version : string) =
   let range = range_of_string range in

@@ -113,13 +113,13 @@ let spec =
       doc = "Apply all known error fixes";
       usage = Printf.sprintf "%s fix [OPTION]... [FILE]\n" CommandUtils.exe_name;
       args =
-        ( ArgSpec.empty
+        (ArgSpec.empty
         |> CommandUtils.codemod_flags
         |> ArgSpec.(
              flag
                "--error-codes"
                (list_of string)
-               ~doc:"Codes of errors to fix. If omitted, all fixable errors will be fixed.") );
+               ~doc:"Codes of errors to fix. If omitted, all fixable errors will be fixed."));
     }
 
 let main (CommandUtils.Codemod_params ({ anon; _ } as codemod_params)) error_codes () =

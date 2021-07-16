@@ -44,13 +44,13 @@ let extract_flowlibs_or_exit options =
       | Files.Prelude path -> Flowlib.Prelude path
       | Files.Flowlib path -> Flowlib.Flowlib path
     in
-    (try Flowlib.extract libdir
-     with e ->
-       let e = Exception.wrap e in
-       let err = Exception.get_ctor_string e in
-       let libdir_str = libdir |> Flowlib.path_of_libdir |> Path.to_string in
-       let msg = Printf.sprintf "Could not extract flowlib files into %s: %s" libdir_str err in
-       Exit.(exit ~msg Could_not_extract_flowlibs))
+    (try Flowlib.extract libdir with
+    | e ->
+      let e = Exception.wrap e in
+      let err = Exception.get_ctor_string e in
+      let libdir_str = libdir |> Flowlib.path_of_libdir |> Path.to_string in
+      let msg = Printf.sprintf "Could not extract flowlib files into %s: %s" libdir_str err in
+      Exit.(exit ~msg Could_not_extract_flowlibs))
   | None -> ()
 
 type 'a unit_result = ('a, ALoc.t * Error_message.internal_error) result

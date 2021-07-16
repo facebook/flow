@@ -56,9 +56,9 @@ let tests =
       assert_output
         ~ctxt
         ~pretty:true
-        ( "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx &&\n"
+        ("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx &&\n"
         ^ "  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx &&\n"
-        ^ "  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" )
+        ^ "  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
         layout );
     ( "and_with_and_rhs" >:: fun ctxt ->
       let layout = Js_layout_generator.expression ~opts (x && y && z) in
@@ -85,9 +85,9 @@ let tests =
       assert_output
         ~ctxt
         ~pretty:true
-        ( "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx &&\n"
+        ("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx &&\n"
         ^ "  (xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx &&\n"
-        ^ "    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)" )
+        ^ "    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)")
         layout );
     ( "or_with_and_lhs" >:: fun ctxt ->
       let layout = Js_layout_generator.expression ~opts ((x && y) || z) in
@@ -114,9 +114,9 @@ let tests =
       assert_output
         ~ctxt
         ~pretty:true
-        ( "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx &&\n"
+        ("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx &&\n"
         ^ "  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ||\n"
-        ^ "  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" )
+        ^ "  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
         layout );
     ( "and_with_or_rhs" >:: fun ctxt ->
       let layout = Js_layout_generator.expression ~opts (x && (y || z)) in
@@ -143,9 +143,9 @@ let tests =
       assert_output
         ~ctxt
         ~pretty:true
-        ( "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx &&\n"
+        ("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx &&\n"
         ^ "  (xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ||\n"
-        ^ "    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)" )
+        ^ "    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)")
         layout );
     ( "or_with_or_lhs" >:: fun ctxt ->
       let layout = Js_layout_generator.expression ~opts ((x || y) || z) in
@@ -172,9 +172,9 @@ let tests =
       assert_output
         ~ctxt
         ~pretty:true
-        ( "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ||\n"
+        ("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ||\n"
         ^ "  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ||\n"
-        ^ "  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" )
+        ^ "  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
         layout );
     ( "or_with_or_rhs" >:: fun ctxt ->
       let layout = Js_layout_generator.expression ~opts (x || y || z) in

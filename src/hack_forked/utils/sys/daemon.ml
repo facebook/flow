@@ -85,8 +85,8 @@ end = struct
     name
 
   let find name =
-    try Obj.obj (Hashtbl.find entry_points name)
-    with Not_found -> Printf.ksprintf failwith "Unknown entry point %S" name
+    try Obj.obj (Hashtbl.find entry_points name) with
+    | Not_found -> Printf.ksprintf failwith "Unknown entry point %S" name
 
   let set_context entry param (ic, oc) =
     let data = (ic, oc, param) in
@@ -122,7 +122,8 @@ end = struct
         Sys_utils.close_in_no_fail "Daemon.get_context" ic;
         Sys.remove file;
         res
-      with exn -> failwith ("Can't find daemon parameters: " ^ Printexc.to_string exn)
+      with
+      | exn -> failwith ("Can't find daemon parameters: " ^ Printexc.to_string exn)
     in
     (entry, param, (Timeout.in_channel_of_descr in_handle, Unix.out_channel_of_descr out_handle))
 
@@ -149,7 +150,8 @@ let exec entry param ic oc =
   try
     f param (ic, oc);
     exit 0
-  with e ->
+  with
+  | e ->
     let e = Exception.wrap e in
     prerr_endline (Exception.to_string e);
     exit 2
@@ -214,10 +216,11 @@ let fork
        if log_stderr <> Unix.stderr && log_stderr <> log_stdout then Unix.close log_stderr;
        f param (child_in, child_out);
        exit 0
-     with e ->
-       let e = Exception.wrap e in
-       prerr_endline (Exception.to_string e);
-       exit 1)
+     with
+    | e ->
+      let e = Exception.wrap e in
+      prerr_endline (Exception.to_string e);
+      exit 1)
   | pid ->
     (* parent *)
     Timeout.close_in child_in;
@@ -239,7 +242,10 @@ let spawn
   Entry.clear_context ();
   Unix.close child_in;
   Unix.close child_out;
-  let close_if_open fd = (try Unix.close fd with Unix.Unix_error (Unix.EBADF, _, _) -> ()) in
+  let close_if_open fd =
+    try Unix.close fd with
+    | Unix.Unix_error (Unix.EBADF, _, _) -> ()
+  in
   if stdin <> Unix.stdin then close_if_open stdin;
   if stdout <> Unix.stdout then close_if_open stdout;
   if stderr <> Unix.stderr && stderr <> stdout then close_if_open stderr;
@@ -270,7 +276,8 @@ let check_entry_point () =
     let (entry, param, (ic, oc)) = Entry.get_context () in
     Entry.clear_context ();
     exec entry param ic oc
-  with Not_found -> ()
+  with
+  | Not_found -> ()
 
 let close { channels = (ic, oc); _ } =
   Timeout.close_in ic;

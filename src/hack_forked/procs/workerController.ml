@@ -200,10 +200,10 @@ let register_entry_point ~restore =
   let name = Printf.sprintf "worker_%d" !entry_counter in
   Daemon.register_entry_point
     name
-    ( if Sys.win32 then
+    (if Sys.win32 then
       win32_worker_main restore
     else
-      unix_worker_main restore )
+      unix_worker_main restore)
 
 (**************************************************************************
  * Creates a pool of workers.
@@ -297,7 +297,8 @@ let send worker worker_pid outfd (f : 'a -> 'b) (x : 'a) : unit Lwt.t =
        the issue seems to have disappeared. *)
     let _ = Marshal_tools.to_fd_with_preamble ~flags:[Caml.Marshal.Closures] outfd request in
     Lwt.return_unit
-  with exn ->
+  with
+  | exn ->
     let exn = Exception.wrap exn in
     Hh_logger.error ~exn "Failed to read response from work #%d" (worker_id worker);
 
