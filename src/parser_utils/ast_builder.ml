@@ -173,6 +173,7 @@ module Functions = struct
   let make
       ~id
       ?params:params_
+      ?tparams
       ?(return = Ast.Type.Missing Loc.none)
       ?(generator = false)
       ?(async = false)
@@ -196,7 +197,7 @@ module Functions = struct
       generator;
       predicate = None;
       return;
-      tparams = None;
+      tparams;
       sig_loc = Loc.none;
       comments = None;
     }

@@ -585,6 +585,70 @@ export default class {
         ]
       in
       assert_refactored ~ctxt expected source (mk_loc (14, 12) (14, 51)) );
+    ( "type_parameters_extract" >:: fun ctxt ->
+      (* Test that all the constraints of generic type parameters are added,
+         and unused ones (A) are removed. *)
+      let source =
+        {multiline|
+        function foo<A, B, C:B=B>(c: C) {
+          function bar<D:C, E:D, F:D=E>(f: F): F {
+            console.log(c); // selected
+            const g = f; // selected
+            return g;
+          }
+        }
+        |multiline}
+      in
+      let expected =
+        [
+          ( "Extract to function in module scope",
+            {multiline|
+function foo<A, B, C: B = B>(c: C) {
+  function bar<D: C, E: D, F: D = E>(f: F): F {
+    const g = newFunction(c, f);
+    return g;
+  }
+}
+function newFunction<B, C: B = B, D: C, E: D, F: D = E>(c: C, f: F): F {
+  console.log(c); // selected
+  const g = f; // selected
+  return g;
+}
+|multiline}
+          );
+          ( "Extract to inner function in function 'bar'",
+            {multiline|
+function foo<A, B, C: B = B>(c: C) {
+  function bar<D: C, E: D, F: D = E>(f: F): F {
+    const g = newFunction();
+    return g;
+    function newFunction(): F {
+      console.log(c); // selected
+      const g = f; // selected
+      return g;
+    }
+  }
+}
+|multiline}
+          );
+          ( "Extract to inner function in function 'foo'",
+            {multiline|
+function foo<A, B, C: B = B>(c: C) {
+  function bar<D: C, E: D, F: D = E>(f: F): F {
+    const g = newFunction(f);
+    return g;
+  }
+  function newFunction<D: C, E: D, F: D = E>(f: F): F {
+    console.log(c); // selected
+    const g = f; // selected
+    return g;
+  }
+}
+|multiline}
+          );
+        ]
+      in
+      assert_refactored ~ctxt expected source (mk_loc (4, 0) (5, 50)) );
     ( "very_nested_extract" >:: fun ctxt ->
       let source =
         {|
