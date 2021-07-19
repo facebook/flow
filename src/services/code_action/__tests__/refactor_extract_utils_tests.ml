@@ -746,8 +746,19 @@ let type_synthesizer_tests =
       ~locs
   in
   let pretty_print_type = function
-    | Some type_ ->
-      type_ |> Js_layout_generator.type_ ~opts:Js_layout_generator.default_opts |> pretty_print
+    | Some (tparams_rev, type_) ->
+      let type_string =
+        type_ |> Js_layout_generator.type_ ~opts:Js_layout_generator.default_opts |> pretty_print
+      in
+      let typeparams_string =
+        match tparams_rev with
+        | [] -> ""
+        | _ ->
+          "<"
+          ^ (tparams_rev |> List.map (fun { Type.name; _ } -> name) |> String.concat ", ")
+          ^ ">: "
+      in
+      typeparams_string ^ type_string
     | None -> "<missing>"
   in
   [
@@ -758,13 +769,19 @@ let type_synthesizer_tests =
         const b = "2";
         class C<T> {}
         const c = new C<number>();
+        function foo<A, B, C:B, D:B=C>(d: D): D {
+          return d;
+        }
         |}
       in
       let loc_of_a = mk_loc (2, 14) (2, 15) in
       let loc_of_b = mk_loc (3, 14) (3, 15) in
       let loc_of_c = mk_loc (5, 14) (5, 15) in
-      let loc_of_missing = mk_loc (6, 14) (6, 15) in
-      let context = create_context source [loc_of_a; loc_of_b; loc_of_c; loc_of_missing] in
+      let loc_of_d = mk_loc (6, 39) (6, 40) in
+      let loc_of_missing = mk_loc (100, 14) (100, 15) in
+      let context =
+        create_context source [loc_of_a; loc_of_b; loc_of_c; loc_of_d; loc_of_missing]
+      in
       let { TypeSynthesizer.type_synthesizer; _ } =
         TypeSynthesizer.create_type_synthesizer_with_import_adder context
       in
@@ -783,6 +800,11 @@ let type_synthesizer_tests =
         ~printer:Base.Fn.id
         "C<number>"
         (loc_of_c |> type_synthesizer |> pretty_print_type);
+      assert_equal
+        ~ctxt
+        ~printer:Base.Fn.id
+        "<D, C, B>: D"
+        (loc_of_d |> type_synthesizer |> pretty_print_type);
       assert_equal
         ~ctxt
         ~printer:Base.Fn.id

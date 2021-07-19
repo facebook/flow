@@ -128,7 +128,7 @@ module TypeSynthesizer : sig
     synthesizer_context
 
   type type_synthesizer_with_import_adder = {
-    type_synthesizer: Loc.t -> (Loc.t, Loc.t) Flow_ast.Type.t option;
+    type_synthesizer: Loc.t -> (Type.typeparam list * (Loc.t, Loc.t) Flow_ast.Type.t) option;
     added_imports: unit -> (string * Autofix_imports.bindings) list;
   }
 

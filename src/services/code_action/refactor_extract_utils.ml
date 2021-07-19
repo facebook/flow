@@ -566,6 +566,45 @@ module TypeSynthesizer = struct
         ident
     end
 
+  class generic_name_collector =
+    object
+      inherit [SSet.t] Type_visitor.t as super
+
+      method! type_ cx pole acc ty =
+        let open Type in
+        match ty with
+        | BoundT (_, name) -> SSet.add name acc
+        | GenericT { id; _ } -> Generic.fold_ids ~f:(fun _ name acc -> SSet.add name acc) ~acc id
+        | _ -> super#type_ cx pole acc ty
+    end
+
+  let keep_used_tparam_rev ~cx ~tparams_rev ~type_ =
+    let generic_name_collector = new generic_name_collector in
+    let collect_used_generic_names t acc = generic_name_collector#type_ cx Polarity.Neutral acc t in
+    let appeared_generic_names = collect_used_generic_names type_ SSet.empty in
+    (* It's not enough to only collect used generic names from the type, but also the generic
+       parameters themselves, since constraints on generic parameter may cause them to refer
+       to each other. e.g. <A, B: A, C: A = B>.
+
+       The following fold starts from the end and folds to the first, adding in names
+       used in the constraints along the way. *)
+    tparams_rev
+    |> List.fold_left
+         (fun (tparams, appeared_generic_names) ({ Type.name; bound; default; _ } as tparam) ->
+           if SSet.mem name appeared_generic_names then
+             let appeared_generic_names = collect_used_generic_names bound appeared_generic_names in
+             let appeared_generic_names =
+               match default with
+               | None -> appeared_generic_names
+               | Some default -> collect_used_generic_names default appeared_generic_names
+             in
+             (tparam :: tparams, appeared_generic_names)
+           else
+             (tparams, appeared_generic_names))
+         ([], appeared_generic_names)
+    |> fst
+    |> List.rev
+
   let create_synthesizer_context ~full_cx ~file ~file_sig ~typed_ast ~reader ~locs =
     let collector = new type_collector reader locs in
     ignore (collector#program typed_ast);
@@ -573,7 +612,7 @@ module TypeSynthesizer = struct
     { full_cx; file; file_sig; typed_ast; type_at_loc_map }
 
   type type_synthesizer_with_import_adder = {
-    type_synthesizer: Loc.t -> (Loc.t, Loc.t) Flow_ast.Type.t option;
+    type_synthesizer: Loc.t -> (Type.typeparam list * (Loc.t, Loc.t) Flow_ast.Type.t) option;
     added_imports: unit -> (string * Autofix_imports.bindings) list;
   }
 
@@ -588,8 +627,8 @@ module TypeSynthesizer = struct
     let type_synthesizer loc =
       match LocMap.find_opt loc type_at_loc_map with
       | None -> None
-      | Some type_scheme ->
-        let (_, type_) =
+      | Some ({ Type.TypeScheme.tparams_rev; type_ } as type_scheme) ->
+        let (_, ast_type) =
           Insert_type.synth_type
             ~full_cx
             ~file_sig
@@ -601,7 +640,7 @@ module TypeSynthesizer = struct
             loc
             type_scheme
         in
-        Some type_
+        Some (keep_used_tparam_rev ~cx:full_cx ~tparams_rev ~type_, ast_type)
     in
     { type_synthesizer; added_imports = (fun () -> remote_converter#to_import_bindings) }
 end

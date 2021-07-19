@@ -29,7 +29,7 @@ let create_extracted_function
            let annot =
              match type_synthesizer loc with
              | None -> Flow_ast.Type.Missing Loc.none
-             | Some type_ -> Flow_ast.Type.Available (Loc.none, type_)
+             | Some (_, type_) -> Flow_ast.Type.Available (Loc.none, type_)
            in
            Patterns.identifier ~annot v |> Functions.param)
     |> Functions.params
@@ -37,7 +37,11 @@ let create_extracted_function
   let returned_variables =
     List.map
       (fun (v, loc) ->
-        (v, loc |> type_synthesizer |> Option.value ~default:(Loc.none, Flow_ast.Type.Any None)))
+        ( v,
+          loc
+          |> type_synthesizer
+          |> Option.value ~default:([], (Loc.none, Flow_ast.Type.Any None))
+          |> snd ))
       (escaping_definitions.VariableAnalysis.escaping_variables
       @ vars_with_shadowed_local_reassignments)
   in
