@@ -133,6 +133,39 @@ function test() {
         ]
       in
       assert_refactored ~ctxt expected source (mk_loc (4, 10) (7, 20)) );
+    ( "extract_use_toplevel_function_param" >:: fun ctxt ->
+      let source =
+        {|
+        function foo(a: number) {
+          console.log(a);
+        }
+        |}
+      in
+      let expected =
+        [
+          ( "Extract to function in module scope",
+            {|
+function foo(a: number) {
+  newFunction(a);
+}
+function newFunction(a: number): void {
+  console.log(a);
+}
+            |}
+          );
+          ( "Extract to inner function in function 'foo'",
+            {|
+function foo(a: number) {
+  newFunction();
+  function newFunction(): void {
+    console.log(a);
+  }
+}
+            |}
+          );
+        ]
+      in
+      assert_refactored ~ctxt expected source (mk_loc (3, 0) (3, 30)) );
     ( "single_escaping_def_extract" >:: fun ctxt ->
       let source = {|
         const a = 3;

@@ -501,6 +501,20 @@ let undefined_variables_after_extraction_tests =
     assert_equal ~ctxt ~printer:(String.concat ", ") expected actual
   in
   [
+    ( "toplevel_only_extract" >:: fun ctxt ->
+      let source =
+        {|
+        const a = 3;
+        let b = a;
+        console.log(b + c); // selected
+      |}
+      in
+      assert_undefined_variables
+        ~ctxt
+        ~expected:[]
+        ~source
+        ~new_function_target_scope_loc:None
+        ~extracted_statements_loc:(mk_loc (4, 2) (4, 28)) );
     ( "basic_function_extract_to_toplevel" >:: fun ctxt ->
       let source =
         {|
@@ -516,8 +530,22 @@ let undefined_variables_after_extraction_tests =
         ~ctxt
         ~expected:["c"]
         ~source
-        ~new_function_target_scope_loc:(mk_loc (2, 8) (7, 9))
+        ~new_function_target_scope_loc:None
         ~extracted_statements_loc:(mk_loc (6, 10) (6, 29)) );
+    ( "extract_use_of_toplevel_function_parameter_to_toplevel" >:: fun ctxt ->
+      let source =
+        {|
+        function test(a: number) {
+          console.log(a);
+        }
+      |}
+      in
+      assert_undefined_variables
+        ~ctxt
+        ~expected:["a"]
+        ~source
+        ~new_function_target_scope_loc:None
+        ~extracted_statements_loc:(mk_loc (3, 10) (3, 25)) );
     ( "basic_function_extract_to_function" >:: fun ctxt ->
       let source =
         {|
@@ -533,7 +561,7 @@ let undefined_variables_after_extraction_tests =
         ~ctxt
         ~expected:[]
         ~source
-        ~new_function_target_scope_loc:(mk_loc (4, 24) (7, 9))
+        ~new_function_target_scope_loc:(Some (mk_loc (4, 24) (7, 9)))
         ~extracted_statements_loc:(mk_loc (6, 10) (6, 29)) );
     ( "deeply_nested_extract_to_inner_function" >:: fun ctxt ->
       let source =
@@ -560,7 +588,7 @@ let undefined_variables_after_extraction_tests =
         ~ctxt
         ~expected:["f"; "level3"]
         ~source
-        ~new_function_target_scope_loc:(mk_loc (6, 28) (14, 11))
+        ~new_function_target_scope_loc:(Some (mk_loc (6, 28) (14, 11)))
         ~extracted_statements_loc:(mk_loc (11, 16) (11, 63)) );
   ]
 

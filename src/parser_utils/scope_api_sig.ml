@@ -49,6 +49,8 @@ module type S = sig
 
   val debug_info : info -> string
 
+  val toplevel_scopes : scope list
+
   val scope : info -> scope -> Scope.t
 
   (* `scope_within info scope_id scope` returns whether `scope` is nested within `scope_id`. *)

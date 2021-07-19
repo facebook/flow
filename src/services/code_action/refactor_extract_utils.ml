@@ -461,7 +461,9 @@ module VariableAnalysis = struct
       ~new_function_target_scope_loc
       ~extracted_statements_loc =
     let new_function_target_scopes =
-      Scope_api.scope_of_loc scope_info new_function_target_scope_loc
+      match new_function_target_scope_loc with
+      | Some scope_loc -> Scope_api.scope_of_loc scope_info scope_loc
+      | None -> Scope_api.toplevel_scopes
     in
     let to_undefined_variable (def, def_scope) =
       let { Scope_api.Def.locs = (def_loc, _); actual_name; _ } = def in

@@ -95,7 +95,7 @@ module VariableAnalysis : sig
   val undefined_variables_after_extraction :
     scope_info:Scope_api.info ->
     defs_with_scopes_of_local_uses:(Scope_api.Def.t * Scope_api.Scope.t) list ->
-    new_function_target_scope_loc:Loc.t ->
+    new_function_target_scope_loc:Loc.t option ->
     extracted_statements_loc:Loc.t ->
     (string * Loc.t) list
 

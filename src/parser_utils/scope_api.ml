@@ -151,6 +151,8 @@ module Make (L : Loc_sig.S) = struct
 
   let def_is_unused info def = L.LSet.is_empty (uses_of_def info ~exclude_def:true def)
 
+  let toplevel_scopes = [0; 1]
+
   let scope info scope_id =
     try IMap.find scope_id info.scopes with
     | Not_found -> failwith ("Scope " ^ string_of_int scope_id ^ " not found")

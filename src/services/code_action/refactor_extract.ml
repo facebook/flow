@@ -186,10 +186,17 @@ let create_refactor
     ~extracted_statements_loc
     ~target_body_loc =
   let undefined_variables =
+    let new_function_target_scope_loc =
+      if target_body_loc = fst ast then
+        (* Do not pass in target loc if the target is toplevel. *)
+        None
+      else
+        Some target_body_loc
+    in
     VariableAnalysis.undefined_variables_after_extraction
       ~scope_info
       ~defs_with_scopes_of_local_uses
-      ~new_function_target_scope_loc:target_body_loc
+      ~new_function_target_scope_loc
       ~extracted_statements_loc
   in
   let { TypeSynthesizer.type_synthesizer; added_imports } =

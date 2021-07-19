@@ -55,6 +55,19 @@ let mk_scope_builder_uses_of_all_uses_test contents expected_uses ctxt =
     expected_uses
     uses
 
+(* Asserts that scopes classified as toplevel indeed contains all toplevel defs. *)
+let mk_scope_builder_toplevel_scopes_test contents expected_defs_in_toplevel ctxt =
+  let info = Scope_builder.program ~with_types:false (parse contents) in
+  let collect_def_names acc scope_id =
+    let { Scope_api.Scope.defs; _ } = Scope_api.scope info scope_id in
+    defs |> SMap.keys |> List.fold_left (fun acc def -> SSet.add def acc) acc
+  in
+  let actual_defs_in_toplevel =
+    Scope_api.toplevel_scopes |> List.fold_left collect_def_names SSet.empty |> SSet.elements
+  in
+  let printer = String.concat ", " in
+  assert_equal ~ctxt ~printer expected_defs_in_toplevel actual_defs_in_toplevel
+
 let mk_scope_builder_scope_loc_test contents expected_scope_locs ctxt =
   let info = Scope_builder.program ~with_types:true (parse contents) in
   let scope_locs =
@@ -287,4 +300,10 @@ let tests =
                  (3, mk_loc (1, 17) (1, 19));
                ];
          (* block (lexical) *)
+         "toplevel_defs_empty" >:: mk_scope_builder_toplevel_scopes_test "" [];
+         "toplevel_defs_hoisting_only"
+         >:: mk_scope_builder_toplevel_scopes_test "function test(a) {}" ["test"];
+         "toplevel_defs_lexical_only" >:: mk_scope_builder_toplevel_scopes_test "const a = b" ["a"];
+         "toplevel_defs_hoisting_and_lexical"
+         >:: mk_scope_builder_toplevel_scopes_test "const a = b; function test(a) {}" ["a"; "test"];
        ]
