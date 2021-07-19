@@ -3,6 +3,8 @@ site_description: "A Static Type Checker for JavaScript"
 blog_title: "Flow Blog"
 site_license: "Distributed under MIT License"
 site_code_of_conduct: "Code of Conduct"
+site_terms_of_use: "Terms"
+site_privacy_policy: "Privacy"
 site_edit_this_page: "Edit this page"
 
 site_flow_version_stable: "Current Version:"
