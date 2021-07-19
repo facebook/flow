@@ -170,54 +170,99 @@ module InformationCollectors = struct
     }
 end
 
-module LocationCollectors = struct
-  class insertion_function_body_loc_collector extracted_statements_loc =
-    object (_this)
-      inherit [(string * Loc.t) list, Loc.t] Flow_ast_visitor.visitor ~init:[] as super
+module InsertionPointCollectors = struct
+  type function_insertion_point = {
+    function_name: string;
+    body_loc: Loc.t;
+    tparams_rev: Type.typeparam list;
+  }
 
-      method! function_ loc function_declaration =
+  type class_insertion_point = {
+    class_name: string option;
+    body_loc: Loc.t;
+    tparams_rev: Type.typeparam list;
+  }
+
+  let not_this_typeparam { Type.is_this; _ } = not is_this
+
+  class function_insertion_point_collector reader extracted_statements_loc =
+    object (this)
+      inherit Typed_ast_utils.type_parameter_mapper as super
+
+      val mutable acc = []
+
+      method private collect_name_and_loc ~tparams_rev function_name body_loc =
+        acc <-
+          (* Flow models `this` parameter as a generic parameter with bound, so it will appear in
+             the typeparam list. However, that is not necessary for the refactor purpose, since we
+             will never produce `this` annotations. *)
+          { function_name; body_loc; tparams_rev = List.filter not_this_typeparam tparams_rev }
+          :: acc
+
+      method function_inserting_locs_with_typeparams typed_ast =
+        let _ = this#program typed_ast in
+        acc
+
+      method! function_ function_declaration =
         let open Flow_ast in
         match function_declaration with
         | {
          Function.id = Some (_, { Identifier.name; _ });
-         body = Function.BodyBlock (block_loc, _);
+         body = Function.BodyBlock (block_aloc, _);
+         tparams;
          _;
-        }
-          when Loc.contains block_loc extracted_statements_loc ->
-          let () = super#set_acc ((name, block_loc) :: acc) in
-          super#function_ loc function_declaration
-        | _ -> super#function_ loc function_declaration
+        } ->
+          let block_loc = Parsing_heaps.Reader.loc_of_aloc ~reader block_aloc in
+          if Loc.contains block_loc extracted_statements_loc then
+            this#type_params_opt tparams (fun _ ->
+                this#collect_name_and_loc name block_loc |> this#annot_with_tparams);
+          super#function_ function_declaration
+        | _ -> super#function_ function_declaration
     end
 
-  let collect_function_inserting_locs ~ast ~extracted_statements_loc =
-    let collector = new insertion_function_body_loc_collector extracted_statements_loc in
-    collector#eval collector#program ast
+  let collect_function_inserting_points ~typed_ast ~reader ~extracted_statements_loc =
+    let collector = new function_insertion_point_collector reader extracted_statements_loc in
+    collector#function_inserting_locs_with_typeparams typed_ast
 
-  class insertion_class_body_loc_collector extracted_statements_loc =
-    object
-      inherit [(string option * Loc.t) option, Loc.t] Flow_ast_visitor.visitor ~init:None as super
+  class class_insertion_point_collector reader extracted_statements_loc =
+    object (this)
+      inherit Typed_ast_utils.type_parameter_mapper as super
 
-      method! class_ loc class_declaration =
-        if Loc.contains extracted_statements_loc loc then
+      val mutable acc = None
+
+      method private collect_name_and_loc ~tparams_rev class_name body_loc =
+        acc <-
+          Some { class_name; body_loc; tparams_rev = List.filter not_this_typeparam tparams_rev }
+
+      method closest_enclosing_class_scope typed_ast =
+        let _ = this#program typed_ast in
+        acc
+
+      method! class_ class_declaration =
+        let open Flow_ast in
+        let { Class.id; body = (body_aloc, _); tparams; _ } = class_declaration in
+        let body_loc = Parsing_heaps.Reader.loc_of_aloc ~reader body_aloc in
+        if Loc.contains extracted_statements_loc body_loc then
           (* When the class is nested inside the extracted statements, we stop recursing down. *)
           class_declaration
-        else if Loc.contains loc extracted_statements_loc then (
-          let open Flow_ast in
-          let { Class.id; body = (body_loc, _); _ } = class_declaration in
+        else if Loc.contains body_loc extracted_statements_loc then
           let id =
             match id with
             | None -> None
             | Some (_, { Identifier.name; _ }) -> Some name
           in
-          super#set_acc (Some (id, body_loc));
-          super#class_ loc class_declaration
-        ) else
-          super#class_ loc class_declaration
+          let () =
+            this#type_params_opt tparams (fun _ ->
+                this#collect_name_and_loc id body_loc |> this#annot_with_tparams)
+          in
+          super#class_ class_declaration
+        else
+          super#class_ class_declaration
     end
 
-  let find_closest_enclosing_class_scope ~ast ~extracted_statements_loc =
-    let collector = new insertion_class_body_loc_collector extracted_statements_loc in
-    collector#eval collector#program ast
+  let find_closest_enclosing_class ~typed_ast ~reader ~extracted_statements_loc =
+    let collector = new class_insertion_point_collector reader extracted_statements_loc in
+    collector#closest_enclosing_class_scope typed_ast
 end
 
 module RefactorProgramMappers = struct

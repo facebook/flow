@@ -257,6 +257,8 @@ let available_refactors
     ~type_synthesizer_context
     ~async_function
     ~in_class
+    ~typed_ast
+    ~reader
     ~ast
     ~extracted_statements
     ~extracted_statements_loc =
@@ -273,22 +275,28 @@ let available_refactors
       ~extracted_statements_loc
   in
   let extract_to_method_refactors =
-    match LocationCollectors.find_closest_enclosing_class_scope ~ast ~extracted_statements_loc with
+    match
+      InsertionPointCollectors.find_closest_enclosing_class
+        ~typed_ast
+        ~reader
+        ~extracted_statements_loc
+    with
     | None -> []
-    | Some (id, target_body_loc) ->
+    | Some { InsertionPointCollectors.class_name; body_loc = target_body_loc; _ } ->
       let (new_ast, added_imports) = create_refactor ~is_method:true ~target_body_loc in
       let title =
-        match id with
+        match class_name with
         | None -> "Extract to method in anonymous class declaration"
-        | Some id -> Printf.sprintf "Extract to method in class '%s'" id
+        | Some class_name -> Printf.sprintf "Extract to method in class '%s'" class_name
       in
       [{ title; new_ast; added_imports }]
   in
   if in_class then
     extract_to_method_refactors
   else
-    let create_inner_function_refactor (title, target_body_loc) =
-      let title = Printf.sprintf "Extract to inner function in function '%s'" title in
+    let create_inner_function_refactor
+        { InsertionPointCollectors.function_name; body_loc = target_body_loc; _ } =
+      let title = Printf.sprintf "Extract to inner function in function '%s'" function_name in
       let (new_ast, added_imports) = create_refactor ~is_method:false ~target_body_loc in
       { title; new_ast; added_imports }
     in
@@ -301,7 +309,10 @@ let available_refactors
       ::
       List.map
         create_inner_function_refactor
-        (LocationCollectors.collect_function_inserting_locs ~ast ~extracted_statements_loc)
+        (InsertionPointCollectors.collect_function_inserting_points
+           ~typed_ast
+           ~reader
+           ~extracted_statements_loc)
     in
     extract_to_method_refactors @ extract_to_functions_refactors
 
@@ -370,6 +381,8 @@ let provide_available_refactors ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader
           ~type_synthesizer_context
           ~async_function
           ~in_class
+          ~typed_ast
+          ~reader
           ~ast
           ~extracted_statements
           ~extracted_statements_loc)

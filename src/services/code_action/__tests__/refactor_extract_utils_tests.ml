@@ -257,27 +257,76 @@ foo(a + b);
       assert_extracted ~ctxt None source (mk_loc (2, 8) (4, 20)) );
   ]
 
-let find_closest_enclosing_class_scope_tests =
+let collect_function_inserting_points_tests =
+  [
+    ( "basic_test" >:: fun ctxt ->
+      let source =
+        {|
+console.log("0");
+function foo<A>() {
+  function bar<B>() {
+    console.log("2");
+  }
+}
+        |}
+      in
+      let typed_ast = source |> parse |> typed_ast_of_ast in
+      let extracted_statements_loc = mk_loc (5, 4) (5, 21) in
+      let reader = State_reader.create () in
+      let actual =
+        InsertionPointCollectors.collect_function_inserting_points
+          ~typed_ast
+          ~reader
+          ~extracted_statements_loc
+        |> List.map (fun { InsertionPointCollectors.function_name; body_loc; tparams_rev } ->
+               (function_name, body_loc, tparams_rev |> List.map (fun { Type.name; _ } -> name)))
+      in
+      let expected =
+        [("bar", mk_loc (4, 20) (6, 3), ["B"; "A"]); ("foo", mk_loc (3, 18) (7, 1), ["A"])]
+      in
+      let printer result =
+        result
+        |> List.map (fun (id, loc, typeparams) ->
+               Printf.sprintf "%s: %s: <%s>" id (Loc.show loc) (String.concat "," typeparams))
+        |> String.concat ", "
+      in
+      assert_equal ~ctxt ~printer expected actual );
+  ]
+
+let find_closest_enclosing_class_tests =
   let assert_closest_enclosing_class_scope ~ctxt ?expected source extracted_statements_loc =
-    let ast = parse source in
+    let typed_ast = source |> parse |> typed_ast_of_ast in
+    let reader = State_reader.create () in
     let actual =
-      LocationCollectors.find_closest_enclosing_class_scope ~ast ~extracted_statements_loc
+      match
+        InsertionPointCollectors.find_closest_enclosing_class
+          ~typed_ast
+          ~reader
+          ~extracted_statements_loc
+      with
+      | None -> None
+      | Some { InsertionPointCollectors.class_name; body_loc; tparams_rev } ->
+        Some (class_name, body_loc, tparams_rev |> List.map (fun { Type.name; _ } -> name))
     in
     let printer = function
       | None -> "None"
-      | Some (id, loc) ->
-        Printf.sprintf "%s: %s" (Option.value ~default:"anonymous" id) (Loc.show loc)
+      | Some (id, loc, typeparams) ->
+        Printf.sprintf
+          "%s: %s: <%s>"
+          (Option.value ~default:"anonymous" id)
+          (Loc.show loc)
+          (String.concat "," typeparams)
     in
     assert_equal ~ctxt ~printer expected actual
   in
   let source =
     {|
 console.log("0");
-export default class {
+export default class <A> {
   test1() {
     console.log("1");
-    class Level2 {
-      test2() {
+    class Level2<B> {
+      test2(v: B) {
         console.log("2");
       }
     }
@@ -291,13 +340,13 @@ export default class {
     ( "mid_enclosing_class_scope" >:: fun ctxt ->
       assert_closest_enclosing_class_scope
         ~ctxt
-        ~expected:(None, mk_loc (3, 21) (12, 1))
+        ~expected:(None, mk_loc (3, 25) (12, 1), ["A"])
         source
         (mk_loc (5, 4) (10, 5)) );
     ( "inner_most_enclosing_class_scope" >:: fun ctxt ->
       assert_closest_enclosing_class_scope
         ~ctxt
-        ~expected:(Some "Level2", mk_loc (6, 17) (10, 5))
+        ~expected:(Some "Level2", mk_loc (6, 20) (10, 5), ["B"; "A"])
         source
         (mk_loc (8, 8) (8, 25)) );
   ]
@@ -717,7 +766,8 @@ let tests =
   "refactor_extract_utils"
   >::: [
          "extract_statements" >::: extract_statements_tests;
-         "find_closest_enclosing_class_scope" >::: find_closest_enclosing_class_scope_tests;
+         "collect_function_inserting_points" >::: collect_function_inserting_points_tests;
+         "find_closest_enclosing_class" >::: find_closest_enclosing_class_tests;
          "collect_relevant_defs_with_scope" >::: collect_relevant_defs_with_scope_tests;
          "undefined_variables_after_extraction" >::: undefined_variables_after_extraction_tests;
          "escaping_locally_defined_variables" >::: escaping_locally_defined_variables_tests;

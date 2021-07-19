@@ -23,18 +23,34 @@ module InformationCollectors : sig
   val collect_statements_information : (Loc.t, Loc.t) Flow_ast.Statement.t list -> t
 end
 
-module LocationCollectors : sig
+module InsertionPointCollectors : sig
+  type function_insertion_point = {
+    function_name: string;
+    body_loc: Loc.t;
+    tparams_rev: Type.typeparam list;
+  }
+
+  type class_insertion_point = {
+    class_name: string option;
+    body_loc: Loc.t;
+    tparams_rev: Type.typeparam list;
+  }
+
   (* Find locations to insert `newFunction` definitions. *)
-  val collect_function_inserting_locs :
-    ast:(Loc.t, Loc.t) Flow_ast.Program.t -> extracted_statements_loc:Loc.t -> (string * Loc.t) list
+  val collect_function_inserting_points :
+    typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.Program.t ->
+    reader:Parsing_heaps.Reader.reader ->
+    extracted_statements_loc:Loc.t ->
+    function_insertion_point list
 
   (* Find the smallest containing class of the extracted statements.
      This is the only valid extraction location
      if we want to extract to a method and call this.newMethod(); *)
-  val find_closest_enclosing_class_scope :
-    ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
+  val find_closest_enclosing_class :
+    typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.Program.t ->
+    reader:Parsing_heaps.Reader.reader ->
     extracted_statements_loc:Loc.t ->
-    (string option * Loc.t) option
+    class_insertion_point option
 end
 
 module RefactorProgramMappers : sig
