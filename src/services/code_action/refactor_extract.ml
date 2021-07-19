@@ -203,7 +203,7 @@ let create_refactor
       ~new_function_target_scope_loc
       ~extracted_statements_loc
   in
-  let { TypeSynthesizer.type_synthesizer; added_imports } =
+  let { TypeSynthesizer.type_synthesizer; added_imports; _ } =
     TypeSynthesizer.create_type_synthesizer_with_import_adder type_synthesizer_context
   in
   (* Put extracted function to two lines after the end of program to have nice format. *)

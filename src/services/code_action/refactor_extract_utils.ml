@@ -612,6 +612,8 @@ module TypeSynthesizer = struct
     { full_cx; file; file_sig; typed_ast; type_at_loc_map }
 
   type type_synthesizer_with_import_adder = {
+    type_param_synthesizer:
+      Type.typeparam list -> Type.typeparam -> (Loc.t, Loc.t) Flow_ast.Type.TypeParam.t;
     type_synthesizer: Loc.t -> (Type.typeparam list * (Loc.t, Loc.t) Flow_ast.Type.t) option;
     added_imports: unit -> (string * Autofix_imports.bindings) list;
   }
@@ -624,23 +626,46 @@ module TypeSynthesizer = struct
         ~file
         ~reserved_names:SSet.empty
     in
+    let synth_type =
+      Insert_type.synth_type
+        ~full_cx
+        ~file_sig
+        ~typed_ast
+        ~expand_aliases:true
+        ~omit_targ_defaults:false
+        ~ambiguity_strategy:Autofix_options.Generalize
+        ~remote_converter
+    in
+    let type_param_synthesizer tparams_rev { Type.name; bound; polarity; default; _ } =
+      let type_scheme_of_type type_ = { Type.TypeScheme.tparams_rev; type_ } in
+      let bound =
+        match bound |> type_scheme_of_type |> synth_type Loc.none with
+        | (_, (_, Flow_ast.Type.Mixed _)) -> Flow_ast.Type.Missing Loc.none
+        | bound -> Flow_ast.Type.Available bound
+      in
+      let variance =
+        match polarity with
+        | Polarity.Neutral -> None
+        | Polarity.Positive -> Some (Loc.none, Flow_ast.Variance.{ kind = Plus; comments = None })
+        | Polarity.Negative -> Some (Loc.none, Flow_ast.Variance.{ kind = Minus; comments = None })
+      in
+      let default =
+        match default with
+        | None -> None
+        | Some default -> Some (default |> type_scheme_of_type |> synth_type Loc.none |> snd)
+      in
+      Ast_builder.Types.type_param ~bound ~variance ~default name
+    in
     let type_synthesizer loc =
       match LocMap.find_opt loc type_at_loc_map with
       | None -> None
       | Some ({ Type.TypeScheme.tparams_rev; type_ } as type_scheme) ->
-        let (_, ast_type) =
-          Insert_type.synth_type
-            ~full_cx
-            ~file_sig
-            ~typed_ast
-            ~expand_aliases:true
-            ~omit_targ_defaults:false
-            ~ambiguity_strategy:Autofix_options.Generalize
-            ~remote_converter
-            loc
-            type_scheme
-        in
+        let (_, ast_type) = synth_type loc type_scheme in
         Some (keep_used_tparam_rev ~cx:full_cx ~tparams_rev ~type_, ast_type)
     in
-    { type_synthesizer; added_imports = (fun () -> remote_converter#to_import_bindings) }
+    {
+      type_param_synthesizer;
+      type_synthesizer;
+      added_imports = (fun () -> remote_converter#to_import_bindings);
+    }
 end

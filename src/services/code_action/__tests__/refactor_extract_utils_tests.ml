@@ -745,7 +745,7 @@ let type_synthesizer_tests =
       ~reader
       ~locs
   in
-  let pretty_print_type = function
+  let pretty_print_type type_param_synthesizer = function
     | Some (tparams_rev, type_) ->
       let type_string =
         type_ |> Js_layout_generator.type_ ~opts:Js_layout_generator.default_opts |> pretty_print
@@ -754,9 +754,13 @@ let type_synthesizer_tests =
         match tparams_rev with
         | [] -> ""
         | _ ->
-          "<"
-          ^ (tparams_rev |> List.map (fun { Type.name; _ } -> name) |> String.concat ", ")
-          ^ ">: "
+          let pretty_print_typeparam tparam =
+            tparam
+            |> type_param_synthesizer tparams_rev
+            |> Js_layout_generator.type_param ~opts:Js_layout_generator.default_opts
+            |> pretty_print
+          in
+          "<" ^ (tparams_rev |> List.map pretty_print_typeparam |> String.concat ", ") ^ ">: "
       in
       typeparams_string ^ type_string
     | None -> "<missing>"
@@ -782,34 +786,34 @@ let type_synthesizer_tests =
       let context =
         create_context source [loc_of_a; loc_of_b; loc_of_c; loc_of_d; loc_of_missing]
       in
-      let { TypeSynthesizer.type_synthesizer; _ } =
+      let { TypeSynthesizer.type_param_synthesizer; type_synthesizer; _ } =
         TypeSynthesizer.create_type_synthesizer_with_import_adder context
       in
       assert_equal
         ~ctxt
         ~printer:Base.Fn.id
         "number"
-        (loc_of_a |> type_synthesizer |> pretty_print_type);
+        (loc_of_a |> type_synthesizer |> pretty_print_type type_param_synthesizer);
       assert_equal
         ~ctxt
         ~printer:Base.Fn.id
         "string"
-        (loc_of_b |> type_synthesizer |> pretty_print_type);
+        (loc_of_b |> type_synthesizer |> pretty_print_type type_param_synthesizer);
       assert_equal
         ~ctxt
         ~printer:Base.Fn.id
         "C<number>"
-        (loc_of_c |> type_synthesizer |> pretty_print_type);
+        (loc_of_c |> type_synthesizer |> pretty_print_type type_param_synthesizer);
       assert_equal
         ~ctxt
         ~printer:Base.Fn.id
-        "<D, C, B>: D"
-        (loc_of_d |> type_synthesizer |> pretty_print_type);
+        "<D: B = C, C: B, B>: D"
+        (loc_of_d |> type_synthesizer |> pretty_print_type type_param_synthesizer);
       assert_equal
         ~ctxt
         ~printer:Base.Fn.id
         "<missing>"
-        (loc_of_missing |> type_synthesizer |> pretty_print_type) );
+        (loc_of_missing |> type_synthesizer |> pretty_print_type type_param_synthesizer) );
   ]
 
 let tests =
