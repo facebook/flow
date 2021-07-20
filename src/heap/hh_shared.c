@@ -1770,6 +1770,6 @@ CAMLprim value hh_read_string(value addr, value wsize) {
   CAMLparam2(addr, wsize);
   CAMLlocal1(s);
   s = caml_alloc(Long_val(wsize), String_tag);
-  memcpy(String_val(s), Ptr_of_addr(Long_val(addr)), Bsize_wsize(Long_val(wsize)));
+  memcpy((char *)String_val(s), Ptr_of_addr(Long_val(addr)), Bsize_wsize(Long_val(wsize)));
   CAMLreturn(s);
 }

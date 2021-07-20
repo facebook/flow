@@ -35,7 +35,7 @@ matcher_t *matcher_create()
   return m;
 }
 
-match_results_t matcher_find(matcher_t *m, char *query, matcher_options_t options) {
+match_results_t matcher_find(matcher_t *m, const char *query, matcher_options_t options) {
   MatcherBase *obj;
   if (m == NULL) {
   return {
@@ -74,7 +74,7 @@ match_results_t matcher_find(matcher_t *m, char *query, matcher_options_t option
   };
 }
 
-void matcher_add_candidate(matcher_t *m, char *candidate) {
+void matcher_add_candidate(matcher_t *m, const char *candidate) {
   MatcherBase *obj;
   if (m == NULL) {
   return;
@@ -85,7 +85,7 @@ void matcher_add_candidate(matcher_t *m, char *candidate) {
   obj->addCandidate(s);
 }
 
-void matcher_remove_candidate(matcher_t *m, char *candidate) {
+void matcher_remove_candidate(matcher_t *m, const char *candidate) {
   MatcherBase *obj;
   if (m == NULL) {
   return;

@@ -89,7 +89,7 @@ value fuzzy_match(value matcher_val, value query_val, value options) {
   CAMLlocal2 (head, rest);
 
   matcher_t *matcher = Matcher_val(matcher_val);
-  char *query = String_val(query_val);
+  const char *query = String_val(query_val);
   matcher_options_t opts = {
     (bool)Bool_val(Field(options, 0)), // case_sensitive
     (bool)Bool_val(Field(options, 1)), // smart_case
