@@ -83,10 +83,7 @@ module VariableAnalysis : sig
   (* Finding lists of definitions relevant to refactor analysis.
      See the type definition of `relevant_defs` for more information. *)
   val collect_relevant_defs_with_scope :
-    scope_info:Scope_api.info ->
-    ssa_values:Ssa_api.values ->
-    extracted_statements_loc:Loc.t ->
-    relevant_defs
+    scope_info:Scope_api.info -> ssa_values:Ssa_api.values -> extracted_loc:Loc.t -> relevant_defs
 
   (* After moving extracted statements into a function into another scope, some variables might
      become undefined since original definition exists in inner scopes.
@@ -96,7 +93,7 @@ module VariableAnalysis : sig
     scope_info:Scope_api.info ->
     defs_with_scopes_of_local_uses:(Scope_api.Def.t * Scope_api.Scope.t) list ->
     new_function_target_scope_loc:Loc.t option ->
-    extracted_statements_loc:Loc.t ->
+    extracted_loc:Loc.t ->
     (string * Loc.t) list
 
   type escaping_definitions = {

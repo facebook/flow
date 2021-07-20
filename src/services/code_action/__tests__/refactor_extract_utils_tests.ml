@@ -357,15 +357,12 @@ let collect_relevant_defs_with_scope_tests =
       ~expected_defs_of_local_uses
       ~expected_vars_with_shadowed_local_reassignments
       source
-      extracted_statements_loc =
+      extracted_loc =
     let ast = parse source in
     let (scope_info, ssa_values) = Ssa_builder.program_with_scope ast in
     let { VariableAnalysis.defs_with_scopes_of_local_uses; vars_with_shadowed_local_reassignments }
         =
-      VariableAnalysis.collect_relevant_defs_with_scope
-        ~scope_info
-        ~ssa_values
-        ~extracted_statements_loc
+      VariableAnalysis.collect_relevant_defs_with_scope ~scope_info ~ssa_values ~extracted_loc
     in
     let actual_defs_of_local_uses =
       defs_with_scopes_of_local_uses
@@ -479,21 +476,18 @@ let collect_relevant_defs_with_scope_tests =
 
 let undefined_variables_after_extraction_tests =
   let assert_undefined_variables
-      ~ctxt ~expected ~source ~new_function_target_scope_loc ~extracted_statements_loc =
+      ~ctxt ~expected ~source ~new_function_target_scope_loc ~extracted_loc =
     let ast = parse source in
     let (scope_info, ssa_values) = Ssa_builder.program_with_scope ast in
     let { VariableAnalysis.defs_with_scopes_of_local_uses; _ } =
-      VariableAnalysis.collect_relevant_defs_with_scope
-        ~scope_info
-        ~ssa_values
-        ~extracted_statements_loc
+      VariableAnalysis.collect_relevant_defs_with_scope ~scope_info ~ssa_values ~extracted_loc
     in
     let actual =
       VariableAnalysis.undefined_variables_after_extraction
         ~scope_info
         ~defs_with_scopes_of_local_uses
         ~new_function_target_scope_loc
-        ~extracted_statements_loc
+        ~extracted_loc
       |> List.map fst
       |> List.sort String.compare
     in
@@ -514,7 +508,7 @@ let undefined_variables_after_extraction_tests =
         ~expected:[]
         ~source
         ~new_function_target_scope_loc:None
-        ~extracted_statements_loc:(mk_loc (4, 2) (4, 28)) );
+        ~extracted_loc:(mk_loc (4, 2) (4, 28)) );
     ( "basic_function_extract_to_toplevel" >:: fun ctxt ->
       let source =
         {|
@@ -531,7 +525,7 @@ let undefined_variables_after_extraction_tests =
         ~expected:["c"]
         ~source
         ~new_function_target_scope_loc:None
-        ~extracted_statements_loc:(mk_loc (6, 10) (6, 29)) );
+        ~extracted_loc:(mk_loc (6, 10) (6, 29)) );
     ( "extract_use_of_toplevel_function_parameter_to_toplevel" >:: fun ctxt ->
       let source =
         {|
@@ -545,7 +539,7 @@ let undefined_variables_after_extraction_tests =
         ~expected:["a"]
         ~source
         ~new_function_target_scope_loc:None
-        ~extracted_statements_loc:(mk_loc (3, 10) (3, 25)) );
+        ~extracted_loc:(mk_loc (3, 10) (3, 25)) );
     ( "basic_function_extract_to_function" >:: fun ctxt ->
       let source =
         {|
@@ -562,7 +556,7 @@ let undefined_variables_after_extraction_tests =
         ~expected:[]
         ~source
         ~new_function_target_scope_loc:(Some (mk_loc (4, 24) (7, 9)))
-        ~extracted_statements_loc:(mk_loc (6, 10) (6, 29)) );
+        ~extracted_loc:(mk_loc (6, 10) (6, 29)) );
     ( "deeply_nested_extract_to_inner_function" >:: fun ctxt ->
       let source =
         {|
@@ -589,7 +583,7 @@ let undefined_variables_after_extraction_tests =
         ~expected:["f"; "level3"]
         ~source
         ~new_function_target_scope_loc:(Some (mk_loc (6, 28) (14, 11)))
-        ~extracted_statements_loc:(mk_loc (11, 16) (11, 63)) );
+        ~extracted_loc:(mk_loc (11, 16) (11, 63)) );
   ]
 
 let escaping_locally_defined_variables_tests =

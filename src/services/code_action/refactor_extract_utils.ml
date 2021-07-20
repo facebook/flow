@@ -367,14 +367,14 @@ module VariableAnalysis = struct
     vars_with_shadowed_local_reassignments: (string * Loc.t) list;
   }
 
-  let collect_relevant_defs_with_scope ~scope_info ~ssa_values ~extracted_statements_loc =
+  let collect_relevant_defs_with_scope ~scope_info ~ssa_values ~extracted_loc =
     let ( used_defs_within_extracted_statements,
           shadowed_local_reassignments_within_extracted_statements ) =
       IMap.fold
         (fun _ { Scope_api.Scope.locals; _ } acc ->
           LocMap.fold
             (fun use def ((used_def_acc, shadowed_local_reassignment_acc) as acc) ->
-              if Loc.contains extracted_statements_loc use then
+              if Loc.contains extracted_loc use then
                 (Scope_api.DefMap.add def () used_def_acc, shadowed_local_reassignment_acc)
               else
                 (* We do not need to worry about a local reassignment if the variable is only used
@@ -407,7 +407,7 @@ module VariableAnalysis = struct
                    does not change the semantics.
                 *)
                 let def_loc = fst def.Scope_api.Def.locs in
-                if not (Loc.contains extracted_statements_loc def_loc) then
+                if not (Loc.contains extracted_loc def_loc) then
                   let has_local_reassignment =
                     (* Find whether there is a local write within the selected statements,
                        while there is already a def outside of them.
@@ -420,7 +420,7 @@ module VariableAnalysis = struct
                           | Ssa_api.Uninitialized -> false
                           | Ssa_api.Write reason ->
                             let write_loc = Reason.poly_loc_of_reason reason in
-                            Loc.contains extracted_statements_loc write_loc)
+                            Loc.contains extracted_loc write_loc)
                         writes
                   in
                   if has_local_reassignment then
@@ -456,10 +456,7 @@ module VariableAnalysis = struct
     }
 
   let undefined_variables_after_extraction
-      ~scope_info
-      ~defs_with_scopes_of_local_uses
-      ~new_function_target_scope_loc
-      ~extracted_statements_loc =
+      ~scope_info ~defs_with_scopes_of_local_uses ~new_function_target_scope_loc ~extracted_loc =
     let new_function_target_scopes =
       match new_function_target_scope_loc with
       | Some scope_loc -> Scope_api.scope_of_loc scope_info scope_loc
@@ -467,7 +464,7 @@ module VariableAnalysis = struct
     in
     let to_undefined_variable (def, def_scope) =
       let { Scope_api.Def.locs = (def_loc, _); actual_name; _ } = def in
-      if Loc.contains extracted_statements_loc def_loc then
+      if Loc.contains extracted_loc def_loc then
         (* Variables defined inside the extracted statements are locally defined. *)
         None
       else

@@ -237,7 +237,7 @@ let create_refactor
       ~scope_info
       ~defs_with_scopes_of_local_uses
       ~new_function_target_scope_loc
-      ~extracted_statements_loc
+      ~extracted_loc:extracted_statements_loc
   in
   let { TypeSynthesizer.type_param_synthesizer; type_synthesizer; added_imports } =
     TypeSynthesizer.create_type_synthesizer_with_import_adder type_synthesizer_context
@@ -401,7 +401,7 @@ let provide_available_refactors ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader
           VariableAnalysis.collect_relevant_defs_with_scope
             ~scope_info
             ~ssa_values
-            ~extracted_statements_loc
+            ~extracted_loc:extracted_statements_loc
         in
         let escaping_definitions =
           VariableAnalysis.collect_escaping_local_defs
