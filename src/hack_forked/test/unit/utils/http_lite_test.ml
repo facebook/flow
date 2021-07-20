@@ -7,7 +7,7 @@
 
 (* helper *)
 let write (fd : Unix.file_descr) (msg : string) : unit =
-  let _ = Unix.write fd msg 0 (String.length msg) in
+  let _ = Unix.write_substring fd msg 0 (String.length msg) in
   ()
 
 (* helper: read_message only takes a buffered_line_reader, so when we want

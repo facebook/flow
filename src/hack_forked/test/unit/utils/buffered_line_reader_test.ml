@@ -31,16 +31,16 @@ let test_mixed_read () =
     match Unix.fork () with
     | 0 ->
       Unix.close fd_in;
-      let _ = Unix.write fd_out (msg1 ^ "\n") 0 (String.length msg1 + 1) in
-      let _ = Unix.write fd_out (msg2 ^ "\r\n") 0 (String.length msg2 + 2) in
-      let _ = Unix.write fd_out (msg2a ^ "\n") 0 (String.length msg2a + 1) in
-      let _ = Unix.write fd_out (msg3 ^ "\r\n") 0 (String.length msg3 + 2) in
-      let _ = Unix.write fd_out msg4a 0 (String.length msg4a) in
+      let _ = Unix.write_substring fd_out (msg1 ^ "\n") 0 (String.length msg1 + 1) in
+      let _ = Unix.write_substring fd_out (msg2 ^ "\r\n") 0 (String.length msg2 + 2) in
+      let _ = Unix.write_substring fd_out (msg2a ^ "\n") 0 (String.length msg2a + 1) in
+      let _ = Unix.write_substring fd_out (msg3 ^ "\r\n") 0 (String.length msg3 + 2) in
+      let _ = Unix.write_substring fd_out msg4a 0 (String.length msg4a) in
       let _ = Unix.sleepf 0.1 in
-      let _ = Unix.write fd_out msg4b 0 (String.length msg4b) in
-      let _ = Unix.write fd_out msg5 0 (String.length msg5) in
-      let _ = Unix.write fd_out msg6 0 (String.length msg6) in
-      let _ = Unix.write fd_out (msg7 ^ "\n") 0 (String.length msg7 + 1) in
+      let _ = Unix.write_substring fd_out msg4b 0 (String.length msg4b) in
+      let _ = Unix.write_substring fd_out msg5 0 (String.length msg5) in
+      let _ = Unix.write_substring fd_out msg6 0 (String.length msg6) in
+      let _ = Unix.write_substring fd_out (msg7 ^ "\n") 0 (String.length msg7 + 1) in
       Unix.close fd_out;
       exit 0
     | _pid ->
@@ -67,11 +67,11 @@ let str_split str len =
 
 let rec write_string str chunk_size fd =
   if String.length str <= chunk_size then
-    let written = Unix.single_write fd str 0 (String.length str) in
+    let written = Unix.single_write_substring fd str 0 (String.length str) in
     assert (written = String.length str)
   else
     let (hd, tl) = str_split str chunk_size in
-    let written = Unix.write fd hd 0 (String.length hd) in
+    let written = Unix.write_substring fd hd 0 (String.length hd) in
     let () = assert (written = String.length hd) in
     write_string tl chunk_size fd
 

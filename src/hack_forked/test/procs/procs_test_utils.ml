@@ -42,7 +42,7 @@ let run_interrupter limit =
         match x with
         | Some 0 -> Caml.exit 0
         | _ ->
-          let written = Unix.write fd_out "!" 0 1 in
+          let written = Unix.write_substring fd_out "!" 0 1 in
           assert (written = 1);
           aux (Base.Option.map x (fun x -> x - 1))
       in
@@ -55,4 +55,4 @@ let run_interrupter limit =
 let read_exclamation_mark fd =
   let exclamation_mark = Bytes.create 1 in
   let read = Unix.read fd exclamation_mark 0 1 in
-  assert (read = 1 && String.equal exclamation_mark "!")
+  assert (read = 1 && String.equal (Bytes.to_string exclamation_mark) "!")
