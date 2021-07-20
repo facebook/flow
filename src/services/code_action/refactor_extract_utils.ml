@@ -60,7 +60,7 @@ module InformationCollectors = struct
     object (this)
       inherit [Loc.t] Flow_ast_mapper.mapper as super
 
-      val mutable _in_class = false
+      val mutable _has_this_super = false
 
       val mutable _async = false
 
@@ -78,7 +78,7 @@ module InformationCollectors = struct
           _inside_loop <- old_inside_loop;
           statement
 
-      method in_class = _in_class
+      method has_this_super = _has_this_super
 
       method is_async = _async
 
@@ -135,11 +135,11 @@ module InformationCollectors = struct
         super#labeled_statement loc statement
 
       method! this_expression loc this_expr =
-        _in_class <- true;
+        _has_this_super <- true;
         super#this_expression loc this_expr
 
       method! super_expression loc super_expr =
-        _in_class <- true;
+        _has_this_super <- true;
         super#super_expression loc super_expr
 
       method! unary_expression loc unary_expr =
@@ -153,7 +153,7 @@ module InformationCollectors = struct
   type t = {
     has_unwrapped_control_flow: bool;
     async_function: bool;
-    in_class: bool;
+    has_this_super: bool;
   }
 
   let collect_statements_information extracted_statements =
@@ -166,7 +166,7 @@ module InformationCollectors = struct
     {
       has_unwrapped_control_flow = information_collector#has_unwrapped_control_flow;
       async_function = information_collector#is_async;
-      in_class = information_collector#in_class;
+      has_this_super = information_collector#has_this_super;
     }
 end
 

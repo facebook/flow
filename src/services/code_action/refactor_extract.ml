@@ -307,7 +307,7 @@ let available_refactors
     ~vars_with_shadowed_local_reassignments
     ~type_synthesizer_context
     ~async_function
-    ~in_class
+    ~has_this_super
     ~typed_ast
     ~reader
     ~ast
@@ -344,7 +344,7 @@ let available_refactors
       in
       [{ title; new_ast; added_imports }]
   in
-  if in_class then
+  if has_this_super then
     extract_to_method_refactors
   else
     let create_inner_function_refactor
@@ -377,7 +377,7 @@ let provide_available_refactors ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader
   match StatementsExtractor.extract ast extract_range with
   | None -> []
   | Some extracted_statements ->
-    let { InformationCollectors.has_unwrapped_control_flow; async_function; in_class } =
+    let { InformationCollectors.has_unwrapped_control_flow; async_function; has_this_super } =
       InformationCollectors.collect_statements_information extracted_statements
     in
     if has_unwrapped_control_flow then
@@ -437,7 +437,7 @@ let provide_available_refactors ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader
           ~vars_with_shadowed_local_reassignments
           ~type_synthesizer_context
           ~async_function
-          ~in_class
+          ~has_this_super
           ~typed_ast
           ~reader
           ~ast

@@ -17,7 +17,7 @@ module InformationCollectors : sig
   type t = {
     has_unwrapped_control_flow: bool;
     async_function: bool;
-    in_class: bool;
+    has_this_super: bool;
   }
 
   val collect_statements_information : (Loc.t, Loc.t) Flow_ast.Statement.t list -> t
