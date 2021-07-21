@@ -1,3 +1,11 @@
+### 0.156.0
+
+New Features:
+* Cross-module autocompletion and code actions that fix missing import declarations are now enabled by default. This was experimental since `0.143.0`. Can be disabled per project with the `autoimports=false` flowconfig option, or per user with the `flow.suggest.autoImports` LSP configuration.
+
+Library Definitions:
+* Enhance the builtin Node.js module types (thanks @isker).
+
 ### 0.155.1
 
 Fix bug in shared memory garbage collection which caused Flow to crash.
