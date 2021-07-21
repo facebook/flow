@@ -1,3 +1,7 @@
+### 0.155.1
+
+Fix bug in shared memory garbage collection which caused Flow to crash.
+
 ### 0.155.0
 
 Likely to cause new Flow errors:
