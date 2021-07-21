@@ -9,7 +9,7 @@ type position = {
   line: int;
   column: int;
 }
-[@@deriving show]
+[@@deriving (eq,show)]
 
 type t = {
   source: File_key.t option;

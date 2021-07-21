@@ -10,7 +10,7 @@ type position = {
   line: int;
   column: int;
 }
-[@@deriving show]
+[@@deriving (eq,show)]
 
 (* start is inclusive; end is exclusive *)
 (* If you are modifying this record, go look at ALoc.ml and make sure you understand the

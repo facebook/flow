@@ -941,7 +941,7 @@ module Eat = struct
 
   (** [maybe env t] eats the next token and returns [true] if it is [t], else return [false] *)
   let maybe env t =
-    if Peek.token env = t then (
+    if Token.equal (Peek.token env) t then (
       token env;
       true
     ) else
@@ -1047,7 +1047,7 @@ module Expect = struct
     error_unexpected ~expected env
 
   let token env t =
-    if Peek.token env <> t then error env t;
+    if not (Token.equal (Peek.token env) t) then error env t;
     Eat.token env
 
   (** [token_opt env T_FOO] eats a token if it is [T_FOO], and errors without consuming if not.
@@ -1055,7 +1055,7 @@ module Expect = struct
       the parser to not advance, like if you are guaranteed that something else has eaten a
       token. *)
   let token_opt env t =
-    if Peek.token env <> t then
+    if not (Token.equal (Peek.token env) t) then
       error env t
     else
       Eat.token env
