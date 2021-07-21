@@ -110,19 +110,44 @@ type T = Obj?.['prop'];
 Like optional chaining, the resulting types of Optional Indexed Access Types include `void`.
 If you have a long chain of nested optional accesses, you can wrap the entire thing with a `$NonMaybeType<...>` if you don’t want `void` in your resulting type.
 
+Example:
+
+```js
+// @flow
+type TasksContent = ?{
+  tasks?: Array<{
+    items?: {
+      metadata?: {
+        title: string,
+        completed: boolean,
+      },
+    },
+  }>,
+};
+
+type TaskData = TasksContent?.['tasks']?.[number]?.['items']?.['metadata'];
+```
+
 There is one small difference between optional chaining and Optional Indexed Access Types.
 If the object type you access is not nullable, the resulting type in optional chaining will not include `void`.
 With Optional Indexed Access Types, for implementation reasons, the resulting type will always include `void`.
 However, if your object type is not nullable then you don’t need to use an Optional Indexed Access Type, but should just use a regular Indexed Access Type.
 
 
-## Enabling Indexed Access Types <a class="toc" id="toc-enabling-indexed-access-types" href="#toc-enabling-indexed-access-types"></a>
+## Adoption <a class="toc" id="toc-adoption" href="#toc-adoption"></a>
 
 To use Indexed Access Types, you need to upgrade your infrastructure so that it supports the syntax:
 
-- `flow` and `flow-parser`: 0.154
+- `flow` and `flow-parser`: 0.155
 - `prettier`: 2.3.2
-- `@babel/parser`: 7.14
+- `babel`: 7.14
 
-Then, enable Indexed Access Types in your `.flowconfig` by adding `indexed_access=true` in the `[options]` section.
-Indexed Access Types will soon be turned on by default and this option will be removed in a future version of Flow.
+We have created an ESLint rule that warns on `$ElementType` and `$PropertyType` usage and recommends Indexed Access Types instead.
+It includes an auto-fixer that can handle most cases. You can simply enable this rule on your codebase and autofix all existing issues.
+
+Install [`eslint-plugin-fb-flow`](https://www.npmjs.com/package/eslint-plugin-fb-flow), and add `fb-flow` to your ESLint plugin list.
+Then enable the rule in your ESLint config:
+
+```
+'fb-flow/use-indexed-access-type': 1,
+```
