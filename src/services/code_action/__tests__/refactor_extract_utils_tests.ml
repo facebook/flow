@@ -133,11 +133,14 @@ let typed_ast_of_ast ast =
 
 let mk_loc = Loc.mk_loc
 
-let extract_statements_tests =
-  let assert_extracted ~ctxt expected source extract_range =
+let extract_tests =
+  let assert_extracted ~ctxt ?expected_statements ?expected_expression source extract_range =
     let ast = parse source in
+    let { AstExtractor.extracted_statements; extracted_expression } =
+      AstExtractor.extract ast extract_range
+    in
     let extracted_statements_str =
-      match StatementsExtractor.extract ast extract_range with
+      match extracted_statements with
       | None -> None
       | Some extracted_statements ->
         Some
@@ -147,16 +150,27 @@ let extract_statements_tests =
           |> String.concat ""
           |> String.trim)
     in
-    let expected =
-      match expected with
+    let extracted_expression_str =
+      match extracted_expression with
       | None -> None
-      | Some s -> Some (String.trim s)
+      | Some extracted_expression ->
+        Some
+          (extracted_expression
+          |> Js_layout_generator.expression ~opts:Js_layout_generator.default_opts
+          |> pretty_print
+          |> String.trim)
     in
-    let printer = function
-      | None -> "not_allowed"
-      | Some s -> s
-    in
-    assert_equal ~ctxt ~printer expected extracted_statements_str
+    assert_equal
+      ~ctxt
+      ~printer:(Option.value ~default:"statement not allowed")
+      (Base.Option.map ~f:String.trim expected_statements)
+      extracted_statements_str;
+    let trim_expected = Base.Option.map ~f:String.trim in
+    assert_equal
+      ~ctxt
+      ~printer:(Option.value ~default:"expression not allowed")
+      (trim_expected expected_expression)
+      extracted_expression_str
   in
   [
     (* Exactly select the first statement. *)
@@ -168,8 +182,7 @@ let extract_statements_tests =
         console.log("I should not be selected");
       |}
       in
-      let expected = Some "const a = 3;" in
-      assert_extracted ~ctxt expected source (mk_loc (2, 8) (2, 20)) );
+      assert_extracted ~ctxt ~expected_statements:"const a = 3;" source (mk_loc (2, 8) (2, 20)) );
     (* Exactly select the first two statements. *)
     ( "extract_statements_linear_exact_multiple_statements" >:: fun ctxt ->
       let source =
@@ -179,11 +192,11 @@ let extract_statements_tests =
         console.log("I should not be selected");
       |}
       in
-      let expected = Some {|
+      let expected_statements = {|
 const a = 3;
 let b = 4;
       |} in
-      assert_extracted ~ctxt expected source (mk_loc (2, 8) (3, 18)) );
+      assert_extracted ~ctxt ~expected_statements source (mk_loc (2, 8) (3, 18)) );
     (* Exactly select the first two statements, but with some whitespaces. *)
     ( "extract_statements_linear_multiple_statements_with_whitespaces" >:: fun ctxt ->
       let source =
@@ -193,11 +206,11 @@ let b = 4;
         console.log("I should not be selected");
       |}
       in
-      let expected = Some {|
+      let expected_statements = {|
 const a = 3;
 let b = 4;
       |} in
-      assert_extracted ~ctxt expected source (mk_loc (2, 0) (4, 0)) );
+      assert_extracted ~ctxt ~expected_statements source (mk_loc (2, 0) (4, 0)) );
     (* Partially select a statement is not alllowed. *)
     ( "extract_statements_linear_partial" >:: fun ctxt ->
       let source =
@@ -207,7 +220,7 @@ let b = 4;
         console.log("I should not be selected");
       |}
       in
-      assert_extracted ~ctxt None source (mk_loc (2, 10) (3, 18)) );
+      assert_extracted ~ctxt source (mk_loc (2, 10) (3, 18)) );
     (* Exactly select the first 3 statements, where the second one is a nested block. *)
     ( "extract_statements_with_nested" >:: fun ctxt ->
       let source =
@@ -220,14 +233,14 @@ let b = 4;
         console.log("I should not be selected");
       |}
       in
-      let expected = Some {|
+      let expected_statements = {|
 const a = 3;
 {
   let b = 4;
 }
 foo(a + b);
       |} in
-      assert_extracted ~ctxt expected source (mk_loc (2, 8) (6, 19)) );
+      assert_extracted ~ctxt ~expected_statements source (mk_loc (2, 8) (6, 19)) );
     (* Select statements from nested block *)
     ( "extract_statements_from_nested" >:: fun ctxt ->
       let source =
@@ -240,8 +253,7 @@ foo(a + b);
         console.log("I should not be selected");
       |}
       in
-      let expected = Some "let b = 4;" in
-      assert_extracted ~ctxt expected source (mk_loc (4, 0) (4, 20)) );
+      assert_extracted ~ctxt ~expected_statements:"let b = 4;" source (mk_loc (4, 0) (4, 20)) );
     (* Selecting part of the statements from a nested block is not allowed *)
     ( "extract_statements_from_nested_partial" >:: fun ctxt ->
       let source =
@@ -254,7 +266,31 @@ foo(a + b);
         console.log("I should not be selected");
       |}
       in
-      assert_extracted ~ctxt None source (mk_loc (2, 8) (4, 20)) );
+      assert_extracted ~ctxt source (mk_loc (2, 8) (4, 20)) );
+    ( "extract_expression_basic" >:: fun ctxt ->
+      assert_extracted ~ctxt ~expected_expression:"1" "const a = 1" (mk_loc (1, 10) (1, 11)) );
+    (* When statement selection is empty, the chosen expression is good. *)
+    ( "extract_expression_nested" >:: fun ctxt ->
+      assert_extracted ~ctxt ~expected_expression:"1 + 1" "const a = 1 + 1" (mk_loc (1, 10) (1, 15))
+    );
+    (* When the selection is both an expression and a statement *)
+    ( "extract_expression_statement_without_semicolon" >:: fun ctxt ->
+      assert_extracted
+        ~ctxt
+        ~expected_statements:"\"hello\";"
+        ~expected_expression:"\"hello\""
+        "'hello'"
+        (mk_loc (1, 0) (1, 7)) );
+    (* Same as above case, but adding a semicolon makes the selection only statement. *)
+    ( "extract_expression_statement_with_semicolon" >:: fun ctxt ->
+      assert_extracted ~ctxt ~expected_statements:"\"hello\";" "'hello';" (mk_loc (1, 0) (1, 8)) );
+    ( "extract_expression_ban_multiple" >:: fun ctxt ->
+      assert_extracted ~ctxt "const a = 1; const b = 2;" (mk_loc (1, 9) (1, 25)) );
+    (* Selecting `1;`.
+       Although expression is contained, illegal selection of statement invalidates it. *)
+    ( "extract_expression_ban_partial_statement" >:: fun ctxt ->
+      assert_extracted ~ctxt "const a = 1; const b = 2;" (mk_loc (1, 8) (1, 11));
+      assert_extracted ~ctxt "const a = 1; const b = 2;" (mk_loc (1, 10) (1, 16)) );
   ]
 
 let collect_function_inserting_points_tests =
@@ -813,7 +849,7 @@ let type_synthesizer_tests =
 let tests =
   "refactor_extract_utils"
   >::: [
-         "extract_statements" >::: extract_statements_tests;
+         "extract" >::: extract_tests;
          "collect_function_inserting_points" >::: collect_function_inserting_points_tests;
          "find_closest_enclosing_class" >::: find_closest_enclosing_class_tests;
          "collect_relevant_defs_with_scope" >::: collect_relevant_defs_with_scope_tests;

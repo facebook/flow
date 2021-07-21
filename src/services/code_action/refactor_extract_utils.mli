@@ -8,9 +8,13 @@
 module Scope_api = Scope_api.With_Loc
 module Ssa_api = Ssa_api.With_Loc
 
-module StatementsExtractor : sig
-  val extract :
-    (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> (Loc.t, Loc.t) Flow_ast.Statement.t list option
+module AstExtractor : sig
+  type extracted = {
+    extracted_statements: (Loc.t, Loc.t) Flow_ast.Statement.t list option;
+    extracted_expression: (Loc.t, Loc.t) Flow_ast.Expression.t option;
+  }
+
+  val extract : (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> extracted
 end
 
 module InformationCollectors : sig

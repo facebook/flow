@@ -300,7 +300,7 @@ type refactor = {
   added_imports: (string * Autofix_imports.bindings) list;
 }
 
-let available_refactors
+let available_refactors_for_statements
     ~scope_info
     ~defs_with_scopes_of_local_uses
     ~escaping_definitions
@@ -373,73 +373,72 @@ let available_refactors
     in
     extract_to_method_refactors @ extract_to_functions_refactors
 
-let provide_available_refactors ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader ~extract_range =
-  match StatementsExtractor.extract ast extract_range with
-  | None -> []
-  | Some extracted_statements ->
-    let { InformationCollectors.has_unwrapped_control_flow; async_function; has_this_super } =
-      InformationCollectors.collect_statements_information extracted_statements
-    in
-    if has_unwrapped_control_flow then
-      []
-    else
-      let extracted_statements_locations = List.map fst extracted_statements in
-      (match extracted_statements_locations with
-      | [] -> []
-      | insert_new_function_call_loc :: rest_statements_locations ->
-        let rest_statements_loc_union = List.fold_left union_loc None rest_statements_locations in
-        let extracted_statements_loc =
-          match rest_statements_loc_union with
-          | None -> insert_new_function_call_loc
-          | Some loc -> Loc.btwn insert_new_function_call_loc loc
-        in
-        let (scope_info, ssa_values) = Ssa_builder.program_with_scope ast in
-        let {
-          VariableAnalysis.defs_with_scopes_of_local_uses;
-          vars_with_shadowed_local_reassignments;
-        } =
-          VariableAnalysis.collect_relevant_defs_with_scope
-            ~scope_info
-            ~ssa_values
-            ~extracted_loc:extracted_statements_loc
-        in
-        let escaping_definitions =
-          VariableAnalysis.collect_escaping_local_defs
-            ~scope_info
-            ~ssa_values
-            ~extracted_statements_loc
-        in
-        let type_synthesizer_context =
-          let locs =
-            defs_with_scopes_of_local_uses
-            |> List.map (fun ({ Scope_api.Def.locs = (def_loc, _); _ }, _) -> def_loc)
-            |> LocSet.of_list
-          in
-          let locs =
-            List.fold_left
-              (fun acc (_, loc) -> LocSet.add loc acc)
-              locs
-              (vars_with_shadowed_local_reassignments
-              @ escaping_definitions.VariableAnalysis.escaping_variables)
-          in
-          TypeSynthesizer.create_synthesizer_context
-            ~full_cx
-            ~file
-            ~file_sig
-            ~typed_ast
-            ~reader
-            ~locs
-        in
-        available_refactors
+let extract_from_statements_refactors
+    ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader extracted_statements =
+  let { InformationCollectors.has_unwrapped_control_flow; async_function; has_this_super } =
+    InformationCollectors.collect_statements_information extracted_statements
+  in
+  if has_unwrapped_control_flow then
+    []
+  else
+    let extracted_statements_locations = List.map fst extracted_statements in
+    match extracted_statements_locations with
+    | [] -> []
+    | insert_new_function_call_loc :: rest_statements_locations ->
+      let rest_statements_loc_union = List.fold_left union_loc None rest_statements_locations in
+      let extracted_statements_loc =
+        match rest_statements_loc_union with
+        | None -> insert_new_function_call_loc
+        | Some loc -> Loc.btwn insert_new_function_call_loc loc
+      in
+      let (scope_info, ssa_values) = Ssa_builder.program_with_scope ast in
+      let {
+        VariableAnalysis.defs_with_scopes_of_local_uses;
+        vars_with_shadowed_local_reassignments;
+      } =
+        VariableAnalysis.collect_relevant_defs_with_scope
           ~scope_info
-          ~defs_with_scopes_of_local_uses
-          ~escaping_definitions
-          ~vars_with_shadowed_local_reassignments
-          ~type_synthesizer_context
-          ~async_function
-          ~has_this_super
-          ~typed_ast
-          ~reader
-          ~ast
-          ~extracted_statements
-          ~extracted_statements_loc)
+          ~ssa_values
+          ~extracted_loc:extracted_statements_loc
+      in
+      let escaping_definitions =
+        VariableAnalysis.collect_escaping_local_defs
+          ~scope_info
+          ~ssa_values
+          ~extracted_statements_loc
+      in
+      let type_synthesizer_context =
+        let locs =
+          defs_with_scopes_of_local_uses
+          |> List.map (fun ({ Scope_api.Def.locs = (def_loc, _); _ }, _) -> def_loc)
+          |> LocSet.of_list
+        in
+        let locs =
+          List.fold_left
+            (fun acc (_, loc) -> LocSet.add loc acc)
+            locs
+            (vars_with_shadowed_local_reassignments
+            @ escaping_definitions.VariableAnalysis.escaping_variables)
+        in
+        TypeSynthesizer.create_synthesizer_context ~full_cx ~file ~file_sig ~typed_ast ~reader ~locs
+      in
+      available_refactors_for_statements
+        ~scope_info
+        ~defs_with_scopes_of_local_uses
+        ~escaping_definitions
+        ~vars_with_shadowed_local_reassignments
+        ~type_synthesizer_context
+        ~async_function
+        ~has_this_super
+        ~typed_ast
+        ~reader
+        ~ast
+        ~extracted_statements
+        ~extracted_statements_loc
+
+let provide_available_refactors ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader ~extract_range =
+  let { AstExtractor.extracted_statements; _ } = AstExtractor.extract ast extract_range in
+  Base.Option.value_map
+    ~default:[]
+    ~f:(extract_from_statements_refactors ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader)
+    extracted_statements

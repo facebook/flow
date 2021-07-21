@@ -9,13 +9,34 @@ module Scope_api = Scope_api.With_Loc
 module Ssa_api = Ssa_api.With_Loc
 open Loc_collections
 
-module StatementsExtractor = struct
-  (* Collect all statements that are completely within the selection. *)
-  class statements_collector (extract_range : Loc.t) =
+module AstExtractor = struct
+  type extracted = {
+    extracted_statements: (Loc.t, Loc.t) Flow_ast.Statement.t list option;
+    extracted_expression: (Loc.t, Loc.t) Flow_ast.Expression.t option;
+  }
+
+  (* Collect all statements that are completely within the selection.
+     Collect a single expression that is completely within the selection. *)
+  class collector (extract_range : Loc.t) =
     object (this)
       inherit [Loc.t] Flow_ast_mapper.mapper as super
 
+      val mutable collect_statement = true
+
+      val mutable collected_expression = None
+
+      (* `Some collected_statements`
+         `None` when extraction is not allowed based on user selection. *)
       val mutable _collected_statements = Some []
+
+      method extracted =
+        let extracted_statements =
+          match _collected_statements with
+          | None -> None
+          | Some [] -> None
+          | Some collected_statements -> Some (List.rev collected_statements)
+        in
+        { extracted_statements; extracted_expression = collected_expression }
 
       method private collect_statement stmt =
         _collected_statements <-
@@ -23,22 +44,24 @@ module StatementsExtractor = struct
           | None -> None
           | Some acc -> Some (stmt :: acc))
 
-      (* `Some collected_statements`, None` when extraction is not allowed based on user selection. *)
-      method collected_statements () =
-        match _collected_statements with
-        | Some collected_statements -> Some (List.rev collected_statements)
-        | None -> None
-
       method! statement stmt =
-        let (statement_loc, _) = stmt in
+        let (statement_loc, stmt') = stmt in
         if Loc.contains extract_range statement_loc then
           let () = this#collect_statement stmt in
-          (* If the statement is already completely contained in the range, do not recursve deeper
-             to collect more nested ones. *)
+          (* If the statement is already completely contained in the range,
+             do not recursve deeper to collect more nested ones,
+             except for the special case when the statement is an expression statement. *)
+          let () =
+            match stmt' with
+            | Flow_ast.Statement.Expression { Flow_ast.Statement.Expression.expression; _ } ->
+              if fst expression = statement_loc then collected_expression <- Some expression
+            | _ -> ()
+          in
           stmt
         else if Loc.contains statement_loc extract_range then
           (* If the range is completely contained in the statement,
-             we should recursve deeper to find smaller nested statements that are contained in the range. *)
+             we should recursve deeper to find smaller nested statements/expressions that are
+             contained in the range. *)
           super#statement stmt
         else if Loc.intersects extract_range statement_loc then
           (* When there is intersection, it means that the selection is not allowed for extraction. *)
@@ -47,12 +70,27 @@ module StatementsExtractor = struct
         else
           (* If disjoint, the statement and nested ones do not need to be collected. *)
           stmt
+
+      method! expression expr =
+        let (expression_loc, _) = expr in
+        if Loc.equal extract_range expression_loc then
+          (* Only collect expression when the selection is an exact match. *)
+          let () = collected_expression <- Some expr in
+          expr
+        else if Loc.contains expression_loc extract_range then
+          (* If the range is completely contained in the expression,
+             we should recursve deeper to find smaller nested expressions that are contained in the
+             range. *)
+          super#expression expr
+        else
+          (* In all other cases, selection is illegal. *)
+          expr
     end
 
   let extract ast extract_range =
-    let collector = new statements_collector extract_range in
+    let collector = new collector extract_range in
     let _ = collector#program ast in
-    collector#collected_statements ()
+    collector#extracted
 end
 
 module InformationCollectors = struct
