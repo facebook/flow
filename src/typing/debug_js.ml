@@ -1452,8 +1452,6 @@ let dump_error_message =
             "PropertyFunctionCallBeforeEverythingInitialized"
           | ThisBeforeEverythingInitialized -> "ThisBeforeEverythingInitialized")
     | EExperimentalEnums loc -> spf "EExperimentalEnums (%s)" (string_of_aloc loc)
-    | EExperimentalEnumsWithUnknownMembers loc ->
-      spf "EExperimentalEnumsWithUnknownMembers (%s)" (string_of_aloc loc)
     | EIndexedAccessNotEnabled loc -> spf "EIndexedAccessNotEnabled (%s)" (string_of_aloc loc)
     | EIndeterminateModuleType loc -> spf "EIndeterminateModuleType (%s)" (string_of_aloc loc)
     | EBadExportPosition loc -> spf "EBadExportPosition (%s)" (string_of_aloc loc)

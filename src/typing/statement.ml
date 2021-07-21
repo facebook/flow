@@ -2122,29 +2122,22 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
     let t =
       if Context.enable_enums cx then (
         let enum_t = mk_enum cx ~enum_reason:reason enum in
-        if (not @@ Context.enable_enums_with_unknown_members cx) && enum_t.has_unknown_members then (
-          Flow.add_output cx (Error_message.EExperimentalEnumsWithUnknownMembers loc);
-          AnyT.error reason
-        ) else
-          let t = DefT (reason, literal_trust (), EnumObjectT enum_t) in
-          Env.declare_implicit_const Scope.Entry.EnumNameBinding cx (OrdinaryName name) name_loc;
-          let use_op =
-            Op
-              (AssignVar
-                 {
-                   var = Some (mk_reason (RIdentifier (OrdinaryName name)) name_loc);
-                   init = reason;
-                 })
-          in
-          Env.init_implicit_const
-            Scope.Entry.EnumNameBinding
-            cx
-            ~use_op
-            (OrdinaryName name)
-            ~has_anno:false
-            t
-            name_loc;
+        let t = DefT (reason, literal_trust (), EnumObjectT enum_t) in
+        Env.declare_implicit_const Scope.Entry.EnumNameBinding cx (OrdinaryName name) name_loc;
+        let use_op =
+          Op
+            (AssignVar
+               { var = Some (mk_reason (RIdentifier (OrdinaryName name)) name_loc); init = reason })
+        in
+        Env.init_implicit_const
+          Scope.Entry.EnumNameBinding
+          cx
+          ~use_op
+          (OrdinaryName name)
+          ~has_anno:false
           t
+          name_loc;
+        t
       ) else (
         Flow.add_output cx (Error_message.EExperimentalEnums loc);
         AnyT.error reason

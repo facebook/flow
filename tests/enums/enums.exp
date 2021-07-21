@@ -2034,6 +2034,25 @@ References:
          ^^^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------- not-fully-exhaustive.js:42:9
+
+Incomplete exhaustive check: the members `C` and `B` of enum `U` [1] have not been considered in check of `u`. The
+default case [2] does not check for the missing members as the `require-explicit-enum-switch-cases` lint has been
+enabled. [require-explicit-enum-switch-cases]
+
+   not-fully-exhaustive.js:42:9
+   42| switch (u) { // Error
+               ^
+
+References:
+   not-fully-exhaustive.js:31:16
+   31| declare var u: U;
+                      ^ [1]
+   not-fully-exhaustive.js:44:3
+   44|   default: break;
+         ^^^^^^^^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------- refinement.js:15:4
 
 Cannot cast `bVoidable` to `B` because undefined [1] is incompatible with `B` [2]. [incompatible-cast]
@@ -3278,18 +3297,67 @@ References:
            ^ [1]
 
 
-Error --------------------------------------------------------------------------------------- unknown-members-off.js:5:1
+Error ------------------------------------------------------------------------------------------ unknown-members.js:30:9
 
-Flow Enums with unknown members are not enabled in this project. Remove the `...` from your enum declaration.
-[illegal-enum]
+Incomplete exhaustive check: the member `B` of enum `E` [1] has not been considered in check of `x`.
+[invalid-exhaustive-check]
 
-      v-----------------
-   5| enum E {  // Error
-   6|   A,
-   7|   B,
-   8|   ...
-   9| }
-      ^
+   unknown-members.js:30:9
+   30| switch (x)  { // Error
+               ^
+
+References:
+   unknown-members.js:9:10
+    9| const x: E = E.A;
+                ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ unknown-members.js:35:9
+
+Missing `default` case in the check of `x`. `E` [1] has unknown members (specified using `...`) so checking it requires
+the use of a `default` case to cover those members. [invalid-exhaustive-check]
+
+   unknown-members.js:35:9
+   35| switch (x)  { // Error
+               ^
+
+References:
+   unknown-members.js:9:10
+    9| const x: E = E.A;
+                ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ unknown-members.js:38:8
+
+Invalid exhaustive check: case checks for enum member `A` of `E` [1], but member `A` was already checked at case [2].
+[invalid-exhaustive-check]
+
+   unknown-members.js:38:8
+   38|   case E.A: break; // Error
+              ^^^
+
+References:
+   unknown-members.js:9:10
+    9| const x: E = E.A;
+                ^ [1]
+   unknown-members.js:36:8
+   36|   case E.A: break;
+              ^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ unknown-members.js:42:9
+
+Missing `default` case in the check of `x`. `E` [1] has unknown members (specified using `...`) so checking it requires
+the use of a `default` case to cover those members. [invalid-exhaustive-check]
+
+   unknown-members.js:42:9
+   42| switch (x)  { // Error
+               ^
+
+References:
+   unknown-members.js:9:10
+    9| const x: E = E.A;
+                ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- utility-types.js:12:11
@@ -3410,7 +3478,7 @@ References:
 
 
 
-Found 205 errors
+Found 209 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
