@@ -214,9 +214,6 @@ let loc_of_token env lex_token =
   | T_REGEXP (loc, _, _) -> loc
   | _ -> loc_of_lexbuf env env.lex_lb
 
-let get_result_and_clear_state (env, lex_token, lex_loc, lex_comments) =
-  let (env, { lex_errors_acc }) = get_and_clear_state env in
-  (env, { Lex_result.lex_token; lex_loc; lex_errors = List.rev lex_errors_acc; lex_comments })
 
 let lex_error (env : Lex_env.t) loc err : Lex_env.t =
   let lex_errors_acc = (loc, err) :: env.lex_state.lex_errors_acc in
@@ -1792,21 +1789,33 @@ let jsx_child env =
   let raw = Buffer.create 127 in
   let (env, child) = jsx_child env start buf raw env.lex_lb in
   let loc = loc_of_token env child in
-  get_result_and_clear_state (env, child, loc, [])
+  let lex_errors_acc = env.lex_state.lex_errors_acc in 
+  if lex_errors_acc = []  then
+    env, {Lex_result.lex_token = child; lex_loc= loc; lex_comments = []; lex_errors = []}
+  else 
+    {env with lex_state = {lex_errors_acc = []}},   
+    {Lex_result.lex_token = child; lex_loc= loc; lex_comments = []; lex_errors = List.rev lex_errors_acc}
 
 let wrap f =
   let rec helper comments env =
     match f env env.lex_lb with
     | Token (env, t) ->
       let loc = loc_of_token env t in
-      let env = { env with lex_last_loc = loc } in
-      (env, t, loc, List.rev comments)
+      let lex_comments = if comments = [] then [] else List.rev comments in 
+      let lex_token = t in 
+      let lex_errors_acc = env.lex_state.lex_errors_acc in 
+      if lex_errors_acc = [] then 
+        { env with lex_last_loc = loc },
+        {Lex_result.lex_token ; lex_loc = loc;  lex_comments ; lex_errors = []}
+      else
+         {env with lex_last_loc = loc; lex_state = {lex_errors_acc = []}},  
+         {Lex_result.lex_token ; lex_loc = loc;  lex_comments ; lex_errors = List.rev lex_errors_acc}
     | Comment (env, ((loc, _) as comment)) ->
       let env = { env with lex_last_loc = loc } in
       helper (comment :: comments) env
     | Continue env -> helper comments env
   in
-  (fun env -> get_result_and_clear_state (helper [] env))
+  (fun env -> helper [] env)
 
 let regexp = wrap regexp
 

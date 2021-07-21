@@ -48,15 +48,7 @@ let clone env =
   let lex_lb = Sedlexing.lexbuf_clone env.lex_lb in
   { env with lex_lb }
 
-let get_and_clear_state env =
-  let state = env.lex_state in
-  let env =
-    if state != empty_lex_state then
-      { env with lex_state = empty_lex_state }
-    else
-      env
-  in
-  (env, state)
+
 
 let lexbuf env = env.lex_lb
 
