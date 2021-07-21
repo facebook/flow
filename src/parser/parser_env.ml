@@ -355,7 +355,9 @@ let[@inline] lookahead ~i env =
   | _ -> assert false
 
 (* functional operations: *)
-let with_strict in_strict_mode env = { env with in_strict_mode }
+let with_strict in_strict_mode env = 
+  if in_strict_mode = env.in_strict_mode then env 
+  else { env with in_strict_mode }
 
 let with_in_formal_parameters in_formal_parameters env = { env with in_formal_parameters }
 
@@ -373,11 +375,15 @@ let with_no_let no_let env = { env with no_let }
 
 let with_in_loop in_loop env = { env with in_loop }
 
-let with_no_in no_in env = { env with no_in }
+let with_no_in no_in env = 
+  if no_in = env.no_in then env 
+  else { env with no_in }
 
 let with_no_anon_function_type no_anon_function_type env = { env with no_anon_function_type }
 
-let with_no_new no_new env = { env with no_new }
+let with_no_new no_new env = 
+  if no_new = env.no_new then env
+  else { env with no_new }
 
 let with_in_switch in_switch env = { env with in_switch }
 
@@ -609,6 +615,9 @@ module Peek = struct
 
   let ith_comments ~i env =
     let comments = Lex_result.comments (lookahead ~i env) in
+    match comments with 
+    | [] -> []
+    | _ -> 
     List.filter
       (fun ({ Loc.start; _ }, _) -> Loc.pos_cmp !(env.consumed_comments_pos) start <= 0)
       comments
