@@ -210,7 +210,6 @@ and 'loc t' =
   | EMalformedPackageJson of 'loc * string
   | EUninitializedInstanceProperty of 'loc * Lints.property_assignment_kind
   | EExperimentalEnums of 'loc
-  | EExperimentalEnumsWithUnknownMembers of 'loc
   | EIndexedAccessNotEnabled of 'loc
   | EUnsafeGetSet of 'loc
   | EIndeterminateModuleType of 'loc
@@ -809,7 +808,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnsafeGetSet loc -> EUnsafeGetSet (f loc)
   | EUninitializedInstanceProperty (loc, e) -> EUninitializedInstanceProperty (f loc, e)
   | EExperimentalEnums loc -> EExperimentalEnums (f loc)
-  | EExperimentalEnumsWithUnknownMembers loc -> EExperimentalEnumsWithUnknownMembers (f loc)
   | EIndexedAccessNotEnabled loc -> EIndexedAccessNotEnabled (f loc)
   | EIndeterminateModuleType loc -> EIndeterminateModuleType (f loc)
   | EBadExportPosition loc -> EBadExportPosition (f loc)
@@ -1138,7 +1136,6 @@ let util_use_op_of_msg nope util = function
   | EUnsafeGetSet _
   | EUninitializedInstanceProperty _
   | EExperimentalEnums _
-  | EExperimentalEnumsWithUnknownMembers _
   | EIndexedAccessNotEnabled _
   | EIndeterminateModuleType _
   | EBadExportPosition _
@@ -1330,7 +1327,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EExportRenamedDefault { loc; _ }
   | EIndeterminateModuleType loc
   | EExperimentalEnums loc
-  | EExperimentalEnumsWithUnknownMembers loc
   | EIndexedAccessNotEnabled loc
   | EUnsafeGetSet loc
   | EUninitializedInstanceProperty (loc, _)
@@ -1456,7 +1452,6 @@ let kind_of_msg =
     | EUnexpectedTypeof _
     | EUnsafeGetSet _
     | EExperimentalEnums _
-    | EExperimentalEnumsWithUnknownMembers _
     | EIndexedAccessNotEnabled _
     | EIndeterminateModuleType _
     | EUnreachable _
@@ -2466,16 +2461,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text " section of your ";
         code ".flowconfig";
         text ".";
-      ]
-    in
-    Normal { features }
-  | EExperimentalEnumsWithUnknownMembers _ ->
-    let features =
-      [
-        text "Flow Enums with unknown members are not enabled in this project. ";
-        text "Remove the ";
-        code "...";
-        text " from your enum declaration.";
       ]
     in
     Normal { features }
@@ -3764,7 +3749,6 @@ let error_code_of_message err : error_code option =
   | EExpectedNumberLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExpectedStringLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExperimentalEnums _ -> Some IllegalEnum
-  | EExperimentalEnumsWithUnknownMembers _ -> Some IllegalEnum
   | EExponentialSpread _ -> Some ExponentialSpread
   | EExportsAnnot _ -> Some InvalidExportsTypeArg
   | EExportValueAsType (_, _) -> Some ExportValueAsType
