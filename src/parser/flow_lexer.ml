@@ -12,7 +12,8 @@ open Token
 open Lex_env
 
 let lexeme = Sedlexing.Utf8.lexeme
-
+let lexeme_to_buffer = Sedlexing.Utf8.lexeme_to_buffer
+let lexeme_to_buffer2 = Sedlexing.Utf8.lexeme_to_buffer2
 let sub_lexeme = Sedlexing.Utf8.sub_lexeme
 
 let letter = [%sedlex.regexp? 'a' .. 'z' | 'A' .. 'Z' | '$']
@@ -332,7 +333,7 @@ let mk_bignum_singleton kind raw =
 
 let decode_identifier =
   let assert_valid_unicode_in_identifier env loc code =
-    let lexbuf = Sedlexing.from_int_code_point  code in
+    let lexbuf = Sedlexing.from_int_array [|code|] in
     match%sedlex lexbuf with
     | js_id_start -> env
     | js_id_continue -> env
@@ -370,8 +371,7 @@ let decode_identifier =
     (* match multi-char substrings that don't contain the start chars of the above patterns *)
     | Plus (Compl (eof | "\\"))
     | any ->
-      let x = lexeme lexbuf in
-      Buffer.add_string buf x;
+      lexeme_to_buffer lexbuf buf;
       id_char env offset buf lexbuf
     | _ -> failwith "unreachable"
   in
@@ -400,7 +400,7 @@ let rec comment env buf lexbuf =
   match%sedlex lexbuf with
   | line_terminator_sequence ->
     let env = new_line env lexbuf in
-    Buffer.add_string buf (lexeme lexbuf);
+    lexeme_to_buffer lexbuf buf;
     comment env buf lexbuf
   | "*/" ->
     let env =
@@ -421,7 +421,7 @@ let rec comment env buf lexbuf =
   (* match multi-char substrings that don't contain the start chars of the above patterns *)
   | Plus (Compl (line_terminator_sequence_start | '*'))
   | any ->
-    Buffer.add_string buf (lexeme lexbuf);
+    lexeme_to_buffer lexbuf buf;
     comment env buf lexbuf
   | _ ->
     let env = illegal env (loc_of_lexbuf env lexbuf) in
@@ -439,8 +439,7 @@ let rec line_comment env buf lexbuf =
   (* match multi-char substrings that don't contain the start chars of the above patterns *)
   | Plus (Compl (eof | line_terminator_sequence_start))
   | any ->
-    let str = lexeme lexbuf in
-    Buffer.add_string buf str;
+    lexeme_to_buffer lexbuf buf; 
     line_comment env buf lexbuf
   | _ -> failwith "unreachable"
 
@@ -556,9 +555,7 @@ let rec string_quote env q buf raw octal lexbuf =
   (* match multi-char substrings that don't contain the start chars of the above patterns *)
   | Plus (Compl ("'" | '"' | '\\' | '\n' | eof))
   | any ->
-    let x = lexeme lexbuf in
-    Buffer.add_string raw x;
-    Buffer.add_string buf x;
+    lexeme_to_buffer2 lexbuf raw buf; 
     string_quote env q buf raw octal lexbuf
   | _ -> failwith "unreachable"
 
@@ -686,7 +683,7 @@ let token (env : Lex_env.t) lexbuf : result =
     let cooked = Buffer.create 127 in
     let raw = Buffer.create 127 in
     let literal = Buffer.create 127 in
-    Buffer.add_string literal (lexeme lexbuf);
+    lexeme_to_buffer lexbuf literal;
 
     let start = start_pos_of_lexbuf env lexbuf in
     let (env, is_tail) = template_part env cooked raw literal lexbuf in

@@ -1,9 +1,11 @@
 (* The package sedlex is released under the terms of an MIT-like license. *)
 (* See the attached LICENSE file.                                         *)
 (* Copyright 2005, 2013 by Alain Frisch and LexiFi.                       *)
-external (.!()<-) : int array -> int -> int -> unit = "%array_unsafe_set"
-external (.!()) : int array -> int -> int = "%array_unsafe_get"
-external (.![]) : string -> int -> char = "%string_unsafe_get"
+external ( .!()<- ) : int array -> int -> int -> unit = "%array_unsafe_set"
+external ( .!() ) : int array -> int -> int = "%array_unsafe_get"
+external ( .![] ) : string -> int -> char = "%string_unsafe_get"
+external ( .![]<- ) : bytes -> int -> char -> unit = "%bytes_unsafe_set"
+
 exception InvalidCodepoint of int
 
 exception MalFormed
@@ -32,25 +34,25 @@ type lexbuf = {
   mutable marked_bol: int;
   mutable marked_line: int;
   mutable marked_val: int;
-  mutable finished: bool;
 }
 
-let lexbuf_clone (x : lexbuf) : lexbuf = {
-  buf = x.buf ; 
-  len = x.len ; 
-  offset = x.offset ; 
-  pos = x.pos ; 
-  curr_bol = x.curr_bol ;
-  curr_line = x.curr_line ;
-  start_pos = x.start_pos ; 
-  start_bol = x.start_bol ;
-  start_line = x.start_line;
-  marked_pos = x.marked_pos;
-  marked_bol = x.marked_bol;
-  marked_line = x.marked_line;
-  marked_val = x.marked_val;
-  finished = x.finished;
-}
+let lexbuf_clone (x : lexbuf) : lexbuf =
+  {
+    buf = x.buf;
+    len = x.len;
+    offset = x.offset;
+    pos = x.pos;
+    curr_bol = x.curr_bol;
+    curr_line = x.curr_line;
+    start_pos = x.start_pos;
+    start_bol = x.start_bol;
+    start_line = x.start_line;
+    marked_pos = x.marked_pos;
+    marked_bol = x.marked_bol;
+    marked_line = x.marked_line;
+    marked_val = x.marked_val;
+  }
+
 let empty_lexbuf =
   {
     buf = [||];
@@ -66,24 +68,22 @@ let empty_lexbuf =
     marked_bol = 0;
     marked_line = 0;
     marked_val = 0;
-    finished = false;
   }
-
 
 let from_int_array a =
   let len = Array.length a in
-  { empty_lexbuf with buf = a; len; finished = true }
+  { empty_lexbuf with buf = a; len }
 
-let from_int_code_point a =
-  let len = 1 in
-  { empty_lexbuf with buf = [| a |]; len; finished = true }
-
+let from_int_sub_array a len =    
+  { empty_lexbuf with buf = a; len }
+  
 let new_line lexbuf =
   if lexbuf.curr_line != 0 then lexbuf.curr_line <- lexbuf.curr_line + 1;
   lexbuf.curr_bol <- lexbuf.pos + lexbuf.offset
 
+
 let next lexbuf : Stdlib.Uchar.t option =
-  if lexbuf.finished && lexbuf.pos = lexbuf.len then
+  if lexbuf.pos = lexbuf.len then
     None
   else
     let ret = lexbuf.buf.!(lexbuf.pos) in
@@ -126,99 +126,125 @@ let sub_lexeme lexbuf pos len = Array.sub lexbuf.buf (lexbuf.start_pos + pos) le
 
 let lexeme lexbuf = Array.sub lexbuf.buf lexbuf.start_pos (lexbuf.pos - lexbuf.start_pos)
 
-(* let lexeme_char lexbuf pos = lexbuf.buf.(lexbuf.start_pos + pos) *)
-
-module Utf8 = struct
-  module Helper = struct
-    (* http://www.faqs.org/rfcs/rfc3629.html *)
-
-    let width = Array.make 256 (-1)
-
-    let () =
-      for i = 0 to 127 do
-        width.!(i) <- 1
-      done;
-      for i = 192 to 223 do
-        width.!(i) <- 2
-      done;
-      for i = 224 to 239 do
-        width.!(i) <- 3
-      done;
-      for i = 240 to 247 do
-        width.!(i) <- 4
-      done
-
-    let next s i =
-      match s.[i] with
-      | '\000' .. '\127' as c -> Char.code c
-      | '\192' .. '\223' as c ->
-        let n1 = Char.code c in
-        let n2 = Char.code s.![i + 1] in
-        if n2 lsr 6 != 0b10 then raise MalFormed;
-        ((n1 land 0x1f) lsl 6) lor (n2 land 0x3f)
-      | '\224' .. '\239' as c ->
-        let n1 = Char.code c in
-        let n2 = Char.code s.![i + 1] in
-        let n3 = Char.code s.![i + 2] in
-        if n2 lsr 6 != 0b10 || n3 lsr 6 != 0b10 then raise MalFormed;
-        let p = ((n1 land 0x0f) lsl 12) lor ((n2 land 0x3f) lsl 6) lor (n3 land 0x3f) in
-        if p >= 0xd800 && p <= 0xdf00 then raise MalFormed;
-        p
-      | '\240' .. '\247' as c ->
-        let n1 = Char.code c in
-        let n2 = Char.code s.![i + 1] in
-        let n3 = Char.code s.![i + 2] in
-        let n4 = Char.code s.![i + 3] in
-        if n2 lsr 6 != 0b10 || n3 lsr 6 != 0b10 || n4 lsr 6 != 0b10 then raise MalFormed;
+(* Return the length ,
+  assume that the [a] has enough capacity to save the decoded value
+*)
+let unsafe_utf8_of_string (s : string)  slen (a : int array ) : int =  
+  let spos = ref 0 in
+  let apos = ref 0 in
+  while !spos < slen do
+    let spos_code = s.![!spos] in
+    (match spos_code with
+    | '\000' .. '\127' as c ->
+      a.!(!apos) <- Char.code c;
+      incr spos
+    | '\192' .. '\223' as c ->
+      let n1 = Char.code c in
+      let n2 = Char.code s.![!spos + 1] in
+      if n2 lsr 6 != 0b10 then raise MalFormed;
+      a.!(!apos) <- ((n1 land 0x1f) lsl 6) lor (n2 land 0x3f);
+      spos := !spos + 2
+    | '\224' .. '\239' as c ->
+      let n1 = Char.code c in
+      let n2 = Char.code s.![!spos + 1] in
+      let n3 = Char.code s.![!spos + 2] in
+      let p = ((n1 land 0x0f) lsl 12) lor ((n2 land 0x3f) lsl 6) lor (n3 land 0x3f) in
+      if (n2 lsr 6 != 0b10 || n3 lsr 6 != 0b10) || (p >= 0xd800 && p <= 0xdf00) then raise MalFormed;
+      a.!(!apos) <- p;
+      spos := !spos + 3
+    | '\240' .. '\247' as c ->
+      let n1 = Char.code c in
+      let n2 = Char.code s.![!spos + 1] in
+      let n3 = Char.code s.![!spos + 2] in
+      let n4 = Char.code s.![!spos + 3] in
+      if n2 lsr 6 != 0b10 || n3 lsr 6 != 0b10 || n4 lsr 6 != 0b10 then raise MalFormed;
+      a.!(!apos) <-
         ((n1 land 0x07) lsl 18)
         lor ((n2 land 0x3f) lsl 12)
         lor ((n3 land 0x3f) lsl 6)
-        lor (n4 land 0x3f)
-      | _ -> raise MalFormed
+        lor (n4 land 0x3f);
+      spos := !spos + 4
+    | _ -> raise MalFormed);
+    incr apos
+  done;
+  !apos
 
-    let compute_len s pos bytes =
-      let rec aux n i =
-        if i >= pos + bytes then
-          if i = pos + bytes then
-            n
-          else
-            raise MalFormed
-        else
-          let w = width.!(Char.code s.![i]) in
-          if w > 0 then
-            aux (succ n) (i + w)
-          else
-            raise MalFormed
-      in
-      aux 0 pos
+(** Assume [b] has enough capacity 
+    Return the length written into [b]
+*)    
+let unsafe_string_of_utf8 (a : int array) ~offset:(apos : int) ~(len : int) (b : bytes) : int =  
+  let apos = ref apos in
+  let len = ref len in
+  let i = ref 0 in
+  while !len > 0 do
+    let u = a.!(!apos) in
+    if u < 0 then
+      raise MalFormed
+    else if u <= 0x007F then begin
+      b.![!i] <- Char.unsafe_chr u;
+      incr i
+    end else if u <= 0x07FF then (
+      b.![!i] <- Char.unsafe_chr (0xC0 lor (u lsr 6));
+      b.![!i + 1] <- Char.unsafe_chr (0x80 lor (u land 0x3F));
+      i := !i + 2
+    ) else if u <= 0xFFFF then (
+      b.![!i] <- Char.unsafe_chr (0xE0 lor (u lsr 12));
+      b.![!i + 1] <- Char.unsafe_chr (0x80 lor ((u lsr 6) land 0x3F));
+      b.![!i + 2] <- Char.unsafe_chr (0x80 lor (u land 0x3F));
+      i := !i + 3
+    ) else if u <= 0x10FFFF then (
+      b.![!i] <- Char.unsafe_chr (0xF0 lor (u lsr 18));
+      b.![!i + 1] <- Char.unsafe_chr (0x80 lor ((u lsr 12) land 0x3F));
+      b.![!i + 2] <- Char.unsafe_chr (0x80 lor ((u lsr 6) land 0x3F));
+      b.![!i + 3] <- Char.unsafe_chr (0x80 lor (u land 0x3F));
+      i := !i + 4
+    ) else
+      raise MalFormed;
+    incr apos;
+    decr len
+  done;
+  !i
 
-    let rec blit_to_int s spos a apos n =
-      if n > 0 then begin
-        a.!(apos) <- next s spos;
-        blit_to_int s (spos + width.(Char.code s.![spos])) a (succ apos) (pred n)
-      end
+module Utf8 = struct
+  let from_string s = 
+    let slen = String.length s in  
+    let a = Array.make slen 0 in 
+    let len = unsafe_utf8_of_string s slen a in 
+    from_int_sub_array a len
 
-    let to_int_array s pos bytes =
-      let n = compute_len s pos bytes in
-      let a = Array.make n 0 in
-      blit_to_int s pos a 0 n;
-      a
 
-    let from_uchar_array a apos len =
-      let b = Buffer.create (len * 4) in
-      let rec aux apos len =
-        if len > 0 then (
-          Buffer.add_utf_8_uchar b (Stdlib.Uchar.unsafe_of_int a.!(apos));
-          aux (succ apos) (pred len)
-        ) else
-          Buffer.contents b
-      in
-      aux apos len
-  end
+  let sub_lexeme lexbuf pos len : string = 
+    let offset = lexbuf.start_pos + pos in 
+    let b = Bytes.create (len * 4) in 
+    let buf = lexbuf.buf in 
+    assert (offset + len <= Array.length buf); 
+    (*Assertion needed, since we make use of unsafe API below *)
+    let i = unsafe_string_of_utf8 buf ~offset ~len b in 
+    Bytes.sub_string b 0 i
 
-  let from_string s = from_int_array (Helper.to_int_array s 0 (String.length s))
+  let lexeme lexbuf : string = 
+    let offset = lexbuf.start_pos  in 
+    let len = lexbuf.pos - offset in 
+    let b = Bytes.create (len * 4) in             
+    let buf = lexbuf.buf in     
+    let i = unsafe_string_of_utf8 buf ~offset ~len b in 
+    Bytes.sub_string b 0 i
+        
+  let lexeme_to_buffer lexbuf buffer : unit = 
+    let offset = lexbuf.start_pos  in 
+    let len = lexbuf.pos - offset in 
+    let b = Bytes.create (len * 4) in             
+    let buf = lexbuf.buf in     
+    let i = unsafe_string_of_utf8 buf ~offset ~len b in 
+    Buffer.add_subbytes buffer b 0 i 
 
-  let sub_lexeme lexbuf pos len = Helper.from_uchar_array lexbuf.buf (lexbuf.start_pos + pos) len
+  let lexeme_to_buffer2 lexbuf buf1 buf2 : unit = 
+    let offset = lexbuf.start_pos  in 
+    let len = lexbuf.pos - offset in 
+    let b = Bytes.create (len * 4) in             
+    let buf = lexbuf.buf in     
+    let i = unsafe_string_of_utf8 buf ~offset ~len b in 
+    Buffer.add_subbytes buf1 b 0 i ;
+    Buffer.add_subbytes buf2 b 0 i 
 
-  let lexeme lexbuf = sub_lexeme lexbuf 0 (lexbuf.pos - lexbuf.start_pos)
 end
