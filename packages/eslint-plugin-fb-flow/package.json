@@ -1,0 +1,29 @@
+{
+  "name": "eslint-plugin-fb-flow",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "This is a set of ESLint rules created and published by the Flow team. They are in addition to (not a replacement for) the rules of `eslint-plugin-flowtype` created and published by the open-source community.",
+  "keywords": [
+    "eslint",
+    "eslintplugin",
+    "eslint-plugin",
+    "fb-flow",
+    "flow",
+    "flowtype"
+  ],
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "eslint": "^7.30.0",
+    "hermes-eslint": "^0.4.8",
+    "jest": "^27.0.6"
+  },
+  "engines": {
+    "node": "12.x || 14.x || >= 16"
+  },
+  "peerDependencies": {
+    "eslint": ">=6"
+  }
+}
