@@ -5,6 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  *)
 module Sedlexing = Flow_sedlexing
+
+(* bol = Beginning Of Line *)
+type bol = {
+  line: int;
+  offset: int;
+}
+
+type lex_state = { lex_errors_acc: (Loc.t * Parse_error.t) list } [@@ocaml.unboxed]
+
 type t = {
   lex_source: File_key.t option;
   lex_lb: Sedlexing.lexbuf;
@@ -14,14 +23,6 @@ type t = {
   lex_state: lex_state;
   lex_last_loc: Loc.t;
 }
-
-(* bol = Beginning Of Line *)
-and bol = {
-  line: int;
-  offset: int;
-}
-
-and lex_state = { lex_errors_acc: (Loc.t * Parse_error.t) list }
 
 let empty_lex_state = { lex_errors_acc = [] }
 
