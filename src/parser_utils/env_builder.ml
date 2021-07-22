@@ -658,7 +658,7 @@ module Make
 
       (* We often want to merge the refinement scopes and writes of two environments with
        * different strategies, especially in logical refinement scopes. In order to do that, we
-       * need to be able to get the writes in our env without the refinement writes. Then we 
+       * need to be able to get the writes in our env without the refinement writes. Then we
        * can merge the refinements from two environments using either AND or OR, and then we can
        * merge the writes and reapply the merged refinement if the ssa_id in unchanged.
        *
@@ -735,10 +735,18 @@ module Make
         env_state <- { env_state with globals_env = SMap.empty }
 
       method private mk_ssa_env =
-        SMap.map (fun _ ->
+        SMap.map (fun (loc, _) ->
             {
               val_ref = ref (Val.uninitialized ());
-              havoc = Havoc.{ unresolved = Val.mk_unresolved (); locs = [] };
+              havoc =
+                Havoc.
+                  {
+                    unresolved = Val.mk_unresolved ();
+                    locs =
+                      Base.Option.value
+                        ~default:[]
+                        (Provider_api.providers_of_def provider_info loc);
+                  };
             })
 
       method private push_ssa_env bindings =
@@ -847,10 +855,7 @@ module Make
         let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) loc in
         begin
           match SMap.find_opt x env_state.ssa_env with
-          | Some { val_ref; havoc } ->
-            val_ref := Val.one reason;
-            Havoc.(
-              havoc.locs <- Base.Option.value_exn (Provider_api.providers_of_def provider_info loc))
+          | Some { val_ref; _ } -> val_ref := Val.one reason
           | _ -> ()
         end;
         super#identifier ident
@@ -1155,11 +1160,11 @@ module Make
 
             (* Now we push a refinement scope and visit the guard/body. At the end, we completely
              * get rid of refinements introduced by the guard, even if they occur in a PHI node, to
-             * ensure that the refinement does not escape the loop via something like 
+             * ensure that the refinement does not escape the loop via something like
              * control flow. For example:
              * while (x != null) {
              *   if (x == 3) {
-             *     x = 4; 
+             *     x = 4;
              *   }
              * }
              * x; // Don't want x to be a PHI of x != null and x = 4.
@@ -1767,8 +1772,8 @@ module Make
             (* Optional chaining with ==/=== null can be tricky. If the value before ? is
              * null or undefined then the entire chain evaluates to undefined. That leaves us
              * with these cases:
-             * a?.b === null THEN a non-maybe and a.b null ELSE a maybe or a.b non-null 
-             * a?.b == null THEN no refinement ELSE a non maybe and a.b non-null 
+             * a?.b === null THEN a non-maybe and a.b null ELSE a maybe or a.b non-null
+             * a?.b == null THEN no refinement ELSE a non maybe and a.b non-null
              * TODO: figure out how to model the negation of an optional chain refinement without
              * introducing a second mapping for the negation of refinements.
              *)

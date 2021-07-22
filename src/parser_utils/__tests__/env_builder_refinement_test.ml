@@ -376,7 +376,7 @@ let%expect_test "singleton_num_neg" =
 
 let%expect_test "sentinel_lit" =
   print_ssa_test {|let x = undefined;
-(x.foo === 3) && x|}; 
+(x.foo === 3) && x|};
     [%expect {| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 17) to (2, 18) => { {refinement = SentinelR foo; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "sentinel_lit_indexed " =
@@ -398,42 +398,42 @@ let y = undefined;
 
 let%expect_test "optional_chain_lit" =
   print_ssa_test {|let x = undefined;
-(x?.foo === 3) && x|}; 
+(x?.foo === 3) && x|};
     [%expect{| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 18) to (2, 19) => { {refinement = And (SentinelR foo, Not (Maybe)); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "optional_chain_member_base" =
   print_ssa_test {|let x = undefined;
-(x.foo?.bar === 3) && x|}; 
+(x.foo?.bar === 3) && x|};
     [%expect {| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 22) to (2, 23) => { (1, 4) to (1, 5): (`x`) } ] |}]
 
 let%expect_test "optional_chain_with_call" =
   print_ssa_test {|let x = undefined;
-(x?.foo().bar === 3) && x|}; 
+(x?.foo().bar === 3) && x|};
     [%expect {| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 24) to (2, 25) => { {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "optional_multiple_chains" =
   print_ssa_test {|let x = undefined;
-(x?.foo?.bar.baz?.qux === 3) && x|}; 
+(x?.foo?.bar.baz?.qux === 3) && x|};
     [%expect {| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 32) to (2, 33) => { {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "optional_base_call" =
   print_ssa_test {|let x = undefined;
-(x?.().foo?.bar.baz?.qux === 3) && x|}; 
+(x?.().foo?.bar.baz?.qux === 3) && x|};
     [%expect {| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 35) to (2, 36) => { (1, 4) to (1, 5): (`x`) } ] |}]
 
 let%expect_test "sentinel_standalone" =
   print_ssa_test {|let x = undefined;
-x.foo && x|}; 
+x.foo && x|};
     [%expect {| [ (2, 9) to (2, 10) => { {refinement = SentinelR foo; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "optional_chain_standalone" =
   print_ssa_test {|let x = undefined;
-x?.foo && x|}; 
+x?.foo && x|};
     [%expect {| [ (2, 10) to (2, 11) => { {refinement = And (SentinelR foo, Not (Maybe)); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
 let%expect_test "conditional_expression" =
   print_ssa_test {|let x = undefined;
-(x ? x: x) && x|}; 
+(x ? x: x) && x|};
     [%expect {| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 5) to (2, 6) => { {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)} }; (2, 8) to (2, 9) => { {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)} }; (2, 14) to (2, 15) => { (1, 4) to (1, 5): (`x`) } ] |}]
 
 let%expect_test "if_else_statement" =
@@ -450,7 +450,7 @@ let%expect_test "if_no_else_statement" =
   print_ssa_test {|let x = undefined;
 if (x) {
   x;
-} 
+}
 x;|};
     [%expect {| [ (2, 4) to (2, 5) => { (1, 4) to (1, 5): (`x`) }; (3, 2) to (3, 3) => { {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)} }; (5, 0) to (5, 1) => { (1, 4) to (1, 5): (`x`) } ] |}]
 
@@ -458,7 +458,7 @@ let%expect_test "if_no_else_statement_with_assignment" =
   print_ssa_test {|let x = undefined;
 if (x !== null) {
   x = null;
-} 
+}
 x;|};
     [%expect {| [ (2, 4) to (2, 5) => { (1, 4) to (1, 5): (`x`) }; (5, 0) to (5, 1) => { (3, 2) to (3, 3): (`x`), {refinement = Not (Not (Null)); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
 
@@ -514,7 +514,7 @@ if (x) {
   if (x === null) {
     throw 'error';
   }
-  x; 
+  x;
 } else {
   if (x === null) {
     x;
@@ -798,3 +798,20 @@ for (let x = 3; x != null; x++) {
 }
 y;|};
     [%expect {| [ (2, 16) to (2, 17) => { (2, 9) to (2, 10): (`x`) }; (2, 27) to (2, 28) => { {refinement = Not (Maybe); writes = (2, 9) to (2, 10): (`x`)} }; (3, 6) to (3, 7) => { (1, 4) to (1, 5): (`y`) }; (6, 2) to (6, 3) => { {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`y`)} }; (8, 0) to (8, 1) => { (1, 4) to (1, 5): (`y`), {refinement = Maybe; writes = (1, 4) to (1, 5): (`y`)}, {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`y`)} } ] |}]
+
+let%expect_test "no_havoc_before_write_seen" =
+  print_ssa_test {|function f() { return 42 }
+var x: number;
+x;
+x = 42;|};
+  [%expect {|
+    [ (3, 0) to (3, 1) => { (uninitialized) } ] |}]
+
+let%expect_test "havoc_before_write_seen" =
+  print_ssa_test {|function f() { return 42 }
+f();
+var x: number;
+x;
+x = 42;|};
+  [%expect {|
+    [ (2, 0) to (2, 1) => { (1, 9) to (1, 10): (`f`) }; (4, 0) to (4, 1) => { (uninitialized) } ] |}]
