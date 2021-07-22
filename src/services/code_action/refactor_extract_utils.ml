@@ -255,21 +255,33 @@ module InsertionPointCollectors = struct
         let _ = this#program typed_ast in
         acc
 
-      method! function_ function_declaration =
+      method private function_with_name ?name function_declaration =
         let open Flow_ast in
         match function_declaration with
-        | {
-         Function.id = Some (_, { Identifier.name; _ });
-         body = Function.BodyBlock (block_aloc, _);
-         tparams;
-         _;
-        } ->
-          let block_loc = Parsing_heaps.Reader.loc_of_aloc ~reader block_aloc in
-          if Loc.contains block_loc extracted_statements_loc then
-            this#type_params_opt tparams (fun _ ->
-                this#collect_name_and_loc name block_loc |> this#annot_with_tparams);
-          super#function_ function_declaration
-        | _ -> super#function_ function_declaration
+        | { Function.id; body = Function.BodyBlock (block_aloc, _); tparams; _ } ->
+          (match (id, name) with
+          | (None, None) -> ()
+          | (Some (_, { Identifier.name; _ }), _)
+          | (None, Some (_, { Identifier.name; _ })) ->
+            let block_loc = Parsing_heaps.Reader.loc_of_aloc ~reader block_aloc in
+            if Loc.contains block_loc extracted_statements_loc then
+              this#type_params_opt tparams (fun _ ->
+                  this#collect_name_and_loc name block_loc |> this#annot_with_tparams))
+        | _ -> ()
+
+      method! function_ function_declaration =
+        let () = this#function_with_name function_declaration in
+        super#function_ function_declaration
+
+      method! variable_declarator ~kind decl =
+        let open Flow_ast in
+        let (_, { Statement.VariableDeclaration.Declarator.id; init }) = decl in
+        match (id, init) with
+        | ( (_, Pattern.Identifier { Pattern.Identifier.name; _ }),
+            Some (_, (Expression.ArrowFunction f | Expression.Function f)) ) ->
+          let () = this#function_with_name ~name f in
+          super#variable_declarator ~kind decl
+        | _ -> super#variable_declarator ~kind decl
     end
 
   let collect_function_inserting_points ~typed_ast ~reader ~extracted_statements_loc =

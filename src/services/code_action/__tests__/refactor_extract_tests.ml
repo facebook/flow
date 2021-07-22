@@ -315,7 +315,21 @@ async function newFunction(): Promise<void> {
   await b;
   let d = 6;
 }
-      |}
+            |}
+          );
+          ( "Extract to inner function in function 'test'",
+            {|
+const test = (async () => {
+  await newFunction();
+  async function newFunction(): Promise<void> {
+    // selection start
+    const a = 3;
+    let b = 4;
+    await b;
+    let d = 6;
+  }
+});
+            |}
           );
         ]
       in
@@ -346,7 +360,22 @@ async function newFunction(): Promise<void> {
   }
   let d = 6;
 }
-      |}
+            |}
+          );
+          ( "Extract to inner function in function 'test'",
+            {|
+const test = (async () => {
+  await newFunction();
+  async function newFunction(): Promise<void> {
+    // selection start
+    const a = 3;
+    {
+      for await (const b of []) {}
+    }
+    let d = 6;
+  }
+});
+            |}
           );
         ]
       in
