@@ -815,3 +815,9 @@ x;
 x = 42;|};
   [%expect {|
     [ (2, 0) to (2, 1) => { (1, 9) to (1, 10): (`f`) }; (4, 0) to (4, 1) => { (uninitialized) } ] |}]
+
+let%expect_test "dont_havoc_to_uninit_in_function" =
+  print_ssa_test {|function f() { return 42 }
+function g() { return f() }|};
+  [%expect {|
+    [ (2, 22) to (2, 23) => { (1, 9) to (1, 10): (`f`) } ] |}]

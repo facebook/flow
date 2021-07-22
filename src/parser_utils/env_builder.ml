@@ -728,10 +728,7 @@ module Make
         env_state <- { env_state with globals_env = SMap.empty }
 
       method havoc_uninitialized_ssa_env =
-        SMap.iter
-          (fun _x { val_ref; havoc } ->
-            val_ref := Val.merge (Val.uninitialized ()) havoc.Havoc.unresolved)
-          env_state.ssa_env;
+        SMap.iter (fun _x { val_ref; havoc } -> val_ref := havoc.Havoc.unresolved) env_state.ssa_env;
         env_state <- { env_state with globals_env = SMap.empty }
 
       method private mk_ssa_env =
