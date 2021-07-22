@@ -47,34 +47,7 @@ module Let_syntax = struct
 end
 
 module SignatureVerification = struct
-  let supported_error_kind cctx norm_opts ~max_type_size acc loc =
-    let add_ty ty =
-      (* NOTE simplify before validating to avoid flagging spurious empty's,
-       * eg. empty's that will be simplified away as parts of unions.
-       * Do not simplify empties. Ignoring some of the attendant upper bounds
-       * might lead to unsound types.
-       *)
-      let ty = Ty_utils.simplify_type ~merge_kinds:false ty in
-      match Validator.validate_type ~size_limit:max_type_size ty with
-      | (ty, []) -> Ok ty
-      | (ty, errs) ->
-        let errs = List.map (fun e -> Error.Validation_error e) errs in
-        Error (errs, ty)
-    in
-    let type_entry =
-      match Codemod_context.Typed.ty_at_loc norm_opts cctx loc with
-      | Ok (Ty.Type ty) -> add_ty ty
-      | Ok (Ty.Decl (Ty.ClassDecl (s, _))) -> add_ty (Ty.TypeOf (Ty.TSymbol s))
-      | Ok _ ->
-        let ty = Ty.explicit_any in
-        let errors = [Error.Missing_annotation_or_normalizer_error] in
-        Error (errors, ty)
-      | Error _ ->
-        let ty = Ty.explicit_any in
-        let errors = [Error.Missing_annotation_or_normalizer_error] in
-        Error (errors, ty)
-    in
-    LMap.add loc type_entry acc
+  let supported_error_kind = Codemod_annotator.lmap_add_ty
 
   let unsupported_error_kind ~default_any acc loc =
     if default_any then
@@ -228,17 +201,6 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
     val mutable sig_verification_loc_tys = LMap.empty
 
     val mutable total_errors = 0
-
-    method private annotate_expr loc expression ty =
-      let open Ast.Expression in
-      match expression with
-      | (arrow_loc, ArrowFunction _func) ->
-        this#update_acc (fun acc -> Acc.warn acc arrow_loc Warning.Skipping_arrow_function);
-        Ok expression
-      | (expr_loc, _) ->
-        Acc.debug expr_loc (Debug.Add_annotation Debug.Expr);
-        this#annotate_node loc ty (fun annot ->
-            (expr_loc, TypeCast TypeCast.{ expression; annot; comments = None }))
 
     method private annotate_class_prop loc prop ty =
       let open Ast.Class.Property in
@@ -427,26 +389,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       | _ -> this#function_ loc expr
 
     method private post_run () =
-      let not_annotated_locs =
-        LMap.fold
-          (fun loc _ acc ->
-            if LMap.mem loc added_annotations_locmap then
-              (* we added an annot *)
-              acc
-            else if LSet.mem loc wont_annotate_locs then
-              (* we are explicitly avoiding it *)
-              acc
-            else if LSet.mem loc codemod_error_locs then
-              (* codemod error *)
-              acc
-            else
-              loc :: acc)
-          sig_verification_loc_tys
-          []
-      in
-      List.iter
-        (fun loc -> this#update_acc (fun acc -> Acc.warn acc loc Warning.Location_unhandled))
-        not_annotated_locs;
+      this#add_unannotated_loc_warnings sig_verification_loc_tys;
       let stats =
         {
           SignatureVerificationErrorStats.number_of_sig_ver_errors = total_errors;
