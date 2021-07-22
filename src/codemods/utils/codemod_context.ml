@@ -17,6 +17,7 @@ module Typed = struct
     typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t;
     docblock: Docblock.t;
     iteration: int;
+    reader: Abstract_state_reader.t;
   }
 
   type error =

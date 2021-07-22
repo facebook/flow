@@ -76,13 +76,15 @@ end
 (* Used to build out a map of locs to ty results where an error occurs *)
 let lmap_add_ty cctx norm_opts ~max_type_size acc loc =
   let add_ty ty =
+    let reader = cctx.Codemod_context.Typed.reader in
+    let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
     (* NOTE simplify before validating to avoid flagging spurious empty's,
      * eg. empty's that will be simplified away as parts of unions.
      * Do not simplify empties. Ignoring some of the attendant upper bounds
      * might lead to unsound types.
      *)
     let ty = Ty_utils.simplify_type ~merge_kinds:false ty in
-    match Validator.validate_type ~size_limit:max_type_size ty with
+    match Validator.validate_type ~size_limit:max_type_size ~loc_of_aloc ty with
     | (ty, []) -> Ok ty
     | (ty, errs) ->
       let errs = List.map (fun e -> Error.Validation_error e) errs in

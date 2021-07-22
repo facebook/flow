@@ -217,6 +217,7 @@ let check_job ~visit ~iteration ~reader ~options acc roots =
             typed_ast;
             docblock;
             iteration;
+            reader;
           }
         in
         let result = visit ~options ast ccx in
