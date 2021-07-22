@@ -36,6 +36,7 @@ module InsertionPointCollectors : sig
   type function_insertion_point = {
     function_name: string;
     body_loc: Loc.t;
+    is_method: bool;
     tparams_rev: Type.typeparam list;
   }
 
@@ -45,11 +46,18 @@ module InsertionPointCollectors : sig
     tparams_rev: Type.typeparam list;
   }
 
-  (* Find locations to insert `newFunction` definitions. *)
+  (* Find locations to insert `newFunction` definitions, excluding methods. *)
   val collect_function_inserting_points :
     typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.Program.t ->
     reader:Parsing_heaps.Reader.reader ->
     extracted_statements_loc:Loc.t ->
+    function_insertion_point list
+
+  (* Find locations to insert `newFunction` definitions, including methods. *)
+  val collect_function_method_inserting_points :
+    typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.Program.t ->
+    reader:Parsing_heaps.Reader.reader ->
+    extracted_loc:Loc.t ->
     function_insertion_point list
 
   (* Find the smallest containing class of the extracted statements.

@@ -351,7 +351,7 @@ function foo<A>() {
           ~typed_ast
           ~reader
           ~extracted_statements_loc
-        |> List.map (fun { InsertionPointCollectors.function_name; body_loc; tparams_rev } ->
+        |> List.map (fun { InsertionPointCollectors.function_name; body_loc; tparams_rev; _ } ->
                (function_name, body_loc, tparams_rev |> List.map (fun { Type.name; _ } -> name)))
       in
       let expected =
@@ -362,6 +362,64 @@ function foo<A>() {
         |> List.map (fun (id, loc, typeparams) ->
                Printf.sprintf "%s: %s: <%s>" id (Loc.show loc) (String.concat "," typeparams))
         |> String.concat ", "
+      in
+      assert_equal ~ctxt ~printer expected actual );
+  ]
+
+let collect_function_method_inserting_points_tests =
+  [
+    ( "basic_test" >:: fun ctxt ->
+      let source =
+        {|
+console.log("0");
+function foo<A>() {
+  function bar<B>() {
+    class Foo {
+      baz1 = () => {
+        class Bar {
+          baz2() {
+            console.log("2"); // selected
+          }
+        }
+      }
+    }
+  }
+}
+        |}
+      in
+      let typed_ast = source |> parse |> typed_ast_of_ast in
+      let extracted_loc = mk_loc (9, 12) (9, 42) in
+      let reader = State_reader.create () in
+      let actual =
+        InsertionPointCollectors.collect_function_method_inserting_points
+          ~typed_ast
+          ~reader
+          ~extracted_loc
+        |> List.map
+             (fun { InsertionPointCollectors.function_name; body_loc; is_method; tparams_rev } ->
+               ( function_name,
+                 body_loc,
+                 is_method,
+                 tparams_rev |> List.map (fun { Type.name; _ } -> name) ))
+      in
+      let expected =
+        [
+          ("baz2", mk_loc (8, 17) (10, 11), true, ["B"; "A"]);
+          ("baz1", mk_loc (6, 19) (12, 7), true, ["B"; "A"]);
+          ("bar", mk_loc (4, 20) (14, 3), false, ["B"; "A"]);
+          ("foo", mk_loc (3, 18) (15, 1), false, ["A"]);
+        ]
+      in
+      let printer result =
+        result
+        |> List.map (fun (id, loc, is_method, typeparams) ->
+               Printf.sprintf
+                 "%s: %s: <%s>. is_method: %b"
+                 id
+                 (Loc.debug_to_string loc)
+                 (String.concat "," typeparams)
+                 is_method)
+        |> String.concat "\n"
       in
       assert_equal ~ctxt ~printer expected actual );
   ]
@@ -888,6 +946,7 @@ let tests =
   >::: [
          "extract" >::: extract_tests;
          "collect_function_inserting_points" >::: collect_function_inserting_points_tests;
+         "function_method_inserting_points" >::: collect_function_method_inserting_points_tests;
          "find_closest_enclosing_class" >::: find_closest_enclosing_class_tests;
          "collect_relevant_defs_with_scope" >::: collect_relevant_defs_with_scope_tests;
          "undefined_variables_after_extraction" >::: undefined_variables_after_extraction_tests;

@@ -348,7 +348,7 @@ let available_refactors_for_statements
     extract_to_method_refactors
   else
     let create_inner_function_refactor
-        { InsertionPointCollectors.function_name; body_loc = target_body_loc; tparams_rev } =
+        { InsertionPointCollectors.function_name; body_loc = target_body_loc; tparams_rev; _ } =
       let title = Printf.sprintf "Extract to inner function in function '%s'" function_name in
       let (new_ast, added_imports) =
         create_refactor ~is_method:false ~target_body_loc ~target_tparams_rev:tparams_rev

@@ -226,6 +226,7 @@ module InsertionPointCollectors = struct
   type function_insertion_point = {
     function_name: string;
     body_loc: Loc.t;
+    is_method: bool;
     tparams_rev: Type.typeparam list;
   }
 
@@ -237,25 +238,30 @@ module InsertionPointCollectors = struct
 
   let not_this_typeparam { Type.is_this; _ } = not is_this
 
-  class function_insertion_point_collector reader extracted_statements_loc =
+  class function_insertion_point_collector reader extracted_loc =
     object (this)
       inherit Typed_ast_utils.type_parameter_mapper as super
 
       val mutable acc = []
 
-      method private collect_name_and_loc ~tparams_rev function_name body_loc =
+      method collect_name_and_loc ~tparams_rev ?(is_method = false) function_name body_loc =
         acc <-
-          (* Flow models `this` parameter as a generic parameter with bound, so it will appear in
-             the typeparam list. However, that is not necessary for the refactor purpose, since we
-             will never produce `this` annotations. *)
-          { function_name; body_loc; tparams_rev = List.filter not_this_typeparam tparams_rev }
+          {
+            function_name;
+            body_loc;
+            is_method;
+            (* Flow models `this` parameter as a generic parameter with bound, so it will appear in
+               the typeparam list. However, that is not necessary for the refactor purpose, since we
+               will never produce `this` annotations. *)
+            tparams_rev = List.filter not_this_typeparam tparams_rev;
+          }
           :: acc
 
       method function_inserting_locs_with_typeparams typed_ast =
         let _ = this#program typed_ast in
         acc
 
-      method private function_with_name ?name function_declaration =
+      method private function_with_name ?name ?(is_method = false) function_declaration =
         let open Flow_ast in
         match function_declaration with
         | { Function.id; body = Function.BodyBlock (block_aloc, _); tparams; _ } ->
@@ -264,9 +270,9 @@ module InsertionPointCollectors = struct
           | (Some (_, { Identifier.name; _ }), _)
           | (None, Some (_, { Identifier.name; _ })) ->
             let block_loc = Parsing_heaps.Reader.loc_of_aloc ~reader block_aloc in
-            if Loc.contains block_loc extracted_statements_loc then
+            if Loc.contains block_loc extracted_loc then
               this#type_params_opt tparams (fun _ ->
-                  this#collect_name_and_loc name block_loc |> this#annot_with_tparams))
+                  this#collect_name_and_loc ~is_method name block_loc |> this#annot_with_tparams))
         | _ -> ()
 
       method! function_ function_declaration =
@@ -286,6 +292,39 @@ module InsertionPointCollectors = struct
 
   let collect_function_inserting_points ~typed_ast ~reader ~extracted_statements_loc =
     let collector = new function_insertion_point_collector reader extracted_statements_loc in
+    collector#function_inserting_locs_with_typeparams typed_ast
+
+  class function_and_method_insertion_point_collector reader extracted_loc =
+    object (this)
+      inherit function_insertion_point_collector reader extracted_loc as super
+
+      method! class_property property =
+        let open Flow_ast in
+        let { Class.Property.key; value; _ } = property in
+        let () =
+          match (key, value) with
+          | ( Expression.Object.Property.Identifier name,
+              Class.Property.Initialized (_, (Expression.ArrowFunction f | Expression.Function f))
+            ) ->
+            this#function_with_name ~name ~is_method:true f
+          | _ -> ()
+        in
+        super#class_property property
+
+      method! class_method meth =
+        let open Flow_ast in
+        let { Class.Method.key; value = (_, f); _ } = meth in
+        let () =
+          match key with
+          | Expression.Object.Property.Identifier name ->
+            this#function_with_name ~name ~is_method:true f
+          | _ -> ()
+        in
+        super#class_method meth
+    end
+
+  let collect_function_method_inserting_points ~typed_ast ~reader ~extracted_loc =
+    let collector = new function_and_method_insertion_point_collector reader extracted_loc in
     collector#function_inserting_locs_with_typeparams typed_ast
 
   class class_insertion_point_collector reader extracted_statements_loc =
