@@ -15,9 +15,15 @@ module AstExtractor = struct
     expression: (Loc.t, Loc.t) Flow_ast.Expression.t;
   }
 
+  type type_with_statement_loc = {
+    directly_containing_statement_loc: Loc.t;
+    type_: (Loc.t, Loc.t) Flow_ast.Type.t;
+  }
+
   type extracted = {
     extracted_statements: (Loc.t, Loc.t) Flow_ast.Statement.t list option;
     extracted_expression: expression_with_statement_loc option;
+    extracted_type: type_with_statement_loc option;
   }
 
   (* Collect all statements that are completely within the selection.
@@ -32,6 +38,8 @@ module AstExtractor = struct
 
       val mutable collected_expression = None
 
+      val mutable collected_type = None
+
       (* `Some collected_statements`
          `None` when extraction is not allowed based on user selection. *)
       val mutable _collected_statements = Some []
@@ -43,7 +51,11 @@ module AstExtractor = struct
           | Some [] -> None
           | Some collected_statements -> Some (List.rev collected_statements)
         in
-        { extracted_statements; extracted_expression = collected_expression }
+        {
+          extracted_statements;
+          extracted_expression = collected_expression;
+          extracted_type = collected_type;
+        }
 
       method private collect_statement stmt =
         _collected_statements <-
@@ -99,6 +111,26 @@ module AstExtractor = struct
         else
           (* In all other cases, selection is illegal. *)
           expr
+
+      method! type_ t =
+        let (type_loc, _) = t in
+        if Loc.equal extract_range type_loc then
+          (* Only collect type when the selection is an exact match. *)
+          let () =
+            match containing_statement_locs with
+            | [] -> ()
+            | directly_containing_statement_loc :: _ ->
+              collected_type <- Some { directly_containing_statement_loc; type_ = t }
+          in
+          t
+        else if Loc.contains type_loc extract_range then
+          (* If the range is completely contained in the type,
+             we should recursve deeper to find smaller nested types that are contained in the
+             range. *)
+          super#type_ t
+        else
+          (* In all other cases, selection is illegal. *)
+          t
     end
 
   let extract ast extract_range =

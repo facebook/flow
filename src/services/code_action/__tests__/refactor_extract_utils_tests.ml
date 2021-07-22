@@ -137,9 +137,10 @@ let typed_ast_of_ast ast =
 let mk_loc = Loc.mk_loc
 
 let extract_tests =
-  let assert_extracted ~ctxt ?expected_statements ?expected_expression source extract_range =
+  let assert_extracted
+      ~ctxt ?expected_statements ?expected_expression ?expected_type source extract_range =
     let ast = parse source in
-    let { AstExtractor.extracted_statements; extracted_expression } =
+    let { AstExtractor.extracted_statements; extracted_expression; extracted_type } =
       AstExtractor.extract ast extract_range
     in
     let extracted_statements_str =
@@ -170,6 +171,23 @@ let extract_tests =
       | Some (containing_statement_locs, expression) ->
         Some (containing_statement_locs, String.trim expression)
     in
+    let actual_extracted_type =
+      match extracted_type with
+      | None -> None
+      | Some { AstExtractor.directly_containing_statement_loc; type_ } ->
+        Some
+          ( directly_containing_statement_loc,
+            type_
+            |> Js_layout_generator.type_ ~opts:Js_layout_generator.default_opts
+            |> pretty_print
+            |> String.trim )
+    in
+    let expected_extracted_type =
+      match expected_type with
+      | None -> None
+      | Some (directly_containing_statement_loc, type_) ->
+        Some (directly_containing_statement_loc, String.trim type_)
+    in
     assert_equal
       ~ctxt
       ~printer:(Option.value ~default:"statement not allowed")
@@ -181,7 +199,14 @@ let extract_tests =
         (Base.Option.value_map ~default:"expression not allowed" ~f:(fun (locs, e) ->
              (locs |> List.map Loc.show |> String.concat ",") ^ "\n" ^ e))
       expected_extracted_expression
-      actual_extracted_expression
+      actual_extracted_expression;
+    assert_equal
+      ~ctxt
+      ~printer:
+        (Base.Option.value_map ~default:"type not allowed" ~f:(fun (loc, t) ->
+             Loc.debug_to_string loc ^ ": " ^ t))
+      expected_extracted_type
+      actual_extracted_type
   in
   [
     (* Exactly select the first statement. *)
@@ -328,6 +353,22 @@ foo(a + b);
         "class A { foo() { const a = 3; } }"
         ~expected_expression:([mk_loc (1, 18) (1, 30); mk_loc (1, 0) (1, 34)], "3")
         (mk_loc (1, 28) (1, 29)) );
+    ( "extract_types" >:: fun ctxt ->
+      assert_extracted
+        ~ctxt
+        ~expected_type:(mk_loc (1, 0) (1, 20), "number")
+        "const a: number = 1;"
+        (mk_loc (1, 9) (1, 15));
+      assert_extracted
+        ~ctxt
+        ~expected_type:(mk_loc (1, 0) (1, 30), "number")
+        "const a: [number, number] = 1;"
+        (mk_loc (1, 10) (1, 16));
+      assert_extracted
+        ~ctxt
+        ~expected_type:(mk_loc (1, 0) (1, 30), "[number, number]")
+        "const a: [number, number] = 1;"
+        (mk_loc (1, 9) (1, 25)) );
   ]
 
 let collect_function_inserting_points_tests =

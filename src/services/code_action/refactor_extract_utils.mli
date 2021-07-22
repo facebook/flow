@@ -14,9 +14,15 @@ module AstExtractor : sig
     expression: (Loc.t, Loc.t) Flow_ast.Expression.t;
   }
 
+  type type_with_statement_loc = {
+    directly_containing_statement_loc: Loc.t;
+    type_: (Loc.t, Loc.t) Flow_ast.Type.t;
+  }
+
   type extracted = {
     extracted_statements: (Loc.t, Loc.t) Flow_ast.Statement.t list option;
     extracted_expression: expression_with_statement_loc option;
+    extracted_type: type_with_statement_loc option;
   }
 
   val extract : (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> extracted
