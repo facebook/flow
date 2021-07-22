@@ -114,6 +114,7 @@ module Opts = struct
     strict_es6_import_export: bool;
     suppress_types: SSet.t;
     temp_dir: string;
+    new_env: bool;
     traces: int;
     trust_mode: Options.trust_mode;
     type_asserts: bool;
@@ -238,6 +239,7 @@ module Opts = struct
       strict_es6_import_export_excludes = [];
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       temp_dir = default_temp_dir;
+      new_env = false;
       traces = 0;
       trust_mode = Options.NoTrust;
       type_asserts = false;
@@ -659,6 +661,7 @@ module Opts = struct
       ("experimental.strict_call_arity", enforce_strict_call_arity_parser);
       ("experimental.strict_es6_import_export.excludes", strict_es6_import_export_excludes_parser);
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
+      ("experimental.new_env", boolean (fun opts v -> Ok { opts with new_env = v }));
       ("experimental.type_asserts", boolean (fun opts v -> Ok { opts with type_asserts = v }));
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
@@ -1269,6 +1272,8 @@ let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
 let enums c = c.options.Opts.enums
 
 let enums_with_unknown_members c = c.options.Opts.enums_with_unknown_members
+
+let new_env c = c.options.Opts.new_env
 
 let exact_by_default c = c.options.Opts.exact_by_default
 

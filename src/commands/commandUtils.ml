@@ -811,6 +811,7 @@ module Options_flags = struct
     temp_dir: string option;
     traces: int option;
     trust_mode: Options.trust_mode option;
+    new_env: bool;
     abstract_locations: bool;
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
@@ -869,7 +870,8 @@ let options_flags =
       merge_timeout
       abstract_locations
       include_suppressions
-      trust_mode =
+      trust_mode
+      new_env =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
       Exit.(exit ~msg:"--merge-timeout must be non-negative" Commandline_usage_error)
@@ -881,6 +883,7 @@ let options_flags =
         profile;
         all;
         wait_for_recheck;
+        new_env;
         weak;
         traces;
         no_flowlib;
@@ -957,7 +960,8 @@ let options_flags =
                    ("silent", Options.SilentTrust);
                    ("none", Options.NoTrust);
                  ]))
-           ~doc:"")
+           ~doc:""
+      |> flag "--new-env" no_arg ~doc:"")
 
 let saved_state_flags =
   let collect_saved_state_flags
@@ -1245,6 +1249,7 @@ let make_options
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_enums = FlowConfig.enums flowconfig;
     opt_enums_with_unknown_members = FlowConfig.enums_with_unknown_members flowconfig;
+    opt_new_env = options_flags.new_env || FlowConfig.new_env flowconfig;
     opt_exact_by_default = FlowConfig.exact_by_default flowconfig;
     opt_facebook_fbs = FlowConfig.facebook_fbs flowconfig;
     opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;
