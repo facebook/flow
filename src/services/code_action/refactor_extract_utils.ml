@@ -10,9 +10,14 @@ module Ssa_api = Ssa_api.With_Loc
 open Loc_collections
 
 module AstExtractor = struct
+  type expression_with_statement_loc = {
+    containing_statement_locs: Loc.t list;
+    expression: (Loc.t, Loc.t) Flow_ast.Expression.t;
+  }
+
   type extracted = {
     extracted_statements: (Loc.t, Loc.t) Flow_ast.Statement.t list option;
-    extracted_expression: (Loc.t, Loc.t) Flow_ast.Expression.t option;
+    extracted_expression: expression_with_statement_loc option;
   }
 
   (* Collect all statements that are completely within the selection.
@@ -20,6 +25,8 @@ module AstExtractor = struct
   class collector (extract_range : Loc.t) =
     object (this)
       inherit [Loc.t] Flow_ast_mapper.mapper as super
+
+      val mutable containing_statement_locs = []
 
       val mutable collect_statement = true
 
@@ -46,36 +53,43 @@ module AstExtractor = struct
 
       method! statement stmt =
         let (statement_loc, stmt') = stmt in
-        if Loc.contains extract_range statement_loc then
-          let () = this#collect_statement stmt in
-          (* If the statement is already completely contained in the range,
-             do not recursve deeper to collect more nested ones,
-             except for the special case when the statement is an expression statement. *)
-          let () =
-            match stmt' with
-            | Flow_ast.Statement.Expression { Flow_ast.Statement.Expression.expression; _ } ->
-              if fst expression = statement_loc then collected_expression <- Some expression
-            | _ -> ()
-          in
-          stmt
-        else if Loc.contains statement_loc extract_range then
-          (* If the range is completely contained in the statement,
-             we should recursve deeper to find smaller nested statements/expressions that are
-             contained in the range. *)
-          super#statement stmt
-        else if Loc.intersects extract_range statement_loc then
-          (* When there is intersection, it means that the selection is not allowed for extraction. *)
-          let () = _collected_statements <- None in
-          stmt
-        else
-          (* If disjoint, the statement and nested ones do not need to be collected. *)
-          stmt
+        let saved_containing_statement_locs = containing_statement_locs in
+        let () = containing_statement_locs <- statement_loc :: containing_statement_locs in
+        let result =
+          if Loc.contains extract_range statement_loc then
+            let () = this#collect_statement stmt in
+            (* If the statement is already completely contained in the range,
+               do not recursve deeper to collect more nested ones,
+               except for the special case when the statement is an expression statement. *)
+            let () =
+              match stmt' with
+              | Flow_ast.Statement.Expression { Flow_ast.Statement.Expression.expression; _ } ->
+                if fst expression = statement_loc then
+                  collected_expression <- Some { containing_statement_locs; expression }
+              | _ -> ()
+            in
+            stmt
+          else if Loc.contains statement_loc extract_range then
+            (* If the range is completely contained in the statement,
+               we should recursve deeper to find smaller nested statements/expressions that are
+               contained in the range. *)
+            super#statement stmt
+          else if Loc.intersects extract_range statement_loc then
+            (* When there is intersection, it means that the selection is not allowed for extraction. *)
+            let () = _collected_statements <- None in
+            stmt
+          else
+            (* If disjoint, the statement and nested ones do not need to be collected. *)
+            stmt
+        in
+        let () = containing_statement_locs <- saved_containing_statement_locs in
+        result
 
       method! expression expr =
         let (expression_loc, _) = expr in
         if Loc.equal extract_range expression_loc then
           (* Only collect expression when the selection is an exact match. *)
-          let () = collected_expression <- Some expr in
+          let () = collected_expression <- Some { containing_statement_locs; expression = expr } in
           expr
         else if Loc.contains expression_loc extract_range then
           (* If the range is completely contained in the expression,

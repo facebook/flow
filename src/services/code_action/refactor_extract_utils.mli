@@ -9,9 +9,14 @@ module Scope_api = Scope_api.With_Loc
 module Ssa_api = Ssa_api.With_Loc
 
 module AstExtractor : sig
+  type expression_with_statement_loc = {
+    containing_statement_locs: Loc.t list;
+    expression: (Loc.t, Loc.t) Flow_ast.Expression.t;
+  }
+
   type extracted = {
     extracted_statements: (Loc.t, Loc.t) Flow_ast.Statement.t list option;
-    extracted_expression: (Loc.t, Loc.t) Flow_ast.Expression.t option;
+    extracted_expression: expression_with_statement_loc option;
   }
 
   val extract : (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> extracted

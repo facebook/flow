@@ -11,7 +11,10 @@ open Loc_collections
 
 let parse contents =
   let (ast, _) =
-    Parser_flow.program ~parse_options:(Some Parser_env.default_parse_options) contents
+    Parser_flow.program
+      ~parse_options:
+        (Some Parser_env.{ default_parse_options with esproposal_class_instance_fields = true })
+      contents
   in
   ast
 
@@ -150,27 +153,35 @@ let extract_tests =
           |> String.concat ""
           |> String.trim)
     in
-    let extracted_expression_str =
+    let actual_extracted_expression =
       match extracted_expression with
       | None -> None
-      | Some extracted_expression ->
+      | Some { AstExtractor.containing_statement_locs; expression } ->
         Some
-          (extracted_expression
-          |> Js_layout_generator.expression ~opts:Js_layout_generator.default_opts
-          |> pretty_print
-          |> String.trim)
+          ( containing_statement_locs,
+            expression
+            |> Js_layout_generator.expression ~opts:Js_layout_generator.default_opts
+            |> pretty_print
+            |> String.trim )
+    in
+    let expected_extracted_expression =
+      match expected_expression with
+      | None -> None
+      | Some (containing_statement_locs, expression) ->
+        Some (containing_statement_locs, String.trim expression)
     in
     assert_equal
       ~ctxt
       ~printer:(Option.value ~default:"statement not allowed")
       (Base.Option.map ~f:String.trim expected_statements)
       extracted_statements_str;
-    let trim_expected = Base.Option.map ~f:String.trim in
     assert_equal
       ~ctxt
-      ~printer:(Option.value ~default:"expression not allowed")
-      (trim_expected expected_expression)
-      extracted_expression_str
+      ~printer:
+        (Base.Option.value_map ~default:"expression not allowed" ~f:(fun (locs, e) ->
+             (locs |> List.map Loc.show |> String.concat ",") ^ "\n" ^ e))
+      expected_extracted_expression
+      actual_extracted_expression
   in
   [
     (* Exactly select the first statement. *)
@@ -268,17 +279,24 @@ foo(a + b);
       in
       assert_extracted ~ctxt source (mk_loc (2, 8) (4, 20)) );
     ( "extract_expression_basic" >:: fun ctxt ->
-      assert_extracted ~ctxt ~expected_expression:"1" "const a = 1" (mk_loc (1, 10) (1, 11)) );
+      assert_extracted
+        ~ctxt
+        ~expected_expression:([mk_loc (1, 0) (1, 11)], "1")
+        "const a = 1"
+        (mk_loc (1, 10) (1, 11)) );
     (* When statement selection is empty, the chosen expression is good. *)
     ( "extract_expression_nested" >:: fun ctxt ->
-      assert_extracted ~ctxt ~expected_expression:"1 + 1" "const a = 1 + 1" (mk_loc (1, 10) (1, 15))
-    );
+      assert_extracted
+        ~ctxt
+        ~expected_expression:([mk_loc (1, 0) (1, 15)], "1 + 1")
+        "const a = 1 + 1"
+        (mk_loc (1, 10) (1, 15)) );
     (* When the selection is both an expression and a statement *)
     ( "extract_expression_statement_without_semicolon" >:: fun ctxt ->
       assert_extracted
         ~ctxt
         ~expected_statements:"\"hello\";"
-        ~expected_expression:"\"hello\""
+        ~expected_expression:([mk_loc (1, 0) (1, 7)], "\"hello\"")
         "'hello'"
         (mk_loc (1, 0) (1, 7)) );
     (* Same as above case, but adding a semicolon makes the selection only statement. *)
@@ -291,6 +309,25 @@ foo(a + b);
     ( "extract_expression_ban_partial_statement" >:: fun ctxt ->
       assert_extracted ~ctxt "const a = 1; const b = 2;" (mk_loc (1, 8) (1, 11));
       assert_extracted ~ctxt "const a = 1; const b = 2;" (mk_loc (1, 10) (1, 16)) );
+    (* Expression only exists in a class, not in any statement. *)
+    ( "ban_expression_only_in_class" >:: fun ctxt ->
+      assert_extracted
+        ~ctxt
+        "class A { a = 3 }"
+        ~expected_expression:([mk_loc (1, 0) (1, 17)], "3")
+        (mk_loc (1, 14) (1, 15));
+      assert_extracted
+        ~ctxt
+        "class A { constructor(a = 3) {} }"
+        ~expected_expression:([mk_loc (1, 0) (1, 33)], "3")
+        (mk_loc (1, 26) (1, 27)) );
+    (* Expression exists in a class, but also in a statement. *)
+    ( "expression_in_class_statements" >:: fun ctxt ->
+      assert_extracted
+        ~ctxt
+        "class A { foo() { const a = 3; } }"
+        ~expected_expression:([mk_loc (1, 18) (1, 30); mk_loc (1, 0) (1, 34)], "3")
+        (mk_loc (1, 28) (1, 29)) );
   ]
 
 let collect_function_inserting_points_tests =
