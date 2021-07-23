@@ -372,42 +372,6 @@ foo(a + b);
         (mk_loc (1, 9) (1, 25)) );
   ]
 
-let collect_function_inserting_points_tests =
-  [
-    ( "basic_test" >:: fun ctxt ->
-      let source =
-        {|
-console.log("0");
-function foo<A>() {
-  function bar<B>() {
-    console.log("2");
-  }
-}
-        |}
-      in
-      let typed_ast = source |> parse |> typed_ast_of_ast in
-      let extracted_statements_loc = mk_loc (5, 4) (5, 21) in
-      let reader = State_reader.create () in
-      let actual =
-        InsertionPointCollectors.collect_function_inserting_points
-          ~typed_ast
-          ~reader
-          ~extracted_statements_loc
-        |> List.map (fun { InsertionPointCollectors.function_name; body_loc; tparams_rev; _ } ->
-               (function_name, body_loc, tparams_rev |> List.map (fun { Type.name; _ } -> name)))
-      in
-      let expected =
-        [("bar", mk_loc (4, 20) (6, 3), ["B"; "A"]); ("foo", mk_loc (3, 18) (7, 1), ["A"])]
-      in
-      let printer result =
-        result
-        |> List.map (fun (id, loc, typeparams) ->
-               Printf.sprintf "%s: %s: <%s>" id (Loc.show loc) (String.concat "," typeparams))
-        |> String.concat ", "
-      in
-      assert_equal ~ctxt ~printer expected actual );
-  ]
-
 let collect_function_method_inserting_points_tests =
   [
     ( "basic_test" >:: fun ctxt ->
@@ -987,7 +951,6 @@ let tests =
   "refactor_extract_utils"
   >::: [
          "extract" >::: extract_tests;
-         "collect_function_inserting_points" >::: collect_function_inserting_points_tests;
          "function_method_inserting_points" >::: collect_function_method_inserting_points_tests;
          "find_closest_enclosing_class" >::: find_closest_enclosing_class_tests;
          "collect_relevant_defs_with_scope" >::: collect_relevant_defs_with_scope_tests;

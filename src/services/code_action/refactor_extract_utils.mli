@@ -22,14 +22,7 @@ module InsertionPointCollectors : sig
     tparams_rev: Type.typeparam list;
   }
 
-  (* Find locations to insert `newFunction` definitions, excluding methods. *)
-  val collect_function_inserting_points :
-    typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.Program.t ->
-    reader:Parsing_heaps.Reader.reader ->
-    extracted_statements_loc:Loc.t ->
-    function_insertion_point list
-
-  (* Find locations to insert `newFunction` definitions, including methods. *)
+  (* Find locations to insert `newFunction`/`newMethod` definitions. *)
   val collect_function_method_inserting_points :
     typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.Program.t ->
     reader:Parsing_heaps.Reader.reader ->

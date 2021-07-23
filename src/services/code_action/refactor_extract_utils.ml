@@ -25,7 +25,7 @@ module InsertionPointCollectors = struct
 
   let not_this_typeparam { Type.is_this; _ } = not is_this
 
-  class function_insertion_point_collector reader extracted_loc =
+  class function_and_method_insertion_point_collector reader extracted_loc =
     object (this)
       inherit Typed_ast_utils.type_parameter_mapper as super
 
@@ -75,15 +75,6 @@ module InsertionPointCollectors = struct
           let () = this#function_with_name ~name f in
           super#variable_declarator ~kind decl
         | _ -> super#variable_declarator ~kind decl
-    end
-
-  let collect_function_inserting_points ~typed_ast ~reader ~extracted_statements_loc =
-    let collector = new function_insertion_point_collector reader extracted_statements_loc in
-    collector#function_inserting_locs_with_typeparams typed_ast
-
-  class function_and_method_insertion_point_collector reader extracted_loc =
-    object (this)
-      inherit function_insertion_point_collector reader extracted_loc as super
 
       method! class_property property =
         let open Flow_ast in

@@ -566,6 +566,18 @@ function newFunction(): void {
 }
           |}
           );
+          ( "Extract to inner function in method 'test1'",
+            {|
+class A {
+  test1() {
+    newFunction();
+    function newFunction(): void {
+      console.log();
+    }
+  }
+}
+            |}
+          );
         ]
         "class A { test1() { console.log(); } }"
         (mk_loc (1, 20) (1, 34)) );
