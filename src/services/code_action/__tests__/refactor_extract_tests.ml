@@ -1130,6 +1130,156 @@ function foo<A, B>() {
         ]
       in
       assert_refactored ~ctxt expected source (mk_loc (4, 25) (4, 43)) );
+    (* Generated name has conflicts. *)
+    ( "generated_name_conflicts" >:: fun ctxt ->
+      let source =
+        {|
+        const newFunction = 1, newFunction1 = 1;
+        const newMethod = 1, newMethod1 = 1;
+        const newLocal = 1, newLocal1 = 1;
+        const newProperty = 1, newProperty1 = 1;
+        class A {
+          test() {
+            1 + 1
+          }
+        }
+        |}
+      in
+      let expected =
+        [
+          ( "Extract to method in class 'A'",
+            {|
+const newFunction = 1,
+  newFunction1 = 1;
+const newMethod = 1,
+  newMethod1 = 1;
+const newLocal = 1,
+  newLocal1 = 1;
+const newProperty = 1,
+  newProperty1 = 1;
+class A {
+  test() {
+    this.newMethod2();
+  }
+  newMethod2(): void {
+    1 + 1;
+  }
+}
+            |}
+          );
+          ( "Extract to function in module scope",
+            {|
+const newFunction = 1,
+  newFunction1 = 1;
+const newMethod = 1,
+  newMethod1 = 1;
+const newLocal = 1,
+  newLocal1 = 1;
+const newProperty = 1,
+  newProperty1 = 1;
+class A {
+  test() {
+    newFunction2();
+  }
+}
+function newFunction2(): void {
+  1 + 1;
+}
+            |}
+          );
+          ( "Extract to inner function in method 'test'",
+            {|
+const newFunction = 1,
+  newFunction1 = 1;
+const newMethod = 1,
+  newMethod1 = 1;
+const newLocal = 1,
+  newLocal1 = 1;
+const newProperty = 1,
+  newProperty1 = 1;
+class A {
+  test() {
+    newFunction2();
+    function newFunction2(): void {
+      1 + 1;
+    }
+  }
+}
+            |}
+          );
+          ( "Extract to field in class 'A'",
+            {|
+const newFunction = 1,
+  newFunction1 = 1;
+const newMethod = 1,
+  newMethod1 = 1;
+const newLocal = 1,
+  newLocal1 = 1;
+const newProperty = 1,
+  newProperty1 = 1;
+class A {
+  newProperty2 = 1 + 1;
+  test() {
+    this.newProperty2;
+  }
+}
+            |}
+          );
+          ( "Extract to constant in method 'test'",
+            {|
+const newFunction = 1,
+  newFunction1 = 1;
+const newMethod = 1,
+  newMethod1 = 1;
+const newLocal = 1,
+  newLocal1 = 1;
+const newProperty = 1,
+  newProperty1 = 1;
+class A {
+  test() {
+    const newLocal2 = 1 + 1;
+    newLocal2;
+  }
+}
+            |}
+          );
+          ( "Extract to constant in module scope",
+            {|
+const newFunction = 1,
+  newFunction1 = 1;
+const newMethod = 1,
+  newMethod1 = 1;
+const newLocal = 1,
+  newLocal1 = 1;
+const newProperty = 1,
+  newProperty1 = 1;
+const newLocal2 = 1 + 1;
+class A {
+  test() {
+    newLocal2;
+  }
+}
+            |}
+          );
+        ]
+      in
+      assert_refactored ~ctxt expected source (mk_loc (8, 12) (8, 17));
+      let source = {|
+        type NewType = number;
+        type NewType1 = NewType;
+      |} in
+      let expected =
+        [
+          ( "Extract to type alias",
+            {|
+type NewType2 = number;
+type NewType = NewType2;
+type NewType1 = NewType;
+            |}
+          );
+        ]
+      in
+      assert_refactored ~ctxt expected source (mk_loc (2, 23) (2, 29)) );
   ]
 
 let tests =

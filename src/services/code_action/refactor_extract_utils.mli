@@ -121,6 +121,8 @@ module RefactorProgramMappers : sig
 end
 
 module VariableAnalysis : sig
+  val collect_used_names : (Loc.t, Loc.t) Flow_ast.Program.t -> SSet.t
+
   type relevant_defs = {
     (* All the definitions that are used by the extracted statements, along with their scopes. *)
     defs_with_scopes_of_local_uses: (Scope_api.Def.t * Scope_api.Scope.t) list;

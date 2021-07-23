@@ -651,6 +651,20 @@ module RefactorProgramMappers = struct
 end
 
 module VariableAnalysis = struct
+  class identifier_collector =
+    object (_this)
+      inherit [SSet.t, Loc.t] Flow_ast_visitor.visitor ~init:SSet.empty as super
+
+      method! identifier id =
+        let (_, { Flow_ast.Identifier.name; _ }) = id in
+        let () = acc |> SSet.add name |> super#set_acc in
+        id
+    end
+
+  let collect_used_names ast =
+    let collector = new identifier_collector in
+    collector#eval collector#program ast
+
   type relevant_defs = {
     defs_with_scopes_of_local_uses: (Scope_api.Def.t * Scope_api.Scope.t) list;
     vars_with_shadowed_local_reassignments: (string * Loc.t) list;
