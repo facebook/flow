@@ -10,7 +10,7 @@ license: "MIT"
 build: [ make "-C" "src/parser" "build-parser" ]
 install: [ make "-C" "src/parser" "ocamlfind-install"]
 depends: [
-  "ocaml" {>= "4.09.1"}
+  "ocaml" {>= "4.10.2"}
   "ocamlfind" {build}
   "ocamlbuild" {build}
   "ppx_deriving" {build}
