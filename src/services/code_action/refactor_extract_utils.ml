@@ -130,7 +130,7 @@ module InsertionPointCollectors = struct
     let collector = new function_and_method_insertion_point_collector reader extracted_loc in
     collector#function_inserting_locs_with_typeparams typed_ast
 
-  class class_insertion_point_collector reader extracted_statements_loc =
+  class class_insertion_point_collector reader extracted_loc =
     object (this)
       inherit Typed_ast_utils.type_parameter_mapper as super
 
@@ -148,10 +148,10 @@ module InsertionPointCollectors = struct
         let open Flow_ast in
         let { Class.id; body = (body_aloc, _); tparams; _ } = class_declaration in
         let body_loc = Parsing_heaps.Reader.loc_of_aloc ~reader body_aloc in
-        if Loc.contains extracted_statements_loc body_loc then
+        if Loc.contains extracted_loc body_loc then
           (* When the class is nested inside the extracted statements, we stop recursing down. *)
           class_declaration
-        else if Loc.contains body_loc extracted_statements_loc then
+        else if Loc.contains body_loc extracted_loc then
           let id =
             match id with
             | None -> None
@@ -166,8 +166,8 @@ module InsertionPointCollectors = struct
           super#class_ class_declaration
     end
 
-  let find_closest_enclosing_class ~typed_ast ~reader ~extracted_statements_loc =
-    let collector = new class_insertion_point_collector reader extracted_statements_loc in
+  let find_closest_enclosing_class ~typed_ast ~reader ~extracted_loc =
+    let collector = new class_insertion_point_collector reader extracted_loc in
     collector#closest_enclosing_class_scope typed_ast
 end
 
@@ -338,7 +338,7 @@ module AstExtractor = struct
 end
 
 module InformationCollectors = struct
-  class extracted_statements_information_collector =
+  class extracted_information_collector =
     object (this)
       inherit [Loc.t] Flow_ast_mapper.mapper as super
 
@@ -439,12 +439,21 @@ module InformationCollectors = struct
   }
 
   let collect_statements_information extracted_statements =
-    let information_collector = new extracted_statements_information_collector in
+    let information_collector = new extracted_information_collector in
     let () =
       List.iter
         (fun statement -> information_collector#statement statement |> ignore)
         extracted_statements
     in
+    {
+      has_unwrapped_control_flow = information_collector#has_unwrapped_control_flow;
+      async_function = information_collector#is_async;
+      has_this_super = information_collector#has_this_super;
+    }
+
+  let collect_expression_information extracted_expression =
+    let information_collector = new extracted_information_collector in
+    let _ = information_collector#expression extracted_expression in
     {
       has_unwrapped_control_flow = information_collector#has_unwrapped_control_flow;
       async_function = information_collector#is_async;
@@ -579,6 +588,35 @@ module RefactorProgramMappers = struct
         ~expression_loc
         ~expression_replacement
         ~constant_definition
+    in
+    mapper#program ast
+
+  class extract_to_class_field_refactor_mapper
+    ~class_body_loc ~expression_loc ~expression_replacement ~field_definition =
+    object (_this)
+      inherit replace_original_expression_mapper ~expression_loc ~expression_replacement as super
+
+      method! class_body block =
+        let open Flow_ast.Class.Body in
+        let (body_loc, body) = block in
+        if Loc.equal body_loc class_body_loc then
+          ( body_loc,
+            {
+              body with
+              body = field_definition :: Flow_ast_mapper.map_list super#class_element body.body;
+            } )
+        else
+          super#class_body block
+    end
+
+  let extract_to_class_field
+      ~class_body_loc ~expression_loc ~expression_replacement ~field_definition ast =
+    let mapper =
+      new extract_to_class_field_refactor_mapper
+        ~class_body_loc
+        ~expression_loc
+        ~expression_replacement
+        ~field_definition
     in
     mapper#program ast
 

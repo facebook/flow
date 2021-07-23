@@ -1071,6 +1071,34 @@ function foo() {
         ]
       in
       assert_refactored ~ctxt expected source (mk_loc (9, 21) (9, 30)) );
+    (* A simple field extraction that can only go inside the class. *)
+    ( "field_extract_class_only" >:: fun ctxt ->
+      let source = "class A { test() { const a = this.test(); } }" in
+      let expected =
+        [
+          ( "Extract to field in class 'A'",
+            {|
+class A {
+  newProperty = this.test();
+  test() {
+    const a = this.newProperty;
+  }
+}
+            |}
+          );
+          ( "Extract to constant in method 'test'",
+            {|
+class A {
+  test() {
+    const newLocal = this.test();
+    const a = newLocal;
+  }
+}
+            |}
+          );
+        ]
+      in
+      assert_refactored ~ctxt expected source (mk_loc (1, 29) (1, 40)) );
     (* A simple type alias extraction without any type variables. *)
     ( "simple_type_extract" >:: fun ctxt ->
       let source = "const a: number = 1;" in

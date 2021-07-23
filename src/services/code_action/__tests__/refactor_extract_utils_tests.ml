@@ -522,15 +522,12 @@ function foo<A>() {
   ]
 
 let find_closest_enclosing_class_tests =
-  let assert_closest_enclosing_class_scope ~ctxt ?expected source extracted_statements_loc =
+  let assert_closest_enclosing_class_scope ~ctxt ?expected source extracted_loc =
     let typed_ast = source |> parse |> typed_ast_of_ast in
     let reader = State_reader.create () in
     let actual =
       match
-        InsertionPointCollectors.find_closest_enclosing_class
-          ~typed_ast
-          ~reader
-          ~extracted_statements_loc
+        InsertionPointCollectors.find_closest_enclosing_class ~typed_ast ~reader ~extracted_loc
       with
       | None -> None
       | Some { InsertionPointCollectors.class_name; body_loc; tparams_rev } ->

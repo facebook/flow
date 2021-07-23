@@ -330,7 +330,7 @@ let available_refactors_for_statements
       InsertionPointCollectors.find_closest_enclosing_class
         ~typed_ast
         ~reader
-        ~extracted_statements_loc
+        ~extracted_loc:extracted_statements_loc
     with
     | None -> []
     | Some { InsertionPointCollectors.class_name; body_loc = target_body_loc; tparams_rev } ->
@@ -449,6 +449,45 @@ let extract_from_statements_refactors
         ~extracted_statements
         ~extracted_statements_loc
 
+let create_extract_to_class_field_refactors
+    ~scope_info
+    ~defs_with_scopes_of_local_uses
+    ~extracted_expression_loc
+    ~expression
+    ~ast
+    { InsertionPointCollectors.class_name; body_loc; _ } =
+  let undefined_variables =
+    VariableAnalysis.undefined_variables_after_extraction
+      ~scope_info
+      ~defs_with_scopes_of_local_uses
+      ~new_function_target_scope_loc:(Some body_loc)
+      ~extracted_loc:extracted_expression_loc
+  in
+  match undefined_variables with
+  | _ :: _ -> []
+  | [] ->
+    let title =
+      match class_name with
+      | None -> "Extract to field in anonymous class declaration"
+      | Some class_name -> Printf.sprintf "Extract to field in class '%s'" class_name
+    in
+    let new_ast =
+      let open Ast_builder in
+      let expression_replacement =
+        (Loc.none, Flow_ast.Expression.(This { This.comments = None }))
+        |> Expressions.member ~property:"newProperty"
+        |> Expressions.member_expression
+      in
+      let field_definition = Ast_builder.Classes.property ~id:"newProperty" expression in
+      RefactorProgramMappers.extract_to_class_field
+        ~class_body_loc:body_loc
+        ~expression_loc:extracted_expression_loc
+        ~expression_replacement
+        ~field_definition
+        ast
+    in
+    [{ title; new_ast; added_imports = [] }]
+
 let create_extract_to_constant_refactor
     ~scope_info
     ~defs_with_scopes_of_local_uses
@@ -481,7 +520,11 @@ let create_extract_to_constant_refactor
         added_imports = [];
       }
 
-let extract_from_expression_refactors ~ast { AstExtractor.constant_insertion_points; expression } =
+let extract_from_expression_refactors
+    ~ast ~typed_ast ~reader { AstExtractor.constant_insertion_points; expression } =
+  let { InformationCollectors.has_this_super; _ } =
+    InformationCollectors.collect_expression_information expression
+  in
   let extracted_expression_loc = fst expression in
   let (scope_info, ssa_values) = Ssa_builder.program_with_scope ast in
   let { VariableAnalysis.defs_with_scopes_of_local_uses; _ } =
@@ -490,15 +533,51 @@ let extract_from_expression_refactors ~ast { AstExtractor.constant_insertion_poi
       ~ssa_values
       ~extracted_loc:extracted_expression_loc
   in
-  constant_insertion_points
-  |> Nel.to_list
-  |> List.filter_map
-       (create_extract_to_constant_refactor
-          ~scope_info
-          ~defs_with_scopes_of_local_uses
-          ~extracted_expression_loc
-          ~expression
-          ~ast)
+  let constant_insertion_points = Nel.to_list constant_insertion_points in
+  let class_insertion_point =
+    InsertionPointCollectors.find_closest_enclosing_class
+      ~typed_ast
+      ~reader
+      ~extracted_loc:extracted_expression_loc
+  in
+  let create_extract_to_constant_refactor =
+    create_extract_to_constant_refactor
+      ~scope_info
+      ~defs_with_scopes_of_local_uses
+      ~extracted_expression_loc
+      ~expression
+      ~ast
+  in
+  match class_insertion_point with
+  | None ->
+    if has_this_super then
+      []
+    else
+      List.filter_map create_extract_to_constant_refactor constant_insertion_points
+  | Some ({ InsertionPointCollectors.body_loc = class_body_loc; _ } as class_insertion_point) ->
+    let extract_to_class_field_refactors =
+      create_extract_to_class_field_refactors
+        ~scope_info
+        ~defs_with_scopes_of_local_uses
+        ~extracted_expression_loc
+        ~expression
+        ~ast
+        class_insertion_point
+    in
+    if has_this_super then
+      extract_to_class_field_refactors
+      @ List.filter_map
+          (fun constant_insertion_point ->
+            if Loc.contains class_body_loc constant_insertion_point.AstExtractor.statement_loc then
+              (* As long as the statement is still inside the class, we allow extraction to constant,
+                 since `this`/`super` is still bound. *)
+              create_extract_to_constant_refactor constant_insertion_point
+            else
+              None)
+          constant_insertion_points
+    else
+      extract_to_class_field_refactors
+      @ List.filter_map create_extract_to_constant_refactor constant_insertion_points
 
 let extract_to_type_alias_refactors
     ~ast
@@ -590,7 +669,7 @@ let provide_available_refactors ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader
   let extract_from_expression_refactors =
     Base.Option.value_map
       ~default:[]
-      ~f:(extract_from_expression_refactors ~ast)
+      ~f:(extract_from_expression_refactors ~ast ~typed_ast ~reader)
       extracted_expression
   in
   let extract_to_type_alias_refactors =

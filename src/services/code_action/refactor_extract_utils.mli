@@ -35,7 +35,7 @@ module InsertionPointCollectors : sig
   val find_closest_enclosing_class :
     typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.Program.t ->
     reader:Parsing_heaps.Reader.reader ->
-    extracted_statements_loc:Loc.t ->
+    extracted_loc:Loc.t ->
     class_insertion_point option
 end
 
@@ -74,6 +74,8 @@ module InformationCollectors : sig
   }
 
   val collect_statements_information : (Loc.t, Loc.t) Flow_ast.Statement.t list -> t
+
+  val collect_expression_information : (Loc.t, Loc.t) Flow_ast.Expression.t -> t
 end
 
 module RefactorProgramMappers : sig
@@ -98,6 +100,14 @@ module RefactorProgramMappers : sig
     expression_loc:Loc.t ->
     expression_replacement:(Loc.t, Loc.t) Flow_ast.Expression.t ->
     constant_definition:(Loc.t, Loc.t) Flow_ast.Statement.t ->
+    (Loc.t, Loc.t) Flow_ast.Program.t ->
+    (Loc.t, Loc.t) Flow_ast.Program.t
+
+  val extract_to_class_field :
+    class_body_loc:Loc.t ->
+    expression_loc:Loc.t ->
+    expression_replacement:(Loc.t, Loc.t) Flow_ast.Expression.t ->
+    field_definition:(Loc.t, Loc.t) Flow_ast.Class.Body.element ->
     (Loc.t, Loc.t) Flow_ast.Program.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t
 

@@ -209,6 +209,19 @@ module Classes = struct
 
   let implements ?targs id = (Loc.none, { Implements.Interface.id; targs })
 
+  let property ?comments ?(annot = Ast.Type.Missing Loc.none) ?(static = false) ?variance ~id value
+      =
+    Body.Property
+      ( Loc.none,
+        {
+          Property.key = Ast.Expression.Object.Property.Identifier (Identifiers.identifier id);
+          value = Ast.Class.Property.Initialized value;
+          annot;
+          static;
+          variance;
+          comments;
+        } )
+
   let method_ ?comments ?(decorators = []) ?(static = false) ~id function_ =
     Body.Method
       ( Loc.none,
