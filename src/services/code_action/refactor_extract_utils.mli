@@ -8,36 +8,6 @@
 module Scope_api = Scope_api.With_Loc
 module Ssa_api = Ssa_api.With_Loc
 
-module AstExtractor : sig
-  type expression_with_statement_loc = {
-    containing_statement_locs: Loc.t list;
-    expression: (Loc.t, Loc.t) Flow_ast.Expression.t;
-  }
-
-  type type_with_statement_loc = {
-    directly_containing_statement_loc: Loc.t;
-    type_: (Loc.t, Loc.t) Flow_ast.Type.t;
-  }
-
-  type extracted = {
-    extracted_statements: (Loc.t, Loc.t) Flow_ast.Statement.t list option;
-    extracted_expression: expression_with_statement_loc option;
-    extracted_type: type_with_statement_loc option;
-  }
-
-  val extract : (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> extracted
-end
-
-module InformationCollectors : sig
-  type t = {
-    has_unwrapped_control_flow: bool;
-    async_function: bool;
-    has_this_super: bool;
-  }
-
-  val collect_statements_information : (Loc.t, Loc.t) Flow_ast.Statement.t list -> t
-end
-
 module InsertionPointCollectors : sig
   type function_insertion_point = {
     function_name: string;
@@ -74,6 +44,36 @@ module InsertionPointCollectors : sig
     reader:Parsing_heaps.Reader.reader ->
     extracted_statements_loc:Loc.t ->
     class_insertion_point option
+end
+
+module AstExtractor : sig
+  type expression_with_statement_loc = {
+    containing_statement_locs: Loc.t list;
+    expression: (Loc.t, Loc.t) Flow_ast.Expression.t;
+  }
+
+  type type_with_statement_loc = {
+    directly_containing_statement_loc: Loc.t;
+    type_: (Loc.t, Loc.t) Flow_ast.Type.t;
+  }
+
+  type extracted = {
+    extracted_statements: (Loc.t, Loc.t) Flow_ast.Statement.t list option;
+    extracted_expression: expression_with_statement_loc option;
+    extracted_type: type_with_statement_loc option;
+  }
+
+  val extract : (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> extracted
+end
+
+module InformationCollectors : sig
+  type t = {
+    has_unwrapped_control_flow: bool;
+    async_function: bool;
+    has_this_super: bool;
+  }
+
+  val collect_statements_information : (Loc.t, Loc.t) Flow_ast.Statement.t list -> t
 end
 
 module RefactorProgramMappers : sig

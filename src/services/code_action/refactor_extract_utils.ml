@@ -9,6 +9,152 @@ module Scope_api = Scope_api.With_Loc
 module Ssa_api = Ssa_api.With_Loc
 open Loc_collections
 
+module InsertionPointCollectors = struct
+  type function_insertion_point = {
+    function_name: string;
+    body_loc: Loc.t;
+    is_method: bool;
+    tparams_rev: Type.typeparam list;
+  }
+
+  type class_insertion_point = {
+    class_name: string option;
+    body_loc: Loc.t;
+    tparams_rev: Type.typeparam list;
+  }
+
+  let not_this_typeparam { Type.is_this; _ } = not is_this
+
+  class function_insertion_point_collector reader extracted_loc =
+    object (this)
+      inherit Typed_ast_utils.type_parameter_mapper as super
+
+      val mutable acc = []
+
+      method collect_name_and_loc ~tparams_rev ?(is_method = false) function_name body_loc =
+        acc <-
+          {
+            function_name;
+            body_loc;
+            is_method;
+            (* Flow models `this` parameter as a generic parameter with bound, so it will appear in
+               the typeparam list. However, that is not necessary for the refactor purpose, since we
+               will never produce `this` annotations. *)
+            tparams_rev = List.filter not_this_typeparam tparams_rev;
+          }
+          :: acc
+
+      method function_inserting_locs_with_typeparams typed_ast =
+        let _ = this#program typed_ast in
+        acc
+
+      method private function_with_name ?name ?(is_method = false) function_declaration =
+        let open Flow_ast in
+        match function_declaration with
+        | { Function.id; body = Function.BodyBlock (block_aloc, _); tparams; _ } ->
+          (match (id, name) with
+          | (None, None) -> ()
+          | (Some (_, { Identifier.name; _ }), _)
+          | (None, Some (_, { Identifier.name; _ })) ->
+            let block_loc = Parsing_heaps.Reader.loc_of_aloc ~reader block_aloc in
+            if Loc.contains block_loc extracted_loc then
+              this#type_params_opt tparams (fun _ ->
+                  this#collect_name_and_loc ~is_method name block_loc |> this#annot_with_tparams))
+        | _ -> ()
+
+      method! function_ function_declaration =
+        let () = this#function_with_name function_declaration in
+        super#function_ function_declaration
+
+      method! variable_declarator ~kind decl =
+        let open Flow_ast in
+        let (_, { Statement.VariableDeclaration.Declarator.id; init }) = decl in
+        match (id, init) with
+        | ( (_, Pattern.Identifier { Pattern.Identifier.name; _ }),
+            Some (_, (Expression.ArrowFunction f | Expression.Function f)) ) ->
+          let () = this#function_with_name ~name f in
+          super#variable_declarator ~kind decl
+        | _ -> super#variable_declarator ~kind decl
+    end
+
+  let collect_function_inserting_points ~typed_ast ~reader ~extracted_statements_loc =
+    let collector = new function_insertion_point_collector reader extracted_statements_loc in
+    collector#function_inserting_locs_with_typeparams typed_ast
+
+  class function_and_method_insertion_point_collector reader extracted_loc =
+    object (this)
+      inherit function_insertion_point_collector reader extracted_loc as super
+
+      method! class_property property =
+        let open Flow_ast in
+        let { Class.Property.key; value; _ } = property in
+        let () =
+          match (key, value) with
+          | ( Expression.Object.Property.Identifier name,
+              Class.Property.Initialized (_, (Expression.ArrowFunction f | Expression.Function f))
+            ) ->
+            this#function_with_name ~name ~is_method:true f
+          | _ -> ()
+        in
+        super#class_property property
+
+      method! class_method meth =
+        let open Flow_ast in
+        let { Class.Method.key; value = (_, f); _ } = meth in
+        let () =
+          match key with
+          | Expression.Object.Property.Identifier name ->
+            this#function_with_name ~name ~is_method:true f
+          | _ -> ()
+        in
+        super#class_method meth
+    end
+
+  let collect_function_method_inserting_points ~typed_ast ~reader ~extracted_loc =
+    let collector = new function_and_method_insertion_point_collector reader extracted_loc in
+    collector#function_inserting_locs_with_typeparams typed_ast
+
+  class class_insertion_point_collector reader extracted_statements_loc =
+    object (this)
+      inherit Typed_ast_utils.type_parameter_mapper as super
+
+      val mutable acc = None
+
+      method private collect_name_and_loc ~tparams_rev class_name body_loc =
+        acc <-
+          Some { class_name; body_loc; tparams_rev = List.filter not_this_typeparam tparams_rev }
+
+      method closest_enclosing_class_scope typed_ast =
+        let _ = this#program typed_ast in
+        acc
+
+      method! class_ class_declaration =
+        let open Flow_ast in
+        let { Class.id; body = (body_aloc, _); tparams; _ } = class_declaration in
+        let body_loc = Parsing_heaps.Reader.loc_of_aloc ~reader body_aloc in
+        if Loc.contains extracted_statements_loc body_loc then
+          (* When the class is nested inside the extracted statements, we stop recursing down. *)
+          class_declaration
+        else if Loc.contains body_loc extracted_statements_loc then
+          let id =
+            match id with
+            | None -> None
+            | Some (_, { Identifier.name; _ }) -> Some name
+          in
+          let () =
+            this#type_params_opt tparams (fun _ ->
+                this#collect_name_and_loc id body_loc |> this#annot_with_tparams)
+          in
+          super#class_ class_declaration
+        else
+          super#class_ class_declaration
+    end
+
+  let find_closest_enclosing_class ~typed_ast ~reader ~extracted_statements_loc =
+    let collector = new class_insertion_point_collector reader extracted_statements_loc in
+    collector#closest_enclosing_class_scope typed_ast
+end
+
 module AstExtractor = struct
   type expression_with_statement_loc = {
     containing_statement_locs: Loc.t list;
@@ -252,152 +398,6 @@ module InformationCollectors = struct
       async_function = information_collector#is_async;
       has_this_super = information_collector#has_this_super;
     }
-end
-
-module InsertionPointCollectors = struct
-  type function_insertion_point = {
-    function_name: string;
-    body_loc: Loc.t;
-    is_method: bool;
-    tparams_rev: Type.typeparam list;
-  }
-
-  type class_insertion_point = {
-    class_name: string option;
-    body_loc: Loc.t;
-    tparams_rev: Type.typeparam list;
-  }
-
-  let not_this_typeparam { Type.is_this; _ } = not is_this
-
-  class function_insertion_point_collector reader extracted_loc =
-    object (this)
-      inherit Typed_ast_utils.type_parameter_mapper as super
-
-      val mutable acc = []
-
-      method collect_name_and_loc ~tparams_rev ?(is_method = false) function_name body_loc =
-        acc <-
-          {
-            function_name;
-            body_loc;
-            is_method;
-            (* Flow models `this` parameter as a generic parameter with bound, so it will appear in
-               the typeparam list. However, that is not necessary for the refactor purpose, since we
-               will never produce `this` annotations. *)
-            tparams_rev = List.filter not_this_typeparam tparams_rev;
-          }
-          :: acc
-
-      method function_inserting_locs_with_typeparams typed_ast =
-        let _ = this#program typed_ast in
-        acc
-
-      method private function_with_name ?name ?(is_method = false) function_declaration =
-        let open Flow_ast in
-        match function_declaration with
-        | { Function.id; body = Function.BodyBlock (block_aloc, _); tparams; _ } ->
-          (match (id, name) with
-          | (None, None) -> ()
-          | (Some (_, { Identifier.name; _ }), _)
-          | (None, Some (_, { Identifier.name; _ })) ->
-            let block_loc = Parsing_heaps.Reader.loc_of_aloc ~reader block_aloc in
-            if Loc.contains block_loc extracted_loc then
-              this#type_params_opt tparams (fun _ ->
-                  this#collect_name_and_loc ~is_method name block_loc |> this#annot_with_tparams))
-        | _ -> ()
-
-      method! function_ function_declaration =
-        let () = this#function_with_name function_declaration in
-        super#function_ function_declaration
-
-      method! variable_declarator ~kind decl =
-        let open Flow_ast in
-        let (_, { Statement.VariableDeclaration.Declarator.id; init }) = decl in
-        match (id, init) with
-        | ( (_, Pattern.Identifier { Pattern.Identifier.name; _ }),
-            Some (_, (Expression.ArrowFunction f | Expression.Function f)) ) ->
-          let () = this#function_with_name ~name f in
-          super#variable_declarator ~kind decl
-        | _ -> super#variable_declarator ~kind decl
-    end
-
-  let collect_function_inserting_points ~typed_ast ~reader ~extracted_statements_loc =
-    let collector = new function_insertion_point_collector reader extracted_statements_loc in
-    collector#function_inserting_locs_with_typeparams typed_ast
-
-  class function_and_method_insertion_point_collector reader extracted_loc =
-    object (this)
-      inherit function_insertion_point_collector reader extracted_loc as super
-
-      method! class_property property =
-        let open Flow_ast in
-        let { Class.Property.key; value; _ } = property in
-        let () =
-          match (key, value) with
-          | ( Expression.Object.Property.Identifier name,
-              Class.Property.Initialized (_, (Expression.ArrowFunction f | Expression.Function f))
-            ) ->
-            this#function_with_name ~name ~is_method:true f
-          | _ -> ()
-        in
-        super#class_property property
-
-      method! class_method meth =
-        let open Flow_ast in
-        let { Class.Method.key; value = (_, f); _ } = meth in
-        let () =
-          match key with
-          | Expression.Object.Property.Identifier name ->
-            this#function_with_name ~name ~is_method:true f
-          | _ -> ()
-        in
-        super#class_method meth
-    end
-
-  let collect_function_method_inserting_points ~typed_ast ~reader ~extracted_loc =
-    let collector = new function_and_method_insertion_point_collector reader extracted_loc in
-    collector#function_inserting_locs_with_typeparams typed_ast
-
-  class class_insertion_point_collector reader extracted_statements_loc =
-    object (this)
-      inherit Typed_ast_utils.type_parameter_mapper as super
-
-      val mutable acc = None
-
-      method private collect_name_and_loc ~tparams_rev class_name body_loc =
-        acc <-
-          Some { class_name; body_loc; tparams_rev = List.filter not_this_typeparam tparams_rev }
-
-      method closest_enclosing_class_scope typed_ast =
-        let _ = this#program typed_ast in
-        acc
-
-      method! class_ class_declaration =
-        let open Flow_ast in
-        let { Class.id; body = (body_aloc, _); tparams; _ } = class_declaration in
-        let body_loc = Parsing_heaps.Reader.loc_of_aloc ~reader body_aloc in
-        if Loc.contains extracted_statements_loc body_loc then
-          (* When the class is nested inside the extracted statements, we stop recursing down. *)
-          class_declaration
-        else if Loc.contains body_loc extracted_statements_loc then
-          let id =
-            match id with
-            | None -> None
-            | Some (_, { Identifier.name; _ }) -> Some name
-          in
-          let () =
-            this#type_params_opt tparams (fun _ ->
-                this#collect_name_and_loc id body_loc |> this#annot_with_tparams)
-          in
-          super#class_ class_declaration
-        else
-          super#class_ class_declaration
-    end
-
-  let find_closest_enclosing_class ~typed_ast ~reader ~extracted_statements_loc =
-    let collector = new class_insertion_point_collector reader extracted_statements_loc in
-    collector#closest_enclosing_class_scope typed_ast
 end
 
 module RefactorProgramMappers = struct
