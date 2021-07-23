@@ -158,9 +158,9 @@ let extract_tests =
     let actual_extracted_expression =
       match extracted_expression with
       | None -> None
-      | Some { AstExtractor.containing_statement_locs; expression } ->
+      | Some { AstExtractor.constant_insertion_points; expression } ->
         Some
-          ( containing_statement_locs,
+          ( Nel.to_list constant_insertion_points,
             expression
             |> Js_layout_generator.expression ~opts:Js_layout_generator.default_opts
             |> pretty_print
@@ -169,8 +169,8 @@ let extract_tests =
     let expected_extracted_expression =
       match expected_expression with
       | None -> None
-      | Some (containing_statement_locs, expression) ->
-        Some (containing_statement_locs, String.trim expression)
+      | Some (constant_insertion_points, expression) ->
+        Some (constant_insertion_points, String.trim expression)
     in
     let actual_extracted_type =
       match extracted_type with
@@ -197,8 +197,10 @@ let extract_tests =
     assert_equal
       ~ctxt
       ~printer:
-        (Base.Option.value_map ~default:"expression not allowed" ~f:(fun (locs, e) ->
-             (locs |> List.map Loc.show |> String.concat ",") ^ "\n" ^ e))
+        (Base.Option.value_map ~default:"expression not allowed" ~f:(fun (points, e) ->
+             (points |> List.map AstExtractor.show_constant_insertion_point |> String.concat ",")
+             ^ "\n"
+             ^ e))
       expected_extracted_expression
       actual_extracted_expression;
     assert_equal
@@ -307,14 +309,30 @@ foo(a + b);
     ( "extract_expression_basic" >:: fun ctxt ->
       assert_extracted
         ~ctxt
-        ~expected_expression:([mk_loc (1, 0) (1, 11)], "1")
+        ~expected_expression:
+          ( [
+              {
+                AstExtractor.title = "Extract to constant in module scope";
+                function_body_loc = None;
+                statement_loc = mk_loc (1, 0) (1, 11);
+              };
+            ],
+            "1" )
         "const a = 1"
         (mk_loc (1, 10) (1, 11)) );
     (* When statement selection is empty, the chosen expression is good. *)
     ( "extract_expression_nested" >:: fun ctxt ->
       assert_extracted
         ~ctxt
-        ~expected_expression:([mk_loc (1, 0) (1, 15)], "1 + 1")
+        ~expected_expression:
+          ( [
+              {
+                AstExtractor.title = "Extract to constant in module scope";
+                function_body_loc = None;
+                statement_loc = mk_loc (1, 0) (1, 15);
+              };
+            ],
+            "1 + 1" )
         "const a = 1 + 1"
         (mk_loc (1, 10) (1, 15)) );
     (* When the selection is both an expression and a statement *)
@@ -322,7 +340,15 @@ foo(a + b);
       assert_extracted
         ~ctxt
         ~expected_statements:"\"hello\";"
-        ~expected_expression:([mk_loc (1, 0) (1, 7)], "\"hello\"")
+        ~expected_expression:
+          ( [
+              {
+                AstExtractor.title = "Extract to constant in module scope";
+                function_body_loc = None;
+                statement_loc = mk_loc (1, 0) (1, 7);
+              };
+            ],
+            "\"hello\"" )
         "'hello'"
         (mk_loc (1, 0) (1, 7)) );
     (* Same as above case, but adding a semicolon makes the selection only statement. *)
@@ -340,20 +366,85 @@ foo(a + b);
       assert_extracted
         ~ctxt
         "class A { a = 3 }"
-        ~expected_expression:([mk_loc (1, 0) (1, 17)], "3")
+        ~expected_expression:
+          ( [
+              {
+                AstExtractor.title = "Extract to constant in module scope";
+                function_body_loc = None;
+                statement_loc = mk_loc (1, 0) (1, 17);
+              };
+            ],
+            "3" )
         (mk_loc (1, 14) (1, 15));
       assert_extracted
         ~ctxt
         "class A { constructor(a = 3) {} }"
-        ~expected_expression:([mk_loc (1, 0) (1, 33)], "3")
+        ~expected_expression:
+          ( [
+              {
+                AstExtractor.title = "Extract to constant in module scope";
+                function_body_loc = None;
+                statement_loc = mk_loc (1, 0) (1, 33);
+              };
+            ],
+            "3" )
         (mk_loc (1, 26) (1, 27)) );
     (* Expression exists in a class, but also in a statement. *)
     ( "expression_in_class_statements" >:: fun ctxt ->
       assert_extracted
         ~ctxt
         "class A { foo() { const a = 3; } }"
-        ~expected_expression:([mk_loc (1, 18) (1, 30); mk_loc (1, 0) (1, 34)], "3")
+        ~expected_expression:
+          ( [
+              {
+                AstExtractor.title = "Extract to constant in method 'foo'";
+                function_body_loc = Some (mk_loc (1, 16) (1, 32));
+                statement_loc = mk_loc (1, 18) (1, 30);
+              };
+              {
+                AstExtractor.title = "Extract to constant in module scope";
+                function_body_loc = None;
+                statement_loc = mk_loc (1, 0) (1, 34);
+              };
+            ],
+            "3" )
         (mk_loc (1, 28) (1, 29)) );
+    (* Expression in many containing scopes with different names *)
+    ( "expression_in_many_scopes" >:: fun ctxt ->
+      let source =
+        {|
+        class A {
+          foo() {
+            function bar() {
+              const a = 3;
+            }
+          }
+        }
+        |}
+      in
+      assert_extracted
+        ~ctxt
+        source
+        ~expected_expression:
+          ( [
+              {
+                AstExtractor.title = "Extract to constant in function 'bar'";
+                function_body_loc = Some (mk_loc (4, 27) (6, 13));
+                statement_loc = mk_loc (5, 14) (5, 26);
+              };
+              {
+                AstExtractor.title = "Extract to constant in method 'foo'";
+                function_body_loc = Some (mk_loc (3, 16) (7, 11));
+                statement_loc = mk_loc (4, 12) (6, 13);
+              };
+              {
+                AstExtractor.title = "Extract to constant in module scope";
+                function_body_loc = None;
+                statement_loc = mk_loc (2, 8) (8, 9);
+              };
+            ],
+            "3" )
+        (mk_loc (5, 24) (5, 25)) );
     ( "extract_types" >:: fun ctxt ->
       assert_extracted
         ~ctxt

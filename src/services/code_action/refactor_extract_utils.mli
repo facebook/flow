@@ -40,8 +40,15 @@ module InsertionPointCollectors : sig
 end
 
 module AstExtractor : sig
-  type expression_with_statement_loc = {
-    containing_statement_locs: Loc.t list;
+  type constant_insertion_point = {
+    title: string;
+    function_body_loc: Loc.t option;
+    statement_loc: Loc.t;
+  }
+  [@@deriving show]
+
+  type expression_with_constant_insertion_points = {
+    constant_insertion_points: constant_insertion_point Nel.t;
     expression: (Loc.t, Loc.t) Flow_ast.Expression.t;
   }
 
@@ -52,7 +59,7 @@ module AstExtractor : sig
 
   type extracted = {
     extracted_statements: (Loc.t, Loc.t) Flow_ast.Statement.t list option;
-    extracted_expression: expression_with_statement_loc option;
+    extracted_expression: expression_with_constant_insertion_points option;
     extracted_type: type_with_statement_loc option;
   }
 
