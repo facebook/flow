@@ -32,16 +32,20 @@ static struct custom_operations matcher_ops = {
 #define Matcher_val(v) (*((matcher_t **) Data_custom_val(v)))
 
 static value alloc_matcher(matcher_t *m) {
-  value v = caml_alloc_custom(&matcher_ops, sizeof(matcher_t *), 0, 1);
+  CAMLparam0();
+  CAMLlocal1(v);
+  v = caml_alloc_custom(&matcher_ops, sizeof(matcher_t *), 0, 1);
   Matcher_val(v) = m;
-  return v;
+  CAMLreturn(v);
 }
 
 static value alloc_result(match_result_t *r) {
-  value v = caml_alloc(2, 0);
+  CAMLparam0();
+  CAMLlocal1(v);
+  v = caml_alloc(2, 0);
   Store_field(v, 0, caml_copy_string(r->value));
   Store_field(v, 1, caml_copy_double(r->score));
-  return v;
+  CAMLreturn(v);
 }
 
 value fuzzy_create(value candidates) {
@@ -103,9 +107,9 @@ value fuzzy_match(value matcher_val, value query_val, value options) {
   match_results_t results = matcher_find(matcher, query, opts);
   rest = Val_int(0); // end of list
   for (int i = results.size - 1; i >= 0; i--) {
-    match_result_t result = results.results[i];
+    match_result_t *result = &results.results[i];
     head = caml_alloc(2, 0); // list item
-    Store_field(head, 0, alloc_result(&result));
+    Store_field(head, 0, alloc_result(result));
     Store_field(head, 1, rest);
     rest = head;
   }
