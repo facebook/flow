@@ -12,6 +12,12 @@ let assert_refactored ~ctxt expected source extract_range =
   let ast = parse source in
   let typed_ast = typed_ast_of_ast ast in
   let reader = State_reader.create () in
+  let remove_blank_lines s =
+    s
+    |> String.split_on_char '\n'
+    |> List.filter (fun s -> String.trim s <> "")
+    |> String.concat "\n"
+  in
   let actual =
     Refactor_extract.provide_available_refactors
       ~ast
@@ -29,10 +35,11 @@ let assert_refactored ~ctxt expected source extract_range =
                   ~preserve_docblock:true
                   ~checksum:None
              |> pretty_print
-             |> String.trim ))
+             |> String.trim
+             |> remove_blank_lines ))
   in
   let expected : (string * string) list =
-    List.map (fun (title, s) -> (title, String.trim s)) expected
+    List.map (fun (title, s) -> (title, s |> String.trim |> remove_blank_lines)) expected
   in
   let printer refactors =
     refactors
@@ -992,6 +999,37 @@ function level1() {
         ]
       in
       assert_refactored ~ctxt expected source (mk_loc (13, 18) (15, 61)) );
+    (* A simple type alias extraction without any type variables. *)
+    ( "simple_type_extract" >:: fun ctxt ->
+      let source = "const a: number = 1;" in
+      let expected = [("Extract to type alias", "type NewType = number;\nconst a: NewType = 1;")] in
+      assert_refactored ~ctxt expected source (mk_loc (1, 9) (1, 15)) );
+    (* Selected type uses generic type parameters *)
+    ( "type_extract_with_generic_type_parameters" >:: fun ctxt ->
+      let source =
+        {|
+        function foo<A, B>() {
+          class Bar<C, D> {
+            baz<E, F>(): [A, B, C, D, E, F] { }
+          }
+        }
+        |}
+      in
+      let expected =
+        [
+          ( "Extract to type alias",
+            {|
+function foo<A, B>() {
+  type NewType<C, D, E, F> = [A, B, C, D, E, F];
+  class Bar<C, D> {
+    baz<E, F>(): NewType<C, D, E, F> {}
+  }
+}
+            |}
+          );
+        ]
+      in
+      assert_refactored ~ctxt expected source (mk_loc (4, 25) (4, 43)) );
   ]
 
 let tests =

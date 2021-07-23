@@ -64,7 +64,8 @@ module Types = struct
   let object_ ?(loc = Loc.none) ?exact ?inexact properties =
     (loc, Ast.Type.Object (Objects.make ?exact ?inexact properties))
 
-  let type_param ?(loc = Loc.none) ~bound ~variance ~default name =
+  let type_param ?(loc = Loc.none) ?(bound = Flow_ast.Type.Missing Loc.none) ?variance ?default name
+      =
     (loc, { Ast.Type.TypeParam.name = Identifiers.identifier name; bound; variance; default })
 
   let type_params ?comments ?(loc = Loc.none) params =
@@ -361,6 +362,9 @@ module Statements = struct
   let try_ ?(loc = Loc.none) ?comments ?handler ?finalizer stmts =
     let block = (loc, { Block.body = stmts; comments = None }) in
     (loc, Try { Try.block; handler; finalizer; comments })
+
+  let type_alias ?(loc = Loc.none) ?comments ?tparams ~name right =
+    (loc, TypeAlias { TypeAlias.id = Identifiers.identifier name; tparams; right; comments })
 
   let catch ?(loc = Loc.none) ?comments ?param stmts =
     let body = (loc, { Block.body = stmts; comments = None }) in

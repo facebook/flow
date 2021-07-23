@@ -494,6 +494,35 @@ module RefactorProgramMappers = struct
     in
 
     mapper#program ast
+
+  class extract_to_type_alias_refactor_mapper ~statement_loc ~type_loc ~type_replacement ~type_alias
+    =
+    object (this)
+      inherit [Loc.t] Flow_ast_mapper.mapper as super
+
+      method! type_ ((loc, _) as t) =
+        if Loc.equal loc type_loc then
+          type_replacement
+        else
+          super#type_ t
+
+      method! statement_fork_point stmt =
+        let (stmt_loc, _) = stmt in
+        if Loc.equal stmt_loc statement_loc then
+          [type_alias; this#statement stmt]
+        else
+          super#statement_fork_point stmt
+    end
+
+  let extract_to_type_alias ~statement_loc ~type_loc ~type_replacement ~type_alias ast =
+    let mapper =
+      new extract_to_type_alias_refactor_mapper
+        ~statement_loc
+        ~type_loc
+        ~type_replacement
+        ~type_alias
+    in
+    mapper#program ast
 end
 
 module VariableAnalysis = struct
@@ -679,7 +708,7 @@ module TypeSynthesizer = struct
 
   class type_collector reader (locs : LocSet.t) =
     object (this)
-      inherit Typed_ast_utils.type_parameter_mapper
+      inherit Typed_ast_utils.type_parameter_mapper as super
 
       val mutable acc = LocMap.empty
 
@@ -696,6 +725,11 @@ module TypeSynthesizer = struct
         let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
         if LocSet.mem loc locs then this#annot_with_tparams (this#collect_type_at_loc loc t);
         ident
+
+      method! type_ (((aloc, type_), _) as ast_type) =
+        let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
+        if LocSet.mem loc locs then this#annot_with_tparams (this#collect_type_at_loc loc type_);
+        super#type_ ast_type
     end
 
   class generic_name_collector =
@@ -786,7 +820,7 @@ module TypeSynthesizer = struct
         | None -> None
         | Some default -> Some (default |> type_scheme_of_type |> synth_type Loc.none |> snd)
       in
-      Ast_builder.Types.type_param ~bound ~variance ~default name
+      Ast_builder.Types.type_param ~bound ?variance ?default name
     in
     let type_synthesizer loc =
       match LocMap.find_opt loc type_at_loc_map with

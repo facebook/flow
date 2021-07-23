@@ -92,6 +92,14 @@ module RefactorProgramMappers : sig
     method_declaration:(Loc.t, Loc.t) Flow_ast_mapper.Ast.Class.Body.element ->
     (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
     (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
+
+  val extract_to_type_alias :
+    statement_loc:Loc.t ->
+    type_loc:Loc.t ->
+    type_replacement:(Loc.t, Loc.t) Flow_ast.Type.t ->
+    type_alias:(Loc.t, Loc.t) Flow_ast.Statement.t ->
+    (Loc.t, Loc.t) Flow_ast.Program.t ->
+    (Loc.t, Loc.t) Flow_ast.Program.t
 end
 
 module VariableAnalysis : sig

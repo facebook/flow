@@ -436,9 +436,97 @@ let extract_from_statements_refactors
         ~extracted_statements
         ~extracted_statements_loc
 
+let extract_to_type_alias_refactors
+    ~ast
+    ~full_cx
+    ~file
+    ~file_sig
+    ~typed_ast
+    ~reader
+    { AstExtractor.directly_containing_statement_loc; type_ } =
+  let type_loc = fst type_ in
+  let available_tparams =
+    match
+      InsertionPointCollectors.collect_function_inserting_points
+        ~typed_ast
+        ~reader
+        ~extracted_statements_loc:type_loc
+    with
+    | [] -> []
+    | { InsertionPointCollectors.tparams_rev; _ } :: _ -> tparams_rev
+  in
+  let (type_params_to_add, type_param_synthesizer) =
+    let type_synthesizer_context =
+      TypeSynthesizer.create_synthesizer_context
+        ~full_cx
+        ~file
+        ~file_sig
+        ~typed_ast
+        ~reader
+        ~locs:(LocSet.singleton type_loc)
+    in
+    let { TypeSynthesizer.type_param_synthesizer; type_synthesizer; _ } =
+      TypeSynthesizer.create_type_synthesizer_with_import_adder type_synthesizer_context
+    in
+    let used_tparams =
+      type_loc
+      |> type_synthesizer
+      |> Base.Option.value_map ~default:[] ~f:fst
+      |> TypeParamSet.of_list
+    in
+    let type_params_to_add =
+      available_tparams
+      |> TypeParamSet.of_list
+      |> TypeParamSet.diff used_tparams
+      |> TypeParamSet.elements
+    in
+    (type_params_to_add, type_param_synthesizer (available_tparams @ type_params_to_add))
+  in
+  let new_ast =
+    let open Ast_builder in
+    let type_replacement =
+      let targs =
+        match type_params_to_add with
+        | [] -> None
+        | _ ->
+          Some
+            (type_params_to_add
+            |> List.map (fun { Type.name; _ } -> Types.unqualified_generic name)
+            |> Types.type_args)
+      in
+      Types.unqualified_generic ?targs "NewType"
+    in
+    let type_alias =
+      let tparams =
+        match type_params_to_add with
+        | [] -> None
+        | _ -> Some (type_params_to_add |> List.map type_param_synthesizer |> Types.type_params)
+      in
+      Statements.type_alias ?tparams ~name:"NewType" type_
+    in
+    RefactorProgramMappers.extract_to_type_alias
+      ~statement_loc:directly_containing_statement_loc
+      ~type_loc
+      ~type_replacement
+      ~type_alias
+      ast
+  in
+  [{ title = "Extract to type alias"; new_ast; added_imports = [] }]
+
 let provide_available_refactors ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader ~extract_range =
-  let { AstExtractor.extracted_statements; _ } = AstExtractor.extract ast extract_range in
-  Base.Option.value_map
-    ~default:[]
-    ~f:(extract_from_statements_refactors ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader)
-    extracted_statements
+  let { AstExtractor.extracted_statements; extracted_type; _ } =
+    AstExtractor.extract ast extract_range
+  in
+  let extract_from_statements_refactors =
+    Base.Option.value_map
+      ~default:[]
+      ~f:(extract_from_statements_refactors ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader)
+      extracted_statements
+  in
+  let extract_to_type_alias_refactors =
+    Base.Option.value_map
+      ~default:[]
+      ~f:(extract_to_type_alias_refactors ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader)
+      extracted_type
+  in
+  extract_from_statements_refactors @ extract_to_type_alias_refactors
