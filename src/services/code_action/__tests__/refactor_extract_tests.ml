@@ -1011,6 +1011,66 @@ function level1() {
         ]
       in
       assert_refactored ~ctxt expected source (mk_loc (13, 18) (15, 61)) );
+    (* A simple constant extraction that can go to all possible scopes. *)
+    ( "simple_constant_extract" >:: fun ctxt ->
+      let source = "function test() { const a = 1; }" in
+      let expected =
+        [
+          ( "Extract to constant in function 'test'",
+            {|
+function test() {
+  const newLocal = 1;
+  const a = newLocal;
+}
+            |} );
+          ( "Extract to constant in module scope",
+            {|
+const newLocal = 1;
+function test() {
+  const a = newLocal;
+}
+            |} );
+        ]
+      in
+      assert_refactored ~ctxt expected source (mk_loc (1, 28) (1, 29)) );
+    (* Testing that we won't extract constant to scopes that will result in undefined variables. *)
+    ( "constant_extract_with_scoping_issues" >:: fun ctxt ->
+      let source =
+        {|
+        function foo() {
+          const a = 3;
+          function bar() {
+            const b = 4;
+            function baz() {
+              const c = 5;
+              // selected a + b + c
+              return a + b + c;
+            }
+          }
+        }
+        |}
+      in
+      let expected =
+        [
+          ( "Extract to constant in function 'baz'",
+            {|
+function foo() {
+  const a = 3;
+  function bar() {
+    const b = 4;
+    function baz() {
+      const c = 5;
+      const newLocal = a + b + c;
+      // selected a + b + c
+      return newLocal;
+    }
+  }
+}
+          |}
+          );
+        ]
+      in
+      assert_refactored ~ctxt expected source (mk_loc (9, 21) (9, 30)) );
     (* A simple type alias extraction without any type variables. *)
     ( "simple_type_extract" >:: fun ctxt ->
       let source = "const a: number = 1;" in

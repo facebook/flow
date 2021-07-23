@@ -406,6 +406,39 @@ export default (suite(
             method: 'textDocument/codeAction',
             result: [
               {
+                title: 'Extract to constant in module scope',
+                kind: 'refactor.extract',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/prop-missing-bracket-syntax.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 3,
+                            character: 0,
+                          },
+                          end: {
+                            line: 3,
+                            character: 13,
+                          },
+                        },
+                        newText: 'const newLocal = "faceboy";\n\nx[newLocal];',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'refactor_extract',
+                    'Extract to constant in module scope',
+                  ],
+                },
+              },
+              {
                 title: 'Replace `faceboy` with `facebook`',
                 kind: 'quickfix',
                 diagnostics: [
@@ -623,7 +656,47 @@ export default (suite(
           ],
         },
       }).verifyAllLSPMessagesInStep(
-        [{method: 'textDocument/codeAction', result: []}],
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Extract to constant in module scope',
+                kind: 'refactor.extract',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/object-cast.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 3,
+                            character: 0,
+                          },
+                          end: {
+                            line: 3,
+                            character: 19,
+                          },
+                        },
+                        newText:
+                          'const newLocal = { floo: "123" };\n\n(newLocal: T);',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'refactor_extract',
+                    'Extract to constant in module scope',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
@@ -770,6 +843,39 @@ export default (suite(
             method: 'textDocument/codeAction',
             result: [
               {
+                title: 'Extract to constant in module scope',
+                kind: 'refactor.extract',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/class-object-subtype.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 8,
+                            character: 0,
+                          },
+                          end: {
+                            line: 8,
+                            character: 13,
+                          },
+                        },
+                        newText: 'const newLocal = new A();\n\nfoo(newLocal);',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'refactor_extract',
+                    'Extract to constant in module scope',
+                  ],
+                },
+              },
+              {
                 title: 'Rewrite object type as an interface',
                 kind: 'quickfix',
                 diagnostics: [
@@ -875,6 +981,40 @@ export default (suite(
           {
             method: 'textDocument/codeAction',
             result: [
+              {
+                title: 'Extract to constant in module scope',
+                kind: 'refactor.extract',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/class-object-subtype.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 12,
+                            character: 0,
+                          },
+                          end: {
+                            line: 12,
+                            character: 18,
+                          },
+                        },
+                        newText:
+                          'const newLocal = new A();\n\nbar({ i: newLocal });',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'refactor_extract',
+                    'Extract to constant in module scope',
+                  ],
+                },
+              },
               {
                 title: 'Rewrite object type as an interface',
                 kind: 'quickfix',
@@ -982,6 +1122,39 @@ export default (suite(
             method: 'textDocument/codeAction',
             result: [
               {
+                title: 'Extract to constant in module scope',
+                kind: 'refactor.extract',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/class-object-subtype.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 18,
+                            character: 0,
+                          },
+                          end: {
+                            line: 18,
+                            character: 12,
+                          },
+                        },
+                        newText: 'const newLocal = new A();\n\nbaz(newLocal);',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'refactor_extract',
+                    'Extract to constant in module scope',
+                  ],
+                },
+              },
+              {
                 title: 'Rewrite `T` as an interface',
                 kind: 'quickfix',
                 diagnostics: [
@@ -1088,6 +1261,39 @@ export default (suite(
           {
             method: 'textDocument/codeAction',
             result: [
+              {
+                title: 'Extract to constant in module scope',
+                kind: 'refactor.extract',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/class-object-subtype.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 22,
+                            character: 0,
+                          },
+                          end: {
+                            line: 22,
+                            character: 12,
+                          },
+                        },
+                        newText: 'const newLocal = new A();\n\nqux(newLocal);',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'refactor_extract',
+                    'Extract to constant in module scope',
+                  ],
+                },
+              },
               {
                 title: 'Rewrite object type as an interface',
                 kind: 'quickfix',

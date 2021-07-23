@@ -547,6 +547,41 @@ module RefactorProgramMappers = struct
 
     mapper#program ast
 
+  class replace_original_expression_mapper ~expression_loc ~expression_replacement =
+    object (_this)
+      inherit [Loc.t] Flow_ast_mapper.mapper as super
+
+      method! expression ((expr_loc, _) as expr) =
+        if Loc.equal expr_loc expression_loc then
+          expression_replacement
+        else
+          super#expression expr
+    end
+
+  class extract_to_constant_refactor_mapper
+    ~statement_loc ~expression_loc ~expression_replacement ~constant_definition =
+    object (this)
+      inherit replace_original_expression_mapper ~expression_loc ~expression_replacement as super
+
+      method! statement_fork_point stmt =
+        let (stmt_loc, _) = stmt in
+        if Loc.equal stmt_loc statement_loc then
+          [constant_definition; this#statement stmt]
+        else
+          super#statement_fork_point stmt
+    end
+
+  let extract_to_constant
+      ~statement_loc ~expression_loc ~expression_replacement ~constant_definition ast =
+    let mapper =
+      new extract_to_constant_refactor_mapper
+        ~statement_loc
+        ~expression_loc
+        ~expression_replacement
+        ~constant_definition
+    in
+    mapper#program ast
+
   class extract_to_type_alias_refactor_mapper ~statement_loc ~type_loc ~type_replacement ~type_alias
     =
     object (this)

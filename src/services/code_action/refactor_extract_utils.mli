@@ -93,6 +93,14 @@ module RefactorProgramMappers : sig
     (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
     (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
 
+  val extract_to_constant :
+    statement_loc:Loc.t ->
+    expression_loc:Loc.t ->
+    expression_replacement:(Loc.t, Loc.t) Flow_ast.Expression.t ->
+    constant_definition:(Loc.t, Loc.t) Flow_ast.Statement.t ->
+    (Loc.t, Loc.t) Flow_ast.Program.t ->
+    (Loc.t, Loc.t) Flow_ast.Program.t
+
   val extract_to_type_alias :
     statement_loc:Loc.t ->
     type_loc:Loc.t ->

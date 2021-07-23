@@ -212,7 +212,7 @@ let create_extracted_function_call
   in
   let_declarations @ [function_call_statement_with_collector]
 
-let create_refactor
+let create_refactor_for_statements
     ~scope_info
     ~defs_with_scopes_of_local_uses
     ~escaping_definitions
@@ -314,7 +314,7 @@ let available_refactors_for_statements
     ~extracted_statements
     ~extracted_statements_loc =
   let create_refactor =
-    create_refactor
+    create_refactor_for_statements
       ~scope_info
       ~defs_with_scopes_of_local_uses
       ~escaping_definitions
@@ -449,6 +449,57 @@ let extract_from_statements_refactors
         ~extracted_statements
         ~extracted_statements_loc
 
+let create_extract_to_constant_refactor
+    ~scope_info
+    ~defs_with_scopes_of_local_uses
+    ~extracted_expression_loc
+    ~expression
+    ~ast
+    { AstExtractor.title; function_body_loc; statement_loc } =
+  let undefined_variables =
+    VariableAnalysis.undefined_variables_after_extraction
+      ~scope_info
+      ~defs_with_scopes_of_local_uses
+      ~new_function_target_scope_loc:function_body_loc
+      ~extracted_loc:extracted_expression_loc
+  in
+  match undefined_variables with
+  | _ :: _ -> None
+  | [] ->
+    Some
+      {
+        title;
+        new_ast =
+          RefactorProgramMappers.extract_to_constant
+            ~statement_loc
+            ~expression_loc:extracted_expression_loc
+            ~expression_replacement:(Ast_builder.Expressions.identifier "newLocal")
+            ~constant_definition:
+              (Ast_builder.Statements.const_declaration
+                 [Ast_builder.Statements.variable_declarator ~init:expression "newLocal"])
+            ast;
+        added_imports = [];
+      }
+
+let extract_from_expression_refactors ~ast { AstExtractor.constant_insertion_points; expression } =
+  let extracted_expression_loc = fst expression in
+  let (scope_info, ssa_values) = Ssa_builder.program_with_scope ast in
+  let { VariableAnalysis.defs_with_scopes_of_local_uses; _ } =
+    VariableAnalysis.collect_relevant_defs_with_scope
+      ~scope_info
+      ~ssa_values
+      ~extracted_loc:extracted_expression_loc
+  in
+  constant_insertion_points
+  |> Nel.to_list
+  |> List.filter_map
+       (create_extract_to_constant_refactor
+          ~scope_info
+          ~defs_with_scopes_of_local_uses
+          ~extracted_expression_loc
+          ~expression
+          ~ast)
+
 let extract_to_type_alias_refactors
     ~ast
     ~full_cx
@@ -527,7 +578,7 @@ let extract_to_type_alias_refactors
   [{ title = "Extract to type alias"; new_ast; added_imports = [] }]
 
 let provide_available_refactors ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader ~extract_range =
-  let { AstExtractor.extracted_statements; extracted_type; _ } =
+  let { AstExtractor.extracted_statements; extracted_expression; extracted_type } =
     AstExtractor.extract ast extract_range
   in
   let extract_from_statements_refactors =
@@ -536,10 +587,18 @@ let provide_available_refactors ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader
       ~f:(extract_from_statements_refactors ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader)
       extracted_statements
   in
+  let extract_from_expression_refactors =
+    Base.Option.value_map
+      ~default:[]
+      ~f:(extract_from_expression_refactors ~ast)
+      extracted_expression
+  in
   let extract_to_type_alias_refactors =
     Base.Option.value_map
       ~default:[]
       ~f:(extract_to_type_alias_refactors ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader)
       extracted_type
   in
-  extract_from_statements_refactors @ extract_to_type_alias_refactors
+  extract_from_statements_refactors
+  @ extract_from_expression_refactors
+  @ extract_to_type_alias_refactors
