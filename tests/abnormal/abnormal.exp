@@ -1,3 +1,52 @@
+Error ------------------------------------------------------------------------------------------- break-continue.js:18:5
+
+Unreachable code. [unreachable-code]
+
+   18|     break; // Error - unreachable
+           ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- break-continue.js:29:5
+
+Unreachable code. [unreachable-code]
+
+   29|     break; // Error - unreachable
+           ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- break-continue.js:40:5
+
+Unreachable code. [unreachable-code]
+
+   40|     break; // Error - unreachable
+           ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- break-continue.js:51:5
+
+Unreachable code. [unreachable-code]
+
+   51|     break; // Error - unreachable
+           ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- break-continue.js:65:4
+
+Cannot cast `x` to number because null [1] is incompatible with number [2]. [incompatible-cast]
+
+   break-continue.js:65:4
+   65|   (x: number); // Error - null incompatible with number
+          ^
+
+References:
+   break-continue.js:56:10
+   56|   let x: null | number = 3;
+                ^^^^ [1]
+   break-continue.js:65:7
+   65|   (x: number); // Error - null incompatible with number
+             ^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------- toplevel_break.js:3:1
 
 Illegal break statement
@@ -23,4 +72,4 @@ Illegal return statement
 
 
 
-Found 3 errors
+Found 8 errors

@@ -993,6 +993,10 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
         Abnormal.throw_stmt_control_flow_exception ast Abnormal.Return
       | (Some then_exn, Some else_exn) when then_exn = else_exn ->
         Abnormal.throw_stmt_control_flow_exception ast then_exn
+      | (Some (Abnormal.Break then_opt_label), Some (Abnormal.Continue else_opt_label))
+      | (Some (Abnormal.Continue then_opt_label), Some (Abnormal.Break else_opt_label))
+        when then_opt_label = else_opt_label ->
+        Abnormal.throw_stmt_control_flow_exception ast (Abnormal.Continue then_opt_label)
       | _ -> ast
     end
   | ( top_loc,

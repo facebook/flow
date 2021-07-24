@@ -1,3 +1,5 @@
+// @flow
+
 function bar(x:number) { }
 function foo() {
     var x = null;
