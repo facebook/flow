@@ -57,7 +57,7 @@ Flow-typed JavaScript can use this to generate Flow's syntax tree with annotated
 
 ## Building Flow from source
 
-Flow is written in OCaml (OCaml 4.09.1 is required).
+Flow is written in OCaml (OCaml 4.10.2 is required).
 
 1. Install system dependencies:
 
