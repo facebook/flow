@@ -10,7 +10,7 @@
 
 'use strict';
 
-module.exports = (j: any, root: any) => {
+module.exports = (j: any, root: any): string => {
   root
     .find(j.ObjectTypeAnnotation, {inexact: false, exact: false})
     .forEach(path => {
