@@ -142,7 +142,7 @@ module type S = sig
         sense: bool;
         lit: float * string;
       }
-    | SentinelR of string
+    | SentinelR of string * L.t
   [@@deriving show { with_path = false }]
 
   val show_refinement_kind_without_locs : refinement_kind -> string
@@ -220,7 +220,7 @@ module Make
         sense: bool;
         lit: float * string;
       }
-    | SentinelR of string
+    | SentinelR of string * L.t
   [@@deriving show { with_path = false }]
 
   let rec show_refinement_kind_without_locs = function
@@ -258,7 +258,7 @@ module Make
         Printf.sprintf "Not (%s)" lit
       else
         lit
-    | SentinelR prop -> Printf.sprintf "SentinelR %s" prop
+    | SentinelR (prop, _) -> Printf.sprintf "SentinelR %s" prop
 
   type refinement = L.LSet.t * refinement_kind
 
@@ -1874,14 +1874,14 @@ module Make
               {
                 Expression.Member._object;
                 property =
-                  ( Expression.Member.PropertyIdentifier (_, { Identifier.name = prop_name; _ })
+                  ( Expression.Member.PropertyIdentifier (ploc, { Identifier.name = prop_name; _ })
                   | Expression.Member.PropertyExpression
-                      (_, Expression.Literal { Literal.value = Literal.String prop_name; _ }) );
+                      (ploc, Expression.Literal { Literal.value = Literal.String prop_name; _ }) );
                 _;
               } ) ->
           (match key _object with
           | Some name ->
-            let refinement = SentinelR prop_name in
+            let refinement = SentinelR (prop_name, ploc) in
             let refinement =
               if sense then
                 refinement
