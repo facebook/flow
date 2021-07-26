@@ -241,11 +241,14 @@ let tests =
                "enum Foo {}\nFoo"
                [mk_loc (1, 5) (1, 8); mk_loc (2, 0) (2, 3)];
          "switch"
-         >:: mk_scope_builder_all_uses_test "switch ('') { case '': const foo = ''; foo; };" [];
-         (* TODO this should be the output, but there is a bug:
-            [mk_loc (1, 29) (1, 32);
-             mk_loc (1, 39) (1, 42)];
-         *)
+         >:: mk_scope_builder_all_uses_test
+               "switch ('') { case '': const foo = ''; foo; };"
+               [mk_loc (1, 29) (1, 32); mk_loc (1, 39) (1, 42)];
+         "switch_weird"
+         >:: mk_scope_builder_all_uses_test
+               "switch ('') { case l: 0; break; case '': let l };"
+               [mk_loc (1, 19) (1, 20); mk_loc (1, 45) (1, 46)];
+         (* ^^ this looks super weird but is correct *)
          "scope_loc_function_declaration"
          >:: mk_scope_builder_scope_loc_test
                "function a() {};"

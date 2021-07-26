@@ -821,3 +821,13 @@ let%expect_test "dont_havoc_to_uninit_in_function" =
 function g() { return f() }|};
   [%expect {|
     [ (2, 22) to (2, 23) => { (1, 9) to (1, 10): (`f`) } ] |}]
+
+let%expect_test "switch_decl" =
+  print_ssa_test {|switch ('') { case '': const foo = ''; foo; };|};
+  [%expect {|
+    [ (1, 39) to (1, 42) => { (1, 29) to (1, 32): (`foo`) } ] |}]
+
+let%expect_test "switch_weird_decl" =
+  print_ssa_test {|switch ('') { case l: 0; break; case '': let l };|};
+  [%expect {|
+    [ (1, 19) to (1, 20) => { (uninitialized) } ] |}]

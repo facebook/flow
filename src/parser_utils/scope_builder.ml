@@ -262,6 +262,23 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         let lexical_bindings = lexical_hoist#eval (lexical_hoist#block loc) stmt in
         this#with_bindings ~lexical:true loc lexical_bindings (super#block loc) stmt
 
+      method! switch loc (switch : ('loc, 'loc) Ast.Statement.Switch.t) =
+        let open Ast.Statement.Switch in
+        let { discriminant; cases; comments = _ } = switch in
+        let _ = this#expression discriminant in
+        let lexical_hoist = new lexical_hoister ~with_types in
+        let lexical_bindings =
+          lexical_hoist#eval
+            (Base.List.map ~f:(fun ((_, { Case.consequent; _ }) as case) ->
+                 let _ = lexical_hoist#statement_list consequent in
+                 case))
+            cases
+        in
+        let _ = this#with_bindings ~lexical:true loc lexical_bindings this#switch_cases cases in
+        switch
+
+      method private switch_cases = Base.List.map ~f:this#switch_case
+
       (* like block *)
       method! program (program : (L.t, L.t) Ast.Program.t) =
         let (loc, _) = program in

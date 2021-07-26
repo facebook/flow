@@ -930,11 +930,8 @@ struct
       (*   [ENVi+1 | ENVi'] si+1 [ENVi+1']                       *)
       (* POST = ENVN | ENVN'                                     *)
       (***********************************************************)
-      method! switch _loc (switch : (L.t, L.t) Ast.Statement.Switch.t) =
+      method! switch_cases cases =
         this#expecting_abrupt_completions (fun () ->
-            let open Ast.Statement.Switch in
-            let { discriminant; cases; comments = _ } = switch in
-            ignore @@ this#expression discriminant;
             let (env, case_completion_states) =
               List.fold_left
                 (fun acc stuff ->
@@ -954,7 +951,7 @@ struct
             this#commit_abrupt_completion_matching
               AbruptCompletion.(mem [break None])
               completion_state);
-        switch
+        cases
 
       method private ssa_switch_case
           (env, case_completion_states) (case : (L.t, L.t) Ast.Statement.Switch.Case.t') =

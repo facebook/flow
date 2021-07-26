@@ -33,6 +33,10 @@ module type S = sig
          method private scoped_for_of_statement :
            L.t -> (L.t, L.t) Flow_ast.Statement.ForOf.t -> (L.t, L.t) Flow_ast.Statement.ForOf.t
 
+         method private switch_cases :
+           (L.t, L.t) Flow_ast.Statement.Switch.Case.t list ->
+           (L.t, L.t) Flow_ast.Statement.Switch.Case.t list
+
          method private lambda :
            L.t -> (L.t, L.t) Flow_ast.Function.Params.t -> (L.t, L.t) Flow_ast.Function.body -> unit
        end
