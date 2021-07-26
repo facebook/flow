@@ -560,7 +560,7 @@ let extract_from_expression_refactors
     InformationCollectors.collect_expression_information expression
   in
   let extracted_expression_loc = fst expression in
-  let (scope_info, ssa_values) = Ssa_builder.program_with_scope ast in
+  let (_abnormal_completion_state, (scope_info, ssa_values)) = Ssa_builder.program_with_scope ast in
   let { VariableAnalysis.defs_with_scopes_of_local_uses; _ } =
     VariableAnalysis.collect_relevant_defs_with_scope
       ~scope_info
