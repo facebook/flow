@@ -1080,6 +1080,13 @@ struct
                   completion_state)
               ~finally:(fun () -> this#reset_ssa_env env))
 
+      method! declare_function loc expr =
+        match Declare_function_utils.declare_function_to_function_declaration_simple loc expr with
+        | Some stmt ->
+          let _ = this#statement (loc, stmt) in
+          expr
+        | None -> super#declare_function loc expr
+
       method! call loc (expr : (L.t, L.t) Ast.Expression.Call.t) =
         ignore @@ super#call loc expr;
         this#havoc_current_ssa_env;

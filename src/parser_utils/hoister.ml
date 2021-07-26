@@ -139,8 +139,13 @@ class ['loc] hoister ~with_types =
 
     method! declare_function loc (decl : ('loc, 'loc) Ast.Statement.DeclareFunction.t) =
       let open Ast.Statement.DeclareFunction in
-      this#add_binding decl.id;
-      super#declare_function loc decl
+      match Declare_function_utils.declare_function_to_function_declaration_simple loc decl with
+      | Some stmt ->
+        let _ = this#statement (loc, stmt) in
+        decl
+      | None ->
+        this#add_binding decl.id;
+        super#declare_function loc decl
 
     method! function_declaration _loc (expr : ('loc, 'loc) Ast.Function.t) =
       let open Ast.Function in

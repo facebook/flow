@@ -822,6 +822,11 @@ function g() { return f() }|};
   [%expect {|
     [ (2, 22) to (2, 23) => { (1, 9) to (1, 10): (`f`) } ] |}]
 
+let%expect_test "declare_predicate_fn" =
+  print_ssa_test {|declare function f(x: number): boolean %checks(x) |};
+  [%expect {|
+    [ (1, 47) to (1, 48) => { (1, 19) to (1, 20): (`x`) } ] |}]
+
 let%expect_test "switch_decl" =
   print_ssa_test {|switch ('') { case '': const foo = ''; foo; };|};
   [%expect {|

@@ -416,6 +416,10 @@ let tests =
          >:: mk_ssa_builder_test
                "let y = {}; let x = {...y}; "
                LocMap.(empty |> add (mk_loc (1, 24) (1, 25)) [mk_write (1, 4) (1, 5) "y"]);
+         "declare_predicate_fn"
+         >:: mk_ssa_builder_test
+               "declare function g(x: number): boolean %checks(x);"
+               LocMap.(empty |> add (mk_loc (1, 47) (1, 48)) [mk_write (1, 19) (1, 20) "x"]);
          "switch"
          >:: mk_ssa_builder_test
                "switch ('') { case '': const foo = ''; foo; };"

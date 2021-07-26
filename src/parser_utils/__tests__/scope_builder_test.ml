@@ -198,6 +198,10 @@ let tests =
          >:: mk_scope_builder_all_uses_test
                "const B = 1; import {B as A} from 'A'; A()"
                [mk_loc (1, 6) (1, 7); mk_loc (1, 26) (1, 27); mk_loc (1, 39) (1, 40)];
+         "declare_pred_fn"
+         >:: mk_scope_builder_all_uses_test
+               "declare function g(x: number): boolean %checks(x);"
+               [mk_loc (1, 17) (1, 18); mk_loc (1, 19) (1, 20); mk_loc (1, 47) (1, 48)];
          "export_named_function"
          >:: mk_scope_builder_all_uses_test
                "export function foo() {}; foo()"

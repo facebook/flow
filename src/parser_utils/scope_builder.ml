@@ -437,6 +437,13 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             ());
 
         expr
+
+      method! declare_function loc expr =
+        match Declare_function_utils.declare_function_to_function_declaration_simple loc expr with
+        | Some stmt ->
+          let _ = this#statement (loc, stmt) in
+          expr
+        | None -> super#declare_function loc expr
     end
 
   let program ?(ignore_toplevel = false) ~with_types program =
