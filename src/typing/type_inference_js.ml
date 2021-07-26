@@ -403,10 +403,8 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
   in
 
   let module_ref = Context.module_ref cx in
-  begin
-    try Context.set_use_def cx @@ Env_builder.program_with_scope aloc_ast with
-    | Env_builder.AbruptCompletionExn _ -> ()
-  end;
+  let (_, use_def) = Env_builder.program_with_scope aloc_ast in
+  Context.set_use_def cx use_def;
 
   let reason_exports_module =
     let desc = Reason.RModule module_ref in

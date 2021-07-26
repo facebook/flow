@@ -157,7 +157,8 @@ module type S = sig
     refinement_of_id: int -> refinement;
   }
 
-  val program_with_scope : ?ignore_toplevel:bool -> (L.t, L.t) Flow_ast.Program.t -> env_info
+  val program_with_scope :
+    ?ignore_toplevel:bool -> (L.t, L.t) Flow_ast.Program.t -> abrupt_kind option * env_info
 
   val program : (L.t, L.t) Flow_ast.Program.t -> Env_api.values * (int -> refinement)
 
@@ -169,8 +170,13 @@ end
 module Make
     (L : Loc_sig.S)
     (Ssa_api : Ssa_api.S with module L = L)
-    (Scope_api : Scope_api_sig.S with module L = Ssa_api.L) :
-  S with module L = L and module Ssa_api = Ssa_api and module Scope_api = Scope_api = struct
+    (Scope_api : Scope_api_sig.S with module L = Ssa_api.L)
+    (Env_api : Env_api.S with module L = L) :
+  S
+    with module L = L
+     and module Ssa_api = Ssa_api
+     and module Scope_api = Scope_api
+     and module Env_api = Env_api = struct
   module L = L
   module Ssa_api = Ssa_api
   module Scope_api = Scope_api
@@ -180,12 +186,8 @@ module Make
 
   module Provider_api : Provider_api.S with module L = L = Provider_api.Make (L)
 
-  module Env_api = Env_api.Make (L)
+  module Env_api = Env_api
   open Scope_builder
-
-  type abrupt_kind = Ssa_builder.AbruptCompletion.t
-
-  exception AbruptCompletionExn = Ssa_builder.AbruptCompletion.Exn
 
   type refinement_kind =
     | AndR of refinement_kind * refinement_kind
@@ -573,6 +575,10 @@ module Make
       f x1 x2 x3;
       list_iter3 f l1 l2 l3
     | _ -> assert false
+
+  type abrupt_kind = AbruptCompletion.t
+
+  exception AbruptCompletionExn = AbruptCompletion.Exn
 
   type ssa = {
     val_ref: Val.t ref;
@@ -2221,7 +2227,7 @@ module Make
   let program_with_scope ?(ignore_toplevel = false) program =
     let open Hoister in
     let (loc, _) = program in
-    let ((scopes, ssa_values) as prepass) =
+    let (_ssa_completion_state, ((scopes, ssa_values) as prepass)) =
       Ssa_builder.program_with_scope ~ignore_toplevel program
     in
     let providers = Provider_api.find_providers program in
@@ -2233,17 +2239,23 @@ module Make
         let hoist = new hoister ~with_types:true in
         hoist#eval hoist#program program
     in
-    ignore @@ ssa_walk#with_bindings loc bindings ssa_walk#program program;
-    {
-      scopes;
-      ssa_values;
-      env_values = ssa_walk#values;
-      providers;
-      refinement_of_id = ssa_walk#refinement_of_id;
-    }
+    let completion_state =
+      ssa_walk#run_to_completion (fun () ->
+          ignore @@ ssa_walk#with_bindings loc bindings ssa_walk#program program)
+    in
+    ( completion_state,
+      {
+        scopes;
+        ssa_values;
+        env_values = ssa_walk#values;
+        providers;
+        refinement_of_id = ssa_walk#refinement_of_id;
+      } )
 
   let program program =
-    let { env_values; refinement_of_id; _ } = program_with_scope ~ignore_toplevel:false program in
+    let (_, { env_values; refinement_of_id; _ }) =
+      program_with_scope ~ignore_toplevel:false program
+    in
     (env_values, refinement_of_id)
 
   let rec refinement_ids_of_ssa_write acc = function
@@ -2271,6 +2283,7 @@ module Make
     L.LSet.fold (fun k acc -> L.LMap.add k (sources_of_use info k) acc) keys L.LMap.empty
 end
 
-module With_Loc = Make (Loc_sig.LocS) (Ssa_api.With_Loc) (Scope_api.With_Loc)
-module With_ALoc = Make (Loc_sig.ALocS) (Ssa_api.With_ALoc) (Scope_api.With_ALoc)
+module With_Loc = Make (Loc_sig.LocS) (Ssa_api.With_Loc) (Scope_api.With_Loc) (Env_api.With_Loc)
+module With_ALoc =
+  Make (Loc_sig.ALocS) (Ssa_api.With_ALoc) (Scope_api.With_ALoc) (Env_api.With_ALoc)
 include With_ALoc

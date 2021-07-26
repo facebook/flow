@@ -433,7 +433,9 @@ let extract_from_statements_refactors
         | None -> insert_new_function_call_loc
         | Some loc -> Loc.btwn insert_new_function_call_loc loc
       in
-      let (scope_info, ssa_values) = Ssa_builder.program_with_scope ast in
+      let (_ssa_abnormal_completion_state, (scope_info, ssa_values)) =
+        Ssa_builder.program_with_scope ast
+      in
       let {
         VariableAnalysis.defs_with_scopes_of_local_uses;
         vars_with_shadowed_local_reassignments;

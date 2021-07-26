@@ -7,7 +7,7 @@
 
 (* This module is responsible for building a mapping from variable reads to the
  * writes those reads. This is used in type checking to determine if a variable is
- * const-like, but the env_builder is used to build the type checking envrionment. 
+ * const-like, but the env_builder is used to build the type checking envrionment.
  * The env_builder copied much of the implementation here, but with sufficient divergence
  * to warrant forking the implementation.
  * If you're here to add support for a new syntax feature, you'll likely
@@ -1170,11 +1170,14 @@ struct
         let hoist = new hoister ~with_types:true in
         hoist#eval hoist#program program
     in
-    ignore @@ ssa_walk#with_bindings loc bindings ssa_walk#program program;
-    (ssa_walk#acc, ssa_walk#values)
+    let completion_state =
+      ssa_walk#run_to_completion (fun () ->
+          ignore @@ ssa_walk#with_bindings loc bindings ssa_walk#program program)
+    in
+    (completion_state, (ssa_walk#acc, ssa_walk#values))
 
   let program program =
-    let (_, values) = program_with_scope ~ignore_toplevel:true program in
+    let (_, (_, values)) = program_with_scope ~ignore_toplevel:true program in
     values
 end
 
