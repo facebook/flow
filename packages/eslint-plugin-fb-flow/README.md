@@ -55,3 +55,30 @@ This rule includes an autofixer that can fix most cases. It does not handle case
 The autofixer does not remove nested `$NonMaybeType`s and output Optional Indexed Access Types.
 In general `$ElementType<$NonMaybeType<O>, K>` is not equivalent to `O?.[K]` as Optional Indexed Access Types are modelled after optional chaining, so have a `void` in their resulting type.
 An auto-fixer can't just naively wrap the whole thing with `$NonMaybeType` as the type of the property at `K` might be nullable, so doing so would remove that nullability.
+
+
+### `use-exact-by-default-object-type`
+For Flow projects which turn on [exact objects by default](https://flow.org/en/docs/types/objects/#toc-explicit-inexact-object-types),
+this ESLint rule enforces that you use the `{ prop: type }` syntax for exact object types instead of the `{| prop: type |}` syntax.
+
+This rules includes an autofixer that transforms `{| prop: type |}` into `{ prop: type }`.
+
+#### Invalid
+```
+type Props = {|
+  foo: string,
+|};
+```
+
+#### Valid
+```
+type Props = {
+  foo: string,
+};
+```
+```
+type InexactProps = {
+  foo: string,
+  ...
+};
+```
