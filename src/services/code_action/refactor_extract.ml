@@ -423,7 +423,9 @@ let extract_from_statements_refactors
   if has_unwrapped_control_flow then
     []
   else
-    let extracted_statements_locations = List.map fst extracted_statements in
+    let extracted_statements_locations =
+      List.map Flow_ast_differ.expand_statement_comment_bounds extracted_statements
+    in
     match extracted_statements_locations with
     | [] -> []
     | insert_new_function_call_loc :: rest_statements_locations ->

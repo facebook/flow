@@ -59,6 +59,8 @@ type node =
   | JSXIdentifier of (Loc.t, Loc.t) Flow_ast.JSX.Identifier.t
 [@@deriving show]
 
+val expand_statement_comment_bounds : (Loc.t, Loc.t) Flow_ast.Statement.t -> Loc.t
+
 (* Diffs the given ASTs using referential equality to determine whether two nodes are different.
  * This works well for transformations based on Flow_ast_mapper, which preserves identity, but it
  * does not work well for e.g. parsing two programs and determining their differences. *)

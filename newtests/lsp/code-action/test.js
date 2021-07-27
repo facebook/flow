@@ -1653,6 +1653,113 @@ export default (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('provide codeAction for statements with comments', [
+      addFile(
+        'refactor-extract-with-comments.js.ignored',
+        'refactor-extract-with-comments.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/refactor-extract-with-comments.js',
+        },
+        range: {
+          start: {
+            line: 3,
+            character: 2,
+          },
+          end: {
+            line: 6,
+            character: 26,
+          },
+        },
+        context: {
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Extract to function in module scope',
+                kind: 'refactor.extract',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-with-comments.js': [
+                      {
+                        range: {
+                          start: {line: 3, character: 2},
+                          end: {line: 6, character: 26},
+                        },
+                        newText: 'let {a, barr, fooo} = newFunction();',
+                      },
+                      {
+                        range: {
+                          start: {line: 9, character: 1},
+                          end: {
+                            line: 9,
+                            character: 1,
+                          },
+                        },
+                        newText:
+                          '\nfunction newFunction(): {| a: number, barr: number, fooo: number |} {\n  // comment before\n  let fooo = 3; // selected\n  let barr = 4; // selected\n  const a = 3; // selected\n  return { a, barr, fooo };\n}',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'refactor_extract',
+                    'Extract to function in module scope',
+                  ],
+                },
+              },
+              {
+                title: "Extract to inner function in function 'i_am_a_test'",
+                kind: 'refactor.extract',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-with-comments.js': [
+                      {
+                        range: {
+                          start: {line: 3, character: 2},
+                          end: {line: 6, character: 26},
+                        },
+                        newText: 'let {a, barr, fooo} = newFunction();',
+                      },
+                      {
+                        range: {
+                          start: {line: 8, character: 15},
+                          end: {line: 8, character: 15},
+                        },
+                        newText:
+                          'function newFunction(): {| a: number, barr: number, fooo: number |} {\n  // comment before\n  let fooo = 3; // selected\n  let barr = 4; // selected\n  const a = 3; // selected\n  return { a, barr, fooo };\n}',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'refactor_extract',
+                    "Extract to inner function in function 'i_am_a_test'",
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
     test('provide codeAction for extract function with type imports', [
       addFile(
         'refactor-extract-function-type-provider.js.ignored',

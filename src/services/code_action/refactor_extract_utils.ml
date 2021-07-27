@@ -467,7 +467,7 @@ module RefactorProgramMappers = struct
       inherit [Loc.t] Flow_ast_mapper.mapper as super
 
       method! statement_fork_point stmt =
-        let (statement_loc, _) = stmt in
+        let statement_loc = Flow_ast_differ.expand_statement_comment_bounds stmt in
         if Loc.contains extracted_statements_loc statement_loc then
           if Loc.equal (Loc.start_loc extracted_statements_loc) (Loc.start_loc statement_loc) then
             function_call_statements

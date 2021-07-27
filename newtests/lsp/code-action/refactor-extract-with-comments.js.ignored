@@ -1,0 +1,10 @@
+//@flow
+
+function i_am_a_test() {
+  // comment before
+  let fooo = 3; // selected
+  let barr = 4; // selected
+  const a = 3; // selected
+  fooo = a + 2;
+  barr = a + 2;
+}
