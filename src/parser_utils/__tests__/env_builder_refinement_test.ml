@@ -1032,3 +1032,49 @@ for (let thing of stuff) {
 }
 stuff;|};
     [%expect {| [ (2, 18) to (2, 23) => { (1, 4) to (1, 9): (`stuff`) }; (5, 0) to (5, 5) => { (1, 4) to (1, 9): (`stuff`), (3, 2) to (3, 7): (`stuff`) } ] |}]
+
+let%expect_test "invariant" =
+  print_ssa_test {|let x = undefined;
+invariant(x != null, "other arg");
+x;
+|};
+    [%expect {| [ (2, 10) to (2, 11) => { (1, 4) to (1, 5): (`x`) }; (3, 0) to (3, 1) => { {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "invariant_false" =
+  print_ssa_test {|let x = undefined;
+if (x === 3) {
+  invariant(false);
+}
+x;
+|};
+    [%expect {| [ (2, 4) to (2, 5) => { (1, 4) to (1, 5): (`x`) }; (5, 0) to (5, 1) => { {refinement = Not (3); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "invariant_no_args" =
+  print_ssa_test {|let x = undefined;
+if (x === 3) {
+  invariant();
+}
+x;
+|};
+    [%expect {| [ (2, 4) to (2, 5) => { (1, 4) to (1, 5): (`x`) }; (5, 0) to (5, 1) => { {refinement = Not (3); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "invariant_reassign" =
+  print_ssa_test {|let x = undefined;
+if (true) {
+  invariant(false, x = 3);
+}
+x;
+|};
+    [%expect {| [ (5, 0) to (5, 1) => { (1, 4) to (1, 5): (`x`) } ] |}]
+
+let%expect_test "try_catch_invariant_reassign" =
+  print_ssa_test {|let x = undefined;
+
+try {
+  if (true) {
+    invariant(false, x = 3);
+  }
+} finally {
+  x;
+}|};
+    [%expect {| [ (8, 2) to (8, 3) => { (1, 4) to (1, 5): (`x`), (5, 21) to (5, 22): (`x`) } ] |}]

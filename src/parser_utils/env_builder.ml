@@ -43,6 +43,11 @@ type optional_chain_state =
   | ContinueChain
   | NonOptional
 
+let is_call_to_invariant callee =
+  match callee with
+  | (_, Flow_ast.Expression.Identifier (_, { Flow_ast.Identifier.name = "invariant"; _ })) -> true
+  | _ -> false
+
 let property_of_sentinel_refinement { Flow_ast.Expression.Member.property; _ } =
   let open Flow_ast in
   match property with
@@ -95,6 +100,8 @@ let extract_number_literal node =
       } ->
     (-.lit, "-" ^ raw)
   | _ -> Utils_js.assert_false "not a number literal"
+
+let error_todo = ()
 
 module type S = sig
   module L : Loc_sig.S
@@ -1522,8 +1529,47 @@ module Make
         | None -> super#declare_function loc expr
 
       method! call loc (expr : (L.t, L.t) Ast.Expression.Call.t) =
+        (* Traverse everything up front. Now we don't need to worry about missing any reads
+         * of identifiers in sub-expressions *)
         ignore @@ super#call loc expr;
-        this#havoc_current_ssa_env ~all:false;
+
+        let open Ast.Expression.Call in
+        let { callee; targs; arguments; _ } = expr in
+        if is_call_to_invariant callee then
+          match (targs, arguments) with
+          (* invariant() and invariant(false, ...) are treated like throw *)
+          | (None, (_, { Ast.Expression.ArgList.arguments = []; comments = _ })) ->
+            this#raise_abrupt_completion AbruptCompletion.throw
+          | ( None,
+              ( _,
+                {
+                  Ast.Expression.ArgList.arguments =
+                    Ast.Expression.Expression
+                      ( _,
+                        Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Boolean false; _ }
+                      )
+                    :: other_args;
+                  comments = _;
+                } ) ) ->
+            let _ = List.map this#expression_or_spread other_args in
+            this#raise_abrupt_completion AbruptCompletion.throw
+          | ( None,
+              ( _,
+                {
+                  Ast.Expression.ArgList.arguments = Ast.Expression.Expression cond :: other_args;
+                  comments = _;
+                } ) ) ->
+            this#push_refinement_scope SMap.empty;
+            ignore @@ this#expression_refinement cond;
+            let _ = List.map this#expression_or_spread other_args in
+            this#pop_refinement_scope_invariant ()
+          | ( _,
+              (_, { Ast.Expression.ArgList.arguments = Ast.Expression.Spread _ :: _; comments = _ })
+            ) ->
+            error_todo
+          | (Some _, _) -> error_todo
+        else
+          this#havoc_current_ssa_env ~all:false;
         expr
 
       method! new_ _loc (expr : (L.t, L.t) Ast.Expression.New.t) =
@@ -1627,6 +1673,12 @@ module Make
         |> SMap.iter (fun name latest_refinement ->
                let { val_ref; _ } = SMap.find name env_state.ssa_env in
                val_ref := Val.unrefine_deeply latest_refinement.refinement_id !val_ref)
+
+      (* Invariant refinement scopes can be popped, but the refinement should continue living on.
+       * To model that, we pop the refinement scope but do not unrefine the refinements. The
+       * refinements live on in the Refinement writes in the ssa_env. *)
+      method private pop_refinement_scope_invariant () =
+        env_state <- { env_state with latest_refinements = List.tl env_state.latest_refinements }
 
       (* When a refinement scope ends, we need to undo the refinement applied to the
        * variables mentioned in the latest_refinements head. Some of these values may no
