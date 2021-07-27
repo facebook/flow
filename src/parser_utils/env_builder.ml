@@ -1290,13 +1290,73 @@ module Make
           ~scout
           ~visit_guard_and_body
           ~make_completion_states
-          ~auto_handle_continues:true
+          ~auto_handle_continues:false
           ~continues;
         stmt
 
-      method! scoped_for_in_statement _loc stmt = stmt
+      method for_in_or_of_left_declaration left =
+        let (_, decl) = left in
+        let open Flow_ast.Statement.VariableDeclaration in
+        let { declarations; kind; comments = _ } = decl in
+        match declarations with
+        | [(_, { Flow_ast.Statement.VariableDeclaration.Declarator.id; init = _ })] ->
+          let open Flow_ast.Pattern in
+          (match id with
+          | (_, (Identifier _ | Object _ | Array _)) ->
+            ignore @@ this#variable_declarator_pattern ~kind id
+          | _ -> failwith "unexpected AST node")
+        | _ -> failwith "Syntactically valid for-in loops must have exactly one left declaration"
 
-      method! scoped_for_of_statement _loc stmt = stmt
+      method! for_in_left_declaration left =
+        this#for_in_or_of_left_declaration left;
+        left
+
+      method! for_of_left_declaration left =
+        this#for_in_or_of_left_declaration left;
+        left
+
+      method scoped_for_in_or_of_statement traverse_left right body =
+        (* This is only evaluated once and so does not need to be scouted
+         * You might be wondering why the lhs has to be scouted-- the LHS can be a pattern that
+         * includes a default write with a variable that is written to inside the loop. It's
+         * critical that we catch loops in the dependency graph with such variables, since the
+         * ordering algorithm will not have a good place to ask for an annotation in that case.
+         *)
+        ignore @@ this#expression right;
+        let scout () =
+          traverse_left ();
+          ignore @@ this#run_to_completion (fun () -> ignore @@ this#statement body)
+        in
+        let visit_guard_and_body () =
+          traverse_left ();
+          let env = this#ssa_env in
+          let loop_completion_state =
+            this#run_to_completion (fun () -> ignore @@ this#statement body)
+          in
+          (this#peek_new_refinements (), Some env, loop_completion_state)
+        in
+        let make_completion_states loop_completion_state = (None, [loop_completion_state]) in
+        let continues = AbruptCompletion.continue None :: env_state.possible_labeled_continues in
+        this#env_loop
+          ~scout
+          ~visit_guard_and_body
+          ~make_completion_states
+          ~auto_handle_continues:true
+          ~continues
+
+      method! scoped_for_in_statement _loc stmt =
+        let open Flow_ast.Statement.ForIn in
+        let { left; right; body; each = _; comments = _ } = stmt in
+        let traverse_left () = ignore (this#for_in_statement_lhs left) in
+        this#scoped_for_in_or_of_statement traverse_left right body;
+        stmt
+
+      method! scoped_for_of_statement _loc stmt =
+        let open Flow_ast.Statement.ForOf in
+        let { left; right; body; await = _; comments = _ } = stmt in
+        let traverse_left () = ignore (this#for_of_statement_lhs left) in
+        this#scoped_for_in_or_of_statement traverse_left right body;
+        stmt
 
       (***********************************************************)
       (* [PRE] switch (e) { case e1: s1 ... case eN: sN } [POST] *)

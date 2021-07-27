@@ -836,3 +836,199 @@ let%expect_test "switch_weird_decl" =
   print_ssa_test {|switch ('') { case l: 0; break; case '': let l };|};
   [%expect {|
     [ (1, 19) to (1, 20) => { (uninitialized) } ] |}]
+
+let%expect_test "for_in" =
+  print_ssa_test {|let stuff = {}
+for (let thing in stuff) {
+  thing
+}|};
+    [%expect {| [ (2, 18) to (2, 23) => { (1, 4) to (1, 9): (`stuff`) }; (3, 2) to (3, 7) => { (2, 9) to (2, 14): (`thing`) } ] |}]
+
+let%expect_test "for_in_reassign" =
+  print_ssa_test {|let stuff = {}
+for (let thing in stuff) {
+  thing;
+  thing = 3;
+}|};
+    [%expect {| [ (2, 18) to (2, 23) => { (1, 4) to (1, 9): (`stuff`) }; (3, 2) to (3, 7) => { (2, 9) to (2, 14): (`thing`) } ] |}]
+
+let%expect_test "for_in_destructure" =
+  print_ssa_test {|let stuff = {}
+for (let {thing} in stuff) {
+  thing;
+}|};
+    [%expect {| [ (2, 20) to (2, 25) => { (1, 4) to (1, 9): (`stuff`) }; (3, 2) to (3, 7) => { (2, 10) to (2, 15): (`thing`) } ] |}]
+
+let%expect_test "for_in_destructure_reassign" =
+  print_ssa_test {|let stuff = {}
+for (let {thing} in stuff) {
+  thing;
+  thing = 3;
+}|};
+    [%expect {| [ (2, 20) to (2, 25) => { (1, 4) to (1, 9): (`stuff`) }; (3, 2) to (3, 7) => { (2, 10) to (2, 15): (`thing`) } ] |}]
+
+let%expect_test "for_in_shadow" =
+  print_ssa_test {|let thing = undefined;
+let stuff = {}
+for (let thing in stuff) {
+  thing;
+}
+thing;|};
+    [%expect {| [ (3, 18) to (3, 23) => { (2, 4) to (2, 9): (`stuff`) }; (4, 2) to (4, 7) => { (3, 9) to (3, 14): (`thing`) }; (6, 0) to (6, 5) => { (1, 4) to (1, 9): (`thing`) } ] |}]
+
+let%expect_test "for_in_throw" =
+  print_ssa_test {|let x = undefined;
+for (let thing in {}) {
+  throw 'error';
+}
+x;|};
+    [%expect {| [ (5, 0) to (5, 1) => { (1, 4) to (1, 5): (`x`) } ] |}]
+
+let%expect_test "for_in_break_with_control_flow_writes" =
+  print_ssa_test {|let y = undefined;
+for (let thing in {}) {
+  if (y == null) {
+    break;
+  }
+  y;
+}
+y;|};
+    [%expect {| [ (3, 6) to (3, 7) => { (1, 4) to (1, 5): (`y`) }; (6, 2) to (6, 3) => { {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`y`)} }; (8, 0) to (8, 1) => { (1, 4) to (1, 5): (`y`), {refinement = Maybe; writes = (1, 4) to (1, 5): (`y`)}, {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`y`)} } ] |}]
+
+let%expect_test "for_in_with_runtime_writes" =
+  print_ssa_test {|let x = undefined;
+let y = undefined;
+for (let thing in {}) {
+  if (y == null) {
+    x = 2;
+  }
+  y;
+}
+y;
+x;|};
+    [%expect {| [ (4, 6) to (4, 7) => { (2, 4) to (2, 5): (`y`) }; (7, 2) to (7, 3) => { (2, 4) to (2, 5): (`y`) }; (9, 0) to (9, 1) => { (2, 4) to (2, 5): (`y`) }; (10, 0) to (10, 1) => { (1, 4) to (1, 5): (`x`), (5, 4) to (5, 5): (`x`) } ] |}]
+
+let%expect_test "for_in_continue" =
+  print_ssa_test {|let x = undefined;
+for (let thing in {}) {
+  continue;
+}
+x;|};
+    [%expect {| [ (5, 0) to (5, 1) => { (1, 4) to (1, 5): (`x`) } ] |}]
+
+let%expect_test "for_in_continue_with_control_flow_writes" =
+  print_ssa_test {|let y = undefined;
+for (let thing in {}) {
+  if (y == null) {
+    continue;
+  }
+  y;
+}
+y;|};
+    [%expect {| [ (3, 6) to (3, 7) => { (1, 4) to (1, 5): (`y`) }; (6, 2) to (6, 3) => { {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`y`)} }; (8, 0) to (8, 1) => { (1, 4) to (1, 5): (`y`), {refinement = Maybe; writes = (1, 4) to (1, 5): (`y`)}, {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`y`)} } ] |}]
+
+let%expect_test "for_in_reassign_right" =
+  print_ssa_test {|let stuff = {};
+for (let thing in stuff) {
+  stuff = [];
+}
+stuff;|};
+    [%expect {| [ (2, 18) to (2, 23) => { (1, 4) to (1, 9): (`stuff`) }; (5, 0) to (5, 5) => { (1, 4) to (1, 9): (`stuff`), (3, 2) to (3, 7): (`stuff`) } ] |}]
+
+let%expect_test "for_of" =
+  print_ssa_test {|let stuff = {}
+for (let thing of stuff) {
+  thing
+}|};
+    [%expect {| [ (2, 18) to (2, 23) => { (1, 4) to (1, 9): (`stuff`) }; (3, 2) to (3, 7) => { (2, 9) to (2, 14): (`thing`) } ] |}]
+
+let%expect_test "for_of_reassign" =
+  print_ssa_test {|let stuff = {}
+for (let thing of stuff) {
+  thing;
+  thing = 3;
+}|};
+    [%expect {| [ (2, 18) to (2, 23) => { (1, 4) to (1, 9): (`stuff`) }; (3, 2) to (3, 7) => { (2, 9) to (2, 14): (`thing`) } ] |}]
+
+let%expect_test "for_of_destructure" =
+  print_ssa_test {|let stuff = {}
+for (let {thing} of stuff) {
+  thing;
+}|};
+    [%expect {| [ (2, 20) to (2, 25) => { (1, 4) to (1, 9): (`stuff`) }; (3, 2) to (3, 7) => { (2, 10) to (2, 15): (`thing`) } ] |}]
+
+let%expect_test "for_of_destructure_reassign" =
+  print_ssa_test {|let stuff = {}
+for (let {thing} of stuff) {
+  thing;
+  thing = 3;
+}|};
+    [%expect {| [ (2, 20) to (2, 25) => { (1, 4) to (1, 9): (`stuff`) }; (3, 2) to (3, 7) => { (2, 10) to (2, 15): (`thing`) } ] |}]
+
+let%expect_test "for_of_shadow" =
+  print_ssa_test {|let thing = undefined;
+let stuff = {}
+for (let thing of stuff) {
+  thing;
+}
+thing;|};
+    [%expect {| [ (3, 18) to (3, 23) => { (2, 4) to (2, 9): (`stuff`) }; (4, 2) to (4, 7) => { (3, 9) to (3, 14): (`thing`) }; (6, 0) to (6, 5) => { (1, 4) to (1, 9): (`thing`) } ] |}]
+
+let%expect_test "for_of_throw" =
+  print_ssa_test {|let x = undefined;
+for (let thing of {}) {
+  throw 'error';
+}
+x;|};
+    [%expect {| [ (5, 0) to (5, 1) => { (1, 4) to (1, 5): (`x`) } ] |}]
+
+let%expect_test "for_of_break_with_control_flow_writes" =
+  print_ssa_test {|let y = undefined;
+for (let thing of {}) {
+  if (y == null) {
+    break;
+  }
+  y;
+}
+y;|};
+    [%expect {| [ (3, 6) to (3, 7) => { (1, 4) to (1, 5): (`y`) }; (6, 2) to (6, 3) => { {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`y`)} }; (8, 0) to (8, 1) => { (1, 4) to (1, 5): (`y`), {refinement = Maybe; writes = (1, 4) to (1, 5): (`y`)}, {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`y`)} } ] |}]
+
+let%expect_test "for_of_with_runtime_writes" =
+  print_ssa_test {|let x = undefined;
+let y = undefined;
+for (let thing of {}) {
+  if (y == null) {
+    x = 2;
+  }
+  y;
+}
+y;
+x;|};
+    [%expect {| [ (4, 6) to (4, 7) => { (2, 4) to (2, 5): (`y`) }; (7, 2) to (7, 3) => { (2, 4) to (2, 5): (`y`) }; (9, 0) to (9, 1) => { (2, 4) to (2, 5): (`y`) }; (10, 0) to (10, 1) => { (1, 4) to (1, 5): (`x`), (5, 4) to (5, 5): (`x`) } ] |}]
+
+let%expect_test "for_of_continue" =
+  print_ssa_test {|let x = undefined;
+for (let thing of {}) {
+  continue;
+}
+x;|};
+    [%expect {| [ (5, 0) to (5, 1) => { (1, 4) to (1, 5): (`x`) } ] |}]
+
+let%expect_test "for_of_continue_with_control_flow_writes" =
+  print_ssa_test {|let y = undefined;
+for (let thing of {}) {
+  if (y == null) {
+    continue;
+  }
+  y;
+}
+y;|};
+    [%expect {| [ (3, 6) to (3, 7) => { (1, 4) to (1, 5): (`y`) }; (6, 2) to (6, 3) => { {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`y`)} }; (8, 0) to (8, 1) => { (1, 4) to (1, 5): (`y`), {refinement = Maybe; writes = (1, 4) to (1, 5): (`y`)}, {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`y`)} } ] |}]
+
+let%expect_test "for_of_reassign_right" =
+  print_ssa_test {|let stuff = {};
+for (let thing of stuff) {
+  stuff = [];
+}
+stuff;|};
+    [%expect {| [ (2, 18) to (2, 23) => { (1, 4) to (1, 9): (`stuff`) }; (5, 0) to (5, 5) => { (1, 4) to (1, 9): (`stuff`), (3, 2) to (3, 7): (`stuff`) } ] |}]
