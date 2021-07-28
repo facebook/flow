@@ -146,7 +146,7 @@ jobs:
       - create-opam-switch
       - run:
           name: Install extra deps from opam
-          command: opam install js_of_ocaml.3.7.1 | cat
+          command: opam install js_of_ocaml.3.9.0 | cat
       - save-opam-cache
       - run:
           name: Build flow.js
@@ -184,7 +184,7 @@ jobs:
       - create-opam-switch
       - run:
           name: Install extra deps from opam
-          command: opam install js_of_ocaml.3.7.1 | cat
+          command: opam install js_of_ocaml.3.9.0 | cat
       - save-opam-cache
       - run:
           name: Build flow
