@@ -9,7 +9,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-.language-sh pre {
+.highlight.language-sh {
   background: $gray-dark;
   color: white !important;
   -webkit-font-smoothing: antialiased;
@@ -26,7 +26,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-.highlight {
+div.highlight {
   position: relative;
   margin: 1rem 0;
   border-left: 4px solid $editor-accent;

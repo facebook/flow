@@ -1,11 +1,8 @@
 source 'https://rubygems.org'
 ruby '~> 2.6'
 
-gem 'jekyll', '~>3.8.7'
-gem 'jekyll-paginate'
+gem 'jekyll', '~>4.2.0'
 gem 'crowdin-cli'
-gem 'kramdown', '~>1.11'
-gem 'rouge', '<2'
 gem 'wdm', '>= 0.1.0' if Gem.win_platform?
 gem 's3_website', '~>3.4.0'
 gem 'octokit'
