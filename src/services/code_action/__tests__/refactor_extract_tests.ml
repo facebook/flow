@@ -8,7 +8,8 @@
 open OUnit2
 open Refactor_extract_utils_tests
 
-let assert_refactored ~ctxt expected source extract_range =
+let assert_refactored
+    ~ctxt ?(support_experimental_snippet_text_edit = false) expected source extract_range =
   let ast = parse source in
   let typed_ast = typed_ast_of_ast ast in
   let reader = State_reader.create () in
@@ -26,6 +27,7 @@ let assert_refactored ~ctxt expected source extract_range =
       ~file_sig:(file_sig_of_ast ast)
       ~typed_ast
       ~reader
+      ~support_experimental_snippet_text_edit
       ~extract_range
     |> List.map (fun { Refactor_extract.title; new_ast; _ } ->
            ( title,
@@ -1159,9 +1161,9 @@ const newProperty = 1,
   newProperty1 = 1;
 class A {
   test() {
-    this.newMethod2();
+    this.${0:newMethod2}();
   }
-  newMethod2(): void {
+  ${0:newMethod2}(): void {
     1 + 1;
   }
 }
@@ -1179,10 +1181,10 @@ const newProperty = 1,
   newProperty1 = 1;
 class A {
   test() {
-    newFunction2();
+    ${0:newFunction2}();
   }
 }
-function newFunction2(): void {
+function ${0:newFunction2}(): void {
   1 + 1;
 }
             |}
@@ -1199,8 +1201,8 @@ const newProperty = 1,
   newProperty1 = 1;
 class A {
   test() {
-    newFunction2();
-    function newFunction2(): void {
+    ${0:newFunction2}();
+    function ${0:newFunction2}(): void {
       1 + 1;
     }
   }
@@ -1218,9 +1220,9 @@ const newLocal = 1,
 const newProperty = 1,
   newProperty1 = 1;
 class A {
-  newProperty2 = 1 + 1;
+  ${0:newProperty2} = 1 + 1;
   test() {
-    this.newProperty2;
+    this.${0:newProperty2};
   }
 }
             |}
@@ -1237,8 +1239,8 @@ const newProperty = 1,
   newProperty1 = 1;
 class A {
   test() {
-    const newLocal2 = 1 + 1;
-    newLocal2;
+    const ${0:newLocal2} = 1 + 1;
+    ${0:newLocal2};
   }
 }
             |}
@@ -1253,17 +1255,22 @@ const newLocal = 1,
   newLocal1 = 1;
 const newProperty = 1,
   newProperty1 = 1;
-const newLocal2 = 1 + 1;
+const ${0:newLocal2} = 1 + 1;
 class A {
   test() {
-    newLocal2;
+    ${0:newLocal2};
   }
 }
             |}
           );
         ]
       in
-      assert_refactored ~ctxt expected source (mk_loc (8, 12) (8, 17));
+      assert_refactored
+        ~ctxt
+        ~support_experimental_snippet_text_edit:true
+        expected
+        source
+        (mk_loc (8, 12) (8, 17));
       let source = {|
         type NewType = number;
         type NewType1 = NewType;
@@ -1272,14 +1279,19 @@ class A {
         [
           ( "Extract to type alias",
             {|
-type NewType2 = number;
-type NewType = NewType2;
+type ${0:NewType2} = number;
+type NewType = ${0:NewType2};
 type NewType1 = NewType;
             |}
           );
         ]
       in
-      assert_refactored ~ctxt expected source (mk_loc (2, 23) (2, 29)) );
+      assert_refactored
+        ~ctxt
+        ~support_experimental_snippet_text_edit:true
+        expected
+        source
+        (mk_loc (2, 23) (2, 29)) );
   ]
 
 let tests =

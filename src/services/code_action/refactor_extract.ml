@@ -13,18 +13,24 @@ let union_loc acc loc =
   | None -> Some loc
   | Some existing_loc -> Some (Loc.btwn existing_loc loc)
 
-let create_unique_name ~used_names prefix =
-  if SSet.mem prefix used_names then
-    let rec number_suffixed_name i =
-      let name = prefix ^ string_of_int i in
-      if SSet.mem name used_names then
-        number_suffixed_name (i + 1)
-      else
-        name
-    in
-    number_suffixed_name 1
+let create_unique_name ~support_experimental_snippet_text_edit ~used_names prefix =
+  let unique_name =
+    if SSet.mem prefix used_names then
+      let rec number_suffixed_name i =
+        let name = prefix ^ string_of_int i in
+        if SSet.mem name used_names then
+          number_suffixed_name (i + 1)
+        else
+          name
+      in
+      number_suffixed_name 1
+    else
+      prefix
+  in
+  if support_experimental_snippet_text_edit then
+    Printf.sprintf "${0:%s}" unique_name
   else
-    prefix
+    unique_name
 
 module TypeParamSet = struct
   include Set.Make (struct
@@ -325,7 +331,7 @@ let available_refactors_for_statements
     ~has_this_super
     ~typed_ast
     ~reader
-    ~used_names
+    ~create_unique_name
     ~ast
     ~extracted_statements
     ~extracted_statements_loc =
@@ -353,7 +359,7 @@ let available_refactors_for_statements
       let (new_ast, added_imports) =
         create_refactor
           ~is_method:true
-          ~new_function_name:(create_unique_name ~used_names "newMethod")
+          ~new_function_name:(create_unique_name "newMethod")
           ~target_body_loc
           ~target_tparams_rev:tparams_rev
       in
@@ -367,7 +373,7 @@ let available_refactors_for_statements
   if has_this_super then
     extract_to_method_refactors
   else
-    let new_function_name = create_unique_name ~used_names "newFunction" in
+    let new_function_name = create_unique_name "newFunction" in
     let create_inner_function_refactor
         {
           InsertionPointCollectors.function_name;
@@ -416,7 +422,7 @@ let available_refactors_for_statements
     extract_to_method_refactors @ extract_to_functions_refactors
 
 let extract_from_statements_refactors
-    ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader ~used_names extracted_statements =
+    ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader ~create_unique_name extracted_statements =
   let { InformationCollectors.has_unwrapped_control_flow; async_function; has_this_super } =
     InformationCollectors.collect_statements_information extracted_statements
   in
@@ -478,7 +484,7 @@ let extract_from_statements_refactors
         ~has_this_super
         ~typed_ast
         ~reader
-        ~used_names
+        ~create_unique_name
         ~ast
         ~extracted_statements
         ~extracted_statements_loc
@@ -557,7 +563,11 @@ let create_extract_to_constant_refactor
       }
 
 let extract_from_expression_refactors
-    ~ast ~typed_ast ~reader ~used_names { AstExtractor.constant_insertion_points; expression } =
+    ~ast
+    ~typed_ast
+    ~reader
+    ~create_unique_name
+    { AstExtractor.constant_insertion_points; expression } =
   let { InformationCollectors.has_this_super; _ } =
     InformationCollectors.collect_expression_information expression
   in
@@ -582,7 +592,7 @@ let extract_from_expression_refactors
       ~defs_with_scopes_of_local_uses
       ~extracted_expression_loc
       ~expression
-      ~new_local_name:(create_unique_name ~used_names "newLocal")
+      ~new_local_name:(create_unique_name "newLocal")
       ~ast
   in
   match class_insertion_point with
@@ -598,7 +608,7 @@ let extract_from_expression_refactors
         ~defs_with_scopes_of_local_uses
         ~extracted_expression_loc
         ~expression
-        ~new_property_name:(create_unique_name ~used_names "newProperty")
+        ~new_property_name:(create_unique_name "newProperty")
         ~ast
         class_insertion_point
     in
@@ -624,7 +634,7 @@ let extract_to_type_alias_refactors
     ~file_sig
     ~typed_ast
     ~reader
-    ~used_names
+    ~create_unique_name
     { AstExtractor.directly_containing_statement_loc; type_ } =
   let type_loc = fst type_ in
   let available_tparams =
@@ -666,7 +676,7 @@ let extract_to_type_alias_refactors
   in
   let new_ast =
     let open Ast_builder in
-    let new_type_name = create_unique_name ~used_names "NewType" in
+    let new_type_name = create_unique_name "NewType" in
     let type_replacement =
       let targs =
         match type_params_to_add with
@@ -696,11 +706,20 @@ let extract_to_type_alias_refactors
   in
   [{ title = "Extract to type alias"; new_ast; added_imports = [] }]
 
-let provide_available_refactors ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader ~extract_range =
+let provide_available_refactors
+    ~ast
+    ~full_cx
+    ~file
+    ~file_sig
+    ~typed_ast
+    ~reader
+    ~support_experimental_snippet_text_edit
+    ~extract_range =
   let { AstExtractor.extracted_statements; extracted_expression; extracted_type } =
     AstExtractor.extract ast extract_range
   in
   let used_names = VariableAnalysis.collect_used_names ast in
+  let create_unique_name = create_unique_name ~support_experimental_snippet_text_edit ~used_names in
   let extract_from_statements_refactors =
     Base.Option.value_map
       ~default:[]
@@ -712,13 +731,13 @@ let provide_available_refactors ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader
            ~file_sig
            ~typed_ast
            ~reader
-           ~used_names)
+           ~create_unique_name)
       extracted_statements
   in
   let extract_from_expression_refactors =
     Base.Option.value_map
       ~default:[]
-      ~f:(extract_from_expression_refactors ~ast ~typed_ast ~reader ~used_names)
+      ~f:(extract_from_expression_refactors ~ast ~typed_ast ~reader ~create_unique_name)
       extracted_expression
   in
   let extract_to_type_alias_refactors =
@@ -732,7 +751,7 @@ let provide_available_refactors ~ast ~full_cx ~file ~file_sig ~typed_ast ~reader
            ~file_sig
            ~typed_ast
            ~reader
-           ~used_names)
+           ~create_unique_name)
       extracted_type
   in
   extract_from_statements_refactors

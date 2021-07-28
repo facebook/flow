@@ -45,7 +45,7 @@ let autofix_exports_code_actions
 
 let refactor_extract_code_actions
     ~options
-    ~support_experimental_snippet_text_edit:_
+    ~support_experimental_snippet_text_edit
     ~ast
     ~full_cx
     ~file_sig
@@ -94,6 +94,7 @@ let refactor_extract_code_actions
           ~file_sig:(File_sig.abstractify_locs file_sig)
           ~typed_ast
           ~reader
+          ~support_experimental_snippet_text_edit
           ~extract_range:loc
         |> List.map lsp_action_from_refactor
   else
