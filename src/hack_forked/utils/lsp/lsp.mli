@@ -307,6 +307,7 @@ module Initialize : sig
     textDocument: textDocumentClientCapabilities;
     window: windowClientCapabilities;
     telemetry: telemetryClientCapabilities;
+    experimental: experimentalClientCapabilities;
   }
 
   and workspaceClientCapabilities = {
@@ -346,6 +347,8 @@ module Initialize : sig
   and windowClientCapabilities = { status: bool }
 
   and telemetryClientCapabilities = { connectionStatus: bool }
+
+  and experimentalClientCapabilities = { snippetTextEdit: bool }
 
   and server_capabilities = {
     textDocumentSync: textDocumentSyncOptions;

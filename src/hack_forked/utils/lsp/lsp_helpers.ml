@@ -267,6 +267,10 @@ let supports_codeActionKinds (p : Lsp.Initialize.params) : CodeActionKind.t list
   | Some { CodeActionLiteralSupport.valueSet } -> valueSet
   | None -> []
 
+let supports_experimental_snippet_text_edit (p : Lsp.Initialize.params) : bool =
+  let open Lsp.Initialize in
+  p.client_capabilities.experimental.snippetTextEdit
+
 let supports_configuration (p : Lsp.Initialize.params) : bool =
   Lsp.Initialize.(p.client_capabilities.workspace.configuration)
 

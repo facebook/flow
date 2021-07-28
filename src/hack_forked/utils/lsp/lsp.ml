@@ -410,7 +410,8 @@ module Initialize = struct
     workspace: workspaceClientCapabilities;
     textDocument: textDocumentClientCapabilities;
     window: windowClientCapabilities;
-    telemetry: telemetryClientCapabilities; (* omitted: experimental *)
+    telemetry: telemetryClientCapabilities;
+    experimental: experimentalClientCapabilities;
   }
 
   and workspaceClientCapabilities = {
@@ -461,6 +462,9 @@ module Initialize = struct
   and telemetryClientCapabilities = {
     connectionStatus: bool;  (** Nuclide-specific: client supports telemetry/connectionStatus *)
   }
+
+  (* Flow LSP specific capabilities. *)
+  and experimentalClientCapabilities = { snippetTextEdit: bool }
 
   (** What capabilities the server provides *)
   and server_capabilities = {

@@ -1109,6 +1109,7 @@ let parse_initialize (params : json option) : Initialize.params =
         textDocument = Jget.obj_opt json "textDocument" |> parse_textDocument;
         window = Jget.obj_opt json "window" |> parse_window;
         telemetry = Jget.obj_opt json "telemetry" |> parse_telemetry;
+        experimental = Jget.obj_opt json "experimental" |> parse_experimental;
       }
     and parse_workspace json =
       {
@@ -1151,6 +1152,8 @@ let parse_initialize (params : json option) : Initialize.params =
     and parse_window json = { status = Jget.obj_opt json "status" |> Base.Option.is_some }
     and parse_telemetry json =
       { connectionStatus = Jget.obj_opt json "connectionStatus" |> Base.Option.is_some }
+    and parse_experimental json =
+      { snippetTextEdit = Jget.bool_d json "snippetTextEdit" ~default:false }
     in
     parse_initialize params)
 

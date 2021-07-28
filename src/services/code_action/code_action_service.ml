@@ -43,7 +43,16 @@ let autofix_exports_code_actions
   else
     []
 
-let refactor_extract_code_actions ~options ~ast ~full_cx ~file_sig ~typed_ast ~reader uri loc =
+let refactor_extract_code_actions
+    ~options
+    ~support_experimental_snippet_text_edit:_
+    ~ast
+    ~full_cx
+    ~file_sig
+    ~typed_ast
+    ~reader
+    uri
+    loc =
   if Options.refactor options then
     if Loc.(loc.start = loc._end) then
       []
@@ -492,6 +501,7 @@ let client_supports_quickfixes params =
 
 let code_actions_at_loc
     ~options
+    ~lsp_init_params
     ~env
     ~reader
     ~cx
@@ -514,7 +524,17 @@ let code_actions_at_loc
       ~diagnostics
       uri
       loc
-    @ refactor_extract_code_actions ~options ~ast ~full_cx:cx ~file_sig ~typed_ast ~reader uri loc
+    @ refactor_extract_code_actions
+        ~options
+        ~support_experimental_snippet_text_edit:
+          (Lsp_helpers.supports_experimental_snippet_text_edit lsp_init_params)
+        ~ast
+        ~full_cx:cx
+        ~file_sig
+        ~typed_ast
+        ~reader
+        uri
+        loc
   in
   let error_fixes =
     code_actions_of_errors

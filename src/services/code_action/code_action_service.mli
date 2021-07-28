@@ -36,6 +36,7 @@ val ast_transform_of_error : ?loc:Loc.t -> Loc.t Error_message.t' -> ast_transfo
 
 val code_actions_at_loc :
   options:Options.t ->
+  lsp_init_params:Lsp.Initialize.params ->
   env:ServerEnv.env ->
   reader:Parsing_heaps.Reader.reader ->
   cx:Context.t ->

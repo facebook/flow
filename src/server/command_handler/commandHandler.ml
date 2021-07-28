@@ -1028,8 +1028,10 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
       | Ok
           ( Parse_artifacts { file_sig; tolerable_errors; ast; parse_errors; _ },
             Typecheck_artifacts { cx; typed_ast } ) ->
+        let lsp_init_params = Persistent_connection.lsp_initialize_params client in
         Code_action_service.code_actions_at_loc
           ~options
+          ~lsp_init_params
           ~env
           ~reader
           ~cx
