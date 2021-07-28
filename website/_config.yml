@@ -50,6 +50,7 @@ exclude:
   - node_modules
   - .asset-cache
   - yarn.lock
+  - webpack.config.js
 
 keep_files:
   - static/master
@@ -57,8 +58,5 @@ keep_files:
 
 assets:
   sources:
-    - _assets/css
-    - _assets/js
     - _assets/images
-    - _assets/third-party
-    - node_modules
+    - assets

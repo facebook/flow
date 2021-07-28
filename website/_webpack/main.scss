@@ -61,14 +61,14 @@ $code-color: $syntax-08;
 
 @import "bootstrap/scss/bootstrap.scss";
 
-@import "_base.scss";
-@import "_cards.scss";
-@import "_editor.scss";
-@import "_syntax.scss";
-@import "_feature.scss";
-@import "_footer.scss";
-@import "_article.scss";
-@import "_navbar.scss";
-@import "_search.scss";
-@import "_toc.scss";
-@import "_try.scss";
+@import "./css/_base.scss";
+@import "./css/_cards.scss";
+@import "./css/_editor.scss";
+@import "./css/_syntax.scss";
+@import "./css/_feature.scss";
+@import "./css/_footer.scss";
+@import "./css/_article.scss";
+@import "./css/_navbar.scss";
+@import "./css/_search.scss";
+@import "./css/_toc.scss";
+@import "./css/_try.scss";

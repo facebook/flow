@@ -1,7 +1,6 @@
 ---
 layout: guide
-scripts:
-  - "install.js.es6"
+entrypoint: install-bundle
 ---
 
 <div class="row">
@@ -63,7 +62,3 @@ scripts:
     {% include_relative _install/include.html package_manager="npm"  compiler="flow-remove-types" %}
   </div>
 </div>
-
-<script type="text/javascript">
-  requirejs(['{% asset install @name %}']);
-</script>

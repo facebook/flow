@@ -20,33 +20,10 @@
     <link rel="canonical" href="{{meta_canonical}}">
     <link rel="alternate" type="application/rss+xml" title="{{site.title}}" href="{{site.url}}/blog/feed.xml" />
     <link rel="shortcut icon" href="/static/favicon.png?t={{site.time | date_to_xmlschema}}">
-    <link rel="stylesheet" href="{% asset 'main.scss' @path %}?t={{site.time | date_to_xmlschema}}">
+    {% asset 'main.css' %}
     {% if page.search or layout.search %}
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/docsearch.js/2.6.3/docsearch.min.css" integrity="sha256-QOSRU/ra9ActyXkIBbiIB144aDBdtvXBcNc3OTNuX/Q=" crossorigin="anonymous"/>
     {% endif %}
-    <script type="text/javascript" src="{% asset 'require_2_3_3.js' @path %}"></script>
-    <script type="text/javascript">
-      requirejs.config({
-        baseUrl: '/assets',
-        waitSeconds: 30,
-        shim: {
-          'bootstrap': { 'deps': ['jquery', 'tether'] }
-        },
-        paths: {
-          {% for script in page.scripts %}
-          '{% asset {{script}} @name %}': '{{ script | asset:"@path" | strip_extension }}',
-          {% endfor %}
-          'jquery': 'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min',
-          'tether-min': 'https://cdnjs.cloudflare.com/ajax/libs/tether/1.3.7/js/tether.min',
-          'bootstrap': 'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.5/js/bootstrap.min',
-          'docsearch': 'https://cdnjs.cloudflare.com/ajax/libs/docsearch.js/2.6.3/docsearch.min',
-          'vs': 'https://unpkg.com/monaco-editor@0.26.1/min/vs',
-          'vscode-oniguruma': 'https://unpkg.com/vscode-oniguruma@1.5.1/release/main',
-          'vscode-textmate': 'https://unpkg.com/vscode-textmate@5.4.0/release/main',
-          'lz-string': 'https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min'
-        }
-      });
-    </script>
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -66,22 +43,15 @@
       {% include footer.html %}
     {% endif %}
 
-    {% asset 'prelude' %}
-    <script type="text/javascript">
-      define('tether', ['tether-min'], function(tether) {
-        window.Tether = tether;
-        return tether;
-      });
-
-      requirejs([
-        'bootstrap',
-        {% if page.search or layout.search %}'{% asset "search" @name %}',{% endif %}
-      ]);
-      {% if page.editor or layout.editor %}
-      requirejs(['{% asset "editor" @name %}'], function(Editor) {
-        Editor.init();
-      });
-      {% endif %}
-    </script>
+    {% asset 'main-bundle' %}
+    {% if page.entrypoint %}
+      {% asset "{{page.entrypoint}}" %}
+    {% endif %}
+    {% if page.search or layout.search %}
+      {% asset "search-bundle" %}
+    {% endif %}
+    {% if page.editor or layout.editor %}
+      {% asset "editor-bundle" %}
+    {% endif %}
   </body>
 </html>

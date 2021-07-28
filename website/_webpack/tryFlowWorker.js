@@ -5,10 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//= require require_2_3_3
-//= require flow-loader
-
-// This is a plain .js file (no Babel), so stick to ES5
+import {load} from './js/flow-loader';
 
 var versionCache = {};
 
@@ -71,9 +68,7 @@ this.onmessage = function(e) {
 function getFlow(version) {
   if (!(version in versionCache)) {
     versionCache[version] = new Promise(function(resolve) {
-      requirejs(['flow-loader'], function(FlowLoader) {
-        resolve(FlowLoader.load(version));
-      });
+      resolve(load(version));
     });
   }
   return versionCache[version];

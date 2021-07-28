@@ -2,8 +2,41 @@
   "name": "flow.org",
   "version": "0.0.0",
   "license": "CC-BY-4.0",
+  "scripts": {
+    "develop": "run-p develop:{webpack,jekyll}",
+    "develop:jekyll": "sleep 10 && bundle exec jekyll serve --host :: --port 8080 --watch",
+    "develop:webpack": "webpack --mode development --watch",
+    "build": "run-s build:webpack build:jekyll",
+    "build:jekyll": "JEKYLL_ENV=production bundle exec jekyll build",
+    "build:webpack": "webpack --mode production"
+  },
   "dependencies": {
     "bootstrap": "4.0.0-alpha.5",
-    "jquery": "3.5.1"
+    "docsearch.js": "2.6.3",
+    "jquery": "^3.5.1",
+    "lz-string": "^1.4.4",
+    "tether": "^1.4.7",
+    "vscode-oniguruma": "^1.5.1",
+    "vscode-textmate": "^5.4.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.14.8",
+    "@babel/preset-env": "^7.14.8",
+    "autoprefixer": "^10.3.1",
+    "babel-loader": "^8.2.2",
+    "css-loader": "^6.2.0",
+    "cssnano": "^5.0.7",
+    "expose-loader": "^3.0.0",
+    "file-loader": "^6.2.0",
+    "mini-css-extract-plugin": "^2.1.0",
+    "node-sass": "^6.0.1",
+    "npm-run-all": "^4.1.5",
+    "postcss": "^8.3.6",
+    "postcss-loader": "^6.1.1",
+    "sass-loader": "^12.1.0",
+    "style-loader": "^3.2.1",
+    "terser-webpack-plugin": "^5.1.4",
+    "webpack": "^5.46.0",
+    "webpack-cli": "^4.7.2"
   }
 }

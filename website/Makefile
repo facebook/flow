@@ -9,6 +9,8 @@ else
 BUILD_FLAGS=-d $(DEST)
 endif
 
+JEKYLL_ENV ?= development
+
 .DEFAULT_GOAL := start
 start:
 	@make install
@@ -31,16 +33,18 @@ static/master/flowlib:
 
 copies: static/master/flow.js static/master/flowlib
 
-serve: test-jekyll flow_js copies
-	@bundle exec jekyll serve --host="::" --port=8080
+serve: test-yarn test-jekyll copies
+	yarn develop
 
-build: test-jekyll copies
+build: test-yarn test-jekyll copies
+	yarn run webpack --mode $(JEKYLL_ENV)
 	bundle exec jekyll build $(BUILD_FLAGS)
 
-serve-production: test-jekyll flow_js copies
-	@JEKYLL_ENV=production bundle exec jekyll serve --host="::" --port=8080
+serve-production: test-yarn test-jekyll copies
+	@JEKYLL_ENV=production yarn develop
 
-build-production: test-jekyll flow_js copies
+build-production: test-yarn test-jekyll copies
+	@yarn run webpack --mode production
 	@JEKYLL_ENV=production bundle exec jekyll build $(BUILD_FLAGS)
 
 # crowdin-sync: test-crowdin

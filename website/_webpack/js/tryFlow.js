@@ -5,14 +5,22 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//= require flow-loader
-//= require ./light_vs
-//= link tryFlowWorker
+// defines window.requirejs
+import './require_2_3_3';
+
 import * as LZString from 'lz-string';
 import {INITIAL, Registry, parseRawGrammar} from 'vscode-textmate';
 import {createOnigScanner, createOnigString, loadWASM} from 'vscode-oniguruma';
-import {load as initFlowLocally} from 'flow-loader';
+import {load as initFlowLocally} from './flow-loader';
 import THEME from './light_vs';
+
+requirejs.config({
+  baseUrl: '/assets',
+  waitSeconds: 30,
+  paths: {
+    'vs': 'https://unpkg.com/monaco-editor@0.26.1/min/vs',
+  }
+});
 
 function appendMsg(container, msg, editor) {
   const clickHandler = (msg) => {
@@ -191,7 +199,7 @@ class FlowWorker {
     this._pending = {};
     this._index = 0;
 
-    const worker = this._worker = new Worker("{% asset 'tryFlowWorker' @path %}");
+    const worker = this._worker = new Worker(window.tryFlowWorker);
     worker.onmessage = ({data}) => {
       if (data.id && this._pending[data.id]) {
         if (data.err) {
@@ -283,7 +291,12 @@ const grammars = {
 };
 
 const registry =
-  loadVSCodeOnigurumWASM()
+  import('vscode-oniguruma/release/onig.wasm')
+  .then(wasmModule => fetch(wasmModule.default))
+  // manually convert to an ArrayBuffer because Jekyll 3.x doesn't
+  // support serving .wasm as application/wasm via `jekyll serve`.
+  // Fixed in Jekyll 4
+  .then(response => response.arrayBuffer())
   .then(data => {
     loadWASM(data);
   }).then(() => {
@@ -329,7 +342,7 @@ function createTokensProvider(languageId) {
   );
 }
 
-function createEditor(
+export function createEditor(
   flowVersion,
   domNode,
   resultsNode,
@@ -556,10 +569,6 @@ function createEditor(
   });
 }
 
-function loadVSCodeOnigurumWASM() {
-  return fetch('https://unpkg.com/vscode-oniguruma@1.5.1/release/onig.wasm');
-}
-
 // from https://github.com/microsoft/vscode/blob/013501950e78b9dde5c2e6ec3f2ddfb9201156b7/src/vs/editor/common/modes/supports/tokenization.ts#L398
 function generateTokensCSSForColorMap(colorMap) {
   let rules = [];
@@ -573,5 +582,3 @@ function generateTokensCSSForColorMap(colorMap) {
   rules.push('.code .mtku { text-decoration: underline; text-underline-position: under; }');
   return rules.join('\n');
 }
-
-exports.createEditor = createEditor;

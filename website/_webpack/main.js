@@ -5,5 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//= require editor
-//= require search
+import 'expose-loader?exposes=$,jQuery!jquery';
+import 'expose-loader?exposes=Tether!tether';
+import 'bootstrap';
