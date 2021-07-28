@@ -20,7 +20,7 @@
     <link rel="canonical" href="{{meta_canonical}}">
     <link rel="alternate" type="application/rss+xml" title="{{site.title}}" href="{{site.url}}/blog/feed.xml" />
     <link rel="shortcut icon" href="/static/favicon.png?t={{site.time | date_to_xmlschema}}">
-    {% asset 'main.css' %}
+    <link rel="stylesheet" href="/assets/main.css?{{site.time | date: '%s'}}" />
     {% if page.search or layout.search %}
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/docsearch.js/2.6.3/docsearch.min.css" integrity="sha256-QOSRU/ra9ActyXkIBbiIB144aDBdtvXBcNc3OTNuX/Q=" crossorigin="anonymous"/>
     {% endif %}
@@ -43,15 +43,15 @@
       {% include footer.html %}
     {% endif %}
 
-    {% asset 'main-bundle' %}
+    <script type="text/javascript" src="/assets/main-bundle.js?{{site.time | date: '%s'}}"></script>
     {% if page.entrypoint %}
-      {% asset "{{page.entrypoint}}" %}
+    <script type="text/javascript" src="/assets/{{page.entrypoint}}-bundle.js?{{site.time | date: '%s'}}"></script>
     {% endif %}
     {% if page.search or layout.search %}
-      {% asset "search-bundle" %}
+    <script type="text/javascript" src="/assets/search-bundle.js?{{site.time | date: '%s'}}"></script>
     {% endif %}
     {% if page.editor or layout.editor %}
-      {% asset "editor-bundle" %}
+    <script type="text/javascript" src="/assets/editor-bundle.js?{{site.time | date: '%s'}}"></script>
     {% endif %}
   </body>
 </html>

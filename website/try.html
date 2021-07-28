@@ -20,11 +20,11 @@ fullscreen: true
 </div>
 
 <script type="text/javascript">
-  window.tryFlowWorker = "{% asset 'tryFlowWorker-bundle' @path %}";
+  window.tryFlowWorker = "/assets/tryFlowWorker-bundle.js?{{site.time | date: '%s'}}";
   window.tryFlowDefaultVersion = '{{ site.flow.version }}';
   window.tryFlowVersions = {{ site.flow.versions | jsonify }};
 </script>
-{% asset "tryFlow-bundle" %}
+<script type="text/javascript" src="/assets/tryFlow-bundle.js?{{site.time | date: '%s'}}"></script>
 
 <footer class="try-footer">
   <pre class="cursor-position">1:1</pre>

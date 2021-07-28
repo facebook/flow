@@ -4,14 +4,8 @@ ruby '~> 2.6'
 gem 'jekyll', '~>3.8.7'
 gem 'jekyll-paginate'
 gem 'crowdin-cli'
-gem 'kramdown', '~>1.11' # _plugins/jekyll_ext.rb messes with internals
-gem 'rouge', '<2' # rouge2 will require changes in _plugins/jekyll_ext.rb
+gem 'kramdown', '~>1.11'
+gem 'rouge', '<2'
 gem 'wdm', '>= 0.1.0' if Gem.win_platform?
 gem 's3_website', '~>3.4.0'
 gem 'octokit'
-
-# jekyll-assets 3.x doesn't support sprockets 4.0
-# (but jekyll-assets 4.x does)
-# https://github.com/envygeeks/jekyll-assets/issues/622
-gem 'jekyll-assets', '~>3', group: :jekyll_plugins
-gem 'sprockets', '<4'
