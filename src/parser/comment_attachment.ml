@@ -147,7 +147,7 @@ class ['loc] trailing_comments_remover ~after_pos =
       let { alternate; comments; _ } = expr in
       let alternate' = this#expression alternate in
       let comments' = this#syntax_opt comments in
-      if alternate == alternate' && comments = comments' then
+      if alternate == alternate' && comments == comments' then
         expr
       else
         { expr with alternate = alternate'; comments = comments' }
