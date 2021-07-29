@@ -17,7 +17,7 @@ INTERNAL_FLAGS=
 
 ifeq ($(OS), Windows_NT)
   UNAME_S=Windows
-  UNAME_M=
+  UNAME_M=x86_64
   SWITCH=ocaml-variants.4.10.2+mingw64c
   CC:=x86_64-w64-mingw32-gcc
   CXX:=x86_64-w64-mingw32-g++
@@ -39,7 +39,7 @@ OCAMLBUILD_JOBS := 0
 ################################################################################
 
 ifeq ($(UNAME_S), Linux)
-  EXTRA_LIBS += rt atomic
+  EXTRA_LIBS += rt
   INOTIFY=src/hack_forked/third-party/inotify
   INOTIFY_STUBS=$(INOTIFY)/inotify_stubs.c
   FSNOTIFY=src/hack_forked/fsnotify_linux
@@ -67,7 +67,6 @@ ifeq ($(UNAME_S), Darwin)
   EXE=
 endif
 ifeq ($(UNAME_S), Windows)
-  EXTRA_LIBS += atomic
   INOTIFY=
   INOTIFY_STUBS=
   FSNOTIFY=src/hack_forked/fsnotify_win
@@ -309,12 +308,11 @@ FUZZY_PATH_DEPS=src/third-party/fuzzy-path/libfuzzy-path.a
 FUZZY_PATH_LINKER_FLAGS=$(FUZZY_PATH_DEPS)
 LIBFUZZY_PATH_DEP=_build/src/third-party/fuzzy-path/.depends-on-libfuzzy-path
 
-# Any additional C flags can be added here
-ifeq ($(UNAME_M), aarch64)
-  CC_FLAGS=
-else
-  CC_FLAGS=-mcx16
+# Coerce gcc to emit cmpxchg16b instead of libatomic library calls
+ifeq ($(UNAME_M), x86_64)
+  CC_FLAGS += -mcx16
 endif
+
 CC_FLAGS += $(EXTRA_CC_FLAGS)
 CC_OPTS=$(foreach flag, $(CC_FLAGS), -ccopt $(flag))
 INCLUDE_OPTS=$(foreach dir,$(MODULES),-I $(dir))
