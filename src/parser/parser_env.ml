@@ -344,11 +344,11 @@ let add_used_private env name loc =
 let consume_comments_until env pos = env.consumed_comments_pos := pos
 
 (* lookahead: *)
-let[@inline] lookahead_0 env = Lookahead.peek_0 !(env.lookahead)
+let lookahead_0 env = Lookahead.peek_0 !(env.lookahead)
 
-let[@inline] lookahead_1 env = Lookahead.peek_1 !(env.lookahead)
+let lookahead_1 env = Lookahead.peek_1 !(env.lookahead)
 
-let[@inline] lookahead ~i env =
+let lookahead ~i env =
   match i with
   | 0 -> lookahead_0 env
   | 1 -> lookahead_1 env
