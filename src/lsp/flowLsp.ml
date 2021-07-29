@@ -630,7 +630,7 @@ let do_initialize flowconfig params : Initialize.result =
     let supports_refactor_extract =
       Lsp_helpers.supports_codeActionKinds params
       |> List.exists ~f:(( = ) CodeActionKind.refactor_extract)
-      && FlowConfig.refactor flowconfig |> Option.value ~default:false
+      && FlowConfig.refactor flowconfig |> Option.value ~default:true
     in
     let supported_code_action_kinds =
       if supports_quickfixes then

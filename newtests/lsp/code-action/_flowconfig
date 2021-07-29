@@ -1,4 +1,3 @@
 [options]
 experimental.enums=true
-experimental.refactor=true
 all=true
