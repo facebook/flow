@@ -703,7 +703,6 @@ let flowconfig_flags prev =
 
 type connect_params = {
   retries: int;
-  retry_if_init: bool;
   timeout: int option;
   no_auto_start: bool;
   autostop: bool;
@@ -716,17 +715,8 @@ type connect_params = {
 }
 
 let collect_connect_flags
-    main
-    lazy_mode
-    timeout
-    retries
-    retry_if_init
-    no_auto_start
-    temp_dir
-    shm_flags
-    ignore_version
-    quiet
-    on_mismatch =
+    main lazy_mode timeout retries no_auto_start temp_dir shm_flags ignore_version quiet on_mismatch
+    =
   let default def = function
     | Some x -> x
     | None -> def
@@ -739,7 +729,6 @@ let collect_connect_flags
   main
     {
       retries = default 3 retries;
-      retry_if_init = default true retry_if_init;
       timeout;
       no_auto_start;
       temp_dir;
@@ -758,10 +747,6 @@ let connect_flags_with_lazy_collector collector =
     collector
     |> flag "--timeout" (optional int) ~doc:"Maximum time to wait, in seconds"
     |> flag "--retries" (optional int) ~doc:"Set the number of retries. (default: 3)"
-    |> flag
-         "--retry-if-init"
-         (optional bool)
-         ~doc:"retry if the server is initializing (default: true)"
     |> flag "--no-auto-start" no_arg ~doc:"If the server is not running, do not start it; just exit"
     |> temp_dir_flag
     |> shm_flags
@@ -1604,7 +1589,7 @@ let rec connect_and_make_request flowconfig_name =
           SocketHandshake.client_build_id = SocketHandshake.build_revision;
           client_version = Flow_version.version;
           is_stop_request = false;
-          server_should_hangup_if_still_initializing = not connect_flags.retry_if_init;
+          server_should_hangup_if_still_initializing = false;
           version_mismatch_strategy;
         },
         { SocketHandshake.client_type = SocketHandshake.Ephemeral } )

@@ -66,7 +66,6 @@ Status command options:
   --one-line           Escapes newlines so that each error prints on one line
   --quiet              Suppresses the server-status information that would have been printed to stderr
   --retries            Set the number of retries. (default: 3)
-  --retry-if-init      retry if the server is initializing (default: true)
   --show-all-errors    Print all errors (the default is to truncate after 50 errors)
   --strip-root         Print paths without the root
   --temp-dir           Directory in which to store temp files (default: /tmp/flow/)

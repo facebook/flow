@@ -1145,9 +1145,8 @@ module RagePrint = struct
   let string_of_connect_params (p : connect_params) : string =
     CommandUtils.(
       Printf.sprintf
-        "retries=%d, retry_if_init=%B, no_auto_start=%B, autostop=%B, ignore_version=%B quiet=%B, temp_dir=%s, timeout=%s, lazy_mode=%s"
+        "retries=%d, no_auto_start=%B, autostop=%B, ignore_version=%B quiet=%B, temp_dir=%s, timeout=%s, lazy_mode=%s"
         p.retries
-        p.retry_if_init
         p.no_auto_start
         p.autostop
         p.ignore_version

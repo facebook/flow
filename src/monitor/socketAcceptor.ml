@@ -232,8 +232,6 @@ let perform_handshake_and_get_client_handshake ~client_fd =
       let status = StatusStream.get_status () in
       if client_handshake.server_should_hangup_if_still_initializing then (
         let%lwt () = respond Server_will_hangup (Some (Server_still_initializing status)) in
-        (* In the case of Ephemeral, CommandConnect will use that response to display *)
-        (* a message to the user about "--retry-if-init false and still initializing" *)
         (* In the case of Persistent, lspCommand will retry a second later. *)
         (* The message we log here solely goes to the logs, not the user. *)
         let (server_status, watchman_status) = status in
