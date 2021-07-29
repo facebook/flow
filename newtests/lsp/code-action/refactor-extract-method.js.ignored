@@ -1,0 +1,7 @@
+//@flow
+
+class Test {
+  test(): void {
+    this.test();
+  }
+}
