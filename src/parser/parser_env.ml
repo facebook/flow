@@ -359,37 +359,61 @@ let with_strict in_strict_mode env =
   if in_strict_mode = env.in_strict_mode then env 
   else { env with in_strict_mode }
 
-let with_in_formal_parameters in_formal_parameters env = { env with in_formal_parameters }
+let with_in_formal_parameters in_formal_parameters env = 
+  if in_formal_parameters = env.in_formal_parameters then env 
+  else { env with in_formal_parameters }
 
-let with_in_function in_function env = { env with in_function }
+let with_in_function in_function env = 
+  if in_function = env.in_function then env
+  else { env with in_function }
 
-let with_allow_yield allow_yield env = { env with allow_yield }
+let with_allow_yield allow_yield env = 
+  if allow_yield = env.allow_yield then env 
+  else { env with allow_yield }
 
-let with_allow_await allow_await env = { env with allow_await }
+let with_allow_await allow_await env = 
+  if allow_await = env.allow_await then env 
+  else { env with allow_await }
 
-let with_allow_directive allow_directive env = { env with allow_directive }
+let with_allow_directive allow_directive env = 
+  if allow_directive = env.allow_directive then env 
+  else { env with allow_directive }
 
-let with_allow_super allow_super env = { env with allow_super }
+let with_allow_super allow_super env = 
+  if allow_super = env.allow_super then env 
+  else { env with allow_super }
 
-let with_no_let no_let env = { env with no_let }
+let with_no_let no_let env = 
+  if no_let = env.no_let then env 
+  else { env with no_let }
 
-let with_in_loop in_loop env = { env with in_loop }
+let with_in_loop in_loop env = 
+  if in_loop = env.in_loop then env 
+  else { env with in_loop }
 
 let with_no_in no_in env = 
   if no_in = env.no_in then env 
   else { env with no_in }
 
-let with_no_anon_function_type no_anon_function_type env = { env with no_anon_function_type }
+let with_no_anon_function_type no_anon_function_type env = 
+  if no_anon_function_type = env.no_anon_function_type then env
+  else { env with no_anon_function_type }
 
 let with_no_new no_new env = 
   if no_new = env.no_new then env
   else { env with no_new }
 
-let with_in_switch in_switch env = { env with in_switch }
+let with_in_switch in_switch env = 
+  if in_switch = env.in_switch then env 
+  else { env with in_switch }
 
-let with_in_export in_export env = { env with in_export }
+let with_in_export in_export env = 
+  if in_export = env.in_export then env 
+  else { env with in_export }
 
-let with_no_call no_call env = { env with no_call }
+let with_no_call no_call env = 
+  if no_call = env.no_call then env 
+  else { env with no_call }
 
 let with_error_callback error_callback env = { env with error_callback = Some error_callback }
 
