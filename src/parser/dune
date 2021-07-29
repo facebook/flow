@@ -3,7 +3,7 @@
  (wrapped false) 
  (modules
   (:standard \ flow_parser_js flow_parser_dot_js))
- (libraries base sedlex wtf8)
+ (libraries base sedlex wtf8 flow_sedlexing)
  (preprocess
   (pps ppx_gen_rec ppx_deriving.std sedlex.ppx)))
 
