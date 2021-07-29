@@ -161,29 +161,13 @@ let unicode_escape = [%sedlex.regexp? ("\\u", hex_quad)]
 let codepoint_escape = [%sedlex.regexp? ("\\u{", Plus hex_digit, '}')]
 
 let js_id_start = [%sedlex.regexp? '$' | '_' | id_start | unicode_escape | codepoint_escape]
-
+let ascii_id_start = [%sedlex.regexp? '$' | '_' | 'a'..'z' | 'A' .. 'Z' ]
+let ascii_id_continue = [%sedlex.regexp? '$' | '_' | 'a'..'z' | 'A' .. 'Z' | '0' .. '9']
 let js_id_continue =
   [%sedlex.regexp? '$' | '_' | 0x200C | 0x200D | id_continue | unicode_escape | codepoint_escape]
 
 (* a short-cut solution to avoid the slow path in var decoding *)  
-let for_sure_valid_js_id ( x : string) : bool =
-  let rec aux x ~offset len =
-    if offset < len then 
-      match String.unsafe_get x offset with 
-      | '$' | '_' | 'a' .. 'z' | 'A' .. 'Z' 
-      | '0' .. '9' 
-        ->  (* approximation to js_id_continue *)
-          aux x ~offset:(offset+1) len 
-      | _ -> false
-    else true in 
-  let len = String.length x in 
-  if len = 0 then false 
-  else 
-    let first_char = String.unsafe_get x 0 in 
-    match first_char with 
-    | '$' | '_' | 'a' .. 'z' | 'A' .. 'Z'  (* approximation to js_id_start *)
-      -> aux x ~offset:1 len
-    | _ -> false
+
 let pos_at_offset env offset =
   { Loc.line = Lex_env.line env; column = offset - Lex_env.bol_offset env }
 
@@ -860,14 +844,16 @@ let token (env : Lex_env.t) lexbuf : result =
   | "with" -> Token (env, T_WITH)
   | "yield" -> Token (env, T_YIELD)
   (* Identifiers *)
+  | (ascii_id_start, Star ascii_id_continue) 
+    -> (* fast path *)
+    let loc = loc_of_lexbuf env lexbuf in
+    let raw = lexeme lexbuf in
+    Token (env, T_IDENTIFIER { loc; value = raw; raw })
   | (js_id_start, Star js_id_continue) ->
     let loc = loc_of_lexbuf env lexbuf in
     let raw = lexeme lexbuf in
-    if for_sure_valid_js_id raw then 
-      Token (env, T_IDENTIFIER { loc; value = raw; raw })
-    else 
-      let (env, value) = decode_identifier env (Sedlexing.lexeme lexbuf) in
-      Token (env, T_IDENTIFIER { loc; value; raw })    
+    let (env, value) = decode_identifier env (Sedlexing.lexeme lexbuf) in
+    Token (env, T_IDENTIFIER { loc; value; raw })    
   (* TODO: Use [Symbol.iterator] instead of @@iterator. *)
   | "@@iterator"
   | "@@asyncIterator" ->
@@ -1713,14 +1699,16 @@ let type_token env lexbuf =
   | "void" -> Token (env, T_VOID_TYPE)
   | "symbol" -> Token (env, T_SYMBOL_TYPE)
   (* Identifiers *)
+  | (ascii_id_start, Star ascii_id_continue)
+    -> (* fast path *)
+    let loc = loc_of_lexbuf env lexbuf in
+    let raw = lexeme lexbuf in
+    Token(env, T_IDENTIFIER {loc; value = raw; raw})
   | (js_id_start, Star js_id_continue) ->
     let loc = loc_of_lexbuf env lexbuf in
     let raw = lexeme lexbuf in
-    if for_sure_valid_js_id raw then     
-      Token(env, T_IDENTIFIER {loc; value = raw; raw})
-    else
-      let (env, value) = decode_identifier env (Sedlexing.lexeme lexbuf) in
-      Token (env, T_IDENTIFIER { loc; value; raw })
+    let (env, value) = decode_identifier env (Sedlexing.lexeme lexbuf) in
+    Token (env, T_IDENTIFIER { loc; value; raw })
   | "%checks" -> Token (env, T_CHECKS)
   (* Syntax *)
   | "[" -> Token (env, T_LBRACKET)
