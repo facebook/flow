@@ -727,16 +727,18 @@ workflows:
             - build_linux_arm64
             - build_macos
 
-      # only deploy the website from master, so that it can include docs/blog
-      # posts about an upcoming release, and so the release branch doesn't
-      # revert those changes.
+      # only deploy the website from the main branch, so that it can include
+      # docs/blog posts about an upcoming release, and so the release branch
+      # doesn't revert those changes.
       - website_deploy:
           requires:
             - build_linux
             - build_js
           filters:
             branches:
-              only: master
+              only:
+                - main
+                - master
 
   build_and_deploy:
     jobs:
