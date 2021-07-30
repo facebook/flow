@@ -1541,6 +1541,7 @@ let get_local_request_handler ienv (id, result) =
       match (result, handle) with
       | (ShowMessageRequestResult result, ShowMessageHandler handle) -> handle result
       | (ShowStatusResult result, ShowStatusHandler handle) -> handle result
+      | (ApplyWorkspaceEditResult result, ApplyWorkspaceEditHandler handle) -> handle result
       | (ConfigurationResult result, ConfigurationHandler handle) -> handle result
       | (RegisterCapabilityResult, VoidHandler) -> (fun state -> state)
       | (ErrorResult (e, msg), _) -> handle_error (e, msg)

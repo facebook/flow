@@ -8,6 +8,8 @@
 open Lsp
 
 type t = {
+  of_apply_workspace_edit_params: t -> ApplyWorkspaceEdit.params -> ApplyWorkspaceEdit.params;
+  of_apply_workspace_edit_result: t -> ApplyWorkspaceEdit.result -> ApplyWorkspaceEdit.result;
   of_cancel_request_params: t -> CancelRequest.params -> CancelRequest.params;
   of_code_action: t -> CodeAction.t -> CodeAction.t;
   of_code_action_context:
@@ -105,6 +107,12 @@ type t = {
 
 let default_mapper =
   {
+    of_apply_workspace_edit_params =
+      (fun mapper { ApplyWorkspaceEdit.label; edit } ->
+        { ApplyWorkspaceEdit.label; edit = mapper.of_workspace_edit mapper edit });
+    of_apply_workspace_edit_result =
+      (fun _mapper { ApplyWorkspaceEdit.applied; failureReason; failedChange } ->
+        { ApplyWorkspaceEdit.applied; failureReason; failedChange });
     of_cancel_request_params = (fun _mapper { CancelRequest.id } -> { CancelRequest.id });
     of_code_action =
       (fun mapper { CodeAction.title; kind; diagnostics; action } ->
@@ -452,6 +460,8 @@ let default_mapper =
           DocumentCodeLensResult (mapper.of_document_code_lens_result mapper result)
         | ExecuteCommandResult result ->
           ExecuteCommandResult (mapper.of_execute_command_result mapper result)
+        | ApplyWorkspaceEditResult result ->
+          ApplyWorkspaceEditResult (mapper.of_apply_workspace_edit_result mapper result)
         | ErrorResult (err, str) -> ErrorResult (err, str));
     of_lsp_request =
       (fun mapper request ->
@@ -503,6 +513,8 @@ let default_mapper =
           DocumentCodeLensRequest (mapper.of_document_code_lens_params mapper params)
         | ExecuteCommandRequest params ->
           ExecuteCommandRequest (mapper.of_execute_command_params mapper params)
+        | ApplyWorkspaceEditRequest params ->
+          ApplyWorkspaceEditRequest (mapper.of_apply_workspace_edit_params mapper params)
         | UnknownRequest (req, json) -> UnknownRequest (req, json));
     of_location =
       (fun mapper { Location.uri; range } ->
