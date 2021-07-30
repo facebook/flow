@@ -999,16 +999,17 @@ let handle_save_state ~saved_state_filename ~genv ~profiling ~env =
   Lwt.return (env, ServerProt.Response.SAVE_STATE result, None)
 
 let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
-  let CodeActionRequest.{ textDocument; range; context = { only = _; diagnostics } } = params in
-  let file_input = file_input_of_text_document_identifier ~client textDocument in
-  let file_key = File_key.SourceFile (File_input.filename_of_file_input file_input) in
-  let loc = Flow_lsp_conversions.lsp_range_to_flow_loc ~source:file_key range in
-  match File_input.content_of_file_input file_input with
-  | Error msg -> Lwt.return (Error msg)
-  | Ok file_contents ->
-    if not (Code_action_service.client_supports_quickfixes params) then
-      Lwt.return (Ok [])
-    else
+  let CodeActionRequest.{ textDocument; range; context = { only; diagnostics } } = params in
+  if not (Code_action_service.kind_is_supported ~options only) then
+    (* bail out early if we don't support any of the code actions requested *)
+    Lwt.return (Ok [])
+  else
+    let file_input = file_input_of_text_document_identifier ~client textDocument in
+    let file_key = File_key.SourceFile (File_input.filename_of_file_input file_input) in
+    let loc = Flow_lsp_conversions.lsp_range_to_flow_loc ~source:file_key range in
+    match File_input.content_of_file_input file_input with
+    | Error msg -> Lwt.return (Error msg)
+    | Ok file_contents ->
       let type_parse_artifacts_cache =
         Some (Persistent_connection.type_parse_artifacts_cache client)
       in
@@ -1041,6 +1042,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
           ~typed_ast
           ~parse_errors
           ~diagnostics
+          ~only
           ~uri
           ~loc)
 
