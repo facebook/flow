@@ -64,6 +64,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
+#define _GNU_SOURCE 1
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
