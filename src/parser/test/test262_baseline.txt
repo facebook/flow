@@ -15,9 +15,9 @@ annexB/language/comments/single-line-html-close.js (strict mode)
 annexB/language/comments/single-line-html-close.js (default)
   Unexpected token `>` at (25, 2) to (25, 3)
 annexB/language/comments/single-line-html-open.js (strict mode)
-  Unexpected token `!`, expected an identifier at (22, 1) to (22, 2)
+  Unexpected token `!`, expected the token `>` at (22, 1) to (22, 2)
 annexB/language/comments/single-line-html-open.js (default)
-  Unexpected token `!`, expected an identifier at (22, 1) to (22, 2)
+  Unexpected token `!`, expected the token `>` at (22, 1) to (22, 2)
 annexB/language/expressions/object/__proto__-duplicate.js (strict mode)
   Missing parse error
 annexB/language/expressions/object/__proto__-duplicate.js (default)
@@ -1206,6 +1206,18 @@ language/expressions/arrow-function/syntax/early-errors/use-strict-with-non-simp
   Missing parse error
 language/expressions/arrow-function/syntax/early-errors/use-strict-with-non-simple-param.js (default)
   Missing parse error
+language/expressions/async-arrow-function/await-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/async-arrow-function/await-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/async-arrow-function/await-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/expressions/async-arrow-function/await-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/expressions/async-arrow-function/await-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/async-arrow-function/await-as-label-identifier-escaped.js (default)
+  Missing parse error
 language/expressions/async-arrow-function/await-as-param-ident-nested-arrow-parameter-position.js (strict mode)
   Missing parse error
 language/expressions/async-arrow-function/await-as-param-ident-nested-arrow-parameter-position.js (default)
@@ -1240,6 +1252,18 @@ language/expressions/async-arrow-function/early-errors-arrow-formals-body-duplic
   Missing parse error
 language/expressions/async-arrow-function/early-errors-arrow-formals-body-duplicate.js (default)
   Missing parse error
+language/expressions/async-function/await-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/async-function/await-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/async-function/await-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/expressions/async-function/await-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/expressions/async-function/await-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/async-function/await-as-label-identifier-escaped.js (default)
+  Missing parse error
 language/expressions/async-function/early-errors-expression-NSPL-with-USD.js (strict mode)
   Missing parse error
 language/expressions/async-function/early-errors-expression-NSPL-with-USD.js (default)
@@ -1247,6 +1271,30 @@ language/expressions/async-function/early-errors-expression-NSPL-with-USD.js (de
 language/expressions/async-function/early-errors-expression-formals-body-duplicate.js (strict mode)
   Missing parse error
 language/expressions/async-function/early-errors-expression-formals-body-duplicate.js (default)
+  Missing parse error
+language/expressions/async-function/named-await-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/async-function/named-await-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/async-function/named-await-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/expressions/async-function/named-await-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/expressions/async-function/named-await-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/async-function/named-await-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/async-generator/await-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/async-generator/await-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/async-generator/await-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/expressions/async-generator/await-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/expressions/async-generator/await-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/async-generator/await-as-label-identifier-escaped.js (default)
   Missing parse error
 language/expressions/async-generator/early-errors-expression-NSPL-with-USD.js (strict mode)
   Missing parse error
@@ -1264,6 +1312,114 @@ language/expressions/async-generator/early-errors-expression-formals-contains-aw
   Missing parse error
 language/expressions/async-generator/early-errors-expression-formals-contains-await-expr.js (default)
   Missing parse error
+language/expressions/async-generator/named-await-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/async-generator/named-await-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/async-generator/named-await-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/expressions/async-generator/named-await-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/expressions/async-generator/named-await-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/async-generator/named-await-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/async-generator/named-yield-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/async-generator/named-yield-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/async-generator/named-yield-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/expressions/async-generator/named-yield-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/expressions/async-generator/named-yield-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/async-generator/named-yield-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/async-generator/yield-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/async-generator/yield-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/async-generator/yield-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/expressions/async-generator/yield-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/expressions/async-generator/yield-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/async-generator/yield-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/class/async-gen-method-static/await-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/async-gen-method-static/await-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/class/async-gen-method-static/await-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/async-gen-method-static/await-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/expressions/class/async-gen-method-static/await-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/async-gen-method-static/await-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/class/async-gen-method-static/yield-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/async-gen-method-static/yield-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/class/async-gen-method-static/yield-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/async-gen-method-static/yield-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/expressions/class/async-gen-method-static/yield-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/async-gen-method-static/yield-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/class/async-gen-method/await-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/async-gen-method/await-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/class/async-gen-method/await-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/async-gen-method/await-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/expressions/class/async-gen-method/await-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/async-gen-method/await-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/class/async-gen-method/yield-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/async-gen-method/yield-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/class/async-gen-method/yield-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/async-gen-method/yield-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/expressions/class/async-gen-method/yield-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/async-gen-method/yield-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/class/async-method-static/await-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/async-method-static/await-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/class/async-method-static/await-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/async-method-static/await-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/expressions/class/async-method-static/await-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/async-method-static/await-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/class/async-method/await-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/async-method/await-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/class/async-method/await-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/async-method/await-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/expressions/class/async-method/await-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/async-method/await-as-label-identifier-escaped.js (default)
+  Missing parse error
 language/expressions/class/class-name-ident-await-escaped-module.js (strict mode)
   Missing parse error
 language/expressions/class/class-name-ident-await-escaped-module.js (default)
@@ -1271,6 +1427,18 @@ language/expressions/class/class-name-ident-await-escaped-module.js (default)
 language/expressions/class/class-name-ident-await-module.js (strict mode)
   Missing parse error
 language/expressions/class/class-name-ident-await-module.js (default)
+  Missing parse error
+language/expressions/class/class-name-ident-let-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/class-name-ident-let-escaped.js (default)
+  Missing parse error
+language/expressions/class/class-name-ident-static-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/class-name-ident-static-escaped.js (default)
+  Missing parse error
+language/expressions/class/class-name-ident-yield-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/class-name-ident-yield-escaped.js (default)
   Missing parse error
 language/expressions/class/dstr/async-private-gen-meth-ary-init-iter-close.js (strict mode)
   Classes may not have private methods. at (70, 2) to (73, 3)
@@ -5708,17 +5876,69 @@ language/expressions/class/elements/wrapped-in-sc-static-private-methods.js (str
   Classes may not have private methods. at (30, 2) to (32, 3)
 language/expressions/class/elements/wrapped-in-sc-static-private-methods.js (default)
   Classes may not have private methods. at (30, 2) to (32, 3)
+language/expressions/class/gen-method-static/yield-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/gen-method-static/yield-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/class/gen-method-static/yield-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/gen-method-static/yield-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/expressions/class/gen-method-static/yield-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/gen-method-static/yield-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/class/gen-method/yield-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/gen-method/yield-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/class/gen-method/yield-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/gen-method/yield-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/expressions/class/gen-method/yield-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/class/gen-method/yield-as-label-identifier-escaped.js (default)
+  Missing parse error
 language/expressions/dynamic-import/assignment-expression/import-meta.js (strict mode)
   Unexpected token `.`, expected the token `(` at (22, 23) to (22, 24)
 language/expressions/dynamic-import/assignment-expression/import-meta.js (default)
   Unexpected token `.`, expected the token `(` at (22, 23) to (22, 24)
+language/expressions/dynamic-import/escape-sequence-import.js (strict mode)
+  Missing parse error
+language/expressions/dynamic-import/escape-sequence-import.js (default)
+  Missing parse error
 language/expressions/function/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/expressions/function/use-strict-with-non-simple-param.js (default)
   Missing parse error
+language/expressions/generators/named-yield-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/generators/named-yield-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/generators/named-yield-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/expressions/generators/named-yield-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/expressions/generators/named-yield-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/generators/named-yield-as-label-identifier-escaped.js (default)
+  Missing parse error
 language/expressions/generators/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/expressions/generators/use-strict-with-non-simple-param.js (default)
+  Missing parse error
+language/expressions/generators/yield-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/generators/yield-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/generators/yield-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/expressions/generators/yield-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/expressions/generators/yield-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/generators/yield-as-label-identifier-escaped.js (default)
   Missing parse error
 language/expressions/import.meta/distinct-for-each-module.js (strict mode)
   Unexpected token `.`, expected the token `(` at (28, 26) to (28, 27)
@@ -5732,6 +5952,10 @@ language/expressions/import.meta/same-object-returned.js (strict mode)
   Unexpected token `.`, expected the token `(` at (27, 14) to (27, 15)
 language/expressions/import.meta/same-object-returned.js (default)
   Unexpected token `.`, expected the token `(` at (27, 14) to (27, 15)
+language/expressions/import.meta/syntax/escape-sequence-import.js (strict mode)
+  Missing parse error
+language/expressions/import.meta/syntax/escape-sequence-import.js (default)
+  Missing parse error
 language/expressions/import.meta/syntax/goal-module-nested-function.js (strict mode)
   Unexpected token `.`, expected the token `(` at (15, 8) to (15, 9)
 language/expressions/import.meta/syntax/goal-module-nested-function.js (default)
@@ -5740,6 +5964,46 @@ language/expressions/import.meta/syntax/goal-module.js (strict mode)
   Unexpected token `.`, expected an identifier at (14, 6) to (14, 7)
 language/expressions/import.meta/syntax/goal-module.js (default)
   Unexpected token `.`, expected an identifier at (14, 6) to (14, 7)
+language/expressions/new.target/escaped-new.js (strict mode)
+  Missing parse error
+language/expressions/new.target/escaped-new.js (default)
+  Missing parse error
+language/expressions/object/method-definition/async-await-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/async-await-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/object/method-definition/async-await-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/async-await-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/expressions/object/method-definition/async-await-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/async-await-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/object/method-definition/async-gen-await-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/async-gen-await-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/object/method-definition/async-gen-await-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/async-gen-await-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/expressions/object/method-definition/async-gen-await-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/async-gen-await-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/object/method-definition/async-gen-yield-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/async-gen-yield-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/object/method-definition/async-gen-yield-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/async-gen-yield-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/expressions/object/method-definition/async-gen-yield-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/async-gen-yield-as-label-identifier-escaped.js (default)
+  Missing parse error
 language/expressions/object/method-definition/early-errors-object-async-method-duplicate-parameters.js (default)
   Missing parse error
 language/expressions/object/method-definition/early-errors-object-method-NSPL-with-USD.js (strict mode)
@@ -5755,6 +6019,18 @@ language/expressions/object/method-definition/early-errors-object-method-await-i
 language/expressions/object/method-definition/early-errors-object-method-await-in-formals.js (default)
   Missing parse error
 language/expressions/object/method-definition/early-errors-object-method-duplicate-parameters.js (default)
+  Missing parse error
+language/expressions/object/method-definition/gen-yield-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/gen-yield-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/object/method-definition/gen-yield-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/gen-yield-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/expressions/object/method-definition/gen-yield-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/gen-yield-as-label-identifier-escaped.js (default)
   Missing parse error
 language/expressions/object/method-definition/generator-param-redecl-const.js (strict mode)
   Missing parse error
@@ -5788,6 +6064,24 @@ language/expressions/template-literal/invalid-legacy-octal-escape-sequence.js (s
   Missing parse error
 language/expressions/template-literal/invalid-legacy-octal-escape-sequence.js (default)
   Missing parse error
+language/future-reserved-words/implements-strict-escaped.js (strict mode)
+  Missing parse error
+language/future-reserved-words/interface-strict-escaped.js (strict mode)
+  Missing parse error
+language/future-reserved-words/let-strict-escaped.js (strict mode)
+  Missing parse error
+language/future-reserved-words/package-strict-escaped.js (strict mode)
+  Missing parse error
+language/future-reserved-words/private-strict-escaped.js (strict mode)
+  Missing parse error
+language/future-reserved-words/protected-strict-escaped.js (strict mode)
+  Missing parse error
+language/future-reserved-words/public-strict-escaped.js (strict mode)
+  Missing parse error
+language/future-reserved-words/static-strict-escaped.js (strict mode)
+  Missing parse error
+language/future-reserved-words/yield-strict-escaped.js (strict mode)
+  Missing parse error
 language/global-code/export.js (strict mode)
   Missing parse error
 language/global-code/export.js (default)
@@ -5799,6 +6093,294 @@ language/global-code/import.js (default)
 language/global-code/new.target-arrow.js (strict mode)
   Missing parse error
 language/global-code/new.target-arrow.js (default)
+  Missing parse error
+language/identifiers/val-break-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-break-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-break-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-break-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-case-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-case-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-case-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-case-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-catch-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-catch-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-catch-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-catch-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-class-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-class-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-class-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-class-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-const-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-const-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-const-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-const-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-continue-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-continue-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-continue-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-continue-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-debugger-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-debugger-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-debugger-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-debugger-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-default-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-default-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-default-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-default-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-delete-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-delete-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-delete-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-delete-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-do-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-do-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-do-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-do-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-else-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-else-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-else-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-else-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-enum-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-enum-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-enum-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-enum-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-export-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-export-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-export-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-export-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-extends-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-extends-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-extends-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-extends-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-false-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-false-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-false-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-false-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-finally-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-finally-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-finally-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-finally-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-for-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-for-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-for-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-for-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-function-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-function-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-function-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-function-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-if-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-if-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-if-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-if-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-import-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-import-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-import-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-import-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-in-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-in-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-in-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-in-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-instanceof-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-instanceof-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-instanceof-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-instanceof-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-new-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-new-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-new-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-new-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-null-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-null-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-null-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-null-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-return-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-return-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-return-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-return-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-super-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-super-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-super-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-super-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-switch-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-switch-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-switch-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-switch-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-this-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-this-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-this-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-this-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-throw-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-throw-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-throw-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-throw-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-true-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-true-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-true-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-true-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-try-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-try-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-try-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-try-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-typeof-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-typeof-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-typeof-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-typeof-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-var-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-var-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-var-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-var-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-void-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-void-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-void-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-void-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-while-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-while-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-while-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-while-via-escape-hex4.js (default)
+  Missing parse error
+language/identifiers/val-with-via-escape-hex.js (strict mode)
+  Missing parse error
+language/identifiers/val-with-via-escape-hex.js (default)
+  Missing parse error
+language/identifiers/val-with-via-escape-hex4.js (strict mode)
+  Missing parse error
+language/identifiers/val-with-via-escape-hex4.js (default)
   Missing parse error
 language/import/dup-bound-names.js (strict mode)
   Missing parse error
@@ -6214,6 +6796,42 @@ language/reserved-words/await-module.js (strict mode)
   Missing parse error
 language/reserved-words/await-module.js (default)
   Missing parse error
+language/reserved-words/ident-reference-false-escaped.js (strict mode)
+  Missing parse error
+language/reserved-words/ident-reference-false-escaped.js (default)
+  Missing parse error
+language/reserved-words/ident-reference-null-escaped.js (strict mode)
+  Missing parse error
+language/reserved-words/ident-reference-null-escaped.js (default)
+  Missing parse error
+language/reserved-words/ident-reference-true-escaped.js (strict mode)
+  Missing parse error
+language/reserved-words/ident-reference-true-escaped.js (default)
+  Missing parse error
+language/reserved-words/label-ident-false-escaped.js (strict mode)
+  Missing parse error
+language/reserved-words/label-ident-false-escaped.js (default)
+  Missing parse error
+language/reserved-words/label-ident-null-escaped.js (strict mode)
+  Missing parse error
+language/reserved-words/label-ident-null-escaped.js (default)
+  Missing parse error
+language/reserved-words/label-ident-true-escaped.js (strict mode)
+  Missing parse error
+language/reserved-words/label-ident-true-escaped.js (default)
+  Missing parse error
+language/statements/async-function/await-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/async-function/await-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/statements/async-function/await-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/statements/async-function/await-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/statements/async-function/await-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/async-function/await-as-label-identifier-escaped.js (default)
+  Missing parse error
 language/statements/async-function/early-errors-declaration-NSPL-with-USD.js (strict mode)
   Missing parse error
 language/statements/async-function/early-errors-declaration-NSPL-with-USD.js (default)
@@ -6222,6 +6840,102 @@ language/statements/async-function/early-errors-declaration-formals-body-duplica
   Missing parse error
 language/statements/async-function/early-errors-declaration-formals-body-duplicate.js (default)
   Missing parse error
+language/statements/async-generator/await-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/async-generator/await-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/statements/async-generator/await-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/statements/async-generator/await-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/statements/async-generator/await-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/async-generator/await-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/statements/async-generator/yield-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/async-generator/yield-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/statements/async-generator/yield-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/statements/async-generator/yield-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/statements/async-generator/yield-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/async-generator/yield-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/statements/class/async-gen-method-static/await-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/async-gen-method-static/await-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/statements/class/async-gen-method-static/await-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/async-gen-method-static/await-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/statements/class/async-gen-method-static/await-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/async-gen-method-static/await-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/statements/class/async-gen-method-static/yield-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/async-gen-method-static/yield-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/statements/class/async-gen-method-static/yield-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/async-gen-method-static/yield-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/statements/class/async-gen-method-static/yield-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/async-gen-method-static/yield-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/statements/class/async-gen-method/await-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/async-gen-method/await-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/statements/class/async-gen-method/await-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/async-gen-method/await-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/statements/class/async-gen-method/await-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/async-gen-method/await-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/statements/class/async-gen-method/yield-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/async-gen-method/yield-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/statements/class/async-gen-method/yield-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/async-gen-method/yield-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/statements/class/async-gen-method/yield-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/async-gen-method/yield-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/statements/class/async-method-static/await-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/async-method-static/await-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/statements/class/async-method-static/await-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/async-method-static/await-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/statements/class/async-method-static/await-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/async-method-static/await-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/statements/class/async-method/await-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/async-method/await-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/statements/class/async-method/await-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/async-method/await-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/statements/class/async-method/await-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/async-method/await-as-label-identifier-escaped.js (default)
+  Missing parse error
 language/statements/class/class-name-ident-await-escaped-module.js (strict mode)
   Missing parse error
 language/statements/class/class-name-ident-await-escaped-module.js (default)
@@ -6229,6 +6943,18 @@ language/statements/class/class-name-ident-await-escaped-module.js (default)
 language/statements/class/class-name-ident-await-module.js (strict mode)
   Missing parse error
 language/statements/class/class-name-ident-await-module.js (default)
+  Missing parse error
+language/statements/class/class-name-ident-let-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/class-name-ident-let-escaped.js (default)
+  Missing parse error
+language/statements/class/class-name-ident-static-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/class-name-ident-static-escaped.js (default)
+  Missing parse error
+language/statements/class/class-name-ident-yield-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/class-name-ident-yield-escaped.js (default)
   Missing parse error
 language/statements/class/definition/early-errors-class-method-NSPL-with-USD.js (strict mode)
   Missing parse error
@@ -10686,6 +11412,30 @@ language/statements/class/elements/wrapped-in-sc-static-private-methods.js (stri
   Classes may not have private methods. at (30, 2) to (32, 3)
 language/statements/class/elements/wrapped-in-sc-static-private-methods.js (default)
   Classes may not have private methods. at (30, 2) to (32, 3)
+language/statements/class/gen-method-static/yield-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/gen-method-static/yield-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/statements/class/gen-method-static/yield-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/gen-method-static/yield-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/statements/class/gen-method-static/yield-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/gen-method-static/yield-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/statements/class/gen-method/yield-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/gen-method/yield-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/statements/class/gen-method/yield-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/gen-method/yield-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/statements/class/gen-method/yield-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/class/gen-method/yield-as-label-identifier-escaped.js (default)
+  Missing parse error
 language/statements/class/syntax/early-errors/class-definition-evaluation-block-duplicate-binding.js (strict mode)
   Missing parse error
 language/statements/class/syntax/early-errors/class-definition-evaluation-block-duplicate-binding.js (default)
@@ -10746,6 +11496,18 @@ language/statements/generators/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/statements/generators/use-strict-with-non-simple-param.js (default)
   Missing parse error
+language/statements/generators/yield-as-binding-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/generators/yield-as-binding-identifier-escaped.js (default)
+  Missing parse error
+language/statements/generators/yield-as-identifier-reference-escaped.js (strict mode)
+  Missing parse error
+language/statements/generators/yield-as-identifier-reference-escaped.js (default)
+  Missing parse error
+language/statements/generators/yield-as-label-identifier-escaped.js (strict mode)
+  Missing parse error
+language/statements/generators/yield-as-label-identifier-escaped.js (default)
+  Missing parse error
 language/statements/labeled/continue.js (strict mode)
   Missing parse error
 language/statements/labeled/continue.js (default)
@@ -10757,6 +11519,8 @@ language/statements/labeled/value-await-module-escaped.js (default)
 language/statements/labeled/value-await-module.js (strict mode)
   Missing parse error
 language/statements/labeled/value-await-module.js (default)
+  Missing parse error
+language/statements/labeled/value-yield-strict-escaped.js (strict mode)
   Missing parse error
 language/statements/let/redeclaration-error-from-within-strict-mode-function.js (default)
   Missing parse error
@@ -11024,16 +11788,16 @@ language/statements/try/early-catch-lex.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 64222 (92.10%)
-Failed: 5512 (7.90%)
+Passed: 63840 (91.55%)
+Failed: 5894 (8.45%)
 
 Features:
   Proxy: 661/663 (99.70%)
   Symbol.asyncIterator: 716/1068 (67.04%)
   Symbol.iterator: 2722/3290 (82.74%)
   arrow-function: 108/118 (91.53%)
-  async-functions: 719/907 (79.27%)
-  async-iteration: 7688/9388 (81.89%)
+  async-functions: 665/907 (73.32%)
+  async-iteration: 7592/9388 (80.87%)
   class: 3562/7578 (47.00%)
   class-fields-private: 1572/1736 (90.55%)
   class-fields-public: 2432/3388 (71.78%)
@@ -11044,10 +11808,10 @@ Features:
   computed-property-names: 312/318 (98.11%)
   default-parameters: 3436/4380 (78.45%)
   destructuring-binding: 10835/12723 (85.16%)
-  dynamic-import: 1034/1036 (99.81%)
+  dynamic-import: 1032/1036 (99.61%)
   export-star-as-namespace-from-module: 28/36 (77.78%)
-  generators: 6021/7653 (78.68%)
-  import.meta: 34/46 (73.91%)
+  generators: 5973/7653 (78.05%)
+  import.meta: 32/46 (69.57%)
   let: 131/135 (97.04%)
   new.target: 92/94 (97.87%)
   numeric-separator-literal: 202/204 (99.02%)
