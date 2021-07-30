@@ -44,16 +44,20 @@ let decode_wrapped (lsp : lsp_id) : wrapped_id =
     | NumberId _ -> failwith "not a wrapped id"
     | StringId s -> s
   in
-  let icolon = String.index s ':' in
-  let server_id = int_of_string (String.sub s 0 icolon) in
-  let id = String.sub s (icolon + 1) (String.length s - icolon - 1) in
-  let message_id =
-    if s.[icolon + 1] = '#' then
-      NumberId (int_of_string id)
-    else
-      StringId id
-  in
-  { server_id; message_id }
+  try
+    Scanf.sscanf s "%d:%['#]%s" (fun server_id kind message_str ->
+        let message_id =
+          if kind = "#" then
+            NumberId (int_of_string message_str)
+          else
+            StringId message_str
+        in
+        { server_id; message_id })
+  with
+  | Scanf.Scan_failure _
+  | Failure _
+  | End_of_file ->
+    failwith (Printf.sprintf "Invalid message id %s" s)
 
 module WrappedKey = struct
   type t = wrapped_id
@@ -1388,8 +1392,22 @@ let parse_json (state : state) (json : Jsonrpc.message) : lsp_message =
     let ienv =
       Base.Option.value_exn ~message:"Didn't expect an LSP response yet" (get_ienv state)
     in
-    try IdMap.find id ienv.i_outstanding_local_requests with
-    | Not_found -> WrappedMap.find (decode_wrapped id) ienv.i_outstanding_requests_from_server
+    match IdMap.find_opt id ienv.i_outstanding_local_requests with
+    | Some msg -> msg
+    | None ->
+      (match WrappedMap.find_opt (decode_wrapped id) ienv.i_outstanding_requests_from_server with
+      | Some msg -> msg
+      | None ->
+        raise
+          (Error.LspException
+             {
+               Error.code = Error.InternalError;
+               message =
+                 Printf.sprintf
+                   "Wasn't expecting a response to request %s"
+                   (Lsp_fmt.id_to_string id);
+               data = None;
+             }))
   in
   Lsp_fmt.parse_lsp json.Jsonrpc.json outstanding
 
