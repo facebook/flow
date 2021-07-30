@@ -841,7 +841,9 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         when is_class && (is_constructor name || (is_static && is_prototype name)) ->
         error_at
           env
-          (loc, Parse_error.InvalidFieldName { name; static = is_static; private_ = false })
+          ( loc,
+            Parse_error.InvalidClassMemberName
+              { name; static = is_static; method_ = false; private_ = false } )
       | _ -> ()
     in
     let rec properties

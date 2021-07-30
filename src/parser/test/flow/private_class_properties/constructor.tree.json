@@ -1,12 +1,12 @@
 {
   "errors":[
     {
-      "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":19}},
-      "message":"Classes may not have private methods."
+      "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":14}},
+      "message":"Classes may not have methods named `#constructor`."
     },
     {
-      "loc":{"source":null,"start":{"line":6,"column":2},"end":{"line":6,"column":26}},
-      "message":"Classes may not have private methods."
+      "loc":{"source":null,"start":{"line":6,"column":9},"end":{"line":6,"column":21}},
+      "message":"Classes may not have methods named `#constructor`."
     },
     {
       "loc":{"source":null,"start":{"line":10,"column":2},"end":{"line":10,"column":14}},

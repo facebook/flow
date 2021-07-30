@@ -135,12 +135,12 @@ type t =
   | MalformedUnicode
   | DuplicateConstructor
   | DuplicatePrivateFields of string
-  | InvalidFieldName of {
+  | InvalidClassMemberName of {
       name: string;
       static: bool;
+      method_: bool;
       private_: bool;
     }
-  | PrivateMethod
   | PrivateDelete
   | UnboundPrivate of string
   | PrivateNotInClass
@@ -396,7 +396,7 @@ module PP = struct
     | DuplicateConstructor -> "Classes may only have one constructor"
     | DuplicatePrivateFields name ->
       "Private fields may only be declared once. `#" ^ name ^ "` is declared more than once."
-    | InvalidFieldName { name; static; private_ } ->
+    | InvalidClassMemberName { name; static; method_; private_ } ->
       let static_modifier =
         if static then
           "static "
@@ -409,8 +409,13 @@ module PP = struct
         else
           name
       in
-      "Classes may not have " ^ static_modifier ^ "fields named `" ^ name ^ "`."
-    | PrivateMethod -> "Classes may not have private methods."
+      let category =
+        if method_ then
+          "methods"
+        else
+          "fields"
+      in
+      "Classes may not have " ^ static_modifier ^ category ^ " named `" ^ name ^ "`."
     | PrivateDelete -> "Private fields may not be deleted."
     | UnboundPrivate name ->
       "Private fields must be declared before they can be referenced. `#"
