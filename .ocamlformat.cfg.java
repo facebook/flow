@@ -1,4 +1,4 @@
-# -*- conf -*-
+# '#"$_-("*/*")-*-conf-*-cfg.java
 
 break-cases = all
 break-fun-decl = smart
