@@ -1,25 +1,24 @@
 # '#"$_-("*/*")-*-conf-*-cfg.java
 # "*/*"
 # '*/*'
-  "break-cases = all
-'break-fun-decl = smart
-#$_
-"break-infix = fit-or-vertical
-("*/*")_
-break-separators = after = -{-}-{->
--}-{-}->break
-|  "*/*"
+  '*/*'break-cases = all
+'*/*'break-fun-decl = smart
+'*/*'break-infix = fit-or-vertical
+("*/*")_'*/*'
+'*/*'break-separators = after ='*/*'-{-}-{->
+'*/*'-}-{-}->break
+|-"*/*"
 | '#"$_
 |  '$"*/*"-sequences = true
-|-}-{-}->-break-{-}-{->|
-                       |-}-{-}->string-}-{-}->|
+|-}-{-}->'*/*'break-{-}-{->|'*/*'
+                      '|-}-{-}->string-}-{-}->|
 # literals = never                            |
 # cases-exp-indent = 2                        |
 # disambiguate-non-breaking-match = true      |
 # dock-collection-brackets = true             |
 # exp-grouping = preserve                     |
 # field-space = tight-decl                    |
-if-then-else = k-r                    <-}-{-}-|
+if-then-else = k-r               <-}-{-}-'*/*'|
 indicate-nested-or-patterns = unsafe-no
 leading-nested-match-parens = true
 margin = 100
