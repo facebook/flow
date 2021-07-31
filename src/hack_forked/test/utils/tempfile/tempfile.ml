@@ -18,7 +18,8 @@ let rec mkdtemp ~skip_mocking ~retries =
     try
       let () = Sys_utils.mkdir_p (Path.to_string tmp_dir) ~skip_mocking in
       tmp_dir
-    with Unix.Unix_error _ -> mkdtemp ~skip_mocking ~retries:(retries - 1)
+    with
+    | Unix.Unix_error _ -> mkdtemp ~skip_mocking ~retries:(retries - 1)
 
 let mkdtemp ~skip_mocking = mkdtemp ~skip_mocking ~retries:30
 

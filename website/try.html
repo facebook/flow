@@ -3,8 +3,6 @@ permalink: /try/
 layout: default
 footer: false
 fullscreen: true
-scripts:
-  - "tryFlow.js.es6"
 ---
 
 <div class="try-editor">
@@ -22,15 +20,11 @@ scripts:
 </div>
 
 <script type="text/javascript">
-  requirejs(['{% asset "tryFlow" @name %}'], function(tryFlow) {
-    tryFlow.createEditor(
-      '{{ site.flow.version }}',
-      document.getElementById("code"),
-      document.getElementById("results"),
-      {{ site.flow.versions | jsonify }}
-    );
-  });
+  window.tryFlowWorker = "/assets/tryFlowWorker-bundle.js?{{site.time | date: '%s'}}";
+  window.tryFlowDefaultVersion = '{{ site.flow.version }}';
+  window.tryFlowVersions = {{ site.flow.versions | jsonify }};
 </script>
+<script type="text/javascript" src="/assets/tryFlow-bundle.js?{{site.time | date: '%s'}}"></script>
 
 <footer class="try-footer">
   <pre class="cursor-position">1:1</pre>

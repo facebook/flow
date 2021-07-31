@@ -76,8 +76,8 @@ module ListenLoop = LwtLoop.Make (struct
   let main genv =
     (* read a message from the monitor *)
     let%lwt message =
-      try%lwt MonitorRPC.read ()
-      with End_of_file ->
+      try%lwt MonitorRPC.read () with
+      | End_of_file ->
         let () = kill_workers () in
         let msg = "Connection to monitor closed unexpectedly" in
         Exit.(exit ~msg Killed_by_monitor)

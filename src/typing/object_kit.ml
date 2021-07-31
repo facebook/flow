@@ -282,7 +282,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                  * For C there will be no prop. However, if the props object is exact
                  * then we need to throw an error. *)
                 | (ReactConfigMerge _, None, Some (_, _, _), _) ->
-                  ( if Obj_type.is_legacy_exact_DO_NOT_USE flags1.obj_kind then
+                  (if Obj_type.is_legacy_exact_DO_NOT_USE flags1.obj_kind then
                     let use_op =
                       Frame
                         ( PropertyCompatibility { prop = Some k; lower = r2; upper = r1 },
@@ -299,7 +299,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                           suggestion = None;
                         }
                     in
-                    add_output cx ~trace err );
+                    add_output cx ~trace err);
                   None)
               props1
               props2
@@ -744,10 +744,10 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 Obj_type.obj_kind_from_optional_dict
                   ~dict
                   ~otherwise:
-                    ( if Obj_type.is_exact_or_sealed reason config_flags.obj_kind then
+                    (if Obj_type.is_exact_or_sealed reason config_flags.obj_kind then
                       Exact
                     else
-                      Inexact )
+                      Inexact)
               in
               let flags = { frozen = true; obj_kind } in
               (props, flags, config_generics)

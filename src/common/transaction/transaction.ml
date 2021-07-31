@@ -53,8 +53,8 @@ let rollback transaction = Lwt_list.iter_s (fun mutator -> mutator.rollback ()) 
 let with_transaction f =
   let transaction = { mutators = [] } in
   let%lwt result =
-    try%lwt f transaction
-    with exn ->
+    try%lwt f transaction with
+    | exn ->
       let exn = Exception.wrap exn in
       let%lwt () = rollback transaction in
       Exception.reraise exn

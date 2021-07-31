@@ -12,8 +12,8 @@ let spf = Printf.sprintf
 
 let read_proc_file filename pid =
   let file = spf "/proc/%d/%s" pid filename in
-  try Ok (Sys_utils.cat file)
-  with exn ->
+  try Ok (Sys_utils.cat file) with
+  | exn ->
     let exn = Exception.wrap exn in
     Error (Exception.to_string exn)
 
@@ -34,7 +34,8 @@ type status = {
 (* The stats we're reading always end in kB. If we start reading more stats then we'll need to beef
  * up this logic *)
 let humanReadableToBytes str =
-  (try Caml.Scanf.sscanf str "%d kB" (fun kb -> 1000 * kb) with _ -> 0)
+  try Caml.Scanf.sscanf str "%d kB" (fun kb -> 1000 * kb) with
+  | _ -> 0
 
 let parse_status raw_status_contents =
   let stats =

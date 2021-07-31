@@ -692,8 +692,8 @@ let pseudo_init_declared_type cx name loc =
       let (scope, entry) = find_entry cx name loc in
       match entry with
       | Value ({ Entry.kind = Var _; _ } as v)
-      | Value ({ Entry.kind = Let _ | Const _; value_state = State.(Undeclared | Declared); _ } as v)
-        ->
+      | Value
+          ({ Entry.kind = Let _ | Const _; value_state = State.(Undeclared | Declared); _ } as v) ->
         Changeset.Global.change_var (scope.id, name, Changeset.Write);
         let entry =
           initialized_value_entry (TypeUtil.type_t_of_annotated_or_inferred v.general) v
@@ -1091,8 +1091,8 @@ let merge_env =
       | Let _
         when child1.value_state >= State.Declared
              && child2.value_state >= State.Declared
-             && ( child1.value_state >= State.MaybeInitialized
-                || child2.value_state >= State.MaybeInitialized ) ->
+             && (child1.value_state >= State.MaybeInitialized
+                || child2.value_state >= State.MaybeInitialized) ->
         (* if either branch has initialized, we can set parent state *)
         State.MaybeInitialized
       | _ -> orig.value_state)
@@ -1398,9 +1398,9 @@ let havoc_local_refinements ?(all = false) cx =
                 name
                 entry
           in
-          ( if entry' != entry then
+          (if entry' != entry then
             let entry_ref = (scope.id, name, Changeset.Write) in
-            Changeset.(if Global.is_active () then Global.change_var entry_ref) );
+            Changeset.(if Global.is_active () then Global.change_var entry_ref));
           entry')
         scope)
 

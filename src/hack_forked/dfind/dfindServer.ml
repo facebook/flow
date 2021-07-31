@@ -32,7 +32,10 @@ let (process_fsnotify_event : DfindEnv.t -> SSet.t -> Fsnotify.event -> SSet.t) 
     if SMap.mem path env.dirs then
       SSet.union dirty (SMap.find path env.dirs)
     else
-      let dir_content = (try SMap.find wpath env.dirs with Not_found -> SSet.empty) in
+      let dir_content =
+        try SMap.find wpath env.dirs with
+        | Not_found -> SSet.empty
+      in
       env.dirs <- SMap.add wpath (SSet.add path dir_content) env.dirs;
       dirty
   in

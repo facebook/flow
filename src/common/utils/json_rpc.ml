@@ -15,11 +15,14 @@ type t =
 exception Malformed_exn of string
 
 let get_prop propname props =
-  try List.assoc propname props
-  with Not_found -> raise (Malformed_exn (propname ^ " property not found"))
+  try List.assoc propname props with
+  | Not_found -> raise (Malformed_exn (propname ^ " property not found"))
 
 let parse_unsafe str =
-  let parsed = (try json_of_string str with Syntax_error msg -> raise (Malformed_exn msg)) in
+  let parsed =
+    try json_of_string str with
+    | Syntax_error msg -> raise (Malformed_exn msg)
+  in
   let props =
     match parsed with
     | JSON_Object props -> props
@@ -27,7 +30,10 @@ let parse_unsafe str =
   in
   let method_json = get_prop "method" props in
   let params_json = get_prop "params" props in
-  let id_json = (try Some (List.assoc "id" props) with Not_found -> None) in
+  let id_json =
+    try Some (List.assoc "id" props) with
+    | Not_found -> None
+  in
   let method_name =
     match method_json with
     | JSON_String str -> str
@@ -48,7 +54,9 @@ let parse_unsafe str =
   in
   Obj (method_name, params, id)
 
-let parse_json_rpc_response str = (try parse_unsafe str with Malformed_exn msg -> Malformed msg)
+let parse_json_rpc_response str =
+  try parse_unsafe str with
+  | Malformed_exn msg -> Malformed msg
 
 let jsonrpcize_notification method_ params =
   Hh_json.(

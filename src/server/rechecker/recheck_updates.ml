@@ -30,7 +30,8 @@ let is_incompatible_package_json ~options ~reader =
            Parsing_service_js.parse_json_file ~fail:true content filename
          in
          Module_js.package_incompatible ~options ~reader filename_str ast
-       with _ -> Module_js.Incompatible Module_js.Unknown)
+       with
+      | _ -> Module_js.Incompatible Module_js.Unknown)
     (* Failed to parse package.json *)
   in
   fun ~want ~sroot ~file_options f ->

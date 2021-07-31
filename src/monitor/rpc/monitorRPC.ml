@@ -64,8 +64,8 @@ let send ~msg =
   with_outfd
     ~on_disabled:(fun () -> ())
     ~f:(fun outfd ->
-      try Marshal_tools.to_fd_with_preamble outfd msg |> ignore
-      with Unix.Unix_error (Unix.EPIPE, _, _) -> raise Monitor_died)
+      try Marshal_tools.to_fd_with_preamble outfd msg |> ignore with
+      | Unix.Unix_error (Unix.EPIPE, _, _) -> raise Monitor_died)
 
 (* Respond to a request from an ephemeral client *)
 let respond_to_request ~request_id ~response = send ~msg:(Response (request_id, response))

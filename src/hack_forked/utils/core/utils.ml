@@ -28,8 +28,8 @@ let unsafe_opt x = unsafe_opt_note "unsafe_opt got None" x
 
 let try_finally ~f ~(finally : unit -> unit) =
   let res =
-    try f ()
-    with e ->
+    try f () with
+    | e ->
       let e = Exception.wrap e in
       finally ();
       Exception.reraise e
@@ -40,8 +40,8 @@ let try_finally ~f ~(finally : unit -> unit) =
 let with_context ~enter ~exit ~do_ =
   enter ();
   let result =
-    try do_ ()
-    with e ->
+    try do_ () with
+    | e ->
       let stack = Printexc.get_raw_backtrace () in
       exit ();
       Printexc.raise_with_backtrace e stack

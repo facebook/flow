@@ -7,7 +7,7 @@
 
 (* helper *)
 let write (fd : Unix.file_descr) (msg : string) : unit =
-  let _ = Unix.write fd msg 0 (String.length msg) in
+  let _ = Unix.write_substring fd msg 0 (String.length msg) in
   ()
 
 (* helper: read_message only takes a buffered_line_reader, so when we want
@@ -97,7 +97,8 @@ let test_read_request () =
      let msg3 = Printf.sprintf "\r\n%s" body in
      let _ = read_message_tester msg3 in
      failwith "missing content-length"
-   with Http_lite.Malformed _ -> ());
+   with
+  | Http_lite.Malformed _ -> ());
 
   (* explicit charset *)
   let msg4 = Printf.sprintf "content-length: %n\ncontent-type: text/plain; utf-8\n\n%s" len body in
@@ -110,7 +111,8 @@ let test_read_request () =
      in
      let _ = read_message_tester msg5 in
      failwith "non-utf8"
-   with Http_lite.Malformed _ -> ());
+   with
+  | Http_lite.Malformed _ -> ());
   true
 
 let tests =

@@ -24,8 +24,8 @@ let on_worker_cancelled = ref (fun () -> ())
 let set_on_worker_cancelled f = on_worker_cancelled := f
 
 let with_worker_exit f =
-  try f ()
-  with Worker_should_exit ->
+  try f () with
+  | Worker_should_exit ->
     !on_worker_cancelled ();
     exit 0
 

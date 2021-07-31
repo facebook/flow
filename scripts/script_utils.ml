@@ -12,7 +12,8 @@ let with_pipe f =
     Unix.close fd_r;
     Unix.close fd_w;
     res
-  with exn ->
+  with
+  | exn ->
     Unix.close fd_r;
     Unix.close fd_w;
     raise exn
@@ -23,7 +24,8 @@ let with_in_channel filename f =
     let res = f ic in
     close_in ic;
     res
-  with exn ->
+  with
+  | exn ->
     close_in ic;
     raise exn
 
@@ -33,14 +35,15 @@ let with_out_channel filename f =
     let res = f oc in
     close_out oc;
     res
-  with exn ->
+  with
+  | exn ->
     close_out oc;
     raise exn
 
 let read_process name args (in_r, _in_w) (out_r, out_w) (err_r, err_w) =
   let pid =
-    try Unix.create_process name args in_r out_w err_w
-    with Unix.Unix_error (Unix.ENOENT, _, _) ->
+    try Unix.create_process name args in_r out_w err_w with
+    | Unix.Unix_error (Unix.ENOENT, _, _) ->
       (* On Windows, this is what happens if you call create_process
        * non_existent_thing *)
       raise (Failure (name ^ ": command not found"))

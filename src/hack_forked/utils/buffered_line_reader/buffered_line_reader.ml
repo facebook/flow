@@ -53,7 +53,8 @@ module Functor (Reader : Buffered_line_reader_sig.READER) :
     try
       let i = String.index s c in
       `First_appearance i
-    with Not_found -> `No_appearance
+    with
+    | Not_found -> `No_appearance
 
   let trim_trailing_cr = function
     | "" -> ""

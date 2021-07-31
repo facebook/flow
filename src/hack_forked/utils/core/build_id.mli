@@ -6,11 +6,3 @@
  *)
 
 val build_revision : string
-
-val build_commit_time : int
-
-val build_commit_time_string : string
-
-val build_mode : string
-
-val is_build_optimized : bool

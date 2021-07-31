@@ -192,10 +192,10 @@ let modify_per_file_errors (uri : Lsp.DocumentUri.t) state f =
   in
   {
     dirty_files =
-      ( if dirty then
+      (if dirty then
         Lsp.UriSet.add uri state.dirty_files
       else
-        state.dirty_files );
+        state.dirty_files);
     file_to_errors_map;
   }
 

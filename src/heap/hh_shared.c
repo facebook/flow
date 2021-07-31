@@ -64,6 +64,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
+#define _GNU_SOURCE 1
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
@@ -283,7 +284,7 @@ typedef uintnat hh_tag_t;
 
 // Keep these in sync with "tag" type definition in sharedMem.ml
 #define Serialized_tag 0
-#define Addr_tbl_tag 13
+#define Addr_tbl_tag 14
 
 static _Bool should_scan(hh_tag_t tag) {
   // By convention, tags below Addr_tbl_tag contain no pointers, whereas
@@ -1770,6 +1771,6 @@ CAMLprim value hh_read_string(value addr, value wsize) {
   CAMLparam2(addr, wsize);
   CAMLlocal1(s);
   s = caml_alloc(Long_val(wsize), String_tag);
-  memcpy(String_val(s), Ptr_of_addr(Long_val(addr)), Bsize_wsize(Long_val(wsize)));
+  memcpy((char *)String_val(s), Ptr_of_addr(Long_val(addr)), Bsize_wsize(Long_val(wsize)));
   CAMLreturn(s);
 }

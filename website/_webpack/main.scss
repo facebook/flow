@@ -1,0 +1,74 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+@charset "utf-8";
+
+$flow-white: white;
+$flow-yellow: #E8BD36;
+$flow-red: darken(#E83F36, 8%);
+$flow-green: #9CD732;
+
+// $flow-blue: #287093;
+// $flow-purple: #6A2C9C;
+
+$brand-primary: $flow-red;
+
+$flow-gray: slategray;
+$flow-gray-dark: darken($flow-gray, 20%);
+$flow-gray-darker: darken($flow-gray, 25%);
+$flow-gray-darkest: darken($flow-gray, 30%);
+
+$flow-inverted-gray:          rgba(white, 0.5);
+$flow-inverted-gray-light:    rgba(white, 0.7);
+$flow-inverted-gray-lighter:  rgba(white, 0.8);
+$flow-inverted-gray-lightest: rgba(white, 0.9);
+
+$navbar-dark-color:          $flow-inverted-gray-light;
+$navbar-dark-hover-color:    $flow-inverted-gray-lighter;
+$navbar-dark-active-color:   $flow-inverted-gray-lightest;
+$navbar-dark-disabled-color: $flow-inverted-gray;
+
+$code-font-size: 95%;
+
+$editor-accent: $flow-yellow;
+$editor-accent-alt: $flow-green;
+
+$editor-accent-bg: desaturate(lighten($editor-accent, 41.5%), 25%);
+
+$editor-error-bg: lighten(desaturate($flow-red, 13%), 3%);
+
+$syntax-07 : mix(#fafafa, $editor-accent, 5%);
+$syntax-05 : mix(#d0d0d0, $editor-accent, 5%);
+$syntax-04 : darken(mix(#b0b0b0, $editor-accent, 5%), 10%);
+$syntax-03 : darken(mix(#505050, $editor-accent, 1%), 25%);
+$syntax-01 : mix(#202020, $editor-accent, 5%);
+$syntax-00 : mix(#000000, $editor-accent, 5%);
+
+$syntax-08 : darken(#eb008a, 10%);
+$syntax-09 : darken(#f29333, 15%);
+$syntax-0A : adjust-hue(darken(#f8ca12, 15%), -10%);
+$syntax-0B : darken(#37b349, 15%);
+$syntax-0C : darken(#00aabb, 3%);
+$syntax-0D : darken(#0e5a94, 3%);
+$syntax-0E : darken(#b31e8d, 3%);
+$syntax-0F : darken(#7a2d00, 3%);
+
+$code-color: $syntax-08;
+
+@import "bootstrap/scss/bootstrap.scss";
+
+@import "./css/_base.scss";
+@import "./css/_cards.scss";
+@import "./css/_editor.scss";
+@import "./css/_syntax.scss";
+@import "./css/_feature.scss";
+@import "./css/_footer.scss";
+@import "./css/_article.scss";
+@import "./css/_navbar.scss";
+@import "./css/_search.scss";
+@import "./css/_toc.scss";
+@import "./css/_try.scss";

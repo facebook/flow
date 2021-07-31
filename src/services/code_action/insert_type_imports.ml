@@ -524,12 +524,12 @@ end = struct
               match t with
               | Ty.TypeOf
                   (Ty.TSymbol
-                    ( {
-                        Ty.sym_provenance =
-                          Ty.Remote { Ty.imported_as = None | Some (_, _, Ty.TypeMode) };
-                        sym_anonymous = false;
-                        _;
-                      } as s )) ->
+                    ({
+                       Ty.sym_provenance =
+                         Ty.Remote { Ty.imported_as = None | Some (_, _, Ty.TypeMode) };
+                       sym_anonymous = false;
+                       _;
+                     } as s)) ->
                 let local = self#convert_symbol ValueUseMode s in
                 Ty.Generic (local, Ty.ClassKind, None)
               | Ty.TypeOf
@@ -596,18 +596,17 @@ end = struct
               | _ -> super#on_symbol env s
           end
         in
-        fun ty ->
-          ( let old_name_map = name_map in
-            let old_symbol_cache = symbol_cache in
-            match covert_ty_visitor#on_t () ty with
-            | exception Import_exc err ->
-              (* NOTE If an error occurs, reset the imported symbols (name_map),
-               * but keep the cache to avoid duplicating work later. *)
-              name_map <- old_name_map;
-              symbol_cache <- old_symbol_cache;
-              Error (Error.Import_error err)
-            | ty' -> Ok ty'
-            : (Ty.t, Error.kind) result )
+        fun ty : (Ty.t, Error.kind) result ->
+          let old_name_map = name_map in
+          let old_symbol_cache = symbol_cache in
+          match covert_ty_visitor#on_t () ty with
+          | exception Import_exc err ->
+            (* NOTE If an error occurs, reset the imported symbols (name_map),
+             * but keep the cache to avoid duplicating work later. *)
+            name_map <- old_name_map;
+            symbol_cache <- old_symbol_cache;
+            Error (Error.Import_error err)
+          | ty' -> Ok ty'
 
       method to_import_stmts () : (Loc.t, Loc.t) Ast.Statement.t list =
         let dummy_loc = Loc.none in

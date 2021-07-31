@@ -103,8 +103,8 @@ module RegularWriterReader : REGULAR_WRITER_READER = struct
        * is interrupted before any bytes are written, the call fails with EINTR. Otherwise, the call
        * succeeds and returns the number of bytes written.
        *)
-      (try Unix.write fd buffer offset size
-       with Unix.Unix_error (Unix.EINTR, _, _) -> write ?timeout fd ~buffer ~offset ~size)
+      (try Unix.write fd buffer offset size with
+      | Unix.Unix_error (Unix.EINTR, _, _) -> write ?timeout fd ~buffer ~offset ~size)
 
   (* Marshal_tools reads from file descriptors. These file descriptors might be for some
    * non-blocking socket. Normally if you try to read from an fd, it will block until some data is
@@ -123,8 +123,8 @@ module RegularWriterReader : REGULAR_WRITER_READER = struct
        * is interrupted before any bytes are read, the call fails with EINTR. Otherwise, the call
        * succeeds and returns the number of bytes read.
        *)
-      (try Unix.read fd buffer offset size
-       with Unix.Unix_error (Unix.EINTR, _, _) -> read ?timeout fd ~buffer ~offset ~size)
+      (try Unix.read fd buffer offset size with
+      | Unix.Unix_error (Unix.EINTR, _, _) -> read ?timeout fd ~buffer ~offset ~size)
 
   let log str = Printf.eprintf "%s\n%!" str
 end
@@ -163,8 +163,8 @@ end = struct
         loop
           (i - 1)
           (remainder / 256)
-          ( Bytes.set acc i (Char.chr (remainder mod 256));
-            acc )
+          (Bytes.set acc i (Char.chr (remainder mod 256));
+           acc)
     in
     loop (preamble_core_size - 1) size (Bytes.create preamble_core_size)
 

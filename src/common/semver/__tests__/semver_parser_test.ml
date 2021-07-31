@@ -11,18 +11,18 @@ exception Semver_parse_error of string
 
 let parse_version str =
   let lexbuf = Lexing.from_string str in
-  try Semver_parser.version Semver_lexer.token lexbuf
-  with Parsing.Parse_error -> raise (Semver_parse_error (Lexing.lexeme lexbuf))
+  try Semver_parser.version Semver_lexer.token lexbuf with
+  | Parsing.Parse_error -> raise (Semver_parse_error (Lexing.lexeme lexbuf))
 
 let parse_comparator str =
   let lexbuf = Lexing.from_string str in
-  try Semver_parser.comparator Semver_lexer.token lexbuf
-  with Parsing.Parse_error -> raise (Semver_parse_error (Lexing.lexeme lexbuf))
+  try Semver_parser.comparator Semver_lexer.token lexbuf with
+  | Parsing.Parse_error -> raise (Semver_parse_error (Lexing.lexeme lexbuf))
 
 let parse_range str =
   let lexbuf = Lexing.from_string str in
-  try Semver_parser.range Semver_lexer.token lexbuf
-  with Parsing.Parse_error -> raise (Semver_parse_error (Lexing.lexeme lexbuf))
+  try Semver_parser.range Semver_lexer.token lexbuf with
+  | Parsing.Parse_error -> raise (Semver_parse_error (Lexing.lexeme lexbuf))
 
 let tests =
   "parser"
@@ -45,8 +45,8 @@ let tests =
              in
              List.iter
                (fun (str, version) ->
-                 try assert_equal ~ctxt ~printer:to_string version (parse_version str)
-                 with Semver_parse_error token ->
+                 try assert_equal ~ctxt ~printer:to_string version (parse_version str) with
+                 | Semver_parse_error token ->
                    assert_failure ("Failed to parse " ^ str ^ ": unexpected token " ^ token))
                cases;
              assert_bool "done" true) )
@@ -69,8 +69,8 @@ let tests =
              in
              List.iter
                (fun (str, comparator) ->
-                 try assert_equal ~ctxt ~printer:to_string comparator (parse_comparator str)
-                 with Semver_parse_error token ->
+                 try assert_equal ~ctxt ~printer:to_string comparator (parse_comparator str) with
+                 | Semver_parse_error token ->
                    assert_failure ("Failed to parse " ^ str ^ ": unexpected token " ^ token))
                cases;
              assert_bool "done" true) )
@@ -94,8 +94,8 @@ let tests =
              in
              List.iter
                (fun (str, range) ->
-                 try assert_equal ~ctxt ~printer:to_string range (parse_range str)
-                 with Semver_parse_error token ->
+                 try assert_equal ~ctxt ~printer:to_string range (parse_range str) with
+                 | Semver_parse_error token ->
                    assert_failure ("Failed to parse " ^ str ^ ": unexpected token " ^ token))
                cases;
              assert_bool "done" true) );

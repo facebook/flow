@@ -18,5 +18,6 @@ val provide_available_refactors :
   file_sig:File_sig.With_ALoc.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   reader:Parsing_heaps.Reader.reader ->
+  support_experimental_snippet_text_edit:bool ->
   extract_range:Loc.t ->
   refactor list

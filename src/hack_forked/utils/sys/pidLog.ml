@@ -49,11 +49,13 @@ let get_pids pids_file =
             let reason = Str.matched_group 2 row in
             results := (pid, reason) :: !results
         done
-      with End_of_file -> ()
+      with
+      | End_of_file -> ()
     end;
     close_in ic;
     List.rev !results
-  with Sys_error _ -> raise FailedToGetPids
+  with
+  | Sys_error _ -> raise FailedToGetPids
 
 let close () =
   Base.Option.iter !log_oc ~f:close_out;

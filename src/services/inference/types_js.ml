@@ -835,13 +835,13 @@ module Check_files : sig
     persistent_connections:Persistent_connection.t option ->
     recheck_reasons:LspProt.recheck_reason list ->
     cannot_skip_direct_dependents:bool ->
-    ( ServerEnv.errors
+    (ServerEnv.errors
     * Coverage_response.file_coverage Utils_js.FilenameMap.t
     * float
     * int
     * string option
     * int
-    * string option )
+    * string option)
     Lwt.t
 end = struct
   let out_of_time ~options ~start_time =
@@ -963,8 +963,8 @@ end = struct
               || FilenameSet.exists (fun f' -> FilenameSet.mem f' sig_new_or_changed)
                  @@ FilenameGraph.find f implementation_dependency_graph
               ||
-              ( incr skipped_count;
-                false ))
+              (incr skipped_count;
+               false))
           @@ merged_dependents
         in
         Hh_logger.info
@@ -1049,8 +1049,8 @@ let ensure_parsed ~options ~profiling ~workers ~reader files =
       | hd :: tl -> raise (Unexpected_file_changes (hd, tl)))
 
 let ensure_parsed_or_trigger_recheck ~options ~profiling ~workers ~reader files =
-  try%lwt ensure_parsed ~options ~profiling ~workers ~reader files
-  with Unexpected_file_changes changed_files -> handle_unexpected_file_changes changed_files
+  try%lwt ensure_parsed ~options ~profiling ~workers ~reader files with
+  | Unexpected_file_changes changed_files -> handle_unexpected_file_changes changed_files
 
 (* When checking contents, ensure that dependencies are checked. Might have more
    general utility.
@@ -1412,10 +1412,10 @@ let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~file_watche
     let { MonitorProt.changed_mergebase; missed_changes = _ } = file_watcher_metadata in
     Hh_logger.info
       "File watcher %s mergebase"
-      ( if changed_mergebase then
+      (if changed_mergebase then
         "changed"
       else
-        "did not change" );
+        "did not change");
 
     if changed_mergebase then (
       (* TODO (glevi) - One of the numbers we need to estimate is "If we restart how many files
@@ -1517,7 +1517,10 @@ module Recheck : sig
     recheck_reasons:LspProt.recheck_reason list ->
     will_be_checked_files:CheckedSet.t ref ->
     env:ServerEnv.env ->
-    (ServerEnv.env * recheck_result * ((* record_recheck_time *) unit -> unit Lwt.t) * string option)
+    (ServerEnv.env
+    * recheck_result
+    * ((* record_recheck_time *) unit -> unit Lwt.t)
+    * string option)
     Lwt.t
 
   (* Raises `Unexpected_file_changes` if it finds files unexpectedly changed when parsing. *)
@@ -1859,13 +1862,13 @@ end = struct
           DirectDependentFilesCache.with_cache
             ~root_files
             ~on_miss:
-              ( lazy
+              (lazy
                 (Dep_service.calc_direct_dependents
                    ~reader:(Abstract_state_reader.Mutator_state_reader reader)
                    workers
                    ~candidates:(FilenameSet.diff unchanged unchanged_files_with_dependents)
                    ~root_files
-                   ~root_modules:(Modulename.Set.union unchanged_modules changed_modules)) ))
+                   ~root_modules:(Modulename.Set.union unchanged_modules changed_modules))))
     in
     Hh_logger.info "Re-resolving directly dependent files";
     let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader direct_dependent_files in
@@ -2297,7 +2300,8 @@ end = struct
           ~files_to_force
           ~recheck_reasons
           ~env
-      with Unexpected_file_changes changed_files -> handle_unexpected_file_changes changed_files
+      with
+      | Unexpected_file_changes changed_files -> handle_unexpected_file_changes changed_files
     in
     recheck_merge
       ~profiling
@@ -2393,15 +2397,16 @@ let recheck
     Base.Option.value_map
       estimates
       ~default:(None, None, None, None, None, None)
-      ~f:(fun {
-                Recheck_stats.estimated_time_to_recheck;
-                estimated_time_to_restart;
-                estimated_time_to_init;
-                estimated_time_per_file;
-                estimated_files_to_recheck;
-                estimated_files_to_init;
-              }
-              ->
+      ~f:(fun
+           {
+             Recheck_stats.estimated_time_to_recheck;
+             estimated_time_to_restart;
+             estimated_time_to_init;
+             estimated_time_per_file;
+             estimated_files_to_recheck;
+             estimated_files_to_init;
+           }
+         ->
         ( Some estimated_time_to_recheck,
           Some estimated_time_to_restart,
           Some estimated_time_to_init,
@@ -2688,7 +2693,8 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
             ~files_to_force:CheckedSet.empty
             ~recheck_reasons
             ~env
-        with Unexpected_file_changes changed_files ->
+        with
+        | Unexpected_file_changes changed_files ->
           let updated_files =
             changed_files |> Nel.to_list |> FilenameSet.of_list |> FilenameSet.union updated_files
           in
@@ -2845,15 +2851,16 @@ let load_saved_state ~profiling ~workers options =
        FlowEventLogger.set_saved_state_filename (Path.to_string saved_state_filename);
        FlowEventLogger.load_saved_state_success ~changed_files_count;
        Lwt.return_some (saved_state, updates)
-     with Saved_state.Invalid_saved_state invalid_reason ->
-       let invalid_reason = Saved_state.invalid_reason_to_string invalid_reason in
-       FlowEventLogger.load_saved_state_error
-         ~saved_state_filename:(Path.to_string saved_state_filename)
-         ~changed_files_count
-         ~invalid_reason;
-       let msg = spf "Failed to load saved state: %s" invalid_reason in
-       exit_if_no_fallback ~msg options;
-       Lwt.return_none)
+     with
+    | Saved_state.Invalid_saved_state invalid_reason ->
+      let invalid_reason = Saved_state.invalid_reason_to_string invalid_reason in
+      FlowEventLogger.load_saved_state_error
+        ~saved_state_filename:(Path.to_string saved_state_filename)
+        ~changed_files_count
+        ~invalid_reason;
+      let msg = spf "Failed to load saved state: %s" invalid_reason in
+      exit_if_no_fallback ~msg options;
+      Lwt.return_none)
 
 let init ~profiling ~workers options =
   let start_time = Unix.gettimeofday () in

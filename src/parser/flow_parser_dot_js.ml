@@ -23,6 +23,7 @@ let () =
       Js.raise_js_error (Js.Unsafe.new_obj Js.error_constr [| Js.Unsafe.inject (Js.string msg) |])
   in
   let parse content options =
-    (try Flow_parser_js.parse content options with exn -> js_error_of_exn exn)
+    try Flow_parser_js.parse content options with
+    | exn -> js_error_of_exn exn
   in
   Js.Unsafe.set exports "parse" (Js.Unsafe.callback parse)

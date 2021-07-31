@@ -28,6 +28,7 @@ let metadata =
     enable_enums = true;
     enable_enums_with_unknown_members = true;
     enable_indexed_access = true;
+    enable_new_env = false;
     enforce_strict_call_arity = true;
     enforce_local_inference_annotations = false;
     exact_by_default = false;
@@ -227,7 +228,8 @@ let system_diff ~f prefix =
         | code ->
           Utils_js.print_endlinef "diff read error code %d" code;
           Error "diff wasn't able to run for some reason"
-      with e ->
+      with
+      | e ->
         let e = Exception.wrap e in
         let msg = Exception.get_ctor_string e in
         Error msg

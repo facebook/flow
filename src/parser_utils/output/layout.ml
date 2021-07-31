@@ -155,10 +155,10 @@ let new_list
     else
       [
         join (fuse [sep; pretty_line]) items;
-        ( if trailing_sep then
+        (if trailing_sep then
           if_break (Atom ",") Empty
         else
-          Empty );
+          Empty);
       ]
   in
   let break =
@@ -183,16 +183,16 @@ let list
       [
         item;
         if_break
-          ( if is_last && trailing then
+          (if is_last && trailing then
             if_pretty sep Empty
           else if not is_last then
             sep
           else
-            Empty )
-          ( if is_last then
+            Empty)
+          (if is_last then
             Empty
           else
-            fuse [sep; pretty_space] );
+            fuse [sep; pretty_space]);
       ]
   in
   let items_count = List.length items - 1 in
@@ -251,10 +251,10 @@ let fuse_with_space =
         None
       else
         Some
-          ( if mode = `First then
+          (if mode = `First then
             str.[0]
           else
-            str.[String.length str - 1] )
+            str.[String.length str - 1])
     | Empty -> None
     | Indent node -> ugly_char ~mode node
     | Newline -> None

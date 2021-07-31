@@ -25,7 +25,7 @@ typedef struct matcher_options {
   size_t max_results;
   size_t max_gap;
   bool record_match_indexes;
-  char *root_path;
+  const char *root_path;
 } matcher_options_t;
 
 typedef struct match_result {
@@ -44,9 +44,9 @@ typedef struct match_results {
 } match_results_t;
 
 matcher_t *matcher_create();
-match_results_t matcher_find(matcher_t *m, char *query, matcher_options_t options);
-void matcher_add_candidate(matcher_t *m, char *candidate);
-void matcher_remove_candidate(matcher_t *m, char *candidate);
+match_results_t matcher_find(matcher_t *m, const char *query, matcher_options_t options);
+void matcher_add_candidate(matcher_t *m, const char *candidate);
+void matcher_remove_candidate(matcher_t *m, const char *candidate);
 void matcher_clear(matcher_t *m);
 void matcher_reserve(matcher_t *m, size_t n);
 size_t matcher_size(matcher_t *m);

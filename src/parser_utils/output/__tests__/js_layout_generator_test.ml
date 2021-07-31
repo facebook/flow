@@ -959,14 +959,14 @@ let tests =
            assert_output
              ~ctxt
              ~pretty:true
-             ( "for (\n"
+             ("for (\n"
              ^ "  "
              ^ x80
              ^ ";\n"
              ^ "  ;\n"
              ^ "  \n"
              (* TODO: remove trailing whitespace *)
-             ^ ");" )
+             ^ ");")
              layout );
          ( "binary_in_in_for_loops" >:: fun ctxt ->
            let ast =
@@ -2092,7 +2092,7 @@ let tests =
            assert_output
              ~ctxt
              ~pretty:true
-             ( "switch (x) {\n"
+             ("switch (x) {\n"
              ^ "  case \"a\":\n"
              ^ "    x++;\n"
              ^ "    break;\n"
@@ -2101,7 +2101,7 @@ let tests =
              ^ "  case \"b\":\n"
              ^ "    x++;\n"
              ^ "    break;\n"
-             ^ "}" )
+             ^ "}")
              layout );
          ( "switch_case_space" >:: fun ctxt ->
            let assert_no_space ~ctxt expr =
@@ -2581,7 +2581,7 @@ let tests =
            assert_statement
              ~ctxt
              ~pretty:true
-             ( "function f(\n  "
+             ("function f(\n  "
              ^ a20
              ^ ",\n  "
              ^ b20
@@ -2589,7 +2589,7 @@ let tests =
              ^ a20
              ^ ": t, "
              ^ b20
-             ^ ": t } {}" )
+             ^ ": t } {}")
              (statement_of_string
                 ("function f(" ^ a20 ^ ", " ^ b20 ^ "): {" ^ a20 ^ ": t, " ^ b20 ^ ": t} {}")) );
          ( "function_type_params_break_before_return_type" >:: fun ctxt ->
@@ -2608,15 +2608,15 @@ let tests =
            assert_expression
              ~ctxt
              ~pretty:true
-             ( "new Foo(\n"
+             ("new Foo(\n"
              ^ "  a,\n"
              ^ "  <jsx>\n"
              ^ ("    " ^ a80 ^ "\n")
              ^ "  </jsx>,\n"
              ^ "  b,\n"
-             ^ ")" )
+             ^ ")")
              (expression_of_string
-                ( "new Foo(\n"
+                ("new Foo(\n"
                 ^ "  a,\n"
                 ^ "  (\n"
                 ^ "    <jsx>\n"
@@ -2624,5 +2624,5 @@ let tests =
                 ^ "    </jsx>\n"
                 ^ "  ),\n"
                 ^ "  b,\n"
-                ^ ")" )) );
+                ^ ")")) );
        ]

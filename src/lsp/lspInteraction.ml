@@ -287,6 +287,7 @@ let trigger_of_lsp_msg =
   | RequestMessage (_, ExecuteCommandRequest _) -> Some ExecuteCommand
   (* Requests which we don't care about. Some are unsupported and some are sent from the lsp to
      * the client *)
+  | RequestMessage (_, ApplyWorkspaceEditRequest _)
   | RequestMessage (_, CompletionItemResolveRequest _)
   | RequestMessage (_, ConfigurationRequest _)
   | RequestMessage (_, DocumentFormattingRequest _)
@@ -323,8 +324,8 @@ let trigger_of_lsp_msg =
   | ResponseMessage (_, DocumentCodeLensResult _)
   | ResponseMessage (_, TypeCoverageResult _)
   | ResponseMessage (_, ExecuteCommandResult _)
+  | ResponseMessage (_, ApplyWorkspaceEditResult _)
   | ResponseMessage (_, RegisterCapabilityResult)
-  (* TODO not sure if this is right, just need to unbreak the build. *)
   | ResponseMessage (_, TypeDefinitionResult _)
   | ResponseMessage (_, DocumentFormattingResult _)
   | ResponseMessage (_, DocumentRangeFormattingResult _)

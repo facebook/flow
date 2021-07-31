@@ -135,10 +135,10 @@ and dump_field ~depth x t polarity optional =
     "%s%s%s: %s"
     (dump_polarity polarity)
     x
-    ( if optional then
+    (if optional then
       "?"
     else
-      "" )
+      "")
     (dump_t ~depth t)
 
 and dump_prop ~depth = function
@@ -435,11 +435,11 @@ let json_of_elt ~strip_root =
         | None -> JSON_Null
         | Some (name, t) ->
           JSON_Object
-            ( [("restParamType", json_of_t t)]
+            ([("restParamType", json_of_t t)]
             @
             match name with
             | None -> []
-            | Some name -> [("restParamName", JSON_String name)] ) );
+            | Some name -> [("restParamName", JSON_String name)]) );
       ("returnType", json_of_t fun_return);
       ("staticType", json_of_t fun_static);
     ]
@@ -472,12 +472,12 @@ let json_of_elt ~strip_root =
       { tp_name : string; tp_bound : t option; tp_polarity : polarity; tp_default : t option } =
     Hh_json.(
       JSON_Object
-        ( [
-            ("name", JSON_String tp_name);
-            ("bound", Base.Option.value_map tp_bound ~f:json_of_t ~default:JSON_Null);
-            ("polarity", json_of_polarity tp_polarity);
-          ]
-        @ Base.Option.value_map tp_default ~default:[] ~f:(fun t -> [("default", json_of_t t)]) ))
+        ([
+           ("name", JSON_String tp_name);
+           ("bound", Base.Option.value_map tp_bound ~f:json_of_t ~default:JSON_Null);
+           ("polarity", json_of_polarity tp_polarity);
+         ]
+        @ Base.Option.value_map tp_default ~default:[] ~f:(fun t -> [("default", json_of_t t)])))
   and json_of_polarity polarity = Hh_json.JSON_String (string_of_polarity polarity)
   and json_of_prop prop =
     Hh_json.(

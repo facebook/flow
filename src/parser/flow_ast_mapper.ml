@@ -363,7 +363,7 @@ class ['loc] mapper =
         && extends == extends'
         && implements == implements'
         && class_decorators == class_decorators'
-        && comments = comments'
+        && comments == comments'
       then
         cls
       else
@@ -531,7 +531,7 @@ class ['loc] mapper =
         test == test'
         && consequent == consequent'
         && alternate == alternate'
-        && comments = comments'
+        && comments == comments'
       then
         expr
       else
@@ -672,7 +672,7 @@ class ['loc] mapper =
       let { id; body; kind; comments } = m in
       let body' = map_loc this#block body in
       let comments' = this#syntax_opt comments in
-      if body' == body && comments = comments' then
+      if body' == body && comments == comments' then
         m
       else
         { id; body = body'; kind; comments = comments' }
@@ -793,7 +793,7 @@ class ['loc] mapper =
       let open Ast.Statement.EnumDeclaration.DefaultedMember in
       let (loc, { id = ident }) = member in
       let id' = this#identifier ident in
-      if ident = id' then
+      if ident == id' then
         member
       else
         (loc, { id = id' })
@@ -804,7 +804,7 @@ class ['loc] mapper =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (loc, { id = ident; init }) = member in
       let id' = this#identifier ident in
-      if ident = id' then
+      if ident == id' then
         member
       else
         (loc, { id = id'; init })
@@ -815,7 +815,7 @@ class ['loc] mapper =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (loc, { id = ident; init }) = member in
       let id' = this#identifier ident in
-      if ident = id' then
+      if ident == id' then
         member
       else
         (loc, { id = id'; init })
@@ -826,7 +826,7 @@ class ['loc] mapper =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (loc, { id = ident; init }) = member in
       let id' = this#identifier ident in
-      if ident = id' then
+      if ident == id' then
         member
       else
         (loc, { id = id'; init })
@@ -1461,7 +1461,7 @@ class ['loc] mapper =
         ident == ident'
         && params == params'
         && body == body'
-        && predicate = predicate'
+        && predicate == predicate'
         && return == return'
         && tparams == tparams'
         && comments == comments'
@@ -2466,7 +2466,7 @@ class ['loc] mapper =
       let { declarations; kind; comments } = decl in
       let decls' = map_list (this#variable_declarator ~kind) declarations in
       let comments' = this#syntax_opt comments in
-      if declarations == decls' && comments = comments' then
+      if declarations == decls' && comments == comments' then
         decl
       else
         { declarations = decls'; kind; comments = comments' }
@@ -2521,7 +2521,7 @@ class ['loc] mapper =
       let { argument; delegate; comments } = expr in
       let argument' = map_opt this#expression argument in
       let comments' = this#syntax_opt comments in
-      if comments = comments' && argument == argument' then
+      if comments == comments' && argument == argument' then
         expr
       else
         { argument = argument'; delegate; comments = comments' }

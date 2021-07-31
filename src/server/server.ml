@@ -33,13 +33,13 @@ let extract_flowlibs_or_exit options =
       | Files.Prelude path -> Flowlib.Prelude path
       | Files.Flowlib path -> Flowlib.Flowlib path
     in
-    (try Flowlib.extract libdir
-     with e ->
-       let e = Exception.wrap e in
-       let err = Exception.get_ctor_string e in
-       let libdir_str = libdir |> Flowlib.path_of_libdir |> Path.to_string in
-       let msg = Printf.sprintf "Could not extract flowlib files into %s: %s" libdir_str err in
-       Exit.(exit ~msg Could_not_extract_flowlibs))
+    (try Flowlib.extract libdir with
+    | e ->
+      let e = Exception.wrap e in
+      let err = Exception.get_ctor_string e in
+      let libdir_str = libdir |> Flowlib.path_of_libdir |> Path.to_string in
+      let msg = Printf.sprintf "Could not extract flowlib files into %s: %s" libdir_str err in
+      Exit.(exit ~msg Could_not_extract_flowlibs))
   | None -> ()
 
 let init ~profiling ?focus_targets genv =
@@ -268,10 +268,10 @@ let exit_msg_of_exception exn msg =
   Utils.spf
     "%s%s"
     msg
-    ( if bt = "" then
+    (if bt = "" then
       bt
     else
-      ":\n" ^ bt )
+      ":\n" ^ bt)
 
 let run_from_daemonize ~init_id ~monitor_channels ~shared_mem_config options =
   try run ~monitor_channels ~shared_mem_config ~init_id options with
@@ -310,13 +310,13 @@ let check_once ~init_id ~shared_mem_config ~format_errors ?focus_targets options
     let should_print_summary = Options.should_profile options in
     let%lwt (profiling, (print_errors, errors, warnings, first_internal_error)) =
       Profiling_js.with_profiling_lwt ~label:"Init" ~should_print_summary (fun profiling ->
-          ( if should_log_server_profiles then
+          (if should_log_server_profiles then
             let rec sample_processor_info () =
               Flow_server_profile.processor_sample ();
               let%lwt () = Lwt_unix.sleep 1.0 in
               sample_processor_info ()
             in
-            Lwt.async sample_processor_info );
+            Lwt.async sample_processor_info);
           let%lwt (env, _, first_internal_error) = program_init profiling in
           let reader = State_reader.create () in
           let (errors, warnings, suppressed_errors) =

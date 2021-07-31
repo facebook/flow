@@ -39,7 +39,7 @@ orbs:
                 PATH: /usr/local/bin:/usr/bin:/cygdrive/c/Windows/system32:/cygdrive/c/Windows:/cygdrive/c/Windows/System32/Wbem:/cygdrive/c/Windows/System32/WindowsPowerShell/v1.0
               command: |
                 cd /cygdrive/c/Users/circleci/project
-                [ -d _opam ] || opam switch create . ocaml-variants.4.09.1+mingw64c --deps-only --yes -vvv
+                [ -d _opam ] || opam switch create . ocaml-variants.4.10.2+mingw64c --deps-only --yes -vvv
 
 executors:
   linux-opam:
@@ -151,7 +151,7 @@ jobs:
       - create-opam-switch
       - run:
           name: Install extra deps from opam
-          command: opam install js_of_ocaml.3.7.1 | cat
+          command: opam install js_of_ocaml.3.9.0 | cat
       - save-opam-cache
       - run:
           name: Build flow.js
@@ -189,7 +189,7 @@ jobs:
       - create-opam-switch
       - run:
           name: Install extra deps from opam
-          command: opam install js_of_ocaml.3.7.1 | cat
+          command: opam install js_of_ocaml.3.9.0 | cat
       - save-opam-cache
       - run:
           name: Build flow
@@ -732,16 +732,18 @@ workflows:
             - build_linux_arm64
             - build_macos
 
-      # only deploy the website from master, so that it can include docs/blog
-      # posts about an upcoming release, and so the release branch doesn't
-      # revert those changes.
+      # only deploy the website from the main branch, so that it can include
+      # docs/blog posts about an upcoming release, and so the release branch
+      # doesn't revert those changes.
       - website_deploy:
           requires:
             - build_linux
             - build_js
           filters:
             branches:
-              only: master
+              only:
+                - main
+                - master
 
   build_and_deploy:
     jobs:

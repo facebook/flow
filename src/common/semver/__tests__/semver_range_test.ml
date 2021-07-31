@@ -52,10 +52,10 @@ let assert_satisfies ~ctxt ?include_prereleases range version expected =
     Printf.sprintf
       "Expected %s %sto satisfy %s"
       (Semver_version.to_string version)
-      ( if expected then
+      (if expected then
         ""
       else
-        "NOT " )
+        "NOT ")
       (Semver_range.to_string range)
   in
   assert_equal ~ctxt ~msg expected (Semver_range.satisfies ?include_prereleases range version)

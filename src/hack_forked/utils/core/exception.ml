@@ -37,7 +37,9 @@ let reraise { exn; backtrace } = Printexc.raise_with_backtrace exn backtrace
 
 (* Converts back to an `exn` with the right backtrace. Generally, avoid this in favor of
    the helpers in this module, like `to_string` and `get_backtrace_string`. *)
-let to_exn t = (try reraise t with exn -> exn)
+let to_exn t =
+  try reraise t with
+  | exn -> exn
 
 (* Like `wrap`, but for the unusual case where you want to create an `Exception`
    for an un-raised `exn`, capturing its stack trace. If you've caught an exception,

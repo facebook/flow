@@ -8,10 +8,17 @@
 open OUnit2
 open Refactor_extract_utils_tests
 
-let assert_refactored ~ctxt expected source extract_range =
+let assert_refactored
+    ~ctxt ?(support_experimental_snippet_text_edit = false) expected source extract_range =
   let ast = parse source in
   let typed_ast = typed_ast_of_ast ast in
   let reader = State_reader.create () in
+  let remove_blank_lines s =
+    s
+    |> String.split_on_char '\n'
+    |> List.filter (fun s -> String.trim s <> "")
+    |> String.concat "\n"
+  in
   let actual =
     Refactor_extract.provide_available_refactors
       ~ast
@@ -20,6 +27,7 @@ let assert_refactored ~ctxt expected source extract_range =
       ~file_sig:(file_sig_of_ast ast)
       ~typed_ast
       ~reader
+      ~support_experimental_snippet_text_edit
       ~extract_range
     |> List.map (fun { Refactor_extract.title; new_ast; _ } ->
            ( title,
@@ -29,10 +37,11 @@ let assert_refactored ~ctxt expected source extract_range =
                   ~preserve_docblock:true
                   ~checksum:None
              |> pretty_print
-             |> String.trim ))
+             |> String.trim
+             |> remove_blank_lines ))
   in
   let expected : (string * string) list =
-    List.map (fun (title, s) -> (title, String.trim s)) expected
+    List.map (fun (title, s) -> (title, s |> String.trim |> remove_blank_lines)) expected
   in
   let printer refactors =
     refactors
@@ -84,15 +93,7 @@ function test() {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 4; column = 10 };
-          _end = { Loc.line = 4; column = 22 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (4, 10) (4, 22)) );
     ( "multi_line_extract" >:: fun ctxt ->
       let source =
         {|
@@ -140,15 +141,40 @@ function test() {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 4; column = 10 };
-          _end = { Loc.line = 7; column = 20 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (4, 10) (7, 20)) );
+    ( "extract_use_toplevel_function_param" >:: fun ctxt ->
+      let source =
+        {|
+        function foo(a: number) {
+          console.log(a);
+        }
+        |}
+      in
+      let expected =
+        [
+          ( "Extract to function in module scope",
+            {|
+function foo(a: number) {
+  newFunction(a);
+}
+function newFunction(a: number): void {
+  console.log(a);
+}
+            |}
+          );
+          ( "Extract to inner function in function 'foo'",
+            {|
+function foo(a: number) {
+  newFunction();
+  function newFunction(): void {
+    console.log(a);
+  }
+}
+            |}
+          );
+        ]
+      in
+      assert_refactored ~ctxt expected source (mk_loc (3, 0) (3, 30)) );
     ( "single_escaping_def_extract" >:: fun ctxt ->
       let source = {|
         const a = 3;
@@ -168,15 +194,7 @@ function newFunction(): number {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 8 };
-          _end = { Loc.line = 2; column = 20 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (2, 8) (2, 20)) );
     ( "local_reassignment_single_return_extract" >:: fun ctxt ->
       let source =
         {|
@@ -203,15 +221,7 @@ function newFunction(): number {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 4; column = 8 };
-          _end = { Loc.line = 4; column = 33 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (4, 8) (4, 33)) );
     ( "local_reassignment_mixed_return_extract" >:: fun ctxt ->
       let source =
         {|
@@ -239,15 +249,7 @@ function newFunction(): {| a: number, fooo: number |} {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 3; column = 8 };
-          _end = { Loc.line = 4; column = 33 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (3, 8) (4, 33)) );
     ( "external_reassignment_single_return_extract" >:: fun ctxt ->
       let source =
         {|
@@ -271,15 +273,7 @@ function newFunction(): number {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 8 };
-          _end = { Loc.line = 2; column = 33 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (2, 8) (2, 33)) );
     ( "external_reassignment_multiple_returns_extract" >:: fun ctxt ->
       let source =
         {|
@@ -303,15 +297,7 @@ function newFunction(): {| a: number, fooo: number |} {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 8 };
-          _end = { Loc.line = 3; column = 32 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (2, 8) (3, 32)) );
     ( "async_expression_extract" >:: fun ctxt ->
       let source =
         {|
@@ -338,19 +324,25 @@ async function newFunction(): Promise<void> {
   await b;
   let d = 6;
 }
-      |}
+            |}
+          );
+          ( "Extract to inner function in function 'test'",
+            {|
+const test = (async () => {
+  await newFunction();
+  async function newFunction(): Promise<void> {
+    // selection start
+    const a = 3;
+    let b = 4;
+    await b;
+    let d = 6;
+  }
+});
+            |}
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 4; column = 10 };
-          _end = { Loc.line = 7; column = 20 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (4, 10) (7, 20)) );
     ( "async_for_of_extract" >:: fun ctxt ->
       let source =
         {|
@@ -377,19 +369,26 @@ async function newFunction(): Promise<void> {
   }
   let d = 6;
 }
-      |}
+            |}
+          );
+          ( "Extract to inner function in function 'test'",
+            {|
+const test = (async () => {
+  await newFunction();
+  async function newFunction(): Promise<void> {
+    // selection start
+    const a = 3;
+    {
+      for await (const b of []) {}
+    }
+    let d = 6;
+  }
+});
+            |}
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 4; column = 10 };
-          _end = { Loc.line = 6; column = 20 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (4, 10) (6, 20)) );
     ( "await_in_async_function_extract" >:: fun ctxt ->
       let source = "const test = async () => await promise;" in
       let expected =
@@ -404,15 +403,7 @@ function newFunction(): void {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 0 };
-          _end = { Loc.line = 1; column = 39 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (1, 0) (1, 39)) );
     ( "return_no_extract" >:: fun ctxt ->
       let source =
         {|
@@ -427,15 +418,7 @@ function newFunction(): void {
         }
       |}
       in
-      assert_refactored
-        ~ctxt
-        []
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 4; column = 10 };
-          _end = { Loc.line = 8; column = 22 };
-        } );
+      assert_refactored ~ctxt [] source (mk_loc (4, 10) (8, 22)) );
     ( "yield_no_extract" >:: fun ctxt ->
       let source =
         {|
@@ -450,44 +433,16 @@ function newFunction(): void {
         }
       |}
       in
-      assert_refactored
-        ~ctxt
-        []
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 4; column = 10 };
-          _end = { Loc.line = 8; column = 22 };
-        } );
+      assert_refactored ~ctxt [] source (mk_loc (4, 10) (8, 22)) );
     ( "label_no_extract" >:: fun ctxt ->
       assert_refactored
         ~ctxt
         []
         "const a = 1; {label:test();} function test() {}"
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 0 };
-          _end = { Loc.line = 1; column = 60 };
-        } );
+        (mk_loc (1, 0) (1, 60)) );
     ( "simple_break_continue_no_extract" >:: fun ctxt ->
-      assert_refactored
-        ~ctxt
-        []
-        "while (true) {break;}"
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 12 };
-          _end = { Loc.line = 1; column = 30 };
-        };
-      assert_refactored
-        ~ctxt
-        []
-        "while (true) {continue;}"
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 12 };
-          _end = { Loc.line = 1; column = 30 };
-        } );
+      assert_refactored ~ctxt [] "while (true) {break;}" (mk_loc (1, 12) (1, 30));
+      assert_refactored ~ctxt [] "while (true) {continue;}" (mk_loc (1, 12) (1, 30)) );
     ( "continue_in_switch_no_extract" >:: fun ctxt ->
       let source =
         {|
@@ -499,34 +454,10 @@ function newFunction(): void {
 
       |}
       in
-      assert_refactored
-        ~ctxt
-        []
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 3; column = 8 };
-          _end = { Loc.line = 5; column = 23 };
-        } );
+      assert_refactored ~ctxt [] source (mk_loc (3, 8) (5, 23)) );
     ( "wrapped_break_continue_with_label_no_extracts" >:: fun ctxt ->
-      assert_refactored
-        ~ctxt
-        []
-        "label:while (true) {break label;}"
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 0 };
-          _end = { Loc.line = 1; column = 50 };
-        };
-      assert_refactored
-        ~ctxt
-        []
-        "label:while (true) {continue label;}"
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 0 };
-          _end = { Loc.line = 1; column = 50 };
-        } );
+      assert_refactored ~ctxt [] "label:while (true) {break label;}" (mk_loc (1, 0) (1, 50));
+      assert_refactored ~ctxt [] "label:while (true) {continue label;}" (mk_loc (1, 0) (1, 50)) );
     ( "wrapped_break_continue_switch_has_extracts" >:: fun ctxt ->
       let expected =
         [
@@ -541,15 +472,7 @@ function newFunction(): void {
 |} );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        "while (true) {break;}"
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 0 };
-          _end = { Loc.line = 1; column = 30 };
-        };
+      assert_refactored ~ctxt expected "while (true) {break;}" (mk_loc (1, 0) (1, 30));
       let expected =
         [
           ( "Extract to function in module scope",
@@ -564,15 +487,7 @@ function newFunction(): void {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        "while (true) {continue;}"
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 0 };
-          _end = { Loc.line = 1; column = 30 };
-        };
+      assert_refactored ~ctxt expected "while (true) {continue;}" (mk_loc (1, 0) (1, 30));
       let expected =
         [
           ( "Extract to function in module scope",
@@ -588,15 +503,7 @@ function newFunction(): void {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        "switch (true) {default:break;}"
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 0 };
-          _end = { Loc.line = 1; column = 40 };
-        } );
+      assert_refactored ~ctxt expected "switch (true) {default:break;}" (mk_loc (1, 0) (1, 40)) );
     ( "basic_class_method_extract" >:: fun ctxt ->
       assert_refactored
         ~ctxt
@@ -615,11 +522,7 @@ class A {
           );
         ]
         "class A { test1() { this.test1(); } }"
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 20 };
-          _end = { Loc.line = 1; column = 33 };
-        };
+        (mk_loc (1, 20) (1, 33));
       assert_refactored
         ~ctxt
         [
@@ -637,11 +540,7 @@ class A {
           );
         ]
         "class A { test1() { super.test1(); } }"
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 20 };
-          _end = { Loc.line = 1; column = 34 };
-        };
+        (mk_loc (1, 20) (1, 34));
       assert_refactored
         ~ctxt
         [
@@ -669,13 +568,21 @@ function newFunction(): void {
 }
           |}
           );
+          ( "Extract to inner function in method 'test1'",
+            {|
+class A {
+  test1() {
+    newFunction();
+    function newFunction(): void {
+      console.log();
+    }
+  }
+}
+            |}
+          );
         ]
         "class A { test1() { console.log(); } }"
-        {
-          Loc.source = None;
-          start = { Loc.line = 1; column = 20 };
-          _end = { Loc.line = 1; column = 34 };
-        } );
+        (mk_loc (1, 20) (1, 34)) );
     ( "class_method_with_parameters_and_return_extract" >:: fun ctxt ->
       let source =
         {|
@@ -727,15 +634,71 @@ export default class {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 14; column = 12 };
-          _end = { Loc.line = 14; column = 51 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (14, 12) (14, 51)) );
+    ( "type_parameters_extract" >:: fun ctxt ->
+      (* Test that all the constraints of generic type parameters are added,
+         and unused ones (A) are removed. *)
+      let source =
+        {multiline|
+        function foo<A, B, C:B=B>(c: C) {
+          function bar<D:C, E:D, F:D=E>(f: F): F {
+            console.log(c); // selected
+            const g = f; // selected
+            return g;
+          }
+        }
+        |multiline}
+      in
+      let expected =
+        [
+          ( "Extract to function in module scope",
+            {multiline|
+function foo<A, B, C: B = B>(c: C) {
+  function bar<D: C, E: D, F: D = E>(f: F): F {
+    const g = newFunction(c, f);
+    return g;
+  }
+}
+function newFunction<B, C: B = B, D: C, E: D, F: D = E>(c: C, f: F): F {
+  console.log(c); // selected
+  const g = f; // selected
+  return g;
+}
+|multiline}
+          );
+          ( "Extract to inner function in function 'bar'",
+            {multiline|
+function foo<A, B, C: B = B>(c: C) {
+  function bar<D: C, E: D, F: D = E>(f: F): F {
+    const g = newFunction();
+    return g;
+    function newFunction(): F {
+      console.log(c); // selected
+      const g = f; // selected
+      return g;
+    }
+  }
+}
+|multiline}
+          );
+          ( "Extract to inner function in function 'foo'",
+            {multiline|
+function foo<A, B, C: B = B>(c: C) {
+  function bar<D: C, E: D, F: D = E>(f: F): F {
+    const g = newFunction(f);
+    return g;
+  }
+  function newFunction<D: C, E: D, F: D = E>(f: F): F {
+    console.log(c); // selected
+    const g = f; // selected
+    return g;
+  }
+}
+|multiline}
+          );
+        ]
+      in
+      assert_refactored ~ctxt expected source (mk_loc (4, 0) (5, 50)) );
     ( "very_nested_extract" >:: fun ctxt ->
       let source =
         {|
@@ -864,15 +827,7 @@ function level1() {
           );
         ]
       in
-      assert_refactored
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 7; column = 16 };
-          _end = { Loc.line = 10; column = 26 };
-        } );
+      assert_refactored ~ctxt expected source (mk_loc (7, 16) (10, 26)) );
     ( "very_nested_extract_with_variables" >:: fun ctxt ->
       let source =
         {|
@@ -1057,15 +1012,286 @@ function level1() {
           );
         ]
       in
+      assert_refactored ~ctxt expected source (mk_loc (13, 18) (15, 61)) );
+    (* A simple constant extraction that can go to all possible scopes. *)
+    ( "simple_constant_extract" >:: fun ctxt ->
+      let source = "function test() { const a = 1; }" in
+      let expected =
+        [
+          ( "Extract to constant in function 'test'",
+            {|
+function test() {
+  const newLocal = 1;
+  const a = newLocal;
+}
+            |} );
+          ( "Extract to constant in module scope",
+            {|
+const newLocal = 1;
+function test() {
+  const a = newLocal;
+}
+            |} );
+        ]
+      in
+      assert_refactored ~ctxt expected source (mk_loc (1, 28) (1, 29)) );
+    (* Testing that we won't extract constant to scopes that will result in undefined variables. *)
+    ( "constant_extract_with_scoping_issues" >:: fun ctxt ->
+      let source =
+        {|
+        function foo() {
+          const a = 3;
+          function bar() {
+            const b = 4;
+            function baz() {
+              const c = 5;
+              // selected a + b + c
+              return a + b + c;
+            }
+          }
+        }
+        |}
+      in
+      let expected =
+        [
+          ( "Extract to constant in function 'baz'",
+            {|
+function foo() {
+  const a = 3;
+  function bar() {
+    const b = 4;
+    function baz() {
+      const c = 5;
+      const newLocal = a + b + c;
+      // selected a + b + c
+      return newLocal;
+    }
+  }
+}
+          |}
+          );
+        ]
+      in
+      assert_refactored ~ctxt expected source (mk_loc (9, 21) (9, 30)) );
+    (* A simple field extraction that can only go inside the class. *)
+    ( "field_extract_class_only" >:: fun ctxt ->
+      let source = "class A { test() { const a = this.test(); } }" in
+      let expected =
+        [
+          ( "Extract to field in class 'A'",
+            {|
+class A {
+  newProperty = this.test();
+  test() {
+    const a = this.newProperty;
+  }
+}
+            |}
+          );
+          ( "Extract to constant in method 'test'",
+            {|
+class A {
+  test() {
+    const newLocal = this.test();
+    const a = newLocal;
+  }
+}
+            |}
+          );
+        ]
+      in
+      assert_refactored ~ctxt expected source (mk_loc (1, 29) (1, 40)) );
+    (* A simple type alias extraction without any type variables. *)
+    ( "simple_type_extract" >:: fun ctxt ->
+      let source = "const a: number = 1;" in
+      let expected = [("Extract to type alias", "type NewType = number;\nconst a: NewType = 1;")] in
+      assert_refactored ~ctxt expected source (mk_loc (1, 9) (1, 15)) );
+    (* Selected type uses generic type parameters *)
+    ( "type_extract_with_generic_type_parameters" >:: fun ctxt ->
+      let source =
+        {|
+        function foo<A, B>() {
+          class Bar<C, D> {
+            baz<E, F>(): [A, B, C, D, E, F] { }
+          }
+        }
+        |}
+      in
+      let expected =
+        [
+          ( "Extract to type alias",
+            {|
+function foo<A, B>() {
+  type NewType<C, D, E, F> = [A, B, C, D, E, F];
+  class Bar<C, D> {
+    baz<E, F>(): NewType<C, D, E, F> {}
+  }
+}
+            |}
+          );
+        ]
+      in
+      assert_refactored ~ctxt expected source (mk_loc (4, 25) (4, 43)) );
+    (* Generated name has conflicts. *)
+    ( "generated_name_conflicts" >:: fun ctxt ->
+      let source =
+        {|
+        const newFunction = 1, newFunction1 = 1;
+        const newMethod = 1, newMethod1 = 1;
+        const newLocal = 1, newLocal1 = 1;
+        const newProperty = 1, newProperty1 = 1;
+        class A {
+          test() {
+            1 + 1
+          }
+        }
+        |}
+      in
+      let expected =
+        [
+          ( "Extract to method in class 'A'",
+            {|
+const newFunction = 1,
+  newFunction1 = 1;
+const newMethod = 1,
+  newMethod1 = 1;
+const newLocal = 1,
+  newLocal1 = 1;
+const newProperty = 1,
+  newProperty1 = 1;
+class A {
+  test() {
+    this.${0:newMethod2}();
+  }
+  ${0:newMethod2}(): void {
+    1 + 1;
+  }
+}
+            |}
+          );
+          ( "Extract to function in module scope",
+            {|
+const newFunction = 1,
+  newFunction1 = 1;
+const newMethod = 1,
+  newMethod1 = 1;
+const newLocal = 1,
+  newLocal1 = 1;
+const newProperty = 1,
+  newProperty1 = 1;
+class A {
+  test() {
+    ${0:newFunction2}();
+  }
+}
+function ${0:newFunction2}(): void {
+  1 + 1;
+}
+            |}
+          );
+          ( "Extract to inner function in method 'test'",
+            {|
+const newFunction = 1,
+  newFunction1 = 1;
+const newMethod = 1,
+  newMethod1 = 1;
+const newLocal = 1,
+  newLocal1 = 1;
+const newProperty = 1,
+  newProperty1 = 1;
+class A {
+  test() {
+    ${0:newFunction2}();
+    function ${0:newFunction2}(): void {
+      1 + 1;
+    }
+  }
+}
+            |}
+          );
+          ( "Extract to field in class 'A'",
+            {|
+const newFunction = 1,
+  newFunction1 = 1;
+const newMethod = 1,
+  newMethod1 = 1;
+const newLocal = 1,
+  newLocal1 = 1;
+const newProperty = 1,
+  newProperty1 = 1;
+class A {
+  ${0:newProperty2} = 1 + 1;
+  test() {
+    this.${0:newProperty2};
+  }
+}
+            |}
+          );
+          ( "Extract to constant in method 'test'",
+            {|
+const newFunction = 1,
+  newFunction1 = 1;
+const newMethod = 1,
+  newMethod1 = 1;
+const newLocal = 1,
+  newLocal1 = 1;
+const newProperty = 1,
+  newProperty1 = 1;
+class A {
+  test() {
+    const ${0:newLocal2} = 1 + 1;
+    ${0:newLocal2};
+  }
+}
+            |}
+          );
+          ( "Extract to constant in module scope",
+            {|
+const newFunction = 1,
+  newFunction1 = 1;
+const newMethod = 1,
+  newMethod1 = 1;
+const newLocal = 1,
+  newLocal1 = 1;
+const newProperty = 1,
+  newProperty1 = 1;
+const ${0:newLocal2} = 1 + 1;
+class A {
+  test() {
+    ${0:newLocal2};
+  }
+}
+            |}
+          );
+        ]
+      in
       assert_refactored
         ~ctxt
+        ~support_experimental_snippet_text_edit:true
         expected
         source
-        {
-          Loc.source = None;
-          start = { Loc.line = 13; column = 18 };
-          _end = { Loc.line = 15; column = 61 };
-        } );
+        (mk_loc (8, 12) (8, 17));
+      let source = {|
+        type NewType = number;
+        type NewType1 = NewType;
+      |} in
+      let expected =
+        [
+          ( "Extract to type alias",
+            {|
+type ${0:NewType2} = number;
+type NewType = ${0:NewType2};
+type NewType1 = NewType;
+            |}
+          );
+        ]
+      in
+      assert_refactored
+        ~ctxt
+        ~support_experimental_snippet_text_edit:true
+        expected
+        source
+        (mk_loc (2, 23) (2, 29)) );
   ]
 
 let tests =

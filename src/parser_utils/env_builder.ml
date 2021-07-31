@@ -43,6 +43,11 @@ type optional_chain_state =
   | ContinueChain
   | NonOptional
 
+let is_call_to_invariant callee =
+  match callee with
+  | (_, Flow_ast.Expression.Identifier (_, { Flow_ast.Identifier.name = "invariant"; _ })) -> true
+  | _ -> false
+
 let property_of_sentinel_refinement { Flow_ast.Expression.Member.property; _ } =
   let open Flow_ast in
   match property with
@@ -96,6 +101,8 @@ let extract_number_literal node =
     (-.lit, "-" ^ raw)
   | _ -> Utils_js.assert_false "not a number literal"
 
+let error_todo = ()
+
 module type S = sig
   module L : Loc_sig.S
 
@@ -142,7 +149,7 @@ module type S = sig
         sense: bool;
         lit: float * string;
       }
-    | SentinelR of string
+    | SentinelR of string * L.t
   [@@deriving show { with_path = false }]
 
   val show_refinement_kind_without_locs : refinement_kind -> string
@@ -157,7 +164,8 @@ module type S = sig
     refinement_of_id: int -> refinement;
   }
 
-  val program_with_scope : ?ignore_toplevel:bool -> (L.t, L.t) Flow_ast.Program.t -> env_info
+  val program_with_scope :
+    ?ignore_toplevel:bool -> (L.t, L.t) Flow_ast.Program.t -> abrupt_kind option * env_info
 
   val program : (L.t, L.t) Flow_ast.Program.t -> Env_api.values * (int -> refinement)
 
@@ -169,8 +177,13 @@ end
 module Make
     (L : Loc_sig.S)
     (Ssa_api : Ssa_api.S with module L = L)
-    (Scope_api : Scope_api_sig.S with module L = Ssa_api.L) :
-  S with module L = L and module Ssa_api = Ssa_api and module Scope_api = Scope_api = struct
+    (Scope_api : Scope_api_sig.S with module L = Ssa_api.L)
+    (Env_api : Env_api.S with module L = L) :
+  S
+    with module L = L
+     and module Ssa_api = Ssa_api
+     and module Scope_api = Scope_api
+     and module Env_api = Env_api = struct
   module L = L
   module Ssa_api = Ssa_api
   module Scope_api = Scope_api
@@ -180,12 +193,8 @@ module Make
 
   module Provider_api : Provider_api.S with module L = L = Provider_api.Make (L)
 
-  module Env_api = Env_api.Make (L)
+  module Env_api = Env_api
   open Scope_builder
-
-  type abrupt_kind = Ssa_builder.AbruptCompletion.t
-
-  exception AbruptCompletionExn = Ssa_builder.AbruptCompletion.Exn
 
   type refinement_kind =
     | AndR of refinement_kind * refinement_kind
@@ -218,7 +227,7 @@ module Make
         sense: bool;
         lit: float * string;
       }
-    | SentinelR of string
+    | SentinelR of string * L.t
   [@@deriving show { with_path = false }]
 
   let rec show_refinement_kind_without_locs = function
@@ -256,7 +265,7 @@ module Make
         Printf.sprintf "Not (%s)" lit
       else
         lit
-    | SentinelR prop -> Printf.sprintf "SentinelR %s" prop
+    | SentinelR (prop, _) -> Printf.sprintf "SentinelR %s" prop
 
   type refinement = L.LSet.t * refinement_kind
 
@@ -574,6 +583,10 @@ module Make
       list_iter3 f l1 l2 l3
     | _ -> assert false
 
+  type abrupt_kind = AbruptCompletion.t
+
+  exception AbruptCompletionExn = AbruptCompletion.Exn
+
   type ssa = {
     val_ref: Val.t ref;
     havoc: Havoc.t;
@@ -658,7 +671,7 @@ module Make
 
       (* We often want to merge the refinement scopes and writes of two environments with
        * different strategies, especially in logical refinement scopes. In order to do that, we
-       * need to be able to get the writes in our env without the refinement writes. Then we 
+       * need to be able to get the writes in our env without the refinement writes. Then we
        * can merge the refinements from two environments using either AND or OR, and then we can
        * merge the writes and reapply the merged refinement if the ssa_id in unchanged.
        *
@@ -728,17 +741,22 @@ module Make
         env_state <- { env_state with globals_env = SMap.empty }
 
       method havoc_uninitialized_ssa_env =
-        SMap.iter
-          (fun _x { val_ref; havoc } ->
-            val_ref := Val.merge (Val.uninitialized ()) havoc.Havoc.unresolved)
-          env_state.ssa_env;
+        SMap.iter (fun _x { val_ref; havoc } -> val_ref := havoc.Havoc.unresolved) env_state.ssa_env;
         env_state <- { env_state with globals_env = SMap.empty }
 
       method private mk_ssa_env =
-        SMap.map (fun _ ->
+        SMap.map (fun (loc, _) ->
             {
               val_ref = ref (Val.uninitialized ());
-              havoc = Havoc.{ unresolved = Val.mk_unresolved (); locs = [] };
+              havoc =
+                Havoc.
+                  {
+                    unresolved = Val.mk_unresolved ();
+                    locs =
+                      Base.Option.value
+                        ~default:[]
+                        (Provider_api.providers_of_def provider_info loc);
+                  };
             })
 
       method private push_ssa_env bindings =
@@ -776,7 +794,8 @@ module Make
         try
           f ();
           None
-        with AbruptCompletion.Exn abrupt_completion -> Some abrupt_completion
+        with
+        | AbruptCompletion.Exn abrupt_completion -> Some abrupt_completion
 
       method from_completion =
         function
@@ -846,10 +865,7 @@ module Make
         let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) loc in
         begin
           match SMap.find_opt x env_state.ssa_env with
-          | Some { val_ref; havoc } ->
-            val_ref := Val.one reason;
-            Havoc.(
-              havoc.locs <- Base.Option.value_exn (Provider_api.providers_of_def provider_info loc))
+          | Some { val_ref; _ } -> val_ref := Val.one reason
           | _ -> ()
         end;
         super#identifier ident
@@ -1154,11 +1170,11 @@ module Make
 
             (* Now we push a refinement scope and visit the guard/body. At the end, we completely
              * get rid of refinements introduced by the guard, even if they occur in a PHI node, to
-             * ensure that the refinement does not escape the loop via something like 
+             * ensure that the refinement does not escape the loop via something like
              * control flow. For example:
              * while (x != null) {
              *   if (x == 3) {
-             *     x = 4; 
+             *     x = 4;
              *   }
              * }
              * x; // Don't want x to be a PHI of x != null and x = 4.
@@ -1281,13 +1297,73 @@ module Make
           ~scout
           ~visit_guard_and_body
           ~make_completion_states
-          ~auto_handle_continues:true
+          ~auto_handle_continues:false
           ~continues;
         stmt
 
-      method! scoped_for_in_statement _loc stmt = stmt
+      method for_in_or_of_left_declaration left =
+        let (_, decl) = left in
+        let open Flow_ast.Statement.VariableDeclaration in
+        let { declarations; kind; comments = _ } = decl in
+        match declarations with
+        | [(_, { Flow_ast.Statement.VariableDeclaration.Declarator.id; init = _ })] ->
+          let open Flow_ast.Pattern in
+          (match id with
+          | (_, (Identifier _ | Object _ | Array _)) ->
+            ignore @@ this#variable_declarator_pattern ~kind id
+          | _ -> failwith "unexpected AST node")
+        | _ -> failwith "Syntactically valid for-in loops must have exactly one left declaration"
 
-      method! scoped_for_of_statement _loc stmt = stmt
+      method! for_in_left_declaration left =
+        this#for_in_or_of_left_declaration left;
+        left
+
+      method! for_of_left_declaration left =
+        this#for_in_or_of_left_declaration left;
+        left
+
+      method scoped_for_in_or_of_statement traverse_left right body =
+        (* This is only evaluated once and so does not need to be scouted
+         * You might be wondering why the lhs has to be scouted-- the LHS can be a pattern that
+         * includes a default write with a variable that is written to inside the loop. It's
+         * critical that we catch loops in the dependency graph with such variables, since the
+         * ordering algorithm will not have a good place to ask for an annotation in that case.
+         *)
+        ignore @@ this#expression right;
+        let scout () =
+          traverse_left ();
+          ignore @@ this#run_to_completion (fun () -> ignore @@ this#statement body)
+        in
+        let visit_guard_and_body () =
+          traverse_left ();
+          let env = this#ssa_env in
+          let loop_completion_state =
+            this#run_to_completion (fun () -> ignore @@ this#statement body)
+          in
+          (this#peek_new_refinements (), Some env, loop_completion_state)
+        in
+        let make_completion_states loop_completion_state = (None, [loop_completion_state]) in
+        let continues = AbruptCompletion.continue None :: env_state.possible_labeled_continues in
+        this#env_loop
+          ~scout
+          ~visit_guard_and_body
+          ~make_completion_states
+          ~auto_handle_continues:true
+          ~continues
+
+      method! scoped_for_in_statement _loc stmt =
+        let open Flow_ast.Statement.ForIn in
+        let { left; right; body; each = _; comments = _ } = stmt in
+        let traverse_left () = ignore (this#for_in_statement_lhs left) in
+        this#scoped_for_in_or_of_statement traverse_left right body;
+        stmt
+
+      method! scoped_for_of_statement _loc stmt =
+        let open Flow_ast.Statement.ForOf in
+        let { left; right; body; await = _; comments = _ } = stmt in
+        let traverse_left () = ignore (this#for_of_statement_lhs left) in
+        this#scoped_for_in_or_of_statement traverse_left right body;
+        stmt
 
       (***********************************************************)
       (* [PRE] switch (e) { case e1: s1 ... case eN: sN } [POST] *)
@@ -1317,11 +1393,8 @@ module Make
       (*   [ENVi+1 | ENVi'] si+1 [ENVi+1']                       *)
       (* POST = ENVN | ENVN'                                     *)
       (***********************************************************)
-      method! switch _loc (switch : (L.t, L.t) Ast.Statement.Switch.t) =
+      method! switch_cases cases =
         this#expecting_abrupt_completions (fun () ->
-            let open Ast.Statement.Switch in
-            let { discriminant; cases; comments = _ } = switch in
-            ignore @@ this#expression discriminant;
             let (env, case_completion_states) =
               List.fold_left
                 (fun acc stuff ->
@@ -1341,7 +1414,7 @@ module Make
             this#commit_abrupt_completion_matching
               AbruptCompletion.(mem [break None])
               completion_state);
-        switch
+        cases
 
       method private ssa_switch_case
           (env, case_completion_states) (case : (L.t, L.t) Ast.Statement.Switch.Case.t') =
@@ -1448,9 +1521,55 @@ module Make
                   completion_state)
               ~finally:(fun () -> this#reset_ssa_env env))
 
+      method! declare_function loc expr =
+        match Declare_function_utils.declare_function_to_function_declaration_simple loc expr with
+        | Some stmt ->
+          let _ = this#statement (loc, stmt) in
+          expr
+        | None -> super#declare_function loc expr
+
       method! call loc (expr : (L.t, L.t) Ast.Expression.Call.t) =
+        (* Traverse everything up front. Now we don't need to worry about missing any reads
+         * of identifiers in sub-expressions *)
         ignore @@ super#call loc expr;
-        this#havoc_current_ssa_env ~all:false;
+
+        let open Ast.Expression.Call in
+        let { callee; targs; arguments; _ } = expr in
+        if is_call_to_invariant callee then
+          match (targs, arguments) with
+          (* invariant() and invariant(false, ...) are treated like throw *)
+          | (None, (_, { Ast.Expression.ArgList.arguments = []; comments = _ })) ->
+            this#raise_abrupt_completion AbruptCompletion.throw
+          | ( None,
+              ( _,
+                {
+                  Ast.Expression.ArgList.arguments =
+                    Ast.Expression.Expression
+                      ( _,
+                        Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Boolean false; _ }
+                      )
+                    :: other_args;
+                  comments = _;
+                } ) ) ->
+            let _ = List.map this#expression_or_spread other_args in
+            this#raise_abrupt_completion AbruptCompletion.throw
+          | ( None,
+              ( _,
+                {
+                  Ast.Expression.ArgList.arguments = Ast.Expression.Expression cond :: other_args;
+                  comments = _;
+                } ) ) ->
+            this#push_refinement_scope SMap.empty;
+            ignore @@ this#expression_refinement cond;
+            let _ = List.map this#expression_or_spread other_args in
+            this#pop_refinement_scope_invariant ()
+          | ( _,
+              (_, { Ast.Expression.ArgList.arguments = Ast.Expression.Spread _ :: _; comments = _ })
+            ) ->
+            error_todo
+          | (Some _, _) -> error_todo
+        else
+          this#havoc_current_ssa_env ~all:false;
         expr
 
       method! new_ _loc (expr : (L.t, L.t) Ast.Expression.New.t) =
@@ -1554,6 +1673,12 @@ module Make
         |> SMap.iter (fun name latest_refinement ->
                let { val_ref; _ } = SMap.find name env_state.ssa_env in
                val_ref := Val.unrefine_deeply latest_refinement.refinement_id !val_ref)
+
+      (* Invariant refinement scopes can be popped, but the refinement should continue living on.
+       * To model that, we pop the refinement scope but do not unrefine the refinements. The
+       * refinements live on in the Refinement writes in the ssa_env. *)
+      method private pop_refinement_scope_invariant () =
+        env_state <- { env_state with latest_refinements = List.tl env_state.latest_refinements }
 
       (* When a refinement scope ends, we need to undo the refinement applied to the
        * variables mentioned in the latest_refinements head. Some of these values may no
@@ -1766,8 +1891,8 @@ module Make
             (* Optional chaining with ==/=== null can be tricky. If the value before ? is
              * null or undefined then the entire chain evaluates to undefined. That leaves us
              * with these cases:
-             * a?.b === null THEN a non-maybe and a.b null ELSE a maybe or a.b non-null 
-             * a?.b == null THEN no refinement ELSE a non maybe and a.b non-null 
+             * a?.b === null THEN a non-maybe and a.b null ELSE a maybe or a.b non-null
+             * a?.b == null THEN no refinement ELSE a non maybe and a.b non-null
              * TODO: figure out how to model the negation of an optional chain refinement without
              * introducing a second mapping for the negation of refinements.
              *)
@@ -1865,14 +1990,14 @@ module Make
               {
                 Expression.Member._object;
                 property =
-                  ( Expression.Member.PropertyIdentifier (_, { Identifier.name = prop_name; _ })
+                  ( Expression.Member.PropertyIdentifier (ploc, { Identifier.name = prop_name; _ })
                   | Expression.Member.PropertyExpression
-                      (_, Expression.Literal { Literal.value = Literal.String prop_name; _ }) );
+                      (ploc, Expression.Literal { Literal.value = Literal.String prop_name; _ }) );
                 _;
               } ) ->
           (match key _object with
           | Some name ->
-            let refinement = SentinelR prop_name in
+            let refinement = SentinelR (prop_name, ploc) in
             let refinement =
               if sense then
                 refinement
@@ -1998,14 +2123,12 @@ module Make
         | (expr, (_, Expression.Literal { Literal.value = Literal.Null; _ })) ->
           this#null_test ~sense ~strict loc expr
         (* expr op undefined *)
-        | ( ( ( _,
-                Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ })
-              ) as undefined ),
+        | ( ((_, Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ }))
+            as undefined),
             expr )
         | ( expr,
-            ( ( _,
-                Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ })
-              ) as undefined ) ) ->
+            ((_, Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ }))
+            as undefined) ) ->
           ignore @@ this#expression undefined;
           this#void_test ~sense ~strict ~check_for_bound_undefined:true loc expr
         (* expr op void(...) *)
@@ -2220,7 +2343,7 @@ module Make
   let program_with_scope ?(ignore_toplevel = false) program =
     let open Hoister in
     let (loc, _) = program in
-    let ((scopes, ssa_values) as prepass) =
+    let (_ssa_completion_state, ((scopes, ssa_values) as prepass)) =
       Ssa_builder.program_with_scope ~ignore_toplevel program
     in
     let providers = Provider_api.find_providers program in
@@ -2232,17 +2355,23 @@ module Make
         let hoist = new hoister ~with_types:true in
         hoist#eval hoist#program program
     in
-    ignore @@ ssa_walk#with_bindings loc bindings ssa_walk#program program;
-    {
-      scopes;
-      ssa_values;
-      env_values = ssa_walk#values;
-      providers;
-      refinement_of_id = ssa_walk#refinement_of_id;
-    }
+    let completion_state =
+      ssa_walk#run_to_completion (fun () ->
+          ignore @@ ssa_walk#with_bindings loc bindings ssa_walk#program program)
+    in
+    ( completion_state,
+      {
+        scopes;
+        ssa_values;
+        env_values = ssa_walk#values;
+        providers;
+        refinement_of_id = ssa_walk#refinement_of_id;
+      } )
 
   let program program =
-    let { env_values; refinement_of_id; _ } = program_with_scope ~ignore_toplevel:false program in
+    let (_, { env_values; refinement_of_id; _ }) =
+      program_with_scope ~ignore_toplevel:false program
+    in
     (env_values, refinement_of_id)
 
   let rec refinement_ids_of_ssa_write acc = function
@@ -2270,6 +2399,7 @@ module Make
     L.LSet.fold (fun k acc -> L.LMap.add k (sources_of_use info k) acc) keys L.LMap.empty
 end
 
-module With_Loc = Make (Loc_sig.LocS) (Ssa_api.With_Loc) (Scope_api.With_Loc)
-module With_ALoc = Make (Loc_sig.ALocS) (Ssa_api.With_ALoc) (Scope_api.With_ALoc)
+module With_Loc = Make (Loc_sig.LocS) (Ssa_api.With_Loc) (Scope_api.With_Loc) (Env_api.With_Loc)
+module With_ALoc =
+  Make (Loc_sig.ALocS) (Ssa_api.With_ALoc) (Scope_api.With_ALoc) (Env_api.With_ALoc)
 include With_ALoc

@@ -229,6 +229,8 @@ The main difference with [`$Diff<A, B>`](#toc-diff), is that `$Rest<A, B>` aims 
 
 ## `$PropertyType<T, k>` <a class="toc" id="toc-propertytype" href="#toc-propertytype"></a>
 
+**WARNING:** `$PropertyType` is deprecated as of Flow version 0.155, and will be removed in a future version of Flow. Use [Indexed Access Types](../indexed-access) instead. `$PropertyType<T, 'k'>` is now `T['k']`.
+
 A `$PropertyType<T, k>` is the type at a given key `k`. As of Flow v0.36.0, `k` must be a literal string.
 
 ```js
@@ -293,6 +295,8 @@ const someBadID: ID = true;
 ```
 
 ## `$ElementType<T, K>` <a class="toc" id="toc-elementtype" href="#toc-elementtype"></a>
+
+**WARNING:** `$ElementType` is deprecated as of Flow version 0.155, and will be removed in a future version of Flow. Use [Indexed Access Types](../indexed-access) instead. `$ElementType<T, K>` is now `T[K]`.
 
 `$ElementType<T, K>` is the type that represents the type of every element inside an [array](../arrays), [tuple](../tuples) or [object](../objects) type `T`, that matches the given *key* type `K`.
 

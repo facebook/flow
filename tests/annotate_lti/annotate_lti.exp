@@ -1,0 +1,127 @@
+>>> arrow.js (#changes: 5)
+// @flow
+
+const f = (x: number) => x;
+f(1)
+
+const f2 = (x: number, y: string) => x;
+f2(1, 'test')
+
+const ret_val = (x: number): number => x;
+
+const callback = (e: number) => e + 1;
+[1, 2, 3].map(callback);
+
+// Should be ignored
+[1, 2, 3].map(e => e + 1);
+
+
+>>> class.js (#changes: 2)
+// @flow
+
+class A {
+
+  aMethod(x: number) {
+    return x + 1;
+  }
+
+  arrow = (x: boolean) => x ? 0 : 1;
+}
+
+const a = new A();
+a.aMethod(2);
+a.arrow(true);
+
+
+
+>>> function.js (#changes: 11)
+// @flow
+
+function f(x: number) {
+  return x;
+}
+f(1);
+
+function f2(x: number, y: string) {
+  return x == 1 ? y : null;
+}
+f2(1, 'test');
+
+function internal_annot(x: string) {
+  return (x: string);
+}
+
+function unknown(x: any) {
+  return x;
+}
+
+function with_default(x: number=1) {
+  return x;
+}
+
+function skip(x: number) {
+  return x;
+}
+
+const f_expr = function fn_expr(x: string) {
+  return (x: string);
+}
+
+// Causes a "Location unhandled" warning
+function rest(x: number, ...args) {
+  return x;
+}
+rest(1, 2, 3, 4);
+
+function obj({num}: {| num: number |}) {
+  return num;
+}
+obj({num: 1});
+
+function arr([num, ...rest]: Array<number>) {
+  return num;
+}
+arr([1, 2, 3, 4]);
+
+function default_arr_ok([num=0]: Array<number>) {
+  return 1;
+}
+default_arr_ok([1, 2, 3, 4]);
+
+// This seems very rare. Causes a "Validation Error"
+function default_arr_err([num=0]) {
+  return 1;
+}
+
+// This seems very rare. Causes a "Validation Error"
+function default_obj_err({x: y=1}) {
+  return 1;
+}
+
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            3
+  Number of annotations added:             18
+  Total size of annotations:               28
+  Number of LTI errors:                    21
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         2
+  Import Error:
+    Loc source none:                        0
+    Parsing heaps get ast error:            0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       1
+  Empty NoUpper:                            1
+  Empty SomeKnownUpper:                     7
+

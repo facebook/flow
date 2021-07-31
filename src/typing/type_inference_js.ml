@@ -49,21 +49,23 @@ let scan_for_error_suppressions cx =
   (* If multiple comments are stacked together, we join them into a codeset positioned on the
      location of the last comment *)
   Base.List.fold_left
-    ~f:(fun acc -> function
-      | (({ Loc.start = { Loc.line; _ }; _ } as loc), { Ast.Comment.text; _ }) ->
-        begin
-          match (should_suppress text loc, acc) with
-          | (Ok (Some (Specific _ as codes)), Some (prev_loc, (Specific _ as prev_codes)))
-            when line = prev_loc.Loc._end.Loc.line + 1 ->
-            Some ({ prev_loc with Loc._end = loc.Loc._end }, join_applicable_codes codes prev_codes)
-          | (Ok codes, _) ->
-            Base.Option.iter ~f:(Context.add_error_suppression cx |> uncurry) acc;
-            Base.Option.map codes ~f:(mk_tuple loc)
-          | (Error (), _) ->
-            Flow_js.add_output cx Error_message.(EMalformedCode (ALoc.of_loc loc));
-            Base.Option.iter ~f:(Context.add_error_suppression cx |> uncurry) acc;
-            None
-        end)
+    ~f:
+      (fun acc -> function
+        | (({ Loc.start = { Loc.line; _ }; _ } as loc), { Ast.Comment.text; _ }) ->
+          begin
+            match (should_suppress text loc, acc) with
+            | (Ok (Some (Specific _ as codes)), Some (prev_loc, (Specific _ as prev_codes)))
+              when line = prev_loc.Loc._end.Loc.line + 1 ->
+              Some
+                ({ prev_loc with Loc._end = loc.Loc._end }, join_applicable_codes codes prev_codes)
+            | (Ok codes, _) ->
+              Base.Option.iter ~f:(Context.add_error_suppression cx |> uncurry) acc;
+              Base.Option.map codes ~f:(mk_tuple loc)
+            | (Error (), _) ->
+              Flow_js.add_output cx Error_message.(EMalformedCode (ALoc.of_loc loc));
+              Base.Option.iter ~f:(Context.add_error_suppression cx |> uncurry) acc;
+              None
+          end)
     ~init:None
   %> Base.Option.iter ~f:(Context.add_error_suppression cx |> uncurry)
 
@@ -401,10 +403,8 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
   in
 
   let module_ref = Context.module_ref cx in
-  begin
-    try Context.set_use_def cx @@ Env_builder.program_with_scope aloc_ast
-    with Env_builder.AbruptCompletionExn _ -> ()
-  end;
+  let (_, use_def) = Env_builder.program_with_scope aloc_ast in
+  Context.set_use_def cx use_def;
 
   let reason_exports_module =
     let desc = Reason.RModule module_ref in
@@ -472,8 +472,8 @@ let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
   ignore (infer_core cx aloc_statements : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t list);
   scan_for_suppressions cx lint_severities all_comments;
 
-  ( module_scope
+  (module_scope
   |> Scope.(
-       iter_entries Entry.((fun name entry -> Flow_js.set_builtin cx name (actual_type entry)))) );
+       iter_entries Entry.((fun name entry -> Flow_js.set_builtin cx name (actual_type entry)))));
 
   NameUtils.Map.keys Scope.(module_scope.entries)

@@ -1767,8 +1767,8 @@ and add_interface_properties cx ~this tparams_map properties s =
                 Indexer (loc, { indexer with Indexer.key; value }) :: rev_prop_asts )
             | Property
                 ( loc,
-                  ( { Property.key; value; static; proto; optional; _method; variance; comments = _ }
-                  as prop ) ) ->
+                  ({ Property.key; value; static; proto; optional; _method; variance; comments = _ }
+                  as prop) ) ->
               if optional && _method then
                 Flow.add_output cx Error_message.(EInternal (loc, OptionalMethod));
               let polarity = polarity variance in

@@ -14,7 +14,8 @@ module String_utils = struct
     try
       let long = String.sub long 0 (String.length short) in
       long = short
-    with Invalid_argument _ -> false
+    with
+    | Invalid_argument _ -> false
 
   let strip_prefix prefix str =
     let prefix_length = String.length prefix in
@@ -43,11 +44,11 @@ end = struct
     Sys.os_type <> "Win32" && Unix.isatty Unix.stdout && Sys.getenv "TERM" <> "dumb"
 
   let print to_print =
-    ( if should_color then
+    (if should_color then
       C.cprint to_print
     else
       let strings = Base.List.map ~f:snd to_print in
-      List.iter (Printf.printf "%s") strings );
+      List.iter (Printf.printf "%s") strings);
     flush stdout
 
   type case_expectation =
@@ -99,13 +100,15 @@ end = struct
     | Prop p :: rest -> spf "%s.%s" (string_of_path rest) p
     | Index i :: rest -> spf "%s[%s]" (string_of_path rest) (string_of_int i)
 
-  let find_case name map = (try SMap.find name map with Not_found -> empty_case)
+  let find_case name map =
+    try SMap.find name map with
+    | Not_found -> empty_case
 
   let parse_options content =
     Base.Result.(
       let get_bool k v =
-        try return (Hh_json.get_bool_exn v)
-        with Assert_failure _ -> failf "invalid value for %S, expected bool" k
+        try return (Hh_json.get_bool_exn v) with
+        | Assert_failure _ -> failf "invalid value for %S, expected bool" k
       in
       return (Hh_json.json_of_string content) >>= fun json ->
       begin
@@ -554,7 +557,8 @@ end = struct
             try
               let (expected, json_errors) = Parser_flow.json_file ~fail:false tree None in
               (Some expected, json_errors)
-            with Parse_error.Error errs -> (None, errs)
+            with
+            | Parse_error.Error errs -> (None, errs)
           in
           (match parse_result with
           | (_, (loc, err) :: _) ->

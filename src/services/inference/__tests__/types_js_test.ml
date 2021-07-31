@@ -72,6 +72,7 @@ let dummy_options_flags =
     verbose = None;
     wait_for_recheck = None;
     weak = false;
+    new_env = false;
     include_suppressions = false;
   }
 

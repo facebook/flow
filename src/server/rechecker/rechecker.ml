@@ -164,7 +164,8 @@ let run_but_cancel_on_file_changes ~options env ~get_forced ~f ~pre_cancel ~post
     let%lwt ret = run_thread in
     Lwt.cancel cancel_thread;
     Lwt.return ret
-  with Lwt.Canceled ->
+  with
+  | Lwt.Canceled ->
     Lwt.cancel cancel_thread;
     post_cancel ()
 
@@ -266,7 +267,8 @@ let rec recheck_single
               ~recheck_reasons
               ~will_be_checked_files
               files_to_recheck
-          with exn ->
+          with
+          | exn ->
             let exn = Exception.wrap exn in
             let%lwt () = stop_parallelizable_workloads () in
             Exception.reraise exn

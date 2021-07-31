@@ -10,7 +10,6 @@
  * An Ocaml implementation of the SpiderMonkey Parser API
  * https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API
  *)
-
 module rec Syntax : sig
   type ('M, 'internal) t = {
     leading: 'M Comment.t list;

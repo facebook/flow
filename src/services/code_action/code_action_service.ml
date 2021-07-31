@@ -7,6 +7,12 @@
 
 open Types_js_types
 
+let include_quick_fixes only =
+  Base.Option.value_map ~default:true ~f:Lsp.CodeActionKind.(contains_kind quickfix) only
+
+let include_refactors only =
+  Base.Option.value_map ~default:true ~f:Lsp.CodeActionKind.(contains_kind refactor) only
+
 let layout_options options =
   Js_layout_generator.
     {
@@ -43,47 +49,61 @@ let autofix_exports_code_actions
   else
     []
 
-let refactor_extract_code_actions ~options ~ast ~full_cx ~file_sig ~typed_ast ~reader uri loc =
-  if Options.refactor options then
-    match loc.Loc.source with
-    | None -> []
-    | Some file ->
-      let lsp_action_from_refactor { Refactor_extract.title; new_ast; added_imports } =
-        let diff = Insert_type.mk_diff ast new_ast in
-        let opts = layout_options options in
-        let edits =
-          Autofix_imports.add_imports ~options:opts ~added_imports ast
-          @ Replacement_printer.mk_loc_patch_ast_differ ~opts diff
-          |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+let refactor_extract_code_actions
+    ~options
+    ~support_experimental_snippet_text_edit
+    ~ast
+    ~full_cx
+    ~file_sig
+    ~typed_ast
+    ~reader
+    ~only
+    uri
+    loc =
+  if Options.refactor options && include_refactors only then
+    if Loc.(loc.start = loc._end) then
+      []
+    else
+      match loc.Loc.source with
+      | None -> []
+      | Some file ->
+        let lsp_action_from_refactor { Refactor_extract.title; new_ast; added_imports } =
+          let diff = Insert_type.mk_diff ast new_ast in
+          let opts = layout_options options in
+          let edits =
+            Autofix_imports.add_imports ~options:opts ~added_imports ast
+            @ Replacement_printer.mk_loc_patch_ast_differ ~opts diff
+            |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+          in
+          let diagnostic_title = "refactor_extract" in
+          let open Lsp in
+          CodeAction.Action
+            {
+              CodeAction.title;
+              kind = CodeActionKind.refactor_extract;
+              diagnostics = [];
+              action =
+                CodeAction.BothEditThenCommand
+                  ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                    {
+                      Command.title = "";
+                      command = Command.Command "log";
+                      arguments =
+                        ["textDocument/codeAction"; diagnostic_title; title]
+                        |> List.map (fun str -> Hh_json.JSON_String str);
+                    } );
+            }
         in
-        let diagnostic_title = "refactor_extract" in
-        let open Lsp in
-        CodeAction.Action
-          {
-            CodeAction.title;
-            kind = CodeActionKind.refactor_extract;
-            diagnostics = [];
-            action =
-              CodeAction.BothEditThenCommand
-                ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
-                  {
-                    Command.title = "";
-                    command = Command.Command "log";
-                    arguments =
-                      ["textDocument/codeAction"; diagnostic_title; title]
-                      |> List.map (fun str -> Hh_json.JSON_String str);
-                  } );
-          }
-      in
-      Refactor_extract.provide_available_refactors
-        ~ast
-        ~full_cx
-        ~file
-        ~file_sig:(File_sig.abstractify_locs file_sig)
-        ~typed_ast
-        ~reader
-        ~extract_range:loc
-      |> List.map lsp_action_from_refactor
+        Refactor_extract.provide_available_refactors
+          ~ast
+          ~full_cx
+          ~file
+          ~file_sig:(File_sig.abstractify_locs file_sig)
+          ~typed_ast
+          ~reader
+          ~support_experimental_snippet_text_edit
+          ~extract_range:loc
+        |> List.map lsp_action_from_refactor
   else
     []
 
@@ -403,7 +423,8 @@ let ast_transform_of_error ?loc = function
       | _ -> None)
     | _ -> None)
 
-let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri loc =
+let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors ~only uri loc =
+  let include_quick_fixes = include_quick_fixes only in
   Flow_error.ErrorSet.fold
     (fun error actions ->
       match
@@ -413,7 +434,7 @@ let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri l
       | Error_message.EBuiltinLookupFailed { reason; name = Some name }
         when Options.autoimports options ->
         let error_loc = Reason.loc_of_reason reason in
-        if Loc.intersects error_loc loc then
+        if include_quick_fixes && Loc.intersects error_loc loc then
           let { ServerEnv.exports; _ } = env in
           suggest_imports
             ~options
@@ -428,20 +449,23 @@ let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri l
         else
           actions
       | error_message ->
-        (match ast_transform_of_error ~loc error_message with
-        | None -> actions
-        | Some { title; diagnostic_title; transform; target_loc } ->
-          autofix_in_upstream_file
-            ~reader
-            ~diagnostics
-            ~ast
-            ~options
-            ~title
-            ~diagnostic_title
-            ~transform
-            uri
-            target_loc
-          :: actions))
+        if include_quick_fixes then
+          match ast_transform_of_error ~loc error_message with
+          | None -> actions
+          | Some { title; diagnostic_title; transform; target_loc } ->
+            autofix_in_upstream_file
+              ~reader
+              ~diagnostics
+              ~ast
+              ~options
+              ~title
+              ~diagnostic_title
+              ~transform
+              uri
+              target_loc
+            :: actions
+        else
+          actions)
     errors
     []
 
@@ -481,14 +505,25 @@ let code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors =
     ~init:[]
     parse_errors
 
-(** currently all of our code actions are quickfixes, so we can short circuit if the client
-    doesn't support those. *)
-let client_supports_quickfixes params =
-  let Lsp.CodeActionRequest.{ context = { only; _ }; _ } = params in
-  Lsp.CodeActionKind.contains_kind_opt ~default:true Lsp.CodeActionKind.quickfix only
+(** List of code actions we implement. *)
+let supported_code_actions options =
+  let actions = [Lsp.CodeActionKind.quickfix] in
+  if Options.refactor options then
+    Lsp.CodeActionKind.refactor_extract :: actions
+  else
+    actions
+
+(** Determines if at least one of the kinds in [only] is supported. *)
+let kind_is_supported ~options only =
+  match only with
+  | None -> true
+  | Some only ->
+    let supported = supported_code_actions options in
+    Base.List.exists ~f:(fun kind -> Lsp.CodeActionKind.contains_kind kind supported) only
 
 let code_actions_at_loc
     ~options
+    ~lsp_init_params
     ~env
     ~reader
     ~cx
@@ -498,6 +533,7 @@ let code_actions_at_loc
     ~typed_ast
     ~parse_errors
     ~diagnostics
+    ~only
     ~uri
     ~loc =
   let experimental_code_actions =
@@ -511,7 +547,18 @@ let code_actions_at_loc
       ~diagnostics
       uri
       loc
-    @ refactor_extract_code_actions ~options ~ast ~full_cx:cx ~file_sig ~typed_ast ~reader uri loc
+    @ refactor_extract_code_actions
+        ~options
+        ~support_experimental_snippet_text_edit:
+          (Lsp_helpers.supports_experimental_snippet_text_edit lsp_init_params)
+        ~ast
+        ~full_cx:cx
+        ~file_sig
+        ~typed_ast
+        ~reader
+        ~only
+        uri
+        loc
   in
   let error_fixes =
     code_actions_of_errors
@@ -521,6 +568,7 @@ let code_actions_at_loc
       ~ast
       ~diagnostics
       ~errors:(Context.errors cx)
+      ~only
       uri
       loc
   in
@@ -592,7 +640,8 @@ let insert_type
         in
         let opts = layout_options options in
         Ok (mk_patch ~opts ast new_ast file_content)
-      with FailedToInsertType err -> Error (error_to_string err)
+      with
+      | FailedToInsertType err -> Error (error_to_string err)
     in
     Lwt.return result
   | Error _ as result ->

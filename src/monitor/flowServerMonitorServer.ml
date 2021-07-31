@@ -135,8 +135,8 @@ end = struct
       | Some (_, client) ->
         let msg = MonitorProt.Data response in
         begin
-          try EphemeralConnection.write_and_close ~msg client
-          with Lwt_stream.Closed ->
+          try EphemeralConnection.write_and_close ~msg client with
+          | Lwt_stream.Closed ->
             Logger.debug "Client for request '%s' is dead. Throwing away response" request_id
         end;
         Lwt.return_unit)
@@ -150,8 +150,8 @@ end = struct
       | Some (_, client) ->
         let msg = MonitorProt.ServerException exn_str in
         begin
-          try EphemeralConnection.write_and_close ~msg client
-          with Lwt_stream.Closed ->
+          try EphemeralConnection.write_and_close ~msg client with
+          | Lwt_stream.Closed ->
             Logger.debug "Client for request '%s' is dead. Throwing away response" request_id
         end;
         Lwt.return_unit)
@@ -180,10 +180,10 @@ end = struct
         Logger.info
           "File watcher reported %d file%s changed"
           count
-          ( if count = 1 then
+          (if count = 1 then
             ""
           else
-            "s" );
+            "s");
         send_request ~msg:(MonitorProt.FileWatcherNotification { files; metadata; initial }) conn
       );
       Lwt.return_unit
@@ -257,7 +257,8 @@ end = struct
       try
         let msg = MonitorProt.(PleaseDie (MonitorExiting (exit_status, exit_msg))) in
         ServerConnection.write ~msg connection
-      with Lwt_stream.Closed ->
+      with
+      | Lwt_stream.Closed ->
         (* Connection to the server has already closed. The server is likely already dead *)
         ()
     in
@@ -277,7 +278,10 @@ end = struct
       let still_alive =
         match server_status with
         | Some (Unix.WEXITED exit_status) ->
-          let exit_type = (try Some (Exit.error_type exit_status) with Not_found -> None) in
+          let exit_type =
+            try Some (Exit.error_type exit_status) with
+            | Not_found -> None
+          in
           begin
             if exit_type = Some Exit.Killed_by_monitor then
               Logger.info "Successfully killed the server process"
@@ -310,7 +314,8 @@ end = struct
       if still_alive then Unix.kill pid Sys.sigkill;
 
       Lwt.return_unit
-    with Unix.Unix_error (Unix.ECHILD, _, _) ->
+    with
+    | Unix.Unix_error (Unix.ECHILD, _, _) ->
       Logger.info "Server process has already exited. No need to kill it";
       Lwt.return_unit
 
@@ -346,8 +351,8 @@ end = struct
       or closed. So a closed Lwt_unix.file_descr won't resurrect.
    *)
   let close_if_open (fd : Lwt_unix.file_descr) =
-    try Lwt_unix.close fd (* If it's already closed, we'll get EBADF *)
-    with Unix.Unix_error (Unix.EBADF, _, _) -> Lwt.return_unit
+    try Lwt_unix.close fd (* If it's already closed, we'll get EBADF *) with
+    | Unix.Unix_error (Unix.EBADF, _, _) -> Lwt.return_unit
 
   let server_num = ref 0
 
@@ -575,12 +580,20 @@ module KeepAliveLoop = LwtLoop.Make (struct
     let pid = ServerInstance.pid_of server in
     let%lwt (_, status) = LwtSysUtils.blocking_waitpid pid in
     let%lwt () = ServerInstance.cleanup server in
-    if Sys.unix && (try Sys_utils.check_dmesg_for_oom pid "flow" with _ -> false) then
+    if
+      Sys.unix
+      &&
+      try Sys_utils.check_dmesg_for_oom pid "flow" with
+      | _ -> false
+    then
       FlowEventLogger.murdered_by_oom_killer ();
 
     match status with
     | Unix.WEXITED exit_status ->
-      let exit_type = (try Some (Exit.error_type exit_status) with Not_found -> None) in
+      let exit_type =
+        try Some (Exit.error_type exit_status) with
+        | Not_found -> None
+      in
       let exit_status_string =
         Base.Option.value_map ~default:"Invalid_exit_code" ~f:Exit.to_string exit_type
       in
@@ -605,7 +618,8 @@ module KeepAliveLoop = LwtLoop.Make (struct
               PersistentConnection.write
                 ~msg:LspProt.(NotificationFromServer (ServerExit exit_type))
                 conn
-            with _ -> ()
+            with
+            | _ -> ()
           in
           PersistentConnectionMap.get_all_clients () |> List.iter send_close;
 
@@ -684,8 +698,8 @@ let setup_signal_handlers =
         exit ~msg:(spf "Received %s signal" (PrintSignal.string_of_signal signal)) Exit.Interrupted)
   in
   let set_signal s =
-    try Sys_utils.set_signal s (Sys.Signal_handle handle_signal)
-    with exn ->
+    try Sys_utils.set_signal s (Sys.Signal_handle handle_signal) with
+    | exn ->
       Logger.error ~exn "Failed to install signal handler for %s" (PrintSignal.string_of_signal s)
   in
   (fun () -> List.iter set_signal signals)

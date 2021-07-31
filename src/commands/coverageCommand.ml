@@ -35,15 +35,15 @@ let spec =
              "--color"
              no_arg
              ~doc:
-               ( "Print the file with colors showing which parts have unknown types "
+               ("Print the file with colors showing which parts have unknown types "
                ^ "(blue for 'empty' and red for 'any'). "
-               ^ "Cannot be used with --json or --pretty" )
+               ^ "Cannot be used with --json or --pretty")
         |> flag
              "--debug"
              no_arg
              ~doc:
-               ( "Print debugging info about each range in the file to stderr. "
-               ^ "Cannot be used with --json or --pretty" )
+               ("Print debugging info about each range in the file to stderr. "
+               ^ "Cannot be used with --json or --pretty")
         |> path_flag
         |> flag "--respect-pragma" no_arg ~doc:"" (* deprecated *)
         |> flag "--all" no_arg ~doc:"Ignore absence of @flow pragma"
@@ -246,7 +246,7 @@ let handle_response
         [
           ( "expressions",
             JSON_Object
-              ( covered_data
+              (covered_data
               @ [
                   ("uncovered_count", int_ (total - covered));
                   ( "uncovered_locs",
@@ -259,7 +259,7 @@ let handle_response
                     JSON_Array
                       (Base.List.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) empty_locs)
                   );
-                ] ) );
+                ]) );
         ]
       |> print_json_endline ~pretty)
   else

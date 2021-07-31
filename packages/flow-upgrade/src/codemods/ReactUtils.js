@@ -10,7 +10,13 @@
 
 'use strict';
 
-module.exports = (j: any) => {
+module.exports = (
+  j: any,
+): ({
+  getImportedReactName(path: any): ?string,
+  getImportedComponentClassPattern(path: any): Function | null,
+  hasDestructuredElement(path: any, reactName?: ?string): boolean,
+}) => {
   /**
    * Has this path imported the react module and given a name it a name? If
    * React is imported like:
@@ -153,7 +159,7 @@ module.exports = (j: any) => {
    *
    * At this moment we do not care about generalizing these patterns!
    */
-  function hasDestructuredElement(path: any, reactName?: ?string) {
+  function hasDestructuredElement(path: any, reactName?: ?string): boolean {
     // All of the places where we want to treat as React.
     const REACT_MODULES = new Set(['React', 'react', 'react-native']);
     reactName = reactName || getImportedReactName(path);

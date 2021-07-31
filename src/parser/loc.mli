@@ -52,6 +52,8 @@ val debug_to_string : ?include_source:bool -> t -> string
 (* Relatively compact; suitable for use as a unique string identifier *)
 val to_string_no_source : t -> string
 
+val mk_loc : ?source:File_key.t -> int * int -> int * int -> t
+
 val source : t -> File_key.t option
 
 (** Produces a zero-width Loc.t, where start = end *)

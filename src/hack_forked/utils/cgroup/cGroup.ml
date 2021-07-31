@@ -70,10 +70,10 @@ let assert_is_using_cgroup_v2 =
       if%lwt Lwt_unix.file_exists cgroup_dir then
         (* /sys/fs/cgroup/memory exists for cgroup v1 but not v2. It's an easy way to tell the
          * difference between versions *)
-          if%lwt Lwt_unix.file_exists (spf "%s/memory" cgroup_dir) then
-            Lwt.return_error (spf "cgroup v1 is mounted at %s. We need v2" cgroup_dir)
-          else
-            Lwt.return_ok ()
+        if%lwt Lwt_unix.file_exists (spf "%s/memory" cgroup_dir) then
+          Lwt.return_error (spf "cgroup v1 is mounted at %s. We need v2" cgroup_dir)
+        else
+          Lwt.return_ok ()
       else
         Lwt.return_error (spf "%s doesn't exist" cgroup_dir))
 
@@ -87,7 +87,6 @@ type stats = {
   (* The total physical memory for the cgroup *)
   total_swap: int;
   (* The total amount of anonymous memory paged out to swap *)
-
   (* anon, file, and shmem are disjoint. If you add in the memory that the kernel uses, they should
    * sum roughly to `total` *)
   anon: int;
@@ -102,8 +101,8 @@ let read_single_number_file path =
   let%lwt contents_result = cat path in
   Lwt.return
     ( contents_result >>= fun contents ->
-      try Ok (contents |> String.strip |> Int.of_string)
-      with Failure _ -> Error "Failed to parse memory.current" )
+      try Ok (contents |> String.strip |> Int.of_string) with
+      | Failure _ -> Error "Failed to parse memory.current" )
 
 let parse_stat stat_contents =
   let stats =

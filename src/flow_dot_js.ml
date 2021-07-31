@@ -160,6 +160,7 @@ let stub_metadata ~root ~checked =
     enable_enums = true;
     enable_enums_with_unknown_members = true;
     enable_indexed_access = true;
+    enable_new_env = false;
     enforce_local_inference_annotations = false;
     enforce_strict_call_arity = true;
     exact_by_default = false;
@@ -374,8 +375,10 @@ let types_to_json types ~strip_root =
         |> List.map (fun (loc, str) ->
                let json_assoc =
                  ("type", JSON_String str)
-                 :: ("reasons", JSON_Array [])
-                 :: ("loc", json_of_loc ~strip_root ~offset_table:None loc)
+                 ::
+                 ("reasons", JSON_Array [])
+                 ::
+                 ("loc", json_of_loc ~strip_root ~offset_table:None loc)
                  :: Errors.deprecated_json_props_of_loc ~strip_root loc
                in
                JSON_Object json_assoc)

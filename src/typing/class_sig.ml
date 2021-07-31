@@ -131,17 +131,17 @@ module Make (F : Func_sig.S) = struct
         { s with private_fields = SMap.add name (Some loc, polarity, field) s.private_fields })
 
   let public_fields_of_signature ~static s =
-    ( if static then
+    (if static then
       s.static
     else
-      s.instance )
+      s.instance)
       .fields
 
   let private_fields_of_signature ~static s =
-    ( if static then
+    (if static then
       s.static
     else
-      s.instance )
+      s.instance)
       .private_fields
 
   let add_constructor loc fsig ?(set_asts = ignore) ?(set_type = ignore) s =
@@ -163,25 +163,25 @@ module Make (F : Func_sig.S) = struct
           s with
           fields = SMap.add name fld s.fields;
           proto_fields =
-            ( if flat then
+            (if flat then
               SMap.remove name s.proto_fields
             else
-              s.proto_fields );
+              s.proto_fields);
           methods =
-            ( if flat then
+            (if flat then
               SMap.remove name s.methods
             else
-              s.methods );
+              s.methods);
           getters =
-            ( if flat then
+            (if flat then
               SMap.remove name s.getters
             else
-              s.getters );
+              s.getters);
           setters =
-            ( if flat then
+            (if flat then
               SMap.remove name s.setters
             else
-              s.setters );
+              s.setters);
         })
       x
 
@@ -220,10 +220,10 @@ module Make (F : Func_sig.S) = struct
         {
           s with
           fields =
-            ( if flat then
+            (if flat then
               SMap.remove name s.fields
             else
-              s.fields );
+              s.fields);
           proto_fields = SMap.remove name s.proto_fields;
           methods = SMap.add name (Nel.one func_info) s.methods;
           getters = SMap.remove name s.getters;
@@ -243,10 +243,10 @@ module Make (F : Func_sig.S) = struct
         {
           s with
           fields =
-            ( if flat then
+            (if flat then
               SMap.remove name s.fields
             else
-              s.fields );
+              s.fields);
           proto_fields = SMap.remove name s.proto_fields;
           methods =
             (match SMap.find_opt name s.methods with
@@ -268,10 +268,10 @@ module Make (F : Func_sig.S) = struct
         {
           s with
           fields =
-            ( if flat then
+            (if flat then
               SMap.remove name s.fields
             else
-              s.fields );
+              s.fields);
           proto_fields = SMap.remove name s.proto_fields;
           methods = SMap.remove name s.methods;
           getters = SMap.add name func_info s.getters;
@@ -287,10 +287,10 @@ module Make (F : Func_sig.S) = struct
         {
           s with
           fields =
-            ( if flat then
+            (if flat then
               SMap.remove name s.fields
             else
-              s.fields );
+              s.fields);
           proto_fields = SMap.remove name s.proto_fields;
           methods = SMap.remove name s.methods;
           setters = SMap.add name func_info s.setters;
@@ -911,10 +911,10 @@ module Make (F : Func_sig.S) = struct
                 (t, TypeUtil.class_type ~annot_loc t)
               | Implicit { null } ->
                 Type.
-                  ( ( if null then
+                  ( (if null then
                       NullProtoT super_reason
                     else
-                      ObjProtoT super_reason ),
+                      ObjProtoT super_reason),
                     FunProtoT super_reason )
             in
             (this_t, TypeUtil.class_type this_t, super, static_super)
@@ -1006,6 +1006,7 @@ module Make (F : Func_sig.S) = struct
       try
         (new detector)#class_ ALoc.none c |> ignore;
         false
-      with FoundInClass -> true
+      with
+      | FoundInClass -> true
   end
 end

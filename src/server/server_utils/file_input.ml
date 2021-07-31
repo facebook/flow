@@ -26,7 +26,7 @@ let content_of_file_input_unsafe = function
   | FileContent (_, content) -> content
 
 let content_of_file_input file =
-  try Ok (content_of_file_input_unsafe file)
-  with exn ->
+  try Ok (content_of_file_input_unsafe file) with
+  | exn ->
     let exn = Exception.wrap exn in
     Error (Exception.to_string exn)

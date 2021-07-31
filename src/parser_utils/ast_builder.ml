@@ -64,6 +64,13 @@ module Types = struct
   let object_ ?(loc = Loc.none) ?exact ?inexact properties =
     (loc, Ast.Type.Object (Objects.make ?exact ?inexact properties))
 
+  let type_param ?(loc = Loc.none) ?(bound = Flow_ast.Type.Missing Loc.none) ?variance ?default name
+      =
+    (loc, { Ast.Type.TypeParam.name = Identifiers.identifier name; bound; variance; default })
+
+  let type_params ?comments ?(loc = Loc.none) params =
+    (loc, { Ast.Type.TypeParams.params; comments })
+
   let type_args ?comments ?(loc = Loc.none) arguments =
     (loc, { Ast.Type.TypeArgs.arguments; comments })
 
@@ -99,10 +106,10 @@ module Literals = struct
     {
       value = Boolean is_true;
       raw =
-        ( if is_true then
+        (if is_true then
           "true"
         else
-          "false" );
+          "false");
       comments;
     }
 end
@@ -167,6 +174,7 @@ module Functions = struct
   let make
       ~id
       ?params:params_
+      ?tparams
       ?(return = Ast.Type.Missing Loc.none)
       ?(generator = false)
       ?(async = false)
@@ -190,7 +198,7 @@ module Functions = struct
       generator;
       predicate = None;
       return;
-      tparams = None;
+      tparams;
       sig_loc = Loc.none;
       comments = None;
     }
@@ -200,6 +208,19 @@ module Classes = struct
   open Ast.Class
 
   let implements ?targs id = (Loc.none, { Implements.Interface.id; targs })
+
+  let property ?comments ?(annot = Ast.Type.Missing Loc.none) ?(static = false) ?variance ~id value
+      =
+    Body.Property
+      ( Loc.none,
+        {
+          Property.key = Ast.Expression.Object.Property.Identifier (Identifiers.identifier id);
+          value = Ast.Class.Property.Initialized value;
+          annot;
+          static;
+          variance;
+          comments;
+        } )
 
   let method_ ?comments ?(decorators = []) ?(static = false) ~id function_ =
     Body.Method
@@ -253,10 +274,10 @@ module JSXs = struct
     {
       opening_element = (Loc.none, { Opening.name; self_closing; attributes });
       closing_element =
-        ( if self_closing then
+        (if self_closing then
           None
         else
-          Some (Loc.none, { Closing.name }) );
+          Some (Loc.none, { Closing.name }));
       children = (Loc.none, children);
       comments;
     }
@@ -354,6 +375,9 @@ module Statements = struct
   let try_ ?(loc = Loc.none) ?comments ?handler ?finalizer stmts =
     let block = (loc, { Block.body = stmts; comments = None }) in
     (loc, Try { Try.block; handler; finalizer; comments })
+
+  let type_alias ?(loc = Loc.none) ?comments ?tparams ~name right =
+    (loc, TypeAlias { TypeAlias.id = Identifiers.identifier name; tparams; right; comments })
 
   let catch ?(loc = Loc.none) ?comments ?param stmts =
     let body = (loc, { Block.body = stmts; comments = None }) in

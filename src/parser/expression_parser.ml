@@ -480,10 +480,10 @@ module Expression
             (is_unary, right))
           env
       in
-      ( if Peek.token env = T_LESS_THAN then
+      (if Peek.token env = T_LESS_THAN then
         match right with
         | Cover_expr (_, Expression.JSXElement _) -> error env Parse_error.AdjacentJSXElements
-        | _ -> () );
+        | _ -> ());
       match (stack, binary_op env) with
       | ([], None) -> right
       | (_, None) ->
@@ -1081,23 +1081,25 @@ module Expression
       | LEGACY_OCTAL ->
         strict_error env Parse_error.StrictOctalLiteral;
         begin
-          try Int64.to_float (Int64.of_string ("0o" ^ raw))
-          with Failure _ -> failwith ("Invalid legacy octal " ^ raw)
+          try Int64.to_float (Int64.of_string ("0o" ^ raw)) with
+          | Failure _ -> failwith ("Invalid legacy octal " ^ raw)
         end
       | LEGACY_NON_OCTAL ->
         strict_error env Parse_error.StrictNonOctalLiteral;
         begin
-          try float_of_string raw with Failure _ -> failwith ("Invalid number " ^ raw)
+          try float_of_string raw with
+          | Failure _ -> failwith ("Invalid number " ^ raw)
         end
       | BINARY
       | OCTAL ->
         begin
-          try Int64.to_float (Int64.of_string raw)
-          with Failure _ -> failwith ("Invalid binary/octal " ^ raw)
+          try Int64.to_float (Int64.of_string raw) with
+          | Failure _ -> failwith ("Invalid binary/octal " ^ raw)
         end
       | NORMAL ->
         begin
-          try float_of_string raw with Failure _ -> failwith ("Invalid number " ^ raw)
+          try float_of_string raw with
+          | Failure _ -> failwith ("Invalid number " ^ raw)
         end
     in
     Expect.token env (T_NUMBER { kind; raw });
@@ -1120,13 +1122,14 @@ module Expression
       | BIG_OCTAL ->
         let postraw = bigint_strip_n raw in
         begin
-          try Int64.to_float (Int64.of_string postraw)
-          with Failure _ -> failwith ("Invalid bigint binary/octal " ^ postraw)
+          try Int64.to_float (Int64.of_string postraw) with
+          | Failure _ -> failwith ("Invalid bigint binary/octal " ^ postraw)
         end
       | BIG_NORMAL ->
         let postraw = bigint_strip_n raw in
         begin
-          try float_of_string postraw with Failure _ -> failwith ("Invalid bigint " ^ postraw)
+          try float_of_string postraw with
+          | Failure _ -> failwith ("Invalid bigint " ^ postraw)
         end
     in
     Expect.token env (T_BIGINT { kind; raw });

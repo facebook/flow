@@ -1943,7 +1943,6 @@ struct
            out constraints, backtracking if they produce errors (and removing the
            errors produced). This is useful to typecheck union types and
            intersection types: see below. **)
-
         (* NOTE: It is important that any def type that simplifies to a union or
            intersection of other def types be processed before we process unions
            and intersections: otherwise we may get spurious errors. **)
@@ -2216,11 +2215,11 @@ struct
                | PredicateT (NotP (RightP (SentinelProp _, _)), _) ->
                  false
                | _ -> true ->
-          ( if Context.is_verbose cx then
+          (if Context.is_verbose cx then
             match u with
             | UseT (_, UnionT _) -> prerr_endline "UnionT ~> UnionT slow case"
             | UseT (_, IntersectionT _) -> prerr_endline "UnionT ~> IntersectionT slow case"
-            | _ -> () );
+            | _ -> ());
           flow_all_in_union cx trace rep u
         | (_, FilterOptionalT (use_op, u)) -> rec_flow_t cx trace ~use_op (l, u)
         | (_, FilterMaybeT (use_op, u)) -> rec_flow_t cx trace ~use_op (l, u)
@@ -2229,7 +2228,6 @@ struct
            be resolved against intersection LBs as a whole, instead of
            by decomposing the intersection into its parts.
         *)
-
         (* lookup of properties **)
         | ( IntersectionT (_, rep),
             LookupT
@@ -2347,7 +2345,6 @@ struct
         (* All other pairs with an intersection lower bound come here. Before
            further processing, we ensure that the upper bound is concretized. See
            prep_try_intersection for details. **)
-
         (* (After the above preprocessing step, try the branches of the intersection
            in turn, with the goal of selecting the correct branch. This process is
            reused for unions as well. See comments on try_union and
@@ -2655,9 +2652,7 @@ struct
            to be used just as o is allowed to be used. *)
         | (ShapeT (_, o), MakeExactT _) -> rec_flow cx trace (o, u)
         (* Classes/Functions are "inexact" *)
-
         (* LB ~> MakeExactT (_, UB) exactifies LB, then flows result to UB *)
-
         (* exactify incoming LB object type, flow to UB *)
         | (DefT (r, trust, ObjT obj), MakeExactT (_, Upper u)) ->
           let obj_kind =
@@ -2803,7 +2798,6 @@ struct
         (* TODO: it is conceivable that other things (e.g. functions) could also be
            viewed as mixins (e.g. by extracting properties in their prototypes), but
            such enhancements are left as future work. *)
-
         (***************************************)
         (* generic function may be specialized *)
         (***************************************)
@@ -2988,9 +2982,9 @@ struct
               begin
                 match calltype.call_targs with
                 | None ->
-                  ( if not (Speculation.speculating cx) then
+                  (if not (Speculation.speculating cx) then
                     let poly_t = (tparams_loc, ids, t) in
-                    Context.add_implicit_instantiation_call cx l poly_t use_op reason_op calltype );
+                    Context.add_implicit_instantiation_call cx l poly_t use_op reason_op calltype);
                   let t_ =
                     instantiate_poly
                       cx
@@ -3032,9 +3026,9 @@ struct
               in
               rec_flow cx trace (t_, ConstructorT (use_op, reason_op, None, args, tout))
             | ConstructorT (use_op, reason_op, None, args, _) ->
-              ( if not (Speculation.speculating cx) then
+              (if not (Speculation.speculating cx) then
                 let poly_t = (tparams_loc, ids, t) in
-                Context.add_implicit_instantiation_ctor cx l poly_t use_op reason_op args );
+                Context.add_implicit_instantiation_ctor cx l poly_t use_op reason_op args);
               let use_op =
                 match use_op_of_use_t u with
                 | Some use_op -> use_op
@@ -3324,8 +3318,8 @@ struct
             (VoidT.why reason_op |> with_trust bogus_trust, OpenT call_tout)
         | ( CustomFunT
               ( lreason,
-                ( (Compose _ | ReactCreateElement | ReactCloneElement | ReactElementFactory _) as
-                kind ) ),
+                ((Compose _ | ReactCreateElement | ReactCloneElement | ReactElementFactory _) as
+                kind) ),
             CallT (use_op, reason_op, calltype) ) ->
           let {
             call_targs;
@@ -3951,7 +3945,6 @@ struct
               f.m(); // O |-> {y:Y}&P, number >=> Y
 
            **)
-
         (**********************************************************************)
         (* objects can be assigned, i.e., their properties can be set in bulk *)
         (**********************************************************************)
@@ -4282,7 +4275,6 @@ struct
            in some idiomatic special cases, we can; in such cases, we know exactly
            which strings/numbers the keys may be, and thus, we can use precise
            properties and indices to resolve the accesses. *)
-
         (**********************************************************************)
         (* objects/arrays may have their properties/elements written and read *)
         (**********************************************************************)
@@ -4334,7 +4326,8 @@ struct
                     match int_of_string_opt index_string with
                     | Some index ->
                       let value_opt =
-                        (try List.nth_opt ts index with Invalid_argument _ -> None)
+                        try List.nth_opt ts index with
+                        | Invalid_argument _ -> None
                       in
                       begin
                         match value_opt with
@@ -4373,7 +4366,7 @@ struct
               end
             | _ -> (false, value)
           in
-          ( if is_index_restricted && not can_write_tuple then
+          (if is_index_restricted && not can_write_tuple then
             match action with
             (* These are safe to do with tuples and unknown indexes *)
             | ReadElem _
@@ -4386,7 +4379,7 @@ struct
                 | Some _ -> Error_message.ETupleUnsafeWrite { reason; use_op }
                 | None -> Error_message.EROArrayWrite ((reason, reason_tup), use_op)
               in
-              add_output cx ~trace error );
+              add_output cx ~trace error);
 
           perform_elem_action cx trace ~use_op ~restrict_deletes:is_tuple reason arr value action
         | (DefT (_, _, ArrT _), GetPropT (_, reason_op, Named (_, OrdinaryName "constructor"), tout))
@@ -4715,12 +4708,12 @@ struct
             CallT
               ( use_op,
                 reason_op,
-                ( {
-                    call_this_t = func;
-                    call_targs;
-                    call_args_tlist = first_arg :: call_args_tlist;
-                    _;
-                  } as funtype ) ) ) ->
+                ({
+                   call_this_t = func;
+                   call_targs;
+                   call_args_tlist = first_arg :: call_args_tlist;
+                   _;
+                 } as funtype) ) ) ->
           Base.Option.iter call_targs ~f:(fun _ ->
               add_output
                 cx
@@ -7457,7 +7450,7 @@ struct
       action =
     match NameUtils.Map.find_opt x pmap with
     | Some p ->
-      ( if not allow_method_access then
+      (if not allow_method_access then
         match p with
         | Method (_, t) ->
           add_output
@@ -7465,7 +7458,7 @@ struct
             ~trace
             (Error_message.EMethodUnbinding
                { use_op; reason_op = reason_prop; reason_prop = reason_of_t t })
-        | _ -> () );
+        | _ -> ());
       perform_lookup_action
         cx
         trace
@@ -8800,10 +8793,10 @@ struct
     | Unresolved bounds ->
       let constraints =
         Lazy.from_val
-          ( if fully_resolved then
+          (if fully_resolved then
             FullyResolved (use_op, lazy t)
           else
-            Resolved (use_op, t) )
+            Resolved (use_op, t))
       in
       Context.add_tvar cx id (Root { root with constraints });
       edges_and_flows_to_t cx trace ~opt:true (id, bounds) (UseT (use_op, t));
@@ -9010,14 +9003,14 @@ struct
           let upmap = Context.find_props cx uflds in
           NameUtils.Map.merge
             (fun x lp up ->
-              ( if not (is_internal_name x || is_dictionary_exempt x) then
+              (if not (is_internal_name x || is_dictionary_exempt x) then
                 match (lp, up) with
                 | (Some p1, Some p2) -> unify_props cx trace ~use_op x lreason ureason p1 p2
                 | (Some p1, None) ->
                   unify_prop_with_dict cx trace ~use_op x p1 lreason ureason udict
                 | (None, Some p2) ->
                   unify_prop_with_dict cx trace ~use_op x p2 ureason lreason ldict
-                | (None, None) -> () );
+                | (None, None) -> ());
               None)
             lpmap
             upmap
@@ -9258,7 +9251,7 @@ struct
       (* If there is a rest parameter, it will consume all the unused arguments *)
       match rest_param with
       | None ->
-        ( if is_strict && Context.enforce_strict_call_arity cx then
+        (if is_strict && Context.enforce_strict_call_arity cx then
           match unused_arglist with
           | [] -> ()
           | (first_unused_arg, _) :: _ ->
@@ -9267,7 +9260,7 @@ struct
                 def_reason,
                 List.length parlist,
                 use_op )
-            |> add_output cx ~trace );
+            |> add_output cx ~trace);
 
         (* Flow the args and params after we add the EFunctionCallExtraArg error.
          * This improves speculation error reporting. *)
@@ -9893,10 +9886,10 @@ struct
       ?trace
       (aloc_of_reason reason)
       ?desc:
-        ( if use_desc then
+        (if use_desc then
           Some (desc_of_reason ~unwrap:false reason)
         else
-          None )
+          None)
       ?annot_loc:(annot_aloc_of_reason reason)
       t
 
@@ -10205,8 +10198,9 @@ module rec FlowJs : Flow_common.S = struct
   module ObjectKit = Object_kit.Kit (FlowJs)
   module SpeculationKit = Speculation_kit.Make (FlowJs)
   module SubtypingKit = Subtyping_kit.Make (FlowJs)
-  include M__flow (React) (CheckPolarity) (TrustKit) (CustomFun) (ObjectKit) (SpeculationKit)
-            (SubtypingKit)
+  include
+    M__flow (React) (CheckPolarity) (TrustKit) (CustomFun) (ObjectKit) (SpeculationKit)
+      (SubtypingKit)
 
   let widen_obj_type = ObjectKit.widen_obj_type
 end

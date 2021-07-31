@@ -87,18 +87,18 @@ let rec dump_t_ (depth, tvars) cx t =
     spf
       "%s %s(%s%s%s)"
       (string_of_ctor t)
-      ( if not (Context.trust_tracking cx) then
+      (if not (Context.trust_tracking cx) then
         ""
       else
-        Base.Option.value_map ~default:"" ~f:(lookup_trust cx |> string_of_trust_rep) trust )
-      ( if reason then
+        Base.Option.value_map ~default:"" ~f:(lookup_trust cx |> string_of_trust_rep) trust)
+      (if reason then
         spf "%S" (dump_reason cx (reason_of_t t))
       else
-        "" )
-      ( if reason && extra <> "" then
+        "")
+      (if reason && extra <> "" then
         ", "
       else
-        "" )
+        "")
       extra
   in
   let kid = dump_t_ (depth - 1, tvars) cx in
@@ -308,12 +308,12 @@ let rec dump_t_ (depth, tvars) cx t =
       p
         t
         ~extra:
-          ( Context.find_exports cx exports_tmap
+          (Context.find_exports cx exports_tmap
           |> NameUtils.Map.bindings
           |> Base.List.map ~f:(fun (name, (_, t)) ->
                  kid t |> spf "%s: %s" (display_string_of_name name))
           |> String.concat ", "
-          |> spf "[%s]" )
+          |> spf "[%s]")
     | InternalT (ExtendsT (_, l, u)) -> p ~extra:(spf "%s, %s" (kid l) (kid u)) t
     | CustomFunT (_, kind) -> p ~extra:(custom_fun kind) t
     | InternalT (ChoiceKitT _) -> p t
@@ -347,14 +347,14 @@ and dump_use_t_ (depth, tvars) cx t =
     spf
       "%s (%s%s%s)"
       (string_of_use_ctor use_t)
-      ( if reason then
+      (if reason then
         spf "%S" (dump_reason cx (reason_of_use_t use_t))
       else
-        "" )
-      ( if reason && extra <> "" then
+        "")
+      (if reason && extra <> "" then
         ", "
       else
-        "" )
+        "")
       extra
   in
   let kid t = dump_t_ (depth - 1, tvars) cx t in
@@ -646,10 +646,10 @@ and dump_use_t_ (depth, tvars) cx t =
       spf
         "UseT (%s, %s%s)"
         (string_of_use_op use_op)
-        ( if Context.trust_tracking cx then
+        (if Context.trust_tracking cx then
           string_of_trust_rep (lookup_trust cx) trust
         else
-          "" )
+          "")
         (kid t)
     | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
     | AdderT (use_op, _, _, x, y) ->
@@ -937,7 +937,8 @@ and dump_tvar_ (depth, tvars) cx id =
                        (fun (use_t, _) _ acc -> dump_use_t_ (depth - 1, stack) cx use_t :: acc)
                        upper
                        [])))
-      with Union_find.Tvar_not_found _ -> spf "Not Found: %d" id)
+      with
+      | Union_find.Tvar_not_found _ -> spf "Not Found: %d" id)
 
 and dump_prop_ (depth, tvars) cx p =
   let kid t = dump_t_ (depth, tvars) cx t in
@@ -1451,8 +1452,6 @@ let dump_error_message =
             "PropertyFunctionCallBeforeEverythingInitialized"
           | ThisBeforeEverythingInitialized -> "ThisBeforeEverythingInitialized")
     | EExperimentalEnums loc -> spf "EExperimentalEnums (%s)" (string_of_aloc loc)
-    | EExperimentalEnumsWithUnknownMembers loc ->
-      spf "EExperimentalEnumsWithUnknownMembers (%s)" (string_of_aloc loc)
     | EIndexedAccessNotEnabled loc -> spf "EIndexedAccessNotEnabled (%s)" (string_of_aloc loc)
     | EIndeterminateModuleType loc -> spf "EIndeterminateModuleType (%s)" (string_of_aloc loc)
     | EBadExportPosition loc -> spf "EBadExportPosition (%s)" (string_of_aloc loc)

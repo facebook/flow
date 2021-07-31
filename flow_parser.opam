@@ -1,6 +1,6 @@
 opam-version: "2.0"
 name: "flow_parser"
-version: "0.155.0"
+version: "0.156.0"
 maintainer: "flow@fb.com"
 authors: ["Flow Team <flow@fb.com>"]
 homepage: "https://github.com/facebook/flow/tree/master/src/parser"
@@ -10,7 +10,7 @@ license: "MIT"
 build: [ make "-C" "src/parser" "build-parser" ]
 install: [ make "-C" "src/parser" "ocamlfind-install"]
 depends: [
-  "ocaml" {>= "4.09.1"}
+  "ocaml" {>= "4.10.2"}
   "ocamlfind" {build}
   "ocamlbuild" {build}
   "ppx_deriving" {build}

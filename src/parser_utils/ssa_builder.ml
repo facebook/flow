@@ -7,7 +7,7 @@
 
 (* This module is responsible for building a mapping from variable reads to the
  * writes those reads. This is used in type checking to determine if a variable is
- * const-like, but the env_builder is used to build the type checking envrionment. 
+ * const-like, but the env_builder is used to build the type checking envrionment.
  * The env_builder copied much of the implementation here, but with sufficient divergence
  * to warrant forking the implementation.
  * If you're here to add support for a new syntax feature, you'll likely
@@ -373,7 +373,8 @@ struct
         try
           f ();
           None
-        with AbruptCompletion.Exn abrupt_completion -> Some abrupt_completion
+        with
+        | AbruptCompletion.Exn abrupt_completion -> Some abrupt_completion
 
       method from_completion =
         function
@@ -929,11 +930,8 @@ struct
       (*   [ENVi+1 | ENVi'] si+1 [ENVi+1']                       *)
       (* POST = ENVN | ENVN'                                     *)
       (***********************************************************)
-      method! switch _loc (switch : (L.t, L.t) Ast.Statement.Switch.t) =
+      method! switch_cases cases =
         this#expecting_abrupt_completions (fun () ->
-            let open Ast.Statement.Switch in
-            let { discriminant; cases; comments = _ } = switch in
-            ignore @@ this#expression discriminant;
             let (env, case_completion_states) =
               List.fold_left
                 (fun acc stuff ->
@@ -953,7 +951,7 @@ struct
             this#commit_abrupt_completion_matching
               AbruptCompletion.(mem [break None])
               completion_state);
-        switch
+        cases
 
       method private ssa_switch_case
           (env, case_completion_states) (case : (L.t, L.t) Ast.Statement.Switch.Case.t') =
@@ -1082,6 +1080,13 @@ struct
                   completion_state)
               ~finally:(fun () -> this#reset_ssa_env env))
 
+      method! declare_function loc expr =
+        match Declare_function_utils.declare_function_to_function_declaration_simple loc expr with
+        | Some stmt ->
+          let _ = this#statement (loc, stmt) in
+          expr
+        | None -> super#declare_function loc expr
+
       method! call loc (expr : (L.t, L.t) Ast.Expression.Call.t) =
         ignore @@ super#call loc expr;
         this#havoc_current_ssa_env;
@@ -1169,11 +1174,14 @@ struct
         let hoist = new hoister ~with_types:true in
         hoist#eval hoist#program program
     in
-    ignore @@ ssa_walk#with_bindings loc bindings ssa_walk#program program;
-    (ssa_walk#acc, ssa_walk#values)
+    let completion_state =
+      ssa_walk#run_to_completion (fun () ->
+          ignore @@ ssa_walk#with_bindings loc bindings ssa_walk#program program)
+    in
+    (completion_state, (ssa_walk#acc, ssa_walk#values))
 
   let program program =
-    let (_, values) = program_with_scope ~ignore_toplevel:true program in
+    let (_, (_, values)) = program_with_scope ~ignore_toplevel:true program in
     values
 end
 

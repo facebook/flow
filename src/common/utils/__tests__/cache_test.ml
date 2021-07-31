@@ -31,8 +31,8 @@ end = struct
         was_evaluated = false;
         lazy_val =
           lazy
-            ( result.was_evaluated <- true;
-              value );
+            (result.was_evaluated <- true;
+             value);
       }
     in
     result

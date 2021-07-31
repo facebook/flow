@@ -43,7 +43,8 @@ let pos_add_string =
     try
       let i' = String.index_from str i '\n' in
       count (n + 1) (i' + 1) str
-    with Not_found -> (n, String.length str - i)
+    with
+    | Not_found -> (n, String.length str - i)
   in
   fun { Sourcemap.line; col } str ->
     let (newlines, remaining_cols) = count 0 0 str in

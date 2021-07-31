@@ -258,8 +258,8 @@ let mapper ~default_any ~preserve_literals ~max_type_size (ask : Codemod_context
 
     method private post_run () = ()
 
-    method! binding_pattern ?(kind = Ast.Statement.VariableDeclaration.Var) ((pat_loc, patt) as expr)
-        =
+    method! binding_pattern
+        ?(kind = Ast.Statement.VariableDeclaration.Var) ((pat_loc, patt) as expr) =
       let open Ast.Pattern in
       let open Ast.Pattern.Identifier in
       match patt with

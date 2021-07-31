@@ -9,12 +9,10 @@ open Hh_core
 
 external realpath : string -> string option = "hh_realpath"
 
-external is_nfs : string -> bool = "hh_is_nfs"
-
-external is_apple_os : unit -> bool = "hh_sysinfo_is_apple_os"
-
 (** Option type intead of exception throwing. *)
-let get_env name = (try Some (Sys.getenv name) with Not_found -> None)
+let get_env name =
+  try Some (Sys.getenv name) with
+  | Not_found -> None
 
 let getenv_home () =
   let home_var =
@@ -54,43 +52,43 @@ let getenv_path () =
   get_env path_var
 
 let open_in_no_fail fn =
-  try open_in fn
-  with e ->
+  try open_in fn with
+  | e ->
     let e = Printexc.to_string e in
     Printf.fprintf stderr "Could not open_in: '%s' (%s)\n" fn e;
     exit 3
 
 let open_in_bin_no_fail fn =
-  try open_in_bin fn
-  with e ->
+  try open_in_bin fn with
+  | e ->
     let e = Printexc.to_string e in
     Printf.fprintf stderr "Could not open_in_bin: '%s' (%s)\n" fn e;
     exit 3
 
 let close_in_no_fail fn ic =
-  try close_in ic
-  with e ->
+  try close_in ic with
+  | e ->
     let e = Printexc.to_string e in
     Printf.fprintf stderr "Could not close: '%s' (%s)\n" fn e;
     exit 3
 
 let open_out_no_fail fn =
-  try open_out fn
-  with e ->
+  try open_out fn with
+  | e ->
     let e = Printexc.to_string e in
     Printf.fprintf stderr "Could not open_out: '%s' (%s)\n" fn e;
     exit 3
 
 let open_out_bin_no_fail fn =
-  try open_out_bin fn
-  with e ->
+  try open_out_bin fn with
+  | e ->
     let e = Printexc.to_string e in
     Printf.fprintf stderr "Could not open_out_bin: '%s' (%s)\n" fn e;
     exit 3
 
 let close_out_no_fail fn oc =
-  try close_out oc
-  with e ->
+  try close_out oc with
+  | e ->
     let e = Printexc.to_string e in
     Printf.fprintf stderr "Could not close: '%s' (%s)\n" fn e;
     exit 3
@@ -120,7 +118,8 @@ let split_lines = Str.split nl_regexp
 let string_contains str substring =
   (* regexp_string matches only this string and nothing else. *)
   let re = Str.regexp_string substring in
-  (try Str.search_forward re str 0 >= 0 with Not_found -> false)
+  try Str.search_forward re str 0 >= 0 with
+  | Not_found -> false
 
 let exec_read cmd =
   let ic = Unix.open_process_in cmd in
@@ -135,7 +134,8 @@ let exec_read_lines ?(reverse = false) cmd =
      while true do
        result := input_line ic :: !result
      done
-   with End_of_file -> ());
+   with
+  | End_of_file -> ());
   assert (Unix.close_process_in ic = Unix.WEXITED 0);
   if not reverse then
     List.rev !result
@@ -210,7 +210,8 @@ let read_stdin_to_string () =
       Buffer.add_char buf '\n'
     done;
     assert false
-  with End_of_file -> Buffer.contents buf
+  with
+  | End_of_file -> Buffer.contents buf
 
 let read_all ?(buf_size = 4096) ic =
   let buf = Buffer.create buf_size in
@@ -221,7 +222,8 @@ let read_all ?(buf_size = 4096) ic =
        if bytes_read = 0 then raise Exit;
        Buffer.add_subbytes buf data 0 bytes_read
      done
-   with Exit -> ());
+   with
+  | Exit -> ());
   Buffer.contents buf
 
 (**
@@ -245,7 +247,8 @@ let expanduser path =
           | Some home -> home
         end
       | unixname ->
-        (try (Unix.getpwnam unixname).Unix.pw_dir with Not_found -> Str.matched_string s)
+        (try (Unix.getpwnam unixname).Unix.pw_dir with
+        | Not_found -> Str.matched_string s)
     end
     path
 
@@ -301,7 +304,10 @@ let executable_path : unit -> string =
 
 let lines_of_in_channel ic =
   let rec loop accum =
-    match (try Some (input_line ic) with _ -> None) with
+    match
+      try Some (input_line ic) with
+      | _ -> None
+    with
     | None -> List.rev accum
     | Some line -> loop (line :: accum)
   in
@@ -313,7 +319,8 @@ let lines_of_file filename =
     let result = lines_of_in_channel ic in
     let _ = close_in ic in
     result
-  with _ ->
+  with
+  | _ ->
     close_in ic;
     []
 
@@ -349,7 +356,8 @@ let try_touch ~follow_symlinks file =
       Unix.utimes file 0.0 0.0
     else
       lutimes file
-  with _ -> ()
+  with
+  | _ -> ()
 
 let mkdir_p ?(skip_mocking = false) =
   if skip_mocking then
@@ -362,15 +370,19 @@ let mkdir_no_fail dir =
   with_umask 0 (fun () ->
       (* Don't set sticky bit since the socket opening code wants to remove any
        * old sockets it finds, which may be owned by a different user. *)
-      try Unix.mkdir dir 0o777 with Unix.Unix_error (Unix.EEXIST, _, _) -> ())
+      try Unix.mkdir dir 0o777 with
+      | Unix.Unix_error (Unix.EEXIST, _, _) -> ())
 
-let unlink_no_fail fn = (try Unix.unlink fn with Unix.Unix_error (Unix.ENOENT, _, _) -> ())
+let unlink_no_fail fn =
+  try Unix.unlink fn with
+  | Unix.Unix_error (Unix.ENOENT, _, _) -> ()
 
 let readlink_no_fail fn =
   if Sys.win32 && Sys.file_exists fn then
     cat fn
   else
-    try Unix.readlink fn with _ -> fn
+    try Unix.readlink fn with
+    | _ -> fn
 
 let splitext filename =
   let root = Filename.chop_extension filename in
@@ -384,7 +396,8 @@ let is_test_mode () =
   try
     ignore @@ Sys.getenv "HH_TEST_MODE";
     true
-  with _ -> false
+  with
+  | _ -> false
 
 let sleep ~seconds = ignore @@ Unix.select [] [] [] seconds
 
@@ -552,8 +565,8 @@ external processor_info : unit -> processor_info = "hh_processor_info"
  * around EINTR which continues the select if it gets interrupted by a signal *)
 let rec select_non_intr read write exn timeout =
   let start_time = Unix.gettimeofday () in
-  try Unix.select read write exn timeout
-  with Unix.Unix_error (Unix.EINTR, _, _) ->
+  try Unix.select read write exn timeout with
+  | Unix.Unix_error (Unix.EINTR, _, _) ->
     (* Negative timeouts mean no timeout *)
     let timeout =
       if timeout < 0.0 then
@@ -567,7 +580,8 @@ let rec select_non_intr read write exn timeout =
  * an EINTR when the forked process dies and the parent gets a sigchld signal. Note: this is only a
  * problem if you're not using the WNOHANG flag, since EINTR isn't thrown for WNOHANG *)
 let rec waitpid_non_intr flags pid =
-  try Unix.waitpid flags pid with Unix.Unix_error (Unix.EINTR, _, _) -> waitpid_non_intr flags pid
+  try Unix.waitpid flags pid with
+  | Unix.Unix_error (Unix.EINTR, _, _) -> waitpid_non_intr flags pid
 
 (* Exposing this for a unit test *)
 let find_oom_in_dmesg_output pid name lines =
@@ -582,7 +596,8 @@ let find_oom_in_dmesg_output pid name lines =
         ignore @@ Str.search_forward re line 0;
         let pid_s = Str.matched_group 2 line in
         pid_s = pid
-      with Not_found -> false)
+      with
+      | Not_found -> false)
 
 let check_dmesg_for_oom pid name =
   let dmesg = exec_read_lines ~reverse:true "dmesg" in

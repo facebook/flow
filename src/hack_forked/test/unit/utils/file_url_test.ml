@@ -123,7 +123,8 @@ let test_invalid_parse () =
       try
         let _ = File_url.parse uri in
         false
-      with _ -> true
+      with
+      | _ -> true
     in
     if not did_raise then failwith (Printf.sprintf "Expected '%s' not to parse" uri)
   in

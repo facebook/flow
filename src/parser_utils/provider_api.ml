@@ -69,8 +69,8 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
       ~f:(fun { declare_locs; def_locs; provider_locs; name; _ } ->
         if L.LSet.mem loc declare_locs || L.LSet.mem loc def_locs then
           Some
-            ( L.LSet.elements provider_locs
-            |> Base.List.map ~f:Reason.(mk_reason (RIdentifier (OrdinaryName name))) )
+            (L.LSet.elements provider_locs
+            |> Base.List.map ~f:Reason.(mk_reason (RIdentifier (OrdinaryName name))))
         else
           None)
       (EntrySet.elements all_entries)
@@ -106,30 +106,30 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
           "%s%sproviders: \n%s\n"
           msg
           t
-          ( SMap.bindings providers
+          (SMap.bindings providers
           |> Base.List.map ~f:(fun (k, { relative_locs; exact_locs }) ->
                  spf
                    "%s %s:\n%s  relative: (%s)\n%s  exact: (%s)"
                    t
                    k
                    t
-                   ( L.LSet.elements relative_locs
+                   (L.LSet.elements relative_locs
                    |> Base.List.map ~f:(L.debug_to_string ~include_source:false)
-                   |> String.concat "), (" )
+                   |> String.concat "), (")
                    t
-                   ( L.LSet.elements exact_locs
+                   (L.LSet.elements exact_locs
                    |> Base.List.map ~f:(L.debug_to_string ~include_source:false)
-                   |> String.concat "), (" ))
-          |> String.concat "\n" )
+                   |> String.concat "), ("))
+          |> String.concat "\n")
       in
       spf
         "%s%schildren:\n%s"
         msg
         t
-        ( L.LMap.bindings children
+        (L.LMap.bindings children
         |> Base.List.map ~f:(fun (loc, scope) ->
                print_rec (L.debug_to_string ~include_source:false loc) (tabs + 1) scope)
-        |> String.concat "\n" )
+        |> String.concat "\n")
     in
     match env with
     | (top, []) -> print_rec "toplevel" 0 top

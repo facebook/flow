@@ -146,7 +146,9 @@ let wanted ~root ~options libs file =
 *)
 let get_ls_files ~root ~all ~options ~libs ~imaginary = function
   | None -> Files.make_next_files ~root ~all ~subdir:None ~options ~libs
-  | Some dir when (try Sys.is_directory dir with _ -> false) ->
+  | Some dir
+    when try Sys.is_directory dir with
+         | _ -> false ->
     let subdir = Some (Path.make dir) in
     Files.make_next_files ~root ~all ~subdir ~options ~libs
   | Some file ->

@@ -81,15 +81,15 @@ end = struct
 
   let add_provider () f m =
     let provs =
-      try Utils_js.FilenameSet.add f (find_in_all_providers_unsafe m)
-      with Not_found -> Utils_js.FilenameSet.singleton f
+      try Utils_js.FilenameSet.add f (find_in_all_providers_unsafe m) with
+      | Not_found -> Utils_js.FilenameSet.singleton f
     in
     Hashtbl.replace !all_providers m provs
 
   let remove_provider () f m =
     let provs =
-      try Utils_js.FilenameSet.remove f (find_in_all_providers_unsafe m)
-      with Not_found ->
+      try Utils_js.FilenameSet.remove f (find_in_all_providers_unsafe m) with
+      | Not_found ->
         failwith
           (Printf.sprintf
              "can't remove provider %s of %S, not found in all_providers"
@@ -108,8 +108,8 @@ end
 let module_name_candidates_cache = Hashtbl.create 50
 
 let memoize_with_module_name_candidates_cache ~f name =
-  try Hashtbl.find module_name_candidates_cache name
-  with Not_found ->
+  try Hashtbl.find module_name_candidates_cache name with
+  | Not_found ->
     let result = f name in
     Hashtbl.add module_name_candidates_cache name result;
     result

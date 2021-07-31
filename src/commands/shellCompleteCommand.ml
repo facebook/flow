@@ -37,7 +37,8 @@ module Command (CommandList : COMMAND_LIST) = struct
       try
         let metadata = SMap.find key flags in
         Some metadata.CommandSpec.ArgSpec.arg_count
-      with Not_found -> None
+      with
+      | Not_found -> None
 
   let get_completion command current rest =
     let flags = CommandSpec.flags command in
@@ -76,7 +77,8 @@ module Command (CommandList : COMMAND_LIST) = struct
         in
         let completion = get_completion command current rest in
         print_endline completion
-      with Not_found -> ()
+      with
+      | Not_found -> ()
 
   let command = CommandSpec.command spec main
 end

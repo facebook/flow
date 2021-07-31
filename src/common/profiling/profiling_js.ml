@@ -315,7 +315,8 @@ end = struct
       let result = f () in
       finalize_timer ~should_print ~timer ~running_timer ~parent_timer ~running;
       result
-    with exn ->
+    with
+    | exn ->
       let exn = Exception.wrap exn in
       finalize_timer ~should_print ~timer ~running_timer ~parent_timer ~running;
       Exception.reraise exn

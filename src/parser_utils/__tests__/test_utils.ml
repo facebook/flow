@@ -21,13 +21,7 @@ let parse contents =
   let (ast, _errors) = Parser_flow.program ~parse_options contents in
   ast
 
-let mk_loc (line1, column1) (line2, column2) =
-  Loc.
-    {
-      source = None;
-      start = { line = line1; column = column1 };
-      _end = { line = line2; column = column2 };
-    }
+let mk_loc = Loc.mk_loc
 
 let print_list printer list = String.concat ", " @@ Base.List.map ~f:printer list
 

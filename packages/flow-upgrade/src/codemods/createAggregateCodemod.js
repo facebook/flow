@@ -15,8 +15,11 @@
  * This file is not required directly when we run `flow-upgrade`. Instead it is
  * initialized in a `jscodeshift` worker.
  */
-module.exports = (transformPaths: Array<string>) => {
-  return (file: {source: string}, api: any) => {
+
+type TransformFn = (file: {source: string}, api: any) => string | null;
+
+module.exports = (transformPaths: Array<string>): TransformFn => {
+  return (file: {source: string}, api: any): string | null => {
     // Get the jscodeshift API and parse our source file.
     const j = api.jscodeshift;
     // Parse ths source file.

@@ -210,7 +210,6 @@ and 'loc t' =
   | EMalformedPackageJson of 'loc * string
   | EUninitializedInstanceProperty of 'loc * Lints.property_assignment_kind
   | EExperimentalEnums of 'loc
-  | EExperimentalEnumsWithUnknownMembers of 'loc
   | EIndexedAccessNotEnabled of 'loc
   | EUnsafeGetSet of 'loc
   | EIndeterminateModuleType of 'loc
@@ -809,7 +808,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnsafeGetSet loc -> EUnsafeGetSet (f loc)
   | EUninitializedInstanceProperty (loc, e) -> EUninitializedInstanceProperty (f loc, e)
   | EExperimentalEnums loc -> EExperimentalEnums (f loc)
-  | EExperimentalEnumsWithUnknownMembers loc -> EExperimentalEnumsWithUnknownMembers (f loc)
   | EIndexedAccessNotEnabled loc -> EIndexedAccessNotEnabled (f loc)
   | EIndeterminateModuleType loc -> EIndeterminateModuleType (f loc)
   | EBadExportPosition loc -> EBadExportPosition (f loc)
@@ -1138,7 +1136,6 @@ let util_use_op_of_msg nope util = function
   | EUnsafeGetSet _
   | EUninitializedInstanceProperty _
   | EExperimentalEnums _
-  | EExperimentalEnumsWithUnknownMembers _
   | EIndexedAccessNotEnabled _
   | EIndeterminateModuleType _
   | EBadExportPosition _
@@ -1330,7 +1327,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EExportRenamedDefault { loc; _ }
   | EIndeterminateModuleType loc
   | EExperimentalEnums loc
-  | EExperimentalEnumsWithUnknownMembers loc
   | EIndexedAccessNotEnabled loc
   | EUnsafeGetSet loc
   | EUninitializedInstanceProperty (loc, _)
@@ -1456,7 +1452,6 @@ let kind_of_msg =
     | EUnexpectedTypeof _
     | EUnsafeGetSet _
     | EExperimentalEnums _
-    | EExperimentalEnumsWithUnknownMembers _
     | EIndexedAccessNotEnabled _
     | EIndeterminateModuleType _
     | EUnreachable _
@@ -1754,10 +1749,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           (spf
              "%n type %s."
              n
-             ( if n == 1 then
+             (if n == 1 then
                "argument"
              else
-               "arguments" ));
+               "arguments"));
       ]
     in
     Normal { features }
@@ -1772,10 +1767,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           (spf
              "%n type %s."
              n
-             ( if n == 1 then
+             (if n == 1 then
                "argument"
              else
-               "arguments" ));
+               "arguments"));
       ]
     in
     Normal { features }
@@ -1795,10 +1790,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             (spf
                "%n type %s."
                n
-               ( if n == 1 then
+               (if n == 1 then
                  "argument"
                else
-                 "arguments" ));
+                 "arguments"));
         ]
       in
       Normal { features }
@@ -1810,10 +1805,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           (spf
              "%n type %s."
              n
-             ( if n == 1 then
+             (if n == 1 then
                "argument"
              else
-               "arguments" ));
+               "arguments"));
       ]
     in
     Normal { features }
@@ -1846,10 +1841,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             (spf
                "%n type argument%s."
                n
-               ( if n == 1 then
+               (if n == 1 then
                  ""
                else
-                 "s" ));
+                 "s"));
         ]
       in
       Normal { features }
@@ -2040,10 +2035,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
               (spf
                  " only has %d element%s, so index %s is out of bounds"
                  length
-                 ( if length == 1 then
+                 (if length == 1 then
                    ""
                  else
-                   "s" )
+                   "s")
                  index);
           ];
         use_op;
@@ -2469,16 +2464,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
-  | EExperimentalEnumsWithUnknownMembers _ ->
-    let features =
-      [
-        text "Flow Enums with unknown members are not enabled in this project. ";
-        text "Remove the ";
-        code "...";
-        text " from your enum declaration.";
-      ]
-    in
-    Normal { features }
   | EIndexedAccessNotEnabled _ ->
     let features =
       [
@@ -2674,8 +2659,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       in
       let features =
         text "Cannot build a typed interface for this module. "
-        :: text "You should annotate the exports of this module with types. "
-        :: features
+        :: text "You should annotate the exports of this module with types. " :: features
       in
       Normal { features })
   | EUnreachable _ -> Normal { features = [text "Unreachable code."] }
@@ -2843,10 +2827,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           (spf
              "without at least %d argument%s."
              n
-             ( if n == 1 then
+             (if n == 1 then
                ""
              else
-               "s" ));
+               "s"));
       ]
     in
     Normal { features }
@@ -3450,15 +3434,14 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         let members_features =
           if number_to_check > 5 then
             let max_display_amount = 4 in
-            ( Base.List.take left_to_check max_display_amount
-            |> Base.List.bind ~f:(fun member -> [code member; text ", "]) )
+            (Base.List.take left_to_check max_display_amount
+            |> Base.List.bind ~f:(fun member -> [code member; text ", "]))
             @ [text (spf "and %d others" (number_to_check - max_display_amount))]
           else
             Friendly.conjunction_concat
               (Base.List.map ~f:(fun member -> [code member]) left_to_check)
         in
-        (text "the members " :: members_features)
-        @ [text " of enum "; ref enum_reason; text " have"]
+        text "the members " :: members_features @ [text " of enum "; ref enum_reason; text " have"]
     in
     let default_features =
       match default_case with
@@ -3473,7 +3456,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       | None -> []
     in
     let features =
-      (text "Incomplete exhaustive check: " :: left_to_check_features)
+      text "Incomplete exhaustive check: " :: left_to_check_features
       @ [text " not been considered in check of "; desc reason; text "."]
       @ default_features
     in
@@ -3764,7 +3747,6 @@ let error_code_of_message err : error_code option =
   | EExpectedNumberLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExpectedStringLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExperimentalEnums _ -> Some IllegalEnum
-  | EExperimentalEnumsWithUnknownMembers _ -> Some IllegalEnum
   | EExponentialSpread _ -> Some ExponentialSpread
   | EExportsAnnot _ -> Some InvalidExportsTypeArg
   | EExportValueAsType (_, _) -> Some ExportValueAsType

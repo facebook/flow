@@ -60,7 +60,8 @@ let init config ~num_workers =
     let (heap, handle) = init config ~num_workers in
     heap_ref := Some heap;
     handle
-  with Failed_memfd_init _ ->
+  with
+  | Failed_memfd_init _ ->
     if EventLogger.should_log () then EventLogger.sharedmem_failed_memfd_init ();
     Hh_logger.log "Failed to use anonymous memfd init";
     (* TODO: The server should exit, but we should exit with a different
@@ -604,7 +605,8 @@ module FreqCache (Config : CacheConfig) :
         ()
       else
         Hashtbl.replace cache x (freq, y)
-    with Not_found ->
+    with
+    | Not_found ->
       incr size;
       let elt = (ref 0, y) in
       Hashtbl.replace cache x elt;
@@ -615,7 +617,9 @@ module FreqCache (Config : CacheConfig) :
     incr freq;
     value
 
-  let get x = (try Some (find x) with Not_found -> None)
+  let get x =
+    try Some (find x) with
+    | Not_found -> None
 
   let remove x =
     if Hashtbl.mem cache x then decr size;
@@ -643,13 +647,13 @@ module OrderedCache (Config : CacheConfig) :
     ()
 
   let add x y =
-    ( if !size >= Config.capacity then
+    (if !size >= Config.capacity then
       (* Remove oldest element - if it's still around. *)
       let elt = Queue.pop queue in
       if Hashtbl.mem cache elt then (
         decr size;
         Hashtbl.remove cache elt
-      ) );
+      ));
 
     (* Add the new element, but bump the size only if it's a new addition. *)
     Queue.push x queue;
@@ -658,13 +662,16 @@ module OrderedCache (Config : CacheConfig) :
 
   let find x = Hashtbl.find cache x
 
-  let get x = (try Some (find x) with Not_found -> None)
+  let get x =
+    try Some (find x) with
+    | Not_found -> None
 
   let remove x =
     try
       if Hashtbl.mem cache x then decr size;
       Hashtbl.remove cache x
-    with Not_found -> ()
+    with
+    | Not_found -> ()
 end
 
 (*****************************************************************************)
@@ -757,16 +764,16 @@ struct
   let log_hit_rate ~hit =
     Measure.sample
       (Value.description ^ " (cache hit rate)")
-      ( if hit then
+      (if hit then
         1.
       else
-        0. );
+        0.);
     Measure.sample
       "(ALL cache hit rate)"
-      ( if hit then
+      (if hit then
         1.
       else
-        0. )
+        0.)
 
   let get x =
     match Cache.get x with
@@ -931,7 +938,7 @@ module NewAPI = struct
     | Pattern_def_tag
     | Pattern_tag
     (* tags defined below this point are scanned for pointers *)
-    | Addr_tbl_tag (* 13 *)
+    | Addr_tbl_tag (* 14 *)
     | Checked_file_tag
     | CJS_module_tag
     | ES_module_tag
@@ -941,6 +948,9 @@ module NewAPI = struct
 
   (* constant constructors are integers *)
   let tag_val : tag -> int = Obj.magic
+
+  (* double-check integer value is consistent with hh_shared.c *)
+  let () = assert (tag_val Addr_tbl_tag = 14)
 
   let mk_header tag size =
     (* lower byte of header is reserved for 6-bit tag and 2 GC bits, OCaml

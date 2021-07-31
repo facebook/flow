@@ -28,10 +28,21 @@ type diff_algorithm =
   | Standard
 
 type expression_node_parent =
-  | StatementParent of (Loc.t, Loc.t) Flow_ast.Statement.t
-  | ExpressionParent of (Loc.t, Loc.t) Flow_ast.Expression.t
-  | SlotParent
-  | SpreadParent
+  | StatementParentOfExpression of (Loc.t, Loc.t) Flow_ast.Statement.t
+  | ExpressionParentOfExpression of (Loc.t, Loc.t) Flow_ast.Expression.t
+  | SlotParentOfExpression (* Any slot that does not require expression to be parenthesized. *)
+  | SpreadParentOfExpression
+[@@deriving show]
+
+type statement_node_parent =
+  | StatementBlockParentOfStatement of Loc.t
+  | ExportParentOfStatement of Loc.t
+  | IfParentOfStatement of Loc.t
+  | LabeledStatementParentOfStatement of Loc.t
+  | LoopParentOfStatement of Loc.t
+  | WithStatementParentOfStatement of Loc.t
+  | TopLevelParentOfStatement
+  | SwitchCaseParentOfStatement of Loc.t
 [@@deriving show]
 
 type node =
@@ -42,7 +53,7 @@ type node =
   | NumberLiteral of Loc.t * Loc.t Flow_ast.NumberLiteral.t
   | BigIntLiteral of Loc.t * Loc.t Flow_ast.BigIntLiteral.t
   | BooleanLiteral of Loc.t * Loc.t Flow_ast.BooleanLiteral.t
-  | Statement of (Loc.t, Loc.t) Flow_ast.Statement.t
+  | Statement of ((Loc.t, Loc.t) Flow_ast.Statement.t * statement_node_parent)
   | Program of (Loc.t, Loc.t) Flow_ast.Program.t
   | Expression of ((Loc.t, Loc.t) Flow_ast.Expression.t * expression_node_parent)
   | Pattern of (Loc.t, Loc.t) Flow_ast.Pattern.t
@@ -58,6 +69,8 @@ type node =
   | JSXChild of (Loc.t, Loc.t) Flow_ast.JSX.child
   | JSXIdentifier of (Loc.t, Loc.t) Flow_ast.JSX.Identifier.t
 [@@deriving show]
+
+val expand_statement_comment_bounds : (Loc.t, Loc.t) Flow_ast.Statement.t -> Loc.t
 
 (* Diffs the given ASTs using referential equality to determine whether two nodes are different.
  * This works well for transformations based on Flow_ast_mapper, which preserves identity, but it

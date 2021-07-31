@@ -1,0 +1,25 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+h1, h2, h3, h4, h5 {
+  .toc {
+    background: red;
+    display: inline-block;
+    width: 0;
+    margin-top: -72px;
+    padding-top: 72px;
+    visibility: hidden;
+  }
+
+  .toc::before {
+    content: "#";
+  }
+
+  &:hover .toc {
+    visibility: visible;
+  }
+}

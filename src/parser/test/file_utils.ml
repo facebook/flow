@@ -11,8 +11,8 @@ type file_kind =
 
 let lstat_kind file =
   Unix.(
-    try Some (lstat file).st_kind
-    with Unix_error (ENOENT, _, _) ->
+    try Some (lstat file).st_kind with
+    | Unix_error (ENOENT, _, _) ->
       prerr_endline ("File not found: " ^ file);
       None)
 

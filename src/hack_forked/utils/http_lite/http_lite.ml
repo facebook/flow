@@ -22,7 +22,8 @@ let read_headers (reader : Buffered_line_reader.t) : string list =
       match Buffered_line_reader.get_next_line reader with
       | "" -> acc
       | line -> read_internal (line :: acc)
-    with Unix.Unix_error _ -> raise (Malformed "Can't read next header")
+    with
+    | Unix.Unix_error _ -> raise (Malformed "Can't read next header")
   in
   List.rev (read_internal [])
 
@@ -72,10 +73,13 @@ let parse_charset (header_value : string) : string option =
 let read_message_utf8 (reader : Buffered_line_reader.t) : string =
   let headers = read_headers reader |> parse_headers_to_lowercase_map in
   let len =
-    try SMap.find "content-length" headers |> int_of_string
-    with _ -> raise (Malformed "Missing Content-Length")
+    try SMap.find "content-length" headers |> int_of_string with
+    | _ -> raise (Malformed "Missing Content-Length")
   in
-  let charset = (try SMap.find "content-type" headers |> parse_charset with _ -> None) in
+  let charset =
+    try SMap.find "content-type" headers |> parse_charset with
+    | _ -> None
+  in
   let body = Buffered_line_reader.get_next_bytes reader len in
   if charset <> Some "utf-8" && charset <> None then raise (Malformed "Charset not utf-8");
   body

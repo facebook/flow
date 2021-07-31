@@ -49,11 +49,7 @@ CAMLprim value marshal_and_compress_stub(value data) {
   if (compressed_size == 0) {
     caml_failwith("LZ4 failed to compress");
   }
-  // It's unfortunate we need to copy. But we don't know how large the OCaml
-  // string will be until after we compress.
-  // TODO: When we're >= OCaml 4.06, switch to caml_alloc_initialized_string
-  compressed_data = caml_alloc_string(compressed_size);
-  memcpy(String_val(compressed_data), compressed_value, compressed_size);
+  compressed_data = caml_alloc_initialized_string(compressed_size, compressed_value);
   caml_stat_free(compressed_value);
 
   caml_stat_free(marshaled_value);
@@ -70,7 +66,7 @@ CAMLprim value decompress_and_unmarshal_stub(value compressed) {
   CAMLparam1(compressed);
   CAMLlocal1(result);
 
-  char *compressed_data = String_val(Field(compressed, 0));
+  const char *compressed_data = String_val(Field(compressed, 0));
   size_t compressed_size = Long_val(Field(compressed, 1));
   size_t uncompressed_size = Long_val(Field(compressed, 2));
 

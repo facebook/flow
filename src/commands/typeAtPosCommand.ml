@@ -72,8 +72,10 @@ let handle_response ~file_contents ~json ~pretty ~strip_root ~expanded response 
     in
     let json_assoc =
       ("type", JSON_String ty)
-      :: ("reasons", JSON_Array [])
-      :: ("loc", json_of_loc ~strip_root ~offset_table loc)
+      ::
+      ("reasons", JSON_Array [])
+      ::
+      ("loc", json_of_loc ~strip_root ~offset_table loc)
       :: Errors.deprecated_json_props_of_loc ~strip_root loc
     in
     let json_assoc =

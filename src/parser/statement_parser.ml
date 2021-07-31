@@ -90,7 +90,7 @@ module Statement
      recover gracefully. *)
   let function_as_statement env =
     let func = Declaration._function env in
-    ( if in_strict_mode env then
+    (if in_strict_mode env then
       function_as_statement_error_at env (fst func)
     else
       let open Ast.Statement in
@@ -99,7 +99,7 @@ module Statement
         error_at env (loc, Parse_error.AsyncFunctionAsStatement)
       | (loc, FunctionDeclaration { Ast.Function.generator = true; _ }) ->
         error_at env (loc, Parse_error.GeneratorFunctionAsStatement)
-      | _ -> () );
+      | _ -> ());
     func
 
   (* https://tc39.es/ecma262/#sec-exports-static-semantics-early-errors *)
@@ -1541,8 +1541,8 @@ module Statement
               record_export env (Flow_ast_utils.ident_of_source (loc, extract_ident_name id))
             | _ ->
               failwith
-                ( "Internal Flow Error! Parsed `export interface` into something "
-                ^ "other than an interface declaration!" ));
+                ("Internal Flow Error! Parsed `export interface` into something "
+                ^ "other than an interface declaration!"));
             Statement.ExportNamedDeclaration
               {
                 declaration = Some interface;

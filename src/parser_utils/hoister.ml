@@ -32,7 +32,7 @@ module Bindings : sig
 
   val to_assoc : 'loc t -> (string * 'loc Nel.t) list
 
-  val to_map : 'loc t -> 'loc list SMap.t
+  val to_map : 'loc t -> 'loc Nel.t SMap.t
 end = struct
   type 'loc entry = ('loc, 'loc) Ast.Identifier.t
 
@@ -65,12 +65,12 @@ end = struct
       List.fold_left
         (fun map (loc, { Ast.Identifier.name = x; comments = _ }) ->
           match SMap.find_opt x map with
-          | Some locs -> SMap.add x (loc :: locs) map
-          | None -> SMap.add x [loc] map)
+          | Some locs -> SMap.add x (Nel.cons loc locs) map
+          | None -> SMap.add x (loc, []) map)
         SMap.empty
         (List.rev t)
     in
-    SMap.map List.rev map
+    SMap.map Nel.rev map
 end
 
 (* TODO: It should be possible to vastly simplify hoisting by overriding the
@@ -139,8 +139,13 @@ class ['loc] hoister ~with_types =
 
     method! declare_function loc (decl : ('loc, 'loc) Ast.Statement.DeclareFunction.t) =
       let open Ast.Statement.DeclareFunction in
-      this#add_binding decl.id;
-      super#declare_function loc decl
+      match Declare_function_utils.declare_function_to_function_declaration_simple loc decl with
+      | Some stmt ->
+        let _ = this#statement (loc, stmt) in
+        decl
+      | None ->
+        this#add_binding decl.id;
+        super#declare_function loc decl
 
     method! function_declaration _loc (expr : ('loc, 'loc) Ast.Function.t) =
       let open Ast.Function in

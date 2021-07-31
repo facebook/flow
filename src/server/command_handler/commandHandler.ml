@@ -67,8 +67,8 @@ let fold_json_of_parse_errors parse_errors acc =
   match parse_errors with
   | err :: _ ->
     ("parse_error", json_of_parse_error err)
-    :: ("parse_error_count", Hh_json.JSON_Number (parse_errors |> List.length |> string_of_int))
-    :: acc
+    ::
+    ("parse_error_count", Hh_json.JSON_Number (parse_errors |> List.length |> string_of_int)) :: acc
   | [] -> acc
 
 let file_input_of_text_document_identifier ~client t =
@@ -155,10 +155,10 @@ let autocomplete
     let json_data_to_log =
       let open Hh_json in
       JSON_Object
-        ( ("errors", JSON_Array [JSON_String err_str])
-        :: ("result", JSON_String "FAILURE_CHECK_CONTENTS")
-        :: ("count", JSON_Number "0")
-        :: initial_json_props )
+        (("errors", JSON_Array [JSON_String err_str])
+         ::
+         ("result", JSON_String "FAILURE_CHECK_CONTENTS")
+         :: ("count", JSON_Number "0") :: initial_json_props)
     in
     Lwt.return (Error err_str, Some json_data_to_log)
   | Ok
@@ -182,11 +182,13 @@ let autocomplete
             in
             let json_props_to_log =
               ("ac_type", Hh_json.JSON_String ac_type_string)
-              :: ("docblock", Docblock.json_of_docblock info)
-              :: ( "token",
-                   match token_opt with
-                   | None -> Hh_json.JSON_Null
-                   | Some token -> Hh_json.JSON_String token )
+              ::
+              ("docblock", Docblock.json_of_docblock info)
+              ::
+              ( "token",
+                match token_opt with
+                | None -> Hh_json.JSON_Null
+                | Some token -> Hh_json.JSON_String token )
               :: initial_json_props
             in
             let (response, json_props_to_log) =
@@ -208,22 +210,24 @@ let autocomplete
                 in
                 ( Ok (token_opt, result),
                   ("result", JSON_String result_string)
-                  :: ("count", JSON_Number (items |> List.length |> string_of_int))
-                  :: ("errors", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) errors_to_log))
-                  :: ("documentation", JSON_Bool at_least_one_result_has_documentation)
+                  ::
+                  ("count", JSON_Number (items |> List.length |> string_of_int))
+                  ::
+                  ("errors", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) errors_to_log))
+                  ::
+                  ("documentation", JSON_Bool at_least_one_result_has_documentation)
                   :: json_props_to_log )
               | AcEmpty reason ->
                 ( Ok
                     (token_opt, { ServerProt.Response.Completion.items = []; is_incomplete = false }),
                   ("result", JSON_String "SUCCESS")
-                  :: ("count", JSON_Number "0")
-                  :: ("empty_reason", JSON_String reason)
-                  :: json_props_to_log )
+                  ::
+                  ("count", JSON_Number "0")
+                  :: ("empty_reason", JSON_String reason) :: json_props_to_log )
               | AcFatalError error ->
                 ( Error error,
                   ("result", JSON_String "FAILURE")
-                  :: ("errors", JSON_Array [JSON_String error])
-                  :: json_props_to_log )
+                  :: ("errors", JSON_Array [JSON_String error]) :: json_props_to_log )
             in
             let json_props_to_log = fold_json_of_parse_errors parse_errors json_props_to_log in
             Lwt.return (response, Some (Hh_json.JSON_Object json_props_to_log))))
@@ -279,17 +283,15 @@ let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, lin
               | Partial (loc, msg) ->
                 ( Ok loc,
                   Some
-                    ( ("result", Hh_json.JSON_String "PARTIAL_FAILURE")
-                    :: ("error", Hh_json.JSON_String msg)
-                    :: json_props ) )
+                    (("result", Hh_json.JSON_String "PARTIAL_FAILURE")
+                     :: ("error", Hh_json.JSON_String msg) :: json_props) )
               | Bad_loc ->
                 (Ok Loc.none, Some (("result", Hh_json.JSON_String "BAD_LOC") :: json_props))
               | Def_error msg ->
                 ( Error msg,
                   Some
-                    ( ("result", Hh_json.JSON_String "FAILURE")
-                    :: ("error", Hh_json.JSON_String msg)
-                    :: json_props ) ) )))
+                    (("result", Hh_json.JSON_String "FAILURE")
+                     :: ("error", Hh_json.JSON_String msg) :: json_props) ) )))
 
 type infer_type_input = {
   file_input: File_input.t;
@@ -346,8 +348,8 @@ let infer_type
               let json_props = add_cache_hit_data_to_json [] did_hit_cache in
               Lwt.return (Error (err_str, Some (Hh_json.JSON_Object json_props)))
             | Ok
-                ( (Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) as
-                check_result ) ->
+                ((Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) as
+                check_result) ->
               let ((loc, ty), type_at_pos_json_props) =
                 Type_info_service.type_at_pos
                   ~cx
@@ -866,16 +868,17 @@ let handle_find_refs ~reader ~genv ~filename ~line ~char ~global ~multi_hop ~pro
   let json_data =
     Some
       (Hh_json.JSON_Object
-         ( ( "result",
-             Hh_json.JSON_String
-               (match result with
-               | Ok _ -> "SUCCESS"
-               | _ -> "FAILURE") )
-         :: ("global", Hh_json.JSON_Bool global)
-         ::
-         (match dep_count with
-         | Some count -> [("deps", Hh_json.JSON_Number (string_of_int count))]
-         | None -> []) ))
+         (( "result",
+            Hh_json.JSON_String
+              (match result with
+              | Ok _ -> "SUCCESS"
+              | _ -> "FAILURE") )
+          ::
+          ("global", Hh_json.JSON_Bool global)
+          ::
+          (match dep_count with
+          | Some count -> [("deps", Hh_json.JSON_Number (string_of_int count))]
+          | None -> [])))
   in
   Lwt.return (env, ServerProt.Response.FIND_REFS result, json_data)
 
@@ -996,16 +999,17 @@ let handle_save_state ~saved_state_filename ~genv ~profiling ~env =
   Lwt.return (env, ServerProt.Response.SAVE_STATE result, None)
 
 let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
-  let CodeActionRequest.{ textDocument; range; context = { only = _; diagnostics } } = params in
-  let file_input = file_input_of_text_document_identifier ~client textDocument in
-  let file_key = File_key.SourceFile (File_input.filename_of_file_input file_input) in
-  let loc = Flow_lsp_conversions.lsp_range_to_flow_loc ~source:file_key range in
-  match File_input.content_of_file_input file_input with
-  | Error msg -> Lwt.return (Error msg)
-  | Ok file_contents ->
-    if not (Code_action_service.client_supports_quickfixes params) then
-      Lwt.return (Ok [])
-    else
+  let CodeActionRequest.{ textDocument; range; context = { only; diagnostics } } = params in
+  if not (Code_action_service.kind_is_supported ~options only) then
+    (* bail out early if we don't support any of the code actions requested *)
+    Lwt.return (Ok [])
+  else
+    let file_input = file_input_of_text_document_identifier ~client textDocument in
+    let file_key = File_key.SourceFile (File_input.filename_of_file_input file_input) in
+    let loc = Flow_lsp_conversions.lsp_range_to_flow_loc ~source:file_key range in
+    match File_input.content_of_file_input file_input with
+    | Error msg -> Lwt.return (Error msg)
+    | Ok file_contents ->
       let type_parse_artifacts_cache =
         Some (Persistent_connection.type_parse_artifacts_cache client)
       in
@@ -1025,8 +1029,10 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
       | Ok
           ( Parse_artifacts { file_sig; tolerable_errors; ast; parse_errors; _ },
             Typecheck_artifacts { cx; typed_ast } ) ->
+        let lsp_init_params = Persistent_connection.lsp_initialize_params client in
         Code_action_service.code_actions_at_loc
           ~options
+          ~lsp_init_params
           ~env
           ~reader
           ~cx
@@ -1036,6 +1042,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
           ~typed_ast
           ~parse_errors
           ~diagnostics
+          ~only
           ~uri
           ~loc)
 
@@ -1271,8 +1278,8 @@ let handle_ephemeral_immediately = wrap_ephemeral_handler handle_ephemeral_immed
  * Since this might run a recheck, `workload ~profiling ~env` MUST return the new env.
  *)
 let rec run_command_in_serial ~genv ~env ~profiling ~workload =
-  try%lwt workload ~profiling ~env
-  with Lwt.Canceled ->
+  try%lwt workload ~profiling ~env with
+  | Lwt.Canceled ->
     Hh_logger.info "Command successfully canceled. Running a recheck before restarting the command";
     let%lwt (recheck_profiling, env) = Rechecker.recheck_loop genv env in
     List.iter (fun from -> Profiling_js.merge ~into:profiling ~from) recheck_profiling;
@@ -1282,8 +1289,8 @@ let rec run_command_in_serial ~genv ~env ~profiling ~workload =
 (* A command that is running in parallel with a recheck, if canceled, can't just run a recheck
  * itself. It needs to defer itself until later. *)
 let run_command_in_parallel ~env ~profiling ~workload ~mk_workload =
-  try%lwt workload ~profiling ~env
-  with Lwt.Canceled as exn ->
+  try%lwt workload ~profiling ~env with
+  | Lwt.Canceled as exn ->
     let exn = Exception.wrap exn in
     Hh_logger.info
       "Command successfully canceled. Requeuing the command for after the next recheck.";
@@ -1330,7 +1337,8 @@ and handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload 
     | Ok ()
     | Error () ->
       Lwt.return_unit
-  with Lwt.Canceled ->
+  with
+  | Lwt.Canceled ->
     (* It's fine for parallelizable commands to be canceled - they'll be run again later *)
     Lwt.return_unit
 
@@ -1405,7 +1413,7 @@ let did_open ~profiling ~reader genv env client (files : (string * string) Nel.t
      *)
     let filenames = Nel.map (fun (fn, _content) -> fn) files in
     let%lwt (env, triggered_recheck) = Lazy_mode_utils.focus_and_check genv env filenames in
-    ( if not triggered_recheck then
+    (if not triggered_recheck then
       (* This open doesn't trigger a recheck, but we'll still send down the errors *)
       let (errors, warnings, _) =
         ErrorCollator.get_with_separate_warnings ~profiling ~reader ~options env
@@ -1414,7 +1422,7 @@ let did_open ~profiling ~reader genv env client (files : (string * string) Nel.t
         ~client
         ~errors_reason:LspProt.Env_change
         ~errors
-        ~warnings );
+        ~warnings);
     Lwt.return env
   | Options.LAZY_MODE_FILESYSTEM
   | Options.LAZY_MODE_WATCHMAN
@@ -1713,10 +1721,10 @@ let handle_persistent_autocomplete_lsp
     match file_input with
     | File_input.FileContent (fn, content) -> Ok (fn, content)
     | File_input.FileName fn ->
-      (try Ok (Some fn, Sys_utils.cat fn)
-       with e ->
-         let e = Exception.wrap e in
-         Error (Exception.get_ctor_string e, Utils.Callstack (Exception.get_backtrace_string e)))
+      (try Ok (Some fn, Sys_utils.cat fn) with
+      | e ->
+        let e = Exception.wrap e in
+        Error (Exception.get_ctor_string e, Utils.Callstack (Exception.get_backtrace_string e)))
   in
   let imports =
     Persistent_connection.Client_config.suggest_autoimports client_config
@@ -1769,10 +1777,10 @@ let handle_persistent_signaturehelp_lsp
     match file_input with
     | File_input.FileContent (fn, content) -> Ok (fn, content)
     | File_input.FileName fn ->
-      (try Ok (Some fn, Sys_utils.cat fn)
-       with e ->
-         let e = Exception.wrap e in
-         Error (Exception.get_ctor_string e, Utils.Callstack (Exception.get_backtrace_string e)))
+      (try Ok (Some fn, Sys_utils.cat fn) with
+      | e ->
+        let e = Exception.wrap e in
+        Error (Exception.get_ctor_string e, Utils.Callstack (Exception.get_backtrace_string e)))
   in
   match fn_content with
   | Error (reason, stack) -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason ~stack metadata
@@ -2059,16 +2067,17 @@ let handle_persistent_find_refs ~reader ~genv ~id ~params ~metadata ~client ~pro
   let extra_data =
     Some
       (Hh_json.JSON_Object
-         ( ( "result",
-             Hh_json.JSON_String
-               (match result with
-               | Ok _ -> "SUCCESS"
-               | _ -> "FAILURE") )
-         :: ("global", Hh_json.JSON_Bool true)
-         ::
-         (match dep_count with
-         | Some count -> [("deps", Hh_json.JSON_Number (string_of_int count))]
-         | None -> []) ))
+         (( "result",
+            Hh_json.JSON_String
+              (match result with
+              | Ok _ -> "SUCCESS"
+              | _ -> "FAILURE") )
+          ::
+          ("global", Hh_json.JSON_Bool true)
+          ::
+          (match dep_count with
+          | Some count -> [("deps", Hh_json.JSON_Number (string_of_int count))]
+          | None -> [])))
   in
   let metadata = with_data ~extra_data metadata in
   match result with
@@ -2611,7 +2620,8 @@ and handle_parallelizable_persistent ~genv ~client_id ~request ~workload env : u
       ~workload
       ~default_ret:()
       env
-  with Lwt.Canceled ->
+  with
+  | Lwt.Canceled ->
     (* It's fine for parallelizable commands to be canceled - they'll be run again later *)
     Lwt.return_unit
 

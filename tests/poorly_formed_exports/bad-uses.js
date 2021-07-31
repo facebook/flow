@@ -52,7 +52,7 @@ if (require.main === module) { }
 // This doesn't need to be allowed, the above can be special-cased.
 if (require.main === (5, module)) { }
 
-// This should be okay since `module` is rebound. Unfortunately it currently errors due to a bug in
+// This is okay since `module` is rebound. Previously it errored due to a (now fixed) bug in
 // scope_builder.
 switch ('') { case '': const module = ''; module; };
 

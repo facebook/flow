@@ -524,22 +524,22 @@ class declaration_info_collector ~scope_info ~reader ~add_var_info ~add_member_i
       ident
 
     method! type_alias
-        ( Flow_ast.Statement.TypeAlias.{ id = ((aloc, type_), Flow_ast.Identifier.{ name; _ }); _ }
-        as ident ) =
+        (Flow_ast.Statement.TypeAlias.{ id = ((aloc, type_), Flow_ast.Identifier.{ name; _ }); _ }
+        as ident) =
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
       this#annot_with_tparams add_type_info name loc type_;
       ident
 
     method! opaque_type
-        ( Flow_ast.Statement.OpaqueType.{ id = ((aloc, type_), Flow_ast.Identifier.{ name; _ }); _ }
-        as ident ) =
+        (Flow_ast.Statement.OpaqueType.{ id = ((aloc, type_), Flow_ast.Identifier.{ name; _ }); _ }
+        as ident) =
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
       this#annot_with_tparams add_type_info name loc type_;
       ident
 
     method! interface
-        ( Flow_ast.Statement.Interface.{ id = ((aloc, type_), Flow_ast.Identifier.{ name; _ }); _ }
-        as ident ) =
+        (Flow_ast.Statement.Interface.{ id = ((aloc, type_), Flow_ast.Identifier.{ name; _ }); _ }
+        as ident) =
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
       this#annot_with_tparams add_type_info name loc type_;
       ident
@@ -673,7 +673,7 @@ let file_liness ~root ~write_root ~file:file_key =
   return Src.FileLines.(to_json { file; lengths; hasUnicodeOrTabs; endsInNewline })
 
 let make ~output_dir ~write_root =
-  ( module Codemod_runner.MakeSimpleTypedRunner (struct
+  (module Codemod_runner.MakeSimpleTypedRunner (struct
     type accumulator = {
       files_analyzed: int;
       json_filenames: SSet.t;
@@ -800,4 +800,4 @@ let make ~output_dir ~write_root =
       output_facts "src.FileLines.1" file_lines;
       close_out out_channel;
       { files_analyzed = 1; json_filenames = SSet.singleton output_file }
-  end) : Codemod_runner.RUNNABLE )
+  end) : Codemod_runner.RUNNABLE)

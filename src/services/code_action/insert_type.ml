@@ -200,8 +200,8 @@ let remove_ambiguous_types ~ambiguity_strategy ~exact_by_default ty loc =
   match ambiguity_strategy with
   | Fail ->
     begin
-      try fail_on_ambiguity ty
-      with FoundAmbiguousType ->
+      try fail_on_ambiguity ty with
+      | FoundAmbiguousType ->
         raise
         @@ expected
         @@ MulipleTypesPossibleAtPoint
@@ -286,8 +286,8 @@ class mapper ~strict ~synth_type target =
         update_property loc prop annot
       | Property
           ( loc,
-            ( { key = Literal (kloc, _) | Identifier (kloc, _) | PrivateName (kloc, _); annot; _ }
-            as prop ) )
+            ({ key = Literal (kloc, _) | Identifier (kloc, _) | PrivateName (kloc, _); annot; _ } as
+            prop) )
         when this#is_target kloc || (target_is_point && this#target_contained_by kloc) ->
         if strict then
           raise

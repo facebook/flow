@@ -138,7 +138,10 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
       begin
         match status with
         | Unix.WEXITED exit_status ->
-          let exit_type = (try Some (Exit.error_type exit_status) with Not_found -> None) in
+          let exit_type =
+            try Some (Exit.error_type exit_status) with
+            | Not_found -> None
+          in
           let exit_status_string =
             Base.Option.value_map ~default:"Invalid_exit_code" ~f:Exit.to_string exit_type
           in
@@ -489,9 +492,9 @@ end = struct
         in
         match timeout with
         | Some timeout ->
-          (try%lwt Lwt_unix.with_timeout timeout go
-           with Lwt_unix.Timeout ->
-             Lwt.return (Error "Failed to initialize watchman: Watchman timed out"))
+          (try%lwt Lwt_unix.with_timeout timeout go with
+          | Lwt_unix.Timeout ->
+            Lwt.return (Error "Failed to initialize watchman: Watchman timed out"))
         | None -> go ()
 
       (* Should we throw away metadata even if files is empty? glevi thinks that's fine, since we

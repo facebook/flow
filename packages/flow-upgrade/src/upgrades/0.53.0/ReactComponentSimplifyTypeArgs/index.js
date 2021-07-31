@@ -15,7 +15,7 @@ exports.kind = 'codemod';
 
 exports.title = 'Simplify React.Component type arguments.';
 
-exports.description = `
+exports.description = (`
 A React.Component used to require three type arguments like this:
 React.Component<DefaultProps, Props, State>. However, requiring DefaultProps
 whenever using type arguments doesn't make much sense. Also, requiring State
@@ -54,6 +54,6 @@ class MyComponent extends React.Component<Props, State> {
 )}
 
 This upgrade will remove DefaultProps from the type arguments of all your
-React components.`.slice(1);
+React components.`.slice(1): string);
 
-exports.transformPath = path.join(__dirname, './codemod.js');
+exports.transformPath = (path.join(__dirname, './codemod.js'): string);

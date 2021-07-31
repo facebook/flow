@@ -44,15 +44,6 @@ value hh_sysinfo_uptime(void) {
 #endif
 }
 
-CAMLprim value hh_sysinfo_is_apple_os(void) {
-  CAMLparam0();
-#ifdef __APPLE__
-  return Val_bool(1);
-#else
-  return Val_bool(0);
-#endif
-}
-
 /**
  * There are a bunch of functions that you expect to return a pid,
  * like Unix.getpid() and Unix.create_process(). However, on

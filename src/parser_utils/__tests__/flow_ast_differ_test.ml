@@ -371,7 +371,7 @@ class first_last_dup_mapper =
   object
     inherit [Loc.t] Flow_ast_mapper.mapper
 
-    method! statement_list stmts = (List.hd stmts :: stmts) @ [List.hd (List.rev stmts)]
+    method! statement_list stmts = List.hd stmts :: stmts @ [List.hd (List.rev stmts)]
   end
 
 class insert_import_mapper =

@@ -55,6 +55,19 @@ let mk_scope_builder_uses_of_all_uses_test contents expected_uses ctxt =
     expected_uses
     uses
 
+(* Asserts that scopes classified as toplevel indeed contains all toplevel defs. *)
+let mk_scope_builder_toplevel_scopes_test contents expected_defs_in_toplevel ctxt =
+  let info = Scope_builder.program ~with_types:false (parse contents) in
+  let collect_def_names acc scope_id =
+    let { Scope_api.Scope.defs; _ } = Scope_api.scope info scope_id in
+    defs |> SMap.keys |> List.fold_left (fun acc def -> SSet.add def acc) acc
+  in
+  let actual_defs_in_toplevel =
+    Scope_api.toplevel_scopes |> List.fold_left collect_def_names SSet.empty |> SSet.elements
+  in
+  let printer = String.concat ", " in
+  assert_equal ~ctxt ~printer expected_defs_in_toplevel actual_defs_in_toplevel
+
 let mk_scope_builder_scope_loc_test contents expected_scope_locs ctxt =
   let info = Scope_builder.program ~with_types:true (parse contents) in
   let scope_locs =
@@ -185,6 +198,10 @@ let tests =
          >:: mk_scope_builder_all_uses_test
                "const B = 1; import {B as A} from 'A'; A()"
                [mk_loc (1, 6) (1, 7); mk_loc (1, 26) (1, 27); mk_loc (1, 39) (1, 40)];
+         "declare_pred_fn"
+         >:: mk_scope_builder_all_uses_test
+               "declare function g(x: number): boolean %checks(x);"
+               [mk_loc (1, 17) (1, 18); mk_loc (1, 19) (1, 20); mk_loc (1, 47) (1, 48)];
          "export_named_function"
          >:: mk_scope_builder_all_uses_test
                "export function foo() {}; foo()"
@@ -228,11 +245,14 @@ let tests =
                "enum Foo {}\nFoo"
                [mk_loc (1, 5) (1, 8); mk_loc (2, 0) (2, 3)];
          "switch"
-         >:: mk_scope_builder_all_uses_test "switch ('') { case '': const foo = ''; foo; };" [];
-         (* TODO this should be the output, but there is a bug:
-            [mk_loc (1, 29) (1, 32);
-             mk_loc (1, 39) (1, 42)];
-         *)
+         >:: mk_scope_builder_all_uses_test
+               "switch ('') { case '': const foo = ''; foo; };"
+               [mk_loc (1, 29) (1, 32); mk_loc (1, 39) (1, 42)];
+         "switch_weird"
+         >:: mk_scope_builder_all_uses_test
+               "switch ('') { case l: 0; break; case '': let l };"
+               [mk_loc (1, 19) (1, 20); mk_loc (1, 45) (1, 46)];
+         (* ^^ this looks super weird but is correct *)
          "scope_loc_function_declaration"
          >:: mk_scope_builder_scope_loc_test
                "function a() {};"
@@ -287,4 +307,10 @@ let tests =
                  (3, mk_loc (1, 17) (1, 19));
                ];
          (* block (lexical) *)
+         "toplevel_defs_empty" >:: mk_scope_builder_toplevel_scopes_test "" [];
+         "toplevel_defs_hoisting_only"
+         >:: mk_scope_builder_toplevel_scopes_test "function test(a) {}" ["test"];
+         "toplevel_defs_lexical_only" >:: mk_scope_builder_toplevel_scopes_test "const a = b" ["a"];
+         "toplevel_defs_hoisting_and_lexical"
+         >:: mk_scope_builder_toplevel_scopes_test "const a = b; function test(a) {}" ["a"; "test"];
        ]

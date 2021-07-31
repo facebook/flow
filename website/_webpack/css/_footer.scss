@@ -1,0 +1,70 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+.footer {
+  padding: 1.5rem 0;
+  background: $flow-gray-darkest;
+  color: white;
+  -webkit-font-smoothing: antialiased;
+
+  @include media-breakpoint-up('lg') {
+    line-height: 2.5;
+  }
+
+  a {
+    color: $flow-yellow;
+  }
+
+  .fboss-logo {
+    margin-top: 1rem;
+    height: 2.5rem;
+    vertical-align: middle;
+    opacity: 0.9;
+
+    &:hover {
+      opacity: 1;
+    }
+
+    @include media-breakpoint-up('lg') {
+      margin-top: 0;
+      margin-left: 1rem;
+    }
+  }
+}
+
+@include media-breakpoint-down('xs') {
+  .footer-right {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid $flow-gray-darker;
+  }
+}
+
+@include media-breakpoint-up('sm') {
+  .footer-left {
+    float: left;
+  }
+
+  .footer-right {
+    float: right;
+    text-align: right;
+  }
+}
+
+@include media-breakpoint-down('md') {
+  .footer-item {
+    display: block;
+  }
+}
+
+@include media-breakpoint-up('lg') {
+  .footer-item + .footer-item::before {
+    padding-left: .25em;
+    padding-right: .25em;
+    content: " · ";
+  }
+}

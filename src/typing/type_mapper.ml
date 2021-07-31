@@ -63,8 +63,7 @@ let union_flatten =
     | UnionT (_, rep) -> union_flatten cx seen @@ UnionRep.members rep
     | MaybeT (r, t) ->
       DefT (r, Trust.bogus_trust (), NullT)
-      :: DefT (r, Trust.bogus_trust (), VoidT)
-      :: flatten cx seen t
+      :: DefT (r, Trust.bogus_trust (), VoidT) :: flatten cx seen t
     | OptionalT { reason = r; type_ = t; use_desc } ->
       let void_t = VoidT.why_with_use_desc ~use_desc r |> with_trust Trust.bogus_trust in
       void_t :: flatten cx seen t
@@ -409,8 +408,8 @@ class virtual ['a] t =
     method fun_type
         cx
         map_cx
-        ({ this_t = (this, subtyping); params; rest_param; return_t; is_predicate; def_reason } as t)
-        =
+        ({ this_t = (this, subtyping); params; rest_param; return_t; is_predicate; def_reason } as
+        t) =
       let this' = self#type_ cx map_cx this in
       let params' =
         ListUtils.ident_map

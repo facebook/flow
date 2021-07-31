@@ -1,0 +1,364 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+.feature {
+  position: relative;
+  padding: 4rem 0;
+  -webkit-font-smoothing: antialiased;
+
+  img {
+    background-color: #22292F; // gif loading
+  }
+}
+
+.feature-small {
+  padding: 4rem 0 3rem;
+}
+
+.feature-heading {
+  position: relative;
+  font-size: 2.5rem;
+  font-weight: 900;
+  text-transform: uppercase;
+
+  @include media-breakpoint-up('sm') {
+    font-size: 3rem;
+  }
+}
+
+.feature-heading-center {
+  @include media-breakpoint-up('xl') {
+    margin-top: 3.5rem;
+  }
+}
+
+.feature-text {
+  font-size: 1.3rem;
+}
+
+.feature .feature-btn {
+  position: relative;
+  display: block;
+  vertical-align: middle;
+
+  margin-bottom: 1rem;
+  padding: 1rem 1.25rem;
+
+  border: 4px solid transparent;
+
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 1.6rem;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+
+  &:hover,
+  &:active,
+  &:focus {
+    border-color: $flow-yellow;
+    background-color: $flow-yellow;
+    color: $flow-gray-darkest;
+    text-decoration: none;
+  }
+
+  @include media-breakpoint-up('md') {
+    display: inline-block;
+    margin-bottom: 2rem;
+    margin-right: 2rem;
+  }
+
+  @include media-breakpoint-up('lg') {
+    margin-bottom: 0;
+  }
+}
+
+.feature-decoration {
+  position: absolute;
+  z-index: 1;
+  width: 10%;
+
+  @include media-breakpoint-up('md') {
+    width: 7.5%;
+  }
+
+  @include media-breakpoint-up('xl') {
+    width: 5%;
+  }
+
+  &::before,
+  &::after {
+    content: "";
+    display: block;
+    position: absolute;
+    z-index: 0;
+    border: 2rem solid red;
+
+    @include media-breakpoint-up('sm') {
+      border-width: 3rem;
+    }
+
+    @include media-breakpoint-up('lg') {
+      border-width: 5rem;
+    }
+  }
+
+  &::after { opacity: 0.5; }
+}
+
+.feature-decoration-rise {
+  left: 0;
+  bottom: 100%;
+
+  &::before,
+  &::after {
+    bottom: 0;
+    left: 0;
+    border-top: 0;
+    border-left: 0;
+    border-right-color: transparent !important;
+  }
+
+  &::after {
+    margin-left: 50%;
+  }
+}
+
+.feature-decoration-drop {
+  right: 0;
+  top: 100%;
+
+  &::before,
+  &::after {
+    top: 0;
+    right: 0;
+    border-bottom-width: 0;
+    border-right-width: 0;
+    border-left-color: transparent !important;
+  }
+
+  &::after {
+    margin-right: 50%;
+  }
+}
+
+.feature-gray {
+  background: #eee;
+
+  .feature-heading {
+    color: #444;
+  }
+
+  .feature-text {
+    color: #666;
+  }
+
+  .feature-btn {
+    border-color: rgba(#444, 0.3);
+    color: #444;
+  }
+
+  .feature-decoration {
+    &::before, &::after {
+      border-color: #eee;
+    }
+  }
+}
+
+.feature-light {
+  background: #fff;
+
+  .feature-heading {
+    color: #444;
+  }
+
+  .feature-text {
+    color: #666;
+  }
+
+  .feature-btn {
+    border-color: rgba(#444, 0.3);
+    color: #444;
+  }
+
+  .feature-decoration {
+    &::before, &::after {
+      border-color: #fff;
+    }
+  }
+}
+
+.feature-dark {
+  background: $flow-gray-darkest;
+
+  .feature-heading {
+    color: #fff;
+  }
+
+  .feature-text {
+    color: #ccc;
+  }
+
+  .feature-btn {
+    border-color: rgba(#fff, 0.3);
+    color: #fff;
+  }
+
+  .feature-decoration {
+    &::before, &::after {
+      border-color: $flow-gray-darkest;
+    }
+  }
+}
+
+.feature-yellow {
+  background: $flow-yellow;
+
+  .feature-heading {
+    color: $flow-gray-darkest;
+  }
+
+  .feature-text {
+    color: $flow-gray-darker;
+  }
+
+  .feature-btn {
+    border-color: white;
+    background: white;
+    color: $flow-gray-darkest;
+
+    &:hover,
+    &:active,
+    &:focus {
+      border-color: $flow-gray-darkest;
+      background-color: $flow-gray-darkest;
+      color: $flow-yellow;
+      text-decoration: none;
+    }
+  }
+
+  .feature-decoration {
+    &::before, &::after {
+      border-color: $flow-yellow;
+    }
+  }
+}
+
+$feature-hero-text-shadow: '';
+@for $i from 1 through 500 {
+  @if $i != 1 { $feature-hero-text-shadow: $feature-hero-text-shadow + ', '; }
+  $feature-hero-text-shadow: $feature-hero-text-shadow + '#{$i}px #{$i}px #{$flow-gray-darkest}';
+}
+
+.feature-hero {
+  padding: 6rem 0;
+  background: $flow-gray-darker;
+  color: white;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+
+  .feature-heading {
+    margin-bottom: 2rem;
+    font-size: 2.5rem;
+
+    color: $flow-yellow;
+    text-shadow: #{$feature-hero-text-shadow};
+
+    $sm: map-get($grid-breakpoints, "sm");
+    $xs: map-get($grid-breakpoints, "xs");
+    $distance: $sm - $xs;
+
+    @media (min-width: $sm - ($distance * 0.4)) {
+      font-size: 2.7rem;
+    }
+
+    @media (min-width: $sm - ($distance * 0.3)) {
+      font-size: 3.1rem;
+    }
+
+    @media (min-width: $sm - ($distance * 0.2)) {
+      font-size: 3.4rem;
+    }
+
+    @media (min-width: $sm - ($distance * 0.1)) {
+      font-size: 3.6rem;
+    }
+
+    @media (min-width: $sm - ($distance * 0.05)) {
+      font-size: 3.8rem;
+    }
+
+    @include media-breakpoint-up('sm') {
+      font-size: 4rem;
+    }
+
+    @include media-breakpoint-up('md') {
+      font-size: 5rem;
+    }
+
+    @include media-breakpoint-up('lg') {
+      font-size: 4rem;
+    }
+
+    @include media-breakpoint-up('xl') {
+      font-size: 4.5rem;
+    }
+
+    span {
+      color: white;
+    }
+  }
+
+  .feature-btn {
+    border-color: rgba(#fff, 0.2);
+    color: #fff;
+  }
+
+  .gh-btn {
+    position: relative;
+    vertical-align: middle;
+  }
+}
+
+.feature-hero-text {
+  position: relative;
+
+  a {
+    color: white;
+    text-decoration: underline;
+  }
+}
+
+.featurette {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.featurette-heading {
+  color: $gray;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.featurette-text {
+  color: $gray;
+  font-size: 1.1rem;
+}
+
+@include media-breakpoint-up('md') {
+  .featurette {
+    height: 8rem;
+    margin-top: 0;
+    margin-bottom: 3rem;
+  }
+}
+
+@include media-breakpoint-only('md') {
+  .featurette {
+    height: 11rem;
+  }
+}

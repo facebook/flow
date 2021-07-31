@@ -422,8 +422,8 @@ let json_of_loc_props ?(strip_root = None) ?(catch_offset_errors = false) ~offse
     Loc.(
       let offset_entry offset_table pos =
         let offset =
-          try int_ (Offset_utils.offset offset_table pos)
-          with Offset_utils.Offset_lookup_failed _ as exn ->
+          try int_ (Offset_utils.offset offset_table pos) with
+          | Offset_utils.Offset_lookup_failed _ as exn ->
             if catch_offset_errors then
               JSON_Null
             else
@@ -1045,11 +1045,11 @@ let rec code_desc_of_expression ~wrap (_, x) =
       | _ -> false
     in
     do_wrap
-      ( code_desc_of_expression ~wrap:wrap_test test
+      (code_desc_of_expression ~wrap:wrap_test test
       ^ " ? "
       ^ code_desc_of_expression ~wrap:false consequent
       ^ " : "
-      ^ code_desc_of_expression ~wrap:false alternate )
+      ^ code_desc_of_expression ~wrap:false alternate)
   | Function _ -> "function () { ... }"
   | Identifier (_, { Ast.Identifier.name = x; comments = _ }) -> x
   | Import { Import.argument; comments = _ } ->
@@ -1099,10 +1099,10 @@ let rec code_desc_of_expression ~wrap (_, x) =
       | (_loc, { ArgList.arguments = _; comments = _ }) -> "(...)"
     in
     code_desc_of_expression ~wrap:true callee
-    ^ ( if optional then
+    ^ (if optional then
         "?."
       else
-        "" )
+        "")
     ^ targ_string
     ^ arg_string
   | OptionalMember { OptionalMember.member = { Member._object; property; comments = _ }; optional }
@@ -1141,10 +1141,10 @@ let rec code_desc_of_expression ~wrap (_, x) =
         | Decrement -> "--")
     in
     do_wrap
-      ( if prefix then
+      (if prefix then
         op ^ x
       else
-        x ^ op )
+        x ^ op)
   | Yield { Yield.argument = Some x; delegate = false; _ } ->
     do_wrap ("yield " ^ code_desc_of_expression ~wrap:false x)
   | Yield { Yield.argument = Some x; delegate = true; _ } ->
@@ -1268,23 +1268,23 @@ and code_desc_of_literal x =
 and code_desc_of_property ~optional property =
   match property with
   | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name = x; comments = _ }) ->
-    ( if optional then
+    (if optional then
       "?."
     else
-      "." )
+      ".")
     ^ x
   | Ast.Expression.Member.PropertyPrivateName
       (_, { Ast.PrivateName.id = (_, { Ast.Identifier.name = x; comments = _ }); comments = _ }) ->
-    ( if optional then
+    (if optional then
       "?.#"
     else
-      ".#" )
+      ".#")
     ^ x
   | Ast.Expression.Member.PropertyExpression x ->
-    ( if optional then
+    (if optional then
       "?.["
     else
-      "[" )
+      "[")
     ^ code_desc_of_expression ~wrap:false x
     ^ "]"
 

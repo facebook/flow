@@ -53,13 +53,16 @@ module Jget = struct
   let int_string_opt (s : string option) : int option =
     match s with
     | None -> None
-    | Some s -> (try Some (int_of_string s) with Failure _ -> raise (Parse ("not an int: " ^ s)))
+    | Some s ->
+      (try Some (int_of_string s) with
+      | Failure _ -> raise (Parse ("not an int: " ^ s)))
 
   let float_string_opt (s : string option) : float option =
     match s with
     | None -> None
     | Some s ->
-      (try Some (float_of_string s) with Failure _ -> raise (Parse ("not a float: " ^ s)))
+      (try Some (float_of_string s) with
+      | Failure _ -> raise (Parse ("not a float: " ^ s)))
 
   let list_opt (l : 'a list option) : 'a option list option =
     match l with

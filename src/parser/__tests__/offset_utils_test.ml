@@ -41,8 +41,8 @@ let str_with_utf16_edge_cases =
     replacement_character
 
 let get_offset table pos =
-  try Offset_utils.offset table pos
-  with Offset_utils.Offset_lookup_failed (_pos, msg) ->
+  try Offset_utils.offset table pos with
+  | Offset_utils.Offset_lookup_failed (_pos, msg) ->
     assert_failure
       (Printf.sprintf "Lookup failed: %s\nTable:\n%s" msg (Offset_utils.debug_string table))
 

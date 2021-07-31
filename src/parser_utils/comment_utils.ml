@@ -10,8 +10,8 @@ class ['loc] comments_stripper =
     inherit ['loc] Flow_ast_mapper.mapper
 
     method! syntax_opt
-        : 'internal. ('loc, 'internal) Flow_ast.Syntax.t option ->
-          ('loc, 'internal) Flow_ast.Syntax.t option =
+        : 'internal.
+          ('loc, 'internal) Flow_ast.Syntax.t option -> ('loc, 'internal) Flow_ast.Syntax.t option =
       (fun _ -> None)
   end
 

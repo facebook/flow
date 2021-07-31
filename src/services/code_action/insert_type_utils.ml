@@ -467,7 +467,7 @@ module Validator = struct
   open Error
 
   (* Raise an validation_error if there isn't a user facing type that is equivalent to the Ty *)
-  class type_validator_visitor =
+  class type_validator_visitor loc_of_aloc =
     object
       inherit [_] Ty.endo_ty as super
 
@@ -485,14 +485,15 @@ module Validator = struct
           env := Empty_MatchingPropT :: !env;
           Ty.explicit_any
         | Ty.Bot (Ty.EmptyTypeDestructorTriggerT loc) ->
-          env := Empty_TypeDestructorTriggerT (ALoc.to_loc_exn loc) :: !env;
+          let concrete_loc = loc_of_aloc loc in
+          env := Empty_TypeDestructorTriggerT concrete_loc :: !env;
           Ty.explicit_any
         | Ty.Any
             (Ty.Unsound
-              ( ( Ty.Constructor | Ty.DummyStatic | Ty.Existential | Ty.Exports
-                | Ty.FunctionPrototype | Ty.InferenceHooks | Ty.InstanceOfRefinement | Ty.Merged
-                | Ty.ResolveSpread | Ty.Unchecked | Ty.Unimplemented | Ty.UnresolvedType
-                | Ty.WeakContext ) as kind )) ->
+              (( Ty.Constructor | Ty.DummyStatic | Ty.Existential | Ty.Exports
+               | Ty.FunctionPrototype | Ty.InferenceHooks | Ty.InstanceOfRefinement | Ty.Merged
+               | Ty.ResolveSpread | Ty.Unchecked | Ty.Unimplemented | Ty.UnresolvedType
+               | Ty.WeakContext ) as kind)) ->
           env := Any_Unsound kind :: !env;
           Ty.explicit_any
         | Ty.Utility (Ty.ReactElementConfigType (Ty.Fun _)) ->
@@ -502,7 +503,7 @@ module Validator = struct
         | Ty.Generic (symbol, _, _) ->
           let { Ty.sym_anonymous; sym_def_loc; _ } = symbol in
           if sym_anonymous then (
-            env := Anonymous (ALoc.to_loc_exn sym_def_loc) :: !env;
+            env := Anonymous (loc_of_aloc sym_def_loc) :: !env;
             Ty.explicit_any
           ) else
             super#on_t env t
@@ -515,7 +516,7 @@ module Validator = struct
 
   let validate_type_too_big_max = 1000
 
-  let validate_type ~size_limit t =
+  let validate_type ~size_limit ?(loc_of_aloc = ALoc.to_loc_exn) t =
     match Ty_utils.size_of_type ~max:size_limit t with
     | None ->
       let max = validate_type_too_big_max in
@@ -523,7 +524,7 @@ module Validator = struct
       (t, [error])
     | Some _ ->
       let env = ref [] in
-      let t = (new type_validator_visitor)#on_t env t in
+      let t = (new type_validator_visitor loc_of_aloc)#on_t env t in
       (t, !env)
 end
 
@@ -601,17 +602,16 @@ class patch_up_react_mapper ?(imports_react = false) () =
        * it is imported with the same mechanism we import other Remote symbols.
        * Otherwise, we refer to these names as 'React.NAME'. *)
       | Ty.Generic
-          ( ( {
-                Ty.sym_name =
-                  Reason.OrdinaryName
-                    ( ( "AbstractComponent" | "ChildrenArray" | "ComponentType" | "Config"
-                      | "Context" | "Element" | "ElementConfig" | "ElementProps" | "ElementRef"
-                      | "ElementType" | "Key" | "Node" | "Portal" | "Ref"
-                      | "StatelessFunctionalComponent" ) as name );
-                sym_provenance = Ty_symbol.Library { Ty_symbol.imported_as = None };
-                sym_def_loc;
-                _;
-              } as symbol ),
+          ( ({
+               Ty.sym_name =
+                 Reason.OrdinaryName
+                   (( "AbstractComponent" | "ChildrenArray" | "ComponentType" | "Config" | "Context"
+                    | "Element" | "ElementConfig" | "ElementProps" | "ElementRef" | "ElementType"
+                    | "Key" | "Node" | "Portal" | "Ref" | "StatelessFunctionalComponent" ) as name);
+               sym_provenance = Ty_symbol.Library { Ty_symbol.imported_as = None };
+               sym_def_loc;
+               _;
+             } as symbol),
             kind,
             args_opt )
         when is_react_loc sym_def_loc ->

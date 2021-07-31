@@ -15,7 +15,7 @@ exports.kind = 'codemod';
 
 exports.title = 'Remove and replace old React utility types.';
 
-exports.description = `
+exports.description = (`
 In the past Flow has some very confusing and inconvenient utility types for
 React. We removed these utility types and replaced them with types which should
 make a lot more sense. These types will make it a lot easier to effectively type
@@ -64,6 +64,6 @@ cause a lot of new errors!)`,
   `Also note that we used import * as React from 'react'. You must use the
 import * syntax if you want to use the new utility types. This codemod will
 update your code to use this new style of import.`,
-])}`.slice(1);
+])}`.slice(1): string);
 
-exports.transformPath = path.join(__dirname, './codemod.js');
+exports.transformPath = (path.join(__dirname, './codemod.js'): string);

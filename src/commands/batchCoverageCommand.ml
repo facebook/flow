@@ -134,10 +134,10 @@ let output_results ~root ~strip_root ~json ~pretty ~show_all ~trust stats =
             ("files", array_ file_list);
             ( "statistics",
               JSON_Object
-                ( [("files_in_directory", int_ num_files_in_dir)]
+                ([("files_in_directory", int_ num_files_in_dir)]
                 @ covered_expressions
                 @ [("total_expressions", int_ total)]
-                @ percentage ) );
+                @ percentage) );
           ]
       in
       print_json_endline ~pretty json_output)

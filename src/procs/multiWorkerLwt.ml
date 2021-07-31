@@ -91,7 +91,8 @@ let multi_threaded_call
           Measure.sample "worker_done" (idle_end_wall_time -. idle_start_wall_time))
         idle_start_times;
       Lwt.return_unit
-    with Lwt.Canceled ->
+    with
+    | Lwt.Canceled ->
       let total = List.length worker_threads in
       let finished = ref 0 in
       let worker_threads =

@@ -1,3 +1,0 @@
-[options]
-experimental.enums=true
-experimental.enums_with_unknown_members=true

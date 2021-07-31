@@ -9,7 +9,10 @@ include Disk_sig.Types
 
 let cat (filename : string) : string =
   let ic = open_in_bin filename in
-  let len = (try in_channel_length ic with Sys_error _ -> 0) in
+  let len =
+    try in_channel_length ic with
+    | Sys_error _ -> 0
+  in
   (* in_channel_length returns 0 for non-regular files; try reading it
      using a fixed-sized buffer if it appears to be empty.
      NOTE: JaneStreet's Core Sys module defines a function is_file which
@@ -35,7 +38,8 @@ let cat (filename : string) : string =
           (* 0 is offset *)
           read_bytes ()
         )
-      with End_of_file -> ()
+      with
+      | End_of_file -> ()
     in
     read_bytes ();
     close_in ic;
@@ -47,8 +51,8 @@ let is_file_not_exist_error ~file ~err_msg =
 
 let write_file ~file ~contents =
   let chan =
-    try open_out file
-    with Sys_error err_msg when is_file_not_exist_error ~file ~err_msg ->
+    try open_out file with
+    | Sys_error err_msg when is_file_not_exist_error ~file ~err_msg ->
       raise (No_such_file_or_directory file)
   in
   output_string chan contents;
@@ -86,7 +90,9 @@ let rec rm_dir_tree path =
   | Sys_error s when s = Printf.sprintf "%s: No such file or directory" path -> ()
   | Unix.Unix_error (Unix.ENOENT, _, _) -> ()
 
-let is_directory x = (try Sys.is_directory x with Sys_error _ -> false)
+let is_directory x =
+  try Sys.is_directory x with
+  | Sys_error _ -> false
 
 let file_exists = Sys.file_exists
 
@@ -104,7 +110,7 @@ let rename old target =
   else if not (file_exists (Filename.dirname target)) then
     raise (No_such_file_or_directory (Filename.dirname target))
   else
-    try Sys.rename old target
-    with Sys_error s when s = "Directory not empty" -> raise (Rename_target_dir_not_empty target)
+    try Sys.rename old target with
+    | Sys_error s when s = "Directory not empty" -> raise (Rename_target_dir_not_empty target)
 
 let filemtime file = (Unix.stat file).Unix.st_mtime

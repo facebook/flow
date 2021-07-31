@@ -66,7 +66,8 @@ let load_per_file_time ~options =
               ~mode:Lwt_io.Input
               ~perm:0o666
               file)
-       with Unix.Unix_error (Unix.ENOENT, _, _) -> Lwt_result.fail "File doesn't exist")
+       with
+      | Unix.Unix_error (Unix.ENOENT, _, _) -> Lwt_result.fail "File doesn't exist")
       >>= fun ic ->
       let%lwt contents = Lwt_io.read ic in
       let%lwt () = Lwt_io.close ic in
@@ -114,15 +115,16 @@ let save_averages ~options ?estimates new_averages =
     Base.Option.value_map
       estimates
       ~default:[]
-      ~f:(fun {
-                estimated_time_to_recheck;
-                estimated_time_to_restart;
-                estimated_time_to_init;
-                estimated_time_per_file;
-                estimated_files_to_recheck;
-                estimated_files_to_init;
-              }
-              ->
+      ~f:(fun
+           {
+             estimated_time_to_recheck;
+             estimated_time_to_restart;
+             estimated_time_to_init;
+             estimated_time_per_file;
+             estimated_files_to_recheck;
+             estimated_files_to_init;
+           }
+         ->
         Hh_json.
           [
             ( estimates_key,
@@ -146,8 +148,8 @@ let save_averages ~options ?estimates new_averages =
     Hh_json.(
       json_to_string
       @@ JSON_Object
-           ( (per_file_time_key, JSON_Number (Dtoa.ecma_string_of_float new_averages.per_file_time))
-           :: estimates ))
+           ((per_file_time_key, JSON_Number (Dtoa.ecma_string_of_float new_averages.per_file_time))
+            :: estimates))
   in
   let file = get_file ~options in
   Lwt_result.(
@@ -168,7 +170,8 @@ let save_averages ~options ?estimates new_averages =
       try%lwt
         let%lwt () = Lwt_io.write oc json_str in
         Lwt_result.ok @@ Lwt_io.close oc
-      with exn ->
+      with
+      | exn ->
         let exn = Exception.wrap exn in
         Lwt_result.fail (Printf.sprintf "Failed to write file\n%s" (Exception.to_string exn))
     in

@@ -112,8 +112,8 @@ let make =
 exception Offset_lookup_failed of Loc.position * string
 
 let lookup arr i pos context_string =
-  try arr.(i)
-  with Invalid_argument _ ->
+  try arr.(i) with
+  | Invalid_argument _ ->
     let msg =
       Printf.sprintf
         "Failure while looking up %s. Index: %d. Length: %d."
@@ -167,4 +167,5 @@ let contains_multibyte_character table =
           line)
       table;
     false
-  with FoundMultibyte -> true
+  with
+  | FoundMultibyte -> true

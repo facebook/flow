@@ -157,12 +157,13 @@ module DeclarationInfo = struct
   let to_json ~root ~write_root { declaration; type_; documentation } =
     key
     @@ JSON_Object
-         ( ("declaration", Declaration.to_json ~root ~write_root declaration)
-         :: ("type", Type.to_json type_)
-         ::
-         (match documentation with
-         | None -> []
-         | Some loc -> [("documentation", Documentation.to_json ~root ~write_root loc)]) )
+         (("declaration", Declaration.to_json ~root ~write_root declaration)
+          ::
+          ("type", Type.to_json type_)
+          ::
+          (match documentation with
+          | None -> []
+          | Some loc -> [("documentation", Documentation.to_json ~root ~write_root loc)]))
 end
 
 module LocalDeclarationReference = struct
@@ -215,12 +216,13 @@ module MemberDeclarationInfo = struct
   let to_json ~root ~write_root { memberDeclaration; type_; documentation } =
     key
     @@ JSON_Object
-         ( ("memberDeclaration", MemberDeclaration.to_json ~root ~write_root memberDeclaration)
-         :: ("type", Type.to_json type_)
-         ::
-         (match documentation with
-         | None -> []
-         | Some loc -> [("documentation", Documentation.to_json ~root ~write_root loc)]) )
+         (("memberDeclaration", MemberDeclaration.to_json ~root ~write_root memberDeclaration)
+          ::
+          ("type", Type.to_json type_)
+          ::
+          (match documentation with
+          | None -> []
+          | Some loc -> [("documentation", Documentation.to_json ~root ~write_root loc)]))
 end
 
 module Export = struct
@@ -349,12 +351,13 @@ module TypeDeclarationInfo = struct
   let to_json ~root ~write_root { typeDeclaration; type_; documentation } =
     key
     @@ JSON_Object
-         ( ("typeDeclaration", TypeDeclaration.to_json ~root ~write_root typeDeclaration)
-         :: ("type", Type.to_json type_)
-         ::
-         (match documentation with
-         | None -> []
-         | Some loc -> [("documentation", Documentation.to_json ~root ~write_root loc)]) )
+         (("typeDeclaration", TypeDeclaration.to_json ~root ~write_root typeDeclaration)
+          ::
+          ("type", Type.to_json type_)
+          ::
+          (match documentation with
+          | None -> []
+          | Some loc -> [("documentation", Documentation.to_json ~root ~write_root loc)]))
 end
 
 module TypeExport = struct

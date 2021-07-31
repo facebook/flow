@@ -368,7 +368,8 @@ let spread2
                  | _ -> Some (t, true, m)))
              props1
              props2)
-      with CannotSpreadError e -> Error e
+      with
+      | CannotSpreadError e -> Error e
     in
     let obj_kind =
       match dict with
@@ -677,14 +678,14 @@ let intersect2
     Obj_type.obj_kind_from_optional_dict
       ~dict
       ~otherwise:
-        ( if
-          (* TODO(jmbrown): Audit this condition. Should this be a conjunction? *)
-          Obj_type.is_legacy_exact_DO_NOT_USE flags1.obj_kind
-          || Obj_type.is_legacy_exact_DO_NOT_USE flags2.obj_kind
+        (if
+         (* TODO(jmbrown): Audit this condition. Should this be a conjunction? *)
+         Obj_type.is_legacy_exact_DO_NOT_USE flags1.obj_kind
+         || Obj_type.is_legacy_exact_DO_NOT_USE flags2.obj_kind
         then
           Exact
         else
-          Inexact )
+          Inexact)
   in
   let flags = { frozen = flags1.frozen || flags2.frozen; obj_kind } in
   let generics = Generic.spread_append generics1 generics2 in

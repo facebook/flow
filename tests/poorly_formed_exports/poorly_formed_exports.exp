@@ -159,16 +159,8 @@ Error --------------------------------------------------------------------------
                                 ^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ bad-uses.js:57:43
 
-`module` may only be used as part of a legal top level export statement [invalid-export]
-
-   57| switch ('') { case '': const module = ''; module; };
-                                                 ^^^^^^
-
-
-
-Found 21 errors
+Found 20 errors
 FLOW CHECK-CONTENTS:
 Error ------------------------------------------------------------------------------------------ bad-named-export.js:4:3
 

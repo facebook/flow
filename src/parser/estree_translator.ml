@@ -1654,10 +1654,10 @@ with type t = Impl.t = struct
           ("value", bool value);
           ( "raw",
             string
-              ( if value then
+              (if value then
                 "true"
               else
-                "false" ) );
+                "false") );
         ]
     and exists_type loc comments = node ?comments "ExistsTypeAnnotation" loc []
     and type_annotation (loc, ty) = node "TypeAnnotation" loc [("typeAnnotation", _type ty)]

@@ -653,8 +653,8 @@ end = struct
     MonitorRPC.status_update ServerStatus.Read_saved_state;
 
     let%lwt fd =
-      try%lwt Lwt_unix.openfile filename [Unix.O_RDONLY; Unix.O_NONBLOCK] 0o666
-      with Unix.Unix_error (Unix.ENOENT, _, _) as exn ->
+      try%lwt Lwt_unix.openfile filename [Unix.O_RDONLY; Unix.O_NONBLOCK] 0o666 with
+      | Unix.Unix_error (Unix.ENOENT, _, _) as exn ->
         let exn = Exception.wrap exn in
         Hh_logger.error "Failed to open %S\n%s" filename (Exception.to_string exn);
         raise (Invalid_saved_state File_does_not_exist)
@@ -662,8 +662,8 @@ end = struct
     let%lwt () = verify_version fd in
     let%lwt (compressed_data : Saved_state_compression.compressed) =
       Profiling_js.with_timer_lwt profiling ~timer:"Read" ~f:(fun () ->
-          try%lwt Marshal_tools_lwt.from_fd_with_preamble fd
-          with exn ->
+          try%lwt Marshal_tools_lwt.from_fd_with_preamble fd with
+          | exn ->
             let exn = Exception.wrap exn in
             Hh_logger.error ~exn "Failed to parse saved state data";
             raise (Invalid_saved_state Failed_to_marshal))
@@ -673,8 +673,8 @@ end = struct
 
     let%lwt (data : saved_state_data) =
       Profiling_js.with_timer_lwt profiling ~timer:"Decompress" ~f:(fun () ->
-          try Lwt.return (Saved_state_compression.decompress_and_unmarshal compressed_data)
-          with exn ->
+          try Lwt.return (Saved_state_compression.decompress_and_unmarshal compressed_data) with
+          | exn ->
             let exn = Exception.wrap exn in
             Hh_logger.error ~exn "Failed to decompress saved state";
             raise (Invalid_saved_state Failed_to_decompress))

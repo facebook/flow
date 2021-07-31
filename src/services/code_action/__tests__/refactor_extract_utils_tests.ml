@@ -11,7 +11,10 @@ open Loc_collections
 
 let parse contents =
   let (ast, _) =
-    Parser_flow.program ~parse_options:(Some Parser_env.default_parse_options) contents
+    Parser_flow.program
+      ~parse_options:
+        (Some Parser_env.{ default_parse_options with esproposal_class_instance_fields = true })
+      contents
   in
   ast
 
@@ -60,6 +63,7 @@ let stub_metadata ~root ~checked =
     suppress_types = SSet.empty;
     trust_mode = Options.NoTrust;
     type_asserts = false;
+    enable_new_env = false;
   }
 
 let dummy_filename = File_key.SourceFile ""
@@ -131,30 +135,81 @@ let typed_ast_of_ast ast =
     comments
     aloc_ast
 
-let extract_statements_tests =
-  let assert_extracted ~ctxt expected source extract_range =
+let mk_loc = Loc.mk_loc
+
+let extract_tests =
+  let assert_extracted
+      ~ctxt ?expected_statements ?expected_expression ?expected_type source extract_range =
     let ast = parse source in
+    let { AstExtractor.extracted_statements; extracted_expression; extracted_type } =
+      AstExtractor.extract ast extract_range
+    in
     let extracted_statements_str =
-      match StatementsExtractor.extract ast extract_range with
+      match extracted_statements with
       | None -> None
       | Some extracted_statements ->
         Some
-          ( extracted_statements
+          (extracted_statements
           |> Js_layout_generator.statement_list ~opts:Js_layout_generator.default_opts
           |> List.map pretty_print
           |> String.concat ""
-          |> String.trim )
+          |> String.trim)
     in
-    let expected =
-      match expected with
+    let actual_extracted_expression =
+      match extracted_expression with
       | None -> None
-      | Some s -> Some (String.trim s)
+      | Some { AstExtractor.constant_insertion_points; expression } ->
+        Some
+          ( Nel.to_list constant_insertion_points,
+            expression
+            |> Js_layout_generator.expression ~opts:Js_layout_generator.default_opts
+            |> pretty_print
+            |> String.trim )
     in
-    let printer = function
-      | None -> "not_allowed"
-      | Some s -> s
+    let expected_extracted_expression =
+      match expected_expression with
+      | None -> None
+      | Some (constant_insertion_points, expression) ->
+        Some (constant_insertion_points, String.trim expression)
     in
-    assert_equal ~ctxt ~printer expected extracted_statements_str
+    let actual_extracted_type =
+      match extracted_type with
+      | None -> None
+      | Some { AstExtractor.directly_containing_statement_loc; type_ } ->
+        Some
+          ( directly_containing_statement_loc,
+            type_
+            |> Js_layout_generator.type_ ~opts:Js_layout_generator.default_opts
+            |> pretty_print
+            |> String.trim )
+    in
+    let expected_extracted_type =
+      match expected_type with
+      | None -> None
+      | Some (directly_containing_statement_loc, type_) ->
+        Some (directly_containing_statement_loc, String.trim type_)
+    in
+    assert_equal
+      ~ctxt
+      ~printer:(Option.value ~default:"statement not allowed")
+      (Base.Option.map ~f:String.trim expected_statements)
+      extracted_statements_str;
+    assert_equal
+      ~ctxt
+      ~printer:
+        (Base.Option.value_map ~default:"expression not allowed" ~f:(fun (points, e) ->
+             (points |> List.map AstExtractor.show_constant_insertion_point |> String.concat ",")
+             ^ "\n"
+             ^ e))
+      expected_extracted_expression
+      actual_extracted_expression;
+    assert_equal
+      ~ctxt
+      ~printer:
+        (Base.Option.value_map ~default:"type not allowed" ~f:(fun (loc, t) ->
+             Loc.debug_to_string loc ^ ": " ^ t))
+      expected_extracted_type
+      actual_extracted_type
   in
   [
     (* Exactly select the first statement. *)
@@ -166,16 +221,7 @@ let extract_statements_tests =
         console.log("I should not be selected");
       |}
       in
-      let expected = Some "const a = 3;" in
-      assert_extracted
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 8 };
-          _end = { Loc.line = 2; column = 20 };
-        } );
+      assert_extracted ~ctxt ~expected_statements:"const a = 3;" source (mk_loc (2, 8) (2, 20)) );
     (* Exactly select the first two statements. *)
     ( "extract_statements_linear_exact_multiple_statements" >:: fun ctxt ->
       let source =
@@ -185,19 +231,11 @@ let extract_statements_tests =
         console.log("I should not be selected");
       |}
       in
-      let expected = Some {|
+      let expected_statements = {|
 const a = 3;
 let b = 4;
       |} in
-      assert_extracted
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 8 };
-          _end = { Loc.line = 3; column = 18 };
-        } );
+      assert_extracted ~ctxt ~expected_statements source (mk_loc (2, 8) (3, 18)) );
     (* Exactly select the first two statements, but with some whitespaces. *)
     ( "extract_statements_linear_multiple_statements_with_whitespaces" >:: fun ctxt ->
       let source =
@@ -207,19 +245,11 @@ let b = 4;
         console.log("I should not be selected");
       |}
       in
-      let expected = Some {|
+      let expected_statements = {|
 const a = 3;
 let b = 4;
       |} in
-      assert_extracted
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 0 };
-          _end = { Loc.line = 4; column = 0 };
-        } );
+      assert_extracted ~ctxt ~expected_statements source (mk_loc (2, 0) (4, 0)) );
     (* Partially select a statement is not alllowed. *)
     ( "extract_statements_linear_partial" >:: fun ctxt ->
       let source =
@@ -229,15 +259,7 @@ let b = 4;
         console.log("I should not be selected");
       |}
       in
-      assert_extracted
-        ~ctxt
-        None
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 10 };
-          _end = { Loc.line = 3; column = 18 };
-        } );
+      assert_extracted ~ctxt source (mk_loc (2, 10) (3, 18)) );
     (* Exactly select the first 3 statements, where the second one is a nested block. *)
     ( "extract_statements_with_nested" >:: fun ctxt ->
       let source =
@@ -250,22 +272,14 @@ let b = 4;
         console.log("I should not be selected");
       |}
       in
-      let expected = Some {|
+      let expected_statements = {|
 const a = 3;
 {
   let b = 4;
 }
 foo(a + b);
       |} in
-      assert_extracted
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 8 };
-          _end = { Loc.line = 6; column = 19 };
-        } );
+      assert_extracted ~ctxt ~expected_statements source (mk_loc (2, 8) (6, 19)) );
     (* Select statements from nested block *)
     ( "extract_statements_from_nested" >:: fun ctxt ->
       let source =
@@ -278,16 +292,7 @@ foo(a + b);
         console.log("I should not be selected");
       |}
       in
-      let expected = Some "let b = 4;" in
-      assert_extracted
-        ~ctxt
-        expected
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 4; column = 0 };
-          _end = { Loc.line = 4; column = 20 };
-        } );
+      assert_extracted ~ctxt ~expected_statements:"let b = 4;" source (mk_loc (4, 0) (4, 20)) );
     (* Selecting part of the statements from a nested block is not allowed *)
     ( "extract_statements_from_nested_partial" >:: fun ctxt ->
       let source =
@@ -300,38 +305,253 @@ foo(a + b);
         console.log("I should not be selected");
       |}
       in
+      assert_extracted ~ctxt source (mk_loc (2, 8) (4, 20)) );
+    ( "extract_expression_basic" >:: fun ctxt ->
       assert_extracted
         ~ctxt
-        None
+        ~expected_expression:
+          ( [
+              {
+                AstExtractor.title = "Extract to constant in module scope";
+                function_body_loc = None;
+                statement_loc = mk_loc (1, 0) (1, 11);
+              };
+            ],
+            "1" )
+        "const a = 1"
+        (mk_loc (1, 10) (1, 11)) );
+    (* When statement selection is empty, the chosen expression is good. *)
+    ( "extract_expression_nested" >:: fun ctxt ->
+      assert_extracted
+        ~ctxt
+        ~expected_expression:
+          ( [
+              {
+                AstExtractor.title = "Extract to constant in module scope";
+                function_body_loc = None;
+                statement_loc = mk_loc (1, 0) (1, 15);
+              };
+            ],
+            "1 + 1" )
+        "const a = 1 + 1"
+        (mk_loc (1, 10) (1, 15)) );
+    (* When the selection is both an expression and a statement *)
+    ( "extract_expression_statement_without_semicolon" >:: fun ctxt ->
+      assert_extracted
+        ~ctxt
+        ~expected_statements:"\"hello\";"
+        ~expected_expression:
+          ( [
+              {
+                AstExtractor.title = "Extract to constant in module scope";
+                function_body_loc = None;
+                statement_loc = mk_loc (1, 0) (1, 7);
+              };
+            ],
+            "\"hello\"" )
+        "'hello'"
+        (mk_loc (1, 0) (1, 7)) );
+    (* Same as above case, but adding a semicolon makes the selection only statement. *)
+    ( "extract_expression_statement_with_semicolon" >:: fun ctxt ->
+      assert_extracted ~ctxt ~expected_statements:"\"hello\";" "'hello';" (mk_loc (1, 0) (1, 8)) );
+    ( "extract_expression_ban_multiple" >:: fun ctxt ->
+      assert_extracted ~ctxt "const a = 1; const b = 2;" (mk_loc (1, 9) (1, 25)) );
+    (* Selecting `1;`.
+       Although expression is contained, illegal selection of statement invalidates it. *)
+    ( "extract_expression_ban_partial_statement" >:: fun ctxt ->
+      assert_extracted ~ctxt "const a = 1; const b = 2;" (mk_loc (1, 8) (1, 11));
+      assert_extracted ~ctxt "const a = 1; const b = 2;" (mk_loc (1, 10) (1, 16)) );
+    (* Expression only exists in a class, not in any statement. *)
+    ( "ban_expression_only_in_class" >:: fun ctxt ->
+      assert_extracted
+        ~ctxt
+        "class A { a = 3 }"
+        ~expected_expression:
+          ( [
+              {
+                AstExtractor.title = "Extract to constant in module scope";
+                function_body_loc = None;
+                statement_loc = mk_loc (1, 0) (1, 17);
+              };
+            ],
+            "3" )
+        (mk_loc (1, 14) (1, 15));
+      assert_extracted
+        ~ctxt
+        "class A { constructor(a = 3) {} }"
+        ~expected_expression:
+          ( [
+              {
+                AstExtractor.title = "Extract to constant in module scope";
+                function_body_loc = None;
+                statement_loc = mk_loc (1, 0) (1, 33);
+              };
+            ],
+            "3" )
+        (mk_loc (1, 26) (1, 27)) );
+    (* Expression exists in a class, but also in a statement. *)
+    ( "expression_in_class_statements" >:: fun ctxt ->
+      assert_extracted
+        ~ctxt
+        "class A { foo() { const a = 3; } }"
+        ~expected_expression:
+          ( [
+              {
+                AstExtractor.title = "Extract to constant in method 'foo'";
+                function_body_loc = Some (mk_loc (1, 16) (1, 32));
+                statement_loc = mk_loc (1, 18) (1, 30);
+              };
+              {
+                AstExtractor.title = "Extract to constant in module scope";
+                function_body_loc = None;
+                statement_loc = mk_loc (1, 0) (1, 34);
+              };
+            ],
+            "3" )
+        (mk_loc (1, 28) (1, 29)) );
+    (* Expression in many containing scopes with different names *)
+    ( "expression_in_many_scopes" >:: fun ctxt ->
+      let source =
+        {|
+        class A {
+          foo() {
+            function bar() {
+              const a = 3;
+            }
+          }
+        }
+        |}
+      in
+      assert_extracted
+        ~ctxt
         source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 8 };
-          _end = { Loc.line = 4; column = 20 };
-        } );
+        ~expected_expression:
+          ( [
+              {
+                AstExtractor.title = "Extract to constant in function 'bar'";
+                function_body_loc = Some (mk_loc (4, 27) (6, 13));
+                statement_loc = mk_loc (5, 14) (5, 26);
+              };
+              {
+                AstExtractor.title = "Extract to constant in method 'foo'";
+                function_body_loc = Some (mk_loc (3, 16) (7, 11));
+                statement_loc = mk_loc (4, 12) (6, 13);
+              };
+              {
+                AstExtractor.title = "Extract to constant in module scope";
+                function_body_loc = None;
+                statement_loc = mk_loc (2, 8) (8, 9);
+              };
+            ],
+            "3" )
+        (mk_loc (5, 24) (5, 25)) );
+    ( "extract_types" >:: fun ctxt ->
+      assert_extracted
+        ~ctxt
+        ~expected_type:(mk_loc (1, 0) (1, 20), "number")
+        "const a: number = 1;"
+        (mk_loc (1, 9) (1, 15));
+      assert_extracted
+        ~ctxt
+        ~expected_type:(mk_loc (1, 0) (1, 30), "number")
+        "const a: [number, number] = 1;"
+        (mk_loc (1, 10) (1, 16));
+      assert_extracted
+        ~ctxt
+        ~expected_type:(mk_loc (1, 0) (1, 30), "[number, number]")
+        "const a: [number, number] = 1;"
+        (mk_loc (1, 9) (1, 25)) );
   ]
 
-let find_closest_enclosing_class_scope_tests =
-  let assert_closest_enclosing_class_scope ~ctxt ?expected source extracted_statements_loc =
-    let ast = parse source in
+let collect_function_method_inserting_points_tests =
+  [
+    ( "basic_test" >:: fun ctxt ->
+      let source =
+        {|
+console.log("0");
+function foo<A>() {
+  function bar<B>() {
+    class Foo {
+      baz1 = () => {
+        class Bar {
+          baz2() {
+            console.log("2"); // selected
+          }
+        }
+      }
+    }
+  }
+}
+        |}
+      in
+      let typed_ast = source |> parse |> typed_ast_of_ast in
+      let extracted_loc = mk_loc (9, 12) (9, 42) in
+      let reader = State_reader.create () in
+      let actual =
+        InsertionPointCollectors.collect_function_method_inserting_points
+          ~typed_ast
+          ~reader
+          ~extracted_loc
+        |> List.map
+             (fun { InsertionPointCollectors.function_name; body_loc; is_method; tparams_rev } ->
+               ( function_name,
+                 body_loc,
+                 is_method,
+                 tparams_rev |> List.map (fun { Type.name; _ } -> name) ))
+      in
+      let expected =
+        [
+          ("baz2", mk_loc (8, 17) (10, 11), true, ["B"; "A"]);
+          ("baz1", mk_loc (6, 19) (12, 7), true, ["B"; "A"]);
+          ("bar", mk_loc (4, 20) (14, 3), false, ["B"; "A"]);
+          ("foo", mk_loc (3, 18) (15, 1), false, ["A"]);
+        ]
+      in
+      let printer result =
+        result
+        |> List.map (fun (id, loc, is_method, typeparams) ->
+               Printf.sprintf
+                 "%s: %s: <%s>. is_method: %b"
+                 id
+                 (Loc.debug_to_string loc)
+                 (String.concat "," typeparams)
+                 is_method)
+        |> String.concat "\n"
+      in
+      assert_equal ~ctxt ~printer expected actual );
+  ]
+
+let find_closest_enclosing_class_tests =
+  let assert_closest_enclosing_class_scope ~ctxt ?expected source extracted_loc =
+    let typed_ast = source |> parse |> typed_ast_of_ast in
+    let reader = State_reader.create () in
     let actual =
-      LocationCollectors.find_closest_enclosing_class_scope ~ast ~extracted_statements_loc
+      match
+        InsertionPointCollectors.find_closest_enclosing_class ~typed_ast ~reader ~extracted_loc
+      with
+      | None -> None
+      | Some { InsertionPointCollectors.class_name; body_loc; tparams_rev } ->
+        Some (class_name, body_loc, tparams_rev |> List.map (fun { Type.name; _ } -> name))
     in
     let printer = function
       | None -> "None"
-      | Some (id, loc) ->
-        Printf.sprintf "%s: %s" (Option.value ~default:"anonymous" id) (Loc.show loc)
+      | Some (id, loc, typeparams) ->
+        Printf.sprintf
+          "%s: %s: <%s>"
+          (Option.value ~default:"anonymous" id)
+          (Loc.show loc)
+          (String.concat "," typeparams)
     in
     assert_equal ~ctxt ~printer expected actual
   in
   let source =
     {|
 console.log("0");
-export default class {
+export default class <A> {
   test1() {
     console.log("1");
-    class Level2 {
-      test2() {
+    class Level2<B> {
+      test2(v: B) {
         console.log("2");
       }
     }
@@ -341,46 +561,19 @@ export default class {
   in
   [
     ( "without_enclosing_class_scope" >:: fun ctxt ->
-      assert_closest_enclosing_class_scope
-        ~ctxt
-        source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 0 };
-          _end = { Loc.line = 2; column = 17 };
-        } );
+      assert_closest_enclosing_class_scope ~ctxt source (mk_loc (2, 0) (2, 17)) );
     ( "mid_enclosing_class_scope" >:: fun ctxt ->
       assert_closest_enclosing_class_scope
         ~ctxt
-        ~expected:
-          ( None,
-            {
-              Loc.source = None;
-              start = { Loc.line = 3; column = 21 };
-              _end = { Loc.line = 12; column = 1 };
-            } )
+        ~expected:(None, mk_loc (3, 25) (12, 1), ["A"])
         source
-        {
-          Loc.source = None;
-          start = { Loc.line = 5; column = 4 };
-          _end = { Loc.line = 10; column = 5 };
-        } );
+        (mk_loc (5, 4) (10, 5)) );
     ( "inner_most_enclosing_class_scope" >:: fun ctxt ->
       assert_closest_enclosing_class_scope
         ~ctxt
-        ~expected:
-          ( Some "Level2",
-            {
-              Loc.source = None;
-              start = { Loc.line = 6; column = 17 };
-              _end = { Loc.line = 10; column = 5 };
-            } )
+        ~expected:(Some "Level2", mk_loc (6, 20) (10, 5), ["B"; "A"])
         source
-        {
-          Loc.source = None;
-          start = { Loc.line = 8; column = 8 };
-          _end = { Loc.line = 8; column = 25 };
-        } );
+        (mk_loc (8, 8) (8, 25)) );
   ]
 
 let collect_relevant_defs_with_scope_tests =
@@ -389,15 +582,14 @@ let collect_relevant_defs_with_scope_tests =
       ~expected_defs_of_local_uses
       ~expected_vars_with_shadowed_local_reassignments
       source
-      extracted_statements_loc =
+      extracted_loc =
     let ast = parse source in
-    let (scope_info, ssa_values) = Ssa_builder.program_with_scope ast in
+    let (_abnormal_completion_state, (scope_info, ssa_values)) =
+      Ssa_builder.program_with_scope ast
+    in
     let { VariableAnalysis.defs_with_scopes_of_local_uses; vars_with_shadowed_local_reassignments }
         =
-      VariableAnalysis.collect_relevant_defs_with_scope
-        ~scope_info
-        ~ssa_values
-        ~extracted_statements_loc
+      VariableAnalysis.collect_relevant_defs_with_scope ~scope_info ~ssa_values ~extracted_loc
     in
     let actual_defs_of_local_uses =
       defs_with_scopes_of_local_uses
@@ -435,11 +627,7 @@ let collect_relevant_defs_with_scope_tests =
         ~expected_defs_of_local_uses:["a"; "b"]
         ~expected_vars_with_shadowed_local_reassignments:[]
         source
-        {
-          Loc.source = None;
-          start = { Loc.line = 4; column = 8 };
-          _end = { Loc.line = 4; column = 27 };
-        } );
+        (mk_loc (4, 8) (4, 27)) );
     ( "used_defs_in_function" >:: fun ctxt ->
       let source =
         {|
@@ -456,11 +644,7 @@ let collect_relevant_defs_with_scope_tests =
         ~expected_defs_of_local_uses:["a"; "b"]
         ~expected_vars_with_shadowed_local_reassignments:[]
         source
-        {
-          Loc.source = None;
-          start = { Loc.line = 5; column = 10 };
-          _end = { Loc.line = 5; column = 23 };
-        } );
+        (mk_loc (5, 10) (5, 23)) );
     ( "used_defs_in_many_scopes" >:: fun ctxt ->
       let source =
         {|
@@ -486,11 +670,7 @@ let collect_relevant_defs_with_scope_tests =
         ~expected_defs_of_local_uses:["a"; "b"; "c"; "d"; "e"]
         ~expected_vars_with_shadowed_local_reassignments:[]
         source
-        {
-          Loc.source = None;
-          start = { Loc.line = 10; column = 16 };
-          _end = { Loc.line = 10; column = 49 };
-        } );
+        (mk_loc (10, 16) (10, 49)) );
     ( "basic_def_with_shadowed_local_reassignment" >:: fun ctxt ->
       let source =
         {|
@@ -504,11 +684,7 @@ let collect_relevant_defs_with_scope_tests =
         ~expected_defs_of_local_uses:["a"]
         ~expected_vars_with_shadowed_local_reassignments:["a"]
         source
-        {
-          Loc.source = None;
-          start = { Loc.line = 3; column = 8 };
-          _end = { Loc.line = 3; column = 26 };
-        } );
+        (mk_loc (3, 8) (3, 26)) );
     ( "basic_def_without_shadowed_local_reassignment" >:: fun ctxt ->
       let source =
         {|
@@ -522,30 +698,25 @@ let collect_relevant_defs_with_scope_tests =
         ~expected_defs_of_local_uses:["a"]
         ~expected_vars_with_shadowed_local_reassignments:[]
         source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 8 };
-          _end = { Loc.line = 3; column = 26 };
-        } );
+        (mk_loc (2, 8) (3, 26)) );
   ]
 
 let undefined_variables_after_extraction_tests =
   let assert_undefined_variables
-      ~ctxt ~expected ~source ~new_function_target_scope_loc ~extracted_statements_loc =
+      ~ctxt ~expected ~source ~new_function_target_scope_loc ~extracted_loc =
     let ast = parse source in
-    let (scope_info, ssa_values) = Ssa_builder.program_with_scope ast in
+    let (_abnormal_completion_state, (scope_info, ssa_values)) =
+      Ssa_builder.program_with_scope ast
+    in
     let { VariableAnalysis.defs_with_scopes_of_local_uses; _ } =
-      VariableAnalysis.collect_relevant_defs_with_scope
-        ~scope_info
-        ~ssa_values
-        ~extracted_statements_loc
+      VariableAnalysis.collect_relevant_defs_with_scope ~scope_info ~ssa_values ~extracted_loc
     in
     let actual =
       VariableAnalysis.undefined_variables_after_extraction
         ~scope_info
         ~defs_with_scopes_of_local_uses
         ~new_function_target_scope_loc
-        ~extracted_statements_loc
+        ~extracted_loc
       |> List.map fst
       |> List.sort String.compare
     in
@@ -553,6 +724,20 @@ let undefined_variables_after_extraction_tests =
     assert_equal ~ctxt ~printer:(String.concat ", ") expected actual
   in
   [
+    ( "toplevel_only_extract" >:: fun ctxt ->
+      let source =
+        {|
+        const a = 3;
+        let b = a;
+        console.log(b + c); // selected
+      |}
+      in
+      assert_undefined_variables
+        ~ctxt
+        ~expected:[]
+        ~source
+        ~new_function_target_scope_loc:None
+        ~extracted_loc:(mk_loc (4, 2) (4, 28)) );
     ( "basic_function_extract_to_toplevel" >:: fun ctxt ->
       let source =
         {|
@@ -568,18 +753,22 @@ let undefined_variables_after_extraction_tests =
         ~ctxt
         ~expected:["c"]
         ~source
-        ~new_function_target_scope_loc:
-          {
-            Loc.source = None;
-            start = { Loc.line = 2; column = 8 };
-            _end = { Loc.line = 7; column = 9 };
-          }
-        ~extracted_statements_loc:
-          {
-            Loc.source = None;
-            start = { Loc.line = 6; column = 10 };
-            _end = { Loc.line = 6; column = 29 };
-          } );
+        ~new_function_target_scope_loc:None
+        ~extracted_loc:(mk_loc (6, 10) (6, 29)) );
+    ( "extract_use_of_toplevel_function_parameter_to_toplevel" >:: fun ctxt ->
+      let source =
+        {|
+        function test(a: number) {
+          console.log(a);
+        }
+      |}
+      in
+      assert_undefined_variables
+        ~ctxt
+        ~expected:["a"]
+        ~source
+        ~new_function_target_scope_loc:None
+        ~extracted_loc:(mk_loc (3, 10) (3, 25)) );
     ( "basic_function_extract_to_function" >:: fun ctxt ->
       let source =
         {|
@@ -595,18 +784,8 @@ let undefined_variables_after_extraction_tests =
         ~ctxt
         ~expected:[]
         ~source
-        ~new_function_target_scope_loc:
-          {
-            Loc.source = None;
-            start = { Loc.line = 4; column = 24 };
-            _end = { Loc.line = 7; column = 9 };
-          }
-        ~extracted_statements_loc:
-          {
-            Loc.source = None;
-            start = { Loc.line = 6; column = 10 };
-            _end = { Loc.line = 6; column = 29 };
-          } );
+        ~new_function_target_scope_loc:(Some (mk_loc (4, 24) (7, 9)))
+        ~extracted_loc:(mk_loc (6, 10) (6, 29)) );
     ( "deeply_nested_extract_to_inner_function" >:: fun ctxt ->
       let source =
         {|
@@ -632,25 +811,17 @@ let undefined_variables_after_extraction_tests =
         ~ctxt
         ~expected:["f"; "level3"]
         ~source
-        ~new_function_target_scope_loc:
-          {
-            Loc.source = None;
-            start = { Loc.line = 6; column = 28 };
-            _end = { Loc.line = 14; column = 11 };
-          }
-        ~extracted_statements_loc:
-          {
-            Loc.source = None;
-            start = { Loc.line = 11; column = 16 };
-            _end = { Loc.line = 11; column = 63 };
-          } );
+        ~new_function_target_scope_loc:(Some (mk_loc (6, 28) (14, 11)))
+        ~extracted_loc:(mk_loc (11, 16) (11, 63)) );
   ]
 
 let escaping_locally_defined_variables_tests =
   let assert_escaping_locally_defined_variables
       ~ctxt ~expected_variables ~expected_has_external_writes source extracted_statements_loc =
     let ast = parse source in
-    let (scope_info, ssa_values) = Ssa_builder.program_with_scope ast in
+    let (_abnormal_completion_state, (scope_info, ssa_values)) =
+      Ssa_builder.program_with_scope ast
+    in
     let { VariableAnalysis.escaping_variables; has_external_writes = actual_has_external_writes } =
       VariableAnalysis.collect_escaping_local_defs ~scope_info ~ssa_values ~extracted_statements_loc
     in
@@ -679,11 +850,7 @@ let escaping_locally_defined_variables_tests =
         ~expected_variables:[]
         ~expected_has_external_writes:false
         source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 8 };
-          _end = { Loc.line = 4; column = 20 };
-        } );
+        (mk_loc (2, 8) (4, 20)) );
     ( "all_escaping" >:: fun ctxt ->
       let source =
         {|
@@ -699,11 +866,7 @@ let escaping_locally_defined_variables_tests =
         ~expected_variables:["a"; "b"]
         ~expected_has_external_writes:false
         source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 8 };
-          _end = { Loc.line = 4; column = 20 };
-        } );
+        (mk_loc (2, 8) (4, 20)) );
     ( "escaping_with_hoisting" >:: fun ctxt ->
       let source =
         {|
@@ -719,11 +882,7 @@ let escaping_locally_defined_variables_tests =
         ~expected_variables:["test"]
         ~expected_has_external_writes:false
         source
-        {
-          Loc.source = None;
-          start = { Loc.line = 3; column = 8 };
-          _end = { Loc.line = 5; column = 37 };
-        } );
+        (mk_loc (3, 8) (5, 37)) );
     ( "escaping_with_hoisting_in_function" >:: fun ctxt ->
       let source =
         {|
@@ -741,11 +900,7 @@ let escaping_locally_defined_variables_tests =
         ~expected_variables:["test"]
         ~expected_has_external_writes:false
         source
-        {
-          Loc.source = None;
-          start = { Loc.line = 4; column = 10 };
-          _end = { Loc.line = 6; column = 39 };
-        } );
+        (mk_loc (4, 10) (6, 39)) );
     ( "escaping_with_shadowing" >:: fun ctxt ->
       let source =
         {|
@@ -758,11 +913,7 @@ let escaping_locally_defined_variables_tests =
         ~expected_variables:[]
         ~expected_has_external_writes:false
         source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 8 };
-          _end = { Loc.line = 2; column = 20 };
-        } );
+        (mk_loc (2, 8) (2, 20)) );
     ( "escaping_with_hoising_shadowing_nested_scopes" >:: fun ctxt ->
       let source =
         {|
@@ -787,11 +938,7 @@ let escaping_locally_defined_variables_tests =
         ~expected_variables:["c"]
         ~expected_has_external_writes:false
         source
-        {
-          Loc.source = None;
-          start = { Loc.line = 4; column = 22 };
-          _end = { Loc.line = 6; column = 26 };
-        } );
+        (mk_loc (4, 22) (6, 26)) );
     ( "escaping_with_external_assignments" >:: fun ctxt ->
       let source =
         {|
@@ -805,11 +952,7 @@ let escaping_locally_defined_variables_tests =
         ~expected_variables:["a"; "b"]
         ~expected_has_external_writes:true
         source
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 8 };
-          _end = { Loc.line = 2; column = 37 };
-        } );
+        (mk_loc (2, 8) (2, 37)) );
   ]
 
 let type_synthesizer_tests =
@@ -827,9 +970,24 @@ let type_synthesizer_tests =
       ~reader
       ~locs
   in
-  let pretty_print_type = function
-    | Some type_ ->
-      type_ |> Js_layout_generator.type_ ~opts:Js_layout_generator.default_opts |> pretty_print
+  let pretty_print_type type_param_synthesizer = function
+    | Some (tparams_rev, type_) ->
+      let type_string =
+        type_ |> Js_layout_generator.type_ ~opts:Js_layout_generator.default_opts |> pretty_print
+      in
+      let typeparams_string =
+        match tparams_rev with
+        | [] -> ""
+        | _ ->
+          let pretty_print_typeparam tparam =
+            tparam
+            |> type_param_synthesizer tparams_rev
+            |> Js_layout_generator.type_param ~opts:Js_layout_generator.default_opts
+            |> pretty_print
+          in
+          "<" ^ (tparams_rev |> List.map pretty_print_typeparam |> String.concat ", ") ^ ">: "
+      in
+      typeparams_string ^ type_string
     | None -> "<missing>"
   in
   [
@@ -840,67 +998,55 @@ let type_synthesizer_tests =
         const b = "2";
         class C<T> {}
         const c = new C<number>();
+        function foo<A, B, C:B, D:B=C>(d: D): D {
+          return d;
+        }
         |}
       in
-      let loc_of_a =
-        {
-          Loc.source = None;
-          start = { Loc.line = 2; column = 14 };
-          _end = { Loc.line = 2; column = 15 };
-        }
+      let loc_of_a = mk_loc (2, 14) (2, 15) in
+      let loc_of_b = mk_loc (3, 14) (3, 15) in
+      let loc_of_c = mk_loc (5, 14) (5, 15) in
+      let loc_of_d = mk_loc (6, 39) (6, 40) in
+      let loc_of_missing = mk_loc (100, 14) (100, 15) in
+      let context =
+        create_context source [loc_of_a; loc_of_b; loc_of_c; loc_of_d; loc_of_missing]
       in
-      let loc_of_b =
-        {
-          Loc.source = None;
-          start = { Loc.line = 3; column = 14 };
-          _end = { Loc.line = 3; column = 15 };
-        }
-      in
-      let loc_of_c =
-        {
-          Loc.source = None;
-          start = { Loc.line = 5; column = 14 };
-          _end = { Loc.line = 5; column = 15 };
-        }
-      in
-      let loc_of_missing =
-        {
-          Loc.source = None;
-          start = { Loc.line = 6; column = 14 };
-          _end = { Loc.line = 6; column = 15 };
-        }
-      in
-      let context = create_context source [loc_of_a; loc_of_b; loc_of_c; loc_of_missing] in
-      let { TypeSynthesizer.type_synthesizer; _ } =
+      let { TypeSynthesizer.type_param_synthesizer; type_synthesizer; _ } =
         TypeSynthesizer.create_type_synthesizer_with_import_adder context
       in
       assert_equal
         ~ctxt
         ~printer:Base.Fn.id
         "number"
-        (loc_of_a |> type_synthesizer |> pretty_print_type);
+        (loc_of_a |> type_synthesizer |> pretty_print_type type_param_synthesizer);
       assert_equal
         ~ctxt
         ~printer:Base.Fn.id
         "string"
-        (loc_of_b |> type_synthesizer |> pretty_print_type);
+        (loc_of_b |> type_synthesizer |> pretty_print_type type_param_synthesizer);
       assert_equal
         ~ctxt
         ~printer:Base.Fn.id
         "C<number>"
-        (loc_of_c |> type_synthesizer |> pretty_print_type);
+        (loc_of_c |> type_synthesizer |> pretty_print_type type_param_synthesizer);
+      assert_equal
+        ~ctxt
+        ~printer:Base.Fn.id
+        "<D: B = C, C: B, B>: D"
+        (loc_of_d |> type_synthesizer |> pretty_print_type type_param_synthesizer);
       assert_equal
         ~ctxt
         ~printer:Base.Fn.id
         "<missing>"
-        (loc_of_missing |> type_synthesizer |> pretty_print_type) );
+        (loc_of_missing |> type_synthesizer |> pretty_print_type type_param_synthesizer) );
   ]
 
 let tests =
   "refactor_extract_utils"
   >::: [
-         "extract_statements" >::: extract_statements_tests;
-         "find_closest_enclosing_class_scope" >::: find_closest_enclosing_class_scope_tests;
+         "extract" >::: extract_tests;
+         "function_method_inserting_points" >::: collect_function_method_inserting_points_tests;
+         "find_closest_enclosing_class" >::: find_closest_enclosing_class_tests;
          "collect_relevant_defs_with_scope" >::: collect_relevant_defs_with_scope_tests;
          "undefined_variables_after_extraction" >::: undefined_variables_after_extraction_tests;
          "escaping_locally_defined_variables" >::: escaping_locally_defined_variables_tests;

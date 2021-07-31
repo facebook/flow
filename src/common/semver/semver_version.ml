@@ -79,13 +79,12 @@ let compare_precedence =
       f ()
   in
   fun { major = a_major; minor = a_minor; patch = a_patch; prerelease = a_pre; build = _ }
-      { major = b_major; minor = b_minor; patch = b_patch; prerelease = b_pre; build = _ } ->
-    ( 0
-      >>= compare_ints a_major b_major
-      >>= compare_ints a_minor b_minor
-      >>= compare_ints a_patch b_patch
-      >>= compare_pre a_pre b_pre
-      : int )
+      { major = b_major; minor = b_minor; patch = b_patch; prerelease = b_pre; build = _ } : int ->
+    0
+    >>= compare_ints a_major b_major
+    >>= compare_ints a_minor b_minor
+    >>= compare_ints a_patch b_patch
+    >>= compare_pre a_pre b_pre
 
 let compare a b =
   let k = compare_precedence a b in

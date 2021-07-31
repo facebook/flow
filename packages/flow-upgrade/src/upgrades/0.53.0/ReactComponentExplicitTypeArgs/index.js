@@ -16,7 +16,7 @@ exports.kind = 'codemod';
 exports.title =
   'Move inferred React.Component type arguments to their generic positions.';
 
-exports.description = `
+exports.description = (`
 The recommended way to write React components used to be:
 
 ${Styled.codeblock(
@@ -82,6 +82,6 @@ class MyComponent extends React.Component<DefaultProps, Props, State> {
     return /* ... */;
   }
 }`.slice(1),
-)}`.slice(1);
+)}`.slice(1): string);
 
-exports.transformPath = path.join(__dirname, './codemod.js');
+exports.transformPath = (path.join(__dirname, './codemod.js'): string);

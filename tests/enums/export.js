@@ -11,3 +11,9 @@ export default enum D {
 }
 
 export const F = E;
+
+export enum U {
+  A,
+  B,
+  ...
+}

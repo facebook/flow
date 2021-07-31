@@ -176,7 +176,9 @@ let error_type = function
   | 110 -> Unknown_error
   | _ -> raise Not_found
 
-let error_type_opt i = (try Some (error_type i) with Not_found -> None)
+let error_type_opt i =
+  try Some (error_type i) with
+  | Not_found -> None
 
 let unpack_process_status = function
   | Unix.WEXITED n -> ("exit", n)

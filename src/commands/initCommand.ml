@@ -58,9 +58,9 @@ let main base_flags flowconfig_flags options root () =
   let libs = flowconfig_flags.CommandUtils.libs in
   let lints = flowconfig_flags.CommandUtils.raw_lint_severities in
   let file = Server_files_js.config_file base_flags.CommandUtils.Base_flags.flowconfig_name root in
-  ( if Sys.file_exists file then
+  (if Sys.file_exists file then
     let msg = Utils_js.spf "Error: \"%s\" already exists!\n%!" file in
-    Exit.(exit ~msg Invalid_flowconfig) );
+    Exit.(exit ~msg Invalid_flowconfig));
 
   let config = FlowConfig.init ~ignores ~untyped ~declarations ~includes ~libs ~options ~lints in
   let config =

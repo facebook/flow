@@ -145,6 +145,13 @@ let to_string_no_source loc =
   else
     Printf.sprintf "%d:%d-%d" line start end_
 
+let mk_loc ?source (start_line, start_column) (end_line, end_column) =
+  {
+    source;
+    start = { line = start_line; column = start_column };
+    _end = { line = end_line; column = end_column };
+  }
+
 let source loc = loc.source
 
 (** Produces a zero-width Loc.t, where start = end *)

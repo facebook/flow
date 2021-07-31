@@ -169,13 +169,15 @@ module Frontmatter = struct
       Str.matched_group 1 str
     in
     let opt_matched_group regex str =
-      (try Some (matched_group regex str) with Not_found -> None)
+      try Some (matched_group regex str) with
+      | Not_found -> None
     in
     let contains needle haystack =
       try
         let _ = Str.search_forward needle haystack 0 in
         true
-      with Not_found -> false
+      with
+      | Not_found -> false
     in
     fun source ->
       try
@@ -213,7 +215,8 @@ module Frontmatter = struct
             None
         in
         Some { es5id; es6id; esid; features; flags; negative }
-      with Not_found -> None
+      with
+      | Not_found -> None
 
   let to_string fm =
     let opt_cons key x acc =
@@ -342,7 +345,10 @@ let fold_test
   let features_acc =
     List.fold_left
       (fun acc name ->
-        let feature = (try SMap.find name acc with Not_found -> (0, 0)) in
+        let feature =
+          try SMap.find name acc with
+          | Not_found -> (0, 0)
+        in
         let feature = incr_result feature passed in
         SMap.add name feature acc)
       features_acc

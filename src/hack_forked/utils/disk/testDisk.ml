@@ -11,7 +11,9 @@ module Hashtbl_base = Hashtbl
 module Hashtbl = struct
   include Hashtbl_base
 
-  let find_opt t x = (try Some (find t x) with Not_found -> None)
+  let find_opt t x =
+    try Some (find t x) with
+    | Not_found -> None
 
   let empty t = length t = 0
 end
@@ -88,7 +90,8 @@ and get_file path root =
   if basename = "." then
     Directory parent
   else
-    try Hashtbl.find parent basename with Not_found -> raise (No_such_file_or_directory path)
+    try Hashtbl.find parent basename with
+    | Not_found -> raise (No_such_file_or_directory path)
 
 (** Initialize creation of CWD. *)
 let () = ignore (mkdir_p "." root)
@@ -121,7 +124,8 @@ let is_directory x =
     match get_file x root with
     | Directory _ -> true
     | Actual_file_with_contents _ -> false
-  with No_such_file_or_directory _ -> false
+  with
+  | No_such_file_or_directory _ -> false
 
 let cat = get
 
@@ -131,7 +135,8 @@ let file_exists x =
     | Actual_file_with_contents _
     | Directory _ ->
       true
-  with No_such_file_or_directory _ -> false
+  with
+  | No_such_file_or_directory _ -> false
 
 let write_file ~file ~contents = set ~create_parent_dirs:false file contents
 
@@ -148,8 +153,10 @@ let rm_dir_tree path =
     try
       let dir = get_dir (Filename.dirname path) root in
       Hashtbl.remove dir (Filename.basename path)
-    with No_such_file_or_directory _ -> (* File already doesn't exist; ignore. *)
-                                        ()
+    with
+    | No_such_file_or_directory _ ->
+      (* File already doesn't exist; ignore. *)
+      ()
 
 let readdir x =
   match get_file x root with

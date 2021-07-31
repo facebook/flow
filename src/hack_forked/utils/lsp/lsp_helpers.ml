@@ -267,6 +267,10 @@ let supports_codeActionKinds (p : Lsp.Initialize.params) : CodeActionKind.t list
   | Some { CodeActionLiteralSupport.valueSet } -> valueSet
   | None -> []
 
+let supports_experimental_snippet_text_edit (p : Lsp.Initialize.params) : bool =
+  let open Lsp.Initialize in
+  p.client_capabilities.experimental.snippetTextEdit
+
 let supports_configuration (p : Lsp.Initialize.params) : bool =
   Lsp.Initialize.(p.client_capabilities.workspace.configuration)
 
@@ -316,7 +320,7 @@ let dismiss_diagnostics (writer : Jsonrpc.writer) (diagnostic_uris : UriSet.t) :
 let notify_connectionStatus
     (p : Lsp.Initialize.params) (writer : Jsonrpc.writer) (wasConnected : bool) (isConnected : bool)
     : bool =
-  ( if supports_connectionStatus p && wasConnected <> isConnected then
+  (if supports_connectionStatus p && wasConnected <> isConnected then
     let message = { Lsp.ConnectionStatus.isConnected } in
-    message |> print_connectionStatus |> Jsonrpc.notify writer "telemetry/connectionStatus" );
+    message |> print_connectionStatus |> Jsonrpc.notify writer "telemetry/connectionStatus");
   isConnected

@@ -43,7 +43,8 @@ let _operations lock_file op : bool =
              * gets us our information without opening a fd *)
             let current_st = Unix.stat lock_file in
             Unix.(st.st_dev = current_st.st_dev && st.st_ino = current_st.st_ino)
-          with _ -> false
+          with
+          | _ -> false
         in
         if not (Sys.win32 || identical_file) then
           (* Looks like someone (tmpwatch?) deleted the lock file; don't
@@ -54,8 +55,8 @@ let _operations lock_file op : bool =
           fd
     in
     let _ =
-      try Unix.lockf fd op 1
-      with _ when Sys.win32 && (op = Unix.F_TLOCK || op = Unix.F_TEST) ->
+      try Unix.lockf fd op 1 with
+      | _ when Sys.win32 && (op = Unix.F_TLOCK || op = Unix.F_TEST) ->
         (* On Windows, F_TLOCK and F_TEST fail if we have the lock ourself *)
         (* However, we then are the only one to be able to write there. *)
         ignore (Unix.lseek fd 0 Unix.SEEK_SET : int);
@@ -70,7 +71,8 @@ let _operations lock_file op : bool =
         assert (wb = 1)
     in
     true
-  with _ -> false
+  with
+  | _ -> false
 
 (**
  * Grabs the file lock and returns true if it the lock was grabbed

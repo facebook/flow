@@ -7,6 +7,7 @@
   (names hh_shared)
   (flags
    (:standard -I../../src/third-party/lz4)))
+ (c_library_flags (-latomic))
  (preprocess
   (pps ppx_deriving.std visitors.ppx))
  (libraries utils_core))

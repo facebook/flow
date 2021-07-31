@@ -198,7 +198,8 @@ let client_did_change
       let new_opened_files = SMap.add fn new_content client.opened_files in
       client.opened_files <- new_opened_files;
       Ok ()
-  with Not_found as e ->
+  with
+  | Not_found as e ->
     let e = Exception.wrap e in
     let stack = Exception.get_backtrace_string e in
     Error (Printf.sprintf "File %s wasn't open to change" fn, Utils.Callstack stack)

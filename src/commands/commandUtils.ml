@@ -223,9 +223,8 @@ let lazy_flags prev =
               ("none", Options.NON_LAZY_MODE);
             ])
          ~doc:
-           ( "Which lazy mode to use: 'fs', 'watchman', 'ide' or 'none'. Use this flag to "
-           ^ "override the lazy mode set in the .flowconfig (which defaults to 'none' if not set)"
-           )
+           ("Which lazy mode to use: 'fs', 'watchman', 'ide' or 'none'. Use this flag to "
+           ^ "override the lazy mode set in the .flowconfig (which defaults to 'none' if not set)")
          ~env:"FLOW_LAZY_MODE")
 
 let input_file_flag verb prev =
@@ -235,10 +234,10 @@ let input_file_flag verb prev =
          "--input-file"
          string
          ~doc:
-           ( "File containing list of files to "
+           ("File containing list of files to "
            ^ verb
            ^ ", one per line. If -, list of files is "
-           ^ "read from the standard input." ))
+           ^ "read from the standard input."))
 
 type shared_mem_params = {
   shm_heap_size: int option;
@@ -322,8 +321,8 @@ let wait_for_recheck_flag prev =
          "--wait-for-recheck"
          (optional bool)
          ~doc:
-           ( "If the server is rechecking, wait for it to complete rather than run sooner using "
-           ^ "outdated data" ))
+           ("If the server is rechecking, wait for it to complete rather than run sooner using "
+           ^ "outdated data"))
 
 let path_flag prev =
   CommandSpec.ArgSpec.(
@@ -343,10 +342,10 @@ let verbose_flags =
         Some
           {
             Verbose.indent =
-              ( if indent then
+              (if indent then
                 2
               else
-                0 );
+                0);
             depth =
               (match depth with
               | Some n when n >= 0 -> n
@@ -704,7 +703,6 @@ let flowconfig_flags prev =
 
 type connect_params = {
   retries: int;
-  retry_if_init: bool;
   timeout: int option;
   no_auto_start: bool;
   autostop: bool;
@@ -717,17 +715,8 @@ type connect_params = {
 }
 
 let collect_connect_flags
-    main
-    lazy_mode
-    timeout
-    retries
-    retry_if_init
-    no_auto_start
-    temp_dir
-    shm_flags
-    ignore_version
-    quiet
-    on_mismatch =
+    main lazy_mode timeout retries no_auto_start temp_dir shm_flags ignore_version quiet on_mismatch
+    =
   let default def = function
     | Some x -> x
     | None -> def
@@ -740,7 +729,6 @@ let collect_connect_flags
   main
     {
       retries = default 3 retries;
-      retry_if_init = default true retry_if_init;
       timeout;
       no_auto_start;
       temp_dir;
@@ -759,10 +747,6 @@ let connect_flags_with_lazy_collector collector =
     collector
     |> flag "--timeout" (optional int) ~doc:"Maximum time to wait, in seconds"
     |> flag "--retries" (optional int) ~doc:"Set the number of retries. (default: 3)"
-    |> flag
-         "--retry-if-init"
-         (optional bool)
-         ~doc:"retry if the server is initializing (default: true)"
     |> flag "--no-auto-start" no_arg ~doc:"If the server is not running, do not start it; just exit"
     |> temp_dir_flag
     |> shm_flags
@@ -812,6 +796,7 @@ module Options_flags = struct
     temp_dir: string option;
     traces: int option;
     trust_mode: Options.trust_mode option;
+    new_env: bool;
     abstract_locations: bool;
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
@@ -870,7 +855,8 @@ let options_flags =
       merge_timeout
       abstract_locations
       include_suppressions
-      trust_mode =
+      trust_mode
+      new_env =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
       Exit.(exit ~msg:"--merge-timeout must be non-negative" Commandline_usage_error)
@@ -882,6 +868,7 @@ let options_flags =
         profile;
         all;
         wait_for_recheck;
+        new_env;
         weak;
         traces;
         no_flowlib;
@@ -937,8 +924,8 @@ let options_flags =
            "--merge-timeout"
            int
            ~doc:
-             ( "The maximum time in seconds to attempt to typecheck a file or cycle of files. "
-             ^ "0 means no timeout (default: 100)" )
+             ("The maximum time in seconds to attempt to typecheck a file or cycle of files. "
+             ^ "0 means no timeout (default: 100)")
            ~env:"FLOW_MERGE_TIMEOUT"
       |> flag
            "--abstract-locations"
@@ -958,7 +945,8 @@ let options_flags =
                    ("silent", Options.SilentTrust);
                    ("none", Options.NoTrust);
                  ]))
-           ~doc:"")
+           ~doc:""
+      |> flag "--new-env" no_arg ~doc:"")
 
 let saved_state_flags =
   let collect_saved_state_flags
@@ -1020,8 +1008,8 @@ let file_watcher_flag prev =
             ("watchman", FlowConfig.Watchman);
           ])
        ~doc:
-         ( "Which file watcher Flow should use (none, dfind, watchman). "
-         ^ "Flow will ignore file system events if this is set to none. (default: dfind)" )
+         ("Which file watcher Flow should use (none, dfind, watchman). "
+         ^ "Flow will ignore file system events if this is set to none. (default: dfind)")
   |> flag
        "--file-watcher-debug"
        no_arg
@@ -1079,7 +1067,10 @@ let no_cgroup_flag =
   let get_systemd_binary () =
     if Sys.unix then
       let ic = Unix.open_process_in "which systemd-run 2> /dev/null" in
-      let systemd_exe = (try Some (input_line ic) with _ -> None) in
+      let systemd_exe =
+        try Some (input_line ic) with
+        | _ -> None
+      in
       if Unix.close_process_in ic = Unix.WEXITED 0 then
         systemd_exe
       else
@@ -1113,13 +1104,7 @@ let no_cgroup_flag =
           | flow_exe :: command :: args -> flow_exe :: command :: "--no-cgroup" :: args
         in
         systemd_exe
-        :: "--quiet"
-        :: "--user"
-        :: "--scope"
-        :: "--slice"
-        :: "flow.slice"
-        :: "--"
-        :: flow_args
+        :: "--quiet" :: "--user" :: "--scope" :: "--slice" :: "flow.slice" :: "--" :: flow_args
         |> Array.of_list
         |> Unix.execv systemd_exe
   in
@@ -1249,6 +1234,7 @@ let make_options
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_enums = FlowConfig.enums flowconfig;
     opt_enums_with_unknown_members = FlowConfig.enums_with_unknown_members flowconfig;
+    opt_new_env = options_flags.new_env || FlowConfig.new_env flowconfig;
     opt_exact_by_default = FlowConfig.exact_by_default flowconfig;
     opt_facebook_fbs = FlowConfig.facebook_fbs flowconfig;
     opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;
@@ -1288,7 +1274,7 @@ let make_options
     opt_react_runtime = FlowConfig.react_runtime flowconfig;
     opt_react_server_component_exts = FlowConfig.react_server_component_exts flowconfig;
     opt_recursion_limit = FlowConfig.recursion_limit flowconfig;
-    opt_refactor = flowconfig |> FlowConfig.refactor |> Option.value ~default:false;
+    opt_refactor = flowconfig |> FlowConfig.refactor |> Option.value ~default:true;
     opt_max_files_checked_per_worker = FlowConfig.max_files_checked_per_worker flowconfig;
     opt_max_rss_bytes_for_check_per_worker =
       FlowConfig.max_rss_bytes_for_check_per_worker flowconfig;
@@ -1506,7 +1492,8 @@ let parse_location_with_optional_filename spec path args =
     | _ -> exit ()
   in
   let (line, column) =
-    (try (int_of_string line, int_of_string column) with Failure _ -> exit ())
+    try (int_of_string line, int_of_string column) with
+    | Failure _ -> exit ()
   in
   let (line, column) = convert_input_pos (line, column) in
   (file, line, column)
@@ -1602,7 +1589,7 @@ let rec connect_and_make_request flowconfig_name =
           SocketHandshake.client_build_id = SocketHandshake.build_revision;
           client_version = Flow_version.version;
           is_stop_request = false;
-          server_should_hangup_if_still_initializing = not connect_flags.retry_if_init;
+          server_should_hangup_if_still_initializing = false;
           version_mismatch_strategy;
         },
         { SocketHandshake.client_type = SocketHandshake.Ephemeral } )
@@ -1620,16 +1607,16 @@ let rec connect_and_make_request flowconfig_name =
     let env = make_env flowconfig flowconfig_name connect_flags root in
     let (ic, oc) = CommandConnect.connect ~flowconfig_name ~client_handshake env in
     send_command ?timeout oc request;
-    try wait_for_response ?timeout ~quiet ~emoji:env.CommandConnect.emoji ~root ic
-    with End_of_file ->
+    try wait_for_response ?timeout ~quiet ~emoji:env.CommandConnect.emoji ~root ic with
+    | End_of_file ->
       if not quiet then
         eprintf_with_spinner
           "Lost connection to the flow server (%d %s remaining)%!"
           retries
-          ( if retries = 1 then
+          (if retries = 1 then
             "retry"
           else
-            "retries" );
+            "retries");
       connect_and_make_request
         flowconfig_name
         ?timeout
@@ -1788,9 +1775,9 @@ let collect_codemod_flags
     input_file
     base_flag
     anon =
-  ( if (not write) && repeat then
+  (if (not write) && repeat then
     let msg = "Error: cannot run codemod with --repeat flag unless --write is also passed" in
-    Exit.(exit ~msg Commandline_usage_error) );
+    Exit.(exit ~msg Commandline_usage_error));
   let codemod_flags =
     Codemod_params
       {

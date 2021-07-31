@@ -67,20 +67,21 @@ module Toplevels (Order : Ordering with type loc = ALoc.t) = struct
     | Some (n, abnormal) ->
       let warn_unreachable loc = Flow.add_output cx (Error_message.EUnreachable loc) in
       Base.List.iteri
-        ~f:(fun i -> function
-          | (_, Ast.Statement.Empty _)
-          | (_, Ast.Statement.FunctionDeclaration _) ->
-            ()
-          | (_, Ast.Statement.VariableDeclaration d) when i > n ->
-            Ast.Statement.VariableDeclaration.(
-              d.declarations
-              |> List.iter
-                   Declarator.(
-                     function
-                     | (_, { init = Some ((loc, _), _); _ }) -> warn_unreachable loc
-                     | _ -> ()))
-          | (loc, _) when i > n -> warn_unreachable loc
-          | _ -> ())
+        ~f:
+          (fun i -> function
+            | (_, Ast.Statement.Empty _)
+            | (_, Ast.Statement.FunctionDeclaration _) ->
+              ()
+            | (_, Ast.Statement.VariableDeclaration d) when i > n ->
+              Ast.Statement.VariableDeclaration.(
+                d.declarations
+                |> List.iter
+                     Declarator.(
+                       function
+                       | (_, { init = Some ((loc, _), _); _ }) -> warn_unreachable loc
+                       | _ -> ()))
+            | (loc, _) when i > n -> warn_unreachable loc
+            | _ -> ())
         stmts;
       Abnormal.throw_stmts_control_flow_exception stmts abnormal
     | None -> stmts

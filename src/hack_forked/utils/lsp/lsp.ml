@@ -309,6 +309,8 @@ module CodeActionKind = struct
   (** Some of the constants defined by the spec *)
   let quickfix = kind_of_string "quickfix"
 
+  let refactor = kind_of_string "refactor"
+
   let refactor_extract = kind_of_string "refactor.extract"
 
   (** Document wide code actions *)
@@ -410,7 +412,8 @@ module Initialize = struct
     workspace: workspaceClientCapabilities;
     textDocument: textDocumentClientCapabilities;
     window: windowClientCapabilities;
-    telemetry: telemetryClientCapabilities; (* omitted: experimental *)
+    telemetry: telemetryClientCapabilities;
+    experimental: experimentalClientCapabilities;
   }
 
   and workspaceClientCapabilities = {
@@ -461,6 +464,9 @@ module Initialize = struct
   and telemetryClientCapabilities = {
     connectionStatus: bool;  (** Nuclide-specific: client supports telemetry/connectionStatus *)
   }
+
+  (* Flow LSP specific capabilities. *)
+  and experimentalClientCapabilities = { snippetTextEdit: bool }
 
   (** What capabilities the server provides *)
   and server_capabilities = {
@@ -686,6 +692,31 @@ module TypeDefinition = struct
   type params = TextDocumentPositionParams.t
 
   and result = DefinitionLocation.t list
+end
+
+(** The workspace/applyEdit request is sent from the server to the client to modify
+    resource on the client side. *)
+module ApplyWorkspaceEdit = struct
+  type params = {
+    label: string option;
+        (** An optional label of the workspace edit. This label is
+	          presented in the user interface for example on an undo
+	          stack to undo the workspace edit. *)
+    edit: WorkspaceEdit.t;  (** The edits to apply. *)
+  }
+
+  and result = {
+    applied: bool;  (** Indicates whether the edit was applied or not. *)
+    failureReason: string option;
+        (** An optional textual description for why the edit was not applied.
+            This may be used by the server for diagnostic logging or to provide
+            a suitable error for a request that triggered the edit. *)
+    failedChange: int option;
+        (** Depending on the client's failure handling strategy `failedChange`
+            might contain the index of the change that failed. This property is
+            only available if the client signals a `failureHandling` strategy
+            in its client capabilities. *)
+  }
 end
 
 (** A code action represents a change that can be performed in code, e.g. to fix a problem or
@@ -943,8 +974,9 @@ module DocumentFormatting = struct
   and formattingOptions = {
     tabSize: int;
     (* size of a tab in spaces *)
-    insertSpaces: bool; (* prefer spaces over tabs *)
-                        (* omitted: signature for further properties *)
+    insertSpaces: bool;
+        (* prefer spaces over tabs *)
+        (* omitted: signature for further properties *)
   }
 end
 
@@ -1230,6 +1262,7 @@ type lsp_request =
   | RenameRequest of Rename.params
   | DocumentCodeLensRequest of DocumentCodeLens.params
   | ExecuteCommandRequest of ExecuteCommand.params
+  | ApplyWorkspaceEditRequest of ApplyWorkspaceEdit.params
   | UnknownRequest of string * Hh_json.json option
 
 type lsp_result =
@@ -1260,6 +1293,7 @@ type lsp_result =
   | RenameResult of Rename.result
   | DocumentCodeLensResult of DocumentCodeLens.result
   | ExecuteCommandResult of ExecuteCommand.result
+  | ApplyWorkspaceEditResult of ApplyWorkspaceEdit.result
   | RegisterCapabilityResult
   (* the string is a stacktrace *)
   | ErrorResult of Error.t * string
@@ -1295,6 +1329,7 @@ and 'a lsp_error_handler = Error.t * string -> 'a -> 'a
 and 'a lsp_result_handler =
   | ShowMessageHandler of (ShowMessageRequest.result -> 'a -> 'a)
   | ShowStatusHandler of (ShowStatus.result -> 'a -> 'a)
+  | ApplyWorkspaceEditHandler of (ApplyWorkspaceEdit.result -> 'a -> 'a)
   | ConfigurationHandler of (Configuration.result -> 'a -> 'a)
   | VoidHandler
 

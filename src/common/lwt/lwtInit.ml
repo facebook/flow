@@ -85,8 +85,8 @@ class unix_select =
 
     method private select fds_r fds_w timeout =
       let (fds_r, fds_w, _) =
-        try Unix.select fds_r fds_w [] timeout
-        with Unix.Unix_error (Unix.EINVAL, fn, params) ->
+        try Unix.select fds_r fds_w [] timeout with
+        | Unix.Unix_error (Unix.EINVAL, fn, params) ->
           (* Ok, so either one of the fds is an invalid fd, or maybe it's a valid fd but too large
            * for select *)
           begin
@@ -94,7 +94,8 @@ class unix_select =
               let explode_if_bad fd = Unix.fstat fd |> ignore in
               List.iter explode_if_bad fds_r;
               List.iter explode_if_bad fds_w
-            with Unix.Unix_error (_, _, _) -> raise (Unix.Unix_error (Unix.EBADF, fn, params))
+            with
+            | Unix.Unix_error (_, _, _) -> raise (Unix.Unix_error (Unix.EBADF, fn, params))
           end;
 
           (* Oh boy. So it looks like all the fds are valid. This likely means that one fd is larger
@@ -127,8 +128,9 @@ let run_lwt f =
   set_engine ();
   try
     Lwt_main.run
-      (try%lwt f ()
-       with exn ->
-         let exn = Exception.wrap exn in
-         raise (WrappedException exn))
-  with WrappedException exn -> Exception.reraise exn
+      (try%lwt f () with
+      | exn ->
+        let exn = Exception.wrap exn in
+        raise (WrappedException exn))
+  with
+  | WrappedException exn -> Exception.reraise exn

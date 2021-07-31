@@ -44,7 +44,6 @@ let main
   let connect_params =
     {
       retries = 0;
-      retry_if_init = false;
       timeout = None;
       no_auto_start = false;
       temp_dir;

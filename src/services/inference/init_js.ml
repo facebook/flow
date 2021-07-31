@@ -47,7 +47,7 @@ let parse_lib_file ~reader options file =
       Parsing.parse_with_defaults ~types_mode ~use_strict ~reader options (* workers *) None next
     in
     Lwt.return
-      ( if is_ok results then
+      (if is_ok results then
         let tolerable_errors = FilenameMap.find lib_file results.Parsing.parse_ok in
         let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe reader lib_file in
         let file_sig = Parsing_heaps.Mutator_reader.get_file_sig_unsafe reader lib_file in
@@ -58,8 +58,9 @@ let parse_lib_file ~reader options file =
       else if is_skip results then
         Lib_skip
       else
-        failwith "Internal error: no parse results found" )
-  with _ -> failwith (spf "Can't read library definitions file %s, exiting." file)
+        failwith "Internal error: no parse results found")
+  with
+  | _ -> failwith (spf "Can't read library definitions file %s, exiting." file)
 
 let infer_lib_file ~ccx ~options ~exclude_syms lib_file ast file_sig =
   let verbose = Options.verbose options in

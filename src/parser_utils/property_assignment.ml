@@ -128,13 +128,13 @@ class property_assignment (property_names : SSet.t) =
           Ast.Pattern.Expression
             ( member_loc,
               Ast.Expression.Member
-                ( {
-                    Ast.Expression.Member._object = (_, Ast.Expression.This _);
-                    property =
-                      ( Ast.Expression.Member.PropertyIdentifier _
-                      | Ast.Expression.Member.PropertyPrivateName _ ) as property;
-                    comments = _;
-                  } as left_member ) ) ) ->
+                ({
+                   Ast.Expression.Member._object = (_, Ast.Expression.This _);
+                   property =
+                     ( Ast.Expression.Member.PropertyIdentifier _
+                     | Ast.Expression.Member.PropertyPrivateName _ ) as property;
+                   comments = _;
+                 } as left_member) ) ) ->
         (match operator with
         | None ->
           (* given `this.x = e`, read e then write x *)

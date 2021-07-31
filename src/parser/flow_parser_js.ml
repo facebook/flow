@@ -32,8 +32,8 @@ end = struct
 
   let regexp loc pattern flags =
     let regexp =
-      try Js.Unsafe.new_obj (Js.Unsafe.variable "RegExp") [| string pattern; string flags |]
-      with _ ->
+      try Js.Unsafe.new_obj (Js.Unsafe.variable "RegExp") [| string pattern; string flags |] with
+      | _ ->
         translation_errors := (loc, Parse_error.InvalidRegExp) :: !translation_errors;
 
         (* Invalid RegExp. We already validated the flags, but we've been

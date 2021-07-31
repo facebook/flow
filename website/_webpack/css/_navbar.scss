@@ -1,0 +1,56 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+.navbar {
+  background: $flow-gray-darkest;
+  -webkit-font-smoothing: antialiased;
+  box-shadow: 0 0px 1px rgba(black, 0.5);
+}
+
+.navbar-brand {
+  height: 54px;
+  padding: 0;
+  margin: -$navbar-padding-y 0;
+  margin-right: 2.5rem;
+
+  @include media-breakpoint-down('md') {
+    height: 56px;
+  }
+
+  .flow-logo {
+    height: 100%;
+  }
+}
+
+.navbar-icon {
+  height: 20px;
+  vertical-align: top;
+
+  path, polygon {
+    fill: $navbar-dark-color;
+
+    .navbar-dark .nav-item .nav-link:hover &,
+    .navbar-dark .nav-item .nav-link:focus & {
+      fill: $navbar-dark-hover-color;
+    }
+
+    .navbar-dark .nav-item.active .nav-link &,
+    .navbar-dark .nav-item.open > .nav-link & {
+      fill: $navbar-dark-active-color;
+    }
+  }
+}
+
+.navbar-language-label {
+  @include media-breakpoint-up('lg') {
+    display: none;
+  }
+
+  @include media-breakpoint-up('xl') {
+    display: inline;
+  }
+}

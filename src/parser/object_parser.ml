@@ -481,15 +481,22 @@ module Object
 
   let check_property_name env loc name static =
     if String.equal name "constructor" || (String.equal name "prototype" && static) then
-      error_at env (loc, Parse_error.InvalidFieldName { name; static; private_ = false })
+      error_at
+        env
+        (loc, Parse_error.InvalidClassMemberName { name; static; method_ = false; private_ = false })
 
-  let check_private_names env seen_names private_name (kind : [ `Field | `Getter | `Setter ]) =
+  let check_private_names
+      env seen_names private_name (kind : [ `Method | `Field | `Getter | `Setter ]) =
     let (loc, { PrivateName.id = (_, { Identifier.name; comments = _ }); comments = _ }) =
       private_name
     in
     if String.equal name "constructor" then
       let () =
-        error_at env (loc, Parse_error.InvalidFieldName { name; static = false; private_ = true })
+        error_at
+          env
+          ( loc,
+            Parse_error.InvalidClassMemberName
+              { name; static = false; method_ = kind = `Method; private_ = true } )
       in
       seen_names
     else
@@ -922,14 +929,13 @@ module Object
                 (true, private_names)
               )
             | Method ->
-              ( seen_constructor,
-                begin
-                  match m.key with
-                  | Ast.Expression.Object.Property.PrivateName _ ->
-                    error_at env (loc, Parse_error.PrivateMethod);
-                    private_names
-                  | _ -> private_names
-                end )
+              let private_names =
+                match m.key with
+                | Ast.Expression.Object.Property.PrivateName name ->
+                  check_private_names env private_names name `Method
+                | _ -> private_names
+              in
+              (seen_constructor, private_names)
             | Get ->
               let open Ast.Expression.Object.Property in
               let private_names =

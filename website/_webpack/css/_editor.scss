@@ -1,0 +1,163 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+.article {
+
+///////////////////////////////////////////////////////////////////////////////
+
+.highlight.language-sh {
+  background: $gray-dark;
+  color: white !important;
+  -webkit-font-smoothing: antialiased;
+  border-left: 4px solid $editor-accent-alt;
+
+  span {
+    color: inherit !important;
+  }
+
+  span.c {
+    color: lighten($gray-light, 15%) !important;
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+div.highlight {
+  position: relative;
+  margin: 1rem 0;
+  border-left: 4px solid $editor-accent;
+  background: $editor-accent-bg;
+}
+
+pre.highlight {
+  padding: 0.5rem 1rem;
+}
+
+// padding
+.editor-content {
+  padding: 5px 0;
+}
+
+// scrolling & pre margin
+.editor-content {
+  overflow-y: visible;
+  overflow-x: auto;
+
+  pre {
+    margin: 0;
+  }
+}
+
+.editor-code pre {
+  color: inherit;
+}
+
+.editor-gutter {
+  padding-left: 17px; // trying to match code mirror
+  padding-right: 8px;
+}
+
+// gutter line
+.editor-gutter {
+  border-right: 1px solid #ccc;
+  border-right: 1px solid lighten($editor-accent, 10%);
+}
+
+// line number colors
+.editor-line {
+  color: darken($editor-accent, 5%);
+}
+
+.editor-code {
+  width: 100%;
+}
+
+.editor-code {
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.editor-code {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+.editor-messages {
+  position: absolute;
+  left: -4px;
+  right: 0;
+}
+
+.flow-error-target {
+  position: relative;
+  display: inline-block;
+  cursor: help;
+
+  &::before {
+    content: "";
+    display: block;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-bottom: 2px dotted $editor-error-bg;
+  }
+}
+
+.flow-error-target .flow-error-target::before {
+  display: none;
+}
+
+.flow-error-target-active {
+  background: rgba($editor-error-bg, 0.4);
+}
+
+.flow-error-target-active:hover {
+  background: rgba($editor-error-bg, 1);
+  color: white;
+
+  margin-left: -4px;
+  margin-right: -4px;
+  padding-left: 4px;
+  padding-right: 4px;
+
+  * {
+    color: inherit !important;
+  }
+}
+
+.flow-error-target-active .flow-error-target-active {
+  background: transparent;
+}
+
+.flow-error {
+  display: none;
+  z-index: 1;
+  background: $editor-error-bg;
+  color: white;
+  padding: 0.5rem 1rem;
+  font-family: $font-family-monospace;
+
+  span {
+    display: inline-block;
+    padding: 0 0.2em;
+    background: rgba(white, 0.2);
+  }
+}
+
+.flow-error-active {
+  display: block;
+}
+
+.flow-error .flow-error-highlighted {
+  background: white;
+  color: $editor-error-bg;
+}
+
+}

@@ -125,7 +125,8 @@ module ExactMatchQuery = struct
     try
       ignore (searcher#program typed_ast);
       None
-    with Found scheme -> Some scheme
+    with
+    | Found scheme -> Some scheme
 end
 
 let find_exact_match_annotation = ExactMatchQuery.find
@@ -203,7 +204,8 @@ module Type_at_pos = struct
     try
       ignore (searcher#program typed_ast);
       None
-    with Found (loc, scheme) -> Some (ALoc.to_loc_exn loc, scheme)
+    with
+    | Found (loc, scheme) -> Some (ALoc.to_loc_exn loc, scheme)
 end
 
 let find_type_at_pos_annotation = Type_at_pos.find

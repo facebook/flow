@@ -15,7 +15,8 @@ let assert_one_of ~ctxt item lst = assert_equal ~ctxt (List.mem item lst) true
 
 let assert_raises ~ctxt ~f expected_exception =
   let exn = ref None in
-  (try f () with e -> exn := Some e);
+  (try f () with
+  | e -> exn := Some e);
   assert_equal ~ctxt !exn (Some expected_exception)
 
 let makeUnionFind () =

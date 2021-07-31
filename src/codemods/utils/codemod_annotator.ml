@@ -73,6 +73,38 @@ module HardCodedImportMap = struct
                } ))
 end
 
+(* Used to build out a map of locs to ty results where an error occurs *)
+let lmap_add_ty cctx norm_opts ~max_type_size acc loc =
+  let add_ty ty =
+    let reader = cctx.Codemod_context.Typed.reader in
+    let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
+    (* NOTE simplify before validating to avoid flagging spurious empty's,
+     * eg. empty's that will be simplified away as parts of unions.
+     * Do not simplify empties. Ignoring some of the attendant upper bounds
+     * might lead to unsound types.
+     *)
+    let ty = Ty_utils.simplify_type ~merge_kinds:false ty in
+    match Validator.validate_type ~size_limit:max_type_size ~loc_of_aloc ty with
+    | (ty, []) -> Ok ty
+    | (ty, errs) ->
+      let errs = List.map (fun e -> Error.Validation_error e) errs in
+      Error (errs, ty)
+  in
+  let type_entry =
+    match Codemod_context.Typed.ty_at_loc norm_opts cctx loc with
+    | Ok (Ty.Type ty) -> add_ty ty
+    | Ok (Ty.Decl (Ty.ClassDecl (s, _))) -> add_ty (Ty.TypeOf (Ty.TSymbol s))
+    | Ok _ ->
+      let ty = Ty.explicit_any in
+      let errors = [Error.Missing_annotation_or_normalizer_error] in
+      Error (errors, ty)
+    | Error _ ->
+      let ty = Ty.explicit_any in
+      let errors = [Error.Missing_annotation_or_normalizer_error] in
+      Error (errors, ty)
+  in
+  LMap.add loc type_entry acc
+
 module Make (Extra : BASE_STATS) = struct
   module Stats = Stats (Extra)
   module Acc = Acc (Extra)
@@ -138,7 +170,10 @@ module Make (Extra : BASE_STATS) = struct
 
       (* This one does the actual annotation *)
       method private annotate_node
-          : 'a. Loc.t -> ty_or_type_ast -> (Loc.t * (Loc.t, Loc.t) Ast.Type.t -> 'a) ->
+          : 'a.
+            Loc.t ->
+            ty_or_type_ast ->
+            (Loc.t * (Loc.t, Loc.t) Ast.Type.t -> 'a) ->
             ('a, Error.kind) result =
         let run loc ty =
           let (acc', ty) =
@@ -186,8 +221,13 @@ module Make (Extra : BASE_STATS) = struct
             Ok (f (Loc.none, t))
 
       method private opt_annotate_inferred_type
-          : 'a. f:(Loc.t -> 'a -> ty_or_type_ast -> ('a, Error.kind) result) -> error:('a -> 'a) ->
-            Loc.t -> ty_or_type_ast -> 'a -> 'a =
+          : 'a.
+            f:(Loc.t -> 'a -> ty_or_type_ast -> ('a, Error.kind) result) ->
+            error:('a -> 'a) ->
+            Loc.t ->
+            ty_or_type_ast ->
+            'a ->
+            'a =
         fun ~f ~error loc ty x ->
           match f loc x ty with
           | Ok y ->
@@ -204,9 +244,14 @@ module Make (Extra : BASE_STATS) = struct
       (* The 'expr' parameter is used for hard-coding type annotations on expressions
        * matching annotate_exports_hardcoded_expr_fixes.expr_to_type_ast. *)
       method private opt_annotate
-          : 'a. f:(Loc.t -> 'a -> ty_or_type_ast -> ('a, Error.kind) result) -> error:('a -> 'a) ->
-            expr:(Loc.t, Loc.t) Ast.Expression.t option -> Loc.t ->
-            (Ty.t, Error.kind list * Ty.t) result -> 'a -> 'a =
+          : 'a.
+            f:(Loc.t -> 'a -> ty_or_type_ast -> ('a, Error.kind) result) ->
+            error:('a -> 'a) ->
+            expr:(Loc.t, Loc.t) Ast.Expression.t option ->
+            Loc.t ->
+            (Ty.t, Error.kind list * Ty.t) result ->
+            'a ->
+            'a =
         fun ~f ~error ~expr loc ty_entry x ->
           let hard_coded_ast_type =
             match expr with
@@ -225,6 +270,40 @@ module Make (Extra : BASE_STATS) = struct
             ) else
               x
           | (None, Ok ty) -> this#opt_annotate_inferred_type ~f ~error loc (Ty_ ty) x
+
+      (* Useful to annotate expressions with a typecast. Skips arrow functions *)
+      method private annotate_expr loc expression ty =
+        let open Ast.Expression in
+        match expression with
+        | (arrow_loc, ArrowFunction _func) ->
+          this#update_acc (fun acc -> Acc.warn acc arrow_loc Warning.Skipping_arrow_function);
+          Ok expression
+        | (expr_loc, _) ->
+          Acc.debug expr_loc (Debug.Add_annotation Debug.Expr);
+          this#annotate_node loc ty (fun annot ->
+              (expr_loc, TypeCast TypeCast.{ expression; annot; comments = None }))
+
+      method private add_unannotated_loc_warnings lmap =
+        let not_annotated_locs =
+          LMap.fold
+            (fun loc _ acc ->
+              if LMap.mem loc added_annotations_locmap then
+                (* we added an annot *)
+                acc
+              else if LSet.mem loc wont_annotate_locs then
+                (* we are explicitly avoiding it *)
+                acc
+              else if LSet.mem loc codemod_error_locs then
+                (* codemod error *)
+                acc
+              else
+                loc :: acc)
+            lmap
+            []
+        in
+        List.iter
+          (fun loc -> this#update_acc (fun acc -> Acc.warn acc loc Warning.Location_unhandled))
+          not_annotated_locs
 
       method virtual private post_run : unit -> Extra.t
 

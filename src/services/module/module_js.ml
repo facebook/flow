@@ -209,7 +209,8 @@ let clear_filename_cache () = files_in_dir := SMap.empty
 
 (* case-sensitive dir_exists  *)
 let rec dir_exists dir =
-  (try Sys.is_directory dir && (case_sensitive || file_exists dir) with _ -> false)
+  try Sys.is_directory dir && (case_sensitive || file_exists dir) with
+  | _ -> false
 
 (* when system is case-insensitive, do our own file exists check *)
 and file_exists path =
@@ -278,9 +279,9 @@ module Node = struct
 
   let path_if_exists_with_file_exts ~file_options resolution_acc path file_exts =
     lazy_seq
-      ( file_exts
+      (file_exts
       |> Base.List.map ~f:(fun ext ->
-             lazy (path_if_exists ~file_options resolution_acc (path ^ ext))) )
+             lazy (path_if_exists ~file_options resolution_acc (path ^ ext))))
 
   let parse_main
       ~reader ~root ~file_options (loc : ALoc.t) resolution_acc package_filename file_exts =
@@ -367,10 +368,10 @@ module Node = struct
           (match SMap.find_opt dir node_modules_containers with
           | Some existing_node_modules_dirs ->
             lazy_seq
-              ( Files.node_resolver_dirnames file_options
+              (Files.node_resolver_dirnames file_options
               |> Base.List.map ~f:(fun dirname ->
                      lazy
-                       ( if SSet.mem dirname existing_node_modules_dirs then
+                       (if SSet.mem dirname existing_node_modules_dirs then
                          resolve_relative
                            ~options
                            ~reader
@@ -379,7 +380,7 @@ module Node = struct
                            dir
                            (spf "%s%s%s" dirname Filename.dir_sep r)
                        else
-                         None )) )
+                         None)))
           | None -> None);
         lazy
           (let parent_dir = Filename.dirname dir in
@@ -413,9 +414,9 @@ module Node = struct
       lazy_seq
         [
           lazy
-            ( if Options.node_resolver_allow_root_relative options then
+            (if Options.node_resolver_allow_root_relative options then
               lazy_seq
-                ( Options.node_resolver_root_relative_dirnames options
+                (Options.node_resolver_root_relative_dirnames options
                 |> Base.List.map ~f:(fun root_relative_dirname ->
                        lazy
                          (let root_str =
@@ -427,7 +428,7 @@ module Node = struct
                           resolve_relative ~options ~reader loc ?resolution_acc root_str import_str))
                 )
             else
-              None );
+              None);
           lazy
             (node_module
                ~options
@@ -610,9 +611,9 @@ let get_module_system opts =
   | Some system -> system
   | None ->
     let module M =
-    ( val match Options.module_system opts with
-          | Options.Node -> (module Node : MODULE_SYSTEM)
-          | Options.Haste -> (module Haste : MODULE_SYSTEM) )
+    (val match Options.module_system opts with
+         | Options.Node -> (module Node : MODULE_SYSTEM)
+         | Options.Haste -> (module Haste : MODULE_SYSTEM))
     in
     let system = (module M : MODULE_SYSTEM) in
     module_system := Some system;
