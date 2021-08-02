@@ -1289,7 +1289,7 @@ let make_options
     opt_react_runtime = FlowConfig.react_runtime flowconfig;
     opt_react_server_component_exts = FlowConfig.react_server_component_exts flowconfig;
     opt_recursion_limit = FlowConfig.recursion_limit flowconfig;
-    opt_refactor = flowconfig |> FlowConfig.refactor |> Option.value ~default:false;
+    opt_refactor = flowconfig |> FlowConfig.refactor |> Option.value ~default:true;
     opt_max_files_checked_per_worker = FlowConfig.max_files_checked_per_worker flowconfig;
     opt_max_rss_bytes_for_check_per_worker =
       FlowConfig.max_rss_bytes_for_check_per_worker flowconfig;
