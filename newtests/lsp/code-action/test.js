@@ -1632,7 +1632,7 @@ export default (suite(
                           },
                         },
                         newText:
-                          'function newFunction(): void {\n  console.log("foo");\n  console.log("bar");\n}',
+                          'function newFunction(): void {\n    console.log("foo");\n    console.log("bar");\n  }',
                       },
                     ],
                   },
@@ -1739,7 +1739,7 @@ export default (suite(
                           end: {line: 8, character: 15},
                         },
                         newText:
-                          'function newFunction(): {| a: number, barr: number, fooo: number |} {\n  // comment before\n  let fooo = 3; // selected\n  let barr = 4; // selected\n  const a = 3; // selected\n  return { a, barr, fooo };\n}',
+                          'function newFunction(): {| a: number, barr: number, fooo: number |} {\n    // comment before\n    let fooo = 3; // selected\n    let barr = 4; // selected\n    const a = 3; // selected\n    return { a, barr, fooo };\n  }',
                       },
                     ],
                   },
@@ -1847,7 +1847,7 @@ export default (suite(
                           end: {line: 7, character: 19},
                         },
                         newText:
-                          '\nfunction newFunction(): void {\n  console.log(foo);\n}',
+                          '\nfunction newFunction(): void {\n    console.log(foo);\n  }',
                       },
                     ],
                   },
@@ -1952,7 +1952,7 @@ export default (suite(
                           end: {line: 7, character: 19},
                         },
                         newText:
-                          'function newFunction(): Foo {\n  const foo = getFoo2();\n  return foo;\n}',
+                          'function newFunction(): Foo {\n    const foo = getFoo2();\n    return foo;\n  }',
                       },
                     ],
                   },
@@ -1964,6 +1964,211 @@ export default (suite(
                     'textDocument/codeAction',
                     'refactor_extract',
                     "Extract to inner function in function 'test'",
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test(
+      'provide codeAction for basic extract method, constant, class fields.',
+      [
+        addFile(
+          'refactor-extract-method.js.ignored',
+          'refactor-extract-method.js',
+        ),
+        lspStartAndConnect(),
+        // Partial selection is not allowed and gives no results.
+        lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/refactor-extract-method.js',
+          },
+          range: {
+            start: {line: 4, character: 4},
+            end: {line: 4, character: 16},
+          },
+          context: {
+            diagnostics: [],
+          },
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/codeAction',
+              result: [
+                {
+                  title: "Extract to method in class 'Test'",
+                  kind: 'refactor.extract',
+                  diagnostics: [],
+                  edit: {
+                    changes: {
+                      '<PLACEHOLDER_PROJECT_URL>/refactor-extract-method.js': [
+                        {
+                          range: {
+                            start: {line: 2, character: 0},
+                            end: {line: 6, character: 1},
+                          },
+                          newText:
+                            'class Test {\n  test(): void {\n    this.newMethod();\n  }\n  newMethod(): void {\n    this.test();\n  }\n}',
+                        },
+                      ],
+                    },
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/codeAction',
+                      'refactor_extract',
+                      "Extract to method in class 'Test'",
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            ...lspIgnoreStatusAndCancellation,
+          ],
+        ),
+        lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+          textDocument: {
+            uri: '<PLACEHOLDER_PROJECT_URL>/refactor-extract-method.js',
+          },
+          range: {
+            start: {line: 4, character: 4},
+            end: {line: 4, character: 15},
+          },
+          context: {
+            diagnostics: [],
+          },
+        }).verifyAllLSPMessagesInStep(
+          [
+            {
+              method: 'textDocument/codeAction',
+              result: [
+                {
+                  title: "Extract to field in class 'Test'",
+                  kind: 'refactor.extract',
+                  diagnostics: [],
+                  edit: {
+                    changes: {
+                      '<PLACEHOLDER_PROJECT_URL>/refactor-extract-method.js': [
+                        {
+                          range: {
+                            start: {line: 2, character: 0},
+                            end: {line: 6, character: 1},
+                          },
+                          newText:
+                            'class Test {\n  newProperty = this.test();\n  \n  test(): void {\n    this.newProperty;\n  }\n}',
+                        },
+                      ],
+                    },
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/codeAction',
+                      'refactor_extract',
+                      "Extract to field in class 'Test'",
+                    ],
+                  },
+                },
+                {
+                  title: "Extract to constant in method 'test'",
+                  kind: 'refactor.extract',
+                  diagnostics: [],
+                  edit: {
+                    changes: {
+                      '<PLACEHOLDER_PROJECT_URL>/refactor-extract-method.js': [
+                        {
+                          range: {
+                            start: {line: 4, character: 4},
+                            end: {line: 4, character: 16},
+                          },
+                          newText:
+                            'const newLocal = this.test();\n    \n    newLocal;',
+                        },
+                      ],
+                    },
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/codeAction',
+                      'refactor_extract',
+                      "Extract to constant in method 'test'",
+                    ],
+                  },
+                },
+              ],
+            },
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            ...lspIgnoreStatusAndCancellation,
+          ],
+        ),
+      ],
+    ),
+    test('provide codeAction for basic extract type alias', [
+      addFile(
+        'refactor-extract-type-alias.js.ignored',
+        'refactor-extract-type-alias.js',
+      ),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/refactor-extract-type-alias.js',
+        },
+        range: {
+          start: {line: 3, character: 11},
+          end: {line: 3, character: 17},
+        },
+        context: {
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Extract to type alias',
+                kind: 'refactor.extract',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/refactor-extract-type-alias.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 3,
+                            character: 2,
+                          },
+                          end: {
+                            line: 3,
+                            character: 22,
+                          },
+                        },
+                        newText:
+                          'type NewType = number;\n  \n  const a: NewType = 3;',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'refactor_extract',
+                    'Extract to type alias',
                   ],
                 },
               },

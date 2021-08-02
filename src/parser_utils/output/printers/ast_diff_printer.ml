@@ -8,6 +8,31 @@
 open Flow_ast_differ
 open Utils_js
 
+let infer_indentation_count = function
+  | StatementBlockParentOfStatement loc ->
+    (* We use the end column since start might be at anywhere.
+       e.g.
+       function foo() {
+         stmt
+       } // <- end indentation + 1 is the stmt indentation. *)
+    Loc.(loc._end.column / 2) + 1
+  | ExportParentOfStatement loc
+  | LabeledStatementParentOfStatement loc ->
+    (* We need to use the parent of parent statement, since the nested statement inside export and
+       label should have the same indentation level as parent. *)
+    Loc.(loc.start.column / 2)
+  | IfParentOfStatement loc
+  | LoopParentOfStatement loc
+  | WithStatementParentOfStatement loc
+  | SwitchCaseParentOfStatement loc ->
+    (* These cases introduces one more level of nesting. *)
+    Loc.(loc.start.column / 2) + 1
+  | TopLevelParentOfStatement -> 0
+
+let wrap_with_inferred_indentation statement_node_parent =
+  let indentation_count = infer_indentation_count statement_node_parent in
+  Base.Fn.apply_n_times ~n:indentation_count (fun node -> Layout.Indent node)
+
 let layout_of_node ~opts = function
   | Raw str -> Layout.Atom str
   | Comment c -> Js_layout_generator.comment c
@@ -16,7 +41,8 @@ let layout_of_node ~opts = function
   | NumberLiteral (loc, lit) -> Js_layout_generator.number_literal_type loc lit
   | BigIntLiteral (loc, lit) -> Js_layout_generator.bigint_literal_type loc lit
   | BooleanLiteral (loc, lit) -> Js_layout_generator.boolean_literal_type loc lit
-  | Statement (stmt, _) -> Js_layout_generator.statement ~opts stmt
+  | Statement (stmt, parent) ->
+    Js_layout_generator.statement ~opts stmt |> wrap_with_inferred_indentation parent
   | Program ast -> Js_layout_generator.program ~preserve_docblock:true ~checksum:None ast
   (* Do not wrap expression in parentheses for cases where we know parentheses are not needed. *)
   | Expression (expr, (StatementParentOfExpression _ | SlotParentOfExpression)) ->
@@ -56,14 +82,24 @@ let is_statement_list =
       | _ -> false)
 
 let text_of_statement_list ~opts nodes =
-  let stmts =
+  let statements_with_parents =
     Base.List.filter_map
       ~f:(function
-        | Statement (stmt, _) -> Some stmt
+        | Statement (stmt, parent) -> Some (stmt, parent)
         | _ -> None)
       nodes
   in
-  text_of_layout (Layout.fuse (Js_layout_generator.statement_list ~opts stmts))
+  let parent =
+    match statements_with_parents with
+    | [] -> TopLevelParentOfStatement
+    | (_, parent) :: _ -> parent
+  in
+  statements_with_parents
+  |> List.map fst
+  |> Js_layout_generator.statement_list ~opts
+  |> Layout.fuse
+  |> wrap_with_inferred_indentation parent
+  |> text_of_layout
 
 let text_of_nodes ~opts ~separator ~leading_separator nodes =
   let sep =
