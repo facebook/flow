@@ -16,10 +16,11 @@ let layout_of_node ~opts = function
   | NumberLiteral (loc, lit) -> Js_layout_generator.number_literal_type loc lit
   | BigIntLiteral (loc, lit) -> Js_layout_generator.bigint_literal_type loc lit
   | BooleanLiteral (loc, lit) -> Js_layout_generator.boolean_literal_type loc lit
-  | Statement stmt -> Js_layout_generator.statement ~opts stmt
+  | Statement (stmt, _) -> Js_layout_generator.statement ~opts stmt
   | Program ast -> Js_layout_generator.program ~preserve_docblock:true ~checksum:None ast
   (* Do not wrap expression in parentheses for cases where we know parentheses are not needed. *)
-  | Expression (expr, (StatementParent _ | SlotParent)) -> Js_layout_generator.expression ~opts expr
+  | Expression (expr, (StatementParentOfExpression _ | SlotParentOfExpression)) ->
+    Js_layout_generator.expression ~opts expr
   | Expression (expr, _) ->
     (* TODO use expression context for printing to insert parens when actually needed. *)
     Layout.fuse [Layout.Atom "("; Js_layout_generator.expression ~opts expr; Layout.Atom ")"]
@@ -58,7 +59,7 @@ let text_of_statement_list ~opts nodes =
   let stmts =
     Base.List.filter_map
       ~f:(function
-        | Statement stmt -> Some stmt
+        | Statement (stmt, _) -> Some stmt
         | _ -> None)
       nodes
   in
@@ -107,7 +108,7 @@ let rec edits_of_changes ?(opts = Js_layout_generator.default_opts) changes =
      We should coalesce this into a single replace spanning both the replace and delete with
      the replacement, so that we can avoid an empty line being printed in the place of deleted
      statements. *)
-  | (loc1, Replace (old_node, (Statement (new_loc, _) as new_node))) :: (loc2, Delete _) :: tl
+  | (loc1, Replace (old_node, (Statement ((new_loc, _), _) as new_node))) :: (loc2, Delete _) :: tl
     when Loc.contains new_loc (Loc.btwn loc1 loc2) ->
     edits_of_changes ~opts ((new_loc, Replace (old_node, new_node)) :: tl)
   (* Similar to the case above, but sometimes we have diff patterns like:
@@ -124,10 +125,14 @@ let rec edits_of_changes ?(opts = Js_layout_generator.default_opts) changes =
         ( old_node,
           Expression
             ( (new_loc, _),
-              StatementParent (_, (Flow_ast.Statement.Expression _ as expression_statement)) ) ) )
+              StatementParentOfExpression
+                (_, (Flow_ast.Statement.Expression _ as expression_statement)) ) ) )
     :: (loc2, Delete _) :: tl
     when Loc.contains new_loc (Loc.btwn loc1 loc2) ->
     edits_of_changes
       ~opts
-      ((new_loc, Replace (old_node, Statement (new_loc, expression_statement))) :: tl)
+      (( new_loc,
+         Replace (old_node, Statement ((new_loc, expression_statement), TopLevelParentOfStatement))
+       )
+       :: tl)
   | hd :: tl -> edit_of_change ~opts hd :: edits_of_changes ~opts tl
