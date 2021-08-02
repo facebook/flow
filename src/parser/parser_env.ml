@@ -642,8 +642,8 @@ module Peek = struct
     match comments with 
     | [] -> []
     | _ -> 
-    Base.List.filter
-      ~f:(fun ({ Loc.start; _ }, _) -> Loc.pos_cmp !(env.consumed_comments_pos) start <= 0)
+    List.filter
+      (fun ({ Loc.start; _ }, _) -> Loc.pos_cmp !(env.consumed_comments_pos) start <= 0)
       comments
 
   let token env = ith_token ~i:0 env
