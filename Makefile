@@ -169,6 +169,7 @@ MODULES=\
   src/state/heaps/parsing/exceptions\
   src/state/locals/module\
   src/state/readers\
+  src/third-party/sedlex\
   src/third-party/fuzzy-path/src\
   src/third-party/lz4\
   src/third-party/ocaml-sourcemaps/src\
