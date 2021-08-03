@@ -1029,7 +1029,7 @@ module Make
         let else_env_with_refinements = this#ssa_env in
         this#pop_refinement_scope ();
         this#reset_ssa_env env0;
-        this#merge_if_statement_envs
+        this#merge_conditional_branches_with_refinements
           (then_env_no_refinements, then_env_with_refinements)
           (else_env_no_refinements, else_env_with_refinements);
 
@@ -1038,7 +1038,42 @@ module Make
         this#merge_completion_states if_completion_states;
         stmt
 
-      method merge_if_statement_envs (env1, refined_env1) (env2, refined_env2) : unit =
+      method! conditional _loc (expr : (L.t, L.t) Flow_ast.Expression.Conditional.t) =
+        let open Flow_ast.Expression.Conditional in
+        let { test; consequent; alternate; comments = _ } = expr in
+        this#push_refinement_scope SMap.empty;
+        ignore @@ this#expression_refinement test;
+        let test_refinements = this#peek_new_refinements () in
+        let env0 = this#ssa_env_without_latest_refinements in
+        let consequent_completion_state =
+          this#run_to_completion (fun () -> ignore @@ this#expression consequent)
+        in
+        let consequent_env_no_refinements = this#ssa_env_without_latest_refinements in
+        let consequent_env_with_refinements = this#ssa_env in
+        this#pop_refinement_scope ();
+        this#reset_ssa_env env0;
+        this#push_refinement_scope test_refinements;
+        this#negate_new_refinements ();
+        let alternate_completion_state =
+          this#run_to_completion (fun () -> ignore @@ this#expression alternate)
+        in
+        let alternate_env_no_refinements = this#ssa_env_without_latest_refinements in
+        let alternate_env_with_refinements = this#ssa_env in
+        this#pop_refinement_scope ();
+        this#reset_ssa_env env0;
+        this#merge_conditional_branches_with_refinements
+          (consequent_env_no_refinements, consequent_env_with_refinements)
+          (alternate_env_no_refinements, alternate_env_with_refinements);
+
+        (* merge completions *)
+        let conditional_completion_states =
+          (consequent_completion_state, [alternate_completion_state])
+        in
+        this#merge_completion_states conditional_completion_states;
+        expr
+
+      method merge_conditional_branches_with_refinements (env1, refined_env1) (env2, refined_env2)
+          : unit =
         (* We only want to merge the refined environments from the two branches of an if-statement
          * if there was an assignment in one of the branches. Otherwise, merging the positive and
          * negative branches of the refinement into a union would be unnecessary work to
@@ -1894,7 +1929,11 @@ module Make
           expr
         in
         this#push_refinement_scope SMap.empty;
-        let (lhs_latest_refinements, rhs_latest_refinements, env1) =
+        (* The RHS is _only_ evaluated if the LHS fails its check. That means that patterns like
+         * x || invariant(false) should propagate the truthy refinement to the next line. We keep track
+         * of the completion state on the rhs to do that. If the LHS throws then the entire expression
+         * throws, so there's no need to catch the exception from the LHS *)
+        let (lhs_latest_refinements, rhs_latest_refinements, env1, rhs_completion_state) =
           match operator with
           | Flow_ast.Expression.Logical.Or
           | Flow_ast.Expression.Logical.And ->
@@ -1905,13 +1944,15 @@ module Make
             | Flow_ast.Expression.Logical.Or -> this#negate_new_refinements ()
             | _ -> ());
             this#push_refinement_scope SMap.empty;
-            ignore @@ this#expression_refinement right;
+            let rhs_completion_state =
+              this#run_to_completion (fun () -> ignore @@ this#expression_refinement right)
+            in
             let rhs_latest_refinements = this#peek_new_refinements () in
             (* Pop LHS refinement scope *)
             this#pop_refinement_scope ();
             (* Pop RHS refinement scope *)
             this#pop_refinement_scope ();
-            (lhs_latest_refinements, rhs_latest_refinements, env1)
+            (lhs_latest_refinements, rhs_latest_refinements, env1, rhs_completion_state)
           | Flow_ast.Expression.Logical.NullishCoalesce ->
             (* If this overall expression is truthy, then either the LHS or the RHS has to be truthy.
                If it's because the LHS is truthy, then the LHS also has to be non-maybe (this is of course
@@ -1925,7 +1966,9 @@ module Make
             let env1 = this#ssa_env_without_latest_refinements in
             this#negate_new_refinements ();
             this#push_refinement_scope SMap.empty;
-            ignore (this#expression_refinement right);
+            let rhs_completion_state =
+              this#run_to_completion (fun () -> ignore (this#expression_refinement right))
+            in
             let rhs_latest_refinements = this#peek_new_refinements () in
             this#pop_refinement_scope ();
             this#pop_refinement_scope ();
@@ -1939,7 +1982,7 @@ module Make
             this#merge_refinement_scopes merge_and nullish truthy_refinements;
             let lhs_latest_refinements = this#peek_new_refinements () in
             this#pop_refinement_scope ();
-            (lhs_latest_refinements, rhs_latest_refinements, env1)
+            (lhs_latest_refinements, rhs_latest_refinements, env1, rhs_completion_state)
         in
         let merge =
           match operator with
@@ -1948,8 +1991,16 @@ module Make
             merge_or
           | Flow_ast.Expression.Logical.And -> merge_and
         in
-        this#merge_self_ssa_env env1;
-        this#merge_refinement_scopes merge lhs_latest_refinements rhs_latest_refinements
+        match rhs_completion_state with
+        | Some AbruptCompletion.Throw ->
+          let env2 = this#ssa_env in
+          this#reset_ssa_env env1;
+          this#push_refinement_scope lhs_latest_refinements;
+          this#pop_refinement_scope_invariant ();
+          this#merge_self_ssa_env env2
+        | _ ->
+          this#merge_self_ssa_env env1;
+          this#merge_refinement_scopes merge lhs_latest_refinements rhs_latest_refinements
 
       method null_test ~strict ~sense loc expr =
         ignore @@ this#expression expr;
@@ -2375,6 +2426,8 @@ module Make
         let open Flow_ast.Expression.Logical in
         let { operator; left = (loc, _) as left; right; comments = _ } = expr in
         this#push_refinement_scope SMap.empty;
+        (* THe LHS is unconditionally evaluated, so we don't run-to-completion and catch the
+         * error here *)
         (match operator with
         | Flow_ast.Expression.Logical.Or
         | Flow_ast.Expression.Logical.And ->
@@ -2382,32 +2435,28 @@ module Make
         | Flow_ast.Expression.Logical.NullishCoalesce ->
           ignore (this#null_test ~strict:false ~sense:false loc left));
         let env1 = this#ssa_env_without_latest_refinements in
+        let env1_with_refinements = this#ssa_env in
         (match operator with
         | Flow_ast.Expression.Logical.NullishCoalesce
         | Flow_ast.Expression.Logical.Or ->
           this#negate_new_refinements ()
         | Flow_ast.Expression.Logical.And -> ());
-        ignore @@ this#expression right;
-        this#pop_refinement_scope ();
-        this#merge_self_ssa_env env1;
-        expr
-
-      method! conditional _loc (expr : (L.t, L.t) Flow_ast.Expression.Conditional.t) =
-        let open Flow_ast.Expression.Conditional in
-        let { test; consequent; alternate; comments = _ } = expr in
-        this#push_refinement_scope SMap.empty;
-        ignore @@ this#expression_refinement test;
-        let test_refinements = this#peek_new_refinements () in
-        let env0 = this#ssa_env_without_latest_refinements in
-        ignore @@ this#expression consequent;
-        let env1 = this#ssa_env_without_latest_refinements in
-        this#pop_refinement_scope ();
-        this#reset_ssa_env env0;
-        this#push_refinement_scope test_refinements;
-        this#negate_new_refinements ();
-        ignore @@ this#expression alternate;
-        this#pop_refinement_scope ();
-        this#merge_self_ssa_env env1;
+        (* The RHS is _only_ evaluated if the LHS fails its check. That means that patterns like
+         * x || invariant(false) should propagate the truthy refinement to the next line. We keep track
+         * of the completion state on the rhs to do that. If the LHS throws then the entire expression
+         * throws, so there's no need to catch the exception from the LHS *)
+        let rhs_completion_state =
+          this#run_to_completion (fun () -> ignore @@ this#expression right)
+        in
+        (match rhs_completion_state with
+        | Some AbruptCompletion.Throw ->
+          let env2 = this#ssa_env in
+          this#reset_ssa_env env1_with_refinements;
+          this#pop_refinement_scope_invariant ();
+          this#merge_self_ssa_env env2
+        | _ ->
+          this#pop_refinement_scope ();
+          this#merge_self_ssa_env env1);
         expr
 
       method private chain_to_refinement =

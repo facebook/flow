@@ -436,6 +436,61 @@ let%expect_test "conditional_expression" =
 (x ? x: x) && x|};
     [%expect {| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 5) to (2, 6) => { {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)} }; (2, 8) to (2, 9) => { {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)} }; (2, 14) to (2, 15) => { (1, 4) to (1, 5): (`x`) } ] |}]
 
+let%expect_test "conditional_throw" =
+  print_ssa_test {|let x = undefined;
+(x ? invariant() : x) && x|}; 
+    [%expect {| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 19) to (2, 20) => { {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)} }; (2, 25) to (2, 26) => { {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "conditional_throw2" =
+  print_ssa_test {|let x = undefined;
+(x ? x : invariant()) && x|}; 
+    [%expect {| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 5) to (2, 6) => { {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)} }; (2, 25) to (2, 26) => { {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "logical_throw_and" =
+  print_ssa_test {|let x = undefined;
+x && invariant();
+x|}; 
+    [%expect {| [ (2, 0) to (2, 1) => { (1, 4) to (1, 5): (`x`) }; (3, 0) to (3, 1) => { {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "logical_throw_or" =
+  print_ssa_test {|let x = undefined;
+x || invariant();
+x|}; 
+    [%expect {| [ (2, 0) to (2, 1) => { (1, 4) to (1, 5): (`x`) }; (3, 0) to (3, 1) => { {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "logical_throw_nc" =
+  print_ssa_test {|let x = undefined;
+x ?? invariant();
+x|}; 
+    [%expect {| [ (2, 0) to (2, 1) => { (1, 4) to (1, 5): (`x`) }; (3, 0) to (3, 1) => { {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "logical_throw_reassignment" =
+  print_ssa_test {|let x = undefined;
+try {
+  x ?? invariant(false, x = 3);
+} finally {
+  x;
+}|}; 
+    [%expect {| [ (3, 2) to (3, 3) => { (1, 4) to (1, 5): (`x`) }; (5, 2) to (5, 3) => { (3, 24) to (3, 25): (`x`), {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "nested_logical_throw_and" =
+  print_ssa_test {|let x = undefined;
+(x && invariant()) && x;
+x;|};
+    [%expect {| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 22) to (2, 23) => { {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)} }; (3, 0) to (3, 1) => { {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "nested_logical_throw_or" =
+  print_ssa_test {|let x = undefined;
+(x || invariant()) && x;
+x;|};
+    [%expect {| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 22) to (2, 23) => { {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)} }; (3, 0) to (3, 1) => { {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "nested_logical_throw_nc" =
+  print_ssa_test {|let x = undefined;
+(x ?? invariant()) && x;
+x;|};
+    [%expect {| [ (2, 1) to (2, 2) => { (1, 4) to (1, 5): (`x`) }; (2, 22) to (2, 23) => { {refinement = And (Not (Maybe), Truthy); writes = (1, 4) to (1, 5): (`x`)} }; (3, 0) to (3, 1) => { {refinement = And (Not (Maybe), Truthy); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
 let%expect_test "if_else_statement" =
   print_ssa_test {|let x = undefined;
 if (x) {
