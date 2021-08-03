@@ -49,6 +49,11 @@ module ImportKind = struct
     | _ ->
       (* TODO: handle requires *)
       Require
+
+  let is_type = function
+    | ImportType -> true
+    | ImportValue -> false
+    | Require -> false
 end
 
 module ImportSource = struct
@@ -64,6 +69,13 @@ module ImportSource = struct
     | _ ->
       (* TODO: handle requires *)
       failwith "only imports are handled so far"
+
+  let is_lower source =
+    String.length source > 1
+    &&
+    match source.[0] with
+    | 'a' .. 'z' -> true
+    | _ -> false
 end
 
 let mk_default_import ?loc ?comments ~from name =
@@ -288,12 +300,24 @@ let compare_imports a b =
   to insert above or below. *)
 let sorted_insertion_point =
   let potential_change import current =
-    let k = ImportKind.(compare (of_statement import) (of_statement current)) in
+    let import_kind = ImportKind.of_statement import in
+    let current_kind = ImportKind.of_statement current in
+    let k = ImportKind.compare import_kind current_kind in
     if k = 0 then
       (* same section *)
-      let k = ImportSource.(compare (of_statement import) (of_statement current)) in
+      let import_source = ImportSource.of_statement import in
+      let current_source = ImportSource.of_statement current in
+      let k = ImportSource.compare import_source current_source in
       if k < 0 then
         Above { skip_line = false }
+      else if
+        (not (ImportKind.is_type import_kind))
+        && ImportSource.is_lower import_source
+        && not (ImportSource.is_lower current_source)
+      then
+        (* separate value imports that start with lowercase into a separate section
+           TODO: this is a Facebook style, could be made a config option. *)
+        Below { skip_line = true }
       else
         Below { skip_line = false }
     else if k < 0 then

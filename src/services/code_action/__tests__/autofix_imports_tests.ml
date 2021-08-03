@@ -399,8 +399,8 @@ let add_import_tests =
       assert_patch ~ctxt expected binding from contents );
 
     ( "import_namespace_above_existing_named" >:: fun ctxt ->
-      let binding = Autofix_imports.Namespace "React" in
-      let from = "react" in
+      let binding = Autofix_imports.Namespace "Bar" in
+      let from = "./bar" in
       let contents = {|
         import type { IFoo } from "./foo";
 
@@ -411,8 +411,8 @@ let add_import_tests =
       let expected = {|
         import type { IFoo } from "./foo";
 
+        import * as Bar from "./bar";
         import { foo } from "./foo";
-        import * as React from "react";
 
         foo
       |} in
@@ -504,6 +504,23 @@ let add_import_tests =
 
       let expected = Str.global_replace (Str.regexp_string "{ foo }") "{foo}" expected in
       assert_patch ~ctxt ~bracket_spacing:false expected binding from contents );
+
+    ( "case_sensitive" >:: fun ctxt ->
+      let binding = Autofix_imports.Named [named_binding "bar"] in
+      let from = "bar" in
+      let contents = {|
+        import { foo } from "Foo";
+
+        foo
+      |} in
+      let expected = {|
+        import { foo } from "Foo";
+
+        import { bar } from "bar";
+
+        foo
+      |} in
+      assert_patch ~ctxt expected binding from contents );
 
   ]
 
