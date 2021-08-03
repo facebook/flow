@@ -353,7 +353,7 @@ module Make
         }
       (* TODO: These are only used to model havoc locs. If bindings propagated the location of the
        * binding along with the name then we could directly query the Provider_api at the
-       * mk_ssa_env call instead of relying on this indirection *)
+       * mk_env call instead of relying on this indirection *)
       | REF of ref_state ref
 
     and t = {
@@ -591,7 +591,7 @@ module Make
 
   exception AbruptCompletionExn = AbruptCompletion.Exn
 
-  type ssa = {
+  type env_val = {
     val_ref: Val.t ref;
     havoc: Havoc.t;
   }
@@ -611,7 +611,7 @@ module Make
     refinement_heap: refinement_chain IMap.t;
     latest_refinements: latest_refinement SMap.t list;
     globals_env: int SMap.t;
-    ssa_env: ssa SMap.t;
+    env: env_val SMap.t;
     (* When an abrupt completion is raised, it falls through any subsequent
        straight-line code, until it reaches a merge point in the control-flow
        graph. At that point, it can be re-raised if and only if all other reaching
@@ -651,7 +651,7 @@ module Make
           refinement_heap = IMap.empty;
           latest_refinements = [];
           globals_env = SMap.empty;
-          ssa_env = SMap.empty;
+          env = SMap.empty;
           abrupt_completion_envs = [];
           possible_labeled_continues = [];
         }
@@ -671,7 +671,7 @@ module Make
          TODO: These low-level operations should probably be replaced by
          higher-level "control-flow-graph" operations that can be implemented using
          them, e.g., those that deal with branches and loops. *)
-      method ssa_env : Env.t = SMap.map (fun { val_ref; _ } -> !val_ref) env_state.ssa_env
+      method env : Env.t = SMap.map (fun { val_ref; _ } -> !val_ref) env_state.env
 
       (* We often want to merge the refinement scopes and writes of two environments with
        * different strategies, especially in logical refinement scopes. In order to do that, we
@@ -682,45 +682,45 @@ module Make
        * An alternative implementation here might have just used PHI nodes to model disjunctions
        * and successive refinement writes to model conjunctions, but it's not clear that that
        * approach is simpler than this one. *)
-      method ssa_env_without_latest_refinements : Env.t =
+      method env_without_latest_refinements : Env.t =
         SMap.mapi
           (fun name { val_ref; _ } ->
             let head = List.hd env_state.latest_refinements in
             match SMap.find_opt name head with
             | None -> !val_ref
             | Some { refinement_id; _ } -> Val.unrefine refinement_id !val_ref)
-          env_state.ssa_env
+          env_state.env
 
-      method merge_remote_ssa_env (env : Env.t) : unit =
-        (* NOTE: env might have more keys than ssa_env, since the environment it
+      method merge_remote_env (env : Env.t) : unit =
+        (* NOTE: env might have more keys than env, since the environment it
            describes might be nested inside the current environment *)
         SMap.iter
           (fun x { val_ref; _ } -> val_ref := Val.merge !val_ref (SMap.find x env))
-          env_state.ssa_env
+          env_state.env
 
-      method merge_ssa_env (env1 : Env.t) (env2 : Env.t) : unit =
+      method merge_env (env1 : Env.t) (env2 : Env.t) : unit =
         let env1 = SMap.values env1 in
         let env2 = SMap.values env2 in
-        let ssa_env = SMap.values env_state.ssa_env in
+        let env = SMap.values env_state.env in
         list_iter3
           (fun { val_ref; _ } value1 value2 -> val_ref := Val.merge value1 value2)
-          ssa_env
+          env
           env1
           env2
 
-      method merge_self_ssa_env (env : Env.t) : unit =
-        let env = SMap.values env in
-        let ssa_env = SMap.values env_state.ssa_env in
-        List.iter2 (fun { val_ref; _ } value -> val_ref := Val.merge !val_ref value) ssa_env env
+      method merge_self_env (other_env : Env.t) : unit =
+        let other_env = SMap.values other_env in
+        let env = SMap.values env_state.env in
+        List.iter2 (fun { val_ref; _ } value -> val_ref := Val.merge !val_ref value) env other_env
 
-      method reset_ssa_env (env0 : Env.t) : unit =
+      method reset_env (env0 : Env.t) : unit =
         let env0 = SMap.values env0 in
-        let ssa_env = SMap.values env_state.ssa_env in
-        List.iter2 (fun { val_ref; _ } value -> val_ref := value) ssa_env env0
+        let env = SMap.values env_state.env in
+        List.iter2 (fun { val_ref; _ } value -> val_ref := value) env env0
 
-      method empty_ssa_env : Env.t = SMap.map (fun _ -> Val.empty ()) env_state.ssa_env
+      method empty_env : Env.t = SMap.map (fun _ -> Val.empty ()) env_state.env
 
-      method havoc_current_ssa_env ~all =
+      method havoc_current_env ~all =
         SMap.iter
           (fun _x { val_ref; havoc = { Havoc.unresolved; locs } } ->
             match locs with
@@ -741,14 +741,13 @@ module Make
               (* If we haven't yet seen a write to this variable, we always havoc *)
               val_ref := unresolved
             | _ -> ())
-          env_state.ssa_env;
+          env_state.env;
         env_state <- { env_state with globals_env = SMap.empty }
 
-      method havoc_uninitialized_ssa_env =
-        SMap.iter (fun _x { val_ref; havoc } -> val_ref := havoc.Havoc.unresolved) env_state.ssa_env;
-        env_state <- { env_state with globals_env = SMap.empty }
+      method havoc_uninitialized_env =
+        SMap.iter (fun _x { val_ref; havoc } -> val_ref := havoc.Havoc.unresolved) env_state.env
 
-      method private mk_ssa_env =
+      method private mk_env =
         SMap.map (fun (loc, _) ->
             {
               val_ref = ref (Val.uninitialized ());
@@ -763,28 +762,28 @@ module Make
                   };
             })
 
-      method private push_ssa_env bindings =
-        let old_ssa_env = env_state.ssa_env in
+      method private push_env bindings =
+        let old_env = env_state.env in
         let bindings = Bindings.to_map bindings in
-        let ssa_env = SMap.fold SMap.add (this#mk_ssa_env bindings) old_ssa_env in
-        env_state <- { env_state with ssa_env };
-        (bindings, old_ssa_env)
+        let env = SMap.fold SMap.add (this#mk_env bindings) old_env in
+        env_state <- { env_state with env };
+        (bindings, old_env)
 
       method private resolve_havocs =
         SMap.iter (fun x _loc ->
-            let { havoc = { Havoc.unresolved; locs }; _ } = SMap.find x env_state.ssa_env in
+            let { havoc = { Havoc.unresolved; locs }; _ } = SMap.find x env_state.env in
             Val.resolve ~unresolved (Val.all locs))
 
-      method private pop_ssa_env (bindings, old_ssa_env) =
+      method private pop_env (bindings, old_env) =
         this#resolve_havocs bindings;
-        env_state <- { env_state with ssa_env = old_ssa_env }
+        env_state <- { env_state with env = old_env }
 
       method! with_bindings : 'a. ?lexical:bool -> L.t -> L.t Bindings.t -> ('a -> 'a) -> 'a -> 'a =
         fun ?lexical loc bindings visit node ->
-          let saved_state = this#push_ssa_env bindings in
+          let saved_state = this#push_env bindings in
           this#run
             (fun () -> ignore @@ super#with_bindings ?lexical loc bindings visit node)
-            ~finally:(fun () -> this#pop_ssa_env saved_state);
+            ~finally:(fun () -> this#pop_env saved_state);
           node
 
       (* Run some computation, catching any abrupt completions; do some final work,
@@ -808,8 +807,8 @@ module Make
 
       method raise_abrupt_completion : 'a. AbruptCompletion.t -> 'a =
         fun abrupt_completion ->
-          let env = this#ssa_env in
-          this#reset_ssa_env this#empty_ssa_env;
+          let env = this#env in
+          this#reset_env this#empty_env;
           let abrupt_completion_envs =
             (abrupt_completion, env) :: env_state.abrupt_completion_envs
           in
@@ -855,7 +854,7 @@ module Make
             env_state.abrupt_completion_envs
         in
         if matching <> [] then (
-          List.iter (fun (_abrupt_completion, env) -> this#merge_remote_ssa_env env) matching;
+          List.iter (fun (_abrupt_completion, env) -> this#merge_remote_env env) matching;
           env_state <- { env_state with abrupt_completion_envs = non_matching }
         ) else
           match completion_state with
@@ -868,7 +867,7 @@ module Make
         let (loc, { Flow_ast.Identifier.name = x; comments = _ }) = ident in
         let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) loc in
         begin
-          match SMap.find_opt x env_state.ssa_env with
+          match SMap.find_opt x env_state.env with
           | Some { val_ref; _ } -> val_ref := Val.one reason
           | _ -> ()
         end;
@@ -878,7 +877,7 @@ module Make
        * if the identifier is refined that we record the refiner as the write that reaches
        * this read *)
       method any_identifier loc name =
-        match SMap.find_opt name env_state.ssa_env with
+        match SMap.find_opt name env_state.env with
         | Some { val_ref; _ } ->
           let values = L.LMap.add loc !val_ref env_state.values in
           env_state <- { env_state with values }
@@ -1004,16 +1003,16 @@ module Make
         this#push_refinement_scope SMap.empty;
         ignore @@ this#expression_refinement test;
         let test_refinements = this#peek_new_refinements () in
-        let env0 = this#ssa_env_without_latest_refinements in
+        let env0 = this#env_without_latest_refinements in
         (* collect completions and environments of every branch *)
         let then_completion_state =
           this#run_to_completion (fun () ->
               ignore @@ this#if_consequent_statement ~has_else:(alternate <> None) consequent)
         in
-        let then_env_no_refinements = this#ssa_env_without_latest_refinements in
-        let then_env_with_refinements = this#ssa_env in
+        let then_env_no_refinements = this#env_without_latest_refinements in
+        let then_env_with_refinements = this#env in
         this#pop_refinement_scope ();
-        this#reset_ssa_env env0;
+        this#reset_env env0;
         this#push_refinement_scope test_refinements;
         this#negate_new_refinements ();
         let else_completion_state =
@@ -1025,10 +1024,10 @@ module Make
                    alternate)
         in
         (* merge environments *)
-        let else_env_no_refinements = this#ssa_env_without_latest_refinements in
-        let else_env_with_refinements = this#ssa_env in
+        let else_env_no_refinements = this#env_without_latest_refinements in
+        let else_env_with_refinements = this#env in
         this#pop_refinement_scope ();
-        this#reset_ssa_env env0;
+        this#reset_env env0;
         this#merge_conditional_branches_with_refinements
           (then_env_no_refinements, then_env_with_refinements)
           (else_env_no_refinements, else_env_with_refinements);
@@ -1044,23 +1043,23 @@ module Make
         this#push_refinement_scope SMap.empty;
         ignore @@ this#expression_refinement test;
         let test_refinements = this#peek_new_refinements () in
-        let env0 = this#ssa_env_without_latest_refinements in
+        let env0 = this#env_without_latest_refinements in
         let consequent_completion_state =
           this#run_to_completion (fun () -> ignore @@ this#expression consequent)
         in
-        let consequent_env_no_refinements = this#ssa_env_without_latest_refinements in
-        let consequent_env_with_refinements = this#ssa_env in
+        let consequent_env_no_refinements = this#env_without_latest_refinements in
+        let consequent_env_with_refinements = this#env in
         this#pop_refinement_scope ();
-        this#reset_ssa_env env0;
+        this#reset_env env0;
         this#push_refinement_scope test_refinements;
         this#negate_new_refinements ();
         let alternate_completion_state =
           this#run_to_completion (fun () -> ignore @@ this#expression alternate)
         in
-        let alternate_env_no_refinements = this#ssa_env_without_latest_refinements in
-        let alternate_env_with_refinements = this#ssa_env in
+        let alternate_env_no_refinements = this#env_without_latest_refinements in
+        let alternate_env_with_refinements = this#env in
         this#pop_refinement_scope ();
-        this#reset_ssa_env env0;
+        this#reset_env env0;
         this#merge_conditional_branches_with_refinements
           (consequent_env_no_refinements, consequent_env_with_refinements)
           (alternate_env_no_refinements, alternate_env_with_refinements);
@@ -1088,16 +1087,16 @@ module Make
               let refined_value1 = SMap.find name refined_env1 in
               let refined_value2 = SMap.find name refined_env2 in
               val_ref := Val.merge refined_value1 refined_value2)
-          env_state.ssa_env
+          env_state.env
 
       method with_env_state f =
         let pre_state = env_state in
-        let pre_env = this#ssa_env in
+        let pre_env = this#env in
         let result = f () in
         env_state <- pre_state;
-        (* It's not enough to just restore the old env_state, since the ssa_env itself contains
-         * refs. We need to call reset_ssa_env to _fully_ reset the env_state *)
-        this#reset_ssa_env pre_env;
+        (* It's not enough to just restore the old env_state, since the env itself contains
+         * refs. We need to call reset_env to _fully_ reset the env_state *)
+        this#reset_env pre_env;
         result
 
       (* Functions called inside scout_changed_vars are responsible for popping any refinement
@@ -1109,9 +1108,9 @@ module Make
          * because a scout should be followed-up by a run that revisits everything visited by
          * the scout. with_env_state will ensure that all mutable state is restored. *)
         this#with_env_state (fun () ->
-            let pre_env = this#ssa_env in
+            let pre_env = this#env in
             scout ();
-            let post_env = this#ssa_env in
+            let post_env = this#env in
             SMap.fold
               (fun name env_val1 acc ->
                 let env_val2 = SMap.find name pre_env in
@@ -1127,7 +1126,7 @@ module Make
       method havoc_changed_vars changed_vars =
         List.iter
           (fun name ->
-            let { val_ref; havoc = { Havoc.unresolved; _ } } = SMap.find name env_state.ssa_env in
+            let { val_ref; havoc = { Havoc.unresolved; _ } } = SMap.find name env_state.env in
             val_ref := unresolved)
           changed_vars
 
@@ -1155,7 +1154,7 @@ module Make
         then
           refinements
           |> SMap.iter (fun name { refinement_id; ssa_id = _ } ->
-                 let { val_ref; _ } = SMap.find name env_state.ssa_env in
+                 let { val_ref; _ } = SMap.find name env_state.env in
                  let new_refinement_id = this#new_id () in
                  env_state <-
                    {
@@ -1233,7 +1232,7 @@ module Make
             (* We either enter the loop body or we don't *)
             (match env_after_test_no_refinements with
             | None -> ()
-            | Some env -> this#merge_self_ssa_env env);
+            | Some env -> this#merge_self_env env);
             this#post_loop_refinements guard_refinements;
 
             let completion_states = make_completion_states loop_completion_state in
@@ -1254,7 +1253,7 @@ module Make
         let visit_guard_and_body () =
           ignore @@ this#expression_refinement test;
           let guard_refinements = this#peek_new_refinements () in
-          let post_guard_no_refinements_env = this#ssa_env_without_latest_refinements in
+          let post_guard_no_refinements_env = this#env_without_latest_refinements in
           let loop_completion_state =
             this#run_to_completion (fun () -> ignore @@ this#statement body)
           in
@@ -1321,7 +1320,7 @@ module Make
           ignore @@ Flow_ast_mapper.map_opt this#for_statement_init init;
           ignore @@ Flow_ast_mapper.map_opt this#expression_refinement test;
           let guard_refinements = this#peek_new_refinements () in
-          let post_guard_no_refinements_env = this#ssa_env_without_latest_refinements in
+          let post_guard_no_refinements_env = this#env_without_latest_refinements in
           let loop_completion_state =
             this#run_to_completion (fun () -> ignore @@ this#statement body)
           in
@@ -1375,7 +1374,7 @@ module Make
         in
         let visit_guard_and_body () =
           traverse_left ();
-          let env = this#ssa_env in
+          let env = this#env in
           let loop_completion_state =
             this#run_to_completion (fun () -> ignore @@ this#statement body)
           in
@@ -1438,8 +1437,8 @@ module Make
               List.fold_left
                 (fun acc stuff ->
                   let (_loc, case) = stuff in
-                  this#ssa_switch_case discriminant acc case)
-                (this#empty_ssa_env, [], [], false)
+                  this#env_switch_case discriminant acc case)
+                (this#empty_env, [], [], false)
                 cases
             in
             (* Only merge the pre-env if the switch was non-exhaustive
@@ -1447,9 +1446,9 @@ module Make
              * the PHI node at the end of the switch. Should we get rid of these refinements?
              *)
             if has_default then
-              this#reset_ssa_env env
+              this#reset_env env
             else
-              this#merge_self_ssa_env env;
+              this#merge_self_env env;
 
             (* In general, cases are non-exhaustive, but if it has a default case then it is! *)
             let completion_state =
@@ -1468,7 +1467,7 @@ module Make
               completion_state);
         cases
 
-      method private ssa_switch_case
+      method private env_switch_case
           discriminant
           (env, case_completion_states, total_refinements, has_default)
           (case : (L.t, L.t) Ast.Statement.Switch.Case.t') =
@@ -1500,15 +1499,15 @@ module Make
          * This disjunction is modeled entirely via PHI nodes. We take the env left over from the
          * previous case and then merge it with the refined env0 we generated here.
          *)
-        let env0 = this#ssa_env in
-        let env0_no_refinements = this#ssa_env_without_latest_refinements in
-        this#merge_ssa_env env0 env;
+        let env0 = this#env in
+        let env0_no_refinements = this#env_without_latest_refinements in
+        this#merge_env env0 env;
         let case_completion_state =
           this#run_to_completion (fun () -> ignore @@ this#statement_list consequent)
         in
-        let env' = this#ssa_env in
+        let env' = this#env in
         this#pop_refinement_scope ();
-        this#reset_ssa_env env0_no_refinements;
+        this#reset_env env0_no_refinements;
         (env', case_completion_state :: case_completion_states, total_refinements, has_default)
 
       (****************************************)
@@ -1550,7 +1549,7 @@ module Make
             let try_completion_state =
               this#run_to_completion (fun () -> ignore @@ this#block loc block)
             in
-            let env1 = this#ssa_env in
+            let env1 = this#env in
             let (catch_completion_state_opt, env2) =
               match handler with
               | Some (loc, clause) ->
@@ -1558,14 +1557,14 @@ module Make
                    overkill. We can be more precise but still correct by collecting all
                    possible writes in the try-block and merging them with the state when
                    entering the try-block. *)
-                this#havoc_current_ssa_env ~all:false;
+                this#havoc_current_env ~all:false;
                 let catch_completion_state =
                   this#run_to_completion (fun () -> ignore @@ this#catch_clause loc clause)
                 in
-                ([catch_completion_state], this#ssa_env)
-              | None -> ([], this#empty_ssa_env)
+                ([catch_completion_state], this#env)
+              | None -> ([], this#empty_env)
             in
-            this#merge_ssa_env env1 env2;
+            this#merge_env env1 env2;
             let try_catch_completion_states = (try_completion_state, catch_completion_state_opt) in
             let completion_state =
               this#run_to_completion (fun () ->
@@ -1580,7 +1579,7 @@ module Make
                    all possible writes in the handler and merging them with the state
                    when entering the handler (which in turn should already account for
                    any contributions by the try-block). *)
-                this#havoc_current_ssa_env ~all:false;
+                this#havoc_current_env ~all:false;
                 ignore @@ this#block loc block
               | None -> ()
             end;
@@ -1590,17 +1589,17 @@ module Make
       (* We also havoc state when entering functions and exiting calls. *)
       method! lambda loc params body =
         this#expecting_abrupt_completions (fun () ->
-            let env = this#ssa_env in
+            let env = this#env in
             this#run
               (fun () ->
-                this#havoc_uninitialized_ssa_env;
+                this#havoc_uninitialized_env;
                 let completion_state =
                   this#run_to_completion (fun () -> super#lambda loc params body)
                 in
                 this#commit_abrupt_completion_matching
                   AbruptCompletion.(mem [return; throw])
                   completion_state)
-              ~finally:(fun () -> this#reset_ssa_env env))
+              ~finally:(fun () -> this#reset_env env))
 
       method! declare_function loc expr =
         match Declare_function_utils.declare_function_to_function_declaration_simple loc expr with
@@ -1650,7 +1649,7 @@ module Make
             error_todo
           | (Some _, _) -> error_todo
         else
-          this#havoc_current_ssa_env ~all:false;
+          this#havoc_current_env ~all:false;
         expr
 
       method! new_ _loc (expr : (L.t, L.t) Ast.Expression.New.t) =
@@ -1658,7 +1657,7 @@ module Make
         let { callee; targs = _; arguments; comments = _ } = expr in
         ignore @@ this#expression callee;
         ignore @@ Flow_ast_mapper.map_opt this#call_arguments arguments;
-        this#havoc_current_ssa_env ~all:false;
+        this#havoc_current_env ~all:false;
         expr
 
       method! unary_expression _loc (expr : (L.t, L.t) Ast.Expression.Unary.t) =
@@ -1667,14 +1666,14 @@ module Make
           ignore @@ this#expression argument;
           begin
             match operator with
-            | Await -> this#havoc_current_ssa_env ~all:false
+            | Await -> this#havoc_current_env ~all:false
             | _ -> ()
           end;
           expr)
 
       method! yield loc (expr : ('loc, 'loc) Ast.Expression.Yield.t) =
         ignore @@ super#yield loc expr;
-        this#havoc_current_ssa_env ~all:true;
+        this#havoc_current_env ~all:true;
         expr
 
       (* Labeled statements handle labeled breaks, but also push labeled continues
@@ -1737,7 +1736,7 @@ module Make
           };
         new_latest_refinements
         |> SMap.iter (fun name latest_refinement ->
-               let { val_ref; _ } = SMap.find name env_state.ssa_env in
+               let { val_ref; _ } = SMap.find name env_state.env in
                let ssa_id = Val.id_of_val !val_ref in
                if ssa_id = latest_refinement.ssa_id then
                  val_ref := Val.refinement latest_refinement.refinement_id !val_ref)
@@ -1752,12 +1751,12 @@ module Make
         env_state <- { env_state with latest_refinements = List.tl env_state.latest_refinements };
         refinements
         |> SMap.iter (fun name latest_refinement ->
-               let { val_ref; _ } = SMap.find name env_state.ssa_env in
+               let { val_ref; _ } = SMap.find name env_state.env in
                val_ref := Val.unrefine_deeply latest_refinement.refinement_id !val_ref)
 
       (* Invariant refinement scopes can be popped, but the refinement should continue living on.
        * To model that, we pop the refinement scope but do not unrefine the refinements. The
-       * refinements live on in the Refinement writes in the ssa_env. *)
+       * refinements live on in the Refinement writes in the env. *)
       method private pop_refinement_scope_invariant () =
         env_state <- { env_state with latest_refinements = List.tl env_state.latest_refinements }
 
@@ -1773,7 +1772,7 @@ module Make
         env_state <- { env_state with latest_refinements = List.tl env_state.latest_refinements };
         refinements
         |> SMap.iter (fun name latest_refinement ->
-               let { val_ref; _ } = SMap.find name env_state.ssa_env in
+               let { val_ref; _ } = SMap.find name env_state.env in
                val_ref := Val.unrefine latest_refinement.refinement_id !val_ref)
 
       method private peek_new_refinements () = List.hd env_state.latest_refinements
@@ -1855,7 +1854,7 @@ module Make
             env_state with
             refinement_heap = IMap.add refinement_id (BASE refinement) env_state.refinement_heap;
           };
-        match SMap.find_opt name env_state.ssa_env with
+        match SMap.find_opt name env_state.env with
         | Some { val_ref; _ } ->
           let ssa_id = Val.id_of_val !val_ref in
           let head = List.hd env_state.latest_refinements in
@@ -1939,7 +1938,7 @@ module Make
           | Flow_ast.Expression.Logical.And ->
             ignore @@ this#expression_refinement left;
             let lhs_latest_refinements = this#peek_new_refinements () in
-            let env1 = this#ssa_env_without_latest_refinements in
+            let env1 = this#env_without_latest_refinements in
             (match operator with
             | Flow_ast.Expression.Logical.Or -> this#negate_new_refinements ()
             | _ -> ());
@@ -1963,7 +1962,7 @@ module Make
                truthy and non-maybe qualities. *)
             ignore (this#null_test ~strict:false ~sense:false loc left);
             let nullish = this#peek_new_refinements () in
-            let env1 = this#ssa_env_without_latest_refinements in
+            let env1 = this#env_without_latest_refinements in
             this#negate_new_refinements ();
             this#push_refinement_scope SMap.empty;
             let rhs_completion_state =
@@ -1993,13 +1992,13 @@ module Make
         in
         match rhs_completion_state with
         | Some AbruptCompletion.Throw ->
-          let env2 = this#ssa_env in
-          this#reset_ssa_env env1;
+          let env2 = this#env in
+          this#reset_env env1;
           this#push_refinement_scope lhs_latest_refinements;
           this#pop_refinement_scope_invariant ();
-          this#merge_self_ssa_env env2
+          this#merge_self_env env2
         | _ ->
-          this#merge_self_ssa_env env1;
+          this#merge_self_env env1;
           this#merge_refinement_scopes merge lhs_latest_refinements rhs_latest_refinements
 
       method null_test ~strict ~sense loc expr =
@@ -2042,7 +2041,7 @@ module Make
         | None -> ()
         | Some name ->
           (* Only add the refinement if undefined is not re-bound *)
-          if (not check_for_bound_undefined) || SMap.find_opt "undefined" this#ssa_env = None then (
+          if (not check_for_bound_undefined) || SMap.find_opt "undefined" this#env = None then (
             let refinement =
               if strict then
                 UndefinedR
@@ -2434,8 +2433,8 @@ module Make
           ignore (this#expression_refinement left)
         | Flow_ast.Expression.Logical.NullishCoalesce ->
           ignore (this#null_test ~strict:false ~sense:false loc left));
-        let env1 = this#ssa_env_without_latest_refinements in
-        let env1_with_refinements = this#ssa_env in
+        let env1 = this#env_without_latest_refinements in
+        let env1_with_refinements = this#env in
         (match operator with
         | Flow_ast.Expression.Logical.NullishCoalesce
         | Flow_ast.Expression.Logical.Or ->
@@ -2450,13 +2449,13 @@ module Make
         in
         (match rhs_completion_state with
         | Some AbruptCompletion.Throw ->
-          let env2 = this#ssa_env in
-          this#reset_ssa_env env1_with_refinements;
+          let env2 = this#env in
+          this#reset_env env1_with_refinements;
           this#pop_refinement_scope_invariant ();
-          this#merge_self_ssa_env env2
+          this#merge_self_env env2
         | _ ->
           this#pop_refinement_scope ();
-          this#merge_self_ssa_env env1);
+          this#merge_self_env env1);
         expr
 
       method private chain_to_refinement =
@@ -2486,7 +2485,7 @@ module Make
       Ssa_builder.program_with_scope ~ignore_toplevel program
     in
     let providers = Provider_api.find_providers program in
-    let ssa_walk = new env_builder prepass providers in
+    let env_walk = new env_builder prepass providers in
     let bindings =
       if ignore_toplevel then
         Bindings.empty
@@ -2495,16 +2494,16 @@ module Make
         hoist#eval hoist#program program
     in
     let completion_state =
-      ssa_walk#run_to_completion (fun () ->
-          ignore @@ ssa_walk#with_bindings loc bindings ssa_walk#program program)
+      env_walk#run_to_completion (fun () ->
+          ignore @@ env_walk#with_bindings loc bindings env_walk#program program)
     in
     ( completion_state,
       {
         scopes;
         ssa_values;
-        env_values = ssa_walk#values;
+        env_values = env_walk#values;
         providers;
-        refinement_of_id = ssa_walk#refinement_of_id;
+        refinement_of_id = env_walk#refinement_of_id;
       } )
 
   let program program =
@@ -2513,9 +2512,9 @@ module Make
     in
     (env_values, refinement_of_id)
 
-  let rec refinement_ids_of_ssa_write acc = function
+  let rec refinement_ids_of_env_write acc = function
     | Env_api.Refinement { refinement_id; writes } ->
-      List.fold_left refinement_ids_of_ssa_write (refinement_id :: acc) writes
+      List.fold_left refinement_ids_of_env_write (refinement_id :: acc) writes
     | _ -> acc
 
   let sources_of_use { env_values = vals; refinement_of_id; _ } loc =
@@ -2527,7 +2526,7 @@ module Make
     in
     let refi_locs =
       L.LMap.find_opt loc vals
-      |> Base.Option.value_map ~default:[] ~f:(List.fold_left refinement_ids_of_ssa_write [])
+      |> Base.Option.value_map ~default:[] ~f:(List.fold_left refinement_ids_of_env_write [])
       |> List.map (fun id -> fst (refinement_of_id id))
       |> List.fold_left L.LSet.union L.LSet.empty
     in
