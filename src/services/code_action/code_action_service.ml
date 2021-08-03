@@ -7,6 +7,12 @@
 
 open Types_js_types
 
+let include_quick_fixes only =
+  Base.Option.value_map ~default:true ~f:Lsp.CodeActionKind.(contains_kind quickfix) only
+
+let include_refactors only =
+  Base.Option.value_map ~default:true ~f:Lsp.CodeActionKind.(contains_kind refactor) only
+
 let layout_options options =
   Js_layout_generator.
     {
@@ -51,9 +57,10 @@ let refactor_extract_code_actions
     ~file_sig
     ~typed_ast
     ~reader
+    ~only
     uri
     loc =
-  if Options.refactor options then
+  if Options.refactor options && include_refactors only then
     if Loc.(loc.start = loc._end) then
       []
     else
@@ -416,7 +423,8 @@ let ast_transform_of_error ?loc = function
       | _ -> None)
     | _ -> None)
 
-let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri loc =
+let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors ~only uri loc =
+  let include_quick_fixes = include_quick_fixes only in
   Flow_error.ErrorSet.fold
     (fun error actions ->
       match
@@ -426,7 +434,7 @@ let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri l
       | Error_message.EBuiltinLookupFailed { reason; name = Some name }
         when Options.autoimports options ->
         let error_loc = Reason.loc_of_reason reason in
-        if Loc.intersects error_loc loc then
+        if include_quick_fixes && Loc.intersects error_loc loc then
           let { ServerEnv.exports; _ } = env in
           suggest_imports
             ~options
@@ -441,20 +449,23 @@ let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors uri l
         else
           actions
       | error_message ->
-        (match ast_transform_of_error ~loc error_message with
-        | None -> actions
-        | Some { title; diagnostic_title; transform; target_loc } ->
-          autofix_in_upstream_file
-            ~reader
-            ~diagnostics
-            ~ast
-            ~options
-            ~title
-            ~diagnostic_title
-            ~transform
-            uri
-            target_loc
-          :: actions))
+        if include_quick_fixes then
+          match ast_transform_of_error ~loc error_message with
+          | None -> actions
+          | Some { title; diagnostic_title; transform; target_loc } ->
+            autofix_in_upstream_file
+              ~reader
+              ~diagnostics
+              ~ast
+              ~options
+              ~title
+              ~diagnostic_title
+              ~transform
+              uri
+              target_loc
+            :: actions
+        else
+          actions)
     errors
     []
 
@@ -494,11 +505,21 @@ let code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors =
     ~init:[]
     parse_errors
 
-(** currently all of our code actions are quickfixes, so we can short circuit if the client
-    doesn't support those. *)
-let client_supports_quickfixes params =
-  let Lsp.CodeActionRequest.{ context = { only; _ }; _ } = params in
-  Lsp.CodeActionKind.contains_kind_opt ~default:true Lsp.CodeActionKind.quickfix only
+(** List of code actions we implement. *)
+let supported_code_actions options =
+  let actions = [Lsp.CodeActionKind.quickfix] in
+  if Options.refactor options then
+    Lsp.CodeActionKind.refactor_extract :: actions
+  else
+    actions
+
+(** Determines if at least one of the kinds in [only] is supported. *)
+let kind_is_supported ~options only =
+  match only with
+  | None -> true
+  | Some only ->
+    let supported = supported_code_actions options in
+    Base.List.exists ~f:(fun kind -> Lsp.CodeActionKind.contains_kind kind supported) only
 
 let code_actions_at_loc
     ~options
@@ -512,6 +533,7 @@ let code_actions_at_loc
     ~typed_ast
     ~parse_errors
     ~diagnostics
+    ~only
     ~uri
     ~loc =
   let experimental_code_actions =
@@ -534,6 +556,7 @@ let code_actions_at_loc
         ~file_sig
         ~typed_ast
         ~reader
+        ~only
         uri
         loc
   in
@@ -545,6 +568,7 @@ let code_actions_at_loc
       ~ast
       ~diagnostics
       ~errors:(Context.errors cx)
+      ~only
       uri
       loc
   in

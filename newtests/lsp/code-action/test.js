@@ -2178,5 +2178,229 @@ export default (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('obey context.only', [
+      addFile('only-filter.js.ignored', 'only-filter.js'),
+      lspStartAndConnect(),
+      // no context.only gets back a quickfix and refactor
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/only-filter.js',
+        },
+        range: {
+          start: {
+            line: 3,
+            character: 0,
+          },
+          end: {
+            line: 3,
+            character: 7,
+          },
+        },
+        context: {
+          diagnostics: [],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Extract to constant in module scope',
+                kind: 'refactor.extract',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/only-filter.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 3,
+                            character: 0,
+                          },
+                          end: {
+                            line: 3,
+                            character: 8,
+                          },
+                        },
+                        newText: 'const newLocal = foo.bar;\n\nnewLocal;',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'refactor_extract',
+                    'Extract to constant in module scope',
+                  ],
+                },
+              },
+              {
+                title:
+                  'Add optional chaining for object that might be `undefined`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/only-filter.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 3,
+                            character: 0,
+                          },
+                          end: {
+                            line: 3,
+                            character: 7,
+                          },
+                        },
+                        newText: 'foo?.bar',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'add_optional_chaining',
+                    'Add optional chaining for object that might be `undefined`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+      // context.only: ["refactor"] only gets the refactor
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/only-filter.js',
+        },
+        range: {
+          start: {
+            line: 3,
+            character: 0,
+          },
+          end: {
+            line: 3,
+            character: 7,
+          },
+        },
+        context: {
+          diagnostics: [],
+          only: ['refactor'],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title: 'Extract to constant in module scope',
+                kind: 'refactor.extract',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/only-filter.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 3,
+                            character: 0,
+                          },
+                          end: {
+                            line: 3,
+                            character: 8,
+                          },
+                        },
+                        newText: 'const newLocal = foo.bar;\n\nnewLocal;',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'refactor_extract',
+                    'Extract to constant in module scope',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+      // context.only: ["quickfix"] only gets the quickfix
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/only-filter.js',
+        },
+        range: {
+          start: {
+            line: 3,
+            character: 0,
+          },
+          end: {
+            line: 3,
+            character: 7,
+          },
+        },
+        context: {
+          diagnostics: [],
+          only: ['quickfix'],
+        },
+      }).verifyAllLSPMessagesInStep(
+        [
+          {
+            method: 'textDocument/codeAction',
+            result: [
+              {
+                title:
+                  'Add optional chaining for object that might be `undefined`',
+                kind: 'quickfix',
+                diagnostics: [],
+                edit: {
+                  changes: {
+                    '<PLACEHOLDER_PROJECT_URL>/only-filter.js': [
+                      {
+                        range: {
+                          start: {
+                            line: 3,
+                            character: 0,
+                          },
+                          end: {
+                            line: 3,
+                            character: 7,
+                          },
+                        },
+                        newText: 'foo?.bar',
+                      },
+                    ],
+                  },
+                },
+                command: {
+                  title: '',
+                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    'textDocument/codeAction',
+                    'add_optional_chaining',
+                    'Add optional chaining for object that might be `undefined`',
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
   ],
 ): Suite);
