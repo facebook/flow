@@ -7,11 +7,14 @@
 
 open Types_js_types
 
-let include_quick_fixes only =
-  Base.Option.value_map ~default:true ~f:Lsp.CodeActionKind.(contains_kind quickfix) only
+let include_code_action ~only kind =
+  match only with
+  | None -> true
+  | Some only -> Base.List.exists ~f:(fun prefix -> Lsp.CodeActionKind.is_kind prefix kind) only
 
-let include_refactors only =
-  Base.Option.value_map ~default:true ~f:Lsp.CodeActionKind.(contains_kind refactor) only
+let include_quick_fixes only = include_code_action ~only Lsp.CodeActionKind.quickfix
+
+let include_extract_refactors only = include_code_action ~only Lsp.CodeActionKind.refactor_extract
 
 let layout_options options =
   Js_layout_generator.
@@ -60,7 +63,7 @@ let refactor_extract_code_actions
     ~only
     uri
     loc =
-  if Options.refactor options && include_refactors only then
+  if Options.refactor options && include_extract_refactors only then
     if Loc.(loc.start = loc._end) then
       []
     else

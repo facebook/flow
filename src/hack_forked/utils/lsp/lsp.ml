@@ -272,7 +272,7 @@ module CodeActionKind = struct
    *)
   type t = string * string list
 
-  (** is x of kind k? *)
+  (** [is_kind k x] determines if [x] is of kind [k] ([k] is a prefix of [x]) *)
   let is_kind : t -> t -> bool =
     let rec is_prefix_of ks xs =
       match (ks, xs) with
