@@ -11,43 +11,13 @@ module LSet = Loc_collections.LocSet
 open Insert_type_utils
 
 module LTI_Annotations = struct
-  let infer_annotation cctx ~preserve_literals ~max_type_size acc loc =
-    let preserve_inferred_literal_types =
-      Codemod_hardcoded_ty_fixes.PreserveLiterals.(
-        match preserve_literals with
-        | Always
-        | Auto ->
-          true
-        | Never -> false)
-    in
-    let norm_opts =
-      {
-        Ty_normalizer_env.expand_internal_types = false;
-        expand_type_aliases = false;
-        flag_shadowed_type_params = false;
-        preserve_inferred_literal_types;
-        evaluate_type_destructors = false;
-        optimize_types = false;
-        omit_targ_defaults = true;
-        merge_bot_and_any_kinds = false;
-        verbose_normalizer = false;
-        max_depth = None;
-      }
-    in
-    Codemod_annotator.lmap_add_ty cctx norm_opts ~max_type_size acc loc
-
-  let collect_annotations cctx ~preserve_literals ~max_type_size errors =
-    Flow_error.ErrorSet.fold
-      (fun e ty_lmap ->
-        match Flow_error.msg_of_error e with
-        | Error_message.EMissingLocalAnnotation reason ->
-          let aloc = Reason.aloc_of_reason reason in
-          let context = Codemod_context.Typed.context cctx in
-          let loc = ALoc.to_loc_with_tables (Context.aloc_tables context) aloc in
-          infer_annotation cctx ~preserve_literals ~max_type_size ty_lmap loc
-        | _ -> ty_lmap)
-      errors
-      LMap.empty
+  let loc_of_lti_error cctx error =
+    match Flow_error.msg_of_error error with
+    | Error_message.EMissingLocalAnnotation reason ->
+      let aloc = Reason.aloc_of_reason reason in
+      let context = Codemod_context.Typed.context cctx in
+      Some (ALoc.to_loc_with_tables (Context.aloc_tables context) aloc)
+    | _ -> None
 end
 
 module ErrorStats = struct
@@ -97,14 +67,11 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
         ~default_any
         cctx as super
 
-    val mutable error_loc_tys : (Ty.t, Insert_type_utils.Error.kind list * Ty.t) result LMap.t =
-      LMap.empty
-
-    val mutable errors_without_loc = 0
+    val mutable loc_error_map = LMap.empty
 
     method private post_run () =
-      this#add_unannotated_loc_warnings error_loc_tys;
-      ErrorStats.{ num_total_errors = LMap.cardinal error_loc_tys + errors_without_loc }
+      this#add_unannotated_loc_warnings loc_error_map;
+      ErrorStats.{ num_total_errors = LMap.cardinal loc_error_map }
 
     method! function_param_pattern ((ploc, patt) : ('loc, 'loc) Ast.Pattern.t) =
       let get_annot ty annot =
@@ -113,8 +80,8 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
         this#opt_annotate ~f ~error ~expr:None ploc ty annot
       in
 
-      if LMap.mem ploc error_loc_tys then (
-        let ty_result = LMap.find ploc error_loc_tys in
+      if LMap.mem ploc loc_error_map then (
+        let ty_result = Codemod_annotator.get_ty cctx ~preserve_literals ~max_type_size ploc in
         match patt with
         | Ast.Pattern.Object Ast.Pattern.Object.{ annot; properties; comments } ->
           let annot' = get_annot ty_result annot in
@@ -135,9 +102,15 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
 
     method! program prog =
       let errors = Context.errors @@ Codemod_context.Typed.context cctx in
-      error_loc_tys <-
-        LTI_Annotations.collect_annotations cctx ~preserve_literals ~max_type_size errors;
-      if LMap.is_empty error_loc_tys then
+      loc_error_map <-
+        Flow_error.ErrorSet.fold
+          (fun error acc ->
+            match LTI_Annotations.loc_of_lti_error cctx error with
+            | Some loc -> LMap.add loc error acc
+            | None -> acc)
+          errors
+          LMap.empty;
+      if LMap.is_empty loc_error_map then
         prog
       else
         super#program prog

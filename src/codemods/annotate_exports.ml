@@ -9,7 +9,6 @@ module Ast = Flow_ast
 module LSet = Loc_collections.LocSet
 module ALSet = Loc_collections.ALocSet
 module LMap = Loc_collections.LocMap
-module Hardcoded_Ty_Fixes = Codemod_hardcoded_ty_fixes
 open Insert_type_utils
 
 (*
@@ -47,7 +46,9 @@ module Let_syntax = struct
 end
 
 module SignatureVerification = struct
-  let supported_error_kind = Codemod_annotator.lmap_add_ty
+  let supported_error_kind cctx ~preserve_literals ~max_type_size acc loc =
+    let ty_result = Codemod_annotator.get_ty cctx ~preserve_literals ~max_type_size loc in
+    LMap.add loc ty_result acc
 
   let unsupported_error_kind ~default_any acc loc =
     if default_any then
@@ -57,28 +58,6 @@ module SignatureVerification = struct
       acc
 
   let collect_annotations cctx ~preserve_literals ~default_any ~max_type_size ast =
-    let preserve_inferred_literal_types =
-      Hardcoded_Ty_Fixes.PreserveLiterals.(
-        match preserve_literals with
-        | Always
-        | Auto ->
-          true
-        | Never -> false)
-    in
-    let norm_opts =
-      {
-        Ty_normalizer_env.expand_internal_types = false;
-        expand_type_aliases = false;
-        flag_shadowed_type_params = false;
-        preserve_inferred_literal_types;
-        evaluate_type_destructors = false;
-        optimize_types = false;
-        omit_targ_defaults = true;
-        merge_bot_and_any_kinds = false;
-        verbose_normalizer = false;
-        max_depth = None;
-      }
-    in
     let { Codemod_context.Typed.options; docblock; _ } = cctx in
     let prevent_munge =
       let should_munge = Options.should_munge_underscores options in
@@ -117,7 +96,7 @@ module SignatureVerification = struct
           | EmptyObject loc
           | UnexpectedArraySpread (loc, _) ->
             let loc = Type_sig_collections.Locs.get locs loc in
-            (tot_errors + 1, supported_error_kind cctx norm_opts ~max_type_size acc loc)
+            (tot_errors + 1, supported_error_kind cctx ~preserve_literals ~max_type_size acc loc)
           | UnexpectedArrayHole loc ->
             let loc = Type_sig_collections.Locs.get locs loc in
             (tot_errors + 1, unsupported_error_kind ~default_any acc loc)))

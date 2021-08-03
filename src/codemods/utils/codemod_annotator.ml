@@ -73,9 +73,31 @@ module HardCodedImportMap = struct
                } ))
 end
 
-(* Used to build out a map of locs to ty results where an error occurs *)
-let lmap_add_ty cctx norm_opts ~max_type_size acc loc =
-  let add_ty ty =
+(* Used to infer the type for an annotation from an error loc *)
+let get_ty cctx ~preserve_literals ~max_type_size loc =
+  let preserve_inferred_literal_types =
+    Codemod_hardcoded_ty_fixes.PreserveLiterals.(
+      match preserve_literals with
+      | Always
+      | Auto ->
+        true
+      | Never -> false)
+  in
+  let norm_opts =
+    {
+      Ty_normalizer_env.expand_internal_types = false;
+      expand_type_aliases = false;
+      flag_shadowed_type_params = false;
+      preserve_inferred_literal_types;
+      evaluate_type_destructors = false;
+      optimize_types = false;
+      omit_targ_defaults = true;
+      merge_bot_and_any_kinds = false;
+      verbose_normalizer = false;
+      max_depth = None;
+    }
+  in
+  let validate_ty ty =
     let reader = cctx.Codemod_context.Typed.reader in
     let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
     (* NOTE simplify before validating to avoid flagging spurious empty's,
@@ -90,20 +112,17 @@ let lmap_add_ty cctx norm_opts ~max_type_size acc loc =
       let errs = List.map (fun e -> Error.Validation_error e) errs in
       Error (errs, ty)
   in
-  let type_entry =
-    match Codemod_context.Typed.ty_at_loc norm_opts cctx loc with
-    | Ok (Ty.Type ty) -> add_ty ty
-    | Ok (Ty.Decl (Ty.ClassDecl (s, _))) -> add_ty (Ty.TypeOf (Ty.TSymbol s))
-    | Ok _ ->
-      let ty = Ty.explicit_any in
-      let errors = [Error.Missing_annotation_or_normalizer_error] in
-      Error (errors, ty)
-    | Error _ ->
-      let ty = Ty.explicit_any in
-      let errors = [Error.Missing_annotation_or_normalizer_error] in
-      Error (errors, ty)
-  in
-  LMap.add loc type_entry acc
+  match Codemod_context.Typed.ty_at_loc norm_opts cctx loc with
+  | Ok (Ty.Type ty) -> validate_ty ty
+  | Ok (Ty.Decl (Ty.ClassDecl (s, _))) -> validate_ty (Ty.TypeOf (Ty.TSymbol s))
+  | Ok _ ->
+    let ty = Ty.explicit_any in
+    let errors = [Error.Missing_annotation_or_normalizer_error] in
+    Error (errors, ty)
+  | Error _ ->
+    let ty = Ty.explicit_any in
+    let errors = [Error.Missing_annotation_or_normalizer_error] in
+    Error (errors, ty)
 
 module Make (Extra : BASE_STATS) = struct
   module Stats = Stats (Extra)
