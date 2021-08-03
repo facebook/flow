@@ -274,10 +274,17 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
                  case))
             cases
         in
-        let _ = this#with_bindings ~lexical:true loc lexical_bindings this#switch_cases cases in
+        let _ =
+          this#with_bindings
+            ~lexical:true
+            loc
+            lexical_bindings
+            (this#switch_cases discriminant)
+            cases
+        in
         switch
 
-      method private switch_cases = Base.List.map ~f:this#switch_case
+      method private switch_cases _ cases = Base.List.map ~f:this#switch_case cases
 
       (* like block *)
       method! program (program : (L.t, L.t) Ast.Program.t) =

@@ -283,6 +283,10 @@ module Make
     | OR of int * int
     | NOT of int
 
+  type cond_context =
+    | SwitchTest
+    | OtherTest
+
   let merge_and ref1 ref2 = AND (ref1, ref2)
 
   let merge_or ref1 ref2 = OR (ref1, ref2)
@@ -1393,23 +1397,36 @@ module Make
       (*   [ENVi+1 | ENVi'] si+1 [ENVi+1']                       *)
       (* POST = ENVN | ENVN'                                     *)
       (***********************************************************)
-      method! switch_cases cases =
+      method! switch_cases discriminant cases =
         this#expecting_abrupt_completions (fun () ->
-            let (env, case_completion_states) =
+            let (env, case_completion_states, _total_refinements, has_default) =
               List.fold_left
                 (fun acc stuff ->
                   let (_loc, case) = stuff in
-                  this#ssa_switch_case acc case)
-                (this#empty_ssa_env, [])
+                  this#ssa_switch_case discriminant acc case)
+                (this#empty_ssa_env, [], [], false)
                 cases
             in
-            this#merge_self_ssa_env env;
+            (* Only merge the pre-env if the switch was non-exhaustive
+             * TODO: Each refinement that ends in a break will be reachable via
+             * the PHI node at the end of the switch. Should we get rid of these refinements?
+             *)
+            if has_default then
+              this#reset_ssa_env env
+            else
+              this#merge_self_ssa_env env;
 
-            (* In general, cases are non-exhaustive. TODO: optimize with `default`. *)
-            let switch_completion_states = (None, case_completion_states) in
+            (* In general, cases are non-exhaustive, but if it has a default case then it is! *)
             let completion_state =
-              this#run_to_completion (fun () ->
-                  this#merge_completion_states switch_completion_states)
+              if has_default then
+                (* Since there is a default we know there is at least one element in this
+                 * list, which means calling List.hd or tail will not fail *)
+                let first_state = List.hd case_completion_states in
+                let remaining_states = List.tl case_completion_states in
+                this#run_to_completion (fun () ->
+                    this#merge_completion_states (first_state, remaining_states))
+              else
+                None
             in
             this#commit_abrupt_completion_matching
               AbruptCompletion.(mem [break None])
@@ -1417,18 +1434,47 @@ module Make
         cases
 
       method private ssa_switch_case
-          (env, case_completion_states) (case : (L.t, L.t) Ast.Statement.Switch.Case.t') =
+          discriminant
+          (env, case_completion_states, total_refinements, has_default)
+          (case : (L.t, L.t) Ast.Statement.Switch.Case.t') =
         let open Ast.Statement.Switch.Case in
         let { test; consequent; comments = _ } = case in
-        ignore @@ Flow_ast_mapper.map_opt this#expression test;
+        let (has_default, total_refinements) =
+          match test with
+          | None ->
+            (* In the default case we negate the refinements introduced by all the other cases and
+             * AND them together. Much of Flow's "exhaustiveness" checking relies on the final
+             * refinement generated here *)
+            let negated_total_refinements = List.map this#negate_refinements total_refinements in
+            let conjuncted_negated_total_refinements =
+              this#conjunct_all_refinements_for_key (key discriminant) negated_total_refinements
+            in
+            this#push_refinement_scope conjuncted_negated_total_refinements;
+            (true, total_refinements)
+          | Some test ->
+            this#push_refinement_scope SMap.empty;
+            ignore @@ this#expression test;
+            let (loc, _) = test in
+            this#eq_test ~strict:true ~sense:true ~cond_context:SwitchTest loc discriminant test;
+            (has_default, this#peek_new_refinements () :: total_refinements)
+        in
+        (* The refinement scope for this case is a disjunction of the refinement scope left
+         * over from the previous case and the refinement introduced by this case. If the previous
+         * case ended in a break then the previous refinement scope left over is None.
+         *
+         * This disjunction is modeled entirely via PHI nodes. We take the env left over from the
+         * previous case and then merge it with the refined env0 we generated here.
+         *)
         let env0 = this#ssa_env in
+        let env0_no_refinements = this#ssa_env_without_latest_refinements in
         this#merge_ssa_env env0 env;
         let case_completion_state =
           this#run_to_completion (fun () -> ignore @@ this#statement_list consequent)
         in
         let env' = this#ssa_env in
-        this#reset_ssa_env env0;
-        (env', case_completion_state :: case_completion_states)
+        this#pop_refinement_scope ();
+        this#reset_ssa_env env0_no_refinements;
+        (env', case_completion_state :: case_completion_states, total_refinements, has_default)
 
       (****************************************)
       (* [PRE] try { s1 } catch { s2 } [POST] *)
@@ -1697,21 +1743,59 @@ module Make
 
       method private peek_new_refinements () = List.hd env_state.latest_refinements
 
+      method private negate_refinements refinements =
+        SMap.map
+          (fun latest_refinement ->
+            let new_id = this#new_id () in
+            let new_ref = NOT latest_refinement.refinement_id in
+            env_state <-
+              { env_state with refinement_heap = IMap.add new_id new_ref env_state.refinement_heap };
+            { latest_refinement with refinement_id = new_id })
+          refinements
+
+      method private conjunct_all_refinements_for_key key refinement_scopes =
+        match key with
+        | None -> SMap.empty
+        | Some key ->
+          let (total_refinement_opt, _) =
+            List.fold_left
+              (fun (total_refinement, mismatched_ids) refinement_scope ->
+                (* ids can be mismatched if the case expression contains an assignment. This should
+                 * be exceedingly rare, but we have to account for it nonetheless. *)
+                if mismatched_ids then
+                  (None, true)
+                else
+                  match (total_refinement, SMap.find_opt key refinement_scope) with
+                  | (None, Some refinement)
+                  | (Some refinement, None) ->
+                    (Some refinement, mismatched_ids)
+                  | (None, None) -> (None, mismatched_ids)
+                  | (Some ref1, Some ref2) ->
+                    if ref1.ssa_id = ref2.ssa_id then (
+                      let new_refinement = AND (ref1.refinement_id, ref2.refinement_id) in
+                      let new_refinement_id = this#new_id () in
+                      env_state <-
+                        {
+                          env_state with
+                          refinement_heap =
+                            IMap.add new_refinement_id new_refinement env_state.refinement_heap;
+                        };
+                      let new_latest_refinement =
+                        { ssa_id = ref1.ssa_id; refinement_id = new_refinement_id }
+                      in
+                      (Some new_latest_refinement, mismatched_ids)
+                    ) else
+                      (None, false))
+              (None, false)
+              refinement_scopes
+          in
+          (match total_refinement_opt with
+          | None -> SMap.empty
+          | Some refinement -> SMap.singleton key refinement)
+
       method private negate_new_refinements () =
         let head = List.hd env_state.latest_refinements in
-        let new_latest_refinements =
-          SMap.map
-            (fun latest_refinement ->
-              let new_id = this#new_id () in
-              let new_ref = NOT latest_refinement.refinement_id in
-              env_state <-
-                {
-                  env_state with
-                  refinement_heap = IMap.add new_id new_ref env_state.refinement_heap;
-                };
-              { latest_refinement with refinement_id = new_id })
-            head
-        in
+        let new_latest_refinements = this#negate_refinements head in
         this#pop_refinement_scope ();
         this#push_refinement_scope new_latest_refinements
 
@@ -2013,7 +2097,7 @@ module Make
         | Some name -> Some name
         | None -> None
 
-      method eq_test ~strict ~sense loc left right =
+      method eq_test ~strict ~sense ~cond_context loc left right =
         let open Flow_ast in
         match (left, right) with
         (* typeof expr ==/=== string *)
@@ -2135,14 +2219,19 @@ module Make
         | ((_, Expression.Unary { Expression.Unary.operator = Expression.Unary.Void; _ }), expr)
         | (expr, (_, Expression.Unary { Expression.Unary.operator = Expression.Unary.Void; _ })) ->
           this#void_test ~sense ~strict ~check_for_bound_undefined:false loc expr
-        | (((_, Expression.Member _) as expr), _)
-        | (_, ((_, Expression.Member _) as expr)) ->
+        (* Member expressions compared against non-literals that include
+         * an optional chain cannot refine like we do in literal cases. The
+         * non-literal value we are comparing against may be null or undefined,
+         * in which case we'd need to use the special case behavior. Since we can't
+         * know at this point, we conservatively do not refine at all based on optional
+         * chains by ignoring the output of maybe_sentinel_and_chain_refinement.
+         *
+         * NOTE: Switch statements do not introduce sentinel refinements *)
+        | (((_, Expression.Member _) as expr), _) ->
           ignore @@ this#expression expr;
-          (* Member expressions compared against non-literals that include
-           * an optional chain cannot refine like we do in literal cases. The
-           * non-literal value we are comparing against may be null or undefined,
-           * in which case we'd need to use the special case behavior. Since we can't
-           * know at this point, we conservatively do not refine at all *)
+          ignore @@ this#maybe_sentinel_and_chain_refinement ~sense loc expr
+        | (_, ((_, Expression.Member _) as expr)) when not (cond_context = SwitchTest) ->
+          ignore @@ this#expression expr;
           ignore @@ this#maybe_sentinel_and_chain_refinement ~sense loc expr
         | _ ->
           ignore @@ this#expression left;
@@ -2160,12 +2249,13 @@ module Make
       method binary_refinement loc expr =
         let open Flow_ast.Expression.Binary in
         let { operator; left; right; comments = _ } = expr in
+        let eq_test = this#eq_test ~cond_context:OtherTest in
         match operator with
         (* == and != refine if lhs or rhs is an ident and other side is null *)
-        | Equal -> this#eq_test ~strict:false ~sense:true loc left right
-        | NotEqual -> this#eq_test ~strict:false ~sense:false loc left right
-        | StrictEqual -> this#eq_test ~strict:true ~sense:true loc left right
-        | StrictNotEqual -> this#eq_test ~strict:true ~sense:false loc left right
+        | Equal -> eq_test ~strict:false ~sense:true loc left right
+        | NotEqual -> eq_test ~strict:false ~sense:false loc left right
+        | StrictEqual -> eq_test ~strict:true ~sense:true loc left right
+        | StrictNotEqual -> eq_test ~strict:true ~sense:false loc left right
         | Instanceof -> this#instance_test loc left right
         | LessThan
         | LessThanEqual

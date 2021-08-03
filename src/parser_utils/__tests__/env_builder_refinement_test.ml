@@ -1078,3 +1078,80 @@ try {
   x;
 }|};
     [%expect {| [ (8, 2) to (8, 3) => { (1, 4) to (1, 5): (`x`), (5, 21) to (5, 22): (`x`) } ] |}]
+
+let%expect_test "switch_empty" =
+  print_ssa_test {|let x = undefined;
+switch (x) {};
+x;
+|};
+    [%expect {| [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (3, 0) to (3, 1) => { (1, 4) to (1, 5): (`x`) } ] |}]
+
+let%expect_test "switch_only_default" =
+  print_ssa_test {|let x = undefined;
+switch (x) {
+  default: {
+    x;
+  }
+};
+x;
+|};
+    [%expect {| [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (4, 4) to (4, 5) => { (1, 4) to (1, 5): (`x`) }; (7, 0) to (7, 1) => { (1, 4) to (1, 5): (`x`) } ] |}]
+
+let%expect_test "switch_break_every_case" =
+  print_ssa_test {|let x = undefined;
+switch (x) {
+  case null:
+    x;
+    break;
+  case 3:
+    x;
+    break;
+  case false:
+    x;
+    break;
+  default: {
+    x;
+  }
+};
+x;
+|};
+    [%expect {| [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (4, 4) to (4, 5) => { {refinement = Null; writes = (1, 4) to (1, 5): (`x`)} }; (7, 4) to (7, 5) => { {refinement = 3; writes = (1, 4) to (1, 5): (`x`)} }; (10, 4) to (10, 5) => { {refinement = false; writes = (1, 4) to (1, 5): (`x`)} }; (13, 4) to (13, 5) => { {refinement = And (And (Not (false), Not (3)), Not (Null)); writes = (1, 4) to (1, 5): (`x`)} }; (16, 0) to (16, 1) => { {refinement = Null; writes = (1, 4) to (1, 5): (`x`)}, {refinement = 3; writes = (1, 4) to (1, 5): (`x`)}, {refinement = false; writes = (1, 4) to (1, 5): (`x`)}, {refinement = And (And (Not (false), Not (3)), Not (Null)); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "switch_with_fallthroughs" =
+  print_ssa_test {|let x = undefined;
+switch (x) {
+  case null:
+    x;
+  case 3:
+    x;
+    break;
+  case true:
+  case false:
+    x;
+  default: {
+    x;
+  }
+};
+x;
+|};
+    [%expect {| [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (4, 4) to (4, 5) => { {refinement = Null; writes = (1, 4) to (1, 5): (`x`)} }; (6, 4) to (6, 5) => { {refinement = Null; writes = (1, 4) to (1, 5): (`x`)}, {refinement = 3; writes = (1, 4) to (1, 5): (`x`)} }; (10, 4) to (10, 5) => { {refinement = true; writes = (1, 4) to (1, 5): (`x`)}, {refinement = false; writes = (1, 4) to (1, 5): (`x`)} }; (12, 4) to (12, 5) => { {refinement = true; writes = (1, 4) to (1, 5): (`x`)}, {refinement = false; writes = (1, 4) to (1, 5): (`x`)}, {refinement = And (And (And (Not (false), Not (true)), Not (3)), Not (Null)); writes = (1, 4) to (1, 5): (`x`)} }; (15, 0) to (15, 1) => { {refinement = Null; writes = (1, 4) to (1, 5): (`x`)}, {refinement = 3; writes = (1, 4) to (1, 5): (`x`)}, {refinement = true; writes = (1, 4) to (1, 5): (`x`)}, {refinement = false; writes = (1, 4) to (1, 5): (`x`)}, {refinement = And (And (And (Not (false), Not (true)), Not (3)), Not (Null)); writes = (1, 4) to (1, 5): (`x`)} } ] |}]
+
+let%expect_test "switch_throw_in_default" =
+  print_ssa_test {|let x = undefined;
+switch (x) {
+  case null:
+    x;
+  case 3:
+    x;
+    break;
+  case true:
+  case false:
+    x;
+    break;
+  default: {
+    throw 'error'
+  }
+};
+x;
+|};
+    [%expect {| [ (2, 8) to (2, 9) => { (1, 4) to (1, 5): (`x`) }; (4, 4) to (4, 5) => { {refinement = Null; writes = (1, 4) to (1, 5): (`x`)} }; (6, 4) to (6, 5) => { {refinement = Null; writes = (1, 4) to (1, 5): (`x`)}, {refinement = 3; writes = (1, 4) to (1, 5): (`x`)} }; (10, 4) to (10, 5) => { {refinement = true; writes = (1, 4) to (1, 5): (`x`)}, {refinement = false; writes = (1, 4) to (1, 5): (`x`)} }; (16, 0) to (16, 1) => { {refinement = Null; writes = (1, 4) to (1, 5): (`x`)}, {refinement = 3; writes = (1, 4) to (1, 5): (`x`)}, {refinement = true; writes = (1, 4) to (1, 5): (`x`)}, {refinement = false; writes = (1, 4) to (1, 5): (`x`)} } ] |}]

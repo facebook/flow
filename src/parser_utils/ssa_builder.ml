@@ -930,7 +930,7 @@ struct
       (*   [ENVi+1 | ENVi'] si+1 [ENVi+1']                       *)
       (* POST = ENVN | ENVN'                                     *)
       (***********************************************************)
-      method! switch_cases cases =
+      method! switch_cases _discriminant cases =
         this#expecting_abrupt_completions (fun () ->
             let (env, case_completion_states) =
               List.fold_left
