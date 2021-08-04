@@ -352,6 +352,8 @@ module Initialize : sig
 
   and experimentalClientCapabilities = { snippetTextEdit: bool }
 
+  and experimentalServerCapabilities = { server_snippetTextEdit: bool }
+
   and server_capabilities = {
     textDocumentSync: textDocumentSyncOptions;
     hoverProvider: bool;
@@ -373,6 +375,7 @@ module Initialize : sig
     executeCommandProvider: executeCommandOptions option;
     implementationProvider: bool;
     selectionRangeProvider: bool;
+    server_experimental: experimentalServerCapabilities;
     typeCoverageProvider: bool;
     rageProvider: bool;
   }
