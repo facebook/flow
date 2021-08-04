@@ -428,7 +428,9 @@ let get_def_info ~reader ~options env profiling file_key ast_info loc :
   let%lwt cx =
     set_def_loc_hook ~reader props_access_info literal_key_info loc;
     Profiling_js.with_timer_lwt profiling ~timer:"MergeContents" ~f:(fun () ->
-        let%lwt () = Types_js.ensure_checked_dependencies ~options ~reader ~env file_key file_sig in
+        let%lwt () =
+          Type_contents.ensure_checked_dependencies ~options ~reader ~env file_key file_sig
+        in
         let (cx, _) =
           Merge_service.check_contents_context ~reader options file_key ast info file_sig type_sig
         in

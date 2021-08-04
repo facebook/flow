@@ -582,12 +582,12 @@ let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
   let open Autofix_exports in
   let%lwt file_artifacts =
     let%lwt ((_, parse_errs) as intermediate_result) =
-      Types_js.parse_contents ~options ~profiling file_content file_key
+      Type_contents.parse_contents ~options ~profiling file_content file_key
     in
     if not (Flow_error.ErrorSet.is_empty parse_errs) then
       Lwt.return (Error parse_errs)
     else
-      Types_js.type_parse_artifacts ~options ~env ~profiling file_key intermediate_result
+      Type_contents.type_parse_artifacts ~options ~env ~profiling file_key intermediate_result
   in
   match file_artifacts with
   | Ok
@@ -615,7 +615,7 @@ let insert_type
   let open Insert_type in
   let%lwt file_artifacts =
     let%lwt ((_, parse_errs) as intermediate_result) =
-      Types_js.parse_contents ~options ~profiling file_content file_key
+      Type_contents.parse_contents ~options ~profiling file_content file_key
     in
     (* It's not clear to me (nmote) that we actually should abort when we see parse errors. Maybe
      * we should continue on here. I'm inserting this logic during the migration away from
@@ -623,7 +623,7 @@ let insert_type
     if not (Flow_error.ErrorSet.is_empty parse_errs) then
       Lwt.return (Error parse_errs)
     else
-      Types_js.type_parse_artifacts ~options ~env ~profiling file_key intermediate_result
+      Type_contents.type_parse_artifacts ~options ~env ~profiling file_key intermediate_result
   in
   match file_artifacts with
   | Ok (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx = full_cx; typed_ast }) ->
@@ -649,22 +649,26 @@ let insert_type
     Lwt.return result
   | Error _ as result ->
     let (errs, _) =
-      Types_js.printable_errors_of_file_artifacts_result ~options ~env file_key result
+      Type_contents.printable_errors_of_file_artifacts_result ~options ~env file_key result
     in
     Lwt.return (Error (error_to_string (Expected (FailedToTypeCheck errs))))
 
 let suggest ~options ~env ~profiling file_key file_content =
   let%lwt file_artifacts_result =
     let%lwt ((_, parse_errs) as intermediate_result) =
-      Types_js.parse_contents ~options ~profiling file_content file_key
+      Type_contents.parse_contents ~options ~profiling file_content file_key
     in
     if not (Flow_error.ErrorSet.is_empty parse_errs) then
       Lwt.return (Error parse_errs)
     else
-      Types_js.type_parse_artifacts ~options ~env ~profiling file_key intermediate_result
+      Type_contents.type_parse_artifacts ~options ~env ~profiling file_key intermediate_result
   in
   let (tc_errors, tc_warnings) =
-    Types_js.printable_errors_of_file_artifacts_result ~options ~env file_key file_artifacts_result
+    Type_contents.printable_errors_of_file_artifacts_result
+      ~options
+      ~env
+      file_key
+      file_artifacts_result
   in
   match file_artifacts_result with
   | Ok (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx; typed_ast = tast }) ->

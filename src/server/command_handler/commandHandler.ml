@@ -20,11 +20,11 @@ let type_parse_artifacts_with_cache
     ~options ~env ~profiling ~type_parse_artifacts_cache file artifacts =
   match type_parse_artifacts_cache with
   | None ->
-    let%lwt result = Types_js.type_parse_artifacts ~options ~env ~profiling file artifacts in
+    let%lwt result = Type_contents.type_parse_artifacts ~options ~env ~profiling file artifacts in
     Lwt.return (result, None)
   | Some cache ->
     let lazy_result =
-      lazy (Types_js.type_parse_artifacts ~options ~env ~profiling file artifacts)
+      lazy (Type_contents.type_parse_artifacts ~options ~env ~profiling file artifacts)
     in
     let%lwt (result, did_hit) = FilenameCache.with_cache file lazy_result cache in
     Lwt.return (result, Some did_hit)
@@ -138,8 +138,8 @@ let autocomplete
   in
   Autocomplete_js.autocomplete_set_hooks ~cursor:cursor_loc;
   let%lwt file_artifacts_result =
-    let%lwt parse_result = Types_js.parse_contents ~options ~profiling contents path in
-    Types_js.type_parse_artifacts ~options ~env ~profiling path parse_result
+    let%lwt parse_result = Type_contents.parse_contents ~options ~profiling contents path in
+    Type_contents.type_parse_artifacts ~options ~env ~profiling path parse_result
   in
   Autocomplete_js.autocomplete_unset_hooks ();
   let initial_json_props =
@@ -250,15 +250,15 @@ let check_file ~options ~env ~profiling ~force file_input =
     if should_check then
       let%lwt result =
         let%lwt ((_, parse_errs) as intermediate_result) =
-          Types_js.parse_contents ~options ~profiling content file
+          Type_contents.parse_contents ~options ~profiling content file
         in
         if not (Flow_error.ErrorSet.is_empty parse_errs) then
           Lwt.return (Error parse_errs)
         else
-          Types_js.type_parse_artifacts ~options ~env ~profiling file intermediate_result
+          Type_contents.type_parse_artifacts ~options ~env ~profiling file intermediate_result
       in
       let (errors, warnings) =
-        Types_js.printable_errors_of_file_artifacts_result ~options ~env file result
+        Type_contents.printable_errors_of_file_artifacts_result ~options ~env file result
       in
       Lwt.return (convert_errors ~errors ~warnings ~suppressed_errors:[])
     else
@@ -332,7 +332,7 @@ let infer_type
     let%lwt result =
       try_with_json (fun () ->
           let%lwt (file_artifacts_result, did_hit_cache) =
-            let%lwt parse_result = Types_js.parse_contents ~options ~profiling content file in
+            let%lwt parse_result = Type_contents.parse_contents ~options ~profiling content file in
             type_parse_artifacts_with_cache
               ~options
               ~env
@@ -527,8 +527,8 @@ let dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructo
       let file = File_key.SourceFile file in
       Lwt.return (File_input.content_of_file_input file_input) >>= fun content ->
       let%lwt file_artifacts_result =
-        let%lwt parse_result = Types_js.parse_contents ~options ~profiling content file in
-        Types_js.type_parse_artifacts ~options ~env ~profiling file parse_result
+        let%lwt parse_result = Type_contents.parse_contents ~options ~profiling content file in
+        Type_contents.type_parse_artifacts ~options ~env ~profiling file parse_result
       in
       match file_artifacts_result with
       | Error _parse_errors -> Lwt.return (Error "Couldn't parse file in parse_contents")
@@ -557,7 +557,9 @@ let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust 
       let%lwt result =
         try_with_json (fun () ->
             let%lwt (file_artifacts_result, did_hit_cache) =
-              let%lwt parse_result = Types_js.parse_contents ~options ~profiling content file in
+              let%lwt parse_result =
+                Type_contents.parse_contents ~options ~profiling content file
+              in
               type_parse_artifacts_with_cache
                 ~options
                 ~env
@@ -725,7 +727,7 @@ let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_i
     | Error _ as err -> Lwt.return (err, None)
     | Ok content ->
       (match%lwt
-         let%lwt parse_result = Types_js.parse_contents ~options ~profiling content file in
+         let%lwt parse_result = Type_contents.parse_contents ~options ~profiling content file in
          type_parse_artifacts_with_cache
            ~options
            ~env
@@ -1015,7 +1017,9 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
       in
       let uri = TextDocumentIdentifier.(textDocument.uri) in
       let%lwt (file_artifacts_result, _did_hit_cache) =
-        let%lwt parse_result = Types_js.parse_contents ~options ~profiling file_contents file_key in
+        let%lwt parse_result =
+          Type_contents.parse_contents ~options ~profiling file_contents file_key
+        in
         type_parse_artifacts_with_cache
           ~options
           ~env
@@ -1792,7 +1796,7 @@ let handle_persistent_signaturehelp_lsp
     in
     let path = File_key.SourceFile path in
     let%lwt (file_artifacts_result, did_hit_cache) =
-      let%lwt parse_result = Types_js.parse_contents ~options ~profiling contents path in
+      let%lwt parse_result = Type_contents.parse_contents ~options ~profiling contents path in
       let type_parse_artifacts_cache =
         Some (Persistent_connection.type_parse_artifacts_cache client)
       in
@@ -2266,7 +2270,7 @@ let handle_live_errors_request =
                 in
                 let%lwt (result, did_hit_cache) =
                   let%lwt ((_, parse_errs) as intermediate_result) =
-                    Types_js.parse_contents ~options ~profiling content file_key
+                    Type_contents.parse_contents ~options ~profiling content file_key
                   in
                   if not (Flow_error.ErrorSet.is_empty parse_errs) then
                     Lwt.return (Error parse_errs, None)
@@ -2283,7 +2287,11 @@ let handle_live_errors_request =
                       intermediate_result
                 in
                 let (live_errors, live_warnings) =
-                  Types_js.printable_errors_of_file_artifacts_result ~options ~env file_key result
+                  Type_contents.printable_errors_of_file_artifacts_result
+                    ~options
+                    ~env
+                    file_key
+                    result
                 in
                 let metadata =
                   let json_props = add_cache_hit_data_to_json [] did_hit_cache in
