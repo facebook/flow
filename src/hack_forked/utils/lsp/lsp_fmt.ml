@@ -1188,6 +1188,20 @@ let print_initialize ~key (r : Initialize.result) : json =
     let print_textDocumentSyncKind kind = int_ (textDocumentSyncKind_to_enum kind) in
     let cap = r.server_capabilities in
     let sync = cap.textDocumentSync in
+    let experimental =
+      let { server_snippetTextEdit } = cap.server_experimental in
+      let props = [] in
+      let props =
+        if server_snippetTextEdit then
+          ("snippetTextEdit", JSON_Bool true) :: props
+        else
+          props
+      in
+      if Base.List.is_empty props then
+        None
+      else
+        Some (JSON_Object props)
+    in
     JSON_Object
       [
         ( "capabilities",
@@ -1257,6 +1271,7 @@ let print_initialize ~key (r : Initialize.result) : json =
               ("implementationProvider", Some (JSON_Bool cap.implementationProvider));
               ("typeCoverageProvider", Some (JSON_Bool cap.typeCoverageProvider));
               ("rageProvider", Some (JSON_Bool cap.rageProvider));
+              ("experimental", experimental);
             ] );
       ])
 

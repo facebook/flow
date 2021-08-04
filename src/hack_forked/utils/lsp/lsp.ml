@@ -468,6 +468,8 @@ module Initialize = struct
   (* Flow LSP specific capabilities. *)
   and experimentalClientCapabilities = { snippetTextEdit: bool }
 
+  and experimentalServerCapabilities = { server_snippetTextEdit: bool }
+
   (** What capabilities the server provides *)
   and server_capabilities = {
     textDocumentSync: textDocumentSyncOptions;  (** how to sync *)
@@ -490,6 +492,7 @@ module Initialize = struct
     executeCommandProvider: executeCommandOptions option;
     implementationProvider: bool;
     selectionRangeProvider: bool;
+    server_experimental: experimentalServerCapabilities;
     typeCoverageProvider: bool;  (** nuclide-specific *)
     rageProvider: bool;  (** nuclide-specific *)
   }

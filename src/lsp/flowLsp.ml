@@ -653,6 +653,7 @@ let do_initialize flowconfig params : Initialize.result =
     else
       CodeActionBool false
   in
+  let server_snippetTextEdit = Lsp_helpers.supports_experimental_snippet_text_edit params in
   {
     server_capabilities =
       {
@@ -691,6 +692,7 @@ let do_initialize flowconfig params : Initialize.result =
         selectionRangeProvider = true;
         typeCoverageProvider = true;
         rageProvider = true;
+        server_experimental = { server_snippetTextEdit };
       };
   }
 
