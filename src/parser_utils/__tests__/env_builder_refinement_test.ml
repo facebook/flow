@@ -27,6 +27,7 @@ let print_values refinement_of_id =
       in
       let writes_str = String.concat "," (List.map print_value writes) in
       Printf.sprintf "{refinement = %s; writes = %s}" refinement_str writes_str
+    | Global name -> "Global " ^ name
   in
   fun values ->
     let kvlist = L.LMap.bindings values in

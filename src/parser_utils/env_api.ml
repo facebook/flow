@@ -17,6 +17,7 @@ module type S = sig
         refinement_id: int;
         writes: write_locs;
       }
+    | Global of string
 
   and write_locs = write_loc list
 
@@ -41,6 +42,7 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
         refinement_id: int;
         writes: write_locs;
       }
+    | Global of string
 
   and write_locs = write_loc list
 
@@ -54,6 +56,7 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
       writes |> List.map writes_of_write_loc |> List.flatten
     | Write r -> [Reason.poly_loc_of_reason r]
     | Uninitialized -> []
+    | Global _ -> []
 
   let print_values =
     let rec print_write_loc write_loc =
@@ -69,6 +72,7 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
         let refinement_id_str = string_of_int refinement_id in
         let writes_str = String.concat "," (List.map print_write_loc writes) in
         Printf.sprintf "{refinement_id = %s; writes = %s}" refinement_id_str writes_str
+      | Global name -> "Global " ^ name
     in
     fun values ->
       let kvlist = L.LMap.bindings values in
