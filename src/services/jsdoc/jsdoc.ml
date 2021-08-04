@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Sedlexing = Flow_sedlexing
+
 module Param = struct
   type optionality =
     | NotOptional

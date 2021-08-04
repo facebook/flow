@@ -7,10 +7,15 @@
 
 [@@@warning "-39"] (* sedlex inserts some unnecessary `rec`s *)
 
+module Sedlexing = Flow_sedlexing
 open Token
 open Lex_env
 
 let lexeme = Sedlexing.Utf8.lexeme
+
+let lexeme_to_buffer = Sedlexing.Utf8.lexeme_to_buffer
+
+let lexeme_to_buffer2 = Sedlexing.Utf8.lexeme_to_buffer2
 
 let sub_lexeme = Sedlexing.Utf8.sub_lexeme
 
@@ -160,6 +165,10 @@ let codepoint_escape = [%sedlex.regexp? ("\\u{", Plus hex_digit, '}')]
 
 let js_id_start = [%sedlex.regexp? '$' | '_' | id_start | unicode_escape | codepoint_escape]
 
+let ascii_id_start = [%sedlex.regexp? '$' | '_' | 'a' .. 'z' | 'A' .. 'Z']
+
+let ascii_id_continue = [%sedlex.regexp? '$' | '_' | 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9']
+
 let js_id_continue =
   [%sedlex.regexp? '$' | '_' | 0x200C | 0x200D | id_continue | unicode_escape | codepoint_escape]
 
@@ -193,10 +202,6 @@ let loc_of_token env lex_token =
   | T_TEMPLATE_PART (loc, _, _) -> loc
   | T_REGEXP (loc, _, _) -> loc
   | _ -> loc_of_lexbuf env env.lex_lb
-
-let get_result_and_clear_state (env, lex_token, lex_loc, lex_comments) =
-  let (env, { lex_errors_acc }) = get_and_clear_state env in
-  (env, { Lex_result.lex_token; lex_loc; lex_errors = List.rev lex_errors_acc; lex_comments })
 
 let lex_error (env : Lex_env.t) loc err : Lex_env.t =
   let lex_errors_acc = (loc, err) :: env.lex_state.lex_errors_acc in
@@ -353,15 +358,14 @@ let decode_identifier =
     (* match multi-char substrings that don't contain the start chars of the above patterns *)
     | Plus (Compl (eof | "\\"))
     | any ->
-      let x = lexeme lexbuf in
-      Buffer.add_string buf x;
+      lexeme_to_buffer lexbuf buf;
       id_char env offset buf lexbuf
     | _ -> failwith "unreachable"
   in
   fun env raw ->
     let offset = Sedlexing.lexeme_start env.lex_lb in
-    let lexbuf = Sedlexing.Utf8.from_string raw in
-    let buf = Buffer.create (String.length raw) in
+    let lexbuf = Sedlexing.from_int_array raw in
+    let buf = Buffer.create (Array.length raw) in
     id_char env offset buf lexbuf
 
 let recover env lexbuf ~f =
@@ -383,7 +387,7 @@ let rec comment env buf lexbuf =
   match%sedlex lexbuf with
   | line_terminator_sequence ->
     let env = new_line env lexbuf in
-    Buffer.add_string buf (lexeme lexbuf);
+    lexeme_to_buffer lexbuf buf;
     comment env buf lexbuf
   | "*/" ->
     let env =
@@ -404,7 +408,7 @@ let rec comment env buf lexbuf =
   (* match multi-char substrings that don't contain the start chars of the above patterns *)
   | Plus (Compl (line_terminator_sequence_start | '*'))
   | any ->
-    Buffer.add_string buf (lexeme lexbuf);
+    lexeme_to_buffer lexbuf buf;
     comment env buf lexbuf
   | _ ->
     let env = illegal env (loc_of_lexbuf env lexbuf) in
@@ -422,8 +426,7 @@ let rec line_comment env buf lexbuf =
   (* match multi-char substrings that don't contain the start chars of the above patterns *)
   | Plus (Compl (eof | line_terminator_sequence_start))
   | any ->
-    let str = lexeme lexbuf in
-    Buffer.add_string buf str;
+    lexeme_to_buffer lexbuf buf;
     line_comment env buf lexbuf
   | _ -> failwith "unreachable"
 
@@ -432,7 +435,7 @@ let string_escape env lexbuf =
   | eof
   | '\\' ->
     let str = lexeme lexbuf in
-    let codes = Sedlexing.lexeme lexbuf |> Array.map Uchar.to_int in
+    let codes = Sedlexing.lexeme lexbuf in
     (env, str, codes, false)
   | ('x', hex_digit, hex_digit) ->
     let str = lexeme lexbuf in
@@ -489,7 +492,7 @@ let string_escape env lexbuf =
   | 'x'
   | '0' .. '7' ->
     let str = lexeme lexbuf in
-    let codes = Sedlexing.lexeme lexbuf |> Array.map Uchar.to_int in
+    let codes = Sedlexing.lexeme lexbuf in
     let env = illegal env (loc_of_lexbuf env lexbuf) in
     (env, str, codes, false)
   | line_terminator_sequence ->
@@ -498,7 +501,7 @@ let string_escape env lexbuf =
     (env, str, [||], false)
   | any ->
     let str = lexeme lexbuf in
-    let codes = Sedlexing.lexeme lexbuf |> Array.map Uchar.to_int in
+    let codes = Sedlexing.lexeme lexbuf in
     (env, str, codes, false)
   | _ -> failwith "unreachable"
 
@@ -539,9 +542,7 @@ let rec string_quote env q buf raw octal lexbuf =
   (* match multi-char substrings that don't contain the start chars of the above patterns *)
   | Plus (Compl ("'" | '"' | '\\' | '\n' | eof))
   | any ->
-    let x = lexeme lexbuf in
-    Buffer.add_string raw x;
-    Buffer.add_string buf x;
+    lexeme_to_buffer2 lexbuf raw buf;
     string_quote env q buf raw octal lexbuf
   | _ -> failwith "unreachable"
 
@@ -669,7 +670,7 @@ let token (env : Lex_env.t) lexbuf : result =
     let cooked = Buffer.create 127 in
     let raw = Buffer.create 127 in
     let literal = Buffer.create 127 in
-    Buffer.add_string literal (lexeme lexbuf);
+    lexeme_to_buffer lexbuf literal;
 
     let start = start_pos_of_lexbuf env lexbuf in
     let (env, is_tail) = template_part env cooked raw literal lexbuf in
@@ -846,10 +847,15 @@ let token (env : Lex_env.t) lexbuf : result =
   | "with" -> Token (env, T_WITH)
   | "yield" -> Token (env, T_YIELD)
   (* Identifiers *)
+  | (ascii_id_start, Star ascii_id_continue) ->
+    (* fast path *)
+    let loc = loc_of_lexbuf env lexbuf in
+    let raw = lexeme lexbuf in
+    Token (env, T_IDENTIFIER { loc; value = raw; raw })
   | (js_id_start, Star js_id_continue) ->
     let loc = loc_of_lexbuf env lexbuf in
     let raw = lexeme lexbuf in
-    let (env, value) = decode_identifier env raw in
+    let (env, value) = decode_identifier env (Sedlexing.lexeme lexbuf) in
     Token (env, T_IDENTIFIER { loc; value; raw })
   (* TODO: Use [Symbol.iterator] instead of @@iterator. *)
   | "@@iterator"
@@ -1696,10 +1702,15 @@ let type_token env lexbuf =
   | "void" -> Token (env, T_VOID_TYPE)
   | "symbol" -> Token (env, T_SYMBOL_TYPE)
   (* Identifiers *)
+  | (ascii_id_start, Star ascii_id_continue) ->
+    (* fast path *)
+    let loc = loc_of_lexbuf env lexbuf in
+    let raw = lexeme lexbuf in
+    Token (env, T_IDENTIFIER { loc; value = raw; raw })
   | (js_id_start, Star js_id_continue) ->
     let loc = loc_of_lexbuf env lexbuf in
     let raw = lexeme lexbuf in
-    let (env, value) = decode_identifier env raw in
+    let (env, value) = decode_identifier env (Sedlexing.lexeme lexbuf) in
     Token (env, T_IDENTIFIER { loc; value; raw })
   | "%checks" -> Token (env, T_CHECKS)
   (* Syntax *)
@@ -1766,21 +1777,48 @@ let jsx_child env =
   let raw = Buffer.create 127 in
   let (env, child) = jsx_child env start buf raw env.lex_lb in
   let loc = loc_of_token env child in
-  get_result_and_clear_state (env, child, loc, [])
+  let lex_errors_acc = env.lex_state.lex_errors_acc in
+  if lex_errors_acc = [] then
+    (env, { Lex_result.lex_token = child; lex_loc = loc; lex_comments = []; lex_errors = [] })
+  else
+    ( { env with lex_state = { lex_errors_acc = [] } },
+      {
+        Lex_result.lex_token = child;
+        lex_loc = loc;
+        lex_comments = [];
+        lex_errors = List.rev lex_errors_acc;
+      } )
 
 let wrap f =
   let rec helper comments env =
     match f env env.lex_lb with
     | Token (env, t) ->
       let loc = loc_of_token env t in
-      let env = { env with lex_last_loc = loc } in
-      (env, t, loc, List.rev comments)
+      let lex_comments =
+        if comments = [] then
+          []
+        else
+          List.rev comments
+      in
+      let lex_token = t in
+      let lex_errors_acc = env.lex_state.lex_errors_acc in
+      if lex_errors_acc = [] then
+        ( { env with lex_last_loc = loc },
+          { Lex_result.lex_token; lex_loc = loc; lex_comments; lex_errors = [] } )
+      else
+        ( { env with lex_last_loc = loc; lex_state = Lex_env.empty_lex_state },
+          {
+            Lex_result.lex_token;
+            lex_loc = loc;
+            lex_comments;
+            lex_errors = List.rev lex_errors_acc;
+          } )
     | Comment (env, ((loc, _) as comment)) ->
       let env = { env with lex_last_loc = loc } in
       helper (comment :: comments) env
     | Continue env -> helper comments env
   in
-  (fun env -> get_result_and_clear_state (helper [] env))
+  (fun env -> helper [] env)
 
 let regexp = wrap regexp
 

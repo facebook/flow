@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Sedlexing = Flow_sedlexing
 open Flow_ast
 module SSet = Set.Make (String)
 
@@ -38,51 +39,32 @@ end
  * - Refactor this to memoize all requested lookahead, so we aren't lexing the
  *   same token multiple times.
  *)
-let maximum_lookahead = 2
 
 module Lookahead : sig
   type t
 
   val create : Lex_env.t -> Lex_mode.t -> t
 
-  val peek : t -> int -> Lex_result.t
+  val peek_0 : t -> Lex_result.t
 
-  val lex_env : t -> int -> Lex_env.t
+  val peek_1 : t -> Lex_result.t
+
+  val lex_env_0 : t -> Lex_env.t
 
   val junk : t -> unit
 end = struct
+  type la_result = (Lex_env.t * Lex_result.t) option
+
   type t = {
-    mutable la_results: (Lex_env.t * Lex_result.t) option array;
-    mutable la_num_lexed: int;
+    mutable la_results_0: la_result;
+    mutable la_results_1: la_result;
     la_lex_mode: Lex_mode.t;
     mutable la_lex_env: Lex_env.t;
   }
 
   let create lex_env mode =
     let lex_env = Lex_env.clone lex_env in
-    { la_results = [||]; la_num_lexed = 0; la_lex_mode = mode; la_lex_env = lex_env }
-
-  let next_power_of_two n =
-    let rec f i =
-      if i >= n then
-        i
-      else
-        f (i * 2)
-    in
-    f 1
-
-  (* resize the tokens array to have at least n elements *)
-  let grow t n =
-    if Array.length t.la_results < n then
-      let new_size = next_power_of_two n in
-      let filler i =
-        if i < Array.length t.la_results then
-          t.la_results.(i)
-        else
-          None
-      in
-      let new_arr = Array.init new_size filler in
-      t.la_results <- new_arr
+    { la_results_0 = None; la_results_1 = None; la_lex_mode = mode; la_lex_env = lex_env }
 
   (* precondition: there is enough room in t.la_results for the result *)
   let lex t =
@@ -97,36 +79,42 @@ end = struct
       | Lex_mode.REGEXP -> Flow_lexer.regexp lex_env
     in
     let cloned_env = Lex_env.clone lex_env in
+    let result = (cloned_env, lex_result) in
     t.la_lex_env <- lex_env;
-    t.la_results.(t.la_num_lexed) <- Some (cloned_env, lex_result);
-    t.la_num_lexed <- t.la_num_lexed + 1
+    begin
+      match t.la_results_0 with
+      | None -> t.la_results_0 <- Some result
+      | Some _ -> t.la_results_1 <- Some result
+    end;
+    result
 
-  let lex_until t i =
-    grow t (i + 1);
-    while t.la_num_lexed <= i do
-      lex t
-    done
-
-  let peek t i =
-    lex_until t i;
-    match t.la_results.(i) with
+  let peek_0 t =
+    match t.la_results_0 with
     | Some (_, result) -> result
-    (* only happens if there is a defect in the lookahead module *)
-    | None -> failwith "Lookahead.peek failed"
+    | None -> snd (lex t)
 
-  let lex_env t i =
-    lex_until t i;
-    match t.la_results.(i) with
+  let peek_1 t =
+    (match t.la_results_0 with
+    | None -> ignore (lex t)
+    | Some _ -> ());
+    match t.la_results_1 with
+    | None -> snd (lex t)
+    | Some (_, result) -> result
+
+  let lex_env_0 t =
+    match t.la_results_0 with
     | Some (lex_env, _) -> lex_env
-    (* only happens if there is a defect in the lookahead module *)
-    | None -> failwith "Lookahead.peek failed"
+    | None -> fst (lex t)
 
   (* Throws away the first peeked-at token, shifting any subsequent tokens up *)
   let junk t =
-    lex_until t 0;
-    if t.la_num_lexed > 1 then Array.blit t.la_results 1 t.la_results 0 (t.la_num_lexed - 1);
-    t.la_results.(t.la_num_lexed - 1) <- None;
-    t.la_num_lexed <- t.la_num_lexed - 1
+    match t.la_results_1 with
+    | None ->
+      ignore (peek_0 t);
+      t.la_results_0 <- None
+    | Some _ ->
+      t.la_results_0 <- t.la_results_1;
+      t.la_results_1 <- None
 end
 
 type token_sink_result = {
@@ -357,40 +345,106 @@ let add_used_private env name loc =
 let consume_comments_until env pos = env.consumed_comments_pos := pos
 
 (* lookahead: *)
+let lookahead_0 env = Lookahead.peek_0 !(env.lookahead)
+
+let lookahead_1 env = Lookahead.peek_1 !(env.lookahead)
+
 let lookahead ~i env =
-  assert (i < maximum_lookahead);
-  Lookahead.peek !(env.lookahead) i
+  match i with
+  | 0 -> lookahead_0 env
+  | 1 -> lookahead_1 env
+  | _ -> assert false
 
 (* functional operations: *)
-let with_strict in_strict_mode env = { env with in_strict_mode }
+let with_strict in_strict_mode env =
+  if in_strict_mode = env.in_strict_mode then
+    env
+  else
+    { env with in_strict_mode }
 
-let with_in_formal_parameters in_formal_parameters env = { env with in_formal_parameters }
+let with_in_formal_parameters in_formal_parameters env =
+  if in_formal_parameters = env.in_formal_parameters then
+    env
+  else
+    { env with in_formal_parameters }
 
-let with_in_function in_function env = { env with in_function }
+let with_in_function in_function env =
+  if in_function = env.in_function then
+    env
+  else
+    { env with in_function }
 
-let with_allow_yield allow_yield env = { env with allow_yield }
+let with_allow_yield allow_yield env =
+  if allow_yield = env.allow_yield then
+    env
+  else
+    { env with allow_yield }
 
-let with_allow_await allow_await env = { env with allow_await }
+let with_allow_await allow_await env =
+  if allow_await = env.allow_await then
+    env
+  else
+    { env with allow_await }
 
-let with_allow_directive allow_directive env = { env with allow_directive }
+let with_allow_directive allow_directive env =
+  if allow_directive = env.allow_directive then
+    env
+  else
+    { env with allow_directive }
 
-let with_allow_super allow_super env = { env with allow_super }
+let with_allow_super allow_super env =
+  if allow_super = env.allow_super then
+    env
+  else
+    { env with allow_super }
 
-let with_no_let no_let env = { env with no_let }
+let with_no_let no_let env =
+  if no_let = env.no_let then
+    env
+  else
+    { env with no_let }
 
-let with_in_loop in_loop env = { env with in_loop }
+let with_in_loop in_loop env =
+  if in_loop = env.in_loop then
+    env
+  else
+    { env with in_loop }
 
-let with_no_in no_in env = { env with no_in }
+let with_no_in no_in env =
+  if no_in = env.no_in then
+    env
+  else
+    { env with no_in }
 
-let with_no_anon_function_type no_anon_function_type env = { env with no_anon_function_type }
+let with_no_anon_function_type no_anon_function_type env =
+  if no_anon_function_type = env.no_anon_function_type then
+    env
+  else
+    { env with no_anon_function_type }
 
-let with_no_new no_new env = { env with no_new }
+let with_no_new no_new env =
+  if no_new = env.no_new then
+    env
+  else
+    { env with no_new }
 
-let with_in_switch in_switch env = { env with in_switch }
+let with_in_switch in_switch env =
+  if in_switch = env.in_switch then
+    env
+  else
+    { env with in_switch }
 
-let with_in_export in_export env = { env with in_export }
+let with_in_export in_export env =
+  if in_export = env.in_export then
+    env
+  else
+    { env with in_export }
 
-let with_no_call no_call env = { env with no_call }
+let with_no_call no_call env =
+  if no_call = env.no_call then
+    env
+  else
+    { env with no_call }
 
 let with_error_callback error_callback env = { env with error_callback = Some error_callback }
 
@@ -616,11 +670,12 @@ module Peek = struct
 
   let ith_comments ~i env =
     let comments = Lex_result.comments (lookahead ~i env) in
-    List.filter
-      (fun ({ Loc.start; _ }, _) -> Loc.pos_cmp !(env.consumed_comments_pos) start <= 0)
-      comments
-
-  let ith_lex_env ~i env = Lookahead.lex_env !(env.lookahead) i
+    match comments with
+    | [] -> []
+    | _ ->
+      List.filter
+        (fun ({ Loc.start; _ }, _) -> Loc.pos_cmp !(env.consumed_comments_pos) start <= 0)
+        comments
 
   let token env = ith_token ~i:0 env
 
@@ -645,7 +700,7 @@ module Peek = struct
       (fun ({ Loc.start; _ }, _) -> Loc.pos_cmp start !(env.consumed_comments_pos) < 0)
       comments
 
-  let lex_env env = ith_lex_env ~i:0 env
+  let lex_env env = Lookahead.lex_env_0 !(env.lookahead)
 
   (* True if there is a line terminator before the next token *)
   let ith_is_line_terminator ~i env =
@@ -950,7 +1005,7 @@ module Eat = struct
 
   (** [maybe env t] eats the next token and returns [true] if it is [t], else return [false] *)
   let maybe env t =
-    if Peek.token env = t then (
+    if Token.equal (Peek.token env) t then (
       token env;
       true
     ) else
@@ -1056,7 +1111,7 @@ module Expect = struct
     error_unexpected ~expected env
 
   let token env t =
-    if Peek.token env <> t then error env t;
+    if not (Token.equal (Peek.token env) t) then error env t;
     Eat.token env
 
   (** [token_opt env T_FOO] eats a token if it is [T_FOO], and errors without consuming if not.
@@ -1064,7 +1119,7 @@ module Expect = struct
       the parser to not advance, like if you are guaranteed that something else has eaten a
       token. *)
   let token_opt env t =
-    if Peek.token env <> t then
+    if not (Token.equal (Peek.token env) t) then
       error env t
     else
       Eat.token env

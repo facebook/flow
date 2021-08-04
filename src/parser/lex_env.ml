@@ -5,6 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Sedlexing = Flow_sedlexing
+
+(* bol = Beginning Of Line *)
+type bol = {
+  line: int;
+  offset: int;
+}
+
+type lex_state = { lex_errors_acc: (Loc.t * Parse_error.t) list } [@@ocaml.unboxed]
+
 type t = {
   lex_source: File_key.t option;
   lex_lb: Sedlexing.lexbuf;
@@ -14,14 +24,6 @@ type t = {
   lex_state: lex_state;
   lex_last_loc: Loc.t;
 }
-
-(* bol = Beginning Of Line *)
-and bol = {
-  line: int;
-  offset: int;
-}
-
-and lex_state = { lex_errors_acc: (Loc.t * Parse_error.t) list }
 
 let empty_lex_state = { lex_errors_acc = [] }
 
@@ -44,18 +46,8 @@ let new_lex_env lex_source lex_lb ~enable_types_in_comments =
 (* copy all the mutable things so that we have a distinct lexing environment
    that does not interfere with ordinary lexer operations *)
 let clone env =
-  let lex_lb = env.lex_lb |> Obj.repr |> Obj.dup |> Obj.obj in
+  let lex_lb = Sedlexing.lexbuf_clone env.lex_lb in
   { env with lex_lb }
-
-let get_and_clear_state env =
-  let state = env.lex_state in
-  let env =
-    if state != empty_lex_state then
-      { env with lex_state = empty_lex_state }
-    else
-      env
-  in
-  (env, state)
 
 let lexbuf env = env.lex_lb
 

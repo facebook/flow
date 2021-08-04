@@ -21,7 +21,7 @@ type t =
       value: string;
       raw: string;
     }
-  | T_REGEXP of (Loc.t * string * string) (* /pattern/flags *)
+  | T_REGEXP of Loc.t * string * string (* /pattern/flags *)
   (* Syntax *)
   | T_LCURLY
   | T_RCURLY
@@ -140,7 +140,7 @@ type t =
   | T_EOF
   (* JSX *)
   | T_JSX_IDENTIFIER of { raw: string }
-  | T_JSX_TEXT of (Loc.t * string * string) (* loc, value, raw *)
+  | T_JSX_TEXT of Loc.t * string * string (* loc, value, raw *)
   (* Type primitives *)
   | T_ANY_TYPE
   | T_MIXED_TYPE
@@ -190,6 +190,7 @@ and template_part = {
   (* string as specified in source *)
   literal: string; (* same as raw, plus characters like ` and ${ *)
 }
+[@@deriving eq]
 
 (*****************************************************************************)
 (* Pretty printer (pretty?) *)
