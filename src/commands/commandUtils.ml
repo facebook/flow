@@ -1692,7 +1692,7 @@ let choose_file_watcher
       | None -> default_file_watcher_mergebase_with
     in
     let survive_restarts =
-      Base.Option.value ~default:false (FlowConfig.watchman_survive_restarts flowconfig)
+      Base.Option.value ~default:true (FlowConfig.watchman_survive_restarts flowconfig)
     in
     FlowServerMonitorOptions.Watchman
       {
