@@ -232,8 +232,14 @@ let%expect_test "eq_undefined" =
 (x == undefined) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 1) to (2, 2) => {
         (1, 4) to (1, 5): (`x`)
+      };
+      (2, 6) to (2, 15) => {
+        Global undefined
       };
       (2, 20) to (2, 21) => {
         {refinement = Maybe; writes = (1, 4) to (1, 5): (`x`)}
@@ -244,8 +250,14 @@ let%expect_test "neq_undefined" =
 (x != undefined) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 1) to (2, 2) => {
         (1, 4) to (1, 5): (`x`)
+      };
+      (2, 6) to (2, 15) => {
+        Global undefined
       };
       (2, 20) to (2, 21) => {
         {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)}
@@ -256,8 +268,14 @@ let%expect_test "strict_eq_undefined" =
 (x === undefined) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 1) to (2, 2) => {
         (1, 4) to (1, 5): (`x`)
+      };
+      (2, 7) to (2, 16) => {
+        Global undefined
       };
       (2, 21) to (2, 22) => {
         {refinement = Undefined; writes = (1, 4) to (1, 5): (`x`)}
@@ -268,8 +286,14 @@ let%expect_test "strict_neq_undefined" =
 (x !== undefined) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 1) to (2, 2) => {
         (1, 4) to (1, 5): (`x`)
+      };
+      (2, 7) to (2, 16) => {
+        Global undefined
       };
       (2, 21) to (2, 22) => {
         {refinement = Not (Undefined); writes = (1, 4) to (1, 5): (`x`)}
@@ -296,6 +320,9 @@ let%expect_test "eq_void" =
 (x == void 0) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 1) to (2, 2) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -308,6 +335,9 @@ let%expect_test "neq_void" =
 (x != void 0) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 1) to (2, 2) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -320,6 +350,9 @@ let%expect_test "strict_eq_void" =
 (x === void 0) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 1) to (2, 2) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -332,6 +365,9 @@ let%expect_test "strict_neq_void" =
 (x !== void 0) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 1) to (2, 2) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -344,8 +380,14 @@ let%expect_test "instanceof" =
 (x instanceof Object) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 1) to (2, 2) => {
         (1, 4) to (1, 5): (`x`)
+      };
+      (2, 14) to (2, 20) => {
+        Global Object
       };
       (2, 25) to (2, 26) => {
         {refinement = instanceof; writes = (1, 4) to (1, 5): (`x`)}
@@ -356,6 +398,9 @@ let%expect_test "Array.isArray" =
 (Array.isArray(x)) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 15) to (2, 16) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -370,6 +415,9 @@ let%expect_test "unary_negation" =
 !(x || x) && x;|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 16) to (2, 17) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -397,6 +445,9 @@ let%expect_test "typeof_bool" =
 (typeof x == "boolean") && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -409,6 +460,9 @@ let%expect_test "not_typeof_bool" =
 (typeof x != "boolean") && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -421,6 +475,9 @@ let%expect_test "typeof_number" =
 (typeof x == "number") && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -433,6 +490,9 @@ let%expect_test "not_typeof_number" =
 (typeof x != "number") && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -445,6 +505,9 @@ let%expect_test "typeof_function" =
 (typeof x == "function") && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -457,6 +520,9 @@ let%expect_test "not_typeof_function" =
 (typeof x != "function") && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -469,6 +535,9 @@ let%expect_test "typeof_object" =
 (typeof x == "object") && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -481,6 +550,9 @@ let%expect_test "not_typeof_object" =
 (typeof x != "object") && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -493,6 +565,9 @@ let%expect_test "typeof_string" =
 (typeof x == "string") && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -505,6 +580,9 @@ let%expect_test "not_typeof_string" =
 (typeof x != "string") && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -517,6 +595,9 @@ let%expect_test "typeof_symbol" =
 (typeof x == "symbol") && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -529,6 +610,9 @@ let%expect_test "not_typeof_symbol" =
 (typeof x != "symbol") && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -541,6 +625,9 @@ let%expect_test "typeof_bool_template" =
 (typeof x == `boolean`) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -553,6 +640,9 @@ let%expect_test "not_typeof_bool_template" =
 (typeof x != `boolean`) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -565,6 +655,9 @@ let%expect_test "typeof_number_template" =
 (typeof x == `number`) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -577,6 +670,9 @@ let%expect_test "not_typeof_number_template" =
 (typeof x != `number`) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -589,6 +685,9 @@ let%expect_test "typeof_function_template" =
 (typeof x == `function`) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -601,6 +700,9 @@ let%expect_test "not_typeof_function_template" =
 (typeof x != `function`) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -613,6 +715,9 @@ let%expect_test "typeof_object_template" =
 (typeof x == `object`) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -625,6 +730,9 @@ let%expect_test "not_typeof_object_template" =
 (typeof x != `object`) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -637,6 +745,9 @@ let%expect_test "typeof_string_template" =
 (typeof x == `string`) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -649,6 +760,9 @@ let%expect_test "not_typeof_string_template" =
 (typeof x != `string`) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -661,6 +775,9 @@ let%expect_test "typeof_symbol_template" =
 (typeof x == `symbol`) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -673,6 +790,9 @@ let%expect_test "not_typeof_symbol_template" =
 (typeof x != `symbol`) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 8) to (2, 9) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -685,6 +805,9 @@ let%expect_test "singleton_bool" =
 (x === true) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 1) to (2, 2) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -697,6 +820,9 @@ let%expect_test "singleton_str" =
 (x === "str") && x|};
   [%expect{|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 1) to (2, 2) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -709,6 +835,9 @@ let%expect_test "singleton_str_template" =
 (x === `str`) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 1) to (2, 2) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -721,6 +850,9 @@ let%expect_test "singleton_num" =
 (x === 3) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 1) to (2, 2) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -733,6 +865,9 @@ let%expect_test "singleton_num_neg" =
 (x === -3) && x|};
   [%expect {|
     [
+      (1, 8) to (1, 17) => {
+        Global undefined
+      };
       (2, 1) to (2, 2) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -745,6 +880,9 @@ let%expect_test "sentinel_lit" =
 (x.foo === 3) && x|}; 
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 1) to (2, 2) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -757,6 +895,9 @@ let%expect_test "sentinel_lit_indexed " =
 (x["foo"] === 3) && x|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 1) to (2, 2) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -770,6 +911,12 @@ let y = undefined;
 (x.foo === y) && x|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
+        (2, 8) to (2, 17) => {
+          Global undefined
+        };
         (3, 1) to (3, 2) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -783,6 +930,12 @@ let y = undefined;
 (x["foo"] === y) && x|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
+        (2, 8) to (2, 17) => {
+          Global undefined
+        };
         (3, 1) to (3, 2) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -795,6 +948,9 @@ let%expect_test "optional_chain_lit" =
 (x?.foo === 3) && x|}; 
     [%expect{|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 1) to (2, 2) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -807,6 +963,9 @@ let%expect_test "optional_chain_member_base" =
 (x.foo?.bar === 3) && x|}; 
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 1) to (2, 2) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -819,6 +978,9 @@ let%expect_test "optional_chain_with_call" =
 (x?.foo().bar === 3) && x|}; 
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 1) to (2, 2) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -831,6 +993,9 @@ let%expect_test "optional_multiple_chains" =
 (x?.foo?.bar.baz?.qux === 3) && x|}; 
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 1) to (2, 2) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -843,6 +1008,9 @@ let%expect_test "optional_base_call" =
 (x?.().foo?.bar.baz?.qux === 3) && x|}; 
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 1) to (2, 2) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -855,6 +1023,9 @@ let%expect_test "sentinel_standalone" =
 x.foo && x|}; 
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 9) to (2, 10) => {
           {refinement = SentinelR foo; writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
@@ -864,6 +1035,9 @@ let%expect_test "optional_chain_standalone" =
 x?.foo && x|}; 
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 10) to (2, 11) => {
           {refinement = And (SentinelR foo, Not (Maybe)); writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
@@ -873,6 +1047,9 @@ let%expect_test "conditional_expression" =
 (x ? x: x) && x|}; 
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 1) to (2, 2) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -891,8 +1068,14 @@ let%expect_test "conditional_throw" =
 (x ? invariant() : x) && x|}; 
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 1) to (2, 2) => {
           (1, 4) to (1, 5): (`x`)
+        };
+        (2, 5) to (2, 14) => {
+          Global invariant
         };
         (2, 19) to (2, 20) => {
           {refinement = Not (Truthy); writes = (1, 4) to (1, 5): (`x`)}
@@ -906,11 +1089,17 @@ let%expect_test "conditional_throw2" =
 (x ? x : invariant()) && x|}; 
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 1) to (2, 2) => {
           (1, 4) to (1, 5): (`x`)
         };
         (2, 5) to (2, 6) => {
           {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)}
+        };
+        (2, 9) to (2, 18) => {
+          Global invariant
         };
         (2, 25) to (2, 26) => {
           {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)}
@@ -922,8 +1111,14 @@ x && invariant();
 x|}; 
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 0) to (2, 1) => {
           (1, 4) to (1, 5): (`x`)
+        };
+        (2, 5) to (2, 14) => {
+          Global invariant
         };
         (3, 0) to (3, 1) => {
           {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)}
@@ -935,8 +1130,14 @@ x || invariant();
 x|}; 
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 0) to (2, 1) => {
           (1, 4) to (1, 5): (`x`)
+        };
+        (2, 5) to (2, 14) => {
+          Global invariant
         };
         (3, 0) to (3, 1) => {
           {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)}
@@ -948,8 +1149,14 @@ x ?? invariant();
 x|}; 
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 0) to (2, 1) => {
           (1, 4) to (1, 5): (`x`)
+        };
+        (2, 5) to (2, 14) => {
+          Global invariant
         };
         (3, 0) to (3, 1) => {
           {refinement = Not (Maybe); writes = (1, 4) to (1, 5): (`x`)}
@@ -964,8 +1171,14 @@ try {
 }|}; 
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (3, 2) to (3, 3) => {
           (1, 4) to (1, 5): (`x`)
+        };
+        (3, 7) to (3, 16) => {
+          Global invariant
         };
         (5, 2) to (5, 3) => {
           (3, 24) to (3, 25): (`x`),
@@ -978,8 +1191,14 @@ let%expect_test "nested_logical_throw_and" =
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 1) to (2, 2) => {
           (1, 4) to (1, 5): (`x`)
+        };
+        (2, 6) to (2, 15) => {
+          Global invariant
         };
         (2, 22) to (2, 23) => {
           {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)}
@@ -994,8 +1213,14 @@ let%expect_test "nested_logical_throw_or" =
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 1) to (2, 2) => {
           (1, 4) to (1, 5): (`x`)
+        };
+        (2, 6) to (2, 15) => {
+          Global invariant
         };
         (2, 22) to (2, 23) => {
           {refinement = Truthy; writes = (1, 4) to (1, 5): (`x`)}
@@ -1010,8 +1235,14 @@ let%expect_test "nested_logical_throw_nc" =
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 1) to (2, 2) => {
           (1, 4) to (1, 5): (`x`)
+        };
+        (2, 6) to (2, 15) => {
+          Global invariant
         };
         (2, 22) to (2, 23) => {
           {refinement = And (Not (Maybe), Truthy); writes = (1, 4) to (1, 5): (`x`)}
@@ -1030,6 +1261,9 @@ if (x) {
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 4) to (2, 5) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -1051,6 +1285,9 @@ if (x) {
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 4) to (2, 5) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -1069,6 +1306,9 @@ if (x !== null) {
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 4) to (2, 5) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -1087,6 +1327,9 @@ if (x) {
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 4) to (2, 5) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -1107,6 +1350,9 @@ if (x) {
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 4) to (2, 5) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -1128,8 +1374,11 @@ let%expect_test "if_return_else_statement" =
   x;
 }
 |};
-    [%expect {|
+    [%expect{|
       [
+        (2, 10) to (2, 19) => {
+          Global undefined
+        };
         (3, 6) to (3, 7) => {
           (2, 6) to (2, 7): (`x`)
         };
@@ -1151,8 +1400,11 @@ let%expect_test "if_else_return_statement" =
   x;
 }
 |};
-    [%expect {|
+    [%expect{|
       [
+        (2, 10) to (2, 19) => {
+          Global undefined
+        };
         (3, 6) to (3, 7) => {
           (2, 6) to (2, 7): (`x`)
         };
@@ -1181,6 +1433,9 @@ if (x) {
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 4) to (2, 5) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -1212,6 +1467,9 @@ while (x != null) {
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 7) to (2, 8) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -1230,6 +1488,9 @@ while (x != null) {
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 7) to (2, 8) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -1250,6 +1511,12 @@ y;
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
+        (2, 8) to (2, 17) => {
+          Global undefined
+        };
         (3, 7) to (3, 8) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -1282,6 +1549,12 @@ y;
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
+        (2, 8) to (2, 17) => {
+          Global undefined
+        };
         (3, 7) to (3, 8) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -1306,6 +1579,9 @@ while (x != null) {
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 7) to (2, 8) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -1326,6 +1602,12 @@ y;
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
+        (2, 8) to (2, 17) => {
+          Global undefined
+        };
         (3, 7) to (3, 8) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -1355,6 +1637,9 @@ while (x != null) {
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 7) to (2, 8) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -1376,6 +1661,9 @@ do {
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (3, 2) to (3, 3) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -1399,6 +1687,12 @@ y;
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
+        (2, 8) to (2, 17) => {
+          Global undefined
+        };
         (4, 6) to (4, 7) => {
           (2, 4) to (2, 5): (`y`)
         };
@@ -1429,6 +1723,12 @@ y;
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
+        (2, 8) to (2, 17) => {
+          Global undefined
+        };
         (4, 6) to (4, 7) => {
           (2, 4) to (2, 5): (`y`)
         };
@@ -1454,6 +1754,9 @@ do {
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (4, 9) to (4, 10) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -1474,6 +1777,12 @@ y;
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
+        (2, 8) to (2, 17) => {
+          Global undefined
+        };
         (4, 6) to (4, 7) => {
           (2, 4) to (2, 5): (`y`)
         };
@@ -1502,6 +1811,9 @@ do {
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (3, 6) to (3, 7) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -1524,6 +1836,9 @@ for (;x != null;) {
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 6) to (2, 7) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -1542,6 +1857,9 @@ for (;x != null;) {
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 6) to (2, 7) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -1562,6 +1880,12 @@ y;
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
+        (2, 8) to (2, 17) => {
+          Global undefined
+        };
         (3, 7) to (3, 8) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -1594,6 +1918,12 @@ y;
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
+        (2, 8) to (2, 17) => {
+          Global undefined
+        };
         (3, 6) to (3, 7) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -1618,6 +1948,9 @@ for (; x != null; ) {
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 7) to (2, 8) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -1638,6 +1971,12 @@ y;
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
+        (2, 8) to (2, 17) => {
+          Global undefined
+        };
         (3, 6) to (3, 7) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -1667,6 +2006,9 @@ for (; x != null; ) {
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 7) to (2, 8) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -1689,6 +2031,9 @@ for (let x = null; x != null; x++) {
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 19) to (2, 20) => {
           (2, 9) to (2, 10): (`x`)
         };
@@ -1736,6 +2081,9 @@ for (let x = 3; x != null; x++) {
 y;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 16) to (2, 17) => {
           (2, 9) to (2, 10): (`x`)
         };
@@ -1765,6 +2113,9 @@ for (let x = 3; x != null; x++) {
 y;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 16) to (2, 17) => {
           (2, 9) to (2, 10): (`x`)
         };
@@ -1794,6 +2145,9 @@ x;|};
         };
         (1, 27) to (1, 28) => {
           {refinement = Not (Maybe); writes = (1, 9) to (1, 10): (`x`)}
+        };
+        (4, 0) to (4, 1) => {
+          Global x
         }] |}]
 
 let%expect_test "for_continue_with_control_flow_writes" =
@@ -1807,6 +2161,9 @@ for (let x = 3; x != null; x++) {
 y;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 16) to (2, 17) => {
           (2, 9) to (2, 10): (`x`)
         };
@@ -1951,6 +2308,9 @@ for (let thing in stuff) {
 thing;|};
     [%expect {|
       [
+        (1, 12) to (1, 21) => {
+          Global undefined
+        };
         (3, 18) to (3, 23) => {
           (2, 4) to (2, 9): (`stuff`)
         };
@@ -1969,6 +2329,9 @@ for (let thing in {}) {
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (5, 0) to (5, 1) => {
           (1, 4) to (1, 5): (`x`)
         }] |}]
@@ -1984,6 +2347,9 @@ for (let thing in {}) {
 y;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (3, 6) to (3, 7) => {
           (1, 4) to (1, 5): (`y`)
         };
@@ -2009,6 +2375,12 @@ y;
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
+        (2, 8) to (2, 17) => {
+          Global undefined
+        };
         (4, 6) to (4, 7) => {
           (2, 4) to (2, 5): (`y`)
         };
@@ -2031,6 +2403,9 @@ for (let thing in {}) {
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (5, 0) to (5, 1) => {
           (1, 4) to (1, 5): (`x`)
         }] |}]
@@ -2046,6 +2421,9 @@ for (let thing in {}) {
 y;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (3, 6) to (3, 7) => {
           (1, 4) to (1, 5): (`y`)
         };
@@ -2141,6 +2519,9 @@ for (let thing of stuff) {
 thing;|};
     [%expect {|
       [
+        (1, 12) to (1, 21) => {
+          Global undefined
+        };
         (3, 18) to (3, 23) => {
           (2, 4) to (2, 9): (`stuff`)
         };
@@ -2159,6 +2540,9 @@ for (let thing of {}) {
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (5, 0) to (5, 1) => {
           (1, 4) to (1, 5): (`x`)
         }] |}]
@@ -2174,6 +2558,9 @@ for (let thing of {}) {
 y;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (3, 6) to (3, 7) => {
           (1, 4) to (1, 5): (`y`)
         };
@@ -2199,6 +2586,12 @@ y;
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
+        (2, 8) to (2, 17) => {
+          Global undefined
+        };
         (4, 6) to (4, 7) => {
           (2, 4) to (2, 5): (`y`)
         };
@@ -2221,6 +2614,9 @@ for (let thing of {}) {
 x;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (5, 0) to (5, 1) => {
           (1, 4) to (1, 5): (`x`)
         }] |}]
@@ -2236,6 +2632,9 @@ for (let thing of {}) {
 y;|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (3, 6) to (3, 7) => {
           (1, 4) to (1, 5): (`y`)
         };
@@ -2271,6 +2670,12 @@ x;
 |};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
+        (2, 0) to (2, 9) => {
+          Global invariant
+        };
         (2, 10) to (2, 11) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -2287,8 +2692,14 @@ x;
 |};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 4) to (2, 5) => {
           (1, 4) to (1, 5): (`x`)
+        };
+        (3, 2) to (3, 11) => {
+          Global invariant
         };
         (5, 0) to (5, 1) => {
           {refinement = Not (3); writes = (1, 4) to (1, 5): (`x`)}
@@ -2303,8 +2714,14 @@ x;
 |};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 4) to (2, 5) => {
           (1, 4) to (1, 5): (`x`)
+        };
+        (3, 2) to (3, 11) => {
+          Global invariant
         };
         (5, 0) to (5, 1) => {
           {refinement = Not (3); writes = (1, 4) to (1, 5): (`x`)}
@@ -2319,6 +2736,12 @@ x;
 |};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
+        (3, 2) to (3, 11) => {
+          Global invariant
+        };
         (5, 0) to (5, 1) => {
           (1, 4) to (1, 5): (`x`)
         }] |}]
@@ -2335,6 +2758,12 @@ try {
 }|};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
+        (5, 4) to (5, 13) => {
+          Global invariant
+        };
         (8, 2) to (8, 3) => {
           (1, 4) to (1, 5): (`x`),
           (5, 21) to (5, 22): (`x`)
@@ -2347,6 +2776,9 @@ x;
 |};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 8) to (2, 9) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -2365,6 +2797,9 @@ x;
 |};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 8) to (2, 9) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -2395,6 +2830,9 @@ x;
 |};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 8) to (2, 9) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -2436,6 +2874,9 @@ x;
 |};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 8) to (2, 9) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -2483,6 +2924,9 @@ x;
 |};
     [%expect {|
       [
+        (1, 8) to (1, 17) => {
+          Global undefined
+        };
         (2, 8) to (2, 9) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -2502,4 +2946,47 @@ x;
           {refinement = 3; writes = (1, 4) to (1, 5): (`x`)},
           {refinement = true; writes = (1, 4) to (1, 5): (`x`)},
           {refinement = false; writes = (1, 4) to (1, 5): (`x`)}
+        }] |}]
+
+let%expect_test "global_refinement" =
+  print_ssa_test {|
+Map != null && Map
+|};
+    [%expect {|
+      [
+        (2, 0) to (2, 3) => {
+          Global Map
+        };
+        (2, 15) to (2, 18) => {
+          {refinement = Not (Maybe); writes = Global Map}
+        }] |}]
+
+let%expect_test "global_refinement_control_flow" =
+  print_ssa_test {|
+if (Map != null) {
+  throw 'error';
+}
+Map;
+|};
+    [%expect {|
+      [
+        (2, 4) to (2, 7) => {
+          Global Map
+        };
+        (5, 0) to (5, 3) => {
+          {refinement = Not (Not (Maybe)); writes = Global Map}
+        }] |}]
+
+let%expect_test "global_overwrite" =
+  print_ssa_test {|
+if (true) {
+  undefined = null;
+}
+undefined;
+|};
+    [%expect {|
+      [
+        (5, 0) to (5, 9) => {
+          Global undefined,
+          (3, 2) to (3, 11): (`undefined`)
         }] |}]

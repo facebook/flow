@@ -317,6 +317,8 @@ module Make
 
     val merge : t -> t -> t
 
+    val global : string -> t
+
     val one : L.t virtual_reason -> t
 
     val all : L.t virtual_reason list -> t
@@ -334,6 +336,8 @@ module Make
     val unrefine_deeply : int -> t -> t
 
     val normalize_through_refinements : write_state -> WriteSet.t
+
+    val is_global_undefined : t -> bool
   end = struct
     let curr_id = ref 0
 
@@ -345,6 +349,7 @@ module Make
 
     and write_state =
       | Uninitialized
+      | Global of string
       | Loc of L.t virtual_reason
       | PHI of write_state list
       | Refinement of {
@@ -360,6 +365,11 @@ module Make
       id: int;
       write_state: write_state;
     }
+
+    let is_global_undefined t =
+      match t.write_state with
+      | Global "undefined" -> true
+      | _ -> false
 
     let new_id () =
       let id = !curr_id in
@@ -416,6 +426,7 @@ module Make
     let rec normalize (t : write_state) : WriteSet.t =
       match t with
       | Uninitialized
+      | Global _
       | Loc _
       | REF { contents = Unresolved _ }
       | Refinement _ ->
@@ -450,6 +461,7 @@ module Make
     let rec normalize_through_refinements (t : write_state) : WriteSet.t =
       match t with
       | Uninitialized
+      | Global _
       | Loc _
       | REF { contents = Unresolved _ } ->
         WriteSet.singleton t
@@ -466,6 +478,8 @@ module Make
         r := Resolved t';
         vals
       | Refinement { val_t; _ } -> normalize_through_refinements val_t.write_state
+
+    let global name = mk_with_write_state @@ Global name
 
     let one reason = mk_with_write_state @@ Loc reason
 
@@ -486,6 +500,7 @@ module Make
     and erase r t =
       match t with
       | Uninitialized -> t
+      | Global _ -> t
       | Loc _ -> t
       | Refinement _ -> failwith "refinements cannot appear inside a REF"
       | PHI ts ->
@@ -521,6 +536,7 @@ module Make
           | Loc r -> Env_api.Write r
           | Refinement { refinement_id; val_t } ->
             Env_api.Refinement { writes = simplify val_t; refinement_id }
+          | Global name -> Env_api.Global name
           | REF _
           | PHI _ ->
             failwith "A normalized value cannot be a PHI or REF")
@@ -610,7 +626,6 @@ module Make
      * any point in the code. The latest_refinement maps keep track of which entries to read. *)
     refinement_heap: refinement_chain IMap.t;
     latest_refinements: latest_refinement SMap.t list;
-    globals_env: int SMap.t;
     env: env_val SMap.t;
     (* When an abrupt completion is raised, it falls through any subsequent
        straight-line code, until it reaches a merge point in the control-flow
@@ -638,7 +653,18 @@ module Make
     possible_labeled_continues: AbruptCompletion.t list;
   }
 
-  class env_builder (prepass_info, prepass_values, _unbound_names) provider_info =
+  let initialize_globals unbound_names =
+    SSet.fold
+      (fun name acc ->
+        let unresolved = Val.mk_unresolved () in
+        (* When we havoc we go back to the original global definition *)
+        Val.resolve ~unresolved (Val.global name);
+        let entry = { val_ref = ref (Val.global name); havoc = { Havoc.unresolved; locs = [] } } in
+        SMap.add name entry acc)
+      unbound_names
+      SMap.empty
+
+  class env_builder (prepass_info, prepass_values, unbound_names) provider_info =
     object (this)
       inherit Scope_builder.scope_builder ~with_types:true as super
 
@@ -650,15 +676,12 @@ module Make
           curr_id = 0;
           refinement_heap = IMap.empty;
           latest_refinements = [];
-          globals_env = SMap.empty;
-          env = SMap.empty;
+          env = initialize_globals unbound_names;
           abrupt_completion_envs = [];
           possible_labeled_continues = [];
         }
 
       method values : Env_api.values = L.LMap.map Val.simplify env_state.values
-
-      method globals_env : int SMap.t = env_state.globals_env
 
       method private new_id () =
         let new_id = env_state.curr_id in
@@ -666,11 +689,6 @@ module Make
         env_state <- { env_state with curr_id };
         new_id
 
-      (* Utils to manipulate single-static-assignment (SSA) environments.
-
-         TODO: These low-level operations should probably be replaced by
-         higher-level "control-flow-graph" operations that can be implemented using
-         them, e.g., those that deal with branches and loops. *)
       method env : Env.t = SMap.map (fun { val_ref; _ } -> !val_ref) env_state.env
 
       (* We often want to merge the refinement scopes and writes of two environments with
@@ -741,8 +759,7 @@ module Make
               (* If we haven't yet seen a write to this variable, we always havoc *)
               val_ref := unresolved
             | _ -> ())
-          env_state.env;
-        env_state <- { env_state with globals_env = SMap.empty }
+          env_state.env
 
       method havoc_uninitialized_env =
         SMap.iter (fun _x { val_ref; havoc } -> val_ref := havoc.Havoc.unresolved) env_state.env
@@ -2037,11 +2054,16 @@ module Make
       method void_test ~sense ~strict ~check_for_bound_undefined loc expr =
         ignore @@ this#expression expr;
         let optional_chain_refinement = this#maybe_sentinel_and_chain_refinement ~sense loc expr in
+        let is_global_undefined () =
+          match SMap.find_opt "undefined" env_state.env with
+          | None -> false
+          | Some { val_ref = v; _ } -> Val.is_global_undefined !v
+        in
         match key expr with
         | None -> ()
         | Some name ->
           (* Only add the refinement if undefined is not re-bound *)
-          if (not check_for_bound_undefined) || SMap.find_opt "undefined" this#env = None then (
+          if (not check_for_bound_undefined) || is_global_undefined () then (
             let refinement =
               if strict then
                 UndefinedR
