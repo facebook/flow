@@ -2168,29 +2168,13 @@ let handle_persistent_rage ~reader ~genv ~id ~metadata ~client:_ ~profiling ~env
   let response = ResponseMessage (id, RageResult items) in
   Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
 
-let handle_persistent_execute_command ~id ~params ~metadata ~client:_ ~profiling:_ =
-  let ExecuteCommand.{ command = Command.Command command; arguments } = params in
-  let extra_data =
-    let open Hh_json in
-    let arguments_json =
-      match arguments with
-      | None -> JSON_Null
-      | Some jsons -> JSON_Array jsons
-    in
-    Some (JSON_Object [("command", JSON_String command); ("arguments", arguments_json)])
-  in
-  match command with
-  | "log" ->
-    Lwt.return
-      ( (),
-        LspProt.LspFromServer (Some (ResponseMessage (id, ExecuteCommandResult ()))),
-        with_data ~extra_data metadata )
-  | _ ->
-    mk_lsp_error_response
-      ~ret:()
-      ~id:(Some id)
-      ~reason:"Malformed command"
-      (with_data ~extra_data metadata)
+let handle_persistent_log_command ~id ~metadata ~arguments:_ ~client:_ ~profiling:_ =
+  (* don't need to do anything, since everything we need to log is already in `metadata` *)
+  Lwt.return
+    ((), LspProt.LspFromServer (Some (ResponseMessage (id, ExecuteCommandResult ()))), metadata)
+
+let handle_persistent_unknown_command ~id ~metadata ~client:_ ~profiling:_ =
+  mk_lsp_error_response ~ret:() ~id:(Some id) ~reason:"Malformed command" metadata
 
 let handle_persistent_unsupported ?id ~unhandled ~metadata ~client:_ ~profiling:_ =
   let message = Printf.sprintf "Unhandled method %s" (Lsp_fmt.message_name_to_string unhandled) in
@@ -2510,7 +2494,21 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     (* Whoever is waiting for the rage results probably doesn't want to wait for a recheck *)
     mk_parallelizable_persistent ~options (handle_persistent_rage ~reader ~genv ~id ~metadata)
   | LspToServer (RequestMessage (id, ExecuteCommandRequest params)) ->
-    Handle_persistent_immediately (handle_persistent_execute_command ~id ~params ~metadata)
+    let ExecuteCommand.{ command = Command.Command command; arguments } = params in
+    let extra_data =
+      let open Hh_json in
+      let arguments_json =
+        match arguments with
+        | None -> JSON_Null
+        | Some jsons -> JSON_Array jsons
+      in
+      Some (JSON_Object [("command", JSON_String command); ("arguments", arguments_json)])
+    in
+    let metadata = with_data ~extra_data metadata in
+    (match command with
+    | "log" ->
+      Handle_persistent_immediately (handle_persistent_log_command ~id ~arguments ~metadata)
+    | _ -> Handle_persistent_immediately (handle_persistent_unknown_command ~id ~metadata))
   | LspToServer unhandled ->
     let id =
       match unhandled with
