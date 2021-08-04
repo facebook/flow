@@ -1052,53 +1052,51 @@ let ensure_parsed_or_trigger_recheck ~options ~profiling ~workers ~reader files 
   try%lwt ensure_parsed ~options ~profiling ~workers ~reader files with
   | Unexpected_file_changes changed_files -> handle_unexpected_file_changes changed_files
 
-(* When checking contents, ensure that dependencies are checked. Might have more
-   general utility.
-   TODO(ljw) CARE! This function calls "typecheck" which may emit errors over the
-   persistent connection. It's reasonable that anything which checks new files
-   should be able to emit errors, even places like propertyFindRefs.get_def_info
-   that invoke this function. But it looks like this codepath fails to emit
-   StartRecheck and EndRecheck messages. *)
-let ensure_checked_dependencies ~options ~reader ~env file file_sig =
+(** Resolves dependencies of [file_sig] specifically for checking contents, rather than
+    for persisting in the heap. Notably, does not error if a required module is not found. *)
+let resolved_requires_of_contents ~options ~reader ~env file file_sig =
+  let audit = Expensive.warn in
+  let reader = Abstract_state_reader.State_reader reader in
+  let node_modules_containers = !Files.node_modules_containers in
   let resolved_requires =
     let require_loc_map = File_sig.With_Loc.(require_loc_map file_sig.module_sig) in
     SMap.fold
       (fun r locs resolved_rs ->
+        let loc = Nel.hd locs |> ALoc.of_loc in
         let resolved_r =
-          Module_js.imported_module
-            ~options
-            ~reader:(Abstract_state_reader.State_reader reader)
-            ~node_modules_containers:!Files.node_modules_containers
-            file
-            (Nel.hd locs |> ALoc.of_loc)
-            r
+          Module_js.imported_module ~options ~reader ~node_modules_containers file loc r
         in
         Modulename.Set.add resolved_r resolved_rs)
       require_loc_map
       Modulename.Set.empty
   in
-  let input =
-    Modulename.Set.fold
-      (fun m acc ->
-        match Module_heaps.Reader.get_file ~reader m ~audit:Expensive.warn with
-        | Some f ->
-          let reader = Abstract_state_reader.State_reader reader in
-          if
-            FilenameSet.mem f env.ServerEnv.files
-            && Module_js.checked_file ~reader f ~audit:Expensive.warn
-          then
-            CheckedSet.add ~dependencies:(FilenameSet.singleton f) acc
-          else
-            acc
-        | None -> acc) (* complain elsewhere about required module not found *)
-      resolved_requires
-      CheckedSet.empty
+  let is_checked f =
+    FilenameSet.mem f env.ServerEnv.files && Module_js.checked_file ~reader f ~audit
   in
-  let checked = env.ServerEnv.checked_files in
+  Modulename.Set.fold
+    (fun m acc ->
+      match Module_heaps.Reader_dispatcher.get_file ~reader m ~audit with
+      | Some f ->
+        if is_checked f then
+          FilenameSet.add f acc
+        else
+          acc
+      | None -> acc) (* complain elsewhere about required module not found *)
+    resolved_requires
+    FilenameSet.empty
+
+(** When checking contents, ensure that dependencies are checked. Might have more
+    general utility. *)
+let ensure_checked_dependencies ~options ~reader ~env file file_sig =
+  let resolved_requires = resolved_requires_of_contents ~options ~reader ~env file file_sig in
+  let unchecked_dependencies =
+    let all_deps = CheckedSet.add ~dependencies:resolved_requires CheckedSet.empty in
+    CheckedSet.diff all_deps env.ServerEnv.checked_files
+  in
+
   (* Often, all dependencies have already been checked, so input contains no unchecked files.
    * In that case, let's short-circuit typecheck, since a no-op typecheck still takes time on
    * large repos *)
-  let unchecked_dependencies = CheckedSet.diff input checked in
   if CheckedSet.is_empty unchecked_dependencies then
     Lwt.return_unit
   else (
