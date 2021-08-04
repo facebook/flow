@@ -638,7 +638,7 @@ module Make
     possible_labeled_continues: AbruptCompletion.t list;
   }
 
-  class env_builder (prepass_info, prepass_values) provider_info =
+  class env_builder (prepass_info, prepass_values, _unbound_names) provider_info =
     object (this)
       inherit Scope_builder.scope_builder ~with_types:true as super
 
@@ -2481,7 +2481,7 @@ module Make
   let program_with_scope ?(ignore_toplevel = false) program =
     let open Hoister in
     let (loc, _) = program in
-    let (_ssa_completion_state, ((scopes, ssa_values) as prepass)) =
+    let (_ssa_completion_state, ((scopes, ssa_values, _) as prepass)) =
       Ssa_builder.program_with_scope ~ignore_toplevel program
     in
     let providers = Provider_api.find_providers program in

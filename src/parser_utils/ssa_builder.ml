@@ -266,6 +266,10 @@ struct
 
       method values : Ssa_api.values = L.LMap.map Val.simplify values
 
+      val mutable unbound_names : SSet.t = SSet.empty
+
+      method unbound_names : SSet.t = unbound_names
+
       val mutable id = 0
 
       method mk_unresolved =
@@ -472,7 +476,7 @@ struct
       method any_identifier (loc : L.t) (x : string) =
         match SMap.find_opt x ssa_env with
         | Some { val_ref; _ } -> values <- L.LMap.add loc !val_ref values
-        | None -> ()
+        | None -> unbound_names <- SSet.add x unbound_names
 
       method! identifier (ident : (L.t, L.t) Ast.Identifier.t) =
         let (loc, { Ast.Identifier.name = x; comments = _ }) = ident in
@@ -1178,10 +1182,10 @@ struct
       ssa_walk#run_to_completion (fun () ->
           ignore @@ ssa_walk#with_bindings loc bindings ssa_walk#program program)
     in
-    (completion_state, (ssa_walk#acc, ssa_walk#values))
+    (completion_state, (ssa_walk#acc, ssa_walk#values, ssa_walk#unbound_names))
 
   let program program =
-    let (_, (_, values)) = program_with_scope ~ignore_toplevel:true program in
+    let (_, (_, values, _)) = program_with_scope ~ignore_toplevel:true program in
     values
 end
 
