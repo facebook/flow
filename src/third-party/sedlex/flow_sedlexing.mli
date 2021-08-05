@@ -13,6 +13,11 @@ val lexbuf_clone : lexbuf -> lexbuf
 val from_int_array : int array -> lexbuf
 val new_line : lexbuf -> unit
 val next : lexbuf -> Uchar.t option
+
+(**/**)
+val __private__next_int : lexbuf -> int 
+(**/**)
+
 val mark : lexbuf -> int -> unit
 val start : lexbuf -> unit
 val backtrack : lexbuf -> int

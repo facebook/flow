@@ -89,6 +89,15 @@ let next lexbuf : Stdlib.Uchar.t option =
     if ret = 10 then new_line lexbuf;
     Some (Stdlib.Uchar.unsafe_of_int ret)
 
+let __private__next_int lexbuf : int =
+  if lexbuf.pos = lexbuf.len then
+    -1
+  else
+    let ret = lexbuf.buf.!(lexbuf.pos) in
+    lexbuf.pos <- lexbuf.pos + 1;
+    if ret = 10 then new_line lexbuf;
+    ret
+
 let mark lexbuf i =
   lexbuf.marked_pos <- lexbuf.pos;
   lexbuf.marked_bol <- lexbuf.curr_bol;
