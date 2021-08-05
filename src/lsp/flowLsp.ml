@@ -1950,7 +1950,9 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
         let (state, _) = track_to_server state c in
         let wrapped = decode_wrapped id in
         (* only forward responses if they're to current server *)
-        if wrapped.server_id = cenv.c_ienv.i_server_id then send_lsp_to_server cenv metadata c;
+        (if wrapped.server_id = cenv.c_ienv.i_server_id then
+          let c = ResponseMessage (wrapped.message_id, result) in
+          send_lsp_to_server cenv metadata c);
         Ok (state, LogNotNeeded)
       | _ -> failwith (Printf.sprintf "Response %s has missing handler" (message_name_to_string c))))
   | (_, Client_message (RequestMessage (id, DocumentSymbolRequest params), metadata)) ->
