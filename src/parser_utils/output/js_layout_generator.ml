@@ -895,7 +895,7 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
 
 (* The beginning of a statement that does a "test", like `if (test)` or `while (test)` *)
 and statement_with_test name test =
-  fuse [Atom name; pretty_space; group [wrap_and_indent (Atom "(", Atom ")") [test]]]
+  group [Atom name; pretty_space; wrap_and_indent (Atom "(", Atom ")") [test]]
 
 (* A statement following a "test", like the `statement` in `if (expr) statement` or
    `for (...) statement`. Better names for this are welcome! *)
@@ -2762,12 +2762,38 @@ and partition_specifiers ~opts default specifiers =
     match specifiers with
     | Some (ImportNamespaceSpecifier (loc, id)) -> ([import_namespace_specifier (loc, id)], None)
     | Some (ImportNamedSpecifiers named_specifiers) ->
-      ([], Some (import_named_specifiers ~opts named_specifiers))
+      let named =
+        (* special case for imports: single specifiers don't break no matter how long *)
+        match (named_specifiers, default) with
+        | ([_], Some _) (* one specifier and a default *)
+        | (_ :: _ :: _, _) (* more than one specifier *) ->
+          import_named_specifiers ~opts named_specifiers
+        | ([named_specifier], None) (* one specifier but no default *) ->
+          let bracket_space =
+            if opts.bracket_spacing then
+              pretty_space
+            else
+              Empty
+          in
+          fuse
+            [
+              Atom "{";
+              bracket_space;
+              import_named_specifier named_specifier;
+              bracket_space;
+              Atom "}";
+            ]
+        | ([], _) -> Atom "{}"
+      in
+      ([], Some named)
     | None -> ([], None)
   in
-  match default with
-  | Some default -> (identifier default :: special, named)
-  | None -> (special, named)
+  let special =
+    match default with
+    | Some default -> identifier default :: special
+    | None -> special
+  in
+  (special, named)
 
 and import_namespace_specifier (loc, id) =
   source_location_with_comments (loc, fuse [Atom "*"; pretty_space; Atom "as"; space; identifier id])
@@ -3155,22 +3181,25 @@ and type_alias ~opts ~declare loc { Ast.Statement.TypeAlias.id; tparams; right; 
     comment_aware_separator ~no_comment:pretty_space (Comment_attachment.type_comment_bounds right)
   in
   layout_node_with_comments_opt loc comments
-  @@ with_semicolon
-       (fuse
-          [
-            (if declare then
-              fuse [Atom "declare"; space]
-            else
-              Empty);
-            Atom "type";
-            space;
-            identifier id;
-            option (type_parameter ~opts) tparams;
-            pretty_space;
-            Atom "=";
-            right_separator;
-            type_ ~opts right;
-          ])
+  @@ group
+       [
+         with_semicolon
+           (fuse
+              [
+                (if declare then
+                  fuse [Atom "declare"; space]
+                else
+                  Empty);
+                Atom "type";
+                space;
+                identifier id;
+                option (type_parameter ~opts) tparams;
+                pretty_space;
+                Atom "=";
+                right_separator;
+                type_ ~opts right;
+              ]);
+       ]
 
 and opaque_type
     ~opts ~declare loc { Ast.Statement.OpaqueType.id; tparams; impltype; supertype; comments } =

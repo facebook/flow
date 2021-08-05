@@ -19,43 +19,47 @@ type writer = {
   pos: int;
 }
 
-type context = {
-  mode: break_mode;
-  ind: int;
-}
+type item = break_mode * layout_node
 
-let rec fits ~width ~mode nodes =
+(** [fits ~width ~rest items] determines whether [items @ rest] can be printed in [width]
+    characters. [items] and [rest] are separate as an optimization to avoid list concats. *)
+let rec fits ~width ~rest (items : item list) =
   if width < 0 then
     false
   else
-    match nodes with
-    | [] -> true
-    | hd :: tl ->
+    match (items, rest) with
+    | ([], []) -> true
+    | ([], _) -> fits ~width ~rest:[] rest
+    | ((mode, hd) :: tl, _) ->
       begin
         match hd with
-        | Empty -> fits ~width ~mode tl
-        | SourceLocation (_, hd) -> fits ~width ~mode (hd :: tl)
-        | IfPretty (hd, _) -> fits ~width ~mode (hd :: tl)
+        | Empty -> fits ~width ~rest tl
+        | SourceLocation (_, hd) -> fits ~width ~rest ((mode, hd) :: tl)
+        | IfPretty (hd, _) -> fits ~width ~rest ((mode, hd) :: tl)
         | IfBreak (if_, else_) ->
           let node =
             match mode with
             | Break -> if_
             | Flat -> else_
           in
-          fits ~width ~mode (node :: tl)
+          fits ~width ~rest ((mode, node) :: tl)
         | Group items
         | Concat items ->
-          fits ~width ~mode (items @ tl)
-        | Indent node -> fits ~width ~mode (node :: tl)
+          let rev_items = Base.List.rev_map ~f:(fun item -> (mode, item)) items in
+          fits ~width ~rest (Base.List.rev_append rev_items tl)
+        | Indent node -> fits ~width ~rest ((mode, node) :: tl)
         (* Respect forced breaks *)
-        | Newline -> false
+        | Newline ->
+          (match mode with
+          | Break -> true
+          | Flat -> false)
         | Sequence ({ break = Break_if_pretty; _ }, _) -> false
-        | Sequence ({ break = _; inline = (before, _); indent = _ }, items) ->
+        | Sequence ({ break = _; inline = (before, _); indent = _ }, nodes) ->
           (* TODO: need to consider `after`. and indent? *)
-          ((not before) && mode = Break) || fits ~width ~mode (items @ tl)
+          ((not before) && mode = Break) || fits ~width ~rest ((mode, Concat nodes) :: tl)
         | Identifier (_, x)
         | Atom x ->
-          fits ~width:(width - String.length x) ~mode tl
+          fits ~width:(width - String.length x) ~rest tl
       end
 
 let print =
@@ -64,18 +68,28 @@ let print =
     { src; pos = ind }
     (* Reset indentation to our inset *)
   in
-  let rec print_node (context : context) (w : writer) : layout_node -> writer = function
+  (* folds a non-empty list *)
+  let rec fold ~f w nodes =
+    match nodes with
+    | node :: rest ->
+      let w = f w rest node in
+      fold ~f w rest
+    | [] -> w
+  in
+  let rec print_node (indent : int) (w : writer) (rest : item list) ((mode, node) : item) : writer =
+    match node with
     | SourceLocation (loc, node) ->
       let src = Source.push_loc loc w.src in
-      let w = print_node context { w with src } node in
+      let w = print_node indent { w with src } rest (mode, node) in
       let src = Source.pop_loc w.src in
       { w with src }
-    | Concat nodes -> List.fold_left (print_node context) w nodes
-    | Newline -> break_and_indent context.ind w
-    | Indent node -> print_node { context with ind = context.ind + 2 } w node
+    | Concat nodes ->
+      let items = Base.List.map ~f:(fun node -> (mode, node)) nodes in
+      fold ~f:(print_node indent) w items
+    | Newline -> break_and_indent indent w
+    | Indent node -> print_node (indent + 2) w rest (mode, node)
     | Sequence ({ break = Break_if_pretty; inline = (left, right); indent = extra_indent }, nodes)
       ->
-      let indent = context.ind in
       let inner_indent = indent + extra_indent in
       let w =
         if not left then
@@ -84,16 +98,15 @@ let print =
           w
       in
       let (w, _) =
-        let inner_context = { ind = inner_indent; mode = Break } in
-        List.fold_left
-          (fun (w, i) node ->
-            let w = print_node inner_context w node in
+        fold
+          ~f:(fun (w, i) rest node ->
+            let w = print_node inner_indent w rest node in
             if i > 0 then
               (break_and_indent inner_indent w, i - 1)
             else
               (w, 0))
           (w, List.length nodes - 1)
-          nodes
+          (Base.List.map ~f:(fun node -> (mode, node)) nodes)
       in
       if not right then
         break_and_indent indent w
@@ -101,39 +114,39 @@ let print =
         w
     | Group nodes as layout ->
       let mode =
-        if fits ~width:(max_width - w.pos) ~mode:Flat [layout] then
+        if fits ~width:(max_width - w.pos) ~rest [(Flat, layout)] then
           Flat
         else
           Break
       in
-      print_node { context with mode } w (Concat nodes)
+      print_node indent w rest (mode, Concat nodes)
     | Sequence (({ break = Break_if_needed; _ } as config), nodes) as layout ->
-      let (mode, node) =
-        if fits ~width:(max_width - w.pos) ~mode:Flat [layout] then
+      let item =
+        if fits ~width:(max_width - w.pos) ~rest [(Flat, layout)] then
           (Flat, Concat nodes)
         else
           (Break, Sequence ({ config with break = Break_if_pretty }, nodes))
       in
-      print_node { context with mode } w node
+      print_node indent w rest item
     | Atom s ->
       let src = Source.add_string s w.src in
       { src; pos = w.pos + String.length s }
     | Identifier (loc, s) ->
       let src = Source.add_identifier loc s w.src in
       { src; pos = w.pos + String.length s }
-    | IfPretty (node, _) -> print_node context w node
+    | IfPretty (node, _) -> print_node indent w rest (mode, node)
     | IfBreak (on_break, otherwise) ->
       let node =
-        match context.mode with
+        match mode with
         | Break -> on_break
         | Flat -> otherwise
       in
-      print_node context w node
+      print_node indent w rest (mode, node)
     | Empty -> w
   in
   fun ~source_maps ?(skip_endline = false) node ->
     let w = { src = Source.create ~source_maps (); pos = 0 } in
-    let { src; _ } = print_node { mode = Flat; ind = 0 } w node in
+    let { src; _ } = print_node 0 w [] (Break, node) in
     if skip_endline then
       src
     else

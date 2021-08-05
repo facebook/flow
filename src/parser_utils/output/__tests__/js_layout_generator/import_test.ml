@@ -66,13 +66,30 @@ let tests =
            "import {\n  %s,\n  %s,\n} from \"a\";"
            (String.make 80 'a')
            (String.make 80 'b'));
-      (* TODO: this should wrap, it's over 80 cols *)
       assert_statement_string
         ~ctxt
         ~pretty:true
         (Printf.sprintf
-           "import { %s, %s } from \"%s\";"
+           "import {\n  %s,\n  %s,\n} from \"%s\";"
            (String.make 20 'a')
            (String.make 20 'b')
-           (String.make 40 'c')) );
+           (String.make 40 'c'));
+      (* don't wrap a single specifier even if it's too long *)
+      assert_statement_string
+        ~ctxt
+        ~pretty:true
+        (Printf.sprintf "import { %s } from \"%s\";" (String.make 40 'a') (String.make 40 'b'));
+      assert_statement_string
+        ~ctxt
+        ~pretty:true
+        ~opts:(no_bracket_spacing opts)
+        (Printf.sprintf "import {%s} from \"%s\";" (String.make 40 'a') (String.make 40 'b'));
+      (* do wrap a single specifier if there's a default *)
+      assert_statement_string
+        ~ctxt
+        ~pretty:true
+        (Printf.sprintf
+           "import x, {\n  %s,\n} from \"%s\";"
+           (String.make 40 'a')
+           (String.make 40 'b')) );
   ]

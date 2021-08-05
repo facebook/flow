@@ -69,10 +69,12 @@ let layout_of_node ~opts = function
     end
   | JSXIdentifier id -> Js_layout_generator.jsx_identifier id
 
-let text_of_layout =
+let text_of_layout layout =
+  (* wrap these layout fragments in a group so they try to fit on one line *)
+  let layout = Layout.Group [layout] in
   (* TODO if we are reprinting the entire program we probably want this to be
    * false. Add some tests and make sure we get it right. *)
-  Pretty_printer.print ~source_maps:None ~skip_endline:true %> Source.contents
+  Pretty_printer.print ~source_maps:None ~skip_endline:true layout |> Source.contents
 
 let text_of_node ~opts = layout_of_node ~opts %> text_of_layout
 

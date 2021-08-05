@@ -136,18 +136,6 @@ let tests =
              ~ctxt
              (long_string ^ "\n  " ^ long_string ^ "\n  " ^ long_string)
              layout );
-         ( "if_break_inside_concat" >:: fun ctxt ->
-           let a41 = String.make 41 'A' in
-           let layout =
-             Concat
-               [
-                 Atom a41;
-                 IfBreak (Empty, Atom " ");
-                 (* this never breaks because it's fused *)
-                 Atom a41;
-               ]
-           in
-           assert_pretty_print ~ctxt (a41 ^ " " ^ a41) layout );
          ( "if_break_inside_concat_inside_sequence" >:: fun ctxt ->
            let a40 = String.make 40 'A' in
            let layout =

@@ -934,10 +934,10 @@ let tests =
                loc
                  (fused
                     [
-                      atom "for";
-                      pretty_space;
                       group
                         [
+                          atom "for";
+                          pretty_space;
                           atom "(";
                           indent
                             (fused
@@ -965,12 +965,11 @@ let tests =
              layout;
 
            (* should wrap because `for (xxxxx...xxx; true; true) {` does't fit on one line *)
-           (* TODO: this currently doesn't wrap *)
            let len = 80 - String.length "for (; true; true) {" + 1 in
            assert_statement_string
              ~ctxt
              ~pretty:true
-             (Printf.sprintf "for (%s; true; true) {}" (String.make len 'x')) );
+             (Printf.sprintf "for (\n  %s;\n  true;\n  true\n) {}" (String.make len 'x')) );
          ( "binary_in_in_for_loops" >:: fun ctxt ->
            let ast =
              let (x, y) = (E.identifier "x", E.identifier "y") in
@@ -1773,8 +1772,10 @@ let tests =
              ~ctxt
              ~pretty:true
              ("type a<\n  a,\n  +a: b = " ^ String.make 80 'c' ^ ",\n> = a;");
-           assert_statement_string ~ctxt ~pretty:true ("type a<a, b> = " ^ String.make 80 'a' ^ ";")
-         );
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ("type a<\n  a,\n  b,\n> = " ^ String.make 80 'a' ^ ";") );
          ( "type" >:: fun ctxt ->
            assert_statement_string ~ctxt "type a=any;";
            assert_statement_string ~ctxt "type a=mixed;";
@@ -1989,9 +1990,15 @@ let tests =
                loc
                  (fused
                     [
-                      atom "switch";
-                      pretty_space;
-                      group [atom "("; indent (fused [softline; loc (id "x")]); softline; atom ")"];
+                      group
+                        [
+                          atom "switch";
+                          pretty_space;
+                          atom "(";
+                          indent (fused [softline; loc (id "x")]);
+                          softline;
+                          atom ")";
+                        ];
                       pretty_space;
                       atom "{";
                       indent
@@ -2062,13 +2069,12 @@ let tests =
              layout );
          ( "switch_conditional_wrap" >:: fun ctxt ->
            (* the conditional should wrap, because `switch (xxxxx...xxx) {` does't fit on one line *)
-           (* TODO: this currently doesn't wrap *)
            let len = 80 - String.length "switch () {" + 1 in
            assert_statement_string
              ~ctxt
              ~pretty:true
              (* TODO: fix trailing whitespace *)
-             (Printf.sprintf "switch (%s) {\n  \n}" (String.make len 'x')) );
+             (Printf.sprintf "switch (\n  %s\n) {\n  \n}" (String.make len 'x')) );
          ( "switch_case_space" >:: fun ctxt ->
            let assert_no_space ~ctxt expr =
              let ret = statement_of_string ("switch(x){case " ^ expr ^ ":break}") in
