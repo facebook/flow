@@ -92,3 +92,7 @@ val type_parse_artifacts_cache :
   single_client -> (Types_js_types.file_artifacts, Flow_error.ErrorSet.t) result FilenameCache.t
 
 val clear_type_parse_artifacts_caches : unit -> unit
+
+val push_outstanding_handler : single_client -> Lsp.lsp_id -> unit Lsp.lsp_handler -> unit
+
+val pop_outstanding_handler : single_client -> Lsp.lsp_id -> unit Lsp.lsp_handler option

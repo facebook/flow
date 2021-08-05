@@ -22,6 +22,7 @@ type single_client = {
   type_parse_artifacts_cache:
     (Types_js_types.file_artifacts, Flow_error.ErrorSet.t) result FilenameCache.t;
   mutable client_config: Client_config.t;
+  mutable outstanding_handlers: unit Lsp.lsp_handler Lsp.IdMap.t;
 }
 
 type t = Prot.client_id list
@@ -102,6 +103,7 @@ let add_client client_id lsp_initialize_params =
       lsp_initialize_params;
       type_parse_artifacts_cache = FilenameCache.make ~max_size:cache_max_size;
       client_config = { Client_config.suggest_autoimports = true };
+      outstanding_handlers = Lsp.IdMap.empty;
     }
   in
   active_clients := IMap.add client_id new_client !active_clients;
@@ -257,3 +259,13 @@ let clear_type_parse_artifacts_caches () =
   IMap.iter
     (fun _key client -> FilenameCache.clear client.type_parse_artifacts_cache)
     !active_clients
+
+let push_outstanding_handler client id handler =
+  client.outstanding_handlers <- Lsp.IdMap.add id handler client.outstanding_handlers
+
+let pop_outstanding_handler client id =
+  match Lsp.IdMap.find_opt id client.outstanding_handlers with
+  | Some handler ->
+    client.outstanding_handlers <- Lsp.IdMap.remove id client.outstanding_handlers;
+    Some handler
+  | None -> None

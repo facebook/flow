@@ -687,7 +687,8 @@ let do_initialize flowconfig params : Initialize.result =
         documentOnTypeFormattingProvider = None;
         renameProvider = true;
         documentLinkProvider = None;
-        executeCommandProvider = Some { commands = [Command.Command "log"] };
+        executeCommandProvider =
+          Some { commands = [Command.Command "log"; Command.Command "source.addMissingImports"] };
         implementationProvider = false;
         selectionRangeProvider = true;
         typeCoverageProvider = true;
