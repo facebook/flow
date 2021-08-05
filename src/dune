@@ -1,5 +1,6 @@
 (executable
   (name flow)
+  (modes native byte_complete)
   (modules
     flow)
   (libraries
