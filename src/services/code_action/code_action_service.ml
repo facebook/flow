@@ -7,6 +7,8 @@
 
 open Types_js_types
 
+let add_missing_imports_kind = Lsp.CodeActionKind.kind_of_string "source.addMissingImports.flow"
+
 let include_code_action ~only kind =
   match only with
   | None -> true
@@ -15,6 +17,8 @@ let include_code_action ~only kind =
 let include_quick_fixes only = include_code_action ~only Lsp.CodeActionKind.quickfix
 
 let include_extract_refactors only = include_code_action ~only Lsp.CodeActionKind.refactor_extract
+
+let include_add_missing_imports_action only = include_code_action ~only add_missing_imports_kind
 
 let layout_options options =
   Js_layout_generator.
@@ -444,49 +448,77 @@ let ast_transform_of_error ?loc = function
 
 let code_actions_of_errors ~options ~reader ~env ~ast ~diagnostics ~errors ~only uri loc =
   let include_quick_fixes = include_quick_fixes only in
-  Flow_error.ErrorSet.fold
-    (fun error actions ->
-      match
-        Flow_error.msg_of_error error
-        |> Error_message.map_loc_of_error_message (Parsing_heaps.Reader.loc_of_aloc ~reader)
-      with
-      | Error_message.EBuiltinLookupFailed { reason; name = Some name }
-        when Options.autoimports options ->
-        let error_loc = Reason.loc_of_reason reason in
-        if include_quick_fixes && Loc.intersects error_loc loc then
-          let { ServerEnv.exports; _ } = env in
-          suggest_imports
-            ~options
-            ~reader
-            ~ast
-            ~diagnostics
-            ~exports (* TODO consider filtering out internal names *)
-            ~name:(Reason.display_string_of_name name)
-            uri
-            loc
-          @ actions
-        else
-          actions
-      | error_message ->
-        if include_quick_fixes then
-          match ast_transform_of_error ~loc error_message with
-          | None -> actions
-          | Some { title; diagnostic_title; transform; target_loc } ->
-            autofix_in_upstream_file
-              ~reader
-              ~diagnostics
-              ~ast
-              ~options
-              ~title
-              ~diagnostic_title
-              ~transform
-              uri
-              target_loc
-            :: actions
-        else
-          actions)
-    errors
-    []
+  let (actions, has_missing_import) =
+    Flow_error.ErrorSet.fold
+      (fun error (actions, has_missing_import) ->
+        match
+          Flow_error.msg_of_error error
+          |> Error_message.map_loc_of_error_message (Parsing_heaps.Reader.loc_of_aloc ~reader)
+        with
+        | Error_message.EBuiltinLookupFailed { reason; name = Some name }
+          when Options.autoimports options ->
+          let error_loc = Reason.loc_of_reason reason in
+          let actions =
+            if include_quick_fixes && Loc.intersects error_loc loc then
+              let { ServerEnv.exports; _ } = env in
+              suggest_imports
+                ~options
+                ~reader
+                ~ast
+                ~diagnostics
+                ~exports (* TODO consider filtering out internal names *)
+                ~name:(Reason.display_string_of_name name)
+                uri
+                loc
+              @ actions
+            else
+              actions
+          in
+          (actions, true)
+        | error_message ->
+          let actions =
+            if include_quick_fixes then
+              match ast_transform_of_error ~loc error_message with
+              | None -> actions
+              | Some { title; diagnostic_title; transform; target_loc } ->
+                autofix_in_upstream_file
+                  ~reader
+                  ~diagnostics
+                  ~ast
+                  ~options
+                  ~title
+                  ~diagnostic_title
+                  ~transform
+                  uri
+                  target_loc
+                :: actions
+            else
+              actions
+          in
+          (actions, has_missing_import))
+      errors
+      ([], false)
+  in
+  if include_add_missing_imports_action only && has_missing_import then
+    let open Lsp in
+    CodeAction.Action
+      {
+        CodeAction.title = "Add all missing imports";
+        kind = add_missing_imports_kind;
+        diagnostics = [];
+        action =
+          CodeAction.CommandOnly
+            {
+              Command.title = "";
+              command = Command.Command "source.addMissingImports";
+              arguments =
+                (* Lsp.TextDocumentIdentifier *)
+                [Hh_json.JSON_Object [("uri", Hh_json.JSON_String (Lsp.DocumentUri.to_string uri))]];
+            };
+      }
+    :: actions
+  else
+    actions
 
 let code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors =
   Base.List.fold_left
@@ -526,7 +558,7 @@ let code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors =
 
 (** List of code actions we implement. *)
 let supported_code_actions options =
-  let actions = [Lsp.CodeActionKind.quickfix] in
+  let actions = [Lsp.CodeActionKind.quickfix; add_missing_imports_kind] in
   if Options.refactor options then
     Lsp.CodeActionKind.refactor_extract :: actions
   else

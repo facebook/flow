@@ -636,6 +636,9 @@ let do_initialize flowconfig params : Initialize.result =
       |> List.exists ~f:(( = ) CodeActionKind.refactor_extract)
       && FlowConfig.refactor flowconfig |> Option.value ~default:true
     in
+    let supports_source_actions =
+      Lsp_helpers.supports_codeActionKinds params |> List.exists ~f:(( = ) CodeActionKind.source)
+    in
     let supported_code_action_kinds =
       if supports_quickfixes then
         [CodeActionKind.quickfix]
@@ -645,6 +648,14 @@ let do_initialize flowconfig params : Initialize.result =
     let supported_code_action_kinds =
       if supports_refactor_extract then
         CodeActionKind.refactor_extract :: supported_code_action_kinds
+      else
+        supported_code_action_kinds
+    in
+    let supported_code_action_kinds =
+      if supports_source_actions then
+        CodeActionKind.source
+        ::
+        CodeActionKind.kind_of_string "source.addMissingImports.flow" :: supported_code_action_kinds
       else
         supported_code_action_kinds
     in
