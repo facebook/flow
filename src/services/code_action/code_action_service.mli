@@ -51,6 +51,15 @@ val code_actions_at_loc :
   loc:Loc.t ->
   (Lsp.CodeAction.command_or_action list, string) result Lwt.t
 
+val autofix_imports :
+  options:Options.t ->
+  env:ServerEnv.env ->
+  reader:Parsing_heaps.Reader.reader ->
+  cx:Context.t ->
+  ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
+  uri:Lsp.DocumentUri.t ->
+  Lsp.TextEdit.t list
+
 val autofix_exports :
   options:Options.t ->
   env:ServerEnv.env ->

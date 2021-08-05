@@ -200,22 +200,25 @@ type text_edits = {
   from: string;
 }
 
-let text_edits_of_import ~options ~reader ~src_dir ~ast kind name source =
-  let from =
-    match source with
-    | Export_index.Global -> None
-    | Export_index.Builtin from -> Some from
-    | Export_index.File_key from ->
-      (match Module_heaps.Reader.get_info ~reader ~audit:Expensive.ok from with
+(** Generates the 'from' part of 'import ... from ...' required to import [source] from
+    a file in [src_dir] *)
+let from_of_source ~options ~reader ~src_dir source =
+  match source with
+  | Export_index.Global -> None
+  | Export_index.Builtin from -> Some from
+  | Export_index.File_key from ->
+    (match Module_heaps.Reader.get_info ~reader ~audit:Expensive.ok from with
+    | None -> None
+    | Some info ->
+      let node_resolver_dirnames = Options.file_options options |> Files.node_resolver_dirnames in
+      (match
+         path_of_modulename ~node_resolver_dirnames ~reader src_dir info.Module_heaps.module_name
+       with
       | None -> None
-      | Some info ->
-        let node_resolver_dirnames = Options.file_options options |> Files.node_resolver_dirnames in
-        (match
-           path_of_modulename ~node_resolver_dirnames ~reader src_dir info.Module_heaps.module_name
-         with
-        | None -> None
-        | Some from -> Some from))
-  in
+      | Some from -> Some from))
+
+let text_edits_of_import ~options ~reader ~src_dir ~ast kind name source =
+  let from = from_of_source ~options ~reader ~src_dir source in
   match from with
   | None -> None
   | Some from ->
@@ -241,6 +244,19 @@ let text_edits_of_import ~options ~reader ~src_dir ~ast kind name source =
       |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
     in
     Some { title; edits; from }
+
+let preferred_import ~ast ~exports name loc =
+  let files =
+    if Autofix_imports.loc_is_type ~ast loc then
+      Export_search.get_types name exports
+    else
+      Export_search.get_values name exports
+  in
+  if Export_index.ExportSet.cardinal files = 1 then
+    (* there must be exactly 1 result to autofix it *)
+    Some (Export_index.ExportSet.choose files)
+  else
+    None
 
 let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
   let open Lsp in
@@ -577,6 +593,101 @@ let code_actions_at_loc
   in
   let parse_error_fixes = code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors in
   Lwt.return (Ok (parse_error_fixes @ experimental_code_actions @ error_fixes))
+
+module ExportSourceMap = WrappedMap.Make (struct
+  type t = Export_index.source
+
+  let compare = Export_index.compare_source
+end)
+
+module ExportKindMap = WrappedMap.Make (struct
+  type t = Export_index.kind
+
+  let compare = Export_index.compare_kind
+end)
+
+(** insert imports for all undefined-variable errors that have only one suggestion *)
+let autofix_imports ~options ~env ~reader ~cx ~ast ~uri =
+  let errors = Context.errors cx in
+  let { ServerEnv.exports; _ } = env in
+  let src_dir = Lsp_helpers.lsp_uri_to_path uri |> Filename.dirname |> Base.Option.return in
+  (* collect imports for all of the undefined variables in the file *)
+  let imports =
+    Flow_error.ErrorSet.fold
+      (fun error imports ->
+        match
+          Flow_error.msg_of_error error
+          |> Error_message.map_loc_of_error_message (Parsing_heaps.Reader.loc_of_aloc ~reader)
+        with
+        | Error_message.EBuiltinLookupFailed { reason; name = Some name }
+          when Options.autoimports options ->
+          let name = Reason.display_string_of_name name in
+          let error_loc = Reason.loc_of_reason reason in
+          (match preferred_import ~ast ~exports name error_loc with
+          | Some (source, export_kind) ->
+            let bindings =
+              match ExportSourceMap.find_opt source imports with
+              | None -> ExportKindMap.empty
+              | Some prev -> prev
+            in
+            let names =
+              match ExportKindMap.find_opt export_kind bindings with
+              | None -> [name]
+              | Some prev -> name :: prev
+            in
+            ExportSourceMap.add source (ExportKindMap.add export_kind names bindings) imports
+          | None -> imports)
+        | _ -> imports)
+      errors
+      ExportSourceMap.empty
+  in
+  let added_imports =
+    ExportSourceMap.fold
+      (fun source names_of_kinds added_imports ->
+        let from = from_of_source ~options ~reader ~src_dir source in
+        match from with
+        | None -> added_imports
+        | Some from ->
+          ExportKindMap.fold
+            (fun export_kind names added_imports ->
+              match export_kind with
+              | Export_index.Default ->
+                Base.List.fold_left
+                  ~init:added_imports
+                  ~f:(fun added_imports name ->
+                    (from, Autofix_imports.Default name) :: added_imports)
+                  names
+              | Export_index.Named ->
+                let named_bindings =
+                  Base.List.map
+                    ~f:(fun name -> { Autofix_imports.remote_name = name; local_name = None })
+                    names
+                in
+                (from, Autofix_imports.Named named_bindings) :: added_imports
+              | Export_index.NamedType ->
+                let named_bindings =
+                  Base.List.map
+                    ~f:(fun name -> { Autofix_imports.remote_name = name; local_name = None })
+                    names
+                in
+                (from, Autofix_imports.NamedType named_bindings) :: added_imports
+              | Export_index.Namespace ->
+                Base.List.fold_left
+                  ~init:added_imports
+                  ~f:(fun added_imports name ->
+                    (from, Autofix_imports.Namespace name) :: added_imports)
+                  names)
+            names_of_kinds
+            added_imports)
+      imports
+      []
+  in
+  let edits =
+    let opts = layout_options options in
+    Autofix_imports.add_imports ~options:opts ~added_imports ast
+    |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+  in
+  edits
 
 let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
   let open Autofix_exports in
