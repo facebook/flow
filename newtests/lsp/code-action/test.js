@@ -359,7 +359,7 @@ export default (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
-    test('provide codeAction for PropMissing errors with bracket syntax', [
+    test('provide quickfix for PropMissing errors with bracket syntax', [
       addFile(
         'prop-missing-bracket-syntax.js.ignored',
         'prop-missing-bracket-syntax.js',
@@ -380,6 +380,7 @@ export default (suite(
           },
         },
         context: {
+          only: ['quickfix'],
           diagnostics: [
             {
               range: {
@@ -405,39 +406,6 @@ export default (suite(
           {
             method: 'textDocument/codeAction',
             result: [
-              {
-                title: 'Extract to constant in module scope',
-                kind: 'refactor.extract',
-                diagnostics: [],
-                edit: {
-                  changes: {
-                    '<PLACEHOLDER_PROJECT_URL>/prop-missing-bracket-syntax.js': [
-                      {
-                        range: {
-                          start: {
-                            line: 3,
-                            character: 0,
-                          },
-                          end: {
-                            line: 3,
-                            character: 13,
-                          },
-                        },
-                        newText: 'const newLocal = "faceboy";\n\nx[newLocal];',
-                      },
-                    ],
-                  },
-                },
-                command: {
-                  title: '',
-                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: [
-                    'textDocument/codeAction',
-                    'refactor_extract',
-                    'Extract to constant in module scope',
-                  ],
-                },
-              },
               {
                 title: 'Replace `faceboy` with `facebook`',
                 kind: 'quickfix',
@@ -618,6 +586,7 @@ export default (suite(
           },
         },
         context: {
+          only: ['quickfix'],
           diagnostics: [
             {
               range: {
@@ -659,42 +628,7 @@ export default (suite(
         [
           {
             method: 'textDocument/codeAction',
-            result: [
-              {
-                title: 'Extract to constant in module scope',
-                kind: 'refactor.extract',
-                diagnostics: [],
-                edit: {
-                  changes: {
-                    '<PLACEHOLDER_PROJECT_URL>/object-cast.js': [
-                      {
-                        range: {
-                          start: {
-                            line: 3,
-                            character: 0,
-                          },
-                          end: {
-                            line: 3,
-                            character: 19,
-                          },
-                        },
-                        newText:
-                          'const newLocal = { floo: "123" };\n\n(newLocal: T);',
-                      },
-                    ],
-                  },
-                },
-                command: {
-                  title: '',
-                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: [
-                    'textDocument/codeAction',
-                    'refactor_extract',
-                    'Extract to constant in module scope',
-                  ],
-                },
-              },
-            ],
+            result: [],
           },
         ],
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
@@ -799,7 +733,7 @@ export default (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
-    test('provide codeAction for ClassObject errors', [
+    test('provide quickfix for ClassObject errors', [
       addFile('class-object-subtype.js.ignored', 'class-object-subtype.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
@@ -817,6 +751,7 @@ export default (suite(
           },
         },
         context: {
+          only: ['quickfix'],
           diagnostics: [
             {
               range: {
@@ -842,39 +777,6 @@ export default (suite(
           {
             method: 'textDocument/codeAction',
             result: [
-              {
-                title: 'Extract to constant in module scope',
-                kind: 'refactor.extract',
-                diagnostics: [],
-                edit: {
-                  changes: {
-                    '<PLACEHOLDER_PROJECT_URL>/class-object-subtype.js': [
-                      {
-                        range: {
-                          start: {
-                            line: 8,
-                            character: 0,
-                          },
-                          end: {
-                            line: 8,
-                            character: 13,
-                          },
-                        },
-                        newText: 'const newLocal = new A();\n\nfoo(newLocal);',
-                      },
-                    ],
-                  },
-                },
-                command: {
-                  title: '',
-                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: [
-                    'textDocument/codeAction',
-                    'refactor_extract',
-                    'Extract to constant in module scope',
-                  ],
-                },
-              },
               {
                 title: 'Rewrite object type as an interface',
                 kind: 'quickfix',
@@ -938,7 +840,7 @@ export default (suite(
         ],
       ),
     ]),
-    test('provide codeAction for nested ClassObject errors', [
+    test('provide quickfix for nested ClassObject errors', [
       addFile('class-object-subtype.js.ignored', 'class-object-subtype.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
@@ -956,6 +858,7 @@ export default (suite(
           },
         },
         context: {
+          only: ['quickfix'],
           diagnostics: [
             {
               range: {
@@ -981,40 +884,6 @@ export default (suite(
           {
             method: 'textDocument/codeAction',
             result: [
-              {
-                title: 'Extract to constant in module scope',
-                kind: 'refactor.extract',
-                diagnostics: [],
-                edit: {
-                  changes: {
-                    '<PLACEHOLDER_PROJECT_URL>/class-object-subtype.js': [
-                      {
-                        range: {
-                          start: {
-                            line: 12,
-                            character: 0,
-                          },
-                          end: {
-                            line: 12,
-                            character: 18,
-                          },
-                        },
-                        newText:
-                          'const newLocal = new A();\n\nbar({ i: newLocal });',
-                      },
-                    ],
-                  },
-                },
-                command: {
-                  title: '',
-                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: [
-                    'textDocument/codeAction',
-                    'refactor_extract',
-                    'Extract to constant in module scope',
-                  ],
-                },
-              },
               {
                 title: 'Rewrite object type as an interface',
                 kind: 'quickfix',
@@ -1078,7 +947,7 @@ export default (suite(
         ],
       ),
     ]),
-    test('provide codeAction for aliased ClassObject errors', [
+    test('provide quickfix for aliased ClassObject errors', [
       addFile('class-object-subtype.js.ignored', 'class-object-subtype.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
@@ -1096,6 +965,7 @@ export default (suite(
           },
         },
         context: {
+          only: ['quickfix'],
           diagnostics: [
             {
               range: {
@@ -1121,39 +991,6 @@ export default (suite(
           {
             method: 'textDocument/codeAction',
             result: [
-              {
-                title: 'Extract to constant in module scope',
-                kind: 'refactor.extract',
-                diagnostics: [],
-                edit: {
-                  changes: {
-                    '<PLACEHOLDER_PROJECT_URL>/class-object-subtype.js': [
-                      {
-                        range: {
-                          start: {
-                            line: 18,
-                            character: 0,
-                          },
-                          end: {
-                            line: 18,
-                            character: 12,
-                          },
-                        },
-                        newText: 'const newLocal = new A();\n\nbaz(newLocal);',
-                      },
-                    ],
-                  },
-                },
-                command: {
-                  title: '',
-                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: [
-                    'textDocument/codeAction',
-                    'refactor_extract',
-                    'Extract to constant in module scope',
-                  ],
-                },
-              },
               {
                 title: 'Rewrite `T` as an interface',
                 kind: 'quickfix',
@@ -1236,6 +1073,7 @@ export default (suite(
           },
         },
         context: {
+          only: ['quickfix'],
           diagnostics: [
             {
               range: {
@@ -1261,39 +1099,6 @@ export default (suite(
           {
             method: 'textDocument/codeAction',
             result: [
-              {
-                title: 'Extract to constant in module scope',
-                kind: 'refactor.extract',
-                diagnostics: [],
-                edit: {
-                  changes: {
-                    '<PLACEHOLDER_PROJECT_URL>/class-object-subtype.js': [
-                      {
-                        range: {
-                          start: {
-                            line: 22,
-                            character: 0,
-                          },
-                          end: {
-                            line: 22,
-                            character: 12,
-                          },
-                        },
-                        newText: 'const newLocal = new A();\n\nqux(newLocal);',
-                      },
-                    ],
-                  },
-                },
-                command: {
-                  title: '',
-                  command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                  arguments: [
-                    'textDocument/codeAction',
-                    'refactor_extract',
-                    'Extract to constant in module scope',
-                  ],
-                },
-              },
               {
                 title: 'Rewrite object type as an interface',
                 kind: 'quickfix',
@@ -1375,6 +1180,7 @@ export default (suite(
           },
         },
         context: {
+          only: ['quickfix'],
           diagnostics: [
             {
               range: {
@@ -1519,6 +1325,7 @@ export default (suite(
           },
         },
         context: {
+          only: ['refactor'],
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
@@ -1546,6 +1353,7 @@ export default (suite(
           },
         },
         context: {
+          only: ['refactor'],
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
@@ -1674,6 +1482,7 @@ export default (suite(
           },
         },
         context: {
+          only: ['refactor'],
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
@@ -1777,6 +1586,7 @@ export default (suite(
         },
         range: {start: {line: 7, character: 2}, end: {line: 7, character: 19}},
         context: {
+          only: ['refactor'],
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
@@ -1874,6 +1684,7 @@ export default (suite(
         },
         range: {start: {line: 6, character: 2}, end: {line: 6, character: 24}},
         context: {
+          only: ['refactor'],
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
@@ -1991,6 +1802,7 @@ export default (suite(
             end: {line: 4, character: 16},
           },
           context: {
+            only: ['refactor'],
             diagnostics: [],
           },
         }).verifyAllLSPMessagesInStep(
@@ -2043,6 +1855,7 @@ export default (suite(
             end: {line: 4, character: 15},
           },
           context: {
+            only: ['refactor'],
             diagnostics: [],
           },
         }).verifyAllLSPMessagesInStep(
@@ -2131,6 +1944,7 @@ export default (suite(
           end: {line: 3, character: 17},
         },
         context: {
+          only: ['refactor'],
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
