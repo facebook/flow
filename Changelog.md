@@ -1,3 +1,21 @@
+### 0.157.0
+
+Likely to cause new Flow errors:
+* Add a new error for unreachable code occuring in a loop after a conditional with mixed `break` and `continue` branches.
+
+New Features:
+* LSP extract to function/method/constant/class fields/type alias is enabled by default. These refactors will show up under after selecting some code. They can be disabled by adding `experimental.refactor=false` to the `.flowconfig`.
+* Add an eslint plugin, `eslint-plugin-fb-flow`, for eslint rules from the Flow team. The first rule is `use-indexed-access-type` to encourage the use of indexed access types (https://flow.org/en/docs/types/indexed-access/).
+* Add another eslint rule to lint against explicit exact by default syntax (fixes #8612).
+* Add a command to `update-suppressions` to the flow tool (fixes #8384).
+
+Library Definitions:
+* Better coverage of the MediaTrackSettings API.
+* Improve types for ResizeObserver (fixes #8693).
+
+Misc:
+* Upgrade to OCaml 4.10.2.
+
 ### 0.156.0
 
 New Features:
