@@ -10,11 +10,9 @@
 
 'use strict';
 
-const ESLintTester = require('../../eslint-tester');
-const rule = require('../no-flow-enums-object-mapping');
-const eslintTester = new ESLintTester();
+const runTest = require('../../run-test');
 
-eslintTester.run('no-flow-enums-object-mapping', rule, {
+runTest('no-flow-enums-object-mapping', {
   valid: [
     'const o = {A: 1, B: 2};',
     'const o = {[Foo.A]: 1, [Foo.B]: 2};',

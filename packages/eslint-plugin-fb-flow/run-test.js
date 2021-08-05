@@ -11,6 +11,7 @@
 'use strict';
 
 const {RuleTester: ESLintTester} = require('eslint');
+const plugin = require('./index');
 
 ESLintTester.setDefaultConfig({
   parser: require.resolve('hermes-eslint'),
@@ -20,4 +21,13 @@ ESLintTester.setDefaultConfig({
   },
 });
 
-module.exports = ESLintTester;
+function runTest(ruleName, testConfig) {
+  const eslintTester = new ESLintTester();
+  const rule = plugin.rules[ruleName];
+  if (rule == null) {
+    throw new Error(`Invalid rule name '${ruleName}'.`);
+  }
+  eslintTester.run(ruleName, rule, testConfig);
+}
+
+module.exports = runTest;

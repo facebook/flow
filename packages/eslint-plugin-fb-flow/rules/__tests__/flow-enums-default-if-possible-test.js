@@ -10,11 +10,9 @@
 
 'use strict';
 
-const ESLintTester = require('../../eslint-tester');
-const eslintTester = new ESLintTester();
-const rule = require('../flow-enums-default-if-possible');
+const runTest = require('../../run-test');
 
-eslintTester.run('flow-enums-default-if-possible', rule, {
+runTest('flow-enums-default-if-possible', {
   valid: [
     'enum Status {}',
     'enum Status {Active, Off}',

@@ -10,11 +10,9 @@
 
 'use strict';
 
-const ESLintTester = require('../../eslint-tester');
-const eslintTester = new ESLintTester();
-const rule = require('../use-exact-by-default-object-type');
+const runTest = require('../../run-test');
 
-eslintTester.run('use-exact-by-default-object-type', rule, {
+runTest('use-exact-by-default-object-type', {
   valid: [
     'type Props = { foo: string };',
 

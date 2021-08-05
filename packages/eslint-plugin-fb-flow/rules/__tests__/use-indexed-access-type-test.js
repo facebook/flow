@@ -8,11 +8,11 @@
  * @format
  */
 
-const ESLintTester = require('../../eslint-tester');
-const rule = require('../use-indexed-access-type');
-const eslintTester = new ESLintTester();
+'use strict';
 
-eslintTester.run('use-indexed-access', rule, {
+const runTest = require('../../run-test');
+
+runTest('use-indexed-access-type', {
   valid: [
     `type T = Foo[Key];`,
     `type T = Foo?.[Key];`,

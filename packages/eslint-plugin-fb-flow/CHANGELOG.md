@@ -1,3 +1,6 @@
+# 0.0.3
+- Exported the rules added in 0.0.2 from `index.js`
+
 # 0.0.2
 - Added rule `use-exact-by-default-object-type`
 - Added rule `use-flow-enums`
