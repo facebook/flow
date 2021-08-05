@@ -454,6 +454,85 @@ let string_of_change ~options (loc, (placement, stmt)) =
   in
   (loc, edit)
 
+(** Ordering of placements, assuming they refer to the same Loc:
+      1. Above { skip_line = true }
+      2. Above { skip_line = false }
+      3. Replace
+      4. Below { skip_line = false }
+      5. Below { skip_line = true }
+  *)
+let compare_placement p1 p2 =
+  match (p1, p2) with
+  | (Above { skip_line = s1 }, Above { skip_line = s2 }) -> Base.Bool.compare s2 s1
+  | (Above _, (Below _ | Replace)) -> -1
+  | (Below { skip_line = s1 }, Below { skip_line = s2 }) -> Base.Bool.compare s1 s2
+  | (Below _, (Above _ | Replace)) -> 1
+  | (Replace, Replace) -> 0
+  | (Replace, Above _) -> 1
+  | (Replace, Below _) -> -1
+
+(** Orders changes based on where they'll appear in the updated file.
+
+    For example, [(Above { skip_line = true }, import_bar)] is sorted before
+    [(Above { skip_line = true }, import_foo)]. Both are sorted before
+    [(Above { skip_line = false }, import_baz)] because they will end up
+    with a blank line between them and [import_baz]. *)
+let compare_changes (loc1, (placement1, stmt1)) (loc2, (placement2, stmt2)) =
+  let k = Loc.compare loc1 loc2 in
+  if k = 0 then
+    let k = compare_placement placement1 placement2 in
+    if k = 0 then
+      compare_imports stmt1 stmt2
+    else
+      k
+  else
+    k
+
+(** Given a list of changes, eliminates whitespace between imports in the same group.
+
+    For example, consider these imports, inserted into a file with no existing imports:
+
+      [import type {foo} from './foo']
+      [import {bar} from './bar']
+      [import {baz} from './baz']
+
+    All 3 have [Above { skip_line = true }] because they're inserted at the top
+    of the file, with a blank line between the first real code. But we don't want to
+    render a line between [bar] and [baz] because they're both named imports, so we
+    need to change [skip_line] to [false] for [bar]. But [foo] is a different group,
+    so it should still skip a line; [baz] is the last one so it should still skip a
+    line to separate the whole group from what follows. *)
+let adjust_placements =
+  let rec loop prev acc = function
+    | [] -> Base.List.rev (prev :: acc)
+    | next :: rest ->
+      let (prev_loc, (prev_placement, prev_stmt)) = prev in
+      let (next_loc, (next_placement, next_stmt)) = next in
+      let (prev, next) =
+        if
+          Loc.equal prev_loc next_loc
+          && compare_placement prev_placement next_placement = 0
+          && ImportKind.(compare (of_statement prev_stmt) (of_statement next_stmt)) = 0
+        then
+          (* being inserted into the same section, so eliminate the line between them *)
+          let (prev_placement, next_placement) =
+            match prev_placement with
+            | Above _ -> (Above { skip_line = false }, next_placement)
+            | Below _ -> (prev_placement, Below { skip_line = false })
+            | Replace -> (prev_placement, next_placement)
+          in
+          let prev = (prev_loc, (prev_placement, prev_stmt)) in
+          let next = (next_loc, (next_placement, next_stmt)) in
+          (prev, next)
+        else
+          (prev, next)
+      in
+      loop next (prev :: acc) rest
+  in
+  function
+  | [] -> []
+  | hd :: tl -> loop hd [] tl
+
 let add_imports ~options ~added_imports ast : (Loc.t * string) list =
   let (Flow_ast_differ.Partitioned { directives = _; imports; body }) =
     let (_, { Program.statements; _ }) = ast in
@@ -461,6 +540,8 @@ let add_imports ~options ~added_imports ast : (Loc.t * string) list =
   in
   added_imports
   |> Base.List.map ~f:(get_change ~imports ~body)
+  |> Base.List.sort ~compare:compare_changes
+  |> adjust_placements
   |> Base.List.map ~f:(string_of_change ~options)
 
 let add_import ~options ~bindings ~from ast : (Loc.t * string) list =

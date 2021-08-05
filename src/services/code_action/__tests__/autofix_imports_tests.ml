@@ -73,7 +73,7 @@ let apply_patch contents patch =
          ^ String.sub contents end_offset (String.length contents - end_offset))
        contents
 
-let assert_patch ~ctxt ?bracket_spacing ?single_quotes expected bindings from contents =
+let assert_patch ~ctxt ?bracket_spacing ?single_quotes ~f expected contents =
   let expected = dedent_trim expected in
   let contents = dedent_trim contents in
   let options =
@@ -93,9 +93,27 @@ let assert_patch ~ctxt ?bracket_spacing ?single_quotes expected bindings from co
     in
     options
   in
-  let patch = Autofix_imports.add_import ~options ~bindings ~from (parse contents) in
+  let patch = f ~options (parse contents) in
   let patched = apply_patch contents patch in
   assert_equal ~ctxt ~printer:(fun x -> x) expected patched
+
+let assert_import ~ctxt ?bracket_spacing ?single_quotes expected bindings from contents =
+  assert_patch
+    ~ctxt
+    ?bracket_spacing
+    ?single_quotes
+    ~f:(Autofix_imports.add_import ~bindings ~from)
+    expected
+    contents
+
+let assert_imports ~ctxt ?bracket_spacing ?single_quotes expected added_imports contents =
+  assert_patch
+    ~ctxt
+    ?bracket_spacing
+    ?single_quotes
+    ~f:(Autofix_imports.add_imports ~added_imports)
+    expected
+    contents
 
 (* TODO: ocamlformat mangles indentation. *)
 [@@@ocamlformat "disable=true"]
@@ -113,10 +131,10 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt expected binding from contents;
+      assert_import ~ctxt expected binding from contents;
 
       let expected = Str.global_replace (Str.regexp_string "\"") "'" expected in
-      assert_patch ~ctxt ~single_quotes:true expected binding from contents );
+      assert_import ~ctxt ~single_quotes:true expected binding from contents );
 
     ( "import_named_above_existing" >:: fun ctxt ->
       let binding = Autofix_imports.Named [named_binding "foo"] in
@@ -132,7 +150,7 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt expected binding from contents );
+      assert_import ~ctxt expected binding from contents );
 
     ( "import_named_below_existing" >:: fun ctxt ->
       let binding = Autofix_imports.Named [named_binding "foo"] in
@@ -148,7 +166,7 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt expected binding from contents );
+      assert_import ~ctxt expected binding from contents );
 
     ( "import_named_sorted_existing" >:: fun ctxt ->
       let binding = Autofix_imports.Named [named_binding "baz"] in
@@ -166,7 +184,7 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt expected binding from contents );
+      assert_import ~ctxt expected binding from contents );
 
     ( "import_named_unsorted_existing" >:: fun ctxt ->
       let binding = Autofix_imports.Named [named_binding "baz"] in
@@ -184,7 +202,7 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt expected binding from contents );
+      assert_import ~ctxt expected binding from contents );
 
     ( "import_named_in_existing" >:: fun ctxt ->
       let binding = Autofix_imports.Named [named_binding "foo"] in
@@ -199,11 +217,11 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt expected binding from contents;
+      assert_import ~ctxt expected binding from contents;
 
       (* not only inserts `{ foo }` specifier, but changes `"./foo"` to `'./foo'` *)
       let expected = Str.global_replace (Str.regexp_string "\"") "'" expected in
-      assert_patch ~ctxt ~single_quotes:true expected binding from contents );
+      assert_import ~ctxt ~single_quotes:true expected binding from contents );
 
     ( "import_multiple_named_in_existing" >:: fun ctxt ->
       let binding = Autofix_imports.Named [named_binding "foo"; named_binding ~local_name:"bazz" "baz"] in
@@ -218,7 +236,7 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt expected binding from contents);
+      assert_import ~ctxt expected binding from contents);
 
     ( "import_named_below_existing_default" >:: fun ctxt ->
       let binding = (Autofix_imports.Named [named_binding "foo"]) in
@@ -234,7 +252,7 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt expected binding from contents );
+      assert_import ~ctxt expected binding from contents );
 
     ( "import_named_below_existing_type" >:: fun ctxt ->
       let binding = (Autofix_imports.Named [named_binding "foo"]) in
@@ -251,7 +269,7 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt expected binding from contents );
+      assert_import ~ctxt expected binding from contents );
 
     ( "import_default_no_existing" >:: fun ctxt ->
       let binding = (Autofix_imports.Default "foo") in
@@ -264,7 +282,7 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt expected binding from contents );
+      assert_import ~ctxt expected binding from contents );
 
     ( "import_default_duplicate" >:: fun ctxt ->
       let binding = Autofix_imports.Default "Foo" in
@@ -280,7 +298,7 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt expected binding from contents );
+      assert_import ~ctxt expected binding from contents );
 
     ( "import_type_no_existing" >:: fun ctxt ->
       let binding = Autofix_imports.NamedType [named_binding "IFoo"] in
@@ -293,7 +311,7 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt expected binding from contents );
+      assert_import ~ctxt expected binding from contents );
 
     ( "import_type_in_existing_type" >:: fun ctxt ->
       let binding = Autofix_imports.NamedType [named_binding "IBar"] in
@@ -304,7 +322,7 @@ let add_import_tests =
       let expected = {|
         import type { IBar, IFoo } from "./foo";
       |} in
-      assert_patch ~ctxt expected binding from contents );
+      assert_import ~ctxt expected binding from contents );
 
     ( "import_type_in_existing_type_unsorted" >:: fun ctxt ->
       let binding = Autofix_imports.NamedType [named_binding "IBar"] in
@@ -315,7 +333,7 @@ let add_import_tests =
       let expected = {|
         import type { IFoo, IBaz, IBar } from "./foo";
       |} in
-      assert_patch ~ctxt expected binding from contents );
+      assert_import ~ctxt expected binding from contents );
 
     ( "import_type_above_existing_named" >:: fun ctxt ->
       let binding = Autofix_imports.NamedType [named_binding "IFoo"] in
@@ -332,7 +350,7 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt expected binding from contents );
+      assert_import ~ctxt expected binding from contents );
 
     ( "import_type_above_existing_default" >:: fun ctxt ->
       let binding = Autofix_imports.NamedType [named_binding "IFoo"] in
@@ -349,7 +367,7 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt expected binding from contents );
+      assert_import ~ctxt expected binding from contents );
 
     ( "import_type_unsorted_existing" >:: fun ctxt ->
       let binding = Autofix_imports.NamedType [named_binding "IBaz"] in
@@ -367,7 +385,7 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt expected binding from contents );
+      assert_import ~ctxt expected binding from contents );
 
     ( "import_namespace_no_existing" >:: fun ctxt ->
       let binding = Autofix_imports.Namespace "React" in
@@ -380,7 +398,7 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt expected binding from contents );
+      assert_import ~ctxt expected binding from contents );
 
     ( "import_namespace_below_existing_named_from_same_module" >:: fun ctxt ->
       let binding = Autofix_imports.Namespace "React" in
@@ -396,7 +414,7 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt expected binding from contents );
+      assert_import ~ctxt expected binding from contents );
 
     ( "import_namespace_above_existing_named" >:: fun ctxt ->
       let binding = Autofix_imports.Namespace "Bar" in
@@ -416,7 +434,7 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt expected binding from contents );
+      assert_import ~ctxt expected binding from contents );
 
     ( "import_namespace_duplicate" >:: fun ctxt ->
       let binding = Autofix_imports.Namespace "Foo" in
@@ -432,7 +450,7 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt expected binding from contents );
+      assert_import ~ctxt expected binding from contents );
 
     ( "import_multiple_named_after_namespace" >:: fun ctxt ->
       let binding = Autofix_imports.Named [named_binding "useContext"] in
@@ -449,7 +467,7 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt expected binding from contents );
+      assert_import ~ctxt expected binding from contents );
 
     ( "insert_after_flow_comment" >:: fun ctxt ->
       let binding = Autofix_imports.Named [named_binding "foo"] in
@@ -466,7 +484,7 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt expected binding from contents );
+      assert_import ~ctxt expected binding from contents );
 
     ( "insert_after_directives" >:: fun ctxt ->
       let binding = Autofix_imports.Named [named_binding "foo"] in
@@ -487,7 +505,7 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt expected binding from contents );
+      assert_import ~ctxt expected binding from contents );
 
     ( "bracket_spacing" >:: fun ctxt ->
       let binding = Autofix_imports.Named [named_binding "foo"] in
@@ -500,10 +518,10 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt ~bracket_spacing:true expected binding from contents;
+      assert_import ~ctxt ~bracket_spacing:true expected binding from contents;
 
       let expected = Str.global_replace (Str.regexp_string "{ foo }") "{foo}" expected in
-      assert_patch ~ctxt ~bracket_spacing:false expected binding from contents );
+      assert_import ~ctxt ~bracket_spacing:false expected binding from contents );
 
     ( "case_sensitive" >:: fun ctxt ->
       let binding = Autofix_imports.Named [named_binding "bar"] in
@@ -520,8 +538,106 @@ let add_import_tests =
 
         foo
       |} in
-      assert_patch ~ctxt expected binding from contents );
-
+      assert_import ~ctxt expected binding from contents );
   ]
 
-let tests = "autofix_imports" >::: ["add_import" >::: add_import_tests]
+let add_imports_tests =
+  [
+    ( "import_named_no_existing" >:: fun ctxt ->
+      let added_imports = [
+        ("./foo", Autofix_imports.Named [named_binding "foo"]);
+        ("./bar", Autofix_imports.Named [named_binding "bar"]);
+      ] in
+      let contents = {|
+        foo
+      |} in
+      let expected = {|
+        import { bar } from "./bar";
+        import { foo } from "./foo";
+
+        foo
+      |} in
+      assert_imports ~ctxt expected added_imports contents );
+
+    ( "import_named_and_type_no_existing" >:: fun ctxt ->
+      let added_imports = [
+        ("./foo", Autofix_imports.NamedType [named_binding "foo"]);
+        ("./bar", Autofix_imports.Named [named_binding "bar"]);
+        ("./baz", Autofix_imports.NamedType [named_binding "baz"]);
+      ] in
+      let contents = {|
+        foo
+      |} in
+      let expected = {|
+        import type { baz } from "./baz";
+        import type { foo } from "./foo";
+
+        import { bar } from "./bar";
+
+        foo
+      |} in
+      assert_imports ~ctxt expected added_imports contents );
+
+    ( "import_named_and_type_around_existing" >:: fun ctxt ->
+      let added_imports = [
+        ("./bar", Autofix_imports.Named [named_binding "bar"]);
+        ("./baz", Autofix_imports.NamedType [named_binding "baz"]);
+      ] in
+      let contents = {|
+        import type { foo } from "./foo";
+
+        (1: foo)
+      |} in
+      let expected = {|
+        import type { baz } from "./baz";
+        import type { foo } from "./foo";
+
+        import { bar } from "./bar";
+
+        (1: foo)
+      |} in
+      assert_imports ~ctxt expected added_imports contents );
+
+    ( "import_named_and_type_to_existing_sections" >:: fun ctxt ->
+      let added_imports = [
+        ("./bar", Autofix_imports.Named [named_binding "bar"]);
+        ("./baz", Autofix_imports.NamedType [named_binding "baz"]);
+      ] in
+      let contents = {|
+        import type { foo } from "./foo";
+
+        import { fizz } from "./fizz";
+
+        (1: foo)
+      |} in
+      let expected = {|
+        import type { baz } from "./baz";
+        import type { foo } from "./foo";
+
+        import { bar } from "./bar";
+        import { fizz } from "./fizz";
+
+        (1: foo)
+      |} in
+      assert_imports ~ctxt expected added_imports contents );
+
+    ( "add_and_update" >:: fun ctxt ->
+      let added_imports = [
+        ("./foo", Autofix_imports.Named [named_binding "other"]);
+        ("./bar", Autofix_imports.Named [named_binding "bar"]);
+      ] in
+      let contents = {|
+        import { foo } from "./foo";
+
+        foo
+      |} in
+      let expected = {|
+        import { bar } from "./bar";
+        import { foo, other } from "./foo";
+
+        foo
+      |} in
+      assert_imports ~ctxt expected added_imports contents );
+  ]
+
+let tests = "autofix_imports" >::: ["add_import" >::: add_import_tests; "add_imports" >::: add_imports_tests]
