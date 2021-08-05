@@ -12,6 +12,12 @@ let space_regex = Str.regexp_string " "
 
 let newline_regex = Str.regexp_string "\n"
 
+let opts = Js_layout_generator.default_opts
+
+let preserve_formatting_opts = Js_layout_generator.{ default_opts with preserve_formatting = true }
+
+let no_bracket_spacing opts = Js_layout_generator.{ opts with bracket_spacing = false }
+
 let assert_output ~ctxt ?msg ?(pretty = false) expected_str layout =
   let print =
     if pretty then

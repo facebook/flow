@@ -16,12 +16,6 @@ module F = Ast_builder.Functions
 module J = Ast_builder.JSXs
 module L = Layout_builder
 
-let opts = Js_layout_generator.default_opts
-
-let preserve_formatting_opts = Js_layout_generator.{ default_opts with preserve_formatting = true }
-
-let no_bracket_spacing opts = Js_layout_generator.{ opts with bracket_spacing = false }
-
 let tests =
   "js_layout_generator"
   >::: [
@@ -34,6 +28,7 @@ let tests =
          "program" >::: Program_test.tests;
          "jsx" >::: Jsx_test.tests;
          "trailing_commas" >::: Trailing_commas_test.tests;
+         "imports" >::: Import_test.tests;
          ( "unary_plus_binary" >:: fun ctxt ->
            let x = E.identifier "x" in
            let y = E.identifier "y" in
@@ -1665,52 +1660,6 @@ let tests =
          ( "import_expressions" >:: fun ctxt ->
            assert_expression_string ~ctxt {|import("a")|};
            assert_expression_string ~ctxt "import(a)" );
-         ( "import_declaration_statement" >:: fun ctxt ->
-           assert_statement_string ~ctxt {|import"a";|};
-           assert_statement_string ~ctxt {|import a from"a";|};
-           assert_statement_string ~ctxt {|import type a from"a";|};
-           assert_statement_string ~ctxt {|import typeof a from"a";|};
-           assert_statement_string ~ctxt {|import a,*as b from"a";|};
-           assert_statement_string ~ctxt {|import a,{b}from"a";|};
-           assert_statement_string ~ctxt {|import{a,type b}from"a";|};
-           assert_statement_string ~ctxt {|import{a,typeof b}from"a";|};
-           assert_statement_string ~ctxt {|import{a,type b as c}from"a";|};
-           assert_statement_string ~ctxt {|import{a as b}from"a";|};
-           assert_statement_string ~ctxt {|import type{a}from"a";|};
-           assert_statement_string ~ctxt {|import{a,b}from"a";|};
-           assert_statement_string ~ctxt {|import type{}from"a";|};
-           assert_statement_string ~ctxt {|import typeof{}from"a";|};
-           assert_statement_string ~ctxt ~pretty:true {|import { a, b } from "a";|};
-           assert_statement_string
-             ~ctxt
-             ~pretty:true
-             ~opts:(no_bracket_spacing opts)
-             {|import {a, b} from "a";|};
-           assert_statement_string ~ctxt ~pretty:true {|import type { a, b } from "a";|};
-           assert_statement_string
-             ~ctxt
-             ~pretty:true
-             ~opts:(no_bracket_spacing opts)
-             {|import type {a, b} from "a";|};
-           assert_statement_string
-             ~ctxt
-             ~pretty:true
-             ("import {\n  a,\n  " ^ String.make 80 'b' ^ ",\n} from \"a\";");
-           assert_statement_string ~ctxt ~pretty:true {|import a, * as b from "a";|};
-           assert_statement_string
-             ~ctxt
-             ~pretty:true
-             ("import a, * as " ^ String.make 80 'b' ^ " from \"a\";");
-           assert_statement_string ~ctxt ~pretty:true {|import a, { b } from "a";|};
-           assert_statement_string
-             ~ctxt
-             ~pretty:true
-             ~opts:(no_bracket_spacing opts)
-             {|import a, {b} from "a";|};
-           assert_statement_string
-             ~ctxt
-             ~pretty:true
-             ("import a, {\n  " ^ String.make 80 'b' ^ ",\n} from \"a\";") );
          ( "export_declaration_statement" >:: fun ctxt ->
            assert_statement_string ~ctxt "export{};";
            assert_statement_string ~ctxt "export{}from\"a\";";
