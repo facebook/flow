@@ -400,7 +400,7 @@ let add_import_tests =
       |} in
       assert_import ~ctxt expected binding from contents );
 
-    ( "import_namespace_below_existing_named_from_same_module" >:: fun ctxt ->
+    ( "import_namespace_above_existing_named_from_same_module" >:: fun ctxt ->
       let binding = Autofix_imports.Namespace "React" in
       let from = "react" in
       let contents = {|
@@ -409,8 +409,8 @@ let add_import_tests =
         foo
       |} in
       let expected = {|
-        import { foo } from "react";
         import * as React from "react";
+        import { foo } from "react";
 
         foo
       |} in
@@ -595,6 +595,24 @@ let add_imports_tests =
         import { bar } from "./bar";
 
         (1: foo)
+      |} in
+      assert_imports ~ctxt expected added_imports contents );
+
+    ( "import_kinds_from_same_module" >:: fun ctxt ->
+      let added_imports = [
+        ("./foo", Autofix_imports.Named [named_binding "foo"]);
+        ("./foo", Autofix_imports.Default "Foo");
+        ("./foo", Autofix_imports.Namespace "FooNS");
+      ] in
+      let contents = {|
+        foo
+      |} in
+      let expected = {|
+        import Foo from "./foo";
+        import * as FooNS from "./foo";
+        import { foo } from "./foo";
+
+        foo
       |} in
       assert_imports ~ctxt expected added_imports contents );
 

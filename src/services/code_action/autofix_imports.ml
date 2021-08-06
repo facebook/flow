@@ -204,6 +204,7 @@ let update_import ~bindings stmt =
   in
   match stmt with
   | (_, ImportDeclaration { import_kind; source; default; specifiers; comments }) ->
+    let (_, { StringLiteral.value = from; _ }) = source in
     let edit =
       match (bindings, default, specifiers) with
       | (Default bound_name, Some (_, { Identifier.name; _ }), _)
@@ -216,26 +217,18 @@ let update_import ~bindings stmt =
         else
           (* an `import Baz from 'foo'` already exists. weird, but insert
              an `import Foo from 'foo'` anyway. (and similar for `import * as Baz ...`) *)
-          let new_stmt =
-            let (_, { StringLiteral.value = from; _ }) = source in
-            mk_import ~bindings ~from
-          in
           let placement =
             if String.compare bound_name name < 0 then
               Above { skip_line = false }
             else
               Below { skip_line = false }
           in
-          (placement, new_stmt)
+          (placement, mk_import ~bindings ~from)
       | (Default _, None, Some _) ->
         (* a `import {bar} from 'foo'` or `import * as Foo from 'foo'` already exists.
            rather than change it to `import Foo, {bar} from 'foo'`, we choose to insert
            a separate import. TODO: maybe make this a config option? *)
-        let new_stmt =
-          let (_, { StringLiteral.value = from; _ }) = source in
-          mk_import ~bindings ~from
-        in
-        (Above { skip_line = false }, new_stmt)
+        (Above { skip_line = false }, mk_import ~bindings ~from)
       | (Named bound_names, _, Some (ImportNamedSpecifiers specifiers))
       | (NamedType bound_names, _, Some (ImportNamedSpecifiers specifiers)) ->
         let open ImportDeclaration in
@@ -272,27 +265,80 @@ let update_import ~bindings stmt =
       | (Named _, Some _, _)
       | (Named _, None, Some (ImportNamespaceSpecifier _))
       | (NamedType _, Some _, _)
-      | (NamedType _, None, Some (ImportNamespaceSpecifier _))
-      | (Namespace _, Some _, _)
-      | (Namespace _, None, Some (ImportNamedSpecifiers _)) ->
+      | (NamedType _, None, Some (ImportNamespaceSpecifier _)) ->
         (* trying to insert a named specifier, but a default or namespace import already
            exists. rather than change it to `import Foo, {bar} from 'foo'`, we choose to
-           insert a separate import `import {bar} from 'foo'`.
+           insert a separate import `import {bar} from 'foo'` below the namespace/default
+           import. TODO: maybe make this a config option? *)
+        (Below { skip_line = false }, mk_import ~bindings ~from)
+      | (Namespace _, Some _, _) ->
+        (* trying to insert a namespace specifier, but a default import already exists.
+           rather than change it to `import * as Foo, Bar from 'foo'`, we choose to
+           insert a separate import `import * as Foo from 'foo'` below the default.
            TODO: maybe make this a config option? *)
-        let new_stmt =
-          let (_, { StringLiteral.value = from; _ }) = source in
-          mk_import ~bindings ~from
-        in
-        (Below { skip_line = false }, new_stmt)
+        (Below { skip_line = false }, mk_import ~bindings ~from)
+      | (Namespace _, None, Some (ImportNamedSpecifiers _)) ->
+        (* trying to insert a namespace specifier, but a named import already exists.
+           rather than change it to `import * as Foo, {bar} from 'foo'`, we choose to
+           insert a separate import `import * as Foo from 'foo'` above the named import.
+           TODO: maybe make this a config option? *)
+        (Above { skip_line = false }, mk_import ~bindings ~from)
       | (_, None, None) -> failwith "unexpected import with neither a default nor specifiers"
     in
     (loc, edit)
   | _ -> failwith "trying to update a non-import"
 
+(** default < namespace < named *)
+let compare_kind_of_import a b =
+  let open Statement in
+  let open Statement.ImportDeclaration in
+  let compare_identifier (_, { Identifier.name = a; _ }) (_, { Identifier.name = b; _ }) =
+    String.compare a b
+  in
+  match (a, b) with
+  | ( ( _,
+        ImportDeclaration
+          {
+            import_kind = _;
+            source = _;
+            default = a_default;
+            specifiers = a_specifiers;
+            comments = _;
+          } ),
+      ( _,
+        ImportDeclaration
+          {
+            import_kind = _;
+            source = _;
+            default = b_default;
+            specifiers = b_specifiers;
+            comments = _;
+          } ) ) ->
+    (match (a_default, b_default) with
+    | (Some a_id, Some b_id) -> compare_identifier a_id b_id
+    | (Some _, None) -> -1
+    | (None, Some _) -> 1
+    | (None, None) ->
+      (match (a_specifiers, b_specifiers) with
+      | (Some (ImportNamespaceSpecifier (_, a_id)), Some (ImportNamespaceSpecifier (_, b_id))) ->
+        compare_identifier a_id b_id
+      | (Some (ImportNamespaceSpecifier _), Some (ImportNamedSpecifiers _)) -> -1
+      | (Some (ImportNamespaceSpecifier _), None) -> -1
+      | (Some (ImportNamedSpecifiers _), Some (ImportNamedSpecifiers _)) -> 0
+      | (Some (ImportNamedSpecifiers _), Some (ImportNamespaceSpecifier _)) -> 1
+      | (Some (ImportNamedSpecifiers _), None) -> -1
+      | (None, None) -> 0
+      | (None, Some _) -> -1))
+  | _ -> 0
+
 let compare_imports a b =
   let k = Section.(compare (of_statement a) (of_statement b)) in
   if k = 0 then
-    ImportSource.(compare (of_statement a) (of_statement b))
+    let k = ImportSource.(compare (of_statement a) (of_statement b)) in
+    if k = 0 then
+      compare_kind_of_import a b
+    else
+      k
   else
     k
 
