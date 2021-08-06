@@ -638,6 +638,23 @@ let add_imports_tests =
         foo
       |} in
       assert_imports ~ctxt expected added_imports contents );
+
+    ( "case_sensitive" >:: fun ctxt ->
+      let added_imports = [
+        ("bar", Autofix_imports.Named [named_binding "bar"]);
+        ("Foo", Autofix_imports.Named [named_binding "foo"]);
+      ] in
+      let contents = {|
+        foo
+      |} in
+      let expected = {|
+        import { foo } from "Foo";
+
+        import { bar } from "bar";
+
+        foo
+      |} in
+      assert_imports ~ctxt expected added_imports contents );
   ]
 
 let tests = "autofix_imports" >::: ["add_import" >::: add_import_tests; "add_imports" >::: add_imports_tests]

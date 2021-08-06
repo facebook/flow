@@ -23,39 +23,6 @@ type placement =
   | Below of { skip_line: bool }
   | Replace
 
-module ImportKind = struct
-  type t =
-    | ImportType
-    | ImportValue
-    | Require
-
-  let compare a b =
-    match (a, b) with
-    | (ImportType, ImportType) -> 0
-    | (ImportValue, ImportValue) -> 0
-    | (Require, Require) -> 0
-    | (ImportType, _) -> (* types come first *) -1
-    | (_, ImportType) -> (* types come first *) 1
-    | (_, Require) -> (* requires come last *) -1
-    | (Require, _) -> (* requires come last *) 1
-
-  let of_statement = function
-    | (_, Statement.ImportDeclaration { Statement.ImportDeclaration.import_kind; _ }) ->
-      (match import_kind with
-      | Statement.ImportDeclaration.ImportType
-      | Statement.ImportDeclaration.ImportTypeof ->
-        ImportType
-      | Statement.ImportDeclaration.ImportValue -> ImportValue)
-    | _ ->
-      (* TODO: handle requires *)
-      Require
-
-  let is_type = function
-    | ImportType -> true
-    | ImportValue -> false
-    | Require -> false
-end
-
 module ImportSource = struct
   let compare a b =
     (* TODO: sort global modules above ../ above ./ *)
@@ -76,6 +43,45 @@ module ImportSource = struct
     match source.[0] with
     | 'a' .. 'z' -> true
     | _ -> false
+end
+
+module Section = struct
+  type t =
+    | ImportType
+    | ImportValueFromRelative  (** import ... from './foo' *)
+    | ImportValueFromModule  (** import ... from 'foo' *)
+    | Require
+
+  let compare a b =
+    match (a, b) with
+    | (ImportType, ImportType) -> 0
+    | (ImportValueFromRelative, ImportValueFromRelative) -> 0
+    | (ImportValueFromModule, ImportValueFromModule) -> 0
+    | (Require, Require) -> 0
+    | (ImportType, _) -> (* types come first *) -1
+    | (_, ImportType) -> (* types come first *) 1
+    | (ImportValueFromRelative, ImportValueFromModule) -> -1
+    | (ImportValueFromModule, ImportValueFromRelative) -> 1
+    | (_, Require) -> (* requires come last *) -1
+    | (Require, _) -> (* requires come last *) 1
+
+  let of_statement = function
+    | ( _,
+        Statement.ImportDeclaration
+          { Statement.ImportDeclaration.import_kind; source = (_, { StringLiteral.value; _ }); _ }
+      ) ->
+      (match import_kind with
+      | Statement.ImportDeclaration.ImportType
+      | Statement.ImportDeclaration.ImportTypeof ->
+        ImportType
+      | Statement.ImportDeclaration.ImportValue ->
+        if ImportSource.is_lower value then
+          ImportValueFromModule
+        else
+          ImportValueFromRelative)
+    | _ ->
+      (* TODO: handle requires *)
+      Require
 end
 
 let mk_default_import ?loc ?comments ~from name =
@@ -284,7 +290,7 @@ let update_import ~bindings stmt =
   | _ -> failwith "trying to update a non-import"
 
 let compare_imports a b =
-  let k = ImportKind.(compare (of_statement a) (of_statement b)) in
+  let k = Section.(compare (of_statement a) (of_statement b)) in
   if k = 0 then
     ImportSource.(compare (of_statement a) (of_statement b))
   else
@@ -296,24 +302,12 @@ let compare_imports a b =
   whether to insert above or below. *)
 let sorted_insertion_point =
   let relative_placement import current =
-    let import_kind = ImportKind.of_statement import in
-    let current_kind = ImportKind.of_statement current in
-    let k = ImportKind.compare import_kind current_kind in
+    let k = Section.(compare (of_statement import) (of_statement current)) in
     if k = 0 then
       (* same section *)
-      let import_source = ImportSource.of_statement import in
-      let current_source = ImportSource.of_statement current in
-      let k = ImportSource.compare import_source current_source in
+      let k = ImportSource.(compare (of_statement import) (of_statement current)) in
       if k < 0 then
         Above { skip_line = false }
-      else if
-        (not (ImportKind.is_type import_kind))
-        && ImportSource.is_lower import_source
-        && not (ImportSource.is_lower current_source)
-      then
-        (* separate value imports that start with lowercase into a separate section
-           TODO: this is a Facebook style, could be made a config option. *)
-        Below { skip_line = true }
       else
         Below { skip_line = false }
     else if k < 0 then
@@ -372,23 +366,23 @@ let insertion_point ~imports ~body import =
       (* above first body statement *)
       (loc, Above { skip_line = true }))
 
-let kind_matches_bindings bindings import_kind =
-  let open ImportKind in
+let section_matches_bindings bindings section =
+  let open Section in
   (* TODO: confirm CJS/ESM interop, depends on flowconfig *)
-  match (import_kind, bindings) with
+  match (section, bindings) with
   | (ImportType, NamedType _) -> true
   | (ImportType, (Default _ | Named _ | Namespace _)) -> false
   | (Require, Default _) -> true
   | (Require, (Named _ | NamedType _ | Namespace _)) -> false
-  | (ImportValue, NamedType _) -> false
-  | (ImportValue, (Default _ | Named _ | Namespace _)) -> true
+  | ((ImportValueFromRelative | ImportValueFromModule), NamedType _) -> false
+  | ((ImportValueFromRelative | ImportValueFromModule), (Default _ | Named _ | Namespace _)) -> true
 
 let existing_import ~bindings ~from imports =
   let open Statement in
   let potentials =
     Base.List.filter
       ~f:(fun stmt ->
-        kind_matches_bindings bindings (ImportKind.of_statement stmt)
+        section_matches_bindings bindings (Section.of_statement stmt)
         && ImportSource.of_statement stmt = from)
       imports
   in
@@ -512,7 +506,7 @@ let adjust_placements =
         if
           Loc.equal prev_loc next_loc
           && compare_placement prev_placement next_placement = 0
-          && ImportKind.(compare (of_statement prev_stmt) (of_statement next_stmt)) = 0
+          && Section.(compare (of_statement prev_stmt) (of_statement next_stmt)) = 0
         then
           (* being inserted into the same section, so eliminate the line between them *)
           let (prev_placement, next_placement) =
