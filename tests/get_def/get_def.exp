@@ -96,3 +96,7 @@ identifier.js:11:11
 Flags:
 identifier.js:3:10,3:16
 
+module_ref.js:1:4
+Flags:
+helpers/Foo.js:6:18,6:18
+

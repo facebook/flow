@@ -259,7 +259,8 @@ class ['M, 'T] searcher
       | (Flow_ast.Expression.Literal Flow_ast.Literal.{ value = String str; _ }, Some prefix)
         when annot_covers_target annot && Base.String.is_prefix str ~prefix ->
         let loc = loc_of_annot annot in
-        this#request (Get_def_request.Require ((loc, str), loc))
+        let mref = Base.String.chop_prefix_exn str ~prefix in
+        this#request (Get_def_request.Require ((loc, mref), loc))
       | _ -> super#expression (annot, expr)
 
     (* object keys would normally hit this#t_identifier; this circumvents that. *)
