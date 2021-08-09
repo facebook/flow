@@ -447,5 +447,141 @@ References:
                        ^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- test.js:201:32
 
-Found 28 errors
+Cannot assign `this.#foo()` to `fooInvalid` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   test.js:201:32
+   201|     const fooInvalid: string = this.#foo();
+                                       ^^^^^^^^^^^
+
+References:
+   test.js:191:14
+   191|   #foo = (): number => 3;
+                     ^^^^^^ [1]
+   test.js:201:23
+   201|     const fooInvalid: string = this.#foo();
+                              ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:203:32
+
+Cannot assign `Calls.#bar()` to `barInvalid` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   test.js:203:32
+   203|     const barInvalid: number = Calls.#bar();
+                                       ^^^^^^^^^^^^
+
+References:
+   test.js:193:21
+   193|   static #bar = (): string => 'baz';
+                            ^^^^^^ [1]
+   test.js:203:23
+   203|     const barInvalid: number = Calls.#bar();
+                              ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:206:41
+
+Cannot assign `this.#optionalFoo?.(...)` to `optionalFooInvalid1` because null or undefined [1] is incompatible with
+number [2]. [incompatible-type]
+
+   test.js:206:41
+   206|     const optionalFooInvalid1: number = this.#optionalFoo?.('');
+                                                ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:195:17
+   195|   #optionalFoo: ?((string) => number);
+                        ^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:206:32
+   206|     const optionalFooInvalid1: number = this.#optionalFoo?.('');
+                                       ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:207:42
+
+Cannot assign `this.#optionalFoo?.(...)` to `optionalFooInvalid2` because number [1] is incompatible with string [2].
+[incompatible-type]
+
+   test.js:207:42
+   207|     const optionalFooInvalid2: ?string = this.#optionalFoo?.('');
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:195:31
+   195|   #optionalFoo: ?((string) => number);
+                                      ^^^^^^ [1]
+   test.js:207:33
+   207|     const optionalFooInvalid2: ?string = this.#optionalFoo?.('');
+                                        ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:208:62
+
+Cannot call `this.#optionalFoo` with `42` bound to the first parameter because number [1] is incompatible with
+string [2]. [incompatible-call]
+
+   test.js:208:62
+   208|     const optionalFooInvalid3: ?number = this.#optionalFoo?.(42);
+                                                                     ^^ [1]
+
+References:
+   test.js:195:20
+   195|   #optionalFoo: ?((string) => number);
+                           ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:211:41
+
+Cannot assign `Calls.#optionalBar?.(...)` to `optionalBarInvalid1` because null or undefined [1] is incompatible with
+string [2]. [incompatible-type]
+
+   test.js:211:41
+   211|     const optionalBarInvalid1: string = Calls.#optionalBar?.(0);
+                                                ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:197:24
+   197|   static #optionalBar: ?((number) => string)
+                               ^^^^^^^^^^^^^^^^^^^^^ [1]
+   test.js:211:32
+   211|     const optionalBarInvalid1: string = Calls.#optionalBar?.(0);
+                                       ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:212:42
+
+Cannot assign `Calls.#optionalBar?.(...)` to `optionalBarInvalid2` because string [1] is incompatible with number [2].
+[incompatible-type]
+
+   test.js:212:42
+   212|     const optionalBarInvalid2: ?number = Calls.#optionalBar?.(0);
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:197:38
+   197|   static #optionalBar: ?((number) => string)
+                                             ^^^^^^ [1]
+   test.js:212:33
+   212|     const optionalBarInvalid2: ?number = Calls.#optionalBar?.(0);
+                                        ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:213:63
+
+Cannot call `Calls.#optionalBar` with empty string bound to the first parameter because string [1] is incompatible with
+number [2]. [incompatible-call]
+
+   test.js:213:63
+   213|     const optionalBarInvalid3: ?string = Calls.#optionalBar?.('');
+                                                                      ^^ [1]
+
+References:
+   test.js:197:27
+   197|   static #optionalBar: ?((number) => string)
+                                  ^^^^^^ [2]
+
+
+
+Found 36 errors

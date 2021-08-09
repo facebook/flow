@@ -3812,33 +3812,20 @@ struct
             x
             fields
             tout
-        | (DefT (reason_c, _, InstanceT _), GetPrivatePropT (use_op, reason_op, x, [], _, _)) ->
-          add_output
-            cx
-            ~trace
-            (Error_message.EPrivateLookupFailed ((reason_op, reason_c), OrdinaryName x, use_op))
         | ( DefT (reason_c, _, InstanceT (_, _, _, instance)),
-            GetPrivatePropT (use_op, reason_op, x, scope :: scopes, static, tout) ) ->
-          if not (ALoc.equal_id scope.class_binding_id instance.class_id) then
-            rec_flow cx trace (l, GetPrivatePropT (use_op, reason_op, x, scopes, static, tout))
-          else
-            let map =
-              if static then
-                scope.class_private_static_fields
-              else
-                scope.class_private_fields
-            in
-            let x = OrdinaryName x in
-            (match NameUtils.Map.find_opt x (Context.find_props cx map) with
-            | None ->
-              add_output
-                cx
-                ~trace
-                (Error_message.EPrivateLookupFailed ((reason_op, reason_c), x, use_op))
-            | Some p ->
-              let action = ReadProp { use_op; obj_t = l; tout } in
-              let propref = Named (reason_op, x) in
-              perform_lookup_action cx trace propref p PropertyMapProperty reason_c reason_op action)
+            GetPrivatePropT (use_op, reason_op, prop_name, scopes, static, tout) ) ->
+          get_private_prop
+            ~cx
+            ~trace
+            ~l
+            ~reason_c
+            ~instance
+            ~use_op
+            ~reason_op
+            ~prop_name
+            ~scopes
+            ~static
+            ~tout
         | (DefT (_, _, InstanceT _), GetPropT (_, reason_op, Computed _, _)) ->
           (* Instances don't have proper dictionary support. All computed accesses
              are converted to named property access to `$key` and `$value` during
@@ -3886,6 +3873,28 @@ struct
              else, then something like `VoidT ~> CallT` doesn't need the op either
              because we want to point at the call and undefined thing. *)
           rec_flow cx trace (funt, apply_method_action use_op reason_call l action)
+        | ( DefT (reason_c, _, InstanceT (_, _, _, instance)),
+            PrivateMethodT
+              (use_op, reason_op, reason_lookup, prop_name, scopes, static, method_action, prop_t)
+          ) ->
+          let tvar = Tvar.mk_no_wrap cx reason_lookup in
+          let funt = OpenT (reason_lookup, tvar) in
+          get_private_prop
+            ~cx
+            ~trace
+            ~l
+            ~reason_c
+            ~instance
+            ~use_op
+            ~reason_op
+            ~prop_name
+            ~scopes
+            ~static
+            ~tout:(reason_lookup, tvar);
+          Base.Option.iter
+            ~f:(fun prop_t -> rec_flow_t cx ~use_op:unknown_use trace (funt, prop_t))
+            prop_t;
+          rec_flow cx trace (funt, apply_method_action use_op reason_op l method_action)
         | (DefT (_, _, InstanceT _), MethodT (_, reason_call, _, Computed _, _, _)) ->
           (* Instances don't have proper dictionary support. All computed accesses
              are converted to named property access to `$key` and `$value` during
@@ -4949,12 +4958,12 @@ struct
         (* class statics *)
         (*****************)
 
-        (* For GetPrivatePropT and SetPrivatePropT, the instance id is needed to determine whether
+        (* For Get/SetPrivatePropT or PrivateMethodT, the instance id is needed to determine whether
          * or not the private static field exists on that class. Since we look through the scopes for
          * the type of the field, there is no need to look at the static member of the instance.
          * Instead, we just flip the boolean flag to true, indicating that when the
-         * InstanceT ~> Set/GetPrivatePropT constraint is processed that we should look at the
-         * private static fields instead of the private instance fields. *)
+         * InstanceT ~> Set/GetPrivatePropT or PrivateMethodT constraint is processed that we should
+         * look at the private static fields instead of the private instance fields. *)
         | ( DefT (reason, _, ClassT instance),
             GetPrivatePropT (use_op, reason_op, x, scopes, _, tout) ) ->
           let u = GetPrivatePropT (use_op, reason_op, x, scopes, true, tout) in
@@ -4962,6 +4971,12 @@ struct
         | ( DefT (reason, _, ClassT instance),
             SetPrivatePropT (use_op, reason_op, x, mode, scopes, _, tout, tp) ) ->
           let u = SetPrivatePropT (use_op, reason_op, x, mode, scopes, true, tout, tp) in
+          rec_flow cx trace (instance, ReposLowerT (reason, false, u))
+        | ( DefT (reason, _, ClassT instance),
+            PrivateMethodT (use_op, reason_op, reason_lookup, prop_name, scopes, _, action, tp) ) ->
+          let u =
+            PrivateMethodT (use_op, reason_op, reason_lookup, prop_name, scopes, true, action, tp)
+          in
           rec_flow cx trace (instance, ReposLowerT (reason, false, u))
         | ( DefT (reason, _, ClassT instance),
             MethodT (use_op, reason_call, reason_lookup, propref, action, prop_t) ) ->
@@ -6295,6 +6310,7 @@ struct
     | OptionalIndexedAccessT _
     | OrT _
     | PredicateT _
+    | PrivateMethodT _
     | ReactKitT _
     | RefineT _
     | ReposLowerT _
@@ -7508,6 +7524,47 @@ struct
          super
          x
          map
+
+  and get_private_prop
+      ~cx ~trace ~l ~reason_c ~instance ~use_op ~reason_op ~prop_name ~scopes ~static ~tout =
+    match scopes with
+    | [] ->
+      add_output
+        cx
+        ~trace
+        (Error_message.EPrivateLookupFailed ((reason_op, reason_c), OrdinaryName prop_name, use_op))
+    | scope :: scopes ->
+      if not (ALoc.equal_id scope.class_binding_id instance.class_id) then
+        get_private_prop
+          ~cx
+          ~trace
+          ~l
+          ~reason_c
+          ~instance
+          ~use_op
+          ~reason_op
+          ~prop_name
+          ~scopes
+          ~static
+          ~tout
+      else
+        let map =
+          if static then
+            scope.class_private_static_fields
+          else
+            scope.class_private_fields
+        in
+        let x = OrdinaryName prop_name in
+        (match NameUtils.Map.find_opt x (Context.find_props cx map) with
+        | None ->
+          add_output
+            cx
+            ~trace
+            (Error_message.EPrivateLookupFailed ((reason_op, reason_c), x, use_op))
+        | Some p ->
+          let action = ReadProp { use_op; obj_t = l; tout } in
+          let propref = Named (reason_op, x) in
+          perform_lookup_action cx trace propref p PropertyMapProperty reason_c reason_op action)
 
   and match_prop
       cx

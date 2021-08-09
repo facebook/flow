@@ -186,3 +186,30 @@ class RefinementClashes {
    }
   }
 }
+
+class Calls {
+  #foo = (): number => 3;
+
+  static #bar = (): string => 'baz';
+
+  #optionalFoo: ?((string) => number);
+
+  static #optionalBar: ?((number) => string)
+
+  test(): void {
+    const fooValid: number = this.#foo();
+    const fooInvalid: string = this.#foo();
+    const barValid: string = Calls.#bar();
+    const barInvalid: number = Calls.#bar();
+
+    const optionalFooValid: ?number = this.#optionalFoo?.('');
+    const optionalFooInvalid1: number = this.#optionalFoo?.('');
+    const optionalFooInvalid2: ?string = this.#optionalFoo?.('');
+    const optionalFooInvalid3: ?number = this.#optionalFoo?.(42);
+
+    const optionalBarValid: ?string = Calls.#optionalBar?.(0);
+    const optionalBarInvalid1: string = Calls.#optionalBar?.(0);
+    const optionalBarInvalid2: ?number = Calls.#optionalBar?.(0);
+    const optionalBarInvalid3: ?string = Calls.#optionalBar?.('');
+  }
+}

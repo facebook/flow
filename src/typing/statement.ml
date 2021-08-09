@@ -4738,6 +4738,12 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
           in
           let prop_t = Tvar.mk cx reason_prop in
           let call_voided_out = Tvar.mk cx reason_call in
+          let private_ =
+            match property with
+            | Member.PropertyExpression _ -> Utils_js.assert_false "unexpected property expression"
+            | Member.PropertyPrivateName _ -> true
+            | Member.PropertyIdentifier _ -> false
+          in
           let get_opt_use argts _ _ =
             method_call_opt_use
               cx
@@ -4746,6 +4752,7 @@ and optional_chain ~cond ~is_existence_check ?sentinel_refine cx ((loc, e) as ex
               ~voided_out:call_voided_out
               reason_call
               ~use_op
+              ~private_
               prop_loc
               (callee, name)
               loc
@@ -5055,6 +5062,7 @@ and method_call_opt_use
     ~prop_t
     reason
     ~use_op
+    ~private_
     ?(havoc = true)
     ?(call_strict_arity = true)
     prop_loc
@@ -5076,7 +5084,11 @@ and method_call_opt_use
       OptChainM (chain_reason, mk_expression_reason expr, prop_t, app, voided_out)
     | _ -> OptCallM app
   in
-  OptMethodT (use_op, reason, reason_expr, propref, action, Some prop_t)
+  if private_ then
+    let class_entries = Env.get_class_entries () in
+    OptPrivateMethodT (use_op, reason, reason_expr, name, class_entries, false, action, Some prop_t)
+  else
+    OptMethodT (use_op, reason, reason_expr, propref, action, Some prop_t)
 
 (* returns (type of method itself, type returned from method) *)
 and method_call

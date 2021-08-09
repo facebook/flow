@@ -465,6 +465,17 @@ module rec TypeTerm : sig
        method called. This will be primarily used for type-table bookkeeping. *)
     | MethodT of
         use_op * (* call *) reason * (* lookup *) reason * propref * method_action * t option
+    (* Similar to above, but stores information necessary to resolve a private method. *)
+    | PrivateMethodT of
+        use_op
+        * (* call *) reason
+        * (* lookup *) reason
+        * (* prop *) string
+        * class_binding list
+        * (* static *) bool
+        * method_action
+        * (* prop_t *)
+        t option
     (* Similar to the last element of the MethodT *)
     | SetPropT of use_op * reason * propref * set_mode * write_ctx * t * t option
     (* The boolean flag indicates whether or not it is a static lookup. We cannot know this when
@@ -882,6 +893,15 @@ module rec TypeTerm : sig
     | OptCallT of use_op * reason * opt_funcalltype
     | OptMethodT of
         use_op * (* call *) reason * (* lookup *) reason * propref * opt_method_action * t option
+    | OptPrivateMethodT of
+        use_op
+        * (* call *) reason
+        * (* lookup *) reason
+        * string
+        * class_binding list
+        * bool
+        * opt_method_action
+        * t option
     | OptGetPropT of use_op * reason * propref
     | OptGetPrivatePropT of use_op * reason * string * class_binding list * bool
     | OptTestPropT of reason * ident * propref
@@ -3323,6 +3343,7 @@ let string_of_use_ctor = function
   | MakeExactT _ -> "MakeExactT"
   | MapTypeT _ -> "MapTypeT"
   | MethodT _ -> "MethodT"
+  | PrivateMethodT _ -> "PrivateMethodT"
   | MixinT _ -> "MixinT"
   | NotT _ -> "NotT"
   | NullishCoalesceT _ -> "NullishCoalesceT"
@@ -3594,6 +3615,8 @@ let apply_opt_use opt_use t_out =
   match opt_use with
   | OptMethodT (op, r1, r2, ref, action, prop_tout) ->
     MethodT (op, r1, r2, ref, apply_opt_action action t_out, prop_tout)
+  | OptPrivateMethodT (op, r1, r2, p, scopes, static, action, prop_tout) ->
+    PrivateMethodT (op, r1, r2, p, scopes, static, apply_opt_action action t_out, prop_tout)
   | OptCallT (u, r, f) -> CallT (u, r, apply_opt_funcalltype f t_out)
   | OptGetPropT (u, r, p) -> GetPropT (u, r, p, t_out)
   | OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)

@@ -760,6 +760,8 @@ and dump_use_t_ (depth, tvars) cx t =
     | MapTypeT _ -> p t
     | MethodT (_, _, _, prop, action, _) ->
       p ~extra:(spf "(%s, %s)" (propref prop) (method_action action)) t
+    | PrivateMethodT (_, _, _, prop, _, _, action, _) ->
+      p ~extra:(spf "(%s), (%s)" prop (method_action action)) t
     | MixinT (_, arg) -> p ~extra:(kid arg) t
     | NotT (_, arg) -> p ~extra:(tout arg) t
     | NullishCoalesceT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (tout y)) t

@@ -127,6 +127,7 @@ and reason_of_use_t = function
   | OptionalIndexedAccessT { reason; _ } -> reason
   | OrT (reason, _, _) -> reason
   | PredicateT (_, (reason, _)) -> reason
+  | PrivateMethodT (_, reason, _, _, _, _, _, _) -> reason
   | ReactKitT (_, reason, _) -> reason
   | RefineT (reason, _, _) -> reason
   | ReposLowerT (reason, _, _) -> reason
@@ -311,6 +312,8 @@ and mod_reason_of_use_t f = function
     OptionalIndexedAccessT { x with reason = f reason }
   | OrT (reason, t1, t2) -> OrT (f reason, t1, t2)
   | PredicateT (pred, (reason, t)) -> PredicateT (pred, (f reason, t))
+  | PrivateMethodT (use_op, call_reason, lookup_reason, props, cbs, static, action, prop_t) ->
+    PrivateMethodT (use_op, f call_reason, lookup_reason, props, cbs, static, action, prop_t)
   | ReactKitT (use_op, reason, tool) -> ReactKitT (use_op, f reason, tool)
   | RefineT (reason, p, t) -> RefineT (f reason, p, t)
   | ReposLowerT (reason, use_desc, t) -> ReposLowerT (f reason, use_desc, t)
@@ -360,6 +363,8 @@ and mod_reason_of_opt_use_t f = function
   | OptCallT (use_op, reason, ft) -> OptCallT (use_op, reason, ft)
   | OptMethodT (op, r1, r2, ref, action, prop_tout) ->
     OptMethodT (op, f r1, r2, ref, action, prop_tout)
+  | OptPrivateMethodT (op, r1, r2, props, cbs, static, action, prop_tout) ->
+    OptPrivateMethodT (op, f r1, r2, props, cbs, static, action, prop_tout)
   | OptGetPropT (use_op, reason, n) -> OptGetPropT (use_op, f reason, n)
   | OptGetPrivatePropT (use_op, reason, name, bindings, static) ->
     OptGetPrivatePropT (use_op, f reason, name, bindings, static)
@@ -382,6 +387,8 @@ let rec util_use_op_of_use_t :
   | BindT (op, r, f, b) -> util op (fun op -> BindT (op, r, f, b))
   | CallT (op, r, f) -> util op (fun op -> CallT (op, r, f))
   | MethodT (op, r1, r2, p, f, tm) -> util op (fun op -> MethodT (op, r1, r2, p, f, tm))
+  | PrivateMethodT (op, r1, r2, x, c, s, a, p) ->
+    util op (fun op -> PrivateMethodT (op, r1, r2, x, c, s, a, p))
   | SetPropT (op, r, p, m, w, t, tp) -> util op (fun op -> SetPropT (op, r, p, m, w, t, tp))
   | SetPrivatePropT (op, r, s, m, c, b, t, tp) ->
     util op (fun op -> SetPrivatePropT (op, r, s, m, c, b, t, tp))
