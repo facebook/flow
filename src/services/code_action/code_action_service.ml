@@ -20,6 +20,9 @@ let include_extract_refactors only = include_code_action ~only Lsp.CodeActionKin
 
 let include_add_missing_imports_action only = include_code_action ~only add_missing_imports_kind
 
+let include_organize_imports_actions only =
+  include_code_action ~only Lsp.CodeActionKind.source_organize_imports
+
 let layout_options options =
   Js_layout_generator.
     {
@@ -558,7 +561,13 @@ let code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors =
 
 (** List of code actions we implement. *)
 let supported_code_actions options =
-  let actions = [Lsp.CodeActionKind.quickfix; add_missing_imports_kind] in
+  let actions =
+    [
+      Lsp.CodeActionKind.quickfix;
+      add_missing_imports_kind;
+      Lsp.CodeActionKind.kind_of_string "source.organizeImports.flow";
+    ]
+  in
   if Options.refactor options then
     Lsp.CodeActionKind.refactor_extract :: actions
   else
@@ -571,6 +580,24 @@ let kind_is_supported ~options only =
   | Some only ->
     let supported = supported_code_actions options in
     Base.List.exists ~f:(fun kind -> Lsp.CodeActionKind.contains_kind kind supported) only
+
+let organize_imports_code_action uri =
+  let open Lsp in
+  CodeAction.Action
+    {
+      CodeAction.title = "Organize imports";
+      kind = CodeActionKind.kind_of_string "source.organizeImports.flow";
+      diagnostics = [];
+      action =
+        CodeAction.CommandOnly
+          {
+            Command.title = "";
+            command = Command.Command "source.organizeImports";
+            arguments =
+              (* Lsp.TextDocumentIdentifier *)
+              [Hh_json.JSON_Object [("uri", Hh_json.JSON_String (Lsp.DocumentUri.to_string uri))]];
+          };
+    }
 
 let code_actions_at_loc
     ~options
@@ -624,7 +651,14 @@ let code_actions_at_loc
       loc
   in
   let parse_error_fixes = code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors in
-  Lwt.return (Ok (parse_error_fixes @ experimental_code_actions @ error_fixes))
+  let actions = parse_error_fixes @ experimental_code_actions @ error_fixes in
+  let actions =
+    if include_organize_imports_actions only then
+      organize_imports_code_action uri :: actions
+    else
+      actions
+  in
+  Lwt.return (Ok actions)
 
 module ExportSourceMap = WrappedMap.Make (struct
   type t = Export_index.source

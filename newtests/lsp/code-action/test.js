@@ -101,7 +101,7 @@ export default (suite(
         [...lspIgnoreStatusAndCancellation],
       ),
     ]),
-    test('provide codeAction for adding optional chaining', [
+    test('provide quickfix for adding optional chaining', [
       addFile('add-optional-chaining.js.ignored', 'add-optional-chaining.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
@@ -119,6 +119,7 @@ export default (suite(
           },
         },
         context: {
+          only: ['quickfix'],
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
@@ -213,6 +214,7 @@ export default (suite(
           },
         },
         context: {
+          only: ['quickfix'],
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
@@ -259,7 +261,7 @@ export default (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
-    test('provide codeAction for PropMissing errors with dot syntax', [
+    test('provide quickfix for PropMissing errors with dot syntax', [
       addFile('prop-missing.js.ignored', 'prop-missing.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
@@ -275,6 +277,7 @@ export default (suite(
           },
         },
         context: {
+          only: ['quickfix'],
           diagnostics: [
             {
               range: {
@@ -465,7 +468,7 @@ export default (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
-    test('provide codeAction for invalid enum member access errors', [
+    test('provide quickfix for invalid enum member access errors', [
       addFile(
         'invalid-enum-member-access.js.ignored',
         'invalid-enum-member-access.js',
@@ -486,6 +489,7 @@ export default (suite(
           },
         },
         context: {
+          only: ['quickfix'],
           diagnostics: [
             {
               range: {
@@ -634,7 +638,7 @@ export default (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
-    test('provide codeAction for parse error', [
+    test('provide quickfix for parse error', [
       addFile('parse-error.js.ignored', 'parse-error.js'),
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/codeAction', {
@@ -650,6 +654,7 @@ export default (suite(
           },
         },
         context: {
+          only: ['quickfix'],
           diagnostics: [
             {
               range: {
@@ -2018,6 +2023,21 @@ export default (suite(
           {
             method: 'textDocument/codeAction',
             result: [
+              {
+                title: 'Organize imports',
+                kind: 'source.organizeImports.flow',
+                diagnostics: [],
+                command: {
+                  title: '',
+                  command:
+                    'source.organizeImports:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                  arguments: [
+                    {
+                      uri: '<PLACEHOLDER_PROJECT_URL>/only-filter.js',
+                    },
+                  ],
+                },
+              },
               {
                 title: 'Extract to constant in module scope',
                 kind: 'refactor.extract',

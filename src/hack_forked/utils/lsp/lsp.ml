@@ -315,6 +315,8 @@ module CodeActionKind = struct
 
   (** Document wide code actions *)
   let source = kind_of_string "source"
+
+  let source_organize_imports = kind_of_string "source.organizeImports"
 end
 
 (** Cancellation notification, method="$/cancelRequest" *)

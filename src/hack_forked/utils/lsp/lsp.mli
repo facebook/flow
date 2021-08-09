@@ -219,6 +219,8 @@ module CodeActionKind : sig
   val refactor_extract : t
 
   val source : t
+
+  val source_organize_imports : t
 end
 
 module CodeActionClientCapabilities : sig

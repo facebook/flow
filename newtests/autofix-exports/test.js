@@ -34,6 +34,7 @@ export default (suite(
           },
         },
         context: {
+          only: ['quickfix'],
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
@@ -59,6 +60,7 @@ export default (suite(
           },
         },
         context: {
+          only: ['quickfix'],
           diagnostics: [
             {
               range: {
@@ -138,6 +140,7 @@ export default (suite(
           },
         },
         context: {
+          only: ['quickfix'],
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
@@ -195,6 +198,7 @@ export default (suite(
           },
         },
         context: {
+          only: ['quickfix'],
           diagnostics: [],
         },
       }).verifyAllLSPMessagesInStep(
