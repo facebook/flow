@@ -284,32 +284,35 @@ let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
       Base.List.filter diagnostics ~f:(fun { source; code; range; _ } ->
           source = Some "Flow" && code = lsp_code && Lsp_helpers.ranges_overlap range error_range)
     in
-    Export_index.ExportSet.fold
-      (fun (source, export_kind) acc ->
-        match text_edits_of_import ~options ~reader ~src_dir ~ast export_kind name source with
-        | None -> acc
-        | Some { edits; title; from = _ } ->
-          let command =
-            CodeAction.Action
-              {
-                CodeAction.title;
-                kind = CodeActionKind.quickfix;
-                diagnostics = relevant_diagnostics;
-                action =
-                  CodeAction.BothEditThenCommand
-                    ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
-                      {
-                        Command.title = "";
-                        command = Command.Command "log";
-                        arguments =
-                          ["textDocument/codeAction"; "import"; title]
-                          |> List.map (fun str -> Hh_json.JSON_String str);
-                      } );
-              }
-          in
-          command :: acc)
-      files
-      []
+    let rev_actions =
+      Export_index.ExportSet.fold
+        (fun (source, export_kind) acc ->
+          match text_edits_of_import ~options ~reader ~src_dir ~ast export_kind name source with
+          | None -> acc
+          | Some { edits; title; from = _ } ->
+            let command =
+              CodeAction.Action
+                {
+                  CodeAction.title;
+                  kind = CodeActionKind.quickfix;
+                  diagnostics = relevant_diagnostics;
+                  action =
+                    CodeAction.BothEditThenCommand
+                      ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                        {
+                          Command.title = "";
+                          command = Command.Command "log";
+                          arguments =
+                            ["textDocument/codeAction"; "import"; title]
+                            |> List.map (fun str -> Hh_json.JSON_String str);
+                        } );
+                }
+            in
+            command :: acc)
+        files
+        []
+    in
+    Base.List.rev rev_actions
 
 let autofix_in_upstream_file
     ~reader ~diagnostics ~ast ~options ~title ~transform ~diagnostic_title uri loc =
