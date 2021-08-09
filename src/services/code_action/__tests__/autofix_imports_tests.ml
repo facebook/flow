@@ -115,6 +115,15 @@ let assert_imports ~ctxt ?bracket_spacing ?single_quotes expected added_imports 
     expected
     contents
 
+let assert_organized ~ctxt ?bracket_spacing ?single_quotes expected contents =
+  assert_patch
+    ~ctxt
+    ?bracket_spacing
+    ?single_quotes
+    ~f:Autofix_imports.organize_imports
+    expected
+    contents
+
 (* TODO: ocamlformat mangles indentation. *)
 [@@@ocamlformat "disable=true"]
 
@@ -675,4 +684,74 @@ let add_imports_tests =
       assert_imports ~ctxt expected added_imports contents );
   ]
 
-let tests = "autofix_imports" >::: ["add_import" >::: add_import_tests; "add_imports" >::: add_imports_tests]
+let organize_imports_tests =
+  [
+    ( "combine_specifiers" >:: fun ctxt ->
+      let contents = {|
+        import { foo } from "./foo";
+        import { bar } from "./foo";
+
+        foo
+      |} in
+      let expected = {|
+        import { bar, foo } from "./foo";
+
+        foo
+      |} in
+      assert_organized ~ctxt expected contents );
+    ( "maintain_comments" >:: fun ctxt ->
+      let contents = {|
+        // leading on ./foo
+        import { foo } from "./foo";
+        // trailing on ./foo
+
+        foo
+      |} in
+      assert_organized ~ctxt contents contents );
+    ( "move_comments" >:: fun ctxt ->
+      let contents = {|
+        // leading on ./foo
+        import { foo } from "./foo";
+
+        // leading on ./bar
+        import { bar } from "./bar";
+
+        foo
+      |} in
+      let expected = {|
+        // leading on ./bar
+        import { bar } from "./bar";
+        // leading on ./foo
+        import { foo } from "./foo";
+
+        foo
+      |} in
+      assert_organized ~ctxt expected contents );
+    ( "combine_comments" >:: fun ctxt ->
+      let contents = {|
+        // comment on foo
+        import { foo } from "./foo";
+        // comment on bar
+        import { bar } from "./foo";
+
+        foo
+      |} in
+      let expected = {|
+        // comment on bar
+        // comment on foo
+        import { bar, foo } from "./foo";
+
+        foo
+      |} in
+      assert_organized ~ctxt expected contents );
+  ]
+
+[@@@ocamlformat "disable=false"]
+
+let tests =
+  "autofix_imports"
+  >::: [
+         "add_import" >::: add_import_tests;
+         "add_imports" >::: add_imports_tests;
+         "organize_imports" >::: organize_imports_tests;
+       ]

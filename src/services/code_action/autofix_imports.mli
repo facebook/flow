@@ -31,4 +31,7 @@ val add_imports :
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   (Loc.t * string) list
 
+val organize_imports :
+  options:Js_layout_generator.opts -> (Loc.t, Loc.t) Flow_ast.Program.t -> (Loc.t * string) list
+
 val loc_is_type : ast:(Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t -> bool

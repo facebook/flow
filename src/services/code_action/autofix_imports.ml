@@ -84,6 +84,10 @@ module Section = struct
       Require
 end
 
+let loc_with_comments stmt =
+  Comment_attachment.statement_comment_bounds stmt
+  |> Comment_attachment.expand_loc_with_comment_bounds (fst stmt)
+
 let mk_default_import ?loc ?comments ~from name =
   let open Ast_builder in
   let default = Some (Identifiers.identifier name) in
@@ -198,10 +202,7 @@ let compare_specifiers a b =
 let update_import ~bindings stmt =
   let open Statement in
   let open Statement.ImportDeclaration in
-  let loc =
-    Comment_attachment.statement_comment_bounds stmt
-    |> Comment_attachment.expand_loc_with_comment_bounds (fst stmt)
-  in
+  let loc = loc_with_comments stmt in
   match stmt with
   | (_, ImportDeclaration { import_kind; source; default; specifiers; comments }) ->
     let (_, { StringLiteral.value = from; _ }) = source in
@@ -586,6 +587,156 @@ let add_imports ~options ~added_imports ast : (Loc.t * string) list =
 
 let add_import ~options ~bindings ~from ast : (Loc.t * string) list =
   add_imports ~options ~added_imports:[(from, bindings)] ast
+
+(** [merge_imports a b] merges all of the bindings from [a] and [b] into
+    a new import declaration.
+
+    If [a] or [b] is not an [ImportDeclaration], or they're from different
+    source files, or have differently named default or namespace imports,
+    a [Failure] exception is raised. See also [compare_imports]; if it
+    returns [0], they should be mergeable.
+
+    All of the resulting [Loc.t]'s are replaced with [Loc.none], since
+    they are no longer meaningful *)
+let merge_imports =
+  let open Statement in
+  let open Statement.ImportDeclaration in
+  let merge_comments a b =
+    let open Syntax in
+    match (a, b) with
+    | (None, c)
+    | (c, None) ->
+      c
+    | (Some a, Some b) ->
+      let leading = a.leading @ b.leading in
+      let trailing = a.trailing @ b.trailing in
+      Flow_ast_utils.mk_comments_opt ~leading ~trailing ()
+  in
+  let merge_defaults a b =
+    match (a, b) with
+    | (Some default, None) -> Some default
+    | (None, Some default) -> Some default
+    | (None, None) -> None
+    | ( Some (_, { Identifier.name; comments }),
+        Some (_, { Identifier.name = b_name; comments = b_comments }) ) ->
+      if name <> b_name then
+        failwith "Can't merge imports with different defaults from the same file";
+      Some (Loc.none, { Identifier.name; comments = merge_comments comments b_comments })
+  in
+  let merge_named_specifiers a b =
+    Base.List.rev_append a b |> Base.List.sort ~compare:compare_specifiers
+  in
+  let merge_namespace_specifier a b =
+    let (_, (_, { Identifier.name; comments = a_comments })) = a in
+    let (_, (_, { Identifier.name = b_name; comments = b_comments })) = b in
+    if name <> b_name then
+      failwith "Can't merge imports with different namespace imports from the same file";
+    let comments = merge_comments a_comments b_comments in
+    (Loc.none, (Loc.none, { Identifier.name; comments }))
+  in
+  let merge_specifiers a b =
+    match (a, b) with
+    | (None, None) -> None
+    | (Some _, None) -> a
+    | (None, Some _) -> b
+    | (Some (ImportNamedSpecifiers a_named), Some (ImportNamedSpecifiers b_named)) ->
+      Some (ImportNamedSpecifiers (merge_named_specifiers a_named b_named))
+    | (Some (ImportNamespaceSpecifier a_ns), Some (ImportNamespaceSpecifier b_ns)) ->
+      Some (ImportNamespaceSpecifier (merge_namespace_specifier a_ns b_ns))
+    | (Some (ImportNamedSpecifiers _), Some (ImportNamespaceSpecifier _))
+    | (Some (ImportNamespaceSpecifier _), Some (ImportNamedSpecifiers _)) ->
+      failwith "Can't merge imports with named and namespace specifiers"
+  in
+  fun a b ->
+    match (a, b) with
+    | ( ( _,
+          ImportDeclaration
+            {
+              import_kind;
+              source = (_, { StringLiteral.value = a_from; _ }) as source;
+              default = a_default;
+              specifiers = a_specifiers;
+              comments = a_comments;
+            } ),
+        ( _,
+          ImportDeclaration
+            {
+              import_kind = b_import_kind;
+              source = (_, { StringLiteral.value = b_from; _ });
+              default = b_default;
+              specifiers = b_specifiers;
+              comments = b_comments;
+            } ) ) ->
+      if a_from <> b_from then failwith "Can't merge imports from different files";
+      (* TODO: we _could_ turn `import {a} from 'a'; import type {T} from 'a'` into
+         `import {a, type T} from 'a'` *)
+      if import_kind <> b_import_kind then failwith "Can't merge imports of different kinds";
+      let default = merge_defaults a_default b_default in
+      let specifiers = merge_specifiers a_specifiers b_specifiers in
+      let comments = merge_comments a_comments b_comments in
+      (Loc.none, ImportDeclaration { import_kind; source; default; specifiers; comments })
+    | (_, _) -> failwith "Can only merge 2 ImportDeclarations"
+
+let merge_changes (a_loc, (a_placement, a_stmt)) (_, (_, b_stmt)) =
+  (a_loc, (a_placement, merge_imports a_stmt b_stmt))
+
+let merge_consecutive_duplicates changes =
+  let rec loop prev acc = function
+    | [] -> prev :: acc
+    | hd :: tl ->
+      if compare_changes hd prev = 0 then
+        let prev = merge_changes hd prev in
+        loop prev acc tl
+      else
+        loop hd (prev :: acc) tl
+  in
+  match changes with
+  | [] -> []
+  | hd :: tl -> Base.List.rev (loop hd [] tl)
+
+let sort_and_dedup_changes changes =
+  let sorted = Base.List.sort ~compare:compare_changes changes in
+  merge_consecutive_duplicates sorted
+
+(** Converts all locs to [Loc.none], because we've moved things around and
+    the printer uses line numbers for whitespace decisions (especially
+    comments). *)
+class loc_stripper =
+  object
+    inherit [Loc.t, Loc.t, Loc.t, Loc.t] Flow_polymorphic_ast_mapper.mapper
+
+    method on_loc_annot _ = Loc.none
+
+    method on_type_annot _ = Loc.none
+  end
+
+let organize_imports ~options ast =
+  let (Flow_ast_differ.Partitioned { directives = _; imports; body = _ }) =
+    let (_, { Program.statements; _ }) = ast in
+    Flow_ast_differ.partition_imports statements
+  in
+  let no_locs = new loc_stripper in
+  match imports with
+  | [] -> []
+  | first_import :: tl ->
+    let loc =
+      let start_loc = loc_with_comments first_import in
+      match Base.List.rev tl with
+      | last_import :: _ ->
+        let end_loc = loc_with_comments last_import in
+        Loc.btwn start_loc end_loc
+      | [] -> start_loc
+    in
+    let edit =
+      imports
+      |> Base.List.map ~f:(fun stmt -> (loc, (Above { skip_line = true }, no_locs#statement stmt)))
+      |> sort_and_dedup_changes
+      |> adjust_placements
+      |> Base.List.map ~f:(fun change -> string_of_change ~options change |> snd)
+      |> String.concat ""
+      |> Base.String.chop_suffix_exn ~suffix:"\n\n"
+    in
+    [(loc, edit)]
 
 module Identifier_finder = struct
   type kind =

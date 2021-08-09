@@ -827,6 +827,14 @@ let suggest ~options ~env ~profiling file_key file_content =
     Lwt.return (Ok (tc_errors, tc_warnings, suggest_warnings, file_patch))
   | Error _ -> Lwt.return (Error tc_errors)
 
+let organize_imports ~options ~ast =
+  let edits =
+    let opts = layout_options options in
+    Autofix_imports.organize_imports ~options:opts ast
+    |> Flow_lsp_conversions.flow_loc_patch_to_lsp_edits
+  in
+  edits
+
 module For_tests = struct
   let path_of_modulename = path_of_modulename
 end

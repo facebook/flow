@@ -1077,6 +1077,20 @@ let add_missing_imports ~reader ~options ~env ~profiling ~client textDocument =
     | Ok (Parse_artifacts { ast; _ }, Typecheck_artifacts { cx; typed_ast = _ }) ->
       Lwt.return (Ok (Code_action_service.autofix_imports ~options ~env ~reader ~cx ~ast ~uri)))
 
+let organize_imports ~options ~profiling ~client textDocument =
+  let file_input = file_input_of_text_document_identifier ~client textDocument in
+  let file_key = File_key.SourceFile (File_input.filename_of_file_input file_input) in
+  match File_input.content_of_file_input file_input with
+  | Error msg -> Lwt.return (Error msg)
+  | Ok file_contents ->
+    let%lwt (parse_artifacts, _parse_errors) =
+      Type_contents.parse_contents ~options ~profiling file_contents file_key
+    in
+    (match parse_artifacts with
+    | None -> Lwt.return (Ok [])
+    | Some (Parse_artifacts { ast; _ }) ->
+      Lwt.return (Ok (Code_action_service.organize_imports ~options ~ast)))
+
 type command_handler =
   (* A command can be handled immediately if it is super duper fast and doesn't require the env.
    * These commands will be handled as soon as we read them off the pipe. Almost nothing should ever
@@ -2200,6 +2214,22 @@ let handle_persistent_log_command ~id ~metadata ~arguments:_ ~client:_ ~profilin
   Lwt.return
     ((), LspProt.LspFromServer (Some (ResponseMessage (id, ExecuteCommandResult ()))), metadata)
 
+let send_workspace_edit ~client ~id ~metadata ~on_response ~on_error label edit =
+  let req_id =
+    let prefix =
+      match id with
+      | Lsp.NumberId id -> string_of_int id
+      | Lsp.StringId id -> id
+    in
+    Lsp.StringId (spf "%s:applyEdit" prefix)
+  in
+  let request =
+    RequestMessage (req_id, ApplyWorkspaceEditRequest { ApplyWorkspaceEdit.label; edit })
+  in
+  let handler = ApplyWorkspaceEditHandler on_response in
+  Persistent_connection.push_outstanding_handler client req_id (handler, on_error);
+  Lwt.return ((), LspProt.LspFromServer (Some request), metadata)
+
 let handle_persistent_add_missing_imports_command
     ~reader ~options ~id ~metadata ~textDocument ~client ~profiling ~env =
   let%lwt edits = add_missing_imports ~reader ~options ~env ~profiling ~client textDocument in
@@ -2211,34 +2241,38 @@ let handle_persistent_add_missing_imports_command
       ((), LspProt.LspFromServer (Some (ResponseMessage (id, ExecuteCommandResult ()))), metadata)
   | Ok edits ->
     (* send a workspace/applyEdit command to the client. when it replies, we'll reply to the command *)
-    let req_id =
-      let prefix =
-        match id with
-        | Lsp.NumberId id -> string_of_int id
-        | Lsp.StringId id -> id
-      in
-      Lsp.StringId (spf "%s:applyEdit" prefix)
-    in
-    let uri = TextDocumentIdentifier.(textDocument.uri) in
-    let edit = { WorkspaceEdit.changes = Lsp.UriMap.singleton uri edits } in
-    let request =
-      RequestMessage
-        ( req_id,
-          ApplyWorkspaceEditRequest { ApplyWorkspaceEdit.label = Some "Add missing imports"; edit }
-        )
-    in
-    let handler =
-      ApplyWorkspaceEditHandler
-        (fun _result () ->
-          (* respond to original executeCommand *)
-          let response = ResponseMessage (id, ExecuteCommandResult ()) in
-          Persistent_connection.send_response
-            (LspProt.LspFromServer (Some response), metadata)
-            client)
+    let on_response _result () =
+      (* respond to original executeCommand *)
+      let response = ResponseMessage (id, ExecuteCommandResult ()) in
+      Persistent_connection.send_response (LspProt.LspFromServer (Some response), metadata) client
     in
     let on_error _ () = (* TODO send error to client *) () in
-    Persistent_connection.push_outstanding_handler client req_id (handler, on_error);
-    Lwt.return ((), LspProt.LspFromServer (Some request), metadata)
+    let label = Some "Add missing imports" in
+    let uri = TextDocumentIdentifier.(textDocument.uri) in
+    let edit = { WorkspaceEdit.changes = Lsp.UriMap.singleton uri edits } in
+    send_workspace_edit ~client ~id ~metadata ~on_response ~on_error label edit
+
+let handle_persistent_organize_imports_command
+    ~options ~id ~metadata ~textDocument ~client ~profiling =
+  let%lwt edits = organize_imports ~options ~profiling ~client textDocument in
+  match edits with
+  | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
+  | Ok [] ->
+    (* nothing to do, return immediately *)
+    Lwt.return
+      ((), LspProt.LspFromServer (Some (ResponseMessage (id, ExecuteCommandResult ()))), metadata)
+  | Ok edits ->
+    (* send a workspace/applyEdit command to the client. when it replies, we'll reply to the command *)
+    let on_response _result () =
+      (* respond to original executeCommand *)
+      let response = ResponseMessage (id, ExecuteCommandResult ()) in
+      Persistent_connection.send_response (LspProt.LspFromServer (Some response), metadata) client
+    in
+    let on_error _ () = (* TODO send error to client *) () in
+    let label = Some "Organize imports" in
+    let uri = TextDocumentIdentifier.(textDocument.uri) in
+    let edit = { WorkspaceEdit.changes = Lsp.UriMap.singleton uri edits } in
+    send_workspace_edit ~client ~id ~metadata ~on_response ~on_error label edit
 
 let handle_persistent_malformed_command ~id ~metadata ~client:_ ~profiling:_ =
   mk_lsp_error_response ~ret:() ~id:(Some id) ~reason:"Malformed command" metadata
@@ -2597,6 +2631,13 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
              ~id
              ~metadata
              ~textDocument)
+      | _ -> Handle_persistent_immediately (handle_persistent_malformed_command ~id ~metadata))
+    | "source.organizeImports" ->
+      (match arguments with
+      | Some [json] ->
+        let textDocument = Lsp_fmt.parse_textDocumentIdentifier (Some json) in
+        Handle_persistent_immediately
+          (handle_persistent_organize_imports_command ~options ~id ~metadata ~textDocument)
       | _ -> Handle_persistent_immediately (handle_persistent_malformed_command ~id ~metadata))
     | _ -> Handle_persistent_immediately (handle_persistent_malformed_command ~id ~metadata))
   | LspToServer (ResponseMessage (id, result)) ->

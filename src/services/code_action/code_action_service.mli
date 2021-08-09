@@ -99,6 +99,9 @@ val suggest :
   result
   Lwt.t
 
+val organize_imports :
+  options:Options.t -> ast:(Loc.t, Loc.t) Flow_ast.Program.t -> Lsp.TextEdit.t list
+
 module For_tests : sig
   val path_of_modulename :
     node_resolver_dirnames:string list ->
