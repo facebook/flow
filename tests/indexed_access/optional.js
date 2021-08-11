@@ -116,3 +116,8 @@ type C = ?Cx;
 (true: C?.[number]); // OK
 ('xx': C?.['bar']); // Error
 (1: C?.['nested']['goop']); // OK
+
+type NonMaybeNumber = $NonMaybeType<Obj['foo']?.['bar']>;
+(1: NonMaybeNumber); // OK
+(true: NonMaybeNumber); // Error
+(undefined: NonMaybeNumber); // Error

@@ -502,6 +502,39 @@ References:
                ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ optional.js:122:2
+
+Cannot cast `true` to `NonMaybeNumber` because boolean [1] is incompatible with number [2]. [incompatible-cast]
+
+   optional.js:122:2
+   122| (true: NonMaybeNumber); // Error
+         ^^^^ [1]
+
+References:
+   optional.js:3:10
+     3|     bar: number,
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ optional.js:123:2
+
+Cannot cast `undefined` to `NonMaybeNumber` because: [incompatible-cast]
+ - Either undefined [1] is incompatible with number [2].
+ - Or undefined [1] is incompatible with empty [3].
+
+   optional.js:123:2
+   123| (undefined: NonMaybeNumber); // Error
+         ^^^^^^^^^ [1]
+
+References:
+   optional.js:3:10
+     3|     bar: number,
+                 ^^^^^^ [2]
+   optional.js:120:37
+   120| type NonMaybeNumber = $NonMaybeType<Obj['foo']?.['bar']>;
+                                            ^^^^^^^^^^ [3]
+
+
 Error ------------------------------------------------------------------------------------------- optional_import.js:5:2
 
 Cannot cast `true` to optional indexed access because boolean [1] is incompatible with number [2]. [incompatible-cast]
@@ -668,7 +701,7 @@ References:
 
 
 
-Found 46 errors
+Found 48 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

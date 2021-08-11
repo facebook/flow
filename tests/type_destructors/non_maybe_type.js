@@ -53,3 +53,8 @@ function f() {
 }
 
 ('hi': $NonMaybeType<empty>); // Error
+
+type NonMaybeNumber = $NonMaybeType<$Values<{a: number, b: void}>>;
+(1: NonMaybeNumber); // OK
+(true: NonMaybeNumber); // Error
+(undefined: NonMaybeNumber); // Error

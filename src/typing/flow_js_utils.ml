@@ -556,6 +556,11 @@ let iter_union ~f cx trace rep u =
   |> Base.List.iteri ~f:(fun i ->
          mod_reason_of_t (union_reason i) %> mk_tuple_swapped u %> f cx trace)
 
+let map_union ~f cx trace rep reason =
+  UnionRep.members rep
+  |> Base.List.map ~f:(fun t -> Tvar.mk_where cx (reason_of_t t) (fun tout -> f cx trace t tout))
+  |> union_of_ts reason
+
 let iter_resolve_union ~f cx trace reason rep upper =
   (* We can't guarantee that tvars or typeapps get resolved, even though we'd like
    * to believe they will. Instead, we separate out all the resolvable types from

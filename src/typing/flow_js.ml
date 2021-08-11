@@ -2084,7 +2084,16 @@ struct
                 cx
                 trace
                 (remove_predicate_from_union reason cx filter_null_and_void rep, tout)
-            | None -> flow_all_in_union cx trace rep u
+            | None ->
+              let non_maybe_union =
+                map_union
+                  ~f:(fun cx trace t tout -> rec_flow cx trace (t, FilterMaybeT (use_op, tout)))
+                  cx
+                  trace
+                  rep
+                  reason
+              in
+              rec_flow_t ~use_op cx trace (non_maybe_union, tout)
           end
         | (UnionT (reason, rep), upper) when UnionRep.members rep |> List.exists is_union_resolvable
           ->
