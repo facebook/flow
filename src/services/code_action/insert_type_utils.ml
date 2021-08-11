@@ -516,7 +516,7 @@ module Validator = struct
 
   let validate_type_too_big_max = 1000
 
-  let validate_type ~size_limit ?(loc_of_aloc = ALoc.to_loc_exn) t =
+  let validate_type ~size_limit ~loc_of_aloc t =
     match Ty_utils.size_of_type ~max:size_limit t with
     | None ->
       let max = validate_type_too_big_max in

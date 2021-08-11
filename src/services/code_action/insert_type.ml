@@ -385,7 +385,7 @@ let synth_type
   let imports_react = ImportsHelper.imports_react file_sig in
   let process ty =
     let () =
-      match Utils.Validator.validate_type ~size_limit ty with
+      match Utils.Validator.validate_type ~size_limit ~loc_of_aloc:ALoc.to_loc_exn ty with
       | (_, error :: _) ->
         (* TODO surface all errors *)
         let error_message = Utils.Error.serialize_validation_error error in
