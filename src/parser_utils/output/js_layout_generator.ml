@@ -193,11 +193,11 @@ let precedence_of_expression expr =
   | (_, E.Logical { E.Logical.operator = E.Logical.NullishCoalesce; _ }) -> 5
   | (_, E.Conditional _) -> 4
   | (_, E.Assignment _) -> precedence_of_assignment
+  | (_, E.ArrowFunction _) ->
+    (* must be >= Assignment, so that `x = () => y = 123` doesn't need parens. It must be lower
+       than a Conditional so that `(() => {}) ? 1 : 2` doesn't become `() => ({} ? 1 : 2)` *)
+    precedence_of_assignment
   | (_, E.Yield _) -> 2
-  (* not sure how low this _needs_ to be, but it can at least be higher than 0
-     because it binds tighter than a sequence expression. it must be lower than
-     a member expression, though, because `()=>{}.x` is invalid. *)
-  | (_, E.ArrowFunction _) -> 1
   | (_, E.Sequence _) -> 0
   (* Expressions that always need parens (probably) *)
   | (_, E.Comprehension _)
@@ -1008,7 +1008,7 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
       | E.Identifier ident -> identifier ident
       | E.Literal lit -> literal ~opts loc lit
       | E.Function func -> function_ ~opts loc func
-      | E.ArrowFunction func -> arrow_function ~ctxt ~opts ~precedence loc func
+      | E.ArrowFunction func -> arrow_function ~ctxt ~opts loc func
       | E.Assignment { E.Assignment.operator; left; right; comments } ->
         layout_node_with_comments_opt loc comments
         @@ fuse
@@ -1671,7 +1671,6 @@ and variable_declarator ~ctxt ~opts (loc, { Ast.Statement.VariableDeclaration.De
 and arrow_function
     ?(ctxt = normal_context)
     ~opts
-    ~precedence
     loc
     {
       Ast.Function.params =
@@ -1773,6 +1772,8 @@ and arrow_function
            | Ast.Function.BodyBlock b -> block ~opts b
            | Ast.Function.BodyExpression expr ->
              let ctxt = { normal_context with group = In_arrow_func } in
+             (* BodyExpression is an AssignmentExpression *)
+             let precedence = precedence_of_assignment in
              expression_with_parens ~precedence ~ctxt ~opts expr
          end;
        ]

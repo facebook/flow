@@ -607,6 +607,12 @@ let tests =
            assert_expression ~ctxt "()=>x?y:z" arrow;
 
            let arrow =
+             let body = Functions.body_expression x in
+             E.arrow_function ~body ()
+           in
+           assert_expression ~ctxt "(()=>x)?y:z" (E.conditional arrow y z);
+
+           let arrow =
              let arrow = E.arrow_function () in
              let body = Functions.body_expression arrow in
              E.arrow_function ~body ()
@@ -2597,4 +2603,7 @@ let tests =
                 ^ "  ),\n"
                 ^ "  b,\n"
                 ^ ")")) );
+         ( "assignment_arrow_function_rhs" >:: fun ctxt ->
+           assert_statement_string ~ctxt ~pretty:true "const x = () => {};";
+           assert_statement_string ~ctxt ~pretty:true "const x = () => y = 123;" );
        ]

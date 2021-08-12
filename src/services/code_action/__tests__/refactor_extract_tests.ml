@@ -314,9 +314,9 @@ function newFunction(): {| a: number, fooo: number |} {
         [
           ( "Extract to function in module scope",
             {|
-const test = (async () => {
+const test = async () => {
   await newFunction();
-});
+};
 async function newFunction(): Promise<void> {
   // selection start
   const a = 3;
@@ -328,7 +328,7 @@ async function newFunction(): Promise<void> {
           );
           ( "Extract to inner function in function 'test'",
             {|
-const test = (async () => {
+const test = async () => {
   await newFunction();
   async function newFunction(): Promise<void> {
     // selection start
@@ -337,7 +337,7 @@ const test = (async () => {
     await b;
     let d = 6;
   }
-});
+};
             |}
           );
         ]
@@ -358,9 +358,9 @@ const test = (async () => {
         [
           ( "Extract to function in module scope",
             {|
-const test = (async () => {
+const test = async () => {
   await newFunction();
-});
+};
 async function newFunction(): Promise<void> {
   // selection start
   const a = 3;
@@ -373,7 +373,7 @@ async function newFunction(): Promise<void> {
           );
           ( "Extract to inner function in function 'test'",
             {|
-const test = (async () => {
+const test = async () => {
   await newFunction();
   async function newFunction(): Promise<void> {
     // selection start
@@ -383,7 +383,7 @@ const test = (async () => {
     }
     let d = 6;
   }
-});
+};
             |}
           );
         ]
@@ -397,7 +397,7 @@ const test = (async () => {
             {|
 newFunction();
 function newFunction(): void {
-  const test = (async () => await promise);
+  const test = async () => await promise;
 }
 |}
           );
