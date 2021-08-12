@@ -6,28 +6,18 @@
  *)
 
 type layout_node =
-  (* A layout with location information *)
-  | SourceLocation of Loc.t * layout_node
-  (* A list of nodes that don't break *)
-  | Concat of layout_node list
-  (* A list of nodes to try to fit on one line *)
-  | Group of layout_node list
-  (* Join elements, allow for breaking over over lines *)
+  | SourceLocation of Loc.t * layout_node  (** A layout with location information *)
+  | Concat of layout_node list  (** A list of nodes that don't break *)
+  | Group of layout_node list  (** A list of nodes to try to fit on one line *)
   | Sequence of list_config * layout_node list
-  (* Increase the indentation *)
-  | Indent of layout_node
-  (* Force a line break *)
-  | Newline
-  (* Print a string *)
-  | Atom of string
-  (* Print an identifier, useful for source map name mappings *)
-  | Identifier of Loc.t * string
-  (* Only print left for pretty output else right *)
-  | IfPretty of layout_node * layout_node
-  (* Print left if break else right *)
-  | IfBreak of layout_node * layout_node
-  (* Print nothing *)
-  | Empty
+      (** Join elements, allow for breaking over over lines *)
+  | Indent of layout_node  (** Increase the indentation *)
+  | Newline  (** Force a line break *)
+  | Atom of string  (** Print a string *)
+  | Identifier of Loc.t * string  (** Print an identifier, useful for source map name mappings *)
+  | IfPretty of layout_node * layout_node  (** Only print left for pretty output else right *)
+  | IfBreak of layout_node * layout_node  (** Print left if break else right *)
+  | Empty  (** Print nothing *)
 
 and when_to_break =
   | Break_if_needed
@@ -35,9 +25,9 @@ and when_to_break =
 
 and list_config = {
   break: when_to_break;
-  (* Whether a break should be placed at the start and end of a sequence when
-     splitting over lines *)
   inline: bool * bool;
+      (** Whether a break should be placed at the start and end of a sequence when
+          splitting over lines *)
   indent: int;
 }
 
@@ -54,16 +44,16 @@ let flat_ugly_space = IfBreak (Empty, ugly_space)
 
 let hardline = Newline
 
-(* Force a line break (`\n`) in pretty mode *)
+(** Force a line break (`\n`) in pretty mode *)
 let pretty_hardline = IfPretty (Newline, Empty)
 
-(* Inserts a line break (`\n`) if the code doesn't fit on one line, otherwise a space *)
+(** Inserts a line break (`\n`) if the code doesn't fit on one line, otherwise a space *)
 let line = IfBreak (Newline, space)
 
-(* Inserts a line break (`\n`) if the code doesn't fit on one line, otherwise a pretty space *)
+(** Inserts a line break (`\n`) if the code doesn't fit on one line, otherwise a pretty space *)
 let pretty_line = IfBreak (Newline, pretty_space)
 
-(* Inserts a line break (`\n`) if the code doesn't fit on one line, otherwise nothing *)
+(** Inserts a line break (`\n`) if the code doesn't fit on one line, otherwise nothing *)
 let softline = IfBreak (Newline, Empty)
 
 let if_pretty if_ else_ =
@@ -93,7 +83,7 @@ let group items =
   | [(Group _ as hd)] -> hd
   | _ -> Group items
 
-(* Fuse a list of items together, no spaces or breaks will be inserted *)
+(** Fuse a list of items together, no spaces or breaks will be inserted *)
 let fuse items =
   let items =
     List.rev
@@ -169,7 +159,7 @@ let new_list
   in
   wrap_and_indent ?break wrap items_layout
 
-(* All purpose list *)
+(** All purpose list *)
 let list
     ?(break = Break_if_needed)
     ?(wrap = (Empty, Empty))
@@ -210,10 +200,10 @@ let list
      not triggered by adjacent lists. *)
   Sequence ({ break = Break_if_needed; inline = (true, true); indent = 0 }, [layout_items])
 
-(* Takes a list of layout nodes and intersperses spaces: a `space` if a space is necessary
-   to separate two tokens, or a `pretty_space` if it's only needed for aesthetics. Generally a
-   space is required, except if the last char of one node or the first char of the next node is
-   a punctuator, then spaces are only for aesthetics (e.g. `new Foo` vs `new(Foo)`) *)
+(** Takes a list of layout nodes and intersperses spaces: a `space` if a space is necessary
+    to separate two tokens, or a `pretty_space` if it's only needed for aesthetics. Generally a
+    space is required, except if the last char of one node or the first char of the next node is
+    a punctuator, then spaces are only for aesthetics (e.g. `new Foo` vs `new(Foo)`) *)
 let fuse_with_space =
   let is_punctuator = function
     | '{'
