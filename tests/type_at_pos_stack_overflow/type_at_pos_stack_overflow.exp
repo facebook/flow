@@ -1,0 +1,10 @@
+test.js:6:12
+Flags: --max-depth 100000 --expand-type-aliases
+type TQuery<Data, Vars, Parent = {data: mixed, parent: mixed, vars: mixed, ...}> = {
+  data: Data,
+  parent: Parent,
+  vars: Vars,
+  ...
+}
+test.js:6:12,6:17
+

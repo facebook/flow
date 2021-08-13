@@ -1337,11 +1337,9 @@ end = struct
         in
         if Env.expand_type_aliases env && not (Env.seen_type_alias symbol env) then
           let%bind targs = optMapM (type__ ~env) targs in
+          let env = Env.set_type_alias symbol env in
           let%bind (env, tparams) = type_params_t ~env tparams in
-          let%bind body_t =
-            let env = Env.set_type_alias symbol env in
-            type__ ~env body_t
-          in
+          let%bind body_t = type__ ~env body_t in
           match (targs, tparams) with
           | (Some targs, Some tparams) -> Substitution.run tparams targs body_t
           | _ -> return body_t
