@@ -380,21 +380,30 @@ let local_value_identifiers
 (* Roughly collects upper bounds of a type.
  * This logic will be changed or made unnecessary once we have contextual typing *)
 let upper_bound_t_of_t ~cx =
-  let rec upper_bounds_of_t : Type.t -> Type.t list =
+  let rec upper_bounds_of_t : ISet.t -> Type.t -> Type.t list =
     let open Base.List.Let_syntax in
-    function
-    | Type.OpenT (_, id) ->
-      let%bind use = Flow_js_utils.possible_uses cx id in
-      upper_bounds_of_use_t use
-    | t -> return t
-  and upper_bounds_of_use_t : Type.use_t -> Type.t list = function
-    | Type.ReposLowerT (_, _, use) -> upper_bounds_of_use_t use
-    | Type.UseT (_, t) -> upper_bounds_of_t t
+    fun seen -> function
+      | Type.OpenT (_, id) ->
+        (* A given tvar might be reachable from many paths through uses. If
+         * we've seen this tvar before, we should not re-add the uses we've
+         * already seen. *)
+        if ISet.mem id seen then
+          []
+        else
+          let seen = ISet.add id seen in
+          let%bind use = Flow_js_utils.possible_uses cx id in
+          upper_bounds_of_use_t seen use
+      | t -> return t
+  and upper_bounds_of_use_t : ISet.t -> Type.use_t -> Type.t list =
+   fun seen -> function
+    | Type.ReposLowerT (_, _, use) -> upper_bounds_of_use_t seen use
+    | Type.UseT (_, t) -> upper_bounds_of_t seen t
     | _ -> []
   in
   fun lb_type ->
+    let seen = ISet.empty in
     let reason = TypeUtil.reason_of_t lb_type in
-    match upper_bounds_of_t lb_type with
+    match upper_bounds_of_t seen lb_type with
     | [] -> Type.MixedT.make reason (Trust.bogus_trust ())
     | [upper_bound] -> upper_bound
     | ub1 :: ub2 :: ubs -> Type.IntersectionT (reason, Type.InterRep.make ub1 ub2 ubs)
