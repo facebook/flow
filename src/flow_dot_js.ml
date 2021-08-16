@@ -242,8 +242,8 @@ let infer_and_merge ~root filename ast file_sig =
     Nel.iter (fun loc ->
         let reason = Reason.(mk_reason (RCustom mref) loc) in
         let module_t = Flow_js_utils.lookup_builtin_strict cx module_name reason in
-        let require_t = Context.find_require cx loc in
-        Flow_js.flow_t cx (module_t, require_t))
+        let (_, require_id) = Context.find_require cx loc in
+        Flow_js.resolve_id cx require_id module_t)
   in
   SMap.iter connect_requires File_sig.With_ALoc.(require_loc_map file_sig.module_sig);
   (* infer ast *)

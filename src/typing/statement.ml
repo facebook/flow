@@ -2460,7 +2460,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
       | ImportDeclaration.ImportTypeof -> Type.ImportTypeof
       | ImportDeclaration.ImportValue -> Type.ImportValue
     in
-    let module_t = Import_export.import cx (source_loc, module_name) in
+    let module_t = OpenT (Import_export.import cx (source_loc, module_name)) in
     let get_imported_t get_reason import_kind remote_export_name local_name =
       Tvar.mk_where cx get_reason (fun t ->
           let import_type =
@@ -2655,7 +2655,7 @@ and export_specifiers cx loc source export_kind =
     Import_export.export cx (OrdinaryName name) loc remote_namespace_t
   (* [declare] export [type] * from "source"; *)
   | E.ExportBatchSpecifier (_, None) ->
-    let source_module_t = Import_export.import cx (Base.Option.value_exn source) in
+    let source_module_t = OpenT (Import_export.import cx (Base.Option.value_exn source)) in
     (match export_kind with
     | Ast.Statement.ExportValue -> Import_export.export_star cx loc source_module_t
     | Ast.Statement.ExportType -> Import_export.export_type_star cx loc source_module_t)

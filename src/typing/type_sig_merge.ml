@@ -88,7 +88,7 @@ let trust = Trust.bogus_trust ()
 module type CONS_GEN = sig
   val flow : Context.t -> Type.t * Type.use_t -> unit
 
-  val flow_t : Context.t -> Type.t * Type.t -> unit
+  val resolve_id : Context.t -> int -> Type.t -> unit
 
   val mk_typeof_annotation :
     Context.t ->

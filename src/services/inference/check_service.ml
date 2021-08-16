@@ -481,8 +481,8 @@ let mk_check_file ~options ~reader ~cache () =
     let module_t = dep_module_t cx mref provider in
     let connect loc =
       let module_t = module_t loc in
-      let require_t = Context.find_require cx loc in
-      ConsGen.flow_t cx (module_t, require_t)
+      let (_, require_id) = Context.find_require cx loc in
+      ConsGen.resolve_id cx require_id module_t
     in
     Nel.iter connect locs
   in

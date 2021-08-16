@@ -67,14 +67,14 @@ let require cx ((_, module_ref) as source) require_loc =
   let module_t = require_t_of_ref_unsafe cx source in
   let reason = mk_reason (RCommonJSExports module_ref) require_loc in
   Tvar.mk_where cx reason (fun t ->
-      Flow.flow cx (module_t, CJSRequireT (reason, t, Context.is_strict cx)))
+      Flow.flow cx (OpenT module_t, CJSRequireT (reason, t, Context.is_strict cx)))
 
 let import cx source = require_t_of_ref_unsafe cx source
 
 let import_ns cx reason source =
   let module_t = require_t_of_ref_unsafe cx source in
   Tvar.mk_where cx reason (fun t ->
-      Flow.flow cx (module_t, ImportModuleNsT (reason, t, Context.is_strict cx)))
+      Flow.flow cx (OpenT module_t, ImportModuleNsT (reason, t, Context.is_strict cx)))
 
 (* Module exports are treated differently than `exports`. The latter is a
    variable that is implicitly set to the empty object at the top of a

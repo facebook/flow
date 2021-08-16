@@ -9844,9 +9844,9 @@ struct
    *
    * If you are not in a lib file, then this behaves as a strict lookup. We error and return Any
    * in the case where the builtin is not already in the map *)
-  and get_builtin cx ?trace:_ x reason =
+  and get_builtin_tvar cx ?trace:_ x reason =
     if Context.current_phase cx <> Context.InitLib then
-      lookup_builtin_strict cx x reason
+      lookup_builtin_strict_tvar cx x reason
     else
       let builtins = Context.builtins cx in
       let builtin =
@@ -9855,13 +9855,17 @@ struct
             Builtins.add_not_yet_seen_builtin builtins x tvar;
             tvar)
       in
-      Tvar.mk_where cx reason (fun t -> flow_t cx (builtin, t))
+      Tvar.mk_where_no_wrap cx reason (fun t -> flow_t cx (builtin, t))
+
+  and get_builtin cx ?trace x reason = OpenT (reason, get_builtin_tvar cx ?trace x reason)
 
   (* Looks up a builtin and errors if it is not found. Does not add an entry that requires a
    * write later. *)
-  and lookup_builtin_strict cx x reason =
+  and lookup_builtin_strict_tvar cx x reason =
     let builtin = Flow_js_utils.lookup_builtin_strict cx x reason in
-    Tvar.mk_where cx reason (fun t -> flow_t cx (builtin, t))
+    Tvar.mk_where_no_wrap cx reason (fun t -> flow_t cx (builtin, t))
+
+  and lookup_builtin_strict cx x reason = OpenT (reason, lookup_builtin_strict_tvar cx x reason)
 
   (* Looks up a builtin and returns the default if it is not found.
    * Does not add an entry that requires a
@@ -10288,3 +10292,6 @@ let mk_default cx reason =
           flow_t cx (t2, tvar)))
     ~selector:(fun r t sel ->
       Tvar.mk_no_wrap_where cx r (fun tvar -> eval_selector cx r t sel tvar (Reason.mk_id ())))
+
+let resolve_id cx id t =
+  resolve_id cx Trace.dummy_trace ~use_op:unknown_use ~fully_resolved:true id t

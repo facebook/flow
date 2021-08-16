@@ -108,6 +108,8 @@ val add_output : Context.t -> ?trace:Type.trace -> Error_message.t -> unit
 
 val get_builtin : Context.t -> ?trace:Type.trace -> name -> reason -> Type.t
 
+val get_builtin_tvar : Context.t -> ?trace:Type.trace -> name -> reason -> Type.ident
+
 val get_builtin_type : Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> name -> Type.t
 
 val set_builtin : Context.t -> ?trace:Type.trace -> name -> Type.t -> unit
@@ -124,3 +126,5 @@ val strengthen_trust : Context.t -> Type.ident -> Trust.trust_qualifier -> Error
 
 val widen_obj_type :
   Context.t -> ?trace:Type.trace -> use_op:Type.use_op -> Reason.reason -> Type.t -> Type.t
+
+val resolve_id : Context.t -> int -> Type.t -> unit

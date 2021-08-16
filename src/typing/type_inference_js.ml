@@ -359,8 +359,8 @@ let scan_for_suppressions cx lint_severities comments =
 let add_require_tvars =
   let add cx desc loc =
     let reason = Reason.mk_reason desc loc in
-    let t = Tvar.mk cx reason in
-    Context.add_require cx loc t
+    let id = Tvar.mk_no_wrap cx reason in
+    Context.add_require cx loc (reason, id)
   in
   let add_decl cx m_name desc loc =
     (* TODO: Imports within `declare module`s can only reference other `declare
@@ -368,8 +368,8 @@ let add_require_tvars =
        move `declare module` storage into the modulemap just like normal modules
        and merge them as such. *)
     let reason = Reason.mk_reason desc loc in
-    let t = Flow_js.get_builtin cx m_name reason in
-    Context.add_require cx loc t
+    let tvar = Flow_js.get_builtin_tvar cx m_name reason in
+    Context.add_require cx loc (reason, tvar)
   in
   fun cx (file_sig : File_sig.With_ALoc.t) ->
     File_sig.With_ALoc.(

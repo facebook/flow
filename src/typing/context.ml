@@ -199,7 +199,7 @@ type t = {
   aloc_table: ALoc.table Lazy.t;
   metadata: metadata;
   module_info: Module_info.t;
-  mutable require_map: Type.t ALocMap.t;
+  mutable require_map: Type.tvar ALocMap.t;
   trust_constructor: unit -> Trust.trust_rep;
   mutable declare_module_ref: Module_info.t option;
   mutable use_def: Env_builder.env_info option;

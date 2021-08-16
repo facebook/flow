@@ -11,7 +11,7 @@ val mk_resource_module_t : Context.t -> ALoc.t -> string -> Type.t
 
 val require : Context.t -> ALoc.t * string -> ALoc.t -> Type.t
 
-val import : Context.t -> ALoc.t * string -> Type.t
+val import : Context.t -> ALoc.t * string -> Type.tvar
 
 val import_ns : Context.t -> Reason.t -> ALoc.t * string -> Type.t
 

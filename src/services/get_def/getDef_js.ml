@@ -73,7 +73,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
     let obj_t =
       match object_source with
       | Get_def_request.ObjectType (_loc, t) -> t
-      | Get_def_request.ObjectRequireLoc loc -> Context.find_require cx loc
+      | Get_def_request.ObjectRequireLoc loc -> Type.OpenT (Context.find_require cx loc)
     in
     extract_member_def ~reader cx obj_t name
   | Get_def_request.(Type (_, v) | Typeof (_, v)) as request ->
@@ -113,7 +113,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
     in
     loop v
   | Get_def_request.Require ((source_loc, name), require_loc) ->
-    let module_t = Context.find_require cx source_loc |> Members.resolve_type cx in
+    let module_t = Type.OpenT (Context.find_require cx source_loc) |> Members.resolve_type cx in
     (* function just so we don't do the work unless it's actually needed. *)
     let get_imported_file () =
       let filename =

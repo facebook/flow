@@ -197,7 +197,7 @@ val find_call : t -> int -> Type.t
 
 val find_exports : t -> Type.Exports.id -> Type.Exports.t
 
-val find_require : t -> ALoc.t -> Type.t
+val find_require : t -> ALoc.t -> Type.tvar
 
 val find_module : t -> string -> Type.t
 
@@ -229,7 +229,7 @@ val max_trace_depth : t -> int
 
 val module_kind : t -> Module_info.kind
 
-val require_map : t -> Type.t ALocMap.t
+val require_map : t -> Type.tvar ALocMap.t
 
 val module_map : t -> Type.t NameUtils.Map.t
 
@@ -321,7 +321,7 @@ val add_severity_cover : t -> File_key.t -> ExactCover.lint_severity_cover -> un
 
 val add_lint_suppressions : t -> LocSet.t -> unit
 
-val add_require : t -> ALoc.t -> Type.t -> unit
+val add_require : t -> ALoc.t -> Type.tvar -> unit
 
 val add_module : t -> Reason.name -> Type.t -> unit
 

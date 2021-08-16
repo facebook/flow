@@ -23,6 +23,11 @@ let mk_where cx reason f =
   let () = f tvar in
   tvar
 
+let mk_where_no_wrap cx reason f =
+  let tvar = mk_no_wrap cx reason in
+  let () = f (Type.OpenT (reason, tvar)) in
+  tvar
+
 let mk_no_wrap_where cx reason f =
   let tvar = mk_no_wrap cx reason in
   let () = f (reason, tvar) in
