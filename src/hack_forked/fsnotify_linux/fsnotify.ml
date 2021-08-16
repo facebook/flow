@@ -25,7 +25,7 @@ type watch = Inotify.watch
  * We need to be able to compare watches because there could be multiple
  * paths that lead to the same watch (because of symlinks).
  *)
-module WMap = Map.Make (struct
+module WMap = Flow_map.Make (struct
   type t = watch
 
   let compare = compare
@@ -97,7 +97,7 @@ let read env =
   let inotify_events = wrap (fun () -> Inotify.read env.fd) () in
   List.fold_left inotify_events ~f:(process_event env) ~init:[]
 
-module FDMap = Map.Make (struct
+module FDMap = Flow_map.Make (struct
   type t = Unix.file_descr
 
   let compare = compare

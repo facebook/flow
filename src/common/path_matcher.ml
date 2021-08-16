@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module PathMap : Map.S with type key = Path.t = Map.Make (struct
+module PathMap : Flow_map.S with type key = Path.t = Flow_map.Make (struct
   type t = Path.t
 
   let compare p1 p2 = String.compare (Path.to_string p1) (Path.to_string p2)

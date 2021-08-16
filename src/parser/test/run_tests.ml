@@ -37,7 +37,7 @@ module RunEsprimaTests : sig
 end = struct
   open Hh_json
   open String_utils
-  module SMap = Map.Make (String)
+  module SMap = Flow_map.Make (String)
   module C = Tty
 
   let should_color =

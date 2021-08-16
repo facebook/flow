@@ -17,4 +17,4 @@ module ALocIDS = struct
 end
 
 module ALocIDSet = Set.Make (ALocIDS)
-module ALocIDMap = Map.Make (ALocIDS)
+module ALocIDMap = Flow_map.Make (ALocIDS)

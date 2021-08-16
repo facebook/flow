@@ -82,7 +82,7 @@ let add_watch env path =
 
 (** Select *)
 
-module FDMap = Map.Make (struct
+module FDMap = Flow_map.Make (struct
   type t = Unix.file_descr
 
   let compare = compare
