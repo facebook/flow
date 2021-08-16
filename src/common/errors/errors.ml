@@ -1046,7 +1046,7 @@ let rec compare compare_loc =
       else
         k)
 
-module ConcreteLocPrintableErrorSet = Set.Make (struct
+module ConcreteLocPrintableErrorSet = Flow_set.Make (struct
   type t = Loc.t printable_error
 
   let compare = compare Loc.compare

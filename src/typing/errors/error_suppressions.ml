@@ -21,7 +21,7 @@ let file_of_loc_unsafe loc =
   | Some x -> x
   | None -> raise (No_source (Loc.debug_to_string ~include_source:true loc))
 
-module CodeLocSet : Set.S with type elt = string * Loc.t = Set.Make (struct
+module CodeLocSet : Flow_set.S with type elt = string * Loc.t = Flow_set.Make (struct
   type t = string * Loc.t
 
   let compare (c1, l1) (c2, l2) =

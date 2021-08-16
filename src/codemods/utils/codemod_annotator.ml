@@ -59,7 +59,7 @@ type ty_or_type_ast =
   | Ty_ of Ty.t
   | Type_ast of Annotate_exports_hardcoded_expr_fixes.hard_coded_type_ast
 
-module NSpecSet = Set.Make (struct
+module NSpecSet = Flow_set.Make (struct
   type t = (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.named_specifier
 
   let compare = Stdlib.compare

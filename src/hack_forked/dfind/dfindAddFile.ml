@@ -69,7 +69,7 @@ let normalize path =
  *)
 (*****************************************************************************)
 
-module ISet = Set.Make (struct
+module ISet = Flow_set.Make (struct
   type t = int
 
   let compare = compare

@@ -27,9 +27,9 @@ val error_of_msg :
 
 val ordered_reasons : Reason.t * Reason.t -> Reason.t * Reason.t
 
-module ErrorSet : Set.S with type elt = ALoc.t t
+module ErrorSet : Flow_set.S with type elt = ALoc.t t
 
-module ConcreteErrorSet : Set.S with type elt = Loc.t t
+module ConcreteErrorSet : Flow_set.S with type elt = Loc.t t
 
 val map_loc_of_error : ('a -> 'b) -> 'a t -> 'b t
 

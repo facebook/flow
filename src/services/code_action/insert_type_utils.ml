@@ -48,7 +48,7 @@ module SymbolMap = struct
   include M
 end
 
-module SymbolSet = Set.Make (struct
+module SymbolSet = Flow_set.Make (struct
   type t = Ty_symbol.symbol
 
   let compare = Stdlib.compare

@@ -37,7 +37,7 @@ module Reordered_argument_map (S : WrappedMap.S) = struct
   let partition m ~f = partition f m
 end
 
-module Reordered_argument_set (S : Set.S) = struct
+module Reordered_argument_set (S : Flow_set.S) = struct
   include S
 
   let add s v = add v s

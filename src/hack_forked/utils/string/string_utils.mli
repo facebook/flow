@@ -109,7 +109,7 @@ val to_list : string -> char list
 val of_list : char list -> string
 
 module CharSet : sig
-  include Set.S with type elt = Char.t
+  include Flow_set.S with type elt = Char.t
 
   val of_string : string -> t
 

@@ -14,7 +14,7 @@
 *)
 open Utils_js
 
-module CodeSet : Set.S with type elt = string * Loc.t = Set.Make (struct
+module CodeSet : Flow_set.S with type elt = string * Loc.t = Flow_set.Make (struct
   type t = string * Loc.t
 
   (* Locs are just metadata here, should not affect behavior *)

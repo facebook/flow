@@ -7,7 +7,7 @@
 
 module Map : WrappedMap.S with type key = Reason.name
 
-module Set : Set.S with type elt = Reason.name
+module Set : Flow_set.S with type elt = Reason.name
 
 val smap_mem : Reason.name -> 'a SMap.t -> bool
 

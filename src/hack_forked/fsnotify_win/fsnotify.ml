@@ -28,7 +28,7 @@ type fsenv
 (* Abstract data type for a watching thread. *)
 type watcher_id
 
-module SSet = Set.Make (String)
+module SSet = Flow_set.Make (String)
 
 type env = {
   fsenv: fsenv;

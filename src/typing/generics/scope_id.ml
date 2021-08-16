@@ -10,7 +10,7 @@ module ScopeInternal : sig
 
   val new_id : unit -> t
 
-  module ScopeSet : Set.S with type elt = t
+  module ScopeSet : Flow_set.S with type elt = t
 
   module ScopeMap : WrappedMap.S with type key = t
 end = struct
@@ -18,7 +18,7 @@ end = struct
 
   let new_id = Reason.mk_id
 
-  module ScopeSet = Set.Make (IntKey)
+  module ScopeSet = Flow_set.Make (IntKey)
   module ScopeMap = WrappedMap.Make (IntKey)
 end
 

@@ -55,4 +55,4 @@ val slash_escaped_string_of_path : t -> string
 
 val path_of_slash_escaped_string : string -> t
 
-module Set : module type of Reordered_argument_set (Set.Make (S))
+module Set : module type of Reordered_argument_set (Flow_set.Make (S))

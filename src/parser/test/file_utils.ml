@@ -16,7 +16,7 @@ let lstat_kind file =
       prerr_endline ("File not found: " ^ file);
       None)
 
-module FileSet = Set.Make (struct
+module FileSet = Flow_set.Make (struct
   type t = file_kind
 
   let compare a b =

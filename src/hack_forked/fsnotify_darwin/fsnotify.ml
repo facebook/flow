@@ -6,7 +6,7 @@
  *)
 
 open Hh_core
-module SSet = Set.Make (String)
+module SSet = Flow_set.Make (String)
 
 exception Error of string * Unix.error
 

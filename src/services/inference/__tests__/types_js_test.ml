@@ -15,7 +15,7 @@ let ( %>:: ) name f = name >:: fun ctxt -> LwtInit.run_lwt (fun () -> f ctxt)
 let assert_checked_sets_equal ~ctxt expected actual =
   assert_equal ~ctxt ~cmp:CheckedSet.debug_equal ~printer:CheckedSet.debug_to_string expected actual
 
-module FilenameSetSet = Set.Make (FilenameSet)
+module FilenameSetSet = Flow_set.Make (FilenameSet)
 
 let debug_string_of_filename_set_set =
   FilenameSetSet.elements

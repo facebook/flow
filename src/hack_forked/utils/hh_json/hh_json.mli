@@ -218,6 +218,6 @@ val get_field_opt : (json * Access.keytrace -> 'a Access.m) -> json -> 'a option
 
 module JsonKey : Set.OrderedType with type t = json
 
-module JSet : Set.S with type elt = json
+module JSet : Flow_set.S with type elt = json
 
 module JMap : WrappedMap.S with type key = json
