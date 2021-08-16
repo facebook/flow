@@ -16,5 +16,5 @@ module ALocIDS = struct
   let compare (t1 : t) (t2 : t) = ALoc.quick_compare (t1 :> ALoc.t) (t2 :> ALoc.t)
 end
 
-module ALocIDSet = Set.Make (ALocIDS)
+module ALocIDSet = Flow_set.Make (ALocIDS)
 module ALocIDMap = Flow_map.Make (ALocIDS)

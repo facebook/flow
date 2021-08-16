@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module CodeLocSet : Set.S with type elt = string * Loc.t
+module CodeLocSet : Flow_set.S with type elt = string * Loc.t
 
 type t
 

@@ -100,7 +100,7 @@ val kind_of_printable_error : 'loc printable_error -> error_kind
 
 val code_of_printable_error : 'loc printable_error -> Error_codes.error_code option
 
-module ConcreteLocPrintableErrorSet : Set.S with type elt = Loc.t printable_error
+module ConcreteLocPrintableErrorSet : Flow_set.S with type elt = Loc.t printable_error
 
 (* formatters/printers *)
 

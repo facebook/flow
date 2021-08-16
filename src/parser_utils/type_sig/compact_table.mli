@@ -118,7 +118,7 @@ module Make () : sig
 
   val to_array_map : ('a -> 'b) -> 'a t -> 'b array
 
-  module IndexSet : Set.S with type elt = index
+  module IndexSet : Flow_set.S with type elt = index
 
   module Interned : sig
     type 'a builder

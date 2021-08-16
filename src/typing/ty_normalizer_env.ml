@@ -100,7 +100,7 @@ type genv = {
 
 let mk_genv ~full_cx ~file ~typed_ast ~file_sig = { file; cx = full_cx; typed_ast; file_sig }
 
-module SymbolSet = Set.Make (struct
+module SymbolSet = Flow_set.Make (struct
   type t = Ty_symbol.symbol
 
   let compare = Stdlib.compare

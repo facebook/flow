@@ -13,7 +13,7 @@ module Map = WrappedMap.Make (struct
   let compare = compare_name
 end)
 
-module Set = Set.Make (struct
+module Set = Flow_set.Make (struct
   type t = name
 
   let compare = compare_name

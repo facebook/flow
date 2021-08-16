@@ -25,7 +25,7 @@ module type S = sig
   end
 
   module LSet : sig
-    include Set.S with type elt = t
+    include Flow_set.S with type elt = t
 
     val pp : Format.formatter -> t -> unit
 
@@ -37,7 +37,7 @@ module type S = sig
   end
 end
 
-module LSetUtils (S : Set.S) = struct
+module LSetUtils (S : Flow_set.S) = struct
   let ident_map f map =
     let changed = ref false in
     let map' =
@@ -77,7 +77,7 @@ module LocS : S with type t = Loc.t = struct
   end
 
   module LSet = struct
-    include Set.Make (Loc)
+    include Flow_set.Make (Loc)
 
     let pp fmt x =
       Format.fprintf fmt "@[<hv 2>{";
@@ -123,7 +123,7 @@ module ALocS : S with type t = ALoc.t = struct
   end
 
   module LSet = struct
-    include Set.Make (ALoc)
+    include Flow_set.Make (ALoc)
 
     let pp fmt x =
       Format.fprintf fmt "@[<hv 2>{";
@@ -169,7 +169,7 @@ module ILocS : S with type t = ILoc.t = struct
   end
 
   module LSet = struct
-    include Set.Make (ILoc)
+    include Flow_set.Make (ILoc)
 
     let pp fmt x =
       Format.fprintf fmt "@[<hv 2>{";

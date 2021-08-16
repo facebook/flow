@@ -58,7 +58,7 @@ let compare_source a b =
 type export = source * kind [@@deriving show, ord]
 
 module ExportSet = struct
-  include Set.Make (struct
+  include Flow_set.Make (struct
     type t = export
 
     let compare = compare_export

@@ -32,7 +32,7 @@ module EntryRef = struct
   let compare = Stdlib.compare
 end
 
-module EntryRefSet : Set.S with type elt = EntryRef.t = Set.Make (EntryRef)
+module EntryRefSet : Flow_set.S with type elt = EntryRef.t = Flow_set.Make (EntryRef)
 
 (* ref to scope refi *)
 module RefiRef = struct
@@ -41,7 +41,7 @@ module RefiRef = struct
   let compare = Stdlib.compare
 end
 
-module RefiRefSet : Set.S with type elt = RefiRef.t = Set.Make (RefiRef)
+module RefiRefSet : Flow_set.S with type elt = RefiRef.t = Flow_set.Make (RefiRef)
 
 (* changeset is a set of changed variables by name
    and a set of changed refinements by key *)

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Make (Set : Set.S) (Map : WrappedMap.S with type key = Set.elt) = struct
+module Make (Set : Flow_set.S) (Map : WrappedMap.S with type key = Set.elt) = struct
   type node = {
     forward: Set.t;
     (* These edges are mutable *only* for efficiency during construction. Once the graph is

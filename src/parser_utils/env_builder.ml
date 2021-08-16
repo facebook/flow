@@ -307,7 +307,7 @@ module Make
 
     and write_state
 
-    module WriteSet : Set.S with type elt = write_state
+    module WriteSet : Flow_set.S with type elt = write_state
 
     val mk_unresolved : unit -> t
 
@@ -417,7 +417,7 @@ module Make
       | [t] -> t
       | ts -> PHI ts
 
-    module WriteSet = Set.Make (struct
+    module WriteSet = Flow_set.Make (struct
       type t = write_state
 
       let compare = Stdlib.compare

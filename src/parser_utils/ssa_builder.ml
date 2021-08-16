@@ -94,7 +94,7 @@ struct
       | [t] -> t
       | ts -> PHI ts
 
-    module WriteSet = Set.Make (struct
+    module WriteSet = Flow_set.Make (struct
       type t = write_state
 
       let compare = Stdlib.compare

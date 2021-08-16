@@ -30,7 +30,7 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
   module Find_providers = Find_providers.FindProviders (L)
   open Find_providers
 
-  module EntrySet = Set.Make (struct
+  module EntrySet = Flow_set.Make (struct
     type t = entry
 
     let compare { entry_id = id1; _ } { entry_id = id2; _ } = Id.compare id1 id2

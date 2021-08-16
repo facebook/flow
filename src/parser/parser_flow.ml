@@ -16,7 +16,7 @@ open Parser_common
    a reversed list of errors and returns the list in forward order with dupes
    removed. This differs from a set because the original order is preserved. *)
 let filter_duplicate_errors =
-  let module PrintableErrorSet = Set.Make (struct
+  let module PrintableErrorSet = Flow_set.Make (struct
     type t = Loc.t * Parse_error.t
 
     let compare (a_loc, a_error) (b_loc, b_error) =

@@ -1528,7 +1528,7 @@ end = struct
     | Many of UnionEnumSet.t
 end
 
-and UnionEnumSet : (Set.S with type elt = UnionEnum.t) = Set.Make (UnionEnum)
+and UnionEnumSet : (Flow_set.S with type elt = UnionEnum.t) = Flow_set.Make (UnionEnum)
 
 and Property : sig
   type t = TypeTerm.property
@@ -1703,7 +1703,7 @@ and Properties : sig
 
   module Map : WrappedMap.S with type key = id
 
-  module Set : Set.S with type elt = id
+  module Set : Flow_set.S with type elt = id
 
   type map = t Map.t
 
@@ -1749,7 +1749,7 @@ end = struct
     let compare = compare_id
   end)
 
-  module Set : Set.S with type elt = id = Set.Make (struct
+  module Set : Flow_set.S with type elt = id = Flow_set.Make (struct
     type t = id
 
     let compare = compare_id
@@ -1850,11 +1850,11 @@ and Poly : sig
 
   val generate_id : unit -> id
 
-  module Set : Set.S with type elt = id
+  module Set : Flow_set.S with type elt = id
 end = struct
   include Source_or_generated_id
 
-  module Set : Set.S with type elt = id = Set.Make (struct
+  module Set : Flow_set.S with type elt = id = Flow_set.Make (struct
     type elt = id
 
     type t = elt
@@ -2397,7 +2397,7 @@ end
    information to types).
    Type terms may also contain internal sets or maps.
 *)
-and TypeSet : (Set.S with type elt = TypeTerm.t) = Set.Make (struct
+and TypeSet : (Flow_set.S with type elt = TypeTerm.t) = Flow_set.Make (struct
   type elt = TypeTerm.t
 
   type t = elt
@@ -2413,7 +2413,7 @@ and TypeMap : (WrappedMap.S with type key = TypeTerm.t) = WrappedMap.Make (struc
   let compare = Stdlib.compare
 end)
 
-and UseTypeSet : (Set.S with type elt = TypeTerm.use_t) = Set.Make (struct
+and UseTypeSet : (Flow_set.S with type elt = TypeTerm.use_t) = Flow_set.Make (struct
   type elt = TypeTerm.use_t
 
   type t = elt

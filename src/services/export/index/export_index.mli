@@ -19,7 +19,7 @@ and source =
 and export = source * kind [@@deriving show, ord]
 
 module ExportSet : sig
-  include Set.S with type elt = export
+  include Flow_set.S with type elt = export
 
   val pp : Format.formatter -> t -> unit
 

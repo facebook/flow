@@ -18,7 +18,7 @@ module type NODE = sig
   val to_string : t -> string
 end
 
-module Make (N : NODE) (NMap : WrappedMap.S with type key = N.t) (NSet : Set.S with type elt = N.t) =
+module Make (N : NODE) (NMap : WrappedMap.S with type key = N.t) (NSet : Flow_set.S with type elt = N.t) =
 struct
   type node = {
     value: N.t;

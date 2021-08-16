@@ -1,4 +1,4 @@
 (library
   (name string)
   (wrapped false)
-  (libraries str))
+  (libraries str collections))
