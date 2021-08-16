@@ -7,7 +7,7 @@ DIR:=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 TOP=$(DIR)/../..
 REL_DIR=src/parser
 
-OCB = ocamlbuild -use-ocamlfind -I src/third-party/sedlex
+OCB = ocamlbuild -use-ocamlfind -I src/third-party/sedlex -I src/hack_forked/utils/collections
 
 NATIVE_OBJECT_FILES=\
 	src/hack_forked/utils/sys/files.o\
