@@ -562,6 +562,275 @@ let object_spread
         continue acc resolved (curr_resolve_idx + 1) todo_rev
     ))
 
+(***************)
+(* Object Rest *)
+(***************)
+
+let object_rest
+    (type a)
+    ~add_output
+    ~(return : _ -> _ -> _ -> Type.t -> a)
+    ~(recurse : _ -> _ -> _ -> _ -> _ -> Type.t -> a)
+    ~subt_check
+    options
+    state
+    cx
+    use_op
+    reason
+    x =
+  let open Object.Rest in
+  let optional = function
+    | OptionalT _ as t -> t
+    | t -> TypeUtil.optional t
+  in
+  (* Subtract the second slice from the first slice and return the difference
+   * slice. The runtime implementation of this type operation is:
+   *
+   *     const result = {};
+   *
+   *     for (const p in props1) {
+   *       if (hasOwnProperty(props1, p)) {
+   *         if (!hasOwnProperty(props2, p)) {
+   *           result[p] = props1[p];
+   *         }
+   *       }
+   *     }
+   *
+   * The resulting object only has a property if the property is own in props1 and
+   * it is not an own property of props2.
+   *)
+  let rest
+      cx
+      ~use_op
+      reason
+      merge_mode
+      { Object.reason = r1; props = props1; flags = flags1; generics = generics1; interface = _ }
+      { Object.reason = r2; props = props2; flags = flags2; generics = generics2; interface = _ } =
+    let dict1 = Obj_type.get_dict_opt flags1.obj_kind in
+    let dict2 = Obj_type.get_dict_opt flags2.obj_kind in
+    let props =
+      NameUtils.Map.merge
+        (fun k p1 p2 ->
+          match
+            ( merge_mode,
+              get_prop r1 p1 dict1,
+              get_prop r2 p2 dict2,
+              Obj_type.is_legacy_exact_DO_NOT_USE flags2.obj_kind )
+          with
+          (* If the object we are using to subtract has an optional property, non-own
+           * property, or is inexact then we should add this prop to our result, but
+           * make it optional as we cannot know for certain whether or not at runtime
+           * the property would be subtracted.
+           *
+           * Sound subtraction also considers exactness and owness to determine
+           * optionality. If p2 is maybe-own then sometimes it may not be
+           * subtracted and so is optional. If props2 is not exact then we may
+           * optionally have some undocumented prop. *)
+          | ((Sound | IgnoreExactAndOwn), Some (t1, _, m1), Some ((OptionalT _ as t2), _, _), _)
+          | (Sound, Some (t1, _, m1), Some (t2, false, _), _)
+          | (Sound, Some (t1, _, m1), Some (t2, _, _), false) ->
+            subt_check ~use_op cx (t1, optional t2);
+            let p =
+              if m1 then
+                Method (None, optional t1)
+              else
+                Field (None, optional t1, Polarity.Neutral)
+            in
+            Some p
+          (* Otherwise if the object we are using to subtract has a non-optional own
+           * property and the object is exact then we never add that property to our
+           * source object. *)
+          | ((Sound | IgnoreExactAndOwn), None, Some (t2, _, _), _) ->
+            let reason = replace_desc_reason (RUndefinedProperty k) r1 in
+            subt_check ~use_op cx (VoidT.make reason |> with_trust bogus_trust, t2);
+            None
+          | ((Sound | IgnoreExactAndOwn), Some (t1, _, _), Some (t2, _, _), _) ->
+            subt_check ~use_op cx (t1, t2);
+            None
+          (* If we have some property in our first object and none in our second
+           * object, but our second object is inexact then we want to make our
+           * property optional and flow that type to mixed. *)
+          | (Sound, Some (t1, _, m1), None, false) ->
+            subt_check ~use_op cx (t1, MixedT.make r2 |> with_trust bogus_trust);
+            let p =
+              if m1 then
+                Method (None, optional t1)
+              else
+                Field (None, optional t1, Polarity.Neutral)
+            in
+            Some p
+          (* If neither object has the prop then we don't add a prop to our
+           * result here. *)
+          | ((Sound | IgnoreExactAndOwn | ReactConfigMerge _), None, None, _) -> None
+          (* If our first object has a prop and our second object does not have that
+           * prop then we will copy over that prop. If the first object's prop is
+           * non-own then sometimes we may not copy it over so we mark it
+           * as optional. *)
+          | (IgnoreExactAndOwn, Some (t, _, m1), None, _) ->
+            let p =
+              if m1 then
+                Method (None, t)
+              else
+                Field (None, t, Polarity.Neutral)
+            in
+            Some p
+          | (ReactConfigMerge _, Some (t, _, m1), None, _) ->
+            let p =
+              if m1 then
+                Method (None, t)
+              else
+                Field (None, t, Polarity.Positive)
+            in
+            Some p
+          | (Sound, Some (t, true, m1), None, _) ->
+            let p =
+              if m1 then
+                Method (None, t)
+              else
+                Field (None, t, Polarity.Neutral)
+            in
+            Some p
+          | (Sound, Some (t, false, m1), None, _) ->
+            let p =
+              if m1 then
+                Method (None, optional t)
+              else
+                Field (None, optional t, Polarity.Neutral)
+            in
+            Some p
+          (* React config merging is special. We are trying to solve for C
+           * in the equation (where ... represents spread instead of rest):
+           *
+           *     {...DP, ...C} = P
+           *
+           * Where DP and P are known. Consider this case:
+           *
+           *     {...{p?}, ...C} = {p}
+           *
+           * The solution for C here is {p} instead of {p?} since
+           * {...{p?}, ...{p?}} is {p?} instead of {p}. This is inconsistent with
+           * the behavior of other object rest merge modes implemented in this
+           * pattern match. *)
+          | ( ReactConfigMerge _,
+              Some (t1, _, m1),
+              Some (OptionalT { reason = _; type_ = t2; use_desc = _ }, _, _),
+              _ ) ->
+            (* We only test the subtyping relation of t1 and t2 if both t1 and t2
+             * are optional types. If t1 is required then t2 will always
+             * be overwritten. *)
+            (match t1 with
+            | OptionalT { reason = _; type_ = t1; use_desc = _ } ->
+              subt_check ~use_op:unknown_use cx (t2, t1)
+            | _ -> ());
+            let p =
+              if m1 then
+                Method (None, t1)
+              else
+                Field (None, t1, Polarity.Neutral)
+            in
+            Some p
+          (* Using our same equation. Consider this case:
+           *
+           *     {...{p}, ...C} = {p}
+           *
+           * The solution for C here is {p?}. An empty object, {}, is not a valid
+           * solution unless that empty object is exact. Even for exact objects,
+           * {|p?|} is the best solution since it accepts more valid
+           * programs then {||}. *)
+          | (ReactConfigMerge _, Some (t1, _, m1), Some (t2, _, _), _) ->
+            (* The DP type for p must be a subtype of the P type for p. *)
+            subt_check ~use_op:unknown_use cx (t2, t1);
+            let p =
+              if m1 then
+                Method (None, optional t1)
+              else
+                Field (None, optional t1, Polarity.Positive)
+            in
+            Some p
+          (* Consider this case:
+           *
+           *     {...{p}, ...C} = {}
+           *
+           * For C there will be no prop. However, if the props object is exact
+           * then we need to throw an error. *)
+          | (ReactConfigMerge _, None, Some (_, _, _), _) ->
+            (if Obj_type.is_legacy_exact_DO_NOT_USE flags1.obj_kind then
+              let use_op =
+                Frame (PropertyCompatibility { prop = Some k; lower = r2; upper = r1 }, unknown_use)
+              in
+              let r2 = replace_desc_reason (RProperty (Some k)) r2 in
+              let err =
+                Error_message.EPropNotFound
+                  {
+                    prop_name = Some k;
+                    reason_prop = r2;
+                    reason_obj = r1;
+                    use_op;
+                    suggestion = None;
+                  }
+              in
+              add_output cx err);
+            None)
+        props1
+        props2
+    in
+    let dict =
+      match (dict1, dict2) with
+      | (None, None) -> None
+      | (Some dict, None) -> Some dict
+      | (None, Some _) -> None
+      (* If our first and second objects have a dictionary then we use our first
+       * dictionary, but we make the value optional since any set of keys may have
+       * been removed. *)
+      | (Some dict1, Some dict2) ->
+        subt_check ~use_op cx (dict1.value, dict2.value);
+        Some
+          {
+            dict_name = None;
+            key = dict1.key;
+            value = optional dict1.value;
+            dict_polarity = Polarity.Neutral;
+          }
+    in
+    let obj_kind =
+      match (flags1.obj_kind, dict) with
+      | (Exact, _) -> Exact
+      | (Indexed _, Some d) -> Indexed d
+      | (UnsealedInFile _, _) when Obj_type.sealed_in_op reason flags1.obj_kind -> Exact
+      | _ -> Inexact
+    in
+    let flags = { frozen = false; obj_kind } in
+    let generics = Generic.spread_subtract generics1 generics2 in
+    let id = Context.generate_property_map cx props in
+    let proto = ObjProtoT r1 in
+    let call = None in
+    mk_object_type
+      ~def_reason:r1
+      ~exact_reason:(Some r1)
+      ~invalidate_aliases:true
+      ~interface:None
+      flags
+      call
+      id
+      proto
+      generics
+  in
+  match state with
+  | One t ->
+    let resolve_tool = Object.Resolve Object.Next in
+    let state = Done x in
+    let tool = Object.Rest (options, state) in
+    recurse cx use_op reason resolve_tool tool t
+  | Done base ->
+    let xs = Nel.map_concat (fun slice -> Nel.map (rest cx ~use_op reason options slice) x) base in
+    let t =
+      match xs with
+      | (x, []) -> x
+      | (x0, x1 :: xs) -> UnionT (reason, UnionRep.make x0 x1 xs)
+    in
+    let use_op p = Frame (ReactGetConfig { polarity = p }, use_op) in
+    return cx use_op options t
+
 (********************)
 (* Object Read Only *)
 (********************)
