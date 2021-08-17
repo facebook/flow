@@ -25,17 +25,12 @@
             "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":14}},
             "range":[12,24],
             "key":{
-              "type":"PrivateName",
+              "type":"PrivateIdentifier",
               "loc":{"source":null,"start":{"line":2,"column":6},"end":{"line":2,"column":8}},
               "range":[16,18],
-              "id":{
-                "type":"Identifier",
-                "loc":{"source":null,"start":{"line":2,"column":7},"end":{"line":2,"column":8}},
-                "range":[17,18],
-                "name":"m",
-                "typeAnnotation":null,
-                "optional":false
-              }
+              "name":"m",
+              "typeAnnotation":null,
+              "optional":false
             },
             "value":{
               "type":"FunctionExpression",

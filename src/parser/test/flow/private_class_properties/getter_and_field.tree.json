@@ -27,19 +27,20 @@
         "range":[8,31],
         "body":[
           {
-            "type":"ClassPrivateProperty",
+            "type":"PropertyDefinition",
             "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":5}},
             "range":[12,15],
             "key":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":4}},
-              "range":[13,14],
+              "type":"PrivateIdentifier",
+              "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":4}},
+              "range":[12,14],
               "name":"m",
               "typeAnnotation":null,
               "optional":false
             },
             "value":null,
             "typeAnnotation":null,
+            "computed":false,
             "static":false,
             "variance":null
           },
@@ -48,17 +49,12 @@
             "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":13}},
             "range":[18,29],
             "key":{
-              "type":"PrivateName",
+              "type":"PrivateIdentifier",
               "loc":{"source":null,"start":{"line":3,"column":6},"end":{"line":3,"column":8}},
               "range":[22,24],
-              "id":{
-                "type":"Identifier",
-                "loc":{"source":null,"start":{"line":3,"column":7},"end":{"line":3,"column":8}},
-                "range":[23,24],
-                "name":"m",
-                "typeAnnotation":null,
-                "optional":false
-              }
+              "name":"m",
+              "typeAnnotation":null,
+              "optional":false
             },
             "value":{
               "type":"FunctionExpression",

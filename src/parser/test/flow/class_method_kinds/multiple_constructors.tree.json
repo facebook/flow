@@ -136,7 +136,7 @@
         "range":[74,115],
         "body":[
           {
-            "type":"ClassProperty",
+            "type":"PropertyDefinition",
             "loc":{"source":null,"start":{"line":7,"column":2},"end":{"line":7,"column":28}},
             "range":[78,104],
             "key":{
@@ -188,7 +188,7 @@
         "range":[127,161],
         "body":[
           {
-            "type":"ClassProperty",
+            "type":"PropertyDefinition",
             "loc":{"source":null,"start":{"line":11,"column":2},"end":{"line":11,"column":21}},
             "range":[131,150],
             "key":{
@@ -337,7 +337,7 @@
         "range":[255,286],
         "body":[
           {
-            "type":"ClassProperty",
+            "type":"PropertyDefinition",
             "loc":{"source":null,"start":{"line":20,"column":2},"end":{"line":20,"column":19}},
             "range":[259,276],
             "key":{
@@ -389,7 +389,7 @@
         "range":[303,342],
         "body":[
           {
-            "type":"ClassProperty",
+            "type":"PropertyDefinition",
             "loc":{"source":null,"start":{"line":24,"column":2},"end":{"line":24,"column":26}},
             "range":[307,331],
             "key":{

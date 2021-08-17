@@ -31,17 +31,12 @@
             "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":15}},
             "range":[12,25],
             "key":{
-              "type":"PrivateName",
+              "type":"PrivateIdentifier",
               "loc":{"source":null,"start":{"line":2,"column":6},"end":{"line":2,"column":9}},
               "range":[16,19],
-              "id":{
-                "type":"Identifier",
-                "loc":{"source":null,"start":{"line":2,"column":8},"end":{"line":2,"column":9}},
-                "range":[18,19],
-                "name":"m",
-                "typeAnnotation":null,
-                "optional":false
-              }
+              "name":"m",
+              "typeAnnotation":null,
+              "optional":false
             },
             "value":{
               "type":"FunctionExpression",

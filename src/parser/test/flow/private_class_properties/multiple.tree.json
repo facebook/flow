@@ -31,13 +31,13 @@
         "range":[8,142],
         "body":[
           {
-            "type":"ClassPrivateProperty",
+            "type":"PropertyDefinition",
             "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":12}},
             "range":[12,22],
             "key":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":4}},
-              "range":[13,14],
+              "type":"PrivateIdentifier",
+              "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":4}},
+              "range":[12,14],
               "name":"p",
               "typeAnnotation":null,
               "optional":false
@@ -53,17 +53,18 @@
                 "range":[16,22]
               }
             },
+            "computed":false,
             "static":false,
             "variance":null
           },
           {
-            "type":"ClassPrivateProperty",
+            "type":"PropertyDefinition",
             "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":12}},
             "range":[25,35],
             "key":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":3,"column":3},"end":{"line":3,"column":4}},
-              "range":[26,27],
+              "type":"PrivateIdentifier",
+              "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":4}},
+              "range":[25,27],
               "name":"q",
               "typeAnnotation":null,
               "optional":false
@@ -79,17 +80,18 @@
                 "range":[29,35]
               }
             },
+            "computed":false,
             "static":false,
             "variance":null
           },
           {
-            "type":"ClassPrivateProperty",
+            "type":"PropertyDefinition",
             "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":12}},
             "range":[38,48],
             "key":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":4,"column":3},"end":{"line":4,"column":4}},
-              "range":[39,40],
+              "type":"PrivateIdentifier",
+              "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":4}},
+              "range":[38,40],
               "name":"p",
               "typeAnnotation":null,
               "optional":false
@@ -105,17 +107,18 @@
                 "range":[42,48]
               }
             },
+            "computed":false,
             "static":false,
             "variance":null
           },
           {
-            "type":"ClassPrivateProperty",
+            "type":"PropertyDefinition",
             "loc":{"source":null,"start":{"line":5,"column":2},"end":{"line":5,"column":19}},
             "range":[88,105],
             "key":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":5,"column":10},"end":{"line":5,"column":11}},
-              "range":[96,97],
+              "type":"PrivateIdentifier",
+              "loc":{"source":null,"start":{"line":5,"column":9},"end":{"line":5,"column":11}},
+              "range":[95,97],
               "name":"q",
               "typeAnnotation":null,
               "optional":false
@@ -131,6 +134,7 @@
                 "range":[99,105]
               }
             },
+            "computed":false,
             "static":true,
             "variance":null
           }

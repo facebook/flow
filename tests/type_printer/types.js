@@ -118,8 +118,8 @@ export type Declaration = {
   start: number;
   trailingComments: ?Array<Comment>;
 } | {
-  type: 'ClassProperty';
-  _ClassProperty: void;
+  type: 'PropertyDefinition';
+  _PropertyDefinition: void;
   computed: boolean;
   key: Node;
   static: boolean;
@@ -1788,8 +1788,8 @@ export type Node = {
   start: number;
   trailingComments: ?Array<Comment>;
 } | {
-  type: 'ClassProperty';
-  _ClassProperty: void;
+  type: 'PropertyDefinition';
+  _PropertyDefinition: void;
   computed: boolean;
   key: Node;
   static: boolean;
@@ -4392,9 +4392,9 @@ export type ClassImplements = {
   trailingComments: ?Array<Comment>;
 };
 
-export type ClassProperty = {
-  type: 'ClassProperty';
-  _ClassProperty: void;
+export type PropertyDefinition = {
+  type: 'PropertyDefinition';
+  _PropertyDefinition: void;
   computed: boolean;
   key: Node;
   static: boolean;

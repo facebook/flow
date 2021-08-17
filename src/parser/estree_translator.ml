@@ -737,8 +737,16 @@ with type t = Impl.t = struct
         ?comments
         loc
         [("name", string name); ("typeAnnotation", null); ("optional", bool false)]
-    and private_name (loc, { PrivateName.id; comments }) =
-      node ?comments "PrivateName" loc [("id", identifier id)]
+    and private_identifier
+        ( loc,
+          { PrivateName.id = (_, { Identifier.name; comments = identifier_comments }); comments } )
+        =
+      let comments = Flow_ast_utils.merge_comments ~outer:comments ~inner:identifier_comments in
+      node
+        ?comments
+        "PrivateIdentifier"
+        loc
+        [("name", string name); ("typeAnnotation", null); ("optional", bool false)]
     and pattern_identifier
         loc { Pattern.Identifier.name = (_, { Identifier.name; comments }); annot; optional } =
       node
@@ -939,7 +947,7 @@ with type t = Impl.t = struct
         match key with
         | Literal lit -> (literal lit, false, comments)
         | Identifier id -> (identifier id, false, comments)
-        | PrivateName name -> (private_name name, false, comments)
+        | PrivateName name -> (private_identifier name, false, comments)
         | Computed (_, { ComputedKey.expression = expr; comments = computed_comments }) ->
           ( expression expr,
             true,
@@ -966,27 +974,19 @@ with type t = Impl.t = struct
           ("decorators", array_of_list class_decorator decorators);
         ]
     and class_private_field
-        ( loc,
-          {
-            Class.PrivateField.key = (_, { PrivateName.id; comments = key_comments });
-            value;
-            annot;
-            static;
-            variance = variance_;
-            comments;
-          } ) =
+        (loc, { Class.PrivateField.key; value; annot; static; variance = variance_; comments }) =
       let (value, declare) =
         match value with
         | Class.Property.Declared -> (None, true)
         | Class.Property.Uninitialized -> (None, false)
         | Class.Property.Initialized x -> (Some x, false)
       in
-      let comments = Flow_ast_utils.merge_comments ~outer:comments ~inner:key_comments in
       let props =
         [
-          ("key", identifier id);
+          ("key", private_identifier key);
           ("value", option expression value);
           ("typeAnnotation", hint type_annotation annot);
+          ("computed", bool false);
           ("static", bool static);
           ("variance", option variance variance_);
         ]
@@ -996,7 +996,7 @@ with type t = Impl.t = struct
         else
           []
       in
-      node ?comments "ClassPrivateProperty" loc props
+      node ?comments "PropertyDefinition" loc props
     and class_property
         (loc, { Class.Property.key; value; annot; static; variance = variance_; comments }) =
       let (key, computed, comments) =
@@ -1030,7 +1030,7 @@ with type t = Impl.t = struct
         else
           []
       in
-      node ?comments "ClassProperty" loc props
+      node ?comments "PropertyDefinition" loc props
     and enum_declaration (loc, { Statement.EnumDeclaration.id; body; comments }) =
       let open Statement.EnumDeclaration in
       let enum_body =
@@ -1887,7 +1887,7 @@ with type t = Impl.t = struct
       let (property, computed) =
         match property with
         | Expression.Member.PropertyIdentifier id -> (identifier id, false)
-        | Expression.Member.PropertyPrivateName name -> (private_name name, false)
+        | Expression.Member.PropertyPrivateName name -> (private_identifier name, false)
         | Expression.Member.PropertyExpression expr -> (expression expr, true)
       in
       [("object", expression _object); ("property", property); ("computed", bool computed)]

@@ -66,8 +66,15 @@ export default function (fork) {
     .field("bigint", String);
 
   /////////
-  // es-proposal
+  // es2022
   /////////
-  def("ClassPrivateProperty")
-    .field("key", def("Identifier"))
+  def("PrivateIdentifier")
+    .bases("Expression", "Pattern")
+    .field("name", String);
+
+  def("PropertyDefinition")
+    .bases("ClassProperty");
+
+  def("ClassBody")
+    .field("body", [or(def("MethodDefinition"), def("PropertyDefinition"))]);
 }

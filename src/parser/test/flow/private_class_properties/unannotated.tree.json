@@ -21,19 +21,20 @@
         "range":[8,18],
         "body":[
           {
-            "type":"ClassPrivateProperty",
+            "type":"PropertyDefinition",
             "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":6}},
             "range":[12,16],
             "key":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":6}},
-              "range":[13,16],
+              "type":"PrivateIdentifier",
+              "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":6}},
+              "range":[12,16],
               "name":"foo",
               "typeAnnotation":null,
               "optional":false
             },
             "value":null,
             "typeAnnotation":null,
+            "computed":false,
             "static":false,
             "variance":null
           }

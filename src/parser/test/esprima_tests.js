@@ -2569,8 +2569,28 @@ module.exports = {
             },
           },
         },
-        'class Foo { [1 + 1]: string; }',
-        'class Foo { 123:string; }',
+        {
+          content: 'class Foo { [1 + 1]: string; }',
+          explanation: 'Esprima-fb returns ClassProperty, but Flow returns PropertyDefinition',
+          expected_differences: {
+            'root.body.0.body.body.0.type': {
+              type: 'Wrong string',
+              expected: 'ClassProperty',
+              actual: 'PropertyDefinition'
+            }
+          }
+        },
+        {
+          content: 'class Foo { 123:string; }',
+          explanation: 'Esprima-fb returns ClassProperty, but Flow returns PropertyDefinition',
+          expected_differences: {
+            'root.body.0.body.body.0.type': {
+              type: 'Wrong string',
+              expected: 'ClassProperty',
+              actual: 'PropertyDefinition'
+            }
+          }
+        },
         {
           content: 'class Foo { "bar"<T>() { } }',
           explanation: "Esprima-fb doesn't include params in " +
@@ -2588,10 +2608,60 @@ module.exports = {
             },
           },
         },
-        'class Foo { "prop1":string; }',
-        'class Foo { [prop1]: string; }' ,
-        'class Foo { prop1:string; prop2:number; }',
-        'class Foo { static prop1:string; prop2:number; }',
+        {
+          content: 'class Foo { "prop1":string; }',
+          explanation: 'Esprima-fb returns ClassProperty, but Flow returns PropertyDefinition',
+          expected_differences: {
+            'root.body.0.body.body.0.type': {
+              type: 'Wrong string',
+              expected: 'ClassProperty',
+              actual: 'PropertyDefinition'
+            }
+          }
+        },
+        {
+          content: 'class Foo { [prop1]: string; }',
+          explanation: 'Esprima-fb returns ClassProperty, but Flow returns PropertyDefinition',
+          expected_differences: {
+            'root.body.0.body.body.0.type': {
+              type: 'Wrong string',
+              expected: 'ClassProperty',
+              actual: 'PropertyDefinition'
+            }
+          }
+        },
+        {
+          content: 'class Foo { prop1:string; prop2:number; }',
+          explanation: 'Esprima-fb returns ClassProperty, but Flow returns PropertyDefinition',
+          expected_differences: {
+            'root.body.0.body.body.0.type': {
+              type: 'Wrong string',
+              expected: 'ClassProperty',
+              actual: 'PropertyDefinition'
+            },
+            'root.body.0.body.body.1.type': {
+              type: 'Wrong string',
+              expected: 'ClassProperty',
+              actual: 'PropertyDefinition'
+            }
+          }
+        },
+        {
+          content: 'class Foo { static prop1:string; prop2:number; }',
+          explanation: 'Esprima-fb returns ClassProperty, but Flow returns PropertyDefinition',
+          expected_differences: {
+            'root.body.0.body.body.0.type': {
+              type: 'Wrong string',
+              expected: 'ClassProperty',
+              actual: 'PropertyDefinition'
+            },
+            'root.body.0.body.body.1.type': {
+              type: 'Wrong string',
+              expected: 'ClassProperty',
+              actual: 'PropertyDefinition'
+            }
+          },
+        },
         {
           content: 'class Foo {set fooProp(value:number){}}',
           explanation: "Esprima-fb doesn't include params in " +

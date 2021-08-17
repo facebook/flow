@@ -31,17 +31,12 @@
             "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":13}},
             "range":[12,23],
             "key":{
-              "type":"PrivateName",
+              "type":"PrivateIdentifier",
               "loc":{"source":null,"start":{"line":2,"column":6},"end":{"line":2,"column":8}},
               "range":[16,18],
-              "id":{
-                "type":"Identifier",
-                "loc":{"source":null,"start":{"line":2,"column":7},"end":{"line":2,"column":8}},
-                "range":[17,18],
-                "name":"m",
-                "typeAnnotation":null,
-                "optional":false
-              }
+              "name":"m",
+              "typeAnnotation":null,
+              "optional":false
             },
             "value":{
               "type":"FunctionExpression",
@@ -72,17 +67,12 @@
             "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":13}},
             "range":[26,37],
             "key":{
-              "type":"PrivateName",
+              "type":"PrivateIdentifier",
               "loc":{"source":null,"start":{"line":3,"column":6},"end":{"line":3,"column":8}},
               "range":[30,32],
-              "id":{
-                "type":"Identifier",
-                "loc":{"source":null,"start":{"line":3,"column":7},"end":{"line":3,"column":8}},
-                "range":[31,32],
-                "name":"m",
-                "typeAnnotation":null,
-                "optional":false
-              }
+              "name":"m",
+              "typeAnnotation":null,
+              "optional":false
             },
             "value":{
               "type":"FunctionExpression",

@@ -197,7 +197,7 @@ var removeFlowVisitor = {
     }
   },
 
-  ClassProperty: function(context, node) {
+  PropertyDefinition: function(context, node) {
     if (node.declare || (context.ignoreUninitializedFields && !node.value)) {
       return removeNode(context, node);
     }

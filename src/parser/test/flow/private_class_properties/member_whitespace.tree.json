@@ -27,19 +27,20 @@
         "range":[8,45],
         "body":[
           {
-            "type":"ClassPrivateProperty",
+            "type":"PropertyDefinition",
             "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":5}},
             "range":[12,15],
             "key":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":4}},
-              "range":[13,14],
+              "type":"PrivateIdentifier",
+              "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":4}},
+              "range":[12,14],
               "name":"m",
               "typeAnnotation":null,
               "optional":false
             },
             "value":null,
             "typeAnnotation":null,
+            "computed":false,
             "static":false,
             "variance":null
           },
@@ -80,17 +81,12 @@
                         "range":[30,34]
                       },
                       "property":{
-                        "type":"PrivateName",
+                        "type":"PrivateIdentifier",
                         "loc":{"source":null,"start":{"line":4,"column":9},"end":{"line":4,"column":12}},
                         "range":[35,38],
-                        "id":{
-                          "type":"Identifier",
-                          "loc":{"source":null,"start":{"line":4,"column":11},"end":{"line":4,"column":12}},
-                          "range":[37,38],
-                          "name":"m",
-                          "typeAnnotation":null,
-                          "optional":false
-                        }
+                        "name":"m",
+                        "typeAnnotation":null,
+                        "optional":false
                       },
                       "computed":false
                     },

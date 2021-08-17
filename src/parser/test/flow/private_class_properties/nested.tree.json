@@ -27,13 +27,13 @@
         "range":[8,76],
         "body":[
           {
-            "type":"ClassPrivateProperty",
+            "type":"PropertyDefinition",
             "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":18}},
             "range":[12,28],
             "key":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":4}},
-              "range":[13,14],
+              "type":"PrivateIdentifier",
+              "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":4}},
+              "range":[12,14],
               "name":"p",
               "typeAnnotation":null,
               "optional":false
@@ -80,6 +80,7 @@
                 "internalSlots":[]
               }
             },
+            "computed":false,
             "static":false,
             "variance":null
           }

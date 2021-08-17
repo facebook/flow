@@ -365,7 +365,7 @@ function handleSpecialObjectCompare(esprima, flow, env) {
         break;
       case 'ObjectTypeProperty':
       case 'ObjectTypeIndexer':
-      case 'ClassProperty':
+      case 'PropertyDefinition':
         delete flow.variance;
         break;
       case 'DeclareModule':
@@ -470,6 +470,7 @@ function compare(esprima, flow, env) {
       if (!ast_types.namedTypes[flow.type]) {
         env.diff("Unknown AST type", "known type", flow.type);
       } else if (!ast_types.namedTypes[flow.type].check(flow, true)) {
+        throw new Error(`${ast_types.namedTypes[flow.type]} ${JSON.stringify(flow)}`);
         env.ast_types_error();
       }
     }

@@ -21,7 +21,7 @@
         "range":[8,40],
         "body":[
           {
-            "type":"ClassProperty",
+            "type":"PropertyDefinition",
             "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":11}},
             "range":[12,21],
             "key":{

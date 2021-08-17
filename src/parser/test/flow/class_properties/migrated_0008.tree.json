@@ -55,7 +55,7 @@
         "range":[17,42],
         "body":[
           {
-            "type":"ClassProperty",
+            "type":"PropertyDefinition",
             "loc":{"source":null,"start":{"line":1,"column":19},"end":{"line":1,"column":27}},
             "range":[19,27],
             "key":{

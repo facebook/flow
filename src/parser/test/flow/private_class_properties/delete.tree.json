@@ -31,13 +31,13 @@
         "range":[8,151],
         "body":[
           {
-            "type":"ClassPrivateProperty",
+            "type":"PropertyDefinition",
             "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":12}},
             "range":[12,22],
             "key":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":4}},
-              "range":[13,14],
+              "type":"PrivateIdentifier",
+              "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":4}},
+              "range":[12,14],
               "name":"p",
               "typeAnnotation":null,
               "optional":false
@@ -53,6 +53,7 @@
                 "range":[16,22]
               }
             },
+            "computed":false,
             "static":false,
             "variance":null
           },
@@ -99,17 +100,12 @@
                           "range":[52,56]
                         },
                         "property":{
-                          "type":"PrivateName",
+                          "type":"PrivateIdentifier",
                           "loc":{"source":null,"start":{"line":4,"column":16},"end":{"line":4,"column":18}},
                           "range":[57,59],
-                          "id":{
-                            "type":"Identifier",
-                            "loc":{"source":null,"start":{"line":4,"column":17},"end":{"line":4,"column":18}},
-                            "range":[58,59],
-                            "name":"p",
-                            "typeAnnotation":null,
-                            "optional":false
-                          }
+                          "name":"p",
+                          "typeAnnotation":null,
+                          "optional":false
                         },
                         "computed":false
                       }
@@ -136,17 +132,12 @@
                           "range":[105,109]
                         },
                         "property":{
-                          "type":"PrivateName",
+                          "type":"PrivateIdentifier",
                           "loc":{"source":null,"start":{"line":5,"column":18},"end":{"line":5,"column":20}},
                           "range":[110,112],
-                          "id":{
-                            "type":"Identifier",
-                            "loc":{"source":null,"start":{"line":5,"column":19},"end":{"line":5,"column":20}},
-                            "range":[111,112],
-                            "name":"p",
-                            "typeAnnotation":null,
-                            "optional":false
-                          }
+                          "name":"p",
+                          "typeAnnotation":null,
+                          "optional":false
                         },
                         "computed":false
                       }
