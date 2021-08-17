@@ -158,7 +158,7 @@ export default (suite(({addFile, flowCmd}) => [
              },
              {
                "name": "concat",
-               "type": "(...strings: Array<string>) => string"
+               "type": "(...values: Array<mixed>) => string"
              },
              {
                "name": "endsWith",

@@ -41,7 +41,7 @@ Flags: --pretty
     {"name":"charAt","type":"(pos: number) => string"},
     {"name":"charCodeAt","type":"(index: number) => number"},
     {"name":"codePointAt","type":"(index: number) => number"},
-    {"name":"concat","type":"(...strings: Array<string>) => string"},
+    {"name":"concat","type":"(...values: Array<mixed>) => string"},
     {
       "name":"endsWith",
       "type":"(searchString: string, position?: number) => boolean"
@@ -389,7 +389,7 @@ Flags: --pretty
     {"name":"charAt","type":"(pos: number) => string"},
     {"name":"charCodeAt","type":"(index: number) => number"},
     {"name":"codePointAt","type":"(index: number) => number"},
-    {"name":"concat","type":"(...strings: Array<string>) => string"},
+    {"name":"concat","type":"(...values: Array<mixed>) => string"},
     {
       "name":"endsWith",
       "type":"(searchString: string, position?: number) => boolean"

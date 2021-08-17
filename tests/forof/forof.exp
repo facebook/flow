@@ -58,8 +58,8 @@ Cannot cast `elem` to number because tuple type [1] is incompatible with number 
               ^^^^
 
 References:
-   <BUILTINS>/core.js:1709:28
-   1709|     @@iterator(): Iterator<[K, V]>;
+   <BUILTINS>/core.js:1711:28
+   1711|     @@iterator(): Iterator<[K, V]>;
                                     ^^^^^^ [1]
    forof.js:32:12
      32|     (elem: number); // Error - tuple ~> number
@@ -75,8 +75,8 @@ Cannot cast `elem` to number because tuple type [1] is incompatible with number 
               ^^^^
 
 References:
-   <BUILTINS>/core.js:1709:28
-   1709|     @@iterator(): Iterator<[K, V]>;
+   <BUILTINS>/core.js:1711:28
+   1711|     @@iterator(): Iterator<[K, V]>;
                                     ^^^^^^ [1]
    forof.js:39:12
      39|     (elem: number); // Error - tuple ~> number
