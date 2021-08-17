@@ -233,12 +233,13 @@ type autocomplete_service_result =
   | AcEmpty of string
   | AcFatalError of string
 
-let documentation_of_member ~reader ~cx ~typed_ast this name =
-  match GetDef_js.extract_member_def ~reader cx this name with
-  | Ok loc ->
-    Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader loc
+let documentation_of_member ~reader ~typed_ast info =
+  match info.Ty_members.def_loc with
+  | None -> None
+  | Some loc ->
+    loc_of_aloc ~reader loc
+    |> Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader
     |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
-  | Error _ -> None
 
 let members_of_type
     ~reader
@@ -278,7 +279,7 @@ let members_of_type
         |> NameUtils.Map.bindings
         |> Base.List.filter_map ~f:include_valid_member
         |> List.map (fun (name, info) ->
-               (name, documentation_of_member ~reader ~cx ~typed_ast type_ name, info)),
+               (name, documentation_of_member ~reader ~typed_ast info, info)),
         (match errors with
         | [] -> []
         | _ :: _ -> Printf.sprintf "members_of_type %s" (Debug_js.dump_t cx type_) :: errors),
@@ -660,7 +661,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
   | Decl (ModuleDecl { exports; _ }) ->
     Base.List.filter_map
       ~f:(function
-        | TypeAliasDecl { name = { Ty.sym_name; _ }; type_ = Some t; _ } as d ->
+        | TypeAliasDecl { name = { Ty.sym_name; sym_def_loc; _ }; type_ = Some t; _ } as d ->
           (* TODO consider omitting items with internal names throughout *)
           let sym_name = Reason.display_string_of_name sym_name in
           let type_ = Ty_printer.string_of_decl_single_line ~exact_by_default d in
@@ -672,12 +673,12 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
               detail = type_;
               sort_text = None;
               preselect = false;
-              documentation = documentation_of_module_member sym_name;
+              documentation = documentation_of_module_member sym_def_loc;
               log_info = "qualified type alias";
               source = None;
               type_ = Some type_;
             }
-        | InterfaceDecl ({ Ty.sym_name; _ }, _) as d ->
+        | InterfaceDecl ({ Ty.sym_name; sym_def_loc; _ }, _) as d ->
           let sym_name = Reason.display_string_of_name sym_name in
           let type_ = Ty_printer.string_of_decl_single_line ~exact_by_default d in
           Some
@@ -688,12 +689,12 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
               detail = type_;
               sort_text = None;
               preselect = false;
-              documentation = documentation_of_module_member sym_name;
+              documentation = documentation_of_module_member sym_def_loc;
               log_info = "qualified interface";
               source = None;
               type_ = Some type_;
             }
-        | ClassDecl ({ Ty.sym_name; _ }, _) as d ->
+        | ClassDecl ({ Ty.sym_name; sym_def_loc; _ }, _) as d ->
           let sym_name = Reason.display_string_of_name sym_name in
           let type_ = Ty_printer.string_of_decl_single_line ~exact_by_default d in
           Some
@@ -704,12 +705,12 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
               detail = type_;
               sort_text = None;
               preselect = false;
-              documentation = documentation_of_module_member sym_name;
+              documentation = documentation_of_module_member sym_def_loc;
               log_info = "qualified class";
               source = None;
               type_ = Some type_;
             }
-        | EnumDecl { Ty.sym_name; _ } as d ->
+        | EnumDecl { Ty.sym_name; sym_def_loc; _ } as d ->
           let sym_name = Reason.display_string_of_name sym_name in
           let type_ = Ty_printer.string_of_decl_single_line ~exact_by_default d in
           Some
@@ -720,7 +721,7 @@ let type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module
               detail = type_;
               sort_text = None;
               preselect = false;
-              documentation = documentation_of_module_member sym_name;
+              documentation = documentation_of_module_member sym_def_loc;
               log_info = "qualified enum";
               source = None;
               type_ = Some type_;
@@ -883,7 +884,7 @@ let autocomplete_unqualified_type
              when type_exports_of_module_ty
                     ~ac_loc
                     ~exact_by_default
-                    ~documentation_of_module_member:Base.Option.some
+                    ~documentation_of_module_member:(fun _ -> None)
                     elt
                   <> [] ->
              let result =
@@ -1260,7 +1261,11 @@ let autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparam
       ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
       qtype_scheme
   in
-  let documentation_of_module_member = documentation_of_member ~reader ~cx ~typed_ast qtype in
+  let documentation_of_module_member def_loc =
+    loc_of_aloc ~reader def_loc
+    |> Find_documentation.jsdoc_of_getdef_loc ~reader
+    |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
+  in
   let (items, errors_to_log) =
     match module_ty_res with
     | Error err -> ([], [Ty_normalizer.error_to_string err])

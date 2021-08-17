@@ -475,11 +475,7 @@ export default (suite(
             },
           },
         ],
-        [
-          'textDocument/publishDiagnostics',
-          'window/showStatus',
-          '$/cancelRequest',
-        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
     test('textDocument/completion triggered by space in jsx', [
@@ -796,8 +792,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 14, character: 3},
-                      end: {line: 14, character: 3},
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
                     },
                     newText: 'apply',
                   },
@@ -807,7 +809,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'apply'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'apply',
+                      },
                     ],
                   },
                 },
@@ -819,8 +824,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 14, character: 3},
-                      end: {line: 14, character: 3},
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
                     },
                     newText: 'arguments',
                   },
@@ -830,7 +841,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'arguments'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'arguments',
+                      },
                     ],
                   },
                 },
@@ -842,8 +856,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 14, character: 3},
-                      end: {line: 14, character: 3},
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
                     },
                     newText: 'bind',
                   },
@@ -853,7 +873,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'bind'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'bind',
+                      },
                     ],
                   },
                 },
@@ -865,8 +888,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 14, character: 3},
-                      end: {line: 14, character: 3},
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
                     },
                     newText: 'call',
                   },
@@ -876,7 +905,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'call'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'call',
+                      },
                     ],
                   },
                 },
@@ -888,8 +920,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 14, character: 3},
-                      end: {line: 14, character: 3},
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
                     },
                     newText: 'caller',
                   },
@@ -899,7 +937,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'caller'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'caller',
+                      },
                     ],
                   },
                 },
@@ -911,8 +952,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 14, character: 3},
-                      end: {line: 14, character: 3},
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
                     },
                     newText: 'childContextTypes',
                   },
@@ -922,7 +969,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'childContextTypes'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'childContextTypes',
+                      },
                     ],
                   },
                 },
@@ -934,8 +984,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 14, character: 3},
-                      end: {line: 14, character: 3},
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
                     },
                     newText: 'contextTypes',
                   },
@@ -945,7 +1001,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'contextTypes'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'contextTypes',
+                      },
                     ],
                   },
                 },
@@ -957,8 +1016,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 14, character: 3},
-                      end: {line: 14, character: 3},
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
                     },
                     newText: 'displayName',
                   },
@@ -968,7 +1033,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'displayName'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'displayName',
+                      },
                     ],
                   },
                 },
@@ -985,8 +1053,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 14, character: 3},
-                      end: {line: 14, character: 3},
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
                     },
                     newText: 'hasOwnProperty',
                   },
@@ -996,7 +1070,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'hasOwnProperty'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'hasOwnProperty',
+                      },
                     ],
                   },
                 },
@@ -1013,8 +1090,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 14, character: 3},
-                      end: {line: 14, character: 3},
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
                     },
                     newText: 'isPrototypeOf',
                   },
@@ -1024,7 +1107,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'isPrototypeOf'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'isPrototypeOf',
+                      },
                     ],
                   },
                 },
@@ -1036,8 +1122,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 14, character: 3},
-                      end: {line: 14, character: 3},
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
                     },
                     newText: 'length',
                   },
@@ -1047,7 +1139,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'length'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'length',
+                      },
                     ],
                   },
                 },
@@ -1055,12 +1150,23 @@ export default (suite(
                   label: 'name',
                   kind: 6,
                   detail: 'string',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Returns the name of the function. Function names are read-only and can not be changed.',
+                  },
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 14, character: 3},
-                      end: {line: 14, character: 3},
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
                     },
                     newText: 'name',
                   },
@@ -1070,7 +1176,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'name'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'name',
+                      },
                     ],
                   },
                 },
@@ -1082,8 +1191,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 14, character: 3},
-                      end: {line: 14, character: 3},
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
                     },
                     newText: 'propTypes',
                   },
@@ -1093,7 +1208,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'propTypes'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'propTypes',
+                      },
                     ],
                   },
                 },
@@ -1110,8 +1228,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 14, character: 3},
-                      end: {line: 14, character: 3},
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
                     },
                     newText: 'propertyIsEnumerable',
                   },
@@ -1121,7 +1245,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'propertyIsEnumerable'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'propertyIsEnumerable',
+                      },
                     ],
                   },
                 },
@@ -1138,8 +1265,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 14, character: 3},
-                      end: {line: 14, character: 3},
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
                     },
                     newText: 'toLocaleString',
                   },
@@ -1149,7 +1282,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'toLocaleString'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'toLocaleString',
+                      },
                     ],
                   },
                 },
@@ -1159,14 +1295,20 @@ export default (suite(
                   detail: '() => string',
                   documentation: {
                     kind: 'markdown',
-                    value: 'Returns a string representation of an object.',
+                    value: 'Returns a string representation of a function.',
                   },
                   sortText: '00000000000000000001',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 14, character: 3},
-                      end: {line: 14, character: 3},
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
                     },
                     newText: 'toString',
                   },
@@ -1176,7 +1318,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'toString'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'toString',
+                      },
                     ],
                   },
                 },
@@ -1193,8 +1338,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 14, character: 3},
-                      end: {line: 14, character: 3},
+                      start: {
+                        line: 14,
+                        character: 3,
+                      },
+                      end: {
+                        line: 14,
+                        character: 3,
+                      },
                     },
                     newText: 'valueOf',
                   },
@@ -1204,7 +1355,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'valueOf'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'valueOf',
+                      },
                     ],
                   },
                 },
@@ -1237,8 +1391,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 15, character: 2},
-                      end: {line: 15, character: 2},
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
                     },
                     newText: 'apply',
                   },
@@ -1248,7 +1408,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'apply'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'apply',
+                      },
                     ],
                   },
                 },
@@ -1260,8 +1423,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 15, character: 2},
-                      end: {line: 15, character: 2},
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
                     },
                     newText: 'arguments',
                   },
@@ -1271,7 +1440,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'arguments'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'arguments',
+                      },
                     ],
                   },
                 },
@@ -1283,8 +1455,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 15, character: 2},
-                      end: {line: 15, character: 2},
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
                     },
                     newText: 'bind',
                   },
@@ -1294,7 +1472,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'bind'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'bind',
+                      },
                     ],
                   },
                 },
@@ -1306,8 +1487,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 15, character: 2},
-                      end: {line: 15, character: 2},
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
                     },
                     newText: 'call',
                   },
@@ -1317,7 +1504,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'call'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'call',
+                      },
                     ],
                   },
                 },
@@ -1329,8 +1519,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 15, character: 2},
-                      end: {line: 15, character: 2},
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
                     },
                     newText: 'caller',
                   },
@@ -1340,7 +1536,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'caller'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'caller',
+                      },
                     ],
                   },
                 },
@@ -1352,8 +1551,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 15, character: 2},
-                      end: {line: 15, character: 2},
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
                     },
                     newText: 'childContextTypes',
                   },
@@ -1363,7 +1568,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'childContextTypes'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'childContextTypes',
+                      },
                     ],
                   },
                 },
@@ -1375,8 +1583,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 15, character: 2},
-                      end: {line: 15, character: 2},
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
                     },
                     newText: 'contextTypes',
                   },
@@ -1386,7 +1600,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'contextTypes'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'contextTypes',
+                      },
                     ],
                   },
                 },
@@ -1398,8 +1615,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 15, character: 2},
-                      end: {line: 15, character: 2},
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
                     },
                     newText: 'displayName',
                   },
@@ -1409,7 +1632,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'displayName'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'displayName',
+                      },
                     ],
                   },
                 },
@@ -1426,8 +1652,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 15, character: 2},
-                      end: {line: 15, character: 2},
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
                     },
                     newText: 'hasOwnProperty',
                   },
@@ -1437,7 +1669,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'hasOwnProperty'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'hasOwnProperty',
+                      },
                     ],
                   },
                 },
@@ -1454,8 +1689,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 15, character: 2},
-                      end: {line: 15, character: 2},
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
                     },
                     newText: 'isPrototypeOf',
                   },
@@ -1465,7 +1706,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'isPrototypeOf'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'isPrototypeOf',
+                      },
                     ],
                   },
                 },
@@ -1477,8 +1721,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 15, character: 2},
-                      end: {line: 15, character: 2},
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
                     },
                     newText: 'length',
                   },
@@ -1488,7 +1738,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'length'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'length',
+                      },
                     ],
                   },
                 },
@@ -1496,12 +1749,23 @@ export default (suite(
                   label: 'name',
                   kind: 6,
                   detail: 'string',
+                  documentation: {
+                    kind: 'markdown',
+                    value:
+                      'Returns the name of the function. Function names are read-only and can not be changed.',
+                  },
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 15, character: 2},
-                      end: {line: 15, character: 2},
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
                     },
                     newText: 'name',
                   },
@@ -1511,7 +1775,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'name'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'name',
+                      },
                     ],
                   },
                 },
@@ -1523,8 +1790,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 15, character: 2},
-                      end: {line: 15, character: 2},
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
                     },
                     newText: 'propTypes',
                   },
@@ -1534,7 +1807,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'propTypes'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'propTypes',
+                      },
                     ],
                   },
                 },
@@ -1551,8 +1827,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 15, character: 2},
-                      end: {line: 15, character: 2},
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
                     },
                     newText: 'propertyIsEnumerable',
                   },
@@ -1562,7 +1844,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'propertyIsEnumerable'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'propertyIsEnumerable',
+                      },
                     ],
                   },
                 },
@@ -1579,8 +1864,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 15, character: 2},
-                      end: {line: 15, character: 2},
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
                     },
                     newText: 'toLocaleString',
                   },
@@ -1590,7 +1881,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'toLocaleString'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'toLocaleString',
+                      },
                     ],
                   },
                 },
@@ -1600,14 +1894,20 @@ export default (suite(
                   detail: '() => string',
                   documentation: {
                     kind: 'markdown',
-                    value: 'Returns a string representation of an object.',
+                    value: 'Returns a string representation of a function.',
                   },
                   sortText: '00000000000000000001',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 15, character: 2},
-                      end: {line: 15, character: 2},
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
                     },
                     newText: 'toString',
                   },
@@ -1617,7 +1917,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'toString'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'toString',
+                      },
                     ],
                   },
                 },
@@ -1634,8 +1937,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 15, character: 2},
-                      end: {line: 15, character: 2},
+                      start: {
+                        line: 15,
+                        character: 2,
+                      },
+                      end: {
+                        line: 15,
+                        character: 2,
+                      },
                     },
                     newText: 'valueOf',
                   },
@@ -1645,7 +1954,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'member',
-                      {token: 'AUTO332', completion: 'valueOf'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'valueOf',
+                      },
                     ],
                   },
                 },
@@ -2516,11 +2828,7 @@ export default (suite(
             },
           },
         ],
-        [
-          'textDocument/publishDiagnostics',
-          'window/showStatus',
-          '$/cancelRequest',
-        ],
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
   ],
