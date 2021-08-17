@@ -1683,13 +1683,25 @@ class virtual ['a] t_with_uses =
     method class_binding cx map_cx binding =
       let class_private_fields = self#props cx map_cx binding.class_private_fields in
       let class_private_static_fields = self#props cx map_cx binding.class_private_static_fields in
+      let class_private_methods = self#props cx map_cx binding.class_private_methods in
+      let class_private_static_methods =
+        self#props cx map_cx binding.class_private_static_methods
+      in
       if
         class_private_fields == binding.class_private_fields
         && class_private_static_fields == binding.class_private_static_fields
+        && class_private_methods == binding.class_private_methods
+        && class_private_static_methods == binding.class_private_static_methods
       then
         binding
       else
-        { binding with class_private_fields; class_private_static_fields }
+        {
+          binding with
+          class_private_fields;
+          class_private_static_fields;
+          class_private_methods;
+          class_private_static_methods;
+        }
 
     method elem_action cx map_cx t =
       match t with

@@ -483,11 +483,22 @@ let bind_entry cx name entry loc =
   if not (is_excluded name) then loop !scopes
 
 (* bind class entry *)
-let bind_class cx class_id class_private_fields class_private_static_fields =
+let bind_class
+    cx
+    class_id
+    class_private_fields
+    class_private_static_fields
+    class_private_methods
+    class_private_static_methods =
   bind_entry
     cx
     (internal_name "class")
-    (Entry.new_class class_id class_private_fields class_private_static_fields)
+    (Entry.new_class
+       class_id
+       class_private_fields
+       class_private_static_fields
+       class_private_methods
+       class_private_static_methods)
     ALoc.none
 
 (* bind var entry *)

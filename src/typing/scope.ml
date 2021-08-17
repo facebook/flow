@@ -114,8 +114,20 @@ module Entry = struct
     | Class of Type.class_binding
 
   (* constructors *)
-  let new_class class_binding_id class_private_fields class_private_static_fields =
-    Class { Type.class_binding_id; Type.class_private_fields; Type.class_private_static_fields }
+  let new_class
+      class_binding_id
+      class_private_fields
+      class_private_static_fields
+      class_private_methods
+      class_private_static_methods =
+    Class
+      {
+        Type.class_binding_id;
+        class_private_fields;
+        class_private_static_fields;
+        class_private_methods;
+        class_private_static_methods;
+      }
 
   let new_value kind state specific ?closure_writes general value_declare_loc =
     Value

@@ -7525,14 +7525,16 @@ and mk_class cx class_loc ~class_annot ~name_loc ~general reason c =
   let this_in_class = Class_stmt_sig.This.in_class c in
   let self = Tvar.mk cx reason in
   let (class_sig, class_ast_f) = mk_class_sig ~class_annot cx name_loc reason self c in
+  let instance_this_type = Class_stmt_sig.this_or_mixed_of_t ~static:false class_sig in
+  let static_this_type = Class_stmt_sig.this_or_mixed_of_t ~static:true class_sig in
   class_sig
   |> Class_stmt_sig.check_with_generics cx (fun class_sig ->
          let public_property_map =
-           Class_stmt_sig.to_prop_map cx
+           Class_stmt_sig.fields_to_prop_map cx
            @@ Class_stmt_sig.public_fields_of_signature ~static:false class_sig
          in
          let private_property_map =
-           Class_stmt_sig.to_prop_map cx
+           Class_stmt_sig.fields_to_prop_map cx
            @@ Class_stmt_sig.private_fields_of_signature ~static:false class_sig
          in
          Class_stmt_sig.check_super cx def_reason class_sig;
@@ -7545,7 +7547,9 @@ and mk_class cx class_loc ~class_annot ~name_loc ~general reason c =
              ~decls:toplevel_decls
              ~stmts:(Toplevels.toplevels statement)
              ~expr:expression
-             ~private_property_map;
+             ~private_property_map
+             ~instance_this_type
+             ~static_this_type;
 
          let class_body = Ast.Class.((snd c.body).Body.body) in
          Context.add_voidable_check
@@ -7698,25 +7702,19 @@ and mk_class_sig =
       let (class_sig, rev_elements) =
         List.fold_left
           (let open Ast.Class in
-          fun (c, rev_elements) -> function
-            (* instance and static methods *)
-            | Body.Property (_, { Property.key = Ast.Expression.Object.Property.PrivateName _; _ })
-              ->
-              failwith "Internal Error: Found non-private field with private name"
-            | Body.Method (_, { Method.key = Ast.Expression.Object.Property.PrivateName _; _ }) ->
-              failwith "Internal Error: Found method with private name"
-            | Body.Method
-                ( loc,
-                  {
-                    Method.key =
-                      Ast.Expression.Object.Property.Identifier
-                        (id_loc, ({ Ast.Identifier.name; comments = _ } as id));
-                    value = (func_loc, func);
-                    kind;
-                    static;
-                    decorators;
-                    comments;
-                  } ) ->
+          fun (c, rev_elements) ->
+            let add_method_sig_and_element
+                ~method_loc
+                ~name
+                ~id_loc
+                ~func_loc
+                ~func
+                ~kind
+                ~private_
+                ~static
+                ~decorators
+                ~comments
+                ~get_typed_method_key =
               Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
               let decorators =
                 Base.List.map ~f:Tast_utils.error_mapper#class_decorator decorators
@@ -7724,10 +7722,10 @@ and mk_class_sig =
               (match kind with
               | Method.Get
               | Method.Set ->
-                Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc)
+                Flow_js.add_output cx (Error_message.EUnsafeGettersSetters method_loc)
               | _ -> ());
               let reason =
-                Ast.Function.(func_reason ~async:func.async ~generator:func.generator loc)
+                Ast.Function.(func_reason ~async:func.async ~generator:func.generator method_loc)
               in
               let (method_sig, reconstruct_func) =
                 mk_method
@@ -7769,9 +7767,9 @@ and mk_class_sig =
                 in
                 let func = reconstruct_func params body func_t in
                 Body.Method
-                  ( (loc, func_t),
+                  ( (method_loc, func_t),
                     {
-                      Method.key = Ast.Expression.Object.Property.Identifier ((id_loc, func_t), id);
+                      Method.key = get_typed_method_key func_t;
                       value = (func_loc, func);
                       kind;
                       static;
@@ -7781,12 +7779,76 @@ and mk_class_sig =
               in
               let add =
                 match kind with
-                | Method.Constructor -> add_constructor (Some id_loc)
-                | Method.Method -> add_method ~static name id_loc
-                | Method.Get -> add_getter ~static name id_loc
-                | Method.Set -> add_setter ~static name id_loc
+                | Method.Constructor -> add_constructor (Some id_loc) ~set_asts ~set_type
+                | Method.Method ->
+                  if private_ then
+                    add_private_method ~static name id_loc ~set_asts ~set_type
+                  else
+                    add_method ~static name id_loc ~set_asts ~set_type
+                | Method.Get -> add_getter ~static name id_loc ~set_asts ~set_type
+                | Method.Set -> add_setter ~static name id_loc ~set_asts ~set_type
               in
-              (add method_sig ~set_asts ~set_type c, get_element :: rev_elements)
+              (add method_sig c, get_element :: rev_elements)
+            in
+            function
+            (* instance and static methods *)
+            | Body.Property (_, { Property.key = Ast.Expression.Object.Property.PrivateName _; _ })
+              ->
+              failwith "Internal Error: Found non-private field with private name"
+            | Body.Method
+                ( method_loc,
+                  {
+                    Method.key =
+                      Ast.Expression.Object.Property.PrivateName
+                        ( id_loc,
+                          ({
+                             Ast.PrivateName.id = (_, { Ast.Identifier.name; comments = _ });
+                             comments = _;
+                           } as id) );
+                    value = (func_loc, func);
+                    kind;
+                    static;
+                    decorators;
+                    comments;
+                  } ) ->
+              add_method_sig_and_element
+                ~method_loc
+                ~name
+                ~id_loc
+                ~func_loc
+                ~func
+                ~kind
+                ~private_:true
+                ~static
+                ~decorators
+                ~comments
+                ~get_typed_method_key:(fun _ ->
+                  Ast.Expression.Object.Property.PrivateName (id_loc, id))
+            | Body.Method
+                ( method_loc,
+                  {
+                    Method.key =
+                      Ast.Expression.Object.Property.Identifier
+                        (id_loc, ({ Ast.Identifier.name; comments = _ } as id));
+                    value = (func_loc, func);
+                    kind;
+                    static;
+                    decorators;
+                    comments;
+                  } ) ->
+              add_method_sig_and_element
+                ~method_loc
+                ~name
+                ~id_loc
+                ~func_loc
+                ~func
+                ~kind
+                ~private_:false
+                ~static
+                ~decorators
+                ~comments
+                ~get_typed_method_key:(fun func_t ->
+                  Ast.Expression.Object.Property.Identifier ((id_loc, func_t), id))
             (* fields *)
             | Body.PrivateField
                 ( loc,

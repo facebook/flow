@@ -54,7 +54,14 @@ val promote_non_const :
   Entry.non_const_specialization ->
   Loc_collections.ALocSet.t option * Entry.non_const_specialization
 
-val bind_class : Context.t -> ALoc.id -> Type.Properties.id -> Type.Properties.id -> unit
+val bind_class :
+  Context.t ->
+  ALoc.id ->
+  Type.Properties.id ->
+  Type.Properties.id ->
+  Type.Properties.id ->
+  Type.Properties.id ->
+  unit
 
 val bind_var : ?state:State.t -> Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
 

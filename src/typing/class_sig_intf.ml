@@ -89,6 +89,10 @@ module type S = sig
   (** Add private field to signature. *)
   val add_private_field : string -> ALoc.t -> Polarity.t -> field -> static:bool -> t -> t
 
+  (** Add private method to signature. *)
+  val add_private_method :
+    static:bool -> string -> ALoc.t -> func_sig -> set_asts:set_asts -> set_type:set_type -> t -> t
+
   (* Access public fields of signature *)
   val public_fields_of_signature : static:bool -> t -> field' SMap.t
 
@@ -159,7 +163,9 @@ module type S = sig
     Type.t -> (* self *)
               Context.t -> Reason.t -> Type.typeparams -> Type.typeparam * Type.t
 
-  val to_prop_map : Context.t -> field' SMap.t -> Type.Properties.id
+  val this_or_mixed_of_t : static:bool -> t -> Type.t
+
+  val fields_to_prop_map : Context.t -> field' SMap.t -> Type.Properties.id
 
   (** 1. Manipulation *)
 
@@ -193,6 +199,8 @@ module type S = sig
       (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
       (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t) ->
     private_property_map:Type.Properties.id ->
+    instance_this_type:Type.t ->
+    static_this_type:Type.t ->
     t ->
     unit
 

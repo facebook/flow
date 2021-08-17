@@ -1700,7 +1700,8 @@ struct
           instantiate_this_class cx trace reason_tapp tc this (Upper u)
         | (TypeAppT _, ReposLowerT (reason, use_desc, u)) ->
           rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
-        | (TypeAppT (reason_tapp, use_op, c, ts), MethodT (_, _, _, _, _, _)) ->
+        | (TypeAppT (reason_tapp, use_op, c, ts), MethodT (_, _, _, _, _, _))
+        | (TypeAppT (reason_tapp, use_op, c, ts), PrivateMethodT (_, _, _, _, _, _, _, _)) ->
           let reason_op = reason_of_use_t u in
           let t = mk_typeapp_instance cx ~trace ~use_op ~reason_op ~reason_tapp ~cache:[] c ts in
           rec_flow cx trace (t, u)
@@ -3825,6 +3826,7 @@ struct
             GetPrivatePropT (use_op, reason_op, prop_name, scopes, static, tout) ) ->
           get_private_prop
             ~cx
+            ~allow_method_access:false
             ~trace
             ~l
             ~reason_c
@@ -3886,10 +3888,20 @@ struct
             PrivateMethodT
               (use_op, reason_op, reason_lookup, prop_name, scopes, static, method_action, prop_t)
           ) ->
+          (* BoundTs from private methods are not on the InstanceT due to scoping rules,
+             so we need to substitute those BoundTs when the method is called. *)
+          let scopes = Subst.subst_class_bindings cx (SMap.singleton "this" l) scopes in
           let tvar = Tvar.mk_no_wrap cx reason_lookup in
           let funt = OpenT (reason_lookup, tvar) in
+          let l =
+            if static then
+              TypeUtil.class_type l
+            else
+              l
+          in
           get_private_prop
             ~cx
+            ~allow_method_access:true
             ~trace
             ~l
             ~reason_c
@@ -5378,6 +5390,21 @@ struct
             trace
             ( position_generic_bound reason bound,
               MethodT (use_op, call_r, lookup_r, propref, action, t_opt) )
+        | ( GenericT { reason; bound; _ },
+            PrivateMethodT (use_op, call_r, lookup_r, prop_name, scopes, static, action, prop_t) )
+          ->
+          let action =
+            match action with
+            | CallM mct -> CallM { mct with meth_generic_this = Some l }
+            | ChainM (r1, r2, t, mct, tout) ->
+              ChainM (r1, r2, t, { mct with meth_generic_this = Some l }, tout)
+          in
+          rec_flow
+            cx
+            trace
+            ( position_generic_bound reason bound,
+              PrivateMethodT (use_op, call_r, lookup_r, prop_name, scopes, static, action, prop_t)
+            )
         | (GenericT { reason; bound; _ }, _) ->
           rec_flow cx trace (position_generic_bound reason bound, u)
         (***************)
@@ -6158,7 +6185,8 @@ struct
           distribute_union_intersection ()
         else
           wait_for_concrete_bound ()
-      | MethodT _ ->
+      | MethodT _
+      | PrivateMethodT _ ->
         if is_concrete bound && not (is_literal_type bound) then
           distribute_union_intersection ()
         else
@@ -7535,7 +7563,18 @@ struct
          map
 
   and get_private_prop
-      ~cx ~trace ~l ~reason_c ~instance ~use_op ~reason_op ~prop_name ~scopes ~static ~tout =
+      ~cx
+      ~allow_method_access
+      ~trace
+      ~l
+      ~reason_c
+      ~instance
+      ~use_op
+      ~reason_op
+      ~prop_name
+      ~scopes
+      ~static
+      ~tout =
     match scopes with
     | [] ->
       add_output
@@ -7546,6 +7585,7 @@ struct
       if not (ALoc.equal_id scope.class_binding_id instance.class_id) then
         get_private_prop
           ~cx
+          ~allow_method_access
           ~trace
           ~l
           ~reason_c
@@ -7557,23 +7597,43 @@ struct
           ~static
           ~tout
       else
-        let map =
+        let x = OrdinaryName prop_name in
+        let perform_lookup_action p =
+          let action = ReadProp { use_op; obj_t = l; tout } in
+          let propref = Named (reason_op, x) in
+          perform_lookup_action cx trace propref p PropertyMapProperty reason_c reason_op action
+        in
+        let field_maps =
           if static then
             scope.class_private_static_fields
           else
             scope.class_private_fields
         in
-        let x = OrdinaryName prop_name in
-        (match NameUtils.Map.find_opt x (Context.find_props cx map) with
+        (match NameUtils.Map.find_opt x (Context.find_props cx field_maps) with
+        | Some p -> perform_lookup_action p
         | None ->
-          add_output
-            cx
-            ~trace
-            (Error_message.EPrivateLookupFailed ((reason_op, reason_c), x, use_op))
-        | Some p ->
-          let action = ReadProp { use_op; obj_t = l; tout } in
-          let propref = Named (reason_op, x) in
-          perform_lookup_action cx trace propref p PropertyMapProperty reason_c reason_op action)
+          let method_maps =
+            if static then
+              scope.class_private_static_methods
+            else
+              scope.class_private_methods
+          in
+          (match NameUtils.Map.find_opt x (Context.find_props cx method_maps) with
+          | Some p ->
+            (if not allow_method_access then
+              match p with
+              | Method (_, t) ->
+                add_output
+                  cx
+                  ~trace
+                  (Error_message.EMethodUnbinding { use_op; reason_op; reason_prop = reason_of_t t })
+              | _ -> ());
+            perform_lookup_action p
+          | None ->
+            add_output
+              cx
+              ~trace
+              (Error_message.EPrivateLookupFailed ((reason_op, reason_c), x, use_op))))
 
   and match_prop
       cx

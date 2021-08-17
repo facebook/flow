@@ -229,8 +229,10 @@ class finder cx =
           Signature_utils.is_munged_property_string label && Context.should_munge_underscores cx
         in
         (Utils_js.spf "property `%s`" label, is_munged)
-      | Ast.Expression.Object.Property.PrivateName _ ->
-        failwith "class_private_field should have been called instead"
+      | Ast.Expression.Object.Property.PrivateName private_name ->
+        let _ = this#private_name private_name in
+        let (_, { Ast.PrivateName.id = (_, { Ast.Identifier.name; _ }); _ }) = private_name in
+        (Utils_js.spf "private property `%s`" name, false)
       | Ast.Expression.Object.Property.Computed _ -> ("computed property", false)
 
     method! class_private_field field =

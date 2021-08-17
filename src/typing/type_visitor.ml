@@ -831,9 +831,20 @@ class ['a] t =
       | Named _ -> acc
       | Computed t -> self#type_ cx pole_TODO acc t
 
-    method private class_binding cx acc { class_private_fields; class_private_static_fields; _ } =
+    method private class_binding
+        cx
+        acc
+        {
+          class_private_fields;
+          class_private_static_fields;
+          class_private_methods;
+          class_private_static_methods;
+          _;
+        } =
       let acc = self#props cx pole_TODO acc class_private_fields in
       let acc = self#props cx pole_TODO acc class_private_static_fields in
+      let acc = self#props cx pole_TODO acc class_private_methods in
+      let acc = self#props cx pole_TODO acc class_private_static_methods in
       acc
 
     method private call_arg cx acc =
