@@ -181,7 +181,7 @@ react_component.js:31:7 = {
   "expanded_type":{
     "kind":"Generic",
     "type":{
-      "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:240:35-80"},
+      "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:240:14-31"},
       "name":"React$FragmentType"
     },
     "generic_kind":"type alias"

@@ -866,7 +866,7 @@ import-type.js:7:7 = {
   "expanded_type":{
     "kind":"Generic",
     "type":{
-      "provenance":{"kind":"Imported as `MyUnionType` (type)","loc":"exports-type.js:3:27-41"},
+      "provenance":{"kind":"Imported as `MyUnionType` (type)","loc":"exports-type.js:3:13-23"},
       "name":"MyUnionType"
     },
     "generic_kind":"type alias"

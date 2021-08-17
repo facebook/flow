@@ -1458,7 +1458,7 @@ type-alias.js:31:6 {
 type-alias.js:34:6 {
   "expanded_type":{
     "kind":"TypeAlias",
-    "name":{"provenance":{"kind":"Local","loc":"type-alias.js:34:15-26"},"name":"TKlass"},
+    "name":{"provenance":{"kind":"Local","loc":"type-alias.js:34:6-11"},"name":"TKlass"},
     "typeParams":null,
     "body":{
       "kind":"Typeof",

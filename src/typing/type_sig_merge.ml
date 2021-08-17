@@ -1566,8 +1566,8 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
     let t =
       let open Reason in
       let open TypeUtil in
-      let t_loc = loc_of_t t in
-      mod_reason_of_t (update_desc_reason (fun desc -> RTypeAlias (name, Some t_loc, desc))) t
+      let id_loc = aloc_of_reason reason in
+      mod_reason_of_t (update_desc_reason (fun desc -> RTypeAlias (name, Some id_loc, desc))) t
     in
     let t = Type.(DefT (reason, trust, TypeT (TypeAliasKind, t))) in
     merge_tparams file reason t tparams
