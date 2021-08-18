@@ -39,8 +39,14 @@ class Bar extends Other implements /*.*/ Foo, ISomething {
   // Class Property with default value
   answer: number = 42;
 
+  // Class Property with default value and variance
+  +covariant: number = 42;
+
   // Class Property
   prop: any;
+
+  // Class Property with variance
+  +propCo: number;
 
   method(): mixed {
     return;
