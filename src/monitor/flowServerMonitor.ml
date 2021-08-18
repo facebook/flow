@@ -58,15 +58,21 @@ end)
 (* This is the common entry point for both daemonize and start. *)
 let internal_start ~is_daemon ?waiting_fd monitor_options =
   let { FlowServerMonitorOptions.server_options; argv; _ } = monitor_options in
+  let root = Options.root server_options in
   let () =
     let file_watcher =
       let open FlowServerMonitorOptions in
       string_of_file_watcher monitor_options.file_watcher
     in
-    FlowEventLogger.set_monitor_options ~file_watcher;
+    let vcs =
+      match Vcs.find root with
+      | None -> "none"
+      | Some Vcs.Hg -> "hg"
+      | Some Vcs.Git -> "git"
+    in
+    FlowEventLogger.set_monitor_options ~file_watcher ~vcs;
     LoggingUtils.set_server_options ~server_options
   in
-  let root = Options.root server_options in
   let tmp_dir = Options.temp_dir server_options in
   (* We need to grab the lock before initializing the pid files and before allocating the shared
    * heap. Luckily for us, the server will do both of these later *)
