@@ -1,10 +1,34 @@
+### 0.158.0
+
+New Features:
+* Add support for private class methods, implementing both the [instance](https://github.com/tc39/proposal-private-methods) and [static](https://github.com/tc39/proposal-static-class-features/) proposals! (thanks to our intern, @SamChou19815)
+* Add an "Organize Imports" code action which sorts and groups the imports at the top of the file.
+* Add an "Add all missing imports" code action which auto-imports all unambiguously undefined variables in the given file.
+
+Notable changes:
+* Fix a bug where private class fields like `#foo: () => 'foo'` could not be called, leading to workarounds like `this.#foo.call(this)`
+* Fix a crash when hovering over a type annotation that is recursive in a parameter default
+* Fix a crash when autocompleting inside an object literal with a recursive type
+* Fix order of auto-import code actions
+* Fix issue with utility types nested in `$NonMaybeType<...>`
+* Fix Go to Definition on module reference strings (e.g. if `module.system.haste.module_ref_prefix=m#`, `"m#Foo"` will jump to the `Foo` module)
+* The `file_watcher.watchman.survive_restarts` setting is now `true` by default. This setting is deprecated and will be removed in a future version.
+* The `--retry-if-init` CLI flag has been removed. Setting it to `false` previously caused the command to error if the server was already running but not yet ready. Instead, use `--timeout` to avoid waiting too long.
+
+Parser:
+* Significantly improved parser performance
+* Private methods are no longer a parse error
+
+`flow-remove-types`:
+* Fix to remove variance sigils on class properties (thanks @mischnic)
+
 ### 0.157.0
 
 Likely to cause new Flow errors:
 * Add a new error for unreachable code occuring in a loop after a conditional with mixed `break` and `continue` branches.
 
 New Features:
-* LSP extract to function/method/constant/class fields/type alias is enabled by default. These refactors will show up under after selecting some code. They can be disabled by adding `experimental.refactor=false` to the `.flowconfig`.
+* LSP extract to function/method/constant/class fields/type alias is enabled by default. These refactors will show up under after selecting some code. They can be disabled by adding `experimental.refactor=false` to the `.flowconfig`. (thanks to our intern, @SamChou19815)
 * Add an eslint plugin, `eslint-plugin-fb-flow`, for eslint rules from the Flow team. The first rule is `use-indexed-access-type` to encourage the use of indexed access types (https://flow.org/en/docs/types/indexed-access/).
 * Add another eslint rule to lint against explicit exact by default syntax (fixes #8612).
 * Add a command to `update-suppressions` to the flow tool (fixes #8384).
