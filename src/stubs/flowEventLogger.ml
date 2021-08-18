@@ -49,7 +49,7 @@ let set_root_name _ = ()
 
 let set_saved_state_filename _ = ()
 
-let set_monitor_options ~file_watcher:_ = ()
+let set_monitor_options ~file_watcher:_ ~vcs:_ = ()
 
 let set_server_options
     ~lazy_mode:_ ~abstract_locations:_ ~max_workers:_ ~enabled_rollouts:_ ~debug:_ =

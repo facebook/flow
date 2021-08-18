@@ -111,6 +111,7 @@ MODULES=\
   src/common/utils/checked_set\
   src/common/utils/filename_cache\
   src/common/utils/loc_utils\
+  src/common/vcs\
   src/common/xx\
   src/flowlib\
   src/lsp\

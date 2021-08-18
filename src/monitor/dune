@@ -14,6 +14,7 @@
     flow_server
     flow_server_files
     flow_server_watchman_expression_terms
+    flow_vcm
     lwt.unix
     semver
     socket
