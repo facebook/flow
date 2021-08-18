@@ -39,8 +39,14 @@ class Bar extends Other            /*.*/                 {
   // Class Property with default value
   answer         = 42;
 
+  // Class Property with default value and variance
+   covariant         = 42;
+
   // Class Property
   prop     ;
+
+  // Class Property with variance
+   propCo        ;
 
   method()        {
     return;

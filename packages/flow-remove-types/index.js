@@ -201,6 +201,9 @@ var removeFlowVisitor = {
     if (node.declare || (context.ignoreUninitializedFields && !node.value)) {
       return removeNode(context, node);
     }
+    if (node.variance != null) {
+      removeNode(context, node.variance);
+    }
   },
 
   ExportNamedDeclaration: function(context, node) {
