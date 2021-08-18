@@ -1229,6 +1229,8 @@ module rec TypeTerm : sig
     class_binding_id: ALoc.id;
     class_private_fields: Properties.id;
     class_private_static_fields: Properties.id;
+    class_private_methods: Properties.id;
+    class_private_static_methods: Properties.id;
   }
 
   and insttype = {

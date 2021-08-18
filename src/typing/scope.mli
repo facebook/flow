@@ -71,7 +71,13 @@ module Entry : sig
     | Type of type_binding
     | Class of Type.class_binding
 
-  val new_class : ALoc.id -> Type.Properties.id -> Type.Properties.id -> t
+  val new_class :
+    ALoc.id ->
+    Type.Properties.id ->
+    Type.Properties.id ->
+    Type.Properties.id ->
+    Type.Properties.id ->
+    t
 
   val new_const :
     loc:ALoc.t -> ?state:State.t -> ?kind:const_binding_kind -> Type.annotated_or_inferred -> t

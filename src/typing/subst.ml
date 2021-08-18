@@ -201,4 +201,7 @@ let substituter =
 
 let subst cx ?use_op ?(force = true) map = substituter#type_ cx (map, force, use_op)
 
+let subst_class_bindings cx ?use_op ?(force = true) map =
+  ListUtils.ident_map (substituter#class_binding cx (map, force, use_op))
+
 let subst_destructor cx ?use_op ?(force = true) map = substituter#destructor cx (map, force, use_op)

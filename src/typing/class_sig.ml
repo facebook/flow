@@ -66,6 +66,7 @@ module Make (F : Func_sig.S) = struct
     (* Multiple function signatures indicates an overloaded method. Note that
        function signatures are stored in reverse definition order. *)
     methods: func_info Nel.t SMap.t;
+    private_methods: func_info SMap.t;
     getters: func_info SMap.t;
     setters: func_info SMap.t;
     calls: Type.t list;
@@ -91,6 +92,7 @@ module Make (F : Func_sig.S) = struct
         private_fields = SMap.empty;
         proto_fields = SMap.empty;
         methods = SMap.empty;
+        private_methods = SMap.empty;
         getters = SMap.empty;
         setters = SMap.empty;
         calls = [];
@@ -129,6 +131,13 @@ module Make (F : Func_sig.S) = struct
   let add_private_field name loc polarity field =
     map_sig (fun s ->
         { s with private_fields = SMap.add name (Some loc, polarity, field) s.private_fields })
+
+  let add_private_method ~static name loc fsig ~set_asts ~set_type x =
+    let func_info = (Some loc, fsig, set_asts, set_type) in
+    map_sig
+      ~static
+      (fun s -> { s with private_methods = SMap.add name func_info s.private_methods })
+      x
 
   let public_fields_of_signature ~static s =
     (if static then
@@ -303,6 +312,7 @@ module Make (F : Func_sig.S) = struct
 
   let iter_methods_with_name f s =
     SMap.iter (f %> Nel.iter) s.methods;
+    SMap.iter f s.private_methods;
     SMap.iter f s.getters;
     SMap.iter f s.setters
 
@@ -324,6 +334,7 @@ module Make (F : Func_sig.S) = struct
       private_fields = SMap.map (subst_field cx map) s.private_fields;
       proto_fields = SMap.map (subst_field cx map) s.proto_fields;
       methods = SMap.map (Nel.map subst_func_sig) s.methods;
+      private_methods = SMap.map subst_func_sig s.private_methods;
       getters = SMap.map subst_func_sig s.getters;
       setters = SMap.map subst_func_sig s.setters;
       calls = Base.List.map ~f:(Flow.subst cx map) s.calls;
@@ -362,6 +373,19 @@ module Make (F : Func_sig.S) = struct
     | Interface _ -> None
 
   let this_or_mixed loc = this_t %> Base.Option.value ~default:(Type.dummy_this loc)
+
+  let this_or_mixed_of_t ~static x =
+    let loc =
+      if static then
+        aloc_of_reason x.static.reason
+      else
+        aloc_of_reason x.instance.reason
+    in
+    let this_t = this_or_mixed loc x in
+    if static then
+      TypeUtil.class_type this_t
+    else
+      this_t
 
   let tparams_with_this tparams this_tp =
     (* Use the loc for the original tparams, or just the loc for the this type if there are no
@@ -403,8 +427,15 @@ module Make (F : Func_sig.S) = struct
     in
     Type.Field (loc, t, polarity)
 
-  let to_prop_map cx =
-    SMap.map to_field %> NameUtils.namemap_of_smap %> Context.generate_property_map cx
+  let to_method cx this_default (loc, fsig, _, _) =
+    Type.Method (loc, F.methodtype cx this_default fsig)
+
+  let to_prop_map to_prop_converter cx =
+    SMap.map to_prop_converter %> NameUtils.namemap_of_smap %> Context.generate_property_map cx
+
+  let fields_to_prop_map = to_prop_map to_field
+
+  let methods_to_prop_map ~cx ~this_default = to_prop_map (to_method cx this_default) cx
 
   let elements cx ~this ?constructor s super =
     (* To determine the default `this` parameter for a method without `this` annotation, we
@@ -443,6 +474,12 @@ module Make (F : Func_sig.S) = struct
             let ts = Base.List.map ~f:(fun (_loc, t, _) -> t) ts in
             (loc0, IntersectionT (reason_of_t t0, InterRep.make t0 t1 ts)))
         s.methods
+    in
+    let () =
+      SMap.iter
+        (fun _name (loc, x, _, set_type) ->
+          Base.Option.iter loc ~f:(fun _loc -> set_type (F.methodtype cx (this_default x) x)))
+        s.private_methods
     in
     (* Re-add the constructor as a method. *)
     let methods =
@@ -863,7 +900,8 @@ module Make (F : Func_sig.S) = struct
     (poly t_inner, poly t_outer)
 
   (* Processes the bodies of instance and static class members. *)
-  let toplevels cx ~decls ~stmts ~expr ~private_property_map x =
+  let toplevels cx ~decls ~stmts ~expr ~private_property_map ~instance_this_type ~static_this_type x
+      =
     let open Type in
     Env.in_lex_scope (fun () ->
         let new_entry ?(state = Scope.State.Initialized) t =
@@ -928,8 +966,14 @@ module Make (F : Func_sig.S) = struct
         let instance_this_recipe = this_recipe instance_this_default in
         let static_this_recipe = this_recipe static_this_default in
 
-        (* Bind private fields to the environment *)
-        Env.bind_class cx x.id private_property_map (to_prop_map cx x.static.private_fields);
+        (* Bind private fields and methods to the environment *)
+        Env.bind_class
+          cx
+          x.id
+          private_property_map
+          (fields_to_prop_map cx x.static.private_fields)
+          (methods_to_prop_map ~cx ~this_default:instance_this_type x.instance.private_methods)
+          (methods_to_prop_map ~cx ~this_default:static_this_type x.static.private_methods);
 
         x
         |> with_sig ~static:true (fun s ->
