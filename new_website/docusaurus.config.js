@@ -55,6 +55,11 @@ module.exports = {
           label: 'Docs',
           position: 'left',
         },
+        {
+          to: 'blog/',
+          label: 'Blog',
+          position: 'left',
+        },
         // Please keep GitHub link to the right for consistency.
         {
           href: 'https://github.com/facebook/flow',
@@ -143,6 +148,12 @@ module.exports = {
           remarkPlugins: [
             [require('@docusaurus/remark-plugin-npm2yarn'), {sync: true}],
           ],
+        },
+        blog: {
+          path: '../website/_posts',
+          postsPerPage: 50,
+          blogSidebarCount: 'ALL',
+          blogSidebarTitle: 'All our posts',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
