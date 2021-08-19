@@ -1,0 +1,249 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @format
+ */
+
+/**
+ * CSS files with the .module.css suffix will be treated as CSS modules
+ * and scoped locally.
+ */
+
+.imgFluid {
+  max-width: 100%;
+  height: auto;
+}
+
+.heroBanner {
+  padding: 4rem 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+@media screen and (max-width: 966px) {
+  .heroBanner {
+    padding: 2rem;
+  }
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  padding: 4rem 0;
+  width: 100%;
+}
+
+.featureHero {
+  padding: 6rem 0;
+  background: var(--flow-gray-darker);
+  color: white;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.feature.featureHero .featureButton {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+@media screen and (min-width: 1200px) {
+  .featureHero .featureHeading {
+    font-size: 4.5rem;
+  }
+}
+@media screen and (min-width: 992px) {
+  .featureHero .featureHeading {
+    font-size: 4rem;
+  }
+}
+@media screen and (min-width: 768px) {
+  .featureHero .featureHeading {
+    font-size: 5rem;
+  }
+}
+@media screen and (min-width: 576px) {
+  .featureHero .featureHeading {
+    font-size: 4rem;
+  }
+}
+@media screen and (min-width: 548px) {
+  .featureHero .featureHeading {
+    font-size: 3.8rem;
+  }
+}
+@media screen and (min-width: 518px) {
+  .featureHero .featureHeading {
+    font-size: 3.6rem;
+  }
+}
+@media screen and (min-width: 460px) {
+  .featureHero .featureHeading {
+    font-size: 3.4rem;
+  }
+}
+@media screen and (min-width: 404px) {
+  .featureHero .featureHeading {
+    font-size: 3.1rem;
+  }
+}
+@media screen and (min-width: 346px) {
+    .featureHero .featureHeading {
+        font-size: 2.7rem;
+    }
+}
+
+.feature .featureButton {
+  position: relative;
+  display: block;
+
+  margin-bottom: 1rem;
+  padding: 1rem 1.25rem;
+
+  border: 4px solid transparent;
+
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 1.6rem;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+.feature .featureButton:hover,
+.feature .featureButton:active,
+.feature .featureButton:focus {
+  border-color: var(--flow-yellow);
+  background-color: var(--flow-yellow);
+  color: var(--flow-gray-darkest);
+  text-decoration: none;
+}
+@media screen and (min-width: 966px) {
+  .feature .featureButton {
+    margin-bottom: 0;
+  }
+}
+@media screen and (min-width: 768px) {
+  .feature .featureButton {
+    display: inline-block;
+    margin-bottom: 2rem;
+    margin-right: 2rem;
+  }
+}
+
+.featurette {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+@media screen and (min-width: 768px) {
+  .featurette {
+    height: 8rem;
+    margin-top: 0;
+    margin-bottom: 3rem;
+  }
+}
+@media screen and (max-width: 768px) {
+  .featurette {
+    height: 11rem;
+  }
+}
+
+.featureSmall {
+  padding: 4rem 0 3rem;
+}
+
+.featureHeading {
+  position: relative;
+  font-size: 2.5rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.featuretteHeading {
+  color: #55595c;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+@media only screen and (min-width: 1200px) {
+  .featureHeadingCenter {
+    margin-top: 3.5rem;
+  }
+}
+
+.featureImage {
+  height: 200px;
+  width: 200px;
+}
+
+.featureText {
+  font-size: 1.3rem;
+}
+
+.featuretteText {
+  color: #55595c;
+  font-size: 1.1rem;
+}
+
+.featureGray {
+  background: #eee;
+}
+
+.featureGray .featureHeading {
+  color: #444;
+}
+
+.featureGray .featureText {
+  color: #666;
+}
+
+.featureLight {
+  background: #fff;
+}
+
+.featureLight .featureHeading {
+  color: #444;
+}
+
+.featureLight .featureText {
+  color: #666;
+}
+
+.featureDark {
+  background: var(--flow-gray-darkest);
+}
+
+.featureDark .featureHeading {
+  color: #fff;
+}
+
+.featureDark .featureText {
+  color: #ccc;
+}
+
+.featureYellow {
+  background: var(--flow-yellow);
+  text-align: center;
+}
+
+.featureYellow .featureHeading {
+  color: var(--flow-gray-darkest);
+}
+
+.featureYellow .featureButton {
+  border-color: white;
+  background: white;
+  color: var(--flow-gray-darkest);
+}
+
+.featureYellow .featureButton:hover,
+.featureYellow .featureButton:active,
+.featureYellow .featureButton:focus {
+  border-color: var(--flow-gray-darkest);
+  background-color: var(--flow-gray-darkest);
+  color: var(--flow-yellow);
+  text-decoration: none;
+}
