@@ -18,6 +18,27 @@ module.exports = {
   favicon: 'img/favicon.png',
   organizationName: 'facebook', // Usually your GitHub org/user name.
   projectName: 'flow', // Usually your repo name.
+  webpack: {
+    // Compiling flow.js is too slow with babel...
+    jsLoader: isServer => ({
+      loader: require.resolve('esbuild-loader'),
+      options: {
+        loader: 'tsx',
+        format: isServer ? 'cjs' : undefined,
+        target: isServer ? 'node12' : 'es2017',
+      },
+    }),
+  },
+  plugins: [
+    function polyfillNodeBuiltinsForFlowJS(context, options) {
+      return {
+        name: 'polyfillNodeBuiltinsForFlowJS',
+        configureWebpack() {
+          return {resolve: {fallback: {fs: false, constants: false}}};
+        },
+      };
+    },
+  ],
   themeConfig: {
     prism: {
       theme: require('prism-react-renderer/themes/github'),
