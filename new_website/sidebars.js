@@ -9,6 +9,6 @@
 
 module.exports = {
   someSidebar: {
-    Introduction: ['getting-started', 'install'],
+    Introduction: ['getting-started', 'install', 'usage'],
   },
 };
