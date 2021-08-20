@@ -608,8 +608,9 @@ end = struct
    * - default: apply when destructuring returned 0 or >1 types, or a recursive type
    * - non_eval: apply when no destructuring happened
    *)
-  let type_destructor_t ~env ~cont ~default ~non_eval (use_op, reason, id, t, d) =
-    if Env.evaluate_type_destructors env then
+  let type_destructor_t
+      ~env ~cont ~default ~non_eval ?(force_eval = false) (use_op, reason, id, t, d) =
+    if Env.evaluate_type_destructors env || force_eval then
       let cx = Env.get_cx env in
       Recursive.with_cache (EvalKey id) ~f:(fun () ->
           Flow_js_utils.check_with_generics cx (List.rev env.Env.tparams_rev) (fun map_ ->
@@ -2466,7 +2467,7 @@ end = struct
         let cont = type__ ~proto ~imode in
         let non_eval = TypeConverter.convert_type_destructor_unevaluated in
         let default = TypeConverter.convert_t ~skip_reason:false in
-        type_destructor_t ~env ~cont ~default ~non_eval (use_op, r, id, t, d)
+        type_destructor_t ~env ~cont ~default ~non_eval ~force_eval:true (use_op, r, id, t, d)
       | EvalT (t, LatentPredT _, id) -> latent_pred_t ~env ~proto ~imode id t
       | ExactT (_, t) -> type__ ~env ~proto ~imode t
       | GenericT { bound; _ } -> type__ ~env ~proto ~imode bound
