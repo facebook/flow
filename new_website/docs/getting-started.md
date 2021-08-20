@@ -11,7 +11,7 @@ Flow checks your code for errors through **static type annotations**. These
 _types_ allow you to tell Flow how you want your code to work, and Flow will
 make sure it does work that way.
 
-```js
+```js flow-check
 // @flow
 function square(n: number): number {
   return n * n;
@@ -25,7 +25,7 @@ types. You should only ever have to do a minimal amount of work to describe your
 code to Flow and it will _infer_ the rest. A lot of the time, Flow can
 understand your code without any types at all.
 
-```js
+```js flow-check
 // @flow
 function square(n) {
   return n * n; // Error!

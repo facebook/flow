@@ -147,6 +147,7 @@ module.exports = {
           editUrl: 'https://github.com/facebook/flow/edit/main/new_website/',
           remarkPlugins: [
             [require('@docusaurus/remark-plugin-npm2yarn'), {sync: true}],
+            require('./src/js/flow-check-remark-plugin'),
           ],
         },
         blog: {
