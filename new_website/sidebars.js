@@ -45,5 +45,21 @@ module.exports = {
         'types/comments',
       ],
     },
+    {
+      type: 'category',
+      label: 'Type System',
+      items: [
+        'lang/index',
+        'lang/types-and-expressions',
+        'lang/subtypes',
+        'lang/variance',
+        'lang/nominal-structural',
+        'lang/depth-subtyping',
+        'lang/width-subtyping',
+        'lang/refinements',
+        'lang/lazy-modes',
+        'lang/types-first',
+      ],
+    },
   ],
 };
