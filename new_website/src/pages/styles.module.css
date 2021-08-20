@@ -31,7 +31,7 @@
 }
 
 .feature {
-  display: flex;
+  position: relative;
   align-items: center;
   padding: 4rem 0;
   width: 100%;
@@ -50,12 +50,32 @@
   color: #fff;
 }
 
-@media screen and (min-width: 1200px) {
+@media screen and (min-width: 346px) {
   .featureHero .featureHeading {
-    font-size: 4.5rem;
+    font-size: 2.7rem;
   }
 }
-@media screen and (min-width: 992px) {
+@media screen and (min-width: 404px) {
+  .featureHero .featureHeading {
+    font-size: 3.1rem;
+  }
+}
+@media screen and (min-width: 460px) {
+  .featureHero .featureHeading {
+    font-size: 3.4rem;
+  }
+}
+@media screen and (min-width: 518px) {
+  .featureHero .featureHeading {
+    font-size: 3.6rem;
+  }
+}
+@media screen and (min-width: 548px) {
+  .featureHero .featureHeading {
+    font-size: 3.8rem;
+  }
+}
+@media screen and (min-width: 576px) {
   .featureHero .featureHeading {
     font-size: 4rem;
   }
@@ -65,35 +85,107 @@
     font-size: 5rem;
   }
 }
-@media screen and (min-width: 576px) {
+@media screen and (min-width: 992px) {
   .featureHero .featureHeading {
     font-size: 4rem;
   }
-}
-@media screen and (min-width: 548px) {
-  .featureHero .featureHeading {
-    font-size: 3.8rem;
+  .featureHero .featureHeading .hiddenLargerUp {
+    display: none !important;
   }
 }
-@media screen and (min-width: 518px) {
+@media screen and (min-width: 1200px) {
   .featureHero .featureHeading {
-    font-size: 3.6rem;
+    font-size: 4.5rem;
   }
 }
-@media screen and (min-width: 460px) {
-  .featureHero .featureHeading {
-    font-size: 3.4rem;
+
+.featureHero .featureHeading {
+  color: var(--flow-yellow);
+}
+
+.featureHero .featureHeading span {
+  color: white;
+}
+
+
+
+.featureDecoration {
+  position: absolute;
+  z-index: 1;
+  width: 10%;
+}
+
+@media only screen and (min-width: 768px) {
+  .featureDecoration {
+    width: 7.5%;
   }
 }
-@media screen and (min-width: 404px) {
-  .featureHero .featureHeading {
-    font-size: 3.1rem;
+
+@media only screen and (min-width: 1200px) {
+  .featureDecoration {
+    width: 5%;
   }
 }
-@media screen and (min-width: 346px) {
-    .featureHero .featureHeading {
-        font-size: 2.7rem;
-    }
+
+.featureDecoration::before,
+.featureDecoration::after {
+  content: "";
+  display: block;
+  position: absolute;
+  z-index: 0;
+  border: 2rem solid red;
+}
+
+@media only screen and (min-width: 576px) {
+  .featureDecoration::before,
+  .featureDecoration::after {
+    border-width: 3rem;
+  }
+}
+
+@media only screen and (min-width: 992px) {
+  .featureDecoration::before,
+  .featureDecoration::after {
+    border-width: 5rem;
+  }
+}
+
+.featureDecoration::after { opacity: 0.5; }
+
+.featureDecorationRise {
+  left: 0;
+  bottom: 100%;
+}
+
+.featureDecorationRise::before,
+.featureDecorationRise::after {
+  bottom: 0;
+  left: 0;
+  border-top: 0;
+  border-left: 0;
+  border-right-color: transparent !important;
+}
+
+.featureDecorationRise::after {
+  margin-left: 50%;
+}
+
+.featureDecorationDrop {
+  right: 0;
+  top: 100%;
+}
+
+.featureDecorationDrop::before,
+.featureDecorationDrop::after {
+  top: 0;
+  right: 0;
+  border-bottom-width: 0;
+  border-right-width: 0;
+  border-left-color: transparent !important;
+}
+
+.featureDecorationDrop::after {
+  margin-right: 50%;
 }
 
 .feature .featureButton {
@@ -212,6 +304,10 @@
   color: #666;
 }
 
+.featureLight .featureDecoration::before, .featureLight .featureDecoration::after {
+  border-color: white;
+}
+
 .featureDark {
   background: var(--flow-gray-darkest);
 }
@@ -222,6 +318,10 @@
 
 .featureDark .featureText {
   color: #ccc;
+}
+
+.featureDark .featureDecoration::before, .featureDark .featureDecoration::after {
+  border-color: var(--flow-gray-darkest);
 }
 
 .featureYellow {
@@ -246,4 +346,8 @@
   background-color: var(--flow-gray-darkest);
   color: var(--flow-yellow);
   text-decoration: none;
+}
+
+.featureYellow .featureDecoration::before, .featureYellow .featureDecoration::after {
+  border-color: var(--flow-yellow);
 }

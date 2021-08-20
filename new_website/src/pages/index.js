@@ -23,7 +23,9 @@ export default function Home() {
       <header className={clsx(styles.feature, styles.featureHero)}>
         <div className="container text--center">
           <p className={styles.featureHeading}>
-            Flow is a static type checker for JavaScript.
+            <span>Flow is</span> <br className={styles.hiddenLargerUp} /> a
+            static type <br className={styles.hiddenLargerUp} /> checker for{' '}
+            <br className={styles.hiddenLargerUp} /> <span>JavaScript.</span>
           </p>
           <div>
             <Link className={styles.featureButton} to={useBaseUrl('docs/')}>
@@ -39,6 +41,12 @@ export default function Home() {
       </header>
       <main>
         <section className={clsx(styles.feature, styles.featureLight)}>
+          <div
+            className={clsx(
+              styles.featureDecoration,
+              styles.featureDecorationDrop,
+            )}
+          />
           <div className="container text--center">
             <div className="row">
               <div className="col col--7">
@@ -98,6 +106,18 @@ export default function Home() {
         </section>
 
         <section className={clsx(styles.feature, styles.featureDark)}>
+          <div
+            className={clsx(
+              styles.featureDecoration,
+              styles.featureDecorationDrop,
+            )}
+          />
+          <div
+            className={clsx(
+              styles.featureDecoration,
+              styles.featureDecorationRise,
+            )}
+          />
           <div className="container">
             <div className="row">
               <div className="col col--7">
@@ -163,6 +183,18 @@ export default function Home() {
             styles.featureYellow,
             styles.featureSmall,
           )}>
+          <div
+            className={clsx(
+              styles.featureDecoration,
+              styles.featureDecorationRise,
+            )}
+          />
+          <div
+            className={clsx(
+              styles.featureDecoration,
+              styles.featureDecorationDrop,
+            )}
+          />
           <div className="container">
             <h2 className={styles.featureHeading}>Ready to get going?</h2>
             <div>
