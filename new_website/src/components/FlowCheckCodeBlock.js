@@ -16,7 +16,8 @@ import Translate, {translate} from '@docusaurus/Translate';
 import styles from './FlowCheckCodeBlock.module.css';
 import {useThemeConfig} from '@docusaurus/theme-common';
 
-export default function FlowCheckCodeBlock({children, flowErrors}) {
+export default function FlowCheckCodeBlock({children, metastring}) {
+  const flowErrors = metastring ? metastring.split('\n') : [];
   const {prism} = useThemeConfig();
   const [showCopied, setShowCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -73,7 +74,7 @@ export default function FlowCheckCodeBlock({children, flowErrors}) {
                     key: i,
                   });
 
-                  lineProps.className += styles.codeBlockLine;
+                  lineProps.className += ' ' + styles.codeBlockLine;
 
                   return (
                     <span key={i} {...lineProps}>

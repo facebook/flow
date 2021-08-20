@@ -11,13 +11,11 @@ const getFlowErrors = require('./initialized-flow-provider');
 
 const transformNode = node => [
   {
-    type: 'jsx',
-    value: `<FlowCheckCodeBlock flowErrors={${JSON.stringify(
-      getFlowErrors(node.value),
-    )}}>`,
+    type: 'code',
+    lang: 'flow',
+    meta: getFlowErrors(node.value).join('\n'),
+    value: node.value,
   },
-  {type: 'text', value: node.value},
-  {type: 'jsx', value: '</FlowCheckCodeBlock>'},
 ];
 
 const matchNode = node => node.type === 'code' && node.meta === 'flow-check';

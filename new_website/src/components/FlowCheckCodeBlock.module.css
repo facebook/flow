@@ -70,6 +70,7 @@
 }
 
 .codeBlockLineNumber {
+  width: 2.5em;
   display: table-cell;
   text-align: right;
   padding-right: 1em;

@@ -8,7 +8,12 @@
  */
 
 module.exports = {
-  someSidebar: {
-    Introduction: ['getting-started', 'install', 'usage'],
-  },
+  someSidebar: [
+    {
+      type: 'category',
+      label: 'Introduction',
+      items: ['getting-started', 'install', 'usage'],
+    },
+    'faq',
+  ],
 };
