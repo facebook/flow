@@ -12,6 +12,7 @@ import typeof ImportedTypeofDefaultClassTwice from "./exports-default-class";
 import typeof ImportedTypeofDefaultPolyClass from "./exports-default-poly-class";
 import typeof ImportedTypeofDefaultClassFuncall from "./exports-default-class-funcall-a";
 import ImportedValueDefaultClassFuncall from "./exports-default-class-funcall-b";
+import { returnsList as f9 } from './exports-list';
 
 import type ImportedTypeOfClassC from './exports-default-class-1';
 import { typeof_c } from './exports-default-class-1-generator';
@@ -27,6 +28,11 @@ declare function f8(): ImportedValueDefaultClassFuncall;
 
 var C = 1;
 
+const Immutable = {
+  List: {}
+};
+const ImmutableList = Immutable.List;
+
 module.exports = {
   x1: f1(),
   x2: f2(),
@@ -37,4 +43,5 @@ module.exports = {
   typeof_c: typeof_c(),  // cannot use `ImportedTypeOfClassC` -- need to import C as typeof
   x7: f7(),
   x8: f8(),
+  x9: f9(),
 };

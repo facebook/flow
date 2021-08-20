@@ -27,6 +27,11 @@ module Queries = struct
     object (_this)
       inherit [SSet.t ref, Loc.t] Flow_ast_visitor.visitor ~init
 
+      (* Skip keys, qualified identifiers *)
+      method! object_key_identifier ident = ident
+
+      method! member_property_identifier ident = ident
+
       method! identifier id =
         let (_, { Ast.Identifier.name; _ }) = id in
         init := SSet.add name !init;
