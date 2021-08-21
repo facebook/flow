@@ -13,3 +13,6 @@ f((x) => {
 
 function g(x: number) {}
 g(3); // Ok
+
+
+f((x) => 3, (x: number) => 3) || []; // no annot

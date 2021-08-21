@@ -5000,7 +5000,7 @@ and predicated_call_expression_
   in
   let (((_, f), _) as callee_ast) = expression cx ~annot:None callee in
   let reason = mk_reason (RFunctionCall (desc_of_t f)) loc in
-  let arg_asts = Base.List.map ~f:(expression cx ~annot:None) args in
+  let arg_asts = Base.List.map ~f:(expression cx ~annot:(Some ())) args in
   let argts = Base.List.map ~f:snd_fst arg_asts in
   let argks = Base.List.map ~f:(Refinement.key ~allow_optional:false) args in
   let use_op =
