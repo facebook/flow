@@ -52,42 +52,42 @@
 
 @media screen and (min-width: 346px) {
   .featureHero .featureHeading {
-    font-size: 2.7rem;
+    font-size: 2.7vw;
   }
 }
 @media screen and (min-width: 404px) {
   .featureHero .featureHeading {
-    font-size: 3.1rem;
+    font-size: 3.1vw;
   }
 }
 @media screen and (min-width: 460px) {
   .featureHero .featureHeading {
-    font-size: 3.4rem;
+    font-size: 3.4vw;
   }
 }
 @media screen and (min-width: 518px) {
   .featureHero .featureHeading {
-    font-size: 3.6rem;
+    font-size: 3.6vw;
   }
 }
 @media screen and (min-width: 548px) {
   .featureHero .featureHeading {
-    font-size: 3.8rem;
+    font-size: 3.8vw;
   }
 }
 @media screen and (min-width: 576px) {
   .featureHero .featureHeading {
-    font-size: 4rem;
+    font-size: 4vw;
   }
 }
 @media screen and (min-width: 768px) {
   .featureHero .featureHeading {
-    font-size: 5rem;
+    font-size: 5vw;
   }
 }
 @media screen and (min-width: 992px) {
   .featureHero .featureHeading {
-    font-size: 4rem;
+    font-size: 4vw;
   }
   .featureHero .featureHeading .hiddenLargerUp {
     display: none !important;
@@ -95,7 +95,7 @@
 }
 @media screen and (min-width: 1200px) {
   .featureHero .featureHeading {
-    font-size: 4.5rem;
+    font-size: 4.5vw;
   }
 }
 
@@ -106,8 +106,6 @@
 .featureHero .featureHeading span {
   color: white;
 }
-
-
 
 .featureDecoration {
   position: absolute;
@@ -150,7 +148,9 @@
   }
 }
 
-.featureDecoration::after { opacity: 0.5; }
+.featureDecoration::after {
+  opacity: 0.5;
+}
 
 .featureDecorationRise {
   left: 0;
@@ -272,12 +272,12 @@
 }
 
 .featureText {
-  font-size: 1.3rem;
+  font-size: 1.3vw;
 }
 
 .featuretteText {
   color: #55595c;
-  font-size: 1.1rem;
+  font-size: 1.1vw;
 }
 
 .featureGray {
@@ -304,7 +304,8 @@
   color: #666;
 }
 
-.featureLight .featureDecoration::before, .featureLight .featureDecoration::after {
+.featureLight .featureDecoration::before,
+.featureLight .featureDecoration::after {
   border-color: white;
 }
 
@@ -320,7 +321,8 @@
   color: #ccc;
 }
 
-.featureDark .featureDecoration::before, .featureDark .featureDecoration::after {
+.featureDark .featureDecoration::before,
+.featureDark .featureDecoration::after {
   border-color: var(--flow-gray-darkest);
 }
 
@@ -348,6 +350,7 @@
   text-decoration: none;
 }
 
-.featureYellow .featureDecoration::before, .featureYellow .featureDecoration::after {
+.featureYellow .featureDecoration::before,
+.featureYellow .featureDecoration::after {
   border-color: var(--flow-yellow);
 }

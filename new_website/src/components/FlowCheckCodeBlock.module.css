@@ -10,6 +10,7 @@
   border-radius: var(--ifm-global-radius);
   box-shadow: var(--ifm-global-shadow-lw);
   overflow: hidden;
+  font-size: 1.5vw;
 }
 
 .codeBlockContent {
@@ -22,7 +23,7 @@
   border-bottom: 1px solid var(--ifm-color-emphasis-300);
   font-size: var(--ifm-code-font-size);
   font-weight: 500;
-  padding: 0.75rem var(--ifm-pre-padding);
+  padding: 0.75vw var(--ifm-pre-padding);
 }
 
 .codeBlock {
@@ -37,7 +38,7 @@
   color: var(--ifm-color-white);
   opacity: 0;
   user-select: none;
-  padding: 0.4rem 0.5rem;
+  padding: 0.4vw 0.5vw;
   position: absolute;
   right: calc(var(--ifm-pre-padding) / 2);
   top: calc(var(--ifm-pre-padding) / 2);
@@ -87,7 +88,7 @@
   white-space: normal;
   margin: 0;
   border-radius: 0;
-  padding: 0.5rem 1rem;
+  padding: 0.5vw 1vw;
   background-color: #d5382f;
   color: white;
 }
