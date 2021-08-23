@@ -1,7 +1,7 @@
 {% include vars.html %}
 
-<div class="list-group mt-1">
-  <strong class="list-group-item bg-faded">
+<div class="khan-group mt-1">
+  <strong class="khan-group-item bg-faded">
     {{i18n.docs_additional_reading}}
   </strong>
 
@@ -23,11 +23,11 @@
       {% endfor %}
     {% endif %}
 
-    <a class="list-group-item list-group-item-action" href="{{url_base}}{{path}}">
-      <h5 class="list-group-item-heading">
+    <a class="khan-group-item list-group-item-action" href="{{url_base}}{{path}}">
+      <h5 class="khan-group-item-heading">
         {{title}}
       </h5>
-      <p class="list-group-item-text text-muted">
+      <p class="khan-group-item-text text-muted">
         {{description}}
       </p>
     </a>
