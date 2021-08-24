@@ -4521,7 +4521,7 @@ struct
           let t = DefT (reason, bogus_trust (), ArrT (ROArrayAT elemt)) in
           rec_flow cx trace (t, MapTypeT (use_op, reason, TupleMap funt, tout))
         | (DefT (_, trust, ObjT o), MapTypeT (use_op, reason_op, ObjectMap funt, tout)) ->
-          let map_t t =
+          let map_t _ t =
             let (t, opt) =
               match t with
               | OptionalT { reason = _; type_ = t; use_desc = _ } -> (t, true)
@@ -4536,33 +4536,11 @@ struct
             else
               t
           in
-          let props_tmap =
-            Context.find_props cx o.props_tmap
-            |> Properties.map_fields map_t
-            |> Context.generate_property_map cx
-          in
-          let flags =
-            {
-              o.flags with
-              obj_kind =
-                Obj_type.map_dict
-                  (fun dict ->
-                    let value = map_t dict.value in
-                    { dict with value })
-                  o.flags.obj_kind;
-            }
-          in
-          let mapped_t =
-            let reason = replace_desc_reason RObjectType reason_op in
-            let t = DefT (reason, trust, ObjT { o with props_tmap; flags }) in
-            if Obj_type.is_legacy_exact_DO_NOT_USE o.flags.obj_kind then
-              ExactT (reason, t)
-            else
-              t
-          in
+          let map_field k t = map_t k t in
+          let mapped_t = Flow_js_utils.map_obj cx trust o reason_op ~map_t ~map_field in
           rec_flow_t cx trace ~use_op:unknown_use (mapped_t, tout)
         | (DefT (_, trust, ObjT o), MapTypeT (use_op, reason_op, ObjectMapi funt, tout)) ->
-          let mapi_t key t =
+          let map_t key t =
             let (t, opt) =
               match t with
               | OptionalT { reason = _; type_ = t; use_desc = _ } -> (t, true)
@@ -4581,34 +4559,11 @@ struct
             else
               t
           in
-          let mapi_field key t =
+          let map_field key t =
             let reason = replace_desc_reason (RStringLit key) reason_op in
-            mapi_t (DefT (reason, bogus_trust (), SingletonStrT key)) t
+            map_t (DefT (reason, bogus_trust (), SingletonStrT key)) t
           in
-          let props_tmap =
-            Context.find_props cx o.props_tmap
-            |> Properties.mapi_fields mapi_field
-            |> Context.generate_property_map cx
-          in
-          let flags =
-            {
-              o.flags with
-              obj_kind =
-                Obj_type.map_dict
-                  (fun dict ->
-                    let value = mapi_t dict.key dict.value in
-                    { dict with value })
-                  o.flags.obj_kind;
-            }
-          in
-          let mapped_t =
-            let reason = replace_desc_reason RObjectType reason_op in
-            let t = DefT (reason, trust, ObjT { o with props_tmap; flags }) in
-            if Obj_type.is_legacy_exact_DO_NOT_USE o.flags.obj_kind then
-              ExactT (reason, t)
-            else
-              t
-          in
+          let mapped_t = Flow_js_utils.map_obj cx trust o reason_op ~map_t ~map_field in
           rec_flow_t cx trace ~use_op:unknown_use (mapped_t, tout)
         (***********************************************)
         (* functions may have their prototypes written *)

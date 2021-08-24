@@ -714,3 +714,27 @@ let is_munged_prop_name cx name =
   is_munged_prop_name_with_munge
     name
     ~should_munge_underscores:(Context.should_munge_underscores cx)
+
+let map_obj cx trust o reason_op ~map_t ~map_field =
+  let props_tmap =
+    Context.find_props cx o.props_tmap
+    |> Properties.mapi_fields map_field
+    |> Context.generate_property_map cx
+  in
+  let flags =
+    {
+      o.flags with
+      obj_kind =
+        Obj_type.map_dict
+          (fun dict ->
+            let value = map_t dict.key dict.value in
+            { dict with value })
+          o.flags.obj_kind;
+    }
+  in
+  let reason = replace_desc_reason RObjectType reason_op in
+  let t = DefT (reason, trust, ObjT { o with props_tmap; flags }) in
+  if Obj_type.is_legacy_exact_DO_NOT_USE o.flags.obj_kind then
+    ExactT (reason, t)
+  else
+    t
