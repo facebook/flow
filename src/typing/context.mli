@@ -60,6 +60,7 @@ type metadata = {
   enable_new_env: bool;
   enforce_strict_call_arity: bool;
   enforce_local_inference_annotations: bool;
+  experimental_infer_indexers: bool;
   exact_by_default: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
@@ -175,6 +176,8 @@ val goals : t -> Type.t IMap.t
 val exact_by_default : t -> bool
 
 val enforce_local_inference_annotations : t -> bool
+
+val experimental_infer_indexers : t -> bool
 
 val check_updates_against_providers : t -> bool
 
@@ -292,6 +295,8 @@ val voidable_checks : t -> voidable_check list
 
 val implicit_instantiation_checks : t -> Implicit_instantiation_check.t list
 
+val inferred_indexers : t -> Type.dicttype list ALocMap.t
+
 val use_def : t -> Env_builder.env_info option
 
 val pid_prefix : t -> string
@@ -357,6 +362,8 @@ val add_implicit_instantiation_ctor :
   Reason.t ->
   Type.call_arg list ->
   unit
+
+val add_inferred_indexer : t -> ALoc.t -> Type.dicttype -> unit
 
 val set_evaluated : t -> Type.t Type.Eval.Map.t -> unit
 

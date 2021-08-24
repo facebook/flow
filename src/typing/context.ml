@@ -41,6 +41,7 @@ type metadata = {
   enable_new_env: bool;
   enforce_strict_call_arity: bool;
   enforce_local_inference_annotations: bool;
+  experimental_infer_indexers: bool;
   exact_by_default: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
@@ -177,6 +178,7 @@ type component_t = {
   mutable literal_subtypes: (Type.t * Type.use_t) list;
   mutable matching_props: (Reason.reason * string * Type.t * Type.t) list;
   mutable implicit_instantiation_checks: Implicit_instantiation_check.t list;
+  mutable inferred_indexers: Type.dicttype list ALocMap.t;
 }
 
 type phase =
@@ -227,6 +229,7 @@ let metadata_of_options options =
     enforce_strict_call_arity = Options.enforce_strict_call_arity options;
     check_updates_against_providers = Options.check_updates_against_providers options;
     enforce_local_inference_annotations = Options.enforce_local_inference_annotations options;
+    experimental_infer_indexers = Options.experimental_infer_indexers options;
     exact_by_default = Options.exact_by_default options;
     facebook_fbs = Options.facebook_fbs options;
     facebook_fbt = Options.facebook_fbt options;
@@ -316,6 +319,7 @@ let make_ccx master_cx =
     exists_excuses = ALocMap.empty;
     voidable_checks = [];
     implicit_instantiation_checks = [];
+    inferred_indexers = ALocMap.empty;
     exists_instantiations = ALocIDMap.empty;
     test_prop_hits_and_misses = IMap.empty;
     computed_property_states = IMap.empty;
@@ -421,6 +425,8 @@ let goals cx = cx.ccx.goal_map
 let exact_by_default cx = cx.metadata.exact_by_default
 
 let enforce_local_inference_annotations cx = cx.metadata.enforce_local_inference_annotations
+
+let experimental_infer_indexers cx = cx.metadata.experimental_infer_indexers
 
 let check_updates_against_providers cx = cx.metadata.check_updates_against_providers
 
@@ -542,6 +548,8 @@ let voidable_checks cx = cx.ccx.voidable_checks
 
 let implicit_instantiation_checks cx = cx.ccx.implicit_instantiation_checks
 
+let inferred_indexers cx = cx.ccx.inferred_indexers
+
 let exists_instantiations cx = cx.ccx.exists_instantiations
 
 let use_def cx = cx.use_def
@@ -640,6 +648,15 @@ let add_implicit_instantiation_ctor cx lhs poly_t use_op reason_op args =
         { lhs; poly_t; operation = (use_op, reason_op, Constructor args) }
     in
     cx.ccx.implicit_instantiation_checks <- check :: cx.ccx.implicit_instantiation_checks
+
+let add_inferred_indexer cx loc dict =
+  cx.ccx.inferred_indexers <-
+    ALocMap.update
+      loc
+      (function
+        | Some dicts -> Some (dict :: dicts)
+        | None -> Some [dict])
+      cx.ccx.inferred_indexers
 
 let set_all_unresolved cx all_unresolved = cx.ccx.all_unresolved <- all_unresolved
 

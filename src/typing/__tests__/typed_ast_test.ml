@@ -30,6 +30,7 @@ let metadata =
     enable_new_env = false;
     enforce_strict_call_arity = true;
     enforce_local_inference_annotations = false;
+    experimental_infer_indexers = false;
     exact_by_default = false;
     facebook_fbs = None;
     facebook_fbt = None;
