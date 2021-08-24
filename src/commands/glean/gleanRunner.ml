@@ -679,6 +679,8 @@ let make ~output_dir ~write_root =
       json_filenames: SSet.t;
     }
 
+    let check_options o = o
+
     let reporter =
       let open Codemod_report in
       let report =

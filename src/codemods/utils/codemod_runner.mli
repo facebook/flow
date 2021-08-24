@@ -21,6 +21,8 @@ module type SIMPLE_TYPED_RUNNER_CONFIG = sig
 
   val reporter : accumulator Codemod_report.t
 
+  val check_options : Options.t -> Options.t
+
   val visit : (accumulator, Codemod_context.Typed.t) abstract_visitor
 end
 

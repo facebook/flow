@@ -144,6 +144,8 @@ module Annotate_exports_command = struct
           empty = Acc.empty;
         }
 
+      let check_options o = o
+
       let visit =
         let mapper = Annotate_exports.mapper ~preserve_literals ~max_type_size ~default_any in
         Codemod_utils.make_visitor (Mapper mapper)
@@ -191,6 +193,8 @@ module Annotate_escaped_generics = struct
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
       include Annotate_escaped_generics
 
+      let check_options o = o
+
       let visit = visit ~default_any ~preserve_literals ~max_type_size
     end) in
     main (module Runner) codemod_flags ()
@@ -236,6 +240,8 @@ module Replace_existentials = struct
   let main codemod_flags preserve_literals max_type_size default_any () =
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
       include Replace_existentials
+
+      let check_options o = o
 
       let visit = visit ~default_any ~preserve_literals ~max_type_size
     end) in
@@ -293,6 +299,8 @@ module Annotate_lti_command = struct
           empty = Acc.empty;
         }
 
+      let check_options o = o
+
       let visit =
         let mapper = Annotate_lti.mapper ~preserve_literals ~max_type_size ~default_any in
         Codemod_utils.make_visitor (Mapper mapper)
@@ -339,6 +347,66 @@ module KeyMirror_command = struct
   let command = CommandSpec.command spec main
 end
 
+module Annotate_empty_object_command = struct
+  let doc = "Annotates empty objects."
+
+  let spec =
+    let module Literals = Codemod_hardcoded_ty_fixes.PreserveLiterals in
+    let preserve_string_literals_level =
+      Literals.[("always", Always); ("never", Never); ("auto", Auto)]
+    in
+    {
+      CommandSpec.name = "annotate-empty-object-experimental";
+      doc;
+      usage =
+        Printf.sprintf
+          "Usage: %s codemod annotate-empty-object-experimental [OPTION]... [FILE]\n\n%s\n"
+          Utils_js.exe_name
+          doc;
+      args =
+        CommandSpec.ArgSpec.(
+          empty
+          |> CommandUtils.codemod_flags
+          |> flag
+               "--preserve-literals"
+               (required ~default:Literals.Never (enum preserve_string_literals_level))
+               ~doc:""
+          |> flag
+               "--max-type-size"
+               (required ~default:100 int)
+               ~doc:"The maximum number of nodes allowed in a single type annotation (default: 100)"
+          |> flag
+               "--default-any"
+               no_arg
+               ~doc:"Adds 'any' to all locations where normalization or validation fails");
+    }
+
+  let main codemod_flags preserve_literals max_type_size default_any () =
+    let open Codemod_utils in
+    let open Insert_type_utils in
+    let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
+      module Acc = Acc (Annotate_empty_object.ErrorStats)
+
+      type accumulator = Acc.t
+
+      let reporter =
+        {
+          Codemod_report.report = Codemod_report.StringReporter Acc.report;
+          combine = Acc.combine;
+          empty = Acc.empty;
+        }
+
+      let check_options o = Options.{ o with opt_experimental_infer_indexers = true }
+
+      let visit =
+        let mapper = Annotate_empty_object.mapper ~preserve_literals ~max_type_size ~default_any in
+        Codemod_utils.make_visitor (Mapper mapper)
+    end) in
+    main (module Runner) codemod_flags ()
+
+  let command = CommandSpec.command spec main
+end
+
 let command =
   let main (cmd, argv) () = CommandUtils.run_command cmd argv in
   let spec =
@@ -351,6 +419,7 @@ let command =
         (Replace_existentials.spec.CommandSpec.name, Replace_existentials.command);
         (Annotate_lti_command.spec.CommandSpec.name, Annotate_lti_command.command);
         (KeyMirror_command.spec.CommandSpec.name, KeyMirror_command.command);
+        (Annotate_empty_object_command.spec.CommandSpec.name, Annotate_empty_object_command.command);
       ]
   in
   CommandSpec.command spec main

@@ -1,0 +1,91 @@
+>>> test.js (#changes: 14)
+//@flow
+
+declare var key : string;
+
+let x: { [string]: number } = {}; // should annot
+x[key] = 3;
+
+let y = {};
+y.key = 4;
+
+let z = {};
+z["key"] = 5;
+
+let a = {};
+a[key] = 3;
+a.key = 4;
+
+
+declare var arr : Array<string>;
+arr.reduce((acc, key) => { acc[key] = 4; return acc }, ({}: { [string]: number })) // annot
+
+
+function foo(x) {
+    x[key] = 3;
+}
+
+foo(({}: { [string]: number })); // annot
+
+let b = { x : ({}: { [string]: number }) } // annot
+b.x[key] = 3;
+
+let first: { [string]: number } = {}; // annot
+let second = first;
+let third = true ? first : ({}: { [string]: number }); // annot
+let fourth = third;
+fourth[key] = 3;
+
+let already_annotated : { [string] : number, ... } = {}; // should not change this
+
+let written_twice: { [string]: string | number } = {}; // should be { [string] : string | number }
+written_twice[key] = 3;
+written_twice[key] = "foo";
+
+let written_thrice: { [string]: number | string } = {}; // should be { [string] : string | number }
+written_thrice[key] = 3;
+written_thrice[key] = "foo";
+written_thrice[key] = "bar";
+
+function Crash<T>(value: T) {
+  declare var props : Array<string>;
+
+  declare var lastProp : string;
+  const lastObj = props.reduce((obj, prop) => {
+    let o = obj[prop];
+    if (!o) {
+      o = obj[prop] = ({}: { [string]: mixed }); // should not crash annotating this
+    }
+    return o;
+  }, self);
+  lastObj[lastProp] = value;
+}
+
+let z = {}; //should not annotate
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            1
+  Number of annotations added:              9
+  Total size of annotations:               31
+  Number of empty object errors:            0
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Parsing heaps get ast error:            0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+

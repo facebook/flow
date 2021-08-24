@@ -71,6 +71,8 @@ module type SIMPLE_TYPED_RUNNER_CONFIG = sig
 
   val reporter : accumulator Codemod_report.t
 
+  val check_options : Options.t -> Options.t
+
   val visit : (accumulator, Codemod_context.Typed.t) abstract_visitor
 end
 
@@ -302,7 +304,7 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
         let%lwt result =
           MultiWorkerLwt.call
             workers
-            ~job:(check_job ~visit:C.visit ~iteration ~reader ~options)
+            ~job:(check_job ~visit:C.visit ~iteration ~reader ~options:(C.check_options options))
             ~neutral:FilenameMap.empty
             ~merge:FilenameMap.union
             ~next:(MultiWorkerLwt.next workers (FilenameSet.elements roots))
