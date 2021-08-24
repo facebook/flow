@@ -158,7 +158,6 @@ let stub_metadata ~root ~checked =
     max_literal_length = 100;
     enable_const_params = false;
     enable_enums = true;
-    enable_enums_with_unknown_members = true;
     enable_indexed_access = true;
     enable_new_env = false;
     enforce_local_inference_annotations = false;

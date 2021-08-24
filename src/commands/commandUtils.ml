@@ -1233,7 +1233,6 @@ let make_options
       FlowConfig.run_post_inference_implicit_instantiation flowconfig;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_enums = FlowConfig.enums flowconfig;
-    opt_enums_with_unknown_members = FlowConfig.enums_with_unknown_members flowconfig;
     opt_new_env = options_flags.new_env || FlowConfig.new_env flowconfig;
     opt_exact_by_default = FlowConfig.exact_by_default flowconfig;
     opt_facebook_fbs = FlowConfig.facebook_fbs flowconfig;

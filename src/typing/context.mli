@@ -56,7 +56,6 @@ type metadata = {
   check_updates_against_providers: bool;
   enable_const_params: bool;
   enable_enums: bool;
-  enable_enums_with_unknown_members: bool;
   enable_indexed_access: bool;
   enable_new_env: bool;
   enforce_strict_call_arity: bool;
@@ -158,8 +157,6 @@ val builtins : t -> Builtins.t
 val enable_const_params : t -> bool
 
 val enable_enums : t -> bool
-
-val enable_enums_with_unknown_members : t -> bool
 
 val enable_indexed_access : t -> bool
 

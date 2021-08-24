@@ -37,7 +37,6 @@ type metadata = {
   check_updates_against_providers: bool;
   enable_const_params: bool;
   enable_enums: bool;
-  enable_enums_with_unknown_members: bool;
   enable_indexed_access: bool;
   enable_new_env: bool;
   enforce_strict_call_arity: bool;
@@ -223,7 +222,6 @@ let metadata_of_options options =
     max_literal_length = Options.max_literal_length options;
     enable_const_params = Options.enable_const_params options;
     enable_enums = Options.enums options;
-    enable_enums_with_unknown_members = Options.enums_with_unknown_members options;
     enable_indexed_access = Options.enable_indexed_access options;
     enable_new_env = Options.new_env options;
     enforce_strict_call_arity = Options.enforce_strict_call_arity options;
@@ -405,8 +403,6 @@ let enable_const_params cx =
   cx.metadata.enable_const_params || cx.metadata.strict || cx.metadata.strict_local
 
 let enable_enums cx = cx.metadata.enable_enums
-
-let enable_enums_with_unknown_members cx = cx.metadata.enable_enums_with_unknown_members
 
 let enable_indexed_access cx = cx.metadata.enable_indexed_access
 

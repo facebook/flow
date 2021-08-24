@@ -83,8 +83,6 @@ val enforce_strict_call_arity : config -> bool
 
 val enums : config -> bool
 
-val enums_with_unknown_members : config -> bool
-
 val new_env : config -> bool
 
 val exact_by_default : config -> bool

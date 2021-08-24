@@ -72,7 +72,6 @@ type t = {
   opt_enabled_rollouts: string SMap.t;
   opt_enforce_local_inference_annotations: bool;
   opt_enforce_strict_call_arity: bool;
-  opt_enums_with_unknown_members: bool;
   opt_enums: bool;
   opt_exact_by_default: bool;
   opt_facebook_fbs: string option;
@@ -161,8 +160,6 @@ let enforce_local_inference_annotations opts = opts.opt_enforce_local_inference_
 let check_updates_against_providers opts = opts.opt_check_updates_against_providers
 
 let enums opts = opts.opt_enums
-
-let enums_with_unknown_members opts = opts.opt_enums_with_unknown_members
 
 let format_bracket_spacing opts = opts.opt_format.opt_bracket_spacing
 

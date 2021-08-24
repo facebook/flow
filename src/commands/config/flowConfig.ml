@@ -52,7 +52,6 @@ module Opts = struct
     enable_const_params: bool;
     enforce_local_inference_annotations: bool;
     enforce_strict_call_arity: bool;
-    enums_with_unknown_members: bool;
     enums: bool;
     exact_by_default: bool;
     facebook_fbs: string option;
@@ -177,7 +176,6 @@ module Opts = struct
       enforce_local_inference_annotations = false;
       enforce_strict_call_arity = true;
       enums = false;
-      enums_with_unknown_members = false;
       exact_by_default = false;
       facebook_fbs = None;
       facebook_fbt = None;
@@ -448,9 +446,6 @@ module Opts = struct
   let enforce_strict_call_arity_parser =
     boolean (fun opts v -> Ok { opts with enforce_strict_call_arity = v })
 
-  let enums_with_unknown_members_parser =
-    boolean (fun opts v -> Ok { opts with enums_with_unknown_members = v })
-
   let facebook_module_interop_parser =
     boolean (fun opts v -> Ok { opts with facebook_module_interop = v })
 
@@ -648,7 +643,6 @@ module Opts = struct
       ("experimental.disable_live_non_parse_errors", disable_live_non_parse_errors_parser);
       ("experimental.enforce_local_inference_annotations", local_inference_annotations);
       ("experimental.check_updates_against_providers", check_updates_against_providers);
-      ("experimental.enums_with_unknown_members", enums_with_unknown_members_parser);
       ("experimental.enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
@@ -1270,8 +1264,6 @@ let enforce_local_inference_annotations c = c.options.Opts.enforce_local_inferen
 let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
 
 let enums c = c.options.Opts.enums
-
-let enums_with_unknown_members c = c.options.Opts.enums_with_unknown_members
 
 let new_env c = c.options.Opts.new_env
 
