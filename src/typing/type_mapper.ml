@@ -797,6 +797,7 @@ class virtual ['a] t =
           t
         else
           ObjectMapi t''
+      | ObjectKeyMirror -> ObjectKeyMirror
 
     method virtual props : Context.t -> 'a -> Properties.id -> Properties.id
 

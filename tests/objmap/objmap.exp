@@ -721,6 +721,24 @@ References:
                                                        ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- keyMirror.js:9:2
+
+Cannot cast `o.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal
+`BAR` [2]. [incompatible-cast]
+
+   keyMirror.js:9:2
+   9| (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
+       ^^^^^
+
+References:
+   keyMirror.js:1:38
+   1| declare function keyMirror<O>(o: O): $KeyMirror<O>;
+                                           ^^^^^^^^^^^^^ [1]
+   keyMirror.js:9:10
+   9| (o.FOO : 'BAR'); // error, 'FOO' incompatible with 'BAR'
+               ^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- objmap.js:10:2
 
 Cannot cast `o.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal
@@ -810,4 +828,4 @@ References:
 
 
 
-Found 42 errors
+Found 43 errors

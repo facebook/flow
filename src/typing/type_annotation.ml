@@ -618,6 +618,20 @@ let rec convert cx tparams_map =
                    TypeDestructorT (use_op reason, reason, TypeMap (ObjectMapi t2)),
                    mk_eval_id cx loc ))
               targs)
+      | "$KeyMirror" ->
+        check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+            let (t1, targs) =
+              match convert_type_params () with
+              | ([t], targs) -> (t, targs)
+              | _ -> assert false
+            in
+            let reason = mk_reason RObjectMapi loc in
+            reconstruct_ast
+              (EvalT
+                 ( t1,
+                   TypeDestructorT (use_op reason, reason, TypeMap ObjectKeyMirror),
+                   mk_eval_id cx loc ))
+              targs)
       | "$CharSet" ->
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
             match targs with

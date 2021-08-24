@@ -476,6 +476,10 @@ type ('loc, 'a) annot =
       obj: 'a;
       fn: 'a;
     }
+  | ObjKeyMirror of {
+      loc: 'loc;
+      obj: 'a;
+    }
   | CharSet of 'loc * string
   | ClassT of 'loc * 'a
   | Function_apply of 'loc

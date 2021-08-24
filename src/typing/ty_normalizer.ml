@@ -1767,6 +1767,7 @@ end = struct
       | T.TypeMap (T.ObjectMapi t') ->
         let%map ty' = type__ ~env t' in
         Ty.Utility (Ty.ObjMapi (ty, ty'))
+      | T.TypeMap T.ObjectKeyMirror -> return (Ty.Utility (Ty.ObjKeyMirror ty))
       | T.PropertyType { name; is_indexed_access } ->
         let name' = Ty.StrLit name in
         if is_indexed_access then

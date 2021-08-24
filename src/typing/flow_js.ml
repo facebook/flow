@@ -4565,6 +4565,14 @@ struct
           in
           let mapped_t = Flow_js_utils.map_obj cx trust o reason_op ~map_t ~map_field in
           rec_flow_t cx trace ~use_op:unknown_use (mapped_t, tout)
+        | (DefT (_, trust, ObjT o), MapTypeT (_, reason_op, ObjectKeyMirror, tout)) ->
+          let map_t key _ = key in
+          let map_field key _ =
+            let reason = replace_desc_reason (RStringLit key) reason_op in
+            DefT (reason, bogus_trust (), SingletonStrT key)
+          in
+          let mapped_t = Flow_js_utils.map_obj cx trust o reason_op ~map_t ~map_field in
+          rec_flow_t cx trace ~use_op:unknown_use (mapped_t, tout)
         (***********************************************)
         (* functions may have their prototypes written *)
         (***********************************************)

@@ -50,6 +50,7 @@ let string_of_destructor = function
   | TypeMap (TupleMap _) -> "TupleMap"
   | TypeMap (ObjectMap _) -> "ObjectMap"
   | TypeMap (ObjectMapi _) -> "ObjectMapi"
+  | TypeMap ObjectKeyMirror -> "ObjectKeyMirror"
   | ReactElementPropsType -> "ReactElementProps"
   | ReactElementConfigType -> "ReactElementConfig"
   | ReactElementRefType -> "ReactElementRef"

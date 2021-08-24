@@ -1345,6 +1345,7 @@ module rec TypeTerm : sig
     | TupleMap of t
     | ObjectMap of t
     | ObjectMapi of t
+    | ObjectKeyMirror
 
   and prototype = t
 

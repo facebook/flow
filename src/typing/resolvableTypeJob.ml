@@ -292,6 +292,7 @@ and collect_of_type_map ?log_unresolved cx acc = function
   | ObjectMap t
   | ObjectMapi t ->
     collect_of_type ?log_unresolved cx acc t
+  | ObjectKeyMirror -> acc
 
 (* In some positions, like annots, we trust that tvars are 0->1. *)
 and collect_of_binding ?log_unresolved cx acc = function

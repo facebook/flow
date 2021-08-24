@@ -900,6 +900,7 @@ class ['a] t =
       | ObjectMap t
       | ObjectMapi t ->
         self#type_ cx pole_TODO acc t
+      | ObjectKeyMirror -> acc
 
     method private choice_use_tool cx acc =
       function

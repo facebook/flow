@@ -772,6 +772,12 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
       let fn = merge file fn in
       let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
       Type.(EvalT (obj, TypeDestructorT (use_op, reason, TypeMap (ObjectMapi fn)), id))
+    | ObjKeyMirror { loc; obj } ->
+      let reason = Reason.(mk_reason RObjectMapi loc) in
+      let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
+      let obj = merge file obj in
+      let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+      Type.(EvalT (obj, TypeDestructorT (use_op, reason, TypeMap ObjectKeyMirror), id))
     | CharSet (loc, str) ->
       let chars = String_utils.CharSet.of_string str in
       let char_str = String_utils.CharSet.to_string chars in

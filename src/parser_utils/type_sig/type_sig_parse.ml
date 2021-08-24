@@ -1963,6 +1963,14 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
         Annot (ObjMapi { loc; obj; fn })
       | _ -> Err (loc, CheckError)
     end
+  | "$KeyMirror" ->
+    begin
+      match targs with
+      | Some (_, { arguments = [obj]; _ }) ->
+        let obj = annot opts scope tbls xs obj in
+        Annot (ObjKeyMirror { loc; obj })
+      | _ -> Err (loc, CheckError)
+    end
   | "$CharSet" ->
     begin
       match targs with
