@@ -357,6 +357,38 @@ module Stats (Extra : BASE_STATS) = struct
     String.concat "\n" rows
 end
 
+module UntypedAcc (Extra : BASE_STATS) = struct
+  type t = {
+    changed_set: FilenameSet.t;
+    stats: Extra.t;
+  }
+
+  let empty = { changed_set = FilenameSet.empty; stats = Extra.empty }
+
+  let update_stats c stats = { c with stats }
+
+  let combine c1 c2 =
+    {
+      changed_set = FilenameSet.union c1.changed_set c2.changed_set;
+      stats = Extra.combine c1.stats c2.stats;
+    }
+
+  let debug loc (x : Debug.t) =
+    Hh_logger.debug "%s %s" (Debug.serialize x) (Reason.string_of_loc loc)
+
+  let info loc (x : Info.t) = Hh_logger.info "%s %s" (Info.serialize x) (Reason.string_of_loc loc)
+
+  let report _ c =
+    let rows =
+      [
+        print_section "Stats";
+        string_of_row ~indent:2 "Files changed" (FilenameSet.cardinal c.changed_set);
+      ]
+      @ Extra.report c.stats
+    in
+    String.concat "\n" rows
+end
+
 module Acc (Extra : BASE_STATS) = struct
   module Stats = Stats (Extra)
 

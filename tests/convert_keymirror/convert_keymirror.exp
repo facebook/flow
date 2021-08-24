@@ -1,0 +1,20 @@
+>>> file.js (#changes: 2)
+// @flow
+
+type Id = <K>(K) => K;
+
+type T1 = $KeyMirror<{ f: '' }>;
+type T2 = $KeyMirror<{ f: '' }>;
+type T3 = $ObjMapi<{ f: '' }, <K, V>(K, V) => V>;
+type T4 = $ObjMapi<{ f: '' }, Id>;
+type T4 = $ObjMapi<{ f: '' }>;
+type T5 = $ObjMapi<>;
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            1
+  Converted instances:                      2
+  Not converted instances:                  2
+  Illformed instances:                      2
+

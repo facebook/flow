@@ -302,6 +302,43 @@ module Annotate_lti_command = struct
   let command = CommandSpec.command spec main
 end
 
+module KeyMirror_command = struct
+  let doc = "Replaces instances of the type $ObjMapi<T, <K>(K) => K> with $KeyMirror<T>"
+
+  let spec =
+    {
+      CommandSpec.name = "key-mirror";
+      doc;
+      usage =
+        Printf.sprintf
+          "Usage: %s codemod key-mirror [OPTION]... [FILE]\n\n%s\n"
+          Utils_js.exe_name
+          doc;
+      args = CommandSpec.ArgSpec.(empty |> CommandUtils.codemod_flags);
+    }
+
+  let main codemod_flags () =
+    let open Codemod_utils in
+    let open Insert_type_utils in
+    let module Runner = Codemod_runner.MakeUntypedRunner (struct
+      module Acc = UntypedAcc (Objmapi_to_keymirror.KeyMirrorStats)
+
+      type accumulator = Acc.t
+
+      let reporter =
+        {
+          Codemod_report.report = Codemod_report.StringReporter Acc.report;
+          combine = Acc.combine;
+          empty = Acc.empty;
+        }
+
+      let visit = Codemod_utils.make_visitor (Mapper Objmapi_to_keymirror.mapper)
+    end) in
+    main (module Runner) codemod_flags ()
+
+  let command = CommandSpec.command spec main
+end
+
 let command =
   let main (cmd, argv) () = CommandUtils.run_command cmd argv in
   let spec =
@@ -313,6 +350,7 @@ let command =
         (Annotate_escaped_generics.spec.CommandSpec.name, Annotate_escaped_generics.command);
         (Replace_existentials.spec.CommandSpec.name, Replace_existentials.command);
         (Annotate_lti_command.spec.CommandSpec.name, Annotate_lti_command.command);
+        (KeyMirror_command.spec.CommandSpec.name, KeyMirror_command.command);
       ]
   in
   CommandSpec.command spec main
