@@ -184,13 +184,14 @@ type component_t = {
 type phase =
   | InitLib
   | Checking
-  | Merging
+  | Merging of bool  (** old/new *)
   | ImplicitInstantiation
 
 let string_of_phase = function
   | InitLib -> "InitLib"
   | Checking -> "Checking"
-  | Merging -> "Merging"
+  | Merging true -> "Merging (new)"
+  | Merging false -> "Merging (old)"
   | ImplicitInstantiation -> "ImplicitInstantiation"
 
 type t = {
@@ -941,3 +942,8 @@ let speculation_id cx =
   match !(speculation_state cx) with
   | [] -> None
   | { speculation_id; case = { case_id; _ }; _ } :: _ -> Some (speculation_id, case_id)
+
+let new_merging cx =
+  match cx.phase with
+  | Merging x -> x
+  | _ -> false

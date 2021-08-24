@@ -161,6 +161,8 @@ val modules_are_use_strict : config -> bool
 
 val munge_underscores : config -> bool
 
+val new_merge : config -> bool
+
 val no_flowlib : config -> bool
 
 val node_main_fields : config -> string list

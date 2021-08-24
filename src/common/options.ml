@@ -105,6 +105,7 @@ type t = {
   opt_modules_are_use_strict: bool;
   opt_munge_underscores: bool;
   opt_node_main_fields: string list;
+  opt_new_merge: bool;
   opt_node_resolver_allow_root_relative: bool;
   opt_node_resolver_root_relative_dirnames: string list;
   opt_profile: bool;
@@ -145,6 +146,8 @@ let autoimports opts = opts.opt_autoimports
 let automatic_require_default opts = opts.opt_automatic_require_default
 
 let babel_loose_array_spread opts = opts.opt_babel_loose_array_spread
+
+let new_merge opts = opts.opt_new_merge
 
 let max_literal_length opts = opts.opt_max_literal_length
 

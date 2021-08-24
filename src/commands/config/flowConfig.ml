@@ -92,6 +92,7 @@ module Opts = struct
     module_system: Options.module_system;
     modules_are_use_strict: bool;
     munge_underscores: bool;
+    new_merge: bool;
     no_flowlib: bool;
     node_main_fields: string list;
     node_resolver_allow_root_relative: bool;
@@ -216,6 +217,7 @@ module Opts = struct
       module_system = Options.Node;
       modules_are_use_strict = false;
       munge_underscores = false;
+      new_merge = false;
       no_flowlib = false;
       node_main_fields = ["main"];
       node_resolver_allow_root_relative = false;
@@ -368,6 +370,8 @@ module Opts = struct
           Ok opts
         else
           Error "New check mode can no longer be disabled.")
+
+  let new_merge_parser = boolean (fun opts v -> Ok { opts with new_merge = v })
 
   let max_files_checked_per_worker_parser =
     uint (fun opts v -> Ok { opts with max_files_checked_per_worker = v })
@@ -647,6 +651,7 @@ module Opts = struct
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
       ("experimental.new_check", new_check_parser);
+      ("experimental.new_merge", new_merge_parser);
       ("experimental.react.server_component_ext", react_server_component_exts_parser);
       ("experimental.refactor", boolean (fun opts v -> Ok { opts with refactor = Some v }));
       ("experimental.reorder_checking", reorder_checking_parser);
@@ -1330,6 +1335,8 @@ let module_system c = c.options.Opts.module_system
 let modules_are_use_strict c = c.options.Opts.modules_are_use_strict
 
 let munge_underscores c = c.options.Opts.munge_underscores
+
+let new_merge c = c.options.Opts.new_merge
 
 let no_flowlib c = c.options.Opts.no_flowlib
 

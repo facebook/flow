@@ -430,7 +430,7 @@ let remove_old_results phase acc file =
   let (errors, warnings, suppressions, coverage, first_internal_error) = acc in
   let coverage =
     match phase with
-    | Context.Merging
+    | Context.Merging _
     | Context.InitLib
     | Context.ImplicitInstantiation ->
       coverage
@@ -524,7 +524,12 @@ let run_merge_service
         List.fold_left
           (fun acc (file, _diff, result) ->
             let component = FilenameMap.find file component_map in
-            let acc = Nel.fold_left (remove_old_results Context.Merging) acc component in
+            let acc =
+              Nel.fold_left
+                (remove_old_results (Context.Merging (Options.new_merge options)))
+                acc
+                component
+            in
             add_merge_results acc file result)
           acc
           merged

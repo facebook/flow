@@ -88,7 +88,7 @@ let trust = Trust.bogus_trust ()
 module type CONS_GEN = sig
   val flow : Context.t -> Type.t * Type.use_t -> unit
 
-  val resolve_id : Context.t -> int -> Type.t -> unit
+  val unresolved_tvar : Context.t -> Reason.t -> int
 
   val mk_typeof_annotation :
     Context.t ->
@@ -103,21 +103,78 @@ module type CONS_GEN = sig
 
   val mk_instance : Context.t -> Reason.t -> Type.t -> Type.t
 
-  val qualify_type : Context.t -> Reason.t -> Type.propref -> Type.t -> Type.t
+  val get_prop : Context.t -> Type.use_op -> ALoc.t -> Reason.t -> Reason.name -> Type.t -> Type.t
+
+  val get_elem : Context.t -> Type.use_op -> Reason.t -> key:Type.t -> Type.t -> Type.t
+
+  val qualify_type :
+    Context.t -> Type.use_op -> ALoc.t -> Reason.t -> Reason.t * Reason.name -> Type.t -> Type.t
 
   val assert_export_is_type : Context.t -> Reason.t -> string -> Type.t -> Type.t
-end
 
-module type TVAR = sig
-  val mk_no_wrap : Context.t -> Reason.t -> int
+  val resolve_id : Context.t -> Type.ident -> Type.t -> unit
 
-  val mk : Context.t -> Reason.t -> Type.t
+  val mk_sig_tvar : Context.t -> Reason.t -> Type.t Lazy.t -> Type.t
 
-  val mk_where : Context.t -> Reason.t -> (Type.t -> unit) -> Type.t
+  val cjs_require : Context.t -> Type.t -> Reason.t -> bool -> Type.t
 
-  val mk_no_wrap_where : Context.t -> Reason.t -> (Reason.t * int -> unit) -> Type.t
+  val export_named :
+    Context.t ->
+    Reason.reason ->
+    Type.export_kind ->
+    (ALoc.t option * Type.t) NameUtils.Map.t ->
+    Type.t ->
+    Type.t
 
-  val mk_derivable_where : Context.t -> Reason.t -> (Type.t -> unit) -> Type.t
+  val cjs_extract_named_exports :
+    Context.t -> Reason.reason -> Reason.reason * Type.exporttypes * bool -> Type.t -> Type.t
+
+  val import_default :
+    Context.t -> Reason.t -> Type.import_kind -> string -> string -> bool -> Type.t -> Type.t
+
+  val import_named :
+    Context.t -> Reason.t -> Type.import_kind -> string -> string -> bool -> Type.t -> Type.t
+
+  val import_ns : Context.t -> Reason.t -> bool -> Type.t -> Type.t
+
+  val import_typeof : Context.t -> Reason.t -> string -> Type.t -> Type.t
+
+  val specialize :
+    Context.t ->
+    Type.t ->
+    Type.use_op ->
+    Reason.t ->
+    Reason.t ->
+    Type.specialize_cache ->
+    Type.t list Base.Option.t ->
+    Type.t
+
+  val copy_named_exports : Context.t -> from_ns:Type.t -> Reason.t -> module_t:Type.t -> Type.t
+
+  val copy_type_exports : Context.t -> from_ns:Type.t -> Reason.t -> module_t:Type.t -> Type.t
+
+  val unary_minus : Context.t -> Reason.t -> Type.t -> Type.t
+
+  val unary_not : Context.t -> Reason.t -> Type.t -> Type.t
+
+  val mixin : Context.t -> Reason.t -> Type.t -> Type.t
+
+  val object_spread :
+    Context.t ->
+    Type.use_op ->
+    Reason.reason ->
+    Type.Object.Spread.target ->
+    Type.Object.Spread.state ->
+    Type.t ->
+    Type.t
+
+  val obj_test_proto : Context.t -> Reason.t -> Type.t -> Type.t
+
+  val existential : Context.t -> force:bool -> Reason.t -> Type.t
+
+  val obj_rest : Context.t -> Reason.t -> string list -> Type.t -> Type.t
+
+  val arr_rest : Context.t -> Type.use_op -> Reason.t -> int -> Type.t -> Type.t
 end
 
 module type S = sig
@@ -133,31 +190,24 @@ module type S = sig
 
   val merge_def : file -> Reason.reason -> (ALoc.t, ALoc.t Pack.packed) Type_sig.def -> Type.t
 
-  val merge_file : file -> unit
-
   val merge : file -> ALoc.t Pack.packed -> Type.t
 end
 
-module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
+module Make (ConsGen : CONS_GEN) : S = struct
   let specialize file t =
-    let open Type in
-    let open TypeUtil in
-    let reason = reason_of_t t in
-    Tvar.mk_derivable_where file.cx reason (fun tout ->
-        ConsGen.flow file.cx (t, SpecializeT (unknown_use, reason, reason, None, None, tout)))
+    let reason = TypeUtil.reason_of_t t in
+    ConsGen.specialize file.cx t Type.unknown_use reason reason None None
 
   let eval_unary file loc t =
     let module U = Flow_ast.Expression.Unary in
     function
     | U.Minus ->
       let reason = Reason.mk_reason (TypeUtil.desc_of_t t) loc in
-      Tvar.mk_where file.cx reason (fun tout ->
-          ConsGen.flow file.cx (t, Type.UnaryMinusT (reason, tout)))
+      ConsGen.unary_minus file.cx reason t
     | U.Plus -> Type.NumT.at loc trust
     | U.Not ->
       let reason = Reason.(mk_reason (RUnaryOperator ("not", TypeUtil.desc_of_t t)) loc) in
-      Tvar.mk_no_wrap_where file.cx reason (fun tout ->
-          ConsGen.flow file.cx (t, Type.NotT (reason, tout)))
+      ConsGen.unary_not file.cx reason t
     | U.BitNot -> Type.NumT.at loc trust
     | U.Typeof -> Type.StrT.at loc trust
     | U.Void -> Type.VoidT.at loc trust
@@ -169,19 +219,16 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
   let eval file loc t = function
     | Unary op -> eval_unary file loc t op
     | GetProp name ->
-      let reason = Reason.(mk_reason (RProperty (Some (OrdinaryName name))) loc) in
+      let name = Reason.OrdinaryName name in
+      let reason = Reason.(mk_reason (RProperty (Some name)) loc) in
       (* TODO: use_op *)
       let use_op = Type.unknown_use in
-      Tvar.mk_no_wrap_where file.cx reason (fun tout ->
-          ConsGen.flow
-            file.cx
-            (t, Type.GetPropT (use_op, reason, Type.Named (reason, Reason.OrdinaryName name), tout)))
+      ConsGen.get_prop file.cx use_op loc reason name t
     | GetElem index ->
       let reason = Reason.(mk_reason (RProperty None) loc) in
       (* TODO: use_op *)
       let use_op = Type.unknown_use in
-      Tvar.mk_no_wrap_where file.cx reason (fun tout ->
-          ConsGen.flow file.cx (t, Type.GetElemT (use_op, reason, index, tout)))
+      ConsGen.get_elem file.cx use_op reason ~key:index t
 
   let async_void_return file loc =
     Flow_js_utils.lookup_builtin_typeapp
@@ -229,33 +276,24 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
   let require file loc index =
     let (mref, mk_module_t) = Module_refs.get file.dependencies index in
     let reason = Reason.(mk_reason (RCommonJSExports mref) loc) in
-    Tvar.mk_where file.cx reason (fun tout ->
-        ConsGen.flow file.cx (mk_module_t loc, Type.CJSRequireT (reason, tout, false)))
+    ConsGen.cjs_require file.cx (mk_module_t loc) reason false
 
   let import file reason id_loc index kind ~remote ~local =
     let (mref, mk_module_t) = Module_refs.get file.dependencies index in
-    Tvar.mk_where file.cx reason (fun tout ->
-        ConsGen.flow
-          file.cx
-          ( mk_module_t id_loc,
-            if remote = "default" then
-              Type.ImportDefaultT (reason, kind, (local, mref), tout, false)
-            else
-              Type.ImportNamedT (reason, kind, remote, mref, tout, false) ))
+    let module_t = mk_module_t id_loc in
+    if remote = "default" then
+      ConsGen.import_default file.cx reason kind local mref false module_t
+    else
+      ConsGen.import_named file.cx reason kind remote mref false module_t
 
   let import_ns file reason id_loc index =
     let (_, mk_module_t) = Module_refs.get file.dependencies index in
-    Tvar.mk_where file.cx reason (fun tout ->
-        ConsGen.flow file.cx (mk_module_t id_loc, Type.ImportModuleNsT (reason, tout, false)))
+    ConsGen.import_ns file.cx reason false (mk_module_t id_loc)
 
   let import_typeof_ns file reason id_loc index =
     let (_, mk_module_t) = Module_refs.get file.dependencies index in
-    let ns_t =
-      Tvar.mk_where file.cx reason (fun tout ->
-          ConsGen.flow file.cx (mk_module_t id_loc, Type.ImportModuleNsT (reason, tout, false)))
-    in
-    Tvar.mk_where file.cx reason (fun tout ->
-        ConsGen.flow file.cx (ns_t, Type.ImportTypeofT (reason, "*", tout)))
+    let ns_t = ConsGen.import_ns file.cx reason false (mk_module_t id_loc) in
+    ConsGen.import_typeof file.cx reason "*" ns_t
 
   let merge_enum file reason id_loc rep members has_unknown_members =
     let rep_reason desc = Reason.(mk_reason (REnumRepresentation desc) id_loc) in
@@ -290,13 +328,11 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
     | Pack.PDef i -> Lazy.force (Pattern_defs.get file.pattern_defs i)
     | Pack.PropP { id_loc; name; def } ->
       let t = Lazy.force (Patterns.get file.patterns def) in
-      let reason = Reason.(mk_reason (RProperty (Some (Reason.OrdinaryName name))) id_loc) in
+      let name = Reason.OrdinaryName name in
+      let reason = Reason.(mk_reason (RProperty (Some name)) id_loc) in
       (* TODO: use_op *)
       let use_op = Type.unknown_use in
-      Tvar.mk_no_wrap_where file.cx reason (fun tout ->
-          ConsGen.flow
-            file.cx
-            (t, Type.GetPropT (use_op, reason, Type.Named (reason, Reason.OrdinaryName name), tout)))
+      ConsGen.get_prop file.cx use_op id_loc reason name t
     | Pack.ComputedP { elem; def } ->
       let elem = Lazy.force (Pattern_defs.get file.pattern_defs elem) in
       let t = Lazy.force (Patterns.get file.patterns def) in
@@ -304,14 +340,14 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
       let reason = Reason.(mk_reason (RProperty None) loc) in
       (* TODO: use_op *)
       let use_op = Type.unknown_use in
-      Tvar.mk_no_wrap_where file.cx reason (fun tout ->
-          ConsGen.flow file.cx (t, Type.GetElemT (use_op, reason, elem, tout)))
+      ConsGen.get_elem file.cx use_op reason ~key:elem t
     | Pack.UnsupportedLiteralP loc -> Type.(AnyT.at (AnyError None) loc)
     | Pack.ObjRestP { loc; xs; def } ->
       let t = Lazy.force (Patterns.get file.patterns def) in
       let reason = Reason.(mk_reason RObjectPatternRestProp loc) in
-      Tvar.mk_where file.cx reason (fun tout ->
-          ConsGen.flow file.cx (t, Type.ObjRestT (reason, xs, tout, Reason.mk_id ())))
+      (* Tvar.mk_where file.cx reason (fun tout ->
+          ConsGen.flow file.cx (t, Type.ObjRestT (reason, xs, tout, Reason.mk_id ()))) *)
+      ConsGen.obj_rest file.cx reason xs t
     | Pack.IndexP { loc; i; def } ->
       let t = Lazy.force (Patterns.get file.patterns def) in
       let reason = Reason.(mk_reason (RCustom (Utils_js.spf "element %d" i)) loc) in
@@ -321,15 +357,13 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
       in
       (* TODO: use_op *)
       let use_op = Type.unknown_use in
-      Tvar.mk_no_wrap_where file.cx reason (fun tout ->
-          ConsGen.flow file.cx (t, Type.GetElemT (use_op, reason, i, tout)))
+      ConsGen.get_elem file.cx use_op reason ~key:i t
     | Pack.ArrRestP { loc; i; def } ->
       let t = Lazy.force (Patterns.get file.patterns def) in
       let reason = Reason.(mk_reason RArrayPatternRestProp loc) in
       (* TODO: use_op *)
       let use_op = Type.unknown_use in
-      Tvar.mk_where file.cx reason (fun tout ->
-          ConsGen.flow file.cx (t, Type.ArrRestT (use_op, reason, i, tout)))
+      ConsGen.arr_rest file.cx use_op reason i t
 
   let merge_remote_ref file reason = function
     | Pack.Import { id_loc; name; index; remote } ->
@@ -365,10 +399,12 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
       let f t _ names =
         let names = Nel.cons name names in
         let qname = String.concat "." (List.rev (Nel.to_list names)) in
-        let id_reason = Reason.(mk_reason (RType (OrdinaryName name)) id_loc) in
+        let name = Reason.OrdinaryName name in
+        let id_reason = Reason.(mk_reason (RType name) id_loc) in
         let reason_op = Reason.(mk_reason (RType (OrdinaryName qname)) loc) in
-        let propname = Type.Named (id_reason, Reason.OrdinaryName name) in
-        let t = ConsGen.qualify_type file.cx reason_op propname t in
+        let use_op = Type.Op (Type.GetProperty reason_op) in
+        let propname = (id_reason, name) in
+        let t = ConsGen.qualify_type file.cx use_op loc reason_op propname t in
         f t loc names
       in
       merge_tyref file f qualification
@@ -413,24 +449,16 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
           has_every_named_export = false;
         }
       in
-      Tvar.mk_where file.cx reason (fun tout ->
-          ConsGen.flow
-            file.cx
-            (t, CJSExtractNamedExportsT (reason, (reason, exporttypes, is_strict), tout)))
-    in
-    let export_named file reason kind named module_t =
-      Tvar.mk_where file.cx reason (fun tout ->
-          ConsGen.flow file.cx (module_t, Type.ExportNamedT (reason, named, kind, tout)))
+      let local_module = (reason, exporttypes, is_strict) in
+      ConsGen.cjs_extract_named_exports file.cx reason local_module t
     in
     let copy_named_exports file reason module_t (loc, from_ns) =
       let reason = Reason.repos_reason loc reason in
-      Tvar.mk_where file.cx reason (fun tout ->
-          ConsGen.flow file.cx (from_ns, Type.CopyNamedExportsT (reason, module_t, tout)))
+      ConsGen.copy_named_exports file.cx ~from_ns reason ~module_t
     in
     let copy_type_exports file reason module_t (loc, from_ns) =
       let reason = Reason.repos_reason loc reason in
-      Tvar.mk_where file.cx reason (fun tout ->
-          ConsGen.flow file.cx (from_ns, Type.CopyTypeExportsT (reason, module_t, tout)))
+      ConsGen.copy_type_exports file.cx ~from_ns reason ~module_t
     in
     let copy_star_exports =
       let rec loop file reason acc = function
@@ -455,7 +483,7 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
         let type_exports = SMap.map Lazy.force type_exports |> NameUtils.namemap_of_smap in
         let type_stars = List.map (merge_star file) type_stars in
         mk_commonjs_module_t file reason strict exports
-        |> export_named file reason Type.ExportType type_exports
+        |> ConsGen.export_named file.cx reason Type.ExportType type_exports
         |> copy_star_exports file reason ([], type_stars)
       | ESExports { type_exports; exports; stars; type_stars; strict } ->
         let exports = SMap.map Lazy.force exports |> NameUtils.namemap_of_smap in
@@ -463,8 +491,8 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
         let stars = List.map (merge_star file) stars in
         let type_stars = List.map (merge_star file) type_stars in
         mk_es_module_t file reason strict
-        |> export_named file reason Type.ExportValue exports
-        |> export_named file reason Type.ExportType type_exports
+        |> ConsGen.export_named file.cx reason Type.ExportValue exports
+        |> ConsGen.export_named file.cx reason Type.ExportType type_exports
         |> copy_star_exports file reason (stars, type_stars)
 
   let rec merge file = function
@@ -519,10 +547,7 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
     | Boolean loc -> Type.BoolT.at loc trust
     | Exists { loc; force } ->
       let reason = Reason.(mk_annot_reason RExistential loc) in
-      if force then
-        Tvar.mk file.cx reason
-      else
-        Type.ExistsT reason
+      ConsGen.existential file.cx ~force reason
     | Optional t -> TypeUtil.optional (merge file t)
     | Maybe (loc, t) ->
       let t = merge file t in
@@ -742,8 +767,7 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
       let reason = Reason.(mk_annot_reason (RModule (OrdinaryName ref)) loc) in
       let m_name = Reason.internal_module_name ref in
       let module_t = Flow_js_utils.lookup_builtin_strict file.cx m_name reason in
-      Tvar.mk_where file.cx reason (fun tout ->
-          ConsGen.flow file.cx (module_t, Type.CJSRequireT (reason, tout, false)))
+      ConsGen.cjs_require file.cx module_t reason false
     | Call { loc; fn; args } ->
       let reason = Reason.(mk_reason RFunctionCallType loc) in
       let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
@@ -977,8 +1001,7 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
         | ObjAnnotImplicitProto -> mk_object None (Type.ObjProtoT reason)
         | ObjAnnotExplicitProto (loc, t) ->
           let reason = Reason.(mk_reason RPrototype loc) in
-          let proto = Tvar.mk file.cx reason in
-          ConsGen.flow file.cx (merge file t, Type.ObjTestProtoT (reason, proto));
+          let proto = ConsGen.obj_test_proto file.cx reason (merge file t) in
           let proto = ConsGen.mk_typeof_annotation file.cx reason proto in
           mk_object None proto
         | ObjAnnotCallable { ts_rev } ->
@@ -1070,8 +1093,7 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
         | None -> Type.ObjProtoT reason
         | Some (loc, t) ->
           let reason = Reason.(mk_reason RPrototype loc) in
-          let proto = Tvar.mk file.cx reason in
-          ConsGen.flow file.cx (merge file t, Type.ObjTestProtoT (reason, proto));
+          let proto = ConsGen.obj_test_proto file.cx reason (merge file t) in
           ConsGen.mk_typeof_annotation file.cx reason proto
       in
       let props = SMap.map (merge_obj_value_prop file) props |> NameUtils.namemap_of_smap in
@@ -1088,11 +1110,11 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
         | ObjValueSpreadElem t -> Type.Object.Spread.Type (merge file t)
         | ObjValueSpreadSlice props -> Type.Object.Spread.Slice (merge_slice props)
       in
-      let (t, todo_rev, acc) =
+      let (t, todo_rev, head_slice) =
         let open Type.Object.Spread in
         match Nel.map merge_elem elems_rev with
-        | (Type t, elems) -> (t, elems, [])
-        | (Slice slice, Type t :: elems) -> (t, elems, [InlineSlice slice])
+        | (Type t, elems) -> (t, elems, None)
+        | (Slice slice, Type t :: elems) -> (t, elems, Some slice)
         | _ -> failwith "unexpected spread"
       in
       let target =
@@ -1105,7 +1127,12 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
         in
         Value { make_seal }
       in
-      let tool = Type.Object.(Resolve Next) in
+      let use_op = Type.(Op (ObjectSpread { op = reason })) in
+      let acc =
+        match head_slice with
+        | Some slice -> [Type.Object.Spread.InlineSlice slice]
+        | None -> []
+      in
       let state =
         {
           Type.Object.Spread.todo_rev;
@@ -1115,11 +1142,7 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
           curr_resolve_idx = 0;
         }
       in
-      let use_op = Type.(Op (ObjectSpread { op = reason })) in
-      Tvar.mk_where file.cx reason (fun tout ->
-          ConsGen.flow
-            file.cx
-            (t, Type.(ObjKitT (use_op, reason, tool, Object.Spread (target, state), tout))))
+      ConsGen.object_spread file.cx use_op reason target state t
     | ArrayLit (loc, t, ts) ->
       let reason = Reason.(mk_reason RArrayLit loc) in
       let t = merge file t in
@@ -1364,8 +1387,7 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
       let (t, names_rev) = loop file ref in
       let name = String.concat "." (List.rev names_rev) in
       let reason = Reason.(mk_annot_reason (RType (OrdinaryName name)) loc) in
-      Tvar.mk_derivable_where file.cx reason (fun tout ->
-          ConsGen.flow file.cx (t, Type.MixinT (reason, tout)))
+      ConsGen.mixin file.cx reason t
     in
     fun file this -> function
       | ClassMixin { loc; t } ->
@@ -1738,9 +1760,4 @@ module Make (Tvar : TVAR) (ConsGen : CONS_GEN) : S = struct
     | Pack.ExportFrom index ->
       let (loc, _name, t) = visit (Remote_refs.get file.remote_refs index) in
       (Some loc, t)
-
-  let merge_file file =
-    let module_t = visit file.exports in
-    let module_ref = Files.module_ref file.key in
-    Context.add_module file.cx (Reason.OrdinaryName module_ref) module_t
 end

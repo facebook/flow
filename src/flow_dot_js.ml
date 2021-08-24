@@ -236,7 +236,7 @@ let infer_and_merge ~root filename ast file_sig =
   let module_ref = Reason.OrdinaryName (Files.module_ref filename) in
   let cx = Context.make ccx metadata filename aloc_table module_ref Context.Checking in
   (* connect requires *)
-  Type_inference_js.add_require_tvars cx file_sig;
+  Type_inference_js.add_require_tvars ~unresolved_tvar:Tvar.mk_no_wrap cx file_sig;
   let connect_requires mref =
     let module_name = Reason.internal_module_name mref in
     Nel.iter (fun loc ->

@@ -68,6 +68,7 @@ let dummy_options_flags =
     temp_dir = None;
     traces = None;
     trust_mode = None;
+    new_merge = false;
     abstract_locations = true;
     verbose = None;
     wait_for_recheck = None;

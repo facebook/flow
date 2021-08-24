@@ -131,33 +131,6 @@ let copy_into dst_cx src_cx t =
   let (_ : Context.t) = copier#type_ src_cx Polarity.Positive dst_cx t in
   ()
 
-(* Helper to create a lazy type. The returned tvar contains a lazy thunk which
- * evaluates to a type. While the lazy thunk is under evaluation, we swap out
- * the tvar's constraint with a fresh unresolved root. This deals with the
- * recursive case where forcing `resolved` loops back to the tvar being defined.
- * *)
-let mk_lazy_tvar cx reason f =
-  let open Type in
-  let open Constraint in
-  let id = Reason.mk_id () in
-  let tvar = OpenT (reason, id) in
-  let constraints =
-    lazy
-      (let node = new_unresolved_root () in
-       Context.add_tvar cx id node;
-       f tvar;
-       Lazy.force (Context.find_graph cx id))
-  in
-  Context.add_tvar cx id (Root { rank = 0; constraints });
-  tvar
-
-let mk_sig_tvar cx reason resolved =
-  let f tvar =
-    let t = Lazy.force resolved in
-    Flow_js.unify cx tvar t
-  in
-  mk_lazy_tvar cx reason f
-
 let unknown_module_t cx mref provider =
   let react_server_module_err = provider = Modulename.String Type.react_server_module_ref in
   let desc = Reason.RCustom mref in
@@ -192,6 +165,35 @@ let get_lint_severities metadata options =
 module ConsGen : Type_sig_merge.CONS_GEN = struct
   include Flow_js
 
+  let unresolved_tvar = Tvar.mk_no_wrap
+
+  (* Helper to create a lazy type. The returned tvar contains a lazy thunk which
+   * evaluates to a type. While the lazy thunk is under evaluation, we swap out
+   * the tvar's constraint with a fresh unresolved root. This deals with the
+   * recursive case where forcing `resolved` loops back to the tvar being defined.
+   * *)
+  let mk_lazy_tvar cx reason f =
+    let open Type in
+    let open Constraint in
+    let id = Reason.mk_id () in
+    let tvar = OpenT (reason, id) in
+    let constraints =
+      lazy
+        (let node = new_unresolved_root () in
+         Context.add_tvar cx id node;
+         f tvar;
+         Lazy.force (Context.find_graph cx id))
+    in
+    Context.add_tvar cx id (Root { rank = 0; constraints });
+    tvar
+
+  let mk_sig_tvar cx reason resolved =
+    let f tvar =
+      let t = Lazy.force resolved in
+      Flow_js.unify cx tvar t
+    in
+    mk_lazy_tvar cx reason f
+
   let assert_export_is_type cx reason name t =
     let open Type in
     let f tvar =
@@ -200,11 +202,18 @@ module ConsGen : Type_sig_merge.CONS_GEN = struct
     in
     mk_lazy_tvar cx reason f
 
-  let qualify_type cx reason propname t =
+  let get_prop cx use_op _loc reason propname t =
+    Tvar.mk_no_wrap_where cx reason (fun tout ->
+        Flow_js.flow cx (t, Type.GetPropT (use_op, reason, Type.Named (reason, propname), tout)))
+
+  let get_elem cx use_op reason ~key t =
+    Tvar.mk_no_wrap_where cx reason (fun tout ->
+        Flow_js.flow cx (t, Type.GetElemT (use_op, reason, key, tout)))
+
+  let qualify_type cx use_op _loc reason (reason_name, name) t =
     let open Type in
     let f tvar =
-      let use_op = Type.(Op (GetProperty reason)) in
-      Flow_js.flow cx (t, GetPropT (use_op, reason, propname, open_tvar tvar))
+      Flow_js.flow cx (t, GetPropT (use_op, reason, Named (reason_name, name), open_tvar tvar))
     in
     mk_lazy_tvar cx reason f
 
@@ -221,6 +230,79 @@ module ConsGen : Type_sig_merge.CONS_GEN = struct
     in
     let tvar = mk_lazy_tvar cx reason f in
     AnnotT (reason, tvar, false)
+
+  let cjs_require cx module_t reason is_strict =
+    Tvar.mk_where cx reason (fun tout ->
+        Flow_js.flow cx (module_t, Type.CJSRequireT (reason, tout, is_strict)))
+
+  let export_named cx reason kind named module_t =
+    Tvar.mk_where cx reason (fun tout ->
+        Flow_js.flow cx (module_t, Type.ExportNamedT (reason, named, kind, tout)))
+
+  let cjs_extract_named_exports cx reason local_module t =
+    Tvar.mk_where cx reason (fun tout ->
+        Flow_js.flow cx (t, Type.CJSExtractNamedExportsT (reason, local_module, tout)))
+
+  let import_default cx reason kind local mref is_strict t =
+    Tvar.mk_where cx reason (fun tout ->
+        Flow_js.flow cx (t, Type.ImportDefaultT (reason, kind, (local, mref), tout, is_strict)))
+
+  let import_named cx reason kind remote mref is_strict module_t =
+    Tvar.mk_where cx reason (fun tout ->
+        Flow_js.flow cx (module_t, Type.ImportNamedT (reason, kind, remote, mref, tout, is_strict)))
+
+  let import_ns cx reason is_strict module_t =
+    Tvar.mk_where cx reason (fun tout ->
+        Flow_js.flow cx (module_t, Type.ImportModuleNsT (reason, tout, is_strict)))
+
+  let import_typeof cx reason export_name ns_t =
+    Tvar.mk_where cx reason (fun tout ->
+        Flow_js.flow cx (ns_t, Type.ImportTypeofT (reason, export_name, tout)))
+
+  let specialize cx t use_op reason_op reason_tapp cache ts =
+    Tvar.mk_derivable_where cx reason_op (fun tout ->
+        Flow_js.flow cx (t, Type.SpecializeT (use_op, reason_op, reason_tapp, cache, ts, tout)))
+
+  let copy_named_exports cx ~from_ns reason ~module_t =
+    Tvar.mk_where cx reason (fun tout ->
+        Flow_js.flow cx (from_ns, Type.CopyNamedExportsT (reason, module_t, tout)))
+
+  let copy_type_exports cx ~from_ns reason ~module_t =
+    Tvar.mk_where cx reason (fun tout ->
+        Flow_js.flow cx (from_ns, Type.CopyTypeExportsT (reason, module_t, tout)))
+
+  let unary_minus cx reason t =
+    Tvar.mk_where cx reason (fun tout -> Flow_js.flow cx (t, Type.UnaryMinusT (reason, tout)))
+
+  let unary_not cx reason t =
+    Tvar.mk_no_wrap_where cx reason (fun tout -> Flow_js.flow cx (t, Type.NotT (reason, tout)))
+
+  let mixin cx reason t =
+    Tvar.mk_derivable_where cx reason (fun tout -> Flow_js.flow cx (t, Type.MixinT (reason, tout)))
+
+  let object_spread cx use_op reason target state t =
+    let tool = Type.Object.(Resolve Next) in
+    Tvar.mk_where cx reason (fun tout ->
+        Flow_js.flow
+          cx
+          (t, Type.(ObjKitT (use_op, reason, tool, Object.Spread (target, state), tout))))
+
+  let obj_test_proto cx reason l =
+    Tvar.mk_where cx reason (fun proto -> Flow_js.flow cx (l, Type.ObjTestProtoT (reason, proto)))
+
+  let existential cx ~force reason =
+    if force then
+      Tvar.mk cx reason
+    else
+      Type.ExistsT reason
+
+  let obj_rest cx reason xs t =
+    Tvar.mk_where cx reason (fun tout ->
+        Flow_js.flow cx (t, Type.ObjRestT (reason, xs, tout, Reason.mk_id ())))
+
+  let arr_rest cx use_op reason i t =
+    Tvar.mk_where cx reason (fun tout ->
+        Flow_js.flow cx (t, Type.ArrRestT (use_op, reason, i, tout)))
 end
 
 [@@@warning "-60"]
@@ -237,7 +319,12 @@ module Flow_js = struct end
  * files. *)
 let mk_check_file ~options ~reader ~cache () =
   let open Type_sig_collections in
-  let module Merge = Type_sig_merge.Make (Tvar) (ConsGen) in
+  let module ConsGen = (val if Options.new_merge options then
+                              (module Annotation_inference)
+                            else
+                              (module ConsGen) : Type_sig_merge.CONS_GEN)
+  in
+  let module Merge = Type_sig_merge.Make (ConsGen) in
   let module Pack = Type_sig_pack in
   let module Heap = SharedMem.NewAPI in
   let audit = Expensive.ok in
@@ -259,7 +346,13 @@ let mk_check_file ~options ~reader ~cache () =
     let metadata = Context.docblock_overrides docblock base_metadata in
     let module_ref = Reason.OrdinaryName (Files.module_ref file_key) in
     let aloc_table = lazy (get_aloc_table_unsafe file_key) in
-    Context.make ccx metadata file_key aloc_table module_ref Context.Checking
+    Context.make
+      ccx
+      metadata
+      file_key
+      aloc_table
+      module_ref
+      (Context.Merging (Options.new_merge options))
   in
 
   (* Create a type representing the exports of a dependency. For checked
@@ -393,7 +486,7 @@ let mk_check_file ~options ~reader ~cache () =
           |> Heap.read_dyn_module cjs_exports es_exports
           |> Merge.merge_exports (Lazy.force file_rec) reason)
       in
-      let t = mk_sig_tvar cx reason resolved in
+      let t = ConsGen.mk_sig_tvar cx reason resolved in
       (fun () -> t)
     in
 
@@ -405,7 +498,7 @@ let mk_check_file ~options ~reader ~cache () =
            let name = Type_sig.def_name def in
            let reason = Type_sig_merge.def_reason def in
            let resolved = lazy (Merge.merge_def (Lazy.force file_rec) reason def) in
-           let t = mk_sig_tvar cx reason resolved in
+           let t = ConsGen.mk_sig_tvar cx reason resolved in
            (loc, name, t))
       in
       (fun () -> Lazy.force thunk)
@@ -419,7 +512,7 @@ let mk_check_file ~options ~reader ~cache () =
            let name = Pack.remote_ref_name remote_ref in
            let reason = Type_sig_merge.remote_ref_reason remote_ref in
            let resolved = lazy (Merge.merge_remote_ref (Lazy.force file_rec) reason remote_ref) in
-           let t = mk_sig_tvar cx reason resolved in
+           let t = ConsGen.mk_sig_tvar cx reason resolved in
            (loc, name, t))
       in
       (fun () -> Lazy.force thunk)
@@ -493,7 +586,7 @@ let mk_check_file ~options ~reader ~cache () =
     let module_ref = Reason.OrdinaryName (Files.module_ref file_key) in
     let cx = Context.make ccx metadata file_key aloc_table module_ref Context.Checking in
     let lint_severities = get_lint_severities metadata options in
-    Type_inference_js.add_require_tvars cx file_sig;
+    Type_inference_js.add_require_tvars ~unresolved_tvar:ConsGen.unresolved_tvar cx file_sig;
     Context.set_local_env cx exported_locals;
     List.iter (connect_require cx) requires;
     let typed_ast = Type_inference_js.infer_ast cx file_key comments ast ~lint_severities in

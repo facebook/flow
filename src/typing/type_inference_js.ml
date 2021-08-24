@@ -356,10 +356,10 @@ let scan_for_suppressions cx lint_severities comments =
   scan_for_error_suppressions cx comments;
   scan_for_lint_suppressions cx lint_severities comments
 
-let add_require_tvars =
+let add_require_tvars ~unresolved_tvar =
   let add cx desc loc =
     let reason = Reason.mk_reason desc loc in
-    let id = Tvar.mk_no_wrap cx reason in
+    let id = unresolved_tvar cx reason in
     Context.add_require cx loc (reason, id)
   in
   let add_decl cx m_name desc loc =
@@ -464,7 +464,7 @@ let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
   let () =
     (* TODO: Wait a minute, why do we bother with requires for lib files? Pretty
        confident that we don't support them in any sensible way. *)
-    add_require_tvars cx file_sig
+    add_require_tvars ~unresolved_tvar:Tvar.mk_no_wrap cx file_sig
   in
   let module_scope = Scope.fresh ~var_scope_kind:Scope.Global () in
   Env.init_env ~exclude_syms module_scope;
