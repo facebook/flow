@@ -89,7 +89,7 @@ var EnumMirroredPrototype = Object.freeze(
       value: function () {
         // We aren't using `Object.values` because that gets enumerable
         // properties, and our properties aren't enumerable.
-        return Object.getOwnPropertyNames(this);
+        return Object.getOwnPropertyNames(this).values();
       },
     },
     getName: {

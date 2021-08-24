@@ -102,8 +102,20 @@ describe('Enum', () => {
       expect(E.cast(3)).toBe(undefined);
     });
 
-    test('members', () => {
+    test('members iterable', () => {
       expect(Array.from(E.members())).toEqual([1, 2]);
+      let i = 1;
+      for (const x of E.members()) {
+        expect(x).toEqual(i);
+        i++;
+      }
+    });
+
+    test('members iterator', () => {
+      const iter = E.members();
+      expect(iter.next()).toEqual({value: 1, done: false});
+      expect(iter.next()).toEqual({value: 2, done: false});
+      expect(iter.next()).toEqual({value: undefined, done: true});
     });
 
     test('getName', () => {
@@ -211,8 +223,21 @@ describe('Enum.Mirrored', () => {
       expect(E.cast('C')).toBe(undefined);
     });
 
-    test('members', () => {
-      expect(Array.from(E.members())).toEqual(['A', 'B']);
+    test('members iterable', () => {
+      const expected = ['A', 'B'];
+      expect(Array.from(E.members())).toEqual(expected);
+      let i = 0;
+      for (const x of E.members()) {
+        expect(x).toEqual(expected[i]);
+        i++;
+      }
+    });
+
+    test('members iterator', () => {
+      const iter = E.members();
+      expect(iter.next()).toEqual({value: 'A', done: false});
+      expect(iter.next()).toEqual({value: 'B', done: false});
+      expect(iter.next()).toEqual({value: undefined, done: true});
     });
 
     test('getName', () => {
