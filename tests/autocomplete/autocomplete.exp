@@ -2803,9 +2803,9 @@ Flags: --lsp
 }
 {
   "label":"members",
-  "labelDetails":{"type":"() => Iterable<E>"},
+  "labelDetails":{"type":"() => Iterator<E>"},
   "kind":3,
-  "detail":"() => Iterable<E>",
+  "detail":"() => Iterator<E>",
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -4552,9 +4552,9 @@ Flags: --lsp
 }
 {
   "label":"members",
-  "labelDetails":{"type":"() => Iterable<DefaultedStringEnum>"},
+  "labelDetails":{"type":"() => Iterator<DefaultedStringEnum>"},
   "kind":3,
-  "detail":"() => Iterable<DefaultedStringEnum>",
+  "detail":"() => Iterator<DefaultedStringEnum>",
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -4659,9 +4659,9 @@ Flags: --lsp
 }
 {
   "label":"members",
-  "labelDetails":{"type":"() => Iterable<InitializedStringEnum>"},
+  "labelDetails":{"type":"() => Iterator<InitializedStringEnum>"},
   "kind":3,
-  "detail":"() => Iterable<InitializedStringEnum>",
+  "detail":"() => Iterator<InitializedStringEnum>",
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -4766,9 +4766,9 @@ Flags: --lsp
 }
 {
   "label":"members",
-  "labelDetails":{"type":"() => Iterable<NumberEnum>"},
+  "labelDetails":{"type":"() => Iterator<NumberEnum>"},
   "kind":3,
-  "detail":"() => Iterable<NumberEnum>",
+  "detail":"() => Iterator<NumberEnum>",
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -4873,9 +4873,9 @@ Flags: --lsp
 }
 {
   "label":"members",
-  "labelDetails":{"type":"() => Iterable<BooleanEnum>"},
+  "labelDetails":{"type":"() => Iterator<BooleanEnum>"},
   "kind":3,
-  "detail":"() => Iterable<BooleanEnum>",
+  "detail":"() => Iterator<BooleanEnum>",
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -4980,9 +4980,9 @@ Flags: --lsp
 }
 {
   "label":"members",
-  "labelDetails":{"type":"() => Iterable<SymbolEnum>"},
+  "labelDetails":{"type":"() => Iterator<SymbolEnum>"},
   "kind":3,
-  "detail":"() => Iterable<SymbolEnum>",
+  "detail":"() => Iterator<SymbolEnum>",
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{

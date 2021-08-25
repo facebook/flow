@@ -20,6 +20,11 @@ const cast: (string) => void | E = E.cast;
 const members: () => Iterable<E> = E.members;
 const isValid: (string) => boolean = E.isValid;
 
+// .members()
+for (const x of E.members()) {} // OK
+const iter = E.members();
+(iter.next().value: E | void); // OK
+
 ////////////
 // Errors //
 ////////////
