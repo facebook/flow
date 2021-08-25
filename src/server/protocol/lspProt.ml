@@ -117,7 +117,7 @@ type request_with_metadata = request * metadata
 
 let string_of_request = function
   | Subscribe -> "subscribe"
-  | LspToServer msg -> Printf.sprintf "lspToServer %s" (Lsp_fmt.message_name_to_string msg)
+  | LspToServer msg -> Printf.sprintf "lspToServer %s" (Lsp_fmt.denorm_message_to_string msg)
   | LiveErrorsRequest uri -> Printf.sprintf "liveErrorsRequest %s" (Lsp.DocumentUri.to_string uri)
 
 let string_of_request_with_metadata (request, _) = string_of_request request
@@ -192,7 +192,7 @@ type message_from_server =
 let string_of_response = function
   | LspFromServer None -> "lspFromServer None"
   | LspFromServer (Some msg) ->
-    Printf.sprintf "lspFromServer %s" (Lsp_fmt.message_name_to_string msg)
+    Printf.sprintf "lspFromServer %s" (Lsp_fmt.denorm_message_to_string msg)
   | LiveErrorsResponse (Ok { live_diagnostics; live_errors_uri; _ }) ->
     let (errors, warnings, others) =
       Base.List.fold_left
