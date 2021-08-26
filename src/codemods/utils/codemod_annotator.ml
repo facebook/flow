@@ -78,6 +78,21 @@ module HardCodedImportMap = struct
                } ))
 end
 
+let validate_ty cctx ~max_type_size ty =
+  let reader = cctx.Codemod_context.Typed.reader in
+  let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
+  (* NOTE simplify before validating to avoid flagging spurious empty's,
+     * eg. empty's that will be simplified away as parts of unions.
+     * Do not simplify empties. Ignoring some of the attendant upper bounds
+     * might lead to unsound types.
+  *)
+  let ty = Ty_utils.simplify_type ~merge_kinds:false ty in
+  match Validator.validate_type ~size_limit:max_type_size ~loc_of_aloc ty with
+  | (ty, []) -> Ok ty
+  | (ty, errs) ->
+    let errs = List.map (fun e -> Error.Validation_error e) errs in
+    Error (errs, ty)
+
 (* Used to infer the type for an annotation from an error loc *)
 let get_ty cctx ~preserve_literals ~max_type_size loc =
   let preserve_inferred_literal_types =
@@ -102,24 +117,9 @@ let get_ty cctx ~preserve_literals ~max_type_size loc =
       max_depth = None;
     }
   in
-  let validate_ty ty =
-    let reader = cctx.Codemod_context.Typed.reader in
-    let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
-    (* NOTE simplify before validating to avoid flagging spurious empty's,
-     * eg. empty's that will be simplified away as parts of unions.
-     * Do not simplify empties. Ignoring some of the attendant upper bounds
-     * might lead to unsound types.
-     *)
-    let ty = Ty_utils.simplify_type ~merge_kinds:false ty in
-    match Validator.validate_type ~size_limit:max_type_size ~loc_of_aloc ty with
-    | (ty, []) -> Ok ty
-    | (ty, errs) ->
-      let errs = List.map (fun e -> Error.Validation_error e) errs in
-      Error (errs, ty)
-  in
   match Codemod_context.Typed.ty_at_loc norm_opts cctx loc with
-  | Ok (Ty.Type ty) -> validate_ty ty
-  | Ok (Ty.Decl (Ty.ClassDecl (s, _))) -> validate_ty (Ty.TypeOf (Ty.TSymbol s))
+  | Ok (Ty.Type ty) -> validate_ty cctx ~max_type_size ty
+  | Ok (Ty.Decl (Ty.ClassDecl (s, _))) -> validate_ty cctx ~max_type_size (Ty.TypeOf (Ty.TSymbol s))
   | Ok _ ->
     let ty = Ty.explicit_any in
     let errors = [Error.Missing_annotation_or_normalizer_error] in

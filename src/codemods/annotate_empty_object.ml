@@ -65,6 +65,12 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       let { Codemod_context.Typed.full_cx = cx; file; file_sig; typed_ast; _ } = cctx in
       let loc = ALoc.of_loc loc in
       let indexers = Context.inferred_indexers cx in
+      let validate = function
+        | Ok (Ty.Type ty) -> Codemod_annotator.validate_ty cctx ~max_type_size ty
+        | _ ->
+          let errors = [Error.Missing_annotation_or_normalizer_error] in
+          Error (errors, Ty.explicit_any)
+      in
       let obj_kind =
         match ALocMap.find_opt loc indexers with
         | Some (_ :: _ as indexers) ->
@@ -80,10 +86,10 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
           let options = Ty_normalizer_env.default_options in
           begin
             match
-              ( Ty_normalizer.from_type ~options ~genv keys,
-                Ty_normalizer.from_type ~options ~genv values )
+              ( Ty_normalizer.from_type ~options ~genv keys |> validate,
+                Ty_normalizer.from_type ~options ~genv values |> validate )
             with
-            | (Ok (Ty.Type dict_key), Ok (Ty.Type dict_value)) ->
+            | (Ok dict_key, Ok dict_value) ->
               Ty.IndexedObj
                 { Ty.dict_polarity = Ty.Neutral; dict_name = None; dict_key; dict_value }
             | _ -> ty.Ty.obj_kind
