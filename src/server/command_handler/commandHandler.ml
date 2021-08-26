@@ -1271,7 +1271,7 @@ let get_ephemeral_handler genv command =
  * catching exceptions *)
 let wrap_ephemeral_handler handler ~genv ~request_id ~client_context ~workload ~cmd_str arg =
   try%lwt
-    Hh_logger.info "Request: %s" cmd_str;
+    Hh_logger.info "%s" cmd_str;
     MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
 
     let%lwt (ret, profiling, json_data) = handler ~genv ~request_id ~workload arg in
@@ -1285,6 +1285,7 @@ let wrap_ephemeral_handler handler ~genv ~request_id ~client_context ~workload ~
     in
     MonitorRPC.status_update ~event;
     FlowEventLogger.ephemeral_command_success ?json_data ~client_context ~profiling;
+    Hh_logger.info "Finished %s" cmd_str;
     Lwt.return (Ok ret)
   with
   | Lwt.Canceled as exn ->
@@ -1419,7 +1420,7 @@ let enqueue_or_handle_ephemeral genv (request_id, command_with_context) =
   let { ServerProt.Request.client_logging_context = client_context; command } =
     command_with_context
   in
-  let cmd_str = ServerProt.Request.to_string command in
+  let cmd_str = spf "%s: %s" request_id (ServerProt.Request.to_string command) in
   match get_ephemeral_handler genv command with
   | Handle_immediately workload ->
     let%lwt result =
