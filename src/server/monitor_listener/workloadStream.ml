@@ -44,9 +44,14 @@ let create () =
     signal = Lwt_condition.create ();
   }
 
+let summarize_length { parallelizable; requeued_parallelizable_length = r; nonparallelizable; _ } =
+  let p = ImmQueue.length parallelizable in
+  let n = ImmQueue.length nonparallelizable in
+  Printf.sprintf "%dP+%dR+%dN=%d" p r n (p + r + n)
+
 (* Add a non-parallelizable workload to the stream and wake up anyone waiting *)
 let push ~name workload stream =
-  Hh_logger.info "Enqueueing nonparallelizable %s" name;
+  Hh_logger.info "Enqueueing nonparallelizable %s behind %s" name (summarize_length stream);
   let enqueue_time = Unix.gettimeofday () in
   stream.nonparallelizable <-
     ImmQueue.push stream.nonparallelizable { enqueue_time; name; workload };
@@ -54,14 +59,14 @@ let push ~name workload stream =
 
 (* Add a parallelizable workload to the stream and wake up anyone waiting *)
 let push_parallelizable ~name workload stream =
-  Hh_logger.info "Enqueueing parallelizable %s" name;
+  Hh_logger.info "Enqueueing parallelizable %s behind %s" name (summarize_length stream);
   let enqueue_time = Unix.gettimeofday () in
   stream.parallelizable <- ImmQueue.push stream.parallelizable { enqueue_time; name; workload };
   Lwt_condition.broadcast stream.signal ()
 
 (* Add a parallelizable workload to the front of the stream and wake up anyone waiting *)
 let requeue_parallelizable ~name workload stream =
-  Hh_logger.info "Requeueing %s" name;
+  Hh_logger.info "Requeueing %s behind %s" name (summarize_length stream);
   let enqueue_time = Unix.gettimeofday () in
   stream.requeued_parallelizable <-
     { enqueue_time; name; workload } :: stream.requeued_parallelizable;
