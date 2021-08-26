@@ -8,15 +8,15 @@ parameter of property `onKeyDown`. [incompatible-type-arg]
                       ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react-dom.js:76:21
-   76|   +T: EventTarget = EventTarget,
-                           ^^^^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:74:56
+   74| declare class SyntheticKeyboardEvent<+T: EventTarget = EventTarget>
+                                                              ^^^^^^^^^^^ [1]
    concretize.js:9:47
     9| function _onKeyDown(e: SyntheticKeyboardEvent<C1>): void {};
                                                      ^^ [2]
-   <BUILTINS>/react-dom.js:76:4
-   76|   +T: EventTarget = EventTarget,
-          ^ [3]
+   <BUILTINS>/react-dom.js:74:39
+   74| declare class SyntheticKeyboardEvent<+T: EventTarget = EventTarget>
+                                             ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- concretize.js:10:16
@@ -29,9 +29,9 @@ parameter of property `onKeyDown`. [incompatible-type-arg]
                       ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react-dom.js:76:7
-   76|   +T: EventTarget = EventTarget,
-             ^^^^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:74:42
+   74| declare class SyntheticKeyboardEvent<+T: EventTarget = EventTarget>
+                                                ^^^^^^^^^^^ [1]
    concretize.js:9:47
     9| function _onKeyDown(e: SyntheticKeyboardEvent<C1>): void {};
                                                      ^^ [2]

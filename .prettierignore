@@ -1,0 +1,16 @@
+# Ignored directories
+_opam
+.circleci
+.github
+facebook
+new_website
+newtests
+packages
+src
+tests
+website
+
+# Ignored file types
+*.html
+*.json
+*.md
