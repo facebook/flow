@@ -1334,13 +1334,13 @@ let rec run_command_in_serial ~genv ~env ~profiling ~workload =
 
 (* A command that is running in parallel with a recheck, if canceled, can't just run a recheck
  * itself. It needs to defer itself until later. *)
-let run_command_in_parallel ~env ~profiling ~workload ~mk_workload =
+let run_command_in_parallel ~env ~profiling ~name ~workload ~mk_workload =
   try%lwt workload ~profiling ~env with
   | Lwt.Canceled as exn ->
     let exn = Exception.wrap exn in
     Hh_logger.info
       "Command successfully canceled. Requeuing the command for after the next recheck.";
-    ServerMonitorListenerState.defer_parallelizable_workload (mk_workload ());
+    ServerMonitorListenerState.defer_parallelizable_workload ~name (mk_workload ());
     Exception.reraise exn
 
 let rec handle_parallelizable_ephemeral_unsafe
@@ -1352,7 +1352,7 @@ let rec handle_parallelizable_ephemeral_unsafe
           let mk_workload () =
             handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str
           in
-          run_command_in_parallel ~env ~profiling ~workload ~mk_workload
+          run_command_in_parallel ~env ~profiling ~name:cmd_str ~workload ~mk_workload
         in
         MonitorRPC.respond_to_request ~request_id ~response;
 
@@ -1434,13 +1434,13 @@ let enqueue_or_handle_ephemeral genv (request_id, command_with_context) =
     let workload =
       handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str
     in
-    ServerMonitorListenerState.push_new_parallelizable_workload workload;
+    ServerMonitorListenerState.push_new_parallelizable_workload ~name:cmd_str workload;
     Lwt.return_unit
   | Handle_nonparallelizable workload ->
     let workload =
       handle_nonparallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str
     in
-    ServerMonitorListenerState.push_new_workload workload;
+    ServerMonitorListenerState.push_new_workload ~name:cmd_str workload;
     Lwt.return_unit
 
 let did_open ~profiling ~reader genv env client (files : (string * string) Nel.t) :
@@ -2741,19 +2741,19 @@ let handle_persistent_immediately ~genv ~client_id ~request ~workload =
     ~default_ret:()
     ()
 
-let rec handle_parallelizable_persistent_unsafe ~request ~genv ~workload ~client ~profiling env :
-    unit persistent_handling_result Lwt.t =
+let rec handle_parallelizable_persistent_unsafe
+    ~request ~genv ~name ~workload ~client ~profiling env : unit persistent_handling_result Lwt.t =
   let mk_workload () =
     let client_id = Persistent_connection.get_id client in
-    handle_parallelizable_persistent ~genv ~client_id ~request ~workload
+    handle_parallelizable_persistent ~genv ~client_id ~request ~name ~workload
   in
   let workload = workload ~client in
-  run_command_in_parallel ~env ~profiling ~workload ~mk_workload
+  run_command_in_parallel ~env ~profiling ~name ~workload ~mk_workload
 
-and handle_parallelizable_persistent ~genv ~client_id ~request ~workload env : unit Lwt.t =
+and handle_parallelizable_persistent ~genv ~client_id ~request ~name ~workload env : unit Lwt.t =
   try%lwt
     wrap_persistent_handler
-      (handle_parallelizable_persistent_unsafe ~request)
+      (handle_parallelizable_persistent_unsafe ~request ~name)
       ~genv
       ~client_id
       ~request
@@ -2783,14 +2783,15 @@ let enqueue_persistent
     (genv : ServerEnv.genv)
     (client_id : LspProt.client_id)
     (request : LspProt.request_with_metadata) : unit Lwt.t =
+  let name = request |> fst |> LspProt.string_of_request in
   match get_persistent_handler ~genv ~client_id ~request with
   | Handle_persistent_immediately workload ->
     handle_persistent_immediately ~genv ~client_id ~request ~workload
   | Handle_parallelizable_persistent workload ->
-    let workload = handle_parallelizable_persistent ~genv ~client_id ~request ~workload in
-    ServerMonitorListenerState.push_new_parallelizable_workload workload;
+    let workload = handle_parallelizable_persistent ~genv ~client_id ~request ~name ~workload in
+    ServerMonitorListenerState.push_new_parallelizable_workload ~name workload;
     Lwt.return_unit
   | Handle_nonparallelizable_persistent workload ->
     let workload = handle_nonparallelizable_persistent ~genv ~client_id ~request ~workload in
-    ServerMonitorListenerState.push_new_workload workload;
+    ServerMonitorListenerState.push_new_workload ~name workload;
     Lwt.return_unit

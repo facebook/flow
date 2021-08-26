@@ -8,11 +8,11 @@
 type env_update = ServerEnv.env -> ServerEnv.env
 
 (* APIs to add to the state *)
-val push_new_workload : WorkloadStream.workload -> unit
+val push_new_workload : name:string -> WorkloadStream.workload -> unit
 
-val push_new_parallelizable_workload : WorkloadStream.parallelizable_workload -> unit
+val push_new_parallelizable_workload : name:string -> WorkloadStream.parallelizable_workload -> unit
 
-val defer_parallelizable_workload : WorkloadStream.parallelizable_workload -> unit
+val defer_parallelizable_workload : name:string -> WorkloadStream.parallelizable_workload -> unit
 
 val requeue_deferred_parallelizable_workloads : unit -> unit
 

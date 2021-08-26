@@ -12,21 +12,22 @@ type env_update = ServerEnv.env -> ServerEnv.env
 (* Workloads are client requests which we processes FIFO *)
 let workload_stream = WorkloadStream.create ()
 
-let push_new_workload workload = WorkloadStream.push workload workload_stream
+let push_new_workload ~name workload = WorkloadStream.push ~name workload workload_stream
 
-let push_new_parallelizable_workload workload =
-  WorkloadStream.push_parallelizable workload workload_stream
+let push_new_parallelizable_workload ~name workload =
+  WorkloadStream.push_parallelizable ~name workload workload_stream
 
 let deferred_parallelizable_workloads_rev = ref []
 
-let defer_parallelizable_workload workload =
-  deferred_parallelizable_workloads_rev := workload :: !deferred_parallelizable_workloads_rev
+let defer_parallelizable_workload ~name workload =
+  deferred_parallelizable_workloads_rev :=
+    (name, workload) :: !deferred_parallelizable_workloads_rev
 
 let requeue_deferred_parallelizable_workloads () =
   let workloads = !deferred_parallelizable_workloads_rev in
   deferred_parallelizable_workloads_rev := [];
-  Base.List.iter workloads ~f:(fun workload ->
-      WorkloadStream.requeue_parallelizable workload workload_stream)
+  Base.List.iter workloads ~f:(fun (name, workload) ->
+      WorkloadStream.requeue_parallelizable ~name workload workload_stream)
 
 (* Env updates are...well...updates to our env. They must be handled in the main thread. Also FIFO
  * but are quick to handle *)
