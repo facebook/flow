@@ -20,10 +20,17 @@ type workload = ServerEnv.env -> ServerEnv.env Lwt.t
 
 type parallelizable_workload = ServerEnv.env -> unit Lwt.t
 
+type 'a item = {
+  enqueue_time: float;
+  workload: 'a;
+}
+
+let project_workload { workload; _ } = workload
+
 type t = {
-  mutable parallelizable: (float * parallelizable_workload) ImmQueue.t;
-  mutable requeued_parallelizable: parallelizable_workload list;
-  mutable nonparallelizable: (float * workload) ImmQueue.t;
+  mutable parallelizable: parallelizable_workload item ImmQueue.t;
+  mutable requeued_parallelizable: parallelizable_workload item list;
+  mutable nonparallelizable: workload item ImmQueue.t;
   signal: unit Lwt_condition.t;
 }
 
@@ -37,19 +44,20 @@ let create () =
 
 (* Add a non-parallelizable workload to the stream and wake up anyone waiting *)
 let push workload stream =
-  let now = Unix.gettimeofday () in
-  stream.nonparallelizable <- ImmQueue.push stream.nonparallelizable (now, workload);
+  let enqueue_time = Unix.gettimeofday () in
+  stream.nonparallelizable <- ImmQueue.push stream.nonparallelizable { enqueue_time; workload };
   Lwt_condition.broadcast stream.signal ()
 
 (* Add a parallelizable workload to the stream and wake up anyone waiting *)
 let push_parallelizable workload stream =
-  let now = Unix.gettimeofday () in
-  stream.parallelizable <- ImmQueue.push stream.parallelizable (now, workload);
+  let enqueue_time = Unix.gettimeofday () in
+  stream.parallelizable <- ImmQueue.push stream.parallelizable { enqueue_time; workload };
   Lwt_condition.broadcast stream.signal ()
 
 (* Add a parallelizable workload to the front of the stream and wake up anyone waiting *)
 let requeue_parallelizable workload stream =
-  stream.requeued_parallelizable <- workload :: stream.requeued_parallelizable;
+  let enqueue_time = Unix.gettimeofday () in
+  stream.requeued_parallelizable <- { enqueue_time; workload } :: stream.requeued_parallelizable;
   Lwt_condition.broadcast stream.signal ()
 
 (* Cast a parallelizable workload to a nonparallelizable workload. *)
@@ -60,7 +68,7 @@ let workload_of_parallelizable_workload parallelizable_workload env =
 (* Pop the oldest workload *)
 let pop stream =
   match stream.requeued_parallelizable with
-  | workload :: rest ->
+  | { workload; _ } :: rest ->
     (* Always prefer requeued parallelizable jobs *)
     stream.requeued_parallelizable <- rest;
     Some (workload_of_parallelizable_workload workload)
@@ -73,20 +81,20 @@ let pop stream =
       | (None, None)
       | (Some _, None) ->
         true
-      | (Some (timestamp_p, _), Some (timestamp_n, _)) -> timestamp_p <= timestamp_n
+      | (Some { enqueue_time = p; _ }, Some { enqueue_time = n; _ }) -> p <= n
       | (None, Some _) -> false
     in
     let (workload_opt, parallelizable, nonparallelizable) =
       if use_parallelizable then
         let (_, parallelizable) = ImmQueue.pop parallelizable in
         let workload =
-          Base.Option.map entry_p ~f:(fun (_, workload) ->
+          Base.Option.map entry_p ~f:(fun { workload; _ } ->
               workload_of_parallelizable_workload workload)
         in
         (workload, parallelizable, nonparallelizable)
       else
         let (_, nonparallelizable) = ImmQueue.pop nonparallelizable in
-        (Base.Option.map entry_n ~f:snd, parallelizable, nonparallelizable)
+        (Base.Option.map entry_n ~f:project_workload, parallelizable, nonparallelizable)
     in
     stream.parallelizable <- parallelizable;
     stream.nonparallelizable <- nonparallelizable;
@@ -95,14 +103,14 @@ let pop stream =
 (* Pop the oldest parallelizable workload *)
 let pop_parallelizable stream =
   match stream.requeued_parallelizable with
-  | workload :: rest ->
+  | { workload; _ } :: rest ->
     (* Always prefer requeued parallelizable jobs *)
     stream.requeued_parallelizable <- rest;
     Some workload
   | [] ->
     let (entry_opt, parallelizable) = ImmQueue.pop stream.parallelizable in
     stream.parallelizable <- parallelizable;
-    Base.Option.map entry_opt ~f:snd
+    Base.Option.map entry_opt ~f:project_workload
 
 (* Wait until there's a workload in the stream *)
 let rec wait_for_workload stream =
