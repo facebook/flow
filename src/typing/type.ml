@@ -2855,10 +2855,10 @@ module FlowSet = struct
   (* returns ref eq map if no change *)
   let add (l, u) x =
     let f = function
-      | None -> Some (UseTypeSet.singleton u)
-      | Some us -> Some (UseTypeSet.add u us)
+      | None ->  (UseTypeSet.singleton u)
+      | Some us ->  (UseTypeSet.add u us)
     in
-    TypeMap.update l f x
+    TypeMap.adjust l f x
 
   let fold f = TypeMap.fold (fun l -> UseTypeSet.fold (fun u -> f (l, u)))
 end
