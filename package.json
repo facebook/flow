@@ -14,7 +14,5 @@
   "scripts": {
     "prepublish": "yarn workspace flow-parser run prepublish"
   },
-  "devDependencies": {
-    "prettier": "2.3.2"
-  }
+  "devDependencies": {}
 }
