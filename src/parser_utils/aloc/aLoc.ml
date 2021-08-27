@@ -92,7 +92,7 @@ end = struct
   let kind (loc : t) : kind =
     if is_keyed loc then
       Keyed
-    else if Obj.magic loc = Loc.none then
+    else if Loc.is_none (Obj.magic loc) then
       ALocNone
     else
       Concrete
@@ -218,7 +218,7 @@ let compare loc1 loc2 =
 let quick_compare loc1 loc2 =
   (* String comparisons are expensive, so we should only evaluate this lambda if
    * the other information we have ties *)
-  let source_compare () = File_key.compare_opt (Repr.source loc1) (Repr.source loc2) in
+  let[@local] source_compare () = File_key.compare_opt (Repr.source loc1) (Repr.source loc2) in
   match (Repr.kind loc1, Repr.kind loc2) with
   | (Repr.Keyed, Repr.Keyed) ->
     let k1 = Repr.get_key_exn loc1 in

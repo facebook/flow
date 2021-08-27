@@ -24,6 +24,13 @@ type t = {
 
 let none = { source = None; start = { line = 0; column = 0 }; _end = { line = 0; column = 0 } }
 
+let is_none (x : t) =
+  x == none
+  ||
+  match x with
+  | { source = None; start = { line = 0; column = 0 }; _end = { line = 0; column = 0 } } -> true
+  | _ -> false
+
 let btwn loc1 loc2 = { source = loc1.source; start = loc1.start; _end = loc2._end }
 
 (* Returns the position immediately before the start of the given loc. If the
