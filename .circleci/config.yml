@@ -52,7 +52,7 @@ executors:
     working_directory: ~/flow
   linux-node:
     docker:
-      - image: circleci/node:8
+      - image: circleci/node:12
     working_directory: ~/flow
   mac:
     macos:
