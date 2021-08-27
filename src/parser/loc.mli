@@ -20,6 +20,8 @@ type t = {
 
 val none : t
 
+val is_none : t -> bool
+
 val btwn : t -> t -> t
 
 val char_before : t -> t
