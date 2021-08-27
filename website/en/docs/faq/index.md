@@ -267,7 +267,6 @@ Flow requires type annotations at module boundaries to make sure it can scale. T
 
 The most common case you'll encounter is when exporting a function or React component. Flow requires you to annotate inputs. For instance, in this [example](https://flow.org/try/#0PTAEAEDMBsHsHcBQBTAHgB1gJwC6gMawB2AzngIYAmloAvKOXQHwOgDUoAjANxA), flow will complain:
 ```js
-// @flow
 export const add = a => a + 1;
 ```
 
@@ -275,7 +274,6 @@ The fix here is to add types to the parameters of `add`.
 
 Example ([https://flow.org/try](https://flow.org/try/#0PTAEAEDMBsHsHcBQBTAHgB1gJwC6gMawB2AzngIYAmloAvKABTkBcoRArgLYBGyWAlHQB8ocqADUoAIwBuIA)):
 ```js
-// @flow
 export const add = (a: number) => a + 1;
 ```
 
@@ -283,7 +281,6 @@ To see how you can annotate exported React components, check out our docs on [HO
 
 There are other cases where this happens, and they might be harder to understand. You'll get an error like `Missing type annotation for U` For instance, you wrote this [code](https://flow.org/try/#0PTAEAEDMBsHsHcBQiDGsB2BnALqAhgE4F4CeoAvKANoDkeNANKDQEY0C6iApgB4AOsArjRZcAcy7ouBAJYoAgkVIV8SkgDoAtnj4AKPBQB8+AJRA):
 ```js
-// @flow
 const array = ['a', 'b']
 export const genericArray = array.map(a => a)
 ```
@@ -295,15 +292,12 @@ Understanding the logic behind generics might be useful, but what you really nee
 You can do that by adding an explicit type argument:
 
 ```js
-// @flow
 const array = ['a', 'b'];
 export const genericArray = array.map<string>(a => a);
 ```
 
-
 or by annotating the exported constant ([https://flow.org/try](https://flow.org/try/#0PTAEAEDMBsHsHcBQBjWA7AzgF1AQwE764CeoAvKANoDku1ANKNQEbUC6iApgB4AOs+HKkw4A5pzSd8AS2QBBQiQBcoBUWIAebDLSiAfOTyLiAOgC2uXgApc5A7gCUQA)):
 ```js
-// @flow
 const array = ['a', 'b']
 export const genericArray: Array<string> = array.map(a => a)
 ```
