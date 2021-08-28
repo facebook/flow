@@ -30,7 +30,6 @@ const f_expr = function fn_expr(x) {
   return (x: string);
 }
 
-// Causes a "Location unhandled" warning
 function rest(x, ...args) {
   return x;
 }
@@ -60,4 +59,3 @@ function default_arr_err([num=0]) {
 function default_obj_err({x: y=1}) {
   return 1;
 }
-

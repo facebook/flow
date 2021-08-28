@@ -347,7 +347,7 @@ let local_value_identifiers
     fold_scope_chain
       scope_info
       (fun _ scope acc ->
-        let scope_vars = scope.Scope.defs |> SMap.map (fun Def.{ locs; _ } -> Nel.hd locs) in
+        let scope_vars = scope.Scope.defs in
 
         (* don't suggest lexically-scoped variables declared after the current location.
            this filtering isn't perfect:
@@ -359,10 +359,14 @@ let local_value_identifiers
            since def_loc is the location of the identifier within the declaration statement
            (not the entire statement), we don't filter out foo when declaring foo. *)
         let relevant_scope_vars =
-          if scope.Scope.lexical then
-            SMap.filter (fun _name def_loc -> Loc.compare def_loc ac_loc < 0) scope_vars
-          else
+          SMap.filter
+            (fun _name { Def.locs; kind; _ } ->
+              Bindings.allow_forward_ref kind || Loc.compare (Nel.hd locs) ac_loc < 0)
             scope_vars
+        in
+
+        let relevant_scope_vars =
+          SMap.map (fun { Def.locs; _ } -> Nel.hd locs) relevant_scope_vars
         in
         SMap.union acc relevant_scope_vars)
       ac_scope_id

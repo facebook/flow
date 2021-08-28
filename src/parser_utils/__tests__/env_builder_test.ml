@@ -35,7 +35,7 @@ let printer with_locs locmap =
 
 let mk_sources_test contents expected_values ctxt =
   let program = parse contents in
-  let (_, info) = Env_builder.With_Loc.program_with_scope ~ignore_toplevel:false program in
+  let (_, info) = Env_builder.With_Loc.program_with_scope program in
   let printer locmap =
     let kvlist = LocMap.bindings locmap in
     let strlist =
@@ -59,7 +59,7 @@ let mk_sources_test contents expected_values ctxt =
     use_kinds
 
 let mk_source_of_use_test contents target_loc expected_values ctxt =
-  let (_, info) = Env_builder.With_Loc.program_with_scope ~ignore_toplevel:false (parse contents) in
+  let (_, info) = Env_builder.With_Loc.program_with_scope (parse contents) in
   let locs = Env_builder.With_Loc.sources_of_use info target_loc in
   assert_equal
     ~ctxt
@@ -71,7 +71,7 @@ let mk_source_of_use_test contents target_loc expected_values ctxt =
 
 let mk_order_test contents expected_values ctxt =
   let ((_, { Flow_ast.Program.statements; _ }) as program) = parse contents in
-  let (_, info) = Env_builder.With_Loc.program_with_scope ~ignore_toplevel:false program in
+  let (_, info) = Env_builder.With_Loc.program_with_scope program in
   let deps = Order_builder.With_Loc.mk_order info statements in
   let deps_string =
     Base.List.map

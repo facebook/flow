@@ -19,6 +19,7 @@ module Make (L : Loc_sig.S) = struct
       locs: L.t Nel.t;
       name: int;
       actual_name: string;
+      kind: Bindings.kind;
     }
     [@@deriving show]
 
@@ -151,7 +152,7 @@ module Make (L : Loc_sig.S) = struct
 
   let def_is_unused info def = L.LSet.is_empty (uses_of_def info ~exclude_def:true def)
 
-  let toplevel_scopes = [0; 1]
+  let toplevel_scopes = [0]
 
   let scope info scope_id =
     try IMap.find scope_id info.scopes with

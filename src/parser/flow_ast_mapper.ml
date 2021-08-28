@@ -2096,7 +2096,8 @@ class ['loc] mapper =
           comments = comments';
         }
 
-    method function_param_pattern (expr : ('loc, 'loc) Ast.Pattern.t) = this#binding_pattern expr
+    method function_param_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =
+      this#binding_pattern ~kind:Ast.Statement.VariableDeclaration.Let expr
 
     method variable_declarator_pattern ~kind (expr : ('loc, 'loc) Ast.Pattern.t) =
       this#binding_pattern ~kind expr
@@ -2277,7 +2278,7 @@ class ['loc] mapper =
     method function_rest_param (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
       let open Ast.Function.RestParam in
       let (loc, { argument; comments }) = expr in
-      let argument' = this#binding_pattern argument in
+      let argument' = this#function_param_pattern argument in
       let comments' = this#syntax_opt comments in
       if argument == argument' && comments == comments' then
         expr

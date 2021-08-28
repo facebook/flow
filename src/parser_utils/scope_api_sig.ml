@@ -19,6 +19,7 @@ module type S = sig
       locs: L.t Nel.t;
       name: int;
       actual_name: string;
+      kind: Bindings.kind;
     }
     [@@deriving show]
 

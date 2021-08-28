@@ -258,7 +258,7 @@ struct
   class ssa_builder =
     object (this)
       (* TODO: with_types should probably be false, but this maintains previous behavior *)
-      inherit scope_builder ~with_types:true as super
+      inherit scope_builder ~flowmin_compatibility:false ~with_types:true as super
 
       (* We maintain a map of read locations to raw Val.t terms, which are
          simplified to lists of write locations once the analysis is done. *)
@@ -1070,14 +1070,14 @@ struct
         expr
 
       (* We also havoc state when entering functions and exiting calls. *)
-      method! lambda loc params body =
+      method! lambda params body =
         this#expecting_abrupt_completions (fun () ->
             let env = this#ssa_env in
             this#run
               (fun () ->
                 this#havoc_uninitialized_ssa_env;
                 let completion_state =
-                  this#run_to_completion (fun () -> super#lambda loc params body)
+                  this#run_to_completion (fun () -> super#lambda params body)
                 in
                 this#commit_abrupt_completion_matching
                   AbruptCompletion.(mem [return; throw])
@@ -1167,15 +1167,16 @@ struct
         stmts
     end
 
-  let program_with_scope ?(ignore_toplevel = false) program =
+  let program_with_scope ?(flowmin_compatibility = false) program =
     let (loc, _) = program in
     let ssa_walk = new ssa_builder in
     let bindings =
-      if ignore_toplevel then
-        Bindings.empty
+      if flowmin_compatibility then
+        let hoist = new lexical_hoister ~flowmin_compatibility in
+        hoist#eval hoist#program program
       else
         (* TODO: with_types should probably be false, but this maintains previous behavior *)
-        let hoist = new hoister ~with_types:true in
+        let hoist = new hoister ~flowmin_compatibility ~with_types:true in
         hoist#eval hoist#program program
     in
     let completion_state =
@@ -1185,7 +1186,7 @@ struct
     (completion_state, (ssa_walk#acc, ssa_walk#values, ssa_walk#unbound_names))
 
   let program program =
-    let (_, (_, values, _)) = program_with_scope ~ignore_toplevel:true program in
+    let (_, (_, values, _)) = program_with_scope ~flowmin_compatibility:false program in
     values
 end
 

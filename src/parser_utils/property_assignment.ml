@@ -268,10 +268,10 @@ let eval_property_assignment class_body =
     |> Base.Option.value ~default:{ Ast.Statement.Block.body = []; comments = None }
   in
   let properties = Base.List.map ~f:fst property_declarations in
-  let bindings : ALoc.t Hoister.Bindings.t =
+  let bindings : ALoc.t Bindings.t =
     List.fold_left
-      (fun bindings property -> Hoister.Bindings.add property bindings)
-      Hoister.Bindings.empty
+      (fun bindings property -> Bindings.(add (property, Var)) bindings)
+      Bindings.empty
       properties
   in
   let property_names =

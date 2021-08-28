@@ -259,11 +259,8 @@ let tests =
                [
                  (0, mk_loc (1, 0) (1, 16));
                  (* program *)
-                 (1, mk_loc (1, 0) (1, 16));
-                 (* program (lexical) *)
-                 (2, mk_loc (1, 0) (1, 15));
+                 (1, mk_loc (1, 13) (1, 15));
                  (* function params and body *)
-                 (3, mk_loc (1, 13) (1, 15));
                ];
          (* block (lexical) *)
          "scope_loc_function_expression"
@@ -272,13 +269,10 @@ let tests =
                [
                  (0, mk_loc (1, 0) (1, 24));
                  (* program *)
-                 (1, mk_loc (1, 0) (1, 24));
-                 (* program (lexical) *)
-                 (2, mk_loc (1, 10) (1, 23));
-                 (* function name (lexical) *)
-                 (3, mk_loc (1, 10) (1, 23));
+                 (1, mk_loc (1, 10) (1, 23));
+                 (* function name *)
+                 (2, mk_loc (1, 21) (1, 23));
                  (* function params and body *)
-                 (4, mk_loc (1, 21) (1, 23));
                ];
          (* block (lexical) *)
          "scope_loc_arrow_function"
@@ -287,24 +281,20 @@ let tests =
                [
                  (0, mk_loc (1, 0) (1, 18));
                  (* program *)
-                 (1, mk_loc (1, 0) (1, 18));
-                 (* program (lexical) *)
-                 (2, mk_loc (1, 10) (1, 17));
+                 (1, mk_loc (1, 10) (1, 17));
                  (* function name (lexical) *)
-                 (3, mk_loc (1, 10) (1, 17));
+                 (2, mk_loc (1, 16) (1, 17));
                ];
          (* function params and body *)
          "scope_loc_for_in"
          >:: mk_scope_builder_scope_loc_test
-               "for (let a in b) {}"
+               "for (let a in b) {}; 42"
                [
-                 (0, mk_loc (1, 0) (1, 19));
+                 (0, mk_loc (1, 0) (1, 23));
                  (* program *)
                  (1, mk_loc (1, 0) (1, 19));
-                 (* program (lexical) *)
-                 (2, mk_loc (1, 0) (1, 19));
                  (* for in (lexical) *)
-                 (3, mk_loc (1, 17) (1, 19));
+                 (2, mk_loc (1, 17) (1, 19));
                ];
          (* block (lexical) *)
          "toplevel_defs_empty" >:: mk_scope_builder_toplevel_scopes_test "" [];

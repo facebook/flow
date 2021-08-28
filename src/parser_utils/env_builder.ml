@@ -164,8 +164,7 @@ module type S = sig
     refinement_of_id: int -> refinement;
   }
 
-  val program_with_scope :
-    ?ignore_toplevel:bool -> (L.t, L.t) Flow_ast.Program.t -> abrupt_kind option * env_info
+  val program_with_scope : (L.t, L.t) Flow_ast.Program.t -> abrupt_kind option * env_info
 
   val program : (L.t, L.t) Flow_ast.Program.t -> Env_api.values * (int -> refinement)
 
@@ -666,7 +665,7 @@ module Make
 
   class env_builder (prepass_info, prepass_values, unbound_names) provider_info =
     object (this)
-      inherit Scope_builder.scope_builder ~with_types:true as super
+      inherit Scope_builder.scope_builder ~flowmin_compatibility:false ~with_types:true as super
 
       val invalidation_caches = Invalidation_api.mk_caches ()
 
@@ -765,7 +764,7 @@ module Make
         SMap.iter (fun _x { val_ref; havoc } -> val_ref := havoc.Havoc.unresolved) env_state.env
 
       method private mk_env =
-        SMap.map (fun (loc, _) ->
+        SMap.map (fun (_, (loc, _)) ->
             {
               val_ref = ref (Val.uninitialized ());
               havoc =
@@ -1604,14 +1603,14 @@ module Make
         stmt
 
       (* We also havoc state when entering functions and exiting calls. *)
-      method! lambda loc params body =
+      method! lambda params body =
         this#expecting_abrupt_completions (fun () ->
             let env = this#env in
             this#run
               (fun () ->
                 this#havoc_uninitialized_env;
                 let completion_state =
-                  this#run_to_completion (fun () -> super#lambda loc params body)
+                  this#run_to_completion (fun () -> super#lambda params body)
                 in
                 this#commit_abrupt_completion_matching
                   AbruptCompletion.(mem [return; throw])
@@ -2500,20 +2499,17 @@ module Make
         this#chain_to_refinement chain
     end
 
-  let program_with_scope ?(ignore_toplevel = false) program =
+  let program_with_scope program =
     let open Hoister in
     let (loc, _) = program in
     let (_ssa_completion_state, ((scopes, ssa_values, _) as prepass)) =
-      Ssa_builder.program_with_scope ~ignore_toplevel program
+      Ssa_builder.program_with_scope ~flowmin_compatibility:false program
     in
     let providers = Provider_api.find_providers program in
     let env_walk = new env_builder prepass providers in
     let bindings =
-      if ignore_toplevel then
-        Bindings.empty
-      else
-        let hoist = new hoister ~with_types:true in
-        hoist#eval hoist#program program
+      let hoist = new hoister ~flowmin_compatibility:false ~with_types:true in
+      hoist#eval hoist#program program
     in
     let completion_state =
       env_walk#run_to_completion (fun () ->
@@ -2529,9 +2525,7 @@ module Make
       } )
 
   let program program =
-    let (_, { env_values; refinement_of_id; _ }) =
-      program_with_scope ~ignore_toplevel:false program
-    in
+    let (_, { env_values; refinement_of_id; _ }) = program_with_scope program in
     (env_values, refinement_of_id)
 
   let rec refinement_ids_of_env_write acc = function

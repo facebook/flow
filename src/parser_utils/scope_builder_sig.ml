@@ -14,15 +14,16 @@ module type S = sig
     type t = Api.info
   end
 
-  val program : ?ignore_toplevel:bool -> with_types:bool -> (L.t, L.t) Flow_ast.Program.t -> Acc.t
+  val program :
+    ?flowmin_compatibility:bool -> with_types:bool -> (L.t, L.t) Flow_ast.Program.t -> Acc.t
 
   class scope_builder :
-    with_types:bool
+    flowmin_compatibility:bool
+    -> with_types:bool
     -> object
          inherit [Acc.t, L.t] Flow_ast_visitor.visitor
 
-         method with_bindings :
-           'a. ?lexical:bool -> L.t -> L.t Hoister.Bindings.t -> ('a -> 'a) -> 'a -> 'a
+         method with_bindings : 'a. ?lexical:bool -> L.t -> L.t Bindings.t -> ('a -> 'a) -> 'a -> 'a
 
          method private scoped_for_statement :
            L.t -> (L.t, L.t) Flow_ast.Statement.For.t -> (L.t, L.t) Flow_ast.Statement.For.t
@@ -39,6 +40,6 @@ module type S = sig
            (L.t, L.t) Flow_ast.Statement.Switch.Case.t list
 
          method private lambda :
-           L.t -> (L.t, L.t) Flow_ast.Function.Params.t -> (L.t, L.t) Flow_ast.Function.body -> unit
+           (L.t, L.t) Flow_ast.Function.Params.t -> (L.t, L.t) Flow_ast.Function.body -> unit
        end
 end

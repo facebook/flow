@@ -15,64 +15,6 @@ open Flow_ast_visitor
 
    TODO: Ideally implemented as a fold, not a map.
 *)
-module Bindings : sig
-  type 'loc t
-
-  type 'loc entry = ('loc, 'loc) Ast.Identifier.t
-
-  val empty : 'loc t
-
-  val singleton : 'loc entry -> 'loc t
-
-  val add : 'loc entry -> 'loc t -> 'loc t
-
-  val push : 'loc t -> 'loc t -> 'loc t
-
-  val exists : ('loc entry -> bool) -> 'loc t -> bool
-
-  val to_assoc : 'loc t -> (string * 'loc Nel.t) list
-
-  val to_map : 'loc t -> 'loc Nel.t SMap.t
-end = struct
-  type 'loc entry = ('loc, 'loc) Ast.Identifier.t
-
-  type 'loc t = 'loc entry list
-
-  let empty = []
-
-  let singleton x = [x]
-
-  let add = List.cons
-
-  let push = List.append
-
-  let exists = List.exists
-
-  let to_assoc t =
-    let (xs, map) =
-      List.fold_left
-        (fun (xs, map) (loc, { Ast.Identifier.name = x; comments = _ }) ->
-          match SMap.find_opt x map with
-          | Some locs -> (xs, SMap.add x (Nel.cons loc locs) map)
-          | None -> (x :: xs, SMap.add x (Nel.one loc) map))
-        ([], SMap.empty)
-        (List.rev t)
-    in
-    List.rev_map (fun x -> (x, Nel.rev @@ SMap.find x map)) xs
-
-  let to_map t =
-    let map =
-      List.fold_left
-        (fun map (loc, { Ast.Identifier.name = x; comments = _ }) ->
-          match SMap.find_opt x map with
-          | Some locs -> SMap.add x (Nel.cons loc locs) map
-          | None -> SMap.add x (loc, []) map)
-        SMap.empty
-        (List.rev t)
-    in
-    SMap.map Nel.rev map
-end
-
 (* TODO: It should be possible to vastly simplify hoisting by overriding the
    general method `pattern_identifier ?kind` for kind = Var | Let | Const that
    was recently introduced to distinguish bindings and assignments from other
@@ -82,102 +24,22 @@ end
    are known to introduce bindings. The logic here is sufficiently tricky that
    we probably should not change it without extensive testing. *)
 
-class ['loc] hoister ~with_types =
+class ['loc] lexical_hoister ~flowmin_compatibility =
   object (this)
     inherit ['loc Bindings.t, 'loc] visitor ~init:Bindings.empty as super
 
-    method private add_binding entry = this#update_acc (Bindings.add entry)
+    val mutable let_kind = Bindings.Let
 
-    (* Ignore expressions. This includes, importantly, function expressions (whose
-       ids should not be hoisted). *)
-    method! expression (expr : ('loc, 'loc) Ast.Expression.t) = expr
+    method private add_let_binding ?kind entry =
+      let kind = Base.Option.value kind ~default:let_kind in
+      this#update_acc Bindings.(add (entry, kind))
 
-    (* Ignore assignment patterns, whose targets should not be hoisted. *)
-    method! assignment_pattern (patt : ('loc, 'loc) Ast.Pattern.t) = patt
+    method private add_const_binding ?kind entry =
+      let kind = Base.Option.value kind ~default:Bindings.Const in
+      this#update_acc Bindings.(add (entry, kind))
 
-    (* Ignore class declarations, since they are lexical bindings (thus not
-       hoisted). *)
-    method! class_ _loc (cls : ('loc, 'loc) Ast.Class.t) = cls
-
-    (* Ignore enum declarations, since they are lexical bindings. *)
-    method! enum_declaration _loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) = enum
-
-    (* Ignore import declarations, since they are lexical bindings (thus not
-       hoisted). *)
-    method! import_declaration _loc (decl : ('loc, 'loc) Ast.Statement.ImportDeclaration.t) = decl
-
-    (* This is visited by function parameters, variable declarations, and catch patterns (but not
-       assignment expressions). *)
-    method! pattern ?kind (expr : ('loc, 'loc) Ast.Pattern.t) =
-      match Utils.unsafe_opt kind with
-      | Ast.Statement.VariableDeclaration.Var ->
-        let open Ast.Pattern in
-        let (_, patt) = expr in
-        begin
-          match patt with
-          | Identifier { Identifier.name; _ } -> this#add_binding name
-          | Object _
-          | Array _ ->
-            run (super#pattern ?kind) expr
-          | Expression _ -> ()
-        end;
-        expr
-      | Ast.Statement.VariableDeclaration.Let
-      | Ast.Statement.VariableDeclaration.Const ->
-        expr
-
-    (* don't hoist let/const bindings *)
-    method! declare_variable loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
-      let open Ast.Statement.DeclareVariable in
-      this#add_binding decl.id;
-      super#declare_variable loc decl
-
-    method! declare_class loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =
-      let open Ast.Statement.DeclareClass in
-      this#add_binding decl.id;
-      super#declare_class loc decl
-
-    method! declare_function loc (decl : ('loc, 'loc) Ast.Statement.DeclareFunction.t) =
-      let open Ast.Statement.DeclareFunction in
-      match Declare_function_utils.declare_function_to_function_declaration_simple loc decl with
-      | Some stmt ->
-        let _ = this#statement (loc, stmt) in
-        decl
-      | None ->
-        this#add_binding decl.id;
-        super#declare_function loc decl
-
-    method! function_declaration _loc (expr : ('loc, 'loc) Ast.Function.t) =
-      let open Ast.Function in
-      let { id; _ } = expr in
-      begin
-        match id with
-        | Some name -> this#add_binding name
-        | None -> ()
-      end;
-      expr
-
-    method! type_alias loc (alias : ('loc, 'loc) Ast.Statement.TypeAlias.t) =
-      let open Ast.Statement.TypeAlias in
-      if with_types then this#add_binding alias.id;
-      super#type_alias loc alias
-
-    method! opaque_type loc (alias : ('loc, 'loc) Ast.Statement.OpaqueType.t) =
-      let open Ast.Statement.OpaqueType in
-      if with_types then this#add_binding alias.id;
-      super#opaque_type loc alias
-
-    method! interface loc (interface : ('loc, 'loc) Ast.Statement.Interface.t) =
-      let open Ast.Statement.Interface in
-      if with_types then this#add_binding interface.id;
-      super#interface loc interface
-  end
-
-class ['loc] lexical_hoister ~with_types =
-  object (this)
-    inherit ['loc Bindings.t, 'loc] visitor ~init:Bindings.empty as super
-
-    method private add_binding entry = this#update_acc (Bindings.add entry)
+    method private add_function_binding entry =
+      this#update_acc Bindings.(add (entry, Bindings.Function))
 
     (* Ignore all statements except variable declarations, class declarations, and
        import declarations. The ignored statements cannot contain lexical
@@ -187,12 +49,30 @@ class ['loc] lexical_hoister ~with_types =
       match stmt with
       | (_, VariableDeclaration _)
       | (_, ClassDeclaration _)
+      | (_, DeclareClass _)
       | (_, EnumDeclaration _)
       | (_, ExportNamedDeclaration _)
       | (_, ExportDefaultDeclaration _)
-      | (_, ImportDeclaration _) ->
+      | (_, ImportDeclaration _)
+      | (_, Labeled _) ->
         super#statement stmt
-      | _ -> stmt
+      | (_, FunctionDeclaration _)
+      | (_, DeclareFunction _) ->
+        this#flowmin_compatibility_statement stmt
+      | _ -> this#nonlexical_statement stmt
+
+    method flowmin_compatibility_statement stmt =
+      (* Flowmin treats function declarations as vars, even though
+         they're actually lets *)
+      if flowmin_compatibility then
+        this#nonlexical_statement stmt
+      else
+        super#statement stmt
+
+    method nonlexical_statement stmt = stmt
+
+    (* Base class statement, needed for subclass *)
+    method base_statement = super#statement
 
     (* Ignore expressions. This includes, importantly, initializers of variable
        declarations. *)
@@ -205,10 +85,16 @@ class ['loc] lexical_hoister ~with_types =
       | None -> expr
       | Some (Ast.Statement.VariableDeclaration.Let | Ast.Statement.VariableDeclaration.Const) ->
         let open Ast.Pattern in
+        let add_binding =
+          match kind with
+          | Some Ast.Statement.VariableDeclaration.Let -> this#add_let_binding ?kind:None
+          | Some Ast.Statement.VariableDeclaration.Const -> this#add_const_binding ?kind:None
+          | _ -> Utils_js.assert_false "Only lets and consts allowed"
+        in
         let (_, patt) = expr in
         begin
           match patt with
-          | Identifier { Identifier.name; _ } -> this#add_binding name
+          | Identifier { Identifier.name; _ } -> add_binding name
           | Object _
           | Array _ ->
             run (super#pattern ?kind) expr
@@ -216,6 +102,22 @@ class ['loc] lexical_hoister ~with_types =
         end;
         expr
       | Some Ast.Statement.VariableDeclaration.Var -> expr
+
+    method base_pattern = super#pattern
+
+    method! function_param_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =
+      let old_lkind = let_kind in
+      let_kind <- Bindings.Parameter;
+      let res = this#binding_pattern ~kind:Ast.Statement.VariableDeclaration.Let expr in
+      let_kind <- old_lkind;
+      res
+
+    method! catch_clause_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =
+      let old_lkind = let_kind in
+      let_kind <- Bindings.CatchParameter;
+      let res = this#binding_pattern ~kind:Ast.Statement.VariableDeclaration.Let expr in
+      let_kind <- old_lkind;
+      res
 
     method! class_ _loc (cls : ('loc, 'loc) Ast.Class.t) =
       let open Ast.Class in
@@ -232,16 +134,105 @@ class ['loc] lexical_hoister ~with_types =
       in
       begin
         match id with
-        | Some name -> this#add_binding name
+        | Some name -> this#add_let_binding ~kind:Bindings.Class name
         | None -> ()
       end;
       cls
 
+    method! function_declaration _loc (expr : ('loc, 'loc) Ast.Function.t) =
+      let open Ast.Function in
+      let { id; _ } = expr in
+      begin
+        match id with
+        | Some name -> this#add_function_binding name
+        | None -> ()
+      end;
+      expr
+
+    method! declare_class loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =
+      let open Ast.Statement.DeclareClass in
+      this#add_let_binding ~kind:Bindings.Class decl.id;
+      super#declare_class loc decl
+
+    method! declare_function loc (decl : ('loc, 'loc) Ast.Statement.DeclareFunction.t) =
+      let open Ast.Statement.DeclareFunction in
+      match Declare_function_utils.declare_function_to_function_declaration_simple loc decl with
+      | Some stmt ->
+        let _ = this#statement (loc, stmt) in
+        decl
+      | None ->
+        this#add_function_binding decl.id;
+        super#declare_function loc decl
+
     method! enum_declaration _loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
       let open Ast.Statement.EnumDeclaration in
       let { id; _ } = enum in
-      this#add_binding id;
+      this#add_const_binding ~kind:Bindings.Enum id;
       enum
+  end
+
+class ['loc] hoister ~flowmin_compatibility ~with_types =
+  object (this)
+    inherit ['loc] lexical_hoister ~flowmin_compatibility as super
+
+    val mutable lexical = true
+
+    method private add_var_binding entry = this#update_acc Bindings.(add (entry, Bindings.Var))
+
+    method private add_type_binding entry = this#update_acc Bindings.(add (entry, Bindings.Type))
+
+    method! private add_const_binding ?kind entry =
+      if lexical then super#add_const_binding ?kind entry
+
+    method! private add_let_binding ?kind entry = if lexical then super#add_let_binding ?kind entry
+
+    method! flowmin_compatibility_statement = this#base_statement
+
+    method! nonlexical_statement stmt =
+      let cur_lex = lexical in
+      lexical <- false;
+      let res = super#base_statement stmt in
+      lexical <- cur_lex;
+      res
+
+    (* This is visited by function parameters, variable declarations, and catch patterns (but not
+       assignment expressions). *)
+    method! pattern ?kind (expr : ('loc, 'loc) Ast.Pattern.t) =
+      let open Ast.Pattern in
+      let (_, patt) = expr in
+      match kind with
+      | Some Ast.Statement.VariableDeclaration.Var ->
+        begin
+          match patt with
+          | Identifier { Identifier.name; _ } -> this#add_var_binding name
+          | Object _
+          | Array _ ->
+            run (super#base_pattern ?kind) expr
+          | Expression _ -> ()
+        end;
+        expr
+      | _ -> super#pattern ?kind expr
+
+    (* don't hoist let/const bindings *)
+    method! declare_variable loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
+      let open Ast.Statement.DeclareVariable in
+      this#add_var_binding decl.id;
+      super#declare_variable loc decl
+
+    method! type_alias loc (alias : ('loc, 'loc) Ast.Statement.TypeAlias.t) =
+      let open Ast.Statement.TypeAlias in
+      if with_types then this#add_type_binding alias.id;
+      super#type_alias loc alias
+
+    method! opaque_type loc (alias : ('loc, 'loc) Ast.Statement.OpaqueType.t) =
+      let open Ast.Statement.OpaqueType in
+      if with_types then this#add_type_binding alias.id;
+      super#opaque_type loc alias
+
+    method! interface loc (interface : ('loc, 'loc) Ast.Statement.Interface.t) =
+      let open Ast.Statement.Interface in
+      if with_types then this#add_type_binding interface.id;
+      super#interface loc interface
 
     method! import_declaration loc decl =
       let open Ast.Statement.ImportDeclaration in
@@ -262,24 +253,23 @@ class ['loc] lexical_hoister ~with_types =
       let allowed_kind = function
         | None
         | Some ImportValue ->
-          true
+          (true, this#add_const_binding ~kind:Bindings.Import)
         | Some ImportType
         | Some ImportTypeof ->
-          with_types
+          (with_types, this#add_type_binding)
       in
       (match specifier with
       | { local = Some binding; remote = _; kind }
-      | { local = None; remote = binding; kind }
-        when allowed_kind kind ->
-        this#add_binding binding
-      | _ -> ());
+      | { local = None; remote = binding; kind } ->
+        let (allowed, add_binding) = allowed_kind kind in
+        if allowed then add_binding binding);
       specifier
 
     method! import_default_specifier (id : ('loc, 'loc) Ast.Identifier.t) =
-      this#add_binding id;
+      this#add_const_binding ~kind:Bindings.Import id;
       id
 
     method! import_namespace_specifier _loc (id : ('loc, 'loc) Ast.Identifier.t) =
-      this#add_binding id;
+      this#add_const_binding ~kind:Bindings.Import id;
       id
   end
