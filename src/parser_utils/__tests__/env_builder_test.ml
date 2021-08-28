@@ -28,14 +28,14 @@ let printer with_locs locmap =
             Printf.sprintf "%s, " (print_locs locs)
           else
             "")
-          (Env_builder.With_Loc.show_refinement_kind refinement))
+          (Env_builder.With_Loc.Env_api.Refi.show_refinement_kind refinement))
       kvlist
   in
   Printf.sprintf "[ %s ]" (String.concat "; " strlist)
 
 let mk_sources_test contents expected_values ctxt =
   let program = parse contents in
-  let (_, info) = Env_builder.With_Loc.program_with_scope program in
+  let (_, info) = Env_builder.With_Loc.program_with_scope () program in
   let printer locmap =
     let kvlist = LocMap.bindings locmap in
     let strlist =
@@ -49,7 +49,7 @@ let mk_sources_test contents expected_values ctxt =
     in
     Printf.sprintf "[ %s ]" (String.concat "; " strlist)
   in
-  let use_kinds = Env_builder.With_Loc.source_bindings info in
+  let use_kinds = Env_builder.With_Loc.Env_api.source_bindings info in
   assert_equal
     ~ctxt
     ~cmp:(eq printer)
@@ -59,8 +59,8 @@ let mk_sources_test contents expected_values ctxt =
     use_kinds
 
 let mk_source_of_use_test contents target_loc expected_values ctxt =
-  let (_, info) = Env_builder.With_Loc.program_with_scope (parse contents) in
-  let locs = Env_builder.With_Loc.sources_of_use info target_loc in
+  let (_, info) = Env_builder.With_Loc.program_with_scope () (parse contents) in
+  let locs = Env_api.With_Loc.sources_of_use info target_loc in
   assert_equal
     ~ctxt
     ~cmp:(eq print_locs)
@@ -71,7 +71,7 @@ let mk_source_of_use_test contents target_loc expected_values ctxt =
 
 let mk_order_test contents expected_values ctxt =
   let ((_, { Flow_ast.Program.statements; _ }) as program) = parse contents in
-  let (_, info) = Env_builder.With_Loc.program_with_scope program in
+  let (_, info) = Env_builder.With_Loc.program_with_scope () program in
   let deps = Order_builder.With_Loc.mk_order info statements in
   let deps_string =
     Base.List.map

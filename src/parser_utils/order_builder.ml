@@ -16,12 +16,12 @@ end
 
 module Make
     (L : Loc_sig.S)
-    (Env_builder : Env_builder.S with module L = L)
+    (Env_api : Env_api.S with module L = L)
     (Convert : ConvertLoc with module L = L) =
 struct
-  module Provider_api = Env_builder.Provider_api
+  module Provider_api = Env_api.Provider_api
 
-  class use_finder ({ Env_builder.providers; _ } as env) =
+  class use_finder ({ Env_api.providers; _ } as env) =
     object (this)
       inherit [LocSet.t, L.t] Flow_ast_visitor.visitor ~init:LocSet.empty as super
 
@@ -37,7 +37,7 @@ struct
               l)
 
       method! identifier ((loc, _) as id) =
-        this#update_convert_acc (Env_builder.sources_of_use env loc |> L.LSet.elements);
+        this#update_convert_acc (Env_api.sources_of_use env loc |> L.LSet.elements);
         id
 
       method! pattern_identifier ?kind ((loc, _) as id) =
@@ -88,7 +88,7 @@ struct
 end
 
 module With_Loc =
-  Make (Loc_sig.LocS) (Env_builder.With_Loc)
+  Make (Loc_sig.LocS) (Env_api.With_Loc)
     (struct
       module L = Loc_sig.LocS
 
@@ -96,7 +96,7 @@ module With_Loc =
     end)
 
 module With_ALoc =
-  Make (Loc_sig.ALocS) (Env_builder.With_ALoc)
+  Make (Loc_sig.ALocS) (Env_api.With_ALoc)
     (struct
       module L = Loc_sig.ALocS
 

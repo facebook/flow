@@ -13,6 +13,10 @@ open TypeUtil
 open Utils_js
 module FlowError = Flow_error
 
+type cx = Context.t
+
+type loc = ALoc.t
+
 (* These possible_* functions would ideally be in constraint.ml, but since they use
  * Context and Context depends on Constraint we need to extract these functions
  * to a separate module in order to avoid a circular dependency *)

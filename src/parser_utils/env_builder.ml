@@ -103,178 +103,65 @@ let extract_number_literal node =
 
 let error_todo = ()
 
+module type C = sig
+  type t
+end
+
+module type F = sig
+  type cx
+
+  type loc
+
+  val add_output : cx -> ?trace:Type.trace -> loc Error_message.t' -> unit
+end
+
 module type S = sig
   module L : Loc_sig.S
 
-  module Ssa_api : Ssa_api.S with module L = L
-
   module Env_api : Env_api.S with module L = L
 
-  module Scope_api : Scope_api_sig.S with module L = L
-
-  module Provider_api : Provider_api.S with module L = L
+  type cx
 
   type abrupt_kind
 
   exception AbruptCompletionExn of abrupt_kind
 
-  type refinement_kind =
-    | AndR of refinement_kind * refinement_kind
-    | OrR of refinement_kind * refinement_kind
-    | NotR of refinement_kind
-    | TruthyR of L.t
-    | NullR
-    | UndefinedR
-    | MaybeR
-    | InstanceOfR of L.t
-    | IsArrayR
-    | BoolR of L.t
-    | FunctionR
-    | NumberR of L.t
-    | ObjectR
-    | StringR of L.t
-    | SymbolR of L.t
-    | SingletonBoolR of {
-        loc: L.t;
-        sense: bool;
-        lit: bool;
-      }
-    | SingletonStrR of {
-        loc: L.t;
-        sense: bool;
-        lit: string;
-      }
-    | SingletonNumR of {
-        loc: L.t;
-        sense: bool;
-        lit: float * string;
-      }
-    | SentinelR of string * L.t
-  [@@deriving show { with_path = false }]
+  val program_with_scope :
+    cx -> (L.t, L.t) Flow_ast.Program.t -> abrupt_kind option * Env_api.env_info
 
-  val show_refinement_kind_without_locs : refinement_kind -> string
-
-  type refinement = L.LSet.t * refinement_kind
-
-  type env_info = {
-    scopes: Scope_api.info;
-    ssa_values: Ssa_api.values;
-    env_values: Env_api.values;
-    providers: Provider_api.info;
-    refinement_of_id: int -> refinement;
-  }
-
-  val program_with_scope : (L.t, L.t) Flow_ast.Program.t -> abrupt_kind option * env_info
-
-  val program : (L.t, L.t) Flow_ast.Program.t -> Env_api.values * (int -> refinement)
-
-  val sources_of_use : env_info -> L.t -> L.LSet.t
-
-  val source_bindings : env_info -> L.LSet.t L.LMap.t
+  val program : cx -> (L.t, L.t) Flow_ast.Program.t -> Env_api.values * (int -> Env_api.refinement)
 end
 
 module Make
     (L : Loc_sig.S)
+    (Scope_api : Scope_api_sig.S with module L = L)
     (Ssa_api : Ssa_api.S with module L = L)
-    (Scope_api : Scope_api_sig.S with module L = Ssa_api.L)
-    (Env_api : Env_api.S with module L = L) :
-  S
-    with module L = L
-     and module Ssa_api = Ssa_api
-     and module Scope_api = Scope_api
-     and module Env_api = Env_api = struct
+    (Env_api : Env_api.S
+                 with module L = L
+                  and module Scope_api = Scope_api
+                  and module Ssa_api = Ssa_api)
+    (Context : C)
+    (FlowAPIUtils : F with type cx = Context.t) :
+  S with module L = L and module Env_api = Env_api and type cx = Context.t = struct
+  let _f = FlowAPIUtils.add_output
+  (* To make ocaml not complain, will be removed when FlowAPIUtils module is used *)
+
   module L = L
-  module Ssa_api = Ssa_api
-  module Scope_api = Scope_api
-  module Scope_builder = Scope_builder.Make (L) (Scope_api)
+
+  module Scope_builder : Scope_builder_sig.S with module L = L and module Api = Scope_api =
+    Scope_builder.Make (L) (Scope_api)
+
   module Ssa_builder = Ssa_builder.Make (L) (Ssa_api) (Scope_builder)
   module Invalidation_api = Invalidation_api.Make (L) (Scope_api) (Ssa_api)
-
-  module Provider_api : Provider_api.S with module L = L = Provider_api.Make (L)
-
   module Env_api = Env_api
+
+  module Provider_api : Provider_api.S with type info = Env_api.Provider_api.info and module L = L =
+    Env_api.Provider_api
+
   open Scope_builder
+  open Env_api.Refi
 
-  type refinement_kind =
-    | AndR of refinement_kind * refinement_kind
-    | OrR of refinement_kind * refinement_kind
-    | NotR of refinement_kind
-    | TruthyR of L.t
-    | NullR
-    | UndefinedR
-    | MaybeR
-    | InstanceOfR of L.t
-    | IsArrayR
-    | BoolR of L.t
-    | FunctionR
-    | NumberR of L.t
-    | ObjectR
-    | StringR of L.t
-    | SymbolR of L.t
-    | SingletonBoolR of {
-        loc: L.t;
-        sense: bool;
-        lit: bool;
-      }
-    | SingletonStrR of {
-        loc: L.t;
-        sense: bool;
-        lit: string;
-      }
-    | SingletonNumR of {
-        loc: L.t;
-        sense: bool;
-        lit: float * string;
-      }
-    | SentinelR of string * L.t
-  [@@deriving show { with_path = false }]
-
-  let rec show_refinement_kind_without_locs = function
-    | AndR (l, r) ->
-      Printf.sprintf
-        "And (%s, %s)"
-        (show_refinement_kind_without_locs l)
-        (show_refinement_kind_without_locs r)
-    | OrR (l, r) ->
-      Printf.sprintf
-        "Or (%s, %s)"
-        (show_refinement_kind_without_locs l)
-        (show_refinement_kind_without_locs r)
-    | NotR r -> Printf.sprintf "Not (%s)" (show_refinement_kind_without_locs r)
-    | TruthyR _ -> "Truthy"
-    | NullR -> "Null"
-    | UndefinedR -> "Undefined"
-    | MaybeR -> "Maybe"
-    | InstanceOfR _ -> "instanceof"
-    | IsArrayR -> "isArray"
-    | BoolR _ -> "bool"
-    | FunctionR -> "function"
-    | NumberR _ -> "number"
-    | ObjectR -> "object"
-    | StringR _ -> "string"
-    | SymbolR _ -> "symbol"
-    | SingletonBoolR { lit; sense; _ } -> string_of_bool (lit = sense)
-    | SingletonStrR { lit; sense; _ } ->
-      if not sense then
-        Printf.sprintf "Not (%s)" lit
-      else
-        lit
-    | SingletonNumR { lit = (_, lit); sense; _ } ->
-      if not sense then
-        Printf.sprintf "Not (%s)" lit
-      else
-        lit
-    | SentinelR (prop, _) -> Printf.sprintf "SentinelR %s" prop
-
-  type refinement = L.LSet.t * refinement_kind
-
-  type env_info = {
-    scopes: Scope_api.info;
-    ssa_values: Ssa_api.values;
-    env_values: Env_api.values;
-    providers: Provider_api.info;
-    refinement_of_id: int -> refinement;
-  }
+  type cx = Context.t
 
   type refinement_chain =
     | BASE of refinement
@@ -663,7 +550,7 @@ module Make
       unbound_names
       SMap.empty
 
-  class env_builder (prepass_info, prepass_values, unbound_names) provider_info =
+  class env_builder _cx (prepass_info, prepass_values, unbound_names) provider_info =
     object (this)
       inherit Scope_builder.scope_builder ~flowmin_compatibility:false ~with_types:true as super
 
@@ -2499,14 +2386,14 @@ module Make
         this#chain_to_refinement chain
     end
 
-  let program_with_scope program =
+  let program_with_scope cx program =
     let open Hoister in
     let (loc, _) = program in
     let (_ssa_completion_state, ((scopes, ssa_values, _) as prepass)) =
       Ssa_builder.program_with_scope ~flowmin_compatibility:false program
     in
     let providers = Provider_api.find_providers program in
-    let env_walk = new env_builder prepass providers in
+    let env_walk = new env_builder cx prepass providers in
     let bindings =
       let hoist = new hoister ~flowmin_compatibility:false ~with_types:true in
       hoist#eval hoist#program program
@@ -2517,43 +2404,32 @@ module Make
     in
     ( completion_state,
       {
-        scopes;
+        Env_api.scopes;
         ssa_values;
         env_values = env_walk#values;
         providers;
         refinement_of_id = env_walk#refinement_of_id;
       } )
 
-  let program program =
-    let (_, { env_values; refinement_of_id; _ }) = program_with_scope program in
+  let program cx program =
+    let (_, { Env_api.env_values; refinement_of_id; _ }) = program_with_scope cx program in
     (env_values, refinement_of_id)
-
-  let rec refinement_ids_of_env_write acc = function
-    | Env_api.Refinement { refinement_id; writes } ->
-      List.fold_left refinement_ids_of_env_write (refinement_id :: acc) writes
-    | _ -> acc
-
-  let sources_of_use { env_values = vals; refinement_of_id; _ } loc =
-    let write_locs =
-      L.LMap.find_opt loc vals
-      |> Base.Option.value_map ~default:[] ~f:(List.map Env_api.writes_of_write_loc)
-      |> List.flatten
-      |> L.LSet.of_list
-    in
-    let refi_locs =
-      L.LMap.find_opt loc vals
-      |> Base.Option.value_map ~default:[] ~f:(List.fold_left refinement_ids_of_env_write [])
-      |> List.map (fun id -> fst (refinement_of_id id))
-      |> List.fold_left L.LSet.union L.LSet.empty
-    in
-    L.LSet.union refi_locs write_locs
-
-  let source_bindings ({ env_values = vals; _ } as info) =
-    let keys = L.LSet.of_list (L.LMap.keys vals) in
-    L.LSet.fold (fun k acc -> L.LMap.add k (sources_of_use info k) acc) keys L.LMap.empty
 end
 
-module With_Loc = Make (Loc_sig.LocS) (Ssa_api.With_Loc) (Scope_api.With_Loc) (Env_api.With_Loc)
-module With_ALoc =
-  Make (Loc_sig.ALocS) (Ssa_api.With_ALoc) (Scope_api.With_ALoc) (Env_api.With_ALoc)
-include With_ALoc
+module DummyCx = struct
+  type t = unit
+end
+
+module DummyFlow = struct
+  type cx = unit
+
+  type loc = Loc.t
+
+  let add_output _ ?trace _ = ignore trace
+end
+
+module With_Loc =
+  Make (Loc_sig.LocS) (Scope_api.With_Loc) (Ssa_api.With_Loc) (Env_api.With_Loc) (DummyCx)
+    (DummyFlow)
+module Make_of_flow =
+  Make (Loc_sig.ALocS) (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api.With_ALoc)

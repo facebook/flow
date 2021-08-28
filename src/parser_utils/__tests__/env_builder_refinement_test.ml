@@ -22,9 +22,7 @@ let print_values refinement_of_id =
         Reason.(desc_of_reason reason |> string_of_desc)
     | Refinement { refinement_id; writes } ->
       let refinement = refinement_of_id refinement_id in
-      let refinement_str =
-        Env_builder.With_Loc.show_refinement_kind_without_locs (snd refinement)
-      in
+      let refinement_str = show_refinement_kind_without_locs (snd refinement) in
       let writes_str = String.concat "," (List.map print_value writes) in
       Printf.sprintf "{refinement = %s; writes = %s}" refinement_str writes_str
     | Global name -> "Global " ^ name
@@ -46,7 +44,7 @@ let print_values refinement_of_id =
 [@@@ocamlformat "disable=true"]
 
 let print_ssa_test contents =
-  let refined_reads, refinement_of_id = Env_builder.With_Loc.program (parse contents) in
+  let refined_reads, refinement_of_id = Env_builder.With_Loc.program () (parse contents) in
   print_values refinement_of_id refined_reads
 
 let%expect_test "logical_expr" =

@@ -394,7 +394,7 @@ let promote_non_const cx name loc spec =
     (None, spec)
   else
     match Context.use_def cx with
-    | Some { Env_builder.scopes = info; ssa_values = values; _ } ->
+    | Some { Env_api.scopes = info; ssa_values = values; _ } ->
       if spec <> Entry.ConstLike && Invalidation_api.is_const_like info values loc then
         (None, Entry.ConstLike)
       else if spec <> Entry.NotWrittenByClosure then

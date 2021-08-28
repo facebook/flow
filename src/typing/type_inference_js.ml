@@ -11,6 +11,7 @@ module Ast = Flow_ast
 (* infer phase services *)
 
 module ImpExp = Import_export
+module EnvBuilder = Env_builder.Make_of_flow (Context) (Flow_js_utils)
 
 (**********)
 (* Driver *)
@@ -403,7 +404,7 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
   in
 
   let module_ref = Context.module_ref cx in
-  let (_, use_def) = Env_builder.program_with_scope aloc_ast in
+  let (_, use_def) = EnvBuilder.program_with_scope cx aloc_ast in
   Context.set_use_def cx use_def;
 
   let reason_exports_module =

@@ -204,7 +204,7 @@ type t = {
   mutable require_map: Type.tvar ALocMap.t;
   trust_constructor: unit -> Trust.trust_rep;
   mutable declare_module_ref: Module_info.t option;
-  mutable use_def: Env_builder.env_info option;
+  mutable use_def: Env_api.env_info option;
   mutable exported_locals: ALocIDSet.t;
 }
 
