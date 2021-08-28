@@ -12,6 +12,8 @@ module type S = sig
 
   type info
 
+  val empty : info
+
   val is_provider : info -> L.t -> bool
 
   val get_providers_for_toplevel_var : string -> info -> L.LSet.t option
@@ -42,6 +44,14 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
     all_annotated_providers: L.LSet.t;
     raw_env: env;
   }
+
+  let empty =
+    {
+      all_entries = EntrySet.empty;
+      all_exact_providers = L.LSet.empty;
+      all_annotated_providers = L.LSet.empty;
+      raw_env = Nel.one (new_scope ~kind:Var);
+    }
 
   let all_exact_providers entries =
     EntrySet.fold (fun { provider_locs; _ } -> L.LSet.union provider_locs) entries L.LSet.empty

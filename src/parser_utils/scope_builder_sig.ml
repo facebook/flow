@@ -12,6 +12,8 @@ module type S = sig
 
   module Acc : sig
     type t = Api.info
+
+    val init : t
   end
 
   val program :

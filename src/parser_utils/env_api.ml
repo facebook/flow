@@ -83,6 +83,8 @@ module type S = sig
     refinement_of_id: int -> Refi.refinement;
   }
 
+  val empty : env_info
+
   val write_locs_of_read_loc : values -> read_loc -> write_locs
 
   val writes_of_write_loc : write_loc -> L.t list
@@ -106,6 +108,9 @@ module Make
   module L = L
   module Ssa_api = Ssa_api
   module Scope_api = Scope_api
+
+  module Scope_builder : Scope_builder_sig.S with module L = L and module Api = Scope_api =
+    Scope_builder.Make (L) (Scope_api)
 
   module Provider_api : Provider_api.S with module L = L = Provider_api.Make (L)
 
@@ -177,6 +182,15 @@ module Make
     providers: Provider_api.info;
     refinement_of_id: int -> refinement;
   }
+
+  let empty =
+    {
+      scopes = Scope_builder.Acc.init;
+      ssa_values = L.LMap.empty;
+      env_values = L.LMap.empty;
+      providers = Provider_api.empty;
+      refinement_of_id = (fun _ -> failwith "Empty env info");
+    }
 
   let rec refinement_ids_of_ssa_write acc = function
     | Refinement { refinement_id; writes } ->
