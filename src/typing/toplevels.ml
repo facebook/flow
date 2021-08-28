@@ -103,10 +103,10 @@ module DependencyOrdering : Ordering with type loc = ALoc.t = struct
   type loc = ALoc.t
 
   let make cx stmts =
-    match Context.use_def cx with
-    | None -> None
-    | Some _ when Context.reorder_checking cx = Options.Lexical -> None
-    | Some info ->
+    if Context.reorder_checking cx = Options.Lexical then
+      None
+    else
+      let { Loc_env.var_info = info; _ } = Context.environment cx in
       let int_loc =
         Base.List.foldi ~f:(fun i int_loc (loc, _) -> IMap.add i loc int_loc) ~init:IMap.empty stmts
       in

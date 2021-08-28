@@ -389,6 +389,10 @@ let add_require_tvars ~unresolved_tvar =
             (require_loc_map module_sig))
         file_sig.declare_modules)
 
+let initialize_env cx aloc_ast =
+  let (_abrupt_completion, info) = EnvBuilder.program_with_scope cx aloc_ast in
+  Context.set_environment cx { Loc_env.types = EnvBuilder.L.LMap.empty; var_info = info }
+
 (* build module graph *)
 (* Lint suppressions are handled iff lint_severities is Some. *)
 let infer_ast ~lint_severities cx filename comments aloc_ast =
@@ -404,8 +408,8 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
   in
 
   let module_ref = Context.module_ref cx in
-  let (_, use_def) = EnvBuilder.program_with_scope cx aloc_ast in
-  Context.set_use_def cx use_def;
+
+  initialize_env cx aloc_ast;
 
   let reason_exports_module =
     let desc = Reason.RModule module_ref in
@@ -468,6 +472,9 @@ let infer_lib_file ~exclude_syms ~lint_severities ~file_sig cx ast =
     add_require_tvars ~unresolved_tvar:Tvar.mk_no_wrap cx file_sig
   in
   let module_scope = Scope.fresh ~var_scope_kind:Scope.Global () in
+
+  initialize_env cx aloc_ast;
+
   Env.init_env ~exclude_syms module_scope;
 
   ignore (infer_core cx aloc_statements : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t list);

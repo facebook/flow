@@ -297,7 +297,7 @@ val implicit_instantiation_checks : t -> Implicit_instantiation_check.t list
 
 val inferred_indexers : t -> Type.dicttype list ALocMap.t
 
-val use_def : t -> Env_api.env_info option
+val environment : t -> Loc_env.t
 
 val pid_prefix : t -> string
 
@@ -387,7 +387,7 @@ val set_exists_checks : t -> ExistsCheck.t ALocMap.t -> unit
 
 val set_exists_excuses : t -> ExistsCheck.t ALocMap.t -> unit
 
-val set_use_def : t -> Env_api.env_info -> unit
+val set_environment : t -> Loc_env.t -> unit
 
 val set_module_map : t -> Type.t NameUtils.Map.t -> unit
 

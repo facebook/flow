@@ -204,7 +204,7 @@ type t = {
   mutable require_map: Type.tvar ALocMap.t;
   trust_constructor: unit -> Trust.trust_rep;
   mutable declare_module_ref: Module_info.t option;
-  mutable use_def: Env_api.env_info option;
+  mutable environment: Loc_env.t;
   mutable exported_locals: ALocIDSet.t;
 }
 
@@ -350,7 +350,7 @@ let make ccx metadata file aloc_table module_ref phase =
     require_map = ALocMap.empty;
     trust_constructor = Trust.literal_trust;
     declare_module_ref = None;
-    use_def = None;
+    environment = Loc_env.empty;
     exported_locals = ALocIDSet.empty;
   }
 
@@ -553,7 +553,7 @@ let inferred_indexers cx = cx.ccx.inferred_indexers
 
 let exists_instantiations cx = cx.ccx.exists_instantiations
 
-let use_def cx = cx.use_def
+let environment cx = cx.environment
 
 let automatic_require_default cx = cx.metadata.automatic_require_default
 
@@ -681,7 +681,7 @@ let set_exists_checks cx exists_checks = cx.ccx.exists_checks <- exists_checks
 
 let set_exists_excuses cx exists_excuses = cx.ccx.exists_excuses <- exists_excuses
 
-let set_use_def cx use_def = cx.use_def <- Some use_def
+let set_environment cx env = cx.environment <- env
 
 let set_local_env cx exported_locals = cx.exported_locals <- exported_locals
 
