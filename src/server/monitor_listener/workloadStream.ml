@@ -22,6 +22,7 @@ type parallelizable_workload = ServerEnv.env -> unit Lwt.t
 
 type 'a item = {
   enqueue_time: float;
+  name: string;
   workload: 'a;
 }
 
@@ -43,21 +44,23 @@ let create () =
   }
 
 (* Add a non-parallelizable workload to the stream and wake up anyone waiting *)
-let push workload stream =
+let push ~name workload stream =
   let enqueue_time = Unix.gettimeofday () in
-  stream.nonparallelizable <- ImmQueue.push stream.nonparallelizable { enqueue_time; workload };
+  stream.nonparallelizable <-
+    ImmQueue.push stream.nonparallelizable { enqueue_time; name; workload };
   Lwt_condition.broadcast stream.signal ()
 
 (* Add a parallelizable workload to the stream and wake up anyone waiting *)
-let push_parallelizable workload stream =
+let push_parallelizable ~name workload stream =
   let enqueue_time = Unix.gettimeofday () in
-  stream.parallelizable <- ImmQueue.push stream.parallelizable { enqueue_time; workload };
+  stream.parallelizable <- ImmQueue.push stream.parallelizable { enqueue_time; name; workload };
   Lwt_condition.broadcast stream.signal ()
 
 (* Add a parallelizable workload to the front of the stream and wake up anyone waiting *)
-let requeue_parallelizable workload stream =
+let requeue_parallelizable ~name workload stream =
   let enqueue_time = Unix.gettimeofday () in
-  stream.requeued_parallelizable <- { enqueue_time; workload } :: stream.requeued_parallelizable;
+  stream.requeued_parallelizable <-
+    { enqueue_time; name; workload } :: stream.requeued_parallelizable;
   Lwt_condition.broadcast stream.signal ()
 
 (* Cast a parallelizable workload to a nonparallelizable workload. *)
