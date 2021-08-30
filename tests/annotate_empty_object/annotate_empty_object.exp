@@ -1,4 +1,4 @@
->>> test.js (#changes: 14)
+>>> test.js (#changes: 13)
 //@flow
 
 declare var key : string;
@@ -18,7 +18,14 @@ a.key = 4;
 
 
 declare var arr : Array<string>;
-arr.reduce((acc, key) => { acc[key] = 4; return acc }, ({}: { [string]: number })) // annot
+arr.reduce<{ [string]: number }>(
+  (acc, key) => {
+    acc[key] = 4;
+    return acc;
+  },
+  {},
+) // annot on the targ to reduce
+
 
 
 function foo(x) {

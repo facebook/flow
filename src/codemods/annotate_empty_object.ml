@@ -105,6 +105,35 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       let error _ = Ast.Type.Available (Loc.none, flowfixme_ast) in
       this#opt_annotate ~f ~error ~expr:None ploc ty annot
 
+    method! call cloc expr =
+      let open Ast.Expression in
+      let open Call in
+      let { callee; targs; arguments; comments } = expr in
+      let open Member in
+      match (callee, arguments, targs) with
+      | ( (_, Member { property = PropertyIdentifier (_, { Ast.Identifier.name = "reduce"; _ }); _ }),
+          (_, { ArgList.arguments = [_; Expression (loc, Object { Object.properties = []; _ })]; _ }),
+          None ) ->
+        let ty_result = Codemod_annotator.get_ty cctx ~preserve_literals ~max_type_size loc in
+        (match ty_result with
+        | Ok (Ty.Obj ({ Ty.obj_props = []; _ } as ty)) ->
+          let ty_obj = this#unsealed_annot loc ty in
+          begin
+            match ty_obj.Ty.obj_kind with
+            | Ty.IndexedObj _ ->
+              begin
+                match this#get_annot cloc (Ok (Ty.Obj ty_obj)) (Ast.Type.Missing cloc) with
+                | Ast.Type.Available (_, t) ->
+                  let targlist = [CallTypeArg.Explicit t] in
+                  let targs = Some (cloc, { CallTypeArgs.arguments = targlist; comments = None }) in
+                  { callee; arguments; comments; targs }
+                | _ -> super#call cloc expr
+              end
+            | _ -> super#call cloc expr
+          end
+        | _ -> super#call cloc expr)
+      | _ -> super#call cloc expr
+
     method! expression expr =
       let open Ast.Expression in
       match expr with

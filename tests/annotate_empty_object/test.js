@@ -17,7 +17,7 @@ a.key = 4;
 
 
 declare var arr : Array<string>;
-arr.reduce((acc, key) => { acc[key] = 4; return acc }, {}) // annot
+arr.reduce((acc, key) => { acc[key] = 4; return acc }, {}) // annot on the targ to reduce
 
 
 function foo(x) {
