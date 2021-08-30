@@ -26,9 +26,11 @@ type 'a item = {
   workload: 'a;
 }
 
+(* INVARIANT: requeued_parallelizable_length = List.length requeued_parallelizable  *)
 type t = {
   mutable parallelizable: parallelizable_workload item ImmQueue.t;
   mutable requeued_parallelizable: parallelizable_workload item list;
+  mutable requeued_parallelizable_length: int;
   mutable nonparallelizable: workload item ImmQueue.t;
   signal: unit Lwt_condition.t;
 }
@@ -37,6 +39,7 @@ let create () =
   {
     parallelizable = ImmQueue.empty;
     requeued_parallelizable = [];
+    requeued_parallelizable_length = 0;
     nonparallelizable = ImmQueue.empty;
     signal = Lwt_condition.create ();
   }
@@ -62,6 +65,7 @@ let requeue_parallelizable ~name workload stream =
   let enqueue_time = Unix.gettimeofday () in
   stream.requeued_parallelizable <-
     { enqueue_time; name; workload } :: stream.requeued_parallelizable;
+  stream.requeued_parallelizable_length <- stream.requeued_parallelizable_length + 1;
   Lwt_condition.broadcast stream.signal ()
 
 (* Cast a parallelizable workload to a nonparallelizable workload. *)
@@ -79,6 +83,7 @@ let pop stream =
       (Unix.gettimeofday () -. enqueue_time);
     (* Always prefer requeued parallelizable jobs *)
     stream.requeued_parallelizable <- rest;
+    stream.requeued_parallelizable_length <- stream.requeued_parallelizable_length - 1;
     Some (workload_of_parallelizable_workload workload)
   | [] ->
     let (entry_p, parallelizable) = ImmQueue.peek stream.parallelizable in
@@ -129,6 +134,7 @@ let pop_parallelizable stream =
       (Unix.gettimeofday () -. enqueue_time);
     (* Always prefer requeued parallelizable jobs *)
     stream.requeued_parallelizable <- rest;
+    stream.requeued_parallelizable_length <- stream.requeued_parallelizable_length - 1;
     Some workload
   | [] ->
     let (entry_opt, parallelizable) = ImmQueue.pop stream.parallelizable in
