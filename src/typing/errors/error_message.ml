@@ -209,7 +209,7 @@ and 'loc t' =
   | EModuleOutsideRoot of 'loc * string
   | EMalformedPackageJson of 'loc * string
   | EUninitializedInstanceProperty of 'loc * Lints.property_assignment_kind
-  | EExperimentalEnums of 'loc
+  | EEnumsNotEnabled of 'loc
   | EIndexedAccessNotEnabled of 'loc
   | EUnsafeGetSet of 'loc
   | EIndeterminateModuleType of 'loc
@@ -807,7 +807,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EMalformedPackageJson (loc, s) -> EMalformedPackageJson (f loc, s)
   | EUnsafeGetSet loc -> EUnsafeGetSet (f loc)
   | EUninitializedInstanceProperty (loc, e) -> EUninitializedInstanceProperty (f loc, e)
-  | EExperimentalEnums loc -> EExperimentalEnums (f loc)
+  | EEnumsNotEnabled loc -> EEnumsNotEnabled (f loc)
   | EIndexedAccessNotEnabled loc -> EIndexedAccessNotEnabled (f loc)
   | EIndeterminateModuleType loc -> EIndeterminateModuleType (f loc)
   | EBadExportPosition loc -> EBadExportPosition (f loc)
@@ -1135,7 +1135,7 @@ let util_use_op_of_msg nope util = function
   | EMalformedPackageJson (_, _)
   | EUnsafeGetSet _
   | EUninitializedInstanceProperty _
-  | EExperimentalEnums _
+  | EEnumsNotEnabled _
   | EIndexedAccessNotEnabled _
   | EIndeterminateModuleType _
   | EBadExportPosition _
@@ -1326,7 +1326,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EToplevelLibraryImport loc
   | EExportRenamedDefault { loc; _ }
   | EIndeterminateModuleType loc
-  | EExperimentalEnums loc
+  | EEnumsNotEnabled loc
   | EIndexedAccessNotEnabled loc
   | EUnsafeGetSet loc
   | EUninitializedInstanceProperty (loc, _)
@@ -1451,7 +1451,7 @@ let kind_of_msg =
       InferWarning ExportKind
     | EUnexpectedTypeof _
     | EUnsafeGetSet _
-    | EExperimentalEnums _
+    | EEnumsNotEnabled _
     | EIndexedAccessNotEnabled _
     | EIndeterminateModuleType _
     | EUnreachable _
@@ -2448,14 +2448,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         ]
     in
     Normal { features }
-  | EExperimentalEnums _ ->
+  | EEnumsNotEnabled _ ->
     let features =
       [
-        text "Experimental ";
-        code "enum";
-        text " usage. ";
+        text "Flow Enums are not enabled. ";
         text "You may opt-in to using enums by putting ";
-        code "experimental.enums=true";
+        code "enums=true";
         text " into the ";
         code "[options]";
         text " section of your ";
@@ -3746,7 +3744,7 @@ let error_code_of_message err : error_code option =
   | EExpectedBooleanLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExpectedNumberLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExpectedStringLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
-  | EExperimentalEnums _ -> Some IllegalEnum
+  | EEnumsNotEnabled _ -> Some IllegalEnum
   | EExponentialSpread _ -> Some ExponentialSpread
   | EExportsAnnot _ -> Some InvalidExportsTypeArg
   | EExportValueAsType (_, _) -> Some ExportValueAsType
