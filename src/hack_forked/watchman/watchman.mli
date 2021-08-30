@@ -70,7 +70,7 @@ type env
 
 val init : init_settings -> env option Lwt.t
 
-val get_mergebase_and_changes : env -> (mergebase_and_changes, failure) Result.t Lwt.t
+val get_mergebase_and_changes : env -> (mergebase_and_changes option, failure) Result.t Lwt.t
 
 val get_changes : env -> (env * pushed_changes, failure) Result.t Lwt.t
 

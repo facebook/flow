@@ -190,7 +190,7 @@ end = struct
   let get_mergebase_and_changes env =
     if env.should_track_mergebase then
       match%lwt Watchman.get_mergebase_and_changes env.instance with
-      | Ok mergebase_and_changes -> Lwt.return (Ok (Some mergebase_and_changes))
+      | Ok _ as ok -> Lwt.return ok
       | Error Watchman.Dead
       | Error Watchman.Restarted ->
         Lwt.return (Error "Failed to query mergebase from Watchman")
@@ -469,7 +469,11 @@ end = struct
                     mergebase
                     (SSet.cardinal changes);
                   (Some mergebase, changes)
-                | None -> (None, SSet.empty)
+                | None ->
+                  if should_track_mergebase then
+                    Logger.warn
+                      "Not checking changes since mergebase! SCM-aware queries are not supported for your VCS by your version of Watchman.";
+                  (None, SSet.empty)
               in
               let new_env = { new_env with mergebase; files } in
               env <- Some new_env;
