@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:3:1
 
-Experimental `enum` usage. You may opt-in to using enums by putting `experimental.enums=true` into the `[options]`
-section of your `.flowconfig`. [illegal-enum]
+Flow Enums are not enabled. You may opt-in to using enums by putting `enums=true` into the `[options]` section of your
+`.flowconfig`. [illegal-enum]
 
       v-------------------------------
    3| enum E { // Error: enums are off

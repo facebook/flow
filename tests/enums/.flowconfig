@@ -6,4 +6,4 @@
 
 [options]
 no_flowlib=false
-experimental.enums=true
+enums=true

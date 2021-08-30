@@ -2143,7 +2143,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t =
           name_loc;
         t
       ) else (
-        Flow.add_output cx (Error_message.EExperimentalEnums loc);
+        Flow.add_output cx (Error_message.EEnumsNotEnabled loc);
         AnyT.error reason
       )
     in
