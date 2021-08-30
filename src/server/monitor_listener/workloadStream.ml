@@ -26,8 +26,6 @@ type 'a item = {
   workload: 'a;
 }
 
-let project_workload { workload; _ } = workload
-
 type t = {
   mutable parallelizable: parallelizable_workload item ImmQueue.t;
   mutable requeued_parallelizable: parallelizable_workload item list;
@@ -45,6 +43,7 @@ let create () =
 
 (* Add a non-parallelizable workload to the stream and wake up anyone waiting *)
 let push ~name workload stream =
+  Hh_logger.info "Enqueueing nonparallelizable %s" name;
   let enqueue_time = Unix.gettimeofday () in
   stream.nonparallelizable <-
     ImmQueue.push stream.nonparallelizable { enqueue_time; name; workload };
@@ -52,12 +51,14 @@ let push ~name workload stream =
 
 (* Add a parallelizable workload to the stream and wake up anyone waiting *)
 let push_parallelizable ~name workload stream =
+  Hh_logger.info "Enqueueing parallelizable %s" name;
   let enqueue_time = Unix.gettimeofday () in
   stream.parallelizable <- ImmQueue.push stream.parallelizable { enqueue_time; name; workload };
   Lwt_condition.broadcast stream.signal ()
 
 (* Add a parallelizable workload to the front of the stream and wake up anyone waiting *)
 let requeue_parallelizable ~name workload stream =
+  Hh_logger.info "Requeueing %s" name;
   let enqueue_time = Unix.gettimeofday () in
   stream.requeued_parallelizable <-
     { enqueue_time; name; workload } :: stream.requeued_parallelizable;
@@ -71,7 +72,11 @@ let workload_of_parallelizable_workload parallelizable_workload env =
 (* Pop the oldest workload *)
 let pop stream =
   match stream.requeued_parallelizable with
-  | { workload; _ } :: rest ->
+  | { workload; name; enqueue_time } :: rest ->
+    Hh_logger.info
+      "Dequeueing requeued %s after %3f seconds"
+      name
+      (Unix.gettimeofday () -. enqueue_time);
     (* Always prefer requeued parallelizable jobs *)
     stream.requeued_parallelizable <- rest;
     Some (workload_of_parallelizable_workload workload)
@@ -91,13 +96,24 @@ let pop stream =
       if use_parallelizable then
         let (_, parallelizable) = ImmQueue.pop parallelizable in
         let workload =
-          Base.Option.map entry_p ~f:(fun { workload; _ } ->
+          Base.Option.map entry_p ~f:(fun { workload; name; enqueue_time } ->
+              Hh_logger.info
+                "Dequeueing parallelizable %s after %3f seconds"
+                name
+                (Unix.gettimeofday () -. enqueue_time);
               workload_of_parallelizable_workload workload)
         in
         (workload, parallelizable, nonparallelizable)
       else
         let (_, nonparallelizable) = ImmQueue.pop nonparallelizable in
-        (Base.Option.map entry_n ~f:project_workload, parallelizable, nonparallelizable)
+        ( Base.Option.map entry_n ~f:(fun { workload; name; enqueue_time } ->
+              Hh_logger.info
+                "Dequeueing nonparallelizable %s after %3f seconds"
+                name
+                (Unix.gettimeofday () -. enqueue_time);
+              workload),
+          parallelizable,
+          nonparallelizable )
     in
     stream.parallelizable <- parallelizable;
     stream.nonparallelizable <- nonparallelizable;
@@ -106,14 +122,23 @@ let pop stream =
 (* Pop the oldest parallelizable workload *)
 let pop_parallelizable stream =
   match stream.requeued_parallelizable with
-  | { workload; _ } :: rest ->
+  | { workload; name; enqueue_time } :: rest ->
+    Hh_logger.info
+      "Dequeueing requeued %s after %3f seconds"
+      name
+      (Unix.gettimeofday () -. enqueue_time);
     (* Always prefer requeued parallelizable jobs *)
     stream.requeued_parallelizable <- rest;
     Some workload
   | [] ->
     let (entry_opt, parallelizable) = ImmQueue.pop stream.parallelizable in
     stream.parallelizable <- parallelizable;
-    Base.Option.map entry_opt ~f:project_workload
+    Base.Option.map entry_opt ~f:(fun { workload; name; enqueue_time } ->
+        Hh_logger.info
+          "Dequeueing parallelizable %s after %3f seconds"
+          name
+          (Unix.gettimeofday () -. enqueue_time);
+        workload)
 
 (* Wait until there's a workload in the stream *)
 let rec wait_for_workload stream =
