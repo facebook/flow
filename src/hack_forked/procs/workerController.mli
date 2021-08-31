@@ -47,8 +47,8 @@ val register_entry_point : restore:('a -> worker_id:int -> unit) -> 'a entry
 
 (* Creates a pool of workers. *)
 val make :
-  ?call_wrapper:(* See docs in WorkerController.worker for call_wrapper. *)
-                call_wrapper ->
+  call_wrapper:(* See docs in WorkerController.worker for call_wrapper. *)
+    call_wrapper option ->
   saved_state:'a ->
   entry:'a entry ->
   nbr_procs:int ->

@@ -364,7 +364,7 @@ type ast_transform_of_error = {
   target_loc: Loc.t;
 }
 
-let loc_opt_intersects ?loc ~error_loc =
+let loc_opt_intersects ~loc ~error_loc =
   match loc with
   | None -> true
   | Some loc -> Loc.intersects error_loc loc
@@ -372,7 +372,7 @@ let loc_opt_intersects ?loc ~error_loc =
 let ast_transform_of_error ?loc = function
   | Error_message.EEnumInvalidMemberAccess { reason; suggestion = Some fixed_prop_name; _ } ->
     let error_loc = Reason.loc_of_reason reason in
-    if loc_opt_intersects ~error_loc ?loc then
+    if loc_opt_intersects ~error_loc ~loc then
       let original_prop_name = reason |> Reason.desc_of_reason |> Reason.string_of_desc in
       let title = Printf.sprintf "Replace %s with `%s`" original_prop_name fixed_prop_name in
       Some
@@ -386,7 +386,7 @@ let ast_transform_of_error ?loc = function
       None
   | Error_message.EClassToObject (reason_class, reason_obj, _) ->
     let error_loc = Reason.loc_of_reason reason_class in
-    if loc_opt_intersects ~error_loc ?loc then
+    if loc_opt_intersects ~error_loc ~loc then
       let obj_loc = Reason.def_loc_of_reason reason_obj in
       let original = reason_obj |> Reason.desc_of_reason ~unwrap:false |> Reason.string_of_desc in
       let title = Utils_js.spf "Rewrite %s as an interface" original in
@@ -402,7 +402,7 @@ let ast_transform_of_error ?loc = function
       None
   | Error_message.EMethodUnbinding { reason_op; reason_prop; _ } ->
     let error_loc = Reason.loc_of_reason reason_op in
-    if loc_opt_intersects ~error_loc ?loc then
+    if loc_opt_intersects ~error_loc ~loc then
       let method_loc = Reason.def_loc_of_reason reason_prop in
       let original = reason_prop |> Reason.desc_of_reason ~unwrap:false |> Reason.string_of_desc in
       let title = Utils_js.spf "Rewrite %s as an arrow function" original in
@@ -420,7 +420,7 @@ let ast_transform_of_error ?loc = function
     (match error_message |> Error_message.friendly_message_of_msg with
     | Error_message.PropMissing
         { loc = error_loc; suggestion = Some suggestion; prop = Some prop_name; _ } ->
-      if loc_opt_intersects ~error_loc ?loc then
+      if loc_opt_intersects ~error_loc ~loc then
         let title = Printf.sprintf "Replace `%s` with `%s`" prop_name suggestion in
         let diagnostic_title = "replace_prop_typo_at_target" in
         Some
@@ -434,7 +434,7 @@ let ast_transform_of_error ?loc = function
         None
     | Error_message.IncompatibleUse
         { loc = error_loc; upper_kind = Error_message.IncompatibleGetPropT _; reason_lower; _ } ->
-      (match (loc_opt_intersects ~error_loc ?loc, Reason.desc_of_reason reason_lower) with
+      (match (loc_opt_intersects ~error_loc ~loc, Reason.desc_of_reason reason_lower) with
       | (true, ((Reason.RVoid | Reason.RNull | Reason.RVoidedNull | Reason.RNullOrVoid) as r)) ->
         let title =
           Printf.sprintf

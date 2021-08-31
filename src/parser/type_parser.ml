@@ -501,7 +501,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
         {
           params with
           Ast.Type.Function.Params.comments =
-            Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
+            Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
         })
       env
 
@@ -568,7 +568,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           {
             params with
             Ast.Type.Function.Params.comments =
-              Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
+              Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
           }
       | Type t -> Type (add_comments t leading trailing)
     in
@@ -1103,7 +1103,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
             Type.Object.exact;
             properties;
             inexact;
-            comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
+            comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
           })
         env
 
@@ -1195,7 +1195,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                {
                  Type.TypeParams.params;
                  comments =
-                   Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
+                   Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
                })
              env)
       ) else
@@ -1227,7 +1227,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
                {
                  Type.TypeArgs.arguments;
                  comments =
-                   Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
+                   Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
                })
              env)
       else

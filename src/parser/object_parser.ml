@@ -472,7 +472,8 @@ module Object
             let trailing = Eat.trailing_comments env in
             ( {
                 Ast.Expression.Object.properties = props;
-                comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
+                comments =
+                  Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
               },
               errs ))
           env

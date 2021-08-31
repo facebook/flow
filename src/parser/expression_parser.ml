@@ -856,7 +856,7 @@ module Expression
         in
         {
           Expression.CallTypeArgs.arguments;
-          comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
+          comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
         }
     in
     fun env ->
@@ -898,7 +898,7 @@ module Expression
           let trailing = Eat.trailing_comments env in
           {
             Expression.ArgList.arguments = args;
-            comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
+            comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
           })
         env
 
@@ -1486,7 +1486,7 @@ module Expression
       let trailing = Eat.trailing_comments env in
       ( {
           Ast.Expression.Array.elements = elems;
-          comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
+          comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
         },
         errs )
 

@@ -300,7 +300,7 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
           {
             Pattern.Object.properties;
             annot;
-            comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
+            comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
           })
 
   (* Parse array destructuring pattern *)
@@ -371,7 +371,9 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
             missing_annot env
         in
         let trailing = Eat.trailing_comments env in
-        let comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal in
+        let comments =
+          Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ()
+        in
         Pattern.Array { Pattern.Array.elements; annot; comments })
 
   and pattern env restricted_error =

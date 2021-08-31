@@ -18,7 +18,7 @@ INTERNAL_FLAGS=
 ifeq ($(OS), Windows_NT)
   UNAME_S=Windows
   UNAME_M=
-  SWITCH=ocaml-variants.4.10.2+mingw64c
+  SWITCH=ocaml-variants.4.12.0+mingw64c
   CC:=x86_64-w64-mingw32-gcc
   CXX:=x86_64-w64-mingw32-g++
   AR:=x86_64-w64-mingw32-gcc-ar

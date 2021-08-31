@@ -45,7 +45,7 @@ let entry = WorkerController.register_entry_point ~restore:ServerWorkerState.res
 
 let make ~n ~gc_control ~init_id heap_handle =
   MultiWorkerLwt.make
-    ?call_wrapper:None
+    ~call_wrapper:None
     ~saved_state:(ServerWorkerState.save ~init_id)
     ~entry
     ~nbr_procs:n

@@ -348,7 +348,7 @@ module Statements = struct
   let class_declaration ?super ?implements ?id elements =
     (Loc.none, ClassDeclaration (Classes.make ?super ?implements ?id elements))
 
-  let import_declaration ?(loc = Loc.none) ?comments ~import_kind ~source ~default ~specifiers =
+  let import_declaration ?(loc = Loc.none) ?comments import_kind source default specifiers =
     (loc, ImportDeclaration { ImportDeclaration.import_kind; source; default; specifiers; comments })
 
   let named_import_specifier ?kind ?local remote = { ImportDeclaration.kind; local; remote }

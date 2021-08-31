@@ -113,9 +113,9 @@ let recheck_series ~recheck_count:_ ~profiling:_ = ()
 
 let murdered_by_oom_killer _ = ()
 
-let ephemeral_command_success ?json_data:_ ~client_context:_ ~profiling:_ = ()
+let ephemeral_command_success ~json_data:_ ~client_context:_ ~profiling:_ = ()
 
-let ephemeral_command_failure ?json_data:_ ~client_context:_ = ()
+let ephemeral_command_failure ~json_data:_ ~client_context:_ = ()
 
 let persistent_command_success
     ~server_logging_context:_

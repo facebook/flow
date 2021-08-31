@@ -27,7 +27,7 @@ val time : ?record:record -> string -> (unit -> 'a) -> 'a
 
 val delete : ?record:record -> string -> unit
 
-val merge : ?record:record -> from:record -> unit
+val merge : ?record:record -> record -> unit
 
 val get_sum : ?record:record -> string -> float option
 

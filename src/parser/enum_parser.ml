@@ -323,7 +323,9 @@ end = struct
           | _ when Peek.is_line_terminator env -> Eat.comments_until_next_line env
           | _ -> []
         in
-        let comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal in
+        let comments =
+          Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ()
+        in
         let body =
           match explicit_type with
           | Some Enum_common.Boolean ->

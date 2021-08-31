@@ -1267,7 +1267,7 @@ module Statement
             Expect.token env T_RCURLY;
             let { trailing; _ } = statement_end_trailing_comments env in
             ( (module_kind, body),
-              Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ))
+              Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal () ))
           env
       in
       let body = (body_loc, { Statement.Block.body; comments }) in

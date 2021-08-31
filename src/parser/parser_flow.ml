@@ -329,7 +329,7 @@ module rec Parse : PARSER = struct
     ( Loc.btwn start_loc end_loc,
       {
         Ast.Statement.Block.body;
-        comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
+        comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
       } )
 
   and function_block_body ~expression env =
@@ -357,7 +357,7 @@ module rec Parse : PARSER = struct
     ( Loc.btwn start_loc end_loc,
       {
         Ast.Statement.Block.body;
-        comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
+        comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
       },
       strict )
 

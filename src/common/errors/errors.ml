@@ -680,7 +680,7 @@ let mk_error
       } ))
 
 let mk_speculation_error
-    ?(kind = InferError) ?trace_infos ~loc ~root ~frames ~error_code ~speculation_errors =
+    ?(kind = InferError) ?trace_infos ~loc ~root ~frames ~error_code speculation_errors =
   Friendly.(
     let trace = Base.Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
     let rec erase_branch_codes =
