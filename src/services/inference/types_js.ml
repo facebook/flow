@@ -1113,7 +1113,7 @@ let unfocused_files_and_dependents_to_infer
 
    In either case, we can consider the result to be "closed" in terms of expected invariants.
 *)
-let files_to_infer ~options ~profiling ~reader ~dependency_info ?focus_targets ~parsed =
+let files_to_infer ~options ~profiling ~reader ~dependency_info ~focus_targets ~parsed =
   Memory_utils.with_memory_timer_lwt ~options "FilesToInfer" profiling (fun () ->
       match focus_targets with
       | None ->
@@ -2624,7 +2624,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
   let { ServerEnv.files = parsed; dependency_info; errors; _ } = env in
   with_transaction (fun transaction reader ->
       let%lwt (input, sig_dependent_files, all_dependent_files) =
-        files_to_infer ~options ~reader ?focus_targets ~profiling ~parsed ~dependency_info
+        files_to_infer ~options ~reader ~focus_targets ~profiling ~parsed ~dependency_info
       in
       let implementation_dependency_graph =
         Dependency_info.implementation_dependency_graph dependency_info

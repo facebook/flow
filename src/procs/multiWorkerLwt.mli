@@ -26,9 +26,9 @@ val next :
 
 (* Creates a pool of workers. *)
 val make :
-  ?call_wrapper:
+  call_wrapper:
     (* See docs in WorkerController.worker for call_wrapper. *)
-    WorkerController.call_wrapper ->
+    WorkerController.call_wrapper option ->
   saved_state:'a ->
   entry:'a WorkerController.entry ->
   nbr_procs:int ->

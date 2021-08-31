@@ -230,7 +230,7 @@ let make_one ?call_wrapper controller_fd spawn id =
 
 (* Make a few workers. When workload is given to a worker (via "call" below),
  * the workload is wrapped in the calL_wrapper. *)
-let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
+let make ~call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
   let setup_controller_fd () =
     if use_prespawned then
       let (parent_fd, child_fd) = Unix.pipe () in

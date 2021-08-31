@@ -41,7 +41,8 @@ module Make (Map : WrappedMap.S) = struct
   let remove_oldest cache =
     let oldest =
       Map.fold
-        (fun key { last_hit; _ } acc ->
+        (fun key entry acc ->
+          let { last_hit; _ } = entry in
           match acc with
           | Some (_, oldest_hit) when oldest_hit <= last_hit -> acc
           | _ -> Some (key, last_hit))

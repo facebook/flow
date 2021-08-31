@@ -60,6 +60,7 @@ val mk_comments_with_internal_opt :
   ?leading:'loc Flow_ast.Comment.t list ->
   ?trailing:'loc Flow_ast.Comment.t list ->
   internal:'loc Flow_ast.Comment.t list ->
+  unit ->
   ('loc, 'loc Flow_ast.Comment.t list) Flow_ast.Syntax.t option
 
 val merge_comments :

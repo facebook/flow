@@ -160,8 +160,9 @@ module Make (Set : Set.S) (Map : WrappedMap.S with type key = Set.elt) = struct
 
   let map f graph =
     Map.fold
-      (fun elt { forward; backward } new_map ->
+      (fun elt entry new_map ->
         let elt = f elt in
+        let { forward; backward } = entry in
         let forward = Set.map f forward in
         let backward = Set.map f backward in
         Map.update
