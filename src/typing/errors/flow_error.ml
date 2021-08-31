@@ -708,7 +708,7 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
         ~root
         ~frames
         ~error_code
-        ~speculation_errors
+        speculation_errors
     in
     (* An error between two incompatible types. A "lower" type and an "upper"
      * type. The use_op describes the path which we followed to find

@@ -90,17 +90,21 @@ let loc_with_comments stmt =
 
 let mk_default_import ?loc ?comments ~from name =
   let open Ast_builder in
+  let source = (Loc.none, string_literal from) in
   let default = Some (Identifiers.identifier name) in
+  let specifiers = None in
   Statements.import_declaration
     ?loc
-    ~import_kind:Statement.ImportDeclaration.ImportValue
-    ~source:(Loc.none, string_literal from)
-    ~default
-    ~specifiers:None
     ?comments
+    Statement.ImportDeclaration.ImportValue
+    source
+    default
+    specifiers
 
 let mk_named_import ?loc ?comments ~import_kind ~from names =
   let open Ast_builder in
+  let source = (Loc.none, string_literal from) in
+  let default = None in
   let specifiers =
     let specifiers =
       List.map
@@ -114,27 +118,23 @@ let mk_named_import ?loc ?comments ~import_kind ~from names =
     in
     Some (Statement.ImportDeclaration.ImportNamedSpecifiers specifiers)
   in
-  Statements.import_declaration
-    ?loc
-    ~import_kind
-    ~source:(Loc.none, string_literal from)
-    ~default:None
-    ~specifiers
-    ?comments
+  Statements.import_declaration ?loc ?comments import_kind source default specifiers
 
 let mk_namespace_import ?loc ?comments ~from name =
   let open Ast_builder in
+  let source = (Loc.none, string_literal from) in
+  let default = None in
   let specifiers =
     let id = Identifiers.identifier name in
     Some (Statement.ImportDeclaration.ImportNamespaceSpecifier (Loc.none, id))
   in
   Statements.import_declaration
     ?loc
-    ~import_kind:Statement.ImportDeclaration.ImportValue
-    ~source:(Loc.none, string_literal from)
-    ~default:None
-    ~specifiers
     ?comments
+    Statement.ImportDeclaration.ImportValue
+    source
+    default
+    specifiers
 
 let mk_import ~bindings ~from =
   match bindings with

@@ -228,7 +228,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
           {
             Ast.Function.Params.params;
             rest;
-            comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal;
+            comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
             this_;
           })
 

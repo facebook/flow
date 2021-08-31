@@ -1284,7 +1284,7 @@ let wrap_ephemeral_handler handler ~genv ~request_id ~client_context ~workload ~
           })
     in
     MonitorRPC.status_update ~event;
-    FlowEventLogger.ephemeral_command_success ?json_data ~client_context ~profiling;
+    FlowEventLogger.ephemeral_command_success ~json_data ~client_context ~profiling;
     Hh_logger.info "Finished %s" cmd_str;
     Lwt.return (Ok ret)
   with
@@ -1294,10 +1294,9 @@ let wrap_ephemeral_handler handler ~genv ~request_id ~client_context ~workload ~
   | exn ->
     let exn = Exception.wrap exn in
     let exn_str = Exception.to_string exn in
+    let json_data = Some Hh_json.(JSON_Object [("exn", JSON_String exn_str)]) in
     Hh_logger.error ~exn "Uncaught exception while handling a request (%s)" cmd_str;
-    FlowEventLogger.ephemeral_command_failure
-      ~client_context
-      ~json_data:(Hh_json.JSON_Object [("exn", Hh_json.JSON_String exn_str)]);
+    FlowEventLogger.ephemeral_command_failure ~client_context ~json_data;
     MonitorRPC.request_failed ~request_id ~exn_str;
     Lwt.return (Error ())
 
@@ -2278,7 +2277,7 @@ let handle_persistent_organize_imports_command
 let handle_persistent_malformed_command ~id ~metadata ~client:_ ~profiling:_ =
   mk_lsp_error_response ~ret:() ~id:(Some id) ~reason:"Malformed command" metadata
 
-let handle_persistent_unsupported ?id ~unhandled ~metadata ~client:_ ~profiling:_ =
+let handle_persistent_unsupported ?id ~unhandled ~metadata ~client:_ ~profiling:_ () =
   let message = Printf.sprintf "Unhandled method %s" (Lsp_fmt.message_name_to_string unhandled) in
   let response =
     match id with
@@ -2650,7 +2649,7 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
       | _ -> None
     in
     (* We can reject unsupported stuff immediately *)
-    Handle_persistent_immediately (handle_persistent_unsupported ?id ~unhandled ~metadata)
+    Handle_persistent_immediately (handle_persistent_unsupported ?id ~unhandled ~metadata ())
   | LiveErrorsRequest uri ->
     let uri = Lsp.DocumentUri.to_string uri in
     (* We can handle live errors even during a recheck *)

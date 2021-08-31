@@ -234,7 +234,7 @@ let merge_entries name from into =
 
 (* Merges all the samples from "from" into "record". If "record" is omitted
  * then it uses the global record *)
-let merge ?record ~from =
+let merge ?record from =
   let into = get_record record in
   into := SMap.merge merge_entries !from !into
 

@@ -85,7 +85,7 @@ let mk_comments_opt ?(leading = []) ?(trailing = []) () =
   | ([], []) -> None
   | (_, _) -> Some (mk_comments ~leading ~trailing ())
 
-let mk_comments_with_internal_opt ?(leading = []) ?(trailing = []) ~internal =
+let mk_comments_with_internal_opt ?(leading = []) ?(trailing = []) ~internal () =
   match (leading, trailing, internal) with
   | ([], [], []) -> None
   | _ -> Some (mk_comments ~leading ~trailing internal)
@@ -106,13 +106,14 @@ let merge_comments_with_internal ~inner ~outer =
   match (inner, outer) with
   | (inner, None) -> inner
   | (None, Some { Syntax.leading; trailing; _ }) ->
-    mk_comments_with_internal_opt ~leading ~trailing ~internal:[]
+    mk_comments_with_internal_opt ~leading ~trailing ~internal:[] ()
   | ( Some { Syntax.leading = inner_leading; trailing = inner_trailing; internal },
       Some { Syntax.leading = outer_leading; trailing = outer_trailing; _ } ) ->
     mk_comments_with_internal_opt
       ~leading:(outer_leading @ inner_leading)
       ~trailing:(inner_trailing @ outer_trailing)
       ~internal
+      ()
 
 let split_comments comments =
   match comments with
