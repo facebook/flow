@@ -133,6 +133,27 @@ type mergebase_and_changes = {
   changes: SSet.t;
 }
 
+module Capability = struct
+  type t =
+    | Scm_since
+    | Scm_hg
+    | Scm_git
+  [@@deriving ord]
+
+  let to_string = function
+    | Scm_since -> "scm-since"
+    | Scm_git -> "scm-git"
+    | Scm_hg -> "scm-hg"
+
+  let all = [Scm_since; Scm_hg; Scm_git]
+
+  module Set = Caml.Set.Make (struct
+    type nonrec t = t
+
+    let compare = compare
+  end)
+end
+
 module Jget = Hh_json_helpers.Jget
 module J = Hh_json_helpers.AdhocJsonHelpers
 
@@ -196,13 +217,13 @@ type dead_env = {
 }
 
 type env = {
-  (* See https://facebook.github.io/watchman/docs/clockspec.html
-   *
-   * This is also used to reliably detect a crashed watchman. Watchman has a
-   * facility to detect watchman process crashes between two "since" queries. *)
   mutable clockspec: string;
+      (** See https://facebook.github.io/watchman/docs/clockspec.html
+          This is also used to reliably detect a crashed watchman. Watchman has a
+          facility to detect watchman process crashes between two "since" queries. *)
   conn: conn;
   settings: init_settings;
+  should_track_mergebase: bool;
   subscription: string;
   watch: watch;
 }
@@ -321,6 +342,15 @@ let subscribe env =
    * See also Watchman docs on "since" query parameter. *)
 let is_fresh_instance obj =
   Hh_json.Access.(return obj >>= get_bool "is_fresh_instance" |> project_bool)
+
+let supports_scm_queries caps vcs =
+  let open Capability in
+  Set.mem Scm_since caps
+  &&
+  match vcs with
+  | Some Vcs.Hg -> Set.mem Scm_hg caps
+  | Some Vcs.Git -> Set.mem Scm_git caps
+  | None -> false
 
 (****************************************************************************)
 (* I/O stuff *)
@@ -506,6 +536,30 @@ let blocking_read ~debug_logging ~conn:(reader, _) =
 (* Initialization, reinitialization *)
 (****************************************************************************)
 
+(** calls [watchman version] to check a list of Watchman capabilities *)
+let get_capabilities ~debug_logging ?conn () =
+  let open Hh_json in
+  let names = List.map ~f:Capability.to_string Capability.all in
+  let query = JSON_Array [JSON_String "version"; JSON_Object [("optional", J.strlist names)]] in
+  match%lwt request ~debug_logging ?conn query with
+  | Ok obj ->
+    let set =
+      Base.List.fold
+        ~init:Capability.Set.empty
+        ~f:(fun acc cap ->
+          let name = Capability.to_string cap in
+          let value =
+            Access.(return obj >>= get_obj "capabilities" >>= get_bool name |> project_bool)
+          in
+          if value then
+            Capability.Set.add cap acc
+          else
+            acc)
+        Capability.all
+    in
+    Lwt.return (Ok set)
+  | Error _ as err -> Lwt.return err
+
 (* When we re-init our connection to Watchman, we use the old clockspec to get all the changes
  * since our last response. However, if Watchman has restarted and the old clockspec pre-dates
  * the new Watchman, then we may miss updates.
@@ -680,10 +734,13 @@ let re_init ?prior_clockspec settings =
   let open Lwt_result.Infix in
   let debug_logging = settings.debug_logging in
   open_connection () >>= fun conn ->
+  get_capabilities ~debug_logging ~conn () >>= fun capabilities ->
   watch ~debug_logging ~conn settings.roots >>= fun watch ->
   get_clockspec ~debug_logging ~conn ~watch prior_clockspec >>= fun clockspec ->
   let subscription = Printf.sprintf "%s.%d" settings.subscription_prefix (Unix.getpid ()) in
-  let env = { settings; conn; watch; clockspec; subscription } in
+  let vcs = Vcs.find (Path.make watch.watch_root) in
+  let should_track_mergebase = supports_scm_queries capabilities vcs in
+  let env = { settings; conn; watch; clockspec; subscription; should_track_mergebase } in
   request ~debug_logging ~conn (subscribe env) >>= fun response ->
   ignore response;
   Lwt.return (Ok env)
@@ -834,11 +891,15 @@ let get_mergebase_and_changes =
       (match extract_mergebase response with
       | Some (clock, mergebase) ->
         let changes = extract_file_names env response in
-        Lwt.return (Ok { clock; mergebase; changes })
+        Lwt.return (Ok (Some { clock; mergebase; changes }))
       | None ->
         Lwt.return (Error (response_error_of_json ~query ~response "Failed to extract mergebase")))
   in
-  (fun env -> with_retry ~max_attempts:max_retry_attempts ~on_retry run_query env)
+  fun env ->
+    if env.should_track_mergebase then
+      with_retry ~max_attempts:max_retry_attempts ~on_retry run_query env
+    else
+      Lwt.return (Ok None)
 
 let force_update_clockspec clock env = env.clockspec <- clock
 
@@ -875,6 +936,7 @@ module Testing = struct
             watched_path_expression_terms =
               Some (J.pred "anyof" [J.strlist ["dirname"; "foo"]; J.strlist ["name"; "foo"]]);
           };
+        should_track_mergebase = false;
         subscription = "dummy_prefix.123456789";
       }
 
