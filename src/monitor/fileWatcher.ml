@@ -367,7 +367,8 @@ end = struct
            * more acceptable to delay a file-changed notification than after a user saves a
            * file in the IDE
            *)
-          if env.finished_an_hg_update then
+          if env.finished_an_hg_update then (
+            env.finished_an_hg_update <- false;
             let%lwt new_mergebase =
               match%lwt get_mergebase_and_changes env with
               | Ok mergebase_and_changes -> Lwt.return mergebase_and_changes
@@ -381,10 +382,9 @@ end = struct
               Logger.info "Watchman reports mergebase changed from %S to %S" old_mergebase mergebase;
               env.mergebase <- Some mergebase;
               env.metadata <- { env.metadata with MonitorProt.changed_mergebase = true };
-              env.finished_an_hg_update <- false;
               Lwt.return_unit
             | _ -> Lwt.return_unit
-          else
+          ) else
             Lwt.return_unit
         in
         broadcast env;
