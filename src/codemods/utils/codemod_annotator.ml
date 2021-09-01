@@ -24,13 +24,23 @@ let type_size_warning_threshold = 30
 
 module Queries = struct
   class ident_visitor ~init =
-    object (_this)
+    object (this)
       inherit [SSet.t ref, Loc.t] Flow_ast_visitor.visitor ~init
 
       (* Skip keys, qualified identifiers *)
       method! object_key_identifier ident = ident
 
       method! member_property_identifier ident = ident
+
+      method! generic_qualified_identifier_type qual =
+        let open Ast.Type.Generic.Identifier in
+        let (loc, { qualification; id }) = qual in
+        let qualification' = this#generic_identifier_type qualification in
+        (* Skips the id part *)
+        if qualification' == qualification then
+          qual
+        else
+          (loc, { qualification = qualification'; id })
 
       method! identifier id =
         let (_, { Ast.Identifier.name; _ }) = id in
@@ -334,6 +344,7 @@ module Make (Extra : BASE_STATS) = struct
       method! program prog =
         (* Gather used identifier names *)
         let reserved_names = Queries.used_names prog in
+        SSet.iter (fun s -> Utils_js.prerr_endlinef "reserved name: %s" s) reserved_names;
         let file = cctx.Codemod_context.Typed.file in
         remote_converter <-
           Some

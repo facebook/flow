@@ -33,6 +33,8 @@ const Immutable = {
 };
 const ImmutableList = Immutable.List;
 
+declare var immutableList: Immutable.List;
+
 module.exports = {
   x1: f1(),
   x2: f2(),

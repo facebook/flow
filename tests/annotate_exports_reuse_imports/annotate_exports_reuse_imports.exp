@@ -41,6 +41,8 @@ const Immutable = {
 };
 const ImmutableList = Immutable.List;
 
+declare var immutableList: Immutable.List;
+
 module.exports = {
   x1: (f1(): A),
   x2: f2(),
@@ -125,6 +127,8 @@ const Immutable = {
 };
 const ImmutableList = Immutable.List;
 
+declare var immutableList: Immutable.List;
+
 module.exports = {
   x1: (f1(): A),
   x2: (f2(): P<number>),
@@ -145,11 +149,11 @@ module.exports = {
 < import typeof $IMPORTED_TYPEOF$_C from "./exports-default-class-1";
 ---
 > import typeof C from "./exports-default-class-1";
-42c42
+44c44
 <   x2: f2(),
 ---
 >   x2: (f2(): P<number>),
-47c47
+49c49
 <   typeof_c: (typeof_c(): $IMPORTED_TYPEOF$_C),  // cannot use `ImportedTypeOfClassC` -- need to import C as typeof
 ---
 >   typeof_c: (typeof_c(): C),  // cannot use `ImportedTypeOfClassC` -- need to import C as typeof
