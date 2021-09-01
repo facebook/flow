@@ -497,9 +497,7 @@ end = struct
           let%lwt watchman = Base.Option.value_exn init_thread in
           init_thread <- None;
 
-          let should_track_mergebase =
-            Options.lazy_mode server_options = Options.LAZY_MODE_WATCHMAN
-          in
+          let should_track_mergebase = Options.is_lazy_mode server_options in
           let survive_restarts = watchman_options.FlowServerMonitorOptions.survive_restarts in
           match watchman with
           | Some watchman ->
