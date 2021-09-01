@@ -1,3 +1,12 @@
+### 0.159.0
+
+New Features:
+* Add support for git to watchman lazy mode. Git projects using `file_watcher=watchman` and `lazy_mode=fs` can now upgrade to `lazy_mode=watchman`.
+* Add codemod to convert `$ObjMapi<T, <K>(K) => K>` to `$KeyMirror<T>`. Run it via `flow codemod key-mirror [OPTION]... [FILE]`.
+
+Library Definitions:
+* Add `devicePixelRatio` global (thanks @Brianzchen)
+
 ### 0.158.0
 
 New Features:
