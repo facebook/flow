@@ -1663,8 +1663,7 @@ let get_check_or_status_exit_code errors warnings max_warnings =
       else
         Type_error))
 
-let choose_file_watcher
-    ~options ~flowconfig ~file_watcher ~file_watcher_debug ~mergebase_with ~sync_timeout =
+let choose_file_watcher ~options ~flowconfig ~file_watcher ~file_watcher_debug ~sync_timeout =
   let file_watcher =
     match (Options.lazy_mode options, file_watcher) with
     | (Options.LAZY_MODE_WATCHMAN, (None | Some FlowConfig.Watchman)) ->
@@ -1690,13 +1689,6 @@ let choose_file_watcher
       | None -> FlowConfig.watchman_sync_timeout flowconfig
     in
     let defer_states = FlowConfig.watchman_defer_states flowconfig in
-    let mergebase_with =
-      match
-        Base.Option.first_some mergebase_with (FlowConfig.watchman_mergebase_with flowconfig)
-      with
-      | Some x -> x
-      | None -> default_file_watcher_mergebase_with
-    in
     let survive_restarts =
       Base.Option.value ~default:true (FlowConfig.watchman_survive_restarts flowconfig)
     in
@@ -1704,10 +1696,16 @@ let choose_file_watcher
       {
         FlowServerMonitorOptions.debug = file_watcher_debug;
         defer_states;
-        mergebase_with;
         survive_restarts;
         sync_timeout;
       }
+
+let choose_file_watcher_mergebase_with ~flowconfig mergebase_with =
+  match
+    Base.Option.first_some mergebase_with (FlowConfig.file_watcher_mergebase_with flowconfig)
+  with
+  | Some x -> x
+  | None -> default_file_watcher_mergebase_with
 
 let choose_file_watcher_timeout ~flowconfig cli_timeout =
   match Base.Option.first_some cli_timeout (FlowConfig.file_watcher_timeout flowconfig) with

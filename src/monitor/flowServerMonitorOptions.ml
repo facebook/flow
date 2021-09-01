@@ -11,7 +11,6 @@
 type watchman_options = {
   debug: bool;  (** Turn on debugging messages for the file watcher *)
   defer_states: string list;  (** Defer watchman notifications while these states are asserted *)
-  mergebase_with: string;  (** symbolic commit to find changes against *)
   survive_restarts: bool;  (** try to recover from watchman restarting *)
   sync_timeout: int option;
       (** How long to wait for the file watcher to synchronize, in milliseconds *)
@@ -42,6 +41,7 @@ type t = {
   file_watcher: file_watcher;
   (* How long to wait for the file watcher to initialize, in seconds *)
   file_watcher_timeout: float option;
+  file_watcher_mergebase_with: string;  (** symbolic commit to find changes against *)
 }
 
 let string_of_file_watcher = function

@@ -366,6 +366,7 @@ end = struct
       argv;
       file_watcher;
       file_watcher_timeout;
+      file_watcher_mergebase_with = mergebase_with;
       _;
     } =
       monitor_options
@@ -376,7 +377,7 @@ end = struct
       | FlowServerMonitorOptions.NoFileWatcher -> new FileWatcher.dummy
       | FlowServerMonitorOptions.DFind -> new FileWatcher.dfind monitor_options
       | FlowServerMonitorOptions.Watchman watchman_options ->
-        new FileWatcher.watchman server_options watchman_options
+        new FileWatcher.watchman ~mergebase_with server_options watchman_options
     in
     Logger.debug "Initializing file watcher (%s)" watcher#name;
     watcher#start_init;

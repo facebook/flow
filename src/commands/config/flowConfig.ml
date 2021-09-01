@@ -57,6 +57,7 @@ module Opts = struct
     facebook_fbs: string option;
     facebook_fbt: string option;
     facebook_module_interop: bool;
+    file_watcher_mergebase_with: string option;
     file_watcher_timeout: int option;
     file_watcher: file_watcher option;
     format_bracket_spacing: bool option;  (** print spaces between brackets in object literals *)
@@ -120,7 +121,6 @@ module Opts = struct
     type_asserts: bool;
     wait_for_recheck: bool;
     watchman_defer_states: string list;
-    watchman_mergebase_with: string option;
     watchman_survive_restarts: bool option;
     watchman_sync_timeout: int option;
     weak: bool;
@@ -182,6 +182,7 @@ module Opts = struct
       facebook_fbt = None;
       facebook_module_interop = false;
       file_watcher = None;
+      file_watcher_mergebase_with = None;
       file_watcher_timeout = None;
       format_bracket_spacing = None;
       format_single_quotes = None;
@@ -245,7 +246,6 @@ module Opts = struct
       type_asserts = false;
       wait_for_recheck = false;
       watchman_defer_states = [];
-      watchman_mergebase_with = None;
       watchman_survive_restarts = None;
       watchman_sync_timeout = None;
       weak = false;
@@ -457,6 +457,9 @@ module Opts = struct
     enum [("none", NoFileWatcher); ("dfind", DFind); ("watchman", Watchman)] (fun opts v ->
         Ok { opts with file_watcher = Some v })
 
+  let file_watcher_mergebase_with_parser =
+    string (fun opts v -> Ok { opts with file_watcher_mergebase_with = Some v })
+
   let format_bracket_spacing_parser =
     boolean (fun opts v -> Ok { opts with format_bracket_spacing = Some v })
 
@@ -626,9 +629,6 @@ module Opts = struct
     string ~multiple:true (fun opts v ->
         Ok { opts with watchman_defer_states = v :: opts.watchman_defer_states })
 
-  let watchman_mergebase_with_parser =
-    string (fun opts v -> Ok { opts with watchman_mergebase_with = Some v })
-
   let watchman_survive_restarts_parser =
     boolean (fun opts v -> Ok { opts with watchman_survive_restarts = Some v })
 
@@ -666,8 +666,8 @@ module Opts = struct
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
       ("file_watcher_timeout", uint (fun opts v -> Ok { opts with file_watcher_timeout = Some v }));
+      ("file_watcher.mergebase_with", file_watcher_mergebase_with_parser);
       ("file_watcher.watchman.defer_state", watchman_defer_states_parser);
-      ("file_watcher.watchman.mergebase_with", watchman_mergebase_with_parser);
       ("file_watcher.watchman.survive_restarts", watchman_survive_restarts_parser);
       ("file_watcher.watchman.sync_timeout", watchman_sync_timeout_parser);
       ("file_watcher", file_watcher_parser);
@@ -1277,13 +1277,13 @@ let exact_by_default c = c.options.Opts.exact_by_default
 
 let file_watcher c = c.options.Opts.file_watcher
 
+let file_watcher_mergebase_with c = c.options.Opts.file_watcher_mergebase_with
+
 let file_watcher_timeout c = c.options.Opts.file_watcher_timeout
 
 let watchman_sync_timeout c = c.options.Opts.watchman_sync_timeout
 
 let watchman_defer_states c = c.options.Opts.watchman_defer_states
-
-let watchman_mergebase_with c = c.options.Opts.watchman_mergebase_with
 
 let watchman_survive_restarts c = c.options.Opts.watchman_survive_restarts
 

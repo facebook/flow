@@ -95,6 +95,8 @@ val facebook_module_interop : config -> bool
 
 val file_watcher : config -> file_watcher option
 
+val file_watcher_mergebase_with : config -> string option
+
 val file_watcher_timeout : config -> int option
 
 val format_bracket_spacing : config -> bool option
@@ -216,8 +218,6 @@ val type_asserts : config -> bool
 val watchman_sync_timeout : config -> int option
 
 val watchman_defer_states : config -> string list
-
-val watchman_mergebase_with : config -> string option
 
 val watchman_survive_restarts : config -> bool option
 

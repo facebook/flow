@@ -125,8 +125,10 @@ let main
       ~flowconfig
       ~file_watcher
       ~file_watcher_debug
-      ~mergebase_with:file_watcher_mergebase_with
       ~sync_timeout:file_watcher_sync_timeout
+  in
+  let file_watcher_mergebase_with =
+    choose_file_watcher_mergebase_with ~flowconfig file_watcher_mergebase_with
   in
   let file_watcher_timeout = choose_file_watcher_timeout ~flowconfig file_watcher_timeout in
   let monitor_options =
@@ -139,6 +141,7 @@ let main
       shared_mem_config;
       argv = Sys.argv;
       file_watcher;
+      file_watcher_mergebase_with;
       file_watcher_timeout;
     }
   in

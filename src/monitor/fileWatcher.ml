@@ -61,9 +61,64 @@ class dummy : watcher =
     method getpid = None
   end
 
+let changes_since_mergebase =
+  let fold_relative_paths acc root paths =
+    Base.List.fold
+      ~init:acc
+      ~f:(fun acc change ->
+        let path = Path.concat root change |> Path.to_string in
+        SSet.add path acc)
+      paths
+  in
+  let files_changed_since_mergebase_with vcs root mergebase_with =
+    let root_str = Path.to_string root in
+    match vcs with
+    | Vcs.Git -> Git.files_changed_since_mergebase_with ~cwd:root_str mergebase_with
+    | Vcs.Hg -> Hg.files_changed_since_mergebase_with ~cwd:root_str mergebase_with
+  in
+  let fold_files_changed_since_mergebase_with acc vcs root mergebase_with =
+    let vcs_name = Vcs.name vcs in
+    match%lwt files_changed_since_mergebase_with vcs root mergebase_with with
+    | Error _ ->
+      Logger.error
+        "Not checking changes since mergebase! %s failed to determine the initial mergebase."
+        vcs_name;
+      Lwt.return acc
+    | Ok (mergebase, changes) ->
+      Logger.info
+        "%s reports the initial mergebase as %S, and %d changes"
+        vcs_name
+        mergebase
+        (List.length changes);
+      Lwt.return (fold_relative_paths acc root changes)
+  in
+  let rec helper ~mergebase_with (seen_roots, (acc : SSet.t)) paths =
+    match paths with
+    | [] -> Lwt.return acc
+    | path :: paths ->
+      let%lwt (seen_roots, acc) =
+        match Vcs.find_root path with
+        | Some (vcs, root) ->
+          let root_str = Path.to_string root in
+          if SSet.mem root_str seen_roots then
+            Lwt.return (seen_roots, acc)
+          else
+            let seen_roots = SSet.add root_str seen_roots in
+            let%lwt acc = fold_files_changed_since_mergebase_with acc vcs root mergebase_with in
+            Lwt.return (seen_roots, acc)
+        | None -> Lwt.return (seen_roots, acc)
+      in
+      helper ~mergebase_with (seen_roots, acc) paths
+  in
+  (fun ~mergebase_with watch_paths -> helper ~mergebase_with (SSet.empty, SSet.empty) watch_paths)
+
 class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
   object (self)
     val mutable dfind_instance = None
+
+    val mutable is_initial = true
+
+    val mutable watch_paths = []
 
     val mutable files = SSet.empty
 
@@ -78,7 +133,7 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
       let file_options =
         Options.file_options monitor_options.FlowServerMonitorOptions.server_options
       in
-      let watch_paths = Files.watched_paths file_options in
+      watch_paths <- Files.watched_paths file_options;
       let null_fd = Daemon.null_fd () in
       let fds = (null_fd, null_fd, null_fd) in
       let dfind = DfindLibLwt.init fds ("flow_server_events", watch_paths) in
@@ -86,6 +141,16 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
 
     method wait_for_init ~timeout:_ =
       let%lwt result = DfindLibLwt.wait_until_ready self#get_dfind in
+      let%lwt () =
+        let open FlowServerMonitorOptions in
+        if Options.is_lazy_mode monitor_options.server_options then (
+          let mergebase_with = monitor_options.file_watcher_mergebase_with in
+          let%lwt changes = changes_since_mergebase ~mergebase_with watch_paths in
+          files <- SSet.union files changes;
+          Lwt.return_unit
+        ) else
+          Lwt.return_unit
+      in
       Lwt.return (Ok result)
 
     (* We don't want two threads to talk to dfind at the same time. And we don't want those two
@@ -109,8 +174,9 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
 
     method get_and_clear_changed_files =
       let%lwt () = self#fetch in
-      let ret = (files, None, false) in
+      let ret = (files, None, is_initial) in
       files <- SSet.empty;
+      is_initial <- false;
       Lwt.return ret
 
     method wait_for_changed_files =
@@ -169,7 +235,8 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
   end
 
 module WatchmanFileWatcher : sig
-  class watchman : Options.t -> FlowServerMonitorOptions.watchman_options -> watcher
+  class watchman :
+    mergebase_with:string -> Options.t -> FlowServerMonitorOptions.watchman_options -> watcher
 end = struct
   exception Watchman_failure of Watchman.failure
 
@@ -385,8 +452,9 @@ end = struct
       Lwt.return reason
 
   class watchman
-    (server_options : Options.t) (watchman_options : FlowServerMonitorOptions.watchman_options) :
-    watcher =
+    ~(mergebase_with : string)
+    (server_options : Options.t)
+    (watchman_options : FlowServerMonitorOptions.watchman_options) : watcher =
     object (self)
       val mutable env = None
 
@@ -402,13 +470,7 @@ end = struct
         | Some env -> env
 
       method start_init =
-        let {
-          FlowServerMonitorOptions.debug;
-          defer_states;
-          mergebase_with;
-          sync_timeout;
-          survive_restarts = _;
-        } =
+        let { FlowServerMonitorOptions.debug; defer_states; sync_timeout; survive_restarts = _ } =
           watchman_options
         in
         let file_options = Options.file_options server_options in
