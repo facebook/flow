@@ -9,4 +9,8 @@ type t =
   | Hg
   | Git
 
+val find_root : ?recursion_limit:int -> Path.t -> (t * Path.t) option
+
 val find : ?recursion_limit:int -> Path.t -> t option
+
+val name : t -> string

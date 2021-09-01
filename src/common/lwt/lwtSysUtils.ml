@@ -40,7 +40,8 @@ let command_result_of_process process =
 
 let prepare_args cmd args = (cmd, Array.of_list (cmd :: args))
 
-let exec cmd args = Lwt_process.with_process_full (prepare_args cmd args) command_result_of_process
+let exec ?env ?cwd cmd args =
+  Lwt_process.with_process_full ?env ?cwd (prepare_args cmd args) command_result_of_process
 
 let exec_with_timeout ~timeout cmd args =
   Lwt_process.with_process_full (prepare_args cmd args) (fun process ->
