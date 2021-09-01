@@ -168,6 +168,19 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
       ~typed_ast
       Get_def_request.(Member { prop_name = name; object_source = ObjectType (loc, props_object) })
 
+module Depth = struct
+  let limit = 9999
+
+  type t = {
+    length: int;
+    locs: Loc.t list;
+  }
+
+  let empty = { length = 0; locs = [] }
+
+  let add loc { length; locs } = { length = length + 1; locs = loc :: locs }
+end
+
 let get_def ~options ~reader ~cx ~file_sig ~typed_ast requested_loc =
   let require_aloc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
   let is_legit_require (source_aloc, _) =
@@ -177,27 +190,41 @@ let get_def ~options ~reader ~cx ~file_sig ~typed_ast requested_loc =
       require_aloc_map
   in
   let module_ref_prefix = Context.haste_module_ref_prefix cx in
-  let rec loop req_loc =
-    let open Get_def_process_location in
-    match process_location_in_typed_ast ~is_legit_require ~typed_ast ~module_ref_prefix req_loc with
-    | OwnDef aloc -> Def (loc_of_aloc ~reader aloc)
-    | Request request ->
-      (match process_request ~options ~reader ~cx ~is_legit_require ~typed_ast request with
-      | Ok res_loc ->
-        (* two scenarios where we stop trying to recur:
-           - when req_loc = res_loc, meaning we've reached a fixed point so
-             continuing would make us infinite loop
-           - when res_loc is not in the file the request originated from, meaning
-             the typed_ast we have is the wrong one to recur with *)
-        if Loc.equal req_loc res_loc || Loc.(res_loc.source <> requested_loc.source) then
-          Def res_loc
-        else (
-          match loop res_loc with
-          | Bad_loc -> Def res_loc
-          | Def_error msg -> Partial (res_loc, msg)
-          | (Def _ | Partial _) as res -> res
-        )
-      | Error msg -> Def_error msg)
-    | LocNotFound -> Bad_loc
+  let rec loop ~depth req_loc =
+    if depth.Depth.length > Depth.limit then
+      let trace_str =
+        depth.Depth.locs |> Base.List.map ~f:Reason.string_of_loc |> Base.String.concat ~sep:"\n"
+      in
+      let log_message =
+        Printf.sprintf
+          "GetDef_js loop depth exceeded %d. Trace (most recent first):\n%s"
+          Depth.limit
+          trace_str
+      in
+      Partial (req_loc, log_message)
+    else
+      let open Get_def_process_location in
+      match
+        process_location_in_typed_ast ~is_legit_require ~typed_ast ~module_ref_prefix req_loc
+      with
+      | OwnDef aloc -> Def (loc_of_aloc ~reader aloc)
+      | Request request ->
+        (match process_request ~options ~reader ~cx ~is_legit_require ~typed_ast request with
+        | Ok res_loc ->
+          (* two scenarios where we stop trying to recur:
+             - when req_loc = res_loc, meaning we've reached a fixed point so
+               continuing would make us infinite loop
+             - when res_loc is not in the file the request originated from, meaning
+               the typed_ast we have is the wrong one to recur with *)
+          if Loc.equal req_loc res_loc || Loc.(res_loc.source <> requested_loc.source) then
+            Def res_loc
+          else (
+            match loop ~depth:(Depth.add req_loc depth) res_loc with
+            | Bad_loc -> Def res_loc
+            | Def_error msg -> Partial (res_loc, msg)
+            | (Def _ | Partial _) as res -> res
+          )
+        | Error msg -> Def_error msg)
+      | LocNotFound -> Bad_loc
   in
-  loop requested_loc
+  loop ~depth:Depth.empty requested_loc
