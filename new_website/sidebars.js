@@ -61,5 +61,10 @@ module.exports = {
         'lang/types-first',
       ],
     },
+    {
+      type: 'category',
+      label: 'Flow CLI',
+      items: ['cli/index', 'cli/coverage', 'cli/annotate-exports'],
+    },
   ],
 };
