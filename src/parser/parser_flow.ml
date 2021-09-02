@@ -135,7 +135,9 @@ module rec Parse : PARSER = struct
       error_on_decorators env decorators;
       let statement =
         match Peek.ith_token ~i:1 env with
-        | T_LPAREN -> Statement.expression env
+        | T_LPAREN (* import(...) *)
+        | T_PERIOD (* import.meta *) ->
+          Statement.expression env
         | _ -> Statement.import_declaration env
       in
       statement

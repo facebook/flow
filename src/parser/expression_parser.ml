@@ -69,6 +69,14 @@ module Expression
             comments = _;
           } ) ->
       false
+    | ( _,
+        MetaProperty
+          {
+            MetaProperty.meta = (_, { Identifier.name = "import"; comments = _ });
+            property = (_, { Identifier.name = "meta"; comments = _ });
+            comments = _;
+          } ) ->
+      false
     (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
     | (_, Array _)
     | (_, Identifier _)
@@ -255,6 +263,14 @@ module Expression
           {
             MetaProperty.meta = (_, { Identifier.name = "new"; comments = _ });
             property = (_, { Identifier.name = "target"; comments = _ });
+            comments = _;
+          } ) ->
+      false
+    | ( _,
+        MetaProperty
+          {
+            MetaProperty.meta = (_, { Identifier.name = "import"; comments = _ });
+            property = (_, { Identifier.name = "meta"; comments = _ });
             comments = _;
           } ) ->
       false
@@ -677,17 +693,32 @@ module Expression
     with_loc
       (fun env ->
         let leading = Peek.comments env in
+        let start_loc = Peek.loc env in
         Expect.token env T_IMPORT;
-        let leading_arg = Peek.comments env in
-        Expect.token env T_LPAREN;
-        let argument = add_comments (assignment (with_no_in false env)) ~leading:leading_arg in
-        Expect.token env T_RPAREN;
-        let trailing = Eat.trailing_comments env in
-        Expression.Import
-          {
-            Expression.Import.argument;
-            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-          })
+        if Eat.maybe env T_PERIOD then (
+          (* import.meta *)
+          let import_ident = Flow_ast_utils.ident_of_source (start_loc, "import") in
+          let meta_loc = Peek.loc env in
+          Expect.identifier env "meta";
+          let meta_ident = Flow_ast_utils.ident_of_source (meta_loc, "meta") in
+          let trailing = Eat.trailing_comments env in
+          Expression.MetaProperty
+            {
+              Expression.MetaProperty.meta = import_ident;
+              property = meta_ident;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            }
+        ) else
+          let leading_arg = Peek.comments env in
+          Expect.token env T_LPAREN;
+          let argument = add_comments (assignment (with_no_in false env)) ~leading:leading_arg in
+          Expect.token env T_RPAREN;
+          let trailing = Eat.trailing_comments env in
+          Expression.Import
+            {
+              Expression.Import.argument;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            })
       env
 
   and call_cover ?(allow_optional_chain = true) ?(in_optional_chain = false) env start_loc left =
