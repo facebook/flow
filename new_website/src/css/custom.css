@@ -23,9 +23,11 @@
   --ifm-color-primary-lighter: #dc2319;
   --ifm-color-primary-lightest: #dc2319;
   --ifm-code-font-size: 95%;
-  --flow-yellow: #E8BD36;
+  --flow-yellow: #e8bd36;
   --flow-gray-darker: #384048;
   --flow-gray-darkest: #2d343a;
+  --flow-green: #9cd732;
+  --flow-red: #dc2319;
 }
 
 .docusaurus-highlight-code-line {
@@ -40,7 +42,7 @@
 }
 
 .navbar .navbar__link {
-  color: rgba(255,255,255,0.7);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .navbar__brand {
@@ -48,5 +50,21 @@
 }
 
 .rounded {
-  border-radius: .25rem;
+  border-radius: 0.25rem;
+}
+
+.version {
+  padding: 3px 5px;
+  font-size: 12px;
+  border-radius: 6px;
+  display: inline-block;
+  vertical-align: middle;
+}
+.version.added {
+  background: var(--flow-green);
+  color: white;
+}
+.version.removed {
+  background: var(--flow-red);
+  color: white;
 }

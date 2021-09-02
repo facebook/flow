@@ -66,5 +66,20 @@ module.exports = {
       label: 'Flow CLI',
       items: ['cli/index', 'cli/coverage', 'cli/annotate-exports'],
     },
+    {
+      type: 'category',
+      label: 'Configuration',
+      items: [
+        'config/index',
+        'config/include',
+        'config/ignore',
+        'config/untyped',
+        'config/libs',
+        'config/lints',
+        'config/options',
+        'config/version',
+        'config/declarations',
+      ],
+    },
   ],
 };
