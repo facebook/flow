@@ -344,7 +344,6 @@ module Make (Extra : BASE_STATS) = struct
       method! program prog =
         (* Gather used identifier names *)
         let reserved_names = Queries.used_names prog in
-        SSet.iter (fun s -> Utils_js.prerr_endlinef "reserved name: %s" s) reserved_names;
         let file = cctx.Codemod_context.Typed.file in
         remote_converter <-
           Some
