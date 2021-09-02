@@ -55,6 +55,8 @@ let extract_flowlibs_or_exit options =
 
 type 'a unit_result = ('a, ALoc.t * Error_message.internal_error) result
 
+type 'a result_list = (File_key.t * 'a option unit_result) list
+
 type ('a, 'ctx) abstract_visitor =
   options:Options.t -> (Loc.t, Loc.t) Flow_ast.Program.t -> 'ctx -> 'a
 
@@ -116,16 +118,16 @@ module type STEP_RUNNER = sig
   val init_run :
     ServerEnv.genv ->
     FilenameSet.t ->
-    (Profiling_js.finished * (env * accumulator unit_result FilenameMap.t)) Lwt.t
+    (Profiling_js.finished * (env * accumulator result_list)) Lwt.t
 
   val recheck_run :
     ServerEnv.genv ->
     env ->
     iteration:int ->
     FilenameSet.t ->
-    (Profiling_js.finished * (env * accumulator unit_result FilenameMap.t)) Lwt.t
+    (Profiling_js.finished * (env * accumulator result_list)) Lwt.t
 
-  val digest : accumulator unit_result FilenameMap.t -> FilenameMap.key list * accumulator
+  val digest : accumulator result_list -> File_key.t list * accumulator
 end
 
 module type RUNNABLE = sig
@@ -195,38 +197,38 @@ let merge_job ~worker_mutator ~options ~reader component =
 (* The processing step in Types-First needs to happen right after the check phase.
    We have already merged any necessary dependencies, so now we only check the
    target files for processing. *)
-let check_job ~visit ~iteration ~reader ~options acc roots =
-  let metadata = Context.metadata_of_options options in
-  let check = Merge_service.mk_check options ~reader () in
-  List.fold_left
-    (fun acc file ->
-      match check file with
-      | Ok None -> acc
-      | Ok (Some ((full_cx, type_sig, file_sig, typed_ast), _)) ->
-        let reader = Abstract_state_reader.Mutator_state_reader reader in
-        let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
-        let ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
-        let docblock = Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader file in
-        let ccx =
-          {
-            Codemod_context.Typed.file;
-            type_sig;
-            file_sig;
-            metadata;
-            options;
-            full_cx;
-            master_cx;
-            typed_ast;
-            docblock;
-            iteration;
-            reader;
-          }
-        in
-        let result = visit ~options ast ccx in
-        FilenameMap.add file (Ok result) acc
-      | Error e -> FilenameMap.add file (Error e) acc)
-    acc
-    roots
+let post_check ~visit ~iteration ~reader ~options ~metadata file check_result =
+  match check_result with
+  | (Ok None | Error _) as result -> result
+  | Ok (Some ((full_cx, type_sig, file_sig, typed_ast), _)) ->
+    let reader = Abstract_state_reader.Mutator_state_reader reader in
+    let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
+    let ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
+    let docblock = Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader file in
+    let ccx =
+      {
+        Codemod_context.Typed.file;
+        type_sig;
+        file_sig;
+        metadata;
+        options;
+        full_cx;
+        master_cx;
+        typed_ast;
+        docblock;
+        iteration;
+        reader;
+      }
+    in
+    let result = visit ~options ast ccx in
+    Ok (Some ((), result))
+
+let mk_next ~options ~workers roots =
+  Job_utils.mk_next
+    ~intermediate_result_callback:(fun _ -> ())
+    ~max_size:(Options.max_files_checked_per_worker options)
+    ~workers
+    ~files:(FilenameSet.elements roots)
 
 module type TYPED_RUNNER_WITH_PREPASS_CONFIG = sig
   type accumulator
@@ -265,7 +267,7 @@ module type TYPED_RUNNER_CONFIG = sig
     Profiling_js.running ->
     Utils_js.FilenameSet.t ->
     iteration:int ->
-    accumulator unit_result Utils_js.FilenameMap.t Lwt.t
+    accumulator result_list Lwt.t
 end
 
 (* Checks the codebase and applies C, providing it with the inference context. *)
@@ -301,13 +303,17 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
         in
         Hh_logger.info "Merging done.";
         Hh_logger.info "Checking %d files" (FilenameSet.cardinal roots);
+        let options = C.check_options options in
+        let (next, merge) = mk_next ~options ~workers roots in
+        let metadata = Context.metadata_of_options options in
+        let post_check = post_check ~visit:C.visit ~iteration ~reader ~options ~metadata in
         let%lwt result =
           MultiWorkerLwt.call
             workers
-            ~job:(check_job ~visit:C.visit ~iteration ~reader ~options:(C.check_options options))
-            ~neutral:FilenameMap.empty
-            ~merge:FilenameMap.union
-            ~next:(MultiWorkerLwt.next workers (FilenameSet.elements roots))
+            ~job:(Job_utils.job ~post_check ~reader ~options)
+            ~neutral:[]
+            ~merge
+            ~next
         in
         Hh_logger.info "Done";
         Lwt.return result)
@@ -377,6 +383,7 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
         Hh_logger.info "Merging done.";
         let files_to_check = CheckedSet.all files_to_check in
         Hh_logger.info "Pre-Checking %d files" (FilenameSet.cardinal files_to_check);
+        (* TODO: refactor pre-pass to use Job_utils as well *)
         let%lwt result =
           MultiWorkerLwt.call
             workers
@@ -390,13 +397,16 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
         C.store_precheck_result result;
         Hh_logger.info "Storing pre-checking results Done";
         Hh_logger.info "Checking+Codemodding %d files" (FilenameSet.cardinal roots);
+        let (next, merge) = mk_next ~options ~workers roots in
+        let metadata = Context.metadata_of_options options in
+        let post_check = post_check ~visit:C.visit ~iteration ~reader ~options ~metadata in
         let%lwt result =
           MultiWorkerLwt.call
             workers
-            ~job:(check_job ~visit:C.visit ~iteration ~reader ~options)
-            ~neutral:FilenameMap.empty
-            ~merge:FilenameMap.union
-            ~next:(MultiWorkerLwt.next workers (FilenameSet.elements roots))
+            ~job:(Job_utils.job ~post_check ~reader ~options)
+            ~neutral:[]
+            ~merge
+            ~next
         in
         Hh_logger.info "Checking+Codemodding Done";
         Lwt.return result)
@@ -462,43 +472,46 @@ module TypedRunner (TypedRunnerConfig : TYPED_RUNNER_CONFIG) : STEP_RUNNER = str
         Lwt.return (env, results))
 
   let digest results =
-    FilenameMap.fold
-      (fun file_key result acc ->
+    List.fold_left
+      (fun acc (file_key, result) ->
         match result with
-        | Ok ok ->
+        | Ok (Some ok) ->
           let (acc_files, acc_result) = acc in
           (file_key :: acc_files, TypedRunnerConfig.reporter.Codemod_report.combine acc_result ok)
+        | Ok None -> acc
         | Error (aloc, err) ->
           Utils_js.prerr_endlinef
             "%s: %s"
             (Reason.string_of_aloc aloc)
             (Error_message.string_of_internal_error err);
           acc)
-      results
       ([], TypedRunnerConfig.reporter.Codemod_report.empty)
+      results
 end
 
 let untyped_runner_job ~mk_ccx ~visit ~abstract_reader file_list =
   List.fold_left
-    (fun results file ->
-      let file_sig =
-        Parsing_heaps.Reader_dispatcher.get_file_sig_unsafe ~reader:abstract_reader file
-      in
-      let ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader:abstract_reader file in
-      FilenameMap.add file (Ok (visit ast (mk_ccx file file_sig))) results)
-    FilenameMap.empty
+    Parsing_heaps.Reader_dispatcher.(
+      fun acc file ->
+        let file_sig = get_file_sig_unsafe ~reader:abstract_reader file in
+        let ast = get_ast_unsafe ~reader:abstract_reader file in
+        let result = visit ast (mk_ccx file file_sig) in
+        (file, Ok (Some result)) :: acc)
+    []
     file_list
 
 let untyped_digest ~reporter results =
-  FilenameMap.fold
-    (fun file_key r acc ->
-      match r with
-      | Error _ -> acc
-      | Ok result ->
+  List.fold_left
+    (fun acc (file_key, result) ->
+      match result with
+      | Error _
+      | Ok None ->
+        acc
+      | Ok (Some result) ->
         let (acc_files, acc_result) = acc in
         (file_key :: acc_files, reporter.Codemod_report.combine result acc_result))
-    results
     ([], reporter.Codemod_report.empty)
+    results
 
 (* UntypedRunner - This runner just parses the specified roots, this means no addition
  * info other than what is passed to the job is available but means this runner is fast. *)
@@ -545,8 +558,8 @@ module UntypedRunner (C : UNTYPED_RUNNER_CONFIG) : STEP_RUNNER = struct
                 workers
                 ~job:(fun _c file_key ->
                   untyped_runner_job ~mk_ccx ~visit ~abstract_reader file_key)
-                ~neutral:FilenameMap.empty
-                ~merge:FilenameMap.union
+                ~neutral:[]
+                ~merge:List.rev_append
                 ~next
             in
             Lwt.return ((), result)))
@@ -608,8 +621,8 @@ module UntypedFlowInitRunner (C : UNTYPED_FLOW_INIT_RUNNER_CONFIG) : STEP_RUNNER
           MultiWorkerLwt.call
             workers
             ~job:(fun _c file_key -> untyped_runner_job ~visit ~mk_ccx ~abstract_reader file_key)
-            ~neutral:FilenameMap.empty
-            ~merge:FilenameMap.union
+            ~neutral:[]
+            ~merge:List.rev_append
             ~next
         in
         Lwt.return ((), result))
