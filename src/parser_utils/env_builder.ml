@@ -507,6 +507,9 @@ module Make
     (* We maintain a map of read locations to raw Val.t terms, which are
        simplified to lists of write locations once the analysis is done. *)
     values: Val.t L.LMap.t;
+    (* We also maintain a list of all write locations, for use in populating the env with
+       types. *)
+    write_entries: L.t virtual_reason list;
     curr_id: int;
     (* Maps refinement ids to refinements. This mapping contains _all_ the refinements reachable at
      * any point in the code. The latest_refinement maps keep track of which entries to read. *)
@@ -559,6 +562,7 @@ module Make
       val mutable env_state : env_builder_state =
         {
           values = L.LMap.empty;
+          write_entries = [];
           curr_id = 0;
           refinement_heap = IMap.empty;
           latest_refinements = [];
@@ -568,6 +572,8 @@ module Make
         }
 
       method values : Env_api.values = L.LMap.map Val.simplify env_state.values
+
+      method write_entries : L.t virtual_reason list = env_state.write_entries
 
       method private new_id () =
         let new_id = env_state.curr_id in
@@ -652,17 +658,13 @@ module Make
 
       method private mk_env =
         SMap.map (fun (_, (loc, _)) ->
+            let providers =
+              Base.Option.value ~default:[] (Provider_api.providers_of_def provider_info loc)
+            in
+            env_state <- { env_state with write_entries = providers @ env_state.write_entries };
             {
               val_ref = ref (Val.uninitialized ());
-              havoc =
-                Havoc.
-                  {
-                    unresolved = Val.mk_unresolved ();
-                    locs =
-                      Base.Option.value
-                        ~default:[]
-                        (Provider_api.providers_of_def provider_info loc);
-                  };
+              havoc = Havoc.{ unresolved = Val.mk_unresolved (); locs = providers };
             })
 
       method private push_env bindings =
@@ -771,7 +773,10 @@ module Make
         let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) loc in
         begin
           match SMap.find_opt x env_state.env with
-          | Some { val_ref; _ } -> val_ref := Val.one reason
+          | Some { val_ref; _ } ->
+            val_ref := Val.one reason;
+            let write_entries = reason :: env_state.write_entries in
+            env_state <- { env_state with write_entries }
           | _ -> ()
         end;
         super#identifier ident
@@ -2407,6 +2412,7 @@ module Make
         Env_api.scopes;
         ssa_values;
         env_values = env_walk#values;
+        env_entries = env_walk#write_entries;
         providers;
         refinement_of_id = env_walk#refinement_of_id;
       } )

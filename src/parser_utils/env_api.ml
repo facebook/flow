@@ -79,6 +79,7 @@ module type S = sig
     scopes: Scope_api.info;
     ssa_values: Ssa_api.values;
     env_values: values;
+    env_entries: L.t virtual_reason list;
     providers: Provider_api.info;
     refinement_of_id: int -> Refi.refinement;
   }
@@ -179,6 +180,7 @@ module Make
     scopes: Scope_api.info;
     ssa_values: Ssa_api.values;
     env_values: values;
+    env_entries: L.t virtual_reason list;
     providers: Provider_api.info;
     refinement_of_id: int -> refinement;
   }
@@ -188,6 +190,7 @@ module Make
       scopes = Scope_builder.Acc.init;
       ssa_values = L.LMap.empty;
       env_values = L.LMap.empty;
+      env_entries = [];
       providers = Provider_api.empty;
       refinement_of_id = (fun _ -> failwith "Empty env info");
     }
