@@ -1755,7 +1755,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | ( GenericT ({ bound = bound1; id = id1; reason = reason1; _ } as g1),
         GenericT ({ bound = bound2; id = id2; reason = reason2; _ } as g2) ) ->
       begin
-        match Generic.satisfies ~printer:(print_if_verbose_lazy cx trace) id1 id2 with
+        match Generic.satisfies ~printer:(print_if_verbose_lazy cx ~trace) id1 id2 with
         | Generic.Satisfied ->
           rec_flow_t
             cx

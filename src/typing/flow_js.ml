@@ -281,7 +281,7 @@ struct
          discarded depending on whether the case that created the action is
          selected or not. *)
       if Speculation.defer_action cx (Speculation_state.FlowAction (l, u)) then
-        print_if_verbose cx trace ~indent:1 ["deferred during speculation"]
+        print_if_verbose cx ~trace ~indent:1 ["deferred during speculation"]
       else if
         match l with
         | AnyT _ ->
@@ -9558,7 +9558,7 @@ struct
                       ~printer:
                         (print_if_verbose_lazy
                            cx
-                           (Base.Option.value trace ~default:Trace.dummy_trace))
+                           ~trace:(Base.Option.value trace ~default:Trace.dummy_trace))
                       generic_state
                       generic
                       ro ))
@@ -9650,11 +9650,7 @@ struct
             in
             let tset = TypeExSet.add elemt tset in
             let generic =
-              Generic.ArraySpread.merge
-                ~printer:(print_if_verbose_lazy cx Trace.dummy_trace)
-                generic
-                generic'
-                ro
+              Generic.ArraySpread.merge ~printer:(print_if_verbose_lazy cx) generic generic' ro
             in
             flatten cx r args (Some (tset, generic)) rest
       in
@@ -10270,8 +10266,8 @@ struct
 
   (* Externally visible function for unification. *)
   (* Calls internal entry point and traps runaway recursion. *)
-  and unify cx t1 t2 =
-    try unify_opt cx ~use_op:unknown_use ~unify_any:true t1 t2 with
+  and unify cx ?(use_op = unknown_use) t1 t2 =
+    try unify_opt cx ~use_op ~unify_any:true t1 t2 with
     | RecursionCheck.LimitExceeded trace ->
       (* log and continue *)
       let reasons = FlowError.ordered_reasons (reason_of_t t1, reason_of_t t2) in

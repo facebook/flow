@@ -33,7 +33,7 @@ module TrustKit (Flow : Flow_common.S) : Flow_common.TRUST_CHECKING = struct
      See below for the algorithm that uses these helpers.
   *)
   let set_new_lower_bound cx trace id ltrust utrust new_trust ubounds =
-    print_if_verbose cx trace [Printf.sprintf "Tainting %d to %s" id (string_of_trust new_trust)];
+    print_if_verbose cx ~trace [Printf.sprintf "Tainting %d to %s" id (string_of_trust new_trust)];
     if subtype_trust ltrust utrust then (
       set_trust ubounds new_trust;
       true
@@ -97,7 +97,10 @@ module TrustKit (Flow : Flow_common.S) : Flow_common.TRUST_CHECKING = struct
   (* These functions work exactly as above, except for upper trust bounds
      propagating to lower variable bounds, and with publicity instead of taint. *)
   let set_new_upper_bound cx trace id ltrust utrust new_trust lbounds =
-    print_if_verbose cx trace [Printf.sprintf "Publicizing %d to %s" id (string_of_trust new_trust)];
+    print_if_verbose
+      cx
+      ~trace
+      [Printf.sprintf "Publicizing %d to %s" id (string_of_trust new_trust)];
     if subtype_trust ltrust utrust then (
       set_trust lbounds new_trust;
       true
@@ -155,7 +158,7 @@ module TrustKit (Flow : Flow_common.S) : Flow_common.TRUST_CHECKING = struct
       let utrust = get_trust ub in
       let (u_lowervars, u_uppervars) = get_bounds ub in
       if not (ISet.mem id1 u_lowervars) then (
-        print_if_verbose cx trace [Printf.sprintf "Trust linking %d to %d" id1 id2];
+        print_if_verbose cx ~trace [Printf.sprintf "Trust linking %d to %d" id1 id2];
         if flow_new_lower_bound cx trace ltrust id2 ub then
           if flow_new_upper_bound cx trace utrust id1 lb then (
             let new_upper = ISet.add id2 u_uppervars in
@@ -195,7 +198,6 @@ module TrustKit (Flow : Flow_common.S) : Flow_common.TRUST_CHECKING = struct
       if new_trust <> trust then (
         print_if_verbose
           cx
-          Trace.dummy_trace
           [
             Printf.sprintf
               "Strengthening %d from %s to %s"

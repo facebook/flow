@@ -5,4 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+val read : Context.t -> ALoc.t -> Reason.t -> Type.t
+
 val initialize_all : Context.t -> unit

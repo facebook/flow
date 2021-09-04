@@ -40,7 +40,7 @@ module type BASE = sig
   val rec_unify :
     Context.t -> Type.trace -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit
 
-  val unify : Context.t -> Type.t -> Type.t -> unit
+  val unify : Context.t -> ?use_op:Type.use_op -> Type.t -> Type.t -> unit
 
   val unify_opt :
     Context.t ->

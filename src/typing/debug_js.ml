@@ -1764,7 +1764,8 @@ let dump_error_message =
         (dump_reason cx reason_prop)
 
 module Verbose = struct
-  let print_if_verbose_lazy cx trace ?(delim = "") ?(indent = 0) (lines : string list Lazy.t) =
+  let print_if_verbose_lazy
+      cx ?(trace = Trace.dummy_trace) ?(delim = "") ?(indent = 0) (lines : string list Lazy.t) =
     match Context.verbose cx with
     | Some { Verbose.indent = num_spaces; _ } ->
       let indent = max (indent + Trace.trace_depth trace - 1) 0 in
@@ -1775,9 +1776,10 @@ module Verbose = struct
       prerr_endline (String.concat delim lines)
     | None -> ()
 
-  let print_if_verbose cx trace ?(delim = "") ?(indent = 0) (lines : string list) =
+  let print_if_verbose
+      cx ?(trace = Trace.dummy_trace) ?(delim = "") ?(indent = 0) (lines : string list) =
     match Context.verbose cx with
-    | Some _ -> print_if_verbose_lazy cx trace ~delim ~indent (lazy lines)
+    | Some _ -> print_if_verbose_lazy cx ~trace ~delim ~indent (lazy lines)
     | None -> ()
 
   let print_types_if_verbose cx trace ?(note : string option) ((l : Type.t), (u : Type.use_t)) =
@@ -1788,6 +1790,6 @@ module Verbose = struct
         | Some x -> spf " ~> %s" x
         | None -> " ~>"
       in
-      print_if_verbose cx trace ~delim [dump_t ~depth cx l; dump_use_t ~depth cx u]
+      print_if_verbose cx ~trace ~delim [dump_t ~depth cx l; dump_use_t ~depth cx u]
     | None -> ()
 end

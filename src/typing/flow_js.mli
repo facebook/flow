@@ -15,7 +15,7 @@ val flow : Context.t -> Type.t * Type.use_t -> unit
 
 val flow_t : Context.t -> Type.t * Type.t -> unit
 
-val unify : Context.t -> Type.t -> Type.t -> unit
+val unify : Context.t -> ?use_op:Type.use_op -> Type.t -> Type.t -> unit
 
 val flow_p :
   Context.t ->
