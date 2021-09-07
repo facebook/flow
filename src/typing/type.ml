@@ -2648,6 +2648,8 @@ and React : sig
 end =
   React
 
+let unknown_use = TypeTerm.(Op UnknownUse)
+
 module Constraint = struct
   module UseTypeKey = struct
     type speculation_id = int
@@ -2727,6 +2729,103 @@ module Constraint = struct
     | Resolved (use_op, t)
     | FullyResolved (use_op, (lazy t)) ->
       [TypeTerm.UseT (use_op, t)]
+
+  let fully_resolved_node t =
+    Root { rank = 0; constraints = lazy (FullyResolved (unknown_use, lazy t)) }
+end
+
+(**************************)
+(* Annotation constraints *)
+(**************************)
+module AConstraint = struct
+  type op = Annot__Future_added_value__ of Reason.t
+
+  (** This kind of constraint is meant to represent type annotations. Unlike the
+      constraints described above that may gradually evolve towards the solution
+      of an unresolved tvar, annotation constraints are resolved immediately.
+
+      There are three kinds of constraints:
+
+      - [Annot_unresolved _] is a constraint for which we have no information yet.
+        This state is associated, for example, with a type variable representing
+        a type alias that we have just started visiting, and so do not have a
+        type for its body yet.
+
+      - [Annot_op { op; id; _ }] expresses the fact that the current variable is the
+        result of applying the opereation [op] on the type that another annotation
+        variable [id] will resolve to.
+
+      - [Annot_resolved] is the state of a fully-resolved annotation variable.
+
+      An annotation variable starts off in the Annot_unresolved or Annot_op state
+      and is resolved to the Annot_resolved state in one step.
+
+      As inference proceeds other types can depend on the current annotation variable
+      through an Annot_op constraint. This fact is recorded in the [dependents] set
+      that is maintained for every unresolved annotation variable. It is important
+      to keep this information around, so we can force these dependents into
+      evaluation when the current variable becomes resolved (see resolve_id in
+      annotation_inference.ml). An implied invariant is that all variables in the
+      dependent set are of the Annot_op kind.
+
+      While in one of the two initial states the respective annotation variable
+      ids are only present in the annotation graph. Once resolved, the resolved
+      type is immediately stored in the main type graph as FullyResolved constraint.
+
+      In rare cases like
+
+        // file rec-export.js
+        import {p} from './rec-export';
+        export {p};
+
+      it is possible for a variable to never become resolved. This is the equivalent
+      of a type variable (from above) to never accumulate any lower bounds. When
+      such constraints get detected, the result is immediately replaced with 'any',
+      which is similar to how we handle the above constraints, when that type
+      variable is exported.
+  *)
+  type constraints =
+    | Annot_unresolved of {
+        reason: Reason.t;
+        mutable dependents: ISet.t;
+      }
+    | Annot_op of {
+        op: op;
+        id: int;
+        mutable dependents: ISet.t;
+      }
+    | Annot_resolved
+
+  let string_of_operation = function
+    | Annot__Future_added_value__ _ -> "Annot__Future_added_value__"
+
+  let reason_of_op = function
+    | Annot__Future_added_value__ r -> r
+
+  let to_annot_op_exn = function
+    | Annot_unresolved _ -> failwith "to_annot_op_exn on unresolved"
+    | Annot_resolved -> failwith "to_annot_op_exn on resolved"
+    | Annot_op { op; _ } -> op
+
+  include Union_find.Make (struct
+    type t = constraints
+  end)
+
+  let new_root constraints = Root { rank = 0; constraints = lazy constraints }
+
+  let fully_resolved_root = { rank = 0; constraints = lazy Annot_resolved }
+
+  let fully_resolved_node = Root fully_resolved_root
+
+  let deps_of_constraint = function
+    | Annot_unresolved { dependents; _ } -> dependents
+    | Annot_op { dependents; _ } -> dependents
+    | Annot_resolved -> ISet.empty
+
+  let update_deps_of_constraint ~f = function
+    | Annot_unresolved d -> d.dependents <- f d.dependents
+    | Annot_op d -> d.dependents <- f d.dependents
+    | Annot_resolved -> ()
 end
 
 module TypeContext = struct
@@ -3475,8 +3574,6 @@ let ro_of_arrtype = function
 let annot use_desc = function
   | OpenT (r, _) as t -> AnnotT (r, t, use_desc)
   | t -> t
-
-let unknown_use = Op UnknownUse
 
 (* The following functions are used as constructors for function types and
    object types, which unfortunately have many fields, not all of which are

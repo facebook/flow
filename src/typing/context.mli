@@ -510,3 +510,11 @@ val exists_instantiations : t -> Type.t list ALocIDMap.t
 val add_exists_instantiation : t -> ALoc.t -> Type.t -> unit
 
 val new_merging : t -> bool
+
+val add_avar : t -> int -> Type.AConstraint.node -> unit
+
+val find_avar : t -> int -> Type.ident * Type.AConstraint.root
+
+val find_avar_exn : t -> int -> Type.ident * Type.AConstraint.root
+
+val iter_annot_dependent_set : t -> (int -> Type.AConstraint.op -> unit) -> ISet.t -> unit

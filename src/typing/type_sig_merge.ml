@@ -86,8 +86,6 @@ let obj_lit_reason ~frozen loc =
 let trust = Trust.bogus_trust ()
 
 module type CONS_GEN = sig
-  val flow : Context.t -> Type.t * Type.use_t -> unit
-
   val unresolved_tvar : Context.t -> Reason.t -> int
 
   val mk_typeof_annotation :
@@ -345,8 +343,6 @@ module Make (ConsGen : CONS_GEN) : S = struct
     | Pack.ObjRestP { loc; xs; def } ->
       let t = Lazy.force (Patterns.get file.patterns def) in
       let reason = Reason.(mk_reason RObjectPatternRestProp loc) in
-      (* Tvar.mk_where file.cx reason (fun tout ->
-          ConsGen.flow file.cx (t, Type.ObjRestT (reason, xs, tout, Reason.mk_id ()))) *)
       ConsGen.obj_rest file.cx reason xs t
     | Pack.IndexP { loc; i; def } ->
       let t = Lazy.force (Patterns.get file.patterns def) in

@@ -179,6 +179,8 @@ type component_t = {
   mutable matching_props: (Reason.reason * string * Type.t * Type.t) list;
   mutable implicit_instantiation_checks: Implicit_instantiation_check.t list;
   mutable inferred_indexers: Type.dicttype list ALocMap.t;
+  (* map from annot tvar ids to nodes used during annotation processing *)
+  mutable annot_graph: Type.AConstraint.node IMap.t;
 }
 
 type phase =
@@ -336,6 +338,7 @@ let make_ccx master_cx =
     fix_cache = Hashtbl.create 0;
     spread_cache = Hashtbl.create 0;
     speculation_state = ref [];
+    annot_graph = IMap.empty;
   }
 
 let make ccx metadata file aloc_table module_ref phase =
@@ -947,3 +950,35 @@ let new_merging cx =
   match cx.phase with
   | Merging x -> x
   | _ -> false
+
+let add_avar cx id node = cx.ccx.annot_graph <- IMap.add id node cx.ccx.annot_graph
+
+let find_avar_exn cx id =
+  let (annot_graph', root_id, constraints) = Type.AConstraint.find_root cx.ccx.annot_graph id in
+  cx.ccx.annot_graph <- annot_graph';
+  (root_id, constraints)
+
+let find_avar cx id =
+  try find_avar_exn cx id with
+  | Union_find.Tvar_not_found root_id ->
+    (* When an id is missing in the annot graph, then it _must_ be resolved and
+     * part of the type graph. *)
+    add_avar cx root_id Type.AConstraint.fully_resolved_node;
+    (root_id, Type.AConstraint.fully_resolved_root)
+
+let iter_annot_dependent_set cx f set =
+  let (_ : ISet.t) =
+    ISet.fold
+      (fun i seen ->
+        let (root_id, root) = find_avar cx i in
+        if ISet.mem root_id seen then
+          seen
+        else
+          let constraints = Lazy.force root.Type.AConstraint.constraints in
+          let op = Type.AConstraint.to_annot_op_exn constraints in
+          let () = f root_id op in
+          ISet.add root_id seen)
+      set
+      ISet.empty
+  in
+  ()
