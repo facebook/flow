@@ -1,0 +1,45 @@
+Error ----------------------------------------------------------------------------------------------- import_meta.js:4:2
+
+Cannot cast `import.meta` to number literal `1` because mixed [1] is incompatible with number literal `1` [2].
+[incompatible-cast]
+
+   import_meta.js:4:2
+   4| (import.meta: 1); // Error
+       ^^^^^^^^^^^ [1]
+
+References:
+   import_meta.js:4:15
+   4| (import.meta: 1); // Error
+                    ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ new_target.js:5:4
+
+Cannot cast `new.target` to boolean because mixed [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   new_target.js:5:4
+   5|   (new.target: boolean); // Error
+         ^^^^^^^^^^ [1]
+
+References:
+   new_target.js:5:16
+   5|   (new.target: boolean); // Error
+                     ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- new_target.js:13:6
+
+Cannot cast `new.target` to boolean because mixed [1] is incompatible with boolean [2]. [incompatible-cast]
+
+   new_target.js:13:6
+   13|     (new.target: boolean); // Error
+            ^^^^^^^^^^ [1]
+
+References:
+   new_target.js:13:18
+   13|     (new.target: boolean); // Error
+                        ^^^^^^^ [2]
+
+
+
+Found 3 errors

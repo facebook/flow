@@ -3643,6 +3643,22 @@ and expression_ ~cond ~annot cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression
   | Generator _ ->
     Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, GeneratorExpression));
     Tast_utils.error_mapper#expression ex
+  | MetaProperty
+      {
+        MetaProperty.meta = (_, { Ast.Identifier.name = "new"; _ }) as meta;
+        property = (_, { Ast.Identifier.name = "target"; _ }) as property;
+        comments;
+      } ->
+    let t = bogus_trust () |> MixedT.at loc in
+    ((loc, t), MetaProperty { MetaProperty.meta; property; comments })
+  | MetaProperty
+      {
+        MetaProperty.meta = (_, { Ast.Identifier.name = "import"; _ }) as meta;
+        property = (_, { Ast.Identifier.name = "meta"; _ }) as property;
+        comments;
+      } ->
+    let t = bogus_trust () |> MixedT.at loc in
+    ((loc, t), MetaProperty { MetaProperty.meta; property; comments })
   | MetaProperty _ ->
     Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, MetaPropertyExpression));
     Tast_utils.error_mapper#expression ex
