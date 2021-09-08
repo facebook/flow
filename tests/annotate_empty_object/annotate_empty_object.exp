@@ -1,4 +1,4 @@
->>> test.js (#changes: 13)
+>>> test.js (#changes: 20)
 //@flow
 
 declare var key : string;
@@ -9,10 +9,10 @@ x[key] = 3;
 let y = {};
 y.key = 4;
 
-let z = {};
+let z: { [string]: number } = {}; // should annot
 z["key"] = 5;
 
-let a = {};
+let a: { [string]: number } = {};
 a[key] = 3;
 a.key = 4;
 
@@ -68,14 +68,40 @@ function Crash<T>(value: T) {
   lastObj[lastProp] = value;
 }
 
-let z = {}; //should not annotate
+let z2 = {}; //should not annotate
+
+declare var u : "A" | "B" | "C";
+let o: { ["A" | "B" | "C"]: number } = {}; // should annot
+o[u] = 3;
+
+let arr2 = ["A", "B", "C"];
+let x2: { [string]: number } = {}; // should annot
+
+for (let k of arr2) {
+    x2[k] = 3
+}
+
+arr2.reduce<{ [string]: number }>(
+  (acc, key) => {
+    acc[key] = 4;
+    return acc;
+  },
+  {},
+) // annot on the targ to reduce
+
+
+function bar(x) {
+  x[u] = 3;
+}
+
+bar(({}: { ["A" | "B" | "C"]: number })); // annot
 
 >>> Launching report...
 
 Stats:
   Files changed:                            1
-  Number of annotations added:              9
-  Total size of annotations:               31
+  Number of annotations added:             15
+  Total size of annotations:               55
   Number of empty object errors:            0
 
 Errors:

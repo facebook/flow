@@ -116,19 +116,18 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
           None ) ->
         let ty_result = Codemod_annotator.get_ty cctx ~preserve_literals ~max_type_size loc in
         (match ty_result with
-        | Ok (Ty.Obj ({ Ty.obj_props = []; _ } as ty)) ->
+        | Ok (Ty.Obj ty) ->
           let ty_obj = this#unsealed_annot loc ty in
           begin
             match ty_obj.Ty.obj_kind with
             | Ty.IndexedObj _ ->
-              begin
-                match this#get_annot cloc (Ok (Ty.Obj ty_obj)) (Ast.Type.Missing cloc) with
-                | Ast.Type.Available (_, t) ->
-                  let targlist = [CallTypeArg.Explicit t] in
-                  let targs = Some (cloc, { CallTypeArgs.arguments = targlist; comments = None }) in
-                  { callee; arguments; comments; targs }
-                | _ -> super#call cloc expr
-              end
+              let ty_obj = { ty_obj with Ty.obj_props = [] } in
+              (match this#get_annot cloc (Ok (Ty.Obj ty_obj)) (Ast.Type.Missing cloc) with
+              | Ast.Type.Available (_, t) ->
+                let targlist = [CallTypeArg.Explicit t] in
+                let targs = Some (cloc, { CallTypeArgs.arguments = targlist; comments = None }) in
+                { callee; arguments; comments; targs }
+              | _ -> super#call cloc expr)
             | _ -> super#call cloc expr
           end
         | _ -> super#call cloc expr)
@@ -140,20 +139,19 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       | (loc, Object { Object.properties = []; _ }) ->
         let ty_result = Codemod_annotator.get_ty cctx ~preserve_literals ~max_type_size loc in
         (match ty_result with
-        | Ok (Ty.Obj ({ Ty.obj_props = []; _ } as ty)) ->
+        | Ok (Ty.Obj ty) ->
           let ty_obj = this#unsealed_annot loc ty in
           begin
             match ty_obj.Ty.obj_kind with
             | Ty.IndexedObj _ ->
-              begin
-                match this#get_annot loc (Ok (Ty.Obj ty_obj)) (Ast.Type.Missing loc) with
-                | Ast.Type.Available annot' ->
-                  ( loc,
-                    Ast.Expression.TypeCast
-                      { annot = annot'; expression = expr; Ast.Expression.TypeCast.comments = None }
-                  )
-                | _ -> super#expression expr
-              end
+              let ty_obj = { ty_obj with Ty.obj_props = [] } in
+              (match this#get_annot loc (Ok (Ty.Obj ty_obj)) (Ast.Type.Missing loc) with
+              | Ast.Type.Available annot' ->
+                ( loc,
+                  Ast.Expression.TypeCast
+                    { annot = annot'; expression = expr; Ast.Expression.TypeCast.comments = None }
+                )
+              | _ -> super#expression expr)
             | _ -> super#expression expr
           end
         | _ -> super#expression expr)
@@ -172,11 +170,12 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
                 Ast.Pattern.Identifier.{ annot = Ast.Type.Missing _ as annot; name; optional } ) ->
             let ty_result = Codemod_annotator.get_ty cctx ~preserve_literals ~max_type_size ploc in
             (match ty_result with
-            | Ok (Ty.Obj ({ Ty.obj_props = []; _ } as ty)) ->
+            | Ok (Ty.Obj ty) ->
               let ty_obj = this#unsealed_annot oloc ty in
               begin
                 match ty_obj.Ty.obj_kind with
                 | Ty.IndexedObj _ ->
+                  let ty_obj = { ty_obj with Ty.obj_props = [] } in
                   let annot' = this#get_annot ploc (Ok (Ty.Obj ty_obj)) annot in
                   ( ploc,
                     Ast.Pattern.Identifier Ast.Pattern.Identifier.{ annot = annot'; name; optional }

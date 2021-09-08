@@ -4310,6 +4310,12 @@ struct
         (**********************************************************************)
         | ( (DefT (_, _, (ObjT _ | ArrT _)) | AnyT _),
             SetElemT (use_op, reason_op, key, mode, tin, tout) ) ->
+          (if Context.experimental_infer_indexers cx then
+            let dicttype =
+              { dict_name = None; key; value = tin; dict_polarity = Polarity.Neutral }
+            in
+            let loc = def_aloc_of_reason (reason_of_t l) in
+            Context.add_inferred_indexer cx loc dicttype);
           rec_flow cx trace (key, ElemT (use_op, reason_op, l, WriteElem (tin, tout, mode)))
         | ((DefT (_, _, (ObjT _ | ArrT _)) | AnyT _), GetElemT (use_op, reason_op, key, tout)) ->
           rec_flow cx trace (key, ElemT (use_op, reason_op, l, ReadElem tout))
@@ -7809,15 +7815,6 @@ struct
         | GenericT { bound = DefT (_, _, NumT _); _ }
         | DefT (_, _, StrT _)
         | DefT (_, _, NumT _) ->
-          (if
-           Context.experimental_infer_indexers cx
-           && not (Obj_type.sealed_in_op reason_op o.flags.obj_kind)
-          then
-            let dicttype =
-              { dict_name = None; key = elem_t; value = prop_t; dict_polarity = Polarity.Neutral }
-            in
-            let loc = def_aloc_of_reason reason_obj in
-            Context.add_inferred_indexer cx loc dicttype);
           (* string and number keys are allowed, but there's nothing else to
              flow without knowing their literal values. *)
           rec_flow_t

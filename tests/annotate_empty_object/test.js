@@ -8,7 +8,7 @@ x[key] = 3;
 let y = {};
 y.key = 4;
 
-let z = {};
+let z = {}; // should annot
 z["key"] = 5;
 
 let a = {};
@@ -60,4 +60,23 @@ function Crash<T>(value: T) {
   lastObj[lastProp] = value;
 }
 
-let z = {}; //should not annotate
+let z2 = {}; //should not annotate
+
+declare var u : "A" | "B" | "C";
+let o = {}; // should annot
+o[u] = 3;
+
+let arr2 = ["A", "B", "C"];
+let x2 = {}; // should annot
+
+for (let k of arr2) {
+    x2[k] = 3
+}
+
+arr2.reduce((acc, key) => { acc[key] = 4; return acc }, {}) // annot on the targ to reduce
+
+function bar(x) {
+  x[u] = 3;
+}
+
+bar({}); // annot
