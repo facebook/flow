@@ -3,8 +3,10 @@
   (wrapped false)
   (libraries
     flow_common_errors
-    flow_parser_utils
+    ; flow_parser_utils
+    flow_parser_utils_signature_builder
     flow_typing_scope
     flow_typing_type
   )
 )
+

@@ -10,5 +10,5 @@
     logging_common
     sys_utils
     utils_core)
-  (preprocess (pps lwt_ppx ppx_let))
+  (preprocess (pps lwt_ppx ppx_let ppx_deriving.std))
 )

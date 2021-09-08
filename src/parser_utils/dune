@@ -12,6 +12,8 @@
   flow_parser_utils_signature_builder
   flow_typing_polarity
   hh_json ; hack
+  flow_typing_type
+  flow_typing_errors
   )
  (preprocess
   (pps ppx_let ppx_deriving.std)))
