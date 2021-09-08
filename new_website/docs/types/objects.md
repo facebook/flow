@@ -185,7 +185,7 @@ var num: number = obj.foo;
 
 #### Reassigning unsealed object properties {#toc-reassigning-unsealed-object-properties}
 
-Similar to [`var` and `let` variables](./variables/#toc-reassigning-variables)
+Similar to [`var` and `let` variables](../variables/#toc-reassigning-variables)
 if you reassign a property of an unsealed object, by default Flow will give it
 the type of all possible assignments.
 
@@ -258,7 +258,7 @@ method({
 });
 ```
 
-> **Note:** This is because of ["width subtyping"](../lang/width-subtyping).
+> **Note:** This is because of ["width subtyping"](../../lang/width-subtyping).
 
 Sometimes it is useful to disable this behavior and only allow a specific set
 of properties. For this, Flow supports "exact" object types.
@@ -302,7 +302,7 @@ type Inexact = {foo: number, ...};
 ```
 
 [Flow is planning to make object types exact by default](https://medium.com/flow-type/on-the-roadmap-exact-objects-by-default-16b72933c5cf).
-This is available via an [option in your flowconfig](../config/options/#toc-exact-by-default-boolean).
+This is available via an [option in your flowconfig](../../config/options/#toc-exact-by-default-boolean).
 You can also read our [upgrade guide](https://medium.com/flow-type/how-to-upgrade-to-exact-by-default-object-type-syntax-7aa44b4d08ab)
 for steps to enable this option in your own project.
 
@@ -368,7 +368,7 @@ function add(id: number, name: string) {
 
 ### `Object` Type {#toc-object-type}
 
-> NOTE: For new code, prefer `any` or `{ [key: string]: any}`. `Object` is an alias to [`any`](./any) and will
+> NOTE: For new code, prefer `any` or `{ [key: string]: any}`. `Object` is an alias to [`any`](../any) and will
 > be deprecated and removed in a future version of Flow.
 
 Sometimes it is useful to write types that accept arbitrary objects, for
@@ -381,7 +381,7 @@ function method(obj: {}) {
 ```
 
 However, if you need to opt-out of the type checker, and don't want to go all
-the way to `any`, you could use `{ [key: string]: any}`. (Note that [`any`](./any) is unsafe and
+the way to `any`, you could use `{ [key: string]: any}`. (Note that [`any`](../any) is unsafe and
 should be avoided). For historical reasons, the `Object` keyword is still available.
 In previous versions of Flow, `Object` was the same
 as `{ [key: string]: any}`.

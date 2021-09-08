@@ -375,7 +375,7 @@ function method(func: () => mixed) {
 ```
 
 However, if you need to opt-out of the type checker, and don't want to go all
-the way to `any`, you can instead use `(...args: Array<any>) => any`. (Note that [`any`](./any) is unsafe and
+the way to `any`, you can instead use `(...args: Array<any>) => any`. (Note that [`any`](../any) is unsafe and
 should be avoided). For historical reasons, the `Function` keyword is still available.
 
 For example, the following code will not report any errors:
@@ -404,4 +404,4 @@ method(function(a: number, b: number) {
 });
 ```
 
-> **You should follow [all the same rules](./any) as `any` when using `Function`.**
+> **You should follow [all the same rules](../any) as `any` when using `Function`.**

@@ -106,7 +106,7 @@ interface MyInterface {
 }
 ```
 
-Also like [class methods](./classes#toc-class-methods), interface methods must also remain bound to the interface on which they were defined.
+Also like [class methods](../classes#toc-class-methods), interface methods must also remain bound to the interface on which they were defined.
 
 ### Interface Properties {#toc-interface-properties}
 
@@ -129,7 +129,7 @@ interface MyInterface {
 
 ### Interfaces as maps {#toc-interfaces-as-maps}
 
-You can create ["indexer properties"](./objects#toc-objects-as-maps) the same
+You can create ["indexer properties"](../objects#toc-objects-as-maps) the same
 way as with objects.
 
 ```js
@@ -140,7 +140,7 @@ interface MyInterface {
 
 ### Interface Generics {#toc-interface-generics}
 
-Interfaces can also have their own [generics](./generics/).
+Interfaces can also have their own [generics](../generics/).
 
 ```js
 interface MyInterface<A, B, C> {
@@ -149,7 +149,7 @@ interface MyInterface<A, B, C> {
 }
 ```
 
-Interface generics are [parameterized](./generics#toc-parameterized-generics).
+Interface generics are [parameterized](../generics#toc-parameterized-generics).
 When you use an interface you need to pass parameters for each of its generics.
 
 ```js
@@ -171,7 +171,7 @@ var val: MyInterface<number, boolean, string> = {
 
 ## Interface property variance (read-only and write-only) {#toc-interface-property-variance-read-only-and-write-only}
 
-Interface properties are [invariant](../lang/variance/) by default. But you
+Interface properties are [invariant](../../lang/variance/) by default. But you
 can add modifiers to make them covariant (read-only) or contravariant
 (write-only).
 

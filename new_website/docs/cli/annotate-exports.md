@@ -3,7 +3,7 @@ title: Flow Annotate-Exports
 slug: /cli/annotate-exports
 ---
 
-Upgrading to [Types-First](../lang/types-first) mode may require a substantial
+Upgrading to [Types-First](../../lang/types-first) mode may require a substantial
 number of type annotations at module boundaries. To help with the process of
 upgrading large codebases, we are providing a codemod command, whose goal is to
 fill in these missing annotations. This command is included in the Flow binary

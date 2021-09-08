@@ -133,8 +133,8 @@ opaque type Good: {x: string} = {x: string, y: number};
 
 ### Generics {#toc-generics}
 
-Opaque type aliases can also have their own [generics](./generics/),
-and they work exactly as generics do in regular [type aliases](./aliases#toc-type-alias-generics)
+Opaque type aliases can also have their own [generics](../generics/),
+and they work exactly as generics do in regular [type aliases](../aliases#toc-type-alias-generics)
 
 ```js
 // @flow
@@ -154,7 +154,7 @@ var val: MyObject<number, boolean, string> = {
 ### Library Definitions {#toc-library-definitions}
 
 You can also declare opaque type aliases in
-[libdefs](../libdefs). There, you omit the underlying
+[libdefs](../../libdefs). There, you omit the underlying
 type, but may still optionally include a super type.
 
 ```js

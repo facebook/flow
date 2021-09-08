@@ -17,7 +17,7 @@ class MyClass {
 let myInstance: MyClass = new MyClass();
 ```
 
-This is because classes in Flow are [nominally typed](../lang/nominal-structural).
+This is because classes in Flow are [nominally typed](../../lang/nominal-structural).
 
 ## Class Syntax {#toc-class-syntax}
 
@@ -122,7 +122,7 @@ class MyClass {
 
 ### Class Generics {#toc-class-generics}
 
-Classes can also have their own [generics](./generics).
+Classes can also have their own [generics](../generics).
 
 ```js
 class MyClass<A, B, C> {
@@ -133,7 +133,7 @@ class MyClass<A, B, C> {
 }
 ```
 
-Class generics are [parameterized](./generics#toc-parameterized-generics).
+Class generics are [parameterized](../generics#toc-parameterized-generics).
 When you use a class as a type you need to pass parameters for each of its
 generics.
 
@@ -159,5 +159,5 @@ class MyClass {}
 (new MyClass(): MyClass); // Ok
 ```
 
-See [here](./utilities#toc-class) for details on `Class<T>`, which allows you
+See [here](../utilities#toc-class) for details on `Class<T>`, which allows you
 to refer to the type of the class in an annotation.

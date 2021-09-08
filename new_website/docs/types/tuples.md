@@ -1,6 +1,6 @@
 ---
 title: Tuple Types
-slug: /types/tuple
+slug: /types/tuples
 ---
 
 Tuples are a sort of list but with a limited set of items. In JavaScript,

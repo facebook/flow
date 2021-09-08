@@ -4,7 +4,7 @@ slug: /config/libs
 ---
 
 The `[libs]` section in a `.flowconfig` file tells Flow to include the
-specified [library definitions](../libdefs/) when type
+specified [library definitions](../../libdefs/) when type
 checking your code. Multiple libraries can be specified. By default, the
 `flow-typed` folder in your project root directory is included as a library
 directory. This default allows you to use

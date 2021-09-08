@@ -12,4 +12,4 @@ ruleA=severityA
 ruleB=severityB
 ```
 
-Check out the [linting docs](../linting) for more information.
+Check out the [linting docs](../../linting) for more information.

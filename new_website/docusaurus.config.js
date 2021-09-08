@@ -18,6 +18,7 @@ module.exports = {
   favicon: 'img/favicon.png',
   organizationName: 'facebook', // Usually your GitHub org/user name.
   projectName: 'flow', // Usually your repo name.
+  trailingSlash: true,
   webpack: {
     // Compiling flow.js is too slow with babel...
     jsLoader: isServer => ({

@@ -3,7 +3,7 @@ title: Literal Types
 slug: /types/literals
 ---
 
-Flow has [primitive types](./primitives) for
+Flow has [primitive types](../primitives) for
 literal values, but can also use literal values as types.
 
 For example, instead of accepting `number` type, we could accept only the
@@ -28,7 +28,7 @@ You can use primitive values for these types:
 - Numbers: like `42` or `3.14`
 - Strings: like `"foo"` or `"bar"`
 
-Using these with [union types](./unions) is powerful:
+Using these with [union types](../unions) is powerful:
 
 ```js flow-check
 // @flow

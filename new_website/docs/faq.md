@@ -6,7 +6,7 @@ slug: /faq
 ## I checked that `foo.bar` is not `null`, but Flow still thinks it is. Why does this happen and how can I fix it?
 
 Flow does not keep track of side effects, so any function call may potentially nullify your check.
-This is called [refinement invalidation](https://flow.org/en/docs/lang/refinements/#toc-refinement-invalidations).
+This is called [refinement invalidation](../lang/refinements/#toc-refinement-invalidations).
 
 
 Example ([https://flow.org/try](https://flow.org/try/#0C4TwDgpgBACghgJzgWygXigbwFBSgI0QC4oB+AZ2AQEsA7AcwBpsBfbAMwFdaBjYagPa0oyEADFuPABTsBAkvCTIAlCUo0GWXFGrsoMuQDpCCZVrx4eQ8gIA2EQ7YH0pAIh4ALCDwDWEACYAhK7KANzaAJAIEMCcCMKyAsaIoVAA9GlQ7E4A7lAQCAgCCOSGUACSeiACnFBWyMgQtMBQwF511nYOTkw6LTnFPuTabHja0bHxUK7+EOxwnLYt6nT0ruEsQA)):
@@ -46,7 +46,7 @@ function myFunc(foo: Param): string {
 
 ## I checked that my object is of type A, so why does Flow still believe it's A | B?
 
-Refinement invalidation can also happen with [disjoint unions](https://flow.org/en/docs/types/unions/#toc-disjoint-unions). Any function call will invalidate any refinement.
+Refinement invalidation can also happen with [disjoint unions](../types/unions/#toc-disjoint-unions). Any function call will invalidate any refinement.
 
 Example ([https://flow.org/try](https://flow.org/try/#0PTAEAEDMBsHsHcBQAXAngBwKagEqYM7qwB2+2AvKIqKAD6gDeoaWAXKAOT4CuAxrwXwcANKABuAQ2jdM7fMgBOAS2IBzUAF9qdRswyzOmBQtgKRoIyYXsAosdOaA3IkS8S80AAsJxACbRMPEJ3ClAACgUCIlIDIOiyAEpQcgA+Rm0lSHDI4JiAOhYKckouPgF8ISSGbRoyZAAVJQBbTFhuZDCwpNT0mj7QN1JYALy4VTCAAwASBhz4zDzJaUwNUABGCYSazVE1gAYDhOcaLQ1HIA)):
 
@@ -140,7 +140,7 @@ const isNumber = (valueToRefine: ?number) => typeof valueToRefine === 'number';
 if (isNumber(val)) add(val, 2);
 ```
 
-However, Flow has [predicates functions](https://flow.org/en/docs/types/functions/#toc-predicate-functions) that can do these checks via `%checks`.
+However, Flow has [predicates functions](../types/functions/#toc-predicate-functions) that can do these checks via `%checks`.
 
 Example ([https://flow.org/try](https://flow.org/try/#0MYewdgzgLgBAhgEwTAvDAFAMwJYCdoBcMYArgLYBGAprgDQwRWhgJGmU0CUqAfDDvlgBqBk3AIA3AChm0GADc4AGyLRc2MAHMYAH2LlquVDACM02bGwQAcgZrH0ipSSoAVEACUqOMFTZ2jPTUNTU4iAFJgAAsmAGsIXhgoAE8AByoQTAVlF3cvHypUFDQAcnZDEulsLPQrWw5cR2VObkQEJqV6ACZOCSA))
 
@@ -300,7 +300,7 @@ const array = ['a', 'b']
 export const genericArray = array.map(a => a)
 ```
 
-Here, Flow will complain on the `export`, asking for a type annotation. Flow wants you to annotate exports returned by a generic function. The type of `Array.prototype.map` is `map<U>(callbackfn: (value: T, index: number, array: Array<T>) => U, thisArg?: any): Array<U>`. The `<U>` corresponds to what is called a [generic](https://flow.org/en/docs/types/generics/), to express the fact that the type of the function passed to map is linked to the type of the array.
+Here, Flow will complain on the `export`, asking for a type annotation. Flow wants you to annotate exports returned by a generic function. The type of `Array.prototype.map` is `map<U>(callbackfn: (value: T, index: number, array: Array<T>) => U, thisArg?: any): Array<U>`. The `<U>` corresponds to what is called a [generic](../types/generics/), to express the fact that the type of the function passed to map is linked to the type of the array.
 
 Understanding the logic behind generics might be useful, but what you really need to know to make your typings valid is that you need to help Flow to understand the type of `genericArray`.
 
@@ -323,7 +323,7 @@ export const genericArray: Array<string> = array.map(a => a)
 
 ## Flow cannot understand the types of my higher order React component, how can I help it?
 
-Typings HOCs can be complicated. While you can follow the [docs about it](https://flow.org/en/docs/react/hoc/), sometimes it can be easier to type the returned component.
+Typings HOCs can be complicated. While you can follow the [docs about it](../react/hoc/), sometimes it can be easier to type the returned component.
 
 For instance, in this [example](https://flow.org/try/#0PTAEAEDMBsHsHcBQBLAtgB1gJwC6gFSgCGAzqAEoCmRAxnpFrKqAORbV0sDciiNsAOxJ4SlHABUAnukqgAvKABCpSgGEmmAZQF45APlDpG6MvtAAeZaPUZB2vAG8AdC6OwTAX1A5plOQCIAIwBXHBxBf1BgPR5+ITwAcW1KLGQaRVDwgXlQAAoHHxkAGlAaAAtkaAATdgEPAEp5A3MQsMFvXzkC3y9BVWg0gGsu3MazOJJYaEonOABzXJYaAZpByiqWeo89B3LKmu0Pc2BWrJjeCbwMtoEALgoOHCcbTXspGXNdiura+6paJ4AOVgVUo2xyogkvlySS0qXSmUE9S4QA), we don't type the HOC (setType), but the component created with it, `Button`. To do so, we use the type `React.ComponentType`.
 

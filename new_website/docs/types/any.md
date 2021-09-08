@@ -3,7 +3,7 @@ title: Any Types
 slug: /types/any
 ---
 
-> **Warning:** Do not mistake `any` with `mixed`. [Read more](./mixed)
+> **Warning:** Do not mistake `any` with `mixed`. [Read more](../mixed)
 
 If you want a way to opt-out of using the type checker, `any` is the way to do
 it. **Using `any` is completely unsafe, and should be avoided whenever

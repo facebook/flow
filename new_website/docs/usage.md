@@ -3,7 +3,7 @@ title: Usage
 slug: /usage
 ---
 
-Once you have [installed](./install/) Flow, you will want to get a feel of how to use Flow at the most basic level. For most new Flow projects, you will follow this general pattern:
+Once you have [installed](../install/) Flow, you will want to get a feel of how to use Flow at the most basic level. For most new Flow projects, you will follow this general pattern:
 
 - [Initialize your project](#toc-initialize-your-project) with `flow init`.
 - Start the [Flow background process](#toc-run-the-flow-background-process) with `flow`.
@@ -19,11 +19,11 @@ Preparing a project for Flow requires only one command:
 flow init
 ```
 
-Run this command at the top level of your project to create one, empty file called [`.flowconfig`](./config/). At its most basic level, `.flowconfig` tells the Flow background process the root of where to begin checking Flow code for errors.
+Run this command at the top level of your project to create one, empty file called [`.flowconfig`](../config/). At its most basic level, `.flowconfig` tells the Flow background process the root of where to begin checking Flow code for errors.
 
 And that is it. Your project is now Flow-enabled.
 
-> It is common to have an empty `.flowconfig` file for your project. However, you can [configure and customize Flow](./config/) in many ways through options available to be added to `.flowconfig`.
+> It is common to have an empty `.flowconfig` file for your project. However, you can [configure and customize Flow](../config/) in many ways through options available to be added to `.flowconfig`.
 
 ### Run the Flow Background Process {#toc-run-the-flow-background-process}
 

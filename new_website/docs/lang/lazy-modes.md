@@ -52,7 +52,7 @@ To start a Flow server in IDE lazy mode, you run
 flow server --lazy-mode ide
 ```
 
-Alternatively, [you can set the lazy mode from the `.flowconfig`](/en/docs/config/options/#toc-lazy-mode-fs-ide-watchman-none).
+Alternatively, [you can set the lazy mode from the `.flowconfig`](../../config/options/#toc-lazy-mode-fs-ide-watchman-none).
 
 The IDE needs to integrate with `flow lsp` to tell Flow which files are open.
 
@@ -64,7 +64,7 @@ To start a Flow server in Filesystem lazy mode, you run
 flow server --lazy-mode fs
 ```
 
-Alternatively, [you can set the lazy mode from the `.flowconfig`](/en/docs/config/options/#toc-lazy-mode-fs-ide-watchman-none).
+Alternatively, [you can set the lazy mode from the `.flowconfig`](../../config/options/#toc-lazy-mode-fs-ide-watchman-none).
 
 ## Using Watchman Lazy Mode {#toc-using-watchman-lazy-mode}
 
@@ -80,7 +80,7 @@ To start a Flow server in Watchman lazy mode, you run
 flow server --lazy-mode Watchman
 ```
 
-Alternatively, [you can set the lazy mode from the `.flowconfig`](/en/docs/config/options/#toc-lazy-mode-fs-ide-watchman-none).
+Alternatively, [you can set the lazy mode from the `.flowconfig`](../../config/options/#toc-lazy-mode-fs-ide-watchman-none).
 
 ## Forcing Flow to Treat a File as Focused {#toc-forcing-flow-to-treat-a-file-as-focused}
 

@@ -3,9 +3,9 @@ title: Indexed Access Types
 slug: /types/indexed-access
 ---
 
-Flow’s Indexed Access Types allow you to get the type of a property from an [object](./objects), [array](./arrays), or [tuple](./tuples) type.
+Flow’s Indexed Access Types allow you to get the type of a property from an [object](../objects), [array](../arrays), or [tuple](../tuples) type.
 
-Indexed Access Types are a replacement for the [`$PropertyType`](./utilities#toc-propertytype) and [`$ElementType`](./utilities#toc-elementtype) utility types.
+Indexed Access Types are a replacement for the [`$PropertyType`](../utilities#toc-propertytype) and [`$ElementType`](../utilities#toc-elementtype) utility types.
 If you're familiar with those utility types already, here is a quick conversion guide:
 - `$PropertyType<Obj, 'prop'>` &rarr;  `Obj['prop']`
 - `$ElementType<Obj, T>` &rarr; `Obj[T]`

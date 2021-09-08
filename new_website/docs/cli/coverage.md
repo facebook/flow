@@ -6,7 +6,7 @@ The coverage command provides a metric of the amount of checking that Flow has
 performed on each part of your code. A program with high Flow coverage should
 increase your confidence that Flow has detected any potential runtime errors.
 
-The determining factor for this is the presence of [`any`](../types/any/) in the
+The determining factor for this is the presence of [`any`](../../types/any/) in the
 inferred type of each expression. An expression whose inferred type is `any` is
 considered *uncovered*, otherwise it is considered *covered*.
 

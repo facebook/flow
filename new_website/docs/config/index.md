@@ -16,14 +16,14 @@ this.
 
 The `.flowconfig` consists of 8 sections:
 
-* [`[include]`](./config/include)
-* [`[ignore]`](./config/ignore)
-* [`[untyped]`](./config/untyped)
-* [`[libs]`](./config/libs)
-* [`[lints]`](./config/lints)
-* [`[options]`](./config/options)
-* [`[version]`](./config/version)
-* [`[declarations]`](./config/declarations)
+* [`[include]`](./include)
+* [`[ignore]`](./ignore)
+* [`[untyped]`](./untyped)
+* [`[libs]`](./libs)
+* [`[lints]`](./lints)
+* [`[options]`](./options)
+* [`[version]`](./version)
+* [`[declarations]`](./declarations)
 
 ### Comments {#toc-comments}
 
@@ -44,7 +44,7 @@ followed by an `#` or `;` or `💩` are ignored. For example:
 The location of the `.flowconfig` is significant. Flow treats the directory that
 contains the `.flowconfig` as the _project root_. By default Flow includes all
 the source code under the project root. The paths in the
-[[include] section](./config/include) are relative to the project root. Some other
+[[include] section](./include) are relative to the project root. Some other
 configuration also lets you reference the project root via the macro
 `<PROJECT_ROOT>`.
 

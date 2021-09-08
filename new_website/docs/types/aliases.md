@@ -51,7 +51,7 @@ type AliasAlias = ObjectAlias;
 
 #### Type Alias Generics {#toc-type-alias-generics}
 
-Type aliases can also have their own [generics](./generics).
+Type aliases can also have their own [generics](../generics).
 
 ```js flow-check
 type MyObject<A, B, C> = {
@@ -60,7 +60,7 @@ type MyObject<A, B, C> = {
 };
 ```
 
-Type alias generics are [parameterized](./generics#toc-parameterized-generics).
+Type alias generics are [parameterized](../generics#toc-parameterized-generics).
 When you use a type alias you need to pass parameters for each of its generics.
 
 ```js flow-check
