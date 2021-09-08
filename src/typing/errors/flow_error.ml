@@ -41,11 +41,8 @@ let concretize_error = map_loc_of_error
 
 let kind_of_error err = msg_of_error err |> kind_of_msg
 
-(* I wish OCaml's scoping for types was better *)
-type 'loc err = 'loc t
-
-module Error (M : Set.OrderedType) : Set.OrderedType with type t = M.t err = struct
-  type t = M.t err
+module Error (M : Set.OrderedType) : Set.OrderedType with type t = M.t t = struct
+  type nonrec t = M.t t
 
   let compare = compare
 end
