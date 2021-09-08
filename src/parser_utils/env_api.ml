@@ -16,7 +16,7 @@ module type S = sig
 
   module Provider_api : Provider_api.S with module L = L
 
-  module ReasonSet : Set.S with type elt = L.t virtual_reason
+  module ReasonSet : Flow_set.S with type elt = L.t virtual_reason
 
   type read_loc = L.t
 
@@ -115,7 +115,7 @@ module Make
 
   module Provider_api : Provider_api.S with module L = L = Provider_api.Make (L)
 
-  module ReasonSet = Set.Make (struct
+  module ReasonSet = Flow_set.Make (struct
     type t = L.t virtual_reason
 
     let compare = Stdlib.compare
