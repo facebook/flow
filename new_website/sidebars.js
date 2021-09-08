@@ -81,5 +81,30 @@ module.exports = {
         'config/declarations',
       ],
     },
+    {
+      type: 'category',
+      label: 'Library Definitions',
+      items: ['libdefs/index', 'libdefs/creation'],
+    },
+    {
+      type: 'category',
+      label: 'Error Suppressions',
+      items: ['errors/index'],
+    },
+    {
+      type: 'category',
+      label: 'React',
+      items: [
+        'react/index',
+        'react/components',
+        'react/events',
+        'react/refs',
+        'react/children',
+        'react/hoc',
+        'react/context',
+        'react/redux',
+        'react/types',
+      ],
+    },
   ],
 };
