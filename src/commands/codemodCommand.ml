@@ -299,7 +299,7 @@ module Annotate_lti_command = struct
           empty = Acc.empty;
         }
 
-      let check_options o = o
+      let check_options o = Options.{ o with opt_enforce_local_inference_annotations = true }
 
       let visit =
         let mapper = Annotate_lti.mapper ~preserve_literals ~max_type_size ~default_any in
