@@ -1763,19 +1763,19 @@ end = struct
   let add_field x polarity loc t = NameUtils.Map.add x (Field (loc, t, polarity))
 
   let add_getter x loc get_t map =
-    NameUtils.Map.update
+    NameUtils.Map.adjust
       x
       (function
-        | Some (Set (set_loc, set_t)) -> Some (GetSet (loc, get_t, set_loc, set_t))
-        | _ -> Some (Get (loc, get_t)))
+        | Some (Set (set_loc, set_t)) ->  (GetSet (loc, get_t, set_loc, set_t))
+        | _ -> (Get (loc, get_t)))
       map
 
   let add_setter x loc set_t map =
-    NameUtils.Map.update
+    NameUtils.Map.adjust
       x
       (function
-        | Some (Get (get_loc, get_t)) -> Some (GetSet (get_loc, get_t, loc, set_t))
-        | _ -> Some (Set (loc, set_t)))
+        | Some (Get (get_loc, get_t)) ->  (GetSet (get_loc, get_t, loc, set_t))
+        | _ ->  (Set (loc, set_t)))
       map
 
   let add_method x loc t = NameUtils.Map.add x (Method (loc, t))
