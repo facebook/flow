@@ -54,7 +54,7 @@
     flow_typing_polarity
     flow_typing_trust
   )
-  (preprocess (pps ppx_let))
+  (preprocess (pps ppx_let ppx_deriving.std))
 )
 
 (library

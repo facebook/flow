@@ -39,6 +39,8 @@ type index = int
 
 type tvar = reason * ident
 
+type number_literal = float * string [@@deriving ord]
+
 module rec TypeTerm : sig
   type t =
     (* open type variable *)
@@ -966,8 +968,6 @@ module rec TypeTerm : sig
     | Truthy
     | AnyLiteral
 
-  and number_literal = float * string
-
   and mixed_flavor =
     | Mixed_everything
     | Mixed_truthy
@@ -1506,12 +1506,11 @@ and UnionEnum : sig
   type t =
     (* TODO this should not allow internal names *)
     | Str of name
-    | Num of TypeTerm.number_literal
+    | Num of number_literal
     | Bool of bool
     | Void
     | Null
-
-  val compare : t -> t -> int
+  [@@deriving ord]
 
   type star =
     | One of t
@@ -1519,12 +1518,11 @@ and UnionEnum : sig
 end = struct
   type t =
     | Str of name
-    | Num of TypeTerm.number_literal
+    | Num of number_literal
     | Bool of bool
     | Void
     | Null
-
-  let compare = Stdlib.compare
+  [@@deriving ord]
 
   type star =
     | One of t
@@ -1888,7 +1886,7 @@ end = struct
 
     type t = key
 
-    let compare = Stdlib.compare
+    let compare (x : int) y = Stdlib.compare x y
   end)
 
   type map = t Map.t
