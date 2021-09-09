@@ -28,7 +28,7 @@ module Make (Set : Flow_set.S) (Map : WrappedMap.S with type key = Set.elt) = st
   let update_entries f keys_to_update graph =
     Set.fold
       (fun key_to_update graph ->
-        Map.update
+        Map.adjust
           key_to_update
           (fun entry ->
             let entry =
@@ -36,7 +36,7 @@ module Make (Set : Flow_set.S) (Map : WrappedMap.S with type key = Set.elt) = st
               | None -> empty_entry
               | Some entry -> entry
             in
-            Some (f entry))
+            f entry)
           graph)
       keys_to_update
       graph
@@ -165,10 +165,10 @@ module Make (Set : Flow_set.S) (Map : WrappedMap.S with type key = Set.elt) = st
         let { forward; backward } = entry in
         let forward = Set.map f forward in
         let backward = Set.map f backward in
-        Map.update
+        Map.adjust
           elt
           (function
-            | None -> Some { forward; backward }
+            | None -> { forward; backward }
             | Some _ -> invalid_arg "Duplicate keys created by function passed to Graph.map")
           new_map)
       graph
