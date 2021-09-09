@@ -27,15 +27,13 @@ module Make (Map : WrappedMap.S) = struct
     cache.size <- 0
 
   let remove_entry key cache =
-    cache.entries <-
-      Map.update
-        key
-        (function
-          | None -> None
-          | Some _ ->
-            cache.size <- cache.size - 1;
-            None)
-        cache.entries
+    let cache_entries = cache.entries in
+    let new_cache_entries = Map.remove key cache.entries in
+    if new_cache_entries != cache_entries then begin
+      cache.size <- cache.size - 1;
+      cache.entries <- new_cache_entries
+    end
+
 
   (* Eviction is O(n) -- see comment in cache_sig.ml *)
   let remove_oldest cache =
