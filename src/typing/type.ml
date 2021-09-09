@@ -2393,35 +2393,6 @@ end = struct
       rep
 end
 
-(* The typechecking algorithm often needs to maintain sets of types, or more
-   generally, maps of types (for logging we need to associate some provenanced
-   information to types).
-   Type terms may also contain internal sets or maps.
-*)
-and TypeSet : (Flow_set.S with type elt = TypeTerm.t) = Flow_set.Make (struct
-  type elt = TypeTerm.t
-
-  type t = elt
-
-  let compare = Stdlib.compare
-end)
-
-and TypeMap : (WrappedMap.S with type key = TypeTerm.t) = WrappedMap.Make (struct
-  type key = TypeTerm.t
-
-  type t = key
-
-  let compare = Stdlib.compare
-end)
-
-and UseTypeSet : (Flow_set.S with type elt = TypeTerm.use_t) = Flow_set.Make (struct
-  type elt = TypeTerm.use_t
-
-  type t = elt
-
-  let compare = Stdlib.compare
-end)
-
 and Object : sig
   type resolve_tool =
     (* Each part of a spread must be resolved in order to compute the result *)
@@ -2539,7 +2510,7 @@ end =
 and React : sig
   module PropType : sig
     type t =
-      | Primitive of (is_required * TypeTerm.t)
+      | Primitive of is_required * TypeTerm.t
       | Complex of complex
 
     and is_required = bool
@@ -2557,8 +2528,8 @@ and React : sig
 
   type resolve_object =
     | ResolveObject
-    | ResolveDict of (TypeTerm.dicttype * Properties.t * resolved_object)
-    | ResolveProp of (name * Properties.t * resolved_object)
+    | ResolveDict of TypeTerm.dicttype * Properties.t * resolved_object
+    | ResolveProp of name * Properties.t * resolved_object
 
   type resolve_array =
     | ResolveArray
@@ -2647,6 +2618,38 @@ end =
   React
 
 let unknown_use = TypeTerm.(Op UnknownUse)
+module UseTypeSet : Flow_set.S with type elt = TypeTerm.use_t = Flow_set.Make (struct
+  type elt = TypeTerm.use_t
+
+  type t = elt
+
+  let compare = Stdlib.compare
+end)
+
+external type_term_compare : TypeTerm.t -> TypeTerm.t -> int = "caml_fast_generic_compare" [@@noalloc]
+
+(* The typechecking algorithm often needs to maintain sets of types, or more
+   generally, maps of types (for logging we need to associate some provenanced
+   information to types).
+   Type terms may also contain internal sets or maps.
+*)
+module TypeSet : Flow_set.S with type elt = TypeTerm.t = Flow_set.Make (struct
+  type elt = TypeTerm.t
+
+  type t = elt
+
+  let compare = type_term_compare
+
+end)
+
+
+module TypeMap : WrappedMap_sig.S with type key = TypeTerm.t = WrappedMap.Make (struct
+  type key = TypeTerm.t
+
+  type t = key
+
+  let compare = type_term_compare
+end)
 
 module Constraint = struct
   module UseTypeKey = struct
@@ -2853,8 +2856,8 @@ module FlowSet = struct
   (* returns ref eq map if no change *)
   let add (l, u) x =
     let f = function
-      | None ->  (UseTypeSet.singleton u)
-      | Some us ->  (UseTypeSet.add u us)
+      | None -> UseTypeSet.singleton u
+      | Some us -> UseTypeSet.add u us
     in
     TypeMap.adjust l f x
 
