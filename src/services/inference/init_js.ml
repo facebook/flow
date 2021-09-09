@@ -18,7 +18,7 @@ module Files = Files
 module Parsing = Parsing_service_js
 module Infer = Type_inference_js
 
-let is_ok { Parsing.parse_ok; _ } = not (FilenameMap.is_empty parse_ok)
+let is_ok { Parsing.parse_ok; _ } = not (FilenameSet.is_empty parse_ok)
 
 let is_fail { Parsing.parse_fails; _ } = not (Base.List.is_empty parse_fails)
 
@@ -48,9 +48,10 @@ let parse_lib_file ~reader options file =
     in
     Lwt.return
       (if is_ok results then
-        let tolerable_errors = FilenameMap.find lib_file results.Parsing.parse_ok in
         let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe reader lib_file in
-        let file_sig = Parsing_heaps.Mutator_reader.get_file_sig_unsafe reader lib_file in
+        let (file_sig, tolerable_errors) =
+          Parsing_heaps.Mutator_reader.get_tolerable_file_sig_unsafe reader lib_file
+        in
         Lib_ok { ast; file_sig; tolerable_errors }
       else if is_fail results then
         let (_, _, parse_fail) = List.hd results.Parsing.parse_fails in

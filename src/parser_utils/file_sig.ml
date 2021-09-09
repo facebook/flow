@@ -111,6 +111,8 @@ struct
 
   type error = IndeterminateModuleType of L.t
 
+  type tolerable_t = t * tolerable_error list
+
   let empty_module_sig =
     {
       requires = [];
@@ -1454,3 +1456,6 @@ let abstractify_locs : With_Loc.t -> With_ALoc.t =
       WA.module_sig = abstractify_module_sig module_sig;
       declare_modules = abstractify_declare_modules declare_modules;
     }
+
+let abstractify (t, tolerable_errors) =
+  (abstractify_locs t, abstractify_tolerable_errors tolerable_errors)

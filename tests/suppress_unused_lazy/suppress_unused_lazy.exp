@@ -7,33 +7,7 @@ The Flow server is currently in filesystem lazy mode and is only checking 2/8 fi
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Status after focusing a.js:
-Error ------------------------------------------------------------------------------------------- invalid_export.js:8:13
-
-`module` may only be used as part of a legal top level export statement [invalid-export]
-
-   8|   const x = module.exports;
-                  ^^^^^^
-
-
-Error ----------------------------------------------------------------------------- signature_verification_error.js:8:31
-
-Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at function return: [signature-verification-failure]
-
-   8| export function foo(x: number) { return x; }
-                                    
-
-
-Warning ----------------------------------------------------------------------------------- type_error_suppressed.js:7:1
-
-Unused suppression comment.
-
-   7| // $FlowFixMe[incompatible-cast]
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-
-Found 2 errors and 1 warning
+No errors!
 
 The Flow server is currently in filesystem lazy mode and is only checking 8/8 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
@@ -56,33 +30,7 @@ References:
 Found 1 error
 
 Status including warnings:
-Error ------------------------------------------------------------------------------------------- invalid_export.js:8:13
-
-`module` may only be used as part of a legal top level export statement [invalid-export]
-
-   8|   const x = module.exports;
-                  ^^^^^^
-
-
-Error ----------------------------------------------------------------------------- signature_verification_error.js:8:31
-
-Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at function return: [signature-verification-failure]
-
-   8| export function foo(x: number) { return x; }
-                                    
-
-
-Warning ----------------------------------------------------------------------------------- type_error_suppressed.js:7:1
-
-Unused suppression comment.
-
-   7| // $FlowFixMe[incompatible-cast]
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-
-Found 2 errors and 1 warning
+No errors!
 
 The Flow server is currently in filesystem lazy mode and is only checking 8/8 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes

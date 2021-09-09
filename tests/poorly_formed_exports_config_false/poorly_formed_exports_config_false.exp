@@ -7,6 +7,14 @@ Cannot resolve name `exports`. [cannot-resolve-name]
         ^^^^^^^
 
 
+Error ------------------------------------------------------------------------------------------------- libs/libs.js:4:3
+
+Exports can only appear at the top level [invalid-export]
+
+   4|   exports.foo = 5;
+        ^^^^^^^
+
+
 Error ---------------------------------------------------------------------------------------- bad-default-export.js:4:3
 
 Exports can only appear at the top level [invalid-export]
@@ -16,7 +24,7 @@ Exports can only appear at the top level [invalid-export]
 
 
 
-Found 2 errors
+Found 3 errors
 FLOW CHECK-CONTENTS:
 Error ---------------------------------------------------------------------------------------- bad-default-export.js:4:3
 

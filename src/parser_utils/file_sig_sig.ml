@@ -174,12 +174,14 @@ module type S = sig
 
   type error = IndeterminateModuleType of L.t
 
+  type tolerable_t = t * tolerable_error list
+
   val empty : t
 
   val program :
     ast:(L.t, L.t) Flow_ast.Program.t ->
     module_ref_prefix:string option ->
-    (t * tolerable_error list, error) result
+    (tolerable_t, error) result
 
   (* Use for debugging; not for exposing info to the end user *)
   val to_string : t -> string
