@@ -22,3 +22,9 @@ function hh_get_build_commit_time_string() {
 function hh_get_build_commit_time() {
   return 0;
 }
+
+//Provides: caml_fast_generic_compare
+//Requires: caml_compare
+function caml_fast_generic_compare(x,y){
+  return caml_compare(x,y);
+}
