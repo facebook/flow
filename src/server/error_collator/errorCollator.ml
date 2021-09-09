@@ -104,27 +104,6 @@ let regenerate ~reader =
   fun ~options env ->
     MonitorRPC.status_update ~event:ServerStatus.Collating_errors_start;
     let { local_errors; merge_errors; warnings; suppressions } = env.errors in
-    (* NOTE Here we ensure that signature-verification errors correspond to the
-     * currently checked files. We need to do this filtering, since errors outside
-     * the checked set are not suppressed correctly and so some of these errors
-     * might linger post-error-suppression. *)
-    let checked_files = env.checked_files in
-    let local_errors =
-      FilenameMap.mapi
-        (fun file errorset ->
-          if CheckedSet.mem file checked_files then
-            errorset
-          else
-            Flow_error.ErrorSet.filter
-              (fun error ->
-                match Flow_error.kind_of_error error with
-                | Errors.LintError Lints.SignatureVerificationFailure
-                | Errors.InferWarning Errors.ExportKind ->
-                  false
-                | _ -> true)
-              errorset)
-        local_errors
-    in
     let acc_err_fun = acc_fun ~options suppressions (fun _ -> ConcreteLocPrintableErrorSet.union) in
     let (collated_errorset, collated_suppressed_errors, unused) =
       (ConcreteLocPrintableErrorSet.empty, [], suppressions)

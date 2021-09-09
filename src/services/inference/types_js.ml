@@ -80,20 +80,6 @@ let collate_parse_results parse_results =
       FilenameMap.empty
       parse_fails
   in
-  let local_errors =
-    (* In practice, the only `tolerable_errors` are related to well formed exports. If this flag
-     * were not temporary in nature, it would be worth adding some complexity to avoid conflating
-     * them. *)
-    Utils_js.FilenameMap.fold
-      (fun file file_sig_errors errors ->
-        let file_sig_errors = File_sig.abstractify_tolerable_errors file_sig_errors in
-        let errset =
-          Inference_utils.set_of_file_sig_tolerable_errors ~source_file:file file_sig_errors
-        in
-        update_errset errors file errset)
-      parse_ok
-      local_errors
-  in
   let unparsed =
     List.fold_left
       (fun unparsed (file, info, _) -> (file, info) :: unparsed)
@@ -102,9 +88,6 @@ let collate_parse_results parse_results =
     |> FilenameSet.fold
          (fun file unparsed -> (file, Docblock.default_info) :: unparsed)
          parse_not_found_skips
-  in
-  let parse_ok =
-    FilenameMap.fold (fun k _ acc -> FilenameSet.add k acc) parse_ok FilenameSet.empty
   in
   (parse_ok, unparsed, parse_unchanged, local_errors, parse_package_json)
 
@@ -807,36 +790,35 @@ end = struct
         Hh_logger.info "new or changed signatures: %d" (FilenameSet.cardinal sig_new_or_changed);
         let focused_to_check = CheckedSet.focused to_check in
         let merged_dependents = CheckedSet.dependents to_check in
-        let skipped_count = ref 0 in
         let implementation_dependency_graph =
           Dependency_info.implementation_dependency_graph dependency_info
         in
         (* skip dependents whenever none of their dependencies have new or changed signatures *)
-        let dependents_to_check =
-          FilenameSet.filter (fun f ->
+        let (dependents_to_check, dependents_to_skip) =
+          FilenameSet.partition
+            (fun f ->
               (cannot_skip_direct_dependents && FilenameSet.mem f direct_dependent_files)
               || FilenameSet.exists (fun f' -> FilenameSet.mem f' sig_new_or_changed)
-                 @@ FilenameGraph.find f implementation_dependency_graph
-              ||
-              (incr skipped_count;
-               false))
-          @@ merged_dependents
+                 @@ FilenameGraph.find f implementation_dependency_graph)
+            merged_dependents
         in
+        let skipped_count = FilenameSet.cardinal dependents_to_skip in
         Hh_logger.info
           "Check will skip %d of %d files"
-          !skipped_count
+          skipped_count
           (* We can just add these counts without worrying about files which are in both sets. We
            * got these both from a CheckedSet. CheckedSet's representation ensures that a single
            * file cannot have more than one kind. *)
           (FilenameSet.cardinal focused_to_check + FilenameSet.cardinal merged_dependents);
         let files = FilenameSet.union focused_to_check dependents_to_check in
+        let suppressions = updated_errors.ServerEnv.suppressions in
         let intermediate_result_callback =
           mk_intermediate_result_callback
             ~reader
             ~options
             ~persistent_connections
             ~recheck_reasons
-            updated_errors.ServerEnv.suppressions
+            suppressions
         in
         Hh_logger.info "Checking files";
 
@@ -859,7 +841,12 @@ end = struct
             ~next
         in
         let { ServerEnv.merge_errors; warnings; _ } = errors in
-        let suppressions = updated_errors.ServerEnv.suppressions in
+        let suppressions =
+          (* remove suppressions in skipped dependents. these were added in the merge phase,
+             but since we're not checking these files we need to remove them so they don't
+             show up as unused. *)
+          FilenameSet.fold Error_suppressions.remove dependents_to_skip suppressions
+        in
         let ((merge_errors, warnings, suppressions, coverage, first_internal_error), slow_files) =
           List.fold_left
             (fun (acc, slow_files) (file, result) ->
@@ -876,7 +863,7 @@ end = struct
           ( errors,
             coverage,
             time_to_check_merged,
-            !skipped_count,
+            skipped_count,
             Base.Option.map ~f:File_key.to_string slowest_file,
             num_slow_files,
             Base.Option.map first_internal_error ~f:(spf "First check internal error:\n%s") ))

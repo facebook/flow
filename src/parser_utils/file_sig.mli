@@ -12,3 +12,5 @@ module With_ALoc : File_sig_sig.S with module L = Loc_sig.ALocS
 val abstractify_locs : With_Loc.t -> With_ALoc.t
 
 val abstractify_tolerable_errors : With_Loc.tolerable_error list -> With_ALoc.tolerable_error list
+
+val abstractify : With_Loc.tolerable_t -> With_ALoc.tolerable_t

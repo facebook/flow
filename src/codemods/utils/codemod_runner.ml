@@ -537,7 +537,7 @@ module UntypedRunner (C : UNTYPED_RUNNER_CONFIG) : STEP_RUNNER = struct
         Transaction.with_transaction (fun transaction ->
             let reader = Mutator_state_reader.create transaction in
             let%lwt {
-                  Parsing_service_js.parse_ok;
+                  Parsing_service_js.parse_ok = roots;
                   parse_skips = _;
                   parse_not_found_skips = _;
                   parse_hash_mismatch_skips = _;
@@ -547,7 +547,6 @@ module UntypedRunner (C : UNTYPED_RUNNER_CONFIG) : STEP_RUNNER = struct
                 } =
               Parsing_service_js.parse_with_defaults ~reader options workers next
             in
-            let roots = FilenameMap.keys parse_ok |> FilenameSet.of_list in
             log_input_files roots;
             let next = Parsing_service_js.next_of_filename_set workers roots in
             let mk_ccx file file_sig = { Codemod_context.Untyped.file; file_sig } in

@@ -22,6 +22,8 @@ module type READER = sig
 
   val get_exports : reader:reader -> File_key.t -> Exports.t option
 
+  val get_tolerable_file_sig : reader:reader -> File_key.t -> File_sig.With_Loc.tolerable_t option
+
   val get_file_sig : reader:reader -> File_key.t -> File_sig.With_Loc.t option
 
   val get_type_sig : reader:reader -> File_key.t -> type_sig option
@@ -35,6 +37,8 @@ module type READER = sig
   val get_docblock_unsafe : reader:reader -> File_key.t -> Docblock.t
 
   val get_exports_unsafe : reader:reader -> File_key.t -> Exports.t
+
+  val get_tolerable_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.tolerable_t
 
   val get_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.t
 
@@ -66,7 +70,7 @@ type worker_mutator = {
     exports:Exports.t ->
     Docblock.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t ->
-    File_sig.With_Loc.t ->
+    File_sig.With_Loc.tolerable_t ->
     locs_tbl ->
     type_sig ->
     unit;
@@ -86,7 +90,7 @@ module Reparse_mutator : sig
 end
 
 module From_saved_state : sig
-  val add_file_sig : File_key.t -> File_sig.With_Loc.t -> unit
+  val add_file_sig : File_key.t -> File_sig.With_Loc.tolerable_t -> unit
 
   val add_file_hash : File_key.t -> Xx.hash -> unit
 

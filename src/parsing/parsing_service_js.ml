@@ -48,7 +48,7 @@ and package_json_error = Loc.t * string
 (* results of parse job, returned by parse and reparse *)
 type results = {
   (* successfully parsed files *)
-  parse_ok: File_sig.With_Loc.tolerable_error list FilenameMap.t;
+  parse_ok: FilenameSet.t;
   (* list of intentionally skipped files *)
   parse_skips: (File_key.t * Docblock.t) list;
   (* set of files skipped because they were not found on disk *)
@@ -65,7 +65,7 @@ type results = {
 
 let empty_result =
   {
-    parse_ok = FilenameMap.empty;
+    parse_ok = FilenameSet.empty;
     parse_skips = [];
     parse_not_found_skips = FilenameSet.empty;
     parse_hash_mismatch_skips = FilenameSet.empty;
@@ -553,8 +553,9 @@ let reducer
                 { ast; file_sig; exports; locs; type_sig; tolerable_errors; parse_errors = _ } ->
               (* if parse_options.fail == true, then parse errors will hit Parse_fail below. otherwise,
                  ignore any parse errors we get here. *)
+              let file_sig = (file_sig, tolerable_errors) in
               worker_mutator.Parsing_heaps.add_file file ~exports info ast file_sig locs type_sig;
-              let parse_ok = FilenameMap.add file tolerable_errors parse_results.parse_ok in
+              let parse_ok = FilenameSet.add file parse_results.parse_ok in
               { parse_results with parse_ok }
             | Parse_fail converted ->
               let fail = (file, info, converted) in
@@ -589,7 +590,7 @@ let reducer
 (* merge is just memberwise union/concat of results *)
 let merge r1 r2 =
   {
-    parse_ok = FilenameMap.union r1.parse_ok r2.parse_ok;
+    parse_ok = FilenameSet.union r1.parse_ok r2.parse_ok;
     parse_skips = r1.parse_skips @ r2.parse_skips;
     parse_not_found_skips = FilenameSet.union r1.parse_not_found_skips r2.parse_not_found_skips;
     parse_hash_mismatch_skips =
@@ -665,7 +666,7 @@ let parse
   in
   if profile then
     let t2 = Unix.gettimeofday () in
-    let ok_count = FilenameMap.cardinal results.parse_ok in
+    let ok_count = FilenameSet.cardinal results.parse_ok in
     let skip_count = List.length results.parse_skips in
     let not_found_count = FilenameSet.cardinal results.parse_not_found_skips in
     let mismatch_count = FilenameSet.cardinal results.parse_hash_mismatch_skips in
@@ -716,7 +717,7 @@ let reparse
       workers
       next
   in
-  let modified = results.parse_ok |> FilenameMap.keys |> FilenameSet.of_list in
+  let modified = results.parse_ok in
   let modified =
     List.fold_left (fun acc (fail, _, _) -> FilenameSet.add fail acc) modified results.parse_fails
   in

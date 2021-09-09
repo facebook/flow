@@ -50,7 +50,7 @@ and package_json_error = Loc.t * string
 (* results of parse job, returned by parse and reparse *)
 type results = {
   (* successfully parsed files *)
-  parse_ok: File_sig.With_Loc.tolerable_error list FilenameMap.t;
+  parse_ok: FilenameSet.t;
   (* list of skipped files *)
   parse_skips: (File_key.t * Docblock.t) list;
   (* set of files skipped because they were not found on disk *)

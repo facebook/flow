@@ -455,8 +455,8 @@ let mk_check_file options ~reader () =
     let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
     (all_comments, aloc_ast)
   in
-  let get_file_sig_unsafe file =
-    Parsing_heaps.Mutator_reader.get_file_sig_unsafe ~reader file |> File_sig.abstractify_locs
+  let get_tolerable_file_sig_unsafe file =
+    Parsing_heaps.Mutator_reader.get_tolerable_file_sig_unsafe ~reader file |> File_sig.abstractify
   in
   let get_type_sig_unsafe file = Parsing_heaps.Mutator_reader.get_type_sig_unsafe ~reader file in
   let get_aloc_table_unsafe = Parsing_heaps.Mutator_reader.get_aloc_table_unsafe ~reader in
@@ -472,7 +472,7 @@ let mk_check_file options ~reader () =
     if info.Module_heaps.checked then
       let (comments, ast) = get_ast_unsafe file in
       let type_sig = get_type_sig_unsafe file in
-      let file_sig = get_file_sig_unsafe file in
+      let (file_sig, tolerable_errors) = get_tolerable_file_sig_unsafe file in
       let docblock = get_docblock_unsafe file in
       let aloc_table = lazy (get_aloc_table_unsafe file) in
       let exported_locals = get_exported_locals file type_sig in
@@ -501,6 +501,13 @@ let mk_check_file options ~reader () =
           errors
           aloc_tables
           severity_cover
+      in
+      (* add tolerable errors after filtering lints since SignatureVerificationFailure is currently
+         an unusual lint that should not be suppressed. *)
+      let errors =
+        tolerable_errors
+        |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:file
+        |> Flow_error.ErrorSet.union errors
       in
       let duration = Unix.gettimeofday () -. start_time in
       Some

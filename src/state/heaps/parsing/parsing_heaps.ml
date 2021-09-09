@@ -252,7 +252,7 @@ module FileSigHeap =
   SharedMem.WithCache
     (File_key)
     (struct
-      type t = File_sig.With_Loc.t
+      type t = File_sig.With_Loc.tolerable_t
 
       let description = "Requires"
     end)
@@ -348,6 +348,8 @@ module type READER = sig
 
   val get_exports : reader:reader -> File_key.t -> Exports.t option
 
+  val get_tolerable_file_sig : reader:reader -> File_key.t -> File_sig.With_Loc.tolerable_t option
+
   val get_file_sig : reader:reader -> File_key.t -> File_sig.With_Loc.t option
 
   val get_type_sig : reader:reader -> File_key.t -> type_sig option
@@ -361,6 +363,8 @@ module type READER = sig
   val get_docblock_unsafe : reader:reader -> File_key.t -> Docblock.t
 
   val get_exports_unsafe : reader:reader -> File_key.t -> Exports.t
+
+  val get_tolerable_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.tolerable_t
 
   val get_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.t
 
@@ -412,7 +416,12 @@ end = struct
 
   let get_old_exports ~reader:_ = ExportsHeap.get_old
 
-  let get_file_sig ~reader:_ = FileSigHeap.get
+  let get_tolerable_file_sig ~reader:_ = FileSigHeap.get
+
+  let get_file_sig ~reader file =
+    match get_tolerable_file_sig ~reader file with
+    | Some (file_sig, _tolerable_errors) -> Some file_sig
+    | None -> None
 
   let get_type_sig ~reader:_ file =
     match TypeSigHeap.get file with
@@ -449,6 +458,11 @@ end = struct
     | Some exports -> exports
     | None -> raise (Exports_not_found (File_key.to_string file))
 
+  let get_tolerable_file_sig_unsafe ~reader file =
+    match get_tolerable_file_sig ~reader file with
+    | Some file_sig -> file_sig
+    | None -> raise (Requires_not_found (File_key.to_string file))
+
   let get_file_sig_unsafe ~reader file =
     match get_file_sig ~reader file with
     | Some file_sig -> file_sig
@@ -479,7 +493,7 @@ type worker_mutator = {
     exports:Exports.t ->
     Docblock.t ->
     (Loc.t, Loc.t) Flow_ast.Program.t ->
-    File_sig.With_Loc.t ->
+    File_sig.With_Loc.tolerable_t ->
     locs_tbl ->
     type_sig ->
     unit;
@@ -615,11 +629,16 @@ module Reader : READER with type reader = State_reader.t = struct
     else
       ExportsHeap.get key
 
-  let get_file_sig ~reader:_ key =
+  let get_tolerable_file_sig ~reader:_ key =
     if should_use_oldified key then
       FileSigHeap.get_old key
     else
       FileSigHeap.get key
+
+  let get_file_sig ~reader key =
+    match get_tolerable_file_sig ~reader key with
+    | Some (file_sig, _tolerable_errors) -> Some file_sig
+    | None -> None
 
   let get_type_sig ~reader key =
     let addr_opt = get_type_sig_addr ~reader key in
@@ -650,6 +669,11 @@ module Reader : READER with type reader = State_reader.t = struct
     match get_exports ~reader file with
     | Some exports -> exports
     | None -> raise (Exports_not_found (File_key.to_string file))
+
+  let get_tolerable_file_sig_unsafe ~reader file =
+    match get_tolerable_file_sig ~reader file with
+    | Some file_sig -> file_sig
+    | None -> raise (Requires_not_found (File_key.to_string file))
 
   let get_file_sig_unsafe ~reader file =
     match get_file_sig ~reader file with
@@ -700,6 +724,11 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | Mutator_state_reader reader -> Mutator_reader.get_exports ~reader
     | State_reader reader -> Reader.get_exports ~reader
 
+  let get_tolerable_file_sig ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_tolerable_file_sig ~reader
+    | State_reader reader -> Reader.get_tolerable_file_sig ~reader
+
   let get_file_sig ~reader =
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_file_sig ~reader
@@ -735,6 +764,11 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | Mutator_state_reader reader -> Mutator_reader.get_exports_unsafe ~reader
     | State_reader reader -> Reader.get_exports_unsafe ~reader
 
+  let get_tolerable_file_sig_unsafe ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_tolerable_file_sig_unsafe ~reader
+    | State_reader reader -> Reader.get_tolerable_file_sig_unsafe ~reader
+
   let get_file_sig_unsafe ~reader =
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_file_sig_unsafe ~reader
@@ -759,7 +793,7 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
 end
 
 module From_saved_state : sig
-  val add_file_sig : File_key.t -> File_sig.With_Loc.t -> unit
+  val add_file_sig : File_key.t -> File_sig.With_Loc.tolerable_t -> unit
 
   val add_file_hash : File_key.t -> Xx.hash -> unit
 
