@@ -114,19 +114,20 @@ module Make (Ord : Map.OrderedType) : S with type key = Ord.t = struct
           | Some old_value -> combine old_value new_value)
         map
 
-  let ident_map f map =
-    let (map_, changed) =
-      fold
-        (fun key item (map_, changed) ->
-          let item_ = f item in
-          (add key item_ map_, changed || item_ != item))
-        map
-        (empty, false)
-    in
-    if changed then
-      map_
-    else
+  let ident_map f coll =
+    let changed = ref false in
+    let new_map =
       map
+        (fun x ->
+          let new_item = f x in
+          if new_item != x then changed := true;
+          new_item)
+        coll
+    in
+    if !changed then
+      new_map
+    else
+      coll
 
   let for_all2 ~f m1 m2 =
     let key_bool_map = merge (fun k v1opt v2opt -> Some (f k v1opt v2opt)) m1 m2 in
