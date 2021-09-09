@@ -654,12 +654,12 @@ export type MyModuleType = T;
 
 ## `$Supertype<T>` {#toc-supertype}
 
-This utility has been deprecated and should be avoided. See [here](../linting/rule-reference#toc-deprecated-utility) for details.
+This utility has been deprecated and should be avoided. See [here](../../linting/rule-reference#toc-deprecated-utility) for details.
 
 ## `$Subtype<T>` {#toc-subtype}
 
-This utility has been deprecated and should be avoided. See [here](../linting/rule-reference#toc-deprecated-utility) for details.
+This utility has been deprecated and should be avoided. See [here](../../linting/rule-reference#toc-deprecated-utility) for details.
 
 ## Existential Type (`*`) {#toc-existential-type}
 
-This utility has been deprecated and should be avoided. See [here](../linting/rule-reference#toc-deprecated-type) for details.
+This utility has been deprecated and should be avoided. See [here](../../linting/rule-reference#toc-deprecated-type) for details.

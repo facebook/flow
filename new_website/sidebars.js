@@ -106,5 +106,42 @@ module.exports = {
         'react/types',
       ],
     },
+    {
+      type: 'category',
+      label: 'Tools',
+      items: [
+        'tools/babel',
+        'tools/flow-remove-types',
+        'tools/create-react-app',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Editors',
+      items: [
+        'editors/index',
+        'editors/atom',
+        'editors/sublime-text',
+        'editors/vim',
+        'editors/emacs',
+        'editors/vscode',
+        'editors/webstorm',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Linting',
+      items: [
+        'linting/index',
+        'linting/flowlint-comments',
+        'linting/ide-integration',
+        'linting/rule-reference',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Flow Strict',
+      items: ['strict/index'],
+    },
   ],
 };
