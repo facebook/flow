@@ -133,4 +133,4 @@ module LintKind = struct
 end
 
 module LintMap = WrappedMap.Make (LintKind)
-module LintSet = Set.Make (LintKind)
+module LintSet = Flow_set.Make (LintKind)

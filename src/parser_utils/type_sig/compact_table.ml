@@ -158,7 +158,7 @@ module Make () = struct
 
   let to_array_map = map
 
-  module IndexSet = Set.Make (struct
+  module IndexSet = Flow_set.Make (struct
     type t = index
 
     let compare a b = a - b

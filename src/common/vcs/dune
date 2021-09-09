@@ -1,6 +1,6 @@
 (library
-  (name flow_vcs)
-  (wrapped false)
-  (libraries
-    sys_utils
-    ))
+ (name flow_vcs)
+ (wrapped false)
+ (libraries sys_utils flow_common_lwt)
+ (preprocess
+  (pps lwt_ppx ppx_let)))

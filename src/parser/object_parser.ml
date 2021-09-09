@@ -9,7 +9,7 @@ module Ast = Flow_ast
 open Token
 open Parser_env
 open Flow_ast
-module SMap = Map.Make (String)
+module SMap = Flow_map.Make (String)
 open Parser_common
 open Comment_attachment
 

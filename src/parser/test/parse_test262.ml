@@ -21,7 +21,7 @@ type test_result = {
   result: (unit, error_reason) result;
 }
 
-module SMap = Map.Make (String)
+module SMap = Flow_map.Make (String)
 
 module Progress_bar = struct
   type t = {

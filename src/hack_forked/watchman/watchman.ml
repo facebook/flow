@@ -147,7 +147,7 @@ module Capability = struct
 
   let all = [Scm_since; Scm_hg; Scm_git]
 
-  module Set = Caml.Set.Make (struct
+  module Set = Flow_set.Make (struct
     type nonrec t = t
 
     let compare = compare

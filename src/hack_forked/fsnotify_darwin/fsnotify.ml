@@ -6,7 +6,7 @@
  *)
 
 open Hh_core
-module SSet = Set.Make (String)
+module SSet = Flow_set.Make (String)
 
 exception Error of string * Unix.error
 
@@ -44,7 +44,7 @@ let init roots =
 
 let read env = List.map (Fsevents.read_events env.fsevents) (fun (path, wpath) -> { path; wpath })
 
-module FDMap = Map.Make (struct
+module FDMap = Flow_map.Make (struct
   type t = Unix.file_descr
 
   let compare = compare

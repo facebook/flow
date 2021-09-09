@@ -6,7 +6,7 @@
  *)
 
 module type S = sig
-  include Map.S
+  include Flow_map.S
 
   val add : ?combine:('a -> 'a -> 'a) -> key -> 'a -> 'a t -> 'a t
 

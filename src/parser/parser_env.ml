@@ -7,7 +7,7 @@
 
 module Sedlexing = Flow_sedlexing
 open Flow_ast
-module SSet = Set.Make (String)
+module SSet = Flow_set.Make (String)
 
 module Lex_mode = struct
   type t =

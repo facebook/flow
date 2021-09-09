@@ -29,7 +29,7 @@ open Debug_js.Verbose
 module FlowError = Flow_error
 
 (* type exemplar set - reasons are not considered in compare *)
-module TypeExSet = Set.Make (struct
+module TypeExSet = Flow_set.Make (struct
   include Type
 
   let compare = reasonless_compare

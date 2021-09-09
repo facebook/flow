@@ -19,7 +19,7 @@ type invalid_char_set =
   | DuplicateChar of Char.t
   | InvalidChar of Char.t
 
-module InvalidCharSetSet = Set.Make (struct
+module InvalidCharSetSet = Flow_set.Make (struct
   type t = invalid_char_set
 
   let compare = Stdlib.compare

@@ -259,7 +259,7 @@ let to_list = Internal.to_list
 let of_list = Internal.of_list
 
 module CharSet = struct
-  include Set.Make (Char)
+  include Flow_set.Make (Char)
 
   let of_string str = of_list (Internal.to_list str)
 

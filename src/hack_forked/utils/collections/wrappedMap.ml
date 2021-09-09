@@ -8,7 +8,7 @@
 module type S = WrappedMap_sig.S
 
 module Make (Ord : Map.OrderedType) : S with type key = Ord.t = struct
-  include Map.Make (Ord)
+  include Flow_map.Make (Ord)
 
   let union ?combine x y =
     let combine =

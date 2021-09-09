@@ -76,7 +76,7 @@ module type NoCache = sig
 
   type value
 
-  module KeySet : Set.S with type elt = key
+  module KeySet : Flow_set.S with type elt = key
 
   val add : key -> value -> unit
 
@@ -141,13 +141,13 @@ module LocalCache (Config : CacheConfig) :
   LocalCache with type key = Config.key and type value = Config.value
 
 module WithCache (Key : Key) (Value : Value) :
-  WithCache with type key = Key.t and type value = Value.t and module KeySet = Set.Make(Key)
+  WithCache with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key)
 
 module NoCache (Key : Key) (Value : Value) :
-  NoCache with type key = Key.t and type value = Value.t and module KeySet = Set.Make(Key)
+  NoCache with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key)
 
 module NoCacheAddr (Key : Key) (Value : AddrValue) :
-  NoCache with type key = Key.t and type value = Value.t addr and module KeySet = Set.Make(Key)
+  NoCache with type key = Key.t and type value = Value.t addr and module KeySet = Flow_set.Make(Key)
 
 val debug_value_size : Obj.t -> int
 

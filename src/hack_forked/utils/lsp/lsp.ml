@@ -52,7 +52,7 @@ module DocumentUri = struct
   let to_string (DocumentUri s) : string = s
 end
 
-module UriSet = Set.Make (DocumentUri)
+module UriSet = Flow_set.Make (DocumentUri)
 module UriMap = WrappedMap.Make (DocumentUri)
 
 (** A position is between two characters like an 'insert' cursor in a editor *)
@@ -1349,5 +1349,5 @@ module IdKey = struct
     | (StringId _, NumberId _) -> 1
 end
 
-module IdSet = Set.Make (IdKey)
+module IdSet = Flow_set.Make (IdKey)
 module IdMap = WrappedMap.Make (IdKey)

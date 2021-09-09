@@ -81,7 +81,7 @@ end = struct
 
   (* arity *)
 
-  module RootSet : Set.S with type elt = root = Set.Make (struct
+  module RootSet : Flow_set.S with type elt = root = Flow_set.Make (struct
     type elt = root
 
     type t = elt

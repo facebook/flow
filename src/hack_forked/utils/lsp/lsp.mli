@@ -21,7 +21,7 @@ module DocumentUri : sig
 end
 
 module UriSet : sig
-  include module type of Set.Make (DocumentUri)
+  include module type of Flow_set.Make (DocumentUri)
 end
 
 module UriMap : sig
@@ -1124,7 +1124,7 @@ module IdKey : sig
 end
 
 module IdSet : sig
-  include module type of Set.Make (IdKey)
+  include module type of Flow_set.Make (IdKey)
 end
 
 module IdMap : sig

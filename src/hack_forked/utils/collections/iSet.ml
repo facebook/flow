@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-include Set.Make (IntKey)
+include Flow_set.Make (IntKey)
 
 let pp fmt iset =
   Format.fprintf fmt "@[<2>{";

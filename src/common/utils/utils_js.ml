@@ -15,7 +15,7 @@ let prerr_endlinef fmt = Printf.ksprintf prerr_endline fmt
 
 let exe_name = Filename.basename Sys.executable_name
 
-module FilenameSet = Set.Make (File_key)
+module FilenameSet = Flow_set.Make (File_key)
 
 module FilenameMap = struct
   include WrappedMap.Make (File_key)
@@ -387,13 +387,13 @@ let debug_time_lwt name x =
   Hh_logger.info "Completed %s in %.3f" name (end_time -. start_time);
   Lwt.return result
 
-module BoolMap = Map.Make (struct
+module BoolMap = Flow_map.Make (struct
   type t = bool
 
   let compare = Base.Bool.compare
 end)
 
-module NumberMap = Map.Make (struct
+module NumberMap = Flow_map.Make (struct
   type t = float
 
   let compare = Base.Float.compare

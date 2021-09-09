@@ -107,4 +107,4 @@ let path_of_slash_escaped_string str =
   consume 0;
   make (Buffer.contents buf)
 
-module Set = Reordered_argument_set (Set.Make (S))
+module Set = Reordered_argument_set (Flow_set.Make (S))

@@ -877,5 +877,5 @@ module JsonKey = struct
     | (JSON_Object _, JSON_Object []) -> 1
 end
 
-module JSet = Set.Make (JsonKey)
+module JSet = Flow_set.Make (JsonKey)
 module JMap = WrappedMap.Make (JsonKey)

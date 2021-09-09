@@ -8,7 +8,7 @@
 (* This module provides a layer between the lexer and the parser which includes
  * some parser state and some lexer state *)
 
-module SSet : Set.S with type t = Set.Make(String).t
+module SSet : Flow_set.S with type t = Flow_set.Make(String).t
 
 module Lex_mode : sig
   type t =

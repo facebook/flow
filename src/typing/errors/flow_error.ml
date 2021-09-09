@@ -47,8 +47,8 @@ module Error (M : Set.OrderedType) : Set.OrderedType with type t = M.t t = struc
   let compare = compare
 end
 
-module ErrorSet = Set.Make (Error (ALoc))
-module ConcreteErrorSet = Set.Make (Error (Loc))
+module ErrorSet = Flow_set.Make (Error (ALoc))
+module ConcreteErrorSet = Flow_set.Make (Error (Loc))
 
 (* Rank scores for signals of different strength on an x^2 scale so that greater
  * signals dominate lesser signals. *)

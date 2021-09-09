@@ -36,5 +36,5 @@ module Key = struct
   let compare : t -> t -> int = compare
 end
 
-module Set = Set.Make (Key)
+module Set = Flow_set.Make (Key)
 module Map = WrappedMap.Make (Key)

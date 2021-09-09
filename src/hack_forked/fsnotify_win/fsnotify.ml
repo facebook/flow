@@ -28,7 +28,7 @@ type fsenv
 (* Abstract data type for a watching thread. *)
 type watcher_id
 
-module SSet = Set.Make (String)
+module SSet = Flow_set.Make (String)
 
 type env = {
   fsenv: fsenv;
@@ -82,7 +82,7 @@ let add_watch env path =
 
 (** Select *)
 
-module FDMap = Map.Make (struct
+module FDMap = Flow_map.Make (struct
   type t = Unix.file_descr
 
   let compare = compare

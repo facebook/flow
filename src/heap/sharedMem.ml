@@ -378,7 +378,7 @@ module type NoCache = sig
 
   type value
 
-  module KeySet : Set.S with type elt = key
+  module KeySet : Flow_set.S with type elt = key
 
   val add : key -> value -> unit
 
@@ -432,9 +432,10 @@ end
 (*****************************************************************************)
 
 module NoCache (Key : Key) (Value : Value) :
-  NoCache with type key = Key.t and type value = Value.t and module KeySet = Set.Make(Key) = struct
+  NoCache with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key) =
+struct
   module Tbl = HashtblSegment (Key)
-  module KeySet = Set.Make (Key)
+  module KeySet = Flow_set.Make (Key)
 
   type key = Key.t
 
@@ -510,7 +511,7 @@ end
 
 module NoCacheAddr (Key : Key) (Value : AddrValue) = struct
   module Tbl = HashtblSegment (Key)
-  module KeySet = Set.Make (Key)
+  module KeySet = Flow_set.Make (Key)
 
   type key = Key.t
 
@@ -729,7 +730,7 @@ end
  *)
 (*****************************************************************************)
 module WithCache (Key : Key) (Value : Value) :
-  WithCache with type key = Key.t and type value = Value.t and module KeySet = Set.Make(Key) =
+  WithCache with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key) =
 struct
   module Direct = NoCache (Key) (Value)
 

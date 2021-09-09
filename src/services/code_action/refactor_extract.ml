@@ -33,7 +33,7 @@ let create_unique_name ~support_experimental_snippet_text_edit ~used_names prefi
     unique_name
 
 module TypeParamSet = struct
-  include Set.Make (struct
+  include Flow_set.Make (struct
     type t = Type.typeparam
 
     let compare = Stdlib.compare
