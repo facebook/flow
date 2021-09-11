@@ -143,7 +143,7 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
       let%lwt result = DfindLibLwt.wait_until_ready self#get_dfind in
       let%lwt () =
         let open FlowServerMonitorOptions in
-        if Options.is_lazy_mode monitor_options.server_options then (
+        if Options.lazy_mode monitor_options.server_options then (
           let mergebase_with = monitor_options.file_watcher_mergebase_with in
           let%lwt changes = changes_since_mergebase ~mergebase_with watch_paths in
           files <- SSet.union files changes;
@@ -506,7 +506,7 @@ end = struct
           let%lwt watchman = Base.Option.value_exn init_thread in
           init_thread <- None;
 
-          let should_track_mergebase = Options.is_lazy_mode server_options in
+          let should_track_mergebase = Options.lazy_mode server_options in
           let survive_restarts = watchman_options.FlowServerMonitorOptions.survive_restarts in
           match watchman with
           | Some watchman ->

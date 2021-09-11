@@ -9,11 +9,6 @@ type module_system =
   | Node
   | Haste
 
-type lazy_mode =
-  | LAZY_MODE_FILESYSTEM
-  | LAZY_MODE_WATCHMAN
-  | NON_LAZY_MODE
-
 type jsx_mode =
   (* JSX desugars into a `React.createElement(name, props, ...children)` call *)
   | Jsx_react
@@ -90,7 +85,7 @@ type t = {
   opt_ignore_non_literal_requires: bool;
   opt_include_suppressions: bool;
   opt_include_warnings: bool;
-  opt_lazy_mode: lazy_mode;
+  opt_lazy_mode: bool;
   opt_lint_severities: Severity.severity LintSettings.t;
   opt_max_files_checked_per_worker: int;
   opt_max_header_tokens: int;
@@ -192,8 +187,6 @@ let file_options opts = opts.opt_file_options
 
 let is_debug_mode opts = opts.opt_debug
 
-let is_lazy_mode opts = opts.opt_lazy_mode <> NON_LAZY_MODE
-
 let lazy_mode opts = opts.opt_lazy_mode
 
 let is_quiet opts = opts.opt_quiet
@@ -290,9 +283,3 @@ let strict_mode opts = opts.opt_strict_mode
 let trust_mode opts = opts.opt_trust_mode
 
 let type_asserts opts = opts.opt_type_asserts
-
-let lazy_mode_to_string lazy_mode =
-  match lazy_mode with
-  | LAZY_MODE_FILESYSTEM -> "fs"
-  | LAZY_MODE_WATCHMAN -> "watchman"
-  | NON_LAZY_MODE -> "none"

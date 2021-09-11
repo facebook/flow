@@ -741,10 +741,9 @@ let show_connected_status (cenv : connected_env) : connected_env =
         let message =
           match cenv.c_lazy_stats with
           | Some { ServerProt.Response.lazy_mode; checked_files; total_files }
-            when checked_files < total_files && lazy_mode <> Options.NON_LAZY_MODE ->
+            when checked_files < total_files && lazy_mode ->
             Printf.sprintf
-              "Flow is ready. (%s lazy mode let it check only %d/%d files [[more...](%s)])"
-              (Options.lazy_mode_to_string lazy_mode)
+              "Flow is ready. (lazy mode let it check only %d/%d files [[more...](%s)])"
               checked_files
               total_files
               "https://flow.org/en/docs/lang/lazy-modes/"
@@ -1165,10 +1164,15 @@ module RagePrint = struct
   let string_of_lazy_stats (lazy_stats : ServerProt.Response.lazy_stats) : string =
     ServerProt.(
       Printf.sprintf
-        "lazy_mode=%s, checked_files=%d, total_files=%d"
-        (Options.lazy_mode_to_string lazy_stats.Response.lazy_mode)
+        "lazy_mode=%B, checked_files=%d, total_files=%d"
+        lazy_stats.Response.lazy_mode
         lazy_stats.Response.checked_files
         lazy_stats.Response.total_files)
+
+  let string_of_lazy_mode = function
+    | FlowConfig.Lazy -> "true"
+    | FlowConfig.Watchman_DEPRECATED -> "watchman"
+    | FlowConfig.Non_lazy -> "false"
 
   let string_of_connect_params (p : connect_params) : string =
     CommandUtils.(
@@ -1181,7 +1185,7 @@ module RagePrint = struct
         p.quiet
         (Base.Option.value ~default:"None" p.temp_dir)
         (Base.Option.value_map p.timeout ~default:"None" ~f:string_of_int)
-        (Base.Option.value_map p.lazy_mode ~default:"None" ~f:Options.lazy_mode_to_string))
+        (Base.Option.value_map p.lazy_mode ~default:"None" ~f:string_of_lazy_mode))
 
   let string_of_open_file { o_open_doc; o_ast; o_unsaved } : string =
     Printf.sprintf

@@ -22,6 +22,11 @@ type file_watcher =
   | DFind
   | Watchman
 
+type lazy_mode =
+  | Lazy
+  | Non_lazy
+  | Watchman_DEPRECATED  (** lazy_mode=watchman is deprecated, but implies file_watcher=Watchman *)
+
 let default_temp_dir = Filename.concat Sys_utils.temp_dir_name "flow"
 
 let map_add map (key, value) = SMap.add key value map
@@ -78,7 +83,7 @@ module Opts = struct
     ignore_non_literal_requires: bool;
     include_warnings: bool;
     indexed_access: bool;
-    lazy_mode: Options.lazy_mode option;
+    lazy_mode: lazy_mode option;
     log_file: Path.t option;
     max_files_checked_per_worker: int;
     max_header_tokens: int;
@@ -501,9 +506,12 @@ module Opts = struct
   let lazy_mode_parser =
     enum
       [
-        ("fs", Options.LAZY_MODE_FILESYSTEM);
-        ("watchman", Options.LAZY_MODE_WATCHMAN);
-        ("none", Options.NON_LAZY_MODE);
+        ("true", Lazy);
+        ("false", Non_lazy);
+        (* legacy, deprecated *)
+        ("fs", Lazy);
+        ("watchman", Watchman_DEPRECATED);
+        ("none", Non_lazy);
       ]
       (fun opts v -> Ok { opts with lazy_mode = Some v })
 

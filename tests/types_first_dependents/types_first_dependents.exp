@@ -2,17 +2,17 @@
 Server should start in fs lazy mode and in types-first mode
 No errors!
 
-The Flow server is currently in filesystem lazy mode and is only checking 0/4 files.
+The Flow server is currently in lazy mode and is only checking 0/4 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Warm up cyclic dependencies
 No errors!
 
-The Flow server is currently in filesystem lazy mode and is only checking 4/4 files.
+The Flow server is currently in lazy mode and is only checking 4/4 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Editing a file should cause dependents to pull in dependencies in the same cycle
 No errors!
 
-The Flow server is currently in filesystem lazy mode and is only checking 4/4 files.
+The Flow server is currently in lazy mode and is only checking 4/4 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes

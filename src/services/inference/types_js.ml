@@ -1037,11 +1037,10 @@ let files_to_infer ~options ~profiling ~reader ~dependency_info ~focus_targets ~
 
 let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~file_watcher_metadata =
   match Options.lazy_mode options with
-  | Options.NON_LAZY_MODE ->
+  | false ->
     (* it's never faster to do a full init than a recheck *)
     Lwt.return_none
-  | Options.LAZY_MODE_FILESYSTEM
-  | Options.LAZY_MODE_WATCHMAN ->
+  | true ->
     let { MonitorProt.changed_mergebase; missed_changes = _ } = file_watcher_metadata in
     (match changed_mergebase with
     | None ->
@@ -2215,7 +2214,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
   let should_force_recheck = Options.saved_state_force_recheck options in
   (* We know that all the files in updates have changed since the saved state was generated. We
      * have two ways to deal with them: *)
-  if Options.lazy_mode options = Options.NON_LAZY_MODE || should_force_recheck then begin
+  if (not (Options.lazy_mode options)) || should_force_recheck then begin
     if FilenameSet.is_empty updates || not libs_ok then
       (* Don't recheck if the libs are not ok *)
       Lwt.return (env, libs_ok)

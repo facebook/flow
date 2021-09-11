@@ -6,7 +6,7 @@ Quick start.
 Expect no errors.
 No errors!
 
-The Flow server is currently in filesystem lazy mode and is only checking 0/1 files.
+The Flow server is currently in lazy mode and is only checking 0/1 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Change @flow file, expect error.
@@ -27,13 +27,13 @@ References:
 
 Found 1 error
 
-The Flow server is currently in filesystem lazy mode and is only checking 1/1 files.
+The Flow server is currently in lazy mode and is only checking 1/1 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Make file @noflow, expect error to go away.
 No errors!
 
-The Flow server is currently in filesystem lazy mode and is only checking 0/0 files.
+The Flow server is currently in lazy mode and is only checking 0/0 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Revert file, expect error again.
@@ -54,7 +54,7 @@ References:
 
 Found 1 error
 
-The Flow server is currently in filesystem lazy mode and is only checking 1/1 files.
+The Flow server is currently in lazy mode and is only checking 1/1 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Done!

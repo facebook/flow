@@ -25,7 +25,7 @@ Found 1 error
 Lazy init with saved state does NOT recheck & sees 0 errors...
 No errors!
 
-The Flow server is currently in filesystem lazy mode and is only checking 0/2 files.
+The Flow server is currently in lazy mode and is only checking 0/2 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 ...but focusing the file exposes the error
@@ -49,7 +49,7 @@ References:
 
 Found 1 error
 
-The Flow server is currently in filesystem lazy mode and is only checking 2/2 files.
+The Flow server is currently in lazy mode and is only checking 2/2 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 --saved-state-force-recheck does recheck & sees new error
@@ -73,7 +73,7 @@ References:
 
 Found 1 error
 
-The Flow server is currently in filesystem lazy mode and is only checking 2/2 files.
+The Flow server is currently in lazy mode and is only checking 2/2 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 A file incompatible with rechecks changed, so no saved state loading
@@ -102,5 +102,5 @@ Found 1 error
 Fallbacks work for lazy mode too
 No errors!
 
-The Flow server is currently in filesystem lazy mode and is only checking 0/2 files.
+The Flow server is currently in lazy mode and is only checking 0/2 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes

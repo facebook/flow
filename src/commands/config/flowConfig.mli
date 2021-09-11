@@ -10,6 +10,11 @@ type file_watcher =
   | DFind
   | Watchman
 
+type lazy_mode =
+  | Lazy
+  | Non_lazy
+  | Watchman_DEPRECATED  (** lazy_mode=watchman is deprecated, but implies file_watcher=Watchman *)
+
 type config
 
 type warning = int * string
@@ -133,7 +138,7 @@ val include_warnings : config -> bool
 
 val indexed_access : config -> bool
 
-val lazy_mode : config -> Options.lazy_mode option
+val lazy_mode : config -> lazy_mode option
 
 val log_file : config -> Path.t option
 

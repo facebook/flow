@@ -67,7 +67,7 @@ let main (module Runnable : Codemod_runner.RUNNABLE) codemod_flags () =
       ~flowconfig_name
       ~flowconfig_hash
       ~flowconfig
-      ~lazy_mode:(Some Options.LAZY_MODE_FILESYSTEM)
+      ~lazy_mode:(Some FlowConfig.Lazy)
       ~root
       ~options_flags:option_values
       ~saved_state_options_flags

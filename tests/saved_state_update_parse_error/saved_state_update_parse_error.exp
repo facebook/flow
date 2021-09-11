@@ -11,7 +11,7 @@ Unexpected identifier, expected the token `)`
 
 Found 1 error
 
-The Flow server is currently in filesystem lazy mode and is only checking 1/1 files.
+The Flow server is currently in lazy mode and is only checking 1/1 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Parse error, but no typing error in b.js:
@@ -27,5 +27,5 @@ Unexpected identifier, expected the token `)`
 
 Found 1 error
 
-The Flow server is currently in filesystem lazy mode and is only checking 1/1 files.
+The Flow server is currently in lazy mode and is only checking 1/1 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes

@@ -132,7 +132,7 @@ module CheckCommand = struct
       read_config_and_hash_or_exit ~enforce_warnings:(not ignore_version) flowconfig_path
     in
     let options =
-      let lazy_mode = Some Options.NON_LAZY_MODE in
+      let lazy_mode = Some FlowConfig.Non_lazy in
       (* Saved state doesn't make sense for `flow check`, so disable it. *)
       let saved_state_options_flags =
         CommandUtils.Saved_state_flags.
@@ -243,7 +243,7 @@ module FocusCheckCommand = struct
         (Server_files_js.config_file flowconfig_name root)
     in
     let options =
-      let lazy_mode = Some Options.NON_LAZY_MODE in
+      let lazy_mode = Some FlowConfig.Non_lazy in
       make_options
         ~flowconfig_name
         ~flowconfig_hash
