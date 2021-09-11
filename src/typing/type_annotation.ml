@@ -496,7 +496,7 @@ let rec convert cx tparams_map =
         check_type_arg_arity cx loc t_ast targs 1 (fun () ->
             let (ts, targs) = convert_type_params () in
             let t = List.hd ts in
-            let reason = mk_reason (RType (OrdinaryName "$ReadOnly")) loc in
+            let reason = mk_reason RReadOnlyType loc in
             reconstruct_ast
               (EvalT (t, TypeDestructorT (use_op reason, reason, ReadOnlyType), mk_eval_id cx loc))
               targs)

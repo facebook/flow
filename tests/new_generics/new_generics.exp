@@ -1036,9 +1036,9 @@ References:
    misc.js:140:54
    140| const directAccount = <T: LLETR>(data: T, otherData: LLETR): $ReadOnly<T> =>
                                                              ^^^^^ [1]
-   misc.js:140:27
+   misc.js:140:72
    140| const directAccount = <T: LLETR>(data: T, otherData: LLETR): $ReadOnly<T> =>
-                                  ^^^^^ [2]
+                                                                               ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- nested.js:8:10

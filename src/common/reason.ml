@@ -205,6 +205,7 @@ type 'loc virtual_reason_desc =
   | RCustom of string
   | RPolyType of 'loc virtual_reason_desc
   | RExactType of 'loc virtual_reason_desc
+  | RReadOnlyType
   | ROptional of 'loc virtual_reason_desc
   | RMaybe of 'loc virtual_reason_desc
   | RRestArray of 'loc virtual_reason_desc
@@ -300,6 +301,7 @@ let rec map_desc_locs f = function
   | RMissingAbstract desc -> RMissingAbstract (map_desc_locs f desc)
   | RPolyType desc -> RPolyType (map_desc_locs f desc)
   | RExactType desc -> RExactType (map_desc_locs f desc)
+  | RReadOnlyType -> RReadOnlyType
   | ROptional desc -> ROptional (map_desc_locs f desc)
   | RMaybe desc -> RMaybe (map_desc_locs f desc)
   | RRestArray desc -> RRestArray (map_desc_locs f desc)
@@ -688,6 +690,7 @@ let rec string_of_desc = function
   | RPolyType (RClass d) -> string_of_desc d
   | RPolyType d -> string_of_desc d
   | RExactType d -> string_of_desc d
+  | RReadOnlyType -> "`$ReadOnly`"
   | ROptional d -> spf "optional %s" (string_of_desc d)
   | RMaybe d ->
     let rec loop = function
@@ -1464,6 +1467,7 @@ let classification_of_reason r =
   | RExports
   | RPolyType _
   | RExactType _
+  | RReadOnlyType
   | ROptional _
   | RMaybe _
   | RAbstract _

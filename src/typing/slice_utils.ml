@@ -857,10 +857,16 @@ let object_read_only =
     let call = None in
     let id = Context.generate_property_map cx props in
     let proto = ObjProtoT reason in
+    (* Avoid referring directly to the $ReadOnly keyword *)
+    let def_reason =
+      match desc_of_reason ~unwrap:false reason with
+      | RReadOnlyType -> r
+      | _ -> reason
+    in
     mk_object_type
-      ~def_reason:r
+      ~def_reason
       ~exact_reason:(Some reason)
-      ~invalidate_aliases:true
+      ~invalidate_aliases:false
       ~interface
       flags
       call

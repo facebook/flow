@@ -732,7 +732,7 @@ module Make (ConsGen : CONS_GEN) : S = struct
         EvalT
           (t1, TypeDestructorT (use_op, reason, RestType (Object.Rest.IgnoreExactAndOwn, t2)), id))
     | ReadOnly (loc, t) ->
-      let reason = Reason.(mk_reason (RType (OrdinaryName "$ReadOnly")) loc) in
+      let reason = Reason.(mk_reason RReadOnlyType loc) in
       let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
       let t = merge file t in
       let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in

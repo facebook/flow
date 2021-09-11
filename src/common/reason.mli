@@ -146,6 +146,7 @@ type 'loc virtual_reason_desc =
   | RCustom of string
   | RPolyType of 'loc virtual_reason_desc
   | RExactType of 'loc virtual_reason_desc
+  | RReadOnlyType
   | ROptional of 'loc virtual_reason_desc
   | RMaybe of 'loc virtual_reason_desc
   | RRestArray of 'loc virtual_reason_desc

@@ -188,6 +188,11 @@ type RecursiveTypeDestructorPoly<X> = {|
 type $Pick<O: {}, K: $Keys<O>> = $ElementType<$NonMaybeType<O>, K>;
 //   ^
 
+// ReadOnly+destructuring
+
+function f({ x }: { x: ReadOnlyObj, ... }) {}
+//           ^
+
 // TODO
 // React.ElementPropsType
 // React.ElementConfigType

@@ -437,6 +437,11 @@ Flags:
 type $Pick<O: {...}, K: $Keys<O>> = $ElementType<$NonMaybeType<O>, K>
 type-destructor.js:188:6,188:10
 
+type-destructor.js:193:14
+Flags:
+ReadOnlyObj
+type-destructor.js:193:14,193:14
+
 type-destructor.js:20:6
 Flags: --evaluate-type-destructors
 type Country = $Keys<{|FR: string, IT: string, US: string|}>
@@ -661,4 +666,9 @@ type-destructor.js:188:6
 Flags: --evaluate-type-destructors
 type $Pick<O: {...}, K: $Keys<O>> = empty
 type-destructor.js:188:6,188:10
+
+type-destructor.js:193:14
+Flags: --evaluate-type-destructors
+ReadOnlyObj
+type-destructor.js:193:14,193:14
 
