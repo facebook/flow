@@ -116,7 +116,6 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
              Options.(
                match mode with
                | LAZY_MODE_FILESYSTEM -> "filesystem"
-               | LAZY_MODE_IDE -> "IDE"
                | LAZY_MODE_WATCHMAN -> "Watchman"
                | NON_LAZY_MODE -> assert false)
              lazy_stats.ServerProt.Response.checked_files

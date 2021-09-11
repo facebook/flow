@@ -25,7 +25,8 @@ let spec =
         |> base_flags
         |> temp_dir_flag
         |> shm_flags
-        |> lazy_flags
+        |> flag "--lazy" no_arg ~doc:"Deprecated, has no effect"
+        |> flag "--lazy-mode" string ~doc:"Deprecated, has no effect"
         |> autostop_flag
         |> from_flag);
   }
@@ -34,7 +35,8 @@ let main
     base_flags
     (temp_dir : string option)
     (shm_flags : CommandUtils.shared_mem_params)
-    (lazy_mode : Options.lazy_mode option)
+    (_lazy : bool)
+    (_lazy_mode : string option)
     (autostop : bool)
     (() : unit) : unit =
   (* always set `quiet`, since the LSP doesn't want any log spew. this only applies to the
@@ -48,7 +50,7 @@ let main
       no_auto_start = false;
       temp_dir;
       autostop;
-      lazy_mode;
+      lazy_mode = None;
       shm_flags;
       ignore_version = false;
       quiet;

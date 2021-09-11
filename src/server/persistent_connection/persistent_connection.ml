@@ -238,15 +238,6 @@ let get_file (client : single_client) (fn : string) : File_input.t =
   | None -> File_input.FileName fn
   | Some content -> File_input.FileContent (Some fn, content)
 
-let get_opened_files (clients : t) : SSet.t =
-  let per_file filename _content acc = SSet.add filename acc in
-  let per_client acc client_id =
-    match get_client client_id with
-    | None -> acc
-    | Some client -> SMap.fold per_file client.opened_files acc
-  in
-  List.fold_left per_client SSet.empty clients
-
 let get_id client = client.client_id
 
 let lsp_initialize_params (client : single_client) = client.lsp_initialize_params

@@ -1,47 +1,21 @@
-===== (ide) force-recheck of a unchanged file does nothing: =====
-No errors!
-
-The Flow server is currently in IDE lazy mode and is only checking 0/1 files.
-To learn more, visit flow.org/en/docs/lang/lazy-modes
-
-===== (ide) force-recheck --focus of a unchanged file does a recheck: =====
-Error -------------------------------------------------------------------------------------------------------- a.js:1:17
-
-Cannot assign `123` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
-
-   a.js:1:17
-   1| var x: string = 123;
-                      ^^^ [1]
-
-References:
-   a.js:1:8
-   1| var x: string = 123;
-             ^^^^^^ [2]
-
-
-
-Found 1 error
-
-The Flow server is currently in IDE lazy mode and is only checking 1/1 files.
-To learn more, visit flow.org/en/docs/lang/lazy-modes
-===== (fs) force-recheck of a unchanged file does nothing: =====
+===== force-recheck of a unchanged file does nothing: =====
 No errors!
 
 The Flow server is currently in filesystem lazy mode and is only checking 0/1 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
-===== (fs) force-recheck --focus of a unchanged file does a recheck: =====
-Error -------------------------------------------------------------------------------------------------------- a.js:1:17
+===== force-recheck --focus of a unchanged file does a recheck: =====
+Error -------------------------------------------------------------------------------------------------------- a.js:3:17
 
 Cannot assign `123` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   a.js:1:17
-   1| var x: string = 123;
+   a.js:3:17
+   3| var x: string = 123;
                       ^^^ [1]
 
 References:
-   a.js:1:8
-   1| var x: string = 123;
+   a.js:3:8
+   3| var x: string = 123;
              ^^^^^^ [2]
 
 

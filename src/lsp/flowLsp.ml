@@ -1594,15 +1594,8 @@ let try_connect flowconfig_name (env : disconnected_env) : state =
     lsp_exit_bad ()
   );
   let start_env =
-    let connect_params =
-      (* If the .flowconfig has explicitly set lazy_mode, then we don't want to override that if we
-         start a new server *)
-      if Base.Option.is_some (FlowConfig.lazy_mode flowconfig) then
-        { env.d_ienv.i_connect_params with lazy_mode = None }
-      else
-        env.d_ienv.i_connect_params
-    in
-    CommandUtils.make_env flowconfig flowconfig_name connect_params env.d_ienv.i_root
+    let { i_connect_params; i_root; _ } = env.d_ienv in
+    CommandUtils.make_env flowconfig flowconfig_name i_connect_params i_root
   in
   let client_handshake =
     SocketHandshake.

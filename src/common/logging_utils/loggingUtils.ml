@@ -37,7 +37,6 @@ let (set_server_options, dump_server_options) =
     let lazy_mode =
       match Options.lazy_mode server_options with
       | Options.LAZY_MODE_FILESYSTEM -> "fs"
-      | Options.LAZY_MODE_IDE -> "ide"
       | Options.LAZY_MODE_WATCHMAN -> "watchman"
       | Options.NON_LAZY_MODE -> "off"
     in

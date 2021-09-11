@@ -61,8 +61,6 @@ type determine_what_to_recheck_result =
 val debug_determine_what_to_recheck :
   profiling:Profiling_js.running ->
   options:Options.t ->
-  is_file_checked:(File_key.t -> bool) ->
-  ide_open_files:SSet.t Lazy.t ->
   sig_dependency_graph:FilenameGraph.t ->
   implementation_dependency_graph:FilenameGraph.t ->
   checked_files:CheckedSet.t ->

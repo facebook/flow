@@ -1,2 +1,2 @@
 [options]
-all=true
+lazy_mode=fs

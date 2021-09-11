@@ -218,12 +218,11 @@ let lazy_flags prev =
          (enum
             [
               ("fs", Options.LAZY_MODE_FILESYSTEM);
-              ("ide", Options.LAZY_MODE_IDE);
               ("watchman", Options.LAZY_MODE_WATCHMAN);
               ("none", Options.NON_LAZY_MODE);
             ])
          ~doc:
-           ("Which lazy mode to use: 'fs', 'watchman', 'ide' or 'none'. Use this flag to "
+           ("Which lazy mode to use: 'fs', 'watchman' or 'none'. Use this flag to "
            ^ "override the lazy mode set in the .flowconfig (which defaults to 'none' if not set)")
          ~env:"FLOW_LAZY_MODE")
 
