@@ -1077,6 +1077,31 @@ module CompletionClientCapabilitiesFmt = struct
     { completionItem = Jget.obj_opt json "completionItem" |> completionItem_of_json }
 end
 
+module DocumentSymbolClientCapabilitiesFmt = struct
+  open DocumentSymbolClientCapabilities
+
+  module SymbolKindFmt = struct
+    let kind_of_json json =
+      Base.Option.bind json ~f:(function
+          | JSON_Number int -> SymbolInformation.symbolKind_of_enum (int_of_string int)
+          | _ -> None)
+
+    let of_json json =
+      {
+        valueSet =
+          Jget.array_opt json "valueSet"
+          |> Base.Option.map ~f:(Base.List.filter_map ~f:kind_of_json);
+      }
+  end
+
+  let of_json json =
+    {
+      symbolKind = Jget.obj_opt json "symbolKind" |> SymbolKindFmt.of_json;
+      hierarchicalDocumentSymbolSupport =
+        Jget.bool_d json "hierarchicalDocumentSymbolSupport" ~default:false;
+    }
+end
+
 module TextDocumentSyncClientCapabilitiesFmt = struct
   open TextDocumentSyncClientCapabilities
 
@@ -1182,6 +1207,8 @@ let parse_initialize (params : json option) : Initialize.params =
           Jget.obj_opt json "synchronization" |> TextDocumentSyncClientCapabilitiesFmt.of_json;
         completion = Jget.obj_opt json "completion" |> CompletionClientCapabilitiesFmt.of_json;
         codeAction = Jget.obj_opt json "codeAction" |> CodeActionClientCapabilitiesFmt.of_json;
+        documentSymbol =
+          Jget.obj_opt json "documentSymbol" |> DocumentSymbolClientCapabilitiesFmt.of_json;
         selectionRange =
           Jget.obj_opt json "selectionRange" |> SelectionRangeClientCapabilitiesFmt.of_json;
         signatureHelp =

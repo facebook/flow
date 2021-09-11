@@ -253,6 +253,15 @@ module CompletionClientCapabilities : sig
   type t = { completionItem: completionItem }
 end
 
+module DocumentSymbolClientCapabilities : sig
+  type symbolKind = { valueSet: SymbolInformation.symbolKind list option }
+
+  type t = {
+    symbolKind: symbolKind;
+    hierarchicalDocumentSymbolSupport: bool;
+  }
+end
+
 module TextDocumentSyncClientCapabilities : sig
   type t = {
     willSave: bool;
@@ -348,6 +357,7 @@ module Initialize : sig
     synchronization: TextDocumentSyncClientCapabilities.t;
     completion: CompletionClientCapabilities.t;
     codeAction: CodeActionClientCapabilities.t;
+    documentSymbol: DocumentSymbolClientCapabilities.t;
     signatureHelp: SignatureHelpClientCapabilities.t;
     selectionRange: SelectionRangeClientCapabilities.t;
   }

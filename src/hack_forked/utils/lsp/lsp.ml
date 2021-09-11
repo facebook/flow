@@ -357,6 +357,28 @@ module CompletionClientCapabilities = struct
   type t = { completionItem: completionItem }
 end
 
+module DocumentSymbolClientCapabilities = struct
+  (** Specific capabilities for the `SymbolKind` in the
+      `textDocument/documentSymbol` request. *)
+  type symbolKind = {
+    valueSet: SymbolInformation.symbolKind list option;
+        (** The symbol kind values the client supports. When this
+            property exists the client also guarantees that it will
+            handle values outside its set gracefully and falls back
+            to a default value when unknown.
+
+            If this property is not present the client only supports
+            the symbol kinds from `File` to `Array` as defined in
+            the initial version of the protocol. *)
+  }
+
+  type t = {
+    symbolKind: symbolKind;
+    hierarchicalDocumentSymbolSupport: bool;
+        (** The client supports hierarchical document symbols. *)
+  }
+end
+
 module TextDocumentSyncClientCapabilities = struct
   (** synchronization capabilities say what messages the client is capable
       of sending, should be be so asked by the server. *)
@@ -462,6 +484,7 @@ module Initialize = struct
     synchronization: TextDocumentSyncClientCapabilities.t;
     completion: CompletionClientCapabilities.t;
     codeAction: CodeActionClientCapabilities.t;
+    documentSymbol: DocumentSymbolClientCapabilities.t;
     signatureHelp: SignatureHelpClientCapabilities.t;
     selectionRange: SelectionRangeClientCapabilities.t;
   }
