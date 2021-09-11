@@ -949,14 +949,12 @@ let is_file_tracked_and_checked ~reader filename =
  * lazy mode. In other contexts, it means the set of files which are eligible to be checked. In this
  * case, it has the latter meaning.
  * *)
-let focused_files_and_dependents_to_infer
+let focused_files_to_infer
     ~is_file_checked
     ~implementation_dependency_graph
     ~sig_dependency_graph
     ~input_focused
-    ~input_dependencies
-    ~sig_dependent_files
-    ~all_dependent_files =
+    ~input_dependencies =
   let input =
     CheckedSet.add
       ~focused:input_focused
@@ -975,14 +973,7 @@ let focused_files_and_dependents_to_infer
   in
   let dependents = FilenameSet.diff roots focused in
   let dependencies = CheckedSet.dependencies input in
-  let checked_files = CheckedSet.add ~focused ~dependents ~dependencies CheckedSet.empty in
-  (* It's possible that all_dependent_files contains foo.js, which is a dependent of a
-   * dependency. That's fine if foo.js is in the checked set. But if it's just some random
-   * other dependent then we need to filter it out.
-   *)
-  let sig_dependent_files = FilenameSet.inter sig_dependent_files (CheckedSet.all checked_files) in
-  let all_dependent_files = FilenameSet.inter all_dependent_files (CheckedSet.all checked_files) in
-  Lwt.return (checked_files, sig_dependent_files, all_dependent_files)
+  CheckedSet.add ~focused ~dependents ~dependencies CheckedSet.empty
 
 let filter_out_node_modules ~options =
   let root = Options.root options in
@@ -998,14 +989,10 @@ let filter_out_node_modules ~options =
  * 1. Node modules will only appear in the dependency set.
  * 2. Dependent files are empty.
  *)
-let unfocused_files_and_dependents_to_infer
-    ~options ~input_focused ~input_dependencies ~sig_dependent_files ~all_dependent_files =
+let unfocused_files_to_infer ~options ~input_focused ~input_dependencies =
   let focused = filter_out_node_modules ~options input_focused in
   let dependencies = Base.Option.value ~default:FilenameSet.empty input_dependencies in
-  Lwt.return
-    ( CheckedSet.add ~focused ~dependencies CheckedSet.empty,
-      sig_dependent_files,
-      all_dependent_files )
+  CheckedSet.add ~focused ~dependencies CheckedSet.empty
 
 (* Called on initialization in non-lazy mode, with optional focus targets.
 
@@ -1024,12 +1011,10 @@ let files_to_infer ~options ~profiling ~reader ~dependency_info ~focus_targets ~
   Memory_utils.with_memory_timer_lwt ~options "FilesToInfer" profiling (fun () ->
       match focus_targets with
       | None ->
-        unfocused_files_and_dependents_to_infer
-          ~options
-          ~input_focused:parsed
-          ~input_dependencies:None
-          ~sig_dependent_files:FilenameSet.empty
-          ~all_dependent_files:FilenameSet.empty
+        let to_infer =
+          unfocused_files_to_infer ~options ~input_focused:parsed ~input_dependencies:None
+        in
+        Lwt.return to_infer
       | Some input_focused ->
         let implementation_dependency_graph =
           Dependency_info.implementation_dependency_graph dependency_info
@@ -1040,14 +1025,15 @@ let files_to_infer ~options ~profiling ~reader ~dependency_info ~focus_targets ~
         in
         (* only focus files that parsed successfully *)
         let input_focused = FilenameSet.inter input_focused parsed in
-        focused_files_and_dependents_to_infer
-          ~is_file_checked
-          ~implementation_dependency_graph
-          ~sig_dependency_graph
-          ~input_focused
-          ~input_dependencies:None
-          ~sig_dependent_files:FilenameSet.empty
-          ~all_dependent_files:FilenameSet.empty)
+        let to_infer =
+          focused_files_to_infer
+            ~is_file_checked
+            ~implementation_dependency_graph
+            ~sig_dependency_graph
+            ~input_focused
+            ~input_dependencies:None
+        in
+        Lwt.return to_infer)
 
 let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~file_watcher_metadata =
   match Options.lazy_mode options with
@@ -1635,18 +1621,19 @@ end = struct
     let acceptable_files_to_focus =
       FilenameSet.union freshparsed (CheckedSet.all unchanged_files_to_force)
     in
-    let%lwt (updated_checked_files, sig_dependent_files, all_dependent_files) =
+    let%lwt updated_checked_files =
       Memory_utils.with_memory_timer_lwt ~options "RecalcDepGraph" profiling (fun () ->
           let old_focus_targets = CheckedSet.focused checked_files in
           let old_focus_targets = FilenameSet.diff old_focus_targets deleted in
           let old_focus_targets = FilenameSet.diff old_focus_targets unparsed_set in
           let focused = FilenameSet.union old_focus_targets freshparsed in
-          unfocused_files_and_dependents_to_infer
-            ~options
-            ~input_focused:(FilenameSet.union focused (CheckedSet.focused files_to_force))
-            ~input_dependencies:(Some (CheckedSet.dependencies files_to_force))
-            ~sig_dependent_files
-            ~all_dependent_files)
+          let to_infer =
+            unfocused_files_to_infer
+              ~options
+              ~input_focused:(FilenameSet.union focused (CheckedSet.focused files_to_force))
+              ~input_dependencies:(Some (CheckedSet.dependencies files_to_force))
+          in
+          Lwt.return to_infer)
     in
     (* Filter updated_checked_files down to the files which we just parsed or unchanged files which
      * will be focused *)
@@ -2466,9 +2453,11 @@ let init ~profiling ~workers options =
 let full_check ~profiling ~options ~workers ?focus_targets env =
   let { ServerEnv.files = parsed; dependency_info; errors; _ } = env in
   with_transaction (fun transaction reader ->
-      let%lwt (input, sig_dependent_files, all_dependent_files) =
+      let%lwt input =
         files_to_infer ~options ~reader ~focus_targets ~profiling ~parsed ~dependency_info
       in
+      let sig_dependent_files = FilenameSet.empty in
+      let all_dependent_files = FilenameSet.empty in
       let implementation_dependency_graph =
         Dependency_info.implementation_dependency_graph dependency_info
       in
