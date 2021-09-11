@@ -346,6 +346,30 @@ module CodeActionClientCapabilities = struct
   }
 end
 
+module CompletionClientCapabilities = struct
+  (** The client supports the following `CompletionItem` specific capabilities. *)
+  type completionItem = {
+    snippetSupport: bool;  (** client can do snippets as insert text *)
+    preselectSupport: bool;  (** client supports the preselect property *)
+    labelDetailsSupport: bool;  (** proposed for 3.17 *)
+  }
+
+  type t = { completionItem: completionItem }
+end
+
+module TextDocumentSyncClientCapabilities = struct
+  (** synchronization capabilities say what messages the client is capable
+      of sending, should be be so asked by the server. *)
+  type t = {
+    willSave: bool;  (** The client supports sending will save notifications. *)
+    willSaveWaitUntil: bool;
+        (** The client supports sending a will save request and
+	          waits for a response providing text edits which will
+	          be applied to the document before it is saved. *)
+    didSave: bool;  (** The client supports did save notifications. *)
+  }
+end
+
 module SelectionRangeClientCapabilities = struct
   type t = { dynamicRegistration: bool }
 end
@@ -433,30 +457,13 @@ module Initialize = struct
 
   and workspaceEdit = { documentChanges: bool  (** client supports versioned doc changes *) }
 
+  (** omitted: dynamic-registration fields *)
   and textDocumentClientCapabilities = {
-    synchronization: synchronization;
-    completion: completion;  (** textDocument/completion *)
+    synchronization: TextDocumentSyncClientCapabilities.t;
+    completion: CompletionClientCapabilities.t;
     codeAction: CodeActionClientCapabilities.t;
-    (* omitted: dynamic-registration fields *)
     signatureHelp: SignatureHelpClientCapabilities.t;
     selectionRange: SelectionRangeClientCapabilities.t;
-  }
-
-  (** synchronization capabilities say what messages the client is capable
-      of sending, should be be so asked by the server.
-      We use the "can_" prefix for OCaml naming reasons; it's absent in LSP *)
-  and synchronization = {
-    can_willSave: bool;  (** client can send textDocument/willSave *)
-    can_willSaveWaitUntil: bool;  (** textDoc.../willSaveWaitUntil *)
-    can_didSave: bool;  (** textDocument/didSave *)
-  }
-
-  and completion = { completionItem: completionItem }
-
-  and completionItem = {
-    snippetSupport: bool;  (** client can do snippets as insert text *)
-    preselectSupport: bool;  (** client supports the preselect property *)
-    labelDetailsSupport: bool;  (** proposed for 3.17 *)
   }
 
   and windowClientCapabilities = {

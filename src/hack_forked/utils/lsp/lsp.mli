@@ -243,6 +243,24 @@ module CodeActionClientCapabilities : sig
   }
 end
 
+module CompletionClientCapabilities : sig
+  type completionItem = {
+    snippetSupport: bool;
+    preselectSupport: bool;
+    labelDetailsSupport: bool;
+  }
+
+  type t = { completionItem: completionItem }
+end
+
+module TextDocumentSyncClientCapabilities : sig
+  type t = {
+    willSave: bool;
+    willSaveWaitUntil: bool;
+    didSave: bool;
+  }
+end
+
 module SelectionRangeClientCapabilities : sig
   type t = { dynamicRegistration: bool }
 end
@@ -327,25 +345,11 @@ module Initialize : sig
   and workspaceEdit = { documentChanges: bool }
 
   and textDocumentClientCapabilities = {
-    synchronization: synchronization;
-    completion: completion;
+    synchronization: TextDocumentSyncClientCapabilities.t;
+    completion: CompletionClientCapabilities.t;
     codeAction: CodeActionClientCapabilities.t;
     signatureHelp: SignatureHelpClientCapabilities.t;
     selectionRange: SelectionRangeClientCapabilities.t;
-  }
-
-  and synchronization = {
-    can_willSave: bool;
-    can_willSaveWaitUntil: bool;
-    can_didSave: bool;
-  }
-
-  and completion = { completionItem: completionItem }
-
-  and completionItem = {
-    snippetSupport: bool;
-    preselectSupport: bool;
-    labelDetailsSupport: bool;
   }
 
   and windowClientCapabilities = { status: bool }

@@ -1063,6 +1063,31 @@ module CodeActionClientCapabilitiesFmt = struct
     }
 end
 
+module CompletionClientCapabilitiesFmt = struct
+  open CompletionClientCapabilities
+
+  let completionItem_of_json json =
+    {
+      snippetSupport = Jget.bool_d json "snippetSupport" ~default:false;
+      preselectSupport = Jget.bool_d json "preselectSupport" ~default:false;
+      labelDetailsSupport = Jget.bool_d json "labelDetailsSupport" ~default:false;
+    }
+
+  let of_json json =
+    { completionItem = Jget.obj_opt json "completionItem" |> completionItem_of_json }
+end
+
+module TextDocumentSyncClientCapabilitiesFmt = struct
+  open TextDocumentSyncClientCapabilities
+
+  let of_json json =
+    {
+      willSave = Jget.bool_d json "willSave" ~default:false;
+      willSaveWaitUntil = Jget.bool_d json "willSaveWaitUntil" ~default:false;
+      didSave = Jget.bool_d json "didSave" ~default:false;
+    }
+end
+
 module SelectionRangeClientCapabilitiesFmt = struct
   open SelectionRangeClientCapabilities
 
@@ -1153,27 +1178,14 @@ let parse_initialize (params : json option) : Initialize.params =
       { documentChanges = Jget.bool_d json "documentChanges" ~default:false }
     and parse_textDocument json =
       {
-        synchronization = Jget.obj_opt json "synchronization" |> parse_synchronization;
-        completion = Jget.obj_opt json "completion" |> parse_completion;
+        synchronization =
+          Jget.obj_opt json "synchronization" |> TextDocumentSyncClientCapabilitiesFmt.of_json;
+        completion = Jget.obj_opt json "completion" |> CompletionClientCapabilitiesFmt.of_json;
         codeAction = Jget.obj_opt json "codeAction" |> CodeActionClientCapabilitiesFmt.of_json;
         selectionRange =
           Jget.obj_opt json "selectionRange" |> SelectionRangeClientCapabilitiesFmt.of_json;
         signatureHelp =
           Jget.obj_opt json "signatureHelp" |> SignatureHelpClientCapabilitiesFmt.of_json;
-      }
-    and parse_synchronization json =
-      {
-        can_willSave = Jget.bool_d json "willSave" ~default:false;
-        can_willSaveWaitUntil = Jget.bool_d json "willSaveWaitUntil" ~default:false;
-        can_didSave = Jget.bool_d json "didSave" ~default:false;
-      }
-    and parse_completion json =
-      { completionItem = Jget.obj_opt json "completionItem" |> parse_completionItem }
-    and parse_completionItem json =
-      {
-        snippetSupport = Jget.bool_d json "snippetSupport" ~default:false;
-        preselectSupport = Jget.bool_d json "preselectSupport" ~default:false;
-        labelDetailsSupport = Jget.bool_d json "labelDetailsSupport" ~default:false;
       }
     and parse_window json = { status = Jget.obj_opt json "status" |> Base.Option.is_some }
     and parse_telemetry json =

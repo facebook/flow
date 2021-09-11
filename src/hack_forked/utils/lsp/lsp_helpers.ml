@@ -278,13 +278,19 @@ let supports_status (p : Lsp.Initialize.params) : bool =
   Lsp.Initialize.(p.client_capabilities.window.status)
 
 let supports_snippets (p : Lsp.Initialize.params) : bool =
-  Lsp.Initialize.(p.client_capabilities.textDocument.completion.completionItem.snippetSupport)
+  let open Lsp.Initialize in
+  let open Lsp.CompletionClientCapabilities in
+  p.client_capabilities.textDocument.completion.completionItem.snippetSupport
 
 let supports_preselect (p : Lsp.Initialize.params) : bool =
-  Lsp.Initialize.(p.client_capabilities.textDocument.completion.completionItem.preselectSupport)
+  let open Lsp.Initialize in
+  let open Lsp.CompletionClientCapabilities in
+  p.client_capabilities.textDocument.completion.completionItem.preselectSupport
 
 let supports_completion_item_label_details (p : Lsp.Initialize.params) : bool =
-  Lsp.Initialize.(p.client_capabilities.textDocument.completion.completionItem.labelDetailsSupport)
+  let open Lsp.Initialize in
+  let open Lsp.CompletionClientCapabilities in
+  p.client_capabilities.textDocument.completion.completionItem.labelDetailsSupport
 
 let supports_connectionStatus (p : Lsp.Initialize.params) : bool =
   Lsp.Initialize.(p.client_capabilities.telemetry.connectionStatus)
