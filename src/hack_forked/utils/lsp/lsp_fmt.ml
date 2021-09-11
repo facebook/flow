@@ -192,13 +192,16 @@ let parse_formattingOptions (json : json option) : DocumentFormatting.formatting
     insertSpaces = Jget.bool_d json "insertSpaces" true;
   }
 
+module SymbolKindFmt = struct
+  let to_json kind = int_ (SymbolInformation.symbolKind_to_enum kind)
+end
+
 let print_symbolInformation (info : SymbolInformation.t) : json =
   SymbolInformation.(
-    let print_symbol_kind k = int_ (SymbolInformation.symbolKind_to_enum k) in
     Jprint.object_opt
       [
         ("name", Some (JSON_String info.name));
-        ("kind", Some (print_symbol_kind info.kind));
+        ("kind", Some (SymbolKindFmt.to_json info.kind));
         ("location", Some (print_location info.location));
         ("containerName", Base.Option.map info.containerName string_);
       ])
@@ -915,8 +918,34 @@ let parse_documentSymbol (params : json option) : DocumentSymbol.params =
   DocumentSymbol.
     { textDocument = Jget.obj_exn params "textDocument" |> parse_textDocumentIdentifier }
 
+module DocumentSymbolFmt = struct
+  open DocumentSymbol
+
+  let rec to_json t =
+    let { name; detail; kind; deprecated; range; selectionRange; children } = t in
+    Jprint.object_opt
+      [
+        ("name", Some (string_ name));
+        ("detail", Base.Option.map ~f:string_ detail);
+        ("kind", Some (SymbolKindFmt.to_json kind));
+        ( "deprecated",
+          if deprecated then
+            Some (JSON_Bool true)
+          else
+            None );
+        ("range", Some (print_range range));
+        ("selectionRange", Some (print_range selectionRange));
+        ( "children",
+          Base.Option.map
+            ~f:(fun children -> JSON_Array (Base.List.map ~f:to_json children))
+            children );
+      ]
+end
+
 let print_documentSymbol (r : DocumentSymbol.result) : json =
-  JSON_Array (List.map r ~f:print_symbolInformation)
+  match r with
+  | `SymbolInformation xs -> JSON_Array (List.map xs ~f:print_symbolInformation)
+  | `DocumentSymbol xs -> JSON_Array (List.map xs ~f:DocumentSymbolFmt.to_json)
 
 (************************************************************************)
 (* textDocument/references request                                      *)

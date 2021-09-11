@@ -56,6 +56,7 @@ type t = {
     t -> DocumentRangeFormatting.result -> DocumentRangeFormatting.result;
   of_document_symbol_params: t -> DocumentSymbol.params -> DocumentSymbol.params;
   of_document_symbol_result: t -> DocumentSymbol.result -> DocumentSymbol.result;
+  of_document_symbol: t -> DocumentSymbol.t -> DocumentSymbol.t;
   of_document_uri: t -> DocumentUri.t -> DocumentUri.t;
   of_execute_command_params: t -> ExecuteCommand.params -> ExecuteCommand.params;
   of_execute_command_result: t -> ExecuteCommand.result -> ExecuteCommand.result;
@@ -314,7 +315,20 @@ let default_mapper =
         let textDocument = mapper.of_text_document_identifier mapper textDocument in
         { DocumentSymbol.textDocument });
     of_document_symbol_result =
-      (fun mapper result -> Base.List.map ~f:(mapper.of_symbol_information mapper) result);
+      (fun mapper result ->
+        match result with
+        | `SymbolInformation result ->
+          `SymbolInformation (Base.List.map ~f:(mapper.of_symbol_information mapper) result)
+        | `DocumentSymbol result ->
+          `DocumentSymbol (Base.List.map ~f:(mapper.of_document_symbol mapper) result));
+    of_document_symbol =
+      (fun mapper { DocumentSymbol.name; detail; kind; deprecated; range; selectionRange; children } ->
+        let range = mapper.of_range mapper range in
+        let selectionRange = mapper.of_range mapper selectionRange in
+        let children =
+          Base.Option.map ~f:(Base.List.map ~f:(mapper.of_document_symbol mapper)) children
+        in
+        { DocumentSymbol.name; detail; kind; deprecated; range; selectionRange; children });
     of_document_uri = (fun _mapper t -> t);
     of_execute_command_params =
       (fun _mapper { ExecuteCommand.command; arguments } -> { ExecuteCommand.command; arguments });

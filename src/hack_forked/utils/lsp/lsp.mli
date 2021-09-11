@@ -729,11 +729,22 @@ module WorkspaceSymbol : sig
 end
 
 module DocumentSymbol : sig
-  type params = documentSymbolParams
+  type t = {
+    name: string;
+    detail: string option;
+    kind: SymbolInformation.symbolKind;
+    deprecated: bool;
+    range: range;
+    selectionRange: range;
+    children: t list option;
+  }
 
-  and result = SymbolInformation.t list
+  type params = { textDocument: TextDocumentIdentifier.t }
 
-  and documentSymbolParams = { textDocument: TextDocumentIdentifier.t }
+  type result =
+    [ `SymbolInformation of SymbolInformation.t list
+    | `DocumentSymbol of t list
+    ]
 end
 
 module FindReferences : sig

@@ -1135,7 +1135,7 @@ let do_documentSymbol (state : state) (id : lsp_id) (params : DocumentSymbol.par
   let uri = params.DocumentSymbol.textDocument.TextDocumentIdentifier.uri in
   (* It's not do_documentSymbol's job to set live parse errors, so we ignore them *)
   let (state, (ast, _live_parse_errors)) = parse_and_cache state uri in
-  let result = DocumentSymbolProvider.provide_symbol_information ~uri ast in
+  let result = `SymbolInformation (DocumentSymbolProvider.provide_symbol_information ~uri ast) in
   let json =
     let key = command_key_of_state state in
     Lsp_fmt.print_lsp ~key (ResponseMessage (id, DocumentSymbolResult result))
