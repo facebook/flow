@@ -502,7 +502,6 @@ module Opts = struct
     enum
       [
         ("fs", Options.LAZY_MODE_FILESYSTEM);
-        ("ide", Options.LAZY_MODE_IDE);
         ("watchman", Options.LAZY_MODE_WATCHMAN);
         ("none", Options.NON_LAZY_MODE);
       ]

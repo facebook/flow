@@ -4,10 +4,6 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-"$FLOW" stop
-
-start_flow . --lazy-mode ide
-
 printf "===== signature-verification error should not be reported, just the parsing error: =====\\n"
 assert_errors "$FLOW" status --no-auto-start
 

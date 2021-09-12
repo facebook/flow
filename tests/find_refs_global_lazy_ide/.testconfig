@@ -1,2 +1,0 @@
-shell: test.sh
-start_args: --lazy-mode ide

@@ -1442,47 +1442,18 @@ let enqueue_or_handle_ephemeral genv (request_id, command_with_context) =
     ServerMonitorListenerState.push_new_workload ~name:cmd_str workload;
     Lwt.return_unit
 
-let did_open ~profiling ~reader genv env client (files : (string * string) Nel.t) :
+let did_open ~profiling ~reader genv env client (_files : (string * string) Nel.t) :
     ServerEnv.env Lwt.t =
   let options = genv.ServerEnv.options in
-  match Options.lazy_mode options with
-  | Options.LAZY_MODE_IDE ->
-    (* LAZY_MODE_IDE is a lazy mode which infers the focused files based on what the IDE
-     * opens. So when an IDE opens a new file, that file is now focused.
-     *
-     * If the newly opened file was previously unchecked or checked as a dependency, then
-     * we will do a new recheck.
-     *
-     * If the newly opened file was already checked, then we'll just send the errors to
-     * the client
-     *)
-    let filenames = Nel.map (fun (fn, _content) -> fn) files in
-    let%lwt (env, triggered_recheck) = Lazy_mode_utils.focus_and_check genv env filenames in
-    (if not triggered_recheck then
-      (* This open doesn't trigger a recheck, but we'll still send down the errors *)
-      let (errors, warnings, _) =
-        ErrorCollator.get_with_separate_warnings ~profiling ~reader ~options env
-      in
-      Persistent_connection.send_errors_if_subscribed
-        ~client
-        ~errors_reason:LspProt.Env_change
-        ~errors
-        ~warnings);
-    Lwt.return env
-  | Options.LAZY_MODE_FILESYSTEM
-  | Options.LAZY_MODE_WATCHMAN
-  | Options.NON_LAZY_MODE ->
-    (* In filesystem lazy mode or in non-lazy mode, the only thing we need to do when
-     * a new file is opened is to send the errors to the client *)
-    let (errors, warnings, _) =
-      ErrorCollator.get_with_separate_warnings ~profiling ~reader ~options env
-    in
-    Persistent_connection.send_errors_if_subscribed
-      ~client
-      ~errors_reason:LspProt.Env_change
-      ~errors
-      ~warnings;
-    Lwt.return env
+  let (errors, warnings, _) =
+    ErrorCollator.get_with_separate_warnings ~profiling ~reader ~options env
+  in
+  Persistent_connection.send_errors_if_subscribed
+    ~client
+    ~errors_reason:LspProt.Env_change
+    ~errors
+    ~warnings;
+  Lwt.return env
 
 let did_close ~profiling ~reader genv env client : ServerEnv.env Lwt.t =
   let options = genv.options in

@@ -11,7 +11,6 @@ type module_system =
 
 type lazy_mode =
   | LAZY_MODE_FILESYSTEM
-  | LAZY_MODE_IDE
   | LAZY_MODE_WATCHMAN
   | NON_LAZY_MODE
 
@@ -295,6 +294,5 @@ let type_asserts opts = opts.opt_type_asserts
 let lazy_mode_to_string lazy_mode =
   match lazy_mode with
   | LAZY_MODE_FILESYSTEM -> "fs"
-  | LAZY_MODE_IDE -> "ide"
   | LAZY_MODE_WATCHMAN -> "watchman"
   | NON_LAZY_MODE -> "none"

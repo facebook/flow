@@ -1052,8 +1052,7 @@ let files_to_infer ~options ~profiling ~reader ~dependency_info ~focus_targets ~
 let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~file_watcher_metadata =
   match Options.lazy_mode options with
   | Options.NON_LAZY_MODE
-  | Options.LAZY_MODE_FILESYSTEM
-  | Options.LAZY_MODE_IDE ->
+  | Options.LAZY_MODE_FILESYSTEM ->
     (* Only watchman mode might restart *)
     Lwt.return_none
   | Options.LAZY_MODE_WATCHMAN ->
@@ -1188,8 +1187,6 @@ module Recheck : sig
   val determine_what_to_recheck :
     profiling:Profiling_js.running ->
     options:Options.t ->
-    is_file_checked:(File_key.t -> bool) ->
-    ide_open_files:SSet.t Lazy.t ->
     sig_dependency_graph:FilenameGraph.t ->
     implementation_dependency_graph:FilenameGraph.t ->
     checked_files:CheckedSet.t ->
@@ -1617,8 +1614,6 @@ end = struct
   let determine_what_to_recheck
       ~profiling
       ~options
-      ~is_file_checked
-      ~ide_open_files
       ~sig_dependency_graph
       ~implementation_dependency_graph
       ~checked_files
@@ -1642,70 +1637,16 @@ end = struct
     in
     let%lwt (updated_checked_files, sig_dependent_files, all_dependent_files) =
       Memory_utils.with_memory_timer_lwt ~options "RecalcDepGraph" profiling (fun () ->
-          match Options.lazy_mode options with
-          | Options.NON_LAZY_MODE
-          (* Non lazy mode treats every file as focused. *)
-          | Options.LAZY_MODE_WATCHMAN
-          (* Watchman mode treats every modified file as focused *)
-          | Options.LAZY_MODE_FILESYSTEM ->
-            (* FS mode treats every modified file as focused *)
-            let old_focus_targets = CheckedSet.focused checked_files in
-            let old_focus_targets = FilenameSet.diff old_focus_targets deleted in
-            let old_focus_targets = FilenameSet.diff old_focus_targets unparsed_set in
-            let focused = FilenameSet.union old_focus_targets freshparsed in
-            unfocused_files_and_dependents_to_infer
-              ~options
-              ~input_focused:(FilenameSet.union focused (CheckedSet.focused files_to_force))
-              ~input_dependencies:(Some (CheckedSet.dependencies files_to_force))
-              ~sig_dependent_files
-              ~all_dependent_files
-          | Options.LAZY_MODE_IDE ->
-            (* IDE mode only treats opened files as focused *)
-            (* Unfortunately, our checked_files set might be out of date. This update could have added
-             * some new dependents or dependencies. So we need to recalculate those.
-             *
-             * To calculate dependents and dependencies, we need to know what are the focused files. We
-             * define the focused files to be the union of
-             *
-             *   1. The files that were previously focused
-             *   2. Modified files that are currently open in the IDE
-             *   3. If this is a `flow force-recheck --focus A.js B.js C.js`, then A.js, B.js and C.js
-             *
-             * Remember that the IDE might open a new file or keep open a deleted file, so the focused
-             * set might be missing that file. If that file reappears, we must remember to refocus on
-             * it.
-             * *)
-            let open_in_ide =
-              let (lazy opened_files) = ide_open_files in
-              FilenameSet.filter
-                (function
-                  | File_key.SourceFile fn
-                  | File_key.LibFile fn
-                  | File_key.JsonFile fn
-                  | File_key.ResourceFile fn ->
-                    SSet.mem fn opened_files
-                  | File_key.Builtins -> false)
-                freshparsed
-            in
-            let input_focused =
-              CheckedSet.focused files_to_force
-              (* Files to force to be focused *)
-              |> filter_out_node_modules ~options
-              (* Never focus node modules *)
-              |> FilenameSet.union (CheckedSet.focused checked_files)
-              (* old focused *)
-              |> FilenameSet.union open_in_ide
-              (* Files which are open in the IDE *)
-            in
-            let input_dependencies = Some (CheckedSet.dependencies files_to_force) in
-            focused_files_and_dependents_to_infer
-              ~is_file_checked
-              ~implementation_dependency_graph
-              ~sig_dependency_graph
-              ~input_focused
-              ~input_dependencies
-              ~sig_dependent_files
-              ~all_dependent_files)
+          let old_focus_targets = CheckedSet.focused checked_files in
+          let old_focus_targets = FilenameSet.diff old_focus_targets deleted in
+          let old_focus_targets = FilenameSet.diff old_focus_targets unparsed_set in
+          let focused = FilenameSet.union old_focus_targets freshparsed in
+          unfocused_files_and_dependents_to_infer
+            ~options
+            ~input_focused:(FilenameSet.union focused (CheckedSet.focused files_to_force))
+            ~input_dependencies:(Some (CheckedSet.dependencies files_to_force))
+            ~sig_dependent_files
+            ~all_dependent_files)
     in
     (* Filter updated_checked_files down to the files which we just parsed or unchanged files which
      * will be focused *)
@@ -1767,9 +1708,6 @@ end = struct
       Dependency_info.implementation_dependency_graph dependency_info
     in
     let sig_dependency_graph = Dependency_info.sig_dependency_graph dependency_info in
-    let is_file_checked =
-      is_file_tracked_and_checked ~reader:(Abstract_state_reader.Mutator_state_reader reader)
-    in
     let%lwt (Determine_what_to_recheck_result
               {
                 to_merge;
@@ -1783,8 +1721,6 @@ end = struct
       determine_what_to_recheck
         ~profiling
         ~options
-        ~is_file_checked
-        ~ide_open_files:(lazy (Persistent_connection.get_opened_files env.ServerEnv.connections))
         ~sig_dependency_graph
         ~implementation_dependency_graph
         ~checked_files:env.ServerEnv.checked_files

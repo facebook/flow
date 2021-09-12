@@ -27,7 +27,7 @@ assert_errors "$FLOW" status --no-auto-start
 # Reset the parse error
 cp B.js.orig B.js
 assert_ok "$FLOW" stop
-start_flow . --lazy-mode ide
+start_flow . --lazy-mode fs --file-watcher none
 
 printf "==== No errors after restart====\\n"
 assert_ok "$FLOW" status --no-auto-start

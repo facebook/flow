@@ -134,7 +134,6 @@ let determine_what_to_recheck
   let checked_files = checked_files_of_graph ~implementation_dependency_graph in
   let freshparsed = prepare_freshparsed freshparsed in
   let options = make_options () in
-  let is_file_checked _ = true in
   let unchanged_checked = make_unchanged_checked checked_files freshparsed in
   (* This approximates the behavior of Dep_service.calc_direct_dependents. As of October 2019, it
    * includes all direct dependents, not just sig direct dependents. If
@@ -153,8 +152,6 @@ let determine_what_to_recheck
   Types_js.debug_determine_what_to_recheck
     ~profiling
     ~options
-    ~is_file_checked
-    ~ide_open_files:(lazy SSet.empty)
     ~sig_dependency_graph
     ~implementation_dependency_graph
     ~checked_files
