@@ -10,17 +10,27 @@
 type request_id = string
 
 type file_watcher_metadata = {
-  changed_mergebase: bool;
+  changed_mergebase: bool option;
+      (** [Some _] if we checked whether the mergebase changed, [None] if we didn't/can't ask the VCS *)
   missed_changes: bool;
 }
 
-let empty_file_watcher_metadata = { changed_mergebase = false; missed_changes = false }
+let empty_file_watcher_metadata = { changed_mergebase = None; missed_changes = false }
 
 let merge_file_watcher_metadata a b =
-  {
-    changed_mergebase = a.changed_mergebase || b.changed_mergebase;
-    missed_changes = a.missed_changes || b.missed_changes;
-  }
+  let changed_mergebase =
+    match (a.changed_mergebase, b.changed_mergebase) with
+    | (None, None) -> None
+    | (Some x, Some y) -> Some (x || y)
+    | (Some true, None)
+    | (None, Some true) ->
+      Some true
+    | (Some false, None)
+    | (None, Some false) ->
+      (* we don't know for sure, so return [None] *)
+      None
+  in
+  { changed_mergebase; missed_changes = a.missed_changes || b.missed_changes }
 
 type please_die_reason = MonitorExiting of (Exit.t * string)
 

@@ -1037,20 +1037,21 @@ let files_to_infer ~options ~profiling ~reader ~dependency_info ~focus_targets ~
 
 let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~file_watcher_metadata =
   match Options.lazy_mode options with
-  | Options.NON_LAZY_MODE
-  | Options.LAZY_MODE_FILESYSTEM ->
-    (* Only watchman mode might restart *)
+  | Options.NON_LAZY_MODE ->
+    (* it's never faster to do a full init than a recheck *)
     Lwt.return_none
+  | Options.LAZY_MODE_FILESYSTEM
   | Options.LAZY_MODE_WATCHMAN ->
     let { MonitorProt.changed_mergebase; missed_changes = _ } = file_watcher_metadata in
-    Hh_logger.info
-      "File watcher %s mergebase"
-      (if changed_mergebase then
-        "changed"
-      else
-        "did not change");
-
-    if changed_mergebase then (
+    (match changed_mergebase with
+    | None ->
+      (* Not tracking the mergebase, so we don't know one way or the other *)
+      Lwt.return_none
+    | Some false ->
+      Hh_logger.info "File watcher did not change mergebase";
+      Lwt.return_none
+    | Some true ->
+      Hh_logger.info "File watcher changed mergebase";
       (* TODO (glevi) - One of the numbers we need to estimate is "If we restart how many files
        * would we merge". Currently we're looking at the number of already checked files. But a
        * better way would be to
@@ -1106,9 +1107,7 @@ let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~file_watche
         else
           Lwt.return_unit
       in
-      Lwt.return (Some estimates)
-    ) else
-      Lwt.return_none
+      Lwt.return (Some estimates))
 
 type determine_what_to_recheck_result =
   | Determine_what_to_recheck_result of {

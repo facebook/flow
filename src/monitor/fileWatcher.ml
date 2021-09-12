@@ -367,25 +367,34 @@ end = struct
            * more acceptable to delay a file-changed notification than after a user saves a
            * file in the IDE
            *)
-          if env.finished_an_hg_update then (
-            env.finished_an_hg_update <- false;
-            let%lwt new_mergebase =
-              match%lwt get_mergebase_and_changes env with
-              | Ok mergebase_and_changes -> Lwt.return mergebase_and_changes
-              | Error msg ->
-                (* TODO: handle this more gracefully than `failwith` *)
-                failwith msg
-            in
-            match (new_mergebase, env.mergebase) with
-            | (Some { Watchman.mergebase; changes = _; clock = _ }, Some old_mergebase)
-              when mergebase <> old_mergebase ->
-              Logger.info "Watchman reports mergebase changed from %S to %S" old_mergebase mergebase;
-              env.mergebase <- Some mergebase;
-              env.metadata <- { env.metadata with MonitorProt.changed_mergebase = true };
-              Lwt.return_unit
-            | _ -> Lwt.return_unit
-          ) else
-            Lwt.return_unit
+          let%lwt changed_mergebase =
+            if env.finished_an_hg_update then (
+              env.finished_an_hg_update <- false;
+              let%lwt new_mergebase =
+                match%lwt get_mergebase_and_changes env with
+                | Ok mergebase_and_changes -> Lwt.return mergebase_and_changes
+                | Error msg ->
+                  (* TODO: handle this more gracefully than `failwith` *)
+                  failwith msg
+              in
+              match (new_mergebase, env.mergebase) with
+              | (Some { Watchman.mergebase; changes = _; clock = _ }, Some old_mergebase) ->
+                let changed_mergebase = mergebase <> old_mergebase in
+                if changed_mergebase then (
+                  Logger.info
+                    "Watchman reports mergebase changed from %S to %S"
+                    old_mergebase
+                    mergebase;
+                  env.mergebase <- Some mergebase
+                );
+                Lwt.return (Some changed_mergebase)
+              | _ -> Lwt.return None
+            ) else
+              Lwt.return None
+          in
+          let metadata = { MonitorProt.changed_mergebase; missed_changes = false } in
+          env.metadata <- MonitorProt.merge_file_watcher_metadata env.metadata metadata;
+          Lwt.return_unit
         in
         broadcast env;
         Lwt.return env
