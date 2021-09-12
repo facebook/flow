@@ -13,13 +13,13 @@ Server should start in lazy mode from the saved state
 Server should have no errors because it's lazy
 No errors!
 
-The Flow server is currently in filesystem lazy mode and is only checking 0/2 files.
+The Flow server is currently in lazy mode and is only checking 0/2 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Server should (but does not) display the type error in B.js after a modification to A.js
 No errors!
 
-The Flow server is currently in filesystem lazy mode and is only checking 2/2 files.
+The Flow server is currently in lazy mode and is only checking 2/2 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 This is the type error it should display

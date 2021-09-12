@@ -4,7 +4,7 @@ Server should start in types-first mode
 Server should have no errors because it's lazy
 No errors!
 
-The Flow server is currently in filesystem lazy mode and is only checking 0/3 files.
+The Flow server is currently in lazy mode and is only checking 0/3 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Adding a line should cause minimal rechecking and expose the error from test1.js only
@@ -25,7 +25,7 @@ References:
 
 Found 1 error
 
-The Flow server is currently in filesystem lazy mode and is only checking 3/3 files.
+The Flow server is currently in lazy mode and is only checking 3/3 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 ========Skipping stats========
@@ -67,7 +67,7 @@ References:
 
 Found 2 errors
 
-The Flow server is currently in filesystem lazy mode and is only checking 3/3 files.
+The Flow server is currently in lazy mode and is only checking 3/3 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 ========Skipping stats========
@@ -123,7 +123,7 @@ References:
 
 Found 3 errors
 
-The Flow server is currently in filesystem lazy mode and is only checking 3/3 files.
+The Flow server is currently in lazy mode and is only checking 3/3 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 ========Skipping stats========

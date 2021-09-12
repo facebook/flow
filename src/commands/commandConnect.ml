@@ -12,7 +12,7 @@ type env = {
   autostart: bool;
   retries: int;
   expiry: float option;
-  lazy_mode: Options.lazy_mode option;
+  lazy_mode: string option;
   autostop: bool;
   tmp_dir: string;
   shm_hash_table_pow: int option;
@@ -61,7 +61,7 @@ let start_flow_server env =
     [Path.to_string root]
     |> arg_map "--sharedmemory-hash-table-pow" ~f:string_of_int shm_hash_table_pow
     |> arg_map "--sharedmemory-log-level" ~f:string_of_int shm_log_level
-    |> arg_map "--lazy-mode" lazy_mode ~f:Options.lazy_mode_to_string
+    |> arg "--lazy-mode" lazy_mode
     |> arg "--temp-dir" (Some tmp_dir)
     |> arg "--from" (FlowEventLogger.get_from_I_AM_A_CLOWN ())
     |> flag "--ignore-version" ignore_version

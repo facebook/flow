@@ -437,7 +437,7 @@ let autofix_exports ~options ~env ~profiling ~input =
 let collect_rage ~profiling ~options ~reader ~env ~files =
   let items = [] in
   (* options *)
-  let data = Printf.sprintf "lazy_mode=%s\n" Options.(lazy_mode options |> lazy_mode_to_string) in
+  let data = Printf.sprintf "lazy_mode=%s\n" (Options.lazy_mode options |> Bool.to_string) in
   let items = ("options", data) :: items in
   (* env: checked files *)
   let data =
@@ -588,9 +588,9 @@ let batch_coverage ~options ~env ~trust ~batch =
     Error
       "Batch Coverage cannot be run in trust mode if the server is not in trust mode. \n\nRestart the Flow server with --trust-mode=check' to enable this command."
     |> Lwt.return
-  else if Options.lazy_mode options <> Options.NON_LAZY_MODE then
+  else if Options.lazy_mode options then
     Error
-      "Batch coverage cannot be run in lazy mode.\n\nRestart the Flow server with '--lazy-mode none' to enable this command."
+      "Batch coverage cannot be run in lazy mode.\n\nRestart the Flow server with '--no-lazy' to enable this command."
     |> Lwt.return
   else
     let is_checked key = CheckedSet.mem key env.checked_files in

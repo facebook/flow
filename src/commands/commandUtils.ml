@@ -200,9 +200,9 @@ let temp_dir_flag prev =
 
 let collect_lazy_flags main lazy_ lazy_mode =
   let lazy_mode =
-    if lazy_ && lazy_mode = None then
-      Some Options.LAZY_MODE_FILESYSTEM
-    (* --lazy === --lazy-mode fs *)
+    if lazy_ && Base.Option.is_none lazy_mode then
+      (* --lazy === --lazy-mode true *)
+      Some FlowConfig.Lazy
     else
       lazy_mode
   in
@@ -212,18 +212,19 @@ let lazy_flags prev =
   CommandSpec.ArgSpec.(
     prev
     |> collect collect_lazy_flags
-    |> flag "--lazy" no_arg ~doc:"Don't run a full check. Shorthand for `--lazy-mode fs`"
+    |> flag "--lazy" no_arg ~doc:"Only check changed files. Shorthand for `--lazy-mode true`"
     |> flag
          "--lazy-mode"
          (enum
             [
-              ("fs", Options.LAZY_MODE_FILESYSTEM);
-              ("watchman", Options.LAZY_MODE_WATCHMAN);
-              ("none", Options.NON_LAZY_MODE);
+              ("true", FlowConfig.Lazy);
+              ("false", FlowConfig.Non_lazy);
+              (* legacy, deprecated options *)
+              ("fs", FlowConfig.Lazy);
+              ("watchman", FlowConfig.Watchman_DEPRECATED);
+              ("none", FlowConfig.Non_lazy);
             ])
-         ~doc:
-           ("Which lazy mode to use: 'fs', 'watchman' or 'none'. Use this flag to "
-           ^ "override the lazy mode set in the .flowconfig (which defaults to 'none' if not set)")
+         ~doc:"If true, only check changed files"
          ~env:"FLOW_LAZY_MODE")
 
 let input_file_flag verb prev =
@@ -705,7 +706,7 @@ type connect_params = {
   timeout: int option;
   no_auto_start: bool;
   autostop: bool;
-  lazy_mode: Options.lazy_mode option;
+  lazy_mode: FlowConfig.lazy_mode option;
   temp_dir: string option;
   shm_flags: shared_mem_params;
   ignore_version: bool;
@@ -1174,10 +1175,11 @@ let make_options
       ~default:(FlowConfig.saved_state_fetcher flowconfig)
   in
   let opt_lazy_mode =
-    let default =
-      Base.Option.value (FlowConfig.lazy_mode flowconfig) ~default:Options.NON_LAZY_MODE
-    in
-    Base.Option.value lazy_mode ~default
+    match Base.Option.first_some lazy_mode (FlowConfig.lazy_mode flowconfig) with
+    | Some FlowConfig.Lazy -> true
+    | Some FlowConfig.Watchman_DEPRECATED -> true
+    | Some FlowConfig.Non_lazy -> false
+    | None -> false
   in
   let opt_new_merge = options_flags.new_merge || FlowConfig.new_merge flowconfig in
   let opt_abstract_locations =
@@ -1334,10 +1336,16 @@ let make_env flowconfig flowconfig_name connect_flags root =
     | Error_client ->
       false
   in
+  let lazy_mode =
+    Base.Option.map connect_flags.lazy_mode ~f:(function
+        | FlowConfig.Lazy -> "true"
+        | FlowConfig.Non_lazy -> "false"
+        | FlowConfig.Watchman_DEPRECATED -> "watchman")
+  in
   {
     CommandConnect.root;
     autostart = not connect_flags.no_auto_start;
-    lazy_mode = connect_flags.lazy_mode;
+    lazy_mode;
     retries;
     expiry;
     autostop = connect_flags.autostop;
@@ -1662,21 +1670,12 @@ let get_check_or_status_exit_code errors warnings max_warnings =
       else
         Type_error))
 
-let choose_file_watcher ~options ~flowconfig ~file_watcher ~file_watcher_debug ~sync_timeout =
+let choose_file_watcher ~flowconfig ~lazy_mode ~file_watcher ~file_watcher_debug ~sync_timeout =
   let file_watcher =
-    match (Options.lazy_mode options, file_watcher) with
-    | (Options.LAZY_MODE_WATCHMAN, (None | Some FlowConfig.Watchman)) ->
-      (* --lazy-mode watchman implies --file-watcher watchman *)
-      FlowConfig.Watchman
-    | (Options.LAZY_MODE_WATCHMAN, Some _) ->
-      (* Error on something like --lazy-mode watchman --file-watcher dfind *)
-      let msg =
-        "Using Watchman lazy mode implicitly uses the Watchman file watcher, "
-        ^ "but you tried to use a different file watcher via the `--file-watcher` flag."
-      in
-      raise (CommandSpec.Failed_to_parse ("--file-watcher", msg))
-    | (_, Some file_watcher) -> file_watcher
-    | (_, None) -> Base.Option.value ~default:FlowConfig.DFind (FlowConfig.file_watcher flowconfig)
+    match (file_watcher, lazy_mode) with
+    | (None, Some FlowConfig.Watchman_DEPRECATED) -> FlowConfig.Watchman
+    | (Some file_watcher, _) -> file_watcher
+    | (None, _) -> Base.Option.value ~default:FlowConfig.DFind (FlowConfig.file_watcher flowconfig)
   in
   match file_watcher with
   | FlowConfig.NoFileWatcher -> FlowServerMonitorOptions.NoFileWatcher

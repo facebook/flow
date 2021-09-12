@@ -2,7 +2,7 @@
 Server should start in fs lazy mode and in types-first mode
 No errors!
 
-The Flow server is currently in filesystem lazy mode and is only checking 0/11 files.
+The Flow server is currently in lazy mode and is only checking 0/11 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Editing a file should cause checking its code against computed types of dependencies
@@ -91,5 +91,5 @@ References:
 
 Found 5 errors
 
-The Flow server is currently in filesystem lazy mode and is only checking 9/11 files.
+The Flow server is currently in lazy mode and is only checking 9/11 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes

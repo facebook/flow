@@ -107,17 +107,12 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     in
     let lazy_msg =
       match lazy_stats.ServerProt.Response.lazy_mode with
-      | Options.NON_LAZY_MODE -> None
-      | mode ->
+      | false -> None
+      | true ->
         Some
           (Printf.sprintf
-             ("The Flow server is currently in %s lazy mode and is only checking %d/%d files.\n"
+             ("The Flow server is currently in lazy mode and is only checking %d/%d files.\n"
              ^^ "To learn more, visit flow.org/en/docs/lang/lazy-modes")
-             Options.(
-               match mode with
-               | LAZY_MODE_FILESYSTEM -> "filesystem"
-               | LAZY_MODE_WATCHMAN -> "Watchman"
-               | NON_LAZY_MODE -> assert false)
              lazy_stats.ServerProt.Response.checked_files
              lazy_stats.ServerProt.Response.total_files)
     in

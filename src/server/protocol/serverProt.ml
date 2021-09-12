@@ -196,7 +196,7 @@ end
 
 module Response = struct
   type lazy_stats = {
-    lazy_mode: Options.lazy_mode;
+    lazy_mode: bool;
     checked_files: int;
     total_files: int;
   }

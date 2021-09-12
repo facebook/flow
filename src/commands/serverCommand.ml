@@ -95,8 +95,8 @@ let main
   in
   let file_watcher =
     choose_file_watcher
-      ~options
       ~flowconfig
+      ~lazy_mode
       ~file_watcher
       ~file_watcher_debug
       ~sync_timeout:file_watcher_sync_timeout
