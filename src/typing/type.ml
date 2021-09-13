@@ -1744,7 +1744,7 @@ end = struct
 
   include Source_or_generated_id
 
-  module Map : WrappedMap.S with type key = id = WrappedMap.Make (struct
+  module Map = WrappedMap.Make (struct
     type t = id
 
     let compare = compare_id
@@ -1764,16 +1764,16 @@ end = struct
     NameUtils.Map.adjust
       x
       (function
-        | Some (Set (set_loc, set_t)) ->  (GetSet (loc, get_t, set_loc, set_t))
-        | _ -> (Get (loc, get_t)))
+        | Some (Set (set_loc, set_t)) -> GetSet (loc, get_t, set_loc, set_t)
+        | _ -> Get (loc, get_t))
       map
 
   let add_setter x loc set_t map =
     NameUtils.Map.adjust
       x
       (function
-        | Some (Get (get_loc, get_t)) ->  (GetSet (get_loc, get_t, loc, set_t))
-        | _ ->  (Set (loc, set_t)))
+        | Some (Get (get_loc, get_t)) -> GetSet (get_loc, get_t, loc, set_t)
+        | _ -> Set (loc, set_t))
       map
 
   let add_method x loc t = NameUtils.Map.add x (Method (loc, t))
@@ -1825,7 +1825,7 @@ and Eval : sig
 end = struct
   include Source_or_generated_id
 
-  module Map : WrappedMap.S with type key = id = WrappedMap.Make (struct
+  module Map  = WrappedMap.Make (struct
     type key = id
 
     type t = key
@@ -1881,7 +1881,7 @@ end = struct
 
   type id = int
 
-  module Map : WrappedMap.S with type key = id = WrappedMap.Make (struct
+  module Map = WrappedMap.Make (struct
     type key = id
 
     type t = key
@@ -2618,15 +2618,20 @@ end =
   React
 
 let unknown_use = TypeTerm.(Op UnknownUse)
+
+external use_t_compare : TypeTerm.use_t -> TypeTerm.use_t -> int = "caml_fast_generic_compare"
+  [@@noalloc]
+
 module UseTypeSet : Flow_set.S with type elt = TypeTerm.use_t = Flow_set.Make (struct
   type elt = TypeTerm.use_t
 
   type t = elt
 
-  let compare = Stdlib.compare
+  let compare = use_t_compare
 end)
 
-external type_term_compare : TypeTerm.t -> TypeTerm.t -> int = "caml_fast_generic_compare" [@@noalloc]
+external type_term_compare : TypeTerm.t -> TypeTerm.t -> int = "caml_fast_generic_compare"
+  [@@noalloc]
 
 (* The typechecking algorithm often needs to maintain sets of types, or more
    generally, maps of types (for logging we need to associate some provenanced
@@ -2639,11 +2644,9 @@ module TypeSet : Flow_set.S with type elt = TypeTerm.t = Flow_set.Make (struct
   type t = elt
 
   let compare = type_term_compare
-
 end)
 
-
-module TypeMap : WrappedMap_sig.S with type key = TypeTerm.t = WrappedMap.Make (struct
+module TypeMap = Flow_map.Make (struct
   type key = TypeTerm.t
 
   type t = key
@@ -2659,10 +2662,15 @@ module Constraint = struct
 
     type t = TypeTerm.use_t * (speculation_id * case_id) option
 
-    let compare = Stdlib.compare
+    let compare (x, assoc1) (y, assoc2) =
+      let v = [%derive.ord: (int * int) option] assoc1 assoc2 in
+      if v = 0 then
+        use_t_compare x y
+      else
+        v
   end
 
-  module UseTypeMap = WrappedMap.Make (UseTypeKey)
+  module UseTypeMap = Flow_map.Make (UseTypeKey)
 
   (** Constraints carry type information that narrows down the possible solutions
       of tvar, and are of two kinds:
@@ -2882,8 +2890,6 @@ let with_trust (trust_constructor : unit -> trust_rep) (type_constructor : trust
   trust_constructor () |> type_constructor
 
 (*********************************************************)
-
-let compare = Stdlib.compare
 
 let open_tvar tvar =
   match tvar with
