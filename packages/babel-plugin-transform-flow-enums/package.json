@@ -1,6 +1,6 @@
 {
   "name": "babel-plugin-transform-flow-enums",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Babel transform for Flow Enums.",
   "main": "index.js",
   "license": "MIT",

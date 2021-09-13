@@ -11,7 +11,7 @@
 // `Object.prototype` in its proto chain, so we must extract it here.
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 
-// Map from an enum object to a set of its values.
+// Map from an enum object to a reverse map of its values to names
 var reverseMapCache = typeof WeakMap === 'function' ? new WeakMap() : new Map();
 
 // Computes the reverse mapping of the enum object: from value to name.

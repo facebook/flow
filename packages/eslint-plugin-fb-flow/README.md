@@ -82,3 +82,108 @@ type InexactProps = {
   ...
 };
 ```
+
+
+### `use-flow-enums`
+You should use [Flow Enums](https://flow.org/en/docs/enums/) instead of legacy enum patterns (e.g. `keyMirror` and `Object.freeze`).
+
+If this lint has flagged an object which is conceptually not an enum (e.g. a bag of constants that don't define a type), you can ignore this warning.
+
+There are also [other reasons to not use Flow Enums](https://flow.org/en/docs/enums/#toc-when-to-not-use-flow-enums), and if any of those are relevant to you, ignore this warning.
+
+See the [Migrating from legacy patterns](https://flow.org/en/docs/enums/migrating-legacy-patterns/) for how to fix this issue.
+
+#### Examples
+Examples of ***invalid*** code for this rule:
+
+```
+const Foo = Object.freeze({
+  A: 1,
+  B: 2,
+});
+
+const Bar = keyMirror({
+  A: null,
+  B: null,
+});
+```
+
+Examples of ***valid*** code for this rule:
+```
+enum Foo {
+  A = 1,
+  B = 2,
+};
+
+enum Bar {
+  A,
+  B,
+};
+```
+
+
+### `flow-enums-default-if-possible`
+With [Flow Enums](https://flow.org/en/docs/enums/),
+if you don't specify member values they by default become [strings mirrored from the member name](https://flow.org/en/docs/enums/defining-enums/#toc-string-enums).
+
+Instead of:
+```
+enum Status {
+  Active = 'Active',
+  Paused = 'Paused',
+  Off = 'Off',
+}
+```
+
+Write:
+```
+enum Status {
+  Active,
+  Paused,
+  Off,
+}
+```
+
+This lint comes with an autofixer to automatically make the fix.
+
+
+### `no-flow-enums-object-mapping`
+You should use a function with a `switch` instead of an object literal to map [Flow Enums](https://flow.org/en/docs/enums/) to other values -
+see the [docs](https://flow.org/en/docs/enums//using-enums/#toc-mapping-enums-to-other-values).
+This avoids having to cast to `string` and [exhaustively checks the enum](https://flow.org/en/docs/enums/using-enums/#toc-exhaustively-checking-enums-with-a-switch).
+
+If you have the Flow Enum:
+```
+enum Status {
+  Active,
+  Paused,
+  Off,
+}
+```
+
+Instead of:
+```
+const STATUS_ICON: {[Status]: string} = {
+  [(Status.Active: string)]: 'green-checkmark',
+  [(Status.Paused: string)]: 'grey-pause',
+  [(Status.Off: string)]: 'red-x',
+};
+const icon = STATUS_ICON[status];
+```
+
+Write:
+```
+function getStatusIcon(status: Status): string {
+  switch (status) {
+    case Status.Active:
+      return 'green-checkmark';
+    case Status.Paused:
+      return 'grey-pause';
+    case Status.Off:
+      return 'red-x';
+  }
+}
+const icon = getStatusIcon(status);
+```
+
+If you add a new member to `Status`, Flow will error and tell you to update your `switch` statement.

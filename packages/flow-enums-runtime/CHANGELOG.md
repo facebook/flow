@@ -1,3 +1,6 @@
+# 0.0.6
+- Update README documentation
+
 # 0.0.5
 - `.members()` on a mirrored enum now returns an iterator (not just an iterable), matching non-mirrored enums
 

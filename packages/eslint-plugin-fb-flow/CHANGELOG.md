@@ -1,3 +1,6 @@
+# 0.0.4
+- Update README documentation
+
 # 0.0.3
 - Exported the rules added in 0.0.2 from `index.js`
 
