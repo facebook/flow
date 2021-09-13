@@ -64,7 +64,7 @@ let start_parallelizable_workloads env =
 let get_lazy_stats ~options env =
   {
     ServerProt.Response.lazy_mode = Options.lazy_mode options;
-    checked_files = CheckedSet.all env.checked_files |> FilenameSet.cardinal;
+    checked_files = CheckedSet.cardinal env.checked_files;
     total_files = FilenameSet.cardinal env.files;
   }
 
