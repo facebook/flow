@@ -170,17 +170,12 @@ static value compare_with_stack(
         // with lexical semantics
         int len1 = caml_string_length(v1);
         int len2 = caml_string_length(v2);
-        int res = memcmp(String_val(v1), String_val(v2), (len1 < len2) ? len1 : len2);
+        SIMPLE_COMPARE(len1, len2);
+        int res = memcmp(String_val(v1), String_val(v2), len1);
         if (res < 0)
           return LESS;
         if (res > 0)
           return GREATER;
-        if (len1 < len2) {
-          return LESS;
-        }
-        else if (len1 > len2) {
-          return GREATER;
-        }
         break; // could be equal
       }
       case Double_tag:
