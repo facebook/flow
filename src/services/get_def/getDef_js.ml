@@ -95,9 +95,7 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
         (match request with
         | Get_def_request.Typeof _ -> loop t
         | _ ->
-          (* `annot_aloc` is set when an AnnotT is the result of an actual source annotation;
-             it's not set when it's the result of a synthesized `typeof` from Signature_builder.
-             see `Flow_js.mk_typeof_annotation ~internal:true` *)
+          (* `annot_aloc` is set when an AnnotT is the result of an actual source annotation *)
           (match Reason.annot_aloc_of_reason r with
           | Some aloc -> Ok (loc_of_aloc ~reader aloc)
           | None -> loop t))

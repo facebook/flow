@@ -146,7 +146,7 @@ and get_elem _cx _use_op _reason ~key:_ _t = failwith "TODO Annotation_inference
 
 and qualify_type cx use_op loc reason propref t = get_prop_internal cx use_op loc reason propref t
 
-and mk_typeof_annotation _cx ?trace:_ _reason ?use_desc:_ ?internal:_ _t =
+and mk_typeof_annotation _cx ?trace:_ _reason _t =
   failwith "TODO Annotation_inference.mk_typeof_annotation"
 
 and assert_export_is_type _cx _reason _name _l =

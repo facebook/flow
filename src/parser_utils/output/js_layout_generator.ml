@@ -3628,7 +3628,7 @@ and type_indexed_access
 and type_nullable ~opts loc { Ast.Type.Nullable.argument; comments } =
   layout_node_with_comments_opt loc comments (fuse [Atom "?"; type_with_parens ~opts argument])
 
-and type_typeof ~opts loc { Ast.Type.Typeof.argument; internal = _; comments } =
+and type_typeof ~opts loc { Ast.Type.Typeof.argument; comments } =
   layout_node_with_comments_opt loc comments (fuse [Atom "typeof"; space; type_ ~opts argument])
 
 and type_tuple ~opts loc { Ast.Type.Tuple.types; comments } =

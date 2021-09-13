@@ -10111,12 +10111,8 @@ struct
   (* Given the type of a value v, return the type term representing the `typeof v`
      annotation expression. If the type of v is a tvar, we need to take extra
      care. Annotations are designed to constrain types, and therefore should not
-     themselves grow when used.
-
-     The internal flag is expected to be true when the typeof operator has been
-     synthesized by the signature generator (in types-first), rather than originate
-     from a source level annotation. *)
-  and mk_typeof_annotation cx ?trace reason ?(use_desc = false) ?(internal = false) t =
+     themselves grow when used. *)
+  and mk_typeof_annotation cx ?trace reason t =
     let source =
       match t with
       | OpenT _ ->
@@ -10133,13 +10129,8 @@ struct
            allows them to widen unexpectedly and may cause unpreditable behavior. *)
         t
     in
-    let annot_loc =
-      if internal then
-        None
-      else
-        Some (aloc_of_reason reason)
-    in
-    AnnotT (opt_annot_reason ?annot_loc reason, source, use_desc)
+    let annot_loc = aloc_of_reason reason in
+    AnnotT (opt_annot_reason ~annot_loc reason, source, false)
 
   and get_builtin_type cx ?trace reason ?(use_desc = false) x =
     let t = get_builtin cx ?trace x reason in

@@ -966,10 +966,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method typeof_type (t : ('M, 'T) Ast.Type.Typeof.t) : ('N, 'U) Ast.Type.Typeof.t =
       let open Ast.Type.Typeof in
-      let { argument; internal; comments } = t in
+      let { argument; comments } = t in
       let argument' = this#type_ argument in
       let comments' = Base.Option.map ~f:this#syntax comments in
-      { argument = argument'; internal; comments = comments' }
+      { argument = argument'; comments = comments' }
 
     method tuple_type (t : ('M, 'T) Ast.Type.Tuple.t) : ('N, 'U) Ast.Type.Tuple.t =
       let open Ast.Type.Tuple in

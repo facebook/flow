@@ -222,8 +222,7 @@ module type S = sig
 
   include TRUST_CHECKING
 
-  val mk_typeof_annotation :
-    Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> ?internal:bool -> Type.t -> Type.t
+  val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> reason -> Type.t -> Type.t
 
   val resolve_spread_list :
     Context.t ->

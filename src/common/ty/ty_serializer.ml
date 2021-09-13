@@ -114,8 +114,7 @@ let type_ options =
       return (mk_generic_type id (Some (mk_targs [(Loc.none, T.StringLiteral (str_lit s))])))
     | TypeOf (TSymbol name) ->
       let%map id = id_from_symbol name in
-      just'
-        (T.Typeof { T.Typeof.argument = mk_generic_type id None; internal = false; comments = None })
+      just' (T.Typeof { T.Typeof.argument = mk_generic_type id None; comments = None })
     | TypeOf _
     | Mu _ ->
       Error (Utils_js.spf "Unsupported type constructor `%s`." (Ty_debug.string_of_ctor_t t))

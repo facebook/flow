@@ -342,8 +342,6 @@ and Type : sig
   module Typeof : sig
     type ('M, 'T) t = {
       argument: ('M, 'T) Type.t;
-      (* TODO T64309494 *)
-      internal: bool;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]

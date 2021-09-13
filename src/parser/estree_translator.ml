@@ -1626,7 +1626,7 @@ with type t = Impl.t = struct
         "IntersectionTypeAnnotation"
         loc
         [("types", array_of_list _type (t0 :: t1 :: ts))]
-    and typeof_type (loc, { Type.Typeof.argument; internal = _; comments }) =
+    and typeof_type (loc, { Type.Typeof.argument; comments }) =
       node ?comments "TypeofTypeAnnotation" loc [("argument", _type argument)]
     and tuple_type (loc, { Type.Tuple.types; comments }) =
       node ?comments "TupleTypeAnnotation" loc [("types", array_of_list _type types)]

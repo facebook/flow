@@ -2686,8 +2686,8 @@ let program
       (loc : Loc.t) (t1 : (Loc.t, Loc.t) Ast.Type.Typeof.t) (t2 : (Loc.t, Loc.t) Ast.Type.Typeof.t)
       : node change list option =
     let open Ast.Type.Typeof in
-    let { argument = argument1; internal = _; comments = comments1 } = t1 in
-    let { argument = argument2; internal = _; comments = comments2 } = t2 in
+    let { argument = argument1; comments = comments1 } = t1 in
+    let { argument = argument2; comments = comments2 } = t2 in
     let argument_diff = Some (diff_if_changed type_ argument1 argument2) in
     let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [argument_diff; comments_diff]

@@ -88,14 +88,7 @@ let trust = Trust.bogus_trust ()
 module type CONS_GEN = sig
   val unresolved_tvar : Context.t -> Reason.t -> int
 
-  val mk_typeof_annotation :
-    Context.t ->
-    ?trace:Type.trace ->
-    Reason.t ->
-    ?use_desc:bool ->
-    ?internal:bool ->
-    Type.t ->
-    Type.t
+  val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> Reason.t -> Type.t -> Type.t
 
   val reposition : Context.t -> ALoc.t -> Type.t -> Type.t
 

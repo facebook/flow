@@ -116,8 +116,7 @@ val set_builtin : Context.t -> ?trace:Type.trace -> name -> Type.t -> unit
 
 val mk_instance : Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> Type.t -> Type.t
 
-val mk_typeof_annotation :
-  Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> ?internal:bool -> Type.t -> Type.t
+val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> reason -> Type.t -> Type.t
 
 (* trust *)
 val mk_trust_var : Context.t -> ?initial:Trust.trust_qualifier -> unit -> Type.ident
