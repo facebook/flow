@@ -69,10 +69,6 @@ module Make (Ord : Map.OrderedType) : S with type key = Ord.t = struct
     in
     merge_env env s1 s2 ~combine:f
 
-  let keys m = fold (fun k _ acc -> k :: acc) m []
-
-  let ordered_keys m = Base.List.map ~f:fst (bindings m)
-
   let values m = fold (fun _ v acc -> v :: acc) m []
 
   let fold_env env f m init = fold (fun key v (env, acc) -> f env key v acc) m (env, init)
@@ -110,11 +106,13 @@ module Make (Ord : Map.OrderedType) : S with type key = Ord.t = struct
     match combine with
     | None -> add key new_value map
     | Some combine ->
-      begin
-        match find_opt key map with
-        | None -> add key new_value map
-        | Some old_value -> add key (combine old_value new_value) map
-      end
+      adjust
+        key
+        (fun opt ->
+          match opt with
+          | None -> new_value
+          | Some old_value -> combine old_value new_value)
+        map
 
   let ident_map f coll =
     let changed = ref false in
@@ -130,20 +128,6 @@ module Make (Ord : Map.OrderedType) : S with type key = Ord.t = struct
       new_map
     else
       coll
-
-  let ident_map_key ?combine f map =
-    let (map_, changed) =
-      fold
-        (fun key item (map_, changed) ->
-          let new_key = f key in
-          (add ?combine new_key item map_, changed || new_key != key))
-        map
-        (empty, false)
-    in
-    if changed then
-      map_
-    else
-      map
 
   let for_all2 ~f m1 m2 =
     let key_bool_map = merge (fun k v1opt v2opt -> Some (f k v1opt v2opt)) m1 m2 in
