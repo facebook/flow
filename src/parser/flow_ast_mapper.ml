@@ -445,7 +445,7 @@ class ['loc] mapper =
       let open Ast.Class.Method in
       let { kind = _; key; value; static = _; decorators; comments } = meth in
       let key' = this#object_key key in
-      let value' = map_loc this#function_expression value in
+      let value' = map_loc this#function_expression_or_method value in
       let decorators' = map_list this#class_decorator decorators in
       let comments' = this#syntax_opt comments in
       if key == key' && value == value' && decorators == decorators' && comments == comments' then
@@ -1431,7 +1431,14 @@ class ['loc] mapper =
 
     method function_declaration loc (stmt : ('loc, 'loc) Ast.Function.t) = this#function_ loc stmt
 
-    method function_expression loc (stmt : ('loc, 'loc) Ast.Function.t) = this#function_ loc stmt
+    method function_expression loc (stmt : ('loc, 'loc) Ast.Function.t) =
+      this#function_expression_or_method loc stmt
+
+    (** previously, we conflated [function_expression] and [class_method]. callers should be
+        updated to override those individually. *)
+    method function_expression_or_method loc (stmt : ('loc, 'loc) Ast.Function.t) =
+      this#function_ loc stmt
+    [@@alert deprecated "Use either function_expression or class_method"]
 
     (* Internal helper for function declarations, function expressions and arrow functions *)
     method function_ _loc (expr : ('loc, 'loc) Ast.Function.t) =
@@ -2032,14 +2039,14 @@ class ['loc] mapper =
           (loc, Init { key = key'; value = value'; shorthand })
       | (loc, Method { key; value = fn }) ->
         let key' = this#object_key key in
-        let fn' = map_loc this#function_expression fn in
+        let fn' = map_loc this#function_expression_or_method fn in
         if key == key' && fn == fn' then
           prop
         else
           (loc, Method { key = key'; value = fn' })
       | (loc, Get { key; value = fn; comments }) ->
         let key' = this#object_key key in
-        let fn' = map_loc this#function_expression fn in
+        let fn' = map_loc this#function_expression_or_method fn in
         let comments' = this#syntax_opt comments in
         if key == key' && fn == fn' && comments == comments' then
           prop
@@ -2047,7 +2054,7 @@ class ['loc] mapper =
           (loc, Get { key = key'; value = fn'; comments = comments' })
       | (loc, Set { key; value = fn; comments }) ->
         let key' = this#object_key key in
-        let fn' = map_loc this#function_expression fn in
+        let fn' = map_loc this#function_expression_or_method fn in
         let comments' = this#syntax_opt comments in
         if key == key' && fn == fn' && comments == comments' then
           prop

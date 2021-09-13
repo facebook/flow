@@ -348,7 +348,8 @@ module FindProviders (L : Loc_sig.S) = struct
 
       method! arrow_function = this#enter_scope Var super#arrow_function
 
-      method! function_expression = this#enter_scope Var super#function_expression
+      method! function_expression_or_method =
+        this#enter_scope Var super#function_expression_or_method
 
       (* The identifier of a function declaration belongs to the outer scope, but its parameters and body belong to its own scope--hence the annoying
          need to write out the full visitor and only enter a var scope for its parameters and body *)

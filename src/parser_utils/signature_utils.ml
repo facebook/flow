@@ -64,7 +64,7 @@ module This_finder = struct
 
       method! function_declaration _ x = x
 
-      method! function_expression _ x = x
+      method! function_expression_or_method _ x = x
     end
 
   let found_this_in_body_or_params

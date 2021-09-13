@@ -22,7 +22,7 @@ module Super_finder = struct
 
       method! function_declaration _ x = x
 
-      method! function_expression _ x = x
+      method! function_expression_or_method _ x = x
     end
 
   let found_super_in_body (body : (Loc.t, Loc.t) Flow_ast.Function.body) =
@@ -43,7 +43,7 @@ module Arguments_finder = struct
          the `this` within those structures, so we ignore them *)
       method! function_declaration _ x = x
 
-      method! function_expression _ x = x
+      method! function_expression_or_method _ x = x
     end
 
   let found_arguments_in_body (body : (Loc.t, Loc.t) Flow_ast.Function.body) =

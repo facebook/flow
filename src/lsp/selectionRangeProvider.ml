@@ -127,9 +127,9 @@ class selection_range_finder ~position =
       if this#contains sig_loc then this#add_loc sig_loc;
       result
 
-    method! function_expression loc x =
+    method! function_expression_or_method loc x =
       let { Flow_ast.Function.sig_loc; _ } = x in
-      let result = super#function_expression loc x in
+      let result = super#function_expression_or_method loc x in
       if this#contains sig_loc then this#add_loc sig_loc;
       result
 
