@@ -254,6 +254,17 @@ let rec fold f m accu =
   | Leaf { v; d } -> f v d accu
   | Node { l; v; d; r; _ } -> fold f r (f v d (fold f l accu))
 
+let rec keys_aux accu tree =
+  match tree with
+  | Empty -> accu
+  | Leaf { v; _ } -> v :: accu
+  | Node { l; v; r; _ } -> keys_aux (v :: keys_aux accu r) l
+
+let keys s = keys_aux [] s
+
+let ordered_keys = keys
+
+
 let rec for_all p = function
   | Empty -> true
   | Leaf { v; d } -> p v d
@@ -322,4 +333,3 @@ type ('k, 'v) t1 = ('k, 'v) t0 =
       l: ('k, 'v) t0;
       r: ('k, 'v) t0;
     }
-

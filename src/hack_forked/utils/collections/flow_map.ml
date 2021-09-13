@@ -65,6 +65,12 @@ module type S = sig
 
   val max_binding_opt : 'a t -> (key * 'a) option
 
+  val keys : 'a t -> key list
+
+  val ordered_keys : 'a t -> key list
+
+  val ident_map_key : ?combine:('a -> 'a -> 'a) -> (key -> key) -> 'a t -> 'a t
+
   val choose : 'a t -> key * 'a
 
   val choose_opt : 'a t -> (key * 'a) option
@@ -429,6 +435,8 @@ module Make (Ord : OrderedType) : S with type key = Ord.t = struct
 
   let bindings = bindings
 
+  let keys = keys
+
   let choose = min_binding
 
   let choose_opt = min_binding_opt
@@ -460,4 +468,31 @@ module Make (Ord : OrderedType) : S with type key = Ord.t = struct
   let map = map
 
   let filter = filter
+
+  let ordered_keys = keys
+
+  let ident_map_key ?combine f map =
+    let (map_, changed) =
+      fold
+        (fun key item (map_, changed) ->
+          let new_key = f key in
+          ( (* add ?combine new_key item map_ *)
+            (match combine with
+            | None -> add new_key item map_
+            | Some combine ->
+              adjust
+                new_key
+                (fun opt ->
+                  match opt with
+                  | None -> item
+                  | Some old_value -> combine old_value item)
+                map_),
+            changed || new_key != key ))
+        map
+        (empty, false)
+    in
+    if changed then
+      map_
+    else
+      map
 end
