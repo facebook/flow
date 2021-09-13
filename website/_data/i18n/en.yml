@@ -314,6 +314,22 @@ docs_additional_reading: "Additional Reading"
   title: "Comment Types"
   description: "Flow with plain JavaScript code by using a special comment syntax"
 
+"/docs/enums/":
+  title: "Flow Enums"
+  description: "A language feature which defines a fixed set of constants which create their own type"
+"/docs/enums/enabling-enums/":
+  title: "Enabling enums in your project"
+  description: "Learn how to enable Flow Enums"
+"/docs/enums/defining-enums/":
+  title: "Defining enums"
+  description: "Learn how to define Flow Enums"
+"/docs/enums/using-enums/":
+  title: "Using enums"
+  description: "Learn how to use Flow Enums, including their methods and exhaustive checking"
+"/docs/enums/migrating-legacy-patterns/":
+  title: "Migrating from legacy patterns"
+  description: "Learn how to migrate from old patterns to Flow Enums"
+
 "/docs/react/":
   title: "Getting Started"
   description: "Learn how to setup React with Flow"
@@ -423,6 +439,10 @@ guides:
     description: >
       Learn how to add Flow type annotations to your code: Primitives, Objects,
       Functions, Classes, and more.
+  enums:
+    title: "Flow Enums"
+    description: >
+      Define a fixed set of constants which create their own type. Exhaustively checked in switch statements.
   lang:
     title: "Type System"
     description: >

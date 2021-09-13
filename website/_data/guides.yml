@@ -50,6 +50,14 @@
 
     - path: "/docs/types/comments/"
 
+- id: enums
+  pages:
+    - path: "/docs/enums/"
+    - path: "/docs/enums/enabling-enums/"
+    - path: "/docs/enums/defining-enums/"
+    - path: "/docs/enums/using-enums/"
+    - path: "/docs/enums/migrating-legacy-patterns/"
+
 - id: lang
   pages:
     - path: "/docs/lang/"
