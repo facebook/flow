@@ -149,7 +149,7 @@ This lint comes with an autofixer to automatically make the fix.
 
 ### `no-flow-enums-object-mapping`
 You should use a function with a `switch` instead of an object literal to map [Flow Enums](https://flow.org/en/docs/enums/) to other values -
-see the [docs](https://flow.org/en/docs/enums//using-enums/#toc-mapping-enums-to-other-values).
+see the [docs](https://flow.org/en/docs/enums/using-enums/#toc-mapping-enums-to-other-values).
 This avoids having to cast to `string` and [exhaustively checks the enum](https://flow.org/en/docs/enums/using-enums/#toc-exhaustively-checking-enums-with-a-switch).
 
 If you have the Flow Enum:
