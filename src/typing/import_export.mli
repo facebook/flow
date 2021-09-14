@@ -7,8 +7,6 @@
 
 val mk_module_t : Context.t -> Reason.t -> Type.t
 
-val mk_resource_module_t : Context.t -> ALoc.t -> string -> Type.t
-
 val require : Context.t -> ALoc.t * string -> ALoc.t -> Type.t
 
 val import : Context.t -> ALoc.t * string -> Type.tvar

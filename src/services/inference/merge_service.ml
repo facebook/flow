@@ -63,7 +63,7 @@ let sig_hash ~root =
   in
 
   (* The module type of a resource dependency only depends on the file
-   * extension. See Import_export.mk_resource_module_t *)
+   * extension. See Type_sig_merge.merge_resource_module_t *)
   let resource_dep f =
     let ext =
       match Utils_js.extension_of_filename f with

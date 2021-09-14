@@ -45,19 +45,6 @@ let mk_commonjs_module_t cx reason_exports_module reason export_t =
           CJSExtractNamedExportsT
             (reason, (reason_exports_module, exporttypes, Context.is_strict cx), t) ))
 
-let mk_resource_module_t cx loc f =
-  let (reason, exports_t) =
-    match Utils_js.extension_of_filename f with
-    | Some ".css" ->
-      let reason = Reason.mk_reason RObjectType loc in
-      (reason, Type.AnyT.make Type.Untyped reason)
-    | Some _ ->
-      let reason = Reason.mk_reason RString loc in
-      (reason, Type.StrT.why reason |> with_trust bogus_trust)
-    | _ -> failwith "How did we find a resource file without an extension?!"
-  in
-  mk_commonjs_module_t cx reason reason exports_t
-
 (* given a module name, return associated tvar in module map (failing if not
    found); e.g., used to find tvars associated with requires *after* all
    requires already have entries in the module map *)

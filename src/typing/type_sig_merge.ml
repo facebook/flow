@@ -181,6 +181,8 @@ module type S = sig
 
   val merge_def : file -> Reason.reason -> (ALoc.t, ALoc.t Pack.packed) Type_sig.def -> Type.t
 
+  val merge_resource_module_t : Context.t -> string -> ALoc.t -> Type.t
+
   val merge : file -> ALoc.t Pack.packed -> Type.t
 end
 
@@ -413,6 +415,18 @@ module Make (ConsGen : CONS_GEN) : S = struct
       let (loc, _name, t) = visit (Remote_refs.get file.remote_refs index) in
       (Some loc, t)
 
+  let mk_commonjs_module_t cx reason strict t =
+    let open Type in
+    let exporttypes =
+      {
+        exports_tmap = Context.make_export_map cx NameUtils.Map.empty;
+        cjs_export = Some t;
+        has_every_named_export = false;
+      }
+    in
+    let local_module = (reason, exporttypes, strict) in
+    ConsGen.cjs_extract_named_exports cx reason local_module t
+
   let merge_exports =
     let merge_star file (loc, index) =
       let (_, mk_module_t) = Module_refs.get file.dependencies index in
@@ -429,18 +443,7 @@ module Make (ConsGen : CONS_GEN) : S = struct
       in
       ModuleT (reason, exportstype, is_strict)
     in
-    let mk_commonjs_module_t file reason is_strict t =
-      let open Type in
-      let exporttypes =
-        {
-          exports_tmap = Context.make_export_map file.cx NameUtils.Map.empty;
-          cjs_export = Some t;
-          has_every_named_export = false;
-        }
-      in
-      let local_module = (reason, exporttypes, is_strict) in
-      ConsGen.cjs_extract_named_exports file.cx reason local_module t
-    in
+
     let copy_named_exports file reason module_t (loc, from_ns) =
       let reason = Reason.repos_reason loc reason in
       ConsGen.copy_named_exports file.cx ~from_ns reason ~module_t
@@ -471,7 +474,7 @@ module Make (ConsGen : CONS_GEN) : S = struct
         in
         let type_exports = SMap.map Lazy.force type_exports |> NameUtils.namemap_of_smap in
         let type_stars = List.map (merge_star file) type_stars in
-        mk_commonjs_module_t file reason strict exports
+        mk_commonjs_module_t file.cx reason strict exports
         |> ConsGen.export_named file.cx reason Type.ExportType type_exports
         |> copy_star_exports file reason ([], type_stars)
       | ESExports { type_exports; exports; stars; type_stars; strict } ->
@@ -1749,4 +1752,17 @@ module Make (ConsGen : CONS_GEN) : S = struct
     | Pack.ExportFrom index ->
       let (loc, _name, t) = visit (Remote_refs.get file.remote_refs index) in
       (Some loc, t)
+
+  let merge_resource_module_t cx f loc =
+    let (reason, exports_t) =
+      match Utils_js.extension_of_filename f with
+      | Some ".css" ->
+        let reason = Reason.mk_reason Reason.RObjectType loc in
+        (reason, Type.AnyT.make Type.Untyped reason)
+      | Some _ ->
+        let reason = Reason.mk_reason Reason.RString loc in
+        (reason, Type.StrT.why reason |> Type.with_trust Type.bogus_trust)
+      | _ -> failwith "How did we find a resource file without an extension?!"
+    in
+    mk_commonjs_module_t cx reason (Context.is_strict cx) exports_t
 end

@@ -147,8 +147,6 @@ let unknown_module_t cx mref provider =
     let reason = Reason.mk_reason desc loc in
     Flow_js_utils.lookup_builtin_strict cx m_name reason
 
-let resource_module_t cx f loc = Import_export.mk_resource_module_t cx loc f
-
 let unchecked_module_t cx mref =
   let desc = Reason.RUntypedModule mref in
   let m_name = Reason.internal_module_name mref in
@@ -361,7 +359,7 @@ let mk_check_file ~options ~reader ~cache () =
   let rec dep_module_t cx mref provider =
     match get_file provider with
     | None -> unknown_module_t cx mref provider
-    | Some (File_key.ResourceFile f) -> resource_module_t cx f
+    | Some (File_key.ResourceFile f) -> Merge.merge_resource_module_t cx f
     | Some dep_file ->
       let { Module_heaps.checked; parsed; _ } = get_info_unsafe dep_file in
       if checked && parsed then
