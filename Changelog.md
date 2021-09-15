@@ -1,3 +1,25 @@
+### 0.160.0
+
+New Features:
+* The `ide`, `fs` and `watchman` lazy modes have been merged into a single mode. The new mode is now SCM-aware with or without Watchman; when the server starts, it queries Git or Mercurial and checks all existing local changes (changes since the mergebase). .
+
+  The `file_watcher.watchman.mergebase_with` config option has been renamed to `file_watcher.mergebase_with`; set this to the name of your default *remote* branch (e.g. `origin/main`).
+
+  Flowconfig setting migration:
+  * `lazy_mode=watchman` -> `lazy_mode=true`, `file_watcher=watchman`
+  * `lazy_mode=fs` -> `lazy_mode=true`
+  * `lazy_mode=ide` -> `lazy_mode=true`
+  * `lazy_mode=none` -> `lazy_mode=false`
+* Added parser support for `import.meta`
+* Added type checking support for `new.target` and `import.meta` as mixed
+
+Library Definitions:
+* Add type for `queueMicrotask`
+
+Notable bug fixes:
+* Improve codemod performance on large codebases
+* Fix a bug that could cause "unused suppression" warnings to appear incorrectly when using lazy mode
+
 ### 0.159.0
 
 New Features:
