@@ -330,7 +330,6 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
         ~f:(reduce_implicit_instantiation_check reducer init_cx Polarity.Neutral)
         implicit_instantiation_checks
     in
-    Context.set_module_map cx reducer#get_reduced_module_map;
     Context.set_graph cx reducer#get_reduced_graph;
     Context.set_trust_graph cx reducer#get_reduced_trust_graph;
     Context.set_property_maps cx reducer#get_reduced_property_maps;

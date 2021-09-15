@@ -446,9 +446,6 @@ let infer_ast ~lint_severities cx filename comments aloc_ast =
   let typed_statements = infer_core cx aloc_statements in
   scan_for_suppressions cx lint_severities comments;
 
-  let module_t = Import_export.mk_module_t cx reason in
-  Context.add_module cx module_ref module_t;
-
   ( prog_aloc,
     {
       Ast.Program.statements = typed_statements;

@@ -328,8 +328,7 @@ let get_all =
   in
   (fun next -> get_all_rec next SSet.empty)
 
-(* Local reference to the module exported by a file. Like other local references
-   to modules imported by the file, it is a member of Context.module_map. *)
+(* Local reference to the module exported by a file. *)
 let module_ref file = File_key.to_string file
 
 let lib_module_ref = ""

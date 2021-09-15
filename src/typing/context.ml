@@ -297,7 +297,6 @@ let empty_sig_cx =
     call_props = IMap.empty;
     export_maps = Type.Exports.Map.empty;
     evaluated = Type.Eval.Map.empty;
-    module_map = NameUtils.Map.empty;
   }
 
 let empty_master_cx () = { master_sig_cx = empty_sig_cx; builtins = Builtins.empty () }
@@ -360,10 +359,6 @@ let make ccx metadata file aloc_table module_ref phase =
 let sig_cx cx = cx.ccx.sig_cx
 
 let trust_graph_sig sig_cx = sig_cx.trust_graph
-
-let find_module_sig sig_cx m =
-  try NameUtils.Map.find (Reason.OrdinaryName m) sig_cx.module_map with
-  | Not_found -> raise (Module_not_found m)
 
 (* modules *)
 
@@ -459,8 +454,6 @@ let find_require cx loc =
   try ALocMap.find loc cx.require_map with
   | Not_found -> raise (Require_not_found (ALoc.debug_to_string ~include_source:true loc))
 
-let find_module cx m = find_module_sig (sig_cx cx) m
-
 let find_tvar cx id =
   try IMap.find id cx.ccx.sig_cx.graph with
   | Not_found -> raise (Union_find.Tvar_not_found id)
@@ -490,8 +483,6 @@ let severity_cover cx = cx.ccx.severity_cover
 let max_trace_depth cx = cx.metadata.max_trace_depth
 
 let require_map cx = cx.require_map
-
-let module_map cx = cx.ccx.sig_cx.module_map
 
 let property_maps cx = cx.ccx.sig_cx.property_maps
 
@@ -600,10 +591,6 @@ let add_lint_suppressions cx suppressions =
 
 let add_require cx loc tvar = cx.require_map <- ALocMap.add loc tvar cx.require_map
 
-let add_module cx name tvar =
-  let module_map = NameUtils.Map.add name tvar cx.ccx.sig_cx.module_map in
-  cx.ccx.sig_cx <- { cx.ccx.sig_cx with module_map }
-
 let add_property_map cx id pmap =
   let property_maps = Type.Properties.Map.add id pmap cx.ccx.sig_cx.property_maps in
   cx.ccx.sig_cx <- { cx.ccx.sig_cx with property_maps }
@@ -688,8 +675,6 @@ let set_environment cx env = cx.environment <- env
 
 let set_local_env cx exported_locals = cx.exported_locals <- exported_locals
 
-let set_module_map cx module_map = cx.ccx.sig_cx <- { cx.ccx.sig_cx with module_map }
-
 (* Given a sig context, it makes sense to clear the parts that are shared with
    the master sig context. Why? The master sig context, which contains global
    declarations, is an implicit dependency for every file, and so will be
@@ -716,7 +701,6 @@ let clear_master_shared cx master_cx =
           sig_cx.evaluated;
       export_maps =
         EMap.filter (fun id _ -> not (EMap.mem id master_cx.export_maps)) sig_cx.export_maps;
-      module_map = cx.ccx.sig_cx.module_map;
     }
 
 let test_prop_hit cx id =
@@ -860,7 +844,6 @@ let merge_into ccx sig_cx_other =
   let sig_cx = ccx.sig_cx in
   ccx.sig_cx <-
     {
-      sig_cx with
       property_maps = Type.Properties.Map.union sig_cx_other.property_maps sig_cx.property_maps;
       call_props = IMap.union sig_cx_other.call_props sig_cx.call_props;
       export_maps = Type.Exports.Map.union sig_cx_other.export_maps sig_cx.export_maps;

@@ -62,8 +62,6 @@ class context_optimizer ~no_lowers =
   object (self)
     inherit [Polarity.t] Type_mapper.t_with_uses as super
 
-    val mutable reduced_module_map = NameUtils.Map.empty
-
     val mutable reduced_graph : Type.Constraint.node IMap.t = IMap.empty
 
     val mutable reduced_trust_graph = IMap.empty
@@ -77,12 +75,6 @@ class context_optimizer ~no_lowers =
     val mutable reduced_evaluated = Eval.Map.empty
 
     val mutable export_reason = None
-
-    method reduce cx module_ref =
-      let export = Context.find_module cx module_ref in
-      let export' = self#type_ cx Polarity.Neutral export in
-      reduced_module_map <-
-        NameUtils.Map.add (Reason.OrdinaryName module_ref) export' reduced_module_map
 
     method tvar cx pole r id =
       let (root_id, _) = Context.find_constraints cx id in
@@ -292,8 +284,6 @@ class context_optimizer ~no_lowers =
        * in the heap. *)
       Utils_js.assert_false "choice kit uses should not appear in signatures"
 
-    method get_reduced_module_map = reduced_module_map
-
     method get_reduced_graph = reduced_graph
 
     method get_reduced_trust_graph = reduced_trust_graph
@@ -306,8 +296,3 @@ class context_optimizer ~no_lowers =
 
     method get_reduced_evaluated = reduced_evaluated
   end
-
-let reduce_context cx ~no_lowers module_refs =
-  let reducer = new context_optimizer ~no_lowers in
-  Base.List.iter ~f:(reducer#reduce cx) module_refs;
-  reducer

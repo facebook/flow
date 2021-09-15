@@ -8,32 +8,6 @@
 module Ast = Flow_ast
 open Typed_ast_utils
 
-(*****************)
-(* Query/Suggest *)
-(*****************)
-
-(* These computations should trigger ground_type calls on the types returned by
-   query_type/suggest_types: in general those types may not be ground (the only
-   non-ground parts should be strict_requires).
-
-   1. Look up ResolvedRequiresHeap(Context.file cx) to get strict_reqs.
-
-   2. Look up ContextHeap(NameHeap(strict_req)) to get strict_cxs that cx
-   depends on, and so on.
-
-   3. Next, look up their exported types via recursive calls to
-   lookup_type(lookup_module(strict_cx, Context.module_name strict_cx)).
-
-   In fact, 2. and 3. could be optimized: we could store exported types
-   (possibly not ground) in InfoHeap, so that they are cached. This means that
-   we could look up InfoHeap(NameHeap(strict_req)) to get strict_req_types
-   directly, instead of going through ContextHeap.
-
-   Note that exported types do not need to be blown away unless their files
-   change, since they are locally determined; instead, we ground them as
-   necessary.
-*)
-
 type result =
   | FailureNoMatch
   | FailureUnparseable of Loc.t * Type.t * string

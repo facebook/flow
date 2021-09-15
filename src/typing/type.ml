@@ -2843,8 +2843,6 @@ module TypeContext = struct
     export_maps: Exports.map;
     (* map from evaluation ids to types *)
     evaluated: TypeTerm.t Eval.Map.t;
-    (* map from module names to their types *)
-    module_map: TypeTerm.t NameUtils.Map.t;
   }
 end
 

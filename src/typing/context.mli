@@ -140,8 +140,6 @@ val cx_with_trust : t -> (unit -> Trust.trust_rep) -> t
 
 val sig_cx : t -> sig_t
 
-val find_module_sig : sig_t -> string -> Type.t
-
 (* accessors *)
 val current_phase : t -> phase
 
@@ -199,8 +197,6 @@ val find_exports : t -> Type.Exports.id -> Type.Exports.t
 
 val find_require : t -> ALoc.t -> Type.tvar
 
-val find_module : t -> string -> Type.t
-
 val find_tvar : t -> Type.ident -> Type.Constraint.node
 
 val mem_nominal_prop_id : t -> Type.ident -> bool
@@ -230,8 +226,6 @@ val max_trace_depth : t -> int
 val module_kind : t -> Module_info.kind
 
 val require_map : t -> Type.tvar ALocMap.t
-
-val module_map : t -> Type.t NameUtils.Map.t
 
 val module_ref : t -> Reason.name
 
@@ -325,8 +319,6 @@ val add_lint_suppressions : t -> LocSet.t -> unit
 
 val add_require : t -> ALoc.t -> Type.tvar -> unit
 
-val add_module : t -> Reason.name -> Type.t -> unit
-
 val add_property_map : t -> Type.Properties.id -> Type.Properties.t -> unit
 
 val add_call_prop : t -> int -> Type.t -> unit
@@ -388,8 +380,6 @@ val set_exists_checks : t -> ExistsCheck.t ALocMap.t -> unit
 val set_exists_excuses : t -> ExistsCheck.t ALocMap.t -> unit
 
 val set_environment : t -> Loc_env.t -> unit
-
-val set_module_map : t -> Type.t NameUtils.Map.t -> unit
 
 val set_local_env : t -> ALocIDSet.t -> unit
 

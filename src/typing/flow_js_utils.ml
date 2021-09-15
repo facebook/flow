@@ -699,9 +699,6 @@ let lookup_builtin_typeapp cx reason x targs =
   let t = lookup_builtin_strict cx x reason in
   typeapp reason t targs
 
-(* Local references to modules can be looked up. *)
-let lookup_module cx m = Context.find_module cx m
-
 let match_this_binding map f =
   match SMap.find "this" map with
   | ReposT (_, t) -> f t

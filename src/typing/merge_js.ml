@@ -311,7 +311,6 @@ let optimize_builtins cx =
     Flow_js.add_output cx (Error_message.EBuiltinLookupFailed { reason; name = Some name })
   in
   Builtins.optimize_entries builtins ~on_missing ~optimize:(reducer#type_ cx Polarity.Neutral);
-  Context.set_module_map cx reducer#get_reduced_module_map;
   Context.set_graph cx reducer#get_reduced_graph;
   Context.set_trust_graph cx reducer#get_reduced_trust_graph;
   Context.set_property_maps cx reducer#get_reduced_property_maps;
