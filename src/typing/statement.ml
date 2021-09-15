@@ -6401,7 +6401,7 @@ and jsx_body cx (loc, child) =
       let (unresolved_param, ex) =
         match ex with
         | Expression e ->
-          let (((_, t), _) as e) = expression cx ~annot:None e in
+          let (((_, t), _) as e) = expression cx ~annot:(Some ()) e in
           (Some (UnresolvedArg (t, None)), Expression e)
         | EmptyExpression -> (None, EmptyExpression)
       in
