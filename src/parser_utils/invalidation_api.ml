@@ -11,27 +11,36 @@ module Make
     (Ssa_api : Ssa_api.S with module L = L) =
 struct
   let is_const_like info values loc =
-    let uses = Scope_api.uses_of_use info loc in
-    (* We consider a binding to be const-like if all reads point to the same
-       write, modulo initialization. *)
-    let writes =
-      L.LSet.fold
-        (fun use acc ->
-          match L.LMap.find_opt use values with
-          | None -> (* use is a write *) acc
-          | Some write_locs ->
-            (* use is a read *)
-            (* collect writes pointed to by the read, modulo initialization *)
-            List.fold_left
-              (fun acc -> function
-                | Ssa_api.Uninitialized -> acc
-                | Ssa_api.Write reason -> L.LSet.add (Reason.poly_loc_of_reason reason) acc)
-              acc
-              write_locs)
-        uses
-        L.LSet.empty
-    in
-    L.LSet.cardinal writes <= 1
+    try
+      let { Scope_api.Def.locs = def_locs; _ } = Scope_api.def_of_use info loc in
+      let uses = Scope_api.uses_of_use info loc in
+      (* We consider a binding to be const-like if all reads point to the same
+         write, modulo initialization. *)
+      let writes =
+        L.LSet.fold
+          (fun use acc ->
+            match L.LMap.find_opt use values with
+            | None -> (* use is a write *) acc
+            | Some write_locs ->
+              (* use is a read *)
+              (* collect writes pointed to by the read, modulo initialization *)
+              List.fold_left
+                (fun acc -> function
+                  | Ssa_api.Uninitialized -> acc
+                  | Ssa_api.Write reason -> L.LSet.add (Reason.poly_loc_of_reason reason) acc)
+                acc
+                write_locs)
+          uses
+          L.LSet.empty
+      in
+      match L.LSet.choose_opt writes with
+      | None -> true
+      | Some loc -> L.LSet.cardinal writes <= 1 && Nel.mem ~equal:L.equal loc def_locs
+    with
+    (* TODO: anywhere where we would raise a Missing_def
+       error is likely a bug with the Scope_builder that
+       should be fixed for the SSA environment to work *)
+    | Scope_api.Missing_def _ -> false
 
   let is_not_captured_by_closure =
     let rec lookup in_current_var_scope info scope def =

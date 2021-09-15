@@ -875,7 +875,7 @@ let%expect_test "singleton_num_neg" =
 
 let%expect_test "sentinel_lit" =
   print_ssa_test {|let x = undefined;
-(x.foo === 3) && x|}; 
+(x.foo === 3) && x|};
     [%expect {|
       [
         (1, 8) to (1, 17) => {
@@ -943,7 +943,7 @@ let y = undefined;
 
 let%expect_test "optional_chain_lit" =
   print_ssa_test {|let x = undefined;
-(x?.foo === 3) && x|}; 
+(x?.foo === 3) && x|};
     [%expect{|
       [
         (1, 8) to (1, 17) => {
@@ -958,7 +958,7 @@ let%expect_test "optional_chain_lit" =
 
 let%expect_test "optional_chain_member_base" =
   print_ssa_test {|let x = undefined;
-(x.foo?.bar === 3) && x|}; 
+(x.foo?.bar === 3) && x|};
     [%expect {|
       [
         (1, 8) to (1, 17) => {
@@ -973,7 +973,7 @@ let%expect_test "optional_chain_member_base" =
 
 let%expect_test "optional_chain_with_call" =
   print_ssa_test {|let x = undefined;
-(x?.foo().bar === 3) && x|}; 
+(x?.foo().bar === 3) && x|};
     [%expect {|
       [
         (1, 8) to (1, 17) => {
@@ -988,7 +988,7 @@ let%expect_test "optional_chain_with_call" =
 
 let%expect_test "optional_multiple_chains" =
   print_ssa_test {|let x = undefined;
-(x?.foo?.bar.baz?.qux === 3) && x|}; 
+(x?.foo?.bar.baz?.qux === 3) && x|};
     [%expect {|
       [
         (1, 8) to (1, 17) => {
@@ -1003,7 +1003,7 @@ let%expect_test "optional_multiple_chains" =
 
 let%expect_test "optional_base_call" =
   print_ssa_test {|let x = undefined;
-(x?.().foo?.bar.baz?.qux === 3) && x|}; 
+(x?.().foo?.bar.baz?.qux === 3) && x|};
     [%expect {|
       [
         (1, 8) to (1, 17) => {
@@ -1018,7 +1018,7 @@ let%expect_test "optional_base_call" =
 
 let%expect_test "sentinel_standalone" =
   print_ssa_test {|let x = undefined;
-x.foo && x|}; 
+x.foo && x|};
     [%expect {|
       [
         (1, 8) to (1, 17) => {
@@ -1030,7 +1030,7 @@ x.foo && x|};
 
 let%expect_test "optional_chain_standalone" =
   print_ssa_test {|let x = undefined;
-x?.foo && x|}; 
+x?.foo && x|};
     [%expect {|
       [
         (1, 8) to (1, 17) => {
@@ -1042,7 +1042,7 @@ x?.foo && x|};
 
 let%expect_test "conditional_expression" =
   print_ssa_test {|let x = undefined;
-(x ? x: x) && x|}; 
+(x ? x: x) && x|};
     [%expect {|
       [
         (1, 8) to (1, 17) => {
@@ -1063,7 +1063,7 @@ let%expect_test "conditional_expression" =
 
 let%expect_test "conditional_throw" =
   print_ssa_test {|let x = undefined;
-(x ? invariant() : x) && x|}; 
+(x ? invariant() : x) && x|};
     [%expect {|
       [
         (1, 8) to (1, 17) => {
@@ -1084,7 +1084,7 @@ let%expect_test "conditional_throw" =
 
 let%expect_test "conditional_throw2" =
   print_ssa_test {|let x = undefined;
-(x ? x : invariant()) && x|}; 
+(x ? x : invariant()) && x|};
     [%expect {|
       [
         (1, 8) to (1, 17) => {
@@ -1106,7 +1106,7 @@ let%expect_test "conditional_throw2" =
 let%expect_test "logical_throw_and" =
   print_ssa_test {|let x = undefined;
 x && invariant();
-x|}; 
+x|};
     [%expect {|
       [
         (1, 8) to (1, 17) => {
@@ -1125,7 +1125,7 @@ x|};
 let%expect_test "logical_throw_or" =
   print_ssa_test {|let x = undefined;
 x || invariant();
-x|}; 
+x|};
     [%expect {|
       [
         (1, 8) to (1, 17) => {
@@ -1144,7 +1144,7 @@ x|};
 let%expect_test "logical_throw_nc" =
   print_ssa_test {|let x = undefined;
 x ?? invariant();
-x|}; 
+x|};
     [%expect {|
       [
         (1, 8) to (1, 17) => {
@@ -1166,7 +1166,7 @@ try {
   x ?? invariant(false, x = 3);
 } finally {
   x;
-}|}; 
+}|};
     [%expect {|
       [
         (1, 8) to (1, 17) => {
@@ -2988,3 +2988,22 @@ undefined;
           Global undefined,
           (3, 2) to (3, 11): (`undefined`)
         }] |}]
+
+let%expect_test "havoc_from_uninitialized" =
+  print_ssa_test {|
+var x: number;
+function havoc() {
+    x = 42;
+}
+havoc();
+(x: void)
+// todo: this should probably also include undefined
+|};
+  [%expect {|
+    [
+      (6, 0) to (6, 5) => {
+        (3, 9) to (3, 14): (`havoc`)
+      };
+      (7, 1) to (7, 2) => {
+        (2, 4) to (2, 5): (`x`)
+      }] |}]

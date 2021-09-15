@@ -121,3 +121,31 @@ function no_havoc_before_decl_annot() {
     (x: string);
   }
 }
+
+function havoc_uninitialized() {
+  var x: number;
+
+  function havoc() {
+    x = 42;
+  }
+  havoc();
+  (x: void); // should error
+}
+
+function havoc_undeclared() {
+  x;
+  function havoc() {
+    x = 42;
+  }
+  havoc();
+  (x: void); // should error
+}
+
+function havoc_not_yet_declared() {
+  function havoc() {
+    x = 42;
+  }
+  havoc();
+  let x: ?number = null;
+  x;
+}

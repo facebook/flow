@@ -210,7 +210,6 @@ module Entry = struct
   (** Given a named entry, return a new Value entry with specific type replaced
       with general type for non-internal, non-Const value entries. Types, consts
       and internal vars are read-only, so specific types can be preserved.
-      TODO: value_state should go from Declared to MaybeInitialized?
    *)
   let havoc ?on_call name entry =
     match entry with
@@ -232,13 +231,20 @@ module Entry = struct
     | Value v ->
       if Reason.is_internal_name name then
         entry
-      else (
-        match (on_call, v.closure_writes) with
+      else
+        let value_state =
+          let open State in
+          match v.value_state with
+          | Declared -> MaybeInitialized
+          | state -> state
+        in
+        (match (on_call, v.closure_writes) with
         | (Some widen_on_call, Some (_, t)) ->
           let t = widen_on_call v.specific t (TypeUtil.type_t_of_annotated_or_inferred v.general) in
-          Value { v with specific = t }
-        | _ -> Value { v with specific = TypeUtil.type_t_of_annotated_or_inferred v.general }
-      )
+          Value { v with specific = t; value_state }
+        | _ ->
+          Value
+            { v with specific = TypeUtil.type_t_of_annotated_or_inferred v.general; value_state })
     | Class _ -> entry
 
   let reset loc name entry =

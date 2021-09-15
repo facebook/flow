@@ -48,6 +48,8 @@ module type S = sig
   }
   [@@deriving show]
 
+  exception Missing_def of info * use
+
   val debug_info : info -> string
 
   val toplevel_scopes : scope list
