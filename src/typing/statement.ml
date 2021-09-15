@@ -2656,6 +2656,8 @@ and export_specifiers cx loc source export_kind =
   (* [declare] export [type] * from "source"; *)
   | E.ExportBatchSpecifier (_, None) ->
     let source_module_t = OpenT (Import_export.import cx (Base.Option.value_exn source)) in
+    let reason = mk_reason (RCustom "batch export") loc in
+    Flow.flow cx (source_module_t, CheckUntypedImportT (reason, ImportValue));
     (match export_kind with
     | Ast.Statement.ExportValue -> Import_export.export_star cx loc source_module_t
     | Ast.Statement.ExportType -> Import_export.export_type_star cx loc source_module_t)

@@ -1405,6 +1405,7 @@ class virtual ['a] t_with_uses =
           t
         else
           CopyTypeExportsT (r, t1', t2')
+      | CheckUntypedImportT (_, _) -> t
       | ExportNamedT (r, tmap, export_kind, t') ->
         let map_loc_type_pair ((loc, t) as orig) =
           let t' = self#type_ cx map_cx t in

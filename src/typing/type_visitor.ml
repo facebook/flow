@@ -442,6 +442,7 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc t in
         let acc = self#type_ cx pole_TODO acc tout in
         acc
+      | CheckUntypedImportT _ -> acc
       | AssertExportIsTypeT (_, _, tout) ->
         let acc = self#type_ cx pole_TODO acc tout in
         acc

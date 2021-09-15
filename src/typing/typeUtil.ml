@@ -80,6 +80,7 @@ and reason_of_use_t = function
   | ConstructorT (_, reason, _, _, _) -> reason
   | CopyNamedExportsT (reason, _, _) -> reason
   | CopyTypeExportsT (reason, _, _) -> reason
+  | CheckUntypedImportT (reason, _) -> reason
   | DebugPrintT reason -> reason
   | DebugSleepT reason -> reason
   | ElemT (_, reason, _, _) -> reason
@@ -253,6 +254,7 @@ and mod_reason_of_use_t f = function
     CopyNamedExportsT (f reason, target_module_t, t_out)
   | CopyTypeExportsT (reason, target_module_t, t_out) ->
     CopyTypeExportsT (f reason, target_module_t, t_out)
+  | CheckUntypedImportT (reason, kind) -> CheckUntypedImportT (f reason, kind)
   | DebugPrintT reason -> DebugPrintT (f reason)
   | DebugSleepT reason -> DebugSleepT (f reason)
   | ElemT (use_op, reason, t, action) -> ElemT (use_op, f reason, t, action)
@@ -473,6 +475,7 @@ let rec util_use_op_of_use_t :
   | CJSExtractNamedExportsT (_, _, _)
   | CopyNamedExportsT (_, _, _)
   | CopyTypeExportsT (_, _, _)
+  | CheckUntypedImportT (_, _)
   | ExportNamedT (_, _, _, _)
   | ExportTypeT (_, _, _, _)
   | AssertExportIsTypeT (_, _, _)

@@ -742,3 +742,17 @@ let map_obj cx trust o reason_op ~map_t ~map_field =
     ExactT (reason, t)
   else
     t
+
+let check_untyped_import cx import_kind lreason ureason =
+  match (import_kind, desc_of_reason lreason) with
+  (* Use a special reason so we can tell the difference between an any-typed type import
+   * from an untyped module and an any-typed type import from a nonexistent module. *)
+  | ((ImportType | ImportTypeof), RUntypedModule module_name) ->
+    let loc = Reason.aloc_of_reason ureason in
+    let message = Error_message.EUntypedTypeImport (loc, module_name) in
+    add_output cx message
+  | (ImportValue, RUntypedModule module_name) ->
+    let loc = Reason.aloc_of_reason ureason in
+    let message = Error_message.EUntypedImport (loc, module_name) in
+    add_output cx message
+  | _ -> ()

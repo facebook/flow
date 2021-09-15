@@ -823,17 +823,14 @@ struct
         | ( AnyT (lreason, _),
             ( CopyNamedExportsT (reason, target_module, t)
             | CopyTypeExportsT (reason, target_module, t) ) ) ->
-          let () =
-            match desc_of_reason lreason with
-            (* Use a special reason so we can tell the difference between an any-typed import
-             * from an untyped module and an any-typed import from a nonexistent module. *)
-            | RUntypedModule module_name ->
-              let loc = Reason.aloc_of_reason reason in
-              let message = Error_message.EUntypedImport (loc, module_name) in
-              add_output cx ~trace message
-            | _ -> ()
-          in
+          Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
           rec_flow_t ~use_op:unknown_use cx trace (target_module, t)
+        (*
+         * Raise an error if an untyped module is imported.
+         *)
+        | ((ModuleT _ | DefT (_, _, ObjT _)), CheckUntypedImportT _) -> ()
+        | (AnyT (lreason, _), CheckUntypedImportT (reason, import_kind)) ->
+          Flow_js_utils.check_untyped_import cx import_kind lreason reason
         (*
          * ObjT CommonJS export values have their properties turned into named
          * exports
@@ -1093,48 +1090,13 @@ struct
           in
           rec_flow_t ~use_op:unknown_use cx trace (import_t, t)
         | (AnyT (lreason, src), (CJSRequireT (reason, t, _) | ImportModuleNsT (reason, t, _))) ->
-          let () =
-            match desc_of_reason lreason with
-            (* Use a special reason so we can tell the difference between an any-typed import
-             * from an untyped module and an any-typed import from a nonexistent module. *)
-            | RUntypedModule module_name ->
-              let loc = Reason.aloc_of_reason reason in
-              let message = Error_message.EUntypedImport (loc, module_name) in
-              add_output cx ~trace message
-            | _ -> ()
-          in
+          Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
           rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason, t)
         | (AnyT (lreason, src), ImportDefaultT (reason, import_kind, _, t, _)) ->
-          let () =
-            match (import_kind, desc_of_reason lreason) with
-            (* Use a special reason so we can tell the difference between an any-typed type import
-             * from an untyped module and an any-typed import from a nonexistent module. *)
-            | ((ImportType | ImportTypeof), RUntypedModule module_name) ->
-              let loc = Reason.aloc_of_reason reason in
-              let message = Error_message.EUntypedTypeImport (loc, module_name) in
-              add_output cx ~trace message
-            | (ImportValue, RUntypedModule module_name) ->
-              let loc = Reason.aloc_of_reason reason in
-              let message = Error_message.EUntypedImport (loc, module_name) in
-              add_output cx ~trace message
-            | _ -> ()
-          in
+          Flow_js_utils.check_untyped_import cx import_kind lreason reason;
           rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason, t)
         | (AnyT (lreason, src), ImportNamedT (reason, import_kind, _, _, t, _)) ->
-          let () =
-            match (import_kind, desc_of_reason lreason) with
-            (* Use a special reason so we can tell the difference between an any-typed type import
-             * from an untyped module and an any-typed type import from a nonexistent module. *)
-            | ((ImportType | ImportTypeof), RUntypedModule module_name) ->
-              let loc = Reason.aloc_of_reason reason in
-              let message = Error_message.EUntypedTypeImport (loc, module_name) in
-              add_output cx ~trace message
-            | (ImportValue, RUntypedModule module_name) ->
-              let loc = Reason.aloc_of_reason reason in
-              let message = Error_message.EUntypedImport (loc, module_name) in
-              add_output cx ~trace message
-            | _ -> ()
-          in
+          Flow_js_utils.check_untyped_import cx import_kind lreason reason;
           rec_flow_t ~use_op:unknown_use cx trace (AnyT.why src reason, t)
         | ( (DefT (_, _, PolyT { t_out = DefT (_, _, TypeT _); _ }) | DefT (_, _, TypeT _)),
             AssertImportIsValueT (reason, name) ) ->
@@ -6276,6 +6238,7 @@ struct
     | ConstructorT _
     | CopyNamedExportsT _
     | CopyTypeExportsT _
+    | CheckUntypedImportT _
     | DestructuringT _
     | ElemT _
     | EnumExhaustiveCheckT _
