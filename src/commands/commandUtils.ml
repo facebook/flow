@@ -828,7 +828,15 @@ let parse_lints_flag =
   in
   fun base_settings flag_settings ->
     let lines = number flag_settings in
-    match LintSettings.of_lines base_settings lines with
+    let settings =
+      match LintSettings.of_lines base_settings lines with
+      | Ok (settings, []) -> Ok settings
+      | Ok (_, (line, msg) :: _) ->
+        (* upgrade CLI warnings to errors *)
+        Error (line, msg)
+      | Error _ as err -> err
+    in
+    match settings with
     | Ok settings -> settings
     | Error (line, msg) ->
       let msg = spf "Error parsing --lints (rule %d): %s" line msg in

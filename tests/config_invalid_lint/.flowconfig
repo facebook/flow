@@ -1,0 +1,6 @@
+[lints]
+sketchy-null=warn
+; redundant
+sketchy-null=warn
+; doesn't exist
+nonexisting-lint=warn

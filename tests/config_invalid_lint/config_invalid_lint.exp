@@ -1,0 +1,29 @@
+Invalid flowconfig should fail
+.flowconfig:4 Redundant argument. This argument doesn't change any lint settings.
+.flowconfig:6 Invalid lint rule "nonexisting-lint" encountered.
+
+Invalid flowconfig should pass
+.flowconfig:4 Redundant argument. This argument doesn't change any lint settings.
+.flowconfig:6 Invalid lint rule "nonexisting-lint" encountered.
+Found 0 errors
+
+flow config check:
+{
+  "errors":[
+    {
+      "line":4,
+      "message":"Redundant argument. This argument doesn't change any lint settings.",
+      "level":"warning"
+    },
+    {
+      "line":6,
+      "message":"Invalid lint rule \"nonexisting-lint\" encountered.",
+      "level":"warning"
+    }
+  ],
+  "flowVersion":"<VERSION>",
+  "exit":{"code":8,"reason":"Invalid_flowconfig"}
+}
+
+flow config check --ignore-version:
+{}

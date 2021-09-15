@@ -10,6 +10,10 @@ open Severity
 
 type 'a t
 
+type warning = int * string
+
+type error = int * string
+
 val of_default : severity -> severity t
 
 val set_value : lint_kind -> 'a * Loc.t option -> 'a t -> 'a t
@@ -49,7 +53,7 @@ val is_enabled : lint_kind -> severity t -> bool
 (* Always the logical opposite of is_enabled *)
 val is_suppressed : lint_kind -> severity t -> bool
 
-val of_lines : severity t -> (int * string) list -> (severity t, int * string) result
+val of_lines : severity t -> (int * string) list -> (severity t * warning list, error) result
 
 (* Intended for debugging purposes. *)
 val to_string : severity t -> string

@@ -967,8 +967,8 @@ let parse_version lines config =
 
 let parse_lints lines config : (config * warning list, error) result =
   let lines = trim_labeled_lines lines in
-  LintSettings.of_lines config.lint_severities lines >>= fun lint_severities ->
-  Ok ({ config with lint_severities }, [])
+  LintSettings.of_lines config.lint_severities lines >>= fun (lint_severities, warnings) ->
+  Ok ({ config with lint_severities }, warnings)
 
 let parse_strict lines config =
   let lines = trim_labeled_lines lines in

@@ -19,6 +19,10 @@ type 'a t = {
   explicit_values: ('a * Loc.t option) LintMap.t;
 }
 
+type warning = int * string
+
+type error = int * string
+
 let default_explicit_values =
   LintMap.singleton Lints.DeprecatedUtility (Severity.Err, None)
   |> LintMap.add Lints.UntypedTypeImport (Severity.Err, None)
@@ -133,26 +137,24 @@ let of_lines base_settings =
     else
       Ok new_settings
   in
-  let rec loop acc = function
-    | [] -> Ok acc
+  let rec loop (acc : Severity.severity t) (warnings : warning list) = function
+    | [] -> Ok (acc, Base.List.rev warnings)
     | line :: lines ->
-      parse_line line >>= fun result ->
-      begin
-        match result with
-        | EntryList (keys, value) ->
-          begin
-            match add_value keys value acc with
-            | Ok settings -> loop settings lines
-            | Error msg -> Error (line |> snd |> fst, msg)
-          end
-        | AllSetting value ->
-          if acc == base_settings then
-            loop value lines
-          else
-            Error
-              ( line |> snd |> fst,
-                "\"all\" is only allowed as the first setting. Settings are order-sensitive." )
-      end
+      (match parse_line line with
+      | Ok (EntryList (keys, value)) ->
+        (match add_value keys value acc with
+        | Ok acc -> loop acc warnings lines
+        | Error msg ->
+          let warning = (line |> snd |> fst, msg) in
+          loop acc (warning :: warnings) lines)
+      | Ok (AllSetting value) ->
+        if acc == base_settings then
+          loop value warnings lines
+        else
+          Error
+            ( line |> snd |> fst,
+              "\"all\" is only allowed as the first setting. Settings are order-sensitive." )
+      | Error line_err -> loop acc (line_err :: warnings) lines)
   in
   let loc_of_line line =
     Loc.(
@@ -161,23 +163,22 @@ let of_lines base_settings =
       { source = None; start; _end })
   in
   fun lint_lines ->
-    let locate_fun =
-      let index = ref 0 in
-      fun item ->
-        let res = (loc_of_line !index, item) in
-        index := !index + 1;
-        res
-    in
+    let locate_fun ((label, _) as item) = (loc_of_line label, item) in
     (* Artificially locate the lines to detect unused lines *)
     let located_lines = Base.List.map ~f:locate_fun lint_lines in
-    let settings = loop base_settings located_lines in
-    settings >>= fun settings ->
+    loop base_settings [] located_lines >>= fun (settings, warnings) ->
     let used_locs =
       fold
         (fun _kind (_enabled, loc) acc ->
           Base.Option.value_map loc ~f:(fun loc -> Loc_collections.LocSet.add loc acc) ~default:acc)
         settings
         Loc_collections.LocSet.empty
+    in
+    let used_locs =
+      Base.List.fold
+        ~f:(fun acc (line, _warning) -> Loc_collections.LocSet.add (loc_of_line line) acc)
+        ~init:used_locs
+        warnings
     in
     let first_unused =
       List.fold_left
@@ -195,14 +196,20 @@ let of_lines base_settings =
         None
         located_lines
     in
-    match first_unused with
-    | Some label ->
-      Error
-        ( label,
-          "Redundant argument. " ^ "The values set by this argument are completely overwritten." )
-    | None ->
-      (* Remove the artificial locations before returning the result *)
-      Ok (map (fun (enabled, _loc) -> (enabled, None)) settings)
+    let warnings =
+      match first_unused with
+      | Some label ->
+        let warning =
+          ( label,
+            "Redundant argument. " ^ "The values set by this argument are completely overwritten."
+          )
+        in
+        warning :: warnings
+      | None -> warnings
+    in
+    (* Remove the artificial locations before returning the result *)
+    let settings = map (fun (enabled, _loc) -> (enabled, None)) settings in
+    Ok (settings, warnings)
 
 let to_string settings =
   let acc = Buffer.create 20 in
