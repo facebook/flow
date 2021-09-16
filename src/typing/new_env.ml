@@ -18,9 +18,9 @@ let find_var { Env_api.env_values; _ } loc = ALocMap.find loc env_values
 
 let find_refi { Env_api.refinement_of_id; _ } = refinement_of_id
 
-let _is_provider { Env_api.providers; _ } = Env_api.Provider_api.is_provider providers
+let is_provider { Env_api.providers; _ } = Env_api.Provider_api.is_provider providers
 
-let _find_providers { Env_api.providers; _ } loc =
+let find_providers { Env_api.providers; _ } loc =
   Env_api.Provider_api.providers_of_def providers loc
   |> Base.Option.value ~default:[]
   |> Base.List.map ~f:Reason.aloc_of_reason
@@ -101,6 +101,35 @@ and read cx loc reason =
   let var_state = find_var var_info loc in
   let t = type_of_state var_state None in
   Flow_js.reposition cx loc t
+
+(*************)
+(*  Writing  *)
+(*************)
+
+let write cx ~use_op loc t =
+  Debug_js.Verbose.print_if_verbose cx [spf "writing to location %s" (ALoc.debug_to_string loc)];
+  let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
+  begin
+    match Loc_env.find_write env loc with
+    | None ->
+      (* If we don't see a spot for this write, it's because it's never read from. *)
+      ()
+    | Some w -> Flow_js.unify cx ~use_op t w
+  end;
+
+  if not @@ is_provider var_info loc then
+    let providers =
+      find_providers var_info loc |> Base.List.map ~f:(Loc_env.find_write env) |> Base.Option.all
+    in
+    let general =
+      match providers with
+      | None
+      | Some [] ->
+        assert_false (spf "Missing providers for %s" (ALoc.debug_to_string loc))
+      | Some [t] -> t
+      | Some (t1 :: t2 :: ts) -> UnionT (mk_reason (RCustom "providers") loc, UnionRep.make t1 t2 ts)
+    in
+    Flow_js.flow cx (t, UseT (use_op, general))
 
 (************************)
 (* Variable Declaration *)

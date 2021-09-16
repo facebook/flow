@@ -7,4 +7,6 @@
 
 val read : Context.t -> ALoc.t -> Reason.t -> Type.t
 
+val write : Context.t -> use_op:Type.use_op -> ALoc.t -> Type.t -> unit
+
 val initialize_all : Context.t -> unit
