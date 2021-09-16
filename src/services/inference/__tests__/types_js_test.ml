@@ -75,6 +75,7 @@ let dummy_options_flags =
     weak = false;
     new_env = false;
     include_suppressions = false;
+    prioritize_dependency_checks = false;
   }
 
 let dummy_saved_state_flags =

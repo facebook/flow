@@ -102,6 +102,7 @@ type t = {
   opt_new_merge: bool;
   opt_node_resolver_allow_root_relative: bool;
   opt_node_resolver_root_relative_dirnames: string list;
+  opt_prioritize_dependency_checks: bool;
   opt_profile: bool;
   opt_quiet: bool;
   opt_react_runtime: react_runtime;
@@ -216,6 +217,8 @@ let node_main_fields opts = opts.opt_node_main_fields
 let node_resolver_allow_root_relative opts = opts.opt_node_resolver_allow_root_relative
 
 let node_resolver_root_relative_dirnames opts = opts.opt_node_resolver_root_relative_dirnames
+
+let prioritize_dependency_checks opts = opts.opt_prioritize_dependency_checks
 
 let react_runtime opts = opts.opt_react_runtime
 

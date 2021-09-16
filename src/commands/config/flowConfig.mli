@@ -180,6 +180,8 @@ val node_resolver_dirnames : config -> string list
 
 val node_resolver_root_relative_dirnames : config -> string list
 
+val prioritize_dependency_checks : config -> bool option
+
 val required_version : config -> string option
 
 val react_runtime : config -> Options.react_runtime

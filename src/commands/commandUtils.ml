@@ -803,6 +803,7 @@ module Options_flags = struct
     wait_for_recheck: bool option;
     weak: bool;
     include_suppressions: bool;
+    prioritize_dependency_checks: bool;
   }
 end
 
@@ -866,7 +867,8 @@ let options_flags =
       abstract_locations
       include_suppressions
       trust_mode
-      new_env =
+      new_env
+      prioritize_dependency_checks =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
       Exit.(exit ~msg:"--merge-timeout must be non-negative" Commandline_usage_error)
@@ -896,6 +898,7 @@ let options_flags =
         new_merge;
         abstract_locations;
         include_suppressions;
+        prioritize_dependency_checks;
       }
   in
   fun prev ->
@@ -958,7 +961,8 @@ let options_flags =
                    ("none", Options.NoTrust);
                  ]))
            ~doc:""
-      |> flag "--new-env" no_arg ~doc:"")
+      |> flag "--new-env" no_arg ~doc:""
+      |> flag "--prioritize-dep-checks" no_arg ~doc:(* experimental *) "")
 
 let saved_state_flags =
   let collect_saved_state_flags
@@ -1207,6 +1211,10 @@ let make_options
         Base.Option.value (FlowConfig.format_single_quotes flowconfig) ~default:false;
     }
   in
+  let opt_prioritize_dependency_checks =
+    options_flags.prioritize_dependency_checks
+    || Base.Option.value (FlowConfig.prioritize_dependency_checks flowconfig) ~default:false
+  in
   let strict_mode = FlowConfig.strict_mode flowconfig in
   {
     Options.opt_flowconfig_name = flowconfig_name;
@@ -1305,6 +1313,7 @@ let make_options
     opt_format;
     opt_autoimports = Base.Option.value (FlowConfig.autoimports flowconfig) ~default:true;
     opt_flowconfig_hash = flowconfig_hash;
+    opt_prioritize_dependency_checks;
     opt_gc_worker =
       {
         Options.gc_minor_heap_size =

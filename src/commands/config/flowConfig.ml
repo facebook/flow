@@ -104,6 +104,7 @@ module Opts = struct
     node_resolver_allow_root_relative: bool;
     node_resolver_dirnames: string list;
     node_resolver_root_relative_dirnames: string list;
+    prioritize_dependency_checks: bool option;
     react_runtime: Options.react_runtime;
     react_server_component_exts: SSet.t;
     recursion_limit: int;
@@ -229,6 +230,7 @@ module Opts = struct
       node_resolver_allow_root_relative = false;
       node_resolver_dirnames = ["node_modules"];
       node_resolver_root_relative_dirnames = [""];
+      prioritize_dependency_checks = None;
       react_runtime = Options.ReactRuntimeClassic;
       react_server_component_exts;
       recursion_limit = 10000;
@@ -579,6 +581,9 @@ module Opts = struct
         let node_resolver_root_relative_dirnames = v :: opts.node_resolver_root_relative_dirnames in
         Ok { opts with node_resolver_root_relative_dirnames })
 
+  let prioritize_dependency_checks_parser =
+    boolean (fun opts v -> Ok { opts with prioritize_dependency_checks = Some v })
+
   let react_runtime_parser =
     enum
       [("classic", Options.ReactRuntimeClassic); ("automatic", Options.ReactRuntimeAutomatic)]
@@ -660,6 +665,7 @@ module Opts = struct
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
       ("experimental.new_check", new_check_parser);
       ("experimental.new_merge", new_merge_parser);
+      ("experimental.prioritize_dependency_checks", prioritize_dependency_checks_parser);
       ("experimental.react.server_component_ext", react_server_component_exts_parser);
       ("experimental.refactor", boolean (fun opts v -> Ok { opts with refactor = Some v }));
       ("experimental.reorder_checking", reorder_checking_parser);
@@ -1355,6 +1361,8 @@ let node_resolver_allow_root_relative c = c.options.Opts.node_resolver_allow_roo
 let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
 
 let node_resolver_root_relative_dirnames c = c.options.Opts.node_resolver_root_relative_dirnames
+
+let prioritize_dependency_checks c = c.options.Opts.prioritize_dependency_checks
 
 let react_runtime c = c.options.Opts.react_runtime
 
