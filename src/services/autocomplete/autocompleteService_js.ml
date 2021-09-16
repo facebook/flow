@@ -790,6 +790,86 @@ class local_type_identifiers_searcher =
       x
   end
 
+let make_builtin_type ~ac_loc name =
+  {
+    ServerProt.Response.Completion.kind = Some Lsp.Completion.Variable;
+    name;
+    detail = name;
+    text_edits = [text_edit (name, ac_loc)];
+    sort_text = sort_text_of_rank 0;
+    preselect = false;
+    documentation = None;
+    log_info = "builtin type";
+    source = None;
+    type_ = None;
+  }
+
+let builtin_types =
+  [
+    "any";
+    "boolean";
+    "empty";
+    "false";
+    "mixed";
+    "null";
+    "number";
+    "bigint";
+    "string";
+    "true";
+    "void";
+    "symbol";
+  ]
+
+let make_utility_type ~ac_loc name =
+  {
+    ServerProt.Response.Completion.kind = Some Lsp.Completion.Function;
+    name;
+    detail = name;
+    text_edits = [text_edit (name, ac_loc)];
+    sort_text = sort_text_of_rank 102 (* below globals *);
+    preselect = false;
+    documentation = None;
+    log_info = "builtin type";
+    source = None;
+    type_ = None;
+  }
+
+let utility_types =
+  [
+    "Class";
+    "$Call";
+    "$CharSet";
+    "$Diff";
+    "$ElementType";
+    "$Exact";
+    "$Exports";
+    "$KeyMirror";
+    "$Keys";
+    "$NonMaybeType";
+    "$ObjMap";
+    "$ObjMapi";
+    "$PropertyType";
+    "$ReadOnly";
+    "$Rest";
+    "$Shape";
+    "$TupleMap";
+    "$Values";
+  ]
+
+let make_type_param ~ac_loc { Type.name; _ } =
+  {
+    ServerProt.Response.Completion.kind = Some Lsp.Completion.TypeParameter;
+    name;
+    detail = name;
+    text_edits = [text_edit (name, ac_loc)];
+    sort_text = sort_text_of_rank 0;
+    preselect = false;
+    documentation = None;
+    log_info = "unqualified type parameter";
+    source = None;
+    type_ = None;
+  }
+
 let local_type_identifiers ~typed_ast ~cx ~file_sig =
   let search = new local_type_identifiers_searcher in
   Stdlib.ignore (search#program typed_ast);
@@ -802,27 +882,13 @@ let local_type_identifiers ~typed_ast ~cx ~file_sig =
 let autocomplete_unqualified_type
     ~env ~options ~reader ~cx ~imports ~tparams_rev ~file_sig ~ac_loc ~ast ~typed_ast ~token =
   (* TODO: filter to results that match `token` *)
-  let open ServerProt.Response.Completion in
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let exact_by_default = Context.exact_by_default cx in
   let items_rev =
-    Base.List.fold_left
-      ~f:(fun acc { Type.name; _ } ->
-        {
-          kind = Some Lsp.Completion.TypeParameter;
-          name;
-          detail = name;
-          text_edits = [text_edit (name, ac_loc)];
-          sort_text = sort_text_of_rank 0;
-          preselect = false;
-          documentation = None;
-          log_info = "unqualified type parameter";
-          source = None;
-          type_ = None;
-        }
-        :: acc)
-      ~init:[]
-      tparams_rev
+    []
+    |> Base.List.rev_map_append builtin_types ~f:(make_builtin_type ~ac_loc)
+    |> Base.List.rev_map_append utility_types ~f:(make_utility_type ~ac_loc)
+    |> Base.List.rev_map_append tparams_rev ~f:(make_type_param ~ac_loc)
   in
   let type_identifiers = local_type_identifiers ~typed_ast ~cx ~file_sig in
   let (items_rev, errors_to_log) =

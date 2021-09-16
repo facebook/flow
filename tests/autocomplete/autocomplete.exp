@@ -1375,6 +1375,534 @@ Flags: --pretty
 unqualified-type-annotation.js:28:18
 Flags: --lsp
 {
+  "label":"any",
+  "kind":6,
+  "detail":"any",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"any"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"any"}]
+  }
+}
+{
+  "label":"boolean",
+  "kind":6,
+  "detail":"boolean",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"boolean"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"boolean"}
+    ]
+  }
+}
+{
+  "label":"empty",
+  "kind":6,
+  "detail":"empty",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"empty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"empty"}]
+  }
+}
+{
+  "label":"false",
+  "kind":6,
+  "detail":"false",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"false"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"false"}]
+  }
+}
+{
+  "label":"mixed",
+  "kind":6,
+  "detail":"mixed",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"mixed"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"mixed"}]
+  }
+}
+{
+  "label":"null",
+  "kind":6,
+  "detail":"null",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"null"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"null"}]
+  }
+}
+{
+  "label":"number",
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"number"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"number"}]
+  }
+}
+{
+  "label":"bigint",
+  "kind":6,
+  "detail":"bigint",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"bigint"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"bigint"}]
+  }
+}
+{
+  "label":"string",
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"string"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"string"}]
+  }
+}
+{
+  "label":"true",
+  "kind":6,
+  "detail":"true",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"true"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"true"}]
+  }
+}
+{
+  "label":"void",
+  "kind":6,
+  "detail":"void",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"void"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"void"}]
+  }
+}
+{
+  "label":"symbol",
+  "kind":6,
+  "detail":"symbol",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"symbol"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"symbol"}]
+  }
+}
+{
+  "label":"Class",
+  "kind":3,
+  "detail":"Class",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Class"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"Class"}]
+  }
+}
+{
+  "label":"$Call",
+  "kind":3,
+  "detail":"$Call",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$Call"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Call"}]
+  }
+}
+{
+  "label":"$CharSet",
+  "kind":3,
+  "detail":"$CharSet",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$CharSet"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$CharSet"}
+    ]
+  }
+}
+{
+  "label":"$Diff",
+  "kind":3,
+  "detail":"$Diff",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$Diff"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Diff"}]
+  }
+}
+{
+  "label":"$ElementType",
+  "kind":3,
+  "detail":"$ElementType",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$ElementType"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ElementType"}
+    ]
+  }
+}
+{
+  "label":"$Exact",
+  "kind":3,
+  "detail":"$Exact",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$Exact"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Exact"}]
+  }
+}
+{
+  "label":"$Exports",
+  "kind":3,
+  "detail":"$Exports",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$Exports"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$Exports"}
+    ]
+  }
+}
+{
+  "label":"$KeyMirror",
+  "kind":3,
+  "detail":"$KeyMirror",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$KeyMirror"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$KeyMirror"}
+    ]
+  }
+}
+{
+  "label":"$Keys",
+  "kind":3,
+  "detail":"$Keys",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$Keys"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Keys"}]
+  }
+}
+{
+  "label":"$NonMaybeType",
+  "kind":3,
+  "detail":"$NonMaybeType",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$NonMaybeType"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$NonMaybeType"}
+    ]
+  }
+}
+{
+  "label":"$ObjMap",
+  "kind":3,
+  "detail":"$ObjMap",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$ObjMap"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ObjMap"}
+    ]
+  }
+}
+{
+  "label":"$ObjMapi",
+  "kind":3,
+  "detail":"$ObjMapi",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$ObjMapi"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ObjMapi"}
+    ]
+  }
+}
+{
+  "label":"$PropertyType",
+  "kind":3,
+  "detail":"$PropertyType",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$PropertyType"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$PropertyType"}
+    ]
+  }
+}
+{
+  "label":"$ReadOnly",
+  "kind":3,
+  "detail":"$ReadOnly",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$ReadOnly"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ReadOnly"}
+    ]
+  }
+}
+{
+  "label":"$Rest",
+  "kind":3,
+  "detail":"$Rest",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$Rest"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Rest"}]
+  }
+}
+{
+  "label":"$Shape",
+  "kind":3,
+  "detail":"$Shape",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$Shape"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Shape"}]
+  }
+}
+{
+  "label":"$TupleMap",
+  "kind":3,
+  "detail":"$TupleMap",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$TupleMap"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$TupleMap"}
+    ]
+  }
+}
+{
+  "label":"$Values",
+  "kind":3,
+  "detail":"$Values",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"$Values"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$Values"}
+    ]
+  }
+}
+{
   "label":"Typaram",
   "kind":25,
   "detail":"Typaram",
@@ -4999,6 +5527,534 @@ Flags: --lsp
 types-jsdoc.js:16:6
 Flags: --lsp
 {
+  "label":"any",
+  "kind":6,
+  "detail":"any",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"any"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"any"}]
+  }
+}
+{
+  "label":"boolean",
+  "kind":6,
+  "detail":"boolean",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"boolean"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"boolean"}
+    ]
+  }
+}
+{
+  "label":"empty",
+  "kind":6,
+  "detail":"empty",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"empty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"empty"}]
+  }
+}
+{
+  "label":"false",
+  "kind":6,
+  "detail":"false",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"false"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"false"}]
+  }
+}
+{
+  "label":"mixed",
+  "kind":6,
+  "detail":"mixed",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"mixed"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"mixed"}]
+  }
+}
+{
+  "label":"null",
+  "kind":6,
+  "detail":"null",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"null"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"null"}]
+  }
+}
+{
+  "label":"number",
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"number"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"number"}]
+  }
+}
+{
+  "label":"bigint",
+  "kind":6,
+  "detail":"bigint",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"bigint"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"bigint"}]
+  }
+}
+{
+  "label":"string",
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"string"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"string"}]
+  }
+}
+{
+  "label":"true",
+  "kind":6,
+  "detail":"true",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"true"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"true"}]
+  }
+}
+{
+  "label":"void",
+  "kind":6,
+  "detail":"void",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"void"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"void"}]
+  }
+}
+{
+  "label":"symbol",
+  "kind":6,
+  "detail":"symbol",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"symbol"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"symbol"}]
+  }
+}
+{
+  "label":"Class",
+  "kind":3,
+  "detail":"Class",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"Class"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"Class"}]
+  }
+}
+{
+  "label":"$Call",
+  "kind":3,
+  "detail":"$Call",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"$Call"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Call"}]
+  }
+}
+{
+  "label":"$CharSet",
+  "kind":3,
+  "detail":"$CharSet",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"$CharSet"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$CharSet"}
+    ]
+  }
+}
+{
+  "label":"$Diff",
+  "kind":3,
+  "detail":"$Diff",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"$Diff"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Diff"}]
+  }
+}
+{
+  "label":"$ElementType",
+  "kind":3,
+  "detail":"$ElementType",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"$ElementType"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ElementType"}
+    ]
+  }
+}
+{
+  "label":"$Exact",
+  "kind":3,
+  "detail":"$Exact",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"$Exact"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Exact"}]
+  }
+}
+{
+  "label":"$Exports",
+  "kind":3,
+  "detail":"$Exports",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"$Exports"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$Exports"}
+    ]
+  }
+}
+{
+  "label":"$KeyMirror",
+  "kind":3,
+  "detail":"$KeyMirror",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"$KeyMirror"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$KeyMirror"}
+    ]
+  }
+}
+{
+  "label":"$Keys",
+  "kind":3,
+  "detail":"$Keys",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"$Keys"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Keys"}]
+  }
+}
+{
+  "label":"$NonMaybeType",
+  "kind":3,
+  "detail":"$NonMaybeType",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"$NonMaybeType"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$NonMaybeType"}
+    ]
+  }
+}
+{
+  "label":"$ObjMap",
+  "kind":3,
+  "detail":"$ObjMap",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"$ObjMap"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ObjMap"}
+    ]
+  }
+}
+{
+  "label":"$ObjMapi",
+  "kind":3,
+  "detail":"$ObjMapi",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"$ObjMapi"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ObjMapi"}
+    ]
+  }
+}
+{
+  "label":"$PropertyType",
+  "kind":3,
+  "detail":"$PropertyType",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"$PropertyType"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$PropertyType"}
+    ]
+  }
+}
+{
+  "label":"$ReadOnly",
+  "kind":3,
+  "detail":"$ReadOnly",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"$ReadOnly"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ReadOnly"}
+    ]
+  }
+}
+{
+  "label":"$Rest",
+  "kind":3,
+  "detail":"$Rest",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"$Rest"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Rest"}]
+  }
+}
+{
+  "label":"$Shape",
+  "kind":3,
+  "detail":"$Shape",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"$Shape"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Shape"}]
+  }
+}
+{
+  "label":"$TupleMap",
+  "kind":3,
+  "detail":"$TupleMap",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"$TupleMap"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$TupleMap"}
+    ]
+  }
+}
+{
+  "label":"$Values",
+  "kind":3,
+  "detail":"$Values",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"$Values"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$Values"}
+    ]
+  }
+}
+{
   "label":"myFoo",
   "labelDetails":{"type":"type myFoo = number"},
   "kind":13,
@@ -7629,6 +8685,534 @@ Flags: --lsp
   }
 }
 {
+  "label":"any",
+  "kind":6,
+  "detail":"any",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"any"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"any"}]
+  }
+}
+{
+  "label":"boolean",
+  "kind":6,
+  "detail":"boolean",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"boolean"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"boolean"}
+    ]
+  }
+}
+{
+  "label":"empty",
+  "kind":6,
+  "detail":"empty",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"empty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"empty"}]
+  }
+}
+{
+  "label":"false",
+  "kind":6,
+  "detail":"false",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"false"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"false"}]
+  }
+}
+{
+  "label":"mixed",
+  "kind":6,
+  "detail":"mixed",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"mixed"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"mixed"}]
+  }
+}
+{
+  "label":"null",
+  "kind":6,
+  "detail":"null",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"null"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"null"}]
+  }
+}
+{
+  "label":"number",
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"number"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"number"}]
+  }
+}
+{
+  "label":"bigint",
+  "kind":6,
+  "detail":"bigint",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"bigint"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"bigint"}]
+  }
+}
+{
+  "label":"string",
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"string"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"string"}]
+  }
+}
+{
+  "label":"true",
+  "kind":6,
+  "detail":"true",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"true"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"true"}]
+  }
+}
+{
+  "label":"void",
+  "kind":6,
+  "detail":"void",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"void"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"void"}]
+  }
+}
+{
+  "label":"symbol",
+  "kind":6,
+  "detail":"symbol",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"symbol"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"symbol"}]
+  }
+}
+{
+  "label":"Class",
+  "kind":3,
+  "detail":"Class",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"Class"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"Class"}]
+  }
+}
+{
+  "label":"$Call",
+  "kind":3,
+  "detail":"$Call",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"$Call"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Call"}]
+  }
+}
+{
+  "label":"$CharSet",
+  "kind":3,
+  "detail":"$CharSet",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"$CharSet"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$CharSet"}
+    ]
+  }
+}
+{
+  "label":"$Diff",
+  "kind":3,
+  "detail":"$Diff",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"$Diff"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Diff"}]
+  }
+}
+{
+  "label":"$ElementType",
+  "kind":3,
+  "detail":"$ElementType",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"$ElementType"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ElementType"}
+    ]
+  }
+}
+{
+  "label":"$Exact",
+  "kind":3,
+  "detail":"$Exact",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"$Exact"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Exact"}]
+  }
+}
+{
+  "label":"$Exports",
+  "kind":3,
+  "detail":"$Exports",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"$Exports"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$Exports"}
+    ]
+  }
+}
+{
+  "label":"$KeyMirror",
+  "kind":3,
+  "detail":"$KeyMirror",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"$KeyMirror"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$KeyMirror"}
+    ]
+  }
+}
+{
+  "label":"$Keys",
+  "kind":3,
+  "detail":"$Keys",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"$Keys"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Keys"}]
+  }
+}
+{
+  "label":"$NonMaybeType",
+  "kind":3,
+  "detail":"$NonMaybeType",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"$NonMaybeType"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$NonMaybeType"}
+    ]
+  }
+}
+{
+  "label":"$ObjMap",
+  "kind":3,
+  "detail":"$ObjMap",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"$ObjMap"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ObjMap"}
+    ]
+  }
+}
+{
+  "label":"$ObjMapi",
+  "kind":3,
+  "detail":"$ObjMapi",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"$ObjMapi"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ObjMapi"}
+    ]
+  }
+}
+{
+  "label":"$PropertyType",
+  "kind":3,
+  "detail":"$PropertyType",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"$PropertyType"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$PropertyType"}
+    ]
+  }
+}
+{
+  "label":"$ReadOnly",
+  "kind":3,
+  "detail":"$ReadOnly",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"$ReadOnly"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ReadOnly"}
+    ]
+  }
+}
+{
+  "label":"$Rest",
+  "kind":3,
+  "detail":"$Rest",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"$Rest"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Rest"}]
+  }
+}
+{
+  "label":"$Shape",
+  "kind":3,
+  "detail":"$Shape",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"$Shape"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Shape"}]
+  }
+}
+{
+  "label":"$TupleMap",
+  "kind":3,
+  "detail":"$TupleMap",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"$TupleMap"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$TupleMap"}
+    ]
+  }
+}
+{
+  "label":"$Values",
+  "kind":3,
+  "detail":"$Values",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
+    "newText":"$Values"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$Values"}
+    ]
+  }
+}
+{
   "label":"K",
   "labelDetails":{"type":"type K = \"foo\""},
   "kind":13,
@@ -7737,6 +9321,534 @@ Flags: --lsp
   }
 }
 {
+  "label":"any",
+  "kind":6,
+  "detail":"any",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"any"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"any"}]
+  }
+}
+{
+  "label":"boolean",
+  "kind":6,
+  "detail":"boolean",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"boolean"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"boolean"}
+    ]
+  }
+}
+{
+  "label":"empty",
+  "kind":6,
+  "detail":"empty",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"empty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"empty"}]
+  }
+}
+{
+  "label":"false",
+  "kind":6,
+  "detail":"false",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"false"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"false"}]
+  }
+}
+{
+  "label":"mixed",
+  "kind":6,
+  "detail":"mixed",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"mixed"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"mixed"}]
+  }
+}
+{
+  "label":"null",
+  "kind":6,
+  "detail":"null",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"null"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"null"}]
+  }
+}
+{
+  "label":"number",
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"number"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"number"}]
+  }
+}
+{
+  "label":"bigint",
+  "kind":6,
+  "detail":"bigint",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"bigint"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"bigint"}]
+  }
+}
+{
+  "label":"string",
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"string"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"string"}]
+  }
+}
+{
+  "label":"true",
+  "kind":6,
+  "detail":"true",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"true"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"true"}]
+  }
+}
+{
+  "label":"void",
+  "kind":6,
+  "detail":"void",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"void"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"void"}]
+  }
+}
+{
+  "label":"symbol",
+  "kind":6,
+  "detail":"symbol",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"symbol"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"symbol"}]
+  }
+}
+{
+  "label":"Class",
+  "kind":3,
+  "detail":"Class",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"Class"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"Class"}]
+  }
+}
+{
+  "label":"$Call",
+  "kind":3,
+  "detail":"$Call",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"$Call"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Call"}]
+  }
+}
+{
+  "label":"$CharSet",
+  "kind":3,
+  "detail":"$CharSet",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"$CharSet"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$CharSet"}
+    ]
+  }
+}
+{
+  "label":"$Diff",
+  "kind":3,
+  "detail":"$Diff",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"$Diff"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Diff"}]
+  }
+}
+{
+  "label":"$ElementType",
+  "kind":3,
+  "detail":"$ElementType",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"$ElementType"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ElementType"}
+    ]
+  }
+}
+{
+  "label":"$Exact",
+  "kind":3,
+  "detail":"$Exact",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"$Exact"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Exact"}]
+  }
+}
+{
+  "label":"$Exports",
+  "kind":3,
+  "detail":"$Exports",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"$Exports"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$Exports"}
+    ]
+  }
+}
+{
+  "label":"$KeyMirror",
+  "kind":3,
+  "detail":"$KeyMirror",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"$KeyMirror"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$KeyMirror"}
+    ]
+  }
+}
+{
+  "label":"$Keys",
+  "kind":3,
+  "detail":"$Keys",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"$Keys"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Keys"}]
+  }
+}
+{
+  "label":"$NonMaybeType",
+  "kind":3,
+  "detail":"$NonMaybeType",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"$NonMaybeType"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$NonMaybeType"}
+    ]
+  }
+}
+{
+  "label":"$ObjMap",
+  "kind":3,
+  "detail":"$ObjMap",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"$ObjMap"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ObjMap"}
+    ]
+  }
+}
+{
+  "label":"$ObjMapi",
+  "kind":3,
+  "detail":"$ObjMapi",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"$ObjMapi"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ObjMapi"}
+    ]
+  }
+}
+{
+  "label":"$PropertyType",
+  "kind":3,
+  "detail":"$PropertyType",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"$PropertyType"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$PropertyType"}
+    ]
+  }
+}
+{
+  "label":"$ReadOnly",
+  "kind":3,
+  "detail":"$ReadOnly",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"$ReadOnly"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ReadOnly"}
+    ]
+  }
+}
+{
+  "label":"$Rest",
+  "kind":3,
+  "detail":"$Rest",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"$Rest"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Rest"}]
+  }
+}
+{
+  "label":"$Shape",
+  "kind":3,
+  "detail":"$Shape",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"$Shape"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Shape"}]
+  }
+}
+{
+  "label":"$TupleMap",
+  "kind":3,
+  "detail":"$TupleMap",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"$TupleMap"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$TupleMap"}
+    ]
+  }
+}
+{
+  "label":"$Values",
+  "kind":3,
+  "detail":"$Values",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
+    "newText":"$Values"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$Values"}
+    ]
+  }
+}
+{
   "label":"O",
   "labelDetails":{"type":"type O = {bar?: string, foo: number, ...}"},
   "kind":13,
@@ -7820,6 +9932,534 @@ Flags: --lsp
       "textDocument/completion",
       "bracket syntax member",
       {"token":null,"completion":"\"foo\""}
+    ]
+  }
+}
+{
+  "label":"any",
+  "kind":6,
+  "detail":"any",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"any"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"any"}]
+  }
+}
+{
+  "label":"boolean",
+  "kind":6,
+  "detail":"boolean",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"boolean"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"boolean"}
+    ]
+  }
+}
+{
+  "label":"empty",
+  "kind":6,
+  "detail":"empty",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"empty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"empty"}]
+  }
+}
+{
+  "label":"false",
+  "kind":6,
+  "detail":"false",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"false"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"false"}]
+  }
+}
+{
+  "label":"mixed",
+  "kind":6,
+  "detail":"mixed",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"mixed"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"mixed"}]
+  }
+}
+{
+  "label":"null",
+  "kind":6,
+  "detail":"null",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"null"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"null"}]
+  }
+}
+{
+  "label":"number",
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"number"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"number"}]
+  }
+}
+{
+  "label":"bigint",
+  "kind":6,
+  "detail":"bigint",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"bigint"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"bigint"}]
+  }
+}
+{
+  "label":"string",
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"string"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"string"}]
+  }
+}
+{
+  "label":"true",
+  "kind":6,
+  "detail":"true",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"true"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"true"}]
+  }
+}
+{
+  "label":"void",
+  "kind":6,
+  "detail":"void",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"void"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"void"}]
+  }
+}
+{
+  "label":"symbol",
+  "kind":6,
+  "detail":"symbol",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"symbol"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"symbol"}]
+  }
+}
+{
+  "label":"Class",
+  "kind":3,
+  "detail":"Class",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"Class"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"Class"}]
+  }
+}
+{
+  "label":"$Call",
+  "kind":3,
+  "detail":"$Call",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"$Call"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Call"}]
+  }
+}
+{
+  "label":"$CharSet",
+  "kind":3,
+  "detail":"$CharSet",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"$CharSet"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$CharSet"}
+    ]
+  }
+}
+{
+  "label":"$Diff",
+  "kind":3,
+  "detail":"$Diff",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"$Diff"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Diff"}]
+  }
+}
+{
+  "label":"$ElementType",
+  "kind":3,
+  "detail":"$ElementType",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"$ElementType"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ElementType"}
+    ]
+  }
+}
+{
+  "label":"$Exact",
+  "kind":3,
+  "detail":"$Exact",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"$Exact"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Exact"}]
+  }
+}
+{
+  "label":"$Exports",
+  "kind":3,
+  "detail":"$Exports",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"$Exports"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$Exports"}
+    ]
+  }
+}
+{
+  "label":"$KeyMirror",
+  "kind":3,
+  "detail":"$KeyMirror",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"$KeyMirror"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$KeyMirror"}
+    ]
+  }
+}
+{
+  "label":"$Keys",
+  "kind":3,
+  "detail":"$Keys",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"$Keys"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Keys"}]
+  }
+}
+{
+  "label":"$NonMaybeType",
+  "kind":3,
+  "detail":"$NonMaybeType",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"$NonMaybeType"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$NonMaybeType"}
+    ]
+  }
+}
+{
+  "label":"$ObjMap",
+  "kind":3,
+  "detail":"$ObjMap",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"$ObjMap"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ObjMap"}
+    ]
+  }
+}
+{
+  "label":"$ObjMapi",
+  "kind":3,
+  "detail":"$ObjMapi",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"$ObjMapi"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ObjMapi"}
+    ]
+  }
+}
+{
+  "label":"$PropertyType",
+  "kind":3,
+  "detail":"$PropertyType",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"$PropertyType"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$PropertyType"}
+    ]
+  }
+}
+{
+  "label":"$ReadOnly",
+  "kind":3,
+  "detail":"$ReadOnly",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"$ReadOnly"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ReadOnly"}
+    ]
+  }
+}
+{
+  "label":"$Rest",
+  "kind":3,
+  "detail":"$Rest",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"$Rest"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Rest"}]
+  }
+}
+{
+  "label":"$Shape",
+  "kind":3,
+  "detail":"$Shape",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"$Shape"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Shape"}]
+  }
+}
+{
+  "label":"$TupleMap",
+  "kind":3,
+  "detail":"$TupleMap",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"$TupleMap"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$TupleMap"}
+    ]
+  }
+}
+{
+  "label":"$Values",
+  "kind":3,
+  "detail":"$Values",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
+    "newText":"$Values"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$Values"}
     ]
   }
 }
@@ -7928,6 +10568,534 @@ Flags: --lsp
       "textDocument/completion",
       "bracket syntax member",
       {"token":null,"completion":"\"foo\""}
+    ]
+  }
+}
+{
+  "label":"any",
+  "kind":6,
+  "detail":"any",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"any"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"any"}]
+  }
+}
+{
+  "label":"boolean",
+  "kind":6,
+  "detail":"boolean",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"boolean"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"boolean"}
+    ]
+  }
+}
+{
+  "label":"empty",
+  "kind":6,
+  "detail":"empty",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"empty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"empty"}]
+  }
+}
+{
+  "label":"false",
+  "kind":6,
+  "detail":"false",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"false"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"false"}]
+  }
+}
+{
+  "label":"mixed",
+  "kind":6,
+  "detail":"mixed",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"mixed"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"mixed"}]
+  }
+}
+{
+  "label":"null",
+  "kind":6,
+  "detail":"null",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"null"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"null"}]
+  }
+}
+{
+  "label":"number",
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"number"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"number"}]
+  }
+}
+{
+  "label":"bigint",
+  "kind":6,
+  "detail":"bigint",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"bigint"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"bigint"}]
+  }
+}
+{
+  "label":"string",
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"string"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"string"}]
+  }
+}
+{
+  "label":"true",
+  "kind":6,
+  "detail":"true",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"true"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"true"}]
+  }
+}
+{
+  "label":"void",
+  "kind":6,
+  "detail":"void",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"void"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"void"}]
+  }
+}
+{
+  "label":"symbol",
+  "kind":6,
+  "detail":"symbol",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"symbol"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"symbol"}]
+  }
+}
+{
+  "label":"Class",
+  "kind":3,
+  "detail":"Class",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"Class"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"Class"}]
+  }
+}
+{
+  "label":"$Call",
+  "kind":3,
+  "detail":"$Call",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"$Call"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Call"}]
+  }
+}
+{
+  "label":"$CharSet",
+  "kind":3,
+  "detail":"$CharSet",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"$CharSet"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$CharSet"}
+    ]
+  }
+}
+{
+  "label":"$Diff",
+  "kind":3,
+  "detail":"$Diff",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"$Diff"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Diff"}]
+  }
+}
+{
+  "label":"$ElementType",
+  "kind":3,
+  "detail":"$ElementType",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"$ElementType"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ElementType"}
+    ]
+  }
+}
+{
+  "label":"$Exact",
+  "kind":3,
+  "detail":"$Exact",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"$Exact"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Exact"}]
+  }
+}
+{
+  "label":"$Exports",
+  "kind":3,
+  "detail":"$Exports",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"$Exports"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$Exports"}
+    ]
+  }
+}
+{
+  "label":"$KeyMirror",
+  "kind":3,
+  "detail":"$KeyMirror",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"$KeyMirror"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$KeyMirror"}
+    ]
+  }
+}
+{
+  "label":"$Keys",
+  "kind":3,
+  "detail":"$Keys",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"$Keys"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Keys"}]
+  }
+}
+{
+  "label":"$NonMaybeType",
+  "kind":3,
+  "detail":"$NonMaybeType",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"$NonMaybeType"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$NonMaybeType"}
+    ]
+  }
+}
+{
+  "label":"$ObjMap",
+  "kind":3,
+  "detail":"$ObjMap",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"$ObjMap"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ObjMap"}
+    ]
+  }
+}
+{
+  "label":"$ObjMapi",
+  "kind":3,
+  "detail":"$ObjMapi",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"$ObjMapi"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ObjMapi"}
+    ]
+  }
+}
+{
+  "label":"$PropertyType",
+  "kind":3,
+  "detail":"$PropertyType",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"$PropertyType"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$PropertyType"}
+    ]
+  }
+}
+{
+  "label":"$ReadOnly",
+  "kind":3,
+  "detail":"$ReadOnly",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"$ReadOnly"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$ReadOnly"}
+    ]
+  }
+}
+{
+  "label":"$Rest",
+  "kind":3,
+  "detail":"$Rest",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"$Rest"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Rest"}]
+  }
+}
+{
+  "label":"$Shape",
+  "kind":3,
+  "detail":"$Shape",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"$Shape"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","builtin type",{"token":null,"completion":"$Shape"}]
+  }
+}
+{
+  "label":"$TupleMap",
+  "kind":3,
+  "detail":"$TupleMap",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"$TupleMap"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$TupleMap"}
+    ]
+  }
+}
+{
+  "label":"$Values",
+  "kind":3,
+  "detail":"$Values",
+  "sortText":"00000000000000000102",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
+    "newText":"$Values"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {"token":null,"completion":"$Values"}
     ]
   }
 }
