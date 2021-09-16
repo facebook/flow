@@ -306,13 +306,27 @@ module CompletionOptions : sig
   }
 end
 
-module Initialize : sig
-  type textDocumentSyncKind =
+module TextDocumentSyncKind : sig
+  type t =
     | NoSync [@value 0]
     | FullSync [@value 1]
     | IncrementalSync [@value 2]
   [@@deriving enum]
+end
 
+module TextDocumentSyncOptions : sig
+  type t = {
+    openClose: bool;
+    change: TextDocumentSyncKind.t;
+    willSave: bool;
+    willSaveWaitUntil: bool;
+    save: saveOptions option;
+  }
+
+  and saveOptions = { includeText: bool }
+end
+
+module Initialize : sig
   type params = {
     processId: int option;
     rootPath: string option;
@@ -371,7 +385,7 @@ module Initialize : sig
   and experimentalServerCapabilities = { server_snippetTextEdit: bool }
 
   and server_capabilities = {
-    textDocumentSync: textDocumentSyncOptions;
+    textDocumentSync: TextDocumentSyncOptions.t;
     hoverProvider: bool;
     completionProvider: CompletionOptions.t option;
     signatureHelpProvider: signatureHelpOptions option;
@@ -412,16 +426,6 @@ module Initialize : sig
   and documentLinkOptions = { doclink_resolveProvider: bool }
 
   and executeCommandOptions = { commands: Command.name list }
-
-  and textDocumentSyncOptions = {
-    want_openClose: bool;
-    want_change: textDocumentSyncKind;
-    want_willSave: bool;
-    want_willSaveWaitUntil: bool;
-    want_didSave: saveOptions option;
-  }
-
-  and saveOptions = { includeText: bool }
 end
 
 module Shutdown : sig end

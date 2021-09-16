@@ -428,14 +428,30 @@ module CompletionOptions = struct
   }
 end
 
-(** Initialize request, method="initialize" *)
-module Initialize = struct
-  type textDocumentSyncKind =
+module TextDocumentSyncKind = struct
+  type t =
     | NoSync [@value 0]  (** docs should not be synced at all. Wire "None" *)
     | FullSync [@value 1]  (** synced by always sending full content. Wire "Full" *)
-    | IncrementalSync [@value 2]
+    | IncrementalSync [@value 2]  (** full only on open. Wire "Incremental" *)
   [@@deriving enum]
+end
 
+module TextDocumentSyncOptions = struct
+  (** text document sync options say what messages the server requests the
+      client to send. *)
+  type t = {
+    openClose: bool;  (** textDocument/didOpen+didClose *)
+    change: TextDocumentSyncKind.t;
+    willSave: bool;  (** textDocument/willSave *)
+    willSaveWaitUntil: bool;  (** textDoc.../willSaveWaitUntil *)
+    save: saveOptions option;  (** textDocument/didSave *)
+  }
+
+  and saveOptions = { includeText: bool  (** the client should include content on save *) }
+end
+
+(** Initialize request, method="initialize" *)
+module Initialize = struct
   type params = {
     processId: int option;  (** pid of parent process *)
     rootPath: string option;  (** deprecated *)
@@ -504,7 +520,7 @@ module Initialize = struct
 
   (** What capabilities the server provides *)
   and server_capabilities = {
-    textDocumentSync: textDocumentSyncOptions;  (** how to sync *)
+    textDocumentSync: TextDocumentSyncOptions.t;  (** how to sync *)
     hoverProvider: bool;
     completionProvider: CompletionOptions.t option;
     signatureHelpProvider: signatureHelpOptions option;
@@ -550,23 +566,6 @@ module Initialize = struct
   and executeCommandOptions = {
     commands: Command.name list;  (** the commands to be executed on the server *)
   }
-
-  (** text document sync options say what messages the server requests the
-      client to send. We use the "want_" prefix for OCaml naming reasons;
-      this prefix is absent in LSP. *)
-  and textDocumentSyncOptions = {
-    want_openClose: bool;
-    (* textDocument/didOpen+didClose *)
-    want_change: textDocumentSyncKind;
-    want_willSave: bool;
-    (* textDocument/willSave *)
-    want_willSaveWaitUntil: bool;
-    (* textDoc.../willSaveWaitUntil *)
-    want_didSave: saveOptions option; (* textDocument/didSave *)
-  }
-
-  (* full only on open. Wire "Incremental" *)
-  and saveOptions = { includeText: bool  (** the client should include content on save *) }
 end
 
 (** Shutdown request, method="shutdown" *)

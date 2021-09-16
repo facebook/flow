@@ -666,18 +666,21 @@ let do_initialize flowconfig params : Initialize.result =
     else
       CodeActionBool false
   in
+  let textDocumentSync =
+    TextDocumentSyncOptions.
+      {
+        openClose = true;
+        change = TextDocumentSyncKind.IncrementalSync;
+        willSave = false;
+        willSaveWaitUntil = false;
+        save = Some { includeText = false };
+      }
+  in
   let server_snippetTextEdit = Lsp_helpers.supports_experimental_snippet_text_edit params in
   {
     server_capabilities =
       {
-        textDocumentSync =
-          {
-            want_openClose = true;
-            want_change = IncrementalSync;
-            want_willSave = false;
-            want_willSaveWaitUntil = false;
-            want_didSave = Some { includeText = false };
-          };
+        textDocumentSync;
         hoverProvider = true;
         completionProvider =
           Some

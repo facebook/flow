@@ -1251,9 +1251,31 @@ let parse_initialize (params : json option) : Initialize.params =
     in
     parse_initialize params)
 
+module TextDocumentSyncKindFmt = struct
+  open TextDocumentSyncKind
+
+  let to_json kind = int_ (to_enum kind)
+end
+
+module TextDocumentSyncOptionsFmt = struct
+  open TextDocumentSyncOptions
+
+  let save_to_json { includeText } = JSON_Object [("includeText", JSON_Bool includeText)]
+
+  let to_json sync =
+    let { openClose; change; willSave; willSaveWaitUntil; save } = sync in
+    Jprint.object_opt
+      [
+        ("openClose", Some (JSON_Bool openClose));
+        ("change", Some (TextDocumentSyncKindFmt.to_json change));
+        ("willSave", Some (JSON_Bool willSave));
+        ("willSaveWaitUntil", Some (JSON_Bool willSaveWaitUntil));
+        ("save", Base.Option.map save ~f:save_to_json);
+      ]
+end
+
 let print_initialize ~key (r : Initialize.result) : json =
   Initialize.(
-    let print_textDocumentSyncKind kind = int_ (textDocumentSyncKind_to_enum kind) in
     let cap = r.server_capabilities in
     let sync = cap.textDocumentSync in
     let experimental =
@@ -1275,18 +1297,7 @@ let print_initialize ~key (r : Initialize.result) : json =
         ( "capabilities",
           Jprint.object_opt
             [
-              ( "textDocumentSync",
-                Some
-                  (Jprint.object_opt
-                     [
-                       ("openClose", Some (JSON_Bool sync.want_openClose));
-                       ("change", Some (print_textDocumentSyncKind sync.want_change));
-                       ("willSave", Some (JSON_Bool sync.want_willSave));
-                       ("willSaveWaitUntil", Some (JSON_Bool sync.want_willSaveWaitUntil));
-                       ( "save",
-                         Base.Option.map sync.want_didSave ~f:(fun save ->
-                             JSON_Object [("includeText", JSON_Bool save.includeText)]) );
-                     ]) );
+              ("textDocumentSync", Some (TextDocumentSyncOptionsFmt.to_json sync));
               ("hoverProvider", Some (JSON_Bool cap.hoverProvider));
               ( "completionProvider",
                 Base.Option.map cap.completionProvider ~f:CompletionOptionsFmt.to_json );
