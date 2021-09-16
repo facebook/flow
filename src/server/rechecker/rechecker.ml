@@ -179,17 +179,12 @@ type recheck_outcome =
 
 (* Perform a single recheck. This will incorporate any pending changes from the file watcher.
  * If any file watcher notifications come in during the recheck, it will be canceled and restarted
- * to include the new changes *)
-let rec recheck_single
-    ?(files_to_recheck = FilenameSet.empty)
-    ~files_to_force
-    ?(file_watcher_metadata = MonitorProt.empty_file_watcher_metadata)
-    ?(recheck_reasons_list_rev = [])
-    ?((* The number of rechecks in this series, including past canceled rechecks and the current
-       * one. *)
-    recheck_count = 1)
-    genv
-    env =
+ * to include the new changes
+ *
+ * [recheck_count] is the number of rechecks in this series, including past canceled rechecks and
+ * the current one.
+ *)
+let rec recheck_single ~files_to_force ~recheck_count genv env =
   ServerMonitorListenerState.(
     let env = update_env env in
     let options = genv.ServerEnv.options in
@@ -203,11 +198,12 @@ let rec recheck_single
      * the server gets spammed with autocomplete requests *)
     let will_be_checked_files = ref (CheckedSet.union env.ServerEnv.checked_files files_to_force) in
     let get_forced () = !will_be_checked_files in
-    let workload = get_and_clear_recheck_workload ~process_updates ~get_forced in
-    let file_watcher_metadata =
-      MonitorProt.merge_file_watcher_metadata file_watcher_metadata workload.metadata
+    let prioritize_dependency_checks = Options.prioritize_dependency_checks options in
+    let workload =
+      get_and_clear_recheck_workload ~prioritize_dependency_checks ~process_updates ~get_forced
     in
-    let files_to_recheck = FilenameSet.union files_to_recheck workload.files_to_recheck in
+    let file_watcher_metadata = workload.metadata in
+    let files_to_recheck = workload.files_to_recheck in
     let files_to_recheck =
       if file_watcher_metadata.MonitorProt.missed_changes then
         (* If the file watcher missed some changes, it's possible that previously-modified
@@ -218,7 +214,7 @@ let rec recheck_single
         files_to_recheck
     in
     let files_to_force = CheckedSet.union files_to_force workload.files_to_force in
-    let recheck_reasons_list_rev = workload.recheck_reasons_rev :: recheck_reasons_list_rev in
+    let recheck_reasons_rev = workload.recheck_reasons_rev in
     if FilenameSet.is_empty files_to_recheck && CheckedSet.is_empty files_to_force then (
       List.iter (fun callback -> callback None) workload.profiling_callbacks;
       Lwt.return (Nothing_to_do env)
@@ -238,25 +234,11 @@ let rec recheck_single
          * heap to grow faster than we can scan. An algorithmic approach to determine the amount of
          * work based on the allocation rate would be better. *)
         let _done : bool = SharedMem.collect_slice 20000000 in
-        recheck_single
-          ~files_to_recheck
-          ~files_to_force
-          ~file_watcher_metadata
-          ~recheck_reasons_list_rev
-          ~recheck_count:(recheck_count + 1)
-          genv
-          env
+        requeue_workload workload;
+        recheck_single ~files_to_force ~recheck_count:(recheck_count + 1) genv env
       in
       let f () =
-        (* Take something like [[10, 9], [8], [7], [6,5,4,3], [2,1]] and output [1,2,3,4,5,6,7,8,9,10]
-         *)
-        let recheck_reasons =
-          List.fold_left
-            (fun recheck_reasons recheck_reasons_rev ->
-              List.rev_append recheck_reasons_rev recheck_reasons)
-            []
-            recheck_reasons_list_rev
-        in
+        let recheck_reasons = List.rev recheck_reasons_rev in
         let%lwt (profiling, env) =
           try%lwt
             recheck
@@ -292,7 +274,6 @@ let recheck_loop =
   (* It's not obvious to Mr Gabe how we should merge together the profiling info from multiple
    * rechecks. But something is better than nothing... *)
   let rec loop ~profiling genv env =
-    let files_to_recheck = FilenameSet.empty in
     let files_to_force = CheckedSet.empty in
     let should_print_summary = Options.should_profile genv.options in
     let%lwt (recheck_series_profiling, recheck_result) =
@@ -301,7 +282,7 @@ let recheck_loop =
       Profiling_js.with_profiling_lwt
         ~label:"RecheckSeries"
         ~should_print_summary
-        (fun _profiling -> recheck_single ~files_to_recheck ~files_to_force genv env)
+        (fun _profiling -> recheck_single ~files_to_force ~recheck_count:1 genv env)
     in
     match recheck_result with
     | Nothing_to_do env -> Lwt.return (List.rev profiling, env)
@@ -312,4 +293,5 @@ let recheck_loop =
   in
   (fun genv env -> loop ~profiling:[] genv env)
 
-let recheck_single ~files_to_force genv env = recheck_single ~files_to_force genv env
+let recheck_single ~files_to_force genv env =
+  recheck_single ~files_to_force ~recheck_count:1 genv env

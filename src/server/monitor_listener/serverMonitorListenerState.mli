@@ -72,7 +72,10 @@ val wait_and_pop_parallelizable_workload : unit -> WorkloadStream.parallelizable
 
 val update_env : ServerEnv.env -> ServerEnv.env
 
+val requeue_workload : recheck_workload -> unit
+
 val get_and_clear_recheck_workload :
+  prioritize_dependency_checks:bool ->
   process_updates:(?skip_incompatible:bool -> SSet.t -> Utils_js.FilenameSet.t) ->
   get_forced:(unit -> CheckedSet.t) ->
   recheck_workload

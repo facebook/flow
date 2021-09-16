@@ -204,11 +204,35 @@ let recheck_fetch ~process_updates ~get_forced =
              let metadata = MonitorProt.merge_file_watcher_metadata metadata workload.metadata in
              { workload with metadata })
 
-let get_and_clear_recheck_workload ~process_updates ~get_forced =
+let requeue_workload workload =
+  Hh_logger.info
+    "Re-queueing force-check of %d files and recheck of %d files"
+    (CheckedSet.cardinal workload.files_to_force)
+    (FilenameSet.cardinal workload.files_to_recheck);
+  let prev = !recheck_acc in
+  let next =
+    {
+      files_to_force = CheckedSet.union workload.files_to_force prev.files_to_force;
+      files_to_recheck = FilenameSet.union workload.files_to_recheck prev.files_to_recheck;
+      profiling_callbacks = prev.profiling_callbacks @ workload.profiling_callbacks;
+      metadata = MonitorProt.merge_file_watcher_metadata prev.metadata workload.metadata;
+      recheck_reasons_rev = prev.recheck_reasons_rev @ workload.recheck_reasons_rev;
+    }
+  in
+  recheck_acc := next
+
+let get_and_clear_recheck_workload ~prioritize_dependency_checks ~process_updates ~get_forced =
   recheck_fetch ~process_updates ~get_forced;
   let recheck_workload = !recheck_acc in
-  recheck_acc := empty_recheck_workload;
-  recheck_workload
+  let { files_to_force; _ } = recheck_workload in
+  if (not prioritize_dependency_checks) || CheckedSet.is_empty files_to_force then (
+    recheck_acc := empty_recheck_workload;
+    recheck_workload
+  ) else
+    let parse_workload = { empty_recheck_workload with files_to_force } in
+    let recheck_workload = { recheck_workload with files_to_force = CheckedSet.empty } in
+    recheck_acc := recheck_workload;
+    parse_workload
 
 let rec wait_for_updates_for_recheck ~process_updates ~get_forced =
   let%lwt _ = Lwt_stream.is_empty recheck_stream in
