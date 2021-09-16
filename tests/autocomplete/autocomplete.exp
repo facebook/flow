@@ -1375,84 +1375,22 @@ Flags: --pretty
 unqualified-type-annotation.js:28:18
 Flags: --lsp
 {
-  "label":"Typologies",
-  "kind":9,
-  "detail":"module Typologies",
+  "label":"Typaram",
+  "kind":25,
+  "detail":"Typaram",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"Typologies."
+    "newText":"Typaram"
   },
   "command":{
     "title":"",
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
-      "unqualified type -> qualified type",
-      {"token":null,"completion":"Typologies"}
-    ]
-  }
-}
-{
-  "label":"Typography",
-  "labelDetails":{"type":"class Typewriter"},
-  "kind":7,
-  "detail":"class Typewriter",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"Typography"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "unqualified type: class or enum",
-      {"token":null,"completion":"Typography"}
-    ]
-  }
-}
-{
-  "label":"Typewriter",
-  "labelDetails":{"type":"class Typewriter"},
-  "kind":7,
-  "detail":"class Typewriter",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"Typewriter"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "unqualified type: class or enum",
-      {"token":null,"completion":"Typewriter"}
-    ]
-  }
-}
-{
-  "label":"Types",
-  "kind":9,
-  "detail":"module Types",
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"Types."
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "unqualified type -> qualified type",
-      {"token":null,"completion":"Types"}
+      "unqualified type parameter",
+      {"token":null,"completion":"Typaram"}
     ]
   }
 }
@@ -1583,22 +1521,84 @@ Flags: --lsp
   }
 }
 {
-  "label":"Typaram",
-  "kind":25,
-  "detail":"Typaram",
+  "label":"Types",
+  "kind":9,
+  "detail":"module Types",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
-    "newText":"Typaram"
+    "newText":"Types."
   },
   "command":{
     "title":"",
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
-      "unqualified type parameter",
-      {"token":null,"completion":"Typaram"}
+      "unqualified type -> qualified type",
+      {"token":null,"completion":"Types"}
+    ]
+  }
+}
+{
+  "label":"Typewriter",
+  "labelDetails":{"type":"class Typewriter"},
+  "kind":7,
+  "detail":"class Typewriter",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Typewriter"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: class or enum",
+      {"token":null,"completion":"Typewriter"}
+    ]
+  }
+}
+{
+  "label":"Typography",
+  "labelDetails":{"type":"class Typewriter"},
+  "kind":7,
+  "detail":"class Typewriter",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Typography"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: class or enum",
+      {"token":null,"completion":"Typography"}
+    ]
+  }
+}
+{
+  "label":"Typologies",
+  "kind":9,
+  "detail":"module Typologies",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Typologies."
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type -> qualified type",
+      {"token":null,"completion":"Typologies"}
     ]
   }
 }
@@ -4999,50 +4999,6 @@ Flags: --lsp
 types-jsdoc.js:16:6
 Flags: --lsp
 {
-  "label":"myEnum",
-  "labelDetails":{"type":"enum myEnum"},
-  "kind":13,
-  "detail":"enum myEnum",
-  "documentation":{"kind":"markdown","value":"this is myEnum"},
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
-    "newText":"myEnum"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "unqualified type: class or enum",
-      {"token":null,"completion":"myEnum"}
-    ]
-  }
-}
-{
-  "label":"myClass",
-  "labelDetails":{"type":"class myClass"},
-  "kind":7,
-  "detail":"class myClass",
-  "documentation":{"kind":"markdown","value":"this is myClass"},
-  "sortText":"00000000000000000000",
-  "insertTextFormat":1,
-  "textEdit":{
-    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
-    "newText":"myClass"
-  },
-  "command":{
-    "title":"",
-    "command":"log:<PLACEHOLDER_PROJECT_URL>",
-    "arguments":[
-      "textDocument/completion",
-      "unqualified type: class or enum",
-      {"token":null,"completion":"myClass"}
-    ]
-  }
-}
-{
   "label":"myFoo",
   "labelDetails":{"type":"type myFoo = number"},
   "kind":13,
@@ -5237,6 +5193,50 @@ Flags: --lsp
       "textDocument/completion",
       "unqualified type: local type identifier",
       {"token":null,"completion":"exportValue"}
+    ]
+  }
+}
+{
+  "label":"myClass",
+  "labelDetails":{"type":"class myClass"},
+  "kind":7,
+  "detail":"class myClass",
+  "documentation":{"kind":"markdown","value":"this is myClass"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"myClass"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: class or enum",
+      {"token":null,"completion":"myClass"}
+    ]
+  }
+}
+{
+  "label":"myEnum",
+  "labelDetails":{"type":"enum myEnum"},
+  "kind":13,
+  "detail":"enum myEnum",
+  "documentation":{"kind":"markdown","value":"this is myEnum"},
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":15,"character":5},"end":{"line":15,"character":5}},
+    "newText":"myEnum"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "unqualified type: class or enum",
+      {"token":null,"completion":"myEnum"}
     ]
   }
 }

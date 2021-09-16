@@ -1986,94 +1986,34 @@ export default (suite(
               isIncomplete: false,
               items: [
                 {
-                  label: 'Typologies',
-                  kind: 9,
-                  detail: 'module Typologies',
+                  label: 'Typaram',
+                  kind: 25,
+                  detail: 'Typaram',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 27, character: 18},
-                      end: {line: 27, character: 18},
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
                     },
-                    newText: 'Typologies.',
+                    newText: 'Typaram',
                   },
                   command: {
                     title: '',
                     command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
-                      'unqualified type -> qualified type',
-                      {token: 'AUTO332', completion: 'Typologies'},
-                    ],
-                  },
-                },
-                {
-                  label: 'Typography',
-                  kind: 7,
-                  detail: 'class Typewriter',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {line: 27, character: 18},
-                      end: {line: 27, character: 18},
-                    },
-                    newText: 'Typography',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'unqualified type: class or enum',
-                      {token: 'AUTO332', completion: 'Typography'},
-                    ],
-                  },
-                },
-                {
-                  label: 'Typewriter',
-                  kind: 7,
-                  detail: 'class Typewriter',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {line: 27, character: 18},
-                      end: {line: 27, character: 18},
-                    },
-                    newText: 'Typewriter',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'unqualified type: class or enum',
-                      {token: 'AUTO332', completion: 'Typewriter'},
-                    ],
-                  },
-                },
-                {
-                  label: 'Types',
-                  kind: 9,
-                  detail: 'module Types',
-                  sortText: '00000000000000000000',
-                  insertTextFormat: 1,
-                  textEdit: {
-                    range: {
-                      start: {line: 27, character: 18},
-                      end: {line: 27, character: 18},
-                    },
-                    newText: 'Types.',
-                  },
-                  command: {
-                    title: '',
-                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
-                    arguments: [
-                      'textDocument/completion',
-                      'unqualified type -> qualified type',
-                      {token: 'AUTO332', completion: 'Types'},
+                      'unqualified type parameter',
+                      {
+                        token: 'AUTO332',
+                        completion: 'Typaram',
+                      },
                     ],
                   },
                 },
@@ -2085,8 +2025,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 27, character: 18},
-                      end: {line: 27, character: 18},
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
                     },
                     newText: 'Typesafe',
                   },
@@ -2096,7 +2042,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'unqualified type: local type identifier',
-                      {token: 'AUTO332', completion: 'Typesafe'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'Typesafe',
+                      },
                     ],
                   },
                 },
@@ -2108,8 +2057,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 27, character: 18},
-                      end: {line: 27, character: 18},
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
                     },
                     newText: 'Typhoon',
                   },
@@ -2119,7 +2074,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'unqualified type: local type identifier',
-                      {token: 'AUTO332', completion: 'Typhoon'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'Typhoon',
+                      },
                     ],
                   },
                 },
@@ -2131,8 +2089,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 27, character: 18},
-                      end: {line: 27, character: 18},
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
                     },
                     newText: 'Typnotism',
                   },
@@ -2142,7 +2106,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'unqualified type: local type identifier',
-                      {token: 'AUTO332', completion: 'Typnotism'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'Typnotism',
+                      },
                     ],
                   },
                 },
@@ -2154,8 +2121,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 27, character: 18},
-                      end: {line: 27, character: 18},
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
                     },
                     newText: 'Tyrant',
                   },
@@ -2165,7 +2138,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'unqualified type: local type identifier',
-                      {token: 'AUTO332', completion: 'Tyrant'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'Tyrant',
+                      },
                     ],
                   },
                 },
@@ -2177,8 +2153,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 27, character: 18},
-                      end: {line: 27, character: 18},
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
                     },
                     newText: 'Tympanic',
                   },
@@ -2188,7 +2170,10 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'unqualified type: local type identifier',
-                      {token: 'AUTO332', completion: 'Tympanic'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'Tympanic',
+                      },
                     ],
                   },
                 },
@@ -2200,8 +2185,14 @@ export default (suite(
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 27, character: 18},
-                      end: {line: 27, character: 18},
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
                     },
                     newText: 'Typeset',
                   },
@@ -2211,30 +2202,138 @@ export default (suite(
                     arguments: [
                       'textDocument/completion',
                       'unqualified type: local type identifier',
-                      {token: 'AUTO332', completion: 'Typeset'},
+                      {
+                        token: 'AUTO332',
+                        completion: 'Typeset',
+                      },
                     ],
                   },
                 },
                 {
-                  label: 'Typaram',
-                  kind: 25,
-                  detail: 'Typaram',
+                  label: 'Types',
+                  kind: 9,
+                  detail: 'module Types',
                   sortText: '00000000000000000000',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
-                      start: {line: 27, character: 18},
-                      end: {line: 27, character: 18},
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
                     },
-                    newText: 'Typaram',
+                    newText: 'Types.',
                   },
                   command: {
                     title: '',
                     command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
-                      'unqualified type parameter',
-                      {token: 'AUTO332', completion: 'Typaram'},
+                      'unqualified type -> qualified type',
+                      {
+                        token: 'AUTO332',
+                        completion: 'Types',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'Typewriter',
+                  kind: 7,
+                  detail: 'class Typewriter',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'Typewriter',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type: class or enum',
+                      {
+                        token: 'AUTO332',
+                        completion: 'Typewriter',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'Typography',
+                  kind: 7,
+                  detail: 'class Typewriter',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'Typography',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type: class or enum',
+                      {
+                        token: 'AUTO332',
+                        completion: 'Typography',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'Typologies',
+                  kind: 9,
+                  detail: 'module Typologies',
+                  sortText: '00000000000000000000',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'Typologies.',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'unqualified type -> qualified type',
+                      {
+                        token: 'AUTO332',
+                        completion: 'Typologies',
+                      },
                     ],
                   },
                 },
@@ -2242,7 +2341,11 @@ export default (suite(
             },
           },
         ],
-        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
       ),
     ]),
     test('textDocument/completion invoked in jsx attribute with value', [
@@ -2828,7 +2931,11 @@ export default (suite(
             },
           },
         ],
-        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
       ),
     ]),
   ],

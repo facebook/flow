@@ -746,11 +746,11 @@ class local_type_identifiers_searcher =
 
     method on_type_annot x = x
 
-    val mutable ids = []
+    val mutable rev_ids = []
 
-    method ids = ids
+    method rev_ids = rev_ids
 
-    method add_id id = ids <- id :: ids
+    method add_id id = rev_ids <- id :: rev_ids
 
     method! type_alias (Flow_ast.Statement.TypeAlias.{ id; _ } as x) =
       this#add_id id;
@@ -793,8 +793,8 @@ class local_type_identifiers_searcher =
 let local_type_identifiers ~typed_ast ~cx ~file_sig =
   let search = new local_type_identifiers_searcher in
   Stdlib.ignore (search#program typed_ast);
-  search#ids
-  |> Base.List.map ~f:(fun ((loc, t), Flow_ast.Identifier.{ name; _ }) -> ((name, loc), t))
+  search#rev_ids
+  |> Base.List.rev_map ~f:(fun ((loc, t), Flow_ast.Identifier.{ name; _ }) -> ((name, loc), t))
   |> Ty_normalizer.from_types
        ~options:ty_normalizer_options
        ~genv:(Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig)
@@ -805,7 +805,7 @@ let autocomplete_unqualified_type
   let open ServerProt.Response.Completion in
   let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
   let exact_by_default = Context.exact_by_default cx in
-  let tparam_results =
+  let items_rev =
     Base.List.fold_left
       ~f:(fun acc { Type.name; _ } ->
         {
@@ -825,10 +825,10 @@ let autocomplete_unqualified_type
       tparams_rev
   in
   let type_identifiers = local_type_identifiers ~typed_ast ~cx ~file_sig in
-  let (tparam_and_tident_results, tparam_and_tident_errors_to_log) =
+  let (items_rev, errors_to_log) =
     type_identifiers
     |> List.fold_left
-         (fun (results, errors_to_log) ((name, aloc), ty_result) ->
+         (fun (items_rev, errors_to_log) ((name, aloc), ty_result) ->
            let documentation =
              loc_of_aloc ~reader aloc
              |> documentation_of_loc ~options ~reader ~cx ~file_sig ~typed_ast
@@ -843,11 +843,11 @@ let autocomplete_unqualified_type
                  (name, ac_loc)
                  elt
              in
-             (result :: results, errors_to_log)
+             (result :: items_rev, errors_to_log)
            | Error err ->
              let error_to_log = Ty_normalizer.error_to_string err in
-             (results, error_to_log :: errors_to_log))
-         (tparam_results, [])
+             (items_rev, error_to_log :: errors_to_log))
+         (items_rev, [])
   in
   let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig in
   let value_identifiers =
@@ -866,14 +866,14 @@ let autocomplete_unqualified_type
       - classes
       - enums
       - modules (followed by a dot) *)
-  let (items, errors_to_log) =
+  let (items_rev, errors_to_log) =
     value_identifiers
     |> List.fold_left
-         (fun (items, errors_to_log) ((name, documentation), ty_res) ->
+         (fun (items_rev, errors_to_log) ((name, documentation), ty_res) ->
            match ty_res with
            | Error err ->
              let error_to_log = Ty_normalizer.error_to_string err in
-             (items, error_to_log :: errors_to_log)
+             (items_rev, error_to_log :: errors_to_log)
            | Ok (Ty.Decl (Ty.ClassDecl _ | Ty.EnumDecl _) as elt) ->
              let result =
                autocomplete_create_result_elt
@@ -883,7 +883,7 @@ let autocomplete_unqualified_type
                  (name, ac_loc)
                  elt
              in
-             (result :: items, errors_to_log)
+             (result :: items_rev, errors_to_log)
            | Ok elt
              when type_exports_of_module_ty
                     ~ac_loc
@@ -900,11 +900,11 @@ let autocomplete_unqualified_type
                  elt
                  ~insert_text:(name ^ ".")
              in
-             (result :: items, errors_to_log)
-           | Ok _ -> (items, errors_to_log))
-         (tparam_and_tident_results, tparam_and_tident_errors_to_log)
+             (result :: items_rev, errors_to_log)
+           | Ok _ -> (items_rev, errors_to_log))
+         (items_rev, errors_to_log)
   in
-  let result =
+  let (items_rev, is_incomplete) =
     if imports then
       let locals =
         let set = set_of_locals ~f:(fun ((name, _aloc), _ty) -> name) type_identifiers in
@@ -915,7 +915,7 @@ let autocomplete_unqualified_type
         let (before, _after) = remove_autocomplete_token token in
         Export_search.search_types ~options:default_autoimport_options before env.ServerEnv.exports
       in
-      let items =
+      let items_rev =
         append_completion_items_of_autoimports
           ~options
           ~reader
@@ -923,12 +923,13 @@ let autocomplete_unqualified_type
           ~ac_loc
           ~locals
           auto_imports
-          items
+          items_rev
       in
-      { ServerProt.Response.Completion.items; is_incomplete }
+      (items_rev, is_incomplete)
     else
-      { ServerProt.Response.Completion.items; is_incomplete = false }
+      (items_rev, false)
   in
+  let result = { ServerProt.Response.Completion.items = Base.List.rev items_rev; is_incomplete } in
   { result; errors_to_log }
 
 let autocomplete_member
