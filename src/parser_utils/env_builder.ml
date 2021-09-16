@@ -509,7 +509,7 @@ module Make
     values: Val.t L.LMap.t;
     (* We also maintain a list of all write locations, for use in populating the env with
        types. *)
-    write_entries: L.t virtual_reason list;
+    write_entries: L.t virtual_reason L.LMap.t;
     curr_id: int;
     (* Maps refinement ids to refinements. This mapping contains _all_ the refinements reachable at
      * any point in the code. The latest_refinement maps keep track of which entries to read. *)
@@ -562,7 +562,7 @@ module Make
       val mutable env_state : env_builder_state =
         {
           values = L.LMap.empty;
-          write_entries = [];
+          write_entries = L.LMap.empty;
           curr_id = 0;
           refinement_heap = IMap.empty;
           latest_refinements = [];
@@ -573,7 +573,7 @@ module Make
 
       method values : Env_api.values = L.LMap.map Val.simplify env_state.values
 
-      method write_entries : L.t virtual_reason list = env_state.write_entries
+      method write_entries : L.t virtual_reason L.LMap.t = env_state.write_entries
 
       method private new_id () =
         let new_id = env_state.curr_id in
@@ -661,7 +661,13 @@ module Make
             let providers =
               Base.Option.value ~default:[] (Provider_api.providers_of_def provider_info loc)
             in
-            env_state <- { env_state with write_entries = providers @ env_state.write_entries };
+            let write_entries =
+              Base.List.fold
+                ~f:(fun acc r -> L.LMap.add (poly_loc_of_reason r) r acc)
+                ~init:env_state.write_entries
+                providers
+            in
+            env_state <- { env_state with write_entries };
             {
               val_ref = ref (Val.uninitialized ());
               havoc = Havoc.{ unresolved = Val.mk_unresolved (); locs = providers };
@@ -775,7 +781,7 @@ module Make
           match SMap.find_opt x env_state.env with
           | Some { val_ref; _ } ->
             val_ref := Val.one reason;
-            let write_entries = reason :: env_state.write_entries in
+            let write_entries = L.LMap.add loc reason env_state.write_entries in
             env_state <- { env_state with write_entries }
           | _ -> ()
         end;

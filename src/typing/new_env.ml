@@ -137,12 +137,11 @@ let write cx ~use_op loc t =
 
 let initialize_all cx =
   let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
-  Base.List.fold
-    ~f:(fun env reason ->
-      let loc = aloc_of_reason reason in
+  ALocMap.fold
+    (fun loc reason env ->
       let t = Inferred (Tvar.mk cx reason) in
       (* Treat everything as inferred for now for the purposes of annotated vs inferred *)
       Loc_env.initialize env loc t)
     var_info.Env_api.env_entries
-    ~init:env
+    env
   |> Context.set_environment cx
