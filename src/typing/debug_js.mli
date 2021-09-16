@@ -42,6 +42,8 @@ val dump_error_message : Context.t -> Error_message.t -> string
 val dump_flow : ?depth:int -> Context.t -> Type.t * Type.use_t -> string
 
 module Verbose : sig
+  val verbose_in_file : Context.t -> Verbose.t -> bool
+
   val print_if_verbose_lazy :
     Context.t -> ?trace:Type.trace -> ?delim:string -> ?indent:int -> string list Lazy.t -> unit
 

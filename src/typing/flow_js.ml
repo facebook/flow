@@ -8889,7 +8889,8 @@ struct
   and __unify cx ~use_op ~unify_any t1 t2 trace =
     begin
       match Context.verbose cx with
-      | Some { Verbose.indent; depth; enabled_during_flowlib = _ } ->
+      | Some ({ Verbose.indent; depth; enabled_during_flowlib = _; focused_files = _ } as verbose)
+        when Debug_js.Verbose.verbose_in_file cx verbose ->
         let indent = String.make ((Trace.trace_depth trace - 1) * indent) ' ' in
         let pid = Context.pid_prefix cx in
         prerr_endlinef
@@ -8900,7 +8901,7 @@ struct
           indent
           pid
           (Debug_js.dump_t ~depth cx t2)
-      | None -> ()
+      | _ -> ()
     end;
 
     (* If the type is the same type or we have already seen this type pair in our

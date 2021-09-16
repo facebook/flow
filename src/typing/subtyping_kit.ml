@@ -1322,11 +1322,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         DefT (ureason, _, ObjT ({ props_tmap = uflds; _ } as u_obj)) ) ->
       let u_deft = u in
       Type_inference_hooks_js.dispatch_obj_to_obj_hook cx l u_deft;
-      let print_fast_path =
-        match Context.verbose cx with
-        | Some _ -> true
-        | _ -> false
-      in
+      let print_fast_path = Context.is_verbose cx in
       if lflds = uflds then (
         if print_fast_path then prerr_endline "ObjT ~> ObjT fast path: yes"
       ) else (

@@ -1765,32 +1765,39 @@ let dump_error_message =
         (dump_reason cx reason_prop)
 
 module Verbose = struct
+  let verbose_in_file cx verbose =
+    match verbose with
+    | { Verbose.focused_files = Some filenames; _ } ->
+      Base.List.mem filenames (Context.file cx |> File_key.to_string) ~equal:String.equal
+    | { Verbose.focused_files = None; _ } -> true
+
   let print_if_verbose_lazy
       cx ?(trace = Trace.dummy_trace) ?(delim = "") ?(indent = 0) (lines : string list Lazy.t) =
     match Context.verbose cx with
-    | Some { Verbose.indent = num_spaces; _ } ->
+    | Some ({ Verbose.indent = num_spaces; _ } as verbose) when verbose_in_file cx verbose ->
       let indent = max (indent + Trace.trace_depth trace - 1) 0 in
       let prefix = String.make (indent * num_spaces) ' ' in
       let pid = Context.pid_prefix cx in
       let add_prefix line = spf "\n%s%s%s" prefix pid line in
       let lines = Base.List.map ~f:add_prefix (Lazy.force lines) in
       prerr_endline (String.concat delim lines)
-    | None -> ()
+    | _ -> ()
 
   let print_if_verbose
       cx ?(trace = Trace.dummy_trace) ?(delim = "") ?(indent = 0) (lines : string list) =
     match Context.verbose cx with
-    | Some _ -> print_if_verbose_lazy cx ~trace ~delim ~indent (lazy lines)
-    | None -> ()
+    | Some verbose when verbose_in_file cx verbose ->
+      print_if_verbose_lazy cx ~trace ~delim ~indent (lazy lines)
+    | _ -> ()
 
   let print_types_if_verbose cx trace ?(note : string option) ((l : Type.t), (u : Type.use_t)) =
     match Context.verbose cx with
-    | Some { Verbose.depth; _ } ->
+    | Some ({ Verbose.depth; _ } as verbose) when verbose_in_file cx verbose ->
       let delim =
         match note with
         | Some x -> spf " ~> %s" x
         | None -> " ~>"
       in
       print_if_verbose cx ~trace ~delim [dump_t ~depth cx l; dump_use_t ~depth cx u]
-    | None -> ()
+    | _ -> ()
 end

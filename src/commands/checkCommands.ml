@@ -198,6 +198,7 @@ module FocusCheckCommand = struct
           |> offset_style_flag
           |> shm_flags
           |> ignore_version_flag
+          |> verbose_focus_flag
           |> from_flag
           |> root_flag
           |> input_file_flag "check"
@@ -220,6 +221,7 @@ module FocusCheckCommand = struct
       offset_style
       shm_flags
       ignore_version
+      verbose_focus
       root
       input_file
       filenames
@@ -242,7 +244,7 @@ module FocusCheckCommand = struct
         ~enforce_warnings:(not ignore_version)
         (Server_files_js.config_file flowconfig_name root)
     in
-    let options =
+    let ({ Options.opt_verbose; _ } as options) =
       let lazy_mode = Some FlowConfig.Non_lazy in
       make_options
         ~flowconfig_name
@@ -252,6 +254,25 @@ module FocusCheckCommand = struct
         ~root
         ~options_flags
         ~saved_state_options_flags
+    in
+    let options =
+      if verbose_focus then
+        let open Verbose in
+        let opt_verbose =
+          Base.Option.value_map
+            opt_verbose
+            ~f:(fun opt_verbose -> { opt_verbose with focused_files = Some filenames })
+            ~default:
+              {
+                Verbose.indent = 0;
+                depth = 1;
+                enabled_during_flowlib = false;
+                focused_files = Some filenames;
+              }
+        in
+        { options with Options.opt_verbose = Some opt_verbose }
+      else
+        options
     in
     let init_id = Random_id.short_string () in
     let offset_kind = CommandUtils.offset_kind_of_offset_style offset_style in

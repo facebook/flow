@@ -468,7 +468,13 @@ let trust_graph cx = trust_graph_sig cx.ccx.sig_cx
 
 let is_checked cx = cx.metadata.checked
 
-let is_verbose cx = cx.metadata.verbose <> None
+let is_verbose cx =
+  match cx.metadata.verbose with
+  | None -> false
+  | Some { Verbose.focused_files = None; _ } -> true
+  | Some { Verbose.focused_files = Some files; _ } ->
+    let file = file cx in
+    Base.List.mem files (File_key.to_string file) ~equal:String.equal
 
 let is_weak cx = cx.metadata.weak
 

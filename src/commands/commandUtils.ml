@@ -239,6 +239,14 @@ let input_file_flag verb prev =
            ^ ", one per line. If -, list of files is "
            ^ "read from the standard input."))
 
+let verbose_focus_flag prev =
+  CommandSpec.ArgSpec.(
+    prev
+    |> flag
+         "--verbose-focus"
+         no_arg
+         ~doc:"Print verbose output about target file only (implies --verbose)")
+
 type shared_mem_params = {
   shm_heap_size: int option;
   shm_hash_table_pow: int option;
@@ -351,6 +359,7 @@ let verbose_flags =
               | Some n when n >= 0 -> n
               | _ -> 1);
             enabled_during_flowlib;
+            focused_files = None;
           }
       else
         None
