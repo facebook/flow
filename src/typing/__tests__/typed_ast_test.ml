@@ -7,6 +7,9 @@
 
 open OUnit2
 module File_sig = File_sig.With_Loc
+module Env = Env.Env
+module Statement = Statement.Make (Env)
+module Abnormal = Statement.Abnormal
 
 (* pretty much copied from Flow_dot_js *)
 let metadata =
@@ -154,7 +157,7 @@ let before_and_after_stmts file_name =
     let t_stmts =
       try
         Statement.toplevel_decls cx stmts;
-        Toplevels.toplevels Statement.statement cx stmts
+        Statement.Toplevels.toplevels Statement.statement cx stmts
       with
       | Abnormal.Exn (Abnormal.Stmts t_stmts, _) -> t_stmts
       | Abnormal.Exn (Abnormal.Stmt t_stmt, _) -> [t_stmt]

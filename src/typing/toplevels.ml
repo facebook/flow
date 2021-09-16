@@ -22,7 +22,11 @@ module type Ordering = sig
   val compare : t -> (loc, loc) Ast.Statement.t -> (loc, loc) Ast.Statement.t -> int
 end
 
-module Toplevels (Order : Ordering with type loc = ALoc.t) = struct
+module Toplevels
+    (Order : Ordering with type loc = ALoc.t)
+    (Env : Env_sig.S)
+    (Abnormal : module type of Abnormal.Make (Env)) =
+    struct
   let toplevels statement cx stmts =
     let ordering = Order.make cx stmts in
     (* Enumerate and sort statements using the order specified *)
@@ -168,4 +172,3 @@ end
 
 module LexicalToplevels = Toplevels (LexicalOrdering)
 module DependencyToplevels = Toplevels (DependencyOrdering)
-include DependencyToplevels

@@ -16,7 +16,10 @@ include Func_sig_intf
  * an annotation with some more work *)
 let annotated_todo t = Inferred t
 
-module Make (F : Func_params.S) = struct
+module Make
+    (Env : Env_sig.S)
+    (Abnormal : module type of Abnormal.Make (Env)) (F : Func_params.S) =
+    struct
   type func_params = F.t
 
   type func_params_tast = (ALoc.t * Type.t) F.ast
