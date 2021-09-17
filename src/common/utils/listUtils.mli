@@ -25,12 +25,6 @@ val split3 : ('a * 'b * 'c) list -> 'a list * 'b list * 'c list
 
 val zipi : 'a list -> 'b list -> (int * 'a * 'b) list
 
-val range_with : (int -> 'a) -> int -> int -> 'a list
-
-val range : int -> int -> int list
-
-val repeat : int -> 'a -> 'a list
-
 val concat_fold : ('a -> 'b -> 'a * 'c list) -> 'a -> 'b list -> 'a * 'c list
 
 val last_opt : 'a list -> 'a option

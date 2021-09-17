@@ -868,12 +868,9 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
               match convert_type_params () with
               | ([DefT (_, _, SingletonNumT (f, _))], targs) ->
                 let n = Base.Int.of_float f in
-                let key_strs =
-                  ListUtils.range 0 n
-                  |> Base.List.map ~f:(fun i -> Some ("x_" ^ Base.Int.to_string i))
-                in
+                let key_strs = Base.List.init n ~f:(fun i -> Some ("x_" ^ Base.Int.to_string i)) in
                 let emp = Key_map.empty in
-                let tins = Unsoundness.at FunctionPrototype loc |> ListUtils.repeat n in
+                let tins = Base.List.init n ~f:(fun _ -> Unsoundness.at FunctionPrototype loc) in
                 let tout =
                   OpenPredT
                     {

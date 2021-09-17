@@ -194,7 +194,7 @@ let standard_list_diff (old_list : 'a list) (new_list : 'a list) : 'a diff_resul
     let deletes =
       Base.List.map ~f:fst trace
       |> ISet.of_list
-      |> ISet.diff (ListUtils.range 0 n |> ISet.of_list)
+      |> ISet.diff (Base.List.range 0 n |> ISet.of_list)
       |> ISet.elements
       |> Base.List.map ~f:(fun pos -> (pos, Delete old_arr.(pos)))
     in

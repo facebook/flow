@@ -924,11 +924,9 @@ module Make (ConsGen : CONS_GEN) : S = struct
       let fun_reason = Reason.(mk_annot_reason (RCustom "abstract predicate function") loc) in
       let static_reason = Reason.(mk_reason (RCustom "abstract predicate static") loc) in
       let out_reason = Reason.(mk_reason (RCustom "open predicate") loc) in
-      let key_strs =
-        ListUtils.range 0 n |> List.map (fun i -> Some ("x_" ^ Base.Int.to_string i))
-      in
+      let key_strs = Base.List.init n ~f:(fun i -> Some ("x_" ^ Base.Int.to_string i)) in
       let emp = Key_map.empty in
-      let tins = Unsoundness.at FunctionPrototype loc |> ListUtils.repeat n in
+      let tins = Base.List.init n ~f:(fun _ -> Unsoundness.at FunctionPrototype loc) in
       let tout =
         OpenPredT { reason = out_reason; base_t = MixedT.at loc trust; m_pos = emp; m_neg = emp }
       in

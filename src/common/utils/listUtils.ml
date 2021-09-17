@@ -129,22 +129,6 @@ let rec split3 = function
 
 let zipi xs ys = Base.List.zip_exn xs ys |> Base.List.mapi ~f:(fun i (x, y) -> (i, x, y))
 
-let range_with f a b =
-  if a > b then
-    []
-  else
-    let rec loop j acc =
-      if a <= j then
-        loop (j - 1) (f j :: acc)
-      else
-        acc
-    in
-    loop (b - 1) []
-
-let range = range_with (fun x -> x)
-
-let repeat n a = range_with (fun _ -> a) 0 n
-
 let concat_fold f acc items =
   let (acc, lists) =
     Base.List.fold_left
