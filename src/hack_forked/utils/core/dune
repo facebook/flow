@@ -5,7 +5,7 @@
  (wrapped false)
  (foreign_stubs
   (language c)
-  (names get_build_id get_build_id_gen)
+  (names get_build_id get_build_id_gen fast_compare)
   (flags
    (:standard
     (:include config/build-timestamp-opt))))
