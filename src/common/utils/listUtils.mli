@@ -61,8 +61,6 @@ val concat_fold : ('a -> 'b -> 'a * 'c list) -> 'a -> 'b list -> 'a * 'c list
 
 val last_opt : 'a list -> 'a option
 
-val is_empty : 'a list -> bool
-
 val dedup : 'a list -> 'a list
 
 val to_string : string -> ('a -> string) -> 'a list -> string

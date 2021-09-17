@@ -284,10 +284,6 @@ let last_opt l =
   in
   Base.List.nth l 0 |> Base.Option.map ~f:(last l)
 
-let is_empty = function
-  | [] -> true
-  | _ -> false
-
 (* Stringify a list given a separator and a printer for the element type *)
 let to_string separator printer list = String.concat separator @@ Base.List.map ~f:printer list
 

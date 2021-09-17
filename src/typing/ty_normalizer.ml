@@ -533,7 +533,7 @@ end = struct
        * remove it if it matches the tparam default. *)
       | (targ :: targ_rst, tparam :: tparam_rst) ->
         let targ_rst = remove_if_able targ_rst tparam_rst in
-        if ListUtils.is_empty targ_rst && matches_default targ tparam then
+        if Base.List.is_empty targ_rst && matches_default targ tparam then
           []
         else
           targ :: targ_rst
