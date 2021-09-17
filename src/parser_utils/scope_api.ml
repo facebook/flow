@@ -65,28 +65,6 @@ module Make (L : Loc_sig.S) = struct
   }
   [@@deriving show]
 
-  let debug_info =
-    let string_of_scope scope =
-      let { Scope.loc; parent; defs; locals; _ } = scope in
-      Utils_js.spf
-        "{\n\tLOC: %s\n\tPARENT: %s\n\tDEFS: %s\n\tLOCALS: %s\n}"
-        (L.debug_to_string loc)
-        (match parent with
-        | Some i -> string_of_int i
-        | None -> "")
-        (ListUtils.assoc_to_string
-           ", "
-           (fun s -> s)
-           "="
-           (fun def -> L.debug_to_string @@ Nel.hd def.Def.locs)
-        @@ SMap.bindings defs)
-        (ListUtils.assoc_to_string ", " L.debug_to_string "=" (fun def -> def.Def.actual_name)
-        @@ L.LMap.bindings locals)
-    in
-    fun info ->
-      let { scopes; _ } = info in
-      ListUtils.assoc_to_string "\n" string_of_int ": " string_of_scope @@ IMap.bindings scopes
-
   let all_uses { scopes; _ } =
     IMap.fold
       (fun _ scope acc ->

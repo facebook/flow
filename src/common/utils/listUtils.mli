@@ -32,6 +32,3 @@ val last_opt : 'a list -> 'a option
 val dedup : 'a list -> 'a list
 
 val to_string : string -> ('a -> string) -> 'a list -> string
-
-val assoc_to_string :
-  string -> ('a -> string) -> string -> ('b -> string) -> ('a * 'b) list -> string

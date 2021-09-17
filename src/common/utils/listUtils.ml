@@ -151,14 +151,6 @@ let last_opt l =
 (* Stringify a list given a separator and a printer for the element type *)
 let to_string separator printer list = String.concat separator @@ Base.List.map ~f:printer list
 
-(* Stringify an association list given a separator, a printer for the key type, a key/value
-   separator, and a printer for the value type *)
-let assoc_to_string separator key_printer key_value_separator value_printer list =
-  to_string
-    separator
-    (fun (k, v) -> Printf.sprintf "%s%s%s" (key_printer k) key_value_separator (value_printer v))
-    list
-
 (* Dedups a list in O(n) time and space. Unlike Base.List.dedup, this
    preserves order. Core's implementation is also O(n log n) *)
 let dedup l =

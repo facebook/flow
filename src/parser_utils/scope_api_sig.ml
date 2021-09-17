@@ -50,8 +50,6 @@ module type S = sig
 
   exception Missing_def of info * use
 
-  val debug_info : info -> string
-
   val toplevel_scopes : scope list
 
   val scope : info -> scope -> Scope.t
