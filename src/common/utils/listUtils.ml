@@ -245,11 +245,6 @@ let range = range_with (fun x -> x)
 
 let repeat n a = range_with (fun _ -> a) 0 n
 
-let rec cat_maybes = function
-  | [] -> []
-  | Some y :: ys -> y :: cat_maybes ys
-  | None :: ys -> cat_maybes ys
-
 let concat_fold f acc items =
   let (acc, lists) =
     Base.List.fold_left

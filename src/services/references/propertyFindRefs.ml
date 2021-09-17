@@ -110,7 +110,7 @@ let process_prop_refs ~reader cx potential_refs file_key prop_def_info name =
            "Encountered while finding refs in `%s`: %s"
            (File_key.to_string file_key)
            err)
-  >>| fun refs -> refs |> ListUtils.cat_maybes |> add_ref_kind FindRefsTypes.PropertyAccess
+  >>| fun refs -> refs |> Base.List.filter_opt |> add_ref_kind FindRefsTypes.PropertyAccess
 
 let property_find_refs_in_file ~reader options ast_info file_key def_info name =
   let potential_refs : Type.t ALocMap.t ref = ref ALocMap.empty in
@@ -141,7 +141,7 @@ let property_find_refs_in_file ~reader options ast_info file_key def_info name =
         | true -> LocMap.find_opt obj_loc (Lazy.force prop_loc_map)
       in
       !potential_matching_literals |> Base.List.map ~f:get_prop_loc_if_relevant |> Result.all
-      >>| fun refs -> refs |> ListUtils.cat_maybes |> add_ref_kind FindRefsTypes.PropertyDefinition
+      >>| fun refs -> refs |> Base.List.filter_opt |> add_ref_kind FindRefsTypes.PropertyDefinition
     in
     literal_prop_refs_result >>= fun literal_prop_refs_result ->
     process_prop_refs ~reader cx !potential_refs file_key def_info name

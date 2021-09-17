@@ -176,7 +176,7 @@ end = struct
 
   let terr ~kind ?msg t =
     let t_str = Base.Option.map t ~f:(fun t -> spf "Raised on type: %s" (Type.string_of_ctor t)) in
-    let msg = ListUtils.cat_maybes [msg; t_str] |> String.concat ", " in
+    let msg = Base.List.filter_opt [msg; t_str] |> String.concat ", " in
     error (kind, msg)
 
   (* Update state *)

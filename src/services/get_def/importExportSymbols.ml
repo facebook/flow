@@ -83,4 +83,4 @@ let find_related_symbol file_sig loc =
   | None -> find_related_symbol_from_requires loc file_sig.module_sig.requires
 
 let find_related_symbols file_sig starting_locs =
-  Base.List.map ~f:(find_related_symbol file_sig) starting_locs |> ListUtils.cat_maybes
+  Base.List.filter_map ~f:(find_related_symbol file_sig) starting_locs
