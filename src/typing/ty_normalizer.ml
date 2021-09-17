@@ -2504,13 +2504,13 @@ let from_schemes ~options ~genv schemes =
   print_normalizer_banner options;
   let imported_names = run_imports ~options ~genv in
   let (_, result) =
-    ListUtils.fold_map
-      (fun state (a, scheme) ->
+    Base.List.fold_map
+      ~f:(fun state (a, scheme) ->
         let { Type.TypeScheme.tparams_rev; type_ = t } = scheme in
         match run_type ~options ~genv ~imported_names ~tparams_rev state t with
         | (Ok t, state) -> (state, (a, Ok t))
         | (Error s, state) -> (state, (a, Error s)))
-      State.empty
+      ~init:State.empty
       schemes
   in
   result
@@ -2519,12 +2519,12 @@ let from_types ~options ~genv ts =
   print_normalizer_banner options;
   let imported_names = run_imports ~options ~genv in
   let (_, result) =
-    ListUtils.fold_map
-      (fun state (a, t) ->
+    Base.List.fold_map
+      ~f:(fun state (a, t) ->
         match run_type ~options ~genv ~imported_names ~tparams_rev:[] state t with
         | (Ok t, state) -> (state, (a, Ok t))
         | (Error s, state) -> (state, (a, Error s)))
-      State.empty
+      ~init:State.empty
       ts
   in
   result

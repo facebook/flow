@@ -250,21 +250,6 @@ let rec cat_maybes = function
   | Some y :: ys -> y :: cat_maybes ys
   | None :: ys -> cat_maybes ys
 
-(** fold over the elements of a list while keeping the results of
-    each iteration and returning it in the end along with the
-    accumulator
- *)
-let fold_map f acc xs =
-  let (acc', ys) =
-    Base.List.fold_left
-      ~f:(fun (a, ys) x ->
-        let (a', y) = f a x in
-        (a', y :: ys))
-      ~init:(acc, [])
-      xs
-  in
-  (acc', Base.List.rev ys)
-
 let concat_fold f acc items =
   let (acc, lists) =
     Base.List.fold_left

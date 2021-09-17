@@ -55,8 +55,6 @@ val repeat : int -> 'a -> 'a list
 
 val cat_maybes : 'a option list -> 'a list
 
-val fold_map : ('a -> 'b -> 'a * 'c) -> 'a -> 'b list -> 'a * 'c list
-
 val concat_fold : ('a -> 'b -> 'a * 'c list) -> 'a -> 'b list -> 'a * 'c list
 
 val last_opt : 'a list -> 'a option
