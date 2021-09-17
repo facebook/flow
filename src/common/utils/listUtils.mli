@@ -9,13 +9,7 @@ val fold_left_opt : ('a -> 'b -> 'a option) -> 'a -> 'b list -> 'a option
 
 val fold_left_until : ('a -> 'b -> bool * 'a) -> 'a -> 'b list -> 'a
 
-val fold_left_while : ('a -> 'b -> bool) -> ('a -> 'b -> 'a) -> 'a -> 'b list -> 'a
-
-val fold_left_for : int -> ('a -> 'b -> 'a) -> 'a -> 'b list -> 'a
-
 val first_upto_n : int -> (int -> 'a option) -> 'a list -> 'a list
-
-val last_n : int -> 'a list -> 'a list
 
 val copy_n : int -> 'a -> 'a list
 

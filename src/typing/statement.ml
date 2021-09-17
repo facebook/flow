@@ -1247,7 +1247,11 @@ module Make (Env : Env_sig.S) = struct
           (* switch_state tracks case effects and is used to create outgoing env *)
           let switch_state = ref None in
           let update_switch_state (case_env, case_writes, _, loc) =
-            let case_env = ListUtils.last_n incoming_depth case_env in
+            let case_env =
+              (* keep the last `incoming_depth` items *)
+              let to_drop = Base.List.length case_env - incoming_depth in
+              Base.List.drop case_env to_drop
+            in
             let state =
               match !switch_state with
               | None -> (case_env, Changeset.empty, case_writes)
