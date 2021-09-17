@@ -99,9 +99,6 @@ let first_upto_n n f lst =
   in
   Base.List.rev r
 
-(* truncate a list to first 0 < n <= len items *)
-let first_n n lst = fold_left_for n (Base.Fn.flip Base.List.cons) [] lst |> Base.List.rev
-
 (* truncate a list to last 0 < n <= len items *)
 let last_n n lst = Base.List.rev lst |> fold_left_for n (Base.Fn.flip Base.List.cons) []
 

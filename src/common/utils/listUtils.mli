@@ -17,8 +17,6 @@ val first_some_map : ('a -> 'b option) -> 'a list -> 'b option
 
 val first_upto_n : int -> (int -> 'a option) -> 'a list -> 'a list
 
-val first_n : int -> 'a list -> 'a list
-
 val last_n : int -> 'a list -> 'a list
 
 val bucket_n : int -> 'a list -> 'a list list
