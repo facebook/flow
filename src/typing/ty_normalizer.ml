@@ -801,7 +801,7 @@ end = struct
       | InternalT i -> internal_t t i
       | MatchingPropT _ -> return (mk_empty Ty.EmptyMatchingPropT)
       | DefT (_, _, MixedT _) -> return Ty.Top
-      | AnyT (_, kind) -> return (Ty.Any (any_t kind))
+      | AnyT (reason, kind) -> return (Ty.Any (any_t reason kind))
       | DefT (_, _, VoidT) -> return Ty.Void
       | DefT (_, _, NumT (Literal (_, (_, x)))) when Env.preserve_inferred_literal_types env ->
         return (Ty.Num (Some x))
@@ -945,8 +945,11 @@ end = struct
       let%map use_kind = uses_t ~env uses in
       Ty.Bot (Ty.NoLowerWithUpper use_kind)
 
-    and any_t = function
-      | T.AnnotatedAny -> Ty.Annotated
+    and any_t reason kind =
+      match kind with
+      | T.AnnotatedAny ->
+        let aloc = Reason.aloc_of_reason reason in
+        Ty.Annotated aloc
       | T.AnyError kind -> Ty.AnyError (any_error_kind kind)
       | T.Unsound k -> Ty.Unsound (unsoundness_any_t k)
       | T.Untyped -> Ty.Untyped

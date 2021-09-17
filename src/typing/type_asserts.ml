@@ -32,7 +32,7 @@ let check_type_visitor wrap =
       | Fun _ -> wrap Reason.RFunctionType
       | Generic (_, _, Some _) -> wrap (Reason.RCustom "class with generics")
       | Mu _ -> wrap (Reason.RCustom "recursive type")
-      | Any Annotated -> Reason.RAnyExplicit |> wrap
+      | Any (Annotated _) -> Reason.RAnyExplicit |> wrap
       | Any _ -> Reason.RAnyImplicit |> wrap
       | Bound (_, name) -> wrap (Reason.RCustom ("bound type var " ^ name))
       | Top -> wrap Reason.RMixed

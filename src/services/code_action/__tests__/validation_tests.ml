@@ -15,7 +15,7 @@ let tests =
   >::: [
          (* Valid types *)
          ( "Any_annotated" >:: fun ctxt ->
-           let t = Any Annotated in
+           let t = Any (Annotated ALoc.none) in
            let (_, errs) = validate_type ~size_limit:1000 ~loc_of_aloc:ALoc.to_loc_exn t in
            assert_equal ~ctxt ~printer:(fun _ -> "unit") (List.length errs) 0 );
          ( "Any_bound_function_this" >:: fun ctxt ->

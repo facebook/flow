@@ -97,13 +97,32 @@ function default_obj_err({x: y=1}) {
   return 1;
 }
 
+>>> react.js (#changes: 1)
+// @flow
+
+import * as React from 'react';
+
+function Component (props: {| label: string |} | {| label: string |}) {
+  return <div>{props.label}</div>;
+}
+
+function Parent() {
+  const a = Component({label: 'a'});
+  return (
+    <>
+      {a}
+      <Component label="b" />
+    </>
+  )
+}
+
 >>> Launching report...
 
 Stats:
-  Files changed:                            3
-  Number of annotations added:             19
-  Total size of annotations:               30
-  Number of LTI errors:                    21
+  Files changed:                            4
+  Number of annotations added:             20
+  Total size of annotations:               35
+  Number of LTI errors:                    22
 
 Errors:
   Missing annot./normalizer error:          0

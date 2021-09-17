@@ -142,7 +142,7 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
   and any ~depth kind =
     let kind =
       match kind with
-      | Annotated -> "explicit"
+      | Annotated _ -> "explicit"
       | _ -> "implicit"
     in
     fuse

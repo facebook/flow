@@ -39,15 +39,19 @@ let tests =
            let t_exp = Union (NumLit "1", NumLit "2", [NumLit "5"; NumLit "11"]) in
            assert_equal ~ctxt ~printer:Ty.show t_exp (Insert_type.simplify t_in) );
          ( "sort_types_top_any" >:: fun ctxt ->
-           let t_in = Union (Top, Any Annotated, []) in
+           let t_in = Union (Top, Any (Annotated ALoc.none), []) in
            let t_exp = Top in
            assert_equal ~ctxt ~printer:Ty.show t_exp (Insert_type.simplify t_in) );
          ( "sort_types_bot_any" >:: fun ctxt ->
-           let t_in = Union (Bot EmptyType, Any Annotated, []) in
-           let t_exp = Any Annotated in
+           let t_in = Union (Bot EmptyType, Any (Annotated ALoc.none), []) in
+           let t_exp = Any (Annotated ALoc.none) in
            assert_equal ~ctxt ~printer:Ty.show t_exp (Insert_type.simplify t_in) );
          ( "sort_types_any_first" >:: fun ctxt ->
-           let t_in = Union (Void, Any Annotated, [Null; Str None; NumLit "5"; Bool None]) in
-           let t_exp = Union (Any Annotated, Void, [Null; Bool None; NumLit "5"; Str None]) in
+           let t_in =
+             Union (Void, Any (Annotated ALoc.none), [Null; Str None; NumLit "5"; Bool None])
+           in
+           let t_exp =
+             Union (Any (Annotated ALoc.none), Void, [Null; Bool None; NumLit "5"; Str None])
+           in
            assert_equal ~ctxt ~printer:Ty.show t_exp (Insert_type.simplify t_in) );
        ]

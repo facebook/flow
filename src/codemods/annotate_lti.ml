@@ -10,6 +10,34 @@ module LMap = Loc_collections.LocMap
 module LSet = Loc_collections.LocSet
 open Insert_type_utils
 
+module Normalize_union = struct
+  (* Wrap Ty.mk_union to filter out union branches that have an `any` propogated
+   * from React *)
+  let mk_union ?(flattened = false) (t0, ts) =
+    let filtered_ts =
+      List.filter
+        (function
+          | Ty.Any (Ty.Annotated aloc) when is_react_loc aloc -> false
+          | _ -> true)
+        (t0 :: ts)
+    in
+    match filtered_ts with
+    | [] -> t0
+    | t1 :: ts -> Ty.mk_union ~flattened (t1, ts)
+
+  let mapper =
+    object
+      inherit [_] Ty.map_ty as super
+
+      method! on_t env t =
+        match t with
+        | Ty.Union (t0, t1, ts) -> super#on_t env (mk_union (t0, t1 :: ts))
+        | _ -> super#on_t env t
+    end
+
+  let normalize t = mapper#on_t () t
+end
+
 module LTI_Annotations = struct
   let loc_of_lti_error cctx error =
     match Flow_error.msg_of_error error with
@@ -74,6 +102,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       ErrorStats.{ num_total_errors = LMap.cardinal loc_error_map }
 
     method! function_param_pattern ((ploc, patt) : ('loc, 'loc) Ast.Pattern.t) =
+      let ( >>| ) = Base.Result.( >>| ) in
       let get_annot ty annot =
         let f loc _annot ty' = this#annotate_node loc ty' (fun a -> Ast.Type.Available a) in
         let error _ = Ast.Type.Available (Loc.none, flowfixme_ast) in
@@ -81,7 +110,10 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       in
 
       if LMap.mem ploc loc_error_map then (
-        let ty_result = Codemod_annotator.get_ty cctx ~preserve_literals ~max_type_size ploc in
+        let ty_result =
+          Codemod_annotator.get_ty cctx ~preserve_literals ~max_type_size ploc
+          >>| Normalize_union.normalize
+        in
         match patt with
         | Ast.Pattern.Object Ast.Pattern.Object.{ annot; properties; comments } ->
           let annot' = get_annot ty_result annot in

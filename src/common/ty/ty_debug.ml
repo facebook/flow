@@ -62,7 +62,7 @@ let rec dump_opt (f : 'a -> string) (o : 'a option) =
   | None -> ""
 
 and dump_any_kind = function
-  | Annotated -> "Annotated"
+  | Annotated _ -> "Annotated"
   | AnyError kind -> spf "AnyError (%s)" (dump_any_error_kind kind)
   | Unsound kind -> spf "Unsound (%s)" (dump_any_unsoundness_kind kind)
   | Untyped -> "Untyped"
@@ -301,7 +301,7 @@ let string_of_ctor_t = function
   | TVar (RVar _, _) -> "RecVar"
   | Bound _ -> "Bound"
   | Generic _ -> "Generic"
-  | Any Annotated -> "Explicit Any"
+  | Any (Annotated _) -> "Explicit Any"
   | Any _ -> "Implicit Any"
   | Top -> "Top"
   | Bot _ -> "Bot"
@@ -370,7 +370,7 @@ let json_of_elt ~strip_root =
       | TVar (v, ts) -> json_of_tvar v @ json_of_targs ts
       | Bound (_, name) -> [("bound", JSON_String name)]
       | Generic g -> json_of_generic g
-      | Any Annotated -> [("any", JSON_String "explicit")]
+      | Any (Annotated _) -> [("any", JSON_String "explicit")]
       | Any _ -> [("any", JSON_String "implicit")]
       | Top
       | Bot _

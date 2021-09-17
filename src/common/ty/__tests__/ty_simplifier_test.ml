@@ -279,7 +279,9 @@ module AnySimplification = struct
           Union
             ( Any (Unsound BoundFunctionThis),
               Inter
-                (Any Annotated, Union (Any (Unsound BoundFunctionThis), Ty.Any Annotated, []), []),
+                ( Any (Annotated ALoc.none),
+                  Union (Any (Unsound BoundFunctionThis), Ty.Any (Annotated ALoc.none), []),
+                  [] ),
               [] )
         in
         let t_out = Ty_utils.simplify_type ~merge_kinds:false t_in in
@@ -300,7 +302,9 @@ module AnySimplification = struct
           Union
             ( Any (Unsound BoundFunctionThis),
               Inter
-                (Any Annotated, Union (Any (Unsound BoundFunctionThis), Ty.Any Annotated, []), []),
+                ( Any (Annotated ALoc.none),
+                  Union (Any (Unsound BoundFunctionThis), Ty.Any (Annotated ALoc.none), []),
+                  [] ),
               [] )
         in
         let t_out = Ty_utils.simplify_type ~merge_kinds:true t_in in
@@ -314,7 +318,7 @@ module Sorting = struct
 
   let simplify_sort = simplify_type ~merge_kinds:false ~sort:true
 
-  let t0 = Union (Any Annotated, Num None, [NumLit "42"])
+  let t0 = Union (Any (Annotated ALoc.none), Num None, [NumLit "42"])
 
   let t1 = Union (NumLit "1", NumLit "2", [NumLit "42"])
 
@@ -328,7 +332,7 @@ module Sorting = struct
 
   let t6 = Union (t3, t2, [t4; t0; t1; t5])
 
-  let t6_sorted = Union (Any Annotated, NumLit "1", [NumLit "2"; NumLit "42"; Num None])
+  let t6_sorted = Union (Any (Annotated ALoc.none), NumLit "1", [NumLit "2"; NumLit "42"; Num None])
 
   let tests =
     [
@@ -364,13 +368,13 @@ module Sorting = struct
           Inter
             ( Union
                 ( Void,
-                  Inter (Void, Any Annotated, [NumLit "1"]),
-                  [Inter (NumLit "1", Any Annotated, [Void])] ),
-              Union (Inter (Any Annotated, Void, [NumLit "1"]), Void, []),
+                  Inter (Void, Any (Annotated ALoc.none), [NumLit "1"]),
+                  [Inter (NumLit "1", Any (Annotated ALoc.none), [Void])] ),
+              Union (Inter (Any (Annotated ALoc.none), Void, [NumLit "1"]), Void, []),
               [] )
         in
         let t_out = simplify_sort t_in in
-        let t_exp = Union (Void, Inter (Any Annotated, Void, [NumLit "1"]), []) in
+        let t_exp = Union (Void, Inter (Any (Annotated ALoc.none), Void, [NumLit "1"]), []) in
         assert_equal ~ctxt ~printer:Ty.show t_exp t_out );
     ]
 end

@@ -118,7 +118,7 @@ let mapper ~default_any ~preserve_literals ~max_type_size (ask : Codemod_context
     method private add_any loc comments =
       let new_type =
         if default_any then
-          Ty.Any Ty.Annotated
+          Ty.explicit_any
         else
           Ty.Top
       in

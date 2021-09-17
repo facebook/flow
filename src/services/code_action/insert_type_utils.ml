@@ -462,7 +462,7 @@ module Builtins = struct
     match suppress_name lint_severities suppress_types preference with
     | Some name ->
       Ty.Generic (Ty_symbol.builtin_symbol (Reason.OrdinaryName name), Ty.TypeAliasKind, None)
-    | None -> Ty.Any Ty.Annotated
+    | None -> Ty.Any (Ty.Annotated ALoc.none)
 
   let flowfixme_ty = flowfixme_generic_ty ~preference:"$FlowFixMe"
 

@@ -65,7 +65,7 @@ and tvar = RVar of int [@@unboxed]
 and generic_t = symbol * gen_kind * t list option
 
 and any_kind =
-  | Annotated
+  | Annotated of aloc
   | AnyError of any_error_kind option
   | Unsound of unsoundness_kind
   | Untyped
@@ -484,7 +484,7 @@ class ['A] comparator_ty =
 
     method tag_of_any_kind _ =
       function
-      | Annotated -> 0
+      | Annotated _ -> 0
       | AnyError _ -> 1
       | Unsound _ -> 2
       | Untyped -> 3
@@ -599,7 +599,7 @@ let mk_inter ?(flattened = false) nel_ts =
   | [] -> t
   | hd :: tl -> Inter (t, hd, tl)
 
-let explicit_any = Any Annotated
+let explicit_any = Any (Annotated ALoc.none)
 
 let is_dynamic = function
   | Any _ -> true
