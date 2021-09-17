@@ -223,6 +223,7 @@ NATIVE_C_FILES=\
   src/hack_forked/find/hh_readdir.c\
   src/heap/hh_shared.c\
   src/hack_forked/utils/core/get_build_id.c\
+  src/hack_forked/utils/core/fast_compare.c\
   src/hack_forked/utils/sys/files.c\
   src/hack_forked/utils/sys/gc_profiling.c\
   src/hack_forked/utils/sys/getrusage.c\
