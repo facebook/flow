@@ -140,13 +140,6 @@ let copy_n n v =
   in
   loop [] n
 
-(** unique list items, in order of first appearance (requires sorted list) *)
-let rec uniq = function
-  | [] -> []
-  | [x] -> [x]
-  | x :: (y :: _ as l) when x = y -> uniq l
-  | x :: rl -> x :: uniq rl
-
 (** physically unique list items, in order of first appearance *)
 let rec phys_uniq = function
   | [] -> []

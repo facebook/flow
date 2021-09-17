@@ -29,8 +29,6 @@ val bucket_n : int -> 'a list -> 'a list list
 
 val copy_n : int -> 'a -> 'a list
 
-val uniq : 'a list -> 'a list
-
 val phys_uniq : 'a list -> 'a list
 
 val ident_map : ('a -> 'a) -> 'a list -> 'a list

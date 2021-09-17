@@ -3238,8 +3238,7 @@ module Vim_emacs_output = struct
         |> ConcreteLocPrintableErrorSet.fold
              (fun warn acc -> to_string ~strip_root "Warning: " warn :: acc)
              warnings
-        |> List.sort String.compare
-        |> ListUtils.uniq
+        |> Base.List.dedup_and_sort ~compare:String.compare
       in
       List.iter
         begin
