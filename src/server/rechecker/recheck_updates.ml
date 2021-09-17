@@ -108,7 +108,7 @@ let check_for_package_json_changes ~is_incompatible_package_json ~skip_incompati
   let incompatible_packages =
     updates
     |> SSet.elements
-    |> ListUtils.filter_map (fun file ->
+    |> Base.List.filter_map ~f:(fun file ->
            match is_incompatible_package_json file with
            | Module_js.Compatible -> None
            | Module_js.Incompatible reason -> Some (file, reason))

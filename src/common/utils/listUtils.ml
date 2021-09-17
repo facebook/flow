@@ -5,19 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-let rev_filter_map f lst =
-  let rec loop lst acc =
-    match lst with
-    | [] -> acc
-    | hd :: tl ->
-      (match f hd with
-      | Some x -> loop tl (x :: acc)
-      | None -> loop tl acc)
-  in
-  loop lst []
-
-let filter_map f lst = rev_filter_map f lst |> Base.List.rev
-
 (** like List.fold_left, but f returns an option and so do we.
     f acc v = Some acc proceeds as usual; None stops the fold.
     Eg

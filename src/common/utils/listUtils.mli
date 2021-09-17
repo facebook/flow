@@ -5,10 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val rev_filter_map : ('a -> 'b option) -> 'a list -> 'b list
-
-val filter_map : ('a -> 'b option) -> 'a list -> 'b list
-
 val fold_left_opt : ('a -> 'b -> 'a option) -> 'a -> 'b list -> 'a option
 
 val fold_left_until : ('a -> 'b -> bool * 'a) -> 'a -> 'b list -> 'a
