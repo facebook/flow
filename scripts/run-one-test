@@ -273,6 +273,7 @@ runtest() {
         #
         auto_start=true
         flowlib=" --no-flowlib"
+        env_flag=""
         shell=""
         cmd="check"
         stdin=""
@@ -354,6 +355,14 @@ runtest() {
             flowlib=""
         fi
 
+        if [[ "$new_env" -eq 1 ]]; then
+            env_flag="--new-env"
+            if [ "$cmd" != "check" ]
+            then
+              return $RUNTEST_SKIP
+            fi
+        fi
+
         # Helper function to generate saved state. If anything goes wrong, it
         # will fail
         create_saved_state () {
@@ -392,6 +401,7 @@ runtest() {
             else
               # default command is check with configurable --no-flowlib
               "$FLOW" check . \
+                $env_flag \
                 $flowlib --strip-root --show-all-errors \
                  1>> "$abs_out_file" 2>> "$stderr_dest"
               st=$?

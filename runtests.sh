@@ -8,7 +8,7 @@ THIS_DIR=$(cd -P "$(dirname "$(readlink "${BASH_SOURCE[0]}" || echo "${BASH_SOUR
 export THIS_DIR
 
 show_help() {
-  printf "Usage: runtests.sh [-ghlqrv] [-d DIR] [-t TEST] [-b] FLOW_BINARY [[-f] TEST_FILTER]\n\n"
+  printf "Usage: runtests.sh [-ehlqrv] [-d DIR] [-t TEST] [-b] FLOW_BINARY [[-f] TEST_FILTER]\n\n"
   printf "Runs Flow's tests.\n\n"
   echo "    [-b] FLOW_BINARY"
   echo "        path to Flow binary (the -b is optional)"
@@ -20,6 +20,8 @@ show_help() {
   echo "        run tests in DIR/tests/"
   echo "    -t TEST"
   echo "        run the test DIR/tests/TEST, equivalent to a filter of \"^TEST$\""
+  echo "    -e"
+  echo "        test using new implementation of the type environment"
   echo "    -r"
   echo "        re-record failing tests to update expected output"
   echo "    -q"
@@ -43,8 +45,9 @@ verbose=0
 quiet=0
 relative="$THIS_DIR"
 list_tests=0
-export saved_state filter
-while getopts "b:d:f:lqrst:vh?" opt; do
+new_env=0
+export saved_state filter new_env
+while getopts "b:d:f:elqrst:vh?" opt; do
   case "$opt" in
   b)
     FLOW="$OPTARG"
@@ -54,6 +57,9 @@ while getopts "b:d:f:lqrst:vh?" opt; do
     ;;
   f)
     filter="$OPTARG"
+    ;;
+  e)
+    new_env=1
     ;;
   l)
     list_tests=1

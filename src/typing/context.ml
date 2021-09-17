@@ -179,6 +179,7 @@ type component_t = {
   mutable matching_props: (Reason.reason * string * Type.t * Type.t) list;
   mutable implicit_instantiation_checks: Implicit_instantiation_check.t list;
   mutable inferred_indexers: Type.dicttype list ALocMap.t;
+  mutable constrained_writes: (Type.t * Type.use_t) list;
   (* map from annot tvar ids to nodes used during annotation processing *)
   mutable annot_graph: Type.AConstraint.node IMap.t;
 }
@@ -314,6 +315,7 @@ let make_ccx master_cx =
     type_asserts_map = ALocMap.empty;
     matching_props = [];
     literal_subtypes = [];
+    constrained_writes = [];
     errors = Flow_error.ErrorSet.empty;
     error_suppressions = Error_suppressions.empty;
     severity_cover = Utils_js.FilenameMap.empty;
@@ -527,6 +529,8 @@ let type_asserts_map cx = cx.ccx.type_asserts_map
 
 let literal_subtypes cx = cx.ccx.literal_subtypes
 
+let constrained_writes cx = cx.ccx.constrained_writes
+
 let type_graph cx = cx.ccx.type_graph
 
 let matching_props cx = cx.ccx.matching_props
@@ -627,6 +631,8 @@ let add_type_assert cx k v = cx.ccx.type_asserts_map <- ALocMap.add k v cx.ccx.t
 let add_matching_props cx c = cx.ccx.matching_props <- c :: cx.ccx.matching_props
 
 let add_literal_subtypes cx c = cx.ccx.literal_subtypes <- c :: cx.ccx.literal_subtypes
+
+let add_constrained_write cx c = cx.ccx.constrained_writes <- c :: cx.ccx.constrained_writes
 
 let add_voidable_check cx voidable_check =
   cx.ccx.voidable_checks <- voidable_check :: cx.ccx.voidable_checks

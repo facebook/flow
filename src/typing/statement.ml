@@ -30,7 +30,7 @@ module Make (Env : Env_sig.S) = struct
   module Toplevels = Toplevels.DependencyToplevels (Env) (Abnormal)
   module Refinement = Refinement.Make (Env)
   module Import_export = Import_export.Make (Env)
-  open Env.LookupMode
+  open Env_sig.LookupMode
 
   (*************)
   (* Utilities *)
@@ -755,9 +755,7 @@ module Make (Env : Env_sig.S) = struct
         | ImportDeclaration.ImportTypeof -> true
         | ImportDeclaration.ImportValue -> false
       in
-      let is_global_lib_scope =
-        File_key.is_lib_file (Context.file cx) && Scope.is_global (Env.peek_scope ())
-      in
+      let is_global_lib_scope = File_key.is_lib_file (Context.file cx) && Env.in_global_scope () in
       if is_global_lib_scope then
         Flow_js.add_output cx Error_message.(EToplevelLibraryImport decl_loc);
       let bind_import local_name (loc : ALoc.t) isType =
@@ -1964,7 +1962,7 @@ module Make (Env : Env_sig.S) = struct
                        init = reason_of_t t;
                      })
               in
-              ignore Env.(set_var cx ~use_op name_str t pat_loc);
+              Env.set_var cx ~use_op name_str t pat_loc;
               ( ForIn.LeftPattern
                   ( (pat_loc, t),
                     Ast.Pattern.Identifier
@@ -2108,7 +2106,7 @@ module Make (Env : Env_sig.S) = struct
                        init = reason_of_t elem_t;
                      })
               in
-              ignore Env.(set_var cx ~use_op name_str elem_t pat_loc);
+              Env.set_var cx ~use_op name_str elem_t pat_loc;
               ( ForOf.LeftPattern
                   ( (pat_loc, elem_t),
                     Ast.Pattern.Identifier
@@ -2147,7 +2145,7 @@ module Make (Env : Env_sig.S) = struct
       let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
       let name = OrdinaryName name in
       let reason = func_reason ~async ~generator sig_loc in
-      let general = Tvar.mk_where cx reason (Env.unify_declared_type cx name) in
+      let general = Tvar.mk_where cx reason (Env.unify_declared_type cx name name_loc) in
       let (fn_type, func_ast) = mk_function_declaration None cx ~general reason func in
       let use_op =
         Op (AssignVar { var = Some (mk_reason (RIdentifier name) loc); init = reason_of_t fn_type })
@@ -2198,7 +2196,7 @@ module Make (Env : Env_sig.S) = struct
       let r = mk_reason (RIdentifier (OrdinaryName name)) id_loc in
       let (a, annot_ast) = Anno.mk_type_annotation cx SMap.empty r annot in
       let t = type_t_of_annotated_or_inferred a in
-      Env.unify_declared_type cx (OrdinaryName name) t;
+      Env.unify_declared_type cx (OrdinaryName name) id_loc t;
       (loc, DeclareVariable { DeclareVariable.id = ((id_loc, t), id); annot = annot_ast; comments })
     | (loc, DeclareFunction declare_function) ->
       (match declare_function_to_function_declaration cx loc declare_function with
@@ -2226,7 +2224,7 @@ module Make (Env : Env_sig.S) = struct
       let kind = Scope.Entry.ClassNameBinding in
       let reason = DescFormat.instance_reason name name_loc in
       Env.declare_implicit_let kind cx name name_loc;
-      let general = Tvar.mk_where cx reason (Env.unify_declared_type cx name) in
+      let general = Tvar.mk_where cx reason (Env.unify_declared_type cx name name_loc) in
       (* ClassDeclarations are statements, so we will never have an annotation to push down here *)
       let (class_t, c_ast) = mk_class cx ~class_annot:None class_loc ~name_loc ~general reason c in
       let use_op =
@@ -2348,7 +2346,7 @@ module Make (Env : Env_sig.S) = struct
           match default with
           | None -> Import_export.export_binding cx name id_loc Ast.Statement.ExportValue
           | Some default_loc ->
-            let t = Env.var_ref ~lookup_mode:Env.LookupMode.ForType cx name loc in
+            let t = Env.var_ref ~lookup_mode:Env_sig.LookupMode.ForType cx name loc in
             Import_export.export cx (OrdinaryName "default") default_loc t
         in
         (* error-handling around calls to `statement` is omitted here because we
@@ -3080,7 +3078,7 @@ module Make (Env : Env_sig.S) = struct
         let (id_loc, { Ast.Identifier.name; comments }) = name in
         (* move const/let bindings from undeclared to declared *)
         declare_var cx (OrdinaryName name) id_loc;
-        Env.unify_declared_type cx (OrdinaryName name) annot_t;
+        Env.unify_declared_type cx (OrdinaryName name) id_loc annot_t;
         Base.Option.iter init_opt ~f:(fun (init_t, init_reason) ->
             let use_op = Op (AssignVar { var = Some id_reason; init = init_reason }) in
             init_var cx ~use_op (OrdinaryName name) ~has_anno init_t id_loc);
@@ -3137,7 +3135,7 @@ module Make (Env : Env_sig.S) = struct
                unified. *)
             let id_node_type =
               if has_anno then (
-                Env.unify_declared_type cx (OrdinaryName name) t;
+                Env.unify_declared_type cx (OrdinaryName name) name_loc t;
                 Env.pseudo_init_declared_type cx name name_loc;
                 t
               ) else (
@@ -3927,7 +3925,7 @@ module Make (Env : Env_sig.S) = struct
             arguments;
             comments;
           }
-        when not (Env.local_scope_entry_exists n) ->
+        when not (Env.local_scope_entry_exists cx id_loc n) ->
         let targs =
           Base.Option.map targs (fun (args_loc, args) ->
               (args_loc, snd (convert_call_targs cx SMap.empty args)))
@@ -4265,7 +4263,7 @@ module Make (Env : Env_sig.S) = struct
                 (ploc, ({ Ast.Identifier.name = "exports"; comments = _ } as exports_name));
             comments;
           }
-        when not (Env.local_scope_entry_exists "module") ->
+        when not (Env.local_scope_entry_exists cx id_loc "module") ->
         let lhs_t = Import_export.get_module_exports cx loc in
         let module_reason = mk_reason (RCustom "module") object_loc in
         let module_t = MixedT.why module_reason |> with_trust bogus_trust in
@@ -5245,8 +5243,9 @@ module Make (Env : Env_sig.S) = struct
     OptCallElemT (reason_call, reason_lookup, elem_t, action)
 
   and identifier_ cx name loc =
+    let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
     if Type_inference_hooks_js.dispatch_id_hook cx name loc then
-      Tvar.mk cx (mk_reason (RIdentifier (OrdinaryName name)) loc)
+      Tvar.mk cx reason
     else
       let t = Env.var_ref ~lookup_mode:ForValue cx (OrdinaryName name) loc in
       (* We want to make sure that the reason description for the type we return
@@ -5398,7 +5397,7 @@ module Make (Env : Env_sig.S) = struct
                  init = reason_of_t result_t;
                })
         in
-        ignore (Env.set_var cx ~use_op name result_t id_loc);
+        Env.set_var cx ~use_op name result_t id_loc;
         let t = NumT.at arg_loc |> with_trust bogus_trust in
         { expr with argument = ((arg_loc, t), Ast.Expression.Identifier ((id_loc, t), id_name)) }
       | (lhs_loc, Ast.Expression.Member mem) ->
@@ -5683,7 +5682,7 @@ module Make (Env : Env_sig.S) = struct
        Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name = "exports"; comments = _ } as name));
      comments;
     }
-      when not (Env.local_scope_entry_exists "module") ->
+      when not (Env.local_scope_entry_exists cx id_loc "module") ->
       Import_export.cjs_clobber cx lhs_loc t;
       let module_reason = mk_reason (RCustom "module") object_loc in
       let module_t = MixedT.why module_reason |> with_trust bogus_trust in
@@ -5829,12 +5828,13 @@ module Make (Env : Env_sig.S) = struct
      * before we visit the rhs to ask for annotations.
      *)
     let all_have_annots =
-      Flow_ast_utils.fold_bindings_of_pattern
-        (fun all_have_annots (loc, { Ast.Identifier.name; comments = _ }) _ ->
-          let has_annot = Env.get_var_annotation cx (OrdinaryName name) loc <> None in
-          all_have_annots && has_annot)
-        true
-        lhs
+      (not Env.new_env)
+      && Flow_ast_utils.fold_bindings_of_pattern
+           (fun all_have_annots (loc, { Ast.Identifier.name; comments = _ }) _ ->
+             let has_annot = Env.get_var_annotation cx (OrdinaryName name) loc <> None in
+             all_have_annots && has_annot)
+           true
+           lhs
     in
     let annot =
       if all_have_annots then
@@ -5899,7 +5899,7 @@ module Make (Env : Env_sig.S) = struct
             (AssignVar
                { var = Some (mk_reason (RIdentifier (OrdinaryName name)) id_loc); init = reason })
         in
-        ignore Env.(set_var cx ~use_op name result_t id_loc)
+        Env.set_var cx ~use_op name result_t id_loc
       | (lhs_loc, Ast.Pattern.Expression (_, Ast.Expression.Member mem)) ->
         let lhs_prop_reason = mk_pattern_reason lhs in
         let make_op ~lhs ~prop = Op (UpdateProperty { lhs; prop }) in
@@ -5951,7 +5951,7 @@ module Make (Env : Env_sig.S) = struct
                  init = reason_of_t result_t;
                })
         in
-        ignore Env.(set_var cx ~use_op name result_t id_loc)
+        Env.set_var cx ~use_op name result_t id_loc
       | (lhs_loc, Ast.Pattern.Expression (_, Ast.Expression.Member mem)) ->
         let lhs_prop_reason = mk_pattern_reason lhs in
         let make_op ~lhs ~prop = Op (UpdateProperty { lhs; prop }) in
@@ -6019,7 +6019,7 @@ module Make (Env : Env_sig.S) = struct
         mem
     | Identifier (_, { Ast.Identifier.name; _ }) ->
       let use_op = Op (DeleteVar { var = mk_expression_reason target }) in
-      ignore Env.(set_var cx ~use_op name void loc);
+      Env.set_var cx ~use_op name void loc;
       expression cx ~annot:None target
     | _ ->
       let (((_, t), _) as target) = expression cx ~annot:None target in
@@ -6820,9 +6820,9 @@ module Make (Env : Env_sig.S) = struct
       extend_with_chain_preds out chain_preds (not sense)
     in
     (* inspect an undefined equality test *)
-    let undef_test loc ~sense ~strict e void_t reconstruct_ast =
+    let undef_test loc ~undefined_loc ~sense ~strict e void_t reconstruct_ast =
       (* if `undefined` isn't redefined in scope, then we assume it is `void` *)
-      if Env.is_global_var cx "undefined" then
+      if Env.is_global_var cx "undefined" undefined_loc then
         void_test loc ~sense ~strict e void_t reconstruct_ast
       else
         let e_ast = expression cx ~annot:None e in
@@ -7110,14 +7110,18 @@ module Make (Env : Env_sig.S) = struct
         let (((_, null_t), _) as null_ast) = expression cx ~annot:None null in
         null_test loc ~sense ~strict expr null_t (fun expr -> reconstruct_ast expr null_ast)
       (* expr op undefined *)
-      | (((_, Identifier (_, { Ast.Identifier.name = "undefined"; comments = _ })) as void), expr)
-        ->
+      | ( ((_, Identifier (undefined_loc, { Ast.Identifier.name = "undefined"; comments = _ })) as
+          void),
+          expr ) ->
         let (((_, void_t), _) as void_ast) = expression cx ~annot:None void in
-        undef_test loc ~sense ~strict expr void_t (fun expr -> reconstruct_ast void_ast expr)
-      | (expr, ((_, Identifier (_, { Ast.Identifier.name = "undefined"; comments = _ })) as void))
-        ->
+        undef_test loc ~undefined_loc ~sense ~strict expr void_t (fun expr ->
+            reconstruct_ast void_ast expr)
+      | ( expr,
+          ((_, Identifier (undefined_loc, { Ast.Identifier.name = "undefined"; comments = _ })) as
+          void) ) ->
         let (((_, void_t), _) as void_ast) = expression cx ~annot:None void in
-        undef_test loc ~sense ~strict expr void_t (fun expr -> reconstruct_ast expr void_ast)
+        undef_test loc ~undefined_loc ~sense ~strict expr void_t (fun expr ->
+            reconstruct_ast expr void_ast)
       (* expr op void(...) *)
       | (((_, Unary { Unary.operator = Unary.Void; _ }) as void), expr) ->
         let (((_, void_t), _) as void_ast) = expression cx ~annot:None void in
@@ -7772,7 +7776,7 @@ module Make (Env : Env_sig.S) = struct
                        } =
                          i
                        in
-                       let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name id_loc in
+                       let c = Env.get_var ~lookup_mode:Env_sig.LookupMode.ForType cx name id_loc in
                        let (typeapp, targs) =
                          match targs with
                          | None -> ((loc, c, None), None)

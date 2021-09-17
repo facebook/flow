@@ -268,6 +268,17 @@ let detect_literal_subtypes =
         Flow_js.flow cx (t, u))
       checks
 
+let check_constrained_writes =
+  let visitor = new resolver_visitor in
+  fun cx ->
+    let checks = Context.constrained_writes cx in
+    List.iter
+      (fun (t, u) ->
+        let t = visitor#type_ cx () t in
+        let u = visitor#use_type cx () u in
+        Flow_js.flow cx (t, u))
+      checks
+
 let get_lint_severities metadata strict_mode lint_severities =
   if metadata.Context.strict || metadata.Context.strict_local then
     StrictModeSettings.fold
@@ -297,7 +308,8 @@ let post_merge_checks cx master_cx ast tast metadata file_sig =
   detect_es6_import_export_errors cx metadata results;
   detect_escaped_generics results;
   detect_matching_props_violations cx;
-  detect_literal_subtypes cx
+  detect_literal_subtypes cx;
+  check_constrained_writes cx
 
 let optimize_builtins cx =
   let reducer =

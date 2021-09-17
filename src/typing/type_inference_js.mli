@@ -5,17 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+val scan_for_suppressions :
+  Context.t -> Severity.severity LintSettings.t -> Loc.t Flow_ast.Comment.t list -> unit
+
+val add_require_tvars :
+  unresolved_tvar:(Context.t -> Reason.t -> Type.ident) -> Context.t -> File_sig.With_ALoc.t -> unit
+
 module type S = sig
   module ImpExp : Import_export.S
-
-  val scan_for_suppressions :
-    Context.t -> Severity.severity LintSettings.t -> Loc.t Flow_ast.Comment.t list -> unit
-
-  val add_require_tvars :
-    unresolved_tvar:(Context.t -> Reason.t -> Type.ident) ->
-    Context.t ->
-    File_sig.With_ALoc.t ->
-    unit
 
   (* Lint suppressions are handled iff lint_severities is Some. *)
   val infer_ast :
@@ -37,6 +34,8 @@ module type S = sig
 end
 
 module Make (_ : Env_sig.S) : S
+
+module NewEnvInference : S
 
 module EnvInference : S
 

@@ -18,52 +18,48 @@ open Reason
 open Scope
 module Flow = Flow_js
 
+(* lookup modes:
+
+   - ForValue is a lookup from a syntactic value location, i.e. standard
+     JS code
+
+   - ForType is a lookup from a syntactic type location, e.g. annotations,
+     interface declarations etc.
+
+   - ForTypeof is a lookup from a typeof expression (necessarily in a type
+     location)
+
+   Rules:
+
+   1. ForValue lookups give errors if they retrieve type aliases (note: we
+      have a single namespace, so any name resolves uniquely to either a
+      value or type)
+
+   2. ForValue lookups give errors if they forward reference non-hoisted
+      things (lets or consts)
+
+   3. ForType lookups may return values or type aliases, since some values
+      also denote types - e.g. a generator function F also denotes the type
+      of the objects it creates. Of course many values don't also have a type
+      denotation and thus errors in type position. But we don't know the type
+      of a symbol during local inference as a rule, so errors of this kind are
+      not raised here.
+
+   4. ForTypeof lookups are in fact ForValue lookups, but due to the order in
+      which AST traversal takes place, these lookups may legitimately violate
+      rule #2, hence the need for a special mode.
+*)
+
 module Env : Env_sig.S = struct
-  (* lookup modes:
-
-     - ForValue is a lookup from a syntactic value location, i.e. standard
-       JS code
-
-     - ForType is a lookup from a syntactic type location, e.g. annotations,
-       interface declarations etc.
-
-     - ForTypeof is a lookup from a typeof expression (necessarily in a type
-       location)
-
-     Rules:
-
-     1. ForValue lookups give errors if they retrieve type aliases (note: we
-        have a single namespace, so any name resolves uniquely to either a
-        value or type)
-
-     2. ForValue lookups give errors if they forward reference non-hoisted
-        things (lets or consts)
-
-     3. ForType lookups may return values or type aliases, since some values
-        also denote types - e.g. a generator function F also denotes the type
-        of the objects it creates. Of course many values don't also have a type
-        denotation and thus errors in type position. But we don't know the type
-        of a symbol during local inference as a rule, so errors of this kind are
-        not raised here.
-
-     4. ForTypeof lookups are in fact ForValue lookups, but due to the order in
-        which AST traversal takes place, these lookups may legitimately violate
-        rule #2, hence the need for a special mode.
-  *)
-  module LookupMode = struct
-    type t =
-      | ForValue
-      | ForType
-      | ForTypeof
-  end
-
-  open LookupMode
+  open Env_sig.LookupMode
 
   (****************)
   (* Environment *)
   (****************)
 
-  type t = Scope.t list
+  type scope = Scope.t
+
+  type t = scope list
 
   (* the environment is a scope stack, which mutates as an AST is
      traversed. changesets are also managed here, but live in
@@ -88,6 +84,10 @@ module Env : Env_sig.S = struct
 
   (* return the current scope *)
   let peek_scope () = List.hd !scopes
+
+  let in_toplevel_scope () = Scope.is_toplevel (peek_scope ())
+
+  let in_global_scope () = Scope.is_global (peek_scope ())
 
   (* return current scope stack *)
   let peek_env () = !scopes
@@ -223,7 +223,7 @@ module Env : Env_sig.S = struct
       scopes := trunc (List.length cur - depth, cur)
 
   (* initialize a new environment (once per module) *)
-  let init_env ?(exclude_syms = NameUtils.Set.empty) module_scope =
+  let init_env ?(exclude_syms = NameUtils.Set.empty) _cx module_scope =
     set_exclude_symbols exclude_syms;
     havoc_current_activation ();
     let global_scope = Scope.fresh ~var_scope_kind:Global () in
@@ -309,7 +309,7 @@ module Env : Env_sig.S = struct
     Scope.add_entry name entry global_scope;
     (global_scope, entry)
 
-  let local_scope_entry_exists name =
+  let local_scope_entry_exists _ _ name =
     let name = OrdinaryName name in
     let rec loop = function
       | [] -> assert_false "empty scope list"
@@ -862,7 +862,7 @@ module Env : Env_sig.S = struct
 
   (* Unify declared type with another type. This is useful for allowing forward
      references in declared types to other types declared later in scope. *)
-  let unify_declared_type ?(lookup_mode = ForValue) cx name t =
+  let unify_declared_type ?(lookup_mode = ForValue) cx name _loc t =
     Entry.(
       match get_current_env_entry name with
       | Some (Value v) when lookup_mode = ForValue -> Flow.unify cx t (general_of_value v)
@@ -888,7 +888,7 @@ module Env : Env_sig.S = struct
         | Some (Value v) -> Flow.unify cx t (find_type aloc (general_of_value v))
         | _ -> ())
 
-  let is_global_var _cx name =
+  let is_global_var _cx name _ =
     let rec loop = function
       | [] -> true
       | scope :: scopes ->
@@ -899,7 +899,7 @@ module Env : Env_sig.S = struct
     loop !scopes
 
   (* get var type, with given location used in type's reason *)
-  let var_ref ?(lookup_mode = ForValue) cx name ?desc loc =
+  let var_ref ?(lookup_mode = ForValue) cx ?desc name loc =
     let t = query_var ~lookup_mode cx name ?desc loc in
     Flow.reposition cx loc t
 
@@ -994,10 +994,10 @@ module Env : Env_sig.S = struct
 
   (* update var by direct assignment *)
   let set_var cx ~use_op name t loc =
-    update_var Changeset.Write cx ~use_op (OrdinaryName name) t loc
+    update_var Changeset.Write cx ~use_op (OrdinaryName name) t loc |> ignore
 
   let set_internal_var cx name t loc =
-    update_var Changeset.Write cx ~use_op:unknown_use (internal_name name) t loc
+    update_var Changeset.Write cx ~use_op:unknown_use (internal_name name) t loc |> ignore
 
   (* update var by refinement test *)
   let refine_var = update_var Changeset.Refine ~use_op:(Op (Internal Refinement))
@@ -1451,7 +1451,7 @@ module Env : Env_sig.S = struct
     Scope.add_refi key refi scope;
     change
 
-  let set_expr = add_heap_refinement Changeset.Write
+  let set_expr k l t1 t2 = add_heap_refinement Changeset.Write k l t1 t2 |> ignore
 
   let refine_expr = add_heap_refinement Changeset.Refine
 
@@ -1549,4 +1549,6 @@ module Env : Env_sig.S = struct
     update_env loc orig_env;
 
     result
+
+  let new_env = false
 end

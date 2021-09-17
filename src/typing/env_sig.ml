@@ -7,10 +7,23 @@
 
 open Scope
 
-module type S = sig
-  type t = Scope.t list
+module LookupMode = struct
+  type t =
+    | ForValue
+    | ForType
+    | ForTypeof
+end
 
-  val peek_scope : unit -> Scope.t
+module type S = sig
+  type scope
+
+  type t = scope list
+
+  val new_env : bool
+
+  val in_toplevel_scope : unit -> bool
+
+  val in_global_scope : unit -> bool
 
   val peek_env : unit -> t
 
@@ -39,7 +52,7 @@ module type S = sig
 
   val trunc_env : int -> unit
 
-  val init_env : ?exclude_syms:NameUtils.Set.t -> Scope.t -> unit
+  val init_env : ?exclude_syms:NameUtils.Set.t -> Context.t -> Scope.t -> unit
 
   val update_env : ALoc.t -> t -> unit
 
@@ -48,13 +61,6 @@ module type S = sig
   val restore_excluded_symbols : NameUtils.Set.t -> unit
 
   (***)
-
-  val promote_non_const :
-    Context.t ->
-    Reason.name ->
-    ALoc.t ->
-    Entry.non_const_specialization ->
-    Loc_collections.ALocSet.t option * Entry.non_const_specialization
 
   val bind_class :
     Context.t ->
@@ -136,20 +142,9 @@ module type S = sig
 
   val pseudo_init_declared_type : Context.t -> string -> ALoc.t -> unit
 
-  module LookupMode : sig
-    type t =
-      | ForValue
-      | ForType
-      | ForTypeof
-  end
+  val local_scope_entry_exists : Context.t -> ALoc.t -> string -> bool
 
-  val local_scope_entry_exists : string -> bool
-
-  val get_env_entry : Reason.name -> t -> Scope.Entry.t option
-
-  val get_current_env_entry : Reason.name -> Scope.Entry.t option
-
-  val get_env_refi : Key.t -> t -> Scope.refi_binding option
+  val is_global_var : Context.t -> string -> ALoc.t -> bool
 
   val get_current_env_refi : Key.t -> Scope.refi_binding option
 
@@ -164,15 +159,16 @@ module type S = sig
   val get_var_declared_type :
     ?lookup_mode:LookupMode.t -> Context.t -> Reason.name -> ALoc.t -> Type.t
 
-  val unify_declared_type : ?lookup_mode:LookupMode.t -> Context.t -> Reason.name -> Type.t -> unit
+  val unify_declared_type :
+    ?lookup_mode:LookupMode.t -> Context.t -> Reason.name -> ALoc.t -> Type.t -> unit
 
   val unify_declared_fun_type : Context.t -> Reason.name -> ALoc.t -> Type.t -> unit
 
   val var_ref :
     ?lookup_mode:LookupMode.t ->
     Context.t ->
-    Reason.name ->
     ?desc:Reason.reason_desc ->
+    Reason.name ->
     ALoc.t ->
     Type.t
 
@@ -184,12 +180,13 @@ module type S = sig
     ALoc.t ->
     Type.t
 
-  val set_var :
-    Context.t -> use_op:Type.use_op -> string -> Type.t -> ALoc.t -> Changeset.EntryRef.t option
+  val set_var : Context.t -> use_op:Type.use_op -> string -> Type.t -> ALoc.t -> unit
 
-  val set_internal_var : Context.t -> string -> Type.t -> ALoc.t -> Changeset.EntryRef.t option
+  val set_internal_var : Context.t -> string -> Type.t -> ALoc.t -> unit
 
-  val set_expr : Key.t -> ALoc.t -> Type.t -> Type.t -> Changeset.RefiRef.t
+  val set_expr : Key.t -> ALoc.t -> Type.t -> Type.t -> unit
+
+  val refine_expr : Key.t -> ALoc.t -> Type.t -> Type.t -> int * Key.t * Changeset.op
 
   val refine_with_preds :
     Context.t -> ALoc.t -> Type.predicate Key_map.t -> Type.t Key_map.t -> Changeset.t
@@ -216,6 +213,4 @@ module type S = sig
   val havoc_heap_refinements_with_propname : private_:bool -> string -> unit
 
   val get_refinement : Context.t -> Key.t -> ALoc.t -> Type.t option
-
-  val is_global_var : Context.t -> string -> bool
 end

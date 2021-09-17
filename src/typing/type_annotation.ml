@@ -17,7 +17,7 @@ module Flow = Flow_js
 module T = Ast.Type
 
 module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = struct
-  open Env.LookupMode
+  open Env_sig.LookupMode
 
   module Func_type_params = Func_params.Make (struct
     type 'T ast = (ALoc.t, 'T) Ast.Type.Function.Params.t
@@ -126,7 +126,7 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
             } ))
 
   let mk_eval_id cx loc =
-    if Env.peek_scope () |> Scope.is_toplevel then
+    if Env.in_toplevel_scope () then
       Context.make_aloc_id cx loc |> Eval.id_of_aloc_id
     else
       Eval.generate_id ()
@@ -1248,7 +1248,7 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
     end in
     let mk_object cx loc ~src_loc ~exact call dict pmap proto =
       let pmap =
-        if src_loc && Env.peek_scope () |> Scope.is_toplevel then
+        if src_loc && Env.in_toplevel_scope () then
           Context.make_source_property_map cx pmap loc
         else
           Context.generate_property_map cx pmap
@@ -1758,7 +1758,7 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
       Env.var_ref ~lookup_mode:ForType cx (OrdinaryName name) loc
 
   and mk_interface_super cx tparams_map (loc, { Ast.Type.Generic.id; targs; comments }) =
-    let lookup_mode = Env.LookupMode.ForType in
+    let lookup_mode = Env_sig.LookupMode.ForType in
     let (c, id) = convert_qualification ~lookup_mode cx "extends" id in
     let (typeapp, targs) =
       match targs with
@@ -2079,7 +2079,7 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
         let name = qualified_name id in
         let r = mk_annot_reason (RType (OrdinaryName name)) loc in
         let (i, id) =
-          let lookup_mode = Env.LookupMode.ForValue in
+          let lookup_mode = Env_sig.LookupMode.ForValue in
           convert_qualification ~lookup_mode cx "mixins" id
         in
         let props_bag =
@@ -2119,7 +2119,7 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
           let (extends, extends_ast) =
             match extends with
             | Some (loc, { Ast.Type.Generic.id; targs; comments }) ->
-              let lookup_mode = Env.LookupMode.ForValue in
+              let lookup_mode = Env_sig.LookupMode.ForValue in
               let (i, id) = convert_qualification ~lookup_mode cx "mixins" id in
               let (t, targs) = mk_super cx tparams_map_with_this loc i targs in
               (Some t, Some (loc, { Ast.Type.Generic.id; targs; comments }))
@@ -2138,7 +2138,7 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 |> Base.List.map ~f:(fun (loc, i) ->
                        let { Interface.id = (id_loc, id_name_inner); targs } = i in
                        let { Ast.Identifier.name; comments = _ } = id_name_inner in
-                       let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name id_loc in
+                       let c = Env.get_var ~lookup_mode:Env_sig.LookupMode.ForType cx name id_loc in
                        let (typeapp, targs) =
                          match targs with
                          | None -> ((loc, c, None), None)

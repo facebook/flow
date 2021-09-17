@@ -583,10 +583,16 @@ let mk_check_file ~options ~reader ~cache () =
     let metadata = Context.docblock_overrides docblock base_metadata in
     let module_ref = Reason.OrdinaryName (Files.module_ref file_key) in
     let cx = Context.make ccx metadata file_key aloc_table module_ref Context.Checking in
+    let infer_ast =
+      if Context.enable_new_env cx then
+        Type_inference_js.NewEnvInference.infer_ast
+      else
+        Type_inference_js.infer_ast
+    in
     let lint_severities = get_lint_severities metadata options in
     Type_inference_js.add_require_tvars ~unresolved_tvar:ConsGen.unresolved_tvar cx file_sig;
     Context.set_local_env cx exported_locals;
     List.iter (connect_require cx) requires;
-    let typed_ast = Type_inference_js.infer_ast cx file_key comments ast ~lint_severities in
+    let typed_ast = infer_ast cx file_key comments ast ~lint_severities in
     Merge_js.post_merge_checks cx master_cx ast typed_ast metadata file_sig;
     (cx, typed_ast)

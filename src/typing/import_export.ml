@@ -104,9 +104,7 @@ module Make (Env : Env_sig.S) = struct
      declared for exports or any other use of exports. *)
   let get_module_exports cx loc = Env.get_internal_var cx "exports" loc
 
-  let set_module_exports cx loc t =
-    let change : Changeset.EntryRef.t option = Env.set_internal_var cx "exports" t loc in
-    ignore change
+  let set_module_exports cx loc t = Env.set_internal_var cx "exports" t loc
 
   let cjs_clobber cx loc t =
     match Module_info.cjs_clobber (Context.module_info cx) loc with
@@ -129,10 +127,10 @@ module Make (Env : Env_sig.S) = struct
 
   let export_binding cx name loc = function
     | Flow_ast.Statement.ExportValue ->
-      let t = Env.var_ref ~lookup_mode:Env.LookupMode.ForValue cx name loc in
+      let t = Env.var_ref ~lookup_mode:Env_sig.LookupMode.ForValue cx name loc in
       export cx name loc t
     | Flow_ast.Statement.ExportType ->
-      let t = Env.var_ref ~lookup_mode:Env.LookupMode.ForType cx name loc in
+      let t = Env.var_ref ~lookup_mode:Env_sig.LookupMode.ForType cx name loc in
       export_type cx name (Some loc) t
 
   (* After we have seen all the export statements in a module, this function will

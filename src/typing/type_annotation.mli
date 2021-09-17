@@ -31,7 +31,7 @@ module Make : functor (Env : Env_sig.S) (_ : module type of Abnormal.Make (Env))
     Type.t option * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.t option
 
   val convert_qualification :
-    ?lookup_mode:Env.LookupMode.t ->
+    ?lookup_mode:Env_sig.LookupMode.t ->
     Context.t ->
     string ->
     (ALoc.t, ALoc.t) Flow_ast.Type.Generic.Identifier.t ->
