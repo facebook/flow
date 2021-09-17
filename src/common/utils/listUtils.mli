@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val fold_left_opt : ('a -> 'b -> 'a option) -> 'a -> 'b list -> 'a option
-
 val fold_left_until : ('a -> 'b -> bool * 'a) -> 'a -> 'b list -> 'a
 
 val first_upto_n : int -> (int -> 'a option) -> 'a list -> 'a list

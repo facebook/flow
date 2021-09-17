@@ -5,22 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-(** like List.fold_left, but f returns an option and so do we.
-    f acc v = Some acc proceeds as usual; None stops the fold.
-    Eg
-      let f x y = if y > 0 then Some (x + y) else None in
-      fold_left_opt f 0 [1; 2; 3; 4; 5] => Some 15
-      fold_left_opt f 0 [1; 2; -3; 4; 5] => None
-
-    Useful in situations where failure rules out List.fold_left.
- *)
-let rec fold_left_opt f acc = function
-  | [] -> Some acc
-  | v :: vs ->
-    (match f acc v with
-    | None -> None
-    | Some acc -> fold_left_opt f acc vs)
-
 (** like List.fold_left, but f returns a stop flag as well as a result.
     f acc v = true, acc proceeds as usual; false, acc stops the fold.
     Eg

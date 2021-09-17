@@ -840,9 +840,8 @@ struct
         | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ }) ->
           Some (BindIdent (Flow_ast_utils.source_of_ident name))
         | (_, Ast.Pattern.Object { Ast.Pattern.Object.properties; _ }) ->
-          let named_opt =
-            ListUtils.fold_left_opt
-              (fun named prop ->
+          let named_bind =
+            Base.List.fold_result properties ~init:[] ~f:(fun named prop ->
                 match prop with
                 | Ast.Pattern.Object.Property
                     ( _,
@@ -852,17 +851,14 @@ struct
                         pattern;
                         _;
                       } ) ->
-                  let bindings = this#require_pattern pattern in
-                  Base.Option.map bindings (fun bindings -> (remote, bindings) :: named)
-                | _ -> None)
-              []
-              properties
+                  (match this#require_pattern pattern with
+                  | Some bindings -> Ok ((Flow_ast_utils.source_of_ident remote, bindings) :: named)
+                  | None -> Error ())
+                | _ -> Error ())
           in
-          Base.Option.map named_opt (fun named ->
-              let named_bind =
-                List.map (fun (id, bind) -> (Flow_ast_utils.source_of_ident id, bind)) named
-              in
-              BindNamed named_bind)
+          (match named_bind with
+          | Ok named_bind -> Some (BindNamed named_bind)
+          | Error () -> None)
         | _ -> None
 
       method private handle_require
