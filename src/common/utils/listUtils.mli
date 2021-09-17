@@ -13,8 +13,6 @@ val fold_left_while : ('a -> 'b -> bool) -> ('a -> 'b -> 'a) -> 'a -> 'b list ->
 
 val fold_left_for : int -> ('a -> 'b -> 'a) -> 'a -> 'b list -> 'a
 
-val first_some_map : ('a -> 'b option) -> 'a list -> 'b option
-
 val first_upto_n : int -> (int -> 'a option) -> 'a list -> 'a list
 
 val last_n : int -> 'a list -> 'a list

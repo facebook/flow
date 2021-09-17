@@ -66,15 +66,6 @@ let rec fold_left_while p f acc = function
 let fold_left_for n f acc lst =
   snd (fold_left_while (fun (i, _) _ -> i < n) (fun (i, acc) x -> (i + 1, f acc x)) (0, acc) lst)
 
-let rec first_some_map f = function
-  | [] -> None
-  | hd :: tl ->
-    begin
-      match f hd with
-      | Some _ as x -> x
-      | None -> first_some_map f tl
-    end
-
 (** this function takes a list and truncates it if needed to no more than
     the first n elements. If truncation happened, then the callback 'f'
     is used to generated a final element e.g. "shown 5/200" *)
