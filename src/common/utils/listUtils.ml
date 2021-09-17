@@ -140,13 +140,6 @@ let copy_n n v =
   in
   loop [] n
 
-(** physically unique list items, in order of first appearance *)
-let rec phys_uniq = function
-  | [] -> []
-  | [x] -> [x]
-  | x :: (y :: _ as l) when x == y -> phys_uniq l
-  | x :: rl -> x :: phys_uniq rl
-
 (** performs a map, but returns the original list if there is no change **)
 let ident_map f lst =
   let (rev_lst, changed) =

@@ -1040,7 +1040,7 @@ module Env : Env_sig.S = struct
       in
       List.for_all check_scope (List.tl envs) && check_scopes (Base.List.map ~f:List.tl envs)
     in
-    let envs = ListUtils.phys_uniq envs in
+    let envs = Base.List.remove_consecutive_duplicates ~equal:( == ) envs in
     List.length envs <= 1
     ||
     let len = List.length (List.hd envs) in
