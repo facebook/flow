@@ -52,7 +52,7 @@ let print_asts ~strip_root ~write files : File_key.t list option Lwt.t =
     Lwt.return None
   in
   let print_real () =
-    let buckets = ListUtils.bucket_n max_files_open files in
+    let buckets = Base.List.chunks_of ~length:max_files_open files in
     let%lwt changed_files =
       Lwt_list.fold_left_s
         (fun acc files ->

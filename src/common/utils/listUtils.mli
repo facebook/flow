@@ -17,8 +17,6 @@ val first_upto_n : int -> (int -> 'a option) -> 'a list -> 'a list
 
 val last_n : int -> 'a list -> 'a list
 
-val bucket_n : int -> 'a list -> 'a list list
-
 val copy_n : int -> 'a -> 'a list
 
 val ident_map : ('a -> 'a) -> 'a list -> 'a list

@@ -93,20 +93,6 @@ let first_upto_n n f lst =
 (* truncate a list to last 0 < n <= len items *)
 let last_n n lst = Base.List.rev lst |> fold_left_for n (Base.Fn.flip Base.List.cons) []
 
-(* split a list into a list of lists, each of length n except the last whose length is in [0, n) *)
-let bucket_n n lst =
-  let (_, curr, all) =
-    Base.List.fold_left
-      ~f:(fun (i, curr, all) result ->
-        if i = n then
-          (1, [result], Base.List.rev curr :: all)
-        else
-          (i + 1, result :: curr, all))
-      ~init:(0, [], [])
-      lst
-  in
-  Base.List.rev curr :: all |> Base.List.rev
-
 (* make a list of n copies of a given value *)
 let copy_n n v =
   let rec loop acc = function
