@@ -195,8 +195,6 @@ module Make
 
     module WriteSet : Flow_set.S with type elt = write_state
 
-    val mk_unresolved : unit -> t
-
     val empty : unit -> t
 
     val uninitialized : unit -> t
@@ -208,8 +206,6 @@ module Make
     val one : L.t virtual_reason -> t
 
     val all : L.t virtual_reason list -> t
-
-    val resolve : unresolved:t -> t -> unit
 
     val simplify : t -> Env_api.write_loc list
 
@@ -223,17 +219,13 @@ module Make
 
     val normalize_through_refinements : write_state -> WriteSet.t
 
+    val is_maybe_uninitialized : (int -> bool) -> t -> bool
+
     val is_global_undefined : t -> bool
   end = struct
     let curr_id = ref 0
 
-    type ref_state =
-      (* different unresolved vars are distinguished by their ids, which enables using structural
-         equality for computing normal forms: see below *)
-      | Unresolved of int
-      | Resolved of write_state
-
-    and write_state =
+    type write_state =
       | Uninitialized
       | Global of string
       | Loc of L.t virtual_reason
@@ -242,10 +234,6 @@ module Make
           refinement_id: int;
           val_t: t;
         }
-      (* TODO: These are only used to model havoc locs. If bindings propagated the location of the
-       * binding along with the name then we could directly query the Provider_api at the
-       * mk_env call instead of relying on this indirection *)
-      | REF of ref_state ref
 
     and t = {
       id: int;
@@ -265,10 +253,6 @@ module Make
     let mk_with_write_state write_state =
       let id = new_id () in
       { id; write_state }
-
-    let mk_unresolved () =
-      let id = new_id () in
-      mk_with_write_state @@ REF (ref (Unresolved id))
 
     let empty () = mk_with_write_state @@ PHI []
 
@@ -314,7 +298,6 @@ module Make
       | Uninitialized
       | Global _
       | Loc _
-      | REF { contents = Unresolved _ }
       | Refinement _ ->
         WriteSet.singleton t
       | PHI ts ->
@@ -324,11 +307,6 @@ module Make
             WriteSet.union vals' vals)
           WriteSet.empty
           ts
-      | REF ({ contents = Resolved t } as r) ->
-        let vals = normalize t in
-        let t' = join (WriteSet.elements vals) in
-        r := Resolved t';
-        vals
 
     let merge t1 t2 =
       if t1.id = t2.id then
@@ -348,8 +326,7 @@ module Make
       match t with
       | Uninitialized
       | Global _
-      | Loc _
-      | REF { contents = Unresolved _ } ->
+      | Loc _ ->
         WriteSet.singleton t
       | PHI ts ->
         List.fold_left
@@ -358,11 +335,6 @@ module Make
             WriteSet.union vals' vals)
           WriteSet.empty
           ts
-      | REF ({ contents = Resolved t } as r) ->
-        let vals = normalize t in
-        let t' = join (WriteSet.elements vals) in
-        r := Resolved t';
-        vals
       | Refinement { val_t; _ } -> normalize_through_refinements val_t.write_state
 
     let global name = mk_with_write_state @@ Global name
@@ -370,48 +342,6 @@ module Make
     let one reason = mk_with_write_state @@ Loc reason
 
     let all locs = mk_with_write_state @@ join (Base.List.map ~f:(fun reason -> Loc reason) locs)
-
-    (* Resolving unresolved to t essentially models an equation of the form
-       unresolved = t, where unresolved is a reference to an unknown and t is the
-       known. Since the only non-trivial operation in t is joining, it is OK to
-       erase any occurrences of unresolved in t: if t = unresolved | t' then
-       unresolved = t is the same as unresolved = t'.
-
-       This can all go away if we can get rid of unresolved/REF *)
-    let rec resolve ~unresolved t =
-      match unresolved.write_state with
-      | REF ({ contents = Unresolved _ } as r) -> r := Resolved (erase r t.write_state)
-      | _ -> failwith "Only an unresolved REF can be resolved"
-
-    and erase r t =
-      match t with
-      | Uninitialized -> t
-      | Global _ -> t
-      | Loc _ -> t
-      | Refinement _ -> failwith "refinements cannot appear inside a REF"
-      | PHI ts ->
-        let ts' = ListUtils.ident_map (erase r) ts in
-        if ts' == ts then
-          t
-        else
-          PHI ts'
-      | REF r' ->
-        if r == r' then
-          PHI []
-        else
-          let t_opt = !r' in
-          let t_opt' =
-            match t_opt with
-            | Unresolved _ -> t_opt
-            | Resolved t ->
-              let t' = erase r t in
-              if t == t' then
-                t_opt
-              else
-                Resolved t'
-          in
-          if t_opt != t_opt' then r' := t_opt';
-          t
 
     (* Simplification converts a Val.t to a list of locations. *)
     let rec simplify t =
@@ -423,12 +353,22 @@ module Make
           | Refinement { refinement_id; val_t } ->
             Env_api.Refinement { writes = simplify val_t; refinement_id }
           | Global name -> Env_api.Global name
-          | REF _
-          | PHI _ ->
-            failwith "A normalized value cannot be a PHI or REF")
+          | PHI _ -> failwith "A normalized value cannot be a PHI")
         (WriteSet.elements vals)
 
     let id_of_val { id; write_state = _ } = id
+
+    let is_maybe_uninitialized refine_to_undefined { write_state; _ } =
+      let rec state_is_uninitialized v =
+        match v with
+        | Uninitialized -> true
+        | PHI states -> Base.List.exists ~f:state_is_uninitialized states
+        | Refinement { refinement_id; val_t = { write_state; _ } } ->
+          state_is_uninitialized write_state && refine_to_undefined refinement_id
+        | Loc _ -> false
+        | Global _ -> false
+      in
+      state_is_uninitialized write_state
   end
 
   (* An environment is a map from variables to values. *)
@@ -472,15 +412,6 @@ module Make
     type env = t * Env.t
   end
 
-  (* Collect all values assigned to a variable, as a conservative fallback when we
-     don't have precise information. *)
-  module Havoc = struct
-    type t = {
-      unresolved: Val.t;
-      mutable locs: L.t Reason.virtual_reason list;
-    }
-  end
-
   let rec list_iter3 f l1 l2 l3 =
     match (l1, l2, l3) with
     | ([], [], []) -> ()
@@ -495,7 +426,8 @@ module Make
 
   type env_val = {
     val_ref: Val.t ref;
-    havoc: Havoc.t;
+    havoc: Val.t;
+    def_loc: L.t option;
   }
 
   type latest_refinement = {
@@ -545,10 +477,7 @@ module Make
   let initialize_globals unbound_names =
     SSet.fold
       (fun name acc ->
-        let unresolved = Val.mk_unresolved () in
-        (* When we havoc we go back to the original global definition *)
-        Val.resolve ~unresolved (Val.global name);
-        let entry = { val_ref = ref (Val.global name); havoc = { Havoc.unresolved; locs = [] } } in
+        let entry = { val_ref = ref (Val.global name); havoc = Val.global name; def_loc = None } in
         SMap.add name entry acc)
       unbound_names
       SMap.empty
@@ -630,31 +559,47 @@ module Make
 
       method empty_env : Env.t = SMap.map (fun _ -> Val.empty ()) env_state.env
 
-      method havoc_current_env ~all =
+      method havoc_env ~force_initialization ~all =
         SMap.iter
-          (fun _x { val_ref; havoc = { Havoc.unresolved; locs } } ->
-            match locs with
-            | loc :: _
-              when Invalidation_api.should_invalidate
-                     ~all
-                     invalidation_caches
-                     prepass_info
-                     prepass_values
-                     loc ->
-              (* NOTE: havoc_env should already have all writes to x, so the only
-                 additional thing that could come from ssa_env is "uninitialized." On
-                 the other hand, we *dont* want to include "uninitialized" if it's no
-                 longer in ssa_env, since that means that x has been initialized (and
-                 there's no going back). *)
-              val_ref := unresolved
-            | [] ->
-              (* If we haven't yet seen a write to this variable, we always havoc *)
-              val_ref := unresolved
-            | _ -> ())
+          (fun _x { val_ref; havoc; def_loc } ->
+            let maybe_uninitialized =
+              lazy (Val.is_maybe_uninitialized this#refinement_may_be_undefined !val_ref)
+            in
+            let havoc_ref =
+              if (not force_initialization) && Lazy.force maybe_uninitialized then
+                Val.merge (Val.uninitialized ()) havoc
+              else
+                havoc
+            in
+            if
+              Base.Option.is_none def_loc
+              || Invalidation_api.should_invalidate
+                   ~all
+                   invalidation_caches
+                   prepass_info
+                   prepass_values
+                   (Base.Option.value_exn def_loc (* checked against none above *))
+              || (force_initialization && Lazy.force maybe_uninitialized)
+            then
+              val_ref := havoc_ref)
           env_state.env
 
-      method havoc_uninitialized_env =
-        SMap.iter (fun _x { val_ref; havoc } -> val_ref := havoc.Havoc.unresolved) env_state.env
+      method havoc_current_env ~all = this#havoc_env ~all ~force_initialization:false
+
+      method havoc_uninitialized_env = this#havoc_env ~force_initialization:true ~all:true
+
+      method refinement_may_be_undefined id =
+        let rec refine_undefined = function
+          | UndefinedR
+          | MaybeR ->
+            true
+          | NotR r -> not @@ refine_undefined r
+          | OrR (r1, r2) -> refine_undefined r1 || refine_undefined r2
+          | AndR (r1, r2) -> refine_undefined r1 && refine_undefined r2
+          | _ -> false
+        in
+        let (_, id) = this#refinement_of_id id in
+        refine_undefined id
 
       method private mk_env =
         SMap.map (fun (_, (loc, _)) ->
@@ -668,10 +613,7 @@ module Make
                 providers
             in
             env_state <- { env_state with write_entries };
-            {
-              val_ref = ref (Val.uninitialized ());
-              havoc = Havoc.{ unresolved = Val.mk_unresolved (); locs = providers };
-            })
+            { val_ref = ref (Val.uninitialized ()); havoc = Val.all providers; def_loc = Some loc })
 
       method private push_env bindings =
         let old_env = env_state.env in
@@ -680,14 +622,7 @@ module Make
         env_state <- { env_state with env };
         (bindings, old_env)
 
-      method private resolve_havocs =
-        SMap.iter (fun x _loc ->
-            let { havoc = { Havoc.unresolved; locs }; _ } = SMap.find x env_state.env in
-            Val.resolve ~unresolved (Val.all locs))
-
-      method private pop_env (bindings, old_env) =
-        this#resolve_havocs bindings;
-        env_state <- { env_state with env = old_env }
+      method private pop_env (_, old_env) = env_state <- { env_state with env = old_env }
 
       method! with_bindings : 'a. ?lexical:bool -> L.t -> L.t Bindings.t -> ('a -> 'a) -> 'a -> 'a =
         fun ?lexical loc bindings visit node ->
@@ -1040,8 +975,8 @@ module Make
       method havoc_changed_vars changed_vars =
         List.iter
           (fun name ->
-            let { val_ref; havoc = { Havoc.unresolved; _ } } = SMap.find name env_state.env in
-            val_ref := unresolved)
+            let { val_ref; havoc; _ } = SMap.find name env_state.env in
+            val_ref := havoc)
           changed_vars
 
       method handle_continues loop_completion_state continues =

@@ -253,8 +253,13 @@ module New_env : Env_sig.S = struct
     | OrdinaryName _ -> (* TODO *) None
 
   let get_var_declared_type ?(lookup_mode = ForValue) cx name loc =
-    (* TODO, get the annotation if it exists *)
-    query_var ~lookup_mode cx name loc
+    match name with
+    | InternalName _
+    | InternalModuleName _ ->
+      Old_env.get_var_declared_type ~lookup_mode cx name loc
+    | OrdinaryName _ ->
+      let env = Context.environment cx in
+      Base.Option.value_exn (Loc_env.find_write env loc)
 
   (*************)
   (*  Writing  *)

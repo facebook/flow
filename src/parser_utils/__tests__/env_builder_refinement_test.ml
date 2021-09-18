@@ -3005,5 +3005,25 @@ havoc();
         (3, 9) to (3, 14): (`havoc`)
       };
       (7, 1) to (7, 2) => {
+        (uninitialized),
         (2, 4) to (2, 5): (`x`)
+      }] |}]
+
+let%expect_test "captured_havoc" =
+  print_ssa_test {|function g() {
+  var xx : { p : number } | null = { p : 4 };
+  if (xx) {
+    return function () {
+       xx.p = 3;
+    }
+  }
+}
+|};
+  [%expect {|
+    [
+      (3, 6) to (3, 8) => {
+        (2, 6) to (2, 8): (`xx`)
+      };
+      (5, 7) to (5, 9) => {
+        {refinement = Truthy; writes = (2, 6) to (2, 8): (`xx`)}
       }] |}]

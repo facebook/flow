@@ -87,8 +87,7 @@ struct
 
   let mk_caches () = (ref L.LMap.empty, ref L.LMap.empty)
 
-  let should_invalidate ~all (const_like_cache, written_by_closure_cache) info values r =
-    let loc = Reason.poly_loc_of_reason r in
+  let should_invalidate ~all (const_like_cache, written_by_closure_cache) info values loc =
     let const_like =
       match L.LMap.find_opt loc !const_like_cache with
       | Some b -> b
