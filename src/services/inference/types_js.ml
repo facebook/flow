@@ -409,21 +409,6 @@ let include_dependencies_and_dependents
       Lwt.return
         (to_merge, to_check, to_merge_or_check, components, CheckedSet.all definitely_to_merge))
 
-let remove_old_results phase acc file =
-  let (errors, warnings, suppressions, coverage, first_internal_error) = acc in
-  let coverage =
-    match phase with
-    | Context.Merging _
-    | Context.InitLib
-    | Context.ImplicitInstantiation ->
-      coverage
-    | Context.Checking -> FilenameMap.remove file coverage
-  in
-  let errors = FilenameMap.remove file errors in
-  let warnings = FilenameMap.remove file warnings in
-  let suppressions = Error_suppressions.remove file suppressions in
-  (errors, warnings, suppressions, coverage, first_internal_error)
-
 let add_internal_error (errors, first_internal_error) file (loc, internal_error) =
   let new_errors = error_set_of_internal_error file (loc, internal_error) in
   let errors = update_errset errors file new_errors in
@@ -439,18 +424,28 @@ let add_internal_error (errors, first_internal_error) file (loc, internal_error)
   in
   (errors, first_internal_error)
 
-let add_merge_results acc leader =
-  let (errors, warnings, suppressions, coverage, first_internal_error) = acc in
-  function
+let remove_old_merge_results acc file =
+  let (files, errors, warnings, suppressions, coverage, first_internal_error) = acc in
+  let errors = FilenameMap.remove file errors in
+  let warnings = FilenameMap.remove file warnings in
+  let suppressions = Error_suppressions.remove file suppressions in
+  (files, errors, warnings, suppressions, coverage, first_internal_error)
+
+let update_merge_results acc component leader result =
+  let acc = Nel.fold_left remove_old_merge_results acc component in
+  let (merged, errors, warnings, suppressions, coverage, first_internal_error) = acc in
+  match result with
   | Ok None -> acc
   | Ok (Some (new_suppressions, _duration)) ->
+    let merged = Nel.fold_left (fun acc file -> FilenameSet.add file acc) merged component in
     let suppressions = Error_suppressions.update_suppressions suppressions new_suppressions in
-    (errors, warnings, suppressions, coverage, first_internal_error)
+    (merged, errors, warnings, suppressions, coverage, first_internal_error)
   | Error e ->
+    let merged = Nel.fold_left (fun acc file -> FilenameSet.add file acc) merged component in
     let (errors, first_internal_error) =
       add_internal_error (errors, first_internal_error) leader e
     in
-    (errors, warnings, suppressions, coverage, first_internal_error)
+    (merged, errors, warnings, suppressions, coverage, first_internal_error)
 
 let update_slow_files acc file check_time =
   if check_time > 1. then
@@ -465,8 +460,12 @@ let update_slow_files acc file check_time =
   else
     acc
 
-let add_check_results acc slow_files file result =
+let update_check_results (acc, slow_files) (file, result) =
   let (errors, warnings, suppressions, coverage, first_internal_error) = acc in
+  let errors = FilenameMap.remove file errors in
+  let warnings = FilenameMap.remove file warnings in
+  let suppressions = Error_suppressions.remove file suppressions in
+  let coverage = FilenameMap.remove file coverage in
   match result with
   | Ok None -> (acc, slow_files)
   | Ok (Some (new_errors, new_warnings, new_suppressions, new_coverage, check_time)) ->
@@ -490,9 +489,9 @@ let run_merge_service
     ~sig_dependency_graph
     ~component_map
     ~recheck_set
-    acc =
+    (errs, warnings, suppressions, coverage) =
   Memory_utils.with_memory_timer_lwt ~options "Merge" profiling (fun () ->
-      let%lwt (merged, { Merge_service.skipped_count; sig_new_or_changed }) =
+      let%lwt (results, { Merge_service.skipped_count; sig_new_or_changed }) =
         Merge_service.merge
           ~master_mutator
           ~worker_mutator
@@ -503,22 +502,17 @@ let run_merge_service
           ~component_map
           ~recheck_set
       in
-      let (errs, warnings, suppressions, coverage, first_internal_error) =
+      let (merged, errs, warnings, suppressions, coverage, first_internal_error) =
         List.fold_left
           (fun acc (file, _diff, result) ->
             let component = FilenameMap.find file component_map in
-            let acc =
-              Nel.fold_left
-                (remove_old_results (Context.Merging (Options.new_merge options)))
-                acc
-                component
-            in
-            add_merge_results acc file result)
-          acc
-          merged
+            update_merge_results acc component file result)
+          (FilenameSet.empty, errs, warnings, suppressions, coverage, None)
+          results
       in
       Lwt.return
-        ( errs,
+        ( merged,
+          errs,
           warnings,
           suppressions,
           coverage,
@@ -670,7 +664,8 @@ let merge
     calc_deps ~options ~profiling ~sig_dependency_graph ~components files_to_merge
   in
   Hh_logger.info "Merging";
-  let%lwt ( ( merge_errors,
+  let%lwt ( ( merged_files,
+              merge_errors,
               warnings,
               suppressions,
               coverage,
@@ -695,7 +690,7 @@ let merge
         ~sig_dependency_graph
         ~component_map
         ~recheck_set
-        (merge_errors, warnings, suppressions, coverage, None)
+        (merge_errors, warnings, suppressions, coverage)
     in
     let%lwt () =
       if Options.should_profile options then
@@ -735,7 +730,8 @@ let merge
       None
   in
   Lwt.return
-    ( errors,
+    ( merged_files,
+      errors,
       coverage,
       skipped_count,
       sig_new_or_changed,
@@ -754,6 +750,7 @@ module Check_files : sig
     coverage:Coverage_response.file_coverage Utils_js.FilenameMap.t ->
     to_check:CheckedSet.t ->
     direct_dependent_files:Utils_js.FilenameSet.t ->
+    merged_files:Utils_js.FilenameSet.t ->
     sig_new_or_changed:Utils_js.FilenameSet.t ->
     dependency_info:Dependency_info.t ->
     persistent_connections:Persistent_connection.t option ->
@@ -780,6 +777,7 @@ end = struct
       ~coverage
       ~to_check
       ~direct_dependent_files
+      ~merged_files
       ~sig_new_or_changed
       ~dependency_info
       ~persistent_connections
@@ -842,16 +840,15 @@ end = struct
         in
         let { ServerEnv.merge_errors; warnings; _ } = errors in
         let suppressions =
-          (* remove suppressions in skipped dependents. these were added in the merge phase,
-             but since we're not checking these files we need to remove them so they don't
-             show up as unused. *)
-          FilenameSet.fold Error_suppressions.remove dependents_to_skip suppressions
+          (* remove suppressions in dependents we merged but skipped checking. these suppressions
+             were added in the merge phase, but since we're not checking these files we need to
+             remove them so they don't show up as unused. *)
+          let merged_but_skipped = FilenameSet.inter dependents_to_skip merged_files in
+          FilenameSet.fold Error_suppressions.remove merged_but_skipped suppressions
         in
         let ((merge_errors, warnings, suppressions, coverage, first_internal_error), slow_files) =
           List.fold_left
-            (fun (acc, slow_files) (file, result) ->
-              let acc = remove_old_results Context.Checking acc file in
-              add_check_results acc slow_files file result)
+            update_check_results
             ((merge_errors, warnings, suppressions, coverage, None), (0, 0., None))
             ret
         in
@@ -1733,7 +1730,8 @@ end = struct
         (CheckedSet.all to_merge_or_check)
     in
     (* recheck *)
-    let%lwt ( updated_errors,
+    let%lwt ( merged_files,
+              updated_errors,
               coverage,
               merge_skip_count,
               sig_new_or_changed,
@@ -1791,6 +1789,7 @@ end = struct
         ~to_check
         ~direct_dependent_files
         ~sig_new_or_changed
+        ~merged_files
         ~dependency_info
         ~persistent_connections:(Some env.ServerEnv.connections)
         ~recheck_reasons
@@ -2483,7 +2482,14 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           (CheckedSet.all to_merge_or_check)
       in
       let recheck_reasons = [LspProt.Full_init] in
-      let%lwt (updated_errors, coverage, _, sig_new_or_changed, _, _, merge_internal_error) =
+      let%lwt ( merged_files,
+                updated_errors,
+                coverage,
+                _,
+                sig_new_or_changed,
+                _,
+                _,
+                merge_internal_error ) =
         merge
           ~transaction
           ~reader
@@ -2512,6 +2518,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~coverage
           ~to_check
           ~direct_dependent_files:FilenameSet.empty
+          ~merged_files
           ~sig_new_or_changed
           ~dependency_info
           ~persistent_connections:None
