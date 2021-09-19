@@ -1,3 +1,7 @@
+### 0.160.1
+
+* Fix a regression in 0.160.0 that caused suppressions to be ignored upon editing files in some cases when using lazy mode.
+
 ### 0.160.0
 
 New Features:
