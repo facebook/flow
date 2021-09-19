@@ -63,6 +63,69 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
            in
            (NameUtils.Map.union ~combine:(fun _ _ snd -> Some snd) mems1 mems2, errs1 @ errs2))
   in
+  (* given a list of objects, collates the members that exist in all of them *)
+  let intersection_of_members ((t1_members, ts_members) : 'a member_info NameUtils.Map.t Nel.t) =
+    NameUtils.Map.map (map_member_info Nel.one) t1_members
+    |> List.fold_right
+         (NameUtils.Map.merge (fun _ ty_opt tys_opt ->
+              match (ty_opt, tys_opt) with
+              | ( Some { ty; from_proto = fp; from_nullable = fn; def_loc = dl },
+                  Some { ty = tys; from_proto = fps; from_nullable = fns; def_loc = dls } ) ->
+                (* We say that a member formed by unioning other members should be treated:
+                 * - as from a prototype only if all its constituent members are.
+                 * - as from a nullable object if any of its constituent members are.
+                 * we say its def_loc is that of an arbitrary constituent member. *)
+                Some
+                  {
+                    ty = Nel.cons ty tys;
+                    from_proto = fp && fps;
+                    from_nullable = fn || fns;
+                    def_loc = Base.Option.first_some dl dls;
+                  }
+              | (None, _)
+              | (_, None) ->
+                None))
+         ts_members
+  in
+  (* given a list of objects, collates the members that exist in any of them *)
+  let union_of_members ((t1_members, ts_members) : 'a member_info NameUtils.Map.t Nel.t) =
+    NameUtils.Map.map (map_member_info Nel.one) t1_members
+    |> List.fold_right
+         (NameUtils.Map.merge (fun _ ty_opt tys_opt ->
+              match (ty_opt, tys_opt) with
+              | ( Some { ty; from_proto = fp; from_nullable = fn; def_loc = dl },
+                  Some { ty = tys; from_proto = fps; from_nullable = fns; def_loc = dls } ) ->
+                (* We say that a member formed by intersecting other members should be treated:
+                 * - as from a prototype only if all its constituent members are.
+                 * - as from a nullable object only if all its constituent members are.
+                 * we say its def_loc is that of an arbitrary constituent member. *)
+                Some
+                  {
+                    ty = Nel.cons ty tys;
+                    from_proto = fp && fps;
+                    from_nullable = fn && fns;
+                    def_loc = Base.Option.first_some dl dls;
+                  }
+              | (Some info, None) -> Some (map_member_info Nel.one info)
+              | (None, Some info) -> Some info
+              | (None, None) -> None))
+         ts_members
+  in
+  let intersection_of_member_types =
+    NameUtils.Map.map
+      (map_member_info (function
+          | (t, []) -> t
+          | (t1, t2 :: ts) -> Ty_utils.simplify_type ~merge_kinds:true (Inter (t1, t2, ts))))
+  in
+  let union_of_member_types =
+    NameUtils.Map.map
+      (map_member_info (function
+          | (t, []) -> t
+          | (t1, t2 :: ts) -> Ty_utils.simplify_type ~merge_kinds:true (Union (t1, t2, ts))))
+  in
+  let add_special_cases special_cases =
+    NameUtils.Map.map (map_member_info (List.fold_right Nel.cons special_cases))
+  in
   let members_of_union (t1, t2, ts) =
     let ((t1_members, errs1), (t2_members, errs2), (ts_members, errss)) =
       (members_of_ty t1, members_of_ty t2, Base.List.map ~f:members_of_ty ts |> List.split)
@@ -95,31 +158,7 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
     in
     let mems =
       (* set intersection of members; type union upon overlaps *)
-      NameUtils.Map.map (map_member_info Nel.one) t1_members
-      |> List.fold_right
-           (NameUtils.Map.merge (fun _ ty_opt tys_opt ->
-                match (ty_opt, tys_opt) with
-                | ( Some { ty; from_proto = fp; from_nullable = fn; def_loc = dl },
-                    Some { ty = tys; from_proto = fps; from_nullable = fns; def_loc = dls } ) ->
-                  (* We say that a member formed by unioning other members should be treated:
-                   * - as from a prototype only if all its constituent members are.
-                   * - as from a nullable object if any of its constituent members are.
-                   * we say its def_loc is that of an arbitrary constituent member. *)
-                  Some
-                    {
-                      ty = Nel.cons ty tys;
-                      from_proto = fp && fps;
-                      from_nullable = fn || fns;
-                      def_loc = Base.Option.first_some dl dls;
-                    }
-                | (None, _)
-                | (_, None) ->
-                  None))
-           (t2_members :: ts_members)
-      |> NameUtils.Map.map
-           (map_member_info (function
-               | (t, []) -> t
-               | (t1, t2 :: ts) -> Ty_utils.simplify_type ~merge_kinds:true (Union (t1, t2, ts))))
+      (t1_members, t2_members :: ts_members) |> intersection_of_members |> union_of_member_types
     in
     (mems, errs)
   in
@@ -140,32 +179,9 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
     in
     let mems =
       (* set union of members; type intersection upon overlaps *)
-      NameUtils.Map.map (map_member_info Nel.one) t1_members
-      |> List.fold_right
-           (NameUtils.Map.merge (fun _ ty_opt tys_opt ->
-                match (ty_opt, tys_opt) with
-                | ( Some { ty; from_proto = fp; from_nullable = fn; def_loc = dl },
-                    Some { ty = tys; from_proto = fps; from_nullable = fns; def_loc = dls } ) ->
-                  (* We say that a member formed by intersecting other members should be treated:
-                   * - as from a prototype only if all its constituent members are.
-                   * - as from a nullable object only if all its constituent members are.
-                   * we say its def_loc is that of an arbitrary constituent member. *)
-                  Some
-                    {
-                      ty = Nel.cons ty tys;
-                      from_proto = fp && fps;
-                      from_nullable = fn && fns;
-                      def_loc = Base.Option.first_some dl dls;
-                    }
-                | (Some info, None) -> Some (map_member_info Nel.one info)
-                | (None, Some info) -> Some info
-                | (None, None) -> None))
-           (t2_members :: ts_members)
-      |> NameUtils.Map.map (map_member_info (List.fold_right Nel.cons special_cases))
-      |> NameUtils.Map.map
-           (map_member_info (function
-               | (t, []) -> t
-               | (t1, t2 :: ts) -> Ty_utils.simplify_type ~merge_kinds:true (Inter (t1, t2, ts))))
+      union_of_members (t1_members, t2_members :: ts_members)
+      |> add_special_cases special_cases
+      |> intersection_of_member_types
     in
     (mems, errs)
   in
