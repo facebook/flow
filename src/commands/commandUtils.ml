@@ -1225,6 +1225,8 @@ let make_options
     || Base.Option.value (FlowConfig.prioritize_dependency_checks flowconfig) ~default:false
   in
   let strict_mode = FlowConfig.strict_mode flowconfig in
+  let opt_temp_dir = Path.to_string temp_dir in
+  let opt_log_file = server_log_file ~flowconfig_name ~tmp_dir:opt_temp_dir root flowconfig in
   {
     Options.opt_flowconfig_name = flowconfig_name;
     opt_lazy_mode;
@@ -1247,7 +1249,7 @@ let make_options
     opt_munge_underscores =
       options_flags.munge_underscore_members || FlowConfig.munge_underscores flowconfig;
     opt_node_main_fields = FlowConfig.node_main_fields flowconfig;
-    opt_temp_dir = Path.to_string temp_dir;
+    opt_temp_dir;
     opt_max_workers =
       Base.Option.value options_flags.max_workers ~default:(FlowConfig.max_workers flowconfig)
       |> min Sys_utils.nbr_procs;
@@ -1341,6 +1343,7 @@ let make_options
         gc_custom_minor_max_size = FlowConfig.gc_worker_custom_minor_max_size flowconfig;
       };
     opt_log_saving_threshold_time_ms = FlowConfig.log_saving_threshold_time_ms flowconfig;
+    opt_log_file;
   }
 
 let make_env flowconfig flowconfig_name connect_flags root =
