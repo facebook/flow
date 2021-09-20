@@ -52,7 +52,12 @@ let set_saved_state_filename _ = ()
 let set_monitor_options ~file_watcher:_ ~vcs:_ = ()
 
 let set_server_options
-    ~lazy_mode:_ ~abstract_locations:_ ~max_workers:_ ~enabled_rollouts:_ ~debug:_ =
+    ~lazy_mode:_
+    ~abstract_locations:_
+    ~max_workers:_
+    ~enabled_rollouts:_
+    ~debug:_
+    ~log_saving_threshold_time_ms:_ =
   ()
 
 let status_response ~num_errors:_ = ()
