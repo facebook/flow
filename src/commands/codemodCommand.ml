@@ -299,6 +299,7 @@ module Annotate_lti_command = struct
           empty = Acc.empty;
         }
 
+      (* Match all files the codemod is run over *)
       let check_options o = Options.{ o with opt_enforce_local_inference_annotations = true }
 
       let visit =

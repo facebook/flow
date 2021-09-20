@@ -60,6 +60,7 @@ type metadata = {
   enable_new_env: bool;
   enforce_strict_call_arity: bool;
   enforce_local_inference_annotations: bool;
+  local_inference_annotation_dirs: string list;
   experimental_infer_indexers: bool;
   exact_by_default: bool;
   facebook_fbs: string option;
@@ -174,6 +175,8 @@ val goals : t -> Type.t IMap.t
 val exact_by_default : t -> bool
 
 val enforce_local_inference_annotations : t -> bool
+
+val local_inference_annotation_dirs : t -> string list
 
 val experimental_infer_indexers : t -> bool
 

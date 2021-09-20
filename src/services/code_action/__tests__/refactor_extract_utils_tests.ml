@@ -41,6 +41,7 @@ let stub_metadata ~root ~checked =
     enable_enums = true;
     enable_indexed_access = true;
     enforce_local_inference_annotations = false;
+    local_inference_annotation_dirs = [];
     experimental_infer_indexers = false;
     enforce_strict_call_arity = true;
     exact_by_default = false;

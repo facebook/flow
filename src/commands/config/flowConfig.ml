@@ -56,6 +56,7 @@ module Opts = struct
     emoji: bool option;
     enable_const_params: bool;
     enforce_local_inference_annotations: bool;
+    local_inference_annotation_dirs: string list;
     enforce_strict_call_arity: bool;
     enums: bool;
     exact_by_default: bool;
@@ -181,6 +182,7 @@ module Opts = struct
       emoji = None;
       enable_const_params = false;
       enforce_local_inference_annotations = false;
+      local_inference_annotation_dirs = [];
       enforce_strict_call_arity = true;
       enums = false;
       exact_by_default = false;
@@ -424,8 +426,23 @@ module Opts = struct
       ~multiple:true
       (fun opts v -> Ok { opts with haste_paths_includes = v :: opts.haste_paths_includes })
 
-  let local_inference_annotations =
+  let enforce_local_inference_annotations =
     boolean (fun opts v -> Ok { opts with enforce_local_inference_annotations = v })
+
+  let local_inference_annotation_dirs =
+    string
+      ~init:(fun opts -> { opts with local_inference_annotation_dirs = [] })
+      ~multiple:true
+      (fun opts v ->
+        if opts.enforce_local_inference_annotations then
+          Ok
+            {
+              opts with
+              local_inference_annotation_dirs = v :: opts.local_inference_annotation_dirs;
+            }
+        else
+          Error
+            "Option \"enforce_local_inference_annotations\" must be set to true to set \"local_inference_annotation_dirs\".")
 
   let check_updates_against_providers =
     boolean (fun opts v -> Ok { opts with check_updates_against_providers = v })
@@ -658,7 +675,8 @@ module Opts = struct
       ("experimental.abstract_locations", abstract_locations_parser);
       ("experimental.const_params", boolean (fun opts v -> Ok { opts with enable_const_params = v }));
       ("experimental.disable_live_non_parse_errors", disable_live_non_parse_errors_parser);
-      ("experimental.enforce_local_inference_annotations", local_inference_annotations);
+      ("experimental.enforce_local_inference_annotations", enforce_local_inference_annotations);
+      ("experimental.local_inference_annotation_dirs", local_inference_annotation_dirs);
       ("experimental.check_updates_against_providers", check_updates_against_providers);
       ("experimental.enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
@@ -1279,6 +1297,8 @@ let max_literal_length c = c.options.Opts.max_literal_length
 let enable_const_params c = c.options.Opts.enable_const_params
 
 let enforce_local_inference_annotations c = c.options.Opts.enforce_local_inference_annotations
+
+let local_inference_annotation_dirs c = c.options.Opts.local_inference_annotation_dirs
 
 let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
 

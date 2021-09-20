@@ -41,6 +41,7 @@ type metadata = {
   enable_new_env: bool;
   enforce_strict_call_arity: bool;
   enforce_local_inference_annotations: bool;
+  local_inference_annotation_dirs: string list;
   experimental_infer_indexers: bool;
   exact_by_default: bool;
   facebook_fbs: string option;
@@ -233,6 +234,7 @@ let metadata_of_options options =
     enforce_strict_call_arity = Options.enforce_strict_call_arity options;
     check_updates_against_providers = Options.check_updates_against_providers options;
     enforce_local_inference_annotations = Options.enforce_local_inference_annotations options;
+    local_inference_annotation_dirs = Options.local_inference_annotation_dirs options;
     experimental_infer_indexers = Options.experimental_infer_indexers options;
     exact_by_default = Options.exact_by_default options;
     facebook_fbs = Options.facebook_fbs options;
@@ -426,6 +428,8 @@ let goals cx = cx.ccx.goal_map
 let exact_by_default cx = cx.metadata.exact_by_default
 
 let enforce_local_inference_annotations cx = cx.metadata.enforce_local_inference_annotations
+
+let local_inference_annotation_dirs cx = cx.metadata.local_inference_annotation_dirs
 
 let experimental_infer_indexers cx = cx.metadata.experimental_infer_indexers
 
