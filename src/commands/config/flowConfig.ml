@@ -86,6 +86,7 @@ module Opts = struct
     indexed_access: bool;
     lazy_mode: lazy_mode option;
     log_file: Path.t option;
+    log_saving_threshold_time_ms: int option;
     max_files_checked_per_worker: int;
     max_header_tokens: int;
     max_literal_length: int;
@@ -213,6 +214,7 @@ module Opts = struct
       indexed_access = true;
       lazy_mode = None;
       log_file = None;
+      log_saving_threshold_time_ms = None;
       max_files_checked_per_worker = 100;
       max_header_tokens = 10;
       max_literal_length = 100;
@@ -715,6 +717,8 @@ module Opts = struct
       ("indexed_access", boolean (fun opts v -> Ok { opts with indexed_access = v }));
       ("lazy_mode", lazy_mode_parser);
       ("log.file", filepath (fun opts v -> Ok { opts with log_file = Some v }));
+      ( "log_saving.threshold_time_ms",
+        uint (fun opts n -> Ok { opts with log_saving_threshold_time_ms = Some n }) );
       ("max_header_tokens", uint (fun opts v -> Ok { opts with max_header_tokens = v }));
       ("max_literal_length", uint (fun opts v -> Ok { opts with max_literal_length = v }));
       ("merge_timeout", merge_timeout_parser);
@@ -1345,6 +1349,8 @@ let indexed_access c = c.options.Opts.indexed_access
 let lazy_mode c = c.options.Opts.lazy_mode
 
 let log_file c = c.options.Opts.log_file
+
+let log_saving_threshold_time_ms c = c.options.Opts.log_saving_threshold_time_ms
 
 let max_files_checked_per_worker c = c.options.Opts.max_files_checked_per_worker
 

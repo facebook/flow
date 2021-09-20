@@ -144,6 +144,8 @@ val lazy_mode : config -> lazy_mode option
 
 val log_file : config -> Path.t option
 
+val log_saving_threshold_time_ms : config -> int option
+
 val max_files_checked_per_worker : config -> int
 
 val max_header_tokens : config -> int

@@ -88,6 +88,7 @@ type t = {
   opt_include_warnings: bool;
   opt_lazy_mode: bool;
   opt_lint_severities: Severity.severity LintSettings.t;
+  opt_log_saving_threshold_time_ms: int option;
   opt_max_files_checked_per_worker: int;
   opt_max_header_tokens: int;
   opt_max_literal_length: int;
@@ -194,6 +195,8 @@ let is_debug_mode opts = opts.opt_debug
 let lazy_mode opts = opts.opt_lazy_mode
 
 let is_quiet opts = opts.opt_quiet
+
+let log_saving_threshold_time_ms opts = opts.opt_log_saving_threshold_time_ms
 
 let max_files_checked_per_worker opts = opts.opt_max_files_checked_per_worker
 
