@@ -57,7 +57,8 @@ let set_server_options
     ~max_workers:_
     ~enabled_rollouts:_
     ~debug:_
-    ~log_saving_threshold_time_ms:_ =
+    ~log_saving_threshold_time_ms:_
+    ~log_file:_ =
   ()
 
 let status_response ~num_errors:_ = ()

@@ -50,12 +50,14 @@ let (set_server_options, dump_server_options) =
     let enabled_rollouts = Options.enabled_rollouts server_options in
     let debug = Options.is_debug_mode server_options in
     let log_saving_threshold_time_ms = Options.log_saving_threshold_time_ms server_options in
+    let log_file = Options.log_file server_options |> Path.to_string in
     ( lazy_mode,
       abstract_locations,
       max_workers,
       enabled_rollouts,
       debug,
-      log_saving_threshold_time_ms )
+      log_saving_threshold_time_ms,
+      log_file )
   in
   let set_server_options ~server_options =
     let ( lazy_mode,
@@ -63,7 +65,8 @@ let (set_server_options, dump_server_options) =
           max_workers,
           enabled_rollouts,
           debug,
-          log_saving_threshold_time_ms ) =
+          log_saving_threshold_time_ms,
+          log_file ) =
       format server_options
     in
     FlowEventLogger.set_server_options
@@ -73,6 +76,7 @@ let (set_server_options, dump_server_options) =
       ~enabled_rollouts
       ~debug
       ~log_saving_threshold_time_ms
+      ~log_file
   in
   let dump_server_options ~server_options ~log =
     let ( lazy_mode,
@@ -80,7 +84,8 @@ let (set_server_options, dump_server_options) =
           max_workers,
           enabled_rollouts,
           debug,
-          log_saving_threshold_time_ms ) =
+          log_saving_threshold_time_ms,
+          log_file ) =
       format server_options
     in
     log (Printf.sprintf "lazy_mode=%s" lazy_mode);
@@ -89,6 +94,7 @@ let (set_server_options, dump_server_options) =
     log (Printf.sprintf "debug=%b" debug);
     Base.Option.iter log_saving_threshold_time_ms ~f:(fun ms ->
         log (Printf.sprintf "log_saving_threshold_time_ms=%d" ms));
+    log (Printf.sprintf "log_file=%s" log_file);
     SMap.iter (fun r g -> log (Printf.sprintf "Rollout %S set to %S" r g)) enabled_rollouts
   in
   (set_server_options, dump_server_options)
