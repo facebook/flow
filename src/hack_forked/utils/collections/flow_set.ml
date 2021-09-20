@@ -71,6 +71,29 @@ module type S = sig
   val to_seq : t -> elt Seq.t
 
   val of_list : elt list -> t
+
+  val make_pp : (Format.formatter -> elt -> unit) -> Format.formatter -> t -> unit
 end
 
-module Make : functor (Ord : Set.OrderedType) -> S with type elt = Ord.t = Set.Make
+module Make (Ord : Set.OrderedType) : S with type elt = Ord.t = struct
+  include Set.Make (Ord)
+
+  let make_pp pp_key fmt iset =
+    Format.fprintf fmt "@[<2>{";
+    let elements = elements iset in
+    (match elements with
+    | [] -> ()
+    | _ -> Format.fprintf fmt " ");
+    ignore
+      (List.fold_left
+         (fun sep s ->
+           if sep then Format.fprintf fmt ";@ ";
+           pp_key fmt s;
+           true)
+         false
+         elements);
+    (match elements with
+    | [] -> ()
+    | _ -> Format.fprintf fmt " ");
+    Format.fprintf fmt "@,}@]"
+end

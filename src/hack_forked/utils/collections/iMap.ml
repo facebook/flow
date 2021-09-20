@@ -8,6 +8,6 @@
 include WrappedMap.Make (IntKey)
 
 let pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit =
- (fun pp_data -> make_pp Format.pp_print_int pp_data)
+ (fun pp_data -> make_pp IntKey.pp pp_data)
 
 let show pp_data x = Format.asprintf "%a" (pp pp_data) x
