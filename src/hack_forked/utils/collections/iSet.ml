@@ -7,24 +7,7 @@
 
 include Flow_set.Make (IntKey)
 
-let pp fmt iset =
-  Format.fprintf fmt "@[<2>{";
-  let elements = elements iset in
-  (match elements with
-  | [] -> ()
-  | _ -> Format.fprintf fmt " ");
-  ignore
-    (List.fold_left
-       (fun sep s ->
-         if sep then Format.fprintf fmt ";@ ";
-         Format.pp_print_int fmt s;
-         true)
-       false
-       elements);
-  (match elements with
-  | [] -> ()
-  | _ -> Format.fprintf fmt " ");
-  Format.fprintf fmt "@,}@]"
+let pp = make_pp IntKey.pp
 
 let show iset = Format.asprintf "%a" pp iset
 

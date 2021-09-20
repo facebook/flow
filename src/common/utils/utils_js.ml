@@ -15,7 +15,13 @@ let prerr_endlinef fmt = Printf.ksprintf prerr_endline fmt
 
 let exe_name = Filename.basename Sys.executable_name
 
-module FilenameSet = Flow_set.Make (File_key)
+module FilenameSet = struct
+  include Flow_set.Make (File_key)
+
+  let pp = make_pp File_key.pp
+
+  let show x = Format.asprintf "%a" pp x
+end
 
 module FilenameMap = struct
   include WrappedMap.Make (File_key)
