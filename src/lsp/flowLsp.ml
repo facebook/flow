@@ -2378,6 +2378,13 @@ and main_log_command (state : state) (metadata : LspProt.metadata) : unit =
     metadata
   in
   let client_context = FlowEventLogger.get_context () in
+  let request_id =
+    let default = "" in
+    let f = Hh_json.json_to_string in
+    Hh_json.Access.get_val "id" (start_json_truncated, [])
+    |> Hh_json.Access.to_option
+    |> Base.Option.value_map ~default ~f
+  in
   let request = start_json_truncated |> Hh_json.json_to_string in
   let persistent_context =
     let start_server_status =
@@ -2422,6 +2429,7 @@ and main_log_command (state : state) (metadata : LspProt.metadata) : unit =
   | None ->
     FlowEventLogger.persistent_command_success
       ~server_logging_context
+      ~request_id
       ~request
       ~extra_data
       ~client_context
@@ -2434,6 +2442,7 @@ and main_log_command (state : state) (metadata : LspProt.metadata) : unit =
   | Some (LspProt.ExpectedError, msg, stack) ->
     FlowEventLogger.persistent_command_success
       ~server_logging_context
+      ~request_id
       ~request
       ~extra_data
       ~client_context
