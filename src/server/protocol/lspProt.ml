@@ -40,6 +40,8 @@ type metadata = {
   lsp_method_name: string;
   (* If we're tracking an interaction in the lsp process, this is the id of the interaction *)
   interaction_tracking_id: int option;
+  (* JSON-RPC id of corresponding LSP request *)
+  lsp_id: Lsp.lsp_id option;
 }
 
 (** For LSP work-items, we keep metadata about requests, to help us log better telemetry.
@@ -60,6 +62,7 @@ let empty_metadata =
     server_logging_context = None;
     lsp_method_name = "";
     interaction_tracking_id = None;
+    lsp_id = None;
   }
 
 (* This is the reason why we start to do a recheck. Since rechecks can be combined together, there

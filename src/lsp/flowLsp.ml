@@ -259,6 +259,7 @@ let new_metadata (state : state) (message : Jsonrpc.message) : LspProt.metadata 
       None
     | Some (Shown (_, params)) -> Some params.ShowStatus.request.ShowMessageRequest.message
   in
+  let lsp_id = message.Jsonrpc.id |> Base.Option.map ~f:Lsp_fmt.parse_id in
   {
     LspProt.empty_metadata with
     LspProt.start_wall_time = message.Jsonrpc.timestamp;
@@ -269,6 +270,7 @@ let new_metadata (state : state) (message : Jsonrpc.message) : LspProt.metadata 
     start_lsp_state;
     start_lsp_state_reason;
     lsp_method_name = Jsonrpc.(message.method_);
+    lsp_id;
   }
 
 let edata_of_exception exn =
@@ -2374,16 +2376,15 @@ and main_log_command (state : state) (metadata : LspProt.metadata) : unit =
     error_info;
     lsp_method_name = _;
     interaction_tracking_id = _;
+    lsp_id;
   } =
     metadata
   in
   let client_context = FlowEventLogger.get_context () in
   let request_id =
-    let default = "" in
-    let f = Hh_json.json_to_string in
-    Hh_json.Access.get_val "id" (start_json_truncated, [])
-    |> Hh_json.Access.to_option
-    |> Base.Option.value_map ~default ~f
+    let default = "notif" in
+    let f = Lsp_fmt.id_to_string in
+    Base.Option.value_map lsp_id ~default ~f
   in
   let request = start_json_truncated |> Hh_json.json_to_string in
   let persistent_context =
