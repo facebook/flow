@@ -330,12 +330,16 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
         ~f:(reduce_implicit_instantiation_check reducer init_cx Polarity.Neutral)
         implicit_instantiation_checks
     in
-    Context.set_graph cx reducer#get_reduced_graph;
-    Context.set_trust_graph cx reducer#get_reduced_trust_graph;
-    Context.set_property_maps cx reducer#get_reduced_property_maps;
-    Context.set_call_props cx reducer#get_reduced_call_props;
-    Context.set_export_maps cx reducer#get_reduced_export_maps;
-    Context.set_evaluated cx reducer#get_reduced_evaluated;
+    Context.merge_into
+      ccx
+      {
+        Type.TypeContext.graph = reducer#get_reduced_graph;
+        trust_graph = reducer#get_reduced_trust_graph;
+        property_maps = reducer#get_reduced_property_maps;
+        call_props = reducer#get_reduced_call_props;
+        export_maps = reducer#get_reduced_export_maps;
+        evaluated = reducer#get_reduced_evaluated;
+      };
 
     let r =
       Base.List.fold_left
