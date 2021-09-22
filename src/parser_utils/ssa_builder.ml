@@ -255,10 +255,10 @@ struct
     havoc: Havoc.t;
   }
 
-  class ssa_builder =
+  class ssa_builder ~flowmin_compatibility =
     object (this)
       (* TODO: with_types should probably be false, but this maintains previous behavior *)
-      inherit scope_builder ~flowmin_compatibility:false ~with_types:true as super
+      inherit scope_builder ~flowmin_compatibility ~with_types:true as super
 
       (* We maintain a map of read locations to raw Val.t terms, which are
          simplified to lists of write locations once the analysis is done. *)
@@ -1169,7 +1169,7 @@ struct
 
   let program_with_scope ?(flowmin_compatibility = false) program =
     let (loc, _) = program in
-    let ssa_walk = new ssa_builder in
+    let ssa_walk = new ssa_builder ~flowmin_compatibility in
     let bindings =
       if flowmin_compatibility then
         let hoist = new lexical_hoister ~flowmin_compatibility in

@@ -57,7 +57,7 @@ let filter_uninitialized
 
 class property_assignment (property_names : SSet.t) =
   object (this)
-    inherit Ssa_builder.With_ALoc.ssa_builder as super
+    inherit Ssa_builder.With_ALoc.ssa_builder ~flowmin_compatibility:false as super
 
     (* ABRUPT COMPLETIONS *)
     method expecting_return_or_throw (f : unit -> unit) : unit =

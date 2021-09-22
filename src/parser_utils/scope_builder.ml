@@ -383,11 +383,13 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           ()
 
       method! function_declaration loc (expr : (L.t, L.t) Ast.Function.t) =
-        let contains_with_or_eval =
+        let skip_scope =
+          flowmin_compatibility
+          &&
           let visit = new with_or_eval_visitor in
           visit#eval (visit#function_declaration loc) expr
         in
-        if not contains_with_or_eval then (
+        if not skip_scope then (
           let open Ast.Function in
           let {
             id;
@@ -413,11 +415,13 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       (* Almost the same as function_declaration, except that the name of the
          function expression is locally in scope. *)
       method! function_ loc (expr : (L.t, L.t) Ast.Function.t) =
-        let contains_with_or_eval =
+        let skip_scope =
+          flowmin_compatibility
+          &&
           let visit = new with_or_eval_visitor in
           visit#eval (visit#function_ loc) expr
         in
-        (if not contains_with_or_eval then
+        (if not skip_scope then
           let open Ast.Function in
           let {
             id;
