@@ -13,7 +13,7 @@ let print_values refinement_of_id =
   let open Env_builder.With_Loc.Env_api in
   let rec print_value write_loc =
     match write_loc with
-    | Uninitialized -> "(uninitialized)"
+    | Uninitialized _ -> "(uninitialized)"
     | Write reason ->
       let loc = Reason.poly_loc_of_reason reason in
       Utils_js.spf

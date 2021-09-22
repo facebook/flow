@@ -34,13 +34,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- havoc.js:8:2
 
-Cannot cast `ya` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `ya` to number because uninitialized variable [1] is incompatible with number [2]. [incompatible-cast]
 
    havoc.js:8:2
    8| (ya: number)
-       ^^ [1]
+       ^^
 
 References:
+   havoc.js:7:5
+   7| var ya: number;
+          ^^ [1]
    havoc.js:8:6
    8| (ya: number)
            ^^^^^^ [2]
@@ -48,13 +51,16 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ initialize.js:8:2
 
-Cannot cast `x` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `x` to number because uninitialized variable [1] is incompatible with number [2]. [incompatible-cast]
 
    initialize.js:8:2
    8| (x: number); // error
-       ^ [1]
+       ^
 
 References:
+   initialize.js:3:5
+   3| var x;
+          ^ [1]
    initialize.js:8:5
    8| (x: number); // error
           ^^^^^^ [2]
@@ -62,13 +68,17 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- initialize.js:21:2
 
-Cannot cast `y` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `y` to number because possibly uninitialized variable [1] is incompatible with number [2].
+[incompatible-cast]
 
    initialize.js:21:2
    21| (y: number); // error
-        ^ [1]
+        ^
 
 References:
+   initialize.js:12:5
+   12| var y;
+           ^ [1]
    initialize.js:21:5
    21| (y: number); // error
            ^^^^^^ [2]
@@ -76,13 +86,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- initialize.js:29:2
 
-Cannot cast `w` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `w` to number because uninitialized variable [1] is incompatible with number [2]. [incompatible-cast]
 
    initialize.js:29:2
    29| (w: number);
-        ^ [1]
+        ^
 
 References:
+   initialize.js:24:7
+   24|   var w ;
+             ^ [1]
    initialize.js:29:5
    29| (w: number);
            ^^^^^^ [2]
@@ -107,6 +120,24 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- loops.js:12:20
 
+Cannot assign `z` to `w` because possibly uninitialized variable [1] is incompatible with number [2].
+[incompatible-type]
+
+   loops.js:12:20
+   12|     var w:number = z; // 2 errors: ?string !~> number
+                          ^
+
+References:
+   loops.js:7:9
+    7|     var z;
+               ^ [1]
+   loops.js:12:11
+   12|     var w:number = z; // 2 errors: ?string !~> number
+                 ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- loops.js:12:20
+
 Cannot assign `z` to `w` because string [1] is incompatible with number [2]. [incompatible-type]
 
    loops.js:12:20
@@ -117,20 +148,6 @@ References:
    loops.js:9:30
     9|         if (x == null) { z = ""; break; }
                                     ^^ [1]
-   loops.js:12:11
-   12|     var w:number = z; // 2 errors: ?string !~> number
-                 ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- loops.js:12:20
-
-Cannot assign `z` to `w` because undefined [1] is incompatible with number [2]. [incompatible-type]
-
-   loops.js:12:20
-   12|     var w:number = z; // 2 errors: ?string !~> number
-                          ^ [1]
-
-References:
    loops.js:12:11
    12|     var w:number = z; // 2 errors: ?string !~> number
                  ^^^^^^ [2]
@@ -299,13 +316,16 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:38:2
 
-Cannot cast `ya` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+Cannot cast `ya` to number because uninitialized variable [1] is incompatible with number [2]. [incompatible-cast]
 
    test.js:38:2
    38| (ya: number)
-        ^^ [1]
+        ^^
 
 References:
+   test.js:37:5
+   37| var ya: number;
+           ^^ [1]
    test.js:38:6
    38| (ya: number)
             ^^^^^^ [2]

@@ -197,7 +197,7 @@ module Make
 
     val empty : unit -> t
 
-    val uninitialized : unit -> t
+    val uninitialized : L.t -> t
 
     val merge : t -> t -> t
 
@@ -219,14 +219,14 @@ module Make
 
     val normalize_through_refinements : write_state -> WriteSet.t
 
-    val is_maybe_uninitialized : (int -> bool) -> t -> bool
+    val locs_of_uninitialized : (int -> bool) -> t -> L.t list
 
     val is_global_undefined : t -> bool
   end = struct
     let curr_id = ref 0
 
     type write_state =
-      | Uninitialized
+      | Uninitialized of L.t
       | Global of string
       | Loc of L.t virtual_reason
       | PHI of write_state list
@@ -256,7 +256,7 @@ module Make
 
     let empty () = mk_with_write_state @@ PHI []
 
-    let uninitialized () = mk_with_write_state Uninitialized
+    let uninitialized r = mk_with_write_state (Uninitialized r)
 
     let refinement refinement_id val_t = mk_with_write_state @@ Refinement { refinement_id; val_t }
 
@@ -295,7 +295,7 @@ module Make
 
     let rec normalize (t : write_state) : WriteSet.t =
       match t with
-      | Uninitialized
+      | Uninitialized _
       | Global _
       | Loc _
       | Refinement _ ->
@@ -324,7 +324,7 @@ module Make
 
     let rec normalize_through_refinements (t : write_state) : WriteSet.t =
       match t with
-      | Uninitialized
+      | Uninitialized _
       | Global _
       | Loc _ ->
         WriteSet.singleton t
@@ -348,7 +348,9 @@ module Make
       let vals = normalize t.write_state in
       Base.List.map
         ~f:(function
-          | Uninitialized -> Env_api.Uninitialized
+          | Uninitialized l when WriteSet.cardinal vals <= 1 ->
+            Env_api.Uninitialized (mk_reason RUninitialized l)
+          | Uninitialized l -> Env_api.Uninitialized (mk_reason RPossiblyUninitialized l)
           | Loc r -> Env_api.Write r
           | Refinement { refinement_id; val_t } ->
             Env_api.Refinement { writes = simplify val_t; refinement_id }
@@ -358,15 +360,19 @@ module Make
 
     let id_of_val { id; write_state = _ } = id
 
-    let is_maybe_uninitialized refine_to_undefined { write_state; _ } =
+    let locs_of_uninitialized refine_to_undefined { write_state; _ } =
       let rec state_is_uninitialized v =
         match v with
-        | Uninitialized -> true
-        | PHI states -> Base.List.exists ~f:state_is_uninitialized states
+        | Uninitialized l -> [l]
+        | PHI states -> Base.List.concat_map ~f:state_is_uninitialized states
         | Refinement { refinement_id; val_t = { write_state; _ } } ->
-          state_is_uninitialized write_state && refine_to_undefined refinement_id
-        | Loc _ -> false
-        | Global _ -> false
+          let states = state_is_uninitialized write_state in
+          if List.length states = 0 || (not @@ refine_to_undefined refinement_id) then
+            []
+          else
+            states
+        | Loc _ -> []
+        | Global _ -> []
       in
       state_is_uninitialized write_state
   end
@@ -562,12 +568,15 @@ module Make
       method havoc_env ~force_initialization ~all =
         SMap.iter
           (fun _x { val_ref; havoc; def_loc } ->
-            let maybe_uninitialized =
-              lazy (Val.is_maybe_uninitialized this#refinement_may_be_undefined !val_ref)
+            let uninitialized_locs =
+              lazy (Val.locs_of_uninitialized this#refinement_may_be_undefined !val_ref)
             in
             let havoc_ref =
-              if (not force_initialization) && Lazy.force maybe_uninitialized then
-                Val.merge (Val.uninitialized ()) havoc
+              if not force_initialization then
+                Base.List.fold
+                  ~init:havoc
+                  ~f:(fun acc loc -> Val.merge acc (Val.uninitialized loc))
+                  (Lazy.force uninitialized_locs)
               else
                 havoc
             in
@@ -579,7 +588,7 @@ module Make
                    prepass_info
                    prepass_values
                    (Base.Option.value_exn def_loc (* checked against none above *))
-              || (force_initialization && Lazy.force maybe_uninitialized)
+              || (force_initialization && List.length (Lazy.force uninitialized_locs) > 0)
             then
               val_ref := havoc_ref)
           env_state.env
@@ -608,7 +617,7 @@ module Make
             in
             let havoc =
               if Base.List.is_empty providers then
-                Val.uninitialized ()
+                Val.uninitialized loc
               else
                 Val.all providers
             in
@@ -619,7 +628,7 @@ module Make
                 providers
             in
             env_state <- { env_state with write_entries };
-            { val_ref = ref (Val.uninitialized ()); havoc; def_loc = Some loc })
+            { val_ref = ref (Val.uninitialized loc); havoc; def_loc = Some loc })
 
       method private push_env bindings =
         let old_env = env_state.env in

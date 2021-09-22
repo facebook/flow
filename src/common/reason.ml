@@ -249,6 +249,8 @@ type 'loc virtual_reason_desc =
   | RPossiblyMissingPropFromObj of name * 'loc virtual_reason_desc
   | RWidenedObjProp of 'loc virtual_reason_desc
   | RUnionBranching of 'loc virtual_reason_desc * int
+  | RUninitialized
+  | RPossiblyUninitialized
 [@@deriving eq, show]
 
 and reason_desc_function =
@@ -268,7 +270,7 @@ let rec map_desc_locs f = function
     | RROArrayType | RTupleType | RTupleElement | RTupleLength _ | RTupleOutOfBoundsAccess
     | RFunction _ | RFunctionType | RFunctionBody | RFunctionCallType | RFunctionUnusedArgument
     | RJSXFunctionCall _ | RJSXIdentifier _ | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt
-      ) as r ->
+    | RUninitialized | RPossiblyUninitialized ) as r ->
     r
   | RFunctionCall desc -> RFunctionCall (map_desc_locs f desc)
   | RUnknownUnspecifiedProperty desc -> RUnknownUnspecifiedProperty (map_desc_locs f desc)
@@ -745,6 +747,8 @@ let rec string_of_desc = function
       (string_of_desc desc)
   | RWidenedObjProp desc -> string_of_desc desc
   | RUnionBranching (desc, _) -> string_of_desc desc
+  | RUninitialized -> "uninitialized variable"
+  | RPossiblyUninitialized -> "possibly uninitialized variable"
 
 let string_of_reason ?(strip_root = None) r =
   let spos = string_of_aloc ~strip_root (aloc_of_reason r) in
@@ -1358,6 +1362,8 @@ let classification_of_reason r =
   | RVoid
   | RNull
   | RVoidedNull
+  | RUninitialized
+  | RPossiblyUninitialized
   | RNullOrVoid ->
     `Nullish
   | RArray

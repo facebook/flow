@@ -189,6 +189,8 @@ type 'loc virtual_reason_desc =
   | RPossiblyMissingPropFromObj of name * 'loc virtual_reason_desc
   | RWidenedObjProp of 'loc virtual_reason_desc
   | RUnionBranching of 'loc virtual_reason_desc * int
+  | RUninitialized
+  | RPossiblyUninitialized
 
 and reason_desc_function =
   | RAsync

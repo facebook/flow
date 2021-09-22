@@ -178,7 +178,7 @@ module New_env : Env_sig.S = struct
     let rec type_of_state states refi =
       Base.List.map
         ~f:(function
-          | Env_api.With_ALoc.Uninitialized -> Type.(VoidT.at loc |> with_trust Trust.bogus_trust)
+          | Env_api.Uninitialized reason -> Type.(VoidT.make reason |> with_trust Trust.bogus_trust)
           | Env_api.With_ALoc.Write reason ->
             Debug_js.Verbose.print_if_verbose
               cx
@@ -235,7 +235,7 @@ module New_env : Env_sig.S = struct
     let rec local_def_exists states =
       Base.List.exists
         ~f:(function
-          | Env_api.With_ALoc.Uninitialized -> true
+          | Env_api.With_ALoc.Uninitialized _ -> true
           | Env_api.With_ALoc.Write _ -> true
           | Env_api.With_ALoc.Refinement { refinement_id = _; writes } -> local_def_exists writes
           | Env_api.With_ALoc.Global _ -> false)

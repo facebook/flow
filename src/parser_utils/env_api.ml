@@ -22,7 +22,7 @@ module type S = sig
 
   type write_loc =
     | Write of L.t Reason.virtual_reason
-    | Uninitialized
+    | Uninitialized of L.t Reason.virtual_reason
     | Refinement of {
         refinement_id: int;
         writes: write_locs;
@@ -125,7 +125,7 @@ module Make
 
   type write_loc =
     | Write of L.t Reason.virtual_reason
-    | Uninitialized
+    | Uninitialized of L.t Reason.virtual_reason
     | Refinement of {
         refinement_id: int;
         writes: write_locs;
@@ -207,7 +207,7 @@ module Make
     | Refinement { refinement_id = _; writes } ->
       writes |> List.map writes_of_write_loc |> List.flatten
     | Write r -> [Reason.poly_loc_of_reason r]
-    | Uninitialized -> []
+    | Uninitialized _ -> []
     | Global _ -> []
 
   let sources_of_use { env_values = vals; refinement_of_id; _ } loc =
@@ -232,7 +232,7 @@ module Make
   let print_values =
     let rec print_write_loc write_loc =
       match write_loc with
-      | Uninitialized -> "(uninitialized)"
+      | Uninitialized _ -> "(uninitialized)"
       | Write reason ->
         let loc = Reason.poly_loc_of_reason reason in
         Utils_js.spf
