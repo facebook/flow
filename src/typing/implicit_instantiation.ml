@@ -320,7 +320,7 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
         file
         aloc_table
         (Reason.OrdinaryName module_ref)
-        Context.ImplicitInstantiation
+        Context.PostInference
     in
     let reducer =
       new Context_optimizer.context_optimizer ~no_lowers:(fun _ -> Unsoundness.merged_any)

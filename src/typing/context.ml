@@ -189,14 +189,14 @@ type phase =
   | InitLib
   | Checking
   | Merging of bool  (** old/new *)
-  | ImplicitInstantiation
+  | PostInference
 
 let string_of_phase = function
   | InitLib -> "InitLib"
   | Checking -> "Checking"
   | Merging true -> "Merging (new)"
   | Merging false -> "Merging (old)"
-  | ImplicitInstantiation -> "ImplicitInstantiation"
+  | PostInference -> "PostInference"
 
 type t = {
   ccx: component_t;

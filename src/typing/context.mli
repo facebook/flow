@@ -88,7 +88,7 @@ type phase =
   | InitLib
   | Checking
   | Merging of bool
-  | ImplicitInstantiation
+  | PostInference
 
 val string_of_phase : phase -> string
 

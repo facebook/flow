@@ -168,6 +168,7 @@ let check_implicit_instantiations cx master_cx =
       implicit_instantiation_checks
 
 class resolver_visitor =
+  (* TODO: replace this with the context_optimizer *)
   let no_lowers _cx r = Type.Unsoundness.merged_any r in
   object (self)
     inherit [unit] Type_mapper.t_with_uses as super
@@ -268,16 +269,51 @@ let detect_literal_subtypes =
         Flow_js.flow cx (t, u))
       checks
 
-let check_constrained_writes =
-  let visitor = new resolver_visitor in
-  fun cx ->
-    let checks = Context.constrained_writes cx in
-    List.iter
-      (fun (t, u) ->
-        let t = visitor#type_ cx () t in
-        let u = visitor#use_type cx () u in
-        Flow_js.flow cx (t, u))
-      checks
+let check_constrained_writes init_cx master_cx =
+  let checks = Context.constrained_writes init_cx in
+  if not @@ Base.List.is_empty checks then (
+    let file = Context.file init_cx in
+    let metadata = Context.metadata init_cx in
+    let aloc_table = Utils_js.FilenameMap.find file (Context.aloc_tables init_cx) in
+    let module_ref = Files.module_ref file in
+    let ccx = Context.make_ccx master_cx in
+
+    let reducer =
+      new Context_optimizer.context_optimizer ~no_lowers:(fun _ -> Type.Unsoundness.merged_any)
+    in
+    let checks =
+      Base.List.map
+        ~f:(fun (t, u) ->
+          let t = reducer#type_ init_cx Polarity.Neutral t in
+          let u = reducer#use_type init_cx Polarity.Neutral u in
+          (t, u))
+        checks
+    in
+    Context.merge_into
+      ccx
+      {
+        Type.TypeContext.graph = reducer#get_reduced_graph;
+        trust_graph = reducer#get_reduced_trust_graph;
+        property_maps = reducer#get_reduced_property_maps;
+        call_props = reducer#get_reduced_call_props;
+        export_maps = reducer#get_reduced_export_maps;
+        evaluated = reducer#get_reduced_evaluated;
+      };
+
+    let cx =
+      Context.make
+        ccx
+        metadata
+        file
+        aloc_table
+        (Reason.OrdinaryName module_ref)
+        Context.PostInference
+    in
+    Base.List.iter ~f:(Flow_js.flow cx) checks;
+
+    let new_errors = Context.errors cx in
+    Flow_error.ErrorSet.iter (Context.add_error init_cx) new_errors
+  )
 
 let get_lint_severities metadata strict_mode lint_severities =
   if metadata.Context.strict || metadata.Context.strict_local then
@@ -309,7 +345,7 @@ let post_merge_checks cx master_cx ast tast metadata file_sig =
   detect_escaped_generics results;
   detect_matching_props_violations cx;
   detect_literal_subtypes cx;
-  check_constrained_writes cx
+  check_constrained_writes cx master_cx
 
 let optimize_builtins cx =
   let reducer =
