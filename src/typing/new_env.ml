@@ -282,9 +282,14 @@ module New_env : Env_sig.S = struct
       in
       let general =
         match providers with
-        | None
+        | None -> assert_false (spf "Missing providers for %s" (ALoc.debug_to_string loc))
         | Some [] ->
-          assert_false (spf "Missing providers for %s" (ALoc.debug_to_string loc))
+          (* There shouldn't generally be a way that we can write to a variable without a
+             provider--if it didnt already have a provider, and we write something to it,
+             that should be the provider! However, we do still call `set_env_entry` on
+             variables that are never written to when we bind them, e.g. `var x;` will
+             bind an open tvar for the general type of `x`. *)
+          VoidT.at loc (bogus_trust ())
         | Some [t] -> t
         | Some (t1 :: t2 :: ts) ->
           UnionT (mk_reason (RCustom "providers") loc, UnionRep.make t1 t2 ts)

@@ -606,6 +606,12 @@ module Make
             let providers =
               Base.Option.value ~default:[] (Provider_api.providers_of_def provider_info loc)
             in
+            let havoc =
+              if Base.List.is_empty providers then
+                Val.uninitialized ()
+              else
+                Val.all providers
+            in
             let write_entries =
               Base.List.fold
                 ~f:(fun acc r -> L.LMap.add (poly_loc_of_reason r) r acc)
@@ -613,7 +619,7 @@ module Make
                 providers
             in
             env_state <- { env_state with write_entries };
-            { val_ref = ref (Val.uninitialized ()); havoc = Val.all providers; def_loc = Some loc })
+            { val_ref = ref (Val.uninitialized ()); havoc; def_loc = Some loc })
 
       method private push_env bindings =
         let old_env = env_state.env in

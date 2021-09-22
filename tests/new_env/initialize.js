@@ -19,3 +19,13 @@ let g = function() {
 };
 
 (y: number); // error
+
+if ((42: any)) {
+  var w ;
+} else {
+  var w;
+}
+
+(w: number);
+
+

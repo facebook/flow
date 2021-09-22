@@ -3027,3 +3027,16 @@ let%expect_test "captured_havoc" =
       (5, 7) to (5, 9) => {
         {refinement = Truthy; writes = (2, 6) to (2, 8): (`xx`)}
       }] |}]
+
+let%expect_test "no_providers" =
+  print_ssa_test {|
+var x;
+function fn() {
+    x;
+}
+|};
+  [%expect {|
+    [
+      (4, 4) to (4, 5) => {
+        (uninitialized)
+      }] |}]
