@@ -1951,6 +1951,11 @@ and main_handle_initialized_unsafe flowconfig_name (state : server_state) (event
     Base.Option.iter interaction_id ~f:(log_interaction ~ux:LspInteraction.Responded state);
     let metadata = { metadata with LspProt.client_duration = Some client_duration } in
     Ok (state, LogNeeded metadata)
+  | (Disconnected _, Client_message (NotificationMessage (CancelRequestNotification _), _metadata))
+    ->
+    (* we cancel all outstanding requests when the server disconnects. if the client
+       also cancels one of those requests, just ignore it. *)
+    Ok (state, LogNotNeeded)
   | (Disconnected _, Client_message (c, metadata)) ->
     let interaction_id =
       LspInteraction.trigger_of_lsp_msg c
@@ -2346,9 +2351,6 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
     (match main_handle_initialized_unsafe flowconfig_name server_state event with
     | Ok (server_state, log_needed) -> Ok (Initialized server_state, log_needed)
     | Error (server_state, exn) -> Error (Initialized server_state, exn))
-  | (_, Client_message (NotificationMessage (CancelRequestNotification _), _metadata)) ->
-    (* let's just not bother reporting any error in this case *)
-    Ok (state, LogNotNeeded)
   | (Post_shutdown, Client_message (_, _metadata)) ->
     raise
       (Error.LspException
