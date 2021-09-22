@@ -7,7 +7,32 @@ The Flow server is currently in lazy mode and is only checking 2/8 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 Status after focusing a.js:
-No errors!
+Warning ------------------------------------------------------------------------------- invalid_export_suppressed.js:8:3
+
+Unused suppression comment.
+
+   8|   // $FlowFixMe[invalid-export]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ----------------------------------------------------------------- signature_verification_error_suppressed.js:7:1
+
+Unused suppression comment.
+
+   7| // $FlowFixMe[signature-verification-failure]
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ----------------------------------------------------------------------------------- type_error_suppressed.js:7:1
+
+Unused suppression comment.
+
+   7| // $FlowFixMe[incompatible-cast]
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 3 warnings
 
 The Flow server is currently in lazy mode and is only checking 8/8 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
@@ -30,7 +55,32 @@ References:
 Found 1 error
 
 Status including warnings:
-No errors!
+Warning ------------------------------------------------------------------------------- invalid_export_suppressed.js:8:3
+
+Unused suppression comment.
+
+   8|   // $FlowFixMe[invalid-export]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ----------------------------------------------------------------- signature_verification_error_suppressed.js:7:1
+
+Unused suppression comment.
+
+   7| // $FlowFixMe[signature-verification-failure]
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Warning ----------------------------------------------------------------------------------- type_error_suppressed.js:7:1
+
+Unused suppression comment.
+
+   7| // $FlowFixMe[incompatible-cast]
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 3 warnings
 
 The Flow server is currently in lazy mode and is only checking 8/8 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
