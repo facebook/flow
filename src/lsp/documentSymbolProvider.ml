@@ -235,4 +235,4 @@ let rec ast_statement
 
 let provide_symbol_information ~uri program =
   let (_loc, { Ast.Program.statements; _ }) = program in
-  Base.List.fold statements ~init:[] ~f:(ast_statement ~uri ~containerName:None)
+  statements |> Base.List.fold ~init:[] ~f:(ast_statement ~uri ~containerName:None) |> Base.List.rev
