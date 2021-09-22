@@ -712,7 +712,7 @@ implements.js:7:8 = {
   "end":24
 }
 multi-inheritance.js:6:7 = {
-  "type":"B | A",
+  "type":"A | B",
   "reasons":[],
   "loc":{
     "source":"multi-inheritance.js",

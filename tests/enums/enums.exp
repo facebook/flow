@@ -1172,7 +1172,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:51:9
 
-Incomplete exhaustive check: the members `Elderberry`, `Date`, `Cherry`, `Banana`, and `Apple` of enum `Five` [1] have
+Incomplete exhaustive check: the members `Apple`, `Banana`, `Cherry`, `Date`, and `Elderberry` of enum `Five` [1] have
 not been considered in check of `five`. [invalid-exhaustive-check]
 
    exhaustive-check.js:51:9
@@ -1187,7 +1187,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:62:9
 
-Incomplete exhaustive check: the members `Fig`, `Elderberry`, `Date`, `Cherry`, and 2 others of enum `Six` [1] have not
+Incomplete exhaustive check: the members `Apple`, `Banana`, `Cherry`, `Date`, and 2 others of enum `Six` [1] have not
 been considered in check of `six`. [invalid-exhaustive-check]
 
    exhaustive-check.js:62:9
@@ -1202,7 +1202,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:63:9
 
-Incomplete exhaustive check: the members `Fig`, `Elderberry`, `Cherry`, `Banana`, and `Apple` of enum `Six` [1] have not
+Incomplete exhaustive check: the members `Apple`, `Banana`, `Cherry`, `Elderberry`, and `Fig` of enum `Six` [1] have not
 been considered in check of `six`. [invalid-exhaustive-check]
 
    exhaustive-check.js:63:9
@@ -1283,7 +1283,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- exhaustive-check.js:89:9
 
-Incomplete exhaustive check: the members `B` and `A` of enum `E` [1] have not been considered in check of `x`.
+Incomplete exhaustive check: the members `A` and `B` of enum `E` [1] have not been considered in check of `x`.
 [invalid-exhaustive-check]
 
    exhaustive-check.js:89:9
@@ -1331,7 +1331,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- exhaustive-check.js:108:9
 
-Incomplete exhaustive check: the members `B` and `A` of enum `E` [1] have not been considered in check of `x`.
+Incomplete exhaustive check: the members `A` and `B` of enum `E` [1] have not been considered in check of `x`.
 [invalid-exhaustive-check]
 
    exhaustive-check.js:108:9
@@ -1550,7 +1550,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:141:11
 
-Incomplete exhaustive check: the members `B` and `A` of enum `F` [1] have not been considered in check of `x`.
+Incomplete exhaustive check: the members `A` and `B` of enum `F` [1] have not been considered in check of `x`.
 [invalid-exhaustive-check]
 
    exhaustive-check.js:141:11
@@ -1806,7 +1806,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:209:11
 
-Incomplete exhaustive check: the members `B` and `A` of enum `E` [1] have not been considered in check of `x`.
+Incomplete exhaustive check: the members `A` and `B` of enum `E` [1] have not been considered in check of `x`.
 [invalid-exhaustive-check]
 
    exhaustive-check.js:209:11
@@ -2017,7 +2017,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- not-fully-exhaustive.js:19:9
 
-Incomplete exhaustive check: the members `C` and `B` of enum `E` [1] have not been considered in check of `e`. The
+Incomplete exhaustive check: the members `B` and `C` of enum `E` [1] have not been considered in check of `e`. The
 default case [2] does not check for the missing members as the `require-explicit-enum-switch-cases` lint has been
 enabled. [require-explicit-enum-switch-cases]
 
@@ -2036,7 +2036,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- not-fully-exhaustive.js:42:9
 
-Incomplete exhaustive check: the members `C` and `B` of enum `U` [1] have not been considered in check of `u`. The
+Incomplete exhaustive check: the members `B` and `C` of enum `U` [1] have not been considered in check of `u`. The
 default case [2] does not check for the missing members as the `require-explicit-enum-switch-cases` lint has been
 enabled. [require-explicit-enum-switch-cases]
 

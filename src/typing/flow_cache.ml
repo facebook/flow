@@ -34,7 +34,7 @@ module FlowConstraint = struct
          to just their toplevel structure. *)
       let u = mod_use_op_of_use_t toplevel_use_op u in
       let cache = Context.constraint_cache cx in
-      let cache' = FlowSet.add (l, u) !cache in
+      let cache' = FlowSet.add l u !cache in
       let found = cache' == !cache in
       if not found then
         cache := cache'

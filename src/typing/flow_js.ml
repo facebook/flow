@@ -1007,7 +1007,7 @@ struct
                  *)
                 (* TODO consider filtering these to OrdinaryNames only *)
                 let known_exports =
-                  NameUtils.Map.keys exports_tmap |> List.map display_string_of_name
+                  NameUtils.Map.keys exports_tmap |> List.rev_map display_string_of_name
                 in
                 let suggestion = typo_suggestion known_exports local_name in
                 add_output
@@ -1080,7 +1080,7 @@ struct
                 else
                   (* TODO consider filtering to OrdinaryNames only *)
                   let known_exports =
-                    NameUtils.Map.keys exports_tmap |> List.map display_string_of_name
+                    NameUtils.Map.keys exports_tmap |> List.rev_map display_string_of_name
                   in
                   let suggestion = typo_suggestion known_exports export_name in
                   Error_message.ENoNamedExport (reason, module_name, export_name, suggestion)
@@ -5003,7 +5003,7 @@ struct
               in
               rec_flow_t cx trace ~use_op:unknown_use (enum_type, OpenT tout)
             else
-              let suggestion = typo_suggestion (SMap.keys members) name in
+              let suggestion = typo_suggestion (SMap.keys members |> List.rev) name in
               error_invalid_access ~suggestion
           | OrdinaryName _ ->
             rec_flow
@@ -7392,7 +7392,7 @@ struct
       ids
       >>| Context.find_real_props cx
       >>= NameUtils.Map.keys
-      |> Base.List.map ~f:display_string_of_name
+      |> Base.List.rev_map ~f:display_string_of_name
       |> typo_suggestion)
 
   and lookup_prop

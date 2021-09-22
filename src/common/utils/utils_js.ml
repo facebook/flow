@@ -212,8 +212,8 @@ let typo_suggestions =
     in
     fst (List.fold_left (fold_results limit name) ([], max_int) possible_names)
 
-let typo_suggestion possible_names name =
-  let suggestions = typo_suggestions possible_names name in
+let typo_suggestion possible_names_rev name =
+  let suggestions = typo_suggestions possible_names_rev name in
   try Some (List.hd suggestions) with
   | _ -> None
 

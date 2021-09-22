@@ -39,6 +39,8 @@ type index = int
 
 type tvar = reason * ident
 
+type number_literal = float * string [@@deriving ord]
+
 module rec TypeTerm : sig
   type t =
     (* open type variable *)
@@ -967,8 +969,6 @@ module rec TypeTerm : sig
     | Truthy
     | AnyLiteral
 
-  and number_literal = float * string
-
   and mixed_flavor =
     | Mixed_everything
     | Mixed_truthy
@@ -1507,12 +1507,11 @@ and UnionEnum : sig
   type t =
     (* TODO this should not allow internal names *)
     | Str of name
-    | Num of TypeTerm.number_literal
+    | Num of number_literal
     | Bool of bool
     | Void
     | Null
-
-  val compare : t -> t -> int
+  [@@deriving ord]
 
   type star =
     | One of t
@@ -1520,12 +1519,11 @@ and UnionEnum : sig
 end = struct
   type t =
     | Str of name
-    | Num of TypeTerm.number_literal
+    | Num of number_literal
     | Bool of bool
     | Void
     | Null
-
-  let compare = Stdlib.compare
+  [@@deriving ord]
 
   type star =
     | One of t
@@ -1764,19 +1762,19 @@ end = struct
   let add_field x polarity loc t = NameUtils.Map.add x (Field (loc, t, polarity))
 
   let add_getter x loc get_t map =
-    NameUtils.Map.update
+    NameUtils.Map.adjust
       x
       (function
-        | Some (Set (set_loc, set_t)) -> Some (GetSet (loc, get_t, set_loc, set_t))
-        | _ -> Some (Get (loc, get_t)))
+        | Some (Set (set_loc, set_t)) -> GetSet (loc, get_t, set_loc, set_t)
+        | _ -> Get (loc, get_t))
       map
 
   let add_setter x loc set_t map =
-    NameUtils.Map.update
+    NameUtils.Map.adjust
       x
       (function
-        | Some (Get (get_loc, get_t)) -> Some (GetSet (get_loc, get_t, loc, set_t))
-        | _ -> Some (Set (loc, set_t)))
+        | Some (Get (get_loc, get_t)) -> GetSet (get_loc, get_t, loc, set_t)
+        | _ -> Set (loc, set_t))
       map
 
   let add_method x loc t = NameUtils.Map.add x (Method (loc, t))
@@ -1889,7 +1887,7 @@ end = struct
 
     type t = key
 
-    let compare = Stdlib.compare
+    let compare (x : int) y = Stdlib.compare x y
   end)
 
   type map = t Map.t
@@ -2396,35 +2394,6 @@ end = struct
       rep
 end
 
-(* The typechecking algorithm often needs to maintain sets of types, or more
-   generally, maps of types (for logging we need to associate some provenanced
-   information to types).
-   Type terms may also contain internal sets or maps.
-*)
-and TypeSet : (Flow_set.S with type elt = TypeTerm.t) = Flow_set.Make (struct
-  type elt = TypeTerm.t
-
-  type t = elt
-
-  let compare = Stdlib.compare
-end)
-
-and TypeMap : (WrappedMap.S with type key = TypeTerm.t) = WrappedMap.Make (struct
-  type key = TypeTerm.t
-
-  type t = key
-
-  let compare = Stdlib.compare
-end)
-
-and UseTypeSet : (Flow_set.S with type elt = TypeTerm.use_t) = Flow_set.Make (struct
-  type elt = TypeTerm.use_t
-
-  type t = elt
-
-  let compare = Stdlib.compare
-end)
-
 and Object : sig
   type resolve_tool =
     (* Each part of a spread must be resolved in order to compute the result *)
@@ -2542,7 +2511,7 @@ end =
 and React : sig
   module PropType : sig
     type t =
-      | Primitive of (is_required * TypeTerm.t)
+      | Primitive of is_required * TypeTerm.t
       | Complex of complex
 
     and is_required = bool
@@ -2560,8 +2529,8 @@ and React : sig
 
   type resolve_object =
     | ResolveObject
-    | ResolveDict of (TypeTerm.dicttype * Properties.t * resolved_object)
-    | ResolveProp of (name * Properties.t * resolved_object)
+    | ResolveDict of TypeTerm.dicttype * Properties.t * resolved_object
+    | ResolveProp of name * Properties.t * resolved_object
 
   type resolve_array =
     | ResolveArray
@@ -2651,6 +2620,41 @@ end =
 
 let unknown_use = TypeTerm.(Op UnknownUse)
 
+external use_t_compare : TypeTerm.use_t -> TypeTerm.use_t -> int = "caml_fast_generic_compare"
+  [@@noalloc]
+
+external type_term_compare : TypeTerm.t -> TypeTerm.t -> int = "caml_fast_generic_compare"
+  [@@noalloc]
+
+module UseTypeSet : Flow_set.S with type elt = TypeTerm.use_t = Flow_set.Make (struct
+  type elt = TypeTerm.use_t
+
+  type t = elt
+
+  let compare = use_t_compare
+end)
+
+(* The typechecking algorithm often needs to maintain sets of types, or more
+   generally, maps of types (for logging we need to associate some provenanced
+   information to types).
+   Type terms may also contain internal sets or maps.
+*)
+module TypeSet : Flow_set.S with type elt = TypeTerm.t = Flow_set.Make (struct
+  type elt = TypeTerm.t
+
+  type t = elt
+
+  let compare = type_term_compare
+end)
+
+module TypeMap = Flow_map.Make (struct
+  type key = TypeTerm.t
+
+  type t = key
+
+  let compare = type_term_compare
+end)
+
 module Constraint = struct
   module UseTypeKey = struct
     type speculation_id = int
@@ -2659,10 +2663,15 @@ module Constraint = struct
 
     type t = TypeTerm.use_t * (speculation_id * case_id) option
 
-    let compare = Stdlib.compare
+    let compare (x, assoc1) (y, assoc2) =
+      let v = [%derive.ord: (int * int) option] assoc1 assoc2 in
+      if v = 0 then
+        use_t_compare x y
+      else
+        v
   end
 
-  module UseTypeMap = WrappedMap.Make (UseTypeKey)
+  module UseTypeMap = Flow_map.Make (UseTypeKey)
 
   (** Constraints carry type information that narrows down the possible solutions
       of tvar, and are of two kinds:
@@ -2852,12 +2861,12 @@ module FlowSet = struct
   let empty = TypeMap.empty
 
   (* returns ref eq map if no change *)
-  let add (l, u) x =
+  let add l u x =
     let f = function
-      | None -> Some (UseTypeSet.singleton u)
-      | Some us -> Some (UseTypeSet.add u us)
+      | None -> UseTypeSet.singleton u
+      | Some us -> UseTypeSet.add u us
     in
-    TypeMap.update l f x
+    TypeMap.adjust l f x
 
   let fold f = TypeMap.fold (fun l -> UseTypeSet.fold (fun u -> f (l, u)))
 end
