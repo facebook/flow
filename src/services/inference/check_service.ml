@@ -318,7 +318,7 @@ module Flow_js = struct end
 let mk_check_file ~options ~reader ~cache () =
   let open Type_sig_collections in
   let module ConsGen = (val if Options.new_merge options then
-                              (module Annotation_inference)
+                              (module Annotation_inference.ConsGen)
                             else
                               (module ConsGen) : Type_sig_merge.CONS_GEN)
   in

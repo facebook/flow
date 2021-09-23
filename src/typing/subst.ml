@@ -88,9 +88,17 @@ let substituter =
             end
           | ExistsT reason ->
             if force then (
-              let t = Tvar.mk cx reason in
-              Context.add_exists_instantiation cx (Reason.aloc_of_reason reason) t;
-              t
+              if Context.new_merging cx then (
+                Utils_js.prerr_endlinef
+                  "WARNING: Existential_type %s"
+                  Reason.(
+                    string_of_loc
+                      (ALoc.to_loc_with_tables (Context.aloc_tables cx) (aloc_of_reason reason)));
+                Unsoundness.why Existential reason
+              ) else
+                let t = Tvar.mk cx reason in
+                Context.add_exists_instantiation cx (Reason.aloc_of_reason reason) t;
+                t
             ) else
               t
           | DefT (reason, trust, PolyT { tparams_loc; tparams = xs; t_out = inner; _ }) ->
