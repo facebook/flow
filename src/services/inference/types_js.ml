@@ -409,41 +409,33 @@ let include_dependencies_and_dependents
       Lwt.return
         (to_merge, to_check, to_merge_or_check, components, CheckedSet.all definitely_to_merge))
 
-let add_internal_error (errors, first_internal_error) file (loc, internal_error) =
+let update_first_internal_error first_internal_error (loc, internal_error) =
+  match first_internal_error with
+  | Some _ -> first_internal_error
+  | None ->
+    Some
+      (spf
+         "%s\n%s"
+         (ALoc.debug_to_string ~include_source:true loc)
+         (Error_message.string_of_internal_error internal_error))
+
+let add_internal_error errors file (loc, internal_error) =
   let new_errors = error_set_of_internal_error file (loc, internal_error) in
-  let errors = update_errset errors file new_errors in
-  let first_internal_error =
-    match first_internal_error with
-    | Some _ -> first_internal_error
-    | None ->
-      Some
-        (spf
-           "%s\n%s"
-           (ALoc.debug_to_string ~include_source:true loc)
-           (Error_message.string_of_internal_error internal_error))
+  update_errset errors file new_errors
+
+let update_merge_results acc component result =
+  let (suppressions, first_internal_error) = acc in
+  let suppressions =
+    Nel.fold_left (fun acc file -> Error_suppressions.remove file acc) suppressions component
   in
-  (errors, first_internal_error)
-
-let remove_old_merge_results acc file =
-  let (errors, warnings, suppressions, coverage, first_internal_error) = acc in
-  let errors = FilenameMap.remove file errors in
-  let warnings = FilenameMap.remove file warnings in
-  let suppressions = Error_suppressions.remove file suppressions in
-  (errors, warnings, suppressions, coverage, first_internal_error)
-
-let update_merge_results acc component leader result =
-  let acc = Nel.fold_left remove_old_merge_results acc component in
-  let (errors, warnings, suppressions, coverage, first_internal_error) = acc in
   match result with
   | Ok None -> acc
   | Ok (Some (new_suppressions, _duration)) ->
     let suppressions = Error_suppressions.update_suppressions suppressions new_suppressions in
-    (errors, warnings, suppressions, coverage, first_internal_error)
+    (suppressions, first_internal_error)
   | Error e ->
-    let (errors, first_internal_error) =
-      add_internal_error (errors, first_internal_error) leader e
-    in
-    (errors, warnings, suppressions, coverage, first_internal_error)
+    let first_internal_error = update_first_internal_error first_internal_error e in
+    (suppressions, first_internal_error)
 
 let update_slow_files acc file check_time =
   if check_time > 1. then
@@ -474,7 +466,8 @@ let update_check_results (acc, slow_files) (file, result) =
     let slow_files = update_slow_files slow_files file check_time in
     ((errors, warnings, suppressions, coverage, first_internal_error), slow_files)
   | Error e ->
-    let (errors, first_internal_error) = add_internal_error (errors, first_internal_error) file e in
+    let first_internal_error = update_first_internal_error first_internal_error e in
+    let errors = add_internal_error errors file e in
     ((errors, warnings, suppressions, coverage, first_internal_error), slow_files)
 
 let run_merge_service
@@ -487,7 +480,7 @@ let run_merge_service
     ~sig_dependency_graph
     ~component_map
     ~recheck_set
-    (errs, warnings, suppressions, coverage) =
+    suppressions =
   Memory_utils.with_memory_timer_lwt ~options "Merge" profiling (fun () ->
       let%lwt (results, { Merge_service.skipped_count; sig_new_or_changed }) =
         Merge_service.merge
@@ -500,19 +493,16 @@ let run_merge_service
           ~component_map
           ~recheck_set
       in
-      let (errs, warnings, suppressions, coverage, first_internal_error) =
+      let (suppressions, first_internal_error) =
         List.fold_left
           (fun acc (file, _diff, result) ->
             let component = FilenameMap.find file component_map in
-            update_merge_results acc component file result)
-          (errs, warnings, suppressions, coverage, None)
+            update_merge_results acc component result)
+          (suppressions, None)
           results
       in
       Lwt.return
-        ( errs,
-          warnings,
-          suppressions,
-          coverage,
+        ( suppressions,
           skipped_count,
           sig_new_or_changed,
           Base.Option.map first_internal_error ~f:(spf "First merge internal error:\n%s") ))
@@ -637,16 +627,13 @@ let merge
     ~options
     ~profiling
     ~workers
-    ~errors
-    ~coverage
+    ~suppressions
     ~to_merge
     ~components
     ~recheck_set
     ~sig_dependency_graph
     ~deleted
     ~unparsed_set =
-  let { ServerEnv.local_errors; merge_errors; warnings; suppressions } = errors in
-
   (* to_merge is the union of inferred (newly inferred files) and the
      transitive closure of all dependents.
 
@@ -661,14 +648,7 @@ let merge
     calc_deps ~options ~profiling ~sig_dependency_graph ~components files_to_merge
   in
   Hh_logger.info "Merging";
-  let%lwt ( ( merge_errors,
-              warnings,
-              suppressions,
-              coverage,
-              skipped_count,
-              sig_new_or_changed,
-              first_internal_error ),
-            time_to_merge ) =
+  let%lwt ((suppressions, skipped_count, sig_new_or_changed, first_internal_error), time_to_merge) =
     let (master_mutator, worker_mutator) =
       Context_heaps.Merge_context_mutator.create
         transaction
@@ -686,7 +666,7 @@ let merge
         ~sig_dependency_graph
         ~component_map
         ~recheck_set
-        (merge_errors, warnings, suppressions, coverage)
+        suppressions
     in
     let%lwt () =
       if Options.should_profile options then
@@ -706,7 +686,6 @@ let merge
   let sig_new_or_changed =
     sig_new_or_changed |> FilenameSet.union deleted |> FilenameSet.union unparsed_set
   in
-  let errors = { ServerEnv.local_errors; merge_errors; warnings; suppressions } in
   (* compute the largest cycle, for logging *)
   let top_cycle =
     Utils_js.FilenameMap.fold
@@ -726,13 +705,7 @@ let merge
       None
   in
   Lwt.return
-    ( errors,
-      coverage,
-      skipped_count,
-      sig_new_or_changed,
-      top_cycle,
-      time_to_merge,
-      first_internal_error )
+    (suppressions, skipped_count, sig_new_or_changed, top_cycle, time_to_merge, first_internal_error)
 
 module Check_files : sig
   val check_files :
@@ -741,7 +714,7 @@ module Check_files : sig
     profiling:Profiling_js.running ->
     workers:MultiWorkerLwt.worker list option ->
     errors:ServerEnv.errors ->
-    updated_errors:ServerEnv.errors ->
+    updated_suppressions:Error_suppressions.t ->
     coverage:Coverage_response.file_coverage Utils_js.FilenameMap.t ->
     to_check:CheckedSet.t ->
     direct_dependent_files:Utils_js.FilenameSet.t ->
@@ -767,7 +740,7 @@ end = struct
       ~profiling
       ~workers
       ~errors
-      ~updated_errors
+      ~updated_suppressions
       ~coverage
       ~to_check
       ~direct_dependent_files
@@ -805,14 +778,13 @@ end = struct
            * file cannot have more than one kind. *)
           (FilenameSet.cardinal focused_to_check + FilenameSet.cardinal merged_dependents);
         let files = FilenameSet.union focused_to_check dependents_to_check in
-        let suppressions = updated_errors.ServerEnv.suppressions in
         let intermediate_result_callback =
           mk_intermediate_result_callback
             ~reader
             ~options
             ~persistent_connections
             ~recheck_reasons
-            suppressions
+            updated_suppressions
         in
         Hh_logger.info "Checking files";
 
@@ -838,7 +810,7 @@ end = struct
         let ((merge_errors, warnings, suppressions, coverage, first_internal_error), slow_files) =
           List.fold_left
             update_check_results
-            ((merge_errors, warnings, suppressions, coverage, None), (0, 0., None))
+            ((merge_errors, warnings, updated_suppressions, coverage, None), (0, 0., None))
             ret
         in
         let (num_slow_files, _, slowest_file) = slow_files in
@@ -1719,8 +1691,7 @@ end = struct
         (CheckedSet.all to_merge_or_check)
     in
     (* recheck *)
-    let%lwt ( updated_errors,
-              coverage,
+    let%lwt ( updated_suppressions,
               merge_skip_count,
               sig_new_or_changed,
               top_cycle,
@@ -1734,8 +1705,7 @@ end = struct
         ~options
         ~profiling
         ~workers
-        ~errors
-        ~coverage:env.ServerEnv.coverage
+        ~suppressions:errors.ServerEnv.suppressions
         ~to_merge
         ~components
         ~recheck_set
@@ -1772,8 +1742,8 @@ end = struct
         ~profiling
         ~workers
         ~errors
-        ~updated_errors
-        ~coverage
+        ~updated_suppressions
+        ~coverage:env.ServerEnv.coverage
         ~to_check
         ~direct_dependent_files
         ~sig_new_or_changed
@@ -2469,15 +2439,14 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           (CheckedSet.all to_merge_or_check)
       in
       let recheck_reasons = [LspProt.Full_init] in
-      let%lwt (updated_errors, coverage, _, sig_new_or_changed, _, _, merge_internal_error) =
+      let%lwt (updated_suppressions, _, sig_new_or_changed, _, _, merge_internal_error) =
         merge
           ~transaction
           ~reader
           ~options
           ~profiling
           ~workers
-          ~errors
-          ~coverage:env.ServerEnv.coverage
+          ~suppressions:errors.ServerEnv.suppressions
           ~to_merge
           ~components
           ~recheck_set
@@ -2494,8 +2463,8 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
           ~profiling
           ~workers
           ~errors
-          ~updated_errors
-          ~coverage
+          ~updated_suppressions
+          ~coverage:env.ServerEnv.coverage
           ~to_check
           ~direct_dependent_files:FilenameSet.empty
           ~sig_new_or_changed
