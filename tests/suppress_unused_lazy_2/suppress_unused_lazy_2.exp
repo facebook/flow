@@ -1,0 +1,38 @@
+Error -------------------------------------------------------------------------------------------------- cycle_b.js:15:2
+
+Cannot cast `1` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   cycle_b.js:15:2
+   15| (1: string); // error
+        ^ [1]
+
+References:
+   cycle_b.js:15:5
+   15| (1: string); // error
+           ^^^^^^ [2]
+
+
+
+Found 1 error
+
+The Flow server is currently in lazy mode and is only checking 3/3 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+Error -------------------------------------------------------------------------------------------------- cycle_b.js:15:2
+
+Cannot cast `1` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   cycle_b.js:15:2
+   15| (1: string); // error
+        ^ [1]
+
+References:
+   cycle_b.js:15:5
+   15| (1: string); // error
+           ^^^^^^ [2]
+
+
+
+Found 1 error
+
+The Flow server is currently in lazy mode and is only checking 3/3 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
