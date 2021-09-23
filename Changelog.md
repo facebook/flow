@@ -1,3 +1,7 @@
+### 0.160.2
+
+* The fix in 0.160.1 didn't fully fix the regression in 0.160.0. It, and the original "fix" from 0.160.0 are reverted.
+
 ### 0.160.1
 
 * Fix a regression in 0.160.0 that caused suppressions to be ignored upon editing files in some cases when using lazy mode.
