@@ -5,16 +5,29 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+open Reason
 open Type
 open Type.AConstraint
+open TypeUtil
 
 let warn fmt =
   let f s = Utils_js.prerr_endlinef "WARNING: %s" s in
   Printf.ksprintf f fmt
 
+let warn_unsupported kind op r = Utils_js.prerr_endlinef "UNSUPPORTED: %s on %s @ %s" kind op r
+
 (* TODO lookup aloc in tables, e.g.
  * ALoc.to_loc_with_tables (Context.aloc_tables cx) (Reason.aloc_of_reason r) *)
 let string_of_reason_loc _cx r = Reason.string_of_aloc (Reason.aloc_of_reason r)
+
+let object_like_op = function
+  | Annot__Future_added_value__ _ -> false
+
+let primitive_promoting_op = function
+  (* TODO: enumerate all use types *)
+  | _ -> false
+
+let function_like_op op = object_like_op op
 
 let unresolved_tvar cx reason = Avar.unresolved cx reason
 
@@ -130,12 +143,213 @@ and resolve_dependent_set cx dependents t =
 
 and reposition _cx _loc _t = failwith "TODO Annotation_inference.reposition"
 
-and elab_t _cx _t _op = failwith "TODO Annotation_inference.elab_t"
+and elab_open cx ~seen reason id op =
+  if ISet.mem id seen then begin
+    warn "elab_open returning any on %s" (Reason.string_of_reason reason);
+    AnyT.error reason
+  end else
+    let module A = Type.AConstraint in
+    let (_, { A.constraints; _ }) = Context.find_avar cx id in
+    match Lazy.force constraints with
+    | A.Annot_resolved ->
+      (* Annot_resolved ids definitelly appear in the type graph *)
+      let t = get_fully_resolved_type cx id in
+      elab_t cx ~seen:(ISet.add id seen) t op
+    | A.Annot_unresolved _
+    | A.Annot_op _ ->
+      let fresh_id = Avar.constrained cx op id in
+      OpenT (reason, fresh_id)
 
-and specialize _cx _t _use_op _reason_op _reason_tapp _cache _ts =
+and elab_t cx ?(seen = ISet.empty) t op =
+  match (t, op) with
+  | (EvalT (_, TypeDestructorT (_, _, d), _), _) ->
+    let r = AConstraint.reason_of_op op in
+    warn_unsupported
+      ("EvalT_" ^ Debug_js.string_of_destructor d)
+      (AConstraint.string_of_operation op)
+      (string_of_reason_loc cx r);
+    Unsoundness.why Unimplemented r
+  | (EvalT _, _) -> failwith "Annotation_inference on other EvalT"
+  | (OpenT (reason, id), _) -> elab_open cx ~seen reason id op
+  | (TypeDestructorTriggerT _, _)
+  | (ReposT _, _)
+  | (InternalT _, _) ->
+    failwith "TODO return something ..."
+  | (AnnotT (r, t, _), _) ->
+    let t = reposition cx (aloc_of_reason r) t in
+    elab_t cx ~seen t op
+  | (DefT (_, _, IdxWrapper _), _) -> failwith "TODO IdxWrapper"
+  | (MaybeT _, _) -> failwith "TODO MaybeT"
+  | (OptionalT _, _) -> failwith "TODO OptionalT"
+  (*********************)
+  (* Type applications *)
+  (*********************)
+  | (ThisTypeAppT (reason_tapp, c, this, ts), _) ->
+    let reason_op = Type.AConstraint.reason_of_op op in
+    let tc = specialize_class cx c reason_op reason_tapp ts in
+    let t = this_specialize cx reason_tapp this tc in
+    elab_t cx t op
+  | (TypeAppT (reason_tapp, typeapp_use_op, c, ts), _) ->
+    (* NOTE omitting TypeAppExpansion.push_unless_loop check. *)
+    let reason_op = Type.AConstraint.reason_of_op op in
+    let t = mk_typeapp_instance cx ~use_op:typeapp_use_op ~reason_op ~reason_tapp c ts in
+    elab_t cx t op
+  (****************)
+  (* Opaque types *)
+  (****************)
+  | (OpaqueT (r, { underlying_t = Some t; _ }), _)
+    when ALoc.source (aloc_of_reason r) = ALoc.source (def_aloc_of_reason r) ->
+    elab_t cx ~seen t op
+  (********)
+  (* Keys *)
+  (********)
+  | (KeysT _, _) -> failwith "TODO KeysT"
+  (********************************)
+  (* Union and intersection types *)
+  (********************************)
+  | (UnionT (_, rep), _) ->
+    let reason = Type.AConstraint.reason_of_op op in
+    let ts = UnionRep.members rep in
+    let ts = Base.List.map ~f:(fun t -> elab_t cx ~seen t op) ts in
+    union_of_ts reason ts
+  | (IntersectionT _, _) ->
+    let r = AConstraint.reason_of_op op in
+    warn_unsupported
+      "IntersectionT"
+      (AConstraint.string_of_operation op)
+      (string_of_reason_loc cx r);
+    Unsoundness.why Unimplemented r
+  (*****************************)
+  (* Singleton primitive types *)
+  (*****************************)
+  | (DefT (reason, trust, SingletonStrT key), _) ->
+    elab_t cx (DefT (reason, trust, StrT (Literal (None, key)))) op
+  | (DefT (reason, trust, SingletonNumT lit), _) ->
+    elab_t cx (DefT (reason, trust, NumT (Literal (None, lit)))) op
+  | (DefT (reason, trust, SingletonBoolT b), _) ->
+    elab_t cx (DefT (reason, trust, BoolT (Some b))) op
+  | (NullProtoT reason, _) -> elab_t cx (DefT (reason, bogus_trust (), NullT)) op
+  (**********************)
+  (* Type instantiation *)
+  (**********************)
+  | (DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; t_out = t; _ }), _) ->
+    let use_op = unknown_use in
+    let reason_op = Type.AConstraint.reason_of_op op in
+    let t = instantiate_poly cx ~use_op ~reason_op ~reason_tapp (tparams_loc, ids, t) in
+    elab_t cx t op
+  | (ThisClassT (r, i, is_this), _) ->
+    let reason = Type.AConstraint.reason_of_op op in
+    let t = fix_this_class cx reason (r, i, is_this) in
+    elab_t cx t op
+  (****************)
+  (* Custom types *)
+  (****************)
+  | (DefT (reason, trust, CharSetT _), _) -> elab_t cx (StrT.why reason trust) op
+  | (CustomFunT (reason, ReactPropType (React.PropType.Primitive (req, _))), _)
+    when function_like_op op ->
+    let builtin_name =
+      if req then
+        "ReactPropsCheckType"
+      else
+        "ReactPropsChainableTypeChecker"
+    in
+    let l = get_builtin_type cx reason (OrdinaryName builtin_name) in
+    elab_t cx l op
+  | (CustomFunT (reason, ReactPropType (React.PropType.Complex kind)), _) when function_like_op op
+    ->
+    let l = get_builtin_prop_type cx reason kind in
+    elab_t cx l op
+  | (CustomFunT (r, _), _) when function_like_op op -> elab_t cx (FunProtoT r) op
+  (**************)
+  (* Shape type *)
+  (**************)
+  | (ShapeT (r, o), _) -> elab_t cx ~seen (reposition cx (aloc_of_reason r) o) op
+  (***********************)
+  (* Opaque types (pt 2) *)
+  (***********************)
+  | (OpaqueT (_, { super_t = Some t; _ }), _) -> elab_t cx t op
+  (********************)
+  (* Function Statics *)
+  (********************)
+  | (DefT (reason, _, FunT (static, _, _)), _) when object_like_op op ->
+    let static = reposition cx (aloc_of_reason reason) static in
+    elab_t cx static op
+  (*****************)
+  (* Class statics *)
+  (*****************)
+  | (DefT (reason, _, ClassT instance), _) when object_like_op op ->
+    let t = get_statics cx reason instance in
+    elab_t cx t op
+  (****************************************)
+  (* Object, function, etc. library calls *)
+  (****************************************)
+  | (ObjProtoT reason, _) ->
+    let use_desc = true in
+    let obj_proto = get_builtin_type cx reason ~use_desc (OrdinaryName "Object") in
+    elab_t cx obj_proto op
+  | (FunProtoT reason, _) ->
+    let use_desc = true in
+    let fun_proto = get_builtin_type cx reason ~use_desc (OrdinaryName "Function") in
+    elab_t cx fun_proto op
+  | (DefT (reason, _, StrT _), _) when primitive_promoting_op op ->
+    let builtin = get_builtin_type cx reason ~use_desc:true (OrdinaryName "String") in
+    elab_t cx builtin op
+  | (DefT (reason, _, NumT _), _) when primitive_promoting_op op ->
+    let builtin = get_builtin_type cx reason ~use_desc:true (OrdinaryName "Number") in
+    elab_t cx builtin op
+  | (DefT (reason, _, BoolT _), _) when primitive_promoting_op op ->
+    let builtin = get_builtin_type cx reason ~use_desc:true (OrdinaryName "Boolean") in
+    elab_t cx builtin op
+  | (DefT (reason, _, SymbolT), _) when primitive_promoting_op op ->
+    let builtin = get_builtin_type cx reason ~use_desc:true (OrdinaryName "Symbol") in
+    elab_t cx builtin op
+  | (_, _) ->
+    let reason = reason_of_op op in
+    warn
+      "Uncaught annotation constraint: (%s, %s)"
+      (string_of_ctor t)
+      (AConstraint.string_of_operation op);
+    AnyT.error reason
+
+and get_builtin_type cx reason ?(use_desc = false) x =
+  let t = Flow_js_utils.lookup_builtin_strict cx x reason in
+  mk_instance cx reason ~use_desc ~reason_type:(reason_of_t t) t
+
+and get_builtin_prop_type cx reason tool =
+  let x =
+    React.PropType.(
+      match tool with
+      | ArrayOf -> "React$PropTypes$arrayOf"
+      | InstanceOf -> "React$PropTypes$instanceOf"
+      | ObjectOf -> "React$PropTypes$objectOf"
+      | OneOf -> "React$PropTypes$oneOf"
+      | OneOfType -> "React$PropTypes$oneOfType"
+      | Shape -> "React$PropTypes$shape")
+  in
+  get_builtin_type cx reason (OrdinaryName x)
+
+and instantiate_poly _cx ~use_op:_ ~reason_op:_ ~reason_tapp:_ ?cache:_ _ =
+  failwith "TODO Annotation_inference.instanciate_poly"
+
+and specialize _cx _t _use_op _reason_op _reason_tapp _ts =
   failwith "TODO Annotation_inference.specialize"
 
-and mk_instance _cx _reason _t = failwith "TODO Annotation_inference.mk_instance"
+and this_specialize _cx _reason _this _t = failwith "TODO Annotation_inference.this_specialize"
+
+and specialize_class cx c reason_op reason_tapp ts =
+  match ts with
+  | None -> c
+  | Some ts -> specialize cx c unknown_use reason_op reason_tapp (Some ts)
+
+and fix_this_class _cx _reason _ = failwith "TODO Annotation_inference.fix_this_class"
+
+and mk_instance _cx _reason ?use_desc:_ ~reason_type:_ _t =
+  failwith "TODO Annotation_inference.mk_instance"
+
+and mk_typeapp_instance _cx ~use_op:_ ~reason_op:_ ~reason_tapp:_ _c _ts =
+  failwith "TODO Annotation_inference.mk_typeapp_instance"
+
+and get_statics _cx _reason _t = failwith "TODO Annotation_inference.get_statics"
 
 and get_prop_internal _cx _use_op _loc _reason_op _propref _l =
   failwith "TODO Annotation_inference.get_prop"
@@ -192,3 +406,5 @@ and object_spread _cx _use_op _reason _target _state _t =
 and obj_test_proto _cx _reason_op _l = failwith "TODO Annotation_inference.obj_test_proto"
 
 and existential _cx ~force:_ _reason = failwith "TODO Annotation_inference.existential"
+
+let mk_instance cx reason t = mk_instance cx reason ~reason_type:reason t

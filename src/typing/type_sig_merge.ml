@@ -136,7 +136,6 @@ module type CONS_GEN = sig
     Type.use_op ->
     Reason.t ->
     Reason.t ->
-    Type.specialize_cache ->
     Type.t list Base.Option.t ->
     Type.t
 
@@ -189,7 +188,7 @@ end
 module Make (ConsGen : CONS_GEN) : S = struct
   let specialize file t =
     let reason = TypeUtil.reason_of_t t in
-    ConsGen.specialize file.cx t Type.unknown_use reason reason None None
+    ConsGen.specialize file.cx t Type.unknown_use reason reason None
 
   let eval_unary file loc t =
     let module U = Flow_ast.Expression.Unary in

@@ -257,9 +257,9 @@ module ConsGen : Type_sig_merge.CONS_GEN = struct
     Tvar.mk_where cx reason (fun tout ->
         Flow_js.flow cx (ns_t, Type.ImportTypeofT (reason, export_name, tout)))
 
-  let specialize cx t use_op reason_op reason_tapp cache ts =
+  let specialize cx t use_op reason_op reason_tapp ts =
     Tvar.mk_derivable_where cx reason_op (fun tout ->
-        Flow_js.flow cx (t, Type.SpecializeT (use_op, reason_op, reason_tapp, cache, ts, tout)))
+        Flow_js.flow cx (t, Type.SpecializeT (use_op, reason_op, reason_tapp, None, ts, tout)))
 
   let copy_named_exports cx ~from_ns reason ~module_t =
     Tvar.mk_where cx reason (fun tout ->
