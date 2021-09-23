@@ -197,6 +197,9 @@ let get_root (state : server_state) : Path.t = (get_ienv state).i_root
 
 let get_flowconfig (state : server_state) : FlowConfig.config = (get_ienv state).i_flowconfig
 
+let get_initialize_params (state : server_state) : Lsp.Initialize.params =
+  (get_ienv state).i_initialize_params
+
 (** Returns a key that is appended to command names to make them "unique".
 
     Why? If we register a command named just "foo", and VS Code starts two
@@ -1074,7 +1077,7 @@ let diagnostic_of_parse_error (loc, parse_error) : PublishDiagnostics.diagnostic
 
 let live_syntax_errors_enabled (state : server_state) =
   let open Initialize in
-  (get_ienv state).i_initialize_params.initializationOptions.liveSyntaxErrors
+  (get_initialize_params state).initializationOptions.liveSyntaxErrors
 
 (** parse_and_cache: either the uri is an open file for which we already
     have parse results (ast+diagnostics), so we can just return them;
@@ -1151,7 +1154,15 @@ let do_documentSymbol (state : server_state) (id : lsp_id) (params : DocumentSym
   let uri = params.DocumentSymbol.textDocument.TextDocumentIdentifier.uri in
   (* It's not do_documentSymbol's job to set live parse errors, so we ignore them *)
   let (state, (ast, _live_parse_errors)) = parse_and_cache state uri in
-  let result = `SymbolInformation (DocumentSymbolProvider.provide_symbol_information ~uri ast) in
+  let supports_hierarchical_document_symbol =
+    Lsp_helpers.supports_hierarchical_document_symbol (get_initialize_params state)
+  in
+  let result =
+    if supports_hierarchical_document_symbol then
+      `DocumentSymbol (DocumentSymbolProvider.provide_document_symbols ast)
+    else
+      `SymbolInformation (DocumentSymbolProvider.provide_symbol_information ~uri ast)
+  in
   let json =
     let key = command_key_of_server_state state in
     Lsp_fmt.print_lsp ~key (ResponseMessage (id, DocumentSymbolResult result))
