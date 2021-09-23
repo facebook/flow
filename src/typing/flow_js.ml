@@ -234,6 +234,7 @@ let inherited_method = function
 
 (********************** start of slab **********************************)
 module M__flow
+    (FlowJs : Flow_common.S)
     (ReactJs : React_kit.REACT)
     (CheckPolarity : Flow_common.CHECK_POLARITY)
     (TrustChecking : Flow_common.TRUST_CHECKING)
@@ -243,6 +244,36 @@ module M__flow
     (SubtypingKit : Subtyping_kit.OUTPUT) =
 struct
   open SubtypingKit
+
+  module InstantiationKit = Instantiation_kit (struct
+    (* Given a type parameter, a supplied type argument for specializing it, and a
+       reason for specialization, either return the type argument or, when directed,
+       look up the instantiation cache for an existing type argument for the same
+       purpose and unify it with the supplied type argument. *)
+    let cache_instantiate cx trace ~use_op ?cache typeparam reason_op reason_tapp t =
+      match cache with
+      | None -> t
+      | Some rs ->
+        (match desc_of_reason reason_tapp with
+        (* This reason description cannot be trusted for caching purposes. *)
+        | RTypeAppImplicit _ -> t
+        | _ ->
+          let t_ = Cache.PolyInstantiation.find cx reason_tapp typeparam (reason_op, rs) in
+          FlowJs.rec_unify cx trace ~use_op ~unify_any:true t t_;
+          t_)
+
+    let mk_targ = ImplicitTypeArgument.mk_targ
+
+    let is_subtype = FlowJs.rec_flow_t
+
+    let reposition = FlowJs.reposition
+
+    let unresolved_id = Tvar.mk_no_wrap
+
+    let resolve_id cx trace ~use_op id t = FlowJs.rec_unify cx trace ~use_op (OpenT id) t
+  end)
+
+  include InstantiationKit
 
   (** NOTE: Do not call this function directly. Instead, call the wrapper
       functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
@@ -7076,64 +7107,6 @@ struct
       (tparams_loc, xs, t)
       (List.rev ts)
 
-  (* Instantiate a polymorphic definition given type arguments. *)
-  and instantiate_poly_with_targs
-      cx trace ~use_op ~reason_op ~reason_tapp ?cache ?errs_ref (tparams_loc, xs, t) ts =
-    let minimum_arity = poly_minimum_arity xs in
-    let maximum_arity = Nel.length xs in
-    let reason_arity = mk_poly_arity_reason tparams_loc in
-    if List.length ts > maximum_arity then (
-      add_output
-        cx
-        ~trace
-        (Error_message.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
-      Base.Option.iter errs_ref ~f:(fun errs_ref ->
-          errs_ref := Context.ETooManyTypeArgs (reason_arity, maximum_arity) :: !errs_ref)
-    );
-    let (map, _) =
-      Nel.fold_left
-        (fun (map, ts) typeparam ->
-          let (t, ts) =
-            match (typeparam, ts) with
-            | ({ default = Some default; _ }, []) ->
-              (* fewer arguments than params and we have a default *)
-              (subst cx ~use_op map default, [])
-            | ({ default = None; _ }, []) ->
-              (* fewer arguments than params but no default *)
-              add_output
-                cx
-                ~trace
-                (Error_message.ETooFewTypeArgs (reason_tapp, reason_arity, minimum_arity));
-              Base.Option.iter errs_ref ~f:(fun errs_ref ->
-                  errs_ref := Context.ETooFewTypeArgs (reason_arity, minimum_arity) :: !errs_ref);
-              (AnyT (reason_op, AnyError None), [])
-            | (_, t :: ts) -> (t, ts)
-          in
-          let t_ = cache_instantiate cx trace ~use_op ?cache typeparam reason_op reason_tapp t in
-          let frame = Frame (TypeParamBound { name = typeparam.name }, use_op) in
-          rec_flow_t cx trace ~use_op:frame (t_, subst cx ~use_op map typeparam.bound);
-          (SMap.add typeparam.name t_ map, ts))
-        (SMap.empty, ts)
-        xs
-    in
-    reposition cx ~trace (aloc_of_reason reason_tapp) (subst cx ~use_op map t)
-
-  (* Given a type parameter, a supplied type argument for specializing it, and a
-     reason for specialization, either return the type argument or, when directed,
-     look up the instantiation cache for an existing type argument for the same
-     purpose and unify it with the supplied type argument. *)
-  and cache_instantiate cx trace ~use_op ?cache typeparam reason_op reason_tapp t =
-    match cache with
-    | None -> t
-    | Some rs ->
-      (match desc_of_reason reason_tapp with
-      (* This reason description cannot be trusted for caching purposes. *)
-      | RTypeAppImplicit _ -> t
-      | _ ->
-        let t_ = Cache.PolyInstantiation.find cx reason_tapp typeparam (reason_op, rs) in
-        rec_unify cx trace ~use_op ~unify_any:true t t_;
-        t_)
-
   (* Instantiate a polymorphic definition with stated bound or 'any' for args *)
   (* Needed only for `instanceof` refis and React.PropTypes.instanceOf types *)
   and instantiate_poly_default_args cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, xs, t) =
@@ -7148,51 +7121,6 @@ struct
     in
     let ts = List.rev ts in
     instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, xs, t) ts
-
-  (* Instantiate a polymorphic definition by creating fresh type arguments. *)
-  and instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache (tparams_loc, xs, t) =
-    let ts =
-      xs
-      |> Nel.map (fun typeparam -> ImplicitTypeArgument.mk_targ cx typeparam reason_op reason_tapp)
-    in
-    instantiate_poly_with_targs
-      cx
-      trace
-      ~use_op
-      ~reason_op
-      ~reason_tapp
-      ?cache
-      (tparams_loc, xs, t)
-      (Nel.to_list ts)
-
-  (* Fix a this-abstracted instance type by tying a "knot": assume that the
-     fixpoint is some `this`, substitute it as This in the instance type, and
-     finally unify it with the instance type. Return the class type wrapping the
-     instance type. *)
-  and fix_this_class cx trace reason (r, i, is_this) =
-    let i' =
-      match Cache.Fix.find cx is_this i with
-      | Some i' -> i'
-      | None ->
-        let this = Tvar.mk cx (reason_of_t i) in
-        let this_generic =
-          if is_this then
-            GenericT
-              {
-                id = Context.make_generic_id cx "this" (def_aloc_of_reason r);
-                reason;
-                name = "this";
-                bound = this;
-              }
-          else
-            this
-        in
-        let i' = subst cx (SMap.singleton "this" this_generic) i in
-        Cache.Fix.add cx is_this i i';
-        rec_unify cx trace ~use_op:unknown_use this i';
-        i'
-    in
-    DefT (r, bogus_trust (), ClassT i')
 
   and is_type = function
     | DefT (_, _, ClassT _)
@@ -9877,52 +9805,6 @@ struct
     let t = mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp id tparams_loc xs t ts in
     mk_instance cx ~trace reason_tapp t
 
-  and mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache id tparams_loc xs t ts =
-    match cache with
-    | Some cache ->
-      instantiate_poly_with_targs
-        cx
-        trace
-        ~use_op
-        ~reason_op
-        ~reason_tapp
-        ~cache
-        (tparams_loc, xs, t)
-        ts
-    | None ->
-      let key = (id, ts) in
-      let cache = Context.subst_cache cx in
-      (match Hashtbl.find_opt cache key with
-      | None ->
-        let errs_ref = ref [] in
-        let t =
-          instantiate_poly_with_targs
-            cx
-            trace
-            ~use_op
-            ~reason_op
-            ~reason_tapp
-            ~errs_ref
-            (tparams_loc, xs, t)
-            ts
-        in
-        Hashtbl.add cache key (!errs_ref, t);
-        t
-      | Some (errs, t) ->
-        errs
-        |> List.iter (function
-               | Context.ETooManyTypeArgs (reason_arity, maximum_arity) ->
-                 let msg =
-                   Error_message.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity)
-                 in
-                 add_output cx ~trace msg
-               | Context.ETooFewTypeArgs (reason_arity, maximum_arity) ->
-                 let msg =
-                   Error_message.ETooFewTypeArgs (reason_tapp, reason_arity, maximum_arity)
-                 in
-                 add_output cx ~trace msg);
-        t)
-
   and mk_instance cx ?trace instance_reason ?use_desc c =
     mk_instance_raw cx ?trace instance_reason ?use_desc ~reason_type:instance_reason c
 
@@ -10249,7 +10131,7 @@ module rec FlowJs : Flow_common.S = struct
   module SpeculationKit = Speculation_kit.Make (FlowJs)
   module SubtypingKit = Subtyping_kit.Make (FlowJs)
   include
-    M__flow (React) (CheckPolarity) (TrustKit) (CustomFun) (ObjectKit) (SpeculationKit)
+    M__flow (FlowJs) (React) (CheckPolarity) (TrustKit) (CustomFun) (ObjectKit) (SpeculationKit)
       (SubtypingKit)
 
   let widen_obj_type = ObjectKit.widen_obj_type
