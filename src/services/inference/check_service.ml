@@ -220,7 +220,7 @@ module ConsGen : Type_sig_merge.CONS_GEN = struct
     let resolved = lazy (Flow_js.reposition cx loc t) in
     mk_sig_tvar cx reason resolved
 
-  let mk_instance cx reason c =
+  let mk_type_reference cx reason c =
     let open Type in
     let f tvar =
       let type_t = DefT (reason, bogus_trust (), TypeT (InstanceKind, tvar)) in

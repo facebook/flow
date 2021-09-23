@@ -92,7 +92,7 @@ module type CONS_GEN = sig
 
   val reposition : Context.t -> ALoc.t -> Type.t -> Type.t
 
-  val mk_instance : Context.t -> Reason.t -> Type.t -> Type.t
+  val mk_type_reference : Context.t -> Reason.t -> Type.t -> Type.t
 
   val get_prop : Context.t -> Type.use_op -> ALoc.t -> Reason.t -> Reason.name -> Type.t -> Type.t
 
@@ -493,7 +493,7 @@ module Make (ConsGen : CONS_GEN) : S = struct
     | Pack.TyRef name ->
       let f t ref_loc (name, _) =
         let reason = Reason.(mk_annot_reason (RType (Reason.OrdinaryName name)) ref_loc) in
-        ConsGen.mk_instance file.cx reason t
+        ConsGen.mk_type_reference file.cx reason t
       in
       merge_tyref file f name
     | Pack.TyRefApp { loc; name; targs } ->

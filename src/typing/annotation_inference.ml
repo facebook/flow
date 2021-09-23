@@ -24,6 +24,7 @@ let string_of_reason_loc _cx r = Reason.string_of_aloc (Reason.aloc_of_reason r)
 let object_like_op = function
   | Annot_SpecializeT _
   | Annot_ThisSpecializeT _
+  | Annot_UseT_TypeT _
   | Annot__Future_added_value__ _ ->
     false
 
@@ -220,6 +221,44 @@ module rec ConsGen : Annotation_inference_sig = struct
     | (AnnotT (r, t, _), _) ->
       let t = reposition cx (aloc_of_reason r) t in
       elab_t cx ~seen t op
+    (*********************************************************************)
+    (* UseT TypeT (runtime types derive static types through annotation) *)
+    (*********************************************************************)
+    | (DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; _ }), Annot_UseT_TypeT reason) ->
+      (* TODO: add use op to missing type arg error? *)
+      Flow_js_utils.add_output
+        cx
+        (Error_message.EMissingTypeArgs
+           {
+             reason_tapp;
+             reason_arity = Flow_js_utils.mk_poly_arity_reason tparams_loc;
+             min_arity = Flow_js_utils.poly_minimum_arity ids;
+             max_arity = Nel.length ids;
+           });
+      AnyT.error reason
+    | (ThisClassT (r, i, is_this), Annot_UseT_TypeT reason) ->
+      let c = fix_this_class cx reason (r, i, is_this) in
+      elab_t cx c op
+    | (DefT (_, _, ClassT it), Annot_UseT_TypeT reason) ->
+      (* a class value annotation becomes the instance type *)
+      reposition cx (aloc_of_reason reason) it
+    | (DefT (_, _, TypeT (_, l)), Annot_UseT_TypeT _) -> l
+    | (DefT (lreason, trust, EnumObjectT enum), Annot_UseT_TypeT _) ->
+      (* an enum object value annotation becomes the enum type *)
+      mk_enum_type ~trust lreason enum
+    | (DefT (enum_reason, _, EnumT _), Annot_UseT_TypeT reason) ->
+      Flow_js_utils.add_output cx Error_message.(EEnumMemberUsedAsType { reason; enum_reason });
+      AnyT.error reason
+    | (l, Annot_UseT_TypeT reason_use) ->
+      (match l with
+      (* Short-circut as we already error on the unresolved name. *)
+      | AnyT (_, AnyError (Some UnresolvedName)) -> ()
+      | AnyT _ -> Flow_js_utils.add_output cx Error_message.(EAnyValueUsedAsType { reason_use })
+      | _ -> Flow_js_utils.add_output cx Error_message.(EValueUsedAsType { reason_use }));
+      AnyT.error reason_use
+    (************************************)
+    (* Wildcards (idx, maybe, optional) *)
+    (************************************)
     | (DefT (_, _, IdxWrapper _), _) -> failwith "TODO IdxWrapper"
     | (MaybeT _, _) -> failwith "TODO MaybeT"
     | (OptionalT _, _) -> failwith "TODO OptionalT"
@@ -396,11 +435,18 @@ module rec ConsGen : Annotation_inference_sig = struct
     | None -> c
     | Some ts -> specialize cx c unknown_use reason_op reason_tapp (Some ts)
 
-  and mk_instance _cx _reason ?use_desc:_ ~reason_type:_ _t =
-    failwith "TODO Annotation_inference.mk_instance"
+  and mk_type_reference cx reason c =
+    let f id = resolve_id cx id (elab_t cx c (Annot_UseT_TypeT reason)) in
+    let tvar = mk_lazy_tvar cx reason f in
+    AnnotT (reason, tvar, false)
 
-  and mk_typeapp_instance _cx ~use_op:_ ~reason_op:_ ~reason_tapp:_ _c _ts =
-    failwith "TODO Annotation_inference.mk_typeapp_instance"
+  and mk_instance cx instance_reason ?(use_desc = false) ~reason_type c =
+    let source = elab_t cx c (Annot_UseT_TypeT reason_type) in
+    AnnotT (instance_reason, source, use_desc)
+
+  and mk_typeapp_instance cx ~use_op ~reason_op ~reason_tapp c ts =
+    let t = specialize cx c use_op reason_op reason_tapp (Some ts) in
+    mk_instance cx reason_tapp ~reason_type:(reason_of_t c) t
 
   and get_statics _cx _reason _t = failwith "TODO Annotation_inference.get_statics"
 
@@ -468,6 +514,4 @@ module rec ConsGen : Annotation_inference_sig = struct
       Unsoundness.why Existential reason
     end else
       Type.ExistsT reason
-
-  let mk_instance cx reason t = mk_instance cx reason ~reason_type:reason t
 end
