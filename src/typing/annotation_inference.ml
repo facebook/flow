@@ -413,8 +413,12 @@ module rec ConsGen : Annotation_inference_sig = struct
 
   and qualify_type cx use_op loc reason propref t = get_prop_internal cx use_op loc reason propref t
 
-  and mk_typeof_annotation _cx ?trace:_ _reason _t =
-    failwith "TODO Annotation_inference.mk_typeof_annotation"
+  (* Unlike Flow_js, types in this module are 0->1, so there is no need for a
+   * mechanism similar to BecomeT of Flow_js. *)
+  and mk_typeof_annotation cx ?trace:_ reason t =
+    let annot_loc = aloc_of_reason reason in
+    let t = reposition cx (aloc_of_reason reason) t in
+    AnnotT (opt_annot_reason ~annot_loc reason, t, false)
 
   and assert_export_is_type _cx _reason _name _l =
     failwith "TODO Annotation_inference.assert_export_is_type"
