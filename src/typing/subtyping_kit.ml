@@ -1048,12 +1048,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let reason = reason_of_t l in
       rec_flow cx trace (l, UseT (use_op, fix_this_class cx trace reason (r, i, this)))
     | (DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; _ }), DefT (_, _, TypeT _)) ->
-      (* TODO: add use op to missing type arg error? *)
       add_output
         cx
         ~trace
         (Error_message.EMissingTypeArgs
            {
+             reason_op = reason_of_t u;
              reason_tapp;
              reason_arity = mk_poly_arity_reason tparams_loc;
              min_arity = poly_minimum_arity ids;

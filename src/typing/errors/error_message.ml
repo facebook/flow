@@ -57,6 +57,7 @@ and 'loc t' =
   | EOnlyDefaultExport of 'loc virtual_reason * string * string
   | ENoNamedExport of 'loc virtual_reason * string * string * string option
   | EMissingTypeArgs of {
+      reason_op: 'loc virtual_reason;
       reason_tapp: 'loc virtual_reason;
       reason_arity: 'loc virtual_reason;
       min_arity: int;
@@ -737,9 +738,10 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ENoDefaultExport (r, s1, s2) -> ENoDefaultExport (map_reason r, s1, s2)
   | EOnlyDefaultExport (r, s1, s2) -> EOnlyDefaultExport (map_reason r, s1, s2)
   | ENoNamedExport (r, s1, s2, s3) -> ENoNamedExport (map_reason r, s1, s2, s3)
-  | EMissingTypeArgs { reason_tapp; reason_arity; min_arity; max_arity } ->
+  | EMissingTypeArgs { reason_op; reason_tapp; reason_arity; min_arity; max_arity } ->
     EMissingTypeArgs
       {
+        reason_op = map_reason reason_op;
         reason_tapp = map_reason reason_tapp;
         reason_arity = map_reason reason_arity;
         min_arity;
@@ -1094,7 +1096,8 @@ let util_use_op_of_msg nope util = function
   | ENoDefaultExport (_, _, _)
   | EOnlyDefaultExport (_, _, _)
   | ENoNamedExport (_, _, _, _)
-  | EMissingTypeArgs { reason_tapp = _; reason_arity = _; min_arity = _; max_arity = _ }
+  | EMissingTypeArgs
+      { reason_op = _; reason_tapp = _; reason_arity = _; min_arity = _; max_arity = _ }
   | EAnyValueUsedAsType _
   | EValueUsedAsType _
   | EPolarityMismatch { reason = _; name = _; expected_polarity = _; actual_polarity = _ }
@@ -1358,7 +1361,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ETypeParamArity (loc, _) -> Some loc
   | ESketchyNullLint { loc; _ } -> Some loc
   | ECallTypeArity { call_loc; _ } -> Some call_loc
-  | EMissingTypeArgs { reason_tapp; _ } -> Some (poly_loc_of_reason reason_tapp)
+  | EMissingTypeArgs { reason_op; _ } -> Some (poly_loc_of_reason reason_op)
   | ESignatureVerification sve ->
     Signature_error.(
       (match sve with
@@ -1722,7 +1725,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       | Some suggestion -> [text " Did you mean "; code suggestion; text "?"]
     in
     Normal { features }
-  | EMissingTypeArgs { reason_tapp; reason_arity; min_arity; max_arity } ->
+  | EMissingTypeArgs { reason_op = _; reason_tapp; reason_arity; min_arity; max_arity } ->
     let (arity, args) =
       if min_arity = max_arity then
         ( spf "%d" max_arity,

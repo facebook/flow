@@ -263,11 +263,11 @@ module rec ConsGen : Annotation_inference_sig = struct
     (* UseT TypeT (runtime types derive static types through annotation) *)
     (*********************************************************************)
     | (DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; _ }), Annot_UseT_TypeT reason) ->
-      (* TODO: add use op to missing type arg error? *)
       Flow_js_utils.add_output
         cx
         (Error_message.EMissingTypeArgs
            {
+             reason_op = reason;
              reason_tapp;
              reason_arity = Flow_js_utils.mk_poly_arity_reason tparams_loc;
              min_arity = Flow_js_utils.poly_minimum_arity ids;

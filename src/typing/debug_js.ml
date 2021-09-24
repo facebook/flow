@@ -1206,9 +1206,10 @@ let dump_error_message =
       spf "EOnlyDefaultExport (%s, %s, %s)" (dump_reason cx reason) module_name export_name
     | ENoNamedExport (reason, module_name, export_name, _) ->
       spf "ENoNamedExport (%s, %s, %s)" (dump_reason cx reason) module_name export_name
-    | EMissingTypeArgs { reason_tapp; reason_arity; min_arity; max_arity } ->
+    | EMissingTypeArgs { reason_op; reason_tapp; reason_arity; min_arity; max_arity } ->
       spf
-        "EMissingTypeArgs { reason_tapp=%s; reason_arity=%s; min_arity=%d; max_arity=%d }"
+        "EMissingTypeArgs { reason_op=%s; reason_tapp=%s; reason_arity=%s; min_arity=%d; max_arity=%d }"
+        (dump_reason cx reason_op)
         (dump_reason cx reason_tapp)
         (dump_reason cx reason_arity)
         min_arity
