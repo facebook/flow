@@ -165,7 +165,7 @@ module rec TypeTerm : sig
      * opaquetype.name for pretty printing. *)
     | OpaqueT of reason * opaquetype
     (* Stores exports (and potentially other metadata) for a module *)
-    | ModuleT of reason * exporttypes * bool (* is_strict *)
+    | ModuleT of (reason * exporttypes * bool) (* is_strict *)
     (* Here's to the crazy ones. The misfits. The rebels. The troublemakers.
        The round pegs in the square holes. **)
     (* types that should never appear in signatures *)

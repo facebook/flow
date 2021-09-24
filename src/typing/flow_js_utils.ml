@@ -922,3 +922,350 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
     in
     DefT (r, bogus_trust (), ClassT i')
 end
+
+(***********)
+(* Imports *)
+(***********)
+
+let check_nonstrict_import cx trace is_strict imported_is_strict reason =
+  if is_strict && not imported_is_strict then
+    let loc = Reason.aloc_of_reason reason in
+    let message = Error_message.ENonstrictImport loc in
+    add_output cx ~trace message
+
+(**************************************************************************)
+(* Module imports                                                         *)
+(*                                                                        *)
+(* The process of importing from a module consists of reading from the    *)
+(* foreign ModuleT type and generating a user-visible construct from it.  *)
+(*                                                                        *)
+(* For CommonJS imports (AKA 'require()'), if the foreign module is an ES *)
+(* module we generate an object whose properties correspond to each of    *)
+(* the named exports of the foreign module. If the foreign module is also *)
+(* a CommonJS module, use the type of the foreign CommonJS exports value  *)
+(* directly.                                                              *)
+(*                                                                        *)
+(* For ES imports (AKA `import` statements), simply generate a model of   *)
+(* an ES ModuleNamespace object from the individual named exports of the  *)
+(* foreign module. This object can then be passed up to "userland"        *)
+(* directly (via `import * as`) or it can be used to extract individual   *)
+(* exports from the foreign module (via `import {}` and `import X from`). *)
+(**************************************************************************)
+
+(* Import and export logic is shared between Flow_js and Annotation_inference.
+ * Import_export_helper_sig is a collection of functions that create constraints in each
+ * constraint engine. Type [r] represents the different styles of returning a
+ * result. In Flow_js it is typical to provide constraints a type variable that
+ * will receive the result of some operation, while in annotation inference to
+ * directly return a type.
+ *)
+module type Import_export_helper_sig = sig
+  type r
+
+  val reposition :
+    Context.t ->
+    ?trace:Type.trace ->
+    ALoc.t ->
+    ?desc:reason_desc ->
+    ?annot_loc:ALoc.t ->
+    Type.t ->
+    Type.t
+
+  val assert_import_is_value : Context.t -> Type.trace -> Reason.t -> string -> Type.t -> unit
+
+  val import_type : Context.t -> Type.trace -> Reason.t -> string -> Type.t -> Type.t
+
+  val import_typeof : Context.t -> Type.trace -> Reason.t -> string -> Type.t -> Type.t
+
+  val return : Context.t -> use_op:use_op -> Type.trace -> Type.t -> r
+
+  val fix_this_class :
+    Context.t -> Type.trace -> Reason.reason -> Reason.reason * Type.t * bool -> Type.t
+
+  val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> reason -> Type.t -> Type.t
+
+  val error_type : Reason.t -> r
+end
+
+(*********************************************************************)
+(* `import type` creates a properly-parameterized type alias for the *)
+(* remote type -- but only for particular, valid remote types.       *)
+(*********************************************************************)
+
+(* TODO: This rule allows interpreting an object as a type!
+
+   It is currently used to work with modules that export named types,
+   e.g. 'react' or 'immutable'. For example, one can do
+
+   `import type React from 'react'`
+
+   followed by uses of `React` as a container of types in (say) type
+   definitions like
+
+   `type C = React.Component<any,any,any>`
+
+   Fortunately, in that case `React` is stored as a type binding in the
+   environment, so it cannot be used as a value.
+
+   However, removing this special case causes no loss of expressibility
+   (while making the model simpler). For example, in the above example we
+   can write
+
+   `import type { Component } from 'react'`
+
+   followed by (say)
+
+   `type C = Component<any,any,any>`
+
+   Overall, we should be able to (at least conceptually) desugar `import
+   type` to `import` followed by `type`.
+*)
+module ImportTypeT_kit (F : Import_export_helper_sig) = struct
+  let canonicalize_imported_type cx trace reason t =
+    match t with
+    | DefT (_, trust, ClassT inst) -> Some (DefT (reason, trust, TypeT (ImportClassKind, inst)))
+    | DefT
+        (_, _, PolyT { tparams_loc; tparams = typeparams; t_out = DefT (_, trust, ClassT inst); id })
+      ->
+      Some
+        (poly_type id tparams_loc typeparams (DefT (reason, trust, TypeT (ImportClassKind, inst))))
+    (* delay fixing a polymorphic this-abstracted class until it is specialized,
+       by transforming the instance type to a type application *)
+    | DefT (_, _, PolyT { tparams_loc; tparams = typeparams; t_out = ThisClassT _; _ }) ->
+      let targs = typeparams |> Nel.map (fun tp -> BoundT (tp.reason, tp.name)) |> Nel.to_list in
+      let tapp = implicit_typeapp t targs in
+      Some (poly_type (Context.generate_poly_id cx) tparams_loc typeparams (class_type tapp))
+    | DefT (_, _, PolyT { t_out = DefT (_, _, TypeT _); _ }) -> Some t
+    (* fix this-abstracted class when used as a type *)
+    | ThisClassT (r, i, this) -> Some (F.fix_this_class cx trace reason (r, i, this))
+    | DefT (enum_reason, trust, EnumObjectT enum) ->
+      let enum_type = mk_enum_type ~trust enum_reason enum in
+      Some (DefT (reason, trust, TypeT (ImportEnumKind, enum_type)))
+    | DefT (_, _, TypeT _) -> Some t
+    | AnyT _ -> Some t
+    | _ -> None
+
+  let on_concrete_type cx trace reason export_name exported_type =
+    match (exported_type, export_name) with
+    | ((ExactT (_, DefT (_, _, ObjT _)) | DefT (_, _, ObjT _)), "default") ->
+      F.return cx trace ~use_op:unknown_use exported_type
+    | (exported_type, _) ->
+      (match canonicalize_imported_type cx trace reason exported_type with
+      | Some imported_t -> F.return cx trace ~use_op:unknown_use imported_t
+      | None ->
+        add_output cx ~trace (Error_message.EImportValueAsType (reason, export_name));
+        F.error_type reason)
+end
+
+(************************************************************************)
+(* `import typeof` creates a properly-parameterized type alias for the  *)
+(* "typeof" the remote export.                                          *)
+(************************************************************************)
+
+module ImportTypeofT_kit (F : Import_export_helper_sig) = struct
+  let on_concrete_type cx trace reason export_name l =
+    match l with
+    | DefT
+        ( _,
+          _,
+          PolyT
+            {
+              tparams_loc;
+              tparams = typeparams;
+              t_out = (DefT (_, _, ClassT _) | DefT (_, _, FunT _)) as lower_t;
+              id;
+            } ) ->
+      let typeof_t = F.mk_typeof_annotation cx ~trace reason lower_t in
+      F.return
+        ~use_op:unknown_use
+        cx
+        trace
+        (poly_type
+           id
+           tparams_loc
+           typeparams
+           (DefT (reason, bogus_trust (), TypeT (ImportTypeofKind, typeof_t))))
+    | DefT (_, _, TypeT _)
+    | DefT (_, _, PolyT { t_out = DefT (_, _, TypeT _); _ }) ->
+      add_output cx ~trace (Error_message.EImportTypeAsTypeof (reason, export_name));
+      F.error_type reason
+    | _ ->
+      let typeof_t = F.mk_typeof_annotation cx ~trace reason l in
+      F.return
+        ~use_op:unknown_use
+        cx
+        trace
+        (DefT (reason, bogus_trust (), TypeT (ImportTypeofKind, typeof_t)))
+end
+
+module CJSRequireT_kit (F : Import_export_helper_sig) = struct
+  (* require('SomeModule') *)
+  let on_ModuleT cx trace (reason, is_strict) (module_reason, exports, imported_is_strict) =
+    check_nonstrict_import cx trace is_strict imported_is_strict reason;
+    let cjs_exports =
+      match exports.cjs_export with
+      | Some t ->
+        (* reposition the export to point at the require(), like the object
+           we create below for non-CommonJS exports *)
+        F.reposition ~trace cx (aloc_of_reason reason) t
+      | None ->
+        let exports_tmap = Context.find_exports cx exports.exports_tmap in
+        (* Convert ES module's named exports to an object *)
+        let mk_exports_object () =
+          let proto = ObjProtoT reason in
+          let props =
+            NameUtils.Map.map (fun (loc, t) -> Field (loc, t, Polarity.Positive)) exports_tmap
+          in
+          Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~frozen:true ~props proto
+        in
+        (* Use default export if option is enabled and module is not lib *)
+        if Context.automatic_require_default cx && not (is_lib_reason_def module_reason) then
+          match NameUtils.Map.find_opt (OrdinaryName "default") exports_tmap with
+          | Some (_, default_t) -> default_t
+          | _ -> mk_exports_object ()
+        else
+          mk_exports_object ()
+    in
+    F.return cx ~use_op:unknown_use trace cjs_exports
+end
+
+module ImportModuleNsT_kit (F : Import_export_helper_sig) = struct
+  (* import * as X from 'SomeModule'; *)
+  let on_ModuleT cx trace (reason, is_strict) (_, exports, imported_is_strict) =
+    check_nonstrict_import cx trace is_strict imported_is_strict reason;
+    let exports_tmap = Context.find_exports cx exports.exports_tmap in
+    let props =
+      NameUtils.Map.map (fun (loc, t) -> Field (loc, t, Polarity.Positive)) exports_tmap
+    in
+    let props =
+      if Context.facebook_module_interop cx then
+        props
+      else
+        match exports.cjs_export with
+        | Some t ->
+          (* TODO this Field should probably have a location *)
+          let p = Field (None, t, Polarity.Positive) in
+          NameUtils.Map.add (OrdinaryName "default") p props
+        | None -> props
+    in
+    let obj_kind =
+      if exports.has_every_named_export then
+        Indexed
+          {
+            key = StrT.why reason |> with_trust bogus_trust;
+            value = AnyT.untyped reason;
+            dict_name = None;
+            dict_polarity = Polarity.Neutral;
+          }
+      else
+        Exact
+    in
+    let proto = ObjProtoT reason in
+    let ns_obj = Obj_type.mk_with_proto cx reason ~obj_kind ~frozen:true ~props proto in
+    F.return cx ~use_op:unknown_use trace ns_obj
+end
+
+module ImportDefaultT_kit (F : Import_export_helper_sig) = struct
+  (* import [type] X from 'SomeModule'; *)
+  let on_ModuleT
+      cx
+      trace
+      (reason, import_kind, (local_name, module_name), is_strict)
+      (module_reason, exports, imported_is_strict) =
+    check_nonstrict_import cx trace is_strict imported_is_strict reason;
+    let export_t =
+      match exports.cjs_export with
+      | Some t -> t
+      | None ->
+        let exports_tmap = Context.find_exports cx exports.exports_tmap in
+        (match NameUtils.Map.find_opt (OrdinaryName "default") exports_tmap with
+        | Some (_, t) -> t
+        | None ->
+          (*
+           * A common error while using `import` syntax is to forget or
+           * misunderstand the difference between `import foo from ...`
+           * and `import {foo} from ...`. The former means to import the
+           * default export to a local var called "foo", and the latter
+           * means to import a named export called "foo" to a local var
+           * called "foo".
+           *
+           * To help guide users here, if we notice that the module being
+           * imported from has no default export (but it does have a named
+           * export that fuzzy-matches the local name specified), we offer
+           * that up as a possible "did you mean?" suggestion.
+           *)
+          (* TODO consider filtering these to OrdinaryNames only *)
+          let known_exports =
+            NameUtils.Map.keys exports_tmap |> List.rev_map display_string_of_name
+          in
+          let suggestion = typo_suggestion known_exports local_name in
+          add_output cx ~trace (Error_message.ENoDefaultExport (reason, module_name, suggestion));
+          AnyT.error module_reason)
+    in
+    let import_t =
+      match import_kind with
+      | ImportType -> F.import_type cx trace reason "default" export_t
+      | ImportTypeof -> F.import_typeof cx trace reason "default" export_t
+      | ImportValue ->
+        F.assert_import_is_value cx trace reason "default" export_t;
+        export_t
+    in
+    F.return cx ~use_op:unknown_use trace import_t
+end
+
+module ImportNamedT_kit (F : Import_export_helper_sig) = struct
+  (* import {X} from 'SomeModule'; *)
+  let on_ModuleT
+      cx
+      trace
+      (reason, import_kind, export_name, module_name, is_strict)
+      (_, exports, imported_is_strict) =
+    check_nonstrict_import cx trace is_strict imported_is_strict reason;
+    (*
+     * When importing from a CommonJS module, we shadow any potential named
+     * exports called "default" with a pointer to the raw `module.exports`
+     * object
+     *)
+    let exports_tmap =
+      let exports_tmap = Context.find_exports cx exports.exports_tmap in
+      (* Drop locations; they are not needed here *)
+      let exports_tmap = NameUtils.Map.map snd exports_tmap in
+      match exports.cjs_export with
+      | Some t -> NameUtils.Map.add (OrdinaryName "default") t exports_tmap
+      | None -> exports_tmap
+    in
+    let has_every_named_export = exports.has_every_named_export in
+    let import_t =
+      match (import_kind, NameUtils.Map.find_opt (OrdinaryName export_name) exports_tmap) with
+      | (ImportType, Some t) -> F.import_type cx trace reason export_name t
+      | (ImportType, None) when has_every_named_export ->
+        F.import_type cx trace reason export_name (AnyT.untyped reason)
+      | (ImportTypeof, Some t) -> F.import_typeof cx trace reason export_name t
+      | (ImportTypeof, None) when has_every_named_export ->
+        F.import_typeof cx trace reason export_name (AnyT.untyped reason)
+      | (ImportValue, Some t) ->
+        F.assert_import_is_value cx trace reason export_name t;
+        t
+      | (ImportValue, None) when has_every_named_export ->
+        let t = AnyT.untyped reason in
+        F.assert_import_is_value cx trace reason export_name t;
+        t
+      | (_, None) ->
+        let num_exports = NameUtils.Map.cardinal exports_tmap in
+        let has_default_export = NameUtils.Map.mem (OrdinaryName "default") exports_tmap in
+        let msg =
+          if num_exports = 1 && has_default_export then
+            Error_message.EOnlyDefaultExport (reason, module_name, export_name)
+          else
+            (* TODO consider filtering to OrdinaryNames only *)
+            let known_exports =
+              NameUtils.Map.keys exports_tmap |> List.rev_map display_string_of_name
+            in
+            let suggestion = typo_suggestion known_exports export_name in
+            Error_message.ENoNamedExport (reason, module_name, export_name, suggestion)
+        in
+        add_output cx ~trace msg;
+        AnyT.error reason
+    in
+    F.return cx trace ~use_op:unknown_use import_t
+end
