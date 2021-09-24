@@ -1,16 +1,41 @@
-Error ----------------------------------------------------------------------------------------------- import_meta.js:4:2
+Error ----------------------------------------------------------------------------------------------- import_meta.js:6:2
 
-Cannot cast `import.meta` to number literal `1` because mixed [1] is incompatible with number literal `1` [2].
+Cannot cast `import.meta` to number literal `1` because `Import$Meta` [1] is incompatible with number literal `1` [2].
 [incompatible-cast]
 
-   import_meta.js:4:2
-   4| (import.meta: 1); // Error
-       ^^^^^^^^^^^ [1]
+   import_meta.js:6:2
+      6| (import.meta: 1); // Error
+          ^^^^^^^^^^^
 
 References:
-   import_meta.js:4:15
-   4| (import.meta: 1); // Error
-                    ^ [2]
+   <BUILTINS>/core.js:2574:20
+                            v
+   2574| type Import$Meta = {
+   2575|   url?: string,
+   2576|   ...
+   2577| };
+         ^ [1]
+   import_meta.js:6:15
+      6| (import.meta: 1); // Error
+                       ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- import_meta.js:7:13
+
+Cannot get `import.meta.xxx` because property `xxx` is missing in `Import$Meta` [1]. [prop-missing]
+
+   import_meta.js:7:13
+      7| import.meta.xxx; // Error
+                     ^^^
+
+References:
+   <BUILTINS>/core.js:2574:20
+                            v
+   2574| type Import$Meta = {
+   2575|   url?: string,
+   2576|   ...
+   2577| };
+         ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ new_target.js:5:4
@@ -42,4 +67,4 @@ References:
 
 
 
-Found 3 errors
+Found 4 errors

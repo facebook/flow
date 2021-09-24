@@ -3721,7 +3721,8 @@ module Make (Env : Env_sig.S) = struct
           property = (_, { Ast.Identifier.name = "meta"; _ }) as property;
           comments;
         } ->
-      let t = bogus_trust () |> MixedT.at loc in
+      let reason = mk_reason (RCustom "import.meta") loc in
+      let t = Flow.get_builtin_type cx reason (OrdinaryName "Import$Meta") in
       ((loc, t), MetaProperty { MetaProperty.meta; property; comments })
     | MetaProperty _ ->
       Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, MetaPropertyExpression));
