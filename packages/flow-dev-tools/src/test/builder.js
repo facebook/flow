@@ -34,8 +34,10 @@ import {
   writeFile,
 } from '../utils/async';
 import {getTestsDir} from '../constants';
+import ShellMocker from './ShellMocker';
 
 import type {SuiteResult} from './runTestSuite';
+import type {AllInvocations} from './ShellMocker';
 
 type CancellationToken = {
   +isCancellationRequested: boolean,
@@ -71,6 +73,7 @@ export class TestBuilder {
   testErrors: Array<string> = [];
   allowFlowServerToDie: boolean = false;
   logStream: stream$Writable | null;
+  shellMocker: ShellMocker;
   waitForRecheck: boolean;
 
   constructor(
@@ -96,6 +99,7 @@ export class TestBuilder {
     this.lazyMode = lazyMode;
     this.lsp = null;
     this.lspMessages = [];
+    this.shellMocker = new ShellMocker(join(baseDir, 'mock', String(testNum)));
     this.waitForRecheck = wait_for_recheck;
   }
 
@@ -143,6 +147,7 @@ export class TestBuilder {
   async createFreshDir(): Promise<void> {
     await mkdirp(this.dir);
     await mkdirp(this.tmpDir);
+    await this.shellMocker.createFreshDirs();
 
     this.logStream = createWriteStream(join(this.tmpDir, 'test.log'));
 
@@ -257,6 +262,22 @@ export class TestBuilder {
     await this.forceRecheck([filename]);
   }
 
+  async mockShellCommand(name: string): Promise<void> {
+    await this.shellMocker.add(name);
+  }
+
+  async clearMockInvocations(): Promise<void> {
+    await this.shellMocker.clearAll();
+  }
+
+  async waitUntilMockInvocation(timeout: number): Promise<boolean> {
+    return await this.shellMocker.waitAll(timeout);
+  }
+
+  async getMockInvocationsSinceStartOfStep(): Promise<AllInvocations> {
+    return await this.shellMocker.getAll();
+  }
+
   async execManualAndLog(
     cmd: string,
     options?: Object,
@@ -354,7 +375,10 @@ export class TestBuilder {
       // Useful for debugging flow server
       // stdio: ["pipe", "pipe", process.stderr],
       cwd: this.dir,
-      env: {...process.env, OCAMLRUNPARAM: 'b'},
+      env: this.shellMocker.prepareProcessEnv({
+        ...process.env,
+        OCAMLRUNPARAM: 'b',
+      }),
     });
     this.server = serverProcess;
     this.serverEmitter.emit('server');
@@ -418,7 +442,10 @@ export class TestBuilder {
       // Useful for debugging flow lsp
       // stdio: ["pipe", "pipe", process.stderr],
       cwd: this.dir,
-      env: {...process.env, OCAMLRUNPARAM: 'b'},
+      env: this.shellMocker.prepareProcessEnv({
+        ...process.env,
+        OCAMLRUNPARAM: 'b',
+      }),
     });
     const connection = rpc.createMessageConnection(
       new rpc.StreamMessageReader(lspProcess.stdout),

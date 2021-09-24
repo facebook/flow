@@ -9,6 +9,7 @@
  */
 
 import type {FlowResult} from '../flowResult';
+import type {AllInvocations} from './ShellMocker';
 import type {LSPMessage} from './lsp';
 
 export interface StepEnvWriteable {
@@ -17,6 +18,7 @@ export interface StepEnvWriteable {
   reportExitCode(code: number): void;
   setLSPMessagesSinceStartOfStep(messages: Array<LSPMessage>): void;
   setLSPStderrSinceStartOfStep(stderr: string): void;
+  setMockInvocationsSinceStartOfStep(invocations: AllInvocations): void;
   setNewErrors(errors: FlowResult): void;
   setServerRunning(running: 'stopped' | 'running'): void;
   setLSPRunning(running: 'stopped' | 'running'): void;
@@ -29,6 +31,7 @@ export interface StepEnvReadable {
   getExitCodes(): Array<number>;
   getLSPMessagesSinceStartOfStep(): Array<LSPMessage>;
   getLSPStderrSinceStartOfStep(): string;
+  getMockInvocationsSinceStartOfStep(): AllInvocations;
   getOldErrors(): FlowResult;
   getNewErrors(): FlowResult;
   getServerRunning(): 'stopped' | 'running';
@@ -48,8 +51,9 @@ export function newEnv(
   let shouldRunFlow = false;
   let lspMessagesSinceStartOfStep = [];
   let lspStderrSinceStartOfStep = '';
+  let mockInvocationsSinceStartOfStep = {};
 
-  const envWrite = {
+  const envWrite: StepEnvWriteable = {
     reportStdout(output) {
       stdout.push(output);
     },
@@ -68,6 +72,10 @@ export function newEnv(
 
     setLSPStderrSinceStartOfStep(stderr) {
       lspStderrSinceStartOfStep = stderr;
+    },
+
+    setMockInvocationsSinceStartOfStep(invocations) {
+      mockInvocationsSinceStartOfStep = invocations;
     },
 
     setNewErrors(errors) {
@@ -106,6 +114,10 @@ export function newEnv(
 
     getLSPStderrSinceStartOfStep() {
       return lspStderrSinceStartOfStep;
+    },
+
+    getMockInvocationsSinceStartOfStep() {
+      return mockInvocationsSinceStartOfStep;
     },
 
     getOldErrors() {
