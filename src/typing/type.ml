@@ -2749,6 +2749,13 @@ end
 (**************************)
 module AConstraint = struct
   type op =
+    (* Imports *)
+    | Annot_ImportNamedT of Reason.t * TypeTerm.import_kind * string * string * bool
+    | Annot_ImportModuleNsT of Reason.t * bool
+    | Annot_ImportTypeT of Reason.reason * string
+    | Annot_ImportTypeofT of Reason.reason * string
+    | Annot_ImportDefaultT of Reason.t * TypeTerm.import_kind * (string * string) * bool
+    | Annot_CJSRequireT of Reason.t * bool
     (* Other operations *)
     | Annot_SpecializeT of TypeTerm.use_op * Reason.t * Reason.t * TypeTerm.t list option
     | Annot_ThisSpecializeT of Reason.t * TypeTerm.t
@@ -2815,12 +2822,24 @@ module AConstraint = struct
     | Annot_SpecializeT _ -> "Annot_SpecializeT"
     | Annot_ThisSpecializeT _ -> "Annot_ThisSpecializeT"
     | Annot_UseT_TypeT _ -> "Annot_UseT_TypeT"
+    | Annot_CJSRequireT _ -> "Annot_CJSRequireT"
+    | Annot_ImportTypeT _ -> "Annot_ImportTypeT"
+    | Annot_ImportTypeofT _ -> "Annot_ImportTypeofT"
+    | Annot_ImportNamedT _ -> "Annot_ImportNamedT"
+    | Annot_ImportDefaultT _ -> "Annot_ImportDefaultT"
+    | Annot_ImportModuleNsT _ -> "Annot_ImportModuleNsT"
     | Annot__Future_added_value__ _ -> "Annot__Future_added_value__"
 
   let reason_of_op = function
     | Annot_SpecializeT (_, r, _, _)
     | Annot_ThisSpecializeT (r, _)
     | Annot_UseT_TypeT r
+    | Annot_CJSRequireT (r, _)
+    | Annot_ImportTypeT (r, _)
+    | Annot_ImportTypeofT (r, _)
+    | Annot_ImportNamedT (r, _, _, _, _)
+    | Annot_ImportDefaultT (r, _, _, _)
+    | Annot_ImportModuleNsT (r, _)
     | Annot__Future_added_value__ r ->
       r
 

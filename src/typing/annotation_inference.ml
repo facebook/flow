@@ -25,6 +25,12 @@ let object_like_op = function
   | Annot_SpecializeT _
   | Annot_ThisSpecializeT _
   | Annot_UseT_TypeT _
+  | Annot_CJSRequireT _
+  | Annot_ImportTypeT _
+  | Annot_ImportTypeofT _
+  | Annot_ImportNamedT _
+  | Annot_ImportDefaultT _
+  | Annot_ImportModuleNsT _
   | Annot__Future_added_value__ _ ->
     false
 
@@ -79,6 +85,38 @@ module rec ConsGen : Annotation_inference_sig = struct
   let mk_typeapp_of_poly cx = InstantiationKit.mk_typeapp_of_poly cx dummy_trace
 
   let fix_this_class cx = InstantiationKit.fix_this_class cx dummy_trace
+
+  (***********)
+  (* Imports *)
+  (***********)
+  module Import_export_helper = struct
+    type r = Type.t
+
+    let reposition cx ?trace:_ loc ?desc:_ ?annot_loc:_ t = ConsGen.reposition cx loc t
+
+    let return _cx ~use_op:_ _trace t = t
+
+    let import_type cx _ reason export_name t =
+      ConsGen.elab_t cx t (Annot_ImportTypeT (reason, export_name))
+
+    let import_typeof cx _trace reason export_name t = ConsGen.import_typeof cx reason export_name t
+
+    (* This check is bypassed in annotation inference *)
+    let assert_import_is_value _cx _trace _reason _name _export_t = ()
+
+    let error_type = AnyT.error
+
+    let fix_this_class = InstantiationKit.fix_this_class
+
+    let mk_typeof_annotation = ConsGen.mk_typeof_annotation
+  end
+
+  module CJSRequireTKit = Flow_js_utils.CJSRequireT_kit (Import_export_helper)
+  module ImportModuleNsTKit = Flow_js_utils.ImportModuleNsT_kit (Import_export_helper)
+  module ImportDefaultTKit = Flow_js_utils.ImportDefaultT_kit (Import_export_helper)
+  module ImportNamedTKit = Flow_js_utils.ImportNamedT_kit (Import_export_helper)
+  module ImportTypeTKit = Flow_js_utils.ImportTypeT_kit (Import_export_helper)
+  module ImportTypeofTKit = Flow_js_utils.ImportTypeofT_kit (Import_export_helper)
 
   let unresolved_tvar cx reason = Avar.unresolved cx reason
 
@@ -256,6 +294,40 @@ module rec ConsGen : Annotation_inference_sig = struct
       | AnyT _ -> Flow_js_utils.add_output cx Error_message.(EAnyValueUsedAsType { reason_use })
       | _ -> Flow_js_utils.add_output cx Error_message.(EValueUsedAsType { reason_use }));
       AnyT.error reason_use
+    (*****************)
+    (* `import type` *)
+    (*****************)
+    | (_, Annot_ImportTypeT (reason, export_name)) ->
+      ImportTypeTKit.on_concrete_type cx dummy_trace reason export_name t
+    (*******************)
+    (* `import typeof` *)
+    (*******************)
+    | (_, Annot_ImportTypeofT (reason, export_name)) ->
+      ImportTypeofTKit.on_concrete_type cx dummy_trace reason export_name t
+    (******************)
+    (* Module imports *)
+    (******************)
+    | (ModuleT m, Annot_CJSRequireT (reason, is_strict)) ->
+      CJSRequireTKit.on_ModuleT cx dummy_trace (reason, is_strict) m
+    | (ModuleT m, Annot_ImportModuleNsT (reason, is_strict)) ->
+      ImportModuleNsTKit.on_ModuleT cx dummy_trace (reason, is_strict) m
+    | (ModuleT m, Annot_ImportDefaultT (reason, import_kind, local, is_strict)) ->
+      ImportDefaultTKit.on_ModuleT cx dummy_trace (reason, import_kind, local, is_strict) m
+    | (ModuleT m, Annot_ImportNamedT (reason, import_kind, export_name, module_name, is_strict)) ->
+      ImportNamedTKit.on_ModuleT
+        cx
+        dummy_trace
+        (reason, import_kind, export_name, module_name, is_strict)
+        m
+    | (AnyT (lreason, src), (Annot_CJSRequireT (reason, _) | Annot_ImportModuleNsT (reason, _))) ->
+      Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
+      AnyT.why src reason
+    | (AnyT (lreason, src), Annot_ImportDefaultT (reason, import_kind, _, _)) ->
+      Flow_js_utils.check_untyped_import cx import_kind lreason reason;
+      AnyT.why src reason
+    | (AnyT (lreason, src), Annot_ImportNamedT (reason, import_kind, _, _, _)) ->
+      Flow_js_utils.check_untyped_import cx import_kind lreason reason;
+      AnyT.why src reason
     (************************************)
     (* Wildcards (idx, maybe, optional) *)
     (************************************)
@@ -469,23 +541,23 @@ module rec ConsGen : Annotation_inference_sig = struct
   and assert_export_is_type _cx _reason _name _l =
     failwith "TODO Annotation_inference.assert_export_is_type"
 
-  and cjs_require _cx _l _reason _is_strict = failwith "TODO Annotation_inference.cjs_require"
+  and cjs_require cx t reason is_strict = elab_t cx t (Annot_CJSRequireT (reason, is_strict))
 
   and export_named _cx _reason _kind _named _t = failwith "TODO Annotation_inference.export_named"
 
   and cjs_extract_named_exports _cx _reason _local_module _t =
     failwith "TODO Annotation_inference.cjs_extract_named_exports"
 
-  and import_typeof _cx _reason _export_t _export_name =
-    failwith "TODO Annotation_inference.mk_import_type_of"
+  and import_typeof cx reason export_name t =
+    elab_t cx t (Annot_ImportTypeofT (reason, export_name))
 
-  and import_default _cx _reason _import_kind _local_name _module_name _is_strict _l =
-    failwith "TODO Annotation_inference.import_default"
+  and import_default cx reason import_kind export_name module_name is_strict t =
+    elab_t cx t (Annot_ImportDefaultT (reason, import_kind, (export_name, module_name), is_strict))
 
-  and import_named _cx _reason _import_kind _export_name _module_name _is_strict _l =
-    failwith "TODO Annotation_inference.import_named"
+  and import_named cx reason import_kind export_name module_name is_strict t =
+    elab_t cx t (Annot_ImportNamedT (reason, import_kind, export_name, module_name, is_strict))
 
-  and import_ns _cx _reason _is_strict _l = failwith "TODO Annotation_inference.import_ns"
+  and import_ns cx reason is_strict t = elab_t cx t (Annot_ImportModuleNsT (reason, is_strict))
 
   and copy_named_exports _cx ~from_ns:_ _reason ~module_t:_ =
     failwith "TODO Annotation_inference.copy_named_exports"
