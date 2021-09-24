@@ -2387,7 +2387,7 @@ and main_log_command (state : state) (metadata : LspProt.metadata) : unit =
     start_watcher_status;
     server_logging_context;
     error_info;
-    lsp_method_name = _;
+    lsp_method_name = method_name;
     interaction_tracking_id = _;
     lsp_id;
   } =
@@ -2444,6 +2444,7 @@ and main_log_command (state : state) (metadata : LspProt.metadata) : unit =
     FlowEventLogger.persistent_command_success
       ~server_logging_context
       ~request_id
+      ~method_name
       ~request
       ~extra_data
       ~client_context
@@ -2457,6 +2458,7 @@ and main_log_command (state : state) (metadata : LspProt.metadata) : unit =
     FlowEventLogger.persistent_command_success
       ~server_logging_context
       ~request_id
+      ~method_name
       ~request
       ~extra_data
       ~client_context
