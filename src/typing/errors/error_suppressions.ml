@@ -91,10 +91,12 @@ end = struct
     { suppressions; lint_suppressions; used_universal_suppressions }
 
   let all_unused_locs { suppressions; lint_suppressions; _ } =
-    suppressions
-    |> SpanMap.values
-    |> List.map (snd %> Suppression_comments.locs_of_applicable_codes %> LocSet.of_list)
-    |> List.fold_left LocSet.union lint_suppressions
+    SpanMap.fold
+      (fun _ (_, codes) acc ->
+        let locs = Suppression_comments.locs_of_applicable_codes codes |> LocSet.of_list in
+        LocSet.union locs acc)
+      suppressions
+      lint_suppressions
 
   let universally_suppressed_codes { used_universal_suppressions; _ } =
     used_universal_suppressions
@@ -279,8 +281,7 @@ let check ~root ~file_options (err : Loc.t Errors.printable_error) (suppressions
     in
     Some (result, used, unused)
 
-(* Gets the locations of the suppression comments that are yet unused *)
-
+(** Gets the locations of the suppression comments that are yet unused *)
 let all_unused_locs map =
   FilenameMap.fold
     (fun _k v acc -> LocSet.union acc (FileSuppressions.all_unused_locs v))
