@@ -8,7 +8,8 @@
 module Make
     (L : Loc_sig.S)
     (Scope_api : Scope_api_sig.S with module L = L)
-    (Ssa_api : Ssa_api.S with module L = L) =
+    (Ssa_api : Ssa_api.S with module L = L)
+    (Provider_api : Provider_api.S with module L = L) =
 struct
   let is_const_like info values loc =
     try
@@ -41,6 +42,31 @@ struct
        error is likely a bug with the Scope_builder that
        should be fixed for the SSA environment to work *)
     | Scope_api.Missing_def _ -> false
+
+  type initialization_valid =
+    | Valid
+    | Invalid
+
+  let declaration_validity info values providers loc =
+    match Provider_api.providers_of_def providers loc with
+    | None
+    | Some (_ :: _) ->
+      Valid
+    | Some [] ->
+      (try
+         let uses = Scope_api.uses_of_use info loc in
+         let reads_exist =
+           L.LSet.exists (fun use -> L.LMap.find_opt use values |> Base.Option.is_some) uses
+         in
+         if reads_exist then
+           Invalid
+         else
+           Valid
+       with
+      (* TODO: anywhere where we would raise a Missing_def
+         error is likely a bug with the Scope_builder that
+         should be fixed for the SSA environment to work *)
+      | Scope_api.Missing_def _ -> Valid)
 
   let is_not_captured_by_closure =
     let rec lookup in_current_var_scope info scope def =
@@ -112,6 +138,8 @@ struct
       not not_written_by_closure
 end
 
-module With_ALoc = Make (Loc_sig.ALocS) (Scope_api.With_ALoc) (Ssa_api.With_ALoc)
-module With_Loc = Make (Loc_sig.LocS) (Scope_api.With_Loc) (Ssa_api.With_Loc)
+module With_ALoc =
+  Make (Loc_sig.ALocS) (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Provider_api.ALocProviders)
+module With_Loc =
+  Make (Loc_sig.LocS) (Scope_api.With_Loc) (Ssa_api.With_Loc) (Provider_api.LocProviders)
 include With_ALoc

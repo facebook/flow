@@ -430,6 +430,7 @@ and 'loc t' =
       reason_op: 'loc virtual_reason;
     }
   | EObjectThisReference of 'loc * 'loc virtual_reason
+  | EInvalidDeclaration of 'loc virtual_reason
 
 and 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;
@@ -994,6 +995,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reason_prop = map_reason reason_prop;
       }
   | EObjectThisReference (loc, r) -> EObjectThisReference (f loc, map_reason r)
+  | EInvalidDeclaration r -> EInvalidDeclaration (map_reason r)
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1209,7 +1211,8 @@ let util_use_op_of_msg nope util = function
   | EImplicitInstantiationUnderconstrainedError _
   | EClassToObject _
   | EMethodUnbinding _
-  | EObjectThisReference _ ->
+  | EObjectThisReference _
+  | EInvalidDeclaration _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1269,7 +1272,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumMemberUsedAsType { reason; _ }
   | EEnumInvalidMemberAccess { reason; _ }
   | EEnumInvalidObjectUtil { reason; _ }
-  | EEnumNotIterable { reason; _ } ->
+  | EEnumNotIterable { reason; _ }
+  | EInvalidDeclaration reason ->
     Some (poly_loc_of_reason reason)
   | EExponentialSpread
       {
@@ -3563,6 +3567,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " with the name of the object, or rewriting the object as a class.";
           ];
       }
+  | EInvalidDeclaration reason ->
+    Normal
+      {
+        features =
+          [text "Variable "; ref reason; text " is never initialized, annotated, or assigned to."];
+      }
   | EImplicitInstantiationTemporaryError (_, msg) -> Normal { features = [text msg] }
   | EImportInternalReactServerModule _ ->
     Normal
@@ -3858,6 +3868,7 @@ let error_code_of_message err : error_code option =
   | EUnsupportedSyntax (_, _) -> Some UnsupportedSyntax
   | EImplicitInstantiationUnderconstrainedError _ -> Some UnderconstrainedImplicitInstantiation
   | EObjectThisReference _ -> Some ObjectThisReference
+  | EInvalidDeclaration _ -> Some InvalidDeclaration
   | EMalformedCode _
   | EImplicitInstantiationTemporaryError _
   | EUnusedSuppression _

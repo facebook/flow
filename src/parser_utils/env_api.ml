@@ -104,16 +104,20 @@ end
 module Make
     (L : Loc_sig.S)
     (Ssa_api : Ssa_api.S with module L = L)
-    (Scope_api : Scope_api_sig.S with module L = Ssa_api.L) :
-  S with module L = L and module Ssa_api = Ssa_api and module Scope_api = Scope_api = struct
+    (Scope_api : Scope_api_sig.S with module L = Ssa_api.L)
+    (Provider_api : Provider_api.S with module L = Ssa_api.L) :
+  S
+    with module L = L
+     and module Ssa_api = Ssa_api
+     and module Scope_api = Scope_api
+     and module Provider_api = Provider_api = struct
   module L = L
   module Ssa_api = Ssa_api
   module Scope_api = Scope_api
+  module Provider_api = Provider_api
 
   module Scope_builder : Scope_builder_sig.S with module L = L and module Api = Scope_api =
     Scope_builder.Make (L) (Scope_api)
-
-  module Provider_api : Provider_api.S with module L = L = Provider_api.Make (L)
 
   module ReasonSet = Flow_set.Make (struct
     type t = L.t virtual_reason
@@ -296,6 +300,8 @@ module Make
     | SentinelR (prop, _) -> Printf.sprintf "SentinelR %s" prop
 end
 
-module With_Loc = Make (Loc_sig.LocS) (Ssa_api.With_Loc) (Scope_api.With_Loc)
-module With_ALoc = Make (Loc_sig.ALocS) (Ssa_api.With_ALoc) (Scope_api.With_ALoc)
+module With_Loc =
+  Make (Loc_sig.LocS) (Ssa_api.With_Loc) (Scope_api.With_Loc) (Provider_api.LocProviders)
+module With_ALoc =
+  Make (Loc_sig.ALocS) (Ssa_api.With_ALoc) (Scope_api.With_ALoc) (Provider_api.ALocProviders)
 include With_ALoc

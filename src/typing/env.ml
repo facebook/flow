@@ -407,9 +407,15 @@ module Env : Env_sig.S = struct
     if Reason.is_internal_name name then
       (None, spec)
     else
-      let { Loc_env.var_info = { Env_api.scopes = info; ssa_values = values; _ }; _ } =
+      let { Loc_env.var_info = { Env_api.scopes = info; ssa_values = values; providers; _ }; _ } =
         Context.environment cx
       in
+      (if Options.env_option_enabled (Context.env_mode cx) Options.NoVariablesWithoutProviders then
+        match Invalidation_api.declaration_validity info values providers loc with
+        | Invalidation_api.Valid -> ()
+        | Invalidation_api.Invalid ->
+          Flow.add_output cx Error_message.(EInvalidDeclaration (mk_reason (RIdentifier name) loc)));
+
       if spec <> Entry.ConstLike && Invalidation_api.is_const_like info values loc then
         (None, Entry.ConstLike)
       else if spec <> Entry.NotWrittenByClosure then

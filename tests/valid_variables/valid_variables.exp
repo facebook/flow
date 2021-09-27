@@ -1,0 +1,34 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:10:5
+
+Variable `z` [1] is never initialized, annotated, or assigned to. [invalid-declaration]
+
+   10| var z;
+           ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:23:5
+
+Variable `w2` [1] is never initialized, annotated, or assigned to. [invalid-declaration]
+
+   23| var w2;
+           ^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:24:5
+
+Variable `w2` [1] is never initialized, annotated, or assigned to. [invalid-declaration]
+
+   24| var w2;
+           ^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:43:5
+
+Variable `j` [1] is never initialized, annotated, or assigned to. [invalid-declaration]
+
+   43| let j;
+           ^ [1]
+
+
+
+Found 4 errors

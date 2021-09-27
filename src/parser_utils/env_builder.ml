@@ -151,13 +151,12 @@ module Make
   module Scope_builder : Scope_builder_sig.S with module L = L and module Api = Scope_api =
     Scope_builder.Make (L) (Scope_api)
 
-  module Ssa_builder = Ssa_builder.Make (L) (Ssa_api) (Scope_builder)
-  module Invalidation_api = Invalidation_api.Make (L) (Scope_api) (Ssa_api)
-  module Env_api = Env_api
-
   module Provider_api : Provider_api.S with type info = Env_api.Provider_api.info and module L = L =
     Env_api.Provider_api
 
+  module Ssa_builder = Ssa_builder.Make (L) (Ssa_api) (Scope_builder)
+  module Invalidation_api = Invalidation_api.Make (L) (Scope_api) (Ssa_api) (Provider_api)
+  module Env_api = Env_api
   open Scope_builder
   open Env_api.Refi
 

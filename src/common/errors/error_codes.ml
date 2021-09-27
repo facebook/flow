@@ -146,6 +146,7 @@ type error_code =
   | UntypedImport
   | UntypedTypeImport
   | ValueAsType
+  | InvalidDeclaration
 
 let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.UntypedTypeImport -> UntypedTypeImport
@@ -315,3 +316,4 @@ let string_of_code : error_code -> string = function
   | UntypedImport -> "untyped-import"
   | UntypedTypeImport -> "untyped-type-import"
   | ValueAsType -> "value-as-type"
+  | InvalidDeclaration -> "invalid-declaration"
