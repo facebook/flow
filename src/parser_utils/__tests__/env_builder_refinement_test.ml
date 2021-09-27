@@ -3040,3 +3040,21 @@ function fn() {
       (4, 4) to (4, 5) => {
         (uninitialized)
       }] |}]
+
+let%expect_test "class_expr" =
+  print_ssa_test {|
+let y = 42;
+let x = class y { m() { x; y } };
+y;
+|};
+    [%expect {|
+      [
+        (3, 24) to (3, 25) => {
+          (3, 4) to (3, 5): (`x`)
+        };
+        (3, 27) to (3, 28) => {
+          (3, 14) to (3, 15): (`y`)
+        };
+        (4, 0) to (4, 1) => {
+          (2, 4) to (2, 5): (`y`)
+        }]|}]

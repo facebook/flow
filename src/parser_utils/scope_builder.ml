@@ -459,6 +459,21 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           let _ = this#statement (loc, stmt) in
           expr
         | None -> super#declare_function loc expr
+
+      method! class_expression loc cls =
+        let { Ast.Class.id; _ } = cls in
+        let bindings =
+          match id with
+          | Some name -> Bindings.(singleton (name, Bindings.Class))
+          | None -> Bindings.empty
+        in
+        this#with_bindings
+          loc
+          ~lexical:true
+          bindings
+          (fun () -> ignore (super#class_expression loc cls : ('a, 'b) Ast.Class.t))
+          ();
+        cls
     end
 
   let program ?(flowmin_compatibility = false) ~with_types program =

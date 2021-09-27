@@ -353,6 +353,8 @@ module FindProviders (L : Loc_sig.S) = struct
       method! class_body ((loc, _) as body) =
         this#enter_scope Var (fun _ body -> super#class_body body) loc body
 
+      method! class_expression = this#enter_scope Lex super#class_expression
+
       method! arrow_function = this#enter_scope Var super#arrow_function
 
       method! function_expression_or_method =

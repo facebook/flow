@@ -446,4 +446,34 @@ let tests =
                  empty
                  |> add (mk_loc (1, 32) (1, 33)) [mk_write (1, 16) (1, 17) "x"]
                  |> add (mk_loc (1, 45) (1, 46)) [mk_write (1, 6) (1, 7) "A"]);
+         "class"
+         >:: mk_ssa_builder_test
+               "class b { m() { b; } }"
+               LocMap.(
+                 empty
+                 |> add (mk_loc (1, 16) (1, 17)) [Ssa_api.uninitialized; mk_write (1, 6) (1, 7) "b"]);
+         "class_expr"
+         >:: mk_ssa_builder_test
+               "let a = class b { m() { b; } }"
+               LocMap.(
+                 empty
+                 |> add
+                      (mk_loc (1, 24) (1, 25))
+                      [Ssa_api.uninitialized; mk_write (1, 14) (1, 15) "b"]);
+         "fun_rec"
+         >:: mk_ssa_builder_test
+               "function b() { b; }"
+               LocMap.(
+                 empty
+                 |> add
+                      (mk_loc (1, 15) (1, 16))
+                      [Ssa_api.uninitialized; mk_write (1, 9) (1, 10) "b"]);
+         "fun_expr"
+         >:: mk_ssa_builder_test
+               "let a = function b() { b; }"
+               LocMap.(
+                 empty
+                 |> add
+                      (mk_loc (1, 23) (1, 24))
+                      [Ssa_api.uninitialized; mk_write (1, 17) (1, 18) "b"]);
        ]

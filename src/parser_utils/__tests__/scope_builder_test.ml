@@ -303,4 +303,14 @@ let tests =
          "toplevel_defs_lexical_only" >:: mk_scope_builder_toplevel_scopes_test "const a = b" ["a"];
          "toplevel_defs_hoisting_and_lexical"
          >:: mk_scope_builder_toplevel_scopes_test "const a = b; function test(a) {}" ["a"; "test"];
+         "toplevel_defs_class" >:: mk_scope_builder_toplevel_scopes_test "let a = class b { }" ["a"];
+         "class_expr_loc"
+         >:: mk_scope_builder_scope_loc_test
+               "let a = class b { m(c) { a; b; c; }}"
+               [
+                 (0, mk_loc (1, 0) (1, 36));
+                 (1, mk_loc (1, 8) (1, 36));
+                 (2, mk_loc (1, 19) (1, 35));
+                 (3, mk_loc (1, 23) (1, 35));
+               ];
        ]

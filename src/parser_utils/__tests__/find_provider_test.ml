@@ -347,4 +347,23 @@ var x = null;
 for (x in {a: 'a'}) { };
          "
                "[(1, 4) to (1, 5)], [(2, 5) to (2, 6)]";
+         "class_expr1_base"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 4) (1, 5))
+               "
+    let w;
+
+    w = class w { m() { w = 42 }};
+         "
+               "[(2, 0) to (2, 1)]";
+         "class_expr2_base"
+         >:: mk_provider_loc_test
+               (mk_loc (2, 20) (2, 21))
+               "
+    let w;
+
+    w = class w { m() { w = 42 }};
+
+         "
+               "[(2, 10) to (2, 11)]";
        ]
