@@ -611,8 +611,10 @@ module Make
 
       method private mk_env =
         SMap.map (fun (_, (loc, _)) ->
-            let providers =
-              Base.Option.value ~default:[] (Provider_api.providers_of_def provider_info loc)
+            let (_, providers) =
+              Base.Option.value
+                ~default:(true, [])
+                (Provider_api.providers_of_def provider_info loc)
             in
             let havoc =
               if Base.List.is_empty providers then

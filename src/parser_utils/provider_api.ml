@@ -22,7 +22,12 @@ module type S = sig
 
   val print_full_env : info -> string
 
-  val providers_of_def : info -> L.t -> L.t Reason.virtual_reason list option
+  val providers_of_def :
+    info ->
+    L.t ->
+    (bool (* Is the def fully-initialized, e.g. not null- or un-initialized *)
+    * L.t Reason.virtual_reason list)
+    option
 
   val is_provider_of_annotated : info -> L.t -> bool
 end
@@ -76,11 +81,22 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
 
   let providers_of_def { all_entries; _ } loc =
     Base.List.find_map
-      ~f:(fun { declare_locs; def_locs; provider_locs; name; _ } ->
+      ~f:(fun { declare_locs; def_locs; provider_locs; name; state; _ } ->
         if L.LSet.mem loc declare_locs || L.LSet.mem loc def_locs then
-          Some
-            (L.LSet.elements provider_locs
-            |> Base.List.map ~f:Reason.(mk_reason (RIdentifier (OrdinaryName name))))
+          let fully_initialized =
+            match state with
+            | Initialized
+            | Annotated ->
+              true
+            | Uninitialized
+            | NullInitialized ->
+              false
+          in
+          let provider_reasons =
+            L.LSet.elements provider_locs
+            |> Base.List.map ~f:Reason.(mk_reason (RIdentifier (OrdinaryName name)))
+          in
+          Some (fully_initialized, provider_reasons)
         else
           None)
       (EntrySet.elements all_entries)

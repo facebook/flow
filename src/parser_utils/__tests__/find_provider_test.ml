@@ -56,7 +56,7 @@ let print_providers prov =
 let print_providers_of_def prov =
   match prov with
   | None -> "[]"
-  | Some provider_locs ->
+  | Some (_, provider_locs) ->
     Utils_js.spf
       "[%s]"
       (Base.List.map

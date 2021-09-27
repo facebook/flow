@@ -45,6 +45,7 @@ struct
         if not @@ Provider_api.is_provider providers loc then
           this#update_convert_acc
             (Base.Option.value_exn (Provider_api.providers_of_def providers loc)
+            |> snd
             |> List.map Reason.poly_loc_of_reason);
         id
 

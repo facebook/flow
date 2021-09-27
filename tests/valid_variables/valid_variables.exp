@@ -30,5 +30,29 @@ Variable `j` [1] is never initialized, annotated, or assigned to. [invalid-decla
            ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------- test_null.js:3:5
 
-Found 4 errors
+Variable `x` [1] is only ever assigned to by `null` [2]. This is likely unintended; if it is intended, annotate `x` with
+`: null` to disambiguate. [invalid-declaration]
+
+   test_null.js:3:5
+   3| var x;
+          ^ [1]
+
+References:
+   test_null.js:4:1
+   4| x = null;
+      ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- test_null.js:7:5
+
+Variable `y` [1] is only ever assigned to by `null`. This is likely unintended; if it is intended, annotate `y` with
+`: null` to disambiguate. [invalid-declaration]
+
+   7| var y = null;
+          ^ [1]
+
+
+
+Found 6 errors

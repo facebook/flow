@@ -430,7 +430,15 @@ and 'loc t' =
       reason_op: 'loc virtual_reason;
     }
   | EObjectThisReference of 'loc * 'loc virtual_reason
-  | EInvalidDeclaration of 'loc virtual_reason
+  | EInvalidDeclaration of {
+      declaration: 'loc virtual_reason;
+      null_write: 'loc null_write option;
+    }
+
+and 'loc null_write = {
+  null_loc: 'loc;
+  initialized: bool;
+}
 
 and 'loc exponential_spread_reason_group = {
   first_reason: 'loc virtual_reason;
@@ -995,7 +1003,15 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reason_prop = map_reason reason_prop;
       }
   | EObjectThisReference (loc, r) -> EObjectThisReference (f loc, map_reason r)
-  | EInvalidDeclaration r -> EInvalidDeclaration (map_reason r)
+  | EInvalidDeclaration { declaration; null_write } ->
+    EInvalidDeclaration
+      {
+        declaration = map_reason declaration;
+        null_write =
+          Base.Option.map
+            ~f:(fun ({ null_loc; _ } as nw) -> { nw with null_loc = f null_loc })
+            null_write;
+      }
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1273,7 +1289,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EEnumInvalidMemberAccess { reason; _ }
   | EEnumInvalidObjectUtil { reason; _ }
   | EEnumNotIterable { reason; _ }
-  | EInvalidDeclaration reason ->
+  | EInvalidDeclaration { declaration = reason; _ } ->
     Some (poly_loc_of_reason reason)
   | EExponentialSpread
       {
@@ -3567,11 +3583,33 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " with the name of the object, or rewriting the object as a class.";
           ];
       }
-  | EInvalidDeclaration reason ->
+  | EInvalidDeclaration { declaration = reason; null_write = None } ->
     Normal
       {
         features =
           [text "Variable "; ref reason; text " is never initialized, annotated, or assigned to."];
+      }
+  | EInvalidDeclaration { declaration = reason; null_write = Some { null_loc; initialized } } ->
+    let null_ref =
+      if initialized then
+        code "null"
+      else
+        ref (mk_reason (RCode "null") null_loc)
+    in
+    Normal
+      {
+        features =
+          [
+            text "Variable ";
+            ref reason;
+            text " is only ever assigned to by ";
+            null_ref;
+            text ". This is likely unintended; if it is intended, annotate ";
+            desc reason;
+            text " with ";
+            code ": null";
+            text " to disambiguate.";
+          ];
       }
   | EImplicitInstantiationTemporaryError (_, msg) -> Normal { features = [text msg] }
   | EImportInternalReactServerModule _ ->

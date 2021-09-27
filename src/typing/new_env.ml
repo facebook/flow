@@ -117,7 +117,7 @@ module New_env : Env_sig.S = struct
 
   let find_providers { Env_api.providers; _ } loc =
     Env_api.Provider_api.providers_of_def providers loc
-    |> Base.Option.value ~default:[]
+    |> Base.Option.value_map ~f:snd ~default:[]
     |> Base.List.map ~f:Reason.aloc_of_reason
 
   (*************)

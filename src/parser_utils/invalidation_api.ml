@@ -45,23 +45,28 @@ struct
 
   type initialization_valid =
     | Valid
-    | Invalid
+    | NotWritten
+    | NullWritten of L.t
 
   let declaration_validity info values providers loc =
     match Provider_api.providers_of_def providers loc with
-    | None
-    | Some (_ :: _) ->
-      Valid
-    | Some [] ->
+    | None -> Valid
+    | Some (true, _ :: _) -> Valid
+    | Some (_, providers) ->
       (try
+         let null_providers =
+           (* Since this variable is not fully initialized, if there are any providers then
+              they must be null providers *)
+           Base.List.map ~f:Reason.poly_loc_of_reason providers |> L.LSet.of_list
+         in
          let uses = Scope_api.uses_of_use info loc in
          let reads_exist =
            L.LSet.exists (fun use -> L.LMap.find_opt use values |> Base.Option.is_some) uses
          in
-         if reads_exist then
-           Invalid
-         else
-           Valid
+         match (reads_exist, not (L.LSet.is_empty null_providers)) with
+         | (false, _) -> Valid
+         | (true, false) -> NotWritten
+         | (true, true) -> NullWritten (L.LSet.min_elt null_providers)
        with
       (* TODO: anywhere where we would raise a Missing_def
          error is likely a bug with the Scope_builder that
