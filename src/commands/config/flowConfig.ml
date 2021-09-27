@@ -51,7 +51,6 @@ module Opts = struct
     autoimports: bool option;
     automatic_require_default: bool option;
     babel_loose_array_spread: bool option;
-    check_updates_against_providers: bool;
     disable_live_non_parse_errors: bool option;
     emoji: bool option;
     enable_const_params: bool;
@@ -123,7 +122,7 @@ module Opts = struct
     strict_es6_import_export: bool;
     suppress_types: SSet.t;
     temp_dir: string;
-    new_env: bool;
+    env_mode: Options.env_mode;
     traces: int;
     trust_mode: Options.trust_mode;
     type_asserts: bool;
@@ -178,7 +177,6 @@ module Opts = struct
       autoimports = None;
       automatic_require_default = None;
       babel_loose_array_spread = None;
-      check_updates_against_providers = false;
       disable_live_non_parse_errors = None;
       emoji = None;
       enable_const_params = false;
@@ -251,7 +249,7 @@ module Opts = struct
       strict_es6_import_export_excludes = [];
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       temp_dir = default_temp_dir;
-      new_env = false;
+      env_mode = Options.ClassicEnv [];
       traces = 0;
       trust_mode = Options.NoTrust;
       type_asserts = false;
@@ -445,9 +443,6 @@ module Opts = struct
         else
           Error
             "Option \"enforce_local_inference_annotations\" must be set to true to set \"local_inference_annotation_dirs\".")
-
-  let check_updates_against_providers =
-    boolean (fun opts v -> Ok { opts with check_updates_against_providers = v })
 
   let reorder_checking_parser =
     enum
@@ -656,6 +651,26 @@ module Opts = struct
       [("check", Options.CheckTrust); ("silent", Options.SilentTrust); ("none", Options.NoTrust)]
       (fun opts trust_mode -> Ok { opts with trust_mode })
 
+  let env_mode_parser =
+    string (fun opts s ->
+        match String.split_on_char ',' s |> Base.List.filter ~f:(( <> ) "") with
+        | [] -> Error "env_mode requires an argument"
+        | ["ssa"] -> Ok { opts with env_mode = Options.SSAEnv }
+        | ["classic"] -> Ok { opts with env_mode = Options.ClassicEnv [] }
+        | options ->
+          let options =
+            Base.List.fold_result options ~init:[] ~f:(fun acc opt ->
+                match opt with
+                | "constrain_writes" -> Ok (Options.ConstrainWrites :: acc)
+                | "ssa" -> Error "\"ssa\" must be the first and only env_mode option if present"
+                | "classic" ->
+                  Error "\"classic\" must be the first and only env_mode option if present"
+                | opt -> Error (spf "\"%s\" is not a valid environment option" opt))
+          in
+          Base.Result.map
+            ~f:(fun options -> { opts with env_mode = Options.ClassicEnv options })
+            options)
+
   let watchman_defer_states_parser =
     string ~multiple:true (fun opts v ->
         Ok { opts with watchman_defer_states = v :: opts.watchman_defer_states })
@@ -679,7 +694,6 @@ module Opts = struct
       ("experimental.disable_live_non_parse_errors", disable_live_non_parse_errors_parser);
       ("experimental.enforce_local_inference_annotations", enforce_local_inference_annotations);
       ("experimental.local_inference_annotation_dirs", local_inference_annotation_dirs);
-      ("experimental.check_updates_against_providers", check_updates_against_providers);
       ("experimental.enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
@@ -694,7 +708,7 @@ module Opts = struct
       ("experimental.strict_call_arity", enforce_strict_call_arity_parser);
       ("experimental.strict_es6_import_export.excludes", strict_es6_import_export_excludes_parser);
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
-      ("experimental.new_env", boolean (fun opts v -> Ok { opts with new_env = v }));
+      ("experimental.env_mode", env_mode_parser);
       ("experimental.type_asserts", boolean (fun opts v -> Ok { opts with type_asserts = v }));
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
@@ -1288,8 +1302,6 @@ let babel_loose_array_spread c = c.options.Opts.babel_loose_array_spread
 
 let disable_live_non_parse_errors c = c.options.Opts.disable_live_non_parse_errors
 
-let check_updates_against_providers c = c.options.Opts.check_updates_against_providers
-
 let emoji c = c.options.Opts.emoji
 
 let format_bracket_spacing c = c.options.Opts.format_bracket_spacing
@@ -1308,7 +1320,7 @@ let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
 
 let enums c = c.options.Opts.enums
 
-let new_env c = c.options.Opts.new_env
+let env_mode c = c.options.Opts.env_mode
 
 let exact_by_default c = c.options.Opts.exact_by_default
 

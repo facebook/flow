@@ -1,2 +1,2 @@
 [options]
-experimental.new_env=true
+experimental.env_mode=ssa

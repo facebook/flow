@@ -805,7 +805,7 @@ module Options_flags = struct
     temp_dir: string option;
     traces: int option;
     trust_mode: Options.trust_mode option;
-    new_env: bool;
+    env_mode: Options.env_mode option;
     abstract_locations: bool;
     new_merge: bool;
     verbose: Verbose.t option;
@@ -876,7 +876,7 @@ let options_flags =
       abstract_locations
       include_suppressions
       trust_mode
-      new_env
+      env_mode
       prioritize_dependency_checks =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
@@ -889,7 +889,7 @@ let options_flags =
         profile;
         all;
         wait_for_recheck;
-        new_env;
+        env_mode;
         weak;
         traces;
         no_flowlib;
@@ -970,7 +970,10 @@ let options_flags =
                    ("none", Options.NoTrust);
                  ]))
            ~doc:""
-      |> flag "--new-env" no_arg ~doc:""
+      |> flag
+           "--env-mode"
+           (optional (enum [("classic", Options.ClassicEnv []); ("ssa", Options.SSAEnv)]))
+           ~doc:""
       |> flag "--prioritize-dep-checks" no_arg ~doc:(* experimental *) "")
 
 let saved_state_flags =
@@ -1265,13 +1268,13 @@ let make_options
         ~f:(fun s -> Files.expand_project_root_token ~root s)
         (FlowConfig.local_inference_annotation_dirs flowconfig);
     opt_experimental_infer_indexers = false;
-    opt_check_updates_against_providers = FlowConfig.check_updates_against_providers flowconfig;
     opt_reorder_checking = FlowConfig.reorder_checking flowconfig;
     opt_run_post_inference_implicit_instantiation =
       FlowConfig.run_post_inference_implicit_instantiation flowconfig;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_enums = FlowConfig.enums flowconfig;
-    opt_new_env = options_flags.new_env || FlowConfig.new_env flowconfig;
+    opt_env_mode =
+      Base.Option.value options_flags.env_mode ~default:(FlowConfig.env_mode flowconfig);
     opt_exact_by_default = FlowConfig.exact_by_default flowconfig;
     opt_facebook_fbs = FlowConfig.facebook_fbs flowconfig;
     opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;

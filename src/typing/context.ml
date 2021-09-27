@@ -34,11 +34,10 @@ type metadata = {
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
   max_literal_length: int;
-  check_updates_against_providers: bool;
   enable_const_params: bool;
   enable_enums: bool;
   enable_indexed_access: bool;
-  enable_new_env: bool;
+  env_mode: Options.env_mode;
   enforce_strict_call_arity: bool;
   enforce_local_inference_annotations: bool;
   local_inference_annotation_dirs: string list;
@@ -230,9 +229,8 @@ let metadata_of_options options =
     enable_const_params = Options.enable_const_params options;
     enable_enums = Options.enums options;
     enable_indexed_access = Options.enable_indexed_access options;
-    enable_new_env = Options.new_env options;
+    env_mode = Options.env_mode options;
     enforce_strict_call_arity = Options.enforce_strict_call_arity options;
-    check_updates_against_providers = Options.check_updates_against_providers options;
     enforce_local_inference_annotations = Options.enforce_local_inference_annotations options;
     local_inference_annotation_dirs = Options.local_inference_annotation_dirs options;
     experimental_infer_indexers = Options.experimental_infer_indexers options;
@@ -413,7 +411,7 @@ let enable_enums cx = cx.metadata.enable_enums
 
 let enable_indexed_access cx = cx.metadata.enable_indexed_access
 
-let enable_new_env cx = cx.metadata.enable_new_env
+let env_mode cx = cx.metadata.env_mode
 
 let enforce_strict_call_arity cx = cx.metadata.enforce_strict_call_arity
 
@@ -432,8 +430,6 @@ let enforce_local_inference_annotations cx = cx.metadata.enforce_local_inference
 let local_inference_annotation_dirs cx = cx.metadata.local_inference_annotation_dirs
 
 let experimental_infer_indexers cx = cx.metadata.experimental_infer_indexers
-
-let check_updates_against_providers cx = cx.metadata.check_updates_against_providers
 
 let reorder_checking cx = cx.metadata.reorder_checking
 

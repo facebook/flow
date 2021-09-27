@@ -25,12 +25,11 @@ let metadata =
     (* global *)
     automatic_require_default = false;
     babel_loose_array_spread = false;
-    check_updates_against_providers = false;
     max_literal_length = 100;
     enable_const_params = false;
     enable_enums = true;
     enable_indexed_access = true;
-    enable_new_env = false;
+    env_mode = Options.ClassicEnv [];
     enforce_strict_call_arity = true;
     enforce_local_inference_annotations = false;
     local_inference_annotation_dirs = [];

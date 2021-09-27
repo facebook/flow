@@ -73,7 +73,7 @@ let dummy_options_flags =
     verbose = None;
     wait_for_recheck = None;
     weak = false;
-    new_env = false;
+    env_mode = Some (Options.ClassicEnv []);
     include_suppressions = false;
     prioritize_dependency_checks = false;
   }

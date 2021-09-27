@@ -35,7 +35,6 @@ let stub_metadata ~root ~checked =
     (* global *)
     automatic_require_default = false;
     babel_loose_array_spread = false;
-    check_updates_against_providers = false;
     max_literal_length = 100;
     enable_const_params = false;
     enable_enums = true;
@@ -64,7 +63,7 @@ let stub_metadata ~root ~checked =
     suppress_types = SSet.empty;
     trust_mode = Options.NoTrust;
     type_asserts = false;
-    enable_new_env = false;
+    env_mode = Options.ClassicEnv [];
   }
 
 let dummy_filename = File_key.SourceFile ""

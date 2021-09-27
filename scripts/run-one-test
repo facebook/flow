@@ -356,7 +356,7 @@ runtest() {
         fi
 
         if [[ "$new_env" -eq 1 ]]; then
-            env_flag="--new-env"
+            env_flag="--env-mode ssa"
             if [ "$cmd" != "check" ]
             then
               return $RUNTEST_SKIP

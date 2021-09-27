@@ -74,8 +74,6 @@ val automatic_require_default : config -> bool option
 
 val babel_loose_array_spread : config -> bool option
 
-val check_updates_against_providers : config -> bool
-
 val disable_live_non_parse_errors : config -> bool option
 
 val emoji : config -> bool option
@@ -90,7 +88,7 @@ val enforce_strict_call_arity : config -> bool
 
 val enums : config -> bool
 
-val new_env : config -> bool
+val env_mode : config -> Options.env_mode
 
 val exact_by_default : config -> bool
 

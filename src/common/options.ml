@@ -34,6 +34,12 @@ type order_mode =
   | Dependency
   | LexicalWithDependencyValidation
 
+type env_option = ConstrainWrites
+
+type env_mode =
+  | ClassicEnv of env_option list
+  | SSAEnv
+
 type react_runtime =
   | ReactRuntimeAutomatic
   | ReactRuntimeClassic
@@ -59,7 +65,6 @@ type t = {
   opt_autoimports: bool;
   opt_automatic_require_default: bool;
   opt_babel_loose_array_spread: bool;
-  opt_check_updates_against_providers: bool;
   opt_debug: bool;
   opt_enable_const_params: bool;
   opt_enable_indexed_access: bool;
@@ -126,7 +131,7 @@ type t = {
   opt_strip_root: bool;
   opt_suppress_types: SSet.t;
   opt_temp_dir: string;
-  opt_new_env: bool;
+  opt_env_mode: env_mode;
   opt_traces: int;
   opt_trust_mode: trust_mode;
   opt_type_asserts: bool;
@@ -134,6 +139,11 @@ type t = {
   opt_wait_for_recheck: bool;
   opt_weak: bool;
 }
+
+let env_option_enabled mode option =
+  match mode with
+  | SSAEnv -> false
+  | ClassicEnv opts -> List.mem option opts
 
 let abstract_locations opts = opts.opt_abstract_locations
 
@@ -163,15 +173,13 @@ let local_inference_annotation_dirs opts = opts.opt_local_inference_annotation_d
 
 let experimental_infer_indexers opts = opts.opt_experimental_infer_indexers
 
-let check_updates_against_providers opts = opts.opt_check_updates_against_providers
-
 let enums opts = opts.opt_enums
 
 let format_bracket_spacing opts = opts.opt_format.opt_bracket_spacing
 
 let format_single_quotes opts = opts.opt_format.opt_single_quotes
 
-let new_env opts = opts.opt_new_env
+let env_mode opts = opts.opt_env_mode
 
 let exact_by_default opts = opts.opt_exact_by_default
 

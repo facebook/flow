@@ -223,7 +223,20 @@ module Env : Env_sig.S = struct
       scopes := trunc (List.length cur - depth, cur)
 
   (* initialize a new environment (once per module) *)
-  let init_env ?(exclude_syms = NameUtils.Set.empty) _cx module_scope =
+  let init_env ?(exclude_syms = NameUtils.Set.empty) cx module_scope =
+    begin
+      if Options.env_option_enabled (Context.env_mode cx) Options.ConstrainWrites then
+        let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
+        ALocMap.fold
+          (fun loc reason env ->
+            let t = Inferred (Tvar.mk cx reason) in
+            (* Treat everything as inferred for now for the purposes of annotated vs inferred *)
+            Loc_env.initialize env loc t)
+          var_info.Env_api.env_entries
+          env
+        |> Context.set_environment cx
+    end;
+
     set_exclude_symbols exclude_syms;
     havoc_current_activation ();
     let global_scope = Scope.fresh ~var_scope_kind:Global () in
@@ -426,6 +439,39 @@ module Env : Env_sig.S = struct
     Flow.add_output cx (Error_message.EBindingError (msg, loc, name, entry))
 
   let already_bound_error = binding_error Error_message.ENameAlreadyBound
+
+  let install_or_constrain_by_provider cx ~use_op t name loc =
+    match name with
+    | OrdinaryName _ when Options.env_option_enabled (Context.env_mode cx) Options.ConstrainWrites
+      ->
+      let ({ Loc_env.var_info = { Env_api.providers; _ }; _ } as env) = Context.environment cx in
+      if not @@ Env_api.Provider_api.is_provider providers loc then
+        let providers =
+          Env_api.Provider_api.providers_of_def providers loc
+          |> Base.Option.value ~default:[]
+          |> Base.List.map ~f:(Fn.compose (Loc_env.find_write env) Reason.aloc_of_reason)
+          |> Base.Option.all
+        in
+        let provider =
+          match providers with
+          | None ->
+            assert_false
+              (spf "Missing providers at %s" (ALoc.debug_to_string ~include_source:true loc))
+          | Some [] ->
+            (* If we find an entry for the providers, but none that actually exist, its because this variable
+               was never assigned to in scope, only in child scopes. We treat this as undefined. We handle erroring on
+               these cases using a different approach (the error should be at the declaration, not the assignment). *)
+            None
+          | Some [t] -> Some t
+          | Some (t1 :: t2 :: ts) ->
+            Some (UnionT (mk_reason (RIdentifier name) loc, UnionRep.make t1 t2 ts))
+        in
+        Base.Option.iter provider ~f:(fun provider ->
+            Context.add_constrained_write cx (t, UseT (use_op, provider)))
+      else
+        let t' = Loc_env.find_write env loc in
+        Base.Option.iter ~f:(fun t' -> Flow_js.flow_t cx (t, t')) t'
+    | _ -> ()
 
   (* initialization of entries happens during a preliminary pass through a
      scoped region of the AST (dynamic for hoisted things, lexical for
@@ -659,8 +705,10 @@ module Env : Env_sig.S = struct
           let specific =
             if has_anno then
               general
-            else
+            else begin
+              install_or_constrain_by_provider cx ~use_op specific name loc;
               specific
+            end
           in
           let new_entry = initialized_value_entry specific v in
           Scope.add_entry name new_entry scope
@@ -945,7 +993,7 @@ module Env : Env_sig.S = struct
         when (not (allow_forward_ref kind)) && same_activation scope ->
         tdz_error cx name loc v;
         None
-      | Value ({ Entry.kind = Let _ | Var _; closure_writes; _ } as v) ->
+      | Value ({ Entry.kind = Let _ | Var _; closure_writes; general; _ } as v) ->
         let change = (scope.id, name, op) in
         Changeset.Global.change_var change;
         let use_op =
@@ -960,6 +1008,13 @@ module Env : Env_sig.S = struct
           | Some (writes_by_closure, t) when ALocSet.mem loc writes_by_closure ->
             Flow.flow cx (specific, UseT (use_op, t))
           | _ -> Flow.flow cx (specific, UseT (use_op, Entry.general_of_value v))
+        end;
+
+        begin
+          match (general, op) with
+          | (Inferred _, Changeset.Write) ->
+            install_or_constrain_by_provider cx ~use_op specific name loc
+          | _ -> ()
         end;
 
         (* add updated entry *)

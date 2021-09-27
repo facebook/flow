@@ -53,11 +53,10 @@ type metadata = {
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
   max_literal_length: int;
-  check_updates_against_providers: bool;
   enable_const_params: bool;
   enable_enums: bool;
   enable_indexed_access: bool;
-  enable_new_env: bool;
+  env_mode: Options.env_mode;
   enforce_strict_call_arity: bool;
   enforce_local_inference_annotations: bool;
   local_inference_annotation_dirs: string list;
@@ -160,7 +159,7 @@ val enable_enums : t -> bool
 
 val enable_indexed_access : t -> bool
 
-val enable_new_env : t -> bool
+val env_mode : t -> Options.env_mode
 
 val enforce_strict_call_arity : t -> bool
 
@@ -179,8 +178,6 @@ val enforce_local_inference_annotations : t -> bool
 val local_inference_annotation_dirs : t -> string list
 
 val experimental_infer_indexers : t -> bool
-
-val check_updates_against_providers : t -> bool
 
 val reorder_checking : t -> Options.order_mode
 
