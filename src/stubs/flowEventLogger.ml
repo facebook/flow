@@ -57,7 +57,7 @@ let set_server_options
     ~max_workers:_
     ~enabled_rollouts:_
     ~debug:_
-    ~log_saving_threshold_time_ms:_
+    ~log_saving:_
     ~log_file:_ =
   ()
 

@@ -1345,7 +1345,7 @@ let make_options
         gc_custom_minor_ratio = FlowConfig.gc_worker_custom_minor_ratio flowconfig;
         gc_custom_minor_max_size = FlowConfig.gc_worker_custom_minor_max_size flowconfig;
       };
-    opt_log_saving_threshold_time_ms = FlowConfig.log_saving_threshold_time_ms flowconfig;
+    opt_log_saving = FlowConfig.log_saving flowconfig;
     opt_log_file;
   }
 
