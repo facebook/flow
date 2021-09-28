@@ -71,7 +71,7 @@ export default class ShellMocker {
   }
 
   async clearAll(): Promise<void> {
-    for (const [name] in this.names.entries()) {
+    for (const [name] of this.names.entries()) {
       await this.clear(name);
       console.log('cleared', name);
     }
