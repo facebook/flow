@@ -73,14 +73,11 @@ export default class ShellMocker {
   async clearAll(): Promise<void> {
     for (const [name] of this.names.entries()) {
       await this.clear(name);
-      console.log('cleared', name);
     }
-    console.log('cleared all');
   }
 
   async get(name: string): Promise<Invocations> {
     const contents = await readFile(this.outFile(name));
-    console.log(name, 'raw', contents);
     const lines = contents.split('\n');
     lines.pop(); // remove trailing empty string
     return lines.map(line => line.split(' '));
@@ -90,7 +87,6 @@ export default class ShellMocker {
     const ret = {};
     for (const [name] of this.names.entries()) {
       ret[name] = await this.get(name);
-      console.log(name, 'parsed', JSON.stringify(ret[name]));
     }
     return ret;
   }
