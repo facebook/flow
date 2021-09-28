@@ -126,6 +126,7 @@ let ephemeral_command_failure ~json_data:_ ~client_context:_ = ()
 let persistent_command_success
     ~server_logging_context:_
     ~request_id:_
+    ~method_name:_
     ~request:_
     ~extra_data:_
     ~client_context:_
