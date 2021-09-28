@@ -1,1 +1,1 @@
-cmd: codemod annotate-lti-experimental --strip-root --quiet ./
+cmd: codemod annotate-lti-experimental --add-this-params --strip-root --quiet ./

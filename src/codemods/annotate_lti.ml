@@ -160,7 +160,9 @@ end
 module Codemod_lti_annotator = Codemod_annotator.Make (ErrorStats)
 module Acc = Insert_type_utils.Acc (ErrorStats)
 
-let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
+let mapper
+    ~preserve_literals ~max_type_size ~default_any ~add_this_params (cctx : Codemod_context.Typed.t)
+    =
   let { Codemod_context.Typed.file_sig; docblock; metadata; options; _ } = cctx in
   let imports_react = Insert_type_imports.ImportsHelper.imports_react file_sig in
   let metadata = Context.docblock_overrides docblock metadata in
@@ -248,7 +250,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
 
       let (ploc, _) = params in
       let with_this_param =
-        if this#needs_this_annot ploc then
+        if add_this_params && this#needs_this_annot ploc then
           let this_locs = find_this_locs expr in
           if not (LSet.is_empty this_locs) then
             let ty_result =

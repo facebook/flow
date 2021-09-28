@@ -281,10 +281,14 @@ module Annotate_lti_command = struct
           |> flag
                "--default-any"
                no_arg
-               ~doc:"Adds 'any' to all locations where normalization or validation fails");
+               ~doc:"Adds 'any' to all locations where normalization or validation fails"
+          |> flag
+               "--add-this-params"
+               no_arg
+               ~doc:"Adds a 'this' parameter and type annotations to functions where necessary");
     }
 
-  let main codemod_flags preserve_literals max_type_size default_any () =
+  let main codemod_flags preserve_literals max_type_size default_any add_this_params () =
     let open Codemod_utils in
     let open Insert_type_utils in
     let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
@@ -303,7 +307,9 @@ module Annotate_lti_command = struct
       let check_options o = Options.{ o with opt_enforce_local_inference_annotations = true }
 
       let visit =
-        let mapper = Annotate_lti.mapper ~preserve_literals ~max_type_size ~default_any in
+        let mapper =
+          Annotate_lti.mapper ~preserve_literals ~max_type_size ~default_any ~add_this_params
+        in
         Codemod_utils.make_visitor (Mapper mapper)
     end) in
     main (module Runner) codemod_flags ()
