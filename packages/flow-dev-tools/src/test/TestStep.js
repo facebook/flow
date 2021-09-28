@@ -294,7 +294,8 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     string,
     string,
     number,
-  ) => TestStepSecondStage = (name, substring, expectedCount) => {
+    maxDist?: number,
+  ) => TestStepSecondStage = (name, substring, expectedCount, maxDist = 0) => {
     const assertLoc = searchStackForTestAssertion();
     const ret = this._cloneWithAssertion((reason, env) => {
       const actualInvocations = env.getMockInvocationsSinceStartOfStep()[name];
@@ -306,9 +307,17 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         method: 'verifyMockInvocationsSinceStartOfStepContaining',
         args: [name, substring, actualCount],
       };
+      let actualStr = actualCount.toString();
+      if (maxDist > 0) {
+        if (Math.abs(expectedCount - actualCount) <= maxDist) {
+          actualStr = expectedCount.toString();
+        } else {
+          actualStr += ` (maximum distance ${maxDist.toString()})`;
+        }
+      }
       return simpleDiffAssertion(
         expectedCount.toString(),
-        actualCount.toString(),
+        actualStr,
         assertLoc,
         reason,
         `${name} invocations`,
