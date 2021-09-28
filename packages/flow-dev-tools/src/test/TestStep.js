@@ -283,6 +283,13 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
+  waitUntilMocksSettle: number => TestStepFirstStage = timeout => {
+    const ret = this._cloneWithAction(async (builder, env) => {
+      while (await builder.waitUntilMockInvocation(timeout));
+    });
+    return ret;
+  };
+
   verifyMockInvocationsSinceStartOfStepContaining: (
     string,
     string,
