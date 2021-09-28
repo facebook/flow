@@ -1,13 +1,11 @@
-flow-remove-types
-=================
+# flow-remove-types
 
 [![npm](https://img.shields.io/npm/v/flow-remove-types.svg?maxAge=86400)](https://www.npmjs.com/package/flow-remove-types)
-[![Build Status](https://img.shields.io/travis/flowtype/flow-remove-types.svg?style=flat&label=travis&branch=master)](https://travis-ci.org/flowtype/flow-remove-types)
 
 Turn your JavaScript with [Flow](https://flowtype.org/) type annotations into
 standard JavaScript in an instant with no configuration and minimal setup.
 
-[Flow](https://flowtype.org/) provides static type checking to JavaScript which
+[Flow](https://flow.org/) provides static type checking to JavaScript which
 can both help find and detect bugs long before code is deployed and can make
 code easier to read and more self-documenting. The Flow tool itself only reads
 and analyzes code. Running code with Flow type annotations requires first
@@ -20,23 +18,22 @@ every browser.
 `flow-remove-types` is a faster, simpler, zero-configuration alternative with
 minimal dependencies for super-fast `npm install` time.
 
-
-## Get Started!
+## Getting Started
 
 Use the command line:
 
-```
+```bash
 npm install --global flow-remove-types
 ```
 
-```
+```bash
 flow-remove-types --help
 flow-remove-types input.js > output.js
 ```
 
 Or the JavaScript API:
 
-```
+```bash
 npm install flow-remove-types
 ```
 
@@ -51,7 +48,7 @@ fs.writeFileSync('output.js', output.toString());
 
 When using the `flow-remove-types` script, be sure [not to direct the output to itself](https://superuser.com/questions/597244/why-does-redirecting-the-output-of-a-file-to-itself-produce-a-blank-file)!
 
-## Use in Build Systems:
+## Use in Build Systems
 
 **Rollup:** [`rollup-plugin-flow`](https://github.com/leebyron/rollup-plugin-flow)
 
@@ -61,25 +58,24 @@ When using the `flow-remove-types` script, be sure [not to direct the output to 
 
 **Gulp:** [`gulp-flow-remove-types`](https://github.com/wain-pc/gulp-flow-remove-types)
 
-
 ## Use with existing development tools
 
- * ESLint: [eslint-plugin-flowtype](https://github.com/gajus/eslint-plugin-flowtype)
- * Mocha: `mocha -r flow-remove-types/register`
- * Jest: Add to your config:
-   ```
+* ESLint: [eslint-plugin-flowtype](https://github.com/gajus/eslint-plugin-flowtype)
+* Mocha: `mocha -r flow-remove-types/register`
+* Jest: Add to your config:
+
+  ```js
    transform: {
      "^.+\\.js(?:\\.flow)?$": "flow-remove-types/jest"
    }
    ```
-
 
 ## Use `flow-node`
 
 Wherever you use `node` you can substitute `flow-node` and have a super fast
 flow-types aware evaluator or REPL.
 
-```
+```bash
 $ flow-node
 > var x: number = 42
 undefined
@@ -116,11 +112,10 @@ expressions. All files are included by default except those found in the
 require('flow-remove-types/register')({ includes: /\/custom_path\// })
 ```
 
-> #### Don't use the require hook in packages distributed on NPM
+> **Don't use the require hook in packages distributed on NPM**
 > As always, don't forget to use `flow-remove-types` to compile files before distributing
 > your code on npm, as using the require hook affects the whole runtime and not
 > just your module and may hurt the runtime performance of code that includes it.
-
 
 ## Dead-Simple Transforms
 
@@ -182,7 +177,7 @@ export class MyClass    extends SomeClass                          {
 
 Rather not have the whitespace? Pass the `--pretty` flag to remove the whitespace.
 
-```
+```bash
 flow-remove-types --pretty --sourcemaps source.js
 ```
 
@@ -199,18 +194,17 @@ var sourceMap = output.generateMap();
 fs.writeFileSync('output.js.map', JSON.stringify(sourceMap));
 ```
 
-
 ## Performance
 
 > *NOTE*: These timings are for `flow-remove-types` v1.
 
-### Install:
+### Install
 
 Installing via `npm` from an empty project:
 
 **flow-remove-types:**
 
-```
+```bash
 time npm install flow-remove-types
 
 real  0m3.193s
@@ -220,7 +214,7 @@ sys   0m0.775s
 
 **Babel:**
 
-```
+```bash
 time npm install babel-cli babel-plugin-transform-flow-strip-types
 
 real  0m23.200s
@@ -228,13 +222,13 @@ user  0m10.395s
 sys   0m4.238s
 ```
 
-### Transform:
+### Transform
 
 Transforming a directory of 20 files of 100 lines each:
 
 **flow-remove-types:**
 
-```
+```bash
 time flow-remove-types src/ --out-dir dest/
 
 real  0m0.431s
@@ -244,7 +238,7 @@ sys   0m0.068s
 
 **Babel:**
 
-```
+```bash
 time babel src/ --out-dir dest/
 
 real  0m1.074s
