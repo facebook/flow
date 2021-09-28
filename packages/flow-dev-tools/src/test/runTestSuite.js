@@ -162,6 +162,7 @@ export default (async function(
         }
         testBuilder.clearLSPMessages();
         testBuilder.clearLSPStderr();
+        await testBuilder.clearMockInvocations();
         let {envRead, envWrite} = newEnv(flowErrors || noErrors);
 
         testBuilder.setAllowFlowServerToDie(step.allowFlowServerToDie());
@@ -198,6 +199,9 @@ export default (async function(
           testBuilder.server == null ? 'stopped' : 'running',
         );
         envWrite.setLSPRunning(testBuilder.lsp == null ? 'stopped' : 'running');
+        envWrite.setMockInvocationsSinceStartOfStep(
+          await testBuilder.getMockInvocationsSinceStartOfStep(),
+        );
 
         let result = step.checkAssertions(envRead);
         testBuilder.assertNoErrors();

@@ -27,6 +27,7 @@ type AssertionMethod =
   | 'verifyServerStatus'
   | 'verifyLSPStatus'
   | 'verifyAllLSPMessagesInStep'
+  | 'verifyMockInvocationsSinceStartOfStepContaining'
   | 'waitAndVerifyAllLSPMessagesContentSinceStartOfStep'
   | 'waitAndVerifyNoLSPMessagesSinceStartOfStep'
   | 'lspStderr';

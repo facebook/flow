@@ -269,6 +269,48 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
+  mockShellCommand: string => TestStepFirstStage = name => {
+    const ret = this._cloneWithAction(async (builder, env) => {
+      await builder.mockShellCommand(name);
+    });
+    return ret;
+  };
+
+  waitUntilMockInvocation: number => TestStepFirstStage = timeout => {
+    const ret = this._cloneWithAction(async (builder, env) => {
+      await builder.waitUntilMockInvocation(timeout);
+    });
+    return ret;
+  };
+
+  verifyMockInvocationsSinceStartOfStepContaining: (
+    string,
+    string,
+    number,
+  ) => TestStepSecondStage = (name, substring, expectedCount) => {
+    const assertLoc = searchStackForTestAssertion();
+    const ret = this._cloneWithAssertion((reason, env) => {
+      const actualInvocations = env.getMockInvocationsSinceStartOfStep()[name];
+      const actualContaining = actualInvocations.filter(invocation =>
+        invocation.some(arg => arg.includes(substring)),
+      );
+      const actualCount = actualContaining.length;
+      const suggestion = {
+        method: 'verifyMockInvocationsSinceStartOfStepContaining',
+        args: [name, substring, actualCount],
+      };
+      return simpleDiffAssertion(
+        expectedCount.toString(),
+        actualCount.toString(),
+        assertLoc,
+        reason,
+        `${name} invocations`,
+        suggestion,
+      );
+    });
+    return ret;
+  };
+
   waitUntilLSPStatus: (number, 'stopped' | 'running') => TestStepFirstStage = (
     timeoutMs,
     expected,
