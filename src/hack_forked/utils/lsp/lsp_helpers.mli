@@ -81,6 +81,8 @@ val supports_completion_item_label_details : Lsp.Initialize.params -> bool
 
 val supports_connectionStatus : Lsp.Initialize.params -> bool
 
+val supports_hierarchical_document_symbol : Lsp.Initialize.params -> bool
+
 val telemetry : Jsonrpc.writer -> Lsp.MessageType.t -> string -> unit
 
 val telemetry_error : Jsonrpc.writer -> string -> unit

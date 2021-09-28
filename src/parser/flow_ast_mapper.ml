@@ -88,7 +88,7 @@ class ['loc] mapper =
       | (loc, Block block) -> id_loc this#block loc block stmt (fun block -> (loc, Block block))
       | (loc, Break break) -> id_loc this#break loc break stmt (fun break -> (loc, Break break))
       | (loc, ClassDeclaration cls) ->
-        id_loc this#class_ loc cls stmt (fun cls -> (loc, ClassDeclaration cls))
+        id_loc this#class_declaration loc cls stmt (fun cls -> (loc, ClassDeclaration cls))
       | (loc, Continue cont) ->
         id_loc this#continue loc cont stmt (fun cont -> (loc, Continue cont))
       | (loc, Debugger dbg) -> id_loc this#debugger loc dbg stmt (fun dbg -> (loc, Debugger dbg))
@@ -184,7 +184,7 @@ class ['loc] mapper =
       | (loc, Assignment x) -> id_loc this#assignment loc x expr (fun x -> (loc, Assignment x))
       | (loc, Binary x) -> id_loc this#binary loc x expr (fun x -> (loc, Binary x))
       | (loc, Call x) -> id_loc this#call loc x expr (fun x -> (loc, Call x))
-      | (loc, Class x) -> id_loc this#class_ loc x expr (fun x -> (loc, Class x))
+      | (loc, Class x) -> id_loc this#class_expression loc x expr (fun x -> (loc, Class x))
       | (loc, Comprehension x) ->
         id_loc this#comprehension loc x expr (fun x -> (loc, Comprehension x))
       | (loc, Conditional x) -> id_loc this#conditional loc x expr (fun x -> (loc, Conditional x))
@@ -347,6 +347,10 @@ class ['loc] mapper =
         clause
       else
         { param = param'; body = body'; comments = comments' }
+
+    method class_declaration loc (cls : ('loc, 'loc) Ast.Class.t) = this#class_ loc cls
+
+    method class_expression loc (cls : ('loc, 'loc) Ast.Class.t) = this#class_ loc cls
 
     method class_ _loc (cls : ('loc, 'loc) Ast.Class.t) =
       let open Ast.Class in
@@ -792,7 +796,7 @@ class ['loc] mapper =
     method enum_defaulted_member (member : 'loc Ast.Statement.EnumDeclaration.DefaultedMember.t) =
       let open Ast.Statement.EnumDeclaration.DefaultedMember in
       let (loc, { id = ident }) = member in
-      let id' = this#identifier ident in
+      let id' = this#enum_member_identifier ident in
       if ident == id' then
         member
       else
@@ -803,7 +807,7 @@ class ['loc] mapper =
           ('loc Ast.BooleanLiteral.t, 'loc) Ast.Statement.EnumDeclaration.InitializedMember.t) =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (loc, { id = ident; init }) = member in
-      let id' = this#identifier ident in
+      let id' = this#enum_member_identifier ident in
       if ident == id' then
         member
       else
@@ -814,7 +818,7 @@ class ['loc] mapper =
           ('loc Ast.NumberLiteral.t, 'loc) Ast.Statement.EnumDeclaration.InitializedMember.t) =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (loc, { id = ident; init }) = member in
-      let id' = this#identifier ident in
+      let id' = this#enum_member_identifier ident in
       if ident == id' then
         member
       else
@@ -825,11 +829,13 @@ class ['loc] mapper =
           ('loc Ast.StringLiteral.t, 'loc) Ast.Statement.EnumDeclaration.InitializedMember.t) =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (loc, { id = ident; init }) = member in
-      let id' = this#identifier ident in
+      let id' = this#enum_member_identifier ident in
       if ident == id' then
         member
       else
         (loc, { id = id'; init })
+
+    method enum_member_identifier (id : ('loc, 'loc) Ast.Identifier.t) = this#identifier id
 
     method export_default_declaration
         _loc (decl : ('loc, 'loc) Ast.Statement.ExportDefaultDeclaration.t) =

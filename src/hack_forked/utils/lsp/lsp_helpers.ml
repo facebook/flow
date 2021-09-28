@@ -292,6 +292,11 @@ let supports_completion_item_label_details (p : Lsp.Initialize.params) : bool =
   let open Lsp.CompletionClientCapabilities in
   p.client_capabilities.textDocument.completion.completionItem.labelDetailsSupport
 
+let supports_hierarchical_document_symbol (p : Lsp.Initialize.params) : bool =
+  let open Lsp.Initialize in
+  let open Lsp.DocumentSymbolClientCapabilities in
+  p.client_capabilities.textDocument.documentSymbol.hierarchicalDocumentSymbolSupport
+
 let supports_connectionStatus (p : Lsp.Initialize.params) : bool =
   Lsp.Initialize.(p.client_capabilities.telemetry.connectionStatus)
 

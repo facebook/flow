@@ -936,8 +936,10 @@ module DocumentSymbolFmt = struct
         ("range", Some (print_range range));
         ("selectionRange", Some (print_range selectionRange));
         ( "children",
-          Base.Option.map
-            ~f:(fun children -> JSON_Array (Base.List.map ~f:to_json children))
+          Base.Option.bind
+            ~f:(function
+              | [] -> None
+              | children -> Some (JSON_Array (Base.List.map ~f:to_json children)))
             children );
       ]
 end
