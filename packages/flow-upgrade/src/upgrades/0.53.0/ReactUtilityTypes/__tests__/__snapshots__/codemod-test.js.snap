@@ -29,7 +29,7 @@ const expression2 = () =>
 `;
 
 exports[`HiddenInSuperClassTypeArgs.js 3`] = `
-"import React, {PropTypes} from 'react';
+"import * as React from 'react';
 
 class Buz {}
 class Foo extends Bar<React.Element<any>> {}
@@ -215,7 +215,7 @@ function create(): React.ComponentType<any> {}
 `;
 
 exports[`ReactClass.js 3`] = `
-"import React, {PropTypes} from 'react';
+"import * as React from 'react';
 
 function create(): React.ComponentType<any> {}
 "
@@ -331,7 +331,7 @@ exports[`ReactComponent.js 2`] = `
 `;
 
 exports[`ReactComponent.js 3`] = `
-"import React, {PropTypes} from 'react';
+"import * as React from 'react';
 
 (any: React.Component<Props, State>);
 (any: React.Component<Props, State>);
@@ -625,7 +625,7 @@ class N extends React.Component {
 `;
 
 exports[`ReactComponentRenderReturn.js 3`] = `
-"import React, {PropTypes} from 'react';
+"import * as React from 'react';
 
 class A extends React.Component {
   render(): React.Node {}
@@ -1435,7 +1435,7 @@ exports[`ReactElement.js 2`] = `
 `;
 
 exports[`ReactElement.js 3`] = `
-"import React, {PropTypes} from 'react';
+"import * as React from 'react';
 
 (any: React.Element<React.ComponentType<Config>>);
 (any: React.Element<React.ComponentType<Props>>);
@@ -1905,7 +1905,7 @@ class X {
 `;
 
 exports[`ReactNodeWithTypeArgs.js 3`] = `
-"import React, {PropTypes} from 'react';
+"import * as React from 'react';
 
 class X {
   render(): ?React.Node {
@@ -2063,7 +2063,7 @@ class X {
 `;
 
 exports[`ReactNodeWithoutTypeArgs.js 3`] = `
-"import React, {PropTypes} from 'react';
+"import * as React from 'react';
 
 class X {
   render(): ?React.Node {
@@ -2243,7 +2243,7 @@ class MyComponent {
 `;
 
 exports[`SyntheticEvent.js 3`] = `
-"import React, {PropTypes} from 'react';
+"import * as React from 'react';
 
 class MyComponent {
   onEvent = (event: SyntheticEvent<>) => console.log('yo');
