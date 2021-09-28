@@ -86,7 +86,7 @@ module Opts = struct
     indexed_access: bool;
     lazy_mode: lazy_mode option;
     log_file: Path.t option;
-    log_saving_threshold_time_ms: int option;
+    log_saving: int SMap.t;
     max_files_checked_per_worker: int;
     max_header_tokens: int;
     max_literal_length: int;
@@ -214,7 +214,7 @@ module Opts = struct
       indexed_access = true;
       lazy_mode = None;
       log_file = None;
-      log_saving_threshold_time_ms = None;
+      log_saving = SMap.empty;
       max_files_checked_per_worker = 100;
       max_header_tokens = 10;
       max_literal_length = 100;
@@ -374,6 +374,12 @@ module Opts = struct
 
   let mapping fn = opt (fun str -> optparse_mapping str >>= fn)
 
+  let optparse_json str =
+    try Ok (Hh_json.json_of_string str) with
+    | Hh_json.Syntax_error msg -> Error (spf "Failed to parse JSON: %s" msg)
+
+  let json = opt optparse_json
+
   (* TODO: remove once .flowconfigs no longer use this setting *)
   let new_check_parser =
     boolean (fun opts v ->
@@ -421,6 +427,17 @@ module Opts = struct
       ~init:(fun opts -> { opts with haste_paths_excludes = [] })
       ~multiple:true
       (fun opts v -> Ok { opts with haste_paths_excludes = v :: opts.haste_paths_excludes })
+
+  let log_saving_parser =
+    json
+      ~init:(fun opts -> { opts with log_saving = SMap.empty })
+      ~multiple:true
+      (fun opts -> function
+        | Hh_json.(JSON_Array [JSON_String method_name; JSON_Number threshold_time_ms_str]) ->
+          let threshold_time_ms = int_of_string threshold_time_ms_str in
+          let log_saving = SMap.add method_name threshold_time_ms opts.log_saving in
+          Ok { opts with log_saving }
+        | _ -> Error "log_saving options must be of the form [\"method name\", threshold_time_ms]")
 
   let haste_paths_includes_parser =
     string
@@ -717,8 +734,7 @@ module Opts = struct
       ("indexed_access", boolean (fun opts v -> Ok { opts with indexed_access = v }));
       ("lazy_mode", lazy_mode_parser);
       ("log.file", filepath (fun opts v -> Ok { opts with log_file = Some v }));
-      ( "log_saving.threshold_time_ms",
-        uint (fun opts n -> Ok { opts with log_saving_threshold_time_ms = Some n }) );
+      ("log_saving", log_saving_parser);
       ("max_header_tokens", uint (fun opts v -> Ok { opts with max_header_tokens = v }));
       ("max_literal_length", uint (fun opts v -> Ok { opts with max_literal_length = v }));
       ("merge_timeout", merge_timeout_parser);
@@ -1350,7 +1366,7 @@ let lazy_mode c = c.options.Opts.lazy_mode
 
 let log_file c = c.options.Opts.log_file
 
-let log_saving_threshold_time_ms c = c.options.Opts.log_saving_threshold_time_ms
+let log_saving c = c.options.Opts.log_saving
 
 let max_files_checked_per_worker c = c.options.Opts.max_files_checked_per_worker
 
