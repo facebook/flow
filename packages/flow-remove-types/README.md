@@ -66,6 +66,12 @@ When using the `flow-remove-types` script, be sure [not to direct the output to 
 
  * ESLint: [eslint-plugin-flowtype](https://github.com/gajus/eslint-plugin-flowtype)
  * Mocha: `mocha -r flow-remove-types/register`
+ * Jest: Add to your config:
+   ```
+   transform: {
+     "^.+\\.js(?:\\.flow)?$": "flow-remove-types/jest"
+   }
+   ```
 
 
 ## Use `flow-node`

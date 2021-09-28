@@ -17,6 +17,7 @@
   },
   "files": [
     "index.js",
+    "jest.js",
     "register.js",
     "flow-remove-types",
     "flow-node",
