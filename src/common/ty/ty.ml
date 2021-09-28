@@ -196,6 +196,7 @@ and utility =
   | Keys of t
   | Values of t
   | ReadOnly of t
+  | Partial of t
   | Exact of t
   | Diff of t * t
   | Rest of t * t
@@ -543,6 +544,7 @@ class ['A] comparator_ty =
       | ReactElementRefType _ -> 20
       | ReactConfigType _ -> 21
       | ObjKeyMirror _ -> 22
+      | Partial _ -> 23
 
     method tag_of_polarity _ =
       function
@@ -683,6 +685,7 @@ let string_of_utility_ctor = function
   | Keys _ -> "$Keys"
   | Values _ -> "$Values"
   | ReadOnly _ -> "$ReadOnly"
+  | Partial _ -> "$Partial"
   | Exact _ -> "$Exact"
   | Diff _ -> "$Diff"
   | Rest _ -> "$Rest"
@@ -706,6 +709,7 @@ let types_of_utility = function
   | Keys t -> Some [t]
   | Values t -> Some [t]
   | ReadOnly t -> Some [t]
+  | Partial t -> Some [t]
   | Exact t -> Some [t]
   | Diff (t1, t2) -> Some [t1; t2]
   | Rest (t1, t2) -> Some [t1; t2]

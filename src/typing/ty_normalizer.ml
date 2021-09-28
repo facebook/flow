@@ -1746,6 +1746,7 @@ end = struct
       match d with
       | T.NonMaybeType -> return (Ty.Utility (Ty.NonMaybeType ty))
       | T.ReadOnlyType -> return (Ty.Utility (Ty.ReadOnly ty))
+      | T.PartialType -> return (Ty.Utility (Ty.Partial ty))
       | T.ValuesType -> return (Ty.Utility (Ty.Values ty))
       | T.ElementType { index_type; is_indexed_access } ->
         let%map index_type' = type__ ~env index_type in

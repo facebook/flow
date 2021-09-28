@@ -109,8 +109,8 @@ Cannot cast `result.value` to string because undefined [1] is incompatible with 
               ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1635:14
-   1635|     +value?: Return,
+   <BUILTINS>/core.js:1638:14
+   1638|     +value?: Return,
                       ^^^^^^ [1]
    return.js:20:20
      20|     (result.value: string); // error: number | void ~> string

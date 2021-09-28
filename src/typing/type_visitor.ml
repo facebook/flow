@@ -201,6 +201,7 @@ class ['a] t =
       | PropertyType _
       | ValuesType
       | ReadOnlyType
+      | PartialType
       | ReactElementPropsType
       | ReactElementConfigType
       | ReactElementRefType ->
@@ -517,6 +518,7 @@ class ['a] t =
           let acc =
             match tool with
             | ReadOnly -> acc
+            | Partial -> acc
             | ObjectRep -> acc
             | ObjectWiden _ -> acc
             | Spread (_, state) ->

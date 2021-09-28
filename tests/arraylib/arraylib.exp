@@ -316,8 +316,8 @@ Cannot assign `arr3.flat(...)` to `result3_2` because mixed [1] is incompatible 
                                          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:815:32
-   815|     flat(depth: number): Array<mixed>;
+   <BUILTINS>/core.js:818:32
+   818|     flat(depth: number): Array<mixed>;
                                        ^^^^^ [1]
    flat.js:22:24
     22| const result3_2: Array<number> = arr3.flat(2); // Error - don't support this
@@ -334,8 +334,8 @@ Cannot assign `arr2.flat(...)` to `result2_6` because mixed [1] is incompatible 
                                          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:815:32
-   815|     flat(depth: number): Array<mixed>;
+   <BUILTINS>/core.js:818:32
+   818|     flat(depth: number): Array<mixed>;
                                        ^^^^^ [1]
    flat.js:27:24
     27| const result2_6: Array<number> = arr2.flat(x); // Error - don't support this

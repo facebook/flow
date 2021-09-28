@@ -25,8 +25,8 @@ Cannot call `Symbol` because no more than 1 argument is expected by function typ
                         ^^^^^
 
 References:
-   <BUILTINS>/core.js:262:10
-   262|   static (value?: mixed): symbol;
+   <BUILTINS>/core.js:265:10
+   265|   static (value?: mixed): symbol;
                  ^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -74,8 +74,8 @@ Cannot assign `Symbol.toPrimitive` to `y` because symbol [1] is incompatible wit
                                   ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:334:24
-   334|   static +toPrimitive: $SymbolToPrimitive;
+   <BUILTINS>/core.js:337:24
+   337|   static +toPrimitive: $SymbolToPrimitive;
                                ^^^^^^^^^^^^^^^^^^ [1]
    symbol.js:45:12
     45|   const y: $SymbolMatch = Symbol.toPrimitive; // Error

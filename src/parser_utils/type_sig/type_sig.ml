@@ -451,6 +451,7 @@ type ('loc, 'a) annot =
   | Shape of 'loc * 'a
   | Diff of 'loc * 'a * 'a
   | ReadOnly of 'loc * 'a
+  | Partial of 'loc * 'a
   | Keys of 'loc * 'a
   | Values of 'loc * 'a
   | Exact of 'loc * 'a

@@ -168,6 +168,7 @@ type 'loc virtual_reason_desc =
   | RIncompatibleInstantiation of string
   | RSpreadOf of 'loc virtual_reason_desc
   | RShapeOf of 'loc virtual_reason_desc
+  | RPartialOf of 'loc virtual_reason_desc
   | RObjectPatternRestProp
   | RArrayPatternRestProp
   | RCommonJSExports of string

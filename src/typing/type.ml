@@ -1327,6 +1327,7 @@ module rec TypeTerm : sig
     | OptionalIndexedAccessResultType of { void_reason: reason }
     | Bind of t
     | ReadOnlyType
+    | PartialType
     | SpreadType of
         Object.Spread.target * Object.Spread.operand list * Object.Spread.operand_slice option
     | RestType of Object.Rest.merge_mode * t
@@ -2500,6 +2501,7 @@ and Object : sig
 
   type tool =
     | ReadOnly
+    | Partial
     | Spread of Spread.target * Spread.state
     | Rest of Rest.merge_mode * Rest.state
     | ReactConfig of ReactConfig.state

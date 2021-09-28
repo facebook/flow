@@ -76,8 +76,8 @@ References:
    <BUILTINS>/react.js:335:30
     335|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance>, ... }>,
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1809:24
-   1809| declare class Promise<+R> {
+   <BUILTINS>/core.js:1812:24
+   1812| declare class Promise<+R> {
                                 ^ [3]
 
 
@@ -97,8 +97,8 @@ References:
    <BUILTINS>/react.js:335:30
     335|     component: () => Promise<{ default: React$AbstractComponent<Config, Instance>, ... }>,
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1809:24
-   1809| declare class Promise<+R> {
+   <BUILTINS>/core.js:1812:24
+   1812| declare class Promise<+R> {
                                 ^ [3]
 
 

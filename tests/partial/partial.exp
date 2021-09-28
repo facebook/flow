@@ -1,0 +1,189 @@
+Error ---------------------------------------------------------------------------------------------------- test.js:11:31
+
+Cannot assign object literal to `b7` because null [1] is incompatible with string [2] in property `x`.
+[incompatible-type]
+
+   test.js:11:31
+   11| let b7 : $Partial<Foo> = {x : null}; // error
+                                     ^^^^ [1]
+
+References:
+   test.js:3:19
+    3| type Foo = {| x : string, y : string |};
+                         ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:12:31
+
+Cannot assign object literal to `b8` because number [1] is incompatible with string [2] in property `x`.
+[incompatible-type]
+
+   test.js:12:31
+   12| let b8 : $Partial<Foo> = {x : 3}; // error
+                                     ^ [1]
+
+References:
+   test.js:3:19
+    3| type Foo = {| x : string, y : string |};
+                         ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:13:26
+
+Cannot assign object literal to `b9` because property `z` is missing in `Foo` [1] but exists in object literal [2].
+[prop-missing]
+
+   test.js:13:26
+   13| let b9 : $Partial<Foo> = {z : ""}; // error
+                                ^^^^^^^^ [2]
+
+References:
+   test.js:13:19
+   13| let b9 : $Partial<Foo> = {z : ""}; // error
+                         ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:18:17
+
+Cannot assign `null` to `v2` because null [1] is incompatible with undefined [2]. [incompatible-type]
+
+   test.js:18:17
+   18| let v2 : Void = null; // error
+                       ^^^^ [1]
+
+References:
+   test.js:18:10
+   18| let v2 : Void = null; // error
+                ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:21:16
+
+Cannot assign `undefined` to `n` because undefined [1] is incompatible with null [2]. [incompatible-type]
+
+   test.js:21:16
+   21| let n : Null = undefined; // error
+                      ^^^^^^^^^ [1]
+
+References:
+   test.js:21:9
+   21| let n : Null = undefined; // error
+               ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:27:17
+
+Cannot assign `a` to `p3` because string [1] is incompatible with undefined [1] in property `x`. [incompatible-type]
+
+   test.js:27:17
+   27| let p3 : PFoo = a; // error
+                       ^
+
+References:
+   test.js:3:19
+    3| type Foo = {| x : string, y : string |};
+                         ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:30:17
+
+Cannot assign `3` to `p6` because number [1] is incompatible with `PFoo` [2]. [incompatible-type]
+
+   test.js:30:17
+   30| let p6 : PFoo = 3; // error
+                       ^ [1]
+
+References:
+   test.js:24:22
+   24| type PFoo = $Partial<?Foo>;
+                            ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:32:21
+
+Cannot instantiate partial number because number [1] is not an object. [not-an-object]
+
+   32| type Err = $Partial<number> // error
+                           ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:47:33
+
+Cannot assign object literal to `d7` because null [1] is incompatible with string [2] in property `x`.
+[incompatible-type]
+
+   test.js:47:33
+   47| let d7 : $Partial<IFace> = {x : null}; // error
+                                       ^^^^ [1]
+
+References:
+   test.js:36:9
+   36|     x : string,
+               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:48:33
+
+Cannot assign object literal to `d8` because number [1] is incompatible with string [2] in property `x`.
+[incompatible-type]
+
+   test.js:48:33
+   48| let d8 : $Partial<IFace> = {x : 3}; // error
+                                       ^ [1]
+
+References:
+   test.js:36:9
+   36|     x : string,
+               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:64:33
+
+Cannot assign object literal to `f9` because null [1] is incompatible with string [2] in property `x`.
+[incompatible-type]
+
+   test.js:64:33
+   64| let f9 : $Partial<JFace> = {x : null}; // error
+                                       ^^^^ [1]
+
+References:
+   test.js:36:9
+   36|     x : string,
+               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:65:34
+
+Cannot assign object literal to `f10` because number [1] is incompatible with string [2] in property `z`.
+[incompatible-type]
+
+   test.js:65:34
+   65| let f10 : $Partial<JFace> = {z : 3}; // error
+                                        ^ [1]
+
+References:
+   test.js:52:9
+   52|     z : string
+               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:66:34
+
+Cannot assign object literal to `f11` because number [1] is incompatible with string [2] in property `x`.
+[incompatible-type]
+
+   test.js:66:34
+   66| let f11 : $Partial<JFace> = {x : 3}; // error
+                                        ^ [1]
+
+References:
+   test.js:36:9
+   36|     x : string,
+               ^^^^^^ [2]
+
+
+
+Found 13 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

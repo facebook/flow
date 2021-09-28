@@ -109,8 +109,8 @@ Cannot call `Promise.all` because function [1] requires another argument. [incom
                  ^^^
 
 References:
-   <BUILTINS>/core.js:1884:5
-   1884|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+   <BUILTINS>/core.js:1887:5
+   1887|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -124,8 +124,8 @@ in `$Iterable` [2]. [prop-missing]
                      ^ [1]
 
 References:
-   <BUILTINS>/core.js:1884:19
-   1884|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+   <BUILTINS>/core.js:1887:19
+   1887|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
                            ^^^^^^^^^^^^^^^ [2]
 
 
@@ -138,8 +138,8 @@ Cannot call `Promise.allSettled` because function [1] requires another argument.
                  ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1891:5
-   1891|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => $SettledPromiseResult<T>>>;
+   <BUILTINS>/core.js:1894:5
+   1894|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => $SettledPromiseResult<T>>>;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -153,8 +153,8 @@ exists in `$Iterable` [2]. [prop-missing]
                             ^ [1]
 
 References:
-   <BUILTINS>/core.js:1891:26
-   1891|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => $SettledPromiseResult<T>>>;
+   <BUILTINS>/core.js:1894:26
+   1894|     static allSettled<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, <T>(p: Promise<T> | T) => $SettledPromiseResult<T>>>;
                                   ^^^^^^^^^^^^^^^ [2]
 
 
@@ -168,8 +168,8 @@ Cannot cast `first.status` to empty because string literal `rejected` [1] is inc
                 ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1905:12
-   1905|   +status: 'rejected',
+   <BUILTINS>/core.js:1908:12
+   1908|   +status: 'rejected',
                     ^^^^^^^^^^ [1]
    allSettled.js:36:22
      36|       (first.status: empty) // Error: 'rejected' case was not covered
@@ -517,8 +517,8 @@ References:
    resolve_void.js:3:29
       3| (Promise.resolve(): Promise<number>); // error
                                      ^^^^^^ [2]
-   <BUILTINS>/core.js:1809:24
-   1809| declare class Promise<+R> {
+   <BUILTINS>/core.js:1812:24
+   1812| declare class Promise<+R> {
                                 ^ [3]
 
 
@@ -535,8 +535,8 @@ References:
    resolve_void.js:5:38
       5| (Promise.resolve(undefined): Promise<number>); // error
                                               ^^^^^^ [2]
-   <BUILTINS>/core.js:1809:24
-   1809| declare class Promise<+R> {
+   <BUILTINS>/core.js:1812:24
+   1812| declare class Promise<+R> {
                                 ^ [3]
 
 

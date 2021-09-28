@@ -103,8 +103,8 @@ export default (suite(({addFile, addFiles, addCode}) => [
             6:           readOnlyRef.push(123);
                                      ^^^^ Cannot call \`readOnlyRef.push\` because property \`push\` is missing in \`$ReadOnlyArray\` [1]. [prop-missing]
             References:
-            750:     forEach<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This): void;
-                                                                                             ^^^^^^^^^^^^^^^^^ [1]. See lib: [LIB] core.js:750
+            753:     forEach<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This): void;
+                                                                                             ^^^^^^^^^^^^^^^^^ [1]. See lib: [LIB] core.js:753
 
           test.js:7
             7:           (readOnlyRef[0]: 1);

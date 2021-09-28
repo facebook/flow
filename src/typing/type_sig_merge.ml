@@ -732,6 +732,12 @@ module Make (ConsGen : CONS_GEN) : S = struct
       let t = merge file t in
       let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
       Type.(EvalT (t, TypeDestructorT (use_op, reason, ReadOnlyType), id))
+    | Partial (loc, t) ->
+      let t = merge file t in
+      let reason = Reason.(mk_reason (RPartialOf (TypeUtil.desc_of_t t)) loc) in
+      let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
+      let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+      Type.(EvalT (t, TypeDestructorT (use_op, reason, PartialType), id))
     | Keys (loc, t) ->
       let reason = Reason.(mk_reason RKeySet loc) in
       let t = merge file t in

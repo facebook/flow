@@ -879,6 +879,48 @@ let object_read_only =
     | (t, []) -> t
     | (t0, t1 :: ts) -> UnionT (reason, UnionRep.make t0 t1 ts)
 
+let object_partial =
+  let mk_partial_object cx reason slice =
+    let { Object.reason = r; props; flags; generics; interface } = slice in
+    let props =
+      NameUtils.Map.map
+        (fun (t, _, is_method) ->
+          if is_method then
+            Method (None, t)
+          else
+            match t with
+            | OptionalT _ -> Field (None, t, Polarity.Neutral)
+            | _ ->
+              Field
+                ( None,
+                  OptionalT { reason = reason_of_t t; type_ = t; use_desc = false },
+                  Polarity.Neutral ))
+        props
+    in
+    let call = None in
+    let id = Context.generate_property_map cx props in
+    let proto = ObjProtoT reason in
+    let def_reason =
+      match desc_of_reason ~unwrap:false reason with
+      | RPartialOf _ -> r
+      | _ -> reason
+    in
+    mk_object_type
+      ~def_reason
+      ~exact_reason:(Some reason)
+      ~invalidate_aliases:false
+      ~interface
+      flags
+      call
+      id
+      proto
+      generics
+  in
+  fun cx reason x ->
+    match Nel.map (mk_partial_object cx reason) x with
+    | (t, []) -> t
+    | (t0, t1 :: ts) -> UnionT (reason, UnionRep.make t0 t1 ts)
+
 (* Intersect two object slices: slice * slice -> slice
  *
  * In general it is unsound to combine intersection types, but since object
@@ -1086,6 +1128,8 @@ let resolve
     let (t, todo) = InterRep.members_nel rep in
     let resolve_tool = Resolve (List0 (todo, (intersection_loc, And))) in
     recurse cx use_op reason resolve_tool tool t
+  (* Null and Void should pass through $Partial, since we would like $Partial<?Foo> to be equivalent to ?$Partial<Foo> *)
+  | DefT (_, _, (NullT | VoidT)) when tool = Partial -> return cx use_op t
   (* Mirroring Object.assign() and {...null} semantics, treat null/void as
    * empty objects. *)
   | DefT (_, _, (NullT | VoidT)) ->
