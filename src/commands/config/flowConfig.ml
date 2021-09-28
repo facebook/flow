@@ -85,7 +85,7 @@ module Opts = struct
     indexed_access: bool;
     lazy_mode: lazy_mode option;
     log_file: Path.t option;
-    log_saving: int SMap.t;
+    log_saving: Options.log_saving SMap.t;
     max_files_checked_per_worker: int;
     max_header_tokens: int;
     max_literal_length: int;
@@ -427,15 +427,24 @@ module Opts = struct
       (fun opts v -> Ok { opts with haste_paths_excludes = v :: opts.haste_paths_excludes })
 
   let log_saving_parser =
+    let open Hh_json in
     json
       ~init:(fun opts -> { opts with log_saving = SMap.empty })
       ~multiple:true
       (fun opts -> function
-        | Hh_json.(JSON_Array [JSON_String method_name; JSON_Number threshold_time_ms_str]) ->
+        | JSON_Array [JSON_String method_name; JSON_Number threshold_time_ms_str; limit_json] ->
           let threshold_time_ms = int_of_string threshold_time_ms_str in
-          let log_saving = SMap.add method_name threshold_time_ms opts.log_saving in
-          Ok { opts with log_saving }
-        | _ -> Error "log_saving options must be of the form [\"method name\", threshold_time_ms]")
+          let log_saving ?limit () =
+            SMap.add method_name Options.{ threshold_time_ms; limit } opts.log_saving
+          in
+          (match limit_json with
+          | JSON_Null -> Ok { opts with log_saving = log_saving () }
+          | JSON_Number limit_str ->
+            let limit = int_of_string limit_str in
+            Ok { opts with log_saving = log_saving ~limit () }
+          | _ -> Error "limit (third element) must be either number or null")
+        | _ ->
+          Error "log_saving options must be of the form [\"method name\", threshold_time_ms, limit]")
 
   let haste_paths_includes_parser =
     string

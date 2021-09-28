@@ -142,7 +142,7 @@ val lazy_mode : config -> lazy_mode option
 
 val log_file : config -> Path.t option
 
-val log_saving : config -> int SMap.t
+val log_saving : config -> Options.log_saving SMap.t
 
 val max_files_checked_per_worker : config -> int
 

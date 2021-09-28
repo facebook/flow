@@ -61,6 +61,11 @@ type gc_control = {
   gc_custom_minor_max_size: int option;
 }
 
+type log_saving = {
+  threshold_time_ms: int;
+  limit: int option;
+}
+
 type t = {
   opt_abstract_locations: bool;
   opt_all: bool;
@@ -96,7 +101,7 @@ type t = {
   opt_lazy_mode: bool;
   opt_lint_severities: Severity.severity LintSettings.t;
   opt_log_file: Path.t;
-  opt_log_saving: int SMap.t;
+  opt_log_saving: log_saving SMap.t;
   opt_max_files_checked_per_worker: int;
   opt_max_header_tokens: int;
   opt_max_literal_length: int;

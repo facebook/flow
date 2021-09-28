@@ -77,8 +77,18 @@ let (set_server_options, dump_server_options) =
     log (Printf.sprintf "max_workers=%d" max_workers);
     log (Printf.sprintf "debug=%b" debug);
     SMap.iter
-      (fun method_name threshold_time_ms ->
-        log (Printf.sprintf "%s threshold_time_ms=%d" method_name threshold_time_ms))
+      (fun method_name Options.{ threshold_time_ms; limit } ->
+        let limit_str =
+          match limit with
+          | None -> "null"
+          | Some limit -> Printf.sprintf "%d" limit
+        in
+        log
+          (Printf.sprintf
+             "%s threshold_time_ms=%d limit=%s"
+             method_name
+             threshold_time_ms
+             limit_str))
       log_saving;
     log (Printf.sprintf "log_file=%s" log_file);
     SMap.iter (fun r g -> log (Printf.sprintf "Rollout %S set to %S" r g)) enabled_rollouts
