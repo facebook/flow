@@ -116,17 +116,88 @@ function Parent() {
   )
 }
 
+>>> this.js (#changes: 9)
+// @flow
+
+function f(this: {| x: number |}) {
+  return this.x;
+}
+f.call({x: 1});
+
+function withArg(
+  this: {| x: number |},
+  
+  y: number,
+) {
+  return this.x + y;
+}
+withArg.call({x: 1}, 1);
+
+function withUnannotatedArg(
+  this: {| x: number |},
+  
+  y: number,
+) {
+  return this.x + y;
+}
+withUnannotatedArg.call({x: 1}, 1);
+
+function unused(this: interface { x: any }) {
+  return this.x;
+}
+
+function unusedTwoProps(this: interface { x1: any, z1: any }) {
+  return this.x1 + this.z1;
+}
+
+function unusedMethod(this: interface { x1: any }) {
+  return this.x1(1);
+}
+
+let object = {
+  fn: function(
+  this: {| fn: (y: number) => number, x: number |},
+  
+  y: number,
+) {
+  return this.x + y;
+},
+  x: 1,
+}
+object.fn(1)
+
+class HasThis {
+  x: number;
+  methodA() {
+    return this.x;
+  }
+  methodB() {
+    ((function(this: any) {
+  // old style bind, expect any/$FlowFixMe
+  return this.x;
+})).bind(this);
+  }
+
+  arrow = (y: number) => { // should annotate y but not `this`
+    return this.x + (y: number);
+  }
+}
+
+let arrow = () => { return this; }
+
+
+
 >>> Launching report...
 
 Stats:
-  Files changed:                            4
-  Number of annotations added:             20
-  Total size of annotations:               35
-  Number of LTI errors:                    22
+  Files changed:                            5
+  Number of annotations added:             23
+  Total size of annotations:               40
+  Number of LTI errors:                    32
 
 Errors:
   Missing annot./normalizer error:          0
-  Validation Error:                         2
+  Validation Error:                         7
   Import Error:
     Loc source none:                        0
     Parsing heaps get ast error:            0
@@ -138,7 +209,7 @@ Errors:
 Warnings:
   Skipping arrow function:                  0
   Large type added:                         0
-  Location unhandled:                       0
-  Empty NoUpper:                            1
-  Empty SomeKnownUpper:                     7
+  Location unhandled:                       8
+  Empty NoUpper:                            2
+  Empty SomeKnownUpper:                    18
 

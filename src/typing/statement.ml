@@ -293,31 +293,14 @@ module Make (Env : Env_sig.S) = struct
     let finder = new return_finder in
     finder#eval (finder#function_ loc) function_ast
 
-  class object_this_finder =
-    object (this)
-      inherit
-        [Loc_collections.ALocSet.t, ALoc.t] Flow_ast_visitor.visitor
-          ~init:Loc_collections.ALocSet.empty
-
-      method! this_expression loc node =
-        this#update_acc (Loc_collections.ALocSet.add loc);
-        node
-
-      (* Any mentions of `this` in these constructs would reference
-         the `this` within those structures, so we ignore them *)
-      method! class_ _ x = x
-
-      method! function_declaration _ x = x
-
-      method! function_expression_or_method _ x = x
-    end
+  module ALoc_this_finder = This_finder.Make (Loc_collections.ALocSet)
 
   let error_on_this_uses_in_object_methods cx =
     let open Ast in
     let open Expression in
     Base.List.iter ~f:(function
         | Object.Property (prop_loc, Object.Property.Method { key; value = (_, func); _ }) ->
-          let finder = new object_this_finder in
+          let finder = new ALoc_this_finder.finder in
           finder#eval (finder#function_ prop_loc) func
           |> Loc_collections.ALocSet.iter (fun loc ->
                  let reason =
