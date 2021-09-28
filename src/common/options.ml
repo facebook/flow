@@ -64,6 +64,7 @@ type gc_control = {
 type log_saving = {
   threshold_time_ms: int;
   limit: int option;
+  rate: float;
 }
 
 type t = {
