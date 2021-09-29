@@ -2556,30 +2556,18 @@ let tests =
            (* If both function params and return type can break, params should break first *)
            let a20 = String.make 20 'a' in
            let b20 = String.make 20 'b' in
-           assert_statement
+           assert_statement_string
              ~ctxt
              ~pretty:true
-             ("function f(\n  "
-             ^ a20
-             ^ ",\n  "
-             ^ b20
-             ^ ",\n): { "
-             ^ a20
-             ^ ": t, "
-             ^ b20
-             ^ ": t } {}")
-             (statement_of_string
-                ("function f(" ^ a20 ^ ", " ^ b20 ^ "): {" ^ a20 ^ ": t, " ^ b20 ^ ": t} {}")) );
+             (Printf.sprintf "function f(\n  %s,\n  %s,\n): { %s: t, %s: t } {}" a20 b20 a20 b20) );
          ( "function_type_params_break_before_return_type" >:: fun ctxt ->
            (* If both function param types and return type can break, params should break first *)
            let a20 = String.make 20 'a' in
            let b20 = String.make 20 'b' in
-           assert_statement
+           assert_statement_string
              ~ctxt
              ~pretty:true
-             ("type T = (\n  " ^ a20 ^ ",\n  " ^ b20 ^ "\n) => { " ^ a20 ^ ": t, " ^ b20 ^ ": t };")
-             (statement_of_string
-                ("type T = (" ^ a20 ^ ", " ^ b20 ^ ") => {" ^ a20 ^ ": t, " ^ b20 ^ ": t};")) );
+             (Printf.sprintf "type T = (\n  %s,\n  %s\n) => { %s: t, %s: t };" a20 b20 a20 b20) );
          ( "jsx_in_new_expression" >:: fun ctxt ->
            (* Verify that JSX wrapped in parens is not reprinted with extra blank lines before and after *)
            let a80 = String.make 80 'a' in

@@ -26,13 +26,14 @@ let assert_output ~ctxt ?msg ?(pretty = false) expected_str layout =
       Compact_printer.print ~source_maps:None
   in
   let out = print layout |> Source.contents in
-  let out = String.sub out 0 (String.length out - 1) in
-  (* remove trailing \n *)
+  let out =
+    (* remove trailing \n *)
+    String.sub out 0 (String.length out - 1)
+  in
+  let open_box = "\xE2\x90\xA3" in
+  let not_sign = "\xC2\xAC\n" in
   let printer x =
-    x
-    |> Str.global_replace space_regex "\xE2\x90\xA3" (* open box *)
-    |> Str.global_replace newline_regex "\xC2\xAC\n"
-    (* not sign, what Atom uses *)
+    x |> Str.global_replace space_regex open_box |> Str.global_replace newline_regex not_sign
   in
   assert_equal ~ctxt ?msg ~printer expected_str out
 
