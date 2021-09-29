@@ -26,7 +26,7 @@ function mixed_rest_t<T: mixed>(...xs: T): void {}
 function array_rest_t<T: Array<mixed>>(...xs: T): void {}
 function roarray_rest_t<T: $ReadOnlyArray<mixed>>(...xs: T): void {}
 function iterable_rest_t<T: Iterable<mixed>>(...xs: T): void {}
-function empty_rest_t<T: empty>(...xs: T): void {}
+function empty_rest_t1<T: empty>(...xs: T): void {}
 function bounds_on_bounds<T>() {
   return function<U: T>(...xs: T): void {}
 }
@@ -36,7 +36,7 @@ function bad_unbound_rest_t<T>(...xs: T): T {
   return xs.pop(); // Error - no bound on T
 }
 function string_rest_t<T: string>(...xs: T): void {}; string_rest_t(); // Error - rest param can't be a string
-function empty_rest_t<T: empty>(...xs: T): void {}; empty_rest_t(); // Error - rest param can't be empty
+function empty_rest_t2<T: empty>(...xs: T): void {}; empty_rest_t2(); // Error - rest param can't be empty
 
 type Rest = Array<string>;
 function rest_alias(...xs: Rest): void {} // Ok

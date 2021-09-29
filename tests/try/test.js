@@ -53,7 +53,7 @@ function moz() {
   var c: string = x[0]; // reachable
 }
 
-function maz() {
+function maz1() {
   let x: number[] = [];
   try {
     throw new Error(`just capturing a stack trace`);
@@ -63,7 +63,7 @@ function maz() {
   var c: string = x[0]; // reachable
 }
 
-function maz() {
+function maz2() {
   let x: number[] = [];
   try {
     throw new Error(`just capturing a stack trace`);

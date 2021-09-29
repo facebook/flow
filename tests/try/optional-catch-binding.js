@@ -3,7 +3,7 @@
  */
 
 // local use of annotated var within catch is ok
-function f() {
+function f1() {
   try {
   } catch {
     var x:number = 0;
@@ -12,7 +12,7 @@ function f() {
 }
 
 // but not across try/catch
-function f() {
+function f2() {
   try {
     var x:number = 0;
   } catch {
@@ -21,7 +21,7 @@ function f() {
 }
 
 // it type checks the block correctly and errors
-function f() {
+function f3() {
   try {
   } catch {
     var y:number = 'string'; // error
@@ -29,7 +29,7 @@ function f() {
 }
 
 // scope works
-function f() {
+function f4() {
   var x: number = 0;
   try {
   } catch {

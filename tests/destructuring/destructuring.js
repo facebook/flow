@@ -34,12 +34,12 @@ corge({b:0});
 
 var {n}:{n: number} = {n: ""}
 
-function test() {
+function test1() {
   var {foo} = {bar: 123}; // error on foo
   var {bar, baz} = {bar: 123} // error on baz
 }
 
-function test() {
+function test2() {
   var x = {foo: 'abc', bar: 123};
   var {foo, ...rest} = x;
   (x.baz: string); // error, baz doesn't exist

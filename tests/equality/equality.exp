@@ -8,12 +8,12 @@ arguments are valid, or try using strict equality (`===` or `!==`) instead. [inv
             ^^
 
 References:
-   test.js:6:20
-   6| function foo (o1 : T, o2 : U) {
-                         ^ [1]
-   test.js:6:28
-   6| function foo (o1 : T, o2 : U) {
-                                 ^ [2]
+   test.js:6:21
+   6| function foo1 (o1 : T, o2 : U) {
+                          ^ [1]
+   test.js:6:29
+   6| function foo1 (o1 : T, o2 : U) {
+                                  ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:7
@@ -26,12 +26,12 @@ arguments are valid, or try using strict equality (`===` or `!==`) instead. [inv
             ^^
 
 References:
-   test.js:6:20
-   6| function foo (o1 : T, o2 : U) {
-                         ^ [1]
-   test.js:6:28
-   6| function foo (o1 : T, o2 : U) {
-                                 ^ [2]
+   test.js:6:21
+   6| function foo1 (o1 : T, o2 : U) {
+                          ^ [1]
+   test.js:6:29
+   6| function foo1 (o1 : T, o2 : U) {
+                                  ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:7
@@ -44,12 +44,12 @@ arguments are valid, or try using strict equality (`===` or `!==`) instead. [inv
             ^^
 
 References:
-   test.js:6:20
-   6| function foo (o1 : T, o2 : U) {
-                         ^ [1]
-   test.js:6:28
-   6| function foo (o1 : T, o2 : U) {
-                                 ^ [2]
+   test.js:6:21
+   6| function foo1 (o1 : T, o2 : U) {
+                          ^ [1]
+   test.js:6:29
+   6| function foo1 (o1 : T, o2 : U) {
+                                  ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:7
@@ -62,12 +62,12 @@ arguments are valid, or try using strict equality (`===` or `!==`) instead. [inv
             ^^
 
 References:
-   test.js:6:20
-   6| function foo (o1 : T, o2 : U) {
-                         ^ [1]
-   test.js:6:28
-   6| function foo (o1 : T, o2 : U) {
-                                 ^ [2]
+   test.js:6:21
+   6| function foo1 (o1 : T, o2 : U) {
+                          ^ [1]
+   test.js:6:29
+   6| function foo1 (o1 : T, o2 : U) {
+                                  ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:16:7
@@ -80,12 +80,12 @@ arguments are valid, or try using strict equality (`===` or `!==`) instead. [inv
              ^^
 
 References:
-   test.js:15:20
-   15| function foo (o1 : A, o2 : B) {
-                          ^ [1]
-   test.js:15:28
-   15| function foo (o1 : A, o2 : B) {
-                                  ^ [2]
+   test.js:15:21
+   15| function foo2 (o1 : A, o2 : B) {
+                           ^ [1]
+   test.js:15:29
+   15| function foo2 (o1 : A, o2 : B) {
+                                   ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:16:7
@@ -98,12 +98,12 @@ arguments are valid, or try using strict equality (`===` or `!==`) instead. [inv
              ^^
 
 References:
-   test.js:15:20
-   15| function foo (o1 : A, o2 : B) {
-                          ^ [1]
-   test.js:15:28
-   15| function foo (o1 : A, o2 : B) {
-                                  ^ [2]
+   test.js:15:21
+   15| function foo2 (o1 : A, o2 : B) {
+                           ^ [1]
+   test.js:15:29
+   15| function foo2 (o1 : A, o2 : B) {
+                                   ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:16:7
@@ -116,12 +116,12 @@ arguments are valid, or try using strict equality (`===` or `!==`) instead. [inv
              ^^
 
 References:
-   test.js:15:20
-   15| function foo (o1 : A, o2 : B) {
-                          ^ [1]
-   test.js:15:28
-   15| function foo (o1 : A, o2 : B) {
-                                  ^ [2]
+   test.js:15:21
+   15| function foo2 (o1 : A, o2 : B) {
+                           ^ [1]
+   test.js:15:29
+   15| function foo2 (o1 : A, o2 : B) {
+                                   ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:16:7
@@ -134,12 +134,12 @@ arguments are valid, or try using strict equality (`===` or `!==`) instead. [inv
              ^^
 
 References:
-   test.js:15:20
-   15| function foo (o1 : A, o2 : B) {
-                          ^ [1]
-   test.js:15:28
-   15| function foo (o1 : A, o2 : B) {
-                                  ^ [2]
+   test.js:15:21
+   15| function foo2 (o1 : A, o2 : B) {
+                           ^ [1]
+   test.js:15:29
+   15| function foo2 (o1 : A, o2 : B) {
+                                   ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:16:7
@@ -152,12 +152,12 @@ arguments are valid, or try using strict equality (`===` or `!==`) instead. [inv
              ^^
 
 References:
-   test.js:15:20
-   15| function foo (o1 : A, o2 : B) {
-                          ^ [1]
-   test.js:15:28
-   15| function foo (o1 : A, o2 : B) {
-                                  ^ [2]
+   test.js:15:21
+   15| function foo2 (o1 : A, o2 : B) {
+                           ^ [1]
+   test.js:15:29
+   15| function foo2 (o1 : A, o2 : B) {
+                                   ^ [2]
 
 
 

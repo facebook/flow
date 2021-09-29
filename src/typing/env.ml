@@ -497,6 +497,32 @@ module Env : Env_sig.S = struct
         Base.Option.iter ~f:(fun t' -> Flow_js.flow_t cx (t, t')) t'
     | _ -> ()
 
+  let can_shadow cx name prev loc =
+    Entry.(
+      function
+      (* vars can shadow other vars *)
+      | (Var _, Var _) -> true
+      (* nonpredicate declared functions can shadow each other, and any declared function can be shadowed by a function *)
+      | (Let (FunctionBinding, _), Let (DeclaredFunctionBinding _, _))
+      | ( Let (DeclaredFunctionBinding { predicate = false }, _),
+          Let (DeclaredFunctionBinding { predicate = false }, _) ) ->
+        true
+      (* declared functions can't shadow other things *)
+      | (Let (DeclaredFunctionBinding _, _), (Var _ | Let (FunctionBinding, _))) -> false
+      (* In JS, funcs/vars can shadow other funcs/vars -- only in var scope. However, we want to
+         ban this pattern in Flow, so we raise an already_bound_error BUT don't abort the binding
+         so that we can still check downstream things. *)
+      | ( (Var _ | Let ((FunctionBinding | DeclaredFunctionBinding _), _)),
+          (Var _ | Let ((FunctionBinding | DeclaredFunctionBinding _), _)) ) ->
+        already_bound_error cx name prev loc;
+        true
+      (* vars can shadow function params, but we should raise an error if they are constlike params *)
+      | (Var _, Let (ParamBinding, _)) -> true
+      | (Var _, Const ConstParamBinding) ->
+        already_bound_error cx name prev loc;
+        true
+      | _ -> false)
+
   (* initialization of entries happens during a preliminary pass through a
      scoped region of the AST (dynamic for hoisted things, lexical for
      lexical things). this leaves them in a germinal state which is
@@ -534,16 +560,10 @@ module Env : Env_sig.S = struct
           (* specifically a var scope allows some shadowing *)
           | VarScope _ ->
             Entry.(
-              let can_shadow = function
-                (* funcs/vars can shadow other funcs/vars -- only in var scope *)
-                | ((Var _ | Let (FunctionBinding, _)), (Var _ | Let (FunctionBinding, _))) -> true
-                (* vars can shadow function params *)
-                | (Var _, (Let (ParamBinding, _) | Const ConstParamBinding)) -> true
-                | _ -> false
-              in
               (match (entry, prev) with
               (* good shadowing leaves existing entry, unifies with new *)
-              | (Value e, Value p) when can_shadow (Entry.kind_of_value e, Entry.kind_of_value p) ->
+              | (Value e, Value p)
+                when can_shadow cx name prev loc (Entry.kind_of_value e, Entry.kind_of_value p) ->
                 (* TODO currently we don't step on specific. shouldn't we? *)
                 Flow.unify cx (Entry.general_of_value p) (Entry.general_of_value e)
               (* bad shadowing is a binding error *)
@@ -634,25 +654,33 @@ module Env : Env_sig.S = struct
       | Inferred t -> Inferred (update_type t new_t)
       | Annotated t -> Annotated (update_type t new_t)
     in
-    fun cx name t loc ->
-      if not (is_excluded (OrdinaryName name)) then
+    fun cx ~predicate name t loc ->
+      if not (is_excluded name) then
         let scope = peek_scope () in
-        match Scope.get_entry (OrdinaryName name) scope with
+        match Scope.get_entry name scope with
         | None ->
-          let (spec, closure_writes) =
-            mk_closure_writes cx (OrdinaryName name) loc t Entry.Havocable
-          in
+          let (spec, closure_writes) = mk_closure_writes cx name loc t Entry.Havocable in
           let entry =
-            Entry.new_var (Inferred t) ~loc ~state:State.Initialized ~spec ?closure_writes
+            Entry.new_let
+              (Inferred t)
+              ~kind:(Entry.DeclaredFunctionBinding { predicate })
+              ~loc
+              ~state:State.Initialized
+              ~spec
+              ?closure_writes
           in
-          Scope.add_entry (OrdinaryName name) entry scope
+          Scope.add_entry name entry scope
         | Some prev ->
           Entry.(
             (match prev with
             | Value v
-              when match Entry.kind_of_value v with
-                   | Var _ -> true
-                   | _ -> false ->
+              when can_shadow
+                     cx
+                     name
+                     prev
+                     loc
+                     ( Let (DeclaredFunctionBinding { predicate }, Havocable (*doesnt matter *)),
+                       Entry.kind_of_value v ) ->
               let entry =
                 Value
                   {
@@ -662,10 +690,10 @@ module Env : Env_sig.S = struct
                     general = update_general_type v.general t;
                   }
               in
-              Scope.add_entry (OrdinaryName name) entry scope
+              Scope.add_entry name entry scope
             | _ ->
               (* declare function shadows some other kind of binding *)
-              already_bound_error cx (OrdinaryName name) prev loc))
+              already_bound_error cx name prev loc))
 
   let same_kind k1 k2 =
     let open Entry in
@@ -857,7 +885,7 @@ module Env : Env_sig.S = struct
     Scope.Entry.(
       function
       | Var _
-      | Let (FunctionBinding, _) ->
+      | Let ((FunctionBinding | DeclaredFunctionBinding _), _) ->
         true
       | _ -> false)
 
@@ -999,7 +1027,12 @@ module Env : Env_sig.S = struct
     | ( Changeset.Write,
         Value
           {
-            Entry.kind = Let Entry.(((ClassNameBinding | FunctionBinding) as binding_kind), _);
+            Entry.kind =
+              Let
+                Entry.
+                  ( ((ClassNameBinding | FunctionBinding | DeclaredFunctionBinding _) as
+                    binding_kind),
+                    _ );
             value_declare_loc;
             _;
           } ) ->

@@ -9,6 +9,6 @@ function convert(filter: Filter) {
 
 type Filter2 = Array<number> | Array<string>;
 
-function convert(filter: Filter2) : Filter2 {
+function convert2(filter: Filter2) : Filter2 {
     return filter.slice(0);
 }

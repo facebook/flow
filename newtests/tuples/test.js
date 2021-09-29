@@ -192,6 +192,13 @@ export default (suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: function foo(x: [1,2]): number { return x[-1]; }
+                        ^^^ Cannot declare \`foo\` [1] because the name is already bound. [name-already-bound]
+            References:
+              3: function foo(x: [1,2]): number { return x[2]; }
+                          ^^^ [1]
+
+          test.js:5
+            5: function foo(x: [1,2]): number { return x[-1]; }
                                                        ^^^^^ Cannot get \`x[-1]\` because tuple type [1] only has 2 elements, so index -1 is out of bounds. [invalid-tuple-index]
             References:
               5: function foo(x: [1,2]): number { return x[-1]; }

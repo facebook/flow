@@ -345,7 +345,12 @@ module New_env : Env_sig.S = struct
       Old_env.bind_declare_var cx name t loc
     | OrdinaryName _ -> bind cx t loc
 
-  let bind_declare_fun cx _ t loc = bind cx t loc
+  let bind_declare_fun cx ~predicate name t loc =
+    match name with
+    | InternalName _
+    | InternalModuleName _ ->
+      Old_env.bind_declare_fun cx ~predicate name t loc
+    | OrdinaryName _ -> bind cx t loc
 
   let declare_let cx name =
     match name with

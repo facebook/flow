@@ -574,6 +574,17 @@ module Make (Env : Env_sig.S) = struct
       Env.in_lex_scope (fun () -> toplevel_decls cx body)
     in
     let catch_clause cx { Try.CatchClause.body = (_, b); _ } = block_body cx b in
+    let function_ ~bind function_loc { Ast.Function.id; async; generator; _ } =
+      let handle_named_function name_loc name =
+        let r = func_reason ~async ~generator name_loc in
+        let tvar = Tvar.mk cx r in
+        bind cx name tvar name_loc
+      in
+      match id with
+      | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
+        handle_named_function name_loc (OrdinaryName name)
+      | None -> handle_named_function function_loc (internal_name "*default*")
+    in
     function
     | (_, Empty _) -> ()
     | (_, Block b) -> block_body cx b
@@ -636,16 +647,7 @@ module Make (Env : Env_sig.S) = struct
           | _ -> ());
           statement_decl cx body)
     | (_, Debugger _) -> ()
-    | (function_loc, FunctionDeclaration { Ast.Function.id; async; generator; _ }) ->
-      let handle_named_function name_loc name =
-        let r = func_reason ~async ~generator name_loc in
-        let tvar = Tvar.mk cx r in
-        Env.bind_fun cx name tvar name_loc
-      in
-      (match id with
-      | Some (name_loc, { Ast.Identifier.name; comments = _ }) ->
-        handle_named_function name_loc (OrdinaryName name)
-      | None -> handle_named_function function_loc (internal_name "*default*"))
+    | (function_loc, FunctionDeclaration func) -> function_ ~bind:Env.bind_fun function_loc func
     | (_, EnumDeclaration { EnumDeclaration.id = (name_loc, { Ast.Identifier.name; _ }); _ }) ->
       if Context.enable_enums cx then
         let r = DescFormat.type_reason (OrdinaryName name) name_loc in
@@ -662,11 +664,12 @@ module Make (Env : Env_sig.S) = struct
           ({ DeclareFunction.id = (id_loc, { Ast.Identifier.name; comments = _ }); _ } as
           declare_function) ) ->
       (match declare_function_to_function_declaration cx loc declare_function with
-      | None ->
+      | Some (FunctionDeclaration func, _) ->
+        function_ ~bind:(Env.bind_declare_fun ~predicate:true) loc func
+      | _ ->
         let r = mk_reason (RIdentifier (OrdinaryName name)) id_loc in
         let t = Tvar.mk cx r in
-        Env.bind_declare_fun cx name t id_loc
-      | Some (func_decl, _) -> statement_decl cx (loc, func_decl))
+        Env.bind_declare_fun cx ~predicate:false (OrdinaryName name) t id_loc)
     | (_, VariableDeclaration decl) -> variable_decl cx decl
     | (_, ClassDeclaration { Ast.Class.id = None; _ }) -> ()
     | (_, ClassDeclaration { Ast.Class.id = Some id; _ }) ->
@@ -898,6 +901,18 @@ module Make (Env : Env_sig.S) = struct
             comments;
           },
           abnormal_opt )
+    in
+    let function_ loc func =
+      match func with
+      | { Ast.Function.id = None; _ } -> failwith "unexpected anonymous function statement"
+      | { Ast.Function.id = Some id; _ } ->
+        let { Ast.Function.sig_loc; async; generator; _ } = func in
+        let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
+        let name = OrdinaryName name in
+        let reason = func_reason ~async ~generator sig_loc in
+        let general = Tvar.mk_where cx reason (Env.unify_declared_type cx name name_loc) in
+        let (fn_type, func_ast) = mk_function_declaration None cx ~general reason func in
+        (fn_type, id, (loc, FunctionDeclaration func_ast))
     in
     function
     | (_, Empty _) as stmt -> stmt
@@ -2125,20 +2140,18 @@ module Make (Env : Env_sig.S) = struct
 
           (loc, ForOf { ForOf.left = left_ast; right = right_ast; body = body_ast; await; comments }))
     | (_, Debugger _) as stmt -> stmt
-    | (_, FunctionDeclaration { Ast.Function.id = None; _ }) ->
-      failwith "unexpected anonymous function statement"
-    | (loc, FunctionDeclaration ({ Ast.Function.id = Some id; _ } as func)) ->
-      let { Ast.Function.sig_loc; async; generator; _ } = func in
-      let (name_loc, { Ast.Identifier.name; comments = _ }) = id in
-      let name = OrdinaryName name in
-      let reason = func_reason ~async ~generator sig_loc in
-      let general = Tvar.mk_where cx reason (Env.unify_declared_type cx name name_loc) in
-      let (fn_type, func_ast) = mk_function_declaration None cx ~general reason func in
+    | (loc, FunctionDeclaration func) ->
+      let (fn_type, (name_loc, { Ast.Identifier.name; comments = _ }), node) = function_ loc func in
       let use_op =
-        Op (AssignVar { var = Some (mk_reason (RIdentifier name) loc); init = reason_of_t fn_type })
+        Op
+          (AssignVar
+             {
+               var = Some (mk_reason (RIdentifier (OrdinaryName name)) loc);
+               init = reason_of_t fn_type;
+             })
       in
-      Env.init_fun cx ~use_op name fn_type name_loc;
-      (loc, FunctionDeclaration func_ast)
+      Env.init_fun cx ~use_op (OrdinaryName name) fn_type name_loc;
+      node
     | (loc, EnumDeclaration enum) ->
       let open EnumDeclaration in
       let { id = (name_loc, ident); body; comments } = enum in
@@ -2187,9 +2200,11 @@ module Make (Env : Env_sig.S) = struct
       (loc, DeclareVariable { DeclareVariable.id = ((id_loc, t), id); annot = annot_ast; comments })
     | (loc, DeclareFunction declare_function) ->
       (match declare_function_to_function_declaration cx loc declare_function with
-      | Some (func_decl, reconstruct_ast) ->
-        (loc, DeclareFunction (reconstruct_ast (statement cx (loc, func_decl))))
-      | None ->
+      | Some (FunctionDeclaration func, reconstruct_ast) ->
+        let (fn_type, (id_loc, { Ast.Identifier.name; comments = _ }), node) = function_ loc func in
+        Env.unify_declared_fun_type cx (OrdinaryName name) id_loc fn_type;
+        (loc, DeclareFunction (reconstruct_ast node))
+      | _ ->
         (* error case *)
         let { DeclareFunction.id = (id_loc, id_name); annot; predicate; comments } =
           declare_function

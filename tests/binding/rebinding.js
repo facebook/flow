@@ -158,7 +158,7 @@ function var_var() {
 
 function function_toplevel() {
   function a() {};
-  function a() {}; // OK
+  function a() {}; // error: name already bound
 }
 
 function function_block() {
@@ -166,6 +166,16 @@ function function_block() {
     function a() {};
     function a() {}; // error: name already bound
   }
+}
+
+function function_var() {
+  function a() {};
+  var a = 42; // error
+}
+
+function var_function() {
+  var a = 42;
+  function a() {}; // error: name already bound
 }
 
 // corner cases

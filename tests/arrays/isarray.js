@@ -1,5 +1,5 @@
 // @flow
-function hmm<Z>(array: Z) {
+function hmm1<Z>(array: Z) {
   if (Array.isArray(array)) {
     const problem: Array<Z> = array; // error
   }
@@ -19,7 +19,7 @@ function coerce<T, U>(t: T): U {
 const twelve: number = coerce("twelve");
 twelve.toFixed();
 
-function hmm(array: mixed) {
+function hmm2(array: mixed) {
   if (Array.isArray(array)) {
     const problem: Array<mixed> = array; // error
     problem[1] = 0;

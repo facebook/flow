@@ -403,12 +403,12 @@ adding a type annotation to `x` [3]). [escaped-generic]
             ^
 
 References:
-   func.js:5:18
-   5| function f<X>(a: X): X {
-                       ^ [1]
-   func.js:5:12
-   5| function f<X>(a: X): X {
-                 ^ [2]
+   func.js:5:19
+   5| function f1<X>(a: X): X {
+                        ^ [1]
+   func.js:5:13
+   5| function f1<X>(a: X): X {
+                  ^ [2]
    func.js:3:5
    3| var x = 42;
           ^ [3]
@@ -522,9 +522,9 @@ type annotation to `a` [3]). [escaped-generic]
                ^^^^^^^^^^^ [1]
 
 References:
-   func.js:42:12
-   42| function f<X>(b: boolean): X => X {
-                  ^ [2]
+   func.js:42:13
+   42| function f2<X>(b: boolean): X => X {
+                   ^ [2]
    func.js:40:5
    40| var a = 42;
            ^ [3]

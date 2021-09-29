@@ -63,6 +63,7 @@ module Entry = struct
     | ClassNameBinding
     | CatchParamBinding
     | FunctionBinding
+    | DeclaredFunctionBinding of { predicate: bool }
     | ParamBinding
 
   and non_const_specialization =
@@ -75,6 +76,7 @@ module Entry = struct
     | ClassNameBinding -> "class"
     | CatchParamBinding -> "catch"
     | FunctionBinding -> "function"
+    | DeclaredFunctionBinding _ -> "declared function"
     | ParamBinding -> "param"
 
   let string_of_value_kind = function

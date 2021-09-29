@@ -13,7 +13,7 @@ function is_number(y): %checks {
 }
 
 // Feature check:
-function foo(x: string | Array<string>): string {
+function foo1(x: string | Array<string>): string {
   if (is_string(x)) {
     // The use of `is_string` as a conditional check
     // should guarantee the narrowing of the type of `x`
@@ -52,7 +52,7 @@ function multi_param(w,x,y,z): %checks {
   return typeof z === "string";
 }
 
-function foo(x: string | Array<string>): string {
+function foo2(x: string | Array<string>): string {
   if (multi_param("1", "2", "3", x)) {
     return x;
   } else {
@@ -60,7 +60,7 @@ function foo(x: string | Array<string>): string {
   }
 }
 
-function foo(a, b) {
+function foo3(a, b) {
   if (two_strings(a, b)) {
     from_two_strings(a, b);
   }

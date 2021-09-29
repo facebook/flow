@@ -25,9 +25,9 @@ Cannot assign `array` to `problem` because read-only array type [1] is incompati
                                     ^^^^^
 
 References:
-   isarray.js:2:24
-   2| function hmm<Z>(array: Z) {
-                             ^ [1]
+   isarray.js:2:25
+   2| function hmm1<Z>(array: Z) {
+                              ^ [1]
    isarray.js:4:20
    4|     const problem: Array<Z> = array; // error
                          ^^^^^^^^ [2]
@@ -61,9 +61,9 @@ Cannot assign `array` to `problem` because read-only array type [1] is incompati
                                          ^^^^^
 
 References:
-   isarray.js:22:21
-   22| function hmm(array: mixed) {
-                           ^^^^^ [1]
+   isarray.js:22:22
+   22| function hmm2(array: mixed) {
+                            ^^^^^ [1]
    isarray.js:24:20
    24|     const problem: Array<mixed> = array; // error
                           ^^^^^^^^^^^^ [2]

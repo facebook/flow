@@ -8,12 +8,12 @@ Cannot return `x` because array type [1] has an unknown number of elements, so i
                ^
 
 References:
-   array.js:3:17
-   3| function foo(x: Array<number>): [number, ?number] {
-                      ^^^^^^^^^^^^^ [1]
-   array.js:3:33
-   3| function foo(x: Array<number>): [number, ?number] {
-                                      ^^^^^^^^^^^^^^^^^ [2]
+   array.js:3:18
+   3| function foo1(x: Array<number>): [number, ?number] {
+                       ^^^^^^^^^^^^^ [1]
+   array.js:3:34
+   3| function foo1(x: Array<number>): [number, ?number] {
+                                       ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- number-index.js:7:1

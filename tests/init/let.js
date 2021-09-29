@@ -134,7 +134,7 @@ function switch_post_init2(i): number {
 }
 
 // use of let after guaranteed init (exhaustive switch + throw) is ok
-function switch_post_init2(i): number {
+function switch_post_init3(i): number {
   let bar;
   switch (i) {
     case 1:

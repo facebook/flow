@@ -96,7 +96,7 @@ module type S = sig
 
   val bind_declare_var : Context.t -> Reason.name -> Type.t -> ALoc.t -> unit
 
-  val bind_declare_fun : Context.t -> string -> Type.t -> ALoc.t -> unit
+  val bind_declare_fun : Context.t -> predicate:bool -> Reason.name -> Type.t -> ALoc.t -> unit
 
   val declare_let : Context.t -> Reason.name -> ALoc.t -> unit
 

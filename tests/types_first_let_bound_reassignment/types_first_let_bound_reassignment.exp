@@ -48,6 +48,20 @@ Cannot assign `1` to `Lib.baz` because property `baz` is not writable. [cannot-w
            ^^^
 
 
+Error ----------------------------------------------------------------------------------------------------- file.js:20:1
+
+Cannot reassign declared function binding `bak` [1]. [cannot-reassign]
+
+   file.js:20:1
+   20| bak = 1; // error in both modes
+       ^^^
+
+References:
+   file.js:19:18
+   19| declare function bak(): void;
+                        ^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- file.js:20:7
 
 Cannot assign `1` to `bak` because number [1] is incompatible with function type [2]. [incompatible-type]
@@ -119,4 +133,4 @@ References:
 
 
 
-Found 9 errors
+Found 10 errors

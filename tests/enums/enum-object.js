@@ -59,10 +59,10 @@ for (const x of E) { // Error
 for (const x of E.members()) { // Valid
 }
 
-function* f() {
+function* f1() {
   yield* E; // Error
 }
-function* f() {
+function* f2() {
   yield* E.members(); // Valid
 }
 

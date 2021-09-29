@@ -1,3 +1,138 @@
+Error ---------------------------------------------------------------------------------------------- declare_pred.js:4:3
+
+Cannot call `f` with `"a"` bound to `x` because string [1] is incompatible with number [2]. [incompatible-call]
+
+   declare_pred.js:4:3
+   4| f("a"); //error
+        ^^^ [1]
+
+References:
+   declare_pred.js:1:23
+   1| declare function f(x: number): bool %checks (x === 0);
+                            ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- declare_pred.js:16:4
+
+Cannot cast `x` to number literal `1` because number literal `0` [1] is incompatible with number literal `1` [2].
+[incompatible-cast]
+
+   declare_pred.js:16:4
+   16|   (x: 1); // error
+          ^
+
+References:
+   declare_pred.js:5:16
+    5| declare var x: number;
+                      ^^^^^^ [1]
+   declare_pred.js:16:7
+   16|   (x: 1); // error
+             ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- declare_pred.js:20:1
+
+Cannot assign function to `h` because predicate encoded in return [1] is incompatible with predicate encoded in
+return [2]. [incompatible-type]
+
+   declare_pred.js:20:1
+   20| function h(x: number): bool %checks { return x === 1 }
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   declare_pred.js:20:39
+   20| function h(x: number): bool %checks { return x === 1 }
+                                             ^^^^^^^^^^^^^^ [1]
+   declare_pred.js:21:37
+   21| declare function h(x: number): bool %checks (x === 0);
+                                           ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- declare_pred.js:21:18
+
+Cannot declare `h` [1] because the name is already bound. [name-already-bound]
+
+   declare_pred.js:21:18
+   21| declare function h(x: number): bool %checks (x === 0);
+                        ^
+
+References:
+   declare_pred.js:20:10
+   20| function h(x: number): bool %checks { return x === 1 }
+                ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- declare_pred.js:26:18
+
+Cannot declare `i` [1] because the name is already bound. [name-already-bound]
+
+   declare_pred.js:26:18
+   26| declare function i(x: string): bool %checks (x === "A");
+                        ^
+
+References:
+   declare_pred.js:25:18
+   25| declare function i(x: number): bool %checks (x === 0);
+                        ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- declare_pred.js:31:18
+
+Cannot declare `j` [1] because the name is already bound. [name-already-bound]
+
+   declare_pred.js:31:18
+   31| declare function j(x: string): bool %checks (x === "A");
+                        ^
+
+References:
+   declare_pred.js:30:18
+   30| declare function j(x: number): bool;
+                        ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- declare_pred.js:34:18
+
+Cannot declare `k` [1] because the name is already bound. [name-already-bound]
+
+   declare_pred.js:34:18
+   34| declare function k(x: number): bool;
+                        ^
+
+References:
+   declare_pred.js:33:18
+   33| declare function k(x: string): bool %checks (x === "A");
+                        ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ err.js:3:24
+
+Cannot assign function to `f` because number [1] is incompatible with string [2] in the return value.
+[incompatible-type]
+
+   err.js:3:24
+   3| function f(x: number): number { return 42}
+                             ^^^^^^ [1]
+
+References:
+   err.js:4:29
+   4| declare function f(number): string // error
+                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ err.js:4:18
+
+Cannot declare `f` [1] because the name is already bound. [name-already-bound]
+
+   err.js:4:18
+   4| declare function f(number): string // error
+                       ^
+
+References:
+   err.js:3:10
+   3| function f(x: number): number { return 42}
+               ^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- scope.js:3:5
 
 Cannot call `bar` with `0` bound to `y` because number [1] is incompatible with string [2]. [incompatible-call]
@@ -30,4 +165,4 @@ References:
 
 
 
-Found 2 errors
+Found 11 errors

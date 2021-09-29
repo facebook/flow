@@ -71,9 +71,9 @@ Cannot return object literal because boolean [1] is incompatible with boolean li
                           ^^^^
 
 References:
-   iterator_result.js:17:40
-     17| function makeIterator(coin_flip: () => boolean ): Iterator<string> {
-                                                ^^^^^^^ [1]
+   iterator_result.js:17:41
+     17| function makeIterator2(coin_flip: () => boolean ): Iterator<string> {
+                                                 ^^^^^^^ [1]
    <BUILTINS>/core.js:1642:11
    1642|     done: false,
                    ^^^^^ [2]
@@ -89,9 +89,9 @@ Cannot return object literal because boolean [1] is incompatible with boolean li
                           ^^^^
 
 References:
-   iterator_result.js:17:40
-     17| function makeIterator(coin_flip: () => boolean ): Iterator<string> {
-                                                ^^^^^^^ [1]
+   iterator_result.js:17:41
+     17| function makeIterator2(coin_flip: () => boolean ): Iterator<string> {
+                                                 ^^^^^^^ [1]
    <BUILTINS>/core.js:1637:11
    1637|     done: true,
                    ^^^^ [2]

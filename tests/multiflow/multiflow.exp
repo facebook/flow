@@ -1,175 +1,175 @@
-Error --------------------------------------------------------------------------------------------------- apply.js:12:22
+Error --------------------------------------------------------------------------------------------------- apply.js:12:23
 
 Cannot call `apply` with array literal bound to `args` because number [1] is incompatible with number literal `123` [2]
 in the second argument. [incompatible-call]
 
-   apply.js:12:22
-   12| apply(noRest, ['hi', 456]); // Error - 456 ~> 123
-                            ^^^ [1]
+   apply.js:12:23
+   12| apply(noRest1, ['hi', 456]); // Error - 456 ~> 123
+                             ^^^ [1]
 
 References:
-   apply.js:10:29
-   10| function noRest(x: 'hi', y: 123): true { return true; }
-                                   ^^^ [2]
+   apply.js:10:30
+   10| function noRest1(x: 'hi', y: 123): true { return true; }
+                                    ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- apply.js:13:15
+Error --------------------------------------------------------------------------------------------------- apply.js:13:16
 
 Cannot call `apply` with array literal bound to `args` because function [1] requires another argument from function
 type [2]. [incompatible-call]
 
-   apply.js:13:15
-   13| apply(noRest, ['hi']); // Error - too few args
-                     ^^^^^^
+   apply.js:13:16
+   13| apply(noRest1, ['hi']); // Error - too few args
+                      ^^^^^^
 
 References:
    apply.js:10:1
-   10| function noRest(x: 'hi', y: 123): true { return true; }
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   10| function noRest1(x: 'hi', y: 123): true { return true; }
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    apply.js:4:7
     4|   fn: (...Args) => Ret,
              ^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- apply.js:19:17
+Error --------------------------------------------------------------------------------------------------- apply.js:19:18
 
 Cannot call `apply` with array literal bound to `args` because number [1] is incompatible with number literal `123` [2]
 in index 1. [incompatible-call]
 
-   apply.js:19:17
-   19| apply(withRest, ['hi', 456]); // Error - 456 ~> 123
-                       ^^^^^^^^^^^
+   apply.js:19:18
+   19| apply(withRest1, ['hi', 456]); // Error - 456 ~> 123
+                        ^^^^^^^^^^^
 
 References:
-   apply.js:19:24
-   19| apply(withRest, ['hi', 456]); // Error - 456 ~> 123
-                              ^^^ [1]
-   apply.js:17:35
-   17| function withRest(...rest: ['hi', 123]): true { return true; }
-                                         ^^^ [2]
+   apply.js:19:25
+   19| apply(withRest1, ['hi', 456]); // Error - 456 ~> 123
+                               ^^^ [1]
+   apply.js:17:36
+   17| function withRest1(...rest: ['hi', 123]): true { return true; }
+                                          ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- apply.js:20:17
+Error --------------------------------------------------------------------------------------------------- apply.js:20:18
 
 Cannot call `apply` with array literal bound to `args` because rest array [1] has an arity of 1 but tuple type [2] has
 an arity of 2. [invalid-tuple-arity]
 
-   apply.js:20:17
-   20| apply(withRest, ['hi']); // Error - too few args
-                       ^^^^^^
+   apply.js:20:18
+   20| apply(withRest1, ['hi']); // Error - too few args
+                        ^^^^^^
 
 References:
    apply.js:4:7
     4|   fn: (...Args) => Ret,
              ^^^^^^^^^^^^^^^^ [1]
-   apply.js:17:28
-   17| function withRest(...rest: ['hi', 123]): true { return true; }
-                                  ^^^^^^^^^^^ [2]
+   apply.js:17:29
+   17| function withRest1(...rest: ['hi', 123]): true { return true; }
+                                   ^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- apply.js:21:17
+Error --------------------------------------------------------------------------------------------------- apply.js:21:18
 
 Cannot call `apply` with array literal bound to `args` because rest array [1] has an arity of 3 but tuple type [2] has
 an arity of 2. [invalid-tuple-arity]
 
-   apply.js:21:17
-   21| apply(withRest, ['hi', 123, false]); // Error - too many args
-                       ^^^^^^^^^^^^^^^^^^
+   apply.js:21:18
+   21| apply(withRest1, ['hi', 123, false]); // Error - too many args
+                        ^^^^^^^^^^^^^^^^^^
 
 References:
    apply.js:4:7
     4|   fn: (...Args) => Ret,
              ^^^^^^^^^^^^^^^^ [1]
-   apply.js:17:28
-   17| function withRest(...rest: ['hi', 123]): true { return true; }
-                                  ^^^^^^^^^^^ [2]
+   apply.js:17:29
+   17| function withRest1(...rest: ['hi', 123]): true { return true; }
+                                   ^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- apply.js:31:26
+Error --------------------------------------------------------------------------------------------------- apply.js:31:27
 
 Cannot call `applyType` with array literal bound to `args` because number [1] is incompatible with number literal
 `123` [2] in the second argument. [incompatible-call]
 
-   apply.js:31:26
-   31| applyType(noRest, ['hi', 456]); // Error - 456 ~> 123
-                                ^^^ [1]
+   apply.js:31:27
+   31| applyType(noRest2, ['hi', 456]); // Error - 456 ~> 123
+                                 ^^^ [1]
 
 References:
-   apply.js:10:29
-   10| function noRest(x: 'hi', y: 123): true { return true; }
-                                   ^^^ [2]
+   apply.js:29:30
+   29| function noRest2(x: 'hi', y: 123): true { return true; }
+                                    ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- apply.js:32:19
+Error --------------------------------------------------------------------------------------------------- apply.js:32:20
 
 Cannot call `applyType` with array literal bound to `args` because function [1] requires another argument from function
 type [2]. [incompatible-call]
 
-   apply.js:32:19
-   32| applyType(noRest, ['hi']); // Error - too few args
-                         ^^^^^^
+   apply.js:32:20
+   32| applyType(noRest2, ['hi']); // Error - too few args
+                          ^^^^^^
 
 References:
-   apply.js:10:1
-   10| function noRest(x: 'hi', y: 123): true { return true; }
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   apply.js:29:1
+   29| function noRest2(x: 'hi', y: 123): true { return true; }
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    apply.js:25:7
    25|   fn: (...Args) => Ret,
              ^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- apply.js:38:21
+Error --------------------------------------------------------------------------------------------------- apply.js:38:22
 
 Cannot call `applyType` with array literal bound to `args` because number [1] is incompatible with number literal
 `123` [2] in index 1. [incompatible-call]
 
-   apply.js:38:21
-   38| applyType(withRest, ['hi', 456]); // Error - 456 ~> 123
-                           ^^^^^^^^^^^
+   apply.js:38:22
+   38| applyType(withRest2, ['hi', 456]); // Error - 456 ~> 123
+                            ^^^^^^^^^^^
 
 References:
-   apply.js:38:28
-   38| applyType(withRest, ['hi', 456]); // Error - 456 ~> 123
-                                  ^^^ [1]
-   apply.js:17:35
-   17| function withRest(...rest: ['hi', 123]): true { return true; }
-                                         ^^^ [2]
+   apply.js:38:29
+   38| applyType(withRest2, ['hi', 456]); // Error - 456 ~> 123
+                                   ^^^ [1]
+   apply.js:36:36
+   36| function withRest2(...rest: ['hi', 123]): true { return true; }
+                                          ^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- apply.js:39:21
+Error --------------------------------------------------------------------------------------------------- apply.js:39:22
 
 Cannot call `applyType` with array literal bound to `args` because rest array [1] has an arity of 1 but tuple type [2]
 has an arity of 2. [invalid-tuple-arity]
 
-   apply.js:39:21
-   39| applyType(withRest, ['hi']); // Error - too few args
-                           ^^^^^^
+   apply.js:39:22
+   39| applyType(withRest2, ['hi']); // Error - too few args
+                            ^^^^^^
 
 References:
    apply.js:25:7
    25|   fn: (...Args) => Ret,
              ^^^^^^^^^^^^^^^^ [1]
-   apply.js:17:28
-   17| function withRest(...rest: ['hi', 123]): true { return true; }
-                                  ^^^^^^^^^^^ [2]
+   apply.js:36:29
+   36| function withRest2(...rest: ['hi', 123]): true { return true; }
+                                   ^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- apply.js:40:21
+Error --------------------------------------------------------------------------------------------------- apply.js:40:22
 
 Cannot call `applyType` with array literal bound to `args` because rest array [1] has an arity of 3 but tuple type [2]
 has an arity of 2. [invalid-tuple-arity]
 
-   apply.js:40:21
-   40| applyType(withRest, ['hi', 123, false]); // Error - too many args
-                           ^^^^^^^^^^^^^^^^^^
+   apply.js:40:22
+   40| applyType(withRest2, ['hi', 123, false]); // Error - too many args
+                            ^^^^^^^^^^^^^^^^^^
 
 References:
    apply.js:25:7
    25|   fn: (...Args) => Ret,
              ^^^^^^^^^^^^^^^^ [1]
-   apply.js:17:28
-   17| function withRest(...rest: ['hi', 123]): true { return true; }
-                                  ^^^^^^^^^^^ [2]
+   apply.js:36:29
+   36| function withRest2(...rest: ['hi', 123]): true { return true; }
+                                   ^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ jsx.js:30:2

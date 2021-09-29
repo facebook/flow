@@ -43,7 +43,7 @@ function if_pre_init(b) {
 }
 
 // ...and after
-function if_partial_post_init(b) {
+function if_1(b) {
   if (b) {
     var x:number = 0;
   }
@@ -51,7 +51,7 @@ function if_partial_post_init(b) {
 }
 
 // ...unless both branches have initialized
-function if_post_init(b) {
+function if_post_init1(b) {
   if (b) {
     var x:number = 0;
   } else {
@@ -61,7 +61,7 @@ function if_post_init(b) {
 }
 
 // use of var after partial init (non-exhaustive if) gives undefined
-function if_partial_post_init(b) {
+function if_partial_post_init2(b) {
   var x:number;
   if (b) {
     x = 0;
@@ -70,7 +70,7 @@ function if_partial_post_init(b) {
 }
 
 // use of var after guaranteed init (exhaustive if) is ok
-function if_post_init(b) {
+function if_post_init2(b) {
   var x:number;
   if (b) {
     x = 0;
@@ -228,7 +228,7 @@ function for_in_scoped_init() {
 }
 
 // ...but use before while gives undefined
-function for_in_pre_init() {
+function for_in_pre_init1() {
   var y:number = x; // error
   for (var p in { a:1, b: 2 }) {
     var x:number = 0;
@@ -236,7 +236,7 @@ function for_in_pre_init() {
 }
 
 // ...and after
-function for_in_post_init() {
+function for_in_post_init1() {
   for (var p in { a:1, b: 2 }) {
     var x:number = 0;
   }
@@ -252,7 +252,7 @@ function for_of_scoped_init() {
 }
 
 // ...but use before while gives undefined
-function for_in_pre_init() {
+function for_in_pre_init2() {
   var y:number = x; // error
   for (var x of [1, 2, 3]) {
     var x:number = 0;
@@ -260,7 +260,7 @@ function for_in_pre_init() {
 }
 
 // ...and after
-function for_in_post_init() {
+function for_in_post_init2() {
   for (var x of [1, 2, 3]) {
     var x:number = 0;
   }

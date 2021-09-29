@@ -14,18 +14,18 @@ function tup_pattern2<X>([ proj ] : Proj<X>) {} // proj: X
 
 function rest_pattern<X>(...r: X[]) {} // r: X[]
 
-function obj_rest_pattern<X>({ _, ...o } : { _: any, x: X }) { // o: { x: X }
+function obj_rest_pattern1<X>({ _, ...o } : { _: any, x: X }) { // o: { x: X }
   o.x;
 }
 type ObjRest<X> = { _: any, x: X };
-function obj_rest_pattern<X>({ _, ...o } : ObjRest<X>) { // o: { x: X }
+function obj_rest_pattern2<X>({ _, ...o } : ObjRest<X>) { // o: { x: X }
   o.x;
 }
 
-function arr_rest_pattern<X>([ _, ...a ] : [ any, X ]) { // a: [X]
+function arr_rest_pattern1<X>([ _, ...a ] : [ any, X ]) { // a: [X]
   a[0];
 }
 type ArrRest<X> = [ any, X ];
-function arr_rest_pattern<X>([ _, ...a ] : ArrRest<X>) { // a: [X]
+function arr_rest_pattern2<X>([ _, ...a ] : ArrRest<X>) { // a: [X]
   a[0];
 }

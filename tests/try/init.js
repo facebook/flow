@@ -8,7 +8,7 @@
 function might_throw() {}
 
 // local use of annotated var within try is ok
-function f() {
+function f1() {
   try {
     var x:number = 0;
     var y:number = x;
@@ -17,7 +17,7 @@ function f() {
 }
 
 // and within catch
-function f() {
+function f2() {
   try {
   } catch (e) {
     var x:number = 0;
@@ -26,7 +26,7 @@ function f() {
 }
 
 // but not across try/catch
-function f() {
+function f3() {
   try {
     might_throw();
     var x:number = 0;
@@ -36,7 +36,7 @@ function f() {
 }
 
 // or try/finally
-function f() {
+function f4() {
   try {
     might_throw();
     var x:number = 0;
@@ -46,7 +46,7 @@ function f() {
 }
 
 // or catch/finally
-function f() {
+function f5() {
   try {
   } catch (e) {
     var x:number = 0;
@@ -56,7 +56,7 @@ function f() {
 }
 
 // or try/catch/finally if init doesn't dominate
-function f() {
+function f6() {
   try {
     var x:number = 0;
   } catch (e) {
@@ -68,7 +68,7 @@ function f() {
 }
 
 // post-use ok because init dominates here
-function f() {
+function f7() {
   try {
     var x:number = 0;
   } catch (e) {
@@ -79,7 +79,7 @@ function f() {
 }
 
 // and here
-function f() {
+function f8() {
   try {
   } catch (e) {
   } finally {
@@ -90,7 +90,7 @@ function f() {
 }
 
 // and here
-function f() {
+function f9() {
   try {
     var x:number;
   } catch (e) {
@@ -102,7 +102,7 @@ function f() {
 }
 
 // and here, thank you JS for the wonder that is hoisting
-function f() {
+function f10() {
   try {
   } catch (e) {
     var x:number;
@@ -114,7 +114,7 @@ function f() {
 }
 
 // error if used prior to init
-function f() {
+function f11() {
   var y:number = x; // error
   try {
     var x:number = 0;
@@ -123,7 +123,7 @@ function f() {
 }
 
 // another non-dominated post
-function f() {
+function f12() {
   try {
     var x:number = 0;
   } catch (e) {
@@ -132,7 +132,7 @@ function f() {
 }
 
 // ditto
-function f() {
+function f13() {
   try {
   } catch (e) {
     var x:number = 0;
@@ -141,7 +141,7 @@ function f() {
 }
 
 // ditto
-function f(b) {
+function f14(b) {
   try {
     var x:number;
     if (b) {

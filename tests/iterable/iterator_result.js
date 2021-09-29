@@ -1,8 +1,8 @@
 /* @flow */
 
-function makeIterator(coin_flip: () => boolean ): Iterator<string> {
+function makeIterator1(coin_flip: () => boolean ): Iterator<string> {
   return {
-    "@@iterator"() { return makeIterator(coin_flip); },
+    "@@iterator"() { return makeIterator1(coin_flip); },
     next(): IteratorResult<string, void> {
       var done = coin_flip();
       if (!done) {
@@ -14,9 +14,9 @@ function makeIterator(coin_flip: () => boolean ): Iterator<string> {
   }
 }
 
-function makeIterator(coin_flip: () => boolean ): Iterator<string> {
+function makeIterator2(coin_flip: () => boolean ): Iterator<string> {
   return {
-    "@@iterator"() { return makeIterator(coin_flip); },
+    "@@iterator"() { return makeIterator2(coin_flip); },
     next(): IteratorResult<string, void> {
       var done = coin_flip();
       if (done) { // Whoops, made a mistake and forgot to negate done

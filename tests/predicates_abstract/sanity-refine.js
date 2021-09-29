@@ -39,6 +39,6 @@ function is_string_regular(x)  {
   return typeof x === "string";
 }
 
-function is_string_and_number(x, y): %checks {
+function is_string_and_number2(x, y): %checks {
   return typeof x === "string" && typeof y === "number";
 }

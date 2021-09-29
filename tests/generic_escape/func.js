@@ -2,7 +2,7 @@
 
 var x = 42;
 
-function f<X>(a: X): X {
+function f1<X>(a: X): X {
   x = a; // error, X ~> escape
   return a;
 }
@@ -39,7 +39,7 @@ function o<X>(x: X) {
 
 var a = 42;
 
-function f<X>(b: boolean): X => X {
+function f2<X>(b: boolean): X => X {
   if (b) {
     a = (x: X) => x;
   }
@@ -62,5 +62,3 @@ function fa<T>(a: T, b: boolean): T {
 function hh<X>({a}: {a: X}): X {
   return a;
 }
-
-

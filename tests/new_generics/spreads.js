@@ -13,14 +13,14 @@ function a<X: {}, Y: {}, Z: {}>(x: X, y: Y) {
 
 // interchanging between spread and basic representation
 // with an object upper bound
-function t<X: {a: number}>(x: X, sp_x: {...X}) {
+function t1<X: {a: number}>(x: X, sp_x: {...X}) {
   (x: {...X}); // ok
   (sp_x: X); // ok
 }
 
 // interchanging between spread and basic representation
 // with a mixed upper bound
-function t<X>(x: X, sp_x: {...X}) {
+function t2<X>(x: X, sp_x: {...X}) {
   (x: {...X}); // nope
   (sp_x: X); // this probably should be banned--imagine if X=number--but is currently allowed
 }

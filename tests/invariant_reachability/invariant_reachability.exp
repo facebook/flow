@@ -31,9 +31,9 @@ Cannot return `c ? 1 : invariant()` because number [1] is incompatible with stri
                     ^ [1]
 
 References:
-   index.js:49:24
-   49| function foo(c: bool): string {
-                              ^^^^^^ [2]
+   index.js:49:25
+   49| function foo9(c: bool): string {
+                               ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- index.js:75:3
@@ -53,12 +53,12 @@ Cannot return `c || invariant()` because boolean [1] is incompatible with string
                 ^
 
 References:
-   index.js:78:17
-   78| function foo(c: bool): string {
-                       ^^^^ [1]
-   index.js:78:24
-   78| function foo(c: bool): string {
-                              ^^^^^^ [2]
+   index.js:78:19
+   78| function foo15(c: bool): string {
+                         ^^^^ [1]
+   index.js:78:26
+   78| function foo15(c: bool): string {
+                                ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- index.js:99:3
@@ -78,12 +78,12 @@ Cannot return `c && invariant()` because boolean [1] is incompatible with string
                  ^
 
 References:
-   index.js:102:17
-   102| function foo(c: bool): string {
-                        ^^^^ [1]
-   index.js:102:24
-   102| function foo(c: bool): string {
-                               ^^^^^^ [2]
+   index.js:102:19
+   102| function foo20(c: bool): string {
+                          ^^^^ [1]
+   index.js:102:26
+   102| function foo20(c: bool): string {
+                                 ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- index.js:123:3
@@ -103,12 +103,12 @@ Cannot return `c ?? invariant()` because boolean [1] is incompatible with string
                  ^
 
 References:
-   index.js:126:18
-   126| function foo(c: ?bool): string {
-                         ^^^^ [1]
-   index.js:126:25
-   126| function foo(c: ?bool): string {
-                                ^^^^^^ [2]
+   index.js:126:20
+   126| function foo25(c: ?bool): string {
+                           ^^^^ [1]
+   index.js:126:27
+   126| function foo25(c: ?bool): string {
+                                  ^^^^^^ [2]
 
 
 

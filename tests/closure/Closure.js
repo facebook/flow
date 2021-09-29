@@ -106,14 +106,14 @@ function havoc_before_decl_annot() {
   }
 }
 
-function no_havoc_before_decl_annot() {
+function no_havoc_before_decl_annot1() {
   function no_havoc() {}
   var x = 'hello world';
   no_havoc();
   (x: string);
 }
 
-function no_havoc_before_decl_annot() {
+function no_havoc_before_decl_annot2() {
   function no_havoc() {}
   var x: number | string = 'hello world';
   if (typeof x === 'string') {

@@ -581,6 +581,20 @@ References:
               ^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------- rebinding.js:161:12
+
+Cannot declare `a` [1] because the name is already bound. [name-already-bound]
+
+   rebinding.js:161:12
+   161|   function a() {}; // error: name already bound
+                   ^
+
+References:
+   rebinding.js:160:12
+   160|   function a() {};
+                   ^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------- rebinding.js:167:14
 
 Cannot declare `a` [1] because the name is already bound. [name-already-bound]
@@ -595,59 +609,87 @@ References:
                      ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- rebinding.js:177:11
+Error ----------------------------------------------------------------------------------------------- rebinding.js:173:7
 
-Cannot declare `x` [1] because the name is already bound. [name-already-bound]
+Cannot declare `a` [1] because the name is already bound. [name-already-bound]
 
-   rebinding.js:177:11
-   177|       var x = 0; // error: name already bound
-                  ^
-
-References:
-   rebinding.js:175:9
-   175|     let x = 0;
-                ^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------- rebinding.js:186:12
-
-Cannot declare `x` [1] because the name is already bound. [name-already-bound]
-
-   rebinding.js:186:12
-   186|       type x = string; // error: name already bound
-                   ^
-
-References:
-   rebinding.js:184:9
-   184|     let x = 0;
-                ^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------- rebinding.js:193:34
-
-Cannot declare `x` [1] because the name is already bound. [name-already-bound]
-
-   rebinding.js:193:34
-   193| function fn_params_name_clash(x, x /* error: x already bound */) {}
-                                         ^
-
-References:
-   rebinding.js:193:31
-   193| function fn_params_name_clash(x, x /* error: x already bound */) {}
-                                      ^ [1]
-
-
-Error ----------------------------------------------------------------------------------------------- rebinding.js:195:7
-
-Cannot declare `x` [1] because the name is already bound. [name-already-bound]
-
-   rebinding.js:195:7
-   195|   let x = 0; // error: x already bound
+   rebinding.js:173:7
+   173|   var a = 42; // error
               ^
 
 References:
-   rebinding.js:194:37
-   194| function fn_params_clash_fn_binding(x,y) {
+   rebinding.js:172:12
+   172|   function a() {};
+                   ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- rebinding.js:178:12
+
+Cannot declare `a` [1] because the name is already bound. [name-already-bound]
+
+   rebinding.js:178:12
+   178|   function a() {}; // error: name already bound
+                   ^
+
+References:
+   rebinding.js:177:7
+   177|   var a = 42;
+              ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- rebinding.js:187:11
+
+Cannot declare `x` [1] because the name is already bound. [name-already-bound]
+
+   rebinding.js:187:11
+   187|       var x = 0; // error: name already bound
+                  ^
+
+References:
+   rebinding.js:185:9
+   185|     let x = 0;
+                ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- rebinding.js:196:12
+
+Cannot declare `x` [1] because the name is already bound. [name-already-bound]
+
+   rebinding.js:196:12
+   196|       type x = string; // error: name already bound
+                   ^
+
+References:
+   rebinding.js:194:9
+   194|     let x = 0;
+                ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- rebinding.js:203:34
+
+Cannot declare `x` [1] because the name is already bound. [name-already-bound]
+
+   rebinding.js:203:34
+   203| function fn_params_name_clash(x, x /* error: x already bound */) {}
+                                         ^
+
+References:
+   rebinding.js:203:31
+   203| function fn_params_name_clash(x, x /* error: x already bound */) {}
+                                      ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- rebinding.js:205:7
+
+Cannot declare `x` [1] because the name is already bound. [name-already-bound]
+
+   rebinding.js:205:7
+   205|   let x = 0; // error: x already bound
+              ^
+
+References:
+   rebinding.js:204:37
+   204| function fn_params_clash_fn_binding(x,y) {
                                             ^ [1]
 
 
@@ -1007,4 +1049,4 @@ References:
 
 
 
-Found 71 errors
+Found 74 errors

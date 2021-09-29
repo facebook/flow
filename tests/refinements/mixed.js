@@ -99,7 +99,7 @@ function obj2(x: mixed) {
   }
 }
 
-function obj2(x: mixed) {
+function obj3(x: mixed) {
   if (typeof x === "object" && x) {
     (x: Object);
   }

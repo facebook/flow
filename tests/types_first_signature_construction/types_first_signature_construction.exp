@@ -42,6 +42,34 @@ References:
                ^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------------- file1.js:8:5
+
+Cannot call `bar` with `42` bound to `x` because number [1] is incompatible with string [2]. [incompatible-call]
+
+   file1.js:8:5
+   8| bar(42);
+          ^^ [1]
+
+References:
+   file1.js:4:17
+   4| function bar(x: string): string { return ""; }
+                      ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- file1.js:9:5
+
+Cannot call `bar` with `true` bound to `x` because boolean [1] is incompatible with string [2]. [incompatible-call]
+
+   file1.js:9:5
+   9| bar(true);
+          ^^^^ [1]
+
+References:
+   file1.js:4:17
+   4| function bar(x: string): string { return ""; }
+                      ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- file4.js:5:7
 
 Cannot declare `A` [1] because the name is already bound. [name-already-bound]
@@ -54,6 +82,20 @@ References:
    file4.js:3:7
    3| class A { x: string }
             ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- file5.js:4:10
+
+Cannot declare `f` [1] because the name is already bound. [name-already-bound]
+
+   file5.js:4:10
+   4| function f(): number { return 1; };
+               ^
+
+References:
+   file5.js:3:5
+   3| var f: number = 1;
+          ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:5:2
@@ -172,4 +214,4 @@ References:
 
 
 
-Found 11 errors
+Found 14 errors

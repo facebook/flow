@@ -1305,9 +1305,9 @@ Cannot cast `x` to object type because `X` [1] is incompatible with object type 
           ^
 
 References:
-   spreads.js:23:18
-   23| function t<X>(x: X, sp_x: {...X}) {
-                        ^ [1]
+   spreads.js:23:19
+   23| function t2<X>(x: X, sp_x: {...X}) {
+                         ^ [1]
    spreads.js:24:7
    24|   (x: {...X}); // nope
              ^^^^^^ [2]

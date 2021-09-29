@@ -781,21 +781,21 @@ References:
                                  ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- rest.js:39:53
+Error ---------------------------------------------------------------------------------------------------- rest.js:39:54
 
-Cannot call `empty_rest_t` because rest array [1] is incompatible with empty [2]. [incompatible-call]
+Cannot call `empty_rest_t2` because rest array [1] is incompatible with empty [2]. [incompatible-call]
 
-   rest.js:39:53
-   39| function empty_rest_t<T: empty>(...xs: T): void {}; empty_rest_t(); // Error - rest param can't be empty
-                                                           ^^^^^^^^^^^^
+   rest.js:39:54
+   39| function empty_rest_t2<T: empty>(...xs: T): void {}; empty_rest_t2(); // Error - rest param can't be empty
+                                                            ^^^^^^^^^^^^^
 
 References:
-   rest.js:39:53
-   39| function empty_rest_t<T: empty>(...xs: T): void {}; empty_rest_t(); // Error - rest param can't be empty
-                                                           ^^^^^^^^^^^^^^ [1]
-   rest.js:29:26
-   29| function empty_rest_t<T: empty>(...xs: T): void {}
-                                ^^^^^ [2]
+   rest.js:39:54
+   39| function empty_rest_t2<T: empty>(...xs: T): void {}; empty_rest_t2(); // Error - rest param can't be empty
+                                                            ^^^^^^^^^^^^^^^ [1]
+   rest.js:39:27
+   39| function empty_rest_t2<T: empty>(...xs: T): void {}; empty_rest_t2(); // Error - rest param can't be empty
+                                 ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- rest.js:53:2

@@ -3,7 +3,7 @@
 type T = 3 | 4;
 type U = "A" | "B";
 
-function foo (o1 : T, o2 : U) {
+function foo1 (o1 : T, o2 : U) {
   if (o1 == o2) {
 
   }
@@ -12,7 +12,7 @@ function foo (o1 : T, o2 : U) {
 type A = "A" | 1 | 2;
 type B = "B" | 3 | "C";
 
-function foo (o1 : A, o2 : B) {
+function foo2 (o1 : A, o2 : B) {
   if (o1 == o2) {
 
   }

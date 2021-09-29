@@ -34,6 +34,7 @@ module Entry : sig
     | ClassNameBinding
     | CatchParamBinding
     | FunctionBinding
+    | DeclaredFunctionBinding of { predicate: bool }
     | ParamBinding
 
   and non_const_specialization =
