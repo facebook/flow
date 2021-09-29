@@ -614,6 +614,20 @@ References:
           ^ [3]
 
 
+Error ----------------------------------------------------------------------------------------------------- misc.js:15:7
+
+Cannot reassign class binding `e` [1]. [cannot-reassign]
+
+   misc.js:15:7
+   15|       e = x;
+             ^
+
+References:
+   misc.js:12:15
+   12| var c = class e {
+                     ^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------------- misc.js:15:11
 
 Cannot assign `x` to `e` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
@@ -704,6 +718,20 @@ References:
            ^^ [3]
 
 
+Error ----------------------------------------------------------------------------------------------------- misc.js:42:7
+
+Cannot reassign function binding `g` [1]. [cannot-reassign]
+
+   misc.js:42:7
+   42|       g = x;
+             ^
+
+References:
+   misc.js:40:12
+   40|   function g<X>(x: X): X | ((boolean, number) => void) {
+                  ^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------------- misc.js:42:11
 
 Cannot assign `x` to `g` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
@@ -739,6 +767,20 @@ References:
                                     ^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- misc.js:53:5
+
+Cannot reassign class binding `C` [1]. [cannot-reassign]
+
+   misc.js:53:5
+   53|     C = x;
+           ^
+
+References:
+   misc.js:49:7
+   49| class C {}
+             ^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- misc.js:53:9
 
 Cannot assign `x` to `C` because type variable `X` [1] cannot escape from the scope in which it was defined [2].
@@ -755,6 +797,20 @@ References:
    misc.js:51:13
    51| function f5<X>(x: X, escape: boolean): X | Class<C> {
                    ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- misc.js:61:7
+
+Cannot reassign class binding `D` [1]. [cannot-reassign]
+
+   misc.js:61:7
+   61|       D = x;
+             ^
+
+References:
+   misc.js:58:7
+   58| class D {
+             ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:61:11
@@ -1209,7 +1265,7 @@ References:
 
 
 
-Found 60 errors
+Found 64 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

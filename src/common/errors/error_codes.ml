@@ -12,7 +12,7 @@ type error_code =
   | CannotImplement
   | CannotInferType
   | CannotRead
-  | CannotReassignExport
+  | CannotReassignConstLike
   | CannotResolveModule
   | CannotResolveName
   | CannotSpreadIndexer
@@ -182,7 +182,7 @@ let string_of_code : error_code -> string = function
   | CannotImplement -> "cannot-implement"
   | CannotInferType -> "cannot-infer-type"
   | CannotRead -> "cannot-read"
-  | CannotReassignExport -> "cannot-reassign-export"
+  | CannotReassignConstLike -> "cannot-reassign"
   | CannotResolveModule -> "cannot-resolve-module"
   | CannotResolveName -> "cannot-resolve-name"
   | CannotSpreadIndexer -> "cannot-spread-indexer"

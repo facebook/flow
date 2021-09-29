@@ -1740,9 +1740,9 @@ let dump_error_message =
         (dump_reason cx reason_upper)
         (string_of_use_op use_op)
         (Base.Option.value ~default:"<None>" representation_type)
-    | EAssignExportedConstLikeBinding { loc; definition; binding_kind } ->
+    | EAssignConstLikeBinding { loc; definition; binding_kind } ->
       spf
-        "EAssignExportedConstLikeBinding (%s) (%s) (%s)"
+        "EAssignConstLikeBinding (%s) (%s) (%s)"
         (string_of_aloc loc)
         (dump_reason cx definition)
         (Scope.Entry.string_of_let_binding_kind binding_kind)

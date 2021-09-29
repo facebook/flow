@@ -989,8 +989,11 @@ module Env : Env_sig.S = struct
      definition. This mitigates the problem, since in case of a reassigment the updated
      value needs to respect the annotation type, so we would only miss a potential
      refinement rather a strong type update.
+
+     We also ban such reassignments in non-exported functions and classes in order to
+     allow their types to be eagerly resolved.
   *)
-  let check_exported_let_bound_reassignment op cx name entry loc =
+  let check_let_bound_reassignment op cx name entry loc =
     let open Entry in
     match (op, entry) with
     | ( Changeset.Write,
@@ -1000,17 +1003,16 @@ module Env : Env_sig.S = struct
             value_declare_loc;
             _;
           } ) ->
-      if Context.is_exported_local cx value_declare_loc then
-        let reason = mk_reason (RType name) value_declare_loc in
-        Flow.add_output
-          cx
-          Error_message.(EAssignExportedConstLikeBinding { loc; definition = reason; binding_kind })
+      let reason = mk_reason (RType name) value_declare_loc in
+      Flow.add_output
+        cx
+        Error_message.(EAssignConstLikeBinding { loc; definition = reason; binding_kind })
     | _ -> ()
 
   (* helper: update let or var entry *)
   let update_var op cx ~use_op name specific loc =
     let (scope, entry) = find_entry cx name loc in
-    check_exported_let_bound_reassignment op cx name entry loc;
+    check_let_bound_reassignment op cx name entry loc;
     Entry.(
       match entry with
       | Value ({ Entry.kind = Let _ as kind; value_state = State.Undeclared; _ } as v)

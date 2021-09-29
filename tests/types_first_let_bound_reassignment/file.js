@@ -12,7 +12,7 @@ let x: number | string = "";
 x = 1; // okay in both modes
 
 function bar() {}
-bar = 1; // okay, bar is not exported
+bar = 1; //  not exported, but still not allowed
 
 Lib.baz = 1; // error in both modes, baz is not writable
 
@@ -35,6 +35,6 @@ f = 1; // error in types-first, exported via type F
 
 function g() {}
 type G = $Call<<V>(() => V) => V, typeof g>;
-g = 1; // okay, G is not exported
+g = 1; // not exported, but still not allowed
 
 module.exports = { C, foo, x, d, eObj };

@@ -405,7 +405,7 @@ and 'loc t' =
       representation_type: string option;
     }
   (* end enum error messages *)
-  | EAssignExportedConstLikeBinding of {
+  | EAssignConstLikeBinding of {
       loc: 'loc;
       definition: 'loc virtual_reason;
       binding_kind: Scope.Entry.let_binding_kind;
@@ -977,9 +977,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reason_upper = map_reason reason_upper;
         representation_type;
       }
-  | EAssignExportedConstLikeBinding { loc; definition; binding_kind } ->
-    EAssignExportedConstLikeBinding
-      { loc = f loc; definition = map_reason definition; binding_kind }
+  | EAssignConstLikeBinding { loc; definition; binding_kind } ->
+    EAssignConstLikeBinding { loc = f loc; definition = map_reason definition; binding_kind }
   | ECannotResolveOpenTvar { use_op; reason; blame_reasons } ->
     ECannotResolveOpenTvar
       {
@@ -1220,7 +1219,7 @@ let util_use_op_of_msg nope util = function
   | EEnumUnknownNotChecked _
   | EEnumInvalidCheck _
   | EEnumMemberUsedAsType _
-  | EAssignExportedConstLikeBinding _
+  | EAssignConstLikeBinding _
   | EMalformedCode _
   | EImplicitInstantiationTemporaryError _
   | EImportInternalReactServerModule _
@@ -1369,7 +1368,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EPropertyTypeAnnot loc
   | EUnexpectedThisType loc
   | ETypeParamMinArity (loc, _)
-  | EAssignExportedConstLikeBinding { loc; _ }
+  | EAssignConstLikeBinding { loc; _ }
   | EMalformedCode loc
   | EImplicitInstantiationTemporaryError (loc, _)
   | EObjectThisReference (loc, _)
@@ -3544,10 +3543,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       | None -> []
     in
     IncompatibleEnum { reason_lower; reason_upper; use_op; suggestion }
-  | EAssignExportedConstLikeBinding { definition; binding_kind; _ } ->
+  | EAssignConstLikeBinding { definition; binding_kind; _ } ->
     let features =
       [
-        text "Cannot reassign exported ";
+        text "Cannot reassign ";
         text (Scope.Entry.string_of_let_binding_kind binding_kind);
         text " binding ";
         ref definition;
@@ -3728,7 +3727,7 @@ let error_code_of_message err : error_code option =
   match err with
   | EAdditionMixed _ -> Some UnclearAddition
   | EArithmeticOperand _ -> Some UnsafeAddition
-  | EAssignExportedConstLikeBinding _ -> Some CannotReassignExport
+  | EAssignConstLikeBinding _ -> Some CannotReassignConstLike
   | EBadExportContext _ -> Some InvalidExport
   | EBadExportPosition _ -> Some InvalidExport
   | EBadDefaultImportAccess _ -> Some DefaultImportAccess

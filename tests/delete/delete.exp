@@ -149,6 +149,20 @@ References:
               ^ [1]
 
 
+Error --------------------------------------------------------------------------------------------------- delete.js:53:1
+
+Cannot reassign class binding `C` [1]. [cannot-reassign]
+
+   delete.js:53:1
+   53| delete C;
+       ^^^^^^^^
+
+References:
+   delete.js:46:7
+   46| class C { x; m() {} }
+             ^ [1]
+
+
 Error --------------------------------------------------------------------------------------------------- delete.js:54:1
 
 Cannot delete function [1] because only member expressions and variables can be deleted. [cannot-delete]
@@ -232,4 +246,4 @@ References:
 
 
 
-Found 16 errors
+Found 17 errors

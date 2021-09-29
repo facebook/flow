@@ -55,21 +55,27 @@ export type RelayModernTypedFlowtest_users = $ReadOnlyArray<{|
  * RelayModernTyped-flowtest     *
  *********************************/
 
-class SingularTest extends React.Component<{
+class SingularTestInternal extends React.Component<{
   string: string,
   onClick: () => void,
   user: RelayModernTypedFlowtest_user,
   nullableUser: ?RelayModernTypedFlowtest_user,
   optionalUser?: RelayModernTypedFlowtest_user,
 }> {}
-SingularTest = createFragmentContainer(SingularTest, 'fragments go here');
+const SingularTest = createFragmentContainer(
+  SingularTestInternal,
+  'fragments go here',
+);
 
-class PluralTest extends React.Component<{
+class PluralTestInternal extends React.Component<{
   users: RelayModernTypedFlowtest_users,
   nullableUsers: ?RelayModernTypedFlowtest_users,
   optionalUsers?: RelayModernTypedFlowtest_users,
 }> {}
-PluralTest = createFragmentContainer(PluralTest, 'fragments go here');
+const PluralTest = createFragmentContainer(
+  PluralTestInternal,
+  'fragments go here',
+);
 
 declare var aUserRef: {
   +__fragments: FragmentReference<RelayModernTypedFlowtest_user$reference>,
