@@ -1,3 +1,21 @@
+### 0.161.0
+
+Likely to cause new Flow errors:
+* Only consider variables as "constlike" if their assignments are within their declarations. This fixes cases of unsoundness. [example](https://flow.org/try/#0G4QwTgBAHgXBB2BXAtgIwKZgNwCgBmi8AxgC4CWA9vBABYjAVEAUAlBAN44TfQQC8EACwAmXAF8cdBsxa4msCAzIATFkA).
+New Features:
+* Add hierarchical document symbol support to the LSP. Improves VS Code's Outline pane, breadcrumbs and symbol search.
+* Autocomplete now includes primitive types like `string` and `number`, as well as utility types like `$Call` and `$Keys`.
+
+Notable changes:
+* Significantly improved overall performance.
+
+Notable bug fixes:
+* Unknown or redundant settings in the flowconfig `[lints]` section are now ignored when passing `--ignore-version`.
+* Improve results of type-at-pos on `$ReadOnly` types.
+
+`flow-remove-types`:
+* Added a Jest transformer, `flow-remove-types/jest`
+
 ### 0.160.2
 
 * The fix in 0.160.1 didn't fully fix the regression in 0.160.0. It, and the original "fix" from 0.160.0 are reverted.
@@ -9,7 +27,7 @@
 ### 0.160.0
 
 New Features:
-* The `ide`, `fs` and `watchman` lazy modes have been merged into a single mode. The new mode is now SCM-aware with or without Watchman; when the server starts, it queries Git or Mercurial and checks all existing local changes (changes since the mergebase). .
+* The `ide`, `fs` and `watchman` lazy modes have been merged into a single mode. The new mode is now SCM-aware with or without Watchman; when the server starts, it queries Git or Mercurial and checks all existing local changes (changes since the mergebase).
 
   The `file_watcher.watchman.mergebase_with` config option has been renamed to `file_watcher.mergebase_with`; set this to the name of your default *remote* branch (e.g. `origin/main`).
 
