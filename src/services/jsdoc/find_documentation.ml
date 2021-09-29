@@ -98,8 +98,9 @@ class documentation_searcher find =
 
     method! declare_function stmt_loc decl =
       let open Flow_ast.Statement.DeclareFunction in
-      let { id = (loc, _); comments; _ } = decl in
-      find loc comments;
+      let { id = (id_loc, _); annot = (annot_loc, _); comments; _ } = decl in
+      find id_loc comments;
+      find annot_loc comments;
       super#declare_function stmt_loc decl
 
     method! object_property_type prop_type =

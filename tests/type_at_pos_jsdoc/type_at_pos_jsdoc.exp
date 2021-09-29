@@ -1423,3 +1423,22 @@ Flags: --strip-root --pretty
   "end":16
 }
 
+redeclare_import.js:5:5
+Flags: --strip-root --pretty
+{
+  "documentation":"first declaration",
+  "type":"((x: number) => number) & ((x: string) => string)",
+  "reasons":[],
+  "loc":{
+    "source":"redeclare_import.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":1,"offset":54},
+    "end":{"line":5,"column":9,"offset":63}
+  },
+  "path":"redeclare_import.js",
+  "line":5,
+  "endline":5,
+  "start":1,
+  "end":9
+}
+
