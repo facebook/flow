@@ -385,10 +385,6 @@ val set_exists_excuses : t -> ExistsCheck.t ALocMap.t -> unit
 
 val set_environment : t -> Loc_env.t -> unit
 
-val set_local_env : t -> ALocIDSet.t -> unit
-
-val is_exported_local : t -> ALoc.t -> bool
-
 val clear_master_shared : t -> master_context -> unit
 
 (* Flow allows you test test if a property exists inside a conditional. However, we only wan to

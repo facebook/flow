@@ -17,7 +17,6 @@ type check_file =
   File_sig.With_ALoc.t ->
   Docblock.t ->
   ALoc.table Lazy.t ->
-  Loc_collections.ALocIDSet.t ->
   Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
 
 (* Check will lazily create types for the checked file's dependencies. These
@@ -578,7 +577,7 @@ let mk_check_file ~options ~reader ~cache () =
     Nel.iter connect locs
   in
 
-  fun file_key requires ast comments file_sig docblock aloc_table exported_locals ->
+  fun file_key requires ast comments file_sig docblock aloc_table ->
     let ccx = Context.make_ccx master_cx in
     let metadata = Context.docblock_overrides docblock base_metadata in
     let module_ref = Reason.OrdinaryName (Files.module_ref file_key) in
@@ -590,7 +589,6 @@ let mk_check_file ~options ~reader ~cache () =
     in
     let lint_severities = get_lint_severities metadata options in
     Type_inference_js.add_require_tvars ~unresolved_tvar:ConsGen.unresolved_tvar cx file_sig;
-    Context.set_local_env cx exported_locals;
     List.iter (connect_require cx) requires;
     let typed_ast = infer_ast cx file_key comments ast ~lint_severities in
     Merge_js.post_merge_checks cx master_cx ast typed_ast metadata file_sig;

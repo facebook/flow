@@ -53,7 +53,6 @@ val check_contents_context :
   (Loc.t, Loc.t) Flow_ast.Program.t ->
   Docblock.t ->
   File_sig.With_Loc.t ->
-  Type_sig_collections.Locs.index Packed_type_sig.Module.t ->
   Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
 
 val merge_runner :

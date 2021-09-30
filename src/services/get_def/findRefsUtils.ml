@@ -10,11 +10,7 @@ module Result = Base.Result
 
 let ( >>= ) = Result.( >>= )
 
-type ast_info =
-  (Loc.t, Loc.t) Flow_ast.Program.t
-  * File_sig.With_Loc.t
-  * Type_sig_collections.Locs.index Packed_type_sig.Module.t
-  * Docblock.t
+type ast_info = (Loc.t, Loc.t) Flow_ast.Program.t * File_sig.With_Loc.t * Docblock.t
 
 let compute_docblock file content =
   let open Parsing_service_js in
@@ -35,7 +31,7 @@ let compute_ast_result options file content =
   let parse_options = make_parse_options ~fail:false ~types_mode ~use_strict docblock options in
   let result = do_parse ~parse_options ~info:docblock content file in
   match result with
-  | Parse_ok { ast; file_sig; type_sig; _ } -> Ok (ast, file_sig, type_sig, docblock)
+  | Parse_ok { ast; file_sig; _ } -> Ok (ast, file_sig, docblock)
   (* The parse should not fail; we have passed ~fail:false *)
   | Parse_fail _ -> Error "Parse unexpectedly failed"
   | Parse_skip _ -> Error "Parse unexpectedly skipped"
@@ -50,12 +46,10 @@ let get_ast_result ~reader file =
   in
   let ast_result = get_result (Reader.get_ast ~reader) "AST" in
   let file_sig_result = get_result (Reader.get_file_sig ~reader) "file sig" in
-  let type_sig_result = get_result (Reader.get_type_sig ~reader) "type sig" in
   let docblock_result = get_result (Reader.get_docblock ~reader) "docblock" in
   ast_result >>= fun ast ->
   file_sig_result >>= fun file_sig ->
-  type_sig_result >>= fun type_sig ->
-  docblock_result >>= fun docblock -> Ok (ast, file_sig, type_sig, docblock)
+  docblock_result >>= fun docblock -> Ok (ast, file_sig, docblock)
 
 let get_all_dependents ~reader options workers env file_key content =
   let docblock = compute_docblock file_key content in

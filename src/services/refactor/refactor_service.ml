@@ -147,7 +147,7 @@ let apply_rename_to_files ~reader refs_by_file new_name =
     begin
       fun file refs acc ->
       acc >>= fun edits ->
-      FindRefsUtils.get_ast_result ~reader file >>| fun (ast, _, _, _) ->
+      FindRefsUtils.get_ast_result ~reader file >>| fun (ast, _, _) ->
       let file_edits = apply_rename_to_file file ast refs new_name in
       List.rev_append file_edits edits
     end

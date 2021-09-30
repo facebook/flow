@@ -17,7 +17,6 @@ type check_file =
   File_sig.With_ALoc.t ->
   Docblock.t ->
   ALoc.table Lazy.t ->
-  Loc_collections.ALocIDSet.t ->
   Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t
 
 val mk_check_file :

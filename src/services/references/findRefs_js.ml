@@ -30,7 +30,7 @@ let sort_and_dedup refs =
   |> Base.List.map ~f:snd
 
 let local_variable_refs ast_info loc =
-  let (ast, _, _, _) = ast_info in
+  let (ast, _, _) = ast_info in
   match VariableFindRefs.local_find_refs ast loc with
   | None -> (None, loc)
   | Some (var_refs, local_def_loc) -> (Some var_refs, local_def_loc)

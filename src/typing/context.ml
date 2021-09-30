@@ -7,7 +7,6 @@
 
 open Type.TypeContext
 module ALocMap = Loc_collections.ALocMap
-module ALocIDSet = Loc_collections.ALocIDSet
 module ALocIDMap = Loc_collections.ALocIDMap
 
 exception Props_not_found of Type.Properties.id
@@ -208,7 +207,6 @@ type t = {
   trust_constructor: unit -> Trust.trust_rep;
   mutable declare_module_ref: Module_info.t option;
   mutable environment: Loc_env.t;
-  mutable exported_locals: ALocIDSet.t;
 }
 
 let metadata_of_options options =
@@ -355,7 +353,6 @@ let make ccx metadata file aloc_table module_ref phase =
     trust_constructor = Trust.literal_trust;
     declare_module_ref = None;
     environment = Loc_env.empty;
-    exported_locals = ALocIDSet.empty;
   }
 
 let sig_cx cx = cx.ccx.sig_cx
@@ -685,8 +682,6 @@ let set_exists_excuses cx exists_excuses = cx.ccx.exists_excuses <- exists_excus
 
 let set_environment cx env = cx.environment <- env
 
-let set_local_env cx exported_locals = cx.exported_locals <- exported_locals
-
 (* Given a sig context, it makes sense to clear the parts that are shared with
    the master sig context. Why? The master sig context, which contains global
    declarations, is an implicit dependency for every file, and so will be
@@ -839,8 +834,6 @@ let generate_poly_id cx =
   nominal
 
 let make_source_poly_id cx aloc = make_aloc_id cx aloc |> Type.Poly.id_of_aloc_id
-
-let is_exported_local cx aloc = ALocIDSet.mem (make_aloc_id cx aloc) cx.exported_locals
 
 let add_exists_instantiation cx loc t =
   let id = make_aloc_id cx loc in

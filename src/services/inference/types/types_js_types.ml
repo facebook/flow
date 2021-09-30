@@ -11,7 +11,6 @@ type parse_artifacts =
       docblock_errors: Parsing_service_js.docblock_error list;
       ast: (Loc.t, Loc.t) Flow_ast.Program.t;
       file_sig: File_sig.With_Loc.t;
-      type_sig: Type_sig_collections.Locs.index Packed_type_sig.Module.t;
       tolerable_errors: File_sig.With_Loc.tolerable_error list;
       parse_errors: (Loc.t * Parse_error.t) list;
     }

@@ -432,21 +432,6 @@ let merge_component ~worker_mutator ~options ~reader ((leader_f, _) as component
     let duration = Unix.gettimeofday () -. start_time in
     (diff, Ok (Some (suppressions, duration)))
 
-let get_exported_locals file_key type_sig =
-  let acc = ref Loc_collections.ALocIDSet.empty in
-  let source = Some file_key in
-  let () =
-    let open Type_sig in
-    let { Packed_type_sig.Module.local_defs; _ } = type_sig in
-    let f def =
-      let iloc : Type_sig_collections.Locs.index = def_id_loc def in
-      let id = ALoc.ALocRepresentationDoNotUse.make_id source (iloc :> int) in
-      acc := Loc_collections.ALocIDSet.add id !acc
-    in
-    Type_sig_collections.Local_defs.iter f local_defs
-  in
-  !acc
-
 let mk_check_file options ~reader () =
   let get_ast_unsafe file =
     let ((_, { Flow_ast.Program.all_comments; _ }) as ast) =
@@ -475,7 +460,6 @@ let mk_check_file options ~reader () =
       let (file_sig, tolerable_errors) = get_tolerable_file_sig_unsafe file in
       let docblock = get_docblock_unsafe file in
       let aloc_table = lazy (get_aloc_table_unsafe file) in
-      let exported_locals = get_exported_locals file type_sig in
       let requires =
         let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
         let reader = Abstract_state_reader.Mutator_state_reader reader in
@@ -485,9 +469,7 @@ let mk_check_file options ~reader () =
         in
         SMap.fold f require_loc_map []
       in
-      let (cx, typed_ast) =
-        check_file file requires ast comments file_sig docblock aloc_table exported_locals
-      in
+      let (cx, typed_ast) = check_file file requires ast comments file_sig docblock aloc_table in
       let coverage = Coverage.file_coverage ~full_cx:cx typed_ast in
       let errors = Context.errors cx in
       let suppressions = Context.error_suppressions cx in
@@ -525,7 +507,7 @@ let check_contents_cache = Check_cache.create ~capacity:1000
 
 (* Variation of merge_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
-let check_contents_context ~reader options file ast docblock file_sig type_sig =
+let check_contents_context ~reader options file ast docblock file_sig =
   let (_, { Flow_ast.Program.all_comments = comments; _ }) = ast in
   let ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let file_sig = File_sig.abstractify_locs file_sig in
@@ -550,7 +532,6 @@ let check_contents_context ~reader options file ast docblock file_sig type_sig =
       (try Parsing_heaps.Reader.get_aloc_table_unsafe ~reader file with
       | Parsing_heaps_exceptions.ALoc_table_not_found _ -> ALoc.empty_table file)
   in
-  let exported_locals = get_exported_locals file type_sig in
   let reader = Abstract_state_reader.State_reader reader in
   let required =
     let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
@@ -565,7 +546,7 @@ let check_contents_context ~reader options file ast docblock file_sig type_sig =
   in
   let cache = check_contents_cache in
   let check_file = Check_service.mk_check_file ~options ~reader ~cache () in
-  check_file file required ast comments file_sig docblock aloc_table exported_locals
+  check_file file required ast comments file_sig docblock aloc_table
 
 (* Wrap a potentially slow operation with a timer that fires every interval seconds. When it fires,
  * it calls ~on_timer. When the operation finishes, the timer is cancelled *)
