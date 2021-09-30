@@ -8,10 +8,10 @@
  * @format
  */
 
-import {format} from 'util';
-import {exec} from '../utils/async';
+const {format} = require('util');
+const {exec} = require('../utils/async');
 
-export default async function(
+async function getAst(
   code: string,
   flowBinPath: string,
 ): Promise<Object> /* AST */ {
@@ -21,3 +21,7 @@ export default async function(
   });
   return JSON.parse(stdout);
 }
+
+module.exports = {
+  default: getAst,
+};

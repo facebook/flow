@@ -8,11 +8,11 @@
  * @format
  */
 
-import simpleDiffAssertion from './simpleDiffAssertion';
+const {default: simpleDiffAssertion} = require('./simpleDiffAssertion');
 
 import type {AssertionLocation, ErrorAssertion} from './assertionTypes';
 
-export default function(
+function sortedStdout(
   expected: string,
   assertLoc: ?AssertionLocation,
 ): ErrorAssertion {
@@ -34,3 +34,7 @@ export default function(
     );
   };
 }
+
+module.exports = {
+  default: sortedStdout,
+};

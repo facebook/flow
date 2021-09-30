@@ -3,8 +3,8 @@
  * @format
  */
 
-import type Suite from 'flow-dev-tools/src/test/Suite.js';
-import {suite, test} from 'flow-dev-tools/src/test/Tester';
+import type {Suite} from 'flow-dev-tools/src/test/Suite';
+const {suite, test} = require('flow-dev-tools/src/test/Tester');
 
 /**
  * This test suite takes each query tested by lsp/queries and runs it once with
@@ -13,7 +13,7 @@ import {suite, test} from 'flow-dev-tools/src/test/Tester';
  * parallel with a recheck will return a response. Those that don't will
  * timeout
  */
-export default (suite(
+module.exports = (suite(
   ({
     lspStartAndConnect,
     lspNotification,

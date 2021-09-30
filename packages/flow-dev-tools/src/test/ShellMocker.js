@@ -11,10 +11,10 @@
 /* dedicated to Michael Shellmocker,
  * seven time world champion of testing shell commands */
 
-import {watch} from 'fs';
-import {join} from 'path';
+const {watch} = require('fs');
+const {join} = require('path');
 
-import {mkdirp, writeFile, readFile} from '../utils/async';
+const {mkdirp, writeFile, readFile} = require('../utils/async');
 
 type ProcessEnv = {[key: string]: string | void};
 
@@ -25,7 +25,7 @@ export type AllInvocations = {
   [name: string]: Invocations,
 };
 
-export default class ShellMocker {
+class ShellMocker {
   dir: string;
   binDir: string;
   outDir: string;
@@ -120,3 +120,7 @@ export default class ShellMocker {
     return results.some(x => x);
   }
 }
+
+module.exports = {
+  default: ShellMocker,
+};

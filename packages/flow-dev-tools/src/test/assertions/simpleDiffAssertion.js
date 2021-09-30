@@ -8,10 +8,10 @@
  * @format
  */
 
-import {format} from 'util';
+const {format} = require('util');
 
-import colors from 'colors/safe';
-import {diffLines, diffWords} from 'diff';
+const colors = require('colors/safe');
+const {diffLines, diffWords} = require('diff');
 
 import type {
   AssertionLocation,
@@ -127,7 +127,7 @@ function getDiff(
   return isSame ? null : messages;
 }
 
-export default function(
+function simpleDiffAssertion(
   expected: string,
   actual: string,
   assertLoc: ?AssertionLocation,
@@ -173,3 +173,7 @@ export default function(
   }
   return {type: 'pass'};
 }
+
+module.exports = {
+  default: simpleDiffAssertion,
+};

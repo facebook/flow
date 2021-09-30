@@ -8,10 +8,10 @@
  * @format
  */
 
-import {format} from 'util';
+const {format} = require('util');
 
-import Suite from './Suite';
-import Test from './Test';
+const {Suite} = require('./Suite');
+const {Test} = require('./Test');
 
 import type {TestStep, TestStepFirstStage} from './TestStep';
 
@@ -19,10 +19,15 @@ export type StepList = Array<TestStep>;
 export type Steps = (tester: TestStepFirstStage) => StepList;
 export type Tests = (tester: TestStepFirstStage) => Array<Test>;
 
-export function suite(tests: Tests): Suite {
+function suite(tests: Tests): Suite {
   return new Suite(tests);
 }
 
-export function test(name: string, steps: StepList): Test {
+function test(name: string, steps: StepList): Test {
   return new Test(name, steps);
 }
+
+module.exports = {
+  suite,
+  test,
+};

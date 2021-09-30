@@ -10,17 +10,17 @@
 
 import type {Flag} from '../command/Base';
 
-import {format} from 'util';
+const {format} = require('util');
 
-import Base, {commonFlags} from '../command/Base';
-import findFlowBin from '../command/findFlowBin';
+const {commonFlags, default: Base} = require('../command/Base');
+const findFlowBin = require('../command/findFlowBin').default;
 
 export type Args = {
   names: Set<string>,
   bin: string,
 };
 
-export default class NewTestCommand extends Base<Args> {
+class NewTestCommand extends Base<Args> {
   static processArgv(argv: Object): Args {
     return {
       names: new Set(argv._),
@@ -49,3 +49,7 @@ NAME
     return [commonFlags.bin];
   }
 }
+
+module.exports = {
+  default: NewTestCommand,
+};

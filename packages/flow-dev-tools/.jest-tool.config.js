@@ -7,5 +7,8 @@
 
 module.exports = {
   rootDir: 'src',
-  testEnvironment: 'node'
+  testEnvironment: 'node',
+  transform: {
+    "^.+\\.js(?:\\.flow)?$": "flow-remove-types/jest"
+  }
 }

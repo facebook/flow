@@ -114,7 +114,7 @@ function rangeMatchesAstRange(
 
 /* Given a location and an AST, find the ast node whose location falls within
  * the given location. Then return the path to that node. */
-export default function(errorLoc: FlowLoc, astRoot: Object): ?Array<PathNode> {
+function getPathToLoc(errorLoc: FlowLoc, astRoot: Object): ?Array<PathNode> {
   const path = new Path(astRoot);
   let ast = path.next();
   while (ast != null) {
@@ -127,10 +127,7 @@ export default function(errorLoc: FlowLoc, astRoot: Object): ?Array<PathNode> {
   return null;
 }
 
-export function getNodeAtRange(
-  range: [number, number],
-  astRoot: Object,
-): ?Object {
+function getNodeAtRange(range: [number, number], astRoot: Object): ?Object {
   const path = new Path(astRoot);
   let ast = path.next();
   while (ast != null) {
@@ -142,3 +139,8 @@ export function getNodeAtRange(
 
   return null;
 }
+
+module.exports = {
+  getNodeAtRange,
+  default: getPathToLoc,
+};

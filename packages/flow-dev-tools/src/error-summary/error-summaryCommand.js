@@ -10,11 +10,11 @@
 
 import type {Flag} from '../command/Base';
 
-import {format} from 'util';
-import {resolve} from 'path';
+const {format} = require('util');
+const {resolve} = require('path');
 
-import Base, {commonFlags} from '../command/Base';
-import findFlowBin from '../command/findFlowBin';
+const {commonFlags, default: Base} = require('../command/Base');
+const findFlowBin = require('../command/findFlowBin').default;
 
 export type Args = {
   bin: string,
@@ -28,7 +28,7 @@ export type Args = {
   showFiles: ?boolean,
 };
 
-export default class ErrorSummaryCommand extends Base<Args> {
+class ErrorSummaryCommand extends Base<Args> {
   static processArgv(argv: Object): Args {
     if (argv._.length !== 1) {
       this.showUsage(this.BAD_ARGS);
@@ -98,3 +98,7 @@ Queries Flow for the errors for ROOT. Then logs how many times each error messag
     ];
   }
 }
+
+module.exports = {
+  default: ErrorSummaryCommand,
+};

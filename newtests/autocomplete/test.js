@@ -3,10 +3,10 @@
  */
 
 
-import type Suite from "flow-dev-tools/src/test/Suite.js";
-import {suite, test} from 'flow-dev-tools/src/test/Tester';
+import type {Suite} from "flow-dev-tools/src/test/Suite";
+const {suite, test} = require('flow-dev-tools/src/test/Tester');
 
-export default (suite(({addFile, flowCmd}) => [
+module.exports = (suite(({addFile, flowCmd}) => [
   test('non-json output', [
     addFile('foo_parse_fail.js'),
     flowCmd(

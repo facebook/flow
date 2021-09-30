@@ -8,12 +8,12 @@
  * @format
  */
 
-import {existsSync} from 'fs';
-import {resolve} from 'path';
+const {existsSync} = require('fs');
+const {resolve} = require('path');
 
-import {binOptions} from './../constants';
+const {binOptions} = require('./../constants');
 
-export default function(binArg: ?string): string {
+function findFlowBin(binArg: ?string): string {
   // Command line arg wins
   if (binArg != null) {
     return resolve(binArg);
@@ -28,3 +28,5 @@ export default function(binArg: ?string): string {
   // Default to whatever is in the path
   return 'flow';
 }
+
+module.exports = {default: findFlowBin};

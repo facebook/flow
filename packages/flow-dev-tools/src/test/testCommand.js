@@ -10,12 +10,12 @@
 
 import type {Flag} from '../command/Base';
 
-import {resolve} from 'path';
-import {format} from 'util';
+const {resolve} = require('path');
+const {format} = require('util');
 
-import {defaultTestsDirName} from '../constants';
-import Base, {commonFlags} from '../command/Base';
-import findFlowBin from '../command/findFlowBin';
+const {defaultTestsDirName} = require('../constants');
+const {commonFlags, default: Base} = require('../command/Base');
+const findFlowBin = require('../command/findFlowBin').default;
 
 export type Args = {
   suites: ?Set<string>,
@@ -31,7 +31,7 @@ export type Args = {
   maxErroredTestsPct: ?number,
 };
 
-export default class TestCommand extends Base<Args> {
+class TestCommand extends Base<Args> {
   static processArgv(argv: Object): Args {
     const suites = argv._.length > 0 ? new Set(argv._) : null;
     if (argv.rerun != null && argv['rerun-failed'] != null) {
@@ -139,3 +139,7 @@ SUITE
     ];
   }
 }
+
+module.exports = {
+  default: TestCommand,
+};

@@ -3,10 +3,10 @@
  */
 
 
-import type Suite from "flow-dev-tools/src/test/Suite.js";
-import {suite, test} from 'flow-dev-tools/src/test/Tester';
+import type {Suite} from "flow-dev-tools/src/test/Suite";
+const {suite, test} = require('flow-dev-tools/src/test/Tester');
 
-export default (suite(({addFile, addFiles, addCode}) => [
+module.exports = (suite(({addFile, addFiles, addCode}) => [
   test('Make sure the server does not die when a parse error is introduced', [
     addCode('var x: string = "hello";')
       .noNewErrors(),

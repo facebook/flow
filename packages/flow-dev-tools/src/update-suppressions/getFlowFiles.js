@@ -8,10 +8,10 @@
  * @format
  */
 
-import {format} from 'util';
-import {execManual} from '../utils/async';
+const {format} = require('util');
+const {execManual} = require('../utils/async');
 
-export default async function(
+async function getFlowFiles(
   bin: string,
   root: string,
   flowconfigName: string,
@@ -32,3 +32,7 @@ export default async function(
 
   throw new Error(format('flow ls failed!', err, stdout, stderr));
 }
+
+module.exports = {
+  default: getFlowFiles,
+};

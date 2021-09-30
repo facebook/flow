@@ -8,11 +8,11 @@
  * @format
  */
 
-import {getFlowErrors} from '../errors';
-import {prettyPrintError} from '../flowResult';
+const {getFlowErrors} = require('../errors');
+const {prettyPrintError} = require('../flowResult');
 import type {Args} from './error-summaryCommand';
 
-export default (async function(args: Args): Promise<void> {
+async function runner(args: Args): Promise<void> {
   var flow_result = await getFlowErrors(
     args.bin,
     args.errorCheckCommand,
@@ -85,4 +85,8 @@ export default (async function(args: Args): Promise<void> {
   result.forEach(error =>
     console.log('frequency: ' + error.freq + ' message: ' + error.message),
   );
-});
+}
+
+module.exports = {
+  default: runner,
+};

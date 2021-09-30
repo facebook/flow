@@ -8,20 +8,20 @@
  * @format
  */
 
-import {execSync, spawn} from 'child_process';
-import {randomBytes} from 'crypto';
-import {createWriteStream, realpathSync} from 'fs';
-import {platform, tmpdir} from 'os';
-import {basename, dirname, extname, join, sep as dir_sep} from 'path';
-import {format} from 'util';
-import EventEmitter from 'events';
+const {execSync, spawn} = require('child_process');
+const {randomBytes} = require('crypto');
+const {createWriteStream, realpathSync} = require('fs');
+const {platform, tmpdir} = require('os');
+const {basename, dirname, extname, join, sep: dir_sep} = require('path');
+const {format} = require('util');
+const EventEmitter = require('events');
 
-import * as rpc from 'vscode-jsonrpc';
-import {URI as VscodeURI, uriToFsPath} from 'vscode-uri';
+const rpc = require('vscode-jsonrpc');
+const {URI: VscodeURI, uriToFsPath} = require('vscode-uri');
 
 import type {LSPMessage, RpcConnection} from './lsp';
 
-import {
+const {
   appendFile,
   exec,
   execManual,
@@ -32,9 +32,9 @@ import {
   sleep,
   unlink,
   writeFile,
-} from '../utils/async';
-import {getTestsDir} from '../constants';
-import ShellMocker from './ShellMocker';
+} = require('../utils/async');
+const {getTestsDir} = require('../constants');
+const {default: ShellMocker} = require('./ShellMocker');
 
 import type {SuiteResult} from './runTestSuite';
 import type {AllInvocations} from './ShellMocker';
@@ -46,7 +46,7 @@ type CancellationToken = {
 
 type CheckCommand = 'check' | 'status';
 
-export class TestBuilder {
+class TestBuilder {
   bin: string;
   dir: string;
   errorCheckCommand: CheckCommand;
@@ -1008,7 +1008,7 @@ export class TestBuilder {
   }
 }
 
-export default class Builder {
+class Builder {
   runID: string;
   dir: string;
   errorCheckCommand: CheckCommand;
@@ -1126,3 +1126,9 @@ export default class Builder {
     );
   }
 }
+
+module.exports = {
+  TestBuilder,
+  Builder,
+  default: Builder,
+};

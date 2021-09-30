@@ -8,31 +8,31 @@
  * @format
  */
 
-import util from 'util';
+const util = require('util');
 
-import {join} from 'path';
+const {join} = require('path');
 
-import getFlowFiles from './getFlowFiles';
-import {
+const getFlowFiles = require('./getFlowFiles').default;
+const {
   collateErrors,
   getFlowErrorsWithWarnings,
   isUnusedSuppression,
   filterErrors,
-} from '../errors';
-import getAst from '../comment/getAst';
+} = require('../errors');
+const getAst = require('../comment/getAst').default;
 
-import {readFile, writeFile} from '../utils/async';
-import {
+const {readFile, writeFile} = require('../utils/async');
+const {
   removeUnusedErrorSuppressionFromText,
   isLintSuppression,
   addCommentToText,
   findStartOfLine,
-} from '../comment/commentMutator';
+} = require('../comment/commentMutator');
 
 import type {Args, RootName, RootPath} from './update-suppressionsCommand';
 import type {FlowLoc, FlowResult, FlowError, FlowMessage} from '../flowResult';
-import getContext from '../comment/getContext';
-import getPathToLoc from '../comment/getPathToLoc';
+const getContext = require('../comment/getContext').default;
+const getPathToLoc = require('../comment/getPathToLoc').default;
 
 type LocKey = string;
 
@@ -173,10 +173,7 @@ function getSites(text: string): Set<string> {
 }
 
 // exported for tests
-export function replaceSites(
-  text: string,
-  sites: $ReadOnlyArray<string>,
-): string {
+function replaceSites(text: string, sites: $ReadOnlyArray<string>): string {
   const remainingSitesStr = [...sites].sort().join(',');
 
   if (/\bsite=([a-z,_]+)\)/.test(text)) {
@@ -275,7 +272,7 @@ async function updateSuppressions(
 }
 
 // Exported for testing
-export async function updateSuppressionsInText(
+async function updateSuppressionsInText(
   contents: Buffer,
   allRoots: Set<RootName>,
   numBins: number,
@@ -367,7 +364,7 @@ function isFlowtest(filename) {
   );
 }
 
-export default async function(args: Args): Promise<void> {
+async function runner(args: Args): Promise<void> {
   let ignoredFileCount = 0;
   let ignoredErrorCount = 0;
   let removedErrorCount = 0;
@@ -453,3 +450,9 @@ export default async function(args: Args): Promise<void> {
     );
   }
 }
+
+module.exports = {
+  replaceSites,
+  updateSuppressionsInText,
+  default: runner,
+};

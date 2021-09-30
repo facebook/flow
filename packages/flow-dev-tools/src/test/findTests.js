@@ -8,13 +8,13 @@
  * @format
  */
 
-import {dirname, normalize, relative, resolve} from 'path';
-import {format} from 'util';
+const {dirname, normalize, relative, resolve} = require('path');
+const {format} = require('util');
 
-import {exists, glob, readFile} from '../utils/async';
-import Builder from './builder';
-import {getTestsDir} from '../constants';
-import Suite from './Suite';
+const {exists, glob, readFile} = require('../utils/async');
+const {default: Builder} = require('./builder');
+const {getTestsDir} = require('../constants');
+const {default: Suite} = require('./Suite');
 
 import type {Tests} from './Tester';
 import type {SuiteResult} from './runTestSuite';
@@ -29,9 +29,7 @@ async function findTestSuites(): Promise<Array<string>> {
   return testSuites.map(normalize);
 }
 
-export async function findTestsByName(
-  suitesOrig: ?Set<string>,
-): Promise<Set<string>> {
+async function findTestsByName(suitesOrig: ?Set<string>): Promise<Set<string>> {
   let suites = null;
   if (suitesOrig != null) {
     suites = new Set();
@@ -68,7 +66,7 @@ export async function findTestsByName(
 
 function loadSuiteByFilename(filename: string): Suite {
   delete require.cache[require.resolve(filename)];
-  const {default: suite} = (require: any)(filename);
+  const suite = (require: any)(filename);
   // I don't know why, but suite instanceof Suite doesn't seem to work when
   // using symlinks. So this is a fuzzy approximation
   if (!(suite && suite.constructor && suite.constructor.name === Suite.name)) {
@@ -79,11 +77,11 @@ function loadSuiteByFilename(filename: string): Suite {
   return suite;
 }
 
-export function loadSuite(suiteName: string): Suite {
+function loadSuite(suiteName: string): Suite {
   return loadSuiteByFilename(resolve(getTestsDir(), suiteName, 'test.js'));
 }
 
-export async function findTestsByRun(
+async function findTestsByRun(
   runID: string,
   failedOnly: boolean,
 ): Promise<Set<string>> {
@@ -140,3 +138,9 @@ export async function findTestsByRun(
 
   return findTestsByName(suites);
 }
+
+module.exports = {
+  findTestsByName,
+  loadSuite,
+  findTestsByRun,
+};

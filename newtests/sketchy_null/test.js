@@ -1,10 +1,10 @@
 /* @flow */
 
 
-import type Suite from "flow-dev-tools/src/test/Suite.js";
-import {suite, test} from 'flow-dev-tools/src/test/Tester';
+import type {Suite} from "flow-dev-tools/src/test/Suite";
+const {suite, test} = require('flow-dev-tools/src/test/Tester');
 
-export default (suite(({addFiles, addCode, flowCmd}) => [
+module.exports = (suite(({addFiles, addCode, flowCmd}) => [
   test('should trigger sketchy null output on sketchy string', [
     addFiles('flowTypeFile.js', 'flowStrictSketchyStringFile.js')
       .newErrors(

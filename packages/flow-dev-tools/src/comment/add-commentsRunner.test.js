@@ -5,10 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {addCommentsToCode} from './add-commentsRunner.js';
-import type {Suppression} from './add-commentsRunner.js'
+const {addCommentsToCode} = require('./add-commentsRunner');
 
-import * as path from 'path';
+const path = require('path');
 
 test('addCommentsToCode', async () => {
   const flowBinPath = path.resolve(process.env.FLOW_BIN);
@@ -76,7 +75,7 @@ const baz = 3;
 // This simulates an error location spanning the entire line. The code looks for AST nodes that are
 // completely contained by the error location, so this location goes from column 1 to a ridiculously
 // large column number.
-function makeSuppression(line: number, text: string): Suppression {
+function makeSuppression(line, text) {
   const [startOffset, endOffset] = offsetsForLine(line, text);
   return {
     loc: {
@@ -96,7 +95,8 @@ function makeSuppression(line: number, text: string): Suppression {
     error_codes:["code2","code1"]
   };
 }
-function offsetsForLine(line: number, text: string): [number, number] {
+
+function offsetsForLine(line, text) {
   let startOffset = 0;
   const lines = text.split('\n');
   for (let currLine = 0; currLine < line - 1; currLine++ ) {

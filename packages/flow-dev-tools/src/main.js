@@ -7,12 +7,11 @@
  * @flow
  */
 
-import 'babel-polyfill';
-import colors from 'colors/safe';
+const colors = require('colors/safe');
 
-import {format} from 'util';
+const {format} = require('util');
 
-import commandFinder from './command/finder';
+const commandFinder = require('./command/finder');
 
 function cleanUp() {
   process.stdout.write('\x1B[?25h') // Show terminal cursor
@@ -35,7 +34,7 @@ process.on('SIGINT', () => {
   cleanUp();
 });
 
-export async function run(): Promise<void> {
+async function run(): Promise<void> {
   const commandMap = await commandFinder(__dirname);
 
   const command = process.argv[2];
@@ -54,3 +53,5 @@ export async function run(): Promise<void> {
     await require(commandModulePath).default.go();
   }
 }
+
+module.exports = {run};

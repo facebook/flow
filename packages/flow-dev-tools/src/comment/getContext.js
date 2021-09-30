@@ -12,12 +12,12 @@ import type {PathNode} from './getPathToLoc';
 import type {FlowLoc} from '../flowResult';
 
 export opaque type Context = 'normal' | 'jsx' | 'jsx_fragment' | 'template';
-export const NORMAL: Context = 'normal';
-export const JSX: Context = 'jsx';
-export const JSX_FRAGMENT: Context = 'jsx_fragment';
-export const TEMPLATE: Context = 'template';
+const NORMAL: Context = 'normal';
+const JSX: Context = 'jsx';
+const JSX_FRAGMENT: Context = 'jsx_fragment';
+const TEMPLATE: Context = 'template';
 
-export default function(
+function getContext(
   loc: FlowLoc,
   path: Array<PathNode>,
 ): [Context, Object /* ast */] {
@@ -61,3 +61,11 @@ export default function(
 
   return [inside, ast];
 }
+
+module.exports = {
+  NORMAL,
+  JSX,
+  JSX_FRAGMENT,
+  TEMPLATE,
+  default: getContext,
+};

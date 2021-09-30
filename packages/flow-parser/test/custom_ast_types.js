@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import typesPlugin from "ast-types/lib/types";
-import sharedPlugin from "ast-types/lib/shared";
+const {default: typesPlugin} = require("ast-types/lib/types");
+const sharedPlugin = require("ast-types/lib/shared");
 
-export default function (fork) {
+function custom_ast_types(fork) {
   const {Type: {def, or}} = fork.use(typesPlugin);
   const shared = fork.use(sharedPlugin);
   const defaults = shared.defaults;
@@ -78,3 +78,5 @@ export default function (fork) {
   def("ClassBody")
     .field("body", [or(def("MethodDefinition"), def("PropertyDefinition"))]);
 }
+
+module.exports = custom_ast_types;

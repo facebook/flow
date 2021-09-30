@@ -7,9 +7,9 @@
  * @format
  */
 
-import {updateSuppressionsInText} from './update-suppressionsRunner';
+const {updateSuppressionsInText} = require('./update-suppressionsRunner');
 
-import * as path from 'path';
+const path = require('path');
 
 const flowBinPath = path.resolve(process.env.FLOW_BIN);
 
@@ -153,7 +153,7 @@ function makeLoc(contents, startLine, startCol, endLine, endCol) {
   };
 }
 
-function posToOffset(contents: string, line: number, col: number) {
+function posToOffset(contents, line, col) {
   let offset = 0;
   // Using 1-indexed line and column for this
   let currentLine = 1;

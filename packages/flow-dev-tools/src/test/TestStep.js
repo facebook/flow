@@ -8,22 +8,30 @@
  * @format
  */
 
-import Builder from './builder';
-import searchStackForTestAssertion from './searchStackForTestAssertion';
-import newErrors from './assertions/newErrors';
-import noNewErrors from './assertions/noNewErrors';
-import stderr from './assertions/stderr';
-import stdout from './assertions/stdout';
-import sortedStdout from './assertions/sortedStdout';
-import exitCodes from './assertions/exitCodes';
-import serverRunning from './assertions/serverRunning';
-import noop from './assertions/noop';
-import lspNoNewMessagesAfterSleep from './assertions/lspNoNewMessagesAfterSleep';
-import lspNewMessagesWithTimeout from './assertions/lspNewMessagesWithTimeout';
-import lspStderr from './assertions/lspStderr';
-import simpleDiffAssertion from './assertions/simpleDiffAssertion';
+const {default: Builder} = require('./builder');
+const {
+  default: searchStackForTestAssertion,
+} = require('./searchStackForTestAssertion');
+const {default: newErrors} = require('./assertions/newErrors');
+const {default: noNewErrors} = require('./assertions/noNewErrors');
+const {default: stderr} = require('./assertions/stderr');
+const {default: stdout} = require('./assertions/stdout');
+const {default: sortedStdout} = require('./assertions/sortedStdout');
+const {default: exitCodes} = require('./assertions/exitCodes');
+const {default: serverRunning} = require('./assertions/serverRunning');
+const {default: noop} = require('./assertions/noop');
+const {
+  default: lspNoNewMessagesAfterSleep,
+} = require('./assertions/lspNoNewMessagesAfterSleep');
+const {
+  default: lspNewMessagesWithTimeout,
+} = require('./assertions/lspNewMessagesWithTimeout');
+const {default: lspStderr} = require('./assertions/lspStderr');
+const {
+  default: simpleDiffAssertion,
+} = require('./assertions/simpleDiffAssertion');
 
-import {sleep} from '../utils/async';
+const {sleep} = require('../utils/async');
 
 import type {
   AssertionLocation,
@@ -71,7 +79,7 @@ export type StepResult = {
  * just makes a copy of the step. Each test suite will be given a stage 1
  * TestStep with 0 actions and 0 assertions.
  */
-export class TestStep {
+class TestStep {
   _actions: Array<Action>;
   _assertions: Array<ErrorAssertion>;
   _reason: ?string;
@@ -218,7 +226,7 @@ class TestStepFirstOrSecondStage extends TestStep {
  *   ]),
  * ]);
  */
-export class TestStepFirstStage extends TestStepFirstOrSecondStage {
+class TestStepFirstStage extends TestStepFirstOrSecondStage {
   addCode: (code: string) => TestStepFirstStage = code =>
     this._cloneWithAction(async (builder, env) => {
       await builder.addCode(code);
@@ -717,3 +725,8 @@ class TestStepSecondStage extends TestStepFirstOrSecondStage {
 }
 
 class TestStepThirdStage extends TestStep {}
+
+module.exports = {
+  TestStep,
+  TestStepFirstStage,
+};

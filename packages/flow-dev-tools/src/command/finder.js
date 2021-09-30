@@ -8,17 +8,17 @@
  * @format
  */
 
-import {format} from 'util';
-import {basename, join, relative, resolve} from 'path';
+const {format} = require('util');
+const {basename, join, relative, resolve} = require('path');
 
-import {glob} from '../utils/async';
+const {glob} = require('../utils/async');
 
 type Command = {
   name: string,
   path: string,
 };
 
-export default async function(cwd: string): Promise<Map<string, string>> {
+async function finder(cwd: string): Promise<Map<string, string>> {
   const root = join('.', relative(cwd, join(__dirname, '..')));
   const commands = await glob(format('%s/**/*Command.js', root), {cwd});
 
@@ -43,3 +43,5 @@ export default async function(cwd: string): Promise<Map<string, string>> {
   }
   return commandMap;
 }
+
+module.exports = finder;

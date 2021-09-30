@@ -8,29 +8,39 @@
  * @format
  */
 
-import path from 'path';
-import {realpathSync} from 'fs';
-import {format} from 'util';
+const path = require('path');
+const {realpathSync} = require('fs');
+const {format} = require('util');
 
-import * as blessed from 'blessed';
+const blessed = require('blessed');
 
-import {readFile, writeFile} from '../utils/async';
-import {
+const {readFile, writeFile} = require('../utils/async');
+const {
   mainLocOfError,
   prettyPrintError,
   mergedMessagesOfError,
   prettyPrintMessageOfError,
-} from '../flowResult';
-import getPathToLoc from './getPathToLoc';
-import {getFlowErrors, filterErrors, mainSourceLocOfError} from '../errors';
-import getContext, {NORMAL, JSX, JSX_FRAGMENT, TEMPLATE} from './getContext';
-import getAst from './getAst';
+} = require('../flowResult');
+const getPathToLoc = require('./getPathToLoc').default;
+const {
+  getFlowErrors,
+  filterErrors,
+  mainSourceLocOfError,
+} = require('../errors');
+const {
+  NORMAL,
+  JSX,
+  JSX_FRAGMENT,
+  TEMPLATE,
+  default: getContext,
+} = require('./getContext');
+const getAst = require('./getAst').default;
 
 import type {PathNode} from './getPathToLoc';
 import type {Args} from './add-commentsCommand';
 import type {FlowLoc, FlowError, FlowMessage} from '../flowResult';
 import type {Context} from './getContext';
-import {formatComment, addCommentToText} from './commentMutator';
+const {formatComment, addCommentToText} = require('./commentMutator');
 
 export type Suppression = {|
   loc: FlowLoc,
@@ -598,7 +608,7 @@ async function interactive(args: Args): Promise<void> {
   screen.render();
 }
 
-export default async function(args: Args): Promise<void> {
+async function runner(args: Args): Promise<void> {
   if (args.all) {
     await nonInteractive(args);
   } else {
@@ -693,7 +703,7 @@ async function addCommentsToSource(
   return commentCount;
 }
 
-export async function addCommentsToCode(
+async function addCommentsToCode(
   comment: ?string,
   error_code: ?string,
   code: string,
@@ -728,7 +738,7 @@ export async function addCommentsToCode(
   return [code, commentCount];
 }
 
-export function addCommentToCode(
+function addCommentToCode(
   comment: string,
   code: string,
   loc: FlowLoc,
@@ -764,3 +774,9 @@ function relativizeStringOfLocation(root: string, str: string): string {
   }
   return format('%s:%s', path.relative(root, source), line);
 }
+
+module.exports = {
+  addCommentsToCode,
+  addCommentToCode,
+  default: runner,
+};

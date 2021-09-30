@@ -39,7 +39,7 @@ export interface StepEnvReadable {
   shouldRunFlow(): boolean;
 }
 
-export function newEnv(
+function newEnv(
   oldErrors: FlowResult,
 ): {envWrite: StepEnvWriteable, envRead: StepEnvReadable} {
   let stdout = [];
@@ -143,3 +143,7 @@ export function newEnv(
 
   return {envWrite, envRead};
 }
+
+module.exports = {
+  newEnv,
+};

@@ -8,17 +8,17 @@
  * @format
  */
 
-import colors from 'colors/safe';
-import {isAbsolute, join} from 'path';
-import {format} from 'util';
+const colors = require('colors/safe');
+const {isAbsolute, join} = require('path');
+const {format} = require('util');
 
-import {readFile, writeFile} from '../utils/async';
-import Builder from '../test/builder';
-import {findTestsByName, findTestsByRun} from '../test/findTests';
-import parser from 'flow-parser';
-import {loadSuite} from '../test/findTests';
-import RunQueue from '../test/RunQueue';
-import {getTestsDir} from '../constants';
+const {readFile, writeFile} = require('../utils/async');
+const {default: Builder} = require('../test/builder');
+const {findTestsByName, findTestsByRun} = require('../test/findTests');
+const parser = require('flow-parser');
+const {loadSuite} = require('../test/findTests');
+const {default: RunQueue} = require('../test/RunQueue');
+const {getTestsDir} = require('../constants');
 
 import type {Args} from './recordCommand';
 
@@ -95,7 +95,7 @@ function dfsForRange(node, line, col): ?[number, number] {
   return null;
 }
 
-export default async function(args: Args): Promise<void> {
+async function runner(args: Args): Promise<void> {
   const builder = new Builder(args.errorCheckCommand);
   let suites;
   if (args.rerun != null) {
@@ -239,3 +239,7 @@ export default async function(args: Args): Promise<void> {
     printStatus('RECORDED');
   }
 }
+
+module.exports = {
+  default: runner,
+};

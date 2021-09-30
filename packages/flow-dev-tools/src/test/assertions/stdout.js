@@ -8,7 +8,7 @@
  * @format
  */
 
-import simpleDiffAssertion from './simpleDiffAssertion';
+const {default: simpleDiffAssertion} = require('./simpleDiffAssertion');
 
 import type {AssertionLocation, ErrorAssertion} from './assertionTypes';
 
@@ -20,7 +20,7 @@ function formatIfJSON(actual: string) {
   }
 }
 
-export default function(
+function stdout(
   expected: string,
   assertLoc: ?AssertionLocation,
 ): ErrorAssertion {
@@ -38,3 +38,7 @@ export default function(
     );
   };
 }
+
+module.exports = {
+  default: stdout,
+};

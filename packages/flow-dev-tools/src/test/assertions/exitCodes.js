@@ -8,11 +8,11 @@
  * @format
  */
 
-import simpleDiffAssertion from './simpleDiffAssertion';
+const {default: simpleDiffAssertion} = require('./simpleDiffAssertion');
 
 import type {AssertionLocation, ErrorAssertion} from './assertionTypes';
 
-export default function(
+function exitCodes(
   expectedArr: Array<number>,
   assertLoc: ?AssertionLocation,
 ): ErrorAssertion {
@@ -30,3 +30,7 @@ export default function(
     );
   };
 }
+
+module.exports = {
+  default: exitCodes,
+};

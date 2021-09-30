@@ -3,10 +3,10 @@
  */
 
 
-import type Suite from "flow-dev-tools/src/test/Suite.js";
-import {suite, test} from 'flow-dev-tools/src/test/Tester';
+import type {Suite} from "flow-dev-tools/src/test/Suite";
+const {suite, test} = require('flow-dev-tools/src/test/Tester');
 
-export default (suite(({addFiles, flowCmd}) => [
+module.exports = (suite(({addFiles, flowCmd}) => [
   test('Ignored directory', [
     addFiles(
       'ignore/dummy.js',

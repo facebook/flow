@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {splitIntoChunks} from './string';
+const {splitIntoChunks} = require('./string');
 
 test('splitIntoChunks', () => {
   expect(splitIntoChunks('', 1)).toEqual([]);

@@ -10,12 +10,12 @@
 
 import type {Flag} from '../command/Base';
 
-import {realpathSync} from 'fs';
-import {format} from 'util';
-import {resolve} from 'path';
+const {realpathSync} = require('fs');
+const {format} = require('util');
+const {resolve} = require('path');
 
-import Base, {commonFlags} from '../command/Base';
-import findFlowBin from '../command/findFlowBin';
+const {commonFlags, default: Base} = require('../command/Base');
+const findFlowBin = require('../command/findFlowBin').default;
 
 export opaque type RootPath: string = string;
 export opaque type RootName: string = string;
@@ -32,7 +32,7 @@ export type Args = {
   only: ?('add' | 'remove'),
 };
 
-export default class UpdateSuppressionsCommand extends Base<Args> {
+class UpdateSuppressionsCommand extends Base<Args> {
   static processArgv(argv: Object): Args {
     if (argv._.length < 1) {
       this.showUsage(this.BAD_ARGS);
@@ -110,3 +110,7 @@ Removes unnecessary, and adds necessary, error suppression comments for ROOT.
     ];
   }
 }
+
+module.exports = {
+  default: UpdateSuppressionsCommand,
+};

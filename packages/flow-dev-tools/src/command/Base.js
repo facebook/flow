@@ -8,9 +8,9 @@
  * @format
  */
 
-import {format} from 'util';
+const {format} = require('util');
 
-import parseArgs from 'minimist';
+const parseArgs = require('minimist');
 
 export type Flag =
   | $Exact<{
@@ -37,7 +37,7 @@ export type Flag =
       default?: string,
     }>;
 
-export const commonFlags = {
+const commonFlags = {
   bin: {
     type: 'string',
     name: 'bin',
@@ -78,7 +78,7 @@ class ShowUsageException {
   }
 }
 
-export default class Base<T: Object> {
+class Base<T: Object> {
   static BAD_ARGS: number = 64;
   static OK: number = 0;
 
@@ -235,3 +235,5 @@ export default class Base<T: Object> {
     }
   }
 }
+
+module.exports = {commonFlags, default: Base};

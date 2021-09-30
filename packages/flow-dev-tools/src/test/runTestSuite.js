@@ -8,16 +8,16 @@
  * @format
  */
 
-import colors from 'colors/safe';
-import {format} from 'util';
+const colors = require('colors/safe');
+const {format} = require('util');
 
-import {noErrors} from '../flowResult';
-import {TestStep, TestStepFirstStage} from './TestStep';
-import {newEnv} from './stepEnv';
-import {withTimeout, writeFile} from '../utils/async';
+const {noErrors} = require('../flowResult');
+const {TestStep, TestStepFirstStage} = require('./TestStep');
+const {newEnv} = require('./stepEnv');
+const {withTimeout, writeFile} = require('../utils/async');
 
-import type Builder, {TestBuilder} from './builder';
-import type Suite from './Suite';
+import type {Builder, TestBuilder} from './builder';
+import type {Suite} from './Suite';
 import type {StepResult} from './TestStep';
 
 type TestResult = {
@@ -35,7 +35,7 @@ export type SuiteResult =
       testResults: Array<TestResult>,
     };
 
-export default (async function(
+async function runTestSuite(
   bin: string,
   builder: Builder,
   suiteName: string,
@@ -239,4 +239,8 @@ export default (async function(
     type: 'normal',
     testResults,
   };
-});
+}
+
+module.exports = {
+  default: runTestSuite,
+};

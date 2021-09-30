@@ -8,12 +8,12 @@
  * @format
  */
 
-import simpleDiffAssertion from './simpleDiffAssertion';
+const {default: simpleDiffAssertion} = require('./simpleDiffAssertion');
 
 import type {AssertionLocation, ErrorAssertion} from './assertionTypes';
 import type {LSPMessage} from '../lsp';
 
-export default function(
+function lspNewMessagesWithTimeout(
   timeoutMs: number,
   expected: $ReadOnlyArray<LSPMessage>,
   assertLoc: ?AssertionLocation,
@@ -41,3 +41,7 @@ export default function(
     );
   };
 }
+
+module.exports = {
+  default: lspNewMessagesWithTimeout,
+};

@@ -8,17 +8,19 @@
  * @format
  */
 
-import {getNodeAtRange} from './getPathToLoc';
-import {type Context, NORMAL, JSX, JSX_FRAGMENT, TEMPLATE} from './getContext';
+import type {Context} from './getContext';
 import type {FlowLoc} from '../flowResult';
-import {format} from 'util';
+
+const {getNodeAtRange} = require('./getPathToLoc');
+const {NORMAL, JSX, JSX_FRAGMENT, TEMPLATE} = require('./getContext');
+const {format} = require('util');
 
 function bufferCharAt(buf: Buffer, pos: number): string {
   return buf.toString('utf8', pos, pos + 1);
 }
 
 const flowlintRegex = /^[ \t\n\r*]*flowlint(-line|-next-line)?\b/;
-export function isLintSuppression(commentAST: {value: string}): boolean {
+function isLintSuppression(commentAST: {value: string}): boolean {
   return flowlintRegex.test(commentAST.value);
 }
 
@@ -150,7 +152,7 @@ function expandComment(
   return [beforeStart + 1, afterEnd];
 }
 
-export function findStartOfLine(contents: Buffer, startOffset: number): number {
+function findStartOfLine(contents: Buffer, startOffset: number): number {
   let start = startOffset;
   while (start >= 0 && !bufferCharAt(contents, start).match(newlineRegex)) {
     start--;
@@ -169,7 +171,7 @@ function findEndOfLine(contents: Buffer, startOffset): number {
   return start;
 }
 
-export function insertCommentToText(
+function insertCommentToText(
   contents: Buffer,
   startOffset: number,
   comment: string,
@@ -181,7 +183,7 @@ export function insertCommentToText(
   ]);
 }
 
-export function addCommentToText(
+function addCommentToText(
   contents: Buffer,
   loc: FlowLoc,
   inside: Context,
@@ -310,7 +312,8 @@ export function addCommentToText(
   }
   return contents;
 }
-export function removeUnusedErrorSuppressionFromText(
+
+function removeUnusedErrorSuppressionFromText(
   contents: Buffer,
   startOffset: number,
   endOffset: number,
@@ -356,7 +359,7 @@ function splitAtWord(str: string, max: number): [string, string] {
 }
 
 /* Figures out how to pad the comment and split it into multiple lines */
-export function formatComment(
+function formatComment(
   comments: Array<string>,
   line: string,
   args: {|
@@ -413,3 +416,12 @@ export function formatComment(
   }
   return commentLines;
 }
+
+module.exports = {
+  isLintSuppression,
+  findStartOfLine,
+  insertCommentToText,
+  addCommentToText,
+  removeUnusedErrorSuppressionFromText,
+  formatComment,
+};

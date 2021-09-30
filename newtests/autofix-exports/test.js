@@ -4,9 +4,9 @@
  */
 
 import type Suite from 'flow-dev-tools/src/test/Suite.js';
-import {suite, test} from 'flow-dev-tools/src/test/Tester';
+const {suite, test} = require('flow-dev-tools/src/test/Tester');
 
-export default (suite(
+module.exports = (suite(
   ({
     lspStartAndConnect,
     lspStart,

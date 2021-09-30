@@ -3,12 +3,12 @@
  */
 
 
-import type Suite from "flow-dev-tools/src/test/Suite.js";
-import {suite, test} from 'flow-dev-tools/src/test/Tester';
+import type {Suite} from "flow-dev-tools/src/test/Suite";
+const {suite, test} = require('flow-dev-tools/src/test/Tester');
 
 /* This test suite documents a bunch of places where using spread arguments
  * doesn't work, either intentionally or due to us being lazy */
-export default (suite(({addFile, addFiles, addCode}) => [
+module.exports = (suite(({addFile, addFiles, addCode}) => [
   test('idx', [
     addCode('declare var idx: $Facebookism$Idx;\n'),
     addCode('idx(...arr, obj => obj.foo)')

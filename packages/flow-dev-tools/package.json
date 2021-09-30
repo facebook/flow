@@ -4,21 +4,13 @@
   "license": "MIT",
   "version": "0.1.0",
   "dependencies": {
-    "babel-core": "^6.8.0",
-    "babel-jest": "^23.0.0",
-    "babel-plugin-syntax-flow": "^6.8.0",
-    "babel-plugin-transform-class-properties": "^6.8.0",
-    "babel-plugin-transform-flow-strip-types": "^6.8.0",
-    "babel-plugin-transform-object-rest-spread": "^6.20.2",
-    "babel-polyfill": "^6.8.0",
-    "babel-preset-env": "^1.7.0",
-    "babel-register": "^6.8.0",
     "blessed": "^0.1.81",
     "colors": "^1.1.2",
     "diff": "^3.5.0",
     "flow-parser": "~0.21.0",
+    "flow-remove-types": "*",
     "glob": "^7.0.3",
-    "jest": "^23.0.0",
+    "jest": "^27",
     "minimist": "~1.2.3",
     "mkdirp": "^0.5.1",
     "ncp": "~2.0.0",
@@ -31,28 +23,10 @@
     "vscode-jsonrpc": "^6.0.0",
     "vscode-uri": "^2.1.2"
   },
-  "babel": {
-    "presets": [
-      [
-        "env",
-        {
-          "targets": {
-            "node": "6"
-          }
-        }
-      ]
-    ],
-    "plugins": [
-      "syntax-flow",
-      "transform-class-properties",
-      "transform-flow-strip-types",
-      "transform-object-rest-spread"
-    ]
-  },
   "scripts": {
     "test": "jest"
   },
   "engines": {
-    "node": ">=6"
+    "node": ">=12"
   }
 }

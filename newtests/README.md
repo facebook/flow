@@ -27,7 +27,7 @@ The only way to create a `Suite` is to call the `suite()` function. The `suite()
 ```JavaScript
 import {suite} from 'flow-dev-tools/src/test/Tester';
 import type TestStep from 'flow-dev-tools/src/test/TestStep';
-export default suite((emptyTestStep: TestStep) => [ < List of Tests >]);
+module.exports = suite((emptyTestStep: TestStep) => [ < List of Tests >]);
 ```
 
 (Why the `suite()` function? Why not just export the callback directly? Well, it removes the need for type annotations!)
@@ -37,9 +37,9 @@ export default suite((emptyTestStep: TestStep) => [ < List of Tests >]);
 The only way to create a `Test` is to call the `test()` function. The `test()` function takes a test name and a list of `TestStep`s, like so
 
 ```JavaScript
-import {suite, test} from 'flow-dev-tools/src/test/Tester';
+const {suite, test} = require('flow-dev-tools/src/test/Tester');
 import type TestStep from 'flow-dev-tools/src/test/TestStep';
-export default suite((emptyTestStep: TestStep) => [
+module.exports = suite((emptyTestStep: TestStep) => [
   test('My first test, [ < List of TestSteps > ]'),
 ]);
 ```
@@ -49,9 +49,9 @@ export default suite((emptyTestStep: TestStep) => [
 A `TestStep` is made up of 0 or more actions and 0 or more assertions. The `emptyTestStep` passed to `suite()`'s callback is a `TestStep` with 0 actions and 0 assertions. `TestStep`s are immutable, so when you call `emptyTestStep.addFile('foo.js')` you get back a new `TestStep` with 1 action and 0 assertions. So a test looks like
 
 ```JavaScript
-import {suite, test} from 'flow-dev-tools/src/test/Tester';
+const {suite, test} = require('flow-dev-tools/src/test/Tester');
 import type TestStep from 'flow-dev-tools/src/test/TestStep';
-export default suite((emptyTestStep: TestStep) => [
+module.exports = suite((emptyTestStep: TestStep) => [
   test('My first test', [
     emptyTestStep
       .addCode('var x = 123')
@@ -66,8 +66,8 @@ export default suite((emptyTestStep: TestStep) => [
 More concisely, this can be written
 
 ```JavaScript
-import {suite, test} from 'flow-dev-tools/src/test/Tester';
-export default suite(({addCode}) => [
+const {suite, test} = require('flow-dev-tools/src/test/Tester');
+module.exports = suite(({addCode}) => [
   test('My first test', [
     addCode('var x = 123')
       .noNewErrors(),

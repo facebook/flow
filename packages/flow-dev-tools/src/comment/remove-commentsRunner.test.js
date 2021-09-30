@@ -7,9 +7,11 @@
  * @format
  */
 
-import {removeUnusedErrorSuppressionsFromText} from './remove-commentsRunner';
+const {
+  removeUnusedErrorSuppressionsFromText,
+} = require('./remove-commentsRunner');
 
-import * as path from 'path';
+const path = require('path');
 
 test('removeUnusedErrorSuppressionsFromText', async () => {
   const flowBinPath = path.resolve(process.env.FLOW_BIN);
@@ -253,7 +255,7 @@ function makeLoc(contents, startLine, startCol, endLine, endCol) {
   };
 }
 
-function posToOffset(contents: string, line: number, col: number) {
+function posToOffset(contents, line, col) {
   let offset = 0;
   // Using 1-indexed line and column for this
   let currentLine = 1;

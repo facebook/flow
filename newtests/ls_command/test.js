@@ -3,8 +3,8 @@
  */
 
 
-import type Suite from "flow-dev-tools/src/test/Suite.js";
-import {suite, test} from 'flow-dev-tools/src/test/Tester';
+import type {Suite} from "flow-dev-tools/src/test/Suite";
+const {suite, test} = require('flow-dev-tools/src/test/Tester');
 
 const files = [
   'other/explicitly_included.js',
@@ -15,7 +15,7 @@ const files = [
   'src/flow-typed/implicit_lib.js',
 ];
 
-export default (suite(({addFile, flowCmd, removeFile}) => [
+module.exports = (suite(({addFile, flowCmd, removeFile}) => [
   test('No --all flag and implicit root', [
     flowCmd(['ls'])
       .stderr(

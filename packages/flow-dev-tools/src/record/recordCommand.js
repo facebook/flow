@@ -10,10 +10,10 @@
 
 import type {Flag} from '../command/Base';
 
-import {format} from 'util';
+const {format} = require('util');
 
-import Base, {commonFlags} from '../command/Base';
-import findFlowBin from '../command/findFlowBin';
+const {commonFlags, default: Base} = require('../command/Base');
+const findFlowBin = require('../command/findFlowBin').default;
 
 export type Args = {
   suites: ?Set<string>,
@@ -23,7 +23,7 @@ export type Args = {
   rerun: ?string,
 };
 
-export default class RecordCommand extends Base<Args> {
+class RecordCommand extends Base<Args> {
   static processArgv(argv: Object): Args {
     const suites = argv._.length > 0 ? new Set(argv._) : null;
     return {
@@ -70,3 +70,7 @@ SUITE
     ];
   }
 }
+
+module.exports = {
+  default: RecordCommand,
+};

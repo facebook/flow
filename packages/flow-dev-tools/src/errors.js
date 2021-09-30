@@ -8,9 +8,9 @@
  * @format
  */
 
-import path from 'path';
-import {format} from 'util';
-import {execManual} from './utils/async';
+const path = require('path');
+const {format} = require('util');
+const {execManual} = require('./utils/async');
 
 import type {FlowError, FlowLoc, FlowResult} from './flowResult';
 
@@ -53,7 +53,7 @@ async function getFlowErrorsImpl(
   throw new Error(format('Flow check failed!', err, stdout, stderr));
 }
 
-export function getFlowErrorsWithWarnings(
+function getFlowErrorsWithWarnings(
   bin: string,
   errorCheckCommand: 'check' | 'status',
   root: string,
@@ -62,7 +62,7 @@ export function getFlowErrorsWithWarnings(
   return getFlowErrorsImpl(bin, errorCheckCommand, root, true, flowconfigName);
 }
 
-export async function getFlowErrors(
+async function getFlowErrors(
   bin: string,
   errorCheckCommand: 'check' | 'status',
   root: string,
@@ -71,7 +71,7 @@ export async function getFlowErrors(
   return getFlowErrorsImpl(bin, errorCheckCommand, root, false, flowconfigName);
 }
 
-export function isUnusedSuppression(error: FlowError): boolean {
+function isUnusedSuppression(error: FlowError): boolean {
   return (
     (error.message[0].descr === 'Error suppressing comment' &&
       error.message[1].descr === 'Unused suppression') ||
@@ -79,7 +79,7 @@ export function isUnusedSuppression(error: FlowError): boolean {
   );
 }
 
-export async function getUnusedSuppressionErrors(
+async function getUnusedSuppressionErrors(
   bin: string,
   errorCheckCommand: 'check' | 'status',
   root: string,
@@ -95,9 +95,7 @@ export async function getUnusedSuppressionErrors(
   return result.errors.filter(isUnusedSuppression);
 }
 
-export function collateLocs(
-  errors: Array<FlowError>,
-): Map<string, Array<FlowLoc>> {
+function collateLocs(errors: Array<FlowError>): Map<string, Array<FlowLoc>> {
   const errorsByFile = collateErrors(errors);
   const locsByFile = new Map();
   for (const [file, errors] of errorsByFile) {
@@ -115,7 +113,7 @@ export function collateLocs(
   return locsByFile;
 }
 
-export function mainSourceLocOfError(error: FlowError): ?FlowLoc {
+function mainSourceLocOfError(error: FlowError): ?FlowLoc {
   const {operation, message} = error;
   for (const msg of [operation, ...message]) {
     if (msg && msg.loc && msg.loc.type === 'SourceFile') {
@@ -128,11 +126,11 @@ export function mainSourceLocOfError(error: FlowError): ?FlowLoc {
 /**
  * Filter out errors without a main location or a source file
  */
-export function filterErrors(errors: Array<FlowError>): Array<FlowError> {
+function filterErrors(errors: Array<FlowError>): Array<FlowError> {
   return errors.filter(e => mainSourceLocOfError(e) != null);
 }
 
-export function collateErrors(
+function collateErrors(
   errors: Array<FlowError>,
 ): Map<string, Array<FlowError>> {
   const errorsByFile = new Map();
@@ -150,3 +148,14 @@ export function collateErrors(
   }
   return errorsByFile;
 }
+
+module.exports = {
+  getFlowErrorsWithWarnings,
+  getFlowErrors,
+  isUnusedSuppression,
+  getUnusedSuppressionErrors,
+  collateLocs,
+  mainSourceLocOfError,
+  filterErrors,
+  collateErrors,
+};

@@ -8,13 +8,13 @@
  * @format
  */
 
-import {difference, prettyPrint} from '../../flowResult';
+const {difference, prettyPrint} = require('../../flowResult');
 
-import simpleDiffAssertion from './simpleDiffAssertion';
+const {default: simpleDiffAssertion} = require('./simpleDiffAssertion');
 
 import type {AssertionLocation, ErrorAssertion} from './assertionTypes';
 
-export default function(
+function newErrors(
   expected: string,
   assertLoc: ?AssertionLocation,
 ): ErrorAssertion {
@@ -39,3 +39,7 @@ export default function(
     );
   };
 }
+
+module.exports = {
+  default: newErrors,
+};

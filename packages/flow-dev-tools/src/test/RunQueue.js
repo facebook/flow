@@ -8,19 +8,19 @@
  * @format
  */
 
-import colors from 'colors/safe';
-import {format} from 'util';
-import tty from 'tty';
+const colors = require('colors/safe');
+const {format} = require('util');
+const tty = require('tty');
 
-import runTestSuite from './runTestSuite';
+const {default: runTestSuite} = require('./runTestSuite');
 
-import type Builder from './builder';
-import type Suite from './Suite';
+import type {Builder} from './builder';
+import type {Suite} from './Suite';
 import type {SuiteResult} from './runTestSuite';
 
 /* Cool little thingy that runs tests in parallel and prints out a multiline
  * status view of what is running and what is done */
-export default class RunQueue {
+class RunQueue {
   almostDone: Array<string>;
   bin: string;
   builder: Builder;
@@ -290,3 +290,8 @@ export default class RunQueue {
     );
   }
 }
+
+module.exports = {
+  RunQueue,
+  default: RunQueue,
+};

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {format} from 'util';
+const {format} = require('util');
 
 export type FlowResult = {
   passed: boolean,
@@ -75,14 +75,14 @@ type FlowMemory = {|
   [group: string]: number | FlowMemoryGroup;
 |}
 
-export const noErrors: FlowResult = {
+const noErrors: FlowResult = {
   passed: true,
   errors: [],
   flowVersion: "No version",
 };
 
 // Returns a result that is a - b
-export function difference(a: FlowResult, b: FlowResult): FlowResult {
+function difference(a: FlowResult, b: FlowResult): FlowResult {
   const oldHashes = {};
   const errors = [];
   for (let error of b.errors) {
@@ -103,7 +103,7 @@ export function difference(a: FlowResult, b: FlowResult): FlowResult {
   };
 }
 
-export function prettyPrintWithHeader(result: FlowResult): string {
+function prettyPrintWithHeader(result: FlowResult): string {
   if (result.passed) {
     return "No errors";
   }
@@ -116,18 +116,18 @@ export function prettyPrintWithHeader(result: FlowResult): string {
   );
 }
 
-export function prettyPrint(result: FlowResult): string {
+function prettyPrint(result: FlowResult): string {
   // Copy the result so we can mess with it
   result = JSON.parse(JSON.stringify(result));
   return result.errors.map(prettyPrintError).join("\n\n");
 }
 
-export function mainLocOfError(error: FlowError): ?FlowLoc {
+function mainLocOfError(error: FlowError): ?FlowLoc {
   const { operation, message } = error;
   return operation && operation.loc || message[0].loc;
 }
 
-export function mergedMessagesOfError(error: FlowError): Array<FlowMessage> {
+function mergedMessagesOfError(error: FlowError): Array<FlowMessage> {
   const { level, kind, message, operation, trace, extra } = error;
   let mainLoc = mainLocOfError(error);
   let messages = [].concat(
@@ -151,14 +151,14 @@ export function mergedMessagesOfError(error: FlowError): Array<FlowMessage> {
   }, []);
 }
 
-export function prettyPrintError(error: FlowError): string {
+function prettyPrintError(error: FlowError): string {
   let mainLoc = mainLocOfError(error);
   const mainFile = mainLoc && mainLoc.source || "[No file]";
   const messages = mergedMessagesOfError(error);
   return messages.map(prettyPrintMessage.bind(null, mainFile)).join("\n");
 }
 
-export function prettyPrintMessageOfError(error: FlowError, message: FlowMessage): string {
+function prettyPrintMessageOfError(error: FlowError, message: FlowMessage): string {
   let mainLoc = mainLocOfError(error);
   const mainFile = mainLoc && mainLoc.source || "[No file]";
   return prettyPrintMessage(mainFile, message);
@@ -278,3 +278,14 @@ function prettyPrintMessage(
   }
   return indentation+descr;
 }
+
+module.exports = {
+  noErrors,
+  difference,
+  prettyPrintWithHeader,
+  prettyPrint,
+  mainLocOfError,
+  mergedMessagesOfError,
+  prettyPrintError,
+  prettyPrintMessageOfError,
+};

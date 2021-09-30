@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {exec} from './async';
+const {exec} = require('./async');
 
 function repeatString(str, times) {
   let result = '';

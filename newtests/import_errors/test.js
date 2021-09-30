@@ -3,10 +3,10 @@
  */
 
 
-import type Suite from "flow-dev-tools/src/test/Suite.js";
-import {suite, test} from 'flow-dev-tools/src/test/Tester';
+import type {Suite} from "flow-dev-tools/src/test/Suite";
+const {suite, test} = require('flow-dev-tools/src/test/Tester');
 
-export default (suite(({addFile, addFiles, addCode}) => [
+module.exports = (suite(({addFile, addFiles, addCode}) => [
   test('Named import of default-only module', [
     addFile('exporter.js'),
     addFile('importer.js')

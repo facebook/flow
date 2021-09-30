@@ -8,19 +8,19 @@
  * @format
  */
 
-import colors from 'colors/safe';
+const colors = require('colors/safe');
 
-import {format} from 'util';
-import {basename, dirname, resolve, join} from 'path';
-import {spawn} from 'child_process';
+const {format} = require('util');
+const {basename, dirname, resolve, join} = require('path');
+const {spawn} = require('child_process');
 
-import {getTestsDir} from '../constants';
-import {drain, readFile, rimraf, symlink} from '../utils/async';
-import Builder from './builder';
-import {findTestsByName, findTestsByRun, loadSuite} from './findTests';
-import RunQueue from './RunQueue';
+const {getTestsDir} = require('../constants');
+const {drain, readFile, rimraf, symlink} = require('../utils/async');
+const {Builder} = require('./builder');
+const {findTestsByName, findTestsByRun, loadSuite} = require('./findTests');
+const {RunQueue} = require('./RunQueue');
 
-import type Suite from './Suite';
+import type {Suite} from './Suite';
 import type {Args} from './testCommand';
 
 /* We potentially have a ton of info to dump into stdout/stderr. Let's handle
@@ -376,7 +376,7 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
   return [exitCode, runID];
 }
 
-export default (async function(args: Args): Promise<void> {
+async function testRunner(args: Args): Promise<void> {
   process.env.IN_FLOW_TEST = '1';
   if (!process.env.hasOwnProperty('FLOW_MAX_WORKERS')) {
     process.env.FLOW_MAX_WORKERS = '2';
@@ -414,4 +414,8 @@ export default (async function(args: Args): Promise<void> {
       process.exit(1);
     }
   }
-});
+}
+
+module.exports = {
+  default: testRunner,
+};

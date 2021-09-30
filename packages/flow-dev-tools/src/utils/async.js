@@ -8,25 +8,25 @@
  * @format
  */
 
-import {exec as cp_exec} from 'child_process';
-import {createInterface as rl_createInterface} from 'readline';
-import {
-  appendFile as fs_appendFile,
-  exists as fs_exists,
-  readdir as fs_readdir,
-  readFile as fs_readFile,
-  rename as fs_rename,
-  symlink as fs_symlink,
-  unlink as fs_unlink,
-  writeFile as fs_writeFile,
-} from 'fs';
-import {ncp as ncp_ncp} from 'ncp';
-import {format} from 'util';
-import {glob as glob_glob} from 'glob';
-import mkdirp_mkdirp from 'mkdirp';
-import rimraf_rimraf from 'rimraf';
+const {exec: cp_exec} = require('child_process');
+const {createInterface: rl_createInterface} = require('readline');
+const {
+  appendFile: fs_appendFile,
+  exists: fs_exists,
+  readdir: fs_readdir,
+  readFile: fs_readFile,
+  rename: fs_rename,
+  symlink: fs_symlink,
+  unlink: fs_unlink,
+  writeFile: fs_writeFile,
+} = require('fs');
+const {ncp: ncp_ncp} = require('ncp');
+const {format} = require('util');
+const {glob: glob_glob} = require('glob');
+const mkdirp_mkdirp = require('mkdirp');
+const rimraf_rimraf = require('rimraf');
 
-import {splitIntoChunks} from './string';
+const {splitIntoChunks} = require('./string');
 
 import type {ReadStream, WriteStream} from 'fs';
 
@@ -38,7 +38,7 @@ export type ExecOpts = child_process$execOpts & {
 // this seems like a pretty safe size.
 const STDIN_WRITE_CHUNK_SIZE = 10000;
 
-export function exec(cmd: string, options?: ExecOpts): Promise<string> {
+function exec(cmd: string, options?: ExecOpts): Promise<string> {
   return new Promise((resolve, reject) => {
     const cp = cp_exec(cmd, options, (err, stdout, stderr) => {
       if (err == null) {
@@ -67,7 +67,7 @@ export function exec(cmd: string, options?: ExecOpts): Promise<string> {
   });
 }
 
-export function execManual(
+function execManual(
   cmd: string,
   options?: Object,
 ): Promise<[?Object, string | Buffer, string | Buffer]> {
@@ -83,7 +83,7 @@ type WriteFileOptions = {
   mode?: number,
   flag?: string,
 };
-export function writeFile(
+function writeFile(
   filename: string,
   data: string,
   options?: WriteFileOptions = {},
@@ -99,7 +99,7 @@ export function writeFile(
   });
 }
 
-export function appendFile(filename: string, data: string): Promise<void> {
+function appendFile(filename: string, data: string): Promise<void> {
   return new Promise((resolve, reject) => {
     fs_appendFile(filename, data, err => {
       if (err == null) {
@@ -111,7 +111,7 @@ export function appendFile(filename: string, data: string): Promise<void> {
   });
 }
 
-export function readFile(filename: string): Promise<string> {
+function readFile(filename: string): Promise<string> {
   return new Promise((resolve, reject) => {
     fs_readFile(filename, 'utf-8', (err, data) => {
       if (err == null) {
@@ -125,7 +125,7 @@ export function readFile(filename: string): Promise<string> {
   });
 }
 
-export function readdir(dir: string): Promise<Array<string>> {
+function readdir(dir: string): Promise<Array<string>> {
   return new Promise((resolve, reject) => {
     fs_readdir(dir, (err, data) => {
       if (err == null) {
@@ -137,7 +137,7 @@ export function readdir(dir: string): Promise<Array<string>> {
   });
 }
 
-export function rename(old_path: string, new_path: string): Promise<void> {
+function rename(old_path: string, new_path: string): Promise<void> {
   return new Promise((resolve, reject) => {
     fs_rename(old_path, new_path, err => {
       if (err == null) {
@@ -149,7 +149,7 @@ export function rename(old_path: string, new_path: string): Promise<void> {
   });
 }
 
-export function rimraf(path: string): Promise<void> {
+function rimraf(path: string): Promise<void> {
   return new Promise((resolve, reject) => {
     rimraf_rimraf(path, err => {
       if (err == null) {
@@ -161,7 +161,7 @@ export function rimraf(path: string): Promise<void> {
   });
 }
 
-export function unlink(file: string): Promise<void> {
+function unlink(file: string): Promise<void> {
   return new Promise((resolve, reject) => {
     fs_unlink(file, err => {
       if (err == null) {
@@ -173,7 +173,7 @@ export function unlink(file: string): Promise<void> {
   });
 }
 
-export function mkdirp(dir: string): Promise<void> {
+function mkdirp(dir: string): Promise<void> {
   return new Promise((resolve, reject) => {
     mkdirp_mkdirp(dir, err => {
       if (err) {
@@ -200,7 +200,7 @@ type NCPOptions = {
   stopOnErr?: boolean,
   errs?: any,
 };
-export function ncp(
+function ncp(
   source: string,
   dest: string,
   options?: NCPOptions,
@@ -216,21 +216,19 @@ export function ncp(
   });
 }
 
-export function drain(
-  writer: stream$Writable | tty$WriteStream,
-): Promise<void> {
+function drain(writer: stream$Writable | tty$WriteStream): Promise<void> {
   return new Promise((resolve, reject) => {
     writer.once('drain', resolve);
   });
 }
 
-export function exists(path: string): Promise<boolean> {
+function exists(path: string): Promise<boolean> {
   return new Promise((resolve, reject) => {
     fs_exists(path, resolve);
   });
 }
 
-export function symlink(
+function symlink(
   target: string | Buffer,
   path: string | Buffer,
 ): Promise<void> {
@@ -245,10 +243,7 @@ type GlobOptions = {
   nodir?: boolean,
   dot?: boolean,
 };
-export function glob(
-  pattern: string,
-  options: GlobOptions,
-): Promise<Array<string>> {
+function glob(pattern: string, options: GlobOptions): Promise<Array<string>> {
   return new Promise((resolve, reject) => {
     glob_glob(pattern, options, (err, files) => {
       if (err) {
@@ -260,7 +255,7 @@ export function glob(
   });
 }
 
-export function isRunning(pid: number): Promise<boolean> {
+function isRunning(pid: number): Promise<boolean> {
   return new Promise(resolve => {
     try {
       process.kill(pid, 0);
@@ -271,13 +266,13 @@ export function isRunning(pid: number): Promise<boolean> {
   });
 }
 
-export function sleep(timeoutMs: number): Promise<void> {
+function sleep(timeoutMs: number): Promise<void> {
   return new Promise(resolve => {
     setTimeout(resolve, timeoutMs);
   });
 }
 
-export function prompt(message: string): Promise<string> {
+function prompt(message: string): Promise<string> {
   const rl = rl_createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -290,7 +285,7 @@ export function prompt(message: string): Promise<string> {
   });
 }
 
-export function withTimeout<A, B>(
+function withTimeout<A, B>(
   timeout_ms: number,
   promise: Promise<A>,
   onTimeout: () => B,
@@ -303,3 +298,25 @@ export function withTimeout<A, B>(
     () => timer && clearTimeout(timer),
   );
 }
+
+module.exports = {
+  exec,
+  execManual,
+  writeFile,
+  appendFile,
+  readFile,
+  readdir,
+  rename,
+  rimraf,
+  unlink,
+  mkdirp,
+  ncp,
+  drain,
+  exists,
+  symlink,
+  glob,
+  isRunning,
+  sleep,
+  prompt,
+  withTimeout,
+};

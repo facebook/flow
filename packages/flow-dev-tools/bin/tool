@@ -1,23 +1,12 @@
 #!/usr/bin/env node
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 
 /* @flow */
 
-// Manually resolving the plugins and presets now lets us require test
-// files from outside flow-dev-tools, and still use the babel config from
-// flow-dev-tools.
-var resolvePlugin = require('babel-core/lib/helpers/resolve-plugin');
-var resolvePreset = require('babel-core/lib/helpers/resolve-preset');
-var babelConfig = require('../package.json').babel;
-babelConfig.plugins = babelConfig.plugins.map(function(p) {
-  return resolvePlugin(p, __dirname);
-});
-babelConfig.presets = babelConfig.presets.map(function(p) {
-  if (Array.isArray(p)) {
-    return [resolvePreset(p[0], __dirname), p[1]];
-  }
-  return resolvePreset(p, __dirname);
-});
-
-require("babel-register")(babelConfig);
-require("babel-polyfill");
+require("flow-remove-types/register");
 require("../src/main.js").run();

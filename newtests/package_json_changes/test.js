@@ -2,10 +2,10 @@
  * @flow
  */
 
-import type Suite from "flow-dev-tools/src/test/Suite.js";
-import {suite, test} from 'flow-dev-tools/src/test/Tester';
+import type {Suite} from "flow-dev-tools/src/test/Suite";
+const {suite, test} = require('flow-dev-tools/src/test/Tester');
 
-export default (suite(({addFile, removeFile, flowCmd}) => [
+module.exports = (suite(({addFile, removeFile, flowCmd}) => [
   test('node - Adding a package.json should kill the server', [
     addFile('start.json', 'package.json')
       .startFlowServer()

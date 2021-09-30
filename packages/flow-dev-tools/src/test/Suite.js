@@ -10,7 +10,7 @@
 
 import type {Tests, Steps} from './Tester';
 
-export default class Suite {
+class Suite {
   getBeforeEach: Steps;
   tags: Array<string>;
   tests: Tests;
@@ -31,3 +31,8 @@ export default class Suite {
     return this;
   }
 }
+
+module.exports = {
+  Suite,
+  default: Suite,
+};

@@ -8,16 +8,16 @@
  * @format
  */
 
-import {format} from 'util';
+const {format} = require('util');
 
-import Base from '../command/Base';
-import commandFinder from '../command/finder';
+const {default: Base} = require('../command/Base');
+const commandFinder = require('../command/finder');
 
 type Args = {
   command: ?string,
 };
 
-export default class HelpCommand extends Base<Args> {
+class HelpCommand extends Base<Args> {
   static processArgv(argv: Object): Args {
     const command = argv._.length > 0 ? argv._[0] : null;
     return {command};
@@ -89,3 +89,5 @@ ${validCommands}
     );
   }
 }
+
+module.exports = {default: HelpCommand};

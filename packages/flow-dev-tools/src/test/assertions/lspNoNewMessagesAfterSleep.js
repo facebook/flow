@@ -8,9 +8,9 @@
  * @format
  */
 
-import {format} from 'util';
+const {format} = require('util');
 
-import colors from 'colors/safe';
+const colors = require('colors/safe');
 
 import type {
   AssertionLocation,
@@ -18,7 +18,7 @@ import type {
   ErrorAssertionResult,
 } from './assertionTypes';
 
-export default function(
+function lspNoNewMessagesAfterSleep(
   timeoutMs: number,
   assertLoc: ?AssertionLocation,
 ): ErrorAssertion {
@@ -63,3 +63,7 @@ export default function(
     return {type: 'pass'};
   };
 }
+
+module.exports = {
+  default: lspNoNewMessagesAfterSleep,
+};

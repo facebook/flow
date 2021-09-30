@@ -2,10 +2,10 @@
  * @flow
  */
 
-import type Suite from "flow-dev-tools/src/test/Suite.js";
-import {suite, test} from 'flow-dev-tools/src/test/Tester';
+import type {Suite} from "flow-dev-tools/src/test/Suite";
+const {suite, test} = require('flow-dev-tools/src/test/Tester');
 
-export default (suite(({addFile}) => [
+module.exports = (suite(({addFile}) => [
   test('all=true', [
     addFile('no_at_flow.js')
       .newErrors(

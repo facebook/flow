@@ -8,33 +8,14 @@
  * @format
  */
 
-import {sync as resolve} from 'resolve';
-import {dirname} from 'path';
+const {sync: resolve} = require('resolve');
+const {dirname} = require('path');
 
 import type {AssertionLocation} from './assertions/assertionTypes';
 
-/* We need to use source-map-support in order to extract the right locations
- * from a stack trace. Unfortunately, we need to use the exact same version
- * that babel-register uses. We can use resolve() to find it.
- */
-let wrapCallSite = null;
-function getWrapCallSite() {
-  if (wrapCallSite == null) {
-    const babelRegisterPath = resolve('babel-register');
-    const sourceMapSupportPath = resolve('source-map-support', {
-      basedir: dirname(babelRegisterPath),
-    });
-    // $FlowFixMe - This is necessary :(
-    wrapCallSite = require(sourceMapSupportPath).wrapCallSite;
-  }
-  return wrapCallSite;
-}
-
-export default function(): ?AssertionLocation {
+function searchStackForTestAssertion(): ?AssertionLocation {
   const oldPrepareStackTrace = Error.prepareStackTrace;
-
-  const wrapCallSite = getWrapCallSite();
-  Error.prepareStackTrace = (_, stack) => stack.map(wrapCallSite);
+  Error.prepareStackTrace = (_, stack) => stack;
   const stack: Array<Object> = (new Error().stack: any);
   Error.prepareStackTrace = oldPrepareStackTrace;
 
@@ -50,3 +31,7 @@ export default function(): ?AssertionLocation {
   }
   return null;
 }
+
+module.exports = {
+  default: searchStackForTestAssertion,
+};

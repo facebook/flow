@@ -8,13 +8,13 @@
  * @format
  */
 
-import {join} from 'path';
+const {join} = require('path');
 
-import {collateLocs, getUnusedSuppressionErrors} from '../errors';
-import getAst from './getAst';
+const {collateLocs, getUnusedSuppressionErrors} = require('../errors');
+const getAst = require('./getAst').default;
 
-import {readFile, writeFile} from '../utils/async';
-import {removeUnusedErrorSuppressionFromText} from './commentMutator';
+const {readFile, writeFile} = require('../utils/async');
+const {removeUnusedErrorSuppressionFromText} = require('./commentMutator');
 
 import type {Args} from './remove-commentsCommand';
 import type {FlowLoc, FlowResult, FlowError, FlowMessage} from '../flowResult';
@@ -45,7 +45,7 @@ async function removeUnusedErrorSuppressions(
 }
 
 // Exported for testing
-export async function removeUnusedErrorSuppressionsFromText(
+async function removeUnusedErrorSuppressionsFromText(
   contents: Buffer,
   errors: Array<FlowLoc>,
   flowBinPath: string,
@@ -91,7 +91,7 @@ function isFlowtest(filename) {
   );
 }
 
-export default async function(args: Args): Promise<void> {
+async function runner(args: Args): Promise<void> {
   let ignoredFileCount = 0;
   let ignoredErrorCount = 0;
   let removedErrorCount = 0;
@@ -128,3 +128,8 @@ export default async function(args: Args): Promise<void> {
     );
   }
 }
+
+module.exports = {
+  removeUnusedErrorSuppressionsFromText,
+  default: runner,
+};

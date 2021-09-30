@@ -10,11 +10,11 @@
 
 import type {Flag} from '../command/Base';
 
-import {format} from 'util';
-import {resolve} from 'path';
+const {format} = require('util');
+const {resolve} = require('path');
 
-import Base, {commonFlags} from '../command/Base';
-import findFlowBin from '../command/findFlowBin';
+const {commonFlags, default: Base} = require('../command/Base');
+const findFlowBin = require('../command/findFlowBin').default;
 
 export type Args = {
   bin: string,
@@ -24,7 +24,7 @@ export type Args = {
   includeFlowtest: boolean,
 };
 
-export default class RemoveCommentsCommand extends Base<Args> {
+class RemoveCommentsCommand extends Base<Args> {
   static processArgv(argv: Object): Args {
     if (argv._.length !== 1) {
       this.showUsage(this.BAD_ARGS);
@@ -68,3 +68,7 @@ Queries Flow for the unused error suppressions for ROOT. Then removes them from 
     ];
   }
 }
+
+module.exports = {
+  default: RemoveCommentsCommand,
+};

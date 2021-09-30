@@ -8,11 +8,11 @@
  * @format
  */
 
-import {format} from 'util';
+const {format} = require('util');
 
-import colors from 'colors/safe';
+const colors = require('colors/safe');
 
-import {difference, prettyPrint} from '../../flowResult';
+const {difference, prettyPrint} = require('../../flowResult');
 
 import type {
   AssertionLocation,
@@ -21,7 +21,7 @@ import type {
 } from './assertionTypes';
 import type {FlowResult} from '../../flowResult';
 
-export default function(assertLoc: ?AssertionLocation): ErrorAssertion {
+function noNewErrors(assertLoc: ?AssertionLocation): ErrorAssertion {
   return (reason: ?string, env): ErrorAssertionResult => {
     const brandNew = difference(env.getNewErrors(), env.getOldErrors());
     if (!brandNew.passed) {
@@ -63,3 +63,7 @@ export default function(assertLoc: ?AssertionLocation): ErrorAssertion {
     return {type: 'pass'};
   };
 }
+
+module.exports = {
+  default: noNewErrors,
+};

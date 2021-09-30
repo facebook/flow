@@ -7,13 +7,13 @@
 
 /* This is based off of ast-types/main.ts */
 
-import fork from "ast-types/fork";
-import { namedTypes } from "ast-types/gen/namedTypes";
+const fork = require("ast-types/fork");
+const { namedTypes } = require("ast-types/gen/namedTypes");
 
-import jsxDef from "ast-types/def/jsx";
-import flowDef from "ast-types/def/flow";
-import esprimaDef from "ast-types/def/esprima";
-import customDef from './custom_ast_types';
+const jsxDef = require("ast-types/def/jsx");
+const flowDef = require("ast-types/def/flow");
+const esprimaDef = require("ast-types/def/esprima");
+const customDef = require('./custom_ast_types');
 
 const {
   namedTypes: n,

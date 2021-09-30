@@ -8,18 +8,18 @@
  * @format
  */
 
-import {join, relative, resolve} from 'path';
-import {format} from 'util';
+const {join, relative, resolve} = require('path');
+const {format} = require('util');
 
-import {
+const {
   exec,
   exists,
   mkdirp,
   readFile,
   unlink,
   writeFile,
-} from '../utils/async';
-import {getTestsDir, defaultFlowConfigName} from '../constants';
+} = require('../utils/async');
+const {getTestsDir, defaultFlowConfigName} = require('../constants');
 
 import type {Args} from './new-testCommand';
 
@@ -50,13 +50,13 @@ async function newTest(bin: string, suiteName: string): Promise<void> {
 
  */
 
+import type {Suite} from 'flow-dev-tools/src/test/Suite';
+const {suite, test} = require('${testerLoc}');
 
-import {suite, test} from '${testerLoc}';
-
-export default suite(({addFile, addFiles, addCode}) => [
+module.exports = (suite(({addFile, addFiles, addCode}) => [
   test('TestName', [
   ]),
-]);
+]): Suite);
 `,
   );
 
@@ -75,6 +75,10 @@ export default suite(({addFile, addFiles, addCode}) => [
   );
 }
 
-export default async function(args: Args): Promise<void> {
+async function runner(args: Args): Promise<void> {
   await Promise.all(Array.from(args.names).map(newTest.bind(null, args.bin)));
 }
+
+module.exports = {
+  default: runner,
+};

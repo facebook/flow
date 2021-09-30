@@ -10,6 +10,10 @@
 
 import type {ErrorAssertionResult} from './assertionTypes';
 
-export default function(): ErrorAssertionResult {
+function noop(): ErrorAssertionResult {
   return {type: 'pass'};
 }
+
+module.exports = {
+  default: noop,
+};

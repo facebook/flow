@@ -8,11 +8,11 @@
  * @format
  */
 
-import {defaultFlowConfigName} from '../constants';
+const {defaultFlowConfigName} = require('../constants');
 
 import type {StepList} from './Tester';
 
-export default class Test {
+class Test {
   flowConfigFilename: string = defaultFlowConfigName;
   name: ?string;
   steps: StepList;
@@ -46,3 +46,7 @@ export default class Test {
     return this;
   }
 }
+
+module.exports = {
+  Test,
+};
