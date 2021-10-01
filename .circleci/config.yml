@@ -280,6 +280,10 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/flow
+      - run:
+          name: Update curl cacerts
+          command: |
+            echo "cacert /Users/$USER/flow/.circleci/cacert.pem" >> ~/.curlrc
       - install-opam-mac
       - make-opam-cachebreaker
       - restore-opam-cache
