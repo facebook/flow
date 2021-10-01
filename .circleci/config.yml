@@ -159,11 +159,13 @@ jobs:
           command: |
             mkdir -p dist
             cp src/parser/flow_parser.js dist/flow_parser.js
+            cp src/parser/flow_parser.js packages/flow-parser/flow_parser.js
       - persist_to_workspace:
           root: .
           paths:
             - bin/flow.js
             - dist/flow_parser.js
+            - packages/flow-parser/flow_parser.js
       - store_artifacts:
           path: bin/flow.js
           destination: flow.js
@@ -713,12 +715,15 @@ workflows:
       - tool_test_linux:
           requires:
             - build_linux
+            - build_js
       - tool_test_macos:
           requires:
             - build_macos
+            - build_js
       - tool_test_win:
           requires:
             - build_win
+            - build_js
       - ounit_test_linux:
           requires:
             - checkout
