@@ -664,22 +664,25 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
-  flowCmd: (args: Array<string>, stdinFile?: string) => TestStepFirstStage = (
-    args,
-    stdinFile,
-  ) => {
+  flowCmd: (
+    args: Array<string>,
+    stdinFile?: string,
+    needsFlowServer?: boolean,
+  ) => TestStepFirstStage = (args, stdinFile, needsFlowServer) => {
     // Certain flow configs don't need a flow server to exist
-    let needsFlowServer = false;
-    switch (args[0]) {
-      case 'ast':
-      case 'init':
-      case 'ls':
-      case 'start':
-      case 'stop':
-      case 'version':
-        break;
-      default:
-        needsFlowServer = true;
+    if (needsFlowServer === undefined) {
+      needsFlowServer = false;
+      switch (args[0]) {
+        case 'ast':
+        case 'init':
+        case 'ls':
+        case 'start':
+        case 'stop':
+        case 'version':
+          break;
+        default:
+          needsFlowServer = true;
+      }
     }
     if (needsFlowServer) {
       // We never want a flowCmd to automatically start a server
