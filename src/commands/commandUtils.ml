@@ -413,7 +413,12 @@ let root_flag prev =
 
 let ignore_version_flag prev =
   CommandSpec.ArgSpec.(
-    prev |> flag "--ignore-version" no_arg ~doc:"Ignore the version constraint in .flowconfig")
+    prev
+    |> flag
+         "--ignore-version"
+         no_arg
+         ~doc:"Ignore the version constraint in .flowconfig"
+         ~env:"FLOW_IGNORE_VERSION")
 
 let log_file_flags =
   let normalize log_file =
