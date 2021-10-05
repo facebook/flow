@@ -971,7 +971,7 @@ let type_synthesizer_tests =
       ~locs
   in
   let pretty_print_type type_param_synthesizer = function
-    | Some (tparams_rev, type_) ->
+    | Ok (Some (tparams_rev, type_)) ->
       let type_string =
         type_ |> Js_layout_generator.type_ ~opts:Js_layout_generator.default_opts |> pretty_print
       in
@@ -980,15 +980,20 @@ let type_synthesizer_tests =
         | [] -> ""
         | _ ->
           let pretty_print_typeparam tparam =
-            tparam
-            |> type_param_synthesizer tparams_rev
-            |> Js_layout_generator.type_param ~opts:Js_layout_generator.default_opts
-            |> pretty_print
+            match type_param_synthesizer tparams_rev tparam with
+            | Ok synthesized ->
+              synthesized
+              |> Js_layout_generator.type_param ~opts:Js_layout_generator.default_opts
+              |> pretty_print
+            | Error expected ->
+              Printf.sprintf "<Error: %s>" Insert_type.(error_to_string (Expected expected))
           in
           "<" ^ (tparams_rev |> List.map pretty_print_typeparam |> String.concat ", ") ^ ">: "
       in
       typeparams_string ^ type_string
-    | None -> "<missing>"
+    | Ok None -> "<missing>"
+    | Error expected ->
+      Printf.sprintf "<Error: %s>" Insert_type.(error_to_string (Expected expected))
   in
   [
     ( "basic_test" >:: fun ctxt ->

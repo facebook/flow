@@ -918,8 +918,12 @@ module TypeSynthesizer = struct
 
   type type_synthesizer_with_import_adder = {
     type_param_synthesizer:
-      Type.typeparam list -> Type.typeparam -> (Loc.t, Loc.t) Flow_ast.Type.TypeParam.t;
-    type_synthesizer: Loc.t -> (Type.typeparam list * (Loc.t, Loc.t) Flow_ast.Type.t) option;
+      Type.typeparam list ->
+      Type.typeparam ->
+      ((Loc.t, Loc.t) Flow_ast.Type.TypeParam.t, Insert_type.expected) result;
+    type_synthesizer:
+      Loc.t ->
+      ((Type.typeparam list * (Loc.t, Loc.t) Flow_ast.Type.t) option, Insert_type.expected) result;
     added_imports: unit -> (string * Autofix_imports.bindings) list;
   }
 
@@ -931,20 +935,27 @@ module TypeSynthesizer = struct
         ~file
         ~reserved_names:SSet.empty
     in
-    let synth_type =
-      Insert_type.synth_type
-        ~full_cx
-        ~file_sig
-        ~typed_ast
-        ~expand_aliases:true
-        ~omit_targ_defaults:false
-        ~ambiguity_strategy:Autofix_options.Generalize
-        ~remote_converter
+    let synth_type loc scheme =
+      try
+        Ok
+          (Insert_type.synth_type
+             ~full_cx
+             ~file_sig
+             ~typed_ast
+             ~expand_aliases:true
+             ~omit_targ_defaults:false
+             ~ambiguity_strategy:Autofix_options.Generalize
+             ~remote_converter
+             loc
+             scheme)
+      with
+      | Insert_type.(FailedToInsertType (Expected expected)) -> Error expected
     in
+    let open Base.Result.Let_syntax in
     let type_param_synthesizer tparams_rev { Type.name; bound; polarity; default; _ } =
       let type_scheme_of_type type_ = { Type.TypeScheme.tparams_rev; type_ } in
-      let bound =
-        match bound |> type_scheme_of_type |> synth_type Loc.none with
+      let%bind bound =
+        match%map bound |> type_scheme_of_type |> synth_type Loc.none with
         | (_, (_, Flow_ast.Type.Mixed _)) -> Flow_ast.Type.Missing Loc.none
         | bound -> Flow_ast.Type.Available bound
       in
@@ -954,18 +965,20 @@ module TypeSynthesizer = struct
         | Polarity.Positive -> Some (Loc.none, Flow_ast.Variance.{ kind = Plus; comments = None })
         | Polarity.Negative -> Some (Loc.none, Flow_ast.Variance.{ kind = Minus; comments = None })
       in
-      let default =
+      let%map default =
         match default with
-        | None -> None
-        | Some default -> Some (default |> type_scheme_of_type |> synth_type Loc.none |> snd)
+        | None -> return None
+        | Some default ->
+          let%map (_, ast) = default |> type_scheme_of_type |> synth_type Loc.none in
+          Some ast
       in
       Ast_builder.Types.type_param ~bound ?variance ?default name
     in
     let type_synthesizer loc =
       match LocMap.find_opt loc type_at_loc_map with
-      | None -> None
+      | None -> return None
       | Some ({ Type.TypeScheme.tparams_rev; type_ } as type_scheme) ->
-        let (_, ast_type) = synth_type loc type_scheme in
+        let%map (_, ast_type) = synth_type loc type_scheme in
         Some (keep_used_tparam_rev ~cx:full_cx ~tparams_rev ~type_, ast_type)
     in
     {

@@ -53,36 +53,38 @@ let create_extracted_function
     ~name
     ~extracted_statements =
   let open Ast_builder in
+  let open Base.Result.Let_syntax in
   let id = Some (Identifiers.identifier name) in
-  let (params, used_tparam_set) =
-    List.fold_right
-      (fun (v, loc) (params, used_tparam_set) ->
-        let (annot, used_tparam_set) =
-          match type_synthesizer loc with
+  let%bind (params, used_tparam_set) =
+    Base.List.fold_result
+      ~f:(fun (params, used_tparam_set) (v, loc) ->
+        let%map (annot, used_tparam_set) =
+          match%map type_synthesizer loc with
           | None -> (Flow_ast.Type.Missing Loc.none, used_tparam_set)
           | Some (tparams_rev, type_) ->
             ( Flow_ast.Type.Available (Loc.none, type_),
               TypeParamSet.add_all tparams_rev used_tparam_set )
         in
         ((v |> Patterns.identifier ~annot |> Functions.param) :: params, used_tparam_set))
-      undefined_variables
-      ([], TypeParamSet.empty)
+      (Base.List.rev undefined_variables)
+      ~init:([], TypeParamSet.empty)
   in
   let params = Functions.params params in
-  let (returned_variables, used_tparam_set) =
-    List.fold_right
-      (fun (v, loc) (returned_variables, used_tparam_set) ->
-        let (type_, used_tparam_set) =
-          match type_synthesizer loc with
+  let%bind (returned_variables, used_tparam_set) =
+    Base.List.fold_result
+      ~f:(fun (returned_variables, used_tparam_set) (v, loc) ->
+        let%map (type_, used_tparam_set) =
+          match%map type_synthesizer loc with
           | None -> ((Loc.none, Flow_ast.Type.Any None), used_tparam_set)
           | Some (tparams_rev, type_) -> (type_, TypeParamSet.add_all tparams_rev used_tparam_set)
         in
         ((v, type_) :: returned_variables, used_tparam_set))
-      (escaping_definitions.VariableAnalysis.escaping_variables
-      @ vars_with_shadowed_local_reassignments)
-      ([], used_tparam_set)
+      (Base.List.rev
+         (escaping_definitions.VariableAnalysis.escaping_variables
+         @ vars_with_shadowed_local_reassignments))
+      ~init:([], used_tparam_set)
   in
-  let tparams =
+  let%map tparams =
     let unbound_tparams =
       target_tparams_rev
       |> TypeParamSet.of_list
@@ -95,7 +97,9 @@ let create_extracted_function
        e.g. `B` is unbound in scope and `A` is bound, but we have `B: A`, so `A` must be included
             for synthesizing types. *)
     let tparams_env = unbound_tparams @ target_tparams_rev in
-    match unbound_tparams |> List.map (type_param_synthesizer tparams_env) with
+    match%map
+      unbound_tparams |> List.map (type_param_synthesizer tparams_env) |> Base.Result.all
+    with
     | [] -> None
     | tparams -> Some (Types.type_params tparams)
   in
@@ -273,44 +277,51 @@ let create_refactor_for_statements
       ~new_function_name
       ~extracted_statements_loc
   in
-  let new_ast =
+  let open Base.Result.Let_syntax in
+  let%map new_ast =
     if is_method then
+      let%map extracted_function =
+        create_extracted_function
+          ~type_param_synthesizer
+          ~type_synthesizer
+          ~target_tparams_rev
+          ~undefined_variables
+          ~escaping_definitions
+          ~vars_with_shadowed_local_reassignments
+          ~async_function
+          ~name:new_function_name
+          ~extracted_statements
+      in
+      let method_declaration =
+        Ast_builder.Classes.method_ ~id:new_function_name extracted_function
+      in
       RefactorProgramMappers.extract_to_method
         ~target_body_loc
         ~extracted_statements_loc
         ~function_call_statements
-        ~method_declaration:
-          (Ast_builder.Classes.method_
-             ~id:new_function_name
-             (create_extracted_function
-                ~type_param_synthesizer
-                ~type_synthesizer
-                ~target_tparams_rev
-                ~undefined_variables
-                ~escaping_definitions
-                ~vars_with_shadowed_local_reassignments
-                ~async_function
-                ~name:new_function_name
-                ~extracted_statements))
+        ~method_declaration
         ast
     else
+      let%map extracted_function =
+        create_extracted_function
+          ~type_param_synthesizer
+          ~type_synthesizer
+          ~target_tparams_rev
+          ~undefined_variables
+          ~escaping_definitions
+          ~vars_with_shadowed_local_reassignments
+          ~async_function
+          ~name:new_function_name
+          ~extracted_statements
+      in
+      let function_declaration_statement =
+        (Loc.none, Flow_ast.Statement.FunctionDeclaration extracted_function)
+      in
       RefactorProgramMappers.extract_to_function
         ~target_body_loc
         ~extracted_statements_loc
         ~function_call_statements
-        ~function_declaration_statement:
-          ( Loc.none,
-            Flow_ast.Statement.FunctionDeclaration
-              (create_extracted_function
-                 ~type_param_synthesizer
-                 ~type_synthesizer
-                 ~target_tparams_rev
-                 ~undefined_variables
-                 ~escaping_definitions
-                 ~vars_with_shadowed_local_reassignments
-                 ~async_function
-                 ~name:new_function_name
-                 ~extracted_statements) )
+        ~function_declaration_statement
         ast
   in
   (new_ast, added_imports ())
@@ -356,24 +367,27 @@ let available_refactors_for_statements
     with
     | None -> []
     | Some { InsertionPointCollectors.class_name; body_loc = target_body_loc; tparams_rev } ->
-      let (new_ast, added_imports) =
-        create_refactor
-          ~is_method:true
-          ~new_function_name:(create_unique_name "newMethod")
-          ~target_body_loc
-          ~target_tparams_rev:tparams_rev
-      in
-      let title =
-        match class_name with
-        | None -> "Extract to method in anonymous class declaration"
-        | Some class_name -> Printf.sprintf "Extract to method in class '%s'" class_name
-      in
-      [{ title; new_ast; added_imports }]
+      (match
+         create_refactor
+           ~is_method:true
+           ~new_function_name:(create_unique_name "newMethod")
+           ~target_body_loc
+           ~target_tparams_rev:tparams_rev
+       with
+      | Ok (new_ast, added_imports) ->
+        let title =
+          match class_name with
+          | None -> "Extract to method in anonymous class declaration"
+          | Some class_name -> Printf.sprintf "Extract to method in class '%s'" class_name
+        in
+        [{ title; new_ast; added_imports }]
+      | Error _ -> [])
   in
   if has_this_super then
     extract_to_method_refactors
   else
     let new_function_name = create_unique_name "newFunction" in
+    let open Base.Result.Let_syntax in
     let create_inner_function_refactor
         {
           InsertionPointCollectors.function_name;
@@ -390,7 +404,7 @@ let available_refactors_for_statements
             "function")
           function_name
       in
-      let (new_ast, added_imports) =
+      let%map (new_ast, added_imports) =
         create_refactor
           ~is_method:false
           ~new_function_name
@@ -400,7 +414,7 @@ let available_refactors_for_statements
       { title; new_ast; added_imports }
     in
     let top_level_function_refactor =
-      let (new_ast, added_imports) =
+      let%map (new_ast, added_imports) =
         create_refactor
           ~is_method:false
           ~new_function_name
@@ -409,7 +423,7 @@ let available_refactors_for_statements
       in
       { title = "Extract to function in module scope"; new_ast; added_imports }
     in
-    let extract_to_functions_refactors =
+    let extract_to_functions_refactor_results =
       top_level_function_refactor
       ::
       List.map
@@ -418,6 +432,9 @@ let available_refactors_for_statements
            ~typed_ast
            ~reader
            ~extracted_loc:extracted_statements_loc)
+    in
+    let extract_to_functions_refactors =
+      Base.List.filter_map extract_to_functions_refactor_results ~f:Base.Result.ok
     in
     extract_to_method_refactors @ extract_to_functions_refactors
 
@@ -649,34 +666,33 @@ let extract_to_type_alias_refactors
     | [] -> []
     | { InsertionPointCollectors.tparams_rev; _ } :: _ -> tparams_rev
   in
-  let (type_params_to_add, type_param_synthesizer) =
-    let type_synthesizer_context =
-      TypeSynthesizer.create_synthesizer_context
-        ~full_cx
-        ~file
-        ~file_sig
-        ~typed_ast
-        ~reader
-        ~locs:(LocSet.singleton type_loc)
+  let new_ast_result =
+    let open Base.Result.Let_syntax in
+    let%bind (type_params_to_add, type_param_synthesizer) =
+      let type_synthesizer_context =
+        TypeSynthesizer.create_synthesizer_context
+          ~full_cx
+          ~file
+          ~file_sig
+          ~typed_ast
+          ~reader
+          ~locs:(LocSet.singleton type_loc)
+      in
+      let { TypeSynthesizer.type_param_synthesizer; type_synthesizer; _ } =
+        TypeSynthesizer.create_type_synthesizer_with_import_adder type_synthesizer_context
+      in
+      let%map used_tparams =
+        let%map ast = type_synthesizer type_loc in
+        ast |> Base.Option.value_map ~default:[] ~f:fst |> TypeParamSet.of_list
+      in
+      let type_params_to_add =
+        available_tparams
+        |> TypeParamSet.of_list
+        |> TypeParamSet.diff used_tparams
+        |> TypeParamSet.elements
+      in
+      (type_params_to_add, type_param_synthesizer (available_tparams @ type_params_to_add))
     in
-    let { TypeSynthesizer.type_param_synthesizer; type_synthesizer; _ } =
-      TypeSynthesizer.create_type_synthesizer_with_import_adder type_synthesizer_context
-    in
-    let used_tparams =
-      type_loc
-      |> type_synthesizer
-      |> Base.Option.value_map ~default:[] ~f:fst
-      |> TypeParamSet.of_list
-    in
-    let type_params_to_add =
-      available_tparams
-      |> TypeParamSet.of_list
-      |> TypeParamSet.diff used_tparams
-      |> TypeParamSet.elements
-    in
-    (type_params_to_add, type_param_synthesizer (available_tparams @ type_params_to_add))
-  in
-  let new_ast =
     let open Ast_builder in
     let new_type_name = create_unique_name "NewType" in
     let type_replacement =
@@ -691,11 +707,15 @@ let extract_to_type_alias_refactors
       in
       Types.unqualified_generic ?targs new_type_name
     in
-    let type_alias =
-      let tparams =
+    let%map type_alias =
+      let%map tparams =
         match type_params_to_add with
-        | [] -> None
-        | _ -> Some (type_params_to_add |> List.map type_param_synthesizer |> Types.type_params)
+        | [] -> return None
+        | _ ->
+          let%map synthesized =
+            type_params_to_add |> List.map type_param_synthesizer |> Base.Result.all
+          in
+          Some (Types.type_params synthesized)
       in
       Statements.type_alias ?tparams ~name:new_type_name type_
     in
@@ -706,7 +726,9 @@ let extract_to_type_alias_refactors
       ~type_alias
       ast
   in
-  [{ title = "Extract to type alias"; new_ast; added_imports = [] }]
+  match new_ast_result with
+  | Ok new_ast -> [{ title = "Extract to type alias"; new_ast; added_imports = [] }]
+  | Error _ -> []
 
 let provide_available_refactors
     ~ast
