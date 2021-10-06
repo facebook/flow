@@ -13,6 +13,7 @@ type verbose_mode =
 type error_reason =
   | Missing_parse_error
   | Unexpected_parse_error of (Loc.t * Parse_error.t)
+  | Uncaught_exn of string
 
 type test_name = string * bool (* filename * strict *)
 
@@ -46,10 +47,10 @@ module Progress_bar = struct
 
   let incr bar = bar.count <- succ bar.count
 
-  let to_string (passed, failed) bar =
+  let to_string (passed, failed, errored) bar =
     let total = float_of_int (passed + failed) in
     Printf.sprintf
-      "\r%s [%s] %d/%d -- Passed: %d (%.2f%%), Failed: %d (%.2f%%)%!"
+      "\r%s [%s] %d/%d -- Passed: %d (%.2f%%), Failed: %d (%.2f%%), Errored: %d (%.2f%%)%!"
       (percentage bar)
       (meter bar)
       bar.count
@@ -58,23 +59,25 @@ module Progress_bar = struct
       (float_of_int passed /. total *. 100.)
       failed
       (float_of_int failed /. total *. 100.)
+      errored
+      (float_of_int errored /. total *. 100.)
 
-  let print (passed, failed) bar = Printf.printf "\r%s%!" (to_string (passed, failed) bar)
+  let print status bar = Printf.printf "\r%s%!" (to_string status bar)
 
-  let print_throttled (passed, failed) bar =
+  let print_throttled status bar =
     let now = Unix.gettimeofday () in
     if now -. bar.last_update > bar.frequency then (
       bar.last_update <- now;
-      print (passed, failed) bar
+      print status bar
     )
 
-  let clear (passed, failed) bar =
-    let len = String.length (to_string (passed, failed) bar) in
+  let clear status bar =
+    let len = String.length (to_string status bar) in
     let spaces = String.make len ' ' in
     Printf.printf "\r%s\r%!" spaces
 
-  let print_final (passed, failed) bar =
-    print (passed, failed) bar;
+  let print_final status bar =
+    print status bar;
     Printf.printf "\n%!"
 
   let make ~chunks ~frequency total = { count = 0; last_update = 0.; total; chunks; frequency }
@@ -127,6 +130,7 @@ let print_error err =
   | Missing_parse_error -> Printf.printf "  Missing parse error\n%!"
   | Unexpected_parse_error (loc, err) ->
     Printf.printf "  %s at %s\n%!" (Parse_error.PP.error err) (Loc.debug_to_string loc)
+  | Uncaught_exn msg -> Printf.printf "  Uncaught exception: %s\n%!" msg
 
 module Frontmatter = struct
   type t = {
@@ -290,64 +294,77 @@ let run_test (name, frontmatter, content) =
       esproposal_class_static_fields = true;
       esproposal_decorators = false;
       esproposal_export_star_as = false;
-      esproposal_optional_chaining = false;
-      esproposal_nullish_coalescing = false;
+      esproposal_optional_chaining = true;
+      esproposal_nullish_coalescing = true;
       types = false;
       use_strict;
     }
   in
-  let (_ast, errors) =
-    Parser_flow.program_file
-      ~fail:false
-      ~parse_options:(Some parse_options)
-      content
-      (Some (File_key.SourceFile filename))
-  in
   let result =
-    match (errors, Frontmatter.negative_phase frontmatter) with
-    | ([], Some ("early" | "parse")) ->
-      (* expected a parse error, didn't get it *)
-      Error Missing_parse_error
-    | (_, Some ("early" | "parse")) ->
-      (* expected a parse error, got one *)
-      Ok ()
-    | ([], Some _)
-    | ([], None) ->
-      (* did not expect a parse error, didn't get one *)
-      Ok ()
-    | (err :: _, Some _)
-    | (err :: _, None) ->
-      (* did not expect a parse error, got one incorrectly *)
-      Error (Unexpected_parse_error err)
+    try
+      let (_ast, errors) =
+        Parser_flow.program_file
+          ~fail:false
+          ~parse_options:(Some parse_options)
+          content
+          (Some (File_key.SourceFile filename))
+      in
+      match (errors, Frontmatter.negative_phase frontmatter) with
+      | ([], Some ("early" | "parse")) ->
+        (* expected a parse error, didn't get it *)
+        Error Missing_parse_error
+      | (_, Some ("early" | "parse")) ->
+        (* expected a parse error, got one *)
+        Ok ()
+      | ([], Some _)
+      | ([], None) ->
+        (* did not expect a parse error, didn't get one *)
+        Ok ()
+      | (err :: _, Some _)
+      | (err :: _, None) ->
+        (* did not expect a parse error, got one incorrectly *)
+        Error (Unexpected_parse_error err)
+    with
+    | exn ->
+      let msg = Printexc.to_string exn in
+      Error (Uncaught_exn msg)
   in
   { name; result }
 
-let incr_result (passed, failed) did_pass =
-  if did_pass then
-    (succ passed, failed)
-  else
-    (passed, succ failed)
+let incr_result (passed, failed, errored) result =
+  match result with
+  | `Passed -> (succ passed, failed, errored)
+  | `Failed -> (passed, succ failed, errored)
+  | `Errored -> (passed, failed, succ errored)
 
 let fold_test
-    ~verbose ~strip_root ~bar (passed_acc, failed_acc, features_acc) (name, frontmatter, content) =
+    ~verbose
+    ~strip_root
+    ~bar
+    (passed_acc, failed_acc, errored_acc, features_acc)
+    (name, frontmatter, content) =
   if verbose then print_name ~strip_root name;
   let passed =
     let { name; result } = run_test (name, frontmatter, content) in
     match result with
-    | Ok _ -> true
+    | Ok _ -> `Passed
     | Error err ->
-      Base.Option.iter ~f:(Progress_bar.clear (passed_acc, failed_acc)) bar;
+      Base.Option.iter ~f:(Progress_bar.clear (passed_acc, failed_acc, errored_acc)) bar;
       if not verbose then print_name ~strip_root name;
       print_error err;
-      false
+      (match err with
+      | Uncaught_exn _ -> `Errored
+      | _ -> `Failed)
   in
-  let (passed_acc, failed_acc) = incr_result (passed_acc, failed_acc) passed in
+  let (passed_acc, failed_acc, errored_acc) =
+    incr_result (passed_acc, failed_acc, errored_acc) passed
+  in
   let features_acc =
     List.fold_left
       (fun acc name ->
         let feature =
           try SMap.find name acc with
-          | Not_found -> (0, 0)
+          | Not_found -> (0, 0, 0)
         in
         let feature = incr_result feature passed in
         SMap.add name feature acc)
@@ -357,12 +374,11 @@ let fold_test
   Base.Option.iter
     ~f:(fun bar ->
       Progress_bar.incr bar;
-      if not passed then
-        Progress_bar.print (passed_acc, failed_acc) bar
-      else
-        Progress_bar.print_throttled (passed_acc, failed_acc) bar)
+      match passed with
+      | `Passed -> Progress_bar.print_throttled (passed_acc, failed_acc, errored_acc) bar
+      | _ -> Progress_bar.print (passed_acc, failed_acc, errored_acc) bar)
     bar;
-  (passed_acc, failed_acc, features_acc)
+  (passed_acc, failed_acc, errored_acc, features_acc)
 
 let main () =
   let verbose_ref = ref Normal in
@@ -406,26 +422,27 @@ let main () =
     else
       Some (Progress_bar.make ~chunks:40 ~frequency:0.1 test_count)
   in
-  let (passed, failed, results_by_feature) =
-    List.fold_left (fold_test ~verbose ~strip_root ~bar) (0, 0, SMap.empty) tests
+  let (passed, failed, errored, results_by_feature) =
+    List.fold_left (fold_test ~verbose ~strip_root ~bar) (0, 0, 0, SMap.empty) tests
   in
   begin
     match bar with
-    | Some bar -> Progress_bar.clear (passed, failed) bar
+    | Some bar -> Progress_bar.clear (passed, failed, errored) bar
     | None -> ()
   end;
 
-  let total = float_of_int (passed + failed) in
+  let total = float_of_int (passed + failed + errored) in
   Printf.printf "\n=== Summary ===\n";
-  Printf.printf "Passed: %d (%.2f%%)\n" passed (float_of_int passed /. total *. 100.);
-  Printf.printf "Failed: %d (%.2f%%)\n" failed (float_of_int failed /. total *. 100.);
+  Printf.printf "Passed:  %d (%.2f%%)\n" passed (float_of_int passed /. total *. 100.);
+  Printf.printf "Failed:  %d (%.2f%%)\n" failed (float_of_int failed /. total *. 100.);
+  Printf.printf "Errored: %d (%.2f%%)\n" errored (float_of_int errored /. total *. 100.);
 
   if not (SMap.is_empty results_by_feature) then (
     Printf.printf "\nFeatures:\n";
     SMap.iter
-      (fun name (passed, failed) ->
-        if failed > 0 || verbose then
-          let total = passed + failed in
+      (fun name (passed, failed, errored) ->
+        if failed > 0 || errored > 0 || verbose then
+          let total = passed + failed + errored in
           let total_f = float_of_int total in
           Printf.printf
             "  %s: %d/%d (%.2f%%)\n"

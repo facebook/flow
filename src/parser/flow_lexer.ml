@@ -327,7 +327,7 @@ let decode_identifier =
     | any
     | eof ->
       lex_error env loc Parse_error.IllegalUnicodeEscape
-    | _ -> failwith "unreachable"
+    | _ -> failwith "unreachable assert_valid_unicode_in_identifier"
   in
   let loc_and_sub_lexeme env offset lexbuf trim_start trim_end =
     let start_offset = offset + Sedlexing.lexeme_start lexbuf in
@@ -360,7 +360,7 @@ let decode_identifier =
     | any ->
       lexeme_to_buffer lexbuf buf;
       id_char env offset buf lexbuf
-    | _ -> failwith "unreachable"
+    | _ -> failwith "unreachable id_char"
   in
   fun env raw ->
     let offset = Sedlexing.lexeme_start env.lex_lb in
@@ -428,7 +428,7 @@ let rec line_comment env buf lexbuf =
   | any ->
     lexeme_to_buffer lexbuf buf;
     line_comment env buf lexbuf
-  | _ -> failwith "unreachable"
+  | _ -> failwith "unreachable line_comment"
 
 let string_escape env lexbuf =
   match%sedlex lexbuf with
@@ -503,7 +503,7 @@ let string_escape env lexbuf =
     let str = lexeme lexbuf in
     let codes = Sedlexing.lexeme lexbuf in
     (env, str, codes, false)
-  | _ -> failwith "unreachable"
+  | _ -> failwith "unreachable string_escape"
 
 (* Really simple version of string lexing. Just try to find beginning and end of
  * string. We can inspect the string later to find invalid escapes, etc *)
@@ -544,7 +544,7 @@ let rec string_quote env q buf raw octal lexbuf =
   | any ->
     lexeme_to_buffer2 lexbuf raw buf;
     string_quote env q buf raw octal lexbuf
-  | _ -> failwith "unreachable"
+  | _ -> failwith "unreachable string_quote"
 
 let rec template_part env cooked raw literal lexbuf =
   match%sedlex lexbuf with
@@ -590,7 +590,7 @@ let rec template_part env cooked raw literal lexbuf =
     Buffer.add_string literal c;
     Buffer.add_string cooked c;
     template_part env cooked raw literal lexbuf
-  | _ -> failwith "unreachable"
+  | _ -> failwith "unreachable template_part"
 
 let token (env : Lex_env.t) lexbuf : result =
   match%sedlex lexbuf with
@@ -691,28 +691,28 @@ let token (env : Lex_env.t) lexbuf : result =
     recover env lexbuf ~f:(fun env lexbuf ->
         match%sedlex lexbuf with
         | binbigint -> Token (env, T_BIGINT { kind = BIG_BINARY; raw = lexeme lexbuf })
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable token bigint")
   | binbigint -> Token (env, T_BIGINT { kind = BIG_BINARY; raw = lexeme lexbuf })
   | (binnumber, (letter | '2' .. '9'), Star alphanumeric) ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf ->
         match%sedlex lexbuf with
         | binnumber -> Token (env, T_NUMBER { kind = BINARY; raw = lexeme lexbuf })
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable token bignumber")
   | binnumber -> Token (env, T_NUMBER { kind = BINARY; raw = lexeme lexbuf })
   | (octbigint, word) ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf ->
         match%sedlex lexbuf with
         | octbigint -> Token (env, T_BIGINT { kind = BIG_OCTAL; raw = lexeme lexbuf })
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable token octbigint")
   | octbigint -> Token (env, T_BIGINT { kind = BIG_OCTAL; raw = lexeme lexbuf })
   | (octnumber, (letter | '8' .. '9'), Star alphanumeric) ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf ->
         match%sedlex lexbuf with
         | octnumber -> Token (env, T_NUMBER { kind = OCTAL; raw = lexeme lexbuf })
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable token octnumber")
   | octnumber -> Token (env, T_NUMBER { kind = OCTAL; raw = lexeme lexbuf })
   | (legacynonoctnumber, word) ->
     (* Numbers cannot be immediately followed by words *)
@@ -720,28 +720,28 @@ let token (env : Lex_env.t) lexbuf : result =
         match%sedlex lexbuf with
         | legacynonoctnumber ->
           Token (env, T_NUMBER { kind = LEGACY_NON_OCTAL; raw = lexeme lexbuf })
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable token legacynonoctnumber")
   | legacynonoctnumber -> Token (env, T_NUMBER { kind = LEGACY_NON_OCTAL; raw = lexeme lexbuf })
   | (legacyoctnumber, (letter | '8' .. '9'), Star alphanumeric) ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf ->
         match%sedlex lexbuf with
         | legacyoctnumber -> Token (env, T_NUMBER { kind = LEGACY_OCTAL; raw = lexeme lexbuf })
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable token legacyoctnumber")
   | legacyoctnumber -> Token (env, T_NUMBER { kind = LEGACY_OCTAL; raw = lexeme lexbuf })
   | (hexbigint, word) ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf ->
         match%sedlex lexbuf with
         | hexbigint -> Token (env, T_BIGINT { kind = BIG_NORMAL; raw = lexeme lexbuf })
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable token hexbigint")
   | hexbigint -> Token (env, T_BIGINT { kind = BIG_NORMAL; raw = lexeme lexbuf })
   | (hexnumber, non_hex_letter, Star alphanumeric) ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf ->
         match%sedlex lexbuf with
         | hexnumber -> Token (env, T_NUMBER { kind = NORMAL; raw = lexeme lexbuf })
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable token hexnumber")
   | hexnumber -> Token (env, T_NUMBER { kind = NORMAL; raw = lexeme lexbuf })
   | (scibigint, word) ->
     (* Numbers cannot be immediately followed by words *)
@@ -751,7 +751,7 @@ let token (env : Lex_env.t) lexbuf : result =
           let loc = loc_of_lexbuf env lexbuf in
           let env = lex_error env loc Parse_error.InvalidSciBigInt in
           Token (env, T_BIGINT { kind = BIG_NORMAL; raw = lexeme lexbuf })
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable token scibigint")
   | scibigint ->
     let loc = loc_of_lexbuf env lexbuf in
     let env = lex_error env loc Parse_error.InvalidSciBigInt in
@@ -761,7 +761,7 @@ let token (env : Lex_env.t) lexbuf : result =
     recover env lexbuf ~f:(fun env lexbuf ->
         match%sedlex lexbuf with
         | scinumber -> Token (env, T_NUMBER { kind = NORMAL; raw = lexeme lexbuf })
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable token scinumber")
   | scinumber -> Token (env, T_NUMBER { kind = NORMAL; raw = lexeme lexbuf })
   | (floatbigint, word) ->
     (* Numbers cannot be immediately followed by words *)
@@ -771,13 +771,13 @@ let token (env : Lex_env.t) lexbuf : result =
           let loc = loc_of_lexbuf env lexbuf in
           let env = lex_error env loc Parse_error.InvalidFloatBigInt in
           Token (env, T_BIGINT { kind = BIG_NORMAL; raw = lexeme lexbuf })
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable token floatbigint")
   | (wholebigint, word) ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf ->
         match%sedlex lexbuf with
         | wholebigint -> Token (env, T_BIGINT { kind = BIG_NORMAL; raw = lexeme lexbuf })
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable token wholebigint")
   | floatbigint ->
     let loc = loc_of_lexbuf env lexbuf in
     let env = lex_error env loc Parse_error.InvalidFloatBigInt in
@@ -790,7 +790,7 @@ let token (env : Lex_env.t) lexbuf : result =
         | wholenumber
         | floatnumber ->
           Token (env, T_NUMBER { kind = NORMAL; raw = lexeme lexbuf })
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable token wholenumber")
   | wholenumber
   | floatnumber ->
     Token (env, T_NUMBER { kind = NORMAL; raw = lexeme lexbuf })
@@ -938,7 +938,7 @@ let token (env : Lex_env.t) lexbuf : result =
   | any ->
     let env = illegal env (loc_of_lexbuf env lexbuf) in
     Token (env, T_ERROR (lexeme lexbuf))
-  | _ -> failwith "unreachable"
+  | _ -> failwith "unreachable token"
 
 let rec regexp_class env buf lexbuf =
   match%sedlex lexbuf with
@@ -959,7 +959,7 @@ let rec regexp_class env buf lexbuf =
     let str = lexeme lexbuf in
     Buffer.add_string buf str;
     regexp_class env buf lexbuf
-  | _ -> failwith "unreachable"
+  | _ -> failwith "unreachable regexp_class"
 
 let rec regexp_body env buf lexbuf =
   match%sedlex lexbuf with
@@ -998,7 +998,7 @@ let rec regexp_body env buf lexbuf =
     let str = lexeme lexbuf in
     Buffer.add_string buf str;
     regexp_body env buf lexbuf
-  | _ -> failwith "unreachable"
+  | _ -> failwith "unreachable regexp_body"
 
 let regexp env lexbuf =
   match%sedlex lexbuf with
@@ -1027,7 +1027,7 @@ let regexp env lexbuf =
   | any ->
     let env = illegal env (loc_of_lexbuf env lexbuf) in
     Token (env, T_ERROR (lexeme lexbuf))
-  | _ -> failwith "unreachable"
+  | _ -> failwith "unreachable regexp"
 
 let rec jsx_text env mode buf raw lexbuf =
   match%sedlex lexbuf with
@@ -1352,7 +1352,7 @@ let rec jsx_text env mode buf raw lexbuf =
     Buffer.add_string raw c;
     Buffer.add_string buf c;
     jsx_text env mode buf raw lexbuf
-  | _ -> failwith "unreachable"
+  | _ -> failwith "unreachable jsxtext"
 
 let jsx_tag env lexbuf =
   match%sedlex lexbuf with
@@ -1401,7 +1401,7 @@ let jsx_tag env lexbuf =
     let loc = { Loc.source = Lex_env.source env; start; _end } in
     Token (env, T_JSX_TEXT (loc, value, raw))
   | any -> Token (env, T_ERROR (lexeme lexbuf))
-  | _ -> failwith "unreachable"
+  | _ -> failwith "unreachable jsx_tag"
 
 let jsx_child env start buf raw lexbuf =
   match%sedlex lexbuf with
@@ -1429,7 +1429,7 @@ let jsx_child env start buf raw lexbuf =
     let raw = Buffer.contents raw in
     let loc = { Loc.source = Lex_env.source env; start; _end } in
     (env, T_JSX_TEXT (loc, value, raw))
-  | _ -> failwith "unreachable"
+  | _ -> failwith "unreachable jsx_child"
 
 let template_tail env lexbuf =
   match%sedlex lexbuf with
@@ -1471,7 +1471,7 @@ let template_tail env lexbuf =
     Token
       ( env,
         T_TEMPLATE_PART (loc_of_lexbuf env lexbuf, { cooked = ""; raw = ""; literal = "" }, true) )
-  | _ -> failwith "unreachable"
+  | _ -> failwith "unreachable template_tail"
 
 (* There are some tokens that never show up in a type and which can cause
  * ambiguity. For example, Foo<Bar<number>> ends with two angle brackets, not
@@ -1549,7 +1549,7 @@ let type_token env lexbuf =
         | (Opt neg, binbigint) ->
           let num = lexeme lexbuf in
           Token (env, mk_bignum_singleton BIG_BINARY num)
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable type_token bigbigint")
   | (Opt neg, binbigint) ->
     let num = lexeme lexbuf in
     Token (env, mk_bignum_singleton BIG_BINARY num)
@@ -1560,7 +1560,7 @@ let type_token env lexbuf =
         | (Opt neg, binnumber) ->
           let num = lexeme lexbuf in
           Token (env, mk_num_singleton BINARY num)
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable type_token binnumber")
   | (Opt neg, binnumber) ->
     let num = lexeme lexbuf in
     Token (env, mk_num_singleton BINARY num)
@@ -1571,7 +1571,7 @@ let type_token env lexbuf =
         | (Opt neg, octbigint) ->
           let num = lexeme lexbuf in
           Token (env, mk_bignum_singleton BIG_OCTAL num)
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable type_token octbigint")
   | (Opt neg, octbigint) ->
     let num = lexeme lexbuf in
     Token (env, mk_bignum_singleton BIG_OCTAL num)
@@ -1582,7 +1582,7 @@ let type_token env lexbuf =
         | (Opt neg, octnumber) ->
           let num = lexeme lexbuf in
           Token (env, mk_num_singleton OCTAL num)
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable type_token octnumber")
   | (Opt neg, octnumber) ->
     let num = lexeme lexbuf in
     Token (env, mk_num_singleton OCTAL num)
@@ -1593,7 +1593,7 @@ let type_token env lexbuf =
         | (Opt neg, legacyoctnumber) ->
           let num = lexeme lexbuf in
           Token (env, mk_num_singleton LEGACY_OCTAL num)
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable type_token legacyoctnumber")
   | (Opt neg, legacyoctnumber) ->
     let num = lexeme lexbuf in
     Token (env, mk_num_singleton LEGACY_OCTAL num)
@@ -1604,7 +1604,7 @@ let type_token env lexbuf =
         | (Opt neg, hexbigint) ->
           let num = lexeme lexbuf in
           Token (env, mk_bignum_singleton BIG_NORMAL num)
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable type_token hexbigint")
   | (Opt neg, hexbigint) ->
     let num = lexeme lexbuf in
     Token (env, mk_bignum_singleton BIG_NORMAL num)
@@ -1615,7 +1615,7 @@ let type_token env lexbuf =
         | (Opt neg, hexnumber) ->
           let num = lexeme lexbuf in
           Token (env, mk_num_singleton NORMAL num)
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable type_token hexnumber")
   | (Opt neg, hexnumber) ->
     let num = lexeme lexbuf in
     Token (env, mk_num_singleton NORMAL num)
@@ -1628,7 +1628,7 @@ let type_token env lexbuf =
           let loc = loc_of_lexbuf env lexbuf in
           let env = lex_error env loc Parse_error.InvalidSciBigInt in
           Token (env, mk_bignum_singleton BIG_NORMAL num)
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable type_token scibigint")
   | (Opt neg, scibigint) ->
     let num = lexeme lexbuf in
     let loc = loc_of_lexbuf env lexbuf in
@@ -1641,7 +1641,7 @@ let type_token env lexbuf =
         | (Opt neg, scinumber) ->
           let num = lexeme lexbuf in
           Token (env, mk_num_singleton NORMAL num)
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable type_token scinumber")
   | (Opt neg, scinumber) ->
     let num = lexeme lexbuf in
     Token (env, mk_num_singleton NORMAL num)
@@ -1654,7 +1654,7 @@ let type_token env lexbuf =
           let loc = loc_of_lexbuf env lexbuf in
           let env = lex_error env loc Parse_error.InvalidFloatBigInt in
           Token (env, mk_bignum_singleton BIG_NORMAL num)
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable type_token floatbigint")
   | (Opt neg, wholebigint, word) ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf ->
@@ -1662,7 +1662,7 @@ let type_token env lexbuf =
         | (Opt neg, wholebigint) ->
           let num = lexeme lexbuf in
           Token (env, mk_bignum_singleton BIG_NORMAL num)
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable type_token wholebigint")
   | (Opt neg, floatbigint) ->
     let num = lexeme lexbuf in
     let loc = loc_of_lexbuf env lexbuf in
@@ -1679,7 +1679,7 @@ let type_token env lexbuf =
         | floatnumber ->
           let num = lexeme lexbuf in
           Token (env, mk_num_singleton NORMAL num)
-        | _ -> failwith "unreachable")
+        | _ -> failwith "unreachable type_token wholenumber")
   | (Opt neg, (wholenumber | floatnumber)) ->
     let num = lexeme lexbuf in
     Token (env, mk_num_singleton NORMAL num)
@@ -1766,7 +1766,7 @@ let type_token env lexbuf =
     in
     Token (env, T_EOF)
   | any -> Token (env, T_ERROR (lexeme lexbuf))
-  | _ -> failwith "unreachable"
+  | _ -> failwith "unreachable type_token"
 
 (* Lexing JSX children requires a string buffer to keep track of whitespace
  * *)

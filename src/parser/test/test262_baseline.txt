@@ -18,12 +18,72 @@ annexB/language/comments/single-line-html-open.js (strict mode)
   Unexpected token `!`, expected the token `>` at (22, 1) to (22, 2)
 annexB/language/comments/single-line-html-open.js (default)
   Unexpected token `!`, expected the token `>` at (22, 1) to (22, 2)
-annexB/language/expressions/object/__proto__-duplicate.js (strict mode)
-  Missing parse error
-annexB/language/expressions/object/__proto__-duplicate.js (default)
-  Missing parse error
+annexB/language/expressions/logical-assignment/emulates-undefined-and.js (strict mode)
+  Unexpected token `=` at (24, 25) to (24, 26)
+annexB/language/expressions/logical-assignment/emulates-undefined-and.js (default)
+  Unexpected token `=` at (24, 25) to (24, 26)
+annexB/language/expressions/logical-assignment/emulates-undefined-coalesce.js (strict mode)
+  Unexpected token `=` at (18, 25) to (18, 26)
+annexB/language/expressions/logical-assignment/emulates-undefined-coalesce.js (default)
+  Unexpected token `=` at (18, 25) to (18, 26)
+annexB/language/expressions/logical-assignment/emulates-undefined-or.js (strict mode)
+  Unexpected token `=` at (25, 25) to (25, 26)
+annexB/language/expressions/logical-assignment/emulates-undefined-or.js (default)
+  Unexpected token `=` at (25, 25) to (25, 26)
 annexB/language/statements/for-in/nonstrict-initializer.js (default)
   Invalid left-hand side in for-in at (11, 7) to (11, 24)
+built-ins/RegExp/match-indices/indices-array-element.js (strict mode)
+  Invalid flags supplied to RegExp constructor 'd' at (14, 19) to (14, 20)
+built-ins/RegExp/match-indices/indices-array-element.js (default)
+  Invalid flags supplied to RegExp constructor 'd' at (14, 19) to (14, 20)
+built-ins/RegExp/match-indices/indices-array-matched.js (strict mode)
+  Invalid flags supplied to RegExp constructor 'd' at (26, 19) to (26, 20)
+built-ins/RegExp/match-indices/indices-array-matched.js (default)
+  Invalid flags supplied to RegExp constructor 'd' at (26, 19) to (26, 20)
+built-ins/RegExp/match-indices/indices-array-non-unicode-match.js (strict mode)
+  Invalid flags supplied to RegExp constructor 'd' at (34, 53) to (34, 54)
+built-ins/RegExp/match-indices/indices-array-non-unicode-match.js (default)
+  Invalid flags supplied to RegExp constructor 'd' at (34, 53) to (34, 54)
+built-ins/RegExp/match-indices/indices-array-properties.js (strict mode)
+  Invalid flags supplied to RegExp constructor 'd' at (16, 19) to (16, 20)
+built-ins/RegExp/match-indices/indices-array-properties.js (default)
+  Invalid flags supplied to RegExp constructor 'd' at (16, 19) to (16, 20)
+built-ins/RegExp/match-indices/indices-array-unicode-match.js (strict mode)
+  Invalid flags supplied to RegExp constructor 'du' at (42, 54) to (42, 55)
+built-ins/RegExp/match-indices/indices-array-unicode-match.js (default)
+  Invalid flags supplied to RegExp constructor 'du' at (42, 54) to (42, 55)
+built-ins/RegExp/match-indices/indices-array-unicode-property-names.js (strict mode)
+  Invalid flags supplied to RegExp constructor 'du' at (11, 39) to (11, 40)
+built-ins/RegExp/match-indices/indices-array-unicode-property-names.js (default)
+  Invalid flags supplied to RegExp constructor 'du' at (11, 39) to (11, 40)
+built-ins/RegExp/match-indices/indices-array-unmatched.js (strict mode)
+  Invalid flags supplied to RegExp constructor 'd' at (25, 20) to (25, 21)
+built-ins/RegExp/match-indices/indices-array-unmatched.js (default)
+  Invalid flags supplied to RegExp constructor 'd' at (25, 20) to (25, 21)
+built-ins/RegExp/match-indices/indices-array.js (strict mode)
+  Invalid flags supplied to RegExp constructor 'd' at (13, 16) to (13, 17)
+built-ins/RegExp/match-indices/indices-array.js (default)
+  Invalid flags supplied to RegExp constructor 'd' at (13, 16) to (13, 17)
+built-ins/RegExp/match-indices/indices-groups-object-undefined.js (strict mode)
+  Invalid flags supplied to RegExp constructor 'd' at (19, 15) to (19, 16)
+built-ins/RegExp/match-indices/indices-groups-object-undefined.js (default)
+  Invalid flags supplied to RegExp constructor 'd' at (19, 15) to (19, 16)
+built-ins/RegExp/match-indices/indices-groups-object-unmatched.js (strict mode)
+  Invalid flags supplied to RegExp constructor 'd' at (17, 30) to (17, 31)
+built-ins/RegExp/match-indices/indices-groups-object-unmatched.js (default)
+  Invalid flags supplied to RegExp constructor 'd' at (17, 30) to (17, 31)
+built-ins/RegExp/match-indices/indices-groups-object.js (strict mode)
+  Invalid flags supplied to RegExp constructor 'd' at (24, 24) to (24, 25)
+built-ins/RegExp/match-indices/indices-groups-object.js (default)
+  Invalid flags supplied to RegExp constructor 'd' at (24, 24) to (24, 25)
+built-ins/RegExp/match-indices/indices-groups-properties.js (strict mode)
+  Invalid flags supplied to RegExp constructor 'du' at (18, 67) to (18, 68)
+built-ins/RegExp/match-indices/indices-groups-properties.js (default)
+  Invalid flags supplied to RegExp constructor 'du' at (18, 67) to (18, 68)
+built-ins/RegExp/match-indices/indices-property.js (strict mode)
+  Invalid flags supplied to RegExp constructor 'd' at (24, 16) to (24, 17)
+built-ins/RegExp/match-indices/indices-property.js (default)
+  Invalid flags supplied to RegExp constructor 'd' at (24, 16) to (24, 17)
 built-ins/RegExp/property-escapes/binary-property-with-value-ASCII_-_F-negated.js (strict mode)
   Missing parse error
 built-ins/RegExp/property-escapes/binary-property-with-value-ASCII_-_F-negated.js (default)
@@ -592,6 +652,14 @@ built-ins/RegExp/property-escapes/unsupported-property-Line_Break.js (strict mod
   Missing parse error
 built-ins/RegExp/property-escapes/unsupported-property-Line_Break.js (default)
   Missing parse error
+built-ins/RegExp/prototype/flags/this-val-regexp.js (strict mode)
+  Invalid flags supplied to RegExp constructor 'd' at (33, 21) to (33, 22)
+built-ins/RegExp/prototype/flags/this-val-regexp.js (default)
+  Invalid flags supplied to RegExp constructor 'd' at (33, 21) to (33, 22)
+built-ins/RegExp/prototype/hasIndices/this-val-regexp.js (strict mode)
+  Invalid flags supplied to RegExp constructor 'd' at (25, 21) to (25, 22)
+built-ins/RegExp/prototype/hasIndices/this-val-regexp.js (default)
+  Invalid flags supplied to RegExp constructor 'd' at (25, 21) to (25, 22)
 language/block-scope/syntax/redeclaration/async-function-name-redeclaration-attempt-with-async-function.js (strict mode)
   Missing parse error
 language/block-scope/syntax/redeclaration/async-function-name-redeclaration-attempt-with-async-function.js (default)
@@ -958,13 +1026,45 @@ language/block-scope/syntax/redeclaration/var-redeclaration-attempt-after-let.js
   Missing parse error
 language/block-scope/syntax/redeclaration/var-redeclaration-attempt-after-let.js (default)
   Missing parse error
+language/expressions/arrow-function/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/arrow-function/array-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/arrow-function/dstr/syntax-error-ident-ref-let-escaped.js (strict mode)
+  Missing parse error
+language/expressions/arrow-function/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/arrow-function/object-destructuring-param-strict-body.js (default)
+  Missing parse error
 language/expressions/arrow-function/params-duplicate.js (default)
+  Missing parse error
+language/expressions/arrow-function/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/arrow-function/rest-param-strict-body.js (default)
   Missing parse error
 language/expressions/arrow-function/syntax/early-errors/arrowparameters-cover-no-duplicates.js (default)
   Missing parse error
 language/expressions/arrow-function/syntax/early-errors/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/expressions/arrow-function/syntax/early-errors/use-strict-with-non-simple-param.js (default)
+  Missing parse error
+language/expressions/assignment/dstr/syntax-error-ident-ref-let-escaped.js (strict mode)
+  Missing parse error
+language/expressions/assignmenttargettype/direct-arrowfunction-1.js (strict mode)
+  Missing parse error
+language/expressions/assignmenttargettype/direct-arrowfunction-1.js (default)
+  Missing parse error
+language/expressions/assignmenttargettype/direct-asyncarrowfunction-1.js (strict mode)
+  Missing parse error
+language/expressions/assignmenttargettype/direct-asyncarrowfunction-1.js (default)
+  Missing parse error
+language/expressions/assignmenttargettype/parenthesized-primaryexpression-objectliteral.js (strict mode)
+  Missing parse error
+language/expressions/assignmenttargettype/parenthesized-primaryexpression-objectliteral.js (default)
+  Missing parse error
+language/expressions/async-arrow-function/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/async-arrow-function/array-destructuring-param-strict-body.js (default)
   Missing parse error
 language/expressions/async-arrow-function/await-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
@@ -1012,6 +1112,14 @@ language/expressions/async-arrow-function/early-errors-arrow-formals-body-duplic
   Missing parse error
 language/expressions/async-arrow-function/early-errors-arrow-formals-body-duplicate.js (default)
   Missing parse error
+language/expressions/async-arrow-function/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/async-arrow-function/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/async-arrow-function/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/async-arrow-function/rest-param-strict-body.js (default)
+  Missing parse error
 language/expressions/async-function/await-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
 language/expressions/async-function/await-as-binding-identifier-escaped.js (default)
@@ -1032,6 +1140,10 @@ language/expressions/async-function/early-errors-expression-formals-body-duplica
   Missing parse error
 language/expressions/async-function/early-errors-expression-formals-body-duplicate.js (default)
   Missing parse error
+language/expressions/async-function/named-array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/async-function/named-array-destructuring-param-strict-body.js (default)
+  Missing parse error
 language/expressions/async-function/named-await-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
 language/expressions/async-function/named-await-as-binding-identifier-escaped.js (default)
@@ -1043,6 +1155,30 @@ language/expressions/async-function/named-await-as-identifier-reference-escaped.
 language/expressions/async-function/named-await-as-label-identifier-escaped.js (strict mode)
   Missing parse error
 language/expressions/async-function/named-await-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/async-function/named-object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/async-function/named-object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/async-function/named-rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/async-function/named-rest-param-strict-body.js (default)
+  Missing parse error
+language/expressions/async-function/nameless-array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/async-function/nameless-array-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/async-function/nameless-object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/async-function/nameless-object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/async-function/nameless-rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/async-function/nameless-rest-param-strict-body.js (default)
+  Missing parse error
+language/expressions/async-generator/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/async-generator/array-destructuring-param-strict-body.js (default)
   Missing parse error
 language/expressions/async-generator/await-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
@@ -1072,6 +1208,10 @@ language/expressions/async-generator/early-errors-expression-formals-contains-aw
   Missing parse error
 language/expressions/async-generator/early-errors-expression-formals-contains-await-expr.js (default)
   Missing parse error
+language/expressions/async-generator/named-array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/async-generator/named-array-destructuring-param-strict-body.js (default)
+  Missing parse error
 language/expressions/async-generator/named-await-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
 language/expressions/async-generator/named-await-as-binding-identifier-escaped.js (default)
@@ -1083,6 +1223,14 @@ language/expressions/async-generator/named-await-as-identifier-reference-escaped
 language/expressions/async-generator/named-await-as-label-identifier-escaped.js (strict mode)
   Missing parse error
 language/expressions/async-generator/named-await-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/async-generator/named-object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/async-generator/named-object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/async-generator/named-rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/async-generator/named-rest-param-strict-body.js (default)
   Missing parse error
 language/expressions/async-generator/named-yield-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
@@ -1096,6 +1244,14 @@ language/expressions/async-generator/named-yield-as-label-identifier-escaped.js 
   Missing parse error
 language/expressions/async-generator/named-yield-as-label-identifier-escaped.js (default)
   Missing parse error
+language/expressions/async-generator/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/async-generator/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/async-generator/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/async-generator/rest-param-strict-body.js (default)
+  Missing parse error
 language/expressions/async-generator/yield-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
 language/expressions/async-generator/yield-as-binding-identifier-escaped.js (default)
@@ -1107,6 +1263,10 @@ language/expressions/async-generator/yield-as-identifier-reference-escaped.js (d
 language/expressions/async-generator/yield-as-label-identifier-escaped.js (strict mode)
   Missing parse error
 language/expressions/async-generator/yield-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/class/async-gen-method-static/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/async-gen-method-static/array-destructuring-param-strict-body.js (default)
   Missing parse error
 language/expressions/class/async-gen-method-static/await-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
@@ -1120,6 +1280,14 @@ language/expressions/class/async-gen-method-static/await-as-label-identifier-esc
   Missing parse error
 language/expressions/class/async-gen-method-static/await-as-label-identifier-escaped.js (default)
   Missing parse error
+language/expressions/class/async-gen-method-static/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/async-gen-method-static/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/class/async-gen-method-static/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/async-gen-method-static/rest-param-strict-body.js (default)
+  Missing parse error
 language/expressions/class/async-gen-method-static/yield-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
 language/expressions/class/async-gen-method-static/yield-as-binding-identifier-escaped.js (default)
@@ -1131,6 +1299,10 @@ language/expressions/class/async-gen-method-static/yield-as-identifier-reference
 language/expressions/class/async-gen-method-static/yield-as-label-identifier-escaped.js (strict mode)
   Missing parse error
 language/expressions/class/async-gen-method-static/yield-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/class/async-gen-method/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/async-gen-method/array-destructuring-param-strict-body.js (default)
   Missing parse error
 language/expressions/class/async-gen-method/await-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
@@ -1144,6 +1316,14 @@ language/expressions/class/async-gen-method/await-as-label-identifier-escaped.js
   Missing parse error
 language/expressions/class/async-gen-method/await-as-label-identifier-escaped.js (default)
   Missing parse error
+language/expressions/class/async-gen-method/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/async-gen-method/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/class/async-gen-method/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/async-gen-method/rest-param-strict-body.js (default)
+  Missing parse error
 language/expressions/class/async-gen-method/yield-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
 language/expressions/class/async-gen-method/yield-as-binding-identifier-escaped.js (default)
@@ -1155,6 +1335,10 @@ language/expressions/class/async-gen-method/yield-as-identifier-reference-escape
 language/expressions/class/async-gen-method/yield-as-label-identifier-escaped.js (strict mode)
   Missing parse error
 language/expressions/class/async-gen-method/yield-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/class/async-method-static/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/async-method-static/array-destructuring-param-strict-body.js (default)
   Missing parse error
 language/expressions/class/async-method-static/await-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
@@ -1168,6 +1352,18 @@ language/expressions/class/async-method-static/await-as-label-identifier-escaped
   Missing parse error
 language/expressions/class/async-method-static/await-as-label-identifier-escaped.js (default)
   Missing parse error
+language/expressions/class/async-method-static/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/async-method-static/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/class/async-method-static/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/async-method-static/rest-param-strict-body.js (default)
+  Missing parse error
+language/expressions/class/async-method/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/async-method/array-destructuring-param-strict-body.js (default)
+  Missing parse error
 language/expressions/class/async-method/await-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
 language/expressions/class/async-method/await-as-binding-identifier-escaped.js (default)
@@ -1179,6 +1375,14 @@ language/expressions/class/async-method/await-as-identifier-reference-escaped.js
 language/expressions/class/async-method/await-as-label-identifier-escaped.js (strict mode)
   Missing parse error
 language/expressions/class/async-method/await-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/class/async-method/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/async-method/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/class/async-method/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/async-method/rest-param-strict-body.js (default)
   Missing parse error
 language/expressions/class/class-name-ident-await-escaped-module.js (strict mode)
   Missing parse error
@@ -1200,6 +1404,70 @@ language/expressions/class/class-name-ident-yield-escaped.js (strict mode)
   Missing parse error
 language/expressions/class/class-name-ident-yield-escaped.js (default)
   Missing parse error
+language/expressions/class/cpn-class-expr-accessors-computed-property-name-from-assignment-expression-coalesce.js (strict mode)
+  Unexpected token `=` at (40, 11) to (40, 12)
+language/expressions/class/cpn-class-expr-accessors-computed-property-name-from-assignment-expression-coalesce.js (default)
+  Unexpected token `=` at (40, 11) to (40, 12)
+language/expressions/class/cpn-class-expr-accessors-computed-property-name-from-assignment-expression-logical-and.js (strict mode)
+  Unexpected token `=` at (40, 11) to (40, 12)
+language/expressions/class/cpn-class-expr-accessors-computed-property-name-from-assignment-expression-logical-and.js (default)
+  Unexpected token `=` at (40, 11) to (40, 12)
+language/expressions/class/cpn-class-expr-accessors-computed-property-name-from-assignment-expression-logical-or.js (strict mode)
+  Unexpected token `=` at (40, 11) to (40, 12)
+language/expressions/class/cpn-class-expr-accessors-computed-property-name-from-assignment-expression-logical-or.js (default)
+  Unexpected token `=` at (40, 11) to (40, 12)
+language/expressions/class/cpn-class-expr-accessors-computed-property-name-from-await-expression.js (strict mode)
+  Unexpected number, expected the token `]` at (40, 13) to (40, 14)
+language/expressions/class/cpn-class-expr-accessors-computed-property-name-from-await-expression.js (default)
+  Unexpected number, expected the token `]` at (40, 13) to (40, 14)
+language/expressions/class/cpn-class-expr-computed-property-name-from-assignment-expression-coalesce.js (strict mode)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/expressions/class/cpn-class-expr-computed-property-name-from-assignment-expression-coalesce.js (default)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/expressions/class/cpn-class-expr-computed-property-name-from-assignment-expression-logical-and.js (strict mode)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/expressions/class/cpn-class-expr-computed-property-name-from-assignment-expression-logical-and.js (default)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/expressions/class/cpn-class-expr-computed-property-name-from-assignment-expression-logical-or.js (strict mode)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/expressions/class/cpn-class-expr-computed-property-name-from-assignment-expression-logical-or.js (default)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/expressions/class/cpn-class-expr-computed-property-name-from-await-expression.js (strict mode)
+  Unexpected number, expected the token `]` at (40, 9) to (40, 10)
+language/expressions/class/cpn-class-expr-computed-property-name-from-await-expression.js (default)
+  Unexpected number, expected the token `]` at (40, 9) to (40, 10)
+language/expressions/class/cpn-class-expr-fields-computed-property-name-from-assignment-expression-coalesce.js (strict mode)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/expressions/class/cpn-class-expr-fields-computed-property-name-from-assignment-expression-coalesce.js (default)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/expressions/class/cpn-class-expr-fields-computed-property-name-from-assignment-expression-logical-and.js (strict mode)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/expressions/class/cpn-class-expr-fields-computed-property-name-from-assignment-expression-logical-and.js (default)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/expressions/class/cpn-class-expr-fields-computed-property-name-from-assignment-expression-logical-or.js (strict mode)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/expressions/class/cpn-class-expr-fields-computed-property-name-from-assignment-expression-logical-or.js (default)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/expressions/class/cpn-class-expr-fields-computed-property-name-from-await-expression.js (strict mode)
+  Unexpected number, expected the token `]` at (40, 9) to (40, 10)
+language/expressions/class/cpn-class-expr-fields-computed-property-name-from-await-expression.js (default)
+  Unexpected number, expected the token `]` at (40, 9) to (40, 10)
+language/expressions/class/cpn-class-expr-fields-methods-computed-property-name-from-assignment-expression-coalesce.js (strict mode)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/expressions/class/cpn-class-expr-fields-methods-computed-property-name-from-assignment-expression-coalesce.js (default)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/expressions/class/cpn-class-expr-fields-methods-computed-property-name-from-assignment-expression-logical-and.js (strict mode)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/expressions/class/cpn-class-expr-fields-methods-computed-property-name-from-assignment-expression-logical-and.js (default)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/expressions/class/cpn-class-expr-fields-methods-computed-property-name-from-assignment-expression-logical-or.js (strict mode)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/expressions/class/cpn-class-expr-fields-methods-computed-property-name-from-assignment-expression-logical-or.js (default)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/expressions/class/cpn-class-expr-fields-methods-computed-property-name-from-await-expression.js (strict mode)
+  Unexpected number, expected the token `]` at (40, 9) to (40, 10)
+language/expressions/class/cpn-class-expr-fields-methods-computed-property-name-from-await-expression.js (default)
+  Unexpected number, expected the token `]` at (40, 9) to (40, 10)
 language/expressions/class/elements/arrow-fnc-init-err-contains-arguments.js (strict mode)
   Missing parse error
 language/expressions/class/elements/arrow-fnc-init-err-contains-arguments.js (default)
@@ -1316,6 +1584,62 @@ language/expressions/class/elements/literal-name-init-err-contains-arguments.js 
   Missing parse error
 language/expressions/class/elements/literal-name-init-err-contains-arguments.js (default)
   Missing parse error
+language/expressions/class/elements/nested-arrow-fnc-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/expressions/class/elements/nested-arrow-fnc-init-err-contains-arguments.js (default)
+  Missing parse error
+language/expressions/class/elements/nested-comp-name-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/expressions/class/elements/nested-comp-name-init-err-contains-arguments.js (default)
+  Missing parse error
+language/expressions/class/elements/nested-literal-name-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/expressions/class/elements/nested-literal-name-init-err-contains-arguments.js (default)
+  Missing parse error
+language/expressions/class/elements/nested-private-arrow-fnc-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/expressions/class/elements/nested-private-arrow-fnc-init-err-contains-arguments.js (default)
+  Missing parse error
+language/expressions/class/elements/nested-private-literal-name-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/expressions/class/elements/nested-private-literal-name-init-err-contains-arguments.js (default)
+  Missing parse error
+language/expressions/class/elements/nested-private-ternary-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/expressions/class/elements/nested-private-ternary-init-err-contains-arguments.js (default)
+  Missing parse error
+language/expressions/class/elements/nested-private-typeof-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/expressions/class/elements/nested-private-typeof-init-err-contains-arguments.js (default)
+  Missing parse error
+language/expressions/class/elements/nested-static-comp-name-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/expressions/class/elements/nested-static-comp-name-init-err-contains-arguments.js (default)
+  Missing parse error
+language/expressions/class/elements/nested-static-literal-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/expressions/class/elements/nested-static-literal-init-err-contains-arguments.js (default)
+  Missing parse error
+language/expressions/class/elements/nested-static-private-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/expressions/class/elements/nested-static-private-init-err-contains-arguments.js (default)
+  Missing parse error
+language/expressions/class/elements/nested-static-string-literal-name-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/expressions/class/elements/nested-static-string-literal-name-init-err-contains-arguments.js (default)
+  Missing parse error
+language/expressions/class/elements/nested-string-literal-name-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/expressions/class/elements/nested-string-literal-name-init-err-contains-arguments.js (default)
+  Missing parse error
+language/expressions/class/elements/nested-ternary-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/expressions/class/elements/nested-ternary-init-err-contains-arguments.js (default)
+  Missing parse error
+language/expressions/class/elements/nested-typeof-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/expressions/class/elements/nested-typeof-init-err-contains-arguments.js (default)
+  Missing parse error
 language/expressions/class/elements/private-arrow-fnc-init-err-contains-arguments.js (strict mode)
   Missing parse error
 language/expressions/class/elements/private-arrow-fnc-init-err-contains-arguments.js (default)
@@ -1332,6 +1656,14 @@ language/expressions/class/elements/private-typeof-init-err-contains-arguments.j
   Missing parse error
 language/expressions/class/elements/private-typeof-init-err-contains-arguments.js (default)
   Missing parse error
+language/expressions/class/elements/static-as-valid-instance-field-assigned.js (strict mode)
+  Unexpected token `=`, expected an identifier at (25, 9) to (25, 10)
+language/expressions/class/elements/static-as-valid-instance-field-assigned.js (default)
+  Unexpected token `=`, expected an identifier at (25, 9) to (25, 10)
+language/expressions/class/elements/static-as-valid-instance-field.js (strict mode)
+  Unexpected token `;`, expected an identifier at (25, 8) to (25, 9)
+language/expressions/class/elements/static-as-valid-instance-field.js (default)
+  Unexpected token `;`, expected an identifier at (25, 8) to (25, 9)
 language/expressions/class/elements/static-comp-name-init-err-contains-arguments.js (strict mode)
   Missing parse error
 language/expressions/class/elements/static-comp-name-init-err-contains-arguments.js (default)
@@ -1424,6 +1756,18 @@ language/expressions/class/elements/typeof-init-err-contains-arguments.js (stric
   Missing parse error
 language/expressions/class/elements/typeof-init-err-contains-arguments.js (default)
   Missing parse error
+language/expressions/class/gen-method-static/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/gen-method-static/array-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/class/gen-method-static/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/gen-method-static/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/class/gen-method-static/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/gen-method-static/rest-param-strict-body.js (default)
+  Missing parse error
 language/expressions/class/gen-method-static/yield-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
 language/expressions/class/gen-method-static/yield-as-binding-identifier-escaped.js (default)
@@ -1435,6 +1779,18 @@ language/expressions/class/gen-method-static/yield-as-identifier-reference-escap
 language/expressions/class/gen-method-static/yield-as-label-identifier-escaped.js (strict mode)
   Missing parse error
 language/expressions/class/gen-method-static/yield-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/class/gen-method/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/gen-method/array-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/class/gen-method/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/gen-method/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/class/gen-method/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/gen-method/rest-param-strict-body.js (default)
   Missing parse error
 language/expressions/class/gen-method/yield-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
@@ -1448,13 +1804,53 @@ language/expressions/class/gen-method/yield-as-label-identifier-escaped.js (stri
   Missing parse error
 language/expressions/class/gen-method/yield-as-label-identifier-escaped.js (default)
   Missing parse error
+language/expressions/class/method-static/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/method-static/array-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/class/method-static/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/method-static/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/class/method-static/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/method-static/rest-param-strict-body.js (default)
+  Missing parse error
+language/expressions/class/method/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/method/array-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/class/method/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/method/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/class/method/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/class/method/rest-param-strict-body.js (default)
+  Missing parse error
 language/expressions/dynamic-import/escape-sequence-import.js (strict mode)
   Missing parse error
 language/expressions/dynamic-import/escape-sequence-import.js (default)
   Missing parse error
+language/expressions/function/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/function/array-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/function/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/function/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/function/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/function/rest-param-strict-body.js (default)
+  Missing parse error
 language/expressions/function/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/expressions/function/use-strict-with-non-simple-param.js (default)
+  Missing parse error
+language/expressions/generators/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/generators/array-destructuring-param-strict-body.js (default)
   Missing parse error
 language/expressions/generators/named-yield-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
@@ -1467,6 +1863,14 @@ language/expressions/generators/named-yield-as-identifier-reference-escaped.js (
 language/expressions/generators/named-yield-as-label-identifier-escaped.js (strict mode)
   Missing parse error
 language/expressions/generators/named-yield-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/generators/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/generators/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/generators/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/generators/rest-param-strict-body.js (default)
   Missing parse error
 language/expressions/generators/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
@@ -1504,10 +1908,224 @@ language/expressions/import.meta/syntax/invalid-assignment-target-object-rest-de
   Missing parse error
 language/expressions/import.meta/syntax/invalid-assignment-target-object-rest-destructuring-expr.js (default)
   Missing parse error
+language/expressions/in/private-field-presence-accessor-shadowed.js (strict mode)
+  Unexpected token `#`, expected an identifier at (35, 15) to (35, 16)
+language/expressions/in/private-field-presence-accessor-shadowed.js (default)
+  Unexpected token `#`, expected an identifier at (35, 15) to (35, 16)
+language/expressions/in/private-field-presence-accessor.js (strict mode)
+  Unexpected token `#`, expected an identifier at (27, 11) to (27, 12)
+language/expressions/in/private-field-presence-accessor.js (default)
+  Unexpected token `#`, expected an identifier at (27, 11) to (27, 12)
+language/expressions/in/private-field-presence-field-shadowed.js (strict mode)
+  Unexpected token `#`, expected an identifier at (27, 15) to (27, 16)
+language/expressions/in/private-field-presence-field-shadowed.js (default)
+  Unexpected token `#`, expected an identifier at (27, 15) to (27, 16)
+language/expressions/in/private-field-presence-field.js (strict mode)
+  Unexpected token `#`, expected an identifier at (21, 11) to (21, 12)
+language/expressions/in/private-field-presence-field.js (default)
+  Unexpected token `#`, expected an identifier at (21, 11) to (21, 12)
+language/expressions/in/private-field-presence-method-shadowed.js (strict mode)
+  Unexpected token `#`, expected an identifier at (35, 15) to (35, 16)
+language/expressions/in/private-field-presence-method-shadowed.js (default)
+  Unexpected token `#`, expected an identifier at (35, 15) to (35, 16)
+language/expressions/in/private-field-presence-method.js (strict mode)
+  Unexpected token `#`, expected an identifier at (27, 11) to (27, 12)
+language/expressions/in/private-field-presence-method.js (default)
+  Unexpected token `#`, expected an identifier at (27, 11) to (27, 12)
+language/expressions/in/private-field-rhs-await-absent.js (strict mode)
+  Unexpected token `#`, expected an identifier at (31, 11) to (31, 12)
+language/expressions/in/private-field-rhs-await-absent.js (default)
+  Unexpected token `#`, expected an identifier at (31, 11) to (31, 12)
+language/expressions/in/private-field-rhs-await-present.js (strict mode)
+  Unexpected token `#`, expected an identifier at (27, 11) to (27, 12)
+language/expressions/in/private-field-rhs-await-present.js (default)
+  Unexpected token `#`, expected an identifier at (27, 11) to (27, 12)
+language/expressions/in/private-field-rhs-non-object.js (strict mode)
+  Unexpected token `#`, expected an identifier at (41, 6) to (41, 7)
+language/expressions/in/private-field-rhs-non-object.js (default)
+  Unexpected token `#`, expected an identifier at (41, 6) to (41, 7)
+language/expressions/in/private-field-rhs-unresolvable.js (strict mode)
+  Unexpected token `#`, expected an identifier at (20, 6) to (20, 7)
+language/expressions/in/private-field-rhs-unresolvable.js (default)
+  Unexpected token `#`, expected an identifier at (20, 6) to (20, 7)
+language/expressions/in/private-field-rhs-yield-present.js (strict mode)
+  Unexpected token `#`, expected an identifier at (26, 11) to (26, 12)
+language/expressions/in/private-field-rhs-yield-present.js (default)
+  Unexpected token `#`, expected an identifier at (26, 11) to (26, 12)
+language/expressions/logical-assignment/lgcl-and-assignment-operator-bigint.js (strict mode)
+  Unexpected token `=` at (24, 25) to (24, 26)
+language/expressions/logical-assignment/lgcl-and-assignment-operator-bigint.js (default)
+  Unexpected token `=` at (24, 25) to (24, 26)
+language/expressions/logical-assignment/lgcl-and-assignment-operator-lhs-before-rhs.js (strict mode)
+  Unexpected token `=` at (23, 17) to (23, 18)
+language/expressions/logical-assignment/lgcl-and-assignment-operator-lhs-before-rhs.js (default)
+  Unexpected token `=` at (23, 17) to (23, 18)
+language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-arrow-function.js (strict mode)
+  Unexpected token `=` at (18, 8) to (18, 9)
+language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-arrow-function.js (default)
+  Unexpected token `=` at (18, 8) to (18, 9)
+language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-class-expression.js (strict mode)
+  Unexpected token `=` at (18, 8) to (18, 9)
+language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-class-expression.js (default)
+  Unexpected token `=` at (18, 8) to (18, 9)
+language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-function.js (strict mode)
+  Unexpected token `=` at (18, 8) to (18, 9)
+language/expressions/logical-assignment/lgcl-and-assignment-operator-namedevaluation-function.js (default)
+  Unexpected token `=` at (18, 8) to (18, 9)
+language/expressions/logical-assignment/lgcl-and-assignment-operator-no-set-put.js (strict mode)
+  Unexpected token `=` at (26, 13) to (26, 14)
+language/expressions/logical-assignment/lgcl-and-assignment-operator-no-set.js (strict mode)
+  Unexpected token `=` at (25, 28) to (25, 29)
+language/expressions/logical-assignment/lgcl-and-assignment-operator-non-extensible.js (strict mode)
+  Unexpected token `=` at (18, 11) to (18, 12)
+language/expressions/logical-assignment/lgcl-and-assignment-operator-non-writeable-put.js (strict mode)
+  Unexpected token `=` at (24, 13) to (24, 14)
+language/expressions/logical-assignment/lgcl-and-assignment-operator-non-writeable.js (strict mode)
+  Unexpected token `=` at (23, 28) to (23, 29)
+language/expressions/logical-assignment/lgcl-and-assignment-operator-unresolved-lhs.js (strict mode)
+  Unexpected token `=` at (15, 15) to (15, 16)
+language/expressions/logical-assignment/lgcl-and-assignment-operator-unresolved-rhs-put.js (strict mode)
+  Unexpected token `=` at (17, 10) to (17, 11)
+language/expressions/logical-assignment/lgcl-and-assignment-operator-unresolved-rhs-put.js (default)
+  Unexpected token `=` at (17, 10) to (17, 11)
+language/expressions/logical-assignment/lgcl-and-assignment-operator-unresolved-rhs.js (strict mode)
+  Unexpected token `=` at (16, 25) to (16, 26)
+language/expressions/logical-assignment/lgcl-and-assignment-operator-unresolved-rhs.js (default)
+  Unexpected token `=` at (16, 25) to (16, 26)
+language/expressions/logical-assignment/lgcl-and-assignment-operator.js (strict mode)
+  Unexpected token `=` at (24, 25) to (24, 26)
+language/expressions/logical-assignment/lgcl-and-assignment-operator.js (default)
+  Unexpected token `=` at (24, 25) to (24, 26)
+language/expressions/logical-assignment/lgcl-and-whitespace.js (strict mode)
+  Unexpected token `=` at (15, 21) to (15, 22)
+language/expressions/logical-assignment/lgcl-and-whitespace.js (default)
+  Unexpected token `=` at (15, 21) to (15, 22)
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-bigint.js (strict mode)
+  Unexpected token `=` at (23, 25) to (23, 26)
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-bigint.js (default)
+  Unexpected token `=` at (23, 25) to (23, 26)
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-lhs-before-rhs.js (strict mode)
+  Unexpected token `=` at (23, 17) to (23, 18)
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-lhs-before-rhs.js (default)
+  Unexpected token `=` at (23, 17) to (23, 18)
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-arrow-function.js (strict mode)
+  Unexpected token `=` at (18, 8) to (18, 9)
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-arrow-function.js (default)
+  Unexpected token `=` at (18, 8) to (18, 9)
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-class-expression.js (strict mode)
+  Unexpected token `=` at (18, 8) to (18, 9)
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-class-expression.js (default)
+  Unexpected token `=` at (18, 8) to (18, 9)
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-function.js (strict mode)
+  Unexpected token `=` at (18, 8) to (18, 9)
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-namedevaluation-function.js (default)
+  Unexpected token `=` at (18, 8) to (18, 9)
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-no-set-put.js (strict mode)
+  Unexpected token `=` at (26, 13) to (26, 14)
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-no-set.js (strict mode)
+  Unexpected token `=` at (25, 28) to (25, 29)
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-non-extensible.js (strict mode)
+  Unexpected token `=` at (19, 13) to (19, 14)
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-non-writeable-put.js (strict mode)
+  Unexpected token `=` at (24, 13) to (24, 14)
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-non-writeable.js (strict mode)
+  Unexpected token `=` at (23, 28) to (23, 29)
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-unresolved-lhs.js (strict mode)
+  Unexpected token `=` at (15, 15) to (15, 16)
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-unresolved-rhs-put.js (strict mode)
+  Unexpected token `=` at (17, 10) to (17, 11)
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-unresolved-rhs-put.js (default)
+  Unexpected token `=` at (17, 10) to (17, 11)
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-unresolved-rhs.js (strict mode)
+  Unexpected token `=` at (16, 25) to (16, 26)
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator-unresolved-rhs.js (default)
+  Unexpected token `=` at (16, 25) to (16, 26)
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator.js (strict mode)
+  Unexpected token `=` at (23, 25) to (23, 26)
+language/expressions/logical-assignment/lgcl-nullish-assignment-operator.js (default)
+  Unexpected token `=` at (23, 25) to (23, 26)
+language/expressions/logical-assignment/lgcl-nullish-whitespace.js (strict mode)
+  Unexpected token `=` at (15, 21) to (15, 22)
+language/expressions/logical-assignment/lgcl-nullish-whitespace.js (default)
+  Unexpected token `=` at (15, 21) to (15, 22)
+language/expressions/logical-assignment/lgcl-or-assignment-operator-bigint.js (strict mode)
+  Unexpected token `=` at (24, 25) to (24, 26)
+language/expressions/logical-assignment/lgcl-or-assignment-operator-bigint.js (default)
+  Unexpected token `=` at (24, 25) to (24, 26)
+language/expressions/logical-assignment/lgcl-or-assignment-operator-lhs-before-rhs.js (strict mode)
+  Unexpected token `=` at (23, 17) to (23, 18)
+language/expressions/logical-assignment/lgcl-or-assignment-operator-lhs-before-rhs.js (default)
+  Unexpected token `=` at (23, 17) to (23, 18)
+language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-arrow-function.js (strict mode)
+  Unexpected token `=` at (18, 8) to (18, 9)
+language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-arrow-function.js (default)
+  Unexpected token `=` at (18, 8) to (18, 9)
+language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-class-expression.js (strict mode)
+  Unexpected token `=` at (18, 8) to (18, 9)
+language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-class-expression.js (default)
+  Unexpected token `=` at (18, 8) to (18, 9)
+language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-function.js (strict mode)
+  Unexpected token `=` at (18, 8) to (18, 9)
+language/expressions/logical-assignment/lgcl-or-assignment-operator-namedevaluation-function.js (default)
+  Unexpected token `=` at (18, 8) to (18, 9)
+language/expressions/logical-assignment/lgcl-or-assignment-operator-no-set-put.js (strict mode)
+  Unexpected token `=` at (26, 13) to (26, 14)
+language/expressions/logical-assignment/lgcl-or-assignment-operator-no-set.js (strict mode)
+  Unexpected token `=` at (25, 28) to (25, 29)
+language/expressions/logical-assignment/lgcl-or-assignment-operator-non-extensible.js (strict mode)
+  Unexpected token `=` at (19, 13) to (19, 14)
+language/expressions/logical-assignment/lgcl-or-assignment-operator-non-writeable-put.js (strict mode)
+  Unexpected token `=` at (24, 13) to (24, 14)
+language/expressions/logical-assignment/lgcl-or-assignment-operator-non-writeable.js (strict mode)
+  Unexpected token `=` at (23, 28) to (23, 29)
+language/expressions/logical-assignment/lgcl-or-assignment-operator-unresolved-lhs.js (strict mode)
+  Unexpected token `=` at (15, 15) to (15, 16)
+language/expressions/logical-assignment/lgcl-or-assignment-operator-unresolved-rhs-put.js (strict mode)
+  Unexpected token `=` at (17, 10) to (17, 11)
+language/expressions/logical-assignment/lgcl-or-assignment-operator-unresolved-rhs-put.js (default)
+  Unexpected token `=` at (17, 10) to (17, 11)
+language/expressions/logical-assignment/lgcl-or-assignment-operator-unresolved-rhs.js (strict mode)
+  Unexpected token `=` at (16, 25) to (16, 26)
+language/expressions/logical-assignment/lgcl-or-assignment-operator-unresolved-rhs.js (default)
+  Unexpected token `=` at (16, 25) to (16, 26)
+language/expressions/logical-assignment/lgcl-or-assignment-operator.js (strict mode)
+  Unexpected token `=` at (24, 25) to (24, 26)
+language/expressions/logical-assignment/lgcl-or-assignment-operator.js (default)
+  Unexpected token `=` at (24, 25) to (24, 26)
+language/expressions/logical-assignment/lgcl-or-whitespace.js (strict mode)
+  Unexpected token `=` at (15, 21) to (15, 22)
+language/expressions/logical-assignment/lgcl-or-whitespace.js (default)
+  Unexpected token `=` at (15, 21) to (15, 22)
 language/expressions/new.target/escaped-new.js (strict mode)
   Missing parse error
 language/expressions/new.target/escaped-new.js (default)
   Missing parse error
+language/expressions/object/__proto__-duplicate.js (strict mode)
+  Missing parse error
+language/expressions/object/__proto__-duplicate.js (default)
+  Missing parse error
+language/expressions/object/cpn-obj-lit-computed-property-name-from-assignment-expression-coalesce.js (strict mode)
+  Unexpected token `=` at (29, 7) to (29, 8)
+language/expressions/object/cpn-obj-lit-computed-property-name-from-assignment-expression-coalesce.js (default)
+  Unexpected token `=` at (29, 7) to (29, 8)
+language/expressions/object/cpn-obj-lit-computed-property-name-from-assignment-expression-logical-and.js (strict mode)
+  Unexpected token `=` at (29, 7) to (29, 8)
+language/expressions/object/cpn-obj-lit-computed-property-name-from-assignment-expression-logical-and.js (default)
+  Unexpected token `=` at (29, 7) to (29, 8)
+language/expressions/object/cpn-obj-lit-computed-property-name-from-assignment-expression-logical-or.js (strict mode)
+  Unexpected token `=` at (29, 7) to (29, 8)
+language/expressions/object/cpn-obj-lit-computed-property-name-from-assignment-expression-logical-or.js (default)
+  Unexpected token `=` at (29, 7) to (29, 8)
+language/expressions/object/cpn-obj-lit-computed-property-name-from-await-expression.js (strict mode)
+  Unexpected number, expected the token `]` at (29, 9) to (29, 10)
+language/expressions/object/cpn-obj-lit-computed-property-name-from-await-expression.js (default)
+  Unexpected number, expected the token `]` at (29, 9) to (29, 10)
+language/expressions/object/identifier-shorthand-let-invalid-strict-mode.js (default)
+  Missing parse error
+language/expressions/object/literal-property-name-bigint.js (strict mode)
+  Unexpected bigint, expected an identifier at (31, 10) to (31, 29)
+language/expressions/object/literal-property-name-bigint.js (default)
+  Unexpected bigint, expected an identifier at (31, 10) to (31, 29)
 language/expressions/object/method-definition/async-await-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
 language/expressions/object/method-definition/async-await-as-binding-identifier-escaped.js (default)
@@ -1532,6 +2150,18 @@ language/expressions/object/method-definition/async-gen-await-as-label-identifie
   Missing parse error
 language/expressions/object/method-definition/async-gen-await-as-label-identifier-escaped.js (default)
   Missing parse error
+language/expressions/object/method-definition/async-gen-meth-array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/async-gen-meth-array-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/object/method-definition/async-gen-meth-object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/async-gen-meth-object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/object/method-definition/async-gen-meth-rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/async-gen-meth-rest-param-strict-body.js (default)
+  Missing parse error
 language/expressions/object/method-definition/async-gen-yield-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
 language/expressions/object/method-definition/async-gen-yield-as-binding-identifier-escaped.js (default)
@@ -1543,6 +2173,18 @@ language/expressions/object/method-definition/async-gen-yield-as-identifier-refe
 language/expressions/object/method-definition/async-gen-yield-as-label-identifier-escaped.js (strict mode)
   Missing parse error
 language/expressions/object/method-definition/async-gen-yield-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/expressions/object/method-definition/async-meth-array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/async-meth-array-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/object/method-definition/async-meth-object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/async-meth-object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/object/method-definition/async-meth-rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/async-meth-rest-param-strict-body.js (default)
   Missing parse error
 language/expressions/object/method-definition/early-errors-object-async-method-duplicate-parameters.js (default)
   Missing parse error
@@ -1559,6 +2201,18 @@ language/expressions/object/method-definition/early-errors-object-method-await-i
 language/expressions/object/method-definition/early-errors-object-method-await-in-formals.js (default)
   Missing parse error
 language/expressions/object/method-definition/early-errors-object-method-duplicate-parameters.js (default)
+  Missing parse error
+language/expressions/object/method-definition/gen-meth-array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/gen-meth-array-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/object/method-definition/gen-meth-object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/gen-meth-object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/object/method-definition/gen-meth-rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/gen-meth-rest-param-strict-body.js (default)
   Missing parse error
 language/expressions/object/method-definition/gen-yield-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
@@ -1584,6 +2238,18 @@ language/expressions/object/method-definition/generator-use-strict-with-non-simp
   Missing parse error
 language/expressions/object/method-definition/generator-use-strict-with-non-simple-param.js (default)
   Missing parse error
+language/expressions/object/method-definition/meth-array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/meth-array-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/object/method-definition/meth-object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/meth-object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/expressions/object/method-definition/meth-rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/expressions/object/method-definition/meth-rest-param-strict-body.js (default)
+  Missing parse error
 language/expressions/object/method-definition/name-param-redecl.js (strict mode)
   Missing parse error
 language/expressions/object/method-definition/name-param-redecl.js (default)
@@ -1596,10 +2262,30 @@ language/expressions/object/method-definition/use-strict-with-non-simple-param.j
   Missing parse error
 language/expressions/object/method-definition/use-strict-with-non-simple-param.js (default)
   Missing parse error
+language/expressions/optional-chaining/call-expression.js (strict mode)
+  An optional chain may not be used in a `new` expression. at (31, 39) to (31, 41)
+language/expressions/optional-chaining/call-expression.js (default)
+  An optional chain may not be used in a `new` expression. at (31, 39) to (31, 41)
+language/expressions/optional-chaining/member-expression.js (strict mode)
+  An optional chain may not be used in a `new` expression. at (63, 36) to (63, 38)
+language/expressions/optional-chaining/member-expression.js (default)
+  An optional chain may not be used in a `new` expression. at (63, 36) to (63, 38)
+language/expressions/optional-chaining/super-property-optional-call.js (strict mode)
+  An optional chain may not be used in a `new` expression. at (24, 18) to (24, 20)
+language/expressions/optional-chaining/super-property-optional-call.js (default)
+  An optional chain may not be used in a `new` expression. at (24, 18) to (24, 20)
 language/expressions/tagged-template/invalid-escape-sequences.js (strict mode)
-  Unexpected token ILLEGAL at (21, 4) to (21, 5)
+  Unexpected token ILLEGAL at (31, 4) to (31, 5)
 language/expressions/tagged-template/invalid-escape-sequences.js (default)
-  Unexpected token ILLEGAL at (21, 4) to (21, 5)
+  Unexpected token ILLEGAL at (31, 4) to (31, 5)
+language/expressions/template-literal/invalid-legacy-octal-escape-sequence-8.js (strict mode)
+  Missing parse error
+language/expressions/template-literal/invalid-legacy-octal-escape-sequence-8.js (default)
+  Missing parse error
+language/expressions/template-literal/invalid-legacy-octal-escape-sequence-9.js (strict mode)
+  Missing parse error
+language/expressions/template-literal/invalid-legacy-octal-escape-sequence-9.js (default)
+  Missing parse error
 language/expressions/template-literal/invalid-legacy-octal-escape-sequence.js (strict mode)
   Missing parse error
 language/expressions/template-literal/invalid-legacy-octal-escape-sequence.js (default)
@@ -1633,6 +2319,58 @@ language/global-code/import.js (default)
 language/global-code/new.target-arrow.js (strict mode)
   Missing parse error
 language/global-code/new.target-arrow.js (default)
+  Missing parse error
+language/identifiers/part-unicode-10.0.0-escaped.js (strict mode)
+  Uncaught exception: (Failure "unreachable assert_valid_unicode_in_identifier")
+language/identifiers/part-unicode-10.0.0-escaped.js (default)
+  Uncaught exception: (Failure "unreachable assert_valid_unicode_in_identifier")
+language/identifiers/part-unicode-11.0.0-escaped.js (strict mode)
+  Uncaught exception: (Failure "unreachable assert_valid_unicode_in_identifier")
+language/identifiers/part-unicode-11.0.0-escaped.js (default)
+  Uncaught exception: (Failure "unreachable assert_valid_unicode_in_identifier")
+language/identifiers/part-unicode-12.0.0-escaped.js (strict mode)
+  Uncaught exception: (Failure "unreachable assert_valid_unicode_in_identifier")
+language/identifiers/part-unicode-12.0.0-escaped.js (default)
+  Uncaught exception: (Failure "unreachable assert_valid_unicode_in_identifier")
+language/identifiers/part-unicode-13.0.0-escaped.js (strict mode)
+  Uncaught exception: (Failure "unreachable assert_valid_unicode_in_identifier")
+language/identifiers/part-unicode-13.0.0-escaped.js (default)
+  Uncaught exception: (Failure "unreachable assert_valid_unicode_in_identifier")
+language/identifiers/part-unicode-5.2.0-escaped.js (strict mode)
+  Uncaught exception: (Failure "unreachable assert_valid_unicode_in_identifier")
+language/identifiers/part-unicode-5.2.0-escaped.js (default)
+  Uncaught exception: (Failure "unreachable assert_valid_unicode_in_identifier")
+language/identifiers/part-unicode-6.1.0-escaped.js (strict mode)
+  Uncaught exception: (Failure "unreachable assert_valid_unicode_in_identifier")
+language/identifiers/part-unicode-6.1.0-escaped.js (default)
+  Uncaught exception: (Failure "unreachable assert_valid_unicode_in_identifier")
+language/identifiers/part-unicode-7.0.0-escaped.js (strict mode)
+  Uncaught exception: (Failure "unreachable assert_valid_unicode_in_identifier")
+language/identifiers/part-unicode-7.0.0-escaped.js (default)
+  Uncaught exception: (Failure "unreachable assert_valid_unicode_in_identifier")
+language/identifiers/part-unicode-8.0.0-escaped.js (strict mode)
+  Uncaught exception: (Failure "unreachable assert_valid_unicode_in_identifier")
+language/identifiers/part-unicode-8.0.0-escaped.js (default)
+  Uncaught exception: (Failure "unreachable assert_valid_unicode_in_identifier")
+language/identifiers/part-unicode-9.0.0-escaped.js (strict mode)
+  Uncaught exception: (Failure "unreachable assert_valid_unicode_in_identifier")
+language/identifiers/part-unicode-9.0.0-escaped.js (default)
+  Uncaught exception: (Failure "unreachable assert_valid_unicode_in_identifier")
+language/identifiers/start-unicode-10.0.0-escaped.js (strict mode)
+  Uncaught exception: (Failure "unreachable assert_valid_unicode_in_identifier")
+language/identifiers/start-unicode-10.0.0-escaped.js (default)
+  Uncaught exception: (Failure "unreachable assert_valid_unicode_in_identifier")
+language/identifiers/start-unicode-13.0.0-escaped.js (strict mode)
+  Uncaught exception: (Failure "unreachable assert_valid_unicode_in_identifier")
+language/identifiers/start-unicode-13.0.0-escaped.js (default)
+  Uncaught exception: (Failure "unreachable assert_valid_unicode_in_identifier")
+language/identifiers/start-zwj-escaped.js (strict mode)
+  Missing parse error
+language/identifiers/start-zwj-escaped.js (default)
+  Missing parse error
+language/identifiers/start-zwnj-escaped.js (strict mode)
+  Missing parse error
+language/identifiers/start-zwnj-escaped.js (default)
   Missing parse error
 language/identifiers/val-break-via-escape-hex.js (strict mode)
   Missing parse error
@@ -2174,14 +2912,6 @@ language/literals/regexp/named-groups/invalid-punctuator-within-groupspecifier.j
   Missing parse error
 language/literals/regexp/named-groups/invalid-punctuator-within-groupspecifier.js (default)
   Missing parse error
-language/literals/regexp/named-groups/invalid-u-escape-in-groupspecifier-2.js (strict mode)
-  Missing parse error
-language/literals/regexp/named-groups/invalid-u-escape-in-groupspecifier-2.js (default)
-  Missing parse error
-language/literals/regexp/named-groups/invalid-u-escape-in-groupspecifier.js (strict mode)
-  Missing parse error
-language/literals/regexp/named-groups/invalid-u-escape-in-groupspecifier.js (default)
-  Missing parse error
 language/literals/regexp/named-groups/invalid-unterminated-groupspecifier-u.js (strict mode)
   Missing parse error
 language/literals/regexp/named-groups/invalid-unterminated-groupspecifier-u.js (default)
@@ -2189,10 +2919,6 @@ language/literals/regexp/named-groups/invalid-unterminated-groupspecifier-u.js (
 language/literals/regexp/named-groups/invalid-unterminated-groupspecifier.js (strict mode)
   Missing parse error
 language/literals/regexp/named-groups/invalid-unterminated-groupspecifier.js (default)
-  Missing parse error
-language/literals/regexp/u-dec-esc.js (strict mode)
-  Missing parse error
-language/literals/regexp/u-dec-esc.js (default)
   Missing parse error
 language/literals/regexp/u-invalid-class-escape.js (strict mode)
   Missing parse error
@@ -2274,6 +3000,14 @@ language/literals/regexp/unicode-escape-nls-err.js (strict mode)
   Missing parse error
 language/literals/regexp/unicode-escape-nls-err.js (default)
   Missing parse error
+language/literals/string/legacy-non-octal-escape-sequence-8-strict-explicit-pragma.js (default)
+  Missing parse error
+language/literals/string/legacy-non-octal-escape-sequence-8-strict.js (strict mode)
+  Missing parse error
+language/literals/string/legacy-non-octal-escape-sequence-9-strict-explicit-pragma.js (default)
+  Missing parse error
+language/literals/string/legacy-non-octal-escape-sequence-9-strict.js (strict mode)
+  Missing parse error
 language/literals/string/legacy-non-octal-escape-sequence-strict.js (strict mode)
   Missing parse error
 language/module-code/early-export-global.js (strict mode)
@@ -2318,6 +3052,50 @@ language/module-code/eval-self-once.js (strict mode)
   Type declarations are not allowed in untyped mode at (35, 12) to (35, 15)
 language/module-code/eval-self-once.js (default)
   Type declarations are not allowed in untyped mode at (35, 12) to (35, 15)
+language/module-code/export-default-asyncfunction-declaration-binding-exists.js (strict mode)
+  Missing parse error
+language/module-code/export-default-asyncfunction-declaration-binding-exists.js (default)
+  Missing parse error
+language/module-code/export-default-asyncgenerator-declaration-binding-exists.js (strict mode)
+  Missing parse error
+language/module-code/export-default-asyncgenerator-declaration-binding-exists.js (default)
+  Missing parse error
+language/module-code/export-default-function-declaration-binding-exists.js (strict mode)
+  Missing parse error
+language/module-code/export-default-function-declaration-binding-exists.js (default)
+  Missing parse error
+language/module-code/export-default-generator-declaration-binding-exists.js (strict mode)
+  Missing parse error
+language/module-code/export-default-generator-declaration-binding-exists.js (default)
+  Missing parse error
+language/module-code/export-expname-from-binding-string.js (strict mode)
+  Unexpected string, expected an identifier at (20, 20) to (20, 23)
+language/module-code/export-expname-from-binding-string.js (default)
+  Unexpected string, expected an identifier at (20, 20) to (20, 23)
+language/module-code/export-expname-from-star-string.js (strict mode)
+  Type declarations are not allowed in untyped mode at (17, 12) to (17, 17)
+language/module-code/export-expname-from-star-string.js (default)
+  Type declarations are not allowed in untyped mode at (17, 12) to (17, 17)
+language/module-code/export-expname-from-string-binding.js (strict mode)
+  Unexpected string, expected an identifier at (18, 9) to (18, 12)
+language/module-code/export-expname-from-string-binding.js (default)
+  Unexpected string, expected an identifier at (18, 9) to (18, 12)
+language/module-code/export-expname-from-string-string.js (strict mode)
+  Unexpected string, expected an identifier at (18, 9) to (18, 12)
+language/module-code/export-expname-from-string-string.js (default)
+  Unexpected string, expected an identifier at (18, 9) to (18, 12)
+language/module-code/export-expname-from-string.js (strict mode)
+  Unexpected string, expected an identifier at (20, 9) to (20, 12)
+language/module-code/export-expname-from-string.js (default)
+  Unexpected string, expected an identifier at (20, 9) to (20, 12)
+language/module-code/export-expname-import-string-binding.js (strict mode)
+  Unexpected string, expected an identifier at (15, 9) to (15, 12)
+language/module-code/export-expname-import-string-binding.js (default)
+  Unexpected string, expected an identifier at (15, 9) to (15, 12)
+language/module-code/export-star-as-dflt.js (strict mode)
+  Type declarations are not allowed in untyped mode at (21, 12) to (21, 19)
+language/module-code/export-star-as-dflt.js (default)
+  Type declarations are not allowed in untyped mode at (21, 12) to (21, 19)
 language/module-code/instn-once.js (strict mode)
   Type declarations are not allowed in untyped mode at (34, 12) to (34, 15)
 language/module-code/instn-once.js (default)
@@ -2332,6 +3110,854 @@ language/module-code/parse-err-hoist-lex-gen.js (default)
   Missing parse error
 language/module-code/parse-err-yield.js (default)
   Missing parse error
+language/module-code/top-level-await/await-awaits-thenable-not-callable.js (strict mode)
+  Unexpected identifier, expected the token `;` at (14, 16) to (14, 24)
+language/module-code/top-level-await/await-awaits-thenable-not-callable.js (default)
+  Unexpected identifier, expected the token `;` at (14, 16) to (14, 24)
+language/module-code/top-level-await/await-awaits-thenables-that-throw.js (strict mode)
+  Unexpected identifier, expected the end of an expression statement (`;`) at (21, 8) to (21, 16)
+language/module-code/top-level-await/await-awaits-thenables-that-throw.js (default)
+  Unexpected identifier, expected the end of an expression statement (`;`) at (21, 8) to (21, 16)
+language/module-code/top-level-await/await-awaits-thenables.js (strict mode)
+  Unexpected identifier, expected the token `,` at (18, 23) to (18, 31)
+language/module-code/top-level-await/await-awaits-thenables.js (default)
+  Unexpected identifier, expected the token `,` at (18, 23) to (18, 31)
+language/module-code/top-level-await/await-dynamic-import-rejection.js (strict mode)
+  Unexpected token `import`, expected the end of an expression statement (`;`) at (51, 6) to (51, 12)
+language/module-code/top-level-await/await-dynamic-import-rejection.js (default)
+  Unexpected token `import`, expected the end of an expression statement (`;`) at (51, 6) to (51, 12)
+language/module-code/top-level-await/await-dynamic-import-resolution.js (strict mode)
+  Unexpected token `import`, expected the token `;` at (48, 15) to (48, 21)
+language/module-code/top-level-await/await-dynamic-import-resolution.js (default)
+  Unexpected token `import`, expected the token `;` at (48, 15) to (48, 21)
+language/module-code/top-level-await/await-expr-func-expression.js (strict mode)
+  Unexpected token `function`, expected the end of an expression statement (`;`) at (45, 6) to (45, 14)
+language/module-code/top-level-await/await-expr-func-expression.js (default)
+  Unexpected token `function`, expected the end of an expression statement (`;`) at (45, 6) to (45, 14)
+language/module-code/top-level-await/await-expr-new-expr-reject.js (strict mode)
+  Unexpected identifier, expected the end of an expression statement (`;`) at (40, 8) to (40, 15)
+language/module-code/top-level-await/await-expr-new-expr-reject.js (default)
+  Unexpected identifier, expected the end of an expression statement (`;`) at (40, 8) to (40, 15)
+language/module-code/top-level-await/await-expr-new-expr.js (strict mode)
+  Unexpected token `new`, expected the token `;` at (37, 18) to (37, 21)
+language/module-code/top-level-await/await-expr-new-expr.js (default)
+  Unexpected token `new`, expected the token `;` at (37, 18) to (37, 21)
+language/module-code/top-level-await/await-expr-reject-throws.js (strict mode)
+  Unexpected identifier, expected the end of an expression statement (`;`) at (27, 8) to (27, 15)
+language/module-code/top-level-await/await-expr-reject-throws.js (default)
+  Unexpected identifier, expected the end of an expression statement (`;`) at (27, 8) to (27, 15)
+language/module-code/top-level-await/await-expr-resolution.js (strict mode)
+  Unexpected number, expected the end of an expression statement (`;`) at (26, 10) to (26, 12)
+language/module-code/top-level-await/await-expr-resolution.js (default)
+  Unexpected number, expected the end of an expression statement (`;`) at (26, 10) to (26, 12)
+language/module-code/top-level-await/await-void-expr.js (strict mode)
+  Unexpected token `void`, expected the token `;` at (24, 14) to (24, 18)
+language/module-code/top-level-await/await-void-expr.js (default)
+  Unexpected token `void`, expected the token `;` at (24, 14) to (24, 18)
+language/module-code/top-level-await/if-await-expr.js (strict mode)
+  Unexpected identifier, expected the token `)` at (26, 10) to (26, 11)
+language/module-code/top-level-await/if-await-expr.js (default)
+  Unexpected identifier, expected the token `)` at (26, 10) to (26, 11)
+language/module-code/top-level-await/module-async-import-async-resolution-ticks.js (strict mode)
+  Unexpected number, expected the end of an expression statement (`;`) at (82, 6) to (82, 7)
+language/module-code/top-level-await/module-async-import-async-resolution-ticks.js (default)
+  Unexpected number, expected the end of an expression statement (`;`) at (82, 6) to (82, 7)
+language/module-code/top-level-await/module-import-unwrapped.js (strict mode)
+  Unexpected identifier, expected the token `,` at (82, 23) to (82, 26)
+language/module-code/top-level-await/module-import-unwrapped.js (default)
+  Unexpected identifier, expected the token `,` at (82, 23) to (82, 26)
+language/module-code/top-level-await/module-self-import-async-resolution-ticks.js (strict mode)
+  Unexpected identifier, expected the token `;` at (83, 21) to (83, 28)
+language/module-code/top-level-await/module-self-import-async-resolution-ticks.js (default)
+  Unexpected identifier, expected the token `;` at (83, 21) to (83, 28)
+language/module-code/top-level-await/new-await-parens.js (strict mode)
+  Unexpected identifier, expected the token `)` at (12, 29) to (12, 35)
+language/module-code/top-level-await/new-await-parens.js (default)
+  Unexpected identifier, expected the token `)` at (12, 29) to (12, 35)
+language/module-code/top-level-await/new-await.js (strict mode)
+  Missing parse error
+language/module-code/top-level-await/new-await.js (default)
+  Missing parse error
+language/module-code/top-level-await/no-operand.js (strict mode)
+  Missing parse error
+language/module-code/top-level-await/no-operand.js (default)
+  Missing parse error
+language/module-code/top-level-await/syntax/await-expr-dyn-import.js (strict mode)
+  Unexpected token `import`, expected the end of an expression statement (`;`) at (37, 8) to (37, 14)
+language/module-code/top-level-await/syntax/await-expr-dyn-import.js (default)
+  Unexpected token `import`, expected the end of an expression statement (`;`) at (37, 8) to (37, 14)
+language/module-code/top-level-await/syntax/block-await-expr-array-literal.js (strict mode)
+  Unexpected token `]` at (59, 41) to (59, 42)
+language/module-code/top-level-await/syntax/block-await-expr-array-literal.js (default)
+  Unexpected token `]` at (59, 41) to (59, 42)
+language/module-code/top-level-await/syntax/block-await-expr-func-expression.js (strict mode)
+  Unexpected token `function`, expected the end of an expression statement (`;`) at (65, 40) to (65, 48)
+language/module-code/top-level-await/syntax/block-await-expr-func-expression.js (default)
+  Unexpected token `function`, expected the end of an expression statement (`;`) at (65, 40) to (65, 48)
+language/module-code/top-level-await/syntax/block-await-expr-identifier.js (strict mode)
+  Unexpected identifier, expected the end of an expression statement (`;`) at (60, 40) to (60, 43)
+language/module-code/top-level-await/syntax/block-await-expr-identifier.js (default)
+  Unexpected identifier, expected the end of an expression statement (`;`) at (60, 40) to (60, 43)
+language/module-code/top-level-await/syntax/block-await-expr-literal-number.js (strict mode)
+  Unexpected number, expected the end of an expression statement (`;`) at (59, 40) to (59, 41)
+language/module-code/top-level-await/syntax/block-await-expr-literal-number.js (default)
+  Unexpected number, expected the end of an expression statement (`;`) at (59, 40) to (59, 41)
+language/module-code/top-level-await/syntax/block-await-expr-literal-string.js (strict mode)
+  Unexpected string, expected the end of an expression statement (`;`) at (59, 40) to (59, 42)
+language/module-code/top-level-await/syntax/block-await-expr-literal-string.js (default)
+  Unexpected string, expected the end of an expression statement (`;`) at (59, 40) to (59, 42)
+language/module-code/top-level-await/syntax/block-await-expr-nested.js (strict mode)
+  Unexpected token `await`, expected the end of an expression statement (`;`) at (55, 40) to (55, 45)
+language/module-code/top-level-await/syntax/block-await-expr-nested.js (default)
+  Unexpected token `await`, expected the end of an expression statement (`;`) at (55, 40) to (55, 45)
+language/module-code/top-level-await/syntax/block-await-expr-new-expr.js (strict mode)
+  Unexpected token `new`, expected the end of an expression statement (`;`) at (56, 40) to (56, 43)
+language/module-code/top-level-await/syntax/block-await-expr-new-expr.js (default)
+  Unexpected token `new`, expected the end of an expression statement (`;`) at (56, 40) to (56, 43)
+language/module-code/top-level-await/syntax/block-await-expr-null.js (strict mode)
+  Unexpected token `null`, expected the end of an expression statement (`;`) at (59, 40) to (59, 44)
+language/module-code/top-level-await/syntax/block-await-expr-null.js (default)
+  Unexpected token `null`, expected the end of an expression statement (`;`) at (59, 40) to (59, 44)
+language/module-code/top-level-await/syntax/block-await-expr-obj-literal.js (strict mode)
+  Unexpected token `{`, expected the end of an expression statement (`;`) at (59, 40) to (59, 41)
+language/module-code/top-level-await/syntax/block-await-expr-obj-literal.js (default)
+  Unexpected token `{`, expected the end of an expression statement (`;`) at (59, 40) to (59, 41)
+language/module-code/top-level-await/syntax/block-await-expr-regexp.js (strict mode)
+  Unexpected token `;` at (59, 43) to (59, 44)
+language/module-code/top-level-await/syntax/block-await-expr-regexp.js (default)
+  Unexpected token `;` at (59, 43) to (59, 44)
+language/module-code/top-level-await/syntax/block-await-expr-this.js (strict mode)
+  Unexpected token `this`, expected the end of an expression statement (`;`) at (59, 40) to (59, 44)
+language/module-code/top-level-await/syntax/block-await-expr-this.js (default)
+  Unexpected token `this`, expected the end of an expression statement (`;`) at (59, 40) to (59, 44)
+language/module-code/top-level-await/syntax/catch-parameter.js (strict mode)
+  Unexpected number, expected the token `,` at (42, 26) to (42, 28)
+language/module-code/top-level-await/syntax/catch-parameter.js (default)
+  Unexpected number, expected the token `,` at (42, 26) to (42, 28)
+language/module-code/top-level-await/syntax/export-class-decl-await-expr-array-literal.js (strict mode)
+  Unexpected token `]` at (68, 33) to (68, 34)
+language/module-code/top-level-await/syntax/export-class-decl-await-expr-array-literal.js (default)
+  Unexpected token `]` at (68, 33) to (68, 34)
+language/module-code/top-level-await/syntax/export-class-decl-await-expr-func-expression.js (strict mode)
+  Unexpected token `function`, expected the token `,` at (74, 32) to (74, 40)
+language/module-code/top-level-await/syntax/export-class-decl-await-expr-func-expression.js (default)
+  Unexpected token `function`, expected the token `,` at (74, 32) to (74, 40)
+language/module-code/top-level-await/syntax/export-class-decl-await-expr-identifier.js (strict mode)
+  Unexpected identifier, expected the token `,` at (69, 32) to (69, 35)
+language/module-code/top-level-await/syntax/export-class-decl-await-expr-identifier.js (default)
+  Unexpected identifier, expected the token `,` at (69, 32) to (69, 35)
+language/module-code/top-level-await/syntax/export-class-decl-await-expr-literal-number.js (strict mode)
+  Unexpected number, expected the token `,` at (68, 32) to (68, 33)
+language/module-code/top-level-await/syntax/export-class-decl-await-expr-literal-number.js (default)
+  Unexpected number, expected the token `,` at (68, 32) to (68, 33)
+language/module-code/top-level-await/syntax/export-class-decl-await-expr-literal-string.js (strict mode)
+  Unexpected string, expected the token `,` at (68, 32) to (68, 34)
+language/module-code/top-level-await/syntax/export-class-decl-await-expr-literal-string.js (default)
+  Unexpected string, expected the token `,` at (68, 32) to (68, 34)
+language/module-code/top-level-await/syntax/export-class-decl-await-expr-nested.js (strict mode)
+  Unexpected token `await`, expected the token `,` at (64, 32) to (64, 37)
+language/module-code/top-level-await/syntax/export-class-decl-await-expr-nested.js (default)
+  Unexpected token `await`, expected the token `,` at (64, 32) to (64, 37)
+language/module-code/top-level-await/syntax/export-class-decl-await-expr-new-expr.js (strict mode)
+  Unexpected token `new`, expected the token `,` at (65, 32) to (65, 35)
+language/module-code/top-level-await/syntax/export-class-decl-await-expr-new-expr.js (default)
+  Unexpected token `new`, expected the token `,` at (65, 32) to (65, 35)
+language/module-code/top-level-await/syntax/export-class-decl-await-expr-null.js (strict mode)
+  Unexpected token `null`, expected the token `,` at (68, 32) to (68, 36)
+language/module-code/top-level-await/syntax/export-class-decl-await-expr-null.js (default)
+  Unexpected token `null`, expected the token `,` at (68, 32) to (68, 36)
+language/module-code/top-level-await/syntax/export-class-decl-await-expr-obj-literal.js (strict mode)
+  Unexpected token `{`, expected the token `,` at (68, 32) to (68, 33)
+language/module-code/top-level-await/syntax/export-class-decl-await-expr-obj-literal.js (default)
+  Unexpected token `{`, expected the token `,` at (68, 32) to (68, 33)
+language/module-code/top-level-await/syntax/export-class-decl-await-expr-regexp.js (strict mode)
+  Unexpected token `)` at (68, 35) to (68, 36)
+language/module-code/top-level-await/syntax/export-class-decl-await-expr-regexp.js (default)
+  Unexpected token `)` at (68, 35) to (68, 36)
+language/module-code/top-level-await/syntax/export-class-decl-await-expr-this.js (strict mode)
+  Unexpected token `this`, expected the token `,` at (68, 32) to (68, 36)
+language/module-code/top-level-await/syntax/export-class-decl-await-expr-this.js (default)
+  Unexpected token `this`, expected the token `,` at (68, 32) to (68, 36)
+language/module-code/top-level-await/syntax/export-dflt-assign-expr-await-expr-array-literal.js (strict mode)
+  Unexpected token `]` at (64, 22) to (64, 23)
+language/module-code/top-level-await/syntax/export-dflt-assign-expr-await-expr-array-literal.js (default)
+  Unexpected token `]` at (64, 22) to (64, 23)
+language/module-code/top-level-await/syntax/export-dflt-assign-expr-await-expr-func-expression.js (strict mode)
+  Unexpected token `function`, expected the token `;` at (70, 21) to (70, 29)
+language/module-code/top-level-await/syntax/export-dflt-assign-expr-await-expr-func-expression.js (default)
+  Unexpected token `function`, expected the token `;` at (70, 21) to (70, 29)
+language/module-code/top-level-await/syntax/export-dflt-assign-expr-await-expr-identifier.js (strict mode)
+  Unexpected identifier, expected the token `;` at (65, 21) to (65, 24)
+language/module-code/top-level-await/syntax/export-dflt-assign-expr-await-expr-identifier.js (default)
+  Unexpected identifier, expected the token `;` at (65, 21) to (65, 24)
+language/module-code/top-level-await/syntax/export-dflt-assign-expr-await-expr-literal-number.js (strict mode)
+  Unexpected number, expected the token `;` at (64, 21) to (64, 22)
+language/module-code/top-level-await/syntax/export-dflt-assign-expr-await-expr-literal-number.js (default)
+  Unexpected number, expected the token `;` at (64, 21) to (64, 22)
+language/module-code/top-level-await/syntax/export-dflt-assign-expr-await-expr-literal-string.js (strict mode)
+  Unexpected string, expected the token `;` at (64, 21) to (64, 23)
+language/module-code/top-level-await/syntax/export-dflt-assign-expr-await-expr-literal-string.js (default)
+  Unexpected string, expected the token `;` at (64, 21) to (64, 23)
+language/module-code/top-level-await/syntax/export-dflt-assign-expr-await-expr-nested.js (strict mode)
+  Unexpected token `await`, expected the token `;` at (60, 21) to (60, 26)
+language/module-code/top-level-await/syntax/export-dflt-assign-expr-await-expr-nested.js (default)
+  Unexpected token `await`, expected the token `;` at (60, 21) to (60, 26)
+language/module-code/top-level-await/syntax/export-dflt-assign-expr-await-expr-new-expr.js (strict mode)
+  Unexpected token `new`, expected the token `;` at (61, 21) to (61, 24)
+language/module-code/top-level-await/syntax/export-dflt-assign-expr-await-expr-new-expr.js (default)
+  Unexpected token `new`, expected the token `;` at (61, 21) to (61, 24)
+language/module-code/top-level-await/syntax/export-dflt-assign-expr-await-expr-null.js (strict mode)
+  Unexpected token `null`, expected the token `;` at (64, 21) to (64, 25)
+language/module-code/top-level-await/syntax/export-dflt-assign-expr-await-expr-null.js (default)
+  Unexpected token `null`, expected the token `;` at (64, 21) to (64, 25)
+language/module-code/top-level-await/syntax/export-dflt-assign-expr-await-expr-obj-literal.js (strict mode)
+  Unexpected token `{`, expected the token `;` at (64, 21) to (64, 22)
+language/module-code/top-level-await/syntax/export-dflt-assign-expr-await-expr-obj-literal.js (default)
+  Unexpected token `{`, expected the token `;` at (64, 21) to (64, 22)
+language/module-code/top-level-await/syntax/export-dflt-assign-expr-await-expr-regexp.js (strict mode)
+  Unexpected token `;` at (64, 24) to (64, 25)
+language/module-code/top-level-await/syntax/export-dflt-assign-expr-await-expr-regexp.js (default)
+  Unexpected token `;` at (64, 24) to (64, 25)
+language/module-code/top-level-await/syntax/export-dflt-assign-expr-await-expr-this.js (strict mode)
+  Unexpected token `this`, expected the token `;` at (64, 21) to (64, 25)
+language/module-code/top-level-await/syntax/export-dflt-assign-expr-await-expr-this.js (default)
+  Unexpected token `this`, expected the token `;` at (64, 21) to (64, 25)
+language/module-code/top-level-await/syntax/export-dft-class-decl-await-expr-array-literal.js (strict mode)
+  Unexpected token `]` at (68, 39) to (68, 40)
+language/module-code/top-level-await/syntax/export-dft-class-decl-await-expr-array-literal.js (default)
+  Unexpected token `]` at (68, 39) to (68, 40)
+language/module-code/top-level-await/syntax/export-dft-class-decl-await-expr-func-expression.js (strict mode)
+  Unexpected token `function`, expected the token `,` at (74, 38) to (74, 46)
+language/module-code/top-level-await/syntax/export-dft-class-decl-await-expr-func-expression.js (default)
+  Unexpected token `function`, expected the token `,` at (74, 38) to (74, 46)
+language/module-code/top-level-await/syntax/export-dft-class-decl-await-expr-identifier.js (strict mode)
+  Unexpected identifier, expected the token `,` at (69, 38) to (69, 41)
+language/module-code/top-level-await/syntax/export-dft-class-decl-await-expr-identifier.js (default)
+  Unexpected identifier, expected the token `,` at (69, 38) to (69, 41)
+language/module-code/top-level-await/syntax/export-dft-class-decl-await-expr-literal-number.js (strict mode)
+  Unexpected number, expected the token `,` at (68, 38) to (68, 39)
+language/module-code/top-level-await/syntax/export-dft-class-decl-await-expr-literal-number.js (default)
+  Unexpected number, expected the token `,` at (68, 38) to (68, 39)
+language/module-code/top-level-await/syntax/export-dft-class-decl-await-expr-literal-string.js (strict mode)
+  Unexpected string, expected the token `,` at (68, 38) to (68, 40)
+language/module-code/top-level-await/syntax/export-dft-class-decl-await-expr-literal-string.js (default)
+  Unexpected string, expected the token `,` at (68, 38) to (68, 40)
+language/module-code/top-level-await/syntax/export-dft-class-decl-await-expr-nested.js (strict mode)
+  Unexpected token `await`, expected the token `,` at (64, 38) to (64, 43)
+language/module-code/top-level-await/syntax/export-dft-class-decl-await-expr-nested.js (default)
+  Unexpected token `await`, expected the token `,` at (64, 38) to (64, 43)
+language/module-code/top-level-await/syntax/export-dft-class-decl-await-expr-new-expr.js (strict mode)
+  Unexpected token `new`, expected the token `,` at (65, 38) to (65, 41)
+language/module-code/top-level-await/syntax/export-dft-class-decl-await-expr-new-expr.js (default)
+  Unexpected token `new`, expected the token `,` at (65, 38) to (65, 41)
+language/module-code/top-level-await/syntax/export-dft-class-decl-await-expr-null.js (strict mode)
+  Unexpected token `null`, expected the token `,` at (68, 38) to (68, 42)
+language/module-code/top-level-await/syntax/export-dft-class-decl-await-expr-null.js (default)
+  Unexpected token `null`, expected the token `,` at (68, 38) to (68, 42)
+language/module-code/top-level-await/syntax/export-dft-class-decl-await-expr-obj-literal.js (strict mode)
+  Unexpected token `{`, expected the token `,` at (68, 38) to (68, 39)
+language/module-code/top-level-await/syntax/export-dft-class-decl-await-expr-obj-literal.js (default)
+  Unexpected token `{`, expected the token `,` at (68, 38) to (68, 39)
+language/module-code/top-level-await/syntax/export-dft-class-decl-await-expr-regexp.js (strict mode)
+  Unexpected token `)` at (68, 41) to (68, 42)
+language/module-code/top-level-await/syntax/export-dft-class-decl-await-expr-regexp.js (default)
+  Unexpected token `)` at (68, 41) to (68, 42)
+language/module-code/top-level-await/syntax/export-dft-class-decl-await-expr-this.js (strict mode)
+  Unexpected token `this`, expected the token `,` at (68, 38) to (68, 42)
+language/module-code/top-level-await/syntax/export-dft-class-decl-await-expr-this.js (default)
+  Unexpected token `this`, expected the token `,` at (68, 38) to (68, 42)
+language/module-code/top-level-await/syntax/export-lex-decl-await-expr-array-literal.js (strict mode)
+  Unexpected token `]` at (60, 22) to (60, 23)
+language/module-code/top-level-await/syntax/export-lex-decl-await-expr-array-literal.js (default)
+  Unexpected token `]` at (60, 22) to (60, 23)
+language/module-code/top-level-await/syntax/export-lex-decl-await-expr-func-expression.js (strict mode)
+  Unexpected token `function`, expected the token `;` at (66, 21) to (66, 29)
+language/module-code/top-level-await/syntax/export-lex-decl-await-expr-func-expression.js (default)
+  Unexpected token `function`, expected the token `;` at (66, 21) to (66, 29)
+language/module-code/top-level-await/syntax/export-lex-decl-await-expr-identifier.js (strict mode)
+  Unexpected identifier, expected the token `;` at (61, 21) to (61, 24)
+language/module-code/top-level-await/syntax/export-lex-decl-await-expr-identifier.js (default)
+  Unexpected identifier, expected the token `;` at (61, 21) to (61, 24)
+language/module-code/top-level-await/syntax/export-lex-decl-await-expr-literal-number.js (strict mode)
+  Unexpected number, expected the token `;` at (60, 21) to (60, 22)
+language/module-code/top-level-await/syntax/export-lex-decl-await-expr-literal-number.js (default)
+  Unexpected number, expected the token `;` at (60, 21) to (60, 22)
+language/module-code/top-level-await/syntax/export-lex-decl-await-expr-literal-string.js (strict mode)
+  Unexpected string, expected the token `;` at (60, 21) to (60, 23)
+language/module-code/top-level-await/syntax/export-lex-decl-await-expr-literal-string.js (default)
+  Unexpected string, expected the token `;` at (60, 21) to (60, 23)
+language/module-code/top-level-await/syntax/export-lex-decl-await-expr-nested.js (strict mode)
+  Unexpected token `await`, expected the token `;` at (56, 21) to (56, 26)
+language/module-code/top-level-await/syntax/export-lex-decl-await-expr-nested.js (default)
+  Unexpected token `await`, expected the token `;` at (56, 21) to (56, 26)
+language/module-code/top-level-await/syntax/export-lex-decl-await-expr-new-expr.js (strict mode)
+  Unexpected token `new`, expected the token `;` at (57, 21) to (57, 24)
+language/module-code/top-level-await/syntax/export-lex-decl-await-expr-new-expr.js (default)
+  Unexpected token `new`, expected the token `;` at (57, 21) to (57, 24)
+language/module-code/top-level-await/syntax/export-lex-decl-await-expr-null.js (strict mode)
+  Unexpected token `null`, expected the token `;` at (60, 21) to (60, 25)
+language/module-code/top-level-await/syntax/export-lex-decl-await-expr-null.js (default)
+  Unexpected token `null`, expected the token `;` at (60, 21) to (60, 25)
+language/module-code/top-level-await/syntax/export-lex-decl-await-expr-obj-literal.js (strict mode)
+  Unexpected token `{`, expected the token `;` at (60, 21) to (60, 22)
+language/module-code/top-level-await/syntax/export-lex-decl-await-expr-obj-literal.js (default)
+  Unexpected token `{`, expected the token `;` at (60, 21) to (60, 22)
+language/module-code/top-level-await/syntax/export-lex-decl-await-expr-regexp.js (strict mode)
+  Unexpected token `;` at (60, 24) to (60, 25)
+language/module-code/top-level-await/syntax/export-lex-decl-await-expr-regexp.js (default)
+  Unexpected token `;` at (60, 24) to (60, 25)
+language/module-code/top-level-await/syntax/export-lex-decl-await-expr-this.js (strict mode)
+  Unexpected token `this`, expected the token `;` at (60, 21) to (60, 25)
+language/module-code/top-level-await/syntax/export-lex-decl-await-expr-this.js (default)
+  Unexpected token `this`, expected the token `;` at (60, 21) to (60, 25)
+language/module-code/top-level-await/syntax/export-var-await-expr-array-literal.js (strict mode)
+  Unexpected token `]` at (63, 26) to (63, 27)
+language/module-code/top-level-await/syntax/export-var-await-expr-array-literal.js (default)
+  Unexpected token `]` at (63, 26) to (63, 27)
+language/module-code/top-level-await/syntax/export-var-await-expr-func-expression.js (strict mode)
+  Unexpected token `function`, expected the token `;` at (69, 25) to (69, 33)
+language/module-code/top-level-await/syntax/export-var-await-expr-func-expression.js (default)
+  Unexpected token `function`, expected the token `;` at (69, 25) to (69, 33)
+language/module-code/top-level-await/syntax/export-var-await-expr-identifier.js (strict mode)
+  Unexpected identifier, expected the token `;` at (64, 25) to (64, 28)
+language/module-code/top-level-await/syntax/export-var-await-expr-identifier.js (default)
+  Unexpected identifier, expected the token `;` at (64, 25) to (64, 28)
+language/module-code/top-level-await/syntax/export-var-await-expr-literal-number.js (strict mode)
+  Unexpected number, expected the token `;` at (63, 25) to (63, 26)
+language/module-code/top-level-await/syntax/export-var-await-expr-literal-number.js (default)
+  Unexpected number, expected the token `;` at (63, 25) to (63, 26)
+language/module-code/top-level-await/syntax/export-var-await-expr-literal-string.js (strict mode)
+  Unexpected string, expected the token `;` at (63, 25) to (63, 27)
+language/module-code/top-level-await/syntax/export-var-await-expr-literal-string.js (default)
+  Unexpected string, expected the token `;` at (63, 25) to (63, 27)
+language/module-code/top-level-await/syntax/export-var-await-expr-nested.js (strict mode)
+  Unexpected token `await`, expected the token `;` at (59, 25) to (59, 30)
+language/module-code/top-level-await/syntax/export-var-await-expr-nested.js (default)
+  Unexpected token `await`, expected the token `;` at (59, 25) to (59, 30)
+language/module-code/top-level-await/syntax/export-var-await-expr-new-expr.js (strict mode)
+  Unexpected token `new`, expected the token `;` at (60, 25) to (60, 28)
+language/module-code/top-level-await/syntax/export-var-await-expr-new-expr.js (default)
+  Unexpected token `new`, expected the token `;` at (60, 25) to (60, 28)
+language/module-code/top-level-await/syntax/export-var-await-expr-null.js (strict mode)
+  Unexpected token `null`, expected the token `;` at (63, 25) to (63, 29)
+language/module-code/top-level-await/syntax/export-var-await-expr-null.js (default)
+  Unexpected token `null`, expected the token `;` at (63, 25) to (63, 29)
+language/module-code/top-level-await/syntax/export-var-await-expr-obj-literal.js (strict mode)
+  Unexpected token `{`, expected the token `;` at (63, 25) to (63, 26)
+language/module-code/top-level-await/syntax/export-var-await-expr-obj-literal.js (default)
+  Unexpected token `{`, expected the token `;` at (63, 25) to (63, 26)
+language/module-code/top-level-await/syntax/export-var-await-expr-regexp.js (strict mode)
+  Unexpected token `;` at (63, 28) to (63, 29)
+language/module-code/top-level-await/syntax/export-var-await-expr-regexp.js (default)
+  Unexpected token `;` at (63, 28) to (63, 29)
+language/module-code/top-level-await/syntax/export-var-await-expr-this.js (strict mode)
+  Unexpected token `this`, expected the token `;` at (63, 25) to (63, 29)
+language/module-code/top-level-await/syntax/export-var-await-expr-this.js (default)
+  Unexpected token `this`, expected the token `;` at (63, 25) to (63, 29)
+language/module-code/top-level-await/syntax/for-await-await-expr-array-literal.js (strict mode)
+  Unexpected token `await`, expected the token `(` at (52, 4) to (52, 9)
+language/module-code/top-level-await/syntax/for-await-await-expr-array-literal.js (default)
+  Unexpected token `await`, expected the token `(` at (52, 4) to (52, 9)
+language/module-code/top-level-await/syntax/for-await-await-expr-func-expression.js (strict mode)
+  Unexpected token `await`, expected the token `(` at (58, 4) to (58, 9)
+language/module-code/top-level-await/syntax/for-await-await-expr-func-expression.js (default)
+  Unexpected token `await`, expected the token `(` at (58, 4) to (58, 9)
+language/module-code/top-level-await/syntax/for-await-await-expr-identifier.js (strict mode)
+  Unexpected token `await`, expected the token `(` at (53, 4) to (53, 9)
+language/module-code/top-level-await/syntax/for-await-await-expr-identifier.js (default)
+  Unexpected token `await`, expected the token `(` at (53, 4) to (53, 9)
+language/module-code/top-level-await/syntax/for-await-await-expr-literal-number.js (strict mode)
+  Unexpected token `await`, expected the token `(` at (52, 4) to (52, 9)
+language/module-code/top-level-await/syntax/for-await-await-expr-literal-number.js (default)
+  Unexpected token `await`, expected the token `(` at (52, 4) to (52, 9)
+language/module-code/top-level-await/syntax/for-await-await-expr-literal-string.js (strict mode)
+  Unexpected token `await`, expected the token `(` at (52, 4) to (52, 9)
+language/module-code/top-level-await/syntax/for-await-await-expr-literal-string.js (default)
+  Unexpected token `await`, expected the token `(` at (52, 4) to (52, 9)
+language/module-code/top-level-await/syntax/for-await-await-expr-nested.js (strict mode)
+  Unexpected token `await`, expected the token `(` at (48, 4) to (48, 9)
+language/module-code/top-level-await/syntax/for-await-await-expr-nested.js (default)
+  Unexpected token `await`, expected the token `(` at (48, 4) to (48, 9)
+language/module-code/top-level-await/syntax/for-await-await-expr-new-expr.js (strict mode)
+  Unexpected token `await`, expected the token `(` at (49, 4) to (49, 9)
+language/module-code/top-level-await/syntax/for-await-await-expr-new-expr.js (default)
+  Unexpected token `await`, expected the token `(` at (49, 4) to (49, 9)
+language/module-code/top-level-await/syntax/for-await-await-expr-null.js (strict mode)
+  Unexpected token `await`, expected the token `(` at (52, 4) to (52, 9)
+language/module-code/top-level-await/syntax/for-await-await-expr-null.js (default)
+  Unexpected token `await`, expected the token `(` at (52, 4) to (52, 9)
+language/module-code/top-level-await/syntax/for-await-await-expr-obj-literal.js (strict mode)
+  Unexpected token `await`, expected the token `(` at (52, 4) to (52, 9)
+language/module-code/top-level-await/syntax/for-await-await-expr-obj-literal.js (default)
+  Unexpected token `await`, expected the token `(` at (52, 4) to (52, 9)
+language/module-code/top-level-await/syntax/for-await-await-expr-regexp.js (strict mode)
+  Unexpected token `await`, expected the token `(` at (52, 4) to (52, 9)
+language/module-code/top-level-await/syntax/for-await-await-expr-regexp.js (default)
+  Unexpected token `await`, expected the token `(` at (52, 4) to (52, 9)
+language/module-code/top-level-await/syntax/for-await-await-expr-template-literal.js (strict mode)
+  Unexpected token `await`, expected the token `(` at (52, 4) to (52, 9)
+language/module-code/top-level-await/syntax/for-await-await-expr-template-literal.js (default)
+  Unexpected token `await`, expected the token `(` at (52, 4) to (52, 9)
+language/module-code/top-level-await/syntax/for-await-await-expr-this.js (strict mode)
+  Unexpected token `await`, expected the token `(` at (52, 4) to (52, 9)
+language/module-code/top-level-await/syntax/for-await-await-expr-this.js (default)
+  Unexpected token `await`, expected the token `(` at (52, 4) to (52, 9)
+language/module-code/top-level-await/syntax/for-await-expr-array-literal.js (strict mode)
+  Unexpected token `]` at (58, 13) to (58, 14)
+language/module-code/top-level-await/syntax/for-await-expr-array-literal.js (default)
+  Unexpected token `]` at (58, 13) to (58, 14)
+language/module-code/top-level-await/syntax/for-await-expr-func-expression.js (strict mode)
+  Unexpected token `function`, expected the token `;` at (64, 12) to (64, 20)
+language/module-code/top-level-await/syntax/for-await-expr-func-expression.js (default)
+  Unexpected token `function`, expected the token `;` at (64, 12) to (64, 20)
+language/module-code/top-level-await/syntax/for-await-expr-identifier.js (strict mode)
+  Unexpected identifier, expected the token `;` at (59, 12) to (59, 15)
+language/module-code/top-level-await/syntax/for-await-expr-identifier.js (default)
+  Unexpected identifier, expected the token `;` at (59, 12) to (59, 15)
+language/module-code/top-level-await/syntax/for-await-expr-literal-number.js (strict mode)
+  Unexpected number, expected the token `;` at (58, 12) to (58, 13)
+language/module-code/top-level-await/syntax/for-await-expr-literal-number.js (default)
+  Unexpected number, expected the token `;` at (58, 12) to (58, 13)
+language/module-code/top-level-await/syntax/for-await-expr-literal-string.js (strict mode)
+  Unexpected string, expected the token `;` at (58, 12) to (58, 14)
+language/module-code/top-level-await/syntax/for-await-expr-literal-string.js (default)
+  Unexpected string, expected the token `;` at (58, 12) to (58, 14)
+language/module-code/top-level-await/syntax/for-await-expr-nested.js (strict mode)
+  Unexpected token `await`, expected the token `;` at (54, 12) to (54, 17)
+language/module-code/top-level-await/syntax/for-await-expr-nested.js (default)
+  Unexpected token `await`, expected the token `;` at (54, 12) to (54, 17)
+language/module-code/top-level-await/syntax/for-await-expr-new-expr.js (strict mode)
+  Unexpected token `new`, expected the token `;` at (55, 12) to (55, 15)
+language/module-code/top-level-await/syntax/for-await-expr-new-expr.js (default)
+  Unexpected token `new`, expected the token `;` at (55, 12) to (55, 15)
+language/module-code/top-level-await/syntax/for-await-expr-null.js (strict mode)
+  Unexpected token `null`, expected the token `;` at (58, 12) to (58, 16)
+language/module-code/top-level-await/syntax/for-await-expr-null.js (default)
+  Unexpected token `null`, expected the token `;` at (58, 12) to (58, 16)
+language/module-code/top-level-await/syntax/for-await-expr-obj-literal.js (strict mode)
+  Unexpected token `{`, expected the token `;` at (58, 12) to (58, 13)
+language/module-code/top-level-await/syntax/for-await-expr-obj-literal.js (default)
+  Unexpected token `{`, expected the token `;` at (58, 12) to (58, 13)
+language/module-code/top-level-await/syntax/for-await-expr-regexp.js (strict mode)
+  Unexpected token `;` at (58, 16) to (58, 17)
+language/module-code/top-level-await/syntax/for-await-expr-regexp.js (default)
+  Unexpected token `;` at (58, 16) to (58, 17)
+language/module-code/top-level-await/syntax/for-await-expr-this.js (strict mode)
+  Unexpected token `this`, expected the token `;` at (58, 12) to (58, 16)
+language/module-code/top-level-await/syntax/for-await-expr-this.js (default)
+  Unexpected token `this`, expected the token `;` at (58, 12) to (58, 16)
+language/module-code/top-level-await/syntax/for-in-await-expr-array-literal.js (strict mode)
+  Unexpected token `]` at (60, 24) to (60, 25)
+language/module-code/top-level-await/syntax/for-in-await-expr-array-literal.js (default)
+  Unexpected token `]` at (60, 24) to (60, 25)
+language/module-code/top-level-await/syntax/for-in-await-expr-func-expression.js (strict mode)
+  Unexpected token `function`, expected the token `,` at (66, 23) to (66, 31)
+language/module-code/top-level-await/syntax/for-in-await-expr-func-expression.js (default)
+  Unexpected token `function`, expected the token `,` at (66, 23) to (66, 31)
+language/module-code/top-level-await/syntax/for-in-await-expr-identifier.js (strict mode)
+  Unexpected identifier, expected the token `,` at (61, 23) to (61, 26)
+language/module-code/top-level-await/syntax/for-in-await-expr-identifier.js (default)
+  Unexpected identifier, expected the token `,` at (61, 23) to (61, 26)
+language/module-code/top-level-await/syntax/for-in-await-expr-literal-number.js (strict mode)
+  Unexpected number, expected the token `,` at (60, 23) to (60, 24)
+language/module-code/top-level-await/syntax/for-in-await-expr-literal-number.js (default)
+  Unexpected number, expected the token `,` at (60, 23) to (60, 24)
+language/module-code/top-level-await/syntax/for-in-await-expr-literal-string.js (strict mode)
+  Unexpected string, expected the token `,` at (60, 23) to (60, 25)
+language/module-code/top-level-await/syntax/for-in-await-expr-literal-string.js (default)
+  Unexpected string, expected the token `,` at (60, 23) to (60, 25)
+language/module-code/top-level-await/syntax/for-in-await-expr-nested.js (strict mode)
+  Unexpected token `await`, expected the token `,` at (56, 23) to (56, 28)
+language/module-code/top-level-await/syntax/for-in-await-expr-nested.js (default)
+  Unexpected token `await`, expected the token `,` at (56, 23) to (56, 28)
+language/module-code/top-level-await/syntax/for-in-await-expr-new-expr.js (strict mode)
+  Unexpected token `new`, expected the token `,` at (57, 23) to (57, 26)
+language/module-code/top-level-await/syntax/for-in-await-expr-new-expr.js (default)
+  Unexpected token `new`, expected the token `,` at (57, 23) to (57, 26)
+language/module-code/top-level-await/syntax/for-in-await-expr-null.js (strict mode)
+  Unexpected token `null`, expected the token `,` at (60, 23) to (60, 27)
+language/module-code/top-level-await/syntax/for-in-await-expr-null.js (default)
+  Unexpected token `null`, expected the token `,` at (60, 23) to (60, 27)
+language/module-code/top-level-await/syntax/for-in-await-expr-obj-literal.js (strict mode)
+  Unexpected token `{`, expected the token `,` at (60, 23) to (60, 24)
+language/module-code/top-level-await/syntax/for-in-await-expr-obj-literal.js (default)
+  Unexpected token `{`, expected the token `,` at (60, 23) to (60, 24)
+language/module-code/top-level-await/syntax/for-in-await-expr-regexp.js (strict mode)
+  Unexpected token `]` at (60, 26) to (60, 27)
+language/module-code/top-level-await/syntax/for-in-await-expr-regexp.js (default)
+  Unexpected token `]` at (60, 26) to (60, 27)
+language/module-code/top-level-await/syntax/for-in-await-expr-this.js (strict mode)
+  Unexpected token `this`, expected the token `,` at (60, 23) to (60, 27)
+language/module-code/top-level-await/syntax/for-in-await-expr-this.js (default)
+  Unexpected token `this`, expected the token `,` at (60, 23) to (60, 27)
+language/module-code/top-level-await/syntax/for-of-await-expr-array-literal.js (strict mode)
+  Unexpected token `]` at (60, 24) to (60, 25)
+language/module-code/top-level-await/syntax/for-of-await-expr-array-literal.js (default)
+  Unexpected token `]` at (60, 24) to (60, 25)
+language/module-code/top-level-await/syntax/for-of-await-expr-func-expression.js (strict mode)
+  Unexpected token `function`, expected the token `,` at (66, 23) to (66, 31)
+language/module-code/top-level-await/syntax/for-of-await-expr-func-expression.js (default)
+  Unexpected token `function`, expected the token `,` at (66, 23) to (66, 31)
+language/module-code/top-level-await/syntax/for-of-await-expr-identifier.js (strict mode)
+  Unexpected identifier, expected the token `,` at (61, 23) to (61, 26)
+language/module-code/top-level-await/syntax/for-of-await-expr-identifier.js (default)
+  Unexpected identifier, expected the token `,` at (61, 23) to (61, 26)
+language/module-code/top-level-await/syntax/for-of-await-expr-literal-number.js (strict mode)
+  Unexpected number, expected the token `,` at (60, 23) to (60, 24)
+language/module-code/top-level-await/syntax/for-of-await-expr-literal-number.js (default)
+  Unexpected number, expected the token `,` at (60, 23) to (60, 24)
+language/module-code/top-level-await/syntax/for-of-await-expr-literal-string.js (strict mode)
+  Unexpected string, expected the token `,` at (60, 23) to (60, 25)
+language/module-code/top-level-await/syntax/for-of-await-expr-literal-string.js (default)
+  Unexpected string, expected the token `,` at (60, 23) to (60, 25)
+language/module-code/top-level-await/syntax/for-of-await-expr-nested.js (strict mode)
+  Unexpected token `await`, expected the token `,` at (56, 23) to (56, 28)
+language/module-code/top-level-await/syntax/for-of-await-expr-nested.js (default)
+  Unexpected token `await`, expected the token `,` at (56, 23) to (56, 28)
+language/module-code/top-level-await/syntax/for-of-await-expr-new-expr.js (strict mode)
+  Unexpected token `new`, expected the token `,` at (57, 23) to (57, 26)
+language/module-code/top-level-await/syntax/for-of-await-expr-new-expr.js (default)
+  Unexpected token `new`, expected the token `,` at (57, 23) to (57, 26)
+language/module-code/top-level-await/syntax/for-of-await-expr-null.js (strict mode)
+  Unexpected token `null`, expected the token `,` at (60, 23) to (60, 27)
+language/module-code/top-level-await/syntax/for-of-await-expr-null.js (default)
+  Unexpected token `null`, expected the token `,` at (60, 23) to (60, 27)
+language/module-code/top-level-await/syntax/for-of-await-expr-obj-literal.js (strict mode)
+  Unexpected token `{`, expected the token `,` at (60, 23) to (60, 24)
+language/module-code/top-level-await/syntax/for-of-await-expr-obj-literal.js (default)
+  Unexpected token `{`, expected the token `,` at (60, 23) to (60, 24)
+language/module-code/top-level-await/syntax/for-of-await-expr-regexp.js (strict mode)
+  Unexpected token `]` at (60, 26) to (60, 27)
+language/module-code/top-level-await/syntax/for-of-await-expr-regexp.js (default)
+  Unexpected token `]` at (60, 26) to (60, 27)
+language/module-code/top-level-await/syntax/for-of-await-expr-this.js (strict mode)
+  Unexpected token `this`, expected the token `,` at (60, 23) to (60, 27)
+language/module-code/top-level-await/syntax/for-of-await-expr-this.js (default)
+  Unexpected token `this`, expected the token `,` at (60, 23) to (60, 27)
+language/module-code/top-level-await/syntax/if-block-await-expr-array-literal.js (strict mode)
+  Unexpected token `]` at (49, 9) to (49, 10)
+language/module-code/top-level-await/syntax/if-block-await-expr-array-literal.js (default)
+  Unexpected token `]` at (49, 9) to (49, 10)
+language/module-code/top-level-await/syntax/if-block-await-expr-func-expression.js (strict mode)
+  Unexpected token `function`, expected the end of an expression statement (`;`) at (55, 8) to (55, 16)
+language/module-code/top-level-await/syntax/if-block-await-expr-func-expression.js (default)
+  Unexpected token `function`, expected the end of an expression statement (`;`) at (55, 8) to (55, 16)
+language/module-code/top-level-await/syntax/if-block-await-expr-identifier.js (strict mode)
+  Unexpected identifier, expected the end of an expression statement (`;`) at (50, 8) to (50, 11)
+language/module-code/top-level-await/syntax/if-block-await-expr-identifier.js (default)
+  Unexpected identifier, expected the end of an expression statement (`;`) at (50, 8) to (50, 11)
+language/module-code/top-level-await/syntax/if-block-await-expr-literal-number.js (strict mode)
+  Unexpected number, expected the end of an expression statement (`;`) at (49, 8) to (49, 9)
+language/module-code/top-level-await/syntax/if-block-await-expr-literal-number.js (default)
+  Unexpected number, expected the end of an expression statement (`;`) at (49, 8) to (49, 9)
+language/module-code/top-level-await/syntax/if-block-await-expr-literal-string.js (strict mode)
+  Unexpected string, expected the end of an expression statement (`;`) at (49, 8) to (49, 10)
+language/module-code/top-level-await/syntax/if-block-await-expr-literal-string.js (default)
+  Unexpected string, expected the end of an expression statement (`;`) at (49, 8) to (49, 10)
+language/module-code/top-level-await/syntax/if-block-await-expr-nested.js (strict mode)
+  Unexpected token `await`, expected the end of an expression statement (`;`) at (45, 8) to (45, 13)
+language/module-code/top-level-await/syntax/if-block-await-expr-nested.js (default)
+  Unexpected token `await`, expected the end of an expression statement (`;`) at (45, 8) to (45, 13)
+language/module-code/top-level-await/syntax/if-block-await-expr-new-expr.js (strict mode)
+  Unexpected token `new`, expected the end of an expression statement (`;`) at (46, 8) to (46, 11)
+language/module-code/top-level-await/syntax/if-block-await-expr-new-expr.js (default)
+  Unexpected token `new`, expected the end of an expression statement (`;`) at (46, 8) to (46, 11)
+language/module-code/top-level-await/syntax/if-block-await-expr-null.js (strict mode)
+  Unexpected token `null`, expected the end of an expression statement (`;`) at (49, 8) to (49, 12)
+language/module-code/top-level-await/syntax/if-block-await-expr-null.js (default)
+  Unexpected token `null`, expected the end of an expression statement (`;`) at (49, 8) to (49, 12)
+language/module-code/top-level-await/syntax/if-block-await-expr-obj-literal.js (strict mode)
+  Unexpected token `{`, expected the end of an expression statement (`;`) at (49, 8) to (49, 9)
+language/module-code/top-level-await/syntax/if-block-await-expr-obj-literal.js (default)
+  Unexpected token `{`, expected the end of an expression statement (`;`) at (49, 8) to (49, 9)
+language/module-code/top-level-await/syntax/if-block-await-expr-regexp.js (strict mode)
+  Unexpected token `;` at (49, 11) to (49, 12)
+language/module-code/top-level-await/syntax/if-block-await-expr-regexp.js (default)
+  Unexpected token `;` at (49, 11) to (49, 12)
+language/module-code/top-level-await/syntax/if-block-await-expr-this.js (strict mode)
+  Unexpected token `this`, expected the end of an expression statement (`;`) at (49, 8) to (49, 12)
+language/module-code/top-level-await/syntax/if-block-await-expr-this.js (default)
+  Unexpected token `this`, expected the end of an expression statement (`;`) at (49, 8) to (49, 12)
+language/module-code/top-level-await/syntax/if-expr-await-expr-array-literal.js (strict mode)
+  Unexpected token `]` at (48, 11) to (48, 12)
+language/module-code/top-level-await/syntax/if-expr-await-expr-array-literal.js (default)
+  Unexpected token `]` at (48, 11) to (48, 12)
+language/module-code/top-level-await/syntax/if-expr-await-expr-func-expression.js (strict mode)
+  Unexpected token `function`, expected the token `)` at (54, 10) to (54, 18)
+language/module-code/top-level-await/syntax/if-expr-await-expr-func-expression.js (default)
+  Unexpected token `function`, expected the token `)` at (54, 10) to (54, 18)
+language/module-code/top-level-await/syntax/if-expr-await-expr-identifier.js (strict mode)
+  Unexpected identifier, expected the token `)` at (49, 10) to (49, 13)
+language/module-code/top-level-await/syntax/if-expr-await-expr-identifier.js (default)
+  Unexpected identifier, expected the token `)` at (49, 10) to (49, 13)
+language/module-code/top-level-await/syntax/if-expr-await-expr-literal-number.js (strict mode)
+  Unexpected number, expected the token `)` at (48, 10) to (48, 11)
+language/module-code/top-level-await/syntax/if-expr-await-expr-literal-number.js (default)
+  Unexpected number, expected the token `)` at (48, 10) to (48, 11)
+language/module-code/top-level-await/syntax/if-expr-await-expr-literal-string.js (strict mode)
+  Unexpected string, expected the token `)` at (48, 10) to (48, 12)
+language/module-code/top-level-await/syntax/if-expr-await-expr-literal-string.js (default)
+  Unexpected string, expected the token `)` at (48, 10) to (48, 12)
+language/module-code/top-level-await/syntax/if-expr-await-expr-nested.js (strict mode)
+  Unexpected token `await`, expected the token `)` at (44, 10) to (44, 15)
+language/module-code/top-level-await/syntax/if-expr-await-expr-nested.js (default)
+  Unexpected token `await`, expected the token `)` at (44, 10) to (44, 15)
+language/module-code/top-level-await/syntax/if-expr-await-expr-new-expr.js (strict mode)
+  Unexpected token `new`, expected the token `)` at (45, 10) to (45, 13)
+language/module-code/top-level-await/syntax/if-expr-await-expr-new-expr.js (default)
+  Unexpected token `new`, expected the token `)` at (45, 10) to (45, 13)
+language/module-code/top-level-await/syntax/if-expr-await-expr-null.js (strict mode)
+  Unexpected token `null`, expected the token `)` at (48, 10) to (48, 14)
+language/module-code/top-level-await/syntax/if-expr-await-expr-null.js (default)
+  Unexpected token `null`, expected the token `)` at (48, 10) to (48, 14)
+language/module-code/top-level-await/syntax/if-expr-await-expr-obj-literal.js (strict mode)
+  Unexpected token `{`, expected the token `)` at (48, 10) to (48, 11)
+language/module-code/top-level-await/syntax/if-expr-await-expr-obj-literal.js (default)
+  Unexpected token `{`, expected the token `)` at (48, 10) to (48, 11)
+language/module-code/top-level-await/syntax/if-expr-await-expr-regexp.js (strict mode)
+  Unexpected token `)` at (48, 13) to (48, 14)
+language/module-code/top-level-await/syntax/if-expr-await-expr-regexp.js (default)
+  Unexpected token `)` at (48, 13) to (48, 14)
+language/module-code/top-level-await/syntax/if-expr-await-expr-this.js (strict mode)
+  Unexpected token `this`, expected the token `)` at (48, 10) to (48, 14)
+language/module-code/top-level-await/syntax/if-expr-await-expr-this.js (default)
+  Unexpected token `this`, expected the token `)` at (48, 10) to (48, 14)
+language/module-code/top-level-await/syntax/top-level-await-expr-array-literal.js (strict mode)
+  Unexpected token `]` at (42, 7) to (42, 8)
+language/module-code/top-level-await/syntax/top-level-await-expr-array-literal.js (default)
+  Unexpected token `]` at (42, 7) to (42, 8)
+language/module-code/top-level-await/syntax/top-level-await-expr-func-expression.js (strict mode)
+  Unexpected token `function`, expected the end of an expression statement (`;`) at (48, 6) to (48, 14)
+language/module-code/top-level-await/syntax/top-level-await-expr-func-expression.js (default)
+  Unexpected token `function`, expected the end of an expression statement (`;`) at (48, 6) to (48, 14)
+language/module-code/top-level-await/syntax/top-level-await-expr-identifier.js (strict mode)
+  Unexpected identifier, expected the end of an expression statement (`;`) at (43, 6) to (43, 9)
+language/module-code/top-level-await/syntax/top-level-await-expr-identifier.js (default)
+  Unexpected identifier, expected the end of an expression statement (`;`) at (43, 6) to (43, 9)
+language/module-code/top-level-await/syntax/top-level-await-expr-literal-number.js (strict mode)
+  Unexpected number, expected the end of an expression statement (`;`) at (42, 6) to (42, 7)
+language/module-code/top-level-await/syntax/top-level-await-expr-literal-number.js (default)
+  Unexpected number, expected the end of an expression statement (`;`) at (42, 6) to (42, 7)
+language/module-code/top-level-await/syntax/top-level-await-expr-literal-string.js (strict mode)
+  Unexpected string, expected the end of an expression statement (`;`) at (42, 6) to (42, 8)
+language/module-code/top-level-await/syntax/top-level-await-expr-literal-string.js (default)
+  Unexpected string, expected the end of an expression statement (`;`) at (42, 6) to (42, 8)
+language/module-code/top-level-await/syntax/top-level-await-expr-nested.js (strict mode)
+  Unexpected token `await`, expected the end of an expression statement (`;`) at (38, 6) to (38, 11)
+language/module-code/top-level-await/syntax/top-level-await-expr-nested.js (default)
+  Unexpected token `await`, expected the end of an expression statement (`;`) at (38, 6) to (38, 11)
+language/module-code/top-level-await/syntax/top-level-await-expr-new-expr.js (strict mode)
+  Unexpected token `new`, expected the end of an expression statement (`;`) at (39, 6) to (39, 9)
+language/module-code/top-level-await/syntax/top-level-await-expr-new-expr.js (default)
+  Unexpected token `new`, expected the end of an expression statement (`;`) at (39, 6) to (39, 9)
+language/module-code/top-level-await/syntax/top-level-await-expr-null.js (strict mode)
+  Unexpected token `null`, expected the end of an expression statement (`;`) at (42, 6) to (42, 10)
+language/module-code/top-level-await/syntax/top-level-await-expr-null.js (default)
+  Unexpected token `null`, expected the end of an expression statement (`;`) at (42, 6) to (42, 10)
+language/module-code/top-level-await/syntax/top-level-await-expr-obj-literal.js (strict mode)
+  Unexpected token `{`, expected the end of an expression statement (`;`) at (42, 6) to (42, 7)
+language/module-code/top-level-await/syntax/top-level-await-expr-obj-literal.js (default)
+  Unexpected token `{`, expected the end of an expression statement (`;`) at (42, 6) to (42, 7)
+language/module-code/top-level-await/syntax/top-level-await-expr-regexp.js (strict mode)
+  Unexpected token `;` at (42, 9) to (42, 10)
+language/module-code/top-level-await/syntax/top-level-await-expr-regexp.js (default)
+  Unexpected token `;` at (42, 9) to (42, 10)
+language/module-code/top-level-await/syntax/top-level-await-expr-this.js (strict mode)
+  Unexpected token `this`, expected the end of an expression statement (`;`) at (42, 6) to (42, 10)
+language/module-code/top-level-await/syntax/top-level-await-expr-this.js (default)
+  Unexpected token `this`, expected the end of an expression statement (`;`) at (42, 6) to (42, 10)
+language/module-code/top-level-await/syntax/try-await-expr-array-literal.js (strict mode)
+  Unexpected token `]` at (50, 9) to (50, 10)
+language/module-code/top-level-await/syntax/try-await-expr-array-literal.js (default)
+  Unexpected token `]` at (50, 9) to (50, 10)
+language/module-code/top-level-await/syntax/try-await-expr-func-expression.js (strict mode)
+  Unexpected token `function`, expected the end of an expression statement (`;`) at (56, 8) to (56, 16)
+language/module-code/top-level-await/syntax/try-await-expr-func-expression.js (default)
+  Unexpected token `function`, expected the end of an expression statement (`;`) at (56, 8) to (56, 16)
+language/module-code/top-level-await/syntax/try-await-expr-identifier.js (strict mode)
+  Unexpected identifier, expected the end of an expression statement (`;`) at (51, 8) to (51, 11)
+language/module-code/top-level-await/syntax/try-await-expr-identifier.js (default)
+  Unexpected identifier, expected the end of an expression statement (`;`) at (51, 8) to (51, 11)
+language/module-code/top-level-await/syntax/try-await-expr-literal-number.js (strict mode)
+  Unexpected number, expected the end of an expression statement (`;`) at (50, 8) to (50, 9)
+language/module-code/top-level-await/syntax/try-await-expr-literal-number.js (default)
+  Unexpected number, expected the end of an expression statement (`;`) at (50, 8) to (50, 9)
+language/module-code/top-level-await/syntax/try-await-expr-literal-string.js (strict mode)
+  Unexpected string, expected the end of an expression statement (`;`) at (50, 8) to (50, 10)
+language/module-code/top-level-await/syntax/try-await-expr-literal-string.js (default)
+  Unexpected string, expected the end of an expression statement (`;`) at (50, 8) to (50, 10)
+language/module-code/top-level-await/syntax/try-await-expr-nested.js (strict mode)
+  Unexpected token `await`, expected the end of an expression statement (`;`) at (46, 8) to (46, 13)
+language/module-code/top-level-await/syntax/try-await-expr-nested.js (default)
+  Unexpected token `await`, expected the end of an expression statement (`;`) at (46, 8) to (46, 13)
+language/module-code/top-level-await/syntax/try-await-expr-new-expr.js (strict mode)
+  Unexpected token `new`, expected the end of an expression statement (`;`) at (47, 8) to (47, 11)
+language/module-code/top-level-await/syntax/try-await-expr-new-expr.js (default)
+  Unexpected token `new`, expected the end of an expression statement (`;`) at (47, 8) to (47, 11)
+language/module-code/top-level-await/syntax/try-await-expr-null.js (strict mode)
+  Unexpected token `null`, expected the end of an expression statement (`;`) at (50, 8) to (50, 12)
+language/module-code/top-level-await/syntax/try-await-expr-null.js (default)
+  Unexpected token `null`, expected the end of an expression statement (`;`) at (50, 8) to (50, 12)
+language/module-code/top-level-await/syntax/try-await-expr-obj-literal.js (strict mode)
+  Unexpected token `{`, expected the end of an expression statement (`;`) at (50, 8) to (50, 9)
+language/module-code/top-level-await/syntax/try-await-expr-obj-literal.js (default)
+  Unexpected token `{`, expected the end of an expression statement (`;`) at (50, 8) to (50, 9)
+language/module-code/top-level-await/syntax/try-await-expr-regexp.js (strict mode)
+  Unexpected token `;` at (50, 11) to (50, 12)
+language/module-code/top-level-await/syntax/try-await-expr-regexp.js (default)
+  Unexpected token `;` at (50, 11) to (50, 12)
+language/module-code/top-level-await/syntax/try-await-expr-this.js (strict mode)
+  Unexpected token `this`, expected the end of an expression statement (`;`) at (50, 8) to (50, 12)
+language/module-code/top-level-await/syntax/try-await-expr-this.js (default)
+  Unexpected token `this`, expected the end of an expression statement (`;`) at (50, 8) to (50, 12)
+language/module-code/top-level-await/syntax/typeof-await-expr-array-literal.js (strict mode)
+  Unexpected token `]` at (43, 14) to (43, 15)
+language/module-code/top-level-await/syntax/typeof-await-expr-array-literal.js (default)
+  Unexpected token `]` at (43, 14) to (43, 15)
+language/module-code/top-level-await/syntax/typeof-await-expr-func-expression.js (strict mode)
+  Unexpected token `function`, expected the end of an expression statement (`;`) at (49, 13) to (49, 21)
+language/module-code/top-level-await/syntax/typeof-await-expr-func-expression.js (default)
+  Unexpected token `function`, expected the end of an expression statement (`;`) at (49, 13) to (49, 21)
+language/module-code/top-level-await/syntax/typeof-await-expr-identifier.js (strict mode)
+  Unexpected identifier, expected the end of an expression statement (`;`) at (44, 13) to (44, 16)
+language/module-code/top-level-await/syntax/typeof-await-expr-identifier.js (default)
+  Unexpected identifier, expected the end of an expression statement (`;`) at (44, 13) to (44, 16)
+language/module-code/top-level-await/syntax/typeof-await-expr-literal-number.js (strict mode)
+  Unexpected number, expected the end of an expression statement (`;`) at (43, 13) to (43, 14)
+language/module-code/top-level-await/syntax/typeof-await-expr-literal-number.js (default)
+  Unexpected number, expected the end of an expression statement (`;`) at (43, 13) to (43, 14)
+language/module-code/top-level-await/syntax/typeof-await-expr-literal-string.js (strict mode)
+  Unexpected string, expected the end of an expression statement (`;`) at (43, 13) to (43, 15)
+language/module-code/top-level-await/syntax/typeof-await-expr-literal-string.js (default)
+  Unexpected string, expected the end of an expression statement (`;`) at (43, 13) to (43, 15)
+language/module-code/top-level-await/syntax/typeof-await-expr-nested.js (strict mode)
+  Unexpected token `await`, expected the end of an expression statement (`;`) at (39, 13) to (39, 18)
+language/module-code/top-level-await/syntax/typeof-await-expr-nested.js (default)
+  Unexpected token `await`, expected the end of an expression statement (`;`) at (39, 13) to (39, 18)
+language/module-code/top-level-await/syntax/typeof-await-expr-new-expr.js (strict mode)
+  Unexpected token `new`, expected the end of an expression statement (`;`) at (40, 13) to (40, 16)
+language/module-code/top-level-await/syntax/typeof-await-expr-new-expr.js (default)
+  Unexpected token `new`, expected the end of an expression statement (`;`) at (40, 13) to (40, 16)
+language/module-code/top-level-await/syntax/typeof-await-expr-null.js (strict mode)
+  Unexpected token `null`, expected the end of an expression statement (`;`) at (43, 13) to (43, 17)
+language/module-code/top-level-await/syntax/typeof-await-expr-null.js (default)
+  Unexpected token `null`, expected the end of an expression statement (`;`) at (43, 13) to (43, 17)
+language/module-code/top-level-await/syntax/typeof-await-expr-obj-literal.js (strict mode)
+  Unexpected token `{`, expected the end of an expression statement (`;`) at (43, 13) to (43, 14)
+language/module-code/top-level-await/syntax/typeof-await-expr-obj-literal.js (default)
+  Unexpected token `{`, expected the end of an expression statement (`;`) at (43, 13) to (43, 14)
+language/module-code/top-level-await/syntax/typeof-await-expr-regexp.js (strict mode)
+  Unexpected token `;` at (43, 16) to (43, 17)
+language/module-code/top-level-await/syntax/typeof-await-expr-regexp.js (default)
+  Unexpected token `;` at (43, 16) to (43, 17)
+language/module-code/top-level-await/syntax/typeof-await-expr-this.js (strict mode)
+  Unexpected token `this`, expected the end of an expression statement (`;`) at (43, 13) to (43, 17)
+language/module-code/top-level-await/syntax/typeof-await-expr-this.js (default)
+  Unexpected token `this`, expected the end of an expression statement (`;`) at (43, 13) to (43, 17)
+language/module-code/top-level-await/syntax/void-await-expr-array-literal.js (strict mode)
+  Unexpected token `]` at (43, 12) to (43, 13)
+language/module-code/top-level-await/syntax/void-await-expr-array-literal.js (default)
+  Unexpected token `]` at (43, 12) to (43, 13)
+language/module-code/top-level-await/syntax/void-await-expr-func-expression.js (strict mode)
+  Unexpected token `function`, expected the end of an expression statement (`;`) at (49, 11) to (49, 19)
+language/module-code/top-level-await/syntax/void-await-expr-func-expression.js (default)
+  Unexpected token `function`, expected the end of an expression statement (`;`) at (49, 11) to (49, 19)
+language/module-code/top-level-await/syntax/void-await-expr-identifier.js (strict mode)
+  Unexpected identifier, expected the end of an expression statement (`;`) at (44, 11) to (44, 14)
+language/module-code/top-level-await/syntax/void-await-expr-identifier.js (default)
+  Unexpected identifier, expected the end of an expression statement (`;`) at (44, 11) to (44, 14)
+language/module-code/top-level-await/syntax/void-await-expr-literal-number.js (strict mode)
+  Unexpected number, expected the end of an expression statement (`;`) at (43, 11) to (43, 12)
+language/module-code/top-level-await/syntax/void-await-expr-literal-number.js (default)
+  Unexpected number, expected the end of an expression statement (`;`) at (43, 11) to (43, 12)
+language/module-code/top-level-await/syntax/void-await-expr-literal-string.js (strict mode)
+  Unexpected string, expected the end of an expression statement (`;`) at (43, 11) to (43, 13)
+language/module-code/top-level-await/syntax/void-await-expr-literal-string.js (default)
+  Unexpected string, expected the end of an expression statement (`;`) at (43, 11) to (43, 13)
+language/module-code/top-level-await/syntax/void-await-expr-nested.js (strict mode)
+  Unexpected token `await`, expected the end of an expression statement (`;`) at (39, 11) to (39, 16)
+language/module-code/top-level-await/syntax/void-await-expr-nested.js (default)
+  Unexpected token `await`, expected the end of an expression statement (`;`) at (39, 11) to (39, 16)
+language/module-code/top-level-await/syntax/void-await-expr-new-expr.js (strict mode)
+  Unexpected token `new`, expected the end of an expression statement (`;`) at (40, 11) to (40, 14)
+language/module-code/top-level-await/syntax/void-await-expr-new-expr.js (default)
+  Unexpected token `new`, expected the end of an expression statement (`;`) at (40, 11) to (40, 14)
+language/module-code/top-level-await/syntax/void-await-expr-null.js (strict mode)
+  Unexpected token `null`, expected the end of an expression statement (`;`) at (43, 11) to (43, 15)
+language/module-code/top-level-await/syntax/void-await-expr-null.js (default)
+  Unexpected token `null`, expected the end of an expression statement (`;`) at (43, 11) to (43, 15)
+language/module-code/top-level-await/syntax/void-await-expr-obj-literal.js (strict mode)
+  Unexpected token `{`, expected the end of an expression statement (`;`) at (43, 11) to (43, 12)
+language/module-code/top-level-await/syntax/void-await-expr-obj-literal.js (default)
+  Unexpected token `{`, expected the end of an expression statement (`;`) at (43, 11) to (43, 12)
+language/module-code/top-level-await/syntax/void-await-expr-regexp.js (strict mode)
+  Unexpected token `;` at (43, 14) to (43, 15)
+language/module-code/top-level-await/syntax/void-await-expr-regexp.js (default)
+  Unexpected token `;` at (43, 14) to (43, 15)
+language/module-code/top-level-await/syntax/void-await-expr-this.js (strict mode)
+  Unexpected token `this`, expected the end of an expression statement (`;`) at (43, 11) to (43, 15)
+language/module-code/top-level-await/syntax/void-await-expr-this.js (default)
+  Unexpected token `this`, expected the end of an expression statement (`;`) at (43, 11) to (43, 15)
+language/module-code/top-level-await/syntax/while-await-expr-array-literal.js (strict mode)
+  Unexpected token `]` at (47, 14) to (47, 15)
+language/module-code/top-level-await/syntax/while-await-expr-array-literal.js (default)
+  Unexpected token `]` at (47, 14) to (47, 15)
+language/module-code/top-level-await/syntax/while-await-expr-func-expression.js (strict mode)
+  Unexpected token `function`, expected the token `)` at (53, 13) to (53, 21)
+language/module-code/top-level-await/syntax/while-await-expr-func-expression.js (default)
+  Unexpected token `function`, expected the token `)` at (53, 13) to (53, 21)
+language/module-code/top-level-await/syntax/while-await-expr-identifier.js (strict mode)
+  Unexpected identifier, expected the token `)` at (48, 13) to (48, 16)
+language/module-code/top-level-await/syntax/while-await-expr-identifier.js (default)
+  Unexpected identifier, expected the token `)` at (48, 13) to (48, 16)
+language/module-code/top-level-await/syntax/while-await-expr-literal-number.js (strict mode)
+  Unexpected number, expected the token `)` at (47, 13) to (47, 14)
+language/module-code/top-level-await/syntax/while-await-expr-literal-number.js (default)
+  Unexpected number, expected the token `)` at (47, 13) to (47, 14)
+language/module-code/top-level-await/syntax/while-await-expr-literal-string.js (strict mode)
+  Unexpected string, expected the token `)` at (47, 13) to (47, 15)
+language/module-code/top-level-await/syntax/while-await-expr-literal-string.js (default)
+  Unexpected string, expected the token `)` at (47, 13) to (47, 15)
+language/module-code/top-level-await/syntax/while-await-expr-nested.js (strict mode)
+  Unexpected token `await`, expected the token `)` at (43, 13) to (43, 18)
+language/module-code/top-level-await/syntax/while-await-expr-nested.js (default)
+  Unexpected token `await`, expected the token `)` at (43, 13) to (43, 18)
+language/module-code/top-level-await/syntax/while-await-expr-new-expr.js (strict mode)
+  Unexpected token `new`, expected the token `)` at (44, 13) to (44, 16)
+language/module-code/top-level-await/syntax/while-await-expr-new-expr.js (default)
+  Unexpected token `new`, expected the token `)` at (44, 13) to (44, 16)
+language/module-code/top-level-await/syntax/while-await-expr-null.js (strict mode)
+  Unexpected token `null`, expected the token `)` at (47, 13) to (47, 17)
+language/module-code/top-level-await/syntax/while-await-expr-null.js (default)
+  Unexpected token `null`, expected the token `)` at (47, 13) to (47, 17)
+language/module-code/top-level-await/syntax/while-await-expr-obj-literal.js (strict mode)
+  Unexpected token `{`, expected the token `)` at (47, 13) to (47, 14)
+language/module-code/top-level-await/syntax/while-await-expr-obj-literal.js (default)
+  Unexpected token `{`, expected the token `)` at (47, 13) to (47, 14)
+language/module-code/top-level-await/syntax/while-await-expr-regexp.js (strict mode)
+  Unexpected token `)` at (47, 16) to (47, 17)
+language/module-code/top-level-await/syntax/while-await-expr-regexp.js (default)
+  Unexpected token `)` at (47, 16) to (47, 17)
+language/module-code/top-level-await/syntax/while-await-expr-this.js (strict mode)
+  Unexpected token `this`, expected the token `)` at (47, 13) to (47, 17)
+language/module-code/top-level-await/syntax/while-await-expr-this.js (default)
+  Unexpected token `this`, expected the token `)` at (47, 13) to (47, 17)
+language/module-code/top-level-await/top-level-ticks-2.js (strict mode)
+  Unexpected identifier, expected the end of an expression statement (`;`) at (43, 6) to (43, 12)
+language/module-code/top-level-await/top-level-ticks-2.js (default)
+  Unexpected identifier, expected the end of an expression statement (`;`) at (43, 6) to (43, 12)
+language/module-code/top-level-await/top-level-ticks.js (strict mode)
+  Unexpected number, expected the end of an expression statement (`;`) at (43, 6) to (43, 7)
+language/module-code/top-level-await/top-level-ticks.js (default)
+  Unexpected number, expected the end of an expression statement (`;`) at (43, 6) to (43, 7)
+language/module-code/top-level-await/void-await-expr.js (strict mode)
+  Unexpected identifier, expected the end of an expression statement (`;`) at (31, 11) to (31, 12)
+language/module-code/top-level-await/void-await-expr.js (default)
+  Unexpected identifier, expected the end of an expression statement (`;`) at (31, 11) to (31, 12)
+language/module-code/top-level-await/while-dynamic-evaluation.js (strict mode)
+  Unexpected identifier, expected the token `)` at (41, 13) to (41, 14)
+language/module-code/top-level-await/while-dynamic-evaluation.js (default)
+  Unexpected identifier, expected the token `)` at (41, 13) to (41, 14)
 language/reserved-words/await-module.js (strict mode)
   Missing parse error
 language/reserved-words/await-module.js (default)
@@ -2360,6 +3986,10 @@ language/reserved-words/label-ident-true-escaped.js (strict mode)
   Missing parse error
 language/reserved-words/label-ident-true-escaped.js (default)
   Missing parse error
+language/statements/async-function/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/async-function/array-destructuring-param-strict-body.js (default)
+  Missing parse error
 language/statements/async-function/await-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
 language/statements/async-function/await-as-binding-identifier-escaped.js (default)
@@ -2380,6 +4010,18 @@ language/statements/async-function/early-errors-declaration-formals-body-duplica
   Missing parse error
 language/statements/async-function/early-errors-declaration-formals-body-duplicate.js (default)
   Missing parse error
+language/statements/async-function/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/async-function/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/statements/async-function/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/async-function/rest-param-strict-body.js (default)
+  Missing parse error
+language/statements/async-generator/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/async-generator/array-destructuring-param-strict-body.js (default)
+  Missing parse error
 language/statements/async-generator/await-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
 language/statements/async-generator/await-as-binding-identifier-escaped.js (default)
@@ -2391,6 +4033,14 @@ language/statements/async-generator/await-as-identifier-reference-escaped.js (de
 language/statements/async-generator/await-as-label-identifier-escaped.js (strict mode)
   Missing parse error
 language/statements/async-generator/await-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/statements/async-generator/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/async-generator/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/statements/async-generator/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/async-generator/rest-param-strict-body.js (default)
   Missing parse error
 language/statements/async-generator/yield-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
@@ -2404,6 +4054,10 @@ language/statements/async-generator/yield-as-label-identifier-escaped.js (strict
   Missing parse error
 language/statements/async-generator/yield-as-label-identifier-escaped.js (default)
   Missing parse error
+language/statements/class/async-gen-method-static/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/async-gen-method-static/array-destructuring-param-strict-body.js (default)
+  Missing parse error
 language/statements/class/async-gen-method-static/await-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
 language/statements/class/async-gen-method-static/await-as-binding-identifier-escaped.js (default)
@@ -2415,6 +4069,14 @@ language/statements/class/async-gen-method-static/await-as-identifier-reference-
 language/statements/class/async-gen-method-static/await-as-label-identifier-escaped.js (strict mode)
   Missing parse error
 language/statements/class/async-gen-method-static/await-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/statements/class/async-gen-method-static/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/async-gen-method-static/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/statements/class/async-gen-method-static/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/async-gen-method-static/rest-param-strict-body.js (default)
   Missing parse error
 language/statements/class/async-gen-method-static/yield-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
@@ -2428,6 +4090,10 @@ language/statements/class/async-gen-method-static/yield-as-label-identifier-esca
   Missing parse error
 language/statements/class/async-gen-method-static/yield-as-label-identifier-escaped.js (default)
   Missing parse error
+language/statements/class/async-gen-method/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/async-gen-method/array-destructuring-param-strict-body.js (default)
+  Missing parse error
 language/statements/class/async-gen-method/await-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
 language/statements/class/async-gen-method/await-as-binding-identifier-escaped.js (default)
@@ -2439,6 +4105,14 @@ language/statements/class/async-gen-method/await-as-identifier-reference-escaped
 language/statements/class/async-gen-method/await-as-label-identifier-escaped.js (strict mode)
   Missing parse error
 language/statements/class/async-gen-method/await-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/statements/class/async-gen-method/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/async-gen-method/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/statements/class/async-gen-method/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/async-gen-method/rest-param-strict-body.js (default)
   Missing parse error
 language/statements/class/async-gen-method/yield-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
@@ -2452,6 +4126,10 @@ language/statements/class/async-gen-method/yield-as-label-identifier-escaped.js 
   Missing parse error
 language/statements/class/async-gen-method/yield-as-label-identifier-escaped.js (default)
   Missing parse error
+language/statements/class/async-method-static/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/async-method-static/array-destructuring-param-strict-body.js (default)
+  Missing parse error
 language/statements/class/async-method-static/await-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
 language/statements/class/async-method-static/await-as-binding-identifier-escaped.js (default)
@@ -2464,6 +4142,18 @@ language/statements/class/async-method-static/await-as-label-identifier-escaped.
   Missing parse error
 language/statements/class/async-method-static/await-as-label-identifier-escaped.js (default)
   Missing parse error
+language/statements/class/async-method-static/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/async-method-static/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/statements/class/async-method-static/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/async-method-static/rest-param-strict-body.js (default)
+  Missing parse error
+language/statements/class/async-method/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/async-method/array-destructuring-param-strict-body.js (default)
+  Missing parse error
 language/statements/class/async-method/await-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
 language/statements/class/async-method/await-as-binding-identifier-escaped.js (default)
@@ -2475,6 +4165,14 @@ language/statements/class/async-method/await-as-identifier-reference-escaped.js 
 language/statements/class/async-method/await-as-label-identifier-escaped.js (strict mode)
   Missing parse error
 language/statements/class/async-method/await-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/statements/class/async-method/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/async-method/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/statements/class/async-method/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/async-method/rest-param-strict-body.js (default)
   Missing parse error
 language/statements/class/class-name-ident-await-escaped-module.js (strict mode)
   Missing parse error
@@ -2496,6 +4194,70 @@ language/statements/class/class-name-ident-yield-escaped.js (strict mode)
   Missing parse error
 language/statements/class/class-name-ident-yield-escaped.js (default)
   Missing parse error
+language/statements/class/cpn-class-decl-accessors-computed-property-name-from-assignment-expression-coalesce.js (strict mode)
+  Unexpected token `=` at (40, 11) to (40, 12)
+language/statements/class/cpn-class-decl-accessors-computed-property-name-from-assignment-expression-coalesce.js (default)
+  Unexpected token `=` at (40, 11) to (40, 12)
+language/statements/class/cpn-class-decl-accessors-computed-property-name-from-assignment-expression-logical-and.js (strict mode)
+  Unexpected token `=` at (40, 11) to (40, 12)
+language/statements/class/cpn-class-decl-accessors-computed-property-name-from-assignment-expression-logical-and.js (default)
+  Unexpected token `=` at (40, 11) to (40, 12)
+language/statements/class/cpn-class-decl-accessors-computed-property-name-from-assignment-expression-logical-or.js (strict mode)
+  Unexpected token `=` at (40, 11) to (40, 12)
+language/statements/class/cpn-class-decl-accessors-computed-property-name-from-assignment-expression-logical-or.js (default)
+  Unexpected token `=` at (40, 11) to (40, 12)
+language/statements/class/cpn-class-decl-accessors-computed-property-name-from-await-expression.js (strict mode)
+  Unexpected number, expected the token `]` at (40, 13) to (40, 14)
+language/statements/class/cpn-class-decl-accessors-computed-property-name-from-await-expression.js (default)
+  Unexpected number, expected the token `]` at (40, 13) to (40, 14)
+language/statements/class/cpn-class-decl-computed-property-name-from-assignment-expression-coalesce.js (strict mode)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/statements/class/cpn-class-decl-computed-property-name-from-assignment-expression-coalesce.js (default)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/statements/class/cpn-class-decl-computed-property-name-from-assignment-expression-logical-and.js (strict mode)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/statements/class/cpn-class-decl-computed-property-name-from-assignment-expression-logical-and.js (default)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/statements/class/cpn-class-decl-computed-property-name-from-assignment-expression-logical-or.js (strict mode)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/statements/class/cpn-class-decl-computed-property-name-from-assignment-expression-logical-or.js (default)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/statements/class/cpn-class-decl-computed-property-name-from-await-expression.js (strict mode)
+  Unexpected number, expected the token `]` at (40, 9) to (40, 10)
+language/statements/class/cpn-class-decl-computed-property-name-from-await-expression.js (default)
+  Unexpected number, expected the token `]` at (40, 9) to (40, 10)
+language/statements/class/cpn-class-decl-fields-computed-property-name-from-assignment-expression-coalesce.js (strict mode)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/statements/class/cpn-class-decl-fields-computed-property-name-from-assignment-expression-coalesce.js (default)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/statements/class/cpn-class-decl-fields-computed-property-name-from-assignment-expression-logical-and.js (strict mode)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/statements/class/cpn-class-decl-fields-computed-property-name-from-assignment-expression-logical-and.js (default)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/statements/class/cpn-class-decl-fields-computed-property-name-from-assignment-expression-logical-or.js (strict mode)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/statements/class/cpn-class-decl-fields-computed-property-name-from-assignment-expression-logical-or.js (default)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/statements/class/cpn-class-decl-fields-computed-property-name-from-await-expression.js (strict mode)
+  Unexpected number, expected the token `]` at (40, 9) to (40, 10)
+language/statements/class/cpn-class-decl-fields-computed-property-name-from-await-expression.js (default)
+  Unexpected number, expected the token `]` at (40, 9) to (40, 10)
+language/statements/class/cpn-class-decl-fields-methods-computed-property-name-from-assignment-expression-coalesce.js (strict mode)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/statements/class/cpn-class-decl-fields-methods-computed-property-name-from-assignment-expression-coalesce.js (default)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/statements/class/cpn-class-decl-fields-methods-computed-property-name-from-assignment-expression-logical-and.js (strict mode)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/statements/class/cpn-class-decl-fields-methods-computed-property-name-from-assignment-expression-logical-and.js (default)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/statements/class/cpn-class-decl-fields-methods-computed-property-name-from-assignment-expression-logical-or.js (strict mode)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/statements/class/cpn-class-decl-fields-methods-computed-property-name-from-assignment-expression-logical-or.js (default)
+  Unexpected token `=` at (40, 7) to (40, 8)
+language/statements/class/cpn-class-decl-fields-methods-computed-property-name-from-await-expression.js (strict mode)
+  Unexpected number, expected the token `]` at (40, 9) to (40, 10)
+language/statements/class/cpn-class-decl-fields-methods-computed-property-name-from-await-expression.js (default)
+  Unexpected number, expected the token `]` at (40, 9) to (40, 10)
 language/statements/class/definition/early-errors-class-method-NSPL-with-USD.js (strict mode)
   Missing parse error
 language/statements/class/definition/early-errors-class-method-NSPL-with-USD.js (default)
@@ -2624,6 +4386,62 @@ language/statements/class/elements/literal-name-init-err-contains-arguments.js (
   Missing parse error
 language/statements/class/elements/literal-name-init-err-contains-arguments.js (default)
   Missing parse error
+language/statements/class/elements/nested-arrow-fnc-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/statements/class/elements/nested-arrow-fnc-init-err-contains-arguments.js (default)
+  Missing parse error
+language/statements/class/elements/nested-comp-name-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/statements/class/elements/nested-comp-name-init-err-contains-arguments.js (default)
+  Missing parse error
+language/statements/class/elements/nested-literal-name-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/statements/class/elements/nested-literal-name-init-err-contains-arguments.js (default)
+  Missing parse error
+language/statements/class/elements/nested-private-arrow-fnc-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/statements/class/elements/nested-private-arrow-fnc-init-err-contains-arguments.js (default)
+  Missing parse error
+language/statements/class/elements/nested-private-literal-name-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/statements/class/elements/nested-private-literal-name-init-err-contains-arguments.js (default)
+  Missing parse error
+language/statements/class/elements/nested-private-ternary-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/statements/class/elements/nested-private-ternary-init-err-contains-arguments.js (default)
+  Missing parse error
+language/statements/class/elements/nested-private-typeof-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/statements/class/elements/nested-private-typeof-init-err-contains-arguments.js (default)
+  Missing parse error
+language/statements/class/elements/nested-static-comp-name-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/statements/class/elements/nested-static-comp-name-init-err-contains-arguments.js (default)
+  Missing parse error
+language/statements/class/elements/nested-static-literal-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/statements/class/elements/nested-static-literal-init-err-contains-arguments.js (default)
+  Missing parse error
+language/statements/class/elements/nested-static-private-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/statements/class/elements/nested-static-private-init-err-contains-arguments.js (default)
+  Missing parse error
+language/statements/class/elements/nested-static-string-literal-name-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/statements/class/elements/nested-static-string-literal-name-init-err-contains-arguments.js (default)
+  Missing parse error
+language/statements/class/elements/nested-string-literal-name-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/statements/class/elements/nested-string-literal-name-init-err-contains-arguments.js (default)
+  Missing parse error
+language/statements/class/elements/nested-ternary-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/statements/class/elements/nested-ternary-init-err-contains-arguments.js (default)
+  Missing parse error
+language/statements/class/elements/nested-typeof-init-err-contains-arguments.js (strict mode)
+  Missing parse error
+language/statements/class/elements/nested-typeof-init-err-contains-arguments.js (default)
+  Missing parse error
 language/statements/class/elements/private-arrow-fnc-init-err-contains-arguments.js (strict mode)
   Missing parse error
 language/statements/class/elements/private-arrow-fnc-init-err-contains-arguments.js (default)
@@ -2640,6 +4458,14 @@ language/statements/class/elements/private-typeof-init-err-contains-arguments.js
   Missing parse error
 language/statements/class/elements/private-typeof-init-err-contains-arguments.js (default)
   Missing parse error
+language/statements/class/elements/static-as-valid-instance-field-assigned.js (strict mode)
+  Unexpected token `=`, expected an identifier at (25, 9) to (25, 10)
+language/statements/class/elements/static-as-valid-instance-field-assigned.js (default)
+  Unexpected token `=`, expected an identifier at (25, 9) to (25, 10)
+language/statements/class/elements/static-as-valid-instance-field.js (strict mode)
+  Unexpected token `;`, expected an identifier at (25, 8) to (25, 9)
+language/statements/class/elements/static-as-valid-instance-field.js (default)
+  Unexpected token `;`, expected an identifier at (25, 8) to (25, 9)
 language/statements/class/elements/static-comp-name-init-err-contains-arguments.js (strict mode)
   Missing parse error
 language/statements/class/elements/static-comp-name-init-err-contains-arguments.js (default)
@@ -2732,6 +4558,18 @@ language/statements/class/elements/typeof-init-err-contains-arguments.js (strict
   Missing parse error
 language/statements/class/elements/typeof-init-err-contains-arguments.js (default)
   Missing parse error
+language/statements/class/gen-method-static/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/gen-method-static/array-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/statements/class/gen-method-static/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/gen-method-static/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/statements/class/gen-method-static/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/gen-method-static/rest-param-strict-body.js (default)
+  Missing parse error
 language/statements/class/gen-method-static/yield-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
 language/statements/class/gen-method-static/yield-as-binding-identifier-escaped.js (default)
@@ -2744,6 +4582,18 @@ language/statements/class/gen-method-static/yield-as-label-identifier-escaped.js
   Missing parse error
 language/statements/class/gen-method-static/yield-as-label-identifier-escaped.js (default)
   Missing parse error
+language/statements/class/gen-method/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/gen-method/array-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/statements/class/gen-method/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/gen-method/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/statements/class/gen-method/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/gen-method/rest-param-strict-body.js (default)
+  Missing parse error
 language/statements/class/gen-method/yield-as-binding-identifier-escaped.js (strict mode)
   Missing parse error
 language/statements/class/gen-method/yield-as-binding-identifier-escaped.js (default)
@@ -2755,6 +4605,46 @@ language/statements/class/gen-method/yield-as-identifier-reference-escaped.js (d
 language/statements/class/gen-method/yield-as-label-identifier-escaped.js (strict mode)
   Missing parse error
 language/statements/class/gen-method/yield-as-label-identifier-escaped.js (default)
+  Missing parse error
+language/statements/class/method-static/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/method-static/array-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/statements/class/method-static/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/method-static/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/statements/class/method-static/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/method-static/rest-param-strict-body.js (default)
+  Missing parse error
+language/statements/class/method/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/method/array-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/statements/class/method/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/method/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/statements/class/method/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/class/method/rest-param-strict-body.js (default)
+  Missing parse error
+language/statements/class/private-non-static-getter-static-setter-early-error.js (strict mode)
+  Missing parse error
+language/statements/class/private-non-static-getter-static-setter-early-error.js (default)
+  Missing parse error
+language/statements/class/private-non-static-setter-static-getter-early-error.js (strict mode)
+  Missing parse error
+language/statements/class/private-non-static-setter-static-getter-early-error.js (default)
+  Missing parse error
+language/statements/class/private-static-getter-non-static-setter-early-error.js (strict mode)
+  Missing parse error
+language/statements/class/private-static-getter-non-static-setter-early-error.js (default)
+  Missing parse error
+language/statements/class/private-static-setter-non-static-getter-early-error.js (strict mode)
+  Missing parse error
+language/statements/class/private-static-setter-non-static-getter-early-error.js (default)
   Missing parse error
 language/statements/class/syntax/early-errors/class-definition-evaluation-block-duplicate-binding.js (strict mode)
   Missing parse error
@@ -2802,15 +4692,43 @@ language/statements/for-of/head-let-bound-names-in-stmt.js (strict mode)
   Missing parse error
 language/statements/for-of/head-let-bound-names-in-stmt.js (default)
   Missing parse error
+language/statements/for-of/head-lhs-async-invalid.js (strict mode)
+  Missing parse error
+language/statements/for-of/head-lhs-async-invalid.js (default)
+  Missing parse error
 language/statements/for/head-let-bound-names-in-stmt.js (strict mode)
   Missing parse error
 language/statements/for/head-let-bound-names-in-stmt.js (default)
   Missing parse error
 language/statements/for/head-lhs-let.js (default)
   Unexpected token `=`, expected an identifier at (25, 4) to (25, 5)
+language/statements/function/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/function/array-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/statements/function/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/function/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/statements/function/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/function/rest-param-strict-body.js (default)
+  Missing parse error
 language/statements/function/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
 language/statements/function/use-strict-with-non-simple-param.js (default)
+  Missing parse error
+language/statements/generators/array-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/generators/array-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/statements/generators/object-destructuring-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/generators/object-destructuring-param-strict-body.js (default)
+  Missing parse error
+language/statements/generators/rest-param-strict-body.js (strict mode)
+  Missing parse error
+language/statements/generators/rest-param-strict-body.js (default)
   Missing parse error
 language/statements/generators/use-strict-with-non-simple-param.js (strict mode)
   Missing parse error
@@ -3108,29 +5026,41 @@ language/statements/try/early-catch-lex.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 68180 (97.77%)
-Failed: 1554 (2.23%)
+Passed:  76144 (96.81%)
+Failed:  2491 (3.17%)
+Errored: 22 (0.03%)
 
 Features:
-  arrow-function: 108/118 (91.53%)
-  async-functions: 753/907 (83.02%)
-  async-iteration: 9160/9388 (97.57%)
-  class: 7450/7578 (98.31%)
-  class-fields-private: 1712/1736 (98.62%)
-  class-fields-public: 3316/3388 (97.87%)
-  class-methods-private: 3034/3082 (98.44%)
-  class-static-fields-private: 636/640 (99.38%)
-  class-static-fields-public: 42/54 (77.78%)
-  class-static-methods-private: 2708/2756 (98.26%)
-  computed-property-names: 312/318 (98.11%)
-  destructuring-assignment: 8/12 (66.67%)
-  dynamic-import: 1034/1036 (99.81%)
-  export-star-as-namespace-from-module: 28/36 (77.78%)
-  generators: 7493/7653 (97.91%)
+  BigInt: 2443/2451 (99.67%)
+  IsHTMLDDA: 64/70 (91.43%)
+  arbitrary-module-namespace-names: 20/32 (62.50%)
+  arrow-function: 1323/1342 (98.58%)
+  async-functions: 1116/1288 (86.65%)
+  async-iteration: 9418/9724 (96.85%)
+  class: 8953/9213 (97.18%)
+  class-fields-private: 1923/1977 (97.27%)
+  class-fields-private-in: 12/34 (35.29%)
+  class-fields-public: 3930/4098 (95.90%)
+  class-methods-private: 3331/3391 (98.23%)
+  class-static-fields-private: 679/687 (98.84%)
+  class-static-fields-public: 364/420 (86.67%)
+  class-static-methods-private: 2943/3003 (98.00%)
+  computed-property-names: 871/955 (91.20%)
+  destructuring-assignment: 215/221 (97.29%)
+  destructuring-binding: 13135/13137 (99.98%)
+  dynamic-import: 1036/1046 (99.04%)
+  export-star-as-namespace-from-module: 28/38 (73.68%)
+  generators: 7816/8018 (97.48%)
   import.meta: 36/46 (78.26%)
-  let: 131/135 (97.04%)
-  new.target: 92/94 (97.87%)
-  numeric-separator-literal: 202/204 (99.02%)
-  object-rest: 672/674 (99.70%)
-  regexp-named-groups: 50/162 (30.86%)
-  regexp-unicode-property-escapes: 792/1076 (73.61%)
+  let: 131/137 (95.62%)
+  logical-assignment-operators: 18/150 (12.00%)
+  new.target: 120/122 (98.36%)
+  numeric-separator-literal: 316/318 (99.37%)
+  object-rest: 706/708 (99.72%)
+  optional-chaining: 106/112 (94.64%)
+  regexp-dotall: 32/34 (94.12%)
+  regexp-match-indices: 26/56 (46.43%)
+  regexp-named-groups: 78/194 (40.21%)
+  regexp-unicode-property-escapes: 808/1092 (73.99%)
+  rest-parameters: 0/192 (0.00%)
+  top-level-await: 62/504 (12.30%)
