@@ -22,15 +22,14 @@ let crop_atom = Atom crop_symbol
 (* from Js_layout_generator *)
 let utf8_escape = Js_layout_generator.utf8_escape
 
-(* TODO: make ~prefer_single_quotes configurable *)
-let better_quote = Js_layout_generator.better_quote ~prefer_single_quotes:false
+let better_quote = Js_layout_generator.better_quote
 
 let wrap_in_parens = Js_layout_generator.wrap_in_parens
 
 let with_semicolon = Js_layout_generator.with_semicolon
 
-let in_quotes s =
-  let quote = better_quote s in
+let in_quotes ~prefer_single_quotes s =
+  let quote = better_quote ~prefer_single_quotes s in
   let a = utf8_escape ~quote s in
   [Atom quote; Atom a; Atom quote]
 
@@ -49,7 +48,8 @@ let variance_ = function
 (* Main Transformation   *)
 (*************************)
 
-let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
+let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~exact_by_default elt
+    =
   let env_map : Layout.layout_node IMap.t ref = ref IMap.empty in
   let size = ref size in
   (* util to limit the number of calls to a (usually recursive) function *)
@@ -112,7 +112,7 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
         ~sep:(Atom ",")
         ~trailing:false
         (counted_map (type_ ~depth) ts)
-    | StrLit raw -> fuse (in_quotes (Reason.display_string_of_name raw))
+    | StrLit raw -> fuse (in_quotes ~prefer_single_quotes (Reason.display_string_of_name raw))
     | NumLit raw -> Atom raw
     | BoolLit value ->
       Atom
@@ -127,7 +127,8 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
       let t = type_ ~depth:0 t in
       env_map := IMap.add i t !env_map;
       Atom (varname i)
-    | CharSet s -> fuse [Atom "$CharSet"; Atom "<"; fuse (in_quotes s); Atom ">"]
+    | CharSet s ->
+      fuse [Atom "$CharSet"; Atom "<"; fuse (in_quotes ~prefer_single_quotes s); Atom ">"]
   and type_var (RVar i) = Atom (varname i)
   and type_generic ~depth g =
     let ({ sym_name = name; _ }, _, targs) = g in
@@ -209,7 +210,7 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
   and type_object_property =
     let to_key x =
       if property_key_quotes_needed x then
-        let quote = better_quote x in
+        let quote = better_quote ~prefer_single_quotes x in
         fuse [Atom quote; Atom (utf8_escape ~quote x); Atom quote]
       else
         identifier (Reason.OrdinaryName x)
@@ -410,7 +411,8 @@ let layout_of_elt ?(size = 5000) ?(with_comments = true) ~exact_by_default elt =
     let body = list ~wrap:(Atom "{", Atom "}") ~sep:(Atom ";") (exports @ [default]) in
     let name =
       match name with
-      | Some name -> fuse (in_quotes (Reason.display_string_of_name name.Ty.sym_name))
+      | Some name ->
+        fuse (in_quotes ~prefer_single_quotes (Reason.display_string_of_name name.Ty.sym_name))
       | None -> Empty
     in
     fuse [Atom "module"; space; name; space; body]
@@ -457,21 +459,29 @@ let print_single_line ~source_maps node =
 
 let print_pretty ~source_maps node = Pretty_printer.print ~source_maps ~skip_endline:true node
 
-let string_of_elt ?(with_comments = true) (elt : Ty.elt) ~exact_by_default : string =
-  layout_of_elt ~with_comments ~exact_by_default elt
+let string_of_elt
+    ?(prefer_single_quotes = false) ?(with_comments = true) (elt : Ty.elt) ~exact_by_default :
+    string =
+  layout_of_elt ~prefer_single_quotes ~with_comments ~exact_by_default elt
   |> print_pretty ~source_maps:None
   |> Source.contents
 
-let string_of_elt_single_line ?(with_comments = true) (elt : Ty.elt) ~exact_by_default : string =
-  layout_of_elt ~with_comments ~exact_by_default elt
+let string_of_elt_single_line
+    ?(prefer_single_quotes = false) ?(with_comments = true) (elt : Ty.elt) ~exact_by_default :
+    string =
+  layout_of_elt ~prefer_single_quotes ~with_comments ~exact_by_default elt
   |> print_single_line ~source_maps:None
   |> Source.contents
 
-let string_of_t ?(with_comments = true) (ty : Ty.t) ~exact_by_default : string =
-  string_of_elt ~with_comments ~exact_by_default (Ty.Type ty)
+let string_of_t
+    ?(prefer_single_quotes = false) ?(with_comments = true) (ty : Ty.t) ~exact_by_default : string =
+  string_of_elt ~prefer_single_quotes ~with_comments ~exact_by_default (Ty.Type ty)
 
-let string_of_t_single_line ?(with_comments = true) (ty : Ty.t) ~exact_by_default : string =
-  string_of_elt_single_line ~with_comments ~exact_by_default (Ty.Type ty)
+let string_of_t_single_line
+    ?(prefer_single_quotes = false) ?(with_comments = true) (ty : Ty.t) ~exact_by_default : string =
+  string_of_elt_single_line ~prefer_single_quotes ~with_comments ~exact_by_default (Ty.Type ty)
 
-let string_of_decl_single_line ?(with_comments = true) (d : Ty.decl) ~exact_by_default : string =
-  string_of_elt_single_line ~with_comments ~exact_by_default (Ty.Decl d)
+let string_of_decl_single_line
+    ?(prefer_single_quotes = false) ?(with_comments = true) (d : Ty.decl) ~exact_by_default : string
+    =
+  string_of_elt_single_line ~prefer_single_quotes ~with_comments ~exact_by_default (Ty.Decl d)

@@ -204,7 +204,7 @@ let type_ options =
   and obj_named_prop =
     let to_key x =
       if Ty_printer.property_key_quotes_needed x then
-        let quote = Ty_printer.better_quote x in
+        let quote = Ty_printer.better_quote ~prefer_single_quotes:false x in
         let raw = quote ^ Ty_printer.utf8_escape ~quote x ^ quote in
         let value = Ast.Literal.String x in
         Ast.Expression.Object.Property.Literal
@@ -311,7 +311,7 @@ let type_ options =
     let%map ts = mapM type_ ts in
     mk_targs ts
   and str_lit lit =
-    let quote = Ty_printer.better_quote lit in
+    let quote = Ty_printer.better_quote ~prefer_single_quotes:false lit in
     let raw_lit = Ty_printer.utf8_escape ~quote lit in
     let raw = quote ^ raw_lit ^ quote in
     { Ast.StringLiteral.value = lit; raw; comments = None }
