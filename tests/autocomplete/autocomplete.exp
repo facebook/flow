@@ -8405,7 +8405,7 @@ Flags: --lsp
 upper_bounds_1.js:10:3
 Flags: --lsp
 {
-  "label":"\"foo\"",
+  "label":"'foo'",
   "labelDetails":{"type":"\"foo\""},
   "kind":12,
   "detail":"\"foo\"",
@@ -8414,7 +8414,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
-    "newText":"\"foo\""
+    "newText":"'foo'"
   },
   "command":{
     "title":"",
@@ -8422,12 +8422,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "literal from upper bound",
-      {"token":null,"completion":"\"foo\""}
+      {"token":null,"completion":"'foo'"}
     ]
   }
 }
 {
-  "label":"\"bar\"",
+  "label":"'bar'",
   "labelDetails":{"type":"\"bar\""},
   "kind":12,
   "detail":"\"bar\"",
@@ -8436,7 +8436,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
-    "newText":"\"bar\""
+    "newText":"'bar'"
   },
   "command":{
     "title":"",
@@ -8444,12 +8444,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "literal from upper bound",
-      {"token":null,"completion":"\"bar\""}
+      {"token":null,"completion":"'bar'"}
     ]
   }
 }
 {
-  "label":"\"baz\"",
+  "label":"'baz'",
   "labelDetails":{"type":"\"baz\""},
   "kind":12,
   "detail":"\"baz\"",
@@ -8458,7 +8458,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
-    "newText":"\"baz\""
+    "newText":"'baz'"
   },
   "command":{
     "title":"",
@@ -8466,7 +8466,7 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "literal from upper bound",
-      {"token":null,"completion":"\"baz\""}
+      {"token":null,"completion":"'baz'"}
     ]
   }
 }
@@ -8495,7 +8495,7 @@ Flags: --lsp
 upper_bounds_2.js:10:4
 Flags: --lsp
 {
-  "label":"\"baz\"",
+  "label":"'baz'",
   "labelDetails":{"type":"\"baz\""},
   "kind":12,
   "detail":"\"baz\"",
@@ -8504,7 +8504,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
-    "newText":"\"baz\""
+    "newText":"'baz'"
   },
   "command":{
     "title":"",
@@ -8512,12 +8512,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "literal from upper bound",
-      {"token":null,"completion":"\"baz\""}
+      {"token":null,"completion":"'baz'"}
     ]
   }
 }
 {
-  "label":"\"bar\"",
+  "label":"'bar'",
   "labelDetails":{"type":"\"bar\""},
   "kind":12,
   "detail":"\"bar\"",
@@ -8526,7 +8526,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
-    "newText":"\"bar\""
+    "newText":"'bar'"
   },
   "command":{
     "title":"",
@@ -8534,12 +8534,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "literal from upper bound",
-      {"token":null,"completion":"\"bar\""}
+      {"token":null,"completion":"'bar'"}
     ]
   }
 }
 {
-  "label":"\"foo\"",
+  "label":"'foo'",
   "labelDetails":{"type":"\"foo\""},
   "kind":12,
   "detail":"\"foo\"",
@@ -8548,7 +8548,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":9,"character":2},"end":{"line":9,"character":2}},
-    "newText":"\"foo\""
+    "newText":"'foo'"
   },
   "command":{
     "title":"",
@@ -8556,7 +8556,7 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "literal from upper bound",
-      {"token":null,"completion":"\"foo\""}
+      {"token":null,"completion":"'foo'"}
     ]
   }
 }
@@ -8565,9 +8565,9 @@ upper_bounds_3.js:12:5
 Flags: --pretty
 {
   "result":[
-    {"name":"\"foo\"","type":"\"foo\""},
-    {"name":"\"bar\"","type":"\"bar\""},
-    {"name":"\"baz\"","type":"\"baz\""},
+    {"name":"'foo'","type":"\"foo\""},
+    {"name":"'bar'","type":"\"bar\""},
+    {"name":"'baz'","type":"\"baz\""},
     {"name":"f","type":"(Union) => void"},
     {"name":"x","type":"empty"}
   ]
@@ -8577,9 +8577,9 @@ upper_bounds_4.js:15:7
 Flags: --pretty
 {
   "result":[
-    {"name":"\"foo\"","type":"\"foo\""},
-    {"name":"\"bar\"","type":"\"bar\""},
-    {"name":"\"baz\"","type":"\"baz\""},
+    {"name":"'foo'","type":"\"foo\""},
+    {"name":"'bar'","type":"\"bar\""},
+    {"name":"'baz'","type":"\"baz\""},
     {"name":"cond","type":"boolean"},
     {"name":"f","type":"(Union) => void"},
     {"name":"x","type":"\"foo\""}
@@ -8590,9 +8590,9 @@ upper_bounds_5.js:13:5
 Flags: --pretty
 {
   "result":[
-    {"name":"\"foo\"","type":"\"foo\""},
-    {"name":"\"bar\"","type":"\"bar\""},
-    {"name":"\"baz\"","type":"\"baz\""},
+    {"name":"'foo'","type":"\"foo\""},
+    {"name":"'bar'","type":"\"bar\""},
+    {"name":"'baz'","type":"\"baz\""},
     {"name":"f","type":"(Union) => void"},
     {"name":"g","type":"(Union) => void"},
     {"name":"x","type":"empty"}

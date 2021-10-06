@@ -423,7 +423,7 @@ let rec literals_of_ty acc ty =
   | Ty.Bool _ -> Ty.BoolLit true :: Ty.BoolLit false :: acc
   | _ -> acc
 
-let autocomplete_literals ~cx ~genv ~tparams_rev ~ac_loc ~upper_bound =
+let autocomplete_literals ~prefer_single_quotes ~cx ~genv ~tparams_rev ~ac_loc ~upper_bound =
   let scheme = { Type.TypeScheme.tparams_rev; type_ = upper_bound } in
   let options = { ty_normalizer_options with Ty_normalizer_env.expand_type_aliases = true } in
   let upper_bound_ty =
@@ -438,7 +438,13 @@ let autocomplete_literals ~cx ~genv ~tparams_rev ~ac_loc ~upper_bound =
   (*let literals = Base.List.fold tys ~init:[] ~f:literals_of_ty in*)
   let literals = literals_of_ty [] upper_bound_ty in
   Base.List.map literals ~f:(fun ty ->
-      let name = Ty_printer.string_of_t_single_line ~with_comments:false ~exact_by_default ty in
+      let name =
+        Ty_printer.string_of_t_single_line
+          ~prefer_single_quotes
+          ~with_comments:false
+          ~exact_by_default
+          ty
+      in
       (* TODO: if we had both the expanded and unexpanded type alias, we'd
          use the unexpanded alias for `ty` and the expanded literal for `name`. *)
       autocomplete_create_result
@@ -545,7 +551,10 @@ let autocomplete_id
   let exact_by_default = Context.exact_by_default cx in
   let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig in
   let upper_bound = upper_bound_t_of_t ~cx type_ in
-  let results = autocomplete_literals ~cx ~genv ~tparams_rev ~ac_loc ~upper_bound in
+  let prefer_single_quotes = Options.format_single_quotes options in
+  let results =
+    autocomplete_literals ~prefer_single_quotes ~cx ~genv ~tparams_rev ~ac_loc ~upper_bound
+  in
   let rank =
     if results = [] then
       0
@@ -1469,7 +1478,10 @@ let autocomplete_get_results
           Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig
         in
         let upper_bound = upper_bound_t_of_t ~cx lit_type in
-        let items = autocomplete_literals ~cx ~genv ~tparams_rev ~ac_loc ~upper_bound in
+        let prefer_single_quotes = Options.format_single_quotes options in
+        let items =
+          autocomplete_literals ~prefer_single_quotes ~cx ~genv ~tparams_rev ~ac_loc ~upper_bound
+        in
         let result = ServerProt.Response.Completion.{ items; is_incomplete = false } in
         ("Acliteral", AcResult { result; errors_to_log = [] })
       | Ac_id { include_super; include_this; type_ } ->
