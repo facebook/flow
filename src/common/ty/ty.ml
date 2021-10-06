@@ -77,7 +77,6 @@ and unsoundness_kind =
   | ComputedNonLiteralKey
   | Constructor
   | DummyStatic
-  | Existential
   | Exports
   | FunctionPrototype
   | InferenceHooks
@@ -210,7 +209,6 @@ and utility =
   | Call of t * t list
   | Class of t
   | Shape of t
-  | Exists
   (* React utils *)
   | ReactElementPropsType of t
   | ReactElementConfigType of t
@@ -496,7 +494,6 @@ class ['A] comparator_ty =
       | ComputedNonLiteralKey -> 1
       | Constructor -> 2
       | DummyStatic -> 3
-      | Existential -> 4
       | Exports -> 5
       | FunctionPrototype -> 6
       | InferenceHooks -> 7
@@ -538,7 +535,6 @@ class ['A] comparator_ty =
       | Call _ -> 12
       | Class _ -> 13
       | Shape _ -> 14
-      | Exists -> 17
       | ReactElementPropsType _ -> 18
       | ReactElementConfigType _ -> 19
       | ReactElementRefType _ -> 20
@@ -699,7 +695,6 @@ let string_of_utility_ctor = function
   | Call _ -> "$Call"
   | Class _ -> "Class"
   | Shape _ -> "$Shape"
-  | Exists -> "*"
   | ReactElementPropsType _ -> "React$ElementProps"
   | ReactElementConfigType _ -> "React$ElementConfig"
   | ReactElementRefType _ -> "React$ElementRef"
@@ -723,7 +718,6 @@ let types_of_utility = function
   | Call (t, ts) -> Some (t :: ts)
   | Class t -> Some [t]
   | Shape t -> Some [t]
-  | Exists -> None
   | ReactElementPropsType t -> Some [t]
   | ReactElementConfigType t -> Some [t]
   | ReactElementRefType t -> Some [t]

@@ -102,7 +102,6 @@ class virtual ['a] t =
         else
           EvalT (t'', dt', id')
       | BoundT _ -> t
-      | ExistsT _ -> t
       | ThisClassT (r, t', i) ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

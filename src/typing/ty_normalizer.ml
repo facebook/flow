@@ -858,7 +858,6 @@ end = struct
       | TypeDestructorTriggerT (_, r, _, _, _) ->
         let loc = Reason.def_aloc_of_reason r in
         return (mk_empty (Ty.EmptyTypeDestructorTriggerT loc))
-      | ExistsT _ -> return Ty.(Utility Exists)
       | ObjProtoT _ -> return Ty.(TypeOf ObjProto)
       | FunProtoT _ -> return Ty.(TypeOf FunProto)
       | OpenPredT { base_t = t; m_pos = _; m_neg = _; reason = _ } -> type__ ~env t
@@ -963,7 +962,6 @@ end = struct
       | T.ComputedNonLiteralKey -> Ty.ComputedNonLiteralKey
       | T.Constructor -> Ty.Constructor
       | T.DummyStatic -> Ty.DummyStatic
-      | T.Existential -> Ty.Existential
       | T.Exports -> Ty.Exports
       | T.FunctionPrototype -> Ty.FunctionPrototype
       | T.InferenceHooks -> Ty.InferenceHooks

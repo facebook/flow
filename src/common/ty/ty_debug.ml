@@ -76,7 +76,6 @@ and dump_any_unsoundness_kind = function
   | ComputedNonLiteralKey -> "ComputedNonLiteralKey"
   | Constructor -> "Constructor"
   | DummyStatic -> "DummyStatic"
-  | Existential -> "Existential"
   | Exports -> "Exports"
   | FunctionPrototype -> "FunctionPrototype"
   | InferenceHooks -> "InferenceHooks"

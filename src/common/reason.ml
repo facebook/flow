@@ -130,7 +130,6 @@ type 'loc virtual_reason_desc =
   | RGetterSetterProperty
   | RThis
   | RThisType
-  | RExistential
   | RImplicitInstantiation
   | RTooFewArgs
   | RTooFewArgsExpectedRest
@@ -279,7 +278,7 @@ let rec map_desc_locs f = function
   | RBinaryOperator (s, d1, d2) -> RBinaryOperator (s, map_desc_locs f d1, map_desc_locs f d2)
   | RLogical (s, d1, d2) -> RLogical (s, map_desc_locs f d1, map_desc_locs f d2)
   | ( RTemplateString | RUnknownString | RUnionEnum | REnum _ | RGetterSetterProperty | RThis
-    | RThisType | RExistential | RImplicitInstantiation | RTooFewArgs | RTooFewArgsExpectedRest
+    | RThisType | RImplicitInstantiation | RTooFewArgs | RTooFewArgsExpectedRest
     | RConstructorReturn | RNewObject | RUnion | RUnionType | RIntersection | RIntersectionType
     | RKeySet | RAnd | RConditional | RPrototype | RObjectPrototype | RFunctionPrototype
     | RDestructuring | RDefaultValue | RConstructor | RReturn | RDefaultConstructor | RRegExp
@@ -612,7 +611,6 @@ let rec string_of_desc = function
   | RGetterSetterProperty -> "getter/setter property"
   | RThis -> "this"
   | RThisType -> "`this` type"
-  | RExistential -> "existential"
   | RImplicitInstantiation -> "implicit instantiation"
   | RTooFewArgs -> "undefined (too few arguments)"
   | RTooFewArgsExpectedRest -> "undefined (too few arguments, expected default/rest parameters)"
@@ -824,8 +822,7 @@ let uninternal_name = function
 let is_instantiable_reason r =
   match desc_of_reason r with
   | RTypeParam _
-  | RThisType
-  | RExistential ->
+  | RThisType ->
     true
   | RImplicitInstantiation -> true
   | _ -> false
@@ -1408,7 +1405,6 @@ let classification_of_reason r =
   | RGetterSetterProperty
   | RThis
   | RThisType
-  | RExistential
   | RImplicitInstantiation
   | RTooFewArgs
   | RTooFewArgsExpectedRest

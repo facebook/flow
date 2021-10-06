@@ -7,7 +7,6 @@
 
 open Type.TypeContext
 module ALocMap = Loc_collections.ALocMap
-module ALocIDMap = Loc_collections.ALocIDMap
 
 exception Props_not_found of Type.Properties.id
 
@@ -171,8 +170,6 @@ type component_t = {
   fix_cache: (bool * Type.t, Type.t) Hashtbl.t;
   spread_cache: Spread_cache.t;
   speculation_state: Speculation_state.t;
-  (* TODO remove when existential type is gone *)
-  mutable exists_instantiations: Type.t list ALocIDMap.t;
   (* Post-inference checks *)
   mutable literal_subtypes: (Type.t * Type.use_t) list;
   mutable matching_props: (Reason.reason * string * Type.t * Type.t) list;
@@ -186,14 +183,13 @@ type component_t = {
 type phase =
   | InitLib
   | Checking
-  | Merging of bool  (** old/new *)
+  | Merging
   | PostInference
 
 let string_of_phase = function
   | InitLib -> "InitLib"
   | Checking -> "Checking"
-  | Merging true -> "Merging (new)"
-  | Merging false -> "Merging (old)"
+  | Merging -> "Merging"
   | PostInference -> "PostInference"
 
 type t = {
@@ -322,7 +318,6 @@ let make_ccx master_cx =
     voidable_checks = [];
     implicit_instantiation_checks = [];
     inferred_indexers = ALocMap.empty;
-    exists_instantiations = ALocIDMap.empty;
     test_prop_hits_and_misses = IMap.empty;
     computed_property_states = IMap.empty;
     spread_widened_types = IMap.empty;
@@ -551,8 +546,6 @@ let voidable_checks cx = cx.ccx.voidable_checks
 let implicit_instantiation_checks cx = cx.ccx.implicit_instantiation_checks
 
 let inferred_indexers cx = cx.ccx.inferred_indexers
-
-let exists_instantiations cx = cx.ccx.exists_instantiations
 
 let environment cx = cx.environment
 
@@ -835,15 +828,6 @@ let generate_poly_id cx =
 
 let make_source_poly_id cx aloc = make_aloc_id cx aloc |> Type.Poly.id_of_aloc_id
 
-let add_exists_instantiation cx loc t =
-  let id = make_aloc_id cx loc in
-  let ts =
-    match ALocIDMap.find_opt id cx.ccx.exists_instantiations with
-    | Some ts -> t :: ts
-    | None -> [t]
-  in
-  cx.ccx.exists_instantiations <- ALocIDMap.add id ts cx.ccx.exists_instantiations
-
 (* Copy context from cx_other to cx *)
 let merge_into ccx sig_cx_other =
   let sig_cx = ccx.sig_cx in
@@ -933,11 +917,6 @@ let speculation_id cx =
   match !(speculation_state cx) with
   | [] -> None
   | { speculation_id; case = { case_id; _ }; _ } :: _ -> Some (speculation_id, case_id)
-
-let new_merging cx =
-  match cx.phase with
-  | Merging x -> x
-  | _ -> false
 
 let add_avar cx id node = cx.ccx.annot_graph <- IMap.add id node cx.ccx.annot_graph
 

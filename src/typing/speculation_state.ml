@@ -41,8 +41,7 @@ type case = {
 
 (* Actions that involve some "ignored" unresolved tvars are considered
    benign. Such tvars can be explicitly designated to be ignored. Also, tvars
-   that instantiate type parameters, this types, existentials, etc. are
-   ignored. *)
+   that instantiate type parameters, this types, etc. are ignored. *)
 type ignore = Type.ident option
 
 (* A branch is a wrapper around a case, that also carries the speculation id of

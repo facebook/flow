@@ -74,7 +74,6 @@ type 'loc virtual_reason_desc =
   | RGetterSetterProperty
   | RThis
   | RThisType
-  | RExistential
   | RImplicitInstantiation
   | RTooFewArgs
   | RTooFewArgsExpectedRest

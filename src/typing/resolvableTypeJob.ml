@@ -81,9 +81,9 @@ and collect_of_type ?log_unresolved cx acc = function
           IMap.add id (Binding (r, id)) acc
         (* Instantiable reasons indicate unresolved tvars that are created
            "fresh" for the sole purpose of binding to other types, e.g. as
-           instantiations of type parameters or as existentials. Constraining
-           them during speculative matching typically do not cause side effects
-           across branches, and help make progress. *)
+           instantiations of type parameters. Constraining them during speculative
+           matching typically do not cause side effects across branches, and help
+           make progress. *)
         else if is_instantiable_reason r then
           acc
         else
@@ -228,7 +228,6 @@ and collect_of_type ?log_unresolved cx acc = function
   | NullProtoT _
   | ObjProtoT _
   | CustomFunT (_, _)
-  | ExistsT _
   | OpenPredT _ ->
     acc
 

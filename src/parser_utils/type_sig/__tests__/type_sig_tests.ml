@@ -3375,7 +3375,7 @@ let%expect_test "existential" =
           def =
           TyRefApp {loc = [4:23-27];
             name = (Unqualified LocalRef {ref_loc = [4:23-24]; index = 0});
-            targs = [(Annot Exists {loc = [4:25-26]; force = true})]}}
+            targs = [(Annot (Exists [4:25-26]))]}}
         |];
       info =
       ESModuleInfo {type_export_keys = [||];
@@ -3397,9 +3397,7 @@ let%expect_test "existential" =
            implements = []; static_props = {};
            proto_props = {};
            own_props =
-           { "p" ->
-             (ObjValueField ([2:2-3], (
-                Annot Exists {loc = [2:5-6]; force = false}), Polarity.Neutral)) }}} |}]
+           { "p" -> (ObjValueField ([2:2-3], (Annot (Exists [2:5-6])), Polarity.Neutral)) }}} |}]
 
 let%expect_test "exact_by_default" =
   print_sig ~exact_by_default:true {|

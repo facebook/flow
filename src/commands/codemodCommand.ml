@@ -202,54 +202,6 @@ module Annotate_escaped_generics = struct
   let command = CommandSpec.command spec main
 end
 
-module Replace_existentials = struct
-  let doc = "Replace existential types with inferred types."
-
-  let spec =
-    let module Literals = Codemod_hardcoded_ty_fixes.PreserveLiterals in
-    let preserve_string_literals_level =
-      Literals.[("always", Always); ("never", Never); ("auto", Auto)]
-    in
-    {
-      CommandSpec.name = "replace-existentials";
-      doc;
-      usage =
-        Printf.sprintf
-          "Usage: %s codemod replace-existentials [OPTION]... [FILE]\n\n%s\n"
-          Utils_js.exe_name
-          doc;
-      args =
-        CommandSpec.ArgSpec.(
-          empty
-          |> CommandUtils.codemod_flags
-          |> flag
-               "--preserve-literals"
-               (required ~default:Literals.Never (enum preserve_string_literals_level))
-               ~doc:""
-          |> flag
-               "--max-type-size"
-               (required ~default:100 int)
-               ~doc:"The maximum number of nodes allowed in a single type annotation (default: 100)"
-          |> flag
-               "--default-any"
-               no_arg
-               ~doc:
-                 "Adds 'any' to all locations where type cannot be inferred. Otherwise, 'mixed' is used");
-    }
-
-  let main codemod_flags preserve_literals max_type_size default_any () =
-    let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
-      include Replace_existentials
-
-      let check_options o = o
-
-      let visit = visit ~default_any ~preserve_literals ~max_type_size
-    end) in
-    main (module Runner) codemod_flags ()
-
-  let command = CommandSpec.command spec main
-end
-
 module Annotate_lti_command = struct
   let doc = "Annotates function definitions required for Flow's local type interence."
 
@@ -423,7 +375,6 @@ let command =
       [
         (Annotate_exports_command.spec.CommandSpec.name, Annotate_exports_command.command);
         (Annotate_escaped_generics.spec.CommandSpec.name, Annotate_escaped_generics.command);
-        (Replace_existentials.spec.CommandSpec.name, Replace_existentials.command);
         (Annotate_lti_command.spec.CommandSpec.name, Annotate_lti_command.command);
         (KeyMirror_command.spec.CommandSpec.name, KeyMirror_command.command);
         (Annotate_empty_object_command.spec.CommandSpec.name, Annotate_empty_object_command.command);

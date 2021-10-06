@@ -3059,8 +3059,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         code "any";
         text ", ";
         code "Object";
-        text ", or ";
+        text ", ";
         code "Function";
+        text ", or ";
+        code "*";
         text " types is not safe!";
       ]
     in

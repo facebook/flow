@@ -160,8 +160,6 @@ module type CONS_GEN = sig
 
   val obj_test_proto : Context.t -> Reason.t -> Type.t -> Type.t
 
-  val existential : Context.t -> force:bool -> Reason.t -> Type.t
-
   val obj_rest : Context.t -> Reason.t -> string list -> Type.t -> Type.t
 
   val arr_rest : Context.t -> Type.use_op -> Reason.t -> int -> Type.t -> Type.t
@@ -536,9 +534,7 @@ module Make (ConsGen : CONS_GEN) : S = struct
       Type.(AnyT.error reason)
     | String loc -> Type.StrT.at loc trust
     | Boolean loc -> Type.BoolT.at loc trust
-    | Exists { loc; force } ->
-      let reason = Reason.(mk_annot_reason RExistential loc) in
-      ConsGen.existential file.cx ~force reason
+    | Exists loc -> Type.AnyT.at Type.AnnotatedAny loc
     | Optional t -> TypeUtil.optional (merge file t)
     | Maybe (loc, t) ->
       let t = merge file t in

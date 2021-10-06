@@ -13,10 +13,7 @@ open Reason
 (* substitutions *)
 (*****************)
 
-(** Substitute bound type variables with associated types in a type. Do not
-    force substitution under polymorphic types. This ensures that existential
-    type variables under a polymorphic type remain unevaluated until the
-    polymorphic type is applied. **)
+(** Substitute bound type variables with associated types in a type. **)
 let substituter =
   object (self)
     inherit [Type.t SMap.t * bool * use_op option] Type_mapper.t_with_uses as super
@@ -86,21 +83,6 @@ let substituter =
                   param_t
               | Some param_t -> param_t
             end
-          | ExistsT reason ->
-            if force then (
-              if Context.new_merging cx then (
-                Utils_js.prerr_endlinef
-                  "WARNING: Existential_type %s"
-                  Reason.(
-                    string_of_loc
-                      (ALoc.to_loc_with_tables (Context.aloc_tables cx) (aloc_of_reason reason)));
-                Unsoundness.why Existential reason
-              ) else
-                let t = Tvar.mk cx reason in
-                Context.add_exists_instantiation cx (Reason.aloc_of_reason reason) t;
-                t
-            ) else
-              t
           | DefT (reason, trust, PolyT { tparams_loc; tparams = xs; t_out = inner; _ }) ->
             let (xs, map, changed) =
               Nel.fold_left

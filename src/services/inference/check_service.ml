@@ -287,12 +287,6 @@ module ConsGen : Type_sig_merge.CONS_GEN = struct
   let obj_test_proto cx reason l =
     Tvar.mk_where cx reason (fun proto -> Flow_js.flow cx (l, Type.ObjTestProtoT (reason, proto)))
 
-  let existential cx ~force reason =
-    if force then
-      Tvar.mk cx reason
-    else
-      Type.ExistsT reason
-
   let obj_rest cx reason xs t =
     Tvar.mk_where cx reason (fun tout ->
         Flow_js.flow cx (t, Type.ObjRestT (reason, xs, tout, Reason.mk_id ())))
@@ -343,13 +337,7 @@ let mk_check_file ~options ~reader ~cache () =
     let metadata = Context.docblock_overrides docblock base_metadata in
     let module_ref = Reason.OrdinaryName (Files.module_ref file_key) in
     let aloc_table = lazy (get_aloc_table_unsafe file_key) in
-    Context.make
-      ccx
-      metadata
-      file_key
-      aloc_table
-      module_ref
-      (Context.Merging (Options.new_merge options))
+    Context.make ccx metadata file_key aloc_table module_ref Context.Merging
   in
 
   (* Create a type representing the exports of a dependency. For checked

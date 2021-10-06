@@ -86,7 +86,7 @@ type metadata = {
 type phase =
   | InitLib
   | Checking
-  | Merging of bool
+  | Merging
   | PostInference
 
 val string_of_phase : phase -> string
@@ -494,12 +494,6 @@ val spread_cache : t -> Spread_cache.t
 val speculation_state : t -> Speculation_state.t
 
 val speculation_id : t -> (int * int) option
-
-val exists_instantiations : t -> Type.t list ALocIDMap.t
-
-val add_exists_instantiation : t -> ALoc.t -> Type.t -> unit
-
-val new_merging : t -> bool
 
 val add_avar : t -> int -> Type.AConstraint.node -> unit
 

@@ -32,9 +32,6 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
     (* This type can appear in an annotation due to the $Pred type constructor,
      * but it won't contain a BoundT. *)
     | OpenPredT _ -> ()
-    (* Even though we don't yet know what this type will become, we can at least
-     * be certain that it won't be a BoundT. *)
-    | ExistsT _ -> ()
     (* The annot will resolve to some type, but it doesn't matter because that
      * type will certainly not contain a BoundT. *)
     | AnnotT _ -> ()

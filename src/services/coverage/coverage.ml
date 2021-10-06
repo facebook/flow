@@ -18,7 +18,6 @@
  *  - AnyWithUpperBoundT
  *  - BoundT
  *  - KeysT
- *  - ExistsT
  *
  * In addition to being considered concrete the above constructors are also
  * considered covered.
@@ -191,7 +190,6 @@ class visitor =
       (* Concrete covered constructors *)
       | BoundT _
       | CustomFunT _
-      | ExistsT _
       | FunProtoT _
       | FunProtoApplyT _
       | FunProtoBindT _

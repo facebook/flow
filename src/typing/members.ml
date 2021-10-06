@@ -454,7 +454,6 @@ let rec extract_type cx this_t =
   | CustomFunT (_, _)
   | MatchingPropT (_, _, _)
   | DefT (_, _, EmptyT)
-  | ExistsT _
   | InternalT (ExtendsT _)
   | FunProtoApplyT _
   | FunProtoBindT _

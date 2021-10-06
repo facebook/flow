@@ -52,7 +52,6 @@ class ['a] t =
         acc
       | BoundT _ -> acc
       | GenericT { bound; _ } -> self#type_ cx pole acc bound
-      | ExistsT _ -> acc
       | ExactT (_, t) -> self#type_ cx pole acc t
       | ShapeT (_, t) -> self#type_ cx pole acc t
       | MatchingPropT (_, _, t) -> self#type_ cx pole_TODO acc t

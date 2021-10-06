@@ -76,8 +76,6 @@ module rec TypeTerm : sig
         bound: t;
         id: Generic.id;
       }
-    (* existential type variable *)
-    | ExistsT of reason
     (* this-abstracted class. If `is_this` is true, then this literally comes from
        `this` as an annotation or expression, and should be fixed to an internal
        view of the class, which is a generic whose upper bound is the class. *)
@@ -220,19 +218,15 @@ module rec TypeTerm : sig
        e.g. RegExp flags *)
     | CharSetT of String_utils.CharSet.t
     (* type aliases *)
-    | TypeT of type_t_kind * t (* A polymorphic type is like a type-level "function" that, when applied to
-                                  lists of type arguments, generates types. Just like a function, a
-                                  polymorphic type has a list of type parameters, represented as bound
-                                  type variables. We say that type parameters are "universally quantified"
-                                  (or "universal"): every substitution of type arguments for type
-                                  parameters generates a type. Dually, we have "existentially quantified"
-                                  (or "existential") type variables: such a type variable denotes some,
-                                  possibly unknown, type. Universal type parameters may specify subtype
-                                  constraints ("bounds"), which must be satisfied by any types they may be
-                                  substituted by. Evaluation of existential types, which involves
-                                  generating fresh type variables, never happens under polymorphic types;
-                                  it is forced only when polymorphic types are applied. *)
-    (* polymorphic type *)
+    | TypeT of type_t_kind * t
+    (* A polymorphic type is like a type-level "function" that, when applied to
+       lists of type arguments, generates types. Just like a function, a
+       polymorphic type has a list of type parameters, represented as bound
+       type variables. We say that type parameters are "universally quantified"
+       (or "universal"): every substitution of type arguments for type
+       parameters generates a type. Universal type parameters may specify subtype
+       constraints ("bounds"), which must be satisfied by any types they may be
+       substituted by. *)
     | PolyT of {
         tparams_loc: ALoc.t;
         tparams: typeparam Nel.t;
@@ -992,7 +986,6 @@ module rec TypeTerm : sig
     | ComputedNonLiteralKey
     | Constructor
     | DummyStatic
-    | Existential
     | Exports
     | FunctionPrototype
     | InferenceHooks
@@ -3040,8 +3033,6 @@ module Unsoundness = struct
 
   let exports = Unsound Exports
 
-  let existential = Unsound Existential
-
   let bound_fn_this = Unsound BoundFunctionThis
 
   let dummy_static = Unsound DummyStatic
@@ -3067,8 +3058,6 @@ module Unsoundness = struct
   let inference_hooks_any = AnyT.make inference_hooks
 
   let exports_any = AnyT.make exports
-
-  let existential_any = AnyT.make existential
 
   let bound_fn_this_any = AnyT.make bound_fn_this
 
@@ -3319,7 +3308,6 @@ let string_of_ctor = function
   | DefT (_, _, t) -> string_of_def_ctor t
   | EvalT _ -> "EvalT"
   | ExactT _ -> "ExactT"
-  | ExistsT _ -> "ExistsT"
   | InternalT (ExtendsT _) -> "ExtendsT"
   | FunProtoT _ -> "FunProtoT"
   | FunProtoApplyT _ -> "FunProtoApplyT"

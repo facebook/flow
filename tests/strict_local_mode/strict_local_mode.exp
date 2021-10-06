@@ -32,7 +32,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:12:10
 
-Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-type]
+Unclear type. Using `any`, `Object`, `Function`, or `*` types is not safe! [unclear-type]
 
    12| const x: any = {}; // Error: unclear-type
                 ^^^

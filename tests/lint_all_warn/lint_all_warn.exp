@@ -18,7 +18,7 @@ References:
 
 Warning ----------------------------------------------------------------------------------------- dynamic-export.js:3:23
 
-Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-type]
+Unclear type. Using `any`, `Object`, `Function`, or `*` types is not safe! [unclear-type]
 
    3| module.exports = (3 : any); // should only report unclear type, not dynamic-export
                             ^^^

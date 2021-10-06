@@ -382,10 +382,7 @@ type ('loc, 'a) annot =
   | BigInt of 'loc
   | String of 'loc
   | Boolean of 'loc
-  | Exists of {
-      loc: 'loc;
-      force: bool;
-    }
+  | Exists of 'loc
   | Optional of 'a
   | Maybe of 'loc * 'a
   | Union of {

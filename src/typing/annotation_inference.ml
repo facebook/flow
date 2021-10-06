@@ -579,11 +579,4 @@ module rec ConsGen : Annotation_inference_sig = struct
     failwith "TODO Annotation_inference.object_spread"
 
   and obj_test_proto _cx _reason_op _l = failwith "TODO Annotation_inference.obj_test_proto"
-
-  and existential cx ~force reason =
-    if force then begin
-      warn_unsupported "Existential" "" (string_of_reason_loc cx reason);
-      Unsoundness.why Existential reason
-    end else
-      Type.ExistsT reason
 end

@@ -140,12 +140,6 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
       Flow_js.add_output cx (Error_message.EUnclearType loc)
     | _ -> ()
 
-  let add_deprecated_type_error_if_not_lib_file cx loc =
-    match ALoc.source loc with
-    | Some file when not @@ File_key.is_lib_file file ->
-      Flow_js.add_output cx (Error_message.EDeprecatedType loc)
-    | _ -> ()
-
   let polarity = Typed_ast_utils.polarity
 
   (**********************************)
@@ -1117,18 +1111,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
             comments;
           } )
     | (loc, (Exists _ as t_ast)) ->
-      add_deprecated_type_error_if_not_lib_file cx loc;
-
-      (* Do not evaluate existential type variables when map is non-empty. This
-         ensures that existential type variables under a polymorphic type remain
-         unevaluated until the polymorphic type is applied. *)
-      let force = SMap.is_empty tparams_map in
-      let reason = derivable_reason (mk_annot_reason RExistential loc) in
-      if force then
-        let tvar = Tvar.mk cx reason in
-        ((loc, tvar), t_ast)
-      else
-        ((loc, ExistsT reason), t_ast)
+      add_unclear_type_error_if_not_lib_file cx loc;
+      ((loc, AnyT.at AnnotatedAny loc), t_ast)
 
   and convert_list =
     let rec loop (ts, tasts) cx tparams_map = function

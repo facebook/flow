@@ -6217,7 +6217,6 @@ struct
       covariant_flow ~use_op bound;
       true
     (* These types have no negative positions in their lower bounds *)
-    | ExistsT _
     | FunProtoApplyT _
     | FunProtoBindT _
     | FunProtoCallT _
@@ -8565,11 +8564,8 @@ struct
      However, unifying with any-like types is sometimes desirable /
      intentional.
   *)
-  and ok_unify ~unify_any desc = function
-    | AnyT _ ->
-      (match desc with
-      | RExistential -> true
-      | _ -> unify_any)
+  and ok_unify ~unify_any = function
+    | AnyT _ -> unify_any
     | _ -> true
 
   and __unify cx ~use_op ~unify_any t1 t2 trace =
@@ -8615,9 +8611,8 @@ struct
       if not (Speculation.defer_action cx (Speculation_state.UnifyAction (use_op, t1, t2))) then
         match (t1, t2) with
         | (OpenT (_, id1), OpenT (_, id2)) -> merge_ids cx trace ~use_op id1 id2
-        | (OpenT (r, id), t) when ok_unify ~unify_any (desc_of_reason r) t ->
-          resolve_id cx trace ~use_op id t
-        | (t, OpenT (r, id)) when ok_unify ~unify_any (desc_of_reason r) t ->
+        | (OpenT (_, id), t) when ok_unify ~unify_any t -> resolve_id cx trace ~use_op id t
+        | (t, OpenT (_, id)) when ok_unify ~unify_any t ->
           resolve_id cx trace ~use_op:(unify_flip use_op) id t
         | (DefT (_, _, PolyT { id = id1; _ }), DefT (_, _, PolyT { id = id2; _ })) when id1 = id2 ->
           ()
