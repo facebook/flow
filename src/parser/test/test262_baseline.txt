@@ -1448,10 +1448,6 @@ language/expressions/class/gen-method/yield-as-label-identifier-escaped.js (stri
   Missing parse error
 language/expressions/class/gen-method/yield-as-label-identifier-escaped.js (default)
   Missing parse error
-language/expressions/dynamic-import/assignment-expression/import-meta.js (strict mode)
-  Unexpected token `.`, expected the token `(` at (22, 23) to (22, 24)
-language/expressions/dynamic-import/assignment-expression/import-meta.js (default)
-  Unexpected token `.`, expected the token `(` at (22, 23) to (22, 24)
 language/expressions/dynamic-import/escape-sequence-import.js (strict mode)
   Missing parse error
 language/expressions/dynamic-import/escape-sequence-import.js (default)
@@ -1488,30 +1484,26 @@ language/expressions/generators/yield-as-label-identifier-escaped.js (strict mod
   Missing parse error
 language/expressions/generators/yield-as-label-identifier-escaped.js (default)
   Missing parse error
-language/expressions/import.meta/distinct-for-each-module.js (strict mode)
-  Unexpected token `.`, expected the token `(` at (28, 26) to (28, 27)
-language/expressions/import.meta/distinct-for-each-module.js (default)
-  Unexpected token `.`, expected the token `(` at (28, 26) to (28, 27)
 language/expressions/import.meta/import-meta-is-an-ordinary-object.js (strict mode)
-  Unexpected token `.`, expected the token `(` at (27, 30) to (27, 31)
+  Unexpected token `import` at (37, 8) to (37, 14)
 language/expressions/import.meta/import-meta-is-an-ordinary-object.js (default)
-  Unexpected token `.`, expected the token `(` at (27, 30) to (27, 31)
-language/expressions/import.meta/same-object-returned.js (strict mode)
-  Unexpected token `.`, expected the token `(` at (27, 14) to (27, 15)
-language/expressions/import.meta/same-object-returned.js (default)
-  Unexpected token `.`, expected the token `(` at (27, 14) to (27, 15)
+  Unexpected token `import` at (37, 8) to (37, 14)
 language/expressions/import.meta/syntax/escape-sequence-import.js (strict mode)
   Missing parse error
 language/expressions/import.meta/syntax/escape-sequence-import.js (default)
   Missing parse error
-language/expressions/import.meta/syntax/goal-module-nested-function.js (strict mode)
-  Unexpected token `.`, expected the token `(` at (15, 8) to (15, 9)
-language/expressions/import.meta/syntax/goal-module-nested-function.js (default)
-  Unexpected token `.`, expected the token `(` at (15, 8) to (15, 9)
-language/expressions/import.meta/syntax/goal-module.js (strict mode)
-  Unexpected token `.`, expected an identifier at (14, 6) to (14, 7)
-language/expressions/import.meta/syntax/goal-module.js (default)
-  Unexpected token `.`, expected an identifier at (14, 6) to (14, 7)
+language/expressions/import.meta/syntax/goal-script.js (strict mode)
+  Missing parse error
+language/expressions/import.meta/syntax/goal-script.js (default)
+  Missing parse error
+language/expressions/import.meta/syntax/invalid-assignment-target-object-destructuring-expr.js (strict mode)
+  Missing parse error
+language/expressions/import.meta/syntax/invalid-assignment-target-object-destructuring-expr.js (default)
+  Missing parse error
+language/expressions/import.meta/syntax/invalid-assignment-target-object-rest-destructuring-expr.js (strict mode)
+  Missing parse error
+language/expressions/import.meta/syntax/invalid-assignment-target-object-rest-destructuring-expr.js (default)
+  Missing parse error
 language/expressions/new.target/escaped-new.js (strict mode)
   Missing parse error
 language/expressions/new.target/escaped-new.js (default)
@@ -3116,8 +3108,8 @@ language/statements/try/early-catch-lex.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 68176 (97.77%)
-Failed: 1558 (2.23%)
+Passed: 68180 (97.77%)
+Failed: 1554 (2.23%)
 
 Features:
   arrow-function: 108/118 (91.53%)
@@ -3131,12 +3123,14 @@ Features:
   class-static-fields-public: 42/54 (77.78%)
   class-static-methods-private: 2708/2756 (98.26%)
   computed-property-names: 312/318 (98.11%)
-  dynamic-import: 1032/1036 (99.61%)
+  destructuring-assignment: 8/12 (66.67%)
+  dynamic-import: 1034/1036 (99.81%)
   export-star-as-namespace-from-module: 28/36 (77.78%)
   generators: 7493/7653 (97.91%)
-  import.meta: 32/46 (69.57%)
+  import.meta: 36/46 (78.26%)
   let: 131/135 (97.04%)
   new.target: 92/94 (97.87%)
   numeric-separator-literal: 202/204 (99.02%)
+  object-rest: 672/674 (99.70%)
   regexp-named-groups: 50/162 (30.86%)
   regexp-unicode-property-escapes: 792/1076 (73.61%)
