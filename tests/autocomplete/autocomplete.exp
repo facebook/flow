@@ -6413,7 +6413,7 @@ Flags: --lsp
 bracket_syntax_1.js:5:5
 Flags: --lsp
 {
-  "label":"\"bar\"",
+  "label":"'bar'",
   "labelDetails":{"type":"string | void"},
   "kind":13,
   "detail":"string | void",
@@ -6421,7 +6421,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
-    "newText":"\"bar\""
+    "newText":"'bar'"
   },
   "command":{
     "title":"",
@@ -6429,12 +6429,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"bar\""}
+      {"token":null,"completion":"'bar'"}
     ]
   }
 }
 {
-  "label":"\"foo\"",
+  "label":"'foo'",
   "labelDetails":{"type":"number"},
   "kind":6,
   "detail":"number",
@@ -6442,7 +6442,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
-    "newText":"\"foo\""
+    "newText":"'foo'"
   },
   "command":{
     "title":"",
@@ -6450,12 +6450,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"foo\""}
+      {"token":null,"completion":"'foo'"}
     ]
   }
 }
 {
-  "label":"\"hasOwnProperty\"",
+  "label":"'hasOwnProperty'",
   "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
@@ -6467,7 +6467,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
-    "newText":"\"hasOwnProperty\""
+    "newText":"'hasOwnProperty'"
   },
   "command":{
     "title":"",
@@ -6475,12 +6475,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"hasOwnProperty\""}
+      {"token":null,"completion":"'hasOwnProperty'"}
     ]
   }
 }
 {
-  "label":"\"isPrototypeOf\"",
+  "label":"'isPrototypeOf'",
   "labelDetails":{"type":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
@@ -6492,7 +6492,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
-    "newText":"\"isPrototypeOf\""
+    "newText":"'isPrototypeOf'"
   },
   "command":{
     "title":"",
@@ -6500,12 +6500,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"isPrototypeOf\""}
+      {"token":null,"completion":"'isPrototypeOf'"}
     ]
   }
 }
 {
-  "label":"\"propertyIsEnumerable\"",
+  "label":"'propertyIsEnumerable'",
   "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
@@ -6517,7 +6517,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
-    "newText":"\"propertyIsEnumerable\""
+    "newText":"'propertyIsEnumerable'"
   },
   "command":{
     "title":"",
@@ -6525,12 +6525,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"propertyIsEnumerable\""}
+      {"token":null,"completion":"'propertyIsEnumerable'"}
     ]
   }
 }
 {
-  "label":"\"toLocaleString\"",
+  "label":"'toLocaleString'",
   "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
@@ -6542,7 +6542,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
-    "newText":"\"toLocaleString\""
+    "newText":"'toLocaleString'"
   },
   "command":{
     "title":"",
@@ -6550,12 +6550,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"toLocaleString\""}
+      {"token":null,"completion":"'toLocaleString'"}
     ]
   }
 }
 {
-  "label":"\"toString\"",
+  "label":"'toString'",
   "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
@@ -6564,7 +6564,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
-    "newText":"\"toString\""
+    "newText":"'toString'"
   },
   "command":{
     "title":"",
@@ -6572,12 +6572,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"toString\""}
+      {"token":null,"completion":"'toString'"}
     ]
   }
 }
 {
-  "label":"\"valueOf\"",
+  "label":"'valueOf'",
   "labelDetails":{"type":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
@@ -6589,7 +6589,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":4},"end":{"line":4,"character":4}},
-    "newText":"\"valueOf\""
+    "newText":"'valueOf'"
   },
   "command":{
     "title":"",
@@ -6597,7 +6597,7 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"valueOf\""}
+      {"token":null,"completion":"'valueOf'"}
     ]
   }
 }
@@ -6626,7 +6626,7 @@ Flags: --lsp
 bracket_syntax_2.js:5:14
 Flags: --lsp
 {
-  "label":"\"bar\"",
+  "label":"'bar'",
   "labelDetails":{"type":"string | void"},
   "kind":13,
   "detail":"string | void",
@@ -6634,7 +6634,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"\"bar\""
+    "newText":"'bar'"
   },
   "command":{
     "title":"",
@@ -6642,12 +6642,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"bar\""}
+      {"token":null,"completion":"'bar'"}
     ]
   }
 }
 {
-  "label":"\"foo\"",
+  "label":"'foo'",
   "labelDetails":{"type":"number"},
   "kind":6,
   "detail":"number",
@@ -6655,7 +6655,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"\"foo\""
+    "newText":"'foo'"
   },
   "command":{
     "title":"",
@@ -6663,12 +6663,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"foo\""}
+      {"token":null,"completion":"'foo'"}
     ]
   }
 }
 {
-  "label":"\"hasOwnProperty\"",
+  "label":"'hasOwnProperty'",
   "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
@@ -6680,7 +6680,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"\"hasOwnProperty\""
+    "newText":"'hasOwnProperty'"
   },
   "command":{
     "title":"",
@@ -6688,12 +6688,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"hasOwnProperty\""}
+      {"token":null,"completion":"'hasOwnProperty'"}
     ]
   }
 }
 {
-  "label":"\"isPrototypeOf\"",
+  "label":"'isPrototypeOf'",
   "labelDetails":{"type":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
@@ -6705,7 +6705,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"\"isPrototypeOf\""
+    "newText":"'isPrototypeOf'"
   },
   "command":{
     "title":"",
@@ -6713,12 +6713,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"isPrototypeOf\""}
+      {"token":null,"completion":"'isPrototypeOf'"}
     ]
   }
 }
 {
-  "label":"\"propertyIsEnumerable\"",
+  "label":"'propertyIsEnumerable'",
   "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
@@ -6730,7 +6730,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"\"propertyIsEnumerable\""
+    "newText":"'propertyIsEnumerable'"
   },
   "command":{
     "title":"",
@@ -6738,12 +6738,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"propertyIsEnumerable\""}
+      {"token":null,"completion":"'propertyIsEnumerable'"}
     ]
   }
 }
 {
-  "label":"\"toLocaleString\"",
+  "label":"'toLocaleString'",
   "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
@@ -6755,7 +6755,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"\"toLocaleString\""
+    "newText":"'toLocaleString'"
   },
   "command":{
     "title":"",
@@ -6763,12 +6763,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"toLocaleString\""}
+      {"token":null,"completion":"'toLocaleString'"}
     ]
   }
 }
 {
-  "label":"\"toString\"",
+  "label":"'toString'",
   "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
@@ -6777,7 +6777,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"\"toString\""
+    "newText":"'toString'"
   },
   "command":{
     "title":"",
@@ -6785,12 +6785,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"toString\""}
+      {"token":null,"completion":"'toString'"}
     ]
   }
 }
 {
-  "label":"\"valueOf\"",
+  "label":"'valueOf'",
   "labelDetails":{"type":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
@@ -6802,7 +6802,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"\"valueOf\""
+    "newText":"'valueOf'"
   },
   "command":{
     "title":"",
@@ -6810,7 +6810,7 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"valueOf\""}
+      {"token":null,"completion":"'valueOf'"}
     ]
   }
 }
@@ -6860,7 +6860,7 @@ Flags: --lsp
 bracket_syntax_3.js:5:14
 Flags: --lsp
 {
-  "label":"\"bar\"",
+  "label":"'bar'",
   "labelDetails":{"type":"number"},
   "kind":6,
   "detail":"number",
@@ -6868,7 +6868,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"\"bar\""
+    "newText":"'bar'"
   },
   "command":{
     "title":"",
@@ -6876,12 +6876,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"bar\""}
+      {"token":null,"completion":"'bar'"}
     ]
   }
 }
 {
-  "label":"\"foo\"",
+  "label":"'foo'",
   "labelDetails":{"type":"number"},
   "kind":6,
   "detail":"number",
@@ -6889,7 +6889,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"\"foo\""
+    "newText":"'foo'"
   },
   "command":{
     "title":"",
@@ -6897,12 +6897,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"foo\""}
+      {"token":null,"completion":"'foo'"}
     ]
   }
 }
 {
-  "label":"\"hasOwnProperty\"",
+  "label":"'hasOwnProperty'",
   "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
@@ -6914,7 +6914,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"\"hasOwnProperty\""
+    "newText":"'hasOwnProperty'"
   },
   "command":{
     "title":"",
@@ -6922,12 +6922,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"hasOwnProperty\""}
+      {"token":null,"completion":"'hasOwnProperty'"}
     ]
   }
 }
 {
-  "label":"\"isPrototypeOf\"",
+  "label":"'isPrototypeOf'",
   "labelDetails":{"type":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
@@ -6939,7 +6939,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"\"isPrototypeOf\""
+    "newText":"'isPrototypeOf'"
   },
   "command":{
     "title":"",
@@ -6947,12 +6947,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"isPrototypeOf\""}
+      {"token":null,"completion":"'isPrototypeOf'"}
     ]
   }
 }
 {
-  "label":"\"propertyIsEnumerable\"",
+  "label":"'propertyIsEnumerable'",
   "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
@@ -6964,7 +6964,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"\"propertyIsEnumerable\""
+    "newText":"'propertyIsEnumerable'"
   },
   "command":{
     "title":"",
@@ -6972,12 +6972,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"propertyIsEnumerable\""}
+      {"token":null,"completion":"'propertyIsEnumerable'"}
     ]
   }
 }
 {
-  "label":"\"toLocaleString\"",
+  "label":"'toLocaleString'",
   "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
@@ -6989,7 +6989,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"\"toLocaleString\""
+    "newText":"'toLocaleString'"
   },
   "command":{
     "title":"",
@@ -6997,12 +6997,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"toLocaleString\""}
+      {"token":null,"completion":"'toLocaleString'"}
     ]
   }
 }
 {
-  "label":"\"toString\"",
+  "label":"'toString'",
   "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
@@ -7011,7 +7011,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"\"toString\""
+    "newText":"'toString'"
   },
   "command":{
     "title":"",
@@ -7019,12 +7019,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"toString\""}
+      {"token":null,"completion":"'toString'"}
     ]
   }
 }
 {
-  "label":"\"valueOf\"",
+  "label":"'valueOf'",
   "labelDetails":{"type":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
@@ -7036,7 +7036,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":12},"end":{"line":4,"character":12}},
-    "newText":"\"valueOf\""
+    "newText":"'valueOf'"
   },
   "command":{
     "title":"",
@@ -7044,7 +7044,7 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"valueOf\""}
+      {"token":null,"completion":"'valueOf'"}
     ]
   }
 }
@@ -7094,7 +7094,7 @@ Flags: --lsp
 bracket_syntax_4.js:5:15
 Flags: --lsp
 {
-  "label":"\"bar\"",
+  "label":"'bar'",
   "labelDetails":{"type":"number"},
   "kind":6,
   "detail":"number",
@@ -7102,7 +7102,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":14},"end":{"line":4,"character":14}},
-    "newText":"\"bar\""
+    "newText":"'bar'"
   },
   "command":{
     "title":"",
@@ -7110,12 +7110,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"bar\""}
+      {"token":null,"completion":"'bar'"}
     ]
   }
 }
 {
-  "label":"\"foo\"",
+  "label":"'foo'",
   "labelDetails":{"type":"number"},
   "kind":6,
   "detail":"number",
@@ -7123,7 +7123,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":14},"end":{"line":4,"character":14}},
-    "newText":"\"foo\""
+    "newText":"'foo'"
   },
   "command":{
     "title":"",
@@ -7131,12 +7131,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"foo\""}
+      {"token":null,"completion":"'foo'"}
     ]
   }
 }
 {
-  "label":"\"hasOwnProperty\"",
+  "label":"'hasOwnProperty'",
   "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
@@ -7148,7 +7148,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":14},"end":{"line":4,"character":14}},
-    "newText":"\"hasOwnProperty\""
+    "newText":"'hasOwnProperty'"
   },
   "command":{
     "title":"",
@@ -7156,12 +7156,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"hasOwnProperty\""}
+      {"token":null,"completion":"'hasOwnProperty'"}
     ]
   }
 }
 {
-  "label":"\"isPrototypeOf\"",
+  "label":"'isPrototypeOf'",
   "labelDetails":{"type":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
@@ -7173,7 +7173,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":14},"end":{"line":4,"character":14}},
-    "newText":"\"isPrototypeOf\""
+    "newText":"'isPrototypeOf'"
   },
   "command":{
     "title":"",
@@ -7181,12 +7181,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"isPrototypeOf\""}
+      {"token":null,"completion":"'isPrototypeOf'"}
     ]
   }
 }
 {
-  "label":"\"propertyIsEnumerable\"",
+  "label":"'propertyIsEnumerable'",
   "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
@@ -7198,7 +7198,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":14},"end":{"line":4,"character":14}},
-    "newText":"\"propertyIsEnumerable\""
+    "newText":"'propertyIsEnumerable'"
   },
   "command":{
     "title":"",
@@ -7206,12 +7206,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"propertyIsEnumerable\""}
+      {"token":null,"completion":"'propertyIsEnumerable'"}
     ]
   }
 }
 {
-  "label":"\"toLocaleString\"",
+  "label":"'toLocaleString'",
   "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
@@ -7223,7 +7223,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":14},"end":{"line":4,"character":14}},
-    "newText":"\"toLocaleString\""
+    "newText":"'toLocaleString'"
   },
   "command":{
     "title":"",
@@ -7231,12 +7231,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"toLocaleString\""}
+      {"token":null,"completion":"'toLocaleString'"}
     ]
   }
 }
 {
-  "label":"\"toString\"",
+  "label":"'toString'",
   "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
@@ -7245,7 +7245,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":14},"end":{"line":4,"character":14}},
-    "newText":"\"toString\""
+    "newText":"'toString'"
   },
   "command":{
     "title":"",
@@ -7253,12 +7253,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"toString\""}
+      {"token":null,"completion":"'toString'"}
     ]
   }
 }
 {
-  "label":"\"valueOf\"",
+  "label":"'valueOf'",
   "labelDetails":{"type":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
@@ -7270,7 +7270,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":14},"end":{"line":4,"character":14}},
-    "newText":"\"valueOf\""
+    "newText":"'valueOf'"
   },
   "command":{
     "title":"",
@@ -7278,7 +7278,7 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"valueOf\""}
+      {"token":null,"completion":"'valueOf'"}
     ]
   }
 }
@@ -7373,7 +7373,7 @@ Flags: --lsp
 bracket_syntax_6.js:5:13
 Flags: --lsp
 {
-  "label":"?.[\"bar\"]",
+  "label":"?.['bar']",
   "labelDetails":{"type":"void | number"},
   "kind":13,
   "detail":"void | number",
@@ -7381,7 +7381,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
-    "newText":"?.[\"bar\"]"
+    "newText":"?.['bar']"
   },
   "command":{
     "title":"",
@@ -7389,12 +7389,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"completion":"?.[\"bar\"]"}
+      {"token":null,"completion":"?.['bar']"}
     ]
   }
 }
 {
-  "label":"?.[\"foo\"]",
+  "label":"?.['foo']",
   "labelDetails":{"type":"void | number"},
   "kind":13,
   "detail":"void | number",
@@ -7402,7 +7402,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
-    "newText":"?.[\"foo\"]"
+    "newText":"?.['foo']"
   },
   "command":{
     "title":"",
@@ -7410,12 +7410,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"completion":"?.[\"foo\"]"}
+      {"token":null,"completion":"?.['foo']"}
     ]
   }
 }
 {
-  "label":"?.[\"hasOwnProperty\"]",
+  "label":"?.['hasOwnProperty']",
   "labelDetails":{"type":"void | ((prop: mixed) => boolean)"},
   "kind":13,
   "detail":"void | ((prop: mixed) => boolean)",
@@ -7427,7 +7427,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
-    "newText":"?.[\"hasOwnProperty\"]"
+    "newText":"?.['hasOwnProperty']"
   },
   "command":{
     "title":"",
@@ -7435,12 +7435,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"completion":"?.[\"hasOwnProperty\"]"}
+      {"token":null,"completion":"?.['hasOwnProperty']"}
     ]
   }
 }
 {
-  "label":"?.[\"isPrototypeOf\"]",
+  "label":"?.['isPrototypeOf']",
   "labelDetails":{"type":"void | ((o: mixed) => boolean)"},
   "kind":13,
   "detail":"void | ((o: mixed) => boolean)",
@@ -7452,7 +7452,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
-    "newText":"?.[\"isPrototypeOf\"]"
+    "newText":"?.['isPrototypeOf']"
   },
   "command":{
     "title":"",
@@ -7460,12 +7460,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"completion":"?.[\"isPrototypeOf\"]"}
+      {"token":null,"completion":"?.['isPrototypeOf']"}
     ]
   }
 }
 {
-  "label":"?.[\"propertyIsEnumerable\"]",
+  "label":"?.['propertyIsEnumerable']",
   "labelDetails":{"type":"void | ((prop: mixed) => boolean)"},
   "kind":13,
   "detail":"void | ((prop: mixed) => boolean)",
@@ -7477,7 +7477,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
-    "newText":"?.[\"propertyIsEnumerable\"]"
+    "newText":"?.['propertyIsEnumerable']"
   },
   "command":{
     "title":"",
@@ -7485,12 +7485,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"completion":"?.[\"propertyIsEnumerable\"]"}
+      {"token":null,"completion":"?.['propertyIsEnumerable']"}
     ]
   }
 }
 {
-  "label":"?.[\"toLocaleString\"]",
+  "label":"?.['toLocaleString']",
   "labelDetails":{"type":"void | (() => string)"},
   "kind":13,
   "detail":"void | (() => string)",
@@ -7502,7 +7502,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
-    "newText":"?.[\"toLocaleString\"]"
+    "newText":"?.['toLocaleString']"
   },
   "command":{
     "title":"",
@@ -7510,12 +7510,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"completion":"?.[\"toLocaleString\"]"}
+      {"token":null,"completion":"?.['toLocaleString']"}
     ]
   }
 }
 {
-  "label":"?.[\"toString\"]",
+  "label":"?.['toString']",
   "labelDetails":{"type":"void | (() => string)"},
   "kind":13,
   "detail":"void | (() => string)",
@@ -7524,7 +7524,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
-    "newText":"?.[\"toString\"]"
+    "newText":"?.['toString']"
   },
   "command":{
     "title":"",
@@ -7532,12 +7532,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"completion":"?.[\"toString\"]"}
+      {"token":null,"completion":"?.['toString']"}
     ]
   }
 }
 {
-  "label":"?.[\"valueOf\"]",
+  "label":"?.['valueOf']",
   "labelDetails":{"type":"void | (() => mixed)"},
   "kind":13,
   "detail":"void | (() => mixed)",
@@ -7549,7 +7549,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":4,"character":11},"end":{"line":4,"character":11}},
-    "newText":"?.[\"valueOf\"]"
+    "newText":"?.['valueOf']"
   },
   "command":{
     "title":"",
@@ -7557,7 +7557,7 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"completion":"?.[\"valueOf\"]"}
+      {"token":null,"completion":"?.['valueOf']"}
     ]
   }
 }
@@ -7628,7 +7628,7 @@ Flags: --lsp
   }
 }
 {
-  "label":"\"hasOwnProperty\"",
+  "label":"'hasOwnProperty'",
   "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
@@ -7640,7 +7640,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
-    "newText":"\"hasOwnProperty\""
+    "newText":"'hasOwnProperty'"
   },
   "command":{
     "title":"",
@@ -7648,12 +7648,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"hasOwnProperty\""}
+      {"token":null,"completion":"'hasOwnProperty'"}
     ]
   }
 }
 {
-  "label":"\"isPrototypeOf\"",
+  "label":"'isPrototypeOf'",
   "labelDetails":{"type":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
@@ -7665,7 +7665,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
-    "newText":"\"isPrototypeOf\""
+    "newText":"'isPrototypeOf'"
   },
   "command":{
     "title":"",
@@ -7673,12 +7673,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"isPrototypeOf\""}
+      {"token":null,"completion":"'isPrototypeOf'"}
     ]
   }
 }
 {
-  "label":"\"propertyIsEnumerable\"",
+  "label":"'propertyIsEnumerable'",
   "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
@@ -7690,7 +7690,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
-    "newText":"\"propertyIsEnumerable\""
+    "newText":"'propertyIsEnumerable'"
   },
   "command":{
     "title":"",
@@ -7698,12 +7698,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"propertyIsEnumerable\""}
+      {"token":null,"completion":"'propertyIsEnumerable'"}
     ]
   }
 }
 {
-  "label":"\"toLocaleString\"",
+  "label":"'toLocaleString'",
   "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
@@ -7715,7 +7715,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
-    "newText":"\"toLocaleString\""
+    "newText":"'toLocaleString'"
   },
   "command":{
     "title":"",
@@ -7723,12 +7723,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"toLocaleString\""}
+      {"token":null,"completion":"'toLocaleString'"}
     ]
   }
 }
 {
-  "label":"\"toString\"",
+  "label":"'toString'",
   "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
@@ -7737,7 +7737,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
-    "newText":"\"toString\""
+    "newText":"'toString'"
   },
   "command":{
     "title":"",
@@ -7745,12 +7745,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"toString\""}
+      {"token":null,"completion":"'toString'"}
     ]
   }
 }
 {
-  "label":"\"valueOf\"",
+  "label":"'valueOf'",
   "labelDetails":{"type":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
@@ -7762,7 +7762,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":3,"character":4},"end":{"line":3,"character":4}},
-    "newText":"\"valueOf\""
+    "newText":"'valueOf'"
   },
   "command":{
     "title":"",
@@ -7770,7 +7770,7 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"valueOf\""}
+      {"token":null,"completion":"'valueOf'"}
     ]
   }
 }
@@ -7841,7 +7841,7 @@ Flags: --lsp
   }
 }
 {
-  "label":"\"hasOwnProperty\"",
+  "label":"'hasOwnProperty'",
   "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
@@ -7853,7 +7853,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
-    "newText":"\"hasOwnProperty\""
+    "newText":"'hasOwnProperty'"
   },
   "command":{
     "title":"",
@@ -7861,12 +7861,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"hasOwnProperty\""}
+      {"token":null,"completion":"'hasOwnProperty'"}
     ]
   }
 }
 {
-  "label":"\"isPrototypeOf\"",
+  "label":"'isPrototypeOf'",
   "labelDetails":{"type":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
@@ -7878,7 +7878,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
-    "newText":"\"isPrototypeOf\""
+    "newText":"'isPrototypeOf'"
   },
   "command":{
     "title":"",
@@ -7886,12 +7886,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"isPrototypeOf\""}
+      {"token":null,"completion":"'isPrototypeOf'"}
     ]
   }
 }
 {
-  "label":"\"propertyIsEnumerable\"",
+  "label":"'propertyIsEnumerable'",
   "labelDetails":{"type":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
@@ -7903,7 +7903,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
-    "newText":"\"propertyIsEnumerable\""
+    "newText":"'propertyIsEnumerable'"
   },
   "command":{
     "title":"",
@@ -7911,12 +7911,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"propertyIsEnumerable\""}
+      {"token":null,"completion":"'propertyIsEnumerable'"}
     ]
   }
 }
 {
-  "label":"\"toLocaleString\"",
+  "label":"'toLocaleString'",
   "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
@@ -7928,7 +7928,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
-    "newText":"\"toLocaleString\""
+    "newText":"'toLocaleString'"
   },
   "command":{
     "title":"",
@@ -7936,12 +7936,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"toLocaleString\""}
+      {"token":null,"completion":"'toLocaleString'"}
     ]
   }
 }
 {
-  "label":"\"toString\"",
+  "label":"'toString'",
   "labelDetails":{"type":"() => string"},
   "kind":3,
   "detail":"() => string",
@@ -7950,7 +7950,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
-    "newText":"\"toString\""
+    "newText":"'toString'"
   },
   "command":{
     "title":"",
@@ -7958,12 +7958,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"toString\""}
+      {"token":null,"completion":"'toString'"}
     ]
   }
 }
 {
-  "label":"\"valueOf\"",
+  "label":"'valueOf'",
   "labelDetails":{"type":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
@@ -7975,7 +7975,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":7,"character":4},"end":{"line":7,"character":4}},
-    "newText":"\"valueOf\""
+    "newText":"'valueOf'"
   },
   "command":{
     "title":"",
@@ -7983,7 +7983,7 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"valueOf\""}
+      {"token":null,"completion":"'valueOf'"}
     ]
   }
 }
@@ -8050,7 +8050,7 @@ Flags: --lsp
   }
 }
 {
-  "label":"[\"foo.bar.baz\"]",
+  "label":"['foo.bar.baz']",
   "labelDetails":{"type":"number"},
   "kind":6,
   "detail":"number",
@@ -8058,7 +8058,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
-    "newText":"[\"foo.bar.baz\"]"
+    "newText":"['foo.bar.baz']"
   },
   "command":{
     "title":"",
@@ -8066,7 +8066,7 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "dot-member switched to bracket-syntax member",
-      {"token":null,"completion":"[\"foo.bar.baz\"]"}
+      {"token":null,"completion":"['foo.bar.baz']"}
     ]
   }
 }
@@ -8234,7 +8234,7 @@ Flags: --lsp
   }
 }
 {
-  "label":"?.[\"foo.bar.baz\"]",
+  "label":"?.['foo.bar.baz']",
   "labelDetails":{"type":"void | number"},
   "kind":13,
   "detail":"void | number",
@@ -8242,7 +8242,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":7,"character":3},"end":{"line":7,"character":4}},
-    "newText":"?.[\"foo.bar.baz\"]"
+    "newText":"?.['foo.bar.baz']"
   },
   "command":{
     "title":"",
@@ -8250,7 +8250,7 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "start optional chain",
-      {"token":null,"completion":"?.[\"foo.bar.baz\"]"}
+      {"token":null,"completion":"?.['foo.bar.baz']"}
     ]
   }
 }
@@ -8606,7 +8606,7 @@ Flags: --pretty
     {"name":"Symbol.iterator","type":"any"},
     {"name":"bar","type":"string"},
     {"name":"foo","type":"number"},
-    {"name":"\"foo.bar\"","type":"boolean"}
+    {"name":"'foo.bar'","type":"boolean"}
   ]
 }
 
@@ -8620,14 +8620,14 @@ Flags: --pretty
   "result":[
     {"name":"bar","type":"string"},
     {"name":"foo","type":"number"},
-    {"name":"\"foo.bar\"","type":"boolean"}
+    {"name":"'foo.bar'","type":"boolean"}
   ]
 }
 
 upper_bounds_9.js:5:14
 Flags: --pretty
 {
-  "result":[{"name":"bar","type":"string"},{"name":"\"foo.bar\"","type":"boolean"}]
+  "result":[{"name":"bar","type":"string"},{"name":"'foo.bar'","type":"boolean"}]
 }
 
 upper_bounds_10.js:19:16
@@ -8643,7 +8643,7 @@ Flags: --pretty
 indexed-access-1.js:7:12
 Flags: --lsp
 {
-  "label":"\"bar\"",
+  "label":"'bar'",
   "labelDetails":{"type":"string | void"},
   "kind":13,
   "detail":"string | void",
@@ -8651,7 +8651,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
-    "newText":"\"bar\""
+    "newText":"'bar'"
   },
   "command":{
     "title":"",
@@ -8659,12 +8659,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"bar\""}
+      {"token":null,"completion":"'bar'"}
     ]
   }
 }
 {
-  "label":"\"foo\"",
+  "label":"'foo'",
   "labelDetails":{"type":"number"},
   "kind":6,
   "detail":"number",
@@ -8672,7 +8672,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":6,"character":11},"end":{"line":6,"character":11}},
-    "newText":"\"foo\""
+    "newText":"'foo'"
   },
   "command":{
     "title":"",
@@ -8680,7 +8680,7 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"foo\""}
+      {"token":null,"completion":"'foo'"}
     ]
   }
 }
@@ -9279,7 +9279,7 @@ Flags: --lsp
 indexed-access-2.js:4:13
 Flags: --lsp
 {
-  "label":"\"bar\"",
+  "label":"'bar'",
   "labelDetails":{"type":"string | void"},
   "kind":13,
   "detail":"string | void",
@@ -9287,7 +9287,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
-    "newText":"\"bar\""
+    "newText":"'bar'"
   },
   "command":{
     "title":"",
@@ -9295,12 +9295,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"bar\""}
+      {"token":null,"completion":"'bar'"}
     ]
   }
 }
 {
-  "label":"\"foo\"",
+  "label":"'foo'",
   "labelDetails":{"type":"number"},
   "kind":6,
   "detail":"number",
@@ -9308,7 +9308,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":3,"character":11},"end":{"line":3,"character":11}},
-    "newText":"\"foo\""
+    "newText":"'foo'"
   },
   "command":{
     "title":"",
@@ -9316,7 +9316,7 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"foo\""}
+      {"token":null,"completion":"'foo'"}
     ]
   }
 }
@@ -9894,7 +9894,7 @@ Flags: --lsp
 indexed-access-optional-1.js:7:14
 Flags: --lsp
 {
-  "label":"\"bar\"",
+  "label":"'bar'",
   "labelDetails":{"type":"void | string"},
   "kind":13,
   "detail":"void | string",
@@ -9902,7 +9902,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
-    "newText":"\"bar\""
+    "newText":"'bar'"
   },
   "command":{
     "title":"",
@@ -9910,12 +9910,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"bar\""}
+      {"token":null,"completion":"'bar'"}
     ]
   }
 }
 {
-  "label":"\"foo\"",
+  "label":"'foo'",
   "labelDetails":{"type":"number"},
   "kind":6,
   "detail":"number",
@@ -9923,7 +9923,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":6,"character":13},"end":{"line":6,"character":13}},
-    "newText":"\"foo\""
+    "newText":"'foo'"
   },
   "command":{
     "title":"",
@@ -9931,7 +9931,7 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"foo\""}
+      {"token":null,"completion":"'foo'"}
     ]
   }
 }
@@ -10530,7 +10530,7 @@ Flags: --lsp
 indexed-access-optional-2.js:4:15
 Flags: --lsp
 {
-  "label":"\"bar\"",
+  "label":"'bar'",
   "labelDetails":{"type":"void | string"},
   "kind":13,
   "detail":"void | string",
@@ -10538,7 +10538,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
-    "newText":"\"bar\""
+    "newText":"'bar'"
   },
   "command":{
     "title":"",
@@ -10546,12 +10546,12 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"bar\""}
+      {"token":null,"completion":"'bar'"}
     ]
   }
 }
 {
-  "label":"\"foo\"",
+  "label":"'foo'",
   "labelDetails":{"type":"number"},
   "kind":6,
   "detail":"number",
@@ -10559,7 +10559,7 @@ Flags: --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":3,"character":13},"end":{"line":3,"character":13}},
-    "newText":"\"foo\""
+    "newText":"'foo'"
   },
   "command":{
     "title":"",
@@ -10567,7 +10567,7 @@ Flags: --lsp
     "arguments":[
       "textDocument/completion",
       "bracket syntax member",
-      {"token":null,"completion":"\"foo\""}
+      {"token":null,"completion":"'foo'"}
     ]
   }
 }

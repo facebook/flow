@@ -7,3 +7,4 @@
 [options]
 no_flowlib=false
 experimental.enums=true
+format.single_quotes=true
