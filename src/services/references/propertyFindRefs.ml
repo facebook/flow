@@ -176,15 +176,14 @@ let export_find_refs_in_file ~reader ast_info file_key def_loc =
     in
     Ok locs)
 
-let add_related_bindings ast_info refs =
-  let (ast, file_sig, _) = ast_info in
+let add_related_bindings file_sig scope_info refs =
   let locs = Base.List.map ~f:snd refs in
   let related_bindings = ImportExportSymbols.find_related_symbols file_sig locs in
   List.fold_left
     begin
       fun acc loc ->
       let new_refs =
-        VariableFindRefs.local_find_refs ast loc
+        VariableFindRefs.local_find_refs scope_info loc
         |> Base.Option.value_map ~default:[] ~f:(fun ((_, refs), _) -> refs)
       in
       List.rev_append new_refs acc
@@ -192,7 +191,8 @@ let add_related_bindings ast_info refs =
     refs
     related_bindings
 
-let find_refs_in_file ~reader options ast_info file_key def_info =
+let find_refs_in_file ~reader options ast_info scope_info file_key def_info =
+  let (_, file_sig, _) = ast_info in
   let refs =
     match def_info with
     | Property (def_info, name) ->
@@ -201,7 +201,7 @@ let find_refs_in_file ~reader options ast_info file_key def_info =
       export_find_refs_in_file ~reader ast_info file_key loc >>| fun refs ->
       add_ref_kind FindRefsTypes.Other refs
   in
-  refs >>| add_related_bindings ast_info
+  refs >>| add_related_bindings file_sig scope_info
 
 let find_refs_in_multiple_files ~reader genv all_deps def_info =
   let { options; workers } = genv in
@@ -218,7 +218,9 @@ let find_refs_in_multiple_files ~reader genv all_deps def_info =
           deps
           |> Base.List.map ~f:(fun dep ->
                  get_ast_result ~reader dep >>= fun ast_info ->
-                 find_refs_in_file ~reader options ast_info dep def_info)
+                 let (ast, _, _) = ast_info in
+                 let scope_info = Scope_builder.program ~with_types:true ast in
+                 find_refs_in_file ~reader options ast_info scope_info dep def_info)
         end
       ~merge:(fun refs acc -> List.rev_append refs acc)
       ~neutral:[]
@@ -417,6 +419,6 @@ let find_global_refs ~reader genv env ~multi_hop def_info =
   refs %>>| fun refs ->
   Lwt.return ((display_name_of_def_info def_info, refs), Some dependent_file_count)
 
-let find_local_refs ~reader ~options file_key ast_info def_info =
-  find_refs_in_file ~reader options ast_info file_key def_info >>= fun refs ->
+let find_local_refs ~reader ~options file_key ast_info scope_info def_info =
+  find_refs_in_file ~reader options ast_info scope_info file_key def_info >>= fun refs ->
   Ok (display_name_of_def_info def_info, refs)

@@ -10,6 +10,7 @@ val find_local_refs :
   options:Options.t ->
   File_key.t ->
   FindRefsUtils.ast_info ->
+  Scope_api.With_Loc.info ->
   GetDefUtils.def_info ->
   (FindRefsTypes.find_refs_found, string) result
 

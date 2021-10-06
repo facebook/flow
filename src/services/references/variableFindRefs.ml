@@ -8,9 +8,8 @@
 open Loc_collections
 module Scope_api = Scope_api.With_Loc
 
-let local_find_refs ast loc =
+let local_find_refs scope_info loc =
   Scope_api.(
-    let scope_info = Scope_builder.program ~with_types:true ast in
     let all_uses = all_uses scope_info in
     let matching_uses = LocSet.filter (fun use -> Loc.contains use loc) all_uses in
     let num_matching_uses = LocSet.cardinal matching_uses in
