@@ -704,6 +704,14 @@ References:
                     ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------- destructuring.js:9:5
+
+Variable `obj` [1] is never initialized, annotated, or assigned to. [invalid-declaration]
+
+   9| var obj;
+          ^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- destructuring.js:10:6
 
 Unsupported expression pattern in destructuring. [unsupported-syntax]
@@ -1239,4 +1247,4 @@ References:
 
 
 
-Found 80 errors
+Found 81 errors

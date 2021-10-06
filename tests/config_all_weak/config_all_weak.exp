@@ -1,3 +1,11 @@
+Error ------------------------------------------------------------------------------------------------ no_at_flow.js:1:5
+
+Variable `x` [1] is never initialized, annotated, or assigned to. [invalid-declaration]
+
+   1| var x;
+          ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------ no_at_flow.js:3:3
 
 Cannot get `x.length` because property `length` is missing in uninitialized variable [1]. [incompatible-use]
@@ -13,4 +21,4 @@ References:
 
 
 
-Found 1 error
+Found 2 errors

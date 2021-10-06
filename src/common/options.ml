@@ -34,9 +34,7 @@ type order_mode =
   | Dependency
   | LexicalWithDependencyValidation
 
-type env_option =
-  | ConstrainWrites
-  | NoVariablesWithoutProviders
+type env_option = ConstrainWrites
 
 type env_mode =
   | ClassicEnv of env_option list

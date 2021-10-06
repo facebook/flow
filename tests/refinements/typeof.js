@@ -7,7 +7,7 @@ function foo(x: bool | number) {
 }
 
 function bar(): number {
-  var x = null;
+  var x: null = null;
   if (typeof x === "object") {
     return x; // error, null
   }

@@ -1,3 +1,11 @@
+Error ------------------------------------------------------------------------------------------------- undefined.js:2:9
+
+Variable `x` [1] is never initialized, annotated, or assigned to. [invalid-declaration]
+
+   2|     var x;
+              ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------- undefined.js:3:7
 
 Cannot call `x.foo` because property `foo` is missing in uninitialized variable [1]. [incompatible-use]
@@ -24,6 +32,14 @@ References:
    undefined.js:13:1
    13| undefined['foo']; // Error
        ^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ undefined2.js:5:9
+
+Variable `id` [1] is never initialized, annotated, or assigned to. [invalid-declaration]
+
+   5|     var id;
+              ^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ undefined2.js:7:6
@@ -144,4 +160,4 @@ References:
 
 
 
-Found 9 errors
+Found 11 errors

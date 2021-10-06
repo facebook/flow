@@ -410,7 +410,7 @@ module Env : Env_sig.S = struct
       let { Loc_env.var_info = { Env_api.scopes = info; ssa_values = values; providers; _ }; _ } =
         Context.environment cx
       in
-      (if Options.env_option_enabled (Context.env_mode cx) Options.NoVariablesWithoutProviders then
+      begin
         let error null_write =
           let null_write =
             Base.Option.map
@@ -425,7 +425,8 @@ module Env : Env_sig.S = struct
         match Invalidation_api.declaration_validity info values providers loc with
         | Invalidation_api.Valid -> ()
         | Invalidation_api.NotWritten -> error None
-        | Invalidation_api.NullWritten null_loc -> error (Some null_loc));
+        | Invalidation_api.NullWritten null_loc -> error (Some null_loc)
+      end;
 
       if spec <> Entry.ConstLike && Invalidation_api.is_const_like info values loc then
         (None, Entry.ConstLike)

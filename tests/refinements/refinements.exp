@@ -3397,9 +3397,9 @@ Cannot return `x` because null [1] is incompatible with number [2]. [incompatibl
                   ^
 
 References:
-   typeof.js:10:11
-   10|   var x = null;
-                 ^^^^ [1]
+   typeof.js:10:10
+   10|   var x: null = null;
+                ^^^^ [1]
    typeof.js:9:17
     9| function bar(): number {
                        ^^^^^^ [2]

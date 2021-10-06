@@ -7,9 +7,9 @@ Cannot perform arithmetic operation because null [1] is not a number. [unsafe-ad
                                 ^
 
 References:
-   1/f.js:5:9
-   5| var x = null;
-              ^^^^ [1]
+   1/f.js:5:8
+   5| var x: null = null;
+             ^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- 2/A.js:10:21
