@@ -105,7 +105,7 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
   ]),
   test('Avoid infinite recursion due to polymorphic recursion', [
     addCode(`
-      function foo<T: Array<*>>(arr: T) {
+      function foo<T: Array<any>>(arr: T) {
         if (arr.length > 10) return arr;
         return foo([...arr, 1]);
       }
@@ -118,8 +118,8 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
            11: (ret: void);
                 ^^^ Cannot cast \`ret\` to undefined because array type [1] is incompatible with undefined [2]. [incompatible-cast]
             References:
-              4:       function foo<T: Array<*>>(arr: T) {
-                                                      ^ [1]
+              4:       function foo<T: Array<any>>(arr: T) {
+                                                        ^ [1]
              11: (ret: void);
                        ^^^^ [2]
         `,
@@ -129,19 +129,6 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
       (ret[5]: 1);
       (ret[5]: 2);
     `)
-      .newErrors(
-        `
-          test.js:15
-           15:       (ret[5]: 2);
-                      ^^^^^^ Cannot cast \`ret[5]\` to number literal \`2\` because number [1] is incompatible with number literal \`2\` [2]. [incompatible-cast]
-            References:
-              4:       function foo<T: Array<*>>(arr: T) {
-                                             ^ [1]
-             15:       (ret[5]: 2);
-                                ^ [2]
-        `,
-      )
-      .because('The element type should be `1`'),
   ]),
   test('Avoid infinite recursion due to recursion', [
     addCode(`

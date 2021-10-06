@@ -273,24 +273,6 @@ References:
            ^ [3]
 
 
-Error --------------------------------------------------------------------------------------------------- class.js:65:12
-
-Cannot return `this.x` because type variable `Y` [1] cannot escape from the scope in which it was defined [2] in
-property `p`. [escaped-generic]
-
-   class.js:65:12
-   65|     return this.x;
-                  ^^^^^^
-
-References:
-   class.js:63:10
-   63|   x: {p: Y};
-                ^ [1]
-   class.js:62:10
-   62| class C1<Y> {
-                ^ [2]
-
-
 Error ---------------------------------------------------------------------------------------------------- class.js:71:7
 
 Cannot initialize property `a` with `this` because `this` [1] cannot escape from its class [1] (try adding a type
@@ -1265,7 +1247,7 @@ References:
 
 
 
-Found 64 errors
+Found 63 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -12,7 +12,7 @@ class C<T: Middle> {
 
 // T is implicitly (bounded by) Middle in constructor call if not provided.
 // Explicit type arg is required in annotation - here a wildcard captures it.
-var a: C<*> = new C();
+var a = new C();
 
 a.meth(new Middle());
 a.meth(new Child());

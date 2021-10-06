@@ -1180,20 +1180,6 @@ Flags: --pretty
   ]
 }
 
-infer.js:4:5
-Flags: --pretty
-{
-  "result":[
-    {"name":"?.b","type":"void | number"},
-    {"name":"?.hasOwnProperty","type":"void | ((prop: mixed) => boolean)"},
-    {"name":"?.isPrototypeOf","type":"void | ((o: mixed) => boolean)"},
-    {"name":"?.propertyIsEnumerable","type":"void | ((prop: mixed) => boolean)"},
-    {"name":"?.toLocaleString","type":"void | (() => string)"},
-    {"name":"?.toString","type":"void | (() => string)"},
-    {"name":"?.valueOf","type":"void | (() => mixed)"}
-  ]
-}
-
 eval_predicate.js:5:3
 Flags: --pretty
 {

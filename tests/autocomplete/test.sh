@@ -52,7 +52,6 @@ queries_in_file autocomplete "generic_alias.js" --pretty
 queries_in_file autocomplete "object_literal.js" --pretty
 queries_in_file autocomplete "optional_object.js" --pretty
 queries_in_file autocomplete "indirect_array.js" --pretty
-queries_in_file autocomplete "infer.js" --pretty
 queries_in_file autocomplete "eval_predicate.js" --pretty
 queries_in_file autocomplete "eval_destructor.js" --pretty
 queries_in_file autocomplete "poly.js" --pretty

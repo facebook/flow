@@ -16,7 +16,7 @@ declare class Bar<T> {
     setState($Shape<T>): void;
 }
 
-class Baz extends Bar<*> {
+class Baz extends Bar<any> {
   state = {
     z: {
       x: 0,

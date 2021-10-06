@@ -30,7 +30,7 @@ class B extends A {
 class C<X> {
   static x: X;
   static bar(x: X) { }
-  static create(): C<*> {
+  static create(): C<any> {
     return new this();
   }
 }
@@ -43,7 +43,7 @@ class D extends C<string> {
   }
 }
 
-var d: C<*> = D.create();
+var d: C<any> = D.create();
 (new A: typeof A);
 (B: typeof A);
 

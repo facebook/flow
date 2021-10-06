@@ -1,5 +1,5 @@
 /* @flow */
 
 ("hi": Iterable<string>);
-("hi": Iterable<*>);
+("hi": Iterable<any>);
 ("hi": Iterable<number>); // Error - string is a Iterable<string>

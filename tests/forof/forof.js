@@ -14,7 +14,7 @@ function testIterable1(iterable: Iterable<number>): void {
   }
 }
 
-function testIterable2(iterable: Iterable<*>): void {
+function testIterable2(iterable: Iterable<any>): void {
   for (var x of iterable) {
     (x: string);
   }
@@ -46,7 +46,7 @@ function testSet1(set: Set<string>): void {
   }
 }
 
-function testSet2(set: Set<*>): void {
+function testSet2(set: Set<any>): void {
   for (var x of set) {
     (x: number); // Anything goes
   }

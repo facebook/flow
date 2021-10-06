@@ -324,21 +324,21 @@ References:
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test2.js:30:12
+Error --------------------------------------------------------------------------------------------------- test2.js:22:12
 
 Cannot cast `new C` to `D` because number [1] is incompatible with string [2] in type argument `X` [3].
 [incompatible-cast]
 
-   test2.js:30:12
-   30| ((new C: C<number>): D<string>) // error: number ~/~ string
+   test2.js:22:12
+   22| ((new C: C<number>): D<string>) // error: number ~/~ string
                   ^^^^^^ [1]
 
 References:
-   test2.js:30:24
-   30| ((new C: C<number>): D<string>) // error: number ~/~ string
+   test2.js:22:24
+   22| ((new C: C<number>): D<string>) // error: number ~/~ string
                               ^^^^^^ [2]
-   test2.js:27:9
-   27| class D<X> { }
+   test2.js:19:9
+   19| class D<X> { }
                ^ [3]
 
 

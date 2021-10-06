@@ -6,7 +6,7 @@ function setTest1(set: Set<string>): Iterable<string> {
 function setTest2<T>(set: Set<T>): Iterable<T> {
   return set;
 };
-function setTest3(set: Set<string>): Iterable<*> {
+function setTest3(set: Set<string>): Iterable<any> {
   return set;
 }
 // Error string ~> number

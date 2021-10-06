@@ -58,48 +58,18 @@ class-0.js:4:10 = {
   "start":9,
   "end":12
 }
-class-0.js:9:5 = {
-  "type":"Class<any>",
-  "reasons":[],
-  "loc":{
-    "source":"class-0.js",
-    "type":"SourceFile",
-    "start":{"line":9,"column":5,"offset":79},
-    "end":{"line":9,"column":5,"offset":80}
-  },
-  "path":"class-0.js",
-  "line":9,
-  "endline":9,
-  "start":5,
-  "end":5
-}
 class-0.js:12:5 = {
   "type":"Class<mixed>",
   "reasons":[],
   "loc":{
     "source":"class-0.js",
     "type":"SourceFile",
-    "start":{"line":12,"column":5,"offset":124},
-    "end":{"line":12,"column":5,"offset":125}
+    "start":{"line":12,"column":5,"offset":103},
+    "end":{"line":12,"column":5,"offset":104}
   },
   "path":"class-0.js",
   "line":12,
   "endline":12,
-  "start":5,
-  "end":5
-}
-class-0.js:15:5 = {
-  "type":"Class<empty>",
-  "reasons":[],
-  "loc":{
-    "source":"class-0.js",
-    "type":"SourceFile",
-    "start":{"line":15,"column":5,"offset":168},
-    "end":{"line":15,"column":5,"offset":169}
-  },
-  "path":"class-0.js",
-  "line":15,
-  "endline":15,
   "start":5,
   "end":5
 }
@@ -109,8 +79,8 @@ class-0.js:21:5 = {
   "loc":{
     "source":"class-0.js",
     "type":"SourceFile",
-    "start":{"line":21,"column":5,"offset":235},
-    "end":{"line":21,"column":5,"offset":236}
+    "start":{"line":21,"column":5,"offset":177},
+    "end":{"line":21,"column":5,"offset":178}
   },
   "path":"class-0.js",
   "line":21,
@@ -124,8 +94,8 @@ class-0.js:24:5 = {
   "loc":{
     "source":"class-0.js",
     "type":"SourceFile",
-    "start":{"line":24,"column":5,"offset":283},
-    "end":{"line":24,"column":5,"offset":284}
+    "start":{"line":24,"column":5,"offset":225},
+    "end":{"line":24,"column":5,"offset":226}
   },
   "path":"class-0.js",
   "line":24,

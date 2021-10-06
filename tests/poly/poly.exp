@@ -12,27 +12,6 @@ References:
              ^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- annot.js:10:36
-
-Cannot return `(new A) || (new A)` because property `x` is missing in object type [1] but exists in object type [2] in
-type argument `X` [3]. [prop-missing]
-
-   annot.js:10:36
-   10|   return (new A: A<{}>) || (new A: A<{x: string}>);
-                                          ^^^^^^^^^^^^^^
-
-References:
-   annot.js:10:20
-   10|   return (new A: A<{}>) || (new A: A<{x: string}>);
-                          ^^ [1]
-   annot.js:10:38
-   10|   return (new A: A<{}>) || (new A: A<{x: string}>);
-                                            ^^^^^^^^^^^ [2]
-   annot.js:1:9
-    1| class A<X> { }
-               ^ [3]
-
-
 Error --------------------------------------------------------------------------------------------------- annot2.js:1:24
 
 Cannot return function because function [1] contains type variable `T` [2] which cannot escape from the scope in which
@@ -158,84 +137,6 @@ References:
    error_position.js:9:37
     9| declare function bar<TValue>(props: Props2<TValue>): null;
                                            ^^^^^^^^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------- implicit_bounded_instantiation.js:15:8
-
-Cannot instantiate `C` because number [1] is incompatible with `Middle` [2] in type argument `T`.
-[incompatible-type-arg]
-
-   implicit_bounded_instantiation.js:15:8
-   15| var a: C<*> = new C();
-              ^^^^
-
-References:
-   implicit_bounded_instantiation.js:19:8
-   19| a.meth(42); // Error: number ~> Middle
-              ^^ [1]
-   implicit_bounded_instantiation.js:7:12
-    7| class C<T: Middle> {
-                  ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------- implicit_bounded_instantiation.js:15:8
-
-Cannot instantiate `C` because `Base` [1] is incompatible with `Middle` [2] in type argument `T`.
-[incompatible-type-arg]
-
-   implicit_bounded_instantiation.js:15:8
-   15| var a: C<*> = new C();
-              ^^^^
-
-References:
-   implicit_bounded_instantiation.js:20:8
-   20| a.meth(new Base()); // Error: Base ~> Middle
-              ^^^^^^^^^^ [1]
-   implicit_bounded_instantiation.js:7:12
-    7| class C<T: Middle> {
-                  ^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------- implicit_bounded_instantiation.js:15:15
-
-Cannot assign `new C()` to `a` because `Middle` [1] is incompatible with number [2] in type argument `T` [3].
-[incompatible-type-arg]
-
-   implicit_bounded_instantiation.js:15:15
-   15| var a: C<*> = new C();
-                     ^^^^^^^
-
-References:
-   implicit_bounded_instantiation.js:7:12
-    7| class C<T: Middle> {
-                  ^^^^^^ [1]
-   implicit_bounded_instantiation.js:19:8
-   19| a.meth(42); // Error: number ~> Middle
-              ^^ [2]
-   implicit_bounded_instantiation.js:7:9
-    7| class C<T: Middle> {
-               ^ [3]
-
-
-Error -------------------------------------------------------------------------- implicit_bounded_instantiation.js:15:15
-
-Cannot assign `new C()` to `a` because `Middle` [1] is incompatible with `Base` [2] in type argument `T` [3].
-[incompatible-type-arg]
-
-   implicit_bounded_instantiation.js:15:15
-   15| var a: C<*> = new C();
-                     ^^^^^^^
-
-References:
-   implicit_bounded_instantiation.js:7:12
-    7| class C<T: Middle> {
-                  ^^^^^^ [1]
-   implicit_bounded_instantiation.js:20:8
-   20| a.meth(new Base()); // Error: Base ~> Middle
-              ^^^^^^^^^^ [2]
-   implicit_bounded_instantiation.js:7:9
-    7| class C<T: Middle> {
-               ^ [3]
 
 
 Error --------------------------------------------------------------------------- implicit_bounded_instantiation.js:19:8
@@ -418,4 +319,4 @@ References:
 
 
 
-Found 24 errors
+Found 19 errors

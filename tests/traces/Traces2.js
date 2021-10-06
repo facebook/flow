@@ -11,7 +11,7 @@ var B = React.createClass({
   propTypes: { bar: React.PropTypes.string.isRequired }
 });
 
-function f(b): Element<*> {
+function f(b) {
   if (b) {
     return <A foo="hey"/>;
   } else {

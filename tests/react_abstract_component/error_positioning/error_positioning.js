@@ -12,14 +12,14 @@ declare function HOC<
 ): React.ComponentType<
    $Diff<React.ElementConfig<TComponent>, {foo: void}>
 >;
-type MockFn<TArguments: $ReadOnlyArray<*>, TReturn> = {
+type MockFn<TArguments: $ReadOnlyArray<any>, TReturn> = {
   (...args: TArguments): TReturn,
   mock: {
     calls: Array<TArguments>,
   }
 };
 
-declare function fn<TArguments: $ReadOnlyArray<*>, TReturn>(
+declare function fn<TArguments: $ReadOnlyArray<any>, TReturn>(
   implementation?: (...args: TArguments) => TReturn,
 ): MockFn<TArguments, TReturn>
 

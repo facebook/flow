@@ -6,13 +6,13 @@ class A {
 
 // class_t (t=Ty.Any)
 var Any: any;
-var a: Class<Any<*>>;
+
 
 // class_t (t=Ty.Top)
 var b: Class<mixed>;
 
-// class_t (t=Ty.Bot)
-var c: Class<*>;
+
+
 
 class C1 {}
 class C2 {}

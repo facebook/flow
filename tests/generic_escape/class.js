@@ -57,7 +57,7 @@ class ObjectUtils {
   }
 }
 
-type D1 = {p: *};
+type D1 = {p: any};
 
 class C1<Y> {
   x: {p: Y};

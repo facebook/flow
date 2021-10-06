@@ -6,7 +6,7 @@ function mapTest1(map: Map<string, number>): Iterable<[string, number]> {
 function mapTest2<K, V>(map: Map<K, V>): Iterable<[K, V]> {
   return map;
 };
-function mapTest3(map: Map<string, number>): Iterable<*> {
+function mapTest3(map: Map<string, number>): Iterable<any> {
   return map;
 }
 // Error - Map is an Iterable<[K, V]>

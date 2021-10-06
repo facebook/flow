@@ -15,12 +15,8 @@ printf "class-0.js:4:3 = "
 assert_ok "$FLOW" type-at-pos class-0.js 4 3 --strip-root --pretty
 printf "class-0.js:4:10 = "
 assert_ok "$FLOW" type-at-pos class-0.js 4 10 --strip-root --pretty
-printf "class-0.js:9:5 = "
-assert_ok "$FLOW" type-at-pos class-0.js 9 5 --strip-root --pretty
 printf "class-0.js:12:5 = "
 assert_ok "$FLOW" type-at-pos class-0.js 12 5 --strip-root --pretty
-printf "class-0.js:15:5 = "
-assert_ok "$FLOW" type-at-pos class-0.js 15 5 --strip-root --pretty
 printf "class-0.js:21:5 = "
 assert_ok "$FLOW" type-at-pos class-0.js 21 5 --strip-root --pretty
 printf "class-0.js:24:5 = "
