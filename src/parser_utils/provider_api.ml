@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Utils_js
-
 module type S = sig
   module L : Loc_sig.S
 
@@ -34,14 +32,8 @@ end
 
 module Make (L : Loc_sig.S) : S with module L = L = struct
   module L = L
-  module Find_providers = Find_providers.FindProviders (L)
-  open Find_providers
-
-  module EntrySet = Flow_set.Make (struct
-    type t = entry
-
-    let compare { entry_id = id1; _ } { entry_id = id2; _ } = Id.compare id1 id2
-  end)
+  module FP = Find_providers.FindProviders (L)
+  open FP
 
   type info = {
     all_entries: EntrySet.t;
@@ -55,23 +47,18 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
       all_entries = EntrySet.empty;
       all_exact_providers = L.LSet.empty;
       all_annotated_providers = L.LSet.empty;
-      raw_env = Nel.one (new_scope ~kind:Var);
+      raw_env = empty_env;
     }
 
   let all_exact_providers entries =
     EntrySet.fold (fun { provider_locs; _ } -> L.LSet.union provider_locs) entries L.LSet.empty
-
-  let rec all_entries { entries; children; _ } =
-    L.LMap.fold (fun _ child acc -> EntrySet.union (all_entries child) acc) children EntrySet.empty
-    |> SMap.fold (fun _ entry acc -> EntrySet.add entry acc) entries
 
   let is_provider { all_exact_providers; _ } loc = L.LSet.mem loc all_exact_providers
 
   let all_annotated_providers entries =
     EntrySet.fold
       (function
-        | { state = Find_providers.Annotated; provider_locs; _ } ->
-          (fun acc -> L.LSet.union provider_locs acc)
+        | { state = AnnotatedVar; provider_locs; _ } -> (fun acc -> L.LSet.union provider_locs acc)
         | _ -> (fun acc -> acc))
       entries
       L.LSet.empty
@@ -85,11 +72,11 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
         if L.LSet.mem loc declare_locs || L.LSet.mem loc def_locs then
           let fully_initialized =
             match state with
-            | Initialized
-            | Annotated ->
+            | InitializedVar
+            | AnnotatedVar ->
               true
-            | Uninitialized
-            | NullInitialized ->
+            | UninitializedVar
+            | NullInitializedVar ->
               false
           in
           let provider_reasons =
@@ -101,14 +88,11 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
           None)
       (EntrySet.elements all_entries)
 
-  let get_providers_for_toplevel_var var { raw_env = ({ entries; _ }, _); _ } =
-    let entry = SMap.find_opt var entries in
-    Base.Option.map ~f:(fun { provider_locs; _ } -> provider_locs) entry
+  let get_providers_for_toplevel_var var { raw_env; _ } = get_providers_for_toplevel_var var raw_env
 
   let find_providers (_, program) =
-    let env = find_declaration_statements program in
-    let ((hd, _) as env) = find_provider_statements env program in
-    let all_entries = all_entries hd in
+    let env = compute_provider_env program in
+    let all_entries = all_entries env in
     {
       all_entries;
       all_exact_providers = all_exact_providers all_entries;
@@ -116,50 +100,7 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
       raw_env = env;
     }
 
-  let print_full_env { raw_env = env; _ } =
-    let rec ptabs count =
-      if count = 0 then
-        ""
-      else
-        spf " %s" (ptabs (count - 1))
-    in
-    let rec print_rec label tabs { providers; entries = _; children; _ } =
-      let msg = spf "%s%s:\n" (ptabs tabs) label in
-      let tabs = tabs + 1 in
-      let t = ptabs tabs in
-      let msg =
-        spf
-          "%s%sproviders: \n%s\n"
-          msg
-          t
-          (SMap.bindings providers
-          |> Base.List.map ~f:(fun (k, { relative_locs; exact_locs }) ->
-                 spf
-                   "%s %s:\n%s  relative: (%s)\n%s  exact: (%s)"
-                   t
-                   k
-                   t
-                   (L.LSet.elements relative_locs
-                   |> Base.List.map ~f:(L.debug_to_string ~include_source:false)
-                   |> String.concat "), (")
-                   t
-                   (L.LSet.elements exact_locs
-                   |> Base.List.map ~f:(L.debug_to_string ~include_source:false)
-                   |> String.concat "), ("))
-          |> String.concat "\n")
-      in
-      spf
-        "%s%schildren:\n%s"
-        msg
-        t
-        (L.LMap.bindings children
-        |> Base.List.map ~f:(fun (loc, scope) ->
-               print_rec (L.debug_to_string ~include_source:false loc) (tabs + 1) scope)
-        |> String.concat "\n")
-    in
-    match env with
-    | (top, []) -> print_rec "toplevel" 0 top
-    | _ -> env_invariant_violated "Final environment has depth =/= 1"
+  let print_full_env { raw_env; _ } = print_full_env raw_env
 end
 
 module LocProviders = Make (Loc_sig.LocS)

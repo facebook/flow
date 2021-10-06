@@ -366,4 +366,289 @@ for (x in {a: 'a'}) { };
 
          "
                "[(2, 10) to (2, 11)]";
+         "nested1"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 4) (1, 5))
+               "
+var x;
+function f() {
+      x = 42; // provider
+}
+         "
+               "[(3, 6) to (3, 7)]";
+         "nested2"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 4) (1, 5))
+               "
+var x = null; // provider
+function f() {
+      x = 42; // provider
+}
+         "
+               "[(1, 4) to (1, 5)], [(3, 6) to (3, 7)]";
+         "nested3"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 4) (1, 5))
+               "
+var x;
+function f() {
+      x = 42; // provider
+}
+x = null // provider
+         "
+               "[(3, 6) to (3, 7)], [(5, 0) to (5, 1)]";
+         "nested4"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 4) (1, 5))
+               "
+var x;
+function f() {
+      x = 42;
+}
+x = 42; // provider
+         "
+               "[(5, 0) to (5, 1)]";
+         "nested5"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 4) (1, 5))
+               "
+var x;
+function f() {
+      x = null;
+}
+x = 42 // provider
+         "
+               "[(5, 0) to (5, 1)]";
+         "nested6"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 4) (1, 5))
+               "
+var x;
+if (condition) {
+      function f() {
+            x = 42; // provider
+      }
+} else {
+      x = null // provider
+}
+         "
+               "[(4, 12) to (4, 13)], [(7, 6) to (7, 7)]";
+         "nested6a"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 4) (1, 5))
+               "
+var x;
+if (condition) {
+      function f() {
+            x = 42;
+      }
+} else {
+      x = 42 // provider
+}
+         "
+               "[(7, 6) to (7, 7)]";
+         "nested7"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 4) (1, 5))
+               "
+var x;
+if (condition) {
+      x = null // provider
+      function f() {
+            x = 42;
+      }
+} else {
+      x = 42 // provider
+}
+         "
+               "[(3, 6) to (3, 7)], [(8, 6) to (8, 7)]";
+         "nested8"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 4) (1, 5))
+               "
+var x;
+if (condition) {
+      function f() {
+            x = 42; // provider
+      }
+} else {
+      function f() {
+            function g() {
+                  x = 42;
+            }
+      }
+}
+         "
+               "[(4, 12) to (4, 13)]";
+         "nested9"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 4) (1, 5))
+               "
+var x;
+if (condition) {
+      function f() {
+            x = null; // provider
+      }
+} else {
+      function f() {
+            function g() {
+                  x = 42; // provider
+            }
+      }
+}
+         "
+               "[(4, 12) to (4, 13)], [(9, 18) to (9, 19)]";
+         "class_expr1"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 4) (1, 5))
+               "
+    let w;
+    function f() {
+      w = class w { m() { w = 42 }};
+    }
+         "
+               "[(3, 2) to (3, 3)]";
+         "class_expr2"
+         >:: mk_provider_loc_test
+               (mk_loc (3, 22) (3, 23))
+               "
+    let w;
+    function f() {
+      w = class w { m() { w = 42 }};
+    }
+         "
+               "[(3, 12) to (3, 13)]";
+         "extend_state_opt1" >:: mk_provider_test "x" "
+var x;
+         " "[]";
+         "extend_state_opt2"
+         >:: mk_provider_test
+               "x"
+               "
+var x: string; // p
+var x: number;
+         "
+               "[(1, 4) to (1, 5)]";
+         "extend_state_opt3"
+         >:: mk_provider_test "x" "
+var x = 42;
+var x: string; // p
+         " "[(2, 4) to (2, 5)]";
+         "extend_state_opt4"
+         >:: mk_provider_test "x" "
+var x;
+x = null; // p
+         " "[(2, 0) to (2, 1)]";
+         "extend_state_opt5"
+         >:: mk_provider_test "x" "
+var x;
+x = 42; // p
+         " "[(2, 0) to (2, 1)]";
+         "extend_state_opt6"
+         >:: mk_provider_test
+               "x"
+               "
+var x = null; // p
+x = 42; // p
+         "
+               "[(1, 4) to (1, 5)], [(2, 0) to (2, 1)]";
+         "extend_state_opt7"
+         >:: mk_provider_test
+               "x"
+               "
+var x;
+function f() { x = null; }
+x = 42; // p
+         "
+               "[(3, 0) to (3, 1)]";
+         "extend_state_opt8"
+         >:: mk_provider_test "x" "
+var x = null; // p
+x = null;
+         " "[(1, 4) to (1, 5)]";
+         "extend_state_opt9"
+         >:: mk_provider_test
+               "x"
+               "
+var x;
+function f() { x = null; }
+x = null; // p
+         "
+               "[(3, 0) to (3, 1)]";
+         "extend_state_opt10"
+         >:: mk_provider_test
+               "x"
+               "
+var x = null; // p
+x = 42; // p
+x = null
+         "
+               "[(1, 4) to (1, 5)], [(2, 0) to (2, 1)]";
+         "extend_state_opt11"
+         >:: mk_provider_test
+               "x"
+               "
+var x;
+function f() {
+      x = null;
+      x = 42; // p
+}
+x = null; // p
+         "
+               "[(4, 6) to (4, 7)], [(6, 0) to (6, 1)]";
+         "extend_state_opt12"
+         >:: mk_provider_test "x" "
+var x = 42; // p
+x = null
+         " "[(1, 4) to (1, 5)]";
+         "extend_state_opt13"
+         >:: mk_provider_test
+               "x"
+               "
+var x;
+function f() {
+      x = 42 // p
+}
+x = null; // p
+         "
+               "[(3, 6) to (3, 7)], [(5, 0) to (5, 1)]";
+         "extend_state_opt14"
+         >:: mk_provider_test "x" "
+var x = 42; // p
+x = 'a';
+         " "[(1, 4) to (1, 5)]";
+         "extend_state_opt15"
+         >:: mk_provider_test
+               "x"
+               "
+var x = null; // p
+function f() {
+      x = 42
+}
+x = 'a'; // p
+         "
+               "[(1, 4) to (1, 5)], [(5, 0) to (5, 1)]";
+         "extend_state_opt16"
+         >:: mk_provider_test
+               "x"
+               "
+var x;
+function f() {
+      x = null;
+      x = 42;
+}
+x = 'a'; // p
+         "
+               "[(6, 0) to (6, 1)]";
+         "extend_state_opt17"
+         >:: mk_provider_test
+               "x"
+               "
+var x;
+function f() {
+      x = 42;
+}
+x = 'a'; // p
+         "
+               "[(5, 0) to (5, 1)]";
        ]

@@ -245,7 +245,7 @@ x"
              empty
              |> add (mk_loc (3, 0) (3, 1)) (LocSet.of_list [write_x])
              |> add (mk_loc (4, 0) (4, 10)) (LocSet.of_list [write_invalidate])
-             |> add (mk_loc (5, 0) (5, 1)) (LocSet.of_list [mk_loc (1, 4) (1, 5)])));
+             |> add (mk_loc (5, 0) (5, 1)) (LocSet.of_list [write_x; mk_loc (2, 24) (2, 25)])));
     "enter_function_var_scope"
     >:: mk_sources_test
           "let x = null;
@@ -256,14 +256,15 @@ function new_scope() {
 x;
 new_scope();
 x"
-          (let write_x = mk_loc (1, 4) (1, 5) in
+          (let write_x_null = mk_loc (1, 4) (1, 5) in
+           let write_x_42 = mk_loc (4, 2) (4, 3) in
            let write_new_scope = mk_loc (2, 9) (2, 18) in
            LocMap.(
              empty
-             |> add (mk_loc (3, 2) (3, 3)) (LocSet.of_list [mk_loc (1, 4) (1, 5)])
-             |> add (mk_loc (6, 0) (6, 1)) (LocSet.of_list [write_x])
+             |> add (mk_loc (3, 2) (3, 3)) (LocSet.of_list [write_x_null; write_x_42])
+             |> add (mk_loc (6, 0) (6, 1)) (LocSet.of_list [write_x_null])
              |> add (mk_loc (7, 0) (7, 9)) (LocSet.of_list [write_new_scope])
-             |> add (mk_loc (8, 0) (8, 1)) (LocSet.of_list [mk_loc (1, 4) (1, 5)])));
+             |> add (mk_loc (8, 0) (8, 1)) (LocSet.of_list [write_x_null; write_x_42])));
     "control_flow"
     >:: mk_sources_test
           "let x = null;
