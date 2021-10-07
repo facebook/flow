@@ -1679,20 +1679,24 @@ module Cli_output = struct
              * that space as the breakpoint. *)
             let bp =
               if breakable then
-                try Some (String.index str ' ') with
-                | Not_found -> None
+                match (String.index_opt str ' ', String.index_opt str '\n') with
+                | (Some i, Some j) when i < j -> `Space i
+                | (Some i, None) -> `Space i
+                | (_, Some j) -> `NL j
+                | (None, None) -> `NonBreakpoint
               else
-                None
+                `NonBreakpoint
             in
             (match bp with
             (* If we have no breakpoint then we want to either create a new word
              * or combine our str with the first word in the result of
              * recursively calling split_into_words. *)
-            | None -> loop finished_words_acc (Some (merge style str word_in_progress_acc)) strs
+            | `NonBreakpoint ->
+              loop finished_words_acc (Some (merge style str word_in_progress_acc)) strs
             (* If we have a breakpoint then we need to split up our str and
              * create a new word with the left half and recurse with the
              * right half. *)
-            | Some bp ->
+            | `Space bp ->
               let left = String.sub str 0 bp in
               let right = String.sub str (bp + 1) (String.length str - (bp + 1)) in
               (* We need to recurse with the right half of our split str because
@@ -1702,6 +1706,18 @@ module Cli_output = struct
                * not breakable. *)
               loop
                 (merge style left word_in_progress_acc :: finished_words_acc)
+                None
+                ((true, style, right) :: strs)
+            | `NL bp ->
+              let left = String.sub str 0 bp in
+              let right = String.sub str (bp + 1) (String.length str - (bp + 1)) in
+              (* We need to recurse with the right half of our split str because
+               * there may be more words we need to split out in it. bp is only
+               * the first breakpoint in str. We can assume that our right half
+               * is breakable since we would have no breakpoint if str was
+               * not breakable. *)
+              loop
+                ((0, [(style, "\n")]) :: merge style left word_in_progress_acc :: finished_words_acc)
                 None
                 ((true, style, right) :: strs))
         in
@@ -1782,16 +1798,29 @@ module Cli_output = struct
               | Some (indentation_first_len, indentation_first) ->
                 (indentation_first_len + init_len, [init_word; indentation_first])
             in
-            ((fun () -> is_last_underlined init_word), init)
+            ((fun () -> is_last_underlined init_word), true, init)
           in
-          let (_, (_, acc)) =
+          let (_, _, (_, acc)) =
             List.fold_left
-              (fun (last_underlined, (pos, acc)) (len, word) ->
+              (fun (last_underlined, initial_space, (pos, acc)) (len, word) ->
                 (* If our position on the line plus one (for the space we would
                  * insert) plus the length of our word will fit in our line length
                  * then add the word to the current line separated from acc with a
                  * space. Otherwise start a new line where word is the only text. *)
-                if pos + 1 + len > line_length then
+                if
+                  match word with
+                  | [(_, "\n")] -> true
+                  | _ -> false
+                then
+                  let last_underlined () = is_last_underlined word in
+                  let (newline_len, newline) =
+                    match indentation with
+                    | None -> (0, [default_style "\n"])
+                    | Some (indentation_len, indentation) ->
+                      (indentation_len, default_style "\n" :: indentation)
+                  in
+                  (last_underlined, false, (newline_len, newline :: acc))
+                else if pos + 1 + len > line_length then
                   let last_underlined () = is_last_underlined word in
                   let (newline_len, newline) =
                     match indentation with
@@ -1800,26 +1829,29 @@ module Cli_output = struct
                       (indentation_len, default_style "\n" :: indentation)
                   in
                   if len <= line_length then
-                    (last_underlined, (len + newline_len, word :: newline :: acc))
+                    (last_underlined, true, (len + newline_len, word :: newline :: acc))
                   else
                     let (len, word) = hard_break_styles ~line_length word in
-                    (last_underlined, (len + newline_len, word :: newline :: acc))
+                    (last_underlined, true, (len + newline_len, word :: newline :: acc))
                 else
                   (* If both the end of the last word was underlined *and* the
                    * beginning of the next word is underlined then we also want to
                    * underline the space we insert. *)
                   let should_underline = is_first_underlined word && last_underlined () in
-                  let space =
-                    let style =
-                      if should_underline then
-                        Tty.Underline Tty.Default
-                      else
-                        Tty.Normal Tty.Default
-                    in
-                    (style, " ")
-                  in
                   let last_underlined () = is_last_underlined word in
-                  (last_underlined, (pos + 1 + len, (space :: word) :: acc)))
+                  if not initial_space then
+                    (last_underlined, true, (pos + len, word :: acc))
+                  else
+                    let space =
+                      let style =
+                        if should_underline then
+                          Tty.Underline Tty.Default
+                        else
+                          Tty.Normal Tty.Default
+                      in
+                      (style, " ")
+                    in
+                    (last_underlined, true, (pos + 1 + len, (space :: word) :: acc)))
               init
               words
           in
