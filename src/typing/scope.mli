@@ -53,7 +53,7 @@ module Entry : sig
     value_assign_loc: ALoc.t;
     specific: Type.t;
     general: Type.annotated_or_inferred;
-    closure_writes: (Loc_collections.ALocSet.t * Type.t) option;
+    closure_writes: (Loc_collections.ALocSet.t * Type.t * Type.t option) option;
     provider: Type.t;
   }
 
@@ -91,7 +91,7 @@ module Entry : sig
     ?state:State.t ->
     ?kind:let_binding_kind ->
     ?spec:non_const_specialization ->
-    ?closure_writes:Loc_collections.ALocSet.t * Type.t ->
+    ?closure_writes:Loc_collections.ALocSet.t * Type.t * Type.t option ->
     provider:Type.t ->
     Type.annotated_or_inferred ->
     t
@@ -100,7 +100,7 @@ module Entry : sig
     loc:ALoc.t ->
     ?state:State.t ->
     ?specific:Type.t ->
-    ?closure_writes:Loc_collections.ALocSet.t * Type.t ->
+    ?closure_writes:Loc_collections.ALocSet.t * Type.t * Type.t option ->
     provider:Type.t ->
     ?spec:non_const_specialization ->
     Type.annotated_or_inferred ->

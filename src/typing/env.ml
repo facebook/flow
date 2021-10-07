@@ -443,6 +443,28 @@ module Env : Env_sig.S = struct
         (None, spec)
 
   let mk_havoc cx name loc general spec =
+    let providers =
+      if Options.env_option_enabled (Context.env_mode cx) Options.ProviderHavoc then
+        let ({ Loc_env.var_info = { Env_api.providers; _ }; _ } as env) = Context.environment cx in
+        let providers =
+          Env_api.Provider_api.providers_of_def providers loc
+          |> Base.Option.value_map ~f:snd ~default:[]
+          |> Base.List.map
+               ~f:
+                 (Fn.compose
+                    (fun loc -> Base.Option.map ~f:(fun t -> (loc, t)) (Loc_env.find_write env loc))
+                    Reason.aloc_of_reason)
+          |> Base.Option.all
+        in
+        match providers with
+        | None ->
+          assert_false
+            (spf "Missing providers at %s" (ALoc.debug_to_string ~include_source:true loc))
+        | Some providers -> providers
+      else
+        []
+    in
+
     let (writes_by_closure_opt, spec') = promote_non_const cx name loc spec in
     let closure_writes =
       match writes_by_closure_opt with
@@ -451,25 +473,39 @@ module Env : Env_sig.S = struct
           Tvar.mk_where cx (mk_reason (RIdentifier name) loc) (fun tvar ->
               Flow.flow_t cx (tvar, general))
         in
-        Some (writes_by_closure, writes_by_closure_t)
+        let writes_by_closure_provider =
+          if
+            ALocSet.for_all
+              (Base.List.mem ~equal:ALoc.equal (Base.List.map ~f:fst providers))
+              writes_by_closure
+          then
+            let writes_by_closure_providers =
+              Base.List.filter_map
+                ~f:(fun (loc, t) ->
+                  if ALocSet.mem loc writes_by_closure then
+                    Some t
+                  else
+                    None)
+                providers
+            in
+            match writes_by_closure_providers with
+            | [] -> None
+            | [t] -> Some t
+            | t1 :: t2 :: ts -> Some (UnionT (mk_reason (RType name) loc, UnionRep.make t1 t2 ts))
+          else
+            None
+        in
+
+        Some (writes_by_closure, writes_by_closure_t, writes_by_closure_provider)
       | _ -> None
     in
     let provider =
       if Options.env_option_enabled (Context.env_mode cx) Options.ProviderHavoc then
-        let ({ Loc_env.var_info = { Env_api.providers; _ }; _ } as env) = Context.environment cx in
-        let providers =
-          Env_api.Provider_api.providers_of_def providers loc
-          |> Base.Option.value_map ~f:snd ~default:[]
-          |> Base.List.map ~f:(Fn.compose (Loc_env.find_write env) Reason.aloc_of_reason)
-          |> Base.Option.all
-        in
         match providers with
-        | None ->
-          assert_false
-            (spf "Missing providers at %s" (ALoc.debug_to_string ~include_source:true loc))
-        | Some [] -> VoidT.at loc (bogus_trust ())
-        | Some [t] -> t
-        | Some (t1 :: t2 :: ts) -> UnionT (mk_reason (RType name) loc, UnionRep.make t1 t2 ts)
+        | [] -> VoidT.at loc (bogus_trust ())
+        | [(_, t)] -> t
+        | (_, t1) :: (_, t2) :: ts ->
+          UnionT (mk_reason (RType name) loc, UnionRep.make t1 t2 (Base.List.map ~f:snd ts))
       else
         general
     in
@@ -1108,7 +1144,7 @@ module Env : Env_sig.S = struct
         in
         begin
           match closure_writes with
-          | Some (writes_by_closure, t) when ALocSet.mem loc writes_by_closure ->
+          | Some (writes_by_closure, t, _) when ALocSet.mem loc writes_by_closure ->
             Flow.flow cx (specific, UseT (use_op, t))
           | _ -> Flow.flow cx (specific, UseT (use_op, Entry.general_of_value v))
         end;
@@ -1554,14 +1590,18 @@ module Env : Env_sig.S = struct
               else
                 Entry.havoc
                   ~on_call:(fun specific t general ->
-                    if Options.env_option_enabled (Context.env_mode cx) Options.ProviderHavoc then
-                      general
-                    else if
+                    if
                       specific == general
                       (* We already know t ~> general, so specific | t = general *)
                     then
                       general
-                    else
+                    else if Options.env_option_enabled (Context.env_mode cx) Options.ProviderHavoc
+                    then (
+                      let tvar = Tvar.mk cx (reason_of_t t) in
+                      Flow.flow cx (specific, UseT (Op (Internal WidenEnv), tvar));
+                      Flow.flow cx (general, UseT (Op (Internal WidenEnv), tvar));
+                      tvar
+                    ) else
                       let (_, tvar_t) = open_tvar t in
                       let (lazy constraints_t) = Context.find_graph cx tvar_t in
                       match (specific, constraints_t) with

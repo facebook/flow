@@ -1001,7 +1001,7 @@ let string_of_scope_entry =
         (dump_t cx specific)
         general_str
         (dump_t cx provider)
-        (Base.Option.value_map closure_writes ~default:"" ~f:(fun (locs, t) ->
+        (Base.Option.value_map closure_writes ~default:"" ~f:(fun (locs, t, _) ->
              spf
                "; closure_writes: { locs: { %s }; t: %s }"
                (ListUtils.to_string ", " string_of_aloc @@ ALocSet.elements locs)

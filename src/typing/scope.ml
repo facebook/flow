@@ -96,7 +96,7 @@ module Entry = struct
     value_assign_loc: ALoc.t;
     specific: Type.t;
     general: Type.annotated_or_inferred;
-    closure_writes: (ALocSet.t * Type.t) option;
+    closure_writes: (ALocSet.t * Type.t * Type.t option) option;
     provider: Type.t;
   }
 
@@ -250,7 +250,10 @@ module Entry = struct
           | state -> state
         in
         (match (on_call, v.closure_writes) with
-        | (Some widen_on_call, Some (_, t)) ->
+        | (Some widen_on_call, Some (_, t, Some provider_t)) ->
+          let t = widen_on_call v.specific t provider_t in
+          Value { v with specific = t; value_state }
+        | (Some widen_on_call, Some (_, t, None)) ->
           let t = widen_on_call v.specific t v.provider in
           Value { v with specific = t; value_state }
         | _ -> Value { v with specific = v.provider; value_state })
