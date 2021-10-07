@@ -24,7 +24,7 @@ module LiteralToPropLoc : sig
 end = struct
   class locmap_builder prop_name =
     object (this)
-      inherit [Loc.t LocMap.t] object_key_visitor ~init:LocMap.empty
+      inherit [Loc.t LocMap.t] Object_key_visitor.visitor ~init:LocMap.empty
 
       method! private visit_object_key
           (literal_loc : Loc.t) (key : (Loc.t, Loc.t) Ast.Expression.Object.Property.key) =
