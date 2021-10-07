@@ -10,24 +10,13 @@ let ( >>= ) = Lwt_result.Infix.( >>= )
 let ( >>| ) = Base.Result.( >>| )
 
 open Utils_js
-open Loc_collections
 
-let locmap_of_bindings =
-  List.fold_left
-    begin
-      fun map (loc, x) ->
-      LocMap.add loc x map
-    end
-    LocMap.empty
+(** Sort and dedup by loc.
 
-(* Extract the loc from each ref, then sort and dedup by loc. This will have to be revisited
-   if we ever need to report multiple ref kinds for a single location. *)
+    This will have to be revisited if we ever need to report multiple ref kinds for
+    a single location. *)
 let sort_and_dedup refs =
-  refs
-  |> Base.List.map ~f:(fun ((_, loc) as reference) -> (loc, reference))
-  |> locmap_of_bindings
-  |> LocMap.bindings
-  |> Base.List.map ~f:snd
+  Base.List.dedup_and_sort ~compare:(fun (_, loc1) (_, loc2) -> Loc.compare loc1 loc2) refs
 
 let local_variable_refs scope_info loc =
   match VariableFindRefs.local_find_refs scope_info loc with
