@@ -287,6 +287,21 @@ module SocketAcceptorLoop (Handler : Handler) = LwtLoop.Make (struct
     Exception.reraise exn
 end)
 
+module Autostop : sig
+  val cancel_countdown : unit -> unit
+
+  val start_countdown : unit -> unit
+end = struct
+  let current_countdown = ref Lwt.return_unit
+
+  let cancel_countdown () = Lwt.cancel !current_countdown
+
+  let start_countdown () =
+    current_countdown :=
+      let%lwt () = Lwt_unix.sleep 60. in
+      Server.stop Server.Autostopped
+end
+
 module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct
   let name = "socket connection"
 
@@ -297,12 +312,13 @@ module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct
       let num_persistent = PersistentConnectionMap.cardinal () in
       let num_ephemeral = RequestMap.cardinal () in
       if autostop && num_persistent = 0 && num_ephemeral = 0 then
-        Server.stop Server.Autostopped
+        Lwt.return (Autostop.start_countdown ())
       else
         Lwt.return_unit
     in
     try%lwt
       let%lwt client = perform_handshake_and_get_client_handshake ~client_fd in
+      Autostop.cancel_countdown ();
       SocketHandshake.(
         match client with
         | Some { client_type = Ephemeral; _ } -> create_ephemeral_connection ~client_fd ~close
