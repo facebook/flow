@@ -31,6 +31,9 @@ module.exports = (suite(
         JSON.stringify({
           message: 'Flow: server is stopped',
         }),
+      ).verifyAllLSPMessagesInStep(
+        [['window/showStatus', 'Flow: server is stopped']],
+        [],
       ),
     ]),
   ],
