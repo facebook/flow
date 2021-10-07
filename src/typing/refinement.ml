@@ -54,8 +54,7 @@ module Make (Env : Env_sig.S) = struct
       (match key ~allow_optional _object with
       | Some (base, chain) -> Some (base, Key.Prop name :: chain)
       | None -> None)
-    | PropertyPrivateName
-        (_, { Ast.PrivateName.id = (_, { Ast.Identifier.name; comments = _ }); comments = _ }) ->
+    | PropertyPrivateName (_, { Ast.PrivateName.name; comments = _ }) ->
       (match key ~allow_optional _object with
       | Some (base, chain) -> Some (base, Key.PrivateField name :: chain)
       | None -> None)

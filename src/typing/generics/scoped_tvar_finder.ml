@@ -231,14 +231,13 @@ class finder cx =
         (Utils_js.spf "property `%s`" label, is_munged)
       | Ast.Expression.Object.Property.PrivateName private_name ->
         let _ = this#private_name private_name in
-        let (_, { Ast.PrivateName.id = (_, { Ast.Identifier.name; _ }); _ }) = private_name in
+        let (_, { Ast.PrivateName.name; _ }) = private_name in
         (Utils_js.spf "private property `%s`" name, false)
       | Ast.Expression.Object.Property.Computed _ -> ("computed property", false)
 
     method! class_private_field field =
       let {
-        Ast.Class.PrivateField.key =
-          (_, { Ast.PrivateName.id = (_, { Ast.Identifier.name = label; _ }); _ }) as key;
+        Ast.Class.PrivateField.key = (_, { Ast.PrivateName.name = label; _ }) as key;
         value;
         annot;
         static;

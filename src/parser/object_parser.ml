@@ -109,14 +109,21 @@ module Object
       in
       (loc, Ast.Expression.Object.Property.Computed (loc, key))
     | T_POUND when class_body ->
-      let (loc, id, _is_private, leading) = Expression.property_name_include_private env in
-      add_declared_private env (Flow_ast_utils.name_of_ident id);
-      ( loc,
-        PrivateName (loc, { PrivateName.id; comments = Flow_ast_utils.mk_comments_opt ~leading () })
-      )
+      let ((loc, { PrivateName.name; _ }) as id) = private_identifier env in
+      add_declared_private env name;
+      (loc, PrivateName id)
+    | T_POUND ->
+      let (loc, id) =
+        with_loc
+          (fun env ->
+            Eat.token env;
+            Identifier (identifier_name env))
+          env
+      in
+      error_at env (loc, Parse_error.PrivateNotInClass);
+      (loc, id)
     | _ ->
-      let (loc, id, is_private, _) = Expression.property_name_include_private env in
-      if is_private then error_at env (loc, Parse_error.PrivateNotInClass);
+      let ((loc, _) as id) = identifier_name env in
       (loc, Identifier id)
 
   let getter_or_setter env ~in_class_body is_getter =
@@ -488,9 +495,7 @@ module Object
 
   let check_private_names
       env seen_names private_name (kind : [ `Method | `Field | `Getter | `Setter ]) =
-    let (loc, { PrivateName.id = (_, { Identifier.name; comments = _ }); comments = _ }) =
-      private_name
-    in
+    let (loc, { PrivateName.name; comments = _ }) = private_name in
     if String.equal name "constructor" then
       let () =
         error_at

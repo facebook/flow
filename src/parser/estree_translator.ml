@@ -737,11 +737,7 @@ with type t = Impl.t = struct
         ?comments
         loc
         [("name", string name); ("typeAnnotation", null); ("optional", bool false)]
-    and private_identifier
-        ( loc,
-          { PrivateName.id = (_, { Identifier.name; comments = identifier_comments }); comments } )
-        =
-      let comments = Flow_ast_utils.merge_comments ~outer:comments ~inner:identifier_comments in
+    and private_identifier (loc, { PrivateName.name; comments }) =
       node
         ?comments
         "PrivateIdentifier"

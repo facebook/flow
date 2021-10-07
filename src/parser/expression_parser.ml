@@ -19,9 +19,6 @@ module type EXPRESSION = sig
 
   val conditional : env -> (Loc.t, Loc.t) Expression.t
 
-  val property_name_include_private :
-    env -> Loc.t * (Loc.t, Loc.t) Identifier.t * bool * Loc.t Comment.t list
-
   val is_assignable_lhs : (Loc.t, Loc.t) Expression.t -> bool
 
   val left_hand_side : env -> (Loc.t, Loc.t) Expression.t
@@ -970,21 +967,22 @@ module Expression
         env
         start_loc
         left =
-      let (id_loc, id, is_private, leading) = property_name_include_private env in
-      if is_private then add_used_private env (Flow_ast_utils.name_of_ident id) id_loc;
-      let loc = Loc.btwn start_loc id_loc in
       let open Expression.Member in
-      let property =
-        if is_private then
-          PropertyPrivateName
-            (id_loc, { PrivateName.id; comments = Flow_ast_utils.mk_comments_opt ~leading () })
-        else
-          PropertyIdentifier id
+      let (id_loc, property) =
+        match Peek.token env with
+        | T_POUND ->
+          let ((id_loc, { Ast.PrivateName.name; _ }) as id) = private_identifier env in
+          add_used_private env name id_loc;
+          (id_loc, PropertyPrivateName id)
+        | _ ->
+          let ((id_loc, _) as id) = identifier_name env in
+          (id_loc, PropertyIdentifier id)
       in
+      let loc = Loc.btwn start_loc id_loc in
       (* super.PrivateName is a syntax error *)
       begin
-        match left with
-        | Cover_expr (_, Ast.Expression.Super _) when is_private ->
+        match (left, property) with
+        | (Cover_expr (_, Ast.Expression.Super _), PropertyPrivateName _) ->
           error_at env (loc, Parse_error.SuperPrivate)
         | _ -> ()
       end;
@@ -1700,25 +1698,4 @@ module Expression
         Expression.(Sequence Sequence.{ expressions; comments = None })
     in
     (fun env ~start_loc acc -> with_loc ~start_loc (helper acc) env)
-
-  and property_name_include_private env =
-    let start_loc = Peek.loc env in
-    let (loc, (is_private, id, leading)) =
-      with_loc
-        (fun env ->
-          let (is_private, leading) =
-            match Peek.token env with
-            | T_POUND ->
-              let leading = Peek.comments env in
-              Eat.token env;
-              (true, leading)
-            | _ -> (false, [])
-          in
-          let id = identifier_name env in
-          (is_private, id, leading))
-        env
-    in
-    if is_private && not (Loc.equal_position start_loc.Loc._end (fst id).Loc.start) then
-      error_at env (loc, Parse_error.WhitespaceInPrivateName);
-    (loc, id, is_private, leading)
 end

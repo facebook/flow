@@ -22,11 +22,8 @@ let public_property loc ident =
   (loc, { r with Ast.Identifier.name = "this." ^ name })
 
 let private_property loc ident =
-  let (_, { Ast.PrivateName.id = (_, ({ Ast.Identifier.name; comments = _ } as r)); comments = _ })
-      =
-    ident
-  in
-  (loc, { r with Ast.Identifier.name = "this.#" ^ name })
+  let (_, { Ast.PrivateName.name; comments }) = ident in
+  (loc, { Ast.Identifier.name = "this.#" ^ name; comments })
 
 let not_definitively_initialized (write_locs : Ssa_api.With_ALoc.write_locs) : bool =
   (* write_locs = [] corresponds to a binding whose "value" in the ssa_env is

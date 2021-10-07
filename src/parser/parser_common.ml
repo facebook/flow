@@ -73,91 +73,114 @@ module type PARSER = sig
   val number : env -> Token.number_type -> string -> float
 end
 
+let identifier_name_raw env =
+  let open Token in
+  let name =
+    match Peek.token env with
+    (* obviously, Identifier is a valid IdentifierName *)
+    | T_IDENTIFIER { value; _ } -> value
+    (* keywords are also IdentifierNames *)
+    | T_AWAIT -> "await"
+    | T_BREAK -> "break"
+    | T_CASE -> "case"
+    | T_CATCH -> "catch"
+    | T_CLASS -> "class"
+    | T_CONST -> "const"
+    | T_CONTINUE -> "continue"
+    | T_DEBUGGER -> "debugger"
+    | T_DEFAULT -> "default"
+    | T_DELETE -> "delete"
+    | T_DO -> "do"
+    | T_ELSE -> "else"
+    | T_EXPORT -> "export"
+    | T_EXTENDS -> "extends"
+    | T_FINALLY -> "finally"
+    | T_FOR -> "for"
+    | T_FUNCTION -> "function"
+    | T_IF -> "if"
+    | T_IMPORT -> "import"
+    | T_IN -> "in"
+    | T_INSTANCEOF -> "instanceof"
+    | T_NEW -> "new"
+    | T_RETURN -> "return"
+    | T_SUPER -> "super"
+    | T_SWITCH -> "switch"
+    | T_THIS -> "this"
+    | T_THROW -> "throw"
+    | T_TRY -> "try"
+    | T_TYPEOF -> "typeof"
+    | T_VAR -> "var"
+    | T_VOID -> "void"
+    | T_WHILE -> "while"
+    | T_WITH -> "with"
+    | T_YIELD -> "yield"
+    (* FutureReservedWord *)
+    | T_ENUM -> "enum"
+    | T_LET -> "let"
+    | T_STATIC -> "static"
+    | T_INTERFACE -> "interface"
+    | T_IMPLEMENTS -> "implements"
+    | T_PACKAGE -> "package"
+    | T_PRIVATE -> "private"
+    | T_PROTECTED -> "protected"
+    | T_PUBLIC -> "public"
+    (* NullLiteral *)
+    | T_NULL -> "null"
+    (* BooleanLiteral *)
+    | T_TRUE -> "true"
+    | T_FALSE -> "false"
+    (* Flow-specific stuff *)
+    | T_DECLARE -> "declare"
+    | T_TYPE -> "type"
+    | T_OPAQUE -> "opaque"
+    | T_ANY_TYPE -> "any"
+    | T_MIXED_TYPE -> "mixed"
+    | T_EMPTY_TYPE -> "empty"
+    | T_BOOLEAN_TYPE BOOL -> "bool"
+    | T_BOOLEAN_TYPE BOOLEAN -> "boolean"
+    | T_NUMBER_TYPE -> "number"
+    | T_BIGINT_TYPE -> "bigint"
+    | T_STRING_TYPE -> "string"
+    | T_VOID_TYPE -> "void"
+    | T_SYMBOL_TYPE -> "symbol"
+    (* Contextual stuff *)
+    | T_OF -> "of"
+    | T_ASYNC -> "async"
+    (* punctuators, types, literals, etc are not identifiers *)
+    | _ ->
+      error_unexpected ~expected:"an identifier" env;
+      ""
+  in
+  Eat.token env;
+  name
+
 (* IdentifierName - https://tc39.github.io/ecma262/#prod-IdentifierName *)
 let identifier_name env =
-  Token.(
-    let loc = Peek.loc env in
-    let leading = Peek.comments env in
-    let name =
-      match Peek.token env with
-      (* obviously, Identifier is a valid IdentifierName *)
-      | T_IDENTIFIER { value; _ } -> value
-      (* keywords are also IdentifierNames *)
-      | T_AWAIT -> "await"
-      | T_BREAK -> "break"
-      | T_CASE -> "case"
-      | T_CATCH -> "catch"
-      | T_CLASS -> "class"
-      | T_CONST -> "const"
-      | T_CONTINUE -> "continue"
-      | T_DEBUGGER -> "debugger"
-      | T_DEFAULT -> "default"
-      | T_DELETE -> "delete"
-      | T_DO -> "do"
-      | T_ELSE -> "else"
-      | T_EXPORT -> "export"
-      | T_EXTENDS -> "extends"
-      | T_FINALLY -> "finally"
-      | T_FOR -> "for"
-      | T_FUNCTION -> "function"
-      | T_IF -> "if"
-      | T_IMPORT -> "import"
-      | T_IN -> "in"
-      | T_INSTANCEOF -> "instanceof"
-      | T_NEW -> "new"
-      | T_RETURN -> "return"
-      | T_SUPER -> "super"
-      | T_SWITCH -> "switch"
-      | T_THIS -> "this"
-      | T_THROW -> "throw"
-      | T_TRY -> "try"
-      | T_TYPEOF -> "typeof"
-      | T_VAR -> "var"
-      | T_VOID -> "void"
-      | T_WHILE -> "while"
-      | T_WITH -> "with"
-      | T_YIELD -> "yield"
-      (* FutureReservedWord *)
-      | T_ENUM -> "enum"
-      | T_LET -> "let"
-      | T_STATIC -> "static"
-      | T_INTERFACE -> "interface"
-      | T_IMPLEMENTS -> "implements"
-      | T_PACKAGE -> "package"
-      | T_PRIVATE -> "private"
-      | T_PROTECTED -> "protected"
-      | T_PUBLIC -> "public"
-      (* NullLiteral *)
-      | T_NULL -> "null"
-      (* BooleanLiteral *)
-      | T_TRUE -> "true"
-      | T_FALSE -> "false"
-      (* Flow-specific stuff *)
-      | T_DECLARE -> "declare"
-      | T_TYPE -> "type"
-      | T_OPAQUE -> "opaque"
-      | T_ANY_TYPE -> "any"
-      | T_MIXED_TYPE -> "mixed"
-      | T_EMPTY_TYPE -> "empty"
-      | T_BOOLEAN_TYPE BOOL -> "bool"
-      | T_BOOLEAN_TYPE BOOLEAN -> "boolean"
-      | T_NUMBER_TYPE -> "number"
-      | T_BIGINT_TYPE -> "bigint"
-      | T_STRING_TYPE -> "string"
-      | T_VOID_TYPE -> "void"
-      | T_SYMBOL_TYPE -> "symbol"
-      (* Contextual stuff *)
-      | T_OF -> "of"
-      | T_ASYNC -> "async"
-      (* punctuators, types, literals, etc are not identifiers *)
-      | _ ->
-        error_unexpected ~expected:"an identifier" env;
-        ""
-    in
-    Eat.token env;
-    let trailing = Eat.trailing_comments env in
-    let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
-    (loc, { Identifier.name; comments }))
+  let loc = Peek.loc env in
+  let leading = Peek.comments env in
+  let name = identifier_name_raw env in
+  let trailing = Eat.trailing_comments env in
+  let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+  (loc, { Identifier.name; comments })
+
+(** PrivateIdentifier - https://tc39.es/ecma262/#prod-PrivateIdentifier
+
+    N.B.: whitespace, line terminators, and comments are not allowed
+    between the # and IdentifierName because PrivateIdentifier is a
+    CommonToken which is considered a single token. See also
+    https://tc39.es/ecma262/#prod-InputElementDiv *)
+let private_identifier env =
+  let start_loc = Peek.loc env in
+  let leading = Peek.comments env in
+  Expect.token env Token.T_POUND;
+  let name_loc = Peek.loc env in
+  let name = identifier_name_raw env in
+  let trailing = Eat.trailing_comments env in
+  let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+  let loc = Loc.btwn start_loc name_loc in
+  if not (Loc.equal_position start_loc.Loc._end name_loc.Loc.start) then
+    error_at env (loc, Parse_error.WhitespaceInPrivateName);
+  (loc, { PrivateName.name; comments })
 
 (**
  * The abstract operation IsLabelledFunction

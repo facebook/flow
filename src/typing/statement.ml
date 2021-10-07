@@ -306,8 +306,7 @@ module Make (Env : Env_sig.S) = struct
                  let reason =
                    match key with
                    | Object.Property.Identifier (_, { Identifier.name; _ })
-                   | Object.Property.PrivateName
-                       (_, { PrivateName.id = (_, { Identifier.name; _ }); _ })
+                   | Object.Property.PrivateName (_, { PrivateName.name; _ })
                    | Object.Property.Literal (_, { Literal.raw = name; _ }) ->
                      mk_reason (RMethod (Some name)) prop_loc
                    | _ -> mk_reason (RMethod None) prop_loc
@@ -4753,12 +4752,8 @@ module Make (Env : Env_sig.S) = struct
             {
               Member._object;
               property =
-                Member.PropertyPrivateName
-                  ( ploc,
-                    {
-                      Ast.PrivateName.id = (_, { Ast.Identifier.name; comments = _ });
-                      comments = _;
-                    } ) as property;
+                Member.PropertyPrivateName (ploc, { Ast.PrivateName.name; comments = _ }) as
+                property;
               comments;
             },
           _ ) ->
@@ -4813,13 +4808,8 @@ module Make (Env : Env_sig.S) = struct
               property,
               argument_asts ) =
           match property with
-          | Member.PropertyPrivateName
-              ( prop_loc,
-                {
-                  Ast.PrivateName.id = (_, ({ Ast.Identifier.name; comments = _ } as id));
-                  comments = _;
-                } )
-          | Member.PropertyIdentifier (prop_loc, ({ Ast.Identifier.name; comments = _ } as id)) ->
+          | Member.PropertyPrivateName (prop_loc, { Ast.PrivateName.name; comments = _ })
+          | Member.PropertyIdentifier (prop_loc, { Ast.Identifier.name; comments = _ }) ->
             let reason_call = mk_reason (RMethodCall (Some name)) loc in
             let reason_prop = mk_reason (RProperty (Some (OrdinaryName name))) prop_loc in
             let this_reason = mk_expression_reason callee in
@@ -4913,10 +4903,9 @@ module Make (Env : Env_sig.S) = struct
               match property with
               | Member.PropertyExpression _ ->
                 Utils_js.assert_false "unexpected property expression"
-              | Member.PropertyPrivateName (_, { Ast.PrivateName.id = (name_loc, _); comments }) ->
-                Member.PropertyPrivateName
-                  (prop_loc, { Ast.PrivateName.id = (name_loc, id); comments })
-              | Member.PropertyIdentifier _ -> Member.PropertyIdentifier ((prop_loc, prop_t), id)
+              | Member.PropertyPrivateName (_, id) -> Member.PropertyPrivateName (prop_loc, id)
+              | Member.PropertyIdentifier (_, id) ->
+                Member.PropertyIdentifier ((prop_loc, prop_t), id)
             in
             ( filtered_out,
               lookup_voided_out,
@@ -5728,10 +5717,7 @@ module Make (Env : Env_sig.S) = struct
     | {
      Member._object;
      property =
-       Member.PropertyPrivateName
-         ( prop_loc,
-           { Ast.PrivateName.id = (_, { Ast.Identifier.name; comments = _ }); comments = _ } ) as
-       property;
+       Member.PropertyPrivateName (prop_loc, { Ast.PrivateName.name; comments = _ }) as property;
      comments;
     } ->
       let lhs_reason = mk_expression_reason _object in
@@ -7944,11 +7930,7 @@ module Make (Env : Env_sig.S) = struct
                     {
                       Method.key =
                         Ast.Expression.Object.Property.PrivateName
-                          ( id_loc,
-                            ({
-                               Ast.PrivateName.id = (_, { Ast.Identifier.name; comments = _ });
-                               comments = _;
-                             } as id) );
+                          (id_loc, ({ Ast.PrivateName.name; comments = _ } as id));
                       value = (func_loc, func);
                       kind;
                       static;
@@ -7997,12 +7979,7 @@ module Make (Env : Env_sig.S) = struct
               | Body.PrivateField
                   ( loc,
                     {
-                      PrivateField.key =
-                        ( _,
-                          {
-                            Ast.PrivateName.id = (id_loc, { Ast.Identifier.name; comments = _ });
-                            comments = _;
-                          } ) as key;
+                      PrivateField.key = (id_loc, { Ast.PrivateName.name; comments = _ }) as key;
                       annot;
                       value;
                       static;

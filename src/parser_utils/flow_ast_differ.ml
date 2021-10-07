@@ -1850,7 +1850,7 @@ let program
       Some (diff_if_changed (expression ~parent:SlotParentOfExpression) exp1 exp2)
     | (PropertyIdentifier id1, PropertyIdentifier id2) -> Some (diff_if_changed identifier id1 id2)
     | (PropertyPrivateName (loc, n1), PropertyPrivateName (_, n2)) ->
-      diff_if_changed_ret_opt (private_name loc) n1 n2
+      Some (diff_if_changed (private_name loc) n1 n2)
     | (_, _) -> None
   and call
       (loc : Loc.t)
@@ -3145,15 +3145,19 @@ let program
     in
     let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [expression_diff; comments_diff]
-  and private_name
-      (loc : Loc.t) (name1 : Loc.t Ast.PrivateName.t') (name2 : Loc.t Ast.PrivateName.t') :
-      node change list option =
+  and private_name (loc : Loc.t) (id1 : Loc.t Ast.PrivateName.t') (id2 : Loc.t Ast.PrivateName.t') :
+      node change list =
     let open Ast.PrivateName in
-    let { id = id1; comments = comments1 } = name1 in
-    let { id = id2; comments = comments2 } = name2 in
-    let id_diff = Some (diff_if_changed identifier id1 id2) in
-    let comments_diff = syntax_opt loc comments1 comments2 in
-    join_diff_list [id_diff; comments_diff]
+    let { name = name1; comments = comments1 } = id1 in
+    let { name = name2; comments = comments2 } = id2 in
+    let name =
+      if String.equal name1 name2 then
+        []
+      else
+        [replace loc (Raw name1) (Raw name2)]
+    in
+    let comments = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
+    comments @ name
   and empty_statement
       (loc : Loc.t) (empty1 : Loc.t Ast.Statement.Empty.t) (empty2 : Loc.t Ast.Statement.Empty.t) :
       node change list option =

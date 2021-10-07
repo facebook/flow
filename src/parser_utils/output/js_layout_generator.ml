@@ -1385,13 +1385,7 @@ and member ?(optional = false) ~opts ~precedence ~ctxt member_node loc =
     match property with
     | Ast.Expression.Member.PropertyIdentifier (loc, { Ast.Identifier.name = id; comments }) ->
       source_location_with_comments ?comments (loc, Atom id)
-    | Ast.Expression.Member.PropertyPrivateName
-        ( loc,
-          {
-            Ast.PrivateName.id = (_, { Ast.Identifier.name = id; comments = id_comments });
-            comments = private_comments;
-          } ) ->
-      let comments = Flow_ast_utils.merge_comments ~inner:id_comments ~outer:private_comments in
+    | Ast.Expression.Member.PropertyPrivateName (loc, { Ast.PrivateName.name = id; comments }) ->
       source_location_with_comments ?comments (loc, Atom ("#" ^ id))
     | Ast.Expression.Member.PropertyExpression expr -> expression ~ctxt ~opts expr
   in
@@ -2096,19 +2090,13 @@ and class_private_field
     ~opts
     ( loc,
       {
-        Ast.Class.PrivateField.key =
-          ( ident_loc,
-            {
-              Ast.PrivateName.id = (_, { Ast.Identifier.name; comments = id_comments });
-              comments = private_comments;
-            } );
+        Ast.Class.PrivateField.key = (ident_loc, { Ast.PrivateName.name; comments = key_comments });
         value;
         static;
         annot;
         variance;
         comments;
       } ) =
-  let key_comments = Flow_ast_utils.merge_comments ~inner:id_comments ~outer:private_comments in
   let key =
     layout_node_with_comments_opt
       ident_loc

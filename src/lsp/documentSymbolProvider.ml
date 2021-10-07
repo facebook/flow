@@ -19,8 +19,7 @@ let name_and_loc_of_identifier = function
   | (loc, { Ast.Identifier.name; _ }) -> name_opt name >>| fun name -> (name, loc)
 
 let name_and_loc_of_private_name = function
-  | (loc, { Ast.PrivateName.id = (_, { Ast.Identifier.name = id; comments = _ }); comments = _ }) ->
-    name_opt id >>| fun name -> ("#" ^ name, loc)
+  | (loc, { Ast.PrivateName.name; comments = _ }) -> name_opt name >>| fun name -> ("#" ^ name, loc)
 
 let name_and_loc_of_key (key : (Loc.t, Loc.t) Ast.Expression.Object.Property.key) :
     (string * Loc.t) option =

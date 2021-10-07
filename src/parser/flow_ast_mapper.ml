@@ -1577,15 +1577,14 @@ class ['loc] mapper =
     method interface_declaration loc (decl : ('loc, 'loc) Ast.Statement.Interface.t) =
       this#interface loc decl
 
-    method private_name (name : 'loc Ast.PrivateName.t) =
+    method private_name (id : 'loc Ast.PrivateName.t) =
       let open Ast.PrivateName in
-      let (loc, { id; comments }) = name in
-      let id' = this#identifier id in
+      let (loc, { name; comments }) = id in
       let comments' = this#syntax_opt comments in
-      if id == id' && comments == comments' then
-        name
+      if comments == comments' then
+        id
       else
-        (loc, { id = id'; comments = comments' })
+        (loc, { name; comments = comments' })
 
     method computed_key (key : ('loc, 'loc) Ast.ComputedKey.t) =
       let open Ast.ComputedKey in

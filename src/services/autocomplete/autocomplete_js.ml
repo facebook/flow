@@ -326,8 +326,7 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       | Literal ((loc, _), Flow_ast.Literal.{ raw = name; _ })
         when this#covers_target loc ->
         this#find loc name Ac_class_key
-      | PrivateName (loc, { Flow_ast.PrivateName.id = (_, { Flow_ast.Identifier.name; _ }); _ })
-        when this#covers_target loc ->
+      | PrivateName (loc, { Flow_ast.PrivateName.name; _ }) when this#covers_target loc ->
         this#find loc ("#" ^ name) Ac_class_key
       | _ -> super#class_key key
 

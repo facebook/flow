@@ -35,7 +35,7 @@ and PrivateName : sig
   type 'M t = 'M * 'M t'
 
   and 'M t' = {
-    id: ('M, 'M) Identifier.t;
+    name: string;
     comments: ('M, unit) Syntax.t option;
   }
   [@@deriving show]
