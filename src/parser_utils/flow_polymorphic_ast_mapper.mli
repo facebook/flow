@@ -56,9 +56,13 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method class_body : ('M, 'T) Flow_ast.Class.Body.t -> ('N, 'U) Ast.Class.Body.t
 
+    method class_declaration : ('M, 'T) Ast.Class.t -> ('N, 'U) Ast.Class.t
+
     method class_decorator : ('M, 'T) Ast.Class.Decorator.t -> ('N, 'U) Ast.Class.Decorator.t
 
     method class_element : ('M, 'T) Ast.Class.Body.element -> ('N, 'U) Ast.Class.Body.element
+
+    method class_expression : ('M, 'T) Ast.Class.t -> ('N, 'U) Ast.Class.t
 
     method class_extends : ('M, 'T) Ast.Class.Extends.t -> ('N, 'U) Ast.Class.Extends.t
 

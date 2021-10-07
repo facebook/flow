@@ -31,7 +31,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           match stmt with
           | Block block -> Block (this#block block)
           | Break break -> Break (this#break break)
-          | ClassDeclaration cls -> ClassDeclaration (this#class_ cls)
+          | ClassDeclaration cls -> ClassDeclaration (this#class_declaration cls)
           | Continue cont -> Continue (this#continue cont)
           | Debugger dbg -> Debugger (this#debugger dbg)
           | DeclareClass stuff -> DeclareClass (this#declare_class stuff)
@@ -102,7 +102,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           | Assignment x -> Assignment (this#assignment x)
           | Binary x -> Binary (this#binary x)
           | Call x -> Call (this#call annot x)
-          | Class x -> Class (this#class_ x)
+          | Class x -> Class (this#class_expression x)
           | Comprehension x -> Comprehension (this#comprehension x)
           | Conditional x -> Conditional (this#conditional x)
           | Function x -> Function (this#function_expression x)
@@ -227,6 +227,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let body' = (this#on_loc_annot * this#block) body in
       let comments' = Base.Option.map ~f:this#syntax comments in
       { param = param'; body = body'; comments = comments' }
+
+    method class_declaration cls = this#class_ cls
+
+    method class_expression cls = this#class_ cls
 
     method class_ (cls : ('M, 'T) Ast.Class.t) : ('N, 'U) Ast.Class.t =
       let open Ast.Class in
