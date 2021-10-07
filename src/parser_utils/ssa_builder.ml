@@ -468,7 +468,7 @@ struct
           | Some { val_ref; havoc } ->
             val_ref := Val.one reason;
             Havoc.(havoc.locs <- reason :: havoc.locs)
-          | _ -> ()
+          | None -> unbound_names <- SSet.add x unbound_names
         end;
         super#identifier ident
 

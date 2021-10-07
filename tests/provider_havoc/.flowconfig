@@ -1,2 +1,2 @@
 [options]
-experimental.env_mode=provider_havoc
+experimental.env_mode=provider_havoc,constrain_writes

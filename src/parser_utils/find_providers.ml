@@ -312,7 +312,7 @@ end = struct
      based on where a new variable would live, this finds the set of entries in which some particular variable
      already exists. *)
   let find_entry_for_existing_variable var env =
-    let rec loop invalid_entry var_scopes_off env rev_head =
+    let rec loop var_scopes_off env rev_head =
       match env with
       | ({ entries; _ } as hd) :: tl when SMap.mem var entries ->
         ( SMap.find var entries,
@@ -322,30 +322,20 @@ end = struct
               (List.rev rev_head)
               (Nel.to_list ({ hd with entries = SMap.add var entry entries }, tl))
             |> Nel.of_list_exn )
-      (* If we don't see the variable before we leave a function scope, increment the var_scopes_off
-         and lazily create an entry in this scope in case we *never* find a scope that it's native to. *)
-      | ({ entries; kind = Var; _ } as hd) :: tl when Base.Option.is_none invalid_entry ->
-        let create_invalid_entry =
-          lazy
-            ( empty_entry var,
-              fun entry ->
-                List.append
-                  (List.rev rev_head)
-                  (Nel.to_list ({ hd with entries = SMap.add var entry entries }, tl))
-                |> Nel.of_list_exn )
-        in
-        loop (Some create_invalid_entry) (var_scopes_off + 1) tl (hd :: rev_head)
-      | ({ kind = Var; _ } as hd) :: tl ->
-        loop invalid_entry (var_scopes_off + 1) tl (hd :: rev_head)
-      | hd :: tl -> loop invalid_entry var_scopes_off tl (hd :: rev_head)
-      | [] ->
-        begin
-          match invalid_entry with
-          | None -> env_invariant_violated (spf "Scope for variable %s not found" var)
-          | Some (lazy (entry, set_entry)) -> (entry, 0, set_entry)
-        end
+      (* If we don't see the variable in the root var scope, it's a global--create a dummy entry for it *)
+      | [({ entries; kind = Var; _ } as hd)] ->
+        ( empty_entry var,
+          var_scopes_off,
+          fun entry ->
+            List.append (List.rev rev_head) [{ hd with entries = SMap.add var entry entries }]
+            |> Nel.of_list_exn )
+      | [{ kind = Lex; _ }] -> env_invariant_violated "Root environment should always be Var"
+      | ({ kind = Var; _ } as hd) :: tl -> loop (var_scopes_off + 1) tl (hd :: rev_head)
+      | hd :: tl -> loop var_scopes_off tl (hd :: rev_head)
+      | [] -> env_invariant_violated "Unreachable"
     in
-    loop None 0 (Nel.to_list env) []
+
+    loop 0 (Nel.to_list env) []
 
   let get_entry var entries = SMap.find_opt var entries |> Option.value ~default:(empty_entry var)
 
