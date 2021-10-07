@@ -142,6 +142,8 @@ module type S = sig
 
   val pseudo_init_declared_type : Context.t -> string -> ALoc.t -> unit
 
+  val install_provider : Context.t -> Type.t -> Reason.name -> ALoc.t -> unit
+
   val local_scope_entry_exists : Context.t -> ALoc.t -> string -> bool
 
   val is_global_var : Context.t -> string -> ALoc.t -> bool

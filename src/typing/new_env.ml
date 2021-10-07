@@ -101,6 +101,8 @@ module New_env : Env_sig.S = struct
 
   let in_toplevel_scope = Old_env.in_toplevel_scope
 
+  let install_provider = Old_env.install_provider
+
   type t = Old_env.t
 
   type scope = Old_env.scope

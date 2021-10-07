@@ -985,6 +985,7 @@ let string_of_scope_entry =
           specific;
           general;
           closure_writes;
+          provider;
         } =
       let general_str =
         match general with
@@ -992,13 +993,14 @@ let string_of_scope_entry =
         | Inferred t -> spf "Inferred %s" (dump_t cx t)
       in
       spf
-        "{ kind: %s; value_state: %s; value_declare_loc: %S; value_assign_loc: %s; specific: %s; general: %s%s }"
+        "{ kind: %s; value_state: %s; value_declare_loc: %S; value_assign_loc: %s; specific: %s; general: %s; provider:%s;%s }"
         (Entry.string_of_value_kind kind)
         (State.to_string value_state)
         (string_of_aloc value_declare_loc)
         (string_of_aloc value_assign_loc)
         (dump_t cx specific)
         general_str
+        (dump_t cx provider)
         (Base.Option.value_map closure_writes ~default:"" ~f:(fun (locs, t) ->
              spf
                "; closure_writes: { locs: { %s }; t: %s }"

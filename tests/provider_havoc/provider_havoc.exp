@@ -1,0 +1,53 @@
+Error ---------------------------------------------------------------------------------------------------- test.js:10:22
+
+Cannot assign `var_x` to `y` because null or undefined [1] is incompatible with number [2]. [incompatible-type]
+
+   test.js:10:22
+   10|       var y:number = var_x;
+                            ^^^^^
+
+References:
+   test.js:5:15
+    5| function g(x: ?number) {
+                     ^^^^^^^ [1]
+   test.js:10:13
+   10|       var y:number = var_x;
+                   ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:23:4
+
+Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   test.js:23:4
+   23|   (x: void); // should error
+          ^
+
+References:
+   test.js:17:17
+   17|   var x: void | number;
+                       ^^^^^^ [1]
+   test.js:23:7
+   23|   (x: void); // should error
+             ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:33:6
+
+Cannot cast `x` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   test.js:33:6
+   33|     (x: number); // should fail
+            ^
+
+References:
+   test.js:27:19
+   27|   var x: number | string = 42;
+                         ^^^^^^ [1]
+   test.js:33:9
+   33|     (x: number); // should fail
+               ^^^^^^ [2]
+
+
+
+Found 3 errors

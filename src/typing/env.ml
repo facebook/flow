@@ -225,7 +225,10 @@ module Env : Env_sig.S = struct
   (* initialize a new environment (once per module) *)
   let init_env ?(exclude_syms = NameUtils.Set.empty) cx module_scope =
     begin
-      if Options.env_option_enabled (Context.env_mode cx) Options.ConstrainWrites then
+      if
+      Options.env_option_enabled (Context.env_mode cx) Options.ConstrainWrites
+      || Options.env_option_enabled (Context.env_mode cx) Options.ProviderHavoc
+     then
         let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
         ALocMap.fold
           (fun loc reason env ->
@@ -318,7 +321,7 @@ module Env : Env_sig.S = struct
         let reason = mk_reason desc loc in
         Flow.get_builtin cx name reason
     in
-    let entry = Entry.new_var (Inferred t) ~loc ~state:State.Initialized in
+    let entry = Entry.new_var (Inferred t) ~loc ~provider:t ~state:State.Initialized in
     Scope.add_entry name entry global_scope;
     (global_scope, entry)
 
@@ -439,7 +442,7 @@ module Env : Env_sig.S = struct
       else
         (None, spec)
 
-  let mk_closure_writes cx name loc general spec =
+  let mk_havoc cx name loc general spec =
     let (writes_by_closure_opt, spec') = promote_non_const cx name loc spec in
     let closure_writes =
       match writes_by_closure_opt with
@@ -451,19 +454,49 @@ module Env : Env_sig.S = struct
         Some (writes_by_closure, writes_by_closure_t)
       | _ -> None
     in
-    (spec', closure_writes)
+    let provider =
+      if Options.env_option_enabled (Context.env_mode cx) Options.ProviderHavoc then
+        let ({ Loc_env.var_info = { Env_api.providers; _ }; _ } as env) = Context.environment cx in
+        let providers =
+          Env_api.Provider_api.providers_of_def providers loc
+          |> Base.Option.value_map ~f:snd ~default:[]
+          |> Base.List.map ~f:(Fn.compose (Loc_env.find_write env) Reason.aloc_of_reason)
+          |> Base.Option.all
+        in
+        match providers with
+        | None ->
+          assert_false
+            (spf "Missing providers at %s" (ALoc.debug_to_string ~include_source:true loc))
+        | Some [] -> VoidT.at loc (bogus_trust ())
+        | Some [t] -> t
+        | Some (t1 :: t2 :: ts) -> UnionT (mk_reason (RType name) loc, UnionRep.make t1 t2 ts)
+      else
+        general
+    in
+    (spec', closure_writes, provider)
 
   let binding_error msg cx name entry loc =
     Flow.add_output cx (Error_message.EBindingError (msg, loc, name, entry))
 
   let already_bound_error = binding_error Error_message.ENameAlreadyBound
 
-  let install_or_constrain_by_provider cx ~use_op t name loc =
+  let install_provider cx t name loc =
+    match name with
+    | OrdinaryName _name
+      when Options.env_option_enabled (Context.env_mode cx) Options.ConstrainWrites
+           || Options.env_option_enabled (Context.env_mode cx) Options.ProviderHavoc ->
+      let ({ Loc_env.var_info = { Env_api.providers; _ }; _ } as env) = Context.environment cx in
+      if Env_api.Provider_api.is_provider providers loc then
+        let t' = Loc_env.find_write env loc in
+        Base.Option.iter ~f:(fun t' -> Flow_js.flow_t cx (t, t')) t'
+    | _ -> ()
+
+  let constrain_by_provider cx ~use_op t name loc =
     match name with
     | OrdinaryName _ when Options.env_option_enabled (Context.env_mode cx) Options.ConstrainWrites
       ->
       let ({ Loc_env.var_info = { Env_api.providers; _ }; _ } as env) = Context.environment cx in
-      if not @@ Env_api.Provider_api.is_provider providers loc then begin
+      if not @@ Env_api.Provider_api.is_provider providers loc then
         let (fully_initialized, provider_locs) =
           Base.Option.value
             ~default:(false, [])
@@ -493,9 +526,6 @@ module Env : Env_sig.S = struct
           in
           Base.Option.iter provider ~f:(fun provider ->
               Context.add_constrained_write cx (t, UseT (use_op, provider)))
-      end else
-        let t' = Loc_env.find_write env loc in
-        Base.Option.iter ~f:(fun t' -> Flow_js.flow_t cx (t, t')) t'
     | _ -> ()
 
   let can_shadow cx name prev loc =
@@ -595,29 +625,37 @@ module Env : Env_sig.S = struct
 
   (* bind var entry *)
   let bind_var_to_name ?(state = State.Declared) cx name t loc =
-    let (spec, closure_writes) =
-      mk_closure_writes cx name loc (TypeUtil.type_t_of_annotated_or_inferred t) Entry.Havocable
+    let (spec, closure_writes, provider) =
+      mk_havoc cx name loc (TypeUtil.type_t_of_annotated_or_inferred t) Entry.Havocable
     in
-    bind_entry cx name (Entry.new_var t ~loc ~state ~spec ?closure_writes) loc
+    bind_entry cx name (Entry.new_var t ~loc ~state ~spec ?closure_writes ~provider) loc
 
   let bind_var ?state cx name t loc = bind_var_to_name ?state cx (OrdinaryName name) t loc
 
   (* bind let entry *)
   let bind_let ?(state = State.Undeclared) cx name t loc =
-    let (spec, closure_writes) =
-      mk_closure_writes
+    let (spec, closure_writes, provider) =
+      mk_havoc
         cx
         (OrdinaryName name)
         loc
         (TypeUtil.type_t_of_annotated_or_inferred t)
         Entry.Havocable
     in
-    bind_entry cx (OrdinaryName name) (Entry.new_let t ~loc ~state ~spec ?closure_writes) loc
+    bind_entry
+      cx
+      (OrdinaryName name)
+      (Entry.new_let t ~loc ~state ~spec ?closure_writes ~provider)
+      loc
 
   (* bind implicit let entry *)
   let bind_implicit_let ?(state = State.Undeclared) kind cx name t loc =
-    let (spec, closure_writes) = mk_closure_writes cx name loc t Entry.Havocable in
-    bind_entry cx name (Entry.new_let (Inferred t) ~kind ~loc ~state ~spec ?closure_writes) loc
+    let (spec, closure_writes, provider) = mk_havoc cx name loc t Entry.Havocable in
+    bind_entry
+      cx
+      name
+      (Entry.new_let (Inferred t) ~kind ~loc ~state ~spec ?closure_writes ~provider)
+      loc
 
   let bind_fun ?(state = State.Declared) = bind_implicit_let ~state Entry.FunctionBinding
 
@@ -660,7 +698,7 @@ module Env : Env_sig.S = struct
         let scope = peek_scope () in
         match Scope.get_entry name scope with
         | None ->
-          let (spec, closure_writes) = mk_closure_writes cx name loc t Entry.Havocable in
+          let (spec, closure_writes, provider) = mk_havoc cx name loc t Entry.Havocable in
           let entry =
             Entry.new_let
               (Inferred t)
@@ -668,6 +706,7 @@ module Env : Env_sig.S = struct
               ~loc
               ~state:State.Initialized
               ~spec
+              ~provider
               ?closure_writes
           in
           Scope.add_entry name entry scope
@@ -689,6 +728,7 @@ module Env : Env_sig.S = struct
                     value_state = State.Initialized;
                     specific = update_type v.specific t;
                     general = update_general_type v.general t;
+                    provider = update_type v.provider t;
                   }
               in
               Scope.add_entry name entry scope
@@ -759,10 +799,12 @@ module Env : Env_sig.S = struct
             if has_anno then
               general
             else begin
-              install_or_constrain_by_provider cx ~use_op specific name loc;
+              constrain_by_provider cx ~use_op specific name loc;
               specific
             end
           in
+          install_provider cx specific name loc;
+
           let new_entry = initialized_value_entry specific v in
           Scope.add_entry name new_entry scope
         | _ ->
@@ -812,6 +854,7 @@ module Env : Env_sig.S = struct
             ({ Entry.kind = Let _ | Const _; value_state = State.(Undeclared | Declared); _ } as v)
           ->
           Changeset.Global.change_var (scope.id, name, Changeset.Write);
+          install_provider cx (TypeUtil.type_t_of_annotated_or_inferred v.general) name loc;
           let entry =
             initialized_value_entry (TypeUtil.type_t_of_annotated_or_inferred v.general) v
           in
@@ -1070,10 +1113,11 @@ module Env : Env_sig.S = struct
           | _ -> Flow.flow cx (specific, UseT (use_op, Entry.general_of_value v))
         end;
 
+        install_provider cx specific name loc;
+
         begin
           match (general, op) with
-          | (Inferred _, Changeset.Write) ->
-            install_or_constrain_by_provider cx ~use_op specific name loc
+          | (Inferred _, Changeset.Write) -> constrain_by_provider cx ~use_op specific name loc
           | _ -> ()
         end;
 
@@ -1510,7 +1554,9 @@ module Env : Env_sig.S = struct
               else
                 Entry.havoc
                   ~on_call:(fun specific t general ->
-                    if
+                    if Options.env_option_enabled (Context.env_mode cx) Options.ProviderHavoc then
+                      general
+                    else if
                       specific == general
                       (* We already know t ~> general, so specific | t = general *)
                     then

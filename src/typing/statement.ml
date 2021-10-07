@@ -2255,6 +2255,7 @@ module Make (Env : Env_sig.S) = struct
         (Reason.internal_name "exports")
         (Scope.Entry.new_var
            ~loc:ALoc.none
+           ~provider:(Locationless.MixedT.t |> with_trust bogus_trust)
            ~specific:(Locationless.EmptyT.t |> with_trust bogus_trust)
            (Inferred (Locationless.MixedT.t |> with_trust bogus_trust)))
         module_scope;
@@ -3081,9 +3082,14 @@ module Make (Env : Env_sig.S) = struct
         (* move const/let bindings from undeclared to declared *)
         declare_var cx (OrdinaryName name) id_loc;
         Env.unify_declared_type cx (OrdinaryName name) id_loc annot_t;
-        Base.Option.iter init_opt ~f:(fun (init_t, init_reason) ->
+        begin
+          match init_opt with
+          | Some (init_t, init_reason) ->
             let use_op = Op (AssignVar { var = Some id_reason; init = init_reason }) in
-            init_var cx ~use_op (OrdinaryName name) ~has_anno init_t id_loc);
+            init_var cx ~use_op (OrdinaryName name) ~has_anno init_t id_loc
+          | None when has_anno -> Env.install_provider cx annot_t (OrdinaryName name) id_loc
+          | None -> ()
+        end;
         Type_inference_hooks_js.(dispatch_lval_hook cx name id_loc (Val annot_t));
         ( (ploc, annot_t),
           Ast.Pattern.Identifier
@@ -3619,7 +3625,8 @@ module Make (Env : Env_sig.S) = struct
         Scope.(
           let kind = Entry.ClassNameBinding in
           let entry =
-            Entry.(new_let (annotated_todo tvar) ~loc:name_loc ~state:State.Declared ~kind)
+            Entry.(
+              new_let (annotated_todo tvar) ~provider:tvar ~loc:name_loc ~state:State.Declared ~kind)
           in
           add_entry (OrdinaryName name) entry scope);
         Env.push_var_scope scope;
@@ -8419,7 +8426,7 @@ module Make (Env : Env_sig.S) = struct
     (* Normally, functions do not have access to super. *)
     let super =
       let t = ObjProtoT (mk_reason RNoSuper loc) in
-      Scope.Entry.new_let (Inferred t) ~loc ~state:Scope.State.Initialized
+      Scope.Entry.new_let (Inferred t) ~provider:t ~loc ~state:Scope.State.Initialized
     in
     let this_recipe fparams =
       let default =
@@ -8442,7 +8449,13 @@ module Make (Env : Env_sig.S) = struct
         | Some t -> Inferred t
         | None -> Annotated default
       in
-      let this = Scope.Entry.new_let t ~loc ~state:Scope.State.Initialized in
+      let this =
+        Scope.Entry.new_let
+          t
+          ~provider:(type_t_of_annotated_or_inferred t)
+          ~loc
+          ~state:Scope.State.Initialized
+      in
       (type_t_of_annotated_or_inferred t, this)
     in
     let (fun_type, reconstruct_ast) =

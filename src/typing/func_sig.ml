@@ -218,7 +218,7 @@ module Make
     let params_ast = F.eval cx fparams in
     (* early-add our own name binding for recursive calls. *)
     Base.Option.iter id ~f:(fun (loc, { Ast.Identifier.name; comments = _ }) ->
-        let entry = annotated_todo knot |> Scope.Entry.new_var ~loc in
+        let entry = annotated_todo knot |> Scope.Entry.new_var ~loc ~provider:knot in
         Scope.add_entry (OrdinaryName name) entry function_scope);
 
     let (yield_t, next_t) =
@@ -256,6 +256,7 @@ module Make
         ~loc:(loc_of_t maybe_exhaustively_checked_t)
         ~state:Scope.State.Declared
         (Inferred maybe_exhaustively_checked_t)
+        ~provider:maybe_exhaustively_checked_t
     in
     Scope.add_entry
       (internal_name "maybe_exhaustively_checked")

@@ -54,6 +54,7 @@ module Entry : sig
     specific: Type.t;
     general: Type.annotated_or_inferred;
     closure_writes: (Loc_collections.ALocSet.t * Type.t) option;
+    provider: Type.t;
   }
 
   type type_binding_kind =
@@ -91,6 +92,7 @@ module Entry : sig
     ?kind:let_binding_kind ->
     ?spec:non_const_specialization ->
     ?closure_writes:Loc_collections.ALocSet.t * Type.t ->
+    provider:Type.t ->
     Type.annotated_or_inferred ->
     t
 
@@ -99,6 +101,7 @@ module Entry : sig
     ?state:State.t ->
     ?specific:Type.t ->
     ?closure_writes:Loc_collections.ALocSet.t * Type.t ->
+    provider:Type.t ->
     ?spec:non_const_specialization ->
     Type.annotated_or_inferred ->
     t

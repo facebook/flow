@@ -50,6 +50,7 @@ class ['loc] lexical_hoister ~flowmin_compatibility =
       | (_, VariableDeclaration _)
       | (_, ClassDeclaration _)
       | (_, DeclareClass _)
+      | (_, DeclareExportDeclaration _)
       | (_, EnumDeclaration _)
       | (_, ExportNamedDeclaration _)
       | (_, ExportDefaultDeclaration _)

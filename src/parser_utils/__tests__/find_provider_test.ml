@@ -651,4 +651,14 @@ function f() {
 x = 'a'; // p
          "
                "[(5, 0) to (5, 1)]";
+         "annot_no_init"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 4) (1, 5))
+               "
+    let w: number; //provider
+    function f() {
+      w = 10;
+    }
+         "
+               "[(1, 4) to (1, 5)]";
        ]

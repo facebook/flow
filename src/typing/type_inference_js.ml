@@ -448,6 +448,7 @@ module Make (Env : Env_sig.S) : S = struct
         add_entry
           (Reason.OrdinaryName "exports")
           (Entry.new_var
+             ~provider:local_exports_var
              ~loc:(TypeUtil.loc_of_t local_exports_var)
              (Type.Inferred local_exports_var))
           scope;
@@ -456,6 +457,7 @@ module Make (Env : Env_sig.S) : S = struct
           (Reason.internal_name "exports")
           (Entry.new_var
              ~loc:(Reason.aloc_of_reason reason_exports_module)
+             ~provider:(Type.Unsoundness.exports_any reason_exports_module)
              ~specific:(Type.DefT (reason_exports_module, Type.bogus_trust (), Type.EmptyT))
              (Type.Inferred (Type.Unsoundness.exports_any reason_exports_module)))
           scope;

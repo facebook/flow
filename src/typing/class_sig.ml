@@ -911,6 +911,7 @@ module Make
           Scope.Entry.new_let
             ~loc:(TypeUtil.loc_of_t (TypeUtil.type_t_of_annotated_or_inferred t))
             ~state
+            ~provider:(TypeUtil.type_t_of_annotated_or_inferred t)
             t
         in
 

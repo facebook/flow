@@ -699,6 +699,7 @@ module Opts = struct
             Base.List.fold_result options ~init:[] ~f:(fun acc opt ->
                 match opt with
                 | "constrain_writes" -> Ok (Options.ConstrainWrites :: acc)
+                | "provider_havoc" -> Ok (Options.ProviderHavoc :: acc)
                 | "ssa" -> Error "\"ssa\" must be the first and only env_mode option if present"
                 | "classic" ->
                   Error "\"classic\" must be the first and only env_mode option if present"

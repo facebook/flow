@@ -97,6 +97,7 @@ module Entry = struct
     specific: Type.t;
     general: Type.annotated_or_inferred;
     closure_writes: (ALocSet.t * Type.t) option;
+    provider: Type.t;
   }
 
   type type_binding_kind =
@@ -131,7 +132,7 @@ module Entry = struct
         class_private_static_methods;
       }
 
-  let new_value kind state specific ?closure_writes general value_declare_loc =
+  let new_value kind state specific ?closure_writes ~provider general value_declare_loc =
     Value
       {
         kind;
@@ -141,14 +142,15 @@ module Entry = struct
         specific;
         general;
         closure_writes;
+        provider;
       }
 
   let new_const ~loc ?(state = State.Undeclared) ?(kind = ConstVarBinding) general =
     let specific = TypeUtil.type_t_of_annotated_or_inferred general in
-    new_value (Const kind) state specific general loc
+    new_value (Const kind) state specific general loc ~provider:specific
 
   let new_import ~loc t =
-    new_value (Const ConstImportBinding) State.Initialized t (Type.Inferred t) loc
+    new_value (Const ConstImportBinding) State.Initialized t (Type.Inferred t) loc ~provider:t
 
   let new_let
       ~loc
@@ -156,18 +158,25 @@ module Entry = struct
       ?(kind = LetVarBinding)
       ?(spec = Havocable)
       ?closure_writes
+      ~provider
       general =
     let specific = TypeUtil.type_t_of_annotated_or_inferred general in
-    new_value (Let (kind, spec)) state specific ?closure_writes general loc
+    new_value (Let (kind, spec)) state specific ?closure_writes ~provider general loc
 
-  let new_var ~loc ?(state = State.Undeclared) ?specific ?closure_writes ?(spec = Havocable) general
-      =
+  let new_var
+      ~loc
+      ?(state = State.Undeclared)
+      ?specific
+      ?closure_writes
+      ~provider
+      ?(spec = Havocable)
+      general =
     let specific =
       match specific with
       | Some t -> t
       | None -> TypeUtil.type_t_of_annotated_or_inferred general
     in
-    new_value (Var spec) state specific ?closure_writes general loc
+    new_value (Var spec) state specific ?closure_writes ~provider general loc
 
   let new_type_ type_binding_kind state loc type_ =
     Type { type_binding_kind; type_state = state; type_loc = loc; type_ }
@@ -242,11 +251,9 @@ module Entry = struct
         in
         (match (on_call, v.closure_writes) with
         | (Some widen_on_call, Some (_, t)) ->
-          let t = widen_on_call v.specific t (TypeUtil.type_t_of_annotated_or_inferred v.general) in
+          let t = widen_on_call v.specific t v.provider in
           Value { v with specific = t; value_state }
-        | _ ->
-          Value
-            { v with specific = TypeUtil.type_t_of_annotated_or_inferred v.general; value_state })
+        | _ -> Value { v with specific = v.provider; value_state })
     | Class _ -> entry
 
   let reset loc name entry =

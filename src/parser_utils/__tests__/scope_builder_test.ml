@@ -313,4 +313,8 @@ let tests =
                  (2, mk_loc (1, 19) (1, 35));
                  (3, mk_loc (1, 23) (1, 35));
                ];
+         "declare_export_default"
+         >:: mk_scope_builder_all_uses_test
+               "declare export default class Foo {}; new Foo()"
+               [mk_loc (1, 29) (1, 32); mk_loc (1, 41) (1, 44)];
        ]

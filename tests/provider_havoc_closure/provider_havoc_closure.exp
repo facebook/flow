@@ -1,0 +1,218 @@
+Error ------------------------------------------------------------------------------------------------- Closure.js:16:14
+
+Cannot assign `42` to `global_x` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   Closure.js:16:14
+   16|   global_x = 42; // blame
+                    ^^ [1]
+
+References:
+   Closure.js:12:16
+   12| var global_x = 'hello';
+                      ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- Closure.js:25:12
+
+Cannot assign `42` to `global_x` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   Closure.js:25:12
+   25| global_x = 42; // blame
+                  ^^ [1]
+
+References:
+   Closure.js:12:16
+   12| var global_x = 'hello';
+                      ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- Closure.js:35:15
+
+Cannot assign `42` to `local_x` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   Closure.js:35:15
+   35|     local_x = 42; // blame
+                     ^^ [1]
+
+References:
+   Closure.js:31:17
+   31|   var local_x = 'hello';
+                       ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- Closure.js:44:13
+
+Cannot assign `42` to `local_x` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   Closure.js:44:13
+   44|   local_x = 42; // error
+                   ^^ [1]
+
+References:
+   Closure.js:31:17
+   31|   var local_x = 'hello';
+                       ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- Closure.js:55:16
+
+Cannot assign `42` to `global_y` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   Closure.js:55:16
+   55|     global_y = 42; // blame
+                      ^^ [1]
+
+References:
+   Closure.js:50:16
+   50| var global_y = 'hello';
+                      ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- Closure.js:65:12
+
+Cannot assign `42` to `global_y` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   Closure.js:65:12
+   65| global_y = 42; // error
+                  ^^ [1]
+
+References:
+   Closure.js:50:16
+   50| var global_y = 'hello';
+                      ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- Closure.js:76:17
+
+Cannot assign `42` to `local_y` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   Closure.js:76:17
+   76|       local_y = 42;
+                       ^^ [1]
+
+References:
+   Closure.js:71:17
+   71|   var local_y = 'hello';
+                       ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- Closure.js:86:13
+
+Cannot assign `42` to `local_y` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   Closure.js:86:13
+   86|   local_y = 42; // error
+                   ^^ [1]
+
+References:
+   Closure.js:71:17
+   71|   var local_y = 'hello';
+                       ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- Closure.js:91:9
+
+Cannot assign `10` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   Closure.js:91:9
+   91|     x = 10; // error
+               ^^ [1]
+
+References:
+   Closure.js:93:11
+   93|   var x = 'hello world';
+                 ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- Closure.js:105:6
+
+Cannot cast `x` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   Closure.js:105:6
+   105|     (x: string); // error
+             ^
+
+References:
+   Closure.js:102:10
+   102|   var x: number | string = 'hello world';
+                 ^^^^^^ [1]
+   Closure.js:105:9
+   105|     (x: string); // error
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- Closure.js:132:4
+
+Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   Closure.js:132:4
+   132|   (x: void); // should error
+           ^
+
+References:
+   Closure.js:126:10
+   126|   var x: number;
+                 ^^^^^^ [1]
+   Closure.js:132:7
+   132|   (x: void); // should error
+              ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- Closure.js:136:3
+
+Cannot resolve name `x`. [cannot-resolve-name]
+
+   136|   x; // expected error
+          ^
+
+
+Error ------------------------------------------------------------------------------------------------- Closure.js:141:4
+
+Cannot cast `x` to undefined because number [1] is incompatible with undefined [2]. [incompatible-cast]
+
+   Closure.js:141:4
+   141|   (x: void); // should error
+           ^
+
+References:
+   Closure.js:138:9
+   138|     x = 42;
+                ^^ [1]
+   Closure.js:141:7
+   141|   (x: void); // should error
+              ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- cond_havoc.js:8:22
+
+Cannot assign empty string to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   cond_havoc.js:8:22
+   8|   function f() { x = "" }
+                           ^^ [1]
+
+References:
+   cond_havoc.js:7:11
+   7|   var x = 0;
+                ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- const.js:20:38
+
+Cannot assign `var_x` to `y` because null or undefined [1] is incompatible with number [2]. [incompatible-type]
+
+   const.js:20:38
+   20|     call_me = () => { var y:number = var_x; };  // error
+                                            ^^^^^
+
+References:
+   const.js:9:15
+    9| function g(x: ?number) {
+                     ^^^^^^^ [1]
+   const.js:20:29
+   20|     call_me = () => { var y:number = var_x; };  // error
+                                   ^^^^^^ [2]
+
+
+
+Found 15 errors
