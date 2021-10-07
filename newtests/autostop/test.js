@@ -23,16 +23,17 @@ module.exports = (suite(
           }),
         ),
       flowCmd(['status'], undefined, false).waitUntilLSPMessage(0, ''),
-      // this next step passes because of the buggy behavior.
-      // this test should be updated once the behavior is fixed
       waitUntilLSPMessage(
         5000,
-        'window/showStatus',
+        'telemetry/connectionStatus',
         JSON.stringify({
-          message: 'Flow: server is stopped',
+          isConnected: true,
         }),
       ).verifyAllLSPMessagesInStep(
-        [['window/showStatus', 'Flow: server is stopped']],
+        [
+          {method: 'telemetry/connectionStatus', params: {isConnected: true}},
+          ['window/showStatus', 'Flow is ready.'],
+        ],
         [],
       ),
     ]),
