@@ -918,6 +918,9 @@ let y = undefined;
         (3, 1) to (3, 2) => {
           (1, 4) to (1, 5): (`x`)
         };
+        (3, 11) to (3, 12) => {
+          (2, 4) to (2, 5): (`y`)
+        };
         (3, 17) to (3, 18) => {
           {refinement = SentinelR foo; writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
@@ -936,6 +939,9 @@ let y = undefined;
         };
         (3, 1) to (3, 2) => {
           (1, 4) to (1, 5): (`x`)
+        };
+        (3, 14) to (3, 15) => {
+          (2, 4) to (2, 5): (`y`)
         };
         (3, 20) to (3, 21) => {
           {refinement = SentinelR foo; writes = (1, 4) to (1, 5): (`x`)}
@@ -1024,6 +1030,9 @@ x.foo && x|};
         (1, 8) to (1, 17) => {
           Global undefined
         };
+        (2, 0) to (2, 1) => {
+          (1, 4) to (1, 5): (`x`)
+        };
         (2, 9) to (2, 10) => {
           {refinement = SentinelR foo; writes = (1, 4) to (1, 5): (`x`)}
         }] |}]
@@ -1035,6 +1044,9 @@ x?.foo && x|};
       [
         (1, 8) to (1, 17) => {
           Global undefined
+        };
+        (2, 0) to (2, 1) => {
+          (1, 4) to (1, 5): (`x`)
         };
         (2, 10) to (2, 11) => {
           {refinement = And (SentinelR foo, Not (Maybe)); writes = (1, 4) to (1, 5): (`x`)}

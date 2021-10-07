@@ -1999,6 +1999,7 @@ module Make
                       (ploc, Expression.Literal { Literal.value = Literal.String prop_name; _ }) );
                 _;
               } ) ->
+          let (_ : ('a, 'b) Ast.Expression.t) = this#expression _object in
           (match key _object with
           | Some name ->
             let refinement = SentinelR (prop_name, ploc) in
@@ -2010,7 +2011,7 @@ module Make
             in
             this#add_refinement name (L.LSet.singleton loc, refinement)
           | None -> ())
-        | _ -> ());
+        | _ -> ignore (this#expression expr : ('a, 'b) Ast.Expression.t));
         (* We return the refinement to the callers to handle specially. null_test and void_test have the
          * most interesting behaviors *)
         match key_of_optional_chain expr with
@@ -2147,10 +2148,12 @@ module Make
          * chains by ignoring the output of maybe_sentinel_and_chain_refinement.
          *
          * NOTE: Switch statements do not introduce sentinel refinements *)
-        | (((_, Expression.Member _) as expr), _) ->
+        | (((_, Expression.Member _) as expr), other) ->
           ignore @@ this#expression expr;
-          ignore @@ this#maybe_sentinel_and_chain_refinement ~sense loc expr
-        | (_, ((_, Expression.Member _) as expr)) when not (cond_context = SwitchTest) ->
+          ignore @@ this#maybe_sentinel_and_chain_refinement ~sense loc expr;
+          ignore @@ this#expression other
+        | (other, ((_, Expression.Member _) as expr)) when not (cond_context = SwitchTest) ->
+          ignore @@ this#expression other;
           ignore @@ this#expression expr;
           ignore @@ this#maybe_sentinel_and_chain_refinement ~sense loc expr
         | _ ->
