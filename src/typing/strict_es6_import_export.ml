@@ -157,6 +157,16 @@ class this_visitor =
 
 (* Visitor that uses the previously found declaration info to check for errors in imports/exports. *)
 class import_export_visitor ~cx ~scope_info ~declarations =
+  (* Create a map from import star use locs to the import star specifier *)
+  let import_star_uses =
+    ALocMap.fold
+      (fun def_loc specifier all_uses ->
+        let def = Scopes.def_of_use scope_info def_loc in
+        let uses = Scopes.uses_of_def scope_info def in
+        ALocSet.fold (fun use_loc all_uses -> ALocMap.add use_loc specifier all_uses) uses all_uses)
+      declarations.import_stars
+      ALocMap.empty
+  in
   object (this)
     inherit [unit, ALoc.t] Flow_ast_visitor.visitor ~init:() as super
 
@@ -191,21 +201,7 @@ class import_export_visitor ~cx ~scope_info ~declarations =
     method private add_export_named_default_error loc name is_reexport =
       this#add_error (Error_message.EExportRenamedDefault { loc; name; is_reexport })
 
-    method private import_star_from_use =
-      (* Create a map from import star use locs to the import star specifier *)
-      let import_star_uses =
-        ALocMap.fold
-          (fun def_loc specifier all_uses ->
-            let def = Scopes.def_of_use scope_info def_loc in
-            let uses = Scopes.uses_of_def scope_info def in
-            ALocSet.fold
-              (fun use_loc all_uses -> ALocMap.add use_loc specifier all_uses)
-              uses
-              all_uses)
-          declarations.import_stars
-          ALocMap.empty
-      in
-      (fun use -> ALocMap.find_opt use import_star_uses)
+    method private import_star_from_use use = ALocMap.find_opt use import_star_uses
 
     method private is_import_star_use use = this#import_star_from_use use <> None
 
