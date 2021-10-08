@@ -181,6 +181,7 @@ module type S = sig
   val program :
     ast:(L.t, L.t) Flow_ast.Program.t ->
     module_ref_prefix:string option ->
+    enable_relay_integration:bool ->
     (tolerable_t, error) result
 
   (* Use for debugging; not for exposing info to the end user *)

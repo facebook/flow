@@ -1,1 +1,27 @@
-Found 0 errors
+Error ------------------------------------------------------------------------------------------------------ test.js:3:1
+
+Cannot resolve module `MissingFile.graphql`. [cannot-resolve-module]
+
+   3| graphql`MissingFile`; // ERROR
+      ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:8:2
+
+Cannot cast `fragment` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:8:2
+   8| (fragment: string); // ERROR
+       ^^^^^^^^
+
+References:
+   MyFragment.graphql.js:1:18
+   1| module.exports = 1;
+                       ^ [1]
+   test.js:8:12
+   8| (fragment: string); // ERROR
+                 ^^^^^^ [2]
+
+
+
+Found 2 errors

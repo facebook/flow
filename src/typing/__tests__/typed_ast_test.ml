@@ -77,7 +77,7 @@ let parse_content file content =
   let (ast, _parse_errors) =
     Parser_flow.program_file ~fail:false ~parse_options content (Some file)
   in
-  match File_sig.program ~ast ~module_ref_prefix:None with
+  match File_sig.program ~ast ~module_ref_prefix:None ~enable_relay_integration:false with
   | Ok (fsig, _) -> Ok (ast, fsig)
   | Error e -> Error e
 

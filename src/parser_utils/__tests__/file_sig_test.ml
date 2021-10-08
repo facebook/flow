@@ -8,15 +8,16 @@
 open OUnit2
 open File_sig.With_Loc
 
-let visit ?parse_options ?(module_ref_prefix = None) source =
+let visit ?parse_options ?(module_ref_prefix = None) ?(enable_relay_integration = false) source =
   let (ast, _) = Parser_flow.program ~parse_options source in
-  match program ~ast ~module_ref_prefix with
+  match program ~ast ~module_ref_prefix ~enable_relay_integration with
   | Ok (fsig, _) -> fsig
   | Error _ -> assert_failure "Unexpected error"
 
-let visit_err ?parse_options ?(module_ref_prefix = None) source =
+let visit_err ?parse_options ?(module_ref_prefix = None) ?(enable_relay_integration = false) source
+    =
   let (ast, _) = Parser_flow.program ~parse_options source in
-  match program ~ast ~module_ref_prefix with
+  match program ~ast ~module_ref_prefix ~enable_relay_integration with
   | Error e -> e
   | Ok _ -> assert_failure "Unexpected success"
 
@@ -226,6 +227,14 @@ let tests =
            | [Require { source = (source_loc, "foo"); require_loc; _ }] ->
              assert_substring_equal ~ctxt "'m#foo'" source source_loc;
              assert_substring_equal ~ctxt "'m#foo'" source require_loc
+           | _ -> assert_failure "Unexpected requires" );
+         ( "relay_integration" >:: fun ctxt ->
+           let source = "graphql`foo`" in
+           let { module_sig = { requires; _ }; _ } = visit source ~enable_relay_integration:true in
+           match requires with
+           | [Require { source = (source_loc, "foo.graphql"); require_loc; _ }] ->
+             assert_substring_equal ~ctxt "graphql`foo`" source source_loc;
+             assert_substring_equal ~ctxt "graphql`foo`" source require_loc
            | _ -> assert_failure "Unexpected requires" );
          ( "dynamic_import" >:: fun ctxt ->
            let source = "import('foo')" in

@@ -33,6 +33,7 @@ type options = {
   exact_by_default: bool;
   module_ref_prefix: string option;
   enable_enums: bool;
+  enable_relay_integration: bool;
 }
 
 (* This type encodes the fixed point of parsed signatures. Of particular note
@@ -2381,6 +2382,13 @@ let template_literal opts tbls loc quasis =
     string_literal opts tbls loc s
   | _ -> Value (StringVal loc)
 
+let graphql_literal _ tbls loc quasi =
+  match Graphql.extract_module_name quasi with
+  | Some module_name ->
+    let mref = push_module_ref tbls module_name in
+    Require { loc; mref }
+  | None -> Annot (Any loc)
+
 let key_mirror =
   let module O = Ast.Expression.Object in
   let module P = O.Property in
@@ -2473,6 +2481,14 @@ let rec expression opts scope tbls (loc, expr) =
   let loc = push_loc tbls loc in
   match expr with
   | E.Literal { Ast.Literal.value; raw; comments = _ } -> literal opts tbls loc value raw
+  | E.TaggedTemplate
+      {
+        E.TaggedTemplate.tag = (_, E.Identifier (_, { Ast.Identifier.name = "graphql"; _ }));
+        quasi;
+        comments = _;
+      }
+    when opts.enable_relay_integration ->
+    graphql_literal opts tbls loc quasi
   | E.TemplateLiteral { E.TemplateLiteral.quasis; expressions = _; comments = _ } ->
     template_literal opts tbls loc quasis
   | E.Identifier id ->
