@@ -25,6 +25,8 @@ val push_files_to_recheck :
   SSet.t ->
   unit
 
+val push_files_to_prioritize : reason:LspProt.recheck_reason -> SSet.t -> unit
+
 val push_files_to_force_focused_and_recheck :
   ?callback:(Profiling_js.finished option -> unit) ->
   reason:LspProt.recheck_reason ->
@@ -59,6 +61,7 @@ val wait_for_updates_for_recheck :
 
 (* APIs to consume *)
 type recheck_workload = {
+  files_to_prioritize: Utils_js.FilenameSet.t;
   files_to_recheck: Utils_js.FilenameSet.t;
   files_to_force: CheckedSet.t;
   profiling_callbacks: (Profiling_js.finished option -> unit) list;

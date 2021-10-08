@@ -838,7 +838,7 @@ let handle_unexpected_file_changes changed_files =
       | _ -> Many_files_changed { file_count = Nel.length filenames })
   in
   let filename_set = filenames |> Nel.to_list |> SSet.of_list in
-  ServerMonitorListenerState.push_files_to_recheck ~reason filename_set;
+  ServerMonitorListenerState.push_files_to_prioritize ~reason filename_set;
   raise Lwt.Canceled
 
 let ensure_parsed ~options ~profiling ~workers ~reader files =
