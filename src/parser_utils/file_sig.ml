@@ -495,11 +495,11 @@ struct
         | (_, Ast.Expression.Identifier (_, { Ast.Identifier.name = "graphql"; _ }))
           when enable_relay_integration ->
           (match Graphql.extract_module_name quasi with
-          | Some module_name ->
+          | Ok module_name ->
             this#add_require
               (Require { source = (loc, module_name); require_loc = loc; bindings = None });
             expr
-          | None -> expr)
+          | Error _ -> expr)
         | _ -> super#tagged_template loc expr
 
       method! import import_loc (expr : (L.t, L.t) Ast.Expression.Import.t) =

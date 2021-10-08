@@ -2384,10 +2384,10 @@ let template_literal opts tbls loc quasis =
 
 let graphql_literal _ tbls loc quasi =
   match Graphql.extract_module_name quasi with
-  | Some module_name ->
+  | Ok module_name ->
     let mref = push_module_ref tbls module_name in
     Require { loc; mref }
-  | None -> Annot (Any loc)
+  | Error _ -> Annot (Any loc)
 
 let key_mirror =
   let module O = Ast.Expression.Object in

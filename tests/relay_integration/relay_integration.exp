@@ -108,5 +108,48 @@ References:
                             ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:73:1
 
-Found 7 errors
+Expected a GraphQL fragment, query, mutation, or subscription. [invalid-graphql]
+
+   73| graphql``; // ERROR
+       ^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:74:1
+
+Template literal substitutions are not allowed in GraphQL literals. [invalid-graphql]
+
+   74| graphql`query MyQuery {${fragment}}`; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:75:1
+
+Expected a GraphQL fragment, query, mutation, or subscription. [invalid-graphql]
+
+   75| graphql`boop MyBoop {}`; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:76:1
+
+Expected exactly one definition per GraphQL tag. [invalid-graphql]
+
+       v---------------
+   76| graphql` # ERROR
+   77|   fragment MyFragment on User {
+   78|     friends {
+   79|       count
+   80|     }
+   81|   }
+   82|   query MyQuery {
+   83|     friends {
+   84|       count
+   85|     }
+   86|   }`;
+         -^
+
+
+
+Found 11 errors

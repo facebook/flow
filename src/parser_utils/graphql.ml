@@ -7,6 +7,11 @@
 
 open Utils_js
 
+type error =
+  | InvalidTaggedTemplate
+  | InvalidGraphQL
+  | MultipleDefinitions
+
 (**
  * GraphQL spec references:
  * Comment: https://spec.graphql.org/June2018/#sec-Comments
@@ -42,12 +47,12 @@ let extract_module_name quasi =
       (* We only allow one query/mutation/subscription/fragment per literal. *)
       try
         ignore @@ Str.search_forward name_regexp comment_free (Str.match_end ());
-        None
+        Error MultipleDefinitions
       with
       | Not_found ->
         (* TODO: handle output for non-haste *)
         let module_name = spf "%s.graphql" name in
-        Some module_name
+        Ok module_name
     else
-      None
-  | _ -> None
+      Error InvalidGraphQL
+  | _ -> Error InvalidTaggedTemplate

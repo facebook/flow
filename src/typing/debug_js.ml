@@ -1767,6 +1767,14 @@ let dump_error_message =
         (string_of_use_op use_op)
         (dump_reason cx reason_op)
         (dump_reason cx reason_prop)
+    | EInvalidGraphQL (loc, err) ->
+      let err_str =
+        match err with
+        | Graphql.InvalidTaggedTemplate -> "invalid tagged template"
+        | Graphql.InvalidGraphQL -> "invalid graphql"
+        | Graphql.MultipleDefinitions -> "multiple definitions"
+      in
+      spf "EInvalidGraphQL (%s) (%s)" (string_of_aloc loc) err_str
 
 module Verbose = struct
   let verbose_in_file cx verbose =

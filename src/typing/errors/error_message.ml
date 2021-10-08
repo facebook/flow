@@ -434,6 +434,7 @@ and 'loc t' =
       declaration: 'loc virtual_reason;
       null_write: 'loc null_write option;
     }
+  | EInvalidGraphQL of 'loc * Graphql.error
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -1011,6 +1012,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
             ~f:(fun ({ null_loc; _ } as nw) -> { nw with null_loc = f null_loc })
             null_write;
       }
+  | EInvalidGraphQL (loc, err) -> EInvalidGraphQL (f loc, err)
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1227,7 +1229,8 @@ let util_use_op_of_msg nope util = function
   | EClassToObject _
   | EMethodUnbinding _
   | EObjectThisReference _
-  | EInvalidDeclaration _ ->
+  | EInvalidDeclaration _
+  | EInvalidGraphQL _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1372,7 +1375,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EMalformedCode loc
   | EImplicitInstantiationTemporaryError (loc, _)
   | EObjectThisReference (loc, _)
-  | EImportInternalReactServerModule loc ->
+  | EImportInternalReactServerModule loc
+  | EInvalidGraphQL (loc, _) ->
     Some loc
   | EImplicitInstantiationUnderconstrainedError { reason_call; _ } ->
     Some (poly_loc_of_reason reason_call)
@@ -3658,6 +3662,16 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           ];
         use_op;
       }
+  | EInvalidGraphQL (_, err) ->
+    let features =
+      match err with
+      | Graphql.InvalidTaggedTemplate ->
+        [text "Template literal substitutions are not allowed in GraphQL literals."]
+      | Graphql.InvalidGraphQL ->
+        [text "Expected a GraphQL fragment, query, mutation, or subscription."]
+      | Graphql.MultipleDefinitions -> [text "Expected exactly one definition per GraphQL tag."]
+    in
+    Normal { features }
 
 let is_lint_error = function
   | EUntypedTypeImport _
@@ -3917,6 +3931,7 @@ let error_code_of_message err : error_code option =
     Some ValueAsType
   | EClassToObject _ -> Some ClassObject
   | EMethodUnbinding _ -> Some MethodUnbinding
+  | EInvalidGraphQL _ -> Some InvalidGraphQL
   (* lints should match their lint name *)
   | EUntypedTypeImport _
   | EUntypedImport _
