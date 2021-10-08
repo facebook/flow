@@ -29,6 +29,7 @@ let metadata =
     enable_const_params = false;
     enable_enums = true;
     enable_indexed_access = true;
+    enable_relay_integration = false;
     env_mode = Options.ClassicEnv [];
     enforce_strict_call_arity = true;
     enforce_local_inference_annotations = false;

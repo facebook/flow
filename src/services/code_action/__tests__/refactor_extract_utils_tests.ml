@@ -39,6 +39,7 @@ let stub_metadata ~root ~checked =
     enable_const_params = false;
     enable_enums = true;
     enable_indexed_access = true;
+    enable_relay_integration = false;
     enforce_local_inference_annotations = false;
     local_inference_annotation_dirs = [];
     experimental_infer_indexers = false;
