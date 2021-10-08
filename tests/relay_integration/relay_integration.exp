@@ -2,26 +2,111 @@ Error --------------------------------------------------------------------------
 
 Cannot resolve module `MissingFile.graphql`. [cannot-resolve-module]
 
-   3| graphql`MissingFile`; // ERROR
-      ^^^^^^^^^^^^^^^^^^^^
+   3| graphql`query MissingFile { foo }`; // ERROR
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------------ test.js:8:2
+Error ----------------------------------------------------------------------------------------------------- test.js:13:2
 
 Cannot cast `fragment` to string because number [1] is incompatible with string [2]. [incompatible-cast]
 
-   test.js:8:2
-   8| (fragment: string); // ERROR
-       ^^^^^^^^
+   test.js:13:2
+   13| (fragment: string); // ERROR
+        ^^^^^^^^
 
 References:
    MyFragment.graphql.js:1:18
-   1| module.exports = 1;
-                       ^ [1]
-   test.js:8:12
-   8| (fragment: string); // ERROR
-                 ^^^^^^ [2]
+    1| module.exports = 1;
+                        ^ [1]
+   test.js:13:12
+   13| (fragment: string); // ERROR
+                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:23:2
+
+Cannot cast `query` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:23:2
+   23| (query: string); // ERROR
+        ^^^^^
+
+References:
+   MyQuery.graphql.js:1:18
+    1| module.exports = 2;
+                        ^ [1]
+   test.js:23:9
+   23| (query: string); // ERROR
+               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:33:2
+
+Cannot cast `mutation` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:33:2
+   33| (mutation: string); // ERROR
+        ^^^^^^^^
+
+References:
+   MyMutation.graphql.js:1:18
+    1| module.exports = 3;
+                        ^ [1]
+   test.js:33:12
+   33| (mutation: string); // ERROR
+                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:43:2
+
+Cannot cast `subscription` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:43:2
+   43| (subscription: string); // ERROR
+        ^^^^^^^^^^^^
+
+References:
+   MySubscription.graphql.js:1:18
+    1| module.exports = 4;
+                        ^ [1]
+   test.js:43:16
+   43| (subscription: string); // ERROR
+                      ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:57:2
+
+Cannot cast `fragmentWithComment` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:57:2
+   57| (fragmentWithComment: string); // ERROR
+        ^^^^^^^^^^^^^^^^^^^
+
+References:
+   MyFragment.graphql.js:1:18
+    1| module.exports = 1;
+                        ^ [1]
+   test.js:57:23
+   57| (fragmentWithComment: string); // ERROR
+                             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:71:2
+
+Cannot cast `fragmentWithCommas` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   test.js:71:2
+   71| (fragmentWithCommas: string); // ERROR
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   MyFragment.graphql.js:1:18
+    1| module.exports = 1;
+                        ^ [1]
+   test.js:71:22
+   71| (fragmentWithCommas: string); // ERROR
+                            ^^^^^^ [2]
 
 
 
-Found 2 errors
+Found 7 errors

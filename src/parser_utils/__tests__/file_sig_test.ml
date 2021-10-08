@@ -229,12 +229,12 @@ let tests =
              assert_substring_equal ~ctxt "'m#foo'" source require_loc
            | _ -> assert_failure "Unexpected requires" );
          ( "relay_integration" >:: fun ctxt ->
-           let source = "graphql`foo`" in
+           let source = "graphql`query foo {}`" in
            let { module_sig = { requires; _ }; _ } = visit source ~enable_relay_integration:true in
            match requires with
            | [Require { source = (source_loc, "foo.graphql"); require_loc; _ }] ->
-             assert_substring_equal ~ctxt "graphql`foo`" source source_loc;
-             assert_substring_equal ~ctxt "graphql`foo`" source require_loc
+             assert_substring_equal ~ctxt "graphql`query foo {}`" source source_loc;
+             assert_substring_equal ~ctxt "graphql`query foo {}`" source require_loc
            | _ -> assert_failure "Unexpected requires" );
          ( "dynamic_import" >:: fun ctxt ->
            let source = "import('foo')" in
