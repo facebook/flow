@@ -1665,10 +1665,10 @@ let%expect_test "import_dynamic" =
 
 let%expect_test "enable_relay_integration" =
   print_sig ~enable_relay_integration:true {|
-    module.exports = graphql`foo`;
+    module.exports = graphql`query foo {}`;
   |};
   [%expect {|
-    CJSModule {type_exports = [||]; exports = (Some Require {loc = [1:17-29]; index = 0});
+    CJSModule {type_exports = [||]; exports = (Some Require {loc = [1:17-38]; index = 0});
       info = CJSModuleInfo {type_export_keys = [||]; type_stars = []; strict = true}}
 
     Module refs:
