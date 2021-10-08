@@ -342,7 +342,7 @@ struct
   (* Subclass of the AST visitor class that calculates requires and exports. Initializes with the
      scope builder class.
   *)
-  class requires_exports_calculator ~ast ~module_ref_prefix =
+  class requires_exports_calculator ~ast ~module_ref_prefix ~enable_relay_integration =
     object (this)
       inherit
         [(t * tolerable_error list, error) result, L.t] visitor ~init:(Ok (empty, [])) as super
@@ -487,6 +487,20 @@ struct
         let open Ast.Literal in
         this#handle_literal loc expr.value;
         super#literal loc expr
+
+      method! tagged_template loc (expr : ('loc, 'loc) Ast.Expression.TaggedTemplate.t) =
+        let open Ast.Expression.TaggedTemplate in
+        let { tag; quasi; comments = _ } = expr in
+        match tag with
+        | (_, Ast.Expression.Identifier (_, { Ast.Identifier.name = "graphql"; _ }))
+          when enable_relay_integration ->
+          (match Graphql.extract_module_name quasi with
+          | Some module_name ->
+            this#add_require
+              (Require { source = (loc, module_name); require_loc = loc; bindings = None });
+            expr
+          | None -> expr)
+        | _ -> super#tagged_template loc expr
 
       method! import import_loc (expr : (L.t, L.t) Ast.Expression.Import.t) =
         let open Ast.Expression in
@@ -1027,8 +1041,8 @@ struct
     | CommonJS _ -> tolerable_errors
     | ES _ -> []
 
-  let program ~ast ~module_ref_prefix =
-    let walk = new requires_exports_calculator ~ast ~module_ref_prefix in
+  let program ~ast ~module_ref_prefix ~enable_relay_integration =
+    let walk = new requires_exports_calculator ~ast ~module_ref_prefix ~enable_relay_integration in
     match walk#eval walk#program ast with
     | Ok (exports, tolerable_errors) ->
       let module_kind = exports.module_sig.module_kind in

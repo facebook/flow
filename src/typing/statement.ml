@@ -3528,6 +3528,31 @@ module Make (Env : Env_sig.S) = struct
       let reason = Ast.Function.(func_reason ~async:func.async ~generator:func.generator loc) in
       let (t, f) = mk_arrow cx ~annot reason func in
       ((loc, t), ArrowFunction f)
+    (*
+     * GraphQL literals, e.g.:
+     * graphql`fragment Foo {}`
+     *)
+    | TaggedTemplate
+        {
+          TaggedTemplate.tag = (_, Identifier (_, { Ast.Identifier.name = "graphql"; _ })) as tag;
+          quasi;
+          comments;
+        }
+      when Context.enable_relay_integration cx ->
+      let t =
+        match Graphql.extract_module_name quasi with
+        | Some module_name -> Import_export.require cx (loc, module_name) loc
+        | None ->
+          let reason = mk_reason (RCustom "graphql tag") loc in
+          AnyT.error reason
+      in
+      let tag_ast = expression cx ~annot:None tag in
+      let quasi_ast =
+        let (quasi_loc, { TemplateLiteral.quasis; expressions; comments }) = quasi in
+        let expressions = Base.List.map ~f:(expression cx ~annot:None) expressions in
+        (quasi_loc, { TemplateLiteral.quasis; expressions; comments })
+      in
+      ((loc, t), TaggedTemplate { TaggedTemplate.tag = tag_ast; quasi = quasi_ast; comments })
     | TaggedTemplate
         {
           TaggedTemplate.tag;
