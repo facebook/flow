@@ -69,6 +69,7 @@ type error_code =
   | InvalidExhaustiveCheck
   | InvalidExport
   | InvalidExportsTypeArg
+  | InvalidGraphQL
   | InvalidIdx
   | InvalidImportStarUse
   | InvalidImportType
@@ -239,6 +240,7 @@ let string_of_code : error_code -> string = function
   | InvalidExhaustiveCheck -> "invalid-exhaustive-check"
   | InvalidExport -> "invalid-export"
   | InvalidExportsTypeArg -> "invalid-exports-type-arg"
+  | InvalidGraphQL -> "invalid-graphql"
   | InvalidIdx -> "invalid-idx"
   | InvalidImportStarUse -> "invalid-import-star-use"
   | InvalidImportType -> "invalid-import-type"

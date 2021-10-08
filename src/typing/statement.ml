@@ -3541,8 +3541,9 @@ module Make (Env : Env_sig.S) = struct
       when Context.enable_relay_integration cx ->
       let t =
         match Graphql.extract_module_name quasi with
-        | Some module_name -> Import_export.require cx (loc, module_name) loc
-        | None ->
+        | Ok module_name -> Import_export.require cx (loc, module_name) loc
+        | Error err ->
+          Flow.add_output cx (Error_message.EInvalidGraphQL (loc, err));
           let reason = mk_reason (RCustom "graphql tag") loc in
           AnyT.error reason
       in
