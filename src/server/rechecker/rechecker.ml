@@ -203,7 +203,9 @@ let rec recheck_single ~files_to_force ~recheck_count genv env =
       get_and_clear_recheck_workload ~prioritize_dependency_checks ~process_updates ~get_forced
     in
     let file_watcher_metadata = workload.metadata in
-    let files_to_recheck = workload.files_to_recheck in
+    let files_to_recheck =
+      FilenameSet.union workload.files_to_prioritize workload.files_to_recheck
+    in
     let files_to_recheck =
       if file_watcher_metadata.MonitorProt.missed_changes then
         (* If the file watcher missed some changes, it's possible that previously-modified
