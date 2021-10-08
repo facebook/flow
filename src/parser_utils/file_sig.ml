@@ -22,6 +22,11 @@ struct
     declare_modules: (L.t * module_sig) SMap.t;
   }
 
+  and options = {
+    module_ref_prefix: string option;
+    enable_relay_integration: bool;
+  }
+
   and module_sig = {
     requires: require list;
     module_kind: module_kind;
@@ -122,6 +127,8 @@ struct
     }
 
   let empty = { module_sig = empty_module_sig; declare_modules = SMap.empty }
+
+  let default_opts = { module_ref_prefix = None; enable_relay_integration = false }
 
   module PP = struct
     let string_of_option f = function
@@ -342,7 +349,7 @@ struct
   (* Subclass of the AST visitor class that calculates requires and exports. Initializes with the
      scope builder class.
   *)
-  class requires_exports_calculator ~ast ~module_ref_prefix ~enable_relay_integration =
+  class requires_exports_calculator ~ast ~opts =
     object (this)
       inherit
         [(t * tolerable_error list, error) result, L.t] visitor ~init:(Ok (empty, [])) as super
@@ -493,7 +500,7 @@ struct
         let { tag; quasi; comments = _ } = expr in
         match tag with
         | (_, Ast.Expression.Identifier (_, { Ast.Identifier.name = "graphql"; _ }))
-          when enable_relay_integration ->
+          when opts.enable_relay_integration ->
           (match Graphql.extract_module_name quasi with
           | Ok module_name ->
             this#add_require
@@ -921,7 +928,7 @@ struct
 
       method private handle_literal loc lit =
         let open Ast.Literal in
-        match module_ref_prefix with
+        match opts.module_ref_prefix with
         | Some prefix ->
           begin
             match lit with
@@ -1041,8 +1048,8 @@ struct
     | CommonJS _ -> tolerable_errors
     | ES _ -> []
 
-  let program ~ast ~module_ref_prefix ~enable_relay_integration =
-    let walk = new requires_exports_calculator ~ast ~module_ref_prefix ~enable_relay_integration in
+  let program ~ast ~opts =
+    let walk = new requires_exports_calculator ~ast ~opts in
     match walk#eval walk#program ast with
     | Ok (exports, tolerable_errors) ->
       let module_kind = exports.module_sig.module_kind in

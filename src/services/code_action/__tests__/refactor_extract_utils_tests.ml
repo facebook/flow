@@ -70,7 +70,7 @@ let stub_metadata ~root ~checked =
 let dummy_filename = File_key.SourceFile ""
 
 let file_sig_of_ast ast =
-  match File_sig.With_Loc.program ~ast ~module_ref_prefix:None ~enable_relay_integration:false with
+  match File_sig.With_Loc.program ~ast ~opts:File_sig.With_Loc.default_opts with
   | Ok (a, _) -> File_sig.abstractify_locs a
   | Error _ -> failwith "failed to construct file signature"
 

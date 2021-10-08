@@ -8,16 +8,15 @@
 open OUnit2
 open File_sig.With_Loc
 
-let visit ?parse_options ?(module_ref_prefix = None) ?(enable_relay_integration = false) source =
+let visit ?parse_options ?(opts = default_opts) source =
   let (ast, _) = Parser_flow.program ~parse_options source in
-  match program ~ast ~module_ref_prefix ~enable_relay_integration with
+  match program ~ast ~opts with
   | Ok (fsig, _) -> fsig
   | Error _ -> assert_failure "Unexpected error"
 
-let visit_err ?parse_options ?(module_ref_prefix = None) ?(enable_relay_integration = false) source
-    =
+let visit_err ?parse_options ?(opts = default_opts) source =
   let (ast, _) = Parser_flow.program ~parse_options source in
-  match program ~ast ~module_ref_prefix ~enable_relay_integration with
+  match program ~ast ~opts with
   | Error e -> e
   | Ok _ -> assert_failure "Unexpected success"
 
@@ -222,7 +221,9 @@ let tests =
            | _ -> assert_failure "Unexpected requires" );
          ( "cjs_module_ref" >:: fun ctxt ->
            let source = "moduleRefConsumer('m#foo')" in
-           let { module_sig = { requires; _ }; _ } = visit source ~module_ref_prefix:(Some "m#") in
+           let { module_sig = { requires; _ }; _ } =
+             visit source ~opts:{ default_opts with module_ref_prefix = Some "m#" }
+           in
            match requires with
            | [Require { source = (source_loc, "foo"); require_loc; _ }] ->
              assert_substring_equal ~ctxt "'m#foo'" source source_loc;
@@ -230,7 +231,9 @@ let tests =
            | _ -> assert_failure "Unexpected requires" );
          ( "relay_integration" >:: fun ctxt ->
            let source = "graphql`query foo {}`" in
-           let { module_sig = { requires; _ }; _ } = visit source ~enable_relay_integration:true in
+           let { module_sig = { requires; _ }; _ } =
+             visit source ~opts:{ default_opts with enable_relay_integration = true }
+           in
            match requires with
            | [Require { source = (source_loc, "foo.graphql"); require_loc; _ }] ->
              assert_substring_equal ~ctxt "graphql`query foo {}`" source source_loc;

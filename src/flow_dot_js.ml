@@ -59,9 +59,7 @@ let parse_content file content =
     in
     Error converted
   else
-    match
-      File_sig.With_Loc.program ~ast ~module_ref_prefix:None ~enable_relay_integration:false
-    with
+    match File_sig.With_Loc.program ~ast ~opts:File_sig.With_Loc.default_opts with
     | Error e ->
       Error (Errors.ConcreteLocPrintableErrorSet.singleton (error_of_file_sig_error file e))
     | Ok (fsig, _tolerable_errors) -> Ok (ast, fsig)

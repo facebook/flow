@@ -22,6 +22,11 @@ module type S = sig
     declare_modules: (L.t * module_sig) SMap.t;
   }
 
+  and options = {
+    module_ref_prefix: string option;
+    enable_relay_integration: bool;
+  }
+
   (* We can extract the observable interface of a module by extracting information
    * about what it requires and what it exports. *)
   and module_sig = {
@@ -178,11 +183,9 @@ module type S = sig
 
   val empty : t
 
-  val program :
-    ast:(L.t, L.t) Flow_ast.Program.t ->
-    module_ref_prefix:string option ->
-    enable_relay_integration:bool ->
-    (tolerable_t, error) result
+  val default_opts : options
+
+  val program : ast:(L.t, L.t) Flow_ast.Program.t -> opts:options -> (tolerable_t, error) result
 
   (* Use for debugging; not for exposing info to the end user *)
   val to_string : t -> string
