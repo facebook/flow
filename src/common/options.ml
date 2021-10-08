@@ -91,6 +91,7 @@ type t = {
   opt_flowconfig_hash: string;
   opt_format: format;
   opt_gc_worker: gc_control;
+  opt_enable_relay_integration: bool;
   opt_haste_module_ref_prefix: string option;
   opt_haste_name_reducers: (Str.regexp * string) list;
   opt_haste_paths_excludes: string list;
@@ -170,6 +171,8 @@ let max_literal_length opts = opts.opt_max_literal_length
 let enable_const_params opts = opts.opt_enable_const_params
 
 let enable_indexed_access opts = opts.opt_enable_indexed_access
+
+let enable_relay_integration opts = opts.opt_enable_relay_integration
 
 let enabled_rollouts opts = opts.opt_enabled_rollouts
 

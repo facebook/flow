@@ -56,6 +56,7 @@ type metadata = {
   enable_const_params: bool;
   enable_enums: bool;
   enable_indexed_access: bool;
+  enable_relay_integration: bool;
   env_mode: Options.env_mode;
   enforce_strict_call_arity: bool;
   enforce_local_inference_annotations: bool;
@@ -158,6 +159,8 @@ val enable_const_params : t -> bool
 val enable_enums : t -> bool
 
 val enable_indexed_access : t -> bool
+
+val enable_relay_integration : t -> bool
 
 val env_mode : t -> Options.env_mode
 

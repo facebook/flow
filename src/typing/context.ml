@@ -35,6 +35,7 @@ type metadata = {
   enable_const_params: bool;
   enable_enums: bool;
   enable_indexed_access: bool;
+  enable_relay_integration: bool;
   env_mode: Options.env_mode;
   enforce_strict_call_arity: bool;
   enforce_local_inference_annotations: bool;
@@ -223,6 +224,7 @@ let metadata_of_options options =
     enable_const_params = Options.enable_const_params options;
     enable_enums = Options.enums options;
     enable_indexed_access = Options.enable_indexed_access options;
+    enable_relay_integration = Options.enable_relay_integration options;
     env_mode = Options.env_mode options;
     enforce_strict_call_arity = Options.enforce_strict_call_arity options;
     enforce_local_inference_annotations = Options.enforce_local_inference_annotations options;
@@ -402,6 +404,8 @@ let enable_const_params cx =
 let enable_enums cx = cx.metadata.enable_enums
 
 let enable_indexed_access cx = cx.metadata.enable_indexed_access
+
+let enable_relay_integration cx = cx.metadata.enable_relay_integration
 
 let env_mode cx = cx.metadata.env_mode
 
