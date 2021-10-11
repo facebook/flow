@@ -476,4 +476,47 @@ let tests =
                  |> add
                       (mk_loc (1, 23) (1, 24))
                       [Ssa_api.uninitialized; mk_write (1, 17) (1, 18) "b"]);
+         "for_issue"
+         >:: mk_ssa_builder_test
+               "for (var x in []) { x; x = 42; } x;"
+               LocMap.(
+                 empty
+                 |> add (mk_loc (1, 20) (1, 21)) [mk_write (1, 9) (1, 10) "x"]
+                 |> add
+                      (mk_loc (1, 33) (1, 34))
+                      [Ssa_api.uninitialized; mk_write (1, 23) (1, 24) "x"]);
+         "for_no_issue"
+         >:: mk_ssa_builder_test
+               "for (let x = 0;;) { x; x = 42; }"
+               LocMap.(
+                 empty
+                 |> add
+                      (mk_loc (1, 20) (1, 21))
+                      [mk_write (1, 9) (1, 10) "x"; mk_write (1, 23) (1, 24) "x"]);
+         "for_in_post"
+         >:: mk_ssa_builder_test
+               "var x = 42;
+              for (var x in y) {
+                x;
+                if (condition) {
+                  x = 42;
+                  x;
+                }
+                x;
+              }
+              x;"
+               LocMap.(
+                 empty
+                 |> add (mk_loc (3, 16) (3, 17)) [mk_write (2, 23) (2, 24) "x"]
+                 |> add (mk_loc (6, 18) (6, 19)) [mk_write (5, 18) (5, 19) "x"]
+                 |> add
+                      (mk_loc (8, 16) (8, 17))
+                      [mk_write (2, 23) (2, 24) "x"; mk_write (5, 18) (5, 19) "x"]
+                 |> add
+                      (mk_loc (10, 14) (10, 15))
+                      [
+                        mk_write (1, 4) (1, 5) "x";
+                        mk_write (2, 23) (2, 24) "x";
+                        mk_write (5, 18) (5, 19) "x";
+                      ]);
        ]
