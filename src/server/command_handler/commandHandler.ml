@@ -708,11 +708,15 @@ let convert_find_refs_result (result : FindRefsTypes.find_refs_ok) :
  * `ServerEnv.env`. *)
 let find_global_refs ~reader ~genv ~env ~profiling (file_input, line, col, multi_hop) =
   let env = ref env in
-  let%lwt (result, dep_count) =
+  let%lwt result =
     FindRefs_js.find_global_refs ~reader ~genv ~env ~profiling ~file_input ~line ~col ~multi_hop
   in
   let env = !env in
-  let result = Base.Result.map result ~f:convert_find_refs_result in
+  let (result, dep_count) =
+    match result with
+    | Ok (result, dep_count) -> (Ok (convert_find_refs_result result), dep_count)
+    | Error _ as err -> (err, None)
+  in
   Lwt.return (env, result, dep_count)
 
 let find_local_refs ~reader ~options ~env ~profiling (file_input, line, col) =

@@ -161,7 +161,7 @@ let rename ~reader ~genv ~env ~profiling ~file_input ~line ~col ~new_name =
   (* TODO verify that new name is a valid identifier *)
   (* TODO maybe do something with the json? *)
   (* TODO support rename based on multi-hop find-refs *)
-  let%lwt (find_refs_response, _) =
+  match%lwt
     FindRefs_js.find_global_refs
       ~reader
       ~genv
@@ -171,10 +171,10 @@ let rename ~reader ~genv ~env ~profiling ~file_input ~line ~col ~new_name =
       ~line
       ~col
       ~multi_hop:false
-  in
-  find_refs_response %>>= function
-  | None -> Lwt.return (Ok None)
-  | Some (_old_name, refs) ->
+  with
+  | Error _ as err -> Lwt.return err
+  | Ok (None, _dep_count) -> Lwt.return (Ok None)
+  | Ok (Some (_old_name, refs), _dep_count) ->
     (* TODO prevent naming conflicts *)
     (* TODO only rename renameable locations (e.g. not `default` in `export default`) *)
     split_by_source refs %>>= fun refs_by_file ->

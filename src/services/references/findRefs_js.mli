@@ -14,7 +14,7 @@ val find_global_refs :
   line:int ->
   col:int ->
   multi_hop:bool ->
-  (FindRefsTypes.find_refs_result * int option) Lwt.t
+  (FindRefsTypes.find_refs_ok * int option, string) result Lwt.t
 
 val find_local_refs :
   reader:State_reader.t ->
@@ -24,4 +24,4 @@ val find_local_refs :
   file_input:File_input.t ->
   line:int ->
   col:int ->
-  FindRefsTypes.find_refs_result Lwt.t
+  (FindRefsTypes.find_refs_ok, string) result Lwt.t
