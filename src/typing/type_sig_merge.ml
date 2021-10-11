@@ -547,15 +547,7 @@ module Make (ConsGen : CONS_GEN) : S = struct
       let t1 = merge file t1 in
       (* NB: tail-recursive map in case of very large types *)
       let ts = Base.List.map ~f:(merge file) ts in
-      let open Type in
-      let rep = UnionRep.make t0 t1 ts in
-      UnionRep.optimize
-        rep
-        ~reasonless_eq:TypeUtil.reasonless_eq
-        ~flatten:(Type_mapper.union_flatten file.cx)
-        ~find_resolved:(Context.find_resolved file.cx)
-        ~find_props:(Context.find_props file.cx);
-      UnionT (reason, rep)
+      Type.(UnionT (reason, UnionRep.make t0 t1 ts))
     | Intersection { loc; t0; t1; ts } ->
       let reason = Reason.(mk_annot_reason RIntersectionType loc) in
       let t0 = merge file t0 in
