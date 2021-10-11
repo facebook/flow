@@ -146,7 +146,7 @@ module.exports = (suite(({addFile, flowCmd}) => [
              },
              {
                "name": "charAt",
-               "type": "(pos: number) => string"
+               "type": "(index: number) => string"
              },
              {
                "name": "charCodeAt",
@@ -154,7 +154,7 @@ module.exports = (suite(({addFile, flowCmd}) => [
              },
              {
                "name": "codePointAt",
-               "type": "(index: number) => number"
+               "type": "(index: number) => (number | void)"
              },
              {
                "name": "concat",

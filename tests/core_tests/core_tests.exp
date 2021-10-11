@@ -171,6 +171,23 @@ References:
                              ^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- string.js:9:6
+
+Cannot cast `''.codePointAt(...)` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   string.js:9:6
+      9|     (''.codePointAt(123): number);
+              ^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:1092:42
+   1092|     codePointAt(index: number): number | void;
+                                                  ^^^^ [1]
+   string.js:9:27
+      9|     (''.codePointAt(123): number);
+                                   ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- weakset.js:19:23
 
 Cannot call `WeakSet` with array literal bound to `iterable` because in type argument `Yield` [1] of the return value of
@@ -275,4 +292,4 @@ References:
 
 
 
-Found 14 errors
+Found 15 errors
