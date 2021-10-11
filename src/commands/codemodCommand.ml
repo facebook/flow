@@ -269,6 +269,73 @@ module Annotate_lti_command = struct
   let command = CommandSpec.command spec main
 end
 
+module Annotate_declarations_command = struct
+  let doc =
+    "Annotates variable declarations with multiple conflicting assignments, as required for Flow's local type interence."
+
+  let spec =
+    let module Literals = Codemod_hardcoded_ty_fixes.PreserveLiterals in
+    let preserve_string_literals_level =
+      Literals.[("always", Always); ("never", Never); ("auto", Auto)]
+    in
+    {
+      CommandSpec.name = "annotate-declarations-experimental";
+      doc;
+      usage =
+        Printf.sprintf
+          "Usage: %s codemod annotate-declarations-experimental [OPTION]... [FILE]\n\n%s\n"
+          Utils_js.exe_name
+          doc;
+      args =
+        CommandSpec.ArgSpec.(
+          empty
+          |> CommandUtils.codemod_flags
+          |> flag
+               "--preserve-literals"
+               (required ~default:Literals.Never (enum preserve_string_literals_level))
+               ~doc:""
+          |> flag
+               "--max-type-size"
+               (required ~default:100 int)
+               ~doc:"The maximum number of nodes allowed in a single type annotation (default: 100)"
+          |> flag
+               "--default-any"
+               no_arg
+               ~doc:"Adds 'any' to all locations where normalization or validation fails");
+    }
+
+  let main codemod_flags preserve_literals max_type_size default_any () =
+    let open Codemod_utils in
+    let open Insert_type_utils in
+    let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
+      module Acc = Acc (Annotate_declarations.ErrorStats)
+
+      type accumulator = Acc.t
+
+      let reporter =
+        {
+          Codemod_report.report = Codemod_report.StringReporter Acc.report;
+          combine = Acc.combine;
+          empty = Acc.empty;
+        }
+
+      (* Match all files the codemod is run over *)
+      let check_options o =
+        let open Options in
+        match o.opt_env_mode with
+        | ClassicEnv opts when List.mem ConstrainWrites opts -> o
+        | ClassicEnv opts -> { o with opt_env_mode = ClassicEnv (ConstrainWrites :: opts) }
+        | SSAEnv -> { o with opt_env_mode = ClassicEnv [ConstrainWrites] }
+
+      let visit =
+        let mapper = Annotate_declarations.mapper ~preserve_literals ~max_type_size ~default_any in
+        Codemod_utils.make_visitor (Mapper mapper)
+    end) in
+    main (module Runner) codemod_flags ()
+
+  let command = CommandSpec.command spec main
+end
+
 module KeyMirror_command = struct
   let doc = "Replaces instances of the type $ObjMapi<T, <K>(K) => K> with $KeyMirror<T>"
 
@@ -376,6 +443,7 @@ let command =
         (Annotate_exports_command.spec.CommandSpec.name, Annotate_exports_command.command);
         (Annotate_escaped_generics.spec.CommandSpec.name, Annotate_escaped_generics.command);
         (Annotate_lti_command.spec.CommandSpec.name, Annotate_lti_command.command);
+        (Annotate_declarations_command.spec.CommandSpec.name, Annotate_declarations_command.command);
         (KeyMirror_command.spec.CommandSpec.name, KeyMirror_command.command);
         (Annotate_empty_object_command.spec.CommandSpec.name, Annotate_empty_object_command.command);
       ]

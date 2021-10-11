@@ -1,0 +1,115 @@
+>>> react.js (#changes: 1)
+//@flow
+import * as React from 'react';
+
+function Component1 (props: { label: string }) {
+  return <div>{props.label}</div>;
+}
+
+function Component2 (props: { id: number }) {
+  return <div>{props.id}</div>;
+}
+
+var component: React.Node = <Component1 label={"component"} />
+
+if (("some condition": any)) {
+  component = <Component2 id={42} />
+}
+
+>>> test.js (#changes: 9)
+// @flow
+
+var x: number | string = 42; // number | string
+x = "a";
+
+var y = null; // no change
+y = 42;
+
+var z: null | number | string = null; // null | number | string
+z = 42;
+z = "a";
+
+var w: boolean | number = 42; // number | bool, don't take on upper bound
+w = true;
+function ub(x: string) { }
+ub(w);
+
+class A { }
+class B extends A { }
+class C extends B { }
+
+var x1 = new B(); // no change
+x1 = new C();
+
+var x2: B | C = new C(); // C | B
+x2 = new B();
+
+var x3; // no change
+if (w) {
+  x3 = 42;
+} else {
+  x3 = "hello"
+}
+
+var x4: number | string | boolean; // number | string | boolean
+if (w) {
+  x4 = 42;
+} else {
+  x4 = "hello"
+}
+x4 = true;
+
+var x5: number | string | boolean; // number | string | boolean
+x5 = true;
+if (w) {
+  x5 = 42;
+} else {
+  x5 = "hello"
+}
+x5;
+
+declare var union: number | string | boolean;
+
+var x6: number | string | boolean = 42; // number | string | boolean
+x6 = "a";
+x6 = union;
+
+var x7: ?number = 42; // ?number
+declare var x7a: ?number;
+x7 = x7a;
+
+var x8: number = 42 // no change (already annotated as number)
+x8 = "hello";
+
+var x9: number | string = 42;
+if (w) {
+  x9 = "hello"
+}
+x9;
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            2
+  Number of annotations added:             10
+  Total size of annotations:               47
+  Number of constrained write errors:      10
+
+Errors:
+  Missing annot./normalizer error:          0
+  Validation Error:                         0
+  Import Error:
+    Loc source none:                        0
+    Parsing heaps get ast error:            0
+    Indeterminate module type:              0
+    No matching export:                     0
+  Serializer error:                         0
+  Unsupported error kind:                   0
+
+Warnings:
+  Skipping arrow function:                  0
+  Large type added:                         0
+  Location unhandled:                       0
+  Empty NoUpper:                            0
+  Empty SomeKnownUpper:                     0
+
