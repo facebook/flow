@@ -13,3 +13,7 @@ function g() {
 
 var y = f();
 y = g();
+
+var w = null;
+w = 42;
+w = "a";

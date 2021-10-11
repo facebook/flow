@@ -529,9 +529,11 @@ module Env : Env_sig.S = struct
 
   let constrain_by_provider cx ~use_op t name loc =
     match name with
-    | OrdinaryName _ when Options.env_option_enabled (Context.env_mode cx) Options.ConstrainWrites
-      ->
-      let ({ Loc_env.var_info = { Env_api.providers; _ }; _ } as env) = Context.environment cx in
+    | OrdinaryName ord_name
+      when Options.env_option_enabled (Context.env_mode cx) Options.ConstrainWrites ->
+      let ({ Loc_env.var_info = { Env_api.providers; scopes; _ }; _ } as env) =
+        Context.environment cx
+      in
       if not @@ Env_api.Provider_api.is_provider providers loc then
         let (fully_initialized, provider_locs) =
           Base.Option.value
@@ -553,15 +555,27 @@ module Env : Env_sig.S = struct
                 (spf "Missing providers at %s" (ALoc.debug_to_string ~include_source:true loc))
             | Some [] ->
               (* If we find an entry for the providers, but none that actually exist, its because this variable
-                 was never assigned to in scope, only in child scopes. We treat this as undefined. We handle erroring on
-                 these cases using a different approach (the error should be at the declaration, not the assignment). *)
+                 was never assigned to. We treat this as undefined. We handle erroring on
+                 these cases using a different approach (the error should be at the declaration,
+                 not the assignment). *)
               None
             | Some [t] -> Some t
             | Some (t1 :: t2 :: ts) ->
               Some (UnionT (mk_reason (RIdentifier name) loc, UnionRep.make t1 t2 ts))
           in
           Base.Option.iter provider ~f:(fun provider ->
-              Context.add_constrained_write cx (t, UseT (use_op, provider)))
+              match Scope_api.With_ALoc.(def_of_use_opt scopes loc) with
+              | Some { Scope_api.With_ALoc.Def.locs = (declaration, _); _ } ->
+                let use_op =
+                  Frame
+                    ( ConstrainedAssignment
+                        { name = ord_name; declaration; providers = provider_locs },
+                      use_op )
+                in
+                Context.add_constrained_write cx (t, UseT (use_op, provider))
+              | None ->
+                (* If there isn't a declaration for the variable, then it's a global, and we don't need to constrain it *)
+                ())
     | _ -> ()
 
   let can_shadow cx name prev loc =

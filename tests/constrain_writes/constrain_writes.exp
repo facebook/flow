@@ -29,5 +29,22 @@ References:
                 ^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:19:5
 
-Found 2 errors
+Cannot assign `"a"` to `w` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   test.js:19:5
+   19| w = "a";
+           ^^^ [1]
+
+References:
+   test.js:18:5
+   18| w = 42;
+           ^^ [2]
+
+
+
+Found 3 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

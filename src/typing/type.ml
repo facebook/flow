@@ -376,6 +376,11 @@ module rec TypeTerm : sig
     | UnknownUse
 
   and 'loc virtual_frame_use_op =
+    | ConstrainedAssignment of {
+        name: string;
+        declaration: 'loc;
+        providers: 'loc virtual_reason list;
+      }
     | ArrayElementCompatibility of {
         lower: 'loc virtual_reason;
         upper: 'loc virtual_reason;
@@ -3372,6 +3377,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | UnknownUse -> "UnknownUse"
 
 let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = function
+  | ConstrainedAssignment _ -> "ConstrainedAssignment"
   | ArrayElementCompatibility _ -> "ArrayElementCompatibility"
   | FunCompatibility _ -> "FunCompatibility"
   | FunMissingArg _ -> "FunMissingArg"

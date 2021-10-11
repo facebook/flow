@@ -280,7 +280,7 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
       | TypeArgCompatibility c -> TypeArgCompatibility { c with lower = c.upper; upper = c.lower }
       | ( CallFunCompatibility _ | TupleMapFunCompatibility _ | ObjMapFunCompatibility _
         | ObjMapiFunCompatibility _ | TypeParamBound _ | FunMissingArg _ | ImplicitTypeParam
-        | ReactGetConfig _ | UnifyFlip ) as use_op ->
+        | ReactGetConfig _ | UnifyFlip | ConstrainedAssignment _ ) as use_op ->
         use_op
     in
     (* Unification produces two errors. One for both sides. For example,
@@ -503,6 +503,7 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
                 ]
               in
               `Root (op, None, message)
+            | Frame (ConstrainedAssignment _, op) -> `Next op
             | Frame (ArrayElementCompatibility { lower; _ }, use_op) ->
               `Frame (lower, use_op, [text "array element"])
             | Frame (FunParam { n; lower; name; _ }, (Frame (FunCompatibility _, _) as use_op)) ->

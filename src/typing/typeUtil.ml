@@ -588,6 +588,9 @@ let rec mod_loc_of_virtual_use_op f =
     | UnknownUse -> UnknownUse
   in
   let mod_loc_of_frame_use_op = function
+    | ConstrainedAssignment { name; declaration; providers } ->
+      ConstrainedAssignment
+        { name; declaration = f declaration; providers = List.map mod_reason providers }
     | ArrayElementCompatibility { lower; upper } ->
       ArrayElementCompatibility { lower = mod_reason lower; upper = mod_reason upper }
     | FunCompatibility { lower; upper } ->

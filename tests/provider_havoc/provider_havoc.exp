@@ -14,20 +14,6 @@ Cannot resolve name `f`. [cannot-resolve-name]
       ^
 
 
-Error --------------------------------------------------------------------------------------- provider_edge_cases.js:9:7
-
-Cannot assign `42` to `f` because number [1] is incompatible with function [2]. [incompatible-type]
-
-   provider_edge_cases.js:9:7
-   9|   f = 42;
-            ^^ [1]
-
-References:
-   provider_edge_cases.js:8:5
-   8| f = function() {
-          ^^^^^^^^^^ [2]
-
-
 Error ---------------------------------------------------------------------------------------- providers_closure.js:16:6
 
 Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
@@ -148,4 +134,4 @@ References:
 
 
 
-Found 10 errors
+Found 9 errors
