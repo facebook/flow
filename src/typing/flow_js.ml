@@ -321,6 +321,163 @@ struct
   module CJSExtractNamedExportsTKit = CJSExtractNamedExportsT_kit (Import_export_helper)
   include InstantiationKit
 
+  (* get prop *)
+
+  let perform_lookup_action cx trace propref p target_kind lreason ureason =
+    let open FlowJs in
+    function
+    | LookupProp (use_op, up) -> rec_flow_p cx ~trace ~use_op lreason ureason propref (p, up)
+    | SuperProp (use_op, lp) -> rec_flow_p cx ~trace ~use_op ureason lreason propref (lp, p)
+    | ReadProp { use_op; obj_t = _; tout } ->
+      begin
+        match Property.read_t p with
+        | Some t ->
+          let loc = aloc_of_reason ureason in
+          rec_flow_t cx trace ~use_op:unknown_use (reposition cx ~trace loc t, OpenT tout)
+        | None ->
+          let (reason_prop, prop_name) =
+            match propref with
+            | Named (r, x) -> (r, Some x)
+            | Computed t -> (reason_of_t t, None)
+          in
+          let msg = Error_message.EPropNotReadable { reason_prop; prop_name; use_op } in
+          add_output cx ~trace msg
+      end
+    | WriteProp { use_op; obj_t = _; tin; write_ctx; prop_tout; mode } ->
+      begin
+        match (Property.write_t ~ctx:write_ctx p, target_kind, mode) with
+        | (Some t, IndexerProperty, Delete) ->
+          (* Always OK to delete a property we found via an indexer *)
+          let void = VoidT.why (reason_of_t t) |> with_trust literal_trust in
+          Base.Option.iter
+            ~f:(fun prop_tout -> rec_flow_t cx trace ~use_op:unknown_use (void, prop_tout))
+            prop_tout
+        | (Some t, _, _) ->
+          rec_flow cx trace (tin, UseT (use_op, t));
+          Base.Option.iter
+            ~f:(fun prop_tout -> rec_flow_t cx trace ~use_op:unknown_use (t, prop_tout))
+            prop_tout
+        | (None, _, _) ->
+          let (reason_prop, prop_name) =
+            match propref with
+            | Named (r, x) -> (r, Some x)
+            | Computed t -> (reason_of_t t, None)
+          in
+          let msg = Error_message.EPropNotWritable { reason_prop; prop_name; use_op } in
+          add_output cx ~trace msg
+      end
+    | MatchProp (use_op, tin) ->
+      begin
+        match Property.read_t p with
+        | Some t -> rec_flow cx trace (tin, UseT (use_op, t))
+        | None ->
+          let (reason_prop, prop_name) =
+            match propref with
+            | Named (r, x) -> (r, Some x)
+            | Computed t -> (reason_of_t t, None)
+          in
+          add_output cx ~trace (Error_message.EPropNotReadable { reason_prop; prop_name; use_op })
+      end
+
+  let lookup_prop
+      cx ~allow_method_access previously_seen_props trace l reason_prop reason_op strict x action =
+    let l =
+      (* munge names beginning with single _ *)
+      if is_munged_prop_name cx x then
+        ObjProtoT (reason_of_t l)
+      else
+        l
+    in
+    let propref = Named (reason_prop, x) in
+    FlowJs.rec_flow
+      cx
+      trace
+      ( l,
+        LookupT
+          {
+            reason = reason_op;
+            lookup_kind = strict;
+            ts = [];
+            propref;
+            lookup_action = action;
+            ids = Some previously_seen_props;
+            method_accessible = allow_method_access;
+          } )
+
+  let access_prop
+      cx
+      ~allow_method_access
+      ~use_op
+      previously_seen_props
+      trace
+      reason_prop
+      reason_op
+      strict
+      super
+      x
+      pmap
+      action =
+    match NameUtils.Map.find_opt x pmap with
+    | Some p ->
+      (if not allow_method_access then
+        match p with
+        | Method (_, t) ->
+          add_output
+            cx
+            ~trace
+            (Error_message.EMethodUnbinding
+               { use_op; reason_op = reason_prop; reason_prop = reason_of_t t })
+        | _ -> ());
+      perform_lookup_action
+        cx
+        trace
+        (Named (reason_prop, x))
+        p
+        PropertyMapProperty
+        reason_prop
+        reason_op
+        action
+    | None ->
+      lookup_prop
+        cx
+        ~allow_method_access
+        previously_seen_props
+        trace
+        super
+        reason_prop
+        reason_op
+        strict
+        x
+        action
+
+  let get_prop
+      cx
+      previously_seen_props
+      trace
+      ~use_op
+      ~allow_method_access
+      reason_prop
+      reason_op
+      strict
+      l
+      super
+      x
+      map
+      tout =
+    ReadProp { use_op; obj_t = l; tout }
+    |> access_prop
+         cx
+         ~use_op
+         ~allow_method_access
+         previously_seen_props
+         trace
+         reason_prop
+         reason_op
+         strict
+         super
+         x
+         map
+
   (** NOTE: Do not call this function directly. Instead, call the wrapper
       functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
       this module, and the function `flow` outside this module. **)
@@ -6893,105 +7050,6 @@ struct
       |> Base.List.rev_map ~f:display_string_of_name
       |> typo_suggestion)
 
-  and lookup_prop
-      cx ~allow_method_access previously_seen_props trace l reason_prop reason_op strict x action =
-    let l =
-      (* munge names beginning with single _ *)
-      if is_munged_prop_name cx x then
-        ObjProtoT (reason_of_t l)
-      else
-        l
-    in
-    let propref = Named (reason_prop, x) in
-    rec_flow
-      cx
-      trace
-      ( l,
-        LookupT
-          {
-            reason = reason_op;
-            lookup_kind = strict;
-            ts = [];
-            propref;
-            lookup_action = action;
-            ids = Some previously_seen_props;
-            method_accessible = allow_method_access;
-          } )
-
-  and access_prop
-      cx
-      ~allow_method_access
-      ~use_op
-      previously_seen_props
-      trace
-      reason_prop
-      reason_op
-      strict
-      super
-      x
-      pmap
-      action =
-    match NameUtils.Map.find_opt x pmap with
-    | Some p ->
-      (if not allow_method_access then
-        match p with
-        | Method (_, t) ->
-          add_output
-            cx
-            ~trace
-            (Error_message.EMethodUnbinding
-               { use_op; reason_op = reason_prop; reason_prop = reason_of_t t })
-        | _ -> ());
-      perform_lookup_action
-        cx
-        trace
-        (Named (reason_prop, x))
-        p
-        PropertyMapProperty
-        reason_prop
-        reason_op
-        action
-    | None ->
-      lookup_prop
-        cx
-        ~allow_method_access
-        previously_seen_props
-        trace
-        super
-        reason_prop
-        reason_op
-        strict
-        x
-        action
-
-  and get_prop
-      cx
-      previously_seen_props
-      trace
-      ~use_op
-      ~allow_method_access
-      reason_prop
-      reason_op
-      strict
-      l
-      super
-      x
-      map
-      tout =
-    ReadProp { use_op; obj_t = l; tout }
-    |> access_prop
-         cx
-         ~use_op
-         ~allow_method_access
-         previously_seen_props
-         trace
-         reason_prop
-         reason_op
-         strict
-         super
-         x
-         map
-
   and get_private_prop
       ~cx
       ~allow_method_access
@@ -9245,60 +9303,6 @@ struct
         finish_custom_fun_call cx ?trace ~use_op ~reason_op kind tout resolved
       | ResolveSpreadsToCallT (funcalltype, tin) ->
         finish_call_t cx ?trace ~use_op ~reason_op funcalltype resolved tin
-
-  and perform_lookup_action cx trace propref p target_kind lreason ureason = function
-    | LookupProp (use_op, up) -> rec_flow_p cx ~trace ~use_op lreason ureason propref (p, up)
-    | SuperProp (use_op, lp) -> rec_flow_p cx ~trace ~use_op ureason lreason propref (lp, p)
-    | ReadProp { use_op; obj_t = _; tout } ->
-      begin
-        match Property.read_t p with
-        | Some t ->
-          let loc = aloc_of_reason ureason in
-          rec_flow_t cx trace ~use_op:unknown_use (reposition cx ~trace loc t, OpenT tout)
-        | None ->
-          let (reason_prop, prop_name) =
-            match propref with
-            | Named (r, x) -> (r, Some x)
-            | Computed t -> (reason_of_t t, None)
-          in
-          let msg = Error_message.EPropNotReadable { reason_prop; prop_name; use_op } in
-          add_output cx ~trace msg
-      end
-    | WriteProp { use_op; obj_t = _; tin; write_ctx; prop_tout; mode } ->
-      begin
-        match (Property.write_t ~ctx:write_ctx p, target_kind, mode) with
-        | (Some t, IndexerProperty, Delete) ->
-          (* Always OK to delete a property we found via an indexer *)
-          let void = VoidT.why (reason_of_t t) |> with_trust literal_trust in
-          Base.Option.iter
-            ~f:(fun prop_tout -> rec_flow_t cx trace ~use_op:unknown_use (void, prop_tout))
-            prop_tout
-        | (Some t, _, _) ->
-          rec_flow cx trace (tin, UseT (use_op, t));
-          Base.Option.iter
-            ~f:(fun prop_tout -> rec_flow_t cx trace ~use_op:unknown_use (t, prop_tout))
-            prop_tout
-        | (None, _, _) ->
-          let (reason_prop, prop_name) =
-            match propref with
-            | Named (r, x) -> (r, Some x)
-            | Computed t -> (reason_of_t t, None)
-          in
-          let msg = Error_message.EPropNotWritable { reason_prop; prop_name; use_op } in
-          add_output cx ~trace msg
-      end
-    | MatchProp (use_op, tin) ->
-      begin
-        match Property.read_t p with
-        | Some t -> rec_flow cx trace (tin, UseT (use_op, t))
-        | None ->
-          let (reason_prop, prop_name) =
-            match propref with
-            | Named (r, x) -> (r, Some x)
-            | Computed t -> (reason_of_t t, None)
-          in
-          add_output cx ~trace (Error_message.EPropNotReadable { reason_prop; prop_name; use_op })
-      end
 
   and perform_elem_action cx trace ~use_op ~restrict_deletes reason_op l value action =
     match (action, restrict_deletes) with
