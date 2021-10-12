@@ -106,6 +106,17 @@ module rec ConsGen : Annotation_inference_sig = struct
 
     let import_typeof cx _trace reason export_name t = ConsGen.import_typeof cx reason export_name t
 
+    let export_named _cx _ (_reason, _named, _kind) _t =
+      failwith "TODO Annotation_inference.export_named"
+
+    let export_named_fresh_var _cx _ (_reason, _named, _kind) _t =
+      failwith "TODO Annotation_inference.export_named_fresh_var"
+
+    let export_type _cx _ _ _ = failwith "TODO Annotation_inference.export_type"
+
+    let cjs_extract_named_exports cx _ (reason, local_module) t =
+      ConsGen.cjs_extract_named_exports cx reason local_module t
+
     (* This check is bypassed in annotation inference *)
     let assert_import_is_value _cx _trace _reason _name _export_t = ()
 

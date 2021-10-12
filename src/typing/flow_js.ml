@@ -282,6 +282,21 @@ struct
       Tvar.mk_where cx reason (fun tvar ->
           FlowJs.rec_flow cx trace (export_t, ImportTypeofT (reason, name, tvar)))
 
+    let export_named cx trace (reason, named, kind) module_t tout =
+      FlowJs.rec_flow cx trace (module_t, Type.ExportNamedT (reason, named, kind, tout))
+
+    let export_named_fresh_var cx trace (reason, named, kind) module_t =
+      Tvar.mk_where cx reason (fun t ->
+          FlowJs.rec_flow cx trace (module_t, Type.ExportNamedT (reason, named, kind, t)))
+
+    let export_type cx trace (reason, export_name, target_module_t) export_t =
+      Tvar.mk_where cx reason (fun t ->
+          FlowJs.rec_flow cx trace (export_t, ExportTypeT (reason, export_name, target_module_t, t)))
+
+    let cjs_extract_named_exports cx trace (reason, local_module) proto_t =
+      Tvar.mk_where cx reason (fun t ->
+          FlowJs.rec_flow cx trace (proto_t, CJSExtractNamedExportsT (reason, local_module, t)))
+
     let assert_import_is_value cx trace reason name export_t =
       FlowJs.rec_flow cx trace (export_t, AssertImportIsValueT (reason, name))
 
@@ -298,6 +313,12 @@ struct
   module ImportNamedTKit = ImportNamedT_kit (Import_export_helper)
   module ImportTypeTKit = ImportTypeT_kit (Import_export_helper)
   module ImportTypeofTKit = ImportTypeofT_kit (Import_export_helper)
+  module ExportNamedTKit = ExportNamedT_kit (Import_export_helper)
+  module AssertExportIsTypeTKit = AssertExportIsTypeT_kit (Import_export_helper)
+  module CopyNamedExportsTKit = CopyNamedExportsT_kit (Import_export_helper)
+  module CopyTypeExportsTKit = CopyTypeExportsT_kit (Import_export_helper)
+  module ExportTypeTKit = ExportTypeT_kit (Import_export_helper)
+  module CJSExtractNamedExportsTKit = CJSExtractNamedExportsT_kit (Import_export_helper)
   include InstantiationKit
 
   (** NOTE: Do not call this function directly. Instead, call the wrapper
@@ -665,223 +686,25 @@ struct
         (*******************)
         | (_, ImportTypeofT (reason, export_name, t)) ->
           ImportTypeofTKit.on_concrete_type cx trace reason export_name l t
-        (**************************************************************************)
-        (* Module exports                                                         *)
-        (*                                                                        *)
-        (* Flow supports both CommonJS and standard ES modules as well as some    *)
-        (* interoperability semantics for communicating between the two module    *)
-        (* systems in both directions.                                            *)
-        (*                                                                        *)
-        (* In order to support both systems at once, Flow abstracts the notion of *)
-        (* module exports by storing a type map for each of the exports of a      *)
-        (* given module, and for each module there is a ModuleT that maintains    *)
-        (* this type map. The exported types are then considered immutable once   *)
-        (* the module has finished inference.                                     *)
-        (*                                                                        *)
-        (* When a type is set for the CommonJS exports value, we store it         *)
-        (* separately from the normal named exports tmap that ES exports are      *)
-        (* stored within. This allows us to distinguish CommonJS modules from ES  *)
-        (* modules when interpreting an ES import statement -- which is important *)
-        (* because ES ModuleNamespace objects built from CommonJS exports are a   *)
-        (* little bit magic.                                                      *)
-        (*                                                                        *)
-        (* For example: If a CommonJS module exports an object, we will extract   *)
-        (* each of the properties of that object and consider them as "named"     *)
-        (* exports for the purposes of an import statement elsewhere:             *)
-        (*                                                                        *)
-        (*   // CJSModule.js                                                      *)
-        (*   module.exports = {                                                   *)
-        (*     someNumber: 42                                                     *)
-        (*   };                                                                   *)
-        (*                                                                        *)
-        (*   // ESModule.js                                                       *)
-        (*   import {someNumber} from "CJSModule";                                *)
-        (*   var a: number = someNumber;                                          *)
-        (*                                                                        *)
-        (* We also map CommonJS export values to the "default" export for         *)
-        (* purposes of import statements in other modules:                        *)
-        (*                                                                        *)
-        (*   // CJSModule.js                                                      *)
-        (*   module.exports = {                                                   *)
-        (*     someNumber: 42                                                     *)
-        (*   };                                                                   *)
-        (*                                                                        *)
-        (*   // ESModule.js                                                       *)
-        (*   import CJSDefaultExport from "CJSModule";                            *)
-        (*   var a: number = CJSDefaultExport.someNumber;                         *)
-        (*                                                                        *)
-        (* Note that the ModuleT type is not intended to be surfaced to any       *)
-        (* userland-visible constructs. Instead it's meant as an internal         *)
-        (* construct that is only *mapped* to/from userland constructs (such as a *)
-        (* CommonJS exports object or an ES ModuleNamespace object).              *)
-        (**************************************************************************)
-
-        (* In the following rules, ModuleT appears in two contexts: as imported
-           modules, and as modules to be exported.
-
-           As a module to be exported, ModuleT denotes a "growing" module. In this
-           form, its contents may change: e.g., its named exports may be
-           extended. Conversely, the rules that drive this growing phase can expect
-           to work only on ModuleT. In particular, modules that are not @flow never
-           hit growing rules: they are modeled as `any`.
-
-           On the other hand, as an imported module, ModuleT denotes a "fully
-           formed" module. The rules hit by such a module don't grow it: they just
-           take it apart and read it. The same rules could also be hit by modules
-           that are not @flow, so the rules have to deal with `any`. *)
-
-        (* util that grows a module by adding named exports from a given map *)
-        | (ModuleT (_, { exports_tmap; _ }, _), ExportNamedT (_, tmap, export_kind, tout)) ->
-          let add_export name export acc =
-            let export' =
-              match export_kind with
-              | ExportValue -> export
-              | ReExport ->
-                (* Re-exports do not overwrite named exports from the local module. *)
-                NameUtils.Map.find_opt name acc |> Base.Option.value ~default:export
-              | ExportType -> export
-            in
-            NameUtils.Map.add name export' acc
-          in
-          Context.find_exports cx exports_tmap
-          |> NameUtils.Map.fold add_export tmap
-          |> Context.add_export_map cx exports_tmap;
-          rec_flow_t ~use_op:unknown_use cx trace (l, tout)
+        (******************)
+        (* Module exports *)
+        (******************)
+        | (ModuleT m, ExportNamedT (reason, tmap, export_kind, tout)) ->
+          ExportNamedTKit.on_ModuleT cx trace (reason, tmap, export_kind) l m tout
         | (_, AssertExportIsTypeT (_, name, t_out)) ->
-          if is_type l then
-            rec_flow_t ~use_op:unknown_use cx trace (l, t_out)
-          else
-            let reason = reason_of_t l in
-            add_output cx ~trace Error_message.(EExportValueAsType (reason, name));
-            rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason, t_out)
-        (* Copy the named exports from a source module into a target module. Used
-           to implement `export * from 'SomeModule'`, with the current module as
-           the target and the imported module as the source. *)
-        | (ModuleT (_, source_exports, _), CopyNamedExportsT (reason, target_module_t, t_out)) ->
-          let source_tmap = Context.find_exports cx source_exports.exports_tmap in
-          rec_flow cx trace (target_module_t, ExportNamedT (reason, source_tmap, ReExport, t_out))
-        (*
-         * Copy only the type exports from a source module into a target module.
-         * Used to implement `export type * from ...`.
-         *)
-        | (ModuleT (_, source_exports, _), CopyTypeExportsT (reason, target_module_t, t_out)) ->
-          let source_exports = Context.find_exports cx source_exports.exports_tmap in
-          (* Remove locations. TODO at some point we may want to include them here. *)
-          let source_exports = NameUtils.Map.map snd source_exports in
-          let target_module_t =
-            NameUtils.Map.fold
-              (fun export_name export_t target_module_t ->
-                Tvar.mk_where cx reason (fun t ->
-                    rec_flow
-                      cx
-                      trace
-                      (export_t, ExportTypeT (reason, export_name, target_module_t, t))))
-              source_exports
-              target_module_t
-          in
-          rec_flow_t ~use_op:unknown_use cx trace (target_module_t, t_out)
-        (*
-         * Export a type from a given ModuleT, but only if the type is compatible
-         * with `import type`/`export type`. When it is not compatible, it is simply
-         * not added to the exports map.
-         *
-         * Note that this is very similar to `ExportNamedT` except that it only
-         * exports one type at a time and it takes the type to be exported as a
-         * lower (so that the type can be filtered post-resolution).
-         *)
-        | (l, ExportTypeT (reason, export_name, target_module_t, t_out)) ->
-          let is_type_export =
-            match l with
-            | DefT (_, _, ObjT _) when export_name = OrdinaryName "default" -> true
-            | l -> ImportTypeTKit.canonicalize_imported_type cx trace reason l <> None
-          in
-          if is_type_export then
-            rec_flow
-              cx
-              trace
-              ( target_module_t,
-                ExportNamedT
-                  ( reason,
-                    (* TODO we may want to add location information here *)
-                    NameUtils.Map.singleton export_name (None, l),
-                    ReExport,
-                    t_out ) )
-          else
-            rec_flow_t ~use_op:unknown_use cx trace (target_module_t, t_out)
-        (* There is nothing to copy from a module exporting `any` or `Object`. *)
-        | ( AnyT (lreason, _),
-            ( CopyNamedExportsT (reason, target_module, t)
-            | CopyTypeExportsT (reason, target_module, t) ) ) ->
-          Flow_js_utils.check_untyped_import cx ImportValue lreason reason;
-          rec_flow_t ~use_op:unknown_use cx trace (target_module, t)
-        (*
-         * ObjT CommonJS export values have their properties turned into named
-         * exports
-         *)
-        | ( ( DefT (_, _, ObjT { props_tmap; proto_t; _ })
-            | ExactT (_, DefT (_, _, ObjT { props_tmap; proto_t; _ })) ),
-            CJSExtractNamedExportsT (reason, (module_t_reason, exporttypes, is_strict), t_out) ) ->
-          (* Copy props from the prototype *)
-          let module_t =
-            Tvar.mk_where cx reason (fun t ->
-                rec_flow
-                  cx
-                  trace
-                  ( proto_t,
-                    CJSExtractNamedExportsT (reason, (module_t_reason, exporttypes, is_strict), t)
-                  ))
-          in
-          (* Copy own props *)
-          rec_flow
-            cx
-            trace
-            ( module_t,
-              ExportNamedT
-                ( reason,
-                  Properties.extract_named_exports (Context.find_props cx props_tmap),
-                  ExportValue,
-                  t_out ) )
-        (*
-         * InstanceT CommonJS export values have their properties turned into named
-         * exports
-         *)
-        | ( DefT (_, _, InstanceT (_, _, _, { own_props; proto_props; _ })),
-            CJSExtractNamedExportsT (reason, (module_t_reason, exporttypes, is_strict), t_out) ) ->
-          let module_t = ModuleT (module_t_reason, exporttypes, is_strict) in
-          let extract_named_exports id =
-            Context.find_props cx id
-            |> NameUtils.Map.filter (fun x _ -> not (is_munged_prop_name cx x))
-            |> Properties.extract_named_exports
-          in
-          (* Copy own props *)
-          let module_t =
-            Tvar.mk_where cx reason (fun t ->
-                rec_flow
-                  cx
-                  trace
-                  (module_t, ExportNamedT (reason, extract_named_exports own_props, ExportValue, t)))
-          in
-          (* Copy proto props *)
-          (* TODO: own props should take precedence *)
-          rec_flow
-            cx
-            trace
-            (module_t, ExportNamedT (reason, extract_named_exports proto_props, ExportValue, t_out))
-        (* If the module is exporting any or Object, then we allow any named
-         * import
-         *)
-        | (AnyT _, CJSExtractNamedExportsT (_, (module_t_reason, exporttypes, is_strict), t_out)) ->
-          let module_t =
-            ModuleT (module_t_reason, { exporttypes with has_every_named_export = true }, is_strict)
-          in
-          rec_flow_t ~use_op:unknown_use cx trace (module_t, t_out)
-        (*
-         * All other CommonJS export value types do not get merged into the named
-         * exports tmap in any special way.
-         *)
-        | (_, CJSExtractNamedExportsT (_, (module_t_reason, exporttypes, is_strict), t_out)) ->
-          let module_t = ModuleT (module_t_reason, exporttypes, is_strict) in
-          rec_flow_t ~use_op:unknown_use cx trace (module_t, t_out)
+          AssertExportIsTypeTKit.on_concrete_type cx trace name l t_out
+        | (ModuleT m, CopyNamedExportsT (reason, target_module_t, t_out)) ->
+          CopyNamedExportsTKit.on_ModuleT cx trace (reason, target_module_t) m t_out
+        | (ModuleT m, CopyTypeExportsT (reason, target_module_t, t_out)) ->
+          CopyTypeExportsTKit.on_ModuleT cx trace (reason, target_module_t) m t_out
+        | (_, ExportTypeT (reason, export_name, target_module_t, t_out)) ->
+          ExportTypeTKit.on_concrete_type cx trace (reason, export_name, target_module_t) l t_out
+        | (AnyT (lreason, _), CopyNamedExportsT (reason, target_module, t)) ->
+          CopyNamedExportsTKit.on_AnyT cx trace lreason (reason, target_module) t
+        | (AnyT (lreason, _), CopyTypeExportsT (reason, target_module, t)) ->
+          CopyTypeExportsTKit.on_AnyT cx trace lreason (reason, target_module) t
+        | (_, CJSExtractNamedExportsT (reason, local_module, t_out)) ->
+          CJSExtractNamedExportsTKit.on_concrete_type cx trace (reason, local_module) l t_out
         (******************)
         (* Module imports *)
         (******************)
@@ -6902,16 +6725,6 @@ struct
     in
     let ts = List.rev ts in
     instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, xs, t) ts
-
-  and is_type = function
-    | DefT (_, _, ClassT _)
-    | DefT (_, _, EnumObjectT _)
-    | ThisClassT (_, _, _)
-    | DefT (_, _, TypeT _)
-    | AnyT _ ->
-      true
-    | DefT (_, _, PolyT { t_out = t'; _ }) -> is_type t'
-    | _ -> false
 
   (* Specialize This in a class. Eventually this causes substitution. *)
   and instantiate_this_class cx trace reason tc this k =
