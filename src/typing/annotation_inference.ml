@@ -567,14 +567,14 @@ module rec ConsGen : Annotation_inference_sig = struct
 
   and get_statics _cx _reason _t = failwith "TODO Annotation_inference.get_statics"
 
-  and get_prop_internal _cx _use_op _loc _reason_op _propref _l =
+  and get_prop_internal _cx _use_op _reason_op _propref _l =
     failwith "TODO Annotation_inference.get_prop"
 
-  and get_prop cx use_op loc reason name t = get_prop_internal cx use_op loc reason (reason, name) t
+  and get_prop cx use_op reason name t = get_prop_internal cx use_op reason (reason, name) t
 
   and get_elem _cx _use_op _reason ~key:_ _t = failwith "TODO Annotation_inference.get_elem"
 
-  and qualify_type cx use_op loc reason propref t = get_prop_internal cx use_op loc reason propref t
+  and qualify_type cx use_op reason propref t = get_prop_internal cx use_op reason propref t
 
   (* Unlike Flow_js, types in this module are 0->1, so there is no need for a
    * mechanism similar to BecomeT of Flow_js. *)

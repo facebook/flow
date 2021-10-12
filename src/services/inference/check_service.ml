@@ -199,7 +199,7 @@ module ConsGen : Type_sig_merge.CONS_GEN = struct
     in
     mk_lazy_tvar cx reason f
 
-  let get_prop cx use_op _loc reason propname t =
+  let get_prop cx use_op reason propname t =
     Tvar.mk_no_wrap_where cx reason (fun tout ->
         Flow_js.flow cx (t, Type.GetPropT (use_op, reason, Type.Named (reason, propname), tout)))
 
@@ -207,7 +207,7 @@ module ConsGen : Type_sig_merge.CONS_GEN = struct
     Tvar.mk_no_wrap_where cx reason (fun tout ->
         Flow_js.flow cx (t, Type.GetElemT (use_op, reason, key, tout)))
 
-  let qualify_type cx use_op _loc reason (reason_name, name) t =
+  let qualify_type cx use_op reason (reason_name, name) t =
     let open Type in
     let f tvar =
       Flow_js.flow cx (t, GetPropT (use_op, reason, Named (reason_name, name), open_tvar tvar))

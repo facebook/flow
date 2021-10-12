@@ -92,12 +92,12 @@ module type CONS_GEN = sig
 
   val mk_type_reference : Context.t -> Reason.t -> Type.t -> Type.t
 
-  val get_prop : Context.t -> Type.use_op -> ALoc.t -> Reason.t -> Reason.name -> Type.t -> Type.t
+  val get_prop : Context.t -> Type.use_op -> Reason.t -> Reason.name -> Type.t -> Type.t
 
   val get_elem : Context.t -> Type.use_op -> Reason.t -> key:Type.t -> Type.t -> Type.t
 
   val qualify_type :
-    Context.t -> Type.use_op -> ALoc.t -> Reason.t -> Reason.t * Reason.name -> Type.t -> Type.t
+    Context.t -> Type.use_op -> Reason.t -> Reason.t * Reason.name -> Type.t -> Type.t
 
   val assert_export_is_type : Context.t -> Reason.t -> string -> Type.t -> Type.t
 
@@ -219,7 +219,7 @@ module Make (ConsGen : CONS_GEN) : S = struct
       let reason = Reason.(mk_reason (RProperty (Some name)) loc) in
       (* TODO: use_op *)
       let use_op = Type.unknown_use in
-      ConsGen.get_prop file.cx use_op loc reason name t
+      ConsGen.get_prop file.cx use_op reason name t
     | GetElem index ->
       let reason = Reason.(mk_reason (RProperty None) loc) in
       (* TODO: use_op *)
@@ -328,7 +328,7 @@ module Make (ConsGen : CONS_GEN) : S = struct
       let reason = Reason.(mk_reason (RProperty (Some name)) id_loc) in
       (* TODO: use_op *)
       let use_op = Type.unknown_use in
-      ConsGen.get_prop file.cx use_op id_loc reason name t
+      ConsGen.get_prop file.cx use_op reason name t
     | Pack.ComputedP { elem; def } ->
       let elem = Lazy.force (Pattern_defs.get file.pattern_defs elem) in
       let t = Lazy.force (Patterns.get file.patterns def) in
@@ -398,7 +398,7 @@ module Make (ConsGen : CONS_GEN) : S = struct
         let reason_op = Reason.(mk_reason (RType (OrdinaryName qname)) loc) in
         let use_op = Type.Op (Type.GetProperty reason_op) in
         let propname = (id_reason, name) in
-        let t = ConsGen.qualify_type file.cx use_op loc reason_op propname t in
+        let t = ConsGen.qualify_type file.cx use_op reason_op propname t in
         f t loc names
       in
       merge_tyref file f qualification
