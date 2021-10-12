@@ -2756,6 +2756,14 @@ module AConstraint = struct
     | Annot_ImportTypeofT of Reason.reason * string
     | Annot_ImportDefaultT of Reason.t * TypeTerm.import_kind * (string * string) * bool
     | Annot_CJSRequireT of Reason.t * bool
+    (* Exports *)
+    | Annot_CJSExtractNamedExportsT of Reason.t * (Reason.t * TypeTerm.exporttypes * bool)
+    | Annot_ExportNamedT of
+        Reason.t * (ALoc.t option * TypeTerm.t) NameUtils.Map.t * TypeTerm.export_kind
+    | Annot_ExportTypeT of Reason.t * Reason.name * TypeTerm.t
+    | Annot_AssertExportIsTypeT of Reason.t * name
+    | Annot_CopyNamedExportsT of Reason.t * TypeTerm.t
+    | Annot_CopyTypeExportsT of Reason.t * TypeTerm.t
     (* Other operations *)
     | Annot_SpecializeT of TypeTerm.use_op * Reason.t * Reason.t * TypeTerm.t list option
     | Annot_ThisSpecializeT of Reason.t * TypeTerm.t
@@ -2828,6 +2836,12 @@ module AConstraint = struct
     | Annot_ImportNamedT _ -> "Annot_ImportNamedT"
     | Annot_ImportDefaultT _ -> "Annot_ImportDefaultT"
     | Annot_ImportModuleNsT _ -> "Annot_ImportModuleNsT"
+    | Annot_CJSExtractNamedExportsT _ -> "Annot_CJSExtractNamedExportsT"
+    | Annot_ExportNamedT _ -> "Annot_ExportNamedT"
+    | Annot_ExportTypeT _ -> "Annot_ExportTypeT"
+    | Annot_AssertExportIsTypeT _ -> "Annot_AssertExportIsTypeT"
+    | Annot_CopyNamedExportsT _ -> "Annot_CopyNamedExportsT"
+    | Annot_CopyTypeExportsT _ -> "Annot_CopyTypeExportsT"
     | Annot__Future_added_value__ _ -> "Annot__Future_added_value__"
 
   let reason_of_op = function
@@ -2840,6 +2854,12 @@ module AConstraint = struct
     | Annot_ImportNamedT (r, _, _, _, _)
     | Annot_ImportDefaultT (r, _, _, _)
     | Annot_ImportModuleNsT (r, _)
+    | Annot_CJSExtractNamedExportsT (r, _)
+    | Annot_ExportNamedT (r, _, _)
+    | Annot_ExportTypeT (r, _, _)
+    | Annot_AssertExportIsTypeT (r, _)
+    | Annot_CopyNamedExportsT (r, _)
+    | Annot_CopyTypeExportsT (r, _)
     | Annot__Future_added_value__ r ->
       r
 

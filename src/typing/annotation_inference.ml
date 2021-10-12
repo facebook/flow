@@ -31,6 +31,12 @@ let object_like_op = function
   | Annot_ImportNamedT _
   | Annot_ImportDefaultT _
   | Annot_ImportModuleNsT _
+  | Annot_CJSExtractNamedExportsT _
+  | Annot_ExportNamedT _
+  | Annot_ExportTypeT _
+  | Annot_AssertExportIsTypeT _
+  | Annot_CopyNamedExportsT _
+  | Annot_CopyTypeExportsT _
   | Annot__Future_added_value__ _ ->
     false
 
@@ -106,13 +112,12 @@ module rec ConsGen : Annotation_inference_sig = struct
 
     let import_typeof cx _trace reason export_name t = ConsGen.import_typeof cx reason export_name t
 
-    let export_named _cx _ (_reason, _named, _kind) _t =
-      failwith "TODO Annotation_inference.export_named"
+    let export_named cx _trace (reason, named, kind) t = ConsGen.export_named cx reason kind named t
 
-    let export_named_fresh_var _cx _ (_reason, _named, _kind) _t =
-      failwith "TODO Annotation_inference.export_named_fresh_var"
+    let export_named_fresh_var = export_named
 
-    let export_type _cx _ _ _ = failwith "TODO Annotation_inference.export_type"
+    let export_type cx _trace (reason, export_name, target_module_t) export_t =
+      ConsGen.elab_t cx export_t (Annot_ExportTypeT (reason, export_name, target_module_t))
 
     let cjs_extract_named_exports cx _ (reason, local_module) t =
       ConsGen.cjs_extract_named_exports cx reason local_module t
@@ -133,6 +138,13 @@ module rec ConsGen : Annotation_inference_sig = struct
   module ImportNamedTKit = Flow_js_utils.ImportNamedT_kit (Import_export_helper)
   module ImportTypeTKit = Flow_js_utils.ImportTypeT_kit (Import_export_helper)
   module ImportTypeofTKit = Flow_js_utils.ImportTypeofT_kit (Import_export_helper)
+  module ExportNamedTKit = Flow_js_utils.ExportNamedT_kit (Import_export_helper)
+  module AssertExportIsTypeTKit = Flow_js_utils.AssertExportIsTypeT_kit (Import_export_helper)
+  module CopyNamedExportsTKit = Flow_js_utils.CopyNamedExportsT_kit (Import_export_helper)
+  module CopyTypeExportsTKit = Flow_js_utils.CopyTypeExportsT_kit (Import_export_helper)
+  module ExportTypeTKit = Flow_js_utils.ExportTypeT_kit (Import_export_helper)
+  module CJSExtractNamedExportsTKit =
+    Flow_js_utils.CJSExtractNamedExportsT_kit (Import_export_helper)
 
   let unresolved_tvar cx reason = Avar.unresolved cx reason
 
@@ -318,6 +330,25 @@ module rec ConsGen : Annotation_inference_sig = struct
     (*******************)
     | (_, Annot_ImportTypeofT (reason, export_name)) ->
       ImportTypeofTKit.on_concrete_type cx dummy_trace reason export_name t
+    (******************)
+    (* Module exports *)
+    (******************)
+    | (ModuleT m, Annot_ExportNamedT (reason, tmap, export_kind)) ->
+      ExportNamedTKit.on_ModuleT cx dummy_trace (reason, tmap, export_kind) t m
+    | (_, Annot_AssertExportIsTypeT (_, name)) ->
+      AssertExportIsTypeTKit.on_concrete_type cx dummy_trace name t
+    | (ModuleT m, Annot_CopyNamedExportsT (reason, target_module_t)) ->
+      CopyNamedExportsTKit.on_ModuleT cx dummy_trace (reason, target_module_t) m
+    | (ModuleT m, Annot_CopyTypeExportsT (reason, target_module_t)) ->
+      CopyTypeExportsTKit.on_ModuleT cx dummy_trace (reason, target_module_t) m
+    | (_, Annot_ExportTypeT (reason, export_name, target_module_t)) ->
+      ExportTypeTKit.on_concrete_type cx dummy_trace (reason, export_name, target_module_t) t
+    | (AnyT (lreason, _), Annot_CopyNamedExportsT (reason, target_module)) ->
+      CopyNamedExportsTKit.on_AnyT cx dummy_trace lreason (reason, target_module)
+    | (AnyT (lreason, _), Annot_CopyTypeExportsT (reason, target_module)) ->
+      CopyTypeExportsTKit.on_AnyT cx dummy_trace lreason (reason, target_module)
+    | (_, Annot_CJSExtractNamedExportsT (reason, local_module)) ->
+      CJSExtractNamedExportsTKit.on_concrete_type cx dummy_trace (reason, local_module) t
     (******************)
     (* Module imports *)
     (******************)
@@ -552,15 +583,19 @@ module rec ConsGen : Annotation_inference_sig = struct
     let t = reposition cx (aloc_of_reason reason) t in
     AnnotT (opt_annot_reason ~annot_loc reason, t, false)
 
-  and assert_export_is_type _cx _reason _name _l =
-    failwith "TODO Annotation_inference.assert_export_is_type"
+  and assert_export_is_type cx reason name t =
+    let f id =
+      let t = elab_t cx t (Annot_AssertExportIsTypeT (reason, Reason.OrdinaryName name)) in
+      resolve_id cx id t
+    in
+    mk_lazy_tvar cx reason f
 
   and cjs_require cx t reason is_strict = elab_t cx t (Annot_CJSRequireT (reason, is_strict))
 
-  and export_named _cx _reason _kind _named _t = failwith "TODO Annotation_inference.export_named"
+  and export_named cx reason kind named t = elab_t cx t (Annot_ExportNamedT (reason, named, kind))
 
-  and cjs_extract_named_exports _cx _reason _local_module _t =
-    failwith "TODO Annotation_inference.cjs_extract_named_exports"
+  and cjs_extract_named_exports cx reason local_module t =
+    elab_t cx t (Annot_CJSExtractNamedExportsT (reason, local_module))
 
   and import_typeof cx reason export_name t =
     elab_t cx t (Annot_ImportTypeofT (reason, export_name))
@@ -573,11 +608,11 @@ module rec ConsGen : Annotation_inference_sig = struct
 
   and import_ns cx reason is_strict t = elab_t cx t (Annot_ImportModuleNsT (reason, is_strict))
 
-  and copy_named_exports _cx ~from_ns:_ _reason ~module_t:_ =
-    failwith "TODO Annotation_inference.copy_named_exports"
+  and copy_named_exports cx ~from_ns reason ~module_t =
+    elab_t cx from_ns (Annot_CopyNamedExportsT (reason, module_t))
 
-  and copy_type_exports _cx ~from_ns:_ _reason ~module_t:_ =
-    failwith "TODO Annotation_inference.copy_type_exports"
+  and copy_type_exports cx ~from_ns reason ~module_t =
+    elab_t cx from_ns (Annot_CopyTypeExportsT (reason, module_t))
 
   and unary_minus _cx _reason_op _l = failwith "TODO Annotation_inference.unary_minus"
 
