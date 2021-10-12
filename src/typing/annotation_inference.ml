@@ -57,6 +57,11 @@ end
 module rec ConsGen : Annotation_inference_sig = struct
   let dummy_trace = Trace.dummy_trace
 
+  (* Repositioning does not seem to have any perceptible impact in annotation
+   * inference. Instead of replicating the convoluted implementation of Flow_js
+   * here, we just return the same type intact. *)
+  let reposition _cx _loc t = t
+
   (*****************)
   (* Instantiation *)
   (*****************)
@@ -71,7 +76,7 @@ module rec ConsGen : Annotation_inference_sig = struct
 
     let is_subtype _cx _trace ~use_op:_ (_t1, _t2) = ()
 
-    let reposition cx ?trace:_ loc ?desc:_ ?annot_loc:_ t = ConsGen.reposition cx loc t
+    let reposition cx ?trace:_ loc ?desc:_ ?annot_loc:_ t = reposition cx loc t
 
     let unresolved_id = Avar.unresolved
 
@@ -92,7 +97,7 @@ module rec ConsGen : Annotation_inference_sig = struct
   module Import_export_helper = struct
     type r = Type.t
 
-    let reposition cx ?trace:_ loc ?desc:_ ?annot_loc:_ t = ConsGen.reposition cx loc t
+    let reposition cx ?trace:_ loc ?desc:_ ?annot_loc:_ t = reposition cx loc t
 
     let return _cx ~use_op:_ _trace t = t
 
@@ -221,8 +226,6 @@ module rec ConsGen : Annotation_inference_sig = struct
 
   and resolve_dependent_set cx dependents t =
     Context.iter_annot_dependent_set cx (fun id op -> resolve_id cx id (elab_t cx t op)) dependents
-
-  and reposition _cx _loc _t = failwith "TODO Annotation_inference.reposition"
 
   and elab_open cx ~seen reason id op =
     if ISet.mem id seen then begin

@@ -90,8 +90,6 @@ module type CONS_GEN = sig
 
   val mk_typeof_annotation : Context.t -> ?trace:Type.trace -> Reason.t -> Type.t -> Type.t
 
-  val reposition : Context.t -> ALoc.t -> Type.t -> Type.t
-
   val mk_type_reference : Context.t -> Reason.t -> Type.t -> Type.t
 
   val get_prop : Context.t -> Type.use_op -> ALoc.t -> Reason.t -> Reason.name -> Type.t -> Type.t
@@ -187,6 +185,14 @@ module Make (ConsGen : CONS_GEN) : S = struct
   let specialize file t =
     let reason = TypeUtil.reason_of_t t in
     ConsGen.specialize file.cx t Type.unknown_use reason reason None
+
+  (* Repositioning the underlying type does not seem to have any perceptible impact
+   * when dealing with annotations. Instead of invoking the convoluted Flow_js.reposition
+   * implementation here, we just return the type intact. What does have an effect is the
+   * lazy tvar indirection, which updates the reason on the new OpenT. *)
+  let reposition_sig_tvar cx loc t =
+    let reason = Reason.repos_reason loc (TypeUtil.reason_of_t t) in
+    ConsGen.mk_sig_tvar cx reason (lazy t)
 
   let eval_unary file loc t =
     let module U = Flow_ast.Expression.Unary in
@@ -368,11 +374,11 @@ module Make (ConsGen : CONS_GEN) : S = struct
     match ref with
     | Pack.LocalRef { ref_loc; index } ->
       let (_loc, name, t) = visit (Local_defs.get file.local_defs index) in
-      let t = ConsGen.reposition file.cx ref_loc t in
+      let t = reposition_sig_tvar file.cx ref_loc t in
       f t ref_loc name
     | Pack.RemoteRef { ref_loc; index } ->
       let (_loc, name, t) = visit (Remote_refs.get file.remote_refs index) in
-      let t = ConsGen.reposition file.cx ref_loc t in
+      let t = reposition_sig_tvar file.cx ref_loc t in
       f t ref_loc name
     | Pack.BuiltinRef { ref_loc; name } ->
       let reason = Reason.(mk_reason (RIdentifier (Reason.OrdinaryName name)) ref_loc) in

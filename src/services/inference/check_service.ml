@@ -214,11 +214,6 @@ module ConsGen : Type_sig_merge.CONS_GEN = struct
     in
     mk_lazy_tvar cx reason f
 
-  let reposition cx loc t =
-    let reason = Reason.repos_reason loc (TypeUtil.reason_of_t t) in
-    let resolved = lazy (Flow_js.reposition cx loc t) in
-    mk_sig_tvar cx reason resolved
-
   let mk_type_reference cx reason c =
     let open Type in
     let f tvar =
