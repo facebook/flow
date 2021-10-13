@@ -1,3 +1,7 @@
+### 0.161.1
+
+* Fixes a bug with `experimental.prioritize_dependency_checks`
+
 ### 0.161.0
 
 Likely to cause new Flow errors:
