@@ -66,6 +66,10 @@ module type S = sig
           lit: float * string;
         }
       | SentinelR of string * L.t
+      | LatentR of {
+          func_loc: L.t;
+          index: int;
+        }
     [@@deriving show { with_path = false }]
 
     type refinement = L.LSet.t * refinement_kind
@@ -171,6 +175,10 @@ module Make
           lit: float * string;
         }
       | SentinelR of string * L.t
+      | LatentR of {
+          func_loc: L.t;
+          index: int;
+        }
     [@@deriving show { with_path = false }]
 
     type refinement = L.LSet.t * refinement_kind
@@ -298,6 +306,7 @@ module Make
       else
         lit
     | SentinelR (prop, _) -> Printf.sprintf "SentinelR %s" prop
+    | LatentR { func_loc = _; index } -> Printf.sprintf "LatentR (index = %i)" index
 end
 
 module With_Loc =

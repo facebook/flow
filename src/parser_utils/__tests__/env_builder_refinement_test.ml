@@ -3070,3 +3070,112 @@ y;
         (4, 0) to (4, 1) => {
           (2, 4) to (2, 5): (`y`)
         }]|}]
+
+let%expect_test "havoc" =
+  print_ssa_test {|
+let x = 3;
+function f() { x = 'string'}
+let y = 3;
+if (x != null && y != null) {
+  f();
+  x;
+  y;
+}
+|};
+    [%expect {|
+      [
+        (5, 4) to (5, 5) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (5, 17) to (5, 18) => {
+          (4, 4) to (4, 5): (`y`)
+        };
+        (6, 2) to (6, 3) => {
+          (3, 9) to (3, 10): (`f`)
+        };
+        (7, 2) to (7, 3) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (8, 2) to (8, 3) => {
+          {refinement = Not (Maybe); writes = (4, 4) to (4, 5): (`y`)}
+        }] |}]
+
+let%expect_test "predicate_function_outside_predicate_position" =
+  print_ssa_test {|
+let x = null;
+let y = 3;
+function f(x): %checks { return x != null }
+f(x, y);
+x;
+y;
+
+x = 'string';
+|};
+    [%expect {|
+      [
+        (4, 32) to (4, 33) => {
+          (4, 11) to (4, 12): (`x`)
+        };
+        (5, 0) to (5, 1) => {
+          (4, 9) to (4, 10): (`f`)
+        };
+        (5, 2) to (5, 3) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (5, 5) to (5, 6) => {
+          (3, 4) to (3, 5): (`y`)
+        };
+        (6, 0) to (6, 1) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (7, 0) to (7, 1) => {
+          (3, 4) to (3, 5): (`y`)
+        }] |}]
+
+let%expect_test "latent_refinements" =
+  print_ssa_test {|
+let x = 3;
+function f() { x = 'string'}
+let y = 3;
+if (f(x, y)) {
+  x;
+  y;
+}
+if (y.f(x, y)) {
+  // No refinements on either
+  x;
+  y;
+}
+|};
+    [%expect {|
+      [
+        (5, 4) to (5, 5) => {
+          (3, 9) to (3, 10): (`f`)
+        };
+        (5, 6) to (5, 7) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (5, 9) to (5, 10) => {
+          (4, 4) to (4, 5): (`y`)
+        };
+        (6, 2) to (6, 3) => {
+          {refinement = LatentR (index = 0); writes = (2, 4) to (2, 5): (`x`)}
+        };
+        (7, 2) to (7, 3) => {
+          {refinement = LatentR (index = 1); writes = (4, 4) to (4, 5): (`y`)}
+        };
+        (9, 4) to (9, 5) => {
+          (4, 4) to (4, 5): (`y`)
+        };
+        (9, 8) to (9, 9) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (9, 11) to (9, 12) => {
+          (4, 4) to (4, 5): (`y`)
+        };
+        (11, 2) to (11, 3) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (12, 2) to (12, 3) => {
+          (4, 4) to (4, 5): (`y`)
+        }] |}]

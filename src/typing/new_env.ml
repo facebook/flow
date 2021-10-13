@@ -163,7 +163,12 @@ module New_env : Env_sig.S = struct
       | SingletonStrR { loc; sense; lit } -> SingletonStrP (loc, sense, lit)
       | SingletonNumR { loc; sense; lit } -> SingletonNumP (loc, sense, lit)
       | SentinelR (prop, loc) ->
-        PropExistsP (prop, mk_reason (RProperty (Some (OrdinaryName prop))) loc))
+        PropExistsP (prop, mk_reason (RProperty (Some (OrdinaryName prop))) loc)
+      | LatentR { func_loc; index } ->
+        (* Latent refinements store the loc of the callee, which is a read in the env *)
+        let reason = mk_reason (RCustom "Function call") func_loc in
+        let t = read_entry cx func_loc reason in
+        LatentP (t, index))
 
   and refine cx reason loc refi t =
     Base.Option.value_map

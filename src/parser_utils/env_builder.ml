@@ -38,6 +38,12 @@ and key_of_identifier (_, { Flow_ast.Identifier.name; comments = _ }) =
   else
     Some name
 
+and key_of_argument =
+  let open Flow_ast.Expression in
+  function
+  | Spread _ -> None
+  | Expression e -> key e
+
 type optional_chain_state =
   | NewChain
   | ContinueChain
@@ -212,6 +218,7 @@ module Make
 
     val refinement : int -> t -> t
 
+    (* unwraps a RefinementWrite into just the underlying write *)
     val unrefine : int -> t -> t
 
     val unrefine_deeply : int -> t -> t
@@ -563,6 +570,23 @@ module Make
         List.iter2 (fun { val_ref; _ } value -> val_ref := value) env env0
 
       method empty_env : Env.t = SMap.map (fun _ -> Val.empty ()) env_state.env
+
+      (* Function calls may introduce refinements if the function called is a
+       * predicate function. The EnvBuilder has no idea if a function is a
+       * predicate function or not. To handle that, we encode that a variable
+       * _might_ be havoced by a function call if that variable is passed
+       * as an argument. Variables not passed into the function are havoced if
+       * the invalidation api says they can be invalidated.
+       *)
+      method apply_latent_refinements callee_loc refinement_keys_by_arg =
+        List.iteri
+          (fun index -> function
+            | None -> ()
+            | Some key ->
+              this#add_refinement
+                key
+                (L.LSet.singleton callee_loc, LatentR { func_loc = callee_loc; index }))
+          refinement_keys_by_arg
 
       method havoc_env ~force_initialization ~all =
         SMap.iter
@@ -2228,6 +2252,42 @@ module Make
           (match key arg with
           | None -> ()
           | Some name -> this#add_refinement name (L.LSet.singleton loc, IsArrayR))
+        (* Latent refinements are only applied on function calls where the function call is an identifier *)
+        | {
+         Flow_ast.Expression.Call.callee = (_, Flow_ast.Expression.Identifier _) as callee;
+         arguments;
+         _;
+        }
+          when not (is_call_to_invariant callee) ->
+          (* This case handles predicate functions. We ensure that this
+           * is not a call to invariant and that the callee is an identifier.
+           * The only other criterion that must be met for this call to produce
+           * a refinement is that the arguments cannot contain a spread.
+           *
+           * Assuming there are no spreads we create a mapping from each argument 
+           * index to the refinement key at that index.
+           *
+           * The semantics for passing the same argument multiple times to predicate
+           * function are sketchy. Pre-LTI Flow allows you to do this but it is buggy. See
+           * https://fburl.com/vf52s7rb on v0.155.0
+           *
+           * We should strongly consider disallowing the same refinement key to
+           * appear multiple times in the arguments. *)
+          let { Flow_ast.Expression.ArgList.arguments = arglist; _ } = snd arguments in
+          let is_spread = function
+            | Flow_ast.Expression.Spread _ -> true
+            | _ -> false
+          in
+          let refinement_keys =
+            if List.exists is_spread arglist then
+              []
+            else
+              List.map (fun arg -> key_of_argument arg) arglist
+          in
+          ignore @@ this#expression callee;
+          ignore @@ this#call_arguments arguments;
+          this#havoc_current_env ~all:false;
+          this#apply_latent_refinements (fst callee) refinement_keys
         | _ -> ignore @@ this#call loc call
 
       method unary_refinement
