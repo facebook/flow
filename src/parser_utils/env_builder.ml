@@ -13,8 +13,6 @@
 
 let statement_error = ()
 
-let global_TODO = ()
-
 open Reason
 open Hoister
 
@@ -829,25 +827,19 @@ module Make
         ignore kind;
         let (loc, { Flow_ast.Identifier.name = x; comments = _ }) = ident in
         let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) loc in
-        begin
-          match SMap.find_opt x env_state.env with
-          | Some { val_ref; _ } ->
-            val_ref := Val.one reason;
-            let write_entries = L.LMap.add loc reason env_state.write_entries in
-            env_state <- { env_state with write_entries }
-          | _ -> ()
-        end;
+        let { val_ref; _ } = SMap.find x env_state.env in
+        val_ref := Val.one reason;
+        let write_entries = L.LMap.add loc reason env_state.write_entries in
+        env_state <- { env_state with write_entries };
         super#identifier ident
 
       (* This method is called during every read of an identifier. We need to ensure that
        * if the identifier is refined that we record the refiner as the write that reaches
        * this read *)
       method any_identifier loc name =
-        match SMap.find_opt name env_state.env with
-        | Some { val_ref; _ } ->
-          let values = L.LMap.add loc !val_ref env_state.values in
-          env_state <- { env_state with values }
-        | None -> ()
+        let { val_ref; _ } = SMap.find name env_state.env in
+        let values = L.LMap.add loc !val_ref env_state.values in
+        env_state <- { env_state with values }
 
       method! identifier (ident : (L.t, L.t) Ast.Identifier.t) =
         let (loc, { Ast.Identifier.name = x; comments = _ }) = ident in
