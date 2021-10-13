@@ -1579,6 +1579,9 @@ end = struct
                ~implementation_dependency_graph
                direct_dependent_files))
     in
+    (* Prevent files in node_modules from being added to the checked set. *)
+    let sig_dependent_files = filter_out_node_modules ~options sig_dependent_files in
+    let all_dependent_files = filter_out_node_modules ~options all_dependent_files in
     let acceptable_files_to_focus =
       FilenameSet.union freshparsed (CheckedSet.all unchanged_files_to_force)
     in
