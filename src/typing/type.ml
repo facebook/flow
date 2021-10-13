@@ -37,6 +37,8 @@ type ident = int
 
 type index = int
 
+type sense = bool
+
 type tvar = reason * ident
 
 type number_literal = float * string [@@deriving ord]
@@ -685,7 +687,7 @@ module rec TypeTerm : sig
     | IntersectionPreprocessKitT of reason * intersection_preprocess_tool
     | DebugPrintT of reason
     | DebugSleepT of reason
-    | SentinelPropTestT of reason * t * string * bool * UnionEnum.star * tvar
+    | SentinelPropTestT of reason * t * string * sense * UnionEnum.star * tvar
     | IdxUnwrap of reason * t_out
     | IdxUnMaybeifyT of reason * t_out
     | OptionalChainT of {
@@ -715,7 +717,7 @@ module rec TypeTerm : sig
      *
      * The boolean part is the sense of the conditional check.
      *)
-    | CallLatentPredT of reason * bool * index * t * tvar
+    | CallLatentPredT of reason * sense * index * t * tvar
     (*
      * CallOpenPredT is fired subsequently, after processing the flow
      * described above. This flow is necessary since the return type of the
@@ -728,7 +730,7 @@ module rec TypeTerm : sig
      * flow) we only keep the relevant key, which corresponds to the refining
      * parameter.
      *)
-    | CallOpenPredT of reason * bool * Key.t * t * tvar
+    | CallOpenPredT of reason * sense * Key.t * t * tvar
     (*
      * Even for the limited use of function predicates that is currently
      * allowed, we still have to build machinery to handle subtyping for
@@ -763,7 +765,7 @@ module rec TypeTerm : sig
      * is treated as an intermediate flow that adjusts the predicates of the
      * OpenPredT by applying a substitution `theta` to the predicates therein.
      *
-     * NOTE: this substitution is not use at the moment since we don't yet
+     * NOTE: this substitution is not used at the moment since we don't yet
      * support subtyping of predicated functions, but the scaffolding might be
      * useful later on.
      *)
