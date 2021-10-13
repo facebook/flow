@@ -205,7 +205,7 @@ module DirectDependentFilesCache : sig
   val clear : unit -> unit
 
   val with_cache :
-    root_files:FilenameSet.t -> on_miss:FilenameSet.t Lwt.t Lazy.t -> FilenameSet.t Lwt.t
+    cache_key:FilenameSet.t -> on_miss:FilenameSet.t Lwt.t Lazy.t -> FilenameSet.t Lwt.t
 end = struct
   let max_size = 100
 
@@ -213,8 +213,8 @@ end = struct
 
   let clear () = FilenameCache.clear cache
 
-  let with_cache ~root_files ~on_miss =
-    match FilenameSet.elements root_files with
+  let with_cache ~cache_key ~on_miss =
+    match FilenameSet.elements cache_key with
     | [root_file] ->
       let%lwt (result, _did_hit) = FilenameCache.with_cache root_file on_miss cache in
       Lwt.return result
@@ -1445,16 +1445,15 @@ end = struct
        direct_dependent_files plus their dependents (transitive closure) *)
     let%lwt direct_dependent_files =
       Memory_utils.with_memory_timer_lwt ~options "DirectDependentFiles" profiling (fun () ->
-          let root_files = FilenameSet.union new_or_changed unchanged_files_with_dependents in
           DirectDependentFilesCache.with_cache
-            ~root_files
+            ~cache_key:(FilenameSet.union new_or_changed_or_deleted unchanged_files_with_dependents)
             ~on_miss:
               (lazy
                 (Dep_service.calc_direct_dependents
                    ~reader:(Abstract_state_reader.Mutator_state_reader reader)
                    workers
                    ~candidates:(FilenameSet.diff unchanged unchanged_files_with_dependents)
-                   ~root_files
+                   ~root_files:(FilenameSet.union new_or_changed unchanged_files_with_dependents)
                    ~root_modules:(Modulename.Set.union unchanged_modules changed_modules))))
     in
     Hh_logger.info "Re-resolving directly dependent files";
