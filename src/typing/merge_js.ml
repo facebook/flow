@@ -279,7 +279,8 @@ let check_constrained_writes init_cx master_cx =
     let ccx = Context.make_ccx master_cx in
 
     let reducer =
-      new Context_optimizer.context_optimizer ~no_lowers:(fun _ -> Type.Unsoundness.merged_any)
+      new Context_optimizer.context_optimizer ~no_lowers:(fun _ r ->
+          Type.EmptyT.make r (Type.bogus_trust ()))
     in
     let checks =
       Base.List.map

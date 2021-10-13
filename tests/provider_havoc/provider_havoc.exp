@@ -1,9 +1,227 @@
-Error -------------------------------------------------------------------------------------- provider_edge_cases.js:5:19
+Error --------------------------------------------------------------------------------------------------- empty.js:12:54
 
-Cannot resolve name `console`. [cannot-resolve-name]
+Cannot assign `si.add(...)` to `si` because null or undefined [1] is incompatible with `T` [2] in type argument `T` [2].
+[incompatible-type-arg]
 
-   5| if ((x => 42) === console.log) {
-                        ^^^^^^^
+   empty.js:12:54
+   12|   (function () { declare var x: ?string; si = si.add(x)})(); // error
+                                                            ^
+
+References:
+   empty.js:12:33
+   12|   (function () { declare var x: ?string; si = si.add(x)})(); // error
+                                       ^^^^^^^ [1]
+   empty.js:65:20
+   65| declare class Set<+T> {
+                          ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- empty.js:12:54
+
+Cannot assign `si.add(...)` to `si` because string [1] is incompatible with `T` [2] in type argument `T` [2].
+[incompatible-type-arg]
+
+   empty.js:12:54
+   12|   (function () { declare var x: ?string; si = si.add(x)})(); // error
+                                                            ^
+
+References:
+   empty.js:12:34
+   12|   (function () { declare var x: ?string; si = si.add(x)})(); // error
+                                        ^^^^^^ [1]
+   empty.js:65:20
+   65| declare class Set<+T> {
+                          ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- empty.js:19:10
+
+Cannot assign array literal to `arr` because number [1] is incompatible with unknown element type of empty array [2] in
+array element. [incompatible-type]
+
+   empty.js:19:10
+   19|   arr = [1,2,3]; // error
+                ^ [1]
+
+References:
+   empty.js:18:13
+   18|   let arr = [];
+                   ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- empty.js:19:12
+
+Cannot assign array literal to `arr` because number [1] is incompatible with unknown element type of empty array [2] in
+array element. [incompatible-type]
+
+   empty.js:19:12
+   19|   arr = [1,2,3]; // error
+                  ^ [1]
+
+References:
+   empty.js:18:13
+   18|   let arr = [];
+                   ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- empty.js:19:14
+
+Cannot assign array literal to `arr` because number [1] is incompatible with unknown element type of empty array [2] in
+array element. [incompatible-type]
+
+   empty.js:19:14
+   19|   arr = [1,2,3]; // error
+                    ^ [1]
+
+References:
+   empty.js:18:13
+   18|   let arr = [];
+                   ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- empty.js:32:11
+
+Cannot assign function to `fn` because `y` [1] is incompatible with number [2] in the first parameter.
+[incompatible-type]
+
+   empty.js:32:11
+   32|     fn = (y => 42); // error
+                 ^ [1]
+
+References:
+   empty.js:30:16
+   30|   let fn = (x: number) => 42;
+                      ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- empty.js:39:11
+
+Cannot assign function to `fn` because `y` [1] is incompatible with number [2] in the first parameter.
+[incompatible-type]
+
+   empty.js:39:11
+   39|     fn = (y => 42); // error, x has number as LB
+                 ^ [1]
+
+References:
+   empty.js:41:6
+   41|   fn(52);
+            ^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- empty.js:47:15
+
+Cannot reference `this` from within method `f` [1]. For safety, Flow restricts access to `this` inside object methods
+since these methods may be unbound and rebound. Consider replacing the reference to `this` with the name of the object,
+or rewriting the object as a class. [object-this-reference]
+
+   empty.js:47:15
+   47|       let b = this.b; // unrelated error, but as a result b is tvar with no lowers
+                     ^^^^
+
+References:
+   empty.js:46:5
+           v----
+   46|     f() {
+   47|       let b = this.b; // unrelated error, but as a result b is tvar with no lowers
+   48|       b = 42; // error
+   49|     }
+           ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- empty.js:48:11
+
+Cannot assign `42` to `b` because number [1] is incompatible with `b` [2]. [incompatible-type]
+
+   empty.js:48:11
+   48|       b = 42; // error
+                 ^^ [1]
+
+References:
+   empty.js:47:11
+   47|       let b = this.b; // unrelated error, but as a result b is tvar with no lowers
+                 ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- empty.js:57:11
+
+Cannot assign array literal to `rts` because unknown element type of empty array [1] is incompatible with number [2] in
+array element. [incompatible-type]
+
+   empty.js:57:11
+   57|     rts = []; // error, redefinition has no lowers and its an invariant check
+                 ^^ [1]
+
+References:
+   empty.js:60:28
+   60|   function getRts(): Array<number> {
+                                  ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- empty.js:72:16
+
+Cannot assign `new Set<...>()` to `si` because string [1] is incompatible with `T` [2] in type argument `T` [2].
+[incompatible-type-arg]
+
+   empty.js:72:16
+   72|   si = new Set<string>(); // error
+                      ^^^^^^ [1]
+
+References:
+   empty.js:65:20
+   65| declare class Set<+T> {
+                          ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- empty.js:74:4
+
+Cannot cast `si` to `Set` because string [1] is incompatible with number [2] in type argument `T` [3].
+[incompatible-cast]
+
+   empty.js:74:4
+   74|   (si: Set<number>);
+          ^^
+
+References:
+   empty.js:72:16
+   72|   si = new Set<string>(); // error
+                      ^^^^^^ [1]
+   empty.js:74:12
+   74|   (si: Set<number>);
+                  ^^^^^^ [2]
+   empty.js:65:20
+   65| declare class Set<+T> {
+                          ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- empty.js:80:15
+
+Cannot assign `si.add(...)` to `si` because number [1] is incompatible with `T` [2] in type argument `T` [2].
+[incompatible-type-arg]
+
+   empty.js:80:15
+   80|   si = si.add(42); // error
+                     ^^ [1]
+
+References:
+   empty.js:65:20
+   65| declare class Set<+T> {
+                          ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- empty.js:86:15
+
+Cannot assign `si.add(...)` to `si` because number [1] is incompatible with `T` [2] in type argument `T` [2].
+[incompatible-type-arg]
+
+   empty.js:86:15
+   86|   si = si.add(42); // error
+                     ^^ [1]
+
+References:
+   empty.js:65:20
+   65| declare class Set<+T> {
+                          ^ [2]
 
 
 Error --------------------------------------------------------------------------------------- provider_edge_cases.js:8:1
@@ -134,4 +352,4 @@ References:
 
 
 
-Found 9 errors
+Found 22 errors

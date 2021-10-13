@@ -308,7 +308,7 @@ module New_env : Env_sig.S = struct
   let subtype_entry cx ~use_op t loc =
     let env = Context.environment cx in
     let w = Base.Option.value_exn (Loc_env.find_write env loc) in
-    Context.add_constrained_write cx (t, UseT (use_op, w))
+    Flow_js.flow cx (t, UseT (use_op, w))
 
   (* init_entry is called on variable declarations (not assignments), and `t`
      is the RHS type. If the variable is annotated, we just need to check t against

@@ -33,3 +33,16 @@ function havoc_annotated() {
     (x: number); // should fail
   }
 }
+
+function test_unsealed() {
+  // unsealed objects are unsound
+  let x = {}
+
+  function f(g: {|b: string|}) {
+    return {...g, ...x}; // no error here, unsoundly.
+  }
+
+  function g() {
+    x = ({a: 42}: {a: number, ...}); // no error here
+  }
+}
