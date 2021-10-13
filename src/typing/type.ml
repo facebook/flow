@@ -1397,14 +1397,6 @@ module rec TypeTerm : sig
     | UnionCases of use_op * t * UnionRep.t * t list
     | IntersectionCases of t list * use_t
 
-  (* A dependent predicate type consisting of:
-     - the result type of the test (not always bool)
-     - a map (lookup key -> type) of refinements which hold if the
-       test is true
-     - a map of refinements which hold if the test is false
-  *)
-  and dep_preds = t * predicate Key_map.t * predicate Key_map.t
-
   and resolve_spread_type = {
     (* This is the list of elements that are already resolved (that is have no
      * more unresolved spread elements *)
