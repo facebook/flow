@@ -486,7 +486,7 @@ struct
       method! jsx_element_name_identifier (ident : (L.t, L.t) Ast.JSX.Identifier.t) =
         let (loc, { Ast.JSX.Identifier.name; comments = _ }) = ident in
         this#any_identifier loc name;
-        super#jsx_identifier ident
+        super#jsx_element_name_identifier ident
 
       method! jsx_element_name_namespaced ns =
         (* TODO: what identifiers does `<foo:bar />` read? *)

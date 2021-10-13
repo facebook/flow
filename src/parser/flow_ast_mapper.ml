@@ -2035,13 +2035,13 @@ class ['loc] mapper =
     method object_property (prop : ('loc, 'loc) Ast.Expression.Object.Property.t) =
       let open Ast.Expression.Object.Property in
       match prop with
-      | (loc, Init { key; value; shorthand }) ->
+      | (loc, Init { key; value; shorthand = _ }) ->
         let key' = this#object_key key in
         let value' = this#expression value in
         if key == key' && value == value' then
           prop
         else
-          (loc, Init { key = key'; value = value'; shorthand })
+          (loc, Init { key = key'; value = value'; shorthand = false })
       | (loc, Method { key; value = fn }) ->
         let key' = this#object_key key in
         let fn' = map_loc this#function_expression_or_method fn in

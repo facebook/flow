@@ -10,24 +10,6 @@ module LMap = Loc_collections.LocMap
 module LSet = Loc_collections.LocSet
 open Insert_type_utils
 
-module DeclarationAnnotations = struct
-  let declaration_locs_of_constrained_write_error cctx error =
-    let tables = Context.aloc_tables (Codemod_context.Typed.context cctx) in
-    let rec find_constrained_writes op =
-      let open Type in
-      match op with
-      | Frame (ConstrainedAssignment { declaration; _ }, op) ->
-        LSet.add (ALoc.to_loc_with_tables tables declaration) (find_constrained_writes op)
-      | Op (Speculation op)
-      | Frame (_, op) ->
-        find_constrained_writes op
-      | _ -> LSet.empty
-    in
-    let msg = Flow_error.msg_of_error error in
-    let use_op_opt = Error_message.util_use_op_of_msg None (fun op _ -> Some op) msg in
-    Base.Option.value_map ~f:find_constrained_writes ~default:LSet.empty use_op_opt
-end
-
 module ErrorStats = struct
   type t = { num_total_errors: int }
 
@@ -115,7 +97,9 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
           (fun error ->
             LSet.fold
               (fun loc -> LMap.add loc ())
-              (DeclarationAnnotations.declaration_locs_of_constrained_write_error cctx error))
+              (Codemod_constrained_write_utils.declaration_locs_of_constrained_write_error
+                 (Codemod_context.Typed.context cctx)
+                 error))
           errors
           LMap.empty;
       if LMap.is_empty loc_error_map then

@@ -336,6 +336,52 @@ module Annotate_declarations_command = struct
   let command = CommandSpec.command spec main
 end
 
+module Rename_redefinitions_command = struct
+  let doc = "Convert redefined variables into separate consts"
+
+  let spec =
+    {
+      CommandSpec.name = "rename-redefinitions-experimental";
+      doc;
+      usage =
+        Printf.sprintf
+          "Usage: %s codemod rename-redefinitions-experimental [OPTION]... [FILE]\n\n%s\n"
+          Utils_js.exe_name
+          doc;
+      args = CommandSpec.ArgSpec.(empty |> CommandUtils.codemod_flags);
+    }
+
+  let main codemod_flags () =
+    let open Codemod_utils in
+    let module Runner = Codemod_runner.MakeSimpleTypedRunner (struct
+      module Acc = Rename_redefinitions.Acc
+
+      type accumulator = Acc.t
+
+      let reporter =
+        {
+          Codemod_report.report = Codemod_report.StringReporter Acc.report;
+          combine = Acc.combine;
+          empty = Acc.empty;
+        }
+
+      (* Match all files the codemod is run over *)
+      let check_options o =
+        let open Options in
+        match o.opt_env_mode with
+        | ClassicEnv opts when List.mem ConstrainWrites opts -> o
+        | ClassicEnv opts -> { o with opt_env_mode = ClassicEnv (ConstrainWrites :: opts) }
+        | SSAEnv -> { o with opt_env_mode = ClassicEnv [ConstrainWrites] }
+
+      let visit =
+        let mapper = Rename_redefinitions.mapper in
+        Codemod_utils.make_visitor (Mapper mapper)
+    end) in
+    main (module Runner) codemod_flags ()
+
+  let command = CommandSpec.command spec main
+end
+
 module KeyMirror_command = struct
   let doc = "Replaces instances of the type $ObjMapi<T, <K>(K) => K> with $KeyMirror<T>"
 
@@ -444,6 +490,7 @@ let command =
         (Annotate_escaped_generics.spec.CommandSpec.name, Annotate_escaped_generics.command);
         (Annotate_lti_command.spec.CommandSpec.name, Annotate_lti_command.command);
         (Annotate_declarations_command.spec.CommandSpec.name, Annotate_declarations_command.command);
+        (Rename_redefinitions_command.spec.CommandSpec.name, Rename_redefinitions_command.command);
         (KeyMirror_command.spec.CommandSpec.name, KeyMirror_command.command);
         (Annotate_empty_object_command.spec.CommandSpec.name, Annotate_empty_object_command.command);
       ]

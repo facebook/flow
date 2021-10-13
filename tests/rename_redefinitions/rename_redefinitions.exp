@@ -1,0 +1,217 @@
+>>> test.js (#changes: 30)
+//@flow
+
+import * as React from 'react';
+
+const tests = [
+  function () {
+    var x = 42;
+    x;
+    const xStr = "hello" //rename
+    xStr;
+  },
+  function () {
+    var x = null;
+    x;
+    x = "hello" //don't rename, provider
+    x;
+  },
+  function () {
+    var x = 42;
+    x;
+    x = "hello" //don't rename, havoced
+    x;
+    function w() {
+      x;
+    }
+  },
+  function () {
+    var x = 42;
+    x;
+    if (condition) {
+      x = "hello" //don't rename, multiple paths
+    }
+    x;
+  },
+  function () {
+    var x = 42;
+    x;
+    if (condition) {
+      x = "hello" //don't rename, multiple paths, even tho next line is exclusive
+      x;
+    }
+    x;
+  },
+  function () {
+    var x = 42;
+    x;
+    if (condition) {
+      const xStr$Temp0 = "hello" //do rename, because no reads after and outside of the conditonal
+      xStr$Temp0;
+    }
+  },
+  function () {
+    console.log();
+    x;
+    var x = 42;
+    x = "hello"; // don't rename, havoced above
+    x;
+    function f() {
+      x = 42;
+    }
+  },
+  function () {
+    var x = null;
+    function f() {
+      x = 42;
+      const xFalse = false; // rename
+      xFalse;
+    }
+  },
+  function () {
+    var x = null;
+    function f() {
+      x;
+      x = 42;
+      x = false; // don't rename, read of x at top of this scope is havoced
+      x;
+    }
+  },
+  function () {
+    var x = null;
+    function f() {
+      x = 42;
+      function w() {
+        x;
+      }
+      x = false; // don't rename, read of x in w is havoed
+      x;
+    }
+  },
+  function () {
+    var x = 42;
+    var xStr$Temp1 = 42
+    x;
+    const xStr$Temp1$Temp2 = "hello" //rename, and dont collide with the in scope var
+    xStr$Temp1$Temp2;
+  },
+  function () {
+    var x = 42;
+    function f() { const xNull = null }
+    const xStr$Temp3 = "hello" //rename, no havocing occurred
+    xStr$Temp3;
+  },
+  function () {
+    var x = 42;
+    function f() { x = null }
+    x = "hello" //don't rename, havoc
+    console.log()
+    x;
+  },
+  function () {
+    declare function create(any): string;
+    var x = 42;
+    const xContainer = create(x); // rename to xContainer
+  },
+  function () {
+    declare function createRadContainer(any): string;
+    var x = 42;
+    const xRad = createRadContainer(x); //rename to xRad
+  },
+  function () {
+    declare var react_: {
+      memo(any): string
+    }
+    var x = 42;
+    const xMemo = react_.memo(x); //rename to xMemo
+  },
+  function () {
+    declare var react_: {
+      createWithSweetData(any): string
+    }
+    var x = 42;
+    const xSweetData = react_.createWithSweetData(x); //rename to xSweetData
+  },
+  function () {
+    var x = true;
+    const x314 = 314 // rename to x314
+  },
+  function () {
+    var x = true;
+    const x3 = 3.14 // rename to x3, to avoid `.`
+  },
+  function () {
+    var x = true;
+    const xNumber = .314 //rename to xNumber; no prefix matches
+  },
+  function () {
+    var x = true;
+    const xNumber$Temp4 = 314453453453454554 //too long, rename to xNumber (modulo temporaries)
+  },
+  function () {
+    declare var z: { bluh: number }
+    var x = true;
+    const xBluh = z.bluh; // rename to xBluh
+  },
+  function () {
+    declare var z: number;
+    var x = true;
+    const xZ = z; // rename to xZ
+  },
+  function () {
+    declare var react_: {
+      memo(any): string,
+      createWithSweetData(any): string,
+      createCoolContainer(any): string,
+    }
+    var z = true;
+    const zMemo = react_.memo(z); // rename all of these
+    const zSweetData = react_.createWithSweetData(zMemo);
+    const zCool = react_.createCoolContainer(zSweetData);
+  },
+  function () {
+    var prop = 42;
+    const propStr = "a";
+
+    function takesPropObj(p: { prop: string }) { }
+
+    takesPropObj( {prop: propStr} ); // rename prop, make non-shorthand { prop: propStr }
+  },
+  function () {
+    function f() {
+      return <Ct />
+    }
+
+    let Ct = ( props: { a: number }) => { return <div>Hi</div> }
+    Ct = ( props: { b: string }) => { return <div>Hi</div> } // no rename
+    <Ct />
+  },
+  function () {
+    let Ct = ( props: { a: number }) => { return <div>Hi</div> }
+    const CtCallback = ( props: { b: string }) => { return <div>Hi</div> } // rename
+    <CtCallback />
+  },
+  function () {
+    declare var x: Array<string>;
+    for (let y = "a";;) {
+      y; // don't rename
+      y = 42;
+    }
+  },
+  function () {
+    declare var x: Array<string>;
+    for (let y of [1,2,3]) {
+      y; //don't rename
+      y = 42;
+    }
+  },
+]
+
+>>> Launching report...
+
+Stats:
+  Files changed:                            1
+  Number of vars with write errors:        27
+  Number of renamable vars:                21
+  Number of $Temps:                         5
+
