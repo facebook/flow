@@ -1228,6 +1228,9 @@ let make_options
         Base.Option.value (FlowConfig.format_single_quotes flowconfig) ~default:false;
     }
   in
+  let opt_direct_dependent_files_fix =
+    Base.Option.value (FlowConfig.direct_dependent_files_fix flowconfig) ~default:true
+  in
   let opt_prioritize_dependency_checks =
     options_flags.prioritize_dependency_checks
     || Base.Option.value (FlowConfig.prioritize_dependency_checks flowconfig) ~default:false
@@ -1263,6 +1266,7 @@ let make_options
       |> min Sys_utils.nbr_procs;
     opt_suppress_types = FlowConfig.suppress_types flowconfig;
     opt_max_literal_length = FlowConfig.max_literal_length flowconfig;
+    opt_direct_dependent_files_fix;
     opt_enable_const_params = FlowConfig.enable_const_params flowconfig;
     opt_enable_indexed_access = FlowConfig.indexed_access flowconfig;
     opt_enable_relay_integration = FlowConfig.relay_integration flowconfig;
