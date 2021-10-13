@@ -127,7 +127,7 @@ module Make (Env : Env_sig.S) = struct
 
   let export_binding cx name loc = function
     | Flow_ast.Statement.ExportValue ->
-      let t = Env.var_ref ~lookup_mode:Env_sig.LookupMode.ForValue cx name loc in
+      let t = Env.get_var_declared_type ~lookup_mode:Env_sig.LookupMode.ForValue cx name loc in
       export cx name loc t
     | Flow_ast.Statement.ExportType ->
       let t = Env.var_ref ~lookup_mode:Env_sig.LookupMode.ForType cx name loc in
