@@ -93,7 +93,8 @@ Stats:
   Files changed:                            2
   Number of annotations added:             10
   Total size of annotations:               47
-  Number of constrained write errors:      10
+  Number of vars with write errors:        10
+  Number of possibly renamable vars:       10
 
 Errors:
   Missing annot./normalizer error:          0
