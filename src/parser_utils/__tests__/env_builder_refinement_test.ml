@@ -400,6 +400,9 @@ let%expect_test "Array.isArray" =
       (1, 8) to (1, 17) => {
         Global undefined
       };
+      (2, 1) to (2, 6) => {
+        Global Array
+      };
       (2, 15) to (2, 16) => {
         (1, 4) to (1, 5): (`x`)
       };
@@ -416,6 +419,9 @@ let%expect_test "unary_negation" =
     [
       (1, 8) to (1, 17) => {
         Global undefined
+      };
+      (2, 2) to (2, 7) => {
+        Global Array
       };
       (2, 16) to (2, 17) => {
         (1, 4) to (1, 5): (`x`)

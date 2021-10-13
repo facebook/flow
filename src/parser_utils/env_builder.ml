@@ -2402,7 +2402,7 @@ module Make
                    Flow_ast.Expression.Member.PropertyIdentifier
                      (_, { Flow_ast.Identifier.name = "isArray"; comments = _ });
                  comments = _;
-               } );
+               } ) as callee;
          targs = _;
          arguments =
            ( _,
@@ -2412,6 +2412,7 @@ module Make
              } );
          comments = _;
         } ->
+          ignore @@ this#expression callee;
           ignore @@ this#expression arg;
           (match Refinement_key.key arg with
           | None -> ()
