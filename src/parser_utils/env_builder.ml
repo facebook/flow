@@ -21,15 +21,6 @@ let is_call_to_invariant callee =
   | (_, Flow_ast.Expression.Identifier (_, { Flow_ast.Identifier.name = "invariant"; _ })) -> true
   | _ -> false
 
-let property_of_sentinel_refinement { Flow_ast.Expression.Member.property; _ } =
-  let open Flow_ast in
-  match property with
-  | Expression.Member.PropertyIdentifier (_, { Identifier.name = prop_name; _ })
-  | Expression.Member.PropertyExpression
-      (_, Expression.Literal { Literal.value = Literal.String prop_name; _ }) ->
-    Some prop_name
-  | _ -> None
-
 let is_number_literal node =
   let open Flow_ast in
   match node with

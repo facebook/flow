@@ -141,13 +141,3 @@ let rec key_of_optional_chain expr =
   | (_, OptionalCall { OptionalCall.call = { Call.callee = subject; _ }; _ }) ->
     key_of_optional_chain subject
   | _ -> None
-
-let key_of_pattern patt =
-  match patt with
-  | (_, Flow_ast.Pattern.Identifier { Flow_ast.Pattern.Identifier.name; _ }) ->
-    Some (key_of_identifier name)
-  | _ ->
-    (* TODO: Heap refinements *)
-    None
-
-let empty_projection : proj list = []
