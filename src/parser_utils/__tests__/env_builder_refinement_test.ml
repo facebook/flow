@@ -14,6 +14,7 @@ let print_values refinement_of_id =
   let rec print_value write_loc =
     match write_loc with
     | Uninitialized _ -> "(uninitialized)"
+    | Projection -> "projection"
     | Write reason ->
       let loc = Reason.poly_loc_of_reason reason in
       Utils_js.spf
@@ -3178,4 +3179,257 @@ if (y.f(x, y)) {
         };
         (12, 2) to (12, 3) => {
           (4, 4) to (4, 5): (`y`)
+        }] |}]
+
+let%expect_test "heap_refinement_basic" =
+  print_ssa_test {|
+let x = {};
+if (x.foo === 3) {
+  x.foo;
+  if (x.foo === 4) {
+    x.foo;
+  }
+}
+|};
+    [%expect {|
+      [
+        (3, 4) to (3, 5) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (4, 2) to (4, 3) => {
+          {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}
+        };
+        (4, 2) to (4, 7) => {
+          {refinement = 3; writes = projection}
+        };
+        (5, 6) to (5, 7) => {
+          {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}
+        };
+        (5, 6) to (5, 11) => {
+          {refinement = 3; writes = projection}
+        };
+        (6, 4) to (6, 5) => {
+          {refinement = SentinelR foo; writes = {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}}
+        };
+        (6, 4) to (6, 9) => {
+          {refinement = 4; writes = {refinement = 3; writes = projection}}
+        }] |}]
+
+let%expect_test "heap_refinement_basic" =
+  print_ssa_test {|
+let x = {};
+if (x.foo === 3) {
+  x.foo;
+  if (x.foo === 4) {
+    x.foo;
+  }
+}
+|};
+    [%expect {|
+      [
+        (3, 4) to (3, 5) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (4, 2) to (4, 3) => {
+          {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}
+        };
+        (4, 2) to (4, 7) => {
+          {refinement = 3; writes = projection}
+        };
+        (5, 6) to (5, 7) => {
+          {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}
+        };
+        (5, 6) to (5, 11) => {
+          {refinement = 3; writes = projection}
+        };
+        (6, 4) to (6, 5) => {
+          {refinement = SentinelR foo; writes = {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}}
+        };
+        (6, 4) to (6, 9) => {
+          {refinement = 4; writes = {refinement = 3; writes = projection}}
+        }] |}]
+
+let%expect_test "heap_refinement_merge_branches" =
+  print_ssa_test {|
+declare var invariant: any;
+let x = {};
+if (true) {
+  invariant(x.foo === 3);
+} else {
+  invariant(x.foo === 4);
+}
+x.foo; // 3 | 4
+|};
+    [%expect {|
+      [
+        (5, 2) to (5, 11) => {
+          (2, 12) to (2, 21): (`invariant`)
+        };
+        (5, 12) to (5, 13) => {
+          (3, 4) to (3, 5): (`x`)
+        };
+        (7, 2) to (7, 11) => {
+          (2, 12) to (2, 21): (`invariant`)
+        };
+        (7, 12) to (7, 13) => {
+          (3, 4) to (3, 5): (`x`)
+        };
+        (9, 0) to (9, 1) => {
+          {refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)},
+          {refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}
+        };
+        (9, 0) to (9, 5) => {
+          {refinement = 3; writes = projection},
+          {refinement = 4; writes = projection}
+        }] |}]
+
+let%expect_test "heap_refinement_one_branch" =
+  print_ssa_test {|
+declare var invariant: any;
+let x = {};
+if (true) {
+  invariant(x.foo === 3);
+} else {
+}
+x.foo; // No refinement
+|};
+    [%expect {|
+      [
+        (5, 2) to (5, 11) => {
+          (2, 12) to (2, 21): (`invariant`)
+        };
+        (5, 12) to (5, 13) => {
+          (3, 4) to (3, 5): (`x`)
+        };
+        (8, 0) to (8, 1) => {
+          (3, 4) to (3, 5): (`x`),
+          {refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}
+        }] |}]
+
+let%expect_test "heap_refinement_while_loop_subject_changed" =
+  print_ssa_test {|
+let x = {};
+while (x.foo === 3) {
+  x.foo;
+  x = {};
+  break;
+}
+x.foo; // No heap refinement here
+|};
+    [%expect {|
+      [
+        (3, 7) to (3, 8) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (4, 2) to (4, 3) => {
+          {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}
+        };
+        (4, 2) to (4, 7) => {
+          {refinement = 3; writes = projection}
+        };
+        (8, 0) to (8, 1) => {
+          (2, 4) to (2, 5): (`x`),
+          (5, 2) to (5, 3): (`x`)
+        }] |}]
+
+let%expect_test "heap_refinement_while_loop_projection_changed" =
+  print_ssa_test {|
+declare var invariant: any;
+let x = {};
+while (x.foo === 3) {
+  invariant(x.foo === 4);
+  x.foo;
+  break;
+}
+x.foo; // No heap refinement here
+|};
+    [%expect {|
+      [
+        (4, 7) to (4, 8) => {
+          (3, 4) to (3, 5): (`x`)
+        };
+        (5, 2) to (5, 11) => {
+          (2, 12) to (2, 21): (`invariant`)
+        };
+        (5, 12) to (5, 13) => {
+          {refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}
+        };
+        (5, 12) to (5, 17) => {
+          {refinement = 3; writes = projection}
+        };
+        (6, 2) to (6, 3) => {
+          {refinement = SentinelR foo; writes = {refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}}
+        };
+        (6, 2) to (6, 7) => {
+          {refinement = 4; writes = {refinement = 3; writes = projection}}
+        };
+        (9, 0) to (9, 1) => {
+          (3, 4) to (3, 5): (`x`),
+          {refinement = SentinelR foo; writes = {refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}}
+        }] |}]
+
+let%expect_test "heap_refinement_while_loop_negated" =
+  print_ssa_test {|
+declare var invariant: any;
+let x = {};
+while (x.foo === 3) {
+  x.foo;
+}
+x.foo;
+|};
+    [%expect {|
+      [
+        (4, 7) to (4, 8) => {
+          (3, 4) to (3, 5): (`x`)
+        };
+        (5, 2) to (5, 3) => {
+          {refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}
+        };
+        (5, 2) to (5, 7) => {
+          {refinement = 3; writes = projection}
+        };
+        (7, 0) to (7, 1) => {
+          {refinement = Not (SentinelR foo); writes = (3, 4) to (3, 5): (`x`)}
+        };
+        (7, 0) to (7, 5) => {
+          {refinement = Not (3); writes = projection}
+        }] |}]
+
+let%expect_test "heap_refinement_loop_control_flow_write" =
+  print_ssa_test {|
+declare var invariant: any;
+let x = {};
+while (x.foo === 3) {
+  if (x.foo === 4) {
+    x.foo;
+  } else { throw 'error'}
+  x.foo;
+}
+x.foo; // x.foo === 4 refinement should not be present
+|};
+    [%expect {|
+      [
+        (4, 7) to (4, 8) => {
+          (3, 4) to (3, 5): (`x`)
+        };
+        (5, 6) to (5, 7) => {
+          {refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}
+        };
+        (5, 6) to (5, 11) => {
+          {refinement = 3; writes = projection}
+        };
+        (6, 4) to (6, 5) => {
+          {refinement = SentinelR foo; writes = {refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}}
+        };
+        (6, 4) to (6, 9) => {
+          {refinement = 4; writes = {refinement = 3; writes = projection}}
+        };
+        (8, 2) to (8, 3) => {
+          {refinement = SentinelR foo; writes = {refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}}
+        };
+        (10, 0) to (10, 1) => {
+          {refinement = Not (SentinelR foo); writes = (3, 4) to (3, 5): (`x`),{refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}}
+        };
+        (10, 0) to (10, 5) => {
+          {refinement = Not (3); writes = projection}
         }] |}]

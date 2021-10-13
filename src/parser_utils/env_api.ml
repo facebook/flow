@@ -28,6 +28,7 @@ module type S = sig
         writes: write_locs;
       }
     | Global of string
+    | Projection
 
   and write_locs = write_loc list
 
@@ -139,6 +140,7 @@ module Make
         writes: write_locs;
       }
     | Global of string
+    | Projection
 
   and write_locs = write_loc list
 
@@ -221,6 +223,7 @@ module Make
     | Write r -> [Reason.poly_loc_of_reason r]
     | Uninitialized _ -> []
     | Global _ -> []
+    | Projection -> []
 
   let sources_of_use { env_values = vals; refinement_of_id; _ } loc =
     let write_locs =
@@ -245,6 +248,7 @@ module Make
     let rec print_write_loc write_loc =
       match write_loc with
       | Uninitialized _ -> "(uninitialized)"
+      | Projection -> "projection"
       | Write reason ->
         let loc = Reason.poly_loc_of_reason reason in
         Utils_js.spf

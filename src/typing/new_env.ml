@@ -199,7 +199,8 @@ module New_env : Env_sig.S = struct
           | Env_api.With_ALoc.Refinement { refinement_id; writes } ->
             find_refi var_info refinement_id |> Base.Option.some |> type_of_state writes
           | Env_api.With_ALoc.Global name ->
-            Flow_js.get_builtin cx (Reason.OrdinaryName name) reason)
+            Flow_js.get_builtin cx (Reason.OrdinaryName name) reason
+          | Env_api.With_ALoc.Projection -> failwith "Projections not yet implemented")
         states
       |> phi cx reason
       |> refine cx reason loc refi
@@ -245,6 +246,7 @@ module New_env : Env_sig.S = struct
           | Env_api.With_ALoc.Uninitialized _ -> true
           | Env_api.With_ALoc.Write _ -> true
           | Env_api.With_ALoc.Refinement { refinement_id = _; writes } -> local_def_exists writes
+          | Env_api.With_ALoc.Projection -> false
           | Env_api.With_ALoc.Global _ -> false)
         states
       |> not
