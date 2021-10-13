@@ -3370,7 +3370,6 @@ x.foo; // No heap refinement here
 
 let%expect_test "heap_refinement_while_loop_negated" =
   print_ssa_test {|
-declare var invariant: any;
 let x = {};
 while (x.foo === 3) {
   x.foo;
@@ -3379,25 +3378,24 @@ x.foo;
 |};
     [%expect {|
       [
-        (4, 7) to (4, 8) => {
-          (3, 4) to (3, 5): (`x`)
+        (3, 7) to (3, 8) => {
+          (2, 4) to (2, 5): (`x`)
         };
-        (5, 2) to (5, 3) => {
-          {refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}
+        (4, 2) to (4, 3) => {
+          {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}
         };
-        (5, 2) to (5, 7) => {
+        (4, 2) to (4, 7) => {
           {refinement = 3; writes = projection}
         };
-        (7, 0) to (7, 1) => {
-          {refinement = Not (SentinelR foo); writes = (3, 4) to (3, 5): (`x`)}
+        (6, 0) to (6, 1) => {
+          {refinement = Not (SentinelR foo); writes = (2, 4) to (2, 5): (`x`)}
         };
-        (7, 0) to (7, 5) => {
+        (6, 0) to (6, 5) => {
           {refinement = Not (3); writes = projection}
         }] |}]
 
 let%expect_test "heap_refinement_loop_control_flow_write" =
   print_ssa_test {|
-declare var invariant: any;
 let x = {};
 while (x.foo === 3) {
   if (x.foo === 4) {
@@ -3409,27 +3407,132 @@ x.foo; // x.foo === 4 refinement should not be present
 |};
     [%expect {|
       [
-        (4, 7) to (4, 8) => {
-          (3, 4) to (3, 5): (`x`)
+        (3, 7) to (3, 8) => {
+          (2, 4) to (2, 5): (`x`)
         };
-        (5, 6) to (5, 7) => {
-          {refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}
+        (4, 6) to (4, 7) => {
+          {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}
         };
-        (5, 6) to (5, 11) => {
+        (4, 6) to (4, 11) => {
           {refinement = 3; writes = projection}
         };
-        (6, 4) to (6, 5) => {
-          {refinement = SentinelR foo; writes = {refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}}
+        (5, 4) to (5, 5) => {
+          {refinement = SentinelR foo; writes = {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}}
         };
-        (6, 4) to (6, 9) => {
+        (5, 4) to (5, 9) => {
           {refinement = 4; writes = {refinement = 3; writes = projection}}
         };
-        (8, 2) to (8, 3) => {
-          {refinement = SentinelR foo; writes = {refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}}
+        (7, 2) to (7, 3) => {
+          {refinement = SentinelR foo; writes = {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}}
         };
-        (10, 0) to (10, 1) => {
-          {refinement = Not (SentinelR foo); writes = (3, 4) to (3, 5): (`x`),{refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}}
+        (9, 0) to (9, 1) => {
+          {refinement = Not (SentinelR foo); writes = (2, 4) to (2, 5): (`x`),{refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}}
         };
-        (10, 0) to (10, 5) => {
+        (9, 0) to (9, 5) => {
           {refinement = Not (3); writes = projection}
+        }] |}]
+
+let%expect_test "heap_refinement_write" =
+  print_ssa_test {|
+let x = {};
+x.foo = 3;
+x.foo;
+|};
+    [%expect {|
+      [
+        (3, 0) to (3, 1) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (4, 0) to (4, 1) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (4, 0) to (4, 5) => {
+          (3, 0) to (3, 5): (some property)
+        }] |}]
+
+let%expect_test "heap_refinement_write_havoc_member" =
+  print_ssa_test {|
+let x = {};
+x.foo = 3;
+let y = x;
+y.foo = 3;
+x.foo; // should no longer be refined
+y.foo; // still refined
+|};
+    [%expect {|
+      [
+        (3, 0) to (3, 1) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (4, 8) to (4, 9) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (5, 0) to (5, 1) => {
+          (4, 4) to (4, 5): (`y`)
+        };
+        (6, 0) to (6, 1) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (7, 0) to (7, 1) => {
+          (4, 4) to (4, 5): (`y`)
+        };
+        (7, 0) to (7, 5) => {
+          (5, 0) to (5, 5): (some property)
+        }] |}]
+
+let%expect_test "heap_refinement_write_havoc_elem" =
+  print_ssa_test {|
+let x = {};
+x.foo = 3;
+let y = x;
+y.foo = 3;
+y[x] = 4;
+x.foo; // should no longer be refined
+y.foo; // should no longer be refined 
+|};
+    [%expect {|
+      [
+        (3, 0) to (3, 1) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (4, 8) to (4, 9) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (5, 0) to (5, 1) => {
+          (4, 4) to (4, 5): (`y`)
+        };
+        (6, 0) to (6, 1) => {
+          (4, 4) to (4, 5): (`y`)
+        };
+        (6, 2) to (6, 3) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (7, 0) to (7, 1) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (8, 0) to (8, 1) => {
+          (4, 4) to (4, 5): (`y`)
+        }] |}]
+
+let%expect_test "heap_refinement_havoc_on_write" =
+  print_ssa_test {|
+let x = {};
+x.foo = 3;
+x.foo;
+x = {};
+x.foo; // No more refinement
+|};
+    [%expect {|
+      [
+        (3, 0) to (3, 1) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (4, 0) to (4, 1) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (4, 0) to (4, 5) => {
+          (3, 0) to (3, 5): (some property)
+        };
+        (6, 0) to (6, 1) => {
+          (5, 0) to (5, 1): (`x`)
         }] |}]

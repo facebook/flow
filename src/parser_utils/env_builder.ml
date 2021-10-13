@@ -657,6 +657,11 @@ module Make
 
       method havoc_heap_refinements heap_refinements = heap_refinements := HeapRefinementMap.empty
 
+      method havoc_all_heap_refinements () =
+        SMap.iter
+          (fun _ { heap_refinements; _ } -> this#havoc_heap_refinements heap_refinements)
+          env_state.env
+
       method havoc_env ~force_initialization ~all =
         SMap.iter
           (fun _x { val_ref; havoc; def_loc; heap_refinements } ->
@@ -827,8 +832,9 @@ module Make
         ignore kind;
         let (loc, { Flow_ast.Identifier.name = x; comments = _ }) = ident in
         let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) loc in
-        let { val_ref; _ } = SMap.find x env_state.env in
+        let { val_ref; heap_refinements; _ } = SMap.find x env_state.env in
         val_ref := Val.one reason;
+        this#havoc_heap_refinements heap_refinements;
         let write_entries = L.LMap.add loc reason env_state.write_entries in
         env_state <- { env_state with write_entries };
         super#identifier ident
@@ -855,6 +861,73 @@ module Make
         (* TODO: what identifiers does `<foo:bar />` read? *)
         super#jsx_element_name_namespaced ns
 
+      method havoc_heap_refinements_using_name ~private_ name =
+        SMap.iter
+          (fun _ { heap_refinements; _ } ->
+            heap_refinements :=
+              HeapRefinementMap.filter
+                (fun projections _ ->
+                  not (Refinement_key.proj_uses_propname ~private_ name projections))
+                !heap_refinements)
+          env_state.env
+
+      (* This function should be called _after_ a member expression is assigned a value.
+       * It havocs other heap refinements depending on the name of the member and then adds
+       * a write to the heap refinement entry for that member expression *)
+      method assign_expression ~update_entry lhs rhs =
+        ignore @@ this#pattern_expression lhs;
+        ignore @@ this#expression rhs;
+        match lhs with
+        | (loc, Flow_ast.Expression.Member member) -> this#assign_member ~update_entry member loc
+        | _ -> ()
+
+      method assign_member ~update_entry lhs_member lhs_loc =
+        this#post_assignment_heap_refinement_havoc lhs_member;
+        (* We pass allow_optional:false, but optional chains can't be in the LHS anyway. *)
+        let refinement_key = Refinement_key.key_of_member lhs_member ~allow_optional:false in
+        match refinement_key with
+        | Some refinement_key when update_entry ->
+          let reason = Reason.(mk_reason RSomeProperty lhs_loc) in
+          let write_val = Val.one reason in
+          this#map_val_with_refinement_key
+            refinement_key
+            (fun _ -> write_val)
+            ~heap_default:(Some write_val);
+          let write_entries = L.LMap.add lhs_loc reason env_state.write_entries in
+          env_state <- { env_state with write_entries }
+        | _ -> ()
+
+      (* This method is called after assigning a member expression but _before_ the refinement for
+       * that assignment is recorded. *)
+      method post_assignment_heap_refinement_havoc (lhs : (L.t, L.t) Flow_ast.Expression.Member.t) =
+        let open Flow_ast.Expression in
+        match lhs with
+        | {
+         Member._object;
+         property = Member.PropertyPrivateName (_, { Flow_ast.PrivateName.name; _ });
+         _;
+        } ->
+          (* Yes, we want to havoc using the PROPERTY name here. This is because we
+           * do not do any alias tracking, so we want to have the following behavior:
+           * let x = {};
+           * let y = x;
+           * x.foo = 3;
+           * y.foo = 4;
+           * (x.foo: 3) // MUST error!
+           *)
+          this#havoc_heap_refinements_using_name name ~private_:true
+        | {
+         Member._object;
+         property = Member.PropertyIdentifier (_, { Flow_ast.Identifier.name; _ });
+         _;
+        } ->
+          (* As in the previous case, we can't know if this object is aliased nor what property
+           * is being written. We are forced to conservatively havoc ALL heap refinements in this
+           * situation. *)
+          this#havoc_heap_refinements_using_name name ~private_:false
+        | { Member._object; property = Member.PropertyExpression _; _ } ->
+          this#havoc_all_heap_refinements ()
+
       (* Order of evaluation matters *)
       method! assignment _loc (expr : (L.t, L.t) Ast.Expression.Assignment.t) =
         let open Ast.Expression.Assignment in
@@ -869,10 +942,9 @@ module Make
                 (* given `x = e`, read e then write x *)
                 ignore @@ this#expression right;
                 ignore @@ this#assignment_pattern left
-              | (_, Expression _) ->
+              | (_, Expression e) ->
                 (* given `o.x = e`, read o then read e *)
-                ignore @@ this#assignment_pattern left;
-                ignore @@ this#expression right
+                this#assign_expression ~update_entry:true e right
             end
           | Some _ ->
             let open Ast.Pattern in
@@ -883,10 +955,9 @@ module Make
                 ignore @@ this#identifier name;
                 ignore @@ this#expression right;
                 ignore @@ this#assignment_pattern left
-              | (_, Expression _) ->
+              | (_, Expression e) ->
                 (* given `o.x += e`, read o then read e *)
-                ignore @@ this#assignment_pattern left;
-                ignore @@ this#expression right
+                this#assign_expression ~update_entry:false e right
               | (_, (Object _ | Array _)) -> statement_error
             end
         end;
