@@ -74,6 +74,7 @@ type t = {
   opt_automatic_require_default: bool;
   opt_babel_loose_array_spread: bool;
   opt_debug: bool;
+  opt_direct_dependent_files_fix: bool;
   opt_enable_const_params: bool;
   opt_enable_indexed_access: bool;
   opt_enabled_rollouts: string SMap.t;
@@ -167,6 +168,8 @@ let babel_loose_array_spread opts = opts.opt_babel_loose_array_spread
 let new_merge opts = opts.opt_new_merge
 
 let max_literal_length opts = opts.opt_max_literal_length
+
+let direct_dependent_files_fix opts = opts.opt_direct_dependent_files_fix
 
 let enable_const_params opts = opts.opt_enable_const_params
 

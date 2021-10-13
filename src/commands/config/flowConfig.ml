@@ -51,6 +51,7 @@ module Opts = struct
     autoimports: bool option;
     automatic_require_default: bool option;
     babel_loose_array_spread: bool option;
+    direct_dependent_files_fix: bool option;
     disable_live_non_parse_errors: bool option;
     emoji: bool option;
     enable_const_params: bool;
@@ -178,6 +179,7 @@ module Opts = struct
       autoimports = None;
       automatic_require_default = None;
       babel_loose_array_spread = None;
+      direct_dependent_files_fix = None;
       disable_live_non_parse_errors = None;
       emoji = None;
       enable_const_params = false;
@@ -504,6 +506,9 @@ module Opts = struct
   let babel_loose_array_spread_parser =
     boolean (fun opts v -> Ok { opts with babel_loose_array_spread = Some v })
 
+  let direct_dependent_files_fix_parser =
+    boolean (fun opts v -> Ok { opts with direct_dependent_files_fix = Some v })
+
   let disable_live_non_parse_errors_parser =
     boolean (fun opts v -> Ok { opts with disable_live_non_parse_errors = Some v })
 
@@ -731,6 +736,7 @@ module Opts = struct
       ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = v }));
       ("experimental.abstract_locations", abstract_locations_parser);
       ("experimental.const_params", boolean (fun opts v -> Ok { opts with enable_const_params = v }));
+      ("experimental.direct_dependent_files_fix", direct_dependent_files_fix_parser);
       ("experimental.disable_live_non_parse_errors", disable_live_non_parse_errors_parser);
       ("experimental.enforce_local_inference_annotations", enforce_local_inference_annotations);
       ("experimental.local_inference_annotation_dirs", local_inference_annotation_dirs);
@@ -1339,6 +1345,8 @@ let autoimports c = c.options.Opts.autoimports
 let automatic_require_default c = c.options.Opts.automatic_require_default
 
 let babel_loose_array_spread c = c.options.Opts.babel_loose_array_spread
+
+let direct_dependent_files_fix c = c.options.Opts.direct_dependent_files_fix
 
 let disable_live_non_parse_errors c = c.options.Opts.disable_live_non_parse_errors
 

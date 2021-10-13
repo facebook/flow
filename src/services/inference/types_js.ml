@@ -1445,8 +1445,14 @@ end = struct
        direct_dependent_files plus their dependents (transitive closure) *)
     let%lwt direct_dependent_files =
       Memory_utils.with_memory_timer_lwt ~options "DirectDependentFiles" profiling (fun () ->
+          let cache_key =
+            if Options.direct_dependent_files_fix options then
+              FilenameSet.union new_or_changed_or_deleted unchanged_files_with_dependents
+            else
+              FilenameSet.union new_or_changed unchanged_files_with_dependents
+          in
           DirectDependentFilesCache.with_cache
-            ~cache_key:(FilenameSet.union new_or_changed_or_deleted unchanged_files_with_dependents)
+            ~cache_key
             ~on_miss:
               (lazy
                 (Dep_service.calc_direct_dependents

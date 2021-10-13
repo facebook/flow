@@ -74,6 +74,8 @@ val automatic_require_default : config -> bool option
 
 val babel_loose_array_spread : config -> bool option
 
+val direct_dependent_files_fix : config -> bool option
+
 val disable_live_non_parse_errors : config -> bool option
 
 val emoji : config -> bool option
