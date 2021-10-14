@@ -25,6 +25,7 @@ module type S = sig
   and options = {
     module_ref_prefix: string option;
     enable_relay_integration: bool;
+    relay_integration_module_prefix: string option;
   }
 
   (* We can extract the observable interface of a module by extracting information

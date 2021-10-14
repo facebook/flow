@@ -31,7 +31,7 @@ let name_regexp =
   Str.regexp
     "^[ \t\n\r,]*\\(query\\|mutation\\|subscription\\|fragment\\)[ \t\n\r,]+\\([_A-Za-z][_0-9A-Za-z]*\\)"
 
-let extract_module_name quasi =
+let extract_module_name quasi ~module_prefix =
   let open Flow_ast.Expression.TemplateLiteral in
   match quasi with
   | ( _,
@@ -50,9 +50,9 @@ let extract_module_name quasi =
         Error MultipleDefinitions
       with
       | Not_found ->
-        (* TODO: handle output for non-haste *)
         let module_name = spf "%s.graphql" name in
-        Ok module_name
+        let prefix = Option.value ~default:"" module_prefix in
+        Ok (prefix ^ module_name)
     else
       Error InvalidGraphQL
   | _ -> Error InvalidTaggedTemplate

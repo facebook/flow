@@ -72,6 +72,7 @@ type metadata = {
   react_runtime: Options.react_runtime;
   react_server_component_exts: SSet.t;
   recursion_limit: int;
+  relay_integration_module_prefix: string option;
   reorder_checking: Options.order_mode;
   root: Path.t;
   run_post_inference_implicit_instantiation: bool;
@@ -161,6 +162,8 @@ val enable_enums : t -> bool
 val enable_indexed_access : t -> bool
 
 val enable_relay_integration : t -> bool
+
+val relay_integration_module_prefix : t -> string option
 
 val env_mode : t -> Options.env_mode
 

@@ -187,6 +187,7 @@ let sig_options
     ?module_ref_prefix
     ?(enable_enums = true)
     ?(enable_relay_integration = false)
+    ?relay_integration_module_prefix
     () =
   {
     Parse.type_asserts;
@@ -200,6 +201,7 @@ let sig_options
     module_ref_prefix;
     enable_enums;
     enable_relay_integration;
+    relay_integration_module_prefix;
   }
 
 let parse_and_pack_module ~strict sig_opts contents =
@@ -216,6 +218,7 @@ let print_sig
     ?module_ref_prefix
     ?enable_enums
     ?enable_relay_integration
+    ?relay_integration_module_prefix
     contents_indent =
   let contents = dedent_trim contents_indent in
   let sig_opts =
@@ -229,6 +232,7 @@ let print_sig
       ?module_ref_prefix
       ?enable_enums
       ?enable_relay_integration
+      ?relay_integration_module_prefix
       ()
   in
   let type_sig = parse_and_pack_module ~strict:true sig_opts contents in
@@ -1673,6 +1677,17 @@ let%expect_test "enable_relay_integration" =
 
     Module refs:
     0. foo.graphql |}]
+
+let%expect_test "relay_integration_module_prefix" =
+  print_sig ~enable_relay_integration:true ~relay_integration_module_prefix:"./__generated__/" {|
+    module.exports = graphql`query foo {}`;
+  |};
+  [%expect {|
+    CJSModule {type_exports = [||]; exports = (Some Require {loc = [1:17-38]; index = 0});
+      info = CJSModuleInfo {type_export_keys = [||]; type_stars = []; strict = true}}
+
+    Module refs:
+    0. ./__generated__/foo.graphql |}]
 
 let%expect_test "scope_extrusion" =
   print_sig {|

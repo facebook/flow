@@ -25,6 +25,7 @@ struct
   and options = {
     module_ref_prefix: string option;
     enable_relay_integration: bool;
+    relay_integration_module_prefix: string option;
   }
 
   and module_sig = {
@@ -128,7 +129,12 @@ struct
 
   let empty = { module_sig = empty_module_sig; declare_modules = SMap.empty }
 
-  let default_opts = { module_ref_prefix = None; enable_relay_integration = false }
+  let default_opts =
+    {
+      module_ref_prefix = None;
+      enable_relay_integration = false;
+      relay_integration_module_prefix = None;
+    }
 
   module PP = struct
     let string_of_option f = function
@@ -501,7 +507,9 @@ struct
         match tag with
         | (_, Ast.Expression.Identifier (_, { Ast.Identifier.name = "graphql"; _ }))
           when opts.enable_relay_integration ->
-          (match Graphql.extract_module_name quasi with
+          (match
+             Graphql.extract_module_name ~module_prefix:opts.relay_integration_module_prefix quasi
+           with
           | Ok module_name ->
             this#add_require
               (Require { source = (loc, module_name); require_loc = loc; bindings = None });

@@ -1,0 +1,5 @@
+[options]
+all=true
+
+relay_integration=true
+relay_integration.module_prefix=./__generated__/

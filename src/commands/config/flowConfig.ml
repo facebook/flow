@@ -77,6 +77,7 @@ module Opts = struct
     gc_worker_window_size: int option;  (** Gc.control's window_size *)
     generate_tests: bool;
     relay_integration: bool;
+    relay_integration_module_prefix: string option;
     haste_module_ref_prefix: string option;
     haste_name_reducers: (Str.regexp * string) list;
     haste_paths_excludes: string list;
@@ -205,6 +206,7 @@ module Opts = struct
       gc_worker_window_size = None;
       generate_tests = false;
       relay_integration = false;
+      relay_integration_module_prefix = None;
       haste_module_ref_prefix = None;
       haste_name_reducers =
         [(Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$", "\\2")];
@@ -774,6 +776,8 @@ module Opts = struct
       ("gc.worker.space_overhead", gc_worker_space_overhead_parser);
       ("gc.worker.window_size", gc_worker_window_size_parser);
       ("relay_integration", boolean (fun opts v -> Ok { opts with relay_integration = v }));
+      ( "relay_integration.module_prefix",
+        string (fun opts v -> Ok { opts with relay_integration_module_prefix = Some v }) );
       ("include_warnings", boolean (fun opts v -> Ok { opts with include_warnings = v }));
       ("indexed_access", boolean (fun opts v -> Ok { opts with indexed_access = v }));
       ("lazy_mode", lazy_mode_parser);
@@ -1391,6 +1395,8 @@ let facebook_fbt c = c.options.Opts.facebook_fbt
 let facebook_module_interop c = c.options.Opts.facebook_module_interop
 
 let relay_integration c = c.options.Opts.relay_integration
+
+let relay_integration_module_prefix c = c.options.Opts.relay_integration_module_prefix
 
 let haste_module_ref_prefix c = c.options.Opts.haste_module_ref_prefix
 

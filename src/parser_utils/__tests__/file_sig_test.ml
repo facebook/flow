@@ -239,6 +239,23 @@ let tests =
              assert_substring_equal ~ctxt "graphql`query foo {}`" source source_loc;
              assert_substring_equal ~ctxt "graphql`query foo {}`" source require_loc
            | _ -> assert_failure "Unexpected requires" );
+         ( "relay_integration_module_prefix" >:: fun ctxt ->
+           let source = "graphql`query foo {}`" in
+           let { module_sig = { requires; _ }; _ } =
+             visit
+               source
+               ~opts:
+                 {
+                   default_opts with
+                   enable_relay_integration = true;
+                   relay_integration_module_prefix = Some "./__generated__/";
+                 }
+           in
+           match requires with
+           | [Require { source = (source_loc, "./__generated__/foo.graphql"); require_loc; _ }] ->
+             assert_substring_equal ~ctxt "graphql`query foo {}`" source source_loc;
+             assert_substring_equal ~ctxt "graphql`query foo {}`" source require_loc
+           | _ -> assert_failure "Unexpected requires" );
          ( "dynamic_import" >:: fun ctxt ->
            let source = "import('foo')" in
            let { module_sig = { requires; _ }; _ } = visit source in

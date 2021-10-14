@@ -67,6 +67,7 @@ let sig_opts =
     module_ref_prefix = None;
     enable_enums = true;
     enable_relay_integration = false;
+    relay_integration_module_prefix = None;
   }
 
 let print_index exports =

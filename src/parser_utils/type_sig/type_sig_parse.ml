@@ -34,6 +34,7 @@ type options = {
   module_ref_prefix: string option;
   enable_enums: bool;
   enable_relay_integration: bool;
+  relay_integration_module_prefix: string option;
 }
 
 (* This type encodes the fixed point of parsed signatures. Of particular note
@@ -2380,8 +2381,9 @@ let template_literal opts tbls loc quasis =
     string_literal opts tbls loc s
   | _ -> Value (StringVal loc)
 
-let graphql_literal _ tbls loc quasi =
-  match Graphql.extract_module_name quasi with
+let graphql_literal opts tbls loc quasi =
+  let module_prefix = opts.relay_integration_module_prefix in
+  match Graphql.extract_module_name ~module_prefix quasi with
   | Ok module_name ->
     let mref = push_module_ref tbls module_name in
     Require { loc; mref }

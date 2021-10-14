@@ -3539,8 +3539,9 @@ module Make (Env : Env_sig.S) = struct
           comments;
         }
       when Context.enable_relay_integration cx ->
+      let module_prefix = Context.relay_integration_module_prefix cx in
       let t =
-        match Graphql.extract_module_name quasi with
+        match Graphql.extract_module_name ~module_prefix quasi with
         | Ok module_name -> Import_export.require cx (loc, module_name) loc
         | Error err ->
           Flow.add_output cx (Error_message.EInvalidGraphQL (loc, err));
