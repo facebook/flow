@@ -8,12 +8,12 @@ Cannot cast `import.meta` to number literal `1` because `Import$Meta` [1] is inc
           ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2577:20
+   <BUILTINS>/core.js:2571:20
                             v
-   2577| type Import$Meta = {
-   2578|   url?: string,
-   2579|   ...
-   2580| };
+   2571| type Import$Meta = {
+   2572|   url?: string,
+   2573|   ...
+   2574| };
          ^ [1]
    import_meta.js:6:15
       6| (import.meta: 1); // Error
@@ -29,12 +29,12 @@ Cannot get `import.meta.xxx` because property `xxx` is missing in `Import$Meta` 
                      ^^^
 
 References:
-   <BUILTINS>/core.js:2577:20
+   <BUILTINS>/core.js:2571:20
                             v
-   2577| type Import$Meta = {
-   2578|   url?: string,
-   2579|   ...
-   2580| };
+   2571| type Import$Meta = {
+   2572|   url?: string,
+   2573|   ...
+   2574| };
          ^ [1]
 
 
