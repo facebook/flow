@@ -1,3 +1,24 @@
+### 0.162.0
+
+Likely to cause new Flow errors:
+* As part of our work on [Local Type Inference](https://medium.com/flow-type/introducing-local-type-inference-for-flow-6af65b7830aa), unannotated variables now require a non-null value to be assigned to them at some point in the program. If a variable is intentionally only null, it can be annotated with `null` (`let x: null = null`); if only undefined, then it can be annotated with `void` (`let x: void;`).
+* Function and class names can no longer be reassigned, even when not exported
+* Fix positioning of [missing-type-arg] errors
+
+New Features:
+* Add `$Partial` utility type. This utility converts all of an object's or interface's named fields to be optional, while maintaining all the object's other properties (exactness, sealedness, etc).
+
+Notable bug fixes:
+* Improve performance of `strict_es6_import_export`
+* Fix an infinite recheck loop when deleting a file when using saved state
+* Fix a bug where the server would stop after running a CLI command if the server was starting with `--autostop`
+
+Misc:
+* Type `import.meta` as object
+* Fix jsdoc support on imported `declare function`
+* Make string literal autocomplete obey `format.single_quotes` setting
+* Improve reliability of "refactor" code actions
+
 ### 0.161.1
 
 * Fixes a bug with `experimental.prioritize_dependency_checks`
