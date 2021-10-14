@@ -1,1 +1,1 @@
-cmd: codemod annotate-declarations-experimental --strip-root --quiet ./
+cmd: codemod annotate-declarations-experimental --strip-root --quiet --filter-deep-empty ./

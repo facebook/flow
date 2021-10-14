@@ -87,14 +87,91 @@ if (w) {
 }
 x9;
 
+>>> underconstrained.js (#changes: 8)
+//@flow
+
+function arr() {
+  let arr: Array<number> = [];
+  arr = [1,2,3];
+}
+
+
+function arr_ok() {
+  let arr = [];
+  arr.push(1);
+  arr = [1,2,3];
+}
+
+function fn() {
+  let fn: ((x: number) => number) = (x: number) => 42;
+  function havoc() {
+    fn = (y => 42);
+  }
+}
+
+function fn_completely_unannotated() {
+  let fn: ((x: number) => number) = x => 42;
+  function havoc() {
+    fn = (y => 42);
+  }
+  fn(52);
+}
+
+function undefined() {
+  let obj = {
+    f() {
+      let b: number = this.b; // empty
+      b = 42;
+    }
+  }
+}
+
+function reversed() {
+  let rts: Array<number> = [];
+
+  function initRts(): void {
+    rts = [];
+  }
+
+  function getRts(): Array<number> {
+    return rts;
+  }
+}
+
+declare class Set<+T> {
+  add<U>(U): Set<T | U>
+}
+
+function set_replace() {
+  let si: Set<string> = new Set();
+
+  si = new Set<string>();
+
+  (si: Set<number>);
+}
+
+function set_add() {
+  let si: Set<mixed> = new Set();
+
+  si = si.add(42);
+}
+
+function set_app() {
+  let si: Set<number> = new Set();
+
+  si = si.add(42);
+
+  (si: Set<number>);
+}
+
 >>> Launching report...
 
 Stats:
-  Files changed:                            2
-  Number of annotations added:             10
-  Total size of annotations:               47
-  Number of vars with write errors:        10
-  Number of possibly renamable vars:       10
+  Files changed:                            3
+  Number of annotations added:             18
+  Total size of annotations:               72
+  Number of vars with write errors:        18
+  Number of possibly renamable vars:       17
 
 Errors:
   Missing annot./normalizer error:          0
@@ -112,5 +189,5 @@ Warnings:
   Large type added:                         0
   Location unhandled:                       0
   Empty NoUpper:                            0
-  Empty SomeKnownUpper:                     0
+  Empty SomeKnownUpper:                     2
 

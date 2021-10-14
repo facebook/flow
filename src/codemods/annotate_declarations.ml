@@ -39,7 +39,121 @@ end
 module Codemod_declaration_annotator = Codemod_annotator.Make (ErrorStats)
 module Acc = Insert_type_utils.Acc (ErrorStats)
 
-let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
+module Simplify = struct
+  let is_resolved_empty t =
+    match t with
+    | Ty.Bot (Ty.NoLowerWithUpper _) -> true
+    | _ -> false
+
+  (* If all types in the union are arrays, filter out those that contain the
+     empty type when it's due to resolving a tvar with no lowers *)
+  let mk_arr_union ts =
+    Base.List.fold_result
+      ~init:[]
+      ~f:(fun acc t ->
+        match t with
+        | Ty.Arr arr -> Ok (arr :: acc)
+        | _ -> Error ())
+      ts
+    |> Base.Result.map
+         ~f:
+           (Base.List.filter_map ~f:(fun ({ Ty.arr_elt_t; _ } as arr) ->
+                if is_resolved_empty arr_elt_t then
+                  None
+                else
+                  Some (Ty.Arr arr)))
+
+  (* If all types in the union are functions with the same arity, filter out those that contain the
+     empty type in parameters *)
+  let mk_fun_union ts =
+    Base.List.fold_result
+      ~init:(None, [])
+      ~f:(fun (param, acc) t ->
+        (* Ensure that this is a union of "the same" function, in the sense of having the same arity.
+           If there are different arities, it's maybe less likely that the elements of the union
+           are the same type up to empty tvars *)
+        match (param, t) with
+        | (None, Ty.Fun ({ Ty.fun_params; fun_rest_param; _ } as fn)) ->
+          Ok (Some (List.length fun_params, Base.Option.is_some fun_rest_param), fn :: acc)
+        | (Some (ct, rest), Ty.Fun ({ Ty.fun_params; fun_rest_param; _ } as fn))
+          when List.length fun_params = ct && Base.Option.is_some fun_rest_param = rest ->
+          Ok (param, fn :: acc)
+        | _ -> Error ())
+      ts
+    |> Base.Result.map ~f:snd
+    |> Base.Result.map
+         ~f:
+           (Base.List.filter_map ~f:(fun ({ Ty.fun_params; fun_rest_param; _ } as fn) ->
+                if
+                  Base.List.exists ~f:(fun (_, t, _) -> is_resolved_empty t) fun_params
+                  || Base.Option.value_map
+                       ~f:(fun (_, t) -> is_resolved_empty t)
+                       ~default:false
+                       fun_rest_param
+                then
+                  None
+                else
+                  Some (Ty.Fun fn)))
+
+  (* If all types in the union are generics, and are the same generics, filter out those that contain the
+     empty type in type arguments *)
+  let mk_gen_union ts =
+    Base.List.fold_result
+      ~init:(None, [])
+      ~f:(fun (sym, acc) t ->
+        match (sym, t) with
+        | (None, Ty.Generic (sym, gen, Some ts)) -> Ok (Some sym, (sym, gen, ts) :: acc)
+        | (Some sym', Ty.Generic (sym, gen, Some ts)) when sym = sym' ->
+          Ok (Some sym', (sym, gen, ts) :: acc)
+        | _ -> Error ())
+      ts
+    |> Base.Result.map ~f:snd
+    |> Base.Result.map
+         ~f:
+           (Base.List.filter_map ~f:(fun (sym, gen, ts) ->
+                if Base.List.exists ~f:is_resolved_empty ts then
+                  None
+                else
+                  Some (Ty.Generic (sym, gen, Some ts))))
+
+  let mk_union ?(flattened = false) (t0, ts) =
+    let filtered_ts =
+      match mk_arr_union (List.rev (t0 :: ts)) with
+      | Ok filter_ts -> filter_ts
+      | Error () ->
+        (match mk_fun_union (List.rev (t0 :: ts)) with
+        | Ok filter_ts -> filter_ts
+        | Error () ->
+          (match mk_gen_union (List.rev (t0 :: ts)) with
+          | Ok filter_ts -> filter_ts
+          | Error () -> t0 :: ts))
+    in
+    match filtered_ts with
+    | [] -> Ty.mk_union ~flattened (t0, ts)
+    | t0 :: ts -> Ty.mk_union ~flattened (t0, ts)
+
+  let mapper =
+    object
+      inherit [_] Ty.map_ty as super
+
+      method! on_t env t =
+        match t with
+        | Ty.Union (t0, t1, ts) -> super#on_t env (mk_union (t0, t1 :: ts))
+        | _ -> super#on_t env t
+    end
+
+  let normalize t =
+    match t with
+    | Codemod_annotator.Ty_ t -> Codemod_annotator.Ty_ (mapper#on_t () t)
+    | _ -> t
+end
+
+let mapper
+    ~preserve_literals
+    ~max_type_size
+    ~default_any
+    ~filter_deep_empty
+    (cctx : Codemod_context.Typed.t) =
   let { Codemod_context.Typed.file_sig; docblock; metadata; options; _ } = cctx in
   let imports_react = Insert_type_imports.ImportsHelper.imports_react file_sig in
   let metadata = Context.docblock_overrides docblock metadata in
@@ -108,7 +222,15 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
 
     method! variable_declarator_pattern ~kind ((ploc, patt) : ('loc, 'loc) Ast.Pattern.t) =
       let get_annot ty annot =
-        let f loc _annot ty' = this#annotate_node loc ty' (fun a -> Ast.Type.Available a) in
+        let f loc _annot ty' =
+          let simplified =
+            if filter_deep_empty then
+              Simplify.normalize ty'
+            else
+              ty'
+          in
+          this#annotate_node loc simplified (fun a -> Ast.Type.Available a)
+        in
         let error _ = Ast.Type.Available (Loc.none, flowfixme_ast) in
         this#opt_annotate ~f ~error ~expr:None ploc ty annot
       in
