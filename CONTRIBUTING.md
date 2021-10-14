@@ -26,7 +26,7 @@ Generally, the following areas of the project are best understood by these peopl
   * @Hans-Halverson
   * @gkz
 * Performance
-  * Performance-related work that happens outside of the typechecker itself. This inlcudes recheck optimizations, abstract locations, saved state, etc.
+  * Performance-related work that happens outside of the typechecker itself. This includes recheck optimizations, abstract locations, saved state, etc.
   * @nmote
 * Flow server
   * All the pieces that make typechecking happen but not the typechecker itself.
