@@ -87,6 +87,10 @@ let file_input_of_text_document_position_opt ~client_id t =
   Base.Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
       file_input_of_text_document_position ~client t)
 
+let file_key_of_file_input ~options file_input =
+  let file_options = Options.file_options options in
+  File_input.filename_of_file_input file_input |> Files.filename_from_string ~options:file_options
+
 let get_status ~profiling ~reader genv env client_root =
   let options = genv.ServerEnv.options in
   let server_root = Options.root options in
@@ -233,10 +237,7 @@ let autocomplete
             Lwt.return (response, Some (Hh_json.JSON_Object json_props_to_log))))
 
 let check_file ~options ~env ~profiling ~force file_input =
-  let file =
-    let file_options = Options.file_options options in
-    File_input.filename_of_file_input file_input |> Files.filename_from_string ~options:file_options
-  in
+  let file = file_key_of_file_input ~options file_input in
   match file_input with
   | File_input.FileName _ -> failwith "Not implemented"
   | File_input.FileContent (_, content) ->
@@ -323,8 +324,7 @@ let infer_type
   } =
     input
   in
-  let file = File_input.filename_of_file_input file_input in
-  let file = File_key.SourceFile file in
+  let file = file_key_of_file_input ~options file_input in
   let options = { options with Options.opt_verbose = verbose } in
   match File_input.content_of_file_input file_input with
   | Error e -> Lwt.return (Error e, None)
@@ -404,8 +404,7 @@ let insert_type
     ~omit_targ_defaults
     ~location_is_strict
     ~ambiguity_strategy =
-  let filename = File_input.filename_of_file_input file_input in
-  let file_key = File_key.SourceFile filename in
+  let file_key = file_key_of_file_input ~options file_input in
   let options = { options with Options.opt_verbose = verbose } in
   File_input.content_of_file_input file_input %>>= fun file_content ->
   try_with (fun _ ->
@@ -425,8 +424,7 @@ let insert_type
       Lwt.return result)
 
 let autofix_exports ~options ~env ~profiling ~input =
-  let filename = File_input.filename_of_file_input input in
-  let file_key = File_key.SourceFile filename in
+  let file_key = file_key_of_file_input ~options input in
   File_input.content_of_file_input input %>>= fun file_content ->
   try_with (fun _ ->
       let%lwt result =
@@ -523,8 +521,7 @@ let collect_rage ~profiling ~options ~reader ~env ~files =
 let dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructors file_input =
   let open Lwt_result.Infix in
   try_with (fun () ->
-      let file = File_input.filename_of_file_input file_input in
-      let file = File_key.SourceFile file in
+      let file = file_key_of_file_input ~options file_input in
       Lwt.return (File_input.content_of_file_input file_input) >>= fun content ->
       let%lwt file_artifacts_result =
         let%lwt parse_result = Type_contents.parse_contents ~options ~profiling content file in
@@ -549,8 +546,7 @@ let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust 
       None )
     |> Lwt.return
   else
-    let file = File_input.filename_of_file_input file_input in
-    let file = File_key.SourceFile file in
+    let file = file_key_of_file_input ~options file_input in
     match File_input.content_of_file_input file_input with
     | Error e -> Lwt.return (Error e, None)
     | Ok content ->
@@ -670,8 +666,7 @@ let get_cycle ~env fn types_only =
         |> serialize_graph))
 
 let suggest ~options ~env ~profiling file =
-  let file_name = File_input.filename_of_file_input file in
-  let file_key = File_key.SourceFile file_name in
+  let file_key = file_key_of_file_input ~options file in
   File_input.content_of_file_input file %>>= fun file_content ->
   try_with (fun _ ->
       let%lwt result = Code_action_service.suggest ~options ~env ~profiling file_key file_content in
@@ -724,8 +719,7 @@ let find_local_refs ~reader ~options ~env ~profiling (file_input, line, col) =
   |> Lwt_result.map convert_find_refs_result
 
 let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_input, line, col) =
-  let filename = File_input.filename_of_file_input file_input in
-  let file = File_key.SourceFile filename in
+  let file = file_key_of_file_input ~options file_input in
   let%lwt (check_result, did_hit_cache) =
     match File_input.content_of_file_input file_input with
     | Error _ as err -> Lwt.return (err, None)
@@ -1011,7 +1005,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
     Lwt.return (Ok [])
   else
     let file_input = file_input_of_text_document_identifier ~client textDocument in
-    let file_key = File_key.SourceFile (File_input.filename_of_file_input file_input) in
+    let file_key = file_key_of_file_input ~options file_input in
     let loc = Flow_lsp_conversions.lsp_range_to_flow_loc ~source:file_key range in
     match File_input.content_of_file_input file_input with
     | Error msg -> Lwt.return (Error msg)
@@ -1056,7 +1050,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
 
 let add_missing_imports ~reader ~options ~env ~profiling ~client textDocument =
   let file_input = file_input_of_text_document_identifier ~client textDocument in
-  let file_key = File_key.SourceFile (File_input.filename_of_file_input file_input) in
+  let file_key = file_key_of_file_input ~options file_input in
   match File_input.content_of_file_input file_input with
   | Error msg -> Lwt.return (Error msg)
   | Ok file_contents ->
@@ -1083,7 +1077,7 @@ let add_missing_imports ~reader ~options ~env ~profiling ~client textDocument =
 
 let organize_imports ~options ~profiling ~client textDocument =
   let file_input = file_input_of_text_document_identifier ~client textDocument in
-  let file_key = File_key.SourceFile (File_input.filename_of_file_input file_input) in
+  let file_key = file_key_of_file_input ~options file_input in
   match File_input.content_of_file_input file_input with
   | Error msg -> Lwt.return (Error msg)
   | Ok file_contents ->
