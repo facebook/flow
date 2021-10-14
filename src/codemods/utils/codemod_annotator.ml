@@ -46,6 +46,11 @@ module Queries = struct
         let (_, { Ast.Identifier.name; _ }) = id in
         init := SSet.add name !init;
         id
+
+      method! jsx_identifier id =
+        let (_, { Ast.JSX.Identifier.name; _ }) = id in
+        init := SSet.add name !init;
+        id
     end
 
   let used_names prog =

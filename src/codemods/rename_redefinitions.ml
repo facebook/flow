@@ -101,10 +101,6 @@ let reduce cx ast =
                   name_map;
             }
 
-        method! jsx_identifier ((_, { Ast.JSX.Identifier.name; _ }) as id) =
-          names := SSet.add name !names;
-          super#jsx_identifier id
-
         method! statement s =
           match s with
           | ( _,
