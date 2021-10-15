@@ -2762,6 +2762,7 @@ module AConstraint = struct
     | Annot_SpecializeT of TypeTerm.use_op * Reason.t * Reason.t * TypeTerm.t list option
     | Annot_ThisSpecializeT of Reason.t * TypeTerm.t
     | Annot_UseT_TypeT of Reason.t
+    | Annot_GetPropT of Reason.t * TypeTerm.use_op * TypeTerm.propref
     | Annot__Future_added_value__ of Reason.t
 
   (** This kind of constraint is meant to represent type annotations. Unlike the
@@ -2836,6 +2837,7 @@ module AConstraint = struct
     | Annot_AssertExportIsTypeT _ -> "Annot_AssertExportIsTypeT"
     | Annot_CopyNamedExportsT _ -> "Annot_CopyNamedExportsT"
     | Annot_CopyTypeExportsT _ -> "Annot_CopyTypeExportsT"
+    | Annot_GetPropT _ -> "Annot_GetPropT"
     | Annot__Future_added_value__ _ -> "Annot__Future_added_value__"
 
   let reason_of_op = function
@@ -2854,6 +2856,7 @@ module AConstraint = struct
     | Annot_AssertExportIsTypeT (r, _)
     | Annot_CopyNamedExportsT (r, _)
     | Annot_CopyTypeExportsT (r, _)
+    | Annot_GetPropT (r, _, _)
     | Annot__Future_added_value__ r ->
       r
 

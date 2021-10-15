@@ -39,8 +39,10 @@ let object_like_op = function
   | Annot_CopyTypeExportsT _
   | Annot__Future_added_value__ _ ->
     false
+  | Annot_GetPropT _ -> true
 
 let primitive_promoting_op = function
+  | Annot_GetPropT _ -> true
   (* TODO: enumerate all use types *)
   | _ -> false
 
@@ -53,6 +55,10 @@ let get_fully_resolved_type cx id =
   | Constraint.Resolved _
   | Constraint.Unresolved _ ->
     failwith "unexpected unresolved constraint in annotation inference"
+
+let get_builtin_typeapp cx reason x targs =
+  let t = Flow_js_utils.lookup_builtin_strict cx x reason in
+  TypeUtil.typeapp reason t targs
 
 module type Annotation_inference_sig = sig
   include Type_sig_merge.CONS_GEN
@@ -145,6 +151,67 @@ module rec ConsGen : Annotation_inference_sig = struct
   module ExportTypeTKit = Flow_js_utils.ExportTypeT_kit (Import_export_helper)
   module CJSExtractNamedExportsTKit =
     Flow_js_utils.CJSExtractNamedExportsT_kit (Import_export_helper)
+
+  (***********)
+  (* GetProp *)
+  (***********)
+
+  module Get_prop_helper = struct
+    type r = Type.t
+
+    let perform_read_prop_action cx use_op propref p ureason =
+      match Property.read_t p with
+      | Some t -> reposition cx (aloc_of_reason ureason) t
+      | None ->
+        let (reason_prop, prop_name) =
+          match propref with
+          | Named (r, x) -> (r, Some x)
+          | Computed t -> (reason_of_t t, None)
+        in
+        let msg = Error_message.EPropNotReadable { reason_prop; prop_name; use_op } in
+        Flow_js_utils.add_output cx msg;
+        AnyT.error ureason
+
+    let cg_lookup_ _cx _use_op _t _reason_op _propref =
+      failwith "TODO Annotation_inference.cg_lookup"
+
+    let read_prop cx _trace options reason_prop reason_op l _super x pmap =
+      let { Flow_js_utils.Access_prop_options.use_op; _ } = options in
+      let propref = Named (reason_prop, x) in
+      match NameUtils.Map.find_opt x pmap with
+      | Some p -> perform_read_prop_action cx use_op propref p reason_op
+      | None ->
+        let l =
+          (* munge names beginning with single _ *)
+          if Flow_js_utils.is_munged_prop_name cx x then
+            ObjProtoT (reason_of_t l)
+          else
+            l
+        in
+        cg_lookup_ cx use_op l reason_op propref
+
+    let error_type = AnyT.error
+
+    let return _cx ~use_op:_ _trace t = t
+
+    (* We will not be doing subtyping checks in annotation inference. *)
+    let dict_read_check _ _ ~use_op:_ _ = ()
+
+    let reposition cx ?trace:_ loc ?desc:_ ?annot_loc:_ t = reposition cx loc t
+
+    let enum_proto cx _trace ~reason (enum_reason, trust, enum) =
+      let enum_t = DefT (enum_reason, trust, EnumT enum) in
+      let { representation_t; _ } = enum in
+      get_builtin_typeapp cx reason (OrdinaryName "$EnumProto") [enum_t; representation_t]
+
+    let cg_lookup cx _trace ~obj_t:_ t (reason_op, _kind, propref, use_op, _ids) =
+      cg_lookup_ cx use_op t reason_op propref
+
+    let cg_get_prop cx _trace t (use_op, access_reason, (prop_reason, name)) =
+      ConsGen.elab_t cx t (Annot_GetPropT (access_reason, use_op, Named (prop_reason, name)))
+  end
+
+  module GetPropTKit = Flow_js_utils.GetPropT_kit (Get_prop_helper)
 
   let unresolved_tvar cx reason = Avar.unresolved cx reason
 
@@ -455,10 +522,22 @@ module rec ConsGen : Annotation_inference_sig = struct
       let reason = Type.AConstraint.reason_of_op op in
       let t = fix_this_class cx reason (r, i, is_this) in
       elab_t cx t op
+    (*****************************)
+    (* React Abstract Components *)
+    (*****************************)
+    | (DefT (r, _, ReactAbstractComponentT _), Annot_GetPropT _) ->
+      let statics =
+        Flow_js_utils.lookup_builtin_strict cx (OrdinaryName "React$AbstractComponentStatics") r
+      in
+      elab_t cx statics op
     (****************)
     (* Custom types *)
     (****************)
     | (DefT (reason, trust, CharSetT _), _) -> elab_t cx (StrT.why reason trust) op
+    | ( CustomFunT (_, ReactPropType (React.PropType.Primitive (false, t))),
+        Annot_GetPropT (reason_op, _, Named (_, OrdinaryName "isRequired")) ) ->
+      let prop_type = React.PropType.Primitive (true, t) in
+      CustomFunT (reason_op, ReactPropType prop_type)
     | (CustomFunT (reason, ReactPropType (React.PropType.Primitive (req, _))), _)
       when function_like_op op ->
       let builtin_name =
@@ -478,6 +557,21 @@ module rec ConsGen : Annotation_inference_sig = struct
     (* Shape type *)
     (**************)
     | (ShapeT (r, o), _) -> elab_t cx ~seen (reposition cx (aloc_of_reason r) o) op
+    (************)
+    (* GetPropT *)
+    (************)
+    | (DefT (r, _, InstanceT (_, super, _, insttype)), Annot_GetPropT (reason_op, use_op, propref))
+      ->
+      GetPropTKit.on_InstanceT cx dummy_trace ~l:t r super insttype use_op reason_op propref
+    | (DefT (_, _, ObjT _), Annot_GetPropT (reason_op, _, Named (_, OrdinaryName "constructor"))) ->
+      Unsoundness.why Constructor reason_op
+    | (DefT (reason_obj, _, ObjT o), Annot_GetPropT (reason_op, use_op, propref)) ->
+      GetPropTKit.read_obj_prop cx dummy_trace ~use_op o propref reason_obj reason_op
+    | (AnyT _, Annot_GetPropT (reason_op, _, _)) -> AnyT (reason_op, Untyped)
+    | (DefT (_, _, FunT (_, t, _)), Annot_GetPropT (_, _, Named (_, OrdinaryName "prototype"))) -> t
+    | (DefT (reason, _, ClassT instance), Annot_GetPropT (_, _, Named (_, OrdinaryName "prototype")))
+      ->
+      reposition cx (aloc_of_reason reason) instance
     (***********************)
     (* Opaque types (pt 2) *)
     (***********************)
@@ -494,6 +588,13 @@ module rec ConsGen : Annotation_inference_sig = struct
     | (DefT (reason, _, ClassT instance), _) when object_like_op op ->
       let t = get_statics cx reason instance in
       elab_t cx t op
+    (*********)
+    (* Enums *)
+    (*********)
+    | ( DefT (enum_reason, trust, EnumObjectT enum),
+        Annot_GetPropT (access_reason, use_op, Named (prop_reason, member_name)) ) ->
+      let access = (use_op, access_reason, (prop_reason, member_name)) in
+      GetPropTKit.on_EnumObjectT cx dummy_trace enum_reason trust enum access
     (****************************************)
     (* Object, function, etc. library calls *)
     (****************************************)
@@ -505,6 +606,21 @@ module rec ConsGen : Annotation_inference_sig = struct
       let use_desc = true in
       let fun_proto = get_builtin_type cx reason ~use_desc (OrdinaryName "Function") in
       elab_t cx fun_proto op
+    (************)
+    (* GetPropT *)
+    (************)
+    | (DefT (reason, _, ArrT (ArrayAT (t, _))), Annot_GetPropT _) ->
+      let arr = get_builtin_typeapp cx reason (OrdinaryName "Array") [t] in
+      elab_t cx arr op
+    | ( DefT (reason, trust, ArrT (TupleAT (_, ts))),
+        Annot_GetPropT (reason_op, _, Named (_, OrdinaryName "length")) ) ->
+      GetPropTKit.on_array_length cx dummy_trace reason trust ts reason_op
+    | (DefT (reason, _, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)), Annot_GetPropT _) ->
+      let t = elemt_of_arrtype arrtype in
+      elab_t cx (get_builtin_typeapp cx reason (OrdinaryName "$ReadOnlyArray") [t]) op
+    (************************)
+    (* Promoting primitives *)
+    (************************)
     | (DefT (reason, _, StrT _), _) when primitive_promoting_op op ->
       let builtin = get_builtin_type cx reason ~use_desc:true (OrdinaryName "String") in
       elab_t cx builtin op
@@ -517,6 +633,8 @@ module rec ConsGen : Annotation_inference_sig = struct
     | (DefT (reason, _, SymbolT), _) when primitive_promoting_op op ->
       let builtin = get_builtin_type cx reason ~use_desc:true (OrdinaryName "Symbol") in
       elab_t cx builtin op
+    | (DefT (lreason, _, MixedT Mixed_function), Annot_GetPropT _) ->
+      elab_t cx (FunProtoT lreason) op
     | (_, _) ->
       let reason = reason_of_op op in
       warn
@@ -567,14 +685,18 @@ module rec ConsGen : Annotation_inference_sig = struct
 
   and get_statics _cx _reason _t = failwith "TODO Annotation_inference.get_statics"
 
-  and get_prop_internal _cx _use_op _reason_op _propref _l =
-    failwith "TODO Annotation_inference.get_prop"
-
-  and get_prop cx use_op reason name t = get_prop_internal cx use_op reason (reason, name) t
+  and get_prop cx use_op reason name t =
+    elab_t cx t (Annot_GetPropT (reason, use_op, Named (reason, name)))
 
   and get_elem _cx _use_op _reason ~key:_ _t = failwith "TODO Annotation_inference.get_elem"
 
-  and qualify_type cx use_op reason propref t = get_prop_internal cx use_op reason propref t
+  and qualify_type cx use_op reason (reason_name, name) t =
+    let open Type in
+    let f id =
+      let t = elab_t cx t (Annot_GetPropT (reason, use_op, Named (reason_name, name))) in
+      resolve_id cx id t
+    in
+    mk_lazy_tvar cx reason f
 
   (* Unlike Flow_js, types in this module are 0->1, so there is no need for a
    * mechanism similar to BecomeT of Flow_js. *)
