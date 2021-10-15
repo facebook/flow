@@ -366,8 +366,7 @@ struct
           add_output cx ~trace (Error_message.EPropNotReadable { reason_prop; prop_name; use_op })
       end
 
-  let lookup_prop
-      cx ~allow_method_access previously_seen_props trace l reason_prop reason_op strict x action =
+  let lookup_prop cx trace options l reason_prop reason_op x action =
     let l =
       (* munge names beginning with single _ *)
       if is_munged_prop_name cx x then
@@ -383,27 +382,16 @@ struct
         LookupT
           {
             reason = reason_op;
-            lookup_kind = strict;
+            lookup_kind = options.Access_prop_options.strict;
             ts = [];
             propref;
             lookup_action = action;
-            ids = Some previously_seen_props;
-            method_accessible = allow_method_access;
+            ids = Some options.Access_prop_options.previously_seen_props;
+            method_accessible = options.Access_prop_options.allow_method_access;
           } )
 
-  let access_prop
-      cx
-      ~allow_method_access
-      ~use_op
-      previously_seen_props
-      trace
-      reason_prop
-      reason_op
-      strict
-      super
-      x
-      pmap
-      action =
+  let access_prop cx trace options reason_prop reason_op super x pmap action =
+    let { Access_prop_options.use_op; allow_method_access; _ } = options in
     match NameUtils.Map.find_opt x pmap with
     | Some p ->
       (if not allow_method_access then
@@ -415,55 +403,13 @@ struct
             (Error_message.EMethodUnbinding
                { use_op; reason_op = reason_prop; reason_prop = reason_of_t t })
         | _ -> ());
-      perform_lookup_action
-        cx
-        trace
-        (Named (reason_prop, x))
-        p
-        PropertyMapProperty
-        reason_prop
-        reason_op
-        action
-    | None ->
-      lookup_prop
-        cx
-        ~allow_method_access
-        previously_seen_props
-        trace
-        super
-        reason_prop
-        reason_op
-        strict
-        x
-        action
+      let propref = Named (reason_prop, x) in
+      perform_lookup_action cx trace propref p PropertyMapProperty reason_prop reason_op action
+    | None -> lookup_prop cx trace options super reason_prop reason_op x action
 
-  let read_prop
-      cx
-      previously_seen_props
-      trace
-      ~use_op
-      ~allow_method_access
-      reason_prop
-      reason_op
-      strict
-      l
-      super
-      x
-      map
-      tout =
-    ReadProp { use_op; obj_t = l; tout }
-    |> access_prop
-         cx
-         ~use_op
-         ~allow_method_access
-         previously_seen_props
-         trace
-         reason_prop
-         reason_op
-         strict
-         super
-         x
-         map
+  let read_prop cx trace options reason_prop reason_op l super x map tout =
+    ReadProp { use_op = options.Access_prop_options.use_op; obj_t = l; tout }
+    |> access_prop cx trace options reason_prop reason_op super x map
 
   let enum_proto cx trace ~reason (enum_reason, trust, enum) =
     let enum_object_t = DefT (enum_reason, trust, EnumObjectT enum) in
@@ -3498,25 +3444,18 @@ struct
           let proto_props = Context.find_props cx instance.proto_props in
           let fields = NameUtils.Map.union own_props proto_props in
           let strict = Strict reason_c in
-          set_prop
-            cx
-            (* Methods cannot be written to because they are read-only; we
-               allow them to be accessed here to avoid redundant errors *)
-            ~allow_method_access:true
-            (Properties.Set.of_list [instance.own_props; instance.proto_props])
-            ~mode
-            ~wr_ctx
-            trace
-            ~use_op
-            reason_prop
-            reason_op
-            strict
-            l
-            super
-            x
-            fields
-            tin
-            prop_t
+          let options =
+            {
+              Access_prop_options.use_op;
+              (* Methods cannot be written to because they are read-only; we
+                 allow them to be accessed here to avoid redundant errors *)
+              allow_method_access = true;
+              previously_seen_props =
+                Properties.Set.of_list [instance.own_props; instance.proto_props];
+              strict;
+            }
+          in
+          set_prop cx ~mode ~wr_ctx trace options reason_prop reason_op l super x fields tin prop_t
         | (DefT (reason_c, _, InstanceT _), SetPrivatePropT (use_op, reason_op, x, _, [], _, _, _))
           ->
           add_output
@@ -3563,19 +3502,16 @@ struct
           let proto_props = Context.find_props cx instance.proto_props in
           let fields = NameUtils.Map.union own_props proto_props in
           let strict = Strict reason_c in
-          match_prop
-            cx
-            ~allow_method_access:false
-            (Properties.Set.of_list [instance.own_props; instance.proto_props])
-            trace
-            ~use_op
-            reason_prop
-            reason_op
-            strict
-            super
-            x
-            fields
-            (OpenT prop_t)
+          let options =
+            {
+              Access_prop_options.use_op;
+              allow_method_access = false;
+              previously_seen_props =
+                Properties.Set.of_list [instance.own_props; instance.proto_props];
+              strict;
+            }
+          in
+          match_prop cx trace options reason_prop reason_op super x fields (OpenT prop_t)
         (*****************************)
         (* ... and their fields read *)
         (*****************************)
@@ -3615,20 +3551,16 @@ struct
             else
               Strict reason_c
           in
-          read_prop
-            cx
-            ~allow_method_access:true
-            (Properties.Set.of_list [instance.own_props; instance.proto_props])
-            trace
-            ~use_op
-            reason_prop
-            reason_lookup
-            strict
-            l
-            super
-            x
-            props
-            (reason_lookup, tvar);
+          let options =
+            {
+              Access_prop_options.allow_method_access = true;
+              previously_seen_props =
+                Properties.Set.of_list [instance.own_props; instance.proto_props];
+              use_op;
+              strict;
+            }
+          in
+          read_prop cx trace options reason_prop reason_lookup l super x props (reason_lookup, tvar);
           Base.Option.iter
             ~f:(fun prop_t -> rec_flow_t cx ~use_op:unknown_use trace (funt, prop_t))
             prop_t;
@@ -6472,19 +6404,16 @@ struct
     let use_op =
       Frame (PropertyCompatibility { prop = Some x; lower = lreason; upper = ureason }, use_op)
     in
-    let strict = NonstrictReturning (None, None) in
     let reason_prop = replace_desc_reason (RProperty (Some x)) lreason in
-    lookup_prop
-      cx
-      ~allow_method_access:true
-      Properties.Set.empty
-      trace
-      t
-      reason_prop
-      lreason
-      strict
-      x
-      (SuperProp (use_op, p))
+    let options =
+      {
+        Access_prop_options.use_op;
+        allow_method_access = true;
+        previously_seen_props = Properties.Set.empty;
+        strict = NonstrictReturning (None, None);
+      }
+    in
+    lookup_prop cx trace options t reason_prop lreason x (SuperProp (use_op, p))
 
   and eval_latent_pred cx ?trace reason curr_t p i =
     let evaluated = Context.evaluated cx in
@@ -7067,64 +6996,15 @@ struct
               ~trace
               (Error_message.EPrivateLookupFailed ((reason_op, reason_c), x, use_op))))
 
-  and match_prop
-      cx
-      previously_seen_props
-      trace
-      ~use_op
-      ~allow_method_access
-      reason_prop
-      reason_op
-      strict
-      super
-      x
-      pmap
-      prop_t =
-    MatchProp (use_op, prop_t)
-    |> access_prop
-         cx
-         ~use_op
-         ~allow_method_access
-         previously_seen_props
-         trace
-         reason_prop
-         reason_op
-         strict
-         super
-         x
-         pmap
+  and match_prop cx trace options reason_prop reason_op super x pmap prop_t =
+    MatchProp (options.Access_prop_options.use_op, prop_t)
+    |> access_prop cx trace options reason_prop reason_op super x pmap
 
   and set_prop
-      cx
-      previously_seen_props
-      ?(wr_ctx = Normal)
-      ~mode
-      trace
-      ~use_op
-      ~allow_method_access
-      reason_prop
-      reason_op
-      strict
-      l
-      super
-      x
-      pmap
-      tin
-      prop_tout =
+      cx ?(wr_ctx = Normal) ~mode trace options reason_prop reason_op l super x pmap tin prop_tout =
+    let use_op = options.Access_prop_options.use_op in
     let action = WriteProp { use_op; obj_t = l; prop_tout; tin; write_ctx = wr_ctx; mode } in
-    access_prop
-      cx
-      ~use_op
-      ~allow_method_access
-      previously_seen_props
-      trace
-      reason_prop
-      reason_op
-      strict
-      super
-      x
-      pmap
-      action
+    access_prop cx trace options reason_prop reason_op super x pmap action
 
   and elem_action_on_obj cx trace ~use_op ?on_named_prop l obj reason_op action =
     let propref =

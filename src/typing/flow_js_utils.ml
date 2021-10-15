@@ -1503,18 +1503,24 @@ end
 (* GetPropT helper *)
 (*******************)
 
+module Access_prop_options = struct
+  type t = {
+    use_op: Type.use_op;
+    previously_seen_props: Type.Properties.Set.t;
+    allow_method_access: bool;
+    strict: Type.lookup_kind;
+  }
+end
+
 module type Get_prop_helper_sig = sig
   type r
 
   val read_prop :
     Context.t ->
-    Type.Properties.Set.t ->
     Type.trace ->
-    use_op:Type.use_op ->
-    allow_method_access:bool ->
+    Access_prop_options.t ->
     Reason.reason ->
     Reason.reason ->
-    Type.lookup_kind ->
     Type.t ->
     Type.t ->
     Reason.name ->
@@ -1570,19 +1576,16 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
         else
           Strict r
       in
-      F.read_prop
-        cx (* Instance methods cannot be unbound *)
-        ~allow_method_access:false
-        (Properties.Set.of_list [insttype.own_props; insttype.proto_props])
-        trace
-        ~use_op
-        reason_prop
-        reason_op
-        strict
-        l
-        super
-        x
-        fields
+      let options =
+        {
+          Access_prop_options.use_op;
+          previously_seen_props = Properties.Set.of_list [insttype.own_props; insttype.proto_props];
+          allow_method_access = false;
+          strict;
+        }
+      in
+      (* Instance methods cannot be unbound *)
+      F.read_prop cx trace options reason_prop reason_op l super x fields
     | Computed _ ->
       (* Instances don't have proper dictionary support. All computed accesses
          are converted to named property access to `$key` and `$value` during
