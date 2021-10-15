@@ -46,3 +46,9 @@ function test_unsealed() {
     x = ({a: 42}: {a: number, ...}); // no error here
   }
 }
+
+function param(
+  cf: ?number,
+) {
+    cf = cf; // no error, ofc
+  }

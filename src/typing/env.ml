@@ -701,6 +701,14 @@ module Env : Env_sig.S = struct
   (* bind implicit let entry *)
   let bind_implicit_let ?(state = State.Undeclared) kind cx name t loc =
     let (spec, closure_writes, provider) = mk_havoc cx name loc t Entry.Havocable in
+    begin
+      match (state, kind) with
+      | (State.Initialized, Entry.ParamBinding) ->
+        (* If this variable starts off initialized (which is currently only the case with
+           parameters), then init_entry does not need to be called later, which is where normally providers are installed. *)
+        install_provider cx t name loc
+      | _ -> ()
+    end;
     bind_entry
       cx
       name
