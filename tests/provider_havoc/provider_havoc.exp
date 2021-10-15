@@ -351,5 +351,13 @@ References:
                ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- unreachable.js:5:3
 
-Found 22 errors
+Unreachable code. [unreachable-code]
+
+   5|   (function (why: number) {});
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 23 errors

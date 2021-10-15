@@ -457,9 +457,7 @@ module Env : Env_sig.S = struct
           |> Base.Option.all
         in
         match providers with
-        | None ->
-          assert_false
-            (spf "Missing providers at %s" (ALoc.debug_to_string ~include_source:true loc))
+        | None -> []
         | Some providers -> providers
       else
         []
@@ -550,9 +548,8 @@ module Env : Env_sig.S = struct
           in
           let provider =
             match providers with
-            | None ->
-              assert_false
-                (spf "Missing providers at %s" (ALoc.debug_to_string ~include_source:true loc))
+            | None
+              (* We can have no providers when the only writes to a variable are in unreachable code *)
             | Some [] ->
               (* If we find an entry for the providers, but none that actually exist, its because this variable
                  was never assigned to. We treat this as undefined. We handle erroring on
