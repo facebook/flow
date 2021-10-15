@@ -1498,3 +1498,219 @@ module CJSExtractNamedExportsT_kit (F : Import_export_helper_sig) = struct
      * exports tmap in any special way. *)
     | _ -> F.return cx trace ~use_op:unknown_use (ModuleT local_module)
 end
+
+(*******************)
+(* GetPropT helper *)
+(*******************)
+
+module type Get_prop_helper_sig = sig
+  type r
+
+  val read_prop :
+    Context.t ->
+    Type.Properties.Set.t ->
+    Type.trace ->
+    use_op:Type.use_op ->
+    allow_method_access:bool ->
+    Reason.reason ->
+    Reason.reason ->
+    Type.lookup_kind ->
+    Type.t ->
+    Type.t ->
+    Reason.name ->
+    Type.property NameUtils.Map.t ->
+    r
+
+  val dict_read_check : Context.t -> Type.trace -> use_op:Type.use_op -> Type.t * Type.t -> unit
+
+  val cg_lookup :
+    Context.t ->
+    Type.trace ->
+    obj_t:Type.t ->
+    Type.t ->
+    Reason.reason * Type.lookup_kind * Type.propref * use_op * Type.Properties.Set.t ->
+    r
+
+  val reposition :
+    Context.t ->
+    ?trace:Type.trace ->
+    ALoc.t ->
+    ?desc:reason_desc ->
+    ?annot_loc:ALoc.t ->
+    Type.t ->
+    Type.t
+
+  val enum_proto :
+    Context.t -> Type.trace -> reason:Reason.t -> Reason.t * Trust.trust_rep * Type.enum_t -> Type.t
+
+  val return : Context.t -> use_op:use_op -> Type.trace -> Type.t -> r
+
+  val error_type : Reason.t -> r
+
+  val cg_get_prop :
+    Context.t -> Type.trace -> Type.t -> use_op * reason * (Reason.t * Reason.name) -> r
+end
+
+module GetPropT_kit (F : Get_prop_helper_sig) = struct
+  let on_InstanceT cx trace ~l r super insttype use_op reason_op propref =
+    match propref with
+    | Named (_, OrdinaryName "constructor") ->
+      F.return
+        cx
+        trace
+        ~use_op:unknown_use
+        (TypeUtil.class_type ?annot_loc:(annot_aloc_of_reason r) l)
+    | Named (reason_prop, x) ->
+      let own_props = Context.find_props cx insttype.own_props in
+      let proto_props = Context.find_props cx insttype.proto_props in
+      let fields = NameUtils.Map.union own_props proto_props in
+      let strict =
+        if insttype.has_unknown_react_mixins then
+          NonstrictReturning (None, None)
+        else
+          Strict r
+      in
+      F.read_prop
+        cx (* Instance methods cannot be unbound *)
+        ~allow_method_access:false
+        (Properties.Set.of_list [insttype.own_props; insttype.proto_props])
+        trace
+        ~use_op
+        reason_prop
+        reason_op
+        strict
+        l
+        super
+        x
+        fields
+    | Computed _ ->
+      (* Instances don't have proper dictionary support. All computed accesses
+         are converted to named property access to `$key` and `$value` during
+         element resolution in ElemT. *)
+      let loc = aloc_of_reason reason_op in
+      add_output cx ~trace Error_message.(EInternal (loc, InstanceLookupComputed));
+      F.error_type reason_op
+
+  let on_EnumObjectT cx trace enum_reason trust enum access =
+    let (_, access_reason, (prop_reason, member_name)) = access in
+    let { members; _ } = enum in
+    let error_invalid_access ~suggestion =
+      let member_reason = replace_desc_reason (RIdentifier member_name) prop_reason in
+      add_output
+        cx
+        ~trace
+        (Error_message.EEnumInvalidMemberAccess
+           { member_name = Some member_name; suggestion; reason = member_reason; enum_reason });
+      F.return cx trace ~use_op:unknown_use (AnyT.error access_reason)
+    in
+    (* We guarantee in the parser that enum member names won't start with lowercase
+     * "a" through "z", these are reserved for methods. *)
+    let is_valid_member_name name =
+      Base.String.is_empty name || (not @@ Base.Char.is_lowercase name.[0])
+    in
+    match member_name with
+    | OrdinaryName name when is_valid_member_name name ->
+      if SMap.mem name members then
+        let enum_type =
+          F.reposition
+            cx
+            ~trace
+            (aloc_of_reason access_reason)
+            (mk_enum_type ~trust enum_reason enum)
+        in
+        F.return cx trace ~use_op:unknown_use enum_type
+      else
+        let suggestion = typo_suggestion (SMap.keys members |> List.rev) name in
+        error_invalid_access ~suggestion
+    | OrdinaryName _ ->
+      let t = F.enum_proto cx trace ~reason:access_reason (enum_reason, trust, enum) in
+      F.cg_get_prop cx trace t access
+    | InternalName _
+    | InternalModuleName _ ->
+      error_invalid_access ~suggestion:None
+
+  let on_array_length cx trace reason trust ts reason_op =
+    (* Use definition as the reason for the length, as this is
+     * the actual location where the length is in fact set. *)
+    let loc = Reason.aloc_of_reason reason_op in
+    let t = tuple_length reason trust ts in
+    F.return cx trace ~use_op:unknown_use (F.reposition cx ~trace loc t)
+
+  let get_obj_prop cx trace o propref reason_op =
+    let named_prop =
+      match propref with
+      | Named (_, x) -> Context.get_prop cx o.props_tmap x
+      | Computed _ -> None
+    in
+    let dict_t = Obj_type.get_dict_opt o.flags.obj_kind in
+    match (propref, named_prop, dict_t) with
+    | (_, Some prop, _) ->
+      (* Property exists on this property map *)
+      Some (prop, PropertyMapProperty)
+    | (Named (_, x), None, Some { key; value; dict_polarity; _ }) when not (is_dictionary_exempt x)
+      ->
+      (* Dictionaries match all property reads *)
+      F.dict_read_check cx trace ~use_op:unknown_use (string_key x reason_op, key);
+      Some (Field (None, value, dict_polarity), IndexerProperty)
+    | (Computed k, None, Some { key; value; dict_polarity; _ }) ->
+      F.dict_read_check cx trace ~use_op:unknown_use (k, key);
+      Some (Field (None, value, dict_polarity), IndexerProperty)
+    | _ -> None
+
+  let perform_read_prop_action cx trace use_op propref p ureason =
+    match Property.read_t p with
+    | Some t ->
+      let loc = aloc_of_reason ureason in
+      F.return cx trace ~use_op:unknown_use (F.reposition cx ~trace loc t)
+    | None ->
+      let (reason_prop, prop_name) =
+        match propref with
+        | Named (r, x) -> (r, Some x)
+        | Computed t -> (reason_of_t t, None)
+      in
+      let msg = Error_message.EPropNotReadable { reason_prop; prop_name; use_op } in
+      add_output cx ~trace msg;
+      F.error_type ureason
+
+  let read_obj_prop cx trace ~use_op o propref reason_obj reason_op =
+    let l = DefT (reason_obj, bogus_trust (), ObjT o) in
+    match get_obj_prop cx trace o propref reason_op with
+    | Some (p, _target_kind) -> perform_read_prop_action cx trace use_op propref p reason_op
+    | None ->
+      (match propref with
+      | Named _ ->
+        let strict =
+          if Obj_type.sealed_in_op reason_op o.flags.obj_kind then
+            Strict reason_obj
+          else
+            ShadowRead (None, Nel.one o.props_tmap)
+        in
+        let x = (reason_op, strict, propref, use_op, Properties.Set.singleton o.props_tmap) in
+        F.cg_lookup cx trace ~obj_t:l o.proto_t x
+      | Computed elem_t ->
+        (match elem_t with
+        | OpenT _ ->
+          let loc = loc_of_t elem_t in
+          add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedOpen));
+          F.error_type reason_op
+        | GenericT { bound = DefT (_, _, StrT (Literal _)); _ }
+        | DefT (_, _, StrT (Literal _)) ->
+          let loc = loc_of_t elem_t in
+          add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedLiteral));
+          F.error_type reason_op
+        | AnyT _ -> F.return cx trace ~use_op:unknown_use (AnyT.untyped reason_op)
+        | GenericT { bound = DefT (_, _, StrT _); _ }
+        | GenericT { bound = DefT (_, _, NumT _); _ }
+        | DefT (_, _, StrT _)
+        | DefT (_, _, NumT _) ->
+          (* string, and number keys are allowed, but there's nothing else to
+             flow without knowing their literal values. *)
+          F.return cx trace ~use_op:unknown_use (Unsoundness.why ComputedNonLiteralKey reason_op)
+        | _ ->
+          let reason_prop = reason_of_t elem_t in
+          add_output
+            cx
+            ~trace
+            (Error_message.EObjectComputedPropertyAccess (reason_op, reason_prop));
+          F.error_type reason_op))
+end

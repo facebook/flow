@@ -329,20 +329,7 @@ struct
     | LookupProp (use_op, up) -> rec_flow_p cx ~trace ~use_op lreason ureason propref (p, up)
     | SuperProp (use_op, lp) -> rec_flow_p cx ~trace ~use_op ureason lreason propref (lp, p)
     | ReadProp { use_op; obj_t = _; tout } ->
-      begin
-        match Property.read_t p with
-        | Some t ->
-          let loc = aloc_of_reason ureason in
-          rec_flow_t cx trace ~use_op:unknown_use (reposition cx ~trace loc t, OpenT tout)
-        | None ->
-          let (reason_prop, prop_name) =
-            match propref with
-            | Named (r, x) -> (r, Some x)
-            | Computed t -> (reason_of_t t, None)
-          in
-          let msg = Error_message.EPropNotReadable { reason_prop; prop_name; use_op } in
-          add_output cx ~trace msg
-      end
+      FlowJs.perform_read_prop_action cx trace use_op propref p ureason tout
     | WriteProp { use_op; obj_t = _; tin; write_ctx; prop_tout; mode } ->
       begin
         match (Property.write_t ~ctx:write_ctx p, target_kind, mode) with
@@ -450,7 +437,7 @@ struct
         x
         action
 
-  let get_prop
+  let read_prop
       cx
       previously_seen_props
       trace
@@ -477,6 +464,54 @@ struct
          super
          x
          map
+
+  let enum_proto cx trace ~reason (enum_reason, trust, enum) =
+    let enum_object_t = DefT (enum_reason, trust, EnumObjectT enum) in
+    let enum_t = DefT (enum_reason, trust, EnumT enum) in
+    let { representation_t; _ } = enum in
+    FlowJs.get_builtin_typeapp
+      cx
+      ~trace
+      reason
+      (OrdinaryName "$EnumProto")
+      [enum_object_t; enum_t; representation_t]
+
+  module Get_prop_helper = struct
+    type r = Type.tvar -> unit
+
+    let read_prop = read_prop
+
+    let error_type _ _ = ()
+
+    let return cx ~use_op trace t tout = FlowJs.rec_flow_t cx ~use_op trace (t, OpenT tout)
+
+    let dict_read_check = FlowJs.rec_flow_t
+
+    let enum_proto = enum_proto
+
+    let reposition = FlowJs.reposition
+
+    let cg_lookup cx trace ~obj_t t (reason_op, strict, propref, use_op, ids) tout =
+      FlowJs.rec_flow
+        cx
+        trace
+        ( t,
+          LookupT
+            {
+              reason = reason_op;
+              lookup_kind = strict;
+              ts = [];
+              propref;
+              lookup_action = ReadProp { use_op; obj_t; tout };
+              method_accessible = true;
+              ids = Some ids;
+            } )
+
+    let cg_get_prop cx trace t (use_op, access_reason, (prop_reason, name)) v =
+      FlowJs.rec_flow cx trace (t, GetPropT (use_op, access_reason, Named (prop_reason, name), v))
+  end
+
+  module GetPropTKit = GetPropT_kit (Get_prop_helper)
 
   (** NOTE: Do not call this function directly. Instead, call the wrapper
       functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
@@ -3544,38 +3579,9 @@ struct
         (*****************************)
         (* ... and their fields read *)
         (*****************************)
-        | ( (DefT (r, _, InstanceT _) as instance),
-            GetPropT (_, _, Named (_, OrdinaryName "constructor"), t) ) ->
-          rec_flow_t
-            cx
-            trace
-            ~use_op:unknown_use
-            (class_type ?annot_loc:(annot_aloc_of_reason r) instance, OpenT t)
-        | ( DefT (reason_c, _, InstanceT (_, super, _, instance)),
-            GetPropT (use_op, reason_op, Named (reason_prop, x), tout) ) ->
-          let own_props = Context.find_props cx instance.own_props in
-          let proto_props = Context.find_props cx instance.proto_props in
-          let fields = NameUtils.Map.union own_props proto_props in
-          let strict =
-            if instance.has_unknown_react_mixins then
-              NonstrictReturning (None, None)
-            else
-              Strict reason_c
-          in
-          get_prop
-            cx (* Instance methods cannot be unbound *)
-            ~allow_method_access:false
-            (Properties.Set.of_list [instance.own_props; instance.proto_props])
-            trace
-            ~use_op
-            reason_prop
-            reason_op
-            strict
-            l
-            super
-            x
-            fields
-            tout
+        | (DefT (r, _, InstanceT (_, super, _, insttype)), GetPropT (use_op, reason_op, propref, t))
+          ->
+          GetPropTKit.on_InstanceT cx trace ~l r super insttype use_op reason_op propref t
         | ( DefT (reason_c, _, InstanceT (_, _, _, instance)),
             GetPrivatePropT (use_op, reason_op, prop_name, scopes, static, tout) ) ->
           get_private_prop
@@ -3591,12 +3597,6 @@ struct
             ~scopes
             ~static
             ~tout
-        | (DefT (_, _, InstanceT _), GetPropT (_, reason_op, Computed _, _)) ->
-          (* Instances don't have proper dictionary support. All computed accesses
-             are converted to named property access to `$key` and `$value` during
-             element resolution in ElemT. *)
-          let loc = aloc_of_reason reason_op in
-          add_output cx ~trace Error_message.(EInternal (loc, InstanceLookupComputed))
         (********************************)
         (* ... and their methods called *)
         (********************************)
@@ -3615,7 +3615,7 @@ struct
             else
               Strict reason_c
           in
-          get_prop
+          read_prop
             cx
             ~allow_method_access:true
             (Properties.Set.of_list [instance.own_props; instance.proto_props])
@@ -3936,7 +3936,7 @@ struct
                 ids;
                 method_accessible;
               } ) ->
-          (match get_obj_prop cx trace o propref reason_op with
+          (match GetPropTKit.get_obj_prop cx trace o propref reason_op with
           | Some (p, target_kind) ->
             (match strict with
             | NonstrictReturning (_, Some (id, _)) -> Context.test_prop_hit cx id
@@ -4030,7 +4030,7 @@ struct
           ->
           rec_flow_t cx trace ~use_op:unknown_use (Unsoundness.why Constructor reason_op, OpenT tout)
         | (DefT (reason_obj, _, ObjT o), GetPropT (use_op, reason_op, propref, tout)) ->
-          read_obj_prop cx trace ~use_op o propref reason_obj reason_op tout
+          GetPropTKit.read_obj_prop cx trace ~use_op o propref reason_obj reason_op tout
         | (AnyT _, GetPropT (_, reason_op, _, tout)) ->
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.untyped reason_op, OpenT tout)
         (********************************)
@@ -4042,7 +4042,7 @@ struct
             MethodT (use_op, reason_call, reason_lookup, propref, action, prop_t) ) ->
           let t =
             Tvar.mk_no_wrap_where cx reason_lookup (fun tout ->
-                read_obj_prop cx trace ~use_op o propref reason_obj reason_lookup tout)
+                GetPropTKit.read_obj_prop cx trace ~use_op o propref reason_obj reason_lookup tout)
           in
           Base.Option.iter
             ~f:(fun prop_t -> rec_flow_t cx trace ~use_op:unknown_use (t, prop_t))
@@ -4761,44 +4761,10 @@ struct
         (*********)
         (* enums *)
         (*********)
-        | ( DefT (enum_reason, trust, EnumObjectT ({ members; _ } as enum)),
-            GetPropT (_, access_reason, Named (prop_reason, member_name), tout) ) ->
-          let error_invalid_access ~suggestion =
-            let member_reason = replace_desc_reason (RIdentifier member_name) prop_reason in
-            add_output
-              cx
-              ~trace
-              (Error_message.EEnumInvalidMemberAccess
-                 { member_name = Some member_name; suggestion; reason = member_reason; enum_reason });
-            rec_flow_t cx trace ~use_op:unknown_use (AnyT.error access_reason, OpenT tout)
-          in
-          (* We guarantee in the parser that enum member names won't start with lowercase
-           * "a" through "z", these are reserved for methods. *)
-          let is_valid_member_name name =
-            Base.String.is_empty name || (not @@ Base.Char.is_lowercase name.[0])
-          in
-          (match member_name with
-          | OrdinaryName name when is_valid_member_name name ->
-            if SMap.mem name members then
-              let enum_type =
-                reposition
-                  cx
-                  ~trace
-                  (aloc_of_reason access_reason)
-                  (mk_enum_type ~trust enum_reason enum)
-              in
-              rec_flow_t cx trace ~use_op:unknown_use (enum_type, OpenT tout)
-            else
-              let suggestion = typo_suggestion (SMap.keys members |> List.rev) name in
-              error_invalid_access ~suggestion
-          | OrdinaryName _ ->
-            rec_flow
-              cx
-              trace
-              (enum_proto cx trace ~reason:access_reason (enum_reason, trust, enum), u)
-          | InternalName _
-          | InternalModuleName _ ->
-            error_invalid_access ~suggestion:None)
+        | ( DefT (enum_reason, trust, EnumObjectT enum),
+            GetPropT (use_op, access_reason, Named (prop_reason, member_name), tout) ) ->
+          let access = (use_op, access_reason, (prop_reason, member_name)) in
+          GetPropTKit.on_EnumObjectT cx trace enum_reason trust enum access tout
         | (DefT (_, _, EnumObjectT _), TestPropT (reason, _, prop, tout)) ->
           rec_flow cx trace (l, GetPropT (Op (GetProperty reason), reason, prop, tout))
         | ( DefT (enum_reason, trust, EnumObjectT enum),
@@ -5473,12 +5439,7 @@ struct
         (*************************)
         | ( DefT (reason, trust, ArrT (TupleAT (_, ts))),
             GetPropT (_, _, Named (_, OrdinaryName "length"), tout) ) ->
-          (* Use definition as the reason for the length, as this is
-           * the actual location where the length is in fact set. *)
-          let reason_op = reason_of_use_t u in
-          let loc = Reason.aloc_of_reason reason_op in
-          let t = tuple_length reason trust ts in
-          rec_flow_t cx trace ~use_op:unknown_use (reposition cx ~trace loc t, OpenT tout)
+          GetPropTKit.on_array_length cx trace reason trust ts (reason_of_use_t u) tout
         | ( DefT (reason, _, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)),
             (GetPropT _ | SetPropT _ | MethodT _ | LookupT _) ) ->
           let t = elemt_of_arrtype arrtype in
@@ -6923,17 +6884,6 @@ struct
   (*********)
   (* enums *)
   (*********)
-  and enum_proto cx trace ~reason (enum_reason, trust, enum) =
-    let enum_object_t = DefT (enum_reason, trust, EnumObjectT enum) in
-    let enum_t = DefT (enum_reason, trust, EnumT enum) in
-    let { representation_t; _ } = enum in
-    get_builtin_typeapp
-      cx
-      ~trace
-      reason
-      (OrdinaryName "$EnumProto")
-      [enum_object_t; enum_t; representation_t]
-
   and enum_exhaustive_check
       cx
       ~trace
@@ -7176,84 +7126,6 @@ struct
       pmap
       action
 
-  and get_obj_prop cx trace o propref reason_op =
-    let named_prop =
-      match propref with
-      | Named (_, x) -> Context.get_prop cx o.props_tmap x
-      | Computed _ -> None
-    in
-    let dict_t = Obj_type.get_dict_opt o.flags.obj_kind in
-    match (propref, named_prop, dict_t) with
-    | (_, Some prop, _) ->
-      (* Property exists on this property map *)
-      Some (prop, PropertyMapProperty)
-    | (Named (_, x), None, Some { key; value; dict_polarity; _ }) when not (is_dictionary_exempt x)
-      ->
-      (* Dictionaries match all property reads *)
-      rec_flow_t cx trace ~use_op:unknown_use (string_key x reason_op, key);
-      Some (Field (None, value, dict_polarity), IndexerProperty)
-    | (Computed k, None, Some { key; value; dict_polarity; _ }) ->
-      rec_flow_t cx trace ~use_op:unknown_use (k, key);
-      Some (Field (None, value, dict_polarity), IndexerProperty)
-    | _ -> None
-
-  and read_obj_prop cx trace ~use_op o propref reason_obj reason_op tout =
-    let l = DefT (reason_obj, bogus_trust (), ObjT o) in
-    match get_obj_prop cx trace o propref reason_op with
-    | Some (p, target_kind) ->
-      let action = ReadProp { use_op; obj_t = l; tout } in
-      perform_lookup_action cx trace propref p target_kind reason_obj reason_op action
-    | None ->
-      (match propref with
-      | Named _ ->
-        let strict =
-          if Obj_type.sealed_in_op reason_op o.flags.obj_kind then
-            Strict reason_obj
-          else
-            ShadowRead (None, Nel.one o.props_tmap)
-        in
-        rec_flow
-          cx
-          trace
-          ( o.proto_t,
-            LookupT
-              {
-                reason = reason_op;
-                lookup_kind = strict;
-                ts = [];
-                propref;
-                lookup_action = ReadProp { use_op; obj_t = l; tout };
-                method_accessible = true;
-                ids = Some (Properties.Set.singleton o.props_tmap);
-              } )
-      | Computed elem_t ->
-        (match elem_t with
-        | OpenT _ ->
-          let loc = loc_of_t elem_t in
-          add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedOpen))
-        | GenericT { bound = DefT (_, _, StrT (Literal _)); _ }
-        | DefT (_, _, StrT (Literal _)) ->
-          let loc = loc_of_t elem_t in
-          add_output cx ~trace Error_message.(EInternal (loc, PropRefComputedLiteral))
-        | AnyT _ -> rec_flow_t cx trace ~use_op:unknown_use (AnyT.untyped reason_op, OpenT tout)
-        | GenericT { bound = DefT (_, _, StrT _); _ }
-        | GenericT { bound = DefT (_, _, NumT _); _ }
-        | DefT (_, _, StrT _)
-        | DefT (_, _, NumT _) ->
-          (* string, and number keys are allowed, but there's nothing else to
-             flow without knowing their literal values. *)
-          rec_flow_t
-            cx
-            trace
-            ~use_op:unknown_use
-            (Unsoundness.why ComputedNonLiteralKey reason_op, OpenT tout)
-        | _ ->
-          let reason_prop = reason_of_t elem_t in
-          add_output
-            cx
-            ~trace
-            (Error_message.EObjectComputedPropertyAccess (reason_op, reason_prop))))
-
   and elem_action_on_obj cx trace ~use_op ?on_named_prop l obj reason_op action =
     let propref =
       match l with
@@ -7274,7 +7146,7 @@ struct
       rec_flow cx trace (obj, MethodT (use_op, reason_call, reason_op, propref, ft, None))
 
   and writelike_obj_prop cx trace ~use_op o propref reason_obj reason_op prop_t action =
-    match get_obj_prop cx trace o propref reason_op with
+    match GetPropTKit.get_obj_prop cx trace o propref reason_op with
     | Some (p, target_kind) ->
       perform_lookup_action cx trace propref p target_kind reason_obj reason_op action
     | None ->
@@ -9699,6 +9571,8 @@ module rec FlowJs : Flow_common.S = struct
       (SubtypingKit)
 
   let widen_obj_type = ObjectKit.widen_obj_type
+
+  let perform_read_prop_action = GetPropTKit.perform_read_prop_action
 end
 
 include FlowJs

@@ -110,6 +110,16 @@ module type BUILTINS = sig
   val lookup_builtin_with_default : Context.t -> name -> Type.t -> Type.t
 
   val set_builtin : Context.t -> ?trace:Type.trace -> name -> Type.t -> unit
+
+  val perform_read_prop_action :
+    Context.t ->
+    Type.trace ->
+    ALoc.t Type.virtual_use_op ->
+    Type.propref ->
+    Type.Property.t ->
+    Reason.reason ->
+    Type.tvar ->
+    unit
 end
 
 module type SUBTYPING = sig
