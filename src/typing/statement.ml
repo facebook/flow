@@ -3090,10 +3090,11 @@ module Make (Env : Env_sig.S) = struct
           | None -> ()
         end;
         Type_inference_hooks_js.(dispatch_lval_hook cx name id_loc (Val annot_t));
-        ( (ploc, annot_t),
+        let ast_t = Env.constraining_type ~default:annot_t cx (OrdinaryName name) id_loc in
+        ( (ploc, ast_t),
           Ast.Pattern.Identifier
             {
-              Ast.Pattern.Identifier.name = ((id_loc, annot_t), { Ast.Identifier.name; comments });
+              Ast.Pattern.Identifier.name = ((id_loc, ast_t), { Ast.Identifier.name; comments });
               annot = annot_ast;
               optional;
             } )
@@ -3147,7 +3148,11 @@ module Make (Env : Env_sig.S) = struct
                 t
               ) else (
                 init_var cx ~use_op (OrdinaryName name) ~has_anno t name_loc;
-                Env.get_var_declared_type cx (OrdinaryName name) name_loc
+                Env.constraining_type
+                  ~default:(Env.get_var_declared_type cx (OrdinaryName name) name_loc)
+                  cx
+                  (OrdinaryName name)
+                  name_loc
               )
             in
             Flow.flow cx (t, AssertImportIsValueT (reason, name));

@@ -1,0 +1,12 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
+experimental.env_mode=constrain_writes
+
+[strict]

@@ -161,6 +161,8 @@ module type S = sig
   val get_var_declared_type :
     ?lookup_mode:LookupMode.t -> Context.t -> Reason.name -> ALoc.t -> Type.t
 
+  val constraining_type : default:Type.t -> Context.t -> Reason.name -> ALoc.t -> Type.t
+
   val unify_declared_type :
     ?lookup_mode:LookupMode.t -> Context.t -> Reason.name -> ALoc.t -> Type.t -> unit
 

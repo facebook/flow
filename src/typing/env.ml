@@ -521,41 +521,39 @@ module Env : Env_sig.S = struct
         Base.Option.iter ~f:(fun t' -> Flow_js.flow_t cx (t, t')) t'
     | _ -> ()
 
+  let get_provider cx name loc =
+    let ({ Loc_env.var_info = { Env_api.providers; _ }; _ } as env) = Context.environment cx in
+    let (fully_initialized, provider_locs) =
+      Base.Option.value ~default:(false, []) (Env_api.Provider_api.providers_of_def providers loc)
+    in
+    let providers =
+      Base.List.map ~f:(Fn.compose (Loc_env.find_write env) Reason.aloc_of_reason) provider_locs
+      |> Base.Option.all
+    in
+    let provider =
+      match providers with
+      | None
+        (* We can have no providers when the only writes to a variable are in unreachable code *)
+      | Some [] ->
+        (* If we find an entry for the providers, but none that actually exist, its because this variable
+           was never assigned to. We treat this as undefined. We handle erroring on
+           these cases using a different approach (the error should be at the declaration,
+           not the assignment). *)
+        None
+      | Some [t] -> Some t
+      | Some (t1 :: t2 :: ts) ->
+        Some (UnionT (mk_reason (RIdentifier name) loc, UnionRep.make t1 t2 ts))
+    in
+    (fully_initialized, provider, provider_locs)
+
   let constrain_by_provider cx ~use_op t name loc =
     match name with
     | OrdinaryName ord_name
       when Options.env_option_enabled (Context.env_mode cx) Options.ConstrainWrites ->
-      let ({ Loc_env.var_info = { Env_api.providers; scopes; _ }; _ } as env) =
-        Context.environment cx
-      in
+      let { Loc_env.var_info = { Env_api.providers; scopes; _ }; _ } = Context.environment cx in
       if not @@ Env_api.Provider_api.is_provider providers loc then
-        let (fully_initialized, provider_locs) =
-          Base.Option.value
-            ~default:(false, [])
-            (Env_api.Provider_api.providers_of_def providers loc)
-        in
+        let (fully_initialized, provider, provider_locs) = get_provider cx name loc in
         if fully_initialized then
-          (* If the variable is never fully initialized, we'll error elsewhere *)
-          let providers =
-            Base.List.map
-              ~f:(Fn.compose (Loc_env.find_write env) Reason.aloc_of_reason)
-              provider_locs
-            |> Base.Option.all
-          in
-          let provider =
-            match providers with
-            | None
-              (* We can have no providers when the only writes to a variable are in unreachable code *)
-            | Some [] ->
-              (* If we find an entry for the providers, but none that actually exist, its because this variable
-                 was never assigned to. We treat this as undefined. We handle erroring on
-                 these cases using a different approach (the error should be at the declaration,
-                 not the assignment). *)
-              None
-            | Some [t] -> Some t
-            | Some (t1 :: t2 :: ts) ->
-              Some (UnionT (mk_reason (RIdentifier name) loc, UnionRep.make t1 t2 ts))
-          in
           Base.Option.iter provider ~f:(fun provider ->
               match Scope_api.With_ALoc.(def_of_use_opt scopes loc) with
               | Some { Scope_api.With_ALoc.Def.locs = (declaration, _); _ } ->
@@ -1054,6 +1052,20 @@ module Env : Env_sig.S = struct
   *)
   let get_var_declared_type ?(lookup_mode = ForValue) cx name loc =
     read_entry ~lookup_mode ~specific:false ?desc:None cx name loc
+
+  let constraining_type ~default cx name loc =
+    let env_mode = Context.env_mode cx in
+    match name with
+    | OrdinaryName _
+      when Options.env_option_enabled env_mode Options.ConstrainWrites
+           && not (Options.env_option_enabled env_mode Options.ClassicTypeAtPos) ->
+      let (_, provider, _) = get_provider cx name loc in
+      begin
+        match provider with
+        | Some provider -> provider
+        | _ -> default
+      end
+    | _ -> default
 
   (* Unify declared type with another type. This is useful for allowing forward
      references in declared types to other types declared later in scope. *)

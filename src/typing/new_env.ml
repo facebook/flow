@@ -270,6 +270,15 @@ module New_env : Env_sig.S = struct
       let env = Context.environment cx in
       Base.Option.value_exn (Loc_env.find_write env loc)
 
+  let constraining_type ~default cx name loc =
+    match name with
+    | InternalName _
+    | InternalModuleName _ ->
+      Old_env.constraining_type ~default cx name loc
+    | OrdinaryName _ ->
+      let env = Context.environment cx in
+      Base.Option.value ~default (Loc_env.find_write env loc)
+
   (*************)
   (*  Writing  *)
   (*************)

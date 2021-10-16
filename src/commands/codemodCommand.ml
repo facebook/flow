@@ -327,9 +327,14 @@ module Annotate_declarations_command = struct
       let check_options o =
         let open Options in
         match o.opt_env_mode with
-        | ClassicEnv opts when List.mem ConstrainWrites opts -> o
-        | ClassicEnv opts -> { o with opt_env_mode = ClassicEnv (ConstrainWrites :: opts) }
-        | SSAEnv -> { o with opt_env_mode = ClassicEnv [ConstrainWrites] }
+        | ClassicEnv opts when List.mem ConstrainWrites opts && List.mem ClassicTypeAtPos opts -> o
+        | ClassicEnv opts when List.mem ConstrainWrites opts ->
+          { o with opt_env_mode = ClassicEnv (ClassicTypeAtPos :: opts) }
+        | ClassicEnv opts when List.mem ClassicTypeAtPos opts ->
+          { o with opt_env_mode = ClassicEnv (ConstrainWrites :: opts) }
+        | ClassicEnv opts ->
+          { o with opt_env_mode = ClassicEnv (ConstrainWrites :: ClassicTypeAtPos :: opts) }
+        | SSAEnv -> { o with opt_env_mode = ClassicEnv [ConstrainWrites; ClassicTypeAtPos] }
 
       let visit =
         let mapper =
