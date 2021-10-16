@@ -1440,10 +1440,13 @@ struct
           let reason_op = reason_of_use_t u in
           let t = mk_typeapp_instance cx ~trace ~use_op ~reason_op ~reason_tapp ~cache:[] c ts in
           rec_flow cx trace (t, u)
-        (* When we have concretized the c for our upper bound TypeAppT then we want
-         * to concretize the lower bound. We flip all our arguments to
-         * ConcretizeTypeAppsT and set the final element to false to signal that we
-         * have concretized the upper bound's c.
+        (* This is the second step in checking a TypeAppT (c, ts) ~> TypeAppT (c, ts).
+         * The first step is in subtyping_kit.ml, and concretizes the c for our
+         * upper bound TypeAppT.
+         *
+         * When we have done that, then we want to concretize the lower bound. We
+         * flip all our arguments to ConcretizeTypeAppsT and set the final element
+         * to false to signal that we have concretized the upper bound's c.
          *
          * If the upper bound's c is not a PolyT then we will fall down to an
          * incompatible use error. *)
