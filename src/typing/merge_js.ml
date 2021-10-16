@@ -279,8 +279,19 @@ let check_constrained_writes init_cx master_cx =
     let ccx = Context.make_ccx master_cx in
 
     let reducer =
+      let mk_reason =
+        let open Reason in
+        let open Utils_js in
+        update_desc_reason (function
+            | RIdentifier (OrdinaryName name) -> RCustom (spf "variable `%s` of unknown type" name)
+            | RParameter (Some name)
+            | RRestParameter (Some name) ->
+              RUnknownParameter name
+            | RTypeParam (name, _, _) -> RCustom (spf "unknown implicit instantiation of `%s`" name)
+            | desc -> desc)
+      in
       new Context_optimizer.context_optimizer ~no_lowers:(fun _ r ->
-          Type.EmptyT.make r (Type.bogus_trust ()))
+          Type.EmptyT.make (mk_reason r) (Type.bogus_trust ()))
     in
     let checks =
       Base.List.map

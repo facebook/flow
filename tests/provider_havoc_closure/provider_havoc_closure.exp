@@ -1,6 +1,8 @@
 Error ------------------------------------------------------------------------------------------------- Closure.js:16:14
 
-Cannot assign `42` to `global_x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `42` to `global_x` because number [1] is incompatible with string [2]. All writes to `global_x` must be
+compatible with the type of its initializer [3]. Add an annotation to `global_x` [3] if a different type is desired.
+[incompatible-type]
 
    Closure.js:16:14
    16|   global_x = 42; // blame
@@ -10,11 +12,16 @@ References:
    Closure.js:12:16
    12| var global_x = 'hello';
                       ^^^^^^^ [2]
+   Closure.js:12:5
+   12| var global_x = 'hello';
+           ^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- Closure.js:25:12
 
-Cannot assign `42` to `global_x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `42` to `global_x` because number [1] is incompatible with string [2]. All writes to `global_x` must be
+compatible with the type of its initializer [3]. Add an annotation to `global_x` [3] if a different type is desired.
+[incompatible-type]
 
    Closure.js:25:12
    25| global_x = 42; // blame
@@ -24,11 +31,16 @@ References:
    Closure.js:12:16
    12| var global_x = 'hello';
                       ^^^^^^^ [2]
+   Closure.js:12:5
+   12| var global_x = 'hello';
+           ^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- Closure.js:35:15
 
-Cannot assign `42` to `local_x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `42` to `local_x` because number [1] is incompatible with string [2]. All writes to `local_x` must be
+compatible with the type of its initializer [3]. Add an annotation to `local_x` [3] if a different type is desired.
+[incompatible-type]
 
    Closure.js:35:15
    35|     local_x = 42; // blame
@@ -38,11 +50,16 @@ References:
    Closure.js:31:17
    31|   var local_x = 'hello';
                        ^^^^^^^ [2]
+   Closure.js:31:7
+   31|   var local_x = 'hello';
+             ^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- Closure.js:44:13
 
-Cannot assign `42` to `local_x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `42` to `local_x` because number [1] is incompatible with string [2]. All writes to `local_x` must be
+compatible with the type of its initializer [3]. Add an annotation to `local_x` [3] if a different type is desired.
+[incompatible-type]
 
    Closure.js:44:13
    44|   local_x = 42; // error
@@ -52,11 +69,16 @@ References:
    Closure.js:31:17
    31|   var local_x = 'hello';
                        ^^^^^^^ [2]
+   Closure.js:31:7
+   31|   var local_x = 'hello';
+             ^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- Closure.js:55:16
 
-Cannot assign `42` to `global_y` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `42` to `global_y` because number [1] is incompatible with string [2]. All writes to `global_y` must be
+compatible with the type of its initializer [3]. Add an annotation to `global_y` [3] if a different type is desired.
+[incompatible-type]
 
    Closure.js:55:16
    55|     global_y = 42; // blame
@@ -66,11 +88,16 @@ References:
    Closure.js:50:16
    50| var global_y = 'hello';
                       ^^^^^^^ [2]
+   Closure.js:50:5
+   50| var global_y = 'hello';
+           ^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- Closure.js:65:12
 
-Cannot assign `42` to `global_y` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `42` to `global_y` because number [1] is incompatible with string [2]. All writes to `global_y` must be
+compatible with the type of its initializer [3]. Add an annotation to `global_y` [3] if a different type is desired.
+[incompatible-type]
 
    Closure.js:65:12
    65| global_y = 42; // error
@@ -80,11 +107,16 @@ References:
    Closure.js:50:16
    50| var global_y = 'hello';
                       ^^^^^^^ [2]
+   Closure.js:50:5
+   50| var global_y = 'hello';
+           ^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- Closure.js:76:17
 
-Cannot assign `42` to `local_y` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `42` to `local_y` because number [1] is incompatible with string [2]. All writes to `local_y` must be
+compatible with the type of its initializer [3]. Add an annotation to `local_y` [3] if a different type is desired.
+[incompatible-type]
 
    Closure.js:76:17
    76|       local_y = 42;
@@ -94,11 +126,16 @@ References:
    Closure.js:71:17
    71|   var local_y = 'hello';
                        ^^^^^^^ [2]
+   Closure.js:71:7
+   71|   var local_y = 'hello';
+             ^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- Closure.js:86:13
 
-Cannot assign `42` to `local_y` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `42` to `local_y` because number [1] is incompatible with string [2]. All writes to `local_y` must be
+compatible with the type of its initializer [3]. Add an annotation to `local_y` [3] if a different type is desired.
+[incompatible-type]
 
    Closure.js:86:13
    86|   local_y = 42; // error
@@ -108,11 +145,15 @@ References:
    Closure.js:71:17
    71|   var local_y = 'hello';
                        ^^^^^^^ [2]
+   Closure.js:71:7
+   71|   var local_y = 'hello';
+             ^^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------------- Closure.js:91:9
 
-Cannot assign `10` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `10` to `x` because number [1] is incompatible with string [2]. All writes to `x` must be compatible with
+the type of its initializer [3]. Add an annotation to `x` [3] if a different type is desired. [incompatible-type]
 
    Closure.js:91:9
    91|     x = 10; // error
@@ -122,6 +163,9 @@ References:
    Closure.js:93:11
    93|   var x = 'hello world';
                  ^^^^^^^^^^^^^ [2]
+   Closure.js:93:7
+   93|   var x = 'hello world';
+             ^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- Closure.js:105:6
@@ -185,7 +229,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- cond_havoc.js:8:22
 
-Cannot assign empty string to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign empty string to `x` because string [1] is incompatible with number [2]. All writes to `x` must be
+compatible with the type of its initializer [3]. Add an annotation to `x` [3] if a different type is desired.
+[incompatible-type]
 
    cond_havoc.js:8:22
    8|   function f() { x = "" }
@@ -195,6 +241,9 @@ References:
    cond_havoc.js:7:11
    7|   var x = 0;
                 ^ [2]
+   cond_havoc.js:7:7
+   7|   var x = 0;
+            ^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- const.js:20:38

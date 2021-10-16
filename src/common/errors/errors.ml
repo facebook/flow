@@ -95,10 +95,12 @@ module Friendly = struct
     | Normal of {
         message: 'a message;
         frames: 'a message list option;
+        explanations: 'a message list option;
         code: Error_codes.error_code option;
       }
     | Speculation of {
         frames: 'a message list;
+        explanations: 'a message list;
         branches: (int * 'a t') list;
         code: Error_codes.error_code option;
       }
@@ -126,6 +128,7 @@ module Friendly = struct
   type 'a message_group = {
     group_message: 'a message;
     group_message_list: 'a message_group list;
+    group_message_post: 'a message option;
   }
 
   type t = ALoc.t t'
@@ -287,8 +290,12 @@ module Friendly = struct
     | message -> message
 
   (* Adds some message to the beginning of a group message. *)
-  let append_group_message message { group_message; group_message_list } =
-    { group_message = message @ text " " :: uncapitalize group_message; group_message_list }
+  let append_group_message message { group_message; group_message_list; group_message_post } =
+    {
+      group_message = message @ text " " :: uncapitalize group_message;
+      group_message_list;
+      group_message_post;
+    }
 
   (* Creates a message group from the error_message type. If show_all_branches
    * is false then we will hide speculation branches with a lower score. If any
@@ -298,8 +305,12 @@ module Friendly = struct
       let frames = Base.List.concat (List.rev (frames :: acc_frames)) in
       Base.List.concat (Base.List.intersperse (List.rev frames) [text " of "])
     in
+    let message_of_explanations ~sep explanations acc_explanations =
+      let explanations = Base.List.concat (List.rev (explanations :: acc_explanations)) in
+      Base.List.concat (Base.List.intersperse (List.rev explanations) [text "."; text sep])
+    in
     let rec flatten_speculation_branches
-        ~show_all_branches ~hidden_branches ~high_score acc_frames acc = function
+        ~show_all_branches ~hidden_branches ~high_score acc_frames acc_explanations acc = function
       | [] -> (hidden_branches, high_score, acc)
       | (score, error) :: branches ->
         (match error.message with
@@ -308,8 +319,8 @@ module Friendly = struct
          *
          * We ignore the score for these errors. Instead propagating the
          * high_score we already have. *)
-        | Speculation { branches = nested_branches; frames; _ } when Base.Option.is_none error.root
-          ->
+        | Speculation { branches = nested_branches; frames; explanations; _ }
+          when Base.Option.is_none error.root ->
           (* We don't perform tail-call recursion here, but it's unlikely that
            * speculations will be so deeply nested that we blow the stack. *)
           let (hidden_branches, high_score, acc) =
@@ -318,6 +329,7 @@ module Friendly = struct
               ~hidden_branches
               ~high_score
               (frames :: acc_frames)
+              (explanations :: acc_explanations)
               acc
               nested_branches
           in
@@ -327,6 +339,7 @@ module Friendly = struct
             ~hidden_branches
             ~high_score
             acc_frames
+            acc_explanations
             acc
             branches
         (* We add every other error if it has an appropriate score. *)
@@ -335,17 +348,17 @@ module Friendly = struct
             if show_all_branches then
               (* If we are configured to show all branches then always add our
                * error to acc. *)
-              (high_score, hidden_branches, (acc_frames, error) :: acc)
+              (high_score, hidden_branches, (acc_frames, acc_explanations, error) :: acc)
             else if
               (* If this message has a better score then throw away all old
                * messages. We are now hiding some messages. *)
               score > high_score
             then
-              (score, hidden_branches || acc <> [], [(acc_frames, error)])
+              (score, hidden_branches || acc <> [], [(acc_frames, acc_explanations, error)])
             (* If this message has the same score as our high score then add
              * it to acc and keep our high score. *)
             else if score = high_score then
-              (high_score, hidden_branches, (acc_frames, error) :: acc)
+              (high_score, hidden_branches, (acc_frames, acc_explanations, error) :: acc)
             (* If this message has a lower score then our high score we skip
              * the error. We are now hiding at least one message. *)
             else
@@ -357,20 +370,65 @@ module Friendly = struct
             ~hidden_branches
             ~high_score
             acc_frames
+            acc_explanations
             acc
             branches)
     in
-    let rec loop ~show_root ~show_code ~show_all_branches ~hidden_branches acc_frames error =
+    let rec loop
+        ~show_root ~show_code ~show_all_branches ~hidden_branches acc_frames acc_explanations error
+        =
       match error.message with
+      (* If there are no frames then we only want to add the root message (if we
+       * have one) and return. We can safely ignore acc_frames. If a message has
+       * frames set to None then the message is not equipped to handle
+       * extra frames. *)
+      | Normal { message; frames = None; explanations = None; code = error_code } ->
+        (* Add the root to our error message when we are configured to show
+         * the root. *)
+        let message =
+          match error.root with
+          | Some { root_message; _ } when show_root -> root_message @ text " " :: message
+          | _ -> message
+        in
+        let message =
+          if show_code then
+            Base.Option.value_map
+              ~f:(fun error_code ->
+                message @ [text " ["; text (Error_codes.string_of_code error_code); text "]"])
+              ~default:message
+              error_code
+          else
+            message
+        in
+        ( hidden_branches,
+          error.loc,
+          { group_message = message; group_message_list = []; group_message_post = None } )
       (* Create normal error messages. *)
-      | Normal { message; frames = Some frames; code = error_code } ->
+      | Normal { message; frames; explanations; code = error_code } ->
         (* Add the frames to our error message. *)
-        let frames = message_of_frames frames acc_frames in
+        let frames =
+          Base.Option.value_map
+            ~default:[]
+            ~f:(fun frames -> message_of_frames frames acc_frames)
+            frames
+        in
         let message =
           if frames = [] then
             message
           else
             message @ text " in " :: frames
+        in
+        let explanations =
+          Base.Option.value_map
+            ~default:[]
+            ~f:(fun explanations -> message_of_explanations ~sep:" " explanations acc_explanations)
+            explanations
+        in
+        let message =
+          if explanations = [] then
+            message
+          else
+            message @ text ". " :: explanations
         in
         (* Add the root to our error message when we are configured to show
          * the root. *)
@@ -393,35 +451,14 @@ module Friendly = struct
           else
             message
         in
-        (hidden_branches, primary_loc, { group_message = message; group_message_list = [] })
-      (* If there are no frames then we only want to add the root message (if we
-       * have one) and return. We can safely ignore acc_frames. If a message has
-       * frames set to None then the message is not equipped to handle
-       * extra frames. *)
-      | Normal { message; frames = None; code = error_code } ->
-        (* Add the root to our error message when we are configured to show
-         * the root. *)
-        let message =
-          match error.root with
-          | Some { root_message; _ } when show_root -> root_message @ text " " :: message
-          | _ -> message
-        in
-        let message =
-          if show_code then
-            Base.Option.value_map
-              ~f:(fun error_code ->
-                message @ [text " ["; text (Error_codes.string_of_code error_code); text "]"])
-              ~default:message
-              error_code
-          else
-            message
-        in
-        (hidden_branches, error.loc, { group_message = message; group_message_list = [] })
+        ( hidden_branches,
+          primary_loc,
+          { group_message = message; group_message_list = []; group_message_post = None } )
       (* When we have a speculation error, do some work to create a message
        * group. Flatten out nested speculation errors with no frames. Hide
        * frames with low scores. Use a single message_group if we hide all but
        * one branches. *)
-      | Speculation { frames; branches; code = error_code } ->
+      | Speculation { frames; explanations; branches; code = error_code } ->
         (* Loop through our speculation branches. We will flatten out relevant
          * union branches and hide branches with a low score in this loop. *)
         let (hidden_branches, _, speculation_errors_rev) =
@@ -431,25 +468,29 @@ module Friendly = struct
             ~hidden_branches:false
             []
             []
+            []
             branches
         in
         (match speculation_errors_rev with
         (* When there is only one branch in acc (we had one branch with a
          * "high score") and this error does not have a root then loop while
          * adding the frames from this speculation error message. *)
-        | [(acc_frames', speculation_error)] when Base.Option.is_none speculation_error.root ->
+        | [(acc_frames', acc_explanations', speculation_error)]
+          when Base.Option.is_none speculation_error.root ->
           loop
             ~show_root
             ~show_all_branches
             ~hidden_branches
             ~show_code
             (frames :: (acc_frames' @ acc_frames))
+            (explanations :: (acc_explanations' @ acc_explanations))
             { speculation_error with root = error.root; loc = error.loc }
         (* If there were more then one branches with high scores add them all
          * together in an error message group. *)
         | _ ->
           (* Get the message from the frames. *)
           let frames = message_of_frames frames acc_frames in
+          let explanations = message_of_explanations ~sep:"\n\n" explanations acc_explanations in
           let message =
             (* If we don't have an error root _and_ we don't have any frames
              * then use a mock error message. (We should always have a root
@@ -502,7 +543,7 @@ module Friendly = struct
           (* Get the message group for all of our speculation errors. *)
           let (hidden_branches, group_message_list) =
             List.fold_left
-              (fun (hidden_branches, group_message_list) (acc_frames', error) ->
+              (fun (hidden_branches, group_message_list) (acc_frames', acc_explanations', error) ->
                 let (hidden_branches, _, message_group) =
                   loop
                     ~show_root:true
@@ -510,6 +551,7 @@ module Friendly = struct
                     ~show_all_branches
                     ~hidden_branches
                     acc_frames'
+                    acc_explanations'
                     error
                 in
                 (hidden_branches, message_group :: group_message_list))
@@ -527,24 +569,34 @@ module Friendly = struct
                   message_group)
               group_message_list
           in
-          let group_message_list =
+          let (group_message_list, group_message_post) =
             if (not show_all_branches) && List.length group_message_list > 50 then
-              let message =
-                {
-                  group_message =
-                    message_of_string
-                      "Only showing the the first 50 branches. To see all branches, re-run Flow with --show-all-branches.";
-                  group_message_list = [];
-                }
+              let group_message_post =
+                let explanations =
+                  if List.length explanations > 0 then
+                    text "\n\n" :: explanations @ [text "."]
+                  else
+                    explanations
+                in
+                Some
+                  (message_of_string
+                     "\nOnly showing the the first 50 branches. To see all branches, re-run Flow with --show-all-branches."
+                  @ explanations)
               in
-              Base.List.rev_append (List.rev (Base.List.take group_message_list 50)) [message]
+              (Base.List.take group_message_list 50, group_message_post)
             else
-              group_message_list
+              ( group_message_list,
+                if List.length explanations > 0 then
+                  Some (text "\n" :: explanations @ [text "."])
+                else
+                  None )
           in
-          (hidden_branches, error.loc, { group_message = message; group_message_list }))
+          ( hidden_branches,
+            error.loc,
+            { group_message = message; group_message_list; group_message_post } ))
     in
     (* Partially apply loop with the state it needs. Have fun! *)
-    loop ~hidden_branches:false []
+    loop ~hidden_branches:false [] []
 
   let extract_references_message_intermediate ~next_id ~loc_to_id ~id_to_loc ~message =
     let (next_id, loc_to_id, id_to_loc, message) =
@@ -586,10 +638,20 @@ module Friendly = struct
         (next_id, loc_to_id, id_to_loc, [])
         message_group.group_message_list
     in
+    let (next_id, loc_to_id, id_to_loc, group_message_post) =
+      Base.Option.value_map
+        ~f:(fun post ->
+          let (n, l, i, msg) =
+            extract_references_message_intermediate ~next_id ~loc_to_id ~id_to_loc ~message:post
+          in
+          (n, l, i, Some msg))
+        ~default:(next_id, loc_to_id, id_to_loc, None)
+        message_group.group_message_post
+    in
     ( next_id,
       loc_to_id,
       id_to_loc,
-      { group_message; group_message_list = List.rev group_message_list_rev } )
+      { group_message; group_message_list = List.rev group_message_list_rev; group_message_post } )
 
   (* Extracts common location references from a message. In order, each location
    * will be replaced with an integer reference starting at 1. If some reference
@@ -609,8 +671,9 @@ module Friendly = struct
    * messages together. We don't insert newlines. This is a suboptimal
    * representation of a grouped message, but it works for our purposes. *)
   let message_of_group_message =
-    let rec loop acc { group_message; group_message_list } =
-      List.fold_left loop (group_message :: acc) group_message_list
+    let rec loop acc { group_message; group_message_list; group_message_post } =
+      let acc = List.fold_left loop (group_message :: acc) group_message_list in
+      Base.Option.value_map ~f:(fun post -> post :: acc) ~default:acc group_message_post
     in
     fun message_group ->
       let acc = loop [] message_group in
@@ -666,6 +729,7 @@ let mk_error
     ?(trace_infos : 'loc info list option)
     ?(root : ('loc * 'loc Friendly.message) option)
     ?(frames : 'loc Friendly.message list option)
+    ?(explanations : 'loc Friendly.message list option)
     (loc : 'loc)
     (error_code : Error_codes.error_code option)
     (message : 'loc Friendly.message) : 'loc printable_error =
@@ -676,20 +740,29 @@ let mk_error
       {
         loc;
         root = Base.Option.map root (fun (root_loc, root_message) -> { root_loc; root_message });
-        message = Normal { message; frames; code = error_code };
+        message = Normal { message; frames; explanations; code = error_code };
       } ))
 
 let mk_speculation_error
-    ?(kind = InferError) ?trace_infos ~loc ~root ~frames ~error_code speculation_errors =
+    ?(kind = InferError)
+    ?trace_infos
+    ~loc
+    ~root
+    ~frames
+    ~explanations
+    ~error_code
+    speculation_errors =
   Friendly.(
     let trace = Base.Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
     let rec erase_branch_codes =
       Base.List.map ~f:(fun (score, { loc; root; message }) ->
           let message =
             match message with
-            | Normal { message; frames; _ } -> Normal { message; frames; code = error_code }
-            | Speculation { frames; branches; _ } ->
-              Speculation { frames; branches = erase_branch_codes branches; code = error_code }
+            | Normal { message; frames; explanations; _ } ->
+              Normal { message; frames; explanations; code = error_code }
+            | Speculation { frames; explanations; branches; _ } ->
+              Speculation
+                { frames; explanations; branches = erase_branch_codes branches; code = error_code }
           in
           (score, { loc; root; message }))
     in
@@ -703,7 +776,7 @@ let mk_speculation_error
       {
         loc;
         root = Base.Option.map root (fun (root_loc, root_message) -> { root_loc; root_message });
-        message = Speculation { frames; branches; code = error_code };
+        message = Speculation { frames; explanations; branches; code = error_code };
       } ))
 
 (*******************************)
@@ -879,14 +952,21 @@ let locs_of_printable_error =
       in
       let locs =
         match message with
-        | Normal { frames; message; code = _ } ->
+        | Normal { frames; explanations; message; code = _ } ->
           let locs =
             Base.Option.value_map frames ~default:locs ~f:(List.fold_left locs_of_message locs)
           in
+          let locs =
+            Base.Option.value_map
+              explanations
+              ~default:locs
+              ~f:(List.fold_left locs_of_message locs)
+          in
           let locs = locs_of_message locs message in
           locs
-        | Speculation { frames; branches; code = _ } ->
+        | Speculation { frames; explanations; branches; code = _ } ->
           let locs = List.fold_left locs_of_message locs frames in
+          let locs = List.fold_left locs_of_message locs explanations in
           let locs =
             List.fold_left (fun locs (_, error) -> locs_of_friendly_error locs error) locs branches
           in
@@ -980,34 +1060,42 @@ let rec compare compare_loc =
   let compare_friendly_message m1 m2 =
     Friendly.(
       match (m1, m2) with
-      | ( Normal { frames = fs1; message = m1; code = c1 },
-          Normal { frames = fs2; message = m2; code = c2 } ) ->
+      | ( Normal { frames = fs1; explanations = ex1; message = m1; code = c1 },
+          Normal { frames = fs2; explanations = ex2; message = m2; code = c2 } ) ->
         let k = compare_option (compare_lists (compare_lists compare_message_feature)) fs1 fs2 in
         if k = 0 then
-          let k = compare_lists compare_message_feature m1 m2 in
+          let k = compare_option (compare_lists (compare_lists compare_message_feature)) ex1 ex2 in
           if k = 0 then
-            Stdlib.compare c1 c2
+            let k = compare_lists compare_message_feature m1 m2 in
+            if k = 0 then
+              Stdlib.compare c1 c2
+            else
+              k
           else
             k
         else
           k
       | (Normal _, Speculation _) -> -1
       | (Speculation _, Normal _) -> 1
-      | ( Speculation { frames = fs1; branches = b1; code = c1 },
-          Speculation { frames = fs2; branches = b2; code = c2 } ) ->
+      | ( Speculation { frames = fs1; explanations = ex1; branches = b1; code = c1 },
+          Speculation { frames = fs2; explanations = ex2; branches = b2; code = c2 } ) ->
         let k = compare_lists (compare_lists compare_message_feature) fs1 fs2 in
         if k = 0 then
-          let k = List.length b1 - List.length b2 in
+          let k = compare_lists (compare_lists compare_message_feature) ex1 ex2 in
           if k = 0 then
-            let k =
-              compare_lists
-                (fun (_, err1) (_, err2) ->
-                  compare compare_loc (InferError, [], err1) (InferError, [], err2))
-                b1
-                b2
-            in
+            let k = List.length b1 - List.length b2 in
             if k = 0 then
-              Stdlib.compare c1 c2
+              let k =
+                compare_lists
+                  (fun (_, err1) (_, err2) ->
+                    compare compare_loc (InferError, [], err1) (InferError, [], err2))
+                  b1
+                  b2
+              in
+              if k = 0 then
+                Stdlib.compare c1 c2
+              else
+                k
             else
               k
           else
@@ -2593,7 +2681,11 @@ module Cli_output = struct
           let acc =
             print_message_friendly ~flags ~colors ~indentation message_group.group_message :: acc
           in
-          loop_list ~indentation:(indentation + 1) acc message_group.group_message_list
+          let acc = loop_list ~indentation:(indentation + 1) acc message_group.group_message_list in
+          Base.Option.value_map
+            ~f:(fun post -> print_message_friendly ~flags ~colors ~indentation post :: acc)
+            ~default:acc
+            message_group.group_message_post
         and loop_list ~indentation acc message_group_list =
           match message_group_list with
           | [] -> acc
@@ -2668,7 +2760,7 @@ module Cli_output = struct
      * message and render a single message. Sometimes singletons will also
      * render a trace. *)
     Friendly.(
-      let (primary_loc, { group_message; group_message_list }) =
+      let (primary_loc, { group_message; group_message_list; group_message_post }) =
         check (message_group_of_error ~show_all_branches ~show_root:true ~show_code:true error)
       in
       get_pretty_printed_friendly_error_group
@@ -2678,7 +2770,8 @@ module Cli_output = struct
         ~severity
         ~trace
         ~primary_locs:(LocSet.singleton primary_loc)
-        ~message_group:{ group_message = capitalize group_message; group_message_list })
+        ~message_group:
+          { group_message = capitalize group_message; group_message_list; group_message_post })
 
   let print_styles ~out_channel ~flags styles =
     let styles =
@@ -2957,18 +3050,25 @@ module Json_output = struct
   let rec json_of_message_group_friendly message_group =
     Hh_json.(
       Friendly.(
-        let { group_message; group_message_list } = message_group in
+        let { group_message; group_message_list; group_message_post } = message_group in
         let group_message = json_of_message_friendly group_message in
-        if group_message_list = [] then
+        let group_message_post =
+          Base.Option.value_map
+            ~f:(fun post -> [("post_message", json_of_message_friendly post)])
+            ~default:[]
+            group_message_post
+        in
+        if group_message_list = [] && group_message_post = [] then
           group_message
         else
           JSON_Object
-            [
-              ("kind", JSON_String "UnorderedList");
-              ("message", group_message);
-              ( "items",
-                JSON_Array (Base.List.map ~f:json_of_message_group_friendly group_message_list) );
-            ]))
+            ([
+               ("kind", JSON_String "UnorderedList");
+               ("message", group_message);
+               ( "items",
+                 JSON_Array (Base.List.map ~f:json_of_message_group_friendly group_message_list) );
+             ]
+            @ group_message_post)))
 
   let json_of_references ~strip_root ~stdin_file ~offset_kind references =
     Hh_json.(

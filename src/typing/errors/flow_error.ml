@@ -503,7 +503,32 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
                 ]
               in
               `Root (op, None, message)
-            | Frame (ConstrainedAssignment _, op) -> `Next op
+            | Frame (ConstrainedAssignment { name; declaration; providers }, use_op) ->
+              let assignments =
+                match providers with
+                | [] -> (* should not happen *) [text "one of its initial assignments"]
+                | [r] when Loc.equal (poly_loc_of_reason r) declaration ->
+                  [text "its "; ref (mk_reason (RCustom "initializer") declaration)]
+                | [r] ->
+                  [text "its "; ref (update_desc_reason (fun _ -> RCustom "initial assignment") r)]
+                | providers ->
+                  text "one of its initial assignments"
+                  ::
+                  (Base.List.map
+                     ~f:(fun r -> ref (update_desc_reason (fun _ -> RCustom "") r))
+                     providers
+                  |> Base.List.intersperse ~sep:(text ","))
+              in
+              let message =
+                [text "All writes to "; code name; text " must be compatible with the type of "]
+                @ assignments
+                @ [
+                    text ". Add an annotation to ";
+                    ref (mk_reason (RIdentifier (OrdinaryName name)) declaration);
+                    text " if a different type is desired";
+                  ]
+              in
+              `Explanation (use_op, message)
             | Frame (ArrayElementCompatibility { lower; _ }, use_op) ->
               `Frame (lower, use_op, [text "array element"])
             | Frame (FunParam { n; lower; name; _ }, (Frame (FunCompatibility _, _) as use_op)) ->
@@ -627,29 +652,35 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
                 frame_loc
             in
             (* Add our frame and recurse with the next use_op. *)
-            let (all_frames, local_frames) = frames in
+            let (all_frames, local_frames, explanations) = frames in
             let frames =
               ( frame :: all_frames,
-                if frame_contains_loc then
+                (if frame_contains_loc then
                   local_frames
                 else
-                  frame :: local_frames )
+                  frame :: local_frames),
+                explanations )
             in
             loop loc frames use_op
           (* Same logic as `Frame except we don't have a frame location. *)
           | `FrameWithoutLoc (use_op, frame) ->
-            let (all_frames, local_frames) = frames in
-            let frames = (frame :: all_frames, frame :: local_frames) in
+            let (all_frames, local_frames, explanations) = frames in
+            let frames = (frame :: all_frames, frame :: local_frames, explanations) in
+            loop loc frames use_op
+          | `Explanation (use_op, frame) ->
+            let (all_frames, local_frames, explanations) = frames in
+            let frames = (all_frames, local_frames, frame :: explanations) in
             loop loc frames use_op
           (* We don't know what our root is! Return what we do know. *)
           | `UnknownRoot show_all_frames ->
-            let (all_frames, local_frames) = frames in
+            let (all_frames, local_frames, explanations) = frames in
             ( None,
               loc,
-              if show_all_frames then
+              (if show_all_frames then
                 all_frames
               else
-                local_frames )
+                local_frames),
+              explanations )
           (* Finish up be returning our root location, root message, primary loc,
            * and frames. *)
           | `Root (root_reason, root_specific_reason, root_message) ->
@@ -665,28 +696,28 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
             in
             (* Return our root loc and message in addition to the true primary loc
              * and frames. *)
-            let (all_frames, _) = frames in
-            (Some (root_loc, root_message), loc, all_frames)
+            let (all_frames, _, explanations) = frames in
+            (Some (root_loc, root_message), loc, all_frames, explanations)
         in
         fun (loc : Loc.t) (use_op : Loc.t virtual_use_op) ->
-          let (root, loc, frames) = loop loc ([], []) use_op in
+          let (root, loc, frames, explanations) = loop loc ([], [], []) use_op in
           let root =
             Base.Option.map root (fun (root_loc, root_message) ->
                 (root_loc, root_message @ [text " because"]))
           in
-          (root, loc, frames))
+          (root, loc, frames, explanations))
     in
     (* Make a friendly error based on a use_op. The message we are provided should
      * not have any punctuation. Punctuation will be provided after the frames of
      * an error message. *)
     let mk_use_op_error (loc : Loc.t) (use_op : Loc.t virtual_use_op) message =
-      let (root, loc, frames) = unwrap_use_ops loc use_op in
+      let (root, loc, frames, explanations) = unwrap_use_ops loc use_op in
       let code = code_of_error error in
-      mk_error ~trace_infos ?root ~frames loc code message
+      mk_error ~trace_infos ?root ~frames ~explanations loc code message
     in
     (* Make a friendly error based on failed speculation. *)
     let mk_use_op_speculation_error (loc : Loc.t) (use_op : Loc.t virtual_use_op) branches =
-      let (root, loc, frames) = unwrap_use_ops loc use_op in
+      let (root, loc, frames, explanations) = unwrap_use_ops loc use_op in
       let error_code = code_of_error error in
       let speculation_errors =
         Base.List.map
@@ -705,6 +736,7 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
         ~loc
         ~root
         ~frames
+        ~explanations
         ~error_code
         speculation_errors
     in
@@ -830,6 +862,30 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
                   code (string_of_int n);
                   text " characters are not treated as literals";
                 ]
+            | (RUnknownParameter n, _) ->
+              let message =
+                [
+                  ref lower;
+                  text " is incompatible with ";
+                  ref upper;
+                  text " (consider adding a type annotation to ";
+                  ref (update_desc_reason (fun _ -> RIdentifier (OrdinaryName n)) lower);
+                  text ")";
+                ]
+              in
+              make_error (loc_of_reason lower) message
+            | (_, RUnknownParameter n) ->
+              let message =
+                [
+                  ref lower;
+                  text " is incompatible with ";
+                  ref upper;
+                  text " (consider adding a type annotation to ";
+                  ref (update_desc_reason (fun _ -> RIdentifier (OrdinaryName n)) upper);
+                  text ")";
+                ]
+              in
+              make_error (loc_of_reason lower) message
             | _ ->
               make_error (loc_of_reason lower) [ref lower; text " is incompatible with "; ref upper]
           end)
@@ -1036,13 +1092,14 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
           | Polarity.Positive -> "writable"
           | Polarity.Neutral -> failwith "unreachable")
       in
-      mk_use_op_error
-        (loc_of_reason lower)
-        use_op
-        (mk_prop_message prop
+      let message =
+        mk_prop_message prop
         @ [text (" is " ^ expected ^ " in "); ref lower; text " but "]
-        @ [text (actual ^ " in "); ref upper])
+        @ [text (actual ^ " in "); ref upper]
+      in
+      mk_use_op_error (loc_of_reason lower) use_op message
     in
+
     match (loc, friendly_message_of_msg msg) with
     | (Some loc, Error_message.Normal { features }) ->
       mk_error ~trace_infos ~kind loc (code_of_error error) features

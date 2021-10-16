@@ -17,3 +17,7 @@ y = g();
 var w = null;
 w = 42;
 w = "a";
+
+var z;
+z = 42;
+z = "a";

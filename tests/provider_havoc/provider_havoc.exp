@@ -1,7 +1,8 @@
 Error --------------------------------------------------------------------------------------------------- empty.js:12:54
 
-Cannot assign `si.add(...)` to `si` because null or undefined [1] is incompatible with `T` [2] in type argument `T` [2].
-[incompatible-type-arg]
+Cannot assign `si.add(...)` to `si` because null or undefined [1] is incompatible with unknown implicit instantiation of
+`T` [2] in type argument `T` [2]. All writes to `si` must be compatible with the type of its initializer [3]. Add an
+annotation to `si` [3] if a different type is desired. [incompatible-type-arg]
 
    empty.js:12:54
    12|   (function () { declare var x: ?string; si = si.add(x)})(); // error
@@ -14,12 +15,16 @@ References:
    empty.js:65:20
    65| declare class Set<+T> {
                           ^ [2]
+   empty.js:11:7
+   11|   let si = new Set();
+             ^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- empty.js:12:54
 
-Cannot assign `si.add(...)` to `si` because string [1] is incompatible with `T` [2] in type argument `T` [2].
-[incompatible-type-arg]
+Cannot assign `si.add(...)` to `si` because string [1] is incompatible with unknown implicit instantiation of `T` [2] in
+type argument `T` [2]. All writes to `si` must be compatible with the type of its initializer [3]. Add an annotation to
+`si` [3] if a different type is desired. [incompatible-type-arg]
 
    empty.js:12:54
    12|   (function () { declare var x: ?string; si = si.add(x)})(); // error
@@ -32,12 +37,16 @@ References:
    empty.js:65:20
    65| declare class Set<+T> {
                           ^ [2]
+   empty.js:11:7
+   11|   let si = new Set();
+             ^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- empty.js:19:10
 
 Cannot assign array literal to `arr` because number [1] is incompatible with unknown element type of empty array [2] in
-array element. [incompatible-type]
+array element. All writes to `arr` must be compatible with the type of its initializer [3]. Add an annotation to
+`arr` [3] if a different type is desired. [incompatible-type]
 
    empty.js:19:10
    19|   arr = [1,2,3]; // error
@@ -47,12 +56,16 @@ References:
    empty.js:18:13
    18|   let arr = [];
                    ^^ [2]
+   empty.js:18:7
+   18|   let arr = [];
+             ^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- empty.js:19:12
 
 Cannot assign array literal to `arr` because number [1] is incompatible with unknown element type of empty array [2] in
-array element. [incompatible-type]
+array element. All writes to `arr` must be compatible with the type of its initializer [3]. Add an annotation to
+`arr` [3] if a different type is desired. [incompatible-type]
 
    empty.js:19:12
    19|   arr = [1,2,3]; // error
@@ -62,12 +75,16 @@ References:
    empty.js:18:13
    18|   let arr = [];
                    ^^ [2]
+   empty.js:18:7
+   18|   let arr = [];
+             ^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- empty.js:19:14
 
 Cannot assign array literal to `arr` because number [1] is incompatible with unknown element type of empty array [2] in
-array element. [incompatible-type]
+array element. All writes to `arr` must be compatible with the type of its initializer [3]. Add an annotation to
+`arr` [3] if a different type is desired. [incompatible-type]
 
    empty.js:19:14
    19|   arr = [1,2,3]; // error
@@ -77,12 +94,16 @@ References:
    empty.js:18:13
    18|   let arr = [];
                    ^^ [2]
+   empty.js:18:7
+   18|   let arr = [];
+             ^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- empty.js:32:11
 
-Cannot assign function to `fn` because `y` [1] is incompatible with number [2] in the first parameter.
-[incompatible-type]
+Cannot assign function to `fn` because parameter `y` of unknown type [1] is incompatible with number [2] (consider
+adding a type annotation to `y` [1]) in the first parameter. All writes to `fn` must be compatible with the type of its
+initializer [3]. Add an annotation to `fn` [3] if a different type is desired. [incompatible-type]
 
    empty.js:32:11
    32|     fn = (y => 42); // error
@@ -92,12 +113,16 @@ References:
    empty.js:30:16
    30|   let fn = (x: number) => 42;
                       ^^^^^^ [2]
+   empty.js:30:7
+   30|   let fn = (x: number) => 42;
+             ^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- empty.js:39:11
 
-Cannot assign function to `fn` because `y` [1] is incompatible with number [2] in the first parameter.
-[incompatible-type]
+Cannot assign function to `fn` because parameter `y` of unknown type [1] is incompatible with number [2] (consider
+adding a type annotation to `y` [1]) in the first parameter. All writes to `fn` must be compatible with the type of its
+initializer [3]. Add an annotation to `fn` [3] if a different type is desired. [incompatible-type]
 
    empty.js:39:11
    39|     fn = (y => 42); // error, x has number as LB
@@ -107,6 +132,9 @@ References:
    empty.js:41:6
    41|   fn(52);
             ^^ [2]
+   empty.js:37:7
+   37|   let fn = x => 42;
+             ^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- empty.js:47:15
@@ -131,7 +159,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- empty.js:48:11
 
-Cannot assign `42` to `b` because number [1] is incompatible with `b` [2]. [incompatible-type]
+Cannot assign `42` to `b` because number [1] is incompatible with variable `b` of unknown type [2]. All writes to `b`
+must be compatible with the type of its initializer [2]. Add an annotation to `b` [2] if a different type is desired.
+[incompatible-type]
 
    empty.js:48:11
    48|       b = 42; // error
@@ -146,7 +176,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- empty.js:57:11
 
 Cannot assign array literal to `rts` because unknown element type of empty array [1] is incompatible with number [2] in
-array element. [incompatible-type]
+array element. All writes to `rts` must be compatible with the type of its initializer [3]. Add an annotation to
+`rts` [3] if a different type is desired. [incompatible-type]
 
    empty.js:57:11
    57|     rts = []; // error, redefinition has no lowers and its an invariant check
@@ -156,12 +187,16 @@ References:
    empty.js:60:28
    60|   function getRts(): Array<number> {
                                   ^^^^^^ [2]
+   empty.js:54:7
+   54|   let rts = [];
+             ^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- empty.js:72:16
 
-Cannot assign `new Set<...>()` to `si` because string [1] is incompatible with `T` [2] in type argument `T` [2].
-[incompatible-type-arg]
+Cannot assign `new Set<...>()` to `si` because string [1] is incompatible with unknown implicit instantiation of `T` [2]
+in type argument `T` [2]. All writes to `si` must be compatible with the type of its initializer [3]. Add an annotation
+to `si` [3] if a different type is desired. [incompatible-type-arg]
 
    empty.js:72:16
    72|   si = new Set<string>(); // error
@@ -171,6 +206,9 @@ References:
    empty.js:65:20
    65| declare class Set<+T> {
                           ^ [2]
+   empty.js:70:7
+   70|   let si = new Set();
+             ^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- empty.js:74:4
@@ -196,8 +234,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- empty.js:80:15
 
-Cannot assign `si.add(...)` to `si` because number [1] is incompatible with `T` [2] in type argument `T` [2].
-[incompatible-type-arg]
+Cannot assign `si.add(...)` to `si` because number [1] is incompatible with unknown implicit instantiation of `T` [2] in
+type argument `T` [2]. All writes to `si` must be compatible with the type of its initializer [3]. Add an annotation to
+`si` [3] if a different type is desired. [incompatible-type-arg]
 
    empty.js:80:15
    80|   si = si.add(42); // error
@@ -207,12 +246,16 @@ References:
    empty.js:65:20
    65| declare class Set<+T> {
                           ^ [2]
+   empty.js:78:7
+   78|   let si = new Set();
+             ^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- empty.js:86:15
 
-Cannot assign `si.add(...)` to `si` because number [1] is incompatible with `T` [2] in type argument `T` [2].
-[incompatible-type-arg]
+Cannot assign `si.add(...)` to `si` because number [1] is incompatible with unknown implicit instantiation of `T` [2] in
+type argument `T` [2]. All writes to `si` must be compatible with the type of its initializer [3]. Add an annotation to
+`si` [3] if a different type is desired. [incompatible-type-arg]
 
    empty.js:86:15
    86|   si = si.add(42); // error
@@ -222,6 +265,9 @@ References:
    empty.js:65:20
    65| declare class Set<+T> {
                           ^ [2]
+   empty.js:84:7
+   84|   let si = new Set();
+             ^^ [3]
 
 
 Error --------------------------------------------------------------------------------------- provider_edge_cases.js:8:1
@@ -351,6 +397,255 @@ References:
                ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:65:12
+
+Cannot assign `f` to `fn` because: [incompatible-type]
+ - Either parameter `y` of unknown type [1] is incompatible with number [2] (consider adding a type annotation to
+   `y` [1]) in the first parameter.
+ - Or parameter `y` of unknown type [3] is incompatible with number [2] (consider adding a type annotation to `y` [3])
+   in the first parameter.
+
+All writes to `fn` must be compatible with the type of its initializer [4]. Add an annotation to `fn` [4] if a different
+type is desired.
+
+   test.js:65:12
+   65|       fn = f;
+                  ^
+
+References:
+   test.js:57:15
+   57|   const f1 = (y => 42); // error, x has number as LB
+                     ^ [1]
+   test.js:67:8
+   67|     fn(52);
+              ^^ [2]
+   test.js:58:15
+   58|   const f2 = (y => 42); // error, x has number as LB
+                     ^ [3]
+   test.js:63:9
+   63|     let fn = x => 42;
+               ^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------------ truncate.js:108:5
+
+Cannot assign `"hello"` to `y` because: [incompatible-type]
+ - Either string [1] is incompatible with string literal `a1` [2].
+ - Or string [1] is incompatible with string literal `a2` [3].
+ - Or string [1] is incompatible with string literal `a3` [4].
+ - Or string [1] is incompatible with string literal `a4` [5].
+ - Or string [1] is incompatible with string literal `a5` [6].
+ - Or string [1] is incompatible with string literal `a6` [7].
+ - Or string [1] is incompatible with string literal `a7` [8].
+ - Or string [1] is incompatible with string literal `a8` [9].
+ - Or string [1] is incompatible with string literal `a9` [10].
+ - Or string [1] is incompatible with string literal `a10` [11].
+ - Or string [1] is incompatible with string literal `a11` [12].
+ - Or string [1] is incompatible with string literal `a12` [13].
+ - Or string [1] is incompatible with string literal `a13` [14].
+ - Or string [1] is incompatible with string literal `a14` [15].
+ - Or string [1] is incompatible with string literal `a15` [16].
+ - Or string [1] is incompatible with string literal `a16` [17].
+ - Or string [1] is incompatible with string literal `a17` [18].
+ - Or string [1] is incompatible with string literal `a18` [19].
+ - Or string [1] is incompatible with string literal `a19` [20].
+ - Or string [1] is incompatible with string literal `a20` [21].
+ - Or string [1] is incompatible with string literal `a21` [22].
+ - Or string [1] is incompatible with string literal `a22` [23].
+ - Or string [1] is incompatible with string literal `a23` [24].
+ - Or string [1] is incompatible with string literal `a24` [25].
+ - Or string [1] is incompatible with string literal `a25` [26].
+ - Or string [1] is incompatible with string literal `a26` [27].
+ - Or string [1] is incompatible with string literal `a27` [28].
+ - Or string [1] is incompatible with string literal `a28` [29].
+ - Or string [1] is incompatible with string literal `a29` [30].
+ - Or string [1] is incompatible with string literal `a30` [31].
+ - Or string [1] is incompatible with string literal `a31` [32].
+ - Or string [1] is incompatible with string literal `a32` [33].
+ - Or string [1] is incompatible with string literal `a33` [34].
+ - Or string [1] is incompatible with string literal `a34` [35].
+ - Or string [1] is incompatible with string literal `a35` [36].
+ - Or string [1] is incompatible with string literal `a36` [37].
+ - Or string [1] is incompatible with string literal `a37` [38].
+ - Or string [1] is incompatible with string literal `a38` [39].
+ - Or string [1] is incompatible with string literal `a39` [40].
+ - Or string [1] is incompatible with string literal `a40` [41].
+ - Or string [1] is incompatible with string literal `a41` [42].
+ - Or string [1] is incompatible with string literal `a42` [43].
+ - Or string [1] is incompatible with string literal `a43` [44].
+ - Or string [1] is incompatible with string literal `a44` [45].
+ - Or string [1] is incompatible with string literal `a45` [46].
+ - Or string [1] is incompatible with string literal `a46` [47].
+ - Or string [1] is incompatible with string literal `a47` [48].
+ - Or string [1] is incompatible with string literal `a48` [49].
+ - Or string [1] is incompatible with string literal `a49` [50].
+ - Or string [1] is incompatible with string literal `a50` [51].
+
+Only showing the the first 50 branches. To see all branches, re-run Flow with --show-all-branches.
+
+All writes to `y` must be compatible with the type of its initializer [52]. Add an annotation to `y` [52] if a different
+type is desired.
+
+   truncate.js:108:5
+   108| y = "hello"; // error;
+            ^^^^^^^ [1]
+
+References:
+   truncate.js:4:5
+     4|   | 'a1'
+            ^^^^ [2]
+   truncate.js:5:5
+     5|   | 'a2'
+            ^^^^ [3]
+   truncate.js:6:5
+     6|   | 'a3'
+            ^^^^ [4]
+   truncate.js:7:5
+     7|   | 'a4'
+            ^^^^ [5]
+   truncate.js:8:5
+     8|   | 'a5'
+            ^^^^ [6]
+   truncate.js:9:5
+     9|   | 'a6'
+            ^^^^ [7]
+   truncate.js:10:5
+    10|   | 'a7'
+            ^^^^ [8]
+   truncate.js:11:5
+    11|   | 'a8'
+            ^^^^ [9]
+   truncate.js:12:5
+    12|   | 'a9'
+            ^^^^ [10]
+   truncate.js:13:5
+    13|   | 'a10'
+            ^^^^^ [11]
+   truncate.js:14:5
+    14|   | 'a11'
+            ^^^^^ [12]
+   truncate.js:15:5
+    15|   | 'a12'
+            ^^^^^ [13]
+   truncate.js:16:5
+    16|   | 'a13'
+            ^^^^^ [14]
+   truncate.js:17:5
+    17|   | 'a14'
+            ^^^^^ [15]
+   truncate.js:18:5
+    18|   | 'a15'
+            ^^^^^ [16]
+   truncate.js:19:5
+    19|   | 'a16'
+            ^^^^^ [17]
+   truncate.js:20:5
+    20|   | 'a17'
+            ^^^^^ [18]
+   truncate.js:21:5
+    21|   | 'a18'
+            ^^^^^ [19]
+   truncate.js:22:5
+    22|   | 'a19'
+            ^^^^^ [20]
+   truncate.js:23:5
+    23|   | 'a20'
+            ^^^^^ [21]
+   truncate.js:24:5
+    24|   | 'a21'
+            ^^^^^ [22]
+   truncate.js:25:5
+    25|   | 'a22'
+            ^^^^^ [23]
+   truncate.js:26:5
+    26|   | 'a23'
+            ^^^^^ [24]
+   truncate.js:27:5
+    27|   | 'a24'
+            ^^^^^ [25]
+   truncate.js:28:5
+    28|   | 'a25'
+            ^^^^^ [26]
+   truncate.js:29:5
+    29|   | 'a26'
+            ^^^^^ [27]
+   truncate.js:30:5
+    30|   | 'a27'
+            ^^^^^ [28]
+   truncate.js:31:5
+    31|   | 'a28'
+            ^^^^^ [29]
+   truncate.js:32:5
+    32|   | 'a29'
+            ^^^^^ [30]
+   truncate.js:33:5
+    33|   | 'a30'
+            ^^^^^ [31]
+   truncate.js:34:5
+    34|   | 'a31'
+            ^^^^^ [32]
+   truncate.js:35:5
+    35|   | 'a32'
+            ^^^^^ [33]
+   truncate.js:36:5
+    36|   | 'a33'
+            ^^^^^ [34]
+   truncate.js:37:5
+    37|   | 'a34'
+            ^^^^^ [35]
+   truncate.js:38:5
+    38|   | 'a35'
+            ^^^^^ [36]
+   truncate.js:39:5
+    39|   | 'a36'
+            ^^^^^ [37]
+   truncate.js:40:5
+    40|   | 'a37'
+            ^^^^^ [38]
+   truncate.js:41:5
+    41|   | 'a38'
+            ^^^^^ [39]
+   truncate.js:42:5
+    42|   | 'a39'
+            ^^^^^ [40]
+   truncate.js:43:5
+    43|   | 'a40'
+            ^^^^^ [41]
+   truncate.js:44:5
+    44|   | 'a41'
+            ^^^^^ [42]
+   truncate.js:45:5
+    45|   | 'a42'
+            ^^^^^ [43]
+   truncate.js:46:5
+    46|   | 'a43'
+            ^^^^^ [44]
+   truncate.js:47:5
+    47|   | 'a44'
+            ^^^^^ [45]
+   truncate.js:48:5
+    48|   | 'a45'
+            ^^^^^ [46]
+   truncate.js:49:5
+    49|   | 'a46'
+            ^^^^^ [47]
+   truncate.js:50:5
+    50|   | 'a47'
+            ^^^^^ [48]
+   truncate.js:51:5
+    51|   | 'a48'
+            ^^^^^ [49]
+   truncate.js:52:5
+    52|   | 'a49'
+            ^^^^^ [50]
+   truncate.js:53:5
+    53|   | 'a50'
+            ^^^^^ [51]
+   truncate.js:107:5
+   107| var y = x;
+            ^ [52]
+
+
 Error ----------------------------------------------------------------------------------------------- unreachable.js:5:3
 
 Unreachable code. [unreachable-code]
@@ -360,4 +655,7 @@ Unreachable code. [unreachable-code]
 
 
 
-Found 23 errors
+Found 25 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

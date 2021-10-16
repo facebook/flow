@@ -174,6 +174,7 @@ type 'loc virtual_reason_desc =
   | RParameter of string option
   | RRestParameter of string option
   | RIdentifier of name
+  | RUnknownParameter of string
   | RIdentifierAssignment of string
   | RPropertyAssignment of string option
   | RProperty of name option
@@ -284,12 +285,12 @@ let rec map_desc_locs f = function
     | RDestructuring | RDefaultValue | RConstructor | RReturn | RDefaultConstructor | RRegExp
     | RSuper | RNoSuper | RDummyPrototype | RDummyThis | RTupleMap | RObjectMap | RType _
     | RTypeof _ | RMethod _ | RMethodCall _ | RParameter _ | RRestParameter _ | RIdentifier _
-    | RIdentifierAssignment _ | RPropertyAssignment _ | RProperty _ | RPrivateProperty _
-    | RShadowProperty _ | RMember _ | RPropertyIsAString _ | RMissingProperty _ | RUnknownProperty _
-    | RUndefinedProperty _ | RSomeProperty | RFieldInitializer _ | RUntypedModule _
-    | RNamedImportedType _ | RImportStarType _ | RImportStarTypeOf _ | RImportStar _
-    | RDefaultImportedType _ | RAsyncImport | RCode _ | RCustom _ | RIncompatibleInstantiation _
-    | ROpaqueType _ | RObjectMapi | RIndexedAccess _ ) as r ->
+    | RUnknownParameter _ | RIdentifierAssignment _ | RPropertyAssignment _ | RProperty _
+    | RPrivateProperty _ | RShadowProperty _ | RMember _ | RPropertyIsAString _ | RMissingProperty _
+    | RUnknownProperty _ | RUndefinedProperty _ | RSomeProperty | RFieldInitializer _
+    | RUntypedModule _ | RNamedImportedType _ | RImportStarType _ | RImportStarTypeOf _
+    | RImportStar _ | RDefaultImportedType _ | RAsyncImport | RCode _ | RCustom _
+    | RIncompatibleInstantiation _ | ROpaqueType _ | RObjectMapi | RIndexedAccess _ ) as r ->
     r
   | REnumRepresentation desc -> REnumRepresentation (map_desc_locs f desc)
   | RConstructorCall desc -> RConstructorCall (map_desc_locs f desc)
@@ -652,6 +653,7 @@ let rec string_of_desc = function
   | RMethod (Some x) -> spf "method `%s`" x
   | RMethod None -> "computed method"
   | RIdentifier x -> spf "`%s`" (prettify_react_util (display_string_of_name x))
+  | RUnknownParameter x -> spf "parameter `%s` of unknown type" (prettify_react_util x)
   | RIdentifierAssignment x -> spf "assignment of identifier `%s`" x
   | RMethodCall (Some x) -> spf "call of method `%s`" x
   | RMethodCall None -> "call of computed property"
@@ -1443,6 +1445,7 @@ let classification_of_reason r =
   | RParameter _
   | RRestParameter _
   | RIdentifier _
+  | RUnknownParameter _
   | RIdentifierAssignment _
   | RPropertyAssignment _
   | RProperty _

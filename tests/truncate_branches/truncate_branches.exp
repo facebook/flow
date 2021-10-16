@@ -51,7 +51,8 @@ Cannot cast `x` to `T` because: [incompatible-cast]
  - Or string [1] is incompatible with string literal `a48` [49].
  - Or string [1] is incompatible with string literal `a49` [50].
  - Or string [1] is incompatible with string literal `a50` [51].
- - Only showing the the first 50 branches. To see all branches, re-run Flow with --show-all-branches.
+
+Only showing the the first 50 branches. To see all branches, re-run Flow with --show-all-branches.
 
    file.js:107:2
    107| (x: T); // error

@@ -1,6 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:4:5
 
-Cannot assign `"a"` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `"a"` to `x` because string [1] is incompatible with number [2]. All writes to `x` must be compatible with
+the type of its initializer [3]. Add an annotation to `x` [3] if a different type is desired. [incompatible-type]
 
    test.js:4:5
    4| x = "a";
@@ -10,11 +11,15 @@ References:
    test.js:3:9
    3| var x = 42;
               ^^ [2]
+   test.js:3:5
+   3| var x = 42;
+          ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:15:5
 
-Cannot assign `g()` to `y` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `g()` to `y` because string [1] is incompatible with number [2]. All writes to `y` must be compatible with
+the type of its initializer [3]. Add an annotation to `y` [3] if a different type is desired. [incompatible-type]
 
    test.js:15:5
    15| y = g();
@@ -27,11 +32,16 @@ References:
    test.js:7:10
     7|   return 42;
                 ^^ [2]
+   test.js:14:5
+   14| var y = f();
+           ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:5
 
-Cannot assign `"a"` to `w` because string [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `"a"` to `w` because string [1] is incompatible with number [2]. All writes to `w` must be compatible with
+the type of one of its initial assignments [3], [4]. Add an annotation to `w` [3] if a different type is desired.
+[incompatible-type]
 
    test.js:19:5
    19| w = "a";
@@ -41,10 +51,37 @@ References:
    test.js:18:5
    18| w = 42;
            ^^ [2]
+   test.js:17:5
+   17| var w = null;
+           ^ [3]
+   test.js:18:1
+   18| w = 42;
+       ^ [4]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:23:5
+
+Cannot assign `"a"` to `z` because string [1] is incompatible with number [2]. All writes to `z` must be compatible with
+the type of its initial assignment [3]. Add an annotation to `z` [4] if a different type is desired. [incompatible-type]
+
+   test.js:23:5
+   23| z = "a";
+           ^^^ [1]
+
+References:
+   test.js:22:5
+   22| z = 42;
+           ^^ [2]
+   test.js:22:1
+   22| z = 42;
+       ^ [3]
+   test.js:21:5
+   21| var z;
+           ^ [4]
 
 
 
-Found 3 errors
+Found 4 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

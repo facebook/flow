@@ -52,3 +52,18 @@ function param(
 ) {
     cf = cf; // no error, ofc
   }
+
+function branch_error() {
+  const f1 = (y => 42); // error, x has number as LB
+  const f2 = (y => 42); // error, x has number as LB
+
+  declare var f: (typeof f1) & (typeof f2);
+
+  function fn_completely_unannotated() {
+    let fn = x => 42;
+    function havoc() {
+      fn = f;
+    }
+    fn(52);
+  }
+}
