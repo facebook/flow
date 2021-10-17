@@ -978,66 +978,20 @@ module Make (Flow : INPUT) : OUTPUT = struct
      * we already deal with statements of this form when checking polymorphic
      * definitions! In particular, statements such as "there is some X:U...")
      * correspond to "create a type variable with that constraint and ...", and
-     * statements such as "show that for all X:U" correspond to "show that for
-     * both X = bottom and X = U, ...".
+     * statements such as "show that for all X:U" correspond to "introduce a
+     * GenericT with bound U".
      *
      * Thus, all we need to do when checking that any type flows to a
      * polymorphic type is to follow the same principles used when checking that
      * a polymorphic definition has a polymorphic type. This has the pleasant
      * side effect that the type we're checking does not itself need to be a
-     * polymorphic type at all! For example, we can let a non-generic method be
-     * overridden with a generic method, as long as the non-generic signature
-     * can be derived as a specialization of the generic signature.
+     * polymorphic type at all.
      *)
-    (* some shortcuts **)
+    (* shortcut: types are identical *)
     | (DefT (_, _, PolyT { id = id1; _ }), DefT (_, _, PolyT { id = id2; _ }))
       when Poly.equal_id id1 id2 ->
       if Context.is_verbose cx then prerr_endline "PolyT ~> PolyT fast path"
-    | ( DefT (r1, _, PolyT { tparams_loc = tparams_loc1; tparams = params1; t_out = t1; id = id1 }),
-        DefT (r2, _, PolyT { tparams_loc = tparams_loc2; tparams = params2; t_out = t2; id = id2 })
-      ) ->
-      let n1 = Nel.length params1 in
-      let n2 = Nel.length params2 in
-      if n2 > n1 then
-        add_output cx ~trace (Error_message.ETooManyTypeArgs (r2, r1, n1))
-      else if n2 < n1 then
-        add_output cx ~trace (Error_message.ETooFewTypeArgs (r2, r1, n1))
-      else
-        (* for equal-arity polymorphic types, flow param upper bounds, then
-         * instances parameterized by these *)
-        let args1 = instantiate_poly_param_upper_bounds cx params1 in
-        let args2 = instantiate_poly_param_upper_bounds cx params2 in
-        List.iter2 (fun arg1 arg2 -> rec_flow_t cx trace ~use_op (arg2, arg1)) args1 args2;
-        let inst1 =
-          let r = reason_of_t t1 in
-          mk_typeapp_of_poly
-            cx
-            trace
-            ~use_op
-            ~reason_op:r
-            ~reason_tapp:r
-            id1
-            tparams_loc1
-            params1
-            t1
-            args1
-        in
-        let inst2 =
-          let r = reason_of_t t2 in
-          mk_typeapp_of_poly
-            cx
-            trace
-            ~use_op
-            ~reason_op:r
-            ~reason_tapp:r
-            id2
-            tparams_loc2
-            params2
-            t2
-            args2
-        in
-        rec_flow_t ~use_op cx trace (inst1, inst2)
-    (* general case **)
+    (* general case: use generics *)
     | (_, DefT (_, _, PolyT { tparams = ids; t_out = t; _ })) ->
       check_with_generics cx (Nel.to_list ids) (fun map_ ->
           rec_flow cx trace (l, UseT (use_op, Subst.subst cx ~use_op map_ t)))
