@@ -2767,6 +2767,7 @@ module AConstraint = struct
     | Annot_ElemT of Reason.t * TypeTerm.use_op * TypeTerm.t (* read action only *)
     | Annot_GetStaticsT of Reason.t
     | Annot_LookupT of Reason.t * TypeTerm.use_op * TypeTerm.propref
+    | Annot_MakeExactT of Reason.t
     | Annot__Future_added_value__ of Reason.t
 
   (** This kind of constraint is meant to represent type annotations. Unlike the
@@ -2846,6 +2847,7 @@ module AConstraint = struct
     | Annot_ElemT _ -> "Annot_ElemT"
     | Annot_GetStaticsT _ -> "Annot_GetStaticsT"
     | Annot_LookupT _ -> "Annot_LookupT"
+    | Annot_MakeExactT _ -> "Annot_MakeExactT"
     | Annot__Future_added_value__ _ -> "Annot__Future_added_value__"
 
   let reason_of_op = function
@@ -2869,6 +2871,7 @@ module AConstraint = struct
     | Annot_ElemT (r, _, _)
     | Annot_GetStaticsT r
     | Annot_LookupT (r, _, _)
+    | Annot_MakeExactT r
     | Annot__Future_added_value__ r ->
       r
 

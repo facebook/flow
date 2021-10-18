@@ -39,6 +39,7 @@ let object_like_op = function
   | Annot_CopyTypeExportsT _
   | Annot_ElemT _
   | Annot_GetStaticsT _
+  | Annot_MakeExactT _
   | Annot__Future_added_value__ _ ->
     false
   | Annot_GetPropT _
@@ -480,6 +481,12 @@ module rec ConsGen : Annotation_inference_sig = struct
     (********************************)
     (* Union and intersection types *)
     (********************************)
+    | (UnionT (reason, rep), Annot_MakeExactT reason_op) ->
+      let ts = UnionRep.members rep in
+      let f t = ExactT (reason_op, t) in
+      let ts' = Base.List.map ts ~f in
+      let reason' = repos_reason (aloc_of_reason reason_op) reason in
+      union_of_ts reason' ts'
     | (UnionT (_, rep), _) ->
       let reason = Type.AConstraint.reason_of_op op in
       let ts = UnionRep.members rep in
@@ -502,6 +509,27 @@ module rec ConsGen : Annotation_inference_sig = struct
     | (DefT (reason, trust, SingletonBoolT b), _) ->
       elab_t cx (DefT (reason, trust, BoolT (Some b))) op
     | (NullProtoT reason, _) -> elab_t cx (DefT (reason, bogus_trust (), NullT)) op
+    (*********)
+    (* Exact *)
+    (*********)
+    | (ExactT (r, t), _) ->
+      let t = push_type_alias_reason r t in
+      let t = make_exact cx r t in
+      elab_t cx t op
+    | (ShapeT (_, o), Annot_MakeExactT _) -> elab_t cx o op
+    | (DefT (r, trust, ObjT obj), Annot_MakeExactT _) ->
+      let obj_kind =
+        match obj.flags.obj_kind with
+        | Inexact -> Exact
+        | k -> k
+      in
+      DefT (r, trust, ObjT { obj with flags = { obj.flags with obj_kind } })
+    | (AnyT (_, src), Annot_MakeExactT reason_op) -> AnyT.why src reason_op
+    | (DefT (_, trust, VoidT), Annot_MakeExactT reason_op) -> VoidT.why reason_op trust
+    | (DefT (_, trust, EmptyT), Annot_MakeExactT reason_op) -> EmptyT.why reason_op trust
+    | (_, Annot_MakeExactT reason_op) ->
+      Flow_js_utils.add_output cx (Error_message.EUnsupportedExact (reason_op, reason_of_t t));
+      AnyT.error reason_op
     (***********************)
     (* Type specialization *)
     (***********************)
@@ -853,6 +881,8 @@ module rec ConsGen : Annotation_inference_sig = struct
 
   and object_spread _cx _use_op _reason _target _state _t =
     failwith "TODO Annotation_inference.object_spread"
+
+  and make_exact cx reason t = elab_t cx t (Annot_MakeExactT reason)
 
   and obj_test_proto _cx _reason_op _l = failwith "TODO Annotation_inference.obj_test_proto"
 end
