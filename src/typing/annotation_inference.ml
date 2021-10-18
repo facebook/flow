@@ -38,6 +38,7 @@ let object_like_op = function
   | Annot_CopyNamedExportsT _
   | Annot_CopyTypeExportsT _
   | Annot_ElemT _
+  | Annot_GetStaticsT _
   | Annot__Future_added_value__ _ ->
     false
   | Annot_GetPropT _
@@ -562,6 +563,16 @@ module rec ConsGen : Annotation_inference_sig = struct
     (* Shape type *)
     (**************)
     | (ShapeT (r, o), _) -> elab_t cx ~seen (reposition cx (aloc_of_reason r) o) op
+    (***************)
+    (* Get statics *)
+    (***************)
+    | (DefT (_, _, InstanceT (static, _, _, _)), Annot_GetStaticsT reason_op) ->
+      reposition cx (aloc_of_reason reason_op) static
+    | (AnyT (_, src), Annot_GetStaticsT reason_op) -> AnyT.why src reason_op
+    | (ObjProtoT _, Annot_GetStaticsT reason_op) ->
+      (* ObjProtoT not only serves as the instance type of the root class, but
+       * also as the statics of the root class. *)
+      reposition cx (aloc_of_reason reason_op) t
     (************)
     (* GetPropT *)
     (************)
@@ -729,7 +740,7 @@ module rec ConsGen : Annotation_inference_sig = struct
     let t = specialize cx c use_op reason_op reason_tapp (Some ts) in
     mk_instance cx reason_tapp ~reason_type:(reason_of_t c) t
 
-  and get_statics _cx _reason _t = failwith "TODO Annotation_inference.get_statics"
+  and get_statics cx reason t = elab_t cx t (Annot_GetStaticsT reason)
 
   and get_prop cx use_op reason name t =
     elab_t cx t (Annot_GetPropT (reason, use_op, Named (reason, name)))
