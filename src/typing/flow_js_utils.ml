@@ -1717,3 +1717,82 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
             (Error_message.EObjectComputedPropertyAccess (reason_op, reason_prop));
           F.error_type reason_op))
 end
+
+(***************)
+(* ElemT utils *)
+(***************)
+
+let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
+  let (value, ts, is_index_restricted, is_tuple) =
+    match arrtype with
+    | ArrayAT (value, ts) -> (value, ts, false, false)
+    | TupleAT (value, ts) -> (value, Some ts, true, true)
+    | ROArrayAT value -> (value, None, true, false)
+  in
+  let (can_write_tuple, value) =
+    match l with
+    | DefT (index_reason, _, NumT (Literal (_, (float_value, _)))) ->
+      begin
+        match ts with
+        | None -> (false, value)
+        | Some ts ->
+          let index_string = Dtoa.ecma_string_of_float float_value in
+          begin
+            match int_of_string_opt index_string with
+            | Some index ->
+              let value_opt =
+                try List.nth_opt ts index with
+                | Invalid_argument _ -> None
+              in
+              begin
+                match value_opt with
+                | Some value -> (true, value)
+                | None ->
+                  if is_tuple then (
+                    add_output
+                      cx
+                      ~trace
+                      (Error_message.ETupleOutOfBounds
+                         {
+                           use_op;
+                           reason;
+                           reason_op = reason_tup;
+                           length = List.length ts;
+                           index = index_string;
+                         });
+                    (true, AnyT.error (mk_reason RTupleOutOfBoundsAccess (aloc_of_reason reason)))
+                  ) else
+                    (true, value)
+              end
+            | None ->
+              (* not an integer index *)
+              if is_tuple then (
+                add_output
+                  cx
+                  ~trace
+                  (Error_message.ETupleNonIntegerIndex
+                     { use_op; reason = index_reason; index = index_string });
+                (true, AnyT.error reason)
+              ) else
+                (true, value)
+          end
+      end
+    | _ -> (false, value)
+  in
+  (if is_index_restricted && (not can_write_tuple) && write_action then
+    let error =
+      match ts with
+      | Some _ -> Error_message.ETupleUnsafeWrite { reason; use_op }
+      | None -> Error_message.EROArrayWrite ((reason, reason_tup), use_op)
+    in
+    add_output cx ~trace error);
+  (value, is_tuple)
+
+let propref_for_elem_t ?on_named_prop = function
+  | GenericT { bound = DefT (_, _, StrT (Literal (_, x))); reason = reason_x; _ }
+  | DefT (reason_x, _, StrT (Literal (_, x))) ->
+    let reason_named = replace_desc_reason (RStringLit x) reason_x in
+    Base.Option.iter ~f:(fun f -> f reason_named) on_named_prop;
+    let reason_prop = replace_desc_reason (RProperty (Some x)) reason_x in
+    Named (reason_prop, x)
+  | l -> Computed l

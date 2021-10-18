@@ -37,12 +37,17 @@ let object_like_op = function
   | Annot_AssertExportIsTypeT _
   | Annot_CopyNamedExportsT _
   | Annot_CopyTypeExportsT _
+  | Annot_ElemT _
   | Annot__Future_added_value__ _ ->
     false
-  | Annot_GetPropT _ -> true
+  | Annot_GetPropT _
+  | Annot_GetElemT _ ->
+    true
 
 let primitive_promoting_op = function
-  | Annot_GetPropT _ -> true
+  | Annot_GetPropT _
+  | Annot_GetElemT _ ->
+    true
   (* TODO: enumerate all use types *)
   | _ -> false
 
@@ -525,7 +530,7 @@ module rec ConsGen : Annotation_inference_sig = struct
     (*****************************)
     (* React Abstract Components *)
     (*****************************)
-    | (DefT (r, _, ReactAbstractComponentT _), Annot_GetPropT _) ->
+    | (DefT (r, _, ReactAbstractComponentT _), (Annot_GetPropT _ | Annot_GetElemT _)) ->
       let statics =
         Flow_js_utils.lookup_builtin_strict cx (OrdinaryName "React$AbstractComponentStatics") r
       in
@@ -572,6 +577,40 @@ module rec ConsGen : Annotation_inference_sig = struct
     | (DefT (reason, _, ClassT instance), Annot_GetPropT (_, _, Named (_, OrdinaryName "prototype")))
       ->
       reposition cx (aloc_of_reason reason) instance
+    (********************)
+    (* GetElemT / ElemT *)
+    (********************)
+    | (DefT (_, trust, StrT _), Annot_GetElemT (reason_op, _use_op, _index)) ->
+      (* NOTE bypassing check that index is a number *)
+      StrT.why reason_op trust
+    | ((DefT (_, _, (ObjT _ | ArrT _)) | AnyT _), Annot_GetElemT (reason_op, use_op, key)) ->
+      elab_t cx key (Annot_ElemT (reason_op, use_op, t))
+    | (DefT (_, _, InstanceT _), Annot_GetElemT (reason, use_op, _i)) ->
+      (* NOTE bypassing key check *)
+      elab_t cx t (Annot_GetPropT (reason, use_op, Named (reason, OrdinaryName "$value")))
+    | (_, Annot_ElemT (reason_op, use_op, (DefT (_, _, ObjT _) as obj))) ->
+      let propref = Flow_js_utils.propref_for_elem_t t in
+      elab_t cx obj (Annot_GetPropT (reason_op, use_op, propref))
+    | (_, Annot_ElemT (reason_op, _use_op, (AnyT _ as _obj))) ->
+      let value = AnyT.untyped reason_op in
+      reposition cx (aloc_of_reason reason_op) value
+    | (AnyT _, Annot_ElemT (reason_op, _, DefT (_, _, ArrT arrtype))) ->
+      let value = elemt_of_arrtype arrtype in
+      reposition cx (aloc_of_reason reason_op) value
+    | (l, Annot_ElemT (reason_op, use_op, DefT (reason_tup, _, ArrT arrtype)))
+      when Flow_js_utils.numeric l ->
+      let (value, _) =
+        Flow_js_utils.array_elem_check
+          ~write_action:false
+          cx
+          dummy_trace
+          l
+          use_op
+          reason_op
+          reason_tup
+          arrtype
+      in
+      reposition cx (aloc_of_reason reason_op) value
     (***********************)
     (* Opaque types (pt 2) *)
     (***********************)
@@ -595,6 +634,13 @@ module rec ConsGen : Annotation_inference_sig = struct
         Annot_GetPropT (access_reason, use_op, Named (prop_reason, member_name)) ) ->
       let access = (use_op, access_reason, (prop_reason, member_name)) in
       GetPropTKit.on_EnumObjectT cx dummy_trace enum_reason trust enum access
+    | (DefT (enum_reason, _, EnumObjectT _), Annot_GetElemT (reason_op, _, elem)) ->
+      let reason = reason_of_t elem in
+      Flow_js_utils.add_output
+        cx
+        (Error_message.EEnumInvalidMemberAccess
+           { member_name = None; suggestion = None; reason; enum_reason });
+      AnyT.error reason_op
     (****************************************)
     (* Object, function, etc. library calls *)
     (****************************************)
@@ -688,7 +734,7 @@ module rec ConsGen : Annotation_inference_sig = struct
   and get_prop cx use_op reason name t =
     elab_t cx t (Annot_GetPropT (reason, use_op, Named (reason, name)))
 
-  and get_elem _cx _use_op _reason ~key:_ _t = failwith "TODO Annotation_inference.get_elem"
+  and get_elem cx use_op reason ~key t = elab_t cx t (Annot_GetElemT (reason, use_op, key))
 
   and qualify_type cx use_op reason (reason_name, name) t =
     let open Type in

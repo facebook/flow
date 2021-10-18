@@ -4030,79 +4030,16 @@ struct
           perform_elem_action cx trace ~use_op ~restrict_deletes:false reason_op arr value action
         | (l, ElemT (use_op, reason, (DefT (reason_tup, _, ArrT arrtype) as arr), action))
           when numeric l ->
-          let (value, ts, is_index_restricted, is_tuple) =
-            match arrtype with
-            | ArrayAT (value, ts) -> (value, ts, false, false)
-            | TupleAT (value, ts) -> (value, Some ts, true, true)
-            | ROArrayAT value -> (value, None, true, false)
-          in
-          let (can_write_tuple, value) =
-            match l with
-            | DefT (index_reason, _, NumT (Literal (_, (float_value, _)))) ->
-              begin
-                match ts with
-                | None -> (false, value)
-                | Some ts ->
-                  let index_string = Dtoa.ecma_string_of_float float_value in
-                  begin
-                    match int_of_string_opt index_string with
-                    | Some index ->
-                      let value_opt =
-                        try List.nth_opt ts index with
-                        | Invalid_argument _ -> None
-                      in
-                      begin
-                        match value_opt with
-                        | Some value -> (true, value)
-                        | None ->
-                          if is_tuple then (
-                            add_output
-                              cx
-                              ~trace
-                              (Error_message.ETupleOutOfBounds
-                                 {
-                                   use_op;
-                                   reason;
-                                   reason_op = reason_tup;
-                                   length = List.length ts;
-                                   index = index_string;
-                                 });
-                            ( true,
-                              AnyT.error (mk_reason RTupleOutOfBoundsAccess (aloc_of_reason reason))
-                            )
-                          ) else
-                            (true, value)
-                      end
-                    | None ->
-                      (* not an integer index *)
-                      if is_tuple then (
-                        add_output
-                          cx
-                          ~trace
-                          (Error_message.ETupleNonIntegerIndex
-                             { use_op; reason = index_reason; index = index_string });
-                        (true, AnyT.error reason)
-                      ) else
-                        (true, value)
-                  end
-              end
-            | _ -> (false, value)
-          in
-          (if is_index_restricted && not can_write_tuple then
+          let write_action =
             match action with
-            (* These are safe to do with tuples and unknown indexes *)
             | ReadElem _
             | CallElem _ ->
-              ()
-            (* This isn't *)
-            | WriteElem _ ->
-              let error =
-                match ts with
-                | Some _ -> Error_message.ETupleUnsafeWrite { reason; use_op }
-                | None -> Error_message.EROArrayWrite ((reason, reason_tup), use_op)
-              in
-              add_output cx ~trace error);
-
+              false
+            | WriteElem _ -> true
+          in
+          let (value, is_tuple) =
+            array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype
+          in
           perform_elem_action cx trace ~use_op ~restrict_deletes:is_tuple reason arr value action
         | (DefT (_, _, ArrT _), GetPropT (_, reason_op, Named (_, OrdinaryName "constructor"), tout))
           ->
@@ -7007,16 +6944,7 @@ struct
     access_prop cx trace options reason_prop reason_op super x pmap action
 
   and elem_action_on_obj cx trace ~use_op ?on_named_prop l obj reason_op action =
-    let propref =
-      match l with
-      | GenericT { bound = DefT (_, _, StrT (Literal (_, x))); reason = reason_x; _ }
-      | DefT (reason_x, _, StrT (Literal (_, x))) ->
-        let reason_named = replace_desc_reason (RStringLit x) reason_x in
-        Base.Option.iter ~f:(fun f -> f reason_named) on_named_prop;
-        let reason_prop = replace_desc_reason (RProperty (Some x)) reason_x in
-        Named (reason_prop, x)
-      | _ -> Computed l
-    in
+    let propref = propref_for_elem_t ?on_named_prop l in
     match action with
     | ReadElem t -> rec_flow cx trace (obj, GetPropT (use_op, reason_op, propref, t))
     | WriteElem (tin, tout, mode) ->
