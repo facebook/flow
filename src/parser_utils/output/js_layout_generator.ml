@@ -289,15 +289,6 @@ let contains_call_expression expr =
   let _ = (new contains_call_mapper result)#expression expr in
   !result
 
-(* returns all of the comments that start before `loc`, and discards the rest *)
-let comments_before_loc loc comments =
-  let rec helper loc acc = function
-    | ((c_loc, _) as comment) :: rest when Loc.compare c_loc loc < 0 ->
-      helper loc (comment :: acc) rest
-    | _ -> List.rev acc
-  in
-  helper loc [] comments
-
 type statement_or_comment =
   | Statement of (Loc.t, Loc.t) Ast.Statement.t
   | Comment of Loc.t Ast.Comment.t
@@ -545,7 +536,7 @@ let rec program
       let all_comments =
         match statements with
         | [] -> all_comments
-        | (loc, _) :: _ -> comments_before_loc loc all_comments
+        | (loc, _) :: _ -> Comment_utils.comments_before_loc loc all_comments
       in
       [
         combine_directives_and_comments ~opts directives all_comments;

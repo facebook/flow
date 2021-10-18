@@ -509,19 +509,21 @@ end = struct
     | (_, Identifier (_, { Ast.Identifier.name = "undefined"; comments = _ })) -> None
     | _ -> failwith "Invalid diff format"
 
+  module Translate =
+    Estree_translator.Translate
+      (Json_of_estree)
+      (struct
+        let include_locs = true
+      end)
+
   let parse_file (test_options, parse_options) content =
     let (ast, errors) = Parser_flow.program_file ~fail:false ~parse_options content None in
     let offset_table = Some (Offset_utils.make ~kind:Offset_utils.JavaScript content) in
-    let module Translate =
-      Estree_translator.Translate
-        (Json_of_estree)
-        (struct
-          let include_interned_comments = test_options.intern_comments
-
-          let include_comments = true
-
-          let include_locs = true
-        end)
+    let ast =
+      if test_options.intern_comments then
+        ast
+      else
+        Comment_utils.strip_inlined_comments ast
     in
     match Translate.program offset_table ast with
     | JSON_Object params ->

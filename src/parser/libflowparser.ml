@@ -39,12 +39,6 @@ module Translate =
   Estree_translator.Translate
     (AbstractTranslator)
     (struct
-      (* TODO: make these configurable via CLI flags *)
-
-      let include_interned_comments = false
-
-      let include_comments = true
-
       let include_locs = true
     end)
 
@@ -89,7 +83,7 @@ let parse content options =
     Parser_flow.program ~fail:false ~parse_options:(Some parse_options) ~token_sink content
   in
   let offset_table = Offset_utils.make ~kind:Offset_utils.Utf8 content in
-  match Translate.program (Some offset_table) ast with
+  match Translate.program (Some offset_table) (Comment_utils.strip_inlined_comments ast) with
   | JObject params ->
     let params = ("errors", Translate.errors errors) :: params in
     let params =

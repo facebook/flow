@@ -62,11 +62,6 @@ module Translate =
   Estree_translator.Translate
     (Json_of_estree)
     (struct
-      (* TODO: make these configurable via CLI flags *)
-      let include_interned_comments = true
-
-      let include_comments = true
-
       let include_locs = true
     end)
 

@@ -45,8 +45,14 @@ end = struct
     Js.Unsafe.inject regexp
 end
 
-module Translate = Estree_translator.Translate (JsTranslator)
 module Token_translator = Token_translator.Translate (JsTranslator)
+
+module Translate =
+  Estree_translator.Translate
+    (JsTranslator)
+    (struct
+      let include_locs = true
+    end)
 
 let bool_opt default jsopts name =
   let opt = Js.Unsafe.get jsopts name in
@@ -115,14 +121,18 @@ let parse content options =
   let (ocaml_ast, errors) = Parser_flow.program ~fail:false ~parse_options ~token_sink content in
   JsTranslator.translation_errors := [];
   let offset_table = Offset_utils.make ~kind:Offset_utils.JavaScript content in
-
-  let module Translate = Translate (struct
-    let include_interned_comments = include_interned_comments
-
-    let include_comments = include_all_comments
-
-    let include_locs = true
-  end) in
+  let ocaml_ast =
+    if include_interned_comments then
+      ocaml_ast
+    else
+      Comment_utils.strip_inlined_comments ocaml_ast
+  in
+  let ocaml_ast =
+    if include_all_comments then
+      ocaml_ast
+    else
+      Comment_utils.strip_comments_list ocaml_ast
+  in
   let ret = Translate.program (Some offset_table) ocaml_ast in
   let translation_errors = !JsTranslator.translation_errors in
   Js.Unsafe.set ret "errors" (Translate.errors (errors @ translation_errors));

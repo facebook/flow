@@ -9,11 +9,6 @@ module Ast = Flow_ast
 
 module type Config = sig
   val include_locs : bool
-
-  val include_comments : bool
-
-  (* FIXME(festevezga, T39098154) Temporary flag while we're migrating from one approach to another *)
-  val include_interned_comments : bool
 end
 
 module Translate (Impl : Translator_intf.S) (Config : Config) : sig
@@ -104,26 +99,21 @@ with type t = Impl.t = struct
       in
       let comments =
         let open Ast.Syntax in
-        match (Config.include_interned_comments, comments) with
-        | (true, Some c) ->
+        match comments with
+        | Some c ->
           (match c with
           | { leading = _ :: _ as l; trailing = _ :: _ as t; _ } ->
             [("leadingComments", comment_list l); ("trailingComments", comment_list t)]
           | { leading = _ :: _ as l; trailing = []; _ } -> [("leadingComments", comment_list l)]
           | { leading = []; trailing = _ :: _ as t; _ } -> [("trailingComments", comment_list t)]
           | _ -> [])
-        | (_, _) -> []
+        | None -> []
       in
       let prefix = locs @ comments @ [("type", string _type)] in
       obj (List.rev_append prefix props)
     and program (loc, { Ast.Program.statements; comments; all_comments }) =
       let body = statement_list statements in
-      let props =
-        if Config.include_comments then
-          [("body", body); ("comments", comment_list all_comments)]
-        else
-          [("body", body)]
-      in
+      let props = [("body", body); ("comments", comment_list all_comments)] in
       node ?comments "Program" loc props
     and statement_list statements = array_of_list statement statements
     and statement =
