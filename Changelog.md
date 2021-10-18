@@ -1,3 +1,7 @@
+### 0.162.1
+
+* Fix a bug where errors in `node_modules` were shown in lazy mode. It is now consistent with non-lazy mode.
+
 ### 0.162.0
 
 Likely to cause new Flow errors:
