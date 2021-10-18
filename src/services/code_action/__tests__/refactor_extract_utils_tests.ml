@@ -66,6 +66,7 @@ let stub_metadata ~root ~checked =
     trust_mode = Options.NoTrust;
     type_asserts = false;
     env_mode = Options.ClassicEnv [];
+    env_mode_constrain_write_dirs = [];
   }
 
 let dummy_filename = File_key.SourceFile ""

@@ -160,6 +160,7 @@ let stub_metadata ~root ~checked =
     enable_indexed_access = true;
     enable_relay_integration = false;
     env_mode = Options.ClassicEnv [];
+    env_mode_constrain_write_dirs = [];
     enforce_local_inference_annotations = false;
     local_inference_annotation_dirs = [];
     experimental_infer_indexers = false;

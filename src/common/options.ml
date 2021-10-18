@@ -143,6 +143,7 @@ type t = {
   opt_suppress_types: SSet.t;
   opt_temp_dir: string;
   opt_env_mode: env_mode;
+  opt_env_mode_constrain_write_dirs: string list;
   opt_traces: int;
   opt_trust_mode: trust_mode;
   opt_type_asserts: bool;
@@ -150,11 +151,6 @@ type t = {
   opt_wait_for_recheck: bool;
   opt_weak: bool;
 }
-
-let env_option_enabled mode option =
-  match mode with
-  | SSAEnv -> false
-  | ClassicEnv opts -> List.mem option opts
 
 let abstract_locations opts = opts.opt_abstract_locations
 
@@ -197,6 +193,8 @@ let format_bracket_spacing opts = opts.opt_format.opt_bracket_spacing
 let format_single_quotes opts = opts.opt_format.opt_single_quotes
 
 let env_mode opts = opts.opt_env_mode
+
+let env_mode_constrain_write_dirs opts = opts.opt_env_mode_constrain_write_dirs
 
 let exact_by_default opts = opts.opt_exact_by_default
 

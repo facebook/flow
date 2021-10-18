@@ -1286,6 +1286,10 @@ let make_options
     opt_enums = FlowConfig.enums flowconfig;
     opt_env_mode =
       Base.Option.value options_flags.env_mode ~default:(FlowConfig.env_mode flowconfig);
+    opt_env_mode_constrain_write_dirs =
+      Base.List.map
+        ~f:(fun s -> Files.expand_project_root_token ~root s)
+        (FlowConfig.env_mode_constrain_write_dirs flowconfig);
     opt_exact_by_default = FlowConfig.exact_by_default flowconfig;
     opt_facebook_fbs = FlowConfig.facebook_fbs flowconfig;
     opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;

@@ -126,6 +126,7 @@ module Opts = struct
     suppress_types: SSet.t;
     temp_dir: string;
     env_mode: Options.env_mode;
+    env_mode_constrain_write_dirs: string list;
     traces: int;
     trust_mode: Options.trust_mode;
     type_asserts: bool;
@@ -256,6 +257,7 @@ module Opts = struct
       suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
       temp_dir = default_temp_dir;
       env_mode = Options.ClassicEnv [];
+      env_mode_constrain_write_dirs = [];
       traces = 0;
       trust_mode = Options.NoTrust;
       type_asserts = false;
@@ -701,13 +703,22 @@ module Opts = struct
     string (fun opts s ->
         match String.split_on_char ',' s |> Base.List.filter ~f:(( <> ) "") with
         | [] -> Error "env_mode requires an argument"
-        | ["ssa"] -> Ok { opts with env_mode = Options.SSAEnv }
+        | ["ssa"] ->
+          if List.length opts.env_mode_constrain_write_dirs = 0 then
+            Ok { opts with env_mode = Options.SSAEnv }
+          else
+            Error
+              "Option \"env_mode\" must not be set to \"ssa\" when \"constrain_write_dirs\" is set."
         | ["classic"] -> Ok { opts with env_mode = Options.ClassicEnv [] }
         | options ->
           let options =
             Base.List.fold_result options ~init:[] ~f:(fun acc opt ->
                 match opt with
-                | "constrain_writes" -> Ok (Options.ConstrainWrites :: acc)
+                | "constrain_writes" when List.length opts.env_mode_constrain_write_dirs = 0 ->
+                  Ok (Options.ConstrainWrites :: acc)
+                | "constrain_writes" ->
+                  Error
+                    "Option \"env_mode\" should not set \"constrain_writes\" when \"env_mode.constrain_writes.includes\" is also set."
                 | "ssa" -> Error "\"ssa\" must be the first and only env_mode option if present"
                 | "classic" ->
                   Error "\"classic\" must be the first and only env_mode option if present"
@@ -716,6 +727,21 @@ module Opts = struct
           Base.Result.map
             ~f:(fun options -> { opts with env_mode = Options.ClassicEnv options })
             options)
+
+  let env_mode_constrain_write_dirs_parser =
+    string
+      ~init:(fun opts -> { opts with env_mode_constrain_write_dirs = [] })
+      ~multiple:true
+      (fun opts v ->
+        match opts.env_mode with
+        | Options.SSAEnv ->
+          Error
+            "Option \"env_mode\" must not be set to \"ssa\" when \"constrain_writes.includes\" is set."
+        | Options.ClassicEnv opts when List.mem Options.ConstrainWrites opts ->
+          Error
+            "Option \"env_mode\" should not set \"constrain_writes\" when \"env_mode.constrain_writes.includes\" is also set."
+        | _ ->
+          Ok { opts with env_mode_constrain_write_dirs = v :: opts.env_mode_constrain_write_dirs })
 
   let watchman_defer_states_parser =
     string ~multiple:true (fun opts v ->
@@ -756,6 +782,7 @@ module Opts = struct
       ("experimental.strict_es6_import_export.excludes", strict_es6_import_export_excludes_parser);
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.env_mode", env_mode_parser);
+      ("experimental.env_mode.constrain_writes.includes", env_mode_constrain_write_dirs_parser);
       ("experimental.type_asserts", boolean (fun opts v -> Ok { opts with type_asserts = v }));
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
@@ -1372,6 +1399,8 @@ let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
 let enums c = c.options.Opts.enums
 
 let env_mode c = c.options.Opts.env_mode
+
+let env_mode_constrain_write_dirs c = c.options.Opts.env_mode_constrain_write_dirs
 
 let exact_by_default c = c.options.Opts.exact_by_default
 

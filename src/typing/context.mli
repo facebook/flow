@@ -58,6 +58,7 @@ type metadata = {
   enable_indexed_access: bool;
   enable_relay_integration: bool;
   env_mode: Options.env_mode;
+  env_mode_constrain_write_dirs: string list;
   enforce_strict_call_arity: bool;
   enforce_local_inference_annotations: bool;
   local_inference_annotation_dirs: string list;
@@ -308,6 +309,8 @@ val copy_of_context : t -> t
 val merge_into : component_t -> sig_t -> unit
 
 val automatic_require_default : t -> bool
+
+val env_option_enabled : t -> Options.env_option -> bool
 
 (* modules *)
 val push_declare_module : t -> Module_info.t -> unit

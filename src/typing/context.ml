@@ -37,6 +37,7 @@ type metadata = {
   enable_indexed_access: bool;
   enable_relay_integration: bool;
   env_mode: Options.env_mode;
+  env_mode_constrain_write_dirs: string list;
   enforce_strict_call_arity: bool;
   enforce_local_inference_annotations: bool;
   local_inference_annotation_dirs: string list;
@@ -227,6 +228,7 @@ let metadata_of_options options =
     enable_indexed_access = Options.enable_indexed_access options;
     enable_relay_integration = Options.enable_relay_integration options;
     env_mode = Options.env_mode options;
+    env_mode_constrain_write_dirs = Options.env_mode_constrain_write_dirs options;
     enforce_strict_call_arity = Options.enforce_strict_call_arity options;
     enforce_local_inference_annotations = Options.enforce_local_inference_annotations options;
     local_inference_annotation_dirs = Options.local_inference_annotation_dirs options;
@@ -572,6 +574,17 @@ let trust_errors cx =
   | Options.SilentTrust
   | Options.NoTrust ->
     false
+
+let env_option_enabled cx option =
+  let open Options in
+  match (cx.metadata.env_mode, cx.metadata.env_mode_constrain_write_dirs, option) with
+  | (SSAEnv, _, _) -> false
+  | (ClassicEnv opts, _, _) when List.mem option opts -> true
+  | (_, (_ :: _ as dirs), ConstrainWrites) ->
+    let filename = File_key.to_string @@ file cx in
+    let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
+    List.exists (fun str -> Base.String.is_prefix ~prefix:str normalized_filename) dirs
+  | _ -> false
 
 let pid_prefix cx =
   if max_workers cx > 0 then

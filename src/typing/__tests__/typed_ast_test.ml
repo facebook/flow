@@ -31,6 +31,7 @@ let metadata =
     enable_indexed_access = true;
     enable_relay_integration = false;
     env_mode = Options.ClassicEnv [];
+    env_mode_constrain_write_dirs = [];
     enforce_strict_call_arity = true;
     enforce_local_inference_annotations = false;
     local_inference_annotation_dirs = [];

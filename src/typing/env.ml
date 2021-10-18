@@ -225,7 +225,7 @@ module Env : Env_sig.S = struct
   (* initialize a new environment (once per module) *)
   let init_env ?(exclude_syms = NameUtils.Set.empty) cx module_scope =
     begin
-      if Options.env_option_enabled (Context.env_mode cx) Options.ConstrainWrites then
+      if Context.env_option_enabled cx Options.ConstrainWrites then
         let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
         ALocMap.fold
           (fun loc reason env ->
@@ -441,7 +441,7 @@ module Env : Env_sig.S = struct
 
   let mk_havoc cx name loc general spec =
     let providers =
-      if Options.env_option_enabled (Context.env_mode cx) Options.ConstrainWrites then
+      if Context.env_option_enabled cx Options.ConstrainWrites then
         let ({ Loc_env.var_info = { Env_api.providers; _ }; _ } as env) = Context.environment cx in
         let providers =
           Env_api.Provider_api.providers_of_def providers loc
@@ -495,7 +495,7 @@ module Env : Env_sig.S = struct
       | _ -> None
     in
     let provider =
-      if Options.env_option_enabled (Context.env_mode cx) Options.ConstrainWrites then
+      if Context.env_option_enabled cx Options.ConstrainWrites then
         match providers with
         | [] -> VoidT.at loc (bogus_trust ())
         | [(_, t)] -> t
@@ -513,8 +513,7 @@ module Env : Env_sig.S = struct
 
   let install_provider cx t name loc =
     match name with
-    | OrdinaryName _name
-      when Options.env_option_enabled (Context.env_mode cx) Options.ConstrainWrites ->
+    | OrdinaryName _name when Context.env_option_enabled cx Options.ConstrainWrites ->
       let ({ Loc_env.var_info = { Env_api.providers; _ }; _ } as env) = Context.environment cx in
       if Env_api.Provider_api.is_provider providers loc then
         let t' = Loc_env.find_write env loc in
@@ -548,8 +547,7 @@ module Env : Env_sig.S = struct
 
   let constrain_by_provider cx ~use_op t name loc =
     match name with
-    | OrdinaryName ord_name
-      when Options.env_option_enabled (Context.env_mode cx) Options.ConstrainWrites ->
+    | OrdinaryName ord_name when Context.env_option_enabled cx Options.ConstrainWrites ->
       let { Loc_env.var_info = { Env_api.providers; scopes; _ }; _ } = Context.environment cx in
       if not @@ Env_api.Provider_api.is_provider providers loc then
         let (fully_initialized, provider, provider_locs) = get_provider cx name loc in
@@ -1054,11 +1052,10 @@ module Env : Env_sig.S = struct
     read_entry ~lookup_mode ~specific:false ?desc:None cx name loc
 
   let constraining_type ~default cx name loc =
-    let env_mode = Context.env_mode cx in
     match name with
     | OrdinaryName _
-      when Options.env_option_enabled env_mode Options.ConstrainWrites
-           && not (Options.env_option_enabled env_mode Options.ClassicTypeAtPos) ->
+      when Context.env_option_enabled cx Options.ConstrainWrites
+           && not (Context.env_option_enabled cx Options.ClassicTypeAtPos) ->
       let (_, provider, _) = get_provider cx name loc in
       begin
         match provider with
@@ -1622,8 +1619,7 @@ module Env : Env_sig.S = struct
                       (* We already know t ~> general, so specific | t = general *)
                     then
                       general
-                    else if Options.env_option_enabled (Context.env_mode cx) Options.ConstrainWrites
-                    then (
+                    else if Context.env_option_enabled cx Options.ConstrainWrites then (
                       let tvar = Tvar.mk cx (reason_of_t t) in
                       Flow.flow cx (specific, UseT (Op (Internal WidenEnv), tvar));
                       Flow.flow cx (general, UseT (Op (Internal WidenEnv), tvar));
