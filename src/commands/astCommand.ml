@@ -15,6 +15,11 @@ type ast_file_type =
   | File_json
   | File_js
 
+type ast_include_comments =
+  | Comments_true
+  | Comments_false
+  | Comments_docblock
+
 let spec =
   {
     CommandSpec.name = "ast";
@@ -44,6 +49,22 @@ let spec =
              (enum [("js", File_js); ("json", File_json)])
              ~doc:"Type of input file (js or json)"
         |> flag "--strict" no_arg ~doc:"Parse in strict mode"
+        |> flag
+             "--include-comments"
+             (required
+                ~default:Comments_true
+                (enum
+                   [
+                     ("true", Comments_true);
+                     ("false", Comments_false);
+                     ("docblock-only", Comments_docblock);
+                   ]))
+             ~doc:
+               "Include or drop comments in the output (true, false or docblock-only) (default: true)"
+        |> flag
+             "--include-locs"
+             (required ~default:true bool)
+             ~doc:"Include or drop location information in the output (default: true)"
         |> CommandUtils.offset_style_flag
         |> CommandUtils.from_flag
         |> CommandUtils.path_flag
@@ -58,20 +79,24 @@ let get_file path = function
   | Some filename -> File_input.FileName (CommandUtils.expand_path filename)
   | None -> File_input.FileContent (path, Sys_utils.read_stdin_to_string ())
 
-module Translate =
-  Estree_translator.Translate
-    (Json_of_estree)
-    (struct
-      let include_locs = true
-    end)
-
 module Token_translator = Token_translator.Translate (Json_of_estree)
 
 let pp_underscore_loc fmt _ = Format.pp_print_string fmt "_"
 
 let main
-    include_tokens pretty check debug pattern file_type_opt use_strict offset_style path filename ()
-    =
+    include_tokens
+    pretty
+    check
+    debug
+    pattern
+    file_type_opt
+    use_strict
+    include_comments
+    include_locs
+    offset_style
+    path
+    filename
+    () =
   let use_relative_path = Base.Option.value_map filename ~default:false ~f:Filename.is_relative in
   let file = get_file path filename in
   let content = File_input.content_of_file_input_unsafe file in
@@ -88,6 +113,14 @@ let main
             File_js
         | None -> File_js
       end
+  in
+
+  let module Translate =
+    Estree_translator.Translate
+      (Json_of_estree)
+      (struct
+        let include_locs = include_locs
+      end)
   in
   (*
    * Record token stream into a list when the --tokens flag is passed.
@@ -170,8 +203,23 @@ let main
           let offset_table = Some (Lazy.force offset_table) in
           let translated_ast =
             match ast with
-            | Ast_js ast -> Translate.program offset_table ast
-            | Ast_json ast -> Translate.expression offset_table ast
+            | Ast_js ast ->
+              let ast =
+                match include_comments with
+                | Comments_true -> ast
+                | Comments_false -> Comment_utils.strip_all_comments ast
+                | Comments_docblock -> Comment_utils.strip_all_comments ~preserve_docblock:true ast
+              in
+              Translate.program offset_table ast
+            | Ast_json ast ->
+              let ast =
+                match include_comments with
+                | Comments_true -> ast
+                | Comments_false
+                | Comments_docblock ->
+                  Comment_utils.strip_inlined_comments_expression ast
+              in
+              Translate.expression offset_table ast
           in
           match translated_ast with
           | JSON_Object params ->
