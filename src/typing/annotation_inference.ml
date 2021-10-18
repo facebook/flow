@@ -41,6 +41,7 @@ let object_like_op = function
   | Annot_GetStaticsT _
   | Annot_MakeExactT _
   | Annot_ObjKitT _
+  | Annot_ObjTestProtoT _
   | Annot__Future_added_value__ _ ->
     false
   | Annot_GetPropT _
@@ -620,6 +621,21 @@ module rec ConsGen : Annotation_inference_sig = struct
     (* Shape type *)
     (**************)
     | (ShapeT (r, o), _) -> elab_t cx ~seen (reposition cx (aloc_of_reason r) o) op
+    (*****************)
+    (* ObjTestProtoT *)
+    (*****************)
+    | (AnyT (_, src), Annot_ObjTestProtoT reason_op) -> AnyT.why src reason_op
+    | (DefT (_, trust, NullT), Annot_ObjTestProtoT reason_op) -> NullProtoT.why reason_op trust
+    | (_, Annot_ObjTestProtoT reason_op) ->
+      if Flow_js_utils.object_like t then
+        reposition cx (aloc_of_reason reason_op) t
+      else
+        let () =
+          Flow_js_utils.add_output
+            cx
+            (Error_message.EInvalidPrototype (aloc_of_reason reason_op, reason_of_t t))
+        in
+        ObjProtoT.why reason_op |> with_trust bogus_trust
     (***************)
     (* Get statics *)
     (***************)
@@ -997,5 +1013,5 @@ module rec ConsGen : Annotation_inference_sig = struct
 
   and make_exact cx reason t = elab_t cx t (Annot_MakeExactT reason)
 
-  and obj_test_proto _cx _reason_op _l = failwith "TODO Annotation_inference.obj_test_proto"
+  and obj_test_proto cx reason_op t = elab_t cx t (Annot_ObjTestProtoT reason_op)
 end
