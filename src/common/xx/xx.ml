@@ -35,3 +35,5 @@ let to_string (hash : hash) : string = Printf.sprintf "%016Lx" hash
 let modulo hash modulus =
   assert (modulus > 0);
   (Int64.to_int hash |> abs) mod modulus
+
+let pp_hash fmt (hash : hash) = Format.fprintf fmt "%016Lx" hash
