@@ -40,6 +40,7 @@ let object_like_op = function
   | Annot_ElemT _
   | Annot_GetStaticsT _
   | Annot_MakeExactT _
+  | Annot_MixinT _
   | Annot_ObjKitT _
   | Annot_ObjTestProtoT _
   | Annot__Future_added_value__ _ ->
@@ -558,6 +559,31 @@ module rec ConsGen : Annotation_inference_sig = struct
     | (_, Annot_MakeExactT reason_op) ->
       Flow_js_utils.add_output cx (Error_message.EUnsupportedExact (reason_op, reason_of_t t));
       AnyT.error reason_op
+    (**********)
+    (* Mixins *)
+    (**********)
+    | (ThisClassT (_, DefT (_, trust, InstanceT (_, _, _, instance)), is_this), Annot_MixinT r) ->
+      (* A class can be viewed as a mixin by extracting its immediate properties,
+       * and "erasing" its static and super *)
+      let static = ObjProtoT r in
+      let super = ObjProtoT r in
+      this_class_type (DefT (r, trust, InstanceT (static, super, [], instance))) is_this
+    | ( DefT
+          ( _,
+            _,
+            PolyT
+              {
+                tparams_loc;
+                tparams = xs;
+                t_out = ThisClassT (_, DefT (_, trust, InstanceT (_, _, _, insttype)), is_this);
+                _;
+              } ),
+        Annot_MixinT r ) ->
+      let static = ObjProtoT r in
+      let super = ObjProtoT r in
+      let instance = DefT (r, trust, InstanceT (static, super, [], insttype)) in
+      poly_type (Context.generate_poly_id cx) tparams_loc xs (this_class_type instance is_this)
+    | (AnyT (_, src), Annot_MixinT r) -> AnyT.why src r
     (***********************)
     (* Type specialization *)
     (***********************)
@@ -921,7 +947,7 @@ module rec ConsGen : Annotation_inference_sig = struct
 
   and unary_not _cx _reason_op _l = failwith "TODO Annotation_inference.unary_not"
 
-  and mixin _cx _reason _l = failwith "TODO Annotation_inference.mixin"
+  and mixin cx reason t = elab_t cx t (Annot_MixinT reason)
 
   and obj_rest _cx _reason _xs _t = failwith "TODO Annotation_inference.obj_rest"
 
