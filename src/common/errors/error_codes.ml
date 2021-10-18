@@ -99,6 +99,7 @@ type error_code =
   | MethodUnbinding
   | MissingAnnot
   | MissingLocalAnnot
+  | MissingThisAnnot
   | MissingArg
   | MissingExport
   | MissingTypeArg
@@ -270,6 +271,7 @@ let string_of_code : error_code -> string = function
   | MethodUnbinding -> "method-unbinding"
   | MissingAnnot -> "missing-annot"
   | MissingLocalAnnot -> "missing-local-annot"
+  | MissingThisAnnot -> "missing-this-annot"
   | MissingArg -> "missing-arg"
   | MissingExport -> "missing-export"
   | MissingTypeArg -> "missing-type-arg"

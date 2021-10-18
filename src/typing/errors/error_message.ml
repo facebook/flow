@@ -3857,7 +3857,12 @@ let error_code_of_message err : error_code option =
   | ELintSetting _ -> Some LintSetting
   | EMalformedPackageJson (_, _) -> Some MalformedPackage
   | EMissingAnnotation _ -> Some MissingAnnot
-  | EMissingLocalAnnotation _ -> Some MissingLocalAnnot
+  | EMissingLocalAnnotation r ->
+    begin
+      match desc_of_reason r with
+      | RImplicitThis _ -> Some MissingThisAnnot
+      | _ -> Some MissingLocalAnnot
+    end
   | EMissingTypeArgs _ -> Some MissingTypeArg
   | EMixedImportAndRequire _ -> Some MixedImportAndRequire
   | EToplevelLibraryImport _ -> Some ToplevelLibraryImport
