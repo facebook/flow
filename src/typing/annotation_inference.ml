@@ -42,12 +42,14 @@ let object_like_op = function
   | Annot__Future_added_value__ _ ->
     false
   | Annot_GetPropT _
-  | Annot_GetElemT _ ->
+  | Annot_GetElemT _
+  | Annot_LookupT _ ->
     true
 
 let primitive_promoting_op = function
   | Annot_GetPropT _
-  | Annot_GetElemT _ ->
+  | Annot_GetElemT _
+  | Annot_LookupT _ ->
     true
   (* TODO: enumerate all use types *)
   | _ -> false
@@ -178,8 +180,8 @@ module rec ConsGen : Annotation_inference_sig = struct
         Flow_js_utils.add_output cx msg;
         AnyT.error ureason
 
-    let cg_lookup_ _cx _use_op _t _reason_op _propref =
-      failwith "TODO Annotation_inference.cg_lookup"
+    let cg_lookup_ cx use_op t reason_op propref =
+      ConsGen.elab_t cx t (Annot_LookupT (reason_op, use_op, propref))
 
     let read_prop cx _trace options reason_prop reason_op l _super x pmap =
       let { Flow_js_utils.Access_prop_options.use_op; _ } = options in
@@ -573,6 +575,29 @@ module rec ConsGen : Annotation_inference_sig = struct
       (* ObjProtoT not only serves as the instance type of the root class, but
        * also as the statics of the root class. *)
       reposition cx (aloc_of_reason reason_op) t
+    (***************)
+    (* LookupT pt1 *)
+    (***************)
+    | ( DefT (_lreason, _, InstanceT (_, super, _, instance)),
+        Annot_LookupT (reason_op, use_op, (Named (_, x) as propref)) ) ->
+      let own_props = Context.find_props cx instance.own_props in
+      let proto_props = Context.find_props cx instance.proto_props in
+      let pmap = NameUtils.Map.union own_props proto_props in
+      (match NameUtils.Map.find_opt x pmap with
+      | None -> Get_prop_helper.cg_lookup_ cx use_op super reason_op propref
+      | Some p -> GetPropTKit.perform_read_prop_action cx dummy_trace use_op propref p reason_op)
+    | (DefT (_, _, InstanceT _), Annot_LookupT (reason_op, _, Computed _)) ->
+      let loc = aloc_of_reason reason_op in
+      Flow_js_utils.add_output cx Error_message.(EInternal (loc, InstanceLookupComputed));
+      AnyT.error reason_op
+    | (DefT (_, _, ObjT o), Annot_LookupT (reason_op, use_op, propref)) ->
+      (match GetPropTKit.get_obj_prop cx dummy_trace o propref reason_op with
+      | Some (p, _) ->
+        GetPropTKit.perform_read_prop_action cx dummy_trace use_op propref p reason_op
+      | None -> Get_prop_helper.cg_lookup_ cx use_op o.proto_t reason_op propref)
+    | (AnyT _, Annot_LookupT (reason_op, use_op, propref)) ->
+      let p = Field (None, AnyT.untyped reason_op, Polarity.Neutral) in
+      GetPropTKit.perform_read_prop_action cx dummy_trace use_op propref p reason_op
     (************)
     (* GetPropT *)
     (************)
@@ -652,6 +677,28 @@ module rec ConsGen : Annotation_inference_sig = struct
         (Error_message.EEnumInvalidMemberAccess
            { member_name = None; suggestion = None; reason; enum_reason });
       AnyT.error reason_op
+    (***************)
+    (* LookupT pt2 *)
+    (***************)
+    | (ObjProtoT _, Annot_LookupT (reason_op, _, Named (_, x)))
+      when Flow_js_utils.is_object_prototype_method x ->
+      Flow_js_utils.lookup_builtin_strict cx (OrdinaryName "Object") reason_op
+    | (FunProtoT _, Annot_LookupT (reason_op, _, Named (_, x)))
+      when Flow_js_utils.is_function_prototype x ->
+      Flow_js_utils.lookup_builtin_strict cx (OrdinaryName "Function") reason_op
+    | ( (DefT (reason, _, NullT) | ObjProtoT reason | FunProtoT reason),
+        Annot_LookupT (reason_op, use_op, (Named (reason_prop, x) as propref)) ) ->
+      let error_message =
+        if Reason.is_builtin_reason ALoc.source reason then
+          Error_message.EBuiltinLookupFailed { reason = reason_prop; name = Some x }
+        else
+          let suggestion = None in
+          Error_message.EStrictLookupFailed
+            { reason_prop; reason_obj = reason_op; name = Some x; use_op = Some use_op; suggestion }
+      in
+      Flow_js_utils.add_output cx error_message;
+      let p = Field (None, AnyT.error_of_kind UnresolvedName reason_op, Polarity.Neutral) in
+      GetPropTKit.perform_read_prop_action cx dummy_trace use_op propref p reason_op
     (****************************************)
     (* Object, function, etc. library calls *)
     (****************************************)
@@ -666,13 +713,14 @@ module rec ConsGen : Annotation_inference_sig = struct
     (************)
     (* GetPropT *)
     (************)
-    | (DefT (reason, _, ArrT (ArrayAT (t, _))), Annot_GetPropT _) ->
+    | (DefT (reason, _, ArrT (ArrayAT (t, _))), (Annot_GetPropT _ | Annot_LookupT _)) ->
       let arr = get_builtin_typeapp cx reason (OrdinaryName "Array") [t] in
       elab_t cx arr op
     | ( DefT (reason, trust, ArrT (TupleAT (_, ts))),
         Annot_GetPropT (reason_op, _, Named (_, OrdinaryName "length")) ) ->
       GetPropTKit.on_array_length cx dummy_trace reason trust ts reason_op
-    | (DefT (reason, _, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)), Annot_GetPropT _) ->
+    | ( DefT (reason, _, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)),
+        (Annot_GetPropT _ | Annot_LookupT _) ) ->
       let t = elemt_of_arrtype arrtype in
       elab_t cx (get_builtin_typeapp cx reason (OrdinaryName "$ReadOnlyArray") [t]) op
     (************************)
@@ -690,7 +738,7 @@ module rec ConsGen : Annotation_inference_sig = struct
     | (DefT (reason, _, SymbolT), _) when primitive_promoting_op op ->
       let builtin = get_builtin_type cx reason ~use_desc:true (OrdinaryName "Symbol") in
       elab_t cx builtin op
-    | (DefT (lreason, _, MixedT Mixed_function), Annot_GetPropT _) ->
+    | (DefT (lreason, _, MixedT Mixed_function), (Annot_GetPropT _ | Annot_LookupT _)) ->
       elab_t cx (FunProtoT lreason) op
     | (_, _) ->
       let reason = reason_of_op op in
