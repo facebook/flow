@@ -40,6 +40,7 @@ let object_like_op = function
   | Annot_ElemT _
   | Annot_GetStaticsT _
   | Annot_MakeExactT _
+  | Annot_ObjKitT _
   | Annot__Future_added_value__ _ ->
     false
   | Annot_GetPropT _
@@ -345,6 +346,28 @@ module rec ConsGen : Annotation_inference_sig = struct
 
   and elab_t cx ?(seen = ISet.empty) t op =
     match (t, op) with
+    | (EvalT (t, TypeDestructorT (use_op, reason, ReadOnlyType), _), _) ->
+      let t = make_readonly cx use_op reason t in
+      elab_t cx t op
+    | (EvalT (t, TypeDestructorT (use_op, reason, SpreadType (target, todo_rev, head_slice)), _), _)
+      ->
+      let state =
+        Object.(
+          Spread.
+            {
+              todo_rev;
+              acc = Base.Option.value_map ~f:(fun x -> [InlineSlice x]) ~default:[] head_slice;
+              spread_id = Reason.mk_id ();
+              union_reason = None;
+              curr_resolve_idx = 0;
+            })
+      in
+      let t = object_spread cx use_op reason target state t in
+      elab_t cx t op
+    | (EvalT (t, TypeDestructorT (use_op, reason, RestType (options, r)), _), _) ->
+      let state = Object.Rest.One r in
+      let t = object_rest cx use_op reason options state t in
+      elab_t cx t op
     | (EvalT (_, TypeDestructorT (_, _, d), _), _) ->
       let r = AConstraint.reason_of_op op in
       warn_unsupported
@@ -487,11 +510,15 @@ module rec ConsGen : Annotation_inference_sig = struct
       let ts' = Base.List.map ts ~f in
       let reason' = repos_reason (aloc_of_reason reason_op) reason in
       union_of_ts reason' ts'
+    | (UnionT _, Annot_ObjKitT (reason, use_op, resolve_tool, tool)) ->
+      object_kit_concrete cx use_op reason resolve_tool tool t
     | (UnionT (_, rep), _) ->
       let reason = Type.AConstraint.reason_of_op op in
       let ts = UnionRep.members rep in
       let ts = Base.List.map ~f:(fun t -> elab_t cx ~seen t op) ts in
       union_of_ts reason ts
+    | (IntersectionT _, Annot_ObjKitT (reason, use_op, resolve_tool, tool)) ->
+      object_kit_concrete cx use_op reason resolve_tool tool t
     | (IntersectionT _, _) ->
       let r = AConstraint.reason_of_op op in
       warn_unsupported
@@ -641,6 +668,11 @@ module rec ConsGen : Annotation_inference_sig = struct
     | (DefT (reason, _, ClassT instance), Annot_GetPropT (_, _, Named (_, OrdinaryName "prototype")))
       ->
       reposition cx (aloc_of_reason reason) instance
+    (**************)
+    (* Object Kit *)
+    (**************)
+    | (_, Annot_ObjKitT (reason, use_op, resolve_tool, tool)) ->
+      object_kit_concrete cx use_op reason resolve_tool tool t
     (********************)
     (* GetElemT / ElemT *)
     (********************)
@@ -879,8 +911,89 @@ module rec ConsGen : Annotation_inference_sig = struct
 
   and arr_rest _cx _use_op _reason _i _t = failwith "TODO Annotation_inference.arr_rest"
 
-  and object_spread _cx _use_op _reason _target _state _t =
-    failwith "TODO Annotation_inference.object_spread"
+  and object_kit_concrete =
+    let rec widen_obj_type cx ~use_op reason t =
+      match t with
+      | OpenT (_, id) ->
+        let open Constraint in
+        begin
+          match Lazy.force (Context.find_graph cx id) with
+          | exception Union_find.Tvar_not_found _ ->
+            warn_unsupported "widen_obj_type" "Annot_ObjKitT" (string_of_reason_loc cx reason);
+            Unsoundness.why Unimplemented reason
+          | Unresolved _
+          | Resolved _ ->
+            failwith "widen_obj_type unexpected non-FullyResolved tvar"
+          | FullyResolved (_, (lazy t)) -> widen_obj_type cx ~use_op reason t
+        end
+      | UnionT (r, rep) ->
+        UnionT
+          ( r,
+            UnionRep.ident_map
+              (fun t ->
+                if is_proper_def t then
+                  widen_obj_type cx ~use_op reason t
+                else
+                  t)
+              rep )
+      | t -> t
+    in
+    let add_output cx msg : unit = Flow_js_utils.add_output cx msg in
+    let return _cx _use_op t = t in
+    let recurse cx use_op reason resolve_tool tool x =
+      object_kit cx use_op reason resolve_tool tool x
+    in
+    let object_spread options state cx =
+      let dict_check _cx _use_op _d1 _d2 = () in
+      Slice_utils.object_spread
+        ~dict_check
+        ~widen_obj_type
+        ~add_output
+        ~return
+        ~recurse
+        options
+        state
+        cx
+    in
+    let object_rest options state cx =
+      let return _ _ _ t = t in
+      (* No subtyping checks in annotation inference *)
+      let subt_check ~use_op:_ _ _ = () in
+      Slice_utils.object_rest ~add_output ~return ~recurse ~subt_check options state cx
+    in
+    let object_read_only cx _use_op = Slice_utils.object_read_only cx in
+    let object_partial cx _use_op = Slice_utils.object_partial cx in
+    let next =
+      Object.(
+        function
+        | Spread (options, state) -> object_spread options state
+        | Rest (options, state) -> object_rest options state
+        | Partial -> object_partial
+        | ReadOnly -> object_read_only
+        | ReactConfig _ -> failwith "new-merge ReactConfig"
+        | ObjectRep -> failwith "new-merge ObjectRep"
+        | ObjectWiden _ -> failwith "new-merge ObjectWiden")
+    in
+    let next cx use_op tool reason x = next tool cx use_op reason x in
+    let statics = get_statics in
+    (fun cx -> Slice_utils.run ~add_output ~return ~next ~recurse ~statics cx)
+
+  and object_kit cx use_op reason resolve_tool tool t =
+    elab_t cx t (Annot_ObjKitT (reason, use_op, resolve_tool, tool))
+
+  and object_spread cx use_op reason target state t =
+    let resolve_tool = Type.Object.(Resolve Next) in
+    let tool = Type.Object.Spread (target, state) in
+    object_kit cx use_op reason resolve_tool tool t
+
+  and object_rest cx use_op reason target state t =
+    let resolve_tool = Type.Object.(Resolve Next) in
+    let tool = Type.Object.Rest (target, state) in
+    object_kit cx use_op reason resolve_tool tool t
+
+  and make_readonly cx use_op reason t =
+    let resolve_tool = Type.Object.(Resolve Next) in
+    object_kit cx use_op reason resolve_tool Type.Object.ReadOnly t
 
   and make_exact cx reason t = elab_t cx t (Annot_MakeExactT reason)
 
