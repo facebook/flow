@@ -41,6 +41,7 @@ type resolved_requires = {
      references need to be re-resolved. *)
   hash: Xx.hash; (* An easy way to compare two resolved_requires to see if they've changed *)
 }
+[@@deriving show]
 
 let mk_resolved_requires ~resolved_modules ~phantom_dependents =
   let state = Xx.init 0L in
