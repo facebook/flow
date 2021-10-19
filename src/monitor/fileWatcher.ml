@@ -441,7 +441,7 @@ end = struct
         Exception.reraise exn
       | _ ->
         let msg = Exception.to_string exn in
-        EventLogger.watchman_uncaught_failure
+        FlowEventLogger.watchman_uncaught_failure
           ("Uncaught exception in Watchman listening loop: " ^ msg);
         Logger.error ~exn:(Exception.to_exn exn) "Uncaught exception in Watchman listening loop";
         raise (Watchman_failure Watchman.Dead)
@@ -560,7 +560,7 @@ end = struct
             let str = Exception.get_ctor_string e in
             let stack = Exception.get_full_backtrace_string 500 e in
             let msg = Printf.sprintf "Failed to initialize watchman: %s\n%s" str stack in
-            EventLogger.watchman_uncaught_failure msg;
+            FlowEventLogger.watchman_uncaught_failure msg;
             Lwt.return (Error msg)
         in
         match timeout with

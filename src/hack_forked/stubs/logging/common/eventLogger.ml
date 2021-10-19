@@ -41,16 +41,4 @@ let sharedmem_failed_memfd_init _ = ()
 
 let flush _ = ()
 
-let watchman_error ?request:_ ?response:_ _ = ()
-
-let watchman_warning _ = ()
-
-let watchman_uncaught_failure _ = ()
-
-let watchman_connection_reestablished _ = ()
-
-let watchman_connection_reestablishment_failed _ = ()
-
-let watchman_timeout _ = ()
-
 let dfind_ready _ _ = ()

@@ -44,7 +44,7 @@ type failure =
 
 let log ?request ?response msg =
   let response = Option.map ~f:(String_utils.truncate 100000) response in
-  let () = EventLogger.watchman_error ?request ?response msg in
+  let () = FlowEventLogger.watchman_error ?request ?response msg in
   let () = Hh_logger.error "%s" msg in
   ()
 
@@ -169,7 +169,7 @@ let parse_response =
     match Jget.string_opt (Some obj) "warning" with
     | None -> ()
     | Some warning ->
-      EventLogger.watchman_warning warning;
+      FlowEventLogger.watchman_warning warning;
       Hh_logger.log "Watchman warning: %s\n" warning
   in
   (* Looks for common errors in watchman responses *)
@@ -801,7 +801,7 @@ let re_init_dead_env =
     | Ok env ->
       Hh_logger.log "Watchman connection reestablished.";
       let downtime = Unix.gettimeofday () -. dead_env.dead_since in
-      EventLogger.watchman_connection_reestablished downtime;
+      FlowEventLogger.watchman_connection_reestablished downtime;
       Lwt.return (Ok env)
     | Error _ as err -> Lwt.return err
 

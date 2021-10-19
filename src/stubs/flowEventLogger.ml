@@ -182,3 +182,13 @@ let live_non_parse_errors_failed ~request:_ ~data:_ ~wall_start:_ = ()
 let file_watcher_event_started ~name:_ ~data:_ = ()
 
 let file_watcher_event_finished ~name:_ ~data:_ = ()
+
+let watchman_error ?request:_ ?response:_ _ = ()
+
+let watchman_warning _ = ()
+
+let watchman_uncaught_failure _ = ()
+
+let watchman_connection_reestablished _ = ()
+
+let watchman_connection_reestablishment_failed _ = ()
