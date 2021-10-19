@@ -295,15 +295,14 @@ let tests () =
     ( name,
       fun () ->
         let num_workers = 0 in
-        let handle =
-          SharedMem.init ~num_workers { SharedMem.heap_size = 1024; hash_table_pow; log_level = 0 }
-        in
-        ignore (handle : SharedMem.handle);
-        test ();
-        true )
+        let config = { SharedMem.heap_size = 1024; hash_table_pow; log_level = 0 } in
+        match SharedMem.init ~num_workers config with
+        | Ok handle ->
+          ignore (handle : SharedMem.handle);
+          test ();
+          true
+        | Error () -> false )
   in
   List.map setup_test list
 
-let () =
-  EventLogger.init_fake ();
-  Unit_test.run_all (tests ())
+let () = Unit_test.run_all (tests ())

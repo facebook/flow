@@ -49,9 +49,7 @@ val hash_stats : unit -> table_stats
 
 val heap_size : unit -> int
 
-val init : config -> num_workers:int -> handle
-
-val init_done : unit -> unit
+val init : config -> num_workers:int -> (handle, unit) result
 
 module type Key = sig
   type t

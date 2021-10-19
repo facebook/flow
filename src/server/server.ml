@@ -73,7 +73,7 @@ let init ~profiling ?focus_targets genv =
   in
   sample_init_memory profiling;
 
-  SharedMem.init_done ();
+  EventLogger.sharedmem_init_done (SharedMem.heap_size ());
 
   (* Return an env that initializes invariants required and maintained by
      recheck, namely that `files` contains files that parsed successfully, and
@@ -197,7 +197,18 @@ let on_compact () =
 let create_program_init ~shared_mem_config ~init_id ?focus_targets options =
   SharedMem.on_compact := on_compact;
   let num_workers = Options.max_workers options in
-  let handle = SharedMem.init ~num_workers shared_mem_config in
+  let handle =
+    match SharedMem.init ~num_workers shared_mem_config with
+    | Ok handle -> handle
+    | Error () ->
+      if EventLogger.should_log () then EventLogger.sharedmem_failed_memfd_init ();
+      Hh_logger.log "Failed to use anonymous memfd init";
+      (* TODO: The server should exit, but we should exit with a different
+       * message, since Out_of_shared_memory is also raised when memfd_reserve
+       * fails. This error condition is specifically when the memfd could not be
+       * initialized. *)
+      raise SharedMem.Out_of_shared_memory
+  in
   let genv = ServerEnvBuild.make_genv ~options ~init_id handle in
   let program_init profiling =
     let%lwt ret = init ~profiling ?focus_targets genv in

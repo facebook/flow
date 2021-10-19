@@ -59,16 +59,9 @@ let init config ~num_workers =
   try
     let (heap, handle) = init config ~num_workers in
     heap_ref := Some heap;
-    handle
+    Ok handle
   with
-  | Failed_memfd_init _ ->
-    if EventLogger.should_log () then EventLogger.sharedmem_failed_memfd_init ();
-    Hh_logger.log "Failed to use anonymous memfd init";
-    (* TODO: The server should exit, but we should exit with a different
-     * message, since Out_of_shared_memory is also raised when memfd_reserve
-     * fails. This error condition is specifically when the memfd could not be
-     * initialized. *)
-    raise Out_of_shared_memory
+  | Failed_memfd_init _ -> Error ()
 
 external connect : handle -> worker_id:int -> heap = "hh_connect"
 
@@ -138,12 +131,6 @@ external hh_log_level : unit -> int = "hh_log_level"
 (* The total number of slots in our hashtable *)
 (*****************************************************************************)
 external hash_stats : unit -> table_stats = "hh_hash_stats"
-
-(*****************************************************************************)
-(* Must be called after the initialization of the hack server is over.
- * (cf serverInit.ml). *)
-(*****************************************************************************)
-let init_done () = EventLogger.sharedmem_init_done (heap_size ())
 
 let on_compact = ref (fun _ _ -> ())
 

@@ -77,7 +77,11 @@ module MakeMain (Runner : Codemod_runner.RUNNABLE) = struct
     let initial_lwt_thread () =
       let genv =
         let num_workers = Options.max_workers options in
-        let handle = SharedMem.init ~num_workers shared_mem_config in
+        let handle =
+          match SharedMem.init ~num_workers shared_mem_config with
+          | Ok handle -> handle
+          | Error () -> raise SharedMem.Out_of_shared_memory
+        in
         ServerEnvBuild.make_genv ~init_id ~options handle
       in
       Runner.run ~genv ~write ~repeat roots

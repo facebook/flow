@@ -90,7 +90,6 @@ let collect_test _ctxt =
 let tests = "heap_tests" >::: ["collect" >:: collect_test]
 
 let () =
-  EventLogger.init_fake ();
   let config = { heap_size = 1024 * 1024 * 1024; hash_table_pow = 14; log_level = 0 } in
-  ignore (init ~num_workers:0 config : handle);
+  ignore (init ~num_workers:0 config : (handle, unit) result);
   run_test_tt_main tests

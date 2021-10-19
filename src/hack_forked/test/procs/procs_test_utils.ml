@@ -26,7 +26,11 @@ let make_workers n =
     let gig = 1024 * 1024 * 1024 in
     { SharedMem.heap_size = 20 * gig; hash_table_pow = 18; log_level = 0 }
   in
-  let heap_handle = SharedMem.init ~num_workers:n default_sharedmem_config in
+  let heap_handle =
+    match SharedMem.init ~num_workers:n default_sharedmem_config with
+    | Ok handle -> handle
+    | Error () -> raise SharedMem.Out_of_shared_memory
+  in
   let gc_control = Caml.Gc.get () in
   let workers =
     MultiWorkerLwt.make
