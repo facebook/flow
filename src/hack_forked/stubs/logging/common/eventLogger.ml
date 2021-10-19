@@ -26,12 +26,6 @@ let should_log () = false
 
 let worker_exception _ = ()
 
-let sharedmem_gc_ran _ _ _ _ = ()
-
-let sharedmem_init_done _ = ()
-
-let sharedmem_failed_memfd_init _ = ()
-
 let flush _ = ()
 
 let dfind_ready _ _ = ()

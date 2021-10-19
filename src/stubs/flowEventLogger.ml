@@ -192,3 +192,9 @@ let watchman_uncaught_failure _ = ()
 let watchman_connection_reestablished _ = ()
 
 let watchman_connection_reestablishment_failed _ = ()
+
+let sharedmem_gc_ran _ _ _ _ = ()
+
+let sharedmem_init_done _ = ()
+
+let sharedmem_failed_memfd_init _ = ()
