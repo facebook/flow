@@ -12,14 +12,7 @@ type init_settings = {
   log_err: Unix.file_descr;
 }
 
-type init_mode =
-  (* Sends everything to /dev/null. *)
-  | Event_logger_fake
-  | Event_logger_real of init_settings
-
 let init ?exit_on_parent_exit:_ ?log_pid:_ ?init_id:_ _ _ = ()
-
-let init_fake () = ()
 
 let disable_logging _ = ()
 
