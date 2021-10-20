@@ -621,7 +621,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
      * We use the ConcretizeTypeAppsT use type to concretize both the c of our
      * upper and lower TypeAppT bound. We start by concretizing the upper bound
      * which we signal by setting the final element in ConcretizeTypeAppsT to
-     * true. *)
+     * true.
+     *
+     * The next step happens back in flow_js.ml, at the cases for a
+     * ConcretizeTypeAppsT use type.
+     *)
     | (TypeAppT (r1, op1, c1, ts1), TypeAppT (r2, op2, c2, ts2)) ->
       if TypeAppExpansion.push_unless_loop cx (c1, ts1) then (
         if TypeAppExpansion.push_unless_loop cx (c2, ts2) then (
