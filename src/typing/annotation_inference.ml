@@ -43,6 +43,8 @@ let object_like_op = function
   | Annot_MixinT _
   | Annot_ObjKitT _
   | Annot_ObjTestProtoT _
+  | Annot_UnaryMinusT _
+  | Annot_NotT _
   | Annot__Future_added_value__ _ ->
     false
   | Annot_GetPropT _
@@ -528,6 +530,31 @@ module rec ConsGen : Annotation_inference_sig = struct
         (AConstraint.string_of_operation op)
         (string_of_reason_loc cx r);
       Unsoundness.why Unimplemented r
+    (*************)
+    (* Unary not *)
+    (*************)
+    (* any propagation *)
+    | (AnyT _, Annot_NotT _) -> t
+    (* !x when x is of unknown truthiness *)
+    | (DefT (_, trust, BoolT None), Annot_NotT reason)
+    | (DefT (_, trust, StrT AnyLiteral), Annot_NotT reason)
+    | (DefT (_, trust, NumT AnyLiteral), Annot_NotT reason) ->
+      BoolT.at (aloc_of_reason reason) trust
+    (* !x when x is falsy *)
+    | (DefT (_, trust, BoolT (Some false)), Annot_NotT reason)
+    | (DefT (_, trust, SingletonBoolT false), Annot_NotT reason)
+    | (DefT (_, trust, StrT (Literal (_, OrdinaryName ""))), Annot_NotT reason)
+    | (DefT (_, trust, SingletonStrT (OrdinaryName "")), Annot_NotT reason)
+    | (DefT (_, trust, NumT (Literal (_, (0., _)))), Annot_NotT reason)
+    | (DefT (_, trust, SingletonNumT (0., _)), Annot_NotT reason)
+    | (DefT (_, trust, NullT), Annot_NotT reason)
+    | (DefT (_, trust, VoidT), Annot_NotT reason) ->
+      let reason = replace_desc_reason (RBooleanLit true) reason in
+      DefT (reason, trust, BoolT (Some true))
+    (* !x when x is truthy *)
+    | (_, Annot_NotT reason) ->
+      let reason = replace_desc_reason (RBooleanLit false) reason in
+      DefT (reason, bogus_trust (), BoolT (Some false))
     (*****************************)
     (* Singleton primitive types *)
     (*****************************)
@@ -753,6 +780,21 @@ module rec ConsGen : Annotation_inference_sig = struct
     (* Opaque types (pt 2) *)
     (***********************)
     | (OpaqueT (_, { super_t = Some t; _ }), _) -> elab_t cx t op
+    (************************)
+    (* Unary minus operator *)
+    (************************)
+    | (DefT (_, trust, NumT lit), Annot_UnaryMinusT reason_op) ->
+      let num =
+        match lit with
+        | Literal (_, (value, raw)) ->
+          let (value, raw) = Flow_ast_utils.negate_number_literal (value, raw) in
+          DefT (replace_desc_reason RNumber reason_op, trust, NumT (Literal (None, (value, raw))))
+        | AnyLiteral
+        | Truthy ->
+          t
+      in
+      num
+    | (AnyT _, Annot_UnaryMinusT reason_op) -> AnyT.untyped reason_op
     (********************)
     (* Function Statics *)
     (********************)
@@ -943,9 +985,9 @@ module rec ConsGen : Annotation_inference_sig = struct
   and copy_type_exports cx ~from_ns reason ~module_t =
     elab_t cx from_ns (Annot_CopyTypeExportsT (reason, module_t))
 
-  and unary_minus _cx _reason_op _l = failwith "TODO Annotation_inference.unary_minus"
+  and unary_minus cx reason_op t = elab_t cx t (Annot_UnaryMinusT reason_op)
 
-  and unary_not _cx _reason_op _l = failwith "TODO Annotation_inference.unary_not"
+  and unary_not cx reason_op t = elab_t cx t (Annot_NotT reason_op)
 
   and mixin cx reason t = elab_t cx t (Annot_MixinT reason)
 
