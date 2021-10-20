@@ -1,0 +1,54 @@
+Error ------------------------------------------------------------------------------------------------------ main.js:6:2
+
+Cannot cast `x1` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   main.js:6:2
+    6| (x1: empty);
+        ^^
+
+References:
+   get_prop_union.js:15:23
+   15| declare export var x: typeof c.f;
+                             ^^^^^^^^^^ [1]
+   main.js:6:6
+    6| (x1: empty);
+            ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ main.js:6:2
+
+Cannot cast `x1` to empty because string [1] is incompatible with empty [2]. [incompatible-cast]
+
+   main.js:6:2
+    6| (x1: empty);
+        ^^
+
+References:
+   get_prop_union.js:15:23
+   15| declare export var x: typeof c.f;
+                             ^^^^^^^^^^ [1]
+   main.js:6:6
+    6| (x1: empty);
+            ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:22:2
+
+Cannot cast `frozenSuitevalues` to `IndirectFrozenSuiteValues` because string literal `Extra Suite` [1] is incompatible
+with literal union [2]. [incompatible-cast]
+
+   main.js:22:2
+   22| (frozenSuitevalues: IndirectFrozenSuiteValues); // error due to no OpenT indirection
+        ^^^^^^^^^^^^^^^^^
+
+References:
+   main.js:21:32
+   21| declare var frozenSuitevalues: FrozenSuiteValues;
+                                      ^^^^^^^^^^^^^^^^^ [1]
+   main.js:22:21
+   22| (frozenSuitevalues: IndirectFrozenSuiteValues); // error due to no OpenT indirection
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 3 errors

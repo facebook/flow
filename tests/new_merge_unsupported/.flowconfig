@@ -1,0 +1,13 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
+no_flowlib=false
+experimental.new_merge=true
+
+[strict]

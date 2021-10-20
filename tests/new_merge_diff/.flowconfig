@@ -1,0 +1,14 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
+no_flowlib=false
+suppress_type=$FlowExpectedError
+experimental.new_merge=true
+
+[strict]

@@ -1,0 +1,17 @@
+Error ----------------------------------------------------------------------------------------------------- main.js:4:16
+
+Cannot assign object literal to `o1` because inexact object literal [1] is incompatible with exact object literal [2].
+[incompatible-exact]
+
+   main.js:4:16
+   4| const o1: T1 = {}; // error inexact is incompatible with exact
+                     ^^ [1]
+
+References:
+   main.js:4:11
+   4| const o1: T1 = {}; // error inexact is incompatible with exact
+                ^^ [2]
+
+
+
+Found 1 error
