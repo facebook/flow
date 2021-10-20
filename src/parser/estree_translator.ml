@@ -82,7 +82,8 @@ with type t = Impl.t = struct
           [
             int (Offset_utils.offset offset_table location.start);
             int (Offset_utils.offset offset_table location._end);
-          ])
+          ]
+      )
     in
     let rec node _type location ?comments props =
       let locs =
@@ -258,11 +259,13 @@ with type t = Impl.t = struct
             ( "kind",
               match kind with
               | DeclareModule.CommonJS _ -> string "CommonJS"
-              | DeclareModule.ES _ -> string "ES" );
+              | DeclareModule.ES _ -> string "ES"
+            );
           ]
       | ( loc,
           DeclareExportDeclaration
-            { DeclareExportDeclaration.specifiers; declaration; default; source; comments } ) ->
+            { DeclareExportDeclaration.specifiers; declaration; default; source; comments }
+        ) ->
         begin
           match specifiers with
           | Some (ExportNamedDeclaration.ExportBatchSpecifier (_, None)) ->
@@ -292,7 +295,8 @@ with type t = Impl.t = struct
                   bool
                     (match default with
                     | Some _ -> true
-                    | None -> false) );
+                    | None -> false)
+                );
                 ("declaration", declaration);
                 ("specifiers", export_specifiers specifiers);
                 ("source", option string_literal source);
@@ -302,7 +306,8 @@ with type t = Impl.t = struct
         node ?comments "DeclareModuleExports" loc [("typeAnnotation", type_annotation annot)]
       | ( loc,
           ExportNamedDeclaration
-            { ExportNamedDeclaration.specifiers; declaration; source; export_kind; comments } ) ->
+            { ExportNamedDeclaration.specifiers; declaration; source; export_kind; comments }
+        ) ->
         begin
           match specifiers with
           | Some (ExportNamedDeclaration.ExportBatchSpecifier (_, None)) ->
@@ -332,7 +337,8 @@ with type t = Impl.t = struct
               ExportDefaultDeclaration.declaration;
               default = _ (* TODO: confirm we shouldn't use this *);
               comments;
-            } ) ->
+            }
+        ) ->
         let declaration =
           match declaration with
           | ExportDefaultDeclaration.Declaration stmt -> statement stmt
@@ -411,7 +417,8 @@ with type t = Impl.t = struct
               (* TODO: arrows shouldn't have these: *)
               id = _;
               generator = _;
-            } ) ->
+            }
+        ) ->
         let (body, expression) =
           match body with
           | Function.BodyBlock b -> (block b, false)
@@ -472,7 +479,8 @@ with type t = Impl.t = struct
                 ("operator", string operator);
                 ("prefix", bool true);
                 ("argument", expression argument);
-              ]))
+              ])
+        )
       | (loc, Binary { Binary.left; operator; right; comments }) ->
         node
           ?comments
@@ -542,7 +550,8 @@ with type t = Impl.t = struct
             ( arg_list arguments,
               Flow_ast_utils.merge_comments
                 ~inner:(format_internal_comments args_comments)
-                ~outer:comments )
+                ~outer:comments
+            )
           | None -> (array [], comments)
         in
         node
@@ -571,7 +580,8 @@ with type t = Impl.t = struct
                 { Call.comments; arguments = (_, { ArgList.comments = args_comments; _ }); _ } as
                 call;
               optional;
-            } ) ->
+            }
+        ) ->
         let comments =
           Flow_ast_utils.merge_comments
             ~inner:(format_internal_comments args_comments)
@@ -643,7 +653,8 @@ with type t = Impl.t = struct
             body;
             comments = func_comments;
             sig_loc = _;
-          } ) =
+          }
+        ) =
       let body =
         match body with
         | Function.BodyBlock b -> b
@@ -690,7 +701,8 @@ with type t = Impl.t = struct
             body;
             comments = func_comments;
             sig_loc = _;
-          } ) =
+          }
+        ) =
       let body =
         match body with
         | Function.BodyBlock b -> b
@@ -896,7 +908,8 @@ with type t = Impl.t = struct
         match implements with
         | Some (_, { Class.Implements.interfaces; comments = implements_comments }) ->
           ( array_of_list class_implements interfaces,
-            Flow_ast_utils.merge_comments ~outer:comments ~inner:implements_comments )
+            Flow_ast_utils.merge_comments ~outer:comments ~inner:implements_comments
+          )
         | None -> (array [], comments)
       in
       node
@@ -926,7 +939,8 @@ with type t = Impl.t = struct
         function
         | Method m -> class_method m
         | PrivateField p -> class_private_field p
-        | Property p -> class_property p)
+        | Property p -> class_property p
+      )
     and class_method (loc, { Class.Method.key; value; kind; static; decorators; comments }) =
       let (key, computed, comments) =
         let open Expression.Object.Property in
@@ -937,7 +951,8 @@ with type t = Impl.t = struct
         | Computed (_, { ComputedKey.expression = expr; comments = computed_comments }) ->
           ( expression expr,
             true,
-            Flow_ast_utils.merge_comments ~outer:comments ~inner:computed_comments )
+            Flow_ast_utils.merge_comments ~outer:comments ~inner:computed_comments
+          )
       in
       let kind =
         Class.Method.(
@@ -945,7 +960,8 @@ with type t = Impl.t = struct
           | Constructor -> "constructor"
           | Method -> "method"
           | Get -> "get"
-          | Set -> "set")
+          | Set -> "set"
+        )
       in
       node
         ?comments
@@ -1035,7 +1051,8 @@ with type t = Impl.t = struct
                       "EnumBooleanMember"
                       loc
                       [("id", identifier id); ("init", boolean_literal init)])
-                  members );
+                  members
+              );
               ("explicitType", bool explicit_type);
               ("hasUnknownMembers", bool has_unknown_members);
             ]
@@ -1052,7 +1069,8 @@ with type t = Impl.t = struct
                       "EnumNumberMember"
                       loc
                       [("id", identifier id); ("init", number_literal init)])
-                  members );
+                  members
+              );
               ("explicitType", bool explicit_type);
               ("hasUnknownMembers", bool has_unknown_members);
             ]
@@ -1089,7 +1107,8 @@ with type t = Impl.t = struct
                 array_of_list
                   (fun (loc, { DefaultedMember.id }) ->
                     node "EnumDefaultedMember" loc [("id", identifier id)])
-                  members );
+                  members
+              );
               ("hasUnknownMembers", bool has_unknown_members);
             ]
       in
@@ -1134,7 +1153,8 @@ with type t = Impl.t = struct
               ("typeAnnotation", hint type_annotation annot);
             ]
         | (loc, Identifier pattern_id) -> pattern_identifier loc pattern_id
-        | (_loc, Expression expr) -> expression expr)
+        | (_loc, Expression expr) -> expression expr
+      )
     and function_param (loc, { Ast.Function.Param.argument; default }) =
       match default with
       | Some default ->
@@ -1155,7 +1175,8 @@ with type t = Impl.t = struct
             rest = Some (rest_loc, { Function.RestParam.argument; comments });
             comments = _;
             this_;
-          } ) ->
+          }
+        ) ->
         let rest = node ?comments "RestElement" rest_loc [("argument", pattern argument)] in
         let rev_params = List.rev_map function_param params in
         let params = List.rev (rest :: rev_params) in
@@ -1207,7 +1228,8 @@ with type t = Impl.t = struct
             | Computed (_, { ComputedKey.expression = expr; comments = key_comments }) ->
               ( expression expr,
                 true,
-                Flow_ast_utils.merge_comments ~outer:comments ~inner:key_comments )
+                Flow_ast_utils.merge_comments ~outer:comments ~inner:key_comments
+              )
           in
           node
             ?comments
@@ -1220,7 +1242,8 @@ with type t = Impl.t = struct
               ("method", bool method_);
               ("shorthand", bool shorthand);
               ("computed", bool computed);
-            ])
+            ]
+        )
       | SpreadProperty (loc, { SpreadProperty.argument; comments }) ->
         node ?comments "SpreadProperty" loc [("argument", expression argument)]
     and object_pattern_property =
@@ -1319,7 +1342,8 @@ with type t = Impl.t = struct
             Expression.TemplateLiteral.Element.value =
               { Expression.TemplateLiteral.Element.raw; cooked };
             tail;
-          } ) =
+          }
+        ) =
       let value = obj [("raw", string raw); ("cooked", string cooked)] in
       node "TemplateElement" loc [("value", value); ("tail", bool tail)]
     and tagged_template (loc, { Expression.TaggedTemplate.tag; quasi; comments }) =
@@ -1347,7 +1371,8 @@ with type t = Impl.t = struct
         Variance.(
           match kind with
           | Plus -> string "plus"
-          | Minus -> string "minus")
+          | Minus -> string "minus"
+        )
       in
       node ?comments "Variance" loc [("kind", kind)]
     and _type (loc, t) =
@@ -1379,7 +1404,8 @@ with type t = Impl.t = struct
         | NumberLiteral n -> number_literal_type (loc, n)
         | BigIntLiteral n -> bigint_literal_type (loc, n)
         | BooleanLiteral b -> boolean_literal_type (loc, b)
-        | Exists comments -> exists_type loc comments)
+        | Exists comments -> exists_type loc comments
+      )
     and any_type loc comments = node ?comments "AnyTypeAnnotation" loc []
     and mixed_type loc comments = node ?comments "MixedTypeAnnotation" loc []
     and empty_type loc comments = node ?comments "EmptyTypeAnnotation" loc []
@@ -1400,7 +1426,8 @@ with type t = Impl.t = struct
             return;
             tparams;
             comments = func_comments;
-          } ) =
+          }
+        ) =
       let comments =
         Flow_ast_utils.merge_comments
           ~inner:(format_internal_comments params_comments)
@@ -1483,7 +1510,8 @@ with type t = Impl.t = struct
           else
             fields
         in
-        node ?comments:(format_internal_comments comments) "ObjectTypeAnnotation" loc fields)
+        node ?comments:(format_internal_comments comments) "ObjectTypeAnnotation" loc fields
+      )
     and object_type_property
         ( loc,
           {
@@ -1495,7 +1523,8 @@ with type t = Impl.t = struct
             variance = variance_;
             _method;
             comments;
-          } ) =
+          }
+        ) =
       let key =
         match key with
         | Expression.Object.Property.Literal lit -> literal lit
@@ -1598,7 +1627,8 @@ with type t = Impl.t = struct
             Type.OptionalIndexedAccess.indexed_access =
               { Type.IndexedAccess.comments; _ } as indexed_access;
             optional;
-          } ) =
+          }
+        ) =
       node
         ?comments
         "OptionalIndexedAccessType"
@@ -1640,10 +1670,12 @@ with type t = Impl.t = struct
           ("value", bool value);
           ( "raw",
             string
-              (if value then
+              ( if value then
                 "true"
               else
-                "false") );
+                "false"
+              )
+          );
         ]
     and exists_type loc comments = node ?comments "ExistsTypeAnnotation" loc []
     and type_annotation (loc, ty) = node "TypeAnnotation" loc [("typeAnnotation", _type ty)]
@@ -1660,7 +1692,8 @@ with type t = Impl.t = struct
             bound;
             variance = tp_var;
             default;
-          } ) =
+          }
+        ) =
       node
         ?comments
         "TypeParameter"
@@ -1696,7 +1729,8 @@ with type t = Impl.t = struct
                 Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source (loc, "_"));
               targs = None;
               comments;
-            } )
+            }
+          )
     and jsx_element
         (loc, { JSX.opening_element; closing_element; children = (_loc, children); comments }) =
       node
@@ -1715,7 +1749,8 @@ with type t = Impl.t = struct
             frag_closing_element;
             frag_children = (_loc, frag_children);
             frag_comments;
-          } ) =
+          }
+        ) =
       node
         ?comments:frag_comments
         "JSXFragment"
@@ -1739,7 +1774,8 @@ with type t = Impl.t = struct
       JSX.Opening.(
         function
         | Attribute attribute -> jsx_attribute attribute
-        | SpreadAttribute attribute -> jsx_spread_attribute attribute)
+        | SpreadAttribute attribute -> jsx_spread_attribute attribute
+      )
     and jsx_closing (loc, { JSX.Closing.name }) =
       node "JSXClosingElement" loc [("name", jsx_name name)]
     and jsx_closing_fragment loc = node "JSXClosingFragment" loc []
@@ -1750,13 +1786,15 @@ with type t = Impl.t = struct
         | (loc, Fragment fragment) -> jsx_fragment (loc, fragment)
         | (loc, ExpressionContainer expr) -> jsx_expression_container (loc, expr)
         | (loc, SpreadChild spread) -> jsx_spread_child (loc, spread)
-        | (loc, Text str) -> jsx_text (loc, str))
+        | (loc, Text str) -> jsx_text (loc, str)
+      )
     and jsx_name =
       JSX.(
         function
         | Identifier id -> jsx_identifier id
         | NamespacedName namespaced_name -> jsx_namespaced_name namespaced_name
-        | MemberExpression member -> jsx_member_expression member)
+        | MemberExpression member -> jsx_member_expression member
+      )
     and jsx_attribute (loc, { JSX.Attribute.name; value }) =
       let name =
         match name with
@@ -1768,7 +1806,8 @@ with type t = Impl.t = struct
       JSX.Attribute.(
         function
         | Literal (loc, value) -> literal (loc, value)
-        | ExpressionContainer (loc, expr) -> jsx_expression_container (loc, expr))
+        | ExpressionContainer (loc, expr) -> jsx_expression_container (loc, expr)
+      )
     and jsx_spread_attribute (loc, { JSX.SpreadAttribute.argument; comments }) =
       node ?comments "JSXSpreadAttribute" loc [("argument", expression argument)]
     and jsx_expression_container (loc, { JSX.ExpressionContainer.expression = expr; comments }) =
@@ -1783,7 +1822,9 @@ with type t = Impl.t = struct
                 start = { loc.start with column = loc.start.column + 1 };
                 _end = { loc._end with column = loc._end.column - 1 };
               }
+            
           in
+
           node "JSXEmptyExpression" empty_loc []
       in
       node
@@ -1844,7 +1885,8 @@ with type t = Impl.t = struct
             | Some Statement.ImportDeclaration.ImportTypeof -> string "typeof"
             | Some Statement.ImportDeclaration.ImportValue
             | None ->
-              null );
+              null
+          );
         ]
     and comment_list comments = array_of_list comment comments
     and comment (loc, c) =
@@ -1854,7 +1896,8 @@ with type t = Impl.t = struct
           | { kind = Line; text = s; _ } -> ("Line", s)
           | { kind = Block; text = s; _ } -> ("Block", s)
         in
-        node _type loc [("value", string value)])
+        node _type loc [("value", string value)]
+      )
     and predicate (loc, { Ast.Type.Predicate.kind; comments }) =
       let open Ast.Type.Predicate in
       let (_type, value) =

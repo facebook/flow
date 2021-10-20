@@ -32,7 +32,8 @@ module ListenLoop = LwtLoop.Make (struct
           {
             env with
             connections = Persistent_connection.add_client_to_clients env.connections client_id;
-          });
+          }
+      );
       Lwt.return_unit
     | MonitorProt.DeadPersistentConnection client_id ->
       (* Immediately remove the dead client *)
@@ -41,7 +42,8 @@ module ListenLoop = LwtLoop.Make (struct
           {
             env with
             connections = Persistent_connection.remove_client_from_clients env.connections client_id;
-          });
+          }
+      );
       Lwt.return_unit
     | MonitorProt.FileWatcherNotification { files = changed_files; metadata; initial } ->
       let open LspProt in

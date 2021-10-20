@@ -24,7 +24,8 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
               cx
               ?trace
               (Error_message.EPolarityMismatch
-                 { reason; name; expected_polarity = tp.polarity; actual_polarity = polarity })
+                 { reason; name; expected_polarity = tp.polarity; actual_polarity = polarity }
+              )
       end
     (* No need to walk into tvars, since we're looking for BoundT types, which
      * will certainly never appear in the bounds of a tvar. *)
@@ -115,8 +116,7 @@ module Kit (Flow : Flow_common.S) : Flow_common.CHECK_POLARITY = struct
       Base.Option.iter dict ~f:(check_polarity_dict cx ?trace tparams polarity);
       check_polarity cx ?trace tparams polarity proto_t;
       Base.Option.iter call_t ~f:(check_polarity_call cx ?trace tparams polarity)
-    | UnionT (_, rep) ->
-      List.iter (check_polarity cx ?trace tparams polarity) (UnionRep.members rep)
+    | UnionT (_, rep) -> List.iter (check_polarity cx ?trace tparams polarity) (UnionRep.members rep)
     | IntersectionT (_, rep) ->
       List.iter (check_polarity cx ?trace tparams polarity) (InterRep.members rep)
     | DefT (_, _, PolyT { tparams = tps; t_out = t; _ }) ->

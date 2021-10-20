@@ -84,7 +84,8 @@ let schedule_non_recurring interval =
         it_value = interval (* How long to wait *);
       }
     in
-    ignore (setitimer ITIMER_REAL interval_timer))
+    ignore (setitimer ITIMER_REAL interval_timer)
+  )
 
 external reraise : exn -> 'a = "%reraise"
 
@@ -112,8 +113,7 @@ and schedule ?(exns = []) () =
   ignore (Sys.signal Sys.sigalrm (Sys.Signal_handle ding_fries_are_done));
 
   (* Start the timer back up *)
-  Base.Option.iter timer ~f:(fun t ->
-      schedule_non_recurring (t.target_time -. Unix.gettimeofday ()));
+  Base.Option.iter timer ~f:(fun t -> schedule_non_recurring (t.target_time -. Unix.gettimeofday ()));
 
   (* If we executed more than one callback this time and more than one callback threw an
    * exception, then we just arbitrarily choose one to throw. Oh well :/ *)

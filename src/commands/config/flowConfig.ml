@@ -284,7 +284,8 @@ module Opts = struct
                ::
                (match SMap.find_opt key map with
                | Some values -> values
-               | None -> []))
+               | None -> [])
+              )
               map
           in
           loop (Ok map) rest
@@ -354,7 +355,9 @@ module Opts = struct
             (spf
                "Unsupported value: \"%s\". Supported values are: %s"
                str
-               (String.concat ", " (SMap.keys values))))
+               (String.concat ", " (SMap.keys values))
+            )
+    )
 
   let filepath = opt (fun str -> Ok (Path.make str))
 
@@ -376,7 +379,8 @@ module Opts = struct
         if v < 0 then
           Error "Number cannot be negative!"
         else
-          Ok v)
+          Ok v
+    )
 
   let mapping fn = opt (fun str -> optparse_mapping str >>= fn)
 
@@ -392,7 +396,8 @@ module Opts = struct
         if v then
           Ok opts
         else
-          Error "New check mode can no longer be disabled.")
+          Error "New check mode can no longer be disabled."
+    )
 
   let new_merge_parser = boolean (fun opts v -> Ok { opts with new_merge = v })
 
@@ -416,7 +421,8 @@ module Opts = struct
             ^ v
             ^ "' since it ends with the reserved extension '"
             ^ Files.flow_ext
-            ^ "'")
+            ^ "'"
+            )
         else
           let module_file_exts = SSet.add v opts.module_file_exts in
           Ok { opts with module_file_exts })
@@ -496,7 +502,8 @@ module Opts = struct
         ("dependency", Options.Dependency);
         ("lexical_with_dependency_validation", Options.LexicalWithDependencyValidation);
       ]
-      (fun opts v -> Ok { opts with reorder_checking = v })
+      (fun opts v -> Ok { opts with reorder_checking = v }
+    )
 
   let post_inference_implicit_instantiation_parser =
     boolean (fun opts v -> Ok { opts with run_post_inference_implicit_instantiation = v })
@@ -524,7 +531,8 @@ module Opts = struct
 
   let file_watcher_parser =
     enum [("none", NoFileWatcher); ("dfind", DFind); ("watchman", Watchman)] (fun opts v ->
-        Ok { opts with file_watcher = Some v })
+        Ok { opts with file_watcher = Some v }
+    )
 
   let file_watcher_mergebase_with_parser =
     string (fun opts v -> Ok { opts with file_watcher_mergebase_with = Some v })
@@ -577,7 +585,8 @@ module Opts = struct
         ("watchman", Watchman_DEPRECATED);
         ("none", Non_lazy);
       ]
-      (fun opts v -> Ok { opts with lazy_mode = Some v })
+      (fun opts v -> Ok { opts with lazy_mode = Some v }
+    )
 
   let merge_timeout_parser =
     uint (fun opts v ->
@@ -587,11 +596,13 @@ module Opts = struct
           else
             Some v
         in
-        Ok { opts with merge_timeout })
+        Ok { opts with merge_timeout }
+    )
 
   let module_system_parser =
     enum [("node", Options.Node); ("haste", Options.Haste)] (fun opts v ->
-        Ok { opts with module_system = v })
+        Ok { opts with module_system = v }
+    )
 
   let name_mapper_parser =
     mapping
@@ -627,7 +638,8 @@ module Opts = struct
           Error
             (spf
                "%S is not a valid value for `module.system.node.resolve_dirname`. Each value must be a valid directory name. Maybe try `module.system.node.allow_root_relative=true`?"
-               v)
+               v
+            )
         else
           let node_resolver_dirnames = v :: opts.node_resolver_dirnames in
           Ok { opts with node_resolver_dirnames })
@@ -649,7 +661,8 @@ module Opts = struct
   let react_runtime_parser =
     enum
       [("classic", Options.ReactRuntimeClassic); ("automatic", Options.ReactRuntimeAutomatic)]
-      (fun opts react_runtime -> Ok { opts with react_runtime })
+      (fun opts react_runtime -> Ok { opts with react_runtime }
+    )
 
   let react_server_component_exts_parser =
     string
@@ -662,14 +675,16 @@ module Opts = struct
   let root_name_parser =
     string (fun opts v ->
         FlowEventLogger.set_root_name (Some v);
-        Ok { opts with root_name = Some v })
+        Ok { opts with root_name = Some v }
+    )
 
   let saved_state_fetcher_parser =
     enum
       [
         ("none", Options.Dummy_fetcher); ("local", Options.Local_fetcher); ("fb", Options.Fb_fetcher);
       ]
-      (fun opts saved_state_fetcher -> Ok { opts with saved_state_fetcher })
+      (fun opts saved_state_fetcher -> Ok { opts with saved_state_fetcher }
+    )
 
   let shm_hash_table_pow_parser =
     uint (fun opts shm_hash_table_pow -> Ok { opts with shm_hash_table_pow })
@@ -697,7 +712,8 @@ module Opts = struct
   let trust_mode_parser =
     enum
       [("check", Options.CheckTrust); ("silent", Options.SilentTrust); ("none", Options.NoTrust)]
-      (fun opts trust_mode -> Ok { opts with trust_mode })
+      (fun opts trust_mode -> Ok { opts with trust_mode }
+    )
 
   let env_mode_parser =
     string (fun opts s ->
@@ -722,11 +738,13 @@ module Opts = struct
                 | "ssa" -> Error "\"ssa\" must be the first and only env_mode option if present"
                 | "classic" ->
                   Error "\"classic\" must be the first and only env_mode option if present"
-                | opt -> Error (spf "\"%s\" is not a valid env_mode option" opt))
+                | opt -> Error (spf "\"%s\" is not a valid env_mode option" opt)
+            )
           in
           Base.Result.map
             ~f:(fun options -> { opts with env_mode = Options.ClassicEnv options })
-            options)
+            options
+    )
 
   let env_mode_constrain_write_dirs_parser =
     string
@@ -745,7 +763,8 @@ module Opts = struct
 
   let watchman_defer_states_parser =
     string ~multiple:true (fun opts v ->
-        Ok { opts with watchman_defer_states = v :: opts.watchman_defer_states })
+        Ok { opts with watchman_defer_states = v :: opts.watchman_defer_states }
+    )
 
   let watchman_survive_restarts_parser =
     boolean (fun opts v -> Ok { opts with watchman_survive_restarts = Some v })
@@ -777,7 +796,8 @@ module Opts = struct
       ("experimental.refactor", boolean (fun opts v -> Ok { opts with refactor = Some v }));
       ("experimental.reorder_checking", reorder_checking_parser);
       ( "experimental.run_post_inference_implicit_instantiation",
-        post_inference_implicit_instantiation_parser );
+        post_inference_implicit_instantiation_parser
+      );
       ("experimental.strict_call_arity", enforce_strict_call_arity_parser);
       ("experimental.strict_es6_import_export.excludes", strict_es6_import_export_excludes_parser);
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
@@ -803,7 +823,8 @@ module Opts = struct
       ("gc.worker.window_size", gc_worker_window_size_parser);
       ("relay_integration", boolean (fun opts v -> Ok { opts with relay_integration = v }));
       ( "relay_integration.module_prefix",
-        string (fun opts v -> Ok { opts with relay_integration_module_prefix = Some v }) );
+        string (fun opts v -> Ok { opts with relay_integration_module_prefix = Some v })
+      );
       ("include_warnings", boolean (fun opts v -> Ok { opts with include_warnings = v }));
       ("indexed_access", boolean (fun opts v -> Ok { opts with indexed_access = v }));
       ("lazy_mode", lazy_mode_parser);
@@ -834,7 +855,8 @@ module Opts = struct
       ("recursion_limit", uint (fun opts v -> Ok { opts with recursion_limit = v }));
       ("saved_state.fetcher", saved_state_fetcher_parser);
       ( "saved_state.load_sighashes",
-        boolean (fun opts v -> Ok { opts with saved_state_load_sighashes = v }) );
+        boolean (fun opts v -> Ok { opts with saved_state_load_sighashes = v })
+      );
       ("server.max_workers", uint (fun opts v -> Ok { opts with max_workers = v }));
       ("sharedmemory.hash_table_pow", shm_hash_table_pow_parser);
       ("sharedmemory.heap_size", uint (fun opts shm_heap_size -> Ok { opts with shm_heap_size }));
@@ -944,7 +966,8 @@ end = struct
         if options.weak <> default_options.weak then pp_opt o "weak" (string_of_bool options.weak);
         if options.temp_dir <> default_options.temp_dir then pp_opt o "temp_dir" options.temp_dir;
         if options.include_warnings <> default_options.include_warnings then
-          pp_opt o "include_warnings" (string_of_bool options.include_warnings))
+          pp_opt o "include_warnings" (string_of_bool options.include_warnings)
+      )
 
   let lints o config =
     let lint_severities = config.lint_severities in
@@ -960,7 +983,8 @@ end = struct
   let strict o config =
     Lints.(
       let strict_mode = config.strict_mode in
-      StrictModeSettings.iter (fun kind -> fprintf o "%s\n" (string_of_kind kind)) strict_mode)
+      StrictModeSettings.iter (fun kind -> fprintf o "%s\n" (string_of_kind kind)) strict_mode
+    )
 
   let section_if_nonempty o header f = function
     | [] -> ()
@@ -1078,7 +1102,8 @@ let parse_version lines config =
         ( ln,
           spf
             "Expected version to match %%d.%%d.%%d, with an optional leading ^, got %s"
-            version_str )
+            version_str
+        )
     else
       Ok ({ config with version = Some version_str }, [])
   | _ -> Ok (config, [])
@@ -1153,7 +1178,8 @@ let parse_rollouts config lines =
                       ( line_num,
                         spf
                           "Groups must have unique names. There is more than one %S group"
-                          group_name )
+                          group_name
+                      )
                   else
                     let (enabled_group, disabled_groups) =
                       match enabled_group with
@@ -1169,7 +1195,8 @@ let parse_rollouts config lines =
                   Error
                     ( line_num,
                       "Malformed rollout group. A group should be a percentage and an identifier, "
-                      ^ "like `50% on`" ))
+                      ^ "like `50% on`"
+                    ))
             >>= fun (enabled_group, disabled_groups, pct_total) ->
             if pct_total = 100 then
               if SMap.mem rollout_name rollouts then
@@ -1177,7 +1204,8 @@ let parse_rollouts config lines =
                   ( line_num,
                     spf
                       "Rollouts must have unique names. There already is a %S rollout"
-                      rollout_name )
+                      rollout_name
+                  )
               else
                 match enabled_group with
                 | None -> Error (line_num, "Invariant violation: failed to choose a group")
@@ -1186,13 +1214,17 @@ let parse_rollouts config lines =
             else
               Error
                 ( line_num,
-                  spf "Rollout groups must sum to 100%%. %S sums to %d%%" rollout_name pct_total )
+                  spf "Rollout groups must sum to 100%%. %S sums to %d%%" rollout_name pct_total
+                )
           else
             Error
               ( line_num,
                 "Malformed rollout. A rollout should be an identifier followed by a list of groups, "
-                ^ "like `myRollout=10% on, 50% off`" ))
-      >>= fun rollouts -> Ok { config with rollouts })
+                ^ "like `myRollout=10% on, 50% off`"
+              )
+      )
+      >>= fun rollouts -> Ok { config with rollouts }
+  )
 
 let parse_section config ((section_ln, section), lines) : (config * warning list, error) result =
   match (section, lines) with
@@ -1235,8 +1267,10 @@ let parse =
                 else
                   Error (line_num, spf "Unknown group %S in rollout %S" group_name rollout_name)
             else
-              Ok ((line_num, line) :: acc))
-        >>= fun lines -> Ok ((section_name, Base.List.rev lines) :: acc))
+              Ok ((line_num, line) :: acc)
+        )
+        >>= fun lines -> Ok ((section_name, Base.List.rev lines) :: acc)
+    )
     >>= fun sections -> Ok (config, Base.List.rev sections)
   in
   let process_rollouts config sections =
@@ -1246,7 +1280,8 @@ let parse =
           | ((_, "rollouts"), lines) ->
             rollout_section_lines := Some lines;
             false
-          | _ -> true)
+          | _ -> true
+          )
     in
     parse_rollouts config !rollout_section_lines >>= filter_sections_by_rollout sections
   in

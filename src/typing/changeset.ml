@@ -63,11 +63,13 @@ let include_scopes ids (vars, refis) =
     (fun id -> ISet.mem id ids)
   in
   ( EntryRefSet.filter (fun (scope_id, _, _) -> mem scope_id) vars,
-    RefiRefSet.filter (fun (scope_id, _, _) -> mem scope_id) refis )
+    RefiRefSet.filter (fun (scope_id, _, _) -> mem scope_id) refis
+  )
 
 let include_ops ops (vars, refis) =
   ( EntryRefSet.filter (fun (_, _, op) -> List.mem op ops) vars,
-    RefiRefSet.filter (fun (_, _, op) -> List.mem op ops) refis )
+    RefiRefSet.filter (fun (_, _, op) -> List.mem op ops) refis
+  )
 
 let include_reads = include_ops [Read]
 
@@ -121,7 +123,8 @@ let to_string =
            changed_vars
            []
        in
-       String.concat "; " (List.rev entry_refs))
+       String.concat "; " (List.rev entry_refs)
+      )
   in
   let string_of_changed_refis changed_refis =
     Utils.spf
@@ -129,7 +132,8 @@ let to_string =
       (let refi_refs =
          RefiRefSet.fold (fun refi_ref acc -> string_of_refi_ref refi_ref :: acc) changed_refis []
        in
-       String.concat "; " (List.rev refi_refs))
+       String.concat "; " (List.rev refi_refs)
+      )
   in
   fun (changed_vars, changed_refis) ->
     Utils.spf "%s, %s" (string_of_changed_vars changed_vars) (string_of_changed_refis changed_refis)

@@ -75,7 +75,9 @@ let parse_content file content =
           types = true;
           use_strict = false;
         }
+      
   in
+
   let (ast, _parse_errors) =
     Parser_flow.program_file ~fail:false ~parse_options content (Some file)
   in
@@ -117,7 +119,8 @@ let add_require_tvars =
               let desc = Reason.RCustom mref in
               Nel.iter (add_decl cx m_name desc) locs)
             (require_loc_map module_sig))
-        file_sig.declare_modules)
+        file_sig.declare_modules
+    )
 
 let before_and_after_stmts file_name =
   let content = Sys_utils.cat file_name in
@@ -172,7 +175,8 @@ let before_and_after_stmts file_name =
                 Flow_ast.Statement.Expression.expression = t_expr;
                 directive = None;
                 comments = None;
-              } );
+              }
+          );
         ]
       | e ->
         let e = Exception.wrap e in
@@ -258,7 +262,8 @@ let pp_diff =
           Flow_ast.Program.statements = Base.List.map ~f:none_mapper#statement stmts;
           comments = None;
           all_comments = [];
-        } )
+        }
+      )
     in
     let layout = Js_layout_generator.program ~preserve_docblock:false ~checksum:None prog in
     layout |> Pretty_printer.print ~source_maps:None |> Source.contents

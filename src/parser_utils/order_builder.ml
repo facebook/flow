@@ -34,7 +34,8 @@ struct
                 else
                   acc)
               a
-              l)
+              l
+        )
 
       method! identifier ((loc, _) as id) =
         this#update_convert_acc (Env_api.sources_of_use env loc |> L.LSet.elements);
@@ -46,7 +47,8 @@ struct
           this#update_convert_acc
             (Base.Option.value_exn (Provider_api.providers_of_def providers loc)
             |> snd
-            |> List.map Reason.poly_loc_of_reason);
+            |> List.map Reason.poly_loc_of_reason
+            );
         id
 
       method! statement ((loc, _) as stmt) =
@@ -80,7 +82,10 @@ struct
               if LocSet.exists (Loc.contains (Convert.convert loc)) locs then
                 ISet.add j acc
               else
-                acc) ))
+                acc
+          )
+        )
+    )
 
   let mk_order env statements =
     let deps = calc_index_deps env statements |> IMap.of_list in

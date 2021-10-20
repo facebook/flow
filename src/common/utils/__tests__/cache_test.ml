@@ -31,8 +31,9 @@ end = struct
         was_evaluated = false;
         lazy_val =
           lazy
-            (result.was_evaluated <- true;
-             value);
+            ( result.was_evaluated <- true;
+              value
+            );
       }
     in
     result
@@ -56,7 +57,8 @@ let tests =
            assert_equal ~ctxt 42 result;
            assert_equal ~ctxt true (LazyEvaluationTracker.was_evaluated eval_tracker);
            assert_equal ~ctxt false did_hit;
-           Lwt.return_unit );
+           Lwt.return_unit
+         );
          ( "basic_hit" %>:: fun ctxt ->
            let cache = make_cache () in
            let eval_tracker = LazyEvaluationTracker.make (Lwt.return 42) in
@@ -71,7 +73,8 @@ let tests =
            assert_equal ~ctxt false (LazyEvaluationTracker.was_evaluated eval_tracker);
            assert_equal ~ctxt false first_did_hit;
            assert_equal ~ctxt true second_did_hit;
-           Lwt.return_unit );
+           Lwt.return_unit
+         );
          ( "eviction" %>:: fun ctxt ->
            let cache = make_cache () in
            let%lwt _ = StringCache.with_cache "foo" (lazy (Lwt.return 1)) cache in
@@ -96,7 +99,8 @@ let tests =
            assert_equal ~ctxt 1 result;
            assert_equal ~ctxt true (LazyEvaluationTracker.was_evaluated eval_tracker);
            assert_equal ~ctxt false did_hit;
-           Lwt.return_unit );
+           Lwt.return_unit
+         );
          ( "eviction_last_access" %>:: fun ctxt ->
            let cache = make_cache () in
            let%lwt _ = StringCache.with_cache "foo" (lazy (Lwt.return 1)) cache in
@@ -120,7 +124,8 @@ let tests =
            assert_equal ~ctxt 2 result;
            assert_equal ~ctxt true (LazyEvaluationTracker.was_evaluated eval_tracker);
            assert_equal ~ctxt false did_hit;
-           Lwt.return_unit );
+           Lwt.return_unit
+         );
          ( "clear" %>:: fun ctxt ->
            let cache = make_cache () in
            let eval_tracker = LazyEvaluationTracker.make (Lwt.return 42) in
@@ -136,7 +141,8 @@ let tests =
            assert_equal ~ctxt true (LazyEvaluationTracker.was_evaluated eval_tracker);
            assert_equal ~ctxt false first_did_hit;
            assert_equal ~ctxt false second_did_hit;
-           Lwt.return_unit );
+           Lwt.return_unit
+         );
          ( "remove_entry" %>:: fun ctxt ->
            let cache = make_cache () in
            let%lwt _ = StringCache.with_cache "foo" (lazy (Lwt.return 42)) cache in
@@ -157,5 +163,6 @@ let tests =
            assert_equal ~ctxt false (LazyEvaluationTracker.was_evaluated bar_eval_tracker);
            assert_equal ~ctxt false foo_did_hit;
            assert_equal ~ctxt true bar_did_hit;
-           Lwt.return_unit );
+           Lwt.return_unit
+         );
        ]

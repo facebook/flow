@@ -78,7 +78,8 @@ end = struct
       Loc.(
         let start = { line = loc._end.line + 1; column = 0 } in
         let _end = { line = loc._end.line + 2; column = 0 } in
-        { loc with start; _end })
+        { loc with start; _end }
+      )
     in
     let suppressions =
       SpanMap.add
@@ -322,7 +323,8 @@ let update_suppressions current_suppressions new_suppressions =
 let get_lint_settings severity_cover loc =
   Base.Option.Monad_infix.(
     Loc.source loc >>= fun source ->
-    Utils_js.FilenameMap.find_opt source severity_cover >>= ExactCover.find_opt loc)
+    Utils_js.FilenameMap.find_opt source severity_cover >>= ExactCover.find_opt loc
+  )
 
 (* Filter out lint errors which are definitely suppressed or were never
  * enabled in the first place. *)
@@ -376,6 +378,8 @@ let filter_lints suppressions errors aloc_tables ~include_suppressions severity_
            * A dependency location might be part of the error, and the corresponding
            * suppression is not available from this worker. We need to pass back all
            * errors to be filtered in the master process. *)
-          | _ -> (ErrorSet.add error errors, warnings, suppressions)))
+          | _ -> (ErrorSet.add error errors, warnings, suppressions)
+        ))
       errors
-      (ErrorSet.empty, ErrorSet.empty, suppressions))
+      (ErrorSet.empty, ErrorSet.empty, suppressions)
+  )

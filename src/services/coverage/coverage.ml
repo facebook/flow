@@ -162,7 +162,8 @@ class visitor =
                 self#types_list cx OpOr bounds
             in
             tvar_cache <- IMap.add root_id (Done cov) tvar_cache;
-            cov)
+            cov
+          )
 
     method type_ cx =
       function
@@ -302,7 +303,8 @@ class ['a, 'l, 't] coverage_folder ~(f : 'l -> 't -> 'a -> 'a) ~(init : 'a) =
       match prop with
       | ( loc,
           Property.Method
-            { key = Property.Literal ((_, t), _) | Property.Identifier ((_, t), _); _ } ) ->
+            { key = Property.Literal ((_, t), _) | Property.Identifier ((_, t), _); _ }
+        ) ->
         acc <- f loc t acc;
         prop
       | _ -> prop
@@ -322,7 +324,8 @@ class ['a, 'l, 't] coverage_folder ~(f : 'l -> 't -> 'a -> 'a) ~(init : 'a) =
                   | Ast.Statement.DeclareExportDeclaration.Class
                       (loc, { Ast.Statement.DeclareClass.id = ((_, t), _); _ }) );
               _;
-            } )
+            }
+        )
       | (loc, Ast.Statement.DeclareInterface { Ast.Statement.Interface.id = ((_, t), _); _ })
       | ( loc,
           Ast.Statement.DeclareModule
@@ -331,7 +334,8 @@ class ['a, 'l, 't] coverage_folder ~(f : 'l -> 't -> 'a -> 'a) ~(init : 'a) =
                 ( Ast.Statement.DeclareModule.Identifier ((_, t), _)
                 | Ast.Statement.DeclareModule.Literal ((_, t), _) );
               _;
-            } )
+            }
+        )
       | (loc, Ast.Statement.DeclareTypeAlias { Ast.Statement.TypeAlias.id = ((_, t), _); _ })
       | (loc, Ast.Statement.DeclareOpaqueType { Ast.Statement.OpaqueType.id = ((_, t), _); _ })
       | (loc, Ast.Statement.InterfaceDeclaration { Ast.Statement.Interface.id = ((_, t), _); _ })

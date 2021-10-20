@@ -47,7 +47,8 @@ let get_proc_stat (pid : int) : (proc_stat, string) result =
             (fun _my_pid _comm _state ppid : (proc_stat, string) result ->
               match get_cmdline pid with
               | Ok cmdline -> Ok { cmdline; ppid }
-              | Error err -> Error err)
+              | Error err -> Error err
+          )
         in
         record
       with

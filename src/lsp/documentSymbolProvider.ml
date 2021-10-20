@@ -89,7 +89,8 @@ class visitor =
       fun ~loc ~selection ~name ?detail ~kind g x ->
         let _ =
           this#with_children g x ~f:(fun children ->
-              mk ~loc ~selection ~name ?detail ~kind ~children:(Some children) ())
+              mk ~loc ~selection ~name ?detail ~kind ~children:(Some children) ()
+          )
         in
         ()
 
@@ -117,19 +118,23 @@ class visitor =
       | (loc, Init { key; value; shorthand = _ }) ->
         Base.Option.iter (name_and_loc_of_key key) ~f:(fun (name, selection) ->
             let kind = Lsp.SymbolInformation.Property in
-            this#visit_special_initializer ~loc ~name ~selection ~kind value)
+            this#visit_special_initializer ~loc ~name ~selection ~kind value
+        )
       | (loc, Method { key; value = _ }) ->
         Base.Option.iter (name_and_loc_of_key key) ~f:(fun (name, selection) ->
             let kind = Lsp.SymbolInformation.Method in
-            this#add_with_children ~loc ~selection ~name ~kind super#object_property prop)
+            this#add_with_children ~loc ~selection ~name ~kind super#object_property prop
+        )
       | (loc, Get { key; value = _; comments = _ }) ->
         Base.Option.iter (name_and_loc_of_key key) ~f:(fun (name, selection) ->
             let kind = Lsp.SymbolInformation.Property in
-            this#add_with_children ~loc ~selection ~name ~kind super#object_property prop)
+            this#add_with_children ~loc ~selection ~name ~kind super#object_property prop
+        )
       | (loc, Set { key; value = _; comments = _ }) ->
         Base.Option.iter (name_and_loc_of_key key) ~f:(fun (name, selection) ->
             let kind = Lsp.SymbolInformation.Property in
-            this#add_with_children ~loc ~selection ~name ~kind super#object_property prop));
+            this#add_with_children ~loc ~selection ~name ~kind super#object_property prop
+        ));
       prop
 
     method visit_special_initializer ~loc ~name ~selection ~kind value : unit =

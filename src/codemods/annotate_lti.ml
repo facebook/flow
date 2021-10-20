@@ -129,7 +129,8 @@ module Normalize_this_getPropT = struct
     locs
     |> LSet.elements
     |> List.filter_map (fun loc ->
-           ALoc.of_loc loc |> Typed_ast_utils.find_exact_match_annotation typed_ast)
+           ALoc.of_loc loc |> Typed_ast_utils.find_exact_match_annotation typed_ast
+       )
     |> List.map (fun { T.TypeScheme.type_; _ } -> type_)
     |> build_combined_type ~cctx
 
@@ -254,11 +255,7 @@ let mapper
           let this_locs = find_this_locs expr in
           if not (LSet.is_empty this_locs) then
             let ty_result =
-              Codemod_annotator.get_ty
-                cctx
-                ~preserve_literals
-                ~max_type_size
-                (LSet.choose this_locs)
+              Codemod_annotator.get_ty cctx ~preserve_literals ~max_type_size (LSet.choose this_locs)
             in
             let annot =
               match this#get_annot Loc.none ty_result (Ast.Type.Missing Loc.none) with
@@ -271,7 +268,9 @@ let mapper
                             Generic.id =
                               Generic.Identifier.Unqualified (_, { Ast.Identifier.name = "this"; _ });
                             _;
-                          } ) ) ->
+                          }
+                      )
+                  ) ->
                 (l, flowfixme_ast)
               | Ast.Type.Available annot' -> annot'
               | Ast.Type.Missing _ ->
@@ -287,7 +286,8 @@ let mapper
                 params' with
                 Ast.Function.Params.this_ =
                   Some (Loc.none, Ast.Function.{ annot; ThisParam.comments = None });
-              } )
+              }
+            )
           else
             annotated_params
         else

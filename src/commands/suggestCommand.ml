@@ -40,7 +40,8 @@ let spec =
              "--fail-on-suggest-warnings"
              no_arg
              ~doc:"Fail on suggest warnings (inferred empty type or normalizer failures)"
-        |> anon "file" (optional string));
+        |> anon "file" (optional string)
+      );
   }
 
 let handle_error err =
@@ -149,6 +150,7 @@ let main
         result;
       flush stdout
     | ServerProt.Response.SUGGEST (Error error) -> handle_error error
-    | response -> failwith_bad_response ~request ~response)
+    | response -> failwith_bad_response ~request ~response
+  )
 
 let command = CommandSpec.command spec main

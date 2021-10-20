@@ -23,8 +23,9 @@ module type S = sig
   val providers_of_def :
     info ->
     L.t ->
-    (bool (* Is the def fully-initialized, e.g. not null- or un-initialized *)
-    * L.t Reason.virtual_reason list)
+    ( bool (* Is the def fully-initialized, e.g. not null- or un-initialized *)
+    * L.t Reason.virtual_reason list
+    )
     option
 
   val is_provider_of_annotated : info -> L.t -> bool

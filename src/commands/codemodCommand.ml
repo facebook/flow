@@ -39,7 +39,8 @@ let main (module Runnable : Codemod_runner.RUNNABLE) codemod_flags () =
           input_file;
           base_flag = base_flags;
           anon = filenames;
-        }) =
+        }
+        ) =
     codemod_flags
   in
   initialize_environment ();
@@ -126,7 +127,8 @@ module Annotate_exports_command = struct
           |> flag
                "--default-any"
                no_arg
-               ~doc:"Adds 'any' to all locations where normalization or validation fails");
+               ~doc:"Adds 'any' to all locations where normalization or validation fails"
+        );
     }
 
   let main codemod_flags preserve_literals max_type_size default_any () =
@@ -186,7 +188,8 @@ module Annotate_escaped_generics = struct
           |> flag
                "--default-any"
                no_arg
-               ~doc:"Adds 'any' to all locations where normalization or validation fails");
+               ~doc:"Adds 'any' to all locations where normalization or validation fails"
+        );
     }
 
   let main codemod_flags preserve_literals max_type_size default_any () =
@@ -237,7 +240,8 @@ module Annotate_lti_command = struct
           |> flag
                "--add-this-params"
                no_arg
-               ~doc:"Adds a 'this' parameter and type annotations to functions where necessary");
+               ~doc:"Adds a 'this' parameter and type annotations to functions where necessary"
+        );
     }
 
   let main codemod_flags preserve_literals max_type_size default_any add_this_params () =
@@ -305,7 +309,8 @@ module Annotate_declarations_command = struct
           |> flag
                "--filter-deep-empty"
                no_arg
-               ~doc:"Remove elements from unions that deeply contain inferred empty types");
+               ~doc:"Remove elements from unions that deeply contain inferred empty types"
+        );
     }
 
   let main codemod_flags preserve_literals max_type_size default_any filter_deep_empty () =
@@ -465,7 +470,8 @@ module Annotate_empty_object_command = struct
           |> flag
                "--default-any"
                no_arg
-               ~doc:"Adds 'any' to all locations where normalization or validation fails");
+               ~doc:"Adds 'any' to all locations where normalization or validation fails"
+        );
     }
 
   let main codemod_flags preserve_literals max_type_size default_any () =

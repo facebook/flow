@@ -23,7 +23,8 @@ type t =
   ( (* Success *)
   (ALoc.t option * Type.t) SMap.t,
     (* SuccessModule *)
-  (ALoc.t option * Type.t) SMap.t * Type.t option )
+  (ALoc.t option * Type.t) SMap.t * Type.t option
+  )
   generic_t
 
 let rec merge_type cx =
@@ -106,7 +107,9 @@ let rec merge_type cx =
             FunT
               ( dummy_static reason,
                 dummy_prototype,
-                mk_functiontype reason tins tout ~rest_param ~def_reason:reason ~params_names ) )
+                mk_functiontype reason tins tout ~rest_param ~def_reason:reason ~params_names
+              )
+          )
     end
   | ((DefT (_, _, ObjT o1) as t1), (DefT (_, _, ObjT o2) as t2)) ->
     let map1 = Context.find_props cx o1.props_tmap in
@@ -143,7 +146,8 @@ let rec merge_type cx =
       | (_, UnsealedInFile _) ->
         UnsealedInFile None
       | ( Indexed { key = k1; value = v1; dict_polarity = Polarity.Positive; _ },
-          Indexed { key = k2; value = v2; dict_polarity = Polarity.Positive; _ } ) ->
+          Indexed { key = k2; value = v2; dict_polarity = Polarity.Positive; _ }
+        ) ->
         Indexed
           {
             dict_name = None;
@@ -213,7 +217,8 @@ let rec merge_type cx =
     DefT
       ( locationless_reason (RCustom "array"),
         bogus_trust (),
-        ArrT (ArrayAT (merge_type cx (t1, t2), tuple_types)) )
+        ArrT (ArrayAT (merge_type cx (t1, t2), tuple_types))
+      )
   | (DefT (_, _, ArrT (TupleAT (t1, ts1))), DefT (_, _, ArrT (TupleAT (t2, ts2))))
     when List.length ts1 = List.length ts2 ->
     DefT
@@ -226,7 +231,8 @@ let rec merge_type cx =
     DefT
       ( locationless_reason (RCustom "read only array"),
         bogus_trust (),
-        ArrT (ROArrayAT (merge_type cx (elemt1, elemt2))) )
+        ArrT (ROArrayAT (merge_type cx (elemt1, elemt2)))
+      )
   | (MaybeT (_, t1), MaybeT (_, t2))
   | (MaybeT (_, t1), t2)
   | (t1, MaybeT (_, t2)) ->
@@ -305,7 +311,8 @@ let intersect_members cx members =
          (fun (_, acc) (loc, t) ->
            (* Arbitrarily use the last location encountered *)
            (loc, merge_type cx (acc, t)))
-         (None, Locationless.EmptyT.t |> with_trust bogus_trust))
+         (None, Locationless.EmptyT.t |> with_trust bogus_trust)
+      )
       map
 
 and instantiate_type = function
@@ -339,9 +346,7 @@ let to_command_result = function
       (spf "autocomplete on unexpected type of value %s (please file a task!)" (string_of_ctor t))
   | FailureUnhandledMembers t ->
     Error
-      (spf
-         "autocomplete on unexpected members of value %s (please file a task!)"
-         (string_of_ctor t))
+      (spf "autocomplete on unexpected members of value %s (please file a task!)" (string_of_ctor t))
 
 let find_props cx =
   Context.find_props cx
@@ -353,7 +358,8 @@ let find_props cx =
          | InternalName _
          | InternalModuleName _ ->
            (* TODO we probably should filter out internal names too, but for now keeping behavior the same *)
-           true)
+           true
+     )
   %> NameUtils.display_smap_of_namemap
 
 let resolve_tvar cx (_, id) =
@@ -578,7 +584,8 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
       (List.fold_left
          (fun acc members -> AugmentableSMap.augment acc ~with_bindings:members)
          SMap.empty
-         members)
+         members
+      )
   | Success (UnionT (_, rep)) ->
     (* Union type should autocomplete for only the properties that are in
        * every type in the intersection *)
@@ -590,7 +597,8 @@ let rec extract_members ?(exclude_proto_members = false) cx = function
              | DefT (_, _, (NullT | VoidT))
              | AnyT _ ->
                false
-             | _ -> true)
+             | _ -> true
+             )
       |> Base.List.map ~f:(extract_members_as_map ~exclude_proto_members cx)
       |> intersect_members cx
     in

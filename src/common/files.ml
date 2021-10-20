@@ -168,9 +168,11 @@ let kind_of_path path =
         (Utils_js.spf
            "On Windows, paths must be less than 248 characters for directories and 260 characters for files. This path has %d characters. Skipping %s"
            (String.length path)
-           path)
+           path
+        )
     | Unix_error (e, _, _) ->
-      StatError (Utils_js.spf "Skipping %s: %s\n%!" path (Unix.error_message e)))
+      StatError (Utils_js.spf "Skipping %s: %s\n%!" path (Unix.error_message e))
+  )
 
 let can_read path =
   try
@@ -279,7 +281,8 @@ let make_next_files_following_symlinks
          ~realpath_filter
          ~error_filter
          ~dir_filter
-         paths)
+         paths
+      )
   in
   let symlinks = ref SSet.empty in
   let seen_symlinks = ref SSet.empty in
@@ -632,10 +635,12 @@ let mkdirp path_str perm =
          let new_path_str = Filename.concat path_str part in
          Unix.(
            try mkdir new_path_str perm with
-           | Unix_error (EEXIST, "mkdir", _) -> ());
+           | Unix_error (EEXIST, "mkdir", _) -> ()
+         );
          new_path_str)
        path_prefix
-       parts)
+       parts
+    )
 
 (* Given a path, we want to know if it's in a node_modules/ directory or not. *)
 let is_within_node_modules ~root ~options path =

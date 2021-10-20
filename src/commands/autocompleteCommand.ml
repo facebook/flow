@@ -39,7 +39,8 @@ let spec =
         |> wait_for_recheck_flag
         |> lsp_flag
         |> flag "--imports" no_arg ~doc:"Include suggestions that can be imported from other files"
-        |> anon "args" (optional (list_of string)));
+        |> anon "args" (optional (list_of string))
+      );
   }
 
 (* legacy editor integrations inserted the "AUTO332" token themselves. modern ones give us the
@@ -111,7 +112,8 @@ let autocomplete_response_to_json ~strip_root response =
         ]
     | Ok { ServerProt.Response.Completion.items; is_incomplete = _ } ->
       let results = Base.List.map ~f:(autocomplete_result_to_json ~strip_root) items in
-      JSON_Object [("result", JSON_Array results)])
+      JSON_Object [("result", JSON_Array results)]
+  )
 
 let main base_flags option_values json pretty root strip_root wait_for_recheck lsp imports args () =
   let (filename, contents, cursor_opt) = parse_args args in
@@ -156,8 +158,10 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck l
                ~is_preselect_supported:true
                ~is_label_detail_supported:true
             %> Lsp_fmt.print_completionItem ~key:"<PLACEHOLDER_PROJECT_URL>"
-            %> Hh_json.print_json_endline ~pretty:true)
-            items)
+            %> Hh_json.print_json_endline ~pretty:true
+            )
+            items
+      )
     else if json || pretty then
       results |> autocomplete_response_to_json ~strip_root |> Hh_json.print_json_endline ~pretty
     else (

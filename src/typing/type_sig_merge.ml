@@ -320,7 +320,8 @@ module Make (ConsGen : CONS_GEN) : S = struct
     in
     let enum_id = Context.make_aloc_id file.cx id_loc in
     Type.(
-      DefT (reason, trust, EnumObjectT { enum_id; members; representation_t; has_unknown_members }))
+      DefT (reason, trust, EnumObjectT { enum_id; members; representation_t; has_unknown_members })
+    )
 
   let merge_pattern file = function
     | Pack.PDef i -> Lazy.force (Pattern_defs.get file.pattern_defs i)
@@ -656,8 +657,11 @@ module Make (ConsGen : CONS_GEN) : S = struct
             TypeDestructorT
               ( use_op,
                 reason,
-                Type.PropertyType { name = Reason.OrdinaryName prop; is_indexed_access = false } ),
-            id ))
+                Type.PropertyType { name = Reason.OrdinaryName prop; is_indexed_access = false }
+              ),
+            id
+          )
+      )
     | ElementType { loc; obj; elem } ->
       let reason = Reason.(mk_reason (RType (OrdinaryName "$ElementType")) loc) in
       let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
@@ -669,7 +673,9 @@ module Make (ConsGen : CONS_GEN) : S = struct
           ( obj,
             TypeDestructorT
               (use_op, reason, Type.ElementType { index_type = elem; is_indexed_access = false }),
-            id ))
+            id
+          )
+      )
     | OptionalIndexedAccessNonMaybeType { loc; obj; index } ->
       let reason = Reason.(mk_reason (RIndexedAccess { optional = true }) loc) in
       let object_type = merge file obj in
@@ -689,7 +695,8 @@ module Make (ConsGen : CONS_GEN) : S = struct
       Type.EvalT
         ( object_type,
           Type.TypeDestructorT (use_op, reason, Type.OptionalIndexedAccessNonMaybeType { index }),
-          id )
+          id
+        )
     | OptionalIndexedAccessResultType { loc; non_maybe_result; void_loc } ->
       let reason = Reason.(mk_reason (RIndexedAccess { optional = true }) loc) in
       let void_reason = Reason.(mk_reason RVoid void_loc) in
@@ -699,8 +706,10 @@ module Make (ConsGen : CONS_GEN) : S = struct
           Type.TypeDestructorT
             ( Type.unknown_use (* not used *),
               reason,
-              Type.OptionalIndexedAccessResultType { void_reason } ),
-          Type.Eval.generate_id () )
+              Type.OptionalIndexedAccessResultType { void_reason }
+            ),
+          Type.Eval.generate_id ()
+        )
     | NonMaybeType (loc, t) ->
       let reason = Reason.(mk_reason (RType (OrdinaryName "$NonMaybeType")) loc) in
       let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
@@ -721,7 +730,8 @@ module Make (ConsGen : CONS_GEN) : S = struct
       let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
       Type.(
         EvalT
-          (t1, TypeDestructorT (use_op, reason, RestType (Object.Rest.IgnoreExactAndOwn, t2)), id))
+          (t1, TypeDestructorT (use_op, reason, RestType (Object.Rest.IgnoreExactAndOwn, t2)), id)
+      )
     | ReadOnly (loc, t) ->
       let reason = Reason.(mk_reason RReadOnlyType loc) in
       let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
@@ -1040,7 +1050,8 @@ module Make (ConsGen : CONS_GEN) : S = struct
       let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
       Type.(
         EvalT
-          (t, TypeDestructorT (unknown_use, reason, SpreadType (target, todo_rev, head_slice)), id))
+          (t, TypeDestructorT (unknown_use, reason, SpreadType (target, todo_rev, head_slice)), id)
+      )
     | InlineInterface (loc, def) ->
       let reason = Reason.(mk_annot_reason RInterfaceType loc) in
       let id = ALoc.id_none in
@@ -1631,7 +1642,8 @@ module Make (ConsGen : CONS_GEN) : S = struct
             proto_props;
             static_calls;
             calls;
-          }) =
+          }
+          ) =
       def
     in
     let t targs =

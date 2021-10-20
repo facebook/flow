@@ -49,7 +49,8 @@ let expect_stats ~nonempty ~used =
     let { nonempty_slots; used_slots; slots } = hash_stats () in
     expect_equals ~name:"nonempty_slots" nonempty_slots expected.nonempty_slots;
     expect_equals ~name:"used_slots" used_slots expected.used_slots;
-    expect_equals ~name:"slots" slots expected.slots)
+    expect_equals ~name:"slots" slots expected.slots
+  )
 
 let expect_heap_size count =
   (* Currently a single element takes 40 bytes (1 word header + 4 words data).
@@ -94,10 +95,12 @@ let expect_compact expected =
     ~msg:
       (Printf.sprintf
          "Expected collection to be %sneeded"
-         (if expected then
+         ( if expected then
            ""
          else
-           "not "))
+           "not "
+         )
+      )
     (!actual = expected)
 
 let test_ops () =
@@ -301,7 +304,8 @@ let tests () =
           ignore (handle : SharedMem.handle);
           test ();
           true
-        | Error () -> false )
+        | Error () -> false
+    )
   in
   List.map setup_test list
 

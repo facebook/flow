@@ -65,9 +65,11 @@ let jsonrpcize_notification method_ params =
         ("jsonrpc", JSON_String "2.0");
         ("method", JSON_String method_);
         ("params", JSON_Array params);
-      ])
+      ]
+  )
 
 let jsonrpcize_response id json =
   Hh_json.(
     JSON_Object
-      [("jsonrpc", JSON_String "2.0"); ("id", JSON_Number (string_of_int id)); ("result", json)])
+      [("jsonrpc", JSON_String "2.0"); ("id", JSON_Number (string_of_int id)); ("result", json)]
+  )

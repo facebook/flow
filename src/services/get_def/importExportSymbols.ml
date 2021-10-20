@@ -69,7 +69,8 @@ let find_related_symbol_from_require loc = function
     in
     loc_records
     |> Base.List.find_map ~f:(fun { remote_loc; local_loc } ->
-           if_one_return_other loc remote_loc local_loc)
+           if_one_return_other loc remote_loc local_loc
+       )
   | Require { bindings = Some bindings; require_loc; _ } ->
     find_related_symbol_from_bindings loc require_loc bindings
   | _ -> None

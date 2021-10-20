@@ -402,7 +402,8 @@ module Friendly = struct
         in
         ( hidden_branches,
           error.loc,
-          { group_message = message; group_message_list = []; group_message_post = None } )
+          { group_message = message; group_message_list = []; group_message_post = None }
+        )
       (* Create normal error messages. *)
       | Normal { message; frames; explanations; code = error_code } ->
         (* Add the frames to our error message. *)
@@ -453,7 +454,8 @@ module Friendly = struct
         in
         ( hidden_branches,
           primary_loc,
-          { group_message = message; group_message_list = []; group_message_post = None } )
+          { group_message = message; group_message_list = []; group_message_post = None }
+        )
       (* When we have a speculation error, do some work to create a message
        * group. Flatten out nested speculation errors with no frames. Hide
        * frames with low scores. Use a single message_group if we hide all but
@@ -562,10 +564,11 @@ module Friendly = struct
             Base.List.mapi
               ~f:(fun i message_group ->
                 append_group_message
-                  (if i = 0 then
+                  ( if i = 0 then
                     [text "Either"]
                   else
-                    [text "Or"])
+                    [text "Or"]
+                  )
                   message_group)
               group_message_list
           in
@@ -581,7 +584,8 @@ module Friendly = struct
                 Some
                   (message_of_string
                      "\nOnly showing the the first 50 branches. To see all branches, re-run Flow with --show-all-branches."
-                  @ explanations)
+                  @ explanations
+                  )
               in
               (Base.List.take group_message_list 50, group_message_post)
             else
@@ -589,11 +593,13 @@ module Friendly = struct
                 if List.length explanations > 0 then
                   Some (text "\n" :: explanations @ [text "."])
                 else
-                  None )
+                  None
+              )
           in
           ( hidden_branches,
             error.loc,
-            { group_message = message; group_message_list; group_message_post } ))
+            { group_message = message; group_message_list; group_message_post }
+          ))
     in
     (* Partially apply loop with the state it needs. Have fun! *)
     loop ~hidden_branches:false [] []
@@ -651,7 +657,8 @@ module Friendly = struct
     ( next_id,
       loc_to_id,
       id_to_loc,
-      { group_message; group_message_list = List.rev group_message_list_rev; group_message_post } )
+      { group_message; group_message_list = List.rev group_message_list_rev; group_message_post }
+    )
 
   (* Extracts common location references from a message. In order, each location
    * will be replaced with an integer reference starting at 1. If some reference
@@ -703,14 +710,16 @@ module Friendly = struct
     {
       messages = [BlameM (loc, message)];
       extra =
-        (if not (IMap.is_empty references) then
+        ( if not (IMap.is_empty references) then
           InfoLeaf [(Loc.none, ["References:"])]
           ::
           (references
           |> IMap.bindings
-          |> Base.List.map ~f:(fun (id, loc) -> InfoLeaf [(loc, ["[" ^ string_of_int id ^ "]"])]))
+          |> Base.List.map ~f:(fun (id, loc) -> InfoLeaf [(loc, ["[" ^ string_of_int id ^ "]"])])
+          )
         else
-          []);
+          []
+        );
       error_codes =
         code_of_message error.message |> Base.Option.value_map ~f:(fun code -> [code]) ~default:[];
     }
@@ -741,7 +750,9 @@ let mk_error
         loc;
         root = Base.Option.map root (fun (root_loc, root_message) -> { root_loc; root_message });
         message = Normal { message; frames; explanations; code = error_code };
-      } ))
+      }
+    )
+  )
 
 let mk_speculation_error
     ?(kind = InferError)
@@ -764,7 +775,8 @@ let mk_speculation_error
               Speculation
                 { frames; explanations; branches = erase_branch_codes branches; code = error_code }
           in
-          (score, { loc; root; message }))
+          (score, { loc; root; message })
+      )
     in
     let branches =
       Base.List.map ~f:(fun (score, (_, _, error)) -> (score, error)) speculation_errors
@@ -777,7 +789,9 @@ let mk_speculation_error
         loc;
         root = Base.Option.map root (fun (root_loc, root_message) -> { root_loc; root_message });
         message = Speculation { frames; explanations; branches; code = error_code };
-      } ))
+      }
+    )
+  )
 
 (*******************************)
 
@@ -902,7 +916,8 @@ let read_lines_in_file loc filename stdin_file =
            in
            match lines with
            | [] -> None
-           | first :: rest -> Some (first, rest))
+           | first :: rest -> Some (first, rest)
+         )
        with
       | Invalid_argument _ -> None))
 
@@ -930,7 +945,8 @@ let loc_of_printable_error_for_compare ((_, _, err) : 'a printable_error) =
   Friendly.(
     match err with
     | { root = Some { root_loc; _ }; _ } -> root_loc
-    | { loc; _ } -> loc)
+    | { loc; _ } -> loc
+  )
 
 let locs_of_printable_error =
   let locs_of_message locs message =
@@ -941,14 +957,16 @@ let locs_of_printable_error =
           | Inline _ -> locs
           | Reference (_, loc) -> loc :: locs)
         locs
-        message)
+        message
+    )
   in
   let rec locs_of_friendly_error locs error =
     Friendly.(
       let { loc; root; message } = error in
       let locs =
         Base.Option.value_map root ~default:locs ~f:(fun { root_message; root_loc } ->
-            root_loc :: locs_of_message locs root_message)
+            root_loc :: locs_of_message locs root_message
+        )
       in
       let locs =
         match message with
@@ -957,10 +975,7 @@ let locs_of_printable_error =
             Base.Option.value_map frames ~default:locs ~f:(List.fold_left locs_of_message locs)
           in
           let locs =
-            Base.Option.value_map
-              explanations
-              ~default:locs
-              ~f:(List.fold_left locs_of_message locs)
+            Base.Option.value_map explanations ~default:locs ~f:(List.fold_left locs_of_message locs)
           in
           let locs = locs_of_message locs message in
           locs
@@ -973,7 +988,8 @@ let locs_of_printable_error =
           locs
       in
       let locs = loc :: locs in
-      locs)
+      locs
+    )
   in
   (fun ((_, _, error) : 'loc printable_error) -> locs_of_friendly_error [] error)
 
@@ -994,7 +1010,8 @@ let deprecated_json_props_of_loc ~strip_root loc =
       ("endline", Hh_json.int_ loc._end.line);
       ("start", Hh_json.int_ (loc.start.column + 1));
       ("end", Hh_json.int_ loc._end.column);
-    ])
+    ]
+  )
 
 (* first reason's position, then second reason's position, etc.; if all
    positions match then first message, then second message, etc.
@@ -1042,7 +1059,8 @@ let rec compare compare_loc =
       | (Text s1, Text s2) -> String.compare s1 s2
       | (Text _, Code _) -> 1
       | (Code _, Text _) -> -1
-      | (Code s1, Code s2) -> String.compare s1 s2)
+      | (Code s1, Code s2) -> String.compare s1 s2
+    )
   in
   let compare_message_feature m1 m2 =
     Friendly.(
@@ -1055,13 +1073,15 @@ let rec compare compare_loc =
         if k = 0 then
           compare_lists compare_message_inline m1 m2
         else
-          k)
+          k
+    )
   in
   let compare_friendly_message m1 m2 =
     Friendly.(
       match (m1, m2) with
       | ( Normal { frames = fs1; explanations = ex1; message = m1; code = c1 },
-          Normal { frames = fs2; explanations = ex2; message = m2; code = c2 } ) ->
+          Normal { frames = fs2; explanations = ex2; message = m2; code = c2 }
+        ) ->
         let k = compare_option (compare_lists (compare_lists compare_message_feature)) fs1 fs2 in
         if k = 0 then
           let k = compare_option (compare_lists (compare_lists compare_message_feature)) ex1 ex2 in
@@ -1078,7 +1098,8 @@ let rec compare compare_loc =
       | (Normal _, Speculation _) -> -1
       | (Speculation _, Normal _) -> 1
       | ( Speculation { frames = fs1; explanations = ex1; branches = b1; code = c1 },
-          Speculation { frames = fs2; explanations = ex2; branches = b2; code = c2 } ) ->
+          Speculation { frames = fs2; explanations = ex2; branches = b2; code = c2 }
+        ) ->
         let k = compare_lists (compare_lists compare_message_feature) fs1 fs2 in
         if k = 0 then
           let k = compare_lists (compare_lists compare_message_feature) ex1 ex2 in
@@ -1101,7 +1122,8 @@ let rec compare compare_loc =
           else
             k
         else
-          k)
+          k
+    )
   in
   fun err1 err2 ->
     Friendly.(
@@ -1117,7 +1139,8 @@ let rec compare compare_loc =
           | ({ root = Some _; _ }, { root = None; _ }) -> -1
           | ({ root = None; _ }, { root = Some _; _ }) -> 1
           | ( { root = Some { root_message = rm1; _ }; loc = loc1; message = m1 },
-              { root = Some { root_message = rm2; _ }; loc = loc2; message = m2 } ) ->
+              { root = Some { root_message = rm2; _ }; loc = loc2; message = m2 }
+            ) ->
             let k = compare_lists compare_message_feature rm1 rm2 in
             if k = 0 then
               let k = compare_loc loc1 loc2 in
@@ -1132,7 +1155,8 @@ let rec compare compare_loc =
         else
           k
       else
-        k)
+        k
+    )
 
 module ConcreteLocPrintableErrorSet = Flow_set.Make (struct
   type t = Loc.t printable_error
@@ -1204,10 +1228,11 @@ module Cli_output = struct
           let prefix =
             Printf.sprintf
               ". See%s: "
-              (if is_lib then
+              ( if is_lib then
                 " lib"
               else
-                "")
+                ""
+              )
           in
           let filename =
             if is_lib then
@@ -1354,7 +1379,8 @@ module Cli_output = struct
             @ [comment_style comment]
             @ see_another_file ~is_lib filename
             @ [default_style "\n"]
-        end)
+        end
+    )
 
   let print_message_nice ~strip_root ~severity stdin_file main_file message =
     let (loc, s) = to_pp message in
@@ -1390,7 +1416,9 @@ module Cli_output = struct
             relative_path ~strip_root filename ^ pos
           | Some Builtins
           | None ->
-            ""))
+            ""
+        )
+      )
     in
     (* If the filename is longer then the remaining horizontal line length we
      * put the filename on a new line. Otherwise the filename eats some of the
@@ -1419,7 +1447,8 @@ module Cli_output = struct
             | 0 -> '\xE2'
             | 1 -> '\x94'
             | 2 -> '\x88'
-            | _ -> failwith "unreachable")
+            | _ -> failwith "unreachable"
+        )
       else
         String.make horizontal_line_length '-'
     in
@@ -1429,11 +1458,13 @@ module Cli_output = struct
         (severity_name
         ^ " "
         ^ horizontal_line
-        ^ (if filename_on_newline then
+        ^ ( if filename_on_newline then
             "\n"
           else
-            " ")
-        ^ filename);
+            " "
+          )
+        ^ filename
+        );
       default_style "\n";
     ]
 
@@ -1552,7 +1583,8 @@ module Cli_output = struct
               (let (Opened opened') = opened in
                match tag_kind with
                | Open _ -> IMap.add tag_id opened opened'
-               | Close -> IMap.remove tag_id opened')
+               | Close -> IMap.remove tag_id opened'
+              )
           in
           add_tags colors opened id start end' tags (tag :: tags_acc)
         (* We've found the correct place for start! If there are any tags which
@@ -1659,7 +1691,8 @@ module Cli_output = struct
               let file_tags = FileKeyMap.add source tags file_tags in
               (colors, file_tags))
           (IMap.empty, FileKeyMap.empty)
-          (IMap.bindings references))
+          (IMap.bindings references)
+    )
 
   (* To be used with the result of layout_references.
    *
@@ -1978,7 +2011,8 @@ module Cli_output = struct
                    in
                    List.rev_append message acc)
                []
-               message)
+               message
+            )
         in
         (* Create the indentation for our message. The first line of indentation
          * will contain a bullet character. *)
@@ -1990,7 +2024,8 @@ module Cli_output = struct
         in
         let indentation_first =
           Base.Option.map indentation_space ~f:(fun space ->
-              [default_style (space ^ " " ^ bullet_char ~flags ^ " ")])
+              [default_style (space ^ " " ^ bullet_char ~flags ^ " ")]
+          )
         in
         let indentation =
           Base.Option.map indentation_space ~f:(fun space -> [default_style (space ^ "   ")])
@@ -2002,7 +2037,8 @@ module Cli_output = struct
             ?indentation
             (split_into_words message)
         in
-        message @ [default_style "\n"])
+        message @ [default_style "\n"]
+    )
 
   (* Shows 3 lines of context in both directions from the root location. *)
   let root_context_lines = 3
@@ -2038,7 +2074,8 @@ module Cli_output = struct
         relative_path ~strip_root filename
       | Some Builtins
       | None ->
-        "(builtins)")
+        "(builtins)"
+    )
 
   exception Oh_no_file_contents_have_changed
 
@@ -2140,15 +2177,17 @@ module Cli_output = struct
                       {
                         source = last_loc.source;
                         start =
-                          (if pos_cmp loc.start last_loc.start < 0 then
+                          ( if pos_cmp loc.start last_loc.start < 0 then
                             loc.start
                           else
-                            last_loc.start);
+                            last_loc.start
+                          );
                         _end =
-                          (if pos_cmp loc._end last_loc._end > 0 then
+                          ( if pos_cmp loc._end last_loc._end > 0 then
                             loc._end
                           else
-                            last_loc._end);
+                            last_loc._end
+                          );
                       }
                     in
                     loc :: acc
@@ -2220,7 +2259,9 @@ module Cli_output = struct
                gutter_width := max !gutter_width width;
 
                (* Return the final list of references for the line along with the width. *)
-               (width, references)))
+               (width, references)
+           )
+          )
           file_line_references
       in
       let gutter_width = !gutter_width in
@@ -2298,7 +2339,8 @@ module Cli_output = struct
                                     *)
                                    try
                                      ( String.sub line 0 split,
-                                       String.sub line split (String.length line - split) )
+                                       String.sub line split (String.length line - split)
+                                     )
                                    with
                                    | Invalid_argument _ -> raise Oh_no_file_contents_have_changed
                                  in
@@ -2335,10 +2377,11 @@ module Cli_output = struct
                                @ line_number
                                (* If the line is empty then strip the whitespace which would be
                                 * trailing whitespace anyways. *)
-                               @ (if line = "" then
+                               @ ( if line = "" then
                                    []
                                  else
-                                   [default_style " "])
+                                   [default_style " "]
+                                 )
                                @ code_line
                                @ [default_style "\n"]
                              in
@@ -2373,7 +2416,8 @@ module Cli_output = struct
                      ]
                      :: acc)
                    [code_frame]
-                   code_frames))
+                   code_frames
+                ))
           locs
       in
       (* Get the root code frame from our map of code frames. We will start with
@@ -2412,7 +2456,10 @@ module Cli_output = struct
                   in
                   (header @ code_frame) :: acc)
                 []
-                code_frames)))
+                code_frames
+             )
+          )
+    )
 
   (* ===================================
    * Error Message Colorless Code Frames
@@ -2526,7 +2573,8 @@ module Cli_output = struct
               (* Add a final newline to lines. *)
               let lines = lines ^ "\n" in
               (* Return our final lines string *)
-              lines)
+              lines
+          )
         in
         (* If we were configured to print the filename then add it to our lines
          * before returning. *)
@@ -2543,15 +2591,15 @@ module Cli_output = struct
                 ^ ":"
                 ^ string_of_int (loc.start.column + 1)
               in
-              space ^ filename ^ "\n" ^ lines)
+              space ^ filename ^ "\n" ^ lines
+          )
       in
       (* Print the locations for all of our references. *)
       let references =
         IMap.fold
           (fun id loc acc ->
             let is_root =
-              Base.Option.value_map root_reference_id ~default:false ~f:(fun root_id ->
-                  root_id = id)
+              Base.Option.value_map root_reference_id ~default:false ~f:(fun root_id -> root_id = id)
             in
             (* Skip this reference if either it is a "shadow reference" or it is the
              * reference for the root. *)
@@ -2574,7 +2622,8 @@ module Cli_output = struct
       (* Print the root location. *)
       match print_loc ~with_filename:(references <> "") root_reference_id root_loc with
       | Some root_code -> [default_style (root_code ^ references)]
-      | None -> [default_style references])
+      | None -> [default_style references]
+    )
 
   (* Goes through the process of laying out a friendly error message group by
    * combining our lower level functions like extract_references_intermediate
@@ -2657,7 +2706,8 @@ module Cli_output = struct
       let (colors, tags) = layout_references ~custom_colors id_to_loc in
       (* Return everything we need for printing error messages. *)
       let _ = (next_id, loc_to_id) in
-      (id_to_loc, root_id, colors, tags, message_group))
+      (id_to_loc, root_id, colors, tags, message_group)
+    )
 
   let get_pretty_printed_friendly_error_group
       ~stdin_file ~strip_root ~flags ~severity ~trace ~primary_locs ~message_group =
@@ -2742,11 +2792,14 @@ module Cli_output = struct
                     stdin_file
                     (match file_of_source root_loc.Loc.source with
                     | Some filename -> filename
-                    | None -> "[No file]"))
-               (append_trace_reasons [] trace));
+                    | None -> "[No file]")
+                 )
+               (append_trace_reasons [] trace)
+            );
           (* Next error: *)
           [default_style "\n"];
-        ])
+        ]
+    )
 
   let get_pretty_printed_error
       ~flags ~stdin_file ~strip_root ~severity ~show_all_branches ~on_hidden_branches group =
@@ -2771,7 +2824,8 @@ module Cli_output = struct
         ~trace
         ~primary_locs:(LocSet.singleton primary_loc)
         ~message_group:
-          { group_message = capitalize group_message; group_message_list; group_message_post })
+          { group_message = capitalize group_message; group_message_list; group_message_post }
+    )
 
   let print_styles ~out_channel ~flags styles =
     let styles =
@@ -2908,7 +2962,8 @@ module Json_output = struct
       | Some loc ->
         let offset_table = get_offset_table_expensive ~stdin_file ~offset_kind loc in
         ("loc", Reason.json_of_loc ~strip_root ~offset_table ~catch_offset_errors:true loc)
-        :: deprecated_json_props_of_loc ~strip_root loc))
+        :: deprecated_json_props_of_loc ~strip_root loc)
+    )
 
   (* Returns the first line of the context *)
   let json_of_loc_context ~stdin_file loc =
@@ -2921,11 +2976,13 @@ module Json_output = struct
             let filename = file_of_source loc.source in
             (match read_lines_in_file loc filename stdin_file with
             | Some l -> Some (Nel.hd l)
-            | None -> None))
+            | None -> None)
+          )
       in
       match code_line with
       | None -> JSON_Null
-      | Some context -> JSON_String context)
+      | Some context -> JSON_String context
+    )
 
   let json_of_loc_context_abridged ~stdin_file ~max_len loc =
     Hh_json.(
@@ -2959,12 +3016,15 @@ module Json_output = struct
                 (* floor *)
                 Some
                   (Base.List.sub numbered_lines ~pos:0 ~len:start_len
-                  @ Base.List.sub numbered_lines ~pos:(num_lines - end_len) ~len:end_len)
-            | None -> None))
+                  @ Base.List.sub numbered_lines ~pos:(num_lines - end_len) ~len:end_len
+                  )
+            | None -> None)
+          )
       in
       match code_lines with
       | None -> JSON_Null
-      | Some code_lines -> JSON_Object code_lines)
+      | Some code_lines -> JSON_Object code_lines
+    )
 
   let json_of_loc_with_context ~strip_root ~stdin_file ~offset_kind loc =
     Hh_json.(
@@ -2973,13 +3033,15 @@ module Json_output = struct
         Reason.json_of_loc_props ~strip_root ~offset_table ~catch_offset_errors:true loc
         @ [("context", json_of_loc_context_abridged ~stdin_file ~max_len:5 (Some loc))]
       in
-      JSON_Object props)
+      JSON_Object props
+    )
 
   let json_of_message_with_context ~strip_root ~stdin_file ~offset_kind message =
     Hh_json.(
       let (_, loc) = unwrap_message message in
       let context = ("context", json_of_loc_context ~stdin_file loc) in
-      JSON_Object (context :: json_of_message_props ~stdin_file ~strip_root ~offset_kind message))
+      JSON_Object (context :: json_of_message_props ~stdin_file ~strip_root ~offset_kind message)
+    )
 
   let json_of_infos ~json_of_message infos =
     Hh_json.(JSON_Array (Base.List.map ~f:json_of_message (infos_to_messages infos)))
@@ -2998,7 +3060,9 @@ module Json_output = struct
          | None -> []
          | Some kids ->
            let kids = Base.List.map ~f:(json_of_info_tree ~json_of_message) kids in
-           [("children", JSON_Array kids)])))
+           [("children", JSON_Array kids)])
+        )
+    )
 
   let json_of_classic_error_props ~json_of_message error =
     Hh_json.(
@@ -3017,14 +3081,17 @@ module Json_output = struct
         props
       else
         let extra = Base.List.map ~f:(json_of_info_tree ~json_of_message) extra in
-        ("extra", JSON_Array extra) :: props)
+        ("extra", JSON_Array extra) :: props
+    )
 
   let json_of_message_inline_friendly message_inline =
     Hh_json.(
       Friendly.(
         match message_inline with
         | Text text -> JSON_Object [("kind", JSON_String "Text"); ("text", JSON_String text)]
-        | Code code -> JSON_Object [("kind", JSON_String "Code"); ("text", JSON_String code)]))
+        | Code code -> JSON_Object [("kind", JSON_String "Code"); ("text", JSON_String code)]
+      )
+    )
 
   let json_of_message_friendly message =
     Hh_json.(
@@ -3042,10 +3109,15 @@ module Json_output = struct
                           ("kind", JSON_String "Reference");
                           ("referenceId", JSON_String (string_of_int id));
                           ( "message",
-                            JSON_Array (Base.List.map ~f:json_of_message_inline_friendly inlines) );
+                            JSON_Array (Base.List.map ~f:json_of_message_inline_friendly inlines)
+                          );
                         ];
                     ])
-                message))))
+                message
+             )
+          )
+      )
+    )
 
   let rec json_of_message_group_friendly message_group =
     Hh_json.(
@@ -3066,9 +3138,13 @@ module Json_output = struct
                ("kind", JSON_String "UnorderedList");
                ("message", group_message);
                ( "items",
-                 JSON_Array (Base.List.map ~f:json_of_message_group_friendly group_message_list) );
+                 JSON_Array (Base.List.map ~f:json_of_message_group_friendly group_message_list)
+               );
              ]
-            @ group_message_post)))
+            @ group_message_post
+            )
+      )
+    )
 
   let json_of_references ~strip_root ~stdin_file ~offset_kind references =
     Hh_json.(
@@ -3079,7 +3155,10 @@ module Json_output = struct
                 (string_of_int id, json_of_loc_with_context ~strip_root ~stdin_file ~offset_kind loc)
                 :: acc)
               references
-              [])))
+              []
+           )
+        )
+    )
 
   let json_of_friendly_error_props ~strip_root ~stdin_file ~offset_kind error =
     Hh_json.(
@@ -3110,7 +3189,9 @@ module Json_output = struct
           (* NOTE: These `referenceLocs` can become `relatedLocations` when
            * implementing the LSP error output. *)
           ("referenceLocs", json_of_references ~strip_root ~stdin_file ~offset_kind references);
-        ]))
+        ]
+      )
+    )
 
   let json_of_error_props
       ~strip_root
@@ -3144,8 +3225,10 @@ module Json_output = struct
                JSON_Object
                  [
                    ( "loc",
-                     Reason.json_of_loc ~strip_root ~offset_table ~catch_offset_errors:true loc );
-                 ])
+                     Reason.json_of_loc ~strip_root ~offset_table ~catch_offset_errors:true loc
+                   );
+                 ]
+           )
       in
       let props =
         [
@@ -3163,7 +3246,8 @@ module Json_output = struct
       (* add trace if present *)
       match trace with
       | [] -> []
-      | _ -> [("trace", JSON_Array (Base.List.map ~f:json_of_message trace))])
+      | _ -> [("trace", JSON_Array (Base.List.map ~f:json_of_message trace))]
+    )
 
   let json_of_error_with_context
       ~strip_root ~stdin_file ~version ~severity ~offset_kind (error, suppression_locs) =
@@ -3177,7 +3261,8 @@ module Json_output = struct
          ~json_of_message
          ~severity
          ~suppression_locs
-         error)
+         error
+      )
 
   let json_of_errors_with_context
       ~strip_root
@@ -3237,7 +3322,8 @@ module Json_output = struct
             JSON_String
               (match version with
               | JsonV1 -> "1"
-              | JsonV2 -> "2") );
+              | JsonV2 -> "2")
+          );
           ( "errors",
             json_of_errors_with_context
               ~strip_root
@@ -3247,11 +3333,13 @@ module Json_output = struct
               ~offset_kind
               ~errors
               ~warnings
-              () );
+              ()
+          );
           ("passed", JSON_Bool (ConcreteLocPrintableErrorSet.is_empty errors));
         ]
       in
-      (fun ~profiling_props -> JSON_Object (props @ profiling_props)))
+      (fun ~profiling_props -> JSON_Object (props @ profiling_props))
+    )
 
   let format_errors
       ~out_channel
@@ -3282,7 +3370,8 @@ module Json_output = struct
           output_string out_channel (json_to_multiline res)
         else
           json_to_output out_channel res;
-        flush out_channel)
+        flush out_channel
+    )
 
   let print_errors
       ~out_channel
@@ -3328,7 +3417,8 @@ module Vim_emacs_output = struct
         else if line = loc._end.line && start - end_ = 1 then
           spf "File \"%s\", line %d, character %d" file line start
         else
-          spf "File \"%s\", line %d, characters %d-%d" file line start end_)
+          spf "File \"%s\", line %d, characters %d-%d" file line start end_
+    )
 
   let print_errors =
     let endline s =

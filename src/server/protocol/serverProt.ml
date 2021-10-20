@@ -182,7 +182,8 @@ module Request = struct
           target.start.line
           target.start.column
           target._end.line
-          target._end.column)
+          target._end.column
+      )
     | RAGE { files } -> Printf.sprintf "rage %s" (String.concat " " files)
     | STATUS { client_root = _; include_warnings = _ } -> "status"
     | SUGGEST _ -> "suggest"

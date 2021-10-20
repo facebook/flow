@@ -214,14 +214,18 @@ let equatable = function
         ( _,
           _,
           ( NumT _ | StrT _ | BoolT _ | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _
-          | SymbolT | EnumObjectT _ | EnumT _ ) ),
-      _ )
+          | SymbolT | EnumObjectT _ | EnumT _ )
+        ),
+      _
+    )
   | ( _,
       DefT
         ( _,
           _,
           ( NumT _ | StrT _ | BoolT _ | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _
-          | SymbolT | EnumObjectT _ | EnumT _ ) ) ) ->
+          | SymbolT | EnumObjectT _ | EnumT _ )
+        )
+    ) ->
     false
   | _ -> true
 
@@ -395,7 +399,8 @@ let error_message_kind_of_upper = function
       ( _,
         r,
         ( DefT (_, _, StrT (Literal (_, name)))
-        | GenericT { bound = DefT (_, _, StrT (Literal (_, name))); _ } ) ) ->
+        | GenericT { bound = DefT (_, _, StrT (Literal (_, name))); _ } )
+      ) ->
     Error_message.IncompatibleHasOwnPropT (aloc_of_reason r, Some name)
   | HasOwnPropT (_, r, _) -> Error_message.IncompatibleHasOwnPropT (aloc_of_reason r, None)
   | GetValuesT _ -> Error_message.IncompatibleGetValuesT
@@ -441,7 +446,8 @@ let add_output_generic ~src_cx:cx ~dst_cx ?trace msg =
           |> Error_suppressions.get_lint_settings (Context.severity_cover cx)
           |> Base.Option.value_map ~default:true ~f:(fun lint_settings ->
                  LintSettings.is_explicit lint_kind lint_settings
-                 || LintSettings.get_value lint_kind lint_settings <> Severity.Off)
+                 || LintSettings.get_value lint_kind lint_settings <> Severity.Off
+             )
         | _ -> true
       end
     | _ -> true
@@ -549,7 +555,8 @@ let iter_union ~f cx trace rep u =
   let union_reason i r = replace_desc_reason (RUnionBranching (desc_of_reason r, i)) r in
   UnionRep.members rep
   |> Base.List.iteri ~f:(fun i ->
-         mod_reason_of_t (union_reason i) %> mk_tuple_swapped u %> f cx trace)
+         mod_reason_of_t (union_reason i) %> mk_tuple_swapped u %> f cx trace
+     )
 
 let map_union ~f cx trace rep reason =
   UnionRep.members rep
@@ -680,7 +687,8 @@ let lookup_builtin_strict cx x reason =
   let builtins = Context.builtins cx in
   Builtins.get_builtin builtins x ~on_missing:(fun () ->
       add_output cx (Error_message.EBuiltinLookupFailed { reason; name = Some x });
-      AnyT.error_of_kind UnresolvedName reason)
+      AnyT.error_of_kind UnresolvedName reason
+  )
 
 let lookup_builtin_with_default cx x default =
   let builtins = Context.builtins cx in
@@ -703,9 +711,7 @@ let is_munged_prop_name_with_munge name ~should_munge_underscores =
   Signature_utils.is_munged_property_name name && should_munge_underscores
 
 let is_munged_prop_name cx name =
-  is_munged_prop_name_with_munge
-    name
-    ~should_munge_underscores:(Context.should_munge_underscores cx)
+  is_munged_prop_name_with_munge name ~should_munge_underscores:(Context.should_munge_underscores cx)
 
 let map_obj cx trust o reason_op ~map_t ~map_field =
   let props_tmap =
@@ -813,7 +819,8 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
         ~trace
         (Error_message.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
       Base.Option.iter errs_ref ~f:(fun errs_ref ->
-          errs_ref := Context.ETooManyTypeArgs (reason_arity, maximum_arity) :: !errs_ref)
+          errs_ref := Context.ETooManyTypeArgs (reason_arity, maximum_arity) :: !errs_ref
+      )
     );
     let (map, _) =
       Nel.fold_left
@@ -830,7 +837,8 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
                 ~trace
                 (Error_message.ETooFewTypeArgs (reason_tapp, reason_arity, minimum_arity));
               Base.Option.iter errs_ref ~f:(fun errs_ref ->
-                  errs_ref := Context.ETooFewTypeArgs (reason_arity, minimum_arity) :: !errs_ref);
+                  errs_ref := Context.ETooFewTypeArgs (reason_arity, minimum_arity) :: !errs_ref
+              );
               (AnyT (reason_op, AnyError None), [])
             | (_, t :: ts) -> (t, ts)
           in
@@ -886,7 +894,8 @@ module Instantiation_kit (H : Instantiation_helper_sig) = struct
                  let msg =
                    Error_message.ETooFewTypeArgs (reason_tapp, reason_arity, maximum_arity)
                  in
-                 add_output cx ~trace msg);
+                 add_output cx ~trace msg
+               );
         t)
 
   (* Instantiate a polymorphic definition by creating fresh type arguments. *)
@@ -1110,7 +1119,8 @@ module ImportTypeofT_kit (F : Import_export_helper_sig) = struct
               tparams = typeparams;
               t_out = (DefT (_, _, ClassT _) | DefT (_, _, FunT _)) as lower_t;
               id;
-            } ) ->
+            }
+        ) ->
       let typeof_t = F.mk_typeof_annotation cx ~trace reason lower_t in
       F.return
         ~use_op:unknown_use
@@ -1120,7 +1130,8 @@ module ImportTypeofT_kit (F : Import_export_helper_sig) = struct
            id
            tparams_loc
            typeparams
-           (DefT (reason, bogus_trust (), TypeT (ImportTypeofKind, typeof_t))))
+           (DefT (reason, bogus_trust (), TypeT (ImportTypeofKind, typeof_t)))
+        )
     | DefT (_, _, TypeT _)
     | DefT (_, _, PolyT { t_out = DefT (_, _, TypeT _); _ }) ->
       add_output cx ~trace (Error_message.EImportTypeAsTypeof (reason, export_name));
@@ -1620,7 +1631,8 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
         cx
         ~trace
         (Error_message.EEnumInvalidMemberAccess
-           { member_name = Some member_name; suggestion; reason = member_reason; enum_reason });
+           { member_name = Some member_name; suggestion; reason = member_reason; enum_reason }
+        );
       F.return cx trace ~use_op:unknown_use (AnyT.error access_reason)
     in
     (* We guarantee in the parser that enum member names won't start with lowercase
@@ -1728,10 +1740,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
           F.return cx trace ~use_op:unknown_use (Unsoundness.why ComputedNonLiteralKey reason_op)
         | _ ->
           let reason_prop = reason_of_t elem_t in
-          add_output
-            cx
-            ~trace
-            (Error_message.EObjectComputedPropertyAccess (reason_op, reason_prop));
+          add_output cx ~trace (Error_message.EObjectComputedPropertyAccess (reason_op, reason_prop));
           F.error_type reason_op))
 end
 
@@ -1776,7 +1785,8 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
                            reason_op = reason_tup;
                            length = List.length ts;
                            index = index_string;
-                         });
+                         }
+                      );
                     (true, AnyT.error (mk_reason RTupleOutOfBoundsAccess (aloc_of_reason reason)))
                   ) else
                     (true, value)
@@ -1788,7 +1798,8 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
                   cx
                   ~trace
                   (Error_message.ETupleNonIntegerIndex
-                     { use_op; reason = index_reason; index = index_string });
+                     { use_op; reason = index_reason; index = index_string }
+                  );
                 (true, AnyT.error reason)
               ) else
                 (true, value)
@@ -1796,13 +1807,14 @@ let array_elem_check ~write_action cx trace l use_op reason reason_tup arrtype =
       end
     | _ -> (false, value)
   in
-  (if is_index_restricted && (not can_write_tuple) && write_action then
+  ( if is_index_restricted && (not can_write_tuple) && write_action then
     let error =
       match ts with
       | Some _ -> Error_message.ETupleUnsafeWrite { reason; use_op }
       | None -> Error_message.EROArrayWrite ((reason, reason_tup), use_op)
     in
-    add_output cx ~trace error);
+    add_output cx ~trace error
+  );
   (value, is_tuple)
 
 let propref_for_elem_t ?on_named_prop = function

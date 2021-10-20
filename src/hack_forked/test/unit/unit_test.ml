@@ -52,10 +52,11 @@ let for_all_non_shortcircuit tests f =
 let run_all (tests : (string * (unit -> bool)) list) =
   Exception.record_backtrace true;
   Caml.exit
-    (if for_all_non_shortcircuit tests run then
+    ( if for_all_non_shortcircuit tests run then
       0
     else
-      1)
+      1
+    )
 
 let run_only tests names =
   let f =

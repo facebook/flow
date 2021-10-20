@@ -63,7 +63,8 @@ let set_get_refs_hook ~reader potential_refs potential_matching_literals target_
       | (Some loc, DefT (_, _, ObjT _)) ->
         let entry = (loc, obj2) in
         potential_matching_literals := entry :: !potential_matching_literals
-      | _ -> ())
+      | _ -> ()
+    )
   in
   Type_inference_hooks_js.set_member_hook (hook false);
   Type_inference_hooks_js.set_call_hook (hook ());
@@ -81,12 +82,14 @@ let type_matches_locs ~reader cx ty prop_def_info name =
                (* Only take the first extracted def loc -- that is, the one for the actual definition
                 * and not overridden implementations, and compare it to the list of def locs we are
                 * interested in *)
-               loc = Nel.hd ty_def_locs)
+               loc = Nel.hd ty_def_locs
+             )
     | FoundObject loc ->
       prop_def_info
       |> Nel.exists (function
              | Class _ -> false
-             | Object def_loc -> loc = def_loc)
+             | Object def_loc -> loc = def_loc
+             )
     | FoundUnion def_locs -> def_locs |> Nel.map def_loc_matches_locs |> Nel.fold_left ( || ) false
     (* TODO we may want to surface AnyType results somehow since we can't be sure whether they
      * are references or not. For now we'll leave them out. *)
@@ -103,13 +106,15 @@ let process_prop_refs ~reader cx potential_refs file_key prop_def_info name =
   |> Base.List.map ~f:(fun (ref_loc, ty) ->
          type_matches_locs ~reader cx ty prop_def_info name >>| function
          | true -> Some (loc_of_aloc ~reader ref_loc)
-         | false -> None)
+         | false -> None
+     )
   |> Result.all
   |> Result.map_error ~f:(fun err ->
          Printf.sprintf
            "Encountered while finding refs in `%s`: %s"
            (File_key.to_string file_key)
-           err)
+           err
+     )
   >>| fun refs -> refs |> Base.List.filter_opt |> add_ref_kind FindRefsTypes.PropertyAccess
 
 let property_find_refs_in_file ~reader options ast_info file_key def_info name =
@@ -174,7 +179,8 @@ let export_find_refs_in_file ~reader ast_info file_key def_loc =
       else
         locs
     in
-    Ok locs)
+    Ok locs
+  )
 
 let add_related_bindings file_sig scope_info refs =
   let locs = Base.List.map ~f:snd refs in
@@ -220,7 +226,8 @@ let find_refs_in_multiple_files ~reader genv all_deps def_info =
                  get_ast_result ~reader dep >>= fun ast_info ->
                  let (ast, _, _) = ast_info in
                  let scope_info = Scope_builder.program ~with_types:true ast in
-                 find_refs_in_file ~reader options ast_info scope_info dep def_info)
+                 find_refs_in_file ~reader options ast_info scope_info dep def_info
+             )
         end
       ~merge:(fun refs acc -> List.rev_append refs acc)
       ~neutral:[]
@@ -301,7 +308,8 @@ let find_related_defs_in_file ~reader options name file =
           class_locs
           |> Nel.to_list
           |> Base.List.map ~f:(fun class_loc -> (Class class_loc, Object obj_loc))
-        | _ -> [])
+        | _ -> []
+    )
     (* TODO union types *)
   in
   let related_types : (Type.t * Type.t) list ref = ref [] in

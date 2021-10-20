@@ -27,7 +27,8 @@ let action_tvars cx =
     | FlowAction (t1, _) -> f cx t1 IMap.empty
     | UnifyAction (_, t1, t2) -> f cx t1 (f cx t2 IMap.empty)
     | UnsealedObjectProperty _ -> failwith "unsealed object property writes are always benign"
-    | ErrorAction _ -> failwith "tvars of error actions don't make sense")
+    | ErrorAction _ -> failwith "tvars of error actions don't make sense"
+  )
 
 let eq_t (t, t_) = TypeUtil.reasonless_compare t t_ = 0
 

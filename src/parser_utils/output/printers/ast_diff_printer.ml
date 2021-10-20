@@ -81,7 +81,8 @@ let text_of_node ~opts = layout_of_node ~opts %> text_of_layout
 let is_statement_list =
   Base.List.for_all ~f:(function
       | Statement _ -> true
-      | _ -> false)
+      | _ -> false
+      )
 
 let text_of_statement_list ~opts nodes =
   let statements_with_parents =
@@ -164,7 +165,10 @@ let rec edits_of_changes ?(opts = Js_layout_generator.default_opts) changes =
           Expression
             ( (new_loc, _),
               StatementParentOfExpression
-                (_, (Flow_ast.Statement.Expression _ as expression_statement)) ) ) )
+                (_, (Flow_ast.Statement.Expression _ as expression_statement))
+            )
+        )
+    )
     :: (loc2, Delete _) :: tl
     when Loc.contains new_loc (Loc.btwn loc1 loc2) ->
     edits_of_changes
@@ -172,5 +176,6 @@ let rec edits_of_changes ?(opts = Js_layout_generator.default_opts) changes =
       (( new_loc,
          Replace (old_node, Statement ((new_loc, expression_statement), TopLevelParentOfStatement))
        )
-       :: tl)
+       :: tl
+      )
   | hd :: tl -> edit_of_change ~opts hd :: edits_of_changes ~opts tl

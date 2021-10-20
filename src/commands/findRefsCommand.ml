@@ -35,7 +35,8 @@ let spec =
              "--multi-hop"
              no_arg
              ~doc:"Include references on related object types (implies `--global`; experimental)"
-        |> anon "args" (required (list_of string)));
+        |> anon "args" (required (list_of string))
+      );
   }
 
 let parse_args path args =
@@ -47,7 +48,8 @@ let parse_args path args =
     | [line; column] ->
       ( get_file_from_filename_or_stdin path ~cmd:CommandSpec.(spec.name) None,
         int_of_string line,
-        int_of_string column )
+        int_of_string column
+      )
     | _ ->
       CommandSpec.usage spec;
       Exit.(exit Commandline_usage_error)
@@ -70,7 +72,8 @@ let print_json result ~stdin_file ~pretty ~strip_root =
             );
           ]
     in
-    print_json_endline ~pretty json)
+    print_json_endline ~pretty json
+  )
 
 let to_string result ~strip_root =
   let locs =

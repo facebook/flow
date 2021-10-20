@@ -28,11 +28,13 @@ let fetch ~options =
         in
         Lwt.return
           (Saved_state_fetcher.Saved_state
-             { saved_state_filename = Path.make saved_state_file; changed_files })
+             { saved_state_filename = Path.make saved_state_file; changed_files }
+          )
       else (
         if not saved_state_exists then Hh_logger.error "File %S does not exist" saved_state_file;
         if not input_file_exists then
           Hh_logger.error "File %S does not exist" changed_files_input_file;
 
         Lwt.return Saved_state_fetcher.Saved_state_error
-      ))
+      )
+  )

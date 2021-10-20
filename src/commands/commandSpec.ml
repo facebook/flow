@@ -99,8 +99,7 @@ module ArgSpec = struct
             let i =
               try int_of_string x with
               | Failure _ ->
-                raise
-                  (Failed_to_parse (name, Utils_js.spf "expected an unsigned integer, got %S" x))
+                raise (Failed_to_parse (name, Utils_js.spf "expected an unsigned integer, got %S" x))
             in
             if i < 0 then
               raise (Failed_to_parse (name, Utils_js.spf "expected an unsigned integer, got %S" x))
@@ -124,7 +123,9 @@ module ArgSpec = struct
                      ( name,
                        Utils_js.spf
                          "expected one of: %s"
-                         (String.concat ", " (Base.List.map ~f:fst values)) ))
+                         (String.concat ", " (Base.List.map ~f:fst values))
+                     )
+                  )
             end
           | _ -> None);
       arg = Arg;
@@ -175,7 +176,9 @@ module ArgSpec = struct
                        "wrong type for required argument%s"
                        (match value with
                        | Some [x] -> ": " ^ x
-                       | _ -> "") ))
+                       | _ -> "")
+                   )
+                )
             | Some result -> result));
       arg = arg_type.arg;
     }
@@ -203,8 +206,10 @@ module ArgSpec = struct
                    | None ->
                      raise
                        (Failed_to_parse
-                          (name, Utils_js.spf "wrong type for argument list item: %s" x)))
-                 values));
+                          (name, Utils_js.spf "wrong type for argument list item: %s" x)
+                       ))
+                 values
+              ));
       arg = Arg_List;
     }
 
@@ -221,7 +226,8 @@ module ArgSpec = struct
                    | None ->
                      raise (Failed_to_parse (name, Utils_js.spf "wrong type for value: %s" arg))
                    | Some result -> result)
-                 args)
+                 args
+              )
           | _ -> None);
       arg = Arg;
     }

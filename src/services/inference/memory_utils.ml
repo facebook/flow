@@ -61,7 +61,10 @@ let with_memory_timer_lwt =
            |> Base.Option.iter ~f:(fun delta ->
                   getter "worker_rss_hwm_delta"
                   |> Base.Option.iter ~f:(fun hwm_delta ->
-                         P.add_memory ~group ~metric ~start ~delta ~hwm_delta profiling)))
+                         P.add_memory ~group ~metric ~start ~delta ~hwm_delta profiling
+                     )
+              )
+       )
   in
   let sample_memory timer profiling ~cgroup_stats ~hash_stats ~heap_size =
     P.sample_memory profiling ~group:timer ~metric:"heap" ~value:(float heap_size);

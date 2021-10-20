@@ -77,7 +77,8 @@ module ExportSet = struct
            pp_export fmt elt;
            true)
          false
-         elements);
+         elements
+      );
     (match elements with
     | [] -> ()
     | _ -> Format.fprintf fmt " ");

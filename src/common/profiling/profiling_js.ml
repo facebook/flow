@@ -111,7 +111,8 @@ end = struct
     Unix.(
       let tm = times () in
       (* Warning - cutime and cstime (children times) don't work on Windows *)
-      (tm.tms_utime +. tm.tms_cutime, tm.tms_stime +. tm.tms_cstime))
+      (tm.tms_utime +. tm.tms_cutime, tm.tms_stime +. tm.tms_cstime)
+    )
 
   let worker_times () =
     let worker_user_time =
@@ -307,7 +308,8 @@ end = struct
     let (parent_timer, running_timer) = prepare_timer ~timer ~running in
     Lwt.finalize f (fun () ->
         finalize_timer ~should_print ~timer ~running_timer ~parent_timer ~running;
-        Lwt.return_unit)
+        Lwt.return_unit
+    )
 
   let with_timer ?(should_print = false) ~timer ~f running =
     let (parent_timer, running_timer) = prepare_timer ~timer ~running in
@@ -335,7 +337,8 @@ end = struct
         [
           ("start_age", JSON_Number (Dtoa.ecma_string_of_float start_age));
           ("duration", JSON_Number (Dtoa.ecma_string_of_float duration));
-        ])
+        ]
+    )
 
   let total_cpu_time info = info.cpu_user +. info.cpu_nice_user +. info.cpu_system +. info.cpu_idle
 
@@ -359,7 +362,8 @@ end = struct
             ("system", JSON_Number (Dtoa.ecma_string_of_float info.cpu_system));
             ("idle", JSON_Number (Dtoa.ecma_string_of_float info.cpu_idle));
             ("usage", JSON_Number (Dtoa.ecma_string_of_float info.cpu_usage));
-          ])
+          ]
+    )
 
   (* This function solves the problem of having multiple sibling timers (timers with the same
    * parent) with the same name. Our JSON representation is an object keyed by the name of the
@@ -484,12 +488,14 @@ end = struct
                     ("done", json_of_time_measurement worker_wall_times.worker_done);
                     ("gc_minor", json_of_time_measurement worker_wall_times.worker_gc_minor);
                     ("gc_major", json_of_time_measurement worker_wall_times.worker_gc_major);
-                  ] );
+                  ]
+              );
               ("sub_results", sub_results);
               ("samples", JSON_Number (string_of_int sample_count));
             ]
       in
-      (timer_name, JSON_Object fields))
+      (timer_name, JSON_Object fields)
+    )
 
   (* This will return a JSON object which is a map from the timer name to the timer's results. This
    * makes it easy for tools like Scuba to query for timing.results.Parsing.wall.duration or
@@ -664,7 +670,8 @@ end = struct
           result.worker_wall_times.worker_idle.duration,
           result.worker_wall_times.worker_done.duration,
           result.worker_wall_times.worker_gc_minor.duration,
-          result.worker_wall_times.worker_gc_major.duration )
+          result.worker_wall_times.worker_gc_major.duration
+        )
       in
       print_summary_single_raw key (result.wall.duration, sum_cpu result, worker_wall_times) total
     in
@@ -677,7 +684,8 @@ end = struct
       in
       let ( wall_end,
             cpu_end,
-            (run_end, read_end, send_end, idle_end, done_end, gc_minor_end, gc_major_end) ) =
+            (run_end, read_end, send_end, idle_end, done_end, gc_minor_end, gc_major_end)
+          ) =
         last_end
       in
       let unknown_wall = wall_start_age -. wall_end in
@@ -690,7 +698,8 @@ end = struct
             idle_start -. idle_end,
             done_start -. done_end,
             gc_minor_start -. gc_minor_end,
-            gc_major_start -. gc_major_end )
+            gc_major_start -. gc_major_end
+          )
         in
         print_summary_single_raw
           (indent ^ "<Unknown>")
@@ -719,7 +728,8 @@ end = struct
           idle_duration,
           done_duration,
           gc_minor_duration,
-          gc_major_duration )
+          gc_major_duration
+        )
       in
       let worker_end =
         ( run_start +. run_duration,
@@ -728,7 +738,8 @@ end = struct
           idle_start +. idle_duration,
           done_start +. done_duration,
           gc_minor_start +. gc_minor_duration,
-          gc_major_start +. gc_major_duration )
+          gc_major_start +. gc_major_duration
+        )
       in
       (worker_last, worker_remaining, worker_end)
     in
@@ -753,7 +764,8 @@ end = struct
           List.fold_left
             (print_result_rows ~indent:new_indent ~total)
             ( (result.wall.start_age, sum_cpu_start_age result, result_worker_starts),
-              (result.wall.duration, sum_cpu result, result_worker_durations) )
+              (result.wall.duration, sum_cpu result, result_worker_durations)
+            )
             result.sub_results
         in
         (* Print an <Unknown> row if there's too much time between the last section and the end of
@@ -763,7 +775,8 @@ end = struct
           last_end
           ( result.wall.start_age +. result.wall.duration,
             sum_cpu_start_age result +. sum_cpu result,
-            result_worker_end )
+            result_worker_end
+          )
           total;
 
         (* Print the unknown totals *)
@@ -773,7 +786,8 @@ end = struct
       let last_end =
         ( result.wall.start_age +. result.wall.duration,
           sum_cpu_start_age result +. sum_cpu result,
-          result_worker_end )
+          result_worker_end
+        )
       in
       let remaining =
         let wall_remaining = wall_remaining -. result.wall.duration in
@@ -786,7 +800,8 @@ end = struct
             idle -. result.worker_wall_times.worker_idle.duration,
             done_ -. result.worker_wall_times.worker_done.duration,
             gc_minor -. result.worker_wall_times.worker_gc_minor.duration,
-            gc_major -. result.worker_wall_times.worker_gc_major.duration )
+            gc_major -. result.worker_wall_times.worker_gc_major.duration
+          )
         in
         (wall_remaining, cpu_remaining, worker_remaining)
       in
@@ -827,7 +842,8 @@ end = struct
         let start =
           ( total.wall.start_age +. total.wall.duration,
             sum_cpu_start_age total +. sum_cpu total,
-            worker_end )
+            worker_end
+          )
         in
         print_unknown ~indent last_end start total
       in
@@ -974,8 +990,10 @@ end = struct
                           ("start", JSON_Number (Dtoa.ecma_string_of_float v.start));
                           ("delta", JSON_Number (Dtoa.ecma_string_of_float v.delta));
                           ( "hwm_delta",
-                            JSON_Number (Dtoa.ecma_string_of_float v.high_water_mark_delta) );
-                        ] )
+                            JSON_Number (Dtoa.ecma_string_of_float v.high_water_mark_delta)
+                          );
+                        ]
+                    )
                     :: props)
                   group
                   []
@@ -992,11 +1010,13 @@ end = struct
             JSON_Object
               (List.map
                  (fun result -> (result.finished_label, to_json ~abridged:false result))
-                 finished_memory.finished_sub_results)
+                 finished_memory.finished_sub_results
+              )
           in
           ("sub_results", sub_results) :: object_props
       in
-      JSON_Object object_props)
+      JSON_Object object_props
+    )
 
   let print_summary_memory_table =
     let pretty_num f =
@@ -1039,7 +1059,8 @@ end = struct
       Base.Option.iter (SMap.find_opt group_name finished_results) ~f:(fun group ->
           let indent_str = String.make (String.length header_without_section + indent - 2) ' ' in
           Printf.eprintf "%s== %s ==\n%!" indent_str group_name;
-          SMap.iter (print_summary_single ~indent:(indent + 2)) group)
+          SMap.iter (print_summary_single ~indent:(indent + 2)) group
+      )
     in
     let print_header label =
       let label = Printf.sprintf "%s Memory Stats" label in
@@ -1103,7 +1124,9 @@ let with_profiling_lwt ~label ~should_print_summary f =
             (* We don't really need to wrap this in a finalize, because if this throws no one will ever
              * read the profiling info, so there's really nothing we need to do in the exceptional case
              *)
-            f profile))
+            f profile
+        )
+    )
   in
   let finished_profile = { finished_timing; finished_memory } in
   if should_print_summary then print_summary finished_profile;
@@ -1125,7 +1148,8 @@ let total_memory_group = "TOTAL"
 let sample_memory ?group ~metric ~value profile =
   Memory.sample_memory ~group:total_memory_group ~metric ~value profile.running_memory;
   Base.Option.iter group ~f:(fun group ->
-      Memory.sample_memory ~group ~metric ~value profile.running_memory)
+      Memory.sample_memory ~group ~metric ~value profile.running_memory
+  )
 
 let add_memory ?group ~metric ~start ~delta ~hwm_delta profile =
   Memory.add_memory
@@ -1136,7 +1160,8 @@ let add_memory ?group ~metric ~start ~delta ~hwm_delta profile =
     ~hwm_delta
     profile.running_memory;
   Base.Option.iter group ~f:(fun group ->
-      Memory.add_memory ~group ~metric ~start ~delta ~hwm_delta profile.running_memory)
+      Memory.add_memory ~group ~metric ~start ~delta ~hwm_delta profile.running_memory
+  )
 
 let to_json_properties profile =
   [

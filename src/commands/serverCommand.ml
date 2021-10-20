@@ -29,7 +29,8 @@ let spec =
         |> no_restart_flag
         |> file_watcher_flag
         |> no_cgroup_flag
-        |> anon "root" (optional string));
+        |> anon "root" (optional string)
+      );
     usage =
       Printf.sprintf
         "Usage: %s server [OPTION]... [ROOT]\n\nRuns a Flow server in the foreground.\n\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be the current directory if unspecified.\n"

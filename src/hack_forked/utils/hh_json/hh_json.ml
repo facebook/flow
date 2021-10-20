@@ -390,7 +390,8 @@ module Make_streamer (Out : Output_stream_intf) = struct
       concat_elt buf elt;
       List.iter elts (fun e ->
           Out.add_string buf sep;
-          concat_elt buf e));
+          concat_elt buf e
+      ));
     Out.add_string buf rb
 
   let escape b s =
@@ -433,10 +434,11 @@ module Make_streamer (Out : Output_stream_intf) = struct
     | JSON_Bool b ->
       Out.add_string
         buf
-        (if b then
+        ( if b then
           "true"
         else
-          "false")
+          "false"
+        )
     | JSON_Null -> Out.add_string buf "null"
 
   and add_assoc ~sort_keys (buf : Out.t) (k, v) =
@@ -481,7 +483,8 @@ and json_to_multiline ?(sort_keys = false) json =
               ^ "  "
               ^ json_to_string ~sort_keys (JSON_String k)
               ^ ":"
-              ^ loop (indent ^ "  ") v)
+              ^ loop (indent ^ "  ") v
+          )
         in
         "{\n" ^ String.concat ",\n" nl ^ "\n" ^ indent ^ "}"
       | _ -> single
@@ -506,10 +509,11 @@ let rec json_to_multiline_output oc (json : json) : unit =
   | JSON_Bool b ->
     output_string
       oc
-      (if b then
+      ( if b then
         "true"
       else
-        "false")
+        "false"
+      )
   | JSON_Null -> output_string oc "null"
 
 let output_json_endline ~pretty (oc : out_channel) (json : json) =
@@ -685,7 +689,8 @@ module Access = struct
             else if key = k then
               Some json
             else
-              None)
+              None
+        )
       in
       match candidate with
       | None -> Error (Missing_key_error (k, keytrace))
@@ -823,7 +828,8 @@ let json_truncate_string
 let get_field accessor on_failure json =
   Access.(
     let on_failure af = on_failure (access_failure_to_string af) in
-    counit_with on_failure (return json >>= accessor))
+    counit_with on_failure (return json >>= accessor)
+  )
 
 let get_field_opt accessor json = Access.(to_option (return json >>= accessor))
 

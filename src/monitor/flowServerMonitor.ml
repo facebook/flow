@@ -38,7 +38,8 @@ let handle_waiting_start_command waiting_fd =
   let%lwt () = send_message FlowServerMonitorDaemon.Starting in
   StatusStream.call_on_free ~f:(fun () ->
       let%lwt () = send_message FlowServerMonitorDaemon.Ready in
-      close ())
+      close ()
+  )
 
 (* The EventLogger needs to be periodically flushed. The server flushes it during its main serve
  * loop, but the monitor has no main loop. So instead we flush every 5 seconds. That should be
@@ -77,9 +78,10 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
   (* We need to grab the lock before initializing the pid files and before allocating the shared
    * heap. Luckily for us, the server will do both of these later *)
   let flowconfig_name = Options.flowconfig_name server_options in
-  (if not (Lock.grab (Server_files_js.lock_file ~flowconfig_name ~tmp_dir root)) then
+  ( if not (Lock.grab (Server_files_js.lock_file ~flowconfig_name ~tmp_dir root)) then
     let msg = "Error: another server is already running?\n" in
-    Exit.(exit ~msg Lock_stolen));
+    Exit.(exit ~msg Lock_stolen)
+  );
 
   (* We can't open the log until we have the lock.
    *
@@ -126,7 +128,8 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
              (Exception.get_full_backtrace_string max_int exn)
          in
          Logger.fatal_s ~exn "Uncaught async exception. Exiting";
-         Exit.(exit ~msg Unknown_error));
+         Exit.(exit ~msg Unknown_error)
+    );
 
     Logger.init_logger log_fd;
     Logger.info "argv=%s" (argv |> Array.to_list |> String.concat " ");
@@ -145,19 +148,23 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
     (* Don't start the server until we've set up the threads to handle the waiting channel *)
     Lwt.async (fun () ->
         let%lwt () = handle_waiting_start_command in
-        FlowServerMonitorServer.start monitor_options);
+        FlowServerMonitorServer.start monitor_options
+    );
 
     (* We can start up the socket acceptor even before the server starts *)
     Lwt.async (fun () ->
         SocketAcceptor.run
           (Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true monitor_socket_fd)
-          monitor_options.FlowServerMonitorOptions.autostop);
+          monitor_options.FlowServerMonitorOptions.autostop
+    );
     Lwt.async (fun () ->
         SocketAcceptor.run_legacy
-          (Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true legacy2_socket_fd));
+          (Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true legacy2_socket_fd)
+    );
     Lwt.async (fun () ->
         SocketAcceptor.run_legacy
-          (Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true legacy1_socket_fd));
+          (Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true legacy1_socket_fd)
+    );
 
     (* Wait forever! Mwhahahahahaha *)
     Lwt.wait () |> fst
@@ -175,9 +182,10 @@ let daemonize ~init_id ~wait ~on_spawn monitor_options =
   let tmp_dir = Options.temp_dir server_options in
   let flowconfig_name = Options.flowconfig_name server_options in
   let lock = Server_files_js.lock_file ~flowconfig_name ~tmp_dir root in
-  (if not (Lock.check lock) then
+  ( if not (Lock.check lock) then
     let msg = spf "Error: There is already a server running for %s" (Path.to_string root) in
-    Exit.(exit ~msg Lock_stolen));
+    Exit.(exit ~msg Lock_stolen)
+  );
 
   FlowServerMonitorDaemon.daemonize ~init_id ~wait ~on_spawn ~monitor_options daemon_entry_point
 

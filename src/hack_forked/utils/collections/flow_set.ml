@@ -177,10 +177,11 @@ let create l v r =
       v;
       r;
       h =
-        (if hl >= hr then
+        ( if hl >= hr then
           hl + 1
         else
-          hr + 1);
+          hr + 1
+        );
     }
 
 (* Same as create, but performs one step of rebalancing if necessary.
@@ -456,10 +457,11 @@ module Make (Ord : OrderedType) : S with type elt = Ord.t = struct
       c = 0
       || mem
            x
-           (if c < 0 then
+           ( if c < 0 then
              l
            else
-             r)
+             r
+           )
 
   let rec remove x tree =
     match tree with
@@ -667,10 +669,11 @@ module Make (Ord : OrderedType) : S with type elt = Ord.t = struct
       else
         find
           x
-          (if c < 0 then
+          ( if c < 0 then
             l
           else
-            r)
+            r
+          )
 
   let rec find_opt x = function
     | Empty -> None
@@ -687,10 +690,11 @@ module Make (Ord : OrderedType) : S with type elt = Ord.t = struct
       else
         find_opt
           x
-          (if c < 0 then
+          ( if c < 0 then
             l
           else
-            r)
+            r
+          )
 
   let try_join l v r =
     (* [join l v r] can only be called when (elements of l < v <
@@ -746,7 +750,8 @@ module Make (Ord : OrderedType) : S with type elt = Ord.t = struct
            pp_key fmt s;
            true)
          false
-         elements);
+         elements
+      );
     (match elements with
     | [] -> ()
     | _ -> Format.fprintf fmt " ");

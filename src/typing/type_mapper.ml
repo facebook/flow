@@ -16,7 +16,8 @@ let maybe_known f x =
         x
       else
         Known x''
-    | Unknown x -> Unknown x)
+    | Unknown x -> Unknown x
+  )
 
 let unwrap_type =
   let rec unwrap seen cx t =
@@ -31,7 +32,8 @@ let unwrap_type =
           | Resolved (_, t')
           | FullyResolved (_, (lazy t')) ->
             unwrap seen cx t'
-          | Unresolved _ -> t)
+          | Unresolved _ -> t
+        )
       )
     | AnnotT (_, t, _)
     | ReposT (_, t) ->
@@ -56,7 +58,8 @@ let union_flatten =
           | Resolved (_, t')
           | FullyResolved (_, (lazy t')) ->
             flatten cx seen t'
-          | Unresolved _ -> [t])
+          | Unresolved _ -> [t]
+        )
       )
     | AnnotT (_, t, _) -> flatten cx seen t
     | ReposT (_, t) -> flatten cx seen t
@@ -407,8 +410,8 @@ class virtual ['a] t =
     method fun_type
         cx
         map_cx
-        ({ this_t = (this, subtyping); params; rest_param; return_t; is_predicate; def_reason } as
-        t) =
+        ({ this_t = (this, subtyping); params; rest_param; return_t; is_predicate; def_reason } as t)
+        =
       let this' = self#type_ cx map_cx this in
       let params' =
         ListUtils.ident_map
@@ -602,7 +605,8 @@ class virtual ['a] t =
           if t' == t then
             operand
           else
-            Type t')
+            Type t'
+      )
 
     method private custom_fun_kind cx map_cx kind =
       match kind with
@@ -715,7 +719,8 @@ class virtual ['a] t =
             t.upper
         in
         if upper' != t.upper then t.upper <- upper';
-        t)
+        t
+      )
 
     method virtual use_type : Context.t -> 'a -> Type.use_t -> Type.use_t
 
@@ -2057,7 +2062,8 @@ class virtual ['a] t_with_uses =
           if tool' == tool && knot' == knot && t'' == t' then
             t
           else
-            CreateClass (tool', knot', t''))
+            CreateClass (tool', knot', t'')
+      )
 
     method private instance_slice cx map_cx t =
       let (st, instt) = t in
@@ -2089,7 +2095,9 @@ class virtual ['a] t_with_uses =
           else
             Super
               ( { reason; Object.props = props'; flags = flags'; generics; interface = interface' },
-                r' ))
+                r'
+              )
+      )
 
     method object_kit_tool cx map_cx tool =
       Object.(
@@ -2113,7 +2121,8 @@ class virtual ['a] t_with_uses =
                   spread_id;
                   union_reason;
                   curr_resolve_idx;
-                } )
+                }
+              )
         | Rest (options, state) ->
           Object.Rest.(
             let state' =
@@ -2134,7 +2143,8 @@ class virtual ['a] t_with_uses =
             if state == state' then
               tool
             else
-              Rest (options, state'))
+              Rest (options, state')
+          )
         | ReactConfig state ->
           Object.ReactConfig.(
             let state' =
@@ -2157,7 +2167,9 @@ class virtual ['a] t_with_uses =
             if state == state' then
               tool
             else
-              ReactConfig state'))
+              ReactConfig state'
+          )
+      )
 
     method choice_use_tool cx map_cx t =
       match t with
@@ -2222,7 +2234,8 @@ class virtual ['a] t_with_uses =
           if resolve_object' == resolve_object then
             tool
           else
-            Shape resolve_object')
+            Shape resolve_object'
+      )
 
     method create_class_tool cx map_cx tool =
       React.CreateClass.(
@@ -2268,7 +2281,8 @@ class virtual ['a] t_with_uses =
           if tlist' == tlist && initial_state' == initial_state then
             tool
           else
-            InitialState (tlist', initial_state'))
+            InitialState (tlist', initial_state')
+      )
 
     method resolved_param cx map_cx t =
       match t with
@@ -2311,7 +2325,8 @@ class virtual ['a] t_with_uses =
           if tlist1' == tlist1 && tlist2' == tlist2 then
             t
           else
-            ResolveElem (tlist1', tlist2'))
+            ResolveElem (tlist1', tlist2')
+      )
 
     method resolve_object cx map_cx t =
       React.(
@@ -2335,7 +2350,8 @@ class virtual ['a] t_with_uses =
           if props' == props && obj' == obj then
             t
           else
-            ResolveProp (s, props', obj'))
+            ResolveProp (s, props', obj')
+      )
 
     method create_class_knot cx map_cx t =
       React.CreateClass.(
@@ -2351,7 +2367,8 @@ class virtual ['a] t_with_uses =
         then
           t
         else
-          { this = this'; static = static'; state_t = state_t'; default_t = default_t' })
+          { this = this'; static = static'; state_t = state_t'; default_t = default_t' }
+      )
 
     method resolve cx map_cx t =
       Object.(
@@ -2369,7 +2386,8 @@ class virtual ['a] t_with_uses =
           if tlist' == tlist && resolvednelist' == resolvednelist then
             t
           else
-            List (tlist', resolvednelist', join))
+            List (tlist', resolvednelist', join)
+      )
 
     method resolved_prop cx map_cx ((t, own, meth) as prop) =
       let t' = self#type_ cx map_cx t in
@@ -2402,7 +2420,8 @@ class virtual ['a] t_with_uses =
           if resolved' == resolved then
             el
           else
-            ResolvedSlice resolved')
+            ResolvedSlice resolved'
+      )
 
     method resolved cx map_cx t =
       let t' = Nel.ident_map (self#object_kit_slice cx map_cx) t in
@@ -2468,7 +2487,8 @@ class virtual ['a] t_with_uses =
             get_default_props;
             get_initial_state;
             unknown_mixins = t.unknown_mixins;
-          })
+          }
+      )
 
     method stack_head cx map_cx ((obj, spec) as t) =
       let obj' = self#resolved_object cx map_cx obj in
@@ -2501,5 +2521,6 @@ class virtual ['a] t_with_uses =
               else
                 NotNull obj'
             | Null _ -> x)
-          t)
+          t
+      )
   end

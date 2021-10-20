@@ -95,7 +95,8 @@ val suggest :
     * (* Suggest-related warnings (normalization etc.) *)
       Replacement_printer.patch,
     (* Annotated program *)
-    Errors.ConcreteLocPrintableErrorSet.t (* Parsing errors *) )
+    Errors.ConcreteLocPrintableErrorSet.t (* Parsing errors *)
+  )
   result
   Lwt.t
 

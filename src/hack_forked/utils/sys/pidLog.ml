@@ -19,7 +19,8 @@ let init pids_file =
       Sys_utils.mkdir_no_fail (Filename.dirname pids_file);
       let oc = open_out pids_file in
       log_oc := Some oc;
-      Unix.(set_close_on_exec (descr_of_out_channel oc)))
+      Unix.(set_close_on_exec (descr_of_out_channel oc))
+  )
 
 let log ?reason ?(no_fail = false) pid =
   if !enabled then

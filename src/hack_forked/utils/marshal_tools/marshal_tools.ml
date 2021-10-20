@@ -163,8 +163,9 @@ end = struct
         loop
           (i - 1)
           (remainder / 256)
-          (Bytes.set acc i (Char.chr (remainder mod 256));
-           acc)
+          ( Bytes.set acc i (Char.chr (remainder mod 256));
+            acc
+          )
     in
     loop (preamble_core_size - 1) size (Bytes.create preamble_core_size)
 
@@ -208,8 +209,10 @@ end = struct
         if preamble_bytes_written <> expected_preamble_size then
           WriterReader.fail Writing_Preamble_Exception
         else
-          WriterReader.return () )
-    >>= fun () -> write_payload ?timeout fd payload 0 size )
+          WriterReader.return ()
+      )
+    >>= fun () -> write_payload ?timeout fd payload 0 size
+    )
     >>= fun bytes_written ->
     if bytes_written <> size then
       WriterReader.fail Writing_Payload_Exception
@@ -236,7 +239,8 @@ end = struct
         WriterReader.log (Printf.sprintf "Error, only read %d bytes for preamble." bytes_read);
         WriterReader.fail Reading_Preamble_Exception
       ) else
-        WriterReader.return () )
+        WriterReader.return ()
+    )
     >>= fun () ->
     let payload_size = parse_preamble preamble in
     let payload = Bytes.create payload_size in

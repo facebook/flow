@@ -90,7 +90,8 @@ let tests () =
           ignore (handle : SharedMem.handle);
           test ();
           true
-        | Error () -> false )
+        | Error () -> false
+    )
   in
   List.map setup_test list
 

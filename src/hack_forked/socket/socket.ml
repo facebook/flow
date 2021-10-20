@@ -65,7 +65,8 @@ let unix_socket sock_name =
             output_binary_int oc port;
             close_out oc
         in
-        sock)
+        sock
+    )
   with
   | Unix.Unix_error (err, _, _) ->
     Printf.eprintf "%s\n" (Unix.error_message err);

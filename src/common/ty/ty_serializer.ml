@@ -71,20 +71,23 @@ let type_ options =
       return
         (builtin_from_string
            "$TEMPORARY$number"
-           ~targs:(mk_targs [(Loc.none, T.NumberLiteral (num_lit lit))]))
+           ~targs:(mk_targs [(Loc.none, T.NumberLiteral (num_lit lit))])
+        )
     | Num None -> just (T.Number None)
     | Str (Some lit) ->
       return
         (builtin_from_string
            "$TEMPORARY$string"
            ~targs:
-             (mk_targs [(Loc.none, T.StringLiteral (str_lit (Reason.display_string_of_name lit)))]))
+             (mk_targs [(Loc.none, T.StringLiteral (str_lit (Reason.display_string_of_name lit)))])
+        )
     | Str None -> just (T.String None)
     | Bool (Some lit) ->
       return
         (builtin_from_string
            "$TEMPORARY$boolean"
-           ~targs:(mk_targs [(Loc.none, T.BooleanLiteral (bool_lit lit))]))
+           ~targs:(mk_targs [(Loc.none, T.BooleanLiteral (bool_lit lit))])
+        )
     | Bool None -> just (T.Boolean None)
     | NumLit lit -> just (T.NumberLiteral (num_lit lit))
     | StrLit lit -> just (T.StringLiteral (str_lit (Reason.display_string_of_name lit)))
@@ -137,7 +140,8 @@ let type_ options =
               {
                 T.Union.types = ((Loc.none, T.Null None), (Loc.none, T.Void None), []);
                 comments = None;
-              } )
+              }
+          )
       | hd :: tl ->
         let%map ts = type_ (mk_union (hd, tl)) in
         (Loc.none, T.Nullable { T.Nullable.argument = ts; comments = None })
@@ -166,7 +170,8 @@ let type_ options =
         (* TODO: handle `this` constraints *)
         this_ = None;
         comments = None;
-      } )
+      }
+    )
   and fun_param (name, t, { prm_optional }) =
     let name = Base.Option.map ~f:id_from_string name in
     let%map annot = type_ t in
@@ -306,7 +311,8 @@ let type_ options =
           | None -> T.Missing Loc.none);
         variance = variance_ tp.tp_polarity;
         default;
-      } )
+      }
+    )
   and type_arguments ts =
     let%map ts = mapM type_ ts in
     mk_targs ts

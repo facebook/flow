@@ -90,7 +90,7 @@ module Statement
      recover gracefully. *)
   let function_as_statement env =
     let func = Declaration._function env in
-    (if in_strict_mode env then
+    ( if in_strict_mode env then
       function_as_statement_error_at env (fst func)
     else
       let open Ast.Statement in
@@ -99,7 +99,8 @@ module Statement
         error_at env (loc, Parse_error.AsyncFunctionAsStatement)
       | (loc, FunctionDeclaration { Ast.Function.generator = true; _ }) ->
         error_at env (loc, Parse_error.GeneratorFunctionAsStatement)
-      | _ -> ());
+      | _ -> ()
+    );
     func
 
   (* https://tc39.es/ecma262/#sec-exports-static-semantics-early-errors *)
@@ -207,7 +208,8 @@ module Statement
     let { trailing; _ } = statement_end_trailing_comments env in
     ( loc,
       Statement.Empty
-        { Statement.Empty.comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () } )
+        { Statement.Empty.comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+    )
 
   and break env =
     let leading = Peek.comments env in
@@ -270,7 +272,8 @@ module Statement
         {
           Statement.Continue.label;
           comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-        } )
+        }
+    )
 
   and debugger =
     with_loc (fun env ->
@@ -289,7 +292,8 @@ module Statement
             pre_semicolon_trailing @ trailing
         in
         Statement.Debugger
-          { Statement.Debugger.comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () })
+          { Statement.Debugger.comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+    )
 
   and do_while =
     with_loc (fun env ->
@@ -327,7 +331,8 @@ module Statement
             Statement.DoWhile.body;
             test;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-          })
+          }
+    )
 
   and for_ =
     let assert_can_be_forin_or_forof env err = function
@@ -375,8 +380,11 @@ module Statement
                        Statement.VariableDeclaration.kind = Statement.VariableDeclaration.Let;
                        declarations;
                        comments = Flow_ast_utils.mk_comments_opt ~leading ();
-                     } )),
-              errs )
+                     }
+                   )
+                ),
+              errs
+            )
           | T_CONST ->
             let (loc, (declarations, leading, errs)) = with_loc Declaration.const env in
             ( Some
@@ -386,8 +394,11 @@ module Statement
                        Statement.VariableDeclaration.kind = Statement.VariableDeclaration.Const;
                        declarations;
                        comments = Flow_ast_utils.mk_comments_opt ~leading ();
-                     } )),
-              errs )
+                     }
+                   )
+                ),
+              errs
+            )
           | T_VAR ->
             let (loc, (declarations, leading, errs)) = with_loc Declaration.var env in
             ( Some
@@ -397,8 +408,11 @@ module Statement
                        Statement.VariableDeclaration.kind = Statement.VariableDeclaration.Var;
                        declarations;
                        comments = Flow_ast_utils.mk_comments_opt ~leading ();
-                     } )),
-              errs )
+                     }
+                   )
+                ),
+              errs
+            )
           | _ ->
             let expr = Parse.expression_or_pattern (env |> with_no_let true) in
             (Some (For_expression expr), [])
@@ -469,7 +483,8 @@ module Statement
           Expect.token env T_RPAREN;
           let body = Parse.statement (env |> with_in_loop true) in
           assert_not_labelled_function env body;
-          Statement.For { Statement.For.init; test; update; body; comments })
+          Statement.For { Statement.For.init; test; update; body; comments }
+    )
 
   and if_ =
     (*
@@ -520,7 +535,8 @@ module Statement
             consequent;
             alternate;
             comments = Flow_ast_utils.mk_comments_opt ~leading ();
-          })
+          }
+    )
 
   and return =
     with_loc (fun env ->
@@ -551,7 +567,8 @@ module Statement
           {
             Statement.Return.argument;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-          })
+          }
+    )
 
   and switch =
     let rec case_list env (seen_default, acc) =
@@ -594,6 +611,7 @@ module Statement
           ( Loc.btwn start_loc end_loc,
             Statement.Switch.Case.
               { test; consequent; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+            
           )
           :: acc
         in
@@ -614,7 +632,8 @@ module Statement
             Statement.Switch.discriminant;
             cases;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-          })
+          }
+    )
 
   and throw =
     with_loc (fun env ->
@@ -630,7 +649,8 @@ module Statement
             ([], remove_trailing argument (fun remover arg -> remover#expression arg))
         in
         let open Statement in
-        Throw { Throw.argument; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () })
+        Throw { Throw.argument; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+    )
 
   and try_ =
     with_loc (fun env ->
@@ -666,8 +686,7 @@ module Statement
                   let body =
                     if Peek.token env <> T_FINALLY then
                       let { remove_trailing; _ } = statement_end_trailing_comments env in
-                      remove_trailing body (fun remover (loc, body) ->
-                          (loc, remover#block loc body))
+                      remove_trailing body (fun remover (loc, body) -> (loc, remover#block loc body))
                     else
                       body
                   in
@@ -701,7 +720,8 @@ module Statement
             handler;
             finalizer;
             comments = Flow_ast_utils.mk_comments_opt ~leading ();
-          })
+          }
+    )
 
   and var =
     with_loc (fun env ->
@@ -714,7 +734,8 @@ module Statement
             Statement.VariableDeclaration.kind;
             declarations;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-          })
+          }
+    )
 
   and const =
     with_loc (fun env ->
@@ -727,7 +748,8 @@ module Statement
             Statement.VariableDeclaration.kind;
             declarations;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-          })
+          }
+    )
 
   and let_ =
     with_loc (fun env ->
@@ -740,7 +762,8 @@ module Statement
             Statement.VariableDeclaration.kind;
             declarations;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-          })
+          }
+    )
 
   and while_ =
     with_loc (fun env ->
@@ -757,7 +780,8 @@ module Statement
         if (not (in_strict_mode env)) && is_labelled_function body then
           function_as_statement_error_at env (fst body);
         Statement.While
-          { Statement.While.test; body; comments = Flow_ast_utils.mk_comments_opt ~leading () })
+          { Statement.While.test; body; comments = Flow_ast_utils.mk_comments_opt ~leading () }
+    )
 
   and with_ env =
     let (loc, stmt) =
@@ -821,7 +845,8 @@ module Statement
               Expression.expression;
               directive = None;
               comments = Flow_ast_utils.mk_comments_opt ~trailing ();
-            })
+            }
+    )
 
   and expression =
     with_loc (fun env ->
@@ -846,7 +871,8 @@ module Statement
             Statement.Expression.expression;
             directive;
             comments = Flow_ast_utils.mk_comments_opt ~trailing ();
-          })
+          }
+    )
 
   and type_alias_helper ~leading env =
     if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAlias;
@@ -872,6 +898,7 @@ module Statement
     in
     Statement.TypeAlias.
       { id; tparams; right; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+    
 
   and declare_type_alias env =
     with_loc
@@ -943,21 +970,24 @@ module Statement
           id,
           tparams,
           supertype,
-          Some (remove_trailing impl (fun remover impl -> remover#type_ impl)) )
+          Some (remove_trailing impl (fun remover impl -> remover#type_ impl))
+        )
       (* opaque type Foo: Super *)
       | (Implicit { remove_trailing; _ }, _, Some super, None) ->
         ( [],
           id,
           tparams,
           Some (remove_trailing super (fun remover super -> remover#type_ super)),
-          None )
+          None
+        )
       (* opaque type Foo<T> *)
       | (Implicit { remove_trailing; _ }, Some tparams, None, None) ->
         ( [],
           id,
           Some (remove_trailing tparams (fun remover tparams -> remover#type_params tparams)),
           None,
-          None )
+          None
+        )
       (* declare opaque type Foo *)
       | (Implicit { remove_trailing; _ }, None, None, None) ->
         ([], remove_trailing id (fun remover id -> remover#identifier id), None, None, None)
@@ -970,6 +1000,7 @@ module Statement
         supertype;
         comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
       }
+    
 
   and declare_opaque_type env =
     with_loc
@@ -1012,6 +1043,7 @@ module Statement
     in
     Statement.Interface.
       { id; tparams; body; extends; comments = Flow_ast_utils.mk_comments_opt ~leading () }
+    
 
   and declare_interface env =
     with_loc
@@ -1141,6 +1173,7 @@ module Statement
     let annot = (loc, annot) in
     Statement.DeclareFunction.
       { id; annot; predicate; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+    
 
   and declare_function_statement env =
     with_loc
@@ -1177,6 +1210,7 @@ module Statement
     in
     Statement.DeclareVariable.
       { id = name; annot; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+    
 
   and declare_var_statement env =
     with_loc
@@ -1233,7 +1267,8 @@ module Statement
             error env Parse_error.AmbiguousDeclareModuleKind;
             module_kind
           | ( Some (DeclareModule.CommonJS _),
-              DeclareExportDeclaration { DeclareExportDeclaration.declaration; _ } ) ->
+              DeclareExportDeclaration { DeclareExportDeclaration.declaration; _ }
+            ) ->
             (match declaration with
             | Some (DeclareExportDeclaration.NamedType _)
             | Some (DeclareExportDeclaration.Interface _) ->
@@ -1267,7 +1302,8 @@ module Statement
             Expect.token env T_RCURLY;
             let { trailing; _ } = statement_end_trailing_comments env in
             ( (module_kind, body),
-              Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal () ))
+              Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ()
+            ))
           env
       in
       let body = (body_loc, { Statement.Block.body; comments }) in
@@ -1356,8 +1392,11 @@ module Statement
     | Implicit { remove_trailing; _ } ->
       ( ( source_loc,
           remove_trailing source (fun remover source ->
-              remover#string_literal_type source_loc source) ),
-        [] )
+              remover#string_literal_type source_loc source
+          )
+        ),
+        []
+      )
 
   and extract_pattern_binding_names =
     let rec fold acc =
@@ -1424,7 +1463,8 @@ module Statement
           | (_, { local = id; exported = None }) ->
             assert_identifier_name_is_identifier ~restricted_error:Parse_error.StrictVarName env id
           | _ -> ())
-        specifiers)
+        specifiers
+    )
 
   and export_declaration ~decorators =
     with_loc (fun env ->
@@ -1469,7 +1509,8 @@ module Statement
                 default;
                 declaration;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-              })
+              }
+          )
         | T_TYPE when Peek.ith_token ~i:1 env <> T_LCURLY ->
           (* export type ... *)
           Statement.ExportNamedDeclaration.(
@@ -1504,7 +1545,8 @@ module Statement
               record_export
                 env
                 (Flow_ast_utils.ident_of_source
-                   (loc, extract_ident_name type_alias.Statement.TypeAlias.id));
+                   (loc, extract_ident_name type_alias.Statement.TypeAlias.id)
+                );
               let type_alias = (loc, Statement.TypeAlias type_alias) in
               Statement.ExportNamedDeclaration
                 {
@@ -1513,7 +1555,8 @@ module Statement
                   source = None;
                   export_kind = Statement.ExportType;
                   comments = Flow_ast_utils.mk_comments_opt ~leading ();
-                }))
+                })
+          )
         | T_OPAQUE ->
           (* export opaque type ... *)
           Statement.ExportNamedDeclaration.(
@@ -1521,7 +1564,8 @@ module Statement
             record_export
               env
               (Flow_ast_utils.ident_of_source
-                 (loc, extract_ident_name opaque_t.Statement.OpaqueType.id));
+                 (loc, extract_ident_name opaque_t.Statement.OpaqueType.id)
+              );
             let opaque_t = (loc, Statement.OpaqueType opaque_t) in
             Statement.ExportNamedDeclaration
               {
@@ -1530,7 +1574,8 @@ module Statement
                 source = None;
                 export_kind = Statement.ExportType;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
-              })
+              }
+          )
         | T_INTERFACE ->
           (* export interface I { ... } *)
           Statement.ExportNamedDeclaration.(
@@ -1542,7 +1587,8 @@ module Statement
             | _ ->
               failwith
                 ("Internal Flow Error! Parsed `export interface` into something "
-                ^ "other than an interface declaration!"));
+                ^ "other than an interface declaration!"
+                ));
             Statement.ExportNamedDeclaration
               {
                 declaration = Some interface;
@@ -1550,7 +1596,8 @@ module Statement
                 source = None;
                 export_kind = Statement.ExportType;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
-              })
+              }
+          )
         | T_LET
         | T_CONST
         | T_VAR
@@ -1595,7 +1642,8 @@ module Statement
                 source = None;
                 export_kind = Statement.ExportValue;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
-              })
+              }
+          )
         | T_MULT ->
           Statement.ExportNamedDeclaration.(
             let loc = Peek.loc env in
@@ -1622,7 +1670,8 @@ module Statement
                 source = Some source;
                 export_kind = Statement.ExportValue;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-              })
+              }
+          )
         | _ ->
           Statement.ExportNamedDeclaration.(
             let export_kind =
@@ -1656,7 +1705,9 @@ module Statement
                 source;
                 export_kind;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-              }))
+              }
+          )
+    )
 
   and declare_export_declaration ?(allow_export_type = false) =
     with_loc (fun env ->
@@ -1815,7 +1866,9 @@ module Statement
                 specifiers = Some (Statement.ExportNamedDeclaration.ExportSpecifiers specifiers);
                 source;
                 comments;
-              }))
+              }
+        )
+    )
 
   and import_declaration =
     Statement.ImportDeclaration.(
@@ -2030,7 +2083,9 @@ module Statement
         | Implicit { remove_trailing; _ } ->
           ( [],
             remove_trailing source (fun remover (loc, source) ->
-                (loc, remover#string_literal_type loc source)) )
+                (loc, remover#string_literal_type loc source)
+            )
+          )
       in
       let with_specifiers import_kind env leading =
         let specifiers = named_or_namespace_specifier env import_kind in
@@ -2136,5 +2191,7 @@ module Statement
               | _ -> with_default ImportTypeof env leading
             end
           (* import Foo from "ModuleName"; *)
-          | _ -> with_default ImportValue env leading))
+          | _ -> with_default ImportValue env leading
+      )
+    )
 end

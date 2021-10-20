@@ -29,7 +29,9 @@ with type t = Impl.t = struct
                 | JSX_TAG -> "jsxTag"
                 | JSX_CHILD -> "jsxChild"
                 | TEMPLATE -> "template"
-                | REGEXP -> "regexp") );
+                | REGEXP -> "regexp"
+              )
+          );
           ( "loc",
             Impl.obj
               [
@@ -38,22 +40,27 @@ with type t = Impl.t = struct
                     [
                       ("line", Impl.number (float token_loc.start.line));
                       ("column", Impl.number (float token_loc.start.column));
-                    ] );
+                    ]
+                );
                 ( "end",
                   Impl.obj
                     [
                       ("line", Impl.number (float token_loc._end.line));
                       ("column", Impl.number (float token_loc._end.column));
-                    ] );
-              ] );
+                    ]
+                );
+              ]
+          );
           ( "range",
             Impl.array
               [
                 Impl.number (float (Offset_utils.offset offset_table token_loc.start));
                 Impl.number (float (Offset_utils.offset offset_table token_loc._end));
-              ] );
+              ]
+          );
           ("value", Impl.string (Token.value_of_token token));
-        ])
+        ]
+    )
 
   let token_list offset_table tokens =
     Impl.array (List.rev_map (token offset_table) tokens |> List.rev)

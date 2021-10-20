@@ -70,7 +70,8 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
         | Identifier id -> identifier_pattern check_env id
         | Expression _ ->
           error_at env (loc, Parse_error.ExpectedPatternFoundExpression);
-          check_env)
+          check_env
+      )
     and _object check_env o = List.fold_left object_property check_env o.Pattern.Object.properties
     and object_property check_env =
       let open Pattern.Object in
@@ -82,7 +83,8 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
             | Identifier id -> identifier_no_dupe_check check_env id
             | _ -> check_env
           in
-          pattern check_env property.pattern)
+          pattern check_env property.pattern
+        )
       | RestElement (_, { Pattern.RestElement.argument; comments = _ }) ->
         pattern check_env argument
     and _array check_env arr = List.fold_left array_element check_env arr.Pattern.Array.elements
@@ -153,7 +155,8 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
             ) else
               None
           in
-          { Function.Param.argument; default })
+          { Function.Param.argument; default }
+      )
     and param_list env acc =
       match Peek.token env with
       | (T_EOF | T_RPAREN | T_ELLIPSIS) as t ->
@@ -172,7 +175,8 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
                 {
                   Function.RestParam.argument = id;
                   comments = Flow_ast_utils.mk_comments_opt ~leading ();
-                } )
+                }
+              )
           else
             None
         in
@@ -206,7 +210,8 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
               {
                 Ast.Function.ThisParam.annot;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
-              } )
+              }
+            )
       ) else
         None
     in
@@ -230,7 +235,8 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
             rest;
             comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
             this_;
-          })
+          }
+      )
 
   let function_body env ~async ~generator ~expression =
     let env = enter_function env ~async ~generator in
@@ -256,7 +262,8 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
             {
               Variance.kind = Variance.Minus;
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
-            } )
+            }
+          )
       | _ -> None
     in
     match variance with
@@ -358,7 +365,8 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) : DE
             tparams;
             sig_loc;
             comments = Flow_ast_utils.mk_comments_opt ~leading ();
-          })
+          }
+    )
 
   let variable_declaration_list =
     let variable_declaration env =

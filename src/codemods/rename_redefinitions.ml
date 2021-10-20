@@ -118,7 +118,9 @@ let reduce cx ast =
           | ( None,
               ( _,
                 Ast.Pattern.Identifier
-                  { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; _ }); _ } ) ) ->
+                  { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; _ }); _ }
+              )
+            ) ->
             let id_loc_aloc = ALoc.of_loc id_loc in
             if is_extractable_assignment id_loc_aloc then this#add_renaming id_loc_aloc name right
           | _ -> ()
@@ -168,7 +170,8 @@ module Naming = struct
               if Str.string_match re name 0 then
                 Some (Str.matched_group 1 name)
               else
-                None)
+                None
+          )
         with
         | Some name -> String.capitalize_ascii name
         | None when String.length name < 20 -> String.capitalize_ascii name
@@ -270,7 +273,7 @@ let mapper cctx =
         ast
       else
         let ast' = super#program ast in
-        (if ast != ast' then
+        ( if ast != ast' then
           let extra =
             Stats.
               {
@@ -278,11 +281,15 @@ let mapper cctx =
                 num_renamed_vars = ALocMap.cardinal map;
                 num_name_collisions = collisions;
               }
+            
           in
+
           this#update_acc (fun acc ->
               Acc.update_stats
                 { acc with Acc.changed_set = Utils_js.FilenameSet.add file acc.Acc.changed_set }
-                extra));
+                extra
+          )
+        );
         ast'
 
     (* Skip keys, qualified identifiers *)
@@ -314,7 +321,9 @@ let mapper cctx =
              ~f:
                (Base.List.filter_map ~f:(function
                    | Ssa_api.Uninitialized -> None
-                   | Ssa_api.Write reason -> Some (Reason.aloc_of_reason reason)))
+                   | Ssa_api.Write reason -> Some (Reason.aloc_of_reason reason)
+                   )
+                   )
              ~default:[]
       in
       match locs with
@@ -344,7 +353,8 @@ let mapper cctx =
                     (id_loc, { Ast.Identifier.name = _; comments = left_comments });
                   annot = left_annot;
                   optional = left_optional;
-                } );
+                }
+            );
           _;
         } as assign
         when ALocMap.mem (ALoc.of_loc id_loc) renaming_map ->
@@ -358,7 +368,8 @@ let mapper cctx =
                   (Loc.none, { Ast.Identifier.name = "const " ^ new_name; comments = left_comments });
                 annot = left_annot;
                 optional = left_optional;
-              } )
+              }
+          )
         in
         { assign with Ast.Expression.Assignment.left }
       | expr -> expr

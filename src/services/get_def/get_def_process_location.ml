@@ -29,7 +29,8 @@ let rec is_require ~is_legit_require expr =
           Call.callee = (_, Identifier (_, { Flow_ast.Identifier.name = "require"; _ }));
           arguments = (_, { ArgList.arguments = Expression (source_annot, _) :: _; _ });
           _;
-        } )
+        }
+    )
     when is_legit_require source_annot ->
     true
   | _ -> false
@@ -102,15 +103,16 @@ class ['M, 'T] searcher
     method! import_named_specifier ~import_kind decl =
       let open Flow_ast.Statement.ImportDeclaration in
       let { local; remote = (remote_annot, _); kind } = decl in
-      (if
-       annot_covers_target remote_annot
-       || Base.Option.exists local ~f:(fun (local_annot, _) -> annot_covers_target local_annot)
+      ( if
+        annot_covers_target remote_annot
+        || Base.Option.exists local ~f:(fun (local_annot, _) -> annot_covers_target local_annot)
       then
         match (kind, import_kind) with
         | (Some ImportTypeof, _)
         | (_, ImportTypeof) ->
           this#request (Get_def_request.Typeof remote_annot)
-        | _ -> this#request (Get_def_request.Type remote_annot));
+        | _ -> this#request (Get_def_request.Type remote_annot)
+      );
       decl
 
     method! import_default_specifier decl =
@@ -144,7 +146,8 @@ class ['M, 'T] searcher
       let (_, { Flow_ast.Identifier.name = local_name; _ }) = local in
       let result =
         Get_def_request.(
-          Member { prop_name = local_name; object_source = ObjectRequireLoc source_loc })
+          Member { prop_name = local_name; object_source = ObjectRequireLoc source_loc }
+        )
       in
       if covers_target specifier_loc then this#request result
 
@@ -179,12 +182,14 @@ class ['M, 'T] searcher
                   Attribute.name =
                     Attribute.Identifier (annot, { Identifier.name = attribute_name; comments = _ });
                   _;
-                } )
+                }
+              )
             when annot_covers_target annot ->
             let loc = loc_of_annot annot in
             this#request
               (Get_def_request.JsxAttribute
-                 { component_t = annot_of_jsx_name component_name; name = attribute_name; loc })
+                 { component_t = annot_of_jsx_name component_name; name = attribute_name; loc }
+              )
           | _ -> ())
         attributes;
       super#jsx_opening_element elt
@@ -197,7 +202,7 @@ class ['M, 'T] searcher
 
     method! pattern ?kind ((pat_annot, p) as pat) =
       let open Flow_ast.Pattern in
-      (if not in_require_declarator then
+      ( if not in_require_declarator then
         match p with
         | Object { Object.properties; _ } ->
           List.iter
@@ -211,17 +216,21 @@ class ['M, 'T] searcher
                     when covers_target loc ->
                     this#request
                       Get_def_request.(
-                        Member { prop_name = name; object_source = ObjectType pat_annot })
+                        Member { prop_name = name; object_source = ObjectType pat_annot }
+                      )
                   | Property.Identifier (id_annot, { Flow_ast.Identifier.name; _ })
                     when annot_covers_target id_annot ->
                     this#request
                       Get_def_request.(
-                        Member { prop_name = name; object_source = ObjectType pat_annot })
+                        Member { prop_name = name; object_source = ObjectType pat_annot }
+                      )
                   | _ -> ()
                 end
-              | _ -> ())
+              | _ -> ()
+            )
             properties
-        | _ -> ());
+        | _ -> ()
+      );
       super#pattern ?kind pat
 
     method! t_pattern_identifier ?kind (annot, name) =
@@ -245,13 +254,16 @@ class ['M, 'T] searcher
                         [
                           Expression
                             ( source_annot,
-                              Literal Flow_ast.Literal.{ value = String module_name; _ } );
+                              Literal Flow_ast.Literal.{ value = String module_name; _ }
+                            );
                         ];
                       comments = _;
-                    } );
+                    }
+                  );
                 _;
               }),
-          _ )
+          _
+        )
         when annot_covers_target annot && is_legit_require source_annot ->
         let loc = loc_of_annot annot in
         let source_loc = loc_of_annot source_annot in

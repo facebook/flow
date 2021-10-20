@@ -35,11 +35,13 @@ let strip_comments_list
     {
       program with
       Flow_ast.Program.all_comments =
-        (if preserve_docblock then
+        ( if preserve_docblock then
           comments_before_loc loc all_comments
         else
-          []);
-    } )
+          []
+        );
+    }
+  )
 
 let strip_all_comments ?(preserve_docblock = false) p =
   p |> strip_comments_list ~preserve_docblock |> strip_inlined_comments

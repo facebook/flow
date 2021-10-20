@@ -17,7 +17,8 @@ let first_upto_n n f lst =
           else
             first
         in
-        (first, total + 1))
+        (first, total + 1)
+    )
   in
   let r =
     if total <= n then

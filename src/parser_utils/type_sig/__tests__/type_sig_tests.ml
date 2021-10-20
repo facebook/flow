@@ -121,7 +121,8 @@ let pp_sig
         remote_refs;
         pattern_defs;
         patterns;
-      } ) =
+      }
+    ) =
   let open Format in
   let pp_loc = mk_pp_loc locs in
   pp_module_kind pp_loc fmt module_kind;
@@ -142,7 +143,8 @@ let pp_builtins
     fmt
     ( errs,
       locs,
-      { Packed_type_sig.Builtins.module_refs; local_defs; remote_refs; globals = _; modules } ) =
+      { Packed_type_sig.Builtins.module_refs; local_defs; remote_refs; globals = _; modules }
+    ) =
   let open Format in
   let pp_loc = mk_pp_loc locs in
   pp_module_refs fmt module_refs;

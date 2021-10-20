@@ -105,7 +105,8 @@ let pack len iter =
         add_int buf loc._end.column
       end;
       prev_line := loc.start.line;
-      prev_column := loc.start.column);
+      prev_column := loc.start.column
+  );
   Buffer.contents buf
 
 let mk_loc source start_line start_column end_line end_column =
@@ -187,4 +188,5 @@ let unpack source init packed =
       let open Loc in
       prev_line := loc.start.line;
       prev_column := loc.start.column;
-      loc)
+      loc
+  )

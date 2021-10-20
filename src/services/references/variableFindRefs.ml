@@ -24,4 +24,5 @@ let local_find_refs scope_info loc =
       let sorted_locs = LocSet.elements @@ uses_of_def scope_info ~exclude_def:false def in
       let name = Def.(def.actual_name) in
       let sorted_locs = Base.List.map ~f:(fun loc -> (FindRefsTypes.Local, loc)) sorted_locs in
-      Some ((name, sorted_locs), Nel.hd def.Def.locs))
+      Some ((name, sorted_locs), Nel.hd def.Def.locs)
+  )

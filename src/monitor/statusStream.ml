@@ -39,7 +39,8 @@ let check_if_free =
       Lwt_mutex.with_lock mutex (fun () ->
           let to_call = !to_call_on_free in
           to_call_on_free := [];
-          Lwt.return to_call)
+          Lwt.return to_call
+      )
     in
     Lwt_list.iter_p (fun f -> f ()) to_call
   in
@@ -113,7 +114,8 @@ let call_on_free ~f =
   else
     Lwt_mutex.with_lock mutex (fun () ->
         to_call_on_free := f :: !to_call_on_free;
-        Lwt.return_unit)
+        Lwt.return_unit
+    )
 
 let file_watcher_ready () =
   let t = !current_status in
@@ -132,7 +134,8 @@ let reset file_watcher restart_reason =
   Lwt_mutex.with_lock mutex (fun () ->
       !current_status.push_to_stream None;
       current_status := empty file_watcher restart_reason;
-      Lwt.return_unit)
+      Lwt.return_unit
+  )
 
 let get_status () =
   let { status; watcher_status; _ } = !current_status in
@@ -146,7 +149,8 @@ let wait_for_signficant_status ~timeout =
   Lwt.pick
     [
       (let%lwt () = Lwt_unix.sleep timeout in
-       Lwt.return (get_status ()));
+       Lwt.return (get_status ())
+      );
       Lwt_condition.wait significant_transition;
     ]
 

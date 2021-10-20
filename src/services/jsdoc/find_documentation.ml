@@ -47,7 +47,8 @@ let replace_comments_of_statement ~comments =
       | ClassDeclaration x -> ClassDeclaration Flow_ast.Class.{ x with comments }
       | FunctionDeclaration x -> FunctionDeclaration Flow_ast.Function.{ x with comments }
       | EnumDeclaration x -> EnumDeclaration EnumDeclaration.{ x with comments }
-      | other -> other)
+      | other -> other
+      )
 
 class documentation_searcher find =
   object (this)
@@ -63,11 +64,13 @@ class documentation_searcher find =
                   id = (_, Flow_ast.Pattern.(Identifier Identifier.{ name = (id_loc, _); annot; _ }));
                   init;
                   _;
-                } ) ->
+                }
+            ) ->
             find id_loc comments;
             find (loc_of_annotation_or_hint annot) comments;
             Base.Option.iter init ~f:(fun (init_loc, _) -> find init_loc comments)
-          | _ -> ());
+          | _ -> ()
+          );
       super#variable_declaration stmt_loc decl
 
     method! class_ stmt_loc cls =
@@ -154,7 +157,8 @@ class documentation_searcher find =
         | (_, Set _) -> ([], [])
       in
       Base.List.iter locs ~f:(fun loc ->
-          Base.List.iter comments ~f:(fun comment -> find loc comment));
+          Base.List.iter comments ~f:(fun comment -> find loc comment)
+      );
       super#object_property prop
 
     method! enum_declaration loc enum =
@@ -204,7 +208,8 @@ class documentation_searcher find =
         stmt |> replace_comments_of_statement ~comments |> this#statement |> ignore
       | Expression (_, TypeCast TypeCast.{ annot = (_, (loc, _)); _ })
       | Expression (loc, _) ->
-        find loc comments);
+        find loc comments
+      );
       super#export_default_declaration loc decl
 
     method! type_alias loc type_alias =
@@ -298,7 +303,9 @@ let def_loc_to_comment_loc_map ast =
   let add_to_map def_loc =
     Base.Option.iter ~f:(fun Flow_ast.Syntax.{ leading; _ } ->
         Base.Option.iter (Base.List.last leading) ~f:(fun (comment_loc, _) ->
-            map_ref := Loc_sig.LocS.LMap.add ~combine:Base.Fn.const def_loc comment_loc !map_ref))
+            map_ref := Loc_sig.LocS.LMap.add ~combine:Base.Fn.const def_loc comment_loc !map_ref
+        )
+    )
   in
   let searcher = new documentation_searcher add_to_map in
   ignore (searcher#program ast);

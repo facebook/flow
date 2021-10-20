@@ -23,6 +23,7 @@ let make_loc start_line end_line =
       start = { line = start_line; column = 0 };
       _end = { line = end_line; column = 0 };
     }
+  
 
 let tests =
   [
@@ -33,7 +34,8 @@ let tests =
     ("nested_member" >:: fun ctxt -> assert_expression_string ~ctxt "<A.b.c/>");
     ("simple_with_child" >:: fun ctxt -> assert_expression_string ~ctxt "<A><B/></A>");
     ( "simple_with_attribute_and_child" >:: fun ctxt ->
-      assert_expression_string ~ctxt ~pretty:true "<A a=\"a\"><B /></A>" );
+      assert_expression_string ~ctxt ~pretty:true "<A a=\"a\"><B /></A>"
+    );
     ( "long_attribute_with_children" >:: fun ctxt ->
       let a_loc = make_loc 1 4 in
       let b_loc = make_loc 2 2 in
@@ -53,7 +55,8 @@ let tests =
                [
                  J.child_element ~loc:b_loc (J.identifier "B") ~selfclosing:true;
                  J.child_element ~loc:c_loc (J.identifier "C") ~selfclosing:true;
-               ])
+               ]
+          )
       in
       let layout =
         L.(
@@ -82,11 +85,15 @@ let tests =
                                              atom
                                                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
                                              atom "\"";
-                                           ]);
-                                    ]);
-                             ]);
+                                           ]
+                                        );
+                                    ]
+                                 );
+                             ]
+                          );
                         atom ">";
-                      ]);
+                      ]
+                   );
                  indent
                    (fused
                       [
@@ -94,10 +101,13 @@ let tests =
                         loc ~loc:b_loc (loc (group [atom "<"; id "B"; pretty_space; atom "/>"]));
                         hardline;
                         loc ~loc:c_loc (loc (group [atom "<"; id "C"; pretty_space; atom "/>"]));
-                      ]);
+                      ]
+                   );
                  pretty_hardline;
                  loc (fused [atom "</"; id "A"; atom ">"]);
-               ]))
+               ]
+            )
+        )
       in
       assert_layout_of_expression ~ctxt layout ast;
       assert_expression
@@ -105,7 +115,8 @@ let tests =
         ~pretty:true
         ("<A\n  a=\"" ^ String.make 80 'a' ^ "\">\n  <B />\n  <C />\n</A>")
         ast;
-      assert_expression ~ctxt ("<A a=\"" ^ String.make 80 'a' ^ "\"><B/>\n<C/></A>") ast );
+      assert_expression ~ctxt ("<A a=\"" ^ String.make 80 'a' ^ "\"><B/>\n<C/></A>") ast
+    );
     ( "borderline_length_with_children" >:: fun ctxt ->
       (* opening tag is 80 columns. if it's indented, make sure it breaks.
 
@@ -129,7 +140,8 @@ let tests =
                    (J.attr_identifier "ddddd")
                    (Some (J.attr_literal (Literals.string "eeeeeeeeeeee")));
                ]
-             ~children:[J.child_element ~loc:f_loc (J.identifier "f") ~selfclosing:true])
+             ~children:[J.child_element ~loc:f_loc (J.identifier "f") ~selfclosing:true]
+          )
       in
       let layout = Js_layout_generator.expression ~opts ast in
       assert_layout
@@ -159,8 +171,10 @@ let tests =
                                              atom "\"";
                                              atom "cccccccccccccccccccccccccccccccccccc";
                                              atom "\"";
-                                           ]);
-                                    ]);
+                                           ]
+                                        );
+                                    ]
+                                 );
                                pretty_line;
                                loc
                                  (fused
@@ -168,25 +182,32 @@ let tests =
                                       id "ddddd";
                                       atom "=";
                                       loc (fused [atom "\""; atom "eeeeeeeeeeee"; atom "\""]);
-                                    ]);
-                             ]);
+                                    ]
+                                 );
+                             ]
+                          );
                         atom ">";
-                      ]);
+                      ]
+                   );
                  indent
                    (fused
                       [
                         pretty_hardline;
                         loc ~loc:f_loc (loc (group [atom "<"; id "f"; pretty_space; atom "/>"]));
-                      ]);
+                      ]
+                   );
                  pretty_hardline;
                  loc (fused [atom "</"; id "aaaaaaaaaaaaa"; atom ">"]);
-               ]))
+               ]
+            )
+        )
         layout;
       assert_output
         ~ctxt
         ({|<aaaaaaaaaaaaa bbbb="cccccccccccccccccccccccccccccccccccc"ddddd="eeeeeeeeeeee">|}
         ^ {|<f/>|}
-        ^ {|</aaaaaaaaaaaaa>|})
+        ^ {|</aaaaaaaaaaaaa>|}
+        )
         layout;
       assert_output
         ~ctxt
@@ -195,7 +216,8 @@ let tests =
         ^ "\n"
         ^ {|  <f />|}
         ^ "\n"
-        ^ {|</aaaaaaaaaaaaa>|})
+        ^ {|</aaaaaaaaaaaaa>|}
+        )
         layout;
 
       let block_layout = Js_layout_generator.statement ~opts (S.block [S.expression ast]) in
@@ -205,7 +227,8 @@ let tests =
         ^ "<aaaaaaaaaaaaa bbbb=\"cccccccccccccccccccccccccccccccccccc\"ddddd=\"eeeeeeeeeeee\">"
         ^ "<f/>"
         ^ "</aaaaaaaaaaaaa>"
-        ^ "}")
+        ^ "}"
+        )
         block_layout;
       assert_output
         ~ctxt
@@ -216,20 +239,25 @@ let tests =
         ^ "    ddddd=\"eeeeeeeeeeee\">\n"
         ^ "    <f />\n"
         ^ "  </aaaaaaaaaaaaa>;\n"
-        ^ "}")
-        block_layout );
+        ^ "}"
+        )
+        block_layout
+    );
     ( "long_child_text" >:: fun ctxt ->
       assert_expression_string ~ctxt ~pretty:true ("<A a=\"a\">\n  " ^ String.make 80 'b' ^ "\n</A>")
     );
     ( "literal_whitespace" >:: fun ctxt ->
-      assert_expression_string ~ctxt ~pretty:true "<A a=\"a\">\n  a{\" \"}\n  b\n</A>" );
+      assert_expression_string ~ctxt ~pretty:true "<A a=\"a\">\n  a{\" \"}\n  b\n</A>"
+    );
     ( "children_fit_on_one_line" >:: fun ctxt ->
-      assert_expression_string ~ctxt ~pretty:true "<A><B /><C /></A>" );
+      assert_expression_string ~ctxt ~pretty:true "<A><B /><C /></A>"
+    );
     ( "long_child_element" >:: fun ctxt ->
       assert_expression_string
         ~ctxt
         ~pretty:true
-        ("<A>\n  <" ^ String.make 80 'B' ^ " />\n  <C />\n</A>") );
+        ("<A>\n  <" ^ String.make 80 'B' ^ " />\n  <C />\n</A>")
+    );
     ( "user_supplied_newlines" >:: fun ctxt ->
       (* TODO: Utils_jsx.trim_jsx_text is overly aggressive for pretty
        *       printing, user supplied newlines between words should be
@@ -239,33 +267,39 @@ let tests =
        *    "<A>\n  " ^ String.make 80 'a' ^ "\n  " ^ String.make 80 'b' ^ "\n</A>"
        *  );
        *)
-      ignore ctxt );
+      ignore ctxt
+    );
     ( "valueless_attribute" >:: fun ctxt ->
       (* TODO: valueless attributes shouldnt print trailing spaces when last *)
-      assert_expression_string ~ctxt "<A a />" );
+      assert_expression_string ~ctxt "<A a />"
+    );
     ("namespaced_valueluess_attribute" >:: fun ctxt -> assert_expression_string ~ctxt "<A a:a />");
     ("attribute_braces" >:: fun ctxt -> assert_expression_string ~ctxt "<A a={1}/>");
     ("attribute_string" >:: fun ctxt -> assert_expression_string ~ctxt "<A a=\"\"/>");
     ("attribute_spread" >:: fun ctxt -> assert_expression_string ~ctxt "<A {...a}/>");
     ( "attribute_spread_between_attributes" >:: fun ctxt ->
-      assert_expression_string ~ctxt "<A a {...a}b />" );
+      assert_expression_string ~ctxt "<A a {...a}b />"
+    );
     ("multiple_shorthand_attributes" >:: fun ctxt -> assert_expression_string ~ctxt "<A a b />");
     ( "shorthand_and_longhand_attributes" >:: fun ctxt ->
-      assert_expression_string ~ctxt "<A a b=\"\"/>" );
+      assert_expression_string ~ctxt "<A a b=\"\"/>"
+    );
     ( "multiple_longhand_attributes" >:: fun ctxt ->
       assert_expression_string ~ctxt "<A a=\"a\"b={b}/>";
       assert_expression_string ~ctxt ~pretty:true "<A a=\"a\" b=\"b\" />";
       assert_expression_string
         ~ctxt
         ~pretty:true
-        ("<A\n  a=\"" ^ String.make 80 'a' ^ "\"\n  b=\"b\"\n/>") );
+        ("<A\n  a=\"" ^ String.make 80 'a' ^ "\"\n  b=\"b\"\n/>")
+    );
     ( "string_longhand_and_shorthand_attributes" >:: fun ctxt ->
       assert_expression_string ~ctxt "<A b=\"\"a />";
       assert_expression_string ~ctxt ~pretty:true "<A a=\"a\" b />";
       assert_expression_string ~ctxt ~pretty:true ("<A\n  a=\"" ^ String.make 80 'a' ^ "\"\n  b\n/>")
     );
     ( "expression_longhand_and_shorthand_attributes" >:: fun ctxt ->
-      assert_expression_string ~ctxt "<A b={1}a />" );
+      assert_expression_string ~ctxt "<A b={1}a />"
+    );
     ( "preserve_blank_lines_between_children" >:: fun ctxt ->
       (* Single blank line is preserved *)
       assert_expression_string ~ctxt ~pretty:true "<A>\n  <B />\n  \n  <C />\n</A>";
@@ -274,5 +308,6 @@ let tests =
         ~ctxt
         ~pretty:true
         "<A>\n  <B />\n  \n  <C />\n</A>"
-        (expression_of_string "<A>\n  <B />\n  \n  \n  <C />\n</A>") );
+        (expression_of_string "<A>\n  <B />\n  \n  \n  <C />\n</A>")
+    );
   ]

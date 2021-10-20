@@ -64,7 +64,8 @@ module AstHelper = struct
     let raw_from_string (str : string) = Printf.sprintf "%S" str in
     let source =
       ( dummy_loc,
-        { Ast.StringLiteral.value = source; raw = raw_from_string source; comments = None } )
+        { Ast.StringLiteral.value = source; raw = raw_from_string source; comments = None }
+      )
     in
     let (default, named_specifier) =
       if default then
@@ -423,7 +424,8 @@ end = struct
              Utils_js.spf
                "'%s' ->\n%s\n"
                (Reason.display_string_of_name k)
-               (Nel.map ImportInfo.dump v |> Nel.to_list |> String.concat "\n"))
+               (Nel.map ImportInfo.dump v |> Nel.to_list |> String.concat "\n")
+         )
       |> String.concat "\n"
   end
 
@@ -524,12 +526,14 @@ end = struct
               match t with
               | Ty.TypeOf
                   (Ty.TSymbol
-                    ({
-                       Ty.sym_provenance =
-                         Ty.Remote { Ty.imported_as = None | Some (_, _, Ty.TypeMode) };
-                       sym_anonymous = false;
-                       _;
-                     } as s)) ->
+                    ( {
+                        Ty.sym_provenance =
+                          Ty.Remote { Ty.imported_as = None | Some (_, _, Ty.TypeMode) };
+                        sym_anonymous = false;
+                        _;
+                      } as s
+                    )
+                    ) ->
                 let local = self#convert_symbol ValueUseMode s in
                 Ty.Generic (local, Ty.ClassKind, None)
               | Ty.TypeOf
@@ -539,7 +543,8 @@ end = struct
                         Ty.Remote { Ty.imported_as = Some (sym_def_loc, sym_name, Ty.TypeofMode) };
                       sym_anonymous = false;
                       _;
-                    }) ->
+                    }
+                    ) ->
                 let local =
                   {
                     Ty.sym_provenance = Ty.Local;
@@ -644,7 +649,8 @@ end = struct
                     default;
                     specifiers;
                     comments = None;
-                  } ))
+                  }
+              ))
             default_list
         in
         let import_stmts =
@@ -662,7 +668,8 @@ end = struct
                       default = None;
                       specifiers;
                       comments = None;
-                    } )
+                    }
+                )
               in
               import_stmt :: acc)
             named_map
@@ -692,7 +699,8 @@ end = struct
                       Ast.Statement.ImportDeclaration.remote = (_, { name = remote_name; _ });
                       local;
                       _;
-                    } ) ->
+                    }
+                ) ->
                 let named_binding =
                   {
                     Autofix_imports.remote_name;
@@ -708,7 +716,8 @@ end = struct
                   | None -> [named_binding]
                 in
                 ( default_acc,
-                  BatchImportBindingsMap.add (import_kind, from) named_bindings named_acc )
+                  BatchImportBindingsMap.add (import_kind, from) named_bindings named_acc
+                )
               | (Some (_, { name; _ }), _) ->
                 ((from, Autofix_imports.Default name) :: default_acc, named_acc)
               | _ -> (default_acc, named_acc))
@@ -755,5 +764,6 @@ end = struct
         let requires = file_sig.module_sig.requires in
         match from_requires requires with
         | exception Found_react_import -> true
-        | _ -> false)
+        | _ -> false
+    )
 end

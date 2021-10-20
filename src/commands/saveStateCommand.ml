@@ -27,7 +27,8 @@ let spec =
         |> connect_flags
         |> root_flag
         |> from_flag
-        |> flag "--out" (required string) ~doc:"The path to the new saved-state file");
+        |> flag "--out" (required string) ~doc:"The path to the new saved-state file"
+      );
   }
 
 let main base_flags option_values root out () =

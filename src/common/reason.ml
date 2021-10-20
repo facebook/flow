@@ -367,7 +367,8 @@ let in_range loc range =
   Loc.(
     let (line, line1, line2) = (loc.start.line, range.start.line, range._end.line) in
     (line1 < line || (line = line1 && range.start.column <= loc.start.column))
-    && (line < line2 || (line = line2 && loc._end.column <= range._end.column)))
+    && (line < line2 || (line = line2 && loc._end.column <= range._end.column))
+  )
 
 let string_of_source ?(strip_root = None) =
   File_key.(
@@ -393,7 +394,8 @@ let string_of_source ?(strip_root = None) =
           let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
           Files.relative_path root_str file
         | None -> file
-      end)
+      end
+  )
 
 let string_of_loc ?(strip_root = None) loc =
   Loc.(
@@ -401,7 +403,8 @@ let string_of_loc ?(strip_root = None) loc =
     | None
     | Some File_key.Builtins ->
       ""
-    | Some file -> spf "%s:%s" (string_of_source ~strip_root file) (Loc.to_string_no_source loc))
+    | Some file -> spf "%s:%s" (string_of_source ~strip_root file) (Loc.to_string_no_source loc)
+  )
 
 let string_of_aloc ?(strip_root = None) aloc =
   match ALoc.source aloc with
@@ -414,7 +417,8 @@ let json_of_source ?(strip_root = None) =
   Hh_json.(
     function
     | Some x -> JSON_String (string_of_source ~strip_root x)
-    | None -> JSON_Null)
+    | None -> JSON_Null
+  )
 
 let json_source_type_of_source =
   Hh_json.(
@@ -424,7 +428,8 @@ let json_source_type_of_source =
     | Some (File_key.JsonFile _) -> JSON_String "JsonFile"
     | Some (File_key.ResourceFile _) -> JSON_String "ResourceFile"
     | Some File_key.Builtins -> JSON_String "Builtins"
-    | None -> JSON_Null)
+    | None -> JSON_Null
+  )
 
 let json_of_loc_props ?(strip_root = None) ?(catch_offset_errors = false) ~offset_table loc =
   Hh_json.(
@@ -464,7 +469,9 @@ let json_of_loc_props ?(strip_root = None) ?(catch_offset_errors = false) ~offse
         ("type", json_source_type_of_source loc.source);
         ("start", JSON_Object start);
         ("end", JSON_Object end_);
-      ]))
+      ]
+    )
+  )
 
 let json_of_loc ?strip_root ?catch_offset_errors ~offset_table loc =
   Hh_json.(JSON_Object (json_of_loc_props ?strip_root ?catch_offset_errors ~offset_table loc))
@@ -1065,7 +1072,8 @@ let rec code_desc_of_expression ~wrap (_, x) =
       ^ " ? "
       ^ code_desc_of_expression ~wrap:false consequent
       ^ " : "
-      ^ code_desc_of_expression ~wrap:false alternate)
+      ^ code_desc_of_expression ~wrap:false alternate
+      )
   | Function _ -> "function () { ... }"
   | Identifier (_, { Ast.Identifier.name = x; comments = _ }) -> x
   | Import { Import.argument; comments = _ } ->
@@ -1115,10 +1123,11 @@ let rec code_desc_of_expression ~wrap (_, x) =
       | (_loc, { ArgList.arguments = _; comments = _ }) -> "(...)"
     in
     code_desc_of_expression ~wrap:true callee
-    ^ (if optional then
+    ^ ( if optional then
         "?."
       else
-        "")
+        ""
+      )
     ^ targ_string
     ^ arg_string
   | OptionalMember { OptionalMember.member = { Member._object; property; comments = _ }; optional }
@@ -1145,7 +1154,8 @@ let rec code_desc_of_expression ~wrap (_, x) =
         | Typeof -> "typeof "
         | Void -> "void "
         | Delete -> "delete "
-        | Await -> "await ")
+        | Await -> "await "
+      )
     in
     do_wrap (op ^ x)
   | Update { Update.operator; prefix; argument; comments = _ } ->
@@ -1154,13 +1164,15 @@ let rec code_desc_of_expression ~wrap (_, x) =
       Update.(
         match operator with
         | Increment -> "++"
-        | Decrement -> "--")
+        | Decrement -> "--"
+      )
     in
     do_wrap
-      (if prefix then
+      ( if prefix then
         op ^ x
       else
-        x ^ op)
+        x ^ op
+      )
   | Yield { Yield.argument = Some x; delegate = false; _ } ->
     do_wrap ("yield " ^ code_desc_of_expression ~wrap:false x)
   | Yield { Yield.argument = Some x; delegate = true; _ } ->
@@ -1232,7 +1244,8 @@ and code_desc_of_operation =
         else if bitshift a && bitshift b then
           false
         else
-          true)
+          true
+    )
   in
   fun left op right ->
     let wrap_left =
@@ -1255,7 +1268,8 @@ and code_desc_of_jsx_element x =
         {
           NamespacedName.namespace = (_, { Identifier.name = a; comments = __POS_OF__ });
           name = (_, { Identifier.name = b; comments = _ });
-        } ) ->
+        }
+      ) ->
     "<" ^ a ^ ":" ^ b ^ " />"
   | MemberExpression x ->
     let rec loop = function
@@ -1264,13 +1278,15 @@ and code_desc_of_jsx_element x =
             MemberExpression._object =
               MemberExpression.Identifier (_, { Identifier.name = a; comments = _ });
             property = (_, { Identifier.name = b; comments = _ });
-          } ) ->
+          }
+        ) ->
         a ^ "." ^ b
       | ( _,
           {
             MemberExpression._object = MemberExpression.MemberExpression a;
             property = (_, { Identifier.name = b; comments = _ });
-          } ) ->
+          }
+        ) ->
         loop a ^ "." ^ b
     in
     "<" ^ loop x ^ " />"
@@ -1284,22 +1300,25 @@ and code_desc_of_literal x =
 and code_desc_of_property ~optional property =
   match property with
   | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name = x; comments = _ }) ->
-    (if optional then
+    ( if optional then
       "?."
     else
-      ".")
+      "."
+    )
     ^ x
   | Ast.Expression.Member.PropertyPrivateName (_, { Ast.PrivateName.name = x; comments = _ }) ->
-    (if optional then
+    ( if optional then
       "?.#"
     else
-      ".#")
+      ".#"
+    )
     ^ x
   | Ast.Expression.Member.PropertyExpression x ->
-    (if optional then
+    ( if optional then
       "?.["
     else
-      "[")
+      "["
+    )
     ^ code_desc_of_expression ~wrap:false x
     ^ "]"
 
@@ -1321,7 +1340,8 @@ let rec mk_expression_reason =
          {
            object_ = code_desc_of_expression ~wrap:true _object;
            property = code_desc_of_property ~optional:false property;
-         })
+         }
+      )
       loc
   | (loc, _) as x -> mk_reason (RCode (code_desc_of_expression ~wrap:false x)) loc
 

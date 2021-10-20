@@ -150,8 +150,7 @@ let update_clients ~clients ~errors_reason ~calc_errors_and_warnings =
     List.iter (send_errors ~errors_reason ~errors ~warnings) subscribed_clients
   )
 
-let send_lsp clients json =
-  clients |> get_subscribed_lsp_clients |> List.iter (send_single_lsp json)
+let send_lsp clients json = clients |> get_subscribed_lsp_clients |> List.iter (send_single_lsp json)
 
 let send_start_recheck clients =
   clients |> get_subscribed_clients |> List.iter send_single_start_recheck

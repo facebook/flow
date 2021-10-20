@@ -264,7 +264,8 @@ let provide_selection_ranges positions ast =
             (Printf.sprintf
                "Invalid position: %d:%d"
                lsp_position.Lsp.line
-               lsp_position.Lsp.character))
+               lsp_position.Lsp.character
+            ))
       ~init:[]
       positions
   in

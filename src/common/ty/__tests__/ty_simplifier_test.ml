@@ -54,7 +54,8 @@ module UnionSimplification = struct
                         };
                     ];
                 },
-              [] )
+              []
+            )
         in
         let t_out = Ty_utils.simplify_type ~merge_kinds:true ~sort:false t_in in
         let t_exp =
@@ -75,7 +76,8 @@ module UnionSimplification = struct
                 ];
             }
         in
-        assert_equal ~ctxt ~printer:Ty.show t_exp t_out );
+        assert_equal ~ctxt ~printer:Ty.show t_exp t_out
+      );
       (*
        * {+f: number} | {-f: number}
        * ~>
@@ -118,11 +120,13 @@ module UnionSimplification = struct
                         };
                     ];
                 },
-              [] )
+              []
+            )
         in
         let t_out = Ty_utils.simplify_type ~merge_kinds:true ~sort:false t_in in
         let t_exp = t_in in
-        assert_equal ~ctxt ~printer:Ty.show t_exp t_out );
+        assert_equal ~ctxt ~printer:Ty.show t_exp t_out
+      );
     ]
 end
 
@@ -179,7 +183,8 @@ module BotAndTopSimplification = struct
                         };
                     ];
                 },
-              [] )
+              []
+            )
         in
         let t_out = Ty_utils.simplify_type ~merge_kinds:true ~sort:false t_in in
         let t_exp =
@@ -202,7 +207,8 @@ module BotAndTopSimplification = struct
                 ];
             }
         in
-        assert_equal ~ctxt ~printer:Ty.show t_exp t_out );
+        assert_equal ~ctxt ~printer:Ty.show t_exp t_out
+      );
       (* This tests the conversion `mixed & T -> T` and that `empty' | T` remains
        * as is when:
        * - `empty'` is not the empty type due to
@@ -224,18 +230,23 @@ module BotAndTopSimplification = struct
                     ( Ty.Top,
                       Ty.Union
                         (Ty.Bot (Ty.NoLowerWithUpper (Ty.SomeUnknownUpper "blah")), Ty.Num None, []),
-                      [] ),
-                  [] ),
-              [] )
+                      []
+                    ),
+                  []
+                ),
+              []
+            )
         in
         let t_out = Ty_utils.simplify_type ~merge_kinds:false ~sort:false t_in in
         let t_exp =
           Ty.Union
             ( Ty.Bot (Ty.EmptyTypeDestructorTriggerT ALoc.none),
               Ty.Bot (Ty.NoLowerWithUpper (Ty.SomeUnknownUpper "blah")),
-              [Ty.Num None] )
+              [Ty.Num None]
+            )
         in
-        assert_equal ~ctxt ~printer:Ty.show t_exp t_out );
+        assert_equal ~ctxt ~printer:Ty.show t_exp t_out
+      );
       (* This tests the conversion `mixed & T -> T` and `empty' | T -> T` when
        * merge_kinds is true.
        *
@@ -253,13 +264,17 @@ module BotAndTopSimplification = struct
                     ( Ty.Top,
                       Ty.Union
                         (Ty.Bot (Ty.NoLowerWithUpper (Ty.SomeUnknownUpper "blah")), Ty.Num None, []),
-                      [] ),
-                  [] ),
-              [] )
+                      []
+                    ),
+                  []
+                ),
+              []
+            )
         in
         let t_out = Ty_utils.simplify_type ~merge_kinds:true ~sort:false t_in in
         let t_exp = Ty.Num None in
-        assert_equal ~ctxt ~printer:Ty.show t_exp t_out );
+        assert_equal ~ctxt ~printer:Ty.show t_exp t_out
+      );
     ]
 end
 
@@ -281,12 +296,15 @@ module AnySimplification = struct
               Inter
                 ( Any (Annotated ALoc.none),
                   Union (Any (Unsound BoundFunctionThis), Ty.Any (Annotated ALoc.none), []),
-                  [] ),
-              [] )
+                  []
+                ),
+              []
+            )
         in
         let t_out = Ty_utils.simplify_type ~merge_kinds:false t_in in
         let t_exp = t_in in
-        assert_equal ~ctxt ~printer:Ty.show t_exp t_out );
+        assert_equal ~ctxt ~printer:Ty.show t_exp t_out
+      );
       (* When merge_kinds is true, all kinds of any are considered equal and so
        * are merged when appearing in unions or intersections.
        *
@@ -304,12 +322,15 @@ module AnySimplification = struct
               Inter
                 ( Any (Annotated ALoc.none),
                   Union (Any (Unsound BoundFunctionThis), Ty.Any (Annotated ALoc.none), []),
-                  [] ),
-              [] )
+                  []
+                ),
+              []
+            )
         in
         let t_out = Ty_utils.simplify_type ~merge_kinds:true t_in in
         let t_exp = Any (Unsound BoundFunctionThis) in
-        assert_equal ~ctxt ~printer:Ty.show t_exp t_out );
+        assert_equal ~ctxt ~printer:Ty.show t_exp t_out
+      );
     ]
 end
 
@@ -356,26 +377,31 @@ module Sorting = struct
           ~ctxt
           ~printer:(Ty_printer.string_of_t ~exact_by_default:true)
           (simplify_sort t6)
-          (simplify_sort (simplify_sort (simplify_sort t6))) );
+          (simplify_sort (simplify_sort (simplify_sort t6)))
+      );
       ( "sorting" >:: fun ctxt ->
         assert_equal
           ~ctxt
           ~printer:(Ty_printer.string_of_t ~exact_by_default:true)
           t6_sorted
-          (simplify_sort t6) );
+          (simplify_sort t6)
+      );
       ( "union/intersection" >:: fun ctxt ->
         let t_in =
           Inter
             ( Union
                 ( Void,
                   Inter (Void, Any (Annotated ALoc.none), [NumLit "1"]),
-                  [Inter (NumLit "1", Any (Annotated ALoc.none), [Void])] ),
+                  [Inter (NumLit "1", Any (Annotated ALoc.none), [Void])]
+                ),
               Union (Inter (Any (Annotated ALoc.none), Void, [NumLit "1"]), Void, []),
-              [] )
+              []
+            )
         in
         let t_out = simplify_sort t_in in
         let t_exp = Union (Void, Inter (Any (Annotated ALoc.none), Void, [NumLit "1"]), []) in
-        assert_equal ~ctxt ~printer:Ty.show t_exp t_out );
+        assert_equal ~ctxt ~printer:Ty.show t_exp t_out
+      );
     ]
 end
 

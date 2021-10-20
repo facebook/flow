@@ -12,6 +12,7 @@ dock-collection-brackets = true
 exp-grouping = preserve
 field-space = tight-decl
 if-then-else = k-r
+indicate-multiline-delimiters = closing-on-separate-line
 indicate-nested-or-patterns = unsafe-no
 leading-nested-match-parens = true
 margin = 100

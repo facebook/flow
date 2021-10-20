@@ -18,8 +18,8 @@ let test ctxt =
     ~ctxt
     L.(
       loc
-        (fused
-           [loc (id "x"); pretty_space; atom "="; pretty_space; wrap_in_parens (expression rhs)]))
+        (fused [loc (id "x"); pretty_space; atom "="; pretty_space; wrap_in_parens (expression rhs)])
+    )
     ast;
 
   let rhs = E.assignment (Patterns.identifier "y") (E.identifier "z") in
@@ -87,11 +87,14 @@ let test ctxt =
                                               Loc.start = { Loc.line = 1; column = 2 };
                                               _end = { Loc.line = 1; column = 3 };
                                             }
-                                          "a");
-                                   ]);
+                                          "a"
+                                       );
+                                   ]
+                                );
                               softline;
                               atom "}";
-                            ]);
+                            ]
+                         );
                        pretty_space;
                        atom "=";
                        pretty_space;
@@ -109,8 +112,13 @@ let test ctxt =
                                 Loc.start = { Loc.line = 1; column = 5 };
                                 _end = { Loc.line = 1; column = 6 };
                               }
-                            "b");
-                     ]));
+                            "b"
+                         );
+                     ]
+                  )
+               );
              atom ";";
-           ]))
+           ]
+        )
+    )
     "({a}=b);"

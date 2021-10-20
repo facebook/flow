@@ -32,13 +32,15 @@ let err_incompatible
       | SimplifyPropType (tool, _) -> Error_message.EInvalidReactPropType { reason; use_op; tool }
       | CreateClass (tool, _, _) -> Error_message.EInvalidReactCreateClass { reason; use_op; tool }
     in
-    add_output cx ~trace err)
+    add_output cx ~trace err
+  )
 
 let component_class
     cx
     reason
     ~(get_builtin_typeapp :
-       Context.t -> ?trace:Type.trace -> reason -> name -> Type.t list -> Type.t)
+       Context.t -> ?trace:Type.trace -> reason -> name -> Type.t list -> Type.t
+       )
     props =
   DefT
     ( reason,
@@ -57,7 +59,8 @@ let get_intrinsic
     prop
     ~rec_flow
     ~(get_builtin_type :
-       Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> name -> Type.t) =
+       Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> name -> Type.t
+       ) =
   let reason = reason_of_t component in
   (* Get the internal $JSXIntrinsics map. *)
   let intrinsics =
@@ -73,7 +76,8 @@ let get_intrinsic
              (match literal with
              | Literal (_, name) -> replace_desc_reason (RIdentifier name) reason
              | _ -> reason);
-         })
+         }
+      )
   in
   (* GetPropT with a non-literal when there is not a dictionary will propagate
    * any. Run the HasOwnPropT check to give the user an error if they use a
@@ -100,7 +104,9 @@ let get_intrinsic
           (match literal with
           | Literal (_, name) -> Named (replace_desc_reason (RReactElement (Some name)) reason, name)
           | _ -> Computed component),
-          (reason, intrinsic) ) );
+          (reason, intrinsic)
+        )
+    );
 
   (* Get the artifact from the intrinsic. *)
   let propref =
@@ -126,7 +132,8 @@ let get_intrinsic
           lookup_action = LookupProp (unknown_use, prop);
           method_accessible = true;
           ids = Some Properties.Set.empty;
-        } )
+        }
+    )
 
 (* Lookup the defaultProps of a component and flow with upper depending
  * on the given polarity.
@@ -162,7 +169,8 @@ let lookup_defaults cx trace component ~reason_op ~rec_flow upper pole =
           lookup_action = action;
           method_accessible = true;
           ids = Some Properties.Set.empty;
-        } )
+        }
+    )
 
 (* Get a type for the default props of a component. If a component has no
  * default props then either the type will be Some {||} or we will
@@ -188,7 +196,8 @@ let props_to_tout
     ~(rec_flow_t : Context.t -> Type.trace -> use_op:Type.use_op -> Type.t * Type.t -> unit)
     ~rec_flow
     ~(get_builtin_type :
-       Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> name -> Type.t)
+       Context.t -> ?trace:Type.trace -> reason -> ?use_desc:bool -> name -> Type.t
+       )
     ~(add_output : Context.t -> ?trace:Type.trace -> Error_message.t -> unit)
     u
     tout =
@@ -249,7 +258,8 @@ let get_config
     ~(rec_flow_t : Context.t -> Type.trace -> use_op:Type.use_op -> Type.t * Type.t -> unit)
     ~rec_flow
     ~(rec_unify :
-       Context.t -> Type.trace -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit)
+       Context.t -> Type.trace -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit
+       )
     ~get_builtin_type
     ~(add_output : Context.t -> ?trace:Type.trace -> Error_message.t -> unit)
     u
@@ -280,7 +290,8 @@ let get_config
            ~rec_flow
            ~get_builtin_type
            ~add_output
-           u)
+           u
+        )
     in
     let defaults = get_defaults cx trace component ~reason_op ~rec_flow in
     (match defaults with
@@ -293,7 +304,9 @@ let get_config
           rec_flow
             cx
             trace
-            (props, ObjKitT (use_op, reason_op, tool, Rest (ReactConfigMerge pole, state), tout)))))
+            (props, ObjKitT (use_op, reason_op, tool, Rest (ReactConfigMerge pole, state), tout))
+        )
+      ))
 
 module type REACT = sig
   val run : Context.t -> Type.trace -> use_op:use_op -> reason -> Type.t -> Type.React.tool -> unit
@@ -356,7 +369,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         match t with
         | GenericT { bound; id; reason; name } ->
           ( mod_reason_of_t (Fn.const reason) bound,
-            (fun bound -> GenericT { bound; id; reason = reason_of_t bound; name }) )
+            (fun bound -> GenericT { bound; id; reason = reason_of_t bound; name })
+          )
         | _ -> (t, (fun x -> x))
       in
       match t with
@@ -453,7 +467,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                type_ =
                  union_of_ts r [spread; DefT (r, bogus_trust (), ArrT (ArrayAT (spread, None)))];
                use_desc = false;
-             })
+             }
+          )
       (* If we have one children argument and a spread of unknown length then
        * React may either pass in the unwrapped argument, or an array where the
        * element type is the union of the known argument and the spread type. *)
@@ -469,7 +484,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         Some
           (union_of_ts
              r
-             [t; DefT (r, bogus_trust (), ArrT (ArrayAT (union_of_ts r [spread; t], Some [t])))])
+             [t; DefT (r, bogus_trust (), ArrT (ArrayAT (union_of_ts r [spread; t], Some [t])))]
+          )
       (* If we have two or more arguments and a spread argument of unknown length
        * then we want to return an array type where the element type is the union
        * of all argument types and the spread argument type. *)
@@ -484,7 +500,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         in
         Some
           (DefT
-             (r, bogus_trust (), ArrT (ArrayAT (union_of_ts r (spread :: t :: ts), Some (t :: ts)))))
+             (r, bogus_trust (), ArrT (ArrayAT (union_of_ts r (spread :: t :: ts), Some (t :: ts))))
+          )
     in
     let config_check clone config children_args =
       (* Create the optional children input type from the children arguments. *)
@@ -509,19 +526,23 @@ module Kit (Flow : Flow_common.S) : REACT = struct
            *
            * Additionally, this hack enables us to not have to explicitly handle
            * AbstractComponent past this point. *)
-          ( (if clone then
+          ( ( if clone then
               ShapeT (reason_of_t config, config)
             else
-              config),
-            None )
+              config
+            ),
+            None
+          )
         | _ ->
-          ( (if clone then
+          ( ( if clone then
               ShapeT (reason_of_t config, Tvar.mk_where cx reason_op props_to_tout)
             else
-              Tvar.mk_where cx reason_op tin_to_props),
+              Tvar.mk_where cx reason_op tin_to_props
+            ),
             (* For class components and function components we want to lookup the
              * static default props property so that we may add it to our config input. *)
-            get_defaults cx trace l ~reason_op ~rec_flow )
+            get_defaults cx trace l ~reason_op ~rec_flow
+          )
       in
       (* Use object spread to add children to config (if we have children)
        * and remove key and ref since we already checked key and ref. Finally in
@@ -549,7 +570,9 @@ module Kit (Flow : Flow_common.S) : REACT = struct
             ( config,
               ObjKitT
                 (use_op, reason, Resolve Next, ReactConfig (Config { defaults; children }), props)
-            )))
+            )
+        )
+      )
     in
     let create_element clone component config children_args tout =
       config_check clone config children_args;
@@ -567,7 +590,9 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               rec_flow
                 cx
                 trace
-                (config, ObjKitT (use_op, reason, Resolve Next, ObjectRep, normalized_config))))
+                (config, ObjKitT (use_op, reason, Resolve Next, ObjectRep, normalized_config))
+            )
+        )
       in
       (* Check the type of React keys in the config input.
        *
@@ -593,7 +618,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                   lower = reason_of_t normalized_config;
                   upper = reason_key;
                 },
-              use_op )
+              use_op
+            )
         in
         let action = LookupProp (use_op, Field (None, key_t, Polarity.Positive)) in
         rec_flow
@@ -609,7 +635,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                 lookup_action = action;
                 method_accessible = true;
                 ids = Some Properties.Set.empty;
-              } )
+              }
+          )
       in
       (* Check the type of React refs in the config input.
        *
@@ -637,7 +664,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                   lower = reason_of_t normalized_config;
                   upper = reason_ref;
                 },
-              use_op )
+              use_op
+            )
         in
         let action = LookupProp (use_op, Field (None, ref_t, Polarity.Positive)) in
         rec_flow
@@ -653,7 +681,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                 lookup_action = action;
                 method_accessible = true;
                 ids = Some Properties.Set.empty;
-              } )
+              }
+          )
       in
       let annot_loc = aloc_of_reason reason_op in
       let elem_reason =
@@ -697,7 +726,11 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                   reason_op,
                   tool,
                   Rest (ReactConfigMerge Polarity.Neutral, state),
-                  tout ) )))
+                  tout
+                )
+            )
+        )
+      )
     in
     let get_instance tout =
       let component = l in
@@ -797,7 +830,9 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                   ReactKitT
                     ( unknown_use,
                       reason_op,
-                      SimplifyPropType (OneOf (ResolveElem (todo, done_rev)), tout) ) )
+                      SimplifyPropType (OneOf (ResolveElem (todo, done_rev)), tout)
+                    )
+                )
           in
           (match tool with
           | ResolveArray ->
@@ -823,7 +858,9 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                   ReactKitT
                     ( unknown_use,
                       reason_op,
-                      SimplifyPropType (OneOfType (ResolveElem (todo, done_rev)), tout) ) )
+                      SimplifyPropType (OneOfType (ResolveElem (todo, done_rev)), tout)
+                    )
+                )
           in
           (match tool with
           | ResolveArray ->
@@ -873,7 +910,9 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                     ReactKitT
                       ( unknown_use,
                         reason_op,
-                        SimplifyPropType (Shape (ResolveProp (k, todo, shape)), tout) ) ))
+                        SimplifyPropType (Shape (ResolveProp (k, todo, shape)), tout)
+                      )
+                  ))
           in
           (match tool with
           | ResolveObject ->
@@ -901,7 +940,9 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                     ReactKitT
                       ( unknown_use,
                         reason_op,
-                        SimplifyPropType (Shape (ResolveDict (dicttype, todo, shape)), tout) ) ))
+                        SimplifyPropType (Shape (ResolveDict (dicttype, todo, shape)), tout)
+                      )
+                  ))
             | Error _ -> AnyT.make (AnyError None) reason_op |> resolve)
           | ResolveDict (dicttype, todo, shape) ->
             let dict =
@@ -920,7 +961,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                   optional ?annot_loc:(annot_aloc_of_reason @@ reason_of_t t) t
               | Error _ -> AnyT.make (AnyError None) reason_op |> optional
             in
-            next todo (add_prop k t shape)))
+            next todo (add_prop k t shape))
+      )
     in
     let create_class knot tout =
       CreateClass.(
@@ -939,7 +981,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           | None ->
             Base.Option.map dict (fun { key; value; dict_polarity; _ } ->
                 rec_flow_t ~use_op:unknown_use cx trace (string_key x reason_op, key);
-                Field (None, value, dict_polarity))
+                Field (None, value, dict_polarity)
+            )
         in
         let read_prop x (obj : resolved_object) =
           Base.Option.bind (get_prop x obj) Property.read_t
@@ -1262,7 +1305,9 @@ module Kit (Flow : Flow_common.S) : REACT = struct
                       proto = NameUtils.Map.empty;
                       (* TODO: check static signature against base class *)
                       static = NameUtils.Map.empty;
-                    } ) );
+                    }
+                )
+            );
 
           let instance =
             DefT (reason_component, bogus_trust (), InstanceT (static, super, [], insttype))
@@ -1407,7 +1452,8 @@ module Kit (Flow : Flow_common.S) : REACT = struct
               | _ -> coerce_object l |> maybe_known_of_result |> map_known (fun x -> NotNull x))
           in
           let acc = merge_initial_state initial_state acc in
-          on_resolve_initial_state acc todo)
+          on_resolve_initial_state acc todo
+      )
     in
     match u with
     | CreateElement0 _ -> failwith "handled elsewhere"

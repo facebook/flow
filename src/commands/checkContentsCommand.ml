@@ -36,7 +36,8 @@ let spec =
         |> wait_for_recheck_flag
         |> flag "--respect-pragma" no_arg ~doc:"" (* deprecated *)
         |> flag "--all" no_arg ~doc:"Ignore absence of an @flow pragma"
-        |> anon "filename" (optional string));
+        |> anon "filename" (optional string)
+      );
   }
 
 let main
@@ -128,7 +129,8 @@ let main
       (* Return a successful exit code if there were only warnings. *)
       Exit.(
         exit
-          (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings))
+          (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
+      )
     )
   | ServerProt.Response.NO_ERRORS ->
     if json then

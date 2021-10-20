@@ -45,7 +45,8 @@ module InsertionPointCollectors = struct
           | (Some (_, { Identifier.name; _ }), _)
           | (None, Some (_, { Identifier.name; _ })) ->
             this#type_params_opt tparams (fun _ ->
-                this#visit_named_function ~is_method ~function_name:name ~body_loc:block_loc))
+                this#visit_named_function ~is_method ~function_name:name ~body_loc:block_loc
+            ))
         | _ -> ()
 
       method! function_ function_declaration =
@@ -57,7 +58,8 @@ module InsertionPointCollectors = struct
         let (_, { Statement.VariableDeclaration.Declarator.id; init }) = decl in
         match (id, init) with
         | ( (_, Pattern.Identifier { Pattern.Identifier.name; _ }),
-            Some (_, (Expression.ArrowFunction f | Expression.Function f)) ) ->
+            Some (_, (Expression.ArrowFunction f | Expression.Function f))
+          ) ->
           let () = this#function_with_name ~name f in
           super#variable_declarator ~kind decl
         | _ -> super#variable_declarator ~kind decl
@@ -159,7 +161,8 @@ module InsertionPointCollectors = struct
           in
           let () =
             this#type_params_opt tparams (fun _ ->
-                this#collect_name_and_loc id body_loc |> this#annot_with_tparams)
+                this#collect_name_and_loc id body_loc |> this#annot_with_tparams
+            )
           in
           super#class_ class_declaration
         else
@@ -224,10 +227,11 @@ module AstExtractor = struct
                 title =
                   Printf.sprintf
                     "Extract to constant in %s '%s'"
-                    (if is_method then
+                    ( if is_method then
                       "method"
                     else
-                      "function")
+                      "function"
+                    )
                     function_name;
                 function_body_loc = Some body_loc;
                 statement_loc = Loc.none;
@@ -265,7 +269,8 @@ module AstExtractor = struct
             (let ({ title; function_body_loc; _ }, constant_insertion_points) =
                constant_insertion_points
              in
-             ({ title; function_body_loc; statement_loc }, constant_insertion_points))
+             ({ title; function_body_loc; statement_loc }, constant_insertion_points)
+            )
         in
         let result =
           if Loc.contains extract_range statement_loc then
@@ -495,7 +500,9 @@ module RefactorProgramMappers = struct
                 program_body with
                 statements =
                   super#statement_list program_body.statements @ [function_declaration_statement];
-              } )
+              }
+            
+          )
         else
           super#program program
 
@@ -539,7 +546,8 @@ module RefactorProgramMappers = struct
             {
               body with
               body = Flow_ast_mapper.map_list super#class_element body.body @ [method_declaration];
-            } )
+            }
+          )
         else
           super#class_body block
     end
@@ -604,7 +612,8 @@ module RefactorProgramMappers = struct
             {
               body with
               body = field_definition :: Flow_ast_mapper.map_list super#class_element body.body;
-            } )
+            }
+          )
         else
           super#class_body block
     end
@@ -672,7 +681,8 @@ module VariableAnalysis = struct
 
   let collect_relevant_defs_with_scope ~scope_info ~ssa_values ~extracted_loc =
     let ( used_defs_within_extracted_statements,
-          shadowed_local_reassignments_within_extracted_statements ) =
+          shadowed_local_reassignments_within_extracted_statements
+        ) =
       IMap.fold
         (fun _ { Scope_api.Scope.locals; _ } acc ->
           LocMap.fold
@@ -825,7 +835,8 @@ module VariableAnalysis = struct
                         | Ssa_api.Write reason ->
                           let write_loc = Reason.poly_loc_of_reason reason in
                           not (Loc.contains extracted_statements_loc write_loc))
-                      write_locs )
+                      write_locs
+                )
               else
                 acc)
             locals
@@ -947,7 +958,8 @@ module TypeSynthesizer = struct
              ~ambiguity_strategy:Autofix_options.Generalize
              ~remote_converter
              loc
-             scheme)
+             scheme
+          )
       with
       | Insert_type.(FailedToInsertType (Expected expected)) -> Error expected
     in

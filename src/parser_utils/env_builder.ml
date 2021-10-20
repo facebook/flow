@@ -549,7 +549,8 @@ module Make
         HeapRefinementMap.merge (fun _ refinement1 refinement2 ->
             match (refinement1, refinement2) with
             | (Some v1, Some v2) -> Some (Val.merge v1 v2)
-            | _ -> None)
+            | _ -> None
+        )
 
       method merge_remote_env (env : Env.t) : unit =
         (* NOTE: env might have more keys than env_state.env, since the environment it
@@ -702,9 +703,7 @@ module Make
       method private mk_env =
         SMap.map (fun (_, (loc, _)) ->
             let (_, providers) =
-              Base.Option.value
-                ~default:(true, [])
-                (Provider_api.providers_of_def provider_info loc)
+              Base.Option.value ~default:(true, []) (Provider_api.providers_of_def provider_info loc)
             in
             let havoc =
               if Base.List.is_empty providers then
@@ -724,7 +723,8 @@ module Make
               havoc;
               def_loc = Some loc;
               heap_refinements = ref HeapRefinementMap.empty;
-            })
+            }
+        )
 
       method private push_env bindings =
         let old_env = env_state.env in
@@ -783,7 +783,8 @@ module Make
                 env_state with
                 abrupt_completion_envs;
                 latest_refinements = saved_latest_refinements;
-              })
+              }
+        )
 
       (* Given multiple completion states, (re)raise if all of them are the same
          abrupt completion. This function is called at merge points. *)
@@ -1027,7 +1028,8 @@ module Make
         (* collect completions and environments of every branch *)
         let then_completion_state =
           this#run_to_completion (fun () ->
-              ignore @@ this#if_consequent_statement ~has_else:(alternate <> None) consequent)
+              ignore @@ this#if_consequent_statement ~has_else:(alternate <> None) consequent
+          )
         in
         let then_env_no_refinements = this#env_without_latest_refinements in
         let then_env_with_refinements = this#env in
@@ -1041,7 +1043,8 @@ module Make
               @@ Flow_ast_mapper.map_opt
                    (fun (loc, { Alternate.body; comments }) ->
                      (loc, { Alternate.body = this#statement body; comments }))
-                   alternate)
+                   alternate
+          )
         in
         (* merge environments *)
         let else_env_no_refinements = this#env_without_latest_refinements in
@@ -1150,7 +1153,8 @@ module Make
                 else
                   Refinement_key.key_of_name name :: acc)
               post_env
-              [])
+              []
+        )
 
       method havoc_changed_vars changed_vars =
         List.iter
@@ -1171,7 +1175,8 @@ module Make
         this#run_to_completion (fun () ->
             this#commit_abrupt_completion_matching
               (AbruptCompletion.mem continues)
-              loop_completion_state)
+              loop_completion_state
+        )
 
       (* After a loop we need to negate the loop guard and apply the refinement. The
        * targets of those refinements may have been changed by the loop, but that
@@ -1202,7 +1207,8 @@ module Make
                  this#map_val_with_refinement_key
                    refinement_key
                    ~heap_default:(Some (Val.projection ()))
-                   refine_val)
+                   refine_val
+             )
 
       (*
        * Unlike the ssa_builder, the env_builder does not create REF unresolved
@@ -1281,7 +1287,8 @@ module Make
             in
             this#commit_abrupt_completion_matching
               AbruptCompletion.(mem [break None])
-              completion_state)
+              completion_state
+        )
 
       method! while_ _loc (stmt : (L.t, L.t) Flow_ast.Statement.While.t) =
         let open Flow_ast.Statement.While in
@@ -1498,13 +1505,15 @@ module Make
                 let first_state = List.hd case_completion_states in
                 let remaining_states = List.tl case_completion_states in
                 this#run_to_completion (fun () ->
-                    this#merge_completion_states (first_state, remaining_states))
+                    this#merge_completion_states (first_state, remaining_states)
+                )
               else
                 None
             in
             this#commit_abrupt_completion_matching
               AbruptCompletion.(mem [break None])
-              completion_state);
+              completion_state
+        );
         cases
 
       method private env_switch_case
@@ -1610,7 +1619,8 @@ module Make
             let try_catch_completion_states = (try_completion_state, catch_completion_state_opt) in
             let completion_state =
               this#run_to_completion (fun () ->
-                  this#merge_completion_states try_catch_completion_states)
+                  this#merge_completion_states try_catch_completion_states
+              )
             in
             this#commit_abrupt_completion_matching AbruptCompletion.all completion_state;
             begin
@@ -1625,7 +1635,8 @@ module Make
                 ignore @@ this#block loc block
               | None -> ()
             end;
-            this#from_completion completion_state);
+            this#from_completion completion_state
+        );
         stmt
 
       (* We also havoc state when entering functions and exiting calls. *)
@@ -1641,7 +1652,8 @@ module Make
                 this#commit_abrupt_completion_matching
                   AbruptCompletion.(mem [return; throw])
                   completion_state)
-              ~finally:(fun () -> this#reset_env env))
+              ~finally:(fun () -> this#reset_env env)
+        )
 
       method! declare_function loc expr =
         match Declare_function_utils.declare_function_to_function_declaration_simple loc expr with
@@ -1672,7 +1684,9 @@ module Make
                       )
                     :: other_args;
                   comments = _;
-                } ) ) ->
+                }
+              )
+            ) ->
             let _ = List.map this#expression_or_spread other_args in
             this#raise_abrupt_completion AbruptCompletion.throw
           | ( None,
@@ -1680,7 +1694,9 @@ module Make
                 {
                   Ast.Expression.ArgList.arguments = Ast.Expression.Expression cond :: other_args;
                   comments = _;
-                } ) ) ->
+                }
+              )
+            ) ->
             this#push_refinement_scope RefinementKeyMap.empty;
             ignore @@ this#expression_refinement cond;
             let _ = List.map this#expression_or_spread other_args in
@@ -1711,7 +1727,8 @@ module Make
             | Await -> this#havoc_current_env ~all:false
             | _ -> ()
           end;
-          expr)
+          expr
+        )
 
       method! yield loc (expr : ('loc, 'loc) Ast.Expression.Yield.t) =
         ignore @@ super#yield loc expr;
@@ -1736,7 +1753,8 @@ module Make
             env_state <- { env_state with possible_labeled_continues = [] };
             this#commit_abrupt_completion_matching
               AbruptCompletion.(mem [break (Some label)])
-              completion_state);
+              completion_state
+        );
         stmt
 
       method! statement (stmt : (L.t, L.t) Ast.Statement.t) =
@@ -1784,7 +1802,8 @@ module Make
                  else
                    v
                in
-               this#map_val_with_refinement_key refinement_key refine_val)
+               this#map_val_with_refinement_key refinement_key refine_val
+           )
 
       (* See pop_refinement_scope. The only difference here is that we unrefine values deeply
        * instead of just at the top level. The reason for this is that intermediate control-flow
@@ -1797,7 +1816,8 @@ module Make
         refinements
         |> RefinementKeyMap.iter (fun refinement_key latest_refinement ->
                let unrefine_deeply = Val.unrefine_deeply latest_refinement.refinement_id in
-               this#map_val_with_refinement_key refinement_key unrefine_deeply)
+               this#map_val_with_refinement_key refinement_key unrefine_deeply
+           )
 
       (* Invariant refinement scopes can be popped, but the refinement should continue living on.
        * To model that, we pop the refinement scope but do not unrefine the refinements. The
@@ -1818,7 +1838,8 @@ module Make
         refinements
         |> RefinementKeyMap.iter (fun refinement_key latest_refinement ->
                let unrefine = Val.unrefine latest_refinement.refinement_id in
-               this#map_val_with_refinement_key refinement_key unrefine)
+               this#map_val_with_refinement_key refinement_key unrefine
+           )
 
       method private peek_new_refinements () = List.hd env_state.latest_refinements
 
@@ -1945,7 +1966,8 @@ module Make
         match assignment.left with
         | ( id_loc,
             Flow_ast.Pattern.Identifier
-              { Flow_ast.Pattern.Identifier.name = (_, { Flow_ast.Identifier.name; _ }); _ } ) ->
+              { Flow_ast.Pattern.Identifier.name = (_, { Flow_ast.Identifier.name; _ }); _ }
+          ) ->
           this#add_refinement
             (Refinement_key.key_of_name name)
             (L.LSet.singleton loc, TruthyR id_loc)
@@ -2186,7 +2208,8 @@ module Make
                   | Expression.Member.PropertyExpression
                       (ploc, Expression.Literal { Literal.value = Literal.String prop_name; _ }) );
                 _;
-              } ) ->
+              }
+          ) ->
           let (_ : ('a, 'b) Ast.Expression.t) = this#expression _object in
           (match Refinement_key.key _object with
           | Some name ->
@@ -2212,15 +2235,20 @@ module Make
         (* typeof expr ==/=== string *)
         | ( ( _,
               Expression.Unary
-                { Expression.Unary.operator = Expression.Unary.Typeof; argument; comments = _ } ),
-            (_, Expression.Literal { Literal.value = Literal.String s; _ }) )
+                { Expression.Unary.operator = Expression.Unary.Typeof; argument; comments = _ }
+            ),
+            (_, Expression.Literal { Literal.value = Literal.String s; _ })
+          )
         | ( (_, Expression.Literal { Literal.value = Literal.String s; _ }),
             ( _,
               Expression.Unary
-                { Expression.Unary.operator = Expression.Unary.Typeof; argument; comments = _ } ) )
+                { Expression.Unary.operator = Expression.Unary.Typeof; argument; comments = _ }
+            )
+          )
         | ( ( _,
               Expression.Unary
-                { Expression.Unary.operator = Expression.Unary.Typeof; argument; comments = _ } ),
+                { Expression.Unary.operator = Expression.Unary.Typeof; argument; comments = _ }
+            ),
             ( _,
               Expression.TemplateLiteral
                 {
@@ -2231,11 +2259,14 @@ module Make
                           Expression.TemplateLiteral.Element.value =
                             { Expression.TemplateLiteral.Element.cooked = s; _ };
                           _;
-                        } );
+                        }
+                      );
                     ];
                   expressions = [];
                   comments = _;
-                } ) )
+                }
+            )
+          )
         | ( ( _,
               Expression.TemplateLiteral
                 {
@@ -2246,15 +2277,18 @@ module Make
                           Expression.TemplateLiteral.Element.value =
                             { Expression.TemplateLiteral.Element.cooked = s; _ };
                           _;
-                        } );
+                        }
+                      );
                     ];
                   expressions = [];
                   comments = _;
-                } ),
+                }
+            ),
             ( _,
               Expression.Unary
-                { Expression.Unary.operator = Expression.Unary.Typeof; argument; comments = _ } ) )
-          ->
+                { Expression.Unary.operator = Expression.Unary.Typeof; argument; comments = _ }
+            )
+          ) ->
           this#typeof_test loc argument s sense
         (* bool equality *)
         | ((lit_loc, Expression.Literal { Literal.value = Literal.Boolean lit; _ }), expr)
@@ -2274,10 +2308,13 @@ module Make
                           Expression.TemplateLiteral.Element.value =
                             { Expression.TemplateLiteral.Element.cooked = lit; _ };
                           _;
-                        } );
+                        }
+                      );
                     ];
                   _;
-                } ) )
+                }
+            )
+          )
         | ( ( lit_loc,
               Expression.TemplateLiteral
                 {
@@ -2288,11 +2325,14 @@ module Make
                           Expression.TemplateLiteral.Element.value =
                             { Expression.TemplateLiteral.Element.cooked = lit; _ };
                           _;
-                        } );
+                        }
+                      );
                     ];
                   _;
-                } ),
-            expr ) ->
+                }
+            ),
+            expr
+          ) ->
           this#literal_test ~strict ~sense loc expr (SingletonStrR { loc = lit_loc; sense; lit })
         (* number equality *)
         | ((lit_loc, number_literal), expr) when is_number_literal number_literal ->
@@ -2316,12 +2356,18 @@ module Make
         | (expr, (_, Expression.Literal { Literal.value = Literal.Null; _ })) ->
           this#null_test ~sense ~strict loc expr
         (* expr op undefined *)
-        | ( ((_, Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ }))
-            as undefined),
-            expr )
+        | ( ( ( _,
+                Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ })
+              ) as undefined
+            ),
+            expr
+          )
         | ( expr,
-            ((_, Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ }))
-            as undefined) ) ->
+            ( ( _,
+                Expression.Identifier (_, { Flow_ast.Identifier.name = "undefined"; comments = _ })
+              ) as undefined
+            )
+          ) ->
           ignore @@ this#expression undefined;
           this#void_test ~sense ~strict ~check_for_bound_undefined:true loc expr
         (* expr op void(...) *)
@@ -2397,19 +2443,22 @@ module Make
                  Flow_ast.Expression.Member._object =
                    ( _,
                      Flow_ast.Expression.Identifier
-                       (_, { Flow_ast.Identifier.name = "Array"; comments = _ }) );
+                       (_, { Flow_ast.Identifier.name = "Array"; comments = _ })
+                   );
                  property =
                    Flow_ast.Expression.Member.PropertyIdentifier
                      (_, { Flow_ast.Identifier.name = "isArray"; comments = _ });
                  comments = _;
-               } ) as callee;
+               }
+           ) as callee;
          targs = _;
          arguments =
            ( _,
              {
                Flow_ast.Expression.ArgList.arguments = [Flow_ast.Expression.Expression arg];
                comments = _;
-             } );
+             }
+           );
          comments = _;
         } ->
           ignore @@ this#expression callee;
@@ -2606,7 +2655,8 @@ module Make
     in
     let completion_state =
       env_walk#run_to_completion (fun () ->
-          ignore @@ env_walk#with_bindings loc bindings env_walk#program program)
+          ignore @@ env_walk#with_bindings loc bindings env_walk#program program
+      )
     in
     ( completion_state,
       {
@@ -2616,7 +2666,8 @@ module Make
         env_entries = env_walk#write_entries;
         providers;
         refinement_of_id = env_walk#refinement_of_id;
-      } )
+      }
+    )
 
   let program cx program =
     let (_, { Env_api.env_values; refinement_of_id; _ }) = program_with_scope cx program in

@@ -18,6 +18,7 @@ let tests =
              let (actual, broader_context) = add_autocomplete_token contents 4 0 in
              assert_equal ~ctxt ~printer:(fun x -> x) expected actual;
              let expected = "foo\nAUTO332\nbar" in
-             assert_equal ~ctxt ~printer:(fun x -> x) expected broader_context );
+             assert_equal ~ctxt ~printer:(fun x -> x) expected broader_context
+           );
          ];
   ]

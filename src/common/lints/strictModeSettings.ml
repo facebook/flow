@@ -27,6 +27,7 @@ let of_lines =
     | labeled_line :: labeled_lines ->
       Base.Result.bind (parse_line labeled_line) (fun kinds ->
           let acc = List.fold_left (fun acc kind -> LintSet.add kind acc) acc kinds in
-          loop acc labeled_lines)
+          loop acc labeled_lines
+      )
   in
   loop LintSet.empty

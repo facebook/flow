@@ -261,7 +261,9 @@ let options_by_strictness frontmatter =
       | Only_strict -> { o with use_strict = true }
       | No_strict
       | Raw ->
-        { o with use_strict = false }))
+        { o with use_strict = false }
+    )
+  )
 
 let split_by_strictness frontmatter =
   Frontmatter.(
@@ -271,7 +273,8 @@ let split_by_strictness frontmatter =
     | Only_strict
     | No_strict
     | Raw ->
-      [frontmatter])
+      [frontmatter]
+  )
 
 let parse_test acc filename =
   let content = Sys_utils.cat filename in

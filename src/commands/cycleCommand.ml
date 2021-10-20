@@ -28,7 +28,8 @@ let spec =
         |> root_flag
         |> strip_root_flag
         |> flag "--types" no_arg ~doc:"Only consider type dependencies"
-        |> anon "FILE..." (required string));
+        |> anon "FILE..." (required string)
+      );
   }
 
 let main base_flags option_values root strip_root types_only file () =

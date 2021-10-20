@@ -84,7 +84,8 @@ let module_name_candidates ~options =
         else
           new_name :: mapped_names
       in
-      List.rev (name :: List.fold_left map_name [] mappers))
+      List.rev (name :: List.fold_left map_name [] mappers)
+  )
 
 let add_package filename = function
   | Ok package -> Package_heaps.Package_heap_mutator.add_package_json filename package
@@ -281,7 +282,9 @@ module Node = struct
     lazy_seq
       (file_exts
       |> Base.List.map ~f:(fun ext ->
-             lazy (path_if_exists ~file_options resolution_acc (path ^ ext))))
+             lazy (path_if_exists ~file_options resolution_acc (path ^ ext))
+         )
+      )
 
   let parse_main
       ~reader ~root ~file_options (loc : ALoc.t) resolution_acc package_filename file_exts =
@@ -351,13 +354,15 @@ module Node = struct
              loc
              resolution_acc
              (Filename.concat path "package.json")
-             file_exts);
+             file_exts
+          );
         lazy
           (path_if_exists_with_file_exts
              ~file_options
              resolution_acc
              (Filename.concat path "index")
-             file_exts);
+             file_exts
+          );
       ]
 
   let rec node_module ~options ~reader node_modules_containers file loc resolution_acc dir r =
@@ -371,7 +376,7 @@ module Node = struct
               (Files.node_resolver_dirnames file_options
               |> Base.List.map ~f:(fun dirname ->
                      lazy
-                       (if SSet.mem dirname existing_node_modules_dirs then
+                       ( if SSet.mem dirname existing_node_modules_dirs then
                          resolve_relative
                            ~options
                            ~reader
@@ -380,7 +385,10 @@ module Node = struct
                            dir
                            (spf "%s%s%s" dirname Filename.dir_sep r)
                        else
-                         None)))
+                         None
+                       )
+                 )
+              )
           | None -> None);
         lazy
           (let parent_dir = Filename.dirname dir in
@@ -395,7 +403,8 @@ module Node = struct
                loc
                resolution_acc
                (Filename.dirname dir)
-               r);
+               r
+          );
       ]
 
   let absolute r = Str.string_match Files.absolute_path_regexp r 0
@@ -414,7 +423,7 @@ module Node = struct
       lazy_seq
         [
           lazy
-            (if Options.node_resolver_allow_root_relative options then
+            ( if Options.node_resolver_allow_root_relative options then
               lazy_seq
                 (Options.node_resolver_root_relative_dirnames options
                 |> Base.List.map ~f:(fun root_relative_dirname ->
@@ -425,10 +434,13 @@ module Node = struct
                             else
                               Filename.concat root_str root_relative_dirname
                           in
-                          resolve_relative ~options ~reader loc ?resolution_acc root_str import_str))
+                          resolve_relative ~options ~reader loc ?resolution_acc root_str import_str
+                         )
+                   )
                 )
             else
-              None);
+              None
+            );
           lazy
             (node_module
                ~options
@@ -438,7 +450,8 @@ module Node = struct
                loc
                resolution_acc
                dir
-               import_str);
+               import_str
+            );
         ]
 
   let imported_module ~options ~reader node_modules_containers file loc ?resolution_acc import_str =
@@ -611,9 +624,10 @@ let get_module_system opts =
   | Some system -> system
   | None ->
     let module M =
-    (val match Options.module_system opts with
-         | Options.Node -> (module Node : MODULE_SYSTEM)
-         | Options.Haste -> (module Haste : MODULE_SYSTEM))
+    ( val match Options.module_system opts with
+          | Options.Node -> (module Node : MODULE_SYSTEM)
+          | Options.Haste -> (module Haste : MODULE_SYSTEM)
+      )
     in
     let system = (module M : MODULE_SYSTEM) in
     module_system := Some system;
@@ -836,7 +850,8 @@ let get_files ~reader ~audit filename module_name =
    if f_module = module_name then
      []
    else
-     [(f_module, Module_heaps.Reader_dispatcher.get_file ~reader ~audit f_module)])
+     [(f_module, Module_heaps.Reader_dispatcher.get_file ~reader ~audit f_module)]
+  )
 
 let get_files_unsafe ~reader ~audit filename module_name =
   (module_name, Module_heaps.Mutator_reader.get_file_unsafe ~reader ~audit module_name)
@@ -845,7 +860,8 @@ let get_files_unsafe ~reader ~audit filename module_name =
    if f_module = module_name then
      []
    else
-     [(f_module, Module_heaps.Mutator_reader.get_file_unsafe ~reader ~audit f_module)])
+     [(f_module, Module_heaps.Mutator_reader.get_file_unsafe ~reader ~audit f_module)]
+  )
 
 let calc_modules_helper ~reader workers files =
   MultiWorkerLwt.call
@@ -856,7 +872,9 @@ let calc_modules_helper ~reader workers files =
            | Some info ->
              let { Module_heaps.module_name; _ } = info in
              (file, get_files_unsafe ~reader ~audit:Expensive.ok file module_name) :: acc
-           | None -> acc))
+           | None -> acc
+       )
+      )
     ~neutral:[]
     ~merge:List.rev_append
     ~next:(MultiWorkerLwt.next workers (FilenameSet.elements files))

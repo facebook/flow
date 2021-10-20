@@ -21,7 +21,8 @@ let register_lock lock_file =
       let fd = Unix.descr_of_out_channel (open_out lock_file) in
       let st = Unix.fstat fd in
       lock_fds := SMap.add lock_file (fd, st) !lock_fds;
-      fd)
+      fd
+  )
 
 (**
  * Grab or check if a file lock is available.

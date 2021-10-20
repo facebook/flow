@@ -170,7 +170,8 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
             raise (FileWatcherDied exn)
           | (End_of_file | Unix.Unix_error (Unix.EPIPE, _, _)) as e ->
             let exn = Exception.wrap e in
-            raise (FileWatcherDied exn))
+            raise (FileWatcherDied exn)
+      )
 
     method get_and_clear_changed_files =
       let%lwt () = self#fetch in
@@ -517,7 +518,8 @@ end = struct
                 files = SSet.empty;
                 listening_thread =
                   (let%lwt env = waiter in
-                   listen env);
+                   listen env
+                  );
                 mergebase = None;
                 is_initial = true;
                 finished_an_hg_update = false;
@@ -614,7 +616,8 @@ end = struct
         Lwt.async (fun () ->
             let%lwt result = env.listening_thread in
             Lwt_condition.signal signal result;
-            Lwt.return_unit);
+            Lwt.return_unit
+        );
 
         Lwt_condition.wait signal
 

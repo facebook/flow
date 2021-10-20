@@ -51,7 +51,8 @@ let find_tests =
 
       let actual = Export_index.find "foo" index in
 
-      assert_exports ~ctxt expected actual );
+      assert_exports ~ctxt expected actual
+    );
     ( "builtins_before_sources_before_globals" >:: fun ctxt ->
       let file_a = file_source "path/to/a.js" in
       let builtin_z = declare_module "z" in
@@ -74,7 +75,8 @@ let find_tests =
 
       let actual = Export_index.find "foo" index in
 
-      assert_exports ~ctxt expected actual );
+      assert_exports ~ctxt expected actual
+    );
   ]
 
 let suite = "export_index" >::: ["find" >::: find_tests]

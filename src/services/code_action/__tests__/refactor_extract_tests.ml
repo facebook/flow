@@ -38,7 +38,9 @@ let assert_refactored
                   ~checksum:None
              |> pretty_print
              |> String.trim
-             |> remove_blank_lines ))
+             |> remove_blank_lines
+           )
+       )
   in
   let expected : (string * string) list =
     List.map (fun (title, s) -> (title, s |> String.trim |> remove_blank_lines)) expected
@@ -93,7 +95,8 @@ function test() {
           );
         ]
       in
-      assert_refactored ~ctxt expected source (mk_loc (4, 10) (4, 22)) );
+      assert_refactored ~ctxt expected source (mk_loc (4, 10) (4, 22))
+    );
     ( "multi_line_extract" >:: fun ctxt ->
       let source =
         {|
@@ -141,7 +144,8 @@ function test() {
           );
         ]
       in
-      assert_refactored ~ctxt expected source (mk_loc (4, 10) (7, 20)) );
+      assert_refactored ~ctxt expected source (mk_loc (4, 10) (7, 20))
+    );
     ( "extract_use_toplevel_function_param" >:: fun ctxt ->
       let source =
         {|
@@ -174,7 +178,8 @@ function foo(a: number) {
           );
         ]
       in
-      assert_refactored ~ctxt expected source (mk_loc (3, 0) (3, 30)) );
+      assert_refactored ~ctxt expected source (mk_loc (3, 0) (3, 30))
+    );
     ( "single_escaping_def_extract" >:: fun ctxt ->
       let source = {|
         const a = 3;
@@ -194,7 +199,8 @@ function newFunction(): number {
           );
         ]
       in
-      assert_refactored ~ctxt expected source (mk_loc (2, 8) (2, 20)) );
+      assert_refactored ~ctxt expected source (mk_loc (2, 8) (2, 20))
+    );
     ( "local_reassignment_single_return_extract" >:: fun ctxt ->
       let source =
         {|
@@ -221,7 +227,8 @@ function newFunction(): number {
           );
         ]
       in
-      assert_refactored ~ctxt expected source (mk_loc (4, 8) (4, 33)) );
+      assert_refactored ~ctxt expected source (mk_loc (4, 8) (4, 33))
+    );
     ( "local_reassignment_mixed_return_extract" >:: fun ctxt ->
       let source =
         {|
@@ -249,7 +256,8 @@ function newFunction(): {| a: number, fooo: number |} {
           );
         ]
       in
-      assert_refactored ~ctxt expected source (mk_loc (3, 8) (4, 33)) );
+      assert_refactored ~ctxt expected source (mk_loc (3, 8) (4, 33))
+    );
     ( "external_reassignment_single_return_extract" >:: fun ctxt ->
       let source =
         {|
@@ -273,7 +281,8 @@ function newFunction(): number {
           );
         ]
       in
-      assert_refactored ~ctxt expected source (mk_loc (2, 8) (2, 33)) );
+      assert_refactored ~ctxt expected source (mk_loc (2, 8) (2, 33))
+    );
     ( "external_reassignment_multiple_returns_extract" >:: fun ctxt ->
       let source =
         {|
@@ -297,7 +306,8 @@ function newFunction(): {| a: number, fooo: number |} {
           );
         ]
       in
-      assert_refactored ~ctxt expected source (mk_loc (2, 8) (3, 32)) );
+      assert_refactored ~ctxt expected source (mk_loc (2, 8) (3, 32))
+    );
     ( "async_expression_extract" >:: fun ctxt ->
       let source =
         {|
@@ -342,7 +352,8 @@ const test = async () => {
           );
         ]
       in
-      assert_refactored ~ctxt expected source (mk_loc (4, 10) (7, 20)) );
+      assert_refactored ~ctxt expected source (mk_loc (4, 10) (7, 20))
+    );
     ( "async_for_of_extract" >:: fun ctxt ->
       let source =
         {|
@@ -388,7 +399,8 @@ const test = async () => {
           );
         ]
       in
-      assert_refactored ~ctxt expected source (mk_loc (4, 10) (6, 20)) );
+      assert_refactored ~ctxt expected source (mk_loc (4, 10) (6, 20))
+    );
     ( "await_in_async_function_extract" >:: fun ctxt ->
       let source = "const test = async () => await promise;" in
       let expected =
@@ -403,7 +415,8 @@ function newFunction(): void {
           );
         ]
       in
-      assert_refactored ~ctxt expected source (mk_loc (1, 0) (1, 39)) );
+      assert_refactored ~ctxt expected source (mk_loc (1, 0) (1, 39))
+    );
     ( "return_no_extract" >:: fun ctxt ->
       let source =
         {|
@@ -418,7 +431,8 @@ function newFunction(): void {
         }
       |}
       in
-      assert_refactored ~ctxt [] source (mk_loc (4, 10) (8, 22)) );
+      assert_refactored ~ctxt [] source (mk_loc (4, 10) (8, 22))
+    );
     ( "yield_no_extract" >:: fun ctxt ->
       let source =
         {|
@@ -433,16 +447,19 @@ function newFunction(): void {
         }
       |}
       in
-      assert_refactored ~ctxt [] source (mk_loc (4, 10) (8, 22)) );
+      assert_refactored ~ctxt [] source (mk_loc (4, 10) (8, 22))
+    );
     ( "label_no_extract" >:: fun ctxt ->
       assert_refactored
         ~ctxt
         []
         "const a = 1; {label:test();} function test() {}"
-        (mk_loc (1, 0) (1, 60)) );
+        (mk_loc (1, 0) (1, 60))
+    );
     ( "simple_break_continue_no_extract" >:: fun ctxt ->
       assert_refactored ~ctxt [] "while (true) {break;}" (mk_loc (1, 12) (1, 30));
-      assert_refactored ~ctxt [] "while (true) {continue;}" (mk_loc (1, 12) (1, 30)) );
+      assert_refactored ~ctxt [] "while (true) {continue;}" (mk_loc (1, 12) (1, 30))
+    );
     ( "continue_in_switch_no_extract" >:: fun ctxt ->
       let source =
         {|
@@ -454,10 +471,12 @@ function newFunction(): void {
 
       |}
       in
-      assert_refactored ~ctxt [] source (mk_loc (3, 8) (5, 23)) );
+      assert_refactored ~ctxt [] source (mk_loc (3, 8) (5, 23))
+    );
     ( "wrapped_break_continue_with_label_no_extracts" >:: fun ctxt ->
       assert_refactored ~ctxt [] "label:while (true) {break label;}" (mk_loc (1, 0) (1, 50));
-      assert_refactored ~ctxt [] "label:while (true) {continue label;}" (mk_loc (1, 0) (1, 50)) );
+      assert_refactored ~ctxt [] "label:while (true) {continue label;}" (mk_loc (1, 0) (1, 50))
+    );
     ( "wrapped_break_continue_switch_has_extracts" >:: fun ctxt ->
       let expected =
         [
@@ -469,7 +488,8 @@ function newFunction(): void {
     break;
   }
 }
-|} );
+|}
+          );
         ]
       in
       assert_refactored ~ctxt expected "while (true) {break;}" (mk_loc (1, 0) (1, 30));
@@ -503,7 +523,8 @@ function newFunction(): void {
           );
         ]
       in
-      assert_refactored ~ctxt expected "switch (true) {default:break;}" (mk_loc (1, 0) (1, 40)) );
+      assert_refactored ~ctxt expected "switch (true) {default:break;}" (mk_loc (1, 0) (1, 40))
+    );
     ( "basic_class_method_extract" >:: fun ctxt ->
       assert_refactored
         ~ctxt
@@ -582,7 +603,8 @@ class A {
           );
         ]
         "class A { test1() { console.log(); } }"
-        (mk_loc (1, 20) (1, 34)) );
+        (mk_loc (1, 20) (1, 34))
+    );
     ( "class_method_with_parameters_and_return_extract" >:: fun ctxt ->
       let source =
         {|
@@ -634,7 +656,8 @@ export default class {
           );
         ]
       in
-      assert_refactored ~ctxt expected source (mk_loc (14, 12) (14, 51)) );
+      assert_refactored ~ctxt expected source (mk_loc (14, 12) (14, 51))
+    );
     ( "type_parameters_extract" >:: fun ctxt ->
       (* Test that all the constraints of generic type parameters are added,
          and unused ones (A) are removed. *)
@@ -698,7 +721,8 @@ function foo<A, B, C: B = B>(c: C) {
           );
         ]
       in
-      assert_refactored ~ctxt expected source (mk_loc (4, 0) (5, 50)) );
+      assert_refactored ~ctxt expected source (mk_loc (4, 0) (5, 50))
+    );
     ( "very_nested_extract" >:: fun ctxt ->
       let source =
         {|
@@ -827,7 +851,8 @@ function level1() {
           );
         ]
       in
-      assert_refactored ~ctxt expected source (mk_loc (7, 16) (10, 26)) );
+      assert_refactored ~ctxt expected source (mk_loc (7, 16) (10, 26))
+    );
     ( "very_nested_extract_with_variables" >:: fun ctxt ->
       let source =
         {|
@@ -1012,7 +1037,8 @@ function level1() {
           );
         ]
       in
-      assert_refactored ~ctxt expected source (mk_loc (13, 18) (15, 61)) );
+      assert_refactored ~ctxt expected source (mk_loc (13, 18) (15, 61))
+    );
     (* A simple constant extraction that can go to all possible scopes. *)
     ( "simple_constant_extract" >:: fun ctxt ->
       let source = "function test() { const a = 1; }" in
@@ -1024,17 +1050,20 @@ function test() {
   const newLocal = 1;
   const a = newLocal;
 }
-            |} );
+            |}
+          );
           ( "Extract to constant in module scope",
             {|
 const newLocal = 1;
 function test() {
   const a = newLocal;
 }
-            |} );
+            |}
+          );
         ]
       in
-      assert_refactored ~ctxt expected source (mk_loc (1, 28) (1, 29)) );
+      assert_refactored ~ctxt expected source (mk_loc (1, 28) (1, 29))
+    );
     (* Testing that we won't extract constant to scopes that will result in undefined variables. *)
     ( "constant_extract_with_scoping_issues" >:: fun ctxt ->
       let source =
@@ -1072,7 +1101,8 @@ function foo() {
           );
         ]
       in
-      assert_refactored ~ctxt expected source (mk_loc (9, 21) (9, 30)) );
+      assert_refactored ~ctxt expected source (mk_loc (9, 21) (9, 30))
+    );
     (* A simple field extraction that can only go inside the class. *)
     ( "field_extract_class_only" >:: fun ctxt ->
       let source = "class A { test() { const a = this.test(); } }" in
@@ -1100,12 +1130,14 @@ class A {
           );
         ]
       in
-      assert_refactored ~ctxt expected source (mk_loc (1, 29) (1, 40)) );
+      assert_refactored ~ctxt expected source (mk_loc (1, 29) (1, 40))
+    );
     (* A simple type alias extraction without any type variables. *)
     ( "simple_type_extract" >:: fun ctxt ->
       let source = "const a: number = 1;" in
       let expected = [("Extract to type alias", "type NewType = number;\nconst a: NewType = 1;")] in
-      assert_refactored ~ctxt expected source (mk_loc (1, 9) (1, 15)) );
+      assert_refactored ~ctxt expected source (mk_loc (1, 9) (1, 15))
+    );
     (* Selected type uses generic type parameters *)
     ( "type_extract_with_generic_type_parameters" >:: fun ctxt ->
       let source =
@@ -1131,7 +1163,8 @@ function foo<A, B>() {
           );
         ]
       in
-      assert_refactored ~ctxt expected source (mk_loc (4, 25) (4, 43)) );
+      assert_refactored ~ctxt expected source (mk_loc (4, 25) (4, 43))
+    );
     (* Generated name has conflicts. *)
     ( "generated_name_conflicts" >:: fun ctxt ->
       let source =
@@ -1291,7 +1324,8 @@ type NewType1 = NewType;
         ~support_experimental_snippet_text_edit:true
         expected
         source
-        (mk_loc (2, 23) (2, 29)) );
+        (mk_loc (2, 23) (2, 29))
+    );
   ]
 
 let tests =

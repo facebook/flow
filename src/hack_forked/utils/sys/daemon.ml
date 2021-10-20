@@ -163,7 +163,8 @@ let name_of_entry = Entry.name_of_entry
 let fd_of_path path =
   Sys_utils.with_umask 0o111 (fun () ->
       Sys_utils.mkdir_no_fail (Filename.dirname path);
-      Unix.openfile path [Unix.O_RDWR; Unix.O_CREAT; Unix.O_TRUNC] 0o666)
+      Unix.openfile path [Unix.O_RDWR; Unix.O_CREAT; Unix.O_TRUNC] 0o666
+  )
 
 let null_fd () = fd_of_path Sys_utils.null_path
 
@@ -209,7 +210,8 @@ let fork
        Sys_utils.with_umask 0o111 (fun () ->
            let fd = null_fd () in
            Unix.dup2 fd Unix.stdin;
-           Unix.close fd);
+           Unix.close fd
+       );
        Unix.dup2 log_stdout Unix.stdout;
        Unix.dup2 log_stderr Unix.stderr;
        if log_stdout <> Unix.stdout then Unix.close log_stdout;

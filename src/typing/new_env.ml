@@ -133,8 +133,7 @@ module New_env : Env_sig.S = struct
  *  may want to compute a more specific least upper bound for these writes.
  *)
   let phi cx reason ts =
-    Tvar.mk_where cx reason (fun tvar ->
-        Base.List.iter ts ~f:(fun t -> Flow_js.flow_t cx (t, tvar)))
+    Tvar.mk_where cx reason (fun tvar -> Base.List.iter ts ~f:(fun t -> Flow_js.flow_t cx (t, tvar)))
 
   let rec predicate_of_refinement cx =
     Env_api.Refi.(
@@ -168,7 +167,8 @@ module New_env : Env_sig.S = struct
         (* Latent refinements store the loc of the callee, which is a read in the env *)
         let reason = mk_reason (RCustom "Function call") func_loc in
         let t = read_entry cx func_loc reason in
-        LatentP (t, index))
+        LatentP (t, index)
+    )
 
   and refine cx reason loc refi t =
     Base.Option.value_map
@@ -176,7 +176,8 @@ module New_env : Env_sig.S = struct
         let predicate = predicate |> snd |> predicate_of_refinement cx in
         let reason = mk_reason (RRefined (desc_of_reason reason)) loc in
         Tvar.mk_no_wrap_where cx reason (fun tvar ->
-            Flow_js.flow cx (t, PredicateT (predicate, tvar))))
+            Flow_js.flow cx (t, PredicateT (predicate, tvar))
+        ))
       ~default:t
       refi
 

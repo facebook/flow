@@ -205,7 +205,8 @@ module Make (Env : Env_sig.S) = struct
     Flow.flow
       cx
       ( OpenT (r, tvar),
-        BecomeT { reason = r; t = Unsoundness.at InferenceHooks ploc; empty_success = true } );
+        BecomeT { reason = r; t = Unsoundness.at InferenceHooks ploc; empty_success = true }
+      );
     (r, tvar)
 
   let translate_identifier_or_literal_key t =
@@ -311,8 +312,10 @@ module Make (Env : Env_sig.S) = struct
                      mk_reason (RMethod (Some name)) prop_loc
                    | _ -> mk_reason (RMethod None) prop_loc
                  in
-                 Flow_js.add_output cx (Error_message.EObjectThisReference (loc, reason)))
-        | _ -> ())
+                 Flow_js.add_output cx (Error_message.EObjectThisReference (loc, reason))
+             )
+        | _ -> ()
+        )
 
   module Func_stmt_config = struct
     type 'T ast = (ALoc.t, 'T) Ast.Function.Params.t
@@ -418,7 +421,8 @@ module Make (Env : Env_sig.S) = struct
             cx
             (OrdinaryName name)
             t
-            loc)
+            loc
+      )
 
     let destruct cx ~use_op ~name_loc name default t =
       Base.Option.iter
@@ -478,7 +482,8 @@ module Make (Env : Env_sig.S) = struct
             Ast.Function.Param.argument =
               ((ploc, t), Ast.Pattern.Object { Ast.Pattern.Object.properties; annot; comments });
             default;
-          } )
+          }
+        )
       | Array { annot; elements; comments } ->
         let default = eval_default cx ~expr default in
         let elements =
@@ -500,7 +505,8 @@ module Make (Env : Env_sig.S) = struct
             Ast.Function.Param.argument =
               ((ploc, t), Ast.Pattern.Array { Ast.Pattern.Array.elements; annot; comments });
             default;
-          } )
+          }
+        )
 
     let eval_rest cx (Rest { t; loc; ploc; id }) =
       let () =
@@ -511,7 +517,8 @@ module Make (Env : Env_sig.S) = struct
         {
           Ast.Function.RestParam.argument = ((ploc, t), Ast.Pattern.Identifier id);
           comments = None;
-        } )
+        }
+      )
 
     let eval_this _ (This { t = _; annot; loc }) =
       (* this does not bind any parameters *)
@@ -611,8 +618,8 @@ module Make (Env : Env_sig.S) = struct
       Env.bind_type cx name tvar name_loc
     | (_, Switch { Switch.cases; _ }) ->
       Env.in_lex_scope (fun () ->
-          cases
-          |> List.iter (fun (_, { Switch.Case.consequent; _ }) -> toplevel_decls cx consequent))
+          cases |> List.iter (fun (_, { Switch.Case.consequent; _ }) -> toplevel_decls cx consequent)
+      )
     | (_, Return _) -> ()
     | (_, Throw _) -> ()
     | (_, Try { Try.block = (_, b); handler; finalizer; comments = _ }) ->
@@ -632,19 +639,22 @@ module Make (Env : Env_sig.S) = struct
           (match init with
           | Some (For.InitDeclaration (_, decl)) -> variable_decl cx decl
           | _ -> ());
-          statement_decl cx body)
+          statement_decl cx body
+      )
     | (_, ForIn { ForIn.left; body; _ }) ->
       Env.in_lex_scope (fun () ->
           (match left with
           | ForIn.LeftDeclaration (_, decl) -> variable_decl cx decl
           | _ -> ());
-          statement_decl cx body)
+          statement_decl cx body
+      )
     | (_, ForOf { ForOf.left; body; _ }) ->
       Env.in_lex_scope (fun () ->
           (match left with
           | ForOf.LeftDeclaration (_, decl) -> variable_decl cx decl
           | _ -> ());
-          statement_decl cx body)
+          statement_decl cx body
+      )
     | (_, Debugger _) -> ()
     | (function_loc, FunctionDeclaration func) -> function_ ~bind:Env.bind_fun function_loc func
     | (_, EnumDeclaration { EnumDeclaration.id = (name_loc, { Ast.Identifier.name; _ }); _ }) ->
@@ -660,8 +670,10 @@ module Make (Env : Env_sig.S) = struct
       Env.bind_declare_var cx (OrdinaryName name) t id_loc
     | ( loc,
         DeclareFunction
-          ({ DeclareFunction.id = (id_loc, { Ast.Identifier.name; comments = _ }); _ } as
-          declare_function) ) ->
+          ( { DeclareFunction.id = (id_loc, { Ast.Identifier.name; comments = _ }); _ } as
+          declare_function
+          )
+      ) ->
       (match declare_function_to_function_declaration cx loc declare_function with
       | Some (FunctionDeclaration func, _) ->
         function_ ~bind:(Env.bind_declare_fun ~predicate:true) loc func
@@ -681,7 +693,8 @@ module Make (Env : Env_sig.S) = struct
       | (_, DeclareInterface { Interface.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ })
       | ( _,
           InterfaceDeclaration
-            { Interface.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } ) ) as stmt ->
+            { Interface.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ }
+        ) ) as stmt ->
       let is_interface =
         match stmt with
         | (_, DeclareInterface _) -> true
@@ -721,7 +734,9 @@ module Make (Env : Env_sig.S) = struct
           else
             failwith
               ("Parser Error: declare export default must always have an "
-              ^ "associated declaration or type!")))
+              ^ "associated declaration or type!"
+              ))
+      )
     | (_, DeclareModuleExports _) -> ()
     | (_, ExportNamedDeclaration { ExportNamedDeclaration.declaration; _ }) ->
       (match declaration with
@@ -733,7 +748,8 @@ module Make (Env : Env_sig.S) = struct
       | ExportDefaultDeclaration.Expression _ -> ())
     | ( decl_loc,
         ImportDeclaration
-          { ImportDeclaration.import_kind; specifiers; default; source = _; comments = _ } ) ->
+          { ImportDeclaration.import_kind; specifiers; default; source = _; comments = _ }
+      ) ->
       let isType =
         match import_kind with
         | ImportDeclaration.ImportType -> true
@@ -803,7 +819,8 @@ module Make (Env : Env_sig.S) = struct
               (loc, { Declarator.id; init }))
             declarations
         in
-        { declarations; kind; comments })
+        { declarations; kind; comments }
+      )
     in
     let interface_helper cx loc (iface_sig, self) =
       let def_reason = mk_reason (desc_of_t self) loc in
@@ -834,7 +851,8 @@ module Make (Env : Env_sig.S) = struct
       let use_op =
         Op
           (AssignVar
-             { var = Some (mk_reason (RIdentifier (OrdinaryName name)) loc); init = reason_of_t t })
+             { var = Some (mk_reason (RIdentifier (OrdinaryName name)) loc); init = reason_of_t t }
+          )
       in
       Env.init_var ~has_anno:false cx ~use_op (OrdinaryName name) t name_loc;
       decl_ast
@@ -842,7 +860,8 @@ module Make (Env : Env_sig.S) = struct
     let check cx b =
       Abnormal.catch_stmts_control_flow_exception (fun () ->
           toplevel_decls cx b.Block.body;
-          Toplevels.toplevels statement cx b.Block.body)
+          Toplevels.toplevels statement cx b.Block.body
+      )
     in
     let catch_clause cx catch_clause =
       let { Try.CatchClause.param; body = (b_loc, b); comments } = catch_clause in
@@ -856,7 +875,8 @@ module Make (Env : Env_sig.S) = struct
                 Identifier.name = (name_loc, ({ Ast.Identifier.name; comments = _ } as id));
                 annot = Ast.Type.Missing mloc;
                 optional;
-              } ) ->
+              }
+          ) ->
           let r = mk_reason (RCustom "catch") loc in
           let t = Tvar.mk cx r in
           let (stmts, abnormal_opt) =
@@ -868,9 +888,11 @@ module Make (Env : Env_sig.S) = struct
                     cx
                     (OrdinaryName name)
                     t
-                    loc);
+                    loc
+                );
 
-                check cx b)
+                check cx b
+            )
           in
           ( {
               Try.CatchClause.param =
@@ -881,11 +903,13 @@ module Make (Env : Env_sig.S) = struct
                         Ast.Pattern.Identifier.name = ((name_loc, t), id);
                         annot = Ast.Type.Missing (mloc, t);
                         optional;
-                      } );
+                      }
+                  );
               body = (b_loc, { Block.body = stmts; comments = b.Block.comments });
               comments;
             },
-            abnormal_opt )
+            abnormal_opt
+          )
         | (loc, Identifier _) ->
           Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, CatchParameterAnnotation));
           (Tast_utils.error_mapper#catch_clause catch_clause, None)
@@ -899,7 +923,8 @@ module Make (Env : Env_sig.S) = struct
             body = (b_loc, { Block.body = stmts; comments = b.Block.comments });
             comments;
           },
-          abnormal_opt )
+          abnormal_opt
+        )
     in
     let function_ loc func =
       match func with
@@ -920,7 +945,9 @@ module Make (Env : Env_sig.S) = struct
         Abnormal.catch_stmts_control_flow_exception (fun () ->
             Env.in_lex_scope (fun () ->
                 toplevel_decls cx body;
-                Toplevels.toplevels statement cx body))
+                Toplevels.toplevels statement cx body
+            )
+        )
       in
       Abnormal.check_stmt_control_flow_exception
         ((loc, Block { Block.body; comments }), abnormal_opt)
@@ -944,7 +971,8 @@ module Make (Env : Env_sig.S) = struct
       (* swap in a refined clone of initial env for then *)
       Env.(
         update_env loc (clone_env start_env);
-        ignore (refine_with_preds cx loc_test preds xts));
+        ignore (refine_with_preds cx loc_test preds xts)
+      );
 
       let (then_ast, then_abnormal) =
         Abnormal.catch_stmt_control_flow_exception (fun () -> statement cx consequent)
@@ -954,7 +982,8 @@ module Make (Env : Env_sig.S) = struct
       (* then swap in a refined clone of initial env for else *)
       Env.(
         update_env loc (clone_env start_env);
-        ignore (refine_with_preds cx loc_test not_preds xts));
+        ignore (refine_with_preds cx loc_test not_preds xts)
+      );
 
       let (else_ast, else_abnormal) =
         match alternate with
@@ -1035,8 +1064,9 @@ module Make (Env : Env_sig.S) = struct
         in
         let ast = (top_loc, Labeled { Labeled.label = lab_ast; body = body_ast; comments }) in
         ignore
-          (Abnormal.check_stmt_control_flow_exception (ast, body_abnormal)
-            : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t);
+          ( Abnormal.check_stmt_control_flow_exception (ast, body_abnormal)
+            : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t
+            );
 
         let newset = Changeset.Global.merge oldset in
         if Abnormal.swap_saved (Abnormal.Continue label) save_continue <> None then
@@ -1057,8 +1087,9 @@ module Make (Env : Env_sig.S) = struct
         in
         let ast = (top_loc, Labeled { Labeled.label = lab_ast; body = body_ast; comments }) in
         ignore
-          (Abnormal.check_stmt_control_flow_exception (ast, body_abnormal)
-            : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t);
+          ( Abnormal.check_stmt_control_flow_exception (ast, body_abnormal)
+            : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t
+            );
 
         let newset = Changeset.Global.merge oldset in
         if Abnormal.swap_saved (Abnormal.Break label) save_break <> None then Env.havoc_vars newset;
@@ -1098,7 +1129,8 @@ module Make (Env : Env_sig.S) = struct
               tparams;
               right;
               comments;
-            } )
+            }
+        )
       | ( loc,
           TypeAlias
             {
@@ -1106,7 +1138,8 @@ module Make (Env : Env_sig.S) = struct
               tparams;
               right;
               comments;
-            } ) ) as stmt ->
+            }
+        ) ) as stmt ->
       let r = DescFormat.type_reason (OrdinaryName name) name_loc in
       let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
       let (((_, t), _) as right_ast) = Anno.convert cx tparams_map right in
@@ -1149,7 +1182,8 @@ module Make (Env : Env_sig.S) = struct
               impltype;
               supertype;
               comments;
-            } )
+            }
+        )
       | ( loc,
           OpaqueType
             {
@@ -1158,7 +1192,8 @@ module Make (Env : Env_sig.S) = struct
               impltype;
               supertype;
               comments;
-            } ) ) as stmt ->
+            }
+        ) ) as stmt ->
       let r = DescFormat.type_reason (OrdinaryName name) name_loc in
       let (tparams, tparams_map, tparams_ast) = Anno.mk_type_param_declarations cx tparams in
       let (underlying_t, impltype_ast) = Anno.convert_opt cx tparams_map impltype in
@@ -1193,7 +1228,8 @@ module Make (Env : Env_sig.S) = struct
           match (underlying_t, super_t) with
           | (Some l, Some u) ->
             Flow_js_utils.check_with_generics cx (TypeParams.to_list tparams) (fun map_ ->
-                flow_t cx (subst cx map_ l, subst cx map_ u))
+                flow_t cx (subst cx map_ l, subst cx map_ u)
+            )
             |> ignore
           | _ -> ()
         in
@@ -1210,7 +1246,8 @@ module Make (Env : Env_sig.S) = struct
         (match stmt with
         | (_, DeclareOpaqueType _) -> (loc, DeclareOpaqueType opaque_type_ast)
         | (_, OpaqueType _) -> (loc, OpaqueType opaque_type_ast)
-        | _ -> assert false))
+        | _ -> assert false)
+      )
     (*******************************************************)
     | (switch_loc, Switch { Switch.discriminant; cases; comments }) ->
       (* add default if absent *)
@@ -1219,7 +1256,8 @@ module Make (Env : Env_sig.S) = struct
           if List.exists (fun (_, { test; _ }) -> test = None) cases then
             (cases, false)
           else
-            (cases @ [(switch_loc, { test = None; consequent = []; comments = None })], true))
+            (cases @ [(switch_loc, { test = None; consequent = []; comments = None })], true)
+        )
       in
       (* typecheck discriminant *)
       let discriminant_ast = expression cx ~annot:None discriminant in
@@ -1233,8 +1271,7 @@ module Make (Env : Env_sig.S) = struct
           let incoming_env = Env.peek_env () in
           let incoming_depth = List.length incoming_env in
           (* set up all bindings *)
-          cases
-          |> List.iter (fun (_, { Switch.Case.consequent; _ }) -> toplevel_decls cx consequent);
+          cases |> List.iter (fun (_, { Switch.Case.consequent; _ }) -> toplevel_decls cx consequent);
 
           (* each case starts with this env - begins as clone of incoming_env
              plus bindings, also accumulates negative refis from case tests *)
@@ -1280,7 +1317,8 @@ module Make (Env : Env_sig.S) = struct
                                left = discriminant;
                                right = expr;
                                comments = None;
-                             } )
+                             }
+                         )
                        in
                        let case_test_reason = mk_reason (RCustom "case test") (fst expr) in
                        let switch_discriminant_reason =
@@ -1308,14 +1346,16 @@ module Make (Env : Env_sig.S) = struct
                    (* merge env changes from fallthrough case, if present *)
                    Base.Option.iter !fallthrough_case ~f:(fun (env, writes, refis, _) ->
                        let changes = Changeset.union writes refis in
-                       Env.merge_env cx loc (case_env, case_env, env) changes);
+                       Env.merge_env cx loc (case_env, case_env, env) changes
+                   );
 
                    (* process statements, track control flow exits: exit will be an
                       unconditional exit, break_opt will be any break *)
                    let save_break = Abnormal.clear_saved (Abnormal.Break None) in
                    let (consequent_ast, exit) =
                      Abnormal.catch_stmts_control_flow_exception (fun () ->
-                         Toplevels.toplevels statement cx consequent)
+                         Toplevels.toplevels statement cx consequent
+                     )
                    in
                    if
                      added_default
@@ -1353,12 +1393,13 @@ module Make (Env : Env_sig.S) = struct
                        None;
 
                    (* if we break to end, add effects to terminal state *)
-                   (if breaks_to_end then
+                   ( if breaks_to_end then
                      match break_opt with
                      | None ->
                        Flow.add_output cx Error_message.(EInternal (loc, BreakEnvMissingForCase))
                      | Some break_env ->
-                       update_switch_state (break_env, case_writes, test_refis, loc));
+                       update_switch_state (break_env, case_writes, test_refis, loc)
+                   );
 
                    (* add negative refis of this case's test to common start env *)
                    (* TODO add API to do this without having to swap in env *)
@@ -1366,7 +1407,8 @@ module Make (Env : Env_sig.S) = struct
                    let _ = Env.refine_with_preds cx loc not_preds xtypes in
                    ( exit,
                      (loc, { Switch.Case.test = test_ast; consequent = consequent_ast; comments })
-                   ))
+                   )
+               )
             |> List.split
           in
           let cases_ast =
@@ -1374,7 +1416,8 @@ module Make (Env : Env_sig.S) = struct
               if added_default then
                 cases_ast |> rev |> tl |> rev
               else
-                cases_ast)
+                cases_ast
+            )
           in
           (* if last case fell out, update terminal switch state with it *)
           Base.Option.iter !fallthrough_case ~f:update_switch_state;
@@ -1383,7 +1426,8 @@ module Make (Env : Env_sig.S) = struct
              original types for partially written values, and swap env in *)
           Base.Option.iter !switch_state ~f:(fun (env, partial_writes, _) ->
               Env.merge_env cx switch_loc (env, env, incoming_env) partial_writes;
-              Env.update_env switch_loc env);
+              Env.update_env switch_loc env
+          );
 
           (* merge original changeset back in *)
           let _ = Changeset.Global.merge incoming_changes in
@@ -1444,14 +1488,17 @@ module Make (Env : Env_sig.S) = struct
                   check = enum_exhaustive_check;
                   incomplete_out = exhaustive_check_incomplete_out;
                   discriminant_after_check;
-                } );
+                }
+            );
           let ast =
             ( switch_loc,
-              Switch { Switch.discriminant = discriminant_ast; cases = cases_ast; comments } )
+              Switch { Switch.discriminant = discriminant_ast; cases = cases_ast; comments }
+            )
           in
           match uniform_switch_exit exits with
           | None -> ast
-          | Some abnormal -> Abnormal.throw_stmt_control_flow_exception ast abnormal)
+          | Some abnormal -> Abnormal.throw_stmt_control_flow_exception ast abnormal
+      )
     (*******************************************************)
     | (loc, Return { Return.argument; comments }) ->
       let reason = mk_reason (RCustom "return") loc in
@@ -1488,7 +1535,8 @@ module Make (Env : Env_sig.S) = struct
                     let funt = Flow.get_builtin cx (OrdinaryName "$await") reason in
                     let callt = mk_functioncalltype reason None [Arg t] (open_tvar tvar) in
                     let reason = repos_reason (aloc_of_reason (reason_of_t t)) reason in
-                    Flow.flow cx (funt, CallT (unknown_use, reason, callt)));
+                    Flow.flow cx (funt, CallT (unknown_use, reason, callt))
+                );
               ]
           in
           Flow.reposition cx ~desc:(desc_of_t t) loc t'
@@ -1530,7 +1578,8 @@ module Make (Env : Env_sig.S) = struct
              {
                value =
                  Base.Option.value_map argument ~default:(reason_of_t t) ~f:mk_expression_reason;
-             })
+             }
+          )
       in
       Flow.flow cx (t, UseT (use_op, ret));
       Env.reset_current_activation loc;
@@ -1616,7 +1665,9 @@ module Make (Env : Env_sig.S) = struct
         Env.in_lex_scope (fun () ->
             Abnormal.catch_stmts_control_flow_exception (fun () ->
                 toplevel_decls cx b.Block.body;
-                Toplevels.toplevels statement cx b.Block.body))
+                Toplevels.toplevels statement cx b.Block.body
+            )
+        )
       in
       (* save ref to env at end of try *)
       let try_env = Env.peek_env () in
@@ -1632,7 +1683,8 @@ module Make (Env : Env_sig.S) = struct
           Env.(
             let e = clone_env start_env in
             merge_env cx loc (e, e, try_env) (Changeset.Global.peek ());
-            update_env loc e);
+            update_env loc e
+          );
 
           let (catch_block_ast, catch_abnormal) = catch_clause cx h in
           (Some (h_loc, catch_block_ast), catch_abnormal)
@@ -1652,7 +1704,8 @@ module Make (Env : Env_sig.S) = struct
           | Some _ ->
             (* if catch throws, then the only way into non-throwing finally
                is via non-throwing try *)
-            try_env)
+            try_env
+        )
       in
       (* traverse finally block, save exceptions,
          and leave in place the terminal env of the non-throwing case
@@ -1670,13 +1723,16 @@ module Make (Env : Env_sig.S) = struct
           Env.(
             let e = clone_env start_env in
             merge_env cx loc (e, e, catch_env) (Changeset.Global.peek ());
-            update_env loc e);
+            update_env loc e
+          );
 
           let (_, finally_abnormal) =
             Env.in_lex_scope (fun () ->
                 Abnormal.catch_stmts_control_flow_exception (fun () ->
                     toplevel_decls cx body;
-                    Toplevels.toplevels statement cx body))
+                    Toplevels.toplevels statement cx body
+                )
+            )
           in
           (* 2. non-throwing finally case. *)
           Env.update_env loc nonthrow_finally_env;
@@ -1686,7 +1742,9 @@ module Make (Env : Env_sig.S) = struct
             Env.in_lex_scope (fun () ->
                 Abnormal.catch_stmts_control_flow_exception (fun () ->
                     toplevel_decls cx body;
-                    Toplevels.toplevels statement cx body))
+                    Toplevels.toplevels statement cx body
+                )
+            )
           in
           (Some (f_loc, { Block.body = finally_block_ast; comments }), finally_abnormal)
       in
@@ -1701,12 +1759,14 @@ module Make (Env : Env_sig.S) = struct
               handler = catch_ast;
               finalizer = finally_ast;
               comments;
-            } )
+            }
+        )
       in
       (* if finally has abnormal control flow, we throw here *)
       ignore
-        (Abnormal.check_stmt_control_flow_exception (ast, finally_abnormal)
-          : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t);
+        ( Abnormal.check_stmt_control_flow_exception (ast, finally_abnormal)
+          : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t
+          );
 
       (* other ways we throw due to try/catch abends *)
       begin
@@ -1745,7 +1805,8 @@ module Make (Env : Env_sig.S) = struct
       (* swap in Pre & c *)
       Env.(
         update_env loc (clone_env start_env);
-        ignore (refine_with_preds cx loc preds orig_types));
+        ignore (refine_with_preds cx loc preds orig_types)
+      );
 
       (* traverse loop body - after this, body_env = Post' *)
       let (body_ast, _) =
@@ -1765,7 +1826,8 @@ module Make (Env : Env_sig.S) = struct
       Env.(
         copy_env cx loc (start_env, body_env) newset;
         update_env loc start_env;
-        ignore (refine_with_preds cx loc not_preds orig_types));
+        ignore (refine_with_preds cx loc not_preds orig_types)
+      );
 
       (* if we broke out of the loop, havoc vars changed by loop body *)
       if Abnormal.swap_saved (Abnormal.Break None) save_break <> None then Env.havoc_vars newset;
@@ -1889,7 +1951,9 @@ module Make (Env : Env_sig.S) = struct
                 update = update_ast;
                 body = body_ast;
                 comments;
-              } ))
+              }
+          )
+      )
     (***************************************************************************)
     (* Refinements for `for-in` are derived by the following Hoare logic rule:
 
@@ -1924,12 +1988,14 @@ module Make (Env : Env_sig.S) = struct
             match left with
             | ForIn.LeftDeclaration
                 ( decl_loc,
-                  ({
-                     VariableDeclaration.kind;
-                     declarations =
-                       [(vdecl_loc, { VariableDeclaration.Declarator.id; init = None })];
-                     comments;
-                   } as decl) ) ->
+                  ( {
+                      VariableDeclaration.kind;
+                      declarations =
+                        [(vdecl_loc, { VariableDeclaration.Declarator.id; init = None })];
+                      comments;
+                    } as decl
+                  )
+                ) ->
               variable_decl cx decl;
               let right_ast = eval_right () in
               let (id_ast, _) =
@@ -1942,8 +2008,10 @@ module Make (Env : Env_sig.S) = struct
                       declarations =
                         [(vdecl_loc, { VariableDeclaration.Declarator.id = id_ast; init = None })];
                       comments;
-                    } ),
-                right_ast )
+                    }
+                  ),
+                right_ast
+              )
             | ForIn.LeftPattern
                 ( pat_loc,
                   Ast.Pattern.Identifier
@@ -1952,7 +2020,8 @@ module Make (Env : Env_sig.S) = struct
                         (name_loc, ({ Ast.Identifier.name = name_str; comments = _ } as id));
                       optional;
                       annot;
-                    } ) ->
+                    }
+                ) ->
               let right_ast = eval_right () in
               let t = StrT.at pat_loc |> with_trust bogus_trust in
               let use_op =
@@ -1961,7 +2030,8 @@ module Make (Env : Env_sig.S) = struct
                      {
                        var = Some (mk_reason (RIdentifier (OrdinaryName name_str)) pat_loc);
                        init = reason_of_t t;
-                     })
+                     }
+                  )
               in
               Env.set_var cx ~use_op name_str t pat_loc;
               ( ForIn.LeftPattern
@@ -1975,8 +2045,10 @@ module Make (Env : Env_sig.S) = struct
                             Tast_utils.unchecked_mapper#type_annotation_hint annot
                           | Ast.Type.Missing loc -> Ast.Type.Missing (loc, t));
                         optional;
-                      } ),
-                right_ast )
+                      }
+                  ),
+                right_ast
+              )
             | _ ->
               let right_ast = eval_right () in
               Flow.add_output cx Error_message.(EInternal (loc, ForInLHS));
@@ -1996,7 +2068,8 @@ module Make (Env : Env_sig.S) = struct
           Env.update_env loc env;
           if Abnormal.swap_saved (Abnormal.Break None) save_break <> None then Env.havoc_vars newset;
 
-          (loc, ForIn { ForIn.left = left_ast; right = right_ast; body = body_ast; each; comments }))
+          (loc, ForIn { ForIn.left = left_ast; right = right_ast; body = body_ast; each; comments })
+      )
     | (loc, ForOf { ForOf.left; right; body; await; comments }) ->
       let reason_desc =
         match left with
@@ -2014,17 +2087,21 @@ module Make (Env : Env_sig.S) = struct
                                 Ast.Pattern.Identifier.name =
                                   (_, { Ast.Identifier.name; comments = _ });
                                 _;
-                              } );
+                              }
+                          );
                         _;
-                      } );
+                      }
+                    );
                   ];
                 _;
-              } ) ->
+              }
+            ) ->
           RIdentifier (OrdinaryName name)
         | ForOf.LeftPattern
             ( _,
               Ast.Pattern.Identifier
-                { Ast.Pattern.Identifier.name = (_, { Ast.Identifier.name; comments = _ }); _ } ) ->
+                { Ast.Pattern.Identifier.name = (_, { Ast.Identifier.name; comments = _ }); _ }
+            ) ->
           RIdentifier (OrdinaryName name)
         | _ -> RCustom "for-of element"
       in
@@ -2071,12 +2148,14 @@ module Make (Env : Env_sig.S) = struct
             match left with
             | ForOf.LeftDeclaration
                 ( decl_loc,
-                  ({
-                     VariableDeclaration.kind;
-                     declarations =
-                       [(vdecl_loc, { VariableDeclaration.Declarator.id; init = None })];
-                     comments;
-                   } as decl) ) ->
+                  ( {
+                      VariableDeclaration.kind;
+                      declarations =
+                        [(vdecl_loc, { VariableDeclaration.Declarator.id; init = None })];
+                      comments;
+                    } as decl
+                  )
+                ) ->
               variable_decl cx decl;
               let (elem_t, right_ast) = eval_right () in
               let (id_ast, _) = variable cx kind id None ~if_uninitialized:(fun _ -> elem_t) in
@@ -2087,8 +2166,10 @@ module Make (Env : Env_sig.S) = struct
                       declarations =
                         [(vdecl_loc, { VariableDeclaration.Declarator.id = id_ast; init = None })];
                       comments;
-                    } ),
-                right_ast )
+                    }
+                  ),
+                right_ast
+              )
             | ForOf.LeftPattern
                 ( pat_loc,
                   Ast.Pattern.Identifier
@@ -2097,7 +2178,8 @@ module Make (Env : Env_sig.S) = struct
                         (name_loc, ({ Ast.Identifier.name = name_str; comments = _ } as id));
                       optional;
                       annot;
-                    } ) ->
+                    }
+                ) ->
               let (elem_t, right_ast) = eval_right () in
               let use_op =
                 Op
@@ -2105,7 +2187,8 @@ module Make (Env : Env_sig.S) = struct
                      {
                        var = Some (mk_reason (RIdentifier (OrdinaryName name_str)) pat_loc);
                        init = reason_of_t elem_t;
-                     })
+                     }
+                  )
               in
               Env.set_var cx ~use_op name_str elem_t pat_loc;
               ( ForOf.LeftPattern
@@ -2119,8 +2202,10 @@ module Make (Env : Env_sig.S) = struct
                             Ast.Type.Available (Tast_utils.error_mapper#type_annotation annot)
                           | Ast.Type.Missing loc -> Ast.Type.Missing (loc, elem_t));
                         optional;
-                      } ),
-                right_ast )
+                      }
+                  ),
+                right_ast
+              )
             | _ ->
               let (_, right_ast) = eval_right () in
               Flow.add_output cx Error_message.(EInternal (loc, ForOfLHS));
@@ -2137,7 +2222,8 @@ module Make (Env : Env_sig.S) = struct
           Env.update_env loc env;
           if Abnormal.swap_saved (Abnormal.Break None) save_break <> None then Env.havoc_vars newset;
 
-          (loc, ForOf { ForOf.left = left_ast; right = right_ast; body = body_ast; await; comments }))
+          (loc, ForOf { ForOf.left = left_ast; right = right_ast; body = body_ast; await; comments })
+      )
     | (_, Debugger _) as stmt -> stmt
     | (loc, FunctionDeclaration func) ->
       let (fn_type, (name_loc, { Ast.Identifier.name; comments = _ }), node) = function_ loc func in
@@ -2147,7 +2233,8 @@ module Make (Env : Env_sig.S) = struct
              {
                var = Some (mk_reason (RIdentifier (OrdinaryName name)) loc);
                init = reason_of_t fn_type;
-             })
+             }
+          )
       in
       Env.init_fun cx ~use_op (OrdinaryName name) fn_type name_loc;
       node
@@ -2167,7 +2254,8 @@ module Make (Env : Env_sig.S) = struct
                  {
                    var = Some (mk_reason (RIdentifier (OrdinaryName name)) name_loc);
                    init = reason;
-                 })
+                 }
+              )
           in
           Env.init_implicit_const
             Scope.Entry.EnumNameBinding
@@ -2191,7 +2279,8 @@ module Make (Env : Env_sig.S) = struct
             DeclareVariable.id = (id_loc, ({ Ast.Identifier.name; comments = _ } as id));
             annot;
             comments;
-          } ) ->
+          }
+      ) ->
       let r = mk_reason (RIdentifier (OrdinaryName name)) id_loc in
       let (a, annot_ast) = Anno.mk_type_annotation cx SMap.empty r annot in
       let t = type_t_of_annotated_or_inferred a in
@@ -2231,7 +2320,8 @@ module Make (Env : Env_sig.S) = struct
       let use_op =
         Op
           (AssignVar
-             { var = Some (mk_reason (RIdentifier name) name_loc); init = reason_of_t class_t })
+             { var = Some (mk_reason (RIdentifier name) name_loc); init = reason_of_t class_t }
+          )
       in
       Env.init_implicit_let kind cx ~use_op name ~has_anno:false class_t name_loc;
       (class_loc, ClassDeclaration c_ast)
@@ -2256,7 +2346,8 @@ module Make (Env : Env_sig.S) = struct
            ~loc:ALoc.none
            ~provider:(Locationless.MixedT.t |> with_trust bogus_trust)
            ~specific:(Locationless.EmptyT.t |> with_trust bogus_trust)
-           (Inferred (Locationless.MixedT.t |> with_trust bogus_trust)))
+           (Inferred (Locationless.MixedT.t |> with_trust bogus_trust))
+        )
         module_scope;
 
       Env.push_var_scope module_scope;
@@ -2266,7 +2357,8 @@ module Make (Env : Env_sig.S) = struct
       let (elements_ast, elements_abnormal) =
         Abnormal.catch_stmts_control_flow_exception (fun () ->
             toplevel_decls cx elements;
-            Toplevels.toplevels statement cx elements)
+            Toplevels.toplevels statement cx elements
+        )
       in
       let reason = mk_reason (RModule (OrdinaryName name)) loc in
       let () =
@@ -2306,7 +2398,9 @@ module Make (Env : Env_sig.S) = struct
                   | Value _
                   | Class _ ->
                     ())
-                module_scope.entries))
+                module_scope.entries
+            )
+          )
       in
       let module_t = Import_export.mk_module_t cx reason in
       let ast =
@@ -2324,11 +2418,13 @@ module Make (Env : Env_sig.S) = struct
               body = (body_loc, { Block.body = elements_ast; comments = elements_comments });
               kind;
               comments;
-            } )
+            }
+        )
       in
       ignore
-        (Abnormal.check_stmt_control_flow_exception (ast, elements_abnormal)
-          : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t);
+        ( Abnormal.check_stmt_control_flow_exception (ast, elements_abnormal)
+          : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t
+          );
 
       let t = Env.get_var_declared_type cx module_ref loc in
       Flow.flow_t cx (module_t, t);
@@ -2425,8 +2521,10 @@ module Make (Env : Env_sig.S) = struct
       )
     | ( loc,
         ExportNamedDeclaration
-          ({ ExportNamedDeclaration.declaration; specifiers; source; export_kind; comments = _ } as
-          export_decl) ) ->
+          ( { ExportNamedDeclaration.declaration; specifiers; source; export_kind; comments = _ } as
+          export_decl
+          )
+      ) ->
       let declaration =
         match declaration with
         | None -> None
@@ -2513,7 +2611,8 @@ module Make (Env : Env_sig.S) = struct
                 ImportNamedT
                   (get_reason, import_kind, remote_export_name, module_name, t, Context.is_strict cx)
             in
-            Flow.flow cx (module_t, import_type))
+            Flow.flow cx (module_t, import_type)
+        )
       in
       let (specifiers, specifiers_ast) =
         match specifiers with
@@ -2522,7 +2621,8 @@ module Make (Env : Env_sig.S) = struct
             named_specifiers
             |> Base.List.map ~f:(function { ImportDeclaration.local; remote; kind } ->
                    let ( remote_name_loc,
-                         ({ Ast.Identifier.name = remote_name; comments = _ } as rmt) ) =
+                         ({ Ast.Identifier.name = remote_name; comments = _ } as rmt)
+                       ) =
                      remote
                    in
                    let (loc, { Ast.Identifier.name = local_name; comments = _ }) =
@@ -2550,17 +2650,22 @@ module Make (Env : Env_sig.S) = struct
                    let local_ast =
                      Base.Option.map local ~f:(fun (local_loc, local_id) ->
                          let { Ast.Identifier.name = local_name; comments } = local_id in
-                         ((local_loc, imported_t), mk_ident ~comments local_name))
+                         ((local_loc, imported_t), mk_ident ~comments local_name)
+                     )
                    in
                    ( (loc, local_name, imported_t, kind),
-                     { ImportDeclaration.local = local_ast; remote = remote_ast; kind } ))
+                     { ImportDeclaration.local = local_ast; remote = remote_ast; kind }
+                   )
+                   )
             |> List.split
           in
           (named_specifiers, Some (ImportDeclaration.ImportNamedSpecifiers named_specifiers_ast))
         | Some
             (ImportDeclaration.ImportNamespaceSpecifier
               ( loc_with_star,
-                (local_loc, ({ Flow_ast.Identifier.name = local_name; _ } as local_id)) )) ->
+                (local_loc, ({ Flow_ast.Identifier.name = local_name; _ } as local_id))
+              )
+              ) ->
           let import_reason =
             let import_reason_desc =
               match import_kind with
@@ -2580,17 +2685,20 @@ module Make (Env : Env_sig.S) = struct
               in
               let module_ns_typeof =
                 Tvar.mk_where cx bind_reason (fun t ->
-                    Flow.flow cx (module_ns_t, ImportTypeofT (bind_reason, "*", t)))
+                    Flow.flow cx (module_ns_t, ImportTypeofT (bind_reason, "*", t))
+                )
               in
               let local_ast = ((local_loc, module_ns_typeof), local_id) in
               ( [(import_loc, local_name, module_ns_typeof, None)],
-                Some (ImportDeclaration.ImportNamespaceSpecifier (loc_with_star, local_ast)) )
+                Some (ImportDeclaration.ImportNamespaceSpecifier (loc_with_star, local_ast))
+              )
             | ImportDeclaration.ImportValue ->
               let reason = mk_reason (RModule (OrdinaryName module_name)) import_loc in
               let module_ns_t = Import_export.import_ns cx reason (fst source, module_name) in
               let local_ast = ((local_loc, module_ns_t), local_id) in
               ( [(local_loc, local_name, module_ns_t, None)],
-                Some (ImportDeclaration.ImportNamespaceSpecifier (loc_with_star, local_ast)) )
+                Some (ImportDeclaration.ImportNamespaceSpecifier (loc_with_star, local_ast))
+              )
           end
         | None -> ([], None)
       in
@@ -2631,7 +2739,8 @@ module Make (Env : Env_sig.S) = struct
             default = default_ast;
             import_kind;
             comments;
-          } )
+          }
+      )
 
   and export_specifiers cx loc source export_kind =
     let open Ast.Statement in
@@ -2654,7 +2763,8 @@ module Make (Env : Env_sig.S) = struct
         let reason = mk_reason (RType local_name) loc in
         let t =
           Tvar.mk_where cx reason (fun tout ->
-              Flow.flow cx (t, AssertExportIsTypeT (reason, local_name, tout)))
+              Flow.flow cx (t, AssertExportIsTypeT (reason, local_name, tout))
+          )
         in
         Import_export.export_type cx remote_name (Some loc) t
       | Ast.Statement.ExportValue -> Import_export.export cx remote_name loc t
@@ -2669,7 +2779,8 @@ module Make (Env : Env_sig.S) = struct
         let reason = mk_reason (RIdentifier local_name) loc in
         Tvar.mk_no_wrap_where cx reason (fun tout ->
             let use_t = GetPropT (unknown_use, reason, Named (reason, local_name), tout) in
-            Flow.flow cx (source_ns_t, use_t))
+            Flow.flow cx (source_ns_t, use_t)
+        )
       in
       match export_kind with
       | Ast.Statement.ExportType -> Import_export.export_type cx remote_name (Some loc) t
@@ -2720,7 +2831,8 @@ module Make (Env : Env_sig.S) = struct
                 key;
               value = v;
               shorthand;
-            } ) ->
+            }
+        ) ->
       let (acc, key, value) =
         if Type_inference_hooks_js.dispatch_obj_prop_decl_hook cx name loc then
           let t = Unsoundness.at InferenceHooks loc in
@@ -2752,7 +2864,8 @@ module Make (Env : Env_sig.S) = struct
                 | Property.Literal (loc, { Ast.Literal.value = Ast.Literal.String name; _ }) ) as
                 key;
               value = (fn_loc, func);
-            } ) ->
+            }
+        ) ->
       let reason = func_reason ~async:false ~generator:false prop_loc in
       let tvar = Tvar.mk cx reason in
       let (t, func) =
@@ -2770,7 +2883,9 @@ module Make (Env : Env_sig.S) = struct
         Property
           ( prop_loc,
             Property.Method
-              { key = translate_identifier_or_literal_key t key; value = (fn_loc, func) } ) )
+              { key = translate_identifier_or_literal_key t key; value = (fn_loc, func) }
+          )
+      )
     (* We enable some unsafe support for getters and setters. The main unsafe bit
      *  is that we don't properly havok refinements when getter and setter methods
      *  are called. *)
@@ -2785,7 +2900,8 @@ module Make (Env : Env_sig.S) = struct
                 key;
               value = (vloc, func);
               comments;
-            } ) ->
+            }
+        ) ->
       Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
       let reason = func_reason ~async:false ~generator:false vloc in
       let tvar = Tvar.mk cx reason in
@@ -2811,7 +2927,9 @@ module Make (Env : Env_sig.S) = struct
                 key = translate_identifier_or_literal_key return_t key;
                 value = (vloc, func);
                 comments;
-              } ) )
+              }
+          )
+      )
     (* unsafe setter property *)
     | Property
         ( loc,
@@ -2823,7 +2941,8 @@ module Make (Env : Env_sig.S) = struct
                 key;
               value = (vloc, func);
               comments;
-            } ) ->
+            }
+        ) ->
       Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
       let reason = func_reason ~async:false ~generator:false vloc in
       let tvar = Tvar.mk cx reason in
@@ -2849,7 +2968,9 @@ module Make (Env : Env_sig.S) = struct
                 key = translate_identifier_or_literal_key param_t key;
                 value = (vloc, func);
                 comments;
-              } ) )
+              }
+          )
+      )
     (* non-string literal LHS *)
     | Property (loc, Property.Init { key = Property.Literal _; _ })
     | Property (loc, Property.Method { key = Property.Literal _; _ })
@@ -2901,7 +3022,8 @@ module Make (Env : Env_sig.S) = struct
           Flow.flow
             cx
             (key, CreateObjWithComputedPropT { reason = reason_of_t key; value; tout_tvar = tvar });
-          Flow.flow cx (OpenT tvar, ObjSealT (reason, t)))
+          Flow.flow cx (OpenT tvar, ObjSealT (reason, t))
+      )
     in
     let (acc, rev_prop_asts) =
       List.fold_left
@@ -2934,7 +3056,8 @@ module Make (Env : Env_sig.S) = struct
                 acc
             in
             ( ObjectExpressionAcc.set_seal ~allow_sealed not_empty_object_literal_argument acc,
-              SpreadProperty (prop_loc, { SpreadProperty.argument; comments }) :: rev_prop_asts )
+              SpreadProperty (prop_loc, { SpreadProperty.argument; comments }) :: rev_prop_asts
+            )
           | Property
               ( prop_loc,
                 Property.Init
@@ -2942,7 +3065,8 @@ module Make (Env : Env_sig.S) = struct
                     key = Property.Computed (k_loc, { Ast.ComputedKey.expression = k; comments });
                     value = v;
                     shorthand;
-                  } ) ->
+                  }
+              ) ->
             let (((_, kt), _) as k) = expression cx ~annot:None k in
             let (((_, vt), _) as v) = expression cx ~annot:(annot_decompose_todo annot) v in
             let computed = mk_computed kt vt in
@@ -2954,15 +3078,18 @@ module Make (Env : Env_sig.S) = struct
                       key = Property.Computed (k_loc, { Ast.ComputedKey.expression = k; comments });
                       value = v;
                       shorthand;
-                    } )
-              :: rev_prop_asts )
+                    }
+                )
+              :: rev_prop_asts
+            )
           | Property
               ( prop_loc,
                 Property.Method
                   {
                     key = Property.Computed (k_loc, { Ast.ComputedKey.expression = k; comments });
                     value = (fn_loc, fn);
-                  } ) ->
+                  }
+              ) ->
             let (((_, kt), _) as k) = expression cx ~annot:None k in
             let ((_, vt), v) =
               expression cx ~annot:(annot_decompose_todo annot) (fn_loc, Ast.Expression.Function fn)
@@ -2980,8 +3107,10 @@ module Make (Env : Env_sig.S) = struct
                     {
                       key = Property.Computed (k_loc, { Ast.ComputedKey.expression = k; comments });
                       value = (fn_loc, fn);
-                    } )
-              :: rev_prop_asts )
+                    }
+                )
+              :: rev_prop_asts
+            )
           | Property
               ( prop_loc,
                 Property.Init
@@ -2992,7 +3121,8 @@ module Make (Env : Env_sig.S) = struct
                           (_, { Ast.Literal.value = Ast.Literal.String "__proto__"; _ }) ) as key;
                     value = v;
                     shorthand = false;
-                  } ) ->
+                  }
+              ) ->
             let reason = mk_reason RPrototype (fst v) in
             let (((_, vt), _) as v) = expression cx ~annot:(annot_decompose_todo annot) v in
             let t =
@@ -3006,8 +3136,10 @@ module Make (Env : Env_sig.S) = struct
                       key = translate_identifier_or_literal_key vt key;
                       value = v;
                       shorthand = false;
-                    } )
-              :: rev_prop_asts )
+                    }
+                )
+              :: rev_prop_asts
+            )
           | prop ->
             let (acc, prop) = object_prop cx ~object_annot:annot acc prop in
             (acc, prop :: rev_prop_asts))
@@ -3097,11 +3229,13 @@ module Make (Env : Env_sig.S) = struct
               Ast.Pattern.Identifier.name = ((id_loc, ast_t), { Ast.Identifier.name; comments });
               annot = annot_ast;
               optional;
-            } )
+            }
+        )
       | _ ->
         Base.Option.iter init_opt ~f:(fun (init_t, init_reason) ->
             let use_op = Op (AssignVar { var = Some id_reason; init = init_reason }) in
-            Flow.flow cx (init_t, UseT (use_op, annot_t)));
+            Flow.flow cx (init_t, UseT (use_op, annot_t))
+        );
         let init =
           Destructuring.empty
             ?init
@@ -3128,8 +3262,10 @@ module Make (Env : Env_sig.S) = struct
                 AnnotT
                   ( reason,
                     Tvar.mk_where cx reason (fun t' ->
-                        Flow.flow cx (t, BecomeT { reason; t = t'; empty_success = true })),
-                    false )
+                        Flow.flow cx (t, BecomeT { reason; t = t'; empty_success = true })
+                    ),
+                    false
+                  )
               else
                 t
             in
@@ -3158,9 +3294,11 @@ module Make (Env : Env_sig.S) = struct
             Flow.flow cx (t, AssertImportIsValueT (reason, name));
             Base.Option.iter default ~f:(fun d ->
                 let default_t = Flow.mk_default cx reason d in
-                Flow.flow cx (default_t, UseT (use_op, t)));
+                Flow.flow cx (default_t, UseT (use_op, t))
+            );
 
-            id_node_type)
+            id_node_type
+        )
     in
     (id_ast, init_ast)
 
@@ -3187,7 +3325,10 @@ module Make (Env : Env_sig.S) = struct
           | Spread (loc, { Ast.Expression.SpreadElement.argument; comments }) ->
             let (((_, t), _) as argument) = expression cx ~annot:array_annot argument in
             ( UnresolvedSpreadArg t,
-              Spread (loc, { Ast.Expression.SpreadElement.argument; comments }) )))
+              Spread (loc, { Ast.Expression.SpreadElement.argument; comments })
+            )
+          )
+          )
 
   (* can raise Abnormal.(Exn (Stmt _, _))
    * annot should become a Type.t option when we have the ability to
@@ -3256,7 +3397,8 @@ module Make (Env : Env_sig.S) = struct
         let elemt = Tvar.mk cx element_reason in
         let reason = replace_desc_reason REmptyArrayLit reason in
         ( (loc, DefT (reason, make_trust (), ArrT (ArrayAT (elemt, Some [])))),
-          Array { Array.elements = []; comments } )
+          Array { Array.elements = []; comments }
+        )
       | elems ->
         let (elem_spread_list, elements) = array_elements cx ~array_annot:annot loc elems in
         ( ( loc,
@@ -3272,20 +3414,25 @@ module Make (Env : Env_sig.S) = struct
                   ~use_op:unknown_use
                   ~reason_op
                   elem_spread_list
-                  resolve_to) ),
-          Array { Array.elements; comments } ))
+                  resolve_to
+            )
+          ),
+          Array { Array.elements; comments }
+        ))
     | New
         {
           New.callee =
             ( callee_loc,
-              Identifier (id_loc, ({ Ast.Identifier.name = "Function"; comments = _ } as name)) );
+              Identifier (id_loc, ({ Ast.Identifier.name = "Function"; comments = _ } as name))
+            );
           targs;
           arguments;
           comments;
         } ->
       let targts_opt =
         Base.Option.map targs (fun (targts_loc, args) ->
-            (targts_loc, convert_call_targs cx SMap.empty args))
+            (targts_loc, convert_call_targs cx SMap.empty args)
+        )
       in
       let (argts, arges) =
         match arguments with
@@ -3319,14 +3466,18 @@ module Make (Env : Env_sig.S) = struct
                       ~rest_param:None
                       ~def_reason:reason
                       ~params_names:[]
-                      proto ) ) ),
+                      proto
+                  )
+              )
+          ),
           New
             {
               New.callee = (callee_annot, Identifier ((id_loc, id_t), name));
               targs = None;
               arguments = arges;
               comments;
-            } )
+            }
+        )
       | Some (targts_loc, targts) ->
         Flow.add_output
           cx
@@ -3337,7 +3488,8 @@ module Make (Env : Env_sig.S) = struct
                 is_new = true;
                 reason_arity = Reason.(locationless_reason (RType (OrdinaryName "Function")));
                 expected_arity = 0;
-              });
+              }
+          );
         ( (loc, AnyT.at (AnyError None) loc),
           New
             {
@@ -3345,12 +3497,14 @@ module Make (Env : Env_sig.S) = struct
               targs = Some (targts_loc, snd targts);
               arguments = arges;
               comments;
-            } ))
+            }
+        ))
     | New
         {
           New.callee =
             ( callee_loc,
-              Identifier (id_loc, ({ Ast.Identifier.name = "Array" as n; comments = _ } as name)) );
+              Identifier (id_loc, ({ Ast.Identifier.name = "Array" as n; comments = _ } as name))
+            );
           targs;
           arguments;
           comments;
@@ -3368,7 +3522,8 @@ module Make (Env : Env_sig.S) = struct
       let result =
         match (targts, argts) with
         | ( Some (loc, ([t], ({ CallTypeArgs.arguments = [_]; comments = _ } as call_targs))),
-            [Arg argt] ) ->
+            [Arg argt]
+          ) ->
           Ok (Some (loc, call_targs, t), argt)
         | (None, [Arg argt]) -> Ok (None, argt)
         | (None, _) -> Error (Error_message.EUseArrayLiteral loc)
@@ -3381,7 +3536,8 @@ module Make (Env : Env_sig.S) = struct
                   is_new = true;
                   reason_arity = Reason.(locationless_reason (RType (OrdinaryName n)));
                   expected_arity = 1;
-                })
+                }
+            )
       in
       (match result with
       | Ok (targ_t, arg_t) ->
@@ -3405,7 +3561,8 @@ module Make (Env : Env_sig.S) = struct
               targs;
               arguments = args;
               comments;
-            } )
+            }
+        )
       | Error err ->
         Flow.add_output cx err;
         Tast_utils.error_mapper#expression ex)
@@ -3429,10 +3586,12 @@ module Make (Env : Env_sig.S) = struct
                fn = mk_expression_reason callee;
                args = args_reasons;
                local = true;
-             })
+             }
+          )
       in
       ( (loc, new_call cx reason ~use_op class_ targts argts),
-        New { New.callee = callee_ast; targs = targs_ast; arguments = arguments_ast; comments } )
+        New { New.callee = callee_ast; targs = targs_ast; arguments = arguments_ast; comments }
+      )
     | Call _ -> subscript ~cond cx ex
     | OptionalCall _ -> subscript ~cond cx ex
     | Conditional { Conditional.test; consequent; alternate; comments } ->
@@ -3579,7 +3738,8 @@ module Make (Env : Env_sig.S) = struct
             DefT
               ( reason_array,
                 bogus_trust (),
-                ArrT (ArrayAT (StrT.why reason |> with_trust bogus_trust, None)) )
+                ArrT (ArrayAT (StrT.why reason |> with_trust bogus_trust, None))
+              )
           in
           let exprs_t = Base.List.map ~f:(fun ((_, t), _) -> Arg t) expressions in
           Arg quasi_t :: exprs_t
@@ -3593,7 +3753,8 @@ module Make (Env : Env_sig.S) = struct
                  fn = mk_expression_reason tag;
                  args = [];
                  local = true;
-               })
+               }
+            )
         in
         CallT (use_op, reason, ft)
       in
@@ -3605,13 +3766,15 @@ module Make (Env : Env_sig.S) = struct
             TaggedTemplate.tag = tag_ast;
             quasi = (quasi_loc, { TemplateLiteral.quasis; expressions; comments = quasi_comments });
             comments = tagged_template_comments;
-          } )
+          }
+      )
     | TemplateLiteral { TemplateLiteral.quasis; expressions; comments } ->
       let (t, expressions) =
         match quasis with
         | [head] ->
           let ( elem_loc,
-                { TemplateLiteral.Element.value = { TemplateLiteral.Element.raw; cooked }; _ } ) =
+                { TemplateLiteral.Element.value = { TemplateLiteral.Element.raw; cooked }; _ }
+              ) =
             head
           in
           let lit = { Ast.Literal.value = Ast.Literal.String cooked; raw; comments = None } in
@@ -3628,7 +3791,9 @@ module Make (Env : Env_sig.S) = struct
                     UseT
                       ( Op
                           (Coercion { from = mk_expression_reason expr; target = reason_of_t t_out }),
-                        t_out ) );
+                        t_out
+                      )
+                  );
                 e)
               expressions
           in
@@ -3657,9 +3822,11 @@ module Make (Env : Env_sig.S) = struct
           let kind = Entry.ClassNameBinding in
           let entry =
             Entry.(
-              new_let (annotated_todo tvar) ~provider:tvar ~loc:name_loc ~state:State.Declared ~kind)
+              new_let (annotated_todo tvar) ~provider:tvar ~loc:name_loc ~state:State.Declared ~kind
+            )
           in
-          add_entry (OrdinaryName name) entry scope);
+          add_entry (OrdinaryName name) entry scope
+        );
         Env.push_var_scope scope;
         let (class_t, c) =
           mk_class ~class_annot:annot cx class_loc ~name_loc ~general:tvar reason c
@@ -3692,11 +3859,13 @@ module Make (Env : Env_sig.S) = struct
                  (match argument with
                  | Some expr -> mk_expression_reason expr
                  | None -> reason_of_t t);
-             })
+             }
+          )
       in
       Flow.flow cx (t, UseT (use_op, yield));
       ( (loc, Env.get_internal_var cx "next" loc),
-        Yield { Yield.argument = argument_ast; delegate = false; comments } )
+        Yield { Yield.argument = argument_ast; delegate = false; comments }
+      )
     | Yield { Yield.argument; delegate = true; comments } ->
       let reason = mk_reason (RCustom "yield* delegate") loc in
       let next = Env.get_internal_var cx "next" loc in
@@ -3731,7 +3900,8 @@ module Make (Env : Env_sig.S) = struct
                  (match argument with
                  | Some expr -> mk_expression_reason expr
                  | None -> reason_of_t t);
-             })
+             }
+          )
       in
       Flow.flow cx (t, AssertIterableT { use_op; reason = iterable_reason; async; targs });
 
@@ -3767,7 +3937,8 @@ module Make (Env : Env_sig.S) = struct
       (match argument with
       | ( source_loc,
           Ast.Expression.Literal
-            { Ast.Literal.value = Ast.Literal.String module_name; raw; comments = _ } )
+            { Ast.Literal.value = Ast.Literal.String module_name; raw; comments = _ }
+        )
       | ( source_loc,
           TemplateLiteral
             {
@@ -3778,11 +3949,13 @@ module Make (Env : Env_sig.S) = struct
                       TemplateLiteral.Element.value =
                         { TemplateLiteral.Element.cooked = module_name; raw };
                       _;
-                    } );
+                    }
+                  );
                 ];
               expressions = [];
               comments = _;
-            } ) ->
+            }
+        ) ->
         let literal_comments =
           match argument with
           | (_, Ast.Expression.Literal { Ast.Literal.comments; _ }) -> comments
@@ -3804,9 +3977,11 @@ module Make (Env : Env_sig.S) = struct
                       Ast.Literal.value = Ast.Literal.String module_name;
                       raw;
                       comments = literal_comments;
-                    } );
+                    }
+                );
               comments;
-            } )
+            }
+        )
       | _ ->
         let ignore_non_literals = Context.should_ignore_non_literal_requires cx in
         if not ignore_non_literals then (
@@ -3892,12 +4067,14 @@ module Make (Env : Env_sig.S) = struct
             Some
               ( Key_map.add key pred preds,
                 Key_map.add key (NotP pred) not_preds,
-                Key_map.add key ty xtys )
+                Key_map.add key ty xtys
+              )
           | None ->
             Some
               ( Key_map.singleton key pred,
                 Key_map.singleton key (NotP pred),
-                Key_map.singleton key ty ))
+                Key_map.singleton key ty
+              ))
         None
     in
     (* Later bindings for the same key in pred_list will override earlier bindings.
@@ -3912,11 +4089,13 @@ module Make (Env : Env_sig.S) = struct
       match (existing_preds, new_preds) with
       | (Some existing_preds, None) -> Some existing_preds
       | ( Some (existing_preds, existing_not_preds, existing_xtys),
-          Some (new_preds, new_not_preds, new_xtys) ) ->
+          Some (new_preds, new_not_preds, new_xtys)
+        ) ->
         Some
           ( mk_and existing_preds new_preds,
             mk_or existing_not_preds new_not_preds,
-            Key_map.union existing_xtys new_xtys )
+            Key_map.union existing_xtys new_xtys
+          )
       | (None, _) -> new_preds
     in
     let exists_pred ((loc, _) as expr) lhs_t =
@@ -3969,7 +4148,8 @@ module Make (Env : Env_sig.S) = struct
         when not (Env.local_scope_entry_exists cx id_loc n) ->
         let targs =
           Base.Option.map targs (fun (args_loc, args) ->
-              (args_loc, snd (convert_call_targs cx SMap.empty args)))
+              (args_loc, snd (convert_call_targs cx SMap.empty args))
+          )
         in
         let (lhs_t, arguments) =
           match (targs, arguments) with
@@ -3979,44 +4159,55 @@ module Make (Env : Env_sig.S) = struct
                   ArgList.arguments =
                     [
                       Expression
-                        (( source_loc,
-                           Ast.Expression.Literal
-                             { Ast.Literal.value = Ast.Literal.String module_name; _ } ) as lit_exp);
+                        ( ( source_loc,
+                            Ast.Expression.Literal
+                              { Ast.Literal.value = Ast.Literal.String module_name; _ }
+                          ) as lit_exp
+                        );
                     ];
                   comments;
-                } ) ) ->
+                }
+              )
+            ) ->
             ( Import_export.require cx (source_loc, module_name) loc,
               ( args_loc,
                 { ArgList.arguments = [Expression (expression cx ~annot:None lit_exp)]; comments }
-              ) )
+              )
+            )
           | ( None,
               ( args_loc,
                 {
                   ArgList.arguments =
                     [
                       Expression
-                        (( source_loc,
-                           TemplateLiteral
-                             {
-                               TemplateLiteral.quasis =
-                                 [
-                                   ( _,
-                                     {
-                                       TemplateLiteral.Element.value =
-                                         { TemplateLiteral.Element.cooked = module_name; _ };
-                                       _;
-                                     } );
-                                 ];
-                               expressions = [];
-                               comments = _;
-                             } ) as lit_exp);
+                        ( ( source_loc,
+                            TemplateLiteral
+                              {
+                                TemplateLiteral.quasis =
+                                  [
+                                    ( _,
+                                      {
+                                        TemplateLiteral.Element.value =
+                                          { TemplateLiteral.Element.cooked = module_name; _ };
+                                        _;
+                                      }
+                                    );
+                                  ];
+                                expressions = [];
+                                comments = _;
+                              }
+                          ) as lit_exp
+                        );
                     ];
                   comments;
-                } ) ) ->
+                }
+              )
+            ) ->
             ( Import_export.require cx (source_loc, module_name) loc,
               ( args_loc,
                 { ArgList.arguments = [Expression (expression cx ~annot:None lit_exp)]; comments }
-              ) )
+              )
+            )
           | (Some _, arguments) ->
             ignore (arg_list cx arguments);
             Flow.add_output
@@ -4028,7 +4219,8 @@ module Make (Env : Env_sig.S) = struct
                     is_new = false;
                     reason_arity = Reason.(locationless_reason (RFunction RNormal));
                     expected_arity = 0;
-                  });
+                  }
+              );
             (AnyT.at (AnyError None) loc, Tast_utils.error_mapper#arg_list arguments)
           | (None, arguments) ->
             ignore (arg_list cx arguments);
@@ -4046,9 +4238,11 @@ module Make (Env : Env_sig.S) = struct
                   targs;
                   arguments;
                   comments;
-                } ),
+                }
+            ),
             None,
-            None )
+            None
+          )
       | Call
           {
             Call.callee =
@@ -4061,7 +4255,8 @@ module Make (Env : Env_sig.S) = struct
                       Member.PropertyIdentifier
                         (prop_loc, ({ Ast.Identifier.name; comments = _ } as id));
                     comments = member_comments;
-                  } ) as expr;
+                  }
+              ) as expr;
             targs;
             arguments;
             comments;
@@ -4082,13 +4277,16 @@ module Make (Env : Env_sig.S) = struct
                           Member._object = obj_ast;
                           property = Member.PropertyIdentifier ((prop_loc, t), id);
                           comments = member_comments;
-                        } );
+                        }
+                    );
                   targs;
                   arguments;
                   comments;
-                } ),
+                }
+            ),
             None,
-            None )
+            None
+          )
       | Call
           {
             Call.callee =
@@ -4099,7 +4297,8 @@ module Make (Env : Env_sig.S) = struct
                     property =
                       Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name; comments = _ } as id));
                     comments = member_comments;
-                  } ) as callee;
+                  }
+              ) as callee;
             targs;
             arguments;
             comments;
@@ -4125,7 +4324,8 @@ module Make (Env : Env_sig.S) = struct
                        prop = reason_prop;
                        args = mk_initial_arguments_reason arguments;
                        local = true;
-                     })
+                     }
+                  )
               in
               Flow.flow
                 cx
@@ -4136,7 +4336,10 @@ module Make (Env : Env_sig.S) = struct
                       reason_lookup,
                       Named (reason_prop, OrdinaryName name),
                       CallM funtype,
-                      Some prop_t ) ))
+                      Some prop_t
+                    )
+                )
+          )
         in
         Some
           ( ( (loc, lhs_t),
@@ -4149,13 +4352,16 @@ module Make (Env : Env_sig.S) = struct
                           Member._object = ((super_loc, super_t), Super super);
                           property = Member.PropertyIdentifier ((ploc, prop_t), id);
                           comments = member_comments;
-                        } );
+                        }
+                    );
                   targs;
                   arguments = arguments_ast;
                   comments;
-                } ),
+                }
+            ),
             None,
-            None )
+            None
+          )
       | Call { Call.callee = (super_loc, Super super) as callee; targs; arguments; comments } ->
         let (targts, targs) = convert_call_targs_opt cx targs in
         let (argts, arguments_ast) = arg_list cx arguments in
@@ -4179,11 +4385,13 @@ module Make (Env : Env_sig.S) = struct
                        fn = mk_expression_reason callee;
                        args = mk_initial_arguments_reason arguments;
                        local = true;
-                     })
+                     }
+                  )
               in
               Flow.flow
                 cx
-                (super_t, MethodT (use_op, reason, super_reason, propref, CallM funtype, None)))
+                (super_t, MethodT (use_op, reason, super_reason, propref, CallM funtype, None))
+          )
         in
         Some
           ( ( (loc, lhs_t),
@@ -4193,9 +4401,11 @@ module Make (Env : Env_sig.S) = struct
                   targs;
                   arguments = arguments_ast;
                   comments;
-                } ),
+                }
+            ),
             None,
-            None )
+            None
+          )
       (******************************************)
       (* See ~/www/static_upstream/core/ *)
       | Call { Call.callee; targs; arguments; comments } when is_call_to_invariant callee ->
@@ -4203,7 +4413,8 @@ module Make (Env : Env_sig.S) = struct
         let (((_, callee_t), _) as callee) = expression cx ~annot:None callee in
         let targs =
           Base.Option.map targs (fun (loc, args) ->
-              (loc, snd (convert_call_targs cx SMap.empty args)))
+              (loc, snd (convert_call_targs cx SMap.empty args))
+          )
         in
         (* NOTE: if an invariant expression throws abnormal control flow, the
            entire statement it was in is reconstructed in the typed AST as an
@@ -4226,19 +4437,24 @@ module Make (Env : Env_sig.S) = struct
                     targs;
                     arguments = (args_loc, { ArgList.arguments = []; comments = args_comments });
                     comments;
-                  } )
+                  }
+              )
               Abnormal.Throw
           | ( None,
               ( args_loc,
                 {
                   ArgList.arguments =
                     Expression
-                      (( _,
-                         Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Boolean false; _ }
-                       ) as lit_exp)
+                      ( ( _,
+                          Ast.Expression.Literal
+                            { Ast.Literal.value = Ast.Literal.Boolean false; _ }
+                        ) as lit_exp
+                      )
                     :: arguments;
                   comments = args_comments;
-                } ) ) ->
+                }
+              )
+            ) ->
             (* invariant(false, ...) is treated like a throw *)
             let arguments = Base.List.map ~f:(Fn.compose snd (expression_or_spread cx)) arguments in
             Env.reset_current_activation loc;
@@ -4256,14 +4472,17 @@ module Make (Env : Env_sig.S) = struct
                         {
                           ArgList.arguments = Expression lit_exp :: arguments;
                           comments = args_comments;
-                        } );
+                        }
+                      );
                     comments;
-                  } )
+                  }
+              )
               Abnormal.Throw
           | ( None,
               ( args_loc,
-                { ArgList.arguments = Expression cond :: arguments; comments = args_comments } ) )
-            ->
+                { ArgList.arguments = Expression cond :: arguments; comments = args_comments }
+              )
+            ) ->
             let arguments = Base.List.map ~f:(Fn.compose snd (expression_or_spread cx)) arguments in
             let ((((_, cond_t), _) as cond), preds, _, xtypes) =
               predicates_of_condition ~cond:OtherTest cx cond
@@ -4272,7 +4491,8 @@ module Make (Env : Env_sig.S) = struct
             let reason = mk_reason (RFunctionCall (desc_of_t callee_t)) loc in
             Flow.flow cx (cond_t, InvariantT reason);
             ( args_loc,
-              { ArgList.arguments = Expression cond :: arguments; comments = args_comments } )
+              { ArgList.arguments = Expression cond :: arguments; comments = args_comments }
+            )
           | (_, (_, { ArgList.arguments = Spread _ :: _; comments = _ })) ->
             ignore (arg_list cx arguments);
             Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, InvariantSpreadArgument));
@@ -4288,7 +4508,8 @@ module Make (Env : Env_sig.S) = struct
                     is_new = false;
                     reason_arity = Reason.(locationless_reason (RFunction RNormal));
                     expected_arity = 0;
-                  });
+                  }
+              );
             Tast_utils.error_mapper#arg_list arguments
         in
         let lhs_t = VoidT.at loc |> with_trust bogus_trust in
@@ -4318,16 +4539,19 @@ module Make (Env : Env_sig.S) = struct
                   Member._object;
                   property = Member.PropertyIdentifier ((ploc, lhs_t), exports_name);
                   comments;
-                } ),
+                }
+            ),
             None,
-            None )
+            None
+          )
       | Member
           {
             Member._object =
               ( object_loc,
                 Identifier
                   ( id_loc,
-                    { Ast.Identifier.name = "ReactGraphQL" | "ReactGraphQLLegacy"; comments = _ } )
+                    { Ast.Identifier.name = "ReactGraphQL" | "ReactGraphQLLegacy"; comments = _ }
+                  )
               );
             property =
               Member.PropertyIdentifier
@@ -4346,9 +4570,11 @@ module Make (Env : Env_sig.S) = struct
                   Member._object = ((object_loc, t), Identifier ((id_loc, t), name));
                   property;
                   comments;
-                } ),
+                }
+            ),
             None,
-            None )
+            None
+          )
       | Member
           {
             Member._object = (super_loc, Super super);
@@ -4437,7 +4663,8 @@ module Make (Env : Env_sig.S) = struct
       | Some void ->
         Tvar.mk_where cx (reason_of_t filtered) (fun t ->
             Flow.flow_t cx (filtered, t);
-            Flow.flow_t cx (void, t))
+            Flow.flow_t cx (void, t)
+        )
     in
     let noop _ = None in
     let in_env preds f =
@@ -4494,7 +4721,8 @@ module Make (Env : Env_sig.S) = struct
       in
       let voided_out =
         Tvar.mk_where cx reason (fun t ->
-            Base.Option.iter ~f:(fun voided_t -> Flow.flow_t cx (voided_t, t)) voided_t)
+            Base.Option.iter ~f:(fun voided_t -> Flow.flow_t cx (voided_t, t)) voided_t
+        )
       in
       let this_t = Tvar.mk cx this_reason in
       let opt_use = get_opt_use subexpression_types reason this_t in
@@ -4508,11 +4736,13 @@ module Make (Env : Env_sig.S) = struct
               this_t;
               t_out = apply_opt_use opt_use mem_tvar;
               voided_out;
-            } );
+            }
+        );
       let lhs_t =
         Tvar.mk_where cx reason (fun t ->
             Flow.flow_t cx (OpenT mem_tvar, t);
-            Flow.flow_t cx (voided_out, t))
+            Flow.flow_t cx (voided_out, t)
+        )
       in
       (OpenT mem_tvar, Some voided_out, lhs_t, chain_t, object_ast, subexpression_asts, preds)
     in
@@ -4599,7 +4829,8 @@ module Make (Env : Env_sig.S) = struct
               filtered_t,
               object_ast,
               subexpression_asts,
-              preds )
+              preds
+            )
           | _ ->
             handle_new_chain
               lhs_reason
@@ -4647,13 +4878,15 @@ module Make (Env : Env_sig.S) = struct
          *)
         match (e', opt_state) with
         | ( Call
-              ({
-                 Call.callee = (callee_loc, OptionalMember { OptionalMember.member; optional });
-                 targs = _;
-                 arguments = _;
-                 comments = _;
-               } as call),
-            (NewChain | ContinueChain) ) ->
+              ( {
+                  Call.callee = (callee_loc, OptionalMember { OptionalMember.member; optional });
+                  targs = _;
+                  arguments = _;
+                  comments = _;
+                } as call
+              ),
+            (NewChain | ContinueChain)
+          ) ->
           let receiver_ast member = OptionalMember { OptionalMember.member; optional } in
           let member_opt =
             if optional then
@@ -4682,7 +4915,8 @@ module Make (Env : Env_sig.S) = struct
               ContinueChain
           in
           ( Call { call with Call.callee = (callee_loc, Member member) },
-            Some (member_opt, member, receiver_ast) )
+            Some (member_opt, member, receiver_ast)
+          )
         | (Call { Call.callee = (_, Member member); targs = _; arguments = _; comments = _ }, _) ->
           (e', Some (NonOptional, member, (fun member -> Member member)))
         | _ -> (e', None)
@@ -4696,12 +4930,14 @@ module Make (Env : Env_sig.S) = struct
         let get_mem_t tind reason obj_t =
           Tvar.mk_no_wrap_where cx reason (fun t ->
               let use = apply_opt_use (get_opt_use tind reason obj_t) t in
-              Flow.flow cx (obj_t, use))
+              Flow.flow cx (obj_t, use)
+          )
         in
         let eval_index preds =
           in_env preds (fun () ->
               let (((_, tind), _) as index) = expression cx ~annot:None index in
-              (tind, index))
+              (tind, index)
+          )
         in
         let (filtered_out, voided_out, lhs_t, obj_t, object_ast, index, preds) =
           handle_chaining
@@ -4728,7 +4964,8 @@ module Make (Env : Env_sig.S) = struct
               { Member._object = object_ast; property = Member.PropertyExpression index; comments }
           ),
           preds,
-          sentinel_refinement )
+          sentinel_refinement
+        )
       (* e.l *)
       | ( Member
             {
@@ -4737,7 +4974,8 @@ module Make (Env : Env_sig.S) = struct
                 Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name; comments = _ } as id));
               comments;
             },
-          _ ) ->
+          _
+        ) ->
         let expr_reason = mk_expression_reason ex in
         let prop_reason = mk_reason (RProperty (Some (OrdinaryName name))) ploc in
         let use_op = Op (GetProperty expr_reason) in
@@ -4751,7 +4989,8 @@ module Make (Env : Env_sig.S) = struct
         let get_mem_t () _ obj_t =
           Tvar.mk_no_wrap_where cx expr_reason (fun t ->
               let use = apply_opt_use opt_use t in
-              Flow.flow cx (obj_t, use))
+              Flow.flow cx (obj_t, use)
+          )
         in
         let (filtered_out, voided_out, lhs_t, obj_t, object_ast, _, preds) =
           handle_chaining
@@ -4778,7 +5017,8 @@ module Make (Env : Env_sig.S) = struct
           voided_out,
           ((loc, lhs_t), member_ast { Member._object = object_ast; property; comments }),
           preds,
-          sentinel_refinement )
+          sentinel_refinement
+        )
       (* e.#l *)
       | ( Member
             {
@@ -4788,7 +5028,8 @@ module Make (Env : Env_sig.S) = struct
                 property;
               comments;
             },
-          _ ) ->
+          _
+        ) ->
         let expr_reason = mk_reason (RPrivateProperty name) loc in
         let use_op = Op (GetProperty (mk_expression_reason ex)) in
         let opt_use = get_private_field_opt_use expr_reason ~use_op name in
@@ -4801,7 +5042,8 @@ module Make (Env : Env_sig.S) = struct
         let get_mem_t () _ obj_t =
           Tvar.mk_no_wrap_where cx expr_reason (fun t ->
               let use = apply_opt_use opt_use t in
-              Flow.flow cx (obj_t, use))
+              Flow.flow cx (obj_t, use)
+          )
         in
         let (filtered_out, voided_out, lhs_t, _, object_ast, _, preds) =
           handle_chaining
@@ -4822,13 +5064,16 @@ module Make (Env : Env_sig.S) = struct
           voided_out,
           ((loc, lhs_t), member_ast { Member._object = object_ast; property; comments }),
           preds,
-          None )
+          None
+        )
       (* Method calls: e.l(), e.#l(), and e1[e2]() *)
       | ( Call { Call.callee = (lookup_loc, callee_expr) as callee; targs; arguments; comments },
           Some
             ( member_opt,
               ({ Member._object; property; comments = member_comments } as receiver),
-              receiver_ast ) ) ->
+              receiver_ast
+            )
+        ) ->
         let (targts, targs) = convert_call_targs_opt cx targs in
         let expr_reason = mk_expression_reason ex in
         let ( filtered_out,
@@ -4838,7 +5083,8 @@ module Make (Env : Env_sig.S) = struct
               prop_t,
               object_ast,
               property,
-              argument_asts ) =
+              argument_asts
+            ) =
           match property with
           | Member.PropertyPrivateName (prop_loc, { Ast.PrivateName.name; comments = _ })
           | Member.PropertyIdentifier (prop_loc, { Ast.Identifier.name; comments = _ }) ->
@@ -4854,7 +5100,8 @@ module Make (Env : Env_sig.S) = struct
                      prop = reason_prop;
                      args = mk_initial_arguments_reason arguments;
                      local = true;
-                   })
+                   }
+                )
             in
             let prop_t = Tvar.mk cx reason_prop in
             let call_voided_out = Tvar.mk cx reason_call in
@@ -4908,13 +5155,15 @@ module Make (Env : Env_sig.S) = struct
                         }
                     | _ -> CallT (use_op, reason_call, app)
                   in
-                  Flow.flow cx (f, call_t))
+                  Flow.flow cx (f, call_t)
+              )
             in
             let get_mem_t argts reason obj_t =
               Type_inference_hooks_js.dispatch_call_hook cx name prop_loc obj_t;
               Tvar.mk_no_wrap_where cx reason_call (fun t ->
                   let use = apply_opt_use (get_opt_use argts reason obj_t) t in
-                  Flow.flow cx (obj_t, use))
+                  Flow.flow cx (obj_t, use)
+              )
             in
             let eval_args preds = in_env preds (fun () -> arg_list cx arguments) in
             let (filtered_out, lookup_voided_out, member_lhs_t, _, object_ast, argument_asts, _) =
@@ -4946,7 +5195,8 @@ module Make (Env : Env_sig.S) = struct
               prop_t,
               object_ast,
               prop_ast,
-              argument_asts )
+              argument_asts
+            )
           | Member.PropertyExpression expr ->
             let reason_call = mk_reason (RMethodCall None) loc in
             let reason_lookup = mk_reason (RProperty None) lookup_loc in
@@ -4969,13 +5219,15 @@ module Make (Env : Env_sig.S) = struct
               Tvar.mk_no_wrap_where cx reason_call (fun t ->
                   let use = apply_opt_use (get_opt_use arg_and_elem_ts reason obj_t) t in
                   Flow.flow cx (obj_t, use);
-                  Flow.flow_t cx (obj_t, prop_t))
+                  Flow.flow_t cx (obj_t, prop_t)
+              )
             in
             let eval_args_and_expr preds =
               in_env preds (fun () ->
                   let (((_, elem_t), _) as expr) = expression cx ~annot:None expr in
                   let (argts, arguments_ast) = arg_list cx arguments in
-                  ((argts, elem_t), (arguments_ast, expr)))
+                  ((argts, elem_t), (arguments_ast, expr))
+              )
             in
             let this_reason = mk_expression_reason callee in
             let ( filtered_out,
@@ -4984,7 +5236,8 @@ module Make (Env : Env_sig.S) = struct
                   _,
                   object_ast,
                   (argument_asts, expr_ast),
-                  _ ) =
+                  _
+                ) =
               handle_chaining
                 member_opt
                 _object
@@ -5004,13 +5257,15 @@ module Make (Env : Env_sig.S) = struct
               prop_t,
               object_ast,
               Member.PropertyExpression expr_ast,
-              argument_asts )
+              argument_asts
+            )
         in
         let voided_out = join_optional_branches lookup_voided_out call_voided_out in
         let lhs_t =
           Tvar.mk_where cx (reason_of_t member_lhs_t) (fun t ->
               Flow.flow_t cx (member_lhs_t, t);
-              Flow.flow_t cx (voided_out, t))
+              Flow.flow_t cx (voided_out, t)
+          )
         in
         ( filtered_out,
           Some voided_out,
@@ -5020,13 +5275,16 @@ module Make (Env : Env_sig.S) = struct
                 Call.callee =
                   ( (lookup_loc, prop_t),
                     receiver_ast
-                      { Member._object = object_ast; property; comments = member_comments } );
+                      { Member._object = object_ast; property; comments = member_comments }
+                  );
                 targs;
                 arguments = argument_asts;
                 comments;
-              } ),
+              }
+          ),
           None,
-          None )
+          None
+        )
       (* e1(e2...) *)
       | (Call { Call.callee; targs; arguments; comments }, None) ->
         let (targts, targs) = convert_call_targs_opt cx targs in
@@ -5038,14 +5296,16 @@ module Make (Env : Env_sig.S) = struct
                  fn = mk_expression_reason callee;
                  args = mk_initial_arguments_reason arguments;
                  local = true;
-               })
+               }
+            )
         in
         let get_opt_use argts reason _ = func_call_opt_use cx reason ~use_op targts argts in
         let get_reason lhs_t = mk_reason (RFunctionCall (desc_of_t lhs_t)) loc in
         let get_result argts reason f =
           Tvar.mk_no_wrap_where cx reason (fun t ->
               let use = apply_opt_use (get_opt_use argts reason f) t in
-              Flow.flow cx (f, use))
+              Flow.flow cx (f, use)
+          )
         in
         let eval_args preds = in_env preds (fun () -> arg_list cx arguments) in
         let (filtered_out, voided_out, lhs_t, _, object_ast, argument_asts, _) =
@@ -5117,7 +5377,8 @@ module Make (Env : Env_sig.S) = struct
       args
       |> Base.List.map ~f:(function
              | Ast.Expression.Expression e -> e
-             | _ -> Utils_js.assert_false "No spreads should reach here")
+             | _ -> Utils_js.assert_false "No spreads should reach here"
+             )
     in
     let (((_, f), _) as callee_ast) = expression cx ~annot:None callee in
     let reason = mk_reason (RFunctionCall (desc_of_t f)) loc in
@@ -5132,7 +5393,8 @@ module Make (Env : Env_sig.S) = struct
              fn = mk_expression_reason callee;
              args = mk_initial_arguments_reason arguments;
              local = true;
-           })
+           }
+        )
     in
     let t = func_call cx reason ~use_op f targts (Base.List.map ~f:(fun e -> Arg e) argts) in
     let arguments_ast =
@@ -5141,7 +5403,8 @@ module Make (Env : Env_sig.S) = struct
           Ast.Expression.ArgList.arguments =
             Base.List.map ~f:(fun e -> Ast.Expression.Expression e) arg_asts;
           comments = args_comments;
-        } )
+        }
+      )
     in
     ( f,
       argks,
@@ -5152,7 +5415,8 @@ module Make (Env : Env_sig.S) = struct
         targs = targ_asts;
         arguments = arguments_ast;
         comments;
-      } )
+      }
+    )
 
   (* We assume that constructor functions return void
      and constructions return objects.
@@ -5164,7 +5428,8 @@ module Make (Env : Env_sig.S) = struct
     Env.havoc_heap_refinements ();
     Env.havoc_local_refinements cx;
     Tvar.mk_where cx reason (fun t ->
-        Flow.flow cx (class_, ConstructorT (use_op, reason, targs, args, t)))
+        Flow.flow cx (class_, ConstructorT (use_op, reason, targs, args, t))
+    )
 
   and func_call_opt_use cx reason ~use_op ?(havoc = true) ?(call_strict_arity = true) targts argts =
     Env.havoc_heap_refinements ();
@@ -5238,7 +5503,9 @@ module Make (Env : Env_sig.S) = struct
       ( f,
         Tvar.mk_no_wrap_where cx reason (fun t ->
             let app = mk_boundfunctioncalltype obj_t targts argts t ~call_strict_arity in
-            Flow.flow cx (f, CallT (use_op, reason, app))) )
+            Flow.flow cx (f, CallT (use_op, reason, app))
+        )
+      )
     | None ->
       Env.havoc_heap_refinements ();
       if havoc then Env.havoc_local_refinements cx;
@@ -5251,7 +5518,9 @@ module Make (Env : Env_sig.S) = struct
             let propref = Named (reason_prop, OrdinaryName name) in
             Flow.flow
               cx
-              (obj_t, MethodT (use_op, reason, reason_expr, propref, CallM app, Some prop_t))) )
+              (obj_t, MethodT (use_op, reason, reason_expr, propref, CallM app, Some prop_t))
+        )
+      )
 
   and elem_call_opt_use
       opt_state
@@ -5343,7 +5612,8 @@ module Make (Env : Env_sig.S) = struct
       let (((_, arg), _) as argument) = expression cx ~annot:None argument in
       let reason = mk_reason (RUnaryOperator ("not", desc_of_t arg)) loc in
       ( Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (arg, NotT (reason, t))),
-        { operator = Not; argument; comments } )
+        { operator = Not; argument; comments }
+      )
     | { operator = Plus; argument; comments } ->
       let argument = expression cx ~annot:None argument in
       (NumT.at loc |> with_trust literal_trust, { operator = Plus; argument; comments })
@@ -5364,7 +5634,8 @@ module Make (Env : Env_sig.S) = struct
             let reason = mk_reason (desc_of_t arg) loc in
             Tvar.mk_derivable_where cx reason (fun t -> Flow.flow cx (arg, UnaryMinusT (reason, t)))
         end,
-        { operator = Minus; argument; comments } )
+        { operator = Minus; argument; comments }
+      )
     | { operator = BitNot; argument; comments } ->
       let t = NumT.at loc |> with_trust literal_trust in
       let (((_, argt), _) as argument) = expression cx ~annot:None argument in
@@ -5379,7 +5650,8 @@ module Make (Env : Env_sig.S) = struct
     | { operator = Ast.Expression.Unary.Delete; argument; comments } ->
       let argument = delete cx loc argument in
       ( BoolT.at loc |> with_trust literal_trust,
-        { operator = Ast.Expression.Unary.Delete; argument; comments } )
+        { operator = Ast.Expression.Unary.Delete; argument; comments }
+      )
     | { operator = Await; argument; comments } ->
       (* TODO: await should look up Promise in the environment instead of going
          directly to the core definition. Otherwise, the following won't work
@@ -5401,10 +5673,12 @@ module Make (Env : Env_sig.S) = struct
                fn = reason_of_t await;
                args = [mk_expression_reason argument];
                local = true;
-             })
+             }
+          )
       in
       ( func_call cx reason ~use_op await None [Arg arg],
-        { operator = Await; argument = argument_ast; comments } )
+        { operator = Await; argument = argument_ast; comments }
+      )
 
   (* numeric pre/post inc/dec *)
   and update cx loc expr =
@@ -5415,8 +5689,8 @@ module Make (Env : Env_sig.S) = struct
     ( result_t,
       match argument with
       | ( arg_loc,
-          Ast.Expression.Identifier (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)) )
-        ->
+          Ast.Expression.Identifier (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name))
+        ) ->
         Flow.flow cx (identifier cx id_name id_loc, AssertArithmeticOperandT reason);
 
         (* enforce state-based guards for binding update, e.g., const *)
@@ -5426,7 +5700,8 @@ module Make (Env : Env_sig.S) = struct
                {
                  var = Some (mk_reason (RIdentifier (OrdinaryName name)) id_loc);
                  init = reason_of_t result_t;
-               })
+               }
+            )
         in
         Env.set_var cx ~use_op name result_t id_loc;
         let t = NumT.at arg_loc |> with_trust bogus_trust in
@@ -5455,7 +5730,8 @@ module Make (Env : Env_sig.S) = struct
       | _ ->
         let (((_, arg_t), _) as arg_ast) = expression cx ~annot:None argument in
         Flow.flow cx (arg_t, AssertArithmeticOperandT reason);
-        { expr with argument = arg_ast } )
+        { expr with argument = arg_ast }
+    )
 
   (* traverse a binary expression, return result type *)
   and binary cx loc { Ast.Expression.Binary.operator; left; right; comments } =
@@ -5469,7 +5745,8 @@ module Make (Env : Env_sig.S) = struct
         RBinaryOperator
           ( Flow_ast_utils.string_of_binary_operator operator,
             desc_of_reason (reason_of_t t1),
-            desc_of_reason (reason_of_t t2) )
+            desc_of_reason (reason_of_t t2)
+          )
       in
       let reason = mk_reason desc loc in
       Flow.flow cx (t1, EqT { reason; flip = false; arg = t2 });
@@ -5492,7 +5769,8 @@ module Make (Env : Env_sig.S) = struct
         RBinaryOperator
           ( Flow_ast_utils.string_of_binary_operator operator,
             desc_of_reason (reason_of_t t1),
-            desc_of_reason (reason_of_t t2) )
+            desc_of_reason (reason_of_t t2)
+          )
       in
       let reason = mk_reason desc loc in
       Flow.flow cx (t1, StrictEqT { reason; cond_context = None; flip = false; arg = t2 });
@@ -5513,7 +5791,8 @@ module Make (Env : Env_sig.S) = struct
         RBinaryOperator
           ( Flow_ast_utils.string_of_binary_operator operator,
             desc_of_reason (reason_of_t t1),
-            desc_of_reason (reason_of_t t2) )
+            desc_of_reason (reason_of_t t2)
+          )
       in
       let reason = mk_reason desc loc in
       Flow.flow cx (t1, ComparatorT { reason; flip = false; arg = t2 });
@@ -5550,10 +5829,13 @@ module Make (Env : Env_sig.S) = struct
                      op = reason;
                      left = mk_expression_reason left;
                      right = mk_expression_reason right;
-                   })
+                   }
+                )
             in
-            Flow.flow cx (t1, AdderT (use_op, reason, false, t2, t))),
-        { operator; left = left_ast; right = right_ast; comments } )
+            Flow.flow cx (t1, AdderT (use_op, reason, false, t2, t))
+        ),
+        { operator; left = left_ast; right = right_ast; comments }
+      )
 
   and logical cx loc { Ast.Expression.Logical.operator; left; right; comments } =
     let open Ast.Expression.Logical in
@@ -5577,7 +5859,8 @@ module Make (Env : Env_sig.S) = struct
       in
       let ((((_, t2), _) as right), right_abnormal) =
         Abnormal.catch_expr_control_flow_exception (fun () ->
-            Env.in_refined_env cx loc not_map xtypes (fun () -> expression cx ~annot:None right))
+            Env.in_refined_env cx loc not_map xtypes (fun () -> expression cx ~annot:None right)
+        )
       in
       let t2 =
         match right_abnormal with
@@ -5587,14 +5870,16 @@ module Make (Env : Env_sig.S) = struct
       in
       let reason = mk_reason (RLogical ("||", desc_of_t t1, desc_of_t t2)) loc in
       ( Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (t1, OrT (reason, t2, t))),
-        { operator = Or; left; right; comments } )
+        { operator = Or; left; right; comments }
+      )
     | And ->
       let ((((_, t1), _) as left), map, _, xtypes) =
         predicates_of_condition ~cond:OtherTest cx left
       in
       let ((((_, t2), _) as right), right_abnormal) =
         Abnormal.catch_expr_control_flow_exception (fun () ->
-            Env.in_refined_env cx loc map xtypes (fun () -> expression cx ~annot:None right))
+            Env.in_refined_env cx loc map xtypes (fun () -> expression cx ~annot:None right)
+        )
       in
       let t2 =
         match right_abnormal with
@@ -5604,7 +5889,8 @@ module Make (Env : Env_sig.S) = struct
       in
       let reason = mk_reason (RLogical ("&&", desc_of_t t1, desc_of_t t2)) loc in
       ( Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (t1, AndT (reason, t2, t))),
-        { operator = And; left; right; comments } )
+        { operator = And; left; right; comments }
+      )
     | NullishCoalesce ->
       let (((_, t1), _) as left) = expression cx ~annot:None left in
       let ((((_, t2), _) as right), right_abnormal) =
@@ -5618,13 +5904,16 @@ module Make (Env : Env_sig.S) = struct
       in
       let reason = mk_reason (RLogical ("??", desc_of_t t1, desc_of_t t2)) loc in
       ( Tvar.mk_no_wrap_where cx reason (fun t ->
-            Flow.flow cx (t1, NullishCoalesceT (reason, t2, t))),
-        { operator = NullishCoalesce; left; right; comments } )
+            Flow.flow cx (t1, NullishCoalesceT (reason, t2, t))
+        ),
+        { operator = NullishCoalesce; left; right; comments }
+      )
 
   and assignment_lhs cx patt =
     match patt with
     | ( pat_loc,
-        Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (loc, name); optional; annot } ) ->
+        Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (loc, name); optional; annot }
+      ) ->
       let t = identifier cx name loc in
       ( (pat_loc, t),
         Ast.Pattern.Identifier
@@ -5636,7 +5925,8 @@ module Make (Env : Env_sig.S) = struct
                 Ast.Type.Available (Tast_utils.error_mapper#type_annotation annot)
               | Ast.Type.Missing hint -> Ast.Type.Missing (hint, AnyT.locationless Untyped));
             optional;
-          } )
+          }
+      )
     | (loc, Ast.Pattern.Expression ((_, Ast.Expression.Member _) as m)) ->
       let (((_, t), _) as m) = expression cx ~annot:None m in
       ((loc, t), Ast.Pattern.Expression m)
@@ -5708,7 +5998,8 @@ module Make (Env : Env_sig.S) = struct
      Member._object =
        ( object_loc,
          Ast.Expression.Identifier
-           (id_loc, ({ Ast.Identifier.name = "module"; comments = _ } as mod_name)) );
+           (id_loc, ({ Ast.Identifier.name = "module"; comments = _ } as mod_name))
+       );
      property =
        Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name = "exports"; comments = _ } as name));
      comments;
@@ -5812,7 +6103,9 @@ module Make (Env : Env_sig.S) = struct
                    mode,
                    wr_ctx,
                    t,
-                   Some prop_t ))
+                   Some prop_t
+                 )
+              )
           in
           Flow.flow cx (o, upper);
           post_assignment_havoc ~private_:false name (lhs_loc, lhs_expr) prop_t t;
@@ -5840,7 +6133,8 @@ module Make (Env : Env_sig.S) = struct
          which clears refis *)
       Env.havoc_heap_refinements ();
       ( (lhs_loc, t),
-        reconstruct_ast { Member._object; property = Member.PropertyExpression index; comments } )
+        reconstruct_ast { Member._object; property = Member.PropertyExpression index; comments }
+      )
 
   (* traverse simple assignment expressions (`lhs = rhs`) *)
   and simple_assignment cx _loc lhs rhs =
@@ -5912,7 +6206,8 @@ module Make (Env : Env_sig.S) = struct
         let use_op =
           Op
             (Addition
-               { op = reason; left = mk_pattern_reason lhs; right = mk_expression_reason rhs })
+               { op = reason; left = mk_pattern_reason lhs; right = mk_expression_reason rhs }
+            )
         in
         Flow.flow cx (lhs_t, AdderT (use_op, reason, false, rhs_t, result_t))
       in
@@ -5920,12 +6215,13 @@ module Make (Env : Env_sig.S) = struct
       (match lhs with
       | ( _,
           Ast.Pattern.Identifier
-            { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; comments = _ }); _ } )
-        ->
+            { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; comments = _ }); _ }
+        ) ->
         let use_op =
           Op
             (AssignVar
-               { var = Some (mk_reason (RIdentifier (OrdinaryName name)) id_loc); init = reason })
+               { var = Some (mk_reason (RIdentifier (OrdinaryName name)) id_loc); init = reason }
+            )
         in
         Env.set_var cx ~use_op name result_t id_loc
       | (lhs_loc, Ast.Pattern.Expression (_, Ast.Expression.Member mem)) ->
@@ -5969,15 +6265,16 @@ module Make (Env : Env_sig.S) = struct
       (match lhs with
       | ( _,
           Ast.Pattern.Identifier
-            { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; comments = _ }); _ } )
-        ->
+            { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; comments = _ }); _ }
+        ) ->
         let use_op =
           Op
             (AssignVar
                {
                  var = Some (mk_reason (RIdentifier (OrdinaryName name)) id_loc);
                  init = reason_of_t result_t;
-               })
+               }
+            )
         in
         Env.set_var cx ~use_op name result_t id_loc
       | (lhs_loc, Ast.Pattern.Expression (_, Ast.Expression.Member mem)) ->
@@ -6062,8 +6359,10 @@ module Make (Env : Env_sig.S) = struct
            (fun (unres_params, children) child ->
              let (unres_param_opt, child) = jsx_body cx child in
              ( Base.Option.value_map unres_param_opt ~default:unres_params ~f:(fun x ->
-                   x :: unres_params),
-               child :: children ))
+                   x :: unres_params
+               ),
+               child :: children
+             ))
            ([], [])
       |> map_pair List.rev List.rev
     in
@@ -6126,10 +6425,12 @@ module Make (Env : Env_sig.S) = struct
       match (name, jsx_mode, (facebook_fbs, facebook_fbt)) with
       | ( Identifier (loc_id, ({ Identifier.name = "fbs" as name; comments = _ } as id)),
           _,
-          (Some custom_jsx_type, _) )
+          (Some custom_jsx_type, _)
+        )
       | ( Identifier (loc_id, ({ Identifier.name = "fbt" as name; comments = _ } as id)),
           _,
-          (_, Some custom_jsx_type) ) ->
+          (_, Some custom_jsx_type)
+        ) ->
         let fbt_reason = mk_reason RFbt loc_element in
         let t = Flow.get_builtin_type cx fbt_reason (OrdinaryName custom_jsx_type) in
         (* TODO check attribute types against an fbt API *)
@@ -6228,7 +6529,8 @@ module Make (Env : Env_sig.S) = struct
       | (Ast.JSX.MemberExpression.Identifier o_id, Ast.JSX.MemberExpression.Identifier c_id) ->
         Ast.JSX.MemberExpression.Identifier (match_identifiers o_id c_id)
       | ( Ast.JSX.MemberExpression.MemberExpression o_exp,
-          Ast.JSX.MemberExpression.MemberExpression c_exp ) ->
+          Ast.JSX.MemberExpression.MemberExpression c_exp
+        ) ->
         Ast.JSX.MemberExpression.MemberExpression (match_member_expressions o_exp c_exp)
       | (_, _) -> Tast_utils.error_mapper#jsx_member_expression_object c_obj
     in
@@ -6255,10 +6557,11 @@ module Make (Env : Env_sig.S) = struct
     let is_react = Context.jsx cx = Options.Jsx_react in
     let reason_props =
       replace_desc_reason
-        (if is_react then
+        ( if is_react then
           RReactProps
         else
-          RJSXElementProps name)
+          RJSXElementProps name
+        )
         reason
     in
     (* Use the same reason for proto and the ObjT so we can walk the proto chain
@@ -6276,7 +6579,8 @@ module Make (Env : Env_sig.S) = struct
                   Attribute.name =
                     Attribute.Identifier (id_loc, { Identifier.name = aname; comments = acomments });
                   value;
-                } ) ->
+                }
+              ) ->
             (* Get the type for the attribute's value. *)
             let (atype, value) =
               match value with
@@ -6291,7 +6595,9 @@ module Make (Env : Env_sig.S) = struct
                       {
                         ExpressionContainer.expression = ExpressionContainer.Expression (loc, e);
                         comments;
-                      } )) ->
+                      }
+                    )
+                    ) ->
                 let (((_, t), _) as e) = expression cx ~annot:(Some ()) (loc, e) in
                 ( t,
                   Some
@@ -6300,7 +6606,10 @@ module Make (Env : Env_sig.S) = struct
                          {
                            ExpressionContainer.expression = ExpressionContainer.Expression e;
                            comments;
-                         } )) )
+                         }
+                       )
+                    )
+                )
               (* <element name={} /> *)
               | Some (Attribute.ExpressionContainer _ as ec) ->
                 let t = EmptyT.at attr_loc |> with_trust bogus_trust in
@@ -6325,7 +6634,8 @@ module Make (Env : Env_sig.S) = struct
                       Attribute.Identifier
                         ((id_loc, atype), { Identifier.name = aname; comments = acomments });
                     value;
-                  } )
+                  }
+                )
             in
             (acc, att :: atts)
           (* Do nothing for namespaced attributes or ignored React attributes. *)
@@ -6364,7 +6674,8 @@ module Make (Env : Env_sig.S) = struct
                 ~use_op:unknown_use
                 ~reason_op:reason
                 unresolved_params
-                (ResolveSpreadsToArrayLiteral (mk_id (), elem_t, tout)))
+                (ResolveSpreadsToArrayLiteral (mk_id (), elem_t, tout))
+          )
         in
         ObjectExpressionAcc.add_prop
           (Properties.add_field (OrdinaryName "children") Polarity.Neutral None arr)
@@ -6406,7 +6717,8 @@ module Make (Env : Env_sig.S) = struct
         let use_op =
           Op
             (ReactCreateElementCall
-               { op = reason_jsx; component = reason_of_t component_t; children = loc_children })
+               { op = reason_jsx; component = reason_of_t component_t; children = loc_children }
+            )
         in
         let jsx_fun = CustomFunT (reason_jsx, ReactCreateElement) in
         let calltype = mk_functioncalltype reason_jsx None args tvar in
@@ -6422,7 +6734,8 @@ module Make (Env : Env_sig.S) = struct
                  op = reason_createElement;
                  component = reason_of_t component_t;
                  children = loc_children;
-               })
+               }
+            )
         in
         let react = Env.var_ref ~lookup_mode:ForValue cx (OrdinaryName "React") loc_opening in
         Flow.flow
@@ -6437,8 +6750,11 @@ module Make (Env : Env_sig.S) = struct
                   (mk_methodcalltype
                      None
                      ([Arg component_t; Arg props] @ Base.List.map ~f:(fun c -> Arg c) children)
-                     tvar),
-                None ) ));
+                     tvar
+                  ),
+                None
+              )
+          ));
       OpenT tvar
     | Options.Jsx_pragma (raw_jsx_expr, jsx_expr) ->
       let reason = mk_reason (RJSXFunctionCall raw_jsx_expr) loc_element in
@@ -6466,7 +6782,8 @@ module Make (Env : Env_sig.S) = struct
               Member._object;
               property = Member.PropertyIdentifier (prop_loc, { Ast.Identifier.name; comments = _ });
               _;
-            } ) ->
+            }
+        ) ->
         let ot = jsx_pragma_expression cx raw_jsx_expr loc_element _object in
         snd
           (method_call
@@ -6478,7 +6795,8 @@ module Make (Env : Env_sig.S) = struct
              prop_loc
              (jsx_expr, ot, name)
              None
-             argts)
+             argts
+          )
       | _ ->
         let f = jsx_pragma_expression cx raw_jsx_expr loc_element jsx_expr in
         func_call cx reason ~use_op ~call_strict_arity:false ~havoc:false f None argts)
@@ -6530,7 +6848,9 @@ module Make (Env : Env_sig.S) = struct
           | EmptyExpression -> (None, EmptyExpression)
         in
         ( unresolved_param,
-          (loc, ExpressionContainer { expression = ex; ExpressionContainer.comments }) ))
+          (loc, ExpressionContainer { expression = ex; ExpressionContainer.comments })
+        )
+      )
     | SpreadChild { SpreadChild.expression = expr; comments } ->
       let (((_, t), _) as e) = expression cx ~annot:None expr in
       (Some (UnresolvedSpreadArg t), (loc, SpreadChild { SpreadChild.expression = e; comments }))
@@ -6549,7 +6869,9 @@ module Make (Env : Env_sig.S) = struct
         (DefT
            ( mk_reason RJSXText (loc |> ALoc.of_loc),
              make_trust (),
-             StrT (Type.Literal (None, OrdinaryName trimmed)) ))
+             StrT (Type.Literal (None, OrdinaryName trimmed))
+           )
+        )
     | None -> None
 
   and jsx_title_member_to_string (_, member) =
@@ -6583,6 +6905,7 @@ module Make (Env : Env_sig.S) = struct
       ( mloc,
         Ast.Expression.Member { _object; property = PropertyIdentifier property; comments = None }
       )
+    
 
   (* reverses jsx_title_member_to_expression *)
   and expression_to_jsx_title_member loc member =
@@ -6598,14 +6921,16 @@ module Make (Env : Env_sig.S) = struct
         match obj_expr with
         | Ast.Expression.Identifier ((id_loc, t), { Ast.Identifier.name; comments }) ->
           Some
-            (Ast.JSX.MemberExpression.Identifier ((id_loc, t), { Ast.JSX.Identifier.name; comments }))
+            (Ast.JSX.MemberExpression.Identifier ((id_loc, t), { Ast.JSX.Identifier.name; comments })
+            )
         | _ ->
           expression_to_jsx_title_member mloc obj_expr
           |> Base.Option.map ~f:(fun e -> Ast.JSX.MemberExpression.MemberExpression e)
       in
       let property = (pannot, { Ast.JSX.Identifier.name; comments }) in
       Base.Option.map _object ~f:(fun _object ->
-          (loc, Ast.JSX.MemberExpression.{ _object; property }))
+          (loc, Ast.JSX.MemberExpression.{ _object; property })
+      )
     | _ -> None
 
   and mk_and map1 map2 =
@@ -6665,7 +6990,8 @@ module Make (Env : Env_sig.S) = struct
       ( test_tast,
         Key_map.add ~combine key p ps,
         Key_map.add ~combine:not_combine key notp notps,
-        Key_map.add key unrefined_t tmap )
+        Key_map.add key unrefined_t tmap
+      )
     in
     let flow_eqt ~strict loc (t1, t2) =
       if strict then
@@ -6707,9 +7033,12 @@ module Make (Env : Env_sig.S) = struct
                   | Member.PropertyExpression
                       ( _,
                         Ast.Expression.Literal
-                          { Ast.Literal.value = Ast.Literal.String prop_name; _ } ) );
+                          { Ast.Literal.value = Ast.Literal.String prop_name; _ }
+                      ) );
                 comments = _;
-              } ) ) ->
+              }
+          )
+        ) ->
         let sentinel_refine obj_t =
           (* Generate a refinement on the object that contains a sentinel property.
              We need to pass this into optional_chain, rather than locally generating a
@@ -6965,75 +7294,93 @@ module Make (Env : Env_sig.S) = struct
       (* this must happen before the case below involving Literal.String in order
          to match anything. *)
       | ( (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; comments }),
-          (str_loc, (Expression.Literal { Literal.value = Literal.String s; _ } as lit_exp)) ) ->
+          (str_loc, (Expression.Literal { Literal.value = Literal.String s; _ } as lit_exp))
+        ) ->
         typeof_test loc sense argument s str_loc (fun argument ->
             let left_t = StrT.at typeof_loc |> with_trust bogus_trust in
             let left =
               ( (typeof_loc, left_t),
-                Expression.Unary { Unary.operator = Unary.Typeof; argument; comments } )
+                Expression.Unary { Unary.operator = Unary.Typeof; argument; comments }
+              )
             in
             let right_t = StrT.at str_loc |> with_trust bogus_trust in
             let right = ((str_loc, right_t), lit_exp) in
-            reconstruct_ast left right)
+            reconstruct_ast left right
+        )
       | ( (str_loc, (Expression.Literal { Literal.value = Literal.String s; _ } as lit_exp)),
-          (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; comments }) ) ->
+          (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; comments })
+        ) ->
         typeof_test loc sense argument s str_loc (fun argument ->
             let left_t = StrT.at str_loc |> with_trust bogus_trust in
             let left = ((str_loc, left_t), lit_exp) in
             let right_t = StrT.at typeof_loc |> with_trust bogus_trust in
             let right =
               ( (typeof_loc, right_t),
-                Expression.Unary { Unary.operator = Unary.Typeof; argument; comments } )
+                Expression.Unary { Unary.operator = Unary.Typeof; argument; comments }
+              )
             in
-            reconstruct_ast left right)
+            reconstruct_ast left right
+        )
       | ( (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; comments }),
           ( str_loc,
-            (Expression.TemplateLiteral
-               {
-                 TemplateLiteral.quasis =
-                   [
-                     ( _,
-                       {
-                         TemplateLiteral.Element.value = { TemplateLiteral.Element.cooked = s; _ };
-                         _;
-                       } );
-                   ];
-                 expressions = [];
-                 comments = _;
-               } as lit_exp) ) ) ->
+            ( Expression.TemplateLiteral
+                {
+                  TemplateLiteral.quasis =
+                    [
+                      ( _,
+                        {
+                          TemplateLiteral.Element.value = { TemplateLiteral.Element.cooked = s; _ };
+                          _;
+                        }
+                      );
+                    ];
+                  expressions = [];
+                  comments = _;
+                } as lit_exp
+            )
+          )
+        ) ->
         typeof_test loc sense argument s str_loc (fun argument ->
             let left_t = StrT.at typeof_loc |> with_trust bogus_trust in
             let left =
               ( (typeof_loc, left_t),
-                Expression.Unary { Unary.operator = Unary.Typeof; argument; comments } )
+                Expression.Unary { Unary.operator = Unary.Typeof; argument; comments }
+              )
             in
             let right_t = StrT.at str_loc |> with_trust bogus_trust in
             let right = ((str_loc, right_t), lit_exp) in
-            reconstruct_ast left right)
+            reconstruct_ast left right
+        )
       | ( ( str_loc,
-            (Expression.TemplateLiteral
-               {
-                 TemplateLiteral.quasis =
-                   [
-                     ( _,
-                       {
-                         TemplateLiteral.Element.value = { TemplateLiteral.Element.cooked = s; _ };
-                         _;
-                       } );
-                   ];
-                 expressions = [];
-                 comments = _;
-               } as lit_exp) ),
-          (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; comments }) ) ->
+            ( Expression.TemplateLiteral
+                {
+                  TemplateLiteral.quasis =
+                    [
+                      ( _,
+                        {
+                          TemplateLiteral.Element.value = { TemplateLiteral.Element.cooked = s; _ };
+                          _;
+                        }
+                      );
+                    ];
+                  expressions = [];
+                  comments = _;
+                } as lit_exp
+            )
+          ),
+          (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; comments })
+        ) ->
         typeof_test loc sense argument s str_loc (fun argument ->
             let left_t = StrT.at str_loc |> with_trust bogus_trust in
             let left = ((str_loc, left_t), lit_exp) in
             let right_t = StrT.at typeof_loc |> with_trust bogus_trust in
             let right =
               ( (typeof_loc, right_t),
-                Expression.Unary { Unary.operator = Unary.Typeof; argument; comments } )
+                Expression.Unary { Unary.operator = Unary.Typeof; argument; comments }
+              )
             in
-            reconstruct_ast left right)
+            reconstruct_ast left right
+        )
       (* special case equality relations involving booleans *)
       | (((lit_loc, Expression.Literal { Literal.value = Literal.Boolean lit; _ }) as value), expr)
         ->
@@ -7059,20 +7406,25 @@ module Make (Env : Env_sig.S) = struct
           (fun expr -> reconstruct_ast expr val_ast)
       (* special case equality relations involving strings *)
       | (((lit_loc, Expression.Literal { Literal.value = Literal.String lit; _ }) as value), expr)
-      | ( (( _,
-             Expression.TemplateLiteral
-               {
-                 TemplateLiteral.quasis =
-                   [
-                     ( lit_loc,
-                       {
-                         TemplateLiteral.Element.value = { TemplateLiteral.Element.cooked = lit; _ };
-                         _;
-                       } );
-                   ];
-                 _;
-               } ) as value),
-          expr ) ->
+      | ( ( ( _,
+              Expression.TemplateLiteral
+                {
+                  TemplateLiteral.quasis =
+                    [
+                      ( lit_loc,
+                        {
+                          TemplateLiteral.Element.value =
+                            { TemplateLiteral.Element.cooked = lit; _ };
+                          _;
+                        }
+                      );
+                    ];
+                  _;
+                }
+            ) as value
+          ),
+          expr
+        ) ->
         let (((_, val_t), _) as val_ast) = expression cx ~annot:None value in
         literal_test
           loc
@@ -7084,19 +7436,24 @@ module Make (Env : Env_sig.S) = struct
           (fun expr -> reconstruct_ast val_ast expr)
       | (expr, ((lit_loc, Expression.Literal { Literal.value = Literal.String lit; _ }) as value))
       | ( expr,
-          (( _,
-             Expression.TemplateLiteral
-               {
-                 TemplateLiteral.quasis =
-                   [
-                     ( lit_loc,
-                       {
-                         TemplateLiteral.Element.value = { TemplateLiteral.Element.cooked = lit; _ };
-                         _;
-                       } );
-                   ];
-                 _;
-               } ) as value) ) ->
+          ( ( _,
+              Expression.TemplateLiteral
+                {
+                  TemplateLiteral.quasis =
+                    [
+                      ( lit_loc,
+                        {
+                          TemplateLiteral.Element.value =
+                            { TemplateLiteral.Element.cooked = lit; _ };
+                          _;
+                        }
+                      );
+                    ];
+                  _;
+                }
+            ) as value
+          )
+        ) ->
         let (((_, val_t), _) as val_ast) = expression cx ~annot:None value in
         literal_test
           loc
@@ -7138,18 +7495,24 @@ module Make (Env : Env_sig.S) = struct
         let (((_, null_t), _) as null_ast) = expression cx ~annot:None null in
         null_test loc ~sense ~strict expr null_t (fun expr -> reconstruct_ast expr null_ast)
       (* expr op undefined *)
-      | ( ((_, Identifier (undefined_loc, { Ast.Identifier.name = "undefined"; comments = _ })) as
-          void),
-          expr ) ->
+      | ( ( (_, Identifier (undefined_loc, { Ast.Identifier.name = "undefined"; comments = _ })) as
+          void
+          ),
+          expr
+        ) ->
         let (((_, void_t), _) as void_ast) = expression cx ~annot:None void in
         undef_test loc ~undefined_loc ~sense ~strict expr void_t (fun expr ->
-            reconstruct_ast void_ast expr)
+            reconstruct_ast void_ast expr
+        )
       | ( expr,
-          ((_, Identifier (undefined_loc, { Ast.Identifier.name = "undefined"; comments = _ })) as
-          void) ) ->
+          ( (_, Identifier (undefined_loc, { Ast.Identifier.name = "undefined"; comments = _ })) as
+          void
+          )
+        ) ->
         let (((_, void_t), _) as void_ast) = expression cx ~annot:None void in
         undef_test loc ~undefined_loc ~sense ~strict expr void_t (fun expr ->
-            reconstruct_ast expr void_ast)
+            reconstruct_ast expr void_ast
+        )
       (* expr op void(...) *)
       | (((_, Unary { Unary.operator = Unary.Void; _ }) as void), expr) ->
         let (((_, void_t), _) as void_ast) = expression cx ~annot:None void in
@@ -7162,7 +7525,8 @@ module Make (Env : Env_sig.S) = struct
       | (((_, Expression.Member _) as expr), value) ->
         let (((_, value_t), _) as value_ast) = expression cx ~annot:None value in
         sentinel_prop_test loc ~sense ~strict expr value_t (fun expr ->
-            reconstruct_ast expr value_ast)
+            reconstruct_ast expr value_ast
+        )
       | (value, ((_, Expression.Member _) as expr))
         when match cond with
              | SwitchTest _ ->
@@ -7171,7 +7535,8 @@ module Make (Env : Env_sig.S) = struct
              | OtherTest -> true ->
         let (((_, value_t), _) as value_ast) = expression cx ~annot:None value in
         sentinel_prop_test loc ~sense ~strict expr value_t (fun expr ->
-            reconstruct_ast value_ast expr)
+            reconstruct_ast value_ast expr
+        )
       (* for all other cases, walk the AST but always return bool *)
       | (expr, value) ->
         let (((_, t1), _) as expr) = expression cx ~annot:None expr in
@@ -7209,22 +7574,27 @@ module Make (Env : Env_sig.S) = struct
             Binary
               { Binary.operator = Binary.Instanceof; left = left_ast; right = right_ast; comments }
           ),
-          LeftP (InstanceofTest, right_t) )
+          LeftP (InstanceofTest, right_t)
+        )
       in
       instance_test loc left make_ast_and_pred true true
     (* expr op expr *)
     | (loc, Binary { Binary.operator = Binary.Equal; left; right; comments }) ->
       eq_test loc ~sense:true ~strict:false left right (fun left right ->
-          Binary { Binary.operator = Binary.Equal; left; right; comments })
+          Binary { Binary.operator = Binary.Equal; left; right; comments }
+      )
     | (loc, Binary { Binary.operator = Binary.StrictEqual; left; right; comments }) ->
       eq_test loc ~sense:true ~strict:true left right (fun left right ->
-          Binary { Binary.operator = Binary.StrictEqual; left; right; comments })
+          Binary { Binary.operator = Binary.StrictEqual; left; right; comments }
+      )
     | (loc, Binary { Binary.operator = Binary.NotEqual; left; right; comments }) ->
       eq_test loc ~sense:false ~strict:false left right (fun left right ->
-          Binary { Binary.operator = Binary.NotEqual; left; right; comments })
+          Binary { Binary.operator = Binary.NotEqual; left; right; comments }
+      )
     | (loc, Binary { Binary.operator = Binary.StrictNotEqual; left; right; comments }) ->
       eq_test loc ~sense:false ~strict:true left right (fun left right ->
-          Binary { Binary.operator = Binary.StrictNotEqual; left; right; comments })
+          Binary { Binary.operator = Binary.StrictNotEqual; left; right; comments }
+      )
     (* Array.isArray(expr) *)
     | ( loc,
         Call
@@ -7239,12 +7609,14 @@ module Make (Env : Env_sig.S) = struct
                       Member.PropertyIdentifier
                         (prop_loc, ({ Ast.Identifier.name = "isArray"; comments = _ } as id));
                     comments = member_comments;
-                  } );
+                  }
+              );
             targs;
             arguments =
               (args_loc, { ArgList.arguments = [Expression arg]; comments = args_comments });
             comments;
-          } ) ->
+          }
+      ) ->
       Base.Option.iter targs ~f:(fun _ ->
           Flow.add_output
             cx
@@ -7255,7 +7627,9 @@ module Make (Env : Env_sig.S) = struct
                   is_new = false;
                   reason_arity = Reason.(locationless_reason (RFunction RNormal));
                   expected_arity = 0;
-                }));
+                }
+            )
+      );
 
       (* get Array.isArray in order to populate the type tables, but we don't
          care about the result. *)
@@ -7270,7 +7644,8 @@ module Make (Env : Env_sig.S) = struct
             let use_op = Op (GetProperty (mk_expression_reason e)) in
             Flow.flow
               cx
-              (obj_t, GetPropT (use_op, reason, Named (prop_reason, OrdinaryName "isArray"), t)))
+              (obj_t, GetPropT (use_op, reason, Named (prop_reason, OrdinaryName "isArray"), t))
+        )
       in
       let make_ast_and_pred arg bool =
         let property = Member.PropertyIdentifier ((prop_loc, fn_t), id) in
@@ -7279,13 +7654,16 @@ module Make (Env : Env_sig.S) = struct
               {
                 Call.callee =
                   ( (callee_loc, fn_t),
-                    Member { Member._object; property; comments = member_comments } );
+                    Member { Member._object; property; comments = member_comments }
+                  );
                 targs = None;
                 arguments =
                   (args_loc, { ArgList.arguments = [Expression arg]; comments = args_comments });
                 comments;
-              } ),
-          ArrP )
+              }
+          ),
+          ArrP
+        )
       in
       instance_test loc arg make_ast_and_pred true true
     (* test1 && test2 *)
@@ -7305,7 +7683,8 @@ module Make (Env : Env_sig.S) = struct
         ),
         mk_and map1 map2,
         mk_or not_map1 not_map2,
-        Key_map.union xts1 xts2 )
+        Key_map.union xts1 xts2
+      )
     (* test1 || test2 *)
     | (loc, Logical { Logical.operator = Logical.Or; left; right; comments }) ->
       let () = check_default_pattern cx left right in
@@ -7320,10 +7699,12 @@ module Make (Env : Env_sig.S) = struct
         Tvar.mk_no_wrap_where cx reason (fun t -> Flow.flow cx (t1, OrT (reason, t2, t)))
       in
       ( ( (loc, t_out),
-          Logical { Logical.operator = Logical.Or; left = left_ast; right = right_ast; comments } ),
+          Logical { Logical.operator = Logical.Or; left = left_ast; right = right_ast; comments }
+        ),
         mk_or map1 map2,
         mk_and not_map1 not_map2,
-        Key_map.union xts1 xts2 )
+        Key_map.union xts1 xts2
+      )
     (* !test *)
     | (loc, Unary { Unary.operator = Unary.Not; argument; comments }) ->
       let (arg, map, not_map, xts) = predicates_of_condition cx ~cond argument in
@@ -7398,7 +7779,8 @@ module Make (Env : Env_sig.S) = struct
     let opt_use = get_prop_opt_use ~cond reason ~use_op (prop_reason, name) in
     Tvar.mk_no_wrap_where cx reason (fun t ->
         let get_prop_u = apply_opt_use opt_use t in
-        Flow.flow cx (tobj, get_prop_u))
+        Flow.flow cx (tobj, get_prop_u)
+    )
 
   and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args =
     let open Ast.Expression in
@@ -7412,7 +7794,8 @@ module Make (Env : Env_sig.S) = struct
              prop = mk_reason (RProperty (Some (OrdinaryName m))) prop_loc;
              args = mk_initial_arguments_reason args;
              local = true;
-           })
+           }
+        )
     in
     match (m, targs, args) with
     | ("create", None, (args_loc, { ArgList.arguments = [Expression e]; comments })) ->
@@ -7423,7 +7806,8 @@ module Make (Env : Env_sig.S) = struct
       in
       ( Obj_type.mk_unsealed cx reason ~proto,
         None,
-        (args_loc, { ArgList.arguments = [Expression e_ast]; comments }) )
+        (args_loc, { ArgList.arguments = [Expression e_ast]; comments })
+      )
     | ( "create",
         None,
         ( args_loc,
@@ -7434,7 +7818,9 @@ module Make (Env : Env_sig.S) = struct
                 Expression (obj_loc, Object { Object.properties; comments = obj_comments });
               ];
             comments;
-          } ) ) ->
+          }
+        )
+      ) ->
       let (((_, e_t), _) as e_ast) = expression cx ~annot:None e in
       let proto =
         let reason = mk_reason RPrototype (fst e) in
@@ -7465,7 +7851,8 @@ module Make (Env : Env_sig.S) = struct
                 Tvar.mk_where cx reason (fun tvar ->
                     let loc = aloc_of_reason reason in
                     let propdesc = implicit_typeapp ~annot_loc:loc propdesc_type [tvar] in
-                    Flow.flow cx (spec, UseT (use_op, propdesc)))
+                    Flow.flow cx (spec, UseT (use_op, propdesc))
+                )
               in
               let p = Field (loc, t, Polarity.Neutral) in
               NameUtils.Map.add x p acc)
@@ -7482,13 +7869,17 @@ module Make (Env : Env_sig.S) = struct
                 (* TODO(vijayramamurthy) construct object type *)
                 Expression
                   ( (obj_loc, AnyT.at Untyped obj_loc),
-                    Object { Object.properties; comments = obj_comments } );
+                    Object { Object.properties; comments = obj_comments }
+                  );
               ];
             comments;
-          } ) )
+          }
+        )
+      )
     | ( ("getOwnPropertyNames" | "keys"),
         None,
-        (args_loc, { ArgList.arguments = [Expression e]; comments }) ) ->
+        (args_loc, { ArgList.arguments = [Expression e]; comments })
+      ) ->
       let arr_reason = mk_reason RArrayType loc in
       let (((_, o), _) as e_ast) = expression cx ~annot:None e in
       ( DefT
@@ -7502,10 +7893,15 @@ module Make (Env : Env_sig.S) = struct
                            (fun desc -> RCustom (spf "element of %s" (string_of_desc desc)))
                            reason
                        in
-                       Flow.flow cx (o, GetKeysT (keys_reason, UseT (use_op, tvar)))),
-                   None )) ),
+                       Flow.flow cx (o, GetKeysT (keys_reason, UseT (use_op, tvar)))
+                   ),
+                   None
+                 )
+              )
+          ),
         None,
-        (args_loc, { ArgList.arguments = [Expression e_ast]; comments }) )
+        (args_loc, { ArgList.arguments = [Expression e_ast]; comments })
+      )
     | ( "defineProperty",
         ( None
         | Some
@@ -7517,23 +7913,28 @@ module Make (Env : Env_sig.S) = struct
               [
                 Expression e;
                 Expression
-                  ((ploc, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String x; _ }) as
-                  key);
+                  ( (ploc, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.String x; _ })
+                  as key
+                  );
                 Expression config;
               ];
             comments;
-          } ) ) ->
+          }
+        )
+      ) ->
       let (ty, targs) =
         match targs with
         | None -> (Tvar.mk cx reason, None)
         | Some
             ( targs_loc,
-              { CallTypeArgs.arguments = [Ast.Expression.CallTypeArg.Explicit targ]; comments } ) ->
+              { CallTypeArgs.arguments = [Ast.Expression.CallTypeArg.Explicit targ]; comments }
+            ) ->
           let (((_, ty), _) as targ) = Anno.convert cx SMap.empty targ in
           ( ty,
             Some
               ( targs_loc,
-                { CallTypeArgs.arguments = [Ast.Expression.CallTypeArg.Explicit targ]; comments } )
+                { CallTypeArgs.arguments = [Ast.Expression.CallTypeArg.Explicit targ]; comments }
+              )
           )
         | _ -> assert_false "unexpected type argument to Object.defineProperty, match guard failed"
       in
@@ -7558,7 +7959,9 @@ module Make (Env : Env_sig.S) = struct
           {
             ArgList.arguments = [Expression e_ast; Expression key_ast; Expression config_ast];
             comments;
-          } ) )
+          }
+        )
+      )
     | ( "defineProperties",
         None,
         ( args_loc,
@@ -7569,7 +7972,9 @@ module Make (Env : Env_sig.S) = struct
                 Expression (obj_loc, Object { Object.properties; comments = obj_comments });
               ];
             comments;
-          } ) ) ->
+          }
+        )
+      ) ->
       let (((_, o), _) as e_ast) = expression cx ~annot:None e in
       let (pmap, properties) = prop_map_of_object cx properties in
       let propdesc_type = Flow.get_builtin cx (OrdinaryName "PropertyDescriptor") reason in
@@ -7595,7 +8000,8 @@ module Make (Env : Env_sig.S) = struct
                Flow.flow cx (spec, UseT (use_op, propdesc));
                Flow.flow
                  cx
-                 (o, SetPropT (use_op, reason, Named (reason, x), Assign, Normal, tvar, None)));
+                 (o, SetPropT (use_op, reason, Named (reason, x), Assign, Normal, tvar, None))
+         );
       ( o,
         None,
         ( args_loc,
@@ -7606,15 +8012,19 @@ module Make (Env : Env_sig.S) = struct
                 (* TODO(vijayramamurthy) construct object type *)
                 Expression
                   ( (obj_loc, AnyT.at Untyped obj_loc),
-                    Object { Object.properties; comments = obj_comments } );
+                    Object { Object.properties; comments = obj_comments }
+                  );
               ];
             comments;
-          } ) )
+          }
+        )
+      )
     (* Freezing an object literal is supported since there's no way it could
        have been mutated elsewhere *)
     | ( "freeze",
         ((None | Some (_, { CallTypeArgs.arguments = [_]; comments = _ })) as targs),
-        (args_loc, { ArgList.arguments = [Expression (arg_loc, Object o)]; comments }) ) ->
+        (args_loc, { ArgList.arguments = [Expression (arg_loc, Object o)]; comments })
+      ) ->
       let targs =
         Base.Option.map ~f:(fun (loc, targs) -> (loc, convert_call_targs cx SMap.empty targs)) targs
       in
@@ -7633,13 +8043,16 @@ module Make (Env : Env_sig.S) = struct
              ~use_op
              (expr, obj_t, m)
              (Base.Option.map ~f:(snd %> fst) targs)
-             [Arg arg_t]),
+             [Arg arg_t]
+          ),
         Base.Option.map ~f:(fun (loc, targs) -> (loc, snd targs)) targs,
-        (args_loc, { ArgList.arguments = [Expression e_ast]; comments }) )
+        (args_loc, { ArgList.arguments = [Expression e_ast]; comments })
+      )
     | ( ( "create" | "getOwnPropertyNames" | "keys" | "defineProperty" | "defineProperties"
         | "freeze" ),
         Some (targs_loc, targs),
-        _ ) ->
+        _
+      ) ->
       let targs = snd (convert_call_targs cx SMap.empty targs) in
       let (_argts, args) = arg_list cx args in
       let arity =
@@ -7657,7 +8070,8 @@ module Make (Env : Env_sig.S) = struct
               is_new = false;
               reason_arity = Reason.(locationless_reason (RFunction RNormal));
               expected_arity = arity;
-            });
+            }
+        );
       (AnyT.at (AnyError None) loc, Some (targs_loc, targs), args)
     (* TODO *)
     | _ ->
@@ -7673,11 +8087,13 @@ module Make (Env : Env_sig.S) = struct
                prop = mk_reason (RProperty (Some (OrdinaryName m))) prop_loc;
                args = mk_initial_arguments_reason args;
                local = true;
-             })
+             }
+          )
       in
       ( snd (method_call cx reason ~use_op ~havoc:false prop_loc (expr, obj_t, m) targts argts),
         targ_asts,
-        arg_asts )
+        arg_asts
+      )
 
   and mk_class cx class_loc ~class_annot ~name_loc ~general reason c =
     let def_reason = repos_reason class_loc reason in
@@ -7717,7 +8133,8 @@ module Make (Env : Env_sig.S) = struct
                Context.public_property_map;
                private_property_map;
                errors = Property_assignment.eval_property_assignment class_body;
-             });
+             }
+       );
     let (class_t_internal, class_t) = Class_stmt_sig.classtype cx class_sig in
     Flow.unify cx self class_t_internal;
     (class_t, class_ast_f general)
@@ -7751,7 +8168,8 @@ module Make (Env : Env_sig.S) = struct
             let return_t = mk_inference_target_with_annots annot_or_inferred field_annot in
             ( Infer
                 ( Func_stmt_sig.field_initializer tparams_map reason expr return_t,
-                  (fun (_, _, value_opt) -> value_ref := Some (Base.Option.value_exn value_opt)) ),
+                  (fun (_, _, value_opt) -> value_ref := Some (Base.Option.value_exn value_opt))
+                ),
               fun () ->
                 Ast.Class.Property.Initialized
                   (Base.Option.value !value_ref ~default:(Tast_utils.error_mapper#expression expr))
@@ -7815,7 +8233,9 @@ module Make (Env : Env_sig.S) = struct
                            )
                        in
                        ( typeapp,
-                         (loc, { Ast.Class.Implements.Interface.id = ((id_loc, c), id); targs }) ))
+                         (loc, { Ast.Class.Implements.Interface.id = ((id_loc, c), id); targs })
+                       )
+                   )
                 |> List.split
               in
               ( implements,
@@ -7937,7 +8357,8 @@ module Make (Env : Env_sig.S) = struct
                         static;
                         decorators;
                         comments;
-                      } )
+                      }
+                    )
                 in
                 let add =
                   match kind with
@@ -7968,7 +8389,8 @@ module Make (Env : Env_sig.S) = struct
                       static;
                       decorators;
                       comments;
-                    } ) ->
+                    }
+                  ) ->
                 add_method_sig_and_element
                   ~method_loc
                   ~name
@@ -7981,7 +8403,8 @@ module Make (Env : Env_sig.S) = struct
                   ~decorators
                   ~comments
                   ~get_typed_method_key:(fun _ ->
-                    Ast.Expression.Object.Property.PrivateName (id_loc, id))
+                    Ast.Expression.Object.Property.PrivateName (id_loc, id)
+                )
               | Body.Method
                   ( method_loc,
                     {
@@ -7993,7 +8416,8 @@ module Make (Env : Env_sig.S) = struct
                       static;
                       decorators;
                       comments;
-                    } ) ->
+                    }
+                  ) ->
                 add_method_sig_and_element
                   ~method_loc
                   ~name
@@ -8006,7 +8430,8 @@ module Make (Env : Env_sig.S) = struct
                   ~decorators
                   ~comments
                   ~get_typed_method_key:(fun func_t ->
-                    Ast.Expression.Object.Property.Identifier ((id_loc, func_t), id))
+                    Ast.Expression.Object.Property.Identifier ((id_loc, func_t), id)
+                )
               (* fields *)
               | Body.PrivateField
                   ( loc,
@@ -8017,7 +8442,8 @@ module Make (Env : Env_sig.S) = struct
                       static;
                       variance;
                       comments;
-                    } ) ->
+                    }
+                  ) ->
                 Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
                 let reason = mk_reason (RProperty (Some (OrdinaryName name))) loc in
                 let polarity = Anno.polarity variance in
@@ -8036,7 +8462,8 @@ module Make (Env : Env_sig.S) = struct
                         static;
                         variance;
                         comments;
-                      } )
+                      }
+                    )
                 in
                 (add_private_field ~static name id_loc polarity field c, get_element :: rev_elements)
               | Body.Property
@@ -8050,7 +8477,8 @@ module Make (Env : Env_sig.S) = struct
                       static;
                       variance;
                       comments;
-                    } ) ->
+                    }
+                  ) ->
                 Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
                 let reason = mk_reason (RProperty (Some (OrdinaryName name))) loc in
                 let polarity = Anno.polarity variance in
@@ -8074,7 +8502,8 @@ module Make (Env : Env_sig.S) = struct
                         static;
                         variance;
                         comments;
-                      } )
+                      }
+                    )
                 in
                 (add_field ~static name id_loc polarity field c, get_element :: rev_elements)
               (* literal LHS *)
@@ -8089,7 +8518,8 @@ module Make (Env : Env_sig.S) = struct
                     (loc, { Property.key = Ast.Expression.Object.Property.Computed _; _ }) ) as elem
                 ->
                 Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ClassPropertyComputed));
-                (c, (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements))
+                (c, (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements)
+            )
             (class_sig, [])
             elements
         in
@@ -8103,13 +8533,16 @@ module Make (Env : Env_sig.S) = struct
                   {
                     Ast.Class.Body.body = Base.List.map ~f:(fun f -> f ()) elements;
                     comments = body_comments;
-                  } );
+                  }
+                );
               tparams = tparams_ast;
               extends = extends_ast;
               implements = implements_ast;
               class_decorators = class_decorators_ast;
               comments;
-            } ))
+            }
+        )
+    )
 
   and mk_func_sig =
     let predicate_function_kind cx loc params =
@@ -8226,7 +8659,8 @@ module Make (Env : Env_sig.S) = struct
         =
       let fparams =
         Func_stmt_params.empty (fun params rest this_ ->
-            Some (loc, { Ast.Function.Params.params; rest; this_; comments }))
+            Some (loc, { Ast.Function.Params.params; rest; this_; comments })
+        )
       in
       let fparams =
         List.fold_left
@@ -8383,7 +8817,8 @@ module Make (Env : Env_sig.S) = struct
             predicate;
             return;
             tparams = tparams_ast;
-          } )
+          }
+      )
 
   (* Given a function declaration and types for `this` and `super`, extract a
      signature consisting of type parameters, parameter types, parameter names,
@@ -8406,7 +8841,8 @@ module Make (Env : Env_sig.S) = struct
               super
               ~decls:toplevel_decls
               ~stmts:(Toplevels.toplevels statement)
-              ~expr:expression)
+              ~expr:expression
+           )
     in
     ignore (Abnormal.swap_saved Abnormal.Return save_return);
     ignore (Abnormal.swap_saved Abnormal.Throw save_throw);
@@ -8530,7 +8966,8 @@ module Make (Env : Env_sig.S) = struct
             update_excuses (fun excuse -> { excuse with number_loc = Some right_loc })
           (* There's no valid default value for mixed to create an excuse. *)
           | _ -> ()
-        end)
+        end
+      )
     | _ -> ()
 
   and post_assignment_havoc ~private_ name exp orig_t t =
@@ -8584,9 +9021,11 @@ module Make (Env : Env_sig.S) = struct
                             _object = ((_, obj_t), _);
                             property = PropertyIdentifier (_, { Identifier.name; _ });
                             _;
-                          } );
+                          }
+                    );
                 _;
-              } )
+              }
+            )
             when is_valid_enum_member_name name ->
             (match acc with
             | EnumExhaustiveCheckInvalid _ -> acc
@@ -8619,7 +9058,8 @@ module Make (Env : Env_sig.S) = struct
              possible_checks = [];
              checks = [];
              default_case = None;
-           })
+           }
+        )
         cases_ast
     in
     match exhaustive_check with
@@ -8637,7 +9077,8 @@ module Make (Env : Env_sig.S) = struct
       Base.List.fold
         ~init:SMap.empty
         ~f:(fun acc (member_loc, { DefaultedMember.id = (_, { Ast.Identifier.name; _ }) }) ->
-          SMap.add name member_loc acc)
+          SMap.add name member_loc acc
+      )
     in
     let enum_id = Context.make_aloc_id cx name_loc in
     let (representation_t, members, has_unknown_members) =
@@ -8663,7 +9104,8 @@ module Make (Env : Env_sig.S) = struct
                   Flow.add_output
                     cx
                     (Error_message.EEnumMemberDuplicateValue
-                       { loc = init_loc; prev_use_loc; enum_reason });
+                       { loc = init_loc; prev_use_loc; enum_reason }
+                    );
                   seen_values
                 | None -> BoolMap.add init_value member_loc seen_values
               in
@@ -8692,7 +9134,8 @@ module Make (Env : Env_sig.S) = struct
                   Flow.add_output
                     cx
                     (Error_message.EEnumMemberDuplicateValue
-                       { loc = init_loc; prev_use_loc; enum_reason });
+                       { loc = init_loc; prev_use_loc; enum_reason }
+                    );
                   seen_values
                 | None -> NumberMap.add init_value member_loc seen_values
               in
@@ -8723,7 +9166,8 @@ module Make (Env : Env_sig.S) = struct
                   Flow.add_output
                     cx
                     (Error_message.EEnumMemberDuplicateValue
-                       { loc = init_loc; prev_use_loc; enum_reason });
+                       { loc = init_loc; prev_use_loc; enum_reason }
+                    );
                   seen_values
                 | None -> SMap.add init_value member_loc seen_values
               in
@@ -8737,7 +9181,8 @@ module Make (Env : Env_sig.S) = struct
         let reason = mk_reason (REnumRepresentation RString) (aloc_of_reason enum_reason) in
         ( DefT (reason, literal_trust (), StrT Truthy (* Member names can't be the empty string *)),
           defaulted_members members,
-          has_unknown_members )
+          has_unknown_members
+        )
       | (_, SymbolBody { SymbolBody.members; has_unknown_members; comments = _ }) ->
         let reason = mk_reason (REnumRepresentation RSymbol) (aloc_of_reason enum_reason) in
         (DefT (reason, literal_trust (), SymbolT), defaulted_members members, has_unknown_members)

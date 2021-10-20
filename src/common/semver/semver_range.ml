@@ -26,7 +26,8 @@ let expand_caret version =
     [
       Semver_comparator.{ op = Some GreaterOrEqual; version };
       Semver_comparator.{ op = Some Less; version = upper };
-    ])
+    ]
+  )
 
 let fold_comparators_of_range f acc t =
   List.fold_left
@@ -80,7 +81,9 @@ let satisfies ?(include_prereleases = false) range version =
                   major = major' && minor = minor' && patch = patch'
                 | _ -> false)
             false
-            range))
+            range
+    )
+  )
 
 let string_of_part = function
   | Comparator c -> Semver_comparator.to_string c

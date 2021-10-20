@@ -31,7 +31,8 @@ module ImportSource = struct
   let of_statement = function
     | ( _,
         Statement.ImportDeclaration
-          { Statement.ImportDeclaration.source = (_, { StringLiteral.value; _ }); _ } ) ->
+          { Statement.ImportDeclaration.source = (_, { StringLiteral.value; _ }); _ }
+      ) ->
       value
     | _ ->
       (* TODO: handle requires *)
@@ -211,7 +212,8 @@ let update_import ~bindings stmt =
       | (Default bound_name, Some (_, { Identifier.name; _ }), _)
       | ( Namespace bound_name,
           None,
-          Some (ImportNamespaceSpecifier (_, (_, { Identifier.name; _ }))) ) ->
+          Some (ImportNamespaceSpecifier (_, (_, { Identifier.name; _ })))
+        ) ->
         if bound_name = name then
           (* this should never happen, the name is already in scope *)
           (Replace, stmt)
@@ -305,7 +307,8 @@ let compare_kind_of_import a b =
             default = a_default;
             specifiers = a_specifiers;
             comments = _;
-          } ),
+          }
+      ),
       ( _,
         ImportDeclaration
           {
@@ -314,7 +317,9 @@ let compare_kind_of_import a b =
             default = b_default;
             specifiers = b_specifiers;
             comments = _;
-          } ) ) ->
+          }
+      )
+    ) ->
     (match (a_default, b_default) with
     | (Some a_id, Some b_id) -> compare_identifier a_id b_id
     | (Some _, None) -> -1
@@ -618,7 +623,8 @@ let merge_imports =
     | (None, Some default) -> Some default
     | (None, None) -> None
     | ( Some (_, { Identifier.name; comments }),
-        Some (_, { Identifier.name = b_name; comments = b_comments }) ) ->
+        Some (_, { Identifier.name = b_name; comments = b_comments })
+      ) ->
       if name <> b_name then
         failwith "Can't merge imports with different defaults from the same file";
       Some (Loc.none, { Identifier.name; comments = merge_comments comments b_comments })
@@ -657,7 +663,8 @@ let merge_imports =
               default = a_default;
               specifiers = a_specifiers;
               comments = a_comments;
-            } ),
+            }
+        ),
         ( _,
           ImportDeclaration
             {
@@ -666,7 +673,9 @@ let merge_imports =
               default = b_default;
               specifiers = b_specifiers;
               comments = b_comments;
-            } ) ) ->
+            }
+        )
+      ) ->
       if a_from <> b_from then failwith "Can't merge imports from different files";
       (* TODO: we _could_ turn `import {a} from 'a'; import type {T} from 'a'` into
          `import {a, type T} from 'a'` *)

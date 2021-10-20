@@ -12,7 +12,8 @@ val register_entry_point :
   monitor_channels:MonitorRPC.channels ->
   shared_mem_config:SharedMem.config ->
   Options.t ->
-  unit) ->
+  unit
+  ) ->
   entry_point
 
 val open_log_file : string -> Unix.file_descr

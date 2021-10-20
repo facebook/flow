@@ -39,7 +39,8 @@ let init roots =
   List.iter roots (fun root ->
       try ignore (Fsevents.add_watch env.fsevents root) with
       | Unix.Unix_error (Unix.ENOENT, _, _) ->
-        prerr_endline ("Not watching root \"" ^ root ^ "\": file not found."));
+        prerr_endline ("Not watching root \"" ^ root ^ "\": file not found.")
+  );
   env
 
 let read env = List.map (Fsevents.read_events env.fsevents) (fun (path, wpath) -> { path; wpath })

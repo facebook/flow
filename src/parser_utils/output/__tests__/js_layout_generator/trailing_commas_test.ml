@@ -32,16 +32,20 @@ let tests =
       ( "all" >:: fun ctxt ->
         let layout = array_layout C.All in
         assert_output ~ctxt (spf "[%s,%s]" a80 a80) layout;
-        assert_output ~ctxt ~pretty:true (spf "[\n  %s,\n  %s,\n]" a80 a80) layout );
+        assert_output ~ctxt ~pretty:true (spf "[\n  %s,\n  %s,\n]" a80 a80) layout
+      );
       ( "es5" >:: fun ctxt ->
         let layout = array_layout C.ES5 in
         assert_output ~ctxt (spf "[%s,%s]" a80 a80) layout;
-        assert_output ~ctxt ~pretty:true (spf "[\n  %s,\n  %s,\n]" a80 a80) layout );
+        assert_output ~ctxt ~pretty:true (spf "[\n  %s,\n  %s,\n]" a80 a80) layout
+      );
       ( "off" >:: fun ctxt ->
         let layout = array_layout C.Off in
         assert_output ~ctxt (spf "[%s,%s]" a80 a80) layout;
-        assert_output ~ctxt ~pretty:true (spf "[\n  %s,\n  %s\n]" a80 a80) layout );
-    ]);
+        assert_output ~ctxt ~pretty:true (spf "[\n  %s,\n  %s\n]" a80 a80) layout
+      );
+    ]
+    );
     ("object"
     >:::
     let x40 = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" in
@@ -56,16 +60,20 @@ let tests =
       ( "all" >:: fun ctxt ->
         let layout = obj_layout C.All in
         assert_output ~ctxt (spf "{foo:%s,bar:%s}" x40 x40) layout;
-        assert_output ~ctxt ~pretty:true (spf "{\n  foo: %s,\n  bar: %s,\n}" x40 x40) layout );
+        assert_output ~ctxt ~pretty:true (spf "{\n  foo: %s,\n  bar: %s,\n}" x40 x40) layout
+      );
       ( "es5" >:: fun ctxt ->
         let layout = obj_layout C.ES5 in
         assert_output ~ctxt (spf "{foo:%s,bar:%s}" x40 x40) layout;
-        assert_output ~ctxt ~pretty:true (spf "{\n  foo: %s,\n  bar: %s,\n}" x40 x40) layout );
+        assert_output ~ctxt ~pretty:true (spf "{\n  foo: %s,\n  bar: %s,\n}" x40 x40) layout
+      );
       ( "off" >:: fun ctxt ->
         let layout = obj_layout C.Off in
         assert_output ~ctxt (spf "{foo:%s,bar:%s}" x40 x40) layout;
-        assert_output ~ctxt ~pretty:true (spf "{\n  foo: %s,\n  bar: %s\n}" x40 x40) layout );
-    ]);
+        assert_output ~ctxt ~pretty:true (spf "{\n  foo: %s,\n  bar: %s\n}" x40 x40) layout
+      );
+    ]
+    );
     ("call"
     >:::
     let a80 = String.make 80 'a' in
@@ -78,16 +86,20 @@ let tests =
       ( "all" >:: fun ctxt ->
         let layout = layout C.All in
         assert_output ~ctxt (spf "x(%s)" a80) layout;
-        assert_output ~ctxt ~pretty:true (spf "x(\n  %s,\n)" a80) layout );
+        assert_output ~ctxt ~pretty:true (spf "x(\n  %s,\n)" a80) layout
+      );
       ( "es5" >:: fun ctxt ->
         let layout = layout C.ES5 in
         assert_output ~ctxt (spf "x(%s)" a80) layout;
-        assert_output ~ctxt ~pretty:true (spf "x(\n  %s,\n)" a80) layout );
+        assert_output ~ctxt ~pretty:true (spf "x(\n  %s,\n)" a80) layout
+      );
       ( "off" >:: fun ctxt ->
         let layout = layout C.Off in
         assert_output ~ctxt (spf "x(%s)" a80) layout;
-        assert_output ~ctxt ~pretty:true (spf "x(\n  %s\n)" a80) layout );
-    ]);
+        assert_output ~ctxt ~pretty:true (spf "x(\n  %s\n)" a80) layout
+      );
+    ]
+    );
     ("function_params"
     >:::
     let a80 = String.make 80 'a' in
@@ -101,16 +113,20 @@ let tests =
       ( "all" >:: fun ctxt ->
         let layout = layout C.All in
         assert_output ~ctxt (spf "function x(%s){}" a80) layout;
-        assert_output ~ctxt ~pretty:true (spf "function x(\n  %s,\n) {}" a80) layout );
+        assert_output ~ctxt ~pretty:true (spf "function x(\n  %s,\n) {}" a80) layout
+      );
       ( "es5" >:: fun ctxt ->
         let layout = layout C.ES5 in
         assert_output ~ctxt (spf "function x(%s){}" a80) layout;
-        assert_output ~ctxt ~pretty:true (spf "function x(\n  %s\n) {}" a80) layout );
+        assert_output ~ctxt ~pretty:true (spf "function x(\n  %s\n) {}" a80) layout
+      );
       ( "off" >:: fun ctxt ->
         let layout = layout C.Off in
         assert_output ~ctxt (spf "function x(%s){}" a80) layout;
-        assert_output ~ctxt ~pretty:true (spf "function x(\n  %s\n) {}" a80) layout );
-    ]);
+        assert_output ~ctxt ~pretty:true (spf "function x(\n  %s\n) {}" a80) layout
+      );
+    ]
+    );
     ("function_params_with_rest"
     >:::
     let a80 = String.make 80 'a' in
@@ -125,14 +141,18 @@ let tests =
       ( "all" >:: fun ctxt ->
         let layout = layout C.All in
         assert_output ~ctxt (spf "function x(%s,...rest){}" a80) layout;
-        assert_output ~ctxt ~pretty:true (spf "function x(\n  %s,\n  ...rest\n) {}" a80) layout );
+        assert_output ~ctxt ~pretty:true (spf "function x(\n  %s,\n  ...rest\n) {}" a80) layout
+      );
       ( "es5" >:: fun ctxt ->
         let layout = layout C.ES5 in
         assert_output ~ctxt (spf "function x(%s,...rest){}" a80) layout;
-        assert_output ~ctxt ~pretty:true (spf "function x(\n  %s,\n  ...rest\n) {}" a80) layout );
+        assert_output ~ctxt ~pretty:true (spf "function x(\n  %s,\n  ...rest\n) {}" a80) layout
+      );
       ( "off" >:: fun ctxt ->
         let layout = layout C.Off in
         assert_output ~ctxt (spf "function x(%s,...rest){}" a80) layout;
-        assert_output ~ctxt ~pretty:true (spf "function x(\n  %s,\n  ...rest\n) {}" a80) layout );
-    ]);
+        assert_output ~ctxt ~pretty:true (spf "function x(\n  %s,\n  ...rest\n) {}" a80) layout
+      );
+    ]
+    );
   ]

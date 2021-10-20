@@ -90,7 +90,9 @@ module HardCodedImportMap = struct
                  default = None;
                  specifiers = Some (Ast.Statement.ImportDeclaration.ImportNamedSpecifiers nspecs);
                  comments = None;
-               } ))
+               }
+           )
+       )
 end
 
 let validate_ty cctx ~max_type_size ty =
@@ -116,7 +118,8 @@ let get_ty cctx ~preserve_literals ~max_type_size loc =
       | Always
       | Auto ->
         true
-      | Never -> false)
+      | Never -> false
+    )
   in
   let norm_opts =
     {
@@ -320,7 +323,8 @@ module Make (Extra : BASE_STATS) = struct
         | (expr_loc, _) ->
           Acc.debug expr_loc (Debug.Add_annotation Debug.Expr);
           this#annotate_node loc ty (fun annot ->
-              (expr_loc, TypeCast TypeCast.{ expression; annot; comments = None }))
+              (expr_loc, TypeCast TypeCast.{ expression; annot; comments = None })
+          )
 
       method private add_unannotated_loc_warnings lmap =
         let not_annotated_locs =
@@ -355,14 +359,16 @@ module Make (Extra : BASE_STATS) = struct
             (new Insert_type_imports.ImportsHelper.remote_converter
                ~iteration:cctx.Codemod_context.Typed.iteration
                ~file
-               ~reserved_names);
+               ~reserved_names
+            );
 
         let prog' = super#program prog in
         let (loc, { Ast.Program.statements = stmts; comments; all_comments }) = prog' in
 
         if prog != prog' then
           this#update_acc (fun acc ->
-              { acc with Acc.changed_set = Utils_js.FilenameSet.add file acc.Acc.changed_set });
+              { acc with Acc.changed_set = Utils_js.FilenameSet.add file acc.Acc.changed_set }
+          );
 
         (* Post run stats *)
         let total_size =

@@ -41,7 +41,8 @@ let register_entry_point (start : start_function) : entry_point =
       FlowEventLogger.init_flow_command ~init_id;
 
       let out_fd = Daemon.descr_of_out_channel oc in
-      start ~waiting_fd:out_fd monitor_options)
+      start ~waiting_fd:out_fd monitor_options
+  )
 
 (* The monitor can communicate with the process that spawned it over a pipe.
  * The current scheme has it write a message when it starts up and has the
@@ -117,13 +118,15 @@ let daemonize ~wait ~on_spawn ~init_id ~monitor_options (entry_point : entry_poi
    * So for now let's make Windows 7 not crash. It seems like `flow start` on
    * Windows 7 doesn't actually leak stdio, so a no op is acceptable
    *)
-  (if Sys.win32 then
+  ( if Sys.win32 then
     Unix.(
       try
         set_close_on_exec stdout;
         set_close_on_exec stderr
       with
-      | Unix_error (EINVAL, _, _) -> ()));
+      | Unix_error (EINVAL, _, _) -> ()
+    )
+  );
 
   let root_str =
     monitor_options.FlowServerMonitorOptions.server_options |> Options.root |> Path.to_string

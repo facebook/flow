@@ -119,7 +119,9 @@ let parse_source_file ~fail ~types ~use_strict content file =
           types;
           use_strict;
         }
+      
   in
+
   let (ast, parse_errors) = Parser_flow.program_file ~fail ~parse_options content (Some file) in
   if fail then assert (parse_errors = []);
   (ast, parse_errors)
@@ -139,7 +141,9 @@ let parse_json_file ~fail content file =
           types = true;
           use_strict = false;
         }
+      
   in
+
   (* parse the file as JSON, then munge the AST to convert from an object
      into a `module.exports = {...}` statement *)
   let (expr, parse_errors) = Parser_flow.json_file ~fail ~parse_options content (Some file) in
@@ -153,10 +157,10 @@ let parse_json_file ~fail content file =
         {
           Member._object =
             (loc_none, Identifier (Flow_ast_utils.ident_of_source (loc_none, "module")));
-          property =
-            Member.PropertyIdentifier (Flow_ast_utils.ident_of_source (loc_none, "exports"));
+          property = Member.PropertyIdentifier (Flow_ast_utils.ident_of_source (loc_none, "exports"));
           comments = None;
-        } )
+        }
+    )
   in
   let loc = fst expr in
   let statement =
@@ -171,10 +175,12 @@ let parse_json_file ~fail content file =
                   left = (loc_none, Pattern.Expression module_exports);
                   right = expr;
                   comments = None;
-                } );
+                }
+            );
           directive = None;
           comments = None;
-        } )
+        }
+    )
   in
   let all_comments = ([] : Loc.t Comment.t list) in
   ((loc, { Program.statements = [statement]; comments = None; all_comments }), parse_errors)
@@ -280,7 +286,8 @@ let extract_docblock =
                | Str.Text text ->
                  let length = String.length text in
                  let column = _end.column + length in
-                 { _end with column })
+                 { _end with column }
+           )
            start
     in
     let split loc s =
@@ -339,7 +346,8 @@ let extract_docblock =
               | T_STRING _
               | T_SEMICOLON ->
                 get_first_comment_contents ~i:(i + 1) env
-              | _ -> None))
+              | _ -> None)
+            )
           | comments -> Some (map_n string_of_comment (max_tokens - i) comments)
         else
           None
@@ -350,7 +358,8 @@ let extract_docblock =
           (fun acc (loc, s) -> parse_attributes acc (split loc s))
           ([], default_info)
           comments
-      | None -> ([], default_info))
+      | None -> ([], default_info)
+  )
 
 let parse_docblock ~max_tokens file content : docblock_error list * Docblock.t =
   match file with
@@ -613,7 +622,8 @@ let merge r1 r2 =
     parse_package_json =
       (let (s1, e1) = r1.parse_package_json in
        let (s2, e2) = r2.parse_package_json in
-       (List.rev_append s1 s2, List.rev_append e1 e2));
+       (List.rev_append s1 s2, List.rev_append e1 e2)
+      );
   }
 
 let opt_or_alternate opt alternate =
@@ -629,10 +639,11 @@ let get_defaults ~types_mode ~use_strict options =
       types_mode
       (* force types when --all is set, but otherwise forbid them unless the file
          has @flow in it. *)
-      (if Options.all options then
+      ( if Options.all options then
         TypesAllowed
       else
-        TypesForbiddenByDefault)
+        TypesForbiddenByDefault
+      )
   in
   let use_strict = opt_or_alternate use_strict (Options.modules_are_use_strict options) in
   let profile = Options.should_profile options in
@@ -847,7 +858,9 @@ let ensure_parsed ~reader options workers files =
              if Parsing_heaps.Mutator_reader.has_ast ~reader fn then
                acc
              else
-               FilenameSet.add fn acc))
+               FilenameSet.add fn acc
+         )
+        )
       ~merge:FilenameSet.union
       ~neutral:FilenameSet.empty
       ~next:(MultiWorkerLwt.next workers (FilenameSet.elements files))

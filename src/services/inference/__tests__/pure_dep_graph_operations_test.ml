@@ -48,7 +48,8 @@ let tests =
                   let expected_all_dependents = make_filename_set ["b"; "c"; "d"; "e"] in
                   assert_sets_equal ~ctxt expected_all_dependents all_dependents;
                   let expected_sig_dependents = make_filename_set ["b"; "c"; "d"; "e"] in
-                  assert_sets_equal ~ctxt expected_sig_dependents sig_dependents );
+                  assert_sets_equal ~ctxt expected_sig_dependents sig_dependents
+                );
                 ( "long_chain_no_sig_dependencies" >:: fun ctxt ->
                   let sig_dependency_graph =
                     [("a", []); ("b", []); ("c", []); ("d", []); ("e", [])]
@@ -67,6 +68,7 @@ let tests =
                   let expected_all_dependents = make_filename_set ["b"; "c"] in
                   assert_sets_equal ~ctxt expected_all_dependents all_dependents;
                   let expected_sig_dependents = make_filename_set ["b"] in
-                  assert_sets_equal ~ctxt expected_sig_dependents sig_dependents );
+                  assert_sets_equal ~ctxt expected_sig_dependents sig_dependents
+                );
               ];
        ]

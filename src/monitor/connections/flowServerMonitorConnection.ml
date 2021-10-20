@@ -55,7 +55,8 @@ module type CONNECTION = sig
       (msg:(* A callback for when we read a message from the in_fd *)
            in_message ->
       connection:t ->
-      unit Lwt.t) ->
+      unit Lwt.t
+      ) ->
     (* Returns the tuple (start, conn), where conn is the connection and `start ()` tells the
      * connection to reading from and writing to the fds *)
     ((unit -> unit) * t) Lwt.t
@@ -160,8 +161,9 @@ module Make (ConnectionProcessor : CONNECTION_PROCESSOR) :
 
     let main connection =
       let%lwt msg =
-        (Marshal_tools_lwt.from_fd_with_preamble connection.in_fd
-          : ConnectionProcessor.in_message Lwt.t)
+        ( Marshal_tools_lwt.from_fd_with_preamble connection.in_fd
+          : ConnectionProcessor.in_message Lwt.t
+          )
       in
       let%lwt () = connection.on_read ~msg ~connection in
       Lwt.return connection
@@ -211,10 +213,12 @@ module Make (ConnectionProcessor : CONNECTION_PROCESSOR) :
         on_read;
         command_thread =
           (let%lwt conn = paused_thread in
-           CommandLoop.run conn);
+           CommandLoop.run conn
+          );
         read_thread =
           (let%lwt conn = paused_thread in
-           ReadLoop.run conn);
+           ReadLoop.run conn
+          );
         wait_for_closed_thread;
       }
     in

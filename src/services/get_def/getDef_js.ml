@@ -68,7 +68,8 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
             ~typed_ast
             (Get_def_request.Type (aloc, type_))
         | _ :: _ :: _ -> Error "Scope builder found multiple matching identifiers"
-      end)
+      end
+    )
   | Get_def_request.(Member { prop_name = name; object_source }) ->
     let obj_t =
       match object_source with
@@ -124,7 +125,8 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
              ~node_modules_containers:!Files.node_modules_containers
              (Context.file cx)
              require_loc
-             name)
+             name
+          )
       in
       match filename with
       | Some file -> Ok Loc.{ none with source = Some file }
@@ -150,13 +152,16 @@ let rec process_request ~options ~reader ~cx ~is_legit_require ~typed_ast :
           (spf
              "Internal Flow Error: Expected ModuleT for %S, but got %S!"
              name
-             (string_of_ctor module_t))))
+             (string_of_ctor module_t)
+          ))
+    )
   | Get_def_request.JsxAttribute { component_t = (_, component_t); name; loc } ->
     let reason = Reason.mk_reason (Reason.RCustom name) loc in
     let props_object =
       Tvar.mk_where cx reason (fun tvar ->
           let use_op = Type.Op Type.UnknownUse in
-          Flow_js.flow cx (component_t, Type.ReactKitT (use_op, reason, Type.React.GetConfig tvar)))
+          Flow_js.flow cx (component_t, Type.ReactKitT (use_op, reason, Type.React.GetConfig tvar))
+      )
     in
     process_request
       ~options

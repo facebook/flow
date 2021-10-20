@@ -37,7 +37,8 @@ module Kit (Flow : Flow_common.S) = struct
       let reason = replace_desc_reason (RCustom "compose intermediate value") (reason_of_t fn) in
       let tvar =
         Tvar.mk_no_wrap_where cx reason (fun tvar ->
-            run_compose cx trace ~use_op reason_op reverse fns spread_fn tin tvar)
+            run_compose cx trace ~use_op reason_op reverse fns spread_fn tin tvar
+        )
       in
       rec_flow
         cx
@@ -131,12 +132,8 @@ module Kit (Flow : Flow_common.S) = struct
         FunT
           ( dummy_static reason_op,
             dummy_prototype,
-            mk_functiontype
-              reason_op
-              [OpenT tin]
-              ~rest_param:None
-              ~def_reason:reason_op
-              (OpenT tvar) )
+            mk_functiontype reason_op [OpenT tin] ~rest_param:None ~def_reason:reason_op (OpenT tvar)
+          )
       in
       rec_flow_t ~use_op:unknown_use cx trace (DefT (reason_op, bogus_trust (), funt), tout)
     | ReactCreateElement ->
@@ -151,7 +148,8 @@ module Kit (Flow : Flow_common.S) = struct
           cx
           trace
           ( component,
-            ReactKitT (use_op, reason_op, React.CreateElement0 (false, config, ([], None), tout)) )
+            ReactKitT (use_op, reason_op, React.CreateElement0 (false, config, ([], None), tout))
+          )
       (* React.createElement(component, config, ...children) *)
       | component :: config :: children ->
         rec_flow
@@ -194,7 +192,8 @@ module Kit (Flow : Flow_common.S) = struct
           cx
           trace
           ( element,
-            get_builtin_typeapp cx ~trace reason_op (OrdinaryName "React$Element") [component] );
+            get_builtin_typeapp cx ~trace reason_op (OrdinaryName "React$Element") [component]
+          );
 
         (* Create a React element using the config and children. *)
         rec_flow
@@ -220,7 +219,8 @@ module Kit (Flow : Flow_common.S) = struct
           cx
           trace
           ( component,
-            ReactKitT (use_op, reason_op, React.CreateElement0 (false, config, ([], None), tout)) )
+            ReactKitT (use_op, reason_op, React.CreateElement0 (false, config, ([], None), tout))
+          )
       (* React.createFactory(component)(config, ...children) *)
       | config :: children ->
         rec_flow

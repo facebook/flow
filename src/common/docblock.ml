@@ -116,4 +116,5 @@ let json_of_docblock info =
         ("typeAssert", typeAssert);
         ("preventMunge", preventsMunge);
         ("providesModule", providesModule);
-      ])
+      ]
+  )

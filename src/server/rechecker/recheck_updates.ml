@@ -111,7 +111,8 @@ let check_for_package_json_changes ~is_incompatible_package_json ~skip_incompati
     |> Base.List.filter_map ~f:(fun file ->
            match is_incompatible_package_json file with
            | Module_js.Compatible -> None
-           | Module_js.Incompatible reason -> Some (file, reason))
+           | Module_js.Incompatible reason -> Some (file, reason)
+       )
   in
   if (not skip_incompatible) && incompatible_packages <> [] then
     let messages =
@@ -120,7 +121,8 @@ let check_for_package_json_changes ~is_incompatible_package_json ~skip_incompati
              spf
                "Modified package: %s (%s)"
                file
-               (Module_js.string_of_package_incompatible_reason reason))
+               (Module_js.string_of_package_incompatible_reason reason)
+         )
       |> String.concat "\n"
     in
     Error

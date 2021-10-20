@@ -47,7 +47,7 @@ let parse_lib_file ~reader options file =
       Parsing.parse_with_defaults ~types_mode ~use_strict ~reader options (* workers *) None next
     in
     Lwt.return
-      (if is_ok results then
+      ( if is_ok results then
         let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe reader lib_file in
         let (file_sig, tolerable_errors) =
           Parsing_heaps.Mutator_reader.get_tolerable_file_sig_unsafe reader lib_file
@@ -59,7 +59,8 @@ let parse_lib_file ~reader options file =
       else if is_skip results then
         Lib_skip
       else
-        failwith "Internal error: no parse results found")
+        failwith "Internal error: no parse results found"
+      )
   with
   | _ -> failwith (spf "Can't read library definitions file %s, exiting." file)
 
@@ -69,7 +70,8 @@ let infer_lib_file ~ccx ~options ~exclude_syms lib_file ast file_sig =
   let metadata =
     Context.(
       let metadata = metadata_of_options options in
-      { metadata with checked = false; weak = false })
+      { metadata with checked = false; weak = false }
+    )
   in
   (* Lib files use only concrete locations, so this is not used. *)
   let aloc_table = lazy (ALoc.empty_table lib_file) in
@@ -201,7 +203,8 @@ let init ~options ~reader lib_files =
     let metadata =
       Context.(
         let metadata = metadata_of_options options in
-        { metadata with checked = false; weak = false })
+        { metadata with checked = false; weak = false }
+      )
     in
     (* Lib files use only concrete locations, so this is not used. *)
     let aloc_table = lazy (ALoc.empty_table File_key.Builtins) in
@@ -231,7 +234,8 @@ let init ~options ~reader lib_files =
     in
     ( error_set_to_filemap (Flow_error.ErrorSet.union parse_and_sig_errors errors),
       error_set_to_filemap warnings,
-      suppressions )
+      suppressions
+    )
   in
   (* store master signature context to heap *)
   Context_heaps.Init_master_context_mutator.add_master ~audit:Expensive.ok master_cx;

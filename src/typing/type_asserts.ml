@@ -74,7 +74,8 @@ let detect_invalid_calls ~full_cx typed_ast file_sig =
         | Ok _
         | Error _ ->
           let { Type.TypeScheme.type_ = t; _ } = scheme in
-          wrap (TypeUtil.desc_of_t t))
+          wrap (TypeUtil.desc_of_t t)
+    )
   in
   let file = Context.file full_cx in
   let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~typed_ast ~file_sig in

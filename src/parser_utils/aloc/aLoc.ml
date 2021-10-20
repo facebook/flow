@@ -153,7 +153,8 @@ let to_loc_with_tables tables loc =
          | Some x -> x
          | None -> failwith "Unexpectedly encountered a location without a source"
        in
-       Lazy.force (Utils_js.FilenameMap.find source tables))
+       Lazy.force (Utils_js.FilenameMap.find source tables)
+      )
   in
   to_loc aloc_table loc
 
@@ -211,7 +212,8 @@ let compare loc1 loc2 =
         (Printf.sprintf
            "Unable to compare a keyed location with a concrete one. loc1: %s, loc2: %s"
            (debug_to_string ~include_source:true loc1)
-           (debug_to_string ~include_source:true loc2))
+           (debug_to_string ~include_source:true loc2)
+        )
   else
     source_compare
 

@@ -94,38 +94,44 @@ module Make (Extra : BASE_STATS) = struct
           PreserveLiterals.enforce ~mode:preserve_literals t
         (* E.g. React$Element<'div'> will become React.Element<'div'> *)
         | Ty.Generic
-            ( ({
-                 Ty.sym_name = Reason.OrdinaryName "React$Element";
-                 sym_provenance = Ty_symbol.Library _;
-                 sym_def_loc;
-                 _;
-               } as symbol),
+            ( ( {
+                  Ty.sym_name = Reason.OrdinaryName "React$Element";
+                  sym_provenance = Ty_symbol.Library _;
+                  sym_def_loc;
+                  _;
+                } as symbol
+              ),
               kind,
-              (Some [(Ty.Str _ | Ty.StrLit _)] as args_opt) )
+              (Some [(Ty.Str _ | Ty.StrLit _)] as args_opt)
+            )
           when is_react_loc sym_def_loc ->
           let symbol = { symbol with Ty.sym_name = Reason.OrdinaryName "Element" } in
           this#on_t env Ty.(Generic (symbol, kind, args_opt))
         (* E.g. React$Element<typeof A> will become React.Node *)
         | Ty.Generic
-            ( ({
-                 Ty.sym_name = Reason.OrdinaryName "React$Element";
-                 sym_provenance = Ty_symbol.Library _;
-                 sym_def_loc;
-                 _;
-               } as symbol),
+            ( ( {
+                  Ty.sym_name = Reason.OrdinaryName "React$Element";
+                  sym_provenance = Ty_symbol.Library _;
+                  sym_def_loc;
+                  _;
+                } as symbol
+              ),
               kind,
-              Some _ )
+              Some _
+            )
           when is_react_loc sym_def_loc ->
           let symbol = { symbol with Ty.sym_name = Reason.OrdinaryName "Node" } in
           this#on_t env Ty.(Generic (symbol, kind, None))
         | Ty.Generic
-            ( ({
-                 Ty.sym_name = Reason.OrdinaryName ("FbtElement" | "FbtResultBase");
-                 sym_provenance = Ty_symbol.Library _;
-                 _;
-               } as symbol),
+            ( ( {
+                  Ty.sym_name = Reason.OrdinaryName ("FbtElement" | "FbtResultBase");
+                  sym_provenance = Ty_symbol.Library _;
+                  _;
+                } as symbol
+              ),
               kind,
-              None )
+              None
+            )
           when (Codemod_context.Typed.metadata cctx).Context.facebook_fbt = Some "FbtElement" ->
           let symbol = { symbol with Ty.sym_name = Reason.OrdinaryName "Fbt" } in
           Ty.(Generic (symbol, kind, None))
@@ -169,7 +175,9 @@ module Make (Extra : BASE_STATS) = struct
                       fun_return = Bound (_, r);
                       fun_static = _;
                     },
-                  t :: _ )))
+                  t :: _
+                )
+                ))
           when p = b && b = r ->
           this#on_t env t
         (* All any's that have reached this point will be serialized. By making them

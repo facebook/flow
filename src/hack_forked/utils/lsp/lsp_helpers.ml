@@ -31,7 +31,8 @@ let lsp_uri_to_path (uri : DocumentUri.t) : string =
              Error.code = Error.InvalidParams;
              message = Printf.sprintf "Not a valid file url '%s'" uri;
              data = None;
-           })
+           }
+        )
   else
     uri
 
@@ -125,7 +126,8 @@ let get_range_overlap (selection : range) (squiggle : range) : range_overlap =
     ( selStart_leq_squiggleStart,
       selStart_leq_squiggleEnd,
       selEnd_lt_squiggleStart,
-      selEnd_lt_squiggleEnd )
+      selEnd_lt_squiggleEnd
+    )
   with
   | (true, true, true, true) -> Selection_before_start_of_squiggle
   | (true, true, false, true) -> Selection_overlaps_start_of_squiggle
@@ -247,7 +249,8 @@ let update_diagnostics_due_to_change
     let apply_all_replaces diagnostic =
       Base.List.fold replaces ~init:(Some diagnostic) ~f:apply_replace
     in
-    Base.List.filter_map diagnostics ~f:apply_all_replaces)
+    Base.List.filter_map diagnostics ~f:apply_all_replaces
+  )
 
 (************************************************************************)
 (* Accessors                                                            *)
@@ -258,7 +261,8 @@ let get_root (p : Lsp.Initialize.params) : string =
     match (p.rootUri, p.rootPath) with
     | (Some uri, _) -> lsp_uri_to_path uri
     | (None, Some path) -> path
-    | (None, None) -> failwith "Initialize params missing root")
+    | (None, None) -> failwith "Initialize params missing root"
+  )
 
 let supports_codeActionKinds (p : Lsp.Initialize.params) : CodeActionKind.t list =
   let open Lsp.Initialize in
@@ -331,7 +335,8 @@ let dismiss_diagnostics (writer : Jsonrpc.writer) (diagnostic_uris : UriSet.t) :
 let notify_connectionStatus
     (p : Lsp.Initialize.params) (writer : Jsonrpc.writer) (wasConnected : bool) (isConnected : bool)
     : bool =
-  (if supports_connectionStatus p && wasConnected <> isConnected then
+  ( if supports_connectionStatus p && wasConnected <> isConnected then
     let message = { Lsp.ConnectionStatus.isConnected } in
-    message |> print_connectionStatus |> Jsonrpc.notify writer "telemetry/connectionStatus");
+    message |> print_connectionStatus |> Jsonrpc.notify writer "telemetry/connectionStatus"
+  );
   isConnected

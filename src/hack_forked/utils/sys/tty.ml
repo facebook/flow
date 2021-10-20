@@ -136,7 +136,8 @@ let (spinner, spinner_used) =
       let str = List.nth_exn spinner (!state mod 4) in
       state := !state + 1;
       str),
-    (fun () -> !state <> 0) )
+    (fun () -> !state <> 0)
+  )
 
 (* ANSI escape sequence to clear whole line *)
 let clear_line_seq = "\r\x1b[0K"

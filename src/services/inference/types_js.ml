@@ -35,8 +35,7 @@ let update_errset map file errset =
     in
     FilenameMap.add file errset map
 
-let merge_error_maps =
-  FilenameMap.union ~combine:(fun _ x y -> Some (Flow_error.ErrorSet.union x y))
+let merge_error_maps = FilenameMap.union ~combine:(fun _ x y -> Some (Flow_error.ErrorSet.union x y))
 
 (* Filter out duplicate provider error, if any, for the given file. *)
 let filter_duplicate_provider map file =
@@ -94,7 +93,8 @@ let collate_parse_results parse_results =
 let parse ~options ~profiling ~workers ~reader parse_next =
   Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
       let%lwt results = Parsing_service_js.parse_with_defaults ~reader options workers parse_next in
-      Lwt.return (collate_parse_results results))
+      Lwt.return (collate_parse_results results)
+  )
 
 let reparse ~options ~profiling ~transaction ~reader ~workers ~modified ~deleted =
   Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
@@ -109,7 +109,8 @@ let reparse ~options ~profiling ~transaction ~reader ~workers ~modified ~deleted
           options
       in
       let (parse_ok, unparsed, unchanged, local_errors, _) = collate_parse_results results in
-      Lwt.return (new_or_changed, parse_ok, unparsed, unchanged, local_errors))
+      Lwt.return (new_or_changed, parse_ok, unparsed, unchanged, local_errors)
+  )
 
 let flow_error_of_module_error file err =
   match err with
@@ -123,7 +124,8 @@ let flow_error_of_module_error file err =
         let pos = Loc.{ line = 1; column = 0 } in
         ALoc.of_loc Loc.{ source = Some conflict; start = pos; _end = pos }
       in
-      EDuplicateModuleProvider { module_name; provider; conflict })
+      EDuplicateModuleProvider { module_name; provider; conflict }
+    )
     |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file
 
 (* commit providers for old and new modules, collect errors. *)
@@ -188,7 +190,9 @@ let (commit_modules, commit_modules_from_saved_state) =
                 in
                 update_errset acc file errset)
               errmap
-              errors ))
+              errors
+          )
+    )
   in
   let commit_modules ~transaction ~reader =
     commit_modules_generic ~introduce_files:(Module_js.introduce_files ~reader) ~transaction ~reader
@@ -254,10 +258,13 @@ let resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~
                  if Flow_error.ErrorSet.is_empty errors then
                    (changed, errors_acc)
                  else
-                   (changed, FilenameMap.add filename errors errors_acc)))
+                   (changed, FilenameMap.add filename errors errors_acc)
+             )
+            )
           ~neutral:(false, FilenameMap.empty)
           ~merge
-          ~next:(MultiWorkerLwt.next workers parsed))
+          ~next:(MultiWorkerLwt.next workers parsed)
+    )
   in
   clear_cache_if_resolved_requires_changed resolved_requires_changed;
   Lwt.return (errors, resolved_requires_changed)
@@ -307,7 +314,8 @@ let commit_modules_and_resolve_requires
   Lwt.return
     ( changed_modules,
       resolved_requires_changed,
-      { ServerEnv.local_errors; merge_errors; warnings; suppressions } )
+      { ServerEnv.local_errors; merge_errors; warnings; suppressions }
+    )
 
 let error_set_of_internal_error file (loc, internal_error) =
   Error_message.EInternal (loc, internal_error)
@@ -329,7 +337,8 @@ let calc_deps ~options ~profiling ~sig_dependency_graph ~components to_merge =
           FilenameMap.empty
           components
       in
-      Lwt.return (sig_dependency_graph, component_map))
+      Lwt.return (sig_dependency_graph, component_map)
+  )
 
 (* The input passed in basically tells us what the caller wants to typecheck.
  * However, due to laziness, it's possible that certain dependents or dependencies have not been
@@ -407,7 +416,8 @@ let include_dependencies_and_dependents
        * components as well. This will work out because every component is either entirely
        * inside to_merge or entirely outside. *)
       Lwt.return
-        (to_merge, to_check, to_merge_or_check, components, CheckedSet.all definitely_to_merge))
+        (to_merge, to_check, to_merge_or_check, components, CheckedSet.all definitely_to_merge)
+  )
 
 let update_first_internal_error first_internal_error (loc, internal_error) =
   match first_internal_error with
@@ -417,7 +427,8 @@ let update_first_internal_error first_internal_error (loc, internal_error) =
       (spf
          "%s\n%s"
          (ALoc.debug_to_string ~include_source:true loc)
-         (Error_message.string_of_internal_error internal_error))
+         (Error_message.string_of_internal_error internal_error)
+      )
 
 let add_internal_error errors file (loc, internal_error) =
   let new_errors = error_set_of_internal_error file (loc, internal_error) in
@@ -505,7 +516,9 @@ let run_merge_service
         ( suppressions,
           skipped_count,
           sig_new_or_changed,
-          Base.Option.map first_internal_error ~f:(spf "First merge internal error:\n%s") ))
+          Base.Option.map first_internal_error ~f:(spf "First merge internal error:\n%s")
+        )
+  )
 
 let mk_intermediate_result_callback
     ~reader ~options ~persistent_connections ~recheck_reasons suppressions =
@@ -581,7 +594,8 @@ let mk_intermediate_result_callback
           Persistent_connection.update_clients
             ~clients
             ~errors_reason
-            ~calc_errors_and_warnings:(fun () -> (new_errors, new_warnings))
+            ~calc_errors_and_warnings:(fun () -> (new_errors, new_warnings)
+          )
   in
   let intermediate_result_callback results =
     let errors =
@@ -612,7 +626,8 @@ let mk_intermediate_result_callback
                let warnings = Errors.ConcreteLocPrintableErrorSet.empty in
                (file, errors, warnings) :: acc)
            ~init:[]
-           results)
+           results
+        )
     in
     send_errors_over_connection errors
   in
@@ -671,7 +686,8 @@ let merge
     let%lwt () =
       if Options.should_profile options then
         Memory_utils.with_memory_timer_lwt ~options "PrintGCStats" profiling (fun () ->
-            Lwt.return (Gc.print_stat stderr))
+            Lwt.return (Gc.print_stat stderr)
+        )
       else
         Lwt.return_unit
     in
@@ -723,13 +739,14 @@ module Check_files : sig
     persistent_connections:Persistent_connection.t option ->
     recheck_reasons:LspProt.recheck_reason list ->
     cannot_skip_direct_dependents:bool ->
-    (ServerEnv.errors
+    ( ServerEnv.errors
     * Coverage_response.file_coverage Utils_js.FilenameMap.t
     * float
     * int
     * string option
     * int
-    * string option)
+    * string option
+    )
     Lwt.t
 end = struct
   open Job_utils
@@ -766,8 +783,9 @@ end = struct
               || FilenameSet.exists (fun f' -> FilenameSet.mem f' sig_new_or_changed)
                  @@ FilenameGraph.find f implementation_dependency_graph
               ||
-              (incr skipped_count;
-               false))
+              ( incr skipped_count;
+                false
+              ))
             merged_dependents
         in
         Hh_logger.info
@@ -824,7 +842,9 @@ end = struct
             !skipped_count,
             Base.Option.map ~f:File_key.to_string slowest_file,
             num_slow_files,
-            Base.Option.map first_internal_error ~f:(spf "First check internal error:\n%s") ))
+            Base.Option.map first_internal_error ~f:(spf "First check internal error:\n%s")
+          )
+    )
 end
 
 exception Unexpected_file_changes of File_key.t Nel.t
@@ -835,7 +855,8 @@ let handle_unexpected_file_changes changed_files =
     LspProt.(
       match filenames with
       | (filename, []) -> Single_file_changed { filename }
-      | _ -> Many_files_changed { file_count = Nel.length filenames })
+      | _ -> Many_files_changed { file_count = Nel.length filenames }
+    )
   in
   let filename_set = filenames |> Nel.to_list |> SSet.of_list in
   ServerMonitorListenerState.push_files_to_prioritize ~reason filename_set;
@@ -852,7 +873,8 @@ let ensure_parsed ~options ~profiling ~workers ~reader files =
       in
       match FilenameSet.elements parse_unexpected_skips with
       | [] -> Lwt.return_unit
-      | hd :: tl -> raise (Unexpected_file_changes (hd, tl)))
+      | hd :: tl -> raise (Unexpected_file_changes (hd, tl))
+  )
 
 let ensure_parsed_or_trigger_recheck ~options ~profiling ~workers ~reader files =
   try%lwt ensure_parsed ~options ~profiling ~workers ~reader files with
@@ -882,7 +904,9 @@ let init_libs ~options ~profiling ~local_errors ~warnings ~suppressions ~reader 
           FilenameMap.union lib_errors local_errors,
           FilenameMap.union lib_warnings warnings,
           Error_suppressions.update_suppressions lib_suppressions suppressions,
-          exports ))
+          exports
+        )
+  )
 
 let is_file_tracked_and_checked ~reader filename =
   Module_heaps.Reader_dispatcher.is_tracked_file ~reader filename
@@ -938,7 +962,8 @@ let filter_out_node_modules ~options =
   let file_options = Options.file_options options in
   FilenameSet.filter (fun fn ->
       let filename_str = File_key.to_string fn in
-      not (Files.is_within_node_modules ~root ~options:file_options filename_str))
+      not (Files.is_within_node_modules ~root ~options:file_options filename_str)
+  )
 
 (* Filesystem lazy mode focuses on any file which changes. Non-lazy mode focuses on every file in
  * the repo. In both cases, we never want node_modules to appear in the focused sets.
@@ -991,7 +1016,8 @@ let files_to_infer ~options ~profiling ~reader ~dependency_info ~focus_targets ~
             ~input_focused
             ~input_dependencies:None
         in
-        Lwt.return to_infer)
+        Lwt.return to_infer
+  )
 
 let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~file_watcher_metadata =
   match Options.lazy_mode options with
@@ -1106,10 +1132,7 @@ module Recheck : sig
     recheck_reasons:LspProt.recheck_reason list ->
     will_be_checked_files:CheckedSet.t ref ->
     env:ServerEnv.env ->
-    (ServerEnv.env
-    * recheck_result
-    * ((* record_recheck_time *) unit -> unit Lwt.t)
-    * string option)
+    (ServerEnv.env * recheck_result * ((* record_recheck_time *) unit -> unit Lwt.t) * string option)
     Lwt.t
 
   (* Raises `Unexpected_file_changes` if it finds files unexpectedly changed when parsing. *)
@@ -1401,12 +1424,14 @@ end = struct
             workers
             ~all_providers_mutator
             ~options
-            new_or_changed_or_deleted)
+            new_or_changed_or_deleted
+      )
     in
     (* We may be forcing a recheck on some unchanged files *)
     let unchanged_files_to_force =
       CheckedSet.filter files_to_force ~f:(fun fn ->
-          (not (FilenameSet.mem fn new_or_changed)) && FilenameSet.mem fn old_parsed)
+          (not (FilenameSet.mem fn new_or_changed)) && FilenameSet.mem fn old_parsed
+      )
     in
     MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
     let%lwt (changed_modules, resolved_requires_changed_in_commit_modules, errors) =
@@ -1437,7 +1462,8 @@ end = struct
      * which dependents need to be added to the checked set *)
     let%lwt unchanged_modules =
       Memory_utils.with_memory_timer_lwt ~options "CalcUnchangedModules" profiling (fun () ->
-          Module_js.calc_unchanged_modules ~reader workers unchanged_files_with_dependents)
+          Module_js.calc_unchanged_modules ~reader workers unchanged_files_with_dependents
+      )
     in
     let parsed = FilenameSet.union freshparsed unchanged in
     (* direct_dependent_files are unchanged files which directly depend on changed modules,
@@ -1454,13 +1480,16 @@ end = struct
           DirectDependentFilesCache.with_cache
             ~cache_key
             ~on_miss:
-              (lazy
+              ( lazy
                 (Dep_service.calc_direct_dependents
                    ~reader:(Abstract_state_reader.Mutator_state_reader reader)
                    workers
                    ~candidates:(FilenameSet.diff unchanged unchanged_files_with_dependents)
                    ~root_files:(FilenameSet.union new_or_changed unchanged_files_with_dependents)
-                   ~root_modules:(Modulename.Set.union unchanged_modules changed_modules))))
+                   ~root_modules:(Modulename.Set.union unchanged_modules changed_modules)
+                )
+                )
+      )
     in
     Hh_logger.info "Re-resolving directly dependent files";
     let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader direct_dependent_files in
@@ -1497,7 +1526,8 @@ end = struct
               ~next:(MultiWorkerLwt.next workers (FilenameSet.elements direct_dependent_files))
           in
           clear_cache_if_resolved_requires_changed resolved_requires_changed;
-          Lwt.return resolved_requires_changed)
+          Lwt.return resolved_requires_changed
+      )
     in
     Hh_logger.info "Recalculating dependency graph";
     let%lwt dependency_info =
@@ -1514,7 +1544,8 @@ end = struct
           in
           let old_dependency_info = env.ServerEnv.dependency_info in
           let to_remove = FilenameSet.union unparsed_set deleted in
-          Lwt.return (Dependency_info.update old_dependency_info partial_dependency_graph to_remove))
+          Lwt.return (Dependency_info.update old_dependency_info partial_dependency_graph to_remove)
+      )
     in
     (* Here's how to update unparsed:
      * 1. Remove the parsed files. This removes any file which used to be unparsed but is now parsed
@@ -1539,7 +1570,8 @@ end = struct
             ~reader
             ~update:new_or_changed
             ~remove:deleted
-            env.ServerEnv.exports)
+            env.ServerEnv.exports
+      )
     in
     Hh_logger.info "Done updating index";
 
@@ -1554,7 +1586,8 @@ end = struct
         unchanged_checked,
         unchanged_files_to_force,
         unparsed_set,
-        cannot_skip_direct_dependents )
+        cannot_skip_direct_dependents
+      )
     in
     Lwt.return (env, intermediate_values)
 
@@ -1577,7 +1610,9 @@ end = struct
             (Pure_dep_graph_operations.calc_all_dependents
                ~sig_dependency_graph
                ~implementation_dependency_graph
-               direct_dependent_files))
+               direct_dependent_files
+            )
+      )
     in
     (* Prevent files in node_modules from being added to the checked set. *)
     let sig_dependent_files = filter_out_node_modules ~options sig_dependent_files in
@@ -1597,13 +1632,15 @@ end = struct
               ~input_focused:(FilenameSet.union focused (CheckedSet.focused files_to_force))
               ~input_dependencies:(Some (CheckedSet.dependencies files_to_force))
           in
-          Lwt.return to_infer)
+          Lwt.return to_infer
+      )
     in
     (* Filter updated_checked_files down to the files which we just parsed or unchanged files which
      * will be focused *)
     let input =
       CheckedSet.filter updated_checked_files ~f:(fun fn ->
-          FilenameSet.mem fn acceptable_files_to_focus)
+          FilenameSet.mem fn acceptable_files_to_focus
+      )
     in
     let%lwt (to_merge, to_check, to_merge_or_check, components, recheck_set) =
       include_dependencies_and_dependents
@@ -1626,7 +1663,8 @@ end = struct
            recheck_set;
            sig_dependent_files;
            all_dependent_files;
-         })
+         }
+      )
 
   (* This function assumes it is called after recheck_parse_and_update_dependency_info. It uses some
    * of the info computed by recheck_parse_and_update_dependency_info to figure out which files to
@@ -1651,7 +1689,8 @@ end = struct
           unchanged_checked,
           unchanged_files_to_force,
           unparsed_set,
-          cannot_skip_direct_dependents ) =
+          cannot_skip_direct_dependents
+        ) =
       intermediate_values
     in
     let dependency_info = env.ServerEnv.dependency_info in
@@ -1668,7 +1707,8 @@ end = struct
                 recheck_set;
                 sig_dependent_files;
                 all_dependent_files;
-              }) =
+              }
+              ) =
       determine_what_to_recheck
         ~profiling
         ~options
@@ -1704,7 +1744,8 @@ end = struct
               sig_new_or_changed,
               top_cycle,
               time_to_merge,
-              merge_internal_error ) =
+              merge_internal_error
+            ) =
       let n = FilenameSet.cardinal all_dependent_files in
       if n > 0 then Hh_logger.info "recheck %d dependent files:" n;
       merge
@@ -1743,7 +1784,8 @@ end = struct
               check_skip_count,
               slowest_file,
               num_slow_files,
-              check_internal_error ) =
+              check_internal_error
+            ) =
       Check_files.check_files
         ~reader
         ~options
@@ -1790,7 +1832,8 @@ end = struct
           estimates;
         },
         record_recheck_time,
-        Base.Option.first_some merge_internal_error check_internal_error )
+        Base.Option.first_some merge_internal_error check_internal_error
+      )
 
   (* We maintain the following invariant across rechecks: The set of `files` contains files that
    * parsed successfully in the previous phase (which could be the init phase or a previous recheck
@@ -1903,7 +1946,9 @@ let recheck
               ~files_to_force
               ~file_watcher_metadata
               ~recheck_reasons
-              ~will_be_checked_files))
+              ~will_be_checked_files
+        )
+    )
   in
   let {
     Recheck.new_or_changed = modified;
@@ -1926,7 +1971,8 @@ let recheck
         estimated_time_to_init,
         estimated_time_per_file,
         estimated_files_to_recheck,
-        estimated_files_to_init ) =
+        estimated_files_to_init
+      ) =
     Base.Option.value_map
       estimates
       ~default:(None, None, None, None, None, None)
@@ -1945,7 +1991,9 @@ let recheck
           Some estimated_time_to_init,
           Some estimated_time_per_file,
           Some estimated_files_to_recheck,
-          Some estimated_files_to_init ))
+          Some estimated_files_to_init
+        )
+    )
   in
   (* TODO: update log to reflect current terminology **)
   let log_recheck_event : profiling:Profiling_js.finished -> unit Lwt.t =
@@ -2069,7 +2117,9 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
                        (* Restore the SigHashHeap *)
                        Base.Option.iter
                          ~f:(Context_heaps.From_saved_state.add_sig_hash fn)
-                         parsed_file_data.Saved_state.sig_hash))
+                         parsed_file_data.Saved_state.sig_hash
+                 )
+                )
               ~merge:(fun () () -> ())
               ~neutral:()
               ~next:(MultiWorkerLwt.next workers parsed_heaps)
@@ -2080,10 +2130,13 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
               (List.fold_left (fun () (fn, unparsed_file_data) ->
                    (* Restore the FileHashHeap *)
                    let hash = unparsed_file_data.Saved_state.unparsed_hash in
-                   Parsing_heaps.From_saved_state.add_file_hash fn hash))
+                   Parsing_heaps.From_saved_state.add_file_hash fn hash
+               )
+              )
             ~merge:(fun () () -> ())
             ~neutral:()
-            ~next:(MultiWorkerLwt.next workers unparsed_heaps))
+            ~next:(MultiWorkerLwt.next workers unparsed_heaps)
+      )
     in
     Hh_logger.info "Loading libraries";
 
@@ -2128,7 +2181,8 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
               unparsed_heaps
           in
           let all_files = FilenameSet.union parsed_set unparsed_set in
-          Lwt.return (parsed_set, unparsed_set, all_files, parsed, unparsed))
+          Lwt.return (parsed_set, unparsed_set, all_files, parsed, unparsed)
+      )
     in
     let all_providers_mutator = Module_hashtables.All_providers_mutator.create transaction in
     (* This will restore InfoHeap, NameHeap, & all_providers hashtable *)
@@ -2158,7 +2212,8 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
     Hh_logger.info "Indexing files";
     let%lwt exports =
       Memory_utils.with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
-          Export_service.init ~workers ~reader ~libs:lib_exports parsed_set)
+          Export_service.init ~workers ~reader ~libs:lib_exports parsed_set
+      )
     in
 
     let env =
@@ -2203,7 +2258,8 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
               ~files_to_force
               ~file_watcher_metadata:MonitorProt.empty_file_watcher_metadata
               ~recheck_reasons
-              ~will_be_checked_files:(ref files_to_force))
+              ~will_be_checked_files:(ref files_to_force)
+        )
       in
       Profiling_js.merge ~from:recheck_profiling ~into:profiling;
       Lwt.return (env, libs_ok)
@@ -2313,13 +2369,15 @@ let init_from_scratch ~profiling ~workers options =
   in
   let%lwt dependency_info =
     Memory_utils.with_memory_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
-        Dep_service.calc_dependency_info ~reader workers ~parsed:parsed_set)
+        Dep_service.calc_dependency_info ~reader workers ~parsed:parsed_set
+    )
   in
 
   Hh_logger.info "Indexing files";
   let%lwt exports =
     Memory_utils.with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
-        Export_service.init ~workers ~reader ~libs:lib_exports parsed_set)
+        Export_service.init ~workers ~reader ~libs:lib_exports parsed_set
+    )
   in
   Hh_logger.info "Done";
 
@@ -2486,7 +2544,8 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
       let first_internal_error = Base.Option.first_some merge_internal_error check_internal_error in
       let checked_files = to_merge_or_check in
       Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked_files);
-      Lwt.return ({ env with ServerEnv.checked_files; errors; coverage }, first_internal_error))
+      Lwt.return ({ env with ServerEnv.checked_files; errors; coverage }, first_internal_error)
+  )
 
 let debug_determine_what_to_recheck = Recheck.determine_what_to_recheck
 

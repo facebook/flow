@@ -74,7 +74,8 @@ let lookup_trust cx id =
   Trust_constraint.(
     match Context.find_trust_graph cx id with
     | TrustResolved trust -> trust
-    | TrustUnresolved b -> get_trust b)
+    | TrustUnresolved b -> get_trust b
+  )
 
 let dump_reason cx reason =
   let strip_root =
@@ -90,18 +91,21 @@ let rec dump_t_ (depth, tvars) cx t =
     spf
       "%s %s(%s%s%s)"
       (string_of_ctor t)
-      (if not (Context.trust_tracking cx) then
+      ( if not (Context.trust_tracking cx) then
         ""
       else
-        Base.Option.value_map ~default:"" ~f:(lookup_trust cx |> string_of_trust_rep) trust)
-      (if reason then
+        Base.Option.value_map ~default:"" ~f:(lookup_trust cx |> string_of_trust_rep) trust
+      )
+      ( if reason then
         spf "%S" (dump_reason cx (reason_of_t t))
       else
-        "")
-      (if reason && extra <> "" then
+        ""
+      )
+      ( if reason && extra <> "" then
         ", "
       else
-        "")
+        ""
+      )
       extra
   in
   let kid = dump_t_ (depth - 1, tvars) cx in
@@ -139,7 +143,8 @@ let rec dump_t_ (depth, tvars) cx t =
         in
         function
         | Primitive (is_required, t) -> spf "Primitive (%b, %s)" is_required (kid t)
-        | Complex kind -> complex kind)
+        | Complex kind -> complex kind
+      )
     in
     function
     | ObjectAssign -> "ObjectAssign"
@@ -199,7 +204,8 @@ let rec dump_t_ (depth, tvars) cx t =
              "<this: %s>(%s) => %s"
              (kid (fst this_t))
              (String.concat "; " (Base.List.map ~f:(fun (_, t) -> kid t) params))
-             (kid return_t))
+             (kid return_t)
+          )
         t
     | AnyT (_, src) -> p ~extra:(string_of_any_source src) t
     | DefT (_, trust, MixedT flavor) ->
@@ -224,7 +230,8 @@ let rec dump_t_ (depth, tvars) cx t =
              "%s [%s] #%s"
              (kid c)
              (String.concat "; " (Base.List.map ~f:(fun tp -> tp.name) (Nel.to_list tps)))
-             (Poly.string_of_id id))
+             (Poly.string_of_id id)
+          )
         t
     | ThisClassT (_, inst, _) -> p ~extra:(kid inst) t
     | BoundT (_, name) -> p ~extra:name t
@@ -240,7 +247,8 @@ let rec dump_t_ (depth, tvars) cx t =
           (spf
              "Array %s, %s"
              (kid elemt)
-             (spf "[%s]" (String.concat "; " (Base.List.map ~f:kid tup))))
+             (spf "[%s]" (String.concat "; " (Base.List.map ~f:kid tup)))
+          )
         t
     | DefT (_, trust, ArrT (TupleAT (_, tup))) ->
       p
@@ -260,7 +268,8 @@ let rec dump_t_ (depth, tvars) cx t =
     | DefT
         ( _,
           trust,
-          EnumObjectT { enum_id; members = _; representation_t = _; has_unknown_members = _ } ) ->
+          EnumObjectT { enum_id; members = _; representation_t = _; has_unknown_members = _ }
+        ) ->
       p ~trust:(Some trust) ~extra:(spf "enum #%s" (ALoc.debug_to_string (enum_id :> ALoc.t))) t
     | AnnotT (_, arg, use_desc) -> p ~extra:(spf "use_desc=%b, %s" use_desc (kid arg)) t
     | OpaqueT (_, { underlying_t = Some arg; _ }) -> p ~extra:(spf "%s" (kid arg)) t
@@ -295,7 +304,8 @@ let rec dump_t_ (depth, tvars) cx t =
           (spf
              "[%s]%s"
              (String.concat "; " (Base.List.map ~f:kid (UnionRep.members rep)))
-             (UnionRep.string_of_specialization rep))
+             (UnionRep.string_of_specialization rep)
+          )
         t
     | DefT (_, trust, IdxWrapper inner_obj) -> p ~trust:(Some trust) ~extra:(kid inner_obj) t
     | DefT (_, trust, ReactAbstractComponentT _) -> p ~trust:(Some trust) t
@@ -313,9 +323,11 @@ let rec dump_t_ (depth, tvars) cx t =
           (Context.find_exports cx exports_tmap
           |> NameUtils.Map.bindings
           |> Base.List.map ~f:(fun (name, (_, t)) ->
-                 kid t |> spf "%s: %s" (display_string_of_name name))
+                 kid t |> spf "%s: %s" (display_string_of_name name)
+             )
           |> String.concat ", "
-          |> spf "[%s]")
+          |> spf "[%s]"
+          )
     | InternalT (ExtendsT (_, l, u)) -> p ~extra:(spf "%s, %s" (kid l) (kid u)) t
     | CustomFunT (_, kind) -> p ~extra:(custom_fun kind) t
     | InternalT (ChoiceKitT _) -> p t
@@ -334,12 +346,17 @@ let rec dump_t_ (depth, tvars) cx t =
                 "; "
                 (Base.List.map
                    ~f:(fun (k, p) -> spf "%s: %s" (Key.string_of_key k) (string_of_predicate p))
-                   (Key_map.elements p_pos)))
+                   (Key_map.elements p_pos)
+                )
+             )
              (String.concat
                 "; "
                 (Base.List.map
                    ~f:(fun (k, p) -> spf "%s: %s" (Key.string_of_key k) (string_of_predicate p))
-                   (Key_map.elements p_neg))))
+                   (Key_map.elements p_neg)
+                )
+             )
+          )
     | ReposT (_, arg)
     | InternalT (ReposUpperT (_, arg)) ->
       p ~extra:(kid arg) t
@@ -349,14 +366,16 @@ and dump_use_t_ (depth, tvars) cx t =
     spf
       "%s (%s%s%s)"
       (string_of_use_ctor use_t)
-      (if reason then
+      ( if reason then
         spf "%S" (dump_reason cx (reason_of_use_t use_t))
       else
-        "")
-      (if reason && extra <> "" then
+        ""
+      )
+      ( if reason && extra <> "" then
         ", "
       else
-        "")
+        ""
+      )
       extra
   in
   let kid t = dump_t_ (depth - 1, tvars) cx t in
@@ -378,7 +397,9 @@ and dump_use_t_ (depth, tvars) cx t =
          (NameUtils.Map.fold
             (fun k p acc -> spf "%s = %s" (display_string_of_name k) (prop p) :: acc)
             map
-            []))
+            []
+         )
+      )
   in
   let propref = function
     | Named (r, x) -> spf "%S %s" (dump_reason cx r) (display_string_of_name x)
@@ -388,8 +409,8 @@ and dump_use_t_ (depth, tvars) cx t =
     | NonstrictReturning (default_opt, testid_opt) ->
       spf
         "Nonstrict%s%s"
-        (Base.Option.value_map default_opt ~default:"" ~f:(fun (t, _) ->
-             spf " returning %s" (kid t)))
+        (Base.Option.value_map default_opt ~default:"" ~f:(fun (t, _) -> spf " returning %s" (kid t))
+        )
         (Base.Option.value_map testid_opt ~default:"" ~f:(fun (id, _) -> spf " for test id %d" id))
     | Strict r -> spf "Strict %S" (dump_reason cx r)
     | ShadowRead (_, ids) ->
@@ -432,8 +453,7 @@ and dump_use_t_ (depth, tvars) cx t =
       in
       let resolve_object = function
         | ResolveObject -> "ResolveObject"
-        | ResolveDict (_, todo, acc) ->
-          spf "ResolveDict (%s, %s)" (props todo) (resolved_object acc)
+        | ResolveDict (_, todo, acc) -> spf "ResolveDict (%s, %s)" (props todo) (resolved_object acc)
         | ResolveProp (k, todo, acc) ->
           spf
             "ResolveProp (%s, %s, %s)"
@@ -449,7 +469,8 @@ and dump_use_t_ (depth, tvars) cx t =
           | ObjectOf -> "ObjectOf"
           | OneOf tool -> spf "OneOf (%s)" (resolve_array tool)
           | OneOfType tool -> spf "OneOfType (%s)" (resolve_array tool)
-          | Shape tool -> spf "Shape (%s)" (resolve_object tool))
+          | Shape tool -> spf "Shape (%s)" (resolve_object tool)
+        )
       in
       let create_class =
         CreateClass.(
@@ -469,7 +490,8 @@ and dump_use_t_ (depth, tvars) cx t =
               (kid state_t)
               (kid default_t)
           in
-          (fun t k -> spf "%s, %s" (tool t) (knot k)))
+          (fun t k -> spf "%s, %s" (tool t) (knot k))
+        )
       in
       function
       | CreateElement0 (_, config, (children, children_spread), tout)
@@ -483,7 +505,8 @@ and dump_use_t_ (depth, tvars) cx t =
                (match children_spread with
                | Some children_spread -> spf "; ...%s" (kid children_spread)
                | None -> "")
-               (kid tout))
+               (kid tout)
+            )
           t
       | ConfigCheck config -> spf "ConfigCheck (%s)" (kid config)
       | GetProps tout -> spf "GetProps (%s)" (kid tout)
@@ -494,7 +517,8 @@ and dump_use_t_ (depth, tvars) cx t =
       | SimplifyPropType (tool, tout) ->
         spf "SimplifyPropType (%s, %s)" (simplify_prop_type tool) (kid tout)
       | CreateClass (tool, knot, tout) ->
-        spf "CreateClass (%s, %s)" (create_class tool knot) (kid tout))
+        spf "CreateClass (%s, %s)" (create_class tool knot) (kid tout)
+    )
   in
   let slice { Object.reason = _; props; flags = { obj_kind; _ }; generics = _; interface = _ } =
     let xs =
@@ -595,7 +619,8 @@ and dump_use_t_ (depth, tvars) cx t =
               (string_of_int curr_resolve_idx)
               (Base.Option.value_map union_reason ~default:"None" ~f:(dump_reason cx))
           in
-          spf "Spread (%s, %s)" target state)
+          spf "Spread (%s, %s)" target state
+        )
       in
       let rest merge_mode state =
         Object.Rest.(
@@ -607,7 +632,8 @@ and dump_use_t_ (depth, tvars) cx t =
             | ReactConfigMerge _ -> "ReactConfigMerge")
             (match state with
             | One t -> spf "One (%s)" (kid t)
-            | Done o -> spf "Done (%s)" (resolved o)))
+            | Done o -> spf "Done (%s)" (resolved o))
+        )
       in
       let react_props state =
         Object.ReactConfig.(
@@ -615,7 +641,8 @@ and dump_use_t_ (depth, tvars) cx t =
             "(%s)"
             (match state with
             | Config _ -> "Config"
-            | Defaults _ -> "Defaults"))
+            | Defaults _ -> "Defaults")
+        )
       in
       let tool = function
         | ReadOnly -> "ReadOnly"
@@ -626,7 +653,8 @@ and dump_use_t_ (depth, tvars) cx t =
         | Rest (options, state) -> rest options state
         | ReactConfig state -> react_props state
       in
-      (fun a b -> spf "(%s, %s)" (resolve_tool a) (tool b)))
+      (fun a b -> spf "(%s, %s)" (resolve_tool a) (tool b))
+    )
   in
   let method_action = function
     | CallM { meth_args_tlist; meth_tout = (call_r, call_tvar); meth_generic_this; _ }
@@ -649,10 +677,11 @@ and dump_use_t_ (depth, tvars) cx t =
       spf
         "UseT (%s, %s%s)"
         (string_of_use_op use_op)
-        (if Context.trust_tracking cx then
+        ( if Context.trust_tracking cx then
           string_of_trust_rep (lookup_trust cx) trust
         else
-          "")
+          ""
+        )
         (kid t)
     | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
     | AdderT (use_op, _, _, x, y) ->
@@ -678,7 +707,8 @@ and dump_use_t_ (depth, tvars) cx t =
              (kid call_this_t)
              (String.concat "; " (Base.List.map ~f:call_arg_kid call_args_tlist))
              (string_of_reason call_r)
-             (tvar call_tvar))
+             (tvar call_tvar)
+          )
         t
     | CallLatentPredT _ -> p t
     | CallOpenPredT _ -> p t
@@ -705,7 +735,10 @@ and dump_use_t_ (depth, tvars) cx t =
                 "; "
                 (Base.List.map
                    ~f:(fun (x, _) -> display_string_of_name x)
-                   (NameUtils.Map.bindings tmap))))
+                   (NameUtils.Map.bindings tmap)
+                )
+             )
+          )
     | ExportTypeT _ -> p t
     | FunImplicitVoidReturnT _ -> p t
     | AssertExportIsTypeT _ -> p t
@@ -722,7 +755,8 @@ and dump_use_t_ (depth, tvars) cx t =
              (string_of_use_op use_op)
              (propref prop)
              (string_of_reason preason)
-             (tvar ptvar))
+             (tvar ptvar)
+          )
         t
     | GetPrivatePropT (_, _, prop, _, _, (preason, ptvar)) ->
       p ~extra:(spf "(%s), (%s, %s)" prop (string_of_reason preason) (tvar ptvar)) t
@@ -758,7 +792,9 @@ and dump_use_t_ (depth, tvars) cx t =
                  "Some %s"
                  (String.concat
                     "; "
-                    (Properties.Set.elements ids |> Base.List.map ~f:Properties.string_of_id))))
+                    (Properties.Set.elements ids |> Base.List.map ~f:Properties.string_of_id)
+                 ))
+          )
         t
     | MakeExactT _ -> p t
     | MapTypeT _ -> p t
@@ -845,8 +881,7 @@ and dump_use_t_ (depth, tvars) cx t =
       p ~extra:(kid arg) t
     | ObjKitT (use_op, _, resolve_tool, tool, tout) ->
       p
-        ~extra:
-          (spf "%s, %s, %s" (string_of_use_op use_op) (object_kit resolve_tool tool) (kid tout))
+        ~extra:(spf "%s, %s, %s" (string_of_use_op use_op) (object_kit resolve_tool tool) (kid tout))
         t
     | TestPropT (_, _, prop, (preason, ptvar)) ->
       p ~extra:(spf "(%s), (%s, %s)" (propref prop) (string_of_reason preason) (tvar ptvar)) t
@@ -885,11 +920,11 @@ and dump_use_t_ (depth, tvars) cx t =
              | None -> "None"
              | Some t -> spf "Some (%s)" (kid t))
              (kid else_t)
-             (kid tout))
+             (kid tout)
+          )
     | ExtendsUseT (_, _, nexts, l, u) ->
       p
-        ~extra:
-          (spf "[%s], %s, %s" (String.concat "; " (Base.List.map ~f:kid nexts)) (kid l) (kid u))
+        ~extra:(spf "[%s], %s, %s" (String.concat "; " (Base.List.map ~f:kid nexts)) (kid l) (kid u))
         t
     | DestructuringT (_, k, s, (r, tout), _) ->
       p
@@ -900,7 +935,8 @@ and dump_use_t_ (depth, tvars) cx t =
              (string_of_destruct_kind k)
              (string_of_selector s)
              (string_of_reason r)
-             (tvar tout))
+             (tvar tout)
+          )
     | CreateObjWithComputedPropT { reason = _; value; tout_tvar } ->
       p t ~extra:(spf "%s %s" (kid value) (kid (OpenT tout_tvar)))
     | ResolveUnionT { resolved; unresolved; upper; id; _ } ->
@@ -912,7 +948,8 @@ and dump_use_t_ (depth, tvars) cx t =
              id
              (String.concat "; " (Base.List.map ~f:kid resolved))
              (String.concat "; " (Base.List.map ~f:kid unresolved))
-             (use_kid upper))
+             (use_kid upper)
+          )
 
 and dump_tvar_ (depth, tvars) cx id =
   if ISet.mem id tvars then
@@ -935,16 +972,22 @@ and dump_tvar_ (depth, tvars) cx id =
               (String.concat
                  "; "
                  (List.rev
-                    (TypeMap.fold (fun t _ acc -> dump_t_ (depth - 1, stack) cx t :: acc) lower [])))
+                    (TypeMap.fold (fun t _ acc -> dump_t_ (depth - 1, stack) cx t :: acc) lower [])
+                 )
+              )
               (String.concat
                  "; "
                  (List.rev
                     (UseTypeMap.fold
                        (fun (use_t, _) _ acc -> dump_use_t_ (depth - 1, stack) cx use_t :: acc)
                        upper
-                       [])))
+                       []
+                    )
+                 )
+              )
       with
-      | Union_find.Tvar_not_found _ -> spf "Not Found: %d" id)
+      | Union_find.Tvar_not_found _ -> spf "Not Found: %d" id
+    )
 
 and dump_prop_ (depth, tvars) cx p =
   let kid t = dump_t_ (depth, tvars) cx t in
@@ -1006,7 +1049,9 @@ let string_of_scope_entry =
              spf
                "; closure_writes: { locs: { %s }; t: %s }"
                (ListUtils.to_string ", " string_of_aloc @@ ALocSet.elements locs)
-               (dump_t cx t)))
+               (dump_t cx t)
+         )
+        )
     in
     let string_of_type_binding cx { Entry.type_state; type_loc; type_; type_binding_kind = _ } =
       spf
@@ -1020,7 +1065,9 @@ let string_of_scope_entry =
         function
         | Value r -> spf "Value %s" (string_of_value_binding cx r)
         | Type r -> spf "Type %s" (string_of_type_binding cx r)
-        | Class r -> spf "Class %s" (ALoc.debug_to_string (r.class_binding_id :> ALoc.t))))
+        | Class r -> spf "Class %s" (ALoc.debug_to_string (r.class_binding_id :> ALoc.t))
+      )
+  )
 
 let string_of_scope_entries cx entries =
   let strings =
@@ -1057,7 +1104,8 @@ let string_of_scope cx scope =
       "{ kind: %s;\nentries:\n%s\nrefis:\n%s\n}"
       (string_of_kind scope.kind)
       (string_of_scope_entries cx scope.entries)
-      (string_of_scope_refis cx scope.refis))
+      (string_of_scope_refis cx scope.refis)
+  )
 
 let string_of_reason cx reason =
   let strip_root =
@@ -1431,8 +1479,7 @@ let dump_error_message =
         (dump_reason cx lower)
         (dump_reason cx upper)
         (string_of_use_op use_op)
-    | EInternal (loc, err) ->
-      spf "EInternal (%s, %s)" (string_of_aloc loc) (dump_internal_error err)
+    | EInternal (loc, err) -> spf "EInternal (%s, %s)" (string_of_aloc loc) (dump_internal_error err)
     | EUnsupportedSyntax (loc, _) -> spf "EUnsupportedSyntax (%s, _)" (string_of_aloc loc)
     | EUseArrayLiteral loc -> spf "EUseArrayLiteral (%s)" (string_of_aloc loc)
     | EMissingAnnotation (reason, _) -> spf "EMissingAnnotation (%s)" (dump_reason cx reason)
@@ -1460,7 +1507,8 @@ let dump_error_message =
           | MethodCallBeforeEverythingInitialized -> "MethodCallBeforeEverythingInitialized"
           | PropertyFunctionCallBeforeEverythingInitialized ->
             "PropertyFunctionCallBeforeEverythingInitialized"
-          | ThisBeforeEverythingInitialized -> "ThisBeforeEverythingInitialized")
+          | ThisBeforeEverythingInitialized -> "ThisBeforeEverythingInitialized"
+        )
     | EEnumsNotEnabled loc -> spf "EEnumsNotEnabled (%s)" (string_of_aloc loc)
     | EIndexedAccessNotEnabled loc -> spf "EIndexedAccessNotEnabled (%s)" (string_of_aloc loc)
     | EIndeterminateModuleType loc -> spf "EIndeterminateModuleType (%s)" (string_of_aloc loc)
@@ -1595,7 +1643,8 @@ let dump_error_message =
           | Overwritten_argument -> "Overwritten_argument"
           | Redundant_argument -> "Redundant_argument"
         in
-        spf "ELintSetting (%s, %s)" (string_of_aloc loc) kind_str)
+        spf "ELintSetting (%s, %s)" (string_of_aloc loc) kind_str
+      )
     | ESketchyNullLint { kind; loc; null_loc; falsy_loc } ->
       Lints.(
         let kind_str =
@@ -1613,18 +1662,19 @@ let dump_error_message =
           kind_str
           (string_of_aloc loc)
           (string_of_aloc null_loc)
-          (string_of_aloc falsy_loc))
+          (string_of_aloc falsy_loc)
+      )
     | ESketchyNumberLint (kind, reason) ->
       Lints.(
         let kind_str =
           match kind with
           | SketchyNumberAnd -> "SketchyNumberAnd"
         in
-        spf "ESketchyNumberLint (%s) (%s)" kind_str (dump_reason cx reason))
+        spf "ESketchyNumberLint (%s) (%s)" kind_str (dump_reason cx reason)
+      )
     | EInvalidPrototype (loc, reason) ->
       spf "EInvalidPrototype (%s) (%s)" (string_of_aloc loc) (dump_reason cx reason)
-    | EUnnecessaryOptionalChain (loc, _) ->
-      spf "EUnnecessaryOptionalChain (%s)" (string_of_aloc loc)
+    | EUnnecessaryOptionalChain (loc, _) -> spf "EUnnecessaryOptionalChain (%s)" (string_of_aloc loc)
     | EUnnecessaryInvariant (loc, _) -> spf "EUnnecessaryInvariant (%s)" (string_of_aloc loc)
     | EUnexpectedTemporaryBaseType loc ->
       spf "EUnexpectedTemporaryBaseType (%s)" (string_of_aloc loc)

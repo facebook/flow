@@ -55,4 +55,6 @@ let exec_with_timeout ~timeout cmd args =
       in
       LwtTimeout.with_timeout ~timeout_msg ~on_timeout timeout (fun () ->
           let%lwt command_result = command_result_of_process process in
-          Lwt.return (Ok command_result)))
+          Lwt.return (Ok command_result)
+      )
+  )

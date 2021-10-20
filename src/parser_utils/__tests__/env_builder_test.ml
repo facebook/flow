@@ -24,10 +24,11 @@ let printer with_locs locmap =
         Printf.sprintf
           "%s => { %s%s }"
           (Loc.debug_to_string read_loc)
-          (if with_locs then
+          ( if with_locs then
             Printf.sprintf "%s, " (print_locs locs)
           else
-            "")
+            ""
+          )
           (Env_builder.With_Loc.Env_api.Refi.show_refinement_kind refinement))
       kvlist
   in
@@ -231,7 +232,9 @@ let general_or_specific_tests =
            LocMap.(
              empty
              |> add (mk_loc (2, 8) (2, 9)) (LocSet.of_list [write_x])
-             |> add (mk_loc (2, 27) (2, 28)) (LocSet.of_list [write_x; refine_x])));
+             |> add (mk_loc (2, 27) (2, 28)) (LocSet.of_list [write_x; refine_x])
+           )
+          );
     "havoc_call"
     >:: mk_sources_test
           "let x = null;
@@ -245,7 +248,9 @@ x"
              empty
              |> add (mk_loc (3, 0) (3, 1)) (LocSet.of_list [write_x])
              |> add (mk_loc (4, 0) (4, 10)) (LocSet.of_list [write_invalidate])
-             |> add (mk_loc (5, 0) (5, 1)) (LocSet.of_list [write_x; mk_loc (2, 24) (2, 25)])));
+             |> add (mk_loc (5, 0) (5, 1)) (LocSet.of_list [write_x; mk_loc (2, 24) (2, 25)])
+           )
+          );
     "enter_function_var_scope"
     >:: mk_sources_test
           "let x = null;
@@ -264,7 +269,9 @@ x"
              |> add (mk_loc (3, 2) (3, 3)) (LocSet.of_list [write_x_null; write_x_42])
              |> add (mk_loc (6, 0) (6, 1)) (LocSet.of_list [write_x_null])
              |> add (mk_loc (7, 0) (7, 9)) (LocSet.of_list [write_new_scope])
-             |> add (mk_loc (8, 0) (8, 1)) (LocSet.of_list [write_x_null; write_x_42])));
+             |> add (mk_loc (8, 0) (8, 1)) (LocSet.of_list [write_x_null; write_x_42])
+           )
+          );
     "control_flow"
     >:: mk_sources_test
           "let x = null;
@@ -286,7 +293,9 @@ x"
              |> add (mk_loc (3, 2) (3, 3)) (LocSet.of_list [write_x; reassign_x])
              |> add (mk_loc (6, 2) (6, 3)) (LocSet.of_list [write_x])
              |> add (mk_loc (9, 2) (9, 11)) (LocSet.of_list [write_new_scope])
-             |> add (mk_loc (11, 0) (11, 1)) (LocSet.of_list [write_x; reassign_x])));
+             |> add (mk_loc (11, 0) (11, 1)) (LocSet.of_list [write_x; reassign_x])
+           )
+          );
   ]
 
 let tests = "env_builder" >::: tests @ general_or_specific_tests

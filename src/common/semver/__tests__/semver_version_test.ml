@@ -62,17 +62,20 @@ let tests =
                     (fun a ->
                       let a_str = to_string a in
                       assert_bool (a_str ^ " not equal to itself") (compare_precedence a a = 0))
-                    ordered );
+                    ordered
+                );
                 ( "build" >:: fun _ctxt ->
                   let a = v 1 0 0 [] [Int 1] in
                   let b = v 1 0 0 [] [Int 2] in
-                  assert_bool "1.0.0+1 should be = 1.0.0+2" (compare_precedence a b = 0) );
+                  assert_bool "1.0.0+1 should be = 1.0.0+2" (compare_precedence a b = 0)
+                );
               ];
          "compare"
          >::: [
                 ( "build" >:: fun _ctxt ->
                   let a = v 1 0 0 [] [Int 1] in
                   let b = v 1 0 0 [] [Int 2] in
-                  assert_bool "1.0.0+1 should NOT be = 1.0.0+2" (compare a b < 0) );
+                  assert_bool "1.0.0+1 should NOT be = 1.0.0+2" (compare a b < 0)
+                );
               ];
        ]

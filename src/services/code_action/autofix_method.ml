@@ -71,7 +71,9 @@ class mapper target =
           | Literal (_, { Literal.raw; _ }) -> raw = "constructor"
           | PrivateName _
           | Computed _ ->
-            false))
+            false
+        )
+      )
 
     method! class_element elem =
       let open Flow_ast in

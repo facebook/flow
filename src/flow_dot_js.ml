@@ -20,7 +20,8 @@ let error_of_parse_error source_file (loc, err) =
 let error_of_file_sig_error source_file e =
   File_sig.With_Loc.(
     match e with
-    | IndeterminateModuleType loc -> Error_message.EIndeterminateModuleType (ALoc.of_loc loc))
+    | IndeterminateModuleType loc -> Error_message.EIndeterminateModuleType (ALoc.of_loc loc)
+  )
   |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
   |> Flow_error.concretize_error loc_of_aloc
   |> Flow_error.make_error_printable
@@ -45,7 +46,9 @@ let parse_content file content =
           types = true;
           use_strict = false;
         }
+      
   in
+
   let (ast, parse_errors) =
     Parser_flow.program_file ~fail:false ~parse_options content (Some file)
   in
@@ -246,7 +249,8 @@ let infer_and_merge ~root filename ast file_sig =
         let reason = Reason.(mk_reason (RCustom mref) loc) in
         let module_t = Flow_js_utils.lookup_builtin_strict cx module_name reason in
         let (_, require_id) = Context.find_require cx loc in
-        Flow_js.resolve_id cx require_id module_t)
+        Flow_js.resolve_id cx require_id module_t
+    )
   in
   SMap.iter connect_requires File_sig.With_ALoc.(require_loc_map file_sig.module_sig);
   (* infer ast *)
@@ -368,7 +372,8 @@ let infer_type filename content line col : Loc.t * (string, string) result =
       (match result with
       | FailureNoMatch -> (Loc.none, Error "No match")
       | FailureUnparseable (loc, _, _) -> (loc, Error "Unparseable")
-      | Success (loc, t) -> (loc, Ok (Ty_printer.string_of_elt_single_line ~exact_by_default:true t))))
+      | Success (loc, t) -> (loc, Ok (Ty_printer.string_of_elt_single_line ~exact_by_default:true t)))
+    )
 
 let types_to_json types ~strip_root =
   Hh_json.(
@@ -384,9 +389,12 @@ let types_to_json types ~strip_root =
                  ("loc", json_of_loc ~strip_root ~offset_table:None loc)
                  :: Errors.deprecated_json_props_of_loc ~strip_root loc
                in
-               JSON_Object json_assoc)
+               JSON_Object json_assoc
+           )
       in
-      JSON_Array types_json))
+      JSON_Array types_json
+    )
+  )
 
 let dump_types js_file js_content =
   let filename = File_key.SourceFile (Js.to_string js_file) in

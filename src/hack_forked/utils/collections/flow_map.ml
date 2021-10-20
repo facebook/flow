@@ -226,7 +226,8 @@ let rec join l v d r =
     else
       create l v d r
   | ( Node { l = ll; v = lv; d = ld; r = lr; h = lh },
-      Node { l = rl; v = rv; d = rd; r = rr; h = rh } ) ->
+      Node { l = rl; v = rv; d = rd; r = rr; h = rh }
+    ) ->
     if lh > rh + 2 then
       bal ll lv ld (join lr v d r)
     else if rh > lh + 2 then
@@ -493,10 +494,11 @@ module Make (Ord : OrderedType) : S with type key = Ord.t = struct
       else
         find
           x
-          (if c < 0 then
+          ( if c < 0 then
             l
           else
-            r)
+            r
+          )
 
   let rec find_opt x = function
     | Empty -> None
@@ -513,10 +515,11 @@ module Make (Ord : OrderedType) : S with type key = Ord.t = struct
       else
         find_opt
           x
-          (if c < 0 then
+          ( if c < 0 then
             l
           else
-            r)
+            r
+          )
 
   let rec mem x = function
     | Empty -> false
@@ -526,10 +529,11 @@ module Make (Ord : OrderedType) : S with type key = Ord.t = struct
       c = 0
       || mem
            x
-           (if c < 0 then
+           ( if c < 0 then
              l
            else
-             r)
+             r
+           )
 
   let rec remove x tree =
     match tree with
@@ -720,7 +724,8 @@ module Make (Ord : OrderedType) : S with type key = Ord.t = struct
           | Some d2 -> f v d d2)
         s
     | ( Node { l = l1; v = v1; d = d1; r = r1; h = h1 },
-        Node { l = l2; v = v2; d = d2; r = r2; h = h2 } ) ->
+        Node { l = l2; v = v2; d = d2; r = r2; h = h2 }
+      ) ->
       if h1 >= h2 then
         let (l2, d2, r2) = split v1 s2 in
         let l = union f l1 l2 and r = union f r1 r2 in
@@ -838,7 +843,8 @@ module Make (Ord : OrderedType) : S with type key = Ord.t = struct
                   | None -> item
                   | Some old_value -> combine old_value item)
                 map_),
-            changed || new_key != key ))
+            changed || new_key != key
+          ))
         map
         (empty, false)
     in

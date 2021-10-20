@@ -32,7 +32,8 @@ let depgraph_subcommand =
           |> strip_root_flag
           |> flag "--out" (required string) ~doc:"Location to print the output file"
           |> flag "--types" no_arg ~doc:"Only consider type dependencies"
-          |> root_flag);
+          |> root_flag
+        );
     }
   in
   let main base_flags option_values strip_root outfile types_only path_opt () =
@@ -79,8 +80,8 @@ let command =
           empty
           |> anon
                "subcommand"
-               (required
-                  (command [("cycle", cycle_subcommand); ("dep-graph", depgraph_subcommand)])));
+               (required (command [("cycle", cycle_subcommand); ("dep-graph", depgraph_subcommand)]))
+        );
     }
   in
   let main (cmd, argv) () = CommandUtils.run_command cmd argv in

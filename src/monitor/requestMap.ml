@@ -22,20 +22,23 @@ let add ~request ~client =
       incr last_id;
       let request_id = Printf.sprintf "Request %d" !last_id in
       map := SMap.add request_id (request, client) !map;
-      Lwt.return request_id)
+      Lwt.return request_id
+  )
 
 let remove ~request_id =
   (* TODO(ljw): doesn't really need mutexes since it doesn't yield *)
   Lwt_mutex.with_lock mutex (fun () ->
       let ret = SMap.find_opt request_id !map in
       map := SMap.remove request_id !map;
-      Lwt.return ret)
+      Lwt.return ret
+  )
 
 let remove_all () =
   (* TODO(ljw): doesn't really need mutexes since it doesn't yield *)
   Lwt_mutex.with_lock mutex (fun () ->
       let ret = SMap.elements !map |> Base.List.map ~f:snd in
       map := SMap.empty;
-      Lwt.return ret)
+      Lwt.return ret
+  )
 
 let cardinal () = SMap.cardinal !map

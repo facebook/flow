@@ -106,14 +106,16 @@ end = struct
     WorkerCancel.with_no_cancellations (fun () ->
         Hh_logger.debug "Committing NameHeap";
         if not mutator.is_init then NameHeap.remove_old_batch !(mutator.changed_files);
-        currently_oldified_nameheap_modulenames := None);
+        currently_oldified_nameheap_modulenames := None
+    );
     Lwt.return_unit
 
   let rollback mutator =
     WorkerCancel.with_no_cancellations (fun () ->
         Hh_logger.debug "Rolling back NameHeap";
         if not mutator.is_init then NameHeap.revive_batch !(mutator.changed_files);
-        currently_oldified_nameheap_modulenames := None);
+        currently_oldified_nameheap_modulenames := None
+    );
     Lwt.return_unit
 
   let create transaction ~is_init =
@@ -124,7 +126,8 @@ end = struct
         let commit () = commit mutator in
         let rollback () = rollback mutator in
         Transaction.add ~singleton:"Commit_modules" ~commit ~rollback transaction;
-        mutator)
+        mutator
+    )
 
   let remove_and_replace mutator ~workers ~to_remove ~to_replace =
     (* During init we don't need to worry about oldifying, reviving, or removing old entries *)
@@ -174,20 +177,21 @@ end = struct
     WorkerCancel.with_no_cancellations (fun () ->
         Hh_logger.debug "Committing ResolvedRequiresHeap";
         active_files := Utils_js.FilenameSet.diff !active_files files;
-        ResolvedRequiresHeap.remove_old_batch files)
+        ResolvedRequiresHeap.remove_old_batch files
+    )
 
   let rollback files =
     WorkerCancel.with_no_cancellations (fun () ->
         Hh_logger.debug "Rolling back ResolvedRequiresHeap";
         active_files := Utils_js.FilenameSet.diff !active_files files;
-        ResolvedRequiresHeap.revive_batch files)
+        ResolvedRequiresHeap.revive_batch files
+    )
 
   let create transaction oldified_files =
     WorkerCancel.with_no_cancellations (fun () ->
         if
           not
-            (Utils_js.FilenameSet.is_empty
-               (Utils_js.FilenameSet.inter oldified_files !active_files))
+            (Utils_js.FilenameSet.is_empty (Utils_js.FilenameSet.inter oldified_files !active_files))
         then
           failwith "Multiple Resolved_requires_mutator's operating on the same files";
         active_files := Utils_js.FilenameSet.union oldified_files !active_files;
@@ -196,7 +200,8 @@ end = struct
         Transaction.add
           ~commit:(fun () -> Lwt.return (commit oldified_files))
           ~rollback:(fun () -> Lwt.return (rollback oldified_files))
-          transaction)
+          transaction
+    )
 
   (* This function runs on a worker process. Ideally, we'd assert that file is a member of
    * oldified_files, but for init and large rechecks this would involve sending a very large
@@ -227,14 +232,16 @@ end = struct
     WorkerCancel.with_no_cancellations (fun () ->
         Hh_logger.debug "Committing InfoHeap";
         InfoHeap.remove_old_batch oldified_files;
-        currently_oldified_infoheap_files := None);
+        currently_oldified_infoheap_files := None
+    );
     Lwt.return_unit
 
   let rollback oldified_files =
     WorkerCancel.with_no_cancellations (fun () ->
         Hh_logger.debug "Rolling back InfoHeap";
         InfoHeap.revive_batch oldified_files;
-        currently_oldified_infoheap_files := None);
+        currently_oldified_infoheap_files := None
+    );
     Lwt.return_unit
 
   let create transaction oldified_files =
@@ -243,7 +250,8 @@ end = struct
         InfoHeap.oldify_batch oldified_files;
         let commit () = commit oldified_files in
         let rollback () = rollback oldified_files in
-        Transaction.add ~singleton:"Introduce_files" ~commit ~rollback transaction)
+        Transaction.add ~singleton:"Introduce_files" ~commit ~rollback transaction
+    )
 
   (* Ideally we'd assert that file is in oldified_files, but passing through the oldified_files set
    * to the worker process which calls add_info is kind of expensive *)
@@ -292,7 +300,8 @@ end = struct
         match ResolvedRequiresHeap.get f with
         | Some resolved_requires -> resolved_requires
         | None ->
-          failwith (Printf.sprintf "resolved requires not found for file %s" (File_key.to_string f)))
+          failwith (Printf.sprintf "resolved requires not found for file %s" (File_key.to_string f))
+    )
 
   let get_info ~reader:_ = Expensive.wrap InfoHeap.get
 
@@ -350,7 +359,8 @@ module Reader : READER with type reader = State_reader.t = struct
         match resolved_requires with
         | Some resolved_requires -> resolved_requires
         | None ->
-          failwith (Printf.sprintf "resolved requires not found for file %s" (File_key.to_string f)))
+          failwith (Printf.sprintf "resolved requires not found for file %s" (File_key.to_string f))
+    )
 
   let get_info ~reader:_ ~audit f =
     if should_use_old_infoheap f then

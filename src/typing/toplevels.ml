@@ -83,7 +83,9 @@ module Toplevels
                      Declarator.(
                        function
                        | (_, { init = Some ((loc, _), _); _ }) -> warn_unreachable loc
-                       | _ -> ()))
+                       | _ -> ()
+                     )
+              )
             | (loc, _) when i > n -> warn_unreachable loc
             | _ -> ())
         stmts;
@@ -131,7 +133,9 @@ module DependencyOrdering : Ordering with type loc = ALoc.t = struct
                       cx
                       (Error_message.EDebugPrint
                          ( Reason.mk_reason (Reason.RCustom "statement") loc,
-                           "Dependency cycle detected" )))
+                           "Dependency cycle detected"
+                         )
+                      ))
                   set;
                 set
             in
@@ -151,7 +155,8 @@ module DependencyOrdering : Ordering with type loc = ALoc.t = struct
                 (ISet.fold
                    (fun j set_acc -> ALocSet.add (IMap.find j int_loc) set_acc)
                    set
-                   ALocSet.empty)
+                   ALocSet.empty
+                )
                 acc)
             order
             ALocMap.empty

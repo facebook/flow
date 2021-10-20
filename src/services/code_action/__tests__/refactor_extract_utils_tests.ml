@@ -156,7 +156,8 @@ let extract_tests =
           |> Js_layout_generator.statement_list ~opts:Js_layout_generator.default_opts
           |> List.map pretty_print
           |> String.concat ""
-          |> String.trim)
+          |> String.trim
+          )
     in
     let actual_extracted_expression =
       match extracted_expression with
@@ -167,7 +168,8 @@ let extract_tests =
             expression
             |> Js_layout_generator.expression ~opts:Js_layout_generator.default_opts
             |> pretty_print
-            |> String.trim )
+            |> String.trim
+          )
     in
     let expected_extracted_expression =
       match expected_expression with
@@ -184,7 +186,8 @@ let extract_tests =
             type_
             |> Js_layout_generator.type_ ~opts:Js_layout_generator.default_opts
             |> pretty_print
-            |> String.trim )
+            |> String.trim
+          )
     in
     let expected_extracted_type =
       match expected_type with
@@ -203,14 +206,18 @@ let extract_tests =
         (Base.Option.value_map ~default:"expression not allowed" ~f:(fun (points, e) ->
              (points |> List.map AstExtractor.show_constant_insertion_point |> String.concat ",")
              ^ "\n"
-             ^ e))
+             ^ e
+         )
+        )
       expected_extracted_expression
       actual_extracted_expression;
     assert_equal
       ~ctxt
       ~printer:
         (Base.Option.value_map ~default:"type not allowed" ~f:(fun (loc, t) ->
-             Loc.debug_to_string loc ^ ": " ^ t))
+             Loc.debug_to_string loc ^ ": " ^ t
+         )
+        )
       expected_extracted_type
       actual_extracted_type
   in
@@ -224,7 +231,8 @@ let extract_tests =
         console.log("I should not be selected");
       |}
       in
-      assert_extracted ~ctxt ~expected_statements:"const a = 3;" source (mk_loc (2, 8) (2, 20)) );
+      assert_extracted ~ctxt ~expected_statements:"const a = 3;" source (mk_loc (2, 8) (2, 20))
+    );
     (* Exactly select the first two statements. *)
     ( "extract_statements_linear_exact_multiple_statements" >:: fun ctxt ->
       let source =
@@ -238,7 +246,8 @@ let extract_tests =
 const a = 3;
 let b = 4;
       |} in
-      assert_extracted ~ctxt ~expected_statements source (mk_loc (2, 8) (3, 18)) );
+      assert_extracted ~ctxt ~expected_statements source (mk_loc (2, 8) (3, 18))
+    );
     (* Exactly select the first two statements, but with some whitespaces. *)
     ( "extract_statements_linear_multiple_statements_with_whitespaces" >:: fun ctxt ->
       let source =
@@ -252,7 +261,8 @@ let b = 4;
 const a = 3;
 let b = 4;
       |} in
-      assert_extracted ~ctxt ~expected_statements source (mk_loc (2, 0) (4, 0)) );
+      assert_extracted ~ctxt ~expected_statements source (mk_loc (2, 0) (4, 0))
+    );
     (* Partially select a statement is not alllowed. *)
     ( "extract_statements_linear_partial" >:: fun ctxt ->
       let source =
@@ -262,7 +272,8 @@ let b = 4;
         console.log("I should not be selected");
       |}
       in
-      assert_extracted ~ctxt source (mk_loc (2, 10) (3, 18)) );
+      assert_extracted ~ctxt source (mk_loc (2, 10) (3, 18))
+    );
     (* Exactly select the first 3 statements, where the second one is a nested block. *)
     ( "extract_statements_with_nested" >:: fun ctxt ->
       let source =
@@ -282,7 +293,8 @@ const a = 3;
 }
 foo(a + b);
       |} in
-      assert_extracted ~ctxt ~expected_statements source (mk_loc (2, 8) (6, 19)) );
+      assert_extracted ~ctxt ~expected_statements source (mk_loc (2, 8) (6, 19))
+    );
     (* Select statements from nested block *)
     ( "extract_statements_from_nested" >:: fun ctxt ->
       let source =
@@ -295,7 +307,8 @@ foo(a + b);
         console.log("I should not be selected");
       |}
       in
-      assert_extracted ~ctxt ~expected_statements:"let b = 4;" source (mk_loc (4, 0) (4, 20)) );
+      assert_extracted ~ctxt ~expected_statements:"let b = 4;" source (mk_loc (4, 0) (4, 20))
+    );
     (* Selecting part of the statements from a nested block is not allowed *)
     ( "extract_statements_from_nested_partial" >:: fun ctxt ->
       let source =
@@ -308,7 +321,8 @@ foo(a + b);
         console.log("I should not be selected");
       |}
       in
-      assert_extracted ~ctxt source (mk_loc (2, 8) (4, 20)) );
+      assert_extracted ~ctxt source (mk_loc (2, 8) (4, 20))
+    );
     ( "extract_expression_basic" >:: fun ctxt ->
       assert_extracted
         ~ctxt
@@ -320,9 +334,11 @@ foo(a + b);
                 statement_loc = mk_loc (1, 0) (1, 11);
               };
             ],
-            "1" )
+            "1"
+          )
         "const a = 1"
-        (mk_loc (1, 10) (1, 11)) );
+        (mk_loc (1, 10) (1, 11))
+    );
     (* When statement selection is empty, the chosen expression is good. *)
     ( "extract_expression_nested" >:: fun ctxt ->
       assert_extracted
@@ -335,9 +351,11 @@ foo(a + b);
                 statement_loc = mk_loc (1, 0) (1, 15);
               };
             ],
-            "1 + 1" )
+            "1 + 1"
+          )
         "const a = 1 + 1"
-        (mk_loc (1, 10) (1, 15)) );
+        (mk_loc (1, 10) (1, 15))
+    );
     (* When the selection is both an expression and a statement *)
     ( "extract_expression_statement_without_semicolon" >:: fun ctxt ->
       assert_extracted
@@ -351,19 +369,24 @@ foo(a + b);
                 statement_loc = mk_loc (1, 0) (1, 7);
               };
             ],
-            "\"hello\"" )
+            "\"hello\""
+          )
         "'hello'"
-        (mk_loc (1, 0) (1, 7)) );
+        (mk_loc (1, 0) (1, 7))
+    );
     (* Same as above case, but adding a semicolon makes the selection only statement. *)
     ( "extract_expression_statement_with_semicolon" >:: fun ctxt ->
-      assert_extracted ~ctxt ~expected_statements:"\"hello\";" "'hello';" (mk_loc (1, 0) (1, 8)) );
+      assert_extracted ~ctxt ~expected_statements:"\"hello\";" "'hello';" (mk_loc (1, 0) (1, 8))
+    );
     ( "extract_expression_ban_multiple" >:: fun ctxt ->
-      assert_extracted ~ctxt "const a = 1; const b = 2;" (mk_loc (1, 9) (1, 25)) );
+      assert_extracted ~ctxt "const a = 1; const b = 2;" (mk_loc (1, 9) (1, 25))
+    );
     (* Selecting `1;`.
        Although expression is contained, illegal selection of statement invalidates it. *)
     ( "extract_expression_ban_partial_statement" >:: fun ctxt ->
       assert_extracted ~ctxt "const a = 1; const b = 2;" (mk_loc (1, 8) (1, 11));
-      assert_extracted ~ctxt "const a = 1; const b = 2;" (mk_loc (1, 10) (1, 16)) );
+      assert_extracted ~ctxt "const a = 1; const b = 2;" (mk_loc (1, 10) (1, 16))
+    );
     (* Expression only exists in a class, not in any statement. *)
     ( "ban_expression_only_in_class" >:: fun ctxt ->
       assert_extracted
@@ -377,7 +400,8 @@ foo(a + b);
                 statement_loc = mk_loc (1, 0) (1, 17);
               };
             ],
-            "3" )
+            "3"
+          )
         (mk_loc (1, 14) (1, 15));
       assert_extracted
         ~ctxt
@@ -390,8 +414,10 @@ foo(a + b);
                 statement_loc = mk_loc (1, 0) (1, 33);
               };
             ],
-            "3" )
-        (mk_loc (1, 26) (1, 27)) );
+            "3"
+          )
+        (mk_loc (1, 26) (1, 27))
+    );
     (* Expression exists in a class, but also in a statement. *)
     ( "expression_in_class_statements" >:: fun ctxt ->
       assert_extracted
@@ -410,8 +436,10 @@ foo(a + b);
                 statement_loc = mk_loc (1, 0) (1, 34);
               };
             ],
-            "3" )
-        (mk_loc (1, 28) (1, 29)) );
+            "3"
+          )
+        (mk_loc (1, 28) (1, 29))
+    );
     (* Expression in many containing scopes with different names *)
     ( "expression_in_many_scopes" >:: fun ctxt ->
       let source =
@@ -446,8 +474,10 @@ foo(a + b);
                 statement_loc = mk_loc (2, 8) (8, 9);
               };
             ],
-            "3" )
-        (mk_loc (5, 24) (5, 25)) );
+            "3"
+          )
+        (mk_loc (5, 24) (5, 25))
+    );
     ( "extract_types" >:: fun ctxt ->
       assert_extracted
         ~ctxt
@@ -463,7 +493,8 @@ foo(a + b);
         ~ctxt
         ~expected_type:(mk_loc (1, 0) (1, 30), "[number, number]")
         "const a: [number, number] = 1;"
-        (mk_loc (1, 9) (1, 25)) );
+        (mk_loc (1, 9) (1, 25))
+    );
   ]
 
 let collect_function_method_inserting_points_tests =
@@ -500,7 +531,9 @@ function foo<A>() {
                ( function_name,
                  body_loc,
                  is_method,
-                 tparams_rev |> List.map (fun { Type.name; _ } -> name) ))
+                 tparams_rev |> List.map (fun { Type.name; _ } -> name)
+               )
+           )
       in
       let expected =
         [
@@ -518,10 +551,12 @@ function foo<A>() {
                  id
                  (Loc.debug_to_string loc)
                  (String.concat "," typeparams)
-                 is_method)
+                 is_method
+           )
         |> String.concat "\n"
       in
-      assert_equal ~ctxt ~printer expected actual );
+      assert_equal ~ctxt ~printer expected actual
+    );
   ]
 
 let find_closest_enclosing_class_tests =
@@ -564,19 +599,22 @@ export default class <A> {
   in
   [
     ( "without_enclosing_class_scope" >:: fun ctxt ->
-      assert_closest_enclosing_class_scope ~ctxt source (mk_loc (2, 0) (2, 17)) );
+      assert_closest_enclosing_class_scope ~ctxt source (mk_loc (2, 0) (2, 17))
+    );
     ( "mid_enclosing_class_scope" >:: fun ctxt ->
       assert_closest_enclosing_class_scope
         ~ctxt
         ~expected:(None, mk_loc (3, 25) (12, 1), ["A"])
         source
-        (mk_loc (5, 4) (10, 5)) );
+        (mk_loc (5, 4) (10, 5))
+    );
     ( "inner_most_enclosing_class_scope" >:: fun ctxt ->
       assert_closest_enclosing_class_scope
         ~ctxt
         ~expected:(Some "Level2", mk_loc (6, 20) (10, 5), ["B"; "A"])
         source
-        (mk_loc (8, 8) (8, 25)) );
+        (mk_loc (8, 8) (8, 25))
+    );
   ]
 
 let collect_relevant_defs_with_scope_tests =
@@ -598,7 +636,8 @@ let collect_relevant_defs_with_scope_tests =
       defs_with_scopes_of_local_uses
       |> List.map (fun ({ Scope_api.Def.actual_name; _ }, { Scope_api.Scope.defs; _ }) ->
              assert_bool "scope does not contain def" (SMap.mem actual_name defs);
-             actual_name)
+             actual_name
+         )
       |> List.sort String.compare
     in
     let actual_vars_with_shadowed_local_reassignments =
@@ -630,7 +669,8 @@ let collect_relevant_defs_with_scope_tests =
         ~expected_defs_of_local_uses:["a"; "b"]
         ~expected_vars_with_shadowed_local_reassignments:[]
         source
-        (mk_loc (4, 8) (4, 27)) );
+        (mk_loc (4, 8) (4, 27))
+    );
     ( "used_defs_in_function" >:: fun ctxt ->
       let source =
         {|
@@ -647,7 +687,8 @@ let collect_relevant_defs_with_scope_tests =
         ~expected_defs_of_local_uses:["a"; "b"]
         ~expected_vars_with_shadowed_local_reassignments:[]
         source
-        (mk_loc (5, 10) (5, 23)) );
+        (mk_loc (5, 10) (5, 23))
+    );
     ( "used_defs_in_many_scopes" >:: fun ctxt ->
       let source =
         {|
@@ -673,7 +714,8 @@ let collect_relevant_defs_with_scope_tests =
         ~expected_defs_of_local_uses:["a"; "b"; "c"; "d"; "e"]
         ~expected_vars_with_shadowed_local_reassignments:[]
         source
-        (mk_loc (10, 16) (10, 49)) );
+        (mk_loc (10, 16) (10, 49))
+    );
     ( "basic_def_with_shadowed_local_reassignment" >:: fun ctxt ->
       let source =
         {|
@@ -687,7 +729,8 @@ let collect_relevant_defs_with_scope_tests =
         ~expected_defs_of_local_uses:["a"]
         ~expected_vars_with_shadowed_local_reassignments:["a"]
         source
-        (mk_loc (3, 8) (3, 26)) );
+        (mk_loc (3, 8) (3, 26))
+    );
     ( "basic_def_without_shadowed_local_reassignment" >:: fun ctxt ->
       let source =
         {|
@@ -701,7 +744,8 @@ let collect_relevant_defs_with_scope_tests =
         ~expected_defs_of_local_uses:["a"]
         ~expected_vars_with_shadowed_local_reassignments:[]
         source
-        (mk_loc (2, 8) (3, 26)) );
+        (mk_loc (2, 8) (3, 26))
+    );
   ]
 
 let undefined_variables_after_extraction_tests =
@@ -740,7 +784,8 @@ let undefined_variables_after_extraction_tests =
         ~expected:[]
         ~source
         ~new_function_target_scope_loc:None
-        ~extracted_loc:(mk_loc (4, 2) (4, 28)) );
+        ~extracted_loc:(mk_loc (4, 2) (4, 28))
+    );
     ( "basic_function_extract_to_toplevel" >:: fun ctxt ->
       let source =
         {|
@@ -757,7 +802,8 @@ let undefined_variables_after_extraction_tests =
         ~expected:["c"]
         ~source
         ~new_function_target_scope_loc:None
-        ~extracted_loc:(mk_loc (6, 10) (6, 29)) );
+        ~extracted_loc:(mk_loc (6, 10) (6, 29))
+    );
     ( "extract_use_of_toplevel_function_parameter_to_toplevel" >:: fun ctxt ->
       let source =
         {|
@@ -771,7 +817,8 @@ let undefined_variables_after_extraction_tests =
         ~expected:["a"]
         ~source
         ~new_function_target_scope_loc:None
-        ~extracted_loc:(mk_loc (3, 10) (3, 25)) );
+        ~extracted_loc:(mk_loc (3, 10) (3, 25))
+    );
     ( "basic_function_extract_to_function" >:: fun ctxt ->
       let source =
         {|
@@ -788,7 +835,8 @@ let undefined_variables_after_extraction_tests =
         ~expected:[]
         ~source
         ~new_function_target_scope_loc:(Some (mk_loc (4, 24) (7, 9)))
-        ~extracted_loc:(mk_loc (6, 10) (6, 29)) );
+        ~extracted_loc:(mk_loc (6, 10) (6, 29))
+    );
     ( "deeply_nested_extract_to_inner_function" >:: fun ctxt ->
       let source =
         {|
@@ -815,7 +863,8 @@ let undefined_variables_after_extraction_tests =
         ~expected:["f"; "level3"]
         ~source
         ~new_function_target_scope_loc:(Some (mk_loc (6, 28) (14, 11)))
-        ~extracted_loc:(mk_loc (11, 16) (11, 63)) );
+        ~extracted_loc:(mk_loc (11, 16) (11, 63))
+    );
   ]
 
 let escaping_locally_defined_variables_tests =
@@ -853,7 +902,8 @@ let escaping_locally_defined_variables_tests =
         ~expected_variables:[]
         ~expected_has_external_writes:false
         source
-        (mk_loc (2, 8) (4, 20)) );
+        (mk_loc (2, 8) (4, 20))
+    );
     ( "all_escaping" >:: fun ctxt ->
       let source =
         {|
@@ -869,7 +919,8 @@ let escaping_locally_defined_variables_tests =
         ~expected_variables:["a"; "b"]
         ~expected_has_external_writes:false
         source
-        (mk_loc (2, 8) (4, 20)) );
+        (mk_loc (2, 8) (4, 20))
+    );
     ( "escaping_with_hoisting" >:: fun ctxt ->
       let source =
         {|
@@ -885,7 +936,8 @@ let escaping_locally_defined_variables_tests =
         ~expected_variables:["test"]
         ~expected_has_external_writes:false
         source
-        (mk_loc (3, 8) (5, 37)) );
+        (mk_loc (3, 8) (5, 37))
+    );
     ( "escaping_with_hoisting_in_function" >:: fun ctxt ->
       let source =
         {|
@@ -903,7 +955,8 @@ let escaping_locally_defined_variables_tests =
         ~expected_variables:["test"]
         ~expected_has_external_writes:false
         source
-        (mk_loc (4, 10) (6, 39)) );
+        (mk_loc (4, 10) (6, 39))
+    );
     ( "escaping_with_shadowing" >:: fun ctxt ->
       let source =
         {|
@@ -916,7 +969,8 @@ let escaping_locally_defined_variables_tests =
         ~expected_variables:[]
         ~expected_has_external_writes:false
         source
-        (mk_loc (2, 8) (2, 20)) );
+        (mk_loc (2, 8) (2, 20))
+    );
     ( "escaping_with_hoising_shadowing_nested_scopes" >:: fun ctxt ->
       let source =
         {|
@@ -941,7 +995,8 @@ let escaping_locally_defined_variables_tests =
         ~expected_variables:["c"]
         ~expected_has_external_writes:false
         source
-        (mk_loc (4, 22) (6, 26)) );
+        (mk_loc (4, 22) (6, 26))
+    );
     ( "escaping_with_external_assignments" >:: fun ctxt ->
       let source =
         {|
@@ -955,7 +1010,8 @@ let escaping_locally_defined_variables_tests =
         ~expected_variables:["a"; "b"]
         ~expected_has_external_writes:true
         source
-        (mk_loc (2, 8) (2, 37)) );
+        (mk_loc (2, 8) (2, 37))
+    );
   ]
 
 let type_synthesizer_tests =
@@ -1046,7 +1102,8 @@ let type_synthesizer_tests =
         ~ctxt
         ~printer:Base.Fn.id
         "<missing>"
-        (loc_of_missing |> type_synthesizer |> pretty_print_type type_param_synthesizer) );
+        (loc_of_missing |> type_synthesizer |> pretty_print_type type_param_synthesizer)
+    );
   ]
 
 let tests =

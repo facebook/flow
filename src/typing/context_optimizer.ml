@@ -13,7 +13,8 @@ let merge_trust_var constr =
   Trust_constraint.(
     match constr with
     | TrustResolved t -> t
-    | TrustUnresolved bound -> get_trust bound |> Trust.fix)
+    | TrustUnresolved bound -> get_trust bound |> Trust.fix
+  )
 
 (****************** signature contexts *********************)
 

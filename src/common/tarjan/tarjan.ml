@@ -77,7 +77,8 @@ struct
              strongconnect state w;
              v.lowlink <- min v.lowlink w.lowlink
            ) else if w.on_stack then
-             v.lowlink <- min v.lowlink w.index);
+             v.lowlink <- min v.lowlink w.index
+       );
 
     if v.lowlink = v.index then
       (* strongly connected component *)
@@ -113,5 +114,6 @@ struct
         (* Show cycles, which are components with more than one node. *)
         if Nel.length mc > 1 then
           let nodes = mc |> Nel.to_list |> Base.List.map ~f:N.to_string |> String.concat "\n\t" in
-          Printf.ksprintf prerr_endline "cycle detected among the following nodes:\n\t%s" nodes)
+          Printf.ksprintf prerr_endline "cycle detected among the following nodes:\n\t%s" nodes
+    )
 end

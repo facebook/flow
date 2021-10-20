@@ -28,7 +28,8 @@ module ImplicitTypeArgument = struct
       RTypeParam
         ( typeparam.name,
           (desc_of_reason reason_op, loc_op),
-          (desc_of_reason reason_tapp, def_aloc_of_reason reason_tapp) )
+          (desc_of_reason reason_tapp, def_aloc_of_reason reason_tapp)
+        )
     in
     let reason = mk_reason desc (def_aloc_of_reason typeparam.reason) in
     let reason = repos_reason loc_op reason in
@@ -138,7 +139,9 @@ end = struct
       (string_of_desc_of_t c)
       (string_of_list tss "," (fun ts ->
            let ts = RootSet.elements ts in
-           spf "[%s]" (string_of_list ts ";" string_of_desc_of_root)))
+           spf "[%s]" (string_of_list ts ";" string_of_desc_of_root)
+       )
+      )
 
   let _dump_stack () = string_of_list !stack "\n" show_entry
 
@@ -176,7 +179,8 @@ end = struct
       let loop =
         !stack
         |> List.exists (fun (prev_c, prev_tss) ->
-               c = prev_c && possibly_expanding_targs prev_tss tss)
+               c = prev_c && possibly_expanding_targs prev_tss tss
+           )
       in
       if loop then
         false

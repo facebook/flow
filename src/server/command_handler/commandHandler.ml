@@ -77,7 +77,8 @@ let file_input_of_text_document_identifier ~client t =
 
 let file_input_of_text_document_identifier_opt ~client_id t =
   Base.Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
-      file_input_of_text_document_identifier ~client t)
+      file_input_of_text_document_identifier ~client t
+  )
 
 let file_input_of_text_document_position ~client t =
   let { Lsp.TextDocumentPositionParams.textDocument; _ } = t in
@@ -85,7 +86,8 @@ let file_input_of_text_document_position ~client t =
 
 let file_input_of_text_document_position_opt ~client_id t =
   Base.Option.map (Persistent_connection.get_client client_id) ~f:(fun client ->
-      file_input_of_text_document_position ~client t)
+      file_input_of_text_document_position ~client t
+  )
 
 let file_key_of_file_input ~options file_input =
   let file_options = Options.file_options options in
@@ -162,12 +164,14 @@ let autocomplete
         (("errors", JSON_Array [JSON_String err_str])
          ::
          ("result", JSON_String "FAILURE_CHECK_CONTENTS")
-         :: ("count", JSON_Number "0") :: initial_json_props)
+         :: ("count", JSON_Number "0") :: initial_json_props
+        )
     in
     Lwt.return (Error err_str, Some json_data_to_log)
   | Ok
       ( Parse_artifacts { docblock = info; file_sig; ast; parse_errors; _ },
-        Typecheck_artifacts { cx; typed_ast } ) ->
+        Typecheck_artifacts { cx; typed_ast }
+      ) ->
     Profiling_js.with_timer_lwt profiling ~timer:"GetResults" ~f:(fun () ->
         try_with_json2 (fun () ->
             let open AutocompleteService_js in
@@ -192,7 +196,8 @@ let autocomplete
               ( "token",
                 match token_opt with
                 | None -> Hh_json.JSON_Null
-                | Some token -> Hh_json.JSON_String token )
+                | Some token -> Hh_json.JSON_String token
+              )
               :: initial_json_props
             in
             let (response, json_props_to_log) =
@@ -210,7 +215,8 @@ let autocomplete
                   Base.List.exists
                     items
                     ~f:(fun ServerProt.Response.Completion.{ documentation; _ } ->
-                      Base.Option.is_some documentation)
+                      Base.Option.is_some documentation
+                  )
                 in
                 ( Ok (token_opt, result),
                   ("result", JSON_String result_string)
@@ -220,21 +226,26 @@ let autocomplete
                   ("errors", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) errors_to_log))
                   ::
                   ("documentation", JSON_Bool at_least_one_result_has_documentation)
-                  :: json_props_to_log )
+                  :: json_props_to_log
+                )
               | AcEmpty reason ->
                 ( Ok
                     (token_opt, { ServerProt.Response.Completion.items = []; is_incomplete = false }),
                   ("result", JSON_String "SUCCESS")
                   ::
                   ("count", JSON_Number "0")
-                  :: ("empty_reason", JSON_String reason) :: json_props_to_log )
+                  :: ("empty_reason", JSON_String reason) :: json_props_to_log
+                )
               | AcFatalError error ->
                 ( Error error,
                   ("result", JSON_String "FAILURE")
-                  :: ("errors", JSON_Array [JSON_String error]) :: json_props_to_log )
+                  :: ("errors", JSON_Array [JSON_String error]) :: json_props_to_log
+                )
             in
             let json_props_to_log = fold_json_of_parse_errors parse_errors json_props_to_log in
-            Lwt.return (response, Some (Hh_json.JSON_Object json_props_to_log))))
+            Lwt.return (response, Some (Hh_json.JSON_Object json_props_to_log))
+        )
+    )
 
 let check_file ~options ~env ~profiling ~force file_input =
   let file = file_key_of_file_input ~options file_input in
@@ -285,14 +296,21 @@ let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, lin
                 ( Ok loc,
                   Some
                     (("result", Hh_json.JSON_String "PARTIAL_FAILURE")
-                     :: ("error", Hh_json.JSON_String msg) :: json_props) )
+                     :: ("error", Hh_json.JSON_String msg) :: json_props
+                    )
+                )
               | Bad_loc ->
                 (Ok Loc.none, Some (("result", Hh_json.JSON_String "BAD_LOC") :: json_props))
               | Def_error msg ->
                 ( Error msg,
                   Some
                     (("result", Hh_json.JSON_String "FAILURE")
-                     :: ("error", Hh_json.JSON_String msg) :: json_props) ) )))
+                     :: ("error", Hh_json.JSON_String msg) :: json_props
+                    )
+                )
+            )
+      )
+  )
 
 type infer_type_input = {
   file_input: File_input.t;
@@ -348,8 +366,9 @@ let infer_type
               let json_props = add_cache_hit_data_to_json [] did_hit_cache in
               Lwt.return (Error (err_str, Some (Hh_json.JSON_Object json_props)))
             | Ok
-                ((Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) as
-                check_result) ->
+                ( (Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) as
+                check_result
+                ) ->
               let ((loc, ty), type_at_pos_json_props) =
                 Type_info_service.type_at_pos
                   ~cx
@@ -389,7 +408,8 @@ let infer_type
               in
               Lwt.return (Ok (response, Some (Hh_json.JSON_Object json_props)))
           in
-          Lwt.return result)
+          Lwt.return result
+      )
     in
     Lwt.return (split_result result)
 
@@ -421,7 +441,8 @@ let insert_type
           ~location_is_strict
           ~ambiguity_strategy
       in
-      Lwt.return result)
+      Lwt.return result
+  )
 
 let autofix_exports ~options ~env ~profiling ~input =
   let file_key = file_key_of_file_input ~options input in
@@ -430,7 +451,8 @@ let autofix_exports ~options ~env ~profiling ~input =
       let%lwt result =
         Code_action_service.autofix_exports ~options ~env ~profiling ~file_key ~file_content
       in
-      Lwt.return result)
+      Lwt.return result
+  )
 
 let collect_rage ~profiling ~options ~reader ~env ~files =
   let items = [] in
@@ -505,7 +527,8 @@ let collect_rage ~profiling ~options ~reader ~env ~files =
             in
             Printf.bprintf buf "%s: %s\n" file file_state)
           files;
-        ("file hash check", Buffer.contents buf) :: items)
+        ("file hash check", Buffer.contents buf) :: items
+    )
   in
   let items =
     let buf = Buffer.create 127 in
@@ -537,13 +560,17 @@ let dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructo
                 ~evaluate_type_destructors
                 cx
                 file_sig
-                typed_ast)))
+                typed_ast
+             )
+          )
+  )
 
 let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust file_input =
   if Options.trust_mode options = Options.NoTrust && trust then
     ( Error
         "Coverage cannot be run in trust mode if the server is not in trust mode. \n\nRestart the Flow server with --trust-mode=check' to enable this command.",
-      None )
+      None
+    )
     |> Lwt.return
   else
     let file = file_key_of_file_input ~options file_input in
@@ -573,9 +600,12 @@ let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust 
               Lwt.return
                 (Ok
                    ( Type_info_service.coverage ~cx ~typed_ast ~force ~trust file content,
-                     Some extra_data ))
+                     Some extra_data
+                   )
+                )
             | Error _parse_errors ->
-              Lwt.return (Error ("Couldn't parse file in parse_contents", Some extra_data)))
+              Lwt.return (Error ("Couldn't parse file in parse_contents", Some extra_data))
+        )
       in
       Lwt.return (split_result result)
 
@@ -660,10 +690,13 @@ let get_cycle ~env fn types_only =
                 if FilenameSet.is_empty subdeps then
                   acc
                 else
-                  FilenameMap.add f subdeps acc))
+                  FilenameMap.add f subdeps acc
+            ))
           FilenameMap.empty
           component
-        |> serialize_graph))
+        |> serialize_graph
+       )
+    )
 
 let suggest ~options ~env ~profiling file =
   let file_key = file_key_of_file_input ~options file in
@@ -675,8 +708,11 @@ let suggest ~options ~env ~profiling file =
         Lwt.return
           (Ok
              (ServerProt.Response.Suggest_Ok
-                { tc_errors; tc_warnings; suggest_warnings; file_patch }))
-      | Error errors -> Lwt.return (Ok (ServerProt.Response.Suggest_Error errors)))
+                { tc_errors; tc_warnings; suggest_warnings; file_patch }
+             )
+          )
+      | Error errors -> Lwt.return (Ok (ServerProt.Response.Suggest_Error errors))
+  )
 
 let find_module ~options ~reader (moduleref, filename) =
   let file = File_key.SourceFile filename in
@@ -805,7 +841,8 @@ let get_imports ~options ~reader module_names =
 let save_state ~saved_state_filename ~genv ~env ~profiling =
   try_with (fun () ->
       let%lwt () = Saved_state.save ~saved_state_filename ~genv ~env ~profiling in
-      Lwt.return (Ok ()))
+      Lwt.return (Ok ())
+  )
 
 let handle_autocomplete
     ~trigger_character ~reader ~options ~profiling ~env ~filename ~contents ~cursor ~imports =
@@ -872,13 +909,16 @@ let handle_find_refs ~reader ~genv ~filename ~line ~char ~global ~multi_hop ~pro
             Hh_json.JSON_String
               (match result with
               | Ok _ -> "SUCCESS"
-              | _ -> "FAILURE") )
+              | _ -> "FAILURE")
+          )
           ::
           ("global", Hh_json.JSON_Bool global)
           ::
           (match dep_count with
           | Some count -> [("deps", Hh_json.JSON_Number (string_of_int count))]
-          | None -> [])))
+          | None -> [])
+         )
+      )
   in
   Lwt.return (env, ServerProt.Response.FIND_REFS result, json_data)
 
@@ -903,7 +943,8 @@ let handle_force_recheck ~files ~focus ~profile ~profiling =
     push ~callback:(fun profiling -> Lwt.wakeup wakener profiling) fileset;
     let%lwt recheck_profiling = wait_for_recheck_thread in
     Base.Option.iter recheck_profiling ~f:(fun recheck_profiling ->
-        Profiling_js.merge ~from:recheck_profiling ~into:profiling);
+        Profiling_js.merge ~from:recheck_profiling ~into:profiling
+    );
     Lwt.return (ServerProt.Response.FORCE_RECHECK recheck_profiling, None)
   ) else (
     (* If we're not profiling the recheck, then respond immediately *)
@@ -1030,7 +1071,8 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
       | Error _ -> Lwt.return (Ok [])
       | Ok
           ( Parse_artifacts { file_sig; tolerable_errors; ast; parse_errors; _ },
-            Typecheck_artifacts { cx; typed_ast } ) ->
+            Typecheck_artifacts { cx; typed_ast }
+          ) ->
         let lsp_init_params = Persistent_connection.lsp_initialize_params client in
         Code_action_service.code_actions_at_loc
           ~options
@@ -1108,12 +1150,14 @@ type command_handler =
   | Handle_parallelizable of
       (profiling:Profiling_js.running ->
       env:ServerEnv.env ->
-      (ServerProt.Response.response * Hh_json.json option) Lwt.t)
+      (ServerProt.Response.response * Hh_json.json option) Lwt.t
+      )
   (* A command is nonparallelizable if it can't be handled immediately or parallelized. *)
   | Handle_nonparallelizable of
       (profiling:Profiling_js.running ->
       env:ServerEnv.env ->
-      (ServerEnv.env * ServerProt.Response.response * Hh_json.json option) Lwt.t)
+      (ServerEnv.env * ServerProt.Response.response * Hh_json.json option) Lwt.t
+      )
 
 (* This command is parallelizable, but we will treat it as nonparallelizable if we've been told
  * to wait_for_recheck by the .flowconfig or CLI *)
@@ -1218,7 +1262,8 @@ let get_ephemeral_handler genv command =
          ~omit_targ_defaults
          ~evaluate_type_destructors
          ~max_depth
-         ~verbose_normalizer)
+         ~verbose_normalizer
+      )
   | ServerProt.Request.RAGE { files } ->
     mk_parallelizable ~wait_for_recheck:None ~options (handle_rage ~reader ~options ~files)
   | ServerProt.Request.INSERT_TYPE
@@ -1243,14 +1288,16 @@ let get_ephemeral_handler genv command =
          ~expand_aliases
          ~omit_targ_defaults
          ~location_is_strict
-         ~ambiguity_strategy)
+         ~ambiguity_strategy
+      )
   | ServerProt.Request.STATUS { client_root; include_warnings } ->
     let genv =
       {
         genv with
         options =
           Options.
-            { options with opt_include_warnings = options.opt_include_warnings || include_warnings };
+            { options with opt_include_warnings = options.opt_include_warnings || include_warnings }
+          ;
       }
     in
     (* `flow status` is often used by users to get all the current errors. After talking to some
@@ -1279,7 +1326,8 @@ let wrap_ephemeral_handler handler ~genv ~request_id ~client_context ~workload ~
           {
             duration = Profiling_js.get_profiling_duration profiling;
             info = CommandSummary cmd_str;
-          })
+          }
+      )
     in
     MonitorRPC.status_update ~event;
     FlowEventLogger.ephemeral_command_success ~json_data ~client_context ~profiling;
@@ -1304,7 +1352,8 @@ let handle_ephemeral_immediately_unsafe ~genv ~request_id ~workload () =
   let should_print_summary = Options.should_profile genv.options in
   let%lwt (profiling, (response, json_data)) =
     Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary (fun profiling ->
-        workload ~profiling)
+        workload ~profiling
+    )
   in
   MonitorRPC.respond_to_request ~request_id ~response;
 
@@ -1366,7 +1415,8 @@ let rec handle_parallelizable_ephemeral_unsafe
           Hh_logger.fatal "flow server is not listening to the same directory. Exiting.";
           FlowExit.(exit Server_client_directory_mismatch)
         | _ -> ());
-        Lwt.return json_data)
+        Lwt.return json_data
+    )
   in
   Lwt.return ((), profiling, json_data)
 
@@ -1394,7 +1444,8 @@ let handle_nonparallelizable_ephemeral_unsafe ~genv ~request_id ~workload env =
         in
         MonitorRPC.respond_to_request ~request_id ~response;
 
-        Lwt.return (env, json_data))
+        Lwt.return (env, json_data)
+    )
   in
   Lwt.return (env, profiling, json_data)
 
@@ -1671,7 +1722,8 @@ let handle_persistent_infer_type
           [
             Base.Option.to_list ty
             |> List.map (fun elt ->
-                   MarkedCode ("flow", Ty_printer.string_of_elt elt ~exact_by_default));
+                   MarkedCode ("flow", Ty_printer.string_of_elt elt ~exact_by_default)
+               );
             Base.Option.to_list documentation |> List.map (fun doc -> MarkedString doc);
           ]
       with
@@ -1703,7 +1755,8 @@ let handle_persistent_code_action_request
     Lwt.return
       ( (),
         LspProt.LspFromServer (Some (ResponseMessage (id, CodeActionResult code_actions))),
-        with_data ~extra_data metadata )
+        with_data ~extra_data metadata
+      )
   | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
 
 let handle_persistent_autocomplete_lsp
@@ -1851,7 +1904,9 @@ let handle_persistent_signaturehelp_lsp
                   fun { func_documentation; param_tys; _ } ->
                     Base.Option.is_some func_documentation
                     || Base.List.exists param_tys ~f:(fun { param_documentation; _ } ->
-                           Base.Option.is_some param_documentation))
+                           Base.Option.is_some param_documentation
+                       )
+                )
         in
         let extra_data =
           Some (Hh_json.JSON_Object [("documentation", Hh_json.JSON_Bool has_any_documentation)])
@@ -1873,8 +1928,10 @@ let handle_persistent_document_highlight
              Hh_json.JSON_String
                (match result with
                | Ok _ -> "SUCCESS"
-               | _ -> "FAILURE") );
-         ])
+               | _ -> "FAILURE")
+           );
+         ]
+      )
   in
   let metadata = with_data ~extra_data metadata in
   match result with
@@ -1936,7 +1993,8 @@ let check_that_we_care_about_this_file =
     else
       let (_, docblock) =
         Parsing_service_js.(
-          parse_docblock docblock_max_tokens (File_key.SourceFile file_path) content)
+          parse_docblock docblock_max_tokens (File_key.SourceFile file_path) content
+        )
       in
       if Docblock.is_flow docblock then
         Ok ()
@@ -2028,7 +2086,8 @@ let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~clien
             None
           | Coverage_response.Uncovered
           | Coverage_response.Empty ->
-            Some loc)
+            Some loc
+      )
     in
     (* Imagine a tree of uncovered spans based on range inclusion. *)
     (* This sorted list is a pre-order flattening of that tree. *)
@@ -2085,13 +2144,16 @@ let handle_persistent_find_refs ~reader ~genv ~id ~params ~metadata ~client ~pro
             Hh_json.JSON_String
               (match result with
               | Ok _ -> "SUCCESS"
-              | _ -> "FAILURE") )
+              | _ -> "FAILURE")
+          )
           ::
           ("global", Hh_json.JSON_Bool true)
           ::
           (match dep_count with
           | Some count -> [("deps", Hh_json.JSON_Number (string_of_int count))]
-          | None -> [])))
+          | None -> [])
+         )
+      )
   in
   let metadata = with_data ~extra_data metadata in
   match result with
@@ -2099,7 +2161,8 @@ let handle_persistent_find_refs ~reader ~genv ~id ~params ~metadata ~client ~pro
     let lsp_locs =
       Base.List.fold locs ~init:(Ok []) ~f:(fun acc loc ->
           let location = Flow_lsp_conversions.loc_to_lsp loc in
-          Base.Result.combine location acc ~ok:List.cons ~err:(fun e _ -> e))
+          Base.Result.combine location acc ~ok:List.cons ~err:(fun e _ -> e)
+      )
     in
     begin
       match lsp_locs with
@@ -2301,8 +2364,11 @@ let handle_live_errors_request =
                      live_errors_failure_kind = Canceled_error_response;
                      live_errors_failure_reason = "Subsumed by a later request";
                      live_errors_failure_uri = Lsp.DocumentUri.of_string uri;
-                   })),
-            metadata )
+                   }
+                )
+            ),
+            metadata
+          )
       else
         (* This is the most recent live errors request we've received for this file. All the
          * older ones have already been responded to or canceled *)
@@ -2322,8 +2388,11 @@ let handle_live_errors_request =
                          live_errors_failure_reason =
                            spf "Cannot get live errors for %s: File not open" file_path;
                          live_errors_failure_uri = Lsp.DocumentUri.of_string uri;
-                       })),
-                metadata )
+                       }
+                    )
+                ),
+                metadata
+              )
           | File_input.FileContent (_, content) ->
             let%lwt (live_errors, live_warnings, metadata) =
               match check_that_we_care_about_this_file ~options ~env ~file_path ~content with
@@ -2371,7 +2440,8 @@ let handle_live_errors_request =
                 Lwt.return
                   ( Errors.ConcreteLocPrintableErrorSet.empty,
                     Errors.ConcreteLocPrintableErrorSet.empty,
-                    metadata )
+                    metadata
+                  )
             in
             let live_errors_uri = Lsp.DocumentUri.of_string uri in
             let live_diagnostics =
@@ -2384,7 +2454,8 @@ let handle_live_errors_request =
             Lwt.return
               ( (),
                 LspProt.LiveErrorsResponse (Ok { LspProt.live_diagnostics; live_errors_uri }),
-                metadata )
+                metadata
+              )
         in
         (* If we've successfully run and there isn't a more recent request for this URI,
          * then remove the entry from the map *)
@@ -2401,7 +2472,8 @@ type persistent_command_handler =
   | Handle_persistent_immediately of
       (client:Persistent_connection.single_client ->
       profiling:Profiling_js.running ->
-      unit persistent_handling_result Lwt.t)
+      unit persistent_handling_result Lwt.t
+      )
   (* A command is parallelizable if it passes four conditions
    *
    * 1. It is fast. Running it in parallel will block the current recheck, so it needs to be really
@@ -2416,13 +2488,15 @@ type persistent_command_handler =
       (client:Persistent_connection.single_client ->
       profiling:Profiling_js.running ->
       env:ServerEnv.env ->
-      unit persistent_handling_result Lwt.t)
+      unit persistent_handling_result Lwt.t
+      )
   (* A command is nonparallelizable if it can't be handled immediately or parallelized. *)
   | Handle_nonparallelizable_persistent of
       (client:Persistent_connection.single_client ->
       profiling:Profiling_js.running ->
       env:ServerEnv.env ->
-      ServerEnv.env persistent_handling_result Lwt.t)
+      ServerEnv.env persistent_handling_result Lwt.t
+      )
 
 (* This command is parallelizable, but we will treat it as nonparallelizable if we've been told
  * to wait_for_recheck by the .flowconfig *)
@@ -2586,8 +2660,7 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     in
     let metadata = with_data ~extra_data metadata in
     (match command with
-    | "log" ->
-      Handle_persistent_immediately (handle_persistent_log_command ~id ~arguments ~metadata)
+    | "log" -> Handle_persistent_immediately (handle_persistent_log_command ~id ~arguments ~metadata)
     | "source.addMissingImports" ->
       (match arguments with
       | Some [json] ->
@@ -2599,7 +2672,8 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
              ~options
              ~id
              ~metadata
-             ~textDocument)
+             ~textDocument
+          )
       | _ -> Handle_persistent_immediately (handle_persistent_malformed_command ~id ~metadata))
     | "source.organizeImports" ->
       (match arguments with
@@ -2632,7 +2706,8 @@ let wrap_persistent_handler
       client:Persistent_connection.single_client ->
       profiling:Profiling_js.running ->
       b ->
-      c persistent_handling_result Lwt.t)
+      c persistent_handling_result Lwt.t
+      )
     ~(genv : ServerEnv.genv)
     ~(client_id : LspProt.client_id)
     ~(request : LspProt.request_with_metadata)
@@ -2675,7 +2750,9 @@ let wrap_persistent_handler
               Lwt.return
                 ( default_ret,
                   LspProt.UncaughtException { request; exception_constructor; stack },
-                  metadata )))
+                  metadata
+                ))
+      )
     in
     (* we'll send this "Finishing_up" event only after sending the LSP response *)
     let event =
@@ -2684,7 +2761,8 @@ let wrap_persistent_handler
           {
             duration = Profiling_js.get_profiling_duration profiling;
             info = CommandSummary (LspProt.string_of_request request);
-          })
+          }
+      )
     in
     let server_profiling = Some profiling in
     let server_logging_context = Some (FlowEventLogger.get_context ()) in
@@ -2748,9 +2826,8 @@ let handle_nonparallelizable_persistent ~genv ~client_id ~request ~workload env 
     env
 
 let enqueue_persistent
-    (genv : ServerEnv.genv)
-    (client_id : LspProt.client_id)
-    (request : LspProt.request_with_metadata) : unit Lwt.t =
+    (genv : ServerEnv.genv) (client_id : LspProt.client_id) (request : LspProt.request_with_metadata)
+    : unit Lwt.t =
   let name = request |> fst |> LspProt.string_of_request in
   match get_persistent_handler ~genv ~client_id ~request with
   | Handle_persistent_immediately workload ->

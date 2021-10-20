@@ -30,10 +30,12 @@ module Src = struct
            [
              ("file", File.to_json file);
              ( "lengths",
-               JSON_Array (Base.List.map ~f:(fun n -> JSON_Number (string_of_int n)) lengths) );
+               JSON_Array (Base.List.map ~f:(fun n -> JSON_Number (string_of_int n)) lengths)
+             );
              ("endsInNewline", JSON_Bool endsInNewline);
              ("hasUnicodeOrTabs", JSON_Bool hasUnicodeOrTabs);
-           ])
+           ]
+        )
   end
 
   module ByteSpan = struct
@@ -163,7 +165,8 @@ module DeclarationInfo = struct
           ::
           (match documentation with
           | None -> []
-          | Some loc -> [("documentation", Documentation.to_json ~root ~write_root loc)]))
+          | Some loc -> [("documentation", Documentation.to_json ~root ~write_root loc)])
+         )
 end
 
 module LocalDeclarationReference = struct
@@ -222,7 +225,8 @@ module MemberDeclarationInfo = struct
           ::
           (match documentation with
           | None -> []
-          | Some loc -> [("documentation", Documentation.to_json ~root ~write_root loc)]))
+          | Some loc -> [("documentation", Documentation.to_json ~root ~write_root loc)])
+         )
 end
 
 module Export = struct
@@ -357,7 +361,8 @@ module TypeDeclarationInfo = struct
           ::
           (match documentation with
           | None -> []
-          | Some loc -> [("documentation", Documentation.to_json ~root ~write_root loc)]))
+          | Some loc -> [("documentation", Documentation.to_json ~root ~write_root loc)])
+         )
 end
 
 module TypeExport = struct

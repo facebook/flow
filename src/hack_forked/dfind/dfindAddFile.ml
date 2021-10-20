@@ -86,7 +86,8 @@ let is_excluded path =
         if Str.string_match re path 0 then
           raise Exit
         else
-          ());
+          ()
+    );
     false
   with
   | Exit -> true

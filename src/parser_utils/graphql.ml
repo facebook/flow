@@ -39,7 +39,8 @@ let extract_module_name quasi ~module_prefix =
         quasis = [(_, { Element.value = { Element.cooked; raw = _ }; tail = true })];
         expressions = [];
         comments = _;
-      } ) ->
+      }
+    ) ->
     (* Remove GraphQL line comments first. *)
     let comment_free = Str.global_replace comment_regexp "" cooked in
     if Str.string_match name_regexp comment_free 0 then

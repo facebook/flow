@@ -88,10 +88,8 @@ val commit_modules :
   (* parsed / unparsed files *)
   (Modulename.t * File_key.t option) list ->
   (* dirty modules *)
-  (File_key.t list
-  * (* providers *)
-    Modulename.Set.t
-  * (* changed modules *)
+  (File_key.t list * (* providers *)
+                     Modulename.Set.t * (* changed modules *)
   error list FilenameMap.t)
   Lwt.t
 

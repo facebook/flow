@@ -48,7 +48,8 @@ let rec is_require =
           arguments =
             (_, { ArgList.arguments = [Expression (_, Literal { value = String _; _ })]; _ });
           _;
-        } ) ->
+        }
+    ) ->
     true
   | _ -> false
 
@@ -106,7 +107,8 @@ let gather_declarations ast =
             let acc =
               match (id, init) with
               | ( (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (id_loc, _); _ }),
-                  Some (_, (Ast.Expression.ArrowFunction func | Ast.Expression.Function func)) ) ->
+                  Some (_, (Ast.Expression.ArrowFunction func | Ast.Expression.Function func))
+                ) ->
                 add_function acc id_loc func
               | _ -> acc
             in
@@ -233,7 +235,8 @@ class import_export_visitor ~cx ~scope_info ~declarations =
         | (Some import_star, Member.PropertyIdentifier (_, { Ast.Identifier.name = "default"; _ }))
         | ( Some import_star,
             Member.PropertyExpression
-              (_, Literal { Ast.Literal.value = Ast.Literal.String "default"; _ }) ) ->
+              (_, Literal { Ast.Literal.value = Ast.Literal.String "default"; _ })
+          ) ->
           this#add_bad_default_import_access_error expr_loc import_star;
           expr
         (* Do not recurse on valid use of module object *)
@@ -260,7 +263,8 @@ class import_export_visitor ~cx ~scope_info ~declarations =
                     | Literal (default_loc, { Ast.Literal.value = Ast.Literal.String "default"; _ })
                       );
                   _;
-                } ) ->
+                }
+              ) ->
             Some default_loc
           | _ -> None)
         properties
@@ -283,7 +287,8 @@ class import_export_visitor ~cx ~scope_info ~declarations =
           {
             id = (_, Ast.Pattern.Object object_pattern) as id;
             init = Some (_, Ast.Expression.Identifier (id_loc, _));
-          } ) ->
+          }
+        ) ->
         (match this#import_star_from_use id_loc with
         | Some import_star ->
           (* Error on attempt to access default export *)
@@ -401,7 +406,8 @@ class import_export_visitor ~cx ~scope_info ~declarations =
         | Some (ExportSpecifiers specifiers) ->
           List.iter
             (fun ( spec_loc,
-                   { ExportSpecifier.local = (id_loc, { Ast.Identifier.name; _ }); exported } ) ->
+                   { ExportSpecifier.local = (id_loc, { Ast.Identifier.name; _ }); exported }
+                 ) ->
               (* Check for renaming export to be default export *)
               begin
                 match exported with

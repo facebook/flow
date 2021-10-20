@@ -51,7 +51,8 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
                | Write r -> Reason.poly_loc_of_reason r = loc
                | Uninitialized -> false)
              write_locs)
-         values)
+         values
+      )
 end
 
 module With_Loc = Make (Loc_sig.LocS)

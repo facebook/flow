@@ -46,7 +46,8 @@ module InsertType = struct
                  ~doc:
                    ("Set how to resolve ambiguity in possible types ("
                    ^ ambiguity_strategies_list
-                   ^ ")")
+                   ^ ")"
+                   )
             |> flag
                  "--in-place"
                  no_arg
@@ -56,8 +57,10 @@ module InsertType = struct
                  "--omit-typearg-defaults"
                  no_arg
                  ~doc:"Omit type arguments when defaults exist and match the provided type argument"
-            |> anon "args" (required (list_of string)));
-      })
+            |> anon "args" (required (list_of string))
+          );
+      }
+    )
 
   let handle_error ?(code = Exit.Unknown_error) msg = Exit.(exit ~msg code)
 
@@ -181,7 +184,8 @@ module Exports = struct
                no_arg
                ~doc:"Overwrite the input file or file specified by the path flag"
           |> flag "--force" no_arg ~doc:"Write the results even if errors are encountered"
-          |> anon "file" (required string));
+          |> anon "file" (required string)
+        );
     }
 
   let handle_error ?(code = Exit.Unknown_error) msg = Exit.(exit ~msg code)
@@ -204,7 +208,8 @@ module Exports = struct
     Buffer.(
       let buff = create (avg_error_size * List.length errors) in
       List.fold_left (fun () -> add_string buff) () errors;
-      contents buff)
+      contents buff
+    )
 
   let handle_ok patch errors input in_place forced path source_path =
     let write_patch content =

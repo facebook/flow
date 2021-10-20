@@ -58,7 +58,8 @@ let exit ?error ~msg exit_status =
     Lwt.protected
       (let%lwt () = Lwt_unix.sleep 1.0 in
        FlowEventLogger.exit ?error (Some msg) (Exit.to_string exit_status);
-       Stdlib.exit (Exit.error_code exit_status))
+       Stdlib.exit (Exit.error_code exit_status)
+      )
   )
 
 type stop_reason =
@@ -180,10 +181,11 @@ end = struct
         Logger.info
           "File watcher reported %d file%s changed"
           count
-          (if count = 1 then
+          ( if count = 1 then
             ""
           else
-            "s");
+            "s"
+          );
         send_request ~msg:(MonitorProt.FileWatcherNotification { files; metadata; initial }) conn
       );
       Lwt.return_unit
@@ -269,9 +271,11 @@ end = struct
         Lwt.pick
           [
             (let%lwt (_, status) = LwtSysUtils.blocking_waitpid pid in
-             Lwt.return (Some status));
+             Lwt.return (Some status)
+            );
             (let%lwt () = Lwt_unix.sleep 0.75 in
-             Lwt.return None);
+             Lwt.return None
+            );
           ]
       in
       let%lwt () = ServerConnection.close_immediately connection in
@@ -563,7 +567,8 @@ module KeepAliveLoop = LwtLoop.Make (struct
         | Missing_flowlib
         | Server_start_failed _
         | Autostop (* is used by monitor to exit, not server *) ->
-          (true, None))
+          (true, None)
+      )
 
   let should_monitor_exit_with_signaled_server signal =
     (* While there are many scary things which can cause segfaults, in practice we've mostly seen
@@ -696,7 +701,8 @@ let setup_signal_handlers =
   in
   let handle_signal signal =
     Lwt.async (fun () ->
-        exit ~msg:(spf "Received %s signal" (PrintSignal.string_of_signal signal)) Exit.Interrupted)
+        exit ~msg:(spf "Received %s signal" (PrintSignal.string_of_signal signal)) Exit.Interrupted
+    )
   in
   let set_signal s =
     try Sys_utils.set_signal s (Sys.Signal_handle handle_signal) with

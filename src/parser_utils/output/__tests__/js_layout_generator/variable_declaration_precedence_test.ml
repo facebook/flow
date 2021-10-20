@@ -31,9 +31,13 @@ let test ctxt =
                        atom "=";
                        pretty_space;
                        wrap_in_parens (expression seq);
-                     ]);
+                     ]
+                  );
                 atom ";";
-              ])))
+              ]
+           )
+        )
+    )
     ast;
 
   let ast =
@@ -56,11 +60,14 @@ let test ctxt =
                        pretty_space;
                        atom "=";
                        pretty_space;
-                       loc
-                         (fused [loc (id "y"); pretty_space; atom "="; pretty_space; loc (id "z")]);
-                     ]);
+                       loc (fused [loc (id "y"); pretty_space; atom "="; pretty_space; loc (id "z")]);
+                     ]
+                  );
                 atom ";";
-              ])))
+              ]
+           )
+        )
+    )
     ast;
 
   let fn_ast = E.function_ () in
@@ -76,5 +83,8 @@ let test ctxt =
                 atom " ";
                 loc (fused [loc (id "x"); pretty_space; atom "="; pretty_space; expression fn_ast]);
                 atom ";";
-              ])))
+              ]
+           )
+        )
+    )
     ast

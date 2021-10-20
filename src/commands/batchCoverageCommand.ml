@@ -41,7 +41,8 @@ let spec =
              "--show-trust"
              no_arg
              ~doc:"EXPERIMENTAL: Whether to include trust information in output"
-        |> anon "FILE..." (list_of string));
+        |> anon "FILE..." (list_of string)
+      );
   }
 
 let output_results ~root ~strip_root ~json ~pretty ~show_all ~trust stats =
@@ -137,17 +138,21 @@ let output_results ~root ~strip_root ~json ~pretty ~show_all ~trust stats =
                 ([("files_in_directory", int_ num_files_in_dir)]
                 @ covered_expressions
                 @ [("total_expressions", int_ total)]
-                @ percentage) );
+                @ percentage
+                )
+            );
           ]
       in
-      print_json_endline ~pretty json_output)
+      print_json_endline ~pretty json_output
+    )
   else
     let (truncation_text, truncated_stats) =
       if num_files_in_dir > 50 && not show_all then
         ( spf
             "\nOnly showing coverage for 50 of %d files. To show more, rerun with --show-all.\n"
             num_files_in_dir,
-          Base.List.take stats 50 )
+          Base.List.take stats 50
+        )
       else
         ("", stats)
     in

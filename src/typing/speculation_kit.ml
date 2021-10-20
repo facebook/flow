@@ -235,7 +235,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
         ( tvar,
           intersection_preprocess_kit
             reason
-            (ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)) )
+            (ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u))
+        )
 
   (************************)
   (* Full type resolution *)
@@ -276,7 +277,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
               | None ->
                 Unsoundness.unresolved_any reason |> resolve_id cx trace ~use_op:unknown_use id
             end;
-            bindings)
+            bindings
+      )
       jobs
       []
 
@@ -606,7 +608,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
       cx
       ~trace
       (Error_message.ESpeculationAmbiguous
-         { reason = case_r; prev_case = (prev_i, prev_case); case = (i, case); cases = rs })
+         { reason = case_r; prev_case = (prev_i, prev_case); case = (i, case); cases = rs }
+      )
 
   and trials_of_spec = function
     | UnionCases (use_op, l, _rep, us) ->
@@ -659,7 +662,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
               ( StrT (Literal _)
               | NumT (Literal _)
               | BoolT (Some _)
-              | SingletonStrT _ | SingletonNumT _ | SingletonBoolT _ | VoidT | NullT ) ) ->
+              | SingletonStrT _ | SingletonNumT _ | SingletonBoolT _ | VoidT | NullT )
+            ) ->
           shortcut_enum cx trace reason_op use_op l rep
         (* Types that are definitely incompatible with enums, after the above case. *)
         | DefT
@@ -667,7 +671,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
               _,
               ( NumT _ | StrT _ | MixedT _ | SymbolT | FunT _ | ObjT _ | ArrT _ | ClassT _
               | InstanceT _ | CharSetT _ | TypeT _ | PolyT _ | ReactAbstractComponentT _ | EnumT _
-              | EnumObjectT _ ) )
+              | EnumObjectT _ )
+            )
           when Base.Option.is_some (UnionRep.check_enum rep) ->
           add_output
             cx
@@ -678,7 +683,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
                  reason_upper =
                    UnionRep.specialized_reason ~reason_of_t:TypeUtil.reason_of_t reason_op rep;
                  use_op;
-               });
+               }
+            );
           true
         | DefT (_, _, ObjT _)
         | ExactT (_, DefT (_, _, ObjT _)) ->
@@ -747,5 +753,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
             rec_unify cx trace t1 t2 ~use_op:(replace_speculation_root_use_op use_op' use_op))
         | (_, Speculation_state.ErrorAction msg) -> add_output cx ~trace msg
         | (_, Speculation_state.UnsealedObjectProperty (flds, s, up)) ->
-          Context.set_prop cx flds s up)
+          Context.set_prop cx flds s up
+        )
 end

@@ -133,7 +133,8 @@ let create_persistent_connection ~client_fd ~close ~lsp_init_params =
         ~msg:LspProt.(NotificationFromServer (Please_hold (StatusStream.get_status ())))
         conn;
       let%lwt () = PersistentStatusLoop.run ~cancel_condition:ExitSignal.signal conn in
-      Lwt.return_unit);
+      Lwt.return_unit
+  );
 
   Lwt.return ()
 
@@ -185,7 +186,8 @@ let perform_handshake_and_get_client_handshake ~client_fd =
       let server1 = { server_build_id; server_bin; server_intent; server_version } in
       let wire : server_handshake_wire =
         ( server1 |> monitor_to_client_1__to_json |> Hh_json.json_to_string,
-          Base.Option.map server2 ~f:(fun server2 -> Marshal.to_string server2 []) )
+          Base.Option.map server2 ~f:(fun server2 -> Marshal.to_string server2 [])
+        )
       in
       let%lwt _ = Marshal_tools_lwt.to_fd_with_preamble client_fd wire in
       Lwt.return_unit
@@ -247,7 +249,8 @@ let perform_handshake_and_get_client_handshake ~client_fd =
     else
       let client = Base.Option.value_exn client in
       let%lwt () = respond Server_will_continue (Some Server_ready) in
-      Lwt.return (Some client))
+      Lwt.return (Some client)
+  )
 
 let catch close exn =
   (* We catch all exceptions, since one bad connection shouldn't kill the whole monitor *)
@@ -324,7 +327,8 @@ module MonitorSocketAcceptorLoop = SocketAcceptorLoop (struct
         | Some { client_type = Ephemeral; _ } -> create_ephemeral_connection ~client_fd ~close
         | Some { client_type = Persistent { lsp_init_params }; _ } ->
           create_persistent_connection ~client_fd ~close ~lsp_init_params
-        | None -> close_without_autostop ())
+        | None -> close_without_autostop ()
+      )
     with
     | exn -> catch close_without_autostop exn
 

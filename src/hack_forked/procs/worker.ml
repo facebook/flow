@@ -100,7 +100,8 @@ let worker_main ic oc =
     let len =
       Measure.time "worker_send_response" (fun () ->
           try Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd data with
-          | Unix.Unix_error (Unix.EPIPE, _, _) -> raise Connection_closed)
+          | Unix.Unix_error (Unix.EPIPE, _, _) -> raise Connection_closed
+      )
     in
     if len > 30 * 1024 * 1024 (* 30 MB *) then (
       Hh_logger.log
@@ -125,7 +126,8 @@ let worker_main ic oc =
       let (Request do_process) =
         Measure.time "worker_read_request" (fun () ->
             try Marshal_tools.from_fd_with_preamble infd with
-            | End_of_file -> raise Connection_closed)
+            | End_of_file -> raise Connection_closed
+        )
       in
       WorkerCancel.set_on_worker_cancelled (fun () -> on_job_cancelled outfd);
       let tm = Unix.times () in

@@ -26,7 +26,8 @@ let tests =
                   List.iter
                     (fun (range, version, satisfies) ->
                       assert_equal ~ctxt satisfies (Semver.satisfies range version))
-                    cases );
+                    cases
+                );
               ];
          Semver_parser_test.tests;
          Semver_range_test.tests;

@@ -132,7 +132,8 @@ let offset table pos =
     else
       (* lines are 1-indexed, columns are zero-indexed *)
       let line_table = lookup table (pos.line - 1) pos "line" in
-      lookup line_table pos.column pos "column")
+      lookup line_table pos.column pos "column"
+  )
 
 let debug_string table =
   let buf = Buffer.create 4096 in

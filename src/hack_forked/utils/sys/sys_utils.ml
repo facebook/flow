@@ -170,11 +170,13 @@ let parse_path_list (paths : string list) : string list =
         let path = String_utils.lstrip path "@" in
         cat path |> split_lines
       else
-        [path])
+        [path]
+  )
   |> List.map ~f:(fun path ->
          match realpath path with
          | Some path -> path
-         | None -> failwith (Printf.sprintf "Invalid path: %s" path))
+         | None -> failwith (Printf.sprintf "Invalid path: %s" path)
+     )
 
 let rm_dir_tree ?(skip_mocking = false) =
   if skip_mocking then
@@ -371,7 +373,8 @@ let mkdir_no_fail dir =
       (* Don't set sticky bit since the socket opening code wants to remove any
        * old sockets it finds, which may be owned by a different user. *)
       try Unix.mkdir dir 0o777 with
-      | Unix.Unix_error (Unix.EEXIST, _, _) -> ())
+      | Unix.Unix_error (Unix.EEXIST, _, _) -> ()
+  )
 
 let unlink_no_fail fn =
   try Unix.unlink fn with
@@ -440,7 +443,8 @@ let make_link_of_timestamped linkname =
     let filename = Filename.concat dir (Printf.sprintf "%s-%s.%s" base time_str ext) in
     unlink_no_fail linkname;
     symlink filename linkname;
-    filename)
+    filename
+  )
 
 let setsid =
   (* Not implemented on Windows. Let's just return the pid *)
@@ -597,7 +601,8 @@ let find_oom_in_dmesg_output pid name lines =
         let pid_s = Str.matched_group 2 line in
         pid_s = pid
       with
-      | Not_found -> false)
+      | Not_found -> false
+  )
 
 let check_dmesg_for_oom pid name =
   let dmesg = exec_read_lines ~reverse:true "dmesg" in

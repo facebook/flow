@@ -38,7 +38,8 @@ let spec =
              "--evaluate-type-destructors"
              no_arg
              ~doc:"Use the result of type destructor evaluation if available"
-        |> anon "file" (optional string));
+        |> anon "file" (optional string)
+      );
   }
 
 let types_to_json ~file_content types ~strip_root =
@@ -58,9 +59,12 @@ let types_to_json ~file_content types ~strip_root =
                  ("loc", json_of_loc ~strip_root ~offset_table loc)
                  :: Errors.deprecated_json_props_of_loc ~strip_root loc
                in
-               JSON_Object json_assoc)
+               JSON_Object json_assoc
+           )
       in
-      JSON_Array types_json))
+      JSON_Array types_json
+    )
+  )
 
 let handle_response types ~json ~file_content ~pretty ~strip_root =
   if json then
@@ -69,8 +73,7 @@ let handle_response types ~json ~file_content ~pretty ~strip_root =
   else
     let out =
       types
-      |> Base.List.map ~f:(fun (loc, str) ->
-             spf "%s: %s" (Reason.string_of_loc ~strip_root loc) str)
+      |> Base.List.map ~f:(fun (loc, str) -> spf "%s: %s" (Reason.string_of_loc ~strip_root loc) str)
       |> String.concat "\n"
     in
     print_endline out
@@ -82,7 +85,8 @@ let handle_error err ~file_content ~json ~pretty ~strip_root =
       prerr_json_endline ~pretty error_json;
 
       (* also output an empty array on stdout, for JSON parsers *)
-      handle_response [] ~file_content ~json ~pretty ~strip_root)
+      handle_response [] ~file_content ~json ~pretty ~strip_root
+    )
   ) else
     prerr_endline err
 

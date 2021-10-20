@@ -79,7 +79,8 @@ let test_parse_charset () =
     if parse_charset "a;charset=b; c" <> Some "b" then failwith "abc2";
     if parse_charset "a;charset=;c" <> None then failwith "empty";
     if parse_charset "a;charset=b;charset=c" <> Some "b" then failwith "dupe";
-    true)
+    true
+  )
 
 let test_read_request () =
   let body = "{\"jsonrpc\":\"2.0\", \"method\":\"method_name\"}" in

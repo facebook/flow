@@ -316,7 +316,8 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
             ~next
         in
         Hh_logger.info "Done";
-        Lwt.return result)
+        Lwt.return result
+    )
 end
 
 (* This mode will run a prepass analysis over the input files and their downstream
@@ -360,7 +361,9 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
                   (Pure_dep_graph_operations.calc_all_dependents
                      ~sig_dependency_graph
                      ~implementation_dependency_graph
-                     roots))
+                     roots
+                  )
+            )
           in
           merge_targets ~env ~options ~profiling ~get_dependent_files roots
         in
@@ -409,7 +412,8 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
             ~next
         in
         Hh_logger.info "Checking+Codemodding Done";
-        Lwt.return result)
+        Lwt.return result
+    )
 end
 
 module TypedRunner (TypedRunnerConfig : TYPED_RUNNER_CONFIG) : STEP_RUNNER = struct
@@ -441,7 +445,8 @@ module TypedRunner (TypedRunnerConfig : TYPED_RUNNER_CONFIG) : STEP_RUNNER = str
         let%lwt results =
           TypedRunnerConfig.merge_and_check env workers options profiling roots ~iteration:0
         in
-        Lwt.return (env, results))
+        Lwt.return (env, results)
+    )
 
   (* The roots that are passed in here have already been filtered by earlier iterations. *)
   let recheck_run genv env ~iteration roots =
@@ -469,7 +474,8 @@ module TypedRunner (TypedRunnerConfig : TYPED_RUNNER_CONFIG) : STEP_RUNNER = str
         let%lwt results =
           TypedRunnerConfig.merge_and_check env workers options profiling roots ~iteration
         in
-        Lwt.return (env, results))
+        Lwt.return (env, results)
+    )
 
   let digest results =
     List.fold_left
@@ -496,7 +502,8 @@ let untyped_runner_job ~mk_ccx ~visit ~abstract_reader file_list =
         let file_sig = get_file_sig_unsafe ~reader:abstract_reader file in
         let ast = get_ast_unsafe ~reader:abstract_reader file in
         let result = visit ast (mk_ccx file file_sig) in
-        (file, Ok (Some result)) :: acc)
+        (file, Ok (Some result)) :: acc
+    )
     []
     file_list
 
@@ -561,7 +568,9 @@ module UntypedRunner (C : UNTYPED_RUNNER_CONFIG) : STEP_RUNNER = struct
                 ~merge:List.rev_append
                 ~next
             in
-            Lwt.return ((), result)))
+            Lwt.return ((), result)
+        )
+    )
 
   let digest = untyped_digest ~reporter:C.reporter
 
@@ -624,7 +633,8 @@ module UntypedFlowInitRunner (C : UNTYPED_FLOW_INIT_RUNNER_CONFIG) : STEP_RUNNER
             ~merge:List.rev_append
             ~next
         in
-        Lwt.return ((), result))
+        Lwt.return ((), result)
+    )
 
   let digest = untyped_digest ~reporter:C.reporter
 

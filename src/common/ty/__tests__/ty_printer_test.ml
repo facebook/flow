@@ -30,7 +30,8 @@ let tests =
                }
            in
            let str = Ty_printer.string_of_t ~exact_by_default:true obj in
-           assert_equal ~ctxt ~printer:(fun x -> x) "{get foo(): string}" str );
+           assert_equal ~ctxt ~printer:(fun x -> x) "{get foo(): string}" str
+         );
          ( "type_object_property_set" >:: fun ctxt ->
            let setter =
              Ty.NamedProp
@@ -51,5 +52,6 @@ let tests =
                }
            in
            let str = Ty_printer.string_of_t ~exact_by_default:true obj in
-           assert_equal ~ctxt ~printer:(fun x -> x) "{set foo(string): void}" str );
+           assert_equal ~ctxt ~printer:(fun x -> x) "{set foo(string): void}" str
+         );
        ]

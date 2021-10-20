@@ -156,7 +156,8 @@ module Callee_finder = struct
           let active_parameter = find_argument ~reader cursor arguments 0 in
           let loc = loc_of_aloc ~reader callee_loc in
           this#annot_with_tparams (fun ~tparams_rev ->
-              raise (Found (Some { tparams_rev; type_ = t; active_parameter; loc })))
+              raise (Found (Some { tparams_rev; type_ = t; active_parameter; loc }))
+          )
         else
           super#call annot expr
 
@@ -200,6 +201,7 @@ let ty_normalizer_options =
       verbose_normalizer = false;
       max_depth = Some 50;
     }
+  
 
 let rec collect_functions ~jsdoc ~exact_by_default acc = function
   | Ty.Fun { Ty.fun_params; fun_rest_param; fun_return; _ } ->

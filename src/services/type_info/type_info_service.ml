@@ -61,9 +61,11 @@ let type_at_pos
           |> json_data_of_type
                ((* TODO use Ty_debug.json_of_t after making it faster using count_calls *)
                 let exact_by_default = Context.exact_by_default cx in
-                Ty_printer.string_of_elt ~exact_by_default ty)
+                Ty_printer.string_of_elt ~exact_by_default ty
+               )
         in
-        (json_data, loc, Some ty))
+        (json_data, loc, Some ty)
+    )
   in
   ((loc, ty), json_data)
 

@@ -106,7 +106,8 @@ let read_events env =
 
   (* prefix the root path *)
   List.map (raw_read_events env.fsenv) ~f:(fun ev ->
-      { ev with path = Filename.concat ev.wpath ev.path })
+      { ev with path = Filename.concat ev.wpath ev.path }
+  )
 
 let select env ?(read_fdl = []) ?(write_fdl = []) ~timeout callback =
   let callback () = callback (read_events env) in

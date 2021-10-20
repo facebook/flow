@@ -42,7 +42,8 @@ let tests =
                    [Atom long_string];
                ]
            in
-           assert_pretty_print ~ctxt ("return (\n  " ^ long_string ^ "\n)") layout );
+           assert_pretty_print ~ctxt ("return (\n  " ^ long_string ^ "\n)") layout
+         );
          ( "force_breaks_in_list" >:: fun ctxt ->
            let short_string = String.make 10 'x' in
            let layout =
@@ -76,7 +77,8 @@ let tests =
                    Atom short_string;
                    Sequence
                      ( { break = Break_if_needed; inline = (false, true); indent = 2 },
-                       [fuse [flat_pretty_space; Atom short_string]] );
+                       [fuse [flat_pretty_space; Atom short_string]]
+                     );
                  ]
              in
              assert_pretty_print ~ctxt (short_string ^ " " ^ short_string) layout
@@ -91,11 +93,13 @@ let tests =
                        Atom short_string;
                        Sequence
                          ( { break = Break_if_needed; inline = (false, true); indent = 2 },
-                           [fuse [flat_pretty_space; Atom short_string]] );
+                           [fuse [flat_pretty_space; Atom short_string]]
+                         );
                      ];
                    Sequence
                      ( { break = Break_if_needed; inline = (false, true); indent = 2 },
-                       [fuse [flat_pretty_space; Atom short_string]] );
+                       [fuse [flat_pretty_space; Atom short_string]]
+                     );
                  ]
              in
              assert_pretty_print
@@ -111,7 +115,8 @@ let tests =
                    Atom long_string;
                    Sequence
                      ( { break = Break_if_needed; inline = (false, true); indent = 2 },
-                       [fuse [flat_pretty_space; Atom long_string]] );
+                       [fuse [flat_pretty_space; Atom long_string]]
+                     );
                  ]
              in
              assert_pretty_print ~ctxt (long_string ^ "\n  " ^ long_string) layout
@@ -125,23 +130,27 @@ let tests =
                      Atom long_string;
                      Sequence
                        ( { break = Break_if_needed; inline = (false, true); indent = 2 },
-                         [fuse [flat_pretty_space; Atom long_string]] );
+                         [fuse [flat_pretty_space; Atom long_string]]
+                       );
                    ];
                  Sequence
                    ( { break = Break_if_needed; inline = (false, true); indent = 2 },
-                     [fuse [flat_pretty_space; Atom long_string]] );
+                     [fuse [flat_pretty_space; Atom long_string]]
+                   );
                ]
            in
            assert_pretty_print
              ~ctxt
              (long_string ^ "\n  " ^ long_string ^ "\n  " ^ long_string)
-             layout );
+             layout
+         );
          ( "if_break_inside_concat_inside_sequence" >:: fun ctxt ->
            let a40 = String.make 40 'A' in
            let layout =
              Sequence
                ( { break = Break_if_needed; inline = (true, true); indent = 0 },
-                 [Concat [Atom a40; IfBreak (Empty, Atom " "); Atom a40]] )
+                 [Concat [Atom a40; IfBreak (Empty, Atom " "); Atom a40]]
+               )
            in
            (* the IfBreak generates Empty because a break is needed, but no newline because it's fused *)
            assert_pretty_print ~ctxt (a40 ^ a40) layout;
@@ -149,12 +158,14 @@ let tests =
            let layout =
              Sequence
                ( { break = Break_if_needed; inline = (true, true); indent = 0 },
-                 [Concat [Atom a40; IfBreak (Empty, Atom " "); Atom a40]; Atom a40] )
+                 [Concat [Atom a40; IfBreak (Empty, Atom " "); Atom a40]; Atom a40]
+               )
            in
            (* same as above. the Concat would be 81 chars if it doesn't break, which causes the parent
               Sequence to break, so the IfBreak takes the "break" case instead, and there's a NL between
               the Concat and last Atom. *)
-           assert_pretty_print ~ctxt (a40 ^ a40 ^ "\n" ^ a40) layout );
+           assert_pretty_print ~ctxt (a40 ^ a40 ^ "\n" ^ a40) layout
+         );
          ( "break_if_needed_sequence_inside_concat" >:: fun ctxt ->
            let a80 = String.make 80 'A' in
            (* fits in 80 cols *)
@@ -191,7 +202,8 @@ let tests =
                  Atom ")";
                ]
            in
-           assert_pretty_print ~ctxt ("(" ^ a80 ^ ")") layout );
+           assert_pretty_print ~ctxt ("(" ^ a80 ^ ")") layout
+         );
          ( "group_break" >:: fun ctxt ->
            let a40 = String.make 40 'A' in
            let a80 = String.make 80 'A' in
@@ -223,5 +235,6 @@ let tests =
            assert_pretty_print
              ~ctxt
              ("(\n  " ^ a80 ^ "\n)")
-             (Group [Atom "("; Indent (Concat [line; Atom a80]); line; Atom ")"]) );
+             (Group [Atom "("; Indent (Concat [line; Atom a80]); line; Atom ")"])
+         );
        ]

@@ -95,7 +95,8 @@ let run_full_test source =
     Loc.(
       let all_starts = List.map (fun { start; _ } -> start) all_locs in
       let all_ends = List.map (fun { _end; _ } -> _end) all_locs in
-      all_starts @ all_ends)
+      all_starts @ all_ends
+    )
   in
   let offset_table = Offset_utils.make ~kind:Offset_utils.Utf8 source in
   (* Just make sure it doesn't crash *)
@@ -114,7 +115,8 @@ let tests =
          ( "Loc.none" >:: fun ctxt ->
            (* This is a fake location but it's used often enough that we should at least not crash when
             * encountering it. *)
-           run ctxt "" (0, 0) (0, 0) );
+           run ctxt "" (0, 0) (0, 0)
+         );
          ("first_char" >:: fun ctxt -> run ctxt "foo bar\n" (1, 0) (0, 0));
          ("last_char" >:: fun ctxt -> run ctxt "foo bar\n" (1, 6) (6, 6));
          ( "column_after_last" >:: fun ctxt ->
@@ -123,13 +125,16 @@ let tests =
             * ((1, 0), (1, 3)). Because of this, we need to make sure we can look up locations that are
             * after the final column of a line, even though these locations don't correspond with an actual
             * character. *)
-           run ctxt "foo\nbar\n" (1, 3) (3, 3) );
+           run ctxt "foo\nbar\n" (1, 3) (3, 3)
+         );
          ( "char_after_last" >:: fun ctxt ->
            (* See the comment in the previous test *)
-           run ctxt "foo\nbar" (2, 3) (7, 7) );
+           run ctxt "foo\nbar" (2, 3) (7, 7)
+         );
          ( "empty" >:: fun ctxt ->
            (* Similar to above, we should be able to get one offset in an empty string *)
-           run ctxt "" (1, 0) (0, 0) );
+           run ctxt "" (1, 0) (0, 0)
+         );
          ("no_last_line_terminator" >:: fun ctxt -> run ctxt "foo bar" (1, 6) (6, 6));
          ("multi_line" >:: fun ctxt -> run ctxt "foo\nbar\n" (2, 1) (5, 5));
          ("carriage_return" >:: fun ctxt -> run ctxt "foo\rbar\r" (2, 1) (5, 5));
@@ -137,34 +142,45 @@ let tests =
          ( "unicode_line_separator" >:: fun ctxt ->
            (* Each line separator character is 3 bytes, or 1 JS code unit. The returned offset
             * reflects that. *)
-           run ctxt (Printf.sprintf "foo%sbar%s" line_sep line_sep) (2, 1) (7, 5) );
+           run ctxt (Printf.sprintf "foo%sbar%s" line_sep line_sep) (2, 1) (7, 5)
+         );
          ( "unicode_paragraph_separator" >:: fun ctxt ->
            (* Each paragraph separator character is 3 bytes, or 1 JS code unit. The returned offset
             * reflects that. *)
-           run ctxt (Printf.sprintf "foo%sbar%s" par_sep par_sep) (2, 1) (7, 5) );
+           run ctxt (Printf.sprintf "foo%sbar%s" par_sep par_sep) (2, 1) (7, 5)
+         );
          ("offset_before_multibyte_char" >:: fun ctxt -> run ctxt str_with_smiley (1, 3) (3, 3));
          ( "offset_of_multibyte_char" >:: fun ctxt ->
            (* This is the position of the smiley. The offset should give us the first byte in the
             * character. *)
-           run ctxt str_with_smiley (1, 4) (4, 4) );
+           run ctxt str_with_smiley (1, 4) (4, 4)
+         );
          ( "offset_after_multibyte_char" >:: fun ctxt ->
            (* This is the position after the smiley. The offset should reflect the width of the multibyte
             * character (4 bytes in UTF-8 and 2 code units in JS in this case). *)
-           run ctxt str_with_smiley (1, 5) (8, 6) );
+           run ctxt str_with_smiley (1, 5) (8, 6)
+         );
          ( "offset_line_after_multibyte_char" >:: fun ctxt ->
-           run ctxt str_with_smiley (2, 0) (13, 11) );
+           run ctxt str_with_smiley (2, 0) (13, 11)
+         );
          ( "offset_of_multi_unit_utf16_char" >:: fun ctxt ->
-           run ctxt str_with_utf16_edge_cases (1, 4) (4, 4) );
+           run ctxt str_with_utf16_edge_cases (1, 4) (4, 4)
+         );
          ( "offset_after_multi_unit_utf16_char" >:: fun ctxt ->
-           run ctxt str_with_utf16_edge_cases (1, 5) (8, 6) );
+           run ctxt str_with_utf16_edge_cases (1, 5) (8, 6)
+         );
          ( "offset_of_single_unit_utf16_char" >:: fun ctxt ->
-           run ctxt str_with_utf16_edge_cases (1, 10) (13, 11) );
+           run ctxt str_with_utf16_edge_cases (1, 10) (13, 11)
+         );
          ( "offset_after_single_unit_utf16_char" >:: fun ctxt ->
-           run ctxt str_with_utf16_edge_cases (1, 11) (16, 12) );
+           run ctxt str_with_utf16_edge_cases (1, 11) (16, 12)
+         );
          ( "offset_of_single_unit_utf16_char2" >:: fun ctxt ->
-           run ctxt str_with_utf16_edge_cases (1, 16) (21, 17) );
+           run ctxt str_with_utf16_edge_cases (1, 16) (21, 17)
+         );
          ( "offset_after_single_unit_utf16_char2" >:: fun ctxt ->
-           run ctxt str_with_utf16_edge_cases (1, 17) (24, 18) );
+           run ctxt str_with_utf16_edge_cases (1, 17) (24, 18)
+         );
          ( "out_of_bounds_line" >:: fun _ctxt ->
            run_expect_failure "foo\n" (5, 0) "Failure while looking up line. Index: 4. Length: 2."
          );
@@ -172,22 +188,28 @@ let tests =
            run_expect_failure
              "foo\n"
              (1, 10)
-             "Failure while looking up column. Index: 10. Length: 4." );
+             "Failure while looking up column. Index: 10. Length: 4."
+         );
          ( "full_test" >:: fun _ctxt ->
            (* Note that there is no newline at the end of the string -- I found a bug in an initial version
             * which was exposed by not having a final newline character. *)
            let source = "const foo = 4;\nconst bar = foo + 2;" in
-           run_full_test source );
+           run_full_test source
+         );
          ( "lexing_error_newline_test" >:: fun _ctxt ->
            let source = "\"foo\nbar\"" in
-           run_full_test source );
+           run_full_test source
+         );
          ( "lexing_error_throw" >:: fun _ctxt ->
            let source = "throw\n" in
-           run_full_test source );
+           run_full_test source
+         );
          ( "lexing_error_regex_newline" >:: fun _ctxt ->
            let source = "/\n/" in
-           run_full_test source );
+           run_full_test source
+         );
          ( "lexing_error_complex_regex_newline" >:: fun _ctxt ->
            let source = "/a\\\n/" in
-           run_full_test source );
+           run_full_test source
+         );
        ]

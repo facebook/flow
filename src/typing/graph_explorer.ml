@@ -131,7 +131,8 @@ let edges graph (id1, ids2) =
             unexplored1_rev_deps
             |> ISet.iter (fun id0 ->
                    let explored0 = find_explored id0 graph in
-                   explored0.deps <- ISet.add id2 explored0.deps);
+                   explored0.deps <- ISet.add id2 explored0.deps
+               );
 
             unexplored2.rev_deps <- ISet.add id1 unexplored2.rev_deps;
             unexplored2.rev_deps <- ISet.union unexplored1_rev_deps unexplored2.rev_deps;
@@ -146,13 +147,15 @@ let edges graph (id1, ids2) =
   unexplored1_rev_deps
   |> ISet.iter (fun id0 ->
          let explored0 = find_explored id0 graph in
-         explored0.deps <- ISet.union ids2 explored0.deps);
+         explored0.deps <- ISet.union ids2 explored0.deps
+     );
 
   ids2
   |> ISet.iter (fun id2 ->
          let unexplored2 = find_unexplored id2 graph in
          unexplored2.rev_deps <- ISet.add id1 unexplored2.rev_deps;
-         unexplored2.rev_deps <- ISet.union unexplored1_rev_deps unexplored2.rev_deps);
+         unexplored2.rev_deps <- ISet.union unexplored1_rev_deps unexplored2.rev_deps
+     );
 
   explored1.deps <- ISet.remove id1 explored1.deps;
   if is_finished explored1 then finished_ids := ISet.add id1 !finished_ids;
@@ -160,7 +163,8 @@ let edges graph (id1, ids2) =
   |> ISet.iter (fun id0 ->
          let explored0 = find_explored id0 graph in
          explored0.deps <- ISet.remove id1 explored0.deps;
-         if is_finished explored0 then finished_ids := ISet.add id0 !finished_ids);
+         if is_finished explored0 then finished_ids := ISet.add id0 !finished_ids
+     );
 
   !finished_ids
 

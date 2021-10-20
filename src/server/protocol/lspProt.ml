@@ -136,7 +136,8 @@ let json_of_request =
           ("method", JSON_String "liveErrorsRequest");
           ("params", JSON_Object [("uri", JSON_String (Lsp.DocumentUri.to_string uri))]);
           ("trigger", metadata.start_json_truncated);
-        ])
+        ]
+  )
 
 (* Why is the server sending us a list of errors *)
 type errors_reason =

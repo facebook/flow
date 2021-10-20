@@ -187,7 +187,8 @@ module Type_at_pos = struct
               {
                 OptionalMember.member = { Member.property = Member.PropertyPrivateName (loc, _); _ };
                 _;
-              } )
+              }
+          )
           when self#covers_target loc ->
           self#annot_with_tparams (self#find_loc loc t)
         | _ -> super#expression expr

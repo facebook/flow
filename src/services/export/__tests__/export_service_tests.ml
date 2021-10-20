@@ -19,31 +19,38 @@ let string_of_modulename_tests =
     ( "string_dot" >:: fun ctxt ->
       let actual = string_of_modulename (module_name "FooBar.baz") in
       let expected = "FooBar" in
-      assert_equal ~ctxt ~printer:(fun x -> x) expected actual );
+      assert_equal ~ctxt ~printer:(fun x -> x) expected actual
+    );
     ( "filename_dot" >:: fun ctxt ->
       let actual = string_of_modulename (module_file (sf "/foo/bar/FooBar.baz.js")) in
       let expected = "FooBar" in
-      assert_equal ~ctxt ~printer:(fun x -> x) expected actual );
+      assert_equal ~ctxt ~printer:(fun x -> x) expected actual
+    );
     ( "string_multiple_dots" >:: fun ctxt ->
       let actual = string_of_modulename (module_name "FooBar.a.b") in
       let expected = "FooBar" in
-      assert_equal ~ctxt ~printer:(fun x -> x) expected actual );
+      assert_equal ~ctxt ~printer:(fun x -> x) expected actual
+    );
     ( "filename_multiple_dots" >:: fun ctxt ->
       let actual = string_of_modulename (module_file (sf "/foo/bar/FooBar.a.b.js")) in
       let expected = "FooBar" in
-      assert_equal ~ctxt ~printer:(fun x -> x) expected actual );
+      assert_equal ~ctxt ~printer:(fun x -> x) expected actual
+    );
     ( "string_camelcase_dashes" >:: fun ctxt ->
       let actual = string_of_modulename (module_name "foo-bar-baz") in
       let expected = "fooBarBaz" in
-      assert_equal ~ctxt ~printer:(fun x -> x) expected actual );
+      assert_equal ~ctxt ~printer:(fun x -> x) expected actual
+    );
     ( "filename_camelcase_dashes" >:: fun ctxt ->
       let actual = string_of_modulename (module_file (sf "/foo/bar/foo-bar-baz.js")) in
       let expected = "fooBarBaz" in
-      assert_equal ~ctxt ~printer:(fun x -> x) expected actual );
+      assert_equal ~ctxt ~printer:(fun x -> x) expected actual
+    );
     ( "scoped_package" >:: fun ctxt ->
       let actual = string_of_modulename (module_name "@example/xyz") in
       let expected = "xyz" in
-      assert_equal ~ctxt ~printer:(fun x -> x) expected actual );
+      assert_equal ~ctxt ~printer:(fun x -> x) expected actual
+    );
   ]
 
 let suite = "export_service" >::: ["string_of_modulename" >::: string_of_modulename_tests]

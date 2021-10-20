@@ -44,11 +44,12 @@ end = struct
     Sys.os_type <> "Win32" && Unix.isatty Unix.stdout && Sys.getenv "TERM" <> "dumb"
 
   let print to_print =
-    (if should_color then
+    ( if should_color then
       C.cprint to_print
     else
       let strings = Base.List.map ~f:snd to_print in
-      List.iter (Printf.printf "%s") strings);
+      List.iter (Printf.printf "%s") strings
+    );
     flush stdout
 
   type case_expectation =
@@ -148,7 +149,8 @@ end = struct
           | "intern_comments" -> get_bool k v >>= fun v -> return ({ intern_comments = v }, opts)
           | _ -> failf "unknown option %S" k)
         (return ({ intern_comments = false }, Parser_env.default_parse_options))
-        props)
+        props
+    )
 
   let tests_of_path path =
     let relativize = strip_prefix path in
@@ -277,7 +279,8 @@ end = struct
                       (_, { Ast.Literal.value = Ast.Literal.String name; raw = _; comments = _ });
                   value;
                   shorthand = false;
-                } ) ->
+                }
+            ) ->
           SMap.add name value acc
         | _ -> failwith "Invalid JSON")
       SMap.empty
@@ -328,15 +331,16 @@ end = struct
         in
         diffs
     | ( JSON_Bool actual,
-        (_, Literal { Ast.Literal.value = Ast.Literal.Boolean expected; raw = _; comments = _ }) )
-      ->
+        (_, Literal { Ast.Literal.value = Ast.Literal.Boolean expected; raw = _; comments = _ })
+      ) ->
       if actual <> expected then
         let path = string_of_path path in
         spf "%s: Expected %b, got %b." path expected actual :: errors
       else
         errors
     | ( JSON_Number actual,
-        (_, Literal { Ast.Literal.value = Ast.Literal.Number _; raw = expected; comments = _ }) ) ->
+        (_, Literal { Ast.Literal.value = Ast.Literal.Number _; raw = expected; comments = _ })
+      ) ->
       if actual <> expected then
         let path = string_of_path path in
         spf "%s: Expected %s, got %s." path expected actual :: errors
@@ -352,7 +356,9 @@ end = struct
                   Literal { Ast.Literal.value = Ast.Literal.Number _; raw = expected; comments = _ }
                 );
               comments = _;
-            } ) ) ->
+            }
+        )
+      ) ->
       let expected = "-" ^ expected in
       if actual <> expected then
         let path = string_of_path path in
@@ -360,7 +366,8 @@ end = struct
       else
         errors
     | ( JSON_String actual,
-        (_, Literal { Ast.Literal.value = Ast.Literal.String expected; raw = _; comments = _ }) ) ->
+        (_, Literal { Ast.Literal.value = Ast.Literal.String expected; raw = _; comments = _ })
+      ) ->
       if not (string_value_matches expected actual) then
         let path = string_of_path path in
         spf "%s: Expected %S, got %S." path expected actual :: errors
@@ -415,7 +422,8 @@ end = struct
       Ast.Expression.(
         function
         | Object.Property (_, prop) -> fst (prop_name_and_value prop) = needle
-        | _ -> false)
+        | _ -> false
+      )
       haystack
 
   let rec apply_diff diff expected =
@@ -743,7 +751,8 @@ end = struct
                 results.ok_cases
                 results.failed_tests
                 results.failed_cases
-                results.skipped_cases );
+                results.skipped_cases
+            );
           ]
       in
       exit 0
@@ -753,7 +762,8 @@ end = struct
           [
             (C.Bold C.Default, spf "Passed: %d (%d cases), " results.ok_tests results.ok_cases);
             ( C.BoldWithBG (C.White, C.Red),
-              spf "Failed: %d (%d cases)" results.failed_tests results.failed_cases );
+              spf "Failed: %d (%d cases)" results.failed_tests results.failed_cases
+            );
             (C.Bold C.Default, spf ", Skipped: %d cases\n" results.skipped_cases);
           ]
       in

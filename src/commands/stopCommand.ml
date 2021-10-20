@@ -27,7 +27,8 @@ let spec =
         |> temp_dir_flag
         |> from_flag
         |> quiet_flag
-        |> anon "root" (optional string));
+        |> anon "root" (optional string)
+      );
   }
 
 exception FailedToKillNicely
@@ -55,8 +56,11 @@ let main base_flags temp_dir quiet root () =
           server_should_hangup_if_still_initializing = false;
           version_mismatch_strategy = Always_stop_server;
         },
-        { client_type = Ephemeral } )
+        { client_type = Ephemeral }
+      )
+    
   in
+
   CommandConnectSimple.(
     match connect_once ~flowconfig_name ~client_handshake ~tmp_dir root with
     | Ok _ ->
@@ -105,6 +109,7 @@ let main base_flags temp_dir quiet root () =
               let msg = spf "Failed to kill server meanly for `%s`" root_s in
               Exit.(exit ~msg Kill_error)
           )
-      end)
+      end
+  )
 
 let command = CommandSpec.command spec main

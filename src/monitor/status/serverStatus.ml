@@ -133,15 +133,17 @@ let render_emoji ~use_emoji ?(pad = After) emoji =
   if use_emoji then
     spf
       "%s%s %s"
-      (if pad = Before then
+      ( if pad = Before then
         " "
       else
-        "")
+        ""
+      )
       (string_of_emoji emoji)
-      (if pad = After then
+      ( if pad = After then
         " "
       else
-        "")
+        ""
+      )
   else
     ""
 
@@ -198,9 +200,7 @@ let string_of_typecheck_status ~use_emoji = function
     let timeout =
       match deadline with
       | Some deadline ->
-        spf
-          " - giving up in %d seconds"
-          (max 0 (int_of_float @@ (deadline -. Unix.gettimeofday ())))
+        spf " - giving up in %d seconds" (max 0 (int_of_float @@ (deadline -. Unix.gettimeofday ())))
       | None -> ""
     in
     spf "%swaiting for Watchman%s" (render_emoji ~use_emoji Eyes) timeout
@@ -230,10 +230,11 @@ let string_of_status ?(use_emoji = false) ?(terse = false) status =
   in
   spf
     "%s%s"
-    (if terse then
+    ( if terse then
       ""
     else
-      "Server is ")
+      "Server is "
+    )
     status_string
 
 (** Transition function for the status state machine. Given the current status and the event,
@@ -271,7 +272,8 @@ let update ~event ~status =
         (spf
            "Unexpected status transition from '%s' with event '%s'"
            (string_of_status status)
-           (string_of_event event))
+           (string_of_event event)
+        )
     else
       Unknown
 
@@ -410,7 +412,8 @@ let log_of_summaries ~(root : Path.t) (summaries : summary list) : FlowEventLogg
               recheck_worst_cycle_size = Base.Option.map top_cycle ~f:(fun (_, size) -> size);
               recheck_worst_cycle_leader =
                 Base.Option.map top_cycle ~f:(fun (f, _) ->
-                    f |> File_key.to_string |> Files.relative_path (Path.to_string root));
+                    f |> File_key.to_string |> Files.relative_path (Path.to_string root)
+                );
             }
         in
         let acc =
@@ -424,7 +427,8 @@ let log_of_summaries ~(root : Path.t) (summaries : summary list) : FlowEventLogg
         in
         acc
     in
-    Base.List.fold summaries ~init ~f)
+    Base.List.fold summaries ~init ~f
+  )
 
 (** When the server is initializing it will publish statuses that say it is initializing. The
     monitor might know that the server actually is restarting. This function turns a initializing
@@ -433,4 +437,5 @@ let change_init_to_restart restart_reason status =
   Base.Option.value_map restart_reason ~default:status ~f:(fun restart_reason ->
       match status with
       | Typechecking (Initializing, tcs) -> Typechecking (Restarting restart_reason, tcs)
-      | _ -> status)
+      | _ -> status
+  )

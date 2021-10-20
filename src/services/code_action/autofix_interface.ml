@@ -31,7 +31,8 @@ class mapper target =
               Interface.body = (loc, Object.{ ot with inexact = false });
               extends = [];
               comments = None;
-            } )
+            }
+        )
       | _ -> super#type_ t
   end
 

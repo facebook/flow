@@ -50,7 +50,8 @@ module Make (Env : Env_sig.S) = struct
     | PropertyExpression
         ( _,
           Ast.Expression.Literal
-            { Ast.Literal.value = Ast.Literal.Number _; raw = name; comments = _ } ) ->
+            { Ast.Literal.value = Ast.Literal.Number _; raw = name; comments = _ }
+        ) ->
       (match key ~allow_optional _object with
       | Some (base, chain) -> Some (base, Key.Prop name :: chain)
       | None -> None)
@@ -74,7 +75,8 @@ module Make (Env : Env_sig.S) = struct
       key_of_member ~allow_optional member
     | ( _,
         Ast.Pattern.Expression
-          (_, Ast.Expression.OptionalMember { Ast.Expression.OptionalMember.member; _ }) ) ->
+          (_, Ast.Expression.OptionalMember { Ast.Expression.OptionalMember.member; _ })
+      ) ->
       key_of_member ~allow_optional member
     | (_, Ast.Pattern.Array _)
     | (_, Ast.Pattern.Object _) ->

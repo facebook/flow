@@ -200,7 +200,8 @@ let type_declaration_references ~root ~write_root ~reader ~full_cx ~typed_ast =
     Base.Option.iter (def_loc_of_t t) ~f:(fun def_loc ->
         let typeDeclaration = TypeDeclaration.{ loc = def_loc; name } in
         let result = TypeDeclarationReference.{ typeDeclaration; loc } in
-        results := result :: !results)
+        results := result :: !results
+    )
   in
   ignore ((new type_reference_searcher add_reference)#program typed_ast);
   !results |> Base.List.map ~f:(TypeDeclarationReference.to_json ~root ~write_root)
@@ -212,7 +213,8 @@ let extract_member_def ~cx ~typed_ast ~file_sig scheme name : ALoc.t option =
   | Ok { members; _ } ->
     Base.Option.bind
       (NameUtils.Map.find_opt (Reason.OrdinaryName name) members)
-      ~f:(fun { def_loc; _ } -> def_loc)
+      ~f:(fun { def_loc; _ } -> def_loc
+    )
 
 let member_declaration_references ~root ~write_root ~reader ~full_cx ~typed_ast ~file_sig =
   let results = ref [] in
@@ -229,7 +231,8 @@ let member_declaration_references ~root ~write_root ~reader ~full_cx ~typed_ast 
           let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
           MemberDeclarationReference.{ memberDeclaration; loc }
         in
-        results := result :: !results)
+        results := result :: !results
+    )
   in
   ignore ((new member_searcher add_member)#program typed_ast);
   !results |> Base.List.map ~f:(MemberDeclarationReference.to_json ~root ~write_root)
@@ -524,22 +527,25 @@ class declaration_info_collector ~scope_info ~reader ~add_var_info ~add_member_i
       ident
 
     method! type_alias
-        (Flow_ast.Statement.TypeAlias.{ id = ((aloc, type_), Flow_ast.Identifier.{ name; _ }); _ }
-        as ident) =
+        ( Flow_ast.Statement.TypeAlias.{ id = ((aloc, type_), Flow_ast.Identifier.{ name; _ }); _ }
+        as ident
+        ) =
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
       this#annot_with_tparams add_type_info name loc type_;
       ident
 
     method! opaque_type
-        (Flow_ast.Statement.OpaqueType.{ id = ((aloc, type_), Flow_ast.Identifier.{ name; _ }); _ }
-        as ident) =
+        ( Flow_ast.Statement.OpaqueType.{ id = ((aloc, type_), Flow_ast.Identifier.{ name; _ }); _ }
+        as ident
+        ) =
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
       this#annot_with_tparams add_type_info name loc type_;
       ident
 
     method! interface
-        (Flow_ast.Statement.Interface.{ id = ((aloc, type_), Flow_ast.Identifier.{ name; _ }); _ }
-        as ident) =
+        ( Flow_ast.Statement.Interface.{ id = ((aloc, type_), Flow_ast.Identifier.{ name; _ }); _ }
+        as ident
+        ) =
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
       this#annot_with_tparams add_type_info name loc type_;
       ident
@@ -591,9 +597,11 @@ let declaration_infos ~root ~write_root ~scope_info ~file ~file_sig ~full_cx ~re
         ~reader
         ~add_var_info
         ~add_member_info
-        ~add_type_info)
+        ~add_type_info
+     )
        #program
-       typed_ast);
+       typed_ast
+    );
   let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~typed_ast ~file_sig in
   let options =
     {
@@ -641,7 +649,8 @@ let declaration_infos ~root ~write_root ~scope_info ~file ~file_sig ~full_cx ~re
             TypeDeclarationInfo.{ typeDeclaration; type_; documentation }
             |> TypeDeclarationInfo.to_json ~root ~write_root
           in
-          (var_infos, member_infos, type_info :: type_infos)))
+          (var_infos, member_infos, type_info :: type_infos))
+  )
 
 let file_of_string_modules ~root ~write_root ~options ~docblock ~file:file_key =
   let open Base.List.Let_syntax in
@@ -802,4 +811,5 @@ let make ~output_dir ~write_root =
       output_facts "src.FileLines.1" file_lines;
       close_out out_channel;
       { files_analyzed = 1; json_filenames = SSet.singleton output_file }
-  end) : Codemod_runner.RUNNABLE)
+  end) : Codemod_runner.RUNNABLE
+  )

@@ -306,11 +306,13 @@ let request_json ?(extra_kv = []) ?(extra_expressions = []) watchman_command env
               ("fields", J.strlist ["name"]);
               (* Watchman doesn't allow an empty allof expression. But expressions is never empty *)
               ("expression", J.pred "allof" expressions);
-            ]);
+            ]
+          );
       ]
     in
     let request = JSON_Array (header @ directives) in
-    request)
+    request
+  )
 
 let get_changes_since_mergebase_query env =
   let mergebase_with = env.settings.mergebase_with in
@@ -318,7 +320,8 @@ let get_changes_since_mergebase_query env =
     [
       ( "since",
         Hh_json.JSON_Object
-          [("scm", Hh_json.JSON_Object [("mergebase-with", Hh_json.JSON_String mergebase_with)])] );
+          [("scm", Hh_json.JSON_Object [("mergebase-with", Hh_json.JSON_String mergebase_with)])]
+      );
     ]
   in
   request_json ~extra_kv Query env
@@ -586,7 +589,8 @@ let has_watchman_restarted_since ~debug_logging ~conn ~watch_root ~clockspec =
                  it's a new watchman instance, so set it to 0 *)
               ("sync_timeout", JSON_Number "0");
             ];
-        ])
+        ]
+    )
   in
   match%lwt request ~debug_logging ~conn query with
   | Ok response ->
@@ -609,7 +613,8 @@ let has_watchman_restarted dead_env =
       let debug_logging = dead_env.prior_settings.debug_logging in
       let clockspec = dead_env.prior_clockspec in
       let watch_root = dead_env.prior_watch_root in
-      has_watchman_restarted_since ~debug_logging ~conn ~watch_root ~clockspec)
+      has_watchman_restarted_since ~debug_logging ~conn ~watch_root ~clockspec
+  )
 
 let prepend_relative_path_term ~relative_path ~terms =
   match terms with
@@ -765,11 +770,13 @@ let extract_file_names env json =
   |> counit_with (fun _ ->
          (* When an hg.update happens, it shows up in the watchman subscription
             as a notification with no files key present. *)
-         [])
+         []
+     )
   |> List.map ~f:(fun json ->
          let s = Hh_json.get_string_exn json in
          let abs = Caml.Filename.concat env.watch.watch_root s in
-         abs)
+         abs
+     )
   |> SSet.of_list
 
 let re_init_dead_env =
@@ -825,7 +832,8 @@ let extract_mergebase data =
       accessor >>= get_obj "clock" >>= get_obj "scm" >>= get_string "mergebase"
       >>= fun (mergebase, _) -> return (clock, mergebase)
     in
-    to_option ret)
+    to_option ret
+  )
 
 let make_mergebase_changed_response env data =
   match extract_mergebase data with

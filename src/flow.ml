@@ -116,10 +116,11 @@ let _ =
     let msg =
       Utils.spf
         "Out of shared memory%s"
-        (if bt = "" then
+        ( if bt = "" then
           bt
         else
-          ":\n" ^ bt)
+          ":\n" ^ bt
+        )
     in
     Exit.(exit ~msg Out_of_shared_memory)
   | e ->

@@ -31,7 +31,8 @@ let spec =
         |> from_flag
         |> path_flag
         |> wait_for_recheck_flag
-        |> anon "args" (required (list_of string)));
+        |> anon "args" (required (list_of string))
+      );
   }
 
 let parse_args path args =
@@ -43,7 +44,8 @@ let parse_args path args =
     | [line; column] ->
       ( get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name) path None,
         int_of_string line,
-        int_of_string column )
+        int_of_string column
+      )
     | _ ->
       CommandSpec.usage spec;
       Exit.(exit Commandline_usage_error)
@@ -84,7 +86,8 @@ let main base_flags option_values json pretty root strip_root path wait_for_rech
          should be replaced with just `Reason.json_of_loc loc`. *)
       Hh_json.(
         let json = JSON_Object (Errors.deprecated_json_props_of_loc ~strip_root loc) in
-        print_json_endline ~pretty json)
+        print_json_endline ~pretty json
+      )
     else
       let from = FlowEventLogger.get_from_I_AM_A_CLOWN () in
       if from = Some "vim" || from = Some "emacs" then

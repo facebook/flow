@@ -29,7 +29,8 @@ let spec =
         |> strip_root_flag
         |> from_flag
         |> wait_for_recheck_flag
-        |> anon "modules" (required (list_of string)));
+        |> anon "modules" (required (list_of string))
+      );
   }
 
 let main base_flags option_values json pretty root strip_root wait_for_recheck modules () =
@@ -97,7 +98,8 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck m
                         (("import", JSON_String req)
                          ::
                          ("loc", json_of_loc_with_offset ~strip_root loc)
-                         :: Errors.deprecated_json_props_of_loc ~strip_root loc)
+                         :: Errors.deprecated_json_props_of_loc ~strip_root loc
+                        )
                       :: acc)
                     acc
                     locs)
@@ -112,7 +114,8 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck m
           []
       in
       let json = JSON_Object (List.append json_non_flow json_imports) in
-      print_json_endline ~pretty json)
+      print_json_endline ~pretty json
+    )
   else
     let print_imports module_name =
       if SMap.mem module_name requirements_map then (

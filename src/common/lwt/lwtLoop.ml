@@ -62,8 +62,10 @@ end = struct
                 (try%lwt thread with
                 | Lwt.Canceled -> Lwt.return_unit);
                 (let%lwt _ = Lwt_condition.wait condition in
-                 Lwt.return_unit);
-              ])
+                 Lwt.return_unit
+                );
+              ]
+        )
     end;
 
     (* Start things going *)

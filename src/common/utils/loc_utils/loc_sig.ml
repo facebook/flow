@@ -92,7 +92,8 @@ module LocS : S with type t = Loc.t = struct
              Loc.pp fmt elt;
              true)
            false
-           elements);
+           elements
+        );
       (match elements with
       | [] -> ()
       | _ -> Format.fprintf fmt " ");
@@ -138,7 +139,8 @@ module ALocS : S with type t = ALoc.t = struct
              ALoc.pp fmt elt;
              true)
            false
-           elements);
+           elements
+        );
       (match elements with
       | [] -> ()
       | _ -> Format.fprintf fmt " ");
@@ -184,7 +186,8 @@ module ILocS : S with type t = ILoc.t = struct
              ILoc.pp fmt elt;
              true)
            false
-           elements);
+           elements
+        );
       (match elements with
       | [] -> ()
       | _ -> Format.fprintf fmt " ");

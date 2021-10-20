@@ -30,14 +30,16 @@ let schedule_timer_to_append ~result id =
         (Printf.sprintf
            "Timer fired too early! Expected interval of %f but got %f"
            expected_interval
-           actual_interval);
+           actual_interval
+        );
     let delta = actual_interval -. expected_interval in
     if delta > maximum_delay then
       failwith
         (Printf.sprintf
            "Expected timer to fire within %fs of target, but it fired %fs after"
            maximum_delay
-           delta);
+           delta
+        );
     result := !result @ [id]
   in
   Timer.set_timer ~interval ~callback

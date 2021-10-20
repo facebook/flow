@@ -33,7 +33,8 @@ class tvar_finder =
             ~default:blame
             ~f:(fun reason -> IMap.add ~combine:(fun fst _ -> fst) id reason blame)
             reason,
-          reason )
+          reason
+        )
   end
 
 let new_gcx () =

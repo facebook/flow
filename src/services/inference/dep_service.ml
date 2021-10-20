@@ -111,7 +111,8 @@ let calc_direct_dependents_utils ~reader workers fileset root_fileset =
         let is_resolution_path_file =
           SSet.exists (fun f -> SSet.mem f root_fileset) phantom_dependents
         in
-        (f, required, is_resolution_path_file) :: acc)
+        (f, required, is_resolution_path_file) :: acc
+    )
   in
   (* merge results *)
   let merge = List.rev_append in
@@ -245,7 +246,9 @@ let calc_partial_dependency_graph ~reader workers files ~parsed =
       ~job:
         (List.fold_left (fun dependency_info file ->
              let dependencies = file_dependencies ~audit:Expensive.ok ~reader file in
-             FilenameMap.add file dependencies dependency_info))
+             FilenameMap.add file dependencies dependency_info
+         )
+        )
       ~neutral:FilenameMap.empty
       ~merge:FilenameMap.union
       ~next:(MultiWorkerLwt.next workers (FilenameSet.elements files))

@@ -39,7 +39,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
             |> strip_root_flag
             |> from_flag
             |> dummy false (* match --version below *)
-            |> anon "root" (optional string));
+            |> anon "root" (optional string)
+          );
       }
     else
       let command_info =
@@ -68,7 +69,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
             |> strip_root_flag
             |> from_flag
             |> flag "--version" no_arg ~doc:"Print version number and exit"
-            |> anon "root" (optional string));
+            |> anon "root" (optional string)
+          );
       }
 
   type args = {
@@ -112,9 +114,11 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         Some
           (Printf.sprintf
              ("The Flow server is currently in lazy mode and is only checking %d/%d files.\n"
-             ^^ "To learn more, visit flow.org/en/docs/lang/lazy-modes")
+             ^^ "To learn more, visit flow.org/en/docs/lang/lazy-modes"
+             )
              lazy_stats.ServerProt.Response.checked_files
-             lazy_stats.ServerProt.Response.total_files)
+             lazy_stats.ServerProt.Response.total_files
+          )
     in
     match response with
     | ServerProt.Response.DIRECTORY_MISMATCH d ->

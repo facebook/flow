@@ -94,7 +94,8 @@ end = struct
           (Printf.sprintf
              "can't remove provider %s of %S, not found in all_providers"
              (File_key.to_string f)
-             (Modulename.to_string m))
+             (Modulename.to_string m)
+          )
     in
     Hashtbl.replace !all_providers m provs
 end

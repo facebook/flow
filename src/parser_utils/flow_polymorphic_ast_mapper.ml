@@ -69,7 +69,9 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           | While stuff -> While (this#while_ stuff)
           | With stuff -> With (this#with_ stuff)
           | TypeAlias stuff -> TypeAlias (this#type_alias stuff)
-          | DeclareOpaqueType otype -> DeclareOpaqueType (this#declare_opaque_type otype) )
+          | DeclareOpaqueType otype -> DeclareOpaqueType (this#declare_opaque_type otype)
+        )
+      
 
     method comment ((annot, c) : 'M Ast.Comment.t) : 'N Ast.Comment.t = (this#on_loc_annot annot, c)
 
@@ -127,7 +129,9 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           | TypeCast x -> TypeCast (this#type_cast x)
           | Unary x -> Unary (this#unary_expression x)
           | Update x -> Update (this#update_expression x)
-          | Yield x -> Yield (this#yield x) )
+          | Yield x -> Yield (this#yield x)
+        )
+      
 
     method arg_list ((annot, args) : ('M, 'T) Ast.Expression.ArgList.t)
         : ('N, 'U) Ast.Expression.ArgList.t =
@@ -250,7 +254,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
             implements = implements';
             class_decorators = class_decorators';
             comments = comments';
-          })
+          }
+      )
 
     method class_extends (extends : ('M, 'T) Ast.Class.Extends.t) : ('N, 'U) Ast.Class.Extends.t =
       let open Ast.Class.Extends in
@@ -407,7 +412,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
             mixins = mixins';
             implements = implements';
             comments = comments';
-          })
+          }
+      )
 
     method class_implements (implements : ('M, 'T) Ast.Class.Implements.t)
         : ('N, 'U) Ast.Class.Implements.t =
@@ -781,11 +787,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           {
             params =
               ( this#on_loc_annot params_annot,
-                { Params.this_ = this_'; params = ps'; rest = rpo'; comments = params_comments' } );
+                { Params.this_ = this_'; params = ps'; rest = rpo'; comments = params_comments' }
+              );
             return = return';
             tparams = tparams';
             comments = func_comments';
-          })
+          }
+      )
 
     method label_identifier (ident : ('M, 'M) Ast.Identifier.t) : ('N, 'N) Ast.Identifier.t =
       this#identifier ident
@@ -816,7 +824,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           _method;
           variance = variance';
           comments = comments';
-        } )
+        }
+      )
 
     method object_indexer_type (oit : ('M, 'T) Ast.Type.Object.Indexer.t)
         : ('N, 'U) Ast.Type.Object.Indexer.t =
@@ -839,7 +848,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let value' = this#type_ value in
       let comments' = Base.Option.map ~f:this#syntax comments in
       ( this#on_loc_annot annot,
-        { id = id'; value = value'; optional; static; _method; comments = comments' } )
+        { id = id'; value = value'; optional; static; _method; comments = comments' }
+      )
 
     method object_type (ot : ('M, 'T) Ast.Type.Object.t) : ('N, 'U) Ast.Type.Object.t =
       let open Ast.Type.Object in
@@ -919,7 +929,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let variance' = Base.Option.map ~f:this#variance variance in
       let default' = Base.Option.map ~f:this#type_ default in
       ( this#on_loc_annot annot,
-        { name = name'; bound = bound'; variance = variance'; default = default' } )
+        { name = name'; bound = bound'; variance = variance'; default = default' }
+      )
 
     method type_param_identifier (id : ('M, 'M) Ast.Identifier.t) : ('N, 'N) Ast.Identifier.t =
       this#identifier id
@@ -1062,7 +1073,9 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           | StringLiteral t' -> StringLiteral (this#string_literal t')
           | NumberLiteral t' -> NumberLiteral (this#number_literal t')
           | BigIntLiteral t' -> BigIntLiteral (this#bigint_literal t')
-          | BooleanLiteral t' -> BooleanLiteral (this#boolean_literal t') )
+          | BooleanLiteral t' -> BooleanLiteral (this#boolean_literal t')
+        )
+      
 
     method implicit (t : ('M, 'T) Ast.Expression.CallTypeArg.Implicit.t)
         : ('N, 'U) Ast.Expression.CallTypeArg.Implicit.t =
@@ -1124,7 +1137,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
             tparams = tparams';
             sig_loc = sig_loc';
             comments = comments';
-          })
+          }
+      )
 
     method function_params (params : ('M, 'T) Ast.Function.Params.t)
         : ('N, 'U) Ast.Function.Params.t =
@@ -1139,7 +1153,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           rest = rest';
           comments = comments';
           this_ = this_';
-        } )
+        }
+      )
 
     method function_param (param : ('M, 'T) Ast.Function.Param.t) : ('N, 'U) Ast.Function.Param.t =
       let open Ast.Function.Param in
@@ -1205,7 +1220,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           let extends' = Base.List.map ~f:(this#on_loc_annot * this#generic_type) extends in
           let body' = (this#on_loc_annot * this#object_type) body in
           let comments' = Base.Option.map ~f:this#syntax comments in
-          { id = id'; tparams = tparams'; extends = extends'; body = body'; comments = comments' })
+          { id = id'; tparams = tparams'; extends = extends'; body = body'; comments = comments' }
+      )
 
     method interface_declaration (decl : ('M, 'T) Ast.Statement.Interface.t)
         : ('N, 'U) Ast.Statement.Interface.t =
@@ -1400,7 +1416,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Fragment frag -> Fragment (this#jsx_fragment frag)
         | ExpressionContainer expr -> ExpressionContainer (this#jsx_expression expr)
         | SpreadChild spread -> SpreadChild (this#jsx_spread_child spread)
-        | Text _ as child' -> child' )
+        | Text _ as child' -> child'
+      )
 
     method jsx_expression (jsx_expr : ('M, 'T) Ast.JSX.ExpressionContainer.t)
         : ('N, 'U) Ast.JSX.ExpressionContainer.t =
@@ -1444,7 +1461,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         let (annot, { namespace; name }) = namespaced_name in
         let namespace' = this#jsx_identifier namespace in
         let name' = this#jsx_identifier name in
-        (this#on_loc_annot annot, { namespace = namespace'; name = name' }))
+        (this#on_loc_annot annot, { namespace = namespace'; name = name' })
+      )
 
     method jsx_member_expression (member_exp : ('M, 'T) Ast.JSX.MemberExpression.t)
         : ('N, 'U) Ast.JSX.MemberExpression.t =
@@ -1587,7 +1605,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           let key' = this#object_key key in
           let fn' = this#function_expression fn in
           let comments' = Base.Option.map ~f:this#syntax comments in
-          Set { key = key'; value = (this#on_loc_annot fn_annot, fn'); comments = comments' } )
+          Set { key = key'; value = (this#on_loc_annot fn_annot, fn'); comments = comments' }
+      )
 
     method object_key (key : ('M, 'T) Ast.Expression.Object.Property.key)
         : ('N, 'U) Ast.Expression.Object.Property.key =
@@ -1619,7 +1638,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
             impltype = impltype';
             supertype = supertype';
             comments = comments';
-          })
+          }
+      )
 
     method declare_opaque_type (otype : ('M, 'T) Ast.Statement.OpaqueType.t)
         : ('N, 'U) Ast.Statement.OpaqueType.t =
@@ -1672,7 +1692,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           let name' = this#t_pattern_identifier ?kind name in
           let annot' = this#type_annotation_hint annot in
           Identifier { Identifier.name = name'; annot = annot'; optional }
-        | Expression e -> Expression (this#pattern_expression e) )
+        | Expression e -> Expression (this#pattern_expression e)
+      )
 
     method t_pattern_identifier ?kind (ident : ('M, 'T) Ast.Identifier.t)
         : ('N, 'U) Ast.Identifier.t =
@@ -1959,7 +1980,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       this#type_params_opt tparams (fun tparams' ->
           let right' = this#type_ right in
           let comments' = Base.Option.map ~f:this#syntax comments in
-          { id = id'; tparams = tparams'; right = right'; comments = comments' })
+          { id = id'; tparams = tparams'; right = right'; comments = comments' }
+      )
 
     method yield (expr : ('M, 'T) Ast.Expression.Yield.t) : ('N, 'U) Ast.Expression.Yield.t =
       let open Ast.Expression.Yield in

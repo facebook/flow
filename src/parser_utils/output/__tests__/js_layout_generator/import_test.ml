@@ -53,7 +53,8 @@ let tests =
         ~ctxt
         ~pretty:true
         ~opts:(no_bracket_spacing opts)
-        {|import a, {b} from "a";|} );
+        {|import a, {b} from "a";|}
+    );
     ( "wrap_specifiers" >:: fun ctxt ->
       assert_statement_string
         ~ctxt
@@ -65,7 +66,8 @@ let tests =
         (Printf.sprintf
            "import {\n  %s,\n  %s,\n} from \"a\";"
            (String.make 80 'a')
-           (String.make 80 'b'));
+           (String.make 80 'b')
+        );
       assert_statement_string
         ~ctxt
         ~pretty:true
@@ -73,7 +75,8 @@ let tests =
            "import {\n  %s,\n  %s,\n} from \"%s\";"
            (String.make 20 'a')
            (String.make 20 'b')
-           (String.make 40 'c'));
+           (String.make 40 'c')
+        );
       (* don't wrap a single specifier even if it's too long *)
       assert_statement_string
         ~ctxt
@@ -91,5 +94,7 @@ let tests =
         (Printf.sprintf
            "import x, {\n  %s,\n} from \"%s\";"
            (String.make 40 'a')
-           (String.make 40 'b')) );
+           (String.make 40 'b')
+        )
+    );
   ]

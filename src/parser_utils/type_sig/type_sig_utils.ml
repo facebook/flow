@@ -53,7 +53,8 @@ let pack_builtins (tbls, (globals, modules)) =
   in
   ( cx.Pack.errs,
     locs,
-    { Packed_type_sig.Builtins.module_refs; local_defs; remote_refs; globals; modules } )
+    { Packed_type_sig.Builtins.module_refs; local_defs; remote_refs; globals; modules }
+  )
 
 (* Modules are parsed and packed separately, then merged component wise
    according to the dependency DAG. *)
@@ -108,7 +109,8 @@ let pack (tbls, file_loc, exports) =
       remote_refs;
       pattern_defs;
       patterns;
-    } )
+    }
+  )
 
 let parse_and_pack_module ~strict opts source ast = pack (parse_module ~strict source opts ast)
 

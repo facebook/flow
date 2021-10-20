@@ -20,15 +20,18 @@ let test_valid () =
       ("file:///c:/path/to/the%20file.txt", "C:/path/to/the file.txt");
       ("file:///c|/path/to/the%20file.txt", "C:/path/to/the file.txt");
       ( "file:///u/lai/tik/tik76002/public_html/lerman.files/chaps",
-        "/u/lai/tik/tik76002/public_html/lerman.files/chaps" );
+        "/u/lai/tik/tik76002/public_html/lerman.files/chaps"
+      );
       ("file:///etc/motd", "/etc/motd");
       ( "file:///c:/windows/My%20Documents%20100%2520/foo.txt",
-        "C:/windows/My Documents 100%20/foo.txt" );
+        "C:/windows/My Documents 100%20/foo.txt"
+      );
       ("file:///D:/Program%20Files/Viewer/startup.htm", "D:/Program Files/Viewer/startup.htm");
       ("file:///D:/Desktop/Book.pdf", "D:/Desktop/Book.pdf");
       ("file://localhost/D:/Desktop/", "D:/Desktop/");
       ( "file:///C:/Documents%20and%20Settings/davris/FileSchemeURIs.doc",
-        "C:/Documents and Settings/davris/FileSchemeURIs.doc" );
+        "C:/Documents and Settings/davris/FileSchemeURIs.doc"
+      );
       ("file:///abc/def/ghi.txt", "/abc/def/ghi.txt");
       ("file:///a:/bcd/efg/hij.txt", "A:/bcd/efg/hij.txt");
       ("file:///home/usr123/work/abc.txt", "/home/usr123/work/abc.txt");
@@ -49,7 +52,8 @@ let test_valid () =
       ("file:///C:/Autoexec.bat", "C:/Autoexec.bat");
       ("file:///etc/hosts", "/etc/hosts");
       ( "file:///C:/WINDOWS/Desktop/FileURLs/mozilla-banner",
-        "C:/WINDOWS/Desktop/FileURLs/mozilla-banner" );
+        "C:/WINDOWS/Desktop/FileURLs/mozilla-banner"
+      );
       ("file:///Macintosh%20HD/fileURLs/mozilla-banner", "/Macintosh HD/fileURLs/mozilla-banner");
       ("file:///fileURLs/mozilla-banner", "/fileURLs/mozilla-banner");
       ("file:///wh/at!/ev%20/er", "/wh/at!/ev /er");
@@ -140,19 +144,22 @@ let test_create () =
         if Sys.win32 then
           "file:///c%3A/autoexec.bat"
         else
-          "file:///c%3A%5Cautoexec.bat" );
+          "file:///c%3A%5Cautoexec.bat"
+      );
       ("c:/autoexec.bat", "file:///c%3A/autoexec.bat");
       ( "c:\\\\autoexec.bat",
         if Sys.win32 then
           "file:///c%3A//autoexec.bat"
         else
-          "file:///c%3A%5C%5Cautoexec.bat" );
+          "file:///c%3A%5C%5Cautoexec.bat"
+      );
       ("c://autoexec.bat", "file:///c%3A//autoexec.bat");
       ("/etc/dollar$dollar", "file:///etc/dollar$dollar");
       ("/etc/hash#hash", "file:///etc/hash%23hash");
       ("/etc/question?question", "file:///etc/question%3Fquestion");
       ( "/etc/braces{}/backtick`/caret^/space /file",
-        "file:///etc/braces%7B%7D/backtick%60/caret%5E/space%20/file" );
+        "file:///etc/braces%7B%7D/backtick%60/caret%5E/space%20/file"
+      );
     ]
   in
   let do_example (file, expected) =

@@ -22,6 +22,7 @@ let tests =
                     ~ctxt
                     ~printer:split_nth_printer
                     (Some ("foo\n", "bar", ""))
-                    (Line.split_nth "foo\nbar" 1) );
+                    (Line.split_nth "foo\nbar" 1)
+                );
               ];
        ]

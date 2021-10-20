@@ -69,7 +69,9 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
       ( loc,
         Pattern.(
           Object
-            { Object.properties = properties env [] props; annot = missing_annot env; comments }) )
+            { Object.properties = properties env [] props; annot = missing_annot env; comments }
+        )
+      )
 
   and array_from_expr =
     (* Convert an Expression to a Pattern if it is a valid
@@ -129,7 +131,8 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
     fun env (loc, { Ast.Expression.Array.elements = elems; comments }) ->
       ( loc,
         Pattern.Array
-          { Pattern.Array.elements = elements env [] elems; annot = missing_annot env; comments } )
+          { Pattern.Array.elements = elements env [] elems; annot = missing_annot env; comments }
+      )
 
   and from_expr env (loc, expr) =
     let open Ast.Expression in
@@ -172,7 +175,8 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
       in
       Pattern.Object.RestElement
         ( loc,
-          { Pattern.RestElement.argument; comments = Flow_ast_utils.mk_comments_opt ~leading () } )
+          { Pattern.RestElement.argument; comments = Flow_ast_utils.mk_comments_opt ~leading () }
+        )
     in
     let property_default env =
       match Peek.token env with
@@ -213,7 +217,8 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
           (match raw_key with
           | ( _,
               Ast.Expression.Object.Property.Identifier
-                ((id_loc, { Identifier.name = string_val; comments = _ }) as name) ) ->
+                ((id_loc, { Identifier.name = string_val; comments = _ }) as name)
+            ) ->
             (* #sec-identifiers-static-semantics-early-errors *)
             if is_reserved string_val && string_val <> "yield" && string_val <> "await" then
               (* it is a syntax error if `name` is a reserved word other than await or yield *)
@@ -228,7 +233,8 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
                   let pattern =
                     ( id_loc,
                       Pattern.Identifier
-                        { Pattern.Identifier.name; annot = missing_annot env; optional = false } )
+                        { Pattern.Identifier.name; annot = missing_annot env; optional = false }
+                    )
                   in
                   let default = property_default env in
                   (pattern, default))
@@ -239,7 +245,8 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
                 Property
                   ( loc,
                     { Property.key = Property.Identifier name; pattern; default; shorthand = true }
-                  ))
+                  )
+              )
           | _ ->
             error_unexpected ~expected:"an identifier" env;
 
@@ -276,7 +283,8 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
                 if Peek.token env = T_COMMA then
                   Some (Peek.loc env)
                 else
-                  None )
+                  None
+              )
             | _ -> (seen_rest, rest_trailing_comma)
           in
           if Peek.token env <> T_RCURLY then Expect.token env T_COMMA;
@@ -301,7 +309,8 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
             Pattern.Object.properties;
             annot;
             comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
-          })
+          }
+    )
 
   (* Parse array destructuring pattern *)
   and array_ restricted_error =
@@ -329,7 +338,8 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
               {
                 Pattern.RestElement.argument;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
-              } )
+              }
+            )
         in
         (* rest elements are always last, the closing ] should be next. but if not,
            error and keep going so we recover gracefully by parsing the rest of the
@@ -374,7 +384,8 @@ module Pattern (Parse : Parser_common.PARSER) (Type : Type_parser.TYPE) = struct
         let comments =
           Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ()
         in
-        Pattern.Array { Pattern.Array.elements; annot; comments })
+        Pattern.Array { Pattern.Array.elements; annot; comments }
+    )
 
   and pattern env restricted_error =
     match Peek.token env with

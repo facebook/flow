@@ -36,8 +36,10 @@ let spec =
              string
              ~doc:
                ("File containing list of files to recheck, one per line. If -, list of files is "
-               ^ "read from the standard input.")
-        |> anon "files" (list_of string));
+               ^ "read from the standard input."
+               )
+        |> anon "files" (list_of string)
+      );
   }
 
 type json =

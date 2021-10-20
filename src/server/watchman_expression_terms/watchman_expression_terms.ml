@@ -19,7 +19,8 @@ let make ~options =
            if ext <> "" && ext.[0] = '.' then
              String.sub ext 1 (String.length ext - 1)
            else
-             ext)
+             ext
+       )
   in
   (* Unfortunately watchman can't deal with absolute paths. Its "wholename" feature only
    * works for relative paths to the watch root, and we don't know the watch root until we

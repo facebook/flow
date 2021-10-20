@@ -556,7 +556,8 @@ let token_is_keyword =
     | T_WITH
     | T_YIELD ->
       true
-    | _ -> false)
+    | _ -> false
+  )
 
 (* #sec-future-reserved-words *)
 let is_future_reserved = function
@@ -568,7 +569,8 @@ let token_is_future_reserved =
     function
     | T_IDENTIFIER { raw; _ } when is_future_reserved raw -> true
     | T_ENUM -> true
-    | _ -> false)
+    | _ -> false
+  )
 
 (* #sec-strict-mode-of-ecmascript *)
 let is_strict_reserved = function
@@ -596,7 +598,8 @@ let token_is_strict_reserved =
     | T_STATIC
     | T_YIELD ->
       true
-    | _ -> false)
+    | _ -> false
+  )
 
 (* #sec-strict-mode-of-ecmascript *)
 let is_restricted = function
@@ -609,7 +612,8 @@ let token_is_restricted =
   Token.(
     function
     | T_IDENTIFIER { raw; _ } when is_restricted raw -> true
-    | _ -> false)
+    | _ -> false
+  )
 
 (* #sec-reserved-words *)
 let is_reserved str_val =

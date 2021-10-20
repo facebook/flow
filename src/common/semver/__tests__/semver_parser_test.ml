@@ -37,7 +37,8 @@ let tests =
                  ("1.2", { zero with major = 1; minor = 2 });
                  ("1.2.3", { zero with major = 1; minor = 2; patch = 3 });
                  ( "1.2.3-alpha",
-                   { zero with major = 1; minor = 2; patch = 3; prerelease = [Str "alpha"] } );
+                   { zero with major = 1; minor = 2; patch = 3; prerelease = [Str "alpha"] }
+                 );
                  ( "1.2.3-alpha.2",
                    { zero with major = 1; minor = 2; patch = 3; prerelease = [Str "alpha"; Int 2] }
                  );
@@ -49,7 +50,9 @@ let tests =
                  | Semver_parse_error token ->
                    assert_failure ("Failed to parse " ^ str ^ ": unexpected token " ^ token))
                cases;
-             assert_bool "done" true) )
+             assert_bool "done" true
+           )
+         )
          (* fixes ounit error reporting *);
          ( "comparator_basics" >:: fun ctxt ->
            Semver_comparator.(
@@ -73,7 +76,9 @@ let tests =
                  | Semver_parse_error token ->
                    assert_failure ("Failed to parse " ^ str ^ ": unexpected token " ^ token))
                cases;
-             assert_bool "done" true) )
+             assert_bool "done" true
+           )
+         )
          (* fixes ounit error reporting *);
          ( "range_basics" >:: fun ctxt ->
            Semver_range.(
@@ -98,6 +103,8 @@ let tests =
                  | Semver_parse_error token ->
                    assert_failure ("Failed to parse " ^ str ^ ": unexpected token " ^ token))
                cases;
-             assert_bool "done" true) );
+             assert_bool "done" true
+           )
+         );
          (* fixes ounit error reporting *)
        ]

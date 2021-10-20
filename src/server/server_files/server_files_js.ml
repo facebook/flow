@@ -12,7 +12,8 @@ let add_dir_sep dir =
     if check_suffix dir dir_sep then
       dir
     else
-      dir ^ dir_sep)
+      dir ^ dir_sep
+  )
 
 let mk_root flowconfig_name root =
   if flowconfig_name = default_flowconfig_name then

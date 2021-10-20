@@ -90,13 +90,13 @@ class ['loc] trailing_comments_remover ~after_pos =
       let open Ast.Expression.ArgList in
       let (loc, { arguments; comments }) = arg_list in
       id this#syntax_opt comments arg_list (fun comments' ->
-          (loc, { arguments; comments = comments' }))
+          (loc, { arguments; comments = comments' })
+      )
 
     method! call_type_args targs =
       let open Ast.Expression.CallTypeArgs in
       let (loc, { arguments; comments }) = targs in
-      id this#syntax_opt comments targs (fun comments' ->
-          (loc, { arguments; comments = comments' }))
+      id this#syntax_opt comments targs (fun comments' -> (loc, { arguments; comments = comments' }))
 
     method! class_ _loc cls =
       let open Ast.Class in
@@ -112,7 +112,8 @@ class ['loc] trailing_comments_remover ~after_pos =
       let open Ast.Class.Body in
       let (loc, { body = _body; comments }) = body in
       id this#syntax_opt comments body (fun comments' ->
-          (loc, { body = _body; comments = comments' }))
+          (loc, { body = _body; comments = comments' })
+      )
 
     method! class_extends _loc extends =
       let open Ast.Class.Extends in
@@ -126,7 +127,8 @@ class ['loc] trailing_comments_remover ~after_pos =
       let open Ast.Class.Implements in
       let (loc, { interfaces; comments }) = implements in
       id (id_list_last this#class_implements_interface) interfaces implements (fun interfaces' ->
-          (loc, { interfaces = interfaces'; comments }))
+          (loc, { interfaces = interfaces'; comments })
+      )
 
     method! class_implements_interface interface =
       let open Ast.Class.Implements.Interface in
@@ -135,7 +137,8 @@ class ['loc] trailing_comments_remover ~after_pos =
         id this#identifier id_ interface (fun id' -> (loc, { id = id'; targs }))
       else
         id (map_opt this#type_args) targs interface (fun targs' ->
-            (loc, { id = id_; targs = targs' }))
+            (loc, { id = id_; targs = targs' })
+        )
 
     method! computed_key key =
       let open Ast.ComputedKey in
@@ -166,7 +169,8 @@ class ['loc] trailing_comments_remover ~after_pos =
       let open Ast.Function.Params in
       let { comments; _ } = params in
       id this#syntax_opt comments (loc, params) (fun comments' ->
-          (loc, { params with comments = comments' }))
+          (loc, { params with comments = comments' })
+      )
 
     method! function_type _loc func =
       let open Ast.Type.Function in
@@ -338,7 +342,8 @@ class ['loc] trailing_comments_remover ~after_pos =
       match init with
       | None ->
         id (this#variable_declarator_pattern ~kind) ident decl (fun ident' ->
-            (loc, { id = ident'; init }))
+            (loc, { id = ident'; init })
+        )
       | Some init ->
         id this#expression init decl (fun init' -> (loc, { id = ident; init = Some init' }))
   end
@@ -452,7 +457,8 @@ let generic_type_remove_trailing env ty =
 let generic_type_list_remove_trailing env extends =
   let { remove_trailing; _ } = trailing_and_remover env in
   remove_trailing extends (fun remover extends ->
-      id_list_last (map_loc remover#generic_type) extends)
+      id_list_last (map_loc remover#generic_type) extends
+  )
 
 let class_implements_remove_trailing env implements =
   let { remove_trailing; _ } = trailing_and_remover env in
@@ -541,7 +547,8 @@ let statement_add_comments
       VariableDeclaration { s with VariableDeclaration.comments = merge_comments comments }
     | While ({ While.comments; _ } as s) ->
       While { s with While.comments = merge_comments comments }
-    | With ({ With.comments; _ } as s) -> With { s with With.comments = merge_comments comments } )
+    | With ({ With.comments; _ } as s) -> With { s with With.comments = merge_comments comments }
+  )
 
 (* Collects the first leading and last trailing comment on an AST node or its children.
    The first leading comment is the first attached comment that begins before the given node's loc,

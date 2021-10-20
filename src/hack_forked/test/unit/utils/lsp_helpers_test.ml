@@ -20,7 +20,8 @@ let assert_peq (exp : position) (actual : position) (failure_msg : string) =
          exp.line
          exp.character
          actual.line
-         actual.character)
+         actual.character
+      )
 
 let assert_req (exp : range option) (actual : range option) (failure_msg : string) =
   match (exp, actual) with
@@ -40,7 +41,8 @@ let assert_req (exp : range option) (actual : range option) (failure_msg : strin
          actual.start.line
          actual.start.character
          actual.end_.line
-         actual.end_.character)
+         actual.end_.character
+      )
 
 let test_pos_compare () =
   let p1 = { line = 1; character = 3 } in

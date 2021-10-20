@@ -65,7 +65,8 @@ let load_per_file_time ~options =
               ~flags:[Unix.O_RDONLY; Unix.O_NONBLOCK]
               ~mode:Lwt_io.Input
               ~perm:0o666
-              file)
+              file
+           )
        with
       | Unix.Unix_error (Unix.ENOENT, _, _) -> Lwt_result.fail "File doesn't exist")
       >>= fun ic ->
@@ -95,7 +96,8 @@ let load_per_file_time ~options =
                        estimated_files_to_init = int_exn json estimated_files_to_init_key;
                      }
                in
-               Result.Ok (v, last_estimates))
+               Result.Ok (v, last_estimates)
+             )
          with
         | Hh_json.Syntax_error str ->
           Result.Error (Printf.sprintf "Failed to parse as JSON contents. %S: %S" str contents)
@@ -106,7 +108,8 @@ let load_per_file_time ~options =
     | Result.Ok (per_file_time, last_estimates) -> Lwt.return (per_file_time, last_estimates)
     | Result.Error reason ->
       Hh_logger.info "Failed to load recheck stats from %S. Reason: %S" file reason;
-      Lwt.return (per_file_time_guess, None))
+      Lwt.return (per_file_time_guess, None)
+  )
 
 let save_averages ~options ?estimates new_averages =
   averages := Some new_averages;
@@ -131,25 +134,35 @@ let save_averages ~options ?estimates new_averages =
               JSON_Object
                 [
                   ( estimated_time_to_recheck_key,
-                    JSON_Number (Dtoa.ecma_string_of_float estimated_time_to_recheck) );
+                    JSON_Number (Dtoa.ecma_string_of_float estimated_time_to_recheck)
+                  );
                   ( estimated_time_to_restart_key,
-                    JSON_Number (Dtoa.ecma_string_of_float estimated_time_to_restart) );
+                    JSON_Number (Dtoa.ecma_string_of_float estimated_time_to_restart)
+                  );
                   ( estimated_time_to_init_key,
-                    JSON_Number (Dtoa.ecma_string_of_float estimated_time_to_init) );
+                    JSON_Number (Dtoa.ecma_string_of_float estimated_time_to_init)
+                  );
                   ( estimated_time_per_file_key,
-                    JSON_Number (Dtoa.ecma_string_of_float estimated_time_per_file) );
+                    JSON_Number (Dtoa.ecma_string_of_float estimated_time_per_file)
+                  );
                   ( estimated_files_to_recheck_key,
-                    JSON_Number (string_of_int estimated_files_to_recheck) );
+                    JSON_Number (string_of_int estimated_files_to_recheck)
+                  );
                   (estimated_files_to_init_key, JSON_Number (string_of_int estimated_files_to_init));
-                ] );
-          ])
+                ]
+            );
+          ]
+        
+    )
   in
   let json_str =
     Hh_json.(
       json_to_string
       @@ JSON_Object
            ((per_file_time_key, JSON_Number (Dtoa.ecma_string_of_float new_averages.per_file_time))
-            :: estimates))
+            :: estimates
+           )
+    )
   in
   let file = get_file ~options in
   Lwt_result.(
@@ -181,7 +194,8 @@ let save_averages ~options ?estimates new_averages =
       | Result.Error msg -> Hh_logger.error "Failed to save per_file_time to %S. %s" file msg
     end;
 
-    Lwt.return_unit)
+    Lwt.return_unit
+  )
 
 let init ~options ~init_time ~parsed_count =
   let%lwt (per_file_time, last_estimates) = load_per_file_time ~options in

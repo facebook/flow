@@ -19,6 +19,7 @@ let default_autoimport_options =
       max_results = max_autoimport_suggestions;
       num_threads = Base.Int.max 1 (Sys_utils.nbr_procs - 2);
     }
+  
 
 let autocomplete_suffix = "AUTO332"
 
@@ -34,14 +35,16 @@ let add_autocomplete_token contents line column =
           let end_ = String.sub line_str column (length - column) in
           start ^ autocomplete_suffix ^ end_
         else
-          line_str)
+          line_str
+    )
   in
   let f (_, x, _) = x in
   let default = "" in
   ( contents_with_token,
     Base.Option.value_map ~f ~default (Line.split_nth contents_with_token (line - 1))
     ^ Base.Option.value_map ~f ~default (Line.split_nth contents_with_token line)
-    ^ Base.Option.value_map ~f ~default (Line.split_nth contents_with_token (line + 1)) )
+    ^ Base.Option.value_map ~f ~default (Line.split_nth contents_with_token (line + 1))
+  )
 
 (**
  * the autocomplete token inserts `suffix_len` characters, which are included
@@ -222,6 +225,7 @@ let ty_normalizer_options =
       verbose_normalizer = false;
       max_depth = Some 50;
     }
+  
 
 type ac_result = {
   result: ServerProt.Response.Completion.t;
@@ -279,11 +283,13 @@ let members_of_type
         |> NameUtils.Map.bindings
         |> Base.List.filter_map ~f:include_valid_member
         |> List.map (fun (name, info) ->
-               (name, documentation_of_member ~reader ~typed_ast info, info)),
+               (name, documentation_of_member ~reader ~typed_ast info, info)
+           ),
         (match errors with
         | [] -> []
         | _ :: _ -> Printf.sprintf "members_of_type %s" (Debug_js.dump_t cx type_) :: errors),
-        in_idx )
+        in_idx
+      )
 
 (* The fact that we need this feels convoluted.
    We run Scope_builder on the untyped AST and now we go back to the typed AST to get the types
@@ -379,7 +385,10 @@ let local_value_identifiers
          (* TODO(vijayramamurthy) do something about sometimes failing to collect types *)
          Base.Option.map (LocMap.find_opt loc types) ~f:(fun type_ ->
              ( (name, documentation_of_loc ~options ~reader ~cx ~file_sig ~typed_ast loc),
-               Type.TypeScheme.{ tparams_rev; type_ } )))
+               Type.TypeScheme.{ tparams_rev; type_ }
+             )
+         )
+     )
   |> Ty_normalizer.from_schemes ~options:ty_normalizer_options ~genv
 
 (* Roughly collects upper bounds of a type.
@@ -454,7 +463,8 @@ let autocomplete_literals ~prefer_single_quotes ~cx ~genv ~tparams_rev ~ac_loc ~
         ~exact_by_default
         ~log_info:"literal from upper bound"
         (name, ac_loc)
-        ty)
+        ty
+  )
 
 let src_dir_of_loc ac_loc =
   Loc.source ac_loc |> Base.Option.map ~f:(fun key -> File_key.to_string key |> Filename.dirname)
@@ -795,7 +805,8 @@ class local_type_identifiers_searcher =
                 in
                 if specifier_binds_type then this#add_id (Base.Option.value local ~default:remote))
               specifiers
-          | ImportNamespaceSpecifier _ -> ( (* namespaces can't be types *) ));
+          | ImportNamespaceSpecifier _ -> ( (* namespaces can't be types *) )
+          );
       x
   end
 
@@ -1070,7 +1081,8 @@ let autocomplete_member
                   |> Js_layout_generator.expression
                        ~opts:(Code_action_service.layout_options options)
                   |> Pretty_printer.print ~source_maps:None ~skip_endline:true
-                  |> Source.contents)
+                  |> Source.contents
+                 )
              in
              let name_is_valid_identifier = Parser_flow.string_is_valid_identifier_name name in
              let edit_loc_of_member_loc member_loc =
@@ -1085,7 +1097,8 @@ let autocomplete_member
                  in_idx,
                  bracket_syntax,
                  member_loc,
-                 name_is_valid_identifier )
+                 name_is_valid_identifier
+               )
              with
              (* TODO: only complete obj destructuring pattern when name is valid identifier *)
              | (_, _, _, _, None, _)
@@ -1144,7 +1157,8 @@ let autocomplete_member
                  ~exact_by_default
                  ~log_info:"start optional chain"
                  (opt_chain_name, remove_autocomplete_token_from_loc member_loc)
-                 opt_chain_ty)
+                 opt_chain_ty
+         )
     in
     (match bracket_syntax with
     | None ->
@@ -1288,7 +1302,8 @@ let autocomplete_jsx_attribute
   let props_object =
     Tvar.mk_where cx reason (fun tvar ->
         let use_op = Type.Op Type.UnknownUse in
-        flow cx (cls, Type.ReactKitT (use_op, reason, Type.React.GetConfig tvar)))
+        flow cx (cls, Type.ReactKitT (use_op, reason, Type.React.GetConfig tvar))
+    )
   in
   let exact_by_default = Context.exact_by_default cx in
   (* The `children` prop (if it exists) is set with the contents between the opening and closing
@@ -1326,7 +1341,8 @@ let autocomplete_jsx_attribute
                ~exact_by_default
                ~log_info:"jsx attribute"
                (name, ac_loc)
-               ty)
+               ty
+         )
     in
     let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
     AcResult { result; errors_to_log }
@@ -1351,7 +1367,8 @@ let autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparam
     | Error err -> ([], [Ty_normalizer.error_to_string err])
     | Ok module_ty ->
       ( type_exports_of_module_ty ~ac_loc ~exact_by_default ~documentation_of_module_member module_ty,
-        [] )
+        []
+      )
   in
   AcResult
     { result = { ServerProt.Response.Completion.items; is_incomplete = false }; errors_to_log }
@@ -1421,8 +1438,7 @@ let autocomplete_object_key
                        symbol
                  in
                  expression
-                 |> Js_layout_generator.expression
-                      ~opts:(Code_action_service.layout_options options)
+                 |> Js_layout_generator.expression ~opts:(Code_action_service.layout_options options)
                  |> Pretty_printer.print ~source_maps:None ~skip_endline:true
                  |> Source.contents
                in
@@ -1433,7 +1449,8 @@ let autocomplete_object_key
                  ~exact_by_default
                  ~log_info:"bracket syntax object key"
                  (insert_text, ac_loc)
-                 ty)
+                 ty
+         )
     in
     let result = { ServerProt.Response.Completion.items; is_incomplete = false } in
     AcResult { result; errors_to_log }
@@ -1471,7 +1488,8 @@ let autocomplete_get_results
             ~token
             obj_type
             ac_loc
-            ~tparams_rev )
+            ~tparams_rev
+        )
       | Ac_literal { lit_type } ->
         let ac_loc = loc_of_aloc ~reader ac_loc |> remove_autocomplete_token_from_loc in
         let genv =
@@ -1501,7 +1519,9 @@ let autocomplete_get_results
                ~imports
                ~tparams_rev
                ~token
-               ~type_) )
+               ~type_
+            )
+        )
       | Ac_member { obj_type; in_optional_chain; bracket_syntax; member_loc; is_type_annotation } ->
         ( "Acmem",
           autocomplete_member
@@ -1520,7 +1540,8 @@ let autocomplete_get_results
             ~tparams_rev
             ~bracket_syntax
             ~member_loc
-            ~is_type_annotation )
+            ~is_type_annotation
+        )
       | Ac_jsx_element { type_ } ->
         ( "Ac_jsx_element",
           autocomplete_jsx_element
@@ -1535,7 +1556,8 @@ let autocomplete_get_results
             ~imports
             ~tparams_rev
             ~token
-            ~type_ )
+            ~type_
+        )
       | Ac_jsx_attribute { attribute_name; used_attr_names; component_t; has_value } ->
         ( "Acjsx",
           autocomplete_jsx_attribute
@@ -1548,7 +1570,8 @@ let autocomplete_get_results
             ~used_attr_names
             ~has_value
             ac_loc
-            ~tparams_rev )
+            ~tparams_rev
+        )
       | Ac_type ->
         ( "Actype",
           AcResult
@@ -1563,8 +1586,11 @@ let autocomplete_get_results
                ~ast
                ~typed_ast
                ~file_sig
-               ~token) )
+               ~token
+            )
+        )
       | Ac_qualified_type qtype ->
         ( "Acqualifiedtype",
           autocomplete_qualified_type ~reader ~cx ~ac_loc ~file_sig ~typed_ast ~tparams_rev ~qtype
-        )) )
+        ))
+    )

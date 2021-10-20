@@ -640,7 +640,8 @@ let reasonless_compare =
      * optimized union ~> union check will not pass. *)
     | (MaybeT (_, t2), MaybeT (r, t1)) -> MaybeT (r, swap_reason t2 t1)
     | ( OptionalT { reason = _; type_ = t2; use_desc = _ },
-        OptionalT { reason; type_ = t1; use_desc } ) ->
+        OptionalT { reason; type_ = t1; use_desc }
+      ) ->
       OptionalT { reason; type_ = swap_reason t2 t1; use_desc }
     | (ExactT (_, t2), ExactT (r, t1)) -> ExactT (r, swap_reason t2 t1)
     | _ -> mod_reason_of_t (fun _ -> reason_of_t t1) t2
@@ -701,7 +702,8 @@ let quick_subtype trust_checked t1 t2 =
       && boolean_literal_eq expected actual
     | (DefT (_, _, ObjT { flags = { obj_kind = Exact; _ }; _ }), ExactT (_, t2')) ->
       reasonless_eq t1 t2'
-    | _ -> reasonless_eq t1 t2)
+    | _ -> reasonless_eq t1 t2
+  )
 
 let reason_of_propref = function
   | Named (r, _) -> r

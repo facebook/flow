@@ -133,7 +133,8 @@ module Make
 
   let add_private_field name loc polarity field =
     map_sig (fun s ->
-        { s with private_fields = SMap.add name (Some loc, polarity, field) s.private_fields })
+        { s with private_fields = SMap.add name (Some loc, polarity, field) s.private_fields }
+    )
 
   let add_private_method ~static name loc fsig ~set_asts ~set_type x =
     let func_info = (Some loc, fsig, set_asts, set_type) in
@@ -143,17 +144,19 @@ module Make
       x
 
   let public_fields_of_signature ~static s =
-    (if static then
+    ( if static then
       s.static
     else
-      s.instance)
+      s.instance
+    )
       .fields
 
   let private_fields_of_signature ~static s =
-    (if static then
+    ( if static then
       s.static
     else
-      s.instance)
+      s.instance
+    )
       .private_fields
 
   let add_constructor loc fsig ?(set_asts = ignore) ?(set_type = ignore) s =
@@ -175,25 +178,29 @@ module Make
           s with
           fields = SMap.add name fld s.fields;
           proto_fields =
-            (if flat then
+            ( if flat then
               SMap.remove name s.proto_fields
             else
-              s.proto_fields);
+              s.proto_fields
+            );
           methods =
-            (if flat then
+            ( if flat then
               SMap.remove name s.methods
             else
-              s.methods);
+              s.methods
+            );
           getters =
-            (if flat then
+            ( if flat then
               SMap.remove name s.getters
             else
-              s.getters);
+              s.getters
+            );
           setters =
-            (if flat then
+            ( if flat then
               SMap.remove name s.setters
             else
-              s.setters);
+              s.setters
+            );
         })
       x
 
@@ -232,10 +239,11 @@ module Make
         {
           s with
           fields =
-            (if flat then
+            ( if flat then
               SMap.remove name s.fields
             else
-              s.fields);
+              s.fields
+            );
           proto_fields = SMap.remove name s.proto_fields;
           methods = SMap.add name (Nel.one func_info) s.methods;
           getters = SMap.remove name s.getters;
@@ -255,10 +263,11 @@ module Make
         {
           s with
           fields =
-            (if flat then
+            ( if flat then
               SMap.remove name s.fields
             else
-              s.fields);
+              s.fields
+            );
           proto_fields = SMap.remove name s.proto_fields;
           methods =
             (match SMap.find_opt name s.methods with
@@ -280,10 +289,11 @@ module Make
         {
           s with
           fields =
-            (if flat then
+            ( if flat then
               SMap.remove name s.fields
             else
-              s.fields);
+              s.fields
+            );
           proto_fields = SMap.remove name s.proto_fields;
           methods = SMap.remove name s.methods;
           getters = SMap.add name func_info s.getters;
@@ -299,10 +309,11 @@ module Make
         {
           s with
           fields =
-            (if flat then
+            ( if flat then
               SMap.remove name s.fields
             else
-              s.fields);
+              s.fields
+            );
           proto_fields = SMap.remove name s.proto_fields;
           methods = SMap.remove name s.methods;
           setters = SMap.add name func_info s.setters;
@@ -327,7 +338,8 @@ module Make
       polarity,
       match field with
       | Annot t -> Annot (Flow.subst cx map t)
-      | Infer (fsig, set_asts) -> Infer (F.subst cx map fsig, set_asts) )
+      | Infer (fsig, set_asts) -> Infer (F.subst cx map fsig, set_asts)
+    )
 
   let subst_sig cx map s =
     let subst_func_sig (loc, sig_, f, g) = (loc, F.subst cx map sig_, f, g) in
@@ -420,7 +432,8 @@ module Make
                 x.constructor;
             static = subst_sig cx map x.static;
             instance = subst_sig cx map x.instance;
-          })
+          }
+    )
 
   let to_field (loc, polarity, field) =
     let t =
@@ -469,8 +482,7 @@ module Make
           in
           (* Keep track of these before intersections are merged, to enable
            * type information on every member of the intersection. *)
-          ms
-          |> Nel.iter (fun (loc, t, set_type) -> Base.Option.iter loc ~f:(fun _loc -> set_type t));
+          ms |> Nel.iter (fun (loc, t, set_type) -> Base.Option.iter loc ~f:(fun _loc -> set_type t));
           match ms with
           | ((loc, t, _), []) -> (loc, t)
           | ((loc0, t0, _), (_, t1, _) :: ts) ->
@@ -552,7 +564,8 @@ module Make
     let open TypeUtil in
     let reason = reason_of_t c in
     Tvar.mk_derivable_where cx reason (fun tvar ->
-        Flow.flow cx (c, SpecializeT (unknown_use, reason, reason, None, targs, tvar)))
+        Flow.flow cx (c, SpecializeT (unknown_use, reason, reason, None, targs, tvar))
+    )
 
   let statictype cx static_proto x =
     let s = x.static in
@@ -565,7 +578,9 @@ module Make
           Utils_js.assert_false
             (Utils_js.spf
                "static fields and methods must be disjoint: %s"
-               (Debug_js.dump_reason cx s.reason)))
+               (Debug_js.dump_reason cx s.reason)
+            )
+      )
       |> NameUtils.namemap_of_smap
     in
     (* Statics are not exact, because we allow width subtyping between them.
@@ -576,7 +591,8 @@ module Make
     Type.(
       match static with
       | DefT (_, _, ObjT o) -> (inited_fields, o)
-      | _ -> failwith "statics must be an ObjT")
+      | _ -> failwith "statics must be an ObjT"
+    )
 
   let insttype cx ~initialized_static_fields s =
     let constructor =
@@ -788,13 +804,17 @@ module Make
       ~static:true
       (iter_methods_with_name (fun name (loc, msig, _, _) ->
            (* Constructors don't bind this *)
-           Base.Option.iter ~f:(check_method msig ~static:true name) loc))
+           Base.Option.iter ~f:(check_method msig ~static:true name) loc
+       )
+      )
       x;
 
     with_sig
       ~static:false
       (iter_methods_with_name (* Constructors don't bind this *) (fun name (loc, msig, _, _) ->
-           Base.Option.iter ~f:(check_method msig ~static:false name) loc))
+           Base.Option.iter ~f:(check_method msig ~static:false name) loc
+       )
+      )
       x
 
   let check_implements cx def_reason x =
@@ -815,8 +835,7 @@ module Make
             | Some targs -> typeapp_annot annot_loc c targs
           in
           let use_op =
-            Op
-              (ClassImplementsCheck { def = def_reason; name = reason; implements = reason_of_t i })
+            Op (ClassImplementsCheck { def = def_reason; name = reason; implements = reason_of_t i })
           in
           Flow.flow cx (i, ImplementsT (use_op, this)))
         implements
@@ -853,7 +872,8 @@ module Make
                    prop = OrdinaryName x;
                    own_loc = Property.first_loc p1;
                    proto_loc = Property.first_loc p2;
-                 })
+                 }
+              )
           in
           let propref = Named (reason, OrdinaryName x) in
           Flow.flow_p cx ~use_op reason reason propref (p1, p2))
@@ -874,7 +894,9 @@ module Make
                 own = NameUtils.namemap_of_smap own;
                 proto = NameUtils.namemap_of_smap proto;
                 static = NameUtils.namemap_of_smap static;
-              } ) )
+              }
+          )
+      )
 
   (* TODO: Ideally we should check polarity for all class types, but this flag is
      flipped off for interface/declare class currently. *)
@@ -919,8 +941,7 @@ module Make
           let save_return = Abnormal.clear_saved Abnormal.Return in
           let save_throw = Abnormal.clear_saved Abnormal.Throw in
           let (_, params_ast, body_ast, init_ast) =
-            f
-            |> F.check_with_generics cx (F.toplevels None cx this_recipe super ~decls ~stmts ~expr)
+            f |> F.check_with_generics cx (F.toplevels None cx this_recipe super ~decls ~stmts ~expr)
           in
           set_asts (params_ast, body_ast, init_ast);
           ignore (Abnormal.swap_saved Abnormal.Return save_return);
@@ -953,12 +974,16 @@ module Make
                 (t, TypeUtil.class_type ~annot_loc t)
               | Implicit { null } ->
                 Type.
-                  ( (if null then
+                  ( ( if null then
                       NullProtoT super_reason
                     else
-                      ObjProtoT super_reason),
-                    FunProtoT super_reason )
+                      ObjProtoT super_reason
+                    ),
+                    FunProtoT super_reason
+                  )
+                
             in
+
             (this_t, TypeUtil.class_type this_t, super, static_super)
         in
 
@@ -987,7 +1012,8 @@ module Make
                  (fun (_loc, f, set_asts, _) -> method_ static_this_recipe super ~set_asts f)
                  s;
                SMap.iter (field static_this_recipe super) s.fields;
-               SMap.iter (field static_this_recipe super) s.private_fields);
+               SMap.iter (field static_this_recipe super) s.private_fields
+           );
 
         x
         |> with_sig ~static:false (fun s ->
@@ -1016,7 +1042,8 @@ module Make
                  let this_recipe _ = (instance_this_default, this) in
                  x.constructor
                  |> List.iter (fun (_, fsig, set_asts, _) ->
-                        method_ this_recipe super ~set_asts fsig)
+                        method_ this_recipe super ~set_asts fsig
+                    )
                end;
 
                (* process instance methods and fields *)
@@ -1026,7 +1053,9 @@ module Make
                  s;
                SMap.iter (field instance_this_recipe super) s.fields;
                SMap.iter (field instance_this_recipe super) s.private_fields;
-               SMap.iter (field instance_this_recipe super) s.proto_fields))
+               SMap.iter (field instance_this_recipe super) s.proto_fields
+           )
+    )
 
   module This = struct
     let is_bound_to_empty { super; _ } =
@@ -1035,7 +1064,8 @@ module Make
         | Class { this_t = DefT (_, _, EmptyT); _ }
         | Class { this_t = ReposT (_, DefT (_, _, EmptyT)); _ } ->
           true
-        | _ -> false)
+        | _ -> false
+      )
 
     exception FoundInClass
 

@@ -222,7 +222,8 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
           CallT
             ( use_op,
               reason_op,
-              { calltype with call_targs = Some call_targs; call_tout = (reason_op, new_tout) } )
+              { calltype with call_targs = Some call_targs; call_tout = (reason_op, new_tout) }
+            )
         in
         Flow_js.flow cx (lhs, call_t)
       | Check.Constructor call_args ->
@@ -263,7 +264,8 @@ module Make (Observer : OBSERVER) : KIT with type output = Observer.output = str
              | None ->
                Observer.on_missing_bounds cx name ~tparam_binder_reason ~instantiation_reason
              | Some t -> Observer.on_pinned_tparam cx name t)
-           | Some Negative -> use_upper_bounds cx name t tparam_binder_reason instantiation_reason)
+           | Some Negative -> use_upper_bounds cx name t tparam_binder_reason instantiation_reason
+       )
 
   let check_fun cx ~tparams ~bounds_map ~return_t ~implicit_instantiation =
     (* Visit the return type *)

@@ -56,7 +56,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 widen_obj_type cx ?trace ~use_op reason t
               else
                 t)
-            rep )
+            rep
+        )
     | t -> t
 
   let run =
@@ -214,7 +215,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           | (t, UnionT (_, rep)) -> UnionRep.members rep |> List.exists (fun u -> is_subset (t, u))
           | (MaybeT (_, t1), MaybeT (_, t2)) -> is_subset (t1, t2)
           | ( OptionalT { reason = _; type_ = t1; use_desc = _ },
-              OptionalT { reason = _; type_ = t2; use_desc = _ } ) ->
+              OptionalT { reason = _; type_ = t2; use_desc = _ }
+            ) ->
             is_subset (t1, t2)
           | (DefT (_, _, (NullT | VoidT)), MaybeT _) -> true
           | (DefT (_, _, VoidT), OptionalT _) -> true
@@ -236,8 +238,10 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             let reason = replace_desc_new_reason (RWidenedObjProp (desc_of_reason reason)) reason in
             ( Tvar.mk_where cx reason (fun t ->
                   rec_flow_t cx trace ~use_op (t1, t);
-                  rec_flow_t cx trace ~use_op (t2, t)),
-              true )
+                  rec_flow_t cx trace ~use_op (t2, t)
+              ),
+              true
+            )
         in
         let widest = Context.spread_widened_types_get_widest cx widened_id in
         match widest with
@@ -286,8 +290,10 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                             missing_prop2
                             widest.Object.reason
                             t,
-                          m1 || m2 ),
-                        changed )
+                          m1 || m2
+                        ),
+                        changed
+                      )
                   else
                     Some ((t, m1 || m2), changed))
               widest_pmap
@@ -320,7 +326,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
             else
               ( Obj_type.is_legacy_exact_DO_NOT_USE widest.Object.flags.obj_kind
                 && Obj_type.is_legacy_exact_DO_NOT_USE slice.Object.flags.obj_kind,
-                changed )
+                changed
+              )
           in
           if not changed then
             ()
@@ -376,7 +383,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
            * to our config props. *)
           let config_props =
             Base.Option.value_map children ~default:config_props ~f:(fun children ->
-                NameUtils.Map.add (OrdinaryName "children") (children, true, false) config_props)
+                NameUtils.Map.add (OrdinaryName "children") (children, true, false) config_props
+            )
           in
           (* Remove the key and ref props from our config. We check key and ref
            * independently of our config. So we must remove them so the user can't
@@ -427,7 +435,9 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                               cx
                               trace
                               ( OpenT (reason, filter_optional cx ~trace reason t1),
-                                CondT (reason, None, t2, tvar) ))
+                                CondT (reason, None, t2, tvar)
+                              )
+                        )
                       in
                       Some (t, m1 || m2))
                   config_props
@@ -445,9 +455,11 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                             UnionRep.make
                               (Slice_utils.read_dict config_reason d1)
                               (Slice_utils.read_dict defaults_reason d2)
-                              [] );
+                              []
+                          );
                       dict_polarity = prop_polarity;
-                    })
+                    }
+                )
               in
               (* React freezes the config so we set the frozen flag to true. The
                * final object is only exact if both the config and defaults objects
@@ -481,7 +493,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                       key = d.key;
                       value = d.value;
                       dict_polarity = prop_polarity;
-                    })
+                    }
+                )
               in
               (* React freezes the config so we set the frozen flag to true. The
                * final object is only exact if the config object is exact. *)
@@ -489,10 +502,11 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
                 Obj_type.obj_kind_from_optional_dict
                   ~dict
                   ~otherwise:
-                    (if Obj_type.is_exact_or_sealed reason config_flags.obj_kind then
+                    ( if Obj_type.is_exact_or_sealed reason config_flags.obj_kind then
                       Exact
                     else
-                      Inexact)
+                      Inexact
+                    )
               in
               let flags = { frozen = true; obj_kind } in
               (props, flags, config_generics)
@@ -527,10 +541,7 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               replace_desc_reason (RCustom "React.TransportValue") reason
             in
             let react_transport_value =
-              get_builtin_type
-                cx
-                reason_transport_value_reason
-                (OrdinaryName "React$TransportValue")
+              get_builtin_type cx reason_transport_value_reason (OrdinaryName "React$TransportValue")
             in
             NameUtils.Map.iter
               (fun _ (t, _) -> rec_flow_t cx trace ~use_op (t, react_transport_value))
@@ -602,7 +613,8 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
               | (t, []) -> t
               | (t0, t1 :: ts) -> UnionT (reason, UnionRep.make t0 t1 ts)
             in
-            rec_flow cx trace (t, UseT (use_op, tout)))
+            rec_flow cx trace (t, UseT (use_op, tout))
+      )
     in
     (*********************)
     (* Object Resolution *)

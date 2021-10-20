@@ -172,7 +172,8 @@ end = struct
       let%bind st = get in
       let n = st.counter in
       let%map _ = put { st with counter = n + 1 } in
-      n)
+      n
+    )
 
   let terr ~kind ?msg t =
     let t_str = Base.Option.map t ~f:(fun t -> spf "Raised on type: %s" (Type.string_of_ctor t)) in
@@ -326,7 +327,8 @@ end = struct
               | (_, _) -> t
           end
         in
-        (fun v t -> o#on_t (v, `Union) t))
+        (fun v t -> o#on_t (v, `Union) t)
+      )
 
     (* Constructing recursive types.
      *
@@ -488,7 +490,8 @@ end = struct
           fun_return = ret;
           fun_type_params = tparams;
           fun_static = static;
-        })
+        }
+    )
 
   let mk_tparam ?bound ?(pol = Ty.Neutral) ?default name =
     Ty.{ tp_name = name; tp_bound = bound; tp_polarity = pol; tp_default = default }
@@ -626,7 +629,9 @@ end = struct
               let (_, tout) = Flow_js.mk_type_destructor cx ~trace use_op reason t' d' id' in
               match Lookahead.peek env tout with
               | Lookahead.LowerBounds [t] -> cont ~env t
-              | _ -> default ~env tout))
+              | _ -> default ~env tout
+          )
+      )
     else
       non_eval ~env t d
 
@@ -634,8 +639,7 @@ end = struct
     let local_type_alias_symbol env reason =
       match desc_of_reason ~unwrap:false reason with
       | REnum name -> return (symbol_from_reason env reason (Reason.OrdinaryName name))
-      | RTypeAlias (name, Some loc, _) ->
-        return (symbol_from_loc env loc (Reason.OrdinaryName name))
+      | RTypeAlias (name, Some loc, _) -> return (symbol_from_loc env loc (Reason.OrdinaryName name))
       | RType name -> return (symbol_from_reason env reason name)
       | desc ->
         let desc = Reason.show_virtual_reason_desc (fun _ _ -> ()) desc in
@@ -783,7 +787,8 @@ end = struct
                    assigning None to under_type_alias, so that aliases are used in subsequent
                    invocations. *)
                 next ~env t
-            end)
+            end
+        )
 
     and type_ctor ~env ~cont t =
       let open Type in
@@ -844,7 +849,8 @@ end = struct
         return
           (generic_talias
              (Ty_symbol.builtin_symbol (Reason.OrdinaryName "React$AbstractComponent"))
-             (Some [config; instance]))
+             (Some [config; instance])
+          )
       | ThisClassT (_, t, _) -> this_class_t ~env t
       | ThisTypeAppT (_, c, _, ts) -> type_app ~env c ts
       | KeysT (_, t) ->
@@ -872,7 +878,8 @@ end = struct
                     (Some "thisArg", explicit_any, non_opt_param);
                     (Some "argArray", explicit_any, opt_param);
                   ]
-                explicit_any)
+                explicit_any
+            )
         else
           return Ty.(TypeOf FunProtoApply)
       | FunProtoBindT _ ->
@@ -884,8 +891,10 @@ end = struct
                 ~params:[(Some "thisArg", explicit_any, non_opt_param)]
                 ~rest:
                   ( Some "argArray",
-                    Arr { arr_readonly = false; arr_literal = None; arr_elt_t = explicit_any } )
-                explicit_any)
+                    Arr { arr_readonly = false; arr_literal = None; arr_elt_t = explicit_any }
+                  )
+                explicit_any
+            )
         else
           return Ty.(TypeOf FunProtoBind)
       | FunProtoCallT _ ->
@@ -897,8 +906,10 @@ end = struct
                 ~params:[(Some "thisArg", explicit_any, non_opt_param)]
                 ~rest:
                   ( Some "argArray",
-                    Arr { arr_readonly = false; arr_literal = None; arr_elt_t = explicit_any } )
-                explicit_any)
+                    Arr { arr_readonly = false; arr_literal = None; arr_elt_t = explicit_any }
+                  )
+                explicit_any
+            )
         else
           return Ty.(TypeOf FunProtoCall)
       | NullProtoT _ -> return Ty.Null
@@ -935,7 +946,8 @@ end = struct
       T.TypeMap.keys bounds.T.Constraint.lower
       |> mapM (fun t ->
              let%map ty = type__ ~env t in
-             Nel.to_list (Ty.bk_union ty))
+             Nel.to_list (Ty.bk_union ty)
+         )
       >>| Base.List.concat
       >>| Base.List.dedup_and_sort ~compare:Stdlib.compare
 
@@ -1415,8 +1427,10 @@ end = struct
                 ~params:[(Some "target", explicit_any, non_opt_param)]
                 ~rest:
                   ( Some "sources",
-                    Arr { arr_readonly = false; arr_literal = None; arr_elt_t = explicit_any } )
-                explicit_any)
+                    Arr { arr_readonly = false; arr_literal = None; arr_elt_t = explicit_any }
+                  )
+                explicit_any
+            )
         (* Object.getPrototypeOf: (o: any): any *)
         | ObjectGetPrototypeOf ->
           return Ty.(mk_fun ~params:[(Some "o", explicit_any, non_opt_param)] explicit_any)
@@ -1467,7 +1481,8 @@ end = struct
                  [
                    (Reason.OrdinaryName "success", Ty.BoolLit false, false);
                    (Reason.OrdinaryName "error", Ty.Str None, false);
-                 ])
+                 ]
+              )
           in
           let result_succ_ty =
             Ty.mk_object
@@ -1476,8 +1491,10 @@ end = struct
                    (Reason.OrdinaryName "success", Ty.BoolLit true, false);
                    ( Reason.OrdinaryName "value",
                      builtin_t (Reason.OrdinaryName "TypeAssertT"),
-                     false );
-                 ])
+                     false
+                   );
+                 ]
+              )
           in
           let ret = Ty.mk_union (result_fail_ty, [result_succ_ty]) in
           return (mk_fun ~tparams ~params ret)
@@ -1490,9 +1507,11 @@ end = struct
                   [
                     ( Some "_",
                       Arr { arr_readonly = false; arr_literal = None; arr_elt_t = explicit_any },
-                      non_opt_param );
+                      non_opt_param
+                    );
                   ]
-                Void)
+                Void
+            )
         (* debugThrow: () => empty *)
         | DebugThrow -> return (mk_fun (mk_empty Ty.EmptyType))
         (* debugSleep: (seconds: number) => void *)
@@ -1524,7 +1543,8 @@ end = struct
                 [
                   ( Some "name",
                     generic_builtin_t (Reason.OrdinaryName "ReactClass") [t],
-                    non_opt_param );
+                    non_opt_param
+                  );
                   (Some "config", t, non_opt_param);
                   (Some "children", explicit_any, opt_param);
                 ]
@@ -1543,9 +1563,11 @@ end = struct
                 ]
               in
               let f2 = mk_fun ~tparams ~params reactElement in
-              mk_inter (f1, [f2]))
+              mk_inter (f1, [f2])
+            )
         (* Fallback *)
-        | t -> custom_fun_short ~env t)
+        | t -> custom_fun_short ~env t
+      )
 
     and custom_fun_short ~env =
       Type.(
@@ -1585,7 +1607,8 @@ end = struct
                  [
                    (Reason.OrdinaryName "success", Ty.BoolLit false, false);
                    (Reason.OrdinaryName "error", Ty.Str None, false);
-                 ])
+                 ]
+              )
           in
           let result_succ_ty =
             Ty.mk_object
@@ -1594,14 +1617,17 @@ end = struct
                    (Reason.OrdinaryName "success", Ty.BoolLit true, false);
                    ( Reason.OrdinaryName "value",
                      builtin_t (Reason.OrdinaryName "TypeAssertT"),
-                     false );
-                 ])
+                     false
+                   );
+                 ]
+              )
           in
           let ret = Ty.mk_union (result_fail_ty, [result_succ_ty]) in
           return (mk_fun ~tparams ~params ret)
         | DebugPrint -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugPrint"))
         | DebugThrow -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugThrow"))
-        | DebugSleep -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugSleep")))
+        | DebugSleep -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugSleep"))
+      )
 
     and custom_fun ~env t =
       if Env.expand_internal_types env then
@@ -1616,17 +1642,20 @@ end = struct
           let%map t = type__ ~env t in
           generic_builtin_t
             (Reason.OrdinaryName
-               (if is_req then
+               ( if is_req then
                  "React$PropType$Primitive$Required"
                else
-                 "React$PropType$Primitive"))
+                 "React$PropType$Primitive"
+               )
+            )
             [t]
         | Complex ArrayOf -> return (builtin_t (Reason.OrdinaryName "React$PropType$ArrayOf"))
         | Complex InstanceOf -> return (builtin_t (Reason.OrdinaryName "React$PropType$ArrayOf"))
         | Complex ObjectOf -> return (builtin_t (Reason.OrdinaryName "React$PropType$dbjectOf"))
         | Complex OneOf -> return (builtin_t (Reason.OrdinaryName "React$PropType$OneOf"))
         | Complex OneOfType -> return (builtin_t (Reason.OrdinaryName "React$PropType$OneOfType"))
-        | Complex Shape -> return (builtin_t (Reason.OrdinaryName "React$PropType$Shape")))
+        | Complex Shape -> return (builtin_t (Reason.OrdinaryName "React$PropType$Shape"))
+      )
 
     and internal_t t =
       Type.(
@@ -1634,7 +1663,8 @@ end = struct
         | ChoiceKitT _
         | ExtendsT _
         | ReposUpperT _ ->
-          terr ~kind:BadInternalT (Some t))
+          terr ~kind:BadInternalT (Some t)
+      )
 
     and param_bound ~env = function
       | T.DefT (_, _, T.MixedT _) -> return None
@@ -1716,10 +1746,12 @@ end = struct
                      dict_name;
                      dict_key;
                      dict_value;
-                   })
+                   }
+                )
             | None -> return Ty.ExactObj
           in
-          return (Ty.Obj { Ty.obj_kind; obj_frozen; obj_literal; obj_props }))
+          return (Ty.Obj { Ty.obj_kind; obj_frozen; obj_literal; obj_props })
+        )
       in
       let spread_operand ~env = function
         | T.Object.Spread.Type t -> type__ ~env t
@@ -2245,7 +2277,8 @@ end = struct
       in
       extract_imported_idents requires
       |> extract_schemes typed_ast
-      |> normalize_imports ~options ~genv)
+      |> normalize_imports ~options ~genv
+    )
 
   module type EXPAND_MEMBERS_CONVERTER = sig
     val include_proto_members : bool
@@ -2426,7 +2459,8 @@ end = struct
             let lowers = Base.List.(dedup_and_sort ~compare:Stdlib.compare (concat lowers)) in
             (match lowers with
             | [] -> Ty.Bot Ty.EmptyType
-            | hd :: tl -> Ty.mk_union ~flattened:true (hd, tl)))
+            | hd :: tl -> Ty.mk_union ~flattened:true (hd, tl))
+      )
 
     and type__ ~env ~proto ~(imode : instance_mode) t =
       let open Type in

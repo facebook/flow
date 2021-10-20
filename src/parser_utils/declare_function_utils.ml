@@ -22,8 +22,9 @@ let declare_function_to_function_declaration
     ~add_output
     declare_loc
     (func_decl : (l, l) Flow_ast.Statement.DeclareFunction.t) :
-    ((l, l) Flow_ast.Statement.t'
-    * ((l, lt) Flow_ast.Statement.t -> (l, lt) Flow_ast.Statement.DeclareFunction.t))
+    ( (l, l) Flow_ast.Statement.t'
+    * ((l, lt) Flow_ast.Statement.t -> (l, lt) Flow_ast.Statement.DeclareFunction.t)
+    )
     option =
   let { Flow_ast.Statement.DeclareFunction.id; annot; predicate; comments } = func_decl in
   match predicate with
@@ -35,7 +36,8 @@ let declare_function_to_function_declaration
         {
           Flow_ast.Type.Predicate.kind = Flow_ast.Type.Predicate.Declared e;
           comments = pred_comments;
-        } ) ->
+        }
+      ) ->
     begin
       match annot with
       | ( annot_loc,
@@ -49,11 +51,14 @@ let declare_function_to_function_declaration
                       rest;
                       this_;
                       comments = params_comments;
-                    } );
+                    }
+                  );
                 Flow_ast.Type.Function.return;
                 Flow_ast.Type.Function.tparams;
                 comments = func_comments;
-              } ) ) ->
+              }
+          )
+        ) ->
         let param_type_to_param : (l, l) Flow_ast.Type.Function.Param.t -> (l, l) Flow_ast.Pattern.t
             =
           let open Flow_ast.Type.Function in
@@ -105,10 +110,12 @@ let declare_function_to_function_declaration
                   [
                     ( loc,
                       Flow_ast.Statement.Return
-                        { Flow_ast.Statement.Return.argument = Some e; comments = None } );
+                        { Flow_ast.Statement.Return.argument = Some e; comments = None }
+                    );
                   ];
                 comments = None;
-              } )
+              }
+            )
         in
         let return : (l, l) Flow_ast.Type.annotation_or_hint =
           Flow_ast.Type.Available (loc, return)
@@ -128,7 +135,8 @@ let declare_function_to_function_declaration
                       {
                         Flow_ast.Type.Predicate.kind = Flow_ast.Type.Predicate.Inferred;
                         comments = None;
-                      } );
+                      }
+                    );
                 return;
                 tparams;
                 sig_loc = declare_loc;
@@ -151,12 +159,15 @@ let declare_function_to_function_declaration
                               [
                                 ( _,
                                   Flow_ast.Statement.Return
-                                    { Flow_ast.Statement.Return.argument = Some e; comments = _ } );
+                                    { Flow_ast.Statement.Return.argument = Some e; comments = _ }
+                                );
                               ];
                             comments = _;
-                          } );
+                          }
+                        );
                     _;
-                  } ) ->
+                  }
+              ) ->
               let param_to_param_type :
                   (l, lt) Flow_ast.Pattern.t -> (l, lt) Flow_ast.Type.Function.Param.t = function
                 | ( loc_t,
@@ -165,14 +176,16 @@ let declare_function_to_function_declaration
                         Flow_ast.Pattern.Identifier.name = (name_loc_t, name);
                         annot = Flow_ast.Type.Available (_, annot);
                         optional;
-                      } ) ->
+                      }
+                  ) ->
                   ( loc_of_tloc loc_t,
                     {
                       Flow_ast.Type.Function.Param.name =
                         Some (copy_t loc_t (loc_of_tloc name_loc_t), name);
                       annot;
                       optional;
-                    } )
+                    }
+                  )
                 | _ -> Utils_js.assert_false "Function declaration AST has unexpected shape"
               in
               let params =
@@ -190,7 +203,8 @@ let declare_function_to_function_declaration
                       {
                         Flow_ast.Type.Function.RestParam.argument = param_to_param_type argument;
                         comments;
-                      } ))
+                      }
+                    ))
                   rest
               in
               let this_ =
@@ -211,11 +225,14 @@ let declare_function_to_function_declaration
                               rest;
                               this_;
                               comments = params_comments;
-                            } );
+                            }
+                          );
                         return;
                         tparams;
                         comments = func_comments;
-                      } ) )
+                      }
+                  )
+                )
               in
               {
                 Flow_ast.Statement.DeclareFunction.id = (id_loc_fun_type, id_name);
@@ -226,10 +243,12 @@ let declare_function_to_function_declaration
                       {
                         Flow_ast.Type.Predicate.kind = Flow_ast.Type.Predicate.Declared e;
                         comments = pred_comments;
-                      } );
+                      }
+                    );
                 comments;
               }
-            | _ -> failwith "Internal error: malformed predicate declare function" )
+            | _ -> failwith "Internal error: malformed predicate declare function"
+          )
       | _ -> None
     end
   | _ -> None

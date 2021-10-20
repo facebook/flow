@@ -21,7 +21,8 @@ let new_builder =
       let _end = { line = max_int / 2; column = max_int / 2 } in
       { source; start; _end }
     in
-    (fun source value -> [(full_range (Some source), value)]))
+    (fun source value -> [(full_range (Some source), value)])
+  )
 
 (* Gets all ranges that intersect with the provided range. *)
 let get_intersecting =
@@ -90,7 +91,8 @@ let get_overlap ~old_range ~new_range =
       else
         (old_range._end, remaining)
     in
-    ({ source; start; _end }, remaining))
+    ({ source; start; _end }, remaining)
+  )
 
 (* Given an entry in a builder, a range to do a modification in the builder, a
  * modification function, and the builder, returns a builder with the range

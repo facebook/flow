@@ -153,14 +153,16 @@ let of_lines base_settings =
         else
           Error
             ( line |> snd |> fst,
-              "\"all\" is only allowed as the first setting. Settings are order-sensitive." )
+              "\"all\" is only allowed as the first setting. Settings are order-sensitive."
+            )
       | Error line_err -> loop acc (line_err :: warnings) lines)
   in
   let loc_of_line line =
     Loc.(
       let start = { line; column = 0 } in
       let _end = { line = line + 1; column = 0 } in
-      { source = None; start; _end })
+      { source = None; start; _end }
+    )
   in
   fun lint_lines ->
     let locate_fun ((label, _) as item) = (loc_of_line label, item) in

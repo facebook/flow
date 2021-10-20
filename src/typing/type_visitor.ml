@@ -498,7 +498,9 @@ class ['a] t =
                 | Shape o -> self#react_resolve_object cx acc o
               in
               let acc = self#type_ cx pole_TODO acc t in
-              acc))
+              acc
+            )
+          )
         | React.CreateClass (tool, knot, tout) ->
           let acc = self#react_create_class_tool cx acc tool in
           let acc = self#react_create_class_knot cx acc knot in
@@ -533,12 +535,14 @@ class ['a] t =
                 in
                 let acc = List.fold_left (self#object_kit_spread_operand cx) acc todo_rev in
                 let acc = List.fold_left (self#object_kit_acc_element cx) acc object_spread_acc in
-                acc)
+                acc
+              )
             | Rest (_, state) ->
               Object.Rest.(
                 (match state with
                 | One t -> self#type_ cx pole_TODO acc t
-                | Done o -> Nel.fold_left (self#object_kit_slice cx) acc o))
+                | Done o -> Nel.fold_left (self#object_kit_slice cx) acc o)
+              )
             | ReactConfig state ->
               Object.ReactConfig.(
                 (match state with
@@ -549,10 +553,12 @@ class ['a] t =
                 | Defaults { config; children } ->
                   let acc = Nel.fold_left (self#object_kit_slice cx) acc config in
                   let acc = self#opt (self#type_ cx pole_TODO) acc children in
-                  acc))
+                  acc)
+              )
           in
           let acc = self#type_ cx pole_TODO acc tout in
-          acc)
+          acc
+        )
       | DebugPrintT _ -> acc
       | DebugSleepT _ -> acc
       | SentinelPropTestT (_, t, _, _, _, tout) ->
@@ -929,7 +935,8 @@ class ['a] t =
           | exception Not_found -> acc (* shouldn't happen *)
           | Unexplored { rev_deps = deps }
           | Explored { deps } ->
-            ISet.fold (fun id acc -> self#type_graph cx acc id) deps acc)
+            ISet.fold (fun id acc -> self#type_graph cx acc id) deps acc
+      )
 
     method private try_flow_spec cx acc =
       function
@@ -950,7 +957,8 @@ class ['a] t =
         | List (ts, rs, _) ->
           let acc = List.fold_left (self#type_ cx pole_TODO) acc ts in
           let acc = Nel.fold_left (Nel.fold_left (self#object_kit_slice cx)) acc rs in
-          acc)
+          acc
+      )
 
     method private object_kit_slice
         cx acc { Object.reason = _; props; flags; generics = _; interface } =
@@ -973,13 +981,15 @@ class ['a] t =
       Object.Spread.(
         function
         | InlineSlice slice -> self#object_kit_spread_operand_slice cx acc slice
-        | ResolvedSlice resolved -> Nel.fold_left (self#object_kit_slice cx) acc resolved)
+        | ResolvedSlice resolved -> Nel.fold_left (self#object_kit_slice cx) acc resolved
+      )
 
     method private object_kit_spread_operand cx acc =
       Object.Spread.(
         function
         | Slice operand_slice -> self#object_kit_spread_operand_slice cx acc operand_slice
-        | Type t -> self#type_ cx pole_TODO acc t)
+        | Type t -> self#type_ cx pole_TODO acc t
+      )
 
     method private react_resolved_object cx acc (_, props, flags) =
       let acc = self#namemap (self#prop cx pole_TODO) acc props in
@@ -998,7 +1008,8 @@ class ['a] t =
         | ResolveProp (_, props, o) ->
           let acc = self#namemap (self#prop cx pole_TODO) acc props in
           let acc = self#react_resolved_object cx acc o in
-          acc)
+          acc
+      )
 
     method private react_create_class_tool cx acc tool =
       React.CreateClass.(
@@ -1019,7 +1030,8 @@ class ['a] t =
           let acc =
             self#opt (self#maybe_known (self#or_null (self#react_resolved_object cx))) acc s
           in
-          acc)
+          acc
+      )
 
     method private react_create_class_stack cx acc (head, tail) =
       let acc = self#react_create_class_stack_head cx acc head in
@@ -1048,7 +1060,8 @@ class ['a] t =
         let acc = self#opt (self#maybe_known (self#react_resolved_object cx)) acc prop_types in
         let acc = List.fold_left (self#type_ cx pole_TODO) acc get_default_props in
         let acc = List.fold_left (self#type_ cx pole_TODO) acc get_initial_state in
-        acc)
+        acc
+      )
 
     method private maybe_known
         : 't. ('a -> 't -> 'a) -> 'a -> 't React.CreateClass.maybe_known -> 'a =
@@ -1056,14 +1069,16 @@ class ['a] t =
         fun f acc x ->
           match x with
           | Known a -> f acc a
-          | Unknown _ -> acc)
+          | Unknown _ -> acc
+      )
 
     method private or_null : 't. ('a -> 't -> 'a) -> 'a -> 't React.CreateClass.or_null -> 'a =
       React.CreateClass.(
         fun f acc x ->
           match x with
           | NotNull a -> f acc a
-          | Null _ -> acc)
+          | Null _ -> acc
+      )
 
     method private react_create_class_knot cx acc knot =
       React.CreateClass.(
@@ -1072,7 +1087,8 @@ class ['a] t =
         let acc = self#type_ cx pole_TODO acc static in
         let acc = self#type_ cx pole_TODO acc state_t in
         let acc = self#type_ cx pole_TODO acc default_t in
-        acc)
+        acc
+      )
 
     method private list : 't. ('a -> 't -> 'a) -> 'a -> 't list -> 'a = List.fold_left
 

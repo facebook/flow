@@ -69,7 +69,8 @@ module Reordered_argument_set (S : Flow_set.S) = struct
            let () = pp fmt elt in
            true)
          false
-         elts);
+         elts
+      );
     (match elts with
     | [] -> ()
     | _ -> Format.fprintf fmt " ");

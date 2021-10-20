@@ -44,7 +44,8 @@ let spec =
              no_arg
              ~doc:"Output what kind of file each file is and why Flow cares about it"
         |> input_file_flag "ls"
-        |> anon "files or dirs" (list_of string));
+        |> anon "files or dirs" (list_of string)
+      );
   }
 
 type file_result =
@@ -106,7 +107,8 @@ let json_of_files_with_explanations files =
           (file, JSON_Object [("explanation", JSON_String (string_of_file_result res))]))
         files
     in
-    JSON_Object properties)
+    JSON_Object properties
+  )
 
 let rec iter_get_next ~f get_next =
   match get_next () with
@@ -157,7 +159,8 @@ let get_ls_files ~root ~all ~options ~libs ~imaginary = function
       let rec cb =
         ref (fun () ->
             (cb := (fun () -> []));
-            [file])
+            [file]
+        )
       in
       (fun () -> !cb ())
     else
@@ -248,7 +251,8 @@ let main
     | files_or_dirs ->
       files_or_dirs
       |> Base.List.map ~f:(fun f ->
-             get_ls_files ~root ~all ~options ~libs:SSet.empty ~imaginary (Some f))
+             get_ls_files ~root ~all ~options ~libs:SSet.empty ~imaginary (Some f)
+         )
       |> concat_get_next
   in
   let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in
@@ -289,7 +293,8 @@ let main
         else
           JSON_Array (List.rev (List.rev_map (fun f -> JSON_String (normalize_filename f)) files))
       in
-      print_json_endline ~pretty json)
+      print_json_endline ~pretty json
+    )
   else
     let f =
       if reason then

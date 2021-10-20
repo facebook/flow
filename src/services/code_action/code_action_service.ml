@@ -30,6 +30,7 @@ let layout_options options =
       bracket_spacing = Options.format_bracket_spacing options;
       single_quotes = Options.format_single_quotes options;
     }
+  
 
 let autofix_exports_code_actions
     ~options ~full_cx ~ast ~file_sig ~tolerable_errors ~typed_ast ~diagnostics uri loc =
@@ -101,7 +102,8 @@ let refactor_extract_code_actions
                       arguments =
                         ["textDocument/codeAction"; diagnostic_title; title]
                         |> List.map (fun str -> Hh_json.JSON_String str);
-                    } );
+                    }
+                  );
             }
         in
         Refactor_extract.provide_available_refactors
@@ -282,7 +284,8 @@ let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
       let open PublishDiagnostics in
       let lsp_code = StringCode Error_codes.(string_of_code CannotResolveName) in
       Base.List.filter diagnostics ~f:(fun { source; code; range; _ } ->
-          source = Some "Flow" && code = lsp_code && Lsp_helpers.ranges_overlap range error_range)
+          source = Some "Flow" && code = lsp_code && Lsp_helpers.ranges_overlap range error_range
+      )
     in
     let rev_actions =
       Export_index.ExportSet.fold
@@ -305,7 +308,8 @@ let suggest_imports ~options ~reader ~ast ~diagnostics ~exports ~name uri loc =
                           arguments =
                             ["textDocument/codeAction"; "import"; title]
                             |> List.map (fun str -> Hh_json.JSON_String str);
-                        } );
+                        }
+                      );
                 }
             in
             command :: acc)
@@ -324,7 +328,8 @@ let autofix_in_upstream_file
          In order to appear in an error, a loc must have a source *)
       let source_file = Base.Option.value_exn src in
       ( Parsing_heaps.Reader.get_ast_unsafe ~reader source_file,
-        source_file |> File_key.to_string |> File_url.create |> Lsp.DocumentUri.of_string )
+        source_file |> File_key.to_string |> File_url.create |> Lsp.DocumentUri.of_string
+      )
     else
       (ast, uri)
   in
@@ -354,7 +359,8 @@ let autofix_in_upstream_file
                 arguments =
                   ["textDocument/codeAction"; diagnostic_title; title]
                   |> List.map (fun str -> Hh_json.JSON_String str);
-              } );
+              }
+            );
       }
 
 type ast_transform_of_error = {
@@ -553,7 +559,8 @@ let code_actions_of_parse_errors ~diagnostics ~uri ~loc parse_errors =
                       arguments =
                         ["textDocument/codeAction"; "fix_parse_error"; title]
                         |> List.map (fun str -> Hh_json.JSON_String str);
-                    } );
+                    }
+                  );
             }
           :: acc
         else
@@ -772,7 +779,8 @@ let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
   match file_artifacts with
   | Ok
       ( Parse_artifacts { ast; file_sig; tolerable_errors; _ },
-        Typecheck_artifacts { cx = full_cx; typed_ast } ) ->
+        Typecheck_artifacts { cx = full_cx; typed_ast }
+      ) ->
     let sv_errors = set_of_fixable_signature_verification_locations tolerable_errors in
     let (new_ast, it_errs) =
       fix_signature_verification_errors ~file_key ~full_cx ~file_sig ~typed_ast ast sv_errors

@@ -30,7 +30,9 @@ let rec debug_string_of_key { base; projections } =
       |> Base.List.map ~f:(function
              | Prop name -> spf ".%s" name
              | PrivateField name -> spf "private.%s" name
-             | Elem expr -> spf "[%s]" (debug_string_of_key expr)))
+             | Elem expr -> spf "[%s]" (debug_string_of_key expr)
+             )
+      )
 
 (* true if the given key uses the given property name *)
 let rec uses_propname propname ~private_ { projections; base = _ } =
@@ -57,7 +59,8 @@ let reason_desc =
       (match List.hd (List.rev projs) with
       | Prop x -> RProperty (Some (OrdinaryName x))
       | PrivateField x -> RPrivateProperty x
-      | Elem _ -> RProperty None))
+      | Elem _ -> RProperty None)
+  )
 
 (* These functions are adapted from typing/refinement.ml. Eventually, this will be the only place
  * where refinement logic lives, so jmbrown is ok with this temporary duplication while he is
@@ -85,7 +88,8 @@ and key_of_member ~allow_optional { Flow_ast.Expression.Member._object; property
   | PropertyExpression
       ( _,
         Flow_ast.Expression.Literal
-          { Flow_ast.Literal.value = Flow_ast.Literal.Number _; raw = name; comments = _ } ) ->
+          { Flow_ast.Literal.value = Flow_ast.Literal.Number _; raw = name; comments = _ }
+      ) ->
     (match key ~allow_optional _object with
     | Some { base; projections } -> Some { base; projections = Prop name :: projections }
     | None -> None)
@@ -135,7 +139,8 @@ let rec key_of_optional_chain expr =
           OptionalMember.member =
             { Member._object = (_, Identifier (_, { Flow_ast.Identifier.name; _ })); _ };
           _;
-        } ) ->
+        }
+    ) ->
     Some (key_of_name name)
   | (_, OptionalMember { OptionalMember.member = { Member._object = subject; _ }; _ })
   | (_, OptionalCall { OptionalCall.call = { Call.callee = subject; _ }; _ }) ->

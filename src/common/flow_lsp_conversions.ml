@@ -15,7 +15,8 @@ let lsp_position_to_flow (position : Lsp.position) : int * int =
     (* Flow's line numbers are 1-indexed; LSP's are 0-indexed *)
     let line = position.line + 1 in
     let char = position.character in
-    (line, char))
+    (line, char)
+  )
 
 let lsp_position_to_flow_position p =
   let (line, column) = lsp_position_to_flow p in
@@ -28,6 +29,7 @@ let lsp_range_to_flow_loc ?source (range : Lsp.range) =
       start = lsp_position_to_flow_position range.start;
       _end = lsp_position_to_flow_position range.end_;
     }
+  
 
 let loc_to_lsp_range (loc : Loc.t) : Lsp.range =
   Loc.(
@@ -35,7 +37,8 @@ let loc_to_lsp_range (loc : Loc.t) : Lsp.range =
     let loc_end = loc._end in
     let start = flow_position_to_lsp loc_start.line loc_start.column in
     let end_ = flow_position_to_lsp loc_end.line loc_end.column in
-    { Lsp.start; end_ })
+    { Lsp.start; end_ }
+  )
 
 let markup_string str = { Lsp.MarkupContent.kind = Lsp.MarkupKind.Markdown; value = str }
 
@@ -68,7 +71,8 @@ let flow_signature_help_to_lsp
                    {
                      parinfo_label = String label;
                      parinfo_documentation = doc_opt param_documentation;
-                   })
+                   }
+               )
           in
           Buffer.add_string label_buf "): ";
           Buffer.add_string label_buf return_ty;
@@ -120,12 +124,16 @@ let flow_completion_item_to_lsp
                     ( "token",
                       match token with
                       | None -> JSON_Null
-                      | Some token -> JSON_String token );
+                      | Some token -> JSON_String token
+                    );
                     ("completion", JSON_String item.name);
                   ];
-              ];
+              ]
+            ;
         }
+      
   in
+
   let labelDetails =
     if
       is_label_detail_supported
@@ -170,7 +178,8 @@ let flow_completions_to_lsp
            ?token
            ~is_snippet_supported
            ~is_preselect_supported
-           ~is_label_detail_supported)
+           ~is_label_detail_supported
+        )
       items
   in
   { Lsp.Completion.isIncomplete = is_incomplete; items }
@@ -238,7 +247,8 @@ let diagnostics_of_flow_errors =
             message = error.Errors.Lsp_output.message;
             relatedInformation;
             relatedLocations = relatedInformation (* legacy fb extension *);
-          } )
+          }
+        )
     | Error _ -> None
   in
   fun ~errors ~warnings ->

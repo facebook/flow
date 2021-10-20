@@ -102,8 +102,10 @@ module FixCodemod (Opts : FIX_CODEMOD_OPTIONS) = struct
                        Base.Option.value_exn
                          (Code_action_service.ast_transform_of_error error_message)
                      in
-                     transform acc_ast target_loc)
-           end))
+                     transform acc_ast target_loc
+                 )
+           end)
+      )
 end
 
 let spec =
@@ -119,8 +121,11 @@ let spec =
              flag
                "--error-codes"
                (list_of string)
-               ~doc:"Codes of errors to fix. If omitted, all fixable errors will be fixed."));
+               ~doc:"Codes of errors to fix. If omitted, all fixable errors will be fixed."
+           )
+        );
     }
+  
 
 let main (CommandUtils.Codemod_params ({ anon; _ } as codemod_params)) error_codes () =
   let komodo_flags =

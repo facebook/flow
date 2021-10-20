@@ -187,7 +187,8 @@ let replace_char needle replacement =
       if c = needle then
         replacement
       else
-        c)
+        c
+  )
 
 (** Splits a string into a list of strings using "\n", "\r" or "\r\n" as
     delimiters. If the string starts or ends with a delimiter, there WILL be an
@@ -224,7 +225,8 @@ let indent indent_size str =
          if str = "" then
            ""
          else
-           padding ^ str)
+           padding ^ str
+     )
   |> String.concat "\n"
 
 (** Splits a string into a list of strings using only "\n" as a delimiter.

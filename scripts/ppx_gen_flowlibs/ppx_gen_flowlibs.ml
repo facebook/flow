@@ -44,7 +44,8 @@ let compute lib_dir =
   let contents =
     libs
     |> List.map (fun (name, contents) ->
-           Exp.tuple [Exp.constant (Const.string name); Exp.constant (Const.string contents)])
+           Exp.tuple [Exp.constant (Const.string name); Exp.constant (Const.string contents)]
+       )
     |> Exp.array
   in
   (hash, contents)

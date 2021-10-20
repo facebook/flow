@@ -9,7 +9,8 @@ open Base
 
 let entry =
   WorkerController.register_entry_point ~restore:(fun _ ~(worker_id : int) ->
-      Hh_logger.set_id (Printf.sprintf "procs_test_utils %d" worker_id))
+      Hh_logger.set_id (Printf.sprintf "procs_test_utils %d" worker_id)
+  )
 
 let try_finalize f x finally y =
   let res =

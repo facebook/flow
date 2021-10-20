@@ -63,7 +63,8 @@ let create_extracted_function
           | None -> (Flow_ast.Type.Missing Loc.none, used_tparam_set)
           | Some (tparams_rev, type_) ->
             ( Flow_ast.Type.Available (Loc.none, type_),
-              TypeParamSet.add_all tparams_rev used_tparam_set )
+              TypeParamSet.add_all tparams_rev used_tparam_set
+            )
         in
         ((v |> Patterns.identifier ~annot |> Functions.param) :: params, used_tparam_set))
       (Base.List.rev undefined_variables)
@@ -81,7 +82,9 @@ let create_extracted_function
         ((v, type_) :: returned_variables, used_tparam_set))
       (Base.List.rev
          (escaping_definitions.VariableAnalysis.escaping_variables
-         @ vars_with_shadowed_local_reassignments))
+         @ vars_with_shadowed_local_reassignments
+         )
+      )
       ~init:([], used_tparam_set)
   in
   let%map tparams =
@@ -109,7 +112,8 @@ let create_extracted_function
     | [(only_returned_variable, return_type)] ->
       ( extracted_statements
         @ [Statements.return (Some (Expressions.identifier only_returned_variable))],
-        return_type )
+        return_type
+      )
     | _ ->
       ( extracted_statements
         @ [
@@ -121,7 +125,11 @@ let create_extracted_function
                            Expressions.object_property
                              ~shorthand:true
                              (Expressions.object_property_key def)
-                             (Expressions.identifier def)))));
+                             (Expressions.identifier def)
+                       )
+                    )
+                 )
+              );
           ],
         ( Loc.none,
           Flow_ast.Type.Object
@@ -130,14 +138,20 @@ let create_extracted_function
                    Flow_ast.Type.Object.Property
                      (Types.Objects.property
                         (Expressions.object_property_key v)
-                        (Flow_ast.Type.Object.Property.Init type_)))
-            |> Types.Objects.make) ) )
+                        (Flow_ast.Type.Object.Property.Init type_)
+                     )
+               )
+            |> Types.Objects.make
+            )
+        )
+      )
   in
   let return_type =
     if async_function then
       Flow_ast.Type.Available
         (Types.unqualified_generic ~targs:(Types.type_args [return_type]) "Promise"
-        |> Types.annotation)
+        |> Types.annotation
+        )
     else
       Flow_ast.Type.Available (Types.annotation return_type)
   in
@@ -167,7 +181,8 @@ let create_extracted_function_call
       ~args:
         (undefined_variables
         |> List.map (fun (v, _) -> v |> Expressions.identifier |> Expressions.expression)
-        |> Expressions.arg_list)
+        |> Expressions.arg_list
+        )
       caller
   in
   let call =
@@ -220,11 +235,16 @@ let create_extracted_function_call
                                pattern = Patterns.identifier def;
                                default = None;
                                shorthand = true;
-                             } ));
+                             }
+                           )
+                     );
                 annot = Flow_ast.Type.Missing Loc.none;
                 comments = None;
-              } )
+              }
+          )
+        
       in
+
       if has_vars_with_shadowed_local_reassignments then
         Statements.expression ~loc:extracted_statements_loc (Expressions.assignment pattern call)
       else
@@ -398,10 +418,11 @@ let available_refactors_for_statements
       let title =
         Printf.sprintf
           "Extract to inner function in %s '%s'"
-          (if is_method then
+          ( if is_method then
             "method"
           else
-            "function")
+            "function"
+          )
           function_name
       in
       let%map (new_ast, added_imports) =
@@ -431,7 +452,8 @@ let available_refactors_for_statements
         (InsertionPointCollectors.collect_function_method_inserting_points
            ~typed_ast
            ~reader
-           ~extracted_loc:extracted_statements_loc)
+           ~extracted_loc:extracted_statements_loc
+        )
     in
     let extract_to_functions_refactors =
       Base.List.filter_map extract_to_functions_refactor_results ~f:Base.Result.ok
@@ -487,7 +509,8 @@ let extract_from_statements_refactors
             (fun acc (_, loc) -> LocSet.add loc acc)
             locs
             (vars_with_shadowed_local_reassignments
-            @ escaping_definitions.VariableAnalysis.escaping_variables)
+            @ escaping_definitions.VariableAnalysis.escaping_variables
+            )
         in
         TypeSynthesizer.create_synthesizer_context ~full_cx ~file ~file_sig ~typed_ast ~reader ~locs
       in
@@ -574,7 +597,8 @@ let create_extract_to_constant_refactor
             ~expression_replacement:(Ast_builder.Expressions.identifier new_local_name)
             ~constant_definition:
               (Ast_builder.Statements.const_declaration
-                 [Ast_builder.Statements.variable_declarator ~init:expression new_local_name])
+                 [Ast_builder.Statements.variable_declarator ~init:expression new_local_name]
+              )
             ast;
         added_imports = [];
       }
@@ -703,7 +727,8 @@ let extract_to_type_alias_refactors
           Some
             (type_params_to_add
             |> List.map (fun { Type.name; _ } -> Types.unqualified_generic name)
-            |> Types.type_args)
+            |> Types.type_args
+            )
       in
       Types.unqualified_generic ?targs new_type_name
     in
@@ -755,7 +780,8 @@ let provide_available_refactors
            ~file_sig
            ~typed_ast
            ~reader
-           ~create_unique_name)
+           ~create_unique_name
+        )
       extracted_statements
   in
   let extract_from_expression_refactors =
@@ -775,7 +801,8 @@ let provide_available_refactors
            ~file_sig
            ~typed_ast
            ~reader
-           ~create_unique_name)
+           ~create_unique_name
+        )
       extracted_type
   in
   extract_from_statements_refactors

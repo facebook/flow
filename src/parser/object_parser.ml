@@ -81,7 +81,8 @@ module Object
         Literal
           ( loc,
             { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-          ) )
+          )
+      )
     | T_NUMBER { kind; raw } ->
       let loc = Peek.loc env in
       let value = Expression.number env kind raw in
@@ -91,7 +92,8 @@ module Object
         Literal
           ( loc,
             { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
-          ) )
+          )
+      )
     | T_LBRACKET ->
       let (loc, key) =
         with_loc
@@ -160,7 +162,8 @@ module Object
                   | ( true,
                       ( _,
                         { Ast.Function.Params.params = []; rest = None; this_ = None; comments = _ }
-                      ) ) ->
+                      )
+                    ) ->
                     ()
                   | (false, (_, { Ast.Function.Params.rest = Some _; _ })) ->
                     (* rest params don't make sense on a setter *)
@@ -172,7 +175,9 @@ module Object
                           rest = None;
                           this_ = None;
                           comments = _;
-                        } ) ) ->
+                        }
+                      )
+                    ) ->
                     ()
                   | (true, _) -> error_at env (key_loc, Parse_error.GetterArity)
                   | (false, _) -> error_at env (key_loc, Parse_error.SetterArity)
@@ -292,7 +297,8 @@ module Object
               tparams;
               sig_loc;
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
-            })
+            }
+        )
       in
       (* PropertyName `:` AssignmentExpression *)
       let parse_value env =
@@ -380,7 +386,8 @@ module Object
         in
         ( SpreadProperty
             (loc, { SpreadProperty.argument; comments = Flow_ast_utils.mk_comments_opt ~leading () }),
-          errs )
+          errs
+        )
       else
         let start_loc = Peek.loc env in
         let (async, leading_async) =
@@ -482,7 +489,8 @@ module Object
                 comments =
                   Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
               },
-              errs ))
+              errs
+            ))
           env
       in
       (loc, expr, errs)
@@ -502,7 +510,8 @@ module Object
           env
           ( loc,
             Parse_error.InvalidClassMemberName
-              { name; static = false; method_ = kind = `Method; private_ = true } )
+              { name; static = false; method_ = kind = `Method; private_ = true }
+          )
       in
       seen_names
     else
@@ -567,7 +576,8 @@ module Object
             remove_trailing expr (fun remover expr -> remover#expression expr)
         in
         let targs = Type.type_args env in
-        { Class.Extends.expr; targs; comments = Flow_ast_utils.mk_comments_opt ~leading () })
+        { Class.Extends.expr; targs; comments = Flow_ast_utils.mk_comments_opt ~leading () }
+    )
 
   (* https://tc39.es/ecma262/#prod-ClassHeritage *)
   let class_heritage env =
@@ -607,7 +617,8 @@ module Object
             static;
             decorators;
             comments = Flow_ast_utils.mk_comments_opt ~leading ();
-          } )
+          }
+        )
     in
     let set env start_loc decorators static leading =
       let (loc, (key, value)) =
@@ -623,7 +634,8 @@ module Object
             static;
             decorators;
             comments = Flow_ast_utils.mk_comments_opt ~leading ();
-          } )
+          }
+        )
     in
     let error_unsupported_variance env = function
       | Some (loc, _) -> error_at env (loc, Parse_error.UnexpectedVariance)
@@ -669,13 +681,15 @@ module Object
             ( key,
               annot,
               Class.Property.Initialized
-                (remover.remove_trailing expr (fun remover expr -> remover#expression expr)) )
+                (remover.remove_trailing expr (fun remover expr -> remover#expression expr))
+            )
           (* prop: annot *)
           | (Ast.Type.Available annot, _) ->
             ( key,
               Ast.Type.Available
                 (remover.remove_trailing annot (fun remover annot -> remover#type_annotation annot)),
-              value )
+              value
+            )
           (* prop *)
           | _ ->
             (remover.remove_trailing key (fun remover key -> remover#object_key key), annot, value)
@@ -743,10 +757,12 @@ module Object
           match (static, key) with
           | ( false,
               Ast.Expression.Object.Property.Identifier
-                (_, { Identifier.name = "constructor"; comments = _ }) )
+                (_, { Identifier.name = "constructor"; comments = _ })
+            )
           | ( false,
               Ast.Expression.Object.Property.Literal
-                (_, { Literal.value = Literal.String "constructor"; _ }) ) ->
+                (_, { Literal.value = Literal.String "constructor"; _ })
+            ) ->
             (Ast.Class.Method.Constructor, env |> with_allow_super Super_prop_or_call)
           | _ -> (Ast.Class.Method.Method, env |> with_allow_super Super_prop)
         in
@@ -782,7 +798,8 @@ module Object
                           (* Disallow this param annotations for constructors *)
                           error_at env (this_loc, Parse_error.ThisParamBannedInConstructor);
                           (loc, { params with this_ = None })
-                        | params -> params)
+                        | params -> params
+                      )
                     in
                     let return =
                       type_annotation_hint_remove_trailing env (Type.annotation_opt env)
@@ -820,7 +837,8 @@ module Object
               static;
               decorators;
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
-            } )
+            }
+          )
     in
     let ith_implies_identifier ~i env =
       match Peek.ith_token ~i env with

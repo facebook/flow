@@ -53,8 +53,10 @@ let tests =
         "sources": ["<stdin>"],
         "names": [],
         "mappings": "AAAA"
-      }|})
-             s );
+      }|}
+             )
+             s
+         );
          ( "two_strings" >:: fun ctxt ->
            let s =
              mk_source ()
@@ -74,6 +76,8 @@ let tests =
         "sources": ["<stdin>"],
         "names": [],
         "mappings": "AAAA,IAAI"
-      }|})
-             s );
+      }|}
+             )
+             s
+         );
        ]

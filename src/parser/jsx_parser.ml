@@ -48,7 +48,8 @@ module JSX (Parse : Parser_common.PARSER) = struct
       {
         JSX.SpreadAttribute.argument;
         comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-      } )
+      }
+    )
 
   let expression_container_contents env =
     if Peek.token env = T_RCURLY then
@@ -74,7 +75,8 @@ module JSX (Parse : Parser_common.PARSER) = struct
       {
         JSX.ExpressionContainer.expression;
         comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal:[] ();
-      } )
+      }
+    )
 
   let expression_container_or_spread_child env =
     Eat.push_lex_mode env Lex_mode.NORMAL;
@@ -221,7 +223,8 @@ module JSX (Parse : Parser_common.PARSER) = struct
                   match expression_container.expression with
                   | EmptyExpression ->
                     error_at env (loc, Parse_error.JSXAttributeValueEmptyExpression)
-                  | _ -> ());
+                  | _ -> ()
+                );
                 Some (JSX.Attribute.ExpressionContainer (loc, expression_container))
               | T_JSX_TEXT (loc, value, raw) as token ->
                 Expect.token env token;
@@ -234,7 +237,9 @@ module JSX (Parse : Parser_common.PARSER) = struct
                          Ast.Literal.value;
                          raw;
                          comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-                       } ))
+                       }
+                     )
+                  )
               | _ ->
                 error env Parse_error.InvalidJSXAttributeValue;
                 let loc = Peek.loc env in
@@ -372,7 +377,8 @@ module JSX (Parse : Parser_common.PARSER) = struct
             | MemberExpression.Identifier (_, { Identifier.name = id; _ }) -> id
             | MemberExpression.MemberExpression e -> normalize (JSX.MemberExpression e)
           in
-          _object ^ "." ^ (snd property).Identifier.name)
+          _object ^ "." ^ (snd property).Identifier.name
+      )
     in
     let is_self_closing = function
       | (_, Ok (`Element e)) -> e.JSX.Opening.self_closing
@@ -427,22 +433,24 @@ module JSX (Parse : Parser_common.PARSER) = struct
                 children;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
               }
-        | (start_loc, Ok `Fragment)
-        | (start_loc, Error `Fragment) ->
-          `Fragment
-            JSX.
-              {
-                frag_opening_element = start_loc;
-                frag_closing_element =
-                  (match closing_element with
-                  | `Fragment loc -> loc
-                  (* the following are parse erros *)
-                  | `Element (loc, _) -> loc
-                  | _ -> end_loc);
-                frag_children = children;
-                frag_comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-              }
+            | (start_loc, Ok `Fragment)
+            | (start_loc, Error `Fragment) ->
+              `Fragment
+                JSX.
+                  {
+                    frag_opening_element = start_loc;
+                    frag_closing_element =
+                      (match closing_element with
+                      | `Fragment loc -> loc
+                      (* the following are parse erros *)
+                      | `Element (loc, _) -> loc
+                      | _ -> end_loc);
+                    frag_children = children;
+                    frag_comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+                  }
+                
       in
+
       (Loc.btwn (fst opening_element) end_loc, result)
 
   and element_or_fragment env =

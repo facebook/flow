@@ -123,7 +123,8 @@ let set_def_loc_hook ~reader prop_access_info literal_key_info target_loc =
           match obj2 with
           | DefT (_, _, ObjT _) -> set_prop_access_info (Use_in_literal (Nel.one obj2, name))
           | _ -> ()
-        end)
+        end
+      )
     | _ -> ()
   in
   Type_inference_hooks_js.set_member_hook (use_hook false);
@@ -224,7 +225,8 @@ let extract_instancet cx ty : (Type.t, string) result =
       Ok t
     | _ ->
       let type_string = string_of_ctor resolved in
-      Error ("Expected a class type to extract an instance type from, got " ^ type_string))
+      Error ("Expected a class type to extract an instance type from, got " ^ type_string)
+  )
 
 (* Must be called with the result from Members.extract_type *)
 let get_def_loc_from_extracted_type cx extracted_type name =
@@ -288,14 +290,17 @@ and extract_def_loc_resolved ~reader cx ty name : (def_loc, string) result =
           |> Result.all
         in
         ( union_members >>= fun members ->
-          Nel.of_list members |> Result.of_option ~error:"Union should have at least one member" )
+          Nel.of_list members |> Result.of_option ~error:"Union should have at least one member"
+        )
         >>| fun members_nel -> FoundUnion members_nel
       | Success _
       | FailureNullishType
       | FailureUnhandledType _
       | FailureUnhandledMembers _ ->
         Ok UnsupportedType
-      | FailureAnyType -> Ok AnyType))
+      | FailureAnyType -> Ok AnyType
+    )
+  )
 
 (* Takes the file key where the module reference appeared, as well as the module reference, and
  * returns the file name for the module that the module reference refers to. *)
@@ -396,7 +401,8 @@ let get_def_info ~reader ~options env profiling file_key ast_info loc :
         let (cx, _) =
           Merge_service.check_contents_context ~reader options file_key ast info file_sig
         in
-        Lwt.return cx)
+        Lwt.return cx
+    )
   in
   unset_hooks ();
   !props_access_info %>>= fun props_access_info ->
@@ -427,13 +433,15 @@ let get_def_info ~reader ~options env profiling file_key ast_info loc :
                     @@ Base.Option.bind external_file_sig (fun external_file_sig ->
                            match external_file_sig.module_sig.module_kind with
                            | CommonJS { mod_exp_loc = Some loc; _ } -> Some loc
-                           | _ -> None)
+                           | _ -> None
+                       )
                 else
                   acc
               | _ -> acc
             end
             (Ok None)
-            file_sig.module_sig.requires)
+            file_sig.module_sig.requires
+        )
       in
       let export_loc =
         export_loc >>| function
@@ -446,7 +454,8 @@ let get_def_info ~reader ~options env profiling file_key ast_info loc :
                 Some mod_exp_loc
               else
                 None
-            | _ -> None))
+            | _ -> None)
+          )
       in
       Result.map export_loc ~f:(Base.Option.map ~f:(fun x -> CJSExport x))
   in

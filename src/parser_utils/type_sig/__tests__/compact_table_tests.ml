@@ -31,7 +31,8 @@ let print_tbl =
   Tbl.iteri (fun (i : Tbl.index) (label, refs) ->
       List.map (fun (j : Tbl.index) -> string_of_int (j :> int)) refs
       |> String.concat " "
-      |> Printf.printf "%d| %c -> %s\n" (i :> int) label)
+      |> Printf.printf "%d| %c -> %s\n" (i :> int) label
+  )
 
 (* A -> [D]
  * B -> [A]
@@ -93,7 +94,8 @@ let%expect_test "splice" =
     Tbl.splice a (fun builder ->
         let b = Tbl.push builder { label = 'B'; refs = [] } in
         let c = Tbl.push builder { label = 'C'; refs = [] } in
-        (b, c))
+        (b, c)
+    )
   in
   List.iter (fun x -> Tbl.mark x mark) [a; b; c; d];
   let indexed = Tbl.compact builder in

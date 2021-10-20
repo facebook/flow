@@ -26,7 +26,8 @@ let add_master ~audit master_cx =
       let master_context =
         { Context.master_sig_cx = Context.sig_cx master_cx; builtins = Context.builtins master_cx }
       in
-      (Expensive.wrap MasterContextHeap.add) ~audit File_key.Builtins master_context)
+      (Expensive.wrap MasterContextHeap.add) ~audit File_key.Builtins master_context
+  )
 
 module SigHashHeap =
   SharedMem.NoCache
@@ -49,17 +50,20 @@ module LeaderHeap =
 let oldify_merge_batch files =
   WorkerCancel.with_no_cancellations (fun () ->
       LeaderHeap.oldify_batch files;
-      SigHashHeap.oldify_batch files)
+      SigHashHeap.oldify_batch files
+  )
 
 let remove_old_merge_batch files =
   WorkerCancel.with_no_cancellations (fun () ->
       LeaderHeap.remove_old_batch files;
-      SigHashHeap.remove_old_batch files)
+      SigHashHeap.remove_old_batch files
+  )
 
 let revive_merge_batch files =
   WorkerCancel.with_no_cancellations (fun () ->
       LeaderHeap.revive_batch files;
-      SigHashHeap.revive_batch files)
+      SigHashHeap.revive_batch files
+  )
 
 module Init_master_context_mutator : sig
   val add_master : (Context.t -> unit) Expensive.t
@@ -90,14 +94,16 @@ end = struct
     WorkerCancel.with_no_cancellations (fun () ->
         Hh_logger.debug "Committing context heaps";
         remove_old_merge_batch oldified_files;
-        currently_oldified_files := None);
+        currently_oldified_files := None
+    );
     Lwt.return_unit
 
   let rollback oldified_files =
     WorkerCancel.with_no_cancellations (fun () ->
         Hh_logger.debug "Rolling back context heaps";
         revive_merge_batch oldified_files;
-        currently_oldified_files := None);
+        currently_oldified_files := None
+    );
     Lwt.return_unit
 
   let create transaction files =
@@ -111,7 +117,8 @@ end = struct
         oldify_merge_batch files;
         Transaction.add ~singleton:"Merge_context" ~commit ~rollback transaction;
 
-        (master_mutator, worker_mutator))
+        (master_mutator, worker_mutator)
+    )
 
   (* While merging, we must keep LeaderHeap and SigHashHeap in sync, sometimes
    * creating new entries and sometimes reusing old entries. *)
@@ -133,13 +140,15 @@ end = struct
           (* Ideally we'd assert that each file is a member of the oldified files too *)
           Nel.iter (fun f -> LeaderHeap.add f leader_f) component;
           SigHashHeap.add leader_f xx
-        ));
+        )
+    );
     diff
 
   let add_merge_on_exn () component =
     let leader_f = Nel.hd component in
     WorkerCancel.with_no_cancellations (fun () ->
-        Nel.iter (fun f -> LeaderHeap.add f leader_f) component);
+        Nel.iter (fun f -> LeaderHeap.add f leader_f) component
+    );
     true
 
   let revive_files oldified_files files =
@@ -147,7 +156,8 @@ end = struct
     assert (FilenameSet.is_empty (FilenameSet.diff files !oldified_files));
     WorkerCancel.with_no_cancellations (fun () ->
         oldified_files := FilenameSet.diff !oldified_files files;
-        revive_merge_batch files)
+        revive_merge_batch files
+    )
 end
 
 module type READER = sig

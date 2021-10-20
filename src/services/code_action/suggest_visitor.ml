@@ -34,7 +34,8 @@ class visitor ~exact_by_default ~ty_query =
         let desc = warning_desc_to_string w in
         let err = mk_error loc None (Friendly.message_of_string desc) in
         _warnings <- ConcreteLocPrintableErrorSet.add err _warnings;
-        None)
+        None
+      )
 
     method warnings () = _warnings
 
@@ -72,8 +73,7 @@ class visitor ~exact_by_default ~ty_query =
       let stmt' = super#statement stmt in
       match stmt' with
       | (loc, FunctionDeclaration x) ->
-        Flow_ast_mapper.id (this#callable_return loc) x stmt' (fun x ->
-            (loc, FunctionDeclaration x))
+        Flow_ast_mapper.id (this#callable_return loc) x stmt' (fun x -> (loc, FunctionDeclaration x))
       | _ -> stmt'
 
     method! object_property (prop : (Loc.t, Loc.t) Ast.Expression.Object.Property.t) =
@@ -118,7 +118,8 @@ class visitor ~exact_by_default ~ty_query =
             | Some annot -> (loc, Identifier { id with annot = Ast.Type.Available annot })
             | None -> patt'
           end
-        | _ -> patt')
+        | _ -> patt'
+      )
 
     method callable_return loc func =
       let open Ast.Function in

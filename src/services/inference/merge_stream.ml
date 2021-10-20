@@ -177,7 +177,8 @@ let create ~num_workers ~reader ~sig_dependency_graph ~leader_map ~component_map
 let update_server_status stream =
   let status =
     ServerStatus.(
-      Merging_progress { finished = stream.merged_files; total = Some stream.total_files })
+      Merging_progress { finished = stream.merged_files; total = Some stream.total_files }
+    )
   in
   MonitorRPC.status_update status
 

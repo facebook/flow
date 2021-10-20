@@ -27,14 +27,16 @@ let spec =
         |> CommandUtils.from_flag
         |> flag "--binary" no_arg ~doc:"Return only the binary"
         |> flag "--semver" no_arg ~doc:"Return only the version number"
-        |> anon "root" (optional string));
+        |> anon "root" (optional string)
+      );
   }
 
 let print_semver json pretty =
   if json || pretty then
     Hh_json.(
       let json = JSON_Object [("semver", JSON_String Flow_version.version)] in
-      print_json_endline ~pretty json)
+      print_json_endline ~pretty json
+    )
   else
     print_endline Flow_version.version
 
@@ -43,7 +45,8 @@ let print_binary json pretty =
   if json || pretty then
     Hh_json.(
       let json = JSON_Object [("binary", JSON_String binary)] in
-      print_json_endline ~pretty json)
+      print_json_endline ~pretty json
+    )
   else
     print_endline binary
 
@@ -63,7 +66,8 @@ let main json pretty binary semver _root () =
             ("flow_build_id", JSON_String (Flow_build_id.get_build_id ()));
           ]
       in
-      print_json_endline ~pretty json)
+      print_json_endline ~pretty json
+    )
   else
     CommandUtils.print_version ();
   Exit.(exit No_error)

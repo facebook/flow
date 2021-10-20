@@ -47,6 +47,7 @@ let init _roots = { fd = wrap Inotify.create (); wpaths = WMap.empty }
 let select_events =
   Inotify.
     [S_Create; S_Delete; S_Delete_self; S_Modify; S_Move_self; S_Moved_from; S_Moved_to; S_Attrib]
+  
 
 (* Returns None if we're already watching that path and Some watch otherwise *)
 let add_watch env path =

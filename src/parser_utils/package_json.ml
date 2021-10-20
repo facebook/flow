@@ -37,10 +37,12 @@ let object_of_statement statement =
           Statement.Expression.expression =
             ( _,
               Expression.Assignment
-                { Expression.Assignment.operator = None; left = _; right = obj; comments = _ } );
+                { Expression.Assignment.operator = None; left = _; right = obj; comments = _ }
+            );
           directive = _;
           comments = _;
-        } ) ->
+        }
+    ) ->
     Ok obj
   | (loc, _) -> Error (loc, "Expected an assignment")
 
@@ -61,7 +63,8 @@ let extract_property map property =
             key = Property.Literal (_, { Literal.value = Literal.String key; _ });
             value = (_, Expression.Literal { Literal.value = Literal.String value; _ });
             _;
-          } ) ->
+          }
+      ) ->
     SMap.add key value map
   | _ -> map
 

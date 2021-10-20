@@ -134,10 +134,11 @@ and dump_field ~depth x t polarity optional =
     "%s%s%s: %s"
     (dump_polarity polarity)
     x
-    (if optional then
+    ( if optional then
       "?"
     else
-      "")
+      ""
+    )
     (dump_t ~depth t)
 
 and dump_prop ~depth = function
@@ -341,7 +342,8 @@ let json_of_elt ~strip_root =
         [
           ("kind", JSON_String (ctor_of_provenance p));
           ("loc", JSON_String (Reason.string_of_aloc ~strip_root loc));
-        ])
+        ]
+    )
   in
   let json_of_symbol { sym_provenance; sym_def_loc; sym_name; _ } =
     Hh_json.(
@@ -349,7 +351,8 @@ let json_of_elt ~strip_root =
         [
           ("provenance", json_of_provenance sym_def_loc sym_provenance);
           ("name", JSON_String (Reason.display_string_of_name sym_name));
-        ])
+        ]
+    )
   in
   let json_of_builtin_value =
     Hh_json.(
@@ -359,7 +362,8 @@ let json_of_elt ~strip_root =
       | FunProtoApply -> JSON_String "Function.prototype.apply"
       | FunProtoBind -> JSON_String "Function.prototype.bind"
       | FunProtoCall -> JSON_String "Function.prototype.call"
-      | TSymbol s -> json_of_symbol s)
+      | TSymbol s -> json_of_symbol s
+    )
   in
   let rec json_of_t t =
     Hh_json.(JSON_Object (("kind", JSON_String (string_of_ctor_t t)) :: json_of_t_list t))
@@ -401,7 +405,8 @@ let json_of_elt ~strip_root =
             ("extends", JSON_Array extends);
             ("body", JSON_Array (Base.List.map ~f:json_of_prop if_props));
             ("dict", Base.Option.value_map if_dict ~f:(fun d -> json_of_dict d) ~default:JSON_Null);
-          ])
+          ]
+        )
       | TypeOf b -> [("name", json_of_builtin_value b)]
       | Utility u -> json_of_utility u
       | IndexedAccess { _object; index; optional } ->
@@ -409,7 +414,8 @@ let json_of_elt ~strip_root =
           ("object", json_of_t _object); ("index", json_of_t index); ("optional", JSON_Bool optional);
         ]
       | Mu (i, t) -> [("mu_var", int_ i); ("type", json_of_t t)]
-      | CharSet s -> [("literal", JSON_String s)])
+      | CharSet s -> [("literal", JSON_String s)]
+    )
   and json_of_tvar (RVar i) = Hh_json.[("id", int_ i)]
   and json_of_generic (s, k, targs_opt) =
     json_of_targs targs_opt
@@ -428,7 +434,9 @@ let json_of_elt ~strip_root =
              (function
                | (Some n, _, _) -> JSON_String n
                | (None, _, _) -> JSON_String "_")
-             fun_params) );
+             fun_params
+          )
+      );
       ( "restParam",
         match fun_rest_param with
         | None -> JSON_Null
@@ -438,7 +446,9 @@ let json_of_elt ~strip_root =
             @
             match name with
             | None -> []
-            | Some name -> [("restParamName", JSON_String name)]) );
+            | Some name -> [("restParamName", JSON_String name)]
+            )
+      );
       ("returnType", json_of_t fun_return);
       ("staticType", json_of_t fun_static);
     ]
@@ -456,17 +466,20 @@ let json_of_elt ~strip_root =
         ("frozen", JSON_Bool obj_frozen);
         ("literal", Base.Option.value_map obj_literal ~f:(fun t -> JSON_Bool t) ~default:JSON_Null);
         ("props", JSON_Array (Base.List.map ~f:json_of_prop obj_props));
-      ])
+      ]
+    )
   and json_of_type_params ps =
     Hh_json.(
       match ps with
       | None -> JSON_Null
-      | Some tparams -> JSON_Array (Base.List.map ~f:json_of_typeparam tparams))
+      | Some tparams -> JSON_Array (Base.List.map ~f:json_of_typeparam tparams)
+    )
   and json_of_targs targs_opt =
     Hh_json.(
       match targs_opt with
       | Some targs -> [("typeArgs", JSON_Array (Base.List.map ~f:json_of_t targs))]
-      | None -> [])
+      | None -> []
+    )
   and json_of_typeparam
       { tp_name : string; tp_bound : t option; tp_polarity : polarity; tp_default : t option } =
     Hh_json.(
@@ -476,7 +489,9 @@ let json_of_elt ~strip_root =
            ("bound", Base.Option.value_map tp_bound ~f:json_of_t ~default:JSON_Null);
            ("polarity", json_of_polarity tp_polarity);
          ]
-        @ Base.Option.value_map tp_default ~default:[] ~f:(fun t -> [("default", json_of_t t)])))
+        @ Base.Option.value_map tp_default ~default:[] ~f:(fun t -> [("default", json_of_t t)])
+        )
+    )
   and json_of_polarity polarity = Hh_json.JSON_String (string_of_polarity polarity)
   and json_of_prop prop =
     Hh_json.(
@@ -494,12 +509,15 @@ let json_of_elt ~strip_root =
                   ( "def_loc",
                     match def_loc with
                     | None -> JSON_Null
-                    | Some loc -> JSON_String (Reason.string_of_aloc loc) );
-                ] );
+                    | Some loc -> JSON_String (Reason.string_of_aloc loc)
+                  );
+                ]
+            );
           ]
         | CallProp ft ->
           [("kind", JSON_String "CallProp"); ("prop", JSON_Object (json_of_fun_t ft))]
-        | SpreadProp t -> [("kind", JSON_String "SpreadProp"); ("prop", json_of_t t)]))
+        | SpreadProp t -> [("kind", JSON_String "SpreadProp"); ("prop", json_of_t t)])
+    )
   and json_of_dict { dict_polarity; dict_name; dict_key; dict_value } =
     Hh_json.(
       JSON_Object
@@ -508,7 +526,8 @@ let json_of_elt ~strip_root =
           ("name", JSON_String (Base.Option.value dict_name ~default:"_"));
           ("key", json_of_t dict_key);
           ("value", json_of_t dict_value);
-        ])
+        ]
+    )
   and json_of_named_prop p =
     Hh_json.(
       JSON_Object
@@ -522,12 +541,14 @@ let json_of_elt ~strip_root =
           ]
         | Method t -> [("kind", JSON_String "Method"); ("funtype", JSON_Object (json_of_fun_t t))]
         | Get t -> [("kind", JSON_String "Get"); ("type", json_of_t t)]
-        | Set t -> [("kind", JSON_String "Set"); ("type", json_of_t t)]))
+        | Set t -> [("kind", JSON_String "Set"); ("type", json_of_t t)])
+    )
   and json_of_utility u =
     Hh_json.(
       let ctor = Ty.string_of_utility_ctor u in
       let ts = json_of_targs (Ty.types_of_utility u) in
-      ("kind", JSON_String ctor) :: ts)
+      ("kind", JSON_String ctor) :: ts
+    )
   in
   let json_of_class_decl (name, tparams) =
     [("name", json_of_symbol name); ("typeParams", json_of_type_params tparams)]

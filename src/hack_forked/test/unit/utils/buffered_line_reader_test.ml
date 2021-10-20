@@ -58,7 +58,8 @@ let test_mixed_read () =
       assert_equals msg6 (get_next_bytes reader (String.length msg6)) "msg6";
       assert_equals msg7 (get_next_line reader) "msg7";
       Unix.close fd_in;
-      true)
+      true
+  )
 
 let str_split str len =
   let hd = String.sub str 0 len in
@@ -87,7 +88,8 @@ let test_few_bytes_at_a_time chunk_size () =
     assert_equals "def" (get_next_line reader) "third word";
     assert_equals "ghij" (get_next_line reader) "fourth word";
     assert_equals "klmno" (get_next_line reader) "fifth word";
-    true)
+    true
+  )
 
 (** Write some after some has been read into the buffer. *)
 let test_write_after_read () =
@@ -105,7 +107,8 @@ let test_write_after_read () =
     (* gh written before gets joined with the ij here. *)
     assert_equals "ghij" (get_next_line reader) "fourth word";
     assert_equals "klmno" (get_next_line reader) "fifth word";
-    true)
+    true
+  )
 
 let tests =
   [

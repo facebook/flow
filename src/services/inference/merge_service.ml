@@ -547,9 +547,10 @@ let with_async_logging_timer ~interval ~on_timer ~f =
   let timer = ref None in
   let cancel_timer () = Base.Option.iter ~f:Timer.cancel_timer !timer in
   let rec run_timer ?(first_run = false) () =
-    (if not first_run then
+    ( if not first_run then
       let run_time = Unix.gettimeofday () -. start_time in
-      on_timer run_time);
+      on_timer run_time
+    );
     timer := Some (Timer.set_timer ~interval ~callback:run_timer)
   in
   (* Timer is unimplemented in Windows. *)
@@ -585,7 +586,8 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
                  files;
                Base.Option.iter merge_timeout ~f:(fun merge_timeout ->
                    if run_time >= merge_timeout then
-                     raise (Error_message.EMergeTimeout (run_time, files))))
+                     raise (Error_message.EMergeTimeout (run_time, files))
+               ))
              ~f:(fun () ->
                let start_time = Unix.gettimeofday () in
                (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
@@ -633,7 +635,8 @@ let merge_job ~worker_mutator ~reader ~job ~options merged elements =
                 match unwrapped_exc with
                 | EDebugThrow loc -> (loc, DebugThrow)
                 | EMergeTimeout (s, _) -> (file_loc, MergeTimeout s)
-                | _ -> (file_loc, MergeJobException exc))
+                | _ -> (file_loc, MergeJobException exc)
+              )
           in
           (leader, diff, result) :: merged))
     merged
@@ -659,7 +662,8 @@ let merge_runner
           Nel.fold_left
             (fun (leader_map, recheck_leader) file ->
               ( FilenameMap.add file leader leader_map,
-                recheck_leader || FilenameSet.mem file recheck_set ))
+                recheck_leader || FilenameSet.mem file recheck_set
+              ))
             (leader_map, false)
             component
         in
@@ -722,7 +726,8 @@ let mk_check options ~reader () =
             file_str;
           Base.Option.iter check_timeout ~f:(fun check_timeout ->
               if run_time >= check_timeout then
-                raise (Error_message.ECheckTimeout (run_time, file_str))))
+                raise (Error_message.ECheckTimeout (run_time, file_str))
+          ))
         ~f:(fun () -> Ok (check_file file))
     with
     | (SharedMem.Out_of_shared_memory | SharedMem.Heap_full | SharedMem.Hash_table_full) as exc ->
@@ -745,4 +750,5 @@ let mk_check options ~reader () =
           match unwrapped_exc with
           | EDebugThrow loc -> (loc, DebugThrow)
           | ECheckTimeout (s, _) -> (file_loc, CheckTimeout s)
-          | _ -> (file_loc, CheckJobException exc))
+          | _ -> (file_loc, CheckJobException exc)
+        )

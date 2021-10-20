@@ -109,7 +109,8 @@ class property_assignment (property_names : SSet.t) =
               match property with
               | PropertyIdentifier id -> public_property loc id
               | PropertyPrivateName id -> private_property loc id
-              | PropertyExpression _ -> failwith "match on expr makes this impossible")
+              | PropertyExpression _ -> failwith "match on expr makes this impossible"
+            )
         in
         read_loc_metadata <- Loc_collections.ALocMap.add loc property_name read_loc_metadata;
         ignore @@ this#any_identifier loc property_name;
@@ -125,13 +126,16 @@ class property_assignment (property_names : SSet.t) =
           Ast.Pattern.Expression
             ( member_loc,
               Ast.Expression.Member
-                ({
-                   Ast.Expression.Member._object = (_, Ast.Expression.This _);
-                   property =
-                     ( Ast.Expression.Member.PropertyIdentifier _
-                     | Ast.Expression.Member.PropertyPrivateName _ ) as property;
-                   comments = _;
-                 } as left_member) ) ) ->
+                ( {
+                    Ast.Expression.Member._object = (_, Ast.Expression.This _);
+                    property =
+                      ( Ast.Expression.Member.PropertyIdentifier _
+                      | Ast.Expression.Member.PropertyPrivateName _ ) as property;
+                    comments = _;
+                  } as left_member
+                )
+            )
+        ) ->
         (match operator with
         | None ->
           (* given `this.x = e`, read e then write x *)
@@ -140,7 +144,8 @@ class property_assignment (property_names : SSet.t) =
               match property with
               | PropertyIdentifier id -> public_property member_loc id
               | PropertyPrivateName id -> private_property member_loc id
-              | PropertyExpression _ -> failwith "match on expr makes this impossible")
+              | PropertyExpression _ -> failwith "match on expr makes this impossible"
+            )
             right
         | Some _ ->
           (* given `this.x += e`, read x then read e *)
@@ -183,14 +188,16 @@ class property_assignment (property_names : SSet.t) =
                 ( Ast.Expression.Member.PropertyIdentifier _
                 | Ast.Expression.Member.PropertyPrivateName _ ) as property;
               comments = _;
-            } ) ->
+            }
+        ) ->
         let name =
           Flow_ast_utils.name_of_ident
           @@ Ast.Expression.Member.(
                match property with
                | PropertyIdentifier id -> public_property member_loc id
                | PropertyPrivateName id -> private_property member_loc id
-               | PropertyExpression _ -> failwith "match on expr.callee makes this impossible")
+               | PropertyExpression _ -> failwith "match on expr.callee makes this impossible"
+             )
         in
         let error =
           if SSet.mem name property_names then
@@ -217,7 +224,8 @@ let eval_property_assignment class_body =
                 annot = _;
                 variance = _;
                 comments = _;
-              } ) ->
+              }
+            ) ->
           Some (public_property loc id, value)
         | Body.PrivateField
             ( _,
@@ -228,7 +236,8 @@ let eval_property_assignment class_body =
                 annot = _;
                 variance = _;
                 comments = _;
-              } ) ->
+              }
+            ) ->
           Some (private_property loc id, value)
         | _ -> None)
       class_body
@@ -253,12 +262,14 @@ let eval_property_assignment class_body =
                       tparams = _;
                       sig_loc = _;
                       comments = _;
-                    } );
+                    }
+                  );
                 key = _;
                 static = _;
                 decorators = _;
                 comments = _;
-              } ) ->
+              }
+            ) ->
           Some block
         | _ -> None)
       class_body
@@ -290,7 +301,8 @@ let eval_property_assignment class_body =
                    ssa_walk#initialize_property property_id default_initializer
                  | _ -> ())
                property_declarations;
-             ignore @@ ssa_walk#block ALoc.none body);
+             ignore @@ ssa_walk#block ALoc.none body
+         );
          body)
        ctor_body;
 
@@ -304,7 +316,9 @@ let eval_property_assignment class_body =
     |> filter_uninitialized ssa_walk#final_ssa_env
     |> Base.List.rev_map ~f:(fun id ->
            ( { loc = Flow_ast_utils.loc_of_ident id; desc = Lints.PropertyNotDefinitelyInitialized },
-             Flow_ast_utils.name_of_ident id ))
+             Flow_ast_utils.name_of_ident id
+           )
+       )
   in
   let read_before_initialized : (ALoc.t error * string) list =
     ssa_walk#values
@@ -313,9 +327,11 @@ let eval_property_assignment class_body =
            if not_definitively_initialized write_locs then
              ssa_walk#metadata_of_read_loc read_loc
              |> Base.Option.map ~f:(fun name ->
-                    ({ loc = read_loc; desc = Lints.ReadFromUninitializedProperty }, name))
+                    ({ loc = read_loc; desc = Lints.ReadFromUninitializedProperty }, name)
+                )
            else
-             None)
+             None
+       )
   in
   let this_errors : (ALoc.t error * string Nel.t) list =
     Base.List.rev_filter_map
@@ -324,7 +340,8 @@ let eval_property_assignment class_body =
         |> Base.List.map ~f:Flow_ast_utils.name_of_ident
         |> Nel.of_list
         |> Base.Option.map ~f:(fun uninitialized_properties ->
-               ({ loc; desc }, uninitialized_properties)))
+               ({ loc; desc }, uninitialized_properties)
+           ))
       ssa_walk#this_escape_errors
   in
   (* It's better to append new to old b/c new is always a singleton *)

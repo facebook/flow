@@ -117,7 +117,8 @@ module Alarm_timeout = struct
         | exn ->
           close_in ic;
           close_out oc;
-          raise exn)
+          raise exn
+    )
 
   let open_connection ?timeout:_ sockaddr =
     (* timeout isn't used in this Alarm_timeout implementation, but is used in Select_timeout *)
@@ -425,7 +426,8 @@ module Select_timeout = struct
           tic.pid <- None;
           close_in tic;
           close_out oc;
-          raise exn)
+          raise exn
+    )
 
   (** Socket *)
 
@@ -536,10 +538,11 @@ let select = (module Select_timeout : S)
 let alarm = (module Alarm_timeout : S)
 
 include
-  (val if Sys.win32 then
-         select
-       else
-         alarm)
+  ( val if Sys.win32 then
+          select
+        else
+          alarm
+    )
 
 let read_connection ~timeout ~on_timeout ~reader sockaddr =
   with_timeout ~timeout ~on_timeout ~do_:(fun timeout ->
@@ -547,4 +550,5 @@ let read_connection ~timeout ~on_timeout ~reader sockaddr =
       try reader timeout tic oc with
       | exn ->
         close_out oc;
-        raise exn)
+        raise exn
+  )

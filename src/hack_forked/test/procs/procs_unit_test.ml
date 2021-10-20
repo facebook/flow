@@ -19,7 +19,8 @@ let multi_worker_list workers () =
          ~job:sum
          ~merge:( + )
          ~neutral:0
-         ~next:(Bucket.make ~num_workers:20 work))
+         ~next:(Bucket.make ~num_workers:20 work)
+      )
   in
   Printf.printf "Got %d\n" result;
   result = expected
@@ -59,10 +60,12 @@ let multi_worker_of_n_buckets workers () =
            ~job:do_work
            ~merge:( + )
            ~neutral:0
-           ~next:(make_n_buckets ~buckets ~split))
+           ~next:(make_n_buckets ~buckets ~split)
+        )
     in
     Printf.printf "Got %d\n" result;
-    result = expected)
+    result = expected
+  )
 
 let tests =
   [

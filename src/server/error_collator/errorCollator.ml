@@ -132,7 +132,8 @@ let get_with_separate_warnings_no_profiling ~reader ~options env =
 
 let get_with_separate_warnings ~profiling ~reader ~options env =
   Profiling_js.with_timer ~timer:"CollateErrors" profiling ~f:(fun () ->
-      get_with_separate_warnings_no_profiling ~reader ~options env)
+      get_with_separate_warnings_no_profiling ~reader ~options env
+  )
 
 (* combine error maps into a single error set and a single warning set *)
 let get ~profiling ~reader ~options env =
@@ -147,4 +148,6 @@ let get ~profiling ~reader ~options env =
             warning_map
             ConcreteLocPrintableErrorSet.empty
         in
-        (errors, warnings, suppressed_errors)))
+        (errors, warnings, suppressed_errors)
+      )
+  )

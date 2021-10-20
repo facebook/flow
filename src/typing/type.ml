@@ -1791,12 +1791,14 @@ end = struct
   let map_fields f =
     NameUtils.Map.map (function
         | Field (loc, t, polarity) -> Field (loc, f t, polarity)
-        | p -> p)
+        | p -> p
+        )
 
   let mapi_fields f =
     NameUtils.Map.mapi (fun k -> function
       | Field (loc, t, polarity) -> Field (loc, f k t, polarity)
-      | p -> p)
+      | p -> p
+    )
 end
 
 and Eval : sig
@@ -1975,7 +1977,8 @@ end = struct
         Some (UnionEnum.Bool lit)
       | DefT (_, _, VoidT) -> Some UnionEnum.Void
       | DefT (_, _, NullT) -> Some UnionEnum.Null
-      | _ -> None)
+      | _ -> None
+    )
 
   let is_base =
     TypeTerm.(
@@ -1986,7 +1989,8 @@ end = struct
       | DefT (_, _, VoidT)
       | DefT (_, _, NullT) ->
         true
-      | _ -> false)
+      | _ -> false
+    )
 
   (* disjoint unions are stored as singleton type maps *)
   module UnionEnumMap = WrappedMap.Make (UnionEnum)
@@ -2076,7 +2080,8 @@ end = struct
         | DefT (_, _, InstanceT _)
         | DefT (_, _, PolyT _) ->
           false
-        | _ -> true)
+        | _ -> true
+      )
 
   let enum_optimize =
     let split_enum =
@@ -2113,7 +2118,8 @@ end = struct
       | DefT (_, _, ObjT { props_tmap; _ })
       | ExactT (_, DefT (_, _, ObjT { props_tmap; _ })) ->
         Some (find_props props_tmap)
-      | _ -> None)
+      | _ -> None
+    )
 
   let disjoint_union_optimize =
     let base_props_of find_resolved find_props t =
@@ -2125,7 +2131,8 @@ end = struct
             | Some enum -> NameUtils.Map.add key (enum, t) acc
             | _ -> acc)
           prop_map
-          NameUtils.Map.empty)
+          NameUtils.Map.empty
+      )
     in
     let split_disjoint_union find_resolved find_props ts =
       List.fold_left
@@ -2173,7 +2180,8 @@ end = struct
               NameUtils.Map.merge
                 (fun _key enum_t_opt values_opt ->
                   Base.Option.(
-                    both enum_t_opt values_opt >>| fun (enum_t, values) -> List.cons enum_t values))
+                    both enum_t_opt values_opt >>| fun (enum_t, values) -> List.cons enum_t values
+                  ))
                 base_props
                 acc)
             init
@@ -2923,7 +2931,8 @@ module AConstraint = struct
             | Rest _ -> "rest"
             | ReactConfig _ -> "react config"
             | ObjectRep -> "object"
-            | ObjectWiden _ -> "widening")
+            | ObjectWiden _ -> "widening"
+          )
       in
       replace_desc_reason desc r
     | Annot_MakeExactT r -> replace_desc_reason (RCustom "exact") r
@@ -3496,7 +3505,8 @@ let string_of_use_op (type a) : a virtual_use_op -> string = function
 
 let string_of_use_op_rec : use_op -> string =
   fold_use_op string_of_root_use_op (fun acc use_op ->
-      spf "%s(%s)" (string_of_frame_use_op use_op) acc)
+      spf "%s(%s)" (string_of_frame_use_op use_op) acc
+  )
 
 let string_of_use_ctor = function
   | UseT (op, t) -> spf "UseT(%s, %s)" (string_of_use_op op) (string_of_ctor t)

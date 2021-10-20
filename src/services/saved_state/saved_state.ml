@@ -281,21 +281,24 @@ end = struct
           FilenameSet.fold
             (collect_normalized_data_for_parsed_file ~normalizer ~reader)
             env.ServerEnv.files
-            [])
+            []
+      )
     in
     let unparsed_heaps =
       Profiling_js.with_timer profiling ~timer:"CollectUnparsed" ~f:(fun () ->
           FilenameSet.fold
             (collect_normalized_data_for_unparsed_file ~normalizer ~reader)
             env.ServerEnv.unparsed
-            [])
+            []
+      )
     in
     let package_heaps =
       Profiling_js.with_timer profiling ~timer:"CollectPackageJson" ~f:(fun () ->
           Base.List.fold
             ~f:(fun m fn -> collect_normalized_data_for_package_json_file ~normalizer fn m)
             env.ServerEnv.package_json_files
-            ~init:FilenameMap.empty)
+            ~init:FilenameMap.empty
+      )
     in
     let ordered_non_flowlib_libs =
       env.ServerEnv.ordered_libs
@@ -385,7 +388,9 @@ end = struct
               orig_size
               new_size
               (100. *. float_of_int new_size /. float_of_int orig_size);
-            Lwt.return compressed))
+            Lwt.return compressed
+          )
+      )
     in
     Profiling_js.with_timer_lwt profiling ~timer:"Write" ~f:(fun () ->
         Hh_logger.info "Writing saved-state file at %S" filename;
@@ -400,7 +405,8 @@ end = struct
         in
         Hh_logger.info "Finished writing %d bytes to saved-state file at %S" bytes_written filename;
 
-        Lwt.return_unit)
+        Lwt.return_unit
+    )
 end
 
 type invalid_reason =
@@ -554,13 +560,14 @@ end = struct
         (List.fold_left (fun acc (relative_fn, unparsed_file_data) ->
              let unparsed_info = denormalize_info_nocache ~root unparsed_file_data.unparsed_info in
              let fn = denormalize_file_key_nocache ~root relative_fn in
-             (fn, { unparsed_info; unparsed_hash = unparsed_file_data.unparsed_hash }) :: acc))
+             (fn, { unparsed_info; unparsed_hash = unparsed_file_data.unparsed_hash }) :: acc
+         )
+        )
       ~neutral:[]
       ~merge:List.rev_append
       ~next
 
-  let denormalize_error_set ~denormalizer =
-    Flow_error.ErrorSet.map (denormalize_error ~denormalizer)
+  let denormalize_error_set ~denormalizer = Flow_error.ErrorSet.map (denormalize_error ~denormalizer)
 
   (* Denormalize all the data *)
   let denormalize_data ~workers ~options ~data =
@@ -666,7 +673,8 @@ end = struct
           | exn ->
             let exn = Exception.wrap exn in
             Hh_logger.error ~exn "Failed to parse saved state data";
-            raise (Invalid_saved_state Failed_to_marshal))
+            raise (Invalid_saved_state Failed_to_marshal)
+      )
     in
     let%lwt () = Lwt_unix.close fd in
     Hh_logger.info "Decompressing saved-state data";
@@ -677,13 +685,15 @@ end = struct
           | exn ->
             let exn = Exception.wrap exn in
             Hh_logger.error ~exn "Failed to decompress saved state";
-            raise (Invalid_saved_state Failed_to_decompress))
+            raise (Invalid_saved_state Failed_to_decompress)
+      )
     in
     Hh_logger.info "Denormalizing saved-state data";
 
     let%lwt data =
       Profiling_js.with_timer_lwt profiling ~timer:"Denormalize" ~f:(fun () ->
-          denormalize_data ~workers ~options ~data)
+          denormalize_data ~workers ~options ~data
+      )
     in
     Hh_logger.info "Finished loading saved-state";
 
@@ -695,6 +705,7 @@ let save = Save.save
 let load ~workers ~saved_state_filename ~options =
   let should_print_summary = Options.should_profile options in
   Profiling_js.with_profiling_lwt ~label:"LoadSavedState" ~should_print_summary (fun profiling ->
-      Load.load ~workers ~saved_state_filename ~options ~profiling)
+      Load.load ~workers ~saved_state_filename ~options ~profiling
+  )
 
 let denormalize_file_data = Load.denormalize_file_data

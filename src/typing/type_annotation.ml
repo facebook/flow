@@ -123,7 +123,9 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 Generic.Identifier.Unqualified ((id_loc, t), { Ast.Identifier.name; comments });
               targs = None;
               comments = None;
-            } ))
+            }
+        )
+    )
 
   let mk_eval_id cx loc =
     if Env.in_toplevel_scope () then
@@ -175,14 +177,16 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
       let (ts, ts_ast) = convert_list cx tparams_map ts in
       let rep = UnionRep.make t0 t1 ts in
       ( (loc, UnionT (mk_annot_reason RUnionType loc, rep)),
-        Union { Union.types = (t0_ast, t1_ast, ts_ast); comments } )
+        Union { Union.types = (t0_ast, t1_ast, ts_ast); comments }
+      )
     | (loc, Intersection { Intersection.types = (t0, t1, ts); comments }) ->
       let (((_, t0), _) as t0_ast) = convert cx tparams_map t0 in
       let (((_, t1), _) as t1_ast) = convert cx tparams_map t1 in
       let (ts, ts_ast) = convert_list cx tparams_map ts in
       let rep = InterRep.make t0 t1 ts in
       ( (loc, IntersectionT (mk_annot_reason RIntersectionType loc, rep)),
-        Intersection { Intersection.types = (t0_ast, t1_ast, ts_ast); comments } )
+        Intersection { Intersection.types = (t0_ast, t1_ast, ts_ast); comments }
+      )
     | (loc, Typeof { Typeof.argument = x; comments }) as t_ast ->
       begin
         match x with
@@ -202,7 +206,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                       { Generic.id = qualification_ast; targs = None; comments = generic_comments }
                   );
                 comments;
-              } )
+              }
+          )
         | (q_loc, _) -> error_type cx loc (Error_message.EUnexpectedTypeof q_loc) t_ast
       end
     | (loc, Tuple { Tuple.types = ts; comments }) ->
@@ -231,12 +236,14 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
           UnionT (element_reason, UnionRep.make t0 t1 ts)
       in
       ( (loc, DefT (reason, infer_trust cx, ArrT (TupleAT (elemt, tuple_types)))),
-        Tuple { Tuple.types = ts_ast; comments } )
+        Tuple { Tuple.types = ts_ast; comments }
+      )
     | (loc, Array { Array.argument = t; comments }) ->
       let r = mk_annot_reason RArrayType loc in
       let (((_, elemt), _) as t_ast) = convert cx tparams_map t in
       ( (loc, DefT (r, infer_trust cx, ArrT (ArrayAT (elemt, None)))),
-        Array { Array.argument = t_ast; comments } )
+        Array { Array.argument = t_ast; comments }
+      )
     | (loc, (StringLiteral { Ast.StringLiteral.value; _ } as t_ast)) ->
       let t =
         if Type_inference_hooks_js.dispatch_literal_hook cx loc then
@@ -265,7 +272,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
           let use_op =
             Op
               (IndexedTypeAccess
-                 { _object = reason_of_t object_type; index = reason_of_t index_type })
+                 { _object = reason_of_t object_type; index = reason_of_t index_type }
+              )
           in
           let destructor =
             match index with
@@ -288,7 +296,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
               qid;
             targs;
             comments;
-          } ) ->
+          }
+      ) ->
       let (m, qualification_ast) = convert_qualification cx "type-annotation" qualification in
       let (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)) = id in
       let reason = mk_reason (RType (OrdinaryName name)) loc in
@@ -297,7 +306,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
       let t_unapplied =
         Tvar.mk_no_wrap_where cx qid_reason (fun t ->
             let use_op = Op (GetProperty qid_reason) in
-            Flow.flow cx (m, GetPropT (use_op, qid_reason, Named (id_reason, OrdinaryName name), t)))
+            Flow.flow cx (m, GetPropT (use_op, qid_reason, Named (id_reason, OrdinaryName name), t))
+        )
       in
       let (t, targs) = mk_nominal_type cx reason tparams_map (t_unapplied, targs) in
       ( (loc, t),
@@ -309,10 +319,12 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                   {
                     Generic.Identifier.qualification = qualification_ast;
                     id = ((id_loc, t_unapplied), id_name);
-                  } );
+                  }
+                );
             targs;
             comments;
-          } )
+          }
+      )
     (* type applications: name < params > *)
     | ( loc,
         Generic
@@ -322,7 +334,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 (name_loc, ({ Ast.Identifier.name; comments = id_comments } as id_name));
             targs;
             comments;
-          } ) as t_ast ->
+          }
+      ) as t_ast ->
       (* Comments are innecessary, so they can be stripped to meet the generic requirements *)
       let ident = (name_loc, name, id_comments) in
       let convert_type_params () =
@@ -341,7 +354,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                   ((name_loc, Base.Option.value id_t ~default:t), id_name);
               targs;
               comments;
-            } )
+            }
+        )
       in
       let use_op reason = Op (TypeApplication { type' = reason }) in
       begin
@@ -355,7 +369,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 reconstruct_ast
                   (DefT (replace_desc_reason RNumber r, trust, NumT (Literal (None, num_lit))))
                   targs
-              | _ -> error_type cx loc (Error_message.EUnexpectedTemporaryBaseType loc) t_ast)
+              | _ -> error_type cx loc (Error_message.EUnexpectedTemporaryBaseType loc) t_ast
+          )
         | "$TEMPORARY$string" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (elemts, targs) = convert_type_params () in
@@ -372,7 +387,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                     (AnyLiteral, RLongStringLit max_literal_length)
                 in
                 reconstruct_ast (DefT (replace_desc_reason r_desc r, trust, StrT lit)) targs
-              | _ -> error_type cx loc (Error_message.EUnexpectedTemporaryBaseType loc) t_ast)
+              | _ -> error_type cx loc (Error_message.EUnexpectedTemporaryBaseType loc) t_ast
+          )
         | "$TEMPORARY$boolean" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (elemts, targs) = convert_type_params () in
@@ -381,19 +397,22 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 reconstruct_ast
                   (DefT (replace_desc_reason RBoolean r, trust, BoolT (Some bool)))
                   targs
-              | _ -> error_type cx loc (Error_message.EUnexpectedTemporaryBaseType loc) t_ast)
+              | _ -> error_type cx loc (Error_message.EUnexpectedTemporaryBaseType loc) t_ast
+          )
         | "$TEMPORARY$object" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
               let t = convert_temporary_object (List.hd ts) in
-              reconstruct_ast t targs)
+              reconstruct_ast t targs
+          )
         | "$TEMPORARY$array" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (elemts, targs) = convert_type_params () in
               let elemt = List.hd elemts in
               reconstruct_ast
                 (DefT (mk_annot_reason RArrayLit loc, infer_trust cx, ArrT (ArrayAT (elemt, None))))
-                targs)
+                targs
+          )
         (* Array<T> *)
         | "Array" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
@@ -401,7 +420,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
               let elemt = List.hd elemts in
               reconstruct_ast
                 (DefT (mk_annot_reason RArrayType loc, infer_trust cx, ArrT (ArrayAT (elemt, None))))
-                targs)
+                targs
+          )
         (* $ReadOnlyArray<T> is the supertype of all tuples and all arrays *)
         | "$ReadOnlyArray" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
@@ -409,7 +429,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
               let elemt = List.hd elemts in
               reconstruct_ast
                 (DefT (mk_annot_reason RROArrayType loc, infer_trust cx, ArrT (ROArrayAT elemt)))
-                targs)
+                targs
+          )
         (* These utilities are no longer supported *)
         (* $Supertype<T> acts as any over supertypes of T *)
         | "$Supertype" ->
@@ -417,14 +438,16 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
               let t = List.hd ts in
-              reconstruct_ast (reason_of_t t |> AnyT.annot) targs)
+              reconstruct_ast (reason_of_t t |> AnyT.annot) targs
+          )
         (* $Subtype<T> acts as any over subtypes of T *)
         | "$Subtype" ->
           Error_message.EDeprecatedUtility (loc, name) |> Flow_js.add_output cx;
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
               let t = List.hd ts in
-              reconstruct_ast (reason_of_t t |> AnyT.annot) targs)
+              reconstruct_ast (reason_of_t t |> AnyT.annot) targs
+          )
         (* $PropertyType<T, 'x'> acts as the type of 'x' in object type T *)
         | "$PropertyType" ->
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->
@@ -437,10 +460,14 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                        TypeDestructorT
                          ( use_op reason,
                            reason,
-                           PropertyType { name = key; is_indexed_access = false } ),
-                       mk_eval_id cx loc ))
+                           PropertyType { name = key; is_indexed_access = false }
+                         ),
+                       mk_eval_id cx loc
+                     )
+                  )
                   targs
-              | _ -> error_type cx loc (Error_message.EPropertyTypeAnnot loc) t_ast)
+              | _ -> error_type cx loc (Error_message.EPropertyTypeAnnot loc) t_ast
+          )
         (* $ElementType<T, string> acts as the type of the string elements in object
            type T *)
         | "$ElementType" ->
@@ -454,10 +481,14 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                        TypeDestructorT
                          ( use_op reason,
                            reason,
-                           ElementType { index_type = e; is_indexed_access = false } ),
-                       mk_eval_id cx loc ))
+                           ElementType { index_type = e; is_indexed_access = false }
+                         ),
+                       mk_eval_id cx loc
+                     )
+                  )
                   targs
-              | _ -> assert false)
+              | _ -> assert false
+          )
         (* $NonMaybeType<T> acts as the type T without null and void *)
         | "$NonMaybeType" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
@@ -466,7 +497,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
               let reason = mk_reason (RType (OrdinaryName "$NonMaybeType")) loc in
               reconstruct_ast
                 (EvalT (t, TypeDestructorT (use_op reason, reason, NonMaybeType), mk_eval_id cx loc))
-                targs)
+                targs
+          )
         (* $Partial<T> makes all of `T`'s properties optional *)
         | "$Partial" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
@@ -475,14 +507,16 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
               let reason = mk_reason (RPartialOf (desc_of_t t)) (loc_of_t t) in
               reconstruct_ast
                 (EvalT (t, TypeDestructorT (use_op reason, reason, PartialType), mk_eval_id cx loc))
-                targs)
+                targs
+          )
         (* $Shape<T> matches the shape of T *)
         | "$Shape" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
               let t = List.hd ts in
               let reason = mk_reason (RShapeOf (desc_of_t t)) (loc_of_t t) in
-              reconstruct_ast (ShapeT (reason, t)) targs)
+              reconstruct_ast (ShapeT (reason, t)) targs
+          )
         (* $Diff<T, S> *)
         | "$Diff" ->
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->
@@ -497,8 +531,11 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                    ( t1,
                      TypeDestructorT
                        (use_op reason, reason, RestType (Type.Object.Rest.IgnoreExactAndOwn, t2)),
-                     mk_eval_id cx loc ))
-                targs)
+                     mk_eval_id cx loc
+                   )
+                )
+                targs
+          )
         (* $ReadOnly<T> *)
         | "$ReadOnly" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
@@ -507,13 +544,15 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
               let reason = mk_reason RReadOnlyType loc in
               reconstruct_ast
                 (EvalT (t, TypeDestructorT (use_op reason, reason, ReadOnlyType), mk_eval_id cx loc))
-                targs)
+                targs
+          )
         (* $Keys<T> is the set of keys of T *)
         | "$Keys" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
               let t = List.hd ts in
-              reconstruct_ast (KeysT (mk_reason RKeySet loc, t)) targs)
+              reconstruct_ast (KeysT (mk_reason RKeySet loc, t)) targs
+          )
         (* $Values<T> is a union of all the own enumerable value types of T *)
         | "$Values" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
@@ -522,13 +561,15 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
               let reason = mk_reason (RType (OrdinaryName "$Values")) loc in
               reconstruct_ast
                 (EvalT (t, TypeDestructorT (use_op reason, reason, ValuesType), mk_eval_id cx loc))
-                targs)
+                targs
+          )
         | "$Exact" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
               let t = List.hd ts in
               let desc = RExactType (desc_of_t t) in
-              reconstruct_ast (ExactT (mk_annot_reason desc loc, t)) targs)
+              reconstruct_ast (ExactT (mk_annot_reason desc loc, t)) targs
+          )
         | "$Rest" ->
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->
               let (t1, t2, targs) =
@@ -541,8 +582,11 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 (EvalT
                    ( t1,
                      TypeDestructorT (use_op reason, reason, RestType (Type.Object.Rest.Sound, t2)),
-                     mk_eval_id cx loc ))
-                targs)
+                     mk_eval_id cx loc
+                   )
+                )
+                targs
+          )
         (* $Exports<'M'> is the type of the exports of module 'M' *)
         (* TODO: use `import typeof` instead when that lands **)
         | "$Exports" ->
@@ -553,17 +597,21 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                     {
                       Ast.Type.TypeArgs.arguments =
                         ( str_loc,
-                          StringLiteral { Ast.StringLiteral.value; raw; comments = str_comments } )
+                          StringLiteral { Ast.StringLiteral.value; raw; comments = str_comments }
+                        )
                         :: _;
                       comments;
-                    } ) ->
+                    }
+                  ) ->
                 let desc = RModule (OrdinaryName value) in
                 let reason = mk_annot_reason desc loc in
                 let remote_module_t = Flow_js.get_builtin cx (internal_module_name value) reason in
                 let str_t = mk_singleton_string cx str_loc value in
                 reconstruct_ast
                   (Tvar.mk_where cx reason (fun t ->
-                       Flow.flow cx (remote_module_t, CJSRequireT (reason, t, Context.is_strict cx))))
+                       Flow.flow cx (remote_module_t, CJSRequireT (reason, t, Context.is_strict cx))
+                   )
+                  )
                   (Some
                      ( targs_loc,
                        {
@@ -571,11 +619,15 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                            [
                              ( (str_loc, str_t),
                                StringLiteral
-                                 { Ast.StringLiteral.value; raw; comments = str_comments } );
+                                 { Ast.StringLiteral.value; raw; comments = str_comments }
+                             );
                            ];
                          comments;
-                       } ))
-              | _ -> error_type cx loc (Error_message.EExportsAnnot loc) t_ast)
+                       }
+                     )
+                  )
+              | _ -> error_type cx loc (Error_message.EExportsAnnot loc) t_ast
+          )
         | "$Call" ->
           (match convert_type_params () with
           | (fn :: args, targs) ->
@@ -596,8 +648,11 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 (EvalT
                    ( t1,
                      TypeDestructorT (use_op reason, reason, TypeMap (TupleMap t2)),
-                     mk_eval_id cx loc ))
-                targs)
+                     mk_eval_id cx loc
+                   )
+                )
+                targs
+          )
         | "$ObjMap" ->
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->
               let (t1, t2, targs) =
@@ -610,8 +665,11 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 (EvalT
                    ( t1,
                      TypeDestructorT (use_op reason, reason, TypeMap (ObjectMap t2)),
-                     mk_eval_id cx loc ))
-                targs)
+                     mk_eval_id cx loc
+                   )
+                )
+                targs
+          )
         | "$ObjMapi" ->
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->
               let (t1, t2, targs) =
@@ -624,8 +682,11 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 (EvalT
                    ( t1,
                      TypeDestructorT (use_op reason, reason, TypeMap (ObjectMapi t2)),
-                     mk_eval_id cx loc ))
-                targs)
+                     mk_eval_id cx loc
+                   )
+                )
+                targs
+          )
         | "$KeyMirror" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (t1, targs) =
@@ -638,8 +699,11 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 (EvalT
                    ( t1,
                      TypeDestructorT (use_op reason, reason, TypeMap ObjectKeyMirror),
-                     mk_eval_id cx loc ))
-                targs)
+                     mk_eval_id cx loc
+                   )
+                )
+                targs
+          )
         | "$ObjMapConst" ->
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->
               let (t1, t2, targs) =
@@ -652,8 +716,11 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 (EvalT
                    ( t1,
                      TypeDestructorT (use_op reason, reason, TypeMap (ObjectMapConst t2)),
-                     mk_eval_id cx loc ))
-                targs)
+                     mk_eval_id cx loc
+                   )
+                )
+                targs
+          )
         | "$CharSet" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               match targs with
@@ -667,7 +734,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                           );
                         ];
                       comments;
-                    } ) ->
+                    }
+                  ) ->
                 let str_t = mk_singleton_string cx str_loc value in
                 let chars = String_utils.CharSet.of_string value in
                 let char_str = String_utils.CharSet.to_string chars in
@@ -682,11 +750,15 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                            [
                              ( (str_loc, str_t),
                                StringLiteral
-                                 { Ast.StringLiteral.value; raw; comments = str_comments } );
+                                 { Ast.StringLiteral.value; raw; comments = str_comments }
+                             );
                            ];
                          comments;
-                       } ))
-              | _ -> error_type cx loc (Error_message.ECharSetAnnot loc) t_ast)
+                       }
+                     )
+                  )
+              | _ -> error_type cx loc (Error_message.ECharSetAnnot loc) t_ast
+          )
         | "this" ->
           if SMap.mem "this" tparams_map then
             (* We model a this type like a type parameter. The bound on a this
@@ -696,7 +768,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
             check_type_arg_arity cx loc t_ast targs 0 (fun () ->
                 reconstruct_ast
                   (Flow.reposition cx loc ~annot_loc:loc (SMap.find "this" tparams_map))
-                  None)
+                  None
+            )
           else (
             Flow.add_output cx (Error_message.EUnexpectedThisType loc);
             Tast_utils.error_mapper#type_ t_ast
@@ -707,30 +780,36 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
               let (ts, targs) = convert_type_params () in
               let t = List.hd ts in
               let reason = mk_reason (RStatics (desc_of_t t)) loc in
-              reconstruct_ast (DefT (reason, infer_trust cx, ClassT t)) targs)
+              reconstruct_ast (DefT (reason, infer_trust cx, ClassT t)) targs
+          )
         | "Function"
         | "function" ->
           check_type_arg_arity cx loc t_ast targs 0 (fun () ->
               add_unclear_type_error_if_not_lib_file cx loc;
               let reason = mk_annot_reason RFunctionType loc in
-              reconstruct_ast (AnyT.make AnnotatedAny reason) None)
+              reconstruct_ast (AnyT.make AnnotatedAny reason) None
+          )
         | "Object" ->
           check_type_arg_arity cx loc t_ast targs 0 (fun () ->
               add_unclear_type_error_if_not_lib_file cx loc;
               let reason = mk_annot_reason RObjectType loc in
-              reconstruct_ast (AnyT.make AnnotatedAny reason) None)
+              reconstruct_ast (AnyT.make AnnotatedAny reason) None
+          )
         | "Function$Prototype$Apply" ->
           check_type_arg_arity cx loc t_ast targs 0 (fun () ->
               let reason = mk_annot_reason RFunctionType loc in
-              reconstruct_ast (FunProtoApplyT reason) None)
+              reconstruct_ast (FunProtoApplyT reason) None
+          )
         | "Function$Prototype$Bind" ->
           check_type_arg_arity cx loc t_ast targs 0 (fun () ->
               let reason = mk_annot_reason RFunctionType loc in
-              reconstruct_ast (FunProtoBindT reason) None)
+              reconstruct_ast (FunProtoBindT reason) None
+          )
         | "Function$Prototype$Call" ->
           check_type_arg_arity cx loc t_ast targs 0 (fun () ->
               let reason = mk_annot_reason RFunctionType loc in
-              reconstruct_ast (FunProtoCallT reason) None)
+              reconstruct_ast (FunProtoCallT reason) None
+          )
         | "Object$Assign" -> mk_custom_fun cx loc t_ast targs ident ObjectAssign
         | "Object$GetPrototypeOf" -> mk_custom_fun cx loc t_ast targs ident ObjectGetPrototypeOf
         | "Object$SetPrototypeOf" -> mk_custom_fun cx loc t_ast targs ident ObjectSetPrototypeOf
@@ -745,8 +824,11 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 (DefT
                    ( mk_reason (RCustom "AbstractComponent") loc,
                      infer_trust cx,
-                     ReactAbstractComponentT { config; instance } ))
-                targs)
+                     ReactAbstractComponentT { config; instance }
+                   )
+                )
+                targs
+          )
         | "React$Config" ->
           check_type_arg_arity cx loc t_ast targs 2 (fun () ->
               let (ts, targs) = convert_type_params () in
@@ -757,8 +839,11 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 (EvalT
                    ( props,
                      TypeDestructorT (use_op reason, reason, ReactConfigType default_props),
-                     mk_eval_id cx loc ))
-                targs)
+                     mk_eval_id cx loc
+                   )
+                )
+                targs
+          )
         | "React$PropType$Primitive" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, typed_targs) = convert_type_params () in
@@ -772,7 +857,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                   assert false
               in
               let ((_, prop_t), _) = mk_custom_fun cx loc targ None ident prop_type in
-              reconstruct_ast prop_t typed_targs)
+              reconstruct_ast prop_t typed_targs
+          )
         | "React$PropType$Primitive$Required" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, typed_targs) = convert_type_params () in
@@ -786,7 +872,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                   assert false
               in
               let ((_, prop_t), _) = mk_custom_fun cx loc targ None ident prop_type in
-              reconstruct_ast prop_t typed_targs)
+              reconstruct_ast prop_t typed_targs
+          )
         | "React$PropType$ArrayOf" ->
           mk_react_prop_type cx loc t_ast targs ident React.PropType.ArrayOf
         | "React$PropType$InstanceOf" ->
@@ -814,7 +901,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 | None ->
                   assert false
               in
-              mk_custom_fun cx loc targ None ident (ReactElementFactory t))
+              mk_custom_fun cx loc targ None ident (ReactElementFactory t)
+          )
         | "React$ElementProps" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
@@ -824,8 +912,11 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 (EvalT
                    ( t,
                      TypeDestructorT (use_op reason, reason, ReactElementPropsType),
-                     mk_eval_id cx loc ))
-                targs)
+                     mk_eval_id cx loc
+                   )
+                )
+                targs
+          )
         | "React$ElementConfig" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
@@ -835,8 +926,11 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 (EvalT
                    ( t,
                      TypeDestructorT (use_op reason, reason, ReactElementConfigType),
-                     mk_eval_id cx loc ))
-                targs)
+                     mk_eval_id cx loc
+                   )
+                )
+                targs
+          )
         | "React$ElementRef" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               let (ts, targs) = convert_type_params () in
@@ -846,8 +940,11 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 (EvalT
                    ( t,
                      TypeDestructorT (use_op reason, reason, ReactElementRefType),
-                     mk_eval_id cx loc ))
-                targs)
+                     mk_eval_id cx loc
+                   )
+                )
+                targs
+          )
         | "$Facebookism$Idx" -> mk_custom_fun cx loc t_ast targs ident Idx
         | "$Facebookism$TypeAssertIs" when Context.type_asserts cx ->
           mk_custom_fun cx loc t_ast targs ident TypeAssertIs
@@ -876,7 +973,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
         | _ when SMap.mem name tparams_map ->
           check_type_arg_arity cx loc t_ast targs 0 (fun () ->
               let t = Flow.reposition cx loc ~annot_loc:loc (SMap.find name tparams_map) in
-              reconstruct_ast t None)
+              reconstruct_ast t None
+          )
         | "$Pred" ->
           let fun_reason = mk_annot_reason (RCustom "abstract predicate function") loc in
           let static_reason = mk_reason (RCustom "abstract predicate static") loc in
@@ -911,9 +1009,13 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                              ~rest_param:None
                              ~def_reason:fun_reason
                              ~params_names:key_strs
-                             ~is_predicate:true ) ))
+                             ~is_predicate:true
+                         )
+                     )
+                  )
                   targs
-              | _ -> error_type cx loc (Error_message.EPredAnnot loc) t_ast)
+              | _ -> error_type cx loc (Error_message.EPredAnnot loc) t_ast
+          )
         | "$Refine" ->
           check_type_arg_arity cx loc t_ast targs 3 (fun () ->
               match convert_type_params () with
@@ -924,7 +1026,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 reconstruct_ast
                   (EvalT (base_t, LatentPredT (reason, pred), mk_eval_id cx loc))
                   targs
-              | _ -> error_type cx loc (Error_message.ERefineAnnot loc) t_ast)
+              | _ -> error_type cx loc (Error_message.ERefineAnnot loc) t_ast
+          )
         | "$Trusted" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               match convert_type_params () with
@@ -934,7 +1037,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 reconstruct_ast
                   (DefT (mk_annot_reason (RTrusted (desc_of_reason rs)) loc, trust, ty))
                   targs
-              | _ -> error_type cx loc (Error_message.ETrustedAnnot loc) t_ast)
+              | _ -> error_type cx loc (Error_message.ETrustedAnnot loc) t_ast
+          )
         | "$Private" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               match convert_type_params () with
@@ -944,7 +1048,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 reconstruct_ast
                   (DefT (mk_annot_reason (RPrivate (desc_of_reason rs)) loc, trust, ty))
                   targs
-              | _ -> error_type cx loc (Error_message.EPrivateAnnot loc) t_ast)
+              | _ -> error_type cx loc (Error_message.EPrivateAnnot loc) t_ast
+          )
         (* other applications with id as head expr *)
         | _ ->
           let reason = mk_reason (RType (OrdinaryName name)) loc in
@@ -960,7 +1065,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
             return;
             tparams;
             comments = func_comments;
-          } ) ->
+          }
+      ) ->
       let (tparams, tparams_map, tparams_ast) =
         mk_type_param_declarations cx ~tparams_map tparams
       in
@@ -977,7 +1083,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
             in
             let name = Base.Option.map ~f:(fun (loc, id_name) -> ((loc, t), id_name)) name in
             ( (Base.Option.map ~f:ident_name name, t) :: params_acc,
-              (param_loc, { Function.Param.name; annot = annot_ast; optional }) :: asts_acc ))
+              (param_loc, { Function.Param.name; annot = annot_ast; optional }) :: asts_acc
+            ))
           ([], [])
           params
       in
@@ -1005,9 +1112,12 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                           Base.Option.map ~f:(fun (loc, id_name) -> ((loc, rest), id_name)) name;
                         annot = annot_ast;
                         optional;
-                      } );
+                      }
+                    );
                   comments;
-                } ) )
+                }
+              )
+          )
         | None -> (None, None)
       in
       let (((_, return_t), _) as return_ast) = convert cx tparams_map return in
@@ -1029,7 +1139,9 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                   return_t;
                   is_predicate = false;
                   def_reason = reason;
-                } ) )
+                }
+              )
+          )
       in
       let t =
         match tparams with
@@ -1048,11 +1160,13 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                   rest = rest_param_ast;
                   this_ = this_param_ast;
                   comments = params_comments;
-                } );
+                }
+              );
             return = return_ast;
             tparams = tparams_ast;
             comments = func_comments;
-          } )
+          }
+      )
     | (loc, Object { Object.exact; properties; inexact; comments }) ->
       let exact_by_default = Context.exact_by_default cx in
       let exact_type = exact || ((not inexact) && exact_by_default) in
@@ -1062,7 +1176,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
         |> List.exists (fun property ->
                match property with
                | Ast.Type.Object.Indexer _ -> true
-               | _ -> false)
+               | _ -> false
+           )
       in
       if (not exact) && (not inexact) && not has_indexer then (
         Flow.add_output cx Error_message.(EAmbiguousObjectType loc);
@@ -1071,8 +1186,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
       ((loc, t), Object { Object.exact; properties; inexact; comments })
     | (loc, Interface { Interface.extends; body; comments }) ->
       let ( body_loc,
-            { Ast.Type.Object.properties; exact; inexact = _inexact; comments = object_comments } )
-          =
+            { Ast.Type.Object.properties; exact; inexact = _inexact; comments = object_comments }
+          ) =
         body
       in
       let reason = mk_annot_reason RInterfaceType loc in
@@ -1087,7 +1202,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
               Ast.Type.Object.(
                 function
                 | CallProperty (_, { CallProperty.static; _ }) -> not static
-                | _ -> false)
+                | _ -> false
+              )
               properties
           in
           Class_type_sig.Interface { Class_type_sig.inline = true; extends; callable }
@@ -1120,10 +1236,12 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                   inexact = false;
                   properties = property_asts;
                   comments = object_comments;
-                } );
+                }
+              );
             extends = extend_asts;
             comments;
-          } )
+          }
+      )
     | (loc, (Exists _ as t_ast)) ->
       add_unclear_type_error_if_not_lib_file cx loc;
       ((loc, AnyT.at AnnotatedAny loc), t_ast)
@@ -1176,7 +1294,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
             let use_op =
               Op (GetProperty (mk_reason (RType (OrdinaryName (qualified_name qualified))) loc))
             in
-            Flow.flow cx (m, GetPropT (use_op, id_reason, Named (id_reason, OrdinaryName name), t)))
+            Flow.flow cx (m, GetPropT (use_op, id_reason, Named (id_reason, OrdinaryName name), t))
+        )
       in
       (t, Qualified (loc, { qualification; id = ((id_loc, t), id_name) }))
     | Unqualified (loc, ({ Ast.Identifier.name; comments = _ } as id_name)) ->
@@ -1271,7 +1390,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
       DefT
         ( mk_annot_reason RObjectType loc,
           infer_trust cx,
-          ObjT (mk_objecttype ~flags ~call pmap proto) )
+          ObjT (mk_objecttype ~flags ~call pmap proto)
+        )
     in
     let mk_object_annot cx loc ~exact call dict pmap proto =
       let exact = exact && dict = None in
@@ -1367,7 +1487,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
             Object.Property.key =
               Ast.Expression.Object.Property.Identifier ((id_loc, return_t), id_name);
             value = Object.Property.Get (loc, f_ast);
-          } )
+          }
+        )
       (* unsafe setter property *)
       | {
        Object.Property.key =
@@ -1390,7 +1511,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
             Object.Property.key =
               Ast.Expression.Object.Property.Identifier ((id_loc, param_t), id_name);
             value = Object.Property.Set (loc, f_ast);
-          } )
+          }
+        )
       | { Object.Property.value = Object.Property.Get _ | Object.Property.Set _; _ } ->
         Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
         let (_, prop_ast) = Tast_utils.error_mapper#object_property_type (loc, prop) in
@@ -1415,7 +1537,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
           value;
           dict_polarity = polarity variance;
         },
-        { Object.Indexer.id; key = key_ast; value = value_ast; static; variance; comments } )
+        { Object.Indexer.id; key = key_ast; value = value_ast; static; variance; comments }
+      )
     in
     let property cx tparams_map acc =
       Object.(
@@ -1475,13 +1598,16 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
             Flow.add_output
               cx
               Error_message.(
-                EUnsupportedSyntax (loc, UnsupportedInternalSlot { name; static = false }));
+                EUnsupportedSyntax (loc, UnsupportedInternalSlot { name; static = false })
+              );
             (acc, Tast_utils.error_mapper#object_type_property prop)
           )
         | SpreadProperty (loc, { Object.SpreadProperty.argument; comments }) ->
           let (((_, t), _) as argument_ast) = convert cx tparams_map argument in
           ( Acc.add_spread t acc,
-            SpreadProperty (loc, { SpreadProperty.argument = argument_ast; comments }) ))
+            SpreadProperty (loc, { SpreadProperty.argument = argument_ast; comments })
+          )
+      )
     in
     fun cx tparams_map loc ~exact properties ->
       let (acc, rev_prop_asts) =
@@ -1559,7 +1685,9 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
             EvalT
               ( l,
                 TypeDestructorT (unknown_use, reason, SpreadType (target, ts, head_slice)),
-                Type.Eval.generate_id () ))
+                Type.Eval.generate_id ()
+              )
+          )
       in
       (t, List.rev rev_prop_asts)
 
@@ -1592,7 +1720,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
     let convert_params cx tparams_map (loc, { Params.params; rest; this_; comments }) =
       let fparams =
         Func_type_params.empty (fun params rest this_ ->
-            Some (loc, { Params.params; rest; this_; comments }))
+            Some (loc, { Params.params; rest; this_; comments })
+        )
       in
       let fparams = List.fold_left (add_param cx tparams_map) fparams params in
       let fparams = Base.Option.fold ~f:(add_rest cx tparams_map) ~init:fparams rest in
@@ -1623,7 +1752,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
           params = params_ast;
           return = return_ast;
           comments = None;
-        } )
+        }
+      )
 
   and mk_type cx tparams_map reason = function
     | None ->
@@ -1682,7 +1812,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
     | Some (loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
       let (targs, targs_ast) = convert_list cx tparams_map targs in
       ( typeapp_annot annot_loc c targs,
-        Some (loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments }) )
+        Some (loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
+      )
 
   (* take a list of AST type param declarations,
      do semantic checking and create types for them. *)
@@ -1735,7 +1866,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
       ( tparams,
         SMap.add name t tparams_map,
         SMap.add name (Flow.subst cx bounds_map bound) bounds_map,
-        ast :: rev_asts )
+        ast :: rev_asts
+      )
     in
     match tparams with
     | None -> (None, tparams_map, None)
@@ -1788,7 +1920,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 in
                 ( append_call ~static t x,
                   CallProperty (loc, { CallProperty.value = (value_loc, ft); static; comments })
-                  :: rev_prop_asts )
+                  :: rev_prop_asts
+                )
               | Indexer (loc, { Indexer.static; _ }) as indexer_prop when mem_field ~static "$key" x
                 ->
                 Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, MultipleIndexers));
@@ -1799,19 +1932,22 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 let (((_, v), _) as value) = convert cx tparams_map value in
                 let polarity = polarity variance in
                 ( add_indexer ~static polarity ~key:k ~value:v x,
-                  Indexer (loc, { indexer with Indexer.key; value }) :: rev_prop_asts )
+                  Indexer (loc, { indexer with Indexer.key; value }) :: rev_prop_asts
+                )
               | Property
                   ( loc,
-                    ({
-                       Property.key;
-                       value;
-                       static;
-                       proto;
-                       optional;
-                       _method;
-                       variance;
-                       comments = _;
-                     } as prop) ) ->
+                    ( {
+                        Property.key;
+                        value;
+                        static;
+                        proto;
+                        optional;
+                        _method;
+                        variance;
+                        comments = _;
+                      } as prop
+                    )
+                  ) ->
                 if optional && _method then
                   Flow.add_output cx Error_message.(EInternal (loc, OptionalMethod));
                 let polarity = polarity variance in
@@ -1828,7 +1964,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                     | ( true,
                         Property.Identifier
                           (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
-                        Ast.Type.Object.Property.Init (func_loc, Ast.Type.Function func) ) ->
+                        Ast.Type.Object.Property.Init (func_loc, Ast.Type.Function func)
+                      ) ->
                       let (fsig, func_ast) = mk_func_sig cx tparams_map loc func in
                       let ft = Func_type_sig.methodtype cx this fsig in
                       let append_method =
@@ -1843,14 +1980,18 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                               prop with
                               Object.Property.key = Property.Identifier ((id_loc, ft), id_name);
                               value = Object.Property.Init ((func_loc, ft), Function func_ast);
-                            } ) )
+                            }
+                          )
+                        
+                      )
                     | (true, Property.Identifier _, _) ->
                       Flow.add_output cx Error_message.(EInternal (loc, MethodNotAFunction));
                       (x, Tast_utils.error_mapper#object_property_type (loc, prop))
                     | ( false,
                         Property.Identifier
                           (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
-                        Ast.Type.Object.Property.Init value ) ->
+                        Ast.Type.Object.Property.Init value
+                      ) ->
                       let (((_, t), _) as value_ast) = convert cx tparams_map value in
                       let t =
                         if optional then
@@ -1871,12 +2012,16 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                               prop with
                               Object.Property.key = Property.Identifier ((id_loc, t), id_name);
                               value = Object.Property.Init value_ast;
-                            } ) )
+                            }
+                          )
+                        
+                      )
                     (* unsafe getter property *)
                     | ( _,
                         Property.Identifier
                           (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
-                        Ast.Type.Object.Property.Get (get_loc, func) ) ->
+                        Ast.Type.Object.Property.Get (get_loc, func)
+                      ) ->
                       Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
                       let (fsig, func_ast) = mk_func_sig cx tparams_map loc func in
                       let prop_t =
@@ -1889,12 +2034,16 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                               prop with
                               Object.Property.key = Property.Identifier ((id_loc, prop_t), id_name);
                               value = Object.Property.Get (get_loc, func_ast);
-                            } ) )
+                            }
+                          )
+                        
+                      )
                     (* unsafe setter property *)
                     | ( _,
                         Property.Identifier
                           (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
-                        Ast.Type.Object.Property.Set (set_loc, func) ) ->
+                        Ast.Type.Object.Property.Set (set_loc, func)
+                      ) ->
                       Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
                       let (fsig, func_ast) = mk_func_sig cx tparams_map loc func in
                       let prop_t =
@@ -1914,7 +2063,11 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                               prop with
                               Object.Property.key = Property.Identifier ((id_loc, prop_t), id_name);
                               value = Object.Property.Set (set_loc, func_ast);
-                            } ) ))
+                            }
+                          )
+                        
+                      )
+                  )
                 in
                 (x, Ast.Type.Object.Property prop :: rev_prop_asts)
               | InternalSlot (loc, slot) as prop ->
@@ -1937,21 +2090,25 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                       t
                   in
                   ( append_call ~static t x,
-                    InternalSlot (loc, { slot with InternalSlot.value }) :: rev_prop_asts )
+                    InternalSlot (loc, { slot with InternalSlot.value }) :: rev_prop_asts
+                  )
                 else (
                   Flow.add_output
                     cx
                     Error_message.(
-                      EUnsupportedSyntax (loc, UnsupportedInternalSlot { name; static }));
+                      EUnsupportedSyntax (loc, UnsupportedInternalSlot { name; static })
+                    );
                   (x, Tast_utils.error_mapper#object_type_property prop :: rev_prop_asts)
                 )
               | SpreadProperty (loc, _) as prop ->
                 Flow.add_output cx Error_message.(EInternal (loc, InterfaceTypeSpread));
-                (x, Tast_utils.error_mapper#object_type_property prop :: rev_prop_asts))
+                (x, Tast_utils.error_mapper#object_type_property prop :: rev_prop_asts)
+          )
           (s, [])
           properties
       in
-      (x, List.rev rev_prop_asts))
+      (x, List.rev rev_prop_asts)
+    )
 
   and optional_indexed_access
       cx loc ~tparams_map { T.OptionalIndexedAccess.indexed_access; optional } =
@@ -1970,7 +2127,9 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
               T.OptionalIndexedAccess.indexed_access =
                 { T.IndexedAccess._object = object_ast; index; comments };
               optional;
-            } ) )
+            }
+        )
+      )
     ) else
       let (object_t, object_ast) =
         match _object with
@@ -2004,7 +2163,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
           ( non_maybe_result_t,
             TypeDestructorT
               (unknown_use (* not used *), reason, OptionalIndexedAccessResultType { void_reason }),
-            Eval.generate_id () )
+            Eval.generate_id ()
+          )
       in
       ( non_maybe_result_t,
         ( (loc, result_t),
@@ -2013,7 +2173,9 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
               T.OptionalIndexedAccess.indexed_access =
                 { T.IndexedAccess._object = object_ast; index; comments };
               optional;
-            } ) )
+            }
+        )
+      )
 
   let mk_super cx tparams_map loc c targs =
     match targs with
@@ -2029,7 +2191,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
         tparams;
         body =
           ( body_loc,
-            { Ast.Type.Object.properties; exact; inexact = _inexact; comments = object_comments } );
+            { Ast.Type.Object.properties; exact; inexact = _inexact; comments = object_comments }
+          );
         extends;
         comments;
       } =
@@ -2048,7 +2211,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
               Ast.Type.Object.(
                 function
                 | CallProperty (_, { CallProperty.static; _ }) -> not static
-                | _ -> false)
+                | _ -> false
+              )
               properties
           in
           Interface { inline = false; extends; callable }
@@ -2073,9 +2237,12 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
           extends = extends_ast;
           body =
             ( body_loc,
-              { Ast.Type.Object.exact; properties; inexact = false; comments = object_comments } );
+              { Ast.Type.Object.exact; properties; inexact = false; comments = object_comments }
+            );
           comments;
-        } ))
+        }
+      )
+    )
 
   let mk_declare_class_sig =
     Class_type_sig.(
@@ -2152,7 +2319,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                              Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
                            )
                        in
-                       (typeapp, (loc, { Interface.id = ((id_loc, c), id_name_inner); targs })))
+                       (typeapp, (loc, { Interface.id = ((id_loc, c), id_name_inner); targs }))
+                   )
                 |> List.split
               in
               (implements, Some (implements_loc, { interfaces = interfaces_ast; comments }))
@@ -2198,5 +2366,7 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
             mixins = mixins_ast;
             implements = implements_ast;
             comments;
-          } ))
+          }
+        )
+    )
 end

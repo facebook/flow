@@ -52,7 +52,8 @@ let multi_threaded_call
     fun result ->
       Lwt_mutex.with_lock merge_mutex (fun () ->
           acc := merge result !acc;
-          Lwt.return_unit)
+          Lwt.return_unit
+      )
   in
   (* Our next() function may give us a job, say there are no more jobs left, or tell us to
      * try again later. This signal is to wake up any workers who were told "try again later"
@@ -99,7 +100,8 @@ let multi_threaded_call
         List.map
           (fun thread ->
             (let%lwt _ = thread in
-             Lwt.return_unit)
+             Lwt.return_unit
+            )
               [%lwt.finally
                 incr finished;
                 report_canceled ~total ~finished:!finished;

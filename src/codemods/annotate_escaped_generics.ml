@@ -25,7 +25,8 @@ let localize =
     function
     | OrdinaryName str -> OrdinaryName (localize_str str)
     | InternalName str -> InternalName (localize_str str)
-    | InternalModuleName str -> InternalModuleName (localize_str str))
+    | InternalModuleName str -> InternalModuleName (localize_str str)
+  )
 
 let localize_type =
   let remote_syms = ref SymbolMap.empty in
@@ -42,7 +43,8 @@ let localize_type =
                 ( ALoc.none,
                   (* TODO this use of display_string_of_name is a bit sketchy *)
                   Reason.display_string_of_name local_name,
-                  Ty.TypeMode );
+                  Ty.TypeMode
+                );
           }
       in
       let imported = { symbol with Ty.sym_provenance; sym_name = local_name } in
@@ -138,16 +140,21 @@ let gen_import_statements file (symbols : Ty_symbol.symbol SymbolMap.t) =
                   Ast.StringLiteral.value = module_name;
                   raw = raw_from_string module_name;
                   comments = None;
-                } );
+                }
+              );
             default = None;
             specifiers =
               Some
                 ImportDeclaration.(
                   ImportNamedSpecifiers
-                    [{ kind = None; local = Some local_name; remote = remote_name }]);
+                    [{ kind = None; local = Some local_name; remote = remote_name }]
+                );
             comments = None;
-          } )
+          }
+      )
+    
   in
+
   SymbolMap.fold (fun remote local acc -> gen_import_statement remote local :: acc) symbols []
 
 (* The mapper *)
@@ -258,8 +265,8 @@ let mapper ~default_any ~preserve_literals ~max_type_size (ask : Codemod_context
 
     method private post_run () = ()
 
-    method! binding_pattern
-        ?(kind = Ast.Statement.VariableDeclaration.Var) ((pat_loc, patt) as expr) =
+    method! binding_pattern ?(kind = Ast.Statement.VariableDeclaration.Var) ((pat_loc, patt) as expr)
+        =
       let open Ast.Pattern in
       let open Ast.Pattern.Identifier in
       match patt with

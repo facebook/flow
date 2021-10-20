@@ -16,14 +16,16 @@ module ImplicitInstantiationKit : Implicit_instantiation.KIT = Implicit_instanti
     Flow_js.add_output
       cx
       (Error_message.EImplicitInstantiationUnderconstrainedError
-         { bound = name; reason_call = instantiation_reason; reason_l = tparam_binder_reason })
+         { bound = name; reason_call = instantiation_reason; reason_l = tparam_binder_reason }
+      )
 
   let on_upper_non_t cx name u ~tparam_binder_reason ~instantiation_reason:_ =
     let msg = name ^ " contains a non-Type.t upper bound " ^ Type.string_of_use_ctor u in
     Flow_js.add_output
       cx
       (Error_message.EImplicitInstantiationTemporaryError
-         (Reason.aloc_of_reason tparam_binder_reason, msg))
+         (Reason.aloc_of_reason tparam_binder_reason, msg)
+      )
 end)
 
 let detect_sketchy_null_checks cx =
@@ -53,7 +55,8 @@ let detect_sketchy_null_checks cx =
           Base.Option.iter exists_check.enum_number_loc ~f:(add_error Lints.SketchyNullEnumNumber);
         if Base.Option.is_none exists_excuse.enum_string_loc then
           Base.Option.iter exists_check.enum_string_loc ~f:(add_error Lints.SketchyNullEnumString);
-        ())
+        ()
+    )
   in
   Loc_collections.ALocMap.iter
     (detect_function (Context.exists_excuses cx))
@@ -66,7 +69,8 @@ let detect_test_prop_misses cx =
       Flow_js.add_output
         cx
         (Error_message.EPropNotFound
-           { prop_name; reason_prop; reason_obj; use_op; suggestion = None }))
+           { prop_name; reason_prop; reason_obj; use_op; suggestion = None }
+        ))
     misses
 
 let detect_unnecessary_optional_chains cx =
@@ -127,7 +131,8 @@ let detect_non_voidable_properties cx =
       | AnyT _ ->
         true
       (* conservatively assume all other types are non-voidable *)
-      | _ -> false)
+      | _ -> false
+    )
   in
   let check_properties (property_map : Type.Properties.id) :
       ALoc.t Property_assignment.error list SMap.t -> unit =
@@ -142,7 +147,8 @@ let detect_non_voidable_properties cx =
           List.iter
             (fun { Property_assignment.loc; desc } ->
               Flow_js.add_output cx (Error_message.EUninitializedInstanceProperty (loc, desc)))
-            errors)
+            errors
+    )
   in
   List.iter
     (fun {
@@ -237,7 +243,8 @@ let detect_matching_props_violations cx =
                obj = TypeUtil.reason_of_t obj;
                key;
                sentinel_reason = TypeUtil.reason_of_t sentinel;
-             })
+             }
+          )
       in
       (* If `obj` is a GenericT, we replace it with it's upper bound, since ultimately it will flow into
          `sentinel` rather than the other way around. *)
@@ -288,10 +295,12 @@ let check_constrained_writes init_cx master_cx =
             | RRestParameter (Some name) ->
               RUnknownParameter name
             | RTypeParam (name, _, _) -> RCustom (spf "unknown implicit instantiation of `%s`" name)
-            | desc -> desc)
+            | desc -> desc
+            )
       in
       new Context_optimizer.context_optimizer ~no_lowers:(fun _ r ->
-          Type.EmptyT.make (mk_reason r) (Type.bogus_trust ()))
+          Type.EmptyT.make (mk_reason r) (Type.bogus_trust ())
+      )
     in
     let checks =
       Base.List.map

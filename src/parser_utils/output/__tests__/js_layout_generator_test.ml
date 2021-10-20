@@ -63,7 +63,8 @@ let tests =
            (* parens are necessary around the inner `+y+y`, but would be reundant
               around the multiplication. that is, we don't need `x+((+y+y)*y)`. *)
            let ast = E.plus x (E.mult (E.plus plus_y y) y) in
-           assert_expression ~ctxt "x+(+y+y)*y" ast );
+           assert_expression ~ctxt "x+(+y+y)*y" ast
+         );
          ( "update_plus_binary" >:: fun ctxt ->
            let x = E.identifier "x" in
            let y = E.identifier "y" in
@@ -86,7 +87,9 @@ let tests =
                         pretty_space;
                         ugly_space;
                         loc (fused [atom "++"; loc (id "y")]);
-                      ]))
+                      ]
+                   )
+               )
                layout;
              assert_output ~ctxt "x+ ++y" layout;
              assert_output ~ctxt ~pretty:true "x + ++y" layout
@@ -111,7 +114,8 @@ let tests =
            assert_expression ~ctxt "x+++ ++y" ast;
 
            let ast = E.minus x_decr decr_y in
-           assert_expression ~ctxt "x--- --y" ast );
+           assert_expression ~ctxt "x--- --y" ast
+         );
          ( "do_while_semicolon" >:: fun ctxt ->
            (* do { x } while (y) *)
            let layout =
@@ -119,10 +123,12 @@ let tests =
                ~opts
                (let body = S.block [S.expression (E.identifier "x")] in
                 let test = E.identifier "y" in
-                S.do_while body test)
+                S.do_while body test
+               )
            in
            assert_output ~ctxt "do{x}while(y);" layout;
-           assert_output ~ctxt ~pretty:true ("do {\n" ^ "  x;\n" ^ "} while (y);") layout );
+           assert_output ~ctxt ~pretty:true ("do {\n" ^ "  x;\n" ^ "} while (y);") layout
+         );
          ( "do_while_long" >:: fun ctxt ->
            (* do { xxxx... } while (yyyy...) *)
            let x80 = String.make 80 'x' in
@@ -132,14 +138,16 @@ let tests =
                ~opts
                (let body = S.block [S.expression (E.identifier x80)] in
                 let test = E.identifier y80 in
-                S.do_while body test)
+                S.do_while body test
+               )
            in
            assert_output ~ctxt ("do{" ^ x80 ^ "}while(" ^ y80 ^ ");") layout;
            assert_output
              ~ctxt
              ~pretty:true
              ("do {\n" ^ "  " ^ x80 ^ ";\n" ^ "} while (\n" ^ "  " ^ y80 ^ "\n" ^ ");")
-             layout );
+             layout
+         );
          ( "do_while_single_statement" >:: fun ctxt ->
            (* do x; while (y) *)
            let layout =
@@ -147,10 +155,12 @@ let tests =
                ~opts
                (let body = S.expression (E.identifier "x") in
                 let test = E.identifier "y" in
-                S.do_while body test)
+                S.do_while body test
+               )
            in
            assert_output ~ctxt "do x;while(y);" layout;
-           assert_output ~ctxt ~pretty:true "do x; while (y);" layout );
+           assert_output ~ctxt ~pretty:true "do x; while (y);" layout
+         );
          ( "do_while_single_statement_long" >:: fun ctxt ->
            (* do xxxx...; while (yyyy...) *)
            let x80 = String.make 80 'x' in
@@ -160,14 +170,16 @@ let tests =
                ~opts
                (let body = S.expression (E.identifier x80) in
                 let test = E.identifier y80 in
-                S.do_while body test)
+                S.do_while body test
+               )
            in
            assert_output ~ctxt ("do " ^ x80 ^ ";while(" ^ y80 ^ ");") layout;
            assert_output
              ~ctxt
              ~pretty:true
              ("do " ^ x80 ^ "; while (\n" ^ "  " ^ y80 ^ "\n" ^ ");")
-             layout );
+             layout
+         );
          ( "do_while_empty_statement" >:: fun ctxt ->
            (* do ; while (y) *)
            let layout =
@@ -175,10 +187,12 @@ let tests =
                ~opts
                (let body = S.empty () in
                 let test = E.identifier "y" in
-                S.do_while body test)
+                S.do_while body test
+               )
            in
            assert_output ~ctxt "do;while(y);" layout;
-           assert_output ~ctxt ~pretty:true "do ; while (y);" layout )
+           assert_output ~ctxt ~pretty:true "do ; while (y);" layout
+         )
          (* TODO: remove space after do *);
          ( "conditionals" >:: fun ctxt ->
            let layout =
@@ -204,8 +218,11 @@ let tests =
                              atom ":";
                              pretty_space;
                              loc (id "c");
-                           ]);
-                    ]))
+                           ]
+                        );
+                    ]
+                 )
+             )
              layout;
            assert_output ~ctxt "a?b:c" layout;
            assert_output ~ctxt ~pretty:true "a ? b : c" layout;
@@ -226,14 +243,16 @@ let tests =
                (E.conditional (E.identifier "a") (E.identifier b80) (E.identifier "c"))
            in
            assert_output ~ctxt ("a?" ^ b80 ^ ":c") layout;
-           assert_output ~ctxt ~pretty:true ("a\n" ^ "  ? " ^ b80 ^ "\n" ^ "  : c") layout );
+           assert_output ~ctxt ~pretty:true ("a\n" ^ "  ? " ^ b80 ^ "\n" ^ "  : c") layout
+         );
          ( "conditional_expression_parens" >:: fun ctxt ->
            let (a, b, c, d, e) =
              ( E.identifier "a",
                E.identifier "b",
                E.identifier "c",
                E.identifier "d",
-               E.identifier "e" )
+               E.identifier "e"
+             )
            in
            (* a ? b++ : c-- *)
            let update =
@@ -270,7 +289,8 @@ let tests =
            assert_expression ~ctxt "a?x=b:y=c" assignment;
 
            let sequence = E.conditional a (E.sequence [b; c]) (E.sequence [d; e]) in
-           assert_expression ~ctxt "a?(b,c):(d,e)" sequence );
+           assert_expression ~ctxt "a?(b,c):(d,e)" sequence
+         );
          ( "call_expression_parens" >:: fun ctxt ->
            let x = E.identifier "x" in
            (* `(x++)()` *)
@@ -285,7 +305,8 @@ let tests =
            let two_members =
              E.call
                (E.member_expression
-                  (E.member (E.member_expression (E.member x ~property:"y")) ~property:"z"))
+                  (E.member (E.member_expression (E.member x ~property:"y")) ~property:"z")
+               )
            in
            assert_expression ~ctxt "x.y.z()" two_members;
 
@@ -327,10 +348,12 @@ let tests =
                       E.expression (E.literal (Literals.string "b"));
                       E.expression (E.sequence [E.function_ ()]);
                       E.expression (E.literal (Literals.number 1. "1"));
-                    ])
+                    ]
+                 )
                (E.identifier "__d")
            in
-           assert_expression ~ctxt "__d(\"a\",\"b\",(function(){}),1)" underscore_d );
+           assert_expression ~ctxt "__d(\"a\",\"b\",(function(){}),1)" underscore_d
+         );
          ( "member_expression_parens" >:: fun ctxt ->
            let x = E.identifier "x" in
            (* `(x++).y` *)
@@ -382,7 +405,8 @@ let tests =
              E.member_expression
                (E.member (E.literal (Literals.number 0.0000001 "0.0000001")) ~property:"z")
            in
-           assert_expression ~ctxt "1e-7.z" num );
+           assert_expression ~ctxt "1e-7.z" num
+         );
          ( "new_expression_empty_params" >:: fun ctxt ->
            (* `new xxxxxxx....()` *)
            let x80 = String.make 80 'x' in
@@ -394,7 +418,8 @@ let tests =
              L.(loc (group [atom "new"; space; loc (id x80); loc (group [atom "("; atom ")"])]))
              layout;
            assert_output ~ctxt ("new " ^ x80 ^ "()") layout;
-           assert_output ~ctxt ~pretty:true ("new " ^ x80 ^ "()") layout );
+           assert_output ~ctxt ~pretty:true ("new " ^ x80 ^ "()") layout
+         );
          ( "new_expression_params" >:: fun ctxt ->
            (* `new Foo(x, y)` *)
            let layout =
@@ -403,7 +428,8 @@ let tests =
                (E.new_
                   (E.identifier "Foo")
                   ~args:
-                    (E.arg_list [E.expression (E.identifier "x"); E.expression (E.identifier "y")]))
+                    (E.arg_list [E.expression (E.identifier "x"); E.expression (E.identifier "y")])
+               )
            in
            assert_layout
              ~ctxt
@@ -427,14 +453,19 @@ let tests =
                                     pretty_line;
                                     loc (id "y");
                                     Layout.IfBreak (atom ",", empty);
-                                  ]);
+                                  ]
+                               );
                              softline;
                              atom ")";
-                           ]);
-                    ]))
+                           ]
+                        );
+                    ]
+                 )
+             )
              layout;
            assert_output ~ctxt "new Foo(x,y)" layout;
-           assert_output ~ctxt ~pretty:true "new Foo(x, y)" layout );
+           assert_output ~ctxt ~pretty:true "new Foo(x, y)" layout
+         );
          ( "new_expression_params_long" >:: fun ctxt ->
            (* `new Foo(xxxxxxx....)` *)
            let x80 = String.make 80 'x' in
@@ -460,11 +491,15 @@ let tests =
                                (fused [softline; loc (id x80); Layout.IfBreak (atom ",", empty)]);
                              softline;
                              atom ")";
-                           ]);
-                    ]))
+                           ]
+                        );
+                    ]
+                 )
+             )
              layout;
            assert_output ~ctxt ("new Foo(" ^ x80 ^ ")") layout;
-           assert_output ~ctxt ~pretty:true ("new Foo(\n" ^ "  " ^ x80 ^ ",\n" ^ ")") layout );
+           assert_output ~ctxt ~pretty:true ("new Foo(\n" ^ "  " ^ x80 ^ ",\n" ^ ")") layout
+         );
          ( "new_expression_parens" >:: fun ctxt ->
            let x80 = String.make 80 'x' in
            let (x, y, z, id80) =
@@ -487,7 +522,9 @@ let tests =
                         pretty_space;
                         wrap_in_parens (loc (fused [loc (id "x"); atom "++"]));
                         loc (group [atom "("; atom ")"]);
-                      ]))
+                      ]
+                   )
+               )
                layout;
              assert_output ~ctxt "new(x++)()" layout;
              assert_output ~ctxt ~pretty:true "new (x++)()" layout;
@@ -521,7 +558,8 @@ let tests =
 
            (* `new (x ? y : z)()` *)
            let cond = E.new_ (E.conditional x y z) ~args:(E.arg_list []) in
-           assert_expression ~ctxt "new(x?y:z)()" cond );
+           assert_expression ~ctxt "new(x?y:z)()" cond
+         );
          ( "unary_expression_parens" >:: fun ctxt ->
            (* `+(+x)` *)
            let plus = E.unary_plus (E.unary_plus (E.identifier "x")) in
@@ -553,7 +591,8 @@ let tests =
 
            (* `+new x()` *)
            let new_ = E.unary_plus (E.new_ ~args:(E.arg_list []) (E.identifier "x")) in
-           assert_expression ~ctxt "+new x()" new_ );
+           assert_expression ~ctxt "+new x()" new_
+         );
          ( "expression_statement_parens" >:: fun ctxt ->
            let obj = S.expression (E.object_ []) in
            assert_statement ~ctxt "({});" obj;
@@ -591,7 +630,8 @@ let tests =
            assert_statement ~ctxt "(function(){})().foo;" func_call_member;
 
            let func_sequence = S.expression (E.sequence [E.function_ (); E.identifier "x"]) in
-           assert_statement ~ctxt "(function(){}),x;" func_sequence );
+           assert_statement ~ctxt "(function(){}),x;" func_sequence
+         );
          ( "arrow_body_parens" >:: fun ctxt ->
            let (x, y, z) = (E.identifier "x", E.identifier "y", E.identifier "z") in
            let arrow =
@@ -617,7 +657,8 @@ let tests =
              let body = Functions.body_expression arrow in
              E.arrow_function ~body ()
            in
-           assert_expression ~ctxt "()=>()=>{}" arrow );
+           assert_expression ~ctxt "()=>()=>{}" arrow
+         );
          ( "argument_parens" >:: fun ctxt ->
            let f = E.identifier "f" in
            let (x, y, z) = (E.identifier "x", E.identifier "y", E.identifier "z") in
@@ -653,7 +694,8 @@ let tests =
              E.arg_list [E.expression logical]
            in
            let call = E.call ~args f in
-           assert_expression ~ctxt ~msg:"nested sequence has parens" "f((x,y)||z)" call );
+           assert_expression ~ctxt ~msg:"nested sequence has parens" "f((x,y)||z)" call
+         );
          ( "binary_in_space" >:: fun ctxt ->
            let ast = statement_of_string {|if("foo" in {"foo": bar}){}|} in
            assert_statement ~ctxt {|if("foo"in{"foo":bar}){}|} ast;
@@ -662,7 +704,8 @@ let tests =
            assert_statement ~ctxt {|if("foo"in bar){}|} ast;
 
            let ast = statement_of_string {|if(foo in {"foo":bar}){}|} in
-           assert_statement ~ctxt {|if(foo in{"foo":bar}){}|} ast );
+           assert_statement ~ctxt {|if(foo in{"foo":bar}){}|} ast
+         );
          ( "binary_instanceof_space" >:: fun ctxt ->
            begin
              let ast = E.instanceof (E.literal (Literals.string "foo")) (E.object_ []) in
@@ -678,7 +721,9 @@ let tests =
                         atom "instanceof";
                         pretty_space;
                         loc (group [atom "{"; atom "}"]);
-                      ]))
+                      ]
+                   )
+               )
                layout;
              assert_output ~ctxt {|"foo"instanceof{}|} layout;
              assert_output ~ctxt ~pretty:true {|"foo" instanceof {}|} layout
@@ -698,7 +743,9 @@ let tests =
                         atom "instanceof";
                         space;
                         loc (id "bar");
-                      ]))
+                      ]
+                   )
+               )
                layout;
              assert_output ~ctxt {|"foo"instanceof bar|} layout;
              assert_output ~ctxt ~pretty:true {|"foo" instanceof bar|} layout
@@ -717,10 +764,13 @@ let tests =
                       atom "instanceof";
                       pretty_space;
                       loc (group [atom "{"; atom "}"]);
-                    ]))
+                    ]
+                 )
+             )
              layout;
            assert_output ~ctxt {|foo instanceof{}|} layout;
-           assert_output ~ctxt ~pretty:true {|foo instanceof {}|} layout );
+           assert_output ~ctxt ~pretty:true {|foo instanceof {}|} layout
+         );
          ( "logical_wrapping" >:: fun ctxt ->
            let x40 = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" in
            let ast = E.logical_and (E.identifier x40) (E.identifier x40) in
@@ -739,11 +789,15 @@ let tests =
                            [
                              Layout.IfBreak (hardline, pretty_space);
                              loc (id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-                           ]);
-                    ]))
+                           ]
+                        );
+                    ]
+                 )
+             )
              layout;
            assert_output ~ctxt (x40 ^ "&&" ^ x40) layout;
-           assert_output ~ctxt ~pretty:true (x40 ^ " &&\n  " ^ x40) layout );
+           assert_output ~ctxt ~pretty:true (x40 ^ " &&\n  " ^ x40) layout
+         );
          ( "return_statement_parens" >:: fun ctxt ->
            let ret = S.return None in
            assert_statement ~ctxt "return;" ret;
@@ -785,13 +839,17 @@ let tests =
                                         atom ",";
                                         pretty_line;
                                         loc (id "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy");
-                                      ]);
-                               ]);
+                                      ]
+                                   );
+                               ]
+                            );
                           softline;
                           Layout.IfBreak (atom ")", empty);
                         ];
                       Layout.IfPretty (atom ";", empty);
-                    ]))
+                    ]
+                 )
+             )
              Layout_matcher.(body_of_function_declaration func >>= nth_fused 0);
            assert_statement ~ctxt ("function f(){return " ^ x40 ^ "," ^ y40 ^ "}") func;
            assert_statement
@@ -821,7 +879,9 @@ let tests =
                           Layout.IfBreak (atom ")", empty);
                         ];
                       Layout.IfPretty (atom ";", empty);
-                    ]))
+                    ]
+                 )
+             )
              Layout_matcher.(body_of_function_declaration func >>= nth_fused 0);
            assert_statement
              ~ctxt
@@ -850,7 +910,9 @@ let tests =
                           Layout.IfBreak (atom ")", empty);
                         ];
                       Layout.IfPretty (atom ";", empty);
-                    ]))
+                    ]
+                 )
+             )
              Layout_matcher.(body_of_function_declaration func >>= nth_fused 0);
            assert_statement
              ~ctxt
@@ -880,7 +942,9 @@ let tests =
                           Layout.IfBreak (atom ")", empty);
                         ];
                       Layout.IfPretty (atom ";", empty);
-                    ]))
+                    ]
+                 )
+             )
              Layout_matcher.(body_of_function_declaration func >>= nth_fused 0);
            assert_statement
              ~ctxt
@@ -905,12 +969,16 @@ let tests =
                       atom " ";
                       loc
                         (id
-                           "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+                           "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                        );
                       Layout.IfPretty (atom ";", empty);
-                    ]))
+                    ]
+                 )
+             )
              Layout_matcher.(body_of_function_declaration func >>= nth_fused 0);
            assert_statement ~ctxt ("function f(){return " ^ x80 ^ "}") func;
-           assert_statement ~ctxt ~pretty:true ("function f() {\n  return " ^ x80 ^ ";\n}") func );
+           assert_statement ~ctxt ~pretty:true ("function f() {\n  return " ^ x80 ^ ";\n}") func
+         );
          ( "return_statement_space" >:: fun ctxt ->
            let assert_no_space ~ctxt expr =
              let ret = statement_of_string ("return " ^ expr ^ ";") in
@@ -928,7 +996,8 @@ let tests =
            assert_statement ~ctxt {|return foo;|} ret;
 
            let ret = statement_of_string {|return 123;|} in
-           assert_statement ~ctxt {|return 123;|} ret );
+           assert_statement ~ctxt {|return 123;|} ret
+         );
          ( "for_loop" >:: fun ctxt ->
            let x80 = String.make 80 'x' in
            let layout =
@@ -949,12 +1018,15 @@ let tests =
                             (fused
                                [
                                  softline; loc (id x80); atom ";"; pretty_line; atom ";"; pretty_line;
-                               ]);
+                               ]
+                            );
                           softline;
                           atom ")";
                         ];
                       loc (atom ";");
-                    ]))
+                    ]
+                 )
+             )
              layout;
            assert_output ~ctxt ("for(" ^ x80 ^ ";;);") layout;
            assert_output
@@ -967,7 +1039,8 @@ let tests =
              ^ "  ;\n"
              ^ "  \n"
              (* TODO: remove trailing whitespace *)
-             ^ ");")
+             ^ ");"
+             )
              layout;
 
            (* should wrap because `for (xxxxx...xxx; true; true) {` does't fit on one line *)
@@ -975,7 +1048,8 @@ let tests =
            assert_statement_string
              ~ctxt
              ~pretty:true
-             (Printf.sprintf "for (\n  %s;\n  true;\n  true\n) {}" (String.make len 'x')) );
+             (Printf.sprintf "for (\n  %s;\n  true;\n  true\n) {}" (String.make len 'x'))
+         );
          ( "binary_in_in_for_loops" >:: fun ctxt ->
            let ast =
              let (x, y) = (E.identifier "x", E.identifier "y") in
@@ -998,16 +1072,19 @@ let tests =
              ~ctxt
              ~msg:"binary `in` expressions need parens"
              "for(x=true==(y in z);;);"
-             ast );
+             ast
+         );
          ( "for_in_space" >:: fun ctxt ->
            let ast = statement_of_string {|for(var x in {"foo": bar}){}|} in
            assert_statement ~ctxt {|for(var x in{"foo":bar}){}|} ast;
 
            let ast = statement_of_string {|for(var x in bar){}|} in
-           assert_statement ~ctxt {|for(var x in bar){}|} ast );
+           assert_statement ~ctxt {|for(var x in bar){}|} ast
+         );
          ( "for_statement_without_block" >:: fun ctxt ->
            assert_statement_string ~ctxt "for(;;)x;";
-           assert_statement_string ~ctxt "{for(;;)x}" );
+           assert_statement_string ~ctxt "{for(;;)x}"
+         );
          ( "if_statement_with_labeled_consequent" >:: fun ctxt ->
            let ast =
              S.if_
@@ -1016,7 +1093,8 @@ let tests =
                (Some (S.if_alternate (S.expression (E.identifier "z"))))
            in
            assert_statement ~ctxt "if(x)y:z;else z;" ast;
-           assert_statement ~ctxt ~pretty:true "if (x) y: z; else z;" ast );
+           assert_statement ~ctxt ~pretty:true "if (x) y: z; else z;" ast
+         );
          ( "if_statement_without_block" >:: fun ctxt ->
            let if_stmt = S.if_ (E.identifier "x") (S.expression (E.identifier "y")) None in
            assert_statement ~ctxt "if(x)y;" if_stmt;
@@ -1024,13 +1102,15 @@ let tests =
 
            let ast = S.block [if_stmt; S.expression (E.identifier "z")] in
            assert_statement ~ctxt "{if(x)y;z}" ast;
-           assert_statement ~ctxt ~pretty:true ("{\n" ^ "  if (x) y;\n" ^ "  z;\n" ^ "}") ast );
+           assert_statement ~ctxt ~pretty:true ("{\n" ^ "  if (x) y;\n" ^ "  z;\n" ^ "}") ast
+         );
          ( "if_statement_with_empty_consequent" >:: fun ctxt ->
            let layout =
              Js_layout_generator.statement ~opts (S.if_ (E.identifier "x") (S.empty ()) None)
            in
            assert_output ~ctxt "if(x);" layout;
-           assert_output ~ctxt ~pretty:true "if (x);" layout );
+           assert_output ~ctxt ~pretty:true "if (x);" layout
+         );
          ( "if_else_statement_without_block" >:: fun ctxt ->
            let if_else_stmt =
              S.if_
@@ -1052,7 +1132,8 @@ let tests =
                (Some (S.if_alternate (S.expression (E.increment ~prefix:true (E.identifier "z")))))
            in
            assert_statement ~ctxt "if(x)y;else++z;" ast;
-           assert_statement ~ctxt ~pretty:true "if (x) y; else ++z;" ast );
+           assert_statement ~ctxt ~pretty:true "if (x) y; else ++z;" ast
+         );
          ( "if_statement_without_block_long" >:: fun ctxt ->
            let a80 = String.make 80 'A' in
            let if_stmt = S.if_ (E.identifier a80) (S.expression (E.identifier "y")) None in
@@ -1069,7 +1150,8 @@ let tests =
              ~ctxt
              ~pretty:true
              ("{\n" ^ "  if (\n" ^ "    " ^ a80 ^ "\n" ^ "  )\n" ^ "    y;\n" ^ "  z;\n" ^ "}")
-             ast );
+             ast
+         );
          ( "if_else_statement_with_empty_consequent" >:: fun ctxt ->
            let layout =
              Js_layout_generator.statement
@@ -1077,10 +1159,12 @@ let tests =
                (S.if_
                   (E.identifier "x")
                   (S.empty ())
-                  (Some (S.if_alternate (S.expression (E.identifier "y")))))
+                  (Some (S.if_alternate (S.expression (E.identifier "y"))))
+               )
            in
            assert_output ~ctxt "if(x);else y;" layout;
-           assert_output ~ctxt ~pretty:true "if (x); else y;" layout );
+           assert_output ~ctxt ~pretty:true "if (x); else y;" layout
+         );
          ( "if_else_statement_with_empty_alternate" >:: fun ctxt ->
            let layout =
              Js_layout_generator.statement
@@ -1088,10 +1172,12 @@ let tests =
                (S.if_
                   (E.identifier "x")
                   (S.expression (E.identifier "y"))
-                  (Some (S.if_alternate (S.empty ()))))
+                  (Some (S.if_alternate (S.empty ())))
+               )
            in
            assert_output ~ctxt "if(x)y;else;" layout;
-           assert_output ~ctxt ~pretty:true "if (x) y; else ;" layout )
+           assert_output ~ctxt ~pretty:true "if (x) y; else ;" layout
+         )
          (* TODO: remove extra space *);
          ( "if_else_statement_with_empty_consequent_and_alternate" >:: fun ctxt ->
            let layout =
@@ -1100,7 +1186,8 @@ let tests =
                (S.if_ (E.identifier "x") (S.empty ()) (Some (S.if_alternate (S.empty ()))))
            in
            assert_output ~ctxt "if(x);else;" layout;
-           assert_output ~ctxt ~pretty:true "if (x); else ;" layout )
+           assert_output ~ctxt ~pretty:true "if (x); else ;" layout
+         )
          (* TODO: remove extra space *);
          ( "while_statement_without_block" >:: fun ctxt ->
            let while_stmt = S.while_ (E.identifier "x") (S.expression (E.identifier "y")) in
@@ -1111,7 +1198,8 @@ let tests =
 
            let ast = S.while_ (E.identifier "x") (S.empty ()) in
            assert_statement ~ctxt "while(x);" ast;
-           assert_statement ~ctxt ~pretty:true "while (x);" ast );
+           assert_statement ~ctxt ~pretty:true "while (x);" ast
+         );
          ( "do_while_statements" >:: fun ctxt ->
            let ast =
              S.do_while
@@ -1126,13 +1214,15 @@ let tests =
                (S.expression (E.increment ~prefix:true (E.identifier "x")))
                (E.identifier "y")
            in
-           assert_statement ~ctxt "do++x;while(y);" ast );
+           assert_statement ~ctxt "do++x;while(y);" ast
+         );
          ( "labeled_empty_statement" >:: fun ctxt ->
            let layout =
              Js_layout_generator.statement ~opts (S.labeled (I.identifier "x") (S.empty ()))
            in
            assert_output ~ctxt "x:;" layout;
-           assert_output ~ctxt ~pretty:true "x: ;" layout );
+           assert_output ~ctxt ~pretty:true "x: ;" layout
+         );
          ( "array_expressions" >:: fun ctxt ->
            assert_expression_string ~ctxt "[]";
            assert_expression_string ~ctxt "[a]";
@@ -1145,7 +1235,8 @@ let tests =
            assert_expression_string
              ~ctxt
              ~pretty:true
-             ("[\n  a,\n  " ^ String.make 80 'b' ^ ",\n  ,\n]") );
+             ("[\n  a,\n  " ^ String.make 80 'b' ^ ",\n  ,\n]")
+         );
          ( "array_with_trailing_hole" >:: fun ctxt ->
            let layout =
              Js_layout_generator.expression
@@ -1162,7 +1253,9 @@ let tests =
                       indent (fused [softline; loc (id "a"); atom ","; pretty_line; atom ","]);
                       softline;
                       atom "]";
-                    ]))
+                    ]
+                 )
+             )
              layout;
            assert_output ~ctxt "[a,,]" layout;
            assert_output ~ctxt ~pretty:true "[a, ,]" layout;
@@ -1174,7 +1267,8 @@ let tests =
                (E.array [E.array_expression (E.identifier a80); E.array_hole ()])
            in
            assert_output ~ctxt ("[" ^ a80 ^ ",,]") layout;
-           assert_output ~ctxt ~pretty:true ("[\n" ^ "  " ^ a80 ^ ",\n" ^ "  ,\n" ^ "]") layout );
+           assert_output ~ctxt ~pretty:true ("[\n" ^ "  " ^ a80 ^ ",\n" ^ "  ,\n" ^ "]") layout
+         );
          ( "function_statements" >:: fun ctxt ->
            assert_statement_string ~ctxt "function a(){}";
            assert_statement_string ~ctxt "async function a(){}";
@@ -1195,7 +1289,8 @@ let tests =
              ~ctxt
              ~pretty:true
              ("function a(\n  a: a,\n  b: " ^ String.make 80 'b' ^ ",\n): a {}");
-           assert_statement_string ~ctxt ~pretty:true "function a() {\n  a;\n}" );
+           assert_statement_string ~ctxt ~pretty:true "function a() {\n  a;\n}"
+         );
          ( "function_expressions" >:: fun ctxt ->
            assert_expression_string ~ctxt "function(){}";
            assert_expression_string ~ctxt "function a(){}";
@@ -1226,7 +1321,8 @@ let tests =
            assert_expression_string ~ctxt "():c=>{}";
            assert_expression_string ~ctxt "(a):c=>{}";
            assert_expression_string ~ctxt "(a:a,b:b):c=>{}";
-           assert_expression_string ~ctxt ~pretty:true "(a: a, b: b): c => {}" );
+           assert_expression_string ~ctxt ~pretty:true "(a: a, b: b): c => {}"
+         );
          ( "function_parameters" >:: fun ctxt ->
            let long_a = String.make 80 'a' in
            let long_b = String.make 80 'b' in
@@ -1245,7 +1341,8 @@ let tests =
            assert_expression_string
              ~ctxt
              ~pretty:true
-             ("(\n  " ^ long_a ^ ",\n  ..." ^ long_b ^ "\n) => {}") );
+             ("(\n  " ^ long_a ^ ",\n  ..." ^ long_b ^ "\n) => {}")
+         );
          ( "class_statements" >:: fun ctxt ->
            let long_a = String.make 80 'a' in
            let long_b = String.make 80 'b' in
@@ -1296,11 +1393,15 @@ let tests =
                                       loc (fused [atom "extends"; space; loc (loc (id "b"))]);
                                       line;
                                       loc (fused [atom "implements"; space; loc (id "c")]);
-                                    ]);
+                                    ]
+                                 );
                                pretty_space;
                                loc (atom "{}");
-                             ]);
-                      ]))
+                             ]
+                          );
+                      ]
+                   )
+               )
                layout;
              assert_output ~ctxt "class a extends b implements c{}" layout;
              assert_output ~ctxt ~pretty:true "class a extends b implements c {}" layout
@@ -1345,17 +1446,27 @@ let tests =
                                                               loc
                                                                 (loc
                                                                    (id
-                                                                      "yyyyyyyyyyyyyyyyyyyyyyyyyyyyy"));
-                                                            ]);
-                                                     ]);
+                                                                      "yyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+                                                                   )
+                                                                );
+                                                            ]
+                                                         );
+                                                     ]
+                                                  );
                                                 pretty_space;
                                                 loc (atom "{}");
-                                              ]);
-                                       ]);
-                                ]);
+                                              ]
+                                           );
+                                       ]
+                                    );
+                                ]
+                             );
                            pretty_hardline;
                            atom "}";
-                         ])))
+                         ]
+                      )
+                   )
+               )
                layout;
              assert_output ~ctxt ("{class " ^ x35 ^ " extends " ^ y29 ^ "{}}") layout;
              assert_output
@@ -1378,11 +1489,13 @@ let tests =
            assert_statement_string
              ~ctxt
              ~pretty:true
-             ("class a\n  extends " ^ long_b ^ "\n  implements " ^ long_b ^ ", c {}") );
+             ("class a\n  extends " ^ long_b ^ "\n  implements " ^ long_b ^ ", c {}")
+         );
          ( "class_expressions" >:: fun ctxt ->
            assert_expression_string ~ctxt "class{}";
            assert_expression_string ~ctxt "class a{}";
-           assert_expression_string ~ctxt "class a extends b{}" );
+           assert_expression_string ~ctxt "class a extends b{}"
+         );
          ( "class_methods" >:: fun ctxt ->
            assert_statement_string ~ctxt "class a{b(){}}";
            assert_statement_string ~ctxt ~pretty:true "class a {\n  b() {}\n  static b() {}\n}";
@@ -1400,7 +1513,8 @@ let tests =
            assert_statement_string ~ctxt "class a{@a@b a(){}}";
            assert_statement_string ~ctxt ~pretty:true "class a {\n  @a\n  a() {}\n}";
            assert_statement_string ~ctxt ~pretty:true "class a {\n  @a\n  @b\n  a() {}\n}";
-           assert_statement_string ~ctxt "class a{*b(){}}" );
+           assert_statement_string ~ctxt "class a{*b(){}}"
+         );
          ( "class_properties" >:: fun ctxt ->
            assert_statement_string ~ctxt "class a{a;}";
            assert_statement_string ~ctxt "class a{a:a;}";
@@ -1414,7 +1528,8 @@ let tests =
              ~ctxt
              ~pretty:true
              "class a {\n  a;\n  b = c;\n  static b = c;\n}";
-           assert_statement_string ~ctxt ~pretty:true "class a {\n  +a: a;\n  b: b = c;\n}" );
+           assert_statement_string ~ctxt ~pretty:true "class a {\n  +a: a;\n  b: b = c;\n}"
+         );
          ( "class_private_properties" >:: fun ctxt ->
            assert_statement_string ~ctxt "class a{#a;}";
            assert_statement_string ~ctxt "class a{#a:a;}";
@@ -1428,10 +1543,12 @@ let tests =
              ~ctxt
              ~pretty:true
              "class a {\n  #a;\n  #b = c;\n  static #b = c;\n}";
-           assert_statement_string ~ctxt ~pretty:true "class a {\n  +#a: a;\n  #b: b = c;\n}" );
+           assert_statement_string ~ctxt ~pretty:true "class a {\n  +#a: a;\n  #b: b = c;\n}"
+         );
          ( "class_declared_fields" >:: fun ctxt ->
            assert_statement_string ~ctxt "class a{declare x;}";
-           assert_statement_string ~ctxt "class a{declare x:string;}" );
+           assert_statement_string ~ctxt "class a{declare x:string;}"
+         );
          ( "forin_statement_declaration" >:: fun ctxt ->
            let mk_layout a b =
              Js_layout_generator.statement
@@ -1439,7 +1556,8 @@ let tests =
                (S.for_in
                   (S.for_in_declarator [S.variable_declarator a])
                   (E.identifier b)
-                  (S.block [S.expression (E.identifier a)]))
+                  (S.block [S.expression (E.identifier a)])
+               )
            in
            begin
              let layout = mk_layout "a" "b" in
@@ -1473,11 +1591,16 @@ let tests =
                                          pretty_hardline;
                                          loc
                                            (fused [loc (id "a"); Layout.IfPretty (atom ";", empty)]);
-                                       ]);
+                                       ]
+                                    );
                                   pretty_hardline;
                                   atom "}";
-                                ]));
-                      ]))
+                                ]
+                             )
+                          );
+                      ]
+                   )
+               )
                layout;
              assert_output ~ctxt "for(var a in b){a}" layout;
              assert_output ~ctxt ~pretty:true ("for (var a in b) {\n" ^ "  a;\n" ^ "}") layout
@@ -1490,7 +1613,8 @@ let tests =
              ~ctxt
              ~pretty:true
              ("for (var " ^ a80 ^ " in b) {\n" ^ "  " ^ a80 ^ ";\n" ^ "}")
-             layout );
+             layout
+         );
          ( "forin_statement_pattern_identifier" >:: fun ctxt ->
            let mk_layout a b =
              Js_layout_generator.statement
@@ -1511,7 +1635,9 @@ let tests =
                           [atom "("; loc (id "a"); space; atom "in"; space; loc (id "b"); atom ")"];
                         pretty_space;
                         loc (loc (atom "{}"));
-                      ]))
+                      ]
+                   )
+               )
                layout;
              assert_output ~ctxt "for(a in b){}" layout;
              assert_output ~ctxt ~pretty:true "for (a in b) {}" layout
@@ -1520,10 +1646,12 @@ let tests =
            let a80 = String.make 80 'a' in
            let layout = mk_layout a80 "b" in
            assert_output ~ctxt ("for(" ^ a80 ^ " in b){}") layout;
-           assert_output ~ctxt ~pretty:true ("for (" ^ a80 ^ " in b) {}") layout );
+           assert_output ~ctxt ~pretty:true ("for (" ^ a80 ^ " in b) {}") layout
+         );
          ( "forin_statement_without_block" >:: fun ctxt ->
            assert_statement_string ~ctxt "for(a in b)x;";
-           assert_statement_string ~ctxt "{for(a in b)x}" );
+           assert_statement_string ~ctxt "{for(a in b)x}"
+         );
          ( "forin_empty_body" >:: fun ctxt ->
            let layout =
              Js_layout_generator.statement
@@ -1531,10 +1659,12 @@ let tests =
                (S.for_in
                   (S.for_in_pattern (Patterns.identifier "a"))
                   (E.identifier "b")
-                  (S.empty ()))
+                  (S.empty ())
+               )
            in
            assert_output ~ctxt "for(a in b);" layout;
-           assert_output ~ctxt ~pretty:true "for (a in b);" layout );
+           assert_output ~ctxt ~pretty:true "for (a in b);" layout
+         );
          ( "forof_statement_declaration" >:: fun ctxt ->
            let mk_layout a b =
              Js_layout_generator.statement
@@ -1542,7 +1672,8 @@ let tests =
                (S.for_of
                   (S.for_of_declarator [S.variable_declarator a])
                   (E.identifier b)
-                  (S.block [S.expression (E.identifier a)]))
+                  (S.block [S.expression (E.identifier a)])
+               )
            in
            begin
              let layout = mk_layout "a" "b" in
@@ -1576,11 +1707,16 @@ let tests =
                                          pretty_hardline;
                                          loc
                                            (fused [loc (id "a"); Layout.IfPretty (atom ";", empty)]);
-                                       ]);
+                                       ]
+                                    );
                                   pretty_hardline;
                                   atom "}";
-                                ]));
-                      ]))
+                                ]
+                             )
+                          );
+                      ]
+                   )
+               )
                layout;
              assert_output ~ctxt "for(var a of b){a}" layout;
              assert_output ~ctxt ~pretty:true ("for (var a of b) {\n" ^ "  a;\n" ^ "}") layout
@@ -1593,7 +1729,8 @@ let tests =
              ~ctxt
              ~pretty:true
              ("for (var " ^ a80 ^ " of b) {\n" ^ "  " ^ a80 ^ ";\n" ^ "}")
-             layout );
+             layout
+         );
          ( "forof_statement_pattern_identifier" >:: fun ctxt ->
            let mk_layout a b =
              Js_layout_generator.statement
@@ -1614,7 +1751,9 @@ let tests =
                           [atom "("; loc (id "a"); space; atom "of"; space; loc (id "b"); atom ")"];
                         pretty_space;
                         loc (loc (atom "{}"));
-                      ]))
+                      ]
+                   )
+               )
                layout;
              assert_output ~ctxt "for(a of b){}" layout;
              assert_output ~ctxt ~pretty:true "for (a of b) {}" layout
@@ -1623,12 +1762,15 @@ let tests =
            let a80 = String.make 80 'a' in
            let layout = mk_layout a80 "b" in
            assert_output ~ctxt ("for(" ^ a80 ^ " of b){}") layout;
-           assert_output ~ctxt ~pretty:true ("for (" ^ a80 ^ " of b) {}") layout );
+           assert_output ~ctxt ~pretty:true ("for (" ^ a80 ^ " of b) {}") layout
+         );
          ( "forof_statement_async" >:: fun ctxt ->
-           assert_statement_string ~ctxt "async function f(){for await(let x of y){}}" );
+           assert_statement_string ~ctxt "async function f(){for await(let x of y){}}"
+         );
          ( "forof_statement_without_block" >:: fun ctxt ->
            assert_statement_string ~ctxt "for(a of b)x;";
-           assert_statement_string ~ctxt "{for(a of b)x}" );
+           assert_statement_string ~ctxt "{for(a of b)x}"
+         );
          ( "forof_empty_body" >:: fun ctxt ->
            let layout =
              Js_layout_generator.statement
@@ -1636,17 +1778,21 @@ let tests =
                (S.for_of
                   (S.for_of_pattern (Patterns.identifier "a"))
                   (E.identifier "b")
-                  (S.empty ()))
+                  (S.empty ())
+               )
            in
            assert_output ~ctxt "for(a of b);" layout;
-           assert_output ~ctxt ~pretty:true "for (a of b);" layout );
+           assert_output ~ctxt ~pretty:true "for (a of b);" layout
+         );
          ( "yield_expressions" >:: fun ctxt ->
            assert_expression_string ~ctxt "function* f(){yield}";
            assert_expression_string ~ctxt "function* f(){yield a}";
-           assert_expression_string ~ctxt "function* f(){yield* a}" );
+           assert_expression_string ~ctxt "function* f(){yield* a}"
+         );
          ( "meta_property_expressions" >:: fun ctxt ->
            assert_statement_string ~ctxt "function F(){new.target}";
-           assert_statement_string ~ctxt "function F(){new.target.name}" );
+           assert_statement_string ~ctxt "function F(){new.target.name}"
+         );
          ( "tagged_template_expressions" >:: fun ctxt ->
            assert_expression_string ~ctxt "a``";
            assert_expression_string ~ctxt "b.c``";
@@ -1663,16 +1809,19 @@ let tests =
            assert_expression_string ~ctxt "(b,c)``";
            assert_expression_string ~ctxt "````";
            assert_expression_string ~ctxt "(void b)``";
-           assert_expression_string ~ctxt "(++b)``" );
+           assert_expression_string ~ctxt "(++b)``"
+         );
          ( "template_expressions" >:: fun ctxt ->
            assert_expression_string ~ctxt "``";
            assert_expression_string ~ctxt "`${a}`";
            assert_expression_string ~ctxt "`a${b}c`";
            assert_expression_string ~ctxt "`a${b}c${d}e`";
-           assert_expression_string ~ctxt "`\\``" );
+           assert_expression_string ~ctxt "`\\``"
+         );
          ( "import_expressions" >:: fun ctxt ->
            assert_expression_string ~ctxt {|import("a")|};
-           assert_expression_string ~ctxt "import(a)" );
+           assert_expression_string ~ctxt "import(a)"
+         );
          ( "export_declaration_statement" >:: fun ctxt ->
            assert_statement_string ~ctxt "export{};";
            assert_statement_string ~ctxt "export{}from\"a\";";
@@ -1709,7 +1858,8 @@ let tests =
              ~ctxt
              ~pretty:true
              ("export * as " ^ String.make 80 'a' ^ " from \"a\";");
-           assert_statement_string ~ctxt ~pretty:true "export opaque type a = b;" )
+           assert_statement_string ~ctxt ~pretty:true "export opaque type a = b;"
+         )
          (* TODO: Flow does not parse this but should
             assert_statement_string ~ctxt "export a,{b}from'a';";
             assert_statement_string ~ctxt "export*as foo,{bar}from'a';"; *);
@@ -1717,11 +1867,13 @@ let tests =
            assert_statement_string ~ctxt "export default a;";
            assert_statement_string ~ctxt "export default a=b;";
            assert_statement_string ~ctxt "export default function(){}";
-           assert_statement_string ~ctxt "export default class{}" );
+           assert_statement_string ~ctxt "export default class{}"
+         );
          ( "type_alias_statement" >:: fun ctxt ->
            assert_statement_string ~ctxt "type a=a;";
            assert_statement_string ~ctxt "type a<a>=a;";
-           assert_statement_string ~ctxt ~pretty:true "type a = a;" );
+           assert_statement_string ~ctxt ~pretty:true "type a = a;"
+         );
          ( "opaque_type_alias_statement" >:: fun ctxt ->
            assert_statement_string ~ctxt "opaque type a=a;";
            assert_statement_string ~ctxt "opaque type a:b=a;";
@@ -1729,14 +1881,16 @@ let tests =
            assert_statement_string ~ctxt "opaque type a<a>:b<a>=a;";
            assert_statement_string ~ctxt "opaque type a<a>:b<a>=c<a>;";
            assert_statement_string ~ctxt ~pretty:true "opaque type a = a;";
-           assert_statement_string ~ctxt ~pretty:true "opaque type a: b = a;" );
+           assert_statement_string ~ctxt ~pretty:true "opaque type a: b = a;"
+         );
          ( "declare_opaque_type_alias_statement" >:: fun ctxt ->
            assert_statement_string ~ctxt "declare opaque type a;";
            assert_statement_string ~ctxt "declare opaque type a:b;";
            assert_statement_string ~ctxt ~pretty:true "declare opaque type a: b;";
            assert_statement_string ~ctxt "declare export opaque type a;";
            assert_statement_string ~ctxt "declare export opaque type a:b;";
-           assert_statement_string ~ctxt ~pretty:true "declare export opaque type a: b;" );
+           assert_statement_string ~ctxt ~pretty:true "declare export opaque type a: b;"
+         );
          ( "type_cast_expression" >:: fun ctxt ->
            let layout =
              Js_layout_generator.expression ~opts (E.typecast (E.identifier "a") Types.mixed)
@@ -1751,7 +1905,9 @@ let tests =
                       loc (id "a");
                       loc (fused [atom ":"; pretty_space; loc (atom "mixed")]);
                       atom ")";
-                    ]))
+                    ]
+                 )
+             )
              layout;
            assert_output ~ctxt "(a:mixed)" layout;
            assert_output ~ctxt ~pretty:true "(a: mixed)" layout;
@@ -1764,7 +1920,8 @@ let tests =
            assert_output ~ctxt ~pretty:true ("(" ^ a80 ^ ": mixed)") layout;
            assert_statement_string ~ctxt ~pretty:true "var a = (b: mixed);";
            (* Arrow function with type params is wrapped in parens *)
-           assert_expression_string ~ctxt "((<A>()=>B):C)" );
+           assert_expression_string ~ctxt "((<A>()=>B):C)"
+         );
          ( "type_parameter" >:: fun ctxt ->
            assert_statement_string ~ctxt "type a<a>=a;";
            assert_statement_string ~ctxt "type a<a,b>=a;";
@@ -1781,7 +1938,8 @@ let tests =
            assert_statement_string
              ~ctxt
              ~pretty:true
-             ("type a<\n  a,\n  b,\n> = " ^ String.make 80 'a' ^ ";") );
+             ("type a<\n  a,\n  b,\n> = " ^ String.make 80 'a' ^ ";")
+         );
          ( "type" >:: fun ctxt ->
            assert_statement_string ~ctxt "type a=any;";
            assert_statement_string ~ctxt "type a=mixed;";
@@ -1814,7 +1972,8 @@ let tests =
            assert_statement_string ~ctxt "type a=*;";
            assert_statement_string ~ctxt "type a='';";
            assert_statement_string ~ctxt "type a=1;";
-           assert_statement_string ~ctxt "type a=true;" );
+           assert_statement_string ~ctxt "type a=true;"
+         );
          ( "type_function" >:: fun ctxt ->
            assert_statement_string ~ctxt "type a=()=>c;";
            assert_statement_string ~ctxt "type a=(a:b)=>c;";
@@ -1837,7 +1996,8 @@ let tests =
            let b30 = String.make 30 'b' in
            assert_expression_string
              ~ctxt
-             ("(" ^ a30 ^ ":" ^ a30 ^ ",..." ^ b30 ^ ":" ^ b30 ^ "):c=>{}") );
+             ("(" ^ a30 ^ ":" ^ a30 ^ ",..." ^ b30 ^ ":" ^ b30 ^ "):c=>{}")
+         );
          ( "type_object" >:: fun ctxt ->
            assert_statement_string ~ctxt "type a={};";
            assert_statement_string ~ctxt "type a={...};";
@@ -1889,7 +2049,8 @@ let tests =
            (* TODO: the RHS should be indented *)
            assert_statement_string ~ctxt ~pretty:true "type T =\n/* foo */\n{\n  // bar\n  ...\n};";
            assert_statement_string ~ctxt ~pretty:true "type T = {\n  // foo\n  ...\n};";
-           assert_statement_string ~ctxt ~pretty:true "type T = {\n  /* foo */\n  ...\n};" );
+           assert_statement_string ~ctxt ~pretty:true "type T = {\n  /* foo */\n  ...\n};"
+         );
          ( "type_union_or_intersection" >:: fun ctxt ->
            assert_statement_string ~ctxt "type a=a|b;";
            assert_statement_string ~ctxt "type a=a|b|c;";
@@ -1909,7 +2070,8 @@ let tests =
            assert_statement_string
              ~ctxt
              ~pretty:true
-             ("type a = \n  | a\n  | b\n  | " ^ String.make 80 'c' ^ ";") );
+             ("type a = \n  | a\n  | b\n  | " ^ String.make 80 'c' ^ ";")
+         );
          ( "interface_declaration_statements" >:: fun ctxt ->
            assert_statement_string ~ctxt "interface a{}";
            assert_statement_string ~ctxt "interface a extends b{}";
@@ -1920,7 +2082,8 @@ let tests =
            assert_statement_string
              ~ctxt
              ~pretty:true
-             ("interface a {\n  a: b,\n  d(): " ^ String.make 80 'c' ^ ",\n}") );
+             ("interface a {\n  a: b,\n  d(): " ^ String.make 80 'c' ^ ",\n}")
+         );
          ( "declare_class_statements" >:: fun ctxt ->
            assert_statement_string ~ctxt "declare class a{}";
            assert_statement_string ~ctxt "declare class a extends b{}";
@@ -1930,22 +2093,27 @@ let tests =
            assert_statement_string
              ~ctxt
              ~pretty:true
-             ("declare class a {\n  static a: b,\n  static d(): " ^ String.make 80 'c' ^ ",\n}") );
+             ("declare class a {\n  static a: b,\n  static d(): " ^ String.make 80 'c' ^ ",\n}")
+         );
          ( "declare_function_statements" >:: fun ctxt ->
            assert_statement_string ~ctxt "declare function a():b;";
            assert_statement_string ~ctxt ~pretty:true "declare function a(): b;";
            assert_statement_string ~ctxt "declare function f():a%checks;";
            assert_statement_string ~ctxt "declare function f(a:b):a%checks(!a);";
-           assert_statement_string ~ctxt ~pretty:true "declare function f(a: b): a %checks(!a);" );
+           assert_statement_string ~ctxt ~pretty:true "declare function f(a: b): a %checks(!a);"
+         );
          ( "declare_var_statements" >:: fun ctxt ->
            assert_statement_string ~ctxt "declare var a;";
-           assert_statement_string ~ctxt "declare var a:b;" );
+           assert_statement_string ~ctxt "declare var a:b;"
+         );
          ( "declare_module_exports_statements" >:: fun ctxt ->
-           assert_statement_string ~ctxt "declare module.exports:a;" );
+           assert_statement_string ~ctxt "declare module.exports:a;"
+         );
          ( "declare_module_statements" >:: fun ctxt ->
            assert_statement_string ~ctxt "declare module a{}";
            assert_statement_string ~ctxt "declare module \"a\"{}";
-           assert_statement_string ~ctxt ~pretty:true "declare module \"a\" {}" );
+           assert_statement_string ~ctxt ~pretty:true "declare module \"a\" {}"
+         );
          ( "declare_export_declaration_statements" >:: fun ctxt ->
            assert_statement_string ~ctxt "declare export default a;";
            assert_statement_string ~ctxt "declare export var a;";
@@ -1956,17 +2124,20 @@ let tests =
            assert_statement_string ~ctxt "declare export{}";
            assert_statement_string ~ctxt "declare export{a,b}";
            assert_statement_string ~ctxt "declare export{a,b}from\"a\"";
-           assert_statement_string ~ctxt "declare export*from\"a\"" );
+           assert_statement_string ~ctxt "declare export*from\"a\""
+         );
          ( "regexp" >:: fun ctxt ->
            (* flags should be sorted *)
            let regexp = expression_of_string "/foo/ymg" in
-           assert_expression ~ctxt "/foo/gmy" regexp );
+           assert_expression ~ctxt "/foo/gmy" regexp
+         );
          ( "string_literal_quotes" >:: fun ctxt ->
            assert_expression ~ctxt {|"'''"|} (expression_of_string {|"'''"|});
            assert_expression ~ctxt {|'"'|} (expression_of_string {|"\""|});
            assert_expression ~ctxt {|"''"|} (expression_of_string {|'\'\''|});
            assert_expression ~ctxt {|"''\""|} (expression_of_string {|"''\""|});
-           assert_expression ~ctxt {|'""\''|} (expression_of_string {|'""\''|}) );
+           assert_expression ~ctxt {|'""\''|} (expression_of_string {|'""\''|})
+         );
          ( "switch" >:: fun ctxt ->
            let case1_loc =
              Loc.{ none with start = { line = 1; column = 1 }; _end = { line = 2; column = 3 } }
@@ -1988,7 +2159,8 @@ let tests =
                       ~loc:case2_loc
                       ~test:(E.literal (Literals.string "b"))
                       [S.expression (E.increment ~prefix:false (E.identifier "x")); S.break ()];
-                  ])
+                  ]
+               )
            in
            assert_layout
              ~ctxt
@@ -2025,11 +2197,14 @@ let tests =
                                            pretty_hardline;
                                            loc
                                              (fused
-                                                [loc (fused [loc (id "x"); atom "++"]); atom ";"]);
+                                                [loc (fused [loc (id "x"); atom "++"]); atom ";"]
+                                             );
                                            pretty_hardline;
                                            loc (fused [atom "break"; atom ";"]);
-                                         ]);
-                                  ]);
+                                         ]
+                                      );
+                                  ]
+                               );
                              pretty_hardline;
                              pretty_hardline;
                              loc
@@ -2046,17 +2221,24 @@ let tests =
                                            pretty_hardline;
                                            loc
                                              (fused
-                                                [loc (fused [loc (id "x"); atom "++"]); atom ";"]);
+                                                [loc (fused [loc (id "x"); atom "++"]); atom ";"]
+                                             );
                                            pretty_hardline;
                                            loc
                                              (fused
-                                                [atom "break"; Layout.IfPretty (atom ";", empty)]);
-                                         ]);
-                                  ]);
-                           ]);
+                                                [atom "break"; Layout.IfPretty (atom ";", empty)]
+                                             );
+                                         ]
+                                      );
+                                  ]
+                               );
+                           ]
+                        );
                       pretty_hardline;
                       atom "}";
-                    ]))
+                    ]
+                 )
+             )
              layout;
            assert_output ~ctxt "switch(x){case\"a\":x++;break;case\"b\":x++;break}" layout;
            assert_output
@@ -2071,8 +2253,10 @@ let tests =
              ^ "  case \"b\":\n"
              ^ "    x++;\n"
              ^ "    break;\n"
-             ^ "}")
-             layout );
+             ^ "}"
+             )
+             layout
+         );
          ( "switch_conditional_wrap" >:: fun ctxt ->
            (* the conditional should wrap, because `switch (xxxxx...xxx) {` does't fit on one line *)
            let len = 80 - String.length "switch () {" + 1 in
@@ -2080,7 +2264,8 @@ let tests =
              ~ctxt
              ~pretty:true
              (* TODO: fix trailing whitespace *)
-             (Printf.sprintf "switch (\n  %s\n) {\n  \n}" (String.make len 'x')) );
+             (Printf.sprintf "switch (\n  %s\n) {\n  \n}" (String.make len 'x'))
+         );
          ( "switch_case_space" >:: fun ctxt ->
            let assert_no_space ~ctxt expr =
              let ret = statement_of_string ("switch(x){case " ^ expr ^ ":break}") in
@@ -2098,21 +2283,24 @@ let tests =
            assert_statement ~ctxt "switch(x){case foo:break}" ret;
 
            let ret = statement_of_string "switch(x){case 123:break}" in
-           assert_statement ~ctxt "switch(x){case 123:break}" ret );
+           assert_statement ~ctxt "switch(x){case 123:break}" ret
+         );
          ( "switch_case_empty" >:: fun ctxt ->
            let layout =
              Js_layout_generator.statement
                ~opts
                (S.switch
                   (E.identifier "x")
-                  [S.switch_case ~test:(E.literal (Literals.string "a")) [S.empty ()]])
+                  [S.switch_case ~test:(E.literal (Literals.string "a")) [S.empty ()]]
+               )
            in
            assert_output ~ctxt "switch(x){case\"a\":;}" layout;
            assert_output
              ~ctxt
              ~pretty:true
              ("switch (x) {\n" ^ "  case \"a\":\n" ^ "    ;\n" ^ "}")
-             layout );
+             layout
+         );
          ( "throw_space" >:: fun ctxt ->
            let assert_no_space ~ctxt expr =
              let ret = statement_of_string ("throw " ^ expr ^ ";") in
@@ -2128,13 +2316,15 @@ let tests =
 
            assert_statement_string ~ctxt "throw foo;";
            assert_statement ~ctxt "throw foo;" (statement_of_string "throw (foo);");
-           assert_statement_string ~ctxt "throw new Error();" );
+           assert_statement_string ~ctxt "throw new Error();"
+         );
          ( "string_literal" >:: fun ctxt ->
            let ast = E.literal (Literals.string "a") in
            let layout = Js_layout_generator.expression ~opts ast in
            assert_layout ~ctxt L.(loc (fused [atom "\""; atom "a"; atom "\""])) layout;
            assert_output ~ctxt {|"a"|} layout;
-           assert_output ~ctxt ~pretty:true {|"a"|} layout );
+           assert_output ~ctxt ~pretty:true {|"a"|} layout
+         );
          ( "unicode_string_literal" >:: fun ctxt ->
            (* escaped using Unicode codepoint *)
            let ast = expression_of_string {|"\u{1F4A9}"|} in
@@ -2175,24 +2365,28 @@ let tests =
            let ast = expression_of_string {|"\x09"|} in
            assert_expression ~ctxt {|"\t"|} ast;
            let ast = expression_of_string {|"\\"|} in
-           assert_expression ~ctxt {|"\\"|} ast );
+           assert_expression ~ctxt {|"\\"|} ast
+         );
          ( "numbers" >:: fun ctxt ->
            assert_expression ~ctxt "100" (expression_of_string "1e2");
            assert_expression ~ctxt "1e3" (expression_of_string "1000");
-           assert_expression ~ctxt "2592e6" (expression_of_string "2.592e+09") );
+           assert_expression ~ctxt "2592e6" (expression_of_string "2.592e+09")
+         );
          ( "sequence_long" >:: fun ctxt ->
            let x80 = String.make 80 'x' in
            let layout =
              Js_layout_generator.expression ~opts (E.sequence [E.identifier x80; E.identifier x80])
            in
            assert_output ~ctxt (x80 ^ "," ^ x80) layout;
-           assert_output ~ctxt ~pretty:true (x80 ^ ",\n" ^ x80) layout );
+           assert_output ~ctxt ~pretty:true (x80 ^ ",\n" ^ x80) layout
+         );
          ( "with_statement_with_empty_body" >:: fun ctxt ->
            let layout =
              Js_layout_generator.statement ~opts (S.with_ (E.identifier "x") (S.empty ()))
            in
            assert_output ~ctxt "with(x);" layout;
-           assert_output ~ctxt ~pretty:true "with (x);" layout );
+           assert_output ~ctxt ~pretty:true "with (x);" layout
+         );
          ( "indexed_access" >:: fun ctxt ->
            let open Flow_ast.Type in
            let layout =
@@ -2204,9 +2398,11 @@ let tests =
                      IndexedAccess._object = Ast_builder.Types.unqualified_generic "T";
                      index = Ast_builder.Types.unqualified_generic "K";
                      comments = None;
-                   } )
+                   }
+               )
            in
-           assert_output ~ctxt "T[K]" layout );
+           assert_output ~ctxt "T[K]" layout
+         );
          ( "optional_indexed_access" >:: fun ctxt ->
            let open Flow_ast.Type in
            let layout =
@@ -2222,9 +2418,11 @@ let tests =
                          comments = None;
                        };
                      optional = true;
-                   } )
+                   }
+               )
            in
-           assert_output ~ctxt "T?.[K]" layout );
+           assert_output ~ctxt "T?.[K]" layout
+         );
          ( "enum_of_boolean" >:: fun ctxt ->
            S.EnumDeclarations.(
              let layout ~explicit_type =
@@ -2236,7 +2434,8 @@ let tests =
                        [
                          initialized_member (I.identifier "A") (boolean_literal true);
                          initialized_member (I.identifier "B") (boolean_literal false);
-                       ])
+                       ]
+                    )
              in
              assert_output ~ctxt "enum E{A=true,B=false,}" (layout ~explicit_type:false);
              let pretty_output = "enum E {\n" ^ "  A = true,\n" ^ "  B = false,\n" ^ "}" in
@@ -2250,7 +2449,9 @@ let tests =
                ~ctxt
                ~pretty:true
                explicit_type_pretty_output
-               (layout ~explicit_type:true)) );
+               (layout ~explicit_type:true)
+           )
+         );
          ( "enum_of_number" >:: fun ctxt ->
            S.EnumDeclarations.(
              let layout ~explicit_type =
@@ -2262,7 +2463,8 @@ let tests =
                        [
                          initialized_member (I.identifier "A") (number_literal 1.0 "1");
                          initialized_member (I.identifier "B") (number_literal 2.0 "2");
-                       ])
+                       ]
+                    )
              in
              assert_output ~ctxt "enum E{A=1,B=2,}" (layout ~explicit_type:false);
              let pretty_output = "enum E {\n" ^ "  A = 1,\n" ^ "  B = 2,\n" ^ "}" in
@@ -2276,7 +2478,9 @@ let tests =
                ~ctxt
                ~pretty:true
                explicit_type_pretty_output
-               (layout ~explicit_type:true)) );
+               (layout ~explicit_type:true)
+           )
+         );
          ( "enum_of_string_initialized" >:: fun ctxt ->
            S.EnumDeclarations.(
              let layout ~explicit_type =
@@ -2288,7 +2492,8 @@ let tests =
                        [
                          initialized_member (I.identifier "A") (string_literal "a");
                          initialized_member (I.identifier "B") (string_literal "b");
-                       ])
+                       ]
+                    )
              in
              assert_output ~ctxt "enum E{A=\"a\",B=\"b\",}" (layout ~explicit_type:false);
              let pretty_output = "enum E {\n" ^ "  A = \"a\",\n" ^ "  B = \"b\",\n" ^ "}" in
@@ -2302,7 +2507,9 @@ let tests =
                ~ctxt
                ~pretty:true
                explicit_type_pretty_output
-               (layout ~explicit_type:true)) );
+               (layout ~explicit_type:true)
+           )
+         );
          ( "enum_of_string_defaulted" >:: fun ctxt ->
            S.EnumDeclarations.(
              let layout ~explicit_type =
@@ -2311,7 +2518,8 @@ let tests =
                     (I.identifier "E")
                     (string_defaulted_body
                        ~explicit_type
-                       [defaulted_member (I.identifier "A"); defaulted_member (I.identifier "B")])
+                       [defaulted_member (I.identifier "A"); defaulted_member (I.identifier "B")]
+                    )
              in
              assert_output ~ctxt "enum E{A,B,}" (layout ~explicit_type:false);
              let pretty_output = "enum E {\n" ^ "  A,\n" ^ "  B,\n" ^ "}" in
@@ -2323,7 +2531,9 @@ let tests =
                ~ctxt
                ~pretty:true
                explicit_type_pretty_output
-               (layout ~explicit_type:true)) );
+               (layout ~explicit_type:true)
+           )
+         );
          ( "enum_of_symbol" >:: fun ctxt ->
            S.EnumDeclarations.(
              let layout =
@@ -2331,11 +2541,14 @@ let tests =
                @@ S.enum_declaration
                     (I.identifier "E")
                     (symbol_body
-                       [defaulted_member (I.identifier "A"); defaulted_member (I.identifier "B")])
+                       [defaulted_member (I.identifier "A"); defaulted_member (I.identifier "B")]
+                    )
              in
              assert_output ~ctxt "enum E of symbol{A,B,}" layout;
              let pretty_output = "enum E of symbol {\n" ^ "  A,\n" ^ "  B,\n" ^ "}" in
-             assert_output ~ctxt ~pretty:true pretty_output layout) );
+             assert_output ~ctxt ~pretty:true pretty_output layout
+           )
+         );
          ( "enum_with_unknown_members" >:: fun ctxt ->
            S.EnumDeclarations.(
              let layout =
@@ -2344,11 +2557,14 @@ let tests =
                     (I.identifier "E")
                     (symbol_body
                        ~has_unknown_members:true
-                       [defaulted_member (I.identifier "A"); defaulted_member (I.identifier "B")])
+                       [defaulted_member (I.identifier "A"); defaulted_member (I.identifier "B")]
+                    )
              in
              assert_output ~ctxt "enum E of symbol{A,B,...}" layout;
              let pretty_output = "enum E of symbol {\n" ^ "  A,\n" ^ "  B,\n" ^ "  ...\n" ^ "}" in
-             assert_output ~ctxt ~pretty:true pretty_output layout) );
+             assert_output ~ctxt ~pretty:true pretty_output layout
+           )
+         );
          ( "enum_with_internal_comment" >:: fun ctxt ->
            S.EnumDeclarations.(
              let layout =
@@ -2364,18 +2580,23 @@ let tests =
                              internal =
                                [Ast_builder.Comments.line ~on_newline:true " internal comment"];
                            }
-                       [defaulted_member (I.identifier "A"); defaulted_member (I.identifier "B")])
+                         
+                       [defaulted_member (I.identifier "A"); defaulted_member (I.identifier "B")]
+                    )
              in
              assert_output ~ctxt "enum E of symbol{A,B,// internal comment\n}" layout;
              let pretty_output = "enum E of symbol {\n  A,\n  B,\n  // internal comment\n  \n}" in
-             assert_output ~ctxt ~pretty:true pretty_output layout) );
+             assert_output ~ctxt ~pretty:true pretty_output layout
+           )
+         );
          ( "arrow_function_with_function_return_type" >:: fun ctxt ->
            assert_expression_string ~ctxt "():((x)=>y)=>{}";
            assert_expression_string ~ctxt "():((x)=>y)%checks=>{}";
            assert_expression_string ~ctxt "():()=>x=>{}";
            assert_expression_string ~ctxt "():()=>x%checks=>{}";
            assert_expression_string ~ctxt "():(...x)=>y=>{}";
-           assert_expression_string ~ctxt "():(...x)=>y%checks=>{}" );
+           assert_expression_string ~ctxt "():(...x)=>y%checks=>{}"
+         );
          ( "nullish_coalesce_with_logical" >:: fun ctxt ->
            assert_expression_string ~ctxt "(a&&b)??c";
            assert_expression_string ~ctxt "a??(b&&c)";
@@ -2385,7 +2606,8 @@ let tests =
            assert_expression_string ~ctxt "(a||b)??c";
            assert_expression_string ~ctxt "a??(b||c)";
            assert_expression_string ~ctxt "a||(b??c)";
-           assert_expression_string ~ctxt "(a??b)||c" );
+           assert_expression_string ~ctxt "(a??b)||c"
+         );
          ("optional_call" >:: fun ctxt -> assert_expression_string ~ctxt "foo?.()");
          ( "class_preserve_blank_lines_between_elements" >:: fun ctxt ->
            (* Single blank line is preserved *)
@@ -2397,7 +2619,8 @@ let tests =
              "class C {\n  a;\n  \n  b;\n}"
              (expression_of_string "class C {\n  a;\n  \n  \n b;\n}");
            (* Comments are not treated as blank lines *)
-           assert_expression_string ~ctxt ~pretty:true "class C {\n  a;\n  //L\n  b;\n}" );
+           assert_expression_string ~ctxt ~pretty:true "class C {\n  a;\n  //L\n  b;\n}"
+         );
          ( "object_type_preserve_blank_lines_between_properties" >:: fun ctxt ->
            (* Single blank line is preserved *)
            assert_statement_string ~ctxt ~pretty:true "type T = {\n  a: 1,\n  \n  b: 2,\n};";
@@ -2408,7 +2631,8 @@ let tests =
              "type T = {\n  a: 1,\n  \n  b: 2,\n};"
              (statement_of_string "type T = {\n  a: 1,\n  \n  \n b: 2,\n};");
            (* Comments are not treated as blank lines *)
-           assert_statement_string ~ctxt ~pretty:true "type T = {\n  a: 1,\n  //L\n  b: 2,\n};" );
+           assert_statement_string ~ctxt ~pretty:true "type T = {\n  a: 1,\n  //L\n  b: 2,\n};"
+         );
          ( "object_pattern_preserve_blank_lines_between_properties" >:: fun ctxt ->
            (* Single blank line is preserved *)
            assert_statement_string ~ctxt ~pretty:true "var {\n  a,\n  \n  b\n};";
@@ -2419,7 +2643,8 @@ let tests =
              "var {\n  a,\n  \n  b\n};"
              (statement_of_string "var {\n  a,\n  \n  \n b\n};");
            (* Comments are not treated as blank lines *)
-           assert_statement_string ~ctxt ~pretty:true "var {\n  a,\n  //L\n  b\n};" );
+           assert_statement_string ~ctxt ~pretty:true "var {\n  a,\n  //L\n  b\n};"
+         );
          ( "switch_preserve_blank_lines_between_cases" >:: fun ctxt ->
            (* Single blank line is preserved *)
            assert_statement_string
@@ -2432,17 +2657,20 @@ let tests =
              ~pretty:true
              "switch (true) {\n  case a:\n    break;\n  \n  case b:\n    break;\n}"
              (statement_of_string
-                "switch (true) {\n  case a:\n    break;\n  \n  \n  case b:\n    break;\n}");
+                "switch (true) {\n  case a:\n    break;\n  \n  \n  case b:\n    break;\n}"
+             );
            (* Comments are not treated as blank lines *)
            assert_statement_string
              ~ctxt
              ~pretty:true
-             "switch (true) {\n  case a:\n    break;\n  //L\n  case b:\n    break;\n}" );
+             "switch (true) {\n  case a:\n    break;\n  //L\n  case b:\n    break;\n}"
+         );
          ( "object_type_preserve_wrapping" >:: fun ctxt ->
            (* Object type that fits on single line with no wrapping is printed on single line *)
            assert_statement_string ~ctxt ~pretty:true "type T = { a: 1 };";
            (* Object type that fits on single line but wraps is printed as wrapping *)
-           assert_statement_string ~ctxt ~pretty:true "type T = {\n  a: 1,\n};" );
+           assert_statement_string ~ctxt ~pretty:true "type T = {\n  a: 1,\n};"
+         );
          ( "function_params_preserve_blank_lines_between_params" >:: fun ctxt ->
            (* Single blank line is preserved *)
            assert_expression_string ~ctxt ~pretty:true "(\n  a,\n  \n  b,\n) => {}";
@@ -2453,7 +2681,8 @@ let tests =
              "(\n  a,\n  \n  b,\n) => {}"
              (expression_of_string "(\n  a,\n  \n  \n  b,\n) => {}");
            (* Comments are not treated as blank lines *)
-           assert_expression_string ~ctxt ~pretty:true "(\n  a,\n  //L\n  b,\n) => {}" );
+           assert_expression_string ~ctxt ~pretty:true "(\n  a,\n  //L\n  b,\n) => {}"
+         );
          ( "function_type_params_preserve_blank_lines_between_params" >:: fun ctxt ->
            (* Single blank line is preserved *)
            assert_statement_string ~ctxt ~pretty:true "type T = (\n  a,\n  \n  b\n) => c;";
@@ -2464,7 +2693,8 @@ let tests =
              "type T = (\n  a,\n  \n  b\n) => c;"
              (statement_of_string "type T = (\n  a,\n  \n  \n  b\n) => c;");
            (* Comments are not treated as blank lines *)
-           assert_statement_string ~ctxt ~pretty:true "type T = (\n  a,\n  //L\n  b\n) => c;" );
+           assert_statement_string ~ctxt ~pretty:true "type T = (\n  a,\n  //L\n  b\n) => c;"
+         );
          ( "array_preserve_blank_lines_between_elements" >:: fun ctxt ->
            (* Single blank line is preserved *)
            assert_expression_string ~ctxt ~pretty:true "[\n  a,\n  \n  b,\n]";
@@ -2479,7 +2709,8 @@ let tests =
            (* Blank lines between holes are preserved *)
            assert_expression_string ~ctxt ~pretty:true "[\n  ,\n  \n  ,\n]";
            assert_expression_string ~ctxt ~pretty:true "[\n  a,\n  \n  ,\n]";
-           assert_expression_string ~ctxt ~pretty:true "[\n  ,\n  \n  a,\n]" );
+           assert_expression_string ~ctxt ~pretty:true "[\n  ,\n  \n  a,\n]"
+         );
          ( "array_pattern_preserve_blank_lines_between_elements" >:: fun ctxt ->
            (* Single blank line is preserved *)
            assert_statement_string ~ctxt ~pretty:true "var [\n  a,\n  \n  b\n];";
@@ -2493,7 +2724,8 @@ let tests =
            assert_statement_string ~ctxt ~pretty:true "var [\n  a,\n  //L\n  b\n];";
            (* Blank lines between holes are preserved *)
            assert_statement_string ~ctxt ~pretty:true "var [\n  ,\n  \n  ,\n  a\n];";
-           assert_statement_string ~ctxt ~pretty:true "var [\n  a,\n  \n  ,\n  \n  b\n];" );
+           assert_statement_string ~ctxt ~pretty:true "var [\n  a,\n  \n  ,\n  \n  b\n];"
+         );
          ( "call_preserve_blank_lines_between_args" >:: fun ctxt ->
            (* Single blank line is preserved *)
            assert_expression_string ~ctxt ~pretty:true "foo(\n  a,\n  \n  b,\n)";
@@ -2504,7 +2736,8 @@ let tests =
              "foo(\n  a,\n  \n  b,\n)"
              (expression_of_string "foo(\n  a,\n  \n  \n  b,\n)");
            (* Comments are not treated as blank lines *)
-           assert_expression_string ~ctxt ~pretty:true "foo(\n  a,\n  //L\n  b,\n)" );
+           assert_expression_string ~ctxt ~pretty:true "foo(\n  a,\n  //L\n  b,\n)"
+         );
          ( "new_preserve_blank_lines_between_args" >:: fun ctxt ->
            (* Single blank line is preserved *)
            assert_expression_string ~ctxt ~pretty:true "new Foo(\n  a,\n  \n  b,\n)";
@@ -2515,7 +2748,8 @@ let tests =
              "new Foo(\n  a,\n  \n  b,\n)"
              (expression_of_string "new Foo(\n  a,\n  \n  \n  b,\n)");
            (* Comments are not treated as blank lines *)
-           assert_expression_string ~ctxt ~pretty:true "new Foo(\n  a,\n  //L\n  b,\n)" );
+           assert_expression_string ~ctxt ~pretty:true "new Foo(\n  a,\n  //L\n  b,\n)"
+         );
          ( "type_args_preserve_blank_lines_between_args" >:: fun ctxt ->
            (* Single blank line is preserved *)
            assert_statement_string ~ctxt ~pretty:true "type Foo = Bar<\n  a,\n  \n  b,\n>;";
@@ -2526,7 +2760,8 @@ let tests =
              "type Foo = Bar<\n  a,\n  \n  b,\n>;"
              (statement_of_string "type Foo = Bar<\n  a,\n  \n  \n  b,\n>;");
            (* Comments are not treated as blank lines *)
-           assert_statement_string ~ctxt ~pretty:true "type Foo = Bar<\n  a,\n  //L\n  b,\n>;" );
+           assert_statement_string ~ctxt ~pretty:true "type Foo = Bar<\n  a,\n  //L\n  b,\n>;"
+         );
          ( "call_type_args_preserve_blank_lines_between_args" >:: fun ctxt ->
            (* Single blank line is preserved *)
            assert_expression_string ~ctxt ~pretty:true "foo<\n  a,\n  \n  b,\n>()";
@@ -2537,10 +2772,12 @@ let tests =
              "foo<\n  a,\n  \n  b,\n>()"
              (expression_of_string "foo<\n  a,\n  \n  \n  b,\n>()");
            (* Comments are not treated as blank lines *)
-           assert_expression_string ~ctxt ~pretty:true "foo<\n  a,\n  //L\n  b,\n>()" );
+           assert_expression_string ~ctxt ~pretty:true "foo<\n  a,\n  //L\n  b,\n>()"
+         );
          ( "call_template_wrapping" >:: fun ctxt ->
            assert_expression_string ~ctxt ~pretty:true "foo(`a\nb`)";
-           assert_expression_string ~ctxt ~pretty:true "foo(\n  `a\nb`,\n)" );
+           assert_expression_string ~ctxt ~pretty:true "foo(\n  `a\nb`,\n)"
+         );
          ( "type_params_preserve_blank_lines_between_params" >:: fun ctxt ->
            (* Single blank line is preserved *)
            assert_expression_string ~ctxt ~pretty:true "<\n  a,\n  \n  b,\n>() => {}";
@@ -2551,7 +2788,8 @@ let tests =
              "<\n  a,\n  \n  b,\n>() => {}"
              (expression_of_string "<\n  a,\n  \n  \n  b,\n>() => {}");
            (* Comments are not treated as blank lines *)
-           assert_expression_string ~ctxt ~pretty:true "<\n  a,\n  //L\n  b,\n>() => {}" );
+           assert_expression_string ~ctxt ~pretty:true "<\n  a,\n  //L\n  b,\n>() => {}"
+         );
          ( "function_params_break_before_return_type" >:: fun ctxt ->
            (* If both function params and return type can break, params should break first *)
            let a20 = String.make 20 'a' in
@@ -2559,7 +2797,8 @@ let tests =
            assert_statement_string
              ~ctxt
              ~pretty:true
-             (Printf.sprintf "function f(\n  %s,\n  %s,\n): { %s: t, %s: t } {}" a20 b20 a20 b20) );
+             (Printf.sprintf "function f(\n  %s,\n  %s,\n): { %s: t, %s: t } {}" a20 b20 a20 b20)
+         );
          ( "function_type_params_break_before_return_type" >:: fun ctxt ->
            (* If both function param types and return type can break, params should break first *)
            let a20 = String.make 20 'a' in
@@ -2567,7 +2806,8 @@ let tests =
            assert_statement_string
              ~ctxt
              ~pretty:true
-             (Printf.sprintf "type T = (\n  %s,\n  %s\n) => { %s: t, %s: t };" a20 b20 a20 b20) );
+             (Printf.sprintf "type T = (\n  %s,\n  %s\n) => { %s: t, %s: t };" a20 b20 a20 b20)
+         );
          ( "jsx_in_new_expression" >:: fun ctxt ->
            (* Verify that JSX wrapped in parens is not reprinted with extra blank lines before and after *)
            let a80 = String.make 80 'a' in
@@ -2580,7 +2820,8 @@ let tests =
              ^ ("    " ^ a80 ^ "\n")
              ^ "  </jsx>,\n"
              ^ "  b,\n"
-             ^ ")")
+             ^ ")"
+             )
              (expression_of_string
                 ("new Foo(\n"
                 ^ "  a,\n"
@@ -2590,8 +2831,12 @@ let tests =
                 ^ "    </jsx>\n"
                 ^ "  ),\n"
                 ^ "  b,\n"
-                ^ ")")) );
+                ^ ")"
+                )
+             )
+         );
          ( "assignment_arrow_function_rhs" >:: fun ctxt ->
            assert_statement_string ~ctxt ~pretty:true "const x = () => {};";
-           assert_statement_string ~ctxt ~pretty:true "const x = () => y = 123;" );
+           assert_statement_string ~ctxt ~pretty:true "const x = () => y = 123;"
+         );
        ]

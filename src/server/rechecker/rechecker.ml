@@ -36,7 +36,8 @@ module Parallelizable_workload_loop = LwtLoop.Make (struct
         [
           ServerMonitorListenerState.wait_and_pop_parallelizable_workload ();
           (let%lwt () = wait_for_cancel in
-           raise Lwt.Canceled);
+           raise Lwt.Canceled
+          );
         ]
     in
     (* We have a workload! Let's run it! *)
@@ -130,7 +131,8 @@ let recheck
           ~clients:env.connections
           ~errors_reason
           ~calc_errors_and_warnings;
-        Lwt.return (log_recheck_event, summary_info, env))
+        Lwt.return (log_recheck_event, summary_info, env)
+    )
   in
   let%lwt () = log_recheck_event ~profiling in
 
@@ -270,7 +272,8 @@ let rec recheck_single ~files_to_force ~recheck_count genv env =
         ~get_forced
         ~f
         ~pre_cancel:stop_parallelizable_workloads
-        ~post_cancel)
+        ~post_cancel
+  )
 
 let recheck_loop =
   (* It's not obvious to Mr Gabe how we should merge together the profiling info from multiple
@@ -284,7 +287,8 @@ let recheck_loop =
       Profiling_js.with_profiling_lwt
         ~label:"RecheckSeries"
         ~should_print_summary
-        (fun _profiling -> recheck_single ~files_to_force ~recheck_count:1 genv env)
+        (fun _profiling -> recheck_single ~files_to_force ~recheck_count:1 genv env
+      )
     in
     match recheck_result with
     | Nothing_to_do env -> Lwt.return (List.rev profiling, env)

@@ -58,7 +58,9 @@ let spec =
                      ("true", Comments_true);
                      ("false", Comments_false);
                      ("docblock-only", Comments_docblock);
-                   ]))
+                   ]
+                )
+             )
              ~doc:
                "Include or drop comments in the output (true, false or docblock-only) (default: true)"
         |> flag
@@ -68,7 +70,8 @@ let spec =
         |> CommandUtils.offset_style_flag
         |> CommandUtils.from_flag
         |> CommandUtils.path_flag
-        |> anon "file" (optional string));
+        |> anon "file" (optional string)
+      );
   }
 
 type ast_result_type =
@@ -157,7 +160,9 @@ let main
                 types = true;
                 use_strict;
               }
+            
         in
+
         let filename = File_input.path_of_file_input file in
         let filename =
           if use_relative_path then
@@ -230,6 +235,7 @@ let main
       with
       | Parse_error.Error l -> JSON_Object [("errors", Translate.errors l)]
     in
-    print_json_endline ~pretty results)
+    print_json_endline ~pretty results
+  )
 
 let command = CommandSpec.command spec main

@@ -292,7 +292,8 @@ module rec ConsGen : Annotation_inference_sig = struct
             (fun id2 ->
               let (root_id2, _) = Context.find_avar cx id2 in
               root_id <> root_id2)
-            deps);
+            deps
+      );
       resolve_id cx id (Unsoundness.merged_any reason)
 
   and mk_lazy_tvar cx reason f =
@@ -300,13 +301,14 @@ module rec ConsGen : Annotation_inference_sig = struct
     let tvar = OpenT (reason, id) in
     let constraints =
       lazy
-        (Avar.unresolved_with_id cx id reason;
-         f id;
-         (* Before forcing the type constraint of [id] we need to make sure the
-          * respective annotation constraint has been processed. If not we infer
-          * the empty type. *)
-         ensure_annot_resolved cx reason id;
-         Lazy.force (Context.find_graph cx id))
+        ( Avar.unresolved_with_id cx id reason;
+          f id;
+          (* Before forcing the type constraint of [id] we need to make sure the
+           * respective annotation constraint has been processed. If not we infer
+           * the empty type. *)
+          ensure_annot_resolved cx reason id;
+          Lazy.force (Context.find_graph cx id)
+        )
     in
     Context.add_tvar cx id (Constraint.Root { Constraint.rank = 0; constraints });
     tvar
@@ -405,7 +407,9 @@ module rec ConsGen : Annotation_inference_sig = struct
               spread_id = Reason.mk_id ();
               union_reason = None;
               curr_resolve_idx = 0;
-            })
+            }
+          
+        )
       in
       let t = object_spread cx use_op reason target state t in
       elab_t cx t op
@@ -441,7 +445,8 @@ module rec ConsGen : Annotation_inference_sig = struct
              reason_arity = Flow_js_utils.mk_poly_arity_reason tparams_loc;
              min_arity = Flow_js_utils.poly_minimum_arity ids;
              max_arity = Nel.length ids;
-           });
+           }
+        );
       AnyT.error reason
     | (ThisClassT (r, i, is_this), Annot_UseT_TypeT reason) ->
       let c = fix_this_class cx reason (r, i, is_this) in
@@ -672,8 +677,10 @@ module rec ConsGen : Annotation_inference_sig = struct
                 tparams = xs;
                 t_out = ThisClassT (_, DefT (_, trust, InstanceT (_, _, _, insttype)), is_this);
                 _;
-              } ),
-        Annot_MixinT r ) ->
+              }
+          ),
+        Annot_MixinT r
+      ) ->
       let static = ObjProtoT r in
       let super = ObjProtoT r in
       let instance = DefT (r, trust, InstanceT (static, super, [], insttype)) in
@@ -683,7 +690,8 @@ module rec ConsGen : Annotation_inference_sig = struct
     (* Type specialization *)
     (***********************)
     | ( DefT (_, _, PolyT { tparams_loc; tparams = xs; t_out = t; id }),
-        Annot_SpecializeT (use_op, reason_op, reason_tapp, ts) ) ->
+        Annot_SpecializeT (use_op, reason_op, reason_tapp, ts)
+      ) ->
       let ts = Base.Option.value ts ~default:[] in
       mk_typeapp_of_poly cx ~use_op ~reason_op ~reason_tapp id tparams_loc xs t ts
     | ((DefT (_, _, ClassT _) | ThisClassT _), Annot_SpecializeT (_, _, _, None)) -> t
@@ -720,7 +728,8 @@ module rec ConsGen : Annotation_inference_sig = struct
     (****************)
     | (DefT (reason, trust, CharSetT _), _) -> elab_t cx (StrT.why reason trust) op
     | ( CustomFunT (_, ReactPropType (React.PropType.Primitive (false, t))),
-        Annot_GetPropT (reason_op, _, Named (_, OrdinaryName "isRequired")) ) ->
+        Annot_GetPropT (reason_op, _, Named (_, OrdinaryName "isRequired"))
+      ) ->
       let prop_type = React.PropType.Primitive (true, t) in
       CustomFunT (reason_op, ReactPropType prop_type)
     | (CustomFunT (reason, ReactPropType (React.PropType.Primitive (req, _))), _)
@@ -771,7 +780,8 @@ module rec ConsGen : Annotation_inference_sig = struct
     (* LookupT pt1 *)
     (***************)
     | ( DefT (_lreason, _, InstanceT (_, super, _, instance)),
-        Annot_LookupT (reason_op, use_op, (Named (_, x) as propref)) ) ->
+        Annot_LookupT (reason_op, use_op, (Named (_, x) as propref))
+      ) ->
       let own_props = Context.find_props cx instance.own_props in
       let proto_props = Context.find_props cx instance.proto_props in
       let pmap = NameUtils.Map.union own_props proto_props in
@@ -897,7 +907,8 @@ module rec ConsGen : Annotation_inference_sig = struct
     (* Enums *)
     (*********)
     | ( DefT (enum_reason, trust, EnumObjectT enum),
-        Annot_GetPropT (access_reason, use_op, Named (prop_reason, member_name)) ) ->
+        Annot_GetPropT (access_reason, use_op, Named (prop_reason, member_name))
+      ) ->
       let access = (use_op, access_reason, (prop_reason, member_name)) in
       GetPropTKit.on_EnumObjectT cx dummy_trace enum_reason trust enum access
     | (DefT (enum_reason, _, EnumObjectT _), Annot_GetElemT (reason_op, _, elem)) ->
@@ -905,7 +916,8 @@ module rec ConsGen : Annotation_inference_sig = struct
       Flow_js_utils.add_output
         cx
         (Error_message.EEnumInvalidMemberAccess
-           { member_name = None; suggestion = None; reason; enum_reason });
+           { member_name = None; suggestion = None; reason; enum_reason }
+        );
       AnyT.error reason_op
     (***************)
     (* LookupT pt2 *)
@@ -917,7 +929,8 @@ module rec ConsGen : Annotation_inference_sig = struct
       when Flow_js_utils.is_function_prototype x ->
       Flow_js_utils.lookup_builtin_strict cx (OrdinaryName "Function") reason_op
     | ( (DefT (reason, _, NullT) | ObjProtoT reason | FunProtoT reason),
-        Annot_LookupT (reason_op, use_op, (Named (reason_prop, x) as propref)) ) ->
+        Annot_LookupT (reason_op, use_op, (Named (reason_prop, x) as propref))
+      ) ->
       let error_message =
         if Reason.is_builtin_reason ALoc.source reason then
           Error_message.EBuiltinLookupFailed { reason = reason_prop; name = Some x }
@@ -952,10 +965,12 @@ module rec ConsGen : Annotation_inference_sig = struct
       let arr = get_builtin_typeapp cx reason (OrdinaryName "Array") [t] in
       elab_t cx arr op
     | ( DefT (reason, trust, ArrT (TupleAT (_, ts))),
-        Annot_GetPropT (reason_op, _, Named (_, OrdinaryName "length")) ) ->
+        Annot_GetPropT (reason_op, _, Named (_, OrdinaryName "length"))
+      ) ->
       GetPropTKit.on_array_length cx dummy_trace reason trust ts reason_op
     | ( DefT (reason, _, ArrT ((TupleAT _ | ROArrayAT _) as arrtype)),
-        (Annot_GetPropT _ | Annot_LookupT _) ) ->
+        (Annot_GetPropT _ | Annot_LookupT _)
+      ) ->
       let t = elemt_of_arrtype arrtype in
       elab_t cx (get_builtin_typeapp cx reason (OrdinaryName "$ReadOnlyArray") [t]) op
     (************************)
@@ -997,7 +1012,8 @@ module rec ConsGen : Annotation_inference_sig = struct
         | ObjectOf -> "React$PropTypes$objectOf"
         | OneOf -> "React$PropTypes$oneOf"
         | OneOfType -> "React$PropTypes$oneOfType"
-        | Shape -> "React$PropTypes$shape")
+        | Shape -> "React$PropTypes$shape"
+      )
     in
     get_builtin_type cx reason (OrdinaryName x)
 
@@ -1060,8 +1076,7 @@ module rec ConsGen : Annotation_inference_sig = struct
   and cjs_extract_named_exports cx reason local_module t =
     elab_t cx t (Annot_CJSExtractNamedExportsT (reason, local_module))
 
-  and import_typeof cx reason export_name t =
-    elab_t cx t (Annot_ImportTypeofT (reason, export_name))
+  and import_typeof cx reason export_name t = elab_t cx t (Annot_ImportTypeofT (reason, export_name))
 
   and import_default cx reason import_kind export_name module_name is_strict t =
     elab_t cx t (Annot_ImportDefaultT (reason, import_kind, (export_name, module_name), is_strict))
@@ -1111,7 +1126,8 @@ module rec ConsGen : Annotation_inference_sig = struct
                   widen_obj_type cx ~use_op reason t
                 else
                   t)
-              rep )
+              rep
+          )
       | t -> t
     in
     let add_output cx msg : unit = Flow_js_utils.add_output cx msg in
@@ -1148,7 +1164,8 @@ module rec ConsGen : Annotation_inference_sig = struct
         | ReadOnly -> object_read_only cx use_op reason x
         | ReactConfig _ -> error_internal cx "ReactConfig" op
         | ObjectRep -> error_internal cx "ObjectRep" op
-        | ObjectWiden _ -> error_internal cx "ObjectWiden" op)
+        | ObjectWiden _ -> error_internal cx "ObjectWiden" op
+      )
     in
     let statics = get_statics in
     fun cx use_op op reason resolve_tool tool t ->

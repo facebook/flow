@@ -33,7 +33,8 @@ val update_clients :
   calc_errors_and_warnings:
     (unit ->
     Errors.ConcreteLocPrintableErrorSet.t
-    * Errors.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t) ->
+    * Errors.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t
+    ) ->
   unit
 
 val send_lsp : t -> Lsp.lsp_message option * LspProt.metadata -> unit

@@ -46,7 +46,8 @@ module Make (Env : Env_sig.S) = struct
           cjs_export = None;
           has_every_named_export = false;
         },
-        Context.is_strict cx )
+        Context.is_strict cx
+      )
 
   (**
  * When CommonJS modules set their export type, we do two things:
@@ -70,7 +71,9 @@ module Make (Env : Env_sig.S) = struct
           cx
           ( export_t,
             CJSExtractNamedExportsT
-              (reason, (reason_exports_module, exporttypes, Context.is_strict cx), t) ))
+              (reason, (reason_exports_module, exporttypes, Context.is_strict cx), t)
+          )
+    )
 
   (* given a module name, return associated tvar in module map (failing if not
      found); e.g., used to find tvars associated with requires *after* all
@@ -81,14 +84,16 @@ module Make (Env : Env_sig.S) = struct
     let module_t = require_t_of_ref_unsafe cx source in
     let reason = mk_reason (RCommonJSExports module_ref) require_loc in
     Tvar.mk_where cx reason (fun t ->
-        Flow.flow cx (OpenT module_t, CJSRequireT (reason, t, Context.is_strict cx)))
+        Flow.flow cx (OpenT module_t, CJSRequireT (reason, t, Context.is_strict cx))
+    )
 
   let import cx source = require_t_of_ref_unsafe cx source
 
   let import_ns cx reason source =
     let module_t = require_t_of_ref_unsafe cx source in
     Tvar.mk_where cx reason (fun t ->
-        Flow.flow cx (OpenT module_t, ImportModuleNsT (reason, t, Context.is_strict cx)))
+        Flow.flow cx (OpenT module_t, ImportModuleNsT (reason, t, Context.is_strict cx))
+    )
 
   (* Module exports are treated differently than `exports`. The latter is a
      variable that is implicitly set to the empty object at the top of a
@@ -154,12 +159,14 @@ module Make (Env : Env_sig.S) = struct
       let copy_named_exports cx reason module_t (loc, from_ns) =
         let reason = repos_reason loc reason in
         Tvar.mk_where cx reason (fun tout ->
-            Flow.flow cx (from_ns, CopyNamedExportsT (reason, module_t, tout)))
+            Flow.flow cx (from_ns, CopyNamedExportsT (reason, module_t, tout))
+        )
       in
       let copy_type_exports cx reason module_t (loc, from_ns) =
         let reason = repos_reason loc reason in
         Tvar.mk_where cx reason (fun tout ->
-            Flow.flow cx (from_ns, CopyTypeExportsT (reason, module_t, tout)))
+            Flow.flow cx (from_ns, CopyTypeExportsT (reason, module_t, tout))
+        )
       in
       let copy_star_exports cx reason exports module_t =
         Module_info.fold_star2
@@ -170,7 +177,8 @@ module Make (Env : Env_sig.S) = struct
       in
       let export_named cx reason kind named module_t =
         Tvar.mk_where cx reason (fun tout ->
-            Flow.flow cx (module_t, ExportNamedT (reason, named, kind, tout)))
+            Flow.flow cx (module_t, ExportNamedT (reason, named, kind, tout))
+        )
       in
       fun cx reason ->
         let info = Context.module_info cx in
@@ -186,5 +194,6 @@ module Make (Env : Env_sig.S) = struct
           mk_module_t cx reason
           |> export_named cx reason ExportValue named
           |> export_named cx reason ExportType info.type_named
-          |> copy_star_exports cx reason (star, info.type_star))
+          |> copy_star_exports cx reason (star, info.type_star)
+    )
 end

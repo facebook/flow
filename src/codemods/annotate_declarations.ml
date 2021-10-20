@@ -61,7 +61,9 @@ module Simplify = struct
                 if is_resolved_empty arr_elt_t then
                   None
                 else
-                  Some (Ty.Arr arr)))
+                  Some (Ty.Arr arr)
+            )
+           )
 
   (* If all types in the union are functions with the same arity, filter out those that contain the
      empty type in parameters *)
@@ -93,7 +95,9 @@ module Simplify = struct
                 then
                   None
                 else
-                  Some (Ty.Fun fn)))
+                  Some (Ty.Fun fn)
+            )
+           )
 
   (* If all types in the union are generics, and are the same generics, filter out those that contain the
      empty type in type arguments *)
@@ -114,7 +118,9 @@ module Simplify = struct
                 if Base.List.exists ~f:is_resolved_empty ts then
                   None
                 else
-                  Some (Ty.Generic (sym, gen, Some ts))))
+                  Some (Ty.Generic (sym, gen, Some ts))
+            )
+           )
 
   let mk_union ?(flattened = false) (t0, ts) =
     let filtered_ts =
@@ -219,6 +225,7 @@ let mapper
           num_error_vars = LSet.cardinal loc_error_set;
           num_renamable_vars = ALocSet.cardinal renamable;
         }
+      
 
     method! variable_declarator_pattern ~kind ((ploc, patt) : ('loc, 'loc) Ast.Pattern.t) =
       let get_annot ty annot =

@@ -46,7 +46,8 @@ let parse_status raw_status_contents =
              let key = String.strip raw_key in
              let stat = String.strip raw_stat in
              SMap.add key stat stats
-           | _ -> stats)
+           | _ -> stats
+       )
   in
   {
     rss_anon =

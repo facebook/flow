@@ -30,13 +30,15 @@ class ['acc] visitor ~init =
           | Method { key; _ }
           | Get { key; _ }
           | Set { key; _ } ->
-            key)
+            key
+        )
       in
       let { properties; comments = _ } = obj in
       properties
       |> List.iter (function
              | SpreadProperty _ -> ()
-             | Property (_, prop) -> prop |> get_prop_key |> this#visit_object_key loc)
+             | Property (_, prop) -> prop |> get_prop_key |> this#visit_object_key loc
+             )
 
     method private visit_object_key
         (_literal_loc : Loc.t) (_key : (Loc.t, Loc.t) Flow_ast.Expression.Object.Property.key) =

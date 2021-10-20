@@ -59,7 +59,8 @@ let assert_false s =
        s
        callstack
        ">>>>"
-       ">>>>");
+       ">>>>"
+    );
   failwith s
 
 let __DEBUG__ ?(s = "") f =

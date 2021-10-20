@@ -75,7 +75,8 @@ module Make (Env : Env_sig.S) = struct
   *)
   let ( catch_stmt_control_flow_exception,
         catch_stmts_control_flow_exception,
-        catch_expr_control_flow_exception ) =
+        catch_expr_control_flow_exception
+      ) =
     let catch_control_flow_exception p f =
       let depth = Env.env_depth () in
       try
@@ -100,18 +101,23 @@ module Make (Env : Env_sig.S) = struct
                   Flow_ast.Statement.Expression.expression = exp;
                   directive = None;
                   comments = None;
-                } )
-          | Stmts _ -> assert_false "Statement expected"),
+                }
+            )
+          | Stmts _ -> assert_false "Statement expected"
+          ),
       catch_control_flow_exception (function
           | Stmts stmts -> stmts
           | Stmt _
           | Expr _ ->
-            assert_false "Statement list expected"),
+            assert_false "Statement list expected"
+          ),
       catch_control_flow_exception (function
           | Expr (_, exp) -> exp
           | Stmt _
           | Stmts _ ->
-            assert_false "Expression expected") )
+            assert_false "Expression expected"
+          )
+    )
 
   (* like check_control_flow_exception, except break statements
      specifying the given label (or None) are ignored *)
@@ -149,11 +155,12 @@ module Make (Env : Env_sig.S) = struct
     and return the current one *)
   let swap_saved abnormal value =
     let old = AbnormalMap.find_opt abnormal !abnormals in
-    (if old <> value then
+    ( if old <> value then
       abnormals :=
         match value with
         | None -> AbnormalMap.remove abnormal !abnormals
-        | Some env -> AbnormalMap.add abnormal env !abnormals);
+        | Some env -> AbnormalMap.add abnormal env !abnormals
+    );
     old
 
   (** remove a given control flow directive's value,

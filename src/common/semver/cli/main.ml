@@ -26,7 +26,8 @@ let parse_args () =
       ("-l", Arg.Set loose, "Use \"loose\" parsing, allowing versions to start with \"v\"");
       ( "-r",
         Arg.String (fun r -> ranges := parse_range_arg r :: !ranges),
-        "Print versions that match this range (if passed multiple times, must pass all ranges)." );
+        "Print versions that match this range (if passed multiple times, must pass all ranges)."
+      );
       ("-v", Arg.Set verbose, "Enables verbose mode");
     ]
   in

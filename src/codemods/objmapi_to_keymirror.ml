@@ -67,10 +67,12 @@ let is_fst = function
                         bound = T.Missing _;
                         variance = None;
                         default = None;
-                      } )
+                      }
+                    )
                     :: _;
                   _;
-                } );
+                }
+              );
           params =
             ( _,
               {
@@ -86,13 +88,16 @@ let is_fst = function
                               T.Generic.id = GId.Unqualified (_, { Id.name = param_name; _ });
                               targs = None;
                               _;
-                            } );
+                            }
+                        );
                       optional = false;
-                    } )
+                    }
+                  )
                   :: _;
                 rest = None;
                 _;
-              } );
+              }
+            );
           return =
             ( _,
               T.Generic
@@ -100,9 +105,11 @@ let is_fst = function
                   T.Generic.id = GId.Unqualified (_, { Id.name = return_name; _ });
                   targs = None;
                   _;
-                } );
+                }
+            );
           _;
-        } ) ->
+        }
+    ) ->
     tparam_name = param_name && param_name = return_name
   | _ -> false
 
@@ -122,10 +129,12 @@ let is_mappable = function
                         bound = T.Missing _;
                         variance = None;
                         default = None;
-                      } )
+                      }
+                    )
                     :: _;
                   _;
-                } );
+                }
+              );
           params =
             ( _,
               {
@@ -141,16 +150,20 @@ let is_mappable = function
                               T.Generic.id = GId.Unqualified (_, { Id.name = param_name; _ });
                               targs = None;
                               _;
-                            } );
+                            }
+                        );
                       optional = false;
-                    } )
+                    }
+                  )
                   :: _;
                 rest = None;
                 _;
-              } );
+              }
+            );
           return = _;
           _;
-        } ) ->
+        }
+    ) ->
     tparam_name = param_name
   | _ -> false
 
@@ -171,7 +184,8 @@ let mapper ctx =
                 G.id = GI.Unqualified (id_loc, { I.name = "$ObjMapi"; comments = c1 });
                 targs = Some (args_loc, { TypeArgs.arguments = [x; fn]; comments = c2 });
                 comments = c3;
-              } ) ->
+              }
+          ) ->
           if is_fst fn then begin
             let extra = KeyMirrorStats.add_converted acc.Acc.stats in
             this#update_acc (fun acc -> Acc.update_stats acc extra);
@@ -182,7 +196,8 @@ let mapper ctx =
                   G.id = GI.Unqualified (id_loc, { I.name = "$KeyMirror"; comments = c1 });
                   targs = Some (args_loc, { TypeArgs.arguments = [x]; comments = c2 });
                   comments = c3;
-                } )
+                }
+            )
           end else if is_mappable fn then begin
             let extra = KeyMirrorStats.add_inconvertible acc.Acc.stats in
             this#update_acc (fun acc -> Acc.update_stats acc extra);
@@ -209,6 +224,7 @@ let mapper ctx =
 
       if prog != prog' then
         this#update_acc (fun acc ->
-            { acc with Acc.changed_set = Utils_js.FilenameSet.add file acc.Acc.changed_set });
+            { acc with Acc.changed_set = Utils_js.FilenameSet.add file acc.Acc.changed_set }
+        );
       prog'
   end

@@ -14,7 +14,8 @@ let lstat_kind file =
     try Some (lstat file).st_kind with
     | Unix_error (ENOENT, _, _) ->
       prerr_endline ("File not found: " ^ file);
-      None)
+      None
+  )
 
 module FileSet = Flow_set.Make (struct
   type t = file_kind
@@ -55,7 +56,8 @@ let fold_files
                  match lstat_kind abs with
                  | Some S_REG -> FileSet.add (File abs) acc
                  | Some S_DIR -> FileSet.add (Dir abs) acc
-                 | _ -> acc))
+                 | _ -> acc
+               ))
              FileSet.empty
       in
       FileSet.fold

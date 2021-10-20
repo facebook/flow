@@ -63,7 +63,8 @@ let message_to_short_string (c : message) : string =
       | Some json -> Printf.sprintf "id=%s" (json_to_string json)
       | None -> "id=[None]"
     in
-    Printf.sprintf "{%s%s,%s%s}" (kind_to_string c.kind) disposition method_ id)
+    Printf.sprintf "{%s%s,%s%s}" (kind_to_string c.kind) disposition method_ id
+  )
 
 let parse_message ~(json : Hh_json.json) ~(timestamp : float) : message =
   let id = J.try_get_val "id" json in
@@ -320,22 +321,24 @@ let respond
       JSON_Object
         ([("jsonrpc", JSON_String "2.0")]
         @ [("id", Base.Option.value in_response_to.id ~default:JSON_Null)]
-        @ (if is_error then
+        @ ( if is_error then
             [("error", result_or_error)]
           else
-            [("result", result_or_error)])
+            [("result", result_or_error)]
+          )
         @
         match powered_by with
         | Some powered_by -> [("powered_by", JSON_String powered_by)]
-        | None -> [])
+        | None -> []
+        )
     in
     last_sent_ref := Some response;
-    writer response)
+    writer response
+  )
 
 (* notify: sends a Notify message *)
-let notify
-    (writer : writer) ?(powered_by : string option) (method_ : string) (params : Hh_json.json) :
-    unit =
+let notify (writer : writer) ?(powered_by : string option) (method_ : string) (params : Hh_json.json)
+    : unit =
   Hh_json.(
     let message =
       JSON_Object
@@ -343,10 +346,12 @@ let notify
         @
         match powered_by with
         | Some powered_by -> [("powered_by", JSON_String powered_by)]
-        | None -> [])
+        | None -> []
+        )
     in
     last_sent_ref := Some message;
-    writer message)
+    writer message
+  )
 
 (************************************************)
 (* Output functions for request                 *)

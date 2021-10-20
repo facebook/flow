@@ -15,7 +15,8 @@ val check_once :
      * (* warnings *)
      (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list ->
     (* suppressed errors *) Profiling_js.finished ->
-    unit (* print errors *)) ->
+    unit (* print errors *)
+    ) ->
   ?focus_targets:Utils_js.FilenameSet.t ->
   Options.t ->
   Errors.ConcreteLocPrintableErrorSet.t * (* errors *) Errors.ConcreteLocPrintableErrorSet.t

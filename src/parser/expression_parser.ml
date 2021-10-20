@@ -64,7 +64,8 @@ module Expression
             MetaProperty.meta = (_, { Identifier.name = "new"; comments = _ });
             property = (_, { Identifier.name = "target"; comments = _ });
             comments = _;
-          } ) ->
+          }
+      ) ->
       false
     | ( _,
         MetaProperty
@@ -72,7 +73,8 @@ module Expression
             MetaProperty.meta = (_, { Identifier.name = "import"; comments = _ });
             property = (_, { Identifier.name = "meta"; comments = _ });
             comments = _;
-          } ) ->
+          }
+      ) ->
       false
     (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
     | (_, Array _)
@@ -249,7 +251,8 @@ module Expression
         let open Expression in
         Yield
           Yield.
-            { argument; delegate; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () })
+            { argument; delegate; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+          )
       env
 
   and is_lhs =
@@ -261,7 +264,8 @@ module Expression
             MetaProperty.meta = (_, { Identifier.name = "new"; comments = _ });
             property = (_, { Identifier.name = "target"; comments = _ });
             comments = _;
-          } ) ->
+          }
+      ) ->
       false
     | ( _,
         MetaProperty
@@ -269,7 +273,8 @@ module Expression
             MetaProperty.meta = (_, { Identifier.name = "import"; comments = _ });
             property = (_, { Identifier.name = "meta"; comments = _ });
             comments = _;
-          } ) ->
+          }
+      ) ->
       false
     (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
     | (_, Identifier _)
@@ -348,7 +353,8 @@ module Expression
         ( loc,
           let open Expression in
           Conditional
-            { Conditional.test = as_expression env expr; consequent; alternate; comments = None } )
+            { Conditional.test = as_expression env expr; consequent; alternate; comments = None }
+        )
     ) else
       expr
 
@@ -496,10 +502,11 @@ module Expression
             (is_unary, right))
           env
       in
-      (if Peek.token env = T_LESS_THAN then
+      ( if Peek.token env = T_LESS_THAN then
         match right with
         | Cover_expr (_, Expression.JSXElement _) -> error env Parse_error.AdjacentJSXElements
-        | _ -> ());
+        | _ -> ()
+      );
       match (stack, binary_op env) with
       | ([], None) -> right
       | (_, None) ->
@@ -565,7 +572,9 @@ module Expression
                   prefix = true;
                   argument;
                   comments = Flow_ast_utils.mk_comments_opt ~leading ();
-                }) ))
+                }
+            )
+          ))
     | Some operator ->
       Eat.token env;
       let (end_loc, argument) = with_loc unary env in
@@ -625,7 +634,9 @@ module Expression
                   prefix = false;
                   argument;
                   comments = Flow_ast_utils.mk_comments_opt ~trailing ();
-                }) )
+                }
+            )
+          )
 
   and left_hand_side_cover env =
     let start_loc = Peek.loc env in
@@ -657,7 +668,8 @@ module Expression
     let super =
       ( loc,
         Expression.Super
-          { Expression.Super.comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () } )
+          { Expression.Super.comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+      )
     in
     match Peek.token env with
     | T_PERIOD
@@ -760,7 +772,8 @@ module Expression
         Try.or_else env ~fallback:left (fun env ->
             let callee = left_to_callee env in
             let targs = call_type_args env in
-            arguments ?targs env callee)
+            arguments ?targs env callee
+        )
       | _ -> left
 
   and call ?(allow_optional_chain = true) env start_loc left =
@@ -862,7 +875,8 @@ module Expression
                   {
                     Expression.CallTypeArg.Implicit.comments =
                       Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-                  } )
+                  }
+                )
             | _ -> Expression.CallTypeArg.Explicit (Type._type env)
           in
           let acc = t :: acc in
@@ -950,7 +964,9 @@ module Expression
             property = PropertyExpression expr;
             comments = Flow_ast_utils.mk_comments_opt ~trailing ();
           }
+        
       in
+
       let member =
         if in_optional_chain then
           let open Expression in
@@ -1181,7 +1197,8 @@ module Expression
       Cover_expr
         ( loc,
           Expression.This
-            { Expression.This.comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () } )
+            { Expression.This.comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+        )
     | T_NUMBER { kind; raw } ->
       let value = Literal.Number (number env kind raw) in
       let trailing = Eat.trailing_comments env in
@@ -1314,7 +1331,8 @@ module Expression
               Expression.TemplateLiteral.Element.value =
                 { Expression.TemplateLiteral.Element.raw = ""; cooked = "" };
               tail = true;
-            } )
+            }
+          )
         in
         (fst expr, List.rev (imaginary_quasi :: quasis), List.rev expressions)
     in
@@ -1325,7 +1343,9 @@ module Expression
         let head =
           Ast.Expression.TemplateLiteral.
             (start_loc, { Element.value = { Element.cooked; raw }; tail = is_tail })
+          
         in
+
         if is_tail then
           (start_loc, [head], [])
         else
@@ -1336,13 +1356,15 @@ module Expression
       ( loc,
         Expression.TemplateLiteral.
           { quasis; expressions; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+        
       )
 
   and tagged_template env start_loc tag part =
     let tag = expression_remove_trailing env tag in
     let quasi = template_literal env part in
     ( Loc.btwn start_loc (fst quasi),
-      Expression.(TaggedTemplate TaggedTemplate.{ tag; quasi; comments = None }) )
+      Expression.(TaggedTemplate TaggedTemplate.{ tag; quasi; comments = None })
+    )
 
   and group env =
     let leading = Peek.comments env in
@@ -1450,7 +1472,8 @@ module Expression
       | Yield ({ Yield.comments; _ } as e) ->
         Yield { e with Yield.comments = merge_comments comments }
       (* TODO: Delete once all expressions support comment attachment *)
-      | _ -> expression )
+      | _ -> expression
+    )
 
   and array_initializer =
     let rec elements env (acc, errs) =
@@ -1477,7 +1500,9 @@ module Expression
           Expression.(
             Array.Spread
               ( loc,
-                SpreadElement.{ argument; comments = Flow_ast_utils.mk_comments_opt ~leading () } ))
+                SpreadElement.{ argument; comments = Flow_ast_utils.mk_comments_opt ~leading () }
+              )
+          )
         in
         let is_last = Peek.token env = T_RBRACKET in
         (* if this array is interpreted as a pattern, the spread becomes an AssignmentRestElement
@@ -1517,7 +1542,8 @@ module Expression
           Ast.Expression.Array.elements = elems;
           comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
         },
-        errs )
+        errs
+      )
 
   and regexp env =
     Eat.push_lex_mode env Lex_mode.REGEXP;
@@ -1546,7 +1572,8 @@ module Expression
     ( loc,
       let open Expression in
       Literal
-        { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () } )
+        { Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+    )
 
   and try_arrow_function =
     (* Certain errors (almost all errors) cause a rollback *)
@@ -1562,7 +1589,8 @@ module Expression
         | ThisParamBannedInArrowFunctions ->
           ()
         (* Everything else causes a rollback *)
-        | _ -> raise Try.Rollback)
+        | _ -> raise Try.Rollback
+      )
     in
     let concise_function_body env ~async =
       (* arrow functions can't be generators *)
@@ -1605,9 +1633,11 @@ module Expression
                             Pattern.Identifier.name;
                             annot = Ast.Type.Missing (Peek.loc_skip_lookahead env);
                             optional = false;
-                          } );
+                          }
+                      );
                     default = None;
-                  } )
+                  }
+                )
               in
               ( tparams,
                 ( loc,
@@ -1616,9 +1646,11 @@ module Expression
                     rest = None;
                     comments = None;
                     this_ = None;
-                  } ),
+                  }
+                ),
                 Ast.Type.Missing Loc.{ loc with start = loc._end },
-                None )
+                None
+              )
             else
               let params =
                 let yield = allow_yield env in
@@ -1684,7 +1716,8 @@ module Expression
               tparams;
               sig_loc;
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
-            } )
+            }
+        )
 
   and sequence =
     let rec helper acc env =

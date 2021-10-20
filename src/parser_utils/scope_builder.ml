@@ -30,7 +30,8 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
                 {
                   Call.callee = (_, Identifier (_, { Ast.Identifier.name = "eval"; comments = _ }));
                   _;
-                } ) ->
+                }
+            ) ->
             this#set_acc true;
             expr
           | _ -> super#expression expr
@@ -166,7 +167,8 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
               let scopes =
                 IMap.add child { Scope.lexical; parent; defs; locals; globals; loc } acc.scopes
               in
-              { acc with scopes });
+              { acc with scopes }
+          );
           uses <- save_uses;
           current_scope_opt <- parent;
           env <- old_env;
@@ -275,7 +277,9 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           lexical_hoist#eval
             (Base.List.map ~f:(fun ((_, { Case.consequent; _ }) as case) ->
                  let _ = lexical_hoist#statement_list consequent in
-                 case))
+                 case
+             )
+            )
             cases
         in
         let _ =
@@ -421,7 +425,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           let visit = new with_or_eval_visitor in
           visit#eval (visit#function_ loc) expr
         in
-        (if not skip_scope then
+        ( if not skip_scope then
           let open Ast.Function in
           let {
             id;
@@ -449,7 +453,8 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             (fun () ->
               run_opt this#function_identifier id;
               this#lambda params body)
-            ());
+            ()
+        );
 
         expr
 

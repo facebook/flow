@@ -53,7 +53,8 @@ class escape_finder ~gcx ~(add_output : Context.t -> ?trace:Type.trace -> Error_
                    bound_name = name;
                    bound_loc = (id :> ALoc.t);
                    is_this = name = "this";
-                 });
+                 }
+              );
           is_escaped || acc
         in
         if Generic.fold_ids ~f:err_fn ~acc:false id then

@@ -23,7 +23,8 @@ let sample_init_memory profiling =
           ~metric:("init_done." ^ metric)
           ~value:(float_of_int value)
           profiling)
-      memory_metrics)
+      memory_metrics
+  )
 
 let extract_flowlibs_or_exit options =
   match Files.default_lib_dir (Options.file_options options) with
@@ -52,7 +53,8 @@ let init ~profiling ?focus_targets genv =
   MultiWorkerLwt.set_report_canceled_callback (fun ~total ~finished ->
       Hh_logger.info "Canceling progress %d/%d" finished total;
       MonitorRPC.status_update
-        ~event:ServerStatus.(Canceling_progress { total = Some total; finished }));
+        ~event:ServerStatus.(Canceling_progress { total = Some total; finished })
+  );
 
   MonitorRPC.status_update ~event:ServerStatus.Init_start;
 
@@ -113,7 +115,8 @@ let rec idle_logging_loop =
       Profiling_js.with_profiling_lwt ~label:"Idle" ~should_print_summary (fun profiling ->
           let sampler_thread = sample_loop profiling in
           let timeout = Lwt_unix.sleep idle_period_in_seconds in
-          Lwt.pick [sampler_thread; timeout])
+          Lwt.pick [sampler_thread; timeout]
+      )
     in
     FlowEventLogger.idle_heartbeat ~idle_time:(Unix.gettimeofday () -. start_time) ~profiling;
     Lwt.async EventLoggerLwt.flush;
@@ -165,7 +168,8 @@ let rec serve ~genv ~env =
       ~default:(Lwt.return env)
       ~f:(fun workload ->
         Hh_logger.info "Running a serial workload";
-        workload env)
+        workload env
+    )
   in
   (* Flush the logs asynchronously *)
   Lwt.async EventLoggerLwt.flush;
@@ -235,7 +239,8 @@ let run ~monitor_channels ~init_id ~shared_mem_config options =
       let event =
         ServerStatus.(
           Finishing_up
-            { duration = Profiling_js.get_profiling_duration profiling; info = InitSummary })
+            { duration = Profiling_js.get_profiling_duration profiling; info = InitSummary }
+        )
       in
       MonitorRPC.status_update ~event;
 
@@ -279,10 +284,11 @@ let exit_msg_of_exception exn msg =
   Utils.spf
     "%s%s"
     msg
-    (if bt = "" then
+    ( if bt = "" then
       bt
     else
-      ":\n" ^ bt)
+      ":\n" ^ bt
+    )
 
 let run_from_daemonize ~init_id ~monitor_channels ~shared_mem_config options =
   try run ~monitor_channels ~shared_mem_config ~init_id options with
@@ -321,13 +327,14 @@ let check_once ~init_id ~shared_mem_config ~format_errors ?focus_targets options
     let should_print_summary = Options.should_profile options in
     let%lwt (profiling, (print_errors, errors, warnings, first_internal_error)) =
       Profiling_js.with_profiling_lwt ~label:"Init" ~should_print_summary (fun profiling ->
-          (if should_log_server_profiles then
+          ( if should_log_server_profiles then
             let rec sample_processor_info () =
               Flow_server_profile.processor_sample ();
               let%lwt () = Lwt_unix.sleep 1.0 in
               sample_processor_info ()
             in
-            Lwt.async sample_processor_info);
+            Lwt.async sample_processor_info
+          );
           let%lwt (env, _, first_internal_error) = program_init profiling in
           let reader = State_reader.create () in
           let (errors, warnings, suppressed_errors) =
@@ -336,16 +343,19 @@ let check_once ~init_id ~shared_mem_config ~format_errors ?focus_targets options
           let collated_errors = (errors, warnings, suppressed_errors) in
           let%lwt print_errors =
             Profiling_js.with_timer_lwt ~timer:"FormatErrors" profiling ~f:(fun () ->
-                Lwt.return (format_errors collated_errors))
+                Lwt.return (format_errors collated_errors)
+            )
           in
-          Lwt.return (print_errors, errors, warnings, first_internal_error))
+          Lwt.return (print_errors, errors, warnings, first_internal_error)
+      )
     in
     print_errors profiling;
 
     let event =
       ServerStatus.(
         Finishing_up
-          { duration = Profiling_js.get_profiling_duration profiling; info = InitSummary })
+          { duration = Profiling_js.get_profiling_duration profiling; info = InitSummary }
+      )
     in
     MonitorRPC.status_update ~event;
 

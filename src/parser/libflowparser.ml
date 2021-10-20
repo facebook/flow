@@ -68,7 +68,8 @@ let convert_options opts =
         | _ -> (opts, tokens))
       (* ignore unknown stuff for future-compatibility *)
       (Parser_env.default_parse_options, false)
-      opts)
+      opts
+  )
 
 let parse content options =
   let (parse_options, include_tokens) = convert_options options in

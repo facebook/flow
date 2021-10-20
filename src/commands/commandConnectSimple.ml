@@ -79,10 +79,12 @@ let open_connection ~timeout ~client_handshake sockaddr =
     SocketHandshake.(
       let wire : client_handshake_wire =
         ( fst client_handshake |> client_to_monitor_1__to_json |> Hh_json.json_to_string,
-          Marshal.to_string (snd client_handshake) [] )
+          Marshal.to_string (snd client_handshake) []
+        )
       in
       Marshal_tools.to_fd_with_preamble fd wire |> ignore;
-      conn)
+      conn
+    )
 
 let close_connection sockaddr =
   match SockMap.find_opt sockaddr !connections with
@@ -106,7 +108,8 @@ let get_handshake ~timeout:_ sockaddr ic oc =
       let wire = (Marshal_tools.from_fd_with_preamble fd : server_handshake_wire) in
       let server_handshake =
         ( fst wire |> Hh_json.json_of_string |> json_to__monitor_to_client_1,
-          snd wire |> Base.Option.map ~f:(fun s : monitor_to_client_2 -> Marshal.from_string s 0) )
+          snd wire |> Base.Option.map ~f:(fun s : monitor_to_client_2 -> Marshal.from_string s 0)
+        )
         (* Server invariant: it only sends us snd=Some if it knows client+server versions match *)
       in
       Ok (sockaddr, ic, oc, server_handshake)
@@ -117,7 +120,8 @@ let get_handshake ~timeout:_ sockaddr ic oc =
     | e ->
       (* Other exceptions may indicate a bad connection, so let's close it *)
       close_connection sockaddr;
-      raise e)
+      raise e
+  )
 
 let verify_handshake ~client_handshake ~server_handshake sockaddr ic =
   SocketHandshake.(
@@ -155,7 +159,8 @@ let verify_handshake ~client_handshake ~server_handshake sockaddr ic =
       else
         (* either the build ids were different, or client1 wasn't valid for server *)
         Error (Build_id_mismatch Server_exited)
-    | _ -> failwith "Monitor sent incorrect handshake")
+    | _ -> failwith "Monitor sent incorrect handshake"
+  )
 
 (* Connects to the monitor via a socket. *)
 let connect_once ~flowconfig_name ~client_handshake ~tmp_dir root =

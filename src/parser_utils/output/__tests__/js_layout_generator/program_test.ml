@@ -64,7 +64,8 @@ let tests =
                                            Loc.start = { Loc.line = 1; column = 4 };
                                            _end = { Loc.line = 1; column = 5 };
                                          }
-                                       "x");
+                                       "x"
+                                    );
                                   pretty_space;
                                   atom "=";
                                   pretty_space;
@@ -76,9 +77,12 @@ let tests =
                                         _end = { Loc.line = 1; column = 9 };
                                       }
                                     (atom "1");
-                                ]);
+                                ]
+                             );
                            atom ";";
-                         ]));
+                         ]
+                      )
+                   );
                  pretty_hardline;
                  pretty_hardline;
                  loc
@@ -122,7 +126,8 @@ let tests =
                                            Loc.start = { Loc.line = 4; column = 4 };
                                            _end = { Loc.line = 4; column = 5 };
                                          }
-                                       "y");
+                                       "y"
+                                    );
                                   pretty_space;
                                   atom "=";
                                   pretty_space;
@@ -134,13 +139,19 @@ let tests =
                                         _end = { Loc.line = 4; column = 9 };
                                       }
                                     (atom "2");
-                                ]);
+                                ]
+                             );
                            atom ";";
-                         ]));
-               ]))
+                         ]
+                      )
+                   );
+               ]
+            )
+        )
         layout;
       assert_output ~ctxt "var x=1;var y=2;" layout;
-      assert_output ~ctxt ~pretty:true "var x = 1;\n\nvar y = 2;" layout );
+      assert_output ~ctxt ~pretty:true "var x = 1;\n\nvar y = 2;" layout
+    );
     ( "program_artifact_newline" >:: fun ctxt ->
       let ast = Ast_builder.mk_program [S.expression (E.identifier "x")] in
       let layout =
@@ -155,10 +166,13 @@ let tests =
                  group [loc (fused [loc (id "x"); atom ";"])];
                  hardline;
                  atom "/* @artifact abc123 */";
-               ]))
+               ]
+            )
+        )
         layout;
       assert_output ~ctxt "x;\n/* @artifact abc123 */" layout;
-      assert_output ~ctxt ~pretty:true "x;\n/* @artifact abc123 */" layout );
+      assert_output ~ctxt ~pretty:true "x;\n/* @artifact abc123 */" layout
+    );
     ( "program_trailing_semicolon" >:: fun ctxt ->
       let ast =
         Ast_builder.mk_program [S.expression (E.identifier "x"); S.expression (E.identifier "y")]
@@ -173,10 +187,13 @@ let tests =
                  loc (fused [loc (id "x"); atom ";"]);
                  pretty_hardline;
                  loc (fused [loc (id "y"); atom ";"]);
-               ]))
+               ]
+            )
+        )
         layout;
       assert_output ~ctxt "x;y;" layout;
-      assert_output ~ctxt ~pretty:true "x;\ny;" layout );
+      assert_output ~ctxt ~pretty:true "x;\ny;" layout
+    );
     ( "preserve_docblock" >:: fun ctxt ->
       let c_loc = Loc.{ none with start = { line = 1; column = 1 } } in
       let s_loc = Loc.{ none with start = { line = 2; column = 1 } } in
@@ -196,7 +213,9 @@ let tests =
                    loc ~loc:c_loc (fused [atom "//"; atom " hello world"; hardline]);
                    pretty_hardline;
                    loc ~loc:s_loc (fused [loc (id "x"); atom ";"]);
-                 ]))
+                 ]
+              )
+          )
           layout;
         assert_output ~ctxt "// hello world\nx;" layout;
 
@@ -210,5 +229,6 @@ let tests =
         L.(program (group [loc ~loc:s_loc (fused [loc (id "x"); atom ";"])]))
         layout;
       assert_output ~ctxt "x;" layout;
-      assert_output ~ctxt ~pretty:true "x;" layout );
+      assert_output ~ctxt ~pretty:true "x;" layout
+    );
   ]

@@ -86,7 +86,8 @@ let mk_next ~intermediate_result_callback ~max_size ~workers ~files =
     let (remaining_files, remaining_count) = !todo in
     todo :=
       ( List.rev_append unfinished_files remaining_files,
-        remaining_count + List.length unfinished_files );
+        remaining_count + List.length unfinished_files
+      );
     finished_count := !finished_count + List.length finished_file_accs;
     status_update ();
     List.rev_append finished_file_accs acc

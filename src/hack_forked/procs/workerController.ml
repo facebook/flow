@@ -200,10 +200,11 @@ let register_entry_point ~restore =
   let name = Printf.sprintf "worker_%d" !entry_counter in
   Daemon.register_entry_point
     name
-    (if Sys.win32 then
+    ( if Sys.win32 then
       win32_worker_main restore
     else
-      unix_worker_main restore)
+      unix_worker_main restore
+    )
 
 (**************************************************************************
  * Creates a pool of workers.

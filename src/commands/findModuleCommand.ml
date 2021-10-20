@@ -30,7 +30,8 @@ let spec =
         |> from_flag
         |> wait_for_recheck_flag
         |> anon "module" (required string)
-        |> anon "file" (required string));
+        |> anon "file" (required string)
+      );
   }
 
 let main base_flags option_values json pretty root strip_root wait_for_recheck moduleref filename ()
@@ -62,7 +63,8 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck m
   if json || pretty then
     Hh_json.(
       let json = JSON_Object [("file", JSON_String result)] in
-      print_json_endline ~pretty json)
+      print_json_endline ~pretty json
+    )
   else
     Printf.printf "%s\n%!" result
 

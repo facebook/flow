@@ -18,7 +18,8 @@ type t = {
 let create ~source_maps () =
   let (sourcemap, names) =
     Base.Option.value_map source_maps ~default:(None, None) ~f:(fun { Source_map_config.names } ->
-        (Some (Sourcemap.create ()), Some names))
+        (Some (Sourcemap.create ()), Some names)
+    )
   in
   {
     buffer = Buffer.create 127;
@@ -76,8 +77,11 @@ let add_string ?name str src =
                 source;
                 original_loc = { line = loc.Loc.start.Loc.line; col = loc.Loc.start.Loc.column };
               }
+            
           in
-          Sourcemap.add_mapping ~original ~generated:src.pos sourcemap)
+
+          Sourcemap.add_mapping ~original ~generated:src.pos sourcemap
+    )
   in
   let pos = pos_add_string src.pos str in
   { src with sourcemap; pos }
@@ -91,7 +95,9 @@ let add_identifier loc str src =
             if name = str then
               None
             else
-              Some name))
+              Some name
+        )
+    )
   in
   src |> push_loc loc |> add_string ?name str |> pop_loc
 

@@ -150,7 +150,8 @@ module Make (Ord : Map.OrderedType) : S with type key = Ord.t = struct
            Format.fprintf fmt "@]";
            true)
          false
-         bindings);
+         bindings
+      );
     (match bindings with
     | [] -> ()
     | _ -> Format.fprintf fmt " ");

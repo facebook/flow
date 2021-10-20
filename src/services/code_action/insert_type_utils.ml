@@ -522,9 +522,11 @@ module Validator = struct
           Ty.explicit_any
         | Ty.Any
             (Ty.Unsound
-              (( Ty.Constructor | Ty.DummyStatic | Ty.Exports | Ty.FunctionPrototype
-               | Ty.InferenceHooks | Ty.InstanceOfRefinement | Ty.Merged | Ty.ResolveSpread
-               | Ty.Unchecked | Ty.Unimplemented | Ty.UnresolvedType | Ty.WeakContext ) as kind)) ->
+              ( ( Ty.Constructor | Ty.DummyStatic | Ty.Exports | Ty.FunctionPrototype
+                | Ty.InferenceHooks | Ty.InstanceOfRefinement | Ty.Merged | Ty.ResolveSpread
+                | Ty.Unchecked | Ty.Unimplemented | Ty.UnresolvedType | Ty.WeakContext ) as kind
+              )
+              ) ->
           env := Any_Unsound kind :: !env;
           Ty.explicit_any
         | Ty.Utility (Ty.ReactElementConfigType (Ty.Fun _)) ->
@@ -592,7 +594,8 @@ class mapper_type_printing_hardcoded_fixes =
                     Param.name = Some (Flow_ast_utils.ident_of_source (loc, Printf.sprintf "_%d" c));
                     annot;
                     optional;
-                  } )
+                  }
+                )
               in
               (normalized_param :: p, c + 1)
             | _ -> (param :: p, c + 1))
@@ -633,18 +636,22 @@ class patch_up_react_mapper ?(imports_react = false) () =
        * it is imported with the same mechanism we import other Remote symbols.
        * Otherwise, we refer to these names as 'React.NAME'. *)
       | Ty.Generic
-          ( ({
-               Ty.sym_name =
-                 Reason.OrdinaryName
-                   (( "AbstractComponent" | "ChildrenArray" | "ComponentType" | "Config" | "Context"
-                    | "Element" | "ElementConfig" | "ElementProps" | "ElementRef" | "ElementType"
-                    | "Key" | "Node" | "Portal" | "Ref" | "StatelessFunctionalComponent" ) as name);
-               sym_provenance = Ty_symbol.Library { Ty_symbol.imported_as = None };
-               sym_def_loc;
-               _;
-             } as symbol),
+          ( ( {
+                Ty.sym_name =
+                  Reason.OrdinaryName
+                    ( ( "AbstractComponent" | "ChildrenArray" | "ComponentType" | "Config"
+                      | "Context" | "Element" | "ElementConfig" | "ElementProps" | "ElementRef"
+                      | "ElementType" | "Key" | "Node" | "Portal" | "Ref"
+                      | "StatelessFunctionalComponent" ) as name
+                    );
+                sym_provenance = Ty_symbol.Library { Ty_symbol.imported_as = None };
+                sym_def_loc;
+                _;
+              } as symbol
+            ),
             kind,
-            args_opt )
+            args_opt
+          )
         when is_react_loc sym_def_loc ->
         let args_opt = Flow_ast_mapper.map_opt (ListUtils.ident_map (this#on_t loc)) args_opt in
         let symbol =
@@ -718,7 +725,8 @@ class stylize_ty_mapper ?(imports_react = false) () =
         match reverse_append_all [others; strings; nums; bools] with
         | [] -> failwith "Impossible! this only removes elements when others are added/present"
         | [t] -> super#on_t loc t
-        | t1 :: t2 :: ts -> super#on_Union loc (Union (t1, t2, ts)) t1 t2 ts)
+        | t1 :: t2 :: ts -> super#on_Union loc (Union (t1, t2, ts)) t1 t2 ts
+      )
   end
 
 (* Returns true if the location given a zero width location. *)

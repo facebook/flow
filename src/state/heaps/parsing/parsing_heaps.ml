@@ -133,7 +133,8 @@ let write_type_sig docblock locs type_sig =
         local_defs
         remote_refs
         pattern_defs
-        patterns)
+        patterns
+  )
 
 let read_docblock file_addr =
   let open Heap in
@@ -308,7 +309,8 @@ module ParsingHeaps = struct
         ASTHeap.add file (compactify_loc ast);
         ExportsHeap.add file exports;
         FileSigHeap.add file file_sig;
-        TypeSigHeap.add file (write_type_sig info locs type_sig))
+        TypeSigHeap.add file (write_type_sig info locs type_sig)
+    )
 
   let oldify_batch files =
     WorkerCancel.with_no_cancellations (fun () ->
@@ -317,7 +319,8 @@ module ParsingHeaps = struct
         FilenameSet.iter ALocTableCache.remove files;
         ExportsHeap.oldify_batch files;
         FileSigHeap.oldify_batch files;
-        FileHashHeap.oldify_batch files)
+        FileHashHeap.oldify_batch files
+    )
 
   let remove_old_batch files =
     WorkerCancel.with_no_cancellations (fun () ->
@@ -325,7 +328,8 @@ module ParsingHeaps = struct
         TypeSigHeap.remove_old_batch files;
         ExportsHeap.remove_old_batch files;
         FileSigHeap.remove_old_batch files;
-        FileHashHeap.remove_old_batch files)
+        FileHashHeap.remove_old_batch files
+    )
 
   let revive_batch files =
     WorkerCancel.with_no_cancellations (fun () ->
@@ -334,7 +338,8 @@ module ParsingHeaps = struct
         FilenameSet.iter ALocTableCache.remove files;
         ExportsHeap.revive_batch files;
         FileSigHeap.revive_batch files;
-        FileHashHeap.revive_batch files)
+        FileHashHeap.revive_batch files
+    )
 end
 
 module type READER = sig
@@ -385,7 +390,8 @@ let loc_of_aloc ~get_aloc_table_unsafe ~reader aloc =
          | None -> failwith "Expected `aloc` to have a `source`"
          | Some x -> x
        in
-       get_aloc_table_unsafe ~reader source)
+       get_aloc_table_unsafe ~reader source
+      )
   in
   ALoc.to_loc table aloc
 
@@ -531,14 +537,16 @@ end = struct
     WorkerCancel.with_no_cancellations (fun () ->
         Hh_logger.debug "Committing parsing heaps";
         ParsingHeaps.remove_old_batch oldified_files;
-        currently_oldified_files := None);
+        currently_oldified_files := None
+    );
     Lwt.return_unit
 
   let rollback oldified_files =
     WorkerCancel.with_no_cancellations (fun () ->
         Hh_logger.debug "Rolling back parsing heaps";
         ParsingHeaps.revive_batch oldified_files;
-        currently_oldified_files := None);
+        currently_oldified_files := None
+    );
     Lwt.return_unit
 
   (* Ideally we'd assert that file was oldified and not revived, but it's too expensive to pass the
@@ -561,14 +569,16 @@ end = struct
         let rollback () = rollback !master_mutator in
         Transaction.add ~singleton:"Reparse" ~commit ~rollback transaction;
 
-        (master_mutator, worker_mutator))
+        (master_mutator, worker_mutator)
+    )
 
   let revive_files oldified_files files =
     WorkerCancel.with_no_cancellations (fun () ->
         (* Every file in files should be in the oldified set *)
         assert (FilenameSet.is_empty (FilenameSet.diff files !oldified_files));
         oldified_files := FilenameSet.diff !oldified_files files;
-        ParsingHeaps.revive_batch files)
+        ParsingHeaps.revive_batch files
+    )
 end
 
 (* This peaks at the Reparse_mutator's state and uses that to determine whether to read from the

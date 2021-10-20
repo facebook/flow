@@ -302,7 +302,8 @@ end = struct
             (* This produces a version of the existing overall env with a new set of entries, replacing
                the entries returned above. *)
             List.append (List.rev rev_head) (Nel.to_list ({ hd with entries }, tl))
-            |> Nel.of_list_exn )
+            |> Nel.of_list_exn
+        )
       | (hd :: tl, _) -> loop tl (hd :: rev_head)
       | ([], _) -> env_invariant_violated "No valid scope for variable"
     in
@@ -321,14 +322,16 @@ end = struct
             List.append
               (List.rev rev_head)
               (Nel.to_list ({ hd with entries = SMap.add var entry entries }, tl))
-            |> Nel.of_list_exn )
+            |> Nel.of_list_exn
+        )
       (* If we don't see the variable in the root var scope, it's a global--create a dummy entry for it *)
       | [({ entries; kind = Var; _ } as hd)] ->
         ( empty_entry var,
           var_scopes_off,
           fun entry ->
             List.append (List.rev rev_head) [{ hd with entries = SMap.add var entry entries }]
-            |> Nel.of_list_exn )
+            |> Nel.of_list_exn
+        )
       | [{ kind = Lex; _ }] -> env_invariant_violated "Root environment should always be Var"
       | ({ kind = Var; _ } as hd) :: tl -> loop (var_scopes_off + 1) tl (hd :: rev_head)
       | hd :: tl -> loop var_scopes_off tl (hd :: rev_head)
@@ -383,7 +386,8 @@ end = struct
               provider_locs = providers2;
               declare_locs = declares2;
               def_locs = defs2;
-            } ) ->
+            }
+          ) ->
           assert (name1 = name2);
           {
             entry_id;
@@ -408,7 +412,8 @@ end = struct
       else
         match (scope1, scope2) with
         | ( { kind = kind1; entries = entries1; children = children1; providers = providers1 },
-            { kind = kind2; entries = entries2; children = children2; providers = providers2 } ) ->
+            { kind = kind2; entries = entries2; children = children2; providers = providers2 }
+          ) ->
           assert (kind1 = kind2);
           {
             kind = kind1;
@@ -431,14 +436,16 @@ end = struct
   let exit_lex_child loc env =
     match env with
     | ( ({ providers = pchild; entries; _ } as child),
-        ({ children; providers = pparent; _ } as parent) :: rest ) ->
+        ({ children; providers = pparent; _ } as parent) :: rest
+      ) ->
       (* For all variables that aren't native to the child scope, update the parent scope's
          provider_info with whatever providing information the child scope contains,
          coarsening the relative_locs to point at the child scope as a whole. *)
       let pchild_promoted =
         SMap.filter (fun k _ -> not (SMap.mem k entries)) pchild
         |> SMap.map (fun { relative_locs = _; exact_locs } ->
-               { relative_locs = L.LSet.singleton loc; exact_locs })
+               { relative_locs = L.LSet.singleton loc; exact_locs }
+           )
       in
       ( {
           parent with
@@ -446,7 +453,8 @@ end = struct
           providers =
             SMap.union ~combine:(fun _ p1 p2 -> Some (join_providers p1 p2)) pparent pchild_promoted;
         },
-        rest )
+        rest
+      )
     | (_, []) -> env_invariant_violated "Popping to empty stack"
 
   (* Root visitor. Uses the `enter_lex_child` function parameter to manipulate the environment when it dives into a scope,
@@ -591,7 +599,8 @@ end = struct
               let (case', acc_env) =
                 this#accumulate_branch_env (env0, cx) (fun () -> this#switch_case case) acc_env
               in
-              (case' :: acc_cases, acc_env))
+              (case' :: acc_cases, acc_env)
+          )
         in
         let _cases' = List.rev rev_cases' in
         this#set_acc (env', cx);
@@ -621,7 +630,8 @@ end = struct
               match finalizer with
               | Some (finalizer_loc, block) ->
                 id_loc this#block finalizer_loc block finalizer (fun block ->
-                    Some (finalizer_loc, block))
+                    Some (finalizer_loc, block)
+                )
               | None -> finalizer)
             env'
         in
@@ -920,7 +930,8 @@ end = struct
         let (env, ({ null_assign } as cx)) = this#acc in
         let ( ({ state = cur_state; provider_locs; def_locs; _ } as entry),
               var_scopes_off,
-              reconstruct_env ) =
+              reconstruct_env
+            ) =
           find_entry_for_existing_variable var env
         in
         let write_state =
@@ -1053,12 +1064,16 @@ end = struct
                    t
                    (L.LSet.elements relative_locs
                    |> Base.List.map ~f:(L.debug_to_string ~include_source:false)
-                   |> String.concat "), (")
+                   |> String.concat "), ("
+                   )
                    t
                    (L.LSet.elements exact_locs
                    |> Base.List.map ~f:(L.debug_to_string ~include_source:false)
-                   |> String.concat "), ("))
-          |> String.concat "\n")
+                   |> String.concat "), ("
+                   )
+             )
+          |> String.concat "\n"
+          )
       in
       spf
         "%s%schildren:\n%s"
@@ -1066,8 +1081,10 @@ end = struct
         t
         (L.LMap.bindings children
         |> Base.List.map ~f:(fun (loc, scope) ->
-               print_rec (L.debug_to_string ~include_source:false loc) (tabs + 1) scope)
-        |> String.concat "\n")
+               print_rec (L.debug_to_string ~include_source:false loc) (tabs + 1) scope
+           )
+        |> String.concat "\n"
+        )
     in
     match env with
     | (top, []) -> print_rec "toplevel" 0 top

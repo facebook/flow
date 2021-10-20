@@ -234,4 +234,5 @@ let json_props_of_t ?msg t =
       [("code", JSON_Number (error_code t |> string_of_int)); ("reason", JSON_String (to_string t))]
       @ Base.Option.value_map msg ~default:[] ~f:(fun msg -> [("msg", JSON_String msg)])
     in
-    [("flowVersion", JSON_String Flow_version.version); ("exit", JSON_Object exit_props)])
+    [("flowVersion", JSON_String Flow_version.version); ("exit", JSON_Object exit_props)]
+  )

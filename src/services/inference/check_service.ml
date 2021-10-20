@@ -66,7 +66,8 @@ let copier =
                       match ts with
                       | [t] -> t
                       | t0 :: t1 :: ts -> UnionT (r, UnionRep.make t0 t1 ts)
-                      | [] -> Unsoundness.merged_any r)
+                      | [] -> Unsoundness.merged_any r
+                     )
                  | Resolved (_, t) -> lazy t
                  | FullyResolved (_, t) -> t
                in
@@ -74,9 +75,11 @@ let copier =
                  lazy
                    (let t = Lazy.force t in
                     let (_ : Context.t) = self#type_ src_cx pole dst_cx t in
-                    t)
+                    t
+                   )
                in
-               FullyResolved (unknown_use, t))
+               FullyResolved (unknown_use, t)
+              )
           in
           let node = Root { rank = 0; constraints } in
           Context.set_graph dst_cx (IMap.add id node dst_graph);
@@ -183,7 +186,8 @@ module ConsGen : Type_sig_merge.CONS_GEN = struct
         (let node = new_unresolved_root () in
          Context.add_tvar cx id node;
          f tvar;
-         Lazy.force (Context.find_graph cx id))
+         Lazy.force (Context.find_graph cx id)
+        )
     in
     Context.add_tvar cx id (Root { rank = 0; constraints });
     tvar
@@ -205,11 +209,13 @@ module ConsGen : Type_sig_merge.CONS_GEN = struct
 
   let get_prop cx use_op reason propname t =
     Tvar.mk_no_wrap_where cx reason (fun tout ->
-        Flow_js.flow cx (t, Type.GetPropT (use_op, reason, Type.Named (reason, propname), tout)))
+        Flow_js.flow cx (t, Type.GetPropT (use_op, reason, Type.Named (reason, propname), tout))
+    )
 
   let get_elem cx use_op reason ~key t =
     Tvar.mk_no_wrap_where cx reason (fun tout ->
-        Flow_js.flow cx (t, Type.GetElemT (use_op, reason, key, tout)))
+        Flow_js.flow cx (t, Type.GetElemT (use_op, reason, key, tout))
+    )
 
   let qualify_type cx use_op reason (reason_name, name) t =
     let open Type in
@@ -229,43 +235,53 @@ module ConsGen : Type_sig_merge.CONS_GEN = struct
 
   let cjs_require cx module_t reason is_strict =
     Tvar.mk_where cx reason (fun tout ->
-        Flow_js.flow cx (module_t, Type.CJSRequireT (reason, tout, is_strict)))
+        Flow_js.flow cx (module_t, Type.CJSRequireT (reason, tout, is_strict))
+    )
 
   let export_named cx reason kind named module_t =
     Tvar.mk_where cx reason (fun tout ->
-        Flow_js.flow cx (module_t, Type.ExportNamedT (reason, named, kind, tout)))
+        Flow_js.flow cx (module_t, Type.ExportNamedT (reason, named, kind, tout))
+    )
 
   let cjs_extract_named_exports cx reason local_module t =
     Tvar.mk_where cx reason (fun tout ->
-        Flow_js.flow cx (t, Type.CJSExtractNamedExportsT (reason, local_module, tout)))
+        Flow_js.flow cx (t, Type.CJSExtractNamedExportsT (reason, local_module, tout))
+    )
 
   let import_default cx reason kind local mref is_strict t =
     Tvar.mk_where cx reason (fun tout ->
-        Flow_js.flow cx (t, Type.ImportDefaultT (reason, kind, (local, mref), tout, is_strict)))
+        Flow_js.flow cx (t, Type.ImportDefaultT (reason, kind, (local, mref), tout, is_strict))
+    )
 
   let import_named cx reason kind remote mref is_strict module_t =
     Tvar.mk_where cx reason (fun tout ->
-        Flow_js.flow cx (module_t, Type.ImportNamedT (reason, kind, remote, mref, tout, is_strict)))
+        Flow_js.flow cx (module_t, Type.ImportNamedT (reason, kind, remote, mref, tout, is_strict))
+    )
 
   let import_ns cx reason is_strict module_t =
     Tvar.mk_where cx reason (fun tout ->
-        Flow_js.flow cx (module_t, Type.ImportModuleNsT (reason, tout, is_strict)))
+        Flow_js.flow cx (module_t, Type.ImportModuleNsT (reason, tout, is_strict))
+    )
 
   let import_typeof cx reason export_name ns_t =
     Tvar.mk_where cx reason (fun tout ->
-        Flow_js.flow cx (ns_t, Type.ImportTypeofT (reason, export_name, tout)))
+        Flow_js.flow cx (ns_t, Type.ImportTypeofT (reason, export_name, tout))
+    )
 
   let specialize cx t use_op reason_op reason_tapp ts =
     Tvar.mk_derivable_where cx reason_op (fun tout ->
-        Flow_js.flow cx (t, Type.SpecializeT (use_op, reason_op, reason_tapp, None, ts, tout)))
+        Flow_js.flow cx (t, Type.SpecializeT (use_op, reason_op, reason_tapp, None, ts, tout))
+    )
 
   let copy_named_exports cx ~from_ns reason ~module_t =
     Tvar.mk_where cx reason (fun tout ->
-        Flow_js.flow cx (from_ns, Type.CopyNamedExportsT (reason, module_t, tout)))
+        Flow_js.flow cx (from_ns, Type.CopyNamedExportsT (reason, module_t, tout))
+    )
 
   let copy_type_exports cx ~from_ns reason ~module_t =
     Tvar.mk_where cx reason (fun tout ->
-        Flow_js.flow cx (from_ns, Type.CopyTypeExportsT (reason, module_t, tout)))
+        Flow_js.flow cx (from_ns, Type.CopyTypeExportsT (reason, module_t, tout))
+    )
 
   let unary_minus cx reason t =
     Tvar.mk_where cx reason (fun tout -> Flow_js.flow cx (t, Type.UnaryMinusT (reason, tout)))
@@ -281,18 +297,21 @@ module ConsGen : Type_sig_merge.CONS_GEN = struct
     Tvar.mk_where cx reason (fun tout ->
         Flow_js.flow
           cx
-          (t, Type.(ObjKitT (use_op, reason, tool, Object.Spread (target, state), tout))))
+          (t, Type.(ObjKitT (use_op, reason, tool, Object.Spread (target, state), tout)))
+    )
 
   let obj_test_proto cx reason l =
     Tvar.mk_where cx reason (fun proto -> Flow_js.flow cx (l, Type.ObjTestProtoT (reason, proto)))
 
   let obj_rest cx reason xs t =
     Tvar.mk_where cx reason (fun tout ->
-        Flow_js.flow cx (t, Type.ObjRestT (reason, xs, tout, Reason.mk_id ())))
+        Flow_js.flow cx (t, Type.ObjRestT (reason, xs, tout, Reason.mk_id ()))
+    )
 
   let arr_rest cx use_op reason i t =
     Tvar.mk_where cx reason (fun tout ->
-        Flow_js.flow cx (t, Type.ArrRestT (use_op, reason, i, tout)))
+        Flow_js.flow cx (t, Type.ArrRestT (use_op, reason, i, tout))
+    )
 end
 
 [@@@warning "-60"]
@@ -309,10 +328,11 @@ module Flow_js = struct end
  * files. *)
 let mk_check_file ~options ~reader ~cache () =
   let open Type_sig_collections in
-  let module ConsGen = (val if Options.new_merge options then
-                              (module Annotation_inference.ConsGen)
-                            else
-                              (module ConsGen) : Type_sig_merge.CONS_GEN)
+  let module ConsGen = ( val if Options.new_merge options then
+                               (module Annotation_inference.ConsGen)
+                             else
+                               (module ConsGen) : Type_sig_merge.CONS_GEN
+                       )
   in
   let module Merge = Type_sig_merge.Make (ConsGen) in
   let module Pack = Type_sig_pack in
@@ -402,21 +422,24 @@ let mk_check_file ~options ~reader ~cache () =
           (Heap.read_type_export addr
           |> deserialize
           |> Pack.map_type_export aloc
-          |> Merge.merge_type_export (Lazy.force file_rec) reason)
+          |> Merge.merge_type_export (Lazy.force file_rec) reason
+          )
       in
       let cjs_exports addr =
         lazy
           (Heap.read_cjs_exports addr
           |> deserialize
           |> Pack.map_packed aloc
-          |> Merge.merge (Lazy.force file_rec))
+          |> Merge.merge (Lazy.force file_rec)
+          )
       in
       let es_export addr =
         lazy
           (Heap.read_es_export addr
           |> deserialize
           |> Pack.map_export aloc
-          |> Merge.merge_export (Lazy.force file_rec))
+          |> Merge.merge_export (Lazy.force file_rec)
+          )
       in
       let cjs_exports addr =
         let (Pack.CJSModuleInfo { type_export_keys; type_stars; strict }) =
@@ -468,7 +491,8 @@ let mk_check_file ~options ~reader ~cache () =
         lazy
           (Heap.file_module file_addr
           |> Heap.read_dyn_module cjs_exports es_exports
-          |> Merge.merge_exports (Lazy.force file_rec) reason)
+          |> Merge.merge_exports (Lazy.force file_rec) reason
+          )
       in
       let t = ConsGen.mk_sig_tvar cx reason resolved in
       (fun () -> t)
@@ -483,7 +507,8 @@ let mk_check_file ~options ~reader ~cache () =
            let reason = Type_sig_merge.def_reason def in
            let resolved = lazy (Merge.merge_def (Lazy.force file_rec) reason def) in
            let t = ConsGen.mk_sig_tvar cx reason resolved in
-           (loc, name, t))
+           (loc, name, t)
+          )
       in
       (fun () -> Lazy.force thunk)
     in
@@ -497,7 +522,8 @@ let mk_check_file ~options ~reader ~cache () =
            let reason = Type_sig_merge.remote_ref_reason remote_ref in
            let resolved = lazy (Merge.merge_remote_ref (Lazy.force file_rec) reason remote_ref) in
            let t = ConsGen.mk_sig_tvar cx reason resolved in
-           (loc, name, t))
+           (loc, name, t)
+          )
       in
       (fun () -> Lazy.force thunk)
     in
@@ -507,7 +533,8 @@ let mk_check_file ~options ~reader ~cache () =
         (Heap.read_pattern_def addr
         |> deserialize
         |> Pack.map_packed aloc
-        |> Merge.merge (Lazy.force file_rec))
+        |> Merge.merge (Lazy.force file_rec)
+        )
     in
 
     let pattern file_rec addr =
@@ -515,7 +542,8 @@ let mk_check_file ~options ~reader ~cache () =
         (Heap.read_pattern addr
         |> deserialize
         |> Pack.map_pattern aloc
-        |> Merge.merge_pattern (Lazy.force file_rec))
+        |> Merge.merge_pattern (Lazy.force file_rec)
+        )
     in
 
     let local_defs file_rec =

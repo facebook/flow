@@ -169,15 +169,11 @@ module Make_asserter (Comp : Comparator) = struct
     match (exp, actual) with
     | (None, None) -> ()
     | (None, Some v) ->
-      Printf.eprintf
-        "assert_option_equals failed. Expected None but got Some(%s)"
-        (Comp.to_string v);
+      Printf.eprintf "assert_option_equals failed. Expected None but got Some(%s)" (Comp.to_string v);
       Printf.eprintf "Assertion msg: %s" failure_msg;
       assert false
     | (Some v, None) ->
-      Printf.eprintf
-        "assert_option_equals failed. Expected Some(%s) but got None"
-        (Comp.to_string v);
+      Printf.eprintf "assert_option_equals failed. Expected Some(%s) but got None" (Comp.to_string v);
       Printf.eprintf "Assertion msg: %s" failure_msg;
       assert false
     | (Some exp, Some actual) -> assert_equals exp actual failure_msg

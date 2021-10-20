@@ -44,7 +44,9 @@ let parse contents =
           esproposal_class_static_fields = true;
           esproposal_export_star_as = true;
         }
+      
   in
+
   let (ast, _errors) = Parser_flow.program ~parse_options contents in
   ast
 

@@ -141,7 +141,8 @@ let warning_flags prev =
          "--max-warnings"
          int
          ~doc:
-           "Warnings above this number will cause a nonzero exit code (implies --include-warnings)")
+           "Warnings above this number will cause a nonzero exit code (implies --include-warnings)"
+  )
 
 let profile_flag prev =
   let open CommandSpec.ArgSpec in
@@ -156,7 +157,9 @@ let error_flags prev =
          (required
             ~default:Tty.Color_Auto
             (enum
-               [("never", Tty.Color_Never); ("always", Tty.Color_Always); ("auto", Tty.Color_Auto)]))
+               [("never", Tty.Color_Never); ("always", Tty.Color_Always); ("auto", Tty.Color_Auto)]
+            )
+         )
          ~doc:"Display terminal output in color. never, always, auto (default: auto)"
     |> warning_flags
     |> flag "--one-line" no_arg ~doc:"Escapes newlines so that each error prints on one line"
@@ -176,7 +179,8 @@ let error_flags prev =
          "--message-width"
          int
          ~doc:
-           "Sets the width of messages but not code snippets (defaults to the smaller of 120 or the terminal width)")
+           "Sets the width of messages but not code snippets (defaults to the smaller of 120 or the terminal width)"
+  )
 
 let collect_json_flags main json pretty =
   if json || pretty then Exit.set_json_mode ~pretty;
@@ -187,7 +191,8 @@ let json_flags prev =
     prev
     |> collect collect_json_flags
     |> flag "--json" no_arg ~doc:"Output results in JSON format"
-    |> flag "--pretty" no_arg ~doc:"Pretty-print JSON output (implies --json)")
+    |> flag "--pretty" no_arg ~doc:"Pretty-print JSON output (implies --json)"
+  )
 
 let temp_dir_flag prev =
   CommandSpec.ArgSpec.(
@@ -196,7 +201,8 @@ let temp_dir_flag prev =
          "--temp-dir"
          string
          ~doc:"Directory in which to store temp files (default: FLOW_TEMP_DIR, or /tmp/flow/)"
-         ~env:"FLOW_TEMP_DIR")
+         ~env:"FLOW_TEMP_DIR"
+  )
 
 let collect_lazy_flags main lazy_ lazy_mode =
   let lazy_mode =
@@ -223,9 +229,11 @@ let lazy_flags prev =
               ("fs", FlowConfig.Lazy);
               ("watchman", FlowConfig.Watchman_DEPRECATED);
               ("none", FlowConfig.Non_lazy);
-            ])
+            ]
+         )
          ~doc:"If true, only check changed files"
-         ~env:"FLOW_LAZY_MODE")
+         ~env:"FLOW_LAZY_MODE"
+  )
 
 let input_file_flag verb prev =
   CommandSpec.ArgSpec.(
@@ -237,7 +245,9 @@ let input_file_flag verb prev =
            ("File containing list of files to "
            ^ verb
            ^ ", one per line. If -, list of files is "
-           ^ "read from the standard input."))
+           ^ "read from the standard input."
+           )
+  )
 
 let verbose_focus_flag prev =
   CommandSpec.ArgSpec.(
@@ -245,7 +255,8 @@ let verbose_focus_flag prev =
     |> flag
          "--verbose-focus"
          no_arg
-         ~doc:"Print verbose output about target file only (implies --verbose)")
+         ~doc:"Print verbose output about target file only (implies --verbose)"
+  )
 
 type shared_mem_params = {
   shm_heap_size: int option;
@@ -274,7 +285,8 @@ let shm_flags prev =
     |> flag
          "--sharedmemory-log-level"
          int
-         ~doc:"The logging level for shared memory statistics. 0=none, 1=some")
+         ~doc:"The logging level for shared memory statistics. 0=none, 1=some"
+  )
 
 let shm_config shm_flags flowconfig =
   let heap_size =
@@ -305,7 +317,8 @@ let from_flag =
           in
           (match parent_cmdline with
           | Ok cmdline -> Some ("parent cmdline: " ^ cmdline)
-          | Error _ -> None))
+          | Error _ -> None)
+        )
     in
     FlowEventLogger.set_from from;
     main
@@ -317,7 +330,8 @@ let from_flag =
       |> flag
            "--from"
            (optional string)
-           ~doc:"Specify who is calling this CLI command (used by logging)")
+           ~doc:"Specify who is calling this CLI command (used by logging)"
+    )
 
 let strip_root_flag prev =
   CommandSpec.ArgSpec.(prev |> flag "--strip-root" no_arg ~doc:"Print paths without the root")
@@ -330,7 +344,9 @@ let wait_for_recheck_flag prev =
          (optional bool)
          ~doc:
            ("If the server is rechecking, wait for it to complete rather than run sooner using "
-           ^ "outdated data"))
+           ^ "outdated data"
+           )
+  )
 
 let path_flag prev =
   CommandSpec.ArgSpec.(
@@ -338,7 +354,8 @@ let path_flag prev =
     |> flag
          "--path"
          (optional string)
-         ~doc:"Specify (fake) path to file when reading data from stdin")
+         ~doc:"Specify (fake) path to file when reading data from stdin"
+  )
 
 let autostop_flag prev =
   CommandSpec.ArgSpec.(prev |> flag "--autostop" no_arg ~doc:"" (* empty to omit it from --help *))
@@ -350,10 +367,11 @@ let verbose_flags =
         Some
           {
             Verbose.indent =
-              (if indent then
+              ( if indent then
                 2
               else
-                0);
+                0
+              );
             depth =
               (match depth with
               | Some n when n >= 0 -> n
@@ -379,7 +397,8 @@ let verbose_flags =
            "--verbose-depth"
            int
            ~doc:"Recursively print types up to specified depth (default 1, implies --verbose)"
-      |> flag "--verbose-flowlib" no_arg ~doc:"Print verbose info while initializing the flowlib")
+      |> flag "--verbose-flowlib" no_arg ~doc:"Print verbose info while initializing the flowlib"
+    )
 
 let quiet_flag prev =
   CommandSpec.ArgSpec.(prev |> flag "--quiet" no_arg ~doc:"Suppress output about server startup")
@@ -403,13 +422,17 @@ let on_mismatch_flag prev =
                  ("stop-server", Stop_server);
                  ("restart-client", Restart_client);
                  ("error-client", Error_client);
-               ]))
+               ]
+            )
+         )
          ~doc:
-           "What to do when the client and server are different versions (choose-newest, stop-server, restart-client, error-client) (default: choose-newest)")
+           "What to do when the client and server are different versions (choose-newest, stop-server, restart-client, error-client) (default: choose-newest)"
+  )
 
 let root_flag prev =
   CommandSpec.ArgSpec.(
-    prev |> flag "--root" string ~doc:"Project root directory containing the .flowconfig")
+    prev |> flag "--root" string ~doc:"Project root directory containing the .flowconfig"
+  )
 
 let ignore_version_flag prev =
   CommandSpec.ArgSpec.(
@@ -418,7 +441,8 @@ let ignore_version_flag prev =
          "--ignore-version"
          no_arg
          ~doc:"Ignore the version constraint in .flowconfig"
-         ~env:"FLOW_IGNORE_VERSION")
+         ~env:"FLOW_IGNORE_VERSION"
+  )
 
 let log_file_flags =
   let normalize log_file =
@@ -444,7 +468,8 @@ let log_file_flags =
            "--monitor-log-file"
            string
            ~doc:"Path to log file (default: /tmp/flow/<escaped root path>.monitor_log)"
-           ~env:"FLOW_MONITOR_LOG_FILE")
+           ~env:"FLOW_MONITOR_LOG_FILE"
+    )
 
 type offset_style =
   | Utf8_offsets
@@ -456,7 +481,8 @@ let offset_style_flag prev =
     |> flag
          "--offset-style"
          (enum [("utf8-bytes", Utf8_offsets); ("js-indices", JavaScript_offsets)])
-         ~doc:"How to compute offsets in JSON output (utf8-bytes, js-indices) (default: utf8-bytes)")
+         ~doc:"How to compute offsets in JSON output (utf8-bytes, js-indices) (default: utf8-bytes)"
+  )
 
 let offset_kind_of_offset_style = function
   | None
@@ -658,7 +684,8 @@ let file_options =
 let ignore_flag prev =
   CommandSpec.ArgSpec.(
     prev
-    |> flag "--ignore" (optional string) ~doc:"Specify one or more ignore patterns, comma separated")
+    |> flag "--ignore" (optional string) ~doc:"Specify one or more ignore patterns, comma separated"
+  )
 
 let untyped_flag prev =
   CommandSpec.ArgSpec.(
@@ -666,7 +693,8 @@ let untyped_flag prev =
     |> flag
          "--untyped"
          (optional string)
-         ~doc:"Specify one or more patterns, comma separated, for files to treat as untyped")
+         ~doc:"Specify one or more patterns, comma separated, for files to treat as untyped"
+  )
 
 let declaration_flag prev =
   CommandSpec.ArgSpec.(
@@ -674,7 +702,8 @@ let declaration_flag prev =
     |> flag
          "--declaration"
          (optional string)
-         ~doc:"Specify one or more patterns, comma separated, for files to treat as declarations")
+         ~doc:"Specify one or more patterns, comma separated, for files to treat as declarations"
+  )
 
 let include_flag prev =
   CommandSpec.ArgSpec.(
@@ -682,7 +711,8 @@ let include_flag prev =
     |> flag
          "--include"
          (optional string)
-         ~doc:"Specify one or more include patterns, comma separated")
+         ~doc:"Specify one or more include patterns, comma separated"
+  )
 
 let lib_flag prev =
   CommandSpec.ArgSpec.(
@@ -690,11 +720,13 @@ let lib_flag prev =
     |> flag
          "--lib"
          (optional string)
-         ~doc:"Specify one or more lib files/directories, comma separated")
+         ~doc:"Specify one or more lib files/directories, comma separated"
+  )
 
 let lints_flag prev =
   CommandSpec.ArgSpec.(
-    prev |> flag "--lints" (optional string) ~doc:"Specify one or more lint rules, comma separated")
+    prev |> flag "--lints" (optional string) ~doc:"Specify one or more lint rules, comma separated"
+  )
 
 let no_restart_flag prev =
   CommandSpec.ArgSpec.(
@@ -702,7 +734,8 @@ let no_restart_flag prev =
     |> flag
          "--no-auto-restart"
          no_arg
-         ~doc:"If the server dies, do not try and restart it; just exit")
+         ~doc:"If the server dies, do not try and restart it; just exit"
+  )
 
 let flowconfig_flags prev =
   CommandSpec.ArgSpec.(
@@ -713,7 +746,8 @@ let flowconfig_flags prev =
     |> declaration_flag
     |> include_flag
     |> lib_flag
-    |> lints_flag)
+    |> lints_flag
+  )
 
 type connect_params = {
   retries: int;
@@ -767,15 +801,18 @@ let connect_flags_with_lazy_collector collector =
     |> from_flag
     |> ignore_version_flag
     |> quiet_flag
-    |> on_mismatch_flag)
+    |> on_mismatch_flag
+  )
 
 let connect_flags_no_lazy prev =
   CommandSpec.ArgSpec.(
-    prev |> collect collect_connect_flags_without_lazy |> connect_flags_with_lazy_collector)
+    prev |> collect collect_connect_flags_without_lazy |> connect_flags_with_lazy_collector
+  )
 
 let connect_flags prev =
   CommandSpec.ArgSpec.(
-    prev |> collect collect_connect_flags |> lazy_flags |> connect_flags_with_lazy_collector)
+    prev |> collect collect_connect_flags |> lazy_flags |> connect_flags_with_lazy_collector
+  )
 
 (* For commands that take both --quiet and --json or --pretty, make the latter two imply --quiet *)
 let connect_and_json_flags =
@@ -953,7 +990,8 @@ let options_flags =
            int
            ~doc:
              ("The maximum time in seconds to attempt to typecheck a file or cycle of files. "
-             ^ "0 means no timeout (default: 100)")
+             ^ "0 means no timeout (default: 100)"
+             )
            ~env:"FLOW_MERGE_TIMEOUT"
       |> flag "--new-merge" no_arg ~doc:""
       |> flag
@@ -973,13 +1011,16 @@ let options_flags =
                    ("check", Options.CheckTrust);
                    ("silent", Options.SilentTrust);
                    ("none", Options.NoTrust);
-                 ]))
+                 ]
+              )
+           )
            ~doc:""
       |> flag
            "--env-mode"
            (optional (enum [("classic", Options.ClassicEnv []); ("ssa", Options.SSAEnv)]))
            ~doc:""
-      |> flag "--prioritize-dep-checks" no_arg ~doc:(* experimental *) "")
+      |> flag "--prioritize-dep-checks" no_arg ~doc:(* experimental *) ""
+    )
 
 let saved_state_flags =
   let collect_saved_state_flags
@@ -998,7 +1039,8 @@ let saved_state_flags =
                 ("none", Options.Dummy_fetcher);
                 ("local", Options.Local_fetcher);
                 ("fb", Options.Fb_fetcher);
-              ])
+              ]
+           )
            ~doc:"Which saved state fetcher Flow should use (none, local) (default: none)"
       |> flag
            "--saved-state-force-recheck"
@@ -1008,7 +1050,8 @@ let saved_state_flags =
            "--saved-state-no-fallback"
            no_arg
            ~doc:
-             "If saved state fails to load, exit (normally fallback is to initialize from scratch)")
+             "If saved state fails to load, exit (normally fallback is to initialize from scratch)"
+    )
 
 let flowconfig_name_flag prev =
   CommandSpec.ArgSpec.(
@@ -1019,7 +1062,9 @@ let flowconfig_name_flag prev =
          ~doc:
            (Printf.sprintf
               "Set the name of the flow configuration file. (default: %s)"
-              Server_files_js.default_flowconfig_name))
+              Server_files_js.default_flowconfig_name
+           )
+  )
 
 let base_flags =
   let collect_base_flags main flowconfig_name = main { Base_flags.flowconfig_name } in
@@ -1039,10 +1084,12 @@ let file_watcher_flag prev =
             ("none", FlowConfig.NoFileWatcher);
             ("dfind", FlowConfig.DFind);
             ("watchman", FlowConfig.Watchman);
-          ])
+          ]
+       )
        ~doc:
          ("Which file watcher Flow should use (none, dfind, watchman). "
-         ^ "Flow will ignore file system events if this is set to none. (default: dfind)")
+         ^ "Flow will ignore file system events if this is set to none. (default: dfind)"
+         )
   |> flag
        "--file-watcher-debug"
        no_arg
@@ -1054,14 +1101,16 @@ let file_watcher_flag prev =
        ~doc:
          (Printf.sprintf
             "Maximum time to wait for the file watcher to initialize, in seconds. 0 means no timeout (default: %d)"
-            default_file_watcher_timeout)
+            default_file_watcher_timeout
+         )
   |> flag
        "--file-watcher-mergebase-with"
        string
        ~doc:
          (Printf.sprintf
             "Symbolic commit against which to compute the mergebase used to find changed files. (default: %s)"
-            default_file_watcher_mergebase_with)
+            default_file_watcher_mergebase_with
+         )
   |> flag
        "--file-watcher-sync-timeout"
        uint
@@ -1088,7 +1137,8 @@ let json_version_flag prev =
     |> flag
          "--json-version"
          (enum [("1", Errors.Json_output.JsonV1); ("2", Errors.Json_output.JsonV2)])
-         ~doc:"The version of the JSON format (defaults to 1)")
+         ~doc:"The version of the JSON format (defaults to 1)"
+  )
 
 (* If a command uses this flag, then it will automatically exec systemd-run (if systemd-run is
  * available). This can add a couple hundred ms to the start up time of the command. Only commands
@@ -1152,7 +1202,8 @@ let no_cgroup_flag =
       |> flag
            "--no-cgroup"
            no_arg
-           ~doc:"Don't automatically run this command in a cgroup (if cgroups are available)")
+           ~doc:"Don't automatically run this command in a cgroup (if cgroups are available)"
+    )
 
 let make_options
     ~flowconfig_name
@@ -1284,8 +1335,7 @@ let make_options
       FlowConfig.run_post_inference_implicit_instantiation flowconfig;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;
     opt_enums = FlowConfig.enums flowconfig;
-    opt_env_mode =
-      Base.Option.value options_flags.env_mode ~default:(FlowConfig.env_mode flowconfig);
+    opt_env_mode = Base.Option.value options_flags.env_mode ~default:(FlowConfig.env_mode flowconfig);
     opt_env_mode_constrain_write_dirs =
       Base.List.map
         ~f:(fun s -> Files.expand_project_root_token ~root s)
@@ -1392,7 +1442,8 @@ let make_env flowconfig flowconfig_name connect_flags root =
     Base.Option.map connect_flags.lazy_mode ~f:(function
         | FlowConfig.Lazy -> "true"
         | FlowConfig.Non_lazy -> "false"
-        | FlowConfig.Watchman_DEPRECATED -> "watchman")
+        | FlowConfig.Watchman_DEPRECATED -> "watchman"
+        )
   in
   {
     CommandConnect.root;
@@ -1572,7 +1623,8 @@ let range_string_of_loc ~strip_root loc =
     in
     let (l0, c0) = (loc.start.line, loc.start.column + 1) in
     let (l1, c1) = (loc._end.line, loc._end.column) in
-    spf "%s:%d:%d,%d:%d" file l0 c0 l1 c1)
+    spf "%s:%d:%d,%d:%d" file l0 c0 l1 c1
+  )
 
 let exe_name = Utils_js.exe_name
 
@@ -1622,7 +1674,8 @@ let rec connect_and_make_request flowconfig_name =
         | (server_status, _) -> Some (ServerStatus.string_of_status ~use_emoji server_status)
       in
       Base.Option.iter status_string (fun status_string ->
-          if not quiet then eprintf_with_spinner "Please wait. %s" status_string);
+          if not quiet then eprintf_with_spinner "Please wait. %s" status_string
+      );
 
       wait_for_response ?timeout ~quiet ~emoji ~root ic
     | MonitorProt.Data response ->
@@ -1657,7 +1710,8 @@ let rec connect_and_make_request flowconfig_name =
           server_should_hangup_if_still_initializing = false;
           version_mismatch_strategy;
         },
-        { SocketHandshake.client_type = SocketHandshake.Ephemeral } )
+        { SocketHandshake.client_type = SocketHandshake.Ephemeral }
+      )
     in
 
     let flowconfig =
@@ -1678,10 +1732,11 @@ let rec connect_and_make_request flowconfig_name =
         eprintf_with_spinner
           "Lost connection to the flow server (%d %s remaining)%!"
           retries
-          (if retries = 1 then
+          ( if retries = 1 then
             "retry"
           else
-            "retries");
+            "retries"
+          );
       connect_and_make_request
         flowconfig_name
         ?timeout
@@ -1720,7 +1775,9 @@ let get_check_or_status_exit_code errors warnings max_warnings =
         | Some _ ->
           No_error
       else
-        Type_error))
+        Type_error
+    )
+  )
 
 let choose_file_watcher ~flowconfig ~lazy_mode ~file_watcher ~file_watcher_debug ~sync_timeout =
   let file_watcher =
@@ -1779,7 +1836,8 @@ let json_of_loc_with_offset ?stdin_file ~strip_root loc =
     let offset_table =
       Base.Option.map file_content ~f:(Offset_utils.make ~kind:Offset_utils.Utf8)
     in
-    Reason.json_of_loc ~strip_root ~offset_table ~catch_offset_errors:true loc)
+    Reason.json_of_loc ~strip_root ~offset_table ~catch_offset_errors:true loc
+  )
 
 let subcommand_spec ~name ~doc cmd_list =
   let command_info =
@@ -1829,9 +1887,10 @@ let collect_codemod_flags
     input_file
     base_flag
     anon =
-  (if (not write) && repeat then
+  ( if (not write) && repeat then
     let msg = "Error: cannot run codemod with --repeat flag unless --write is also passed" in
-    Exit.(exit ~msg Commandline_usage_error));
+    Exit.(exit ~msg Commandline_usage_error)
+  );
   let codemod_flags =
     Codemod_params
       {
@@ -1881,4 +1940,5 @@ let codemod_flags prev =
     |> input_file_flag
          "File containing a list of paths to transform. Incompatible with stdin and FILE..."
     |> base_flags
-    |> anon "FILE..." (list_of string))
+    |> anon "FILE..." (list_of string)
+  )

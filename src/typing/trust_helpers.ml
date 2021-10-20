@@ -37,4 +37,5 @@ let actual_trust cx t =
         match Context.find_trust_graph cx ident with
         | TrustResolved trust -> trust
         | TrustUnresolved bounds -> get_trust bounds
-      end)
+      end
+  )

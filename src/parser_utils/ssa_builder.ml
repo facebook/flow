@@ -341,7 +341,8 @@ struct
             {
               val_ref = ref (Val.uninitialized ());
               havoc = Havoc.{ unresolved = this#mk_unresolved; locs = [] };
-            })
+            }
+        )
 
       method private push_ssa_env bindings =
         let old_ssa_env = ssa_env in
@@ -352,7 +353,8 @@ struct
       method private resolve_havocs =
         SMap.iter (fun x _loc ->
             let { havoc = { Havoc.unresolved; locs }; _ } = SMap.find x ssa_env in
-            Val.resolve ~unresolved (Val.all locs))
+            Val.resolve ~unresolved (Val.all locs)
+        )
 
       method private pop_ssa_env (bindings, old_ssa_env) =
         this#resolve_havocs bindings;
@@ -413,7 +415,8 @@ struct
         let saved = abrupt_completion_envs in
         abrupt_completion_envs <- [];
         this#run f ~finally:(fun () ->
-            abrupt_completion_envs <- List.rev_append saved abrupt_completion_envs)
+            abrupt_completion_envs <- List.rev_append saved abrupt_completion_envs
+        )
 
       (* Given multiple completion states, (re)raise if all of them are the same
          abrupt completion. This function is called at merge points. *)
@@ -627,7 +630,8 @@ struct
         (* collect completions and environments of every branch *)
         let then_completion_state =
           this#run_to_completion (fun () ->
-              ignore @@ this#if_consequent_statement ~has_else:(alternate <> None) consequent)
+              ignore @@ this#if_consequent_statement ~has_else:(alternate <> None) consequent
+          )
         in
         let env1 = this#ssa_env in
         this#reset_ssa_env env0;
@@ -637,7 +641,8 @@ struct
               @@ Flow_ast_mapper.map_opt
                    (fun (loc, { Alternate.body; comments }) ->
                      (loc, { Alternate.body = this#statement body; comments }))
-                   alternate)
+                   alternate
+          )
         in
         (* merge environments *)
         this#merge_self_ssa_env env1;
@@ -680,7 +685,8 @@ struct
               this#run_to_completion (fun () ->
                   this#commit_abrupt_completion_matching
                     (AbruptCompletion.mem continues)
-                    loop_completion_state)
+                    loop_completion_state
+              )
             in
             (* end of loop body *)
             this#assert_ssa_env env1;
@@ -691,14 +697,14 @@ struct
             (* we might also never enter the loop body *)
             let while_completion_states = (None, [loop_completion_state]) in
             let completion_state =
-              this#run_to_completion (fun () ->
-                  this#merge_completion_states while_completion_states)
+              this#run_to_completion (fun () -> this#merge_completion_states while_completion_states)
             in
             (* completion_state = None *)
             (* break exits *)
             this#commit_abrupt_completion_matching
               AbruptCompletion.(mem [break None])
-              completion_state);
+              completion_state
+        );
         stmt
 
       (***********************************)
@@ -728,7 +734,8 @@ struct
               this#run_to_completion (fun () ->
                   this#commit_abrupt_completion_matching
                     (AbruptCompletion.mem continues)
-                    loop_completion_state)
+                    loop_completion_state
+              )
             in
             begin
               match loop_completion_state with
@@ -739,12 +746,14 @@ struct
             let do_while_completion_states = (loop_completion_state, []) in
             let completion_state =
               this#run_to_completion (fun () ->
-                  this#merge_completion_states do_while_completion_states)
+                  this#merge_completion_states do_while_completion_states
+              )
             in
             (* completion_state = loop_completion_state *)
             this#commit_abrupt_completion_matching
               AbruptCompletion.(mem [break None])
-              completion_state);
+              completion_state
+        );
         stmt
 
       (**************************************)
@@ -784,7 +793,8 @@ struct
               this#run_to_completion (fun () ->
                   this#commit_abrupt_completion_matching
                     (AbruptCompletion.mem continues)
-                    loop_completion_state)
+                    loop_completion_state
+              )
             in
             begin
               match loop_completion_state with
@@ -799,7 +809,8 @@ struct
             in
             this#commit_abrupt_completion_matching
               AbruptCompletion.(mem [break None])
-              completion_state);
+              completion_state
+        );
         stmt
 
       (*************************************)
@@ -840,18 +851,21 @@ struct
               this#run_to_completion (fun () ->
                   this#commit_abrupt_completion_matching
                     (AbruptCompletion.mem continues)
-                    loop_completion_state)
+                    loop_completion_state
+              )
             in
             this#assert_ssa_env env1;
             this#reset_ssa_env env2;
             let for_in_completion_states = (None, [loop_completion_state]) in
             let completion_state =
               this#run_to_completion (fun () ->
-                  this#merge_completion_states for_in_completion_states)
+                  this#merge_completion_states for_in_completion_states
+              )
             in
             this#commit_abrupt_completion_matching
               AbruptCompletion.(mem [break None])
-              completion_state);
+              completion_state
+        );
         stmt
 
       (*************************************)
@@ -892,18 +906,21 @@ struct
               this#run_to_completion (fun () ->
                   this#commit_abrupt_completion_matching
                     (AbruptCompletion.mem continues)
-                    loop_completion_state)
+                    loop_completion_state
+              )
             in
             this#assert_ssa_env env1;
             this#reset_ssa_env env2;
             let for_of_completion_states = (None, [loop_completion_state]) in
             let completion_state =
               this#run_to_completion (fun () ->
-                  this#merge_completion_states for_of_completion_states)
+                  this#merge_completion_states for_of_completion_states
+              )
             in
             this#commit_abrupt_completion_matching
               AbruptCompletion.(mem [break None])
-              completion_state);
+              completion_state
+        );
         stmt
 
       method for_in_or_of_left_declaration left =
@@ -971,11 +988,13 @@ struct
             let switch_completion_states = (None, case_completion_states) in
             let completion_state =
               this#run_to_completion (fun () ->
-                  this#merge_completion_states switch_completion_states)
+                  this#merge_completion_states switch_completion_states
+              )
             in
             this#commit_abrupt_completion_matching
               AbruptCompletion.(mem [break None])
-              completion_state);
+              completion_state
+        );
         cases
 
       method private ssa_switch_case
@@ -1050,7 +1069,8 @@ struct
             let try_catch_completion_states = (try_completion_state, catch_completion_state_opt) in
             let completion_state =
               this#run_to_completion (fun () ->
-                  this#merge_completion_states try_catch_completion_states)
+                  this#merge_completion_states try_catch_completion_states
+              )
             in
             this#commit_abrupt_completion_matching AbruptCompletion.all completion_state;
             begin
@@ -1065,7 +1085,8 @@ struct
                 ignore @@ this#block loc block
               | None -> ()
             end;
-            this#from_completion completion_state);
+            this#from_completion completion_state
+        );
         stmt
 
       (* branching expressions *)
@@ -1103,7 +1124,8 @@ struct
                 this#commit_abrupt_completion_matching
                   AbruptCompletion.(mem [return; throw])
                   completion_state)
-              ~finally:(fun () -> this#reset_ssa_env env))
+              ~finally:(fun () -> this#reset_ssa_env env)
+        )
 
       method! declare_function loc expr =
         match Declare_function_utils.declare_function_to_function_declaration_simple loc expr with
@@ -1134,7 +1156,8 @@ struct
             | Await -> this#havoc_current_ssa_env
             | _ -> ()
           end;
-          expr)
+          expr
+        )
 
       method! yield loc (expr : ('loc, 'loc) Ast.Expression.Yield.t) =
         ignore @@ super#yield loc expr;
@@ -1155,7 +1178,8 @@ struct
             possible_labeled_continues <- [];
             this#commit_abrupt_completion_matching
               AbruptCompletion.(mem [break (Some label)])
-              completion_state);
+              completion_state
+        );
         stmt
 
       method! statement (stmt : (L.t, L.t) Ast.Statement.t) =
@@ -1202,7 +1226,8 @@ struct
     in
     let completion_state =
       ssa_walk#run_to_completion (fun () ->
-          ignore @@ ssa_walk#with_bindings loc bindings ssa_walk#program program)
+          ignore @@ ssa_walk#with_bindings loc bindings ssa_walk#program program
+      )
     in
     (completion_state, (ssa_walk#acc, ssa_walk#values, ssa_walk#unbound_names))
 

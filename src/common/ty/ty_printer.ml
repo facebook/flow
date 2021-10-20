@@ -107,19 +107,16 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
       in
       fuse [type_ ~depth _object; left_delim; type_ ~depth index; Atom "]"]
     | Tup ts ->
-      list
-        ~wrap:(Atom "[", Atom "]")
-        ~sep:(Atom ",")
-        ~trailing:false
-        (counted_map (type_ ~depth) ts)
+      list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ",") ~trailing:false (counted_map (type_ ~depth) ts)
     | StrLit raw -> fuse (in_quotes ~prefer_single_quotes (Reason.display_string_of_name raw))
     | NumLit raw -> Atom raw
     | BoolLit value ->
       Atom
-        (if value then
+        ( if value then
           "true"
         else
-          "false")
+          "false"
+        )
     | InlineInterface { if_extends; if_props; if_dict } ->
       type_interface ~depth if_extends if_props if_dict
     | TypeOf pv -> fuse [Atom "typeof"; space; builtin_value pv]
@@ -149,10 +146,11 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     fuse
       [
         Atom "any";
-        (if depth = 1 && with_comments then
+        ( if depth = 1 && with_comments then
           fuse [pretty_space; Atom kind |> wrap_in_parens]
         else
-          Empty);
+          Empty
+        );
       ]
   and type_interface ~depth extends props dict =
     let extends =
@@ -196,10 +194,11 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
             fuse
               [
                 identifier (Reason.OrdinaryName id);
-                (if prm_optional then
+                ( if prm_optional then
                   Atom "?"
                 else
-                  Empty);
+                  Empty
+                );
                 Atom ":";
                 pretty_space;
               ]
@@ -226,10 +225,11 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
                 [
                   variance_ polarity;
                   to_key (Reason.display_string_of_name key);
-                  (if optional then
+                  ( if optional then
                     Atom "?"
                   else
-                    Empty);
+                    Empty
+                  );
                   Atom ":";
                   pretty_space;
                   type_ ~depth t;
@@ -266,7 +266,8 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
                 ]
           end
         | CallProp func -> fuse [type_function ~depth ~sep:(Atom ":") func]
-        | SpreadProp t -> fuse [Atom "..."; type_ ~depth t])
+        | SpreadProp t -> fuse [Atom "..."; type_ ~depth t]
+    )
   and type_array ~depth { arr_readonly; arr_literal; arr_elt_t } =
     let arr =
       if arr_readonly then

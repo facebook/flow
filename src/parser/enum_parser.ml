@@ -70,7 +70,8 @@ end = struct
               NumberLiteral.value;
               raw;
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-            } )
+            }
+          )
       else
         InvalidInit loc
     | T_STRING (loc, value, raw, octal) ->
@@ -84,7 +85,8 @@ end = struct
               StringLiteral.value;
               raw;
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-            } )
+            }
+          )
       else
         InvalidInit loc
     | (T_TRUE | T_FALSE) as token ->
@@ -96,7 +98,8 @@ end = struct
             {
               BooleanLiteral.value = token = T_TRUE;
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-            } )
+            }
+          )
       else
         InvalidInit loc
     | _ ->
@@ -118,7 +121,8 @@ end = struct
             member_init env
           | _ -> NoInit
         in
-        (id, init))
+        (id, init)
+    )
 
   let check_explicit_type_mismatch env ~enum_name ~explicit_type ~member_name literal_type loc =
     match explicit_type with
@@ -199,7 +203,8 @@ end = struct
           defaulted_members = List.rev acc.members.defaulted_members;
         },
         acc.has_unknown_members,
-        acc.internal_comments )
+        acc.internal_comments
+      )
     | T_ELLIPSIS ->
       let loc = Peek.loc env in
       (* Internal comments may appear before the ellipsis *)
@@ -415,7 +420,8 @@ end = struct
                 empty ()
             end
         in
-        body)
+        body
+    )
 
   let declaration =
     with_loc (fun env ->
@@ -425,5 +431,6 @@ end = struct
         let (name_loc, { Identifier.name = enum_name; _ }) = id in
         let body = enum_body ~enum_name ~name_loc env in
         let comments = Flow_ast_utils.mk_comments_opt ~leading () in
-        Statement.EnumDeclaration { id; body; comments })
+        Statement.EnumDeclaration { id; body; comments }
+    )
 end

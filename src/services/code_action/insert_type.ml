@@ -60,7 +60,8 @@ class use_upper_bound_mapper =
       Ty.(
         function
         | NoLowerWithUpper (SomeKnownUpper ub) -> this#on_t () ub
-        | b -> super#on_Bot () t b)
+        | b -> super#on_Bot () t b
+      )
   end
 
 class fail_on_ambiguity_mapper =
@@ -286,8 +287,10 @@ class mapper ~strict ~synth_type target =
         update_property loc prop annot
       | Property
           ( loc,
-            ({ key = Literal (kloc, _) | Identifier (kloc, _) | PrivateName (kloc, _); annot; _ } as
-            prop) )
+            ( { key = Literal (kloc, _) | Identifier (kloc, _) | PrivateName (kloc, _); annot; _ }
+            as prop
+            )
+          )
         when this#is_target kloc || (target_is_point && this#target_contained_by kloc) ->
         if strict then
           raise
@@ -368,7 +371,8 @@ let normalize ~full_cx ~file_sig ~typed_ast ~expand_aliases ~omit_targ_defaults 
     with
     | FailureNoMatch -> raise @@ unexpected @@ FailedToNormalizeNoMatch
     | FailureUnparseable (loc, _, msg) -> raise @@ expected @@ FailedToNormalize (loc, msg)
-    | Success (_, ty) -> ty)
+    | Success (_, ty) -> ty
+  )
 
 let synth_type
     ?(size_limit = 30)

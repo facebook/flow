@@ -121,4 +121,5 @@ let trim_jsx_text =
             _end = { line = end_line; column = end_column };
           }
         in
-        Some (loc, trimmed))
+        Some (loc, trimmed)
+      )

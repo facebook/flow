@@ -44,7 +44,8 @@ module Types = struct
           _method;
           variance;
           comments;
-        } )
+        }
+      )
 
     let getter ?(loc = Loc.none) ?optional ?static ?proto ?_method ?variance key func =
       let value = Ast.Type.Object.Property.Get (loc, func) in
@@ -78,11 +79,11 @@ module Types = struct
     ( loc,
       Ast.Type.Generic
         {
-          Ast.Type.Generic.id =
-            Ast.Type.Generic.Identifier.Unqualified (Identifiers.identifier name);
+          Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (Identifiers.identifier name);
           targs;
           comments;
-        } )
+        }
+    )
 end
 
 let string_literal ?comments value =
@@ -106,10 +107,11 @@ module Literals = struct
     {
       value = Boolean is_true;
       raw =
-        (if is_true then
+        ( if is_true then
           "true"
         else
-          "false");
+          "false"
+        );
       comments;
     }
 end
@@ -121,7 +123,8 @@ module Patterns = struct
     let annot = Base.Option.value ~default:(Ast.Type.Missing loc) annot in
     ( loc,
       Identifier
-        { Identifier.name = Flow_ast_utils.ident_of_source (loc, str); annot; optional = false } )
+        { Identifier.name = Flow_ast_utils.ident_of_source (loc, str); annot; optional = false }
+    )
 
   let array elements =
     let elements =
@@ -148,11 +151,14 @@ module Patterns = struct
                       pattern = identifier str;
                       default = None;
                       shorthand = true;
-                    } );
+                    }
+                  );
               ];
             annot = Ast.Type.Missing Loc.none;
             comments = None;
-          } )
+          }
+      )
+    
 end
 
 module Functions = struct
@@ -220,7 +226,8 @@ module Classes = struct
           static;
           variance;
           comments;
-        } )
+        }
+      )
 
   let method_ ?comments ?(decorators = []) ?(static = false) ~id function_ =
     Body.Method
@@ -232,7 +239,8 @@ module Classes = struct
           static;
           decorators;
           comments;
-        } )
+        }
+      )
 
   (* TODO: add property *)
   let make ?comments ?super ?(implements = []) ?id elements =
@@ -274,10 +282,11 @@ module JSXs = struct
     {
       opening_element = (Loc.none, { Opening.name; self_closing; attributes });
       closing_element =
-        (if self_closing then
+        ( if self_closing then
           None
         else
-          Some (Loc.none, { Closing.name }));
+          Some (Loc.none, { Closing.name })
+        );
       children = (Loc.none, children);
       comments;
     }
@@ -617,7 +626,9 @@ let ast_of_string ~parser str =
           types = true;
           use_strict = false;
         }
+      
   in
+
   let env = Parser_env.init_env ~token_sink:None ~parse_options None str in
   let (ast, _) = Parser_flow.do_parse env parser false in
   ast

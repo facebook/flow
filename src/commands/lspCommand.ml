@@ -28,7 +28,8 @@ let spec =
         |> flag "--lazy" no_arg ~doc:"Deprecated, has no effect"
         |> flag "--lazy-mode" string ~doc:"Deprecated, has no effect"
         |> autostop_flag
-        |> from_flag);
+        |> from_flag
+      );
   }
 
 let main

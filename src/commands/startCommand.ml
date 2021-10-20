@@ -31,7 +31,8 @@ let spec =
         |> no_restart_flag
         |> file_watcher_flag
         |> no_cgroup_flag
-        |> anon "root" (optional string));
+        |> anon "root" (optional string)
+      );
     usage =
       Printf.sprintf
         "Usage: %s start [OPTION]... [ROOT]\n\nStarts a Flow server.\n\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be the current directory if unspecified.\nA server will be started if none is running over ROOT.\n"
@@ -110,7 +111,9 @@ let main
                ("pid", JSON_String (string_of_int pid));
                ("log_file", JSON_String server_log_file);
                ("monitor_log_file", JSON_String monitor_log_file);
-             ]))
+             ]
+          )
+      )
     else if not (Options.is_quiet options) then (
       Printf.eprintf "Spawned flow server (pid=%d)\n" pid;
       Printf.eprintf "Logs will go to %s\n%!" server_log_file;

@@ -21,14 +21,15 @@ let hh_logger_level_of_env env =
 (* TODO: min_level should probably default to warn, but was historically info *)
 let set_hh_logger_min_level ?(min_level = Hh_logger.Level.Info) options =
   Hh_logger.Level.set_min_level
-    (if Options.is_quiet options then
+    ( if Options.is_quiet options then
       Hh_logger.Level.Off
     else if Options.verbose options != None || Options.is_debug_mode options then
       Hh_logger.Level.Debug
     else
       match hh_logger_level_of_env "FLOW_LOG_LEVEL" with
       | Some level -> level
-      | None -> min_level)
+      | None -> min_level
+    )
 
 let init_loggers ~options ?min_level () = set_hh_logger_min_level ?min_level options
 
@@ -89,7 +90,8 @@ let (set_server_options, dump_server_options) =
              method_name
              threshold_time_ms
              limit_str
-             rate))
+             rate
+          ))
       log_saving;
     log (Printf.sprintf "log_file=%s" log_file);
     SMap.iter (fun r g -> log (Printf.sprintf "Rollout %S set to %S" r g)) enabled_rollouts

@@ -20,6 +20,7 @@ let mk_line_comment text =
         trailing = [];
         internal = ();
       }
+    
 
 let mk_block_comment text =
   let open Flow_ast in
@@ -30,6 +31,7 @@ let mk_block_comment text =
         trailing = [];
         internal = ();
       }
+    
 
 let mk_block_comments ~leading ~trailing =
   let open Flow_ast in
@@ -56,7 +58,8 @@ let mk_test comment ?(should_not_parse = false) ?description ?params ?unrecogniz
           ~printer:(string_of_option (Printf.sprintf "%S"))
           ~msg:"description"
           description
-          (Jsdoc.description jsdoc));
+          (Jsdoc.description jsdoc)
+    );
     Base.Option.iter params ~f:(fun params ->
         assert_equal
           ~ctxt
@@ -64,7 +67,8 @@ let mk_test comment ?(should_not_parse = false) ?description ?params ?unrecogniz
           ~printer:Jsdoc.Params.show
           ~msg:"params"
           params
-          (Jsdoc.params jsdoc));
+          (Jsdoc.params jsdoc)
+    );
     Base.Option.iter unrecognized_tags ~f:(fun unrecognized_tags ->
         assert_equal
           ~ctxt
@@ -72,7 +76,8 @@ let mk_test comment ?(should_not_parse = false) ?description ?params ?unrecogniz
           ~printer:Jsdoc.Unrecognized_tags.show
           ~msg:"unrecognized tags"
           unrecognized_tags
-          (Jsdoc.unrecognized_tags jsdoc))
+          (Jsdoc.unrecognized_tags jsdoc)
+    )
 
 let tests =
   "JSDoc"
@@ -86,13 +91,12 @@ let tests =
                     *   foo
                     *   bar
                     *   @snap crackle
-                    *   |})
+                    *   |}
+               )
                ~description:(Some "foo\nbar");
          "pick_last_jsdoc-containing_leading_comment"
          >:: mk_test
-               (mk_block_comments
-                  ~leading:["* foo"; "bar"; "* baz"; "snap"]
-                  ~trailing:["* crackle"])
+               (mk_block_comments ~leading:["* foo"; "bar"; "* baz"; "snap"] ~trailing:["* crackle"])
                ~description:(Some "baz");
          "no_description" >:: mk_test (mk_block_comment "*\n @unsupported") ~description:None;
          "simple_param_descriptions"
@@ -111,7 +115,8 @@ let tests =
                     * @argument g - argument alias for param tag
                       @param
                       @param h
-                      @param i description before eof|})
+                      @param i description before eof|}
+               )
                ~description:(Some "overall description")
                ~params:
                  Jsdoc.Param.
@@ -128,8 +133,10 @@ let tests =
                            {
                              description = Some "hyphen before description for c";
                              optional = NotOptional;
-                           } );
-                       ] );
+                           }
+                         );
+                       ]
+                     );
                      ("d", [(Name, { description = None; optional = NotOptional })]);
                      ( "e",
                        [
@@ -137,30 +144,37 @@ let tests =
                            {
                              description = Some "multiline\nparam description";
                              optional = NotOptional;
-                           } );
-                       ] );
+                           }
+                         );
+                       ]
+                     );
                      ( "f",
                        [
                          ( Name,
                            { description = Some "arg alias for param tag"; optional = NotOptional }
                          );
-                       ] );
+                       ]
+                     );
                      ( "g",
                        [
                          ( Name,
                            {
                              description = Some "argument alias for param tag";
                              optional = NotOptional;
-                           } );
-                       ] );
+                           }
+                         );
+                       ]
+                     );
                      ("h", [(Name, { description = None; optional = NotOptional })]);
                      ( "i",
                        [
                          ( Name,
                            { description = Some "description before eof"; optional = NotOptional }
                          );
-                       ] );
-                   ];
+                       ]
+                     );
+                   ]
+                 ;
          "advanced_params"
          >:: mk_test
                (mk_block_comment
@@ -175,7 +189,8 @@ let tests =
                     * @param qux.x.y[].z
                     * @param [qux[][].x]
                     * @param [qux=has a default]
-                  |})
+                  |}
+               )
                ~params:
                  Jsdoc.Param.
                    [
@@ -183,43 +198,56 @@ let tests =
                      ( "bar",
                        [
                          ( Element Name,
-                           { description = Some "element path of bar"; optional = NotOptional } );
+                           { description = Some "element path of bar"; optional = NotOptional }
+                         );
                          ( Member (Name, "x"),
-                           { description = Some "member x path of bar"; optional = NotOptional } );
+                           { description = Some "member x path of bar"; optional = NotOptional }
+                         );
                          ( Member (Name, "y"),
                            {
                              description = Some "optional member y path of bar with default";
                              optional = OptionalWithDefault "this is a default";
-                           } );
-                       ] );
+                           }
+                         );
+                       ]
+                     );
                      ( "baz",
                        [
                          ( Element Name,
                            {
                              description = Some "optional element path of baz with default";
                              optional = OptionalWithDefault "this is another default";
-                           } );
+                           }
+                         );
                          ( Member (Member (Name, "bar"), "foo"),
                            {
                              description = Some "member foo of member bar of baz";
                              optional = NotOptional;
-                           } );
+                           }
+                         );
                          ( Member (Member (Element Name, "foo"), "bar"),
                            {
                              description = Some "member bar of member foo of element of baz";
                              optional = NotOptional;
-                           } );
-                       ] );
+                           }
+                         );
+                       ]
+                     );
                      ( "qux",
                        [
                          ( Member (Element (Member (Member (Name, "x"), "y")), "z"),
-                           { description = None; optional = NotOptional } );
+                           { description = None; optional = NotOptional }
+                         );
                          ( Member (Element (Element Name), "x"),
-                           { description = None; optional = Optional } );
+                           { description = None; optional = Optional }
+                         );
                          ( Name,
-                           { description = None; optional = OptionalWithDefault "has a default" } );
-                       ] );
-                   ];
+                           { description = None; optional = OptionalWithDefault "has a default" }
+                         );
+                       ]
+                     );
+                   ]
+                 ;
          "description_tag"
          >:: mk_test
                (mk_block_comment
@@ -227,7 +255,8 @@ let tests =
                     * @param a description for a
                     * @description this description overrides the first one
                     *   and can have multiple lines
-                    * @param b another parameter|})
+                    * @param b another parameter|}
+               )
                ~description:
                  (Some "this description overrides the first one\nand can have multiple lines")
                ~params:
@@ -239,7 +268,8 @@ let tests =
                      ( "b",
                        [(Name, { description = Some "another parameter"; optional = NotOptional })]
                      );
-                   ];
+                   ]
+                 ;
          "desc_tag"
          >:: mk_test
                (mk_block_comment
@@ -247,7 +277,8 @@ let tests =
                     * @param a description for a
                     * @desc this desc overrides the first one
                     *   and can have multiple lines
-                    * @param b another parameter|})
+                    * @param b another parameter|}
+               )
                ~description:(Some "this desc overrides the first one\nand can have multiple lines")
                ~params:
                  Jsdoc.Param.
@@ -258,7 +289,8 @@ let tests =
                      ( "b",
                        [(Name, { description = Some "another parameter"; optional = NotOptional })]
                      );
-                   ];
+                   ]
+                 ;
          "unrecognized_tags"
          >:: mk_test
                (mk_block_comment
@@ -267,7 +299,8 @@ let tests =
                     * contents of explorer-desc tag
                     * @explorer-ignore
                     * @explorer-title some title
-                    * @desc description 2 |})
+                    * @desc description 2 |}
+               )
                ~description:(Some "description 2")
                ~unrecognized_tags:
                  [

@@ -100,7 +100,8 @@ let substituter =
                   in
                   ( { typeparam with bound; default } :: xs,
                     SMap.remove typeparam.name map,
-                    changed || bound != typeparam.bound || default != typeparam.default ))
+                    changed || bound != typeparam.bound || default != typeparam.default
+                  ))
                 ([], map, false)
                 xs
             in

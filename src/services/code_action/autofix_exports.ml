@@ -52,7 +52,8 @@ let fix_signature_verification_errors ~file_key ~full_cx ~file_sig ~typed_ast =
           ~typed_ast
           ast
           loc,
-        it_errs )
+        it_errs
+      )
     with
     | FailedToInsertType err -> (ast, error_to_string err :: it_errs)
   in

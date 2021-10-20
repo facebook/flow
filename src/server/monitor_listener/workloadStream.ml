@@ -111,7 +111,8 @@ let pop stream =
                 "Dequeueing parallelizable %s after %3f seconds"
                 name
                 (Unix.gettimeofday () -. enqueue_time);
-              workload_of_parallelizable_workload workload)
+              workload_of_parallelizable_workload workload
+          )
         in
         (workload, parallelizable, nonparallelizable)
       else
@@ -121,9 +122,11 @@ let pop stream =
                 "Dequeueing nonparallelizable %s after %3f seconds"
                 name
                 (Unix.gettimeofday () -. enqueue_time);
-              workload),
+              workload
+          ),
           parallelizable,
-          nonparallelizable )
+          nonparallelizable
+        )
     in
     stream.parallelizable <- parallelizable;
     stream.nonparallelizable <- nonparallelizable;
@@ -149,7 +152,8 @@ let pop_parallelizable stream =
           "Dequeueing parallelizable %s after %3f seconds"
           name
           (Unix.gettimeofday () -. enqueue_time);
-        workload)
+        workload
+    )
 
 (* Wait until there's a workload in the stream *)
 let rec wait_for_workload stream =

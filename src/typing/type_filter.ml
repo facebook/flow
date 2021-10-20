@@ -53,7 +53,8 @@ let rec exists = function
         | SingletonStrT (OrdinaryName "")
         | StrT (Literal (_, OrdinaryName ""))
         | SingletonNumT (0., _)
-        | NumT (Literal (_, (0., _))) ) ) ->
+        | NumT (Literal (_, (0., _))) )
+      ) ->
     DefT (r, trust, EmptyT)
   (* unknown things become truthy *)
   | UnionT (r, rep) -> recurse_into_union exists (r, UnionRep.members rep)
@@ -81,7 +82,8 @@ let rec not_exists t =
         | SingletonStrT (OrdinaryName "")
         | StrT (Literal (_, OrdinaryName ""))
         | SingletonNumT (0., _)
-        | NumT (Literal (_, (0., _))) ) ) ->
+        | NumT (Literal (_, (0., _))) )
+      ) ->
     t
   | AnyT (r, _) -> DefT (r, Trust.bogus_trust (), EmptyT)
   | UnionT (r, rep) -> recurse_into_union not_exists (r, UnionRep.members rep)
@@ -98,7 +100,8 @@ let rec not_exists t =
         | ArrT _ | ObjT _ | InstanceT _ | EnumObjectT _ | FunT _ | SingletonNumT _
         | NumT (Literal _ | Truthy)
         | EnumT { representation_t = DefT (_, _, NumT Truthy); _ }
-        | MixedT Mixed_truthy ) ) ->
+        | MixedT Mixed_truthy )
+      ) ->
     DefT (r, trust, EmptyT)
   | DefT (reason, trust, ClassT _) -> DefT (reason, trust, EmptyT)
   (* unknown boolies become falsy *)
@@ -413,7 +416,8 @@ let array t =
     DefT
       ( replace_desc_new_reason RROArrayType r,
         trust,
-        ArrT (ROArrayAT (DefT (r, trust, MixedT Mixed_everything))) )
+        ArrT (ROArrayAT (DefT (r, trust, MixedT Mixed_everything)))
+      )
   | DefT (_, _, ArrT _)
   | AnyT _ ->
     t

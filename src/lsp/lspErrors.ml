@@ -83,7 +83,8 @@ let empty = { dirty_files = Lsp.UriSet.empty; file_to_errors_map = Lsp.UriMap.em
  * out. The one exception is in limit_errors, to ensure consistent results *)
 let sort_errors =
   PublishDiagnostics.(
-    List.sort ~compare:(fun d1 d2 -> Lsp_helpers.pos_compare d1.range.start d2.range.start))
+    List.sort ~compare:(fun d1 d2 -> Lsp_helpers.pos_compare d1.range.start d2.range.start)
+  )
 
 (* If we have too many errors then limit them to the first N errors *)
 let limit_errors errors =
@@ -114,7 +115,9 @@ let limit_errors errors =
             relatedInformation = [];
             relatedLocations = [];
           }
+        
       in
+
       diagnostic :: retain
 
 let is_parse_error =
@@ -192,10 +195,11 @@ let modify_per_file_errors (uri : Lsp.DocumentUri.t) state f =
   in
   {
     dirty_files =
-      (if dirty then
+      ( if dirty then
         Lsp.UriSet.add uri state.dirty_files
       else
-        state.dirty_files);
+        state.dirty_files
+      );
     file_to_errors_map;
   }
 
@@ -206,14 +210,16 @@ let modify_server_errors uri new_errors state f =
       let new_server_errors =
         f per_file_errors.server_errors (new_parse_errors, new_non_parse_errors)
       in
-      { per_file_errors with server_errors = new_server_errors })
+      { per_file_errors with server_errors = new_server_errors }
+  )
 
 (* We've parsed a file locally and now want to record the number of parse errors for this file *)
 let set_live_parse_errors_and_send send_json uri live_parse_errors state =
   (* If the caller passes in some non-parse errors then we'll just ignore them *)
   let live_parse_errors = List.filter live_parse_errors ~f:is_parse_error in
   modify_per_file_errors uri state (fun per_file_errors ->
-      { per_file_errors with live_parse_errors = Some (ParseErrors live_parse_errors) })
+      { per_file_errors with live_parse_errors = Some (ParseErrors live_parse_errors) }
+  )
   |> send_all_errors send_json
 
 (* We've run check-contents on a modified open file and now want to record the errors reported by
@@ -222,14 +228,16 @@ let set_live_non_parse_errors_and_send send_json uri live_non_parse_errors state
   (* If the caller passes in some parse errors then we'll just ignore them *)
   let live_non_parse_errors = List.filter live_non_parse_errors ~f:is_not_parse_error in
   modify_per_file_errors uri state (fun per_file_errors ->
-      { per_file_errors with live_non_parse_errors = Some (NonParseErrors live_non_parse_errors) })
+      { per_file_errors with live_non_parse_errors = Some (NonParseErrors live_non_parse_errors) }
+  )
   |> send_all_errors send_json
 
 (* When we close a file we clear all the live parse errors or non-parse errors for that file, but we
  * keep around the server errors *)
 let clear_all_live_errors_and_send send_json uri state =
   modify_per_file_errors uri state (fun per_file_errors ->
-      { per_file_errors with live_parse_errors = None; live_non_parse_errors = None })
+      { per_file_errors with live_parse_errors = None; live_non_parse_errors = None }
+  )
   |> send_all_errors send_json
 
 (* my_list @ [] returns a list which is no longer physically identical to my_list. This is a
@@ -260,7 +268,9 @@ let add_streamed_server_errors_and_send send_json uri_to_error_map state =
             let (ParseErrors new_parse_errors, NonParseErrors new_non_parse_errors) = new_errors in
             Streamed
               ( ParseErrors (append existing_parse_errors new_parse_errors),
-                NonParseErrors (append existing_non_parse_errors new_non_parse_errors) )))
+                NonParseErrors (append existing_non_parse_errors new_non_parse_errors)
+              )
+      ))
     uri_to_error_map
     state
   |> send_all_errors send_json
@@ -275,7 +285,8 @@ let set_finalized_server_errors_and_send send_json uri_to_error_map state =
           modify_server_errors uri new_errors_unsplit state (fun _ new_errors ->
               (* At the end of the recheck, the finialized errors will replace either the errors from
                * the previous recheck or the streamed errors *)
-              Finalized new_errors)
+              Finalized new_errors
+          )
         in
         let files_with_new_errors = Lsp.UriSet.add uri files_with_new_errors in
         (state, files_with_new_errors))
@@ -326,7 +337,8 @@ let update_errors_due_to_change_and_send send_json params state =
         | Some (NonParseErrors live_non_parse_errors) ->
           Some
             (NonParseErrors
-               (Lsp_helpers.update_diagnostics_due_to_change live_non_parse_errors params))
+               (Lsp_helpers.update_diagnostics_due_to_change live_non_parse_errors params)
+            )
       in
       let server_errors =
         match server_errors with
@@ -346,5 +358,6 @@ let update_errors_due_to_change_and_send send_json params state =
           in
           Finalized (ParseErrors parse_errors, NonParseErrors non_parse_errors)
       in
-      { live_parse_errors; live_non_parse_errors; server_errors })
+      { live_parse_errors; live_non_parse_errors; server_errors }
+  )
   |> send_all_errors send_json

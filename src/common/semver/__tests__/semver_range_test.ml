@@ -52,10 +52,11 @@ let assert_satisfies ~ctxt ?include_prereleases range version expected =
     Printf.sprintf
       "Expected %s %sto satisfy %s"
       (Semver_version.to_string version)
-      (if expected then
+      ( if expected then
         ""
       else
-        "NOT ")
+        "NOT "
+      )
       (Semver_range.to_string range)
   in
   assert_equal ~ctxt ~msg expected (Semver_range.satisfies ?include_prereleases range version)
@@ -85,7 +86,9 @@ let tests =
                    expected
                    (comparators_of_range input))
                cases;
-             assert_bool "done" true) )
+             assert_bool "done" true
+           )
+         )
          (* fixes ounit error reporting *);
          ( "satisfies" >:: fun ctxt ->
            Semver_range.(
@@ -112,7 +115,9 @@ let tests =
              List.iter
                (fun (range, version, expected) -> assert_satisfies ~ctxt range version expected)
                cases;
-             assert_bool "done" true) )
+             assert_bool "done" true
+           )
+         )
          (* fixes ounit error reporting *);
          ( "satisfies_includes_prereleases" >:: fun ctxt ->
            Semver_range.(
@@ -131,6 +136,8 @@ let tests =
                (fun (range, version, expected) ->
                  assert_satisfies ~ctxt ~include_prereleases range version expected)
                cases;
-             assert_bool "done" true) );
+             assert_bool "done" true
+           )
+         );
          (* fixes ounit error reporting *)
        ]

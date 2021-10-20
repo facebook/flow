@@ -26,6 +26,5 @@ let mean_kill ~flowconfig_name ~tmp_dir root =
         ())
     pids;
   ignore (Unix.sleep 1);
-  if CommandConnectSimple.server_exists ~flowconfig_name ~tmp_dir root then
-    raise (FailedToKill None);
+  if CommandConnectSimple.server_exists ~flowconfig_name ~tmp_dir root then raise (FailedToKill None);
   ()

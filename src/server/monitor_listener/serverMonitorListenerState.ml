@@ -27,7 +27,8 @@ let requeue_deferred_parallelizable_workloads () =
   let workloads = !deferred_parallelizable_workloads_rev in
   deferred_parallelizable_workloads_rev := [];
   Base.List.iter workloads ~f:(fun (name, workload) ->
-      WorkloadStream.requeue_parallelizable ~name workload workload_stream)
+      WorkloadStream.requeue_parallelizable ~name workload workload_stream
+  )
 
 (* Env updates are...well...updates to our env. They must be handled in the main thread. Also FIFO
  * but are quick to handle *)
@@ -181,14 +182,16 @@ let recheck_fetch ~process_updates ~get_forced =
                    workload with
                    files_to_force = CheckedSet.add ~focused workload.files_to_force;
                    files_to_prioritize = FilenameSet.union updates workload.files_to_prioritize;
-                 } )
+                 }
+               )
              | CheckedSetToForce checked_set ->
                let checked_set = CheckedSet.diff checked_set (get_forced ()) in
                ( CheckedSet.is_empty checked_set,
                  {
                    workload with
                    files_to_force = CheckedSet.union checked_set workload.files_to_force;
-                 } )
+                 }
+               )
              | FilesToResync changed_since_mergebase ->
                let updates = process_updates ?skip_incompatible changed_since_mergebase in
                (* we don't know yet whether there's anything to recheck. even if [updates]
@@ -198,7 +201,8 @@ let recheck_fetch ~process_updates ~get_forced =
                  {
                    workload with
                    files_to_recheck = FilenameSet.union updates workload.files_to_recheck;
-                 } )
+                 }
+               )
            in
            let workload =
              match callback with
@@ -218,7 +222,8 @@ let recheck_fetch ~process_updates ~get_forced =
            | None -> workload
            | Some metadata ->
              let metadata = MonitorProt.merge_file_watcher_metadata metadata workload.metadata in
-             { workload with metadata })
+             { workload with metadata }
+       )
 
 let requeue_workload workload =
   Hh_logger.info
@@ -284,9 +289,11 @@ let wait_for_anything ~process_updates ~get_forced =
       [
         WorkloadStream.wait_for_workload workload_stream;
         (let%lwt _ = Lwt_stream.is_empty env_update_stream in
-         Lwt.return_unit);
+         Lwt.return_unit
+        );
         (let%lwt _ = Lwt_stream.is_empty recheck_stream in
-         Lwt.return_unit);
+         Lwt.return_unit
+        );
         wait_for_updates_for_recheck ~process_updates ~get_forced;
       ]
   in

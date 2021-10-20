@@ -73,7 +73,8 @@ let do_parse_wrapper ~options filename contents =
 let parse_contents ~options ~profiling contents filename =
   let%lwt parse_result =
     Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
-        Lwt.return (do_parse_wrapper ~options filename contents))
+        Lwt.return (do_parse_wrapper ~options filename contents)
+    )
   in
   match parse_result with
   | Parsed (Parse_artifacts { parse_errors; docblock_errors; _ } as parse_artifacts) ->
@@ -117,7 +118,8 @@ let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifact
     ServerEnv.(
       let new_suppressions = Context.error_suppressions cx in
       let { suppressions; _ } = env.errors in
-      Error_suppressions.update_suppressions suppressions new_suppressions)
+      Error_suppressions.update_suppressions suppressions new_suppressions
+    )
   in
   let severity_cover = Context.severity_cover cx in
   let include_suppressions = Context.include_suppressions cx in
@@ -250,7 +252,8 @@ let file_artifacts_of_parse_artifacts ~options ~env ~reader ~profiling ~filename
   let (Parse_artifacts { docblock; ast; file_sig; _ }) = parse_artifacts in
   let%lwt (cx, typed_ast) =
     Memory_utils.with_memory_timer_lwt ~options "MergeContents" profiling (fun () ->
-        merge_contents ~options ~env ~reader filename docblock ast file_sig)
+        merge_contents ~options ~env ~reader filename docblock ast file_sig
+    )
   in
   Lwt.return (parse_artifacts, Typecheck_artifacts { cx; typed_ast })
 

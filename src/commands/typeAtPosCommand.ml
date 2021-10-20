@@ -48,7 +48,8 @@ let spec =
              ~doc:"Use the result of type destructor evaluation if available"
         |> flag "--max-depth" (required ~default:50 int) ~doc:"Maximum depth of type (default 50)"
         |> flag "--verbose-normalizer" no_arg ~doc:"Print verbose info during normalization"
-        |> anon "args" (required (list_of string)));
+        |> anon "args" (required (list_of string))
+      );
   }
 
 let handle_response ~file_contents ~json ~pretty ~strip_root ~expanded response =
@@ -83,7 +84,8 @@ let handle_response ~file_contents ~json ~pretty ~strip_root ~expanded response 
         ( "expanded_type",
           match t with
           | Some ty -> Ty_debug.json_of_elt ~strip_root ty
-          | None -> JSON_Null )
+          | None -> JSON_Null
+        )
         :: json_assoc
       else
         json_assoc
@@ -113,7 +115,8 @@ let handle_error err ~json ~pretty =
   if json then
     Hh_json.(
       let json = JSON_Object [("error", JSON_String err)] in
-      prerr_json_endline ~pretty json)
+      prerr_json_endline ~pretty json
+    )
   else
     prerr_endline err
 

@@ -17,7 +17,8 @@ let error_of_docblock_error ~source_file (loc, err) =
           Error_message.MultipleProvidesModuleAttributes
         | Parsing_service_js.MultipleJSXAttributes -> Error_message.MultipleJSXAttributes
         | Parsing_service_js.InvalidJSXAttribute first_error ->
-          Error_message.InvalidJSXAttribute first_error )
+          Error_message.InvalidJSXAttribute first_error
+      )
   in
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
 
@@ -46,7 +47,8 @@ let error_of_file_sig_error ~source_file err =
       match err with
       | IndeterminateModuleType loc -> Error_message.EIndeterminateModuleType (ALoc.of_loc loc)
     in
-    Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err)
+    Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
+  )
 
 let set_of_file_sig_error ~source_file =
   error_of_file_sig_error ~source_file %> Flow_error.ErrorSet.singleton
@@ -59,7 +61,8 @@ let error_of_file_sig_tolerable_error ~source_file err =
       | BadExportContext (name, loc) -> Error_message.EBadExportContext (name, loc)
       | SignatureVerificationError sve -> Error_message.ESignatureVerification sve
     in
-    Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err)
+    Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
+  )
 
 let set_of_file_sig_tolerable_errors ~source_file =
   Base.List.map ~f:(error_of_file_sig_tolerable_error ~source_file) %> Flow_error.ErrorSet.of_list

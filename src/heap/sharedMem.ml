@@ -635,13 +635,14 @@ module OrderedCache (Config : CacheConfig) :
     ()
 
   let add x y =
-    (if !size >= Config.capacity then
+    ( if !size >= Config.capacity then
       (* Remove oldest element - if it's still around. *)
       let elt = Queue.pop queue in
       if Hashtbl.mem cache elt then (
         decr size;
         Hashtbl.remove cache elt
-      ));
+      )
+    );
 
     (* Add the new element, but bump the size only if it's a new addition. *)
     Queue.push x queue;
@@ -752,16 +753,18 @@ struct
   let log_hit_rate ~hit =
     Measure.sample
       (Value.description ^ " (cache hit rate)")
-      (if hit then
+      ( if hit then
         1.
       else
-        0.);
+        0.
+      );
     Measure.sample
       "(ALL cache hit rate)"
-      (if hit then
+      ( if hit then
         1.
       else
-        0.)
+        0.
+      )
 
   let get x =
     match Cache.get x with

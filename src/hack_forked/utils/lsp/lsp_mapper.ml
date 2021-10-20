@@ -398,20 +398,17 @@ let default_mapper =
           CancelRequestNotification (mapper.of_cancel_request_params mapper params)
         | PublishDiagnosticsNotification params ->
           PublishDiagnosticsNotification (mapper.of_publish_diagnostics_params mapper params)
-        | DidOpenNotification params ->
-          DidOpenNotification (mapper.of_did_open_params mapper params)
+        | DidOpenNotification params -> DidOpenNotification (mapper.of_did_open_params mapper params)
         | DidCloseNotification params ->
           DidCloseNotification (mapper.of_did_close_params mapper params)
-        | DidSaveNotification params ->
-          DidSaveNotification (mapper.of_did_save_params mapper params)
+        | DidSaveNotification params -> DidSaveNotification (mapper.of_did_save_params mapper params)
         | DidChangeNotification params ->
           DidChangeNotification (mapper.of_did_change_params mapper params)
         | DidChangeConfigurationNotification params ->
           DidChangeConfigurationNotification
             (mapper.of_did_change_configuration_params mapper params)
         | DidChangeWatchedFilesNotification params ->
-          DidChangeWatchedFilesNotification
-            (mapper.of_did_change_watched_files_params mapper params)
+          DidChangeWatchedFilesNotification (mapper.of_did_change_watched_files_params mapper params)
         | LogMessageNotification params ->
           LogMessageNotification (mapper.of_log_message_params mapper params)
         | TelemetryNotification params ->
@@ -462,8 +459,7 @@ let default_mapper =
         | DocumentRangeFormattingResult result ->
           DocumentRangeFormattingResult (mapper.of_document_range_formatting_result mapper result)
         | DocumentOnTypeFormattingResult result ->
-          DocumentOnTypeFormattingResult
-            (mapper.of_document_on_type_formatting_result mapper result)
+          DocumentOnTypeFormattingResult (mapper.of_document_on_type_formatting_result mapper result)
         | ShowMessageRequestResult result ->
           ShowMessageRequestResult (mapper.of_show_message_request_result mapper result)
         | ShowStatusResult result -> ShowStatusResult (mapper.of_show_status_result mapper result)

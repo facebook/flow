@@ -21,7 +21,8 @@ let tests =
            (* This illustrates the difference between LwtUtils.all and Lwt.nchoose, which would resolve to
             * [1] *)
            assert_equal ~ctxt lst [1; 2];
-           Lwt.return_unit );
+           Lwt.return_unit
+         );
          ( "fails_early" %>:: fun ctxt ->
            let (p1, _) = Lwt.wait () in
            let (p2, r2) = Lwt.wait () in
@@ -35,5 +36,6 @@ let tests =
              | Failure s -> Lwt.return_some s
            in
            assert_equal ~ctxt exn (Some "did not work");
-           Lwt.return_unit );
+           Lwt.return_unit
+         );
        ]

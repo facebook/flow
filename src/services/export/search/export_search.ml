@@ -119,7 +119,8 @@ let take =
       |> List.to_seq
       |> Seq.flat_map (fun { Fuzzy_path.value; _ } ->
              Export_index.find_seq value index
-             |> Seq.map (fun (source, kind) -> (source, kind, value)))
+             |> Seq.map (fun (source, kind) -> (source, kind, value))
+         )
     in
     helper ~n ~query [] seq
 

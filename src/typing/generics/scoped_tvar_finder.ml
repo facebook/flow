@@ -144,7 +144,8 @@ class finder cx =
       ScopeHelper.in_function_scope gcx tparams this#set_gcx (fun () ->
           let (_ : (ml, tl) Ast.Function.Params.t) = this#function_params params in
           let (_ : (ml, tl) Ast.Function.body) = this#function_body body in
-          ());
+          ()
+      );
       node
 
     (* Classes need their declaration locations to have the ALoc.id for `this`, in case they're anonymous.
@@ -173,7 +174,8 @@ class finder cx =
          desirable--we want to ask for annotations if a tparam flows into anything externally visible in the class *)
       ScopeHelper.in_class_toplevel_scope tparams id (fun () ->
           let (_ : (ml, tl) Ast.Class.Body.t) = this#class_body body in
-          ());
+          ()
+      );
       cls
 
     method! class_ _ = failwith "Use class_with_loc"
@@ -207,18 +209,21 @@ class finder cx =
         in
         ()
       in
-      (if is_munged && not static then
+      ( if is_munged && not static then
         (* Special case for munged properties *)
         ScopeHelper.in_class_prop_scope gcx this#set_gcx (fun () ->
             let () = check_prop () in
             let (_ : (ml, tl) Ast.Class.Property.value) = this#class_property_value value in
-            ())
+            ()
+        )
       else
         let () = check_prop () in
         (* Here we actually install the tparams collected in `class_with_loc` into the scope *)
         ScopeHelper.in_class_prop_scope gcx this#set_gcx (fun () ->
             let (_ : (ml, tl) Ast.Class.Property.value) = this#class_property_value value in
-            ()));
+            ()
+        )
+      );
       prop
 
     method object_key_label key =
@@ -253,15 +258,18 @@ class finder cx =
         in
         ()
       in
-      (if not static then
+      ( if not static then
         ScopeHelper.in_class_prop_scope gcx this#set_gcx (fun () ->
             let (_ : (ml, tl) Ast.Class.Property.value) = this#class_property_value value in
-            check_prop ())
+            check_prop ()
+        )
       else
         let () = check_prop () in
         ScopeHelper.in_class_prop_scope gcx this#set_gcx (fun () ->
             let (_ : (ml, tl) Ast.Class.Property.value) = this#class_property_value value in
-            ()));
+            ()
+        )
+      );
       field
 
     method type_param_id tparam =
@@ -274,7 +282,9 @@ class finder cx =
       this#type_params_opt
         tparams
         (Base.Option.value_map ~default:[] ~f:(fun (_, { Ast.Type.TypeParams.params; _ }) ->
-             Base.List.map ~f:this#type_param_id params))
+             Base.List.map ~f:this#type_param_id params
+         )
+        )
 
     method! pattern_object_property_identifier_key ?kind:_ key =
       (* Don't explore object property identifier keys, only value identifiers. *)

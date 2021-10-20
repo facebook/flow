@@ -75,12 +75,14 @@ let assert_is_using_cgroup_v2 =
         else
           Lwt.return_ok ()
       else
-        Lwt.return_error (spf "%s doesn't exist" cgroup_dir))
+        Lwt.return_error (spf "%s doesn't exist" cgroup_dir)
+  )
 
 (* I don't really expect us to switch cgroups often, but let's only cache for 5 seconds *)
 let get_cgroup_name =
   Memoize.until ~seconds:5.0 ~f:(fun () ->
-      ProcFS.first_cgroup_for_pid (Unix.getpid ()) |> Lwt.return)
+      ProcFS.first_cgroup_for_pid (Unix.getpid ()) |> Lwt.return
+  )
 
 type stats = {
   total: int;
@@ -102,7 +104,8 @@ let read_single_number_file path =
   Lwt.return
     ( contents_result >>= fun contents ->
       try Ok (contents |> String.strip |> Int.of_string) with
-      | Failure _ -> Error "Failed to parse memory.current" )
+      | Failure _ -> Error "Failed to parse memory.current"
+    )
 
 let parse_stat stat_contents =
   let stats =
@@ -112,7 +115,8 @@ let parse_stat stat_contents =
            | [key; raw_stat] ->
              Caml.int_of_string_opt raw_stat
              |> Base.Option.value_map ~default:stats ~f:(fun stat -> SMap.add key stat stats)
-           | _ -> stats)
+           | _ -> stats
+       )
   in
   let get key =
     match SMap.find_opt key stats with
@@ -136,7 +140,8 @@ let get_stats_for_cgroup (cgroup_name : string) : (stats, string) Result.t Lwt.t
       total_swap_result >>= fun total_swap ->
       stat_contents_result >>= fun stat_contents ->
       parse_stat stat_contents >>= fun (anon, file, shmem) ->
-      Ok { total; total_swap; anon; file; shmem } )
+      Ok { total; total_swap; anon; file; shmem }
+    )
 
 (* Like Result's >>= but for when you're dealing with result threads *)
 let ( >>% ) (type a b c) (thread : (a, b) Result.t Lwt.t) (f : a -> (c, b) Result.t Lwt.t) :

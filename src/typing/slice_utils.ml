@@ -27,7 +27,8 @@ let mk_object_type
       (* Implemented/super interfaces are folded into the property map computed by the slice, so
            we effectively flatten the hierarchy in the output *)
       ( DefT (def_reason, bogus_trust (), InstanceT (static, ObjProtoT def_reason, [], inst)),
-        def_reason )
+        def_reason
+      )
     | None ->
       let t = DefT (def_reason, bogus_trust (), ObjT (mk_objecttype ~flags ~call id proto)) in
       (* Wrap the final type in an `ExactT` if we have an exact flag *)
@@ -42,7 +43,8 @@ let mk_object_type
   in
   Generic.make_spread_id generics
   |> Base.Option.value_map ~default:t ~f:(fun id ->
-         GenericT { bound = t; reason; id; name = Generic.to_string id })
+         GenericT { bound = t; reason; id; name = Generic.to_string id }
+     )
 
 let is_widened_reason_desc r =
   match desc_of_reason r with
@@ -235,11 +237,12 @@ let spread2
     reason
     ( _inline1,
       inexact_reason1,
-      { Object.reason = r1; props = props1; flags = flags1; generics = generics1; interface = _ } )
+      { Object.reason = r1; props = props1; flags = flags1; generics = generics1; interface = _ }
+    )
     ( inline2,
       _inexact_reason2,
-      { Object.reason = r2; props = props2; flags = flags2; generics = generics2; interface = _ } )
-    =
+      { Object.reason = r2; props = props2; flags = flags2; generics = generics2; interface = _ }
+    ) =
   let exact1 = Obj_type.is_legacy_exact_DO_NOT_USE flags1.obj_kind in
   let exact2 = Obj_type.is_legacy_exact_DO_NOT_USE flags2.obj_kind in
   let dict1 = Obj_type.get_dict_opt flags1.obj_kind in
@@ -255,7 +258,8 @@ let spread2
     | (_, Some { key; value = _; dict_name = _; dict_polarity = _ }) ->
       Error
         (Error_message.ECannotSpreadIndexerOnRight
-           { spread_reason = reason; object_reason = r2; key_reason = reason_of_t key; use_op })
+           { spread_reason = reason; object_reason = r2; key_reason = reason_of_t key; use_op }
+        )
     | (Some { key; value; dict_name = _; dict_polarity = _ }, _) when not (exact2 || inline2) ->
       Error
         (Error_message.EInexactMayOverwriteIndexer
@@ -265,7 +269,8 @@ let spread2
              value_reason = reason_of_t value;
              object2_reason = r2;
              use_op;
-           })
+           }
+        )
     | _ -> Ok dict1
   in
   match dict with
@@ -287,7 +292,8 @@ let spread2
           true,
           (* Since we cannot be sure which is spread, if either
            * are methods we must treat the result as a method *)
-          method2 || method1 )
+          method2 || method1
+        )
       (* In this case, we know opt2 is true and opt1 is false *)
       else
         (union t1 t2, true, method2 || method1)
@@ -315,7 +321,9 @@ let spread2
                              propname = x;
                              error_kind = Error_message.Inexact;
                              use_op;
-                           }))
+                           }
+                        )
+                     )
                (* We care about a few cases here. We want to make sure that we can
                 * infer a precise type. This is tricky when the left-hand slice is inexact,
                 * since it may contain p2 even though it's not explicitly specified.
@@ -364,10 +372,13 @@ let spread2
                              propname = x;
                              error_kind;
                              use_op;
-                           }))
+                           }
+                        )
+                     )
                  | _ -> Some (t, true, m)))
              props1
-             props2)
+             props2
+          )
       with
       | CannotSpreadError e -> Error e
     in
@@ -508,7 +519,8 @@ let object_spread
                 UnionRep.make
                   (spread_mk_object cx reason options x0)
                   (spread_mk_object cx reason options x1)
-                  (Base.List.map ~f:(spread_mk_object cx reason options) xs) )
+                  (Base.List.map ~f:(spread_mk_object cx reason options) xs)
+              )
           | Error e ->
             add_output cx e;
             AnyT.error reason
@@ -560,7 +572,8 @@ let object_spread
         return cx use_op (AnyT.error reason)
       ) else
         continue acc resolved (curr_resolve_idx + 1) todo_rev
-    ))
+    )
+  )
 
 (***************)
 (* Object Rest *)
@@ -615,7 +628,8 @@ let object_rest
             ( merge_mode,
               get_prop r1 p1 dict1,
               get_prop r2 p2 dict2,
-              Obj_type.is_legacy_exact_DO_NOT_USE flags2.obj_kind )
+              Obj_type.is_legacy_exact_DO_NOT_USE flags2.obj_kind
+            )
           with
           (* If the object we are using to subtract has an optional property, non-own
            * property, or is inexact then we should add this prop to our result, but
@@ -714,7 +728,8 @@ let object_rest
           | ( ReactConfigMerge _,
               Some (t1, _, m1),
               Some (OptionalT { reason = _; type_ = t2; use_desc = _ }, _, _),
-              _ ) ->
+              _
+            ) ->
             (* We only test the subtyping relation of t1 and t2 if both t1 and t2
              * are optional types. If t1 is required then t2 will always
              * be overwritten. *)
@@ -754,7 +769,7 @@ let object_rest
            * For C there will be no prop. However, if the props object is exact
            * then we need to throw an error. *)
           | (ReactConfigMerge _, None, Some (_, _, _), _) ->
-            (if Obj_type.is_legacy_exact_DO_NOT_USE flags1.obj_kind then
+            ( if Obj_type.is_legacy_exact_DO_NOT_USE flags1.obj_kind then
               let use_op =
                 Frame (PropertyCompatibility { prop = Some k; lower = r2; upper = r1 }, unknown_use)
               in
@@ -769,7 +784,8 @@ let object_rest
                     suggestion = None;
                   }
               in
-              add_output cx err);
+              add_output cx err
+            );
             None)
         props1
         props2
@@ -894,7 +910,8 @@ let object_partial =
               Field
                 ( None,
                   OptionalT { reason = reason_of_t t; type_ = t; use_desc = false },
-                  Polarity.Neutral ))
+                  Polarity.Neutral
+                ))
         props
     in
     let call = None in
@@ -948,7 +965,8 @@ let intersect2
     let (t1, t2, opt) =
       match (t1, t2) with
       | ( OptionalT { reason = _; type_ = t1; use_desc = _ },
-          OptionalT { reason = _; type_ = t2; use_desc = _ } ) ->
+          OptionalT { reason = _; type_ = t2; use_desc = _ }
+        ) ->
         (t1, t2, true)
       | (OptionalT { reason = _; type_ = t1; use_desc = _ }, t2)
       | (t1, OptionalT { reason = _; type_ = t2; use_desc = _ })
@@ -989,20 +1007,22 @@ let intersect2
           key = intersection d1.key d2.key;
           value = intersection (read_dict r1 d1) (read_dict r2 d2);
           dict_polarity = Polarity.Neutral;
-        })
+        }
+    )
   in
   let obj_kind =
     Obj_type.obj_kind_from_optional_dict
       ~dict
       ~otherwise:
-        (if
-         (* TODO(jmbrown): Audit this condition. Should this be a conjunction? *)
-         Obj_type.is_legacy_exact_DO_NOT_USE flags1.obj_kind
-         || Obj_type.is_legacy_exact_DO_NOT_USE flags2.obj_kind
+        ( if
+          (* TODO(jmbrown): Audit this condition. Should this be a conjunction? *)
+          Obj_type.is_legacy_exact_DO_NOT_USE flags1.obj_kind
+          || Obj_type.is_legacy_exact_DO_NOT_USE flags2.obj_kind
         then
           Exact
         else
-          Inexact)
+          Inexact
+        )
   in
   let flags = { frozen = flags1.frozen || flags2.frozen; obj_kind } in
   let generics = Generic.spread_append generics1 generics2 in
@@ -1032,7 +1052,8 @@ let resolved ~next ~recurse cx use_op reason resolve_tool tool x =
       | t :: todo ->
         let done_rev = Nel.cons x done_rev in
         let resolve_tool = Resolve (List (todo, done_rev, join)) in
-        recurse cx use_op reason resolve_tool tool t))
+        recurse cx use_op reason resolve_tool tool t)
+  )
 
 let interface_slice cx r intf id generics =
   let (id, obj_kind) =
@@ -1040,7 +1061,8 @@ let interface_slice cx r intf id generics =
     (* TODO $-prefixed names should be internal *)
     match
       ( NameUtils.Map.find_opt (OrdinaryName "$key") props,
-        NameUtils.Map.find_opt (OrdinaryName "$value") props )
+        NameUtils.Map.find_opt (OrdinaryName "$value") props
+      )
     with
     | (Some (Field (_, key, polarity)), Some (Field (_, value, polarity')))
       when polarity = polarity' ->
@@ -1102,7 +1124,8 @@ let resolve
         add_output
           cx
           (Error_message.ECannotSpreadInterface
-             { spread_reason = reason; interface_reason = r; use_op });
+             { spread_reason = reason; interface_reason = r; use_op }
+          );
         return cx use_op (AnyT.error reason)
       | _ -> recurse cx use_op reason resolve_tool tool super
     end

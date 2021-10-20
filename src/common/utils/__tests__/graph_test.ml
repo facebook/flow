@@ -41,33 +41,40 @@ let tests =
            let result_forward_map = StringGraph.to_map graph in
            let result_backward_map = StringGraph.to_backward_map graph in
            assert_smaps_equal ~ctxt map result_forward_map;
-           assert_smaps_equal ~ctxt reverse_map result_backward_map );
+           assert_smaps_equal ~ctxt reverse_map result_backward_map
+         );
          ( "find" >:: fun ctxt ->
            let result = StringGraph.find "foo" graph in
            let expected = SMap.find "foo" map in
-           assert_ssets_equal ~ctxt expected result );
+           assert_ssets_equal ~ctxt expected result
+         );
          ( "find_opt" >:: fun ctxt ->
            let result = StringGraph.find_opt "foo" graph in
            let result = Base.Option.value_exn result in
            let expected = SMap.find "foo" map in
-           assert_ssets_equal ~ctxt expected result );
+           assert_ssets_equal ~ctxt expected result
+         );
          ( "find_opt_none" >:: fun ctxt ->
            let result = StringGraph.find_opt "qux" graph in
            let expected = None in
-           assert_equal ~ctxt expected result );
+           assert_equal ~ctxt expected result
+         );
          ( "find_backward" >:: fun ctxt ->
            let result = StringGraph.find_backward "baz" graph in
            let expected = SMap.find "baz" reverse_map in
-           assert_ssets_equal ~ctxt expected result );
+           assert_ssets_equal ~ctxt expected result
+         );
          ( "find_backward_opt" >:: fun ctxt ->
            let result = StringGraph.find_backward_opt "baz" graph in
            let result = Base.Option.value_exn result in
            let expected = SMap.find "baz" reverse_map in
-           assert_ssets_equal ~ctxt expected result );
+           assert_ssets_equal ~ctxt expected result
+         );
          ( "find_backward_opt_none" >:: fun ctxt ->
            let result = StringGraph.find_backward_opt "qux" graph in
            let expected = None in
-           assert_equal ~ctxt expected result );
+           assert_equal ~ctxt expected result
+         );
          ( "add" >:: fun ctxt ->
            let update_map = SMap.of_list [("qux", SSet.of_list ["foo"; "baz"])] in
            let graph = StringGraph.update_from_map graph update_map ~to_remove:SSet.empty in
@@ -81,7 +88,8 @@ let tests =
              |> SMap.add "qux" SSet.empty
            in
            assert_smaps_equal ~ctxt expected_forward_map result_forward_map;
-           assert_smaps_equal ~ctxt expected_backward_map result_backward_map );
+           assert_smaps_equal ~ctxt expected_backward_map result_backward_map
+         );
          ( "remove" >:: fun ctxt ->
            let graph =
              StringGraph.update_from_map graph SMap.empty ~to_remove:(SSet.singleton "bar")
@@ -95,7 +103,8 @@ let tests =
              SMap.of_list [("foo", SSet.of_list []); ("baz", SSet.of_list ["foo"])]
            in
            assert_smaps_equal ~ctxt expected_forward_map result_forward_map;
-           assert_smaps_equal ~ctxt expected_backward_map result_backward_map );
+           assert_smaps_equal ~ctxt expected_backward_map result_backward_map
+         );
          ( "remove_all" >:: fun ctxt ->
            let graph =
              StringGraph.update_from_map graph SMap.empty ~to_remove:(SSet.of_list (SMap.keys map))
@@ -104,7 +113,8 @@ let tests =
            let result_backward_map = StringGraph.to_backward_map graph in
            let expected = SMap.empty in
            assert_smaps_equal ~ctxt expected result_forward_map;
-           assert_smaps_equal ~ctxt expected result_backward_map );
+           assert_smaps_equal ~ctxt expected result_backward_map
+         );
          ( "remove_nonexistent" >:: fun ctxt ->
            let graph =
              StringGraph.update_from_map graph SMap.empty ~to_remove:(SSet.singleton "fake")
@@ -112,7 +122,8 @@ let tests =
            let result_forward_map = StringGraph.to_map graph in
            let result_backward_map = StringGraph.to_backward_map graph in
            assert_smaps_equal ~ctxt map result_forward_map;
-           assert_smaps_equal ~ctxt reverse_map result_backward_map );
+           assert_smaps_equal ~ctxt reverse_map result_backward_map
+         );
          ( "modify" >:: fun ctxt ->
            let update_map = SMap.of_list [("foo", SSet.empty)] in
            let graph = StringGraph.update_from_map graph update_map ~to_remove:SSet.empty in
@@ -123,7 +134,8 @@ let tests =
              SMap.of_list [("foo", SSet.empty); ("bar", SSet.empty); ("baz", SSet.singleton "bar")]
            in
            assert_smaps_equal ~ctxt expected_forward_map result_forward_map;
-           assert_smaps_equal ~ctxt expected_backward_map result_backward_map );
+           assert_smaps_equal ~ctxt expected_backward_map result_backward_map
+         );
          ( "modify_complex" >:: fun ctxt ->
            let update_map =
              SMap.of_list [("foo", SSet.of_list ["qux"]); ("qux", SSet.of_list ["baz"])]
@@ -149,7 +161,8 @@ let tests =
                ]
            in
            assert_smaps_equal ~ctxt expected_forward_map result_forward_map;
-           assert_smaps_equal ~ctxt expected_backward_map result_backward_map );
+           assert_smaps_equal ~ctxt expected_backward_map result_backward_map
+         );
          ( "map" >:: fun ctxt ->
            let mapped_graph = StringGraph.map (fun x -> "foo_" ^ x) graph in
            let result_forward_map = StringGraph.to_map mapped_graph in
@@ -161,5 +174,6 @@ let tests =
                  ("foo_baz", SSet.of_list []);
                ]
            in
-           assert_smaps_equal ~ctxt expected_forward_map result_forward_map );
+           assert_smaps_equal ~ctxt expected_forward_map result_forward_map
+         );
        ]

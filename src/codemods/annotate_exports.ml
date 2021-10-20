@@ -200,9 +200,12 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
                       Ast.Pattern.Identifier.name;
                       annot = Ast.Type.Missing _ as annot;
                       optional = false as optional;
-                    } );
+                    }
+                );
               init = Some (eloc, _) as init;
-            } ) )
+            }
+          )
+        )
         when LMap.mem eloc sig_verification_loc_tys ->
         let ty = LMap.find eloc sig_verification_loc_tys in
         let f loc _annot ty = this#annotate_node loc ty (fun a -> Ast.Type.Available a) in
@@ -235,7 +238,9 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
           ( loc,
             Ast.Expression.TypeCast
               Ast.Expression.TypeCast.
-                { expression = e; annot = (Loc.none, flowfixme_ast); comments = None } )
+                { expression = e; annot = (Loc.none, flowfixme_ast); comments = None }
+              
+          )
         in
         this#opt_annotate ~f ~error ~expr:(Some expr) loc type_entry expr
       | None -> expr
@@ -313,10 +318,12 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       | (Identifier { Identifier.annot = Ast.Type.Available _; _ }, _)
       (* In `const x = exp;` the error appears on exp, so it's handled elsewhere. *)
       | ( Identifier { Identifier.annot = Ast.Type.Missing _; _ },
-          Ast.Statement.VariableDeclaration.Const ) ->
+          Ast.Statement.VariableDeclaration.Const
+        ) ->
         super#variable_declarator_pattern ~kind expr
       | ( Identifier { Identifier.name; annot = Ast.Type.Missing _ as annot; optional },
-          Ast.Statement.VariableDeclaration.(Var | Let) ) ->
+          Ast.Statement.VariableDeclaration.(Var | Let)
+        ) ->
         let (name_loc, _) = name in
         (match LMap.find_opt name_loc sig_verification_loc_tys with
         | None -> super#variable_declarator_pattern ~kind expr
@@ -350,14 +357,17 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
                      Param.argument =
                        ( _,
                          Ast.Pattern.Identifier
-                           { Ast.Pattern.Identifier.annot = Ast.Type.Missing ploc; _ } );
+                           { Ast.Pattern.Identifier.annot = Ast.Type.Missing ploc; _ }
+                       );
                      _;
-                   } );
+                   }
+                 );
                ];
              rest = None;
              this_ = None;
              comments = _;
-           } );
+           }
+         );
        return = Ast.Type.Missing rloc;
        _;
       }

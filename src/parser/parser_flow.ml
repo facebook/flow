@@ -93,7 +93,8 @@ module rec Parse : PARSER = struct
         Ast.Program.statements = stmts;
         comments = Flow_ast_utils.mk_comments_opt ~leading ();
         all_comments;
-      } )
+      }
+    )
 
   and directives =
     let check env token =
@@ -332,7 +333,8 @@ module rec Parse : PARSER = struct
       {
         Ast.Statement.Block.body;
         comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
-      } )
+      }
+    )
 
   and function_block_body ~expression env =
     let start_loc = Peek.loc env in
@@ -361,7 +363,8 @@ module rec Parse : PARSER = struct
         Ast.Statement.Block.body;
         comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
       },
-      strict )
+      strict
+    )
 
   and jsx_element_or_fragment = JSX.element_or_fragment
 

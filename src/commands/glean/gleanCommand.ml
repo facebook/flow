@@ -19,7 +19,8 @@ let spec =
       empty
       |> codemod_flags
       |> flag "--output-dir" (required string) ~doc:"Name of directory to output the JSON into"
-      |> flag "--write-root" (required string) ~doc:"Prefix to attach to file names (e.g. www)");
+      |> flag "--write-root" (required string) ~doc:"Prefix to attach to file names (e.g. www)"
+      );
   }
 
 let main codemod_flags output_dir write_root =

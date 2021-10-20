@@ -26,7 +26,8 @@ module FreeVars = struct
           | Mu (v, t) ->
             let env = { env with skip = ISet.add v env.skip } in
             super#on_t env t
-          | t -> super#on_t env t)
+          | t -> super#on_t env t
+        )
     end
 
   (* Computes the set of variables appearing free in the input. *)
@@ -67,7 +68,8 @@ module Size = struct
         size := 0;
         match o#on_t max t with
         | exception SizeCutOff -> GreaterThan max
-        | () -> Exactly !size)
+        | () -> Exactly !size
+    )
 end
 
 let size_of_type ?(max = 10000) t =
@@ -88,7 +90,8 @@ let symbols_of_type =
         method! on_symbol _env s = [s]
       end
     in
-    (fun t -> o#on_t () t))
+    (fun t -> o#on_t () t)
+  )
 
 module Simplify = struct
   type config = {

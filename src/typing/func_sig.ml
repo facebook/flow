@@ -75,7 +75,8 @@ module Make
       |> TypeParams.map (fun tp ->
              let bound = Flow.subst cx map tp.bound in
              let default = Base.Option.map ~f:(Flow.subst cx map) tp.default in
-             { tp with bound; default })
+             { tp with bound; default }
+         )
     in
     let map =
       TypeParams.to_list tparams |> List.fold_left (fun map tp -> SMap.remove tp.name map) map
@@ -94,7 +95,8 @@ module Make
             tparams_map = SMap.map (Flow.subst cx map) tparams_map;
             fparams = F.subst cx map fparams;
             return_t = TypeUtil.map_annotated_or_inferred (Flow.subst cx map) return_t;
-          })
+          }
+    )
 
   let functiontype cx this_default { reason; kind; tparams; fparams; return_t; knot; _ } =
     let make_trust = Context.trust_constructor cx in
@@ -141,7 +143,9 @@ module Make
                 ~rest_param
                 ~def_reason
                 ~params_names
-                (TypeUtil.type_t_of_annotated_or_inferred return_t) ) )
+                (TypeUtil.type_t_of_annotated_or_inferred return_t)
+            )
+        )
     in
     poly_type_of_tparams (Context.generate_poly_id cx) tparams t
 
@@ -219,17 +223,20 @@ module Make
     (* early-add our own name binding for recursive calls. *)
     Base.Option.iter id ~f:(fun (loc, { Ast.Identifier.name; comments = _ }) ->
         let entry = annotated_todo knot |> Scope.Entry.new_var ~loc ~provider:knot in
-        Scope.add_entry (OrdinaryName name) entry function_scope);
+        Scope.add_entry (OrdinaryName name) entry function_scope
+    );
 
     let (yield_t, next_t) =
       if kind = Generator || kind = AsyncGenerator then
         ( Tvar.mk cx (replace_desc_reason (RCustom "yield") reason),
-          Tvar.mk cx (replace_desc_reason (RCustom "next") reason) )
+          Tvar.mk cx (replace_desc_reason (RCustom "next") reason)
+        )
       else
         ( DefT
             ( replace_desc_reason (RCustom "no yield") reason,
               bogus_trust (),
-              MixedT Mixed_everything ),
+              MixedT Mixed_everything
+            ),
           DefT
             (replace_desc_reason (RCustom "no next") reason, bogus_trust (), MixedT Mixed_everything)
         )
@@ -240,9 +247,11 @@ module Make
           Entry.(
             let loc = loc_of_t (TypeUtil.type_t_of_annotated_or_inferred t) in
             let state = State.Initialized in
-            new_const ~loc ~state t)
+            new_const ~loc ~state t
+          )
         in
-        (new_entry (Inferred yield_t), new_entry (Inferred next_t), new_entry return_t))
+        (new_entry (Inferred yield_t), new_entry (Inferred next_t), new_entry return_t)
+      )
     in
     Scope.add_entry (internal_name "yield") yield function_scope;
     Scope.add_entry (internal_name "next") next function_scope;
@@ -275,7 +284,8 @@ module Make
           | [(_, Return { Return.argument = Some expr; comments = _ })]
           | [(_, Expression { Expression.expression = expr; _ })] ->
             Some (Ast.Function.BodyExpression expr)
-          | _ -> failwith "expected return body") )
+          | _ -> failwith "expected return body")
+        )
     in
     (* NOTE: Predicate functions can currently only be of the form:
        function f(...) { return <exp>; }
@@ -290,7 +300,8 @@ module Make
             let loc = aloc_of_reason reason in
             Flow_js.add_output cx Error_message.(EUnsupportedSyntax (loc, PredicateInvalidBody))
         end
-      | _ -> ());
+      | _ -> ()
+    );
 
     (* decl/type visit pre-pass *)
     decls cx statements;
@@ -307,7 +318,8 @@ module Make
         | Some (Break _)
         | Some (Continue _) ->
           failwith "Illegal toplevel abnormal directive"
-        | None -> true)
+        | None -> true
+      )
     in
     let body_ast = reconstruct_body statements_ast in
     (* build return type for void funcs *)
@@ -377,7 +389,8 @@ module Make
           cx
           ( Env.get_internal_var cx "maybe_exhaustively_checked" loc,
             FunImplicitVoidReturnT
-              { use_op; reason = reason_of_t return_t; return = return_t; void_t } );
+              { use_op; reason = reason_of_t return_t; return = return_t; void_t }
+          );
         init_ast
       ) else
         None

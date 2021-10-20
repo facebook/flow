@@ -1023,13 +1023,16 @@ let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 let util_use_op_of_msg nope util = function
   | EIncompatible { use_op; lower; upper; branches } ->
     Base.Option.value_map use_op ~default:nope ~f:(fun use_op ->
-        util use_op (fun use_op -> EIncompatible { use_op = Some use_op; lower; upper; branches }))
+        util use_op (fun use_op -> EIncompatible { use_op = Some use_op; lower; upper; branches })
+    )
   | EIncompatibleDefs { use_op; reason_lower; reason_upper; branches } ->
     util use_op (fun use_op -> EIncompatibleDefs { use_op; reason_lower; reason_upper; branches })
   | EIncompatibleProp { use_op; prop; reason_prop; reason_obj; special } ->
     Base.Option.value_map use_op ~default:nope ~f:(fun use_op ->
         util use_op (fun use_op ->
-            EIncompatibleProp { use_op = Some use_op; prop; reason_prop; reason_obj; special }))
+            EIncompatibleProp { use_op = Some use_op; prop; reason_prop; reason_obj; special }
+        )
+    )
   | ETrustIncompatibleWithUseOp (rl, ru, op) ->
     util op (fun op -> ETrustIncompatibleWithUseOp (rl, ru, op))
   | EExpectedStringLit { reason_lower; reason_upper; use_op } ->
@@ -1040,7 +1043,8 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op -> EExpectedBooleanLit { reason_lower; reason_upper; use_op })
   | EPropNotFound { prop_name = prop; reason_prop; reason_obj; use_op; suggestion } ->
     util use_op (fun use_op ->
-        EPropNotFound { prop_name = prop; reason_prop; reason_obj; use_op; suggestion })
+        EPropNotFound { prop_name = prop; reason_prop; reason_obj; use_op; suggestion }
+    )
   | EPropNotReadable { reason_prop; prop_name; use_op } ->
     util use_op (fun use_op -> EPropNotReadable { reason_prop; prop_name; use_op })
   | EPropNotWritable { reason_prop; prop_name; use_op } ->
@@ -1049,7 +1053,8 @@ let util_use_op_of_msg nope util = function
     util op (fun op -> EPropPolarityMismatch (rs, p, ps, op))
   | EStrictLookupFailed { reason_prop; reason_obj; name; suggestion; use_op = Some op } ->
     util op (fun op ->
-        EStrictLookupFailed { reason_prop; reason_obj; name; suggestion; use_op = Some op })
+        EStrictLookupFailed { reason_prop; reason_obj; name; suggestion; use_op = Some op }
+    )
   | EPrivateLookupFailed (rs, x, op) -> util op (fun op -> EPrivateLookupFailed (rs, x, op))
   | EAdditionMixed (r, op) -> util op (fun op -> EAdditionMixed (r, op))
   | ETupleArityMismatch (rs, x, y, op) -> util op (fun op -> ETupleArityMismatch (rs, x, y, op))
@@ -1091,24 +1096,28 @@ let util_use_op_of_msg nope util = function
     util use_op (fun use_op -> ECannotSpreadInterface { spread_reason; interface_reason; use_op })
   | ECannotSpreadIndexerOnRight { spread_reason; object_reason; key_reason; use_op } ->
     util use_op (fun use_op ->
-        ECannotSpreadIndexerOnRight { spread_reason; object_reason; key_reason; use_op })
+        ECannotSpreadIndexerOnRight { spread_reason; object_reason; key_reason; use_op }
+    )
   | EUnableToSpread { spread_reason; object1_reason; object2_reason; propname; error_kind; use_op }
     ->
     util use_op (fun use_op ->
         EUnableToSpread
-          { spread_reason; object1_reason; object2_reason; propname; error_kind; use_op })
+          { spread_reason; object1_reason; object2_reason; propname; error_kind; use_op }
+    )
   | EInexactMayOverwriteIndexer { spread_reason; key_reason; value_reason; object2_reason; use_op }
     ->
     util use_op (fun use_op ->
         EInexactMayOverwriteIndexer
-          { spread_reason; key_reason; value_reason; object2_reason; use_op })
+          { spread_reason; key_reason; value_reason; object2_reason; use_op }
+    )
   | ECannotResolveOpenTvar { use_op; reason; blame_reasons } ->
     util use_op (fun use_op -> ECannotResolveOpenTvar { use_op; reason; blame_reasons })
   | EEscapedGeneric { reason; blame_reason; annot_reason; use_op; bound_name; bound_loc; is_this }
     ->
     util use_op (fun use_op ->
         EEscapedGeneric
-          { reason; blame_reason; annot_reason; use_op; bound_loc; bound_name; is_this })
+          { reason; blame_reason; annot_reason; use_op; bound_loc; bound_name; is_this }
+    )
   | EDebugPrint (_, _)
   | EExportValueAsType (_, _)
   | EImportValueAsType (_, _)
@@ -1400,7 +1409,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
       | EmptyArray loc
       | EmptyObject loc
       | UnexpectedExpression (loc, _) ->
-        Some loc))
+        Some loc)
+    )
   | EDuplicateModuleProvider { conflict; _ } -> Some conflict
   | EBindingError (_, loc, _, _) -> Some loc
   | EEnumModification { loc; _ } -> Some loc
@@ -1495,7 +1505,8 @@ let kind_of_msg =
     | EDocblockError _
     | ELintSetting _ ->
       PseudoParseError
-    | _ -> InferError)
+    | _ -> InferError
+  )
 
 let mk_prop_message =
   Errors.Friendly.(
@@ -1505,7 +1516,8 @@ let mk_prop_message =
     | Some ("$key" | "$value") ->
       [text "an index signature declaring the expected key / value type"]
     | Some "$call" -> [text "a call signature declaring the expected parameter / return type"]
-    | Some prop -> [text "property "; code prop])
+    | Some prop -> [text "property "; code prop]
+  )
 
 let enum_name_of_reason reason =
   match desc_of_reason reason with
@@ -1761,7 +1773,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           if max_arity = 1 then
             "argument"
           else
-            "arguments" )
+            "arguments"
+        )
       else
         (spf "%d-%d" min_arity max_arity, "arguments")
     in
@@ -1781,10 +1794,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           (spf
              "%n type %s."
              n
-             (if n == 1 then
+             ( if n == 1 then
                "argument"
              else
-               "arguments"));
+               "arguments"
+             )
+          );
       ]
     in
     Normal { features }
@@ -1799,10 +1814,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           (spf
              "%n type %s."
              n
-             (if n == 1 then
+             ( if n == 1 then
                "argument"
              else
-               "arguments"));
+               "arguments"
+             )
+          );
       ]
     in
     Normal { features }
@@ -1822,10 +1839,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             (spf
                "%n type %s."
                n
-               (if n == 1 then
+               ( if n == 1 then
                  "argument"
                else
-                 "arguments"));
+                 "arguments"
+               )
+            );
         ]
       in
       Normal { features }
@@ -1837,10 +1856,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           (spf
              "%n type %s."
              n
-             (if n == 1 then
+             ( if n == 1 then
                "argument"
              else
-               "arguments"));
+               "arguments"
+             )
+          );
       ]
     in
     Normal { features }
@@ -1873,10 +1894,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             (spf
                "%n type argument%s."
                n
-               (if n == 1 then
+               ( if n == 1 then
                  ""
                else
-                 "s"));
+                 "s"
+               )
+            );
         ]
       in
       Normal { features }
@@ -2067,11 +2090,13 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
               (spf
                  " only has %d element%s, so index %s is out of bounds"
                  length
-                 (if length == 1 then
+                 ( if length == 1 then
                    ""
                  else
-                   "s")
-                 index);
+                   "s"
+                 )
+                 index
+              );
           ];
         use_op;
       }
@@ -2128,10 +2153,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
                ~f:(fun case_r ->
                  let text = "to " ^ string_of_desc (desc_of_reason case_r) in
                  [ref (mk_reason (RCustom text) (loc_of_reason case_r))])
-               case_rs)
+               case_rs
+            )
         @ [text "."]
       in
-      Normal { features })
+      Normal { features }
+    )
   | EIncompatibleWithExact (reasons, use_op, kind) ->
     let (lower, upper) = reasons in
     let object_kind =
@@ -2683,7 +2710,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text
               (spf
                  "Cannot determine the type of this %s. "
-                 (Flow_ast_utils.ExpressionSort.to_string esort));
+                 (Flow_ast_utils.ExpressionSort.to_string esort)
+              );
             text "Please provide an annotation, e.g., by adding a type cast around this expression.";
           ]
       in
@@ -2691,7 +2719,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text "Cannot build a typed interface for this module. "
         :: text "You should annotate the exports of this module with types. " :: features
       in
-      Normal { features })
+      Normal { features }
+    )
   | EUnreachable _ -> Normal { features = [text "Unreachable code."] }
   | EInvalidObjectKit { reason; reason_op = _; use_op } ->
     UseOp { loc = loc_of_reason reason; features = [ref reason; text " is not an object"]; use_op }
@@ -2830,7 +2859,9 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           | Shape (ResolveDict _) -> is_not_prop_type
           | Shape (ResolveProp _) -> is_not_prop_type
         in
-        UseOp { loc = loc_of_reason reason; features = [ref reason; text (" " ^ msg)]; use_op }))
+        UseOp { loc = loc_of_reason reason; features = [ref reason; text (" " ^ msg)]; use_op }
+      )
+    )
   | EInvalidReactCreateClass { reason; use_op; tool } ->
     React.(
       React.CreateClass.(
@@ -2846,7 +2877,9 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           | DefaultProps _ -> "is not an object"
           | InitialState _ -> "is not an object or null"
         in
-        UseOp { loc = loc_of_reason reason; features = [ref reason; text (" " ^ msg)]; use_op }))
+        UseOp { loc = loc_of_reason reason; features = [ref reason; text (" " ^ msg)]; use_op }
+      )
+    )
   | EReactElementFunArity (_, fn, n) ->
     let features =
       [
@@ -2857,10 +2890,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           (spf
              "without at least %d argument%s."
              n
-             (if n == 1 then
+             ( if n == 1 then
                ""
              else
-               "s"));
+               "s"
+             )
+          );
       ]
     in
     Normal { features }
@@ -2886,7 +2921,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     let annot_features =
       Base.Option.value_map annot_reason ~default:[] ~f:(fun annot_reason ->
-          [text " (try adding a type annotation to "; ref annot_reason; text ")"])
+          [text " (try adding a type annotation to "; ref annot_reason; text ")"]
+      )
     in
     UseOp { loc = loc_of_reason reason; features = features @ annot_features; use_op }
   | EEscapedGeneric
@@ -2902,7 +2938,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     let annot_features =
       Base.Option.value_map annot_reason ~default:[] ~f:(fun annot_reason ->
-          [text " (try adding a type annotation to "; ref annot_reason; text ")"])
+          [text " (try adding a type annotation to "; ref annot_reason; text ")"]
+      )
     in
     UseOp { loc = loc_of_reason reason; features = features @ annot_features; use_op }
   | EEscapedGeneric
@@ -2921,7 +2958,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     let annot_features =
       Base.Option.value_map annot_reason ~default:[] ~f:(fun annot_reason ->
-          [text " (try adding a type annotation to "; ref annot_reason; text ")"])
+          [text " (try adding a type annotation to "; ref annot_reason; text ")"]
+      )
     in
     UseOp { loc = loc_of_reason reason; features = features @ annot_features; use_op }
   | EEscapedGeneric
@@ -2937,7 +2975,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     let annot_features =
       Base.Option.value_map annot_reason ~default:[] ~f:(fun annot_reason ->
-          [text " (try adding a type annotation to "; ref annot_reason; text ")"])
+          [text " (try adding a type annotation to "; ref annot_reason; text ")"]
+      )
     in
     UseOp { loc = loc_of_reason reason; features = features @ annot_features; use_op }
   | EUnsupportedSetProto _ -> Normal { features = [text "Mutating this prototype is unsupported."] }
@@ -3236,7 +3275,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
             text " or make ";
             code (display_string_of_name propname);
             text " a required property";
-          ] )
+          ]
+        )
     in
     let features =
       [
@@ -3346,7 +3386,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         let name = display_string_of_name name in
         [text " because "; code name; text " is not a member of "; ref enum_reason; text "."]
         @ Base.Option.value_map suggestion ~default:[] ~f:(fun suggestion ->
-              [text " Did you mean the member "; code suggestion; text "?"])
+              [text " Did you mean the member "; code suggestion; text "?"]
+          )
       | None ->
         [text " on "; ref enum_reason; text " because computed access is not allowed on enums."]
     in
@@ -3467,7 +3508,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           if number_to_check > 5 then
             let max_display_amount = 4 in
             (Base.List.take left_to_check max_display_amount
-            |> Base.List.bind ~f:(fun member -> [code member; text ", "]))
+            |> Base.List.bind ~f:(fun member -> [code member; text ", "])
+            )
             @ [text (spf "and %d others" (number_to_check - max_display_amount))]
           else
             Friendly.conjunction_concat

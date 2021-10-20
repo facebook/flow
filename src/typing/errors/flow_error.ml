@@ -125,7 +125,8 @@ let score_of_use_op use_op =
              * rendered in error messages. So it doesn't necessarily signal anything
              * about the user's intent. *)
             | ImplicitTypeParam -> 0
-            | _ -> frame_score))
+            | _ -> frame_score
+            ))
       use_op
   in
   match score with
@@ -393,7 +394,8 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
                   None,
                   match var with
                   | Some var -> [text "Cannot assign "; desc init; text " to "; desc var]
-                  | None -> [text "Cannot assign "; desc init; text " to variable"] )
+                  | None -> [text "Cannot assign "; desc init; text " to variable"]
+                )
             | Op (DeleteVar { var }) -> `Root (var, None, [text "Cannot delete "; desc var])
             | Op (InitField { op; body }) ->
               `Root (op, None, [text "Cannot initialize "; desc op; text " with "; desc body])
@@ -425,12 +427,15 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
               `Root (op, Some prop, [text "Cannot call "; desc fn])
             | Frame
                 ( FunParam _,
-                  (Op (Type.Speculation (Op (FunCall _ | FunCallMethod _ | JSXCreateElement _))) as
-                  use_op) ) ->
+                  ( Op (Type.Speculation (Op (FunCall _ | FunCallMethod _ | JSXCreateElement _))) as
+                  use_op
+                  )
+                ) ->
               `Next use_op
             | Frame
                 ( FunParam { n; name; lower = lower'; _ },
-                  Op (FunCall { args; fn; _ } | FunCallMethod { args; fn; _ }) ) ->
+                  Op (FunCall { args; fn; _ } | FunCallMethod { args; fn; _ })
+                ) ->
               let lower =
                 if List.length args > n - 1 then
                   List.nth args (n - 1)
@@ -447,14 +452,16 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
                   None,
                   [
                     text "Cannot call "; desc fn; text " with "; desc lower; text " bound to "; param;
-                  ] )
+                  ]
+                )
             | Op (FunReturnStatement { value }) ->
               `Root (value, None, [text "Cannot return "; desc value])
             | Op (FunImplicitReturn { upper; fn }) ->
               `Root
                 ( upper,
                   None,
-                  [text "Cannot expect "; desc upper; text " as the return type of "; desc fn] )
+                  [text "Cannot expect "; desc upper; text " as the return type of "; desc fn]
+                )
             | Op (GeneratorYield { value }) ->
               `Root (value, None, [text "Cannot yield "; desc value])
             | Op (GetProperty prop) -> `Root (prop, None, [text "Cannot get "; desc prop])
@@ -490,7 +497,8 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
                     desc case_test;
                     text " against ";
                     ref switch_discriminant;
-                  ] )
+                  ]
+                )
             | Op (MatchingProp { op; obj; key; sentinel_reason }) ->
               let message =
                 [
@@ -517,7 +525,8 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
                   (Base.List.map
                      ~f:(fun r -> ref (update_desc_reason (fun _ -> RCustom "") r))
                      providers
-                  |> Base.List.intersperse ~sep:(text ","))
+                  |> Base.List.intersperse ~sep:(text ",")
+                  )
               in
               let message =
                 [text "All writes to "; code name; text " must be compatible with the type of "]
@@ -554,7 +563,8 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
                 ( PropertyCompatibility
                     (* TODO the $-prefixed names should be internal *)
                     { prop = None | Some (OrdinaryName ("$key" | "$value")); lower; _ },
-                  use_op ) ->
+                  use_op
+                ) ->
               `Frame (lower, use_op, [text "the indexer property"])
             | Frame (PropertyCompatibility { prop = Some (OrdinaryName "$call"); lower; _ }, use_op)
               ->
@@ -603,8 +613,10 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
                       (List.fold_left
                          (fun acc prop -> display_string_of_name prop ^ "." ^ acc)
                          (display_string_of_name prop)
-                         props);
-                  ] )
+                         props
+                      );
+                  ]
+                )
             | Frame (TupleElementCompatibility { n; lower; _ }, use_op) ->
               `Frame (lower, use_op, [text "index "; text (string_of_int (n - 1))])
             | Frame (TypeArgCompatibility { targ; lower; _ }, use_op) ->
@@ -655,11 +667,13 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
             let (all_frames, local_frames, explanations) = frames in
             let frames =
               ( frame :: all_frames,
-                (if frame_contains_loc then
+                ( if frame_contains_loc then
                   local_frames
                 else
-                  frame :: local_frames),
-                explanations )
+                  frame :: local_frames
+                ),
+                explanations
+              )
             in
             loop loc frames use_op
           (* Same logic as `Frame except we don't have a frame location. *)
@@ -676,11 +690,13 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
             let (all_frames, local_frames, explanations) = frames in
             ( None,
               loc,
-              (if show_all_frames then
+              ( if show_all_frames then
                 all_frames
               else
-                local_frames),
-              explanations )
+                local_frames
+              ),
+              explanations
+            )
           (* Finish up be returning our root location, root message, primary loc,
            * and frames. *)
           | `Root (root_reason, root_specific_reason, root_message) ->
@@ -703,9 +719,11 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
           let (root, loc, frames, explanations) = loop loc ([], [], []) use_op in
           let root =
             Base.Option.map root (fun (root_loc, root_message) ->
-                (root_loc, root_message @ [text " because"]))
+                (root_loc, root_message @ [text " because"])
+            )
           in
-          (root, loc, frames, explanations))
+          (root, loc, frames, explanations)
+      )
     in
     (* Make a friendly error based on a use_op. The message we are provided should
      * not have any punctuation. Punctuation will be provided after the frames of
@@ -846,7 +864,8 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
             if Loc.compare (loc_of_reason return) (loc_of_reason upper) = 0 then
               [text "implicitly-returned "; desc upper]
             else
-              [ref upper])
+              [ref upper]
+            )
         (* Default incompatibility. *)
         | _ ->
           begin
@@ -924,7 +943,8 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
               text " may be passed into `any` and ";
               ref lower;
               text " is incompatible with `any`";
-            ])
+            ]
+          )
       | (_, (RTrusted _ | RPrivate (RTrusted _))) ->
         mk_use_op_error
           (loc_of_reason lower)
@@ -1108,7 +1128,8 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
       mk_prop_missing_error loc prop reason_obj use_op suggestion
     | ( None,
         PropPolarityMismatch
-          { prop; reason_lower; reason_upper; polarity_lower; polarity_upper; use_op } ) ->
+          { prop; reason_lower; reason_upper; polarity_lower; polarity_upper; use_op }
+      ) ->
       mk_prop_polarity_mismatch_error
         prop
         (reason_lower, polarity_lower)
@@ -1126,7 +1147,8 @@ let rec make_error_printable ?(speculation = false) (error : Loc.t t) : Loc.t Er
       mk_use_op_speculation_error loc use_op branches
     | (None, Error_message.Normal _)
     | (Some _, _) ->
-      raise (ImproperlyFormattedError msg))
+      raise (ImproperlyFormattedError msg)
+  )
 
 let concretize_errors loc_of_aloc set =
   ErrorSet.fold (concretize_error loc_of_aloc %> ConcreteErrorSet.add) set ConcreteErrorSet.empty

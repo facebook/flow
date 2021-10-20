@@ -25,7 +25,8 @@ module Command (CommandList : COMMAND_LIST) = struct
                "--current"
                (optional int)
                ~doc:"Current term in the argument list being completed."
-          |> rest);
+          |> rest
+        );
     }
 
   let is_partial_flag substr = Str.string_match (Str.regexp "^-") substr 0

@@ -660,7 +660,9 @@ let add_implicit_instantiation_ctor cx lhs poly_t use_op reason_op args =
     let check =
       Implicit_instantiation_check.
         { lhs; poly_t; operation = (use_op, reason_op, Constructor args) }
+      
     in
+
     cx.ccx.implicit_instantiation_checks <- check :: cx.ccx.implicit_instantiation_checks
 
 let add_inferred_indexer cx loc dict =
@@ -905,7 +907,8 @@ let rec find_trust_root cx (id : Trust_constraint.ident) =
           id
           (File_key.to_string @@ file cx)
       in
-      Utils_js.assert_false msg)
+      Utils_js.assert_false msg
+  )
 
 let find_trust_constraints cx id =
   let (root_id, root) = find_trust_root cx id in

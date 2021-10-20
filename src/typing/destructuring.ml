@@ -49,7 +49,8 @@ module Make (Env : Env_sig.S) = struct
         DestructInfer
     in
     Tvar.mk_no_wrap_where cx reason (fun tout ->
-        Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ())))
+        Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
+    )
 
   let pattern_default cx ~expr acc = function
     | None -> (acc, None)
@@ -84,9 +85,13 @@ module Make (Env : Env_sig.S) = struct
                             Ast.Literal.value = Ast.Literal.Number (float i);
                             raw = string_of_int i;
                             comments = None;
-                          } );
+                          }
+                      );
                   comments = None;
-                } ))
+                }
+              
+          )
+      )
     in
     let refinement =
       Base.Option.bind init (fun init -> Refinement.get ~allow_optional:true cx init loc)
@@ -119,7 +124,10 @@ module Make (Env : Env_sig.S) = struct
                   _object = init;
                   property = PropertyIdentifier (loc, { Ast.Identifier.name = x; comments });
                   comments = None;
-                } ))
+                }
+              
+          )
+      )
     in
     let refinement =
       Base.Option.bind init (fun init -> Refinement.get ~allow_optional:true cx init loc)
@@ -130,7 +138,8 @@ module Make (Env : Env_sig.S) = struct
           if has_default then
             Default.default reason d
           else
-            d)
+            d
+      )
     in
     let (parent, current) =
       match refinement with
@@ -163,7 +172,10 @@ module Make (Env : Env_sig.S) = struct
       Base.Option.map init (fun init ->
           ( loc,
             Ast.Expression.(
-              Member Member.{ _object = init; property = PropertyExpression e; comments = None }) ))
+              Member Member.{ _object = init; property = PropertyExpression e; comments = None }
+            )
+          )
+      )
     in
     let refinement =
       Base.Option.bind init (fun init -> Refinement.get ~allow_optional:true cx init loc)
@@ -184,13 +196,8 @@ module Make (Env : Env_sig.S) = struct
     { acc with parent; current; default }
 
   let object_property
-      cx
-      ~expr
-      ~has_default
-      (acc : state)
-      xs
-      (key : (ALoc.t, ALoc.t) Ast.Pattern.Object.Property.key) :
-      state * string list * (ALoc.t, ALoc.t * Type.t) Ast.Pattern.Object.Property.key =
+      cx ~expr ~has_default (acc : state) xs (key : (ALoc.t, ALoc.t) Ast.Pattern.Object.Property.key)
+      : state * string list * (ALoc.t, ALoc.t * Type.t) Ast.Pattern.Object.Property.key =
     let open Ast.Pattern.Object in
     match key with
     | Property.Identifier (loc, { Ast.Identifier.name = x; comments }) ->
@@ -229,7 +236,9 @@ module Make (Env : Env_sig.S) = struct
             | RArrayPatternRestProp
             | RObjectPatternRestProp ->
               RIdentifier (OrdinaryName name)
-            | desc -> desc))
+            | desc -> desc
+            )
+            )
         current
     in
     let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
@@ -259,7 +268,8 @@ module Make (Env : Env_sig.S) = struct
                | (Some (Default.Expr t), _) -> reason_of_t t
                | (_, Some init) -> mk_expression_reason init
                | _ -> reason_of_t current);
-           })
+           }
+        )
     in
     f ~use_op ~name_loc name default current
 
@@ -285,7 +295,9 @@ module Make (Env : Env_sig.S) = struct
           Flow_js.add_output
             cx
             Error_message.(EUnsupportedSyntax (loc, DestructuringExpressionPattern));
-          Expression (Tast_utils.error_mapper#expression e) )
+          Expression (Tast_utils.error_mapper#expression e)
+      )
+    
 
   and array_elements cx ~expr ~f acc =
     let open Ast.Pattern.Array in
@@ -299,7 +311,8 @@ module Make (Env : Env_sig.S) = struct
       | RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments }) ->
         let acc = array_rest_element cx acc i loc in
         let p = pattern cx ~expr ~f acc p in
-        RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments }))
+        RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments })
+    )
 
   and object_properties =
     let open Ast.Pattern.Object in

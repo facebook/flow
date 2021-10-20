@@ -20,7 +20,8 @@ let rec fold_bindings_of_pattern =
         function
         | Property (_, { Property.pattern = p; _ })
         | RestElement (_, { RestElement.argument = p; comments = _ }) ->
-          fold_bindings_of_pattern f acc p)
+          fold_bindings_of_pattern f acc p
+      )
     in
     let element f acc =
       Array.(
@@ -28,14 +29,16 @@ let rec fold_bindings_of_pattern =
         | Hole _ -> acc
         | Element (_, { Element.argument = p; default = _ })
         | RestElement (_, { RestElement.argument = p; comments = _ }) ->
-          fold_bindings_of_pattern f acc p)
+          fold_bindings_of_pattern f acc p
+      )
     in
     fun f acc -> function
       | (_, Identifier { Identifier.name; annot; _ }) -> f acc name annot
       | (_, Object { Object.properties; _ }) -> List.fold_left (property f) acc properties
       | (_, Array { Array.elements; _ }) -> List.fold_left (element f) acc elements
       (* This is for assignment and default param destructuring `[a.b=1]=c`, ignore these for now. *)
-      | (_, Expression _) -> acc)
+      | (_, Expression _) -> acc
+  )
 
 let fold_bindings_of_variable_declarations f acc declarations =
   let open Flow_ast.Statement.VariableDeclaration in
@@ -108,7 +111,8 @@ let merge_comments_with_internal ~inner ~outer =
   | (None, Some { Syntax.leading; trailing; _ }) ->
     mk_comments_with_internal_opt ~leading ~trailing ~internal:[] ()
   | ( Some { Syntax.leading = inner_leading; trailing = inner_trailing; internal },
-      Some { Syntax.leading = outer_leading; trailing = outer_trailing; _ } ) ->
+      Some { Syntax.leading = outer_leading; trailing = outer_trailing; _ }
+    ) ->
     mk_comments_with_internal_opt
       ~leading:(outer_leading @ inner_leading)
       ~trailing:(inner_trailing @ outer_trailing)

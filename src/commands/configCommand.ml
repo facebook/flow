@@ -23,7 +23,8 @@ let find_subcommand =
           CommandUtils.exe_name;
       args =
         CommandSpec.ArgSpec.(
-          empty |> flowconfig_name_flag |> json_flags |> anon "root" (optional string));
+          empty |> flowconfig_name_flag |> json_flags |> anon "root" (optional string)
+        );
     }
   in
   let main flowconfig_name json pretty root () =
@@ -32,7 +33,8 @@ let find_subcommand =
     if json || pretty then
       Hh_json.(
         let json = JSON_Object [("root", JSON_String root)] in
-        print_json_endline ~pretty json)
+        print_json_endline ~pretty json
+      )
     else
       print_endline root
   in
@@ -55,16 +57,18 @@ let check_subcommand =
           |> json_flags
           |> root_flag
           |> ignore_version_flag
-          |> anon "file" (optional string));
+          |> anon "file" (optional string)
+        );
     }
   in
   (* If a flowconfig was passed in, confirm it exists; otherwise, search for it using the
      --root and --flowconfig-name flags. *)
   let find_flowconfig flowconfig_name root = function
     | Some file ->
-      (if not (Sys.file_exists file) then
+      ( if not (Sys.file_exists file) then
         let msg = Utils_js.spf "Could not find file %s" file in
-        Exit.(exit ~msg Could_not_find_flowconfig));
+        Exit.(exit ~msg Could_not_find_flowconfig)
+      );
       let root = Path.make (Filename.dirname file) in
       (file, root |> Path.to_string)
     | None ->
@@ -82,8 +86,10 @@ let check_subcommand =
             JSON_String
               (match kind with
               | `Error -> "error"
-              | `Warning -> "warning") );
-        ])
+              | `Warning -> "warning")
+          );
+        ]
+    )
   in
   let exit_with_json ~pretty json =
     Hh_json.(
@@ -92,7 +98,9 @@ let check_subcommand =
         let json = JSON_Object (("errors", json) :: Exit.json_props_of_t code) in
         Hh_json.print_json_endline ~pretty json;
         Exit.unset_json_mode ();
-        Exit.(exit code)))
+        Exit.(exit code)
+      )
+    )
   in
   let main flowconfig_name json pretty root ignore_version file () =
     let (file, root) = find_flowconfig flowconfig_name root file in
@@ -114,7 +122,8 @@ let check_subcommand =
         if json || pretty then
           Hh_json.(
             let json = JSON_Array (List.map (json_of_issue `Warning) warnings) in
-            exit_with_json ~pretty json)
+            exit_with_json ~pretty json
+          )
         else
           flowconfig_multi_error warnings
       )
@@ -122,7 +131,8 @@ let check_subcommand =
       if json || pretty then
         Hh_json.(
           let json = JSON_Array [json_of_issue `Error err] in
-          exit_with_json ~pretty json)
+          exit_with_json ~pretty json
+        )
       else
         flowconfig_multi_error [err]
   in
@@ -143,7 +153,8 @@ let command =
           |> CommandUtils.from_flag
           |> anon
                "subcommand"
-               (required (command [("check", check_subcommand); ("find", find_subcommand)])));
+               (required (command [("check", check_subcommand); ("find", find_subcommand)]))
+        );
     }
   in
   let main (cmd, argv) () = CommandUtils.run_command cmd argv in

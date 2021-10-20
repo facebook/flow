@@ -17,7 +17,8 @@ type t =
   ( (* Success *)
   (ALoc.t option * Type.t) SMap.t,
     (* SuccessModule *)
-  (ALoc.t option * Type.t) SMap.t * Type.t option )
+  (ALoc.t option * Type.t) SMap.t * Type.t option
+  )
   generic_t
 
 (* For debugging purposes *)

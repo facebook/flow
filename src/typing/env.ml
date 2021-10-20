@@ -260,7 +260,8 @@ module Env : Env_sig.S = struct
            "update_env %s: unequal length scope lists, old %d new %d "
            (string_of_aloc loc)
            (List.length new_scopes)
-           (List.length (peek_env ())));
+           (List.length (peek_env ()))
+        );
 
     scopes := new_scopes
 
@@ -420,7 +421,8 @@ module Env : Env_sig.S = struct
           Flow.add_output
             cx
             Error_message.(
-              EInvalidDeclaration { declaration = mk_reason (RIdentifier name) loc; null_write })
+              EInvalidDeclaration { declaration = mk_reason (RIdentifier name) loc; null_write }
+            )
         in
         match Invalidation_api.declaration_validity info values providers loc with
         | Invalidation_api.Valid -> ()
@@ -450,7 +452,8 @@ module Env : Env_sig.S = struct
                ~f:
                  (Fn.compose
                     (fun loc -> Base.Option.map ~f:(fun t -> (loc, t)) (Loc_env.find_write env loc))
-                    Reason.aloc_of_reason)
+                    Reason.aloc_of_reason
+                 )
           |> Base.Option.all
         in
         match providers with
@@ -466,7 +469,8 @@ module Env : Env_sig.S = struct
       | Some writes_by_closure ->
         let writes_by_closure_t =
           Tvar.mk_where cx (mk_reason (RIdentifier name) loc) (fun tvar ->
-              Flow.flow_t cx (tvar, general))
+              Flow.flow_t cx (tvar, general)
+          )
         in
         let writes_by_closure_provider =
           if
@@ -559,12 +563,14 @@ module Env : Env_sig.S = struct
                   Frame
                     ( ConstrainedAssignment
                         { name = ord_name; declaration; providers = provider_locs },
-                      use_op )
+                      use_op
+                    )
                 in
                 Context.add_constrained_write cx (t, UseT (use_op, provider))
               | None ->
                 (* If there isn't a declaration for the variable, then it's a global, and we don't need to constrain it *)
-                ())
+                ()
+          )
     | _ -> ()
 
   let can_shadow cx name prev loc =
@@ -575,7 +581,8 @@ module Env : Env_sig.S = struct
       (* nonpredicate declared functions can shadow each other, and any declared function can be shadowed by a function *)
       | (Let (FunctionBinding, _), Let (DeclaredFunctionBinding _, _))
       | ( Let (DeclaredFunctionBinding { predicate = false }, _),
-          Let (DeclaredFunctionBinding { predicate = false }, _) ) ->
+          Let (DeclaredFunctionBinding { predicate = false }, _)
+        ) ->
         true
       (* declared functions can't shadow other things *)
       | (Let (DeclaredFunctionBinding _, _), (Var _ | Let (FunctionBinding, _))) -> false
@@ -583,7 +590,8 @@ module Env : Env_sig.S = struct
          ban this pattern in Flow, so we raise an already_bound_error BUT don't abort the binding
          so that we can still check downstream things. *)
       | ( (Var _ | Let ((FunctionBinding | DeclaredFunctionBinding _), _)),
-          (Var _ | Let ((FunctionBinding | DeclaredFunctionBinding _), _)) ) ->
+          (Var _ | Let ((FunctionBinding | DeclaredFunctionBinding _), _))
+        ) ->
         already_bound_error cx name prev loc;
         true
       (* vars can shadow function params, but we should raise an error if they are constlike params *)
@@ -591,7 +599,8 @@ module Env : Env_sig.S = struct
       | (Var _, Const ConstParamBinding) ->
         already_bound_error cx name prev loc;
         true
-      | _ -> false)
+      | _ -> false
+    )
 
   (* initialization of entries happens during a preliminary pass through a
      scoped region of the AST (dynamic for hoisted things, lexical for
@@ -623,7 +632,8 @@ module Env : Env_sig.S = struct
             | (VarScope _, _) ->
               add_entry name entry scope
             (* otherwise, keep looking for our scope *)
-            | _ -> loop scopes))
+            | _ -> loop scopes)
+          )
         (* some rebindings are allowed, but usually an error *)
         | Some prev ->
           (match scope.kind with
@@ -637,7 +647,8 @@ module Env : Env_sig.S = struct
                 (* TODO currently we don't step on specific. shouldn't we? *)
                 Flow.unify cx (Entry.general_of_value p) (Entry.general_of_value e)
               (* bad shadowing is a binding error *)
-              | _ -> already_bound_error cx name prev loc))
+              | _ -> already_bound_error cx name prev loc)
+            )
           (* shadowing in a lex scope is always an error *)
           | LexScope -> already_bound_error cx name prev loc))
     in
@@ -659,7 +670,8 @@ module Env : Env_sig.S = struct
          class_private_fields
          class_private_static_fields
          class_private_methods
-         class_private_static_methods)
+         class_private_static_methods
+      )
       ALoc.none
 
   (* bind var entry *)
@@ -767,7 +779,8 @@ module Env : Env_sig.S = struct
                      prev
                      loc
                      ( Let (DeclaredFunctionBinding { predicate }, Havocable (*doesnt matter *)),
-                       Entry.kind_of_value v ) ->
+                       Entry.kind_of_value v
+                     ) ->
               let entry =
                 Value
                   {
@@ -781,7 +794,8 @@ module Env : Env_sig.S = struct
               Scope.add_entry name entry scope
             | _ ->
               (* declare function shadows some other kind of binding *)
-              already_bound_error cx name prev loc))
+              already_bound_error cx name prev loc)
+          )
 
   let same_kind k1 k2 =
     let open Entry in
@@ -806,7 +820,8 @@ module Env : Env_sig.S = struct
           ->
           let new_entry = Value { v with value_state = State.Declared } in
           Scope.add_entry name new_entry scope
-        | _ -> already_bound_error cx name entry loc)
+        | _ -> already_bound_error cx name entry loc
+      )
 
   let declare_let = declare_value_entry Entry.(Let (LetVarBinding, Havocable))
 
@@ -834,9 +849,8 @@ module Env : Env_sig.S = struct
             Value ({ Entry.kind = Let _; value_state = State.Undeclared | State.Declared; _ } as v)
           )
         | ( Const _,
-            Value
-              ({ Entry.kind = Const _; value_state = State.Undeclared | State.Declared; _ } as v) )
-          ->
+            Value ({ Entry.kind = Const _; value_state = State.Undeclared | State.Declared; _ } as v)
+          ) ->
           Changeset.Global.change_var (scope.id, name, Changeset.Write);
           let general = TypeUtil.type_t_of_annotated_or_inferred v.general in
           if specific != general then Flow.flow cx (specific, UseT (use_op, general));
@@ -858,7 +872,8 @@ module Env : Env_sig.S = struct
           (* Incompatible or non-redeclarable new and previous entries.
              We will have already issued an error in `bind_value_entry`,
              so we can prune this case here. *)
-          ())
+          ()
+      )
 
   let init_var = init_value_entry Entry.(Var Havocable)
 
@@ -887,7 +902,8 @@ module Env : Env_sig.S = struct
           (* Incompatible or non-redeclarable new and previous entries.
              We will have already issued an error in `bind_value_entry`,
              so we can prune this case here. *)
-          ())
+          ()
+      )
 
   (* treat a var's declared (annotated) type as an initializer *)
   let pseudo_init_declared_type cx name loc =
@@ -910,7 +926,8 @@ module Env : Env_sig.S = struct
           (* Incompatible or non-redeclarable new and previous entries.
              We will have already issued an error in `bind_value_entry`,
              so we can prune this case here. *)
-          ())
+          ()
+      )
 
   (* helper for read/write tdz checks *)
   (* for now, we only enforce TDZ within the same activation.
@@ -961,14 +978,16 @@ module Env : Env_sig.S = struct
             UnionT (mk_reason desc value_declare_loc, rep)
         in
         (specific, general)
-      | { specific; general; _ } -> (specific, general))
+      | { specific; general; _ } -> (specific, general)
+    )
 
   (* emit tdz error for value entry *)
   let tdz_error cx name loc v =
     Entry.(
       (* second clause of error message is due to switch scopes *)
       let msg = Error_message.EReferencedBeforeDeclaration in
-      binding_error msg cx name (Value v) loc)
+      binding_error msg cx name (Value v) loc
+    )
 
   (* helper for read/write tdz checks *)
   (* functions are block-scoped, but also hoisted. forward ref ok *)
@@ -978,7 +997,8 @@ module Env : Env_sig.S = struct
       | Var _
       | Let ((FunctionBinding | DeclaredFunctionBinding _), _) ->
         true
-      | _ -> false)
+      | _ -> false
+    )
 
   (* helper - does semantic checking and returns entry type *)
   let read_entry ~lookup_mode ~specific cx name ?desc loc =
@@ -1004,7 +1024,8 @@ module Env : Env_sig.S = struct
           if specific then
             s
           else
-            TypeUtil.type_t_of_annotated_or_inferred g))
+            TypeUtil.type_t_of_annotated_or_inferred g)
+    )
 
   let rec seek_env f = function
     | [] -> None
@@ -1071,7 +1092,8 @@ module Env : Env_sig.S = struct
       match get_current_env_entry name with
       | Some (Value v) when lookup_mode = ForValue -> Flow.unify cx t (general_of_value v)
       | Some entry when lookup_mode <> ForValue -> Flow.unify cx t (Entry.declared_type entry)
-      | _ -> ())
+      | _ -> ()
+    )
 
   (* Unify declared function type with another type. This is similarly motivated as above, except that
      we also need to take overloading into account. See `bind_declare_fun` for similar logic. *)
@@ -1090,7 +1112,8 @@ module Env : Env_sig.S = struct
       Entry.(
         match get_current_env_entry name with
         | Some (Value v) -> Flow.unify cx t (find_type aloc (general_of_value v))
-        | _ -> ())
+        | _ -> ()
+      )
 
   let is_global_var _cx name _ =
     let rec loop = function
@@ -1134,12 +1157,15 @@ module Env : Env_sig.S = struct
             Entry.kind =
               Let
                 Entry.
-                  ( ((ClassNameBinding | FunctionBinding | DeclaredFunctionBinding _) as
-                    binding_kind),
-                    _ );
+                  ( ( (ClassNameBinding | FunctionBinding | DeclaredFunctionBinding _) as
+                    binding_kind
+                    ),
+                    _
+                  );
             value_declare_loc;
             _;
-          } ) ->
+          }
+      ) ->
       let reason = mk_reason (RType name) value_declare_loc in
       Flow.add_output
         cx
@@ -1209,7 +1235,8 @@ module Env : Env_sig.S = struct
         let msg = Error_message.ETypeAliasInValuePosition in
         binding_error msg cx name entry loc;
         None
-      | Class _ -> assert_false "Internal error: update_var called on Class")
+      | Class _ -> assert_false "Internal error: update_var called on Class"
+    )
 
   (* update var by direct assignment *)
   let set_var cx ~use_op name t loc =
@@ -1243,7 +1270,9 @@ module Env : Env_sig.S = struct
           (spf
              "refine_const called on %s %s"
              (Entry.string_of_kind entry)
-             (display_string_of_name name)))
+             (display_string_of_name name)
+          )
+    )
 
   (* given a list of envs (scope lists), return true iff all envs are
      the same length and all scope ids and kinds match *)
@@ -1280,7 +1309,8 @@ module Env : Env_sig.S = struct
            "find_scopes %s: scope %d not found. head env %s"
            (string_of_aloc loc)
            scope_id
-           (string_of_env cx (List.hd envs)))
+           (string_of_env cx (List.hd envs))
+        )
 
   (* The following function takes a changset and a triple of environments -
        original and two derivations - and merges the bindings indicated by
@@ -1295,7 +1325,8 @@ module Env : Env_sig.S = struct
       let reason = mk_reason name loc in
       Tvar.mk_where cx reason (fun tvar ->
           Flow.flow cx (l1, UseT (Op (Internal MergeEnv), tvar));
-          Flow.flow cx (l2, UseT (Op (Internal MergeEnv), tvar)))
+          Flow.flow cx (l2, UseT (Op (Internal MergeEnv), tvar))
+      )
     in
     (* merge_entry helper - calculate new specific type *)
     let merge_specific cx loc name (specific0, general0) specific1 specific2 =
@@ -1329,10 +1360,12 @@ module Env : Env_sig.S = struct
           when child1.value_state >= State.Declared
                && child2.value_state >= State.Declared
                && (child1.value_state >= State.MaybeInitialized
-                  || child2.value_state >= State.MaybeInitialized) ->
+                  || child2.value_state >= State.MaybeInitialized
+                  ) ->
           (* if either branch has initialized, we can set parent state *)
           State.MaybeInitialized
-        | _ -> orig.value_state)
+        | _ -> orig.value_state
+      )
     in
     let merge_entry cx loc envs ((scope_id, name, _) as entry_ref) =
       let (scope0, scope1, scope2) = find_scope_triple cx loc envs scope_id in
@@ -1366,7 +1399,8 @@ module Env : Env_sig.S = struct
             (spf
                "merge_env %s: type alias %s found in changelist"
                (string_of_aloc loc)
-               (display_string_of_name name))
+               (display_string_of_name name)
+            )
         (* global lookups may leave uneven new entries, which we can forget *)
         | (_, _, _) when is_global scope0 -> ()
         (* missing completely from non-global scope *)
@@ -1379,7 +1413,8 @@ module Env : Env_sig.S = struct
                (Changeset.string_of_entry_ref entry_ref)
                (Debug_js.string_of_scope cx scope0)
                (Debug_js.string_of_scope cx scope1)
-               (Debug_js.string_of_scope cx scope2))
+               (Debug_js.string_of_scope cx scope2)
+            )
         (* a newly created entry may exist in one lex child -
            this pattern is due to our current switch handling *)
         | (None, Some (Value _ as entry), None) when Scope.is_lex scope1 ->
@@ -1399,7 +1434,9 @@ module Env : Env_sig.S = struct
                (display_string_of_name name)
                (print_entry_kind_opt orig)
                (print_entry_kind_opt child1)
-               (print_entry_kind_opt child2)))
+               (print_entry_kind_opt child2)
+            )
+      )
     in
     let merge_refi cx loc envs (scope_id, key, _) =
       let (scope0, scope1, scope2) = find_scope_triple cx loc envs scope_id in
@@ -1437,7 +1474,8 @@ module Env : Env_sig.S = struct
              (string_of_aloc loc)
              (List.length env0)
              (List.length env1)
-             (List.length env2));
+             (List.length env2)
+          );
       changeset
       |> Changeset.iter_type_updates
            (merge_entry cx loc (env0, env1, env2))
@@ -1471,7 +1509,8 @@ module Env : Env_sig.S = struct
             (spf
                "copy_env %s: type alias %s found in changelist"
                (string_of_aloc loc)
-               (display_string_of_name name))
+               (display_string_of_name name)
+            )
         (* global lookups may leave new entries in env2, or orphan changes *)
         (* ...which we can forget *)
         | (None, _) when is_global scope1 -> ()
@@ -1490,7 +1529,9 @@ module Env : Env_sig.S = struct
                (string_of_aloc loc)
                (display_string_of_name name)
                (print_entry_kind_opt entry1)
-               (print_entry_kind_opt entry2)))
+               (print_entry_kind_opt entry2)
+            )
+      )
     in
     (* look for and copy refinement in top scope only *)
     let copy_refi cx loc envs (scope_id, key, _) =
@@ -1510,9 +1551,7 @@ module Env : Env_sig.S = struct
       else
         assert_false (spf "copy_env %s: envs not congruent" (string_of_aloc loc));
       changeset
-      |> Changeset.iter_type_updates
-           (copy_entry cx loc (env1, env2))
-           (copy_refi cx loc (env1, env2))
+      |> Changeset.iter_type_updates (copy_entry cx loc (env1, env2)) (copy_refi cx loc (env1, env2))
 
   (* in the top scope, convert specific types to tvars with former
      specific type as incoming lower bound, and general type as
@@ -1548,8 +1587,10 @@ module Env : Env_sig.S = struct
                Entry.(
                  fun name -> function
                    | Value var -> Value (widen_var cx loc (RIdentifier name) var)
-                   | entry -> entry);
-          scope |> Scope.update_refis (fun key refi -> widen_refi cx loc (Key.reason_desc key) refi))
+                   | entry -> entry
+               );
+          scope |> Scope.update_refis (fun key refi -> widen_refi cx loc (Key.reason_desc key) refi)
+      )
 
   (* The protocol around havoc has changed a few times.
      The following function used to do most of the work, but is now subsumed by
@@ -1596,7 +1637,8 @@ module Env : Env_sig.S = struct
         in
         loop !scopes
       in
-      Changeset.iter_type_updates havoc_entry havoc_refi)
+      Changeset.iter_type_updates havoc_entry havoc_refi
+    )
 
   (* Clear entries for heap refinement pseudovars in env.
      If name is passed, clear only those refis that depend on it.
@@ -1642,11 +1684,13 @@ module Env : Env_sig.S = struct
                   name
                   entry
             in
-            (if entry' != entry then
+            ( if entry' != entry then
               let entry_ref = (scope.id, name, Changeset.Write) in
-              Changeset.(if Global.is_active () then Global.change_var entry_ref));
+              Changeset.(if Global.is_active () then Global.change_var entry_ref)
+            );
             entry')
-          scope)
+          scope
+    )
 
   let havoc_heap_refinements_with_propname ~private_ name =
     iter_scopes (Scope.havoc_refis ~private_ ~name)
@@ -1747,7 +1791,8 @@ module Env : Env_sig.S = struct
             end
           | (_, _) ->
             Flow.add_output cx (Error_message.ERefineAsValue (refi_reason, name));
-            acc))
+            acc)
+        )
       (* for heap refinements, we just add new entries *)
       | _ ->
         let orig_type = Key_map.find key orig_types in

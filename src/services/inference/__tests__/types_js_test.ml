@@ -235,7 +235,8 @@ let tests =
                                      recheck_set = _;
                                      sig_dependent_files = _;
                                      all_dependent_files = _;
-                                   }) =
+                                   }
+                                   ) =
                            determine_what_to_recheck
                              ~profiling
                              ~sig_dependency_graph
@@ -254,7 +255,8 @@ let tests =
                            ~ctxt
                            (CheckedSet.union to_merge to_check)
                            to_merge_or_check;
-                         Lwt.return_unit);
+                         Lwt.return_unit
+                     );
                 "long_chain"
                 %>:: test_with_profiling (fun ctxt profiling ->
                          let sig_dependency_graph =
@@ -273,7 +275,8 @@ let tests =
                                      recheck_set = _;
                                      sig_dependent_files = _;
                                      all_dependent_files = _;
-                                   }) =
+                                   }
+                                   ) =
                            determine_what_to_recheck
                              ~profiling
                              ~sig_dependency_graph
@@ -298,7 +301,8 @@ let tests =
                            ~ctxt
                            (CheckedSet.union to_merge to_check)
                            to_merge_or_check;
-                         Lwt.return_unit);
+                         Lwt.return_unit
+                     );
                 "long_chain_no_sig_dependencies"
                 %>:: test_with_profiling (fun ctxt profiling ->
                          let sig_dependency_graph =
@@ -317,7 +321,8 @@ let tests =
                                      recheck_set = _;
                                      sig_dependent_files = _;
                                      all_dependent_files = _;
-                                   }) =
+                                   }
+                                   ) =
                            determine_what_to_recheck
                              ~profiling
                              ~sig_dependency_graph
@@ -338,7 +343,8 @@ let tests =
                            ~ctxt
                            (CheckedSet.union to_merge to_check)
                            to_merge_or_check;
-                         Lwt.return_unit);
+                         Lwt.return_unit
+                     );
                 "simple_cycle"
                 %>:: test_with_profiling (fun ctxt profiling ->
                          let sig_dependency_graph =
@@ -357,7 +363,8 @@ let tests =
                                      recheck_set = _;
                                      sig_dependent_files = _;
                                      all_dependent_files = _;
-                                   }) =
+                                   }
+                                   ) =
                            determine_what_to_recheck
                              ~profiling
                              ~sig_dependency_graph
@@ -382,7 +389,8 @@ let tests =
                            ~ctxt
                            (CheckedSet.union to_merge to_check)
                            to_merge_or_check;
-                         Lwt.return_unit);
+                         Lwt.return_unit
+                     );
                 "simple_cycle_no_sig_dependencies"
                 %>:: test_with_profiling (fun ctxt profiling ->
                          let sig_dependency_graph =
@@ -401,7 +409,8 @@ let tests =
                                      recheck_set = _;
                                      sig_dependent_files = _;
                                      all_dependent_files = _;
-                                   }) =
+                                   }
+                                   ) =
                            determine_what_to_recheck
                              ~profiling
                              ~sig_dependency_graph
@@ -422,7 +431,8 @@ let tests =
                            ~ctxt
                            (CheckedSet.union to_merge to_check)
                            to_merge_or_check;
-                         Lwt.return_unit);
+                         Lwt.return_unit
+                     );
               ];
          "include_dependencies_and_dependents"
          >::: [
@@ -457,7 +467,8 @@ let tests =
                            ~ctxt
                            (CheckedSet.union to_merge to_check)
                            to_merge_or_check;
-                         Lwt.return_unit);
+                         Lwt.return_unit
+                     );
                 "long_chain_no_sig_dependencies"
                 %>:: test_with_profiling (fun ctxt profiling ->
                          let sig_dependency_graph =
@@ -489,7 +500,8 @@ let tests =
                            ~ctxt
                            (CheckedSet.union to_merge to_check)
                            to_merge_or_check;
-                         Lwt.return_unit);
+                         Lwt.return_unit
+                     );
                 "cycle"
                 %>:: test_with_profiling (fun ctxt profiling ->
                          let sig_dependency_graph =
@@ -534,7 +546,8 @@ let tests =
                            (CheckedSet.union to_merge to_check)
                            to_merge_or_check;
                          assert_components_equal ~ctxt expected_components components;
-                         Lwt.return_unit);
+                         Lwt.return_unit
+                     );
                 "lazy"
                 %>:: test_with_profiling (fun ctxt profiling ->
                          let sig_dependency_graph = [("a", []); ("b", []); ("c", []); ("d", [])] in
@@ -566,6 +579,7 @@ let tests =
                            (CheckedSet.union to_merge to_check)
                            to_merge_or_check;
                          assert_components_equal ~ctxt expected_components components;
-                         Lwt.return_unit);
+                         Lwt.return_unit
+                     );
               ];
        ]

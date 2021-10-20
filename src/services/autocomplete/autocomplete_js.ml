@@ -90,7 +90,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
           | _ -> autocomplete_type
         in
         this#annot_with_tparams (fun ~tparams_rev ->
-            raise (Found { tparams_rev; ac_loc; token; autocomplete_type }))
+            raise (Found { tparams_rev; ac_loc; token; autocomplete_type })
+        )
 
     method! comment ((loc, Flow_ast.Comment.{ text; _ }) as c) =
       if this#covers_target loc then
@@ -128,12 +129,14 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                  bracket_syntax = None;
                  member_loc;
                  is_type_annotation = false;
-               })
+               }
+            )
         | PropertyExpression
             ( (prop_loc, type_),
               Flow_ast.Expression.(
                 ( Literal { Flow_ast.Literal.raw = token; _ }
-                | Identifier (_, { Flow_ast.Identifier.name = token; _ }) )) )
+                | Identifier (_, { Flow_ast.Identifier.name = token; _ }) ))
+            )
           when this#covers_target prop_loc ->
           this#find
             prop_loc
@@ -145,7 +148,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                  bracket_syntax = Some (default_ac_id type_);
                  member_loc;
                  is_type_annotation = false;
-               })
+               }
+            )
         | _ -> ()
       end;
       super#member expr
@@ -171,12 +175,14 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                  bracket_syntax = None;
                  member_loc;
                  is_type_annotation = false;
-               })
+               }
+            )
         | PropertyExpression
             ( (prop_loc, type_),
               Flow_ast.Expression.(
                 ( Literal { Flow_ast.Literal.raw = token; _ }
-                | Identifier (_, { Flow_ast.Identifier.name = token; _ }) )) )
+                | Identifier (_, { Flow_ast.Identifier.name = token; _ }) ))
+            )
           when this#covers_target prop_loc ->
           this#find
             prop_loc
@@ -188,7 +194,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                  bracket_syntax = Some (default_ac_id type_);
                  member_loc;
                  is_type_annotation = false;
-               })
+               }
+            )
         | _ -> ()
       end;
       (* the reason we don't simply call `super#optional_member` is because that would
@@ -209,7 +216,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                         Property.key =
                           Property.Identifier ((prop_loc, _), Flow_ast.Identifier.{ name; _ });
                         _;
-                      } ))
+                      }
+                    ))
                 when this#covers_target prop_loc ->
                 this#find
                   prop_loc
@@ -221,7 +229,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                        bracket_syntax = None;
                        member_loc = None;
                        is_type_annotation = false;
-                     })
+                     }
+                  )
               | _ -> ())
             properties
         | _ -> ()
@@ -262,7 +271,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                       Attribute.Identifier
                         ((loc, _), { Identifier.name = attribute_name; comments = _ });
                     value;
-                  } ) ->
+                  }
+                ) ->
               let found' =
                 match found with
                 | Some _ -> found
@@ -351,9 +361,10 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
              {
                f with
                autocomplete_type = Ac_id { id with include_super = true; include_this = true };
-             })
-      | Found
-          ({ autocomplete_type = Ac_member ({ bracket_syntax = Some id; _ } as member); _ } as f) ->
+             }
+          )
+      | Found ({ autocomplete_type = Ac_member ({ bracket_syntax = Some id; _ } as member); _ } as f)
+        ->
         raise
           (Found
              {
@@ -364,35 +375,38 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                      member with
                      bracket_syntax = Some { id with include_super = true; include_this = true };
                    };
-             })
+             }
+          )
 
     method! function_expression x =
       try super#function_expression x with
       | Found ({ autocomplete_type = Ac_id id; _ } as f) ->
         raise (Found { f with autocomplete_type = Ac_id { id with include_this = true } })
-      | Found
-          ({ autocomplete_type = Ac_member ({ bracket_syntax = Some id; _ } as member); _ } as f) ->
+      | Found ({ autocomplete_type = Ac_member ({ bracket_syntax = Some id; _ } as member); _ } as f)
+        ->
         raise
           (Found
              {
                f with
                autocomplete_type =
                  Ac_member { member with bracket_syntax = Some { id with include_this = true } };
-             })
+             }
+          )
 
     method! function_declaration x =
       try super#function_declaration x with
       | Found ({ autocomplete_type = Ac_id id; _ } as f) ->
         raise (Found { f with autocomplete_type = Ac_id { id with include_this = true } })
-      | Found
-          ({ autocomplete_type = Ac_member ({ bracket_syntax = Some id; _ } as member); _ } as f) ->
+      | Found ({ autocomplete_type = Ac_member ({ bracket_syntax = Some id; _ } as member); _ } as f)
+        ->
         raise
           (Found
              {
                f with
                autocomplete_type =
                  Ac_member { member with bracket_syntax = Some { id with include_this = true } };
-             })
+             }
+          )
 
     method! generic_identifier_type id =
       let open Flow_ast.Type.Generic.Identifier in
@@ -479,7 +493,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                 Type.Generic.id =
                   Type.Generic.Identifier.Unqualified (_, { Identifier.name = token; _ });
                 _;
-              } ) )
+              } )
+        )
         when this#covers_target index_loc ->
         this#find
           index_loc
@@ -491,7 +506,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                bracket_syntax = Some (default_ac_id index_type);
                member_loc = Some (compute_member_loc ~expr_loc:loc ~obj_loc);
                is_type_annotation = true;
-             })
+             }
+          )
       | _ -> ());
       super#indexed_access_type ia
 
@@ -513,7 +529,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                 Type.Generic.id =
                   Type.Generic.Identifier.Unqualified (_, { Identifier.name = token; _ });
                 _;
-              } ) )
+              } )
+        )
         when this#covers_target index_loc ->
         this#find
           index_loc
@@ -525,7 +542,8 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                bracket_syntax = Some (default_ac_id index_type);
                member_loc = Some (compute_member_loc ~expr_loc:loc ~obj_loc);
                is_type_annotation = true;
-             })
+             }
+          )
       | _ -> ());
       (* The reason we don't simply call `super#optional_indexed_access` is because that would
        * call `this#indexed_access`, which would be redundant. *)
@@ -540,14 +558,16 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
       match t with
       | ( (loc, lit_type),
           ( StringLiteral Flow_ast.StringLiteral.{ raw; _ }
-          | NumberLiteral Flow_ast.NumberLiteral.{ raw; _ } ) )
+          | NumberLiteral Flow_ast.NumberLiteral.{ raw; _ } )
+        )
         when this#covers_target loc ->
         this#find loc raw (Ac_literal { lit_type })
       | (((loc, _) as annot), IndexedAccess ia) ->
         (this#on_type_annot annot, IndexedAccess (this#indexed_access_type_with_loc loc ia))
       | (((loc, _) as annot), OptionalIndexedAccess ia) ->
         ( this#on_type_annot annot,
-          OptionalIndexedAccess (this#optional_indexed_access_type_with_loc loc ia) )
+          OptionalIndexedAccess (this#optional_indexed_access_type_with_loc loc ia)
+        )
       | _ -> super#type_ t
   end
 

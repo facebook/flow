@@ -26,5 +26,6 @@ let with_timeout ?timeout_msg ?on_timeout timeout f =
          | None -> Lwt.return_unit
          | Some on_timeout -> on_timeout ()
        in
-       Lwt.return (Error timeout_msg));
+       Lwt.return (Error timeout_msg)
+      );
     ]

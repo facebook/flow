@@ -209,7 +209,8 @@ module TrustKit (Flow : Flow_common.S) : Flow_common.TRUST_CHECKING = struct
         if
           not
             (for_all_iter (add_trust_upper_bound cx Trace.dummy_trace new_trust) lowervars
-            && for_all_iter (add_trust_lower_bound cx Trace.dummy_trace new_trust) uppervars)
+            && for_all_iter (add_trust_lower_bound cx Trace.dummy_trace new_trust) uppervars
+            )
         then
           add_output cx message
       )

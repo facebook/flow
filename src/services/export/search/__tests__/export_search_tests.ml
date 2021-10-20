@@ -39,7 +39,8 @@ let tests =
       let t = init index in
       let results = search_values "foobar" t in
       let expected = mk_results [("FooBar", sf "/a/foobar.js", named)] in
-      assert_equal ~ctxt ~printer:show_search_results expected results );
+      assert_equal ~ctxt ~printer:show_search_results expected results
+    );
     ( "is_incomplete" >:: fun ctxt ->
       let t = init index in
       let options = { default_options with Fuzzy_path.max_results = 2 } in
@@ -55,7 +56,8 @@ let tests =
       let options = { default_options with Fuzzy_path.max_results = 5 } in
       let { results; is_incomplete } = search_values ~options "f" t in
       assert_equal ~ctxt false is_incomplete;
-      assert_equal ~ctxt ~printer:string_of_int 4 (List.length results) );
+      assert_equal ~ctxt ~printer:string_of_int 4 (List.length results)
+    );
     ( "is_incomplete_multiple_files" >:: fun ctxt ->
       (* if there are 3 "Foo"s and "FooBar", but max_results = 2, make sure
          we don't add all 3 "Foo"s. *)
@@ -65,7 +67,8 @@ let tests =
       let t = init index in
       let { results; is_incomplete } = search_values ~options "Foo" t in
       assert_equal ~ctxt true is_incomplete;
-      assert_equal ~ctxt ~printer:string_of_int 2 (List.length results) );
+      assert_equal ~ctxt ~printer:string_of_int 2 (List.length results)
+    );
     ( "same_name_different_file" >:: fun ctxt ->
       let index = Export_index.add "FooBar" (sf "/a/f.js") named index in
       let t = init index in
@@ -74,7 +77,8 @@ let tests =
       let expected =
         mk_results [("FooBar", sf "/a/f.js", named); ("FooBar", sf "/a/foobar.js", named)]
       in
-      assert_equal ~ctxt ~printer:show_search_results expected results );
+      assert_equal ~ctxt ~printer:show_search_results expected results
+    );
     ( "filter_values_and_types" >:: fun ctxt ->
       let index = Export_index.add "FooBar" (sf "/a/f_type.js") named_type index in
       let t = init index in
@@ -85,7 +89,8 @@ let tests =
 
       let results = search_types "FooBar" t in
       let expected = mk_results [("FooBar", sf "/a/f_type.js", named_type)] in
-      assert_equal ~ctxt ~printer:show_search_results expected results );
+      assert_equal ~ctxt ~printer:show_search_results expected results
+    );
     ( "max_results_filtered_by_kind" >:: fun ctxt ->
       let index = Export_index.add "FooBar" (sf "/a/foobar_a.js") named index in
       let index = Export_index.add "FooBar" (sf "/a/foobar_d.js") named index in
@@ -110,7 +115,8 @@ let tests =
           ~is_incomplete:true
           [("FooBar", sf "/a/foobar_b.js", named_type); ("FooBar", sf "/a/foobar_c.js", named_type)]
       in
-      assert_equal ~ctxt ~printer:show_search_results expected results );
+      assert_equal ~ctxt ~printer:show_search_results expected results
+    );
     ( "default_before_named_before_namespace" >:: fun ctxt ->
       let index =
         Export_index.empty
@@ -130,7 +136,8 @@ let tests =
             ("FooBar", sf "/a/FooBar.js", namespace);
           ]
       in
-      assert_equal ~ctxt ~printer:show_search_results expected results );
+      assert_equal ~ctxt ~printer:show_search_results expected results
+    );
   ]
 
 let suite = "export_search" >::: tests

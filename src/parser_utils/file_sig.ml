@@ -192,13 +192,15 @@ struct
             Printf.sprintf "ExportDefault (%s)" @@ PP.string_of_option (fun (_, x) -> x) local
           | (_, ExportNamed { kind; _ }) ->
             Printf.sprintf "ExportNamed (%s)" @@ string_of_named_export_kind kind
-          | (_, ExportNs _) -> "ExportNs" )
+          | (_, ExportNs _) -> "ExportNs"
+        )
       in
       let string_of_type_export (n, type_export) =
         ( n,
           match type_export with
           | (_, TypeExportNamed { kind; _ }) ->
-            Printf.sprintf "TypeExportNamed (%s)" @@ string_of_named_export_kind kind )
+            Printf.sprintf "TypeExportNamed (%s)" @@ string_of_named_export_kind kind
+        )
       in
       let string_of_export_star = function
         | (_, ExportStar _) -> "ExportStar"
@@ -220,10 +222,12 @@ struct
           ("module_kind", string_of_module_kind module_sig.module_kind);
           ( "type_exports_named",
             PP.items_to_record_string 2
-            @@ Base.List.map ~f:string_of_type_export module_sig.type_exports_named );
+            @@ Base.List.map ~f:string_of_type_export module_sig.type_exports_named
+          );
           ( "type_exports_star",
             PP.items_to_list_string 2
-            @@ Base.List.map ~f:string_of_export_star module_sig.type_exports_star );
+            @@ Base.List.map ~f:string_of_export_star module_sig.type_exports_star
+          );
         ]
     in
     PP.items_to_record_string 0 [("module_sig", string_of_module_sig t.module_sig)]
@@ -388,7 +392,8 @@ struct
               | Ok (fsig, errs) ->
                 (match f fsig.module_sig with
                 | Error e -> Error e
-                | Ok module_sig -> Ok ({ fsig with module_sig }, errs)))
+                | Ok module_sig -> Ok ({ fsig with module_sig }, errs))
+              )
 
       method private add_require require = this#update_module_sig (add_require require)
 
@@ -418,7 +423,8 @@ struct
            * can allow aliasing and mutation. *)
           | ( _,
               Identifier
-                (loc, { Ast.Identifier.name = ("module" | "exports") as name; comments = _ }) )
+                (loc, { Ast.Identifier.name = ("module" | "exports") as name; comments = _ })
+            )
             when not (Scope_api.is_local_use scope_info loc) ->
             this#add_tolerable_error (BadExportContext (name, loc))
           | _ -> ()
@@ -468,7 +474,8 @@ struct
           match (_object, property) with
           (* Allow `module.anythingButExports` *)
           | ( Identifier (_, { Ast.Identifier.name = "module"; comments = _ }),
-              PropertyIdentifier (_, { Ast.Identifier.name = prop; comments = _ }) )
+              PropertyIdentifier (_, { Ast.Identifier.name = prop; comments = _ })
+            )
             when prop <> "exports" ->
             ()
           (* Allow `module.exports.whatever` -- this is safe because handle_assignment has already
@@ -480,7 +487,8 @@ struct
                     PropertyIdentifier (_, { Ast.Identifier.name = "exports"; comments = _ });
                   _;
                 },
-              PropertyIdentifier _ )
+              PropertyIdentifier _
+            )
           (* Allow `exports.whatever`, for the same reason as above *)
           | (Identifier (_, { Ast.Identifier.name = "exports"; comments = _ }), PropertyIdentifier _)
             ->
@@ -533,10 +541,12 @@ struct
                             TemplateLiteral.Element.value =
                               { TemplateLiteral.Element.cooked = name; _ };
                             _;
-                          } );
+                          }
+                        );
                       ];
                     _;
-                  } ) ) ->
+                  } )
+            ) ->
             this#add_require (ImportDynamic { source = (loc, name); import_loc })
           | _ -> ()
         end;
@@ -731,7 +741,9 @@ struct
                   ( "default",
                     ( stmt_loc,
                       ExportDefault
-                        { default_loc; local = Some (Flow_ast_utils.source_of_ident id) } ) )
+                        { default_loc; local = Some (Flow_ast_utils.source_of_ident id) }
+                    )
+                  )
                 | None ->
                   (Flow_ast_utils.name_of_ident id, (stmt_loc, ExportNamed { loc = fst id; kind }))
               in
@@ -783,12 +795,16 @@ struct
                     {
                       Member._object =
                         ( module_loc,
-                          Identifier (_, { Ast.Identifier.name = "module"; comments = _ }) );
+                          Identifier (_, { Ast.Identifier.name = "module"; comments = _ })
+                        );
                       property =
                         Member.PropertyIdentifier
                           (_, { Ast.Identifier.name = "exports"; comments = _ });
                       _;
-                    } ) ) )
+                    }
+                )
+            )
+          )
           when not (Scope_api.is_local_use scope_info module_loc) ->
           this#handle_cjs_default_export module_loc mod_exp_loc;
           ignore (this#expression right);
@@ -802,10 +818,14 @@ struct
                     {
                       Member._object =
                         ( (mod_exp_loc as module_loc),
-                          Identifier (_, { Ast.Identifier.name = "exports"; comments = _ }) );
+                          Identifier (_, { Ast.Identifier.name = "exports"; comments = _ })
+                        );
                       property = Member.PropertyIdentifier _;
                       _;
-                    } ) ) )
+                    }
+                )
+            )
+          )
         (* module.exports.foo = ... *)
         | ( None,
             ( _,
@@ -825,10 +845,14 @@ struct
                                 Member.PropertyIdentifier
                                   (_, { Ast.Identifier.name = "exports"; comments = _ });
                               _;
-                            } );
+                            }
+                        );
                       property = Member.PropertyIdentifier _;
                       _;
-                    } ) ) )
+                    }
+                )
+            )
+          )
           when not (Scope_api.is_local_use scope_info module_loc) ->
           (* expressions not allowed in declare module body *)
           assert (curr_declare_module = None);
@@ -843,7 +867,9 @@ struct
                   Ast.Pattern.Identifier.name =
                     (loc, { Ast.Identifier.name = ("exports" | "module") as id; comments = _ });
                   _;
-                } ) )
+                }
+            )
+          )
           when not (Scope_api.is_local_use scope_info loc) ->
           ignore (this#expression right);
           this#add_tolerable_error (BadExportContext (id, loc))
@@ -879,11 +905,13 @@ struct
                           Ast.Pattern.Object.Property.Identifier remote;
                         pattern;
                         _;
-                      } ) ->
+                      }
+                    ) ->
                   (match this#require_pattern pattern with
                   | Some bindings -> Ok ((Flow_ast_utils.source_of_ident remote, bindings) :: named)
                   | None -> Error ())
-                | _ -> Error ())
+                | _ -> Error ()
+            )
           in
           (match named_bind with
           | Ok named_bind -> Some (BindNamed named_bind)
@@ -921,13 +949,17 @@ struct
                                         TemplateLiteral.Element.value =
                                           { TemplateLiteral.Element.cooked = name; _ };
                                         _;
-                                      } );
+                                      }
+                                    );
                                   ];
                                 _;
-                              } ) );
+                              } )
+                        );
                     ];
                   comments = _;
-                } ) ) ->
+                }
+              )
+            ) ->
             if not (Scope_api.is_local_use scope_info loc) then
               this#add_require
                 (Require { source = (source_loc, name); require_loc = call_loc; bindings })
@@ -947,7 +979,8 @@ struct
                      source = (loc, String_utils.lstrip s prefix);
                      require_loc = loc;
                      bindings = None;
-                   })
+                   }
+                )
             | _ -> ()
           end
         | None -> ()
@@ -967,7 +1000,8 @@ struct
           | Some m ->
             this#update_acc (function
                 | Error _ as acc -> acc
-                | Ok (fsig, errs) -> Ok (add_declare_module name m loc fsig, errs))
+                | Ok (fsig, errs) -> Ok (add_declare_module name m loc fsig, errs)
+                )
         end;
         curr_declare_module <- None;
         ret
@@ -1011,9 +1045,11 @@ struct
                           kind =
                             NamedSpecifier
                               { local = Flow_ast_utils.source_of_ident spec.local; source };
-                        } )
+                        }
+                    )
                   in
-                  (name, export) :: acc)
+                  (name, export) :: acc
+              )
               []
               specs
           in
@@ -1033,7 +1069,8 @@ struct
         let map_expression_statement (stmt : (L.t, L.t) Statement.Expression.t) =
           Statement.Expression.(
             let { expression; _ } = stmt in
-            id map_expression expression stmt (fun expr -> { stmt with expression = expr }))
+            id map_expression expression stmt (fun expr -> { stmt with expression = expr })
+          )
         in
         let map_statement (stmt : (L.t, L.t) Statement.t) =
           let open Statement in
@@ -1352,7 +1389,8 @@ struct
                   tolerable_error
                 else
                   SignatureVerificationError (UnexpectedExpression (loc', esort))
-            end)
+            end
+          )
 
       method error (error : error) =
         match error with
@@ -1396,7 +1434,8 @@ let abstractify_locs : With_Loc.t -> With_ALoc.t =
         (Base.List.map
            ~f:(fun (remote, require_bindings) ->
              (abstractify_fst remote, abstractify_require_bindings require_bindings))
-           named)
+           named
+        )
   in
   let abstractify_require = function
     | WL.Require { source; require_loc; bindings } ->
@@ -1448,7 +1487,8 @@ let abstractify_locs : With_Loc.t -> With_ALoc.t =
   in
   let abstractify_es_star =
     Base.List.map ~f:(fun (loc, export_star) ->
-        (ALoc.of_loc loc, abstractify_export_star export_star))
+        (ALoc.of_loc loc, abstractify_export_star export_star)
+    )
   in
   let abstractify_module_kind = function
     | WL.CommonJS { mod_exp_loc } ->
@@ -1462,7 +1502,8 @@ let abstractify_locs : With_Loc.t -> With_ALoc.t =
   in
   let abstractify_type_exports_named =
     Base.List.map ~f:(fun (name, (loc, type_export)) ->
-        (name, (ALoc.of_loc loc, abstractify_type_export type_export)))
+        (name, (ALoc.of_loc loc, abstractify_type_export type_export))
+    )
   in
   let abstractify_type_exports_star = abstractify_es_star in
   let abstractify_module_sig { WL.requires; module_kind; type_exports_named; type_exports_star } =

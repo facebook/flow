@@ -87,7 +87,8 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
           begin
             match
               ( Ty_normalizer.from_type ~options ~genv keys |> validate,
-                Ty_normalizer.from_type ~options ~genv values |> validate )
+                Ty_normalizer.from_type ~options ~genv values |> validate
+              )
             with
             | (Ok dict_key, Ok dict_value) ->
               Ty.IndexedObj
@@ -113,7 +114,8 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       match (callee, arguments, targs) with
       | ( (_, Member { property = PropertyIdentifier (_, { Ast.Identifier.name = "reduce"; _ }); _ }),
           (_, { ArgList.arguments = [_; Expression (loc, Object { Object.properties = []; _ })]; _ }),
-          None ) ->
+          None
+        ) ->
         let ty_result = Codemod_annotator.get_ty cctx ~preserve_literals ~max_type_size loc in
         (match ty_result with
         | Ok (Ty.Obj ty) ->
@@ -167,7 +169,8 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
           match id with
           | ( ploc,
               Ast.Pattern.Identifier
-                Ast.Pattern.Identifier.{ annot = Ast.Type.Missing _ as annot; name; optional } ) ->
+                Ast.Pattern.Identifier.{ annot = Ast.Type.Missing _ as annot; name; optional }
+            ) ->
             let ty_result = Codemod_annotator.get_ty cctx ~preserve_literals ~max_type_size ploc in
             (match ty_result with
             | Ok (Ty.Obj ty) ->

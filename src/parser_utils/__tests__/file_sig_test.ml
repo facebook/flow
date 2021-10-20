@@ -25,7 +25,8 @@ let substring_loc s loc =
     let table = Offset_utils.make ~kind:Offset_utils.Utf8 s in
     let a = Offset_utils.offset table loc.start in
     let b = Offset_utils.offset table loc._end in
-    String.sub s a (b - a))
+    String.sub s a (b - a)
+  )
 
 let call_opt x = function
   | Some f -> f x
@@ -93,7 +94,8 @@ let tests =
              assert_substring_equal ~ctxt "'foo'" source source_loc;
              assert_substring_equal ~ctxt "require('foo')" source require_loc;
              assert_substring_equal ~ctxt "Foo" source ident_loc
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "cjs_deep_requires" >:: fun ctxt ->
            let source = "let foo = {x: require('bar')}; func(foo, require('baz'));" in
            let { module_sig = { requires; _ }; _ } = visit source in
@@ -106,7 +108,8 @@ let tests =
              assert_substring_equal ~ctxt "require('bar')" source req_bar_loc;
              assert_substring_equal ~ctxt "'baz'" source baz_loc;
              assert_substring_equal ~ctxt "require('baz')" source req_baz_loc
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "cjs_deep_requires_plus_bindings" >:: fun ctxt ->
            let source = "const Foo = require('foo'); func(Foo, require('bar'));" in
            let { module_sig = { requires; _ }; _ } = visit source in
@@ -125,7 +128,8 @@ let tests =
              assert_substring_equal ~ctxt "Foo" source foo_id_loc;
              assert_substring_equal ~ctxt "'bar'" source bar_loc;
              assert_substring_equal ~ctxt "require('bar')" source req_bar_loc
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "cjs_require_template_literal" >:: fun ctxt ->
            let source = "const Foo = require(`foo`)" in
            let { module_sig = { requires; _ }; _ } = visit source in
@@ -141,7 +145,8 @@ let tests =
              assert_substring_equal ~ctxt "`foo`" source source_loc;
              assert_substring_equal ~ctxt "require(`foo`)" source require_loc;
              assert_substring_equal ~ctxt "Foo" source ident_loc
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "cjs_require_named" >:: fun ctxt ->
            let source = "const {foo, bar: baz} = require('foo');" in
            let { module_sig = { requires; _ }; _ } = visit source in
@@ -166,7 +171,8 @@ let tests =
              assert_substring_equal ~ctxt "foo" source foo_loc';
              assert_substring_equal ~ctxt "bar" source bar_loc;
              assert_substring_equal ~ctxt "baz" source baz_loc
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "cjs_require_duplicate_remote" >:: fun ctxt ->
            let source = "const {foo: bar, foo: baz} = require('foo');" in
            let { module_sig = { requires; _ }; _ } = visit source in
@@ -190,7 +196,8 @@ let tests =
              assert_substring_equal ~ctxt "foo" source foo_loc';
              assert_substring_equal ~ctxt "bar" source bar_loc;
              assert_substring_equal ~ctxt "baz" source baz_loc
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "cjs_require_duplicate_local" >:: fun ctxt ->
            let source = "const {foo: bar, baz: bar} = require('foo');" in
            let { module_sig = { requires; _ }; _ } = visit source in
@@ -208,7 +215,8 @@ let tests =
              in
              assert_substring_equal ~ctxt "bar" source bar_loc;
              assert_substring_equal ~ctxt "baz" source baz_loc
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "cjs_require_in_export" >:: fun ctxt ->
            (* An initial version of the change to ban non-toplevel exports failed to descend into the RHS
             * of export statements *)
@@ -218,7 +226,8 @@ let tests =
            | [Require { source = (source_loc, "foo"); require_loc; bindings = None }] ->
              assert_substring_equal ~ctxt "'foo'" source source_loc;
              assert_substring_equal ~ctxt "require('foo')" source require_loc
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "cjs_module_ref" >:: fun ctxt ->
            let source = "moduleRefConsumer('m#foo')" in
            let { module_sig = { requires; _ }; _ } =
@@ -228,7 +237,8 @@ let tests =
            | [Require { source = (source_loc, "foo"); require_loc; _ }] ->
              assert_substring_equal ~ctxt "'m#foo'" source source_loc;
              assert_substring_equal ~ctxt "'m#foo'" source require_loc
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "relay_integration" >:: fun ctxt ->
            let source = "graphql`query foo {}`" in
            let { module_sig = { requires; _ }; _ } =
@@ -238,7 +248,8 @@ let tests =
            | [Require { source = (source_loc, "foo.graphql"); require_loc; _ }] ->
              assert_substring_equal ~ctxt "graphql`query foo {}`" source source_loc;
              assert_substring_equal ~ctxt "graphql`query foo {}`" source require_loc
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "relay_integration_module_prefix" >:: fun ctxt ->
            let source = "graphql`query foo {}`" in
            let { module_sig = { requires; _ }; _ } =
@@ -255,7 +266,8 @@ let tests =
            | [Require { source = (source_loc, "./__generated__/foo.graphql"); require_loc; _ }] ->
              assert_substring_equal ~ctxt "graphql`query foo {}`" source source_loc;
              assert_substring_equal ~ctxt "graphql`query foo {}`" source require_loc
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "dynamic_import" >:: fun ctxt ->
            let source = "import('foo')" in
            let { module_sig = { requires; _ }; _ } = visit source in
@@ -263,7 +275,8 @@ let tests =
            | [ImportDynamic { source = (source_loc, "foo"); import_loc }] ->
              assert_substring_equal ~ctxt "'foo'" source source_loc;
              assert_substring_equal ~ctxt "import('foo')" source import_loc
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "dynamic_import_template_literal" >:: fun ctxt ->
            let source = "import(`foo`)" in
            let { module_sig = { requires; _ }; _ } = visit source in
@@ -271,13 +284,15 @@ let tests =
            | [ImportDynamic { source = (source_loc, "foo"); import_loc }] ->
              assert_substring_equal ~ctxt "`foo`" source source_loc;
              assert_substring_equal ~ctxt "import(`foo`)" source import_loc
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "es_import" >:: fun ctxt ->
            let source = "import 'foo'" in
            let { module_sig = { requires; _ }; _ } = visit source in
            match requires with
            | [Import0 { source = (loc, "foo") }] -> assert_substring_equal ~ctxt "'foo'" source loc
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "es_import_default" >:: fun ctxt ->
            let source = "import Foo from 'foo'" in
            let { module_sig = { requires; _ }; _ } = visit source in
@@ -288,7 +303,8 @@ let tests =
              |> assert_singleton_smap ~ctxt "Foo"
              |> assert_singleton_nel
              |> assert_substrings_equal ~ctxt "Foo" "Foo" source
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "es_import_named" >:: fun ctxt ->
            let source = "import {A} from 'foo'" in
            let { module_sig = { requires; _ }; _ } = visit source in
@@ -299,7 +315,8 @@ let tests =
              |> assert_singleton_smap ~ctxt "A"
              |> assert_singleton_nel
              |> assert_substrings_equal ~ctxt "A" "A" source
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "es_import_renamed" >:: fun ctxt ->
            let source = "import {A as B} from 'foo'" in
            let { module_sig = { requires; _ }; _ } = visit source in
@@ -310,7 +327,8 @@ let tests =
              |> assert_singleton_smap ~ctxt "B"
              |> assert_singleton_nel
              |> assert_substrings_equal ~ctxt "A" "B" source
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "es_import_named_type" >:: fun ctxt ->
            let source = "import {type A} from 'foo'" in
            let { module_sig = { requires; _ }; _ } = visit source in
@@ -321,7 +339,8 @@ let tests =
              |> assert_singleton_smap ~ctxt "A"
              |> assert_singleton_nel
              |> assert_substrings_equal ~ctxt "A" "A" source
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "es_import_named_typeof" >:: fun ctxt ->
            let source = "import {typeof A} from 'foo'" in
            let { module_sig = { requires; _ }; _ } = visit source in
@@ -332,14 +351,16 @@ let tests =
              |> assert_singleton_smap ~ctxt "A"
              |> assert_singleton_nel
              |> assert_substrings_equal ~ctxt "A" "A" source
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "es_import_ns" >:: fun ctxt ->
            let source = "import * as Foo from 'foo'" in
            let { module_sig = { requires; _ }; _ } = visit source in
            match requires with
            | [Import { source = (_, "foo"); ns = Some (loc, "Foo"); _ }] ->
              assert_substring_equal ~ctxt "Foo" source loc
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "es_import_type" >:: fun ctxt ->
            let source = "import type A from 'foo'" in
            let { module_sig = { requires; _ }; _ } = visit source in
@@ -350,7 +371,8 @@ let tests =
              |> assert_singleton_smap ~ctxt "A"
              |> assert_singleton_nel
              |> assert_substrings_equal ~ctxt "A" "A" source
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "es_import_type_named" >:: fun ctxt ->
            let source = "import type {A} from 'foo'" in
            let { module_sig = { requires; _ }; _ } = visit source in
@@ -361,7 +383,8 @@ let tests =
              |> assert_singleton_smap ~ctxt "A"
              |> assert_singleton_nel
              |> assert_substrings_equal ~ctxt "A" "A" source
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "es_import_type_renamed" >:: fun ctxt ->
            let source = "import type {A as B} from 'foo'" in
            let { module_sig = { requires; _ }; _ } = visit source in
@@ -372,7 +395,8 @@ let tests =
              |> assert_singleton_smap ~ctxt "B"
              |> assert_singleton_nel
              |> assert_substrings_equal ~ctxt "A" "B" source
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "es_import_typeof" >:: fun ctxt ->
            let source = "import typeof A from 'foo'" in
            let { module_sig = { requires; _ }; _ } = visit source in
@@ -383,7 +407,8 @@ let tests =
              |> assert_singleton_smap ~ctxt "A"
              |> assert_singleton_nel
              |> assert_substrings_equal ~ctxt "A" "A" source
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "es_import_typeof_named" >:: fun ctxt ->
            let source = "import typeof {A} from 'foo'" in
            let { module_sig = { requires; _ }; _ } = visit source in
@@ -394,7 +419,8 @@ let tests =
              |> assert_singleton_smap ~ctxt "A"
              |> assert_singleton_nel
              |> assert_substrings_equal ~ctxt "A" "A" source
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "es_import_typeof_renamed" >:: fun ctxt ->
            let source = "import typeof {A as B} from 'foo'" in
            let { module_sig = { requires; _ }; _ } = visit source in
@@ -405,59 +431,72 @@ let tests =
              |> assert_singleton_smap ~ctxt "B"
              |> assert_singleton_nel
              |> assert_substrings_equal ~ctxt "A" "B" source
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "es_import_typesof_ns" >:: fun ctxt ->
            let source = "import typeof * as Foo from 'foo'" in
            let { module_sig = { requires; _ }; _ } = visit source in
            match requires with
            | [Import { source = (_, "foo"); typesof_ns = Some (loc, "Foo"); _ }] ->
              assert_substring_equal ~ctxt "Foo" source loc
-           | _ -> assert_failure "Unexpected requires" );
+           | _ -> assert_failure "Unexpected requires"
+         );
          ( "cjs_default" >:: fun ctxt ->
            let source = "" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt None) );
+           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt None)
+         );
          ( "cjs_clobber" >:: fun ctxt ->
            let source = "module.exports = 0" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14))) );
+           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
+         );
          ( "cjs_clobber_rebound" >:: fun ctxt ->
            let source = "var module = {}; module.exports = 0" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt None) );
+           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt None)
+         );
          ( "cjs_exports_named_rebound" >:: fun ctxt ->
            let source = "var module = {}; module.exports.bar = 0" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt None) );
+           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt None)
+         );
          ( "cjs_exports_named_rebound2" >:: fun ctxt ->
            let source = "var exports = {}; exports.bar = 0" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt None) );
+           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt None)
+         );
          ( "cjs_exports" >:: fun ctxt ->
            let source = "exports = {foo: bar}; exports.baz = qux;" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
            (* TODO report an export loc here *)
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (22, 29))) );
+           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (22, 29)))
+         );
          ( "cjs_export_named" >:: fun ctxt ->
            let source = "module.exports.foo = 0; module.exports.bar = baz;" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14))) );
+           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
+         );
          ( "cjs_export_object" >:: fun ctxt ->
            let source = "module.exports = {foo: bar, baz: 0, qux};" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14))) );
+           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
+         );
          ( "cjs_export_ident" >:: fun ctxt ->
            let source = "module.exports = foo;" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14))) );
+           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
+         );
          ( "cjs_export_ident_then_props" >:: fun ctxt ->
            let source = "module.exports = foo; module.exports.bar = baz;" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14))) );
+           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
+         );
          ( "cjs_export_props_then_ident" >:: fun ctxt ->
            let source = "module.exports.foo = bar; module.exports = baz;" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14))) );
+           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 14)))
+         );
          ( "export_named_type" >:: fun ctxt ->
            let source = "export type ty = string" in
            let { module_sig = { type_exports_named; _ }; _ } = visit source in
@@ -465,7 +504,8 @@ let tests =
            match type_export with
            | (_, TypeExportNamed { loc; kind = NamedDeclaration }) ->
              assert_substring_equal ~ctxt "type ty = string" source loc
-           | _ -> assert_failure "Unexpected type export" );
+           | _ -> assert_failure "Unexpected type export"
+         );
          ( "export_named_opaque_type" >:: fun ctxt ->
            let source = "export opaque type ty = string" in
            let { module_sig = { type_exports_named; _ }; _ } = visit source in
@@ -473,7 +513,8 @@ let tests =
            match type_export with
            | (_, TypeExportNamed { loc; kind = NamedDeclaration }) ->
              assert_substring_equal ~ctxt "opaque type ty = string" source loc
-           | _ -> assert_failure "Unexpected type export" );
+           | _ -> assert_failure "Unexpected type export"
+         );
          ( "export_named_interface" >:: fun ctxt ->
            let source = "export interface I {}" in
            let { module_sig = { type_exports_named; _ }; _ } = visit source in
@@ -481,7 +522,8 @@ let tests =
            match type_export with
            | (_, TypeExportNamed { loc; kind = NamedDeclaration }) ->
              assert_substring_equal ~ctxt "interface I {}" source loc
-           | _ -> assert_failure "Unexpected type export" );
+           | _ -> assert_failure "Unexpected type export"
+         );
          ( "export_default_expr" >:: fun ctxt ->
            let source = "export default 0" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
@@ -490,7 +532,9 @@ let tests =
                match export with
                | (_, ExportDefault { default_loc; local = None }) ->
                  assert_substring_equal ~ctxt "default" source default_loc
-               | _ -> assert_failure "Unexpected export") );
+               | _ -> assert_failure "Unexpected export"
+           )
+         );
          ( "export_default_anon_decl" >:: fun ctxt ->
            let source = "export default function() {}" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
@@ -499,7 +543,9 @@ let tests =
                match export with
                | (_, ExportDefault { default_loc; local = None }) ->
                  assert_substring_equal ~ctxt "default" source default_loc
-               | _ -> assert_failure "Unexpected export") );
+               | _ -> assert_failure "Unexpected export"
+           )
+         );
          ( "export_default_named_func" >:: fun ctxt ->
            let source = "export default function foo() {}" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
@@ -509,7 +555,9 @@ let tests =
                | (_, ExportDefault { default_loc; local = Some (loc, "foo") }) ->
                  assert_substring_equal ~ctxt "default" source default_loc;
                  assert_substring_equal ~ctxt "foo" source loc
-               | _ -> assert_failure "Unexpected export") );
+               | _ -> assert_failure "Unexpected export"
+           )
+         );
          ( "export_default_named_class" >:: fun ctxt ->
            let source = "export default function C() {}" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
@@ -519,7 +567,9 @@ let tests =
                | (_, ExportDefault { default_loc; local = Some (loc, "C") }) ->
                  assert_substring_equal ~ctxt "default" source default_loc;
                  assert_substring_equal ~ctxt "C" source loc
-               | _ -> assert_failure "Unexpected export") );
+               | _ -> assert_failure "Unexpected export"
+           )
+         );
          ( "export_named_func" >:: fun ctxt ->
            let source = "export function foo() {}" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
@@ -528,7 +578,9 @@ let tests =
                match export with
                | (_, ExportNamed { loc; kind = NamedDeclaration }) ->
                  assert_substring_equal ~ctxt "foo" source loc
-               | _ -> assert_failure "Unexpected export") );
+               | _ -> assert_failure "Unexpected export"
+           )
+         );
          ( "export_named_class" >:: fun ctxt ->
            let source = "export class C {}" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
@@ -537,7 +589,9 @@ let tests =
                match export with
                | (_, ExportNamed { loc; kind = NamedDeclaration }) ->
                  assert_substring_equal ~ctxt "C" source loc
-               | _ -> assert_failure "Unexpected export") );
+               | _ -> assert_failure "Unexpected export"
+           )
+         );
          ( "export_named_vars" >:: fun ctxt ->
            let source = "export var x, y = 0, [a] = [], {p} = {}" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
@@ -566,7 +620,9 @@ let tests =
                assert_substring_equal ~ctxt "x" source x_loc;
                assert_substring_equal ~ctxt "y" source y_loc;
                assert_substring_equal ~ctxt "a" source a_loc;
-               assert_substring_equal ~ctxt "p" source p_loc) );
+               assert_substring_equal ~ctxt "p" source p_loc
+           )
+         );
          ( "export_named_specs" >:: fun ctxt ->
            let source = "export {x, y as z}" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
@@ -576,7 +632,8 @@ let tests =
                  match List.assoc "x" named with
                  | ( _,
                      ExportNamed
-                       { loc; kind = NamedSpecifier { local = (x_loc, "x"); source = None } } )
+                       { loc; kind = NamedSpecifier { local = (x_loc, "x"); source = None } }
+                   )
                    when x_loc = loc ->
                    loc
                  | _ -> assert_failure "Unexpected export"
@@ -585,13 +642,16 @@ let tests =
                  match List.assoc "z" named with
                  | ( _,
                      ExportNamed
-                       { loc; kind = NamedSpecifier { local = (y_loc, "y"); source = None } } ) ->
+                       { loc; kind = NamedSpecifier { local = (y_loc, "y"); source = None } }
+                   ) ->
                    (y_loc, loc)
                  | _ -> assert_failure "Unexpected export"
                in
                assert_substring_equal ~ctxt "x" source x_loc;
                assert_substring_equal ~ctxt "y" source y_loc;
-               assert_substring_equal ~ctxt "z" source z_loc) );
+               assert_substring_equal ~ctxt "z" source z_loc
+           )
+         );
          ( "export_star" >:: fun ctxt ->
            let source = "export * from 'foo'" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
@@ -599,7 +659,9 @@ let tests =
                | [(_, ExportStar { star_loc; source = (source_loc, "foo") })] ->
                  assert_substring_equal ~ctxt "*" source star_loc;
                  assert_substring_equal ~ctxt "'foo'" source source_loc
-               | _ -> assert_failure "Unexpected export") );
+               | _ -> assert_failure "Unexpected export"
+               )
+         );
          ( "export_ns" >:: fun ctxt ->
            let source = "export * as ns from 'foo'" in
            let parse_options =
@@ -612,12 +674,15 @@ let tests =
                | (_, ExportNs { loc; source = (source_loc, "foo"); _ }) ->
                  assert_substring_equal ~ctxt "ns" source loc;
                  assert_substring_equal ~ctxt "'foo'" source source_loc
-               | _ -> assert_failure "Unexpected export") );
+               | _ -> assert_failure "Unexpected export"
+           )
+         );
          ( "declare_module.exports" >:: fun ctxt ->
            let source = "declare module.exports: ty" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
            (* TODO use just the `module.exports` location *)
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 26))) );
+           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (0, 26)))
+         );
          ( "declare_export_default" >:: fun ctxt ->
            let source = "declare export default string" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
@@ -626,7 +691,9 @@ let tests =
                match export with
                | (_, ExportDefault { default_loc; local = None }) ->
                  assert_substring_equal ~ctxt "default" source default_loc
-               | _ -> assert_failure "Unexpected export") );
+               | _ -> assert_failure "Unexpected export"
+           )
+         );
          ( "declare_export_default_func" >:: fun ctxt ->
            let source = "declare export default function foo(): void" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
@@ -636,7 +703,9 @@ let tests =
                | (_, ExportDefault { default_loc; local = Some (loc, "foo") }) ->
                  assert_substring_equal ~ctxt "default" source default_loc;
                  assert_substring_equal ~ctxt "foo" source loc
-               | _ -> assert_failure "Unexpected export") );
+               | _ -> assert_failure "Unexpected export"
+           )
+         );
          ( "declare_export_default_class" >:: fun ctxt ->
            let source = "declare export default class C {}" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
@@ -646,7 +715,9 @@ let tests =
                | (_, ExportDefault { default_loc; local = Some (loc, "C") }) ->
                  assert_substring_equal ~ctxt "default" source default_loc;
                  assert_substring_equal ~ctxt "C" source loc
-               | _ -> assert_failure "Unexpected export") );
+               | _ -> assert_failure "Unexpected export"
+           )
+         );
          ( "declare_export_named_func" >:: fun ctxt ->
            let source = "declare export function foo(): void" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
@@ -655,7 +726,9 @@ let tests =
                match export with
                | (_, ExportNamed { loc; kind = NamedDeclaration }) ->
                  assert_substring_equal ~ctxt "foo" source loc
-               | _ -> assert_failure "Unexpected export") );
+               | _ -> assert_failure "Unexpected export"
+           )
+         );
          ( "declare_export_named_class" >:: fun ctxt ->
            let source = "declare export class C {}" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
@@ -664,7 +737,9 @@ let tests =
                match export with
                | (_, ExportNamed { loc; kind = NamedDeclaration }) ->
                  assert_substring_equal ~ctxt "C" source loc
-               | _ -> assert_failure "Unexpected export") );
+               | _ -> assert_failure "Unexpected export"
+           )
+         );
          ( "declare_export_named_var" >:: fun ctxt ->
            let source = "declare export var foo: string" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
@@ -673,7 +748,9 @@ let tests =
                match export with
                | (_, ExportNamed { loc; kind = NamedDeclaration }) ->
                  assert_substring_equal ~ctxt "foo" source loc
-               | _ -> assert_failure "Unexpected export") );
+               | _ -> assert_failure "Unexpected export"
+           )
+         );
          ( "declare_export_named_specs" >:: fun ctxt ->
            let source = "declare export {x, y as z}" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
@@ -683,7 +760,8 @@ let tests =
                  match List.assoc "x" named with
                  | ( _,
                      ExportNamed
-                       { loc; kind = NamedSpecifier { local = (x_loc, "x"); source = None } } )
+                       { loc; kind = NamedSpecifier { local = (x_loc, "x"); source = None } }
+                   )
                    when x_loc = loc ->
                    loc
                  | _ -> assert_failure "Unexpected export"
@@ -692,13 +770,16 @@ let tests =
                  match List.assoc "z" named with
                  | ( _,
                      ExportNamed
-                       { loc; kind = NamedSpecifier { local = (y_loc, "y"); source = None } } ) ->
+                       { loc; kind = NamedSpecifier { local = (y_loc, "y"); source = None } }
+                   ) ->
                    (y_loc, loc)
                  | _ -> assert_failure "Unexpected export"
                in
                assert_substring_equal ~ctxt "x" source x_loc;
                assert_substring_equal ~ctxt "y" source y_loc;
-               assert_substring_equal ~ctxt "z" source z_loc) );
+               assert_substring_equal ~ctxt "z" source z_loc
+           )
+         );
          ( "declare_export_star" >:: fun ctxt ->
            let source = "declare export * from 'foo'" in
            let { module_sig = { module_kind; _ }; _ } = visit source in
@@ -706,7 +787,9 @@ let tests =
                | [(_, ExportStar { star_loc; source = (source_loc, "foo") })] ->
                  assert_substring_equal ~ctxt "*" source star_loc;
                  assert_substring_equal ~ctxt "'foo'" source source_loc
-               | _ -> assert_failure "Unexpected export") );
+               | _ -> assert_failure "Unexpected export"
+               )
+         );
          ( "declare_export_ns" >:: fun ctxt ->
            let source = "declare export * as ns from 'foo'" in
            let parse_options =
@@ -721,7 +804,9 @@ let tests =
                  | _ -> assert_failure "Unexpected export"
                in
                assert_substring_equal ~ctxt "ns" source loc;
-               assert_substring_equal ~ctxt "'foo'" source source_loc) );
+               assert_substring_equal ~ctxt "'foo'" source source_loc
+           )
+         );
          ( "declare_module" >:: fun ctxt ->
            let source = "declare module foo {}" in
            let { declare_modules; _ } = visit source in
@@ -734,7 +819,8 @@ let tests =
            assert_equal ~ctxt 0 (List.length requires);
            assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt None);
            assert_equal ~ctxt 0 (List.length type_exports_named);
-           assert_equal ~ctxt 0 (List.length type_exports_star) );
+           assert_equal ~ctxt 0 (List.length type_exports_star)
+         );
          ("declare_module_export_type" >:: function
           | ctxt ->
             let source = "declare module foo { declare export type bar = string }" in
@@ -747,7 +833,8 @@ let tests =
               | (_, TypeExportNamed { loc; kind = NamedDeclaration }) -> loc
               | _ -> assert_failure "Unexpected type export"
             in
-            assert_substring_equal ~ctxt "bar" source loc);
+            assert_substring_equal ~ctxt "bar" source loc
+         );
          ( "declare_module_export_default_expr" >:: fun ctxt ->
            let source = "declare module foo { declare export default ty }" in
            let { declare_modules; _ } = visit source in
@@ -758,7 +845,9 @@ let tests =
                match List.assoc "default" named with
                | (_, ExportDefault { default_loc; local = None }) ->
                  assert_substring_equal ~ctxt "default" source default_loc
-               | _ -> assert_failure "Unexpected export") );
+               | _ -> assert_failure "Unexpected export"
+           )
+         );
          ( "declare_module_export_default_decl" >:: fun ctxt ->
            let source = "declare module foo { declare export default function bar(): void }" in
            let { declare_modules; _ } = visit source in
@@ -770,7 +859,9 @@ let tests =
                | (_, ExportDefault { default_loc; local = Some (loc, "bar") }) ->
                  assert_substring_equal ~ctxt "default" source default_loc;
                  assert_substring_equal ~ctxt "bar" source loc
-               | _ -> assert_failure "Unexpected export") );
+               | _ -> assert_failure "Unexpected export"
+           )
+         );
          ( "declare_module_export_name_func" >:: fun ctxt ->
            let source = "declare module foo { declare export function bar(): void }" in
            let { declare_modules; _ } = visit source in
@@ -783,7 +874,9 @@ let tests =
                  | (_, ExportNamed { loc; kind = NamedDeclaration }) -> loc
                  | _ -> assert_failure "Unexpected export"
                in
-               assert_substring_equal ~ctxt "bar" source loc) );
+               assert_substring_equal ~ctxt "bar" source loc
+           )
+         );
          ( "declare_module_export_star" >:: fun ctxt ->
            let source = "declare module foo { declare export * from 'bar' }" in
            let { declare_modules; _ } = visit source in
@@ -793,14 +886,17 @@ let tests =
                | [(_, ExportStar { star_loc; source = (source_loc, "bar") })] ->
                  assert_substring_equal ~ctxt "*" source star_loc;
                  assert_substring_equal ~ctxt "'bar'" source source_loc
-               | _ -> assert_failure "Unexpected export") );
+               | _ -> assert_failure "Unexpected export"
+               )
+         );
          ( "declare_module_declare_module.export" >:: fun ctxt ->
            let source = "declare module foo { declare module.exports: ty }" in
            let { declare_modules; _ } = visit source in
            assert_equal ~ctxt 1 (SMap.cardinal declare_modules);
            let (_, { module_kind; _ }) = SMap.find "foo" declare_modules in
            (* TODO use o0nly the location of `module.exports` *)
-           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (21, 47))) );
+           assert_cjs ~source module_kind ~assert_export_loc:(assert_equal ~ctxt (Some (21, 47)))
+         );
          ( "err_indeterminate_clobber_after_export" >:: fun ctxt ->
            let source = "export default 0; module.exports = 0;" in
            match visit_err source with
@@ -810,5 +906,6 @@ let tests =
            let source = "module.exports = 0; export default 0;" in
            match visit_err source with
            | IndeterminateModuleType loc ->
-             assert_substring_equal ~ctxt "export default 0;" source loc );
+             assert_substring_equal ~ctxt "export default 0;" source loc
+         );
        ]

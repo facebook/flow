@@ -37,25 +37,29 @@ let spec =
              ~doc:
                ("Print the file with colors showing which parts have unknown types "
                ^ "(blue for 'empty' and red for 'any'). "
-               ^ "Cannot be used with --json or --pretty")
+               ^ "Cannot be used with --json or --pretty"
+               )
         |> flag
              "--debug"
              no_arg
              ~doc:
                ("Print debugging info about each range in the file to stderr. "
-               ^ "Cannot be used with --json or --pretty")
+               ^ "Cannot be used with --json or --pretty"
+               )
         |> path_flag
         |> flag "--respect-pragma" no_arg ~doc:"" (* deprecated *)
         |> flag "--all" no_arg ~doc:"Ignore absence of @flow pragma"
         |> flag "--show-trust" no_arg ~doc:"EXPERIMENTAL: Include trust information in output"
-        |> anon "file" (optional string));
+        |> anon "file" (optional string)
+      );
   }
 
 let handle_error ~json ~pretty err =
   if json then
     Hh_json.(
       let json = JSON_Object [("error", JSON_String err)] in
-      prerr_json_endline ~pretty json)
+      prerr_json_endline ~pretty json
+    )
   else
     prerr_endline err
 
@@ -88,7 +92,8 @@ let debug_range (loc, cov) =
       loc.start.column
       loc._end.line
       loc._end.column
-      (Coverage.to_bool cov))
+      (Coverage.to_bool cov)
+  )
 
 let rec colorize_file content last_offset accum = function
   | [] -> colorize content last_offset (String.length content) Tty.Default accum
@@ -158,7 +163,8 @@ let rec split_overlapping_ranges accum = function
         let overlap_loc = (loc2_start, loc1_end) in
         let tail_loc = (loc1_end + 1, loc2_end) in
         ( (head_loc, is_covered1) :: (overlap_loc, Coverage.m_or (is_covered1, is_covered2)) :: accum,
-          (tail_loc, is_covered2) :: rest )
+          (tail_loc, is_covered2) :: rest
+        )
       else
         (* range 2 is in the middle of range 1, so split range 1 and consume
            the first part, which doesn't overlap, and then recurse on
@@ -227,11 +233,13 @@ let handle_response
             ("untainted_count", int_ untainted);
             ( "untainted_locs",
               JSON_Array
-                (Base.List.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) untainted_locs) );
+                (Base.List.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) untainted_locs)
+            );
             ("tainted_count", int_ tainted);
             ( "tainted_locs",
               JSON_Array
-                (Base.List.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) tainted_locs) );
+                (Base.List.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) tainted_locs)
+            );
           ]
         else
           let covered_locs = untainted_locs @ tainted_locs |> Base.List.sort ~compare in
@@ -239,7 +247,8 @@ let handle_response
             ("covered_count", int_ covered);
             ( "covered_locs",
               JSON_Array
-                (Base.List.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) covered_locs) );
+                (Base.List.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) covered_locs)
+            );
           ]
       in
       JSON_Object
@@ -253,15 +262,20 @@ let handle_response
                     JSON_Array
                       (Base.List.map
                          ~f:(Reason.json_of_loc ~strip_root ~offset_table)
-                         uncovered_locs) );
+                         uncovered_locs
+                      )
+                  );
                   ("empty_count", int_ empty);
                   ( "empty_locs",
                     JSON_Array
                       (Base.List.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) empty_locs)
                   );
-                ]) );
+                ]
+              )
+          );
         ]
-      |> print_json_endline ~pretty)
+      |> print_json_endline ~pretty
+    )
   else
     Utils_js.print_endlinef "Covered: %0.2f%% (%d of %d expressions)\n" percent covered total
 

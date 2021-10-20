@@ -553,7 +553,9 @@ module Scope = struct
     modify_names
       (SMap.update name (function
           | None -> Some b
-          | x -> x))
+          | x -> x
+          )
+          )
       scope
 
   let rec lookup scope name =
@@ -604,8 +606,7 @@ module Scope = struct
     let node = push_remote_ref tbls ref in
     add scope name (RemoteBinding node)
 
-  let bind_type scope tbls id_loc name def =
-    bind_local scope tbls name (TypeBinding { id_loc; def })
+  let bind_type scope tbls id_loc name def = bind_local scope tbls name (TypeBinding { id_loc; def })
 
   let bind_class scope tbls id_loc name def =
     bind_local scope tbls name (ClassBinding { id_loc; name; def })
@@ -639,8 +640,11 @@ module Scope = struct
                  | DeclareFunBinding { name; defs_rev } ->
                    let defs_rev = Nel.cons (id_loc, fn_loc, def) defs_rev in
                    DeclareFunBinding { name; defs_rev }
-                 | def -> def);
-             binding_opt))
+                 | def -> def
+                 );
+             binding_opt
+       )
+      )
       scope
 
   let bind_var scope tbls kind id_loc name def =
@@ -1184,7 +1188,8 @@ let typeof =
           {
             T.Generic.Identifier.qualification;
             id = (id_loc, { Ast.Identifier.name; comments = _ });
-          } ) ->
+          }
+        ) ->
       loop scope tbls typeof_loc ((id_loc, name) :: chain) qualification
     | T.Generic.Identifier.Unqualified id ->
       let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
@@ -1222,8 +1227,7 @@ and annot_with_loc opts scope tbls xs (loc, t) =
       Annot (SingletonNumber (loc, value, raw))
     | T.BigIntLiteral { Ast.BigIntLiteral.bigint; _ } -> Annot (SingletonBigInt (loc, bigint))
     | T.BooleanLiteral { Ast.BooleanLiteral.value; _ } -> Annot (SingletonBoolean (loc, value))
-    | T.Nullable { T.Nullable.argument; _ } ->
-      Annot (Maybe (loc, annot opts scope tbls xs argument))
+    | T.Nullable { T.Nullable.argument; _ } -> Annot (Maybe (loc, annot opts scope tbls xs argument))
     | T.Array { T.Array.argument; _ } -> Annot (Array (loc, annot opts scope tbls xs argument))
     | T.Function f ->
       let def = function_type opts scope tbls xs f in
@@ -2239,7 +2243,8 @@ and tparams =
             bound = b;
             variance = v;
             default = d;
-          } ) =
+          }
+        ) =
       tp
     in
     let name_loc = push_loc tbls name_loc in
@@ -2254,7 +2259,8 @@ and tparams =
           match List.rev acc with
           | [] -> Mono
           | tp :: tps -> Poly (tparams_loc, tp, tps)
-        end )
+        end
+      )
     | tp :: tps ->
       let (TParam { name; _ } as tp) = tparam opts scope tbls xs tp in
       let xs = SSet.add name xs in
@@ -2415,7 +2421,8 @@ let key_mirror =
                   | P.Literal (id_loc, { Ast.Literal.value = Ast.Literal.String name; _ }) );
                 value = _;
                 shorthand = _;
-              } ) ->
+              }
+          ) ->
         let id_loc = push_loc tbls id_loc in
         let acc =
           if name = "__proto__" then
@@ -2444,7 +2451,8 @@ let jsx_element opts tbls loc elem =
     Err
       ( loc,
         SigError
-          (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.JSXElement)) )
+          (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.JSXElement))
+      )
 
 let binary loc =
   let open Ast.Expression.Binary in
@@ -2615,7 +2623,8 @@ let rec expression opts scope tbls (loc, expr) =
                 property =
                   E.Member.PropertyIdentifier (_, { Ast.Identifier.name = "freeze"; comments = _ });
                 comments = _;
-              } );
+              }
+          );
         targs = None;
         arguments =
           ( _,
@@ -2623,7 +2632,8 @@ let rec expression opts scope tbls (loc, expr) =
               E.ArgList.arguments =
                 [E.Expression (obj_loc, E.Object { E.Object.properties; comments = _ })];
               comments = _;
-            } );
+            }
+          );
         comments = _;
       } ->
     (* TODO: Similar to the "require" case above, we should only special-case
@@ -2641,7 +2651,8 @@ let rec expression opts scope tbls (loc, expr) =
               E.ArgList.arguments =
                 [E.Expression (obj_loc, E.Object { E.Object.properties; comments = _ })];
               comments = _;
-            } );
+            }
+          );
         comments = _;
       }
     when opts.facebook_keyMirror ->
@@ -2665,7 +2676,8 @@ let rec expression opts scope tbls (loc, expr) =
   | E.Call _ ->
     Err
       ( loc,
-        SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Call)) )
+        SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Call))
+      )
   | E.Comprehension _ ->
     Err
       ( loc,
@@ -2676,17 +2688,20 @@ let rec expression opts scope tbls (loc, expr) =
     Err
       ( loc,
         SigError
-          (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Conditional)) )
+          (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Conditional))
+      )
   | E.Generator _ ->
     Err
       ( loc,
         SigError
-          (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Generator)) )
+          (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Generator))
+      )
   | E.JSXFragment _ ->
     Err
       ( loc,
         SigError
-          (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.JSXFragment)) )
+          (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.JSXFragment))
+      )
   | E.Logical _ ->
     Err
       ( loc,
@@ -2727,7 +2742,8 @@ let rec expression opts scope tbls (loc, expr) =
   | E.This _ ->
     Err
       ( loc,
-        SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.This)) )
+        SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.This))
+      )
   | E.Yield _ ->
     Err
       ( loc,
@@ -2764,7 +2780,9 @@ and member =
         ( toplevel_loc,
           SigError
             (Signature_error.UnexpectedExpression
-               (toplevel_loc, Flow_ast_utils.ExpressionSort.Member)) )
+               (toplevel_loc, Flow_ast_utils.ExpressionSort.Member)
+            )
+        )
   in
   (fun opts scope tbls obj loc prop -> loop ~toplevel_loc:loc opts scope tbls [(loc, prop)] obj)
 
@@ -2862,7 +2880,8 @@ and function_def =
         Err
           ( loc,
             SigError
-              (Signature_error.ExpectedAnnotation (loc, Expected_annotation_sort.FunctionReturn)) )
+              (Signature_error.ExpectedAnnotation (loc, Expected_annotation_sort.FunctionReturn))
+          )
       else if async then
         AsyncVoidReturn loc
       else
@@ -2883,7 +2902,8 @@ and function_def =
             {
               S.Block.body = [(loc, S.Return { S.Return.argument = Some expr; comments = _ })];
               comments = _;
-            } )
+            }
+          )
       | F.BodyExpression ((loc, _) as expr) ->
         let loc = push_loc tbls loc in
         let pnames =
@@ -3026,10 +3046,11 @@ and predicate opts scope tbls pnames =
         None
     | L.Null ->
       Some
-        (if strict then
+        ( if strict then
           `Null loc
         else
-          `Maybe)
+          `Maybe
+        )
     | L.Number x ->
       if strict then
         Some (`Number (loc, x, raw))
@@ -3173,8 +3194,10 @@ and predicate opts scope tbls pnames =
                 E.Member._object = (_, E.Identifier (_, { I.name = "Array"; comments = _ }));
                 property = E.Member.PropertyIdentifier (_, { I.name = "isArray"; comments = _ });
                 comments = _;
-              } ),
-          { E.ArgList.arguments = [E.Expression arg]; comments = _ } ) ->
+              }
+          ),
+          { E.ArgList.arguments = [E.Expression arg]; comments = _ }
+        ) ->
         refine `IsArray arg
       | (_, { E.ArgList.arguments; comments = _ }) -> loop [] 0 arguments
   in
@@ -3216,7 +3239,8 @@ and class_def =
                 static;
                 decorators = _;
                 comments = _;
-              } ) ->
+              }
+            ) ->
           if opts.munge && Signature_utils.is_munged_property_string name then
             acc
           else begin
@@ -3246,7 +3270,8 @@ and class_def =
                 static;
                 variance;
                 comments = _;
-              } ) ->
+              }
+            ) ->
           if opts.munge && Signature_utils.is_munged_property_string name then
             acc
           else
@@ -3267,7 +3292,9 @@ and class_def =
                       ( prop_loc,
                         SigError
                           (Signature_error.ExpectedAnnotation
-                             (prop_loc, Expected_annotation_sort.Property { name })) )
+                             (prop_loc, Expected_annotation_sort.Property { name })
+                          )
+                      )
                   in
                   let id_loc = push_loc tbls id_loc in
                   (id_loc, res)
@@ -3584,7 +3611,9 @@ let type_alias_decl opts scope tbls decl =
       (splice tbls id_loc (fun tbls ->
            let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
            let body = annot opts scope tbls xs t in
-           TypeAlias { id_loc; name; tparams; body }))
+           TypeAlias { id_loc; name; tparams; body }
+       )
+      )
   in
   Scope.bind_type scope tbls id_loc name def
 
@@ -3605,7 +3634,9 @@ let opaque_type_decl opts scope tbls decl =
            let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
            let bound = Base.Option.map ~f:(annot opts scope tbls xs) supertype in
            let body = Base.Option.map ~f:(annot opts scope tbls xs) impltype in
-           OpaqueType { id_loc; name; tparams; bound; body }))
+           OpaqueType { id_loc; name; tparams; bound; body }
+       )
+      )
   in
   Scope.bind_type scope tbls id_loc name def
 
@@ -3674,7 +3705,9 @@ let variable_decl opts scope tbls kind decl =
                    scope
                    tbls
                    SSet.empty
-                   annot))
+                   annot
+             )
+            )
         in
         Scope.bind_var scope tbls kind id_loc name def
     end
@@ -3700,9 +3733,11 @@ let variable_decl opts scope tbls kind decl =
                    scope
                    tbls
                    SSet.empty
-                   annot)
+                   annot
+           )
          in
-         push_pattern_def tbls def)
+         push_pattern_def tbls def
+        )
     in
     let def = push_pattern tbls (PDef pattern_def) in
     pattern opts scope tbls f def p;
@@ -3742,7 +3777,9 @@ let declare_variable_decl opts scope tbls decl =
              scope
              tbls
              SSet.empty
-             t))
+             t
+       )
+      )
   in
   Scope.bind_declare_var scope tbls id_loc name def
 
@@ -3796,7 +3833,9 @@ let declare_function_decl opts scope tbls decl =
                  None
              in
              FunSig { tparams; params; rest_param; this_param; return; predicate }
-           | _ -> failwith "unexpected declare function annot"))
+           | _ -> failwith "unexpected declare function annot"
+       )
+      )
   in
   Scope.bind_declare_function scope tbls id_loc fn_loc name def
 
@@ -3870,7 +3909,9 @@ let interface_decl opts scope tbls decl =
       (splice tbls id_loc (fun tbls ->
            let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
            let def = interface_def opts scope tbls xs extends properties in
-           Interface { id_loc; name; tparams; def }))
+           Interface { id_loc; name; tparams; def }
+       )
+      )
   in
   Scope.bind_type scope tbls id_loc name def
 
@@ -4095,7 +4136,9 @@ let assignment =
                   (_, E.Identifier (_, { I.name = "module" as object_name; comments = _ }));
                 property = E.Member.PropertyIdentifier (_, { I.name = "exports"; comments = _ });
                 comments = _;
-              } ) )
+              }
+          )
+      )
       when Scope.lookup scope object_name = None ->
       let t = expression opts scope tbls right in
       Scope.cjs_clobber scope t
@@ -4109,7 +4152,9 @@ let assignment =
                   (_, E.Identifier (_, { I.name = "exports" as object_name; comments = _ }));
                 property = E.Member.PropertyIdentifier (id_loc, { I.name; comments = _ });
                 comments = _;
-              } ) )
+              }
+          )
+      )
     (* module.exports.foo = ... *)
     | ( None,
         P.Expression
@@ -4125,10 +4170,13 @@ let assignment =
                         property =
                           E.Member.PropertyIdentifier (_, { I.name = "exports"; comments = _ });
                         comments = _;
-                      } );
+                      }
+                  );
                 property = E.Member.PropertyIdentifier (id_loc, { I.name; comments = _ });
                 comments = _;
-              } ) )
+              }
+          )
+      )
       when Scope.lookup scope object_name = None ->
       let id_loc = push_loc tbls id_loc in
       let t = expression opts scope tbls right in
@@ -4142,7 +4190,9 @@ let assignment =
                 E.Member._object = (_, E.Identifier (_, { I.name; comments = _ }));
                 property = E.Member.PropertyIdentifier (id_loc, { I.name = prop_name; comments = _ });
                 comments = _;
-              } ) ) ->
+              }
+          )
+      ) ->
       let id_loc = push_loc tbls id_loc in
       let t = expression opts scope tbls right in
       Scope.assign_binding prop_name (id_loc, t) name scope

@@ -72,7 +72,8 @@ module Layout_builder = struct
         match loc with
         | { source = None; start = { line = 1; column = 0 }; _end = { line = 0; column = 0 } } ->
           true
-        | _ -> false)
+        | _ -> false
+      )
     in
     let string_of_loc loc =
       Loc.(
@@ -81,7 +82,8 @@ module Layout_builder = struct
           loc.start.line
           loc.start.column
           loc._end.line
-          loc._end.column)
+          loc._end.column
+      )
     in
     let string_of_when_to_break = function
       | Break_if_needed -> "Layout.Break_if_needed"

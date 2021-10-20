@@ -106,7 +106,8 @@ module CheckCommand = struct
           |> ignore_version_flag
           |> from_flag
           |> no_cgroup_flag
-          |> anon "root" (optional string));
+          |> anon "root" (optional string)
+        );
       usage =
         Printf.sprintf
           "Usage: %s check [OPTION]... [ROOT]\n\nDoes a full Flow check and prints the results.\n\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be the current directory if unspecified.\n"
@@ -143,7 +144,9 @@ module CheckCommand = struct
             saved_state_force_recheck = false;
             saved_state_no_fallback = false;
           }
+        
       in
+
       make_options
         ~flowconfig_name
         ~flowconfig_hash
@@ -203,7 +206,8 @@ module FocusCheckCommand = struct
           |> root_flag
           |> input_file_flag "check"
           |> no_cgroup_flag
-          |> anon "root" (list_of string));
+          |> anon "root" (list_of string)
+        );
       usage =
         Printf.sprintf
           "Usage: %s focus-check [OPTION]... [FILES/DIRS]\n\nEXPERIMENTAL: Does a focused Flow check on the input files/directories (and each of their dependents and dependencies) and prints the results.\n\nIf --root is not specified, Flow will search upward for a .flowconfig file from the first file or dir in FILES/DIR.\nIf --root is not specified and FILES/DIR is omitted, a focus check is ran on the current directory.\n"
@@ -232,12 +236,13 @@ module FocusCheckCommand = struct
     let root =
       CommandUtils.guess_root
         flowconfig_name
-        (if root <> None then
+        ( if root <> None then
           root
         else
           match filenames with
           | [] -> None
-          | x :: _ -> Some x)
+          | x :: _ -> Some x
+        )
     in
     let (flowconfig, flowconfig_hash) =
       read_config_and_hash_or_exit

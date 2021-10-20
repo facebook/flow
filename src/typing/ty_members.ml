@@ -57,11 +57,13 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
                ( NameUtils.Map.singleton
                    name
                    { ty = ty_of_named_prop prop; from_proto; from_nullable = false; def_loc },
-                 [] )
+                 []
+               )
              | SpreadProp ty -> members_of_ty ty
              | CallProp _ -> (NameUtils.Map.empty, [])
            in
-           (NameUtils.Map.union ~combine:(fun _ _ snd -> Some snd) mems1 mems2, errs1 @ errs2))
+           (NameUtils.Map.union ~combine:(fun _ _ snd -> Some snd) mems1 mems2, errs1 @ errs2)
+       )
   in
   (* given a list of objects, collates the members that exist in all of them *)
   let intersection_of_members ((t1_members, ts_members) : 'a member_info NameUtils.Map.t Nel.t) =
@@ -70,7 +72,8 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
          (NameUtils.Map.merge (fun _ ty_opt tys_opt ->
               match (ty_opt, tys_opt) with
               | ( Some { ty; from_proto = fp; from_nullable = fn; def_loc = dl },
-                  Some { ty = tys; from_proto = fps; from_nullable = fns; def_loc = dls } ) ->
+                  Some { ty = tys; from_proto = fps; from_nullable = fns; def_loc = dls }
+                ) ->
                 (* We say that a member formed by unioning other members should be treated:
                  * - as from a prototype only if all its constituent members are.
                  * - as from a nullable object if any of its constituent members are.
@@ -84,7 +87,9 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
                   }
               | (None, _)
               | (_, None) ->
-                None))
+                None
+          )
+         )
          ts_members
   in
   (* given a list of objects, collates the members that exist in any of them *)
@@ -94,7 +99,8 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
          (NameUtils.Map.merge (fun _ ty_opt tys_opt ->
               match (ty_opt, tys_opt) with
               | ( Some { ty; from_proto = fp; from_nullable = fn; def_loc = dl },
-                  Some { ty = tys; from_proto = fps; from_nullable = fns; def_loc = dls } ) ->
+                  Some { ty = tys; from_proto = fps; from_nullable = fns; def_loc = dls }
+                ) ->
                 (* We say that a member formed by intersecting other members should be treated:
                  * - as from a prototype only if all its constituent members are.
                  * - as from a nullable object only if all its constituent members are.
@@ -108,20 +114,26 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
                   }
               | (Some info, None) -> Some (map_member_info Nel.one info)
               | (None, Some info) -> Some info
-              | (None, None) -> None))
+              | (None, None) -> None
+          )
+         )
          ts_members
   in
   let intersection_of_member_types =
     NameUtils.Map.map
       (map_member_info (function
           | (t, []) -> t
-          | (t1, t2 :: ts) -> Ty_utils.simplify_type ~merge_kinds:true (Inter (t1, t2, ts))))
+          | (t1, t2 :: ts) -> Ty_utils.simplify_type ~merge_kinds:true (Inter (t1, t2, ts))
+          )
+          )
   in
   let union_of_member_types =
     NameUtils.Map.map
       (map_member_info (function
           | (t, []) -> t
-          | (t1, t2 :: ts) -> Ty_utils.simplify_type ~merge_kinds:true (Union (t1, t2, ts))))
+          | (t1, t2 :: ts) -> Ty_utils.simplify_type ~merge_kinds:true (Union (t1, t2, ts))
+          )
+          )
   in
   let add_special_cases special_cases =
     NameUtils.Map.map (map_member_info (List.fold_right Nel.cons special_cases))
@@ -150,7 +162,8 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
           NameUtils.Map.map
             (* Bot is the identity of type union *)
             (Fn.const
-               { ty = Bot EmptyType; from_proto = true; from_nullable = true; def_loc = None })
+               { ty = Bot EmptyType; from_proto = true; from_nullable = true; def_loc = None }
+            )
             universe
         | Normal -> ty_members
       in
@@ -193,7 +206,8 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
   | ( TVar _ | Bound _ | Generic _ | Symbol | Num _ | Str _ | Bool _ | NumLit _ | StrLit _
     | BoolLit _ | Arr _ | Tup _ ) as t ->
     ( NameUtils.Map.empty,
-      [Printf.sprintf "members_of_ty unexpectedly applied to (%s)" (Ty_debug.dump_t t)] )
+      [Printf.sprintf "members_of_ty unexpectedly applied to (%s)" (Ty_debug.dump_t t)]
+    )
   | Any _
   | Top
   | Bot _
@@ -227,6 +241,7 @@ let ty_normalizer_options =
       verbose_normalizer = false;
       max_depth = Some 50;
     }
+  
 
 let extract ~include_proto_members ~cx ~typed_ast ~file_sig scheme =
   let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file:(Context.file cx) ~typed_ast ~file_sig in

@@ -42,7 +42,8 @@ let add_require_tvars ~unresolved_tvar =
               let desc = Reason.RCustom mref in
               Nel.iter (add_decl cx m_name desc) locs)
             (require_loc_map module_sig))
-        file_sig.declare_modules)
+        file_sig.declare_modules
+    )
 
 (* Scan the list of comments to place suppressions on the appropriate locations.
     Because each comment can only contain a single code, in order to support
@@ -113,7 +114,8 @@ let scan_for_lint_suppressions =
           in
           update_pos' new_loc str (index + ind_diff) length
         else
-          pos)
+          pos
+      )
     in
     (fun pos str -> update_pos' pos str 0 (String.length str))
   in
@@ -180,7 +182,8 @@ let scan_for_lint_suppressions =
       in
       let _end = update_pos start value in
       let loc = { loc with start; _end } in
-      { value; loc })
+      { value; loc }
+    )
   in
   let split_delim_locational delim { loc; value } =
     let delim_str = String.make 1 delim in
@@ -251,7 +254,8 @@ let scan_for_lint_suppressions =
         match keyword with
         | Unending -> range_unending loc
         | Line -> range_of_line loc.source loc._end.line
-        | Next_line -> range_of_line loc.source (loc._end.line + 1))
+        | Next_line -> range_of_line loc.source (loc._end.line + 1)
+    )
   in
   let convert_comment (loc, comment) =
     (* Comment locs contain the comment characters themselves. (//, /*, and */)
@@ -266,7 +270,8 @@ let scan_for_lint_suppressions =
       | { Ast.Comment.kind = Ast.Comment.Line; text = s; _ } ->
         let new_start = { loc.start with column = loc.start.column + 2 } in
         let new_loc = { loc with start = new_start } in
-        { loc = new_loc; value = s })
+        { loc = new_loc; value = s }
+    )
   in
   let nested_map f outer_list = Base.List.map ~f:(Base.List.map ~f) outer_list in
   let process_comment
@@ -429,7 +434,8 @@ module Make (Env : Env_sig.S) : S = struct
             Ast.Program.statements = aloc_statements;
             comments = aloc_comments;
             all_comments = aloc_all_comments;
-          } ) =
+          }
+        ) =
       aloc_ast
     in
 
@@ -450,7 +456,8 @@ module Make (Env : Env_sig.S) : S = struct
           (Entry.new_var
              ~provider:local_exports_var
              ~loc:(TypeUtil.loc_of_t local_exports_var)
-             (Type.Inferred local_exports_var))
+             (Type.Inferred local_exports_var)
+          )
           scope;
 
         add_entry
@@ -459,10 +466,12 @@ module Make (Env : Env_sig.S) : S = struct
              ~loc:(Reason.aloc_of_reason reason_exports_module)
              ~provider:(Type.Unsoundness.exports_any reason_exports_module)
              ~specific:(Type.DefT (reason_exports_module, Type.bogus_trust (), Type.EmptyT))
-             (Type.Inferred (Type.Unsoundness.exports_any reason_exports_module)))
+             (Type.Inferred (Type.Unsoundness.exports_any reason_exports_module))
+          )
           scope;
 
-        scope)
+        scope
+      )
     in
     Env.init_env cx module_scope;
 
@@ -481,7 +490,8 @@ module Make (Env : Env_sig.S) : S = struct
         Ast.Program.statements = typed_statements;
         comments = aloc_comments;
         all_comments = aloc_all_comments;
-      } )
+      }
+    )
 
   (* infer a parsed library file.
      processing is similar to an ordinary module, except that
@@ -509,7 +519,9 @@ module Make (Env : Env_sig.S) : S = struct
 
     (module_scope
     |> Scope.(
-         iter_entries Entry.((fun name entry -> Flow_js.set_builtin cx name (actual_type entry)))));
+         iter_entries Entry.((fun name entry -> Flow_js.set_builtin cx name (actual_type entry)))
+       )
+    );
 
     NameUtils.Map.keys Scope.(module_scope.entries)
 end

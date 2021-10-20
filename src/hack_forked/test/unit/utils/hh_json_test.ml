@@ -31,7 +31,8 @@ let test_escape_unescape () =
       let encoded = Hh_json.json_to_string json in
       let decoded = Hh_json.json_of_string encoded in
       let result = Hh_json.get_string_exn decoded in
-      String.equal result s)
+      String.equal result s
+  )
 
 let test_empty_string () =
   try
@@ -71,7 +72,8 @@ let test_access_string () =
       | Error (Missing_key_error ("foo", [])) -> true
       | _ -> false
     in
-    r1 && r2 && r3 && r4)
+    r1 && r2 && r3 && r4
+  )
 
 let test_jget_string () =
   let json_string = Some (Hh_json.json_of_string "{ \"foo\": \"hello\" }") in
@@ -109,7 +111,8 @@ let test_jget_string () =
     in
     let failed = String_utils.is_substring "false" results in
     if failed then Caml.Printf.eprintf "%s" results;
-    not failed)
+    not failed
+  )
 
 let test_jget_number () =
   let json_int = Some (Hh_json.json_of_string "{ \"foo\": 1 }") in
@@ -131,7 +134,8 @@ let test_jget_number () =
     in
     let failed = String_utils.is_substring "false" results in
     if failed then Caml.Printf.eprintf "%s" results;
-    not failed)
+    not failed
+  )
 
 let test_access_object_string () =
   let json = Hh_json.json_of_string "{ \"foo\": { \"bar\": { \"baz\": \"hello\" } } }" in
@@ -139,7 +143,8 @@ let test_access_object_string () =
     let result = return json >>= get_obj "foo" >>= get_obj "bar" >>= get_string "baz" in
     match result with
     | Ok ("hello", _) -> true
-    | _ -> false)
+    | _ -> false
+  )
 
 let test_access_object_bool () =
   let json = Hh_json.json_of_string "{ \"foo\": { \"bar\": { \"baz\": true } } }" in
@@ -147,7 +152,8 @@ let test_access_object_bool () =
     let result = return json >>= get_obj "foo" >>= get_obj "bar" >>= get_bool "baz" in
     match result with
     | Ok (true, _) -> true
-    | _ -> false)
+    | _ -> false
+  )
 
 let test_access_object_number () =
   let json = Hh_json.json_of_string "{ \"foo\": { \"bar\": { \"baz\": 5 } } }" in
@@ -155,7 +161,8 @@ let test_access_object_number () =
     let result = return json >>= get_obj "foo" >>= get_obj "bar" >>= get_number "baz" in
     match result with
     | Ok ("5", _) -> true
-    | _ -> false)
+    | _ -> false
+  )
 
 let test_access_object_val () =
   let json = Hh_json.json_of_string "{ \"foo\": { \"bar\": { \"baz\": 5 } } }" in
@@ -163,7 +170,8 @@ let test_access_object_val () =
     let result = return json >>= get_obj "foo" >>= get_obj "bar" >>= get_val "baz" in
     match result with
     | Ok (Hh_json.JSON_Number "5", _) -> true
-    | _ -> false)
+    | _ -> false
+  )
 
 let test_access_object_key_doesnt_exist () =
   let json = Hh_json.json_of_string "{ \"foo\": { \"bar\": { \"baz\": 5 } } }" in
@@ -171,7 +179,8 @@ let test_access_object_key_doesnt_exist () =
     let result = return json >>= get_obj "foo" >>= get_obj "bar" >>= get_number "oops" in
     match result with
     | Error (Missing_key_error ("oops", ["bar"; "foo"])) -> true
-    | _ -> false)
+    | _ -> false
+  )
 
 let test_access_object_type_invalid () =
   let json = Hh_json.json_of_string "{ \"foo\": { \"bar\": { \"baz\": 5 } } }" in
@@ -179,7 +188,8 @@ let test_access_object_type_invalid () =
     let result = return json >>= get_obj "foo" >>= get_obj "bar" >>= get_string "baz" in
     match result with
     | Error (Wrong_type_error (["baz"; "bar"; "foo"], Hh_json.String_t)) -> true
-    | _ -> false)
+    | _ -> false
+  )
 
 (** Hit an error when accessing the third key, in this JSON object
   * of depth 4. *)
@@ -196,7 +206,8 @@ let test_access_object_error_in_middle () =
     in
     match result with
     | Error (Missing_key_error ("oops", ["bar"; "foo"])) -> true
-    | _ -> false)
+    | _ -> false
+  )
 
 type fbz_record = {
   foo: bool;
@@ -226,7 +237,8 @@ let test_access_3_keys_one_object () =
       Asserter.Bool_asserter.assert_equals v.foo true "foo value mismatch";
       Asserter.String_asserter.assert_equals v.bar "hello" "bar value mismatch";
       Asserter.Int_asserter.assert_equals v.baz 5 "baz value mismatch";
-      true)
+      true
+  )
 
 (** We access exactly as we do above, but "bar" actually is an array instead
  * of a string, so we should expect to get a Error. *)
@@ -251,7 +263,8 @@ let test_access_3_keys_one_object_wrong_type_middle () =
       true
     | Ok (_, _) ->
       Caml.Printf.eprintf "Expected failure, but successfully traversed json.\n";
-      false)
+      false
+  )
 
 let test_truncate () =
   let s = {|{ "a":{"a1":{"a1x":"hello","a1y":42},"a2":true},"b":null}|} in
@@ -307,7 +320,8 @@ let tests =
     ("test_access_object_error_in_middle", test_access_object_error_in_middle);
     ("test_access_3_keys_on_object", test_access_3_keys_one_object);
     ( "test_access_3_keys_one_object_wrong_type_middle",
-      test_access_3_keys_one_object_wrong_type_middle );
+      test_access_3_keys_one_object_wrong_type_middle
+    );
     ("test_truncate", test_truncate);
     ("test_hex_escape", test_hex_escape);
   ]

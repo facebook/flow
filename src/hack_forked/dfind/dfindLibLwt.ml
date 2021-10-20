@@ -41,7 +41,8 @@ let get_changes handle =
   let rec loop acc =
     (request_changes handle >>= function
      | DfindServer.Updates s -> Lwt.return s
-     | DfindServer.Ready -> assert false)
+     | DfindServer.Ready -> assert false
+    )
     >>= fun diff ->
     if SSet.is_empty diff then
       Lwt.return acc

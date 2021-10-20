@@ -97,10 +97,12 @@ let client_to_monitor_1__to_json (c : client_to_monitor_1) : Hh_json.json =
         ("client_build_id", JSON_String c.client_build_id);
         ("is_stop_request", JSON_Bool c.is_stop_request);
         ( "server_should_hangup_if_still_initializing",
-          JSON_Bool c.server_should_hangup_if_still_initializing );
+          JSON_Bool c.server_should_hangup_if_still_initializing
+        );
         ("client_version", JSON_String c.client_version);
         ( "version_mismatch_strategy",
-          JSON_String (version_mismatch_strategy_to_string c.version_mismatch_strategy) );
+          JSON_String (version_mismatch_strategy_to_string c.version_mismatch_strategy)
+        );
         (* Deprecated - sent to talk to old servers *)
         ( "server_should_exit_if_version_mismatch",
           JSON_Bool
@@ -108,8 +110,10 @@ let client_to_monitor_1__to_json (c : client_to_monitor_1) : Hh_json.json =
             | Always_stop_server -> true
             | Stop_server_if_older -> true
             (* Any server reading this field is older than this client *)
-            | Error_client -> false) );
-      ])
+            | Error_client -> false)
+        );
+      ]
+  )
 
 let default_client_to_monitor_1 =
   {
@@ -149,7 +153,8 @@ let json_to__client_to_monitor_1 (json : Hh_json.json) : client_to_monitor_1 =
       server_should_hangup_if_still_initializing;
       client_version;
       version_mismatch_strategy;
-    })
+    }
+  )
 
 let monitor_to_client_1__to_json (m : monitor_to_client_1) : Hh_json.json =
   Hh_json.(
@@ -165,7 +170,8 @@ let monitor_to_client_1__to_json (m : monitor_to_client_1) : Hh_json.json =
         ("server_bin", JSON_String m.server_bin);
         ("server_intent", JSON_String (m.server_intent |> intent_to_string));
         ("server_version", JSON_String m.server_version);
-      ])
+      ]
+  )
 
 let json_to__monitor_to_client_1 (json : Hh_json.json) : monitor_to_client_1 =
   Hh_json_helpers.(
@@ -181,4 +187,5 @@ let json_to__monitor_to_client_1 (json : Hh_json.json) : monitor_to_client_1 =
     let server_bin = Jget.string_exn json "server_bin" in
     let server_intent = Jget.string_exn json "server_intent" |> string_to_intent in
     let server_version = Jget.string_d json ~default:"0.0.0" "server_version" in
-    { server_build_id; server_bin; server_intent; server_version })
+    { server_build_id; server_bin; server_intent; server_version }
+  )

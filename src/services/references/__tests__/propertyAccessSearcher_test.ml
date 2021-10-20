@@ -38,7 +38,8 @@ let run ctxt expected name content =
       | Parsing_service_js.Parse_skip _ -> failwith "Parse unexpectedly skipped"
     in
     let result = PropertyAccessSearcher.search name ast in
-    assert_equal ~ctxt expected result)
+    assert_equal ~ctxt expected result
+  )
 
 let tests =
   "SymbolKind"
@@ -47,7 +48,8 @@ let tests =
          ("property_access_negative" >:: fun ctxt -> run ctxt false "bar" "foo.baz");
          ("destructuring_shorthand_positive" >:: fun ctxt -> run ctxt true "bar" "const {bar} = baz");
          ( "destructuring_shorthand_negative" >:: fun ctxt ->
-           run ctxt false "baz" "const {bar} = baz" );
+           run ctxt false "baz" "const {bar} = baz"
+         );
          ("destructuring_positive" >:: fun ctxt -> run ctxt true "foo" "const {foo: bar} = baz");
          ("destructuring_negative" >:: fun ctxt -> run ctxt false "bar" "const {foo: bar} = baz");
          ("destructuring_negative" >:: fun ctxt -> run ctxt false "bar" "const {foo: bar} = baz");

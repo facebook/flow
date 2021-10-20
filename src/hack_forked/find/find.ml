@@ -16,7 +16,8 @@ let lstat_kind file =
     try Some (lstat file).st_kind with
     | Unix_error (ENOENT, _, _) ->
       prerr_endline ("File not found: " ^ file);
-      None)
+      None
+  )
 
 external native_hh_readdir : string -> (string * int) list = "hh_readdir"
 
@@ -46,8 +47,10 @@ let hh_readdir path : (string * dt_kind) list =
           (match lstat_kind (Filename.concat path name) with
           | Some S_DIR -> Some (name, DT_DIR)
           | Some S_REG -> Some (name, DT_REG)
-          | _ -> None))
-      | _ -> None)
+          | _ -> None)
+        )
+      | _ -> None
+  )
 
 let fold_files
     (type t)
@@ -132,7 +135,9 @@ let make_next_files ?name:_ ?(filter = (fun _ -> true)) ?(others = []) root =
                match lstat_kind path with
                | Some S_REG -> Some (path, DT_REG)
                | Some S_DIR -> Some (path, DT_DIR)
-               | _ -> None))
+               | _ -> None
+             )
+         )
     in
     ref (Dir (dirs, "", Nil))
   in

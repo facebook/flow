@@ -18,7 +18,8 @@ let timestamp_string () =
       tm.tm_hour
       tm.tm_min
       tm.tm_sec
-      ms)
+      ms
+  )
 
 type dest = {
   file: bool;
@@ -54,7 +55,8 @@ let print_with_newline_internal ~dest ?exn fmt =
             else
               "\n    Backtrace:\n" ^ bt
           in
-          Printf.sprintf "\n    Exception: %s%s" (Exception.get_ctor_string exn) bt)
+          Printf.sprintf "\n    Exception: %s%s" (Exception.get_ctor_string exn) bt
+      )
     in
     let time = timestamp_string () in
     let id_str = id_string () in

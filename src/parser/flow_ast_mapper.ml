@@ -89,14 +89,14 @@ class ['loc] mapper =
       | (loc, Break break) -> id_loc this#break loc break stmt (fun break -> (loc, Break break))
       | (loc, ClassDeclaration cls) ->
         id_loc this#class_declaration loc cls stmt (fun cls -> (loc, ClassDeclaration cls))
-      | (loc, Continue cont) ->
-        id_loc this#continue loc cont stmt (fun cont -> (loc, Continue cont))
+      | (loc, Continue cont) -> id_loc this#continue loc cont stmt (fun cont -> (loc, Continue cont))
       | (loc, Debugger dbg) -> id_loc this#debugger loc dbg stmt (fun dbg -> (loc, Debugger dbg))
       | (loc, DeclareClass stuff) ->
         id_loc this#declare_class loc stuff stmt (fun stuff -> (loc, DeclareClass stuff))
       | (loc, DeclareExportDeclaration decl) ->
         id_loc this#declare_export_declaration loc decl stmt (fun decl ->
-            (loc, DeclareExportDeclaration decl))
+            (loc, DeclareExportDeclaration decl)
+        )
       | (loc, DeclareFunction stuff) ->
         id_loc this#declare_function loc stuff stmt (fun stuff -> (loc, DeclareFunction stuff))
       | (loc, DeclareInterface stuff) ->
@@ -109,7 +109,8 @@ class ['loc] mapper =
         id_loc this#declare_variable loc stuff stmt (fun stuff -> (loc, DeclareVariable stuff))
       | (loc, DeclareModuleExports annot) ->
         id_loc this#declare_module_exports loc annot stmt (fun annot ->
-            (loc, DeclareModuleExports annot))
+            (loc, DeclareModuleExports annot)
+        )
       | (loc, DoWhile stuff) ->
         id_loc this#do_while loc stuff stmt (fun stuff -> (loc, DoWhile stuff))
       | (loc, Empty empty) -> id_loc this#empty loc empty stmt (fun empty -> (loc, Empty empty))
@@ -117,10 +118,12 @@ class ['loc] mapper =
         id_loc this#enum_declaration loc enum stmt (fun enum -> (loc, EnumDeclaration enum))
       | (loc, ExportDefaultDeclaration decl) ->
         id_loc this#export_default_declaration loc decl stmt (fun decl ->
-            (loc, ExportDefaultDeclaration decl))
+            (loc, ExportDefaultDeclaration decl)
+        )
       | (loc, ExportNamedDeclaration decl) ->
         id_loc this#export_named_declaration loc decl stmt (fun decl ->
-            (loc, ExportNamedDeclaration decl))
+            (loc, ExportNamedDeclaration decl)
+        )
       | (loc, Expression expr) ->
         id_loc this#expression_statement loc expr stmt (fun expr -> (loc, Expression expr))
       | (loc, For for_stmt) ->
@@ -137,7 +140,8 @@ class ['loc] mapper =
         id_loc this#import_declaration loc decl stmt (fun decl -> (loc, ImportDeclaration decl))
       | (loc, InterfaceDeclaration stuff) ->
         id_loc this#interface_declaration loc stuff stmt (fun stuff ->
-            (loc, InterfaceDeclaration stuff))
+            (loc, InterfaceDeclaration stuff)
+        )
       | (loc, Labeled label) ->
         id_loc this#labeled_statement loc label stmt (fun label -> (loc, Labeled label))
       | (loc, OpaqueType otype) ->
@@ -418,8 +422,7 @@ class ['loc] mapper =
     method class_element (elem : ('loc, 'loc) Ast.Class.Body.element) =
       let open Ast.Class.Body in
       match elem with
-      | Method (loc, meth) ->
-        id_loc this#class_method loc meth elem (fun meth -> Method (loc, meth))
+      | Method (loc, meth) -> id_loc this#class_method loc meth elem (fun meth -> Method (loc, meth))
       | Property (loc, prop) ->
         id_loc this#class_property loc prop elem (fun prop -> Property (loc, prop))
       | PrivateField (loc, field) ->
@@ -804,7 +807,8 @@ class ['loc] mapper =
 
     method enum_boolean_member
         (member :
-          ('loc Ast.BooleanLiteral.t, 'loc) Ast.Statement.EnumDeclaration.InitializedMember.t) =
+          ('loc Ast.BooleanLiteral.t, 'loc) Ast.Statement.EnumDeclaration.InitializedMember.t
+          ) =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (loc, { id = ident; init }) = member in
       let id' = this#enum_member_identifier ident in
@@ -814,8 +818,8 @@ class ['loc] mapper =
         (loc, { id = id'; init })
 
     method enum_number_member
-        (member :
-          ('loc Ast.NumberLiteral.t, 'loc) Ast.Statement.EnumDeclaration.InitializedMember.t) =
+        (member : ('loc Ast.NumberLiteral.t, 'loc) Ast.Statement.EnumDeclaration.InitializedMember.t)
+        =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (loc, { id = ident; init }) = member in
       let id' = this#enum_member_identifier ident in
@@ -825,8 +829,8 @@ class ['loc] mapper =
         (loc, { id = id'; init })
 
     method enum_string_member
-        (member :
-          ('loc Ast.StringLiteral.t, 'loc) Ast.Statement.EnumDeclaration.InitializedMember.t) =
+        (member : ('loc Ast.StringLiteral.t, 'loc) Ast.Statement.EnumDeclaration.InitializedMember.t)
+        =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (loc, { id = ident; init }) = member in
       let id' = this#enum_member_identifier ident in
@@ -855,8 +859,8 @@ class ['loc] mapper =
       | Declaration stmt -> id this#statement stmt decl (fun stmt -> Declaration stmt)
       | Expression expr -> id this#expression expr decl (fun expr -> Expression expr)
 
-    method export_named_declaration
-        _loc (decl : ('loc, 'loc) Ast.Statement.ExportNamedDeclaration.t) =
+    method export_named_declaration _loc (decl : ('loc, 'loc) Ast.Statement.ExportNamedDeclaration.t)
+        =
       let open Ast.Statement.ExportNamedDeclaration in
       let { export_kind; source; specifiers; declaration; comments } = decl in
       let specifiers' = map_opt this#export_named_specifier specifiers in
@@ -1064,7 +1068,8 @@ class ['loc] mapper =
         {
           params =
             ( params_loc,
-              { Params.this_ = this_'; params = ps'; rest = rpo'; comments = params_comments' } );
+              { Params.this_ = this_'; params = ps'; rest = rpo'; comments = params_comments' }
+            );
           return = return';
           tparams = tparams';
           comments = func_comments';
@@ -1107,7 +1112,8 @@ class ['loc] mapper =
             _method;
             variance = variance';
             comments = comments';
-          } )
+          }
+        )
 
     method object_spread_property_type (opt : ('loc, 'loc) Ast.Type.Object.SpreadProperty.t) =
       let open Ast.Type.Object.SpreadProperty in
@@ -1662,7 +1668,8 @@ class ['loc] mapper =
           ImportNamedSpecifiers named_specifiers'
       | ImportNamespaceSpecifier (loc, ident) ->
         id_loc this#import_namespace_specifier loc ident specifier (fun ident ->
-            ImportNamespaceSpecifier (loc, ident))
+            ImportNamespaceSpecifier (loc, ident)
+        )
 
     method import_named_specifier
         ~(import_kind : Ast.Statement.ImportDeclaration.import_kind)
@@ -1802,10 +1809,11 @@ class ['loc] mapper =
         id_loc this#jsx_attribute_value_literal loc lit value (fun lit -> Literal (loc, lit))
       | ExpressionContainer (loc, expr) ->
         id_loc this#jsx_attribute_value_expression loc expr value (fun expr ->
-            ExpressionContainer (loc, expr))
+            ExpressionContainer (loc, expr)
+        )
 
-    method jsx_attribute_value_expression
-        loc (jsx_expr : ('loc, 'loc) Ast.JSX.ExpressionContainer.t) =
+    method jsx_attribute_value_expression loc (jsx_expr : ('loc, 'loc) Ast.JSX.ExpressionContainer.t)
+        =
       this#jsx_expression loc jsx_expr
 
     method jsx_attribute_value_literal loc (lit : 'loc Ast.Literal.t) = this#literal loc lit
@@ -1882,7 +1890,8 @@ class ['loc] mapper =
         if namespace == namespace' && name == name' then
           namespaced_name
         else
-          (loc, { namespace = namespace'; name = name' }))
+          (loc, { namespace = namespace'; name = name' })
+      )
 
     method jsx_member_expression (member_exp : ('loc, 'loc) Ast.JSX.MemberExpression.t) =
       let open Ast.JSX in
@@ -2201,7 +2210,8 @@ class ['loc] mapper =
         id (this#pattern_object_property_literal_key ?kind) lit key (fun lit' -> Literal lit')
       | Identifier identifier ->
         id (this#pattern_object_property_identifier_key ?kind) identifier key (fun id' ->
-            Identifier id')
+            Identifier id'
+        )
       | Computed expr ->
         id (this#pattern_object_property_computed_key ?kind) expr key (fun expr' -> Computed expr')
 
