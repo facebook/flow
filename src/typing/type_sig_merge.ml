@@ -788,7 +788,7 @@ module Make (ConsGen : CONS_GEN) : S = struct
       let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
       Type.(EvalT (obj, TypeDestructorT (use_op, reason, TypeMap (ObjectMapi fn)), id))
     | ObjKeyMirror { loc; obj } ->
-      let reason = Reason.(mk_reason RObjectMapi loc) in
+      let reason = Reason.(mk_reason RObjectKeyMirror loc) in
       let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
       let obj = merge file obj in
       let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in

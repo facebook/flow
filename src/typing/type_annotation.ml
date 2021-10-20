@@ -633,7 +633,7 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 | ([t], targs) -> (t, targs)
                 | _ -> assert false
               in
-              let reason = mk_reason RObjectMapi loc in
+              let reason = mk_reason RObjectKeyMirror loc in
               reconstruct_ast
                 (EvalT
                    ( t1,

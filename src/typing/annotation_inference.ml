@@ -45,6 +45,7 @@ let object_like_op = function
   | Annot_ObjTestProtoT _
   | Annot_UnaryMinusT _
   | Annot_NotT _
+  | Annot_ObjKeyMirror _
   | Annot__Future_added_value__ _ ->
     false
   | Annot_GetPropT _
@@ -371,6 +372,9 @@ module rec ConsGen : Annotation_inference_sig = struct
     | (EvalT (t, TypeDestructorT (use_op, reason, RestType (options, r)), _), _) ->
       let state = Object.Rest.One r in
       let t = object_rest cx use_op reason options state t in
+      elab_t cx t op
+    | (EvalT (t, TypeDestructorT (_, reason, TypeMap ObjectKeyMirror), _), _) ->
+      let t = elab_t cx t (Annot_ObjKeyMirror reason) in
       elab_t cx t op
     | (EvalT (_, TypeDestructorT (_, _, d), _), _) ->
       let r = AConstraint.reason_of_op op in
@@ -776,6 +780,8 @@ module rec ConsGen : Annotation_inference_sig = struct
           arrtype
       in
       reposition cx (aloc_of_reason reason_op) value
+    | (DefT (_, trust, ObjT o), Annot_ObjKeyMirror reason_op) ->
+      Flow_js_utils.obj_key_mirror cx trust o reason_op
     (***********************)
     (* Opaque types (pt 2) *)
     (***********************)
