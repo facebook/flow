@@ -1,0 +1,16 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
+
+no_flowlib=false
+suppress_type=$FlowExpectedError
+include_warnings=true
+experimental.enums=true
+
+[strict]
