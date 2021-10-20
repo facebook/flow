@@ -150,6 +150,7 @@ start_flow_unsafe () {
       PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
       "$FLOW" start "$root" \
         $flowlib --wait \
+        $new_merge_flag \
         --wait-for-recheck "$wait_for_recheck" \
         --saved-state-fetcher "local" \
         --saved-state-no-fallback \
@@ -167,6 +168,7 @@ start_flow_unsafe () {
     PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
     "$FLOW" start "$root" \
       $flowlib --wait --wait-for-recheck "$wait_for_recheck" \
+      $new_merge_flag \
       --file-watcher "$file_watcher" \
       --log-file "$abs_log_file" \
       --monitor-log-file "$abs_monitor_log_file" \
@@ -283,6 +285,11 @@ runtest() {
         start_args=""
         file_watcher="none"
         wait_for_recheck="true"
+        if [[ "$new_merge" -eq 1 ]]; then
+          new_merge_flag="--new-merge"
+        else
+          new_merge_flag=""
+        fi
         if [ -e ".testconfig" ]
         then
             # auto_start
@@ -339,6 +346,12 @@ runtest() {
                 return $RUNTEST_SKIP
             fi
 
+            if [[ "$new_merge" -eq 1 ]] && \
+              [ "$(awk '$1=="TODO_new_merge:"{print $2}' .testconfig)" == "true" ]
+            then
+                return $RUNTEST_SKIP
+            fi
+
             # wait_for_recheck
             if [ "$(awk '$1=="wait_for_recheck:"{print $2}' .testconfig)" == "false" ]
             then
@@ -373,6 +386,7 @@ runtest() {
             # start server and wait
             "$FLOW" start "$root" \
               $flowlib --wait \
+              $new_merge_flag \
               --wait-for-recheck "$wait_for_recheck" \
               --lazy-mode none \
               --file-watcher "$file_watcher" \
@@ -403,6 +417,7 @@ runtest() {
               "$FLOW" check . \
                 $env_flag \
                 $flowlib --strip-root --show-all-errors \
+                $new_merge_flag \
                  1>> "$abs_out_file" 2>> "$stderr_dest"
               st=$?
             fi
@@ -431,6 +446,7 @@ runtest() {
             "$FLOW" "codemod" "annotate-exports" \
                 $flowlib \
                 ${cmd_args[*]} \
+                $new_merge_flag \
                 --strip-root \
                 --quiet \
                 --input-file "$input_file" \

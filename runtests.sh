@@ -28,6 +28,8 @@ show_help() {
   echo "        quiet output (hides status, just prints results)"
   echo "    -s"
   echo "        test saved state"
+  echo "    -m"
+  echo "        test new merge"
   echo "    -v"
   echo "        verbose output (shows skipped tests)"
   echo "    -h"
@@ -41,13 +43,13 @@ export FLOW_NODE_BINARY=${FLOW_NODE_BINARY:-${NODE_BINARY:-$(which node)}}
 OPTIND=1
 record=0
 saved_state=0
+new_merge=0
 verbose=0
 quiet=0
 relative="$THIS_DIR"
-list_tests=0
 new_env=0
-export saved_state filter new_env
-while getopts "b:d:f:elqrst:vh?" opt; do
+export saved_state filter new_env new_merge
+while getopts "b:d:f:elmqrst:vh?" opt; do
   case "$opt" in
   b)
     FLOW="$OPTARG"
@@ -77,6 +79,9 @@ while getopts "b:d:f:elqrst:vh?" opt; do
     saved_state=1
     printf "Testing saved state by running all tests using saved state\\n"
     ;;
+  m)
+    new_merge=1
+    ;;
   v)
     verbose=1
     ;;
@@ -94,6 +99,8 @@ shift $((OPTIND-1))
 if [ -n "$specific_test" ]; then
   if [[ "$saved_state" -eq 1 ]]; then
     specific_test=$(echo $specific_test | sed 's/\(.*\)-saved-state$/\1/')
+  elif [[ "$new_merge" -eq 1 ]]; then
+    specific_test=$(echo $specific_test | sed 's/\(.*\)-new-merge$/\1/')
   fi
 
   filter="^$specific_test$"
