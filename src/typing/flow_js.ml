@@ -1639,17 +1639,7 @@ struct
               let dict_t = Obj_type.get_dict_opt flags.obj_kind in
               (* flow the union of keys of l to keys *)
               let keylist =
-                NameUtils.Map.fold
-                  (fun name _ acc ->
-                    match name with
-                    | OrdinaryName _ ->
-                      let reason = replace_desc_new_reason (RStringLit name) reason_op in
-                      DefT (reason, bogus_trust (), SingletonStrT name) :: acc
-                    | InternalName _
-                    | InternalModuleName _ ->
-                      acc)
-                  (Context.find_props cx props_tmap)
-                  []
+                Flow_js_utils.keylist_of_props (Context.find_props cx props_tmap) reason_op
               in
               rec_flow cx trace (union_of_ts reason_op keylist, keys);
               Base.Option.iter dict_t (fun { key; _ } ->
@@ -1658,19 +1648,7 @@ struct
         | (DefT (_, _, InstanceT (_, _, _, instance)), GetKeysT (reason_op, keys)) ->
           (* methods are not enumerable, so only walk fields *)
           let own_props = Context.find_props cx instance.own_props in
-          let keylist =
-            NameUtils.Map.fold
-              (fun name _ acc ->
-                match name with
-                | OrdinaryName _ ->
-                  let reason = replace_desc_new_reason (RStringLit name) reason_op in
-                  DefT (reason, bogus_trust (), SingletonStrT name) :: acc
-                | InternalName _
-                | InternalModuleName _ ->
-                  acc)
-              own_props
-              []
-          in
+          let keylist = Flow_js_utils.keylist_of_props own_props reason_op in
           rec_flow cx trace (union_of_ts reason_op keylist, keys)
         | (AnyT _, GetKeysT (reason_op, keys)) ->
           rec_flow cx trace (StrT.why reason_op |> with_trust literal_trust, keys)

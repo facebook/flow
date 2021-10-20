@@ -2774,6 +2774,8 @@ module AConstraint = struct
     | Annot_UnaryMinusT of Reason.t
     | Annot_NotT of Reason.t
     | Annot_ObjKeyMirror of Reason.t
+    | Annot_GetKeysT of Reason.t
+    | Annot_ToStringT of Reason.t
     | Annot__Future_added_value__ of Reason.t
 
   (** This kind of constraint is meant to represent type annotations. Unlike the
@@ -2860,6 +2862,8 @@ module AConstraint = struct
     | Annot_UnaryMinusT _ -> "Annot_UnaryMinusT"
     | Annot_NotT _ -> "Annot_NotT"
     | Annot_ObjKeyMirror _ -> "Annot_ObjKeyMirror"
+    | Annot_GetKeysT _ -> "Annot_GetKeysT"
+    | Annot_ToStringT _ -> "Annot_ToStringT"
     | Annot__Future_added_value__ _ -> "Annot__Future_added_value__"
 
   let reason_of_op = function
@@ -2890,6 +2894,8 @@ module AConstraint = struct
     | Annot_NotT r
     | Annot_MixinT r
     | Annot_ObjKeyMirror r
+    | Annot_GetKeysT r
+    | Annot_ToStringT r
     | Annot__Future_added_value__ r ->
       r
 

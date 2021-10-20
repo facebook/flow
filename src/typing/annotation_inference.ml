@@ -46,6 +46,8 @@ let object_like_op = function
   | Annot_UnaryMinusT _
   | Annot_NotT _
   | Annot_ObjKeyMirror _
+  | Annot_GetKeysT _
+  | Annot_ToStringT _
   | Annot__Future_added_value__ _ ->
     false
   | Annot_GetPropT _
@@ -508,7 +510,35 @@ module rec ConsGen : Annotation_inference_sig = struct
     (********)
     (* Keys *)
     (********)
-    | (KeysT _, _) -> failwith "TODO KeysT"
+    | (KeysT _, Annot_ToStringT _) -> t
+    | (KeysT (reason, t), _) ->
+      let t = elab_t cx t (Annot_GetKeysT reason) in
+      elab_t cx t op
+    | (DefT (_, _, ObjT { flags; props_tmap; _ }), Annot_GetKeysT reason_op) ->
+      begin
+        match flags.obj_kind with
+        | UnsealedInFile _ -> with_trust bogus_trust (StrT.why reason_op)
+        | _ ->
+          let dict_t = Obj_type.get_dict_opt flags.obj_kind in
+          (* flow the union of keys of l to keys *)
+          let keylist =
+            Flow_js_utils.keylist_of_props (Context.find_props cx props_tmap) reason_op
+          in
+          let keylist =
+            match dict_t with
+            | None -> keylist
+            | Some { key; _ } ->
+              let key = elab_t cx key (Annot_ToStringT reason_op) in
+              key :: keylist
+          in
+          union_of_ts reason_op keylist
+      end
+    | (DefT (_, _, InstanceT (_, _, _, instance)), Annot_GetKeysT reason_op) ->
+      (* methods are not enumerable, so only walk fields *)
+      let own_props = Context.find_props cx instance.own_props in
+      let keylist = Flow_js_utils.keylist_of_props own_props reason_op in
+      union_of_ts reason_op keylist
+    | (AnyT _, Annot_GetKeysT reason_op) -> with_trust literal_trust (StrT.why reason_op)
     (********************************)
     (* Union and intersection types *)
     (********************************)
@@ -860,6 +890,11 @@ module rec ConsGen : Annotation_inference_sig = struct
       let use_desc = true in
       let fun_proto = get_builtin_type cx reason ~use_desc (OrdinaryName "Function") in
       elab_t cx fun_proto op
+    (*************)
+    (* ToStringT *)
+    (*************)
+    | (DefT (_, _, StrT _), Annot_ToStringT _) -> t
+    | (_, Annot_ToStringT reason_op) -> with_trust bogus_trust (StrT.why reason_op)
     (************)
     (* GetPropT *)
     (************)

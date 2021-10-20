@@ -1796,3 +1796,16 @@ let propref_for_elem_t ?on_named_prop = function
     let reason_prop = replace_desc_reason (RProperty (Some x)) reason_x in
     Named (reason_prop, x)
   | l -> Computed l
+
+let keylist_of_props props reason_op =
+  NameUtils.Map.fold
+    (fun name _ acc ->
+      match name with
+      | OrdinaryName _ ->
+        let reason = replace_desc_new_reason (RStringLit name) reason_op in
+        DefT (reason, bogus_trust (), SingletonStrT name) :: acc
+      | InternalName _
+      | InternalModuleName _ ->
+        acc)
+    props
+    []
