@@ -23,6 +23,8 @@ type error = int * string
 
 type config_result = (config * warning list, error) result
 
+val default_temp_dir : string
+
 val get : ?allow_cache:bool -> string -> config_result
 
 val get_hash : ?allow_cache:bool -> string -> Xx.hash

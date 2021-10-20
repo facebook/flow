@@ -193,7 +193,13 @@ let start ~start_state ~trigger =
 let recheck_start ~start_state = internal_state.last_recheck_start_state <- Some start_state
 
 let log ~ux ~trigger ~start_state ~end_state =
+  let is_timeout_ux =
+    match ux with
+    | Timeout -> true
+    | _ -> false
+  in
   FlowInteractionLogger.interaction
+    ~is_timeout_ux
     ~source:(trigger |> source_of_trigger |> string_of_source)
     ~trigger:(trigger |> string_of_trigger)
     ~ux:(ux |> string_of_ux)

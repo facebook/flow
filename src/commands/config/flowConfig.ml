@@ -449,6 +449,9 @@ module Opts = struct
       let%bind (method_name, threshold_time_ms_str, limit_json, rate_str) =
         match json with
         | JSON_Array [JSON_String a; JSON_Number b; c; JSON_Number d] -> Ok (a, b, c, d)
+        | JSON_Array [JSON_String "timeout"; JSON_Null; c; JSON_Number d] ->
+          (* timeout threshold is currently hardcoded as LspInteraction.max_age *)
+          Ok ("timeout", "-1", c, d)
         | _ -> Error "must be of the form [\"method name\", threshold_time_ms, limit, rate]"
       in
       let threshold_time_ms = int_of_string threshold_time_ms_str in

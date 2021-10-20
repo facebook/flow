@@ -2325,8 +2325,9 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
       }
     in
     FlowInteractionLogger.set_server_config
+      ~timeout_log_saving:(SMap.find_opt "timeout" (FlowConfig.log_saving flowconfig))
       ~flowconfig_name
-      ~root:(Path.to_string i_root)
+      ~root:i_root
       ~root_name:(FlowConfig.root_name flowconfig);
 
     (* If the version in .flowconfig is simply incompatible with our current
