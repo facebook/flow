@@ -24,8 +24,6 @@ let set_init_type _ = ()
 
 let should_log () = false
 
-let worker_exception _ = ()
-
 let flush _ = ()
 
 let dfind_ready _ _ = ()

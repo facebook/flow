@@ -198,3 +198,5 @@ let sharedmem_gc_ran _ _ _ _ = ()
 let sharedmem_init_done _ = ()
 
 let sharedmem_failed_memfd_init _ = ()
+
+let worker_exception _ = ()

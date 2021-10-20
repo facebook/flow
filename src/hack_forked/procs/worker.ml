@@ -160,7 +160,7 @@ let worker_main ic oc =
         (Exception.get_full_backtrace_string max_int exn)
     in
     let pid = Unix.getpid () in
-    if EventLogger.should_log () then EventLogger.worker_exception e_str;
+    if FlowEventLogger.should_log () then FlowEventLogger.worker_exception e_str;
     Printf.printf "Worker %d exception: %s\n%!" pid e_str;
     exit 2
 
