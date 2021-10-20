@@ -23,8 +23,8 @@ with `HTMLFormElement` [2]. [incompatible-call]
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:930:70
-   930|   createElement(tagName: 'input', options?: ElementCreationOptions): HTMLInputElement;
+   <BUILTINS>/dom.js:978:70
+   978|   createElement(tagName: 'input', options?: ElementCreationOptions): HTMLInputElement;
                                                                              ^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/bom.js:535:24
    535|     constructor(form?: HTMLFormElement): void;
