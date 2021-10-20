@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Hh_core
-
 (* Forking duplicates data in all buffers, so we flush them beforehand to avoid
  * writing the same thing twice.
  *
@@ -28,10 +26,10 @@ let post_fork_child f = post_fork_child_callbacks := f :: !post_fork_child_callb
 (* You should always use this instead of Unix.fork, so that the callbacks get
  * invoked *)
 let fork () =
-  List.iter !pre_fork_callbacks (fun f -> f ());
+  Base.List.iter !pre_fork_callbacks ~f:(fun f -> f ());
   match Unix.fork () with
   | 0 ->
-    List.iter !post_fork_child_callbacks (fun f -> f ());
+    Base.List.iter !post_fork_child_callbacks ~f:(fun f -> f ());
     0
   | i -> i
 

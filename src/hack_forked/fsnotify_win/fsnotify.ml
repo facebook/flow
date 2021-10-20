@@ -20,8 +20,6 @@
 
 *)
 
-open Hh_core
-
 (* Abstract data type for notifier context. *)
 type fsenv
 
@@ -64,7 +62,7 @@ let init roots =
   Unix.set_close_on_exec in_fd;
   Unix.set_close_on_exec out_fd;
   let fsenv = raw_init out_fd in
-  let watchers = List.map roots ~f:(raw_add_watch fsenv) in
+  let watchers = Base.List.map roots ~f:(raw_add_watch fsenv) in
   { fsenv; fd = in_fd; watchers; wpaths = SSet.empty }
 
 (** Faked add_watch, as for `fsnotify_darwin`. *)
@@ -105,20 +103,20 @@ let read_events env =
   ignore (Unix.read env.fd buf 0 1 : int);
 
   (* prefix the root path *)
-  List.map (raw_read_events env.fsenv) ~f:(fun ev ->
+  Base.List.map (raw_read_events env.fsenv) ~f:(fun ev ->
       { ev with path = Filename.concat ev.wpath ev.path }
   )
 
 let select env ?(read_fdl = []) ?(write_fdl = []) ~timeout callback =
   let callback () = callback (read_events env) in
   let read_fdl = (env.fd, callback) :: read_fdl in
-  let read_callbacks = List.fold_left ~f:make_callback ~init:FDMap.empty read_fdl in
-  let write_callbacks = List.fold_left ~f:make_callback ~init:FDMap.empty write_fdl in
+  let read_callbacks = Base.List.fold ~f:make_callback ~init:FDMap.empty read_fdl in
+  let write_callbacks = Base.List.fold ~f:make_callback ~init:FDMap.empty write_fdl in
   let (read_ready, write_ready, _) =
-    Unix.select (List.map read_fdl fst) (List.map write_fdl fst) [] timeout
+    Unix.select (Base.List.map read_fdl ~f:fst) (Base.List.map write_fdl ~f:fst) [] timeout
   in
-  List.iter write_ready (invoke_callback write_callbacks);
-  List.iter read_ready (invoke_callback read_callbacks)
+  Base.List.iter write_ready ~f:(invoke_callback write_callbacks);
+  Base.List.iter read_ready ~f:(invoke_callback read_callbacks)
 
 (** Unused, for compatibility with `fsnotify_linux/fsnotify.mli` only. *)
 

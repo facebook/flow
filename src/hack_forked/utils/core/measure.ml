@@ -76,8 +76,6 @@
  * sent across pipes.
  *)
 
-module List = Hh_core.List
-
 module FloatMap = WrappedMap.Make (struct
   type t = float
 
@@ -135,7 +133,7 @@ let new_distribution ~bucket_size = Some { bucket_size; buckets = FloatMap.empty
 let get_record = function
   | Some record -> record
   | None ->
-    (match List.hd !global with
+    (match Base.List.hd !global with
     | Some record -> record
     | None ->
       failwith ("No global record available! " ^ "Did you forget to call Measure.push_global?"))

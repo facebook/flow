@@ -9,7 +9,6 @@
 (* Spec: http://www.jsonrpc.org/specification *)
 (* Practical readbable guide: https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#base-protocol-json-structures *)
 
-open Hh_core
 module J = Hh_json_helpers.AdhocJsonHelpers
 
 type writer = Hh_json.json -> unit
@@ -146,7 +145,7 @@ let internal_run_daemon' (oc : queue_message Daemon.out_channel) : unit =
            need to queue a message to be written until we have read
            something. *)
         let (readable_fds, _, _) = Unix.select read_fds write_fds [] (-1.0) in
-        let ready_for_read = not (List.is_empty readable_fds) in
+        let ready_for_read = not (Base.List.is_empty readable_fds) in
         if ready_for_read then
           Read
         else

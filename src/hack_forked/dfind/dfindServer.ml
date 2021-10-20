@@ -9,7 +9,6 @@
 (* Code relative to the client/server communication *)
 (*****************************************************************************)
 
-open Hh_core
 open DfindEnv
 
 type msg =
@@ -55,16 +54,16 @@ let run_daemon (scuba_table, roots) (ic, oc) =
   let t = Unix.gettimeofday () in
   let infd = Daemon.descr_of_in_channel ic in
   let outfd = Daemon.descr_of_out_channel oc in
-  let roots = List.map roots Path.to_string in
+  let roots = Base.List.map ~f:Path.to_string roots in
   let env = DfindEnv.make roots in
-  List.iter roots (DfindAddFile.path env);
+  Base.List.iter ~f:(DfindAddFile.path env) roots;
   EventLogger.dfind_ready scuba_table t;
   Marshal_tools.to_fd_with_preamble outfd Ready |> ignore;
   ignore @@ Hh_logger.log_duration "Initialization" t;
   let acc = ref SSet.empty in
   let descr_in = Daemon.descr_of_in_channel ic in
   let fsnotify_callback events =
-    acc := List.fold_left events ~f:(process_fsnotify_event env) ~init:!acc
+    acc := Base.List.fold events ~f:(process_fsnotify_event env) ~init:!acc
   in
   let message_in_callback () =
     let () = Marshal_tools.from_fd_with_preamble infd in

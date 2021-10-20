@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Hh_core
-
 let log_oc = ref None
 
 let enabled = ref true
@@ -54,7 +52,7 @@ let get_pids pids_file =
       | End_of_file -> ()
     end;
     close_in ic;
-    List.rev !results
+    Base.List.rev !results
   with
   | Sys_error _ -> raise FailedToGetPids
 

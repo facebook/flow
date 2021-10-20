@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Hh_core
-
 (* Our Unix systems only allow reading 64KB chunks at a time.
  * Trying to read more than 64KB results in only 64KB being read. *)
 let chunk_size = 65536

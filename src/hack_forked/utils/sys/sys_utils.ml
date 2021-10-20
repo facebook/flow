@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Hh_core
-
 external realpath : string -> string option = "hh_realpath"
 
 (** Option type intead of exception throwing. *)
@@ -138,7 +136,7 @@ let exec_read_lines ?(reverse = false) cmd =
   | End_of_file -> ());
   assert (Unix.close_process_in ic = Unix.WEXITED 0);
   if not reverse then
-    List.rev !result
+    Base.List.rev !result
   else
     !result
 
@@ -150,8 +148,8 @@ let rec collect_paths path_predicate path =
     path
     |> Sys.readdir
     |> Array.to_list
-    |> List.map ~f:(Filename.concat path)
-    |> List.concat_map ~f:(collect_paths path_predicate)
+    |> Base.List.map ~f:(Filename.concat path)
+    |> Base.List.concat_map ~f:(collect_paths path_predicate)
   else
     Utils.singleton_if (path_predicate path) path
 
@@ -165,14 +163,14 @@ let rec collect_paths path_predicate path =
  * one per line).
  *)
 let parse_path_list (paths : string list) : string list =
-  List.concat_map paths ~f:(fun path ->
+  Base.List.concat_map paths ~f:(fun path ->
       if String_utils.string_starts_with path "@" then
         let path = String_utils.lstrip path "@" in
         cat path |> split_lines
       else
         [path]
   )
-  |> List.map ~f:(fun path ->
+  |> Base.List.map ~f:(fun path ->
          match realpath path with
          | Some path -> path
          | None -> failwith (Printf.sprintf "Invalid path: %s" path)
@@ -273,7 +271,7 @@ let executable_path : unit -> string =
       | Some paths -> Str.split (Str.regexp_string path_sep) paths
     in
     let path =
-      List.fold_left
+      Base.List.fold
         paths
         ~f:
           begin
@@ -310,7 +308,7 @@ let lines_of_in_channel ic =
       try Some (input_line ic) with
       | _ -> None
     with
-    | None -> List.rev accum
+    | None -> Base.List.rev accum
     | Some line -> loop (line :: accum)
   in
   loop []
@@ -343,7 +341,7 @@ let append_file ~file s =
 
 let write_strings_to_file ~file (ss : string list) =
   let chan = open_out_gen [Open_wronly; Open_creat] 0o666 file in
-  List.iter ~f:(output_string chan) ss;
+  Base.List.iter ~f:(output_string chan) ss;
   close_out chan
 
 (* could be in control section too *)
@@ -595,7 +593,7 @@ let find_oom_in_dmesg_output pid name lines =
     Str.regexp (Printf.sprintf "[Oo]ut of memory: Kill\\(ed\\)? process \\([0-9]+\\) (%s)" name)
   in
   let pid = string_of_int pid in
-  List.exists lines (fun line ->
+  Base.List.exists lines ~f:(fun line ->
       try
         ignore @@ Str.search_forward re line 0;
         let pid_s = Str.matched_group 2 line in

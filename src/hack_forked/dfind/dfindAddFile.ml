@@ -8,7 +8,6 @@
 (*****************************************************************************)
 (* Adds a new file or directory to the environment *)
 (*****************************************************************************)
-open Hh_core
 open DfindEnv
 open DfindMaybe
 
@@ -78,11 +77,12 @@ end)
 (* This used to be an environment variable, but it is too complicated
  * for now. Hardcoding! Yay!
  *)
-let excludes = List.map ~f:Str.regexp [".*/wiki/images/.*"; ".*/\\.git"; ".*/\\.svn"; ".*/\\.hg"]
+let excludes =
+  Base.List.map ~f:Str.regexp [".*/wiki/images/.*"; ".*/\\.git"; ".*/\\.svn"; ".*/\\.hg"]
 
 let is_excluded path =
   try
-    List.iter excludes (fun re ->
+    Base.List.iter excludes ~f:(fun re ->
         if Str.string_match re path 0 then
           raise Exit
         else

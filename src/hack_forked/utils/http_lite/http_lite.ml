@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Hh_core
-
 (* This is a lightweight library for reading and writing messages in the HTTP
    format, with headers and body. So far it only supports the small set of
    features needed by the Language Server Protocol. It follows the internet
@@ -25,7 +23,7 @@ let read_headers (reader : Buffered_line_reader.t) : string list =
     with
     | Unix.Unix_error _ -> raise (Malformed "Can't read next header")
   in
-  List.rev (read_internal [])
+  Base.List.rev (read_internal [])
 
 (** parse_headers_to_lowercase_map: turns list of "Key: Value" string headers
  * into a map, with keys normalized to lower-case. HTTP actually allows
@@ -59,7 +57,7 @@ let parse_charset (header_value : string) : string option =
     | _ -> None
   in
   match Str.split (Str.regexp ";") header_value with
-  | _mime_type :: params -> List.find_map params ~f:charset_value
+  | _mime_type :: params -> Base.List.find_map params ~f:charset_value
   | _ -> None
 
 (** read_message_utf8: reads an http-style message "Headers...Body"

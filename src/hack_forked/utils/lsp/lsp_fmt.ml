@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Hh_core
 open Lsp
 open Hh_json
 open Hh_json_helpers
@@ -161,12 +160,12 @@ let print_textEdit (edit : TextEdit.t) : json =
 let print_workspaceEdit (r : WorkspaceEdit.t) : json =
   WorkspaceEdit.(
     let print_workspace_edit_changes (uri, text_edits) =
-      (DocumentUri.to_string uri, JSON_Array (List.map ~f:print_textEdit text_edits))
+      (DocumentUri.to_string uri, JSON_Array (Base.List.map ~f:print_textEdit text_edits))
     in
     JSON_Object
       [
         ( "changes",
-          JSON_Object (List.map (UriMap.elements r.changes) ~f:print_workspace_edit_changes)
+          JSON_Object (Base.List.map (UriMap.elements r.changes) ~f:print_workspace_edit_changes)
         );
       ]
   )
@@ -195,7 +194,7 @@ let parse_command (json : json option) : Command.t =
   {
     title = Jget.string_d json "title" "";
     command = parse_command_name name;
-    arguments = Jget.array_d json "arguments" ~default:[] |> List.filter_opt;
+    arguments = Jget.array_d json "arguments" ~default:[] |> Base.List.filter_opt;
   }
 
 let parse_formattingOptions (json : json option) : DocumentFormatting.formattingOptions =
@@ -301,7 +300,7 @@ let print_rage (r : Rage.result) : json =
           );
         ]
     in
-    JSON_Array (List.map r ~f:print_item)
+    JSON_Array (Base.List.map r ~f:print_item)
   )
 
 (************************************************************************)
@@ -350,7 +349,7 @@ let parse_didChange (params : json option) : DidChange.params =
       textDocument = Jget.obj_exn params "textDocument" |> parse_versionedTextDocumentIdentifier;
       contentChanges =
         Jget.array_d params "contentChanges" ~default:[]
-        |> List.map ~f:parse_textDocumentContentChangeEvent;
+        |> Base.List.map ~f:parse_textDocumentContentChangeEvent;
     }
   )
 
@@ -361,7 +360,7 @@ module SelectionRangeFmt = struct
   let params_of_json (json : json option) : params =
     {
       textDocument = Jget.obj_exn json "textDocument" |> parse_textDocumentIdentifier;
-      positions = Jget.array_d json "positions" ~default:[] |> List.map ~f:parse_position;
+      positions = Jget.array_d json "positions" ~default:[] |> Base.List.map ~f:parse_position;
     }
 
   let rec json_of_selection_range { range; parent } =
@@ -369,7 +368,7 @@ module SelectionRangeFmt = struct
       [("range", Some (print_range range)); ("parent", Option.map json_of_selection_range parent)]
 
   let json_of_result (t : result) : json =
-    let ranges = List.map ~f:json_of_selection_range t in
+    let ranges = Base.List.map ~f:json_of_selection_range t in
     JSON_Array ranges
 end
 
@@ -403,7 +402,7 @@ module SignatureHelpFmt = struct
       [
         ("label", Some (JSON_String siginfo_label));
         ("documentation", Base.Option.map ~f:json_of_documentation siginfo_documentation);
-        ("parameters", Some (JSON_Array (List.map ~f:json_of_parameter parameters)));
+        ("parameters", Some (JSON_Array (Base.List.map ~f:json_of_parameter parameters)));
       ]
 
   let to_json (r : SignatureHelp.result) : json =
@@ -412,7 +411,7 @@ module SignatureHelpFmt = struct
     | Some r ->
       JSON_Object
         [
-          ("signatures", JSON_Array (List.map ~f:json_of_signature r.signatures));
+          ("signatures", JSON_Array (Base.List.map ~f:json_of_signature r.signatures));
           ("activeSignature", int_ r.activeSignature);
           ("activeParameter", int_ r.activeParameter);
         ]
@@ -473,7 +472,7 @@ let parse_documentCodeLens (params : json option) : DocumentCodeLens.params =
   
 
 let print_documentCodeLens ~key (r : DocumentCodeLens.result) : json =
-  JSON_Array (List.map r ~f:(print_codeLens ~key))
+  JSON_Array (Base.List.map r ~f:(print_codeLens ~key))
 
 (************************************************************************)
 (* workspace/executeCommand Request                                     *)
@@ -544,16 +543,16 @@ let print_diagnostic (diagnostic : PublishDiagnostics.diagnostic) : json =
         ("source", Base.Option.map diagnostic.source string_);
         ("message", Some (JSON_String diagnostic.message));
         ( "relatedInformation",
-          Some (JSON_Array (List.map diagnostic.relatedInformation ~f:print_related))
+          Some (JSON_Array (Base.List.map diagnostic.relatedInformation ~f:print_related))
         );
         ( "relatedLocations",
-          Some (JSON_Array (List.map diagnostic.relatedLocations ~f:print_related))
+          Some (JSON_Array (Base.List.map diagnostic.relatedLocations ~f:print_related))
         );
       ]
   )
 
 let print_diagnostic_list (ds : PublishDiagnostics.diagnostic list) : json =
-  JSON_Array (List.map ds ~f:print_diagnostic)
+  JSON_Array (Base.List.map ds ~f:print_diagnostic)
 
 let print_diagnostics (r : PublishDiagnostics.params) : json =
   PublishDiagnostics.(
@@ -607,8 +606,10 @@ let parse_diagnostic (j : json option) : PublishDiagnostics.diagnostic =
       code = Jget.val_opt j "code" |> parse_code;
       source = Jget.string_opt j "source";
       message = Jget.string_exn j "message";
-      relatedInformation = Jget.array_d j "relatedInformation" ~default:[] |> List.map ~f:parse_info;
-      relatedLocations = Jget.array_d j "relatedLocations" ~default:[] |> List.map ~f:parse_info;
+      relatedInformation =
+        Jget.array_d j "relatedInformation" ~default:[] |> Base.List.map ~f:parse_info;
+      relatedLocations =
+        Jget.array_d j "relatedLocations" ~default:[] |> Base.List.map ~f:parse_info;
     }
   )
 
@@ -619,13 +620,14 @@ let parse_kind json : CodeActionKind.t option =
     | _ -> None
   )
 
-let parse_kinds jsons : CodeActionKind.t list = List.map ~f:parse_kind jsons |> List.filter_opt
+let parse_kinds jsons : CodeActionKind.t list =
+  Base.List.map ~f:parse_kind jsons |> Base.List.filter_opt
 
 let parse_codeActionRequest (j : json option) : CodeActionRequest.params =
   CodeActionRequest.(
     let parse_context c : CodeActionRequest.codeActionContext =
       {
-        diagnostics = Jget.array_exn c "diagnostics" |> List.map ~f:parse_diagnostic;
+        diagnostics = Jget.array_exn c "diagnostics" |> Base.List.map ~f:parse_diagnostic;
         only = Jget.array_opt c "only" |> Base.Option.map ~f:parse_kinds;
       }
     in
@@ -664,7 +666,7 @@ let print_codeActionResult ~key (c : CodeAction.result) : json =
       | Command c -> print_command ~key c
       | Action c -> print_codeAction ~key c
     in
-    JSON_Array (List.map c ~f:print_command_or_action)
+    JSON_Array (Base.List.map c ~f:print_command_or_action)
   )
 
 (* print_codeAction *)
@@ -701,7 +703,7 @@ let print_showMessageRequest (r : ShowMessageRequest.showMessageRequestParams) :
     [
       ("type", Some (int_ (MessageType.to_enum r.ShowMessageRequest.type_)));
       ("message", Some (JSON_String r.ShowMessageRequest.message));
-      ("actions", Some (JSON_Array (List.map r.ShowMessageRequest.actions ~f:print_action)));
+      ("actions", Some (JSON_Array (Base.List.map r.ShowMessageRequest.actions ~f:print_action)));
     ]
 
 let parse_result_showMessageRequest (result : json option) : ShowMessageRequest.result =
@@ -722,7 +724,7 @@ let print_showStatus (r : ShowStatus.showStatusParams) : json =
   Jprint.object_opt
     [
       ("type", Some (int_ (MessageType.to_enum rr.ShowMessageRequest.type_)));
-      ("actions", Some (JSON_Array (List.map rr.ShowMessageRequest.actions ~f:print_action)));
+      ("actions", Some (JSON_Array (Base.List.map rr.ShowMessageRequest.actions ~f:print_action)));
       ("message", Some (JSON_String rr.ShowMessageRequest.message));
       ("shortMessage", Base.Option.map r.ShowStatus.shortMessage ~f:string_);
       ( "progress",
@@ -756,7 +758,7 @@ let print_hover (r : Hover.result) : json =
     | Some r ->
       Jprint.object_opt
         [
-          ("contents", Some (JSON_Array (List.map r.Hover.contents ~f:print_markedItem)));
+          ("contents", Some (JSON_Array (Base.List.map r.Hover.contents ~f:print_markedItem)));
           ("range", Base.Option.map r.range ~f:print_range);
         ]
   )
@@ -769,7 +771,7 @@ let parse_definition (params : json option) : Definition.params =
   parse_textDocumentPositionParams params
 
 let print_definition (r : Definition.result) : json =
-  JSON_Array (List.map r ~f:print_definition_location)
+  JSON_Array (Base.List.map r ~f:print_definition_location)
 
 (************************************************************************)
 (* completionItem/resolve request                                       *)
@@ -798,7 +800,7 @@ let parse_completionItem (params : json option) : CompletionItemResolve.params =
   Completion.(
     let textEdits =
       Jget.obj_opt params "textEdit" :: Jget.array_d params "additionalTextEdits" ~default:[]
-      |> List.filter_map ~f:parse_textEdit
+      |> Base.List.filter_map ~f:parse_textEdit
     in
     let command =
       match Jget.obj_opt params "command" with
@@ -843,7 +845,7 @@ let print_completionItem ~key (item : Completion.completionItem) : json =
                 [
                   ("kind", JSON_String "markdown");
                   ( "value",
-                    JSON_String (String.trim (List.fold doc ~init:"" ~f:string_of_markedString))
+                    JSON_String (String.trim (Base.List.fold doc ~init:"" ~f:string_of_markedString))
                   );
                 ]
           )
@@ -860,13 +862,13 @@ let print_completionItem ~key (item : Completion.completionItem) : json =
         ( "insertTextFormat",
           Base.Option.map item.insertTextFormat (fun x -> int_ @@ insertTextFormat_to_enum x)
         );
-        ("textEdit", Base.Option.map (List.hd item.textEdits) print_textEdit);
+        ("textEdit", Base.Option.map (Base.List.hd item.textEdits) print_textEdit);
         ( "additionalTextEdits",
-          match List.tl item.textEdits with
+          match Base.List.tl item.textEdits with
           | None
           | Some [] ->
             None
-          | Some l -> Some (JSON_Array (List.map l ~f:print_textEdit))
+          | Some l -> Some (JSON_Array (Base.List.map l ~f:print_textEdit))
         );
         ("command", Base.Option.map item.command (print_command ~key));
         ("data", item.data);
@@ -903,7 +905,7 @@ let print_completion ~key (r : Completion.result) : json =
     JSON_Object
       [
         ("isIncomplete", JSON_Bool r.isIncomplete);
-        ("items", JSON_Array (List.map r.items ~f:(print_completionItem ~key)));
+        ("items", JSON_Array (Base.List.map r.items ~f:(print_completionItem ~key)));
       ]
   )
 
@@ -959,7 +961,7 @@ let parse_workspaceSymbol (params : json option) : WorkspaceSymbol.params =
   WorkspaceSymbol.{ query = Jget.string_exn params "query" }
 
 let print_workspaceSymbol (r : WorkspaceSymbol.result) : json =
-  JSON_Array (List.map r ~f:print_symbolInformation)
+  JSON_Array (Base.List.map r ~f:print_symbolInformation)
 
 (************************************************************************)
 (* textDocument/documentSymbol request                                  *)
@@ -1000,8 +1002,8 @@ end
 
 let print_documentSymbol (r : DocumentSymbol.result) : json =
   match r with
-  | `SymbolInformation xs -> JSON_Array (List.map xs ~f:print_symbolInformation)
-  | `DocumentSymbol xs -> JSON_Array (List.map xs ~f:DocumentSymbolFmt.to_json)
+  | `SymbolInformation xs -> JSON_Array (Base.List.map xs ~f:print_symbolInformation)
+  | `DocumentSymbol xs -> JSON_Array (Base.List.map xs ~f:DocumentSymbolFmt.to_json)
 
 (************************************************************************)
 (* textDocument/references request                                      *)
@@ -1029,7 +1031,7 @@ let parse_goToImplementation (params : json option) : GoToImplementation.params 
 (* shared by textDocument/references and textDocument/implementation    *)
 (************************************************************************)
 
-let print_Locations (r : Location.t list) : json = JSON_Array (List.map r ~f:print_location)
+let print_Locations (r : Location.t list) : json = JSON_Array (Base.List.map r ~f:print_location)
 
 (************************************************************************)
 (* textDocument/documentHighlight request                               *)
@@ -1048,7 +1050,7 @@ let print_documentHighlight (r : DocumentHighlight.result) : json =
           ("kind", Base.Option.map highlight.kind ~f:print_highlightKind);
         ]
     in
-    JSON_Array (List.map r ~f:print_highlight)
+    JSON_Array (Base.List.map r ~f:print_highlight)
   )
 
 (************************************************************************)
@@ -1070,7 +1072,7 @@ let print_typeCoverage (r : TypeCoverage.result) : json =
     JSON_Object
       [
         ("coveredPercent", int_ r.coveredPercent);
-        ("uncoveredRanges", JSON_Array (List.map r.uncoveredRanges ~f:print_uncov));
+        ("uncoveredRanges", JSON_Array (Base.List.map r.uncoveredRanges ~f:print_uncov));
         ("defaultMessage", JSON_String r.defaultMessage);
       ]
   )
@@ -1093,7 +1095,7 @@ let parse_documentFormatting (params : json option) : DocumentFormatting.params 
   }
 
 let print_documentFormatting (r : DocumentFormatting.result) : json =
-  JSON_Array (List.map r ~f:print_textEdit)
+  JSON_Array (Base.List.map r ~f:print_textEdit)
 
 (************************************************************************)
 (* textDocument/rangeFormatting request                                 *)
@@ -1108,7 +1110,7 @@ let parse_documentRangeFormatting (params : json option) : DocumentRangeFormatti
   }
 
 let print_documentRangeFormatting (r : DocumentRangeFormatting.result) : json =
-  JSON_Array (List.map r ~f:print_textEdit)
+  JSON_Array (Base.List.map r ~f:print_textEdit)
 
 (************************************************************************)
 (* textDocument/onTypeFormatting request                                *)
@@ -1124,7 +1126,7 @@ let parse_documentOnTypeFormatting (params : json option) : DocumentOnTypeFormat
   }
 
 let print_documentOnTypeFormatting (r : DocumentOnTypeFormatting.result) : json =
-  JSON_Array (List.map r ~f:print_textEdit)
+  JSON_Array (Base.List.map r ~f:print_textEdit)
 
 (************************************************************************)
 (* initialize request                                                   *)
@@ -1211,7 +1213,7 @@ module SignatureHelpClientCapabilitiesFmt = struct
 
   let documentationFormat_of_json json =
     Base.Option.value_map json ~default:[] ~f:(fun formats ->
-        List.map formats ~f:(Base.Option.bind ~f:MarkupKindFmt.of_json) |> List.filter_opt
+        Base.List.map formats ~f:(Base.Option.bind ~f:MarkupKindFmt.of_json) |> Base.List.filter_opt
     )
 
   let parameterInformation_of_json json =
@@ -1384,7 +1386,7 @@ let print_initialize ~key (r : Initialize.result) : json =
                       [
                         ( "codeActionKinds",
                           JSON_Array
-                            (List.map
+                            (Base.List.map
                                ~f:(fun k -> JSON_String (CodeActionKind.string_of_kind k))
                                codeActionKinds
                             )
@@ -1436,7 +1438,7 @@ module DidChangeWatchedFilesFmt = struct
   let params_of_json (json : Hh_json.json option) : params =
     let changes =
       Jget.array_exn json "changes"
-      |> List.map ~f:(fun change ->
+      |> Base.List.map ~f:(fun change ->
              let uri = Jget.string_exn change "uri" |> DocumentUri.of_string in
              let type_ = Jget.int_exn change "type" in
              let type_ =
@@ -1455,7 +1457,7 @@ module DidChangeWatchedFilesFmt = struct
       [
         ( "watchers",
           JSON_Array
-            (List.map registerOptions.watchers ~f:(fun watcher ->
+            (Base.List.map registerOptions.watchers ~f:(fun watcher ->
                  JSON_Object
                    [
                      ("globPattern", JSON_String watcher.globPattern);
@@ -1484,7 +1486,7 @@ module RegisterCapabilityFmt = struct
       [
         ( "registrations",
           JSON_Array
-            (List.map params.registrations ~f:(fun registration ->
+            (Base.List.map params.registrations ~f:(fun registration ->
                  Jprint.object_opt
                    [
                      ("id", Some (string_ registration.id));

@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Hh_core
-
 type position = {
   line: int;
   (* 1-based *)
@@ -130,14 +128,14 @@ let print_edit b edit =
   Printf.bprintf b "range = %s\n text = \n%s\n" range edit.text
 
 let edit_file content (edits : text_edit list) : (string, string * Utils.callstack) result =
-  try Ok (List.fold ~init:content ~f:apply_edit edits) with
+  try Ok (Base.List.fold ~init:content ~f:apply_edit edits) with
   | e ->
     let stack = Printexc.get_backtrace () in
     let b = Buffer.create 1024 in
     Printf.bprintf b "Invalid edit: %s\n" (Printexc.to_string e);
     Printf.bprintf b "Original content:\n%s\n" content;
     Printf.bprintf b "Edits:\n";
-    List.iter edits ~f:(print_edit b);
+    Base.List.iter edits ~f:(print_edit b);
     Error (Buffer.contents b, Utils.Callstack stack)
 
 let edit_file_unsafe fc edits =

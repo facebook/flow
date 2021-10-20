@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Hh_core
-
 (* Don't change the ordering of this record without updating hh_shared_init in
  * hh_shared.c, which indexes into config objects *)
 type config = {
@@ -571,7 +569,7 @@ module FreqCache (Config : CacheConfig) :
         end
         cache;
       Hashtbl.clear cache;
-      l := List.sort ~compare:(fun (_, x, _) (_, y, _) -> y - x) !l;
+      l := Base.List.sort ~compare:(fun (_, x, _) (_, y, _) -> y - x) !l;
       let i = ref 0 in
       while !i < Config.capacity do
         match !l with

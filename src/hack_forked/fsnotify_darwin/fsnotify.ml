@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Hh_core
 module SSet = Flow_set.Make (String)
 
 exception Error of string * Unix.error
@@ -36,14 +35,15 @@ let add_watch env path =
 
 let init roots =
   let env = { fsevents = Fsevents.init (); wpaths = SSet.empty } in
-  List.iter roots (fun root ->
+  Base.List.iter roots ~f:(fun root ->
       try ignore (Fsevents.add_watch env.fsevents root) with
       | Unix.Unix_error (Unix.ENOENT, _, _) ->
         prerr_endline ("Not watching root \"" ^ root ^ "\": file not found.")
   );
   env
 
-let read env = List.map (Fsevents.read_events env.fsevents) (fun (path, wpath) -> { path; wpath })
+let read env =
+  Base.List.map (Fsevents.read_events env.fsevents) ~f:(fun (path, wpath) -> { path; wpath })
 
 module FDMap = Flow_map.Make (struct
   type t = Unix.file_descr
@@ -65,10 +65,10 @@ let invoke_callback fdmap fd =
 let select env ?(read_fdl = []) ?(write_fdl = []) ~timeout callback =
   let callback () = callback (Unix.handle_unix_error read env) in
   let read_fdl = (Fsevents.get_event_fd env.fsevents, callback) :: read_fdl in
-  let read_callbacks = List.fold_left ~f:make_callback ~init:FDMap.empty read_fdl in
-  let write_callbacks = List.fold_left ~f:make_callback ~init:FDMap.empty write_fdl in
+  let read_callbacks = Base.List.fold ~f:make_callback ~init:FDMap.empty read_fdl in
+  let write_callbacks = Base.List.fold ~f:make_callback ~init:FDMap.empty write_fdl in
   let (read_ready, write_ready, _) =
-    Unix.select (List.map read_fdl fst) (List.map write_fdl fst) [] timeout
+    Unix.select (Base.List.map read_fdl ~f:fst) (Base.List.map write_fdl ~f:fst) [] timeout
   in
-  List.iter write_ready (invoke_callback write_callbacks);
-  List.iter read_ready (invoke_callback read_callbacks)
+  Base.List.iter write_ready ~f:(invoke_callback write_callbacks);
+  Base.List.iter read_ready ~f:(invoke_callback read_callbacks)

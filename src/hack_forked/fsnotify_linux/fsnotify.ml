@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Hh_core
-
 exception Error of string * Unix.error
 
 let wrap f () =
@@ -86,7 +84,7 @@ let process_event env events event =
   match event with
   | (_, _, _, None) -> events
   | (watch, type_list, _, Some filename) ->
-    List.iter type_list check_event_type;
+    Base.List.iter type_list ~f:check_event_type;
     let wpath =
       try WMap.find watch env.wpaths with
       | _ -> assert false
@@ -96,7 +94,7 @@ let process_event env events event =
 
 let read env =
   let inotify_events = wrap (fun () -> Inotify.read env.fd) () in
-  List.fold_left inotify_events ~f:(process_event env) ~init:[]
+  Base.List.fold inotify_events ~f:(process_event env) ~init:[]
 
 module FDMap = Flow_map.Make (struct
   type t = Unix.file_descr
@@ -113,19 +111,19 @@ let invoke_callback fdmap fd = (FDMap.find fd fdmap) ()
 let select env ?(read_fdl = []) ?(write_fdl = []) ~timeout callback =
   let callback () = callback (Unix.handle_unix_error read env) in
   let read_fdl = (env.fd, callback) :: read_fdl in
-  let read_callbacks = List.fold_left read_fdl ~f:make_callback ~init:FDMap.empty in
-  let write_callbacks = List.fold_left write_fdl ~f:make_callback ~init:FDMap.empty in
+  let read_callbacks = Base.List.fold read_fdl ~f:make_callback ~init:FDMap.empty in
+  let write_callbacks = Base.List.fold write_fdl ~f:make_callback ~init:FDMap.empty in
   let (read_ready, write_ready, _) =
-    Unix.select (List.map read_fdl fst) (List.map write_fdl fst) [] timeout
+    Unix.select (Base.List.map read_fdl ~f:fst) (Base.List.map write_fdl ~f:fst) [] timeout
   in
-  List.iter write_ready (invoke_callback write_callbacks);
-  List.iter read_ready (invoke_callback read_callbacks)
+  Base.List.iter write_ready ~f:(invoke_callback write_callbacks);
+  Base.List.iter read_ready ~f:(invoke_callback read_callbacks)
 
 (********** DEBUGGING ****************)
 (* Can be useful to see what the event actually is, for debugging *)
 let _string_of inotify_ev =
   let (wd, mask, cookie, s) = inotify_ev in
-  let mask = String.concat ":" (List.map mask Inotify.string_of_event) in
+  let mask = String.concat ":" (Base.List.map mask ~f:Inotify.string_of_event) in
   let s =
     match s with
     | Some s -> s

@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Hh_core
-
 type raw_color =
   | Default
   | Black
@@ -90,7 +88,7 @@ let should_color color_mode =
   | Color_Auto -> supports_color ()
 
 let emoji_spinner =
-  List.map
+  Base.List.map
   (* Some terminals display the emoji using only one column, even though they
      may take up two columns, and put the cursor immediately after it in an
      illegible manner. Add an extra space to separate the cursor from the emoji. *)
@@ -119,7 +117,7 @@ let print_one ?(color_mode = Color_Auto) ?(out_channel = stdout) c s =
   Printf.fprintf out_channel "%s" (apply_color ~color_mode c s)
 
 let cprint ?(color_mode = Color_Auto) ?(out_channel = stdout) strs =
-  List.iter strs (fun (c, s) -> print_one ~color_mode ~out_channel c s)
+  Base.List.iter strs ~f:(fun (c, s) -> print_one ~color_mode ~out_channel c s)
 
 let cprintf ?(color_mode = Color_Auto) ?(out_channel = stdout) c =
   Printf.ksprintf (print_one ~color_mode ~out_channel c)
@@ -133,7 +131,7 @@ let (spinner, spinner_used) =
         else
           ["-"; "\\"; "|"; "/"]
       in
-      let str = List.nth_exn spinner (!state mod 4) in
+      let str = Base.List.nth_exn spinner (!state mod 4) in
       state := !state + 1;
       str),
     (fun () -> !state <> 0)
@@ -168,10 +166,10 @@ let read_choice message choices =
     Printf.printf
       "%s (%s)%!"
       message
-      (String.concat "|" (List.map choices String_utils.string_of_char));
+      (String.concat "|" (Base.List.map choices ~f:String_utils.string_of_char));
     let choice = read_char () in
     print_newline ();
-    if List.mem ~equal:Char.equal choices choice then
+    if Base.List.mem ~equal:Char.equal choices choice then
       choice
     else
       loop ()

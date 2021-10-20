@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Hh_core
-
 let test_valid () =
   let examples =
     [
@@ -66,7 +64,7 @@ let test_valid () =
     if actual <> expected then
       failwith (Printf.sprintf "Expected '%s' -> '%s', not '%s'" uri expected actual)
   in
-  List.iter examples ~f:do_example;
+  Base.List.iter examples ~f:do_example;
   true
 
 let test_invalid_parse () =
@@ -132,7 +130,7 @@ let test_invalid_parse () =
     in
     if not did_raise then failwith (Printf.sprintf "Expected '%s' not to parse" uri)
   in
-  List.iter examples ~f:do_example;
+  Base.List.iter examples ~f:do_example;
   true
 
 let test_create () =
@@ -167,7 +165,7 @@ let test_create () =
     if actual <> expected then
       failwith (Printf.sprintf "Expected '%s' -> '%s', not '%s'" file expected actual)
   in
-  List.iter examples ~f:do_example;
+  Base.List.iter examples ~f:do_example;
   true
 
 let tests =

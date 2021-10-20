@@ -9,8 +9,6 @@
 (* Prelude *)
 (*****************************************************************************)
 
-open Hh_core
-
 let lstat_kind file =
   Unix.(
     try Some (lstat file).st_kind with
@@ -32,7 +30,7 @@ type dt_kind =
  * and 2 per directory.
  *)
 let hh_readdir path : (string * dt_kind) list =
-  List.filter_map (native_hh_readdir path) (fun (name, kind) ->
+  Base.List.filter_map (native_hh_readdir path) ~f:(fun (name, kind) ->
       match (name, kind) with
       | (".", _) -> None
       | ("..", _) -> None
@@ -71,7 +69,7 @@ let fold_files
       acc
     else
       let files = hh_readdir dir in
-      List.fold_left
+      Base.List.fold
         ~f:(fun acc (file, kind) ->
           let file = Filename.concat dir file in
           match kind with
@@ -81,8 +79,8 @@ let fold_files
         ~init:acc
         files
   in
-  let paths = List.map paths Path.to_string in
-  List.fold_left paths ~init ~f:(fold 0)
+  let paths = Base.List.map paths ~f:Path.to_string in
+  Base.List.fold paths ~init ~f:(fold 0)
 
 let iter_files ?max_depth ?filter ?file_only paths action =
   fold_files ?max_depth ?filter ?file_only paths (fun file _ -> action file) ()
@@ -129,8 +127,8 @@ let make_next_files ?name:_ ?(filter = (fun _ -> true)) ?(others = []) root =
   in
   let state =
     let dirs =
-      Path.to_string root :: List.map ~f:Path.to_string others
-      |> List.filter_map ~f:(fun path ->
+      Path.to_string root :: Base.List.map ~f:Path.to_string others
+      |> Base.List.filter_map ~f:(fun path ->
              Unix.(
                match lstat_kind path with
                | Some S_REG -> Some (path, DT_REG)
