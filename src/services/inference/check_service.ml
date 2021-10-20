@@ -162,6 +162,10 @@ let get_lint_severities metadata options =
 module ConsGen : Type_sig_merge.CONS_GEN = struct
   include Flow_js
 
+  let dst_cx_ref = ref None
+
+  let set_dst_cx cx = dst_cx_ref := Some cx
+
   let unresolved_tvar = Tvar.mk_no_wrap
 
   (* Helper to create a lazy type. The returned tvar contains a lazy thunk which
@@ -565,6 +569,7 @@ let mk_check_file ~options ~reader ~cache () =
     let metadata = Context.docblock_overrides docblock base_metadata in
     let module_ref = Reason.OrdinaryName (Files.module_ref file_key) in
     let cx = Context.make ccx metadata file_key aloc_table module_ref Context.Checking in
+    ConsGen.set_dst_cx cx;
     let infer_ast =
       match Context.env_mode cx with
       | Options.SSAEnv -> Type_inference_js.NewEnvInference.infer_ast

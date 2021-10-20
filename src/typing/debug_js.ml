@@ -1130,6 +1130,7 @@ let dump_error_message =
     | CheckTimeout _ -> "CheckTimeout"
     | CheckJobException _ -> "CheckJobException"
     | UnexpectedTypeapp _ -> "UnexpectedTypeapp"
+    | UnexpectedAnnotationInference _ -> "UnexpectedAnnotationInference"
   in
   let dump_upper_kind = function
     | IncompatibleGetPropT _ -> "IncompatibleGetPropT"
@@ -1777,6 +1778,12 @@ let dump_error_message =
         | Graphql.MultipleDefinitions -> "multiple definitions"
       in
       spf "EInvalidGraphQL (%s) (%s)" (string_of_aloc loc) err_str
+    | EAnnotationInference (loc, reason_op, reason) ->
+      spf
+        "EAnnotationInference (%s) (%s) (%s)"
+        (string_of_aloc loc)
+        (dump_reason cx reason_op)
+        (dump_reason cx reason)
 
 module Verbose = struct
   let verbose_in_file cx verbose =

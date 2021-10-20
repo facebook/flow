@@ -416,7 +416,9 @@ let use_op_of_lookup_action = function
 
 exception SpeculativeError of Error_message.t
 
-let add_output cx ?trace msg =
+(* [src_cx] is the context in which the error is created, and [dst_cx] the context
+ * in which it is recorded. *)
+let add_output_generic ~src_cx:cx ~dst_cx ?trace msg =
   let trace_reasons =
     match trace with
     | None -> []
@@ -468,8 +470,14 @@ let add_output cx ?trace msg =
     then
       assert_false (spf "add_output: no source for error: %s" (Debug_js.dump_error_message cx msg));
 
-    Context.add_error cx error
+    Context.add_error dst_cx error
   )
+
+let add_output cx ?trace msg = add_output_generic ~src_cx:cx ~dst_cx:cx ?trace msg
+
+(* In annotation inference, errors are created in the exporting side (src_cx), and
+ * are recorded in the importing one (dst_cx). *)
+let add_annot_inference_error ~src_cx ~dst_cx msg : unit = add_output_generic ~src_cx ~dst_cx msg
 
 let exact_obj_error cx trace obj_kind ~use_op ~exact_reason l =
   let error_kind =

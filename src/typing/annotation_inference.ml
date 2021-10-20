@@ -85,6 +85,42 @@ module type Annotation_inference_sig = sig
 end
 
 module rec ConsGen : Annotation_inference_sig = struct
+  (* Annotation inference is performed in the context of the definition module (this
+   * is what the input `cx` in elab_t etc. represents). However, in order to be
+   * able to raise errors during annotation inference, we need to have access to the
+   * destination context. This is what this reference is for. `dst_cx_ref` is set
+   * Check_serivce.mk_check_file once per file right after the destination context
+   * is created. *)
+  let dst_cx_ref = ref None
+
+  let set_dst_cx cx = dst_cx_ref := Some cx
+
+  (* Errors created with [error_unsupported] are actually reported. Compare this to
+   * errors created with Flow_js_utils.add_output which are recorded in the context
+   * of the source of the annotations, and are therefore ignored. This function checks
+   * that dst_cx_ref has been set and uses that as the target context.
+   *
+   * The only kind of errors that are reported here are "unsupported" cases. These
+   * are mostly cases that rely on subtyping, which is not implemented here; most
+   * commonly evaluating call-like EvalTs and speculation. *)
+  let error_unsupported cx t op =
+    let reason_op = AConstraint.display_reason_of_op op in
+    let loc = Reason.aloc_of_reason reason_op in
+    let msg = Error_message.EAnnotationInference (loc, reason_op, TypeUtil.reason_of_t t) in
+    (match !dst_cx_ref with
+    | None -> assert false
+    | Some dst_cx -> Flow_js_utils.add_annot_inference_error ~src_cx:cx ~dst_cx msg);
+    AnyT.error reason_op
+
+  let error_internal cx msg op =
+    let reason_op = AConstraint.display_reason_of_op op in
+    let loc = Reason.aloc_of_reason reason_op in
+    let msg = Error_message.(EInternal (loc, UnexpectedAnnotationInference msg)) in
+    (match !dst_cx_ref with
+    | None -> assert false
+    | Some dst_cx -> Flow_js_utils.add_annot_inference_error ~src_cx:cx ~dst_cx msg);
+    AnyT.error reason_op
+
   let dummy_trace = Trace.dummy_trace
 
   (* Repositioning does not seem to have any perceptible impact in annotation
@@ -382,19 +418,12 @@ module rec ConsGen : Annotation_inference_sig = struct
     | (EvalT (t, TypeDestructorT (_, reason, TypeMap (ObjectMapConst t')), _), _) ->
       let t = elab_t cx t (Annot_ObjMapConst (reason, t')) in
       elab_t cx t op
-    | (EvalT (_, TypeDestructorT (_, _, d), _), _) ->
-      let r = AConstraint.reason_of_op op in
-      warn_unsupported
-        ("EvalT_" ^ Debug_js.string_of_destructor d)
-        (AConstraint.string_of_operation op)
-        (string_of_reason_loc cx r);
-      Unsoundness.why Unimplemented r
-    | (EvalT _, _) -> failwith "Annotation_inference on other EvalT"
+    | (EvalT _, _) -> error_unsupported cx t op
     | (OpenT (reason, id), _) -> elab_open cx ~seen reason id op
     | (TypeDestructorTriggerT _, _)
     | (ReposT _, _)
     | (InternalT _, _) ->
-      failwith "TODO return something ..."
+      error_unsupported cx t op
     | (AnnotT (r, t, _), _) ->
       let t = reposition cx (aloc_of_reason r) t in
       elab_t cx ~seen t op
@@ -489,9 +518,12 @@ module rec ConsGen : Annotation_inference_sig = struct
     (************************************)
     (* Wildcards (idx, maybe, optional) *)
     (************************************)
-    | (DefT (_, _, IdxWrapper _), _) -> failwith "TODO IdxWrapper"
-    | (MaybeT _, _) -> failwith "TODO MaybeT"
-    | (OptionalT _, _) -> failwith "TODO OptionalT"
+    | (DefT (_, _, IdxWrapper _), _)
+    | (MaybeT _, _)
+    | (OptionalT _, _) ->
+      (* These are rare in practice. Will consider adding support if we hit this
+       * error case. *)
+      error_unsupported cx t op
     (*********************)
     (* Type applications *)
     (*********************)
@@ -553,21 +585,18 @@ module rec ConsGen : Annotation_inference_sig = struct
       let reason' = repos_reason (aloc_of_reason reason_op) reason in
       union_of_ts reason' ts'
     | (UnionT _, Annot_ObjKitT (reason, use_op, resolve_tool, tool)) ->
-      object_kit_concrete cx use_op reason resolve_tool tool t
+      object_kit_concrete cx use_op op reason resolve_tool tool t
     | (UnionT (_, rep), _) ->
       let reason = Type.AConstraint.reason_of_op op in
       let ts = UnionRep.members rep in
       let ts = Base.List.map ~f:(fun t -> elab_t cx ~seen t op) ts in
       union_of_ts reason ts
     | (IntersectionT _, Annot_ObjKitT (reason, use_op, resolve_tool, tool)) ->
-      object_kit_concrete cx use_op reason resolve_tool tool t
+      object_kit_concrete cx use_op op reason resolve_tool tool t
     | (IntersectionT _, _) ->
-      let r = AConstraint.reason_of_op op in
-      warn_unsupported
-        "IntersectionT"
-        (AConstraint.string_of_operation op)
-        (string_of_reason_loc cx r);
-      Unsoundness.why Unimplemented r
+      (* Handling intersections as inputs would require use of speculation. Instead,
+       * we ask the user to provide a simpler type. *)
+      error_unsupported cx t op
     (*************)
     (* Unary not *)
     (*************)
@@ -779,7 +808,7 @@ module rec ConsGen : Annotation_inference_sig = struct
     (* Object Kit *)
     (**************)
     | (_, Annot_ObjKitT (reason, use_op, resolve_tool, tool)) ->
-      object_kit_concrete cx use_op reason resolve_tool tool t
+      object_kit_concrete cx use_op op reason resolve_tool tool t
     (********************)
     (* GetElemT / ElemT *)
     (********************)
@@ -933,6 +962,7 @@ module rec ConsGen : Annotation_inference_sig = struct
       elab_t cx (FunProtoT lreason) op
     | (_, _) ->
       let reason = reason_of_op op in
+      (* This corresponds to the catch-all case of flow_js.ml. *)
       warn
         "Uncaught annotation constraint: (%s, %s)"
         (string_of_ctor t)
@@ -1094,20 +1124,31 @@ module rec ConsGen : Annotation_inference_sig = struct
     in
     let object_read_only cx _use_op = Slice_utils.object_read_only cx in
     let object_partial cx _use_op = Slice_utils.object_partial cx in
-    let next =
+    let next op cx use_op tool reason x =
       Object.(
-        function
-        | Spread (options, state) -> object_spread options state
-        | Rest (options, state) -> object_rest options state
-        | Partial -> object_partial
-        | ReadOnly -> object_read_only
-        | ReactConfig _ -> failwith "new-merge ReactConfig"
-        | ObjectRep -> failwith "new-merge ObjectRep"
-        | ObjectWiden _ -> failwith "new-merge ObjectWiden")
+        match tool with
+        | Spread (options, state) -> object_spread options state cx use_op reason x
+        | Rest (options, state) -> object_rest options state cx use_op reason x
+        | Partial -> object_partial cx use_op reason x
+        | ReadOnly -> object_read_only cx use_op reason x
+        | ReactConfig _ -> error_internal cx "ReactConfig" op
+        | ObjectRep -> error_internal cx "ObjectRep" op
+        | ObjectWiden _ -> error_internal cx "ObjectWiden" op)
     in
-    let next cx use_op tool reason x = next tool cx use_op reason x in
     let statics = get_statics in
-    (fun cx -> Slice_utils.run ~add_output ~return ~next ~recurse ~statics cx)
+    fun cx use_op op reason resolve_tool tool t ->
+      Slice_utils.run
+        ~add_output
+        ~return
+        ~next:(next op)
+        ~recurse
+        ~statics
+        cx
+        use_op
+        reason
+        resolve_tool
+        tool
+        t
 
   and object_kit cx use_op reason resolve_tool tool t =
     elab_t cx t (Annot_ObjKitT (reason, use_op, resolve_tool, tool))

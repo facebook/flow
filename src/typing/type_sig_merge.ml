@@ -161,6 +161,8 @@ module type CONS_GEN = sig
   val obj_rest : Context.t -> Reason.t -> string list -> Type.t -> Type.t
 
   val arr_rest : Context.t -> Type.use_op -> Reason.t -> int -> Type.t -> Type.t
+
+  val set_dst_cx : Context.t -> unit
 end
 
 module type S = sig
@@ -182,9 +184,9 @@ module type S = sig
 end
 
 module Make (ConsGen : CONS_GEN) : S = struct
-  let specialize file t =
+  let specialize file reason_op t =
     let reason = TypeUtil.reason_of_t t in
-    ConsGen.specialize file.cx t Type.unknown_use reason reason None
+    ConsGen.specialize file.cx t Type.unknown_use reason_op reason None
 
   (* Repositioning the underlying type does not seem to have any perceptible impact
    * when dealing with annotations. Instead of invoking the convoluted Flow_js.reposition
@@ -1350,7 +1352,8 @@ module Make (ConsGen : CONS_GEN) : S = struct
       | ObjectPrototypeExtendsNull -> (Type.NullProtoT super_reason, Type.FunProtoT super_reason)
       | ClassImplicitExtends -> (Type.ObjProtoT super_reason, Type.FunProtoT super_reason)
       | ClassExplicitExtends { loc; t } ->
-        let t = specialize file (merge file t) in
+        let reason_op = Reason.mk_reason (Reason.RCustom "class extends") loc in
+        let t = specialize file reason_op (merge file t) in
         let t = TypeUtil.this_typeapp ~annot_loc:loc t this None in
         (t, TypeUtil.class_type t)
       | ClassExplicitExtendsApp { loc; t; targs } ->
@@ -1387,7 +1390,8 @@ module Make (ConsGen : CONS_GEN) : S = struct
     in
     fun file this -> function
       | ClassMixin { loc; t } ->
-        let t = specialize file (merge_mixin_ref file loc t) in
+        let reason_op = Reason.mk_reason (Reason.RCustom "class mixins") loc in
+        let t = specialize file reason_op (merge_mixin_ref file loc t) in
         TypeUtil.this_typeapp ~annot_loc:loc t this None
       | ClassMixinApp { loc; t; targs } ->
         let t = merge_mixin_ref file loc t in

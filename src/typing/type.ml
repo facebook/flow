@@ -2615,6 +2615,10 @@ end =
 
 let unknown_use = TypeTerm.(Op UnknownUse)
 
+let name_of_propref = function
+  | TypeTerm.Named (_, x) -> Some x
+  | TypeTerm.Computed _ -> None
+
 external use_t_compare : TypeTerm.use_t -> TypeTerm.use_t -> int = "caml_fast_generic_compare"
   [@@noalloc]
 
@@ -2902,6 +2906,30 @@ module AConstraint = struct
     | Annot_ToStringT r
     | Annot__Future_added_value__ r ->
       r
+
+  (* Used to produce prettier error messages for annotation inference. *)
+  let display_reason_of_op = function
+    | Annot_ObjKitT (r, _, _, tool) ->
+      let desc =
+        RCustom
+          Object.(
+            match tool with
+            | ReadOnly -> "readonly"
+            | Partial -> "partial"
+            | Spread _ -> "spread"
+            | Rest _ -> "rest"
+            | ReactConfig _ -> "react config"
+            | ObjectRep -> "object"
+            | ObjectWiden _ -> "widening")
+      in
+      replace_desc_reason desc r
+    | Annot_MakeExactT r -> replace_desc_reason (RCustom "exact") r
+    | Annot_GetStaticsT r -> replace_desc_reason (RCustom "statics") r
+    | Annot_MixinT r -> replace_desc_reason (RCustom "mixins") r
+    | Annot_UnaryMinusT r -> replace_desc_reason (RCustom "unary minus") r
+    | Annot_NotT r -> replace_desc_reason (RCustom "unary not") r
+    | Annot_GetPropT (r, _, propref) -> replace_desc_reason (RProperty (name_of_propref propref)) r
+    | r -> reason_of_op r
 
   let to_annot_op_exn = function
     | Annot_unresolved _ -> failwith "to_annot_op_exn on unresolved"
@@ -3645,19 +3673,15 @@ let string_of_type_t_kind = function
   | ImportEnumKind -> "ImportEnumKind"
   | InstanceKind -> "InstanceKind"
 
-let name_of_propref = function
-  | Named (_, x) -> Some x
-  | Computed _ -> None
-
-and extract_setter_type = function
+let extract_setter_type = function
   | DefT (_, _, FunT (_, _, { params = [(_, param_t)]; _ })) -> param_t
   | _ -> failwith "Setter property with unexpected type"
 
-and extract_getter_type = function
+let extract_getter_type = function
   | DefT (_, _, FunT (_, _, { return_t; _ })) -> return_t
   | _ -> failwith "Getter property with unexpected type"
 
-and elemt_of_arrtype = function
+let elemt_of_arrtype = function
   | ArrayAT (elemt, _)
   | ROArrayAT elemt
   | TupleAT (elemt, _) ->

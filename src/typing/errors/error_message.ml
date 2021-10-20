@@ -435,6 +435,7 @@ and 'loc t' =
       null_write: 'loc null_write option;
     }
   | EInvalidGraphQL of 'loc * Graphql.error
+  | EAnnotationInference of 'loc * 'loc virtual_reason * 'loc virtual_reason
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -490,6 +491,7 @@ and internal_error =
   | CheckTimeout of float
   | CheckJobException of Exception.t
   | UnexpectedTypeapp of string
+  | UnexpectedAnnotationInference of string
 
 and 'loc unsupported_syntax =
   | ComprehensionExpression
@@ -1013,6 +1015,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
             null_write;
       }
   | EInvalidGraphQL (loc, err) -> EInvalidGraphQL (f loc, err)
+  | EAnnotationInference (loc, r1, r2) -> EAnnotationInference (f loc, map_reason r1, map_reason r2)
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1230,7 +1233,8 @@ let util_use_op_of_msg nope util = function
   | EMethodUnbinding _
   | EObjectThisReference _
   | EInvalidDeclaration _
-  | EInvalidGraphQL _ ->
+  | EInvalidGraphQL _
+  | EAnnotationInference _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1376,7 +1380,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EImplicitInstantiationTemporaryError (loc, _)
   | EObjectThisReference (loc, _)
   | EImportInternalReactServerModule loc
-  | EInvalidGraphQL (loc, _) ->
+  | EInvalidGraphQL (loc, _)
+  | EAnnotationInference (loc, _, _) ->
     Some loc
   | EImplicitInstantiationUnderconstrainedError { reason_call; _ } ->
     Some (poly_loc_of_reason reason_call)
@@ -1533,6 +1538,7 @@ let string_of_internal_error = function
   | CheckTimeout s -> spf "check job timed out after %0.2f seconds" s
   | CheckJobException exc -> "uncaught exception: " ^ Exception.to_string exc
   | UnexpectedTypeapp s -> "unexpected typeapp: " ^ s
+  | UnexpectedAnnotationInference s -> "unexpected " ^ s ^ " in annotation inference"
 
 (* Friendly messages are created differently based on the specific error they come from, so
    we collect the ingredients here and pass them to make_error_printable *)
@@ -3674,6 +3680,20 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       | Graphql.MultipleDefinitions -> [text "Expected exactly one definition per GraphQL tag."]
     in
     Normal { features }
+  | EAnnotationInference (_, reason_op, reason) ->
+    let features =
+      [
+        text "Cannot use ";
+        desc (replace_desc_reason (desc_of_reason reason_op) reason_op);
+        text " on ";
+        ref (replace_desc_reason (Reason.desc_of_reason reason) reason);
+        text " in an export position. ";
+        text "Please provide an (alternative) annotation for ";
+        ref reason_op;
+        text ".";
+      ]
+    in
+    Normal { features }
 
 let is_lint_error = function
   | EUntypedTypeImport _
@@ -3939,6 +3959,7 @@ let error_code_of_message err : error_code option =
   | EClassToObject _ -> Some ClassObject
   | EMethodUnbinding _ -> Some MethodUnbinding
   | EInvalidGraphQL _ -> Some InvalidGraphQL
+  | EAnnotationInference _ -> Some InvalidExportedAnnotation
   (* lints should match their lint name *)
   | EUntypedTypeImport _
   | EUntypedImport _
