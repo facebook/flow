@@ -46,6 +46,7 @@ let object_like_op = function
   | Annot_UnaryMinusT _
   | Annot_NotT _
   | Annot_ObjKeyMirror _
+  | Annot_ObjMapConst _
   | Annot_GetKeysT _
   | Annot_ToStringT _
   | Annot__Future_added_value__ _ ->
@@ -377,6 +378,9 @@ module rec ConsGen : Annotation_inference_sig = struct
       elab_t cx t op
     | (EvalT (t, TypeDestructorT (_, reason, TypeMap ObjectKeyMirror), _), _) ->
       let t = elab_t cx t (Annot_ObjKeyMirror reason) in
+      elab_t cx t op
+    | (EvalT (t, TypeDestructorT (_, reason, TypeMap (ObjectMapConst t')), _), _) ->
+      let t = elab_t cx t (Annot_ObjMapConst (reason, t')) in
       elab_t cx t op
     | (EvalT (_, TypeDestructorT (_, _, d), _), _) ->
       let r = AConstraint.reason_of_op op in
@@ -812,6 +816,8 @@ module rec ConsGen : Annotation_inference_sig = struct
       reposition cx (aloc_of_reason reason_op) value
     | (DefT (_, trust, ObjT o), Annot_ObjKeyMirror reason_op) ->
       Flow_js_utils.obj_key_mirror cx trust o reason_op
+    | (DefT (_, trust, ObjT o), Annot_ObjMapConst (reason_op, target)) ->
+      Flow_js_utils.obj_map_const cx trust o reason_op target
     (***********************)
     (* Opaque types (pt 2) *)
     (***********************)

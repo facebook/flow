@@ -640,6 +640,20 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                      TypeDestructorT (use_op reason, reason, TypeMap ObjectKeyMirror),
                      mk_eval_id cx loc ))
                 targs)
+        | "$ObjMapConst" ->
+          check_type_arg_arity cx loc t_ast targs 2 (fun () ->
+              let (t1, t2, targs) =
+                match convert_type_params () with
+                | ([t1; t2], targs) -> (t1, t2, targs)
+                | _ -> assert false
+              in
+              let reason = mk_reason RObjectMapi loc in
+              reconstruct_ast
+                (EvalT
+                   ( t1,
+                     TypeDestructorT (use_op reason, reason, TypeMap (ObjectMapConst t2)),
+                     mk_eval_id cx loc ))
+                targs)
         | "$CharSet" ->
           check_type_arg_arity cx loc t_ast targs 1 (fun () ->
               match targs with

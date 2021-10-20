@@ -1348,6 +1348,7 @@ module rec TypeTerm : sig
     | ObjectMap of t
     | ObjectMapi of t
     | ObjectKeyMirror
+    | ObjectMapConst of t
 
   and prototype = t
 
@@ -2774,6 +2775,7 @@ module AConstraint = struct
     | Annot_UnaryMinusT of Reason.t
     | Annot_NotT of Reason.t
     | Annot_ObjKeyMirror of Reason.t
+    | Annot_ObjMapConst of Reason.t * TypeTerm.t
     | Annot_GetKeysT of Reason.t
     | Annot_ToStringT of Reason.t
     | Annot__Future_added_value__ of Reason.t
@@ -2862,6 +2864,7 @@ module AConstraint = struct
     | Annot_UnaryMinusT _ -> "Annot_UnaryMinusT"
     | Annot_NotT _ -> "Annot_NotT"
     | Annot_ObjKeyMirror _ -> "Annot_ObjKeyMirror"
+    | Annot_ObjMapConst _ -> "Annot_ObjMapConst"
     | Annot_GetKeysT _ -> "Annot_GetKeysT"
     | Annot_ToStringT _ -> "Annot_ToStringT"
     | Annot__Future_added_value__ _ -> "Annot__Future_added_value__"
@@ -2894,6 +2897,7 @@ module AConstraint = struct
     | Annot_NotT r
     | Annot_MixinT r
     | Annot_ObjKeyMirror r
+    | Annot_ObjMapConst (r, _)
     | Annot_GetKeysT r
     | Annot_ToStringT r
     | Annot__Future_added_value__ r ->

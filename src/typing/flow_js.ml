@@ -4174,6 +4174,8 @@ struct
           rec_flow_t cx trace ~use_op:unknown_use (mapped_t, tout)
         | (DefT (_, trust, ObjT o), MapTypeT (_, reason_op, ObjectKeyMirror, tout)) ->
           rec_flow_t cx trace ~use_op:unknown_use (obj_key_mirror cx trust o reason_op, tout)
+        | (DefT (_, trust, ObjT o), MapTypeT (_, reason_op, ObjectMapConst target, tout)) ->
+          rec_flow_t cx trace ~use_op:unknown_use (obj_map_const cx trust o reason_op target, tout)
         (***********************************************)
         (* functions may have their prototypes written *)
         (***********************************************)

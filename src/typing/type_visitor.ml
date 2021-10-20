@@ -900,7 +900,8 @@ class ['a] t =
       function
       | TupleMap t
       | ObjectMap t
-      | ObjectMapi t ->
+      | ObjectMapi t
+      | ObjectMapConst t ->
         self#type_ cx pole_TODO acc t
       | ObjectKeyMirror -> acc
 

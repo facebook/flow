@@ -290,7 +290,8 @@ and collect_of_object_kit_spread_operands ?log_unresolved cx acc operands =
 and collect_of_type_map ?log_unresolved cx acc = function
   | TupleMap t
   | ObjectMap t
-  | ObjectMapi t ->
+  | ObjectMapi t
+  | ObjectMapConst t ->
     collect_of_type ?log_unresolved cx acc t
   | ObjectKeyMirror -> acc
 

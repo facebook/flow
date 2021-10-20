@@ -106,6 +106,7 @@ type 'loc virtual_reason_desc =
   | RObjectMap
   | RObjectMapi
   | RObjectKeyMirror
+  | RObjectMapConst
   | RType of name
   | RTypeAlias of string * 'loc option * 'loc virtual_reason_desc
   | ROpaqueType of string

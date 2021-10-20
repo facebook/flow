@@ -205,6 +205,7 @@ and utility =
   | ObjMap of t * t
   | ObjMapi of t * t
   | ObjKeyMirror of t
+  | ObjMapConst of t * t
   | TupleMap of t * t
   | Call of t * t list
   | Class of t
@@ -541,6 +542,7 @@ class ['A] comparator_ty =
       | ReactConfigType _ -> 21
       | ObjKeyMirror _ -> 22
       | Partial _ -> 23
+      | ObjMapConst _ -> 24
 
     method tag_of_polarity _ =
       function
@@ -691,6 +693,7 @@ let string_of_utility_ctor = function
   | ObjMap _ -> "$ObjMap"
   | ObjMapi _ -> "$ObjMapi"
   | ObjKeyMirror _ -> "$KeyMirror"
+  | ObjMapConst _ -> "$ObjectMapConst"
   | TupleMap _ -> "$TupleMap"
   | Call _ -> "$Call"
   | Class _ -> "Class"
@@ -714,6 +717,7 @@ let types_of_utility = function
   | ObjMap (t1, t2) -> Some [t1; t2]
   | ObjMapi (t1, t2) -> Some [t1; t2]
   | ObjKeyMirror t -> Some [t]
+  | ObjMapConst (t1, t2) -> Some [t1; t2]
   | TupleMap (t1, t2) -> Some [t1; t2]
   | Call (t, ts) -> Some (t :: ts)
   | Class t -> Some [t]

@@ -735,6 +735,15 @@ let obj_key_mirror cx trust o reason_op =
   in
   map_obj cx trust o reason_op ~map_t ~map_field
 
+let obj_map_const cx trust o reason_op target =
+  let map_t _ t =
+    match t with
+    | OptionalT _ -> optional target
+    | _ -> target
+  in
+  let map_field _ t = map_t target t in
+  map_obj cx trust o reason_op ~map_t ~map_field
+
 let check_untyped_import cx import_kind lreason ureason =
   match (import_kind, desc_of_reason lreason) with
   (* Use a special reason so we can tell the difference between an any-typed type import

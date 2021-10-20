@@ -793,6 +793,13 @@ module Make (ConsGen : CONS_GEN) : S = struct
       let obj = merge file obj in
       let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
       Type.(EvalT (obj, TypeDestructorT (use_op, reason, TypeMap ObjectKeyMirror), id))
+    | ObjMapConst { loc; obj; t } ->
+      let reason = Reason.(mk_reason RObjectMapConst loc) in
+      let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
+      let obj = merge file obj in
+      let t = merge file t in
+      let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
+      Type.(EvalT (obj, TypeDestructorT (use_op, reason, TypeMap (ObjectMapConst t)), id))
     | CharSet (loc, str) ->
       let chars = String_utils.CharSet.of_string str in
       let char_str = String_utils.CharSet.to_string chars in

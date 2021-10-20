@@ -162,6 +162,7 @@ type 'loc virtual_reason_desc =
   | RObjectMap
   | RObjectMapi
   | RObjectKeyMirror
+  | RObjectMapConst
   (* TODO type names should not be able to be internal names *)
   | RType of name
   | RTypeAlias of string * 'loc option (* reliable def loc *) * 'loc virtual_reason_desc
@@ -292,7 +293,7 @@ let rec map_desc_locs f = function
     | RUntypedModule _ | RNamedImportedType _ | RImportStarType _ | RImportStarTypeOf _
     | RImportStar _ | RDefaultImportedType _ | RAsyncImport | RCode _ | RCustom _
     | RIncompatibleInstantiation _ | ROpaqueType _ | RObjectMapi | RObjectKeyMirror
-    | RIndexedAccess _ ) as r ->
+    | RObjectMapConst | RIndexedAccess _ ) as r ->
     r
   | REnumRepresentation desc -> REnumRepresentation (map_desc_locs f desc)
   | RConstructorCall desc -> RConstructorCall (map_desc_locs f desc)
@@ -648,6 +649,7 @@ let rec string_of_desc = function
   | RObjectMap -> "`$ObjMap`"
   | RObjectMapi -> "`$ObjMapi`"
   | RObjectKeyMirror -> "`$KeyMirror`"
+  | RObjectMapConst -> "`$ObjMapConst`"
   | RType x -> spf "`%s`" (prettify_react_util (display_string_of_name x))
   | RTypeAlias (x, _, _) -> spf "`%s`" (prettify_react_util x)
   | ROpaqueType x -> spf "`%s`" (prettify_react_util x)
@@ -883,7 +885,8 @@ let is_typemap_reason r =
   | RTupleMap
   | RObjectMap
   | RObjectMapi
-  | RObjectKeyMirror ->
+  | RObjectKeyMirror
+  | RObjectMapConst ->
     true
   | _ -> false
 
@@ -1440,6 +1443,7 @@ let classification_of_reason r =
   | RObjectMap
   | RObjectMapi
   | RObjectKeyMirror
+  | RObjectMapConst
   | RType _
   | RTypeAlias _
   | ROpaqueType _

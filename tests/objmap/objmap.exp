@@ -739,6 +739,23 @@ References:
                ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------------ main.js:9:2
+
+Cannot cast `t1` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
+
+   main.js:9:2
+   9| (t1: string); // error
+       ^^
+
+References:
+   objmapconst.js:7:24
+   7| declare export var t1: typeof t.f;
+                             ^^^^^^^^^^ [1]
+   main.js:9:6
+   9| (t1: string); // error
+           ^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- objmap.js:10:2
 
 Cannot cast `o.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal
@@ -793,6 +810,23 @@ References:
        ^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- objmapconst.js:8:2
+
+Cannot cast `t1` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
+
+   objmapconst.js:8:2
+   8| (t1: string); // error
+       ^^
+
+References:
+   objmapconst.js:7:24
+   7| declare export var t1: typeof t.f;
+                             ^^^^^^^^^^ [1]
+   objmapconst.js:8:6
+   8| (t1: string); // error
+           ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- optional.js:13:2
 
 Cannot cast `o3.b` to array type because undefined [1] is incompatible with array type [2]. [incompatible-cast]
@@ -828,4 +862,4 @@ References:
 
 
 
-Found 43 errors
+Found 45 errors

@@ -478,6 +478,11 @@ type ('loc, 'a) annot =
       loc: 'loc;
       obj: 'a;
     }
+  | ObjMapConst of {
+      loc: 'loc;
+      obj: 'a;
+      t: 'a;
+    }
   | CharSet of 'loc * string
   | ClassT of 'loc * 'a
   | Function_apply of 'loc

@@ -1979,6 +1979,15 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
         Annot (ObjKeyMirror { loc; obj })
       | _ -> Err (loc, CheckError)
     end
+  | "$ObjMapConst" ->
+    begin
+      match targs with
+      | Some (_, { arguments = [obj; t]; _ }) ->
+        let obj = annot opts scope tbls xs obj in
+        let t = annot opts scope tbls xs t in
+        Annot (ObjMapConst { loc; obj; t })
+      | _ -> Err (loc, CheckError)
+    end
   | "$CharSet" ->
     begin
       match targs with
