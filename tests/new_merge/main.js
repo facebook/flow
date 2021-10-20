@@ -159,3 +159,6 @@ import {
 import type { T as T24 } from './keys';
 declare var t24: T24;
 (t24: empty); // error number (length) ~> empty
+
+import { x as x25 } from './obj_rest';
+(x25: empty); // error number ~> empty

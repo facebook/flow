@@ -2782,6 +2782,7 @@ module AConstraint = struct
     | Annot_ObjMapConst of Reason.t * TypeTerm.t
     | Annot_GetKeysT of Reason.t
     | Annot_ToStringT of Reason.t
+    | Annot_ObjRestT of Reason.t * string list
     | Annot__Future_added_value__ of Reason.t
 
   (** This kind of constraint is meant to represent type annotations. Unlike the
@@ -2871,6 +2872,7 @@ module AConstraint = struct
     | Annot_ObjMapConst _ -> "Annot_ObjMapConst"
     | Annot_GetKeysT _ -> "Annot_GetKeysT"
     | Annot_ToStringT _ -> "Annot_ToStringT"
+    | Annot_ObjRestT _ -> "Annot_ObjRestT"
     | Annot__Future_added_value__ _ -> "Annot__Future_added_value__"
 
   let reason_of_op = function
@@ -2904,6 +2906,7 @@ module AConstraint = struct
     | Annot_ObjMapConst (r, _)
     | Annot_GetKeysT r
     | Annot_ToStringT r
+    | Annot_ObjRestT (r, _)
     | Annot__Future_added_value__ r ->
       r
 
@@ -2929,6 +2932,7 @@ module AConstraint = struct
     | Annot_UnaryMinusT r -> replace_desc_reason (RCustom "unary minus") r
     | Annot_NotT r -> replace_desc_reason (RCustom "unary not") r
     | Annot_GetPropT (r, _, propref) -> replace_desc_reason (RProperty (name_of_propref propref)) r
+    | Annot_ObjRestT (r, _) -> replace_desc_reason (RCustom "rest") r
     | r -> reason_of_op r
 
   let to_annot_op_exn = function

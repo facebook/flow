@@ -1826,3 +1826,25 @@ let keylist_of_props props reason_op =
         acc)
     props
     []
+
+let objt_to_obj_rest cx props_tmap flags reason xs =
+  let props = Context.find_props cx props_tmap in
+  let props = List.fold_left (fun map x -> NameUtils.Map.remove (OrdinaryName x) map) props xs in
+  (* Remove shadow properties from rest result *)
+  (* TODO consider converting to SMap here so downstream code doesn't need to
+   * handle internal names *)
+  let props = NameUtils.Map.filter (fun x _ -> not (is_internal_name x)) props in
+  let proto = ObjProtoT reason in
+  (* A rest result can not be exact if the source object is unsealed,
+     because we may not have seen all the writes yet. *)
+  let obj_kind =
+    match flags.obj_kind with
+    | UnsealedInFile _ when not (Obj_type.sealed_in_op reason flags.obj_kind) ->
+      UnsealedInFile (ALoc.source (aloc_of_reason reason))
+    | UnsealedInFile _
+    | Exact ->
+      Exact
+    | Indexed d -> Indexed d
+    | _ -> Inexact
+  in
+  Obj_type.mk_with_proto cx reason ~props proto ~obj_kind

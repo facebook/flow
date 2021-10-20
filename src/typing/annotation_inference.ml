@@ -53,7 +53,8 @@ let object_like_op = function
     false
   | Annot_GetPropT _
   | Annot_GetElemT _
-  | Annot_LookupT _ ->
+  | Annot_LookupT _
+  | Annot_ObjRestT _ ->
     true
 
 let primitive_promoting_op = function
@@ -790,6 +791,20 @@ module rec ConsGen : Annotation_inference_sig = struct
       let p = Field (None, AnyT.untyped reason_op, Polarity.Neutral) in
       GetPropTKit.perform_read_prop_action cx dummy_trace use_op propref p reason_op
     (************)
+    (* ObjRestT *)
+    (************)
+    | (DefT (_, _, ObjT { props_tmap; flags; _ }), Annot_ObjRestT (reason, xs)) ->
+      Flow_js_utils.objt_to_obj_rest cx props_tmap flags reason xs
+    | (DefT (_, _, InstanceT _), Annot_ObjRestT _) ->
+      (* This implementation relies on unsealed objects and set-prop logic that is
+       * hard to implement in annotation inference. *)
+      error_unsupported cx t op
+    | (AnyT (_, src), Annot_ObjRestT (reason, _)) -> AnyT.why src reason
+    | (ObjProtoT _, Annot_ObjRestT (reason, _)) -> Obj_type.mk_unsealed cx reason ~proto:t
+    | (DefT (_, _, (NullT | VoidT)), Annot_ObjRestT (reason, _)) ->
+      (* mirroring Object.assign semantics, treat null/void as empty objects *)
+      Obj_type.mk_unsealed cx reason
+    (************)
     (* GetPropT *)
     (************)
     | (DefT (r, _, InstanceT (_, super, _, insttype)), Annot_GetPropT (reason_op, use_op, propref))
@@ -1068,7 +1083,7 @@ module rec ConsGen : Annotation_inference_sig = struct
 
   and mixin cx reason t = elab_t cx t (Annot_MixinT reason)
 
-  and obj_rest _cx _reason _xs _t = failwith "TODO Annotation_inference.obj_rest"
+  and obj_rest cx reason xs t = elab_t cx t (Annot_ObjRestT (reason, xs))
 
   and arr_rest _cx _use_op _reason _i _t = failwith "TODO Annotation_inference.arr_rest"
 

@@ -208,6 +208,21 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------ ops_on_inst_rest.js:5:8
+
+Cannot use rest on `C` [1] in an export position. Please provide an (alternative) annotation for rest [2].
+[invalid-exported-annotation]
+
+   ops_on_inst_rest.js:5:8
+   5| const {...rest_c} = c;
+             ^^^^^^^^^ [2]
+
+References:
+   ops_on_inst_rest.js:3:15
+   3| declare class C { f: number }
+                    ^ [1]
+
+
 Error ------------------------------------------------------------------------------------- ops_on_intersection.js:13:25
 
 Cannot use class extends on intersection type [1] in an export position. Please provide an (alternative) annotation for
@@ -678,4 +693,4 @@ References:
 
 
 
-Found 46 errors
+Found 47 errors

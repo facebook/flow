@@ -738,8 +738,25 @@ References:
               ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- main.js:164:2
 
-Found 44 errors
+Cannot cast `x25` to empty because number [1] is incompatible with empty [2]. [incompatible-cast]
+
+   main.js:164:2
+   164| (x25: empty); // error number ~> empty
+         ^^^
+
+References:
+   obj_rest.js:3:18
+     3| const obj = { f: 1 };
+                         ^ [1]
+   main.js:164:7
+   164| (x25: empty); // error number ~> empty
+              ^^^^^ [2]
+
+
+
+Found 45 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -95,3 +95,6 @@ import {
 (react_config_x12: any);
 (react_config_x13: any);
 (react_config_x14: any);
+
+import { x as x_inst_rest } from './ops_on_inst_rest';
+(x_inst_rest: any);
