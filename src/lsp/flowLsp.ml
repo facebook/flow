@@ -1916,7 +1916,7 @@ and main_handle_initialized_unsafe flowconfig_name (state : server_state) (event
     (* documentSymbols is handled in the client, not the server, since it's
        purely syntax-driven and we'd like it to work even if the server is
        busy or disconnected *)
-    let interaction_id = start_interaction ~trigger:LspInteraction.DocumentSymbol state in
+    let interaction_id = start_interaction ~trigger:(LspInteraction.DocumentSymbol id) state in
     let state = do_documentSymbol state id params in
     log_interaction ~ux:LspInteraction.Responded state interaction_id;
     Ok (state, LogNeeded metadata)
@@ -1924,7 +1924,7 @@ and main_handle_initialized_unsafe flowconfig_name (state : server_state) (event
     (* selectionRange is handled in the client, not the server, since it's
        purely syntax-driven and we'd like it to work even if the server is
        busy or disconnected *)
-    let interaction_id = start_interaction ~trigger:LspInteraction.SelectionRange state in
+    let interaction_id = start_interaction ~trigger:(LspInteraction.SelectionRange id) state in
     let state = do_selectionRange state id params in
     log_interaction ~ux:LspInteraction.Responded state interaction_id;
     Ok (state, LogNeeded metadata)

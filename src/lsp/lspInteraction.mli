@@ -8,28 +8,28 @@
 type id = int
 
 type trigger =
-  | CodeAction
-  | Completion
-  | Definition
+  | CodeAction of Lsp.lsp_id
+  | Completion of Lsp.lsp_id
+  | Definition of Lsp.lsp_id
   | DidChange
   | DidClose
   | DidOpen
   | DidSave
-  | DocumentHighlight
-  | DocumentSymbol
-  | FindReferences
-  | Hover
+  | DocumentHighlight of Lsp.lsp_id
+  | DocumentSymbol of Lsp.lsp_id
+  | FindReferences of Lsp.lsp_id
+  | Hover of Lsp.lsp_id
   | PushedErrorsEndOfRecheck of LspProt.recheck_reason
   | PushedErrorsEnvChange
   | PushedErrorsNewSubscription
   | PushedErrorsRecheckStreaming of LspProt.recheck_reason
-  | Rage
-  | Rename
+  | Rage of Lsp.lsp_id
+  | Rename of Lsp.lsp_id
   | ServerConnected
-  | SelectionRange
-  | SignatureHelp
-  | TypeCoverage
-  | ExecuteCommand
+  | SelectionRange of Lsp.lsp_id
+  | SignatureHelp of Lsp.lsp_id
+  | TypeCoverage of Lsp.lsp_id
+  | ExecuteCommand of Lsp.lsp_id
   | UnknownTrigger
 
 type ux =

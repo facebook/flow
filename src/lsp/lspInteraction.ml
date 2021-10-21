@@ -13,28 +13,28 @@ type id = int
 
 (* What initiated this interaction *)
 type trigger =
-  | CodeAction
-  | Completion
-  | Definition
+  | CodeAction of Lsp.lsp_id
+  | Completion of Lsp.lsp_id
+  | Definition of Lsp.lsp_id
   | DidChange
   | DidClose
   | DidOpen
   | DidSave
-  | DocumentHighlight
-  | DocumentSymbol
-  | FindReferences
-  | Hover
+  | DocumentHighlight of Lsp.lsp_id
+  | DocumentSymbol of Lsp.lsp_id
+  | FindReferences of Lsp.lsp_id
+  | Hover of Lsp.lsp_id
   | PushedErrorsEndOfRecheck of recheck_reason
   | PushedErrorsEnvChange
   | PushedErrorsNewSubscription
   | PushedErrorsRecheckStreaming of recheck_reason
-  | Rage
-  | Rename
+  | Rage of Lsp.lsp_id
+  | Rename of Lsp.lsp_id
   | ServerConnected
-  | SelectionRange
-  | SignatureHelp
-  | TypeCoverage
-  | ExecuteCommand
+  | SelectionRange of Lsp.lsp_id
+  | SignatureHelp of Lsp.lsp_id
+  | TypeCoverage of Lsp.lsp_id
+  | ExecuteCommand of Lsp.lsp_id
   | UnknownTrigger
 
 (* Source of the trigger *)
@@ -78,31 +78,58 @@ type state = {
 }
 
 let string_of_trigger = function
-  | CodeAction -> "codeAction"
-  | Completion -> "completion"
-  | Definition -> "definition"
+  | CodeAction _ -> "codeAction"
+  | Completion _ -> "completion"
+  | Definition _ -> "definition"
   | DidChange -> "didChange"
   | DidClose -> "didClose"
   | DidOpen -> "didOpen"
   | DidSave -> "didSave"
-  | DocumentHighlight -> "documentHighlight"
-  | DocumentSymbol -> "documentSymbol"
-  | FindReferences -> "findReferences"
-  | Hover -> "hover"
+  | DocumentHighlight _ -> "documentHighlight"
+  | DocumentSymbol _ -> "documentSymbol"
+  | FindReferences _ -> "findReferences"
+  | Hover _ -> "hover"
   | PushedErrorsEndOfRecheck recheck_reason ->
     Printf.sprintf "endOfRecheck/%s" (normalized_string_of_recheck_reason recheck_reason)
   | PushedErrorsRecheckStreaming recheck_reason ->
     Printf.sprintf "recheckStreaming/%s" (normalized_string_of_recheck_reason recheck_reason)
   | PushedErrorsEnvChange -> "envChange"
   | PushedErrorsNewSubscription -> "newSubscription"
-  | Rage -> "Rage"
-  | Rename -> "Rename"
+  | Rage _ -> "Rage"
+  | Rename _ -> "Rename"
   | ServerConnected -> "ServerConnected"
-  | SelectionRange -> "SelectionRange"
-  | SignatureHelp -> "SignatureHelp"
-  | TypeCoverage -> "TypeCoverage"
-  | ExecuteCommand -> "ExecuteCommand"
+  | SelectionRange _ -> "SelectionRange"
+  | SignatureHelp _ -> "SignatureHelp"
+  | TypeCoverage _ -> "TypeCoverage"
+  | ExecuteCommand _ -> "ExecuteCommand"
   | UnknownTrigger -> "UnknownTrigger"
+
+let lsp_id_of_trigger = function
+  | CodeAction lsp_id
+  | Completion lsp_id
+  | Definition lsp_id
+  | DocumentHighlight lsp_id
+  | DocumentSymbol lsp_id
+  | FindReferences lsp_id
+  | Hover lsp_id
+  | Rage lsp_id
+  | Rename lsp_id
+  | SelectionRange lsp_id
+  | SignatureHelp lsp_id
+  | TypeCoverage lsp_id
+  | ExecuteCommand lsp_id ->
+    Some lsp_id
+  | DidChange
+  | DidClose
+  | DidOpen
+  | DidSave
+  | PushedErrorsEndOfRecheck _
+  | PushedErrorsRecheckStreaming _
+  | PushedErrorsEnvChange
+  | PushedErrorsNewSubscription
+  | ServerConnected
+  | UnknownTrigger ->
+    None
 
 let string_of_ux = function
   | Canceled -> "Canceled"
@@ -128,23 +155,23 @@ let string_of_buffer_status = function
   | UnsavedBuffers -> "UnsavedBuffers"
 
 let source_of_trigger = function
-  | CodeAction
-  | Completion
-  | Definition
+  | CodeAction _
+  | Completion _
+  | Definition _
   | DidChange
   | DidClose
   | DidOpen
   | DidSave
-  | DocumentHighlight
-  | DocumentSymbol
-  | FindReferences
-  | Hover
-  | Rage
-  | Rename
-  | SelectionRange
-  | SignatureHelp
-  | TypeCoverage
-  | ExecuteCommand ->
+  | DocumentHighlight _
+  | DocumentSymbol _
+  | FindReferences _
+  | Hover _
+  | Rage _
+  | Rename _
+  | SelectionRange _
+  | SignatureHelp _
+  | TypeCoverage _
+  | ExecuteCommand _ ->
     Client
   | PushedErrorsEndOfRecheck _
   | PushedErrorsEnvChange
@@ -198,7 +225,9 @@ let log ~ux ~trigger ~start_state ~end_state =
     | Timeout -> true
     | _ -> false
   in
+  let lsp_id = lsp_id_of_trigger trigger |> Base.Option.map ~f:Lsp_fmt.id_to_string in
   FlowInteractionLogger.interaction
+    ~lsp_id
     ~is_timeout_ux
     ~source:(trigger |> source_of_trigger |> string_of_source)
     ~trigger:(trigger |> string_of_trigger)
@@ -281,19 +310,19 @@ let trigger_of_lsp_msg =
   let open Lsp in
   function
   (* Requests from the client which we care about *)
-  | RequestMessage (_, CodeActionRequest _) -> Some CodeAction
-  | RequestMessage (_, CompletionRequest _) -> Some Completion
-  | RequestMessage (_, DefinitionRequest _) -> Some Definition
-  | RequestMessage (_, DocumentHighlightRequest _) -> Some DocumentHighlight
-  | RequestMessage (_, DocumentSymbolRequest _) -> Some DocumentSymbol
-  | RequestMessage (_, FindReferencesRequest _) -> Some FindReferences
-  | RequestMessage (_, HoverRequest _) -> Some Hover
-  | RequestMessage (_, RageRequest) -> Some Rage
-  | RequestMessage (_, RenameRequest _) -> Some Rename
-  | RequestMessage (_, TypeCoverageRequest _) -> Some TypeCoverage
-  | RequestMessage (_, SelectionRangeRequest _) -> Some SelectionRange
-  | RequestMessage (_, SignatureHelpRequest _) -> Some SignatureHelp
-  | RequestMessage (_, ExecuteCommandRequest _) -> Some ExecuteCommand
+  | RequestMessage (lsp_id, CodeActionRequest _) -> Some (CodeAction lsp_id)
+  | RequestMessage (lsp_id, CompletionRequest _) -> Some (Completion lsp_id)
+  | RequestMessage (lsp_id, DefinitionRequest _) -> Some (Definition lsp_id)
+  | RequestMessage (lsp_id, DocumentHighlightRequest _) -> Some (DocumentHighlight lsp_id)
+  | RequestMessage (lsp_id, DocumentSymbolRequest _) -> Some (DocumentSymbol lsp_id)
+  | RequestMessage (lsp_id, FindReferencesRequest _) -> Some (FindReferences lsp_id)
+  | RequestMessage (lsp_id, HoverRequest _) -> Some (Hover lsp_id)
+  | RequestMessage (lsp_id, RageRequest) -> Some (Rage lsp_id)
+  | RequestMessage (lsp_id, RenameRequest _) -> Some (Rename lsp_id)
+  | RequestMessage (lsp_id, TypeCoverageRequest _) -> Some (TypeCoverage lsp_id)
+  | RequestMessage (lsp_id, SelectionRangeRequest _) -> Some (SelectionRange lsp_id)
+  | RequestMessage (lsp_id, SignatureHelpRequest _) -> Some (SignatureHelp lsp_id)
+  | RequestMessage (lsp_id, ExecuteCommandRequest _) -> Some (ExecuteCommand lsp_id)
   (* Requests which we don't care about. Some are unsupported and some are sent from the lsp to
      * the client *)
   | RequestMessage (_, ApplyWorkspaceEditRequest _)

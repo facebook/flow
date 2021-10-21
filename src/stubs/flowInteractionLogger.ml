@@ -10,6 +10,7 @@ let init () = ()
 let set_server_config ~timeout_log_saving:_ ~flowconfig_name:_ ~root:_ ~root_name:_ = ()
 
 let interaction
+    ~lsp_id:_
     ~is_timeout_ux:_
     ~source:_
     ~trigger:_
