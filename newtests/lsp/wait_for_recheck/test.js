@@ -216,68 +216,6 @@ module.exports = (suite(
       ],
     ).waitForRecheck(true),
 
-    test('textDocument/references will time out with wait_for_recheck=true', [
-      addFiles('references.js', 'references2.js'),
-      lspStartAndConnect(),
-      addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
-        [''],
-        [...lspIgnoreStatusAndCancellation],
-      ),
-      lspRequestAndWaitUntilResponse('textDocument/references', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/references.js'},
-        position: {line: 9, character: 17}, // on an identifier
-      })
-        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation])
-        .timeout(2000),
-    ]).waitForRecheck(true),
-
-    test('textDocument/references will time out with wait_for_recheck=false', [
-      addFiles('references.js', 'references2.js'),
-      lspStartAndConnect(),
-      addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
-        [''],
-        [...lspIgnoreStatusAndCancellation],
-      ),
-      lspRequestAndWaitUntilResponse('textDocument/references', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/references.js'},
-        position: {line: 9, character: 17}, // on an identifier
-      })
-        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation])
-        .timeout(2000),
-    ]).waitForRecheck(false),
-
-    test('textDocument/rename will time out with wait_for_recheck=true', [
-      addFiles('references.js', 'references2.js'),
-      lspStartAndConnect(),
-      addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
-        [''],
-        [...lspIgnoreStatusAndCancellation],
-      ),
-      lspRequestAndWaitUntilResponse('textDocument/rename', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/references.js'},
-        position: {line: 9, character: 17}, // on an identifier
-        newName: 'foobar',
-      })
-        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation])
-        .timeout(2000),
-    ]).waitForRecheck(true),
-
-    test('textDocument/rename will time out with wait_for_recheck=false', [
-      addFiles('references.js', 'references2.js'),
-      lspStartAndConnect(),
-      addFile('sleep.js.ignored', 'sleep.js').verifyAllLSPMessagesInStep(
-        [''],
-        [...lspIgnoreStatusAndCancellation],
-      ),
-      lspRequestAndWaitUntilResponse('textDocument/rename', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/references.js'},
-        position: {line: 9, character: 17}, // on an identifier
-        newName: 'foobar',
-      })
-        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation])
-        .timeout(2000),
-    ]).waitForRecheck(false),
-
     test('textDocument/documentSymbol will return with wait_for_recheck=true', [
       addFiles('outline.js', 'references.js'),
       lspStartAndConnect(),

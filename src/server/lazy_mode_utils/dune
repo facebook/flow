@@ -1,9 +1,0 @@
-(library
-  (name flow_server_lazy_mode_utils)
-  (wrapped false)
-  (libraries
-    flow_server_env
-    flow_server_rechecker
-  )
-  (preprocess (pps lwt_ppx))
-)

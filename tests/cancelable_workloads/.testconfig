@@ -1,3 +1,0 @@
-shell: test.sh
-# TODO fix saved-state behavior (T82201186)
-skip_saved_state: true

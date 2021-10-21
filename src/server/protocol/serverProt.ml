@@ -57,8 +57,7 @@ module Request = struct
         filename: File_input.t;
         line: int;
         char: int;
-        global: bool;
-        multi_hop: bool;
+        wait_for_recheck: bool option;
       }
     | FORCE_RECHECK of {
         files: string list;
@@ -146,14 +145,8 @@ module Request = struct
       Printf.sprintf "dump-types %s" (File_input.filename_of_file_input input)
     | FIND_MODULE { moduleref; filename; wait_for_recheck = _ } ->
       Printf.sprintf "find-module %s %s" moduleref filename
-    | FIND_REFS { filename; line; char; global; multi_hop } ->
-      Printf.sprintf
-        "find-refs %s:%d:%d:%B:%B"
-        (File_input.filename_of_file_input filename)
-        line
-        char
-        global
-        multi_hop
+    | FIND_REFS { filename; line; char; wait_for_recheck = _ } ->
+      Printf.sprintf "find-refs %s:%d:%d" (File_input.filename_of_file_input filename) line char
     | FORCE_RECHECK { files; focus; profile = _ } ->
       Printf.sprintf "force-recheck %s (focus = %b)" (String.concat " " files) focus
     | GET_DEF { filename; line; char; wait_for_recheck = _ } ->

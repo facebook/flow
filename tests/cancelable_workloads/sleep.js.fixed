@@ -1,5 +1,0 @@
-// @flow
-
-import {num} from './foo';
-
-(num: boolean); // error number ~> boolean

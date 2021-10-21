@@ -11,15 +11,3 @@ val compute_docblock : File_key.t -> string (* content *) -> Docblock.t
 
 val compute_ast_result :
   Options.t -> File_key.t -> string (* content *) -> (ast_info, string) result
-
-val get_ast_result : reader:State_reader.t -> File_key.t -> (ast_info, string) result
-
-val get_all_dependents :
-  reader:State_reader.t ->
-  Options.t ->
-  MultiWorkerLwt.worker list option ->
-  ServerEnv.env ref ->
-  File_key.t ->
-  string (* content *) ->
-  (* transitive dependents *)
-  Utils_js.FilenameSet.t Lwt.t

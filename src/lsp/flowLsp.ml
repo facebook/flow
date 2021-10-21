@@ -717,7 +717,7 @@ let do_initialize flowconfig params : Initialize.result =
         signatureHelpProvider = Some { sighelp_triggerCharacters = ["("; ","] };
         definitionProvider = true;
         typeDefinitionProvider = false;
-        referencesProvider = true;
+        referencesProvider = false;
         documentHighlightProvider = true;
         documentSymbolProvider = true;
         workspaceSymbolProvider = false;
@@ -726,7 +726,7 @@ let do_initialize flowconfig params : Initialize.result =
         documentFormattingProvider = false;
         documentRangeFormattingProvider = false;
         documentOnTypeFormattingProvider = None;
-        renameProvider = true;
+        renameProvider = false;
         documentLinkProvider = None;
         executeCommandProvider =
           Some

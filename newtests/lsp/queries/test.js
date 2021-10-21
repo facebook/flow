@@ -160,42 +160,6 @@ module.exports = (suite(
       ),
     ]),
 
-    test('textDocument/references', [
-      addFiles('references.js', 'references2.js'),
-      lspStartAndConnect(),
-      lspRequestAndWaitUntilResponse('textDocument/references', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/references.js'},
-        position: {line: 9, character: 17}, // on an identifier
-      }).verifyAllLSPMessagesInStep(
-        [['textDocument/references', '{line":3,"line":5,"line":9}']],
-        [...lspIgnoreStatusAndCancellation],
-      ),
-      lspRequestAndWaitUntilResponse('textDocument/references', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/references.js'},
-        position: {
-          line: 9,
-          character: 17,
-        }, // on an identifier
-        context: {includeIndirectReferences: true},
-      }).verifyAllLSPMessagesInStep(
-        [['textDocument/references', '{line":3,"line":5,"line":6,"line":9}']],
-        [...lspIgnoreStatusAndCancellation],
-      ),
-    ]),
-
-    test('textDocument/rename', [
-      addFiles('references.js', 'references2.js'),
-      lspStartAndConnect(),
-      lspRequestAndWaitUntilResponse('textDocument/rename', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/references.js'},
-        position: {line: 9, character: 17}, // on an identifier
-        newName: 'foobar',
-      }).verifyAllLSPMessagesInStep(
-        [['textDocument/rename', '{"line":3,"line":5,"line":9}']],
-        [...lspIgnoreStatusAndCancellation],
-      ),
-    ]),
-
     test('textDocument/documentSymbol', [
       addFiles('outline.js', 'references.js'),
       lspStartAndConnect(),

@@ -2,25 +2,6 @@ Get-def imported class:
 {"path":"foo.js","line":3,"endline":3,"start":14,"end":16}
 Get-def class member:
 {"path":"foo.js","line":4,"endline":4,"start":3,"end":5}
-Find-refs class property:
-{
-  "kind":"symbol-found",
-  "name":"foo",
-  "locs":[
-    {
-      "source":"bar.js",
-      "type":"SourceFile",
-      "start":{"line":7,"column":5,"offset":71},
-      "end":{"line":7,"column":7,"offset":74}
-    },
-    {
-      "source":"foo.js",
-      "type":"SourceFile",
-      "start":{"line":4,"column":3,"offset":31},
-      "end":{"line":4,"column":5,"offset":34}
-    }
-  ]
-}
 Autocomplete class property:
 {"result":[{"name":"foo","type":"() => void"}]}
 dump types:

@@ -136,7 +136,6 @@ MODULES=\
   src/server/command_handler\
   src/server/env\
   src/server/error_collator\
-  src/server/lazy_mode_utils\
   src/server/monitor_listener\
   src/server/persistent_connection\
   src/server/protocol\
@@ -156,7 +155,6 @@ MODULES=\
   src/services/inference/types\
   src/services/jsdoc\
   src/services/module\
-  src/services/refactor\
   src/services/references\
   src/services/saved_state\
   src/services/saved_state/compression\

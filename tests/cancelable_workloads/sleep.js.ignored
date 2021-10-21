@@ -1,9 +1,0 @@
-// @flow
-
-import {num} from './foo';
-
-declare var sleep: $Flow$DebugSleep;
-
-sleep(100); // sleep for 100 seconds
-
-(num: boolean); // error number ~> boolean

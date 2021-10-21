@@ -298,6 +298,3 @@ let recheck_loop =
       loop ~profiling:(recheck_profiling :: profiling) genv env
   in
   (fun genv env -> loop ~profiling:[] genv env)
-
-let recheck_single ~files_to_force genv env =
-  recheck_single ~files_to_force ~recheck_count:1 genv env

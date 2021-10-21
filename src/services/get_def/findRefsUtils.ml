@@ -5,11 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Utils_js
-module Result = Base.Result
-
-let ( >>= ) = Result.( >>= )
-
 type ast_info = (Loc.t, Loc.t) Flow_ast.Program.t * File_sig.With_Loc.t * Docblock.t
 
 let compute_docblock file content =
@@ -35,45 +30,3 @@ let compute_ast_result options file content =
   (* The parse should not fail; we have passed ~fail:false *)
   | Parse_fail _ -> Error "Parse unexpectedly failed"
   | Parse_skip _ -> Error "Parse unexpectedly skipped"
-
-let get_ast_result ~reader file =
-  let open Parsing_heaps in
-  let get_result f kind =
-    let error =
-      Printf.sprintf "Expected %s to be available for %s" kind (File_key.to_string file)
-    in
-    Result.of_option ~error (f file)
-  in
-  let ast_result = get_result (Reader.get_ast ~reader) "AST" in
-  let file_sig_result = get_result (Reader.get_file_sig ~reader) "file sig" in
-  let docblock_result = get_result (Reader.get_docblock ~reader) "docblock" in
-  ast_result >>= fun ast ->
-  file_sig_result >>= fun file_sig ->
-  docblock_result >>= fun docblock -> Ok (ast, file_sig, docblock)
-
-let get_all_dependents ~reader options workers env file_key content =
-  let docblock = compute_docblock file_key content in
-  let reader = Abstract_state_reader.State_reader reader in
-  let modulename = Module_js.exported_module ~options file_key docblock in
-  let%lwt direct_deps =
-    Dep_service.calc_direct_dependents
-      ~reader
-      workers
-      (* Surprisingly, creating this set doesn't seem to cause horrible performance but it's
-         probably worth looking at if you are searching for optimizations *)
-      ~candidates:ServerEnv.(CheckedSet.all !env.checked_files)
-      ~root_files:(FilenameSet.singleton file_key)
-      ~root_modules:(Modulename.Set.singleton modulename)
-  in
-  let dependency_info = !env.ServerEnv.dependency_info in
-  let implementation_dependency_graph =
-    Dependency_info.implementation_dependency_graph dependency_info
-  in
-  let sig_dependency_graph = Dependency_info.sig_dependency_graph dependency_info in
-  let (_sig_dependents, all_dependents) =
-    Pure_dep_graph_operations.calc_all_dependents
-      ~sig_dependency_graph
-      ~implementation_dependency_graph
-      direct_deps
-  in
-  Lwt.return all_dependents

@@ -732,24 +732,6 @@ let convert_find_refs_result (result : FindRefsTypes.find_refs_ok) :
     ServerProt.Response.find_refs_success =
   Base.Option.map result ~f:(fun (name, refs) -> (name, Base.List.map ~f:snd refs))
 
-(* Find refs is a really weird command. Whereas other commands will cancel themselves if they find
- * unchecked code, find refs will focus that code and keep chugging along. It may therefore change
- * the env. Furthermore, it is written using a lot of `result`'s, which make it really hard to
- * properly pass through the env. Therefore, it uses an `ServerEnv.env ref` instead of an
- * `ServerEnv.env`. *)
-let find_global_refs ~reader ~genv ~env ~profiling (file_input, line, col, multi_hop) =
-  let env = ref env in
-  let%lwt result =
-    FindRefs_js.find_global_refs ~reader ~genv ~env ~profiling ~file_input ~line ~col ~multi_hop
-  in
-  let env = !env in
-  let (result, dep_count) =
-    match result with
-    | Ok (result, dep_count) -> (Ok (convert_find_refs_result result), dep_count)
-    | Error _ as err -> (err, None)
-  in
-  Lwt.return (env, result, dep_count)
-
 let find_local_refs ~reader ~options ~env ~profiling (file_input, line, col) =
   FindRefs_js.find_local_refs ~reader ~options ~env ~profiling ~file_input ~line ~col
   |> Lwt_result.map convert_find_refs_result
@@ -893,34 +875,23 @@ let handle_find_module ~options ~reader ~moduleref ~filename ~profiling:_ ~env:_
   let response = find_module ~options ~reader (moduleref, filename) in
   Lwt.return (ServerProt.Response.FIND_MODULE response, None)
 
-let handle_find_refs ~reader ~genv ~filename ~line ~char ~global ~multi_hop ~profiling ~env =
-  let%lwt (env, result, dep_count) =
-    if global || multi_hop then
-      find_global_refs ~reader ~genv ~env ~profiling (filename, line, char, multi_hop)
-    else
-      let options = genv.ServerEnv.options in
-      let%lwt result = find_local_refs ~reader ~options ~env ~profiling (filename, line, char) in
-      Lwt.return (env, result, None)
-  in
+let handle_find_refs ~options ~reader ~filename ~line ~char ~profiling ~env =
+  let%lwt result = find_local_refs ~reader ~options ~env ~profiling (filename, line, char) in
   let json_data =
     Some
       (Hh_json.JSON_Object
-         (( "result",
-            Hh_json.JSON_String
-              (match result with
-              | Ok _ -> "SUCCESS"
-              | _ -> "FAILURE")
-          )
-          ::
-          ("global", Hh_json.JSON_Bool global)
-          ::
-          (match dep_count with
-          | Some count -> [("deps", Hh_json.JSON_Number (string_of_int count))]
-          | None -> [])
-         )
+         [
+           ( "result",
+             Hh_json.JSON_String
+               (match result with
+               | Ok _ -> "SUCCESS"
+               | _ -> "FAILURE")
+           );
+           ("global", Hh_json.JSON_Bool false);
+         ]
       )
   in
-  Lwt.return (env, ServerProt.Response.FIND_REFS result, json_data)
+  Lwt.return (ServerProt.Response.FIND_REFS result, json_data)
 
 let handle_force_recheck ~files ~focus ~profile ~profiling =
   let fileset = SSet.of_list files in
@@ -1218,11 +1189,11 @@ let get_ephemeral_handler genv command =
       ~wait_for_recheck
       ~options
       (handle_find_module ~options ~reader ~moduleref ~filename)
-  | ServerProt.Request.FIND_REFS { filename; line; char; global; multi_hop } ->
-    (* find-refs can take a while and may use MultiWorkerLwt. Furthermore, it may do a recheck and
-     * change env. Each of these 3 facts disqualifies find-refs from being parallelizable *)
-    Handle_nonparallelizable
-      (handle_find_refs ~reader ~genv ~filename ~line ~char ~global ~multi_hop)
+  | ServerProt.Request.FIND_REFS { filename; line; char; wait_for_recheck } ->
+    mk_parallelizable
+      ~wait_for_recheck
+      ~options
+      (handle_find_refs ~options ~reader ~filename ~line ~char)
   | ServerProt.Request.FORCE_RECHECK { files; focus; profile } ->
     Handle_immediately (handle_force_recheck ~files ~focus ~profile)
   | ServerProt.Request.GET_DEF { filename; line; char; wait_for_recheck } ->
@@ -2126,112 +2097,6 @@ let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~clien
     Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
   | (true, Error reason) -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
 
-let handle_persistent_find_refs ~reader ~genv ~id ~params ~metadata ~client ~profiling ~env =
-  let FindReferences.
-        { loc; context = { includeDeclaration = _; includeIndirectReferences = multi_hop } } =
-    params
-  in
-  (* TODO: respect includeDeclaration *)
-  let file_input = file_input_of_text_document_position ~client loc in
-  let (line, char) = Flow_lsp_conversions.position_of_document_position loc in
-  let%lwt (env, result, dep_count) =
-    find_global_refs ~reader ~genv ~env ~profiling (file_input, line, char, multi_hop)
-  in
-  let extra_data =
-    Some
-      (Hh_json.JSON_Object
-         (( "result",
-            Hh_json.JSON_String
-              (match result with
-              | Ok _ -> "SUCCESS"
-              | _ -> "FAILURE")
-          )
-          ::
-          ("global", Hh_json.JSON_Bool true)
-          ::
-          (match dep_count with
-          | Some count -> [("deps", Hh_json.JSON_Number (string_of_int count))]
-          | None -> [])
-         )
-      )
-  in
-  let metadata = with_data ~extra_data metadata in
-  match result with
-  | Ok (Some (_name, locs)) ->
-    let lsp_locs =
-      Base.List.fold locs ~init:(Ok []) ~f:(fun acc loc ->
-          let location = Flow_lsp_conversions.loc_to_lsp loc in
-          Base.Result.combine location acc ~ok:List.cons ~err:(fun e _ -> e)
-      )
-    in
-    begin
-      match lsp_locs with
-      | Ok lsp_locs ->
-        let response = ResponseMessage (id, FindReferencesResult lsp_locs) in
-        Lwt.return (env, LspProt.LspFromServer (Some response), metadata)
-      | Error reason -> mk_lsp_error_response ~ret:env ~id:(Some id) ~reason metadata
-    end
-  | Ok None ->
-    (* e.g. if it was requested on a place that's not even an identifier *)
-    let r = FindReferencesResult [] in
-    let response = ResponseMessage (id, r) in
-    Lwt.return (env, LspProt.LspFromServer (Some response), metadata)
-  | Error reason -> mk_lsp_error_response ~ret:env ~id:(Some id) ~reason metadata
-
-let handle_persistent_rename ~reader ~genv ~id ~params ~file_input ~metadata ~client ~profiling ~env
-    =
-  let { Rename.textDocument; position; newName } = params in
-  let file_input =
-    match file_input with
-    | Some file_input -> file_input
-    | None ->
-      (* We must have failed to get the client when we first tried. We could throw here, but this is
-       * a little more defensive. The only danger here is that the file contents may have changed *)
-      file_input_of_text_document_identifier ~client textDocument
-  in
-  let (line, col) = Flow_lsp_conversions.lsp_position_to_flow position in
-  let env = ref env in
-  let%lwt result =
-    Refactor_service.rename ~reader ~genv ~env ~profiling ~file_input ~line ~col ~new_name:newName
-  in
-  let env = !env in
-  let edits_to_response (edits : (Loc.t * string) list) =
-    (* Extract the path from each edit and convert into a map from file to edits for that file *)
-    let file_to_edits : ((Loc.t * string) list UriMap.t, string) result =
-      List.fold_left
-        begin
-          fun map edit ->
-          map >>= fun map ->
-          let (loc, _) = edit in
-          let uri = Flow_lsp_conversions.file_key_to_uri Loc.(loc.source) in
-          uri >>| fun uri ->
-          let lst = Base.Option.value ~default:[] (UriMap.find_opt uri map) in
-          (* This reverses the list *)
-          UriMap.add uri (edit :: lst) map
-        end
-        (Ok UriMap.empty)
-        edits
-      (* Reverse the lists to restore the original order *)
-      >>| UriMap.map List.rev
-    in
-    (* Convert all of the edits to LSP edits *)
-    let file_to_textedits : (TextEdit.t list UriMap.t, string) result =
-      file_to_edits >>| UriMap.map (Base.List.map ~f:Flow_lsp_conversions.flow_edit_to_textedit)
-    in
-    let workspace_edit : (WorkspaceEdit.t, string) result =
-      file_to_textedits >>| fun file_to_textedits -> { WorkspaceEdit.changes = file_to_textedits }
-    in
-    match workspace_edit with
-    | Ok x ->
-      let response = ResponseMessage (id, RenameResult x) in
-      Lwt.return (env, LspProt.LspFromServer (Some response), metadata)
-    | Error reason -> mk_lsp_error_response ~ret:env ~id:(Some id) ~reason metadata
-  in
-  match result with
-  | Ok (Some edits) -> edits_to_response edits
-  | Ok None -> edits_to_response []
-  | Error reason -> mk_lsp_error_response ~ret:env ~id:(Some id) ~reason metadata
-
 let handle_persistent_rage ~reader ~genv ~id ~metadata ~client:_ ~profiling ~env =
   let root = Path.to_string genv.ServerEnv.options.Options.opt_root in
   let items =
@@ -2630,20 +2495,6 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     mk_parallelizable_persistent
       ~options
       (handle_persistent_coverage ~options ~id ~params ~file_input ~metadata)
-  | LspToServer (RequestMessage (id, FindReferencesRequest params)) ->
-    (* Like `flow find-refs`, this is kind of slow and mutates env, so it can't run in parallel *)
-    Handle_nonparallelizable_persistent
-      (handle_persistent_find_refs ~reader ~genv ~id ~params ~metadata)
-  | LspToServer (RequestMessage (id, RenameRequest params)) ->
-    (* Grab the file contents immediately in case of any future didChanges *)
-    let file_input =
-      let textDocument = params.Rename.textDocument in
-      file_input_of_text_document_identifier_opt ~client_id textDocument
-    in
-    (* rename delegates to find-refs, which can be kind of slow and might mutate the env, so it
-       * can't run in parallel *)
-    Handle_nonparallelizable_persistent
-      (handle_persistent_rename ~reader ~genv ~id ~params ~file_input ~metadata)
   | LspToServer (RequestMessage (id, RageRequest)) ->
     (* Whoever is waiting for the rage results probably doesn't want to wait for a recheck *)
     mk_parallelizable_persistent ~options (handle_persistent_rage ~reader ~genv ~id ~metadata)

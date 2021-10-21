@@ -13,11 +13,3 @@ val find_local_refs :
   Scope_api.With_Loc.info ->
   GetDefUtils.def_info ->
   (FindRefsTypes.find_refs_found, string) result
-
-val find_global_refs :
-  reader:State_reader.t ->
-  ServerEnv.genv ->
-  ServerEnv.env ref ->
-  multi_hop:bool ->
-  GetDefUtils.def_info ->
-  (FindRefsTypes.find_refs_found * int option, string) result Lwt.t

@@ -4,7 +4,6 @@
   (libraries
     flow_parser
     flow_server_env
-    flow_server_lazy_mode_utils
     flow_service_get_def
     flow_state_readers
   )
