@@ -15,8 +15,4 @@ type callstack = Callstack of string
 
 val spf : ('a, unit, string) format -> 'a
 
-val singleton_if : bool -> 'a -> 'a list
-
-val unsafe_opt : 'a option -> 'a
-
 val try_finally : f:(unit -> 'a) -> finally:(unit -> unit) -> 'a

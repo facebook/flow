@@ -150,8 +150,10 @@ let rec collect_paths path_predicate path =
     |> Array.to_list
     |> Base.List.map ~f:(Filename.concat path)
     |> Base.List.concat_map ~f:(collect_paths path_predicate)
+  else if path_predicate path then
+    [path]
   else
-    Utils.singleton_if (path_predicate path) path
+    []
 
 (**
  * Sometimes the user wants to pass a list of paths on the command-line.

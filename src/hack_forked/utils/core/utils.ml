@@ -12,20 +12,6 @@ let () = Random.self_init ()
 
 let spf = Printf.sprintf
 
-let singleton_if cond x =
-  if cond then
-    [x]
-  else
-    []
-
-(* Since OCaml usually runs w/o backtraces enabled, the note makes errors
- * easier to debug. *)
-let unsafe_opt_note note = function
-  | None -> raise (Invalid_argument note)
-  | Some x -> x
-
-let unsafe_opt x = unsafe_opt_note "unsafe_opt got None" x
-
 let try_finally ~f ~(finally : unit -> unit) =
   let res =
     try f () with
