@@ -20,8 +20,6 @@ let log _ = ()
 
 let logger_pid () = None
 
-let set_init_type _ = ()
-
 let should_log () = false
 
 let flush _ = ()
