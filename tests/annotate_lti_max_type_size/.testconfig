@@ -1,0 +1,1 @@
+cmd: codemod annotate-lti-experimental --add-this-params --strip-root --quiet --max-type-size 2 --default-any ./
