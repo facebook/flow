@@ -52,8 +52,7 @@ module SignatureVerification = struct
 
   let unsupported_error_kind ~default_any acc loc =
     if default_any then
-      let ty_entry = Error ([Error.Unsupported_error_kind], Ty.explicit_any) in
-      LMap.add loc ty_entry acc
+      LMap.add loc (Error [Error.Unsupported_error_kind]) acc
     else
       acc
 

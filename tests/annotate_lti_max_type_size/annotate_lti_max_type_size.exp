@@ -1,8 +1,8 @@
 >>> file.js (#changes: 1)
 // @flow
 
-// TODO: In case of infered type size violation, this should be annotated as `any`
-function foo(x: {| f: number, g: number, h: number |}) {}
+// In case of infered type size violation, this should be annotated as `any`
+function foo(x: any) {}
 
 foo({f: 1, g: 2, h: 3});
 
@@ -11,7 +11,7 @@ foo({f: 1, g: 2, h: 3});
 Stats:
   Files changed:                            1
   Number of annotations added:              1
-  Total size of annotations:                2
+  Total size of annotations:                1
   Number of LTI errors:                     1
 
 Errors:

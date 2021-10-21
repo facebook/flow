@@ -138,10 +138,7 @@ module Normalize_this_getPropT = struct
     let validate_ty = Codemod_annotator.validate_ty cctx ~max_type_size in
     match ty_from_locs cctx this_locs with
     | Ok ty -> validate_ty ty
-    | Error _ ->
-      let ty = Ty.explicit_any in
-      let errors = [Error.Missing_annotation_or_normalizer_error] in
-      Error (errors, ty)
+    | Error _ -> Error [Error.Missing_annotation_or_normalizer_error]
 end
 
 module ErrorStats = struct

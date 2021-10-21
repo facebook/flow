@@ -99,16 +99,14 @@ let validate_ty cctx ~max_type_size ty =
   let reader = cctx.Codemod_context.Typed.reader in
   let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
   (* NOTE simplify before validating to avoid flagging spurious empty's,
-     * eg. empty's that will be simplified away as parts of unions.
-     * Do not simplify empties. Ignoring some of the attendant upper bounds
-     * might lead to unsound types.
-  *)
+   * eg. empty's that will be simplified away as parts of unions.
+   * Do not simplify empties. Ignoring some of the attendant upper bounds
+   * might lead to unsound types. *)
   let ty = Ty_utils.simplify_type ~merge_kinds:false ty in
-  match Validator.validate_type ~size_limit:max_type_size ~loc_of_aloc ty with
-  | (ty, []) -> Ok ty
-  | (ty, errs) ->
-    let errs = List.map (fun e -> Error.Validation_error e) errs in
-    Error (errs, ty)
+  let (ty, errs) = Validator.validate_type ~size_limit:max_type_size ~loc_of_aloc ty in
+  match errs with
+  | [] -> Ok ty
+  | errs -> Error (List.map (fun e -> Error.Validation_error e) errs)
 
 (* Used to infer the type for an annotation from an error loc *)
 let get_ty cctx ~preserve_literals ~max_type_size loc =
@@ -138,14 +136,8 @@ let get_ty cctx ~preserve_literals ~max_type_size loc =
   match Codemod_context.Typed.ty_at_loc norm_opts cctx loc with
   | Ok (Ty.Type ty) -> validate_ty cctx ~max_type_size ty
   | Ok (Ty.Decl (Ty.ClassDecl (s, _))) -> validate_ty cctx ~max_type_size (Ty.TypeOf (Ty.TSymbol s))
-  | Ok _ ->
-    let ty = Ty.explicit_any in
-    let errors = [Error.Missing_annotation_or_normalizer_error] in
-    Error (errors, ty)
-  | Error _ ->
-    let ty = Ty.explicit_any in
-    let errors = [Error.Missing_annotation_or_normalizer_error] in
-    Error (errors, ty)
+  | Ok _ -> Error [Error.Missing_annotation_or_normalizer_error]
+  | Error _ -> Error [Error.Missing_annotation_or_normalizer_error]
 
 module Make (Extra : BASE_STATS) = struct
   module Stats = Stats (Extra)
@@ -291,7 +283,7 @@ module Make (Extra : BASE_STATS) = struct
             error:('a -> 'a) ->
             expr:(Loc.t, Loc.t) Ast.Expression.t option ->
             Loc.t ->
-            (Ty.t, Error.kind list * Ty.t) result ->
+            (Ty.t, Error.kind list) result ->
             'a ->
             'a =
         fun ~f ~error ~expr loc ty_entry x ->
@@ -303,12 +295,12 @@ module Make (Extra : BASE_STATS) = struct
           match (hard_coded_ast_type, ty_entry) with
           | (Some type_ast, _) ->
             this#opt_annotate_inferred_type ~f ~error loc (Type_ast type_ast) x
-          | (None, Error (errs, ty)) ->
+          | (None, Error errs) ->
             List.iter (fun err -> this#update_acc (fun acc -> Acc.error acc loc err)) errs;
             codemod_error_locs <- LSet.add loc codemod_error_locs;
             if default_any then (
               Acc.info loc Info.Default_any;
-              this#opt_annotate_inferred_type ~f ~error loc (Ty_ ty) x
+              this#opt_annotate_inferred_type ~f ~error loc (Ty_ Ty.explicit_any) x
             ) else
               x
           | (None, Ok ty) -> this#opt_annotate_inferred_type ~f ~error loc (Ty_ ty) x

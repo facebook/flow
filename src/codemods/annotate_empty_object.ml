@@ -67,9 +67,7 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       let indexers = Context.inferred_indexers cx in
       let validate = function
         | Ok (Ty.Type ty) -> Codemod_annotator.validate_ty cctx ~max_type_size ty
-        | _ ->
-          let errors = [Error.Missing_annotation_or_normalizer_error] in
-          Error (errors, Ty.explicit_any)
+        | _ -> Error [Error.Missing_annotation_or_normalizer_error]
       in
       let obj_kind =
         match ALocMap.find_opt loc indexers with
