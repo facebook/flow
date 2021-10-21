@@ -36,15 +36,3 @@ let try_finally ~f ~(finally : unit -> unit) =
   in
   finally ();
   res
-
-let with_context ~enter ~exit ~do_ =
-  enter ();
-  let result =
-    try do_ () with
-    | e ->
-      let stack = Printexc.get_raw_backtrace () in
-      exit ();
-      Printexc.raise_with_backtrace e stack
-  in
-  exit ();
-  result

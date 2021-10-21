@@ -20,5 +20,3 @@ val singleton_if : bool -> 'a -> 'a list
 val unsafe_opt : 'a option -> 'a
 
 val try_finally : f:(unit -> 'a) -> finally:(unit -> unit) -> 'a
-
-val with_context : enter:(unit -> unit) -> exit:(unit -> unit) -> do_:(unit -> 'c) -> 'c

@@ -188,19 +188,14 @@ let restart () =
   Unix.execv cmd argv
 
 let with_umask umask f =
-  let old_umask = ref 0 in
-  Utils.with_context
-    ~enter:(fun () -> old_umask := Unix.umask umask)
-    ~exit:(fun () ->
-      let _ = Unix.umask !old_umask in
-      ())
-    ~do_:f
-
-let with_umask umask f =
   if Sys.win32 then
     f ()
   else
-    with_umask umask f
+    let old_umask = Unix.umask umask in
+    Utils.try_finally ~f ~finally:(fun () ->
+        let _ = Unix.umask old_umask in
+        ()
+    )
 
 let read_stdin_to_string () =
   let buf = Buffer.create 4096 in
