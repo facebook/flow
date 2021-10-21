@@ -281,7 +281,7 @@ let run ~monitor_channels ~init_id ~shared_mem_config options =
 
 let exit_msg_of_exception exn msg =
   let bt = Exception.get_full_backtrace_string max_int exn in
-  Utils.spf
+  Printf.sprintf
     "%s%s"
     msg
     ( if bt = "" then
@@ -307,7 +307,7 @@ let run_from_daemonize ~init_id ~monitor_channels ~shared_mem_config options =
   | MonitorRPC.Monitor_died -> Exit.(exit ~msg:"Monitor died unexpectedly" Killed_by_monitor)
   | e ->
     let e = Exception.wrap e in
-    let msg = Utils.spf "Unhandled exception: %s" (Exception.to_string e) in
+    let msg = Printf.sprintf "Unhandled exception: %s" (Exception.to_string e) in
     Exit.(exit ~msg Unknown_error)
 
 let check_once ~init_id ~shared_mem_config ~format_errors ?focus_targets options =

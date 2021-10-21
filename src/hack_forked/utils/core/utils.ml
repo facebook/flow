@@ -10,8 +10,6 @@ type callstack = Callstack of string
 
 let () = Random.self_init ()
 
-let spf = Printf.sprintf
-
 let try_finally ~f ~(finally : unit -> unit) =
   let res =
     try f () with

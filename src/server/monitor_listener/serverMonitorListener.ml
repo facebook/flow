@@ -68,7 +68,7 @@ module ListenLoop = LwtLoop.Make (struct
       let msg =
         match please_die_reason with
         | MonitorProt.MonitorExiting (monitor_exit_status, monitor_msg) ->
-          Utils.spf
+          Utils_js.spf
             "Monitor is exiting with status %s (%s)"
             (Exit.to_string monitor_exit_status)
             monitor_msg

@@ -122,7 +122,7 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
        fun exn ->
          let exn = Exception.wrap exn in
          let msg =
-           Utils.spf
+           Printf.sprintf
              "Uncaught async exception: %s\n%s"
              (Exception.get_ctor_string exn)
              (Exception.get_full_backtrace_string max_int exn)

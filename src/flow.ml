@@ -114,7 +114,7 @@ let _ =
     let e = Exception.wrap e in
     let bt = Exception.get_backtrace_string e in
     let msg =
-      Utils.spf
+      Printf.sprintf
         "Out of shared memory%s"
         ( if bt = "" then
           bt
@@ -125,7 +125,7 @@ let _ =
     Exit.(exit ~msg Out_of_shared_memory)
   | e ->
     let e = Exception.wrap e in
-    let msg = Utils.spf "Unhandled exception: %s" (Exception.to_string e) in
+    let msg = Printf.sprintf "Unhandled exception: %s" (Exception.to_string e) in
     Exit.(exit ~msg Unknown_error)
 
 (* If we haven't exited yet, let's exit now for logging's sake *)

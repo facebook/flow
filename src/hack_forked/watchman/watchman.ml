@@ -6,7 +6,8 @@
  *)
 
 open Base
-open Utils
+
+let spf = Printf.sprintf
 
 (*
  * Module for us to interface with Watchman, a file watching service.

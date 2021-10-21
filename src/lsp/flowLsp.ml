@@ -1823,7 +1823,7 @@ and initial_lwt_thread flowconfig_name client state () =
   (Lwt.async_exception_hook :=
      fun exn ->
        let exn = Exception.wrap exn in
-       let msg = Utils.spf "Uncaught async exception: %s" (Exception.to_string exn) in
+       let msg = Printf.sprintf "Uncaught async exception: %s" (Exception.to_string exn) in
        FlowExit.(exit ~msg Unknown_error)
   );
 
