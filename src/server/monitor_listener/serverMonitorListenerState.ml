@@ -274,8 +274,8 @@ let get_and_clear_recheck_workload ~prioritize_dependency_checks ~process_update
   recheck_fetch ~process_updates ~get_forced;
   let recheck_workload = !recheck_acc in
   let { files_to_force; files_to_prioritize; _ } = recheck_workload in
-  (* when prioritize_dependency_checks is enabled, if there are any files_to_force then we will
-     return them first and leave everything else in the queue for the next recheck.
+  (* when prioritize_dependency_checks is enabled, if there are any dependencies to force, then we
+     will return them first and leave everything else in the queue for the next recheck.
 
      if there are any files_to_prioritize, those are included in the next recheck but do not
      themselves cause a prioritized recheck. the use-case for this is unexpected changes that
@@ -286,17 +286,18 @@ let get_and_clear_recheck_workload ~prioritize_dependency_checks ~process_update
      be rechecked, so we push it onto the workload stream and cancel the priority recheck. if
      [foo.js] was not included in the next priority workload, then it would fail and be retried
      but again discover it needs [foo.js]. *)
-  if (not prioritize_dependency_checks) || CheckedSet.is_empty files_to_force then (
+  let (dependencies_to_force, files_to_force) =
+    CheckedSet.partition ~f:CheckedSet.is_dependency files_to_force
+  in
+  if (not prioritize_dependency_checks) || CheckedSet.is_empty dependencies_to_force then (
     recheck_acc := empty_recheck_workload;
     recheck_workload
   ) else
-    let priority_workload = { empty_recheck_workload with files_to_force; files_to_prioritize } in
+    let priority_workload =
+      { empty_recheck_workload with files_to_force = dependencies_to_force; files_to_prioritize }
+    in
     let recheck_workload =
-      {
-        recheck_workload with
-        files_to_force = CheckedSet.empty;
-        files_to_prioritize = FilenameSet.empty;
-      }
+      { recheck_workload with files_to_force; files_to_prioritize = FilenameSet.empty }
     in
     recheck_acc := recheck_workload;
     priority_workload
