@@ -2789,17 +2789,17 @@ module Make (Env : Env_sig.S) = struct
       | Ast.Statement.ExportValue -> Import_export.export cx remote_name loc t
     in
     let export_specifier (loc, { E.ExportSpecifier.local; exported }) =
-      let (local_name, remote_name) =
-        let (_, { Ast.Identifier.name = local_name; comments = _ }) = local in
+      let (local_name, remote_name, local_name_loc) =
+        let (local_name_loc, { Ast.Identifier.name = local_name; comments = _ }) = local in
         let local_name = OrdinaryName local_name in
         match exported with
-        | None -> (local_name, local_name)
+        | None -> (local_name, local_name, local_name_loc)
         | Some (_, { Ast.Identifier.name = remote_name; comments = _ }) ->
-          (local_name, OrdinaryName remote_name)
+          (local_name, OrdinaryName remote_name, local_name_loc)
       in
       match source with
       | Some source -> export_from loc source local_name remote_name
-      | None -> export_ref loc local_name remote_name
+      | None -> export_ref local_name_loc local_name remote_name
     in
     function
     (* [declare] export [type] {foo [as bar]} [from ...]; *)
