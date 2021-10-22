@@ -3566,3 +3566,83 @@ x;
         (6, 0) to (6, 1) => {
           unreachable
         }] |}]
+
+let%expect_test "function_hoisted_typeof" =
+  print_ssa_test {|
+let x = null;
+if (Math.random()) {
+  x = 'string';
+} else {
+  x = 4;
+}
+
+x = 5;
+// Note that the typeofs here report all the providers and not x = 5
+function f<T: typeof x = typeof x>(y: typeof x): typeof x { return null; }
+declare function f<T: typeof x = typeof x>(y: typeof x): typeof x;
+// The return here should not be hoisted, but the param is because
+// we havoc before we visit the params.
+let y = (z: typeof x): typeof x => 3;
+|};
+    [%expect {|
+      [
+        (3, 4) to (3, 8) => {
+          Global Math
+        };
+        (11, 11) to (11, 12) => {
+          Global T
+        };
+        (11, 21) to (11, 22) => {
+          (2, 4) to (2, 5): (`x`),
+          (4, 2) to (4, 3): (`x`),
+          (6, 2) to (6, 3): (`x`)
+        };
+        (11, 32) to (11, 33) => {
+          (2, 4) to (2, 5): (`x`),
+          (4, 2) to (4, 3): (`x`),
+          (6, 2) to (6, 3): (`x`)
+        };
+        (11, 45) to (11, 46) => {
+          (2, 4) to (2, 5): (`x`),
+          (4, 2) to (4, 3): (`x`),
+          (6, 2) to (6, 3): (`x`)
+        };
+        (11, 56) to (11, 57) => {
+          (2, 4) to (2, 5): (`x`),
+          (4, 2) to (4, 3): (`x`),
+          (6, 2) to (6, 3): (`x`)
+        };
+        (12, 19) to (12, 20) => {
+          Global T
+        };
+        (12, 29) to (12, 30) => {
+          (2, 4) to (2, 5): (`x`),
+          (4, 2) to (4, 3): (`x`),
+          (6, 2) to (6, 3): (`x`)
+        };
+        (12, 40) to (12, 41) => {
+          (2, 4) to (2, 5): (`x`),
+          (4, 2) to (4, 3): (`x`),
+          (6, 2) to (6, 3): (`x`)
+        };
+        (12, 43) to (12, 44) => {
+          (15, 4) to (15, 5): (`y`)
+        };
+        (12, 53) to (12, 54) => {
+          (2, 4) to (2, 5): (`x`),
+          (4, 2) to (4, 3): (`x`),
+          (6, 2) to (6, 3): (`x`)
+        };
+        (12, 64) to (12, 65) => {
+          (2, 4) to (2, 5): (`x`),
+          (4, 2) to (4, 3): (`x`),
+          (6, 2) to (6, 3): (`x`)
+        };
+        (15, 19) to (15, 20) => {
+          (2, 4) to (2, 5): (`x`),
+          (4, 2) to (4, 3): (`x`),
+          (6, 2) to (6, 3): (`x`)
+        };
+        (15, 30) to (15, 31) => {
+          (9, 0) to (9, 1): (`x`)
+        }] |}]

@@ -386,6 +386,15 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             run this#function_body_any body)
           ()
 
+      method private function_tparams_and_return tparams return =
+        ignore @@ this#type_annotation_hint return;
+        ignore @@ run_opt this#type_params tparams
+
+      method private hoisted_function_tparams_and_return tparams return =
+        this#function_tparams_and_return tparams return
+
+      method private hoisted_type_annotation annot = ignore @@ this#type_annotation annot
+
       method! function_declaration loc (expr : (L.t, L.t) Ast.Function.t) =
         let skip_scope =
           flowmin_compatibility
@@ -399,18 +408,18 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             id;
             params;
             body;
+            return;
+            tparams;
             async = _;
             generator = _;
             predicate = _;
-            return = _;
-            tparams = _;
             sig_loc = _;
             comments = _;
           } =
             expr
           in
           run_opt this#function_identifier id;
-
+          if with_types then this#hoisted_function_tparams_and_return tparams return;
           this#lambda params body
         );
 
@@ -431,11 +440,11 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             id;
             params;
             body;
+            return;
+            tparams;
             async = _;
             generator = _;
             predicate = _;
-            return = _;
-            tparams = _;
             sig_loc = _;
             comments = _;
           } =
@@ -452,6 +461,8 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             bindings
             (fun () ->
               run_opt this#function_identifier id;
+              (* This function is not hoisted, so we just traverse the signature *)
+              if with_types then this#function_tparams_and_return tparams return;
               this#lambda params body)
             ()
         );
@@ -463,7 +474,11 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         | Some stmt ->
           let _ = this#statement (loc, stmt) in
           expr
-        | None -> super#declare_function loc expr
+        | None ->
+          let _ = super#declare_function loc expr in
+          let { Ast.Statement.DeclareFunction.annot; _ } = expr in
+          this#hoisted_type_annotation annot;
+          expr
 
       method! class_expression loc cls =
         let { Ast.Class.id; _ } = cls in

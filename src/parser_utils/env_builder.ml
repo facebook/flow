@@ -449,6 +449,7 @@ module Make
        statement, the list will be cleared. A loop will consume the list, so we
        also clear the list on our way out of any labeled statement. *)
     possible_labeled_continues: AbruptCompletion.t list;
+    visiting_hoisted_type: bool;
   }
 
   let initialize_globals unbound_names =
@@ -482,6 +483,7 @@ module Make
           env = initialize_globals unbound_names;
           abrupt_completion_envs = [];
           possible_labeled_continues = [];
+          visiting_hoisted_type = false;
         }
 
       method values : Env_api.values = L.LMap.map Val.simplify env_state.values
@@ -700,17 +702,21 @@ module Make
         let (_, id) = this#refinement_of_id id in
         refine_undefined id
 
+      method private providers_of_def_loc def_loc =
+        let (_, providers) =
+          Base.Option.value ~default:(true, []) (Provider_api.providers_of_def provider_info def_loc)
+        in
+        ( ( if Base.List.is_empty providers then
+            Val.uninitialized def_loc
+          else
+            Val.all providers
+          ),
+          providers
+        )
+
       method private mk_env =
         SMap.map (fun (_, (loc, _)) ->
-            let (_, providers) =
-              Base.Option.value ~default:(true, []) (Provider_api.providers_of_def provider_info loc)
-            in
-            let havoc =
-              if Base.List.is_empty providers then
-                Val.uninitialized loc
-              else
-                Val.all providers
-            in
+            let (havoc, providers) = this#providers_of_def_loc loc in
             let write_entries =
               Base.List.fold
                 ~f:(fun acc r -> L.LMap.add (poly_loc_of_reason r) r acc)
@@ -835,8 +841,15 @@ module Make
        * if the identifier is refined that we record the refiner as the write that reaches
        * this read *)
       method any_identifier loc name =
-        let { val_ref; _ } = SMap.find name env_state.env in
-        let values = L.LMap.add loc !val_ref env_state.values in
+        let { val_ref; def_loc; _ } = SMap.find name env_state.env in
+        let v =
+          match def_loc with
+          | Some def_loc when env_state.visiting_hoisted_type ->
+            let (provider_val, _) = this#providers_of_def_loc def_loc in
+            provider_val
+          | _ -> !val_ref
+        in
+        let values = L.LMap.add loc v env_state.values in
         env_state <- { env_state with values }
 
       method! identifier (ident : (L.t, L.t) Ast.Identifier.t) =
@@ -2639,6 +2652,18 @@ module Make
               env_state <- { env_state with values }));
           super#expression expr
         | _ -> super#expression expr
+
+      method! private hoisted_function_tparams_and_return tparams return =
+        let visiting_hoisted_type = env_state.visiting_hoisted_type in
+        env_state <- { env_state with visiting_hoisted_type = true };
+        super#hoisted_function_tparams_and_return tparams return;
+        env_state <- { env_state with visiting_hoisted_type }
+
+      method! private hoisted_type_annotation annot =
+        let visiting_hoisted_type = env_state.visiting_hoisted_type in
+        env_state <- { env_state with visiting_hoisted_type = true };
+        super#hoisted_type_annotation annot;
+        env_state <- { env_state with visiting_hoisted_type }
     end
 
   (* The EnvBuilder does not traverse dead code, but statement.ml does. Dead code
