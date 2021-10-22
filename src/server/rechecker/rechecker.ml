@@ -183,10 +183,13 @@ type recheck_outcome =
  * If any file watcher notifications come in during the recheck, it will be canceled and restarted
  * to include the new changes
  *
+ * [files_to_force_DEPRECATED] is a legacy API used to force some files manually, rather than go
+ * through the normal workload stream via [ServerMonitorListenerState.push_checked_set_to_force].
+ *
  * [recheck_count] is the number of rechecks in this series, including past canceled rechecks and
  * the current one.
  *)
-let rec recheck_single ~files_to_force ~recheck_count genv env =
+let rec recheck_single ~files_to_force:files_to_force_DEPRECATED ~recheck_count genv env =
   ServerMonitorListenerState.(
     let env = update_env env in
     let options = genv.ServerEnv.options in
@@ -198,7 +201,9 @@ let rec recheck_single ~files_to_force ~recheck_count genv env =
      * This early estimate is not a very good estimate, since it's missing new dependents and
      * dependencies. However it should be good enough to prevent rechecks continuously restarting as
      * the server gets spammed with autocomplete requests *)
-    let will_be_checked_files = ref (CheckedSet.union env.ServerEnv.checked_files files_to_force) in
+    let will_be_checked_files =
+      ref (CheckedSet.union env.ServerEnv.checked_files files_to_force_DEPRECATED)
+    in
     let get_forced () = !will_be_checked_files in
     let prioritize_dependency_checks = Options.prioritize_dependency_checks options in
     let workload =
@@ -217,7 +222,7 @@ let rec recheck_single ~files_to_force ~recheck_count genv env =
       else
         files_to_recheck
     in
-    let files_to_force = CheckedSet.union files_to_force workload.files_to_force in
+    let files_to_force = CheckedSet.union files_to_force_DEPRECATED workload.files_to_force in
     let recheck_reasons_rev = workload.recheck_reasons_rev in
     if FilenameSet.is_empty files_to_recheck && CheckedSet.is_empty files_to_force then (
       List.iter (fun callback -> callback None) workload.profiling_callbacks;
@@ -239,7 +244,11 @@ let rec recheck_single ~files_to_force ~recheck_count genv env =
          * work based on the allocation rate would be better. *)
         let _done : bool = SharedMem.collect_slice 20000000 in
         requeue_workload workload;
-        recheck_single ~files_to_force ~recheck_count:(recheck_count + 1) genv env
+        recheck_single
+          ~files_to_force:files_to_force_DEPRECATED
+          ~recheck_count:(recheck_count + 1)
+          genv
+          env
       in
       let f () =
         let recheck_reasons = List.rev recheck_reasons_rev in

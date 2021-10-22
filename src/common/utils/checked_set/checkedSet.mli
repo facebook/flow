@@ -7,6 +7,8 @@
 
 type t
 
+type kind
+
 val empty : t
 
 val is_empty : t -> bool
@@ -50,7 +52,15 @@ val diff : t -> t -> t
 
 val filter : f:(File_key.t -> bool) -> t -> t
 
+val partition : f:(kind -> bool) -> t -> t * t
+
 val all : t -> Utils_js.FilenameSet.t
+
+val is_focused : kind -> bool
+
+val is_dependent : kind -> bool
+
+val is_dependency : kind -> bool
 
 val focused : t -> Utils_js.FilenameSet.t
 
