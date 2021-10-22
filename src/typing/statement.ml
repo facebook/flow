@@ -7563,9 +7563,9 @@ module Make (Env : Env_sig.S) = struct
     | (_, Assignment { Assignment.left = (loc, Ast.Pattern.Identifier id); _ }) ->
       let (((_, expr), _) as tast) = expression cx ~annot:None e in
       let id = id.Ast.Pattern.Identifier.name in
-      (match refinable_lvalue ~allow_optional:true (loc, Ast.Expression.Identifier id) with
-      | (Some name, _) -> result tast name expr (ExistsP (Some loc)) true
-      | (None, _) -> empty_result tast)
+      (match Refinement.key ~allow_optional:true (loc, Ast.Expression.Identifier id) with
+      | Some name -> result tast name expr (ExistsP (Some loc)) true
+      | None -> empty_result tast)
     (* expr instanceof t *)
     | (loc, Binary { Binary.operator = Binary.Instanceof; left; right; comments }) ->
       let make_ast_and_pred left_ast bool =
