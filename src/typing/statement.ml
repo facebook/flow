@@ -2581,7 +2581,9 @@ module Make (Env : Env_sig.S) = struct
             | EnumDeclaration { EnumDeclaration.id; _ } ->
               let stmt = statement cx (loc, stmt) in
               let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
-              let t = Env.var_ref ~lookup_mode:ForValue cx (OrdinaryName name) id_loc in
+              let t =
+                Env.get_var_declared_type ~lookup_mode:ForValue cx (OrdinaryName name) id_loc
+              in
               (id_loc, t, stmt)
             | _ -> failwith "unexpected default export declaration"
           in
