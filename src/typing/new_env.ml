@@ -122,6 +122,20 @@ module New_env : Env_sig.S = struct
     |> Base.Option.value_map ~f:snd ~default:[]
     |> Base.List.map ~f:Reason.aloc_of_reason
 
+  let provider_type_for_def_loc env def_loc =
+    let { Loc_env.var_info; _ } = env in
+    let providers =
+      find_providers var_info def_loc
+      |> Base.List.map ~f:(Loc_env.find_write env)
+      |> Base.Option.all
+    in
+    match providers with
+    | None -> assert_false (spf "Missing providers for %s" (ALoc.debug_to_string def_loc))
+    | Some [] -> MixedT.make (mk_reason (RCustom "no providers") def_loc) (Trust.bogus_trust ())
+    | Some [t] -> t
+    | Some (t1 :: t2 :: ts) ->
+      UnionT (mk_reason (RCustom "providers") def_loc, UnionRep.make t1 t2 ts)
+
   (*************)
   (*  Reading  *)
   (*************)
@@ -269,7 +283,7 @@ module New_env : Env_sig.S = struct
       Old_env.get_var_declared_type ~lookup_mode cx name loc
     | OrdinaryName _ ->
       let env = Context.environment cx in
-      Base.Option.value_exn (Loc_env.find_write env loc)
+      provider_type_for_def_loc env loc
 
   let constraining_type ~default cx name loc =
     match name with
@@ -296,23 +310,7 @@ module New_env : Env_sig.S = struct
     end;
 
     if not @@ is_provider var_info loc then
-      let providers =
-        find_providers var_info loc |> Base.List.map ~f:(Loc_env.find_write env) |> Base.Option.all
-      in
-      let general =
-        match providers with
-        | None -> assert_false (spf "Missing providers for %s" (ALoc.debug_to_string loc))
-        | Some [] ->
-          (* There shouldn't generally be a way that we can write to a variable without a
-             provider--if it didnt already have a provider, and we write something to it,
-             that should be the provider! However, we do still call `set_env_entry` on
-             variables that are never written to when we bind them, e.g. `var x;` will
-             bind an open tvar for the general type of `x`. *)
-          VoidT.at loc (bogus_trust ())
-        | Some [t] -> t
-        | Some (t1 :: t2 :: ts) ->
-          UnionT (mk_reason (RCustom "providers") loc, UnionRep.make t1 t2 ts)
-      in
+      let general = provider_type_for_def_loc env loc in
       Context.add_constrained_write cx (t, UseT (use_op, general))
 
   let subtype_entry cx ~use_op t loc =
