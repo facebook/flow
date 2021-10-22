@@ -118,22 +118,69 @@ let empty_recheck_workload =
     recheck_reasons_rev = [];
   }
 
-let recheck_workload_is_empty workload =
+let recheck_acc = ref empty_recheck_workload
+
+(** Updates [workload] while maintaining physical equality of each key if there's nothing to do *)
+let update ?files_to_prioritize ?files_to_recheck ?files_to_force workload =
+  let workload =
+    match files_to_prioritize with
+    | Some new_files_to_prioritize ->
+      let files_to_prioritize =
+        workload.files_to_prioritize
+        |> FilenameSet.diff new_files_to_prioritize
+        |> FilenameSet.union workload.files_to_prioritize
+      in
+      { workload with files_to_prioritize }
+    | None -> workload
+  in
+  let workload =
+    match files_to_recheck with
+    | Some new_files_to_recheck ->
+      let files_to_recheck =
+        workload.files_to_recheck
+        |> FilenameSet.diff new_files_to_recheck
+        |> FilenameSet.union workload.files_to_recheck
+      in
+      { workload with files_to_recheck }
+    | None -> workload
+  in
+  let workload =
+    match files_to_force with
+    | Some new_files_to_force ->
+      let files_to_force =
+        workload.files_to_force
+        |> CheckedSet.diff new_files_to_force
+        |> CheckedSet.union workload.files_to_force
+      in
+      { workload with files_to_force }
+    | None -> workload
+  in
+  workload
+
+let workload_changed a b =
   let {
-    files_to_prioritize;
-    files_to_recheck;
-    files_to_force;
+    files_to_prioritize = files_to_prioritize_a;
+    files_to_recheck = files_to_recheck_a;
+    files_to_force = files_to_force_a;
     profiling_callbacks = _;
     metadata = _;
     recheck_reasons_rev = _;
   } =
-    workload
+    a
   in
-  FilenameSet.is_empty files_to_prioritize
-  && FilenameSet.is_empty files_to_recheck
-  && CheckedSet.is_empty files_to_force
-
-let recheck_acc = ref empty_recheck_workload
+  let {
+    files_to_prioritize = files_to_prioritize_b;
+    files_to_recheck = files_to_recheck_b;
+    files_to_force = files_to_force_b;
+    profiling_callbacks = _;
+    metadata = _;
+    recheck_reasons_rev = _;
+  } =
+    b
+  in
+  files_to_prioritize_a != files_to_prioritize_b
+  || files_to_recheck_a != files_to_recheck_b
+  || files_to_force_a != files_to_force_b
 
 (* Process the messages which are currently in the recheck stream and return the resulting workload
  *
@@ -163,46 +210,28 @@ let recheck_fetch ~process_updates ~get_forced =
                let updates = process_updates ?skip_incompatible changed_files in
                let workload =
                  if urgent then
-                   {
-                     workload with
-                     files_to_prioritize = FilenameSet.union updates workload.files_to_prioritize;
-                   }
+                   update ~files_to_prioritize:updates workload
                  else
-                   {
-                     workload with
-                     files_to_recheck = FilenameSet.union updates workload.files_to_recheck;
-                   }
+                   update ~files_to_recheck:updates workload
                in
                (FilenameSet.is_empty updates, workload)
              | FilesToForceFocusedAndRecheck forced_focused_files ->
                let updates = process_updates ?skip_incompatible forced_focused_files in
                let focused = FilenameSet.diff updates (get_forced () |> CheckedSet.focused) in
-               ( FilenameSet.is_empty updates,
-                 {
-                   workload with
-                   files_to_force = CheckedSet.add ~focused workload.files_to_force;
-                   files_to_prioritize = FilenameSet.union updates workload.files_to_prioritize;
-                 }
-               )
+               let files_to_force = CheckedSet.add ~focused CheckedSet.empty in
+               let workload = update ~files_to_prioritize:updates ~files_to_force workload in
+               (FilenameSet.is_empty updates, workload)
              | CheckedSetToForce checked_set ->
-               let checked_set = CheckedSet.diff checked_set (get_forced ()) in
-               ( CheckedSet.is_empty checked_set,
-                 {
-                   workload with
-                   files_to_force = CheckedSet.union checked_set workload.files_to_force;
-                 }
-               )
+               let files_to_force = CheckedSet.diff checked_set (get_forced ()) in
+               let workload = update ~files_to_force workload in
+               (CheckedSet.is_empty files_to_force, workload)
              | FilesToResync changed_since_mergebase ->
                let updates = process_updates ?skip_incompatible changed_since_mergebase in
+               let workload = update ~files_to_recheck:updates workload in
                (* we don't know yet whether there's anything to recheck. even if [updates]
                    is empty, the server also needs to check the existing checked files, so
                    we always return [false] here. *)
-               ( false,
-                 {
-                   workload with
-                   files_to_recheck = FilenameSet.union updates workload.files_to_recheck;
-                 }
-               )
+               (false, workload)
            in
            let workload =
              match callback with
@@ -276,11 +305,13 @@ let get_and_clear_recheck_workload ~prioritize_dependency_checks ~process_update
 
 let rec wait_for_updates_for_recheck ~process_updates ~get_forced =
   let%lwt _ = Lwt_stream.is_empty recheck_stream in
+  let workload_before = !recheck_acc in
   recheck_fetch ~process_updates ~get_forced;
-  if recheck_workload_is_empty !recheck_acc then
-    wait_for_updates_for_recheck ~process_updates ~get_forced
-  else
+  let workload_after = !recheck_acc in
+  if workload_changed workload_before workload_after then
     Lwt.return_unit
+  else
+    wait_for_updates_for_recheck ~process_updates ~get_forced
 
 (* Block until any stream receives something *)
 let wait_for_anything ~process_updates ~get_forced =
