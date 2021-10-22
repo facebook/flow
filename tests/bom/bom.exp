@@ -19,16 +19,16 @@ Cannot call `FormData` with `document.createElement(...)` bound to `form` becaus
 with `HTMLFormElement` [2]. [incompatible-call]
 
    FormData.js:6:14
-     6| new FormData(document.createElement('input')); // incorrect
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      6| new FormData(document.createElement('input')); // incorrect
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:994:70
-   994|   createElement(tagName: 'input', options?: ElementCreationOptions): HTMLInputElement;
-                                                                             ^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/dom.js:1105:70
+   1105|   createElement(tagName: 'input', options?: ElementCreationOptions): HTMLInputElement;
+                                                                              ^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/bom.js:535:24
-   535|     constructor(form?: HTMLFormElement): void;
-                               ^^^^^^^^^^^^^^^ [2]
+    535|     constructor(form?: HTMLFormElement): void;
+                                ^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:14:19
