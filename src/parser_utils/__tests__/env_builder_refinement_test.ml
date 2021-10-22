@@ -27,6 +27,7 @@ let print_values refinement_of_id =
       let writes_str = String.concat "," (List.map print_value writes) in
       Printf.sprintf "{refinement = %s; writes = %s}" refinement_str writes_str
     | Global name -> "Global " ^ name
+    | Unreachable _ -> "unreachable"
   in
   fun values ->
     let kvlist = L.LMap.bindings values in
@@ -2085,6 +2086,9 @@ let%expect_test "for_throw" =
       [
         (1, 16) to (1, 17) => {
           (1, 9) to (1, 10): (`x`)
+        };
+        (1, 27) to (1, 28) => {
+          unreachable
         }] |}]
 
 let%expect_test "for_break_with_control_flow_writes" =
@@ -3541,4 +3545,24 @@ x.foo; // No more refinement
         };
         (6, 0) to (6, 1) => {
           (5, 0) to (5, 1): (`x`)
+        }] |}]
+
+let%expect_test "unreachable_code" =
+  print_ssa_test {|
+x = 4;
+x;
+throw new Error();
+var x = 3;
+x;
+|};
+    [%expect {|
+      [
+        (3, 0) to (3, 1) => {
+          (2, 0) to (2, 1): (`x`)
+        };
+        (4, 10) to (4, 15) => {
+          Global Error
+        };
+        (6, 0) to (6, 1) => {
+          unreachable
         }] |}]

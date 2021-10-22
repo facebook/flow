@@ -215,6 +215,9 @@ module New_env : Env_sig.S = struct
             find_refi var_info refinement_id |> Base.Option.some |> type_of_state writes
           | Env_api.With_ALoc.Global name ->
             Flow_js.get_builtin cx (Reason.OrdinaryName name) reason
+          | Env_api.With_ALoc.Unreachable loc ->
+            let reason = mk_reason (RCustom "unreachable value") loc in
+            EmptyT.make reason (Trust.bogus_trust ())
           | Env_api.With_ALoc.Projection -> failwith "Projections not yet implemented")
         states
       |> phi cx reason
@@ -260,6 +263,7 @@ module New_env : Env_sig.S = struct
         ~f:(function
           | Env_api.With_ALoc.Uninitialized _ -> true
           | Env_api.With_ALoc.Write _ -> true
+          | Env_api.With_ALoc.Unreachable _ -> true
           | Env_api.With_ALoc.Refinement { refinement_id = _; writes } -> local_def_exists writes
           | Env_api.With_ALoc.Projection -> false
           | Env_api.With_ALoc.Global _ -> false)

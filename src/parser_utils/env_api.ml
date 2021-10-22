@@ -29,6 +29,7 @@ module type S = sig
       }
     | Global of string
     | Projection
+    | Unreachable of L.t
 
   and write_locs = write_loc list
 
@@ -141,6 +142,7 @@ module Make
       }
     | Global of string
     | Projection
+    | Unreachable of L.t
 
   and write_locs = write_loc list
 
@@ -224,6 +226,7 @@ module Make
     | Uninitialized _ -> []
     | Global _ -> []
     | Projection -> []
+    | Unreachable _ -> []
 
   let sources_of_use { env_values = vals; refinement_of_id; _ } loc =
     let write_locs =
@@ -249,6 +252,7 @@ module Make
       match write_loc with
       | Uninitialized _ -> "(uninitialized)"
       | Projection -> "projection"
+      | Unreachable _ -> "unreachable"
       | Write reason ->
         let loc = Reason.poly_loc_of_reason reason in
         Utils_js.spf

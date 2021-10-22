@@ -2641,6 +2641,46 @@ module Make
         | _ -> super#expression expr
     end
 
+  (* The EnvBuilder does not traverse dead code, but statement.ml does. Dead code
+   * is an error in Flow, so type checking after that point is not very meaningful.
+   * In order to support statement.ml's queries, we must ensure that the value map we
+   * send to it has the dead code reads filled in. An alternative approach to this visitor
+   * would be to assume that if the entry does not exist in the map then it is unreachable,
+   * but that assumes that the EnvBuilder is 100% correct. This approach lets us discriminate
+   * between real dead code and issues with the EnvBuilder, which seems far better than
+   * the alternative *)
+  class dead_code_marker env_values =
+    object (this)
+      inherit Scope_builder.scope_builder ~flowmin_compatibility:false ~with_types:true as super
+
+      val mutable values = env_values
+
+      method values = values
+
+      method any_identifier loc =
+        values <-
+          L.LMap.update
+            loc
+            (function
+              | None -> Some [Env_api.Unreachable loc]
+              | x -> x)
+            values
+
+      method! identifier (ident : (L.t, L.t) Ast.Identifier.t) =
+        let (loc, _) = ident in
+        this#any_identifier loc;
+        super#identifier ident
+
+      method! jsx_element_name_identifier (ident : (L.t, L.t) Ast.JSX.Identifier.t) =
+        let (loc, _) = ident in
+        this#any_identifier loc;
+        super#jsx_identifier ident
+
+      method! pattern_identifier ?kind e =
+        ignore kind;
+        e
+    end
+
   let program_with_scope cx program =
     let open Hoister in
     let (loc, _) = program in
@@ -2658,11 +2698,14 @@ module Make
           ignore @@ env_walk#with_bindings loc bindings env_walk#program program
       )
     in
+    (* Fill in dead code reads *)
+    let dead_code_marker = new dead_code_marker env_walk#values in
+    let _ = dead_code_marker#program program in
     ( completion_state,
       {
         Env_api.scopes;
         ssa_values;
-        env_values = env_walk#values;
+        env_values = dead_code_marker#values;
         env_entries = env_walk#write_entries;
         providers;
         refinement_of_id = env_walk#refinement_of_id;
