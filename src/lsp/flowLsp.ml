@@ -1019,42 +1019,6 @@ let track_from_server (state : server_state) (c : Lsp.lsp_message) : server_stat
     Connected { env with c_ienv }
   | (_, _) -> state
 
-let dismiss_tracks (state : server_state) : server_state =
-  let decline_request_to_server (id : lsp_id) : unit =
-    let e =
-      {
-        Error.code = Error.RequestCancelled;
-        message = "Connection to server has been lost";
-        data = None;
-      }
-    in
-    let stack = Exception.get_current_callstack_string 100 in
-    let json =
-      let key = command_key_of_server_state state in
-      Lsp_fmt.print_lsp_response ~key id (ErrorResult (e, stack))
-    in
-    to_stdout json
-  in
-  let cancel_request_from_server (server_id : int) (wrapped : wrapped_id) (_request : lsp_request) :
-      unit =
-    if server_id = wrapped.server_id then
-      let id = encode_wrapped wrapped in
-      let notification = CancelRequestNotification { CancelRequest.id } in
-      let json = Lsp_fmt.print_lsp_notification notification in
-      to_stdout json
-    else
-      ()
-  in
-  match state with
-  | Connected env ->
-    WrappedMap.iter
-      (cancel_request_from_server env.c_ienv.i_server_id)
-      env.c_ienv.i_outstanding_requests_from_server;
-    IdSet.iter decline_request_to_server env.c_outstanding_requests_to_server;
-    Connected { env with c_outstanding_requests_to_server = IdSet.empty }
-    |> update_errors (LspErrors.clear_all_errors_and_send to_stdout)
-  | _ -> state
-
 let lsp_DocumentItem_to_flow (open_doc : Lsp.TextDocumentItem.t) : File_input.t =
   let uri = open_doc.TextDocumentItem.uri in
   let fn = Lsp_helpers.lsp_uri_to_path uri in
@@ -1555,6 +1519,43 @@ let start_interaction ~trigger state =
 let log_interaction ~ux state id =
   let end_state = collect_interaction_state state in
   LspInteraction.log ~end_state ~ux ~id
+
+let dismiss_tracks (state : server_state) : server_state =
+  let decline_request_to_server (id : lsp_id) : unit =
+    let e =
+      {
+        Error.code = Error.RequestCancelled;
+        message = "Connection to server has been lost";
+        data = None;
+      }
+    in
+    let stack = Exception.get_current_callstack_string 100 in
+    let json =
+      let key = command_key_of_server_state state in
+      Lsp_fmt.print_lsp_response ~key id (ErrorResult (e, stack))
+    in
+    to_stdout json
+  in
+  let cancel_request_from_server (server_id : int) (wrapped : wrapped_id) (_request : lsp_request) :
+      unit =
+    if server_id = wrapped.server_id then
+      let id = encode_wrapped wrapped in
+      let notification = CancelRequestNotification { CancelRequest.id } in
+      let json = Lsp_fmt.print_lsp_notification notification in
+      to_stdout json
+    else
+      ()
+  in
+  LspInteraction.dismiss_tracks (collect_interaction_state state);
+  match state with
+  | Connected env ->
+    WrappedMap.iter
+      (cancel_request_from_server env.c_ienv.i_server_id)
+      env.c_ienv.i_outstanding_requests_from_server;
+    IdSet.iter decline_request_to_server env.c_outstanding_requests_to_server;
+    Connected { env with c_outstanding_requests_to_server = IdSet.empty }
+    |> update_errors (LspErrors.clear_all_errors_and_send to_stdout)
+  | _ -> state
 
 let do_live_diagnostics
     (state : server_state)

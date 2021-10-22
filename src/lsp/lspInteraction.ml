@@ -47,6 +47,7 @@ type source =
 type ux =
   | Canceled
   | CanceledPushingLiveNonParseErrors
+  | Dismissed
   | Errored
   | ErroredPushingLiveNonParseErrors
   | ErroredPushingLiveParseErrors
@@ -134,6 +135,7 @@ let lsp_id_of_trigger = function
 let string_of_ux = function
   | Canceled -> "Canceled"
   | CanceledPushingLiveNonParseErrors -> "CanceledPushingLiveNonParseErrors"
+  | Dismissed -> "Dismissed"
   | Errored -> "Errored"
   | ErroredPushingLiveNonParseErrors -> "ErroredPushingLiveNonParseErrors"
   | ErroredPushingLiveParseErrors -> "ErroredPushingLiveParseErrors"
@@ -299,6 +301,14 @@ let gc ~get_state =
   | Some start_time ->
     (* Otherwise let's check back in when the oldest pending interaction is set to expire *)
     start_time +. max_age
+
+let rec dismiss_tracks end_state =
+  let s = internal_state in
+  if s.lowest_pending_id < s.next_id then begin
+    log ~end_state ~ux:Dismissed ~id:s.lowest_pending_id;
+    s.lowest_pending_id <- s.lowest_pending_id + 1;
+    dismiss_tracks end_state
+  end
 
 let init () = FlowInteractionLogger.init ()
 

@@ -35,6 +35,7 @@ type trigger =
 type ux =
   | Canceled
   | CanceledPushingLiveNonParseErrors
+  | Dismissed
   | Errored
   | ErroredPushingLiveNonParseErrors
   | ErroredPushingLiveParseErrors
@@ -76,3 +77,5 @@ val trigger_of_lsp_msg : Lsp.lsp_message -> trigger option
 val gc : get_state:(unit -> state) -> float
 
 val flush : unit -> unit Lwt.t
+
+val dismiss_tracks : state -> unit
