@@ -11,7 +11,7 @@ const store = (x: mixed) => { v.f = () => x; };
 function coerce8251<A, B>(x: A): B {
   v.f = () => { throw null };  // Refine v.f.
   if (true) store(x);  // Invalidate the refinement.
-  return v.f(); // TODO error: trying to still use the refinement.
+  return v.f(); // error: trying to still use the refinement.
 }
 
 function coerce8777<A, B>(x: A): B {
@@ -51,23 +51,23 @@ type A = {b?: {c: boolean}};
   // somewhere it gets refined again.)
 
   // Conditional constructs: the short-circuiting operators…
-  if (a.b) { true && f();                     a.b.c; } // TODO error
+  if (a.b) { true && f();                     a.b.c; } // error
   if (a.b) { f() && true;                     a.b.c; } // error
-  if (a.b) { false || f();                    a.b.c; } // TODO error
+  if (a.b) { false || f();                    a.b.c; } // error
   if (a.b) { f() || false;                    a.b.c; } // error
   if (a.b) { null ?? f();                     a.b.c; } // error
   if (a.b) { f() ?? true;                     a.b.c; } // error
   // … the ternary operator…
-  if (a.b) { p ? f() : 0;                     a.b.c; } // TODO error
-  if (a.b) { p ? 1 : f();                     a.b.c; } // TODO error
+  if (a.b) { p ? f() : 0;                     a.b.c; } // error
+  if (a.b) { p ? 1 : f();                     a.b.c; } // error
   if (a.b) { f() ? 1 : 0;                     a.b.c; } // error
   // … and if/else.
-  if (a.b) { if (p) f();                      a.b.c; } // TODO error
-  if (a.b) { if (p); else f();                a.b.c; } // TODO error
+  if (a.b) { if (p) f();                      a.b.c; } // error
+  if (a.b) { if (p); else f();                a.b.c; } // error
   if (a.b) { if (f());                        a.b.c; } // error
 
   // Switch statements.
-  if (a.b) { switch (p) { case true: f(); }        a.b.c; } // TODO error
+  if (a.b) { switch (p) { case true: f(); }        a.b.c; } // error
   if (a.b) { switch (p) { case true: f(); break; } a.b.c; } // error
   if (a.b) { switch (p) { default: f(); }          a.b.c; } // error
   if (a.b) { switch (p) { default: f(); break; }   a.b.c; } // error
@@ -95,7 +95,7 @@ type A = {b?: {c: boolean}};
   // Loop constructs with an abrupt completion / abnormal control flow.
   // while…
   if (a.b) { while (p) { f(); continue; }     a.b.c; } // TODO error
-  if (a.b) { while (p) { f(); break;    }     a.b.c; } // TODO error
+  if (a.b) { while (p) { f(); break;    }     a.b.c; } // error
   if (a.b) { while (p) { f(); return;   }     a.b.c; } // ideally ok, error acceptable
   if (a.b) { while (f()) { continue; }        a.b.c; } // error
   if (a.b) { while (f()) { break;    }        a.b.c; } // error
@@ -109,7 +109,7 @@ type A = {b?: {c: boolean}};
   if (a.b) { do { return;   } while (f());    a.b.c; } // error[unreachable-code]
   // … for…
   if (a.b) { for (; p;) { f(); continue; }    a.b.c; } // TODO error
-  if (a.b) { for (; p;) { f(); break;    }    a.b.c; } // TODO error
+  if (a.b) { for (; p;) { f(); break;    }    a.b.c; } // error
   if (a.b) { for (; p;) { f(); return;   }    a.b.c; } // ideally ok, error acceptable
   if (a.b) { for (; p; f()) continue;         a.b.c; } // TODO error
   if (a.b) { for (; p; f()) break;            a.b.c; } // ideally ok, error acceptable
@@ -122,17 +122,17 @@ type A = {b?: {c: boolean}};
   if (a.b) { for (f(); p;) return;            a.b.c; } // error
   // … for-in…
   if (a.b) { for (i in y) { f(); continue; }  a.b.c; } // TODO error
-  if (a.b) { for (i in y) { f(); break;    }  a.b.c; } // TODO error
+  if (a.b) { for (i in y) { f(); break;    }  a.b.c; } // error
   if (a.b) { for (i in y) { f(); return;   }  a.b.c; } // ideally ok, error acceptable
   if (a.b) { for (i in ff()) continue;        a.b.c; } // TODO error
-  if (a.b) { for (i in ff()) break;           a.b.c; } // TODO error
+  if (a.b) { for (i in ff()) break;           a.b.c; } // error
   if (a.b) { for (i in ff()) return;          a.b.c; } // TODO error
   // … for-of.
   if (a.b) { for (i of y) { f(); continue; }  a.b.c; } // TODO error
-  if (a.b) { for (i of y) { f(); break;    }  a.b.c; } // TODO error
+  if (a.b) { for (i of y) { f(); break;    }  a.b.c; } // error
   if (a.b) { for (i of y) { f(); return;   }  a.b.c; } // ideally ok, error acceptable
   if (a.b) { for (i of ff()) continue;        a.b.c; } // TODO error
-  if (a.b) { for (i of ff()) break;           a.b.c; } // TODO error
+  if (a.b) { for (i of ff()) break;           a.b.c; } // error
   if (a.b) { for (i of ff()) return;          a.b.c; } // TODO error
 }
 
@@ -145,20 +145,20 @@ type A = {b?: {c: boolean}};
   // semantics of their own (i.e. not loops or `switch`.)
   if (a.b) { l: { f(); }                           a.b.c; } // error
   if (a.b) { l: { f(); break l; }                  a.b.c; } // TODO error
-  if (a.b) { l: if (p) { f(); break l; }           a.b.c; } // TODO error
+  if (a.b) { l: if (p) { f(); break l; }           a.b.c; } // error
   l: if (a.b) { if (p) { f(); break l; }           a.b.c; } // ideally ok, error acceptable
   l: if (a.b) { f(); break l;                      a.b.c; } // error[unreachable-code]
 
   // Labelled break to `switch`.
-  if (a.b) { l: switch (p) { case true: f(); break l; } a.b.c; } // TODO error
-  if (a.b) { l: switch (p) { default: f(); break l; }   a.b.c; } // TODO error
+  if (a.b) { l: switch (p) { case true: f(); break l; } a.b.c; } // error
+  if (a.b) { l: switch (p) { default: f(); break l; }   a.b.c; } // error
   if (a.b) { l: switch (f()) { case true: break l; }    a.b.c; } // error
   if (a.b) { l: switch (f()) { default: break l; }      a.b.c; } // error
 
   // Labelled break and continue, to loop constructs.
   // while…
-  if (a.b) { l: while (p) { f(); continue l; }     a.b.c; } // TODO error
-  if (a.b) { l: while (p) { f(); break l;    }     a.b.c; } // TODO error
+  if (a.b) { l: while (p) { f(); continue l; }     a.b.c; } // error
+  if (a.b) { l: while (p) { f(); break l;    }     a.b.c; } // error
   if (a.b) { l: while (f()) { continue l; }        a.b.c; } // error
   if (a.b) { l: while (f()) { break l;    }        a.b.c; } // error
   // … do-while…
@@ -167,8 +167,8 @@ type A = {b?: {c: boolean}};
   if (a.b) { l: do { continue l; } while (f());    a.b.c; } // TODO error
   if (a.b) { l: do { break l;    } while (f());    a.b.c; } // ideally ok, error acceptable
   // … for…
-  if (a.b) { l: for (; p;) { f(); continue l; }    a.b.c; } // TODO error
-  if (a.b) { l: for (; p;) { f(); break l;    }    a.b.c; } // TODO error
+  if (a.b) { l: for (; p;) { f(); continue l; }    a.b.c; } // error
+  if (a.b) { l: for (; p;) { f(); break l;    }    a.b.c; } // error
   if (a.b) { l: for (; p; f()) continue l;         a.b.c; } // TODO error
   if (a.b) { l: for (; p; f()) break l;            a.b.c; } // ideally ok, error acceptable
   if (a.b) { l: for (; f();) continue l;           a.b.c; } // error
@@ -176,15 +176,15 @@ type A = {b?: {c: boolean}};
   if (a.b) { l: for (f(); p;) continue l;          a.b.c; } // error
   if (a.b) { l: for (f(); p;) break l;             a.b.c; } // error
   // … for-in…
-  if (a.b) { l: for (i in y) { f(); continue l; }  a.b.c; } // TODO error
-  if (a.b) { l: for (i in y) { f(); break l;    }  a.b.c; } // TODO error
-  if (a.b) { l: for (i in ff()) continue l;        a.b.c; } // TODO error
-  if (a.b) { l: for (i in ff()) break l;           a.b.c; } // TODO error
+  if (a.b) { l: for (i in y) { f(); continue l; }  a.b.c; } // error
+  if (a.b) { l: for (i in y) { f(); break l;    }  a.b.c; } // error
+  if (a.b) { l: for (i in ff()) continue l;        a.b.c; } // error
+  if (a.b) { l: for (i in ff()) break l;           a.b.c; } // error
   // … for-of.
   if (a.b) { l: for (i of y) { f(); continue l; }  a.b.c; } // TODO error
-  if (a.b) { l: for (i of y) { f(); break l;    }  a.b.c; } // TODO error
+  if (a.b) { l: for (i of y) { f(); break l;    }  a.b.c; } // error
   if (a.b) { l: for (i of ff()) continue l;        a.b.c; } // TODO error
-  if (a.b) { l: for (i of ff()) break l;           a.b.c; } // TODO error
+  if (a.b) { l: for (i of ff()) break l;           a.b.c; } // error
 }
 
 // Heap refinements, again on `a.b` where `a` is local,

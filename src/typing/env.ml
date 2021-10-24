@@ -1652,11 +1652,19 @@ module Env : Env_sig.S = struct
       Changeset.iter_type_updates havoc_entry havoc_refi
     )
 
-  (* Clear entries for heap refinement pseudovars in env.
-     If name is passed, clear only those refis that depend on it.
-     Real variables are left untouched.
-  *)
-  let havoc_heap_refinements () = iter_scopes Scope.havoc_all_refis
+  (* Clear all heap refinements (refis) in env.
+
+     Refinements on names bound directly in a scope are left
+     untouched; for those, see [havoc_local_refinements]. *)
+  let havoc_heap_refinements () =
+    iter_scopes (fun scope ->
+        if Changeset.Global.is_active () then
+          scope
+          |> Scope.iter_refis (fun key _ ->
+                 Changeset.Global.change_refi (scope.id, key, Changeset.Write)
+             );
+        Scope.havoc_all_refis scope
+    )
 
   let havoc_local_refinements ?(all = false) cx =
     iter_scopes (fun scope ->

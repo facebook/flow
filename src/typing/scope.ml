@@ -376,6 +376,9 @@ let remove_entry name scope = scope.entries <- NameUtils.Map.remove name scope.e
 (* get entry from scope, or None *)
 let get_entry name scope = NameUtils.Map.find_opt name scope.entries
 
+(* use passed f to iterate over all scope refis *)
+let iter_refis f scope = Key_map.iter f scope.refis
+
 (* use passed f to update all scope refis *)
 let update_refis f scope = scope.refis <- Key_map.mapi f scope.refis
 
