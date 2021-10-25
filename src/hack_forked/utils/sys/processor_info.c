@@ -64,11 +64,11 @@ value hh_processor_info(void) {
   natural_t num_cpus;
 
   kern_return_t ret = host_processor_info(
-    mach_host_self(),
-    PROCESSOR_CPU_LOAD_INFO,
-    &num_cpus,
-    (processor_info_array_t *)&cpu_load_info,
-    &msg_count);
+      mach_host_self(),
+      PROCESSOR_CPU_LOAD_INFO,
+      &num_cpus,
+      (processor_info_array_t*)&cpu_load_info,
+      &msg_count);
 
   if (ret) {
     snprintf(buf, 256, "host_processor_info error: %s", mach_error_string(ret));
@@ -80,21 +80,21 @@ value hh_processor_info(void) {
   for (i = 0; i < num_cpus; i++) {
     info = caml_alloc(4, Double_array_tag);
     Store_double_field(
-      info,
-      CPU_INFO_USER,
-      cpu_load_info[i].cpu_ticks[CPU_STATE_USER] / ticks_per_second);
+        info,
+        CPU_INFO_USER,
+        cpu_load_info[i].cpu_ticks[CPU_STATE_USER] / ticks_per_second);
     Store_double_field(
-      info,
-      CPU_INFO_USER_NICE,
-      cpu_load_info[i].cpu_ticks[CPU_STATE_NICE] / ticks_per_second);
+        info,
+        CPU_INFO_USER_NICE,
+        cpu_load_info[i].cpu_ticks[CPU_STATE_NICE] / ticks_per_second);
     Store_double_field(
-      info,
-      CPU_INFO_SYSTEM,
-      cpu_load_info[i].cpu_ticks[CPU_STATE_SYSTEM] / ticks_per_second);
+        info,
+        CPU_INFO_SYSTEM,
+        cpu_load_info[i].cpu_ticks[CPU_STATE_SYSTEM] / ticks_per_second);
     Store_double_field(
-      info,
-      CPU_INFO_IDLE,
-      cpu_load_info[i].cpu_ticks[CPU_STATE_IDLE] / ticks_per_second);
+        info,
+        CPU_INFO_IDLE,
+        cpu_load_info[i].cpu_ticks[CPU_STATE_IDLE] / ticks_per_second);
     Store_field(array, i, info);
 
     total_user += cpu_load_info[i].cpu_ticks[CPU_STATE_USER];
@@ -119,7 +119,7 @@ value hh_processor_info(void) {
 #else // Not Windows and not OS X means Linux
 #include <unistd.h> // nolint (linter thinks this is a duplicate include)
 
-value scan_line(FILE *fp, long ticks_per_second) {
+value scan_line(FILE* fp, long ticks_per_second) {
   CAMLparam0();
   CAMLlocal1(cpu_info);
   double user = 0.0;
@@ -146,7 +146,7 @@ value hh_processor_info(void) {
   CAMLparam0();
   CAMLlocal2(result, array);
 
-  FILE *fp = fopen("/proc/stat", "r");
+  FILE* fp = fopen("/proc/stat", "r");
   long num_cpus = sysconf(_SC_NPROCESSORS_ONLN);
   int i;
   long ticks_per_second = sysconf(_SC_CLK_TCK);
@@ -158,9 +158,7 @@ value hh_processor_info(void) {
   result = caml_alloc_tuple(2);
   if (fp != NULL) {
     Store_field(
-      result,
-      PROCESSOR_INFO_PROC_TOTALS,
-      scan_line(fp, ticks_per_second));
+        result, PROCESSOR_INFO_PROC_TOTALS, scan_line(fp, ticks_per_second));
 
     array = caml_alloc_tuple(num_cpus);
     Store_field(result, PROCESSOR_INFO_PROC_PER_CPU, array);

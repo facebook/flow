@@ -19,15 +19,16 @@
 #define State_val(v) (*((XXH64_state_t*)Data_custom_val(v)))
 
 static struct custom_operations xx_state_ops = {
-  "org.flow.xx_state",
-  custom_finalize_default,
-  custom_compare_default,
-  custom_hash_default,
-  custom_serialize_default,
-  custom_deserialize_default,
-  custom_compare_ext_default
+    "org.flow.xx_state",
+    custom_finalize_default,
+    custom_compare_default,
+    custom_hash_default,
+    custom_serialize_default,
+    custom_deserialize_default,
+    custom_compare_ext_default
 #ifdef custom_fixed_length_default
-  , custom_fixed_length_default
+    ,
+    custom_fixed_length_default
 #endif
 };
 

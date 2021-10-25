@@ -5,16 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#include <nan.h>
 #include <flowparser/libflowparser.h>
+#include <nan.h>
 
 using namespace std;
 using namespace v8;
 using namespace flowparser;
 
 class V8Translator : public AbstractTranslator<Local<Value>> {
-public:
-  Local<Value> convert_string(char *str) {
+ public:
+  Local<Value> convert_string(char* str) {
     return Nan::New(str).ToLocalChecked();
   };
   Local<Value> convert_number(double n) {
@@ -35,10 +35,10 @@ public:
 
     while (list_has_next(props)) {
       prop = list_head(props);
-      Nan::Set(obj,
-        convert_string(get_prop_key(prop)),
-        convert_json(get_prop_value(prop))
-      );
+      Nan::Set(
+          obj,
+          convert_string(get_prop_key(prop)),
+          convert_json(get_prop_value(prop)));
       props = list_tail(props);
     }
 
@@ -86,13 +86,11 @@ void Parse(const Nan::FunctionCallbackInfo<v8::Value>& info) {
       if (!maybe_props.IsEmpty()) {
         Local<Array> props = maybe_props.ToLocalChecked();
         for (uint32_t i = 0; i < props->Length(); i++) {
-           Local<Value> key = Nan::Get(props, i).ToLocalChecked();
-           Local<Value> value = Nan::Get(opts, key).ToLocalChecked();
-           Nan::Utf8String name(key);
-           options.insert(std::pair<std::string, int>(
-             std::string(*name),
-             Nan::To<bool>(value).FromJust()
-           ));
+          Local<Value> key = Nan::Get(props, i).ToLocalChecked();
+          Local<Value> value = Nan::Get(opts, key).ToLocalChecked();
+          Nan::Utf8String name(key);
+          options.insert(std::pair<std::string, int>(
+              std::string(*name), Nan::To<bool>(value).FromJust()));
         }
       }
     }
@@ -105,10 +103,9 @@ void Parse(const Nan::FunctionCallbackInfo<v8::Value>& info) {
 NAN_MODULE_INIT(Init) {
   flowparser::init();
   Nan::Set(
-    target,
-    Nan::New("parse").ToLocalChecked(),
-    Nan::GetFunction(Nan::New<v8::FunctionTemplate>(Parse)).ToLocalChecked()
-  );
+      target,
+      Nan::New("parse").ToLocalChecked(),
+      Nan::GetFunction(Nan::New<v8::FunctionTemplate>(Parse)).ToLocalChecked());
 }
 
 NODE_MODULE(flow_parser, Init)

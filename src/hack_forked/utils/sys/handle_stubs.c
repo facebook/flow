@@ -6,10 +6,10 @@
  */
 
 #define CAML_NAME_SPACE
+#include <caml/custom.h>
+#include <caml/intext.h>
 #include <caml/mlvalues.h>
 #include <caml/unixsupport.h>
-#include <caml/intext.h>
-#include <caml/custom.h>
 #include <stdio.h>
 
 // Ideally these would live in a handle.h file but our internal build system
@@ -22,7 +22,7 @@
 #endif
 
 value caml_hh_worker_get_handle(value x) {
-    return Val_long(Handle_val(x));
+  return Val_long(Handle_val(x));
 }
 
 value caml_hh_worker_create_handle(value x) {
@@ -34,7 +34,8 @@ value caml_hh_worker_create_handle(value x) {
 }
 
 #ifdef _WIN32
-static void win_handle_serialize(value h, uintnat *wsize_32, uintnat *wsize_64) {
+static void
+win_handle_serialize(value h, uintnat* wsize_32, uintnat* wsize_64) {
   caml_serialize_int_8((int64_t)Handle_val(h));
   caml_serialize_int_1(Descr_kind_val(h));
   caml_serialize_int_1(CRT_fd_val(h));
@@ -43,8 +44,8 @@ static void win_handle_serialize(value h, uintnat *wsize_32, uintnat *wsize_64) 
   *wsize_64 = sizeof(struct filedescr);
 }
 
-static uintnat win_handle_deserialize(void * dst) {
-  struct filedescr *h= (struct filedescr *)dst;
+static uintnat win_handle_deserialize(void* dst) {
+  struct filedescr* h = (struct filedescr*)dst;
   h->fd.handle = (HANDLE)caml_deserialize_sint_8();
   h->kind = caml_deserialize_uint_1();
   h->crt_fd = caml_deserialize_sint_1();
@@ -57,7 +58,8 @@ value win_setup_handle_serialization(value unit) {
   (void)unit; // Dear compiler, please ignore this param
 #ifdef _WIN32
   value handle = win_alloc_handle((HANDLE)0); // Dummy handle
-  struct custom_operations *win_handle_ops = (struct custom_operations *)Field(handle, 0);
+  struct custom_operations* win_handle_ops =
+      (struct custom_operations*)Field(handle, 0);
   win_handle_ops->serialize = win_handle_serialize;
   win_handle_ops->deserialize = win_handle_deserialize;
   caml_register_custom_operations(win_handle_ops);

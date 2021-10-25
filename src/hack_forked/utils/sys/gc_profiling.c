@@ -15,13 +15,11 @@
 #include <stdio.h>
 #include <sys/time.h>
 
-
 static double minor_start_time = 0.0;
 static double major_start_time = 0.0;
 
 static double minor_time = 0.0;
 static double major_time = 0.0;
-
 
 void minor_begin() {
   struct timeval time;
@@ -39,7 +37,7 @@ void minor_end() {
   struct timeval time;
   gettimeofday(&time, NULL);
   minor_time +=
-    time.tv_sec + ((double)time.tv_usec / 1000000) - minor_start_time;
+      time.tv_sec + ((double)time.tv_usec / 1000000) - minor_start_time;
 }
 
 /**
@@ -56,7 +54,7 @@ void major_end() {
   struct timeval time;
   gettimeofday(&time, NULL);
   major_time +=
-    time.tv_sec + ((double)time.tv_usec / 1000000) - major_start_time;
+      time.tv_sec + ((double)time.tv_usec / 1000000) - major_start_time;
 }
 
 void hh_start_gc_profiling() {

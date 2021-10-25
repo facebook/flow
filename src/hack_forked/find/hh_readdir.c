@@ -7,13 +7,13 @@
 
 #include "hh_readdir.h"
 
+#include <caml/alloc.h>
+#include <caml/callback.h>
+#include <caml/fail.h>
+#include <caml/memory.h>
+#include <caml/unixsupport.h>
 #include <dirent.h>
 #include <errno.h>
-#include <caml/callback.h>
-#include <caml/memory.h>
-#include <caml/alloc.h>
-#include <caml/fail.h>
-#include <caml/unixsupport.h>
 
 #ifdef __APPLE__
 /* On glibc platforms (including mingw32) this is conditionally defined
@@ -30,9 +30,7 @@ CAMLprim value hh_readdir(value path) {
   CAMLlocal3(head, tail, list);
 
   if (Tag_val(path) != String_tag) {
-    caml_invalid_argument(
-      "Path must be a string"
-    );
+    caml_invalid_argument("Path must be a string");
   }
 
   DIR* dir = opendir(String_val(path));
@@ -54,7 +52,8 @@ CAMLprim value hh_readdir(value path) {
     }
     head = caml_alloc_tuple(2);
 #ifdef __APPLE__
-    Store_field(head, 0, caml_alloc_initialized_string(ent->d_namlen, ent->d_name));
+    Store_field(
+        head, 0, caml_alloc_initialized_string(ent->d_namlen, ent->d_name));
 #else
     Store_field(head, 0, caml_copy_string(ent->d_name));
 #endif

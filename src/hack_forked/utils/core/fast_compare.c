@@ -9,14 +9,14 @@
  * This file exports a customized fast comparison function
  * for most common cases, it does not cover edge cases like OCaml's built-in
  * ones. And its string comparision is based on length first, and content later.
- * 
+ *
  * The restrictions are documented in the
- * exported functions. 
- * 
- * DON'T USE IT until it is confirmed that such 
- * comparison is indeed a hot path and `ppx_deriving` is 
+ * exported functions.
+ *
+ * DON'T USE IT until it is confirmed that such
+ * comparison is indeed a hot path and `ppx_deriving` is
  * too complicated for your type.
- * 
+ *
  */
 
 #include <caml/mlvalues.h>
@@ -27,40 +27,31 @@
 #define EQUAL Val_int(0)
 #define GREATER Val_int(1)
 
-typedef struct
-{
-  value *v1;
-  value *v2;
+typedef struct {
+  value* v1;
+  value* v2;
   mlsize_t count;
 } item;
 
-typedef struct
-{
+typedef struct {
   item init_stack[INIT_SIZE];
-  item *stack;
-  item *limit;
+  item* stack;
+  item* limit;
 } stack;
 
 // Resize the stack and modify the
 // current point in place
-static void resize_stack(stack *stk,
-                         item **sp)
-{
+static void resize_stack(stack* stk, item** sp) {
   asize_t newsize = 64;
   asize_t sp_offset = *sp - stk->stack;
-  item *newstack;
+  item* newstack;
 
-  if (stk->stack == stk->init_stack)
-  {
+  if (stk->stack == stk->init_stack) {
     newstack = malloc(sizeof(item) * newsize);
-    memcpy(newstack, stk->init_stack,
-           sizeof(item) * INIT_SIZE);
-  }
-  else
-  {
+    memcpy(newstack, stk->init_stack, sizeof(item) * INIT_SIZE);
+  } else {
     newsize = 2 * (stk->limit - stk->stack);
-    newstack = realloc(stk->stack,
-                       sizeof(item) * newsize);
+    newstack = realloc(stk->stack, sizeof(item) * newsize);
   }
   stk->stack = newstack;
   stk->limit = newstack + newsize;
@@ -68,41 +59,33 @@ static void resize_stack(stack *stk,
 }
 
 /**
- * compare [v1] [v2] when they are 
+ * compare [v1] [v2] when they are
  * immediate numbers
  */
 #define MAYBE_LONG_COMPARE(v1, v2) \
-  do                               \
-  {                                \
-    if (Is_long(v1))               \
-    {                              \
-      if (Is_long(v2))             \
-      {                            \
-        if (v1 < v2)               \
-        {                          \
+  do {                             \
+    if (Is_long(v1)) {             \
+      if (Is_long(v2)) {           \
+        if (v1 < v2) {             \
           return LESS;             \
         }                          \
         return GREATER;            \
       }                            \
       return LESS;                 \
     }                              \
-    if (Is_long(v2))               \
-    {                              \
+    if (Is_long(v2)) {             \
       return GREATER;              \
     }                              \
   } while (0)
 
 /**
- * comapre [v1] [v2] assuming they are 
+ * comapre [v1] [v2] assuming they are
  * immediate numbers
  */
 #define SIMPLE_COMPARE(v1, v2) \
-  do                           \
-  {                            \
-    if (v1 != v2)              \
-    {                          \
-      if (v1 < v2)             \
-      {                        \
+  do {                         \
+    if (v1 != v2) {            \
+      if (v1 < v2) {           \
         return LESS;           \
       }                        \
       return GREATER;          \
@@ -110,12 +93,11 @@ static void resize_stack(stack *stk,
   } while (0)
 
 /**
- * comparing [v1] [v2] assuming they are 
+ * comparing [v1] [v2] assuming they are
  * ocaml doubles
  */
 #define DOUBLE_VAL_COMPARE(v1, v2) \
-  do                               \
-  {                                \
+  do {                             \
     double d1 = Double_val(v1);    \
     double d2 = Double_val(v2);    \
     if (d1 < d2)                   \
@@ -127,11 +109,10 @@ static void resize_stack(stack *stk,
 /**
  * comparing [v1] [v2] assuming they are
  * ocaml strings
- * 
+ *
  */
 #define STRING_VAL_COMPARE(v1, v2)                          \
-  do                                                        \
-  {                                                         \
+  do {                                                      \
     int len1 = caml_string_length(v1);                      \
     int len2 = caml_string_length(v2);                      \
     SIMPLE_COMPARE(len1, len2);                             \
@@ -144,12 +125,11 @@ static void resize_stack(stack *stk,
 
 /**
  * PUSH_STACK(sp,pt1,pt2,sz1)
- * assuming that pt1[0] is visited while 
+ * assuming that pt1[0] is visited while
  * pt1[1] will be put on stack
  */
 #define PUSH_STACK(sp, pt1, pt2, sz1) \
-  do                                  \
-  {                                   \
+  do {                                \
     sp->v1 = &Field(pt1, 1);          \
     sp->v2 = &Field(pt2, 1);          \
     sp->count = sz1;                  \
@@ -157,12 +137,11 @@ static void resize_stack(stack *stk,
 
 /**
  * POP_STACK(sp,stk,val1,val2)
- * POP the stack the poped value is put inside [val1] 
+ * POP the stack the poped value is put inside [val1]
  * and [val2]
  */
 #define POP_STACK(sp, stk, val1, val2) \
-  do                                   \
-  {                                    \
+  do {                                 \
     if (sp == stk->stack)              \
       return EQUAL;                    \
     val1 = *((sp->v1)++);              \
@@ -171,51 +150,40 @@ static void resize_stack(stack *stk,
       sp--;                            \
   } while (0)
 
-static value compare_with_stack(
-    value v1, value v2, stack *stk, item *sp)
-{
-
-  while (1)
-  {
-    if (v1 != v2)
-    {
-
+static value compare_with_stack(value v1, value v2, stack* stk, item* sp) {
+  while (1) {
+    if (v1 != v2) {
       MAYBE_LONG_COMPARE(v1, v2);
       tag_t t1 = Tag_val(v1);
       tag_t t2 = Tag_val(v2);
       SIMPLE_COMPARE(t1, t2);
-      switch (t1)
-      {
-      case String_tag:
-      {
-
-        STRING_VAL_COMPARE(v1, v2);
-        break;
-      }
-      case Double_tag:
-      {
-        DOUBLE_VAL_COMPARE(v1, v2);
-        break;
-      }
-      default:
-      {
-        mlsize_t sz1 = Wosize_val(v1);
-        mlsize_t sz2 = Wosize_val(v2);
-        // when tag is the same while
-        // size is different -- this seems only possible for array
-        // v1 != v2 && sz1 = sz2 = 0 && Tag(v1) = Tag(v2) holds, since Atom are preallocated
-        SIMPLE_COMPARE(sz1, sz2);
-        if (--sz1 > 0)
-        {
-          sp++;
-          if (sp >= stk->limit)
-            resize_stack(stk, &sp);
-          PUSH_STACK(sp, v1, v2, sz1);
+      switch (t1) {
+        case String_tag: {
+          STRING_VAL_COMPARE(v1, v2);
+          break;
         }
-        v1 = Field(v1, 0);
-        v2 = Field(v2, 0);
-        continue;
-      }
+        case Double_tag: {
+          DOUBLE_VAL_COMPARE(v1, v2);
+          break;
+        }
+        default: {
+          mlsize_t sz1 = Wosize_val(v1);
+          mlsize_t sz2 = Wosize_val(v2);
+          // when tag is the same while
+          // size is different -- this seems only possible for array
+          // v1 != v2 && sz1 = sz2 = 0 && Tag(v1) = Tag(v2) holds, since Atom
+          // are preallocated
+          SIMPLE_COMPARE(sz1, sz2);
+          if (--sz1 > 0) {
+            sp++;
+            if (sp >= stk->limit)
+              resize_stack(stk, &sp);
+            PUSH_STACK(sp, v1, v2, sz1);
+          }
+          v1 = Field(v1, 0);
+          v2 = Field(v2, 0);
+          continue;
+        }
       }
     }
 
@@ -231,15 +199,13 @@ static value compare_with_stack(
  * - the child block should not contain
  *   - ocaml style objects
  *   - custom block Int32.t, Int64.t and Lazy.t
- * Due to these restrictions, this function is only used 
+ * Due to these restrictions, this function is only used
  * in [Type.ml] [TypeTerm.use_t] and [TypeTerm.t]
  */
-CAMLprim value caml_fast_generic_compare(value v1, value v2)
-{
+CAMLprim value caml_fast_generic_compare(value v1, value v2) {
   stack stk;
 
-  if (v1 != v2)
-  {
+  if (v1 != v2) {
     MAYBE_LONG_COMPARE(v1, v2);
 
     tag_t t1 = Tag_val(v1);
@@ -247,18 +213,16 @@ CAMLprim value caml_fast_generic_compare(value v1, value v2)
     SIMPLE_COMPARE(t1, t2);
     mlsize_t sz1 = Wosize_val(v1);
 
-    item *sp = stk.stack = stk.init_stack;
+    item* sp = stk.stack = stk.init_stack;
     stk.limit = stk.stack + INIT_SIZE;
-    if (--sz1 > 0)
-    {
+    if (--sz1 > 0) {
       sp++;
       PUSH_STACK(sp, v1, v2, sz1);
     }
     v1 = Field(v1, 0);
     v2 = Field(v2, 0);
     value res = compare_with_stack(v1, v2, &stk, sp);
-    if (stk.stack != stk.init_stack)
-    {
+    if (stk.stack != stk.init_stack) {
       free(stk.stack);
     }
     return res;

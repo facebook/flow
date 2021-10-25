@@ -17,7 +17,6 @@ value hh_getrusage(void) {
 #else
 #include <sys/resource.h>
 
-
 value hh_getrusage(void) {
   CAMLparam0();
   CAMLlocal1(result);

@@ -52,14 +52,14 @@
 /* define CAML_NAME_SPACE to ensure all the caml imports are prefixed with
  * 'caml_' */
 #define CAML_NAME_SPACE
-#include <caml/mlvalues.h>
-#include <caml/callback.h>
-#include <caml/memory.h>
 #include <caml/alloc.h>
-#include <caml/fail.h>
-#include <caml/unixsupport.h>
-#include <caml/intext.h>
 #include <caml/bigarray.h>
+#include <caml/callback.h>
+#include <caml/fail.h>
+#include <caml/intext.h>
+#include <caml/memory.h>
+#include <caml/mlvalues.h>
+#include <caml/unixsupport.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -76,10 +76,10 @@
 #include <unistd.h>
 #endif
 
-#include <limits.h>
-#include <stdalign.h>
 #include <inttypes.h>
+#include <limits.h>
 #include <lz4.h>
+#include <stdalign.h>
 #include <sys/time.h>
 #include <time.h>
 
@@ -108,40 +108,40 @@
  * appeared in Linux 3.17.
  ****************************************************************************/
 #ifdef __linux__
- #define MEMFD_CREATE 1
+#define MEMFD_CREATE 1
 
- // glibc only added support for memfd_create in version 2.27.
- #ifndef MFD_CLOEXEC
-  // Linux version for the architecture must support syscall memfd_create
-  #ifndef SYS_memfd_create
-    #if defined(__x86_64__)
-      #define SYS_memfd_create 319
-    #elif defined(__powerpc64__)
-      #define SYS_memfd_create 360
-    #elif defined(__aarch64__)
-      #define SYS_memfd_create 385
-    #else
-      #error "hh_shared.c requires an architecture that supports memfd_create"
-    #endif
-  #endif
+// glibc only added support for memfd_create in version 2.27.
+#ifndef MFD_CLOEXEC
+// Linux version for the architecture must support syscall memfd_create
+#ifndef SYS_memfd_create
+#if defined(__x86_64__)
+#define SYS_memfd_create 319
+#elif defined(__powerpc64__)
+#define SYS_memfd_create 360
+#elif defined(__aarch64__)
+#define SYS_memfd_create 385
+#else
+#error "hh_shared.c requires an architecture that supports memfd_create"
+#endif
+#endif
 
-  #include <asm/unistd.h>
+#include <asm/unistd.h>
 
-  /* Originally this function would call uname(), parse the linux
-   * kernel release version and make a decision based on whether
-   * the kernel was >= 3.17 or not. However, syscall will return -1
-   * with an strerr(errno) of "Function not implemented" if the
-   * kernel is < 3.17, and that's good enough.
-   */
-  static int memfd_create(const char *name, unsigned int flags) {
-    return syscall(SYS_memfd_create, name, flags);
-  }
- #endif
+/* Originally this function would call uname(), parse the linux
+ * kernel release version and make a decision based on whether
+ * the kernel was >= 3.17 or not. However, syscall will return -1
+ * with an strerr(errno) of "Function not implemented" if the
+ * kernel is < 3.17, and that's good enough.
+ */
+static int memfd_create(const char* name, unsigned int flags) {
+  return syscall(SYS_memfd_create, name, flags);
+}
+#endif
 #endif
 
 #ifndef MAP_NORESERVE
-  // This flag was unimplemented in FreeBSD and then later removed
-  #define MAP_NORESERVE 0
+// This flag was unimplemented in FreeBSD and then later removed
+#define MAP_NORESERVE 0
 #endif
 
 #ifdef _WIN32
@@ -157,10 +157,10 @@ static int win32_getpagesize(void) {
 #define CACHE_LINE_SIZE (1 << 6)
 #define WORD_SIZE sizeof(value)
 
-#define __ALIGN_MASK(x,mask)    (((x)+(mask))&~(mask))
-#define ALIGN(x,a)              __ALIGN_MASK(x,(typeof(x))(a)-1)
-#define CACHE_ALIGN(x)          ALIGN(x,CACHE_LINE_SIZE)
-#define WORD_ALIGN(x)           ALIGN(x,WORD_SIZE)
+#define __ALIGN_MASK(x, mask) (((x) + (mask)) & ~(mask))
+#define ALIGN(x, a) __ALIGN_MASK(x, (typeof(x))(a)-1)
+#define CACHE_ALIGN(x) ALIGN(x, CACHE_LINE_SIZE)
+#define WORD_ALIGN(x) ALIGN(x, WORD_SIZE)
 
 /* Each process reserves a range of values at a time from the shared counter.
  * Should be a power of two for more efficient modulo calculation. */
@@ -234,9 +234,10 @@ typedef struct {
    * non-zero hash. We never clear hashes so this monotonically increases */
   alignas(128) uintnat hcounter;
 
-  /* The number of nonempty filled slots in the hashtable. A nonempty filled slot
-   * has a non-zero hash AND a non-null addr. It increments when we write data
-   * into a slot with addr==NULL and decrements when we clear data from a slot */
+  /* The number of nonempty filled slots in the hashtable. A nonempty filled
+   * slot has a non-zero hash AND a non-null addr. It increments when we write
+   * data into a slot with addr==NULL and decrements when we clear data from a
+   * slot */
   alignas(128) uintnat hcounter_filled;
 
   /* The top of the heap, offset from hashtbl pointer */
@@ -261,11 +262,10 @@ typedef struct {
 // |11111111 11111111 11111111 1111|1111 11111111 11111111 11111111 |111111|11|
 // +-------------------------------+--------------------------------+------+--+
 // |                               |                                |      |
-// |                               |                                |      * 0-1 GC
-// |                               |                                |
-// |                               |                                * 2-7 tag
-// |                               |
-// |                               * 31-1 decompress capacity (in words)
+// |                               |                                |      * 0-1
+// GC |                               |                                | | |
+// * 2-7 tag |                               | |                               *
+// 31-1 decompress capacity (in words)
 // * 63-32 compressed size (in words)
 //
 // For GC, to distinguish headers from (word-aligned) pointers, the least bits
@@ -297,24 +297,24 @@ static _Bool should_scan(hh_tag_t tag) {
 }
 
 #define NULL_ADDR 0
-#define Addr_of_ptr(entry) ((char *)(entry) - (char *)hashtbl)
-#define Ptr_of_addr(addr) ((char *)hashtbl + (addr))
-#define Entry_of_addr(addr) ((heap_entry_t *)Ptr_of_addr(addr))
+#define Addr_of_ptr(entry) ((char*)(entry) - (char*)hashtbl)
+#define Ptr_of_addr(addr) ((char*)hashtbl + (addr))
+#define Entry_of_addr(addr) ((heap_entry_t*)Ptr_of_addr(addr))
 
-#define Deref(addr) (*(uintnat *)(Ptr_of_addr(addr))) /* also an l-value */
+#define Deref(addr) (*(uintnat*)(Ptr_of_addr(addr))) /* also an l-value */
 
 // During GC, we read words from the heap which might be an addr or a header,
 // and we need to distinguish between them.
-#define Is_addr(x) (((x) & 0b11) == 0)
+#define Is_addr(x) (((x)&0b11) == 0)
 
 // The low 2 bits of headers are reserved for GC. The white bit pattern
 // denotes an unmarked object, black denotes a marked object, and blue denotes a
 // free object.
 #define Color_white 0b01
 #define Color_black 0b11
-#define Color_blue  0b10
+#define Color_blue 0b10
 
-#define Color_hd(hd) ((hd) & 0b11)
+#define Color_hd(hd) ((hd)&0b11)
 
 #define Is_white(hd) (Color_hd(hd) == Color_white)
 #define Is_black(hd) (Color_hd(hd) == Color_black)
@@ -344,7 +344,8 @@ static _Bool should_scan(hh_tag_t tag) {
 // (in words) of the entry in the heap and the capacity (in words) of the buffer
 // needed to decompress the entry.
 #define Entry_wsize(header) ((header) >> 36)
-#define Entry_decompress_capacity(header) (Bsize_wsize(((header) >> 8) & 0xFFFFFFF))
+#define Entry_decompress_capacity(header) \
+  (Bsize_wsize(((header) >> 8) & 0xFFFFFFF))
 
 // The distance (in bytes) from one hh_entry_t* to the next. Entries are laid
 // out contiguously in memory.
@@ -400,19 +401,19 @@ static uintnat mark_stack_size = 0;
 
 // The initial stack space, allocated at startup for the mark stack. This space
 // will persist between collections.
-static addr_t *mark_stack_init = NULL;
+static addr_t* mark_stack_init = NULL;
 
 // Base of the current mark stack. This is initially aliased to
 // mark_stack_init, but will change if the mark stack is realloced.
-static addr_t *mark_stack = NULL;
+static addr_t* mark_stack = NULL;
 
 // Head of the current mark stack, equal to `mark_stack` when the stack is
 // empty, adjusted during push/pop.
-static addr_t *mark_stack_ptr = NULL;
+static addr_t* mark_stack_ptr = NULL;
 
 // End of the current mark stack, equal to `mark_stack + mark_stack_size`, used
 // to trigger resize.
-static addr_t *mark_stack_end = NULL;
+static addr_t* mark_stack_end = NULL;
 
 // When we start a GC, we record the heap pointer here. We use this to identify
 // allocations performed during marking. These objects are not explicitly
@@ -498,8 +499,9 @@ CAMLprim value hh_hash_stats(value unit) {
 }
 
 static void raise_failed_memfd_init(int errcode) {
-  static const value *exn = NULL;
-  if (!exn) exn = caml_named_value("failed_memfd_init");
+  static const value* exn = NULL;
+  if (!exn)
+    exn = caml_named_value("failed_memfd_init");
   caml_raise_with_arg(*exn, unix_error_of_code(errcode));
 }
 
@@ -525,11 +527,12 @@ static HANDLE memfd;
  **************************************************************************/
 static void memfd_init(size_t shared_mem_size) {
   memfd = CreateFileMapping(
-    INVALID_HANDLE_VALUE,
-    NULL,
-    PAGE_READWRITE | SEC_RESERVE,
-    shared_mem_size >> 32, shared_mem_size & ((1ll << 32) - 1),
-    NULL);
+      INVALID_HANDLE_VALUE,
+      NULL,
+      PAGE_READWRITE | SEC_RESERVE,
+      shared_mem_size >> 32,
+      shared_mem_size & ((1ll << 32) - 1),
+      NULL);
   if (memfd == NULL) {
     win32_maperr(GetLastError());
     raise_failed_memfd_init(errno);
@@ -595,8 +598,8 @@ static void memfd_init(size_t shared_mem_size) {
 
 #ifdef _WIN32
 
-static char *memfd_map(size_t size) {
-  char *mem = NULL;
+static char* memfd_map(size_t size) {
+  char* mem = NULL;
   mem = MapViewOfFile(memfd, FILE_MAP_ALL_ACCESS, 0, 0, size);
   if (mem == NULL) {
     win32_maperr(GetLastError());
@@ -607,15 +610,15 @@ static char *memfd_map(size_t size) {
 
 #else
 
-static char *memfd_map(size_t size) {
-  char *mem = NULL;
+static char* memfd_map(size_t size) {
+  char* mem = NULL;
   /* MAP_NORESERVE is because we want a lot more virtual memory than what
    * we are actually going to use.
    */
   int flags = MAP_SHARED | MAP_NORESERVE;
-  int prot  = PROT_READ  | PROT_WRITE;
+  int prot = PROT_READ | PROT_WRITE;
   mem = (char*)mmap(NULL, size, prot, flags, memfd, 0);
-  if(mem == MAP_FAILED) {
+  if (mem == MAP_FAILED) {
     printf("Error initializing: %s\n", strerror(errno));
     exit(2);
   }
@@ -632,17 +635,17 @@ static char *memfd_map(size_t size) {
  * `SIGBUS`.
  ****************************************************************************/
 
-static void raise_out_of_shared_memory(void)
-{
-  static const value *exn = NULL;
-  if (!exn) exn = caml_named_value("out_of_shared_memory");
+static void raise_out_of_shared_memory(void) {
+  static const value* exn = NULL;
+  if (!exn)
+    exn = caml_named_value("out_of_shared_memory");
   caml_raise_constant(*exn);
 }
 
 #ifdef _WIN32
 
 /* Reserves memory. This is required on Windows */
-static void win_reserve(char * mem, size_t sz) {
+static void win_reserve(char* mem, size_t sz) {
   if (!VirtualAlloc(mem, sz, MEM_COMMIT, PAGE_READWRITE)) {
     win32_maperr(GetLastError());
     raise_out_of_shared_memory();
@@ -651,7 +654,7 @@ static void win_reserve(char * mem, size_t sz) {
 
 /* On Linux, memfd_reserve is only used to reserve memory that is mmap'd to the
  * memfd file. */
-static void memfd_reserve(char * mem, size_t sz) {
+static void memfd_reserve(char* mem, size_t sz) {
   win_reserve(mem, sz);
 }
 
@@ -662,14 +665,14 @@ static void memfd_reserve(char * mem, size_t sz) {
  * however it doesn't seem to work for a shm_open fd, so this function is
  * currently a no-op. This means that our OOM handling for OSX is a little
  * weaker than the other OS's */
-static void memfd_reserve(char * mem, size_t sz) {
+static void memfd_reserve(char* mem, size_t sz) {
   (void)mem;
   (void)sz;
 }
 
 #else
 
-static void memfd_reserve(char *mem, size_t sz) {
+static void memfd_reserve(char* mem, size_t sz) {
   off_t offset = (off_t)(mem - shared_mem);
   int err;
   do {
@@ -692,7 +695,7 @@ static void map_info_page(int page_bsize) {
 
 #ifdef _WIN32
   // Memory must be reserved on Windows
-  win_reserve((char *)info, page_bsize);
+  win_reserve((char*)info, page_bsize);
 #endif
 }
 
@@ -713,8 +716,8 @@ static void define_mappings(int page_bsize) {
 #ifdef _WIN32
   // Memory must be reserved on Windows. Heap allocations will be reserved
   // in hh_alloc, so we just reserve the locals and hashtbl memory here.
-  win_reserve((char *)locals, locals_bsize);
-  win_reserve((char *)hashtbl, hashtbl_bsize);
+  win_reserve((char*)locals, locals_bsize);
+  win_reserve((char*)hashtbl, hashtbl_bsize);
 #endif
 
 #ifdef MADV_DONTDUMP
@@ -739,10 +742,7 @@ static value alloc_heap_bigarray(void) {
 /* Must be called by the master BEFORE forking the workers! */
 /*****************************************************************************/
 
-CAMLprim value hh_shared_init(
-  value config_val,
-  value num_workers_val
-) {
+CAMLprim value hh_shared_init(value config_val, value num_workers_val) {
   CAMLparam2(config_val, num_workers_val);
   CAMLlocal1(result);
 
@@ -761,7 +761,7 @@ CAMLprim value hh_shared_init(
   /* The total size of the shared file must have space for the info page, local
    * data, the hash table, and the heap. */
   size_t shared_mem_bsize =
-    page_bsize + locals_bsize + hashtbl_bsize + heap_bsize;
+      page_bsize + locals_bsize + hashtbl_bsize + heap_bsize;
 
   memfd_init(shared_mem_bsize);
 
@@ -803,7 +803,7 @@ CAMLprim value hh_shared_init(
   // stack overflow, but we don't actually handle that exception, so what
   // happens in practice is we terminate at toplevel with an unhandled exception
   // and a useless ocaml backtrace. A core dump is actually more useful. Sigh.
-  struct sigaction sigact = { 0 };
+  struct sigaction sigact = {0};
   sigact.sa_handler = SIG_DFL;
   sigemptyset(&sigact.sa_mask);
   sigact.sa_flags = 0;
@@ -908,9 +908,10 @@ CAMLprim value hh_get_can_worker_stop(value unit) {
 
 static void check_should_exit(void) {
   assert(info != NULL);
-  if(worker_can_exit && info->workers_should_exit) {
-    static const value *exn = NULL;
-    if (!exn) exn = caml_named_value("worker_should_exit");
+  if (worker_can_exit && info->workers_should_exit) {
+    static const value* exn = NULL;
+    if (!exn)
+      exn = caml_named_value("worker_should_exit");
     caml_raise_constant(*exn);
   }
 }
@@ -977,18 +978,21 @@ static void mark_stack_resize(void) {
 
   // To avoid exhausting the heap in the event of a programmer error, we fail if
   // the mark stack exceeds some fixed huge size (currently ~1.5 GB).
-  if (new_size >= MARK_STACK_MAX_SIZE) mark_stack_overflow();
+  if (new_size >= MARK_STACK_MAX_SIZE)
+    mark_stack_overflow();
 
   // Keep the initial stack, which will be restored by mark_stack_reset.
   // Otherwise realloc, which frees the underlying memory if necessary.
-  addr_t *new_stack;
+  addr_t* new_stack;
   if (mark_stack == mark_stack_init) {
     new_stack = malloc(new_size * sizeof(addr_t));
-    if (new_stack == NULL) mark_stack_overflow();
+    if (new_stack == NULL)
+      mark_stack_overflow();
     memcpy(new_stack, mark_stack_init, MARK_STACK_INIT_SIZE * sizeof(addr_t));
   } else {
     new_stack = realloc(mark_stack, new_size * sizeof(addr_t));
-    if (new_stack == NULL) mark_stack_overflow();
+    if (new_stack == NULL)
+      mark_stack_overflow();
   }
 
   mark_stack = new_stack;
@@ -1222,7 +1226,9 @@ CAMLprim value hh_sweep_slice(value work_val) {
 // | X |<--| * |<--| * |
 // +---+   +---+   +---+
 static void gc_thread(addr_t p) {
-  if (Deref(p) == NULL_ADDR) { return; }
+  if (Deref(p) == NULL_ADDR) {
+    return;
+  }
   uintnat q = Deref(p);
   Deref(p) = Deref(q);
   Deref(q) = p;
@@ -1361,8 +1367,9 @@ CAMLprim value hh_compact(value unit) {
 }
 
 static void raise_heap_full(void) {
-  static const value *exn = NULL;
-  if (!exn) exn = caml_named_value("heap_full");
+  static const value* exn = NULL;
+  if (!exn)
+    exn = caml_named_value("heap_full");
   caml_raise_constant(*exn);
 }
 
@@ -1403,7 +1410,7 @@ CAMLprim value hh_store_ocaml(value v) {
   int compress_bound, compressed_size;
 
   caml_output_value_to_malloc(
-    v, Val_int(0)/*flags*/, &serialized, &serialized_size);
+      v, Val_int(0) /*flags*/, &serialized, &serialized_size);
 
   // Compress the serialized data. LZ4's maximum input size is ~2GB. If the
   // input is larger than that, LZ4_compressBound will return 0 and the
@@ -1415,10 +1422,7 @@ CAMLprim value hh_store_ocaml(value v) {
   compress_bound = LZ4_compressBound(serialized_size);
   compressed = malloc(compress_bound);
   compressed_size = LZ4_compress_default(
-    serialized,
-    compressed,
-    serialized_size,
-    compress_bound);
+      serialized, compressed, serialized_size, compress_bound);
 
   assert(compressed_size > 0);
 
@@ -1460,13 +1464,11 @@ CAMLprim value hh_store_ocaml(value v) {
   assert(compressed_size < 0x10000000);
   assert(decompress_capacity < 0x10000000);
 
-  hh_header_t header
-    = compressed_wsize << 36
-    | decompress_capacity << 8
-    | Color_white;
+  hh_header_t header =
+      compressed_wsize << 36 | decompress_capacity << 8 | Color_white;
 
   // Allocate space for the header and compressed data
-  heap_entry_t *entry = Entry_of_addr(hh_alloc(1 + compressed_wsize));
+  heap_entry_t* entry = Entry_of_addr(hh_alloc(1 + compressed_wsize));
 
   // Write header and data into allocated space.
   entry->header = header;
@@ -1490,7 +1492,7 @@ CAMLprim value hh_store_ocaml(value v) {
 
 // The final byte of a compressed heap entry contains an offset, which we can
 // use to convert the approximate size in words to the precise size in bytes.
-static size_t entry_compressed_bsize(heap_entry_t *entry) {
+static size_t entry_compressed_bsize(heap_entry_t* entry) {
   size_t compressed_wsize = Entry_wsize(entry->header);
   size_t offset_index = Bsize_wsize(compressed_wsize) - 1;
   return offset_index - entry->data[offset_index];
@@ -1507,8 +1509,9 @@ static uint64_t get_hash(value key) {
 }
 
 static void raise_hash_table_full(void) {
-  static const value *exn = NULL;
-  if (!exn) exn = caml_named_value("hash_table_full");
+  static const value* exn = NULL;
+  if (!exn)
+    exn = caml_named_value("hash_table_full");
   caml_raise_constant(*exn);
 }
 
@@ -1545,9 +1548,10 @@ CAMLprim value hh_add(value key, value addr) {
       // don't need to worry about concurrent deletes.
 
       if (hashtbl[slot].addr == NULL_ADDR) {
-        // Two threads may be racing to write this value, so try to grab the slot
-        // atomically.
-        if (__sync_bool_compare_and_swap(&hashtbl[slot].addr, NULL_ADDR, elt.addr)) {
+        // Two threads may be racing to write this value, so try to grab the
+        // slot atomically.
+        if (__sync_bool_compare_and_swap(
+                &hashtbl[slot].addr, NULL_ADDR, elt.addr)) {
           __sync_fetch_and_add(&info->hcounter_filled, 1);
         }
       }
@@ -1566,13 +1570,12 @@ CAMLprim value hh_add(value key, value addr) {
       // `old`.
       old.value = 0;
       _Bool success = __atomic_compare_exchange(
-        /* ptr */ &hashtbl[slot].value,
-        /* expected */ &old.value,
-        /* desired */ &elt.value,
-        /* weak */ 0,
-        /* success_memorder */ __ATOMIC_SEQ_CST,
-        /* failure_memorder */ __ATOMIC_SEQ_CST
-      );
+          /* ptr */ &hashtbl[slot].value,
+          /* expected */ &old.value,
+          /* desired */ &elt.value,
+          /* weak */ 0,
+          /* success_memorder */ __ATOMIC_SEQ_CST,
+          /* failure_memorder */ __ATOMIC_SEQ_CST);
 
       if (success) {
         // The slot was still empty when we tried to CAS, meaning we
@@ -1611,11 +1614,11 @@ static unsigned int find_slot(value key) {
   uint64_t hash = get_hash(key);
   unsigned int slot = hash & (hashtbl_slots - 1);
   unsigned int init_slot = slot;
-  while(1) {
-    if(hashtbl[slot].hash == hash) {
+  while (1) {
+    if (hashtbl[slot].hash == hash) {
       return slot;
     }
-    if(hashtbl[slot].hash == 0) {
+    if (hashtbl[slot].hash == 0) {
       return slot;
     }
     slot = (slot + 1) & (hashtbl_slots - 1);
@@ -1648,17 +1651,14 @@ CAMLprim value hh_deserialize(value addr_val) {
   CAMLlocal1(result);
   check_should_exit();
 
-  heap_entry_t *entry = Entry_of_addr(Long_val(addr_val));
+  heap_entry_t* entry = Entry_of_addr(Long_val(addr_val));
   size_t compressed_bsize = entry_compressed_bsize(entry);
   size_t decompress_capacity = Entry_decompress_capacity(entry->header);
 
-  char *decompressed = malloc(decompress_capacity);
+  char* decompressed = malloc(decompress_capacity);
 
   size_t serialized_size = LZ4_decompress_safe(
-    entry->data,
-    decompressed,
-    compressed_bsize,
-    decompress_capacity);
+      entry->data, decompressed, compressed_bsize, decompress_capacity);
 
   result = caml_input_value_from_block(decompressed, serialized_size);
   free(decompressed);
@@ -1684,7 +1684,7 @@ CAMLprim value hh_get(value key) {
 /*****************************************************************************/
 CAMLprim value hh_get_size(value addr_val) {
   CAMLparam1(addr_val);
-  heap_entry_t *entry = Entry_of_addr(Long_val(addr_val));
+  heap_entry_t* entry = Entry_of_addr(Long_val(addr_val));
   size_t compressed_bsize = entry_compressed_bsize(entry);
   CAMLreturn(Val_long(compressed_bsize));
 }
@@ -1771,6 +1771,9 @@ CAMLprim value hh_read_string(value addr, value wsize) {
   CAMLparam2(addr, wsize);
   CAMLlocal1(s);
   s = caml_alloc(Long_val(wsize), String_tag);
-  memcpy((char *)String_val(s), Ptr_of_addr(Long_val(addr)), Bsize_wsize(Long_val(wsize)));
+  memcpy(
+      (char*)String_val(s),
+      Ptr_of_addr(Long_val(addr)),
+      Bsize_wsize(Long_val(wsize)));
   CAMLreturn(s);
 }

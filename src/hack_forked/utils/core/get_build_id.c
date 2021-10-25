@@ -16,8 +16,8 @@
  */
 
 #define CAML_NAME_SPACE
-#include <caml/memory.h>
 #include <caml/alloc.h>
+#include <caml/memory.h>
 
 extern const char* const BuildInfo_kRevision;
 

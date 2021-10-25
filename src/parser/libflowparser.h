@@ -7,12 +7,12 @@
 
 #define CAML_NAME_SPACE
 
+#include <caml/alloc.h>
+#include <caml/callback.h>
+#include <caml/memory.h>
+#include <caml/mlvalues.h>
 #include <map>
 #include <string>
-#include <caml/alloc.h>
-#include <caml/mlvalues.h>
-#include <caml/memory.h>
-#include <caml/callback.h>
 
 namespace flowparser {
 
@@ -49,9 +49,9 @@ value cons(value hd, value tl) {
 
 template <class T>
 class AbstractTranslator {
-public:
+ public:
   virtual ~AbstractTranslator() = default;
-  virtual T convert_string(char *str) = 0;
+  virtual T convert_string(char* str) = 0;
   virtual T convert_number(double n) = 0;
   virtual T convert_bool(long b) = 0;
   virtual T convert_null() = 0;
@@ -94,11 +94,11 @@ public:
     }
   }
 
-  T parse(const char *content, options_t opts) {
+  T parse(const char* content, options_t opts) {
     CAMLparam0();
     CAMLlocal4(content_val, option_val, options_val, result_val);
 
-    static value * func = caml_named_value("flow_parse");
+    static value* func = caml_named_value("flow_parse");
 
     content_val = caml_copy_string(content);
 
@@ -117,8 +117,8 @@ public:
 };
 
 void init() {
-  char *argv[] = {NULL};
+  char* argv[] = {NULL};
   caml_startup(argv);
 }
 
-} // namespace flow
+} // namespace flowparser
