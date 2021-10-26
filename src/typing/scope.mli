@@ -197,7 +197,7 @@ val filter_refis_using_propname : private_:bool -> string -> 'a Key_map.t -> 'a 
 
 val havoc_refis : ?name:string -> private_:bool -> t -> unit
 
-val havoc_all_refis : ?name:string -> t -> unit
+val havoc_all_refis : t -> unit
 
 val havoc : t -> unit
 

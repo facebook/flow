@@ -406,9 +406,8 @@ let havoc_refis ?name ~private_ scope =
     | Some name -> scope.refis |> filter_refis_using_propname ~private_ name
     | None -> Key_map.empty)
 
-let havoc_all_refis ?name scope =
-  havoc_refis ?name ~private_:false scope;
-  havoc_refis ?name ~private_:true scope
+(* havoc a scope's refinements: clear all its refis *)
+let havoc_all_refis scope = scope.refis <- Key_map.empty
 
 (* havoc a scope:
    - clear all refinements
