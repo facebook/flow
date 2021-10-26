@@ -3646,3 +3646,22 @@ let y = (z: typeof x): typeof x => 3;
         (15, 30) to (15, 31) => {
           (9, 0) to (9, 1): (`x`)
         }] |}]
+
+let%expect_test "hoisted_global_refinement" =
+  print_ssa_test {|
+if (global != null) {
+  global;
+  function f(x: typeof global) { }
+}
+|};
+    [%expect {|
+      [
+        (2, 4) to (2, 10) => {
+          Global global
+        };
+        (3, 2) to (3, 8) => {
+          {refinement = Not (Maybe); writes = Global global}
+        };
+        (4, 23) to (4, 29) => {
+          Global global
+        }] |}]

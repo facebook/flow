@@ -841,13 +841,12 @@ module Make
        * if the identifier is refined that we record the refiner as the write that reaches
        * this read *)
       method any_identifier loc name =
-        let { val_ref; def_loc; _ } = SMap.find name env_state.env in
+        let { val_ref; havoc; _ } = SMap.find name env_state.env in
         let v =
-          match def_loc with
-          | Some def_loc when env_state.visiting_hoisted_type ->
-            let (provider_val, _) = this#providers_of_def_loc def_loc in
-            provider_val
-          | _ -> !val_ref
+          if env_state.visiting_hoisted_type then
+            havoc
+          else
+            !val_ref
         in
         let values = L.LMap.add loc v env_state.values in
         env_state <- { env_state with values }
