@@ -1113,3 +1113,9 @@ const EnhancedFunction_DefaultProps = hoc(Function_DefaultProps);
 <EnhancedFunction_DefaultProps // Error: It is missing a required non-default prop.
   foo={1}
 />;
+
+class ThisInJsxTag extends React.Component<{tag: () => React$MixedElement}> {
+  render() {
+    return <this.props.tag />; // OK
+  }
+}

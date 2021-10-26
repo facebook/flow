@@ -6895,6 +6895,8 @@ module Make (Env : Env_sig.S) = struct
       let open Ast.JSX.MemberExpression in
       match member._object with
       | MemberExpression member -> jsx_title_member_to_expression member
+      | Identifier (loc, { Ast.JSX.Identifier.name = "this"; comments }) ->
+        (loc, Ast.Expression.This { Ast.Expression.This.comments })
       | Identifier (loc, { Ast.JSX.Identifier.name; comments }) ->
         (loc, Ast.Expression.Identifier (loc, mk_ident ~comments name))
     in
@@ -6915,12 +6917,17 @@ module Make (Env : Env_sig.S) = struct
     | Ast.Expression.Member.(
         Ast.Expression.Member
           {
-            _object = ((mloc, _), obj_expr);
+            _object = ((mloc, tobj), obj_expr);
             property = PropertyIdentifier (pannot, { Ast.Identifier.name; comments });
             comments = _;
           }) ->
       let _object =
         match obj_expr with
+        | Ast.Expression.This { Ast.Expression.This.comments } ->
+          Some
+            (Ast.JSX.MemberExpression.Identifier
+               ((mloc, tobj), { Ast.JSX.Identifier.name = "this"; comments })
+            )
         | Ast.Expression.Identifier ((id_loc, t), { Ast.Identifier.name; comments }) ->
           Some
             (Ast.JSX.MemberExpression.Identifier ((id_loc, t), { Ast.JSX.Identifier.name; comments })
