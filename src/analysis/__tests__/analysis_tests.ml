@@ -7,6 +7,6 @@
 
 open OUnit2
 
-let tests = "parser_utils" >::: [File_sig_test.tests; Flow_ast_differ_test.tests]
+let tests = "analysis" >::: [Scope_builder_test.tests; Ssa_builder_test.tests]
 
 let () = run_test_tt_main tests

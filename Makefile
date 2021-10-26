@@ -81,6 +81,8 @@ endif
 ################################################################################
 
 MODULES=\
+  src/analysis\
+  src/analysis/env_builder\
   src/codemods\
   src/codemods/utils\
   src/commands\

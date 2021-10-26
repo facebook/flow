@@ -7,7 +7,7 @@
 
 (* This module is responsible for building a mapping from variable reads to the
  * writes and refinements that reach those reads. It is based on the implementation of the
- * ssa_builder, but with enough divergent behavior that the ssa_builder and env_builder don't
+ * ssa_builder, but with enough divergent behavior that the ssa_builder and name_resolver don't
  * actually share much code. If you're here to add support for a new syntax feature, you'll likely
  * need to modify the ssa_builder as well, but not necessarily with identical changes.*)
 
@@ -412,7 +412,7 @@ module Make
     refinement_id: int;
   }
 
-  type env_builder_state = {
+  type name_resolver_state = {
     (* We maintain a map of read locations to raw Val.t terms, which are
        simplified to lists of write locations once the analysis is done. *)
     values: Val.t L.LMap.t;
@@ -467,13 +467,13 @@ module Make
       unbound_names
       SMap.empty
 
-  class env_builder _cx (prepass_info, prepass_values, unbound_names) provider_info =
+  class name_resolver _cx (prepass_info, prepass_values, unbound_names) provider_info =
     object (this)
       inherit Scope_builder.scope_builder ~flowmin_compatibility:false ~with_types:true as super
 
       val invalidation_caches = Invalidation_api.mk_caches ()
 
-      val mutable env_state : env_builder_state =
+      val mutable env_state : name_resolver_state =
         {
           values = L.LMap.empty;
           write_entries = L.LMap.empty;
@@ -1224,7 +1224,7 @@ module Make
              )
 
       (*
-       * Unlike the ssa_builder, the env_builder does not create REF unresolved
+       * Unlike the ssa_builder, the name_resolver does not create REF unresolved
        * Val.ts to model the write states of variables in loops. This approach
        * would cause a lot of cycles in the ordering algorithm, which means
        * we'd need to ask for a lot of annotations. Moreover, it's not clear where
@@ -2491,7 +2491,7 @@ module Make
            * The only other criterion that must be met for this call to produce
            * a refinement is that the arguments cannot contain a spread.
            *
-           * Assuming there are no spreads we create a mapping from each argument 
+           * Assuming there are no spreads we create a mapping from each argument
            * index to the refinement key at that index.
            *
            * The semantics for passing the same argument multiple times to predicate
@@ -2713,7 +2713,7 @@ module Make
       Ssa_builder.program_with_scope ~flowmin_compatibility:false program
     in
     let providers = Provider_api.find_providers program in
-    let env_walk = new env_builder cx prepass providers in
+    let env_walk = new name_resolver cx prepass providers in
     let bindings =
       let hoist = new hoister ~flowmin_compatibility:false ~with_types:true in
       hoist#eval hoist#program program

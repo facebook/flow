@@ -7,11 +7,11 @@
 
 (* This module is responsible for building a mapping from variable reads to the
  * writes those reads. This is used in type checking to determine if a variable is
- * const-like, but the env_builder is used to build the type checking envrionment.
- * The env_builder copied much of the implementation here, but with sufficient divergence
+ * const-like, but the name_resolver is used to build the type checking envrionment.
+ * The name_resolver copied much of the implementation here, but with sufficient divergence
  * to warrant forking the implementation.
  * If you're here to add support for a new syntax feature, you'll likely
- * need to modify the env_builder as well, but not necessarily with identical changes.*)
+ * need to modify the name_resolver as well, but not necessarily with identical changes.*)
 
 module Ast = Flow_ast
 open Hoister

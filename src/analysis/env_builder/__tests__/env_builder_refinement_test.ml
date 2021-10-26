@@ -10,7 +10,7 @@ module LocMap = Loc_collections.LocMap
 module LocSet = Loc_collections.LocSet
 
 let print_values refinement_of_id =
-  let open Env_builder.With_Loc.Env_api in
+  let open Name_resolver.With_Loc.Env_api in
   let rec print_value write_loc =
     match write_loc with
     | Uninitialized _ -> "(uninitialized)"
@@ -46,7 +46,7 @@ let print_values refinement_of_id =
 [@@@ocamlformat "disable=true"]
 
 let print_ssa_test contents =
-  let refined_reads, refinement_of_id = Env_builder.With_Loc.program () (parse contents) in
+  let refined_reads, refinement_of_id = Name_resolver.With_Loc.program () (parse contents) in
   print_values refinement_of_id refined_reads
 
 let%expect_test "logical_expr" =
@@ -3498,7 +3498,7 @@ let y = x;
 y.foo = 3;
 y[x] = 4;
 x.foo; // should no longer be refined
-y.foo; // should no longer be refined 
+y.foo; // should no longer be refined
 |};
     [%expect {|
       [

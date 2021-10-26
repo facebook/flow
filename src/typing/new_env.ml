@@ -484,7 +484,7 @@ module New_env : Env_sig.S = struct
       assert_false (spf "Looking up an ordinary name entry %s in new environment" name)
 
   (* This is mostly copied from the same function in env.ml, but with refinements of ordinary names
-     being ignored, because that happens in the env_builder. *)
+     being ignored, because that happens in the name_resolver. *)
   let refine_with_preds cx loc preds orig_types =
     let refine_type orig_type pred refined_type =
       Flow_js.flow cx (orig_type, PredicateT (pred, refined_type))

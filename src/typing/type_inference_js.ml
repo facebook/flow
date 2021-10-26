@@ -10,7 +10,7 @@ module Ast = Flow_ast
 
 (* infer phase services *)
 
-module EnvBuilder = Env_builder.Make_of_flow (Context) (Flow_js_utils)
+module NameResolver = Name_resolver.Make_of_flow (Context) (Flow_js_utils)
 
 let add_require_tvars ~unresolved_tvar =
   let add cx desc loc =
@@ -421,8 +421,8 @@ module Make (Env : Env_sig.S) : S = struct
     | exc -> raise exc
 
   let initialize_env cx aloc_ast =
-    let (_abrupt_completion, info) = EnvBuilder.program_with_scope cx aloc_ast in
-    Context.set_environment cx { Loc_env.types = EnvBuilder.L.LMap.empty; var_info = info }
+    let (_abrupt_completion, info) = NameResolver.program_with_scope cx aloc_ast in
+    Context.set_environment cx { Loc_env.types = NameResolver.L.LMap.empty; var_info = info }
 
   (* build module graph *)
   (* Lint suppressions are handled iff lint_severities is Some. *)
