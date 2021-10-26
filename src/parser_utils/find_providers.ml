@@ -848,6 +848,10 @@ end = struct
         end;
         super#identifier ident
 
+      method! function_identifier ((loc, { Ast.Identifier.name; comments = _ }) as ident) =
+        this#new_entry name Flow_ast.Statement.VariableDeclaration.Let loc;
+        super#identifier ident
+
       method! for_in_left_declaration left =
         let (_, decl) = left in
         let { Flow_ast.Statement.VariableDeclaration.declarations; kind; comments = _ } = decl in

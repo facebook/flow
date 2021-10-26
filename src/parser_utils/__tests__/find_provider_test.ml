@@ -663,4 +663,14 @@ x = 'a'; // p
     }
          "
                "[(1, 4) to (1, 5)]";
+         "function_same_name"
+         >:: mk_provider_loc_test
+               (mk_loc (3, 15) (3, 16))
+               "
+    function f() { }
+    if (condition) {
+          function f() { }
+    }
+         "
+               "[(3, 15) to (3, 16)]";
        ]
