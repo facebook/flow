@@ -2453,25 +2453,15 @@ struct
         (* Classes/Functions are "inexact" *)
         (* LB ~> MakeExactT (_, UB) exactifies LB, then flows result to UB *)
         (* exactify incoming LB object type, flow to UB *)
-        | (DefT (r, trust, ObjT obj), MakeExactT (_, Upper u)) ->
-          let obj_kind =
-            match obj.flags.obj_kind with
-            | Inexact -> Exact
-            | k -> k
-          in
-          let exactobj = { obj with flags = { obj.flags with obj_kind } } in
-          rec_flow cx trace (DefT (r, trust, ObjT exactobj), u)
+        | (DefT (r, trust, ObjT obj), MakeExactT (reason_op, Upper u)) ->
+          let exactobj = TypeUtil.make_exact_object ~reason_obj:r trust obj ~reason_op in
+          rec_flow cx trace (exactobj, u)
         (* exactify incoming UB object type, flow to LB *)
         | (DefT (ru, trust, ObjT obj_u), MakeExactT (reason_op, Lower (use_op, l))) ->
           (* forward to standard obj ~> obj *)
           let ru = repos_reason (aloc_of_reason reason_op) ru in
-          let obj_kind =
-            match obj_u.flags.obj_kind with
-            | Inexact -> Exact
-            | k -> k
-          in
-          let xu = { obj_u with flags = { obj_u.flags with obj_kind } } in
-          rec_flow cx trace (l, UseT (use_op, DefT (ru, trust, ObjT xu)))
+          let xu = TypeUtil.make_exact_object ~reason_obj:ru trust obj_u ~reason_op in
+          rec_flow cx trace (l, UseT (use_op, xu))
         | (AnyT (_, src), MakeExactT (reason_op, k)) -> continue cx trace (AnyT.why src reason_op) k
         | (DefT (_, trust, VoidT), MakeExactT (reason_op, k)) ->
           continue cx trace (VoidT.why reason_op trust) k

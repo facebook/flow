@@ -646,13 +646,8 @@ module rec ConsGen : Annotation_inference_sig = struct
       let t = make_exact cx r t in
       elab_t cx t op
     | (ShapeT (_, o), Annot_MakeExactT _) -> elab_t cx o op
-    | (DefT (r, trust, ObjT obj), Annot_MakeExactT _) ->
-      let obj_kind =
-        match obj.flags.obj_kind with
-        | Inexact -> Exact
-        | k -> k
-      in
-      DefT (r, trust, ObjT { obj with flags = { obj.flags with obj_kind } })
+    | (DefT (reason_obj, trust, ObjT obj), Annot_MakeExactT reason_op) ->
+      TypeUtil.make_exact_object ~reason_obj trust obj ~reason_op
     | (AnyT (_, src), Annot_MakeExactT reason_op) -> AnyT.why src reason_op
     | (DefT (_, trust, VoidT), Annot_MakeExactT reason_op) -> VoidT.why reason_op trust
     | (DefT (_, trust, EmptyT), Annot_MakeExactT reason_op) -> EmptyT.why reason_op trust

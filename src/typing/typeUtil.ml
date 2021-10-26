@@ -735,7 +735,13 @@ let maybe t =
   let reason = update_desc_new_reason (fun desc -> RMaybe desc) (reason_of_t t) in
   MaybeT (reason, t)
 
-let exact t = ExactT (reason_of_t t, t)
+let make_exact_object ~reason_obj trust obj ~reason_op:_ =
+  let obj_kind =
+    match obj.flags.obj_kind with
+    | Inexact -> Exact
+    | k -> k
+  in
+  DefT (reason_obj, trust, ObjT { obj with flags = { obj.flags with obj_kind } })
 
 let class_type ?(structural = false) ?annot_loc t =
   let reason =

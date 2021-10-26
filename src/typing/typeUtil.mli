@@ -59,7 +59,8 @@ val optional : ?annot_loc:ALoc.t -> ?use_desc:bool -> Type.t -> Type.t
 
 val maybe : Type.t -> Type.t
 
-val exact : Type.t -> Type.t
+val make_exact_object :
+  reason_obj:reason -> Type.trust_rep -> Type.objtype -> reason_op:reason -> Type.t
 
 val class_type : ?structural:bool -> ?annot_loc:ALoc.t -> Type.t -> Type.t
 
