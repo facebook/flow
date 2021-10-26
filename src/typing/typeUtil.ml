@@ -735,11 +735,25 @@ let maybe t =
   let reason = update_desc_new_reason (fun desc -> RMaybe desc) (reason_of_t t) in
   MaybeT (reason, t)
 
-let make_exact_object ~reason_obj trust obj ~reason_op:_ =
+let make_exact_object ~reason_obj trust obj ~reason_op =
   let obj_kind =
     match obj.flags.obj_kind with
     | Inexact -> Exact
     | k -> k
+  in
+  (* This case analysis aims at recovering a potential type alias associated
+   * with an $Exact<> constructor. *)
+  let reason_obj =
+    match desc_of_reason ~unwrap:false reason_op with
+    | RTypeAlias (n, loc, _) ->
+      update_desc_reason
+        (function
+          | RTypeAlias (_, _, desc) -> RTypeAlias (n, loc, desc)
+          | desc -> RTypeAlias (n, loc, desc))
+        reason_obj
+    | _ ->
+      (* If [r] is an RTypeAlias, then this alias is no longer valid. *)
+      update_desc_reason invalidate_rtype_alias reason_obj
   in
   DefT (reason_obj, trust, ObjT { obj with flags = { obj.flags with obj_kind } })
 

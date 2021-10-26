@@ -98,3 +98,7 @@ writeOnlyObj.p = 42; // Should error!
 // Invalid usage
 type readOnlyNum = $ReadOnly<number>;
 (42: readOnlyNum); // Should error!
+
+// $ReadOnly preserves literal-ness
+declare function create<+S>(obj: S): $ReadOnly<S>;
+(create({ f: 1 }): { f: any });

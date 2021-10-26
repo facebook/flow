@@ -914,7 +914,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- tabs.js:30:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
- - Either children array [1] is incompatible with object type [2].
+ - Either children array [1] is incompatible with `React.Element` [2].
  - Or JSX text [3] is incompatible with boolean [4] in array element.
 
    tabs.js:30:9
@@ -936,7 +936,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- tabs.js:31:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
- - Either children array [1] is incompatible with object type [2].
+ - Either children array [1] is incompatible with `React.Element` [2].
  - Or JSX text [3] is incompatible with boolean [4] in array element.
 
    tabs.js:31:9
@@ -958,7 +958,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- tabs.js:32:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
- - Either children array [1] is incompatible with object type [2].
+ - Either children array [1] is incompatible with `React.Element` [2].
  - Or JSX text [3] is incompatible with boolean [4] in array element.
 
    tabs.js:32:9
@@ -1640,7 +1640,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- view.js:38:7
 
 Cannot create `View` element because in property `children`: [incompatible-type]
- - Either children array [1] is incompatible with object type [2].
+ - Either children array [1] is incompatible with `React.Element` [2].
  - Or number [3] is incompatible with boolean [4] in array element.
 
    view.js:38:7

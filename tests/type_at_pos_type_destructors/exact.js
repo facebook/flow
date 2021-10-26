@@ -27,3 +27,10 @@ type P<X> = $Exact<{ m: (x: X) => void}>;
 //   ^
 type Q<X> = $Exact<P<X>>;
 //   ^
+
+type R = $Exact<{ +f: number }>;
+declare var r: {| response: R |};
+const d = r.response;
+function bar({d}) {}
+//            ^
+bar({d});

@@ -509,7 +509,7 @@ References:
 Error ------------------------------------------------------------------------------------------ function_lower.js:25:10
 
 Cannot return `NotAComponent` because: [incompatible-return]
- - Either property `name` is missing in object type [1] but exists in statics of `NotAComponent` [2].
+ - Either property `name` is missing in `React.Element` [1] but exists in statics of `NotAComponent` [2].
  - Or class `NotAComponent` [2] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `NotAComponent` [2] but exists in `$Iterable` [4].
 
@@ -535,7 +535,7 @@ References:
 Error ------------------------------------------------------------------------------------------- function_lower.js:28:2
 
 Cannot cast `NotAFunctionComponent` to AbstractComponent because: [incompatible-cast]
- - Either property `name` is missing in object type [1] but exists in statics of `NotAComponent` [2].
+ - Either property `name` is missing in `React.Element` [1] but exists in statics of `NotAComponent` [2].
  - Or class `NotAComponent` [2] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `NotAComponent` [2] but exists in `$Iterable` [4].
 

@@ -48,6 +48,11 @@ Flags:
 type Q<X> = $Exact<P<X>>
 exact.js:28:6,28:6
 
+exact.js:34:15
+Flags:
+R
+exact.js:34:15,34:15
+
 react-component.js:12:6
 Flags:
 type ReactA = ElementProps<typeof MyComponent>

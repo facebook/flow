@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------------ Suspense.js:12:23
 
 Cannot create `Suspense` element because in property `fallback`: [incompatible-type]
- - Either inexact function [1] is incompatible with exact object type [2].
+ - Either inexact function [1] is incompatible with exact `React.Element` [2].
  - Or function [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in function [1] but exists in `$Iterable` [4].
 

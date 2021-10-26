@@ -11,7 +11,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `Component` element because: [incompatible-type]
  - Either inexact object type [1] is incompatible with exact `React.Element` [2].
- - Or an unknown property that may exist on the inexact object type [3] is incompatible with object type [2].
+ - Or an unknown property that may exist on the inexact object type [3] is incompatible with `React.Element` [2].
  - Or an unknown property that may exist on the inexact object type [3] is incompatible with
    `React.TransportObject` [4].
 
@@ -34,7 +34,7 @@ References:
 Error --------------------------------------------------------------------------------------------- test.hybrid.js:11:77
 
 Cannot create `Component` element because: [incompatible-type]
- - Either inexact function [1] is incompatible with exact object type [2].
+ - Either inexact function [1] is incompatible with exact `React.Element` [2].
  - Or function [1] is incompatible with indexed `React.TransportObject` [3].
 
    test.hybrid.js:11:77
@@ -70,7 +70,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- test.hybrid.js:13:2
 
 Cannot create `Component` element because: [incompatible-type]
- - Either an unknown property that may exist on the inexact props [1] is incompatible with object type [2].
+ - Either an unknown property that may exist on the inexact props [1] is incompatible with `React.Element` [2].
  - Or an unknown property that may exist on the inexact props [1] is incompatible with `React.TransportObject` [3].
 
    test.hybrid.js:13:2
@@ -92,7 +92,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- test.hybrid.js:14:2
 
 Cannot create `IndexedComponent` element because: [incompatible-type]
- - Either inexact function type [1] is incompatible with exact object type [2].
+ - Either inexact function type [1] is incompatible with exact `React.Element` [2].
  - Or function type [1] is incompatible with indexed `React.TransportObject` [3].
 
    test.hybrid.js:14:2
@@ -136,7 +136,7 @@ References:
 Error --------------------------------------------------------------------------------------------- test.hybrid.js:19:32
 
 Cannot create `InexactComponent` element because: [incompatible-type]
- - Either inexact function [1] is incompatible with exact object type [2].
+ - Either inexact function [1] is incompatible with exact `React.Element` [2].
  - Or function [1] is incompatible with indexed `React.TransportObject` [3].
 
    test.hybrid.js:19:32
@@ -155,7 +155,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- test.hybrid.js:20:2
 
 Cannot create `InexactComponent` element because: [incompatible-type]
- - Either an unknown property that may exist on the inexact props [1] is incompatible with object type [2].
+ - Either an unknown property that may exist on the inexact props [1] is incompatible with `React.Element` [2].
  - Or an unknown property that may exist on the inexact props [1] is incompatible with `React.TransportObject` [3].
 
    test.hybrid.js:20:2
@@ -178,7 +178,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `inexactObject` to `TransportValue` because: [incompatible-cast]
  - Either inexact object type [1] is incompatible with exact `React.Element` [2].
- - Or an unknown property that may exist on the inexact object type [3] is incompatible with object type [2].
+ - Or an unknown property that may exist on the inexact object type [3] is incompatible with `React.Element` [2].
  - Or an unknown property that may exist on the inexact object type [3] is incompatible with
    `React.TransportObject` [4].
 
@@ -201,7 +201,7 @@ References:
 Error ------------------------------------------------------------------------------------------- transport_type.js:20:2
 
 Cannot cast `fn` to `TransportValue` because: [incompatible-cast]
- - Either inexact function type [1] is incompatible with exact object type [2].
+ - Either inexact function type [1] is incompatible with exact `React.Element` [2].
  - Or function type [1] is incompatible with indexed `React.TransportObject` [3].
 
    transport_type.js:20:2
@@ -231,8 +231,8 @@ Cannot cast `hasInexactObj` to `TransportValue` because: [incompatible-cast]
    of property `foo`.
  - Or inexact object type [6] is incompatible with exact `React.Element` [1] in property `foo` of property `foo` of
    property `foo` of property `foo`.
- - Or an unknown property that may exist on the inexact object type [6] is incompatible with object type [1] in property
-   `foo` of property `foo` of property `foo` of property `foo`.
+ - Or an unknown property that may exist on the inexact object type [6] is incompatible with `React.Element` [1] in
+   property `foo` of property `foo` of property `foo` of property `foo`.
  - Or an unknown property that may exist on the inexact object type [6] is incompatible with `React.TransportObject` [7]
    in property `foo` of property `foo` of property `foo` of property `foo`.
 
@@ -268,7 +268,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `hasOneIncompatibleValue` to `TransportValue` because: [incompatible-cast]
  - Either property `bar` is missing in `React.Element` [1] but exists in object type [2].
- - Or inexact function type [3] is incompatible with exact object type [1] in property `qux`.
+ - Or inexact function type [3] is incompatible with exact `React.Element` [1] in property `qux`.
  - Or function type [3] is incompatible with indexed `React.TransportObject` [4] in property `qux`.
 
    transport_type.js:24:2
