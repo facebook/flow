@@ -282,195 +282,195 @@ References:
                  ^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:41:48
+Error ----------------------------------------------------------------------------------------------- subtyping.js:50:48
 
 Cannot return `f` because `T` [1] is incompatible with number [2] in the return value. [incompatible-return]
 
-   subtyping.js:41:48
-   41|   (f: <T>(T) => T): (<S>(number) => number) => f; // should be ok, currently isn't
+   subtyping.js:50:48
+   50|   (f: <T>(T) => T): (<S>(number) => number) => f; // should be ok, currently isn't
                                                       ^
 
 References:
-   subtyping.js:41:8
-   41|   (f: <T>(T) => T): (<S>(number) => number) => f; // should be ok, currently isn't
+   subtyping.js:50:8
+   50|   (f: <T>(T) => T): (<S>(number) => number) => f; // should be ok, currently isn't
               ^ [1]
-   subtyping.js:41:37
-   41|   (f: <T>(T) => T): (<S>(number) => number) => f; // should be ok, currently isn't
+   subtyping.js:50:37
+   50|   (f: <T>(T) => T): (<S>(number) => number) => f; // should be ok, currently isn't
                                            ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:49:42
+Error ----------------------------------------------------------------------------------------------- subtyping.js:58:42
 
 Cannot return `f` because `T` [1] is incompatible with array type [2] in the return value. [incompatible-return]
 
-   subtyping.js:49:42
-   49|   (f: <T>(T) => T): (<S>(S[]) => S[]) => f; // should be ok, currently isn't
+   subtyping.js:58:42
+   58|   (f: <T>(T) => T): (<S>(S[]) => S[]) => f; // should be ok, currently isn't
                                                 ^
 
 References:
-   subtyping.js:49:8
-   49|   (f: <T>(T) => T): (<S>(S[]) => S[]) => f; // should be ok, currently isn't
+   subtyping.js:58:8
+   58|   (f: <T>(T) => T): (<S>(S[]) => S[]) => f; // should be ok, currently isn't
               ^ [1]
-   subtyping.js:49:34
-   49|   (f: <T>(T) => T): (<S>(S[]) => S[]) => f; // should be ok, currently isn't
+   subtyping.js:58:34
+   58|   (f: <T>(T) => T): (<S>(S[]) => S[]) => f; // should be ok, currently isn't
                                         ^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:55:26
+Error ----------------------------------------------------------------------------------------------- subtyping.js:64:26
 
 Cannot use function type [1] with fewer than 2 type arguments. [missing-type-arg]
 
-   subtyping.js:55:26
-   55| (f: <R, S>(R, S) => S): (<T>(T, T) => T) => f; // ideally ok, known error
+   subtyping.js:64:26
+   64| (f: <R, S>(R, S) => S): (<T>(T, T) => T) => f; // ideally ok, known error
                                 ^^^^^^^^^^^^^^
 
 References:
-   subtyping.js:55:5
-   55| (f: <R, S>(R, S) => S): (<T>(T, T) => T) => f; // ideally ok, known error
+   subtyping.js:64:5
+   64| (f: <R, S>(R, S) => S): (<T>(T, T) => T) => f; // ideally ok, known error
            ^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:56:26
+Error ----------------------------------------------------------------------------------------------- subtyping.js:65:26
 
 Cannot use function type [1] with fewer than 2 type arguments. [missing-type-arg]
 
-   subtyping.js:56:26
-   56| (f: <R, S>(R, S) => S): (<T>(T, T) => boolean) => f; // error
+   subtyping.js:65:26
+   65| (f: <R, S>(R, S) => S): (<T>(T, T) => boolean) => f; // error
                                 ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   subtyping.js:56:5
-   56| (f: <R, S>(R, S) => S): (<T>(T, T) => boolean) => f; // error
+   subtyping.js:65:5
+   65| (f: <R, S>(R, S) => S): (<T>(T, T) => boolean) => f; // error
            ^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:57:27
+Error ----------------------------------------------------------------------------------------------- subtyping.js:66:27
 
 Cannot use function type [1] with more than 1 type argument. [extra-type-arg]
 
-   subtyping.js:57:27
-   57| (f: <R>(R, mixed) => R): (<S, T>(S, T) => S) => f; // ideally ok, known error
+   subtyping.js:66:27
+   66| (f: <R>(R, mixed) => R): (<S, T>(S, T) => S) => f; // ideally ok, known error
                                  ^^^^^^^^^^^^^^^^^
 
 References:
-   subtyping.js:57:5
-   57| (f: <R>(R, mixed) => R): (<S, T>(S, T) => S) => f; // ideally ok, known error
+   subtyping.js:66:5
+   66| (f: <R>(R, mixed) => R): (<S, T>(S, T) => S) => f; // ideally ok, known error
            ^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:58:27
+Error ----------------------------------------------------------------------------------------------- subtyping.js:67:27
 
 Cannot use function type [1] with more than 1 type argument. [extra-type-arg]
 
-   subtyping.js:58:27
-   58| (f: <R>(R, mixed) => R): (<S, T>(S, T) => T) => f; // error
+   subtyping.js:67:27
+   67| (f: <R>(R, mixed) => R): (<S, T>(S, T) => T) => f; // error
                                  ^^^^^^^^^^^^^^^^^
 
 References:
-   subtyping.js:58:5
-   58| (f: <R>(R, mixed) => R): (<S, T>(S, T) => T) => f; // error
+   subtyping.js:67:5
+   67| (f: <R>(R, mixed) => R): (<S, T>(S, T) => T) => f; // error
            ^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:65:51
+Error ----------------------------------------------------------------------------------------------- subtyping.js:74:51
 
 Cannot return `f` because number [1] is incompatible with string [2]. [incompatible-return]
 
-   subtyping.js:65:51
-   65|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
+   subtyping.js:74:51
+   74|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
                                                          ^
 
 References:
-   subtyping.js:65:9
-   65|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
+   subtyping.js:74:9
+   74|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
                ^^^^^^ [1]
-   subtyping.js:64:9
-   64| (f: <S: string, T: number>() => { a: S, b: T })
+   subtyping.js:73:9
+   73| (f: <S: string, T: number>() => { a: S, b: T })
                ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:65:51
+Error ----------------------------------------------------------------------------------------------- subtyping.js:74:51
 
 Cannot return `f` because string [1] is incompatible with number [2]. [incompatible-return]
 
-   subtyping.js:65:51
-   65|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
+   subtyping.js:74:51
+   74|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
                                                          ^
 
 References:
-   subtyping.js:65:20
-   65|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
+   subtyping.js:74:20
+   74|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error
                           ^^^^^^ [1]
-   subtyping.js:64:20
-   64| (f: <S: string, T: number>() => { a: S, b: T })
+   subtyping.js:73:20
+   73| (f: <S: string, T: number>() => { a: S, b: T })
                           ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:70:54
+Error ----------------------------------------------------------------------------------------------- subtyping.js:79:54
 
 Cannot return `f` because number [1] is incompatible with `T` [2] in the first parameter. [incompatible-return]
 
-   subtyping.js:70:54
-   70| (f: (number, number) => number): (<T>(T, T) => T) => f; // error
+   subtyping.js:79:54
+   79| (f: (number, number) => number): (<T>(T, T) => T) => f; // error
                                                             ^
 
 References:
-   subtyping.js:70:6
-   70| (f: (number, number) => number): (<T>(T, T) => T) => f; // error
+   subtyping.js:79:6
+   79| (f: (number, number) => number): (<T>(T, T) => T) => f; // error
             ^^^^^^ [1]
-   subtyping.js:70:39
-   70| (f: (number, number) => number): (<T>(T, T) => T) => f; // error
+   subtyping.js:79:39
+   79| (f: (number, number) => number): (<T>(T, T) => T) => f; // error
                                              ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:70:54
+Error ----------------------------------------------------------------------------------------------- subtyping.js:79:54
 
 Cannot return `f` because number [1] is incompatible with `T` [2] in the second parameter. [incompatible-return]
 
-   subtyping.js:70:54
-   70| (f: (number, number) => number): (<T>(T, T) => T) => f; // error
+   subtyping.js:79:54
+   79| (f: (number, number) => number): (<T>(T, T) => T) => f; // error
                                                             ^
 
 References:
-   subtyping.js:70:14
-   70| (f: (number, number) => number): (<T>(T, T) => T) => f; // error
+   subtyping.js:79:14
+   79| (f: (number, number) => number): (<T>(T, T) => T) => f; // error
                     ^^^^^^ [1]
-   subtyping.js:70:42
-   70| (f: (number, number) => number): (<T>(T, T) => T) => f; // error
+   subtyping.js:79:42
+   79| (f: (number, number) => number): (<T>(T, T) => T) => f; // error
                                                 ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:70:54
+Error ----------------------------------------------------------------------------------------------- subtyping.js:79:54
 
 Cannot return `f` because number [1] is incompatible with `T` [2] in the return value. [incompatible-return]
 
-   subtyping.js:70:54
-   70| (f: (number, number) => number): (<T>(T, T) => T) => f; // error
+   subtyping.js:79:54
+   79| (f: (number, number) => number): (<T>(T, T) => T) => f; // error
                                                             ^
 
 References:
-   subtyping.js:70:25
-   70| (f: (number, number) => number): (<T>(T, T) => T) => f; // error
+   subtyping.js:79:25
+   79| (f: (number, number) => number): (<T>(T, T) => T) => f; // error
                                ^^^^^^ [1]
-   subtyping.js:70:48
-   70| (f: (number, number) => number): (<T>(T, T) => T) => f; // error
+   subtyping.js:79:48
+   79| (f: (number, number) => number): (<T>(T, T) => T) => f; // error
                                                       ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- subtyping.js:72:54
+Error ----------------------------------------------------------------------------------------------- subtyping.js:81:54
 
 Cannot return `f` because number [1] is incompatible with string [2] in the second parameter. [incompatible-return]
 
-   subtyping.js:72:54
-   72| (f: <T>(T, T) => T): ((number, string) => number) => f; // error
+   subtyping.js:81:54
+   81| (f: <T>(T, T) => T): ((number, string) => number) => f; // error
                                                             ^
 
 References:
-   subtyping.js:72:43
-   72| (f: <T>(T, T) => T): ((number, string) => number) => f; // error
+   subtyping.js:81:43
+   81| (f: <T>(T, T) => T): ((number, string) => number) => f; // error
                                                  ^^^^^^ [1]
-   subtyping.js:72:32
-   72| (f: <T>(T, T) => T): ((number, string) => number) => f; // error
+   subtyping.js:81:32
+   81| (f: <T>(T, T) => T): ((number, string) => number) => f; // error
                                       ^^^^^^ [2]
 
 

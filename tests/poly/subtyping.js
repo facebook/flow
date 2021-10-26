@@ -30,6 +30,15 @@
   coerce('a').toFixed();
 }
 
+// Test issue #8766, round 3 -- this time also testing for a subtle
+// pitfall in implementing the rule ∀-local / S-All-Loc from the
+// polymorphic-subtyping literature:
+//   https://github.com/facebook/flow/pull/8767#issuecomment-949402649
+{
+  const g = (f: <S, T: S>(T) => T): <S, T>(T) => S => f; // TODO should error
+  const coerce: <B, A>(A) => B = g(<S, T: S>(x: T): T => x);
+}
+
 
 // Conversely, we reject (but ideally shouldn't) a subtyping when it
 // requires setting the lower tparams to particular types, or types in
