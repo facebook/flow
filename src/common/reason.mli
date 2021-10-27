@@ -212,10 +212,6 @@ type concrete_reason = Loc.t virtual_reason
 
 type t = reason (* convenience *)
 
-module TestID : sig
-  val run : ('a -> 'b) -> 'a -> 'b
-end
-
 (* reason constructor *)
 val mk_reason : 'loc virtual_reason_desc -> 'loc -> 'loc virtual_reason
 

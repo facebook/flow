@@ -45,28 +45,8 @@ let mk_id () = Ident.make ""
 
    - termination analysis: we use reasons to limit instantiation of type
    parameters in polymorphic types at particular locations, to prevent the type
-   checker from generating an unbounded number of constraints. The `pos` field
-   of reasons is sufficient to distinguish code locations, except that as an
-   implementation strategy for checking polymorphic definitions, we walk over
-   the same source code multiple times to check it with different instantiations
-   of type parameters, and to index "copies" of the reasons created in those
-   passes over the same source code, we use an additional `test_id` field.
+   checker from generating an unbounded number of constraints.
 *)
-module TestID = struct
-  let _current = ref None
-
-  (* Get current test id. *)
-  let current () = !_current
-
-  (* Call f on a, installing new_test_id as the current test_id, and restoring
-     the current test_id when done. (See also the function mk_reason below.) *)
-  let run f a =
-    let test_id = current () in
-    _current := Some (mk_id ());
-    let b = f a in
-    _current := test_id;
-    b
-end
 
 type 'loc virtual_reason_desc =
   | RTrusted of 'loc virtual_reason_desc
@@ -346,7 +326,6 @@ let rec map_desc_locs f = function
   | RUnionBranching (desc, i) -> RUnionBranching (map_desc_locs f desc, i)
 
 type 'loc virtual_reason = {
-  test_id: int option;
   derivable: bool;
   desc: 'loc virtual_reason_desc;
   loc: 'loc;
@@ -478,11 +457,11 @@ let json_of_loc ?strip_root ?catch_offset_errors ~offset_table loc =
 
 (* reason constructors, accessors, etc. *)
 
-let mk_reason_with_test_id test_id desc loc def_loc_opt annot_loc_opt =
-  { test_id; derivable = false; desc; loc; def_loc_opt; annot_loc_opt }
+let mk_reason_internal desc loc def_loc_opt annot_loc_opt =
+  { derivable = false; desc; loc; def_loc_opt; annot_loc_opt }
 
 let map_reason_locs f reason =
-  let { def_loc_opt; annot_loc_opt; loc; desc; test_id; derivable } = reason in
+  let { def_loc_opt; annot_loc_opt; loc; desc; derivable } = reason in
   let loc' = f loc in
   let def_loc_opt' = Base.Option.map ~f def_loc_opt in
   let annot_loc_opt' = Base.Option.map ~f annot_loc_opt in
@@ -492,15 +471,13 @@ let map_reason_locs f reason =
     annot_loc_opt = annot_loc_opt';
     loc = loc';
     desc = desc';
-    test_id;
     derivable;
   }
 
-(* The current test_id is included in every new reason. *)
-let mk_reason desc aloc = mk_reason_with_test_id (TestID.current ()) desc aloc None None
+let mk_reason desc aloc = mk_reason_internal desc aloc None None
 
 (* Lift a string to a reason. Usually used as a dummy reason. *)
-let locationless_reason desc = mk_reason_with_test_id None desc ALoc.none None None
+let locationless_reason desc = mk_reason_internal desc ALoc.none None None
 
 let func_reason ~async ~generator =
   let func_desc =
@@ -777,14 +754,9 @@ let string_of_reason ?(strip_root = None) r =
 
 let dump_reason ?(strip_root = None) r =
   spf
-    "%s: %S%s"
+    "%s: %S"
     (string_of_aloc ~strip_root (aloc_of_reason r))
     (string_of_desc r.desc)
-    begin
-      match r.test_id with
-      | Some n -> spf " (test %d)" n
-      | None -> ""
-    end
 
 let desc_of_reason =
   let rec loop = function
@@ -953,25 +925,23 @@ let is_blamable_reason r = not (r.loc = ALoc.none || is_lib_reason r)
 
 (* returns reason with new description and position of original *)
 let update_desc_reason f r =
-  mk_reason_with_test_id
-    r.test_id
+  mk_reason_internal
     (f (desc_of_reason ~unwrap:false r))
     (poly_loc_of_reason r)
     r.def_loc_opt
     (annot_poly_loc_of_reason r)
 
 let update_desc_new_reason f r =
-  mk_reason_with_test_id
-    r.test_id
+  mk_reason_internal
     (f (desc_of_reason ~unwrap:false r))
     (poly_loc_of_reason r)
     None
     None
 
 let replace_desc_reason desc r =
-  mk_reason_with_test_id r.test_id desc r.loc r.def_loc_opt r.annot_loc_opt
+  mk_reason_internal desc r.loc r.def_loc_opt r.annot_loc_opt
 
-let replace_desc_new_reason desc r = mk_reason_with_test_id r.test_id desc r.loc None None
+let replace_desc_new_reason desc r = mk_reason_internal desc r.loc None None
 
 (* returns reason with new location and description of original *)
 let repos_reason loc reason =
@@ -982,7 +952,7 @@ let repos_reason loc reason =
     else
       Some def_loc
   in
-  mk_reason_with_test_id reason.test_id reason.desc loc def_aloc_opt reason.annot_loc_opt
+  mk_reason_internal reason.desc loc def_aloc_opt reason.annot_loc_opt
 
 let annot_reason ~annot_loc reason = { reason with annot_loc_opt = Some annot_loc }
 
