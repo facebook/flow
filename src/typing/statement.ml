@@ -44,10 +44,6 @@ module Make (Env : Env_sig.S) = struct
    * must be decomposed in some way before it is passed down *)
   let annot_decompose_todo x = x
 
-  (* We use this value to indicate places where values stored in the environment can have
-   * an annotation with some more work *)
-  let annotated_todo t = Inferred t
-
   module ObjectExpressionAcc = struct
     type element =
       | Spread of Type.t
@@ -3845,7 +3841,7 @@ module Make (Env : Env_sig.S) = struct
           let kind = Entry.ClassNameBinding in
           let entry =
             Entry.(
-              new_let (annotated_todo tvar) ~provider:tvar ~loc:name_loc ~state:State.Declared ~kind
+              new_let (Annotated tvar) ~provider:tvar ~loc:name_loc ~state:State.Declared ~kind
             )
           in
           add_entry (OrdinaryName name) entry scope

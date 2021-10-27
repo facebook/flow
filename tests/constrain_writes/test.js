@@ -65,3 +65,18 @@ function switch_scope(x: mixed) {
   }
   (a : string); // OK
 }
+
+function trycatch() {
+  try {
+  } catch (e) {
+    e = 42;
+  }
+}
+
+function classexp() {
+  let _ = class e {
+    f() {
+      e = 42;
+    }
+  }
+}

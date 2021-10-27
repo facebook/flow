@@ -125,8 +125,22 @@ References:
               ^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:79:7
 
-Found 7 errors
+Cannot reassign class binding `e` [1]. [cannot-reassign]
+
+   test.js:79:7
+   79|       e = 42;
+             ^
+
+References:
+   test.js:77:17
+   77|   let _ = class e {
+                       ^ [1]
+
+
+
+Found 8 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

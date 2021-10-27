@@ -712,9 +712,8 @@ module Env : Env_sig.S = struct
     in
     begin
       match (state, kind) with
-      | (State.Initialized, Entry.ParamBinding) ->
-        (* If this variable starts off initialized (which is currently only the case with
-           parameters), then init_entry does not need to be called later, which is where normally providers are installed. *)
+      | (State.Initialized, Entry.(ParamBinding | CatchParamBinding)) ->
+        (* If this variable starts off initialized then init_entry does not need to be called later, which is where normally providers are installed. *)
         install_provider cx (TypeUtil.type_t_of_annotated_or_inferred t) name loc
       | _ -> ()
     end;
