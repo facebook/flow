@@ -352,6 +352,7 @@ module Make (Env : Env_sig.S) = struct
           pattern: pattern;
           default: (ALoc.t, ALoc.t) Ast.Expression.t option;
           expr: expr;
+          has_anno: bool;
         }
 
     type rest =
@@ -360,6 +361,7 @@ module Make (Env : Env_sig.S) = struct
           loc: ALoc.t;
           ploc: ALoc.t;
           id: (ALoc.t, ALoc.t * Type.t) Ast.Pattern.Identifier.t;
+          has_anno: bool;
         }
 
     type this_param =
@@ -396,14 +398,14 @@ module Make (Env : Env_sig.S) = struct
     let this_type (This { t; _ }) = t
 
     let subst_param cx map param =
-      let (Param { t; loc; ploc; pattern; default; expr }) = param in
+      let (Param { t; loc; ploc; pattern; default; expr; has_anno }) = param in
       let t = Flow.subst cx map t in
-      Param { t; loc; ploc; pattern; default; expr }
+      Param { t; loc; ploc; pattern; default; expr; has_anno }
 
     let subst_rest cx map rest =
-      let (Rest { t; loc; ploc; id }) = rest in
+      let (Rest { t; loc; ploc; id; has_anno }) = rest in
       let t = Flow.subst cx map t in
-      Rest { t; loc; ploc; id }
+      Rest { t; loc; ploc; id; has_anno }
 
     let subst_this cx map (This { t; loc; annot }) =
       let t = Flow.subst cx map t in
@@ -424,21 +426,27 @@ module Make (Env : Env_sig.S) = struct
             loc
       )
 
-    let destruct cx ~use_op ~name_loc name default t =
+    let destruct cx ~use_op ~name_loc ~has_anno name default t =
       Base.Option.iter
         ~f:(fun d ->
           let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
           let default_t = Flow.mk_default cx reason d in
           Flow.flow cx (default_t, UseT (use_op, t)))
         default;
-      bind cx name t name_loc;
+      let t_bound =
+        if has_anno then
+          Annotated t
+        else
+          Inferred t
+      in
+      bind cx name t_bound name_loc;
       t
 
     let eval_default cx ~expr = function
       | None -> None
       | Some e -> Some (expr cx e)
 
-    let eval_param cx (Param { t; loc; ploc; pattern; default; expr }) =
+    let eval_param cx (Param { t; loc; ploc; pattern; default; expr; has_anno }) =
       match pattern with
       | Id id ->
         let default = eval_default cx ~expr default in
@@ -458,6 +466,12 @@ module Make (Env : Env_sig.S) = struct
             else
               t
           in
+          let t =
+            if has_anno then
+              Annotated t
+            else
+              Inferred t
+          in
           bind cx name t loc
         in
         (loc, { Ast.Function.Param.argument = ((ploc, t), Ast.Pattern.Identifier id); default })
@@ -474,7 +488,7 @@ module Make (Env : Env_sig.S) = struct
                 | Ast.Type.Missing _ -> false
                 | Ast.Type.Available _ -> true)
           in
-          let f = destruct cx in
+          let f = destruct cx ~has_anno in
           Destructuring.object_properties cx ~expr ~f init properties
         in
         ( loc,
@@ -497,7 +511,7 @@ module Make (Env : Env_sig.S) = struct
                 | Ast.Type.Missing _ -> false
                 | Ast.Type.Available _ -> true)
           in
-          let f = destruct cx in
+          let f = destruct cx ~has_anno in
           Destructuring.array_elements cx ~expr ~f init elements
         in
         ( loc,
@@ -508,9 +522,15 @@ module Make (Env : Env_sig.S) = struct
           }
         )
 
-    let eval_rest cx (Rest { t; loc; ploc; id }) =
+    let eval_rest cx (Rest { t; loc; ploc; id; has_anno }) =
       let () =
         let { Ast.Pattern.Identifier.name = ((loc, _), { Ast.Identifier.name; _ }); _ } = id in
+        let t =
+          if has_anno then
+            Annotated t
+          else
+            Inferred t
+        in
         bind cx name t loc
       in
       ( loc,
@@ -662,7 +682,7 @@ module Make (Env : Env_sig.S) = struct
       if Context.enable_enums cx then
         let r = DescFormat.type_reason (OrdinaryName name) name_loc in
         let tvar = Tvar.mk cx r in
-        Env.bind_implicit_const Scope.Entry.EnumNameBinding cx name tvar name_loc
+        Env.bind_implicit_const Scope.Entry.EnumNameBinding cx name (Annotated tvar) name_loc
     | ( _,
         DeclareVariable { DeclareVariable.id = (id_loc, { Ast.Identifier.name; comments = _ }); _ }
       ) ->
@@ -689,7 +709,7 @@ module Make (Env : Env_sig.S) = struct
       let name = OrdinaryName name in
       let reason = mk_reason (RType name) name_loc in
       let tvar = Tvar.mk cx reason in
-      Env.bind_implicit_let Scope.Entry.ClassNameBinding cx name tvar name_loc
+      Env.bind_implicit_let Scope.Entry.ClassNameBinding cx name (Inferred tvar) name_loc
     | ( (_, DeclareClass { DeclareClass.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ })
       | (_, DeclareInterface { Interface.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ })
       | ( _,
@@ -888,7 +908,7 @@ module Make (Env : Env_sig.S) = struct
                     Entry.(CatchParamBinding)
                     cx
                     (OrdinaryName name)
-                    t
+                    (Inferred t)
                     loc
                 );
 
@@ -8607,6 +8627,11 @@ module Make (Env : Env_sig.S) = struct
     let mk_param cx ~annot tparams_map param =
       let (loc, { Ast.Function.Param.argument = (ploc, patt); default }) = param in
       let expr = expression ~annot:None in
+      let has_param_anno =
+        match Destructuring.type_of_pattern (ploc, patt) with
+        | Ast.Type.Missing _ -> false
+        | Ast.Type.Available _ -> true
+      in
       let (t, pattern) =
         match patt with
         | Ast.Pattern.Identifier id ->
@@ -8631,17 +8656,22 @@ module Make (Env : Env_sig.S) = struct
         | Ast.Pattern.Expression _ -> failwith "unexpected expression pattern in param"
       in
       RequireAnnot.require_annot_on_pattern cx ~annot (reason_of_t t) patt;
-      Func_stmt_config.Param { t; loc; ploc; pattern; default; expr }
+      Func_stmt_config.Param { t; loc; ploc; pattern; default; expr; has_anno = has_param_anno }
     in
     let mk_rest cx ~annot tparams_map rest =
       let (loc, { Ast.Function.RestParam.argument = (ploc, patt); comments = _ }) = rest in
+      let has_param_anno =
+        match Destructuring.type_of_pattern (ploc, patt) with
+        | Ast.Type.Missing _ -> false
+        | Ast.Type.Available _ -> true
+      in
       match patt with
       | Ast.Pattern.Identifier id ->
         let (t, id) =
           id_param cx tparams_map id (fun name -> mk_reason (RRestParameter (Some name)) ploc)
         in
         RequireAnnot.require_annot_on_pattern cx ~annot (reason_of_t t) patt;
-        Ok (Func_stmt_config.Rest { t; loc; ploc; id })
+        Ok (Func_stmt_config.Rest { t; loc; ploc; id; has_anno = has_param_anno })
       | Ast.Pattern.Object _
       | Ast.Pattern.Array _
       | Ast.Pattern.Expression _ ->

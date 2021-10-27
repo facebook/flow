@@ -78,12 +78,24 @@ module type S = sig
     ?state:State.t -> Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit
 
   val bind_implicit_let :
-    ?state:State.t -> Entry.let_binding_kind -> Context.t -> Reason.name -> Type.t -> ALoc.t -> unit
+    ?state:State.t ->
+    Entry.let_binding_kind ->
+    Context.t ->
+    Reason.name ->
+    Type.annotated_or_inferred ->
+    ALoc.t ->
+    unit
 
   val bind_fun : ?state:State.t -> Context.t -> Reason.name -> Type.t -> ALoc.t -> unit
 
   val bind_implicit_const :
-    ?state:State.t -> Entry.const_binding_kind -> Context.t -> string -> Type.t -> ALoc.t -> unit
+    ?state:State.t ->
+    Entry.const_binding_kind ->
+    Context.t ->
+    string ->
+    Type.annotated_or_inferred ->
+    ALoc.t ->
+    unit
 
   val bind_const :
     ?state:State.t -> Context.t -> string -> Type.annotated_or_inferred -> ALoc.t -> unit

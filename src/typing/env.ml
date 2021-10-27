@@ -701,22 +701,21 @@ module Env : Env_sig.S = struct
 
   (* bind implicit let entry *)
   let bind_implicit_let ?(state = State.Undeclared) kind cx name t loc =
-    let (spec, closure_writes, provider) = mk_havoc cx name loc t Entry.Havocable in
+    let (spec, closure_writes, provider) =
+      mk_havoc cx name loc (TypeUtil.type_t_of_annotated_or_inferred t) Entry.Havocable
+    in
     begin
       match (state, kind) with
       | (State.Initialized, Entry.ParamBinding) ->
         (* If this variable starts off initialized (which is currently only the case with
            parameters), then init_entry does not need to be called later, which is where normally providers are installed. *)
-        install_provider cx t name loc
+        install_provider cx (TypeUtil.type_t_of_annotated_or_inferred t) name loc
       | _ -> ()
     end;
-    bind_entry
-      cx
-      name
-      (Entry.new_let (Inferred t) ~kind ~loc ~state ~spec ?closure_writes ~provider)
-      loc
+    bind_entry cx name (Entry.new_let t ~kind ~loc ~state ~spec ?closure_writes ~provider) loc
 
-  let bind_fun ?(state = State.Declared) = bind_implicit_let ~state Entry.FunctionBinding
+  let bind_fun ?(state = State.Declared) cx name t =
+    bind_implicit_let ~state Entry.FunctionBinding cx name (Inferred t)
 
   (* bind const entry *)
   let bind_const ?(state = State.Undeclared) cx name t loc =
@@ -726,7 +725,7 @@ module Env : Env_sig.S = struct
 
   (* bind implicit const entry *)
   let bind_implicit_const ?(state = State.Undeclared) kind cx name t loc =
-    bind_entry cx (OrdinaryName name) (Entry.new_const (Inferred t) ~kind ~loc ~state) loc
+    bind_entry cx (OrdinaryName name) (Entry.new_const t ~kind ~loc ~state) loc
 
   (* bind type entry *)
   let bind_type ?(state = State.Declared) cx name t loc =
@@ -856,13 +855,21 @@ module Env : Env_sig.S = struct
           if specific != general then Flow.flow cx (specific, UseT (use_op, general));
 
           (* note that annotation supercedes specific initializer type *)
+          begin
+            match v.general with
+            | Annotated _ -> ()
+            | Inferred _ ->
+              (* This is checked separately from has_anno because this variable
+                 may have been previously declared with an annotation even if this
+                 declaration lacks one; e.g. `var x: number; var x = "hello"` *)
+              constrain_by_provider cx ~use_op specific name loc
+          end;
+
           let specific =
             if has_anno then
               general
-            else begin
-              constrain_by_provider cx ~use_op specific name loc;
+            else
               specific
-            end
           in
           install_provider cx specific name loc;
 

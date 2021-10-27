@@ -344,7 +344,7 @@ module New_env : Env_sig.S = struct
     | InternalName _
     | InternalModuleName _ ->
       Old_env.bind_implicit_let ?state kind cx name t loc
-    | OrdinaryName _ -> bind cx t loc
+    | OrdinaryName _ -> bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
 
   let bind_fun ?state cx name t loc =
     match name with
@@ -353,7 +353,8 @@ module New_env : Env_sig.S = struct
       Old_env.bind_fun ?state cx name t loc
     | OrdinaryName _ -> bind cx t loc
 
-  let bind_implicit_const ?state:_ _ cx _ t loc = bind cx t loc
+  let bind_implicit_const ?state:_ _ cx _ t loc =
+    bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
 
   let bind_const ?state:_ cx _ t loc = bind cx (TypeUtil.type_t_of_annotated_or_inferred t) loc
 
