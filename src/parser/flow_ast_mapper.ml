@@ -441,7 +441,7 @@ class ['loc] mapper =
     method class_implements_interface (interface : ('loc, 'loc) Ast.Class.Implements.Interface.t) =
       let open Ast.Class.Implements.Interface in
       let (loc, { id; targs }) = interface in
-      let id' = this#type_identifier id in
+      let id' = this#type_identifier_reference id in
       let targs' = map_opt this#type_args targs in
       if id == id' && targs == targs' then
         interface
@@ -1194,14 +1194,14 @@ class ['loc] mapper =
     method generic_identifier_type (git : ('loc, 'loc) Ast.Type.Generic.Identifier.t) =
       let open Ast.Type.Generic.Identifier in
       match git with
-      | Unqualified i -> id this#type_identifier i git (fun i -> Unqualified i)
+      | Unqualified i -> id this#type_identifier_reference i git (fun i -> Unqualified i)
       | Qualified i -> id this#generic_qualified_identifier_type i git (fun i -> Qualified i)
 
     method generic_qualified_identifier_type qual =
       let open Ast.Type.Generic.Identifier in
       let (loc, { qualification; id }) = qual in
       let qualification' = this#generic_identifier_type qualification in
-      let id' = this#type_identifier id in
+      let id' = this#type_identifier_reference id in
       if qualification' == qualification && id' == id then
         qual
       else
@@ -1240,10 +1240,10 @@ class ['loc] mapper =
     method type_param (tparam : ('loc, 'loc) Ast.Type.TypeParam.t) =
       let open Ast.Type.TypeParam in
       let (loc, { name; bound; variance; default }) = tparam in
-      let name' = this#type_identifier name in
       let bound' = this#type_annotation_hint bound in
       let variance' = this#variance_opt variance in
       let default' = map_opt this#type_ default in
+      let name' = this#binding_type_identifier name in
       if name' == name && bound' == bound && variance' == variance && default' == default then
         tparam
       else
@@ -1561,6 +1561,10 @@ class ['loc] mapper =
 
     method type_identifier (id : ('loc, 'loc) Ast.Identifier.t) = this#identifier id
 
+    method type_identifier_reference (id : ('loc, 'loc) Ast.Identifier.t) = this#type_identifier id
+
+    method binding_type_identifier (id : ('loc, 'loc) Ast.Identifier.t) = this#type_identifier id
+
     method interface _loc (interface : ('loc, 'loc) Ast.Statement.Interface.t) =
       let open Ast.Statement.Interface in
       let { id = ident; tparams; extends; body; comments } = interface in
@@ -1685,7 +1689,7 @@ class ['loc] mapper =
       in
       let remote' =
         if is_type then
-          this#type_identifier remote
+          this#type_identifier_reference remote
         else
           this#identifier remote
       in
@@ -1695,7 +1699,7 @@ class ['loc] mapper =
         | Some ident ->
           let local_visitor =
             if is_type then
-              this#type_identifier
+              this#binding_type_identifier
             else
               this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let
           in
@@ -2094,7 +2098,7 @@ class ['loc] mapper =
     method opaque_type _loc (otype : ('loc, 'loc) Ast.Statement.OpaqueType.t) =
       let open Ast.Statement.OpaqueType in
       let { id; tparams; impltype; supertype; comments } = otype in
-      let id' = this#type_identifier id in
+      let id' = this#binding_type_identifier id in
       let tparams' = map_opt this#type_params tparams in
       let impltype' = map_opt this#type_ impltype in
       let supertype' = map_opt this#type_ supertype in
@@ -2530,7 +2534,7 @@ class ['loc] mapper =
     method type_alias _loc (stuff : ('loc, 'loc) Ast.Statement.TypeAlias.t) =
       let open Ast.Statement.TypeAlias in
       let { id; tparams; right; comments } = stuff in
-      let id' = this#type_identifier id in
+      let id' = this#binding_type_identifier id in
       let tparams' = map_opt this#type_params tparams in
       let right' = this#type_ right in
       let comments' = this#syntax_opt comments in
