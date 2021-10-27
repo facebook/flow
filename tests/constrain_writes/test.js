@@ -80,3 +80,11 @@ function classexp() {
     }
   }
 }
+
+function decl() {
+  declare var x: number;
+  declare function f(): void;
+
+  x = "hi";
+  f = "hi";
+}

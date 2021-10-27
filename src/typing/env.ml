@@ -764,7 +764,7 @@ module Env : Env_sig.S = struct
           let (spec, closure_writes, provider) = mk_havoc cx name loc t Entry.Havocable in
           let entry =
             Entry.new_let
-              (Inferred t)
+              (Annotated t)
               ~kind:(Entry.DeclaredFunctionBinding { predicate })
               ~loc
               ~state:State.Initialized
