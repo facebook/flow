@@ -181,8 +181,398 @@ References:
                            ^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- wiki_examples.js:23:13
 
-Found 11 errors
+Cannot assign `'Our new pr...'` to `product` because string [1] is incompatible with number [2]. All writes to `product`
+must be compatible with the type of its initializer [3]. Add an annotation to `product` [3] if a different type is
+desired. [incompatible-type]
+
+   wiki_examples.js:23:13
+   23|   product = "Our new product is..."; // Error
+                   ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   wiki_examples.js:12:17
+   12|   let product = Math.sqrt(x) + y;
+                       ^^^^^^^^^^^^^^^^ [2]
+   wiki_examples.js:12:7
+   12|   let product = Math.sqrt(x) + y;
+             ^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- wiki_examples.js:24:15
+
+Cannot assign function to `Component` because property `other_prop` is missing in `Props` [1] but exists in
+`OtherProps` [2] in the first parameter. All writes to `Component` must be compatible with the type of its
+initializer [3]. Add an annotation to `Component` [3] if a different type is desired. [prop-missing]
+
+   wiki_examples.js:24:15
+   24|   Component = ({other_prop}: OtherProps) => { return <>{other_prop}</> }; // Error
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   wiki_examples.js:14:28
+   14|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                  ^^^^^ [1]
+   wiki_examples.js:24:30
+   24|   Component = ({other_prop}: OtherProps) => { return <>{other_prop}</> }; // Error
+                                    ^^^^^^^^^^ [2]
+   wiki_examples.js:14:7
+   14|   let Component = ({prop}: Props) => { return <>{prop}</> }
+             ^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- wiki_examples.js:24:15
+
+Cannot assign function to `Component` because property `prop` is missing in `OtherProps` [1] but exists in `Props` [2]
+in the first parameter. All writes to `Component` must be compatible with the type of its initializer [3]. Add an
+annotation to `Component` [3] if a different type is desired. [prop-missing]
+
+   wiki_examples.js:24:15
+   24|   Component = ({other_prop}: OtherProps) => { return <>{other_prop}</> }; // Error
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   wiki_examples.js:24:30
+   24|   Component = ({other_prop}: OtherProps) => { return <>{other_prop}</> }; // Error
+                                    ^^^^^^^^^^ [1]
+   wiki_examples.js:14:28
+   14|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                  ^^^^^ [2]
+   wiki_examples.js:14:7
+   14|   let Component = ({prop}: Props) => { return <>{prop}</> }
+             ^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- wiki_examples.js:25:14
+
+Cannot assign `<OtherComponent />` to `element` because property `other_prop` is missing in `Props` [1] but exists in
+`OtherProps` [2] in the first parameter of type argument `ElementType` [3]. All writes to `element` must be compatible
+with the type of its initializer [4]. Add an annotation to `element` [4] if a different type is desired. [prop-missing]
+
+   wiki_examples.js:25:14
+    25|   element = <OtherComponent {...other_props} />; // Error
+                     ^^^^^^^^^^^^^^
+
+References:
+   wiki_examples.js:14:28
+    14|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                   ^^^^^ [1]
+   wiki_examples.js:20:32
+    20|   declare var OtherComponent: (OtherProps) => React.Node;
+                                       ^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:195:29
+   195| declare type React$Element<+ElementType: React$ElementType> = {|
+                                    ^^^^^^^^^^^ [3]
+   wiki_examples.js:16:7
+    16|   let element = <Component {...props} />
+              ^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------- wiki_examples.js:25:14
+
+Cannot assign `<OtherComponent />` to `element` because property `prop` is missing in `OtherProps` [1] but exists in
+`Props` [2] in the first parameter of type argument `ElementType` [3]. All writes to `element` must be compatible with
+the type of its initializer [4]. Add an annotation to `element` [4] if a different type is desired. [prop-missing]
+
+   wiki_examples.js:25:14
+    25|   element = <OtherComponent {...other_props} />; // Error
+                     ^^^^^^^^^^^^^^
+
+References:
+   wiki_examples.js:20:32
+    20|   declare var OtherComponent: (OtherProps) => React.Node;
+                                       ^^^^^^^^^^ [1]
+   wiki_examples.js:14:28
+    14|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                   ^^^^^ [2]
+   <BUILTINS>/react.js:195:29
+   195| declare type React$Element<+ElementType: React$ElementType> = {|
+                                    ^^^^^^^^^^^ [3]
+   wiki_examples.js:16:7
+    16|   let element = <Component {...props} />
+              ^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------- wiki_examples.js:25:14
+
+Cannot assign `<OtherComponent />` to `element` because `React.Portal` [1] is incompatible with `React.Element` [2] in
+the return value of type argument `ElementType` [3]. All writes to `element` must be compatible with the type of its
+initializer [4]. Add an annotation to `element` [4] if a different type is desired. [incompatible-type-arg]
+
+   wiki_examples.js:25:14
+    25|   element = <OtherComponent {...other_props} />; // Error
+                     ^^^^^^^^^^^^^^
+
+References:
+   wiki_examples.js:20:47
+    20|   declare var OtherComponent: (OtherProps) => React.Node;
+                                                      ^^^^^^^^^^ [1]
+   wiki_examples.js:14:47
+    14|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                                      ^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:195:29
+   195| declare type React$Element<+ElementType: React$ElementType> = {|
+                                    ^^^^^^^^^^^ [3]
+   wiki_examples.js:16:7
+    16|   let element = <Component {...props} />
+              ^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------- wiki_examples.js:25:14
+
+Cannot assign `<OtherComponent />` to `element` because boolean [1] is incompatible with `React.Element` [2] in the
+return value of type argument `ElementType` [3]. All writes to `element` must be compatible with the type of its
+initializer [4]. Add an annotation to `element` [4] if a different type is desired. [incompatible-type-arg]
+
+   wiki_examples.js:25:14
+    25|   element = <OtherComponent {...other_props} />; // Error
+                     ^^^^^^^^^^^^^^
+
+References:
+   wiki_examples.js:20:47
+    20|   declare var OtherComponent: (OtherProps) => React.Node;
+                                                      ^^^^^^^^^^ [1]
+   wiki_examples.js:14:47
+    14|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                                      ^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:195:29
+   195| declare type React$Element<+ElementType: React$ElementType> = {|
+                                    ^^^^^^^^^^^ [3]
+   wiki_examples.js:16:7
+    16|   let element = <Component {...props} />
+              ^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------- wiki_examples.js:25:14
+
+Cannot assign `<OtherComponent />` to `element` because null [1] is incompatible with `React.Element` [2] in the return
+value of type argument `ElementType` [3]. All writes to `element` must be compatible with the type of its
+initializer [4]. Add an annotation to `element` [4] if a different type is desired. [incompatible-type-arg]
+
+   wiki_examples.js:25:14
+    25|   element = <OtherComponent {...other_props} />; // Error
+                     ^^^^^^^^^^^^^^
+
+References:
+   wiki_examples.js:20:47
+    20|   declare var OtherComponent: (OtherProps) => React.Node;
+                                                      ^^^^^^^^^^ [1]
+   wiki_examples.js:14:47
+    14|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                                      ^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:195:29
+   195| declare type React$Element<+ElementType: React$ElementType> = {|
+                                    ^^^^^^^^^^^ [3]
+   wiki_examples.js:16:7
+    16|   let element = <Component {...props} />
+              ^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------- wiki_examples.js:25:14
+
+Cannot assign `<OtherComponent />` to `element` because number [1] is incompatible with `React.Element` [2] in the
+return value of type argument `ElementType` [3]. All writes to `element` must be compatible with the type of its
+initializer [4]. Add an annotation to `element` [4] if a different type is desired. [incompatible-type-arg]
+
+   wiki_examples.js:25:14
+    25|   element = <OtherComponent {...other_props} />; // Error
+                     ^^^^^^^^^^^^^^
+
+References:
+   wiki_examples.js:20:47
+    20|   declare var OtherComponent: (OtherProps) => React.Node;
+                                                      ^^^^^^^^^^ [1]
+   wiki_examples.js:14:47
+    14|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                                      ^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:195:29
+   195| declare type React$Element<+ElementType: React$ElementType> = {|
+                                    ^^^^^^^^^^^ [3]
+   wiki_examples.js:16:7
+    16|   let element = <Component {...props} />
+              ^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------- wiki_examples.js:25:14
+
+Cannot assign `<OtherComponent />` to `element` because string [1] is incompatible with `React.Element` [2] in the
+return value of type argument `ElementType` [3]. All writes to `element` must be compatible with the type of its
+initializer [4]. Add an annotation to `element` [4] if a different type is desired. [incompatible-type-arg]
+
+   wiki_examples.js:25:14
+    25|   element = <OtherComponent {...other_props} />; // Error
+                     ^^^^^^^^^^^^^^
+
+References:
+   wiki_examples.js:20:47
+    20|   declare var OtherComponent: (OtherProps) => React.Node;
+                                                      ^^^^^^^^^^ [1]
+   wiki_examples.js:14:47
+    14|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                                      ^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:195:29
+   195| declare type React$Element<+ElementType: React$ElementType> = {|
+                                    ^^^^^^^^^^^ [3]
+   wiki_examples.js:16:7
+    16|   let element = <Component {...props} />
+              ^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------- wiki_examples.js:25:14
+
+Cannot assign `<OtherComponent />` to `element` because inexact `$Iterable` [1] is incompatible with exact
+`React.Element` [2] in the return value of type argument `ElementType` [3]. All writes to `element` must be compatible
+with the type of its initializer [4]. Add an annotation to `element` [4] if a different type is desired.
+[incompatible-exact]
+
+   wiki_examples.js:25:14
+    25|   element = <OtherComponent {...other_props} />; // Error
+                     ^^^^^^^^^^^^^^
+
+References:
+   wiki_examples.js:20:47
+    20|   declare var OtherComponent: (OtherProps) => React.Node;
+                                                      ^^^^^^^^^^ [1]
+   wiki_examples.js:14:47
+    14|   let Component = ({prop}: Props) => { return <>{prop}</> }
+                                                      ^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:195:29
+   195| declare type React$Element<+ElementType: React$ElementType> = {|
+                                    ^^^^^^^^^^^ [3]
+   wiki_examples.js:16:7
+    16|   let element = <Component {...props} />
+              ^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------- wiki_examples.js:56:24
+
+Cannot assign `42` to `topLevelAssigned` because number [1] is incompatible with string [2]. All writes to
+`topLevelAssigned` must be compatible with the type of its initial assignment [3]. Add an annotation to
+`topLevelAssigned` [4] if a different type is desired. [incompatible-type]
+
+   wiki_examples.js:56:24
+   56|     topLevelAssigned = 42; // Error `topLevelAssigned` has type `string`
+                              ^^ [1]
+
+References:
+   wiki_examples.js:59:22
+   59|   topLevelAssigned = "Hello world"; // This write determines the var's type
+                            ^^^^^^^^^^^^^ [2]
+   wiki_examples.js:59:3
+   59|   topLevelAssigned = "Hello world"; // This write determines the var's type
+         ^^^^^^^^^^^^^^^^ [3]
+   wiki_examples.js:53:7
+   53|   let topLevelAssigned;
+             ^^^^^^^^^^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------- wiki_examples.js:60:22
+
+Cannot assign `true` to `topLevelAssigned` because boolean [1] is incompatible with string [2]. All writes to
+`topLevelAssigned` must be compatible with the type of its initial assignment [3]. Add an annotation to
+`topLevelAssigned` [4] if a different type is desired. [incompatible-type]
+
+   wiki_examples.js:60:22
+   60|   topLevelAssigned = true; // Error `topLevelAssigned` has type `string`
+                            ^^^^ [1]
+
+References:
+   wiki_examples.js:59:22
+   59|   topLevelAssigned = "Hello world"; // This write determines the var's type
+                            ^^^^^^^^^^^^^ [2]
+   wiki_examples.js:59:3
+   59|   topLevelAssigned = "Hello world"; // This write determines the var's type
+         ^^^^^^^^^^^^^^^^ [3]
+   wiki_examples.js:53:7
+   53|   let topLevelAssigned;
+             ^^^^^^^^^^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------- wiki_examples.js:76:22
+
+Cannot assign `false` to `myNumberOrString` because: [incompatible-type]
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+All writes to `myNumberOrString` must be compatible with the type of one of its initial assignments [4], [5]. Add an
+annotation to `myNumberOrString` [6] if a different type is desired.
+
+   wiki_examples.js:76:22
+   76|   myNumberOrString = false; // Error `myNumberOrString` has type `number | string`
+                            ^^^^^ [1]
+
+References:
+   wiki_examples.js:69:24
+   69|     myNumberOrString = 42;
+                              ^^ [2]
+   wiki_examples.js:71:24
+   71|     myNumberOrString = "Hello world";
+                              ^^^^^^^^^^^^^ [3]
+   wiki_examples.js:69:5
+   69|     myNumberOrString = 42;
+           ^^^^^^^^^^^^^^^^ [4]
+   wiki_examples.js:71:5
+   71|     myNumberOrString = "Hello world";
+           ^^^^^^^^^^^^^^^^ [5]
+   wiki_examples.js:66:7
+   66|   let myNumberOrString;
+             ^^^^^^^^^^^^^^^^ [6]
+
+
+Error ------------------------------------------------------------------------------------------- wiki_examples.js:88:21
+
+Cannot call `oneBranchAssigned.toUpperCase` because property `toUpperCase` is missing in possibly uninitialized
+variable [1]. [incompatible-use]
+
+   wiki_examples.js:88:21
+   88|   oneBranchAssigned.toUpperCase(); // Error: `oneBranchAssigned` may be uninitialized
+                           ^^^^^^^^^^^
+
+References:
+   wiki_examples.js:82:7
+   82|   let oneBranchAssigned;
+             ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- wiki_examples.js:88:21
+
+Cannot call `oneBranchAssigned.toUpperCase` because property `toUpperCase` is missing in `Number` [1]. [prop-missing]
+
+   wiki_examples.js:88:21
+   88|   oneBranchAssigned.toUpperCase(); // Error: `oneBranchAssigned` may be uninitialized
+                           ^^^^^^^^^^^
+
+References:
+   wiki_examples.js:89:23
+   89|   oneBranchAssigned = 42; // Error `oneBranchAssigned` has type `string`
+                             ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- wiki_examples.js:89:23
+
+Cannot assign `42` to `oneBranchAssigned` because number [1] is incompatible with string [2]. All writes to
+`oneBranchAssigned` must be compatible with the type of its initial assignment [3]. Add an annotation to
+`oneBranchAssigned` [4] if a different type is desired. [incompatible-type]
+
+   wiki_examples.js:89:23
+   89|   oneBranchAssigned = 42; // Error `oneBranchAssigned` has type `string`
+                             ^^ [1]
+
+References:
+   wiki_examples.js:85:25
+   85|     oneBranchAssigned = "Hello world!";
+                               ^^^^^^^^^^^^^^ [2]
+   wiki_examples.js:85:5
+   85|     oneBranchAssigned = "Hello world!";
+           ^^^^^^^^^^^^^^^^^ [3]
+   wiki_examples.js:82:7
+   82|   let oneBranchAssigned;
+             ^^^^^^^^^^^^^^^^^ [4]
+
+
+
+Found 28 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
