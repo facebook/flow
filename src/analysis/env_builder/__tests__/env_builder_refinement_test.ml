@@ -3589,9 +3589,6 @@ let y = (z: typeof x): typeof x => 3;
         (3, 4) to (3, 8) => {
           Global Math
         };
-        (11, 11) to (11, 12) => {
-          Global T
-        };
         (11, 21) to (11, 22) => {
           (2, 4) to (2, 5): (`x`),
           (4, 2) to (4, 3): (`x`),
@@ -3611,9 +3608,6 @@ let y = (z: typeof x): typeof x => 3;
           (2, 4) to (2, 5): (`x`),
           (4, 2) to (4, 3): (`x`),
           (6, 2) to (6, 3): (`x`)
-        };
-        (12, 19) to (12, 20) => {
-          Global T
         };
         (12, 29) to (12, 30) => {
           (2, 4) to (2, 5): (`x`),
@@ -3664,4 +3658,15 @@ if (global != null) {
         };
         (4, 23) to (4, 29) => {
           Global global
+        }] |}]
+
+let%expect_test "type_alias" =
+  print_ssa_test {|
+type t = number;
+let x: t = 42;
+|};
+    [%expect {|
+      [
+        (3, 7) to (3, 8) => {
+          (2, 5) to (2, 6): (`t`)
         }] |}]

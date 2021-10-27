@@ -715,21 +715,33 @@ module Make
         )
 
       method private mk_env =
-        SMap.map (fun (_, (loc, _)) ->
-            let (havoc, providers) = this#providers_of_def_loc loc in
-            let write_entries =
-              Base.List.fold
-                ~f:(fun acc r -> L.LMap.add (poly_loc_of_reason r) r acc)
-                ~init:env_state.write_entries
-                providers
-            in
-            env_state <- { env_state with write_entries };
-            {
-              val_ref = ref (Val.uninitialized loc);
-              havoc;
-              def_loc = Some loc;
-              heap_refinements = ref HeapRefinementMap.empty;
-            }
+        SMap.mapi (fun name (kind, (loc, _)) ->
+            match kind with
+            | Bindings.Type ->
+              let reason = mk_reason (RType (OrdinaryName name)) loc in
+              let write_entries = L.LMap.add loc reason env_state.write_entries in
+              env_state <- { env_state with write_entries };
+              {
+                val_ref = ref (Val.one reason);
+                havoc = Val.one reason;
+                def_loc = Some loc;
+                heap_refinements = ref HeapRefinementMap.empty;
+              }
+            | _ ->
+              let (havoc, providers) = this#providers_of_def_loc loc in
+              let write_entries =
+                Base.List.fold
+                  ~f:(fun acc r -> L.LMap.add (poly_loc_of_reason r) r acc)
+                  ~init:env_state.write_entries
+                  providers
+              in
+              env_state <- { env_state with write_entries };
+              {
+                val_ref = ref (Val.uninitialized loc);
+                havoc;
+                def_loc = Some loc;
+                heap_refinements = ref HeapRefinementMap.empty;
+              }
         )
 
       method private push_env bindings =
@@ -825,6 +837,8 @@ module Make
           | Some abrupt_completion when not (filter abrupt_completion) ->
             raise (AbruptCompletion.Exn abrupt_completion)
           | _ -> ()
+
+      method! binding_type_identifier ident = super#identifier ident
 
       method! pattern_identifier ?kind ident =
         ignore kind;
@@ -2689,6 +2703,8 @@ module Make
               | None -> Some [Env_api.Unreachable loc]
               | x -> x)
             values
+
+      method! binding_type_identifier ident = super#identifier ident
 
       method! identifier (ident : (L.t, L.t) Ast.Identifier.t) =
         let (loc, _) = ident in
