@@ -673,4 +673,30 @@ x = 'a'; // p
     }
          "
                "[(3, 15) to (3, 16)]";
+         "switch1"
+         >:: mk_provider_loc_test
+               (mk_loc (1, 4) (1, 5))
+               "
+    let w;
+    switch (bar) {
+      case 'foo':
+            let w;
+            w = 10;
+    }
+    w = 42; // provider for external
+         "
+               "[(7, 0) to (7, 1)]";
+         "switch2"
+         >:: mk_provider_loc_test
+               (mk_loc (4, 12) (4, 13))
+               "
+    let w;
+    switch (bar) {
+      case 'foo':
+            let w;
+            w = 10; // provider for internal
+    }
+    w = 42;
+         "
+               "[(5, 8) to (5, 9)]";
        ]

@@ -591,21 +591,27 @@ end = struct
 
       method! switch _loc (switch : ('loc, 'loc) Ast.Statement.Switch.t) =
         let open Ast.Statement.Switch in
-        let { discriminant; cases; comments } = switch in
+        let { discriminant; cases = _; comments = _ } = switch in
         let _discriminant' = this#expression discriminant in
-        let (env0, cx) = this#acc in
-        let (rev_cases', env') =
-          Base.List.fold cases ~init:([], env0) ~f:(fun (acc_cases, acc_env) case ->
-              let (case', acc_env) =
-                this#accumulate_branch_env (env0, cx) (fun () -> this#switch_case case) acc_env
-              in
-              (case' :: acc_cases, acc_env)
-          )
-        in
-        let _cases' = List.rev rev_cases' in
-        this#set_acc (env', cx);
-        let _comments' = this#syntax_opt comments in
-        switch
+        this#enter_scope
+          Lex
+          (fun _loc switch ->
+            let { discriminant = _; cases; comments } = switch in
+            let (env0, cx) = this#acc in
+            let (rev_cases', env') =
+              Base.List.fold cases ~init:([], env0) ~f:(fun (acc_cases, acc_env) case ->
+                  let (case', acc_env) =
+                    this#accumulate_branch_env (env0, cx) (fun () -> this#switch_case case) acc_env
+                  in
+                  (case' :: acc_cases, acc_env)
+              )
+            in
+            let _cases' = List.rev rev_cases' in
+            this#set_acc (env', cx);
+            let _comments' = this#syntax_opt comments in
+            switch)
+          _loc
+          switch
 
       method! try_catch _loc (stmt : ('loc, 'loc) Ast.Statement.Try.t) =
         let open Ast.Statement.Try in
