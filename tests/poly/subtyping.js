@@ -6,10 +6,10 @@
 // with the upper tparams set to their bounds, even if it wasn't OK
 // for other possible arguments.
 {
-  (o: <T>() => mixed): (<S>() => S) => o; // TODO should error
+  (o: <T>() => mixed): (<S>() => S) => o; // should error
 
   function coerce<A, B>(x: A): B {
-    const g = (o: <T>() => A): (<S>() => S) => o; // TODO should error
+    const g = (o: <T>() => A): (<S>() => S) => o; // should error
     return g(<T>() => x)();
   }
 
@@ -19,10 +19,10 @@
 
 // Test issue #8766, round 2.
 {
-  (f: <T>(T) => mixed): (<S>(mixed) => S) => f; // TODO should error
+  (f: <T>(T) => mixed): (<S>(mixed) => S) => f; // should error
 
   function coerce<A, B>(x: A): B {
-    const g = (f: <T>(T) => mixed): (<S>(mixed) => S) => f; // TODO should error
+    const g = (f: <T>(T) => mixed): (<S>(mixed) => S) => f; // should error
     return g(<T>(y: T) => x)();
   }
 
@@ -35,7 +35,7 @@
 // polymorphic-subtyping literature:
 //   https://github.com/facebook/flow/pull/8767#issuecomment-949402649
 {
-  const g = (f: <S, T: S>(T) => T): <S, T>(T) => S => f; // TODO should error
+  const g = (f: <S, T: S>(T) => T): <S, T>(T) => S => f; // should error
   const coerce: <B, A>(A) => B = g(<S, T: S>(x: T): T => x);
 }
 
@@ -61,9 +61,9 @@
 
 // Test subtyping where lower has fewer or more parameters than upper.
 // Currently these don't work; see #8767.
-(f: <R, S>(R, S) => S): (<T>(T, T) => T) => f; // ideally ok, known error
+(f: <R, S>(R, S) => S): (<T>(T, T) => T) => f; // ok
 (f: <R, S>(R, S) => S): (<T>(T, T) => boolean) => f; // error
-(f: <R>(R, mixed) => R): (<S, T>(S, T) => S) => f; // ideally ok, known error
+(f: <R>(R, mixed) => R): (<S, T>(S, T) => S) => f; // ok
 (f: <R>(R, mixed) => R): (<S, T>(S, T) => T) => f; // error
 
 

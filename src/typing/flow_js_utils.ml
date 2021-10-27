@@ -577,33 +577,32 @@ let iter_resolve_union ~f cx trace reason rep upper =
 
 (** Generics *)
 
+(* New generics mode: generate a GenericT from a generic *)
+let generic_bound cx prev_map { bound; name; reason = param_reason; is_this = _; _ } =
+  let param_loc = aloc_of_reason param_reason in
+  let bound = subst cx prev_map bound in
+  let id = Context.make_generic_id cx name param_loc in
+  let bound =
+    mod_reason_of_t
+      (fun bound_reason ->
+        let annot_loc = annot_aloc_of_reason bound_reason in
+        let desc = desc_of_reason ~unwrap:false bound_reason in
+        opt_annot_reason ?annot_loc @@ mk_reason desc param_loc)
+      bound
+  in
+  let generic = GenericT { reason = reason_of_t bound; name; id; bound } in
+  SMap.add name generic prev_map
+
 (** Harness for testing parameterized types. Given a test function and a list
     of type params, replace the type params with GenericTs and run the test function.
   *)
-let check_with_generics : 'a. Context.t -> Type.typeparam list -> (Type.t SMap.t -> 'a) -> 'a =
-  (* New generics mode: generate a GenericT from a generic *)
-  let generic_bound cx prev_map { bound; name; reason = param_reason; is_this = _; _ } =
-    let param_loc = aloc_of_reason param_reason in
-    let bound = subst cx prev_map bound in
-    let id = Context.make_generic_id cx name param_loc in
-    let bound =
-      mod_reason_of_t
-        (fun bound_reason ->
-          let annot_loc = annot_aloc_of_reason bound_reason in
-          let desc = desc_of_reason ~unwrap:false bound_reason in
-          opt_annot_reason ?annot_loc @@ mk_reason desc param_loc)
-        bound
-    in
-    let generic = GenericT { reason = reason_of_t bound; name; id; bound } in
-    SMap.add name generic prev_map
-  in
-  (* main - run f over a collection of arg maps generated for params *)
-  fun cx params f ->
-    if params = [] then
-      f SMap.empty
-    else
-      let map = Base.List.fold_left ~f:(generic_bound cx) ~init:SMap.empty params in
-      f map
+let check_with_generics cx params f =
+  if params = [] then
+    f SMap.empty
+  else
+    (* main - run f over a collection of arg maps generated for params *)
+    let map = Base.List.fold_left ~f:(generic_bound cx) ~init:SMap.empty params in
+    f map
 
 let mk_poly_arity_reason tparams_loc =
   mk_reason (RCustom "See type parameters of definition here") tparams_loc

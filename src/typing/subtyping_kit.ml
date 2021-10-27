@@ -1004,8 +1004,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
      * we already deal with statements of this form when checking polymorphic
      * definitions! In particular, statements such as "there is some X:U...")
      * correspond to "create a type variable with that constraint and ...", and
-     * statements such as "show that for all X:U" correspond to "show that for
-     * both X = bottom and X = U, ...".
+     * statements such as "show that for all X:U" correspond to "introduce a
+     * GenericT with bound U".
      *
      * Thus, all we need to do when checking that any type flows to a
      * polymorphic type is to follow the same principles used when checking that
@@ -1019,50 +1019,72 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | (DefT (_, _, PolyT { id = id1; _ }), DefT (_, _, PolyT { id = id2; _ }))
       when Poly.equal_id id1 id2 ->
       if Context.is_verbose cx then prerr_endline "PolyT ~> PolyT fast path"
-    | ( DefT (r1, _, PolyT { tparams_loc = tparams_loc1; tparams = params1; t_out = t1; id = id1 }),
-        DefT (r2, _, PolyT { tparams_loc = tparams_loc2; tparams = params2; t_out = t2; id = id2 })
-      ) ->
-      let n1 = Nel.length params1 in
-      let n2 = Nel.length params2 in
-      if n2 > n1 then
-        add_output cx ~trace (Error_message.ETooManyTypeArgs (r2, r1, n1))
-      else if n2 < n1 then
-        add_output cx ~trace (Error_message.ETooFewTypeArgs (r2, r1, n1))
-      else
-        (* for equal-arity polymorphic types, flow param upper bounds, then
-         * instances parameterized by these *)
-        let args1 = instantiate_poly_param_upper_bounds cx params1 in
-        let args2 = instantiate_poly_param_upper_bounds cx params2 in
-        List.iter2 (fun arg1 arg2 -> rec_flow_t cx trace ~use_op (arg2, arg1)) args1 args2;
-        let inst1 =
-          let r = reason_of_t t1 in
-          mk_typeapp_of_poly
-            cx
-            trace
-            ~use_op
-            ~reason_op:r
-            ~reason_tapp:r
-            id1
-            tparams_loc1
-            params1
-            t1
-            args1
-        in
-        let inst2 =
-          let r = reason_of_t t2 in
-          mk_typeapp_of_poly
-            cx
-            trace
-            ~use_op
-            ~reason_op:r
-            ~reason_tapp:r
-            id2
-            tparams_loc2
-            params2
-            t2
-            args2
-        in
-        rec_flow_t ~use_op cx trace (inst1, inst2)
+    | ( DefT (_, _, PolyT { tparams = params1; t_out = t1; _ }),
+        DefT (_, _, PolyT { tparams = params2; t_out = t2; _ })
+      )
+      when let n1 = Nel.length params1 in
+           let n2 = Nel.length params2 in
+           n1 = n2 ->
+      (* A description of this subtyping rule can be found in "Decidable Bounded
+       * Quantifcation" by G. Castagna B. Pierce.
+       *
+       *   G |- T1 <: S1   G, { X: S1 } |- S2 <: T2
+       *   ------------------------------------------ (All-local)
+       *   G |- forall X:S1 . S2 <: forall X:T1 . T2
+       *
+       * The code below implements this rule for the slightly more general case of
+       * subtyping between two polymorphic types:
+       *
+       * forall a1:b1  , ... ai:bi  , ..., an:bn   . t
+       * forall a1':b1', ... ai':bi', ..., an':bn' . t'
+       *
+       * 1st Premise
+       * -----------
+       * For each type parameter pair (ai:bi, ai':bi') we create the constraints:
+       *
+       * bi[ai/Ai, ..., a_(i-1)/A_(i-1)] <: bi'[ai'/Ai, ..., a_(i-1)'/A_(i-1)]
+       *
+       * where ai is a BoundT
+       *       Ai is the corresponding GenericT that is produced by [generic_bound]
+       *       t[a/b] denotes substitution of a by b in t
+       *
+       * Note that for the right-hand side, we maintain a map that maps primed
+       * params (a1', a2', etc.) to GenericTs of the left-hand side (A1, A2, etc.).
+       *)
+      let (_, _) =
+        Base.List.fold2_exn
+          (Nel.to_list params1)
+          (Nel.to_list params2)
+          ~init:(SMap.empty, SMap.empty)
+          ~f:(fun (prev_map1, prev_map2) param1 param2 ->
+            let bound1 = Subst.subst cx ~use_op prev_map1 param1.bound in
+            let bound2 = Subst.subst cx ~use_op prev_map2 param2.bound in
+            rec_flow cx trace (bound2, UseT (use_op, bound1));
+            let map1 = Flow_js_utils.generic_bound cx prev_map1 param1 in
+            let map2 = SMap.add param2.name (SMap.find param1.name map1) prev_map2 in
+            (map1, map2)
+        )
+      in
+
+      (* 2nd Premise
+       * -----------
+       * We check t <: t' after substituting each bound ai with a GenericT type
+       * Ai, that is bound by bi.
+       *)
+      check_with_generics cx (Nel.to_list params1) (fun map1 ->
+          let inst1 = Subst.subst cx ~use_op map1 t1 in
+          let map2 =
+            Base.List.fold2_exn
+              (Nel.to_list params1)
+              (Nel.to_list params2)
+              ~init:SMap.empty
+              ~f:(fun prev_map { name = n1; _ } { name = n2; _ } ->
+                SMap.add n2 (SMap.find n1 map1) prev_map
+            )
+          in
+          let inst2 = Subst.subst cx ~use_op map2 t2 in
+          rec_flow_t ~use_op cx trace (inst1, inst2)
+      )
     (* general case **)
     | (_, DefT (_, _, PolyT { tparams = ids; t_out = t; _ })) ->
       check_with_generics cx (Nel.to_list ids) (fun map_ ->

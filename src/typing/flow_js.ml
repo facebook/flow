@@ -8376,52 +8376,6 @@ struct
           resolve_id cx trace ~use_op:(unify_flip use_op) id t
         | (DefT (_, _, PolyT { id = id1; _ }), DefT (_, _, PolyT { id = id2; _ })) when id1 = id2 ->
           ()
-        | ( DefT
-              (r1, _, PolyT { tparams_loc = tparams_loc1; tparams = params1; t_out = t1; id = id1 }),
-            DefT
-              (r2, _, PolyT { tparams_loc = tparams_loc2; tparams = params2; t_out = t2; id = id2 })
-          ) ->
-          let n1 = Nel.length params1 in
-          let n2 = Nel.length params2 in
-          if n2 > n1 then
-            add_output cx ~trace (Error_message.ETooManyTypeArgs (r2, r1, n1))
-          else if n2 < n1 then
-            add_output cx ~trace (Error_message.ETooFewTypeArgs (r2, r1, n1))
-          else
-            (* for equal-arity polymorphic types, unify param upper bounds
-               with each other, then instances parameterized by these *)
-            let args1 = instantiate_poly_param_upper_bounds cx params1 in
-            let args2 = instantiate_poly_param_upper_bounds cx params2 in
-            List.iter2 (rec_unify cx trace ~use_op) args1 args2;
-            let inst1 =
-              let r = reason_of_t t1 in
-              mk_typeapp_of_poly
-                cx
-                trace
-                ~use_op
-                ~reason_op:r
-                ~reason_tapp:r
-                id1
-                tparams_loc1
-                params1
-                t1
-                args1
-            in
-            let inst2 =
-              let r = reason_of_t t2 in
-              mk_typeapp_of_poly
-                cx
-                trace
-                ~use_op
-                ~reason_op:r
-                ~reason_tapp:r
-                id2
-                tparams_loc2
-                params2
-                t2
-                args2
-            in
-            rec_unify cx trace ~use_op inst1 inst2
         | (DefT (_, _, ArrT (ArrayAT (t1, ts1))), DefT (_, _, ArrT (ArrayAT (t2, ts2)))) ->
           let ts1 = Base.Option.value ~default:[] ts1 in
           let ts2 = Base.Option.value ~default:[] ts2 in
