@@ -80,8 +80,53 @@ References:
            ^ [4]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:26:7
 
-Found 4 errors
+Cannot assign `"Hello"` to `x` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   test.js:26:7
+   26|   x = "Hello"; // only regular failure
+             ^^^^^^^ [1]
+
+References:
+   test.js:25:16
+   25| function ff(x: number) {
+                      ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:40:16
+
+Cannot assign `x` to `a` because rest of object pattern [1] is incompatible with string [2]. [incompatible-type]
+
+   test.js:40:16
+   40|   var {...a} = x; // no post-check here
+                      ^
+
+References:
+   test.js:40:8
+   40|   var {...a} = x; // no post-check here
+              ^^^^ [1]
+   test.js:39:11
+   39|   var a : string;
+                 ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:45:7
+
+Cannot assign `42` to `p` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   test.js:45:7
+   45|   p = 42; // error: number ~> string, but no post-infer
+             ^^ [1]
+
+References:
+   test.js:44:8
+   44|   var {p}: T = {p: "foo"};
+              ^ [2]
+
+
+
+Found 7 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
