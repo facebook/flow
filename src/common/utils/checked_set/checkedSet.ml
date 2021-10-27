@@ -109,6 +109,9 @@ let filter_into_set ~f checked =
     checked
     FilenameSet.empty
 
+let partition ~(f : kind -> bool) (checked : t) : t * t =
+  FilenameMap.partition (fun _key -> f) checked
+
 let count ~f checked =
   FilenameMap.fold
     (fun _key kind acc ->
