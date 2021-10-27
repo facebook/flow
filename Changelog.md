@@ -1,3 +1,28 @@
+### 0.163.0
+
+New Features:
+* The deprecated `*` type is now an alias to `any`. You can use `flow codemod replace-existentials`, which is available in previous versions of Flow, to upgrade your codebase to not use `*`. This codemod command will not be available in the current or future versions of Flow.
+* Add (experimental) codemod to annotate variables that cause constrained write errors in future Flow versions.
+* Add (experimental) codemod rename variable names that are reused with different types.
+* Add --include-comments and --include-locs flags to the `flow ast` command.
+* Add $ObjMapConst<O, T> builtin type, alias for $ObjMap<O, () => T>.
+
+Notable bug fixes:
+* Fix bug in `$KeyMirror` so that it respects the optionality of its arguments.
+* Type `JSON` as object rather than a class. This prevents code such as `new JSON()` which is a runtime error.
+
+Library Definitions:
+* Add `InputEvent.dataTransfer`
+* Declare `AggregateError` class - fixes #8764 (thanks @lachlanhunt).
+* Improve `UIEvent`, `InputEvent` and `KeyboardEvent` types.
+
+Misc:
+* Fix typo in CONTRIBUTING.md (thanks @jereef).
+* Clarify comments for ConcretizeTypeAppsT logic after Subtyping_kit refactor (thanks gnprice).
+
+Parser:
+* Fix a bug that allowed comments after the `#` in private identifiers.
+
 ### 0.162.2
 
 * Fixes a bug with `experimental.prioritize_dependency_checks`
