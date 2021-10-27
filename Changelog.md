@@ -1,3 +1,7 @@
+### 0.162.2
+
+* Fixes a bug with `experimental.prioritize_dependency_checks`
+
 ### 0.162.1
 
 * Fix a bug where errors in `node_modules` were shown in lazy mode. It is now consistent with non-lazy mode.
