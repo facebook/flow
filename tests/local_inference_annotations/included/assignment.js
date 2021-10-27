@@ -6,8 +6,8 @@ let y = (x: number) => 3;
 y = (x) => 3; // Missing annot
 
 let [a, b]: [number => number, number => number] = [(x) => x, (y) => y]
-a = (x) => x; // Errors, but could be supported
-[a, b] = [(y) => y , (y) => y]; // Errors, but could be supported
+a = (x) => x; // No missing annot
+[a, b] = [(y) => y , (y) => y]; // No missing annots
 
 var c;
 c = (x) => 3; // Missing annot

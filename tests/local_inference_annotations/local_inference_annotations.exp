@@ -22,30 +22,6 @@ Missing an annotation on `x`. [missing-local-annot]
            ^
 
 
-Error --------------------------------------------------------------------------------------- included/assignment.js:9:6
-
-Missing an annotation on `x`. [missing-local-annot]
-
-   9| a = (x) => x; // Errors, but could be supported
-           ^
-
-
-Error ------------------------------------------------------------------------------------- included/assignment.js:10:12
-
-Missing an annotation on `y`. [missing-local-annot]
-
-   10| [a, b] = [(y) => y , (y) => y]; // Errors, but could be supported
-                  ^
-
-
-Error ------------------------------------------------------------------------------------- included/assignment.js:10:23
-
-Missing an annotation on `y`. [missing-local-annot]
-
-   10| [a, b] = [(y) => y , (y) => y]; // Errors, but could be supported
-                             ^
-
-
 Error -------------------------------------------------------------------------------------- included/assignment.js:13:6
 
 Missing an annotation on `x`. [missing-local-annot]
@@ -559,4 +535,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 67 errors
+Found 64 errors

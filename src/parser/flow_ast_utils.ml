@@ -33,7 +33,7 @@ let rec fold_bindings_of_pattern =
       )
     in
     fun f acc -> function
-      | (_, Identifier { Identifier.name; annot; _ }) -> f acc name annot
+      | (_, Identifier { Identifier.name; _ }) -> f acc name
       | (_, Object { Object.properties; _ }) -> List.fold_left (property f) acc properties
       | (_, Array { Array.elements; _ }) -> List.fold_left (element f) acc elements
       (* This is for assignment and default param destructuring `[a.b=1]=c`, ignore these for now. *)
@@ -44,7 +44,18 @@ let fold_bindings_of_variable_declarations f acc declarations =
   let open Flow_ast.Statement.VariableDeclaration in
   List.fold_left
     (fun acc -> function
-      | (_, { Declarator.id = pattern; _ }) -> fold_bindings_of_pattern f acc pattern)
+      | (_, { Declarator.id = pattern; _ }) ->
+        let has_anno =
+          (* Only the toplevel annotation in a pattern is meaningful *)
+          let open Flow_ast.Pattern in
+          match pattern with
+          | (_, Array { Array.annot = Flow_ast.Type.Available _; _ })
+          | (_, Object { Object.annot = Flow_ast.Type.Available _; _ })
+          | (_, Identifier { Identifier.annot = Flow_ast.Type.Available _; _ }) ->
+            true
+          | _ -> false
+        in
+        fold_bindings_of_pattern (f has_anno) acc pattern)
     acc
     declarations
 

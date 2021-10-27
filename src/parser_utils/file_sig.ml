@@ -685,7 +685,7 @@ struct
             | VariableDeclaration { VariableDeclaration.declarations = decls; _ } ->
               let rev_named =
                 Ast_utils.fold_bindings_of_variable_declarations
-                  (fun named (loc, { Ast.Identifier.name; comments = _ }) _ ->
+                  (fun _ named (loc, { Ast.Identifier.name; comments = _ }) ->
                     let export = (stmt_loc, ExportNamed { loc; kind }) in
                     (name, export) :: named)
                   []

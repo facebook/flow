@@ -559,13 +559,14 @@ module Make (Env : Env_sig.S) = struct
       | Ast.Statement.VariableDeclaration.Var -> Env.bind_var
     in
     Flow_ast_utils.fold_bindings_of_variable_declarations
-      (fun () (loc, { Ast.Identifier.name; comments = _ }) annot_hint ->
+      (fun has_anno () (loc, { Ast.Identifier.name; comments = _ }) ->
         let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
         let t =
           let tvar = Tvar.mk cx reason in
-          match annot_hint with
-          | Flow_ast.Type.Missing _ -> Inferred tvar
-          | Flow_ast.Type.Available _ -> Annotated tvar
+          if has_anno then
+            Annotated tvar
+          else
+            Inferred tvar
         in
         bind cx name t loc)
       ()
@@ -2543,7 +2544,7 @@ module Make (Env : Env_sig.S) = struct
               Import_export.export_binding cx (OrdinaryName name) id_loc export_kind
             | VariableDeclaration { VariableDeclaration.declarations; _ } ->
               Flow_ast_utils.fold_bindings_of_variable_declarations
-                (fun () id _ ->
+                (fun _ () id ->
                   let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
                   Type_inference_hooks_js.dispatch_export_named_hook name id_loc;
                   Import_export.export_binding cx (OrdinaryName name) id_loc export_kind)
@@ -6154,7 +6155,7 @@ module Make (Env : Env_sig.S) = struct
     let all_have_annots =
       (not Env.new_env)
       && Flow_ast_utils.fold_bindings_of_pattern
-           (fun all_have_annots (loc, { Ast.Identifier.name; comments = _ }) _ ->
+           (fun all_have_annots (loc, { Ast.Identifier.name; comments = _ }) ->
              let has_annot = Env.get_var_annotation cx (OrdinaryName name) loc <> None in
              all_have_annots && has_annot)
            true
