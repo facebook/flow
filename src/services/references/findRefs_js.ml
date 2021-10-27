@@ -7,8 +7,6 @@
 
 let ( >>= ) = Lwt_result.Infix.( >>= )
 
-let ( >>| ) = Base.Result.( >>| )
-
 open Utils_js
 
 (** Sort and dedup by loc.
@@ -23,15 +21,6 @@ let local_variable_refs scope_info loc =
   | None -> (None, loc)
   | Some (var_refs, local_def_loc) -> (Some var_refs, local_def_loc)
 
-let local_property_refs ~reader ~options ~file_key ~ast_info ~scope_info ~def_info =
-  match def_info with
-  | None -> Lwt.return (Ok None)
-  | Some def_info ->
-    let refs =
-      PropertyFindRefs.find_local_refs ~reader ~options file_key ast_info scope_info def_info
-    in
-    Lwt.return (refs >>| Base.Option.some)
-
 let find_local_refs ~reader ~options ~env ~profiling ~file_input ~line ~col =
   let filename = File_input.filename_of_file_input file_input in
   let file_key = File_key.SourceFile filename in
@@ -42,10 +31,8 @@ let find_local_refs ~reader ~options ~env ~profiling ~file_input ~line ~col =
   let (ast, _, _) = ast_info in
   let scope_info = Scope_builder.program ~with_types:true ast in
   let (var_refs, loc) = local_variable_refs scope_info loc in
-  (* Run get-def on the local loc *)
-  GetDefUtils.get_def_info ~reader ~options env profiling file_key ast_info loc >>= fun def_info ->
   (* Then run property find-refs *)
-  local_property_refs ~reader ~options ~file_key ~ast_info ~scope_info ~def_info
+  PropertyFindRefs.find_local_refs ~reader ~options ~env ~profiling file_key ast_info scope_info loc
   >>= fun prop_refs ->
   (* If property find-refs returned nothing (for example if we are importing from an untyped
      * module), then fall back on the local refs we computed earlier. *)

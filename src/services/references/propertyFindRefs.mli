@@ -8,8 +8,10 @@
 val find_local_refs :
   reader:State_reader.t ->
   options:Options.t ->
+  env:ServerEnv.env ->
+  profiling:Profiling_js.running ->
   File_key.t ->
   FindRefsUtils.ast_info ->
   Scope_api.With_Loc.info ->
-  GetDefUtils.def_info ->
-  (FindRefsTypes.find_refs_found, string) result
+  Loc.t ->
+  (FindRefsTypes.find_refs_ok, string) result Lwt.t
