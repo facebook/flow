@@ -5170,3 +5170,80 @@ let%expect_test "es_export_star" =
     1. bar
     2. baz
     3. qux |}]
+
+let%expect_test "duplicate_binding" =
+  print_sig {|
+    import type {T} from 'foo';
+    export type T = any;
+  |};
+  [%expect{|
+    CJSModule {type_exports = [||]; exports = None;
+      info = CJSModuleInfo {type_export_keys = [||]; type_stars = []; strict = true}} |}]
+
+let%expect_test "duplicate_binding2" =
+  print_sig {|
+    const foo = 1;
+    export var {foo, bar}: {foo: number, bar: number} = {foo: 2, bar: 3};
+  |};
+  [%expect{|
+    ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"bar"|];
+        stars = []; strict = true}}
+
+    Local defs:
+    0. Variable {id_loc = [2:17-20]; name = "bar"; def = (Pattern 1)}
+
+    Pattern defs:
+    0. (Annot
+          ObjAnnot {loc = [2:23-49];
+            obj_kind = InexactObj;
+            props =
+            { "bar" -> (ObjAnnotField ([2:37-40], (Annot (Number [2:42-48])), Polarity.Neutral));
+              "foo" -> (ObjAnnotField ([2:24-27], (Annot (Number [2:29-35])), Polarity.Neutral)) };
+            proto = ObjAnnotImplicitProto})
+
+    Patterns:
+    0. (PDef 0)
+    1. PropP {id_loc = [2:17-20]; name = "bar"; def = 0} |}]
+
+let%expect_test "duplicate_binding2" =
+  print_sig {|
+    class C {}
+    export default class C {}
+  |};
+  [%expect {|
+    CJSModule {type_exports = [||]; exports = None;
+      info = CJSModuleInfo {type_export_keys = [||]; type_stars = []; strict = true}} |}]
+
+let%expect_test "fun_shadow_declare_fun" =
+  print_sig {|
+    declare function f(x: string): number;
+    declare function f(x: number): string;
+    export function f() {}
+  |};
+  [%expect {|
+    ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"f"|];
+        stars = []; strict = true}}
+
+    Local defs:
+    0. DeclareFun {id_loc = [1:17-18];
+         name = "f"; fn_loc = [1:18-37];
+         def =
+         FunSig {tparams = Mono;
+           params = [FunParam {name = (Some "x"); t = (Annot (String [1:22-28]))}];
+           rest_param = None; this_param = None;
+           return = (Annot (Number [1:31-37]));
+           predicate = None};
+         tail =
+         [([2:17-18], [2:18-37],
+           FunSig {tparams = Mono;
+             params = [FunParam {name = (Some "x"); t = (Annot (Number [2:22-28]))}];
+             rest_param = None; this_param = None;
+             return = (Annot (String [2:31-37]));
+             predicate = None})
+           ]} |}]

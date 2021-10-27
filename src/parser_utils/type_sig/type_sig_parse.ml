@@ -309,6 +309,8 @@ and 'loc tables = {
   patterns: 'loc pattern Patterns.builder;
 }
 
+let ignore2 _ _ = ()
+
 let create_tables () =
   {
     locs = Locs.create ();
@@ -549,14 +551,7 @@ module Scope = struct
     | ID.ImportTypeof -> ImportTypeofNsBinding { id_loc; name; mref }
     | ID.ImportType -> failwith "unexpected import type *"
 
-  let add scope name b =
-    modify_names
-      (SMap.update name (function
-          | None -> Some b
-          | x -> x
-          )
-          )
-      scope
+  let bind scope name f = modify_names (SMap.update name f) scope
 
   let rec lookup scope name =
     match scope with
@@ -568,22 +563,6 @@ module Scope = struct
       (match SMap.find_opt name names with
       | Some _ as x -> x
       | None -> lookup parent name)
-
-  let rec lookup_exn scope name =
-    match scope with
-    | Global { names; _ }
-    | Module { names; _ } ->
-      SMap.find name names
-    | DeclareModule { parent; names; _ }
-    | Lexical { parent; names } ->
-      (match SMap.find_opt name names with
-      | Some b -> b
-      | None -> lookup_exn parent name)
-
-  let lookup_local_exn scope name =
-    match lookup_exn scope name with
-    | LocalBinding b -> b
-    | RemoteBinding _ -> failwith "unexpected remote binding"
 
   let rec find_host scope b =
     match scope with
@@ -597,14 +576,23 @@ module Scope = struct
       else
         find_host parent b
 
-  let bind_local scope tbls name def =
+  let bind_local scope tbls name def k =
     let host = find_host scope def in
-    let node = push_local_def tbls def in
-    add host name (LocalBinding node)
+    bind host name (function
+        | Some _ as existing_binding -> existing_binding
+        | None ->
+          let node = push_local_def tbls def in
+          k name node;
+          Some (LocalBinding node)
+        )
 
   let bind_remote scope tbls name ref =
-    let node = push_remote_ref tbls ref in
-    add scope name (RemoteBinding node)
+    bind scope name (function
+        | Some _ as existing_binding -> existing_binding
+        | None ->
+          let node = push_remote_ref tbls ref in
+          Some (RemoteBinding node)
+        )
 
   let bind_type scope tbls id_loc name def = bind_local scope tbls name (TypeBinding { id_loc; def })
 
@@ -617,35 +605,52 @@ module Scope = struct
   let bind_enum scope tbls id_loc name def =
     bind_local scope tbls name (EnumBinding { id_loc; name; def })
 
-  let bind_function scope tbls id_loc fn_loc name ~async ~generator def =
-    let statics = SMap.empty in
-    bind_local scope tbls name (FunBinding { id_loc; name; async; generator; fn_loc; def; statics })
+  (* Function declarations preceded by declared functions are taken to have the
+   * type of the declared functions. This is a weird special case aimed to
+   * support overloaded signatures. *)
+  let bind_function scope tbls id_loc fn_loc name ~async ~generator def k =
+    bind scope name (fun binding_opt ->
+        match binding_opt with
+        | None ->
+          let statics = SMap.empty in
+          let def : _ local_binding =
+            FunBinding { id_loc; name; async; generator; fn_loc; def; statics }
+          in
+          let node = push_local_def tbls def in
+          k name node;
+          Some (LocalBinding node)
+        | Some (RemoteBinding _) -> binding_opt
+        | Some (LocalBinding node) ->
+          (match Local_defs.value node with
+          | DeclareFunBinding _ -> k name node
+          | _ -> ());
+          binding_opt
+    )
 
   (* Multiple declared functions with the same name in the same scope define an
    * overloaded function. Note that declared functions are block scoped, so we
    * don't need to walk the scope chain since the scope argument is certainly
    * the host scope. *)
-  let bind_declare_function scope tbls id_loc fn_loc name def =
-    modify_names
-      (SMap.update name (fun binding_opt ->
-           match binding_opt with
-           | None ->
-             let defs_rev = Nel.one (id_loc, fn_loc, def) in
-             let def = DeclareFunBinding { name; defs_rev } in
-             let node = push_local_def tbls def in
-             Some (LocalBinding node)
-           | Some (RemoteBinding _) -> binding_opt
-           | Some (LocalBinding node) ->
-             Local_defs.modify node (function
-                 | DeclareFunBinding { name; defs_rev } ->
-                   let defs_rev = Nel.cons (id_loc, fn_loc, def) defs_rev in
-                   DeclareFunBinding { name; defs_rev }
-                 | def -> def
-                 );
-             binding_opt
-       )
-      )
-      scope
+  let bind_declare_function scope tbls id_loc fn_loc name def k =
+    bind scope name (fun binding_opt ->
+        match binding_opt with
+        | None ->
+          let defs_rev = Nel.one (id_loc, fn_loc, def) in
+          let def = DeclareFunBinding { name; defs_rev } in
+          let node = push_local_def tbls def in
+          k name node;
+          Some (LocalBinding node)
+        | Some (RemoteBinding _) -> binding_opt
+        | Some (LocalBinding node) ->
+          Local_defs.modify node (function
+              | DeclareFunBinding { name; defs_rev } ->
+                k name node;
+                let defs_rev = Nel.cons (id_loc, fn_loc, def) defs_rev in
+                DeclareFunBinding { name; defs_rev }
+              | def -> def
+              );
+          binding_opt
+    )
 
   let bind_var scope tbls kind id_loc name def =
     bind_local scope tbls name (value_binding kind id_loc name def)
@@ -731,9 +736,7 @@ module Scope = struct
     in
     modify_exports f scope
 
-  let export_binding scope kind id =
-    let (_, { Ast.Identifier.name; comments = _ }) = id in
-    let binding = lookup_local_exn scope name in
+  let export_binding scope kind name binding =
     let f =
       match kind with
       | Ast.Statement.ExportType -> Exports.add_type name (ExportTypeBinding binding)
@@ -745,9 +748,7 @@ module Scope = struct
     let f = Exports.add "default" (ExportDefault { default_loc; def }) in
     modify_exports f scope
 
-  let export_default_binding scope default_loc id =
-    let (_, { Ast.Identifier.name; comments = _ }) = id in
-    let binding = lookup_local_exn scope name in
+  let export_default_binding scope default_loc name binding =
     let f = Exports.add "default" (ExportDefaultBinding { default_loc; name; binding }) in
     modify_exports f scope
 
@@ -2521,7 +2522,7 @@ let rec expression opts scope tbls (loc, expr) =
         let id_loc = push_loc tbls id_loc in
         let scope = Scope.push_lex scope in
         let def = lazy (splice tbls id_loc (fun tbls -> class_def opts scope tbls c)) in
-        Scope.bind_class scope tbls id_loc name def;
+        Scope.bind_class scope tbls id_loc name def ignore2;
         val_ref scope id_loc name
       | None ->
         let def = class_def opts scope tbls c in
@@ -2538,7 +2539,7 @@ let rec expression opts scope tbls (loc, expr) =
         let def =
           lazy (splice tbls id_loc (fun tbls -> function_def opts scope tbls SSet.empty f))
         in
-        Scope.bind_function scope tbls id_loc sig_loc name ~async ~generator def;
+        Scope.bind_function scope tbls id_loc sig_loc name ~async ~generator def ignore2;
         val_ref scope id_loc name
       | None ->
         let def = function_def opts scope tbls SSet.empty f in
@@ -3640,13 +3641,13 @@ let opaque_type_decl opts scope tbls decl =
   in
   Scope.bind_type scope tbls id_loc name def
 
-let rec const_var_init_decl opts scope tbls id_loc name expr =
+let rec const_var_init_decl opts scope tbls id_loc name k expr =
   let module E = Ast.Expression in
   match expr with
   (* const x = id *)
   | (_, E.Identifier (ref_loc, { Ast.Identifier.name = ref_name; comments = _ })) ->
     let ref_loc = push_loc tbls ref_loc in
-    Scope.bind_const_ref scope tbls id_loc name ref_loc ref_name scope
+    Scope.bind_const_ref scope tbls id_loc name ref_loc ref_name scope k
   (* const x = function *)
   | (_, E.Function f) ->
     let { Ast.Function.id = fn_id; async; generator; sig_loc; _ } = f in
@@ -3659,29 +3660,29 @@ let rec const_var_init_decl opts scope tbls id_loc name expr =
         let def =
           lazy (splice tbls fn_id_loc (fun tbls -> function_def opts fn_scope tbls SSet.empty f))
         in
-        Scope.bind_function fn_scope tbls fn_id_loc sig_loc fn_name ~async ~generator def;
-        Scope.bind_const_ref scope tbls id_loc name fn_id_loc fn_name fn_scope
+        Scope.bind_function fn_scope tbls fn_id_loc sig_loc fn_name ~async ~generator def ignore2;
+        Scope.bind_const_ref scope tbls id_loc name fn_id_loc fn_name fn_scope k
       | None ->
         let def =
           lazy (splice tbls sig_loc (fun tbls -> function_def opts scope tbls SSet.empty f))
         in
-        Scope.bind_const_fun scope tbls id_loc name sig_loc ~async ~generator def
+        Scope.bind_const_fun scope tbls id_loc name sig_loc ~async ~generator def k
     end
   (* const x = arrow function *)
   | (loc, E.ArrowFunction f) ->
     let { Ast.Function.async; generator; _ } = f in
     let loc = push_loc tbls loc in
     let def = lazy (splice tbls loc (fun tbls -> function_def opts scope tbls SSet.empty f)) in
-    Scope.bind_const_fun scope tbls id_loc name loc ~async ~generator def
+    Scope.bind_const_fun scope tbls id_loc name loc ~async ~generator def k
   (* const x = a, b *)
   | (_, E.Sequence { E.Sequence.expressions; comments = _ }) ->
-    sequence (const_var_init_decl opts scope tbls id_loc name) expressions
+    sequence (const_var_init_decl opts scope tbls id_loc name k) expressions
   (* const x = ... fallback *)
   | _ ->
     let def = lazy (splice tbls id_loc (fun tbls -> expression opts scope tbls expr)) in
-    Scope.bind_const scope tbls id_loc name def
+    Scope.bind_const scope tbls id_loc name def k
 
-let variable_decl opts scope tbls kind decl =
+let variable_decl opts scope tbls kind k decl =
   let module V = Ast.Statement.VariableDeclaration in
   let module P = Ast.Pattern in
   let (_, { V.Declarator.id = p; init }) = decl in
@@ -3693,7 +3694,7 @@ let variable_decl opts scope tbls kind decl =
       match (kind, annot, init) with
       (* const x = ... special cases *)
       | (V.Const, Ast.Type.Missing _, Some expr) ->
-        const_var_init_decl opts scope tbls id_loc name expr
+        const_var_init_decl opts scope tbls id_loc name k expr
       | _ ->
         let def =
           lazy
@@ -3709,13 +3710,13 @@ let variable_decl opts scope tbls kind decl =
              )
             )
         in
-        Scope.bind_var scope tbls kind id_loc name def
+        Scope.bind_var scope tbls kind id_loc name def k
     end
   | P.Object { P.Object.annot; _ }
   | P.Array { P.Array.annot; _ } ->
     let f id_loc name p =
       let def = lazy (Pattern p) in
-      Scope.bind_var scope tbls kind id_loc name def
+      Scope.bind_var scope tbls kind id_loc name def k
     in
     let splice_loc_ref = ref None in
     let pattern_def =
@@ -3744,9 +3745,9 @@ let variable_decl opts scope tbls kind decl =
     splice_loc_ref := Some (Locs.tail_exn tbls.locs)
   | P.Expression _ -> failwith "unexpected expression pattern"
 
-let variable_decls opts scope tbls decl =
+let variable_decls opts scope tbls decl k =
   let { Ast.Statement.VariableDeclaration.kind; declarations; comments = _ } = decl in
-  List.iter (variable_decl opts scope tbls kind) declarations
+  List.iter (variable_decl opts scope tbls kind k) declarations
 
 let class_decl opts scope tbls decl =
   let id = Base.Option.value_exn decl.Ast.Class.id in
@@ -3989,75 +3990,49 @@ let enum_decl =
     in
     Scope.bind_enum scope tbls id_loc name def
 
-let export_named_decl opts scope tbls kind =
+let export_named_decl opts scope tbls kind stmt =
   let module S = Ast.Statement in
-  function
-  | S.FunctionDeclaration f ->
-    function_decl opts scope tbls f;
-    Scope.export_binding scope kind (Base.Option.value_exn f.Ast.Function.id)
-  | S.ClassDeclaration c ->
-    class_decl opts scope tbls c;
-    Scope.export_binding scope kind (Base.Option.value_exn c.Ast.Class.id)
-  | S.TypeAlias t ->
-    type_alias_decl opts scope tbls t;
-    Scope.export_binding scope kind t.S.TypeAlias.id
-  | S.OpaqueType t ->
-    opaque_type_decl opts scope tbls t;
-    Scope.export_binding scope kind t.S.OpaqueType.id
-  | S.InterfaceDeclaration i ->
-    interface_decl opts scope tbls i;
-    Scope.export_binding scope kind i.S.Interface.id
-  | S.VariableDeclaration decl ->
-    variable_decls opts scope tbls decl;
-    Flow_ast_utils.fold_bindings_of_variable_declarations
-      (fun () id _ -> Scope.export_binding scope kind id)
-      ()
-      decl.S.VariableDeclaration.declarations
-  | S.EnumDeclaration e ->
-    enum_decl opts scope tbls e;
-    Scope.export_binding scope kind e.S.EnumDeclaration.id
-  | _ -> failwith "unexpected export declaration"
+  let decl =
+    match stmt with
+    | S.FunctionDeclaration f -> function_decl opts scope tbls f
+    | S.ClassDeclaration c -> class_decl opts scope tbls c
+    | S.TypeAlias t -> type_alias_decl opts scope tbls t
+    | S.OpaqueType t -> opaque_type_decl opts scope tbls t
+    | S.InterfaceDeclaration i -> interface_decl opts scope tbls i
+    | S.VariableDeclaration decl -> variable_decls opts scope tbls decl
+    | S.EnumDeclaration e -> enum_decl opts scope tbls e
+    | _ -> failwith "unexpected export declaration"
+  in
+  decl (Scope.export_binding scope kind)
 
 let declare_export_decl opts scope tbls default =
   let module S = Ast.Statement in
   let module D = S.DeclareExportDeclaration in
-  let export_maybe_default_binding id =
+  let export_maybe_default_binding =
     match default with
-    | None -> Scope.export_binding scope S.ExportValue id
-    | Some default_loc -> Scope.export_default_binding scope default_loc id
+    | None -> Scope.export_binding scope S.ExportValue
+    | Some default_loc -> Scope.export_default_binding scope default_loc
   in
   function
   | D.Variable (_, v) ->
-    declare_variable_decl opts scope tbls v;
-    Scope.export_binding scope S.ExportValue v.S.DeclareVariable.id
-  | D.Function (_, f) ->
-    declare_function_decl opts scope tbls f;
-    export_maybe_default_binding f.S.DeclareFunction.id
-  | D.Class (_, c) ->
-    declare_class_decl opts scope tbls c;
-    export_maybe_default_binding c.S.DeclareClass.id
+    declare_variable_decl opts scope tbls v (Scope.export_binding scope S.ExportValue)
+  | D.Function (_, f) -> declare_function_decl opts scope tbls f export_maybe_default_binding
+  | D.Class (_, c) -> declare_class_decl opts scope tbls c export_maybe_default_binding
   | D.DefaultType t ->
     let default_loc = Base.Option.value_exn default in
     let def = annot opts scope tbls SSet.empty t in
     Scope.export_default scope default_loc def
-  | D.NamedType (_, t) ->
-    type_alias_decl opts scope tbls t;
-    Scope.export_binding scope S.ExportType t.S.TypeAlias.id
+  | D.NamedType (_, t) -> type_alias_decl opts scope tbls t (Scope.export_binding scope S.ExportType)
   | D.NamedOpaqueType (_, t) ->
-    opaque_type_decl opts scope tbls t;
-    Scope.export_binding scope S.ExportType t.S.OpaqueType.id
-  | D.Interface (_, i) ->
-    interface_decl opts scope tbls i;
-    Scope.export_binding scope S.ExportType i.S.Interface.id
+    opaque_type_decl opts scope tbls t (Scope.export_binding scope S.ExportType)
+  | D.Interface (_, i) -> interface_decl opts scope tbls i (Scope.export_binding scope S.ExportType)
 
 let export_default_decl =
   let module S = Ast.Statement in
   let module D = S.ExportDefaultDeclaration in
   let export_default_class opts scope tbls default_loc loc decl =
     match decl.Ast.Class.id with
-    | Some id ->
-      class_decl opts scope tbls decl;
-      Scope.export_default_binding scope default_loc id
+    | Some _ -> class_decl opts scope tbls decl (Scope.export_default_binding scope default_loc)
     | None ->
       let def = class_def opts scope tbls decl in
       let def = Value (ClassExpr (loc, def)) in
@@ -4066,9 +4041,7 @@ let export_default_decl =
   let export_default_fun opts scope tbls default_loc loc decl =
     let { Ast.Function.id; async; generator; _ } = decl in
     match id with
-    | Some id ->
-      function_decl opts scope tbls decl;
-      Scope.export_default_binding scope default_loc id
+    | Some _ -> function_decl opts scope tbls decl (Scope.export_default_binding scope default_loc)
     | None ->
       let def = function_def opts scope tbls SSet.empty decl in
       let statics = SMap.empty in
@@ -4086,8 +4059,7 @@ let export_default_decl =
       let loc = push_loc tbls loc in
       export_default_fun opts scope tbls default_loc loc decl
     | D.Declaration (_, S.EnumDeclaration decl) ->
-      enum_decl opts scope tbls decl;
-      Scope.export_default_binding scope default_loc decl.S.EnumDeclaration.id
+      enum_decl opts scope tbls decl (Scope.export_default_binding scope default_loc)
     | D.Declaration _ -> failwith "unexpected default export declaration"
     | D.Expression expr ->
       let def = expression opts scope tbls expr in
@@ -4204,16 +4176,16 @@ let assignment =
 let rec statement opts scope tbls (loc, stmt) =
   let module S = Ast.Statement in
   match stmt with
-  | S.TypeAlias decl -> type_alias_decl opts scope tbls decl
-  | S.DeclareTypeAlias decl -> type_alias_decl opts scope tbls decl
-  | S.OpaqueType decl -> opaque_type_decl opts scope tbls decl
-  | S.DeclareOpaqueType decl -> opaque_type_decl opts scope tbls decl
-  | S.ClassDeclaration decl -> class_decl opts scope tbls decl
-  | S.DeclareClass decl -> declare_class_decl opts scope tbls decl
-  | S.InterfaceDeclaration decl -> interface_decl opts scope tbls decl
-  | S.DeclareInterface decl -> interface_decl opts scope tbls decl
-  | S.FunctionDeclaration decl -> function_decl opts scope tbls decl
-  | S.DeclareFunction decl -> declare_function_decl opts scope tbls decl
+  | S.TypeAlias decl -> type_alias_decl opts scope tbls decl ignore2
+  | S.DeclareTypeAlias decl -> type_alias_decl opts scope tbls decl ignore2
+  | S.OpaqueType decl -> opaque_type_decl opts scope tbls decl ignore2
+  | S.DeclareOpaqueType decl -> opaque_type_decl opts scope tbls decl ignore2
+  | S.ClassDeclaration decl -> class_decl opts scope tbls decl ignore2
+  | S.DeclareClass decl -> declare_class_decl opts scope tbls decl ignore2
+  | S.InterfaceDeclaration decl -> interface_decl opts scope tbls decl ignore2
+  | S.DeclareInterface decl -> interface_decl opts scope tbls decl ignore2
+  | S.FunctionDeclaration decl -> function_decl opts scope tbls decl ignore2
+  | S.DeclareFunction decl -> declare_function_decl opts scope tbls decl ignore2
   | S.ImportDeclaration decl ->
     (match scope with
     | Global _ ->
@@ -4245,7 +4217,7 @@ let rec statement opts scope tbls (loc, stmt) =
       | Some (S.For.InitExpression _) -> scope
       | Some (S.For.InitDeclaration (_, decl)) ->
         let scope = Scope.push_lex scope in
-        variable_decls opts scope tbls decl;
+        variable_decls opts scope tbls decl ignore2;
         scope
     in
     statement opts scope tbls body
@@ -4255,7 +4227,7 @@ let rec statement opts scope tbls (loc, stmt) =
       | S.ForIn.LeftPattern _ -> scope
       | S.ForIn.LeftDeclaration (_, decl) ->
         let scope = Scope.push_lex scope in
-        variable_decls opts scope tbls decl;
+        variable_decls opts scope tbls decl ignore2;
         scope
     in
     statement opts scope tbls body
@@ -4265,7 +4237,7 @@ let rec statement opts scope tbls (loc, stmt) =
       | S.ForOf.LeftPattern _ -> scope
       | S.ForOf.LeftDeclaration (_, decl) ->
         let scope = Scope.push_lex scope in
-        variable_decls opts scope tbls decl;
+        variable_decls opts scope tbls decl ignore2;
         scope
     in
     statement opts scope tbls body
@@ -4296,8 +4268,8 @@ let rec statement opts scope tbls (loc, stmt) =
     end
   | S.While { S.While.body; _ } -> statement opts scope tbls body
   | S.Labeled { S.Labeled.body; _ } -> statement opts scope tbls body
-  | S.VariableDeclaration decl -> variable_decls opts scope tbls decl
-  | S.DeclareVariable decl -> declare_variable_decl opts scope tbls decl
+  | S.VariableDeclaration decl -> variable_decls opts scope tbls decl ignore2
+  | S.DeclareVariable decl -> declare_variable_decl opts scope tbls decl ignore2
   | S.DeclareExportDeclaration decl ->
     let module D = S.DeclareExportDeclaration in
     let { D.default; declaration; specifiers; source; comments = _ } = decl in
@@ -4330,7 +4302,7 @@ let rec statement opts scope tbls (loc, stmt) =
     let (_, { S.Block.body = stmts; comments = _ }) = body in
     List.iter (statement opts scope tbls) stmts;
     Scope.finalize_declare_module_exports_exn scope
-  | S.EnumDeclaration decl -> enum_decl opts scope tbls decl
+  | S.EnumDeclaration decl -> enum_decl opts scope tbls decl ignore2
   (* unsupported *)
   | S.With _ -> ()
   (* statements that won't introduce a top-level type or name in module scope *)
