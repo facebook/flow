@@ -43,28 +43,26 @@ end
 
 (* If the given type refers to an object literal, return the location of the object literal.
  * Otherwise return None *)
-let get_object_literal_loc ~reader ty : Loc.t option =
+let get_object_literal_loc ty : ALoc.t option =
   let open TypeUtil in
   let open Reason in
   let reason_desc = reason_of_t ty (* TODO look into unwrap *) |> desc_of_reason ~unwrap:false in
   match reason_desc with
-  | RObjectLit -> Some (def_loc_of_t ty |> loc_of_aloc ~reader)
+  | RObjectLit -> Some (def_loc_of_t ty)
   | _ -> None
 
 type def_kind =
-  (* Use of a property, e.g. `foo.bar`. Includes type of receiver (`foo`) and name of the property
-   * `bar` *)
-  | Use of Type.t * string
-  (* In a class, where a property/method is defined. Includes the type of the class and the name
-     of the property. *)
-  | Class_def of Type.t * string (* name *) * bool (* static *)
-  (* In an object type. Includes the location of the property definition and its name. *)
-  | Obj_def of Loc.t * string (* name *)
-  (* List of types that the object literal flows into directly, as well as the name of the
-   * property. *)
-  | Use_in_literal of Type.t Nel.t * string
-
-(* name *)
+  | Use of Type.t * (* name *) string
+      (** Use of a property, e.g. `foo.bar`. Includes type of receiver (`foo`) and name of the
+          property `bar` *)
+  | Class_def of Type.t * (* name *) string * (* static *) bool
+      (** In a class, where a property/method is defined. Includes the type of the class and the name
+          of the property. *)
+  | Obj_def of Loc.t * (* name *) string
+      (** In an object type. Includes the location of the property definition and its name. *)
+  | Use_in_literal of Type.t Nel.t * (* name *) string
+      (** List of types that the object literal flows into directly, as well as the name of the
+          property. *)
 
 let set_def_loc_hook ~reader prop_access_info literal_key_info target_loc =
   let set_prop_access_info new_info =
@@ -115,24 +113,25 @@ let set_def_loc_hook ~reader prop_access_info literal_key_info target_loc =
     let loc = loc_of_aloc ~reader loc in
     if Loc.contains loc target_loc then set_prop_access_info (Obj_def (loc, name))
   in
-  let obj_to_obj_hook _ctxt obj1 obj2 =
-    match (get_object_literal_loc ~reader obj1, literal_key_info) with
-    | (Some loc, Some (target_loc, _, name)) when loc = target_loc ->
-      Type.(
-        begin
-          match obj2 with
-          | DefT (_, _, ObjT _) -> set_prop_access_info (Use_in_literal (Nel.one obj2, name))
-          | _ -> ()
-        end
-      )
-    | _ -> ()
-  in
   Type_inference_hooks_js.set_member_hook (use_hook false);
   Type_inference_hooks_js.set_call_hook (use_hook ());
   Type_inference_hooks_js.set_class_member_decl_hook class_def_hook;
   Type_inference_hooks_js.set_obj_type_prop_decl_hook obj_def_hook;
   Type_inference_hooks_js.set_export_named_hook export_named_hook;
-  Type_inference_hooks_js.set_obj_to_obj_hook obj_to_obj_hook
+
+  match literal_key_info with
+  | Some (target_loc, _, name) ->
+    let obj_to_obj_hook _ctxt obj1 obj2 =
+      match get_object_literal_loc obj1 with
+      | Some obj_aloc when loc_of_aloc ~reader obj_aloc = target_loc ->
+        let open Type in
+        (match obj2 with
+        | DefT (_, _, ObjT _) -> set_prop_access_info (Use_in_literal (Nel.one obj2, name))
+        | _ -> ())
+      | _ -> ()
+    in
+    Type_inference_hooks_js.set_obj_to_obj_hook obj_to_obj_hook
+  | None -> ()
 
 let unset_hooks () = Type_inference_hooks_js.reset_hooks ()
 
@@ -335,9 +334,8 @@ let def_info_of_typecheck_results ~reader cx props_access_info =
     extract_def_loc ~reader cx ty name >>| def_info_of_def_loc
   in
   match props_access_info with
-  | None -> Ok None
-  | Some (Obj_def (loc, name)) -> Ok (Some (Nel.one (Object loc), name))
-  | Some (Class_def (ty, name, static)) ->
+  | Obj_def (loc, name) -> Ok (Some (Nel.one (Object loc), name))
+  | Class_def (ty, name, static) ->
     if static then
       (* Here, `ty` ends up resolving to `ObjT` so we lose the knowledge that this is a static
        * property. This means that we don't get the fancy look-up-the-inheritance-chain behavior
@@ -352,9 +350,9 @@ let def_info_of_typecheck_results ~reader cx props_access_info =
       | FoundObject _ ->
         Error "Expected to extract class def info from a class"
       | _ -> Error "Unexpectedly failed to extract definition from known type" )
-  | Some (Use (ty, name)) ->
+  | Use (ty, name) ->
     def_info_of_type name ty >>| Base.Option.map ~f:(fun def_info -> (def_info, name))
-  | Some (Use_in_literal (types, name)) ->
+  | Use_in_literal (types, name) ->
     let def_infos_result = Nel.map (def_info_of_type name) types |> Nel.result_all in
     def_infos_result >>| fun def_infos ->
     Nel.cat_maybes def_infos
@@ -405,11 +403,11 @@ let get_def_info ~reader ~options env profiling file_key ast_info loc :
     )
   in
   unset_hooks ();
-  !props_access_info %>>= fun props_access_info ->
-  let def_info = def_info_of_typecheck_results ~reader cx props_access_info in
-  let def_info = def_info >>= add_literal_properties literal_key_info in
   let def_info =
-    def_info >>= function
+    !props_access_info
+    >>= Base.Option.value_map ~f:(def_info_of_typecheck_results ~reader cx) ~default:(Ok None)
+    >>= add_literal_properties literal_key_info
+    >>= function
     | Some _ as def_info -> Ok def_info
     | None ->
       (* Check if we are on a CJS import/export. These cases are not covered above since the type

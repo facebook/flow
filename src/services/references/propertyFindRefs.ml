@@ -40,7 +40,7 @@ end = struct
     builder#eval builder#program ast
 end
 
-let set_get_refs_hook ~reader potential_refs potential_matching_literals target_name =
+let set_get_refs_hook potential_refs potential_matching_literals target_name =
   let hook ret _ctxt name loc ty =
     if name = target_name then
       (* Replace previous bindings of `loc`. We should always use the result of the last call to
@@ -55,13 +55,11 @@ let set_get_refs_hook ~reader potential_refs potential_matching_literals target_
     | _ -> ()
   in
   let obj_to_obj_hook _ctxt obj1 obj2 =
-    Type.(
-      match (get_object_literal_loc ~reader obj1, obj2) with
-      | (Some loc, DefT (_, _, ObjT _)) ->
-        let entry = (loc, obj2) in
-        potential_matching_literals := entry :: !potential_matching_literals
-      | _ -> ()
-    )
+    let open Type in
+    match (get_object_literal_loc obj1, obj2) with
+    | (Some aloc, DefT (_, _, ObjT _)) ->
+      potential_matching_literals := (aloc, obj2) :: !potential_matching_literals
+    | _ -> ()
   in
   Type_inference_hooks_js.set_member_hook (hook false);
   Type_inference_hooks_js.set_call_hook (hook ());
@@ -116,7 +114,7 @@ let process_prop_refs ~reader cx potential_refs file_key prop_def_info name =
 
 let property_find_refs_in_file ~reader options ast_info file_key def_info name =
   let potential_refs : Type.t ALocMap.t ref = ref ALocMap.empty in
-  let potential_matching_literals : (Loc.t * Type.t) list ref = ref [] in
+  let potential_matching_literals : (ALoc.t * Type.t) list ref = ref [] in
   let (ast, file_sig, info) = ast_info in
   let info = Docblock.set_flow_mode_for_ide_command info in
   let local_defs =
@@ -128,17 +126,19 @@ let property_find_refs_in_file ~reader options ast_info file_key def_info name =
   if not has_symbol then
     Ok local_defs
   else (
-    set_get_refs_hook ~reader potential_refs potential_matching_literals name;
+    set_get_refs_hook potential_refs potential_matching_literals name;
     let (cx, _) = Merge_service.check_contents_context ~reader options file_key ast info file_sig in
     unset_hooks ();
     let literal_prop_refs_result =
       (* Lazy to avoid this computation if there are no potentially-relevant object literals to
        * examine *)
       let prop_loc_map = lazy (LiteralToPropLoc.make ast name) in
-      let get_prop_loc_if_relevant (obj_loc, into_type) =
+      let get_prop_loc_if_relevant (obj_aloc, into_type) =
         type_matches_locs ~reader cx into_type def_info name >>| function
         | false -> None
-        | true -> LocMap.find_opt obj_loc (Lazy.force prop_loc_map)
+        | true ->
+          let obj_loc = loc_of_aloc ~reader obj_aloc in
+          LocMap.find_opt obj_loc (Lazy.force prop_loc_map)
       in
       !potential_matching_literals |> Base.List.map ~f:get_prop_loc_if_relevant |> Result.all
       >>| fun refs -> refs |> Base.List.filter_opt |> add_ref_kind FindRefsTypes.PropertyDefinition
