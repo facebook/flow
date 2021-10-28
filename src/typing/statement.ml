@@ -4614,7 +4614,7 @@ module Make (Env : Env_sig.S) = struct
               let use_op = Op (GetProperty (mk_expression_reason ex)) in
               get_prop ~use_op ~cond cx expr_reason super_t (prop_reason, name)
         in
-        let property = Member.PropertyIdentifier ((ploc, super_t), id) in
+        let property = Member.PropertyIdentifier ((ploc, lhs_t), id) in
         let ast =
           ( (loc, lhs_t),
             member_ast { Member._object = ((super_loc, super_t), Super super); property; comments }
