@@ -38,7 +38,17 @@ let command_result_of_process process =
   and stderr = Lwt_io.read process#stderr in
   Lwt.return { stdout; stderr; status }
 
-let prepare_args cmd args = (cmd, Array.of_list (cmd :: args))
+let prepare_args cmd args =
+  (* [Lwt_process.spawn] calls Windows' CreateProcess directly, and [Unix.execvp] otherwise.
+     [Unix.execvp] searches for [cmd] on the path, but Lwt doesn't (as of Lwt 5.4.2).
+
+     By passing "", [Lwt_process.spawn] leaves the [lpApplicationName] argument to
+     [CreateProcess] blank, causing [CreateProcess] to search for the first whitespace-
+     delimited token ([cmd]) on the path like we want.
+
+     This also works on Unix because Lwt_process.unix_spawn uses the first array element
+     instead, when we pass "". *)
+  ("", Array.of_list (cmd :: args))
 
 let exec ?env ?cwd cmd args =
   Lwt_process.with_process_full ?env ?cwd (prepare_args cmd args) command_result_of_process
