@@ -1,14 +1,6 @@
 FLOW STATUS:
 Error ------------------------------------------------------------------------------------------------- libs/libs.js:4:3
 
-Cannot resolve name `exports`. [cannot-resolve-name]
-
-   4|   exports.foo = 5;
-        ^^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------- libs/libs.js:4:3
-
 Exports can only appear at the top level [invalid-export]
 
    4|   exports.foo = 5;
@@ -39,136 +31,120 @@ Exports can only appear at the top level [invalid-export]
         ^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ bad-uses.js:13:11
+Error ------------------------------------------------------------------------------------------------ bad-uses.js:16:11
 
 `module` may only be used as part of a legal top level export statement [invalid-export]
 
-   13| addsAProp(module.exports);
+   16| addsAProp(module.exports); // ERROR
                  ^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ bad-uses.js:14:11
+Error ------------------------------------------------------------------------------------------------ bad-uses.js:17:11
 
 `module` may only be used as part of a legal top level export statement [invalid-export]
 
-   14| addsAProp(module['exports']);
+   17| addsAProp(module['exports']); // ERROR
                  ^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ bad-uses.js:14:11
-
-Cannot resolve name `module`. [cannot-resolve-name]
-
-   14| addsAProp(module['exports']);
-                 ^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------ bad-uses.js:15:11
+Error ------------------------------------------------------------------------------------------------ bad-uses.js:18:11
 
 `exports` may only be used as part of a legal top level export statement [invalid-export]
 
-   15| addsAProp(exports);
+   18| addsAProp(exports); // ERROR
                  ^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ bad-uses.js:16:20
+Error ------------------------------------------------------------------------------------------------ bad-uses.js:19:20
 
 `module` may only be used as part of a legal top level export statement [invalid-export]
 
-   16| addsAPropToExports(module);
+   19| addsAPropToExports(module); // ERROR
                           ^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------- bad-uses.js:18:1
-
-`module` may only be used as part of a legal top level export statement [invalid-export]
-
-   18| module.exports['foo'] = 42;
-       ^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------- bad-uses.js:19:1
-
-`module` may only be used as part of a legal top level export statement [invalid-export]
-
-   19| module['exports'] = {};
-       ^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------- bad-uses.js:20:1
+Error ------------------------------------------------------------------------------------------------- bad-uses.js:24:3
 
 `exports` may only be used as part of a legal top level export statement [invalid-export]
 
-   20| exports['foo'] = 42;
-       ^^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------- bad-uses.js:22:5
-
-`exports` may only be used as part of a legal top level export statement [invalid-export]
-
-   22| (5, exports).foo = 1;
-           ^^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------- bad-uses.js:23:5
-
-`module` may only be used as part of a legal top level export statement [invalid-export]
-
-   23| (5, module).exports.foo = 34;
-           ^^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------- bad-uses.js:26:3
-
-`exports` may only be used as part of a legal top level export statement [invalid-export]
-
-   26|   exports['foo'] = 42;
+   24|   exports['foo'] = 42; // ERROR
          ^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------- bad-uses.js:27:3
+Error ------------------------------------------------------------------------------------------------- bad-uses.js:25:3
 
 Exports can only appear at the top level [invalid-export]
 
-   27|   exports.foo = 5;
+   25|   exports.foo = 5; // ERROR
          ^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------- bad-uses.js:35:3
+Error ------------------------------------------------------------------------------------------------- bad-uses.js:28:1
 
 `module` may only be used as part of a legal top level export statement [invalid-export]
 
-   35|   module = {};
-         ^^^^^^
+   28| module.exports['foo'] = 42; // ERROR
+       ^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------- bad-uses.js:36:3
+Error ------------------------------------------------------------------------------------------------- bad-uses.js:29:1
+
+`module` may only be used as part of a legal top level export statement [invalid-export]
+
+   29| module['exports'] = {}; // ERROR
+       ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- bad-uses.js:30:1
 
 `exports` may only be used as part of a legal top level export statement [invalid-export]
 
-   36|   exports = {};
-         ^^^^^^^
+   30| exports['foo'] = 42; // ERROR
+       ^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------- bad-uses.js:51:5
+Error ------------------------------------------------------------------------------------------------- bad-uses.js:32:5
 
-Cannot resolve name `require`. [cannot-resolve-name]
+`exports` may only be used as part of a legal top level export statement [invalid-export]
 
-   51| if (require.main === module) { }
+   32| (5, exports).foo = 1; // ERROR
            ^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ bad-uses.js:53:26
+Error ------------------------------------------------------------------------------------------------- bad-uses.js:33:5
 
 `module` may only be used as part of a legal top level export statement [invalid-export]
 
-   53| if (require.main === (5, module)) { }
+   33| (5, module).exports.foo = 34; // ERROR
+           ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- bad-uses.js:38:3
+
+`module` may only be used as part of a legal top level export statement [invalid-export]
+
+   38|   module = {}; // ERROR
+         ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- bad-uses.js:39:3
+
+`exports` may only be used as part of a legal top level export statement [invalid-export]
+
+   39|   exports = {}; // ERROR
+         ^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ bad-uses.js:56:26
+
+`module` may only be used as part of a legal top level export statement [invalid-export]
+
+   56| if (require.main === (5, module)) { } // ERROR
                                 ^^^^^^
 
 
 
-Found 21 errors
+Found 18 errors
 FLOW CHECK-CONTENTS:
 Error ------------------------------------------------------------------------------------------ bad-named-export.js:4:3
 
