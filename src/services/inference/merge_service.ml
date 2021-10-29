@@ -494,7 +494,15 @@ let mk_check_file options ~reader () =
  *
  * Note that this cache needs to be invaliated when files change. We can use the
  * set of changed files (determined by the merge stream's signature hashing) to
- * invalidate file-by-file when a recheck transaction commits. *)
+ * invalidate file-by-file when a recheck transaction commits.
+ *
+ * This cache also needs to be cleared when we compact the shared heap. The
+ * values in this cache can contain lazy thunks which close over shared heap
+ * addresses. In the event of a compaction, these addresses can become invalid.
+ *
+ * Any state derived from the values in this cache also needs to be reset in the
+ * event of a compaction, which can be done in the SharedMem.on_compact
+ * callback. *)
 let check_contents_cache = Check_cache.create ~capacity:1000
 
 (* Variation of merge_context where requires may not have already been

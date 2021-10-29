@@ -180,6 +180,19 @@ let on_compact () =
   MonitorRPC.status_update ~event:ServerStatus.GC_start;
   let old_size = SharedMem.heap_size () in
   let start_t = Unix.gettimeofday () in
+
+  (* The check_contents_cache entries close over heap addresses which can become
+   * invalidated because compaction will move objects around in the shared heap. *)
+  Check_cache.clear Merge_service.check_contents_cache;
+
+  (* Similarly, the typed ASTs in this cache might reference the same unforced
+   * thunks, since dependency type information is reachable from the typed ASTs.
+   *
+   * We also clear this cache after every recheck, which is the only time that
+   * GC compaction can happen, so this call is unlikely to affect the cache hit
+   * rate. *)
+  Persistent_connection.clear_type_parse_artifacts_caches ();
+
   fun () ->
     let new_size = SharedMem.heap_size () in
     let time_taken = Unix.gettimeofday () -. start_t in
