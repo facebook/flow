@@ -563,7 +563,7 @@ module Make
     let open Type in
     let open TypeUtil in
     let reason = reason_of_t c in
-    Tvar.mk_derivable_where cx reason (fun tvar ->
+    Tvar.mk_where cx reason (fun tvar ->
         Flow.flow cx (c, SpecializeT (unknown_use, reason, reason, None, targs, tvar))
     )
 

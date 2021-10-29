@@ -269,7 +269,7 @@ module ConsGen : Type_sig_merge.CONS_GEN = struct
     )
 
   let specialize cx t use_op reason_op reason_tapp ts =
-    Tvar.mk_derivable_where cx reason_op (fun tout ->
+    Tvar.mk_where cx reason_op (fun tout ->
         Flow_js.flow cx (t, Type.SpecializeT (use_op, reason_op, reason_tapp, None, ts, tout))
     )
 
@@ -290,7 +290,7 @@ module ConsGen : Type_sig_merge.CONS_GEN = struct
     Tvar.mk_no_wrap_where cx reason (fun tout -> Flow_js.flow cx (t, Type.NotT (reason, tout)))
 
   let mixin cx reason t =
-    Tvar.mk_derivable_where cx reason (fun tout -> Flow_js.flow cx (t, Type.MixinT (reason, tout)))
+    Tvar.mk_where cx reason (fun tout -> Flow_js.flow cx (t, Type.MixinT (reason, tout)))
 
   let object_spread cx use_op reason target state t =
     let tool = Type.Object.(Resolve Next) in

@@ -326,7 +326,6 @@ let rec map_desc_locs f = function
   | RUnionBranching (desc, i) -> RUnionBranching (map_desc_locs f desc, i)
 
 type 'loc virtual_reason = {
-  derivable: bool;
   desc: 'loc virtual_reason_desc;
   loc: 'loc;
   def_loc_opt: 'loc option;
@@ -458,10 +457,10 @@ let json_of_loc ?strip_root ?catch_offset_errors ~offset_table loc =
 (* reason constructors, accessors, etc. *)
 
 let mk_reason_internal desc loc def_loc_opt annot_loc_opt =
-  { derivable = false; desc; loc; def_loc_opt; annot_loc_opt }
+  { desc; loc; def_loc_opt; annot_loc_opt }
 
 let map_reason_locs f reason =
-  let { def_loc_opt; annot_loc_opt; loc; desc; derivable } = reason in
+  let { def_loc_opt; annot_loc_opt; loc; desc } = reason in
   let loc' = f loc in
   let def_loc_opt' = Base.Option.map ~f def_loc_opt in
   let annot_loc_opt' = Base.Option.map ~f annot_loc_opt in
@@ -471,7 +470,6 @@ let map_reason_locs f reason =
     annot_loc_opt = annot_loc_opt';
     loc = loc';
     desc = desc';
-    derivable;
   }
 
 let mk_reason desc aloc = mk_reason_internal desc aloc None None
@@ -896,15 +894,10 @@ let is_literal_array_reason r =
     true
   | _ -> false
 
-let is_derivable_reason r = r.derivable
-
-let derivable_reason r = { r with derivable = true }
-
 let builtin_reason desc =
   { Loc.none with Loc.source = Some File_key.Builtins }
   |> ALoc.of_loc
   |> mk_reason desc
-  |> derivable_reason
 
 let is_builtin_reason f r = r.loc |> f |> ( = ) (Some File_key.Builtins)
 
