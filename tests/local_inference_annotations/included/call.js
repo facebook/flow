@@ -16,3 +16,6 @@ g(3); // Ok
 
 
 f((x) => 3, (x: number) => 3) || []; // no annot
+
+const h: ?(number => number) = null;
+h ?? ((x) => 3); // no annot

@@ -5913,7 +5913,7 @@ module Make (Env : Env_sig.S) = struct
     | NullishCoalesce ->
       let (((_, t1), _) as left) = expression cx ~annot:None left in
       let ((((_, t2), _) as right), right_abnormal) =
-        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ~annot:None right)
+        Abnormal.catch_expr_control_flow_exception (fun () -> expression cx ~annot:(Some ()) right)
       in
       let t2 =
         match right_abnormal with
