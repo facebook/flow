@@ -8,8 +8,6 @@
 (** Callstack is simply a typed way to indicate that a string is a callstack *)
 type callstack = Callstack of string
 
-let () = Random.self_init ()
-
 let try_finally ~f ~(finally : unit -> unit) =
   let res =
     try f () with

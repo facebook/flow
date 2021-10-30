@@ -103,6 +103,7 @@ let _ =
      exit via Exit.exit instead. *)
   let () = Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore in
   let () = Exception.record_backtrace true in
+  let () = Random.self_init () in
   let () = if Sys_utils.get_env "IN_FLOW_TEST" <> None then LoggingUtils.disable_logging () in
   try
     Daemon.check_entry_point ();

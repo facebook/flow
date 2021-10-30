@@ -5,17 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-let initialized = ref false
-
 (* Do not use / in random ids as they appear in filenames. *)
 let alphanumeric_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
+(** Generates a random string containing characters from [alphabet].
+
+    Be sure to initialize [Random] (e.g. [Random.self_init ()]). *)
 let short_string_with_alphabet alphabet =
-  (* If we haven't seeded random then do it now *)
-  if not !initialized then (
-    initialized := true;
-    Random.self_init ()
-  );
   let r = ref ((Random.bits () lsl 30) lor Random.bits ()) in
   let cs = ref [] in
   while !r > 0 do
@@ -25,4 +21,7 @@ let short_string_with_alphabet alphabet =
   done;
   String.concat "" !cs
 
+(** Generates a random alphanumeric string.
+
+    Be sure to initialize [Random] (e.g. [Random.self_init ()]). *)
 let short_string () = short_string_with_alphabet alphanumeric_alphabet
