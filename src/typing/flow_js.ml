@@ -3076,7 +3076,7 @@ struct
           let loc_tapp = def_aloc_of_reason (fst call_tout) in
           let desc_tapp = desc_of_reason (fst call_tout) in
           let spec = extract_non_spread cx ~trace arg1 in
-          let mk_tvar f = Tvar.mk cx (f reason_op |> derivable_reason) in
+          let mk_tvar f = Tvar.mk cx (f reason_op) in
           let knot =
             {
               React.CreateClass.this = mk_tvar (replace_desc_reason RThisType);
@@ -8748,7 +8748,7 @@ struct
             (* If the rest parameter is consuming N elements, then drop N elements
              * from the rest parameter *)
             let rest_reason = reason_of_t rest_param in
-            Tvar.mk_derivable_where cx rest_reason (fun tout ->
+            Tvar.mk_where cx rest_reason (fun tout ->
                 let i = List.length rev_elems in
                 rec_flow cx trace (rest_param, ArrRestT (use_op, orig_rest_reason, i, tout))
             )
@@ -9281,18 +9281,12 @@ struct
       | Some d -> replace_desc_new_reason d reason
       | None -> reason
     in
-    let mk_cached_tvar_where reason t_open (r, id) f =
+    let mk_cached_tvar_where reason t_open id f =
       let repos_cache = Context.repos_cache cx in
       match Repos_cache.find id reason !repos_cache with
       | Some t -> t
       | None ->
-        let mk_tvar_where =
-          if is_derivable_reason r then
-            Tvar.mk_derivable_where
-          else
-            Tvar.mk_where
-        in
-        mk_tvar_where cx reason (fun tvar ->
+        Tvar.mk_where cx reason (fun tvar ->
             repos_cache := Repos_cache.add reason t_open tvar !repos_cache;
             f tvar
         )
@@ -9322,7 +9316,7 @@ struct
                 | FullyResolved _ -> true
                 | Unresolved _ -> assert_false "handled below"
               in
-              mk_cached_tvar_where reason t_open (r, id) (fun tvar ->
+              mk_cached_tvar_where reason t_open id (fun tvar ->
                   (* All `t` in `Resolved (_, t)` are concrete. Because `t` is a concrete
                    * type, `t'` is also necessarily concrete (i.e., reposition preserves
                    * open -> open, concrete -> concrete). The unification below thus
@@ -9341,7 +9335,7 @@ struct
                   resolve_id cx trace ~use_op ~fully_resolved id t'
               ))
           | Unresolved _ ->
-            mk_cached_tvar_where reason t_open (r, id) (fun tvar ->
+            mk_cached_tvar_where reason t_open id (fun tvar ->
                 flow_opt cx ?trace (t_open, ReposLowerT (reason, use_desc, UseT (unknown_use, tvar)))
             )
         end

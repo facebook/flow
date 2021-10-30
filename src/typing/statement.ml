@@ -1548,7 +1548,7 @@ module Make (Env : Env_sig.S) = struct
               reason
               (OrdinaryName "Promise")
               [
-                Tvar.mk_derivable_where cx reason (fun tvar ->
+                Tvar.mk_where cx reason (fun tvar ->
                     let funt = Flow.get_builtin cx (OrdinaryName "$await") reason in
                     let callt = mk_functioncalltype reason None [Arg t] (open_tvar tvar) in
                     let reason = repos_reason (aloc_of_reason (reason_of_t t)) reason in
@@ -1568,7 +1568,7 @@ module Make (Env : Env_sig.S) = struct
               (OrdinaryName "Generator")
               [
                 Env.get_internal_var cx "yield" loc;
-                Tvar.mk_derivable_where cx reason (fun tvar -> Flow.flow_t cx (t, tvar));
+                Tvar.mk_where cx reason (fun tvar -> Flow.flow_t cx (t, tvar));
                 Env.get_internal_var cx "next" loc;
               ]
           in
@@ -1582,7 +1582,7 @@ module Make (Env : Env_sig.S) = struct
               (OrdinaryName "AsyncGenerator")
               [
                 Env.get_internal_var cx "yield" loc;
-                Tvar.mk_derivable_where cx reason (fun tvar -> Flow.flow_t cx (t, tvar));
+                Tvar.mk_where cx reason (fun tvar -> Flow.flow_t cx (t, tvar));
                 Env.get_internal_var cx "next" loc;
               ]
           in
@@ -5651,7 +5651,7 @@ module Make (Env : Env_sig.S) = struct
             DefT (reason, trust, NumT (Literal (sense, (value, raw))))
           | arg ->
             let reason = mk_reason (desc_of_t arg) loc in
-            Tvar.mk_derivable_where cx reason (fun t -> Flow.flow cx (arg, UnaryMinusT (reason, t)))
+            Tvar.mk_where cx reason (fun t -> Flow.flow cx (arg, UnaryMinusT (reason, t)))
         end,
         { operator = Minus; argument; comments }
       )

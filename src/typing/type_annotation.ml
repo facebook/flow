@@ -2253,9 +2253,7 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
           let lookup_mode = Env_sig.LookupMode.ForValue in
           convert_qualification ~lookup_mode cx "mixins" id
         in
-        let props_bag =
-          Tvar.mk_derivable_where cx r (fun tvar -> Flow.flow cx (i, Type.MixinT (r, tvar)))
-        in
+        let props_bag = Tvar.mk_where cx r (fun tvar -> Flow.flow cx (i, Type.MixinT (r, tvar))) in
         let (t, targs) = mk_super cx tparams_map loc props_bag targs in
         (t, (loc, { Ast.Type.Generic.id; targs; comments }))
       in
