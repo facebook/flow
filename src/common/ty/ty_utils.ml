@@ -211,11 +211,11 @@ module Simplify = struct
         else
           make ts3
 
-      method! on_Union config u t0 t1 ts =
+      method! on_Union config u from_bounds t0 t1 ts =
         let { is_top; is_bot; _ } = config in
         self#simplify
           ~break:Ty.bk_union
-          ~make:Ty.mk_union
+          ~make:(Ty.mk_union ~from_bounds)
           ~is_zero:is_top
           ~is_one:is_bot
           ~default:u

@@ -45,7 +45,7 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
     | Get t
     | Set t ->
       t
-    | Field { t; optional = true; _ } -> Union (t, Void, [])
+    | Field { t; optional = true; _ } -> Union (false, t, Void, [])
     | Method ft -> Fun ft
   in
   let members_of_obj obj_props =
@@ -127,18 +127,19 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
           )
           )
   in
-  let union_of_member_types =
+  let union_of_member_types ~from_bounds =
     NameUtils.Map.map
       (map_member_info (function
           | (t, []) -> t
-          | (t1, t2 :: ts) -> Ty_utils.simplify_type ~merge_kinds:true (Union (t1, t2, ts))
+          | (t1, t2 :: ts) ->
+            Ty_utils.simplify_type ~merge_kinds:true (Union (from_bounds, t1, t2, ts))
           )
           )
   in
   let add_special_cases special_cases =
     NameUtils.Map.map (map_member_info (List.fold_right Nel.cons special_cases))
   in
-  let members_of_union (t1, t2, ts) =
+  let members_of_union ~from_bounds (t1, t2, ts) =
     let ((t1_members, errs1), (t2_members, errs2), (ts_members, errss)) =
       (members_of_ty t1, members_of_ty t2, Base.List.map ~f:members_of_ty ts |> List.split)
     in
@@ -171,7 +172,9 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
     in
     let mems =
       (* set intersection of members; type union upon overlaps *)
-      (t1_members, t2_members :: ts_members) |> intersection_of_members |> union_of_member_types
+      (t1_members, t2_members :: ts_members)
+      |> intersection_of_members
+      |> union_of_member_types ~from_bounds
     in
     (mems, errs)
   in
@@ -201,7 +204,7 @@ let rec members_of_ty : Ty.t -> Ty.t member_info NameUtils.Map.t * string list =
   function
   | Obj { obj_props; _ } -> members_of_obj obj_props
   | Fun { fun_static; _ } -> members_of_ty fun_static
-  | Union (t1, t2, ts) -> members_of_union (t1, t2, ts)
+  | Union (from_bounds, t1, t2, ts) -> members_of_union ~from_bounds (t1, t2, ts)
   | Inter (t1, t2, ts) -> members_of_intersection (t1, t2, ts)
   | ( TVar _ | Bound _ | Generic _ | Symbol | Num _ | Str _ | Bool _ | NumLit _ | StrLit _
     | BoolLit _ | Arr _ | Tup _ ) as t ->

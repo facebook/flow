@@ -46,7 +46,7 @@ type t =
   | Obj of obj_t
   | Arr of arr_t
   | Tup of t list
-  | Union of t * t * t list
+  | Union of bool (* from annotation *) * t * t * t list
   | Inter of t * t * t list
   | InlineInterface of interface_t
   | TypeOf of builtin_or_symbol
@@ -576,8 +576,8 @@ class ['A] comparator_ty =
 (* Type destructors *)
 
 let rec bk_union ?(flattened = false) = function
-  | Union (t1, t2, ts) when flattened -> (t1, t2 :: ts)
-  | Union (t1, t2, ts) -> Nel.map_concat bk_union (t1, t2 :: ts)
+  | Union (_, t1, t2, ts) when flattened -> (t1, t2 :: ts)
+  | Union (_, t1, t2, ts) -> Nel.map_concat bk_union (t1, t2 :: ts)
   | t -> (t, [])
 
 let rec bk_inter ?(flattened = false) = function
@@ -587,11 +587,11 @@ let rec bk_inter ?(flattened = false) = function
 
 (* Type constructors *)
 
-let mk_union ?(flattened = false) nel_ts =
+let mk_union ~from_bounds ?(flattened = false) nel_ts =
   let (t, ts) = Nel.map_concat (bk_union ~flattened) nel_ts in
   match ts with
   | [] -> t
-  | hd :: tl -> Union (t, hd, tl)
+  | hd :: tl -> Union (from_bounds, t, hd, tl)
 
 let mk_inter ?(flattened = false) nel_ts =
   let (t, ts) = Nel.map_concat (bk_inter ~flattened) nel_ts in
@@ -605,7 +605,7 @@ let is_dynamic = function
   | Any _ -> true
   | _ -> false
 
-let mk_maybe t = mk_union (Null, [Void; t])
+let mk_maybe ~from_bounds t = mk_union ~from_bounds (Null, [Void; t])
 
 let mk_field_props prop_list =
   Base.List.map

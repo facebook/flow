@@ -229,7 +229,7 @@ and dump_t ?(depth = 10) t =
     | Obj o -> dump_obj ~depth o
     | Arr a -> dump_arr ~depth a
     | Tup ts -> spf "Tup (%s)" (dump_list (dump_t ~depth) ~sep:"," ts)
-    | Union (t1, t2, ts) ->
+    | Union (_, t1, t2, ts) ->
       spf "Union (%s)" (dump_list (dump_t ~depth) ~sep:", " (Base.List.take (t1 :: t2 :: ts) 10))
     | Inter (t1, t2, ts) -> spf "Inter (%s)" (dump_list (dump_t ~depth) ~sep:", " (t1 :: t2 :: ts))
     | InlineInterface { if_extends; if_props; if_dict } ->
@@ -396,7 +396,8 @@ let json_of_elt ~strip_root =
           ("type", json_of_t arr_elt_t);
         ]
       | Tup ts -> [("types", JSON_Array (Base.List.map ~f:json_of_t ts))]
-      | Union (t0, t1, ts) -> [("types", JSON_Array (Base.List.map ~f:json_of_t (t0 :: t1 :: ts)))]
+      | Union (_, t0, t1, ts) ->
+        [("types", JSON_Array (Base.List.map ~f:json_of_t (t0 :: t1 :: ts)))]
       | Inter (t0, t1, ts) -> [("types", JSON_Array (Base.List.map ~f:json_of_t (t0 :: t1 :: ts)))]
       | InlineInterface { if_extends; if_props; if_dict } ->
         Hh_json.(

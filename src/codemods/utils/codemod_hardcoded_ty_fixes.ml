@@ -137,17 +137,17 @@ module Make (Extra : BASE_STATS) = struct
           Ty.(Generic (symbol, kind, None))
         (* The following moves the `any` component of a union to the beginning of the
          * union. This is a heuristic that helps union resolution later on. *)
-        | Ty.Union (Ty.Any _, _, _) -> super#on_t env t
-        | Ty.Union (first, Ty.Any _, rest) ->
-          let t = Ty.Union (sanitized_any, first, rest) in
+        | Ty.Union (_from_bounds, Ty.Any _, _, _) -> super#on_t env t
+        | Ty.Union (from_bounds, first, Ty.Any _, rest) ->
+          let t = Ty.Union (from_bounds, sanitized_any, first, rest) in
           super#on_t env t
-        | Ty.Union (first, second, rest) when List.exists Ty.is_dynamic rest ->
+        | Ty.Union (from_bounds, first, second, rest) when List.exists Ty.is_dynamic rest ->
           let rest' = List.filter Utils_js.(Ty.is_dynamic %> not) rest in
           let t =
             if rest == rest' then
               t
             else
-              Ty.mk_union (sanitized_any, first :: second :: rest')
+              Ty.mk_union ~from_bounds (sanitized_any, first :: second :: rest')
           in
           super#on_t env t
         (*

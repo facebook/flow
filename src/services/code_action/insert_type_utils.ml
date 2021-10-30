@@ -695,7 +695,7 @@ class stylize_ty_mapper ?(imports_react = false) () =
 
     (* remove literals when the base type is in the union, and simplify true | false to bool *)
     (* These simplifications should always be sound *)
-    method! on_Union loc t _ _ _ =
+    method! on_Union loc t from_bounds _ _ _ =
       Ty.(
         let filter_union (a : partition_acc) t =
           match (t, a) with
@@ -725,7 +725,8 @@ class stylize_ty_mapper ?(imports_react = false) () =
         match reverse_append_all [others; strings; nums; bools] with
         | [] -> failwith "Impossible! this only removes elements when others are added/present"
         | [t] -> super#on_t loc t
-        | t1 :: t2 :: ts -> super#on_Union loc (Union (t1, t2, ts)) t1 t2 ts
+        | t1 :: t2 :: ts ->
+          super#on_Union loc (Union (from_bounds, t1, t2, ts)) from_bounds t1 t2 ts
       )
   end
 

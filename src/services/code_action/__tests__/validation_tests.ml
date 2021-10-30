@@ -26,13 +26,13 @@ let tests =
          );
          (* Invalid type (number | any(unsound)) - raises exception *)
          ( "Any_unsound_unresolved_type" >:: fun ctxt ->
-           let t = Union (Num None, Any (Unsound UnresolvedType), []) in
+           let t = Union (false, Num None, Any (Unsound UnresolvedType), []) in
            let (_, errs) = validate_type ~size_limit:1000 ~loc_of_aloc:ALoc.to_loc_exn t in
            assert_equal ~ctxt ~printer:(fun _ -> "unit") errs [Error.Any_Unsound UnresolvedType]
          );
          (* Type too big - raises exception *)
          ( "Type_too_big" >:: fun ctxt ->
-           let t = Union (Num None, Num None, []) in
+           let t = Union (false, Num None, Num None, []) in
            let (_, errs) = validate_type ~size_limit:2 ~loc_of_aloc:ALoc.to_loc_exn t in
            assert_equal
              ~ctxt

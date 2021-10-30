@@ -20,7 +20,8 @@ module UnionSimplification = struct
       ( "simplify_union_obj" >:: fun ctxt ->
         let t_in =
           Ty.Union
-            ( Ty.Obj
+            ( false,
+              Ty.Obj
                 {
                   Ty.obj_kind = Ty.InexactObj;
                   obj_frozen = false;
@@ -86,7 +87,8 @@ module UnionSimplification = struct
       ( "simplify_union_obj" >:: fun ctxt ->
         let t_in =
           Ty.Union
-            ( Ty.Obj
+            ( false,
+              Ty.Obj
                 {
                   Ty.obj_kind = Ty.InexactObj;
                   obj_frozen = false;
@@ -143,7 +145,8 @@ module BotAndTopSimplification = struct
       ( "simplify_union_obj_empty_insensitive" >:: fun ctxt ->
         let t_in =
           Ty.Union
-            ( Ty.Obj
+            ( false,
+              Ty.Obj
                 {
                   Ty.obj_kind = Ty.InexactObj;
                   obj_frozen = false;
@@ -225,11 +228,16 @@ module BotAndTopSimplification = struct
           Ty.Inter
             ( Ty.Top,
               Ty.Union
-                ( Ty.Bot (Ty.EmptyTypeDestructorTriggerT ALoc.none),
+                ( false,
+                  Ty.Bot (Ty.EmptyTypeDestructorTriggerT ALoc.none),
                   Ty.Inter
                     ( Ty.Top,
                       Ty.Union
-                        (Ty.Bot (Ty.NoLowerWithUpper (Ty.SomeUnknownUpper "blah")), Ty.Num None, []),
+                        ( false,
+                          Ty.Bot (Ty.NoLowerWithUpper (Ty.SomeUnknownUpper "blah")),
+                          Ty.Num None,
+                          []
+                        ),
                       []
                     ),
                   []
@@ -240,7 +248,8 @@ module BotAndTopSimplification = struct
         let t_out = Ty_utils.simplify_type ~merge_kinds:false ~sort:false t_in in
         let t_exp =
           Ty.Union
-            ( Ty.Bot (Ty.EmptyTypeDestructorTriggerT ALoc.none),
+            ( false,
+              Ty.Bot (Ty.EmptyTypeDestructorTriggerT ALoc.none),
               Ty.Bot (Ty.NoLowerWithUpper (Ty.SomeUnknownUpper "blah")),
               [Ty.Num None]
             )
@@ -259,11 +268,16 @@ module BotAndTopSimplification = struct
           Ty.Inter
             ( Ty.Top,
               Ty.Union
-                ( Ty.Bot (Ty.EmptyTypeDestructorTriggerT ALoc.none),
+                ( false,
+                  Ty.Bot (Ty.EmptyTypeDestructorTriggerT ALoc.none),
                   Ty.Inter
                     ( Ty.Top,
                       Ty.Union
-                        (Ty.Bot (Ty.NoLowerWithUpper (Ty.SomeUnknownUpper "blah")), Ty.Num None, []),
+                        ( false,
+                          Ty.Bot (Ty.NoLowerWithUpper (Ty.SomeUnknownUpper "blah")),
+                          Ty.Num None,
+                          []
+                        ),
                       []
                     ),
                   []
@@ -292,10 +306,11 @@ module AnySimplification = struct
       ( "merge_any_kinds_sensitive" >:: fun ctxt ->
         let t_in =
           Union
-            ( Any (Unsound BoundFunctionThis),
+            ( false,
+              Any (Unsound BoundFunctionThis),
               Inter
                 ( Any (Annotated ALoc.none),
-                  Union (Any (Unsound BoundFunctionThis), Ty.Any (Annotated ALoc.none), []),
+                  Union (false, Any (Unsound BoundFunctionThis), Ty.Any (Annotated ALoc.none), []),
                   []
                 ),
               []
@@ -318,10 +333,11 @@ module AnySimplification = struct
       ( "merge_any_kinds_insensitive" >:: fun ctxt ->
         let t_in =
           Union
-            ( Any (Unsound BoundFunctionThis),
+            ( false,
+              Any (Unsound BoundFunctionThis),
               Inter
                 ( Any (Annotated ALoc.none),
-                  Union (Any (Unsound BoundFunctionThis), Ty.Any (Annotated ALoc.none), []),
+                  Union (false, Any (Unsound BoundFunctionThis), Ty.Any (Annotated ALoc.none), []),
                   []
                 ),
               []
@@ -339,21 +355,22 @@ module Sorting = struct
 
   let simplify_sort = simplify_type ~merge_kinds:false ~sort:true
 
-  let t0 = Union (Any (Annotated ALoc.none), Num None, [NumLit "42"])
+  let t0 = Union (false, Any (Annotated ALoc.none), Num None, [NumLit "42"])
 
-  let t1 = Union (NumLit "1", NumLit "2", [NumLit "42"])
+  let t1 = Union (false, NumLit "1", NumLit "2", [NumLit "42"])
 
-  let t2 = Union (NumLit "2", t0, [t1])
+  let t2 = Union (false, NumLit "2", t0, [t1])
 
-  let t3 = Union (t0, t1, [t2])
+  let t3 = Union (false, t0, t1, [t2])
 
-  let t4 = Union (t3, t2, [t1; t0])
+  let t4 = Union (false, t3, t2, [t1; t0])
 
-  let t5 = Union (t0, t1, [t2; t3; t4])
+  let t5 = Union (false, t0, t1, [t2; t3; t4])
 
-  let t6 = Union (t3, t2, [t4; t0; t1; t5])
+  let t6 = Union (false, t3, t2, [t4; t0; t1; t5])
 
-  let t6_sorted = Union (Any (Annotated ALoc.none), NumLit "1", [NumLit "2"; NumLit "42"; Num None])
+  let t6_sorted =
+    Union (false, Any (Annotated ALoc.none), NumLit "1", [NumLit "2"; NumLit "42"; Num None])
 
   let tests =
     [
@@ -390,16 +407,19 @@ module Sorting = struct
         let t_in =
           Inter
             ( Union
-                ( Void,
+                ( false,
+                  Void,
                   Inter (Void, Any (Annotated ALoc.none), [NumLit "1"]),
                   [Inter (NumLit "1", Any (Annotated ALoc.none), [Void])]
                 ),
-              Union (Inter (Any (Annotated ALoc.none), Void, [NumLit "1"]), Void, []),
+              Union (false, Inter (Any (Annotated ALoc.none), Void, [NumLit "1"]), Void, []),
               []
             )
         in
         let t_out = simplify_sort t_in in
-        let t_exp = Union (Void, Inter (Any (Annotated ALoc.none), Void, [NumLit "1"]), []) in
+        let t_exp =
+          Union (false, Void, Inter (Any (Annotated ALoc.none), Void, [NumLit "1"]), [])
+        in
         assert_equal ~ctxt ~printer:Ty.show t_exp t_out
       );
     ]

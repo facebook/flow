@@ -100,7 +100,7 @@ let type_ options =
     | Tup ts ->
       let%map ts = mapM type_ ts in
       (Loc.none, T.Tuple { T.Tuple.types = ts; comments = None })
-    | Union (t0, t1, ts) as t -> union t (t0, t1, ts)
+    | Union (from_bounds, t0, t1, ts) as t -> union t (from_bounds, t0, t1, ts)
     | Inter (t0, t1, ts) -> intersection (t0, t1, ts)
     | Utility s -> utility s
     | IndexedAccess { _object; index; optional } ->
@@ -129,7 +129,7 @@ let type_ options =
     let%bind id = id_from_symbol x in
     let%map targs = opt type_arguments targs in
     mk_generic_type id targs
-  and union t (t0, t1, rest) =
+  and union t (from_bounds, t0, t1, rest) =
     let ts = bk_union t |> Nel.to_list in
     if List.mem Null ts && List.mem Void ts then
       match List.filter (fun t -> not (t = Null || t = Void)) ts with
@@ -143,7 +143,7 @@ let type_ options =
               }
           )
       | hd :: tl ->
-        let%map ts = type_ (mk_union (hd, tl)) in
+        let%map ts = type_ (mk_union ~from_bounds (hd, tl)) in
         (Loc.none, T.Nullable { T.Nullable.argument = ts; comments = None })
     else
       let%bind t0 = type_ t0 in

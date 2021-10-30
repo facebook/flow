@@ -424,7 +424,7 @@ let upper_bound_t_of_t ~cx =
 
 let rec literals_of_ty acc ty =
   match ty with
-  | Ty.Union (t1, t2, ts) -> Base.List.fold_left (t1 :: t2 :: ts) ~f:literals_of_ty ~init:acc
+  | Ty.Union (_, t1, t2, ts) -> Base.List.fold_left (t1 :: t2 :: ts) ~f:literals_of_ty ~init:acc
   | Ty.StrLit _
   | Ty.NumLit _
   | Ty.BoolLit _ ->
@@ -1065,7 +1065,7 @@ let autocomplete_member
                  0
              in
              let opt_chain_ty =
-               Ty_utils.simplify_type ~merge_kinds:true (Ty.Union (Ty.Void, ty, []))
+               Ty_utils.simplify_type ~merge_kinds:true (Ty.Union (false, Ty.Void, ty, []))
              in
              let name_as_indexer =
                lazy

@@ -303,13 +303,13 @@ end = struct
 
             method! on_t env t =
               match (env, t) with
-              | ((v, _), Union (t0, t1, ts)) ->
+              | ((v, _), Union (from_bounds, t0, t1, ts)) ->
                 let t0' = self#on_t (v, `Union) t0 in
                 let ts' = self#on_list self#on_t (v, `Union) (t1 :: ts) in
                 if t0 == t0' && ts == ts' then
                   t
                 else
-                  Ty.mk_union (t0', ts')
+                  Ty.mk_union ~from_bounds (t0', ts')
               | ((v, _), Inter (t0, t1, ts)) ->
                 let t0' = self#on_t (v, `Inter) t0 in
                 let ts' = self#on_list self#on_t (v, `Inter) (t1 :: ts) in
@@ -556,12 +556,12 @@ end = struct
     let%map ts = mapM f ts in
     Ty.mk_inter (t0, t1 :: ts)
 
-  let app_union ~f rep =
+  let app_union ~from_bounds ~f rep =
     let (t0, (t1, ts)) = T.UnionRep.members_nel rep in
     let%bind t0 = f t0 in
     let%bind t1 = f t1 in
     let%map ts = mapM f ts in
-    Ty.mk_union (t0, t1 :: ts)
+    Ty.mk_union ~from_bounds (t0, t1 :: ts)
 
   (* Utility that determines the next immediate concrete constructor, ie. reads
    * through OpenTs and AnnotTs. This is useful in determining, for example, the
@@ -825,10 +825,10 @@ end = struct
       | DefT (_, _, SingletonBoolT lit) -> return (Ty.BoolLit lit)
       | MaybeT (_, t) ->
         let%map t = type__ ~env t in
-        Ty.mk_union (Ty.Void, [Ty.Null; t])
+        Ty.mk_union ~from_bounds:false (Ty.Void, [Ty.Null; t])
       | OptionalT { reason = _; type_ = t; use_desc = _ } ->
         let%map t = type__ ~env t in
-        Ty.mk_union (Ty.Void, [t])
+        Ty.mk_union ~from_bounds:false (Ty.Void, [t])
       | DefT (_, _, FunT (static, _, f)) ->
         let%map t = fun_ty ~env static f None in
         Ty.Fun t
@@ -836,7 +836,7 @@ end = struct
         let%map o = obj_ty ~env r o in
         Ty.Obj o
       | DefT (r, _, ArrT a) -> arr_ty ~env r a
-      | UnionT (_, rep) -> app_union ~f:(type__ ~env) rep
+      | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env) rep
       | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env) rep
       | DefT (_, _, PolyT { tparams = ps; t_out = t; _ }) -> poly_ty ~env t ps
       | TypeAppT (_, _, t, ts) -> type_app ~env t (Some ts)
@@ -940,7 +940,7 @@ end = struct
       | T.Constraint.Unresolved bounds ->
         (match%bind resolve_from_lower_bounds ~env bounds with
         | [] -> empty_with_upper_bounds ~env bounds
-        | hd :: tl -> return (Ty.mk_union ~flattened:true (hd, tl)))
+        | hd :: tl -> return (Ty.mk_union ~from_bounds:true ~flattened:true (hd, tl)))
 
     and resolve_from_lower_bounds ~env bounds =
       T.TypeMap.keys bounds.T.Constraint.lower
@@ -1409,7 +1409,7 @@ end = struct
           let%map tys = mapM (singleton ~env targs) ts in
           (match tys with
           | [] -> Ty.Bot (Ty.NoLowerWithUpper Ty.NoUpper)
-          | t :: ts -> Ty.mk_union (t, ts))
+          | t :: ts -> Ty.mk_union ~from_bounds:true (t, ts))
 
     and opaque_t ~env reason opaque_type =
       let name = opaque_type.Type.opaque_name in
@@ -1458,7 +1458,7 @@ end = struct
               (Some "pathCallback", pathCallback, non_opt_param);
             ]
           in
-          return (mk_fun ~tparams ~params (Ty.mk_maybe idxResult))
+          return (mk_fun ~tparams ~params (Ty.mk_maybe ~from_bounds:false idxResult))
         (* var TypeAssertIs: <TypeAssertT>(value: mixed) => boolean *)
         | TypeAssertIs ->
           let tparams = [mk_tparam "TypeAssertT"] in
@@ -1496,7 +1496,7 @@ end = struct
                  ]
               )
           in
-          let ret = Ty.mk_union (result_fail_ty, [result_succ_ty]) in
+          let ret = Ty.mk_union ~from_bounds:false (result_fail_ty, [result_succ_ty]) in
           return (mk_fun ~tparams ~params ret)
         (* debugPrint: (_: any[]) => void *)
         | DebugPrint ->
@@ -1622,7 +1622,7 @@ end = struct
                  ]
               )
           in
-          let ret = Ty.mk_union (result_fail_ty, [result_succ_ty]) in
+          let ret = Ty.mk_union ~from_bounds:false (result_fail_ty, [result_succ_ty]) in
           return (mk_fun ~tparams ~params ret)
         | DebugPrint -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugPrint"))
         | DebugThrow -> return (builtin_t (Reason.OrdinaryName "$Flow$DebugThrow"))
@@ -2459,7 +2459,7 @@ end = struct
             let lowers = Base.List.(dedup_and_sort ~compare:Stdlib.compare (concat lowers)) in
             (match lowers with
             | [] -> Ty.Bot Ty.EmptyType
-            | hd :: tl -> Ty.mk_union ~flattened:true (hd, tl))
+            | hd :: tl -> Ty.mk_union ~from_bounds:true ~flattened:true (hd, tl))
       )
 
     and type__ ~env ~proto ~(imode : instance_mode) t =
@@ -2494,15 +2494,15 @@ end = struct
         type__ ~env ~proto ~imode t_out
       | MaybeT (_, t) ->
         let%map t = type__ ~env ~proto ~imode t in
-        Ty.mk_union (Ty.Void, [Ty.Null; t])
+        Ty.mk_union ~from_bounds:false (Ty.Void, [Ty.Null; t])
       | IntersectionT (_, rep) -> app_intersection ~f:(type__ ~env ~proto ~imode) rep
-      | UnionT (_, rep) -> app_union ~f:(type__ ~env ~proto ~imode) rep
+      | UnionT (_, rep) -> app_union ~from_bounds:false ~f:(type__ ~env ~proto ~imode) rep
       | DefT (_, _, FunT (static, _, _)) -> type__ ~env ~proto ~imode static
       | TypeAppT (r, use_op, t, ts) -> type_app_t ~env ~proto ~imode r use_op t ts
       | DefT (_, _, TypeT (_, t)) -> type__ ~env ~proto ~imode t
       | OptionalT { type_ = t; _ } ->
         let%map t = type__ ~env ~proto ~imode t in
-        Ty.mk_union (Ty.Void, [t])
+        Ty.mk_union ~from_bounds:false (Ty.Void, [t])
       | EvalT (t, TypeDestructorT (use_op, r, d), id) ->
         let cont = type__ ~proto ~imode in
         let non_eval = TypeConverter.convert_type_destructor_unevaluated in

@@ -14,7 +14,7 @@ open Insert_type_utils
 module Normalize_union = struct
   (* Wrap Ty.mk_union to filter out union branches that have an `any` propogated
    * from React *)
-  let mk_union ?(flattened = false) (t0, ts) =
+  let mk_union ~from_bounds ?(flattened = false) (t0, ts) =
     let filtered_ts =
       List.filter
         (function
@@ -24,7 +24,7 @@ module Normalize_union = struct
     in
     match filtered_ts with
     | [] -> t0
-    | t1 :: ts -> Ty.mk_union ~flattened (t1, ts)
+    | t1 :: ts -> Ty.mk_union ~from_bounds ~flattened (t1, ts)
 
   let mapper =
     object
@@ -32,7 +32,7 @@ module Normalize_union = struct
 
       method! on_t env t =
         match t with
-        | Ty.Union (t0, t1, ts) -> super#on_t env (mk_union (t0, t1 :: ts))
+        | Ty.Union (from_bounds, t0, t1, ts) -> super#on_t env (mk_union ~from_bounds (t0, t1 :: ts))
         | _ -> super#on_t env t
     end
 

@@ -144,7 +144,7 @@ module Simplify = struct
 
       method! on_t env t =
         match t with
-        | Ty.Union (t0, t1, ts) -> super#on_t env (mk_union (t0, t1 :: ts))
+        | Ty.Union (from_bounds, t0, t1, ts) -> super#on_t env (mk_union ~from_bounds (t0, t1 :: ts))
         | _ -> super#on_t env t
     end
 

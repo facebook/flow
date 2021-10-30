@@ -95,7 +95,7 @@ let layout_of_elt ~prefer_single_quotes ?(size = 5000) ?(with_comments = true) ~
     | Obj obj -> type_object ~depth obj
     | Arr arr -> type_array ~depth arr
     | Generic g -> type_generic ~depth g
-    | Union (t1, t2, ts) -> type_union ~depth (t1 :: t2 :: ts)
+    | Union (_, t1, t2, ts) -> type_union ~depth (t1 :: t2 :: ts)
     | Inter (t1, t2, ts) -> type_intersection ~depth (t1 :: t2 :: ts)
     | Utility s -> utility ~depth s
     | IndexedAccess { _object; index; optional } ->
