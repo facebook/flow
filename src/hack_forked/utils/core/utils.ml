@@ -7,14 +7,3 @@
 
 (** Callstack is simply a typed way to indicate that a string is a callstack *)
 type callstack = Callstack of string
-
-let try_finally ~f ~(finally : unit -> unit) =
-  let res =
-    try f () with
-    | e ->
-      let e = Exception.wrap e in
-      finally ();
-      Exception.reraise e
-  in
-  finally ();
-  res

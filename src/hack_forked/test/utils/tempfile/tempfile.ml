@@ -26,7 +26,7 @@ let mkdtemp ~skip_mocking = mkdtemp ~skip_mocking ~retries:30
 let with_tempdir ~skip_mocking g =
   let dir = mkdtemp skip_mocking in
   let f () = g dir in
-  Utils.try_finally ~f ~finally:(fun () -> Sys_utils.rm_dir_tree (Path.to_string dir) ~skip_mocking)
+  Exception.protect ~f ~finally:(fun () -> Sys_utils.rm_dir_tree (Path.to_string dir) ~skip_mocking)
 
 let with_real_tempdir g =
   Random.self_init ();

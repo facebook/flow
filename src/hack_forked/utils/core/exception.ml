@@ -137,3 +137,14 @@ let get_full_backtrace_string n { exn = _; backtrace } =
   backtrace_slots_to_string slots
 
 let record_backtrace = Printexc.record_backtrace
+
+let protect ~f ~finally =
+  let res =
+    try f () with
+    | e ->
+      let e = wrap e in
+      finally ();
+      reraise e
+  in
+  finally ();
+  res

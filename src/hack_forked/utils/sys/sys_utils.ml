@@ -194,7 +194,7 @@ let with_umask umask f =
     f ()
   else
     let old_umask = Unix.umask umask in
-    Utils.try_finally ~f ~finally:(fun () ->
+    Exception.protect ~f ~finally:(fun () ->
         let _ = Unix.umask old_umask in
         ()
     )

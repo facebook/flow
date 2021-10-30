@@ -30,3 +30,5 @@ val print_full_backtrace : out_channel -> int -> t -> unit
 val get_full_backtrace_string : int -> t -> string
 
 val record_backtrace : bool -> unit
+
+val protect : f:(unit -> 'a) -> finally:(unit -> unit) -> 'a

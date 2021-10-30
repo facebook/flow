@@ -34,7 +34,7 @@ let check_should_exit () = with_worker_exit check_should_exit
 
 let with_no_cancellations f =
   if get_can_worker_stop () then
-    Utils.try_finally
+    Exception.protect
       ~f:
         begin
           fun () ->
