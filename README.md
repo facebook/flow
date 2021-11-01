@@ -95,6 +95,8 @@ Flow is written in OCaml (OCaml 4.10.2 is required).
     make deps
     ```
 
+    **note**: If you find that you get an error looking for `ocaml-base-compiler` version, your local dependency repo may be out of date and you need to run `opam update` + `opam upgrade`
+
 5. Build the `flow` binary:
 
     ```sh
