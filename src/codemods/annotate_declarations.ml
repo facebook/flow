@@ -243,7 +243,9 @@ let mapper
       in
 
       if LSet.mem ploc loc_error_set then (
-        let ty_result = Codemod_annotator.get_ty cctx ~preserve_literals ~max_type_size ploc in
+        let ty_result =
+          Codemod_annotator.get_validated_ty cctx ~preserve_literals ~max_type_size ploc
+        in
         match patt with
         | Ast.Pattern.Object Ast.Pattern.Object.{ annot; properties; comments } ->
           let annot' = get_annot ty_result annot in

@@ -11,6 +11,14 @@ module LSet = Loc_collections.LocSet
 module T = Type
 open Insert_type_utils
 
+module Let_syntax = struct
+  let return = return
+
+  let bind x ~f = x >>= f
+
+  let map x ~f = x >>| f
+end
+
 module Normalize_union = struct
   (* Wrap Ty.mk_union to filter out union branches that have an `any` propogated
    * from React *)
@@ -63,8 +71,6 @@ let find_this_locs (fn : ('a, 'a) Ast.Function.t) =
  * will be an interface with prop names typed as `any`.
  *)
 module Normalize_this_getPropT = struct
-  let ( >>| ) = Base.Result.( >>| )
-
   let get_props bounds =
     let lowers = T.TypeMap.keys bounds.T.Constraint.lower in
     if List.length lowers == 0 then
@@ -156,6 +162,7 @@ module ErrorStats = struct
 end
 
 module Codemod_lti_annotator = Codemod_annotator.Make (ErrorStats)
+module Hardcoded_Ty_Fixes = Codemod_hardcoded_ty_fixes.Make (ErrorStats)
 module Acc = Insert_type_utils.Acc (ErrorStats)
 
 let mapper
@@ -201,12 +208,27 @@ let mapper
       let error _ = Ast.Type.Available (Loc.none, flowfixme_ast) in
       this#opt_annotate ~f ~error ~expr:None loc ty annot
 
+    method private fix_and_validate loc ty =
+      let (acc', ty) =
+        Hardcoded_Ty_Fixes.run
+          ~cctx
+          ~lint_severities
+          ~suppress_types
+          ~imports_react
+          ~preserve_literals
+          acc
+          loc
+          ty
+      in
+      this#set_acc acc';
+      Codemod_annotator.validate_ty cctx ~max_type_size ty
+
     method! function_param_pattern ((ploc, patt) : ('loc, 'loc) Ast.Pattern.t) =
-      let ( >>| ) = Base.Result.( >>| ) in
       if LMap.mem ploc loc_error_map then (
         let ty_result =
-          Codemod_annotator.get_ty cctx ~preserve_literals ~max_type_size ploc
+          Codemod_annotator.get_ty cctx ~preserve_literals ploc
           >>| Normalize_union.normalize
+          >>= this#fix_and_validate ploc
         in
         match patt with
         | Ast.Pattern.Object Ast.Pattern.Object.{ annot; properties; comments } ->
@@ -252,7 +274,11 @@ let mapper
           let this_locs = find_this_locs expr in
           if not (LSet.is_empty this_locs) then
             let ty_result =
-              Codemod_annotator.get_ty cctx ~preserve_literals ~max_type_size (LSet.choose this_locs)
+              Codemod_annotator.get_validated_ty
+                cctx
+                ~preserve_literals
+                ~max_type_size
+                (LSet.choose this_locs)
             in
             let annot =
               match this#get_annot Loc.none ty_result (Ast.Type.Missing Loc.none) with

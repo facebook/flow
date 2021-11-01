@@ -114,7 +114,9 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
           (_, { ArgList.arguments = [_; Expression (loc, Object { Object.properties = []; _ })]; _ }),
           None
         ) ->
-        let ty_result = Codemod_annotator.get_ty cctx ~preserve_literals ~max_type_size loc in
+        let ty_result =
+          Codemod_annotator.get_validated_ty cctx ~preserve_literals ~max_type_size loc
+        in
         (match ty_result with
         | Ok (Ty.Obj ty) ->
           let ty_obj = this#unsealed_annot loc ty in
@@ -137,7 +139,9 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
       let open Ast.Expression in
       match expr with
       | (loc, Object { Object.properties = []; _ }) ->
-        let ty_result = Codemod_annotator.get_ty cctx ~preserve_literals ~max_type_size loc in
+        let ty_result =
+          Codemod_annotator.get_validated_ty cctx ~preserve_literals ~max_type_size loc
+        in
         (match ty_result with
         | Ok (Ty.Obj ty) ->
           let ty_obj = this#unsealed_annot loc ty in
@@ -169,7 +173,9 @@ let mapper ~preserve_literals ~max_type_size ~default_any (cctx : Codemod_contex
               Ast.Pattern.Identifier
                 Ast.Pattern.Identifier.{ annot = Ast.Type.Missing _ as annot; name; optional }
             ) ->
-            let ty_result = Codemod_annotator.get_ty cctx ~preserve_literals ~max_type_size ploc in
+            let ty_result =
+              Codemod_annotator.get_validated_ty cctx ~preserve_literals ~max_type_size ploc
+            in
             (match ty_result with
             | Ok (Ty.Obj ty) ->
               let ty_obj = this#unsealed_annot oloc ty in

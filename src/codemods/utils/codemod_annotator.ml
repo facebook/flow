@@ -109,7 +109,7 @@ let validate_ty cctx ~max_type_size ty =
   | errs -> Error (List.map (fun e -> Error.Validation_error e) errs)
 
 (* Used to infer the type for an annotation from an error loc *)
-let get_ty cctx ~preserve_literals ~max_type_size loc =
+let get_ty cctx ~preserve_literals loc =
   let preserve_inferred_literal_types =
     Codemod_hardcoded_ty_fixes.PreserveLiterals.(
       match preserve_literals with
@@ -134,10 +134,14 @@ let get_ty cctx ~preserve_literals ~max_type_size loc =
     }
   in
   match Codemod_context.Typed.ty_at_loc norm_opts cctx loc with
-  | Ok (Ty.Type ty) -> validate_ty cctx ~max_type_size ty
-  | Ok (Ty.Decl (Ty.ClassDecl (s, _))) -> validate_ty cctx ~max_type_size (Ty.TypeOf (Ty.TSymbol s))
+  | Ok (Ty.Type ty) -> Ok ty
+  | Ok (Ty.Decl (Ty.ClassDecl (s, _))) -> Ok (Ty.TypeOf (Ty.TSymbol s))
   | Ok _ -> Error [Error.Missing_annotation_or_normalizer_error]
   | Error _ -> Error [Error.Missing_annotation_or_normalizer_error]
+
+let get_validated_ty cctx ~preserve_literals ~max_type_size loc =
+  let ty = get_ty cctx ~preserve_literals loc in
+  ty >>= validate_ty cctx ~max_type_size
 
 module Make (Extra : BASE_STATS) = struct
   module Stats = Stats (Extra)

@@ -47,7 +47,7 @@ end
 
 module SignatureVerification = struct
   let supported_error_kind cctx ~preserve_literals ~max_type_size acc loc =
-    let ty_result = Codemod_annotator.get_ty cctx ~preserve_literals ~max_type_size loc in
+    let ty_result = Codemod_annotator.get_validated_ty cctx ~preserve_literals ~max_type_size loc in
     LMap.add loc ty_result acc
 
   let unsupported_error_kind ~default_any acc loc =

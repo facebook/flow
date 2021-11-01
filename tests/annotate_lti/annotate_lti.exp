@@ -34,7 +34,7 @@ a.arrow(true);
 
 
 
->>> function.js (#changes: 12)
+>>> function.js (#changes: 14)
 // @flow
 
 function f(x: number) {
@@ -71,6 +71,20 @@ function rest(x: number, ...args: Array<number>) {
   return x;
 }
 rest(1, 2, 3, 4);
+
+// Should be annotated with `NumType`, not `NumType | number`
+function g(x: NumType) {}
+type NumType = number;
+const y: NumType = 1;
+g(y);
+g(2);
+
+// Should be annotated with `NumType | StringType`, not `NumType | StringType | string`
+function g2(x: NumType | StringType) {}
+type StringType = string;
+const z: NumType | StringType = 1;
+g2(z);
+g2('test');
 
 function obj({num}: {| num: number |}) {
   return num;
@@ -191,9 +205,9 @@ let arrow = () => { return this; }
 
 Stats:
   Files changed:                            5
-  Number of annotations added:             23
-  Total size of annotations:               40
-  Number of LTI errors:                    32
+  Number of annotations added:             25
+  Total size of annotations:               35
+  Number of LTI errors:                    34
 
 Errors:
   Missing annot./normalizer error:          0

@@ -1,4 +1,4 @@
->>> file.js (#changes: 1)
+>>> file.js (#changes: 2)
 // @flow
 
 // In case of infered type size violation, this should be annotated as `any`
@@ -6,13 +6,21 @@ function foo(x: any) {}
 
 foo({f: 1, g: 2, h: 3});
 
+// Hardcoded fixes should collapse the inferred union to a small size before annotation
+// Should be annotated with `ObjType`, not `any`
+function g(x: ObjType) {}
+type ObjType = {f: number, g: number, h: number};
+const y: ObjType = {f: 1, g: 2, h: 3};
+g(y);
+g({f: 4, g: 5, h: 6});
+
 >>> Launching report...
 
 Stats:
   Files changed:                            1
-  Number of annotations added:              1
-  Total size of annotations:                1
-  Number of LTI errors:                     1
+  Number of annotations added:              2
+  Total size of annotations:                2
+  Number of LTI errors:                     2
 
 Errors:
   Missing annot./normalizer error:          0
