@@ -93,6 +93,7 @@ type t =
   | StrictDuplicateProperty
   | AccessorDataProperty
   | AccessorGetSet
+  | InvalidTypeof
   | StrictLHSAssignment
   | StrictLHSPostfix
   | StrictLHSPrefix
@@ -453,4 +454,5 @@ module PP = struct
       "Arrow functions cannot have a `this` parameter; arrow functions automatically bind `this` when declared."
     | ThisParamBannedInConstructor ->
       "Constructors cannot have a `this` parameter; constructors don't bind `this` like other functions."
+    | InvalidTypeof -> "`typeof` can only be used to get the type of variables."
 end

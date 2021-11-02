@@ -502,6 +502,7 @@
         "loc":{"source":null,"start":{"line":26,"column":24},"end":{"line":26,"column":34}},
         "range":[597,607],
         "params":[],
+        "this":null,
         "returnType":{
           "type":"VoidTypeAnnotation",
           "loc":{"source":null,"start":{"line":26,"column":30},"end":{"line":26,"column":34}},
@@ -537,6 +538,7 @@
         "loc":{"source":null,"start":{"line":27,"column":23},"end":{"line":27,"column":33}},
         "range":[645,655],
         "params":[],
+        "this":null,
         "returnType":{
           "type":"VoidTypeAnnotation",
           "trailingComments":[
@@ -1272,18 +1274,12 @@
         "loc":{"source":null,"start":{"line":49,"column":24},"end":{"line":49,"column":34}},
         "range":[1421,1431],
         "argument":{
-          "type":"GenericTypeAnnotation",
+          "type":"Identifier",
           "loc":{"source":null,"start":{"line":49,"column":31},"end":{"line":49,"column":34}},
           "range":[1428,1431],
-          "id":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":49,"column":31},"end":{"line":49,"column":34}},
-            "range":[1428,1431],
-            "name":"Foo",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "typeParameters":null
+          "name":"Foo",
+          "typeAnnotation":null,
+          "optional":false
         }
       }
     },
@@ -1313,26 +1309,20 @@
         "loc":{"source":null,"start":{"line":50,"column":23},"end":{"line":50,"column":33}},
         "range":[1471,1481],
         "argument":{
-          "type":"GenericTypeAnnotation",
+          "type":"Identifier",
+          "trailingComments":[
+            {
+              "type":"Block",
+              "loc":{"source":null,"start":{"line":50,"column":34},"end":{"line":50,"column":44}},
+              "range":[1482,1492],
+              "value":" T id "
+            }
+          ],
           "loc":{"source":null,"start":{"line":50,"column":30},"end":{"line":50,"column":33}},
           "range":[1478,1481],
-          "id":{
-            "type":"Identifier",
-            "trailingComments":[
-              {
-                "type":"Block",
-                "loc":{"source":null,"start":{"line":50,"column":34},"end":{"line":50,"column":44}},
-                "range":[1482,1492],
-                "value":" T id "
-              }
-            ],
-            "loc":{"source":null,"start":{"line":50,"column":30},"end":{"line":50,"column":33}},
-            "range":[1478,1481],
-            "name":"Foo",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "typeParameters":null
+          "name":"Foo",
+          "typeAnnotation":null,
+          "optional":false
         }
       }
     },

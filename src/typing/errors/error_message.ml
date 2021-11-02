@@ -197,7 +197,6 @@ and 'loc t' =
   | ERefineAnnot of 'loc
   | ETrustedAnnot of 'loc
   | EPrivateAnnot of 'loc
-  | EUnexpectedTypeof of 'loc
   | EFunPredCustom of ('loc virtual_reason * 'loc virtual_reason) * string
   | EIncompatibleWithShape of 'loc virtual_reason * 'loc virtual_reason * 'loc virtual_use_op
   | EInternal of 'loc * internal_error
@@ -808,7 +807,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ERefineAnnot loc -> ERefineAnnot (f loc)
   | ETrustedAnnot loc -> ETrustedAnnot (f loc)
   | EPrivateAnnot loc -> EPrivateAnnot (f loc)
-  | EUnexpectedTypeof loc -> EUnexpectedTypeof (f loc)
   | EFunPredCustom ((r1, r2), s) -> EFunPredCustom ((map_reason r1, map_reason r2), s)
   | EInternal (loc, i) -> EInternal (f loc, i)
   | EUnsupportedSyntax (loc, u) -> EUnsupportedSyntax (f loc, map_unsupported_syntax u)
@@ -1156,7 +1154,6 @@ let util_use_op_of_msg nope util = function
   | ERefineAnnot _
   | ETrustedAnnot _
   | EPrivateAnnot _
-  | EUnexpectedTypeof _
   | EFunPredCustom (_, _)
   | EInternal (_, _)
   | EUnsupportedSyntax (_, _)
@@ -1373,7 +1370,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUseArrayLiteral loc
   | EUnsupportedSyntax (loc, _)
   | EInternal (loc, _)
-  | EUnexpectedTypeof loc
   | EPrivateAnnot loc
   | ETrustedAnnot loc
   | ERefineAnnot loc
@@ -1490,7 +1486,6 @@ let kind_of_msg =
     | EBadExportPosition _
     | EBadExportContext _ ->
       InferWarning ExportKind
-    | EUnexpectedTypeof _
     | EUnsafeGetSet _
     | EEnumsNotEnabled _
     | EIndexedAccessNotEnabled _
@@ -2288,8 +2283,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Normal { features = [text "Not a valid type to mark as "; code "$Trusted"; text "."] }
   | EPrivateAnnot _ ->
     Normal { features = [text "Not a valid type to mark as "; code "$Private"; text "."] }
-  | EUnexpectedTypeof _ ->
-    Normal { features = [code "typeof"; text " can only be used to get the type of variables."] }
   | EFunPredCustom ((a, b), msg) ->
     Normal { features = [ref a; text ". "; text msg; text " "; ref b; text "."] }
   | EIncompatibleWithShape (lower, upper, use_op) ->
@@ -3977,7 +3970,6 @@ let error_code_of_message err : error_code option =
     end
   | EUnexpectedTemporaryBaseType _ -> Some InvalidTempType
   | EUnexpectedThisType _ -> Some IllegalThis
-  | EUnexpectedTypeof _ -> Some InvalidTypeOf
   | EUnionSpeculationFailed { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EUnreachable _ -> Some UnreachableCode
   | EUnsafeGetSet _ -> Some IllegalGetSet

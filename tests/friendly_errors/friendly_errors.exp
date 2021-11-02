@@ -1103,7 +1103,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- typeof-unexpected.js:6:15
 
-`typeof` can only be used to get the type of variables. [invalid-typeof]
+`typeof` can only be used to get the type of variables.
 
    6| (null: typeof 42);
                     ^^

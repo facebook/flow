@@ -38,3 +38,8 @@ let z = {};
 // Error on use of computed property in destructuring pattern
 const {named1: renamed4, [1 + 2]: computed1} = Foo;
 ({named1: x, [1 + 2]: z}) = Foo;
+
+ type PitchWizardDataAction = $ReadOnly<{
+  type: typeof Foo,
+  ...
+}>;

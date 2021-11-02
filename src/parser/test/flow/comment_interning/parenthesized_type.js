@@ -36,7 +36,7 @@ type Test18 = /* Leading union */ (any | any) /* Trailing union */;
 
 type Test19 = /* Leading intersection */ (any & any) /* Trailing intersection */;
 
-type Test20 = /* Leading typeof */ (typeof 1) /* Trailing typeof */;
+type Test20 = /* Leading typeof */ (typeof x) /* Trailing typeof */;
 
 type Test21 = /* Leading tuple */ ([any, any]) /* Trailing any */;
 

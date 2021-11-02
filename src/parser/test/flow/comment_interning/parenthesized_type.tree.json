@@ -522,6 +522,7 @@
             "optional":false
           }
         ],
+        "this":null,
         "returnType":{
           "type":"AnyTypeAnnotation",
           "loc":{"source":null,"start":{"line":27,"column":45},"end":{"line":27,"column":48}},
@@ -786,11 +787,12 @@
         "loc":{"source":null,"start":{"line":39,"column":36},"end":{"line":39,"column":44}},
         "range":[1369,1377],
         "argument":{
-          "type":"NumberLiteralTypeAnnotation",
+          "type":"Identifier",
           "loc":{"source":null,"start":{"line":39,"column":43},"end":{"line":39,"column":44}},
           "range":[1376,1377],
-          "value":1,
-          "raw":"1"
+          "name":"x",
+          "typeAnnotation":null,
+          "optional":false
         }
       }
     },

@@ -1,1 +1,1 @@
-var a : typeof A.B<T>
+var a : typeof A.B

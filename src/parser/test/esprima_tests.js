@@ -2731,9 +2731,84 @@ module.exports = {
         'var x : number & string = 4;',
         'var x : () => number | () => string = fn;',
         'var x : () => number & () => string = fn;',
-        'var x: typeof Y | number = Y;',
-        'var x: typeof Y & number = Y;',
-        'var x: typeof Y = Y;',
+        {
+          content: 'var x: typeof Y | number = Y;',
+          explanation: "Esprima-fb sees typeof arguments as arbitrary types",
+          expected_differences: {
+            'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.types.0.argument.type': {
+              type: 'Wrong string',
+              expected: 'GenericTypeAnnotation',
+              actual: 'Identifier',
+            },
+            'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.types.0.argument.id': {
+              type: 'Missing property'
+            },
+            'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.types.0.argument.typeParameters': {
+              type: 'Missing property'
+            },
+            'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.types.0.argument.name': {
+              type: 'Unexpected property'
+            },
+            'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.types.0.argument.typeAnnotation': {
+              type: 'Unexpected property'
+            },
+            'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.types.0.argument.optional': {
+              type: 'Unexpected property'
+            },
+          },
+        },
+        {
+          content: 'var x: typeof Y & number = Y;',
+          explanation: "Esprima-fb sees typeof arguments as arbitrary types",
+          expected_differences: {
+            'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.types.0.argument.type': {
+              type: 'Wrong string',
+              expected: 'GenericTypeAnnotation',
+              actual: 'Identifier',
+            },
+            'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.types.0.argument.id': {
+              type: 'Missing property'
+            },
+            'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.types.0.argument.typeParameters': {
+              type: 'Missing property'
+            },
+            'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.types.0.argument.name': {
+              type: 'Unexpected property'
+            },
+            'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.types.0.argument.typeAnnotation': {
+              type: 'Unexpected property'
+            },
+            'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.types.0.argument.optional': {
+              type: 'Unexpected property'
+            },
+          },
+        },
+        {
+          content: 'var x: typeof Y = Y;',
+          explanation: "Esprima-fb sees typeof arguments as arbitrary types",
+          expected_differences: {
+            'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.argument.type': {
+              type: 'Wrong string',
+              expected: 'GenericTypeAnnotation',
+              actual: 'Identifier',
+            },
+            'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.argument.id': {
+              type: 'Missing property'
+            },
+            'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.argument.typeParameters': {
+              type: 'Missing property'
+            },
+            'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.argument.name': {
+              type: 'Unexpected property'
+            },
+            'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.argument.typeAnnotation': {
+              type: 'Unexpected property'
+            },
+            'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.argument.optional': {
+              type: 'Unexpected property'
+            },
+          },
+        },
     ],
     'Tuples': [ /* TODO */ ],
     'Type Aliases': [
@@ -2788,7 +2863,32 @@ module.exports = {
           }
         }
       },
-      'var x: typeof A[];',
+      {
+        content: 'var x: typeof A[];',
+        explanation: "Esprima-fb sees typeof arguments as arbitrary types",
+        expected_differences: {
+          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.elementType.argument.type': {
+            type: 'Wrong string',
+            expected: 'GenericTypeAnnotation',
+            actual: 'Identifier',
+          },
+          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.elementType.argument.id': {
+            type: 'Missing property'
+          },
+          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.elementType.argument.typeParameters': {
+            type: 'Missing property'
+          },
+          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.elementType.argument.name': {
+            type: 'Unexpected property'
+          },
+          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.elementType.argument.typeAnnotation': {
+            type: 'Unexpected property'
+          },
+          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.elementType.argument.optional': {
+            type: 'Unexpected property'
+          },
+        },
+      },
     ],
     'Export': {
       'options': { sourceType: "module" },
@@ -3080,7 +3180,32 @@ module.exports = {
         }
       },
       'var a: (A | B)',
-      'var a: (typeof A)',
+      {
+        content: 'var a: (typeof A)',
+        explanation: "Esprima-fb sees typeof arguments as arbitrary types",
+        expected_differences: {
+          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.argument.type': {
+            type: 'Wrong string',
+            expected: 'GenericTypeAnnotation',
+            actual: 'Identifier',
+          },
+          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.argument.id': {
+            type: 'Missing property'
+          },
+          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.argument.typeParameters': {
+            type: 'Missing property'
+          },
+          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.argument.name': {
+            type: 'Unexpected property'
+          },
+          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.argument.typeAnnotation': {
+            type: 'Unexpected property'
+          },
+          'root.body.0.declarations.0.id.typeAnnotation.typeAnnotation.argument.optional': {
+            type: 'Unexpected property'
+          },
+        },
+      },
       'var a: Array<(number)>',
       'var a: ([]) = []',
       'var a: (A)',

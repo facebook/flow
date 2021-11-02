@@ -241,6 +241,54 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
     in
     postfix_with env ~in_optional_indexed_access t
 
+  and typeof_expr env = raw_typeof_expr_with_identifier env (Parse.identifier env)
+
+  and raw_typeof_expr_with_identifier =
+    let rec identifier env (q_loc, qualification) =
+      if Peek.token env = T_PERIOD && Peek.ith_is_identifier ~i:1 env then
+        let (loc, q) =
+          with_loc
+            ~start_loc:q_loc
+            (fun env ->
+              Expect.token env T_PERIOD;
+              let id = identifier_name env in
+              { Type.Typeof.Target.qualification; id })
+            env
+        in
+        let qualification = Type.Typeof.Target.Qualified (loc, q) in
+        identifier env (loc, qualification)
+      else
+        qualification
+    in
+    fun env ((loc, _) as id) ->
+      let id = Type.Typeof.Target.Unqualified id in
+      identifier env (loc, id)
+
+  and typeof_arg env =
+    match Peek.token env with
+    | T_LPAREN ->
+      Eat.token env;
+      let typeof = typeof_arg env in
+      Expect.token env T_RPAREN;
+      typeof
+    | T_IDENTIFIER _ (* `static` is reserved in strict mode, but still an identifier *) ->
+      Some (typeof_expr env)
+    | _ ->
+      error env Parse_error.InvalidTypeof;
+      None
+
+  and typeof env =
+    with_loc
+      (fun env ->
+        let leading = Peek.comments env in
+        Expect.token env T_TYPEOF;
+        match typeof_arg env with
+        | None -> Type.Any None
+        | Some argument ->
+          Type.Typeof
+            { Type.Typeof.argument; comments = Flow_ast_utils.mk_comments_opt ~leading () })
+      env
+
   and primary env =
     let loc = Peek.loc env in
     match Peek.token env with
@@ -264,17 +312,7 @@ module Type (Parse : Parser_common.PARSER) : TYPE = struct
           Type.Interface
             { Type.Interface.extends; body; comments = Flow_ast_utils.mk_comments_opt ~leading () })
         env
-    | T_TYPEOF ->
-      with_loc
-        (fun env ->
-          let leading = Peek.comments env in
-          Expect.token env T_TYPEOF;
-          Type.Typeof
-            {
-              Type.Typeof.argument = primary env;
-              comments = Flow_ast_utils.mk_comments_opt ~leading ();
-            })
-        env
+    | T_TYPEOF -> typeof env
     | T_LBRACKET -> tuple env
     | T_IDENTIFIER _
     | T_STATIC (* `static` is reserved in strict mode, but still an identifier *) ->

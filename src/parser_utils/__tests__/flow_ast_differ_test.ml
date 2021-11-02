@@ -1139,12 +1139,12 @@ let tests =
              ~mapper:(new useless_mapper)
          );
          ( "typeof_type" >:: fun ctxt ->
-           let source = "type Foo = typeof number" in
+           let source = "type Foo = typeof rename" in
            assert_edits_equal
              ctxt
-             ~edits:[((18, 24), "string")]
+             ~edits:[((18, 24), "gotRenamed")]
              ~source
-             ~expected:"type Foo = typeof string"
+             ~expected:"type Foo = typeof gotRenamed"
              ~mapper:(new useless_mapper)
          );
          ( "new_type_param" >:: fun ctxt ->

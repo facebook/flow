@@ -1329,12 +1329,32 @@ class ['loc] mapper =
     method typeof_type (t : ('loc, 'loc) Ast.Type.Typeof.t) =
       let open Ast.Type.Typeof in
       let { argument; comments } = t in
-      let argument' = this#type_ argument in
+      let argument' = this#typeof_expression argument in
       let comments' = this#syntax_opt comments in
       if argument == argument' && comments == comments' then
         t
       else
         { argument = argument'; comments = comments' }
+
+    method typeof_expression (git : ('loc, 'loc) Ast.Type.Typeof.Target.t) =
+      let open Ast.Type.Typeof.Target in
+      match git with
+      | Unqualified i -> id this#typeof_identifier i git (fun i -> Unqualified i)
+      | Qualified i -> id this#typeof_qualified_identifier i git (fun i -> Qualified i)
+
+    method typeof_identifier id = this#identifier id
+
+    method typeof_member_identifier id = this#identifier id
+
+    method typeof_qualified_identifier qual =
+      let open Ast.Type.Typeof.Target in
+      let (loc, { qualification; id }) = qual in
+      let qualification' = this#typeof_expression qualification in
+      let id' = this#typeof_member_identifier id in
+      if qualification' == qualification && id' == id then
+        qual
+      else
+        (loc, { qualification = qualification'; id = id' })
 
     method tuple_type (t : ('loc, 'loc) Ast.Type.Tuple.t) =
       let open Ast.Type.Tuple in

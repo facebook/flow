@@ -1184,26 +1184,17 @@ let typeof =
       finish tbls typeof_loc t (x :: qname) chain
   in
   let rec loop scope tbls typeof_loc chain = function
-    | T.Generic.Identifier.Qualified
-        ( _,
-          {
-            T.Generic.Identifier.qualification;
-            id = (id_loc, { Ast.Identifier.name; comments = _ });
-          }
-        ) ->
+    | T.Typeof.Target.Qualified
+        (_, { T.Typeof.Target.qualification; id = (id_loc, { Ast.Identifier.name; comments = _ }) })
+      ->
       loop scope tbls typeof_loc ((id_loc, name) :: chain) qualification
-    | T.Generic.Identifier.Unqualified id ->
+    | T.Typeof.Target.Unqualified id ->
       let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
       let id_loc = push_loc tbls id_loc in
       let t = val_ref scope id_loc name in
       finish tbls typeof_loc t [name] chain
   in
-  fun scope tbls typeof_loc -> function
-    | (_, T.Generic { T.Generic.id; targs = None; comments = _ }) ->
-      loop scope tbls typeof_loc [] id
-    | (loc, _) ->
-      let loc = push_loc tbls loc in
-      Err (loc, CheckError)
+  (fun scope tbls typeof_loc expr -> loop scope tbls typeof_loc [] expr)
 
 let rec annot opts scope tbls xs (loc, t) =
   let (_, annot) = annot_with_loc opts scope tbls xs (loc, t) in

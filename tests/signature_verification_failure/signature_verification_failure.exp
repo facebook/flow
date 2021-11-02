@@ -347,18 +347,9 @@ Cannot resolve name `Y`. [cannot-resolve-name]
                     ^
 
 
-Error ---------------------------------------------------------------------------------------------------- typeof.js:3:5
-
-Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
-annotation at declaration of variable `x`: [signature-verification-failure]
-
-   3| var x = 2;
-          ^
-
-
 Error --------------------------------------------------------------------------------------------------- typeof.js:6:22
 
-`typeof` can only be used to get the type of variables. [invalid-typeof]
+`typeof` can only be used to get the type of variables.
 
    6| export var z: typeof 42 = 42;
                            ^^
@@ -374,4 +365,4 @@ annotation at declaration of variable `x`: [signature-verification-failure]
 
 
 
-Found 38 errors
+Found 37 errors

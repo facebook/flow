@@ -32,6 +32,8 @@ module Queries = struct
 
       method! member_property_identifier ident = ident
 
+      method! typeof_member_identifier ident = ident
+
       method! generic_qualified_identifier_type qual =
         let open Ast.Type.Generic.Identifier in
         let (loc, { qualification; id }) = qual in

@@ -295,6 +295,8 @@ let mapper cctx =
     (* Skip keys, qualified identifiers *)
     method! object_key_identifier ident = ident
 
+    method! typeof_member_identifier ident = ident
+
     method! member_property_identifier ident = ident
 
     method! pattern_object_property_identifier_key ?kind:_ id = id

@@ -1643,7 +1643,14 @@ with type t = Impl.t = struct
         loc
         [("types", array_of_list _type (t0 :: t1 :: ts))]
     and typeof_type (loc, { Type.Typeof.argument; comments }) =
-      node ?comments "TypeofTypeAnnotation" loc [("argument", _type argument)]
+      node ?comments "TypeofTypeAnnotation" loc [("argument", typeof_expr argument)]
+    and typeof_expr id =
+      match id with
+      | Type.Typeof.Target.Unqualified id -> identifier id
+      | Type.Typeof.Target.Qualified q -> typeof_qualifier q
+    and typeof_qualifier (loc, { Type.Typeof.Target.id; qualification }) =
+      let qualification = typeof_expr qualification in
+      node "QualifiedTypeofIdentifier" loc [("qualification", qualification); ("id", identifier id)]
     and tuple_type (loc, { Type.Tuple.types; comments }) =
       node ?comments "TupleTypeAnnotation" loc [("types", array_of_list _type types)]
     and string_literal_type (loc, { Ast.StringLiteral.value; raw; comments }) =

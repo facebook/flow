@@ -2714,9 +2714,22 @@ let program
     let open Ast.Type.Typeof in
     let { argument = argument1; comments = comments1 } = t1 in
     let { argument = argument2; comments = comments2 } = t2 in
-    let argument_diff = Some (diff_if_changed type_ argument1 argument2) in
+    let argument_diff = diff_if_changed_ret_opt typeof_expr argument1 argument2 in
     let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [argument_diff; comments_diff]
+  and typeof_expr
+      (git1 : (Loc.t, Loc.t) Ast.Type.Typeof.Target.t)
+      (git2 : (Loc.t, Loc.t) Ast.Type.Typeof.Target.t) : node change list option =
+    let open Ast.Type.Typeof.Target in
+    match (git1, git2) with
+    | (Unqualified id1, Unqualified id2) -> diff_if_changed identifier id1 id2 |> Base.Option.return
+    | ( Qualified (_loc1, { qualification = q1; id = id1 }),
+        Qualified (_loc2, { qualification = q2; id = id2 })
+      ) ->
+      let qualification_diff = diff_if_changed_ret_opt typeof_expr q1 q2 in
+      let id_diff = diff_if_changed identifier id1 id2 |> Base.Option.return in
+      join_diff_list [qualification_diff; id_diff]
+    | _ -> None
   and array_type
       (loc : Loc.t) (t1 : (Loc.t, Loc.t) Ast.Type.Array.t) (t2 : (Loc.t, Loc.t) Ast.Type.Array.t) :
       node change list option =

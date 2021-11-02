@@ -32,6 +32,19 @@ function custom_ast_types(fork) {
     .field("indexType", def("FlowType"))
     .field("optional", Boolean);
 
+  def("TypeofTypeAnnotation")
+    .bases("FlowType")
+    .build("argument")
+    .field("argument", or(def("Identifier"), def("QualifiedTypeofIdentifier")));
+
+  def("QualifiedTypeofIdentifier")
+    .bases("Node")
+    .build("qualification", "id")
+    .field("qualification",
+           or(def("Identifier"),
+              def("QualifiedTypeofIdentifier")))
+    .field("id", def("Identifier"));
+
   // See https://github.com/benjamn/ast-types/issues/180
   def("ExportNamedDeclaration")
     // TODO: this is non-standard, upstream is standard

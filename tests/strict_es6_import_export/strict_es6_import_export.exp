@@ -341,6 +341,21 @@ References:
               ^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------- import_star_invalid_use.js:43:16
+
+`import *` [1] object can only be used by accessing one of its named exports with a member access or destructuring.
+[invalid-import-star-use]
+
+   import_star_invalid_use.js:43:16
+   43|   type: typeof Foo,
+                      ^^^
+
+References:
+   import_star_invalid_use.js:3:8
+    3| import * as Foo from './foo';
+              ^^^^^^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------- mixed_import_and_require.js:6:1
 
 Cannot use a mix of non-type toplevel `import` [1] and `require` statements in the same file. [mixed-import-and-require]
@@ -482,4 +497,4 @@ export please `import` and then `export default` instead. [export-renamed-defaul
 
 
 
-Found 40 errors
+Found 41 errors

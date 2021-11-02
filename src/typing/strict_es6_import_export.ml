@@ -342,6 +342,22 @@ class import_export_visitor ~cx ~scope_info ~declarations =
       end;
       super#import_declaration loc decl
 
+    method! typeof_expression git =
+      let open Ast.Type.Typeof.Target in
+      match git with
+      (* Error on unqualified use of module object *)
+      | Unqualified (id_loc, _) ->
+        (match this#import_star_from_use id_loc with
+        | Some import_star ->
+          this#add_invalid_import_star_use_error id_loc import_star;
+          git
+        | None -> super#typeof_expression git)
+      (* Do not recurse on valid use of module object *)
+      | Qualified (_, { qualification = Unqualified (id_loc, _); _ })
+        when this#is_import_star_use id_loc ->
+        git
+      | _ -> super#typeof_expression git
+
     method! generic_identifier_type git =
       let open Ast.Type.Generic.Identifier in
       match git with

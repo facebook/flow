@@ -340,8 +340,21 @@ and Type : sig
   end
 
   module Typeof : sig
+    module Target : sig
+      type ('M, 'T) t =
+        | Unqualified of ('M, 'T) Identifier.t
+        | Qualified of ('M, 'T) qualified
+
+      and ('M, 'T) qualified' = {
+        qualification: ('M, 'T) t;
+        id: ('M, 'T) Identifier.t;
+      }
+
+      and ('M, 'T) qualified = 'T * ('M, 'T) qualified' [@@deriving show]
+    end
+
     type ('M, 'T) t = {
-      argument: ('M, 'T) Type.t;
+      argument: ('M, 'T) Target.t;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]

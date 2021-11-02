@@ -3719,8 +3719,19 @@ and type_indexed_access
 and type_nullable ~opts loc { Ast.Type.Nullable.argument; comments } =
   layout_node_with_comments_opt loc comments (fuse [Atom "?"; type_with_parens ~opts argument])
 
-and type_typeof ~opts loc { Ast.Type.Typeof.argument; comments } =
-  layout_node_with_comments_opt loc comments (fuse [Atom "typeof"; space; type_ ~opts argument])
+and type_typeof ~opts:_ loc { Ast.Type.Typeof.argument; comments } =
+  let rec generic_identifier =
+    let open Ast.Type.Typeof.Target in
+    function
+    | Unqualified id -> identifier id
+    | Qualified (loc, { qualification; id }) ->
+      source_location_with_comments
+        (loc, fuse [generic_identifier qualification; Atom "."; identifier id])
+  in
+  layout_node_with_comments_opt
+    loc
+    comments
+    (fuse [Atom "typeof"; space; generic_identifier argument])
 
 and type_tuple ~opts loc { Ast.Type.Tuple.types; comments } =
   layout_node_with_comments_opt

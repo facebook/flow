@@ -982,9 +982,22 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method typeof_type (t : ('M, 'T) Ast.Type.Typeof.t) : ('N, 'U) Ast.Type.Typeof.t =
       let open Ast.Type.Typeof in
       let { argument; comments } = t in
-      let argument' = this#type_ argument in
+      let argument' = this#typeof_expression argument in
       let comments' = Base.Option.map ~f:this#syntax comments in
       { argument = argument'; comments = comments' }
+
+    method typeof_expression (git : ('M, 'T) Ast.Type.Typeof.Target.t) =
+      let open Ast.Type.Typeof.Target in
+      match git with
+      | Unqualified i -> Unqualified (this#typeof_identifier i)
+      | Qualified (annot, { qualification; id = id_ }) ->
+        let qualification' = this#typeof_expression qualification in
+        let id' = this#typeof_member_identifier id_ in
+        Qualified (this#on_type_annot annot, { qualification = qualification'; id = id' })
+
+    method typeof_identifier id = this#t_identifier id
+
+    method typeof_member_identifier id = this#t_identifier id
 
     method tuple_type (t : ('M, 'T) Ast.Type.Tuple.t) : ('N, 'U) Ast.Type.Tuple.t =
       let open Ast.Type.Tuple in

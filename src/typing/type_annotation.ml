@@ -89,6 +89,18 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
     in
     loop []
 
+  let typeof_name =
+    let rec loop acc =
+      let open Ast.Type.Typeof.Target in
+      function
+      | Unqualified (_, { Ast.Identifier.name; comments = _ }) ->
+        let parts = name :: acc in
+        String.concat "." parts
+      | Qualified (_, { qualification; id = (_, { Ast.Identifier.name; comments = _ }) }) ->
+        loop (name :: acc) qualification
+    in
+    loop []
+
   let ident_name (_, { Ast.Identifier.name; comments = _ }) = name
 
   let error_type cx loc msg t_in =
@@ -187,29 +199,13 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
       ( (loc, IntersectionT (mk_annot_reason RIntersectionType loc, rep)),
         Intersection { Intersection.types = (t0_ast, t1_ast, ts_ast); comments }
       )
-    | (loc, Typeof { Typeof.argument = x; comments }) as t_ast ->
-      begin
-        match x with
-        | (q_loc, Generic { Generic.id = qualification; targs = None; comments = generic_comments })
-          ->
-          let (valtype, qualification_ast) =
-            convert_qualification ~lookup_mode:ForTypeof cx "typeof-annotation" qualification
-          in
-          let desc = RTypeof (qualified_name qualification) in
-          let reason = mk_reason desc loc in
-          ( (loc, Flow.mk_typeof_annotation cx reason valtype),
-            Typeof
-              {
-                Typeof.argument =
-                  ( (q_loc, valtype),
-                    Generic
-                      { Generic.id = qualification_ast; targs = None; comments = generic_comments }
-                  );
-                comments;
-              }
-          )
-        | (q_loc, _) -> error_type cx loc (Error_message.EUnexpectedTypeof q_loc) t_ast
-      end
+    | (loc, Typeof { Typeof.argument = qualification; comments }) ->
+      let (valtype, qualification_ast) = convert_typeof cx "typeof-annotation" qualification in
+      let desc = RTypeof (typeof_name qualification) in
+      let reason = mk_reason desc loc in
+      ( (loc, Flow.mk_typeof_annotation cx reason valtype),
+        Typeof { Typeof.argument = qualification_ast; comments }
+      )
     | (loc, Tuple { Tuple.types = ts; comments }) ->
       let (tuple_types, ts_ast) = convert_list cx tparams_map ts in
       let reason = mk_annot_reason RTupleType loc in
@@ -1300,6 +1296,29 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
       (t, Qualified (loc, { qualification; id = ((id_loc, t), id_name) }))
     | Unqualified (loc, ({ Ast.Identifier.name; comments = _ } as id_name)) ->
       let t = Env.get_var ~lookup_mode cx name loc in
+      (t, Unqualified ((loc, t), id_name))
+
+  and convert_typeof cx reason_prefix =
+    let open Ast.Type.Typeof.Target in
+    function
+    | Qualified (loc, { qualification; id }) as qualified ->
+      let (m, qualification) = convert_typeof cx reason_prefix qualification in
+      let (id_loc, id_name) = id in
+      let { Ast.Identifier.name; comments = _ } = id_name in
+      let desc = RCustom (spf "%s `%s`" reason_prefix (typeof_name qualified)) in
+      let reason = mk_reason desc loc in
+      let id_reason = mk_reason desc id_loc in
+      let t =
+        Tvar.mk_no_wrap_where cx reason (fun t ->
+            let use_op =
+              Op (GetProperty (mk_reason (RType (OrdinaryName (typeof_name qualified))) loc))
+            in
+            Flow.flow cx (m, GetPropT (use_op, id_reason, Named (id_reason, OrdinaryName name), t))
+        )
+      in
+      (t, Qualified ((loc, t), { qualification; id = ((id_loc, t), id_name) }))
+    | Unqualified (loc, ({ Ast.Identifier.name; comments = _ } as id_name)) ->
+      let t = Env.get_var ~lookup_mode:ForTypeof cx name loc in
       (t, Unqualified ((loc, t), id_name))
 
   and convert_object =
