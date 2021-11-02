@@ -11128,3 +11128,244 @@ Flags: --lsp
   }
 }
 
+typeof.js:4:18
+Flags: --lsp
+{
+  "label":"abb",
+  "labelDetails":{"type":"{b: string, ...}"},
+  "kind":6,
+  "detail":"{b: string, ...}",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":16},"end":{"line":3,"character":17}},
+    "newText":"abb"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"abb"}
+    ]
+  }
+}
+{
+  "label":"c",
+  "labelDetails":{"type":"any"},
+  "kind":6,
+  "detail":"any",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":16},"end":{"line":3,"character":17}},
+    "newText":"c"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"c"}
+    ]
+  }
+}
+{
+  "label":"foo",
+  "labelDetails":{"type":"(abb: {b: string, ...}) => void"},
+  "kind":3,
+  "detail":"(abb: {b: string, ...}) => void",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":16},"end":{"line":3,"character":17}},
+    "newText":"foo"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {"token":null,"completion":"foo"}
+    ]
+  }
+}
+{
+  "label":"this",
+  "kind":6,
+  "detail":"this",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":16},"end":{"line":3,"character":17}},
+    "newText":"this"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","this",{"token":null,"completion":"this"}]
+  }
+}
+
+typeof_2.js:4:19
+Flags: --lsp
+{
+  "label":"b",
+  "labelDetails":{"type":"string"},
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":18},"end":{"line":3,"character":18}},
+    "newText":"b"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"b"}]
+  }
+}
+{
+  "label":"hasOwnProperty",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object has a property with the specified name."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":18},"end":{"line":3,"character":18}},
+    "newText":"hasOwnProperty"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"hasOwnProperty"}
+    ]
+  }
+}
+{
+  "label":"isPrototypeOf",
+  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "kind":3,
+  "detail":"(o: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether an object exists in another object's prototype chain."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":18},"end":{"line":3,"character":18}},
+    "newText":"isPrototypeOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"isPrototypeOf"}
+    ]
+  }
+}
+{
+  "label":"propertyIsEnumerable",
+  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "kind":3,
+  "detail":"(prop: mixed) => boolean",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Determines whether a specified property is enumerable."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":18},"end":{"line":3,"character":18}},
+    "newText":"propertyIsEnumerable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"propertyIsEnumerable"}
+    ]
+  }
+}
+{
+  "label":"toLocaleString",
+  "labelDetails":{"type":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns a date converted to a string using the current locale."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":18},"end":{"line":3,"character":18}},
+    "newText":"toLocaleString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "member",
+      {"token":null,"completion":"toLocaleString"}
+    ]
+  }
+}
+{
+  "label":"toString",
+  "labelDetails":{"type":"() => string"},
+  "kind":3,
+  "detail":"() => string",
+  "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":18},"end":{"line":3,"character":18}},
+    "newText":"toString"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"toString"}]
+  }
+}
+{
+  "label":"valueOf",
+  "labelDetails":{"type":"() => mixed"},
+  "kind":3,
+  "detail":"() => mixed",
+  "documentation":{
+    "kind":"markdown",
+    "value":"Returns the primitive value of the specified object."
+  },
+  "sortText":"00000000000000000001",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":18},"end":{"line":3,"character":18}},
+    "newText":"valueOf"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":["textDocument/completion","member",{"token":null,"completion":"valueOf"}]
+  }
+}
+

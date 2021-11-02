@@ -64,6 +64,13 @@ let type_of_qualification =
   | Qualified (_, { id = ((_, t), _); _ }) ->
     t
 
+let type_of_typeof =
+  let open Flow_ast.Type.Typeof.Target in
+  function
+  | Unqualified ((_, t), _)
+  | Qualified ((_, t), _) ->
+    t
+
 let compute_member_loc ~expr_loc ~obj_loc =
   let expr_loc = ALoc.to_loc_exn expr_loc in
   let obj_loc = ALoc.to_loc_exn obj_loc in
@@ -407,6 +414,32 @@ class process_request_searcher (from_trigger_character : bool) (cursor : Loc.t) 
                  Ac_member { member with bracket_syntax = Some { id with include_this = true } };
              }
           )
+
+    method! typeof_expression id =
+      let open Flow_ast.Type.Typeof.Target in
+      begin
+        match id with
+        | Unqualified ((loc, t), { Flow_ast.Identifier.name; _ }) when this#covers_target loc ->
+          this#find loc name (Ac_id (default_ac_id t))
+        | Qualified
+            ((expr_loc, _), { qualification; id = ((loc, _), Flow_ast.Identifier.{ name; _ }) })
+          when this#covers_target loc ->
+          let obj_type = type_of_typeof qualification in
+          this#find
+            loc
+            name
+            (Ac_member
+               {
+                 obj_type;
+                 in_optional_chain = false;
+                 bracket_syntax = None;
+                 member_loc = Some (compute_member_loc ~expr_loc ~obj_loc:loc);
+                 is_type_annotation = false;
+               }
+            )
+        | _ -> ()
+      end;
+      id
 
     method! generic_identifier_type id =
       let open Flow_ast.Type.Generic.Identifier in

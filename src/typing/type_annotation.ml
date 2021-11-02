@@ -1318,7 +1318,12 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
       in
       (t, Qualified ((loc, t), { qualification; id = ((id_loc, t), id_name) }))
     | Unqualified (loc, ({ Ast.Identifier.name; comments = _ } as id_name)) ->
-      let t = Env.get_var ~lookup_mode:ForTypeof cx name loc in
+      let t =
+        if Type_inference_hooks_js.dispatch_id_hook cx name loc then
+          Unsoundness.at InferenceHooks loc
+        else
+          Env.get_var ~lookup_mode:ForTypeof cx name loc
+      in
       (t, Unqualified ((loc, t), id_name))
 
   and convert_object =
