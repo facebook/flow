@@ -1,6 +1,6 @@
 /*
  * @flow
- * @format
+ * @noformat
  */
 
 import type {Suite} from 'flow-dev-tools/src/test/Suite';

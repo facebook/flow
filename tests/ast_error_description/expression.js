@@ -1,5 +1,5 @@
 /**
- * @format
+ * @noformat
  * @flow
  */
 

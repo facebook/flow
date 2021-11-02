@@ -1,7 +1,7 @@
 /***
  * Test tracking of variable types across closure calls.
  * @flow
- * @format
+ * @noformat
  */
 
 function takes_string(_: string) {}

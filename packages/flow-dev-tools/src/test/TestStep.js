@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
- * @format
+ * @noformat
  */
 
 const {default: Builder} = require('./builder');
