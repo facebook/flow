@@ -1,45 +1,20 @@
-a.js:1:16 = {
-  "type":"module \"a\" {exports: typeof A}",
-  "reasons":[],
-  "loc":{
-    "source":"a.js",
-    "type":"SourceFile",
-    "start":{"line":1,"column":16,"offset":15},
-    "end":{"line":1,"column":16,"offset":16}
-  },
-  "path":"a.js",
-  "line":1,
-  "endline":1,
-  "start":16,
-  "end":16
-}
-b.js:3:16 = {
-  "type":"module \"b\" {exports: number}",
-  "reasons":[],
-  "loc":{
-    "source":"b.js",
-    "type":"SourceFile",
-    "start":{"line":3,"column":16,"offset":25},
-    "end":{"line":3,"column":16,"offset":26}
-  },
-  "path":"b.js",
-  "line":3,
-  "endline":3,
-  "start":16,
-  "end":16
-}
-c.js:1:16 = {
-  "type":"module \"c\" {type X = number; type Y = string; exports: number}",
-  "reasons":[],
-  "loc":{
-    "source":"c.js",
-    "type":"SourceFile",
-    "start":{"line":1,"column":16,"offset":15},
-    "end":{"line":1,"column":16,"offset":16}
-  },
-  "path":"c.js",
-  "line":1,
-  "endline":1,
-  "start":16,
-  "end":16
-}
+a.js:1:16
+Flags:
+module "a" {exports: typeof A}
+a.js:1:16,1:16
+
+b.js:3:16
+Flags:
+module "b" {exports: number}
+b.js:3:16,3:16
+
+c.js:1:16
+Flags:
+module "c" {type X = number; type Y = string; exports: number}
+c.js:1:16,1:16
+
+cjs.js:7:4
+Flags:
+module  {declare var foo: string; declare var bar: number; }
+cjs.js:7:1,7:7
+
