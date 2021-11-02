@@ -476,7 +476,7 @@ module Make (ConsGen : CONS_GEN) : S = struct
         let exports =
           match exports with
           | Some (lazy t) -> t
-          | None -> Obj_type.mk_unsealed file.cx reason
+          | None -> Obj_type.mk_exact_empty file.cx reason
         in
         let type_exports = SMap.map Lazy.force type_exports |> NameUtils.namemap_of_smap in
         let type_stars = List.map (merge_star file) type_stars in

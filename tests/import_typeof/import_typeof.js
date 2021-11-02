@@ -137,3 +137,11 @@ var i2: num_cjs_named = 'asdf'; // Error: string ~> number
 import typeof * as ModuleNSObjT from "./ExportNamed_Multi";
 var j1: ModuleNSObjT = {num: 42, str: 'asdf'};
 var j2: ModuleNSObjT = {num: 42, str: 42}; // Error: number ~> string
+
+
+////////////////////////////////////////////////////
+// == Import typeof empty file with no exports == //
+////////////////////////////////////////////////////
+
+import typeof E from './empty';
+({a: 1}: E); // Error

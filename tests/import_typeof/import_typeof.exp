@@ -226,5 +226,20 @@ References:
                            ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- import_typeof.js:147:2
 
-Found 16 errors
+Cannot cast object literal to `E` because property `a` is missing in exports [1] but exists in object literal [2].
+[prop-missing]
+
+   import_typeof.js:147:2
+   147| ({a: 1}: E); // Error
+         ^^^^^^ [2]
+
+References:
+   import_typeof.js:147:10
+   147| ({a: 1}: E); // Error
+                 ^ [1]
+
+
+
+Found 17 errors
