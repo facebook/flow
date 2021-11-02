@@ -8,38 +8,37 @@
 open OUnit2
 
 let run ctxt expected name content =
+  let open Parsing_service_js in
   let file = File_key.SourceFile "/dummy.js" in
-  let info = FindRefsUtils.compute_docblock file content in
-  Parsing_service_js.(
-    let parse_options =
-      {
-        parse_fail = false;
-        parse_types_mode = TypesAllowed;
-        parse_use_strict = true;
-        parse_prevent_munge = false;
-        parse_module_ref_prefix = None;
-        parse_facebook_fbt = None;
-        (* following options unused in classic mode *)
-        parse_type_asserts = false;
-        parse_suppress_types = SSet.empty;
-        parse_max_literal_len = 0;
-        parse_exact_by_default = false;
-        parse_enable_enums = false;
-        parse_enable_relay_integration = false;
-        parse_relay_integration_module_prefix = None;
-        parse_node_main_fields = [];
-      }
-    in
-    let result = Parsing_service_js.do_parse ~parse_options ~info content file in
-    let ast =
-      match result with
-      | Parsing_service_js.Parse_ok { ast; _ } -> ast
-      | Parsing_service_js.Parse_fail _ -> failwith "Parse unexpectedly failed"
-      | Parsing_service_js.Parse_skip _ -> failwith "Parse unexpectedly skipped"
-    in
-    let result = PropertyAccessSearcher.search name ast in
-    assert_equal ~ctxt expected result
-  )
+  let (_docblock_errors, info) = parse_docblock ~max_tokens:docblock_max_tokens file content in
+  let parse_options =
+    {
+      parse_fail = false;
+      parse_types_mode = TypesAllowed;
+      parse_use_strict = true;
+      parse_prevent_munge = false;
+      parse_module_ref_prefix = None;
+      parse_facebook_fbt = None;
+      (* following options unused in classic mode *)
+      parse_type_asserts = false;
+      parse_suppress_types = SSet.empty;
+      parse_max_literal_len = 0;
+      parse_exact_by_default = false;
+      parse_enable_enums = false;
+      parse_enable_relay_integration = false;
+      parse_relay_integration_module_prefix = None;
+      parse_node_main_fields = [];
+    }
+  in
+  let result = do_parse ~parse_options ~info content file in
+  let ast =
+    match result with
+    | Parse_ok { ast; _ } -> ast
+    | Parse_fail _ -> failwith "Parse unexpectedly failed"
+    | Parse_skip _ -> failwith "Parse unexpectedly skipped"
+  in
+  let result = PropertyAccessSearcher.search name ast in
+  assert_equal ~ctxt expected result
 
 let tests =
   "SymbolKind"

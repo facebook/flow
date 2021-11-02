@@ -21,12 +21,22 @@ let local_variable_refs scope_info loc =
   | None -> (None, loc)
   | Some (var_refs, local_def_loc) -> (Some var_refs, local_def_loc)
 
+let parse_contents ~options ~profiling content file_key =
+  match%lwt Type_contents.parse_contents ~options ~profiling content file_key with
+  | (Some (Types_js_types.Parse_artifacts { ast; file_sig; docblock; _ }), _errs) ->
+    Lwt.return (Ok (ast, file_sig, docblock))
+  | (None, errs) ->
+    if Flow_error.ErrorSet.is_empty errs then
+      Lwt.return (Error "Parse skipped")
+    else
+      Lwt.return (Error "Parse unexpectedly failed")
+
 let find_local_refs ~reader ~options ~env ~profiling ~file_input ~line ~col =
   let filename = File_input.filename_of_file_input file_input in
   let file_key = File_key.SourceFile filename in
   let loc = Loc.cursor (Some file_key) line col in
   File_input.content_of_file_input file_input %>>= fun content ->
-  FindRefsUtils.compute_ast_result options file_key content %>>= fun ast_info ->
+  parse_contents ~options ~profiling content file_key >>= fun ast_info ->
   (* Start by running local variable find references *)
   let (ast, _, _) = ast_info in
   let scope_info = Scope_builder.program ~with_types:true ast in
