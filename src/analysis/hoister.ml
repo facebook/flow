@@ -246,17 +246,17 @@ class ['loc] hoister ~flowmin_compatibility ~with_types =
       | _ -> super#import_declaration loc decl
 
     method! import_named_specifier
-        ~import_kind:_ (specifier : ('loc, 'loc) Ast.Statement.ImportDeclaration.named_specifier) =
+        ~import_kind (specifier : ('loc, 'loc) Ast.Statement.ImportDeclaration.named_specifier) =
       let open Ast.Statement.ImportDeclaration in
-      (* when `with_types` is false, only add bindings for values, not types.
-         `import_declaration` avoids visiting specifiers for `import type` and
-         `import typeof`, so `kind = None` must mean a value here. *)
-      let allowed_kind = function
-        | None
-        | Some ImportValue ->
+      let allowed_kind kind =
+        match (kind, import_kind) with
+        | (None, ImportValue)
+        | (Some ImportValue, _) ->
           (true, this#add_const_binding ~kind:Bindings.Import)
-        | Some ImportType
-        | Some ImportTypeof ->
+        | (_, ImportType)
+        | (_, ImportTypeof)
+        | (Some ImportType, _)
+        | (Some ImportTypeof, _) ->
           (with_types, this#add_type_binding)
       in
       (match specifier with
@@ -266,11 +266,29 @@ class ['loc] hoister ~flowmin_compatibility ~with_types =
         if allowed then add_binding binding);
       specifier
 
-    method! import_default_specifier (id : ('loc, 'loc) Ast.Identifier.t) =
-      this#add_const_binding ~kind:Bindings.Import id;
+    method! import_default_specifier ~import_kind (id : ('loc, 'loc) Ast.Identifier.t) =
+      let open Ast.Statement.ImportDeclaration in
+      begin
+        match import_kind with
+        | ImportValue -> this#add_const_binding ~kind:Bindings.Import id
+        | ImportType
+        | ImportTypeof
+          when with_types ->
+          this#add_type_binding id
+        | _ -> ()
+      end;
       id
 
-    method! import_namespace_specifier _loc (id : ('loc, 'loc) Ast.Identifier.t) =
-      this#add_const_binding ~kind:Bindings.Import id;
+    method! import_namespace_specifier ~import_kind _loc (id : ('loc, 'loc) Ast.Identifier.t) =
+      let open Ast.Statement.ImportDeclaration in
+      begin
+        match import_kind with
+        | ImportValue -> this#add_const_binding ~kind:Bindings.Import id
+        | ImportType
+        | ImportTypeof
+          when with_types ->
+          this#add_type_binding id
+        | _ -> ()
+      end;
       id
   end

@@ -4146,3 +4146,114 @@ var w = class <X, Y:X> extends X<X> implements Y<Y> {
         (4, 11) to (4, 12) => {
           (3, 4) to (3, 5): (`Z`)
         }] |}]
+
+let%expect_test "import_type" =
+  print_ssa_test {|
+var x: S;
+import { type S } from '';
+|};
+    [%expect {|
+      [
+        (2, 7) to (2, 8) => {
+          (3, 14) to (3, 15): (`S`)
+        }] |}]
+
+let%expect_test "import_mix" =
+  print_ssa_test {|
+var x: S = t;
+var a: W;
+import { type S, t, w as y, typeof w as W } from '';
+t;
+y;
+w;
+|};
+    [%expect {|
+      [
+        (2, 7) to (2, 8) => {
+          (4, 14) to (4, 15): (`S`)
+        };
+        (2, 11) to (2, 12) => {
+          (uninitialized)
+        };
+        (3, 7) to (3, 8) => {
+          (4, 40) to (4, 41): (`W`)
+        };
+        (5, 0) to (5, 1) => {
+          (4, 17) to (4, 18): (`t`)
+        };
+        (6, 0) to (6, 1) => {
+          (4, 25) to (4, 26): (`y`)
+        };
+        (7, 0) to (7, 1) => {
+          Global w
+        }] |}]
+
+let%expect_test "import_def" =
+  print_ssa_test {|
+(NS: NST);
+(ps: ns);
+(ps: ms);
+(1: a);
+(2: b);
+import type {a, b} from ''
+import typeof ns from '';
+import type ms from '';
+import ps from ''
+import * as NS from ''
+import typeof * as NST from ''
+(NS: NST);
+(ps: ns);
+(ps: ms);
+(1: a);
+(2: b);
+|};
+    [%expect {|
+      [
+        (2, 1) to (2, 3) => {
+          (uninitialized)
+        };
+        (2, 5) to (2, 8) => {
+          (12, 19) to (12, 22): (`NST`)
+        };
+        (3, 1) to (3, 3) => {
+          (uninitialized)
+        };
+        (3, 5) to (3, 7) => {
+          (8, 14) to (8, 16): (`ns`)
+        };
+        (4, 1) to (4, 3) => {
+          (uninitialized)
+        };
+        (4, 5) to (4, 7) => {
+          (9, 12) to (9, 14): (`ms`)
+        };
+        (5, 4) to (5, 5) => {
+          (7, 13) to (7, 14): (`a`)
+        };
+        (6, 4) to (6, 5) => {
+          (7, 16) to (7, 17): (`b`)
+        };
+        (13, 1) to (13, 3) => {
+          (11, 12) to (11, 14): (`NS`)
+        };
+        (13, 5) to (13, 8) => {
+          (12, 19) to (12, 22): (`NST`)
+        };
+        (14, 1) to (14, 3) => {
+          (10, 7) to (10, 9): (`ps`)
+        };
+        (14, 5) to (14, 7) => {
+          (8, 14) to (8, 16): (`ns`)
+        };
+        (15, 1) to (15, 3) => {
+          (10, 7) to (10, 9): (`ps`)
+        };
+        (15, 5) to (15, 7) => {
+          (9, 12) to (9, 14): (`ms`)
+        };
+        (16, 4) to (16, 5) => {
+          (7, 13) to (7, 14): (`a`)
+        };
+        (17, 4) to (17, 5) => {
+          (7, 16) to (7, 17): (`b`)
+        }] |}]

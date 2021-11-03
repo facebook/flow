@@ -1673,7 +1673,7 @@ class ['loc] mapper =
       let open Ast.Statement.ImportDeclaration in
       let { import_kind; source; specifiers; default; comments } = decl in
       let specifiers' = map_opt (this#import_specifier ~import_kind) specifiers in
-      let default' = map_opt this#import_default_specifier default in
+      let default' = map_opt (this#import_default_specifier ~import_kind) default in
       let comments' = this#syntax_opt comments in
       if specifiers == specifiers' && default == default' && comments == comments' then
         decl
@@ -1693,7 +1693,7 @@ class ['loc] mapper =
         else
           ImportNamedSpecifiers named_specifiers'
       | ImportNamespaceSpecifier (loc, ident) ->
-        id_loc this#import_namespace_specifier loc ident specifier (fun ident ->
+        id_loc (this#import_namespace_specifier ~import_kind) loc ident specifier (fun ident ->
             ImportNamespaceSpecifier (loc, ident)
         )
 
@@ -1702,15 +1702,18 @@ class ['loc] mapper =
         (specifier : ('loc, 'loc) Ast.Statement.ImportDeclaration.named_specifier) =
       let open Ast.Statement.ImportDeclaration in
       let { kind; local; remote } = specifier in
-      let is_type =
+      let (is_type_remote, is_type_local) =
         match (import_kind, kind) with
         | (ImportType, _)
         | (_, Some ImportType) ->
-          true
-        | _ -> false
+          (true, true)
+        | (ImportTypeof, _)
+        | (_, Some ImportTypeof) ->
+          (false, true)
+        | _ -> (false, false)
       in
       let remote' =
-        if is_type then
+        if is_type_remote then
           this#type_identifier_reference remote
         else
           this#identifier remote
@@ -1720,7 +1723,7 @@ class ['loc] mapper =
         | None -> None
         | Some ident ->
           let local_visitor =
-            if is_type then
+            if is_type_local then
               this#binding_type_identifier
             else
               this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let
@@ -1732,11 +1735,27 @@ class ['loc] mapper =
       else
         { kind; local = local'; remote = remote' }
 
-    method import_default_specifier (id : ('loc, 'loc) Ast.Identifier.t) =
-      this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id
+    method import_default_specifier ~import_kind (id : ('loc, 'loc) Ast.Identifier.t) =
+      let open Ast.Statement.ImportDeclaration in
+      let local_visitor =
+        match import_kind with
+        | ImportType
+        | ImportTypeof ->
+          this#binding_type_identifier
+        | _ -> this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let
+      in
+      local_visitor id
 
-    method import_namespace_specifier _loc (id : ('loc, 'loc) Ast.Identifier.t) =
-      this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id
+    method import_namespace_specifier ~import_kind _loc (id : ('loc, 'loc) Ast.Identifier.t) =
+      let open Ast.Statement.ImportDeclaration in
+      let local_visitor =
+        match import_kind with
+        | ImportType
+        | ImportTypeof ->
+          this#binding_type_identifier
+        | _ -> this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let
+      in
+      local_visitor id
 
     method jsx_element _loc (expr : ('loc, 'loc) Ast.JSX.element) =
       let open Ast.JSX in

@@ -261,25 +261,26 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
 
       (* don't rename the `foo` in `import {foo as bar} from ...;` *)
       method! import_named_specifier
-          ~import_kind:_ (specifier : (L.t, L.t) Ast.Statement.ImportDeclaration.named_specifier) =
+          ~import_kind (specifier : (L.t, L.t) Ast.Statement.ImportDeclaration.named_specifier) =
         let open Ast.Statement.ImportDeclaration in
         (* when `with_types` is false, only visit values, not types. `import_declaration`
            avoids visiting specifiers for `import type` and `import typeof`, so
            `kind = None` must mean a value here. *)
-        let allowed_kind = function
-          | None
-          | Some ImportValue ->
-            true
-          | Some ImportType
-          | Some ImportTypeof ->
-            with_types
+        let visitor kind =
+          match (import_kind, kind) with
+          | ((ImportType | ImportTypeof), _)
+          | (_, Some (ImportType | ImportTypeof)) ->
+            if with_types then
+              Some this#binding_type_identifier
+            else
+              None
+          | _ -> Some this#pattern_identifier
         in
         (match specifier with
         | { local = Some ident; remote = _; kind }
-        | { local = None; remote = ident; kind }
-          when allowed_kind kind ->
-          ignore (this#identifier ident)
-        | _ -> ());
+        | { local = None; remote = ident; kind } ->
+          let visitor = visitor kind in
+          ignore (Base.Option.map ~f:(fun visitor -> visitor ident) visitor));
         specifier
 
       (* don't rename the `bar` in `export {foo as bar}` *)

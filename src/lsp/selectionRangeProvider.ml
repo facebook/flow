@@ -183,7 +183,8 @@ class selection_range_finder ~position =
 
     method! computed_key x = this#test super#computed_key x
 
-    method! import_namespace_specifier loc x = this#test_loc loc super#import_namespace_specifier x
+    method! import_namespace_specifier ~import_kind loc x =
+      this#test_loc loc (super#import_namespace_specifier ~import_kind) x
 
     method! jsx_opening_element x = this#test super#jsx_opening_element x
 
