@@ -299,17 +299,9 @@ let mapper cctx =
 
     method! member_property_identifier ident = ident
 
-    method! pattern_object_property_identifier_key ?kind:_ id = id
+    method! member_type_identifier ident = ident
 
-    method! generic_qualified_identifier_type qual =
-      let open Ast.Type.Generic.Identifier in
-      let (loc, { qualification; id }) = qual in
-      let qualification' = this#generic_identifier_type qualification in
-      (* Skips the id part *)
-      if qualification' == qualification then
-        qual
-      else
-        (loc, { qualification = qualification'; id })
+    method! pattern_object_property_identifier_key ?kind:_ id = id
 
     method! pattern_identifier ?kind:_ id = id
 

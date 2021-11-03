@@ -24,7 +24,7 @@ let type_size_warning_threshold = 30
 
 module Queries = struct
   class ident_visitor ~init =
-    object (this)
+    object
       inherit [SSet.t ref, Loc.t] Flow_ast_visitor.visitor ~init
 
       (* Skip keys, qualified identifiers *)
@@ -32,17 +32,9 @@ module Queries = struct
 
       method! member_property_identifier ident = ident
 
-      method! typeof_member_identifier ident = ident
+      method! member_type_identifier ident = ident
 
-      method! generic_qualified_identifier_type qual =
-        let open Ast.Type.Generic.Identifier in
-        let (loc, { qualification; id }) = qual in
-        let qualification' = this#generic_identifier_type qualification in
-        (* Skips the id part *)
-        if qualification' == qualification then
-          qual
-        else
-          (loc, { qualification = qualification'; id })
+      method! typeof_member_identifier ident = ident
 
       method! identifier id =
         let (_, { Ast.Identifier.name; _ }) = id in
