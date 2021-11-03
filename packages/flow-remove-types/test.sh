@@ -63,5 +63,10 @@ if [ "$FLOW_NODE" != 42 ]; then echo 'flow-node failed'; exit 1; fi;
 
 # Test flow-node with options
 echo "Test: flow-node with options"
-FLOW_NODE_OPTS=$(./flow-node --code-comments -p 'process.argv.length');
+# --no-warnings is a node flag. node doesn't count its own flags in process.argv, so we're left with
+# ["node", "path/to/flow-node", "-p", "'process.argv.length'"]
+FLOW_NODE_OPTS=$(./flow-node --no-warnings -p 'process.argv.length');
 if [ "$FLOW_NODE_OPTS" != 4 ]; then echo 'flow-node with options failed'; exit 1; fi;
+# --bogus-flag isn't a node flag, so node will error. this test ensures we're not just dropping flags
+FLOW_NODE_OPTS=$(./flow-node --bogus-flag 2>&1);
+if [[ "$FLOW_NODE_OPTS" != *"bad option: --bogus-flag"* ]]; then echo 'flow-node with options failed'; exit 1; fi;
