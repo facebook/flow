@@ -39,9 +39,6 @@ printf "\\n\\nget-imports with --wait-for-recheck false runs immediately:\\n"
 assert_ok "$FLOW" get-imports \
   --strip-root --pretty --wait-for-recheck false focused.js
 
-printf "\\n\\nsuggest with --wait-for-recheck false runs immediately:\\n"
-assert_ok "$FLOW" suggest --strip-root --wait-for-recheck false focused.js
-
 printf "\\n\\ntype-at-pos with --wait-for-recheck false runs immediately:\\n"
 assert_ok "$FLOW" type-at-pos \
   --strip-root --pretty --wait-for-recheck false focused.js 5 18

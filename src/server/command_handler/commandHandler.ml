@@ -698,22 +698,6 @@ let get_cycle ~env fn types_only =
        )
     )
 
-let suggest ~options ~env ~profiling file =
-  let file_key = file_key_of_file_input ~options file in
-  File_input.content_of_file_input file %>>= fun file_content ->
-  try_with (fun _ ->
-      let%lwt result = Code_action_service.suggest ~options ~env ~profiling file_key file_content in
-      match result with
-      | Ok (tc_errors, tc_warnings, suggest_warnings, file_patch) ->
-        Lwt.return
-          (Ok
-             (ServerProt.Response.Suggest_Ok
-                { tc_errors; tc_warnings; suggest_warnings; file_patch }
-             )
-          )
-      | Error errors -> Lwt.return (Ok (ServerProt.Response.Suggest_Error errors))
-  )
-
 let find_module ~options ~reader (moduleref, filename) =
   let file = File_key.SourceFile filename in
   let loc = { Loc.none with Loc.source = Some file } in
@@ -1002,10 +986,6 @@ let handle_status ~reader ~genv ~client_root ~profiling ~env =
   let (status_response, lazy_stats) = get_status ~profiling ~reader genv env client_root in
   Lwt.return (env, ServerProt.Response.STATUS { status_response; lazy_stats }, None)
 
-let handle_suggest ~options ~input ~profiling ~env =
-  let%lwt result = suggest ~options ~env ~profiling input in
-  Lwt.return (ServerProt.Response.SUGGEST result, None)
-
 let handle_save_state ~saved_state_filename ~genv ~profiling ~env =
   let%lwt result = save_state ~saved_state_filename ~genv ~env ~profiling in
   Lwt.return (env, ServerProt.Response.SAVE_STATE result, None)
@@ -1276,8 +1256,6 @@ let get_ephemeral_handler genv command =
      * for the current recheck to finish. So even though we could technically make `flow status`
      * parallelizable, we choose to make it nonparallelizable *)
     Handle_nonparallelizable (handle_status ~reader ~genv ~client_root)
-  | ServerProt.Request.SUGGEST { input; wait_for_recheck } ->
-    mk_parallelizable ~wait_for_recheck ~options (handle_suggest ~options ~input)
   | ServerProt.Request.SAVE_STATE { outfile } ->
     (* save-state can take awhile to run. Furthermore, you probably don't want to run this with out
      * of date data. So save-state is not parallelizable *)

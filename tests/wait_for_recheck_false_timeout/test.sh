@@ -41,10 +41,6 @@ printf "\\n\\nget-imports with --wait-for-recheck true times out:\\n"
 assert_exit 3 "$FLOW" get-imports \
   --timeout 1 --wait-for-recheck true --strip-root --pretty focused.js
 
-printf "\\n\\nsuggest with --wait-for-recheck true times out:\\n"
-assert_exit 3 "$FLOW" suggest \
-  --timeout 1 --wait-for-recheck true --strip-root focused.js
-
 printf "\\n\\ntype-at-pos with --wait-for-recheck true times out:\\n"
 assert_exit 3 "$FLOW" type-at-pos \
   --timeout 1 --wait-for-recheck true --strip-root --pretty focused.js 5 18

@@ -108,10 +108,6 @@ module Request = struct
         client_root: Path.t;
         include_warnings: bool;
       }
-    | SUGGEST of {
-        input: File_input.t;
-        wait_for_recheck: bool option;
-      }
 
   let to_string = function
     | AUTOCOMPLETE
@@ -179,7 +175,6 @@ module Request = struct
       )
     | RAGE { files } -> Printf.sprintf "rage %s" (String.concat " " files)
     | STATUS { client_root = _; include_warnings = _ } -> "status"
-    | SUGGEST _ -> "suggest"
     | SAVE_STATE { outfile } -> Printf.sprintf "save-state %s" (Path.to_string outfile)
 
   type command_with_context = {
@@ -264,17 +259,6 @@ module Response = struct
 
   type rage_response = (string * string) list
 
-  type suggest_result =
-    | Suggest_Ok of {
-        tc_errors: Errors.ConcreteLocPrintableErrorSet.t;
-        tc_warnings: Errors.ConcreteLocPrintableErrorSet.t;
-        suggest_warnings: Errors.ConcreteLocPrintableErrorSet.t;
-        file_patch: Replacement_printer.patch;
-      }
-    | Suggest_Error of Errors.ConcreteLocPrintableErrorSet.t
-
-  type suggest_response = (suggest_result, string) result
-
   type graph_response = (graph_response_subgraph, string) result
 
   and graph_response_subgraph = (string * string list) list
@@ -319,7 +303,6 @@ module Response = struct
         status_response: status_response;
         lazy_stats: lazy_stats;
       }
-    | SUGGEST of suggest_response
     | SAVE_STATE of (unit, string) result
 
   let to_string = function
@@ -340,6 +323,5 @@ module Response = struct
     | INSERT_TYPE _ -> "insert_type response"
     | RAGE _ -> "rage response"
     | STATUS _ -> "status response"
-    | SUGGEST _ -> "suggest response"
     | SAVE_STATE _ -> "save_state response"
 end

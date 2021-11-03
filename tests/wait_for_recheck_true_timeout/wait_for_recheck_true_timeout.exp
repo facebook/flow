@@ -36,9 +36,6 @@ get-imports times out:
 }
 
 
-suggest times out:
-
-
 type-at-pos times out:
 {
   "flowVersion":"<VERSION>",

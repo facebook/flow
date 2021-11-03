@@ -75,14 +75,6 @@ get-imports without --wait-for-recheck runs immediately:
 }
 
 
-suggest without --wait-for-recheck runs immediately:
-// @flow
-
-import val from "./dependency.js"
-
-var x: string = val;
-
-
 type-at-pos without --wait-for-recheck runs immediately:
 {
   "type":"number",

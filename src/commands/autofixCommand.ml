@@ -262,10 +262,6 @@ let command =
     CommandUtils.subcommand_spec
       ~name:"autofix"
       ~doc:""
-      [
-        ("suggest", SuggestCommand.command);
-        ("insert-type", InsertType.command);
-        ("exports", Exports.command);
-      ]
+      [("insert-type", InsertType.command); ("exports", Exports.command)]
   in
   CommandSpec.command spec main

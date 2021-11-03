@@ -36,9 +36,6 @@ get-imports with --wait-for-recheck true times out:
 }
 
 
-suggest with --wait-for-recheck true times out:
-
-
 type-at-pos with --wait-for-recheck true times out:
 {
   "flowVersion":"<VERSION>",

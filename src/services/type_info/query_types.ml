@@ -74,16 +74,6 @@ let dump_types ~printer ~expand_aliases ~evaluate_type_destructors cx file_sig t
   in
   Base.List.filter_map result ~f:print_ok |> concretize_loc_pairs |> sort_loc_pairs
 
-let suggest_types cx file_sig typed_ast loc =
-  let options =
-    { Ty_normalizer_env.default_options with Ty_normalizer_env.flag_shadowed_type_params = true }
-  in
-  let file = Context.file cx in
-  let aLoc = ALoc.of_loc loc in
-  match Typed_ast_utils.find_exact_match_annotation typed_ast aLoc with
-  | None -> FailureNoMatch
-  | Some scheme -> type_of_scheme ~options ~full_cx:cx ~file ~file_sig typed_ast loc scheme
-
 let insert_type_normalize
     ~full_cx
     ?(file = Context.file full_cx)

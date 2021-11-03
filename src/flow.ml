@@ -42,7 +42,6 @@ end = struct
       ServerCommand.command;
       StartCommand.command;
       StopCommand.command;
-      SuggestCommand.command;
       TypeAtPosCommand.command;
       VersionCommand.command;
     ]
