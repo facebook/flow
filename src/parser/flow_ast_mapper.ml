@@ -358,9 +358,10 @@ class ['loc] mapper =
 
     method class_ _loc (cls : ('loc, 'loc) Ast.Class.t) =
       let open Ast.Class in
-      let { id; body; tparams = _; extends; implements; class_decorators; comments } = cls in
+      let { id; body; tparams; extends; implements; class_decorators; comments } = cls in
       let id' = map_opt this#class_identifier id in
       let body' = this#class_body body in
+      let tparams' = map_opt this#type_params tparams in
       let extends' = map_opt (map_loc this#class_extends) extends in
       let implements' = map_opt this#class_implements implements in
       let class_decorators' = map_list this#class_decorator class_decorators in
@@ -372,17 +373,18 @@ class ['loc] mapper =
         && implements == implements'
         && class_decorators == class_decorators'
         && comments == comments'
+        && tparams == tparams'
       then
         cls
       else
         {
-          cls with
           id = id';
           body = body';
           extends = extends';
           implements = implements';
           class_decorators = class_decorators';
           comments = comments';
+          tparams = tparams';
         }
 
     method class_extends _loc (extends : ('loc, 'loc) Ast.Class.Extends.t') =
