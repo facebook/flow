@@ -93,6 +93,61 @@ let file_key_of_file_input ~options file_input =
   let file_options = Options.file_options options in
   File_input.filename_of_file_input file_input |> Files.filename_from_string ~options:file_options
 
+(* This tries to simulate the logic from elsewhere which determines whether we would report
+ * errors for a given file. The criteria are
+ *
+ * 1) The file must be either implicitly included (be in the same dir structure as .flowconfig)
+ *    or explicitly included
+ * 2) The file must not be ignored
+ * 3) The file path must be a Flow file (e.g foo.js and not foo.php or foo/)
+ * 4) The file must either have `// @flow` or all=true must be set in the .flowconfig or CLI
+ *)
+let check_that_we_care_about_this_file =
+  let check_file_not_ignored ~file_options ~env ~file_path () =
+    if Files.wanted ~options:file_options env.ServerEnv.libs file_path then
+      Ok ()
+    else
+      Error "File is ignored"
+  in
+  let check_file_included ~options ~file_options ~file_path () =
+    let file_is_implicitly_included =
+      let root_str = spf "%s%s" (Path.to_string (Options.root options)) Filename.dir_sep in
+      String_utils.string_starts_with file_path root_str
+    in
+    if file_is_implicitly_included then
+      Ok ()
+    else if Files.is_included file_options file_path then
+      Ok ()
+    else
+      Error "File is not implicitly or explicitly included"
+  in
+  let check_is_flow_file ~file_options ~file_path () =
+    if Files.is_flow_file ~options:file_options file_path then
+      Ok ()
+    else
+      Error "File is not a Flow file"
+  in
+  let check_flow_pragma ~options ~content ~file_key () =
+    if Options.all options then
+      Ok ()
+    else
+      let (_, docblock) =
+        Parsing_service_js.(parse_docblock docblock_max_tokens file_key content)
+      in
+      if Docblock.is_flow docblock then
+        Ok ()
+      else
+        Error "File is missing @flow pragma and `all` is not set to `true`"
+  in
+  fun ~options ~env ~file_key ~content ->
+    let file_path = Files.imaginary_realpath (File_key.to_string file_key) in
+    let file_options = Options.file_options options in
+    Ok ()
+    >>= check_file_not_ignored ~file_options ~env ~file_path
+    >>= check_file_included ~options ~file_options ~file_path
+    >>= check_is_flow_file ~file_options ~file_path
+    >>= check_flow_pragma ~options ~content ~file_key
+
 let get_status ~profiling ~reader genv env client_root =
   let options = genv.ServerEnv.options in
   let server_root = Options.root options in
@@ -994,52 +1049,76 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
   let CodeActionRequest.{ textDocument; range; context = { only; diagnostics } } = params in
   if not (Code_action_service.kind_is_supported ~options only) then
     (* bail out early if we don't support any of the code actions requested *)
-    Lwt.return (Ok [])
+    Lwt.return (Ok [], None)
   else
     let file_input = file_input_of_text_document_identifier ~client textDocument in
     let file_key = file_key_of_file_input ~options file_input in
     let loc = Flow_lsp_conversions.lsp_range_to_flow_loc ~source:file_key range in
     match File_input.content_of_file_input file_input with
-    | Error msg -> Lwt.return (Error msg)
+    | Error msg -> Lwt.return (Error msg, None)
     | Ok file_contents ->
-      let type_parse_artifacts_cache =
-        Some (Persistent_connection.type_parse_artifacts_cache client)
-      in
-      let uri = TextDocumentIdentifier.(textDocument.uri) in
-      let%lwt (file_artifacts_result, _did_hit_cache) =
-        let%lwt parse_result =
-          Type_contents.parse_contents ~options ~profiling file_contents file_key
+      (match check_that_we_care_about_this_file ~options ~env ~file_key ~content:file_contents with
+      | Error reason ->
+        let extra_data =
+          let open Hh_json in
+          Some (JSON_Object [("skipped", JSON_Bool true); ("skip_reason", JSON_String reason)])
         in
-        type_parse_artifacts_with_cache
-          ~options
-          ~env
-          ~profiling
-          ~type_parse_artifacts_cache
-          file_key
-          parse_result
-      in
-      (match file_artifacts_result with
-      | Error _ -> Lwt.return (Ok [])
-      | Ok
-          ( Parse_artifacts { file_sig; tolerable_errors; ast; parse_errors; _ },
-            Typecheck_artifacts { cx; typed_ast }
-          ) ->
-        let lsp_init_params = Persistent_connection.lsp_initialize_params client in
-        Code_action_service.code_actions_at_loc
-          ~options
-          ~lsp_init_params
-          ~env
-          ~reader
-          ~cx
-          ~file_sig
-          ~tolerable_errors
-          ~ast
-          ~typed_ast
-          ~parse_errors
-          ~diagnostics
-          ~only
-          ~uri
-          ~loc)
+        Lwt.return (Ok [], extra_data)
+      | Ok () ->
+        let%lwt (file_artifacts_result, _did_hit_cache) =
+          let%lwt parse_result =
+            Type_contents.parse_contents ~options ~profiling file_contents file_key
+          in
+          let type_parse_artifacts_cache =
+            Some (Persistent_connection.type_parse_artifacts_cache client)
+          in
+          type_parse_artifacts_with_cache
+            ~options
+            ~env
+            ~profiling
+            ~type_parse_artifacts_cache
+            file_key
+            parse_result
+        in
+        (match file_artifacts_result with
+        | Error _ -> Lwt.return (Ok [], None)
+        | Ok
+            ( Parse_artifacts { file_sig; tolerable_errors; ast; parse_errors; _ },
+              Typecheck_artifacts { cx; typed_ast }
+            ) ->
+          let uri = TextDocumentIdentifier.(textDocument.uri) in
+          let lsp_init_params = Persistent_connection.lsp_initialize_params client in
+          let%lwt code_actions =
+            Code_action_service.code_actions_at_loc
+              ~options
+              ~lsp_init_params
+              ~env
+              ~reader
+              ~cx
+              ~file_sig
+              ~tolerable_errors
+              ~ast
+              ~typed_ast
+              ~parse_errors
+              ~diagnostics
+              ~only
+              ~uri
+              ~loc
+          in
+          let extra_data =
+            match code_actions with
+            | Error _ -> None
+            | Ok code_actions ->
+              let open Hh_json in
+              let json_of_code_action = function
+                | CodeAction.Command Command.{ title; command = _; arguments = _ }
+                | CodeAction.Action CodeAction.{ title; kind = _; diagnostics = _; action = _ } ->
+                  JSON_String title
+              in
+              let actions = JSON_Array (Base.List.map ~f:json_of_code_action code_actions) in
+              Some (JSON_Object [("actions", actions)])
+          in
+          Lwt.return (code_actions, extra_data)))
 
 let add_missing_imports ~reader ~options ~env ~profiling ~client textDocument =
   let file_input = file_input_of_text_document_identifier ~client textDocument in
@@ -1690,21 +1769,16 @@ let handle_persistent_infer_type
 
 let handle_persistent_code_action_request
     ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
-  let%lwt result = find_code_actions ~reader ~options ~profiling ~env ~client ~params in
+  let%lwt (result, extra_data) =
+    find_code_actions ~reader ~options ~profiling ~env ~client ~params
+  in
+  let metadata = with_data ~extra_data metadata in
   match result with
   | Ok code_actions ->
-    let json_of_code_action = function
-      | CodeAction.Command Command.{ title; command = _; arguments = _ }
-      | CodeAction.Action CodeAction.{ title; kind = _; diagnostics = _; action = _ } ->
-        Hh_json.JSON_String title
-    in
-    let extra_data =
-      Some (Hh_json.JSON_Array (Base.List.map ~f:json_of_code_action code_actions))
-    in
     Lwt.return
       ( (),
         LspProt.LspFromServer (Some (ResponseMessage (id, CodeActionResult code_actions))),
-        with_data ~extra_data metadata
+        metadata
       )
   | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
 
@@ -1902,63 +1976,6 @@ let handle_persistent_document_highlight
     Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
   | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
 
-(* This tries to simulate the logic from elsewhere which determines whether we would report
- * errors for a given file. The criteria are
- *
- * 1) The file must be either implicitly included (be in the same dir structure as .flowconfig)
- *    or explicitly included
- * 2) The file must not be ignored
- * 3) The file path must be a Flow file (e.g foo.js and not foo.php or foo/)
- * 4) The file must either have `// @flow` or all=true must be set in the .flowconfig or CLI
- *)
-let check_that_we_care_about_this_file =
-  let check_file_not_ignored ~file_options ~env ~file_path () =
-    if Files.wanted ~options:file_options env.ServerEnv.libs file_path then
-      Ok ()
-    else
-      Error "File is ignored"
-  in
-  let check_file_included ~options ~file_options ~file_path () =
-    let file_is_implicitly_included =
-      let root_str = spf "%s%s" (Path.to_string (Options.root options)) Filename.dir_sep in
-      String_utils.string_starts_with file_path root_str
-    in
-    if file_is_implicitly_included then
-      Ok ()
-    else if Files.is_included file_options file_path then
-      Ok ()
-    else
-      Error "File is not implicitly or explicitly included"
-  in
-  let check_is_flow_file ~file_options ~file_path () =
-    if Files.is_flow_file ~options:file_options file_path then
-      Ok ()
-    else
-      Error "File is not a Flow file"
-  in
-  let check_flow_pragma ~options ~content ~file_path () =
-    if Options.all options then
-      Ok ()
-    else
-      let (_, docblock) =
-        Parsing_service_js.(
-          parse_docblock docblock_max_tokens (File_key.SourceFile file_path) content
-        )
-      in
-      if Docblock.is_flow docblock then
-        Ok ()
-      else
-        Error "File is missing @flow pragma and `all` is not set to `true`"
-  in
-  fun ~options ~env ~file_path ~content ->
-    let file_path = Files.imaginary_realpath file_path in
-    let file_options = Options.file_options options in
-    Ok ()
-    >>= check_file_not_ignored ~file_options ~env ~file_path
-    >>= check_file_included ~options ~file_options ~file_path
-    >>= check_is_flow_file ~file_options ~file_path
-    >>= check_flow_pragma ~options ~content ~file_path
-
 let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~client ~profiling ~env =
   let textDocument = params.TypeCoverage.textDocument in
   let file_input =
@@ -1971,11 +1988,11 @@ let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~clien
   in
   (* if it isn't a flow file (i.e. lacks a @flow directive) then we won't do anything *)
   let content = File_input.content_of_file_input file_input in
-  let file_path = File_input.filename_of_file_input file_input in
   let is_flow =
     match content with
     | Ok content ->
-      (match check_that_we_care_about_this_file ~options ~env ~file_path ~content with
+      let file_key = file_key_of_file_input ~options file_input in
+      (match check_that_we_care_about_this_file ~options ~env ~file_key ~content with
       | Ok () -> true
       | Error _ -> false)
     | Error _ -> false
@@ -2217,7 +2234,8 @@ let handle_live_errors_request =
          * older ones have already been responded to or canceled *)
         let file_path = Lsp_helpers.lsp_uri_to_path (Lsp.DocumentUri.of_string uri) in
         let%lwt ret =
-          match Persistent_connection.get_file client file_path with
+          let file_input = Persistent_connection.get_file client file_path in
+          match file_input with
           | File_input.FileName _ ->
             (* Maybe we've received a didClose for this file? Or maybe we got a request for a file
              * that wasn't open in the first place (that would be a bug). *)
@@ -2238,7 +2256,8 @@ let handle_live_errors_request =
               )
           | File_input.FileContent (_, content) ->
             let%lwt (live_errors, live_warnings, metadata) =
-              match check_that_we_care_about_this_file ~options ~env ~file_path ~content with
+              let file_key = file_key_of_file_input ~options file_input in
+              match check_that_we_care_about_this_file ~options ~env ~file_key ~content with
               | Ok () ->
                 let file_key =
                   let file_options = Options.file_options options in
@@ -2277,6 +2296,15 @@ let handle_live_errors_request =
                 Lwt.return (live_errors, live_warnings, metadata)
               | Error reason ->
                 Hh_logger.info "Not reporting live errors for file %S: %s" file_path reason;
+
+                let metadata =
+                  let json =
+                    Hh_json.(
+                      JSON_Object [("skipped", JSON_Bool true); ("skip_reason", JSON_String reason)]
+                    )
+                  in
+                  with_data ~extra_data:(Some json) metadata
+                in
 
                 (* If the LSP requests errors for a file for which we wouldn't normally emit errors
                  * then just return empty sets *)

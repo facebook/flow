@@ -1,0 +1,2 @@
+const x = {foo: 123};
+x.floo;
