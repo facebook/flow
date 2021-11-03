@@ -100,5 +100,6 @@ let (set_server_options, dump_server_options) =
 
 let disable_logging () =
   EventLogger.disable_logging ();
+  FlowEventLogger.disable_logging ();
   FlowInteractionLogger.disable_logging ();
   Flow_server_profile.disable_logging ()
