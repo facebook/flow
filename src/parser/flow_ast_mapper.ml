@@ -1201,11 +1201,13 @@ class ['loc] mapper =
       let open Ast.Type.Generic.Identifier in
       let (loc, { qualification; id }) = qual in
       let qualification' = this#generic_identifier_type qualification in
-      let id' = this#type_identifier_reference id in
+      let id' = this#member_type_identifier id in
       if qualification' == qualification && id' == id then
         qual
       else
         (loc, { qualification = qualification'; id = id' })
+
+    method member_type_identifier id = this#identifier id
 
     method variance (variance : 'loc Ast.Variance.t) =
       let (loc, { Ast.Variance.kind; comments }) = variance in

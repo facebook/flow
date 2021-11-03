@@ -3670,3 +3670,136 @@ let x: t = 42;
         (3, 7) to (3, 8) => {
           (2, 5) to (2, 6): (`t`)
         }] |}]
+
+let%expect_test "type_alias_global" =
+  print_ssa_test {|
+let x: t = 42;
+|};
+    [%expect {|
+      [
+        (2, 7) to (2, 8) => {
+          Global t
+        }] |}]
+
+let%expect_test "type_alias_refine" =
+  print_ssa_test {|
+if (t) {
+  let x: t = 42;
+}
+|};
+    [%expect {|
+      [
+        (2, 4) to (2, 5) => {
+          Global t
+        };
+        (3, 9) to (3, 10) => {
+          {refinement = Truthy; writes = Global t}
+        }] |}]
+
+let%expect_test "type_alias_no_init" =
+  print_ssa_test {|
+type t = number;
+let x: t;
+|};
+    [%expect {|
+      [
+        (3, 7) to (3, 8) => {
+          (2, 5) to (2, 6): (`t`)
+        }] |}]
+
+let%expect_test "type_alias_lookup" =
+  print_ssa_test {|
+import * as React from 'react';
+type T = React.ComponentType;
+var C: React.ComponentType;
+|};
+    [%expect {|
+      [
+        (3, 9) to (3, 14) => {
+          (2, 12) to (2, 17): (`React`)
+        };
+        (4, 7) to (4, 12) => {
+          (2, 12) to (2, 17): (`React`)
+        }] |}]
+
+let%expect_test "class_as_type" =
+  print_ssa_test {|
+class C { }
+var x: C = new C();
+|};
+    [%expect {|
+      [
+        (3, 7) to (3, 8) => {
+          (2, 6) to (2, 7): (`C`)
+        };
+        (3, 15) to (3, 16) => {
+          (2, 6) to (2, 7): (`C`)
+        }] |}]
+
+let%expect_test "interface_as_type" =
+  print_ssa_test {|
+interface C { }
+var x: C;
+|};
+    [%expect {|
+      [
+        (3, 7) to (3, 8) => {
+          (2, 10) to (2, 11): (`C`)
+        }] |}]
+
+let%expect_test "hoist_type" =
+  print_ssa_test {|
+var x: T;
+type T = number;
+|};
+    [%expect {|
+      [
+        (2, 7) to (2, 8) => {
+          (3, 5) to (3, 6): (`T`)
+        }] |}]
+
+let%expect_test "hoist_interface" =
+  print_ssa_test {|
+var x: C;
+interface C { }
+|};
+    [%expect {|
+      [
+        (2, 7) to (2, 8) => {
+          (3, 10) to (3, 11): (`C`)
+        }] |}]
+
+let%expect_test "opaque" =
+  print_ssa_test {|
+var x: T;
+opaque type T: C = C;
+interface C { }
+|};
+    [%expect {|
+      [
+        (2, 7) to (2, 8) => {
+          (3, 12) to (3, 13): (`T`)
+        };
+        (3, 15) to (3, 16) => {
+          (4, 10) to (4, 11): (`C`)
+        };
+        (3, 19) to (3, 20) => {
+          (4, 10) to (4, 11): (`C`)
+        }] |}]
+
+let%expect_test "mutual" =
+  print_ssa_test {|
+type A = Array<B>;
+type B = { a: A };
+|};
+    [%expect {|
+      [
+        (2, 9) to (2, 14) => {
+          Global Array
+        };
+        (2, 15) to (2, 16) => {
+          (3, 5) to (3, 6): (`B`)
+        };
+        (3, 14) to (3, 15) => {
+          (2, 5) to (2, 6): (`A`)
+        }] |}]

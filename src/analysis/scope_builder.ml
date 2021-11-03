@@ -213,6 +213,9 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       (* don't rename the `foo` in `typeof x.foo` *)
       method! typeof_member_identifier ident = ident
 
+      (* don't rename the `ComponentType` in `React.ComponentType` *)
+      method! member_type_identifier (id : (L.t, L.t) Ast.Identifier.t) = id
+
       (* don't rename the `foo` in `const {foo: bar} = x` *)
       method! pattern_object_property_identifier_key ?kind id =
         ignore kind;
