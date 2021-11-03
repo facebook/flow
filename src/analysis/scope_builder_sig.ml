@@ -44,16 +44,6 @@ module type S = sig
          method private lambda :
            (L.t, L.t) Flow_ast.Function.Params.t -> (L.t, L.t) Flow_ast.Function.body -> unit
 
-         method private function_tparams_and_return :
-           (L.t, L.t) Flow_ast.Type.TypeParams.t option ->
-           (L.t, L.t) Flow_ast_mapper.Ast.Type.annotation_or_hint ->
-           unit
-
-         method private hoisted_function_tparams_and_return :
-           (L.t, L.t) Flow_ast.Type.TypeParams.t option ->
-           (L.t, L.t) Flow_ast_mapper.Ast.Type.annotation_or_hint ->
-           unit
-
-         method private hoisted_type_annotation : (L.t, L.t) Flow_ast.Type.annotation -> unit
+         method private hoist_annotations : (unit -> unit) -> unit
        end
 end

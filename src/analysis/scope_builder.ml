@@ -189,23 +189,48 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         (* TODO: what identifiers does `<foo:bar />` read? *)
         super#jsx_element_name_namespaced ns
 
-      method! type_alias loc alias =
+      method! type_alias _loc alias =
         if not with_types then
           alias
         else
-          super#type_alias loc alias
+          let open Ast.Statement.TypeAlias in
+          let { id; tparams; right; comments = _ } = alias in
+          ignore @@ this#binding_type_identifier id;
+          this#scoped_type_params tparams ~in_tparam_scope:(fun () -> ignore @@ this#type_ right);
+          alias
 
-      method! opaque_type loc alias =
+      method! opaque_type _loc alias =
         if not with_types then
           alias
         else
-          super#opaque_type loc alias
+          let open Ast.Statement.OpaqueType in
+          let { id; tparams; impltype; supertype; comments = _ } = alias in
+          ignore @@ this#binding_type_identifier id;
+          this#scoped_type_params tparams ~in_tparam_scope:(fun () ->
+              ignore @@ Base.Option.map ~f:this#type_ impltype;
+              ignore @@ Base.Option.map ~f:this#type_ supertype
+          );
+          alias
 
-      method! interface loc interface =
+      method! interface _loc interface =
         if not with_types then
           interface
         else
-          super#interface loc interface
+          let open Ast.Statement.Interface in
+          let { id; tparams; extends; body = (body_loc, body); comments = _ } = interface in
+          ignore @@ this#binding_type_identifier id;
+          let extends_targs =
+            Base.List.filter_map
+              ~f:(fun (_ext_loc, { Ast.Type.Generic.id; targs; comments = _ }) ->
+                ignore @@ this#generic_identifier_type id;
+                targs)
+              extends
+          in
+          this#scoped_type_params tparams ~in_tparam_scope:(fun () ->
+              ignore @@ Base.List.map ~f:this#type_args extends_targs;
+              ignore @@ this#object_type body_loc body
+          );
+          interface
 
       (* don't rename the `foo` in `x.foo` *)
       method! member_property_identifier (id : (L.t, L.t) Ast.Identifier.t) = id
@@ -392,14 +417,34 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             run this#function_body_any body)
           ()
 
-      method private function_tparams_and_return tparams return =
-        ignore @@ this#type_annotation_hint return;
-        ignore @@ run_opt this#type_params tparams
+      method private scoped_type_params ?(hoist_op = (fun f -> f ())) ~in_tparam_scope tparams =
+        let open Ast.Type.TypeParams in
+        let open Ast.Type.TypeParam in
+        let tps =
+          Base.Option.value_map ~f:(fun (_, tparams) -> tparams.params) ~default:[] tparams
+        in
+        let rec loop tps =
+          match tps with
+          | (loc, { name; bound; variance; default }) :: next ->
+            hoist_op (fun () -> ignore @@ this#type_annotation_hint bound);
+            ignore @@ this#variance_opt variance;
+            hoist_op (fun () -> ignore @@ Base.Option.map ~f:this#type_ default);
+            let bindings = Bindings.(singleton (name, Bindings.Type)) in
+            this#with_bindings
+              loc
+              bindings
+              (fun () ->
+                ignore @@ this#binding_type_identifier name;
+                loop next)
+              ()
+          | [] -> in_tparam_scope ()
+        in
+        if with_types then
+          loop tps
+        else
+          in_tparam_scope ()
 
-      method private hoisted_function_tparams_and_return tparams return =
-        this#function_tparams_and_return tparams return
-
-      method private hoisted_type_annotation annot = ignore @@ this#type_annotation annot
+      method private hoist_annotations f = f ()
 
       method! function_declaration loc (expr : (L.t, L.t) Ast.Function.t) =
         let skip_scope =
@@ -425,8 +470,14 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             expr
           in
           run_opt this#function_identifier id;
-          if with_types then this#hoisted_function_tparams_and_return tparams return;
-          this#lambda params body
+          this#scoped_type_params
+            ~hoist_op:this#hoist_annotations
+            tparams
+            ~in_tparam_scope:(fun () ->
+              this#lambda params body;
+              if with_types then
+                this#hoist_annotations (fun () -> ignore @@ this#type_annotation_hint return)
+          )
         );
 
         expr
@@ -468,11 +519,12 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             (fun () ->
               run_opt this#function_identifier id;
               (* This function is not hoisted, so we just traverse the signature *)
-              if with_types then this#function_tparams_and_return tparams return;
-              this#lambda params body)
+              this#scoped_type_params tparams ~in_tparam_scope:(fun () ->
+                  this#lambda params body;
+                  if with_types then ignore @@ this#type_annotation_hint return
+              ))
             ()
         );
-
         expr
 
       method! declare_function loc expr =
@@ -483,8 +535,27 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         | None ->
           let _ = super#declare_function loc expr in
           let { Ast.Statement.DeclareFunction.annot; _ } = expr in
-          this#hoisted_type_annotation annot;
+          ignore @@ this#hoist_annotations (fun () -> ignore @@ this#type_annotation annot);
           expr
+
+      method! function_type _loc (ft : ('loc, 'loc) Ast.Type.Function.t) =
+        let open Ast.Type.Function in
+        let {
+          params = (_, { Params.this_; params = ps; rest = rpo; comments = _ });
+          return;
+          tparams;
+          comments = _;
+        } =
+          ft
+        in
+        let in_tparam_scope () =
+          ignore @@ Base.Option.map ~f:this#function_this_param_type this_;
+          ignore @@ Base.List.map ~f:this#function_param_type ps;
+          ignore @@ Base.Option.map ~f:this#function_rest_param_type rpo;
+          ignore @@ this#type_ return
+        in
+        this#scoped_type_params tparams ~in_tparam_scope;
+        ft
 
       method! class_expression loc cls =
         let { Ast.Class.id; _ } = cls in
@@ -500,6 +571,84 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           (fun () -> ignore (super#class_expression loc cls : ('a, 'b) Ast.Class.t))
           ();
         cls
+
+      method! class_ _loc (cls : ('loc, 'loc) Ast.Class.t) =
+        let open Ast.Class in
+        let { id; body; tparams; extends; implements; class_decorators; comments = _ } = cls in
+        ignore @@ Base.List.map ~f:this#class_decorator class_decorators;
+        ignore @@ Base.Option.map ~f:this#class_identifier id;
+        let extends_targs =
+          Base.Option.value_map
+            extends
+            ~default:None
+            ~f:(fun (_, { Ast.Class.Extends.expr; targs; comments = _ }) ->
+              ignore @@ this#expression expr;
+              targs
+          )
+        in
+        let implements_targs =
+          Base.Option.value_map
+            implements
+            ~default:[]
+            ~f:(fun (_, { Ast.Class.Implements.interfaces; comments = _ }) ->
+              Base.List.filter_map
+                interfaces
+                ~f:(fun (_, { Ast.Class.Implements.Interface.id; targs }) ->
+                  ignore @@ this#type_identifier_reference id;
+                  targs
+              )
+          )
+        in
+        let in_tparam_scope () =
+          ignore @@ Base.Option.map ~f:this#type_args extends_targs;
+          ignore @@ Base.List.map ~f:this#type_args implements_targs;
+          ignore @@ this#class_body body
+        in
+        this#scoped_type_params tparams ~in_tparam_scope;
+        cls
+
+      method! declare_class _loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =
+        let open Ast.Statement.DeclareClass in
+        let { id; tparams; body = (body_loc, body); extends; mixins; implements; comments = _ } =
+          decl
+        in
+        ignore @@ this#class_identifier id;
+        let extends_targs =
+          Base.Option.value_map
+            extends
+            ~default:None
+            ~f:(fun (_ext_loc, { Ast.Type.Generic.id; targs; comments = _ }) ->
+              ignore @@ this#generic_identifier_type id;
+              targs
+          )
+        in
+        let mixins_targs =
+          Base.List.filter_map mixins ~f:(fun (_, { Ast.Type.Generic.id; targs; comments = _ }) ->
+              ignore @@ this#generic_identifier_type id;
+              targs
+          )
+        in
+        let implements_targs =
+          Base.Option.value_map
+            implements
+            ~default:[]
+            ~f:(fun (_, { Ast.Class.Implements.interfaces; comments = _ }) ->
+              Base.List.filter_map
+                interfaces
+                ~f:(fun (_, { Ast.Class.Implements.Interface.id; targs }) ->
+                  ignore @@ this#type_identifier_reference id;
+                  targs
+              )
+          )
+        in
+        let in_tparam_scope () =
+          ignore @@ Base.Option.map ~f:this#type_args extends_targs;
+          ignore @@ Base.List.map ~f:this#type_args mixins_targs;
+          ignore @@ Base.List.map ~f:this#type_args implements_targs;
+          ignore @@ this#object_type body_loc body
+        in
+        this#scoped_type_params tparams ~in_tparam_scope;
+        decl
     end
 
   let program ?(flowmin_compatibility = false) ~with_types program =

@@ -1590,7 +1590,7 @@ class ['loc] mapper =
     method interface _loc (interface : ('loc, 'loc) Ast.Statement.Interface.t) =
       let open Ast.Statement.Interface in
       let { id = ident; tparams; extends; body; comments } = interface in
-      let id' = this#class_identifier ident in
+      let id' = this#binding_type_identifier ident in
       let tparams' = map_opt this#type_params tparams in
       let extends' = map_list (map_loc this#generic_type) extends in
       let body' = map_loc this#object_type body in

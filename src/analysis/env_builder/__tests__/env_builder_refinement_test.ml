@@ -3803,3 +3803,346 @@ type B = { a: A };
         (3, 14) to (3, 15) => {
           (2, 5) to (2, 6): (`A`)
         }] |}]
+
+let%expect_test "fun_tparam" =
+  print_ssa_test {|
+function f<X, Y: X = number>(x: X, y: Y) {
+  (x: Y);
+}
+|};
+    [%expect {|
+      [
+        (2, 17) to (2, 18) => {
+          (2, 11) to (2, 12): (`X`)
+        };
+        (2, 32) to (2, 33) => {
+          (2, 11) to (2, 12): (`X`)
+        };
+        (2, 38) to (2, 39) => {
+          (2, 14) to (2, 15): (`Y`)
+        };
+        (3, 3) to (3, 4) => {
+          (2, 29) to (2, 30): (`x`)
+        };
+        (3, 6) to (3, 7) => {
+          (2, 14) to (2, 15): (`Y`)
+        }] |}]
+
+let%expect_test "fun_tparam_return" =
+  print_ssa_test {|
+function f<X, Y: X = number>(x: X, y: Y): Y {
+  (x: Y);
+}
+|};
+    [%expect {|
+      [
+        (2, 17) to (2, 18) => {
+          (2, 11) to (2, 12): (`X`)
+        };
+        (2, 32) to (2, 33) => {
+          (2, 11) to (2, 12): (`X`)
+        };
+        (2, 38) to (2, 39) => {
+          (2, 14) to (2, 15): (`Y`)
+        };
+        (2, 42) to (2, 43) => {
+          (2, 14) to (2, 15): (`Y`)
+        };
+        (3, 3) to (3, 4) => {
+          (2, 29) to (2, 30): (`x`)
+        };
+        (3, 6) to (3, 7) => {
+          (2, 14) to (2, 15): (`Y`)
+        }] |}]
+
+let%expect_test "fun_tparam_global_bound" =
+  print_ssa_test {|
+function f<Z: Z>() { }
+|};
+    [%expect {|
+      [
+        (2, 14) to (2, 15) => {
+          Global Z
+        }] |}]
+
+let%expect_test "fun_inline_tparam" =
+  print_ssa_test {|
+let x = function f<X, Y: X = number>(x: X, y: Y) {
+  (x: Y);
+}
+|};
+    [%expect {|
+      [
+        (2, 25) to (2, 26) => {
+          (2, 19) to (2, 20): (`X`)
+        };
+        (2, 40) to (2, 41) => {
+          (2, 19) to (2, 20): (`X`)
+        };
+        (2, 46) to (2, 47) => {
+          (2, 22) to (2, 23): (`Y`)
+        };
+        (3, 3) to (3, 4) => {
+          (2, 37) to (2, 38): (`x`)
+        };
+        (3, 6) to (3, 7) => {
+          (2, 22) to (2, 23): (`Y`)
+        }] |}]
+
+let%expect_test "arrow_fun_tparam" =
+  print_ssa_test {|
+let x = <X, Y: X = number>(x: X, y: Y) => {
+  (x: Y);
+}
+|};
+    [%expect {|
+      [
+        (2, 15) to (2, 16) => {
+          (2, 9) to (2, 10): (`X`)
+        };
+        (2, 30) to (2, 31) => {
+          (2, 9) to (2, 10): (`X`)
+        };
+        (2, 36) to (2, 37) => {
+          (2, 12) to (2, 13): (`Y`)
+        };
+        (3, 3) to (3, 4) => {
+          (2, 27) to (2, 28): (`x`)
+        };
+        (3, 6) to (3, 7) => {
+          (2, 12) to (2, 13): (`Y`)
+        }] |}]
+
+let%expect_test "type_tparam" =
+  print_ssa_test {|
+type T<X, Y: X = number> = Array<[X, Y]>
+|};
+    [%expect {|
+      [
+        (2, 13) to (2, 14) => {
+          (2, 7) to (2, 8): (`X`)
+        };
+        (2, 27) to (2, 32) => {
+          Global Array
+        };
+        (2, 34) to (2, 35) => {
+          (2, 7) to (2, 8): (`X`)
+        };
+        (2, 37) to (2, 38) => {
+          (2, 10) to (2, 11): (`Y`)
+        }] |}]
+
+let%expect_test "opaque_tparam" =
+  print_ssa_test {|
+opaque type T<X>: X = X
+|};
+    [%expect {|
+      [
+        (2, 18) to (2, 19) => {
+          (2, 14) to (2, 15): (`X`)
+        };
+        (2, 22) to (2, 23) => {
+          (2, 14) to (2, 15): (`X`)
+        }] |}]
+
+let%expect_test "opaque_tparam" =
+  print_ssa_test {|
+declare opaque type T<X>: X;
+|};
+    [%expect {|
+      [
+        (2, 26) to (2, 27) => {
+          (2, 22) to (2, 23): (`X`)
+        }] |}]
+
+let%expect_test "interface_tparam" =
+  print_ssa_test {|
+interface T<X, Y:X> {
+  x: X;
+  y: Y;
+};
+|};
+    [%expect {|
+      [
+        (2, 17) to (2, 18) => {
+          (2, 12) to (2, 13): (`X`)
+        };
+        (3, 5) to (3, 6) => {
+          (2, 12) to (2, 13): (`X`)
+        };
+        (4, 5) to (4, 6) => {
+          (2, 15) to (2, 16): (`Y`)
+        }] |}]
+
+let%expect_test "interface_miss" =
+  print_ssa_test {|
+interface T<X> extends X { };
+|};
+    [%expect {|
+      [
+        (2, 23) to (2, 24) => {
+          Global X
+        }] |}]
+
+let%expect_test "interface_extends_tparam" =
+  print_ssa_test {|
+type X<S> = S;
+
+interface T<X> extends X<X> {
+  x: X
+};
+|};
+    [%expect {|
+      [
+        (2, 12) to (2, 13) => {
+          (2, 7) to (2, 8): (`S`)
+        };
+        (4, 23) to (4, 24) => {
+          (2, 5) to (2, 6): (`X`)
+        };
+        (4, 25) to (4, 26) => {
+          (4, 12) to (4, 13): (`X`)
+        };
+        (5, 5) to (5, 6) => {
+          (4, 12) to (4, 13): (`X`)
+        }] |}]
+
+let%expect_test "fun_type_tparam" =
+  print_ssa_test {|
+type T<W> = <X: W, Y: X>(X) => Y
+|};
+    [%expect {|
+      [
+        (2, 16) to (2, 17) => {
+          (2, 7) to (2, 8): (`W`)
+        };
+        (2, 22) to (2, 23) => {
+          (2, 13) to (2, 14): (`X`)
+        };
+        (2, 25) to (2, 26) => {
+          (2, 13) to (2, 14): (`X`)
+        };
+        (2, 31) to (2, 32) => {
+          (2, 19) to (2, 20): (`Y`)
+        }] |}]
+
+let%expect_test "class_tparam" =
+  print_ssa_test {|
+class C<X, Y:X> extends X<X> implements Y<Y> {
+  f<Z:Y>(x:X, y:Y) {
+    let z: Z;
+  }
+}
+|};
+    [%expect {|
+      [
+        (2, 13) to (2, 14) => {
+          (2, 8) to (2, 9): (`X`)
+        };
+        (2, 24) to (2, 25) => {
+          Global X
+        };
+        (2, 26) to (2, 27) => {
+          (2, 8) to (2, 9): (`X`)
+        };
+        (2, 40) to (2, 41) => {
+          Global Y
+        };
+        (2, 42) to (2, 43) => {
+          (2, 11) to (2, 12): (`Y`)
+        };
+        (3, 6) to (3, 7) => {
+          (2, 11) to (2, 12): (`Y`)
+        };
+        (3, 11) to (3, 12) => {
+          (2, 8) to (2, 9): (`X`)
+        };
+        (3, 16) to (3, 17) => {
+          (2, 11) to (2, 12): (`Y`)
+        };
+        (4, 11) to (4, 12) => {
+          (3, 4) to (3, 5): (`Z`)
+        }] |}]
+
+let%expect_test "declare_class_tparam" =
+  print_ssa_test {|
+declare class C<X, Y:X, Z = X> extends X<X> mixins Z<Z> implements Y<Y> {
+  f<Z:Y>(X, Y): Z;
+}
+|};
+    [%expect {|
+      [
+        (2, 21) to (2, 22) => {
+          (2, 16) to (2, 17): (`X`)
+        };
+        (2, 28) to (2, 29) => {
+          (2, 16) to (2, 17): (`X`)
+        };
+        (2, 39) to (2, 40) => {
+          Global X
+        };
+        (2, 41) to (2, 42) => {
+          (2, 16) to (2, 17): (`X`)
+        };
+        (2, 51) to (2, 52) => {
+          Global Z
+        };
+        (2, 53) to (2, 54) => {
+          (2, 24) to (2, 25): (`Z`)
+        };
+        (2, 67) to (2, 68) => {
+          Global Y
+        };
+        (2, 69) to (2, 70) => {
+          (2, 19) to (2, 20): (`Y`)
+        };
+        (3, 6) to (3, 7) => {
+          (2, 19) to (2, 20): (`Y`)
+        };
+        (3, 9) to (3, 10) => {
+          (2, 16) to (2, 17): (`X`)
+        };
+        (3, 12) to (3, 13) => {
+          (2, 19) to (2, 20): (`Y`)
+        };
+        (3, 16) to (3, 17) => {
+          (3, 4) to (3, 5): (`Z`)
+        }] |}]
+
+let%expect_test "class_expr_tparam" =
+  print_ssa_test {|
+var w = class <X, Y:X> extends X<X> implements Y<Y> {
+  f<Z:Y>(x:X, y:Y) {
+    let z: Z;
+  }
+}
+|};
+    [%expect {|
+      [
+        (2, 20) to (2, 21) => {
+          (2, 15) to (2, 16): (`X`)
+        };
+        (2, 31) to (2, 32) => {
+          Global X
+        };
+        (2, 33) to (2, 34) => {
+          (2, 15) to (2, 16): (`X`)
+        };
+        (2, 47) to (2, 48) => {
+          Global Y
+        };
+        (2, 49) to (2, 50) => {
+          (2, 18) to (2, 19): (`Y`)
+        };
+        (3, 6) to (3, 7) => {
+          (2, 18) to (2, 19): (`Y`)
+        };
+        (3, 11) to (3, 12) => {
+          (2, 15) to (2, 16): (`X`)
+        };
+        (3, 16) to (3, 17) => {
+          (2, 18) to (2, 19): (`Y`)
+        };
+        (4, 11) to (4, 12) => {
+          (3, 4) to (3, 5): (`Z`)
+        }] |}]

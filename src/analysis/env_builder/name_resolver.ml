@@ -2670,16 +2670,10 @@ module Make
           super#expression expr
         | _ -> super#expression expr
 
-      method! private hoisted_function_tparams_and_return tparams return =
+      method! private hoist_annotations f =
         let visiting_hoisted_type = env_state.visiting_hoisted_type in
         env_state <- { env_state with visiting_hoisted_type = true };
-        super#hoisted_function_tparams_and_return tparams return;
-        env_state <- { env_state with visiting_hoisted_type }
-
-      method! private hoisted_type_annotation annot =
-        let visiting_hoisted_type = env_state.visiting_hoisted_type in
-        env_state <- { env_state with visiting_hoisted_type = true };
-        super#hoisted_type_annotation annot;
+        f ();
         env_state <- { env_state with visiting_hoisted_type }
     end
 
