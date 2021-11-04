@@ -15,6 +15,6 @@ c.js:1:16,1:16
 
 cjs.js:7:4
 Flags:
-module  {declare var foo: string; declare var bar: number; }
+module  {}
 cjs.js:7:1,7:7
 

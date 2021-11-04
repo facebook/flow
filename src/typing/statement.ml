@@ -2402,7 +2402,7 @@ module Make (Env : Env_sig.S) = struct
                       NameUtils.Map.empty
                   in
                   let proto = ObjProtoT reason in
-                  let t = Obj_type.mk_unsealed cx reason ~props ~proto in
+                  let t = Obj_type.mk_with_proto cx reason ~obj_kind:Exact ~props proto in
                   Import_export.set_module_exports cx loc t
               in
               NameUtils.Map.iter

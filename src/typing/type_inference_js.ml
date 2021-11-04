@@ -477,7 +477,15 @@ module Make (Env : Env_sig.S) : S = struct
 
     let file_loc = Loc.{ none with source = Some filename } |> ALoc.of_loc in
     let reason = Reason.mk_reason Reason.RExports file_loc in
-    let init_exports = Obj_type.mk_unsealed cx reason in
+    let dict =
+      {
+        Type.key = Type.StrT.make reason (Trust.bogus_trust ());
+        value = Type.MixedT.make reason (Trust.bogus_trust ());
+        dict_name = None;
+        dict_polarity = Polarity.Negative;
+      }
+    in
+    let init_exports = Obj_type.mk cx ~obj_kind:(Type.Indexed dict) reason in
     ImpExp.set_module_exports cx file_loc init_exports;
 
     (* infer *)
