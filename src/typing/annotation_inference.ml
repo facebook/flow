@@ -15,8 +15,6 @@ let warn fmt =
   let f s = Utils_js.prerr_endlinef "WARNING: %s" s in
   Printf.ksprintf f fmt
 
-let warn_unsupported kind op r = Utils_js.prerr_endlinef "UNSUPPORTED: %s on %s @ %s" kind op r
-
 (* TODO lookup aloc in tables, e.g.
  * ALoc.to_loc_with_tables (Context.aloc_tables cx) (Reason.aloc_of_reason r) *)
 let string_of_reason_loc _cx r = Reason.string_of_aloc (Reason.aloc_of_reason r)
@@ -113,14 +111,17 @@ module rec ConsGen : Annotation_inference_sig = struct
     | Some dst_cx -> Flow_js_utils.add_annot_inference_error ~src_cx:cx ~dst_cx msg);
     AnyT.error reason_op
 
-  let error_internal cx msg op =
-    let reason_op = AConstraint.display_reason_of_op op in
+  let error_internal_reason cx msg reason_op =
     let loc = Reason.aloc_of_reason reason_op in
     let msg = Error_message.(EInternal (loc, UnexpectedAnnotationInference msg)) in
     (match !dst_cx_ref with
     | None -> assert false
     | Some dst_cx -> Flow_js_utils.add_annot_inference_error ~src_cx:cx ~dst_cx msg);
     AnyT.error reason_op
+
+  let error_internal cx msg op =
+    let reason_op = AConstraint.display_reason_of_op op in
+    error_internal_reason cx msg reason_op
 
   let dummy_trace = Trace.dummy_trace
 
@@ -1105,8 +1106,7 @@ module rec ConsGen : Annotation_inference_sig = struct
         begin
           match Lazy.force (Context.find_graph cx id) with
           | exception Union_find.Tvar_not_found _ ->
-            warn_unsupported "widen_obj_type" "Annot_ObjKitT" (string_of_reason_loc cx reason);
-            Unsoundness.why Unimplemented reason
+            error_internal_reason cx "widen_obj_type" reason
           | Unresolved _
           | Resolved _ ->
             failwith "widen_obj_type unexpected non-FullyResolved tvar"
