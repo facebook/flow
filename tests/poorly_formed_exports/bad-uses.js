@@ -1,7 +1,7 @@
 // @flow
 
-exports.foo; // OK
-module.exports.foo; // OK
+exports.foo; // ERROR
+module.exports.foo; // ERROR
 
 // These functions are provided just to illustrate the danger of aliasing `module` and
 // `module.exports`.
@@ -19,8 +19,8 @@ addsAProp(exports); // ERROR
 addsAPropToExports(module); // ERROR
 
 function h() {
-  exports.foo; // OK
-  module.exports.foo; // OK
+  exports.foo; // ERROR
+  module.exports.foo; // ERROR
   exports['foo'] = 42; // ERROR
   exports.foo = 5; // ERROR
 }

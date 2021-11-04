@@ -31,6 +31,38 @@ Exports can only appear at the top level [invalid-export]
         ^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------------- bad-uses-es6.js:5:9
+
+Cannot get `exports.foo` because property `foo` is not readable. [cannot-read]
+
+   5| exports.foo; // ERROR
+              ^^^
+
+
+Error --------------------------------------------------------------------------------------------- bad-uses-es6.js:6:16
+
+Cannot get `module.exports.foo` because property `foo` is not readable. [cannot-read]
+
+   6| module.exports.foo; // ERROR
+                     ^^^
+
+
+Error -------------------------------------------------------------------------------------------------- bad-uses.js:3:9
+
+Cannot get `exports.foo` because property `foo` is not readable. [cannot-read]
+
+   3| exports.foo; // ERROR
+              ^^^
+
+
+Error ------------------------------------------------------------------------------------------------- bad-uses.js:4:16
+
+Cannot get `module.exports.foo` because property `foo` is not readable. [cannot-read]
+
+   4| module.exports.foo; // ERROR
+                     ^^^
+
+
 Error ------------------------------------------------------------------------------------------------ bad-uses.js:16:11
 
 `module` may only be used as part of a legal top level export statement [invalid-export]
@@ -61,6 +93,14 @@ Error --------------------------------------------------------------------------
 
    19| addsAPropToExports(module); // ERROR
                           ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ bad-uses.js:22:11
+
+Cannot get `exports.foo` because property `foo` is not readable. [cannot-read]
+
+   22|   exports.foo; // ERROR
+                 ^^^
 
 
 Error ------------------------------------------------------------------------------------------------- bad-uses.js:24:3
@@ -144,7 +184,7 @@ Error --------------------------------------------------------------------------
 
 
 
-Found 18 errors
+Found 23 errors
 FLOW CHECK-CONTENTS:
 Error ------------------------------------------------------------------------------------------ bad-named-export.js:4:3
 
