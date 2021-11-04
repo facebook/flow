@@ -50,30 +50,12 @@ declare var s10: S10;
 import B11 from './qualified_typeapp';
 B11.x;
 
-import { p as p12 } from './recursive_module';
-(p12: empty); // okay - inferred as any
-
-import A13 from './recursive_module_cycle_A';
-(A13: empty); // okay - inferred as any
-
 import { A as A14, B as B14, x as x14 } from './unification';
 const y14: Array<A14 /* tvar 2 */> = x14; // unify 1(B) = 2(A), update 1 goto 2, expected error
 const z14: Array<B14 /* tvar 3 */> = x14; // okay
 
 import { f as f15 } from './async_void_return';
 (f15(): empty);
-
-import {
-  r as r16,
-  x as x16,
-  C as C16,
-  arr as arr16,
-  type T as T16,
-  type S as S16,
-  type DisjoinUnionOpt as D16,
-} from './recursive_types';
-(r16: empty); // okay - inferred as any
-(x16.r: empty); // okay - inferred as any
 
 declare var t16: T16;
 (1: S16); // error number ~> string
