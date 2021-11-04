@@ -987,13 +987,13 @@ module rec ConsGen : Annotation_inference_sig = struct
     | (DefT (lreason, _, MixedT Mixed_function), (Annot_GetPropT _ | Annot_LookupT _)) ->
       elab_t cx (FunProtoT lreason) op
     | (_, _) ->
-      let reason = reason_of_op op in
-      (* This corresponds to the catch-all case of flow_js.ml. *)
-      warn
-        "Uncaught annotation constraint: (%s, %s)"
-        (string_of_ctor t)
-        (AConstraint.string_of_operation op);
-      AnyT.error reason
+      let open Error_message in
+      let reason_op = reason_of_op op in
+      let lower = (reason_of_t t, Flow_js_utils.error_message_kind_of_lower t) in
+      let upper = (reason_op, IncompatibleUnclassified (string_of_operation op)) in
+      let use_op = use_op_of_operation op in
+      Flow_js_utils.add_output cx (EIncompatible { lower; upper; use_op; branches = [] });
+      AnyT.error reason_op
 
   and get_builtin_type cx reason ?(use_desc = false) x =
     let t = Flow_js_utils.lookup_builtin_strict cx x reason in
