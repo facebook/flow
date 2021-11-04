@@ -1833,6 +1833,8 @@ let dump_error_message =
         (string_of_aloc loc)
         (dump_reason cx reason_op)
         (dump_reason cx reason)
+    | EAnnotationInferenceRecursive (loc, reason) ->
+      spf "EAnnotationInferenceRecursive (%s) (%s)" (string_of_aloc loc) (dump_reason cx reason)
 
 module Verbose = struct
   let verbose_in_file cx verbose =

@@ -11,14 +11,6 @@ open Type
 open Type.AConstraint
 open TypeUtil
 
-let warn fmt =
-  let f s = Utils_js.prerr_endlinef "WARNING: %s" s in
-  Printf.ksprintf f fmt
-
-(* TODO lookup aloc in tables, e.g.
- * ALoc.to_loc_with_tables (Context.aloc_tables cx) (Reason.aloc_of_reason r) *)
-let string_of_reason_loc _cx r = Reason.string_of_aloc (Reason.aloc_of_reason r)
-
 let object_like_op = function
   | Annot_SpecializeT _
   | Annot_ThisSpecializeT _
@@ -110,6 +102,14 @@ module rec ConsGen : Annotation_inference_sig = struct
     | None -> assert false
     | Some dst_cx -> Flow_js_utils.add_annot_inference_error ~src_cx:cx ~dst_cx msg);
     AnyT.error reason_op
+
+  let error_recursive cx reason =
+    let loc = Reason.aloc_of_reason reason in
+    let msg = Error_message.EAnnotationInferenceRecursive (loc, reason) in
+    (match !dst_cx_ref with
+    | None -> assert false
+    | Some dst_cx -> Flow_js_utils.add_annot_inference_error ~src_cx:cx ~dst_cx msg);
+    AnyT.error reason
 
   let error_internal_reason cx msg reason_op =
     let loc = Reason.aloc_of_reason reason_op in
@@ -283,10 +283,8 @@ module rec ConsGen : Annotation_inference_sig = struct
     match Context.find_avar cx id with
     | (_, { A.constraints = (lazy A.Annot_resolved); _ }) -> ()
     | (_, { A.constraints = (lazy (A.Annot_unresolved _)); _ }) ->
-      warn "returning any on %s" (string_of_reason_loc cx reason);
-      resolve_id cx id (Unsoundness.merged_any reason)
+      resolve_id cx id (error_recursive cx reason)
     | (root_id, { A.constraints = (lazy (A.Annot_op { id = dep_id; _ })); _ }) ->
-      warn "returning any on %s" (string_of_reason_loc cx reason);
       let (_, { A.constraints = (lazy dep_constraint); _ }) = Context.find_avar cx dep_id in
       A.update_deps_of_constraint dep_constraint ~f:(fun deps ->
           ISet.filter
@@ -295,7 +293,7 @@ module rec ConsGen : Annotation_inference_sig = struct
               root_id <> root_id2)
             deps
       );
-      resolve_id cx id (Unsoundness.merged_any reason)
+      resolve_id cx id (error_recursive cx reason)
 
   and mk_lazy_tvar cx reason f =
     let id = Reason.mk_id () in
@@ -376,10 +374,9 @@ module rec ConsGen : Annotation_inference_sig = struct
     Context.iter_annot_dependent_set cx (fun id op -> resolve_id cx id (elab_t cx t op)) dependents
 
   and elab_open cx ~seen reason id op =
-    if ISet.mem id seen then begin
-      warn "elab_open returning any on %s" (Reason.string_of_reason reason);
-      AnyT.error reason
-    end else
+    if ISet.mem id seen then
+      error_recursive cx reason
+    else
       let module A = Type.AConstraint in
       let (_, { A.constraints; _ }) = Context.find_avar cx id in
       match Lazy.force constraints with

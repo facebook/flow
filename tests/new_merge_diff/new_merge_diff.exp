@@ -78,8 +78,56 @@ References:
            ^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------ recursive_module.js:3:9
 
-Found 5 errors
+Invalid trivially recursive definition of `p` in an export position.  [invalid-recursive-exported-annotation]
+
+   3| import {p} from './recursive_module';
+              ^
+
+
+Error ---------------------------------------------------------------------------------- recursive_module_cycle_A.js:3:7
+
+Invalid trivially recursive definition of `b` in an export position.  [invalid-recursive-exported-annotation]
+
+   3| const b = require('./recursive_module_cycle_B');
+            ^
+
+
+Error ---------------------------------------------------------------------------------- recursive_module_cycle_B.js:3:7
+
+Invalid trivially recursive definition of `a` in an export position.  [invalid-recursive-exported-annotation]
+
+   3| const a = require('./recursive_module_cycle_A');
+            ^
+
+
+Error ------------------------------------------------------------------------------------------ recursive_types.js:3:17
+
+Invalid trivially recursive definition of `x` in an export position.  [invalid-recursive-exported-annotation]
+
+   3| export const x: x = 0; // error recursive
+                      ^
+
+
+Error ------------------------------------------------------------------------------------------ recursive_types.js:5:24
+
+Invalid trivially recursive definition of `y` in an export position.  [invalid-recursive-exported-annotation]
+
+   5| export const y: typeof y.f = 0; // error recursive
+                             ^
+
+
+Error ------------------------------------------------------------------------------------------ recursive_types.js:9:29
+
+Invalid trivially recursive definition of function type in an export position.  [invalid-recursive-exported-annotation]
+
+   9| export function f(): typeof f.g { return 1; } // error recursive
+                                  ^
+
+
+
+Found 11 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

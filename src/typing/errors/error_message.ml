@@ -435,6 +435,7 @@ and 'loc t' =
     }
   | EInvalidGraphQL of 'loc * Graphql.error
   | EAnnotationInference of 'loc * 'loc virtual_reason * 'loc virtual_reason
+  | EAnnotationInferenceRecursive of 'loc * 'loc virtual_reason
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -1014,6 +1015,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       }
   | EInvalidGraphQL (loc, err) -> EInvalidGraphQL (f loc, err)
   | EAnnotationInference (loc, r1, r2) -> EAnnotationInference (f loc, map_reason r1, map_reason r2)
+  | EAnnotationInferenceRecursive (loc, r) -> EAnnotationInferenceRecursive (f loc, map_reason r)
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -1240,7 +1242,8 @@ let util_use_op_of_msg nope util = function
   | EObjectThisReference _
   | EInvalidDeclaration _
   | EInvalidGraphQL _
-  | EAnnotationInference _ ->
+  | EAnnotationInference _
+  | EAnnotationInferenceRecursive _ ->
     nope
 
 (* Not all messages (i.e. those whose locations are based on use_ops) have locations that can be
@@ -1386,7 +1389,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EObjectThisReference (loc, _)
   | EImportInternalReactServerModule loc
   | EInvalidGraphQL (loc, _)
-  | EAnnotationInference (loc, _, _) ->
+  | EAnnotationInference (loc, _, _)
+  | EAnnotationInferenceRecursive (loc, _) ->
     Some loc
   | EImplicitInstantiationUnderconstrainedError { reason_call; _ } ->
     Some (poly_loc_of_reason reason_call)
@@ -3729,6 +3733,15 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     in
     Normal { features }
+  | EAnnotationInferenceRecursive (_, reason) ->
+    let features =
+      [
+        text "Invalid trivially recursive definition of ";
+        desc reason;
+        text " in an export position. ";
+      ]
+    in
+    Normal { features }
 
 let is_lint_error = function
   | EUntypedTypeImport _
@@ -3994,6 +4007,7 @@ let error_code_of_message err : error_code option =
   | EMethodUnbinding _ -> Some MethodUnbinding
   | EInvalidGraphQL _ -> Some InvalidGraphQL
   | EAnnotationInference _ -> Some InvalidExportedAnnotation
+  | EAnnotationInferenceRecursive _ -> Some InvalidExportedAnnotationRecursive
   (* lints should match their lint name *)
   | EUntypedTypeImport _
   | EUntypedImport _
