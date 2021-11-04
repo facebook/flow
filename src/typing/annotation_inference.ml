@@ -248,7 +248,14 @@ module rec ConsGen : Annotation_inference_sig = struct
 
     let error_type = AnyT.error
 
-    let return _cx ~use_op:_ _trace t = t
+    (* We could have just returned `t` here. The OpenT indirection is for compatibility
+     * with Flow_js. Specifically, without the OpenT the transformation in
+     * https://github.com/facebook/flow/blob/8c3825a1be188e9ade4ad4ed515361bb28c65d8a/src/typing/flow_js.ml#L1744-L1755
+     * would fire, causing a divergence in the behavior of this module and Flow_js. *)
+    let return cx ~use_op _trace t =
+      match t with
+      | OpenT _ -> t
+      | _ -> Tvar.mk_fully_resolved cx use_op (reason_of_t t) t
 
     (* We will not be doing subtyping checks in annotation inference. *)
     let dict_read_check _ _ ~use_op:_ _ = ()
