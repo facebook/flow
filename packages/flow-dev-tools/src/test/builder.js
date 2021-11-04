@@ -451,6 +451,7 @@ class TestBuilder {
       new rpc.StreamMessageReader(lspProcess.stdout),
       new rpc.StreamMessageWriter(lspProcess.stdin),
     );
+    connection.trace(rpc.Trace.Verbose, this);
     connection.listen();
 
     // In nodejs, the 'exit' even is fired when the process exits;
@@ -485,12 +486,6 @@ class TestBuilder {
         outstandingRequestsInfo.nextId++;
         const params = this.sanitizeIncomingLSPMessage(rawParams);
         messages.push({method, id, params});
-        this.log(
-          'LSP <<request %d: %s\n%s',
-          id,
-          method,
-          JSON.stringify(params),
-        );
         messageEmitter.emit('message');
 
         cancellationToken.onCancellationRequested(() => {
@@ -499,10 +494,6 @@ class TestBuilder {
           // it, for our messages[] array, so that tests can match on it.
           const synthesizedParams = {id};
           messages.push({method: '$/cancelRequest', params: synthesizedParams});
-          this.log(
-            'LSP <<notification $/cancelRequest\n%s',
-            JSON.stringify(synthesizedParams),
-          );
           messageEmitter.emit('message');
         });
 
@@ -519,7 +510,6 @@ class TestBuilder {
       (method: string, rawParams: Array<mixed> | {} | void) => {
         const params = this.sanitizeIncomingLSPMessage(rawParams);
         messages.push({method, params});
-        this.log('LSP <<notification %s\n%s', method, JSON.stringify(params));
         messageEmitter.emit('message');
       },
     );
@@ -646,7 +636,6 @@ class TestBuilder {
       throw new Error('No LSP process running! Cannot sendLSPNotification');
     }
     const args = this.sanitizeOutgoingLSPMessage(argsRaw);
-    await this.log('LSP >>notification %s\n%s', method, JSON.stringify(args));
     lsp.connection.sendNotification(method, ...args);
   }
 
@@ -668,11 +657,9 @@ class TestBuilder {
     lsp.outstandingRequestsFromServer.delete(id);
     if (argsRaw.length == 1 && argsRaw[0] instanceof Error) {
       const e = (argsRaw[0]: Error);
-      await this.log('LSP >>response "id":%d\n%s', id, JSON.stringify(e));
       callbacks.reject(e);
     } else {
       const args = this.sanitizeOutgoingLSPMessage(argsRaw);
-      await this.log('LSP >>response "id":%d\n%s', id, JSON.stringify(args));
       callbacks.resolve(...args);
     }
   }
@@ -693,7 +680,6 @@ class TestBuilder {
     }
 
     const args = this.sanitizeOutgoingLSPMessage(argsRaw);
-    await this.log('LSP >>request %s\n%s', method, JSON.stringify(args));
     let resultRaw;
     try {
       resultRaw = await lsp.connection.sendRequest(method, ...args);
@@ -701,13 +687,11 @@ class TestBuilder {
       const message = error.message;
       error = {message, ...error}; // otherwise it doesn't show up in JSON.stringify
       lspMessages.push({method, error});
-      await this.log('LSP <<error %s\n%s', method, JSON.stringify(error));
       lsp.messageEmitter.emit('message');
       return;
     }
     const result = this.sanitizeIncomingLSPMessage(resultRaw);
     lspMessages.push({method, result});
-    await this.log('LSP <<response %s\n%s', method, JSON.stringify(resultRaw));
     lsp.messageEmitter.emit('message');
   }
 
