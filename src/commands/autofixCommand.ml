@@ -52,7 +52,6 @@ module InsertType = struct
                  "--in-place"
                  no_arg
                  ~doc:"Overwrite the input file or file specified by the path flag"
-            |> flag "--expand-type-aliases" no_arg ~doc:"Replace type aliases with their bodies"
             |> flag
                  "--omit-typearg-defaults"
                  no_arg
@@ -121,7 +120,6 @@ module InsertType = struct
       location_is_strict
       ambiguity_strategy
       in_place
-      expand_aliases
       omit_targ_defaults
       args
       () =
@@ -148,7 +146,6 @@ module InsertType = struct
           location_is_strict;
           ambiguity_strategy;
           wait_for_recheck;
-          expand_aliases;
           omit_targ_defaults;
         }
     in

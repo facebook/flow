@@ -2629,11 +2629,3 @@ type-destructors.js:7:25-29: Props
 type-destructors.js:7:25-29: type Props = {age: number, name: string, ...}
 type-destructors.js:7:32-43: DefaultProps
 type-destructors.js:7:32-43: type DefaultProps = {age: number, ...}
-=== type-destructors.js (--expand-type-aliases --evaluate-type-destructors) ===
-type-destructors.js:7:13-16: {name: string, ...}
-type-destructors.js:7:19-23: {name: string, ...}
-type-destructors.js:7:19-44: {name: string, ...}
-type-destructors.js:7:25-29: {age: number, name: string, ...}
-type-destructors.js:7:25-29: type Props = {age: number, name: string, ...}
-type-destructors.js:7:32-43: {age: number, ...}
-type-destructors.js:7:32-43: type DefaultProps = {age: number, ...}

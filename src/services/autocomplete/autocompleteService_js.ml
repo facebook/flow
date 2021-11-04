@@ -215,7 +215,6 @@ let ty_normalizer_options =
   Ty_normalizer_env.
     {
       expand_internal_types = true;
-      expand_type_aliases = false;
       flag_shadowed_type_params = true;
       preserve_inferred_literal_types = false;
       evaluate_type_destructors = true;
@@ -434,7 +433,7 @@ let rec literals_of_ty acc ty =
 
 let autocomplete_literals ~prefer_single_quotes ~cx ~genv ~tparams_rev ~ac_loc ~upper_bound =
   let scheme = { Type.TypeScheme.tparams_rev; type_ = upper_bound } in
-  let options = { ty_normalizer_options with Ty_normalizer_env.expand_type_aliases = true } in
+  let options = ty_normalizer_options in
   let upper_bound_ty =
     match Ty_normalizer.from_scheme ~options ~genv scheme with
     | Ok (Ty.Type ty) -> ty

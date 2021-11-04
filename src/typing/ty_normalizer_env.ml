@@ -22,11 +22,6 @@ type options = {
    * Function.prototype.apply: (thisArg: any, argArray?: any): any
    *)
   expand_internal_types: bool;
-  (* If set to `true` type aliase names will be expanded to the types they represent.
-   *
-   * WARNING: This can cause a blow-up in the size of the produced types.
-   *)
-  expand_type_aliases: bool;
   (* The normalizer keeps a stack of type parameters that are in scope. This stack
    * may contain the same name twice (but with different associated locations).
    * This is a case of shadowing. For certain uses of normalized types (e.g. suggest)
@@ -76,7 +71,6 @@ let default_options =
   {
     evaluate_type_destructors = false;
     expand_internal_types = false;
-    expand_type_aliases = false;
     flag_shadowed_type_params = false;
     merge_bot_and_any_kinds = true;
     omit_targ_defaults = false;
@@ -170,8 +164,6 @@ let descend e = { e with depth = e.depth + 1 }
 let get_cx e = e.genv.cx
 
 let expand_internal_types e = e.options.expand_internal_types
-
-let expand_type_aliases e = e.options.expand_type_aliases
 
 let evaluate_type_destructors e = e.options.evaluate_type_destructors
 

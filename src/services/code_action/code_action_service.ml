@@ -796,7 +796,6 @@ let insert_type
     ~file_key
     ~file_content
     ~target
-    ~expand_aliases
     ~omit_targ_defaults
     ~location_is_strict:strict
     ~ambiguity_strategy =
@@ -822,7 +821,6 @@ let insert_type
             ~full_cx
             ~file_sig
             ~typed_ast
-            ~expand_aliases
             ~omit_targ_defaults
             ~strict
             ~ambiguity_strategy

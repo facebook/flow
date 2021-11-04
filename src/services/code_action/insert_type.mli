@@ -55,7 +55,6 @@ val synth_type :
   full_cx:Context.t ->
   file_sig:File_sig.With_ALoc.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
-  expand_aliases:bool ->
   omit_targ_defaults:bool ->
   ambiguity_strategy:Autofix_options.ambiguity_strategy ->
   remote_converter:Insert_type_imports.ImportsHelper.remote_converter ->
@@ -77,7 +76,6 @@ val insert_type :
   full_cx:Context.t ->
   file_sig:File_sig.With_Loc.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
-  expand_aliases:bool ->
   omit_targ_defaults:bool ->
   strict:bool ->
   ambiguity_strategy:Autofix_options.ambiguity_strategy ->

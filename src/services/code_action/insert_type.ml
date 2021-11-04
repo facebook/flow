@@ -357,18 +357,9 @@ let type_lookup_at_location typed_ast loc =
   | Some p -> p
   | None -> raise @@ unexpected @@ UnknownTypeAtPoint loc
 
-let normalize ~full_cx ~file_sig ~typed_ast ~expand_aliases ~omit_targ_defaults loc scheme =
+let normalize ~full_cx ~file_sig ~typed_ast ~omit_targ_defaults loc scheme =
   Query_types.(
-    match
-      insert_type_normalize
-        ~full_cx
-        ~file_sig
-        ~typed_ast
-        ~expand_aliases
-        ~omit_targ_defaults
-        loc
-        scheme
-    with
+    match insert_type_normalize ~full_cx ~file_sig ~typed_ast ~omit_targ_defaults loc scheme with
     | FailureNoMatch -> raise @@ unexpected @@ FailedToNormalizeNoMatch
     | FailureUnparseable (loc, _, msg) -> raise @@ expected @@ FailedToNormalize (loc, msg)
     | Success (_, ty) -> ty
@@ -379,7 +370,6 @@ let synth_type
     ~full_cx
     ~file_sig
     ~typed_ast
-    ~expand_aliases
     ~omit_targ_defaults
     ~ambiguity_strategy
     ~remote_converter
@@ -400,16 +390,7 @@ let synth_type
     remove_ambiguous_types ~ambiguity_strategy ~exact_by_default ty type_loc
   in
   let ty =
-    match
-      normalize
-        ~full_cx
-        ~file_sig
-        ~typed_ast
-        ~expand_aliases
-        ~omit_targ_defaults
-        type_loc
-        type_scheme
-    with
+    match normalize ~full_cx ~file_sig ~typed_ast ~omit_targ_defaults type_loc type_scheme with
     | Ty.Type ty -> process ty
     | Ty.Decl (Ty.ClassDecl (name, _)) ->
       let ty = Ty.TypeOf (Ty.TSymbol name) in
@@ -492,7 +473,6 @@ let insert_type
     ~full_cx
     ~file_sig
     ~typed_ast
-    ~expand_aliases
     ~omit_targ_defaults
     ~strict
     ~ambiguity_strategy
@@ -517,7 +497,6 @@ let insert_type
       ~full_cx
       ~file_sig
       ~typed_ast
-      ~expand_aliases
       ~omit_targ_defaults
       ~ambiguity_strategy
       ~remote_converter

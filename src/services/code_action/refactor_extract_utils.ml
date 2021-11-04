@@ -953,7 +953,6 @@ module TypeSynthesizer = struct
              ~full_cx
              ~file_sig
              ~typed_ast
-             ~expand_aliases:false
              ~omit_targ_defaults:false
              ~ambiguity_strategy:Autofix_options.Generalize
              ~remote_converter

@@ -163,8 +163,8 @@ type EB5<T: {...}> = {|u: O, w: T, v: O, x: O, ...T, y: O|}
 spread.js:48:6,48:8
 
 spread.js:50:6
-Flags: --expand-type-aliases
-type PTA1<T: {...}> = {o: O, ...T, ...T, ...}
+Flags:
+type PTA1<T: {...}> = {...B2<T>, ...T, ...}
 spread.js:50:6,50:9
 
 spread.js:52:6
@@ -198,8 +198,8 @@ type PRec<X> = {o: O, ...PRec<X>, ...}
 spread.js:62:6,62:9
 
 spread.js:64:6
-Flags: --expand-type-aliases
-type IP1<T: {...}> = {...T, ...S, o: O, ...} & {...T, o: O, ...}
+Flags:
+type IP1<T: {...}> = {...B1<T>, ...} & {...B2<T>, ...}
 spread.js:64:6,64:8
 
 spread.js:66:6

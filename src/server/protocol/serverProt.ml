@@ -44,7 +44,6 @@ module Request = struct
       }
     | DUMP_TYPES of {
         input: File_input.t;
-        expand_aliases: bool;
         evaluate_type_destructors: bool;
         wait_for_recheck: bool option;
       }
@@ -85,7 +84,6 @@ module Request = struct
         line: int;
         char: int;
         verbose: Verbose.t option;
-        expand_aliases: bool;
         omit_targ_defaults: bool;
         evaluate_type_destructors: bool;
         wait_for_recheck: bool option;
@@ -99,7 +97,6 @@ module Request = struct
         location_is_strict: bool;
         ambiguity_strategy: Autofix_options.ambiguity_strategy;
         wait_for_recheck: bool option;
-        expand_aliases: bool;
         omit_targ_defaults: bool;
       }
     | RAGE of { files: string list }
@@ -136,8 +133,7 @@ module Request = struct
     | CYCLE { filename; types_only } ->
       Printf.sprintf "cycle (types_only: %b) %s" types_only filename
     | GRAPH_DEP_GRAPH _ -> Printf.sprintf "dep-graph"
-    | DUMP_TYPES { input; expand_aliases = _; evaluate_type_destructors = _; wait_for_recheck = _ }
-      ->
+    | DUMP_TYPES { input; evaluate_type_destructors = _; wait_for_recheck = _ } ->
       Printf.sprintf "dump-types %s" (File_input.filename_of_file_input input)
     | FIND_MODULE { moduleref; filename; wait_for_recheck = _ } ->
       Printf.sprintf "find-module %s %s" moduleref filename
@@ -155,7 +151,6 @@ module Request = struct
           line;
           char;
           verbose = _;
-          expand_aliases = _;
           omit_targ_defaults = _;
           evaluate_type_destructors = _;
           wait_for_recheck = _;

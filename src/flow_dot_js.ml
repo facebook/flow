@@ -361,7 +361,6 @@ let infer_type filename content line col : Loc.t * (string, string) result =
           ~full_cx:cx
           ~file
           ~file_sig
-          ~expand_aliases:false
           ~omit_targ_defaults:false
           ~typed_ast
           ~evaluate_type_destructors:false
@@ -407,13 +406,7 @@ let dump_types js_file js_content =
     let (cx, typed_ast) = infer_and_merge ~root filename ast file_sig in
     let printer = Ty_printer.string_of_elt_single_line ~exact_by_default:true in
     let types =
-      Query_types.dump_types
-        ~printer
-        ~evaluate_type_destructors:false
-        ~expand_aliases:false
-        cx
-        file_sig
-        typed_ast
+      Query_types.dump_types ~printer ~evaluate_type_destructors:false cx file_sig typed_ast
     in
     let strip_root = None in
     let types_json = types_to_json types ~strip_root in
