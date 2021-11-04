@@ -23,3 +23,28 @@ declare var frozenSuitevalues: FrozenSuiteValues;
 
 declare var indirectFrozenSuitevalues: IndirectFrozenSuiteValues;
 (indirectFrozenSuitevalues: FrozenSuiteValues); // okay
+
+import { p as p12 } from './recursive_module';
+(p12: empty); // okay - inferred as any
+
+import A13 from './recursive_module_cycle_A';
+(A13: empty); // okay - inferred as any
+
+import {
+  x as x4,
+  y as y4,
+  z as z4,
+  f as f4,
+  type T as T4,
+  type S as S4,
+  type R as R4,
+} from './recursive_types';
+
+(x4: any);
+(y4: any);
+(x4: any);
+(f4: any);
+
+(0: T4);
+(0: S4); // error number ~> string
+(0: R4); // error number ~> R (obj)
