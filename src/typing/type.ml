@@ -2918,6 +2918,42 @@ module AConstraint = struct
     | Annot__Future_added_value__ r ->
       r
 
+  let use_op_of_operation = function
+    | Annot_SpecializeT (use_op, _, _, _)
+    | Annot_GetPropT (_, use_op, _)
+    | Annot_GetElemT (_, use_op, _)
+    | Annot_ElemT (_, use_op, _)
+    | Annot_LookupT (_, use_op, _)
+    | Annot_ObjKitT (_, use_op, _, _) ->
+      Some use_op
+    | Annot_ThisSpecializeT _
+    | Annot_UseT_TypeT _
+    | Annot_CJSRequireT _
+    | Annot_ImportTypeT _
+    | Annot_ImportTypeofT _
+    | Annot_ImportNamedT _
+    | Annot_ImportDefaultT _
+    | Annot_ImportModuleNsT _
+    | Annot_CJSExtractNamedExportsT _
+    | Annot_ExportNamedT _
+    | Annot_ExportTypeT _
+    | Annot_AssertExportIsTypeT _
+    | Annot_CopyNamedExportsT _
+    | Annot_CopyTypeExportsT _
+    | Annot_GetStaticsT _
+    | Annot_MakeExactT _
+    | Annot_ObjTestProtoT _
+    | Annot_UnaryMinusT _
+    | Annot_NotT _
+    | Annot_MixinT _
+    | Annot_ObjKeyMirror _
+    | Annot_ObjMapConst _
+    | Annot_GetKeysT _
+    | Annot_ToStringT _
+    | Annot_ObjRestT _
+    | Annot__Future_added_value__ _ ->
+      None
+
   (* Used to produce prettier error messages for annotation inference. *)
   let display_reason_of_op = function
     | Annot_ObjKitT (r, _, _, tool) ->
