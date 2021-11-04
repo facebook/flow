@@ -71,6 +71,7 @@ type error_code =
   | InvalidExportsTypeArg
   | InvalidGraphQL
   | InvalidExportedAnnotation
+  | InvalidExportedAnnotationRecursive
   | InvalidIdx
   | InvalidImportStarUse
   | InvalidImportType
@@ -244,6 +245,7 @@ let string_of_code : error_code -> string = function
   | InvalidExportsTypeArg -> "invalid-exports-type-arg"
   | InvalidGraphQL -> "invalid-graphql"
   | InvalidExportedAnnotation -> "invalid-exported-annotation"
+  | InvalidExportedAnnotationRecursive -> "invalid-recursive-exported-annotation"
   | InvalidIdx -> "invalid-idx"
   | InvalidImportStarUse -> "invalid-import-star-use"
   | InvalidImportType -> "invalid-import-type"
