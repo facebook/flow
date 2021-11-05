@@ -52,12 +52,6 @@ module Request = struct
         filename: string;
         wait_for_recheck: bool option;
       }
-    | FIND_REFS of {
-        filename: File_input.t;
-        line: int;
-        char: int;
-        wait_for_recheck: bool option;
-      }
     | FORCE_RECHECK of {
         files: string list;
         focus: bool;
@@ -137,8 +131,6 @@ module Request = struct
       Printf.sprintf "dump-types %s" (File_input.filename_of_file_input input)
     | FIND_MODULE { moduleref; filename; wait_for_recheck = _ } ->
       Printf.sprintf "find-module %s %s" moduleref filename
-    | FIND_REFS { filename; line; char; wait_for_recheck = _ } ->
-      Printf.sprintf "find-refs %s:%d:%d" (File_input.filename_of_file_input filename) line char
     | FORCE_RECHECK { files; focus; profile = _ } ->
       Printf.sprintf "force-recheck %s (focus = %b)" (String.concat " " files) focus
     | GET_DEF { filename; line; char; wait_for_recheck = _ } ->
@@ -229,11 +221,6 @@ module Response = struct
 
   type dump_types_response = ((Loc.t * string) list, string) result
 
-  (* name of the symbol, locations where it appears, or None if no symbols were found *)
-  type find_refs_success = (string * Loc.t list) option
-
-  type find_refs_response = (find_refs_success, string) result
-
   type get_def_response = (Loc.t, string) result
 
   type get_imports_response = Loc.t Nel.t Modulename.Map.t SMap.t * SSet.t
@@ -287,7 +274,6 @@ module Response = struct
     | GRAPH_DEP_GRAPH of (unit, string) result
     | DUMP_TYPES of dump_types_response
     | FIND_MODULE of find_module_response
-    | FIND_REFS of find_refs_response
     | FORCE_RECHECK of Profiling_js.finished option
     | GET_DEF of get_def_response
     | GET_IMPORTS of get_imports_response
@@ -310,7 +296,6 @@ module Response = struct
     | GRAPH_DEP_GRAPH _ -> "dep-graph response"
     | DUMP_TYPES _ -> "dump_types response"
     | FIND_MODULE _ -> "find_module response"
-    | FIND_REFS _ -> "find_refs response"
     | FORCE_RECHECK _ -> "force_recheck response"
     | GET_DEF _ -> "get_def response"
     | GET_IMPORTS _ -> "get_imports response"

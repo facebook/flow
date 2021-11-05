@@ -29,7 +29,6 @@ end = struct
       GraphCommand.command;
       DumpTypesCommand.command;
       FindModuleCommand.command;
-      FindRefsCommand.command;
       FixCommand.command;
       ForceRecheckCommand.command;
       GetDefCommand.command;

@@ -1,6 +1,0 @@
-// @flow
-
-type Bar = { foo: string };
-
-const x: Bar = { foo: 'asdf' };
-x.foo;

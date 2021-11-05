@@ -754,14 +754,6 @@ let find_module ~options ~reader (moduleref, filename) =
   in
   Module_heaps.Reader.get_file ~reader ~audit:Expensive.warn module_name
 
-let convert_find_refs_result (result : FindRefsTypes.find_refs_ok) :
-    ServerProt.Response.find_refs_success =
-  Base.Option.map result ~f:(fun (name, refs) -> (name, Base.List.map ~f:snd refs))
-
-let find_local_refs ~reader ~options ~env ~profiling (file_input, line, col) =
-  FindRefs_js.find_local_refs ~reader ~options ~env ~profiling ~file_input ~line ~col
-  |> Lwt_result.map convert_find_refs_result
-
 let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_input, line, col) =
   let file = file_key_of_file_input ~options file_input in
   let%lwt (check_result, did_hit_cache) =
@@ -898,24 +890,6 @@ let handle_dump_types ~options ~input ~evaluate_type_destructors ~profiling ~env
 let handle_find_module ~options ~reader ~moduleref ~filename ~profiling:_ ~env:_ =
   let response = find_module ~options ~reader (moduleref, filename) in
   Lwt.return (ServerProt.Response.FIND_MODULE response, None)
-
-let handle_find_refs ~options ~reader ~filename ~line ~char ~profiling ~env =
-  let%lwt result = find_local_refs ~reader ~options ~env ~profiling (filename, line, char) in
-  let json_data =
-    Some
-      (Hh_json.JSON_Object
-         [
-           ( "result",
-             Hh_json.JSON_String
-               (match result with
-               | Ok _ -> "SUCCESS"
-               | _ -> "FAILURE")
-           );
-           ("global", Hh_json.JSON_Bool false);
-         ]
-      )
-  in
-  Lwt.return (ServerProt.Response.FIND_REFS result, json_data)
 
 let handle_force_recheck ~files ~focus ~profile ~profiling =
   let fileset = SSet.of_list files in
@@ -1228,11 +1202,6 @@ let get_ephemeral_handler genv command =
       ~wait_for_recheck
       ~options
       (handle_find_module ~options ~reader ~moduleref ~filename)
-  | ServerProt.Request.FIND_REFS { filename; line; char; wait_for_recheck } ->
-    mk_parallelizable
-      ~wait_for_recheck
-      ~options
-      (handle_find_refs ~options ~reader ~filename ~line ~char)
   | ServerProt.Request.FORCE_RECHECK { files; focus; profile } ->
     Handle_immediately (handle_force_recheck ~files ~focus ~profile)
   | ServerProt.Request.GET_DEF { filename; line; char; wait_for_recheck } ->
@@ -1916,15 +1885,17 @@ let handle_persistent_signaturehelp_lsp
 let handle_persistent_document_highlight
     ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
   let file_input = file_input_of_text_document_position ~client params in
-  let (line, char) = Flow_lsp_conversions.position_of_document_position params in
-  let%lwt result = find_local_refs ~reader ~options ~env ~profiling (file_input, line, char) in
+  let (line, col) = Flow_lsp_conversions.position_of_document_position params in
+  let%lwt local_refs =
+    FindRefs_js.find_local_refs ~reader ~options ~env ~profiling ~file_input ~line ~col
+  in
   let extra_data =
     Some
       (Hh_json.JSON_Object
          [
            ( "result",
              Hh_json.JSON_String
-               (match result with
+               (match local_refs with
                | Ok _ -> "SUCCESS"
                | _ -> "FAILURE")
            );
@@ -1932,16 +1903,16 @@ let handle_persistent_document_highlight
       )
   in
   let metadata = with_data ~extra_data metadata in
-  match result with
-  | Ok (Some (_name, locs)) ->
+  match local_refs with
+  | Ok (Some (_name, refs)) ->
     (* All the locs are implicitly in the same file *)
-    let loc_to_highlight loc =
+    let ref_to_highlight (_, loc) =
       {
         DocumentHighlight.range = Flow_lsp_conversions.loc_to_lsp_range loc;
         kind = Some DocumentHighlight.Text;
       }
     in
-    let r = DocumentHighlightResult (Base.List.map ~f:loc_to_highlight locs) in
+    let r = DocumentHighlightResult (Base.List.map ~f:ref_to_highlight refs) in
     let response = ResponseMessage (id, r) in
     Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
   | Ok None ->
