@@ -228,7 +228,7 @@ let autocomplete
         Typecheck_artifacts { cx; typed_ast }
       ) ->
     Profiling_js.with_timer_lwt profiling ~timer:"GetResults" ~f:(fun () ->
-        try_with_json2 (fun () ->
+        try_with_json (fun () ->
             let open AutocompleteService_js in
             let (token_opt, (ac_type_string, results_res)) =
               autocomplete_get_results
@@ -340,7 +340,7 @@ let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, lin
   in
   let file_sig = File_sig.abstractify_locs file_sig in
   Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
-      try_with_json2 (fun () ->
+      try_with_json (fun () ->
           Lwt.return
             ( GetDef_js.get_def ~options ~reader ~cx ~file_sig ~typed_ast loc |> fun result ->
               let open GetDef_js.Get_def_result in
@@ -400,70 +400,62 @@ let infer_type
   match File_input.content_of_file_input file_input with
   | Error e -> Lwt.return (Error e, None)
   | Ok content ->
-    let%lwt result =
-      try_with_json (fun () ->
-          let%lwt (file_artifacts_result, did_hit_cache) =
-            let%lwt parse_result = Type_contents.parse_contents ~options ~profiling content file in
-            type_parse_artifacts_with_cache
-              ~options
-              ~env
-              ~profiling
-              ~type_parse_artifacts_cache
-              file
-              parse_result
-          in
-          let%lwt result =
-            match file_artifacts_result with
-            | Error _parse_errors ->
-              let err_str = "Couldn't parse file in parse_artifacts" in
-              let json_props = add_cache_hit_data_to_json [] did_hit_cache in
-              Lwt.return (Error (err_str, Some (Hh_json.JSON_Object json_props)))
-            | Ok
-                ( (Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) as
-                check_result
-                ) ->
-              let ((loc, ty), type_at_pos_json_props) =
-                Type_info_service.type_at_pos
-                  ~cx
-                  ~file_sig
-                  ~typed_ast
-                  ~omit_targ_defaults
-                  ~evaluate_type_destructors
-                  ~max_depth
-                  ~verbose_normalizer
-                  file
-                  line
-                  column
-              in
-              let%lwt (getdef_loc_result, _) =
-                get_def_of_check_result
-                  ~options
-                  ~reader
-                  ~profiling
-                  ~check_result
-                  (file, line, column)
-              in
-              let documentation =
-                match getdef_loc_result with
-                | Error _ -> None
-                | Ok getdef_loc ->
-                  Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader getdef_loc
-                  |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
-              in
-              let json_props =
-                ("documentation", Hh_json.JSON_Bool (Base.Option.is_some documentation))
-                :: add_cache_hit_data_to_json type_at_pos_json_props did_hit_cache
-              in
-              let exact_by_default = Options.exact_by_default options in
-              let response =
-                ServerProt.Response.Infer_type_response { loc; ty; exact_by_default; documentation }
-              in
-              Lwt.return (Ok (response, Some (Hh_json.JSON_Object json_props)))
-          in
-          Lwt.return result
-      )
-    in
-    Lwt.return (split_result result)
+    try_with_json (fun () ->
+        let%lwt (file_artifacts_result, did_hit_cache) =
+          let%lwt parse_result = Type_contents.parse_contents ~options ~profiling content file in
+          type_parse_artifacts_with_cache
+            ~options
+            ~env
+            ~profiling
+            ~type_parse_artifacts_cache
+            file
+            parse_result
+        in
+        let%lwt result =
+          match file_artifacts_result with
+          | Error _parse_errors ->
+            let err_str = "Couldn't parse file in parse_artifacts" in
+            let json_props = add_cache_hit_data_to_json [] did_hit_cache in
+            Lwt.return (Error err_str, Some (Hh_json.JSON_Object json_props))
+          | Ok
+              ( (Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) as
+              check_result
+              ) ->
+            let ((loc, ty), type_at_pos_json_props) =
+              Type_info_service.type_at_pos
+                ~cx
+                ~file_sig
+                ~typed_ast
+                ~omit_targ_defaults
+                ~evaluate_type_destructors
+                ~max_depth
+                ~verbose_normalizer
+                file
+                line
+                column
+            in
+            let%lwt (getdef_loc_result, _) =
+              get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, column)
+            in
+            let documentation =
+              match getdef_loc_result with
+              | Error _ -> None
+              | Ok getdef_loc ->
+                Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader getdef_loc
+                |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
+            in
+            let json_props =
+              ("documentation", Hh_json.JSON_Bool (Base.Option.is_some documentation))
+              :: add_cache_hit_data_to_json type_at_pos_json_props did_hit_cache
+            in
+            let exact_by_default = Options.exact_by_default options in
+            let response =
+              ServerProt.Response.Infer_type_response { loc; ty; exact_by_default; documentation }
+            in
+            Lwt.return (Ok response, Some (Hh_json.JSON_Object json_props))
+        in
+        Lwt.return result
+    )
 
 let insert_type
     ~options
@@ -619,37 +611,32 @@ let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust 
     match File_input.content_of_file_input file_input with
     | Error e -> Lwt.return (Error e, None)
     | Ok content ->
-      let%lwt result =
-        try_with_json (fun () ->
-            let%lwt (file_artifacts_result, did_hit_cache) =
-              let%lwt parse_result =
-                Type_contents.parse_contents ~options ~profiling content file
-              in
-              type_parse_artifacts_with_cache
-                ~options
-                ~env
-                ~profiling
-                ~type_parse_artifacts_cache
-                file
-                parse_result
+      try_with_json (fun () ->
+          let%lwt (file_artifacts_result, did_hit_cache) =
+            let%lwt parse_result = Type_contents.parse_contents ~options ~profiling content file in
+            type_parse_artifacts_with_cache
+              ~options
+              ~env
+              ~profiling
+              ~type_parse_artifacts_cache
+              file
+              parse_result
+          in
+          let extra_data =
+            let json_props = add_cache_hit_data_to_json [] did_hit_cache in
+            Hh_json.JSON_Object json_props
+          in
+          match file_artifacts_result with
+          | Ok (_, Typecheck_artifacts { cx; typed_ast }) ->
+            let%lwt coverage =
+              Memory_utils.with_memory_timer_lwt ~options "Coverage" profiling (fun () ->
+                  Lwt.return (Type_info_service.coverage ~cx ~typed_ast ~force ~trust file content)
+              )
             in
-            let extra_data =
-              let json_props = add_cache_hit_data_to_json [] did_hit_cache in
-              Hh_json.JSON_Object json_props
-            in
-            match file_artifacts_result with
-            | Ok (_, Typecheck_artifacts { cx; typed_ast }) ->
-              let%lwt coverage =
-                Memory_utils.with_memory_timer_lwt ~options "Coverage" profiling (fun () ->
-                    Lwt.return (Type_info_service.coverage ~cx ~typed_ast ~force ~trust file content)
-                )
-              in
-              Lwt.return (Ok (coverage, Some extra_data))
-            | Error _parse_errors ->
-              Lwt.return (Error ("Couldn't parse file in parse_contents", Some extra_data))
-        )
-      in
-      Lwt.return (split_result result)
+            Lwt.return (Ok coverage, Some extra_data)
+          | Error _parse_errors ->
+            Lwt.return (Error "Couldn't parse file in parse_contents", Some extra_data)
+      )
 
 let batch_coverage ~options ~env ~trust ~batch =
   if Options.trust_mode options = Options.NoTrust && trust then
