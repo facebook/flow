@@ -144,3 +144,18 @@ declare var t24: T24;
 
 import { x as x25 } from './obj_rest';
 (x25: empty); // error number ~> empty
+
+import type { IndirectFrozenSuiteValues } from './frozen_obj';
+
+type FrozenSuiteValues =
+  | 'Diamonds'
+  | 'Clubs'
+  | 'Hearts'
+  | 'Spades'
+  | 'Extra Suite';
+
+declare var frozenSuitevalues: FrozenSuiteValues;
+(frozenSuitevalues: IndirectFrozenSuiteValues); // okay - due to OpenT indirection
+
+declare var indirectFrozenSuitevalues: IndirectFrozenSuiteValues;
+(indirectFrozenSuitevalues: FrozenSuiteValues); // okay

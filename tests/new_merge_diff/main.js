@@ -9,21 +9,6 @@ import typeof T3 from './export_error';
 // in new-merge, we no longer error here as we already error in export_error.js
 (0: T3);
 
-import type { IndirectFrozenSuiteValues } from './frozen_obj';
-
-type FrozenSuiteValues =
-  | 'Diamonds'
-  | 'Clubs'
-  | 'Hearts'
-  | 'Spades'
-  | 'Extra Suite';
-
-declare var frozenSuitevalues: FrozenSuiteValues;
-(frozenSuitevalues: IndirectFrozenSuiteValues); // error due to no OpenT indirection
-
-declare var indirectFrozenSuitevalues: IndirectFrozenSuiteValues;
-(indirectFrozenSuitevalues: FrozenSuiteValues); // okay
-
 import { p as p12 } from './recursive_module';
 (p12: empty); // okay - inferred as any
 
