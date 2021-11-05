@@ -1,0 +1,70 @@
+{
+  "method": "textDocument/documentHighlight",
+  "result": [
+    {
+      "range": {
+        "start": {
+          "line": 4,
+          "character": 2
+        },
+        "end": {
+          "line": 4,
+          "character": 5
+        }
+      },
+      "kind": 1
+    },
+    {
+      "range": {
+        "start": {
+          "line": 15,
+          "character": 10
+        },
+        "end": {
+          "line": 15,
+          "character": 13
+        }
+      },
+      "kind": 1
+    },
+    {
+      "range": {
+        "start": {
+          "line": 19,
+          "character": 8
+        },
+        "end": {
+          "line": 19,
+          "character": 11
+        }
+      },
+      "kind": 1
+    },
+    {
+      "range": {
+        "start": {
+          "line": 20,
+          "character": 8
+        },
+        "end": {
+          "line": 20,
+          "character": 11
+        }
+      },
+      "kind": 1
+    },
+    {
+      "range": {
+        "start": {
+          "line": 31,
+          "character": 14
+        },
+        "end": {
+          "line": 31,
+          "character": 17
+        }
+      },
+      "kind": 1
+    }
+  ]
+}
