@@ -2182,12 +2182,16 @@ let handle_live_errors_request =
   (* How do we know that we're responding to the latest request for a URI? Keep track of the
    * latest metadata object *)
   let uri_to_latest_metadata_map = ref SMap.empty in
+  let is_latest_metadata uri metadata =
+    match SMap.find_opt uri !uri_to_latest_metadata_map with
+    | Some latest_metadata -> latest_metadata = metadata
+    | None -> false
+  in
   fun ~options ~uri ~metadata ->
     (* Immediately store the latest metadata *)
     uri_to_latest_metadata_map := SMap.add uri metadata !uri_to_latest_metadata_map;
     fun ~client ~profiling ~env ->
-      let latest_metadata = SMap.find uri !uri_to_latest_metadata_map in
-      if latest_metadata <> metadata then
+      if not (is_latest_metadata uri metadata) then
         (* A more recent request for live errors has come in for this file. So let's cancel
          * this one and let the later one handle it *)
         Lwt.return
@@ -2305,10 +2309,8 @@ let handle_live_errors_request =
         in
         (* If we've successfully run and there isn't a more recent request for this URI,
          * then remove the entry from the map *)
-        (match SMap.find_opt uri !uri_to_latest_metadata_map with
-        | Some latest_metadata when latest_metadata = metadata ->
-          uri_to_latest_metadata_map := SMap.remove uri !uri_to_latest_metadata_map
-        | _ -> ());
+        if is_latest_metadata uri metadata then
+          uri_to_latest_metadata_map := SMap.remove uri !uri_to_latest_metadata_map;
         Lwt.return ret
 
 type persistent_command_handler =
