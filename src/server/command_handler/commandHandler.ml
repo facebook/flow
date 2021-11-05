@@ -228,78 +228,73 @@ let autocomplete
         Typecheck_artifacts { cx; typed_ast }
       ) ->
     Profiling_js.with_timer_lwt profiling ~timer:"GetResults" ~f:(fun () ->
-        try_with_json (fun () ->
-            let open AutocompleteService_js in
-            let (token_opt, (ac_type_string, results_res)) =
-              autocomplete_get_results
-                ~env
-                ~options
-                ~reader
-                ~cx
-                ~file_sig
-                ~ast
-                ~typed_ast
-                ~imports
-                trigger_character
-                cursor_loc
+        let open AutocompleteService_js in
+        let (token_opt, (ac_type_string, results_res)) =
+          autocomplete_get_results
+            ~env
+            ~options
+            ~reader
+            ~cx
+            ~file_sig
+            ~ast
+            ~typed_ast
+            ~imports
+            trigger_character
+            cursor_loc
+        in
+        let json_props_to_log =
+          ("ac_type", Hh_json.JSON_String ac_type_string)
+          ::
+          ("docblock", Docblock.json_of_docblock info)
+          ::
+          ( "token",
+            match token_opt with
+            | None -> Hh_json.JSON_Null
+            | Some token -> Hh_json.JSON_String token
+          )
+          :: initial_json_props
+        in
+        let (response, json_props_to_log) =
+          let open Hh_json in
+          match results_res with
+          | AcResult { result; errors_to_log } ->
+            let { ServerProt.Response.Completion.items; is_incomplete = _ } = result in
+            let result_string =
+              match (items, errors_to_log) with
+              | (_, []) -> "SUCCESS"
+              | ([], _ :: _) -> "FAILURE"
+              | (_ :: _, _ :: _) -> "PARTIAL"
             in
-            let json_props_to_log =
-              ("ac_type", Hh_json.JSON_String ac_type_string)
-              ::
-              ("docblock", Docblock.json_of_docblock info)
-              ::
-              ( "token",
-                match token_opt with
-                | None -> Hh_json.JSON_Null
-                | Some token -> Hh_json.JSON_String token
+            let at_least_one_result_has_documentation =
+              Base.List.exists items ~f:(fun ServerProt.Response.Completion.{ documentation; _ } ->
+                  Base.Option.is_some documentation
               )
-              :: initial_json_props
             in
-            let (response, json_props_to_log) =
-              let open Hh_json in
-              match results_res with
-              | AcResult { result; errors_to_log } ->
-                let { ServerProt.Response.Completion.items; is_incomplete = _ } = result in
-                let result_string =
-                  match (items, errors_to_log) with
-                  | (_, []) -> "SUCCESS"
-                  | ([], _ :: _) -> "FAILURE"
-                  | (_ :: _, _ :: _) -> "PARTIAL"
-                in
-                let at_least_one_result_has_documentation =
-                  Base.List.exists
-                    items
-                    ~f:(fun ServerProt.Response.Completion.{ documentation; _ } ->
-                      Base.Option.is_some documentation
-                  )
-                in
-                ( Ok (token_opt, result),
-                  ("result", JSON_String result_string)
-                  ::
-                  ("count", JSON_Number (items |> List.length |> string_of_int))
-                  ::
-                  ("errors", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) errors_to_log))
-                  ::
-                  ("documentation", JSON_Bool at_least_one_result_has_documentation)
-                  :: json_props_to_log
-                )
-              | AcEmpty reason ->
-                ( Ok
-                    (token_opt, { ServerProt.Response.Completion.items = []; is_incomplete = false }),
-                  ("result", JSON_String "SUCCESS")
-                  ::
-                  ("count", JSON_Number "0")
-                  :: ("empty_reason", JSON_String reason) :: json_props_to_log
-                )
-              | AcFatalError error ->
-                ( Error error,
-                  ("result", JSON_String "FAILURE")
-                  :: ("errors", JSON_Array [JSON_String error]) :: json_props_to_log
-                )
-            in
-            let json_props_to_log = fold_json_of_parse_errors parse_errors json_props_to_log in
-            Lwt.return (response, Some (Hh_json.JSON_Object json_props_to_log))
-        )
+            ( Ok (token_opt, result),
+              ("result", JSON_String result_string)
+              ::
+              ("count", JSON_Number (items |> List.length |> string_of_int))
+              ::
+              ("errors", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) errors_to_log))
+              ::
+              ("documentation", JSON_Bool at_least_one_result_has_documentation)
+              :: json_props_to_log
+            )
+          | AcEmpty reason ->
+            ( Ok (token_opt, { ServerProt.Response.Completion.items = []; is_incomplete = false }),
+              ("result", JSON_String "SUCCESS")
+              ::
+              ("count", JSON_Number "0")
+              :: ("empty_reason", JSON_String reason) :: json_props_to_log
+            )
+          | AcFatalError error ->
+            ( Error error,
+              ("result", JSON_String "FAILURE")
+              :: ("errors", JSON_Array [JSON_String error]) :: json_props_to_log
+            )
+        in
+        let json_props_to_log = fold_json_of_parse_errors parse_errors json_props_to_log in
+        Lwt.return (response, Some (Hh_json.JSON_Object json_props_to_log))
     )
 
 let check_file ~options ~env ~profiling ~force file_input =
@@ -334,37 +329,34 @@ let check_file ~options ~env ~profiling ~force file_input =
 (* This returns result, json_data_to_log, where json_data_to_log is the json data from
  * getdef_get_result which we end up using *)
 let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, col) =
-  let loc = Loc.cursor (Some file) line col in
-  let (Parse_artifacts { file_sig; parse_errors; _ }, Typecheck_artifacts { cx; typed_ast }) =
-    check_result
-  in
-  let file_sig = File_sig.abstractify_locs file_sig in
   Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
-      try_with_json (fun () ->
-          Lwt.return
-            ( GetDef_js.get_def ~options ~reader ~cx ~file_sig ~typed_ast loc |> fun result ->
-              let open GetDef_js.Get_def_result in
-              let json_props = fold_json_of_parse_errors parse_errors [] in
-              match result with
-              | Def loc -> (Ok loc, Some (("result", Hh_json.JSON_String "SUCCESS") :: json_props))
-              | Partial (loc, msg) ->
-                ( Ok loc,
-                  Some
-                    (("result", Hh_json.JSON_String "PARTIAL_FAILURE")
-                     :: ("error", Hh_json.JSON_String msg) :: json_props
-                    )
-                )
-              | Bad_loc ->
-                (Ok Loc.none, Some (("result", Hh_json.JSON_String "BAD_LOC") :: json_props))
-              | Def_error msg ->
-                ( Error msg,
-                  Some
-                    (("result", Hh_json.JSON_String "FAILURE")
-                     :: ("error", Hh_json.JSON_String msg) :: json_props
-                    )
+      let loc = Loc.cursor (Some file) line col in
+      let (Parse_artifacts { file_sig; parse_errors; _ }, Typecheck_artifacts { cx; typed_ast }) =
+        check_result
+      in
+      let file_sig = File_sig.abstractify_locs file_sig in
+      Lwt.return
+        ( GetDef_js.get_def ~options ~reader ~cx ~file_sig ~typed_ast loc |> fun result ->
+          let open GetDef_js.Get_def_result in
+          let json_props = fold_json_of_parse_errors parse_errors [] in
+          match result with
+          | Def loc -> (Ok loc, Some (("result", Hh_json.JSON_String "SUCCESS") :: json_props))
+          | Partial (loc, msg) ->
+            ( Ok loc,
+              Some
+                (("result", Hh_json.JSON_String "PARTIAL_FAILURE")
+                 :: ("error", Hh_json.JSON_String msg) :: json_props
                 )
             )
-      )
+          | Bad_loc -> (Ok Loc.none, Some (("result", Hh_json.JSON_String "BAD_LOC") :: json_props))
+          | Def_error msg ->
+            ( Error msg,
+              Some
+                (("result", Hh_json.JSON_String "FAILURE")
+                 :: ("error", Hh_json.JSON_String msg) :: json_props
+                )
+            )
+        )
   )
 
 type infer_type_input = {
@@ -400,62 +392,57 @@ let infer_type
   match File_input.content_of_file_input file_input with
   | Error e -> Lwt.return (Error e, None)
   | Ok content ->
-    try_with_json (fun () ->
-        let%lwt (file_artifacts_result, did_hit_cache) =
-          let%lwt parse_result = Type_contents.parse_contents ~options ~profiling content file in
-          type_parse_artifacts_with_cache
-            ~options
-            ~env
-            ~profiling
-            ~type_parse_artifacts_cache
-            file
-            parse_result
-        in
-        let%lwt result =
-          match file_artifacts_result with
-          | Error _parse_errors ->
-            let err_str = "Couldn't parse file in parse_artifacts" in
-            let json_props = add_cache_hit_data_to_json [] did_hit_cache in
-            Lwt.return (Error err_str, Some (Hh_json.JSON_Object json_props))
-          | Ok
-              ( (Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) as
-              check_result
-              ) ->
-            let ((loc, ty), type_at_pos_json_props) =
-              Type_info_service.type_at_pos
-                ~cx
-                ~file_sig
-                ~typed_ast
-                ~omit_targ_defaults
-                ~evaluate_type_destructors
-                ~max_depth
-                ~verbose_normalizer
-                file
-                line
-                column
-            in
-            let%lwt (getdef_loc_result, _) =
-              get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, column)
-            in
-            let documentation =
-              match getdef_loc_result with
-              | Error _ -> None
-              | Ok getdef_loc ->
-                Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader getdef_loc
-                |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
-            in
-            let json_props =
-              ("documentation", Hh_json.JSON_Bool (Base.Option.is_some documentation))
-              :: add_cache_hit_data_to_json type_at_pos_json_props did_hit_cache
-            in
-            let exact_by_default = Options.exact_by_default options in
-            let response =
-              ServerProt.Response.Infer_type_response { loc; ty; exact_by_default; documentation }
-            in
-            Lwt.return (Ok response, Some (Hh_json.JSON_Object json_props))
-        in
-        Lwt.return result
-    )
+    let%lwt (file_artifacts_result, did_hit_cache) =
+      let%lwt parse_result = Type_contents.parse_contents ~options ~profiling content file in
+      type_parse_artifacts_with_cache
+        ~options
+        ~env
+        ~profiling
+        ~type_parse_artifacts_cache
+        file
+        parse_result
+    in
+    (match file_artifacts_result with
+    | Error _parse_errors ->
+      let err_str = "Couldn't parse file in parse_artifacts" in
+      let json_props = add_cache_hit_data_to_json [] did_hit_cache in
+      Lwt.return (Error err_str, Some (Hh_json.JSON_Object json_props))
+    | Ok ((Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) as check_result)
+      ->
+      let ((loc, ty), type_at_pos_json_props) =
+        Type_info_service.type_at_pos
+          ~cx
+          ~file_sig
+          ~typed_ast
+          ~omit_targ_defaults
+          ~evaluate_type_destructors
+          ~max_depth
+          ~verbose_normalizer
+          file
+          line
+          column
+      in
+      let%lwt (getdef_loc_result, _) =
+        try_with_json (fun () ->
+            get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, column)
+        )
+      in
+      let documentation =
+        match getdef_loc_result with
+        | Error _ -> None
+        | Ok getdef_loc ->
+          Find_documentation.jsdoc_of_getdef_loc ~current_ast:typed_ast ~reader getdef_loc
+          |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
+      in
+      let json_props =
+        ("documentation", Hh_json.JSON_Bool (Base.Option.is_some documentation))
+        :: add_cache_hit_data_to_json type_at_pos_json_props did_hit_cache
+      in
+      let exact_by_default = Options.exact_by_default options in
+      let response =
+        ServerProt.Response.Infer_type_response { loc; ty; exact_by_default; documentation }
+      in
+      Lwt.return (Ok response, Some (Hh_json.JSON_Object json_props)))
 
 let insert_type
     ~options
@@ -611,32 +598,30 @@ let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust 
     match File_input.content_of_file_input file_input with
     | Error e -> Lwt.return (Error e, None)
     | Ok content ->
-      try_with_json (fun () ->
-          let%lwt (file_artifacts_result, did_hit_cache) =
-            let%lwt parse_result = Type_contents.parse_contents ~options ~profiling content file in
-            type_parse_artifacts_with_cache
-              ~options
-              ~env
-              ~profiling
-              ~type_parse_artifacts_cache
-              file
-              parse_result
-          in
-          let extra_data =
-            let json_props = add_cache_hit_data_to_json [] did_hit_cache in
-            Hh_json.JSON_Object json_props
-          in
-          match file_artifacts_result with
-          | Ok (_, Typecheck_artifacts { cx; typed_ast }) ->
-            let%lwt coverage =
-              Memory_utils.with_memory_timer_lwt ~options "Coverage" profiling (fun () ->
-                  Lwt.return (Type_info_service.coverage ~cx ~typed_ast ~force ~trust file content)
-              )
-            in
-            Lwt.return (Ok coverage, Some extra_data)
-          | Error _parse_errors ->
-            Lwt.return (Error "Couldn't parse file in parse_contents", Some extra_data)
-      )
+      let%lwt (file_artifacts_result, did_hit_cache) =
+        let%lwt parse_result = Type_contents.parse_contents ~options ~profiling content file in
+        type_parse_artifacts_with_cache
+          ~options
+          ~env
+          ~profiling
+          ~type_parse_artifacts_cache
+          file
+          parse_result
+      in
+      let extra_data =
+        let json_props = add_cache_hit_data_to_json [] did_hit_cache in
+        Hh_json.JSON_Object json_props
+      in
+      (match file_artifacts_result with
+      | Ok (_, Typecheck_artifacts { cx; typed_ast }) ->
+        let%lwt coverage =
+          Memory_utils.with_memory_timer_lwt ~options "Coverage" profiling (fun () ->
+              Lwt.return (Type_info_service.coverage ~cx ~typed_ast ~force ~trust file content)
+          )
+        in
+        Lwt.return (Ok coverage, Some extra_data)
+      | Error _parse_errors ->
+        Lwt.return (Error "Couldn't parse file in parse_contents", Some extra_data))
 
 let batch_coverage ~options ~env ~trust ~batch =
   if Options.trust_mode options = Options.NoTrust && trust then
@@ -834,16 +819,18 @@ let save_state ~saved_state_filename ~genv ~env ~profiling =
 let handle_autocomplete
     ~trigger_character ~reader ~options ~profiling ~env ~filename ~contents ~cursor ~imports =
   let%lwt (result, json_data) =
-    autocomplete
-      ~trigger_character
-      ~reader
-      ~options
-      ~env
-      ~profiling
-      ~filename
-      ~contents
-      ~cursor
-      ~imports
+    try_with_json (fun () ->
+        autocomplete
+          ~trigger_character
+          ~reader
+          ~options
+          ~env
+          ~profiling
+          ~filename
+          ~contents
+          ~cursor
+          ~imports
+    )
   in
   let result = Base.Result.map result ~f:snd in
   Lwt.return (ServerProt.Response.AUTOCOMPLETE result, json_data)
@@ -857,10 +844,12 @@ let handle_check_file ~options ~force ~input ~profiling ~env =
   Lwt.return (ServerProt.Response.CHECK_FILE response, None)
 
 let handle_coverage ~options ~force ~input ~trust ~profiling ~env =
-  let%lwt (response, _extra_data) =
-    coverage ~options ~env ~profiling ~type_parse_artifacts_cache:None ~force ~trust input
+  let%lwt (response, json_data) =
+    try_with_json (fun () ->
+        coverage ~options ~env ~profiling ~type_parse_artifacts_cache:None ~force ~trust input
+    )
   in
-  Lwt.return (ServerProt.Response.COVERAGE response, None)
+  Lwt.return (ServerProt.Response.COVERAGE response, json_data)
 
 let handle_batch_coverage ~options ~profiling:_ ~env ~batch ~trust =
   let%lwt response = batch_coverage ~options ~env ~batch ~trust in
@@ -910,7 +899,15 @@ let handle_force_recheck ~files ~focus ~profile ~profiling =
 
 let handle_get_def ~reader ~options ~filename ~line ~char ~profiling ~env =
   let%lwt (result, json_data) =
-    get_def ~reader ~options ~env ~profiling ~type_parse_artifacts_cache:None (filename, line, char)
+    try_with_json (fun () ->
+        get_def
+          ~reader
+          ~options
+          ~env
+          ~profiling
+          ~type_parse_artifacts_cache:None
+          (filename, line, char)
+    )
   in
   Lwt.return (ServerProt.Response.GET_DEF result, json_data)
 
@@ -947,7 +944,9 @@ let handle_infer_type
     }
   in
   let%lwt (result, json_data) =
-    infer_type ~options ~reader ~env ~profiling ~type_parse_artifacts_cache:None input
+    try_with_json (fun () ->
+        infer_type ~options ~reader ~env ~profiling ~type_parse_artifacts_cache:None input
+    )
   in
   Lwt.return (ServerProt.Response.INFER_TYPE result, json_data)
 
