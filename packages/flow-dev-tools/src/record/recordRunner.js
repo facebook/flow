@@ -199,37 +199,42 @@ async function runner(args: Args): Promise<void> {
           ) {
             const result = stepResult.assertionResults[assertionNum];
             if (result.type === 'fail') {
-              const assertLoc = result.assertLoc;
-              if (assertLoc) {
-                let filename = assertLoc.filename;
-                if (!isAbsolute(filename)) {
-                  const filename = join(
-                    getTestsDir(),
-                    suiteName,
-                    assertLoc.filename,
-                  );
-                }
-                const code = await readFile(filename);
-                const ast = parser.parse(code, {});
-                const range =
-                  assertLoc &&
-                  dfsForRange(ast, assertLoc.line, assertLoc.column);
-                if (range) {
-                  const [start, end] = range;
-                  const out =
-                    code.slice(0, start) +
-                    suggestionToString(result.suggestion, assertLoc.column) +
-                    code.slice(end);
-                  await writeFile(filename, out);
+              const suggestion = result.suggestion;
+              if (suggestion.method) {
+                const assertLoc = result.assertLoc;
+                if (assertLoc) {
+                  let filename = assertLoc.filename;
+                  if (!isAbsolute(filename)) {
+                    filename = join(getTestsDir(), suiteName, filename);
+                  }
+                  const code = await readFile(filename);
+                  const ast = parser.parse(code, {});
+                  const range =
+                    assertLoc &&
+                    dfsForRange(ast, assertLoc.line, assertLoc.column);
+                  if (range) {
+                    const [start, end] = range;
+                    const out =
+                      code.slice(0, start) +
+                      suggestionToString(suggestion, assertLoc.column) +
+                      code.slice(end);
+                    await writeFile(filename, out);
+                  } else {
+                    process.stderr.write(
+                      'Could not find the assertion in the code\n',
+                    );
+                  }
                 } else {
                   process.stderr.write(
-                    'Could not find the assertion in the code\n',
+                    'Could not find the assertion in the stack\n',
                   );
                 }
-              } else {
-                process.stderr.write(
-                  'Could not find the assertion in the stack\n',
-                );
+              } else if (suggestion.file) {
+                let filename = suggestion.file;
+                if (!isAbsolute(filename)) {
+                  filename = join(getTestsDir(), suiteName, filename);
+                }
+                await writeFile(filename, suggestion.contents);
               }
             }
           }
