@@ -797,9 +797,8 @@ end
 (** proposed for 3.17: https://github.com/microsoft/vscode/issues/39441 *)
 module CompletionItemLabelDetails = struct
   type t = {
-    parameters: string option;
-    qualifier: string option;
-    type_: string option;
+    description: string option;
+    detail: string option;
   }
 end
 

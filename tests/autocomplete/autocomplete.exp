@@ -484,7 +484,7 @@ member_class_property.js:8:5
 Flags: --lsp
 {
   "label":"baz",
-  "labelDetails":{"type":"string"},
+  "labelDetails":{"detail":"string"},
   "kind":6,
   "detail":"string",
   "sortText":"00000000000000000000",
@@ -501,7 +501,7 @@ Flags: --lsp
 }
 {
   "label":"hasOwnProperty",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -526,7 +526,7 @@ Flags: --lsp
 }
 {
   "label":"isPrototypeOf",
-  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "labelDetails":{"detail":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -551,7 +551,7 @@ Flags: --lsp
 }
 {
   "label":"propertyIsEnumerable",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -576,7 +576,7 @@ Flags: --lsp
 }
 {
   "label":"toLocaleString",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -601,7 +601,7 @@ Flags: --lsp
 }
 {
   "label":"toString",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -619,7 +619,7 @@ Flags: --lsp
 }
 {
   "label":"valueOf",
-  "labelDetails":{"type":"() => mixed"},
+  "labelDetails":{"detail":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -664,7 +664,7 @@ member_interface_property.js:9:5
 Flags: --lsp
 {
   "label":"bar",
-  "labelDetails":{"type":"string"},
+  "labelDetails":{"detail":"string"},
   "kind":6,
   "detail":"string",
   "sortText":"00000000000000000000",
@@ -681,7 +681,7 @@ Flags: --lsp
 }
 {
   "label":"baz",
-  "labelDetails":{"type":"string"},
+  "labelDetails":{"detail":"string"},
   "kind":6,
   "detail":"string",
   "sortText":"00000000000000000000",
@@ -698,7 +698,7 @@ Flags: --lsp
 }
 {
   "label":"hasOwnProperty",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -723,7 +723,7 @@ Flags: --lsp
 }
 {
   "label":"isPrototypeOf",
-  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "labelDetails":{"detail":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -748,7 +748,7 @@ Flags: --lsp
 }
 {
   "label":"propertyIsEnumerable",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -773,7 +773,7 @@ Flags: --lsp
 }
 {
   "label":"toLocaleString",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -798,7 +798,7 @@ Flags: --lsp
 }
 {
   "label":"toString",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -816,7 +816,7 @@ Flags: --lsp
 }
 {
   "label":"valueOf",
-  "labelDetails":{"type":"() => mixed"},
+  "labelDetails":{"detail":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -1910,7 +1910,7 @@ Flags: --lsp
 }
 {
   "label":"Typesafe",
-  "labelDetails":{"type":"interface Typesafety"},
+  "labelDetails":{"detail":"interface Typesafety"},
   "kind":8,
   "detail":"interface Typesafety",
   "sortText":"00000000000000000000",
@@ -1931,7 +1931,7 @@ Flags: --lsp
 }
 {
   "label":"Typhoon",
-  "labelDetails":{"type":"type Typhoon = string"},
+  "labelDetails":{"detail":"type Typhoon = string"},
   "kind":13,
   "detail":"type Typhoon = string",
   "sortText":"00000000000000000000",
@@ -1952,7 +1952,7 @@ Flags: --lsp
 }
 {
   "label":"Typnotism",
-  "labelDetails":{"type":"type Typnotism = number"},
+  "labelDetails":{"detail":"type Typnotism = number"},
   "kind":13,
   "detail":"type Typnotism = number",
   "sortText":"00000000000000000000",
@@ -1973,7 +1973,7 @@ Flags: --lsp
 }
 {
   "label":"Tyrant",
-  "labelDetails":{"type":"type Tyrant = string"},
+  "labelDetails":{"detail":"type Tyrant = string"},
   "kind":13,
   "detail":"type Tyrant = string",
   "sortText":"00000000000000000000",
@@ -1994,7 +1994,7 @@ Flags: --lsp
 }
 {
   "label":"Tympanic",
-  "labelDetails":{"type":"type Tympanic = number"},
+  "labelDetails":{"detail":"type Tympanic = number"},
   "kind":13,
   "detail":"type Tympanic = number",
   "sortText":"00000000000000000000",
@@ -2015,7 +2015,7 @@ Flags: --lsp
 }
 {
   "label":"Typeset",
-  "labelDetails":{"type":"interface Typeset"},
+  "labelDetails":{"detail":"interface Typeset"},
   "kind":8,
   "detail":"interface Typeset",
   "sortText":"00000000000000000000",
@@ -2056,7 +2056,7 @@ Flags: --lsp
 }
 {
   "label":"Typewriter",
-  "labelDetails":{"type":"class Typewriter"},
+  "labelDetails":{"detail":"class Typewriter"},
   "kind":7,
   "detail":"class Typewriter",
   "sortText":"00000000000000000000",
@@ -2077,7 +2077,7 @@ Flags: --lsp
 }
 {
   "label":"Typography",
-  "labelDetails":{"type":"class Typewriter"},
+  "labelDetails":{"detail":"class Typewriter"},
   "kind":7,
   "detail":"class Typewriter",
   "sortText":"00000000000000000000",
@@ -2293,7 +2293,7 @@ rank.js:7:11
 Flags: --lsp
 {
   "label":"hasOwnProperty",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -2318,7 +2318,7 @@ Flags: --lsp
 }
 {
   "label":"isPrototypeOf",
-  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "labelDetails":{"detail":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -2343,7 +2343,7 @@ Flags: --lsp
 }
 {
   "label":"propertyIsEnumerable",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -2368,7 +2368,7 @@ Flags: --lsp
 }
 {
   "label":"toLocaleString",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -2393,7 +2393,7 @@ Flags: --lsp
 }
 {
   "label":"toString",
-  "labelDetails":{"type":"number"},
+  "labelDetails":{"detail":"number"},
   "kind":6,
   "detail":"number",
   "sortText":"00000000000000000000",
@@ -2410,7 +2410,7 @@ Flags: --lsp
 }
 {
   "label":"valueOf",
-  "labelDetails":{"type":"() => mixed"},
+  "labelDetails":{"detail":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -2434,7 +2434,7 @@ rank_union.js:8:3
 Flags: --lsp
 {
   "label":"hasOwnProperty",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -2459,7 +2459,7 @@ Flags: --lsp
 }
 {
   "label":"isPrototypeOf",
-  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "labelDetails":{"detail":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -2484,7 +2484,7 @@ Flags: --lsp
 }
 {
   "label":"propertyIsEnumerable",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -2509,7 +2509,7 @@ Flags: --lsp
 }
 {
   "label":"toLocaleString",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -2534,7 +2534,7 @@ Flags: --lsp
 }
 {
   "label":"toString",
-  "labelDetails":{"type":"(() => string) | number"},
+  "labelDetails":{"detail":"(() => string) | number"},
   "kind":13,
   "detail":"(() => string) | number",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -2552,7 +2552,7 @@ Flags: --lsp
 }
 {
   "label":"valueOf",
-  "labelDetails":{"type":"() => mixed"},
+  "labelDetails":{"detail":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -2576,7 +2576,7 @@ rank_intersection.js:8:3
 Flags: --lsp
 {
   "label":"hasOwnProperty",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -2601,7 +2601,7 @@ Flags: --lsp
 }
 {
   "label":"isPrototypeOf",
-  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "labelDetails":{"detail":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -2626,7 +2626,7 @@ Flags: --lsp
 }
 {
   "label":"propertyIsEnumerable",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -2651,7 +2651,7 @@ Flags: --lsp
 }
 {
   "label":"toLocaleString",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -2676,7 +2676,7 @@ Flags: --lsp
 }
 {
   "label":"toString",
-  "labelDetails":{"type":"(() => string) & number"},
+  "labelDetails":{"detail":"(() => string) & number"},
   "kind":6,
   "detail":"(() => string) & number",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -2694,7 +2694,7 @@ Flags: --lsp
 }
 {
   "label":"valueOf",
-  "labelDetails":{"type":"() => mixed"},
+  "labelDetails":{"detail":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -2718,7 +2718,7 @@ suggest_optional_chaining_1.js:4:3
 Flags: --lsp
 {
   "label":"?.foo",
-  "labelDetails":{"type":"void | string"},
+  "labelDetails":{"detail":"void | string"},
   "kind":13,
   "detail":"void | string",
   "sortText":"00000000000000000000",
@@ -2739,7 +2739,7 @@ Flags: --lsp
 }
 {
   "label":"?.hasOwnProperty",
-  "labelDetails":{"type":"void | ((prop: mixed) => boolean)"},
+  "labelDetails":{"detail":"void | ((prop: mixed) => boolean)"},
   "kind":13,
   "detail":"void | ((prop: mixed) => boolean)",
   "documentation":{
@@ -2764,7 +2764,7 @@ Flags: --lsp
 }
 {
   "label":"?.isPrototypeOf",
-  "labelDetails":{"type":"void | ((o: mixed) => boolean)"},
+  "labelDetails":{"detail":"void | ((o: mixed) => boolean)"},
   "kind":13,
   "detail":"void | ((o: mixed) => boolean)",
   "documentation":{
@@ -2789,7 +2789,7 @@ Flags: --lsp
 }
 {
   "label":"?.propertyIsEnumerable",
-  "labelDetails":{"type":"void | ((prop: mixed) => boolean)"},
+  "labelDetails":{"detail":"void | ((prop: mixed) => boolean)"},
   "kind":13,
   "detail":"void | ((prop: mixed) => boolean)",
   "documentation":{
@@ -2814,7 +2814,7 @@ Flags: --lsp
 }
 {
   "label":"?.toLocaleString",
-  "labelDetails":{"type":"void | (() => string)"},
+  "labelDetails":{"detail":"void | (() => string)"},
   "kind":13,
   "detail":"void | (() => string)",
   "documentation":{
@@ -2839,7 +2839,7 @@ Flags: --lsp
 }
 {
   "label":"?.toString",
-  "labelDetails":{"type":"void | (() => string)"},
+  "labelDetails":{"detail":"void | (() => string)"},
   "kind":13,
   "detail":"void | (() => string)",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -2861,7 +2861,7 @@ Flags: --lsp
 }
 {
   "label":"?.valueOf",
-  "labelDetails":{"type":"void | (() => mixed)"},
+  "labelDetails":{"detail":"void | (() => mixed)"},
   "kind":13,
   "detail":"void | (() => mixed)",
   "documentation":{
@@ -2889,7 +2889,7 @@ suggest_optional_chaining_2.js:4:3
 Flags: --lsp
 {
   "label":"?.bar",
-  "labelDetails":{"type":"void | number"},
+  "labelDetails":{"detail":"void | number"},
   "kind":13,
   "detail":"void | number",
   "sortText":"00000000000000000000",
@@ -2910,7 +2910,7 @@ Flags: --lsp
 }
 {
   "label":"foo",
-  "labelDetails":{"type":"string"},
+  "labelDetails":{"detail":"string"},
   "kind":6,
   "detail":"string",
   "sortText":"00000000000000000000",
@@ -2927,7 +2927,7 @@ Flags: --lsp
 }
 {
   "label":"hasOwnProperty",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -2952,7 +2952,7 @@ Flags: --lsp
 }
 {
   "label":"isPrototypeOf",
-  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "labelDetails":{"detail":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -2977,7 +2977,7 @@ Flags: --lsp
 }
 {
   "label":"propertyIsEnumerable",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -3002,7 +3002,7 @@ Flags: --lsp
 }
 {
   "label":"toLocaleString",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -3027,7 +3027,7 @@ Flags: --lsp
 }
 {
   "label":"toString",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -3045,7 +3045,7 @@ Flags: --lsp
 }
 {
   "label":"valueOf",
-  "labelDetails":{"type":"() => mixed"},
+  "labelDetails":{"detail":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -3069,7 +3069,7 @@ suggest_optional_chaining_3.js:4:3
 Flags: --lsp
 {
   "label":"?.foo",
-  "labelDetails":{"type":"void | number | string"},
+  "labelDetails":{"detail":"void | number | string"},
   "kind":13,
   "detail":"void | number | string",
   "sortText":"00000000000000000000",
@@ -3090,7 +3090,7 @@ Flags: --lsp
 }
 {
   "label":"hasOwnProperty",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -3115,7 +3115,7 @@ Flags: --lsp
 }
 {
   "label":"isPrototypeOf",
-  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "labelDetails":{"detail":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -3140,7 +3140,7 @@ Flags: --lsp
 }
 {
   "label":"propertyIsEnumerable",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -3165,7 +3165,7 @@ Flags: --lsp
 }
 {
   "label":"toLocaleString",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -3190,7 +3190,7 @@ Flags: --lsp
 }
 {
   "label":"toString",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -3208,7 +3208,7 @@ Flags: --lsp
 }
 {
   "label":"valueOf",
-  "labelDetails":{"type":"() => mixed"},
+  "labelDetails":{"detail":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -3232,7 +3232,7 @@ enums.js:10:3
 Flags: --lsp
 {
   "label":"Bar",
-  "labelDetails":{"type":"E"},
+  "labelDetails":{"detail":"E"},
   "kind":6,
   "detail":"E",
   "sortText":"00000000000000000000",
@@ -3249,7 +3249,7 @@ Flags: --lsp
 }
 {
   "label":"Foo",
-  "labelDetails":{"type":"E"},
+  "labelDetails":{"detail":"E"},
   "kind":6,
   "detail":"E",
   "sortText":"00000000000000000000",
@@ -3266,7 +3266,7 @@ Flags: --lsp
 }
 {
   "label":"cast",
-  "labelDetails":{"type":"(input: ?string) => (void | E)"},
+  "labelDetails":{"detail":"(input: ?string) => (void | E)"},
   "kind":3,
   "detail":"(input: ?string) => (void | E)",
   "sortText":"00000000000000000001",
@@ -3283,7 +3283,7 @@ Flags: --lsp
 }
 {
   "label":"getName",
-  "labelDetails":{"type":"(input: E) => string"},
+  "labelDetails":{"detail":"(input: E) => string"},
   "kind":3,
   "detail":"(input: E) => string",
   "sortText":"00000000000000000001",
@@ -3300,7 +3300,7 @@ Flags: --lsp
 }
 {
   "label":"isValid",
-  "labelDetails":{"type":"(input: ?string) => boolean"},
+  "labelDetails":{"detail":"(input: ?string) => boolean"},
   "kind":3,
   "detail":"(input: ?string) => boolean",
   "sortText":"00000000000000000001",
@@ -3317,7 +3317,7 @@ Flags: --lsp
 }
 {
   "label":"members",
-  "labelDetails":{"type":"() => Iterator<E>"},
+  "labelDetails":{"detail":"() => Iterator<E>"},
   "kind":3,
   "detail":"() => Iterator<E>",
   "sortText":"00000000000000000001",
@@ -3362,7 +3362,7 @@ jsdoc.js:15:4
 Flags: --lsp
 {
   "label":"Bar",
-  "labelDetails":{"type":"class Bar"},
+  "labelDetails":{"detail":"class Bar"},
   "kind":7,
   "detail":"class Bar",
   "documentation":{"kind":"markdown","value":"the class Bar"},
@@ -3384,7 +3384,7 @@ Flags: --lsp
 }
 {
   "label":"BooleanEnum",
-  "labelDetails":{"type":"enum BooleanEnum"},
+  "labelDetails":{"detail":"enum BooleanEnum"},
   "kind":13,
   "detail":"enum BooleanEnum",
   "documentation":{"kind":"markdown","value":"a boolean enum"},
@@ -3406,7 +3406,7 @@ Flags: --lsp
 }
 {
   "label":"DefaultedStringEnum",
-  "labelDetails":{"type":"enum DefaultedStringEnum"},
+  "labelDetails":{"detail":"enum DefaultedStringEnum"},
   "kind":13,
   "detail":"enum DefaultedStringEnum",
   "documentation":{"kind":"markdown","value":"a defaulted string enum"},
@@ -3428,7 +3428,7 @@ Flags: --lsp
 }
 {
   "label":"InitializedStringEnum",
-  "labelDetails":{"type":"enum InitializedStringEnum"},
+  "labelDetails":{"detail":"enum InitializedStringEnum"},
   "kind":13,
   "detail":"enum InitializedStringEnum",
   "documentation":{"kind":"markdown","value":"an initialized string enum"},
@@ -3450,7 +3450,7 @@ Flags: --lsp
 }
 {
   "label":"NumberEnum",
-  "labelDetails":{"type":"enum NumberEnum"},
+  "labelDetails":{"detail":"enum NumberEnum"},
   "kind":13,
   "detail":"enum NumberEnum",
   "documentation":{"kind":"markdown","value":"a number enum"},
@@ -3472,7 +3472,7 @@ Flags: --lsp
 }
 {
   "label":"SymbolEnum",
-  "labelDetails":{"type":"enum SymbolEnum"},
+  "labelDetails":{"detail":"enum SymbolEnum"},
   "kind":13,
   "detail":"enum SymbolEnum",
   "documentation":{"kind":"markdown","value":"a symbol enum"},
@@ -3494,7 +3494,7 @@ Flags: --lsp
 }
 {
   "label":"baz",
-  "labelDetails":{"type":"number"},
+  "labelDetails":{"detail":"number"},
   "kind":6,
   "detail":"number",
   "documentation":{"kind":"markdown","value":"the variable baz"},
@@ -3516,7 +3516,7 @@ Flags: --lsp
 }
 {
   "label":"foo",
-  "labelDetails":{"type":"() => void"},
+  "labelDetails":{"detail":"() => void"},
   "kind":3,
   "detail":"() => void",
   "documentation":{"kind":"markdown","value":"the function foo"},
@@ -3538,7 +3538,7 @@ Flags: --lsp
 }
 {
   "label":"qux",
-  "labelDetails":{"type":"number"},
+  "labelDetails":{"detail":"number"},
   "kind":6,
   "detail":"number",
   "documentation":{
@@ -3563,7 +3563,7 @@ Flags: --lsp
 }
 {
   "label":"x",
-  "labelDetails":{"type":"() => void"},
+  "labelDetails":{"detail":"() => void"},
   "kind":3,
   "detail":"() => void",
   "documentation":{"kind":"markdown","value":"a JSDoc in the same file"},
@@ -3588,7 +3588,7 @@ jsdoc-members-1.js:43:5
 Flags: --lsp
 {
   "label":"a",
-  "labelDetails":{"type":"number"},
+  "labelDetails":{"detail":"number"},
   "kind":6,
   "detail":"number",
   "documentation":{"kind":"markdown","value":"identifier property of an object literal"},
@@ -3606,7 +3606,7 @@ Flags: --lsp
 }
 {
   "label":"b",
-  "labelDetails":{"type":"number"},
+  "labelDetails":{"detail":"number"},
   "kind":6,
   "detail":"number",
   "documentation":{"kind":"markdown","value":"literal property of an object literal"},
@@ -3624,7 +3624,7 @@ Flags: --lsp
 }
 {
   "label":"c",
-  "labelDetails":{"type":"number"},
+  "labelDetails":{"detail":"number"},
   "kind":6,
   "detail":"number",
   "documentation":{"kind":"markdown","value":"computed property of an object literal"},
@@ -3642,7 +3642,7 @@ Flags: --lsp
 }
 {
   "label":"d",
-  "labelDetails":{"type":"number"},
+  "labelDetails":{"detail":"number"},
   "kind":6,
   "detail":"number",
   "documentation":{"kind":"markdown","value":"annotated getter property of an object literal"},
@@ -3660,7 +3660,7 @@ Flags: --lsp
 }
 {
   "label":"e",
-  "labelDetails":{"type":"void"},
+  "labelDetails":{"detail":"void"},
   "kind":6,
   "detail":"void",
   "sortText":"00000000000000000000",
@@ -3677,7 +3677,7 @@ Flags: --lsp
 }
 {
   "label":"f",
-  "labelDetails":{"type":"() => void"},
+  "labelDetails":{"detail":"() => void"},
   "kind":3,
   "detail":"() => void",
   "documentation":{"kind":"markdown","value":"method property of an object literal"},
@@ -3695,7 +3695,7 @@ Flags: --lsp
 }
 {
   "label":"g",
-  "labelDetails":{"type":"() => Promise<void>"},
+  "labelDetails":{"detail":"() => Promise<void>"},
   "kind":3,
   "detail":"() => Promise<void>",
   "documentation":{"kind":"markdown","value":"async method property of an object literal"},
@@ -3713,7 +3713,7 @@ Flags: --lsp
 }
 {
   "label":"h",
-  "labelDetails":{"type":"number"},
+  "labelDetails":{"detail":"number"},
   "kind":6,
   "detail":"number",
   "documentation":{
@@ -3734,7 +3734,7 @@ Flags: --lsp
 }
 {
   "label":"hasOwnProperty",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -3759,7 +3759,7 @@ Flags: --lsp
 }
 {
   "label":"isPrototypeOf",
-  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "labelDetails":{"detail":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -3784,7 +3784,7 @@ Flags: --lsp
 }
 {
   "label":"propertyIsEnumerable",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -3809,7 +3809,7 @@ Flags: --lsp
 }
 {
   "label":"toLocaleString",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -3834,7 +3834,7 @@ Flags: --lsp
 }
 {
   "label":"toString",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -3852,7 +3852,7 @@ Flags: --lsp
 }
 {
   "label":"valueOf",
-  "labelDetails":{"type":"() => mixed"},
+  "labelDetails":{"detail":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -3876,7 +3876,7 @@ jsdoc-members-2.js:5:17
 Flags: --lsp
 {
   "label":"bar",
-  "labelDetails":{"type":"2"},
+  "labelDetails":{"detail":"2"},
   "kind":12,
   "detail":"2",
   "documentation":{"kind":"markdown","value":"bar is a getter property"},
@@ -3894,7 +3894,7 @@ Flags: --lsp
 }
 {
   "label":"baz",
-  "labelDetails":{"type":"3"},
+  "labelDetails":{"detail":"3"},
   "kind":12,
   "detail":"3",
   "documentation":{"kind":"markdown","value":"baz is an identifier property with variance"},
@@ -3912,7 +3912,7 @@ Flags: --lsp
 }
 {
   "label":"foo",
-  "labelDetails":{"type":"1"},
+  "labelDetails":{"detail":"1"},
   "kind":12,
   "detail":"1",
   "documentation":{"kind":"markdown","value":"foo is an identifier property"},
@@ -3930,7 +3930,7 @@ Flags: --lsp
 }
 {
   "label":"qux",
-  "labelDetails":{"type":"4"},
+  "labelDetails":{"detail":"4"},
   "kind":12,
   "detail":"4",
   "documentation":{"kind":"markdown","value":"qux is a literal property"},
@@ -3951,7 +3951,7 @@ jsdoc-members-3.js:5:20
 Flags: --lsp
 {
   "label":"bar",
-  "labelDetails":{"type":"2"},
+  "labelDetails":{"detail":"2"},
   "kind":12,
   "detail":"2",
   "documentation":{"kind":"markdown","value":"bar is a getter property"},
@@ -3969,7 +3969,7 @@ Flags: --lsp
 }
 {
   "label":"baz",
-  "labelDetails":{"type":"3"},
+  "labelDetails":{"detail":"3"},
   "kind":12,
   "detail":"3",
   "documentation":{"kind":"markdown","value":"baz is an identifier property with variance"},
@@ -3987,7 +3987,7 @@ Flags: --lsp
 }
 {
   "label":"foo",
-  "labelDetails":{"type":"1"},
+  "labelDetails":{"detail":"1"},
   "kind":12,
   "detail":"1",
   "documentation":{"kind":"markdown","value":"foo is an identifier property"},
@@ -4005,7 +4005,7 @@ Flags: --lsp
 }
 {
   "label":"qux",
-  "labelDetails":{"type":"4"},
+  "labelDetails":{"detail":"4"},
   "kind":12,
   "detail":"4",
   "documentation":{"kind":"markdown","value":"qux is a literal property"},
@@ -4026,7 +4026,7 @@ jsdoc-members-4.js:5:5
 Flags: --lsp
 {
   "label":"apply",
-  "labelDetails":{"type":"(thisArg: any, argArray?: any) => any"},
+  "labelDetails":{"detail":"(thisArg: any, argArray?: any) => any"},
   "kind":3,
   "detail":"(thisArg: any, argArray?: any) => any",
   "sortText":"00000000000000000001",
@@ -4043,7 +4043,7 @@ Flags: --lsp
 }
 {
   "label":"arguments",
-  "labelDetails":{"type":"any"},
+  "labelDetails":{"detail":"any"},
   "kind":6,
   "detail":"any",
   "sortText":"00000000000000000000",
@@ -4060,7 +4060,7 @@ Flags: --lsp
 }
 {
   "label":"bind",
-  "labelDetails":{"type":"(thisArg: any, ...argArray: Array<any>) => any"},
+  "labelDetails":{"detail":"(thisArg: any, ...argArray: Array<any>) => any"},
   "kind":3,
   "detail":"(thisArg: any, ...argArray: Array<any>) => any",
   "sortText":"00000000000000000001",
@@ -4077,7 +4077,7 @@ Flags: --lsp
 }
 {
   "label":"call",
-  "labelDetails":{"type":"(thisArg: any, ...argArray: Array<any>) => any"},
+  "labelDetails":{"detail":"(thisArg: any, ...argArray: Array<any>) => any"},
   "kind":3,
   "detail":"(thisArg: any, ...argArray: Array<any>) => any",
   "sortText":"00000000000000000001",
@@ -4094,7 +4094,7 @@ Flags: --lsp
 }
 {
   "label":"caller",
-  "labelDetails":{"type":"any | null"},
+  "labelDetails":{"detail":"any | null"},
   "kind":13,
   "detail":"any | null",
   "sortText":"00000000000000000000",
@@ -4111,7 +4111,7 @@ Flags: --lsp
 }
 {
   "label":"hasOwnProperty",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -4136,7 +4136,7 @@ Flags: --lsp
 }
 {
   "label":"isPrototypeOf",
-  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "labelDetails":{"detail":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -4161,7 +4161,7 @@ Flags: --lsp
 }
 {
   "label":"length",
-  "labelDetails":{"type":"number"},
+  "labelDetails":{"detail":"number"},
   "kind":6,
   "detail":"number",
   "sortText":"00000000000000000000",
@@ -4178,7 +4178,7 @@ Flags: --lsp
 }
 {
   "label":"name",
-  "labelDetails":{"type":"string"},
+  "labelDetails":{"detail":"string"},
   "kind":6,
   "detail":"string",
   "documentation":{
@@ -4199,7 +4199,7 @@ Flags: --lsp
 }
 {
   "label":"propertyIsEnumerable",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -4224,7 +4224,7 @@ Flags: --lsp
 }
 {
   "label":"staticMethod",
-  "labelDetails":{"type":"() => void"},
+  "labelDetails":{"detail":"() => void"},
   "kind":3,
   "detail":"() => void",
   "documentation":{"kind":"markdown","value":"this is a static method"},
@@ -4242,7 +4242,7 @@ Flags: --lsp
 }
 {
   "label":"staticProp",
-  "labelDetails":{"type":"1"},
+  "labelDetails":{"detail":"1"},
   "kind":12,
   "detail":"1",
   "documentation":{"kind":"markdown","value":"this is a static property"},
@@ -4260,7 +4260,7 @@ Flags: --lsp
 }
 {
   "label":"toLocaleString",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -4285,7 +4285,7 @@ Flags: --lsp
 }
 {
   "label":"toString",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{"kind":"markdown","value":"Returns a string representation of a function."},
@@ -4303,7 +4303,7 @@ Flags: --lsp
 }
 {
   "label":"valueOf",
-  "labelDetails":{"type":"() => mixed"},
+  "labelDetails":{"detail":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -4327,7 +4327,7 @@ jsdoc-members-5.js:5:13
 Flags: --lsp
 {
   "label":"hasOwnProperty",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -4352,7 +4352,7 @@ Flags: --lsp
 }
 {
   "label":"instanceMethod",
-  "labelDetails":{"type":"() => void"},
+  "labelDetails":{"detail":"() => void"},
   "kind":3,
   "detail":"() => void",
   "documentation":{"kind":"markdown","value":"this is an instance method"},
@@ -4374,7 +4374,7 @@ Flags: --lsp
 }
 {
   "label":"instanceProp",
-  "labelDetails":{"type":"2"},
+  "labelDetails":{"detail":"2"},
   "kind":12,
   "detail":"2",
   "documentation":{"kind":"markdown","value":"this is an instance property"},
@@ -4392,7 +4392,7 @@ Flags: --lsp
 }
 {
   "label":"isPrototypeOf",
-  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "labelDetails":{"detail":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -4417,7 +4417,7 @@ Flags: --lsp
 }
 {
   "label":"propertyIsEnumerable",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -4442,7 +4442,7 @@ Flags: --lsp
 }
 {
   "label":"toLocaleString",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -4467,7 +4467,7 @@ Flags: --lsp
 }
 {
   "label":"toString",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -4485,7 +4485,7 @@ Flags: --lsp
 }
 {
   "label":"valueOf",
-  "labelDetails":{"type":"() => mixed"},
+  "labelDetails":{"detail":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -4506,7 +4506,7 @@ Flags: --lsp
 }
 {
   "label":"varianceProp",
-  "labelDetails":{"type":"3"},
+  "labelDetails":{"detail":"3"},
   "kind":12,
   "detail":"3",
   "documentation":{"kind":"markdown","value":"property with variance"},
@@ -4527,7 +4527,7 @@ jsdoc-members-6.js:6:5
 Flags: --lsp
 {
   "label":"bar",
-  "labelDetails":{"type":"2"},
+  "labelDetails":{"detail":"2"},
   "kind":12,
   "detail":"2",
   "documentation":{"kind":"markdown","value":"bar is a getter property"},
@@ -4545,7 +4545,7 @@ Flags: --lsp
 }
 {
   "label":"baz",
-  "labelDetails":{"type":"3"},
+  "labelDetails":{"detail":"3"},
   "kind":12,
   "detail":"3",
   "documentation":{"kind":"markdown","value":"baz is an identifier property with variance"},
@@ -4563,7 +4563,7 @@ Flags: --lsp
 }
 {
   "label":"foo",
-  "labelDetails":{"type":"1"},
+  "labelDetails":{"detail":"1"},
   "kind":12,
   "detail":"1",
   "documentation":{"kind":"markdown","value":"foo is an identifier property"},
@@ -4581,7 +4581,7 @@ Flags: --lsp
 }
 {
   "label":"hasOwnProperty",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -4606,7 +4606,7 @@ Flags: --lsp
 }
 {
   "label":"isPrototypeOf",
-  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "labelDetails":{"detail":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -4631,7 +4631,7 @@ Flags: --lsp
 }
 {
   "label":"propertyIsEnumerable",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -4656,7 +4656,7 @@ Flags: --lsp
 }
 {
   "label":"qux",
-  "labelDetails":{"type":"4"},
+  "labelDetails":{"detail":"4"},
   "kind":12,
   "detail":"4",
   "documentation":{"kind":"markdown","value":"qux is a literal property"},
@@ -4674,7 +4674,7 @@ Flags: --lsp
 }
 {
   "label":"toLocaleString",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -4699,7 +4699,7 @@ Flags: --lsp
 }
 {
   "label":"toString",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -4717,7 +4717,7 @@ Flags: --lsp
 }
 {
   "label":"valueOf",
-  "labelDetails":{"type":"() => mixed"},
+  "labelDetails":{"detail":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -4741,7 +4741,7 @@ jsdoc-members-7.js:6:5
 Flags: --lsp
 {
   "label":"?.bar",
-  "labelDetails":{"type":"void | 2"},
+  "labelDetails":{"detail":"void | 2"},
   "kind":13,
   "detail":"void | 2",
   "documentation":{"kind":"markdown","value":"bar is a getter property"},
@@ -4763,7 +4763,7 @@ Flags: --lsp
 }
 {
   "label":"?.baz",
-  "labelDetails":{"type":"void | 3"},
+  "labelDetails":{"detail":"void | 3"},
   "kind":13,
   "detail":"void | 3",
   "documentation":{"kind":"markdown","value":"baz is an identifier property with variance"},
@@ -4785,7 +4785,7 @@ Flags: --lsp
 }
 {
   "label":"?.foo",
-  "labelDetails":{"type":"void | 1"},
+  "labelDetails":{"detail":"void | 1"},
   "kind":13,
   "detail":"void | 1",
   "documentation":{"kind":"markdown","value":"foo is an identifier property"},
@@ -4807,7 +4807,7 @@ Flags: --lsp
 }
 {
   "label":"?.hasOwnProperty",
-  "labelDetails":{"type":"void | ((prop: mixed) => boolean)"},
+  "labelDetails":{"detail":"void | ((prop: mixed) => boolean)"},
   "kind":13,
   "detail":"void | ((prop: mixed) => boolean)",
   "documentation":{
@@ -4832,7 +4832,7 @@ Flags: --lsp
 }
 {
   "label":"?.isPrototypeOf",
-  "labelDetails":{"type":"void | ((o: mixed) => boolean)"},
+  "labelDetails":{"detail":"void | ((o: mixed) => boolean)"},
   "kind":13,
   "detail":"void | ((o: mixed) => boolean)",
   "documentation":{
@@ -4857,7 +4857,7 @@ Flags: --lsp
 }
 {
   "label":"?.propertyIsEnumerable",
-  "labelDetails":{"type":"void | ((prop: mixed) => boolean)"},
+  "labelDetails":{"detail":"void | ((prop: mixed) => boolean)"},
   "kind":13,
   "detail":"void | ((prop: mixed) => boolean)",
   "documentation":{
@@ -4882,7 +4882,7 @@ Flags: --lsp
 }
 {
   "label":"?.qux",
-  "labelDetails":{"type":"void | 4"},
+  "labelDetails":{"detail":"void | 4"},
   "kind":13,
   "detail":"void | 4",
   "documentation":{"kind":"markdown","value":"qux is a literal property"},
@@ -4904,7 +4904,7 @@ Flags: --lsp
 }
 {
   "label":"?.toLocaleString",
-  "labelDetails":{"type":"void | (() => string)"},
+  "labelDetails":{"detail":"void | (() => string)"},
   "kind":13,
   "detail":"void | (() => string)",
   "documentation":{
@@ -4929,7 +4929,7 @@ Flags: --lsp
 }
 {
   "label":"?.toString",
-  "labelDetails":{"type":"void | (() => string)"},
+  "labelDetails":{"detail":"void | (() => string)"},
   "kind":13,
   "detail":"void | (() => string)",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -4951,7 +4951,7 @@ Flags: --lsp
 }
 {
   "label":"?.valueOf",
-  "labelDetails":{"type":"void | (() => mixed)"},
+  "labelDetails":{"detail":"void | (() => mixed)"},
   "kind":13,
   "detail":"void | (() => mixed)",
   "documentation":{
@@ -4979,7 +4979,7 @@ jsdoc-members-8.js:11:21
 Flags: --lsp
 {
   "label":"Member1",
-  "labelDetails":{"type":"DefaultedStringEnum"},
+  "labelDetails":{"detail":"DefaultedStringEnum"},
   "kind":6,
   "detail":"DefaultedStringEnum",
   "documentation":{"kind":"markdown","value":"first member of a defaulted string enum"},
@@ -4997,7 +4997,7 @@ Flags: --lsp
 }
 {
   "label":"Member2",
-  "labelDetails":{"type":"DefaultedStringEnum"},
+  "labelDetails":{"detail":"DefaultedStringEnum"},
   "kind":6,
   "detail":"DefaultedStringEnum",
   "documentation":{"kind":"markdown","value":"second member of a defaulted string enum"},
@@ -5015,7 +5015,7 @@ Flags: --lsp
 }
 {
   "label":"cast",
-  "labelDetails":{"type":"(input: ?string) => (void | DefaultedStringEnum)"},
+  "labelDetails":{"detail":"(input: ?string) => (void | DefaultedStringEnum)"},
   "kind":3,
   "detail":"(input: ?string) => (void | DefaultedStringEnum)",
   "sortText":"00000000000000000001",
@@ -5032,7 +5032,7 @@ Flags: --lsp
 }
 {
   "label":"getName",
-  "labelDetails":{"type":"(input: DefaultedStringEnum) => string"},
+  "labelDetails":{"detail":"(input: DefaultedStringEnum) => string"},
   "kind":3,
   "detail":"(input: DefaultedStringEnum) => string",
   "sortText":"00000000000000000001",
@@ -5049,7 +5049,7 @@ Flags: --lsp
 }
 {
   "label":"isValid",
-  "labelDetails":{"type":"(input: ?string) => boolean"},
+  "labelDetails":{"detail":"(input: ?string) => boolean"},
   "kind":3,
   "detail":"(input: ?string) => boolean",
   "sortText":"00000000000000000001",
@@ -5066,7 +5066,7 @@ Flags: --lsp
 }
 {
   "label":"members",
-  "labelDetails":{"type":"() => Iterator<DefaultedStringEnum>"},
+  "labelDetails":{"detail":"() => Iterator<DefaultedStringEnum>"},
   "kind":3,
   "detail":"() => Iterator<DefaultedStringEnum>",
   "sortText":"00000000000000000001",
@@ -5086,7 +5086,7 @@ jsdoc-members-8.js:13:23
 Flags: --lsp
 {
   "label":"Member1",
-  "labelDetails":{"type":"InitializedStringEnum"},
+  "labelDetails":{"detail":"InitializedStringEnum"},
   "kind":6,
   "detail":"InitializedStringEnum",
   "documentation":{"kind":"markdown","value":"first member of an initialized string enum"},
@@ -5104,7 +5104,7 @@ Flags: --lsp
 }
 {
   "label":"Member2",
-  "labelDetails":{"type":"InitializedStringEnum"},
+  "labelDetails":{"detail":"InitializedStringEnum"},
   "kind":6,
   "detail":"InitializedStringEnum",
   "documentation":{"kind":"markdown","value":"second member of an initialized string enum"},
@@ -5122,7 +5122,7 @@ Flags: --lsp
 }
 {
   "label":"cast",
-  "labelDetails":{"type":"(input: ?string) => (void | InitializedStringEnum)"},
+  "labelDetails":{"detail":"(input: ?string) => (void | InitializedStringEnum)"},
   "kind":3,
   "detail":"(input: ?string) => (void | InitializedStringEnum)",
   "sortText":"00000000000000000001",
@@ -5139,7 +5139,7 @@ Flags: --lsp
 }
 {
   "label":"getName",
-  "labelDetails":{"type":"(input: InitializedStringEnum) => string"},
+  "labelDetails":{"detail":"(input: InitializedStringEnum) => string"},
   "kind":3,
   "detail":"(input: InitializedStringEnum) => string",
   "sortText":"00000000000000000001",
@@ -5156,7 +5156,7 @@ Flags: --lsp
 }
 {
   "label":"isValid",
-  "labelDetails":{"type":"(input: ?string) => boolean"},
+  "labelDetails":{"detail":"(input: ?string) => boolean"},
   "kind":3,
   "detail":"(input: ?string) => boolean",
   "sortText":"00000000000000000001",
@@ -5173,7 +5173,7 @@ Flags: --lsp
 }
 {
   "label":"members",
-  "labelDetails":{"type":"() => Iterator<InitializedStringEnum>"},
+  "labelDetails":{"detail":"() => Iterator<InitializedStringEnum>"},
   "kind":3,
   "detail":"() => Iterator<InitializedStringEnum>",
   "sortText":"00000000000000000001",
@@ -5193,7 +5193,7 @@ jsdoc-members-8.js:15:12
 Flags: --lsp
 {
   "label":"Member1",
-  "labelDetails":{"type":"NumberEnum"},
+  "labelDetails":{"detail":"NumberEnum"},
   "kind":6,
   "detail":"NumberEnum",
   "documentation":{"kind":"markdown","value":"first member of a number enum"},
@@ -5211,7 +5211,7 @@ Flags: --lsp
 }
 {
   "label":"Member2",
-  "labelDetails":{"type":"NumberEnum"},
+  "labelDetails":{"detail":"NumberEnum"},
   "kind":6,
   "detail":"NumberEnum",
   "documentation":{"kind":"markdown","value":"second member of a number enum"},
@@ -5229,7 +5229,7 @@ Flags: --lsp
 }
 {
   "label":"cast",
-  "labelDetails":{"type":"(input: ?number) => (void | NumberEnum)"},
+  "labelDetails":{"detail":"(input: ?number) => (void | NumberEnum)"},
   "kind":3,
   "detail":"(input: ?number) => (void | NumberEnum)",
   "sortText":"00000000000000000001",
@@ -5246,7 +5246,7 @@ Flags: --lsp
 }
 {
   "label":"getName",
-  "labelDetails":{"type":"(input: NumberEnum) => string"},
+  "labelDetails":{"detail":"(input: NumberEnum) => string"},
   "kind":3,
   "detail":"(input: NumberEnum) => string",
   "sortText":"00000000000000000001",
@@ -5263,7 +5263,7 @@ Flags: --lsp
 }
 {
   "label":"isValid",
-  "labelDetails":{"type":"(input: ?number) => boolean"},
+  "labelDetails":{"detail":"(input: ?number) => boolean"},
   "kind":3,
   "detail":"(input: ?number) => boolean",
   "sortText":"00000000000000000001",
@@ -5280,7 +5280,7 @@ Flags: --lsp
 }
 {
   "label":"members",
-  "labelDetails":{"type":"() => Iterator<NumberEnum>"},
+  "labelDetails":{"detail":"() => Iterator<NumberEnum>"},
   "kind":3,
   "detail":"() => Iterator<NumberEnum>",
   "sortText":"00000000000000000001",
@@ -5300,7 +5300,7 @@ jsdoc-members-8.js:17:13
 Flags: --lsp
 {
   "label":"Member1",
-  "labelDetails":{"type":"BooleanEnum"},
+  "labelDetails":{"detail":"BooleanEnum"},
   "kind":6,
   "detail":"BooleanEnum",
   "documentation":{"kind":"markdown","value":"first member of a boolean enum"},
@@ -5318,7 +5318,7 @@ Flags: --lsp
 }
 {
   "label":"Member2",
-  "labelDetails":{"type":"BooleanEnum"},
+  "labelDetails":{"detail":"BooleanEnum"},
   "kind":6,
   "detail":"BooleanEnum",
   "documentation":{"kind":"markdown","value":"second member of a boolean enum"},
@@ -5336,7 +5336,7 @@ Flags: --lsp
 }
 {
   "label":"cast",
-  "labelDetails":{"type":"(input: ?boolean) => (void | BooleanEnum)"},
+  "labelDetails":{"detail":"(input: ?boolean) => (void | BooleanEnum)"},
   "kind":3,
   "detail":"(input: ?boolean) => (void | BooleanEnum)",
   "sortText":"00000000000000000001",
@@ -5353,7 +5353,7 @@ Flags: --lsp
 }
 {
   "label":"getName",
-  "labelDetails":{"type":"(input: BooleanEnum) => string"},
+  "labelDetails":{"detail":"(input: BooleanEnum) => string"},
   "kind":3,
   "detail":"(input: BooleanEnum) => string",
   "sortText":"00000000000000000001",
@@ -5370,7 +5370,7 @@ Flags: --lsp
 }
 {
   "label":"isValid",
-  "labelDetails":{"type":"(input: ?boolean) => boolean"},
+  "labelDetails":{"detail":"(input: ?boolean) => boolean"},
   "kind":3,
   "detail":"(input: ?boolean) => boolean",
   "sortText":"00000000000000000001",
@@ -5387,7 +5387,7 @@ Flags: --lsp
 }
 {
   "label":"members",
-  "labelDetails":{"type":"() => Iterator<BooleanEnum>"},
+  "labelDetails":{"detail":"() => Iterator<BooleanEnum>"},
   "kind":3,
   "detail":"() => Iterator<BooleanEnum>",
   "sortText":"00000000000000000001",
@@ -5407,7 +5407,7 @@ jsdoc-members-8.js:19:12
 Flags: --lsp
 {
   "label":"Member1",
-  "labelDetails":{"type":"SymbolEnum"},
+  "labelDetails":{"detail":"SymbolEnum"},
   "kind":6,
   "detail":"SymbolEnum",
   "documentation":{"kind":"markdown","value":"first member of a boolean enum"},
@@ -5425,7 +5425,7 @@ Flags: --lsp
 }
 {
   "label":"Member2",
-  "labelDetails":{"type":"SymbolEnum"},
+  "labelDetails":{"detail":"SymbolEnum"},
   "kind":6,
   "detail":"SymbolEnum",
   "documentation":{"kind":"markdown","value":"second member of a boolean enum"},
@@ -5443,7 +5443,7 @@ Flags: --lsp
 }
 {
   "label":"cast",
-  "labelDetails":{"type":"(input: ?symbol) => (void | SymbolEnum)"},
+  "labelDetails":{"detail":"(input: ?symbol) => (void | SymbolEnum)"},
   "kind":3,
   "detail":"(input: ?symbol) => (void | SymbolEnum)",
   "sortText":"00000000000000000001",
@@ -5460,7 +5460,7 @@ Flags: --lsp
 }
 {
   "label":"getName",
-  "labelDetails":{"type":"(input: SymbolEnum) => string"},
+  "labelDetails":{"detail":"(input: SymbolEnum) => string"},
   "kind":3,
   "detail":"(input: SymbolEnum) => string",
   "sortText":"00000000000000000001",
@@ -5477,7 +5477,7 @@ Flags: --lsp
 }
 {
   "label":"isValid",
-  "labelDetails":{"type":"(input: ?symbol) => boolean"},
+  "labelDetails":{"detail":"(input: ?symbol) => boolean"},
   "kind":3,
   "detail":"(input: ?symbol) => boolean",
   "sortText":"00000000000000000001",
@@ -5494,7 +5494,7 @@ Flags: --lsp
 }
 {
   "label":"members",
-  "labelDetails":{"type":"() => Iterator<SymbolEnum>"},
+  "labelDetails":{"detail":"() => Iterator<SymbolEnum>"},
   "kind":3,
   "detail":"() => Iterator<SymbolEnum>",
   "sortText":"00000000000000000001",
@@ -6042,7 +6042,7 @@ Flags: --lsp
 }
 {
   "label":"myFoo",
-  "labelDetails":{"type":"type myFoo = number"},
+  "labelDetails":{"detail":"type myFoo = number"},
   "kind":13,
   "detail":"type myFoo = number",
   "documentation":{"kind":"markdown","value":"this is myFoo"},
@@ -6064,7 +6064,7 @@ Flags: --lsp
 }
 {
   "label":"myBar",
-  "labelDetails":{"type":"type myBar<T> = ?T"},
+  "labelDetails":{"detail":"type myBar<T> = ?T"},
   "kind":13,
   "detail":"type myBar<T> = ?T",
   "documentation":{"kind":"markdown","value":"this is myBar"},
@@ -6086,7 +6086,7 @@ Flags: --lsp
 }
 {
   "label":"myInterface",
-  "labelDetails":{"type":"interface myInterface"},
+  "labelDetails":{"detail":"interface myInterface"},
   "kind":8,
   "detail":"interface myInterface",
   "documentation":{"kind":"markdown","value":"this is myInterface"},
@@ -6108,7 +6108,7 @@ Flags: --lsp
 }
 {
   "label":"ExportFoo",
-  "labelDetails":{"type":"type ExportFoo = number"},
+  "labelDetails":{"detail":"type ExportFoo = number"},
   "kind":13,
   "detail":"type ExportFoo = number",
   "documentation":{"kind":"markdown","value":"this is ExportFoo"},
@@ -6130,7 +6130,7 @@ Flags: --lsp
 }
 {
   "label":"ExportBar",
-  "labelDetails":{"type":"type ExportBar<T> = ?T"},
+  "labelDetails":{"detail":"type ExportBar<T> = ?T"},
   "kind":13,
   "detail":"type ExportBar<T> = ?T",
   "documentation":{"kind":"markdown","value":"this is ExportBar"},
@@ -6152,7 +6152,7 @@ Flags: --lsp
 }
 {
   "label":"ExportClass",
-  "labelDetails":{"type":"class ExportClass"},
+  "labelDetails":{"detail":"class ExportClass"},
   "kind":7,
   "detail":"class ExportClass",
   "documentation":{"kind":"markdown","value":"this is ExportClass"},
@@ -6174,7 +6174,7 @@ Flags: --lsp
 }
 {
   "label":"ExportInterface",
-  "labelDetails":{"type":"interface ExportInterface"},
+  "labelDetails":{"detail":"interface ExportInterface"},
   "kind":8,
   "detail":"interface ExportInterface",
   "documentation":{"kind":"markdown","value":"this is ExportInterface"},
@@ -6196,7 +6196,7 @@ Flags: --lsp
 }
 {
   "label":"ExportEnum",
-  "labelDetails":{"type":"enum ExportEnum"},
+  "labelDetails":{"detail":"enum ExportEnum"},
   "kind":13,
   "detail":"enum ExportEnum",
   "documentation":{"kind":"markdown","value":"this is ExportEnum"},
@@ -6218,7 +6218,7 @@ Flags: --lsp
 }
 {
   "label":"exportValue",
-  "labelDetails":{"type":"type exportValue = number"},
+  "labelDetails":{"detail":"type exportValue = number"},
   "kind":13,
   "detail":"type exportValue = number",
   "documentation":{"kind":"markdown","value":"this is ExportValue"},
@@ -6240,7 +6240,7 @@ Flags: --lsp
 }
 {
   "label":"myClass",
-  "labelDetails":{"type":"class myClass"},
+  "labelDetails":{"detail":"class myClass"},
   "kind":7,
   "detail":"class myClass",
   "documentation":{"kind":"markdown","value":"this is myClass"},
@@ -6262,7 +6262,7 @@ Flags: --lsp
 }
 {
   "label":"myEnum",
-  "labelDetails":{"type":"enum myEnum"},
+  "labelDetails":{"detail":"enum myEnum"},
   "kind":13,
   "detail":"enum myEnum",
   "documentation":{"kind":"markdown","value":"this is myEnum"},
@@ -6287,7 +6287,7 @@ qualified-types-jsdoc.js:5:12
 Flags: --lsp
 {
   "label":"ExportBar",
-  "labelDetails":{"type":"type ExportBar<T> = ?T"},
+  "labelDetails":{"detail":"type ExportBar<T> = ?T"},
   "kind":13,
   "detail":"type ExportBar<T> = ?T",
   "documentation":{"kind":"markdown","value":"this is ExportBar"},
@@ -6309,7 +6309,7 @@ Flags: --lsp
 }
 {
   "label":"ExportClass",
-  "labelDetails":{"type":"class ExportClass"},
+  "labelDetails":{"detail":"class ExportClass"},
   "kind":7,
   "detail":"class ExportClass",
   "documentation":{"kind":"markdown","value":"this is ExportClass"},
@@ -6331,7 +6331,7 @@ Flags: --lsp
 }
 {
   "label":"ExportEnum",
-  "labelDetails":{"type":"enum ExportEnum"},
+  "labelDetails":{"detail":"enum ExportEnum"},
   "kind":13,
   "detail":"enum ExportEnum",
   "documentation":{"kind":"markdown","value":"this is ExportEnum"},
@@ -6353,7 +6353,7 @@ Flags: --lsp
 }
 {
   "label":"ExportFoo",
-  "labelDetails":{"type":"type ExportFoo = number"},
+  "labelDetails":{"detail":"type ExportFoo = number"},
   "kind":6,
   "detail":"type ExportFoo = number",
   "documentation":{"kind":"markdown","value":"this is ExportFoo"},
@@ -6375,7 +6375,7 @@ Flags: --lsp
 }
 {
   "label":"ExportInterface",
-  "labelDetails":{"type":"interface ExportInterface"},
+  "labelDetails":{"detail":"interface ExportInterface"},
   "kind":8,
   "detail":"interface ExportInterface",
   "documentation":{"kind":"markdown","value":"this is ExportInterface"},
@@ -6400,7 +6400,7 @@ bracket_syntax_1.js:5:5
 Flags: --lsp
 {
   "label":"'bar'",
-  "labelDetails":{"type":"string | void"},
+  "labelDetails":{"detail":"string | void"},
   "kind":13,
   "detail":"string | void",
   "sortText":"00000000000000000000",
@@ -6421,7 +6421,7 @@ Flags: --lsp
 }
 {
   "label":"'foo'",
-  "labelDetails":{"type":"number"},
+  "labelDetails":{"detail":"number"},
   "kind":6,
   "detail":"number",
   "sortText":"00000000000000000000",
@@ -6442,7 +6442,7 @@ Flags: --lsp
 }
 {
   "label":"'hasOwnProperty'",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -6467,7 +6467,7 @@ Flags: --lsp
 }
 {
   "label":"'isPrototypeOf'",
-  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "labelDetails":{"detail":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -6492,7 +6492,7 @@ Flags: --lsp
 }
 {
   "label":"'propertyIsEnumerable'",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -6517,7 +6517,7 @@ Flags: --lsp
 }
 {
   "label":"'toLocaleString'",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -6542,7 +6542,7 @@ Flags: --lsp
 }
 {
   "label":"'toString'",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -6564,7 +6564,7 @@ Flags: --lsp
 }
 {
   "label":"'valueOf'",
-  "labelDetails":{"type":"() => mixed"},
+  "labelDetails":{"detail":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -6589,7 +6589,7 @@ Flags: --lsp
 }
 {
   "label":"obj",
-  "labelDetails":{"type":"{bar?: string, foo: number, ...}"},
+  "labelDetails":{"detail":"{bar?: string, foo: number, ...}"},
   "kind":6,
   "detail":"{bar?: string, foo: number, ...}",
   "sortText":"00000000000000000000",
@@ -6613,7 +6613,7 @@ bracket_syntax_2.js:5:14
 Flags: --lsp
 {
   "label":"'bar'",
-  "labelDetails":{"type":"string | void"},
+  "labelDetails":{"detail":"string | void"},
   "kind":13,
   "detail":"string | void",
   "sortText":"00000000000000000000",
@@ -6634,7 +6634,7 @@ Flags: --lsp
 }
 {
   "label":"'foo'",
-  "labelDetails":{"type":"number"},
+  "labelDetails":{"detail":"number"},
   "kind":6,
   "detail":"number",
   "sortText":"00000000000000000000",
@@ -6655,7 +6655,7 @@ Flags: --lsp
 }
 {
   "label":"'hasOwnProperty'",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -6680,7 +6680,7 @@ Flags: --lsp
 }
 {
   "label":"'isPrototypeOf'",
-  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "labelDetails":{"detail":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -6705,7 +6705,7 @@ Flags: --lsp
 }
 {
   "label":"'propertyIsEnumerable'",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -6730,7 +6730,7 @@ Flags: --lsp
 }
 {
   "label":"'toLocaleString'",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -6755,7 +6755,7 @@ Flags: --lsp
 }
 {
   "label":"'toString'",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -6777,7 +6777,7 @@ Flags: --lsp
 }
 {
   "label":"'valueOf'",
-  "labelDetails":{"type":"() => mixed"},
+  "labelDetails":{"detail":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -6802,7 +6802,7 @@ Flags: --lsp
 }
 {
   "label":"obj",
-  "labelDetails":{"type":"{bar?: string, foo: number, ...}"},
+  "labelDetails":{"detail":"{bar?: string, foo: number, ...}"},
   "kind":6,
   "detail":"{bar?: string, foo: number, ...}",
   "sortText":"00000000000000000000",
@@ -6823,7 +6823,7 @@ Flags: --lsp
 }
 {
   "label":"x",
-  "labelDetails":{"type":"empty"},
+  "labelDetails":{"detail":"empty"},
   "kind":6,
   "detail":"empty",
   "sortText":"00000000000000000000",
@@ -6847,7 +6847,7 @@ bracket_syntax_3.js:5:14
 Flags: --lsp
 {
   "label":"'bar'",
-  "labelDetails":{"type":"number"},
+  "labelDetails":{"detail":"number"},
   "kind":6,
   "detail":"number",
   "sortText":"00000000000000000000",
@@ -6868,7 +6868,7 @@ Flags: --lsp
 }
 {
   "label":"'foo'",
-  "labelDetails":{"type":"number"},
+  "labelDetails":{"detail":"number"},
   "kind":6,
   "detail":"number",
   "sortText":"00000000000000000000",
@@ -6889,7 +6889,7 @@ Flags: --lsp
 }
 {
   "label":"'hasOwnProperty'",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -6914,7 +6914,7 @@ Flags: --lsp
 }
 {
   "label":"'isPrototypeOf'",
-  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "labelDetails":{"detail":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -6939,7 +6939,7 @@ Flags: --lsp
 }
 {
   "label":"'propertyIsEnumerable'",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -6964,7 +6964,7 @@ Flags: --lsp
 }
 {
   "label":"'toLocaleString'",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -6989,7 +6989,7 @@ Flags: --lsp
 }
 {
   "label":"'toString'",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -7011,7 +7011,7 @@ Flags: --lsp
 }
 {
   "label":"'valueOf'",
-  "labelDetails":{"type":"() => mixed"},
+  "labelDetails":{"detail":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -7036,7 +7036,7 @@ Flags: --lsp
 }
 {
   "label":"obj",
-  "labelDetails":{"type":"{bar: number, foo: number, ...}"},
+  "labelDetails":{"detail":"{bar: number, foo: number, ...}"},
   "kind":6,
   "detail":"{bar: number, foo: number, ...}",
   "sortText":"00000000000000000000",
@@ -7057,7 +7057,7 @@ Flags: --lsp
 }
 {
   "label":"x",
-  "labelDetails":{"type":"empty"},
+  "labelDetails":{"detail":"empty"},
   "kind":6,
   "detail":"empty",
   "sortText":"00000000000000000000",
@@ -7081,7 +7081,7 @@ bracket_syntax_4.js:5:15
 Flags: --lsp
 {
   "label":"'bar'",
-  "labelDetails":{"type":"number"},
+  "labelDetails":{"detail":"number"},
   "kind":6,
   "detail":"number",
   "sortText":"00000000000000000000",
@@ -7102,7 +7102,7 @@ Flags: --lsp
 }
 {
   "label":"'foo'",
-  "labelDetails":{"type":"number"},
+  "labelDetails":{"detail":"number"},
   "kind":6,
   "detail":"number",
   "sortText":"00000000000000000000",
@@ -7123,7 +7123,7 @@ Flags: --lsp
 }
 {
   "label":"'hasOwnProperty'",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -7148,7 +7148,7 @@ Flags: --lsp
 }
 {
   "label":"'isPrototypeOf'",
-  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "labelDetails":{"detail":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -7173,7 +7173,7 @@ Flags: --lsp
 }
 {
   "label":"'propertyIsEnumerable'",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -7198,7 +7198,7 @@ Flags: --lsp
 }
 {
   "label":"'toLocaleString'",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -7223,7 +7223,7 @@ Flags: --lsp
 }
 {
   "label":"'toString'",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -7245,7 +7245,7 @@ Flags: --lsp
 }
 {
   "label":"'valueOf'",
-  "labelDetails":{"type":"() => mixed"},
+  "labelDetails":{"detail":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -7270,7 +7270,7 @@ Flags: --lsp
 }
 {
   "label":"obj",
-  "labelDetails":{"type":"{bar: number, foo: number, ...}"},
+  "labelDetails":{"detail":"{bar: number, foo: number, ...}"},
   "kind":6,
   "detail":"{bar: number, foo: number, ...}",
   "sortText":"00000000000000000000",
@@ -7291,7 +7291,7 @@ Flags: --lsp
 }
 {
   "label":"x",
-  "labelDetails":{"type":"empty"},
+  "labelDetails":{"detail":"empty"},
   "kind":6,
   "detail":"empty",
   "sortText":"00000000000000000000",
@@ -7315,7 +7315,7 @@ bracket_syntax_5.js:8:13
 Flags: --lsp
 {
   "label":"obj",
-  "labelDetails":{"type":"{bar: number, foo: number, ...}"},
+  "labelDetails":{"detail":"{bar: number, foo: number, ...}"},
   "kind":6,
   "detail":"{bar: number, foo: number, ...}",
   "sortText":"00000000000000000000",
@@ -7336,7 +7336,7 @@ Flags: --lsp
 }
 {
   "label":"x",
-  "labelDetails":{"type":"empty"},
+  "labelDetails":{"detail":"empty"},
   "kind":6,
   "detail":"empty",
   "sortText":"00000000000000000000",
@@ -7360,7 +7360,7 @@ bracket_syntax_6.js:5:13
 Flags: --lsp
 {
   "label":"?.['bar']",
-  "labelDetails":{"type":"void | number"},
+  "labelDetails":{"detail":"void | number"},
   "kind":13,
   "detail":"void | number",
   "sortText":"00000000000000000000",
@@ -7381,7 +7381,7 @@ Flags: --lsp
 }
 {
   "label":"?.['foo']",
-  "labelDetails":{"type":"void | number"},
+  "labelDetails":{"detail":"void | number"},
   "kind":13,
   "detail":"void | number",
   "sortText":"00000000000000000000",
@@ -7402,7 +7402,7 @@ Flags: --lsp
 }
 {
   "label":"?.['hasOwnProperty']",
-  "labelDetails":{"type":"void | ((prop: mixed) => boolean)"},
+  "labelDetails":{"detail":"void | ((prop: mixed) => boolean)"},
   "kind":13,
   "detail":"void | ((prop: mixed) => boolean)",
   "documentation":{
@@ -7427,7 +7427,7 @@ Flags: --lsp
 }
 {
   "label":"?.['isPrototypeOf']",
-  "labelDetails":{"type":"void | ((o: mixed) => boolean)"},
+  "labelDetails":{"detail":"void | ((o: mixed) => boolean)"},
   "kind":13,
   "detail":"void | ((o: mixed) => boolean)",
   "documentation":{
@@ -7452,7 +7452,7 @@ Flags: --lsp
 }
 {
   "label":"?.['propertyIsEnumerable']",
-  "labelDetails":{"type":"void | ((prop: mixed) => boolean)"},
+  "labelDetails":{"detail":"void | ((prop: mixed) => boolean)"},
   "kind":13,
   "detail":"void | ((prop: mixed) => boolean)",
   "documentation":{
@@ -7477,7 +7477,7 @@ Flags: --lsp
 }
 {
   "label":"?.['toLocaleString']",
-  "labelDetails":{"type":"void | (() => string)"},
+  "labelDetails":{"detail":"void | (() => string)"},
   "kind":13,
   "detail":"void | (() => string)",
   "documentation":{
@@ -7502,7 +7502,7 @@ Flags: --lsp
 }
 {
   "label":"?.['toString']",
-  "labelDetails":{"type":"void | (() => string)"},
+  "labelDetails":{"detail":"void | (() => string)"},
   "kind":13,
   "detail":"void | (() => string)",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -7524,7 +7524,7 @@ Flags: --lsp
 }
 {
   "label":"?.['valueOf']",
-  "labelDetails":{"type":"void | (() => mixed)"},
+  "labelDetails":{"detail":"void | (() => mixed)"},
   "kind":13,
   "detail":"void | (() => mixed)",
   "documentation":{
@@ -7549,7 +7549,7 @@ Flags: --lsp
 }
 {
   "label":"obj",
-  "labelDetails":{"type":"?{bar: number, foo: number, ...}"},
+  "labelDetails":{"detail":"?{bar: number, foo: number, ...}"},
   "kind":13,
   "detail":"?{bar: number, foo: number, ...}",
   "sortText":"00000000000000000000",
@@ -7570,7 +7570,7 @@ Flags: --lsp
 }
 {
   "label":"x",
-  "labelDetails":{"type":"empty"},
+  "labelDetails":{"detail":"empty"},
   "kind":6,
   "detail":"empty",
   "sortText":"00000000000000000000",
@@ -7594,7 +7594,7 @@ iterator.js:4:5
 Flags: --lsp
 {
   "label":"Symbol.iterator",
-  "labelDetails":{"type":"Iterator<number>"},
+  "labelDetails":{"detail":"Iterator<number>"},
   "kind":6,
   "detail":"Iterator<number>",
   "sortText":"00000000000000000000",
@@ -7615,7 +7615,7 @@ Flags: --lsp
 }
 {
   "label":"'hasOwnProperty'",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -7640,7 +7640,7 @@ Flags: --lsp
 }
 {
   "label":"'isPrototypeOf'",
-  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "labelDetails":{"detail":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -7665,7 +7665,7 @@ Flags: --lsp
 }
 {
   "label":"'propertyIsEnumerable'",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -7690,7 +7690,7 @@ Flags: --lsp
 }
 {
   "label":"'toLocaleString'",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -7715,7 +7715,7 @@ Flags: --lsp
 }
 {
   "label":"'toString'",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -7737,7 +7737,7 @@ Flags: --lsp
 }
 {
   "label":"'valueOf'",
-  "labelDetails":{"type":"() => mixed"},
+  "labelDetails":{"detail":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -7762,7 +7762,7 @@ Flags: --lsp
 }
 {
   "label":"bar",
-  "labelDetails":{"type":"{\"@@asyncIterator\": AsyncIterator<number>, ...}"},
+  "labelDetails":{"detail":"{\"@@asyncIterator\": AsyncIterator<number>, ...}"},
   "kind":6,
   "detail":"{\"@@asyncIterator\": AsyncIterator<number>, ...}",
   "sortText":"00000000000000000000",
@@ -7783,7 +7783,7 @@ Flags: --lsp
 }
 {
   "label":"foo",
-  "labelDetails":{"type":"{\"@@iterator\": Iterator<number>, ...}"},
+  "labelDetails":{"detail":"{\"@@iterator\": Iterator<number>, ...}"},
   "kind":6,
   "detail":"{\"@@iterator\": Iterator<number>, ...}",
   "sortText":"00000000000000000000",
@@ -7807,7 +7807,7 @@ iterator.js:8:5
 Flags: --lsp
 {
   "label":"Symbol.asyncIterator",
-  "labelDetails":{"type":"AsyncIterator<number>"},
+  "labelDetails":{"detail":"AsyncIterator<number>"},
   "kind":6,
   "detail":"AsyncIterator<number>",
   "sortText":"00000000000000000000",
@@ -7828,7 +7828,7 @@ Flags: --lsp
 }
 {
   "label":"'hasOwnProperty'",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -7853,7 +7853,7 @@ Flags: --lsp
 }
 {
   "label":"'isPrototypeOf'",
-  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "labelDetails":{"detail":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -7878,7 +7878,7 @@ Flags: --lsp
 }
 {
   "label":"'propertyIsEnumerable'",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -7903,7 +7903,7 @@ Flags: --lsp
 }
 {
   "label":"'toLocaleString'",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -7928,7 +7928,7 @@ Flags: --lsp
 }
 {
   "label":"'toString'",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -7950,7 +7950,7 @@ Flags: --lsp
 }
 {
   "label":"'valueOf'",
-  "labelDetails":{"type":"() => mixed"},
+  "labelDetails":{"detail":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -7975,7 +7975,7 @@ Flags: --lsp
 }
 {
   "label":"bar",
-  "labelDetails":{"type":"{\"@@asyncIterator\": AsyncIterator<number>, ...}"},
+  "labelDetails":{"detail":"{\"@@asyncIterator\": AsyncIterator<number>, ...}"},
   "kind":6,
   "detail":"{\"@@asyncIterator\": AsyncIterator<number>, ...}",
   "sortText":"00000000000000000000",
@@ -7996,7 +7996,7 @@ Flags: --lsp
 }
 {
   "label":"foo",
-  "labelDetails":{"type":"{\"@@iterator\": Iterator<number>, ...}"},
+  "labelDetails":{"detail":"{\"@@iterator\": Iterator<number>, ...}"},
   "kind":6,
   "detail":"{\"@@iterator\": Iterator<number>, ...}",
   "sortText":"00000000000000000000",
@@ -8020,7 +8020,7 @@ bracket_syntax_needed.js:8:5
 Flags: --lsp
 {
   "label":"foo",
-  "labelDetails":{"type":"number"},
+  "labelDetails":{"detail":"number"},
   "kind":6,
   "detail":"number",
   "sortText":"00000000000000000000",
@@ -8037,7 +8037,7 @@ Flags: --lsp
 }
 {
   "label":"['foo.bar.baz']",
-  "labelDetails":{"type":"number"},
+  "labelDetails":{"detail":"number"},
   "kind":6,
   "detail":"number",
   "sortText":"00000000000000000000",
@@ -8058,7 +8058,7 @@ Flags: --lsp
 }
 {
   "label":"hasOwnProperty",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -8083,7 +8083,7 @@ Flags: --lsp
 }
 {
   "label":"isPrototypeOf",
-  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "labelDetails":{"detail":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -8108,7 +8108,7 @@ Flags: --lsp
 }
 {
   "label":"propertyIsEnumerable",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -8133,7 +8133,7 @@ Flags: --lsp
 }
 {
   "label":"toLocaleString",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -8158,7 +8158,7 @@ Flags: --lsp
 }
 {
   "label":"toString",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -8176,7 +8176,7 @@ Flags: --lsp
 }
 {
   "label":"valueOf",
-  "labelDetails":{"type":"() => mixed"},
+  "labelDetails":{"detail":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{
@@ -8200,7 +8200,7 @@ bracket_syntax_needed_2.js:8:5
 Flags: --lsp
 {
   "label":"?.foo",
-  "labelDetails":{"type":"void | number"},
+  "labelDetails":{"detail":"void | number"},
   "kind":13,
   "detail":"void | number",
   "sortText":"00000000000000000000",
@@ -8221,7 +8221,7 @@ Flags: --lsp
 }
 {
   "label":"?.['foo.bar.baz']",
-  "labelDetails":{"type":"void | number"},
+  "labelDetails":{"detail":"void | number"},
   "kind":13,
   "detail":"void | number",
   "sortText":"00000000000000000000",
@@ -8242,7 +8242,7 @@ Flags: --lsp
 }
 {
   "label":"?.hasOwnProperty",
-  "labelDetails":{"type":"void | ((prop: mixed) => boolean)"},
+  "labelDetails":{"detail":"void | ((prop: mixed) => boolean)"},
   "kind":13,
   "detail":"void | ((prop: mixed) => boolean)",
   "documentation":{
@@ -8267,7 +8267,7 @@ Flags: --lsp
 }
 {
   "label":"?.isPrototypeOf",
-  "labelDetails":{"type":"void | ((o: mixed) => boolean)"},
+  "labelDetails":{"detail":"void | ((o: mixed) => boolean)"},
   "kind":13,
   "detail":"void | ((o: mixed) => boolean)",
   "documentation":{
@@ -8292,7 +8292,7 @@ Flags: --lsp
 }
 {
   "label":"?.propertyIsEnumerable",
-  "labelDetails":{"type":"void | ((prop: mixed) => boolean)"},
+  "labelDetails":{"detail":"void | ((prop: mixed) => boolean)"},
   "kind":13,
   "detail":"void | ((prop: mixed) => boolean)",
   "documentation":{
@@ -8317,7 +8317,7 @@ Flags: --lsp
 }
 {
   "label":"?.toLocaleString",
-  "labelDetails":{"type":"void | (() => string)"},
+  "labelDetails":{"detail":"void | (() => string)"},
   "kind":13,
   "detail":"void | (() => string)",
   "documentation":{
@@ -8342,7 +8342,7 @@ Flags: --lsp
 }
 {
   "label":"?.toString",
-  "labelDetails":{"type":"void | (() => string)"},
+  "labelDetails":{"detail":"void | (() => string)"},
   "kind":13,
   "detail":"void | (() => string)",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -8364,7 +8364,7 @@ Flags: --lsp
 }
 {
   "label":"?.valueOf",
-  "labelDetails":{"type":"void | (() => mixed)"},
+  "labelDetails":{"detail":"void | (() => mixed)"},
   "kind":13,
   "detail":"void | (() => mixed)",
   "documentation":{
@@ -8392,7 +8392,7 @@ upper_bounds_1.js:10:3
 Flags: --lsp
 {
   "label":"f",
-  "labelDetails":{"type":"(Union) => void"},
+  "labelDetails":{"detail":"(Union) => void"},
   "kind":3,
   "detail":"(Union) => void",
   "sortText":"00000000000000000000",
@@ -8484,7 +8484,7 @@ indexed-access-1.js:7:12
 Flags: --lsp
 {
   "label":"'bar'",
-  "labelDetails":{"type":"string | void"},
+  "labelDetails":{"detail":"string | void"},
   "kind":13,
   "detail":"string | void",
   "sortText":"00000000000000000000",
@@ -8505,7 +8505,7 @@ Flags: --lsp
 }
 {
   "label":"'foo'",
-  "labelDetails":{"type":"number"},
+  "labelDetails":{"detail":"number"},
   "kind":6,
   "detail":"number",
   "sortText":"00000000000000000000",
@@ -9054,7 +9054,7 @@ Flags: --lsp
 }
 {
   "label":"K",
-  "labelDetails":{"type":"type K = \"foo\""},
+  "labelDetails":{"detail":"type K = \"foo\""},
   "kind":13,
   "detail":"type K = \"foo\"",
   "sortText":"00000000000000000000",
@@ -9075,7 +9075,7 @@ Flags: --lsp
 }
 {
   "label":"O",
-  "labelDetails":{"type":"type O = {bar?: string, foo: number, ...}"},
+  "labelDetails":{"detail":"type O = {bar?: string, foo: number, ...}"},
   "kind":13,
   "detail":"type O = {bar?: string, foo: number, ...}",
   "sortText":"00000000000000000000",
@@ -9096,7 +9096,7 @@ Flags: --lsp
 }
 {
   "label":"T",
-  "labelDetails":{"type":"type T = empty"},
+  "labelDetails":{"detail":"type T = empty"},
   "kind":13,
   "detail":"type T = empty",
   "sortText":"00000000000000000000",
@@ -9120,7 +9120,7 @@ indexed-access-2.js:4:13
 Flags: --lsp
 {
   "label":"'bar'",
-  "labelDetails":{"type":"string | void"},
+  "labelDetails":{"detail":"string | void"},
   "kind":13,
   "detail":"string | void",
   "sortText":"00000000000000000000",
@@ -9141,7 +9141,7 @@ Flags: --lsp
 }
 {
   "label":"'foo'",
-  "labelDetails":{"type":"number"},
+  "labelDetails":{"detail":"number"},
   "kind":6,
   "detail":"number",
   "sortText":"00000000000000000000",
@@ -9690,7 +9690,7 @@ Flags: --lsp
 }
 {
   "label":"O",
-  "labelDetails":{"type":"type O = {bar?: string, foo: number, ...}"},
+  "labelDetails":{"detail":"type O = {bar?: string, foo: number, ...}"},
   "kind":13,
   "detail":"type O = {bar?: string, foo: number, ...}",
   "sortText":"00000000000000000000",
@@ -9711,7 +9711,7 @@ Flags: --lsp
 }
 {
   "label":"T",
-  "labelDetails":{"type":"type T = any"},
+  "labelDetails":{"detail":"type T = any"},
   "kind":13,
   "detail":"type T = any",
   "sortText":"00000000000000000000",
@@ -9735,7 +9735,7 @@ indexed-access-optional-1.js:7:14
 Flags: --lsp
 {
   "label":"'bar'",
-  "labelDetails":{"type":"void | string"},
+  "labelDetails":{"detail":"void | string"},
   "kind":13,
   "detail":"void | string",
   "sortText":"00000000000000000000",
@@ -9756,7 +9756,7 @@ Flags: --lsp
 }
 {
   "label":"'foo'",
-  "labelDetails":{"type":"number"},
+  "labelDetails":{"detail":"number"},
   "kind":6,
   "detail":"number",
   "sortText":"00000000000000000000",
@@ -10305,7 +10305,7 @@ Flags: --lsp
 }
 {
   "label":"K",
-  "labelDetails":{"type":"type K = \"foo\""},
+  "labelDetails":{"detail":"type K = \"foo\""},
   "kind":13,
   "detail":"type K = \"foo\"",
   "sortText":"00000000000000000000",
@@ -10326,7 +10326,7 @@ Flags: --lsp
 }
 {
   "label":"O",
-  "labelDetails":{"type":"type O = ?{bar?: string, foo: number, ...}"},
+  "labelDetails":{"detail":"type O = ?{bar?: string, foo: number, ...}"},
   "kind":13,
   "detail":"type O = ?{bar?: string, foo: number, ...}",
   "sortText":"00000000000000000000",
@@ -10347,7 +10347,7 @@ Flags: --lsp
 }
 {
   "label":"T",
-  "labelDetails":{"type":"type T = empty"},
+  "labelDetails":{"detail":"type T = empty"},
   "kind":13,
   "detail":"type T = empty",
   "sortText":"00000000000000000000",
@@ -10371,7 +10371,7 @@ indexed-access-optional-2.js:4:15
 Flags: --lsp
 {
   "label":"'bar'",
-  "labelDetails":{"type":"void | string"},
+  "labelDetails":{"detail":"void | string"},
   "kind":13,
   "detail":"void | string",
   "sortText":"00000000000000000000",
@@ -10392,7 +10392,7 @@ Flags: --lsp
 }
 {
   "label":"'foo'",
-  "labelDetails":{"type":"number"},
+  "labelDetails":{"detail":"number"},
   "kind":6,
   "detail":"number",
   "sortText":"00000000000000000000",
@@ -10941,7 +10941,7 @@ Flags: --lsp
 }
 {
   "label":"O",
-  "labelDetails":{"type":"type O = {bar?: string, foo: number, ...} | void"},
+  "labelDetails":{"detail":"type O = {bar?: string, foo: number, ...} | void"},
   "kind":13,
   "detail":"type O = {bar?: string, foo: number, ...} | void",
   "sortText":"00000000000000000000",
@@ -10962,7 +10962,7 @@ Flags: --lsp
 }
 {
   "label":"T",
-  "labelDetails":{"type":"type T = any | void"},
+  "labelDetails":{"detail":"type T = any | void"},
   "kind":13,
   "detail":"type T = any | void",
   "sortText":"00000000000000000000",
@@ -10986,7 +10986,7 @@ typeof.js:4:18
 Flags: --lsp
 {
   "label":"abb",
-  "labelDetails":{"type":"{b: string, ...}"},
+  "labelDetails":{"detail":"{b: string, ...}"},
   "kind":6,
   "detail":"{b: string, ...}",
   "sortText":"00000000000000000000",
@@ -11007,7 +11007,7 @@ Flags: --lsp
 }
 {
   "label":"c",
-  "labelDetails":{"type":"any"},
+  "labelDetails":{"detail":"any"},
   "kind":6,
   "detail":"any",
   "sortText":"00000000000000000000",
@@ -11028,7 +11028,7 @@ Flags: --lsp
 }
 {
   "label":"foo",
-  "labelDetails":{"type":"(abb: {b: string, ...}) => void"},
+  "labelDetails":{"detail":"(abb: {b: string, ...}) => void"},
   "kind":3,
   "detail":"(abb: {b: string, ...}) => void",
   "sortText":"00000000000000000000",
@@ -11068,7 +11068,7 @@ typeof_2.js:4:19
 Flags: --lsp
 {
   "label":"b",
-  "labelDetails":{"type":"string"},
+  "labelDetails":{"detail":"string"},
   "kind":6,
   "detail":"string",
   "sortText":"00000000000000000000",
@@ -11085,7 +11085,7 @@ Flags: --lsp
 }
 {
   "label":"hasOwnProperty",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -11110,7 +11110,7 @@ Flags: --lsp
 }
 {
   "label":"isPrototypeOf",
-  "labelDetails":{"type":"(o: mixed) => boolean"},
+  "labelDetails":{"detail":"(o: mixed) => boolean"},
   "kind":3,
   "detail":"(o: mixed) => boolean",
   "documentation":{
@@ -11135,7 +11135,7 @@ Flags: --lsp
 }
 {
   "label":"propertyIsEnumerable",
-  "labelDetails":{"type":"(prop: mixed) => boolean"},
+  "labelDetails":{"detail":"(prop: mixed) => boolean"},
   "kind":3,
   "detail":"(prop: mixed) => boolean",
   "documentation":{
@@ -11160,7 +11160,7 @@ Flags: --lsp
 }
 {
   "label":"toLocaleString",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{
@@ -11185,7 +11185,7 @@ Flags: --lsp
 }
 {
   "label":"toString",
-  "labelDetails":{"type":"() => string"},
+  "labelDetails":{"detail":"() => string"},
   "kind":3,
   "detail":"() => string",
   "documentation":{"kind":"markdown","value":"Returns a string representation of an object."},
@@ -11203,7 +11203,7 @@ Flags: --lsp
 }
 {
   "label":"valueOf",
-  "labelDetails":{"type":"() => mixed"},
+  "labelDetails":{"detail":"() => mixed"},
   "kind":3,
   "detail":"() => mixed",
   "documentation":{

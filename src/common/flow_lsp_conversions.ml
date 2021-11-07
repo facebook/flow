@@ -139,12 +139,7 @@ let flow_completion_item_to_lsp
       is_label_detail_supported
       && (Base.Option.is_some item.source || Base.Option.is_some item.type_)
     then
-      Some
-        {
-          Lsp.CompletionItemLabelDetails.qualifier = item.source;
-          parameters = None;
-          type_ = item.type_;
-        }
+      Some { Lsp.CompletionItemLabelDetails.description = item.source; detail = item.type_ }
     else
       None
   in

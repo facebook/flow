@@ -782,17 +782,15 @@ module CompletionItemLabelDetailsFmt = struct
 
   let of_json json : CompletionItemLabelDetails.t =
     let json = Some json in
-    let parameters = Jget.string_opt json "parameters" in
-    let qualifier = Jget.string_opt json "qualifier" in
-    let type_ = Jget.string_opt json "type" in
-    { parameters; qualifier; type_ }
+    let description = Jget.string_opt json "description" in
+    let detail = Jget.string_opt json "detail" in
+    { description; detail }
 
-  let to_json { parameters; qualifier; type_ } =
+  let to_json { description; detail } =
     Jprint.object_opt
       [
-        ("parameters", Base.Option.map ~f:(fun x -> JSON_String x) parameters);
-        ("qualifier", Base.Option.map ~f:(fun x -> JSON_String x) qualifier);
-        ("type", Base.Option.map ~f:(fun x -> JSON_String x) type_);
+        ("description", Base.Option.map ~f:(fun x -> JSON_String x) description);
+        ("detail", Base.Option.map ~f:(fun x -> JSON_String x) detail);
       ]
 end
 
