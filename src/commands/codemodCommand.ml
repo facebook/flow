@@ -44,7 +44,12 @@ let main (module Runnable : Codemod_runner.RUNNABLE) codemod_flags () =
     codemod_flags
   in
   initialize_environment ();
+  (* Normalizes filepaths (symlinks and shortcuts) *)
   let filenames = CommandUtils.get_filenames_from_input input_file filenames in
+  if filenames = [] then (
+    Printf.eprintf "Error: filenames or --input-file are required\n%!";
+    exit 64 (* EX_USAGE *)
+  );
   let flowconfig_name = base_flags.CommandUtils.Base_flags.flowconfig_name in
   let root =
     match root with
@@ -73,13 +78,7 @@ let main (module Runnable : Codemod_runner.RUNNABLE) codemod_flags () =
       ~options_flags:option_values
       ~saved_state_options_flags
   in
-  (* Normalizes filepaths (symlinks and shortcuts) *)
-  if filenames = [] then (
-    Printf.eprintf "Error: filenames or --input-file are required\n%!";
-    exit 64 (* EX_USAGE *)
-  );
   let file_options = Options.file_options options in
-
   let roots = CommandUtils.expand_file_list ~options:file_options filenames in
   let roots =
     SSet.fold
