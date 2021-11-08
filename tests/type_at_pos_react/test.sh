@@ -36,9 +36,7 @@ assert_ok "$FLOW" type-at-pos react_component.js 32 13 --strip-root --pretty --e
 printf "react_component.js:32:29 = "
 assert_ok "$FLOW" type-at-pos react_component.js 32 29 --strip-root --pretty --expand-json-output
 
-# react.js
-printf "react.js:2:7 = "
-assert_ok "$FLOW" type-at-pos react.js 2 7 --strip-root
+queries_in_file "type-at-pos" "react.js"
 
 printf "react_abstract_component.js:3:15 = "
 assert_ok "$FLOW" type-at-pos react_abstract_component.js 3 15 --strip-root

@@ -1,4 +1,4 @@
 {"path":"ignore/test.js","line":2,"endline":2,"start":5,"end":7}
-{"type":"number","reasons":[],"loc":{"source":"ignore/test.js","type":"SourceFile","start":{"line":3,"column":1,"offset":33},"end":{"line":3,"column":3,"offset":36}},"path":"ignore/test.js","line":3,"endline":3,"start":1,"end":3}
+{"type":"(unknown)","reasons":[],"loc":{"source":null,"type":null,"start":{"line":0,"column":1,"offset":0},"end":{"line":0,"column":0,"offset":0}},"path":"","line":0,"endline":0,"start":1,"end":0}
 {"path":"no_flow/test.js","line":2,"endline":2,"start":5,"end":7}
-{"type":"number","reasons":[],"loc":{"source":"no_flow/test.js","type":"SourceFile","start":{"line":3,"column":1,"offset":33},"end":{"line":3,"column":3,"offset":36}},"path":"no_flow/test.js","line":3,"endline":3,"start":1,"end":3}
+{"type":"(unknown)","reasons":[],"loc":{"source":null,"type":null,"start":{"line":0,"column":1,"offset":0},"end":{"line":0,"column":0,"offset":0}},"path":"","line":0,"endline":0,"start":1,"end":0}

@@ -1,17 +1,17 @@
-a.js:1:16
+a.js:3:16
 Flags:
 module "a" {exports: typeof A}
-a.js:1:16,1:16
+a.js:3:16,3:16
 
 b.js:3:16
 Flags:
 module "b" {exports: number}
 b.js:3:16,3:16
 
-c.js:1:16
+c.js:3:16
 Flags:
 module "c" {type X = number; type Y = string; exports: number}
-c.js:1:16,1:16
+c.js:3:16,3:16
 
 cjs.js:7:4
 Flags:
