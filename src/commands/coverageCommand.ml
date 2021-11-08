@@ -47,7 +47,6 @@ let spec =
                ^ "Cannot be used with --json or --pretty"
                )
         |> path_flag
-        |> flag "--respect-pragma" no_arg ~doc:"" (* deprecated *)
         |> flag "--all" no_arg ~doc:"Ignore absence of @flow pragma"
         |> flag "--show-trust" no_arg ~doc:"EXPERIMENTAL: Include trust information in output"
         |> anon "file" (optional string)
@@ -290,7 +289,6 @@ let main
     color
     debug
     path
-    respect_pragma
     all
     trust
     filename
@@ -310,15 +308,6 @@ let main
     else
       None
   in
-  if (not option_values.quiet) && all && respect_pragma then
-    prerr_endline "Warning: --all and --respect-pragma cannot be used together. --all wins.";
-
-  (* TODO: --respect-pragma is deprecated. We will soon flip the default. As a
-     transition, --all defaults to enabled. To maintain the current behavior
-     going forward, callers should add --all, which currently is a no-op.
-     Once we flip the default, --respect-pragma will have no effect and will
-     be removed. *)
-  let all = all || not respect_pragma in
   (* pretty implies json *)
   let json = json || pretty in
   if color && json then

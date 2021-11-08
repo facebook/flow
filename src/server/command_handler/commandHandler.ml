@@ -618,7 +618,7 @@ let dump_types ~options ~env ~profiling ~evaluate_type_destructors file_input =
           (Ok (Type_info_service.dump_types ~evaluate_type_destructors cx file_sig typed_ast))
   )
 
-let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust file_input =
+let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust file content =
   if Options.trust_mode options = Options.NoTrust && trust then
     ( Error
         "Coverage cannot be run in trust mode if the server is not in trust mode. \n\nRestart the Flow server with --trust-mode=check' to enable this command.",
@@ -626,34 +626,30 @@ let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust 
     )
     |> Lwt.return
   else
-    let file = file_key_of_file_input ~options file_input in
-    match File_input.content_of_file_input file_input with
-    | Error e -> Lwt.return (Error e, None)
-    | Ok content ->
-      let%lwt (file_artifacts_result, did_hit_cache) =
-        let%lwt parse_result = Type_contents.parse_contents ~options ~profiling content file in
-        type_parse_artifacts_with_cache
-          ~options
-          ~env
-          ~profiling
-          ~type_parse_artifacts_cache
-          file
-          parse_result
+    let%lwt (file_artifacts_result, did_hit_cache) =
+      let%lwt parse_result = Type_contents.parse_contents ~options ~profiling content file in
+      type_parse_artifacts_with_cache
+        ~options
+        ~env
+        ~profiling
+        ~type_parse_artifacts_cache
+        file
+        parse_result
+    in
+    let extra_data =
+      let json_props = add_cache_hit_data_to_json [] did_hit_cache in
+      Hh_json.JSON_Object json_props
+    in
+    match file_artifacts_result with
+    | Ok (_, Typecheck_artifacts { cx; typed_ast }) ->
+      let%lwt coverage =
+        Memory_utils.with_memory_timer_lwt ~options "Coverage" profiling (fun () ->
+            Lwt.return (Type_info_service.coverage ~cx ~typed_ast ~force ~trust file content)
+        )
       in
-      let extra_data =
-        let json_props = add_cache_hit_data_to_json [] did_hit_cache in
-        Hh_json.JSON_Object json_props
-      in
-      (match file_artifacts_result with
-      | Ok (_, Typecheck_artifacts { cx; typed_ast }) ->
-        let%lwt coverage =
-          Memory_utils.with_memory_timer_lwt ~options "Coverage" profiling (fun () ->
-              Lwt.return (Type_info_service.coverage ~cx ~typed_ast ~force ~trust file content)
-          )
-        in
-        Lwt.return (Ok coverage, Some extra_data)
-      | Error _parse_errors ->
-        Lwt.return (Error "Couldn't parse file in parse_contents", Some extra_data))
+      Lwt.return (Ok coverage, Some extra_data)
+    | Error _parse_errors ->
+      Lwt.return (Error "Couldn't parse file in parse_contents", Some extra_data)
 
 let batch_coverage ~options ~env ~trust ~batch =
   if Options.trust_mode options = Options.NoTrust && trust then
@@ -880,7 +876,20 @@ let handle_check_file ~options ~force ~input ~profiling ~env =
 let handle_coverage ~options ~force ~input ~trust ~profiling ~env =
   let%lwt (response, json_data) =
     try_with_json (fun () ->
-        coverage ~options ~env ~profiling ~type_parse_artifacts_cache:None ~force ~trust input
+        let options = { options with Options.opt_all = options.Options.opt_all || force } in
+        match of_file_input ~options ~env input with
+        | Error (Failed msg) -> Lwt.return (Error msg, None)
+        | Error (Skipped reason) -> Lwt.return (Error reason, json_of_skipped reason)
+        | Ok (file_key, file_contents) ->
+          coverage
+            ~options
+            ~env
+            ~profiling
+            ~type_parse_artifacts_cache:None
+            ~force
+            ~trust
+            file_key
+            file_contents
     )
   in
   Lwt.return (ServerProt.Response.COVERAGE response, json_data)
@@ -1946,31 +1955,9 @@ let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~clien
        * a little more defensive. The only danger here is that the file contents may have changed *)
       file_input_of_text_document_identifier ~client textDocument
   in
-  (* if it isn't a flow file (i.e. lacks a @flow directive) then we won't do anything *)
-  let content = File_input.content_of_file_input file_input in
-  let is_flow =
-    match content with
-    | Ok content ->
-      let file_key = file_key_of_file_input ~options file_input in
-      (match check_that_we_care_about_this_file ~options ~env ~file_key ~content with
-      | Ok () -> true
-      | Error _ -> false)
-    | Error _ -> false
-  in
-  let%lwt (result, extra_data) =
-    if is_flow then
-      (* 'true' makes it report "unknown" for all exprs in non-flow files *)
-      let force = Options.all options in
-      let type_parse_artifacts_cache =
-        Some (Persistent_connection.type_parse_artifacts_cache client)
-      in
-      coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust:false file_input
-    else
-      Lwt.return (Ok [], None)
-  in
-  let metadata = with_data ~extra_data metadata in
-  match (is_flow, result) with
-  | (false, _) ->
+  match of_file_input ~options ~env file_input with
+  | Error (Failed reason) -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
+  | Error (Skipped reason) ->
     let range = { start = { line = 0; character = 0 }; end_ = { line = 1; character = 0 } } in
     let r =
       TypeCoverageResult
@@ -1981,76 +1968,99 @@ let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~clien
         }
     in
     let response = ResponseMessage (id, r) in
+    let metadata =
+      let extra_data = json_of_skipped reason in
+      with_data ~extra_data metadata
+    in
     Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
-  | (true, Ok all_locs) ->
-    (* Figure out the percentages *)
-    let accum_coverage (covered, total) (_loc, cov) =
-      let covered =
-        match cov with
-        | Coverage_response.Tainted
-        | Coverage_response.Untainted ->
-          covered + 1
-        | Coverage_response.Uncovered
-        | Coverage_response.Empty ->
-          covered
+  | Ok (file_key, file_contents) ->
+    let%lwt (result, extra_data) =
+      (* 'true' makes it report "unknown" for all exprs in non-flow files *)
+      let force = Options.all options in
+      let type_parse_artifacts_cache =
+        Some (Persistent_connection.type_parse_artifacts_cache client)
       in
-      (covered, total + 1)
+      coverage
+        ~options
+        ~env
+        ~profiling
+        ~type_parse_artifacts_cache
+        ~force
+        ~trust:false
+        file_key
+        file_contents
     in
-    let (covered, total) = Base.List.fold all_locs ~init:(0, 0) ~f:accum_coverage in
-    let coveredPercent =
-      if total = 0 then
-        100
-      else
-        100 * covered / total
-    in
-    (* Figure out each individual uncovered span *)
-    let uncovereds =
-      Base.List.filter_map all_locs ~f:(fun (loc, cov) ->
+    let metadata = with_data ~extra_data metadata in
+    (match result with
+    | Ok all_locs ->
+      (* Figure out the percentages *)
+      let accum_coverage (covered, total) (_loc, cov) =
+        let covered =
           match cov with
           | Coverage_response.Tainted
           | Coverage_response.Untainted ->
-            None
+            covered + 1
           | Coverage_response.Uncovered
           | Coverage_response.Empty ->
-            Some loc
-      )
-    in
-    (* Imagine a tree of uncovered spans based on range inclusion. *)
-    (* This sorted list is a pre-order flattening of that tree. *)
-    let sorted = Base.List.sort uncovereds ~compare:Loc.compare in
-    (* We can use that sorted list to remove any span which contains another, so *)
-    (* the user only sees actionable reports of the smallest causes of untypedness. *)
-    (* The algorithm: accept a range if its immediate successor isn't contained by it. *)
-    let f (candidate, acc) loc =
-      if Loc.contains candidate loc then
-        (loc, acc)
-      else
-        (loc, candidate :: acc)
-    in
-    let singles =
-      match sorted with
-      | [] -> []
-      | first :: _ ->
-        let (final_candidate, singles) = Base.List.fold sorted ~init:(first, []) ~f in
-        final_candidate :: singles
-    in
-    (* Convert to LSP *)
-    let loc_to_lsp loc =
-      { TypeCoverage.range = Flow_lsp_conversions.loc_to_lsp_range loc; message = None }
-    in
-    let uncoveredRanges = Base.List.map singles ~f:loc_to_lsp in
-    (* Send the results! *)
-    let r =
-      TypeCoverageResult
-        {
-          TypeCoverage.coveredPercent;
-          uncoveredRanges;
-          defaultMessage = "Un-type checked code. Consider adding type annotations.";
-        }
-    in
-    let response = ResponseMessage (id, r) in
-    Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
-  | (true, Error reason) -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
+            covered
+        in
+        (covered, total + 1)
+      in
+      let (covered, total) = Base.List.fold all_locs ~init:(0, 0) ~f:accum_coverage in
+      let coveredPercent =
+        if total = 0 then
+          100
+        else
+          100 * covered / total
+      in
+      (* Figure out each individual uncovered span *)
+      let uncovereds =
+        Base.List.filter_map all_locs ~f:(fun (loc, cov) ->
+            match cov with
+            | Coverage_response.Tainted
+            | Coverage_response.Untainted ->
+              None
+            | Coverage_response.Uncovered
+            | Coverage_response.Empty ->
+              Some loc
+        )
+      in
+      (* Imagine a tree of uncovered spans based on range inclusion. *)
+      (* This sorted list is a pre-order flattening of that tree. *)
+      let sorted = Base.List.sort uncovereds ~compare:Loc.compare in
+      (* We can use that sorted list to remove any span which contains another, so *)
+      (* the user only sees actionable reports of the smallest causes of untypedness. *)
+      (* The algorithm: accept a range if its immediate successor isn't contained by it. *)
+      let f (candidate, acc) loc =
+        if Loc.contains candidate loc then
+          (loc, acc)
+        else
+          (loc, candidate :: acc)
+      in
+      let singles =
+        match sorted with
+        | [] -> []
+        | first :: _ ->
+          let (final_candidate, singles) = Base.List.fold sorted ~init:(first, []) ~f in
+          final_candidate :: singles
+      in
+      (* Convert to LSP *)
+      let loc_to_lsp loc =
+        { TypeCoverage.range = Flow_lsp_conversions.loc_to_lsp_range loc; message = None }
+      in
+      let uncoveredRanges = Base.List.map singles ~f:loc_to_lsp in
+      (* Send the results! *)
+      let r =
+        TypeCoverageResult
+          {
+            TypeCoverage.coveredPercent;
+            uncoveredRanges;
+            defaultMessage = "Un-type checked code. Consider adding type annotations.";
+          }
+      in
+      let response = ResponseMessage (id, r) in
+      Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
+    | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata)
 
 let handle_persistent_rage ~reader ~genv ~id ~metadata ~client:_ ~profiling ~env =
   let root = Path.to_string genv.ServerEnv.options.Options.opt_root in
