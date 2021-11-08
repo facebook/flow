@@ -158,6 +158,12 @@ type ide_file_error =
   | Skipped of string
   | Failed of string
 
+let json_props_of_skipped reason =
+  let open Hh_json in
+  [("skipped", JSON_Bool true); ("skip_reason", JSON_String reason)]
+
+let json_of_skipped reason = Some (Hh_json.JSON_Object (json_props_of_skipped reason))
+
 let of_file_input ~options ~env file_input =
   let file_key = file_key_of_file_input ~options file_input in
   match File_input.content_of_file_input file_input with
@@ -414,10 +420,8 @@ let infer_type
       ServerProt.Response.Infer_type_response
         { loc = Loc.none; ty = None; exact_by_default = true; documentation = None }
     in
-    let json_props =
-      Hh_json.(JSON_Object [("skipped", JSON_Bool true); ("skip_reason", JSON_String reason)])
-    in
-    Lwt.return (Ok response, Some json_props)
+    let extra_data = json_of_skipped reason in
+    Lwt.return (Ok response, extra_data)
   | Ok (file, content) ->
     let options = { options with Options.opt_verbose = verbose } in
     let%lwt (file_artifacts_result, did_hit_cache) =
@@ -755,40 +759,42 @@ let find_module ~options ~reader (moduleref, filename) =
   Module_heaps.Reader.get_file ~reader ~audit:Expensive.warn module_name
 
 let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_input, line, col) =
-  let file = file_key_of_file_input ~options file_input in
-  let%lwt (check_result, did_hit_cache) =
-    match File_input.content_of_file_input file_input with
-    | Error _ as err -> Lwt.return (err, None)
-    | Ok content ->
-      (match%lwt
-         let%lwt parse_result = Type_contents.parse_contents ~options ~profiling content file in
-         type_parse_artifacts_with_cache
-           ~options
-           ~env
-           ~profiling
-           ~type_parse_artifacts_cache
-           file
-           parse_result
-       with
+  match of_file_input ~options ~env file_input with
+  | Error (Failed msg) -> Lwt.return (Error msg, None)
+  | Error (Skipped reason) ->
+    let json_props = ("result", Hh_json.JSON_String "SKIPPED") :: json_props_of_skipped reason in
+    Lwt.return (Ok Loc.none, Some (Hh_json.JSON_Object json_props))
+  | Ok (file, content) ->
+    let%lwt (check_result, did_hit_cache) =
+      match%lwt
+        let%lwt parse_result = Type_contents.parse_contents ~options ~profiling content file in
+        type_parse_artifacts_with_cache
+          ~options
+          ~env
+          ~profiling
+          ~type_parse_artifacts_cache
+          file
+          parse_result
+      with
       | (Ok result, did_hit_cache) -> Lwt.return (Ok result, did_hit_cache)
       | (Error _parse_errors, did_hit_cache) ->
-        Lwt.return (Error "Couldn't parse file in parse_contents", did_hit_cache))
-  in
-  match check_result with
-  | Error msg ->
-    let json_props = [("error", Hh_json.JSON_String msg)] in
-    let json_props = add_cache_hit_data_to_json json_props did_hit_cache in
-    Lwt.return (Error msg, Some (Hh_json.JSON_Object json_props))
-  | Ok check_result ->
-    let%lwt (result, json_props) =
-      get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, col)
+        Lwt.return (Error "Couldn't parse file in parse_contents", did_hit_cache)
     in
-    let json =
-      let json_props = Base.Option.value ~default:[] json_props in
+    (match check_result with
+    | Error msg ->
+      let json_props = [("error", Hh_json.JSON_String msg)] in
       let json_props = add_cache_hit_data_to_json json_props did_hit_cache in
-      Hh_json.JSON_Object json_props
-    in
-    Lwt.return (result, Some json)
+      Lwt.return (Error msg, Some (Hh_json.JSON_Object json_props))
+    | Ok check_result ->
+      let%lwt (result, json_props) =
+        get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, col)
+      in
+      let json =
+        let json_props = Base.Option.value ~default:[] json_props in
+        let json_props = add_cache_hit_data_to_json json_props did_hit_cache in
+        Hh_json.JSON_Object json_props
+      in
+      Lwt.return (result, Some json))
 
 let module_name_of_string ~options module_name_str =
   let file_options = Options.file_options options in
@@ -1024,10 +1030,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
     match of_file_input ~options ~env file_input with
     | Error (Failed msg) -> Lwt.return (Error msg, None)
     | Error (Skipped reason) ->
-      let extra_data =
-        let open Hh_json in
-        Some (JSON_Object [("skipped", JSON_Bool true); ("skip_reason", JSON_String reason)])
-      in
+      let extra_data = json_of_skipped reason in
       Lwt.return (Ok [], extra_data)
     | Ok (file_key, file_contents) ->
       let%lwt (file_artifacts_result, _did_hit_cache) =
@@ -2259,12 +2262,8 @@ let handle_live_errors_request =
                 Hh_logger.info "Not reporting live errors for file %S: %s" file_path reason;
 
                 let metadata =
-                  let json =
-                    Hh_json.(
-                      JSON_Object [("skipped", JSON_Bool true); ("skip_reason", JSON_String reason)]
-                    )
-                  in
-                  with_data ~extra_data:(Some json) metadata
+                  let extra_data = json_of_skipped reason in
+                  with_data ~extra_data metadata
                 in
 
                 (* If the LSP requests errors for a file for which we wouldn't normally emit errors
