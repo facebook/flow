@@ -49,7 +49,7 @@ val code_actions_at_loc :
   only:Lsp.CodeActionKind.t list option ->
   uri:Lsp.DocumentUri.t ->
   loc:Loc.t ->
-  (Lsp.CodeAction.command_or_action list, string) result Lwt.t
+  (Lsp.CodeAction.command_or_action list, string) result
 
 val autofix_imports :
   options:Options.t ->
@@ -66,7 +66,7 @@ val autofix_exports :
   profiling:Profiling_js.running ->
   file_key:File_key.t ->
   file_content:string ->
-  (Replacement_printer.patch * string list, string) result Lwt.t
+  (Replacement_printer.patch * string list, string) result
 
 val insert_type :
   options:Options.t ->
@@ -78,7 +78,7 @@ val insert_type :
   omit_targ_defaults:bool ->
   location_is_strict:bool ->
   ambiguity_strategy:Autofix_options.ambiguity_strategy ->
-  (Replacement_printer.patch, string) result Lwt.t
+  (Replacement_printer.patch, string) result
 
 val organize_imports :
   options:Options.t -> ast:(Loc.t, Loc.t) Flow_ast.Program.t -> Lsp.TextEdit.t list

@@ -668,7 +668,7 @@ let code_actions_at_loc
     else
       actions
   in
-  Lwt.return (Ok actions)
+  Ok actions
 
 module ExportSourceMap = WrappedMap.Make (struct
   type t = Export_index.source
@@ -767,12 +767,12 @@ let autofix_imports ~options ~env ~reader ~cx ~ast ~uri =
 
 let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
   let open Autofix_exports in
-  let%lwt file_artifacts =
-    let%lwt ((_, parse_errs) as intermediate_result) =
+  let file_artifacts =
+    let ((_, parse_errs) as intermediate_result) =
       Type_contents.parse_contents ~options ~profiling file_content file_key
     in
     if not (Flow_error.ErrorSet.is_empty parse_errs) then
-      Lwt.return (Error parse_errs)
+      Error parse_errs
     else
       Type_contents.type_parse_artifacts ~options ~env ~profiling file_key intermediate_result
   in
@@ -786,8 +786,8 @@ let autofix_exports ~options ~env ~profiling ~file_key ~file_content =
       fix_signature_verification_errors ~file_key ~full_cx ~file_sig ~typed_ast ast sv_errors
     in
     let opts = layout_options options in
-    Lwt.return (Ok (Insert_type.mk_patch ~opts ast new_ast file_content, it_errs))
-  | Error _ -> Lwt.return (Error "Failed to type-check file")
+    Ok (Insert_type.mk_patch ~opts ast new_ast file_content, it_errs)
+  | Error _ -> Error "Failed to type-check file"
 
 let insert_type
     ~options
@@ -800,44 +800,41 @@ let insert_type
     ~location_is_strict:strict
     ~ambiguity_strategy =
   let open Insert_type in
-  let%lwt file_artifacts =
-    let%lwt ((_, parse_errs) as intermediate_result) =
+  let file_artifacts =
+    let ((_, parse_errs) as intermediate_result) =
       Type_contents.parse_contents ~options ~profiling file_content file_key
     in
     (* It's not clear to me (nmote) that we actually should abort when we see parse errors. Maybe
      * we should continue on here. I'm inserting this logic during the migration away from
      * typecheck_contents because it's behavior-preserving, but this may be worth revisiting. *)
     if not (Flow_error.ErrorSet.is_empty parse_errs) then
-      Lwt.return (Error parse_errs)
+      Error parse_errs
     else
       Type_contents.type_parse_artifacts ~options ~env ~profiling file_key intermediate_result
   in
   match file_artifacts with
   | Ok (Parse_artifacts { ast; file_sig; _ }, Typecheck_artifacts { cx = full_cx; typed_ast }) ->
-    let result =
-      try
-        let new_ast =
-          Insert_type.insert_type
-            ~full_cx
-            ~file_sig
-            ~typed_ast
-            ~omit_targ_defaults
-            ~strict
-            ~ambiguity_strategy
-            ast
-            target
-        in
-        let opts = layout_options options in
-        Ok (mk_patch ~opts ast new_ast file_content)
-      with
-      | FailedToInsertType err -> Error (error_to_string err)
-    in
-    Lwt.return result
+    (try
+       let new_ast =
+         Insert_type.insert_type
+           ~full_cx
+           ~file_sig
+           ~typed_ast
+           ~omit_targ_defaults
+           ~strict
+           ~ambiguity_strategy
+           ast
+           target
+       in
+       let opts = layout_options options in
+       Ok (mk_patch ~opts ast new_ast file_content)
+     with
+    | FailedToInsertType err -> Error (error_to_string err))
   | Error _ as result ->
     let (errs, _) =
       Type_contents.printable_errors_of_file_artifacts_result ~options ~env file_key result
     in
-    Lwt.return (Error (error_to_string (Expected (FailedToTypeCheck errs))))
+    Error (error_to_string (Expected (FailedToTypeCheck errs)))
 
 let organize_imports ~options ~ast =
   let edits =

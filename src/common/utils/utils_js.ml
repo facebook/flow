@@ -296,30 +296,6 @@ let bind2 ~f x y = Base.Result.bind x (fun x -> Base.Result.bind y (f x))
 
 let map2 ~f x y = Base.Result.bind x (fun x -> Base.Result.map y ~f:(f x))
 
-(** Catch exceptions and promise rejections, stringify them, and return Error. Otherwise, return
-    the unchanged result of calling `f`. *)
-let try_with_json :
-    (unit -> (('a, string) result * 'json) Lwt.t) -> (('a, string) result * 'json) Lwt.t =
- fun f ->
-  try%lwt f () with
-  | Lwt.Canceled as exn ->
-    let exn = Exception.wrap exn in
-    Exception.reraise exn
-  | exn ->
-    let exn = Exception.wrap exn in
-    Lwt.return (Error (Exception.to_string exn), None)
-
-(** Catch exceptions and promise rejections, stringify them, and return Error. Otherwise, return
-    the unchanged result of calling `f`. *)
-let try_with f =
-  try%lwt f () with
-  | Lwt.Canceled as exn ->
-    let exn = Exception.wrap exn in
-    Exception.reraise exn
-  | exn ->
-    let exn = Exception.wrap exn in
-    Lwt.return (Error (Exception.to_string exn))
-
 let debug_print_current_stack_trace () =
   Hh_logger.info "Current backtrace:\n%s" (Exception.get_current_callstack_string 200)
 

@@ -13,4 +13,4 @@ val find_local_refs :
   file_input:File_input.t ->
   line:int ->
   col:int ->
-  (FindRefsTypes.find_refs_ok, string) result Lwt.t
+  (FindRefsTypes.find_refs_ok, string) result

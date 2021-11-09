@@ -5,10 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-let ( >>= ) = Lwt_result.Infix.( >>= )
-
-open Utils_js
-
 (** Sort and dedup by loc.
 
     This will have to be revisited if we ever need to report multiple ref kinds for
@@ -22,30 +18,40 @@ let local_variable_refs scope_info loc =
   | Some (var_refs, local_def_loc) -> (Some var_refs, local_def_loc)
 
 let parse_contents ~options ~profiling content file_key =
-  match%lwt Type_contents.parse_contents ~options ~profiling content file_key with
+  match Type_contents.parse_contents ~options ~profiling content file_key with
   | (Some (Types_js_types.Parse_artifacts { ast; file_sig; docblock; _ }), _errs) ->
-    Lwt.return (Ok (ast, file_sig, docblock))
+    Ok (ast, file_sig, docblock)
   | (None, errs) ->
     if Flow_error.ErrorSet.is_empty errs then
-      Lwt.return (Error "Parse skipped")
+      Error "Parse skipped"
     else
-      Lwt.return (Error "Parse unexpectedly failed")
+      Error "Parse unexpectedly failed"
 
 let find_local_refs ~reader ~options ~env ~profiling ~file_input ~line ~col =
+  let open Base.Result.Let_syntax in
   let filename = File_input.filename_of_file_input file_input in
   let file_key = File_key.SourceFile filename in
   let loc = Loc.cursor (Some file_key) line col in
-  File_input.content_of_file_input file_input %>>= fun content ->
-  parse_contents ~options ~profiling content file_key >>= fun ast_info ->
+  let%bind content = File_input.content_of_file_input file_input in
+  let%bind ast_info = parse_contents ~options ~profiling content file_key in
   (* Start by running local variable find references *)
   let (ast, _, _) = ast_info in
   let scope_info = Scope_builder.program ~with_types:true ast in
   let (var_refs, loc) = local_variable_refs scope_info loc in
   (* Then run property find-refs *)
-  PropertyFindRefs.find_local_refs ~reader ~options ~env ~profiling file_key ast_info scope_info loc
-  >>= fun prop_refs ->
+  let%bind prop_refs =
+    PropertyFindRefs.find_local_refs
+      ~reader
+      ~options
+      ~env
+      ~profiling
+      file_key
+      ast_info
+      scope_info
+      loc
+  in
   (* If property find-refs returned nothing (for example if we are importing from an untyped
      * module), then fall back on the local refs we computed earlier. *)
   let refs = Base.Option.first_some prop_refs var_refs in
   let refs = Base.Option.map ~f:(fun (name, refs) -> (name, sort_and_dedup refs)) refs in
-  Lwt.return (Ok refs)
+  Ok refs

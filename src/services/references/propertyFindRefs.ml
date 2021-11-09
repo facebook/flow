@@ -207,12 +207,9 @@ let find_refs_in_file ~reader options ast_info scope_info file_key def_info =
   refs >>| add_related_bindings file_sig scope_info
 
 let find_local_refs ~reader ~options ~env ~profiling file_key ast_info scope_info loc =
-  match%lwt get_def_info ~reader ~options env profiling file_key ast_info loc with
-  | Error _ as err -> Lwt.return err
-  | Ok None -> Lwt.return (Ok None)
+  match get_def_info ~reader ~options env profiling file_key ast_info loc with
+  | Error _ as err -> err
+  | Ok None -> Ok None
   | Ok (Some def_info) ->
-    let refs =
-      find_refs_in_file ~reader options ast_info scope_info file_key def_info >>= fun refs ->
-      Ok (Some (display_name_of_def_info def_info, refs))
-    in
-    Lwt.return refs
+    find_refs_in_file ~reader options ast_info scope_info file_key def_info >>= fun refs ->
+    Ok (Some (display_name_of_def_info def_info, refs))
