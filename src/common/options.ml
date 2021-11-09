@@ -76,7 +76,6 @@ type t = {
   opt_debug: bool;
   opt_direct_dependent_files_fix: bool;
   opt_enable_const_params: bool;
-  opt_enable_indexed_access: bool;
   opt_enabled_rollouts: string SMap.t;
   opt_enforce_local_inference_annotations: bool;
   opt_local_inference_annotation_dirs: string list;
@@ -170,8 +169,6 @@ let max_literal_length opts = opts.opt_max_literal_length
 let direct_dependent_files_fix opts = opts.opt_direct_dependent_files_fix
 
 let enable_const_params opts = opts.opt_enable_const_params
-
-let enable_indexed_access opts = opts.opt_enable_indexed_access
 
 let enable_relay_integration opts = opts.opt_enable_relay_integration
 

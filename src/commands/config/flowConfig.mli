@@ -148,8 +148,6 @@ val ignore_non_literal_requires : config -> bool
 
 val include_warnings : config -> bool
 
-val indexed_access : config -> bool
-
 val lazy_mode : config -> lazy_mode option
 
 val log_file : config -> Path.t option

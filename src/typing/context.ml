@@ -34,7 +34,6 @@ type metadata = {
   max_literal_length: int;
   enable_const_params: bool;
   enable_enums: bool;
-  enable_indexed_access: bool;
   enable_relay_integration: bool;
   env_mode: Options.env_mode;
   env_mode_constrain_write_dirs: string list;
@@ -226,7 +225,6 @@ let metadata_of_options options =
     max_literal_length = Options.max_literal_length options;
     enable_const_params = Options.enable_const_params options;
     enable_enums = Options.enums options;
-    enable_indexed_access = Options.enable_indexed_access options;
     enable_relay_integration = Options.enable_relay_integration options;
     env_mode = Options.env_mode options;
     env_mode_constrain_write_dirs = Options.env_mode_constrain_write_dirs options;
@@ -408,8 +406,6 @@ let enable_const_params cx =
   cx.metadata.enable_const_params || cx.metadata.strict || cx.metadata.strict_local
 
 let enable_enums cx = cx.metadata.enable_enums
-
-let enable_indexed_access cx = cx.metadata.enable_indexed_access
 
 let enable_relay_integration cx = cx.metadata.enable_relay_integration
 

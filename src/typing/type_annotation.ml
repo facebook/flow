@@ -261,23 +261,17 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
       let (((_, object_type), _) as _object) = convert cx tparams_map _object in
       let (((_, index_type), _) as index) = convert cx tparams_map index in
       let t =
-        if not @@ Context.enable_indexed_access cx then (
-          Flow.add_output cx (Error_message.EIndexedAccessNotEnabled loc);
-          AnyT.error reason
-        ) else
-          let use_op =
-            Op
-              (IndexedTypeAccess
-                 { _object = reason_of_t object_type; index = reason_of_t index_type }
-              )
-          in
-          let destructor =
-            match index with
-            | (_, StringLiteral { Ast.StringLiteral.value; _ }) ->
-              PropertyType { name = OrdinaryName value; is_indexed_access = true }
-            | _ -> ElementType { index_type; is_indexed_access = true }
-          in
-          EvalT (object_type, TypeDestructorT (use_op, reason, destructor), mk_eval_id cx loc)
+        let use_op =
+          Op
+            (IndexedTypeAccess { _object = reason_of_t object_type; index = reason_of_t index_type })
+        in
+        let destructor =
+          match index with
+          | (_, StringLiteral { Ast.StringLiteral.value; _ }) ->
+            PropertyType { name = OrdinaryName value; is_indexed_access = true }
+          | _ -> ElementType { index_type; is_indexed_access = true }
+        in
+        EvalT (object_type, TypeDestructorT (use_op, reason, destructor), mk_eval_id cx loc)
       in
       ((loc, t), IndexedAccess { IndexedAccess._object; index; comments })
     | (loc, OptionalIndexedAccess ia) ->
@@ -2140,66 +2134,51 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
     let { T.IndexedAccess._object; index; comments } = indexed_access in
     let (((_, index_type), _) as index) = convert cx tparams_map index in
     let index_reason = reason_of_t index_type in
-    if not @@ Context.enable_indexed_access cx then (
-      Flow.add_output cx (Error_message.EIndexedAccessNotEnabled loc);
-      let object_ast = convert cx tparams_map _object in
-      let any_t = AnyT.error reason in
-      ( any_t,
-        ( (loc, any_t),
-          T.OptionalIndexedAccess
-            {
-              T.OptionalIndexedAccess.indexed_access =
-                { T.IndexedAccess._object = object_ast; index; comments };
-              optional;
-            }
+    let (object_t, object_ast) =
+      match _object with
+      | (loc, T.OptionalIndexedAccess ia) -> optional_indexed_access cx loc ~tparams_map ia
+      | _ ->
+        let (((_, object_t), _) as object_ast) = convert cx tparams_map _object in
+        (object_t, object_ast)
+    in
+    let lhs_reason = reason_of_t object_t in
+    let use_op = Op (IndexedTypeAccess { _object = lhs_reason; index = index_reason }) in
+    let non_maybe_destructor =
+      match index with
+      | (_, Ast.Type.StringLiteral { Ast.StringLiteral.value; _ }) ->
+        let name = OrdinaryName value in
+        if optional then
+          OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessStrLitIndex name }
+        else
+          PropertyType { name; is_indexed_access = true }
+      | _ ->
+        if optional then
+          OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessTypeIndex index_type }
+        else
+          ElementType { index_type; is_indexed_access = true }
+    in
+    let non_maybe_result_t =
+      EvalT (object_t, TypeDestructorT (use_op, reason, non_maybe_destructor), mk_eval_id cx loc)
+    in
+    let void_reason = replace_desc_reason RVoid lhs_reason in
+    let result_t =
+      EvalT
+        ( non_maybe_result_t,
+          TypeDestructorT
+            (unknown_use (* not used *), reason, OptionalIndexedAccessResultType { void_reason }),
+          Eval.generate_id ()
         )
+    in
+    ( non_maybe_result_t,
+      ( (loc, result_t),
+        T.OptionalIndexedAccess
+          {
+            T.OptionalIndexedAccess.indexed_access =
+              { T.IndexedAccess._object = object_ast; index; comments };
+            optional;
+          }
       )
-    ) else
-      let (object_t, object_ast) =
-        match _object with
-        | (loc, T.OptionalIndexedAccess ia) -> optional_indexed_access cx loc ~tparams_map ia
-        | _ ->
-          let (((_, object_t), _) as object_ast) = convert cx tparams_map _object in
-          (object_t, object_ast)
-      in
-      let lhs_reason = reason_of_t object_t in
-      let use_op = Op (IndexedTypeAccess { _object = lhs_reason; index = index_reason }) in
-      let non_maybe_destructor =
-        match index with
-        | (_, Ast.Type.StringLiteral { Ast.StringLiteral.value; _ }) ->
-          let name = OrdinaryName value in
-          if optional then
-            OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessStrLitIndex name }
-          else
-            PropertyType { name; is_indexed_access = true }
-        | _ ->
-          if optional then
-            OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessTypeIndex index_type }
-          else
-            ElementType { index_type; is_indexed_access = true }
-      in
-      let non_maybe_result_t =
-        EvalT (object_t, TypeDestructorT (use_op, reason, non_maybe_destructor), mk_eval_id cx loc)
-      in
-      let void_reason = replace_desc_reason RVoid lhs_reason in
-      let result_t =
-        EvalT
-          ( non_maybe_result_t,
-            TypeDestructorT
-              (unknown_use (* not used *), reason, OptionalIndexedAccessResultType { void_reason }),
-            Eval.generate_id ()
-          )
-      in
-      ( non_maybe_result_t,
-        ( (loc, result_t),
-          T.OptionalIndexedAccess
-            {
-              T.OptionalIndexedAccess.indexed_access =
-                { T.IndexedAccess._object = object_ast; index; comments };
-              optional;
-            }
-        )
-      )
+    )
 
   let mk_super cx tparams_map loc c targs =
     match targs with
