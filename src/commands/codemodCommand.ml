@@ -259,7 +259,14 @@ module Annotate_lti_command = struct
         }
 
       (* Match all files the codemod is run over *)
-      let check_options o = Options.{ o with opt_enforce_local_inference_annotations = true }
+      let check_options o =
+        Options.
+          {
+            o with
+            opt_enforce_local_inference_annotations = true;
+            opt_enforce_this_annotations = true;
+          }
+        
 
       let visit =
         let mapper =

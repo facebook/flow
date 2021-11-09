@@ -8680,7 +8680,7 @@ module Make (Env : Env_sig.S) = struct
       Func_stmt_config.This { t; loc; annot = (annot_loc, annot) }
     in
     let require_this_annot cx func param_loc = function
-      | None when RequireAnnot.should_require_annot cx ->
+      | None when Context.enforce_this_annotations cx ->
         if
           Signature_utils.This_finder.found_this_in_body_or_params
             func.Ast.Function.body

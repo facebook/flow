@@ -88,6 +88,8 @@ val enforce_local_inference_annotations : config -> bool
 
 val local_inference_annotation_dirs : config -> string list
 
+val enforce_this_annotations : config -> bool
+
 val enforce_strict_call_arity : config -> bool
 
 val enums : config -> bool

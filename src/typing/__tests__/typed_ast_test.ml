@@ -35,6 +35,7 @@ let metadata =
     enforce_strict_call_arity = true;
     enforce_local_inference_annotations = false;
     local_inference_annotation_dirs = [];
+    enforce_this_annotations = false;
     experimental_infer_indexers = false;
     exact_by_default = false;
     facebook_fbs = None;

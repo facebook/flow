@@ -57,6 +57,7 @@ module Opts = struct
     enable_const_params: bool;
     enforce_local_inference_annotations: bool;
     local_inference_annotation_dirs: string list;
+    enforce_this_annotations: bool;
     enforce_strict_call_arity: bool;
     enums: bool;
     exact_by_default: bool;
@@ -187,6 +188,7 @@ module Opts = struct
       enable_const_params = false;
       enforce_local_inference_annotations = false;
       local_inference_annotation_dirs = [];
+      enforce_this_annotations = false;
       enforce_strict_call_arity = true;
       enums = false;
       exact_by_default = false;
@@ -498,6 +500,9 @@ module Opts = struct
           Error
             "Option \"enforce_local_inference_annotations\" must be set to true to set \"local_inference_annotation_dirs\".")
 
+  let enforce_this_annotations =
+    boolean (fun opts v -> Ok { opts with enforce_this_annotations = v })
+
   let reorder_checking_parser =
     enum
       [
@@ -789,6 +794,7 @@ module Opts = struct
       ("experimental.disable_live_non_parse_errors", disable_live_non_parse_errors_parser);
       ("experimental.enforce_local_inference_annotations", enforce_local_inference_annotations);
       ("experimental.local_inference_annotation_dirs", local_inference_annotation_dirs);
+      ("experimental.enforce_this_annotations", enforce_this_annotations);
       ("experimental.enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
@@ -1431,6 +1437,8 @@ let enable_const_params c = c.options.Opts.enable_const_params
 let enforce_local_inference_annotations c = c.options.Opts.enforce_local_inference_annotations
 
 let local_inference_annotation_dirs c = c.options.Opts.local_inference_annotation_dirs
+
+let enforce_this_annotations c = c.options.Opts.enforce_this_annotations
 
 let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
 
