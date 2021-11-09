@@ -4,8 +4,6 @@ layout: guide
 
 Flow's editor integration is primarily via the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/). There are [many vim LSP clients](https://microsoft.github.io/language-server-protocol/implementors/tools/) to choose from, such as [ALE](#toc-ale).
 
-Alternatively, the legacy [vim-flow](#toc-vim-flow) extension is Flow-specific, and provides fewer features.
-
 ## ALE <a class="toc" id="toc-ale" href="#toc-ale"></a>
 
 The Asynchronous Lint Engine (ALE) plugin for Vim 8+ and NeoVim, [vim-ale](https://github.com/w0rp/ale), is a generalized linting engine with support for Flow and many other tools.
@@ -154,48 +152,4 @@ let g:LanguageClient_serverCommands={
 " check the type under cursor w/ leader T
 nnoremap <leader>t :call LanguageClient_textDocument_hover()<CR>
 nnoremap <leader>y :call LanguageClient_textDocument_definition()<CR>
-```
-
-## vim-flow <a class="toc" id="toc-vim-flow" href="#toc-vim-flow"></a>
-
-Another way to add support for Flow in Vim is to use [vim-flow](https://github.com/flowtype/vim-flow).
-
-* Adds completions to omnifunc
-* Checks JavaScript files for type errors on save
-
-### Requirements <a class="toc" id="toc-requirements" href="#toc-requirements"></a>
-
-* Requires Flow to be installed and available on your path.
-* Requires projects containing JavaScript files to be initialised with flow init.
-* Requires JavaScript files to be marked with /* @flow */ at the top.
-
-### Pathogen <a class="toc" id="toc-pathogen" href="#toc-pathogen"></a>
-
-```sh
-cd ~/.vim/bundle
-git clone git://github.com/flowtype/vim-flow.git
-```
-
-### NeoBundle <a class="toc" id="toc-neobundle" href="#toc-neobundle"></a>
-
-Add this to your ~/.vimrc
-
-```vim
-  NeoBundleLazy 'flowtype/vim-flow', {
-    \ 'autoload': {
-    \     'filetypes': 'javascript'
-    \ }}
-```
-
-With Flow build step, using flow-bin
-
-```vim
-  NeoBundleLazy 'flowtype/vim-flow', {
-    \ 'autoload': {
-    \     'filetypes': 'javascript'
-    \ },
-    \ 'build': {
-    \     'mac': 'npm install -g flow-bin',
-    \     'unix': 'npm install -g flow-bin'
-    \ }}
 ```
