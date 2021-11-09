@@ -199,7 +199,6 @@ and utility =
   | Exact of t
   | Diff of t * t
   | Rest of t * t
-  | PropertyType of t * t
   | ElementType of t * t
   | NonMaybeType of t
   | ObjMap of t * t
@@ -527,7 +526,6 @@ class ['A] comparator_ty =
       | Exact _ -> 3
       | Diff _ -> 4
       | Rest _ -> 5
-      | PropertyType _ -> 6
       | ElementType _ -> 7
       | NonMaybeType _ -> 8
       | ObjMap _ -> 9
@@ -687,7 +685,6 @@ let string_of_utility_ctor = function
   | Exact _ -> "$Exact"
   | Diff _ -> "$Diff"
   | Rest _ -> "$Rest"
-  | PropertyType _ -> "$PropertyType"
   | ElementType _ -> "$ElementType"
   | NonMaybeType _ -> "$NonMaybeType"
   | ObjMap _ -> "$ObjMap"
@@ -711,7 +708,6 @@ let types_of_utility = function
   | Exact t -> Some [t]
   | Diff (t1, t2) -> Some [t1; t2]
   | Rest (t1, t2) -> Some [t1; t2]
-  | PropertyType (t1, t2) -> Some [t1; t2]
   | ElementType (t1, t2) -> Some [t1; t2]
   | NonMaybeType t -> Some [t]
   | ObjMap (t1, t2) -> Some [t1; t2]

@@ -523,12 +523,12 @@ class virtual ['a] t =
       | OptionalIndexedAccessResultType _
       | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessStrLitIndex _ } ->
         t
-      | ElementType { index_type; is_indexed_access } ->
+      | ElementType { index_type } ->
         let index_type' = self#type_ cx map_cx index_type in
         if index_type' == index_type then
           t
         else
-          ElementType { index_type = index_type'; is_indexed_access }
+          ElementType { index_type = index_type' }
       | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessTypeIndex index_type } ->
         let index_type' = self#type_ cx map_cx index_type in
         if index_type' == index_type then

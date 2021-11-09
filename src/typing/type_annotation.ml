@@ -268,8 +268,8 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
         let destructor =
           match index with
           | (_, StringLiteral { Ast.StringLiteral.value; _ }) ->
-            PropertyType { name = OrdinaryName value; is_indexed_access = true }
-          | _ -> ElementType { index_type; is_indexed_access = true }
+            PropertyType { name = OrdinaryName value }
+          | _ -> ElementType { index_type }
         in
         EvalT (object_type, TypeDestructorT (use_op, reason, destructor), mk_eval_id cx loc)
       in
@@ -447,11 +447,7 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 reconstruct_ast
                   (EvalT
                      ( t,
-                       TypeDestructorT
-                         ( use_op reason,
-                           reason,
-                           PropertyType { name = key; is_indexed_access = false }
-                         ),
+                       TypeDestructorT (use_op reason, reason, PropertyType { name = key }),
                        mk_eval_id cx loc
                      )
                   )
@@ -468,11 +464,7 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
                 reconstruct_ast
                   (EvalT
                      ( t,
-                       TypeDestructorT
-                         ( use_op reason,
-                           reason,
-                           ElementType { index_type = e; is_indexed_access = false }
-                         ),
+                       TypeDestructorT (use_op reason, reason, ElementType { index_type = e }),
                        mk_eval_id cx loc
                      )
                   )
@@ -2150,12 +2142,12 @@ module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = 
         if optional then
           OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessStrLitIndex name }
         else
-          PropertyType { name; is_indexed_access = true }
+          PropertyType { name }
       | _ ->
         if optional then
           OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessTypeIndex index_type }
         else
-          ElementType { index_type; is_indexed_access = true }
+          ElementType { index_type }
     in
     let non_maybe_result_t =
       EvalT (object_t, TypeDestructorT (use_op, reason, non_maybe_destructor), mk_eval_id cx loc)
