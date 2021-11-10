@@ -33,7 +33,6 @@ let spec =
         |> from_flag
         |> path_flag
         |> wait_for_recheck_flag
-        |> flag "--expand-type-aliases" no_arg ~doc:"Replace type aliases with their bodies"
         |> flag
              "--evaluate-type-destructors"
              no_arg
@@ -99,7 +98,6 @@ let main
     strip_root
     path
     wait_for_recheck
-    expand_aliases
     evaluate_type_destructors
     filename
     () =
@@ -121,8 +119,7 @@ let main
       None
   in
   let request =
-    ServerProt.Request.DUMP_TYPES
-      { input = file; expand_aliases; evaluate_type_destructors; wait_for_recheck }
+    ServerProt.Request.DUMP_TYPES { input = file; evaluate_type_destructors; wait_for_recheck }
   in
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.DUMP_TYPES (Error err) ->

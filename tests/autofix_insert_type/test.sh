@@ -64,14 +64,12 @@ do_file "arrow-0.js" 4 1 4 5
 do_file "arrow-0.js" 3 7 3 8
 
 do_file "alias.js" 5 24
-do_file "alias.js" 5 24 --expand-type-aliases
 do_file "alias.js" 6 10 6 11
-do_file "alias.js" 9 1 9 5 --expand-type-aliases
+do_file "alias.js" 9 1 9 5
 
 do_file "alias-0.js" 9 24
-do_file "alias-0.js" 9 24 --expand-type-aliases
 do_file "alias-0.js" 10 10 10 11
-do_file "alias-0.js" 13 1 13 32 --expand-type-aliases
+do_file "alias-0.js" 13 1 13 32
 
 # Test pointing to identifiers
 do_file "replacement-object.js" 2 5 --strategy=generalize

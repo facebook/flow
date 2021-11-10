@@ -116,7 +116,6 @@ let get_ty cctx ~preserve_literals loc =
   let norm_opts =
     {
       Ty_normalizer_env.expand_internal_types = false;
-      expand_type_aliases = false;
       flag_shadowed_type_params = false;
       preserve_inferred_literal_types;
       evaluate_type_destructors = false;

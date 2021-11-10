@@ -915,21 +915,6 @@ optional.js:14:10 = {
   "start":10,
   "end":10
 }
-stack-overflow-bugfix.js:5:6 = {
-  "type":"type T = {fn<A, B>(): (value: B) => S<A, C<B>>, ...}",
-  "reasons":[],
-  "loc":{
-    "source":"stack-overflow-bugfix.js",
-    "type":"SourceFile",
-    "start":{"line":5,"column":6,"offset":79},
-    "end":{"line":5,"column":6,"offset":80}
-  },
-  "path":"stack-overflow-bugfix.js",
-  "line":5,
-  "endline":5,
-  "start":6,
-  "end":6
-}
 recursive.js:3:25 = {
   "type":"type V$1 = {|m(): V$1|}; {|m(): V$1|}",
   "reasons":[],
@@ -1230,21 +1215,6 @@ type-alias.js:7:6 = {
   "start":6,
   "end":6
 }
-type-alias.js:7:6 (--expand-type-aliases) = {
-  "type":"type E = {|x: number|}",
-  "reasons":[],
-  "loc":{
-    "source":"type-alias.js",
-    "type":"SourceFile",
-    "start":{"line":7,"column":6,"offset":82},
-    "end":{"line":7,"column":6,"offset":83}
-  },
-  "path":"type-alias.js",
-  "line":7,
-  "endline":7,
-  "start":6,
-  "end":6
-}
 type-alias.js:8:6 = {
   "type":"type F = ?D",
   "reasons":[],
@@ -1381,7 +1351,7 @@ type-alias.js:20:8 {
   "end":8
 }
 type-alias.js:24:6 {
-  "type":"type H = number | null",
+  "type":"type H = G<number>",
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1396,7 +1366,7 @@ type-alias.js:24:6 {
   "end":6
 }
 type-alias.js:25:6 {
-  "type":"type I = null | number | string",
+  "type":"type I = G<(G<number> | string)>",
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1411,7 +1381,7 @@ type-alias.js:25:6 {
   "end":6
 }
 type-alias.js:27:6 {
-  "type":"type K = (<X>(x: X) => void) | number | null",
+  "type":"type K = J<number>",
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1426,7 +1396,7 @@ type-alias.js:27:6 {
   "end":6
 }
 type-alias.js:29:6 {
-  "type":"type M<Z> = (<X>(x: X, y: Z) => void) | number | Z | null",
+  "type":"type M<Z> = L<number, Z>",
   "reasons":[],
   "loc":{
     "source":"type-alias.js",
@@ -1441,7 +1411,7 @@ type-alias.js:29:6 {
   "end":6
 }
 type-alias.js:31:6 {
-  "type":"type O = {x: N<number>, ...} | null",
+  "type":"type O = N<number>",
   "reasons":[],
   "loc":{
     "source":"type-alias.js",

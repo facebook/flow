@@ -43,7 +43,6 @@ type error_kind =
   | UnexpectedTypeCtor of string
   | UnsupportedTypeCtor
   | UnsupportedUseCtor
-  | TypeTooBig
   | RecursionLimit
 
 type error = error_kind * string
@@ -66,7 +65,6 @@ let error_kind_to_string = function
   | UnexpectedTypeCtor c -> spf "Unexpected type constructor (%s)" c
   | UnsupportedTypeCtor -> "Unsupported type constructor"
   | UnsupportedUseCtor -> "Unsupported use constructor"
-  | TypeTooBig -> "Type too big"
   | RecursionLimit -> "recursion limit"
 
 let error_to_string (kind, msg) = spf "[%s] %s" (error_kind_to_string kind) msg
@@ -419,60 +417,6 @@ end = struct
         | Error e -> error e)
   end
 
-  module Substitution = struct
-    open Ty
-
-    (* NOTE Traversing huge types may lead to merge-timeouts. We cut off the size
-     * of the recursion at 10K nodes. *)
-    let max_size = 10000
-
-    exception SizeCutOff
-
-    let size = ref 0
-
-    let init_env tparams types =
-      let rec step acc = function
-        | ([], _)
-        | (_, []) ->
-          acc
-        | (p :: ps, t :: ts) -> step (SMap.add p.tp_name t acc) (ps, ts)
-      in
-      step SMap.empty (tparams, types)
-
-    let remove_params env = function
-      | None -> env
-      | Some ps -> List.fold_left (fun e p -> SMap.remove p.tp_name e) env ps
-
-    let visitor =
-      object
-        inherit [_] endo_ty as super
-
-        method! on_t env t =
-          size := !size + 1;
-          if !size > max_size then raise SizeCutOff;
-          match t with
-          | Fun { fun_type_params = ps; _ } ->
-            let env = remove_params env ps in
-            super#on_t env t
-          | Bound (_, name) ->
-            begin
-              match SMap.find_opt name env with
-              | Some t' -> t'
-              | None -> super#on_t env t
-            end
-          | _ -> super#on_t env t
-      end
-
-    (* Replace a list of type parameters with a list of types in the given type.
-     * These lists might not match exactly in length. *)
-    let run vs ts t =
-      let env = init_env vs ts in
-      size := 0;
-      match visitor#on_t env t with
-      | exception SizeCutOff -> terr ~kind:TypeTooBig None
-      | t' -> return t'
-  end
-
   (***********************)
   (* Construct built-ins *)
   (***********************)
@@ -753,42 +697,37 @@ end = struct
             type_with_alias_reason ~env t
 
     and type_with_alias_reason ~env t =
-      let next = type_ctor ~cont:type_with_alias_reason in
-      let reason = TypeUtil.reason_of_t t in
-      if Env.expand_type_aliases env then
-        next ~env t
-      else
-        Type.(
-          (* These type are treated as transparent when it comes to the type alias
-           * annotation.
-           *
-           * TypeDestructorTriggerT might hold a type-app, so avoid using the type here.
-           * Instead, do the fallback action which is to normalize to Bot. The trigger
-           * should have actually produced another concrete type as a lower bound. *)
-          match t with
-          | OpenT _
-          | TypeDestructorTriggerT _ ->
-            next ~env t
-          | EvalT _ when Env.evaluate_type_destructors env -> next ~env t
+      let open Type in
+      (* These type are treated as transparent when it comes to the type alias
+       * annotation.
+       *
+       * TypeDestructorTriggerT might hold a type-app, so avoid using the type here.
+       * Instead, do the fallback action which is to normalize to Bot. The trigger
+       * should have actually produced another concrete type as a lower bound. *)
+      match t with
+      | OpenT _
+      | TypeDestructorTriggerT _ ->
+        type_ctor ~env ~cont:type_with_alias_reason t
+      | EvalT _ when Env.evaluate_type_destructors env ->
+        type_ctor ~env ~cont:type_with_alias_reason t
+      | _ ->
+        begin
+          match desc_of_reason ~unwrap:false (TypeUtil.reason_of_t t) with
+          | RTypeAlias (name, Some loc, _) ->
+            (* The default action is to avoid expansion by using the type alias name,
+               when this can be trusted. The one case where we want to skip this process
+               is when recovering the body of a type alias A. In that case the environment
+               field under_type_alias will be 'Some A'. If the type alias name in the reason
+               is also A, then we are still at the top-level of the type-alias, so we
+               proceed by expanding one level preserving the same environment. *)
+            let symbol = symbol_from_loc env loc (Reason.OrdinaryName name) in
+            return (generic_talias symbol None)
           | _ ->
-            begin
-              match desc_of_reason ~unwrap:false reason with
-              | RTypeAlias (name, Some loc, _) ->
-                (* The default action is to avoid expansion by using the type alias name,
-                   when this can be trusted. The one case where we want to skip this process
-                   is when recovering the body of a type alias A. In that case the environment
-                   field under_type_alias will be 'Some A'. If the type alias name in the reason
-                   is also A, then we are still at the top-level of the type-alias, so we
-                   proceed by expanding one level preserving the same environment. *)
-                let symbol = symbol_from_loc env loc (Reason.OrdinaryName name) in
-                return (generic_talias symbol None)
-              | _ ->
-                (* We are now beyond the point of the one-off expansion. Reset the environment
-                   assigning None to under_type_alias, so that aliases are used in subsequent
-                   invocations. *)
-                next ~env t
-            end
-        )
+            (* We are now beyond the point of the one-off expansion. Reset the environment
+               assigning None to under_type_alias, so that aliases are used in subsequent
+               invocations. *)
+            type_ctor ~env ~cont:type_with_alias_reason t
+        end
 
     and type_ctor ~env ~cont t =
       let open Type in
@@ -1335,7 +1274,7 @@ end = struct
         in
         mk_generic ~env symbol kind tparams targs
       in
-      let type_t_app ~env r kind body_t tparams targs =
+      let type_t_app ~env r kind tparams targs =
         let open Type in
         let%bind symbol =
           match kind with
@@ -1349,16 +1288,7 @@ end = struct
           | OpaqueKind -> Reason_utils.opaque_type_alias_symbol env r
           | TypeParamKind -> terr ~kind:BadTypeAlias ~msg:"TypeParamKind" None
         in
-        if Env.expand_type_aliases env && not (Env.seen_type_alias symbol env) then
-          let%bind targs = optMapM (type__ ~env) targs in
-          let env = Env.set_type_alias symbol env in
-          let%bind (env, tparams) = type_params_t ~env tparams in
-          let%bind body_t = type__ ~env body_t in
-          match (targs, tparams) with
-          | (Some targs, Some tparams) -> Substitution.run tparams targs body_t
-          | _ -> return body_t
-        else
-          mk_generic ~env symbol Ty.TypeAliasKind tparams targs
+        mk_generic ~env symbol Ty.TypeAliasKind tparams targs
       in
       let singleton_poly ~env targs tparams t =
         let open Type in
@@ -1367,7 +1297,7 @@ end = struct
         | DefT (_, _, TypeT (_, DefT (r, _, InstanceT (_, _, _, i))))
         | DefT (_, _, ClassT (DefT (r, _, InstanceT (_, _, _, i)))) ->
           instance_app ~env r i tparams targs
-        | DefT (r, _, TypeT (kind, body_t)) -> type_t_app ~env r kind body_t tparams targs
+        | DefT (r, _, TypeT (kind, _)) -> type_t_app ~env r kind tparams targs
         | DefT (_, _, ClassT (TypeAppT (_, _, t, _))) -> type_app ~env t targs
         | _ ->
           let msg = "PolyT:" ^ Type.string_of_ctor t in

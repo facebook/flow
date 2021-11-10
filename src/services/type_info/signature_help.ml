@@ -191,7 +191,6 @@ let ty_normalizer_options =
   Ty_normalizer_env.
     {
       expand_internal_types = true;
-      expand_type_aliases = false;
       flag_shadowed_type_params = true;
       preserve_inferred_literal_types = false;
       evaluate_type_destructors = true;

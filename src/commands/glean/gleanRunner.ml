@@ -606,7 +606,6 @@ let declaration_infos ~root ~write_root ~scope_info ~file ~file_sig ~full_cx ~re
   let options =
     {
       Ty_normalizer_env.expand_internal_types = false;
-      expand_type_aliases = false;
       flag_shadowed_type_params = false;
       preserve_inferred_literal_types = false;
       evaluate_type_destructors = false;

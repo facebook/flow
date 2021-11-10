@@ -48,7 +48,7 @@ type EB4<T: {}> = {|o: O, ...T, oo: O|};
 type EB5<T: {}> = {|u: O, ...{ v: O, w: T }, x: O, ...T, y: O|};
 //   ^
 type PTA1<T: {}> = {...B2<T>, ...T};
-//   ^ --expand-type-aliases
+//   ^
 type PTA2<T: {}> = {...T, ...B2<T>};
 //   ^
 type EP1<T> = {|...P<T>, o: O|};
@@ -62,7 +62,7 @@ type ECtor2 = {|o: O, ...Ctor|};
 type PRec<X> = {o: O, ...PRec<X>};
 //   ^
 type IP1<T: {}> = {...B1<T>} & {...B2<T>};
-//   ^ --expand-type-aliases
+//   ^
 type Nest1<T: {}> = {...{...T}};
 //   ^
 type Nest2<T: {}> = {...{...{...T}}};

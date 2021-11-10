@@ -29,7 +29,6 @@ let fix_signature_verification_error_at_loc ?remote_converter ~full_cx ~file_sig
     ~full_cx
     ~file_sig
     ~typed_ast
-    ~expand_aliases:false
     ?remote_converter
     ~omit_targ_defaults:false
     ~strict:false

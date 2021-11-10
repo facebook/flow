@@ -75,7 +75,6 @@ val insert_type :
   file_key:File_key.t ->
   file_content:string ->
   target:Loc.t ->
-  expand_aliases:bool ->
   omit_targ_defaults:bool ->
   location_is_strict:bool ->
   ambiguity_strategy:Autofix_options.ambiguity_strategy ->

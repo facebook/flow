@@ -75,7 +75,7 @@ query_at_pos() {
 #   //   ^
 #
 # You can also pass in flags after the ^:
-# //   ^ --expand-type-aliases
+# //   ^ --evaluate-type-destructors
 #
 # Invoke this passing the query name, the file, and any additional flags to be
 # applied to every query in the file, e.g.

@@ -371,7 +371,6 @@ type infer_type_input = {
   file_input: File_input.t;
   query_position: Loc.position;
   verbose: Verbose.t option;
-  expand_aliases: bool;
   omit_targ_defaults: bool;
   evaluate_type_destructors: bool;
   verbose_normalizer: bool;
@@ -389,7 +388,6 @@ let infer_type
     file_input;
     query_position = { Loc.line; column };
     verbose;
-    expand_aliases;
     omit_targ_defaults;
     evaluate_type_destructors;
     max_depth;
@@ -429,7 +427,6 @@ let infer_type
                   ~cx
                   ~file_sig
                   ~typed_ast
-                  ~expand_aliases
                   ~omit_targ_defaults
                   ~evaluate_type_destructors
                   ~max_depth
@@ -475,7 +472,6 @@ let insert_type
     ~file_input
     ~target
     ~verbose
-    ~expand_aliases
     ~omit_targ_defaults
     ~location_is_strict
     ~ambiguity_strategy =
@@ -491,7 +487,6 @@ let insert_type
           ~file_key
           ~file_content
           ~target
-          ~expand_aliases
           ~omit_targ_defaults
           ~location_is_strict
           ~ambiguity_strategy
@@ -596,7 +591,7 @@ let collect_rage ~profiling ~options ~reader ~env ~files =
   in
   items
 
-let dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructors file_input =
+let dump_types ~options ~env ~profiling ~evaluate_type_destructors file_input =
   let open Lwt_result.Infix in
   try_with (fun () ->
       let file = file_key_of_file_input ~options file_input in
@@ -609,15 +604,7 @@ let dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructo
       | Error _parse_errors -> Lwt.return (Error "Couldn't parse file in parse_contents")
       | Ok (Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) ->
         Lwt.return
-          (Ok
-             (Type_info_service.dump_types
-                ~expand_aliases
-                ~evaluate_type_destructors
-                cx
-                file_sig
-                typed_ast
-             )
-          )
+          (Ok (Type_info_service.dump_types ~evaluate_type_destructors cx file_sig typed_ast))
   )
 
 let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust file_input =
@@ -904,10 +891,8 @@ let handle_cycle ~fn ~types_only ~profiling:_ ~env =
   let%lwt response = get_cycle ~env fn types_only in
   Lwt.return (env, ServerProt.Response.CYCLE response, None)
 
-let handle_dump_types ~options ~input ~expand_aliases ~evaluate_type_destructors ~profiling ~env =
-  let%lwt response =
-    dump_types ~options ~env ~profiling ~expand_aliases ~evaluate_type_destructors input
-  in
+let handle_dump_types ~options ~input ~evaluate_type_destructors ~profiling ~env =
+  let%lwt response = dump_types ~options ~env ~profiling ~evaluate_type_destructors input in
   Lwt.return (ServerProt.Response.DUMP_TYPES response, None)
 
 let handle_find_module ~options ~reader ~moduleref ~filename ~profiling:_ ~env:_ =
@@ -983,7 +968,6 @@ let handle_infer_type
     ~line
     ~char
     ~verbose
-    ~expand_aliases
     ~omit_targ_defaults
     ~evaluate_type_destructors
     ~max_depth
@@ -995,7 +979,6 @@ let handle_infer_type
       file_input = input;
       query_position = { Loc.line; column = char };
       verbose;
-      expand_aliases;
       omit_targ_defaults;
       evaluate_type_destructors;
       verbose_normalizer;
@@ -1012,7 +995,6 @@ let handle_insert_type
     ~file_input
     ~target
     ~verbose
-    ~expand_aliases
     ~omit_targ_defaults
     ~location_is_strict
     ~ambiguity_strategy
@@ -1026,7 +1008,6 @@ let handle_insert_type
       ~file_input
       ~target
       ~verbose
-      ~expand_aliases
       ~omit_targ_defaults
       ~location_is_strict
       ~ambiguity_strategy
@@ -1237,12 +1218,11 @@ let get_ephemeral_handler genv command =
     let file_options = Options.file_options options in
     let fn = Files.filename_from_string ~options:file_options filename in
     Handle_nonparallelizable (handle_cycle ~fn ~types_only)
-  | ServerProt.Request.DUMP_TYPES
-      { input; expand_aliases; evaluate_type_destructors; wait_for_recheck } ->
+  | ServerProt.Request.DUMP_TYPES { input; evaluate_type_destructors; wait_for_recheck } ->
     mk_parallelizable
       ~wait_for_recheck
       ~options
-      (handle_dump_types ~options ~input ~expand_aliases ~evaluate_type_destructors)
+      (handle_dump_types ~options ~input ~evaluate_type_destructors)
   | ServerProt.Request.FIND_MODULE { moduleref; filename; wait_for_recheck } ->
     mk_parallelizable
       ~wait_for_recheck
@@ -1271,7 +1251,6 @@ let get_ephemeral_handler genv command =
         line;
         char;
         verbose;
-        expand_aliases;
         omit_targ_defaults;
         evaluate_type_destructors;
         wait_for_recheck;
@@ -1288,7 +1267,6 @@ let get_ephemeral_handler genv command =
          ~line
          ~char
          ~verbose
-         ~expand_aliases
          ~omit_targ_defaults
          ~evaluate_type_destructors
          ~max_depth
@@ -1302,7 +1280,6 @@ let get_ephemeral_handler genv command =
         target;
         wait_for_recheck;
         verbose;
-        expand_aliases;
         omit_targ_defaults;
         location_is_strict;
         ambiguity_strategy;
@@ -1315,7 +1292,6 @@ let get_ephemeral_handler genv command =
          ~options
          ~target
          ~verbose
-         ~expand_aliases
          ~omit_targ_defaults
          ~location_is_strict
          ~ambiguity_strategy
@@ -1721,7 +1697,6 @@ let handle_persistent_infer_type
       file_input;
       query_position = { Loc.line; column };
       verbose = None;
-      expand_aliases = false;
       omit_targ_defaults = false;
       evaluate_type_destructors = false;
       verbose_normalizer = false;

@@ -419,17 +419,6 @@ function f(x: MyNumber): MyNumber {
 
 f(1);
 No errors!
-alias.js 5 24 --expand-type-aliases
-// @flow
-
-type MyNumber = number;
-
-function f(x: MyNumber): number {
-  return x;
-};
-
-f(1);
-No errors!
 alias.js 6 10 6 11
 // @flow
 
@@ -441,7 +430,7 @@ function f(x: MyNumber) {
 
 f(1);
 No errors!
-alias.js 9 1 9 5 --expand-type-aliases
+alias.js 9 1 9 5
 // @flow
 
 type MyNumber = number;
@@ -450,7 +439,7 @@ function f(x: MyNumber) {
   return x;
 };
 
-(f(1): number);
+(f(1): MyNumber);
 No errors!
 alias-0.js 9 24
 // @flow
@@ -462,21 +451,6 @@ type MyObject = {
 };
 
 function f(x: MyObject): MyObject {
-  return x;
-};
-
-f({foo:1, bar:true, baz:"baz"});
-No errors!
-alias-0.js 9 24 --expand-type-aliases
-// @flow
-
-type MyObject = {
-  foo: number,
-  bar: boolean,
-  baz: string,
-};
-
-function f(x: MyObject): { bar: boolean, baz: string, foo: number, ... } {
   return x;
 };
 
@@ -497,7 +471,7 @@ function f(x: MyObject) {
 
 f({foo:1, bar:true, baz:"baz"});
 No errors!
-alias-0.js 13 1 13 32 --expand-type-aliases
+alias-0.js 13 1 13 32
 // @flow
 
 type MyObject = {
@@ -510,7 +484,7 @@ function f(x: MyObject) {
   return x;
 };
 
-(f({foo:1, bar:true, baz:"baz"}): { bar: boolean, baz: string, foo: number, ... });
+(f({foo:1, bar:true, baz:"baz"}): MyObject);
 No errors!
 replacement-object.js 2 5 --strategy=generalize
 // @flow

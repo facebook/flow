@@ -37,7 +37,6 @@ let spec =
              "--expand-json-output"
              no_arg
              ~doc:"Includes an expanded version of the returned JSON type (implies --json)"
-        |> flag "--expand-type-aliases" no_arg ~doc:"Replace type aliases with their bodies"
         |> flag
              "--omit-typearg-defaults"
              no_arg
@@ -131,7 +130,6 @@ let main
     path
     wait_for_recheck
     expanded
-    expand_aliases
     omit_targ_defaults
     evaluate_type_destructors
     max_depth
@@ -158,7 +156,6 @@ let main
         line;
         char = column;
         verbose;
-        expand_aliases;
         omit_targ_defaults;
         evaluate_type_destructors;
         wait_for_recheck;

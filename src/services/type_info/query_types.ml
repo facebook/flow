@@ -30,7 +30,6 @@ let type_at_pos_type
     ~full_cx
     ~file
     ~file_sig
-    ~expand_aliases
     ~omit_targ_defaults
     ~evaluate_type_destructors
     ~verbose_normalizer
@@ -40,7 +39,6 @@ let type_at_pos_type
   let options =
     {
       Ty_normalizer_env.expand_internal_types = false;
-      expand_type_aliases = expand_aliases;
       flag_shadowed_type_params = false;
       preserve_inferred_literal_types = false;
       evaluate_type_destructors;
@@ -55,13 +53,9 @@ let type_at_pos_type
   | None -> FailureNoMatch
   | Some (loc, scheme) -> type_of_scheme ~options ~full_cx ~file ~file_sig typed_ast loc scheme
 
-let dump_types ~printer ~expand_aliases ~evaluate_type_destructors cx file_sig typed_ast =
+let dump_types ~printer ~evaluate_type_destructors cx file_sig typed_ast =
   let options =
-    {
-      Ty_normalizer_env.default_options with
-      Ty_normalizer_env.expand_type_aliases = expand_aliases;
-      evaluate_type_destructors;
-    }
+    { Ty_normalizer_env.default_options with Ty_normalizer_env.evaluate_type_destructors }
   in
   let file = Context.file cx in
   let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in
@@ -75,18 +69,10 @@ let dump_types ~printer ~expand_aliases ~evaluate_type_destructors cx file_sig t
   Base.List.filter_map result ~f:print_ok |> concretize_loc_pairs |> sort_loc_pairs
 
 let insert_type_normalize
-    ~full_cx
-    ?(file = Context.file full_cx)
-    ~file_sig
-    ~expand_aliases
-    ~omit_targ_defaults
-    ~typed_ast
-    loc
-    scheme =
+    ~full_cx ?(file = Context.file full_cx) ~file_sig ~omit_targ_defaults ~typed_ast loc scheme =
   let options =
     {
       Ty_normalizer_env.expand_internal_types = false;
-      expand_type_aliases = expand_aliases;
       (* Shadowed type parameters won't be valid for type insertion *)
       flag_shadowed_type_params = true;
       (* We eventually want to elimitate literal types, so let's not expose them here. *)
