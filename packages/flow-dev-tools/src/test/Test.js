@@ -19,6 +19,7 @@ class Test {
   tags: Array<string>;
   lazyMode: 'ide' | 'fs' | null = null;
   shouldWaitForRecheck: boolean = true;
+  noRestart: boolean = false;
 
   constructor(name: string, steps: StepList) {
     this.name = name;
@@ -43,6 +44,11 @@ class Test {
 
   waitForRecheck(wait_for_recheck: boolean): this {
     this.shouldWaitForRecheck = wait_for_recheck;
+    return this;
+  }
+
+  noAutoRestart(): this {
+    this.noRestart = true;
     return this;
   }
 }

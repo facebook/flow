@@ -108,6 +108,7 @@ async function runTestSuite(
         test.flowConfigFilename,
         test.lazyMode,
         test.shouldWaitForRecheck,
+        test.noRestart,
       );
 
       let firstIdeStartStep = null;

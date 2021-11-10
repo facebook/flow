@@ -75,6 +75,7 @@ class TestBuilder {
   logStream: stream$Writable | null;
   shellMocker: ShellMocker;
   waitForRecheck: boolean;
+  noAutoRestart: boolean;
 
   constructor(
     bin: string,
@@ -85,6 +86,7 @@ class TestBuilder {
     flowConfigFilename: string,
     lazyMode: 'ide' | 'fs' | null,
     wait_for_recheck: boolean,
+    noAutoRestart: boolean,
   ) {
     this.bin = bin;
     // If we're testing lazy mode, then we must use status
@@ -101,6 +103,7 @@ class TestBuilder {
     this.lspMessages = [];
     this.shellMocker = new ShellMocker(join(baseDir, 'mock', String(testNum)));
     this.waitForRecheck = wait_for_recheck;
+    this.noAutoRestart = noAutoRestart;
   }
 
   getFileName(): string {
@@ -356,18 +359,19 @@ class TestBuilder {
     }
     const lazyMode =
       this.lazyMode === null ? [] : ['--lazy-mode', this.lazyMode];
+    const noAutoRestart = this.noAutoRestart ? ['--no-auto-restart'] : [];
     const args = [
       'server',
       '--strip-root',
       '--debug',
       '--temp-dir',
       this.tmpDir,
-      '--no-auto-restart',
       '--file-watcher',
       'none',
       '--wait-for-recheck',
       String(this.waitForRecheck),
     ]
+      .concat(noAutoRestart)
       .concat(lazyMode)
       .concat([this.dir]);
     await this.log('# %s %s', this.bin, args.join(' '));
@@ -1077,6 +1081,7 @@ class Builder {
     flowConfigFilename: string,
     lazyMode: 'fs' | 'ide' | null,
     wait_for_recheck: boolean,
+    noAutoRestart: boolean,
   ): Promise<TestBuilder> {
     const testBuilder = new TestBuilder(
       bin,
@@ -1087,6 +1092,7 @@ class Builder {
       flowConfigFilename,
       lazyMode,
       wait_for_recheck,
+      noAutoRestart,
     );
     Builder.builders.push(testBuilder);
     await testBuilder.createFreshDir();
