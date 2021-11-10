@@ -529,25 +529,21 @@ let insert_type
   let file_key = file_key_of_file_input ~options file_input in
   let options = { options with Options.opt_verbose = verbose } in
   File_input.content_of_file_input file_input >>= fun file_content ->
-  try_with (fun _ ->
-      Code_action_service.insert_type
-        ~options
-        ~env
-        ~profiling
-        ~file_key
-        ~file_content
-        ~target
-        ~omit_targ_defaults
-        ~location_is_strict
-        ~ambiguity_strategy
-  )
+  Code_action_service.insert_type
+    ~options
+    ~env
+    ~profiling
+    ~file_key
+    ~file_content
+    ~target
+    ~omit_targ_defaults
+    ~location_is_strict
+    ~ambiguity_strategy
 
 let autofix_exports ~options ~env ~profiling ~input =
   let file_key = file_key_of_file_input ~options input in
   File_input.content_of_file_input input >>= fun file_content ->
-  try_with (fun _ ->
-      Code_action_service.autofix_exports ~options ~env ~profiling ~file_key ~file_content
-  )
+  Code_action_service.autofix_exports ~options ~env ~profiling ~file_key ~file_content
 
 let collect_rage ~profiling ~options ~reader ~env ~files =
   let items = [] in
@@ -863,10 +859,8 @@ let get_imports ~options ~reader module_names =
   List.fold_left add_to_results (SMap.empty, SSet.empty) module_names
 
 let save_state ~saved_state_filename ~genv ~env ~profiling =
-  try_with_lwt (fun () ->
-      let%lwt () = Saved_state.save ~saved_state_filename ~genv ~env ~profiling in
-      Lwt.return (Ok ())
-  )
+  let%lwt () = Saved_state.save ~saved_state_filename ~genv ~env ~profiling in
+  Lwt.return (Ok ())
 
 let handle_autocomplete
     ~trigger_character ~reader ~options ~profiling ~env ~filename ~contents ~cursor ~imports =
@@ -888,7 +882,7 @@ let handle_autocomplete
   Lwt.return (ServerProt.Response.AUTOCOMPLETE result, json_data)
 
 let handle_autofix_exports ~options ~input ~profiling ~env =
-  let result = autofix_exports ~options ~env ~profiling ~input in
+  let result = try_with (fun () -> autofix_exports ~options ~env ~profiling ~input) in
   Lwt.return (ServerProt.Response.AUTOFIX_EXPORTS result, None)
 
 let handle_check_file ~options ~force ~input ~profiling ~env =
@@ -1028,16 +1022,18 @@ let handle_insert_type
     ~profiling
     ~env =
   let result =
-    insert_type
-      ~options
-      ~env
-      ~profiling
-      ~file_input
-      ~target
-      ~verbose
-      ~omit_targ_defaults
-      ~location_is_strict
-      ~ambiguity_strategy
+    try_with (fun _ ->
+        insert_type
+          ~options
+          ~env
+          ~profiling
+          ~file_input
+          ~target
+          ~verbose
+          ~omit_targ_defaults
+          ~location_is_strict
+          ~ambiguity_strategy
+    )
   in
   Lwt.return (ServerProt.Response.INSERT_TYPE result, None)
 
@@ -1050,7 +1046,9 @@ let handle_status ~reader ~genv ~client_root ~profiling ~env =
   Lwt.return (env, ServerProt.Response.STATUS { status_response; lazy_stats }, None)
 
 let handle_save_state ~saved_state_filename ~genv ~profiling ~env =
-  let%lwt result = save_state ~saved_state_filename ~genv ~env ~profiling in
+  let%lwt result =
+    try_with_lwt (fun () -> save_state ~saved_state_filename ~genv ~env ~profiling)
+  in
   Lwt.return (env, ServerProt.Response.SAVE_STATE result, None)
 
 let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
