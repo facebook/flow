@@ -4,26 +4,20 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-# coverage of declare module
+printf "coverage of declare module:\n"
 assert_ok "$FLOW" coverage --color declare_module.js
 
-# should not crash
+printf "\nshould not crash:\n"
 assert_ok "$FLOW" coverage --color crash.js
 
-# should terminate
+printf "\nshould terminate:\n"
 assert_ok "$FLOW" coverage --color non-termination.js
 
-# assumes @flow weak
-assert_ok "$FLOW" coverage no_pragma.js
+printf "\nerrors because not @flow:\n"
+assert_ok "$FLOW" coverage --quiet no_pragma.js 2>&1
 
-# assumes @flow weak
-assert_ok "$FLOW" coverage --all no_pragma.js
-
-# should be 0%
-assert_ok "$FLOW" coverage --respect-pragma no_pragma.js
-
-# --all wins (and assumes @flow weak)
-assert_ok "$FLOW" coverage --respect-pragma --all no_pragma.js
+printf "\nforces @flow:\n"
+assert_ok "$FLOW" coverage --quiet --all no_pragma.js 2>&1
 
 #
 # some more detailed tests:

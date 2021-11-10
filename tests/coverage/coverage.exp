@@ -1,11 +1,18 @@
-[0m// check coverage of declare module
+coverage of declare module:
+[0m// @flow
+
+// check coverage of declare module
 
 [0m[0mdeclare module foo {
 }[0m[0m
 [0m
 Covered: 100.00% (1 of 1 expressions)
 
-[0m// This file triggers a violation of the "disjoint-or-nested ranges invariant"
+
+should not crash:
+[0m// @flow
+
+// This file triggers a violation of the "disjoint-or-nested ranges invariant"
 // that we implicitly assume in type-at-pos and coverage implementations. In
 // particular, when unchecked it causes a crash with coverage --color.
 
@@ -17,7 +24,11 @@ Covered: 100.00% (1 of 1 expressions)
 [0m
 Covered: 100.00% (2 of 2 expressions)
 
-[0m// This file triggers a violation of the "disjoint-or-nested ranges invariant"
+
+should terminate:
+[0m// @flow
+
+// This file triggers a violation of the "disjoint-or-nested ranges invariant"
 // that we implicitly assume in type-at-pos and coverage implementations. In
 // particular, when unchecked it causes non-termination with coverage --color.
 
@@ -32,12 +43,11 @@ Covered: 100.00% (2 of 2 expressions)
 [0m
 Covered: 100.00% (3 of 3 expressions)
 
-Covered: 75.00% (3 of 4 expressions)
 
-Covered: 75.00% (3 of 4 expressions)
+errors because not @flow:
+File is missing @flow pragma and `all` is not set to `true`
 
-Covered: 0.00% (0 of 4 expressions)
-
+forces @flow:
 Covered: 75.00% (3 of 4 expressions)
 
 -----------------------------
