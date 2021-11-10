@@ -309,7 +309,7 @@ type-destructor.js:74:6,74:17
 
 type-destructor.js:78:6
 Flags:
-type PropertyTypeProps = $PropertyType<Props, "name">
+type PropertyTypeProps = Props["name"]
 type-destructor.js:78:6,78:22
 
 type-destructor.js:82:6
@@ -319,17 +319,17 @@ type-destructor.js:82:6,82:21
 
 type-destructor.js:84:6
 Flags:
-type ElementTypePropsPoly<K> = $ElementType<Props, K>
+type ElementTypePropsPoly<K> = Props[K]
 type-destructor.js:84:6,84:25
 
 type-destructor.js:86:6
 Flags:
-type ElementTypePropsPolyBounded<K: "name" | "age"> = $ElementType<Props, K>
+type ElementTypePropsPolyBounded<K: "name" | "age"> = Props[K]
 type-destructor.js:86:6,86:32
 
 type-destructor.js:88:6
 Flags:
-type ElementTypePropsPolyBoundedEmpty<K: "phone"> = $ElementType<Props, K>
+type ElementTypePropsPolyBoundedEmpty<K: "phone"> = Props[K]
 type-destructor.js:88:6,88:37
 
 type-destructor.js:92:6
@@ -415,31 +415,29 @@ type-destructor.js:165:6,165:13
 
 type-destructor.js:169:18
 Flags:
-<T: {...}, K: T>() => $ElementType<T, K>
+<T: {...}, K: T>() => T[K]
 type-destructor.js:169:18,169:28
 
 type-destructor.js:171:18
 Flags:
-<K: empty, T: {...}>() => $ElementType<T, K>
+<K: empty, T: {...}>() => T[K]
 type-destructor.js:171:18,171:28
 
 type-destructor.js:175:6
 Flags:
-type RecursiveTypeDestructor = {|
-  f: {|g: $PropertyType<RecursiveTypeDestructor, "f">|}
-|}
+type RecursiveTypeDestructor = {|f: {|g: RecursiveTypeDestructor["f"]|}|}
 type-destructor.js:175:6,175:28
 
 type-destructor.js:182:6
 Flags:
 type RecursiveTypeDestructorPoly<X> = {|
-  f: ({|h: $PropertyType<RecursiveTypeDestructorPoly<X>, "f">|} | X)
+  f: ({|h: RecursiveTypeDestructorPoly<X>["f"]|} | X)
 |}
 type-destructor.js:182:6,182:32
 
 type-destructor.js:188:6
 Flags:
-type $Pick<O: {...}, K: $Keys<O>> = $ElementType<$NonMaybeType<O>, K>
+type $Pick<O: {...}, K: $Keys<O>> = $NonMaybeType<O>[K]
 type-destructor.js:188:6,188:10
 
 type-destructor.js:193:14

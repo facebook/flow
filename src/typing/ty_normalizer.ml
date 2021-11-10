@@ -1708,12 +1708,15 @@ end = struct
       | T.ReadOnlyType -> return (Ty.Utility (Ty.ReadOnly ty))
       | T.PartialType -> return (Ty.Utility (Ty.Partial ty))
       | T.ValuesType -> return (Ty.Utility (Ty.Values ty))
-      | T.ElementType { index_type; is_indexed_access } ->
-        let%map index_type' = type__ ~env index_type in
-        if is_indexed_access then
-          Ty.IndexedAccess { _object = ty; index = index_type'; optional = false }
-        else
-          Ty.Utility (Ty.ElementType (ty, index_type'))
+      | T.ElementType { index_type } ->
+        let%map index = type__ ~env index_type in
+        (match index_type with
+        | T.DefT (_, _, T.SingletonStrT _) ->
+          (* `$ElementType<X, "foo">` is not equivalent to `X["foo"]`
+           * for instances. Indexed access produces PropertyType when
+           * the index is a string literal. *)
+          Ty.Utility (Ty.ElementType (ty, index))
+        | _ -> Ty.IndexedAccess { _object = ty; index; optional = false })
       | T.OptionalIndexedAccessNonMaybeType { index } ->
         let%map index' =
           match index with
@@ -1735,12 +1738,9 @@ end = struct
       | T.TypeMap (T.ObjectMapConst t') ->
         let%map ty' = type__ ~env t' in
         Ty.Utility (Ty.ObjMapConst (ty, ty'))
-      | T.PropertyType { name; is_indexed_access } ->
-        let name' = Ty.StrLit name in
-        if is_indexed_access then
-          return @@ Ty.IndexedAccess { _object = ty; index = name'; optional = false }
-        else
-          return @@ Ty.Utility (Ty.PropertyType (ty, name'))
+      | T.PropertyType { name } ->
+        let index = Ty.StrLit name in
+        return @@ Ty.IndexedAccess { _object = ty; index; optional = false }
       | T.TypeMap (T.TupleMap t') ->
         let%map ty' = type__ ~env t' in
         Ty.Utility (Ty.TupleMap (ty, ty'))

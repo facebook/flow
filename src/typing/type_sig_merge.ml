@@ -654,11 +654,7 @@ module Make (ConsGen : CONS_GEN) : S = struct
       Type.(
         EvalT
           ( obj,
-            TypeDestructorT
-              ( use_op,
-                reason,
-                Type.PropertyType { name = Reason.OrdinaryName prop; is_indexed_access = false }
-              ),
+            TypeDestructorT (use_op, reason, Type.PropertyType { name = Reason.OrdinaryName prop }),
             id
           )
       )
@@ -666,16 +662,9 @@ module Make (ConsGen : CONS_GEN) : S = struct
       let reason = Reason.(mk_reason (RType (OrdinaryName "$ElementType")) loc) in
       let use_op = Type.Op (Type.TypeApplication { type' = reason }) in
       let obj = merge file obj in
-      let elem = merge file elem in
+      let index_type = merge file elem in
       let id = Type.Eval.id_of_aloc_id (Context.make_aloc_id file.cx loc) in
-      Type.(
-        EvalT
-          ( obj,
-            TypeDestructorT
-              (use_op, reason, Type.ElementType { index_type = elem; is_indexed_access = false }),
-            id
-          )
-      )
+      Type.(EvalT (obj, TypeDestructorT (use_op, reason, Type.ElementType { index_type }), id))
     | OptionalIndexedAccessNonMaybeType { loc; obj; index } ->
       let reason = Reason.(mk_reason (RIndexedAccess { optional = true }) loc) in
       let object_type = merge file obj in
