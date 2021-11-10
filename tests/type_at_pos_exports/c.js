@@ -1,3 +1,5 @@
+// @flow
+
 declare module c {
 //             ^
   declare export type X = number;

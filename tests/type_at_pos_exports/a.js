@@ -1,3 +1,5 @@
+// @flow
+
 declare module a {
 //             ^
   declare class A {}

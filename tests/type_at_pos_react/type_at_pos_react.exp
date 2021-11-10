@@ -256,7 +256,10 @@ react_component.js:32:29 = {
   "start":29,
   "end":41
 }
-react.js:2:7 = React$CreateElement
-react.js:2:7,2:19
+react.js:4:7
+Flags:
+React$CreateElement
+react.js:4:7,4:19
+
 react_abstract_component.js:3:15 = React$AbstractComponent<any, any>
 react_abstract_component.js:3:15,3:15

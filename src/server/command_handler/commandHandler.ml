@@ -103,6 +103,7 @@ let file_key_of_file_input ~options file_input =
  * 4) The file must either have `// @flow` or all=true must be set in the .flowconfig or CLI
  *)
 let check_that_we_care_about_this_file =
+  let is_stdin file_path = String.equal file_path "-" in
   let check_file_not_ignored ~file_options ~env ~file_path () =
     if Files.wanted ~options:file_options env.ServerEnv.libs file_path then
       Ok ()
@@ -140,13 +141,31 @@ let check_that_we_care_about_this_file =
         Error "File is missing @flow pragma and `all` is not set to `true`"
   in
   fun ~options ~env ~file_key ~content ->
-    let file_path = Files.imaginary_realpath (File_key.to_string file_key) in
-    let file_options = Options.file_options options in
-    Ok ()
-    >>= check_file_not_ignored ~file_options ~env ~file_path
-    >>= check_file_included ~options ~file_options ~file_path
-    >>= check_is_flow_file ~file_options ~file_path
-    >>= check_flow_pragma ~options ~content ~file_key
+    let file_path = File_key.to_string file_key in
+    if is_stdin file_path then
+      (* if we don't know the filename (stdin), assume it's ok *)
+      Ok ()
+    else
+      let file_path = Files.imaginary_realpath file_path in
+      let file_options = Options.file_options options in
+      Ok ()
+      >>= check_file_not_ignored ~file_options ~env ~file_path
+      >>= check_file_included ~options ~file_options ~file_path
+      >>= check_is_flow_file ~file_options ~file_path
+      >>= check_flow_pragma ~options ~content ~file_key
+
+type ide_file_error =
+  | Skipped of string
+  | Failed of string
+
+let of_file_input ~options ~env file_input =
+  let file_key = file_key_of_file_input ~options file_input in
+  match File_input.content_of_file_input file_input with
+  | Error msg -> Error (Failed msg)
+  | Ok file_contents ->
+    (match check_that_we_care_about_this_file ~options ~env ~file_key ~content:file_contents with
+    | Error reason -> Error (Skipped reason)
+    | Ok () -> Ok (file_key, file_contents))
 
 let get_status ~profiling ~reader genv env client_root =
   let options = genv.ServerEnv.options in
@@ -387,11 +406,20 @@ let infer_type
   } =
     input
   in
-  let file = file_key_of_file_input ~options file_input in
-  let options = { options with Options.opt_verbose = verbose } in
-  match File_input.content_of_file_input file_input with
-  | Error e -> Lwt.return (Error e, None)
-  | Ok content ->
+  match of_file_input ~options ~env file_input with
+  | Error (Failed e) -> Lwt.return (Error e, None)
+  | Error (Skipped reason) ->
+    let response =
+      (* TODO: wow, this is a shady way to return no result! *)
+      ServerProt.Response.Infer_type_response
+        { loc = Loc.none; ty = None; exact_by_default = true; documentation = None }
+    in
+    let json_props =
+      Hh_json.(JSON_Object [("skipped", JSON_Bool true); ("skip_reason", JSON_String reason)])
+    in
+    Lwt.return (Ok response, Some json_props)
+  | Ok (file, content) ->
+    let options = { options with Options.opt_verbose = verbose } in
     let%lwt (file_artifacts_result, did_hit_cache) =
       let%lwt parse_result = Type_contents.parse_contents ~options ~profiling content file in
       type_parse_artifacts_with_cache
@@ -993,73 +1021,70 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
     Lwt.return (Ok [], None)
   else
     let file_input = file_input_of_text_document_identifier ~client textDocument in
-    let file_key = file_key_of_file_input ~options file_input in
-    let loc = Flow_lsp_conversions.lsp_range_to_flow_loc ~source:file_key range in
-    match File_input.content_of_file_input file_input with
-    | Error msg -> Lwt.return (Error msg, None)
-    | Ok file_contents ->
-      (match check_that_we_care_about_this_file ~options ~env ~file_key ~content:file_contents with
-      | Error reason ->
-        let extra_data =
-          let open Hh_json in
-          Some (JSON_Object [("skipped", JSON_Bool true); ("skip_reason", JSON_String reason)])
+    match of_file_input ~options ~env file_input with
+    | Error (Failed msg) -> Lwt.return (Error msg, None)
+    | Error (Skipped reason) ->
+      let extra_data =
+        let open Hh_json in
+        Some (JSON_Object [("skipped", JSON_Bool true); ("skip_reason", JSON_String reason)])
+      in
+      Lwt.return (Ok [], extra_data)
+    | Ok (file_key, file_contents) ->
+      let%lwt (file_artifacts_result, _did_hit_cache) =
+        let%lwt parse_result =
+          Type_contents.parse_contents ~options ~profiling file_contents file_key
         in
-        Lwt.return (Ok [], extra_data)
-      | Ok () ->
-        let%lwt (file_artifacts_result, _did_hit_cache) =
-          let%lwt parse_result =
-            Type_contents.parse_contents ~options ~profiling file_contents file_key
-          in
-          let type_parse_artifacts_cache =
-            Some (Persistent_connection.type_parse_artifacts_cache client)
-          in
-          type_parse_artifacts_with_cache
+        let type_parse_artifacts_cache =
+          Some (Persistent_connection.type_parse_artifacts_cache client)
+        in
+        type_parse_artifacts_with_cache
+          ~options
+          ~env
+          ~profiling
+          ~type_parse_artifacts_cache
+          file_key
+          parse_result
+      in
+      (match file_artifacts_result with
+      | Error _ -> Lwt.return (Ok [], None)
+      | Ok
+          ( Parse_artifacts { file_sig; tolerable_errors; ast; parse_errors; _ },
+            Typecheck_artifacts { cx; typed_ast }
+          ) ->
+        let uri = TextDocumentIdentifier.(textDocument.uri) in
+        let loc = Flow_lsp_conversions.lsp_range_to_flow_loc ~source:file_key range in
+        let lsp_init_params = Persistent_connection.lsp_initialize_params client in
+        let%lwt code_actions =
+          Code_action_service.code_actions_at_loc
             ~options
+            ~lsp_init_params
             ~env
-            ~profiling
-            ~type_parse_artifacts_cache
-            file_key
-            parse_result
+            ~reader
+            ~cx
+            ~file_sig
+            ~tolerable_errors
+            ~ast
+            ~typed_ast
+            ~parse_errors
+            ~diagnostics
+            ~only
+            ~uri
+            ~loc
         in
-        (match file_artifacts_result with
-        | Error _ -> Lwt.return (Ok [], None)
-        | Ok
-            ( Parse_artifacts { file_sig; tolerable_errors; ast; parse_errors; _ },
-              Typecheck_artifacts { cx; typed_ast }
-            ) ->
-          let uri = TextDocumentIdentifier.(textDocument.uri) in
-          let lsp_init_params = Persistent_connection.lsp_initialize_params client in
-          let%lwt code_actions =
-            Code_action_service.code_actions_at_loc
-              ~options
-              ~lsp_init_params
-              ~env
-              ~reader
-              ~cx
-              ~file_sig
-              ~tolerable_errors
-              ~ast
-              ~typed_ast
-              ~parse_errors
-              ~diagnostics
-              ~only
-              ~uri
-              ~loc
-          in
-          let extra_data =
-            match code_actions with
-            | Error _ -> None
-            | Ok code_actions ->
-              let open Hh_json in
-              let json_of_code_action = function
-                | CodeAction.Command Command.{ title; command = _; arguments = _ }
-                | CodeAction.Action CodeAction.{ title; kind = _; diagnostics = _; action = _ } ->
-                  JSON_String title
-              in
-              let actions = JSON_Array (Base.List.map ~f:json_of_code_action code_actions) in
-              Some (JSON_Object [("actions", actions)])
-          in
-          Lwt.return (code_actions, extra_data)))
+        let extra_data =
+          match code_actions with
+          | Error _ -> None
+          | Ok code_actions ->
+            let open Hh_json in
+            let json_of_code_action = function
+              | CodeAction.Command Command.{ title; command = _; arguments = _ }
+              | CodeAction.Action CodeAction.{ title; kind = _; diagnostics = _; action = _ } ->
+                JSON_String title
+            in
+            let actions = JSON_Array (Base.List.map ~f:json_of_code_action code_actions) in
+            Some (JSON_Object [("actions", actions)])
+        in
+        Lwt.return (code_actions, extra_data))
 
 let add_missing_imports ~reader ~options ~env ~profiling ~client textDocument =
   let file_input = file_input_of_text_document_identifier ~client textDocument in

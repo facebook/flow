@@ -31,31 +31,31 @@ module.exports = (suite(({addFiles, flowCmd}) => [
       .stdout(
         `
           {
-            "type": "number",
+            "type": "(unknown)",
             "reasons": [],
             "loc": {
-              "source": "ignore/foo.js",
-              "type": "SourceFile",
+              "source": null,
+              "type": null,
               "start": {
-                "line": 3,
+                "line": 0,
                 "column": 1,
-                "offset": 33
+                "offset": 0
               },
               "end": {
-                "line": 3,
-                "column": 3,
-                "offset": 36
+                "line": 0,
+                "column": 0,
+                "offset": 0
               }
             },
-            "path": "ignore/foo.js",
-            "line": 3,
-            "endline": 3,
+            "path": "",
+            "line": 0,
+            "endline": 0,
             "start": 1,
-            "end": 3
+            "end": 0
           }
         `,
       )
-      .because('Should work even though directory is ignored'),
+      .because('Should not work when directory is ignored'),
   ]),
 
   test('Directory with no @flow', [
@@ -82,30 +82,30 @@ module.exports = (suite(({addFiles, flowCmd}) => [
       .stdout(
         `
           {
-            "type": "number",
+            "type": "(unknown)",
             "reasons": [],
             "loc": {
-              "source": "no_flow/foo.js",
-              "type": "SourceFile",
+              "source": null,
+              "type": null,
               "start": {
-                "line": 3,
+                "line": 0,
                 "column": 1,
-                "offset": 33
+                "offset": 0
               },
               "end": {
-                "line": 3,
-                "column": 3,
-                "offset": 36
+                "line": 0,
+                "column": 0,
+                "offset": 0
               }
             },
-            "path": "no_flow/foo.js",
-            "line": 3,
-            "endline": 3,
+            "path": "",
+            "line": 0,
+            "endline": 0,
             "start": 1,
-            "end": 3
+            "end": 0
           }
         `,
       )
-      .because('Should work even though no_flow/foo.js is missing @flow'),
+      .because('Should not work because no_flow/foo.js is missing @flow'),
   ]),
 ]): Suite);
