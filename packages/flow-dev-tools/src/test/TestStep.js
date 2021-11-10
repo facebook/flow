@@ -8,6 +8,9 @@
  * @noformat
  */
 
+const {join} = require('path');
+const {readFileSync} = require('fs');
+
 const {default: Builder} = require('./builder');
 const {
   default: searchStackForTestAssertion,
@@ -245,6 +248,23 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
   addFiles: (...sources: Array<string>) => TestStepFirstStage = (...sources) =>
     this._cloneWithAction(async (builder, env) => {
       await builder.addFiles(sources);
+      env.triggerFlowCheck();
+    });
+
+  addFixture: (source: string, dest?: string) => TestStepFirstStage = (
+    source,
+    dest,
+  ) =>
+    this._cloneWithAction(async (builder, env) => {
+      await builder.addFile(join('__fixtures__', source), dest || source);
+      env.triggerFlowCheck();
+    });
+
+  addFixtures: (...sources: Array<string>) => TestStepFirstStage = (...sources) =>
+    this._cloneWithAction(async (builder, env) => {
+      await Promise.all(
+        sources.map(source => builder.addFileImpl(join('__fixtures__', source), source)),
+      );
       env.triggerFlowCheck();
     });
 
@@ -615,6 +635,68 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
       return simpleDiffAssertion(
         expects.map(diffable).join('\n'),
         actuals.map(diffable).join('\n'),
+        assertLoc,
+        reason,
+        'messages',
+        suggestion,
+        ignoreWhitespace,
+      );
+    });
+    ret._readsIdeMessages = true;
+    return ret;
+  };
+
+  verifyLSPMessageSnapshot: (string, $ReadOnlyArray<string | [string, string] | LSPMessage>) => TestStepSecondStage = (snapshot, ignores) => {
+    const assertLoc = searchStackForTestAssertion();
+    const ret = this._cloneWithAssertion((reason, env) => {
+      const actualMessages = env.getLSPMessagesSinceStartOfStep();
+      let expected;
+      try {
+        expected = readFileSync(snapshot, 'utf8');
+      } catch (_) {
+        expected = "";
+      }
+      let actuals: Array<string> = [];
+      let doesMatch = (
+        actual: LSPMessage,
+        expected: string | [string, string] | LSPMessage,
+      ) => {
+        if (typeof expected === 'string') {
+          return Builder.doesMessageFuzzyMatch(actual, expected);
+        } else if (Array.isArray(expected) && expected.length === 2) {
+          return Builder.doesMessageFuzzyMatch(
+            actual,
+            expected[0],
+            expected[1],
+          );
+        } else {
+          return Builder.doesMessageMatch(actual, expected);
+        }
+      };
+      for (let iActual = 0; iActual < actualMessages.length; iActual++) {
+        let actual = actualMessages[iActual];
+        if (ignores.some(ignore => doesMatch(actual, ignore))) {
+          // ignore it
+        } else {
+          actuals.push(JSON.stringify(actual, null, 2));
+        }
+      }
+
+      const contents = actuals.join('\n') + '\n';
+
+      const suggestion = {
+        file: snapshot,
+        contents: contents,
+      };
+
+      // don't ignore whitespace, since we used JSON.stringify to format
+      // both `expects` and `actuals`, whitespace is already normalized
+      // and differences are relevant (like within strings).
+      const ignoreWhitespace = false;
+
+      return simpleDiffAssertion(
+        expected,
+        contents,
         assertLoc,
         reason,
         'messages',
