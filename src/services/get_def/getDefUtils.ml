@@ -383,23 +383,23 @@ let add_literal_properties literal_key_info def_info =
     ~f:(Base.Option.map ~f:(fun (prop_def_info, name) -> Property (prop_def_info, name)))
 
 let get_def_info ~reader ~options env profiling file_key ast_info loc :
-    (def_info option, string) result Lwt.t =
+    (def_info option, string) result =
   let props_access_info = ref (Ok None) in
   let (ast, file_sig, info) = ast_info in
   (* Check if it's an exported symbol *)
   let loc = Base.Option.value (ImportExportSymbols.find_related_symbol file_sig loc) ~default:loc in
   let info = Docblock.set_flow_mode_for_ide_command info in
   let literal_key_info : (Loc.t * Loc.t * string) option = ObjectKeyAtLoc.get ast loc in
-  let%lwt cx =
+  let cx =
     set_def_loc_hook ~reader props_access_info literal_key_info loc;
-    Profiling_js.with_timer_lwt profiling ~timer:"MergeContents" ~f:(fun () ->
-        let%lwt () =
+    Profiling_js.with_timer profiling ~timer:"MergeContents" ~f:(fun () ->
+        let () =
           Type_contents.ensure_checked_dependencies ~options ~reader ~env file_key file_sig
         in
         let (cx, _) =
           Merge_service.check_contents_context ~reader options file_key ast info file_sig
         in
-        Lwt.return cx
+        cx
     )
   in
   unset_hooks ();
@@ -457,4 +457,4 @@ let get_def_info ~reader ~options env profiling file_key ast_info loc :
       in
       Result.map export_loc ~f:(Base.Option.map ~f:(fun x -> CJSExport x))
   in
-  Lwt.return @@ def_info
+  def_info

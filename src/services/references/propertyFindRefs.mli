@@ -14,4 +14,4 @@ val find_local_refs :
   FindRefsUtils.ast_info ->
   Scope_api.With_Loc.info ->
   Loc.t ->
-  (FindRefsTypes.find_refs_ok, string) result Lwt.t
+  (FindRefsTypes.find_refs_ok, string) result

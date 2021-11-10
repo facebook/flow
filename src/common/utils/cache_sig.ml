@@ -22,4 +22,6 @@ module type S = sig
   (* Returns the value as well as a boolean which is true if the cache was hit and false if it
    * missed. *)
   val with_cache : key -> 'a Lwt.t Lazy.t -> 'a t -> ('a * bool) Lwt.t
+
+  val with_cache_sync : key -> 'a Lazy.t -> 'a t -> 'a * bool
 end

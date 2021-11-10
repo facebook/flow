@@ -20,14 +20,14 @@ let type_parse_artifacts_with_cache
     ~options ~env ~profiling ~type_parse_artifacts_cache file artifacts =
   match type_parse_artifacts_cache with
   | None ->
-    let%lwt result = Type_contents.type_parse_artifacts ~options ~env ~profiling file artifacts in
-    Lwt.return (result, None)
+    let result = Type_contents.type_parse_artifacts ~options ~env ~profiling file artifacts in
+    (result, None)
   | Some cache ->
     let lazy_result =
       lazy (Type_contents.type_parse_artifacts ~options ~env ~profiling file artifacts)
     in
-    let%lwt (result, did_hit) = FilenameCache.with_cache file lazy_result cache in
-    Lwt.return (result, Some did_hit)
+    let (result, did_hit) = FilenameCache.with_cache_sync file lazy_result cache in
+    (result, Some did_hit)
 
 let add_cache_hit_data_to_json json_props did_hit =
   match did_hit with
@@ -35,6 +35,48 @@ let add_cache_hit_data_to_json json_props did_hit =
     (* This means the cache was not available *)
     json_props
   | Some did_hit -> ("cached", Hh_json.JSON_Bool did_hit) :: json_props
+
+(** Catch exceptions, stringify them, and return Error. Otherwise, return
+    the unchanged result of calling `f`.
+
+    Does NOT catch Lwt.Canceled, because that is used as a signal to restart the command.
+    TODO: this should be a dedicated exception, but we have to make sure nothing
+    swallows it. *)
+let try_with f =
+  (* NOT try%lwt, even though we catch Lwt.Canceled *)
+  try f () with
+  | Lwt.Canceled as exn ->
+    let exn = Exception.wrap exn in
+    Exception.reraise exn
+  | exn ->
+    let exn = Exception.wrap exn in
+    Error (Exception.to_string exn)
+
+let try_with_lwt f =
+  try%lwt f () with
+  | Lwt.Canceled as exn ->
+    let exn = Exception.wrap exn in
+    Exception.reraise exn
+  | exn ->
+    let exn = Exception.wrap exn in
+    Lwt.return (Error (Exception.to_string exn))
+
+(** Catch exceptions, stringify them, and return Error. Otherwise, return
+    the unchanged result of calling `f`.
+
+    Does NOT catch Lwt.Canceled, because that is used as a signal to restart the command.
+    TODO: this should be a dedicated exception, but we have to make sure nothing
+    swallows it. *)
+let try_with_json : (unit -> ('a, string) result * 'json) -> ('a, string) result * 'json =
+ fun f ->
+  (* NOT try%lwt, even though we catch Lwt.Canceled *)
+  try f () with
+  | Lwt.Canceled as exn ->
+    let exn = Exception.wrap exn in
+    Exception.reraise exn
+  | exn ->
+    let exn = Exception.wrap exn in
+    (Error (Exception.to_string exn), None)
 
 let status_log errors =
   if Errors.ConcreteLocPrintableErrorSet.is_empty errors then
@@ -223,8 +265,8 @@ let autocomplete
     AutocompleteService_js.add_autocomplete_token contents line column
   in
   Autocomplete_js.autocomplete_set_hooks ~cursor:cursor_loc;
-  let%lwt file_artifacts_result =
-    let%lwt parse_result = Type_contents.parse_contents ~options ~profiling contents path in
+  let file_artifacts_result =
+    let parse_result = Type_contents.parse_contents ~options ~profiling contents path in
     Type_contents.type_parse_artifacts ~options ~env ~profiling path parse_result
   in
   Autocomplete_js.autocomplete_unset_hooks ();
@@ -247,12 +289,12 @@ let autocomplete
          :: ("count", JSON_Number "0") :: initial_json_props
         )
     in
-    Lwt.return (Error err_str, Some json_data_to_log)
+    (Error err_str, Some json_data_to_log)
   | Ok
       ( Parse_artifacts { docblock = info; file_sig; ast; parse_errors; _ },
         Typecheck_artifacts { cx; typed_ast }
       ) ->
-    Profiling_js.with_timer_lwt profiling ~timer:"GetResults" ~f:(fun () ->
+    Profiling_js.with_timer profiling ~timer:"GetResults" ~f:(fun () ->
         let open AutocompleteService_js in
         let (token_opt, (ac_type_string, results_res)) =
           autocomplete_get_results
@@ -319,7 +361,7 @@ let autocomplete
             )
         in
         let json_props_to_log = fold_json_of_parse_errors parse_errors json_props_to_log in
-        Lwt.return (response, Some (Hh_json.JSON_Object json_props_to_log))
+        (response, Some (Hh_json.JSON_Object json_props_to_log))
     )
 
 let check_file ~options ~env ~profiling ~force file_input =
@@ -335,51 +377,49 @@ let check_file ~options ~env ~profiling ~force file_input =
         Docblock.is_flow docblock
     in
     if should_check then
-      let%lwt result =
-        let%lwt ((_, parse_errs) as intermediate_result) =
+      let result =
+        let ((_, parse_errs) as intermediate_result) =
           Type_contents.parse_contents ~options ~profiling content file
         in
         if not (Flow_error.ErrorSet.is_empty parse_errs) then
-          Lwt.return (Error parse_errs)
+          Error parse_errs
         else
           Type_contents.type_parse_artifacts ~options ~env ~profiling file intermediate_result
       in
       let (errors, warnings) =
         Type_contents.printable_errors_of_file_artifacts_result ~options ~env file result
       in
-      Lwt.return (convert_errors ~errors ~warnings ~suppressed_errors:[])
+      convert_errors ~errors ~warnings ~suppressed_errors:[]
     else
-      Lwt.return ServerProt.Response.NOT_COVERED
+      ServerProt.Response.NOT_COVERED
 
 (* This returns result, json_data_to_log, where json_data_to_log is the json data from
  * getdef_get_result which we end up using *)
 let get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, col) =
-  Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
+  Profiling_js.with_timer profiling ~timer:"GetResult" ~f:(fun () ->
       let loc = Loc.cursor (Some file) line col in
       let (Parse_artifacts { file_sig; parse_errors; _ }, Typecheck_artifacts { cx; typed_ast }) =
         check_result
       in
       let file_sig = File_sig.abstractify_locs file_sig in
-      Lwt.return
-        ( GetDef_js.get_def ~options ~reader ~cx ~file_sig ~typed_ast loc |> fun result ->
-          let open GetDef_js.Get_def_result in
-          let json_props = fold_json_of_parse_errors parse_errors [] in
-          match result with
-          | Def loc -> (Ok loc, Some (("result", Hh_json.JSON_String "SUCCESS") :: json_props))
-          | Partial (loc, msg) ->
-            ( Ok loc,
-              Some
-                (("result", Hh_json.JSON_String "PARTIAL_FAILURE")
-                 :: ("error", Hh_json.JSON_String msg) :: json_props
-                )
+      GetDef_js.get_def ~options ~reader ~cx ~file_sig ~typed_ast loc |> fun result ->
+      let open GetDef_js.Get_def_result in
+      let json_props = fold_json_of_parse_errors parse_errors [] in
+      match result with
+      | Def loc -> (Ok loc, Some (("result", Hh_json.JSON_String "SUCCESS") :: json_props))
+      | Partial (loc, msg) ->
+        ( Ok loc,
+          Some
+            (("result", Hh_json.JSON_String "PARTIAL_FAILURE")
+             :: ("error", Hh_json.JSON_String msg) :: json_props
             )
-          | Bad_loc -> (Ok Loc.none, Some (("result", Hh_json.JSON_String "BAD_LOC") :: json_props))
-          | Def_error msg ->
-            ( Error msg,
-              Some
-                (("result", Hh_json.JSON_String "FAILURE")
-                 :: ("error", Hh_json.JSON_String msg) :: json_props
-                )
+        )
+      | Bad_loc -> (Ok Loc.none, Some (("result", Hh_json.JSON_String "BAD_LOC") :: json_props))
+      | Def_error msg ->
+        ( Error msg,
+          Some
+            (("result", Hh_json.JSON_String "FAILURE")
+             :: ("error", Hh_json.JSON_String msg) :: json_props
             )
         )
   )
@@ -400,7 +440,7 @@ let infer_type
     ~(env : ServerEnv.env)
     ~(profiling : Profiling_js.running)
     ~type_parse_artifacts_cache
-    input : (ServerProt.Response.infer_type_response * Hh_json.json option) Lwt.t =
+    input : ServerProt.Response.infer_type_response * Hh_json.json option =
   let {
     file_input;
     query_position = { Loc.line; column };
@@ -413,7 +453,7 @@ let infer_type
     input
   in
   match of_file_input ~options ~env file_input with
-  | Error (Failed e) -> Lwt.return (Error e, None)
+  | Error (Failed e) -> (Error e, None)
   | Error (Skipped reason) ->
     let response =
       (* TODO: wow, this is a shady way to return no result! *)
@@ -421,11 +461,11 @@ let infer_type
         { loc = Loc.none; ty = None; exact_by_default = true; documentation = None }
     in
     let extra_data = json_of_skipped reason in
-    Lwt.return (Ok response, extra_data)
+    (Ok response, extra_data)
   | Ok (file, content) ->
     let options = { options with Options.opt_verbose = verbose } in
-    let%lwt (file_artifacts_result, did_hit_cache) =
-      let%lwt parse_result = Type_contents.parse_contents ~options ~profiling content file in
+    let (file_artifacts_result, did_hit_cache) =
+      let parse_result = Type_contents.parse_contents ~options ~profiling content file in
       type_parse_artifacts_with_cache
         ~options
         ~env
@@ -438,7 +478,7 @@ let infer_type
     | Error _parse_errors ->
       let err_str = "Couldn't parse file in parse_artifacts" in
       let json_props = add_cache_hit_data_to_json [] did_hit_cache in
-      Lwt.return (Error err_str, Some (Hh_json.JSON_Object json_props))
+      (Error err_str, Some (Hh_json.JSON_Object json_props))
     | Ok ((Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) as check_result)
       ->
       let ((loc, ty), type_at_pos_json_props) =
@@ -454,7 +494,7 @@ let infer_type
           line
           column
       in
-      let%lwt (getdef_loc_result, _) =
+      let (getdef_loc_result, _) =
         try_with_json (fun () ->
             get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, column)
         )
@@ -474,7 +514,7 @@ let infer_type
       let response =
         ServerProt.Response.Infer_type_response { loc; ty; exact_by_default; documentation }
       in
-      Lwt.return (Ok response, Some (Hh_json.JSON_Object json_props)))
+      (Ok response, Some (Hh_json.JSON_Object json_props)))
 
 let insert_type
     ~options
@@ -488,31 +528,25 @@ let insert_type
     ~ambiguity_strategy =
   let file_key = file_key_of_file_input ~options file_input in
   let options = { options with Options.opt_verbose = verbose } in
-  File_input.content_of_file_input file_input %>>= fun file_content ->
+  File_input.content_of_file_input file_input >>= fun file_content ->
   try_with (fun _ ->
-      let%lwt result =
-        Code_action_service.insert_type
-          ~options
-          ~env
-          ~profiling
-          ~file_key
-          ~file_content
-          ~target
-          ~omit_targ_defaults
-          ~location_is_strict
-          ~ambiguity_strategy
-      in
-      Lwt.return result
+      Code_action_service.insert_type
+        ~options
+        ~env
+        ~profiling
+        ~file_key
+        ~file_content
+        ~target
+        ~omit_targ_defaults
+        ~location_is_strict
+        ~ambiguity_strategy
   )
 
 let autofix_exports ~options ~env ~profiling ~input =
   let file_key = file_key_of_file_input ~options input in
-  File_input.content_of_file_input input %>>= fun file_content ->
+  File_input.content_of_file_input input >>= fun file_content ->
   try_with (fun _ ->
-      let%lwt result =
-        Code_action_service.autofix_exports ~options ~env ~profiling ~file_key ~file_content
-      in
-      Lwt.return result
+      Code_action_service.autofix_exports ~options ~env ~profiling ~file_key ~file_content
   )
 
 let collect_rage ~profiling ~options ~reader ~env ~files =
@@ -603,20 +637,17 @@ let collect_rage ~profiling ~options ~reader ~env ~files =
   items
 
 let dump_types ~options ~env ~profiling ~evaluate_type_destructors file_input =
-  let open Lwt_result.Infix in
-  try_with (fun () ->
-      let file = file_key_of_file_input ~options file_input in
-      Lwt.return (File_input.content_of_file_input file_input) >>= fun content ->
-      let%lwt file_artifacts_result =
-        let%lwt parse_result = Type_contents.parse_contents ~options ~profiling content file in
-        Type_contents.type_parse_artifacts ~options ~env ~profiling file parse_result
-      in
-      match file_artifacts_result with
-      | Error _parse_errors -> Lwt.return (Error "Couldn't parse file in parse_contents")
-      | Ok (Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) ->
-        Lwt.return
-          (Ok (Type_info_service.dump_types ~evaluate_type_destructors cx file_sig typed_ast))
-  )
+  let open Base.Result in
+  let file = file_key_of_file_input ~options file_input in
+  File_input.content_of_file_input file_input >>= fun content ->
+  let file_artifacts_result =
+    let parse_result = Type_contents.parse_contents ~options ~profiling content file in
+    Type_contents.type_parse_artifacts ~options ~env ~profiling file parse_result
+  in
+  match file_artifacts_result with
+  | Error _parse_errors -> Error "Couldn't parse file in parse_contents"
+  | Ok (Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) ->
+    Ok (Type_info_service.dump_types ~evaluate_type_destructors cx file_sig typed_ast)
 
 let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust file content =
   if Options.trust_mode options = Options.NoTrust && trust then
@@ -624,10 +655,9 @@ let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust 
         "Coverage cannot be run in trust mode if the server is not in trust mode. \n\nRestart the Flow server with --trust-mode=check' to enable this command.",
       None
     )
-    |> Lwt.return
   else
-    let%lwt (file_artifacts_result, did_hit_cache) =
-      let%lwt parse_result = Type_contents.parse_contents ~options ~profiling content file in
+    let (file_artifacts_result, did_hit_cache) =
+      let parse_result = Type_contents.parse_contents ~options ~profiling content file in
       type_parse_artifacts_with_cache
         ~options
         ~env
@@ -642,24 +672,21 @@ let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust 
     in
     match file_artifacts_result with
     | Ok (_, Typecheck_artifacts { cx; typed_ast }) ->
-      let%lwt coverage =
-        Memory_utils.with_memory_timer_lwt ~options "Coverage" profiling (fun () ->
-            Lwt.return (Type_info_service.coverage ~cx ~typed_ast ~force ~trust file content)
+      let coverage =
+        Profiling_js.with_timer profiling ~timer:"Coverage" ~f:(fun () ->
+            Type_info_service.coverage ~cx ~typed_ast ~force ~trust file content
         )
       in
-      Lwt.return (Ok coverage, Some extra_data)
-    | Error _parse_errors ->
-      Lwt.return (Error "Couldn't parse file in parse_contents", Some extra_data)
+      (Ok coverage, Some extra_data)
+    | Error _parse_errors -> (Error "Couldn't parse file in parse_contents", Some extra_data)
 
 let batch_coverage ~options ~env ~trust ~batch =
   if Options.trust_mode options = Options.NoTrust && trust then
     Error
       "Batch Coverage cannot be run in trust mode if the server is not in trust mode. \n\nRestart the Flow server with --trust-mode=check' to enable this command."
-    |> Lwt.return
   else if Options.lazy_mode options then
     Error
       "Batch coverage cannot be run in lazy mode.\n\nRestart the Flow server with '--no-lazy' to enable this command."
-    |> Lwt.return
   else
     let is_checked key = CheckedSet.mem key env.checked_files in
     let filter key = Base.List.exists ~f:(fun elt -> Files.is_prefix elt key) batch in
@@ -671,7 +698,7 @@ let batch_coverage ~options ~env ~trust ~batch =
     let response =
       FilenameMap.fold (fun key coverage -> List.cons (key, coverage)) coverage_map []
     in
-    Ok response |> Lwt.return
+    Ok response
 
 let serialize_graph graph =
   (* Convert from map/set to lists for serialization to client. *)
@@ -714,30 +741,25 @@ let get_cycle ~env fn types_only =
     else
       Dependency_info.implementation_dependency_graph dependency_info
   in
-  Lwt.return
-    (Ok
-       (let components = Sort_js.topsort ~roots:parsed (FilenameGraph.to_map dependency_graph) in
-        (* Get component for target file *)
-        let component = List.find (Nel.mem ~equal:File_key.equal fn) components in
-        (* Restrict dep graph to only in-cycle files *)
-        Nel.fold_left
-          (fun acc f ->
-            Base.Option.fold
-              (FilenameGraph.find_opt f dependency_graph)
-              ~init:acc
-              ~f:(fun acc deps ->
-                let subdeps =
-                  FilenameSet.filter (fun f -> Nel.mem ~equal:File_key.equal f component) deps
-                in
-                if FilenameSet.is_empty subdeps then
-                  acc
-                else
-                  FilenameMap.add f subdeps acc
-            ))
-          FilenameMap.empty
-          component
-        |> serialize_graph
-       )
+  Ok
+    (let components = Sort_js.topsort ~roots:parsed (FilenameGraph.to_map dependency_graph) in
+     (* Get component for target file *)
+     let component = List.find (Nel.mem ~equal:File_key.equal fn) components in
+     (* Restrict dep graph to only in-cycle files *)
+     Nel.fold_left
+       (fun acc f ->
+         Base.Option.fold (FilenameGraph.find_opt f dependency_graph) ~init:acc ~f:(fun acc deps ->
+             let subdeps =
+               FilenameSet.filter (fun f -> Nel.mem ~equal:File_key.equal f component) deps
+             in
+             if FilenameSet.is_empty subdeps then
+               acc
+             else
+               FilenameMap.add f subdeps acc
+         ))
+       FilenameMap.empty
+       component
+     |> serialize_graph
     )
 
 let find_module ~options ~reader (moduleref, filename) =
@@ -756,14 +778,14 @@ let find_module ~options ~reader (moduleref, filename) =
 
 let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_input, line, col) =
   match of_file_input ~options ~env file_input with
-  | Error (Failed msg) -> Lwt.return (Error msg, None)
+  | Error (Failed msg) -> (Error msg, None)
   | Error (Skipped reason) ->
     let json_props = ("result", Hh_json.JSON_String "SKIPPED") :: json_props_of_skipped reason in
-    Lwt.return (Ok Loc.none, Some (Hh_json.JSON_Object json_props))
+    (Ok Loc.none, Some (Hh_json.JSON_Object json_props))
   | Ok (file, content) ->
-    let%lwt (check_result, did_hit_cache) =
-      match%lwt
-        let%lwt parse_result = Type_contents.parse_contents ~options ~profiling content file in
+    let (check_result, did_hit_cache) =
+      match
+        let parse_result = Type_contents.parse_contents ~options ~profiling content file in
         type_parse_artifacts_with_cache
           ~options
           ~env
@@ -772,17 +794,17 @@ let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_i
           file
           parse_result
       with
-      | (Ok result, did_hit_cache) -> Lwt.return (Ok result, did_hit_cache)
+      | (Ok result, did_hit_cache) -> (Ok result, did_hit_cache)
       | (Error _parse_errors, did_hit_cache) ->
-        Lwt.return (Error "Couldn't parse file in parse_contents", did_hit_cache)
+        (Error "Couldn't parse file in parse_contents", did_hit_cache)
     in
     (match check_result with
     | Error msg ->
       let json_props = [("error", Hh_json.JSON_String msg)] in
       let json_props = add_cache_hit_data_to_json json_props did_hit_cache in
-      Lwt.return (Error msg, Some (Hh_json.JSON_Object json_props))
+      (Error msg, Some (Hh_json.JSON_Object json_props))
     | Ok check_result ->
-      let%lwt (result, json_props) =
+      let (result, json_props) =
         get_def_of_check_result ~options ~reader ~profiling ~check_result (file, line, col)
       in
       let json =
@@ -790,7 +812,7 @@ let get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_i
         let json_props = add_cache_hit_data_to_json json_props did_hit_cache in
         Hh_json.JSON_Object json_props
       in
-      Lwt.return (result, Some json))
+      (result, Some json))
 
 let module_name_of_string ~options module_name_str =
   let file_options = Options.file_options options in
@@ -841,14 +863,14 @@ let get_imports ~options ~reader module_names =
   List.fold_left add_to_results (SMap.empty, SSet.empty) module_names
 
 let save_state ~saved_state_filename ~genv ~env ~profiling =
-  try_with (fun () ->
+  try_with_lwt (fun () ->
       let%lwt () = Saved_state.save ~saved_state_filename ~genv ~env ~profiling in
       Lwt.return (Ok ())
   )
 
 let handle_autocomplete
     ~trigger_character ~reader ~options ~profiling ~env ~filename ~contents ~cursor ~imports =
-  let%lwt (result, json_data) =
+  let (result, json_data) =
     try_with_json (fun () ->
         autocomplete
           ~trigger_character
@@ -866,20 +888,20 @@ let handle_autocomplete
   Lwt.return (ServerProt.Response.AUTOCOMPLETE result, json_data)
 
 let handle_autofix_exports ~options ~input ~profiling ~env =
-  let%lwt result = autofix_exports ~options ~env ~profiling ~input in
+  let result = autofix_exports ~options ~env ~profiling ~input in
   Lwt.return (ServerProt.Response.AUTOFIX_EXPORTS result, None)
 
 let handle_check_file ~options ~force ~input ~profiling ~env =
-  let%lwt response = check_file ~options ~env ~force ~profiling input in
+  let response = check_file ~options ~env ~force ~profiling input in
   Lwt.return (ServerProt.Response.CHECK_FILE response, None)
 
 let handle_coverage ~options ~force ~input ~trust ~profiling ~env =
-  let%lwt (response, json_data) =
+  let (response, json_data) =
     try_with_json (fun () ->
         let options = { options with Options.opt_all = options.Options.opt_all || force } in
         match of_file_input ~options ~env input with
-        | Error (Failed msg) -> Lwt.return (Error msg, None)
-        | Error (Skipped reason) -> Lwt.return (Error reason, json_of_skipped reason)
+        | Error (Failed msg) -> (Error msg, None)
+        | Error (Skipped reason) -> (Error reason, json_of_skipped reason)
         | Ok (file_key, file_contents) ->
           coverage
             ~options
@@ -895,15 +917,17 @@ let handle_coverage ~options ~force ~input ~trust ~profiling ~env =
   Lwt.return (ServerProt.Response.COVERAGE response, json_data)
 
 let handle_batch_coverage ~options ~profiling:_ ~env ~batch ~trust =
-  let%lwt response = batch_coverage ~options ~env ~batch ~trust in
+  let response = batch_coverage ~options ~env ~batch ~trust in
   Lwt.return (ServerProt.Response.BATCH_COVERAGE response, None)
 
 let handle_cycle ~fn ~types_only ~profiling:_ ~env =
-  let%lwt response = get_cycle ~env fn types_only in
+  let response = get_cycle ~env fn types_only in
   Lwt.return (env, ServerProt.Response.CYCLE response, None)
 
 let handle_dump_types ~options ~input ~evaluate_type_destructors ~profiling ~env =
-  let%lwt response = dump_types ~options ~env ~profiling ~evaluate_type_destructors input in
+  let response =
+    try_with (fun () -> dump_types ~options ~env ~profiling ~evaluate_type_destructors input)
+  in
   Lwt.return (ServerProt.Response.DUMP_TYPES response, None)
 
 let handle_find_module ~options ~reader ~moduleref ~filename ~profiling:_ ~env:_ =
@@ -941,7 +965,7 @@ let handle_force_recheck ~files ~focus ~profile ~profiling =
   )
 
 let handle_get_def ~reader ~options ~filename ~line ~char ~profiling ~env =
-  let%lwt (result, json_data) =
+  let (result, json_data) =
     try_with_json (fun () ->
         get_def
           ~reader
@@ -986,7 +1010,7 @@ let handle_infer_type
       max_depth;
     }
   in
-  let%lwt (result, json_data) =
+  let (result, json_data) =
     try_with_json (fun () ->
         infer_type ~options ~reader ~env ~profiling ~type_parse_artifacts_cache:None input
     )
@@ -1003,7 +1027,7 @@ let handle_insert_type
     ~ambiguity_strategy
     ~profiling
     ~env =
-  let%lwt result =
+  let result =
     insert_type
       ~options
       ~env
@@ -1033,17 +1057,17 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
   let CodeActionRequest.{ textDocument; range; context = { only; diagnostics } } = params in
   if not (Code_action_service.kind_is_supported ~options only) then
     (* bail out early if we don't support any of the code actions requested *)
-    Lwt.return (Ok [], None)
+    (Ok [], None)
   else
     let file_input = file_input_of_text_document_identifier ~client textDocument in
     match of_file_input ~options ~env file_input with
-    | Error (Failed msg) -> Lwt.return (Error msg, None)
+    | Error (Failed msg) -> (Error msg, None)
     | Error (Skipped reason) ->
       let extra_data = json_of_skipped reason in
-      Lwt.return (Ok [], extra_data)
+      (Ok [], extra_data)
     | Ok (file_key, file_contents) ->
-      let%lwt (file_artifacts_result, _did_hit_cache) =
-        let%lwt parse_result =
+      let (file_artifacts_result, _did_hit_cache) =
+        let parse_result =
           Type_contents.parse_contents ~options ~profiling file_contents file_key
         in
         let type_parse_artifacts_cache =
@@ -1058,7 +1082,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
           parse_result
       in
       (match file_artifacts_result with
-      | Error _ -> Lwt.return (Ok [], None)
+      | Error _ -> (Ok [], None)
       | Ok
           ( Parse_artifacts { file_sig; tolerable_errors; ast; parse_errors; _ },
             Typecheck_artifacts { cx; typed_ast }
@@ -1066,7 +1090,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
         let uri = TextDocumentIdentifier.(textDocument.uri) in
         let loc = Flow_lsp_conversions.lsp_range_to_flow_loc ~source:file_key range in
         let lsp_init_params = Persistent_connection.lsp_initialize_params client in
-        let%lwt code_actions =
+        let code_actions =
           Code_action_service.code_actions_at_loc
             ~options
             ~lsp_init_params
@@ -1096,7 +1120,7 @@ let find_code_actions ~reader ~options ~env ~profiling ~params ~client =
             let actions = JSON_Array (Base.List.map ~f:json_of_code_action code_actions) in
             Some (JSON_Object [("actions", actions)])
         in
-        Lwt.return (code_actions, extra_data))
+        (code_actions, extra_data))
 
 let add_missing_imports ~reader ~options ~env ~profiling ~client textDocument =
   let file_input = file_input_of_text_document_identifier ~client textDocument in
@@ -1108,10 +1132,8 @@ let add_missing_imports ~reader ~options ~env ~profiling ~client textDocument =
       Some (Persistent_connection.type_parse_artifacts_cache client)
     in
     let uri = TextDocumentIdentifier.(textDocument.uri) in
-    let%lwt (file_artifacts_result, _did_hit_cache) =
-      let%lwt parse_result =
-        Type_contents.parse_contents ~options ~profiling file_contents file_key
-      in
+    let (file_artifacts_result, _did_hit_cache) =
+      let parse_result = Type_contents.parse_contents ~options ~profiling file_contents file_key in
       type_parse_artifacts_with_cache
         ~options
         ~env
@@ -1129,15 +1151,14 @@ let organize_imports ~options ~profiling ~client textDocument =
   let file_input = file_input_of_text_document_identifier ~client textDocument in
   let file_key = file_key_of_file_input ~options file_input in
   match File_input.content_of_file_input file_input with
-  | Error msg -> Lwt.return (Error msg)
+  | Error msg -> Error msg
   | Ok file_contents ->
-    let%lwt (parse_artifacts, _parse_errors) =
+    let (parse_artifacts, _parse_errors) =
       Type_contents.parse_contents ~options ~profiling file_contents file_key
     in
     (match parse_artifacts with
-    | None -> Lwt.return (Ok [])
-    | Some (Parse_artifacts { ast; _ }) ->
-      Lwt.return (Ok (Code_action_service.organize_imports ~options ~ast)))
+    | None -> Ok []
+    | Some (Parse_artifacts { ast; _ }) -> Ok (Code_action_service.organize_imports ~options ~ast))
 
 type command_handler =
   (* A command can be handled immediately if it is super duper fast and doesn't require the env.
@@ -1653,7 +1674,7 @@ let handle_persistent_get_def
   in
   let (line, char) = Flow_lsp_conversions.position_of_document_position params in
   let type_parse_artifacts_cache = Some (Persistent_connection.type_parse_artifacts_cache client) in
-  let%lwt (result, extra_data) =
+  let (result, extra_data) =
     get_def ~options ~reader ~env ~profiling ~type_parse_artifacts_cache (file_input, line, char)
   in
   let metadata = with_data ~extra_data metadata in
@@ -1695,7 +1716,7 @@ let handle_persistent_infer_type
       max_depth = 50;
     }
   in
-  let%lwt (result, extra_data) =
+  let (result, extra_data) =
     infer_type ~options ~reader ~env ~profiling ~type_parse_artifacts_cache input
   in
   let metadata = with_data ~extra_data metadata in
@@ -1736,9 +1757,7 @@ let handle_persistent_infer_type
 
 let handle_persistent_code_action_request
     ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
-  let%lwt (result, extra_data) =
-    find_code_actions ~reader ~options ~profiling ~env ~client ~params
-  in
+  let (result, extra_data) = find_code_actions ~reader ~options ~profiling ~env ~client ~params in
   let metadata = with_data ~extra_data metadata in
   match result with
   | Ok code_actions ->
@@ -1790,7 +1809,7 @@ let handle_persistent_autocomplete_lsp
   match fn_content with
   | Error (reason, stack) -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason ~stack metadata
   | Ok (filename, contents) ->
-    let%lwt (result, extra_data) =
+    let (result, extra_data) =
       autocomplete
         ~trigger_character
         ~reader
@@ -1848,8 +1867,8 @@ let handle_persistent_signaturehelp_lsp
       | None -> "-"
     in
     let path = File_key.SourceFile path in
-    let%lwt (file_artifacts_result, did_hit_cache) =
-      let%lwt parse_result = Type_contents.parse_contents ~options ~profiling contents path in
+    let (file_artifacts_result, did_hit_cache) =
+      let parse_result = Type_contents.parse_contents ~options ~profiling contents path in
       let type_parse_artifacts_cache =
         Some (Persistent_connection.type_parse_artifacts_cache client)
       in
@@ -1909,7 +1928,7 @@ let handle_persistent_document_highlight
     ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
   let file_input = file_input_of_text_document_position ~client params in
   let (line, col) = Flow_lsp_conversions.position_of_document_position params in
-  let%lwt local_refs =
+  let local_refs =
     FindRefs_js.find_local_refs ~reader ~options ~env ~profiling ~file_input ~line ~col
   in
   let extra_data =
@@ -1974,7 +1993,7 @@ let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~clien
     in
     Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
   | Ok (file_key, file_contents) ->
-    let%lwt (result, extra_data) =
+    let (result, extra_data) =
       (* 'true' makes it report "unknown" for all exprs in non-flow files *)
       let force = Options.all options in
       let type_parse_artifacts_cache =
@@ -2116,8 +2135,7 @@ let handle_persistent_add_missing_imports_command
 
 let handle_persistent_organize_imports_command
     ~options ~id ~metadata ~textDocument ~client ~profiling =
-  let%lwt edits = organize_imports ~options ~profiling ~client textDocument in
-  match edits with
+  match organize_imports ~options ~profiling ~client textDocument with
   | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
   | Ok [] ->
     (* nothing to do, return immediately *)
@@ -2237,12 +2255,12 @@ let handle_live_errors_request =
                   let file_options = Options.file_options options in
                   Files.filename_from_string ~options:file_options file_path
                 in
-                let%lwt (result, did_hit_cache) =
-                  let%lwt ((_, parse_errs) as intermediate_result) =
+                let (result, did_hit_cache) =
+                  let ((_, parse_errs) as intermediate_result) =
                     Type_contents.parse_contents ~options ~profiling content file_key
                   in
                   if not (Flow_error.ErrorSet.is_empty parse_errs) then
-                    Lwt.return (Error parse_errs, None)
+                    (Error parse_errs, None)
                   else
                     let type_parse_artifacts_cache =
                       Some (Persistent_connection.type_parse_artifacts_cache client)

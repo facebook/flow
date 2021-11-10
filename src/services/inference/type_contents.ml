@@ -70,8 +70,12 @@ let do_parse_wrapper ~options filename contents =
     (* This happens when a non-source file is queried, such as a json file *)
     Skipped
 
+let with_timer ~options timer profiling f =
+  let should_print = Options.should_profile options in
+  Profiling_js.with_timer profiling ~should_print ~timer ~f
+
 let parse_contents ~options ~profiling contents filename =
-  Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
+  with_timer ~options "Parsing" profiling (fun () ->
       match do_parse_wrapper ~options filename contents with
       | Parsed (Parse_artifacts { parse_errors; docblock_errors; _ } as parse_artifacts) ->
         let errors =
@@ -86,15 +90,15 @@ let parse_contents ~options ~profiling contents filename =
             Flow_error.ErrorSet.add err errors
           | _ -> Flow_error.ErrorSet.empty
         in
-        Lwt.return (Some parse_artifacts, errors)
-      | Skipped -> Lwt.return (None, Flow_error.ErrorSet.empty)
+        (Some parse_artifacts, errors)
+      | Skipped -> (None, Flow_error.ErrorSet.empty)
       | Docblock_errors errs ->
         let errs = Inference_utils.set_of_docblock_errors ~source_file:filename errs in
-        Lwt.return (None, errs)
+        (None, errs)
       | File_sig_error err ->
         let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
         let errs = Flow_error.ErrorSet.singleton err in
-        Lwt.return (None, errs)
+        (None, errs)
   )
 
 let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifacts =
@@ -234,7 +238,7 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
    * In that case, let's short-circuit typecheck, since a no-op typecheck still takes time on
    * large repos *)
   if CheckedSet.is_empty unchecked_dependencies then
-    Lwt.return_unit
+    ()
   else (
     Hh_logger.info
       "Canceling command due to %d unchecked dependencies"
@@ -246,9 +250,9 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
 
 (** TODO: handle case when file+contents don't agree with file system state **)
 let merge_contents ~options ~env ~profiling ~reader filename info ast file_sig =
-  Memory_utils.with_memory_timer_lwt ~options "MergeContents" profiling (fun () ->
-      let%lwt () = ensure_checked_dependencies ~options ~reader ~env filename file_sig in
-      Lwt.return (Merge_service.check_contents_context ~reader options filename ast info file_sig)
+  with_timer ~options "MergeContents" profiling (fun () ->
+      let () = ensure_checked_dependencies ~options ~reader ~env filename file_sig in
+      Merge_service.check_contents_context ~reader options filename ast info file_sig
   )
 
 let type_parse_artifacts ~options ~env ~profiling filename intermediate_result =
@@ -256,8 +260,8 @@ let type_parse_artifacts ~options ~env ~profiling filename intermediate_result =
   | (Some (Parse_artifacts { docblock; ast; file_sig; _ } as parse_artifacts), _errs) ->
     (* We assume that callers have already inspected the parse errors, so we discard them here. *)
     let reader = State_reader.create () in
-    let%lwt (cx, typed_ast) =
+    let (cx, typed_ast) =
       merge_contents ~options ~env ~profiling ~reader filename docblock ast file_sig
     in
-    Lwt.return (Ok (parse_artifacts, Typecheck_artifacts { cx; typed_ast }))
-  | (None, errs) -> Lwt.return (Error errs)
+    Ok (parse_artifacts, Typecheck_artifacts { cx; typed_ast })
+  | (None, errs) -> Error errs

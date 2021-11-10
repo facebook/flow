@@ -12,7 +12,7 @@ val parse_contents :
   string ->
   (* fake file-/module name *)
   File_key.t ->
-  (Types_js_types.parse_artifacts option * Flow_error.ErrorSet.t) Lwt.t
+  Types_js_types.parse_artifacts option * Flow_error.ErrorSet.t
 
 val ensure_checked_dependencies :
   options:Options.t ->
@@ -20,7 +20,7 @@ val ensure_checked_dependencies :
   env:ServerEnv.env ->
   File_key.t ->
   File_sig.With_Loc.t ->
-  unit Lwt.t
+  unit
 
 val type_parse_artifacts :
   options:Options.t ->
@@ -29,7 +29,7 @@ val type_parse_artifacts :
   (* fake file-/module name *)
   File_key.t ->
   Types_js_types.parse_artifacts option * Flow_error.ErrorSet.t ->
-  (Types_js_types.file_artifacts, Flow_error.ErrorSet.t) result Lwt.t
+  (Types_js_types.file_artifacts, Flow_error.ErrorSet.t) result
 
 val printable_errors_of_file_artifacts_result :
   options:Options.t ->
