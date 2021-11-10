@@ -86,7 +86,6 @@ module Opts = struct
     haste_use_name_reducers: bool;
     ignore_non_literal_requires: bool;
     include_warnings: bool;
-    indexed_access: bool;
     lazy_mode: lazy_mode option;
     log_file: Path.t option;
     log_saving: Options.log_saving SMap.t;
@@ -218,7 +217,6 @@ module Opts = struct
       haste_use_name_reducers = false;
       ignore_non_literal_requires = false;
       include_warnings = false;
-      indexed_access = true;
       lazy_mode = None;
       log_file = None;
       log_saving = SMap.empty;
@@ -835,7 +833,6 @@ module Opts = struct
         string (fun opts v -> Ok { opts with relay_integration_module_prefix = Some v })
       );
       ("include_warnings", boolean (fun opts v -> Ok { opts with include_warnings = v }));
-      ("indexed_access", boolean (fun opts v -> Ok { opts with indexed_access = v }));
       ("lazy_mode", lazy_mode_parser);
       ("log.file", filepath (fun opts v -> Ok { opts with log_file = Some v }));
       ("log_saving", log_saving_parser);
@@ -1485,8 +1482,6 @@ let haste_use_name_reducers c = c.options.Opts.haste_use_name_reducers
 let ignore_non_literal_requires c = c.options.Opts.ignore_non_literal_requires
 
 let include_warnings c = c.options.Opts.include_warnings
-
-let indexed_access c = c.options.Opts.indexed_access
 
 let lazy_mode c = c.options.Opts.lazy_mode
 

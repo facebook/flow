@@ -1509,7 +1509,6 @@ let dump_error_message =
           | ThisBeforeEverythingInitialized -> "ThisBeforeEverythingInitialized"
         )
     | EEnumsNotEnabled loc -> spf "EEnumsNotEnabled (%s)" (string_of_aloc loc)
-    | EIndexedAccessNotEnabled loc -> spf "EIndexedAccessNotEnabled (%s)" (string_of_aloc loc)
     | EIndeterminateModuleType loc -> spf "EIndeterminateModuleType (%s)" (string_of_aloc loc)
     | EBadExportPosition loc -> spf "EBadExportPosition (%s)" (string_of_aloc loc)
     | EBadExportContext (name, loc) -> spf "EBadExportContext (%s, %s)" name (string_of_aloc loc)

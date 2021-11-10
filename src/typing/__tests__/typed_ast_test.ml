@@ -28,7 +28,6 @@ let metadata =
     max_literal_length = 100;
     enable_const_params = false;
     enable_enums = true;
-    enable_indexed_access = true;
     enable_relay_integration = false;
     env_mode = Options.ClassicEnv [];
     env_mode_constrain_write_dirs = [];

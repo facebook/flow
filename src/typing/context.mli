@@ -55,7 +55,6 @@ type metadata = {
   max_literal_length: int;
   enable_const_params: bool;
   enable_enums: bool;
-  enable_indexed_access: bool;
   enable_relay_integration: bool;
   env_mode: Options.env_mode;
   env_mode_constrain_write_dirs: string list;
@@ -160,8 +159,6 @@ val builtins : t -> Builtins.t
 val enable_const_params : t -> bool
 
 val enable_enums : t -> bool
-
-val enable_indexed_access : t -> bool
 
 val enable_relay_integration : t -> bool
 
