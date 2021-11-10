@@ -1334,7 +1334,12 @@ let wrap_ephemeral_handler handler ~genv ~request_id ~client_context ~workload ~
     Hh_logger.info "%s" cmd_str;
     MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
 
-    let%lwt (ret, profiling, json_data) = handler ~genv ~request_id ~workload arg in
+    let should_print_summary = Options.should_profile genv.options in
+    let%lwt (profiling, (ret, json_data)) =
+      Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary (fun profiling ->
+          handler ~genv ~request_id ~workload ~profiling arg
+      )
+    in
     let event =
       ServerStatus.(
         Finishing_up
@@ -1363,16 +1368,10 @@ let wrap_ephemeral_handler handler ~genv ~request_id ~client_context ~workload ~
 
 (* A few commands need to be handled immediately, as soon as they arrive from the monitor. An
  * `env` is NOT available, since we don't have the server's full attention *)
-let handle_ephemeral_immediately_unsafe ~genv ~request_id ~workload () =
-  let should_print_summary = Options.should_profile genv.options in
-  let%lwt (profiling, (response, json_data)) =
-    Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary (fun profiling ->
-        workload ~profiling
-    )
-  in
+let handle_ephemeral_immediately_unsafe ~genv:_ ~request_id ~workload ~profiling () =
+  let%lwt (response, json_data) = workload ~profiling in
   MonitorRPC.respond_to_request ~request_id ~response;
-
-  Lwt.return ((), profiling, json_data)
+  Lwt.return ((), json_data)
 
 let handle_ephemeral_immediately = wrap_ephemeral_handler handle_ephemeral_immediately_unsafe
 
@@ -1405,35 +1404,29 @@ let run_command_in_parallel ~env ~profiling ~name ~workload ~mk_workload =
     Exception.reraise exn
 
 let rec handle_parallelizable_ephemeral_unsafe
-    ~client_context ~cmd_str ~genv ~request_id ~workload env =
-  let should_print_summary = Options.should_profile genv.options in
-  let%lwt (profiling, json_data) =
-    Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary (fun profiling ->
-        let%lwt (response, json_data) =
-          let mk_workload () =
-            handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str
-          in
-          run_command_in_parallel ~env ~profiling ~name:cmd_str ~workload ~mk_workload
-        in
-        MonitorRPC.respond_to_request ~request_id ~response;
+    ~client_context ~cmd_str ~genv ~request_id ~workload ~profiling env =
+  let%lwt json_data =
+    let%lwt (response, json_data) =
+      let mk_workload () =
+        handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str
+      in
+      run_command_in_parallel ~env ~profiling ~name:cmd_str ~workload ~mk_workload
+    in
+    MonitorRPC.respond_to_request ~request_id ~response;
 
-        (* It sucks this has to live here. We need a better way to handle post-send logic
-         * TODO - Do we actually need this error? Why do we even send the path? *)
-        (match response with
-        | ServerProt.Response.(
-            STATUS { lazy_stats = _; status_response = DIRECTORY_MISMATCH { server; client } }) ->
-          Hh_logger.fatal "Status: Error";
-          Hh_logger.fatal
-            "server_dir=%s, client_dir=%s"
-            (Path.to_string server)
-            (Path.to_string client);
-          Hh_logger.fatal "flow server is not listening to the same directory. Exiting.";
-          FlowExit.(exit Server_client_directory_mismatch)
-        | _ -> ());
-        Lwt.return json_data
-    )
+    (* It sucks this has to live here. We need a better way to handle post-send logic
+     * TODO - Do we actually need this error? Why do we even send the path? *)
+    (match response with
+    | ServerProt.Response.(
+        STATUS { lazy_stats = _; status_response = DIRECTORY_MISMATCH { server; client } }) ->
+      Hh_logger.fatal "Status: Error";
+      Hh_logger.fatal "server_dir=%s, client_dir=%s" (Path.to_string server) (Path.to_string client);
+      Hh_logger.fatal "flow server is not listening to the same directory. Exiting.";
+      FlowExit.(exit Server_client_directory_mismatch)
+    | _ -> ());
+    Lwt.return json_data
   in
-  Lwt.return ((), profiling, json_data)
+  Lwt.return ((), json_data)
 
 and handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str env =
   try%lwt
@@ -1450,19 +1443,10 @@ and handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload 
     (* It's fine for parallelizable commands to be canceled - they'll be run again later *)
     Lwt.return_unit
 
-let handle_nonparallelizable_ephemeral_unsafe ~genv ~request_id ~workload env =
-  let should_print_summary = Options.should_profile genv.options in
-  let%lwt (profiling, (env, json_data)) =
-    Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary (fun profiling ->
-        let%lwt (env, response, json_data) =
-          run_command_in_serial ~genv ~env ~profiling ~workload
-        in
-        MonitorRPC.respond_to_request ~request_id ~response;
-
-        Lwt.return (env, json_data)
-    )
-  in
-  Lwt.return (env, profiling, json_data)
+let handle_nonparallelizable_ephemeral_unsafe ~genv ~request_id ~workload ~profiling env =
+  let%lwt (env, response, json_data) = run_command_in_serial ~genv ~env ~profiling ~workload in
+  MonitorRPC.respond_to_request ~request_id ~response;
+  Lwt.return (env, json_data)
 
 let handle_nonparallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str env =
   let%lwt result =
