@@ -652,12 +652,12 @@ let coverage ~options ~env ~profiling ~type_parse_artifacts_cache ~force ~trust 
             in
             match file_artifacts_result with
             | Ok (_, Typecheck_artifacts { cx; typed_ast }) ->
-              Lwt.return
-                (Ok
-                   ( Type_info_service.coverage ~cx ~typed_ast ~force ~trust file content,
-                     Some extra_data
-                   )
+              let%lwt coverage =
+                Memory_utils.with_memory_timer_lwt ~options "Coverage" profiling (fun () ->
+                    Lwt.return (Type_info_service.coverage ~cx ~typed_ast ~force ~trust file content)
                 )
+              in
+              Lwt.return (Ok (coverage, Some extra_data))
             | Error _parse_errors ->
               Lwt.return (Error ("Couldn't parse file in parse_contents", Some extra_data))
         )
