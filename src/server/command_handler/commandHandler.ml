@@ -13,6 +13,17 @@ open Utils_js
 open Lsp
 open Types_js_types
 
+type ephemeral_parallelizable_result = ServerProt.Response.response * Hh_json.json option
+
+type ephemeral_nonparallelizable_result =
+  ServerEnv.env * ServerProt.Response.response * Hh_json.json option
+
+type persistent_parallelizable_result = LspProt.response * LspProt.metadata
+
+type persistent_nonparallelizable_result = ServerEnv.env * LspProt.response * LspProt.metadata
+
+type 'a workload = profiling:Profiling_js.running -> env:ServerEnv.env -> 'a Lwt.t
+
 (* Returns the result of calling `type_parse_artifacts`, along with a bool option indicating
  * whether the cache was hit -- None if no cache was available, Some true if it was hit, and Some
  * false if it was missed. *)
@@ -1159,32 +1170,21 @@ let organize_imports ~options ~profiling ~client textDocument =
     | Some (Parse_artifacts { ast; _ }) -> Ok (Code_action_service.organize_imports ~options ~ast))
 
 type command_handler =
-  (* A command can be handled immediately if it is super duper fast and doesn't require the env.
-   * These commands will be handled as soon as we read them off the pipe. Almost nothing should ever
-   * be handled immediately *)
-  | Handle_immediately of
-      (profiling:Profiling_js.running -> (ServerProt.Response.response * Hh_json.json option) Lwt.t)
-  (* A command is parallelizable if it passes four conditions
-   *
-   * 1. It is fast. Running it in parallel will block the current recheck, so it needs to be really
-   *    fast.
-   * 2. It doesn't use the workers. Currently we can't deal with the recheck using the workers at the
-   *    same time as a command using the workers
-   * 3. It doesn't return a new env. It really should be just a read-only job
-   * 4. It doesn't mind using slightly out of date data. During a recheck, it will be reading the
-   *    oldified data
-   *)
-  | Handle_parallelizable of
-      (profiling:Profiling_js.running ->
-      env:ServerEnv.env ->
-      (ServerProt.Response.response * Hh_json.json option) Lwt.t
-      )
-  (* A command is nonparallelizable if it can't be handled immediately or parallelized. *)
-  | Handle_nonparallelizable of
-      (profiling:Profiling_js.running ->
-      env:ServerEnv.env ->
-      (ServerEnv.env * ServerProt.Response.response * Hh_json.json option) Lwt.t
-      )
+  | Handle_immediately of (profiling:Profiling_js.running -> ephemeral_parallelizable_result Lwt.t)
+      (** A command can be handled immediately if it is super duper fast and doesn't require the env.
+          These commands will be handled as soon as we read them off the pipe. Almost nothing should ever
+          be handled immediately *)
+  | Handle_parallelizable of ephemeral_parallelizable_result workload
+      (** A command is parallelizable if it passes four conditions
+          1. It is fast. Running it in parallel will block the current recheck, so it needs to be really
+             fast.
+          2. It doesn't use the workers. Currently we can't deal with the recheck using the workers at the
+             same time as a command using the workers
+          3. It doesn't return a new env. It really should be just a read-only job
+          4. It doesn't mind using slightly out of date data. During a recheck, it will be reading the
+            oldified data *)
+  | Handle_nonparallelizable of ephemeral_nonparallelizable_result workload
+      (** A command is nonparallelizable if it can't be handled immediately or parallelized. *)
 
 (* This command is parallelizable, but we will treat it as nonparallelizable if we've been told
  * to wait_for_recheck by the .flowconfig or CLI *)
@@ -1395,7 +1395,10 @@ let rec run_command_in_serial ~genv ~env ~profiling ~workload =
 (* A command that is running in parallel with a recheck, if canceled, can't just run a recheck
  * itself. It needs to defer itself until later. *)
 let run_command_in_parallel ~env ~profiling ~name ~workload ~mk_workload =
-  try%lwt workload ~profiling ~env with
+  try%lwt
+    let%lwt (response, json_data) = workload ~profiling ~env in
+    Lwt.return (response, json_data)
+  with
   | Lwt.Canceled as exn ->
     let exn = Exception.wrap exn in
     Hh_logger.info
@@ -1537,11 +1540,9 @@ let with_data ~(extra_data : Hh_json.json option) (metadata : LspProt.metadata) 
   let extra_data = metadata.extra_data @ keyvals_of_json extra_data in
   { metadata with extra_data }
 
-type 'a persistent_handling_result = 'a * LspProt.response * LspProt.metadata
-
 (* This is commonly called by persistent handlers when something goes wrong and we need to return
   * an error response *)
-let mk_lsp_error_response ~ret ~id ~reason ?stack metadata =
+let mk_lsp_error_response ~id ~reason ?stack metadata =
   let metadata = with_error ?stack ~reason metadata in
   let (_, reason, Utils.Callstack stack) = Base.Option.value_exn metadata.LspProt.error_info in
   let message =
@@ -1561,13 +1562,13 @@ let mk_lsp_error_response ~ret ~id ~reason ?stack metadata =
       NotificationMessage
         (TelemetryNotification { LogMessage.type_ = MessageType.ErrorMessage; message = text })
   in
-  Lwt.return (ret, LspProt.LspFromServer (Some message), metadata)
+  Lwt.return (LspProt.LspFromServer (Some message), metadata)
 
-let handle_persistent_canceled ~ret ~id ~metadata ~client:_ ~profiling:_ =
+let handle_persistent_canceled ~id ~metadata ~client:_ ~profiling:_ =
   let e = { Error.code = Error.RequestCancelled; message = "cancelled"; data = None } in
   let response = ResponseMessage (id, ErrorResult (e, "")) in
   let metadata = with_error ~stack:(Utils.Callstack "") ~reason:"cancelled" metadata in
-  Lwt.return (ret, LspProt.LspFromServer (Some response), metadata)
+  Lwt.return (LspProt.LspFromServer (Some response), metadata)
 
 let handle_persistent_subscribe ~reader ~options ~metadata ~client ~profiling ~env =
   let (current_errors, current_warnings, _) =
@@ -1601,25 +1602,25 @@ let (enqueue_did_open_files, handle_persistent_did_open_notification) =
   (enqueue_did_open_files, handle_persistent_did_open_notification)
 
 let handle_persistent_did_open_notification_no_op ~metadata ~client:_ ~profiling:_ =
-  Lwt.return ((), LspProt.LspFromServer None, metadata)
+  Lwt.return (LspProt.LspFromServer None, metadata)
 
 let handle_persistent_did_change_notification ~params ~metadata ~client ~profiling:_ =
   let { Lsp.DidChange.textDocument; contentChanges } = params in
   let { VersionedTextDocumentIdentifier.uri; version = _ } = textDocument in
   let fn = Lsp_helpers.lsp_uri_to_path uri in
   match Persistent_connection.client_did_change client fn contentChanges with
-  | Ok () -> Lwt.return ((), LspProt.LspFromServer None, metadata)
-  | Error (reason, stack) -> mk_lsp_error_response ~ret:() ~id:None ~reason ~stack metadata
+  | Ok () -> Lwt.return (LspProt.LspFromServer None, metadata)
+  | Error (reason, stack) -> mk_lsp_error_response ~id:None ~reason ~stack metadata
 
 let handle_persistent_did_save_notification ~metadata ~client:_ ~profiling:_ =
-  Lwt.return ((), LspProt.LspFromServer None, metadata)
+  Lwt.return (LspProt.LspFromServer None, metadata)
 
 let handle_persistent_did_close_notification ~reader ~genv ~metadata ~client ~profiling ~env =
   let%lwt env = did_close ~profiling ~reader genv env client in
   Lwt.return (env, LspProt.LspFromServer None, metadata)
 
 let handle_persistent_did_close_notification_no_op ~metadata ~client:_ ~profiling:_ =
-  Lwt.return ((), LspProt.LspFromServer None, metadata)
+  Lwt.return (LspProt.LspFromServer None, metadata)
 
 let handle_persistent_cancel_notification ~params ~metadata ~client:_ ~profiling:_ ~env =
   let id = params.CancelRequest.id in
@@ -1642,7 +1643,7 @@ let handle_persistent_did_change_configuration_notification ~params ~metadata ~c
     | None -> client_config
   in
   client_did_change_configuration client client_config;
-  Lwt.return ((), LspProt.LspFromServer None, metadata)
+  Lwt.return (LspProt.LspFromServer None, metadata)
 
 let handle_persistent_get_def
     ~reader ~options ~id ~params ~file_input ~metadata ~client ~profiling ~env =
@@ -1663,15 +1664,15 @@ let handle_persistent_get_def
   match result with
   | Ok loc when loc = Loc.none ->
     let response = ResponseMessage (id, DefinitionResult []) in
-    Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
+    Lwt.return (LspProt.LspFromServer (Some response), metadata)
   | Ok loc ->
     let { TextDocumentPositionParams.textDocument; position = _ } = params in
     let default_uri = textDocument.TextDocumentIdentifier.uri in
     let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc in
     let definition_location = { Lsp.DefinitionLocation.location; title = None } in
     let response = ResponseMessage (id, DefinitionResult [definition_location]) in
-    Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
-  | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
+    Lwt.return (LspProt.LspFromServer (Some response), metadata)
+  | Error reason -> mk_lsp_error_response ~id:(Some id) ~reason metadata
 
 let handle_persistent_infer_type
     ~options ~reader ~id ~params ~file_input ~metadata ~client ~profiling ~env =
@@ -1734,8 +1735,8 @@ let handle_persistent_infer_type
       | (_, _) -> Some { Lsp.Hover.contents; range }
     in
     let response = ResponseMessage (id, HoverResult r) in
-    Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
-  | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
+    Lwt.return (LspProt.LspFromServer (Some response), metadata)
+  | Error reason -> mk_lsp_error_response ~id:(Some id) ~reason metadata
 
 let handle_persistent_code_action_request
     ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
@@ -1744,11 +1745,8 @@ let handle_persistent_code_action_request
   match result with
   | Ok code_actions ->
     Lwt.return
-      ( (),
-        LspProt.LspFromServer (Some (ResponseMessage (id, CodeActionResult code_actions))),
-        metadata
-      )
-  | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
+      (LspProt.LspFromServer (Some (ResponseMessage (id, CodeActionResult code_actions))), metadata)
+  | Error reason -> mk_lsp_error_response ~id:(Some id) ~reason metadata
 
 let handle_persistent_autocomplete_lsp
     ~reader ~options ~id ~params ~file_input ~metadata ~client ~profiling ~env =
@@ -1789,7 +1787,7 @@ let handle_persistent_autocomplete_lsp
     && Options.autoimports options
   in
   match fn_content with
-  | Error (reason, stack) -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason ~stack metadata
+  | Error (reason, stack) -> mk_lsp_error_response ~id:(Some id) ~reason ~stack metadata
   | Ok (filename, contents) ->
     let (result, extra_data) =
       autocomplete
@@ -1816,8 +1814,8 @@ let handle_persistent_autocomplete_lsp
             completions
         in
         let response = ResponseMessage (id, CompletionResult result) in
-        Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
-      | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
+        Lwt.return (LspProt.LspFromServer (Some response), metadata)
+      | Error reason -> mk_lsp_error_response ~id:(Some id) ~reason metadata
     end
 
 let handle_persistent_signaturehelp_lsp
@@ -1841,7 +1839,7 @@ let handle_persistent_signaturehelp_lsp
         Error (Exception.get_ctor_string e, Utils.Callstack (Exception.get_backtrace_string e)))
   in
   match fn_content with
-  | Error (reason, stack) -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason ~stack metadata
+  | Error (reason, stack) -> mk_lsp_error_response ~id:(Some id) ~reason ~stack metadata
   | Ok (filename, contents) ->
     let path =
       match filename with
@@ -1869,11 +1867,7 @@ let handle_persistent_signaturehelp_lsp
     in
     (match file_artifacts_result with
     | Error _parse_errors ->
-      mk_lsp_error_response
-        ~ret:()
-        ~id:(Some id)
-        ~reason:"Couldn't parse file in parse_artifacts"
-        metadata
+      mk_lsp_error_response ~id:(Some id) ~reason:"Couldn't parse file in parse_artifacts" metadata
     | Ok (Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast }) ->
       let func_details =
         let file_sig = File_sig.abstractify_locs file_sig in
@@ -1902,9 +1896,8 @@ let handle_persistent_signaturehelp_lsp
         let extra_data =
           Some (Hh_json.JSON_Object [("documentation", Hh_json.JSON_Bool has_any_documentation)])
         in
-        Lwt.return ((), LspProt.LspFromServer (Some response), with_data ~extra_data metadata)
-      | Error _ ->
-        mk_lsp_error_response ~ret:() ~id:(Some id) ~reason:"Failed to normalize type" metadata))
+        Lwt.return (LspProt.LspFromServer (Some response), with_data ~extra_data metadata)
+      | Error _ -> mk_lsp_error_response ~id:(Some id) ~reason:"Failed to normalize type" metadata))
 
 let handle_persistent_document_highlight
     ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
@@ -1938,13 +1931,13 @@ let handle_persistent_document_highlight
     in
     let r = DocumentHighlightResult (Base.List.map ~f:ref_to_highlight refs) in
     let response = ResponseMessage (id, r) in
-    Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
+    Lwt.return (LspProt.LspFromServer (Some response), metadata)
   | Ok None ->
     (* e.g. if it was requested on a place that's not even an identifier *)
     let r = DocumentHighlightResult [] in
     let response = ResponseMessage (id, r) in
-    Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
-  | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
+    Lwt.return (LspProt.LspFromServer (Some response), metadata)
+  | Error reason -> mk_lsp_error_response ~id:(Some id) ~reason metadata
 
 let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~client ~profiling ~env =
   let textDocument = params.TypeCoverage.textDocument in
@@ -1957,7 +1950,7 @@ let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~clien
       file_input_of_text_document_identifier ~client textDocument
   in
   match of_file_input ~options ~env file_input with
-  | Error (Failed reason) -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
+  | Error (Failed reason) -> mk_lsp_error_response ~id:(Some id) ~reason metadata
   | Error (Skipped reason) ->
     let range = { start = { line = 0; character = 0 }; end_ = { line = 1; character = 0 } } in
     let r =
@@ -1973,7 +1966,7 @@ let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~clien
       let extra_data = json_of_skipped reason in
       with_data ~extra_data metadata
     in
-    Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
+    Lwt.return (LspProt.LspFromServer (Some response), metadata)
   | Ok (file_key, file_contents) ->
     let (result, extra_data) =
       (* 'true' makes it report "unknown" for all exprs in non-flow files *)
@@ -2060,8 +2053,8 @@ let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~clien
           }
       in
       let response = ResponseMessage (id, r) in
-      Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
-    | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata)
+      Lwt.return (LspProt.LspFromServer (Some response), metadata)
+    | Error reason -> mk_lsp_error_response ~id:(Some id) ~reason metadata)
 
 let handle_persistent_rage ~reader ~genv ~id ~metadata ~client:_ ~profiling ~env =
   let root = Path.to_string genv.ServerEnv.options.Options.opt_root in
@@ -2070,12 +2063,11 @@ let handle_persistent_rage ~reader ~genv ~id ~metadata ~client:_ ~profiling ~env
     |> Base.List.map ~f:(fun (title, data) -> { Lsp.Rage.title = Some (root ^ ":" ^ title); data })
   in
   let response = ResponseMessage (id, RageResult items) in
-  Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
+  Lwt.return (LspProt.LspFromServer (Some response), metadata)
 
 let handle_persistent_log_command ~id ~metadata ~arguments:_ ~client:_ ~profiling:_ =
   (* don't need to do anything, since everything we need to log is already in `metadata` *)
-  Lwt.return
-    ((), LspProt.LspFromServer (Some (ResponseMessage (id, ExecuteCommandResult ()))), metadata)
+  Lwt.return (LspProt.LspFromServer (Some (ResponseMessage (id, ExecuteCommandResult ()))), metadata)
 
 let send_workspace_edit ~client ~id ~metadata ~on_response ~on_error label edit =
   let req_id =
@@ -2091,17 +2083,17 @@ let send_workspace_edit ~client ~id ~metadata ~on_response ~on_error label edit 
   in
   let handler = ApplyWorkspaceEditHandler on_response in
   Persistent_connection.push_outstanding_handler client req_id (handler, on_error);
-  Lwt.return ((), LspProt.LspFromServer (Some request), metadata)
+  Lwt.return (LspProt.LspFromServer (Some request), metadata)
 
 let handle_persistent_add_missing_imports_command
     ~reader ~options ~id ~metadata ~textDocument ~client ~profiling ~env =
   let%lwt edits = add_missing_imports ~reader ~options ~env ~profiling ~client textDocument in
   match edits with
-  | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
+  | Error reason -> mk_lsp_error_response ~id:(Some id) ~reason metadata
   | Ok [] ->
     (* nothing to do, return immediately *)
     Lwt.return
-      ((), LspProt.LspFromServer (Some (ResponseMessage (id, ExecuteCommandResult ()))), metadata)
+      (LspProt.LspFromServer (Some (ResponseMessage (id, ExecuteCommandResult ()))), metadata)
   | Ok edits ->
     (* send a workspace/applyEdit command to the client. when it replies, we'll reply to the command *)
     let on_response _result () =
@@ -2118,11 +2110,11 @@ let handle_persistent_add_missing_imports_command
 let handle_persistent_organize_imports_command
     ~options ~id ~metadata ~textDocument ~client ~profiling =
   match organize_imports ~options ~profiling ~client textDocument with
-  | Error reason -> mk_lsp_error_response ~ret:() ~id:(Some id) ~reason metadata
+  | Error reason -> mk_lsp_error_response ~id:(Some id) ~reason metadata
   | Ok [] ->
     (* nothing to do, return immediately *)
     Lwt.return
-      ((), LspProt.LspFromServer (Some (ResponseMessage (id, ExecuteCommandResult ()))), metadata)
+      (LspProt.LspFromServer (Some (ResponseMessage (id, ExecuteCommandResult ()))), metadata)
   | Ok edits ->
     (* send a workspace/applyEdit command to the client. when it replies, we'll reply to the command *)
     let on_response _result () =
@@ -2137,7 +2129,7 @@ let handle_persistent_organize_imports_command
     send_workspace_edit ~client ~id ~metadata ~on_response ~on_error label edit
 
 let handle_persistent_malformed_command ~id ~metadata ~client:_ ~profiling:_ =
-  mk_lsp_error_response ~ret:() ~id:(Some id) ~reason:"Malformed command" metadata
+  mk_lsp_error_response ~id:(Some id) ~reason:"Malformed command" metadata
 
 let handle_persistent_unsupported ?id ~unhandled ~metadata ~client:_ ~profiling:_ () =
   let message = Printf.sprintf "Unhandled method %s" (Lsp_fmt.message_name_to_string unhandled) in
@@ -2150,7 +2142,7 @@ let handle_persistent_unsupported ?id ~unhandled ~metadata ~client:_ ~profiling:
       NotificationMessage
         (TelemetryNotification { LogMessage.type_ = MessageType.ErrorMessage; message })
   in
-  Lwt.return ((), LspProt.LspFromServer (Some response), metadata)
+  Lwt.return (LspProt.LspFromServer (Some response), metadata)
 
 let handle_result_from_client ~id ~metadata ~(result : Lsp.lsp_result) ~client ~profiling:_ =
   (match Persistent_connection.pop_outstanding_handler client id with
@@ -2160,7 +2152,7 @@ let handle_result_from_client ~id ~metadata ~(result : Lsp.lsp_result) ~client ~
     | (ErrorResult (e, msg), _) -> handle_error (e, msg) ()
     | _ -> ())
   | None -> ());
-  Lwt.return ((), LspProt.LspFromServer None, metadata)
+  Lwt.return (LspProt.LspFromServer None, metadata)
 
 (* What should we do if we get multiple requests for the same URI? Each request wants the most
  * up-to-date live errors, so if we have 10 pending requests then we would want to send the same
@@ -2190,8 +2182,7 @@ let handle_live_errors_request =
         (* A more recent request for live errors has come in for this file. So let's cancel
          * this one and let the later one handle it *)
         Lwt.return
-          ( (),
-            LspProt.(
+          ( LspProt.(
               LiveErrorsResponse
                 (Error
                    {
@@ -2214,8 +2205,7 @@ let handle_live_errors_request =
             (* Maybe we've received a didClose for this file? Or maybe we got a request for a file
              * that wasn't open in the first place (that would be a bug). *)
             Lwt.return
-              ( (),
-                LspProt.(
+              ( LspProt.(
                   LiveErrorsResponse
                     (Error
                        {
@@ -2293,8 +2283,7 @@ let handle_live_errors_request =
               |> Base.Option.value ~default:[]
             in
             Lwt.return
-              ( (),
-                LspProt.LiveErrorsResponse (Ok { LspProt.live_diagnostics; live_errors_uri }),
+              ( LspProt.LiveErrorsResponse (Ok { LspProt.live_diagnostics; live_errors_uri }),
                 metadata
               )
         in
@@ -2305,37 +2294,27 @@ let handle_live_errors_request =
         Lwt.return ret
 
 type persistent_command_handler =
-  (* A command can be handled immediately if it is super duper fast and doesn't require the env.
-   * These commands will be handled as soon as we read them off the pipe. Almost nothing should ever
-   * be handled immediately *)
   | Handle_persistent_immediately of
       (client:Persistent_connection.single_client ->
       profiling:Profiling_js.running ->
-      unit persistent_handling_result Lwt.t
+      persistent_parallelizable_result Lwt.t
       )
-  (* A command is parallelizable if it passes four conditions
-   *
-   * 1. It is fast. Running it in parallel will block the current recheck, so it needs to be really
-   *    fast.
-   * 2. It doesn't use the workers. Currently we can't deal with the recheck using the workers at the
-   *    same time as a command using the workers
-   * 3. It doesn't return a new env. It really should be just a read-only job
-   * 4. It doesn't mind using slightly out of date data. During a recheck, it will be reading the
-   *    oldified data
-   *)
+      (** A command can be handled immediately if it is super duper fast and doesn't require the env.
+          These commands will be handled as soon as we read them off the pipe. Almost nothing should ever
+          be handled immediately *)
   | Handle_parallelizable_persistent of
-      (client:Persistent_connection.single_client ->
-      profiling:Profiling_js.running ->
-      env:ServerEnv.env ->
-      unit persistent_handling_result Lwt.t
-      )
-  (* A command is nonparallelizable if it can't be handled immediately or parallelized. *)
+      (client:Persistent_connection.single_client -> persistent_parallelizable_result workload)
+      (** A command is parallelizable if it passes four conditions
+          1. It is fast. Running it in parallel will block the current recheck, so it needs to be really
+            fast.
+          2. It doesn't use the workers. Currently we can't deal with the recheck using the workers at the
+            same time as a command using the workers
+          3. It doesn't return a new env. It really should be just a read-only job
+          4. It doesn't mind using slightly out of date data. During a recheck, it will be reading the
+            oldified data *)
   | Handle_nonparallelizable_persistent of
-      (client:Persistent_connection.single_client ->
-      profiling:Profiling_js.running ->
-      env:ServerEnv.env ->
-      ServerEnv.env persistent_handling_result Lwt.t
-      )
+      (client:Persistent_connection.single_client -> persistent_nonparallelizable_result workload)
+      (** A command is nonparallelizable if it can't be handled immediately or parallelized. *)
 
 (* This command is parallelizable, but we will treat it as nonparallelizable if we've been told
  * to wait_for_recheck by the .flowconfig *)
@@ -2344,7 +2323,7 @@ let mk_parallelizable_persistent ~options f =
   if wait_for_recheck then
     Handle_nonparallelizable_persistent
       (fun ~client ~profiling ~env ->
-        let%lwt ((), msg, metadata) = f ~client ~profiling ~env in
+        let%lwt (msg, metadata) = f ~client ~profiling ~env in
         Lwt.return (env, msg, metadata))
   else
     Handle_parallelizable_persistent f
@@ -2362,7 +2341,7 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     when IdSet.mem id !ServerMonitorListenerState.cancellation_requests ->
     (* We don't do any work, we just immediately tell the monitor that this request was already
        * canceled *)
-    Handle_persistent_immediately (handle_persistent_canceled ~ret:() ~id ~metadata)
+    Handle_persistent_immediately (handle_persistent_canceled ~id ~metadata)
   | Subscribe ->
     (* This mutates env, so it can't run in parallel *)
     Handle_nonparallelizable_persistent (handle_persistent_subscribe ~reader ~options ~metadata)
@@ -2523,6 +2502,8 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     (* We can handle live errors even during a recheck *)
     mk_parallelizable_persistent ~options (handle_live_errors_request ~options ~uri ~metadata)
 
+type 'a persistent_handling_result = 'a * LspProt.response * LspProt.metadata
+
 let wrap_persistent_handler
     (type a b c)
     (handler :
@@ -2560,7 +2541,10 @@ let wrap_persistent_handler
 
             (* We can't actually skip a canceled request...we need to send a response. But we can
              * skip the normal handler *)
-            handle_persistent_canceled ~ret:default_ret ~id ~metadata ~client ~profiling
+            let%lwt (response, json_data) =
+              handle_persistent_canceled ~id ~metadata ~client ~profiling
+            in
+            Lwt.return (default_ret, response, json_data)
           | _ ->
             (try%lwt handler ~genv ~workload ~client ~profiling arg with
             | Lwt.Canceled as e ->
@@ -2600,7 +2584,8 @@ let wrap_persistent_handler
     Lwt.return ret
 
 let handle_persistent_immediately_unsafe ~genv:_ ~workload ~client ~profiling () =
-  workload ~client ~profiling
+  let%lwt (response, json_data) = workload ~client ~profiling in
+  Lwt.return ((), response, json_data)
 
 let handle_persistent_immediately ~genv ~client_id ~request ~workload =
   wrap_persistent_handler
@@ -2619,7 +2604,10 @@ let rec handle_parallelizable_persistent_unsafe
     handle_parallelizable_persistent ~genv ~client_id ~request ~name ~workload
   in
   let workload = workload ~client in
-  run_command_in_parallel ~env ~profiling ~name ~workload ~mk_workload
+  let%lwt (response, json_data) =
+    run_command_in_parallel ~env ~profiling ~name ~workload ~mk_workload
+  in
+  Lwt.return ((), response, json_data)
 
 and handle_parallelizable_persistent ~genv ~client_id ~request ~name ~workload env : unit Lwt.t =
   try%lwt
