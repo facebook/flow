@@ -1,3 +1,41 @@
+### 0.164.0
+
+New Features:
+* `exports`/`module.exports` can no longer be read from in a module (e.g. `exports.foo`) to eliminate this usage of unsealed objects - you can refactor your code to directly reference `foo` instead, or just use ES modules (e.g. `export const foo = ...`)
+* Improved autocomplete for the targets of `typeof` type annotations.
+* Support for finding references and renaming has been removed. While these features often worked well, they also caused extremely bad performance and crashes. We hope to reimplement these features as soon as we can.
+* When displaying types, always use indexed access types for `$ElementType` and `$PropertyType` utilities.
+* Remove `indexed_access` option, it's always enabled now (was on by default before if the option was omitted).
+
+Notable bug fixes:
+* Fix an issue where the `refactor` code-action would hang on large inputs.
+* The exports of a file with no value exports are typed as an exact empty object rather than an unsealed object. Common errors which resulted from this are accidentally doing `import typeof Foo` rather than `import type {Foo}`
+* Fix error causing LSP requests to fail.
+* Fix calling `watchman` on Windows.
+* Fix soundness issue when comparing polymorphic types (example [try-Flow](https://flow.org/try/#0GYVwdgxgLglg9mABBOBTAThVAeAggGkQCEA+ACgA8AuRXAShqMQG8AoRZBAZykQHNEAXkRk4NbABVydISVoMR2AMrTZiJTMFy4AbnaJ0qKCHRI+ZSaq2IKdMnT0BfVqxRgeiAIY0wIALYARhhCnBhYZADknhEOrJ4AdFBwAGIwFKgAJvY6iAD0uQbgsH6oiBjocOiEASC8YHCIyQA2cADuZegV6F5gAJ6tABYYqEA)).
+* Fix handling of duplicate bindings in signature builder.
+* Improve error messages and type-at-pos results around `$ExactT<...>` type annotations.
+* Fix referencing `this` in a JSX title member.
+* `flow coverage` now returns 0% for non-@flow files; pass `--all` to also check non-@flow files.
+* No longer attempt to provide definition or `flow get-def` on non-Flow files.
+* No longer attempt to provide hover or `flow type-at-pos` on non-Flow files
+* Update to latest LSP 3.17 beta definition of `CompletionItemLabelDetail`
+
+Library Definitions:
+* Fix `navigator.clipboard.write` type and add `ClipboardItem` (thanks @Egrodo).
+* Add node.js `fs.copyFile` overload to support the case where the `mode` param is not specified (thanks @Brianzchen).
+
+Misc:
+* Removed the `flow suggest` command.
+* Improve codemod CLI error handling (Thanks @gnprice).
+* Changed scheduling of LSP commands in parallel with typechecking, to prioritize commands.
+* Removed `flow find-refs` command.
+* Removed the `--expand-type-aliases` flag from all Flow commands, it has caused several performance and non-termination issues without providing much value.
+* Improved codebase quality (thanks @gnprice).
+
+Parser:
+* Invalid `typeof` type annotations, where the argument to `typeof` is a not a variable or member expression, are now parse errors rather than type errors.
+
 ### 0.163.0
 
 New Features:
