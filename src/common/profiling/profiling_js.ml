@@ -313,15 +313,9 @@ end = struct
 
   let with_timer ?(should_print = false) ~timer ~f running =
     let (parent_timer, running_timer) = prepare_timer ~timer ~running in
-    try
-      let result = f () in
-      finalize_timer ~should_print ~timer ~running_timer ~parent_timer ~running;
-      result
-    with
-    | exn ->
-      let exn = Exception.wrap exn in
-      finalize_timer ~should_print ~timer ~running_timer ~parent_timer ~running;
-      Exception.reraise exn
+    Exception.protect ~f ~finally:(fun () ->
+        finalize_timer ~should_print ~timer ~running_timer ~parent_timer ~running
+    )
 
   let get_total_wall_duration finished_timer = finished_timer.wall.duration
 
