@@ -3,17 +3,18 @@ title: Visual Studio Code
 slug: /editors/vscode
 ---
 
-[Visual Studio Code](https://code.visualstudio.com/) has several editor
-integrations for using Flow.
+![Screenshot of Flow Language Support](/static/flow_for_vscode.gif)
 
-### Flow-Language-Support {#toc-flow-language-support}
+Support for Flow in [Visual Studio Code](https://code.visualstudio.com/) is provided by
+the [Flow Language Support](https://marketplace.visualstudio.com/items?itemName=flowtype.flow-for-vscode)
+extension. It provides all the functionality you would expect:
 
-[Flow Language Support](https://marketplace.visualstudio.com/items?itemName=flowtype.flow-for-vscode)
-provides all the functionality you would expect — linting, intellisense, type
-tooltips and click-to-definition. It's stable and under active development.
+- IntelliSense (Autocomplete)
+- Go to Definition / Peek Definition
+- Diagnostics (Errors, Warnings)
+- Hover type information
+- Toggleable code coverage reports
 
-### Others {#toc-others}
+## Installation
 
-Other extensions that you may try are:
-
-- [vscode-flow-ide](https://marketplace.visualstudio.com/items?itemName=gcazaciuc.vscode-flow-ide)
+Search for "Flow Language Support" in the VS Code extensions panel or install through the [Marketplace](https://marketplace.visualstudio.com/items?itemName=flowtype.flow-for-vscode).
