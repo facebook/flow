@@ -1329,6 +1329,7 @@ let make_options
       Base.List.map
         ~f:(fun s -> Files.expand_project_root_token ~root s)
         (FlowConfig.local_inference_annotation_dirs flowconfig);
+    opt_enforce_this_annotations = FlowConfig.enforce_this_annotations flowconfig;
     opt_experimental_infer_indexers = false;
     opt_reorder_checking = FlowConfig.reorder_checking flowconfig;
     opt_run_post_inference_implicit_instantiation =

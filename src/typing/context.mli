@@ -62,6 +62,7 @@ type metadata = {
   enforce_strict_call_arity: bool;
   enforce_local_inference_annotations: bool;
   local_inference_annotation_dirs: string list;
+  enforce_this_annotations: bool;
   experimental_infer_indexers: bool;
   exact_by_default: bool;
   facebook_fbs: string option;
@@ -183,6 +184,8 @@ val exact_by_default : t -> bool
 val enforce_local_inference_annotations : t -> bool
 
 val local_inference_annotation_dirs : t -> string list
+
+val enforce_this_annotations : t -> bool
 
 val experimental_infer_indexers : t -> bool
 

@@ -80,6 +80,7 @@ type t = {
   opt_enabled_rollouts: string SMap.t;
   opt_enforce_local_inference_annotations: bool;
   opt_local_inference_annotation_dirs: string list;
+  opt_enforce_this_annotations: bool;
   opt_experimental_infer_indexers: bool;
   opt_enforce_strict_call_arity: bool;
   opt_enums: bool;
@@ -183,6 +184,8 @@ let enforce_strict_call_arity opts = opts.opt_enforce_strict_call_arity
 let enforce_local_inference_annotations opts = opts.opt_enforce_local_inference_annotations
 
 let local_inference_annotation_dirs opts = opts.opt_local_inference_annotation_dirs
+
+let enforce_this_annotations opts = opts.opt_enforce_this_annotations
 
 let experimental_infer_indexers opts = opts.opt_experimental_infer_indexers
 

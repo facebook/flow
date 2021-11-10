@@ -166,6 +166,7 @@ let stub_metadata ~root ~checked =
     env_mode_constrain_write_dirs = [];
     enforce_local_inference_annotations = false;
     local_inference_annotation_dirs = [];
+    enforce_this_annotations = false;
     experimental_infer_indexers = false;
     enforce_strict_call_arity = true;
     exact_by_default = false;
