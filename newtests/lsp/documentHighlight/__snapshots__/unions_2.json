@@ -1,0 +1,31 @@
+{
+  "method": "textDocument/documentHighlight",
+  "result": [
+    {
+      "range": {
+        "start": {
+          "line": 9,
+          "character": 28
+        },
+        "end": {
+          "line": 9,
+          "character": 31
+        }
+      },
+      "kind": 1
+    },
+    {
+      "range": {
+        "start": {
+          "line": 16,
+          "character": 8
+        },
+        "end": {
+          "line": 16,
+          "character": 11
+        }
+      },
+      "kind": 1
+    }
+  ]
+}
