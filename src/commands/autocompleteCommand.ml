@@ -46,7 +46,8 @@ let spec =
 (* legacy editor integrations inserted the "AUTO332" token themselves. modern ones give us the
    cursor location. this function finds the first occurrence of "AUTO332" and returns the
    contents with the token removed, along with the (line, column) cursor position. *)
-let extract_cursor contents =
+let extract_cursor input =
+  let contents = File_input.content_of_file_input_unsafe input in
   let regexp = Str.regexp_string AutocompleteService_js.autocomplete_suffix in
   try
     let offset = Str.search_forward regexp contents 0 in
@@ -61,34 +62,30 @@ let extract_cursor contents =
       in
       prefix ^ suffix
     in
-    (contents, Some cursor)
+    let input = File_input.(FileContent (path_of_file_input input, contents)) in
+    (input, Some cursor)
   with
-  | Not_found -> (contents, None)
+  | Not_found -> (input, None)
+
+let file_input_from_stdin filename =
+  get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name) filename None
 
 let parse_args = function
   | None
   | Some [] ->
-    let contents = Sys_utils.read_stdin_to_string () in
-    let (contents, cursor) = extract_cursor contents in
-    (None, contents, cursor)
+    let input = file_input_from_stdin None in
+    extract_cursor input
   | Some [filename] ->
-    let filename = get_path_of_file filename in
-    let contents = Sys_utils.read_stdin_to_string () in
-    let (contents, cursor) = extract_cursor contents in
-    (Some filename, contents, cursor)
+    let input = file_input_from_stdin (Some filename) in
+    extract_cursor input
   | Some [line; column] ->
-    let line = int_of_string line in
-    let column = int_of_string column in
-    let contents = Sys_utils.read_stdin_to_string () in
-    let cursor = convert_input_pos (line, column) in
-    (None, contents, Some cursor)
+    let cursor = convert_input_pos (int_of_string line, int_of_string column) in
+    let input = file_input_from_stdin None in
+    (input, Some cursor)
   | Some [filename; line; column] ->
-    let line = int_of_string line in
-    let column = int_of_string column in
-    let contents = Sys_utils.read_stdin_to_string () in
-    let filename = get_path_of_file filename in
-    let cursor = convert_input_pos (line, column) in
-    (Some filename, contents, Some cursor)
+    let cursor = convert_input_pos (int_of_string line, int_of_string column) in
+    let input = file_input_from_stdin (Some filename) in
+    (input, Some cursor)
   | _ ->
     CommandSpec.usage spec;
     Exit.(exit Commandline_usage_error)
@@ -116,14 +113,14 @@ let autocomplete_response_to_json ~strip_root response =
   )
 
 let main base_flags option_values json pretty root strip_root wait_for_recheck lsp imports args () =
-  let (filename, contents, cursor_opt) = parse_args args in
+  let (input, cursor_opt) = parse_args args in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root =
     guess_root
       flowconfig_name
       (match root with
       | Some root -> Some root
-      | None -> filename)
+      | None -> File_input.path_of_file_input input)
   in
   let strip_root =
     if strip_root then
@@ -141,7 +138,7 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck l
   | Some cursor ->
     let request =
       ServerProt.Request.AUTOCOMPLETE
-        { filename; contents; cursor; wait_for_recheck; trigger_character = None; imports }
+        { input; cursor; wait_for_recheck; trigger_character = None; imports }
     in
     let results =
       match connect_and_make_request flowconfig_name option_values root request with

@@ -8,8 +8,7 @@
 module Request = struct
   type command =
     | AUTOCOMPLETE of {
-        filename: string option;
-        contents: string;
+        input: File_input.t;
         cursor: int * int;
         trigger_character: string option;
         wait_for_recheck: bool option;
@@ -101,21 +100,9 @@ module Request = struct
       }
 
   let to_string = function
-    | AUTOCOMPLETE
-        {
-          filename;
-          contents = _;
-          cursor = _;
-          wait_for_recheck = _;
-          trigger_character = _;
-          imports = _;
-        } ->
-      let filename =
-        match filename with
-        | None -> "-"
-        | Some filename -> filename
-      in
-      Printf.sprintf "autocomplete %s" filename
+    | AUTOCOMPLETE { input; cursor = _; wait_for_recheck = _; trigger_character = _; imports = _ }
+      ->
+      Printf.sprintf "autocomplete %s" (File_input.filename_of_file_input input)
     | AUTOFIX_EXPORTS { input; _ } ->
       Printf.sprintf "autofix exports %s" (File_input.filename_of_file_input input)
     | CHECK_FILE { input; verbose = _; force = _; include_warnings = _; wait_for_recheck = _ } ->

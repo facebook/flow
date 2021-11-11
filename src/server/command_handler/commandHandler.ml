@@ -259,121 +259,120 @@ let get_status ~profiling ~reader genv env client_root =
   in
   (status_response, lazy_stats)
 
-let autocomplete
-    ~trigger_character ~reader ~options ~env ~profiling ~filename ~contents ~cursor ~imports =
-  let path =
-    match filename with
-    | Some filename -> filename
-    | None -> "-"
-  in
-  let path = File_key.SourceFile path in
-  let cursor_loc =
-    let (line, column) = cursor in
-    Loc.cursor (Some path) line column
-  in
-  let (contents, broader_context) =
-    let (line, column) = cursor in
-    AutocompleteService_js.add_autocomplete_token contents line column
-  in
-  Autocomplete_js.autocomplete_set_hooks ~cursor:cursor_loc;
-  let file_artifacts_result =
-    let parse_result = Type_contents.parse_contents ~options ~profiling contents path in
-    Type_contents.type_parse_artifacts ~options ~env ~profiling path parse_result
-  in
-  Autocomplete_js.autocomplete_unset_hooks ();
-  let initial_json_props =
-    let open Hh_json in
-    [
-      ("ac_trigger", JSON_String (Base.Option.value trigger_character ~default:"None"));
-      ("broader_context", JSON_String broader_context);
-    ]
-  in
-  match file_artifacts_result with
-  | Error _parse_errors ->
-    let err_str = "Couldn't parse file in parse_contents" in
-    let json_data_to_log =
-      let open Hh_json in
-      JSON_Object
-        (("errors", JSON_Array [JSON_String err_str])
-         ::
-         ("result", JSON_String "FAILURE_CHECK_CONTENTS")
-         :: ("count", JSON_Number "0") :: initial_json_props
-        )
+let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~input ~cursor ~imports =
+  let filename = file_key_of_file_input ~options input in
+  match File_input.content_of_file_input input with
+  | Error e -> (Error e, None)
+  | Ok contents ->
+    let cursor_loc =
+      let (line, column) = cursor in
+      Loc.cursor (Some filename) line column
     in
-    (Error err_str, Some json_data_to_log)
-  | Ok
-      ( Parse_artifacts { docblock = info; file_sig; ast; parse_errors; _ },
-        Typecheck_artifacts { cx; typed_ast }
-      ) ->
-    Profiling_js.with_timer profiling ~timer:"GetResults" ~f:(fun () ->
-        let open AutocompleteService_js in
-        let (token_opt, (ac_type_string, results_res)) =
-          autocomplete_get_results
-            ~env
-            ~options
-            ~reader
-            ~cx
-            ~file_sig
-            ~ast
-            ~typed_ast
-            ~imports
-            trigger_character
-            cursor_loc
-        in
-        let json_props_to_log =
-          ("ac_type", Hh_json.JSON_String ac_type_string)
-          ::
-          ("docblock", Docblock.json_of_docblock info)
-          ::
-          ( "token",
-            match token_opt with
-            | None -> Hh_json.JSON_Null
-            | Some token -> Hh_json.JSON_String token
+    let (contents, broader_context) =
+      let (line, column) = cursor in
+      AutocompleteService_js.add_autocomplete_token contents line column
+    in
+    Autocomplete_js.autocomplete_set_hooks ~cursor:cursor_loc;
+    let file_artifacts_result =
+      let parse_result = Type_contents.parse_contents ~options ~profiling contents filename in
+      Type_contents.type_parse_artifacts ~options ~env ~profiling filename parse_result
+    in
+    Autocomplete_js.autocomplete_unset_hooks ();
+    let initial_json_props =
+      let open Hh_json in
+      [
+        ("ac_trigger", JSON_String (Base.Option.value trigger_character ~default:"None"));
+        ("broader_context", JSON_String broader_context);
+      ]
+    in
+    (match file_artifacts_result with
+    | Error _parse_errors ->
+      let err_str = "Couldn't parse file in parse_contents" in
+      let json_data_to_log =
+        let open Hh_json in
+        JSON_Object
+          (("errors", JSON_Array [JSON_String err_str])
+           ::
+           ("result", JSON_String "FAILURE_CHECK_CONTENTS")
+           :: ("count", JSON_Number "0") :: initial_json_props
           )
-          :: initial_json_props
-        in
-        let (response, json_props_to_log) =
-          let open Hh_json in
-          match results_res with
-          | AcResult { result; errors_to_log } ->
-            let { ServerProt.Response.Completion.items; is_incomplete = _ } = result in
-            let result_string =
-              match (items, errors_to_log) with
-              | (_, []) -> "SUCCESS"
-              | ([], _ :: _) -> "FAILURE"
-              | (_ :: _, _ :: _) -> "PARTIAL"
-            in
-            let at_least_one_result_has_documentation =
-              Base.List.exists items ~f:(fun ServerProt.Response.Completion.{ documentation; _ } ->
-                  Base.Option.is_some documentation
+      in
+      (Error err_str, Some json_data_to_log)
+    | Ok
+        ( Parse_artifacts { docblock = info; file_sig; ast; parse_errors; _ },
+          Typecheck_artifacts { cx; typed_ast }
+        ) ->
+      Profiling_js.with_timer profiling ~timer:"GetResults" ~f:(fun () ->
+          let open AutocompleteService_js in
+          let (token_opt, (ac_type_string, results_res)) =
+            autocomplete_get_results
+              ~env
+              ~options
+              ~reader
+              ~cx
+              ~file_sig
+              ~ast
+              ~typed_ast
+              ~imports
+              trigger_character
+              cursor_loc
+          in
+          let json_props_to_log =
+            ("ac_type", Hh_json.JSON_String ac_type_string)
+            ::
+            ("docblock", Docblock.json_of_docblock info)
+            ::
+            ( "token",
+              match token_opt with
+              | None -> Hh_json.JSON_Null
+              | Some token -> Hh_json.JSON_String token
+            )
+            :: initial_json_props
+          in
+          let (response, json_props_to_log) =
+            let open Hh_json in
+            match results_res with
+            | AcResult { result; errors_to_log } ->
+              let { ServerProt.Response.Completion.items; is_incomplete = _ } = result in
+              let result_string =
+                match (items, errors_to_log) with
+                | (_, []) -> "SUCCESS"
+                | ([], _ :: _) -> "FAILURE"
+                | (_ :: _, _ :: _) -> "PARTIAL"
+              in
+              let at_least_one_result_has_documentation =
+                Base.List.exists
+                  items
+                  ~f:(fun ServerProt.Response.Completion.{ documentation; _ } ->
+                    Base.Option.is_some documentation
+                )
+              in
+              ( Ok (token_opt, result),
+                ("result", JSON_String result_string)
+                ::
+                ("count", JSON_Number (items |> List.length |> string_of_int))
+                ::
+                ("errors", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) errors_to_log))
+                ::
+                ("documentation", JSON_Bool at_least_one_result_has_documentation)
+                :: json_props_to_log
               )
-            in
-            ( Ok (token_opt, result),
-              ("result", JSON_String result_string)
-              ::
-              ("count", JSON_Number (items |> List.length |> string_of_int))
-              ::
-              ("errors", JSON_Array (Base.List.map ~f:(fun s -> JSON_String s) errors_to_log))
-              ::
-              ("documentation", JSON_Bool at_least_one_result_has_documentation)
-              :: json_props_to_log
-            )
-          | AcEmpty reason ->
-            ( Ok (token_opt, { ServerProt.Response.Completion.items = []; is_incomplete = false }),
-              ("result", JSON_String "SUCCESS")
-              ::
-              ("count", JSON_Number "0")
-              :: ("empty_reason", JSON_String reason) :: json_props_to_log
-            )
-          | AcFatalError error ->
-            ( Error error,
-              ("result", JSON_String "FAILURE")
-              :: ("errors", JSON_Array [JSON_String error]) :: json_props_to_log
-            )
-        in
-        let json_props_to_log = fold_json_of_parse_errors parse_errors json_props_to_log in
-        (response, Some (Hh_json.JSON_Object json_props_to_log))
-    )
+            | AcEmpty reason ->
+              ( Ok (token_opt, { ServerProt.Response.Completion.items = []; is_incomplete = false }),
+                ("result", JSON_String "SUCCESS")
+                ::
+                ("count", JSON_Number "0")
+                :: ("empty_reason", JSON_String reason) :: json_props_to_log
+              )
+            | AcFatalError error ->
+              ( Error error,
+                ("result", JSON_String "FAILURE")
+                :: ("errors", JSON_Array [JSON_String error]) :: json_props_to_log
+              )
+          in
+          let json_props_to_log = fold_json_of_parse_errors parse_errors json_props_to_log in
+          (response, Some (Hh_json.JSON_Object json_props_to_log))
+      ))
 
 let check_file ~options ~env ~profiling ~force file_input =
   let file = file_key_of_file_input ~options file_input in
@@ -873,20 +872,11 @@ let save_state ~saved_state_filename ~genv ~env ~profiling =
   let%lwt () = Saved_state.save ~saved_state_filename ~genv ~env ~profiling in
   Lwt.return (Ok ())
 
-let handle_autocomplete
-    ~trigger_character ~reader ~options ~profiling ~env ~filename ~contents ~cursor ~imports =
+let handle_autocomplete ~trigger_character ~reader ~options ~profiling ~env ~input ~cursor ~imports
+    =
   let (result, json_data) =
     try_with_json (fun () ->
-        autocomplete
-          ~trigger_character
-          ~reader
-          ~options
-          ~env
-          ~profiling
-          ~filename
-          ~contents
-          ~cursor
-          ~imports
+        autocomplete ~trigger_character ~reader ~options ~env ~profiling ~input ~cursor ~imports
     )
   in
   let result = Base.Result.map result ~f:snd in
@@ -1207,12 +1197,12 @@ let get_ephemeral_handler genv command =
   let options = genv.options in
   let reader = State_reader.create () in
   match command with
-  | ServerProt.Request.AUTOCOMPLETE
-      { filename; contents; cursor; trigger_character; wait_for_recheck; imports } ->
+  | ServerProt.Request.AUTOCOMPLETE { input; cursor; trigger_character; wait_for_recheck; imports }
+    ->
     mk_parallelizable
       ~wait_for_recheck
       ~options
-      (handle_autocomplete ~trigger_character ~reader ~options ~filename ~contents ~cursor ~imports)
+      (handle_autocomplete ~trigger_character ~reader ~options ~input ~cursor ~imports)
   | ServerProt.Request.AUTOFIX_EXPORTS { input; verbose; wait_for_recheck } ->
     let options = { options with Options.opt_verbose = verbose } in
     mk_parallelizable ~wait_for_recheck ~options (handle_autofix_exports ~input ~options)
@@ -1773,50 +1763,35 @@ let handle_persistent_autocomplete_lsp
       ~default:None
       context
   in
-  let fn_content =
-    match file_input with
-    | File_input.FileContent (fn, content) -> Ok (fn, content)
-    | File_input.FileName fn ->
-      (try Ok (Some fn, Sys_utils.cat fn) with
-      | e ->
-        let e = Exception.wrap e in
-        Error (Exception.get_ctor_string e, Utils.Callstack (Exception.get_backtrace_string e)))
-  in
   let imports =
     Persistent_connection.Client_config.suggest_autoimports client_config
     && Options.autoimports options
   in
-  match fn_content with
-  | Error (reason, stack) -> mk_lsp_error_response ~id:(Some id) ~reason ~stack metadata
-  | Ok (filename, contents) ->
-    let (result, extra_data) =
-      autocomplete
-        ~trigger_character
-        ~reader
-        ~options
-        ~env
-        ~profiling
-        ~filename
-        ~contents
-        ~cursor:(line, char)
-        ~imports
+  let (result, extra_data) =
+    autocomplete
+      ~trigger_character
+      ~reader
+      ~options
+      ~env
+      ~profiling
+      ~input:file_input
+      ~cursor:(line, char)
+      ~imports
+  in
+  let metadata = with_data ~extra_data metadata in
+  match result with
+  | Ok (token, completions) ->
+    let result =
+      Flow_lsp_conversions.flow_completions_to_lsp
+        ?token
+        ~is_snippet_supported
+        ~is_preselect_supported
+        ~is_label_detail_supported
+        completions
     in
-    let metadata = with_data ~extra_data metadata in
-    begin
-      match result with
-      | Ok (token, completions) ->
-        let result =
-          Flow_lsp_conversions.flow_completions_to_lsp
-            ?token
-            ~is_snippet_supported
-            ~is_preselect_supported
-            ~is_label_detail_supported
-            completions
-        in
-        let response = ResponseMessage (id, CompletionResult result) in
-        Lwt.return (LspProt.LspFromServer (Some response), metadata)
-      | Error reason -> mk_lsp_error_response ~id:(Some id) ~reason metadata
-    end
+    let response = ResponseMessage (id, CompletionResult result) in
+    Lwt.return (LspProt.LspFromServer (Some response), metadata)
+  | Error reason -> mk_lsp_error_response ~id:(Some id) ~reason metadata
 
 let handle_persistent_signaturehelp_lsp
     ~reader ~options ~id ~params ~file_input ~metadata ~client ~profiling ~env =
