@@ -260,10 +260,13 @@ let get_status ~profiling ~reader genv env client_root =
   (status_response, lazy_stats)
 
 let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~input ~cursor ~imports =
-  let filename = file_key_of_file_input ~options input in
-  match File_input.content_of_file_input input with
-  | Error e -> (Error e, None)
-  | Ok contents ->
+  match of_file_input ~options ~env input with
+  | Error (Failed e) -> (Error e, None)
+  | Error (Skipped reason) ->
+    let response = (None, { ServerProt.Response.Completion.items = []; is_incomplete = false }) in
+    let extra_data = json_of_skipped reason in
+    (Ok response, extra_data)
+  | Ok (filename, contents) ->
     let cursor_loc =
       let (line, column) = cursor in
       Loc.cursor (Some filename) line column
