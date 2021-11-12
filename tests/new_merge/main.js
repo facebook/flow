@@ -159,3 +159,6 @@ declare var frozenSuitevalues: FrozenSuiteValues;
 
 declare var indirectFrozenSuitevalues: IndirectFrozenSuiteValues;
 (indirectFrozenSuitevalues: FrozenSuiteValues); // okay
+
+import S26 from './type_of_typeapp';
+(S26.getState(): empty); // error RecordInstance ~> empty

@@ -440,6 +440,18 @@ module rec ConsGen : Annotation_inference_sig = struct
     (*********************************************************************)
     (* UseT TypeT (runtime types derive static types through annotation) *)
     (*********************************************************************)
+    (* First handle catch-all cases of subtyping_kit.ml *)
+    | ((MaybeT _ | OptionalT _), Annot_UseT_TypeT _) -> error_unsupported cx t op
+    | (ThisTypeAppT (reason_tapp, c, this, ts), Annot_UseT_TypeT _) ->
+      let reason_op = Type.AConstraint.reason_of_op op in
+      let tc = specialize_class cx c reason_op reason_tapp ts in
+      let t = this_specialize cx reason_tapp this tc in
+      elab_t cx t op
+    | (TypeAppT (reason_tapp, typeapp_use_op, c, ts), Annot_UseT_TypeT _) ->
+      (* NOTE omitting TypeAppExpansion.push_unless_loop check. *)
+      let reason_op = Type.AConstraint.reason_of_op op in
+      let t = mk_typeapp_instance cx ~use_op:typeapp_use_op ~reason_op ~reason_tapp c ts in
+      elab_t cx t op
     | (DefT (reason_tapp, _, PolyT { tparams_loc; tparams = ids; _ }), Annot_UseT_TypeT reason) ->
       Flow_js_utils.add_output
         cx
