@@ -2091,13 +2091,25 @@ class ['loc] mapper =
     method object_property (prop : ('loc, 'loc) Ast.Expression.Object.Property.t) =
       let open Ast.Expression.Object.Property in
       match prop with
-      | (loc, Init { key; value; shorthand = _ }) ->
+      | (loc, Init { key; value; shorthand }) ->
         let key' = this#object_key key in
         let value' = this#expression value in
-        if key == key' && value == value' then
+        let shorthand' =
+          (* Try to figure out if shorthand should still be true--if
+             key and value change differently, it should become false *)
+          shorthand
+          &&
+          match (key', value') with
+          | ( Identifier (_, { Ast.Identifier.name = key_name; _ }),
+              (_, Ast.Expression.Identifier (_, { Ast.Identifier.name = value_name; _ }))
+            ) ->
+            String.equal key_name value_name
+          | _ -> key == key' && value == value'
+        in
+        if key == key' && value == value' && shorthand == shorthand' then
           prop
         else
-          (loc, Init { key = key'; value = value'; shorthand = false })
+          (loc, Init { key = key'; value = value'; shorthand = shorthand' })
       | (loc, Method { key; value = fn }) ->
         let key' = this#object_key key in
         let fn' = map_loc this#function_expression_or_method fn in
