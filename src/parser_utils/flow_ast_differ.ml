@@ -2872,7 +2872,7 @@ let program
     let { id = id1; annot = annot1; comments = comments1 } = decl1 in
     let { id = id2; annot = annot2; comments = comments2 } = decl2 in
     let id_diff = Some (diff_if_changed identifier id1 id2) in
-    let annot_diff = Some (diff_if_changed type_annotation_hint annot1 annot2) in
+    let annot_diff = Some (diff_if_changed type_annotation annot1 annot2) in
     let comments_diff = syntax_opt loc comments1 comments2 in
     join_diff_list [id_diff; annot_diff; comments_diff]
   and enum_declaration

@@ -3,7 +3,7 @@
 /**
  * declaration of foo
  */
-declare var foo;
+declare var foo: empty;
 
   foo;
 // ^

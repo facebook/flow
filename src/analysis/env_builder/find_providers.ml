@@ -724,7 +724,7 @@ end = struct
       method! declare_variable _loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
         let open Ast.Statement.DeclareVariable in
         let { id = ident; annot; comments = _ } = decl in
-        let (_ : ('a, 'b) Ast.Type.annotation_or_hint) = this#type_annotation_hint annot in
+        let (_ : ('a, 'b) Ast.Type.annotation) = this#type_annotation annot in
         let (_ : ('a, 'b) Ast.Identifier.t) =
           this#in_context
             ~mod_cx:(fun _cx -> { init_state = Annotation })

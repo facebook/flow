@@ -2102,10 +2102,7 @@ let tests =
            assert_statement_string ~ctxt "declare function f(a:b):a%checks(!a);";
            assert_statement_string ~ctxt ~pretty:true "declare function f(a: b): a %checks(!a);"
          );
-         ( "declare_var_statements" >:: fun ctxt ->
-           assert_statement_string ~ctxt "declare var a;";
-           assert_statement_string ~ctxt "declare var a:b;"
-         );
+         ("declare_var_statements" >:: fun ctxt -> assert_statement_string ~ctxt "declare var a:b;");
          ( "declare_module_exports_statements" >:: fun ctxt ->
            assert_statement_string ~ctxt "declare module.exports:a;"
          );
@@ -2116,7 +2113,7 @@ let tests =
          );
          ( "declare_export_declaration_statements" >:: fun ctxt ->
            assert_statement_string ~ctxt "declare export default a;";
-           assert_statement_string ~ctxt "declare export var a;";
+           assert_statement_string ~ctxt "declare export var a:a;";
            assert_statement_string ~ctxt "declare export function a():a;";
            assert_statement_string ~ctxt "declare export default function a():a;";
            assert_statement_string ~ctxt "declare export class a{}";

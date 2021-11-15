@@ -180,8 +180,8 @@ let tests =
                [mk_loc (1, 12) (1, 15); mk_loc (1, 25) (1, 28)];
          "declare_export_var"
          >:: mk_scope_builder_all_uses_test
-               "declare export var bar; bar"
-               [mk_loc (1, 19) (1, 22); mk_loc (1, 24) (1, 27)];
+               "declare export var bar: number; bar"
+               [mk_loc (1, 19) (1, 22); mk_loc (1, 32) (1, 35)];
          "declare_class"
          >:: mk_scope_builder_all_uses_test
                "declare class Foo {}; new Foo()"

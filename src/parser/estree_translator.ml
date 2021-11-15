@@ -775,19 +775,17 @@ with type t = Impl.t = struct
         loc
         [("body", statement_list body)]
     and declare_variable (loc, { Statement.DeclareVariable.id; annot; comments }) =
-      let id_loc =
-        Loc.btwn
-          (fst id)
-          (match annot with
-          | Ast.Type.Available annot -> fst annot
-          | Ast.Type.Missing _ -> fst id)
-      in
+      let id_loc = Loc.btwn (fst id) (fst annot) in
       node
         ?comments
         "DeclareVariable"
         loc
         [
-          ("id", pattern_identifier id_loc { Pattern.Identifier.name = id; annot; optional = false });
+          ( "id",
+            pattern_identifier
+              id_loc
+              { Pattern.Identifier.name = id; annot = Ast.Type.Available annot; optional = false }
+          );
         ]
     and declare_function
         (loc, { Statement.DeclareFunction.id; annot; predicate = predicate_; comments }) =

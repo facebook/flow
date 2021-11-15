@@ -515,7 +515,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.DeclareVariable in
       let { id = ident; annot; comments } = decl in
       let id' = this#t_pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident in
-      let annot' = this#type_annotation_hint annot in
+      let annot' = this#type_annotation annot in
       let comments' = Base.Option.map ~f:this#syntax comments in
       { id = id'; annot = annot'; comments = comments' }
 

@@ -3756,23 +3756,10 @@ let function_decl opts scope tbls decl =
   Scope.bind_function scope tbls id_loc sig_loc name ~async ~generator def
 
 let declare_variable_decl opts scope tbls decl =
-  let { Ast.Statement.DeclareVariable.id; annot = t; comments = _ } = decl in
+  let { Ast.Statement.DeclareVariable.id; annot = (_, t); comments = _ } = decl in
   let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
   let id_loc = push_loc tbls id_loc in
-  let def =
-    lazy
-      (splice tbls id_loc (fun tbls ->
-           annot_or_hint
-             ~err_loc:(Some id_loc)
-             ~sort:(Expected_annotation_sort.VariableDefinition { name })
-             opts
-             scope
-             tbls
-             SSet.empty
-             t
-       )
-      )
-  in
+  let def = lazy (splice tbls id_loc (fun tbls -> annot opts scope tbls SSet.empty t)) in
   Scope.bind_declare_var scope tbls id_loc name def
 
 let declare_function_decl opts scope tbls decl =

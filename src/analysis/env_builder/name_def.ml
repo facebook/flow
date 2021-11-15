@@ -154,11 +154,7 @@ module Make (L : Loc_sig.S) = struct
       method! declare_variable loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
         let open Ast.Statement.DeclareVariable in
         let { id = (id_loc, _); annot; comments = _ } = decl in
-        begin
-          match annot with
-          | Ast.Type.Available annot -> this#add_binding id_loc (Binding (Root (Annotation annot)))
-          | _ -> ()
-        end;
+        this#add_binding id_loc (Binding (Root (Annotation annot)));
         super#declare_variable loc decl
 
       method! function_param (param : ('loc, 'loc) Ast.Function.Param.t) =

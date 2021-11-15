@@ -14,39 +14,23 @@
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":43},"end":{"line":1,"column":46}},
-      "message":"Unexpected identifier, expected the token `;`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":43},"end":{"line":1,"column":46}},
-      "message":"Unexpected identifier, expected the token `declare`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":46},"end":{"line":1,"column":47}},
-      "message":"Unexpected token `(`, expected the token `var`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":47},"end":{"line":1,"column":48}},
-      "message":"Unexpected token `)`, expected an identifier"
+      "message":"Unexpected identifier, expected the token `:`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":49},"end":{"line":1,"column":50}},
-      "message":"Unexpected token `{`, expected the token `;`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":49},"end":{"line":1,"column":50}},
-      "message":"Unexpected token `{`, expected the token `declare`"
+      "message":"Unexpected token `{`, expected the token `=>`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":50},"end":{"line":1,"column":51}},
-      "message":"Unexpected token `}`, expected the token `var`"
+      "message":"Unexpected token `}`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":52},"end":{"line":1,"column":53}},
-      "message":"Unexpected token `}`, expected an identifier"
+      "message":"Unexpected token `}`, expected the start of a statement"
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "message":"Unexpected end of input, expected the token `}`"
+      "message":"Unexpected end of input, expected the start of a statement"
     }
   ],
   "type":"Program",
@@ -55,8 +39,8 @@
   "body":[
     {
       "type":"DeclareModule",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":0}},
-      "range":[0,54],
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":51}},
+      "range":[0,51],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":16}},
@@ -67,51 +51,48 @@
       },
       "body":{
         "type":"BlockStatement",
-        "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":2,"column":0}},
-        "range":[17,54],
+        "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":51}},
+        "range":[17,51],
         "body":[
           {
             "type":"DeclareVariable",
-            "loc":{"source":null,"start":{"line":1,"column":19},"end":{"line":1,"column":42}},
-            "range":[19,42],
+            "loc":{"source":null,"start":{"line":1,"column":19},"end":{"line":1,"column":50}},
+            "range":[19,50],
             "id":{
               "type":"Identifier",
-              "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":42}},
-              "range":[34,42],
+              "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":50}},
+              "range":[34,50],
               "name":"function",
-              "typeAnnotation":null,
-              "optional":false
-            }
-          },
-          {
-            "type":"DeclareVariable",
-            "loc":{"source":null,"start":{"line":1,"column":43},"end":{"line":1,"column":48}},
-            "range":[43,48],
-            "id":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":1,"column":47},"end":{"line":1,"column":48}},
-              "range":[47,48],
-              "name":"",
-              "typeAnnotation":null,
-              "optional":false
-            }
-          },
-          {
-            "type":"DeclareVariable",
-            "loc":{"source":null,"start":{"line":1,"column":49},"end":{"line":1,"column":53}},
-            "range":[49,53],
-            "id":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":1,"column":52},"end":{"line":1,"column":53}},
-              "range":[52,53],
-              "name":"",
-              "typeAnnotation":null,
+              "typeAnnotation":{
+                "type":"TypeAnnotation",
+                "loc":{"source":null,"start":{"line":1,"column":43},"end":{"line":1,"column":50}},
+                "range":[43,50],
+                "typeAnnotation":{
+                  "type":"FunctionTypeAnnotation",
+                  "loc":{"source":null,"start":{"line":1,"column":46},"end":{"line":1,"column":50}},
+                  "range":[46,50],
+                  "params":[],
+                  "this":null,
+                  "returnType":{
+                    "type":"AnyTypeAnnotation",
+                    "loc":{"source":null,"start":{"line":1,"column":50},"end":{"line":1,"column":51}},
+                    "range":[50,51]
+                  },
+                  "rest":null,
+                  "typeParameters":null
+                }
+              },
               "optional":false
             }
           }
         ]
       },
       "kind":"CommonJS"
+    },
+    {
+      "type":"EmptyStatement",
+      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
+      "range":[54,54]
     }
   ],
   "comments":[]

@@ -3082,8 +3082,6 @@ module.exports = {
       ],
     },
     'Declare Statements': [
-      'declare var foo',
-      'declare var foo;',
       'declare var foo: number;',
       'declare function foo(): void',
       'declare function foo(): void;',

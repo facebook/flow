@@ -214,7 +214,6 @@ export opaque type A = number;
 
 // Declare export
 declare export opaque type B;
-declare export var x;
 declare export function x(): void;
 declare export default T;
 

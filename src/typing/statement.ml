@@ -2298,9 +2298,7 @@ module Make (Env : Env_sig.S) = struct
             comments;
           }
       ) ->
-      let r = mk_reason (RIdentifier (OrdinaryName name)) id_loc in
-      let (a, annot_ast) = Anno.mk_type_annotation cx SMap.empty r annot in
-      let t = type_t_of_annotated_or_inferred a in
+      let (t, annot_ast) = Anno.mk_type_available_annotation cx SMap.empty annot in
       Env.unify_declared_type cx (OrdinaryName name) id_loc t;
       (loc, DeclareVariable { DeclareVariable.id = ((id_loc, t), id); annot = annot_ast; comments })
     | (loc, DeclareFunction declare_function) ->

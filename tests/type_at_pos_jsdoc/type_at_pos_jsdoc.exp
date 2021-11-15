@@ -178,8 +178,8 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"declare.js",
     "type":"SourceFile",
-    "start":{"line":8,"column":3,"offset":59},
-    "end":{"line":8,"column":5,"offset":62}
+    "start":{"line":8,"column":3,"offset":66},
+    "end":{"line":8,"column":5,"offset":69}
   },
   "path":"declare.js",
   "line":8,
@@ -197,8 +197,8 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"declare.js",
     "type":"SourceFile",
-    "start":{"line":16,"column":5,"offset":127},
-    "end":{"line":16,"column":7,"offset":130}
+    "start":{"line":16,"column":5,"offset":134},
+    "end":{"line":16,"column":7,"offset":137}
   },
   "path":"declare.js",
   "line":16,
@@ -216,8 +216,8 @@ Flags: --strip-root --pretty
   "loc":{
     "source":"declare.js",
     "type":"SourceFile",
-    "start":{"line":24,"column":3,"offset":208},
-    "end":{"line":24,"column":5,"offset":211}
+    "start":{"line":24,"column":3,"offset":215},
+    "end":{"line":24,"column":5,"offset":218}
   },
   "path":"declare.js",
   "line":24,

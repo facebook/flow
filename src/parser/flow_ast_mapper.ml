@@ -704,7 +704,7 @@ class ['loc] mapper =
       let open Ast.Statement.DeclareVariable in
       let { id = ident; annot; comments } = decl in
       let id' = this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident in
-      let annot' = this#type_annotation_hint annot in
+      let annot' = this#type_annotation annot in
       let comments' = this#syntax_opt comments in
       if id' == ident && annot' == annot && comments' == comments then
         decl

@@ -3947,7 +3947,7 @@ and declare_variable
             Atom "var";
             space;
             identifier id;
-            hint (type_annotation ~opts) annot;
+            type_annotation ~opts annot;
           ]
        )
 
