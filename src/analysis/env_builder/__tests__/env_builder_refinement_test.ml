@@ -4257,3 +4257,65 @@ import typeof * as NST from ''
         (17, 4) to (17, 5) => {
           (7, 16) to (7, 17): (`b`)
         }] |}]
+
+let%expect_test "inc" =
+  print_ssa_test {|
+let x = 0;
+++x;
+x++;
+x;
+  |};
+  [%expect {|
+    [
+      (3, 2) to (3, 3) => {
+        (2, 4) to (2, 5): (`x`)
+      };
+      (4, 0) to (4, 1) => {
+        (3, 2) to (3, 3): (`x`)
+      };
+      (5, 0) to (5, 1) => {
+        (4, 0) to (4, 1): (`x`)
+      }] |}]
+
+let%expect_test "inc_heap" =
+  print_ssa_test {|
+let x = { a: 0 };
+++x.a;
+x.a++;
+x.a;
+  |};
+  [%expect {|
+    [
+      (3, 2) to (3, 3) => {
+        (2, 4) to (2, 5): (`x`)
+      };
+      (4, 0) to (4, 1) => {
+        (2, 4) to (2, 5): (`x`)
+      };
+      (4, 0) to (4, 3) => {
+        (3, 2) to (3, 5): (some property)
+      };
+      (5, 0) to (5, 1) => {
+        (2, 4) to (2, 5): (`x`)
+      };
+      (5, 0) to (5, 3) => {
+        (4, 0) to (4, 3): (some property)
+      }] |}]
+
+let%expect_test "op_assign_heap" =
+  print_ssa_test {|
+let x = { a: 0 };
+x.a += 42;
+x.a;
+  |};
+  [%expect {|
+    [
+      (3, 0) to (3, 1) => {
+        (2, 4) to (2, 5): (`x`)
+      };
+      (4, 0) to (4, 1) => {
+        (2, 4) to (2, 5): (`x`)
+      };
+      (4, 0) to (4, 3) => {
+        (3, 0) to (3, 3): (some property)
+      }] |}]

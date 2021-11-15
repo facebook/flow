@@ -975,7 +975,7 @@ module Make
                 ignore @@ this#assignment_pattern left
               | (_, Expression e) ->
                 (* given `o.x += e`, read o then read e *)
-                this#assign_expression ~update_entry:false e right
+                this#assign_expression ~update_entry:true e right
               | (_, (Object _ | Array _)) -> statement_error
             end
         end;
@@ -1018,9 +1018,12 @@ module Make
             (* given `x++`, read x then write x *)
             ignore @@ this#identifier x;
             ignore @@ this#pattern_identifier x
-          | _ ->
-            (* given `o.x++`, read o *)
-            ignore @@ this#expression argument
+          | (loc, Ast.Expression.Member member) ->
+            (* given `o.x++`, read o.x then write o.x *)
+            ignore @@ this#expression argument;
+            ignore @@ this#pattern_expression argument;
+            this#assign_member ~update_entry:true member loc
+          | _ -> (* given 'o()++`, read o *) ignore @@ this#expression argument
         end;
         expr
 
