@@ -1454,9 +1454,9 @@ end = struct
     (* We can ignore unchanged files which were forced as dependencies. We don't care about their
      * dependents *)
     let unchanged_files_with_dependents =
-      FilenameSet.union
-        (CheckedSet.focused unchanged_files_to_force)
-        (CheckedSet.dependents unchanged_files_to_force)
+      CheckedSet.filter_into_set
+        ~f:(fun kind -> not (CheckedSet.is_dependency kind))
+        unchanged_files_to_force
     in
     (* Figure out which modules the unchanged forced files provide. We need these to figure out
      * which dependents need to be added to the checked set *)
@@ -1617,9 +1617,6 @@ end = struct
     (* Prevent files in node_modules from being added to the checked set. *)
     let sig_dependent_files = filter_out_node_modules ~options sig_dependent_files in
     let all_dependent_files = filter_out_node_modules ~options all_dependent_files in
-    let acceptable_files_to_focus =
-      FilenameSet.union freshparsed (CheckedSet.all unchanged_files_to_force)
-    in
     let%lwt updated_checked_files =
       Memory_utils.with_memory_timer_lwt ~options "RecalcDepGraph" profiling (fun () ->
           let old_focus_targets = CheckedSet.focused checked_files in
@@ -1639,7 +1636,7 @@ end = struct
      * will be focused *)
     let input =
       CheckedSet.filter updated_checked_files ~f:(fun fn ->
-          FilenameSet.mem fn acceptable_files_to_focus
+          FilenameSet.mem fn freshparsed || CheckedSet.mem fn unchanged_files_to_force
       )
     in
     let%lwt (to_merge, to_check, to_merge_or_check, components, recheck_set) =
