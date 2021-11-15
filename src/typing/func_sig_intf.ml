@@ -78,20 +78,6 @@ module type S = sig
     (func_params -> Type.t * Scope.Entry.t) ->
     (* this recipe *)
     Scope.Entry.t ->
-    decls:((* super *)
-           Context.t -> (ALoc.t, ALoc.t) Flow_ast.Statement.t list -> unit) ->
-    stmts:
-      (Context.t ->
-      (ALoc.t, ALoc.t) Flow_ast.Statement.t list ->
-      (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list
-      ) ->
-    expr:
-      (?cond:Type.cond_context ->
-      Context.t ->
-      annot:unit option ->
-      (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
-      (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
-      ) ->
     t ->
     Type.t (* this *)
     * func_params_tast option

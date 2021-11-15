@@ -19,8 +19,6 @@ module type S = sig
     | Stmt of (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t
     | Stmts of (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list
 
-  exception Exn of payload * t
-
   val throw_stmt_control_flow_exception : (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t -> t -> 'a
 
   val throw_stmts_control_flow_exception :
@@ -54,4 +52,6 @@ module type S = sig
   val swap_saved : t -> Env.t option -> Env.t option
 
   val clear_saved : t -> Env.t option
+
+  val try_with_abnormal_exn : f:(unit -> 'a) -> on_abnormal_exn:(payload * t -> 'a) -> unit -> 'a
 end

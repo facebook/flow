@@ -396,7 +396,7 @@ end
 
 module Make_Inference (Env : Env_sig.S) = struct
   module rec Statement_ : (Statement_sig.S with module Env := Env) =
-    Statement.Make (Env) (Destructuring_) (Func_stmt_config_)
+    Statement.Make (Env) (Destructuring_) (Func_stmt_config_) (Statement_)
 
   and Destructuring_ : Destructuring_sig.S = Destructuring.Make (Env) (Statement_)
 
@@ -421,20 +421,21 @@ module Make (Env : Env_sig.S) : S = struct
 
   (* core inference, assuming setup and teardown happens elsewhere *)
   let infer_core cx statements =
-    try
-      statements |> Statement.toplevel_decls cx;
-      statements |> Statement.Toplevels.toplevels Statement.statement cx
-    with
-    | Abnormal.Exn (Abnormal.Stmts stmts, Abnormal.Throw) ->
-      (* throw is allowed as a top-level statement *)
-      stmts
-    | Abnormal.Exn (Abnormal.Stmts stmts, _) ->
-      (* should never happen *)
-      let loc = Loc.{ none with source = Some (Context.file cx) } |> ALoc.of_loc in
-      Flow_js.add_output cx Error_message.(EInternal (loc, AbnormalControlFlow));
-      stmts
-    | Abnormal.Exn _ -> failwith "Flow bug: Statement.toplevels threw with non-stmts payload"
-    | exc -> raise exc
+    Abnormal.try_with_abnormal_exn
+      ~f:(fun () ->
+        statements |> Statement.toplevel_decls cx;
+        statements |> Statement.Toplevels.toplevels Statement.statement cx)
+      ~on_abnormal_exn:(function
+        | (Abnormal.Stmts stmts, Abnormal.Throw) ->
+          (* throw is allowed as a top-level statement *)
+          stmts
+        | (Abnormal.Stmts stmts, _) ->
+          (* should never happen *)
+          let loc = Loc.{ none with source = Some (Context.file cx) } |> ALoc.of_loc in
+          Flow_js.add_output cx Error_message.(EInternal (loc, AbnormalControlFlow));
+          stmts
+        | _ -> failwith "Flow bug: Statement.toplevels threw with non-stmts payload")
+      ()
 
   let initialize_env cx aloc_ast =
     let (_abrupt_completion, info) = NameResolver.program_with_scope cx aloc_ast in

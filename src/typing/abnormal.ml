@@ -152,4 +152,9 @@ module Make (Env : Env_sig.S) : Abnormal_sig.S with module Env := Env = struct
   (** remove a given control flow directive's value,
     and return the current one *)
   let clear_saved abnormal = swap_saved abnormal None
+
+  let try_with_abnormal_exn ~f ~on_abnormal_exn () =
+    try f () with
+    | Exn (payload, t) -> on_abnormal_exn (payload, t)
+    | exc -> raise exc
 end

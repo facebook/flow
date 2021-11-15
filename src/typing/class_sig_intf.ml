@@ -187,19 +187,6 @@ module type S = sig
   (** Evaluate the class body. *)
   val toplevels :
     Context.t ->
-    decls:(Context.t -> (ALoc.t, ALoc.t) Flow_ast.Statement.t list -> unit) ->
-    stmts:
-      (Context.t ->
-      (ALoc.t, ALoc.t) Flow_ast.Statement.t list ->
-      (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list
-      ) ->
-    expr:
-      (?cond:Type.cond_context ->
-      Context.t ->
-      annot:unit option ->
-      (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
-      (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
-      ) ->
     private_property_map:Type.Properties.id ->
     instance_this_type:Type.t ->
     static_this_type:Type.t ->

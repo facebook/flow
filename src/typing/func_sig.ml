@@ -16,8 +16,14 @@ include Func_sig_intf
  * an annotation with some more work *)
 let annotated_todo t = Inferred t
 
-module Make (Env : Env_sig.S) (Abnormal : Abnormal_sig.S with module Env := Env) (F : Func_params.S) =
+module Make
+    (Env : Env_sig.S)
+    (Abnormal : Abnormal_sig.S with module Env := Env)
+    (Statement : Statement_sig.S with module Env := Env)
+    (F : Func_params.S) =
 struct
+  module Toplevels = Toplevels.DependencyToplevels (Env) (Abnormal)
+
   type func_params = F.t
 
   type func_params_tast = (ALoc.t * Type.t) F.ast
@@ -154,15 +160,8 @@ struct
     | [(_, param_t)] -> param_t
     | _ -> failwith "Setter property with unexpected type"
 
-  let toplevels
-      id
-      cx
-      this_recipe
-      super
-      ~decls
-      ~stmts
-      ~expr
-      { reason = reason_fn; kind; tparams_map; fparams; body; return_t; knot; _ } =
+  let toplevels id cx this_recipe super x =
+    let { reason = reason_fn; kind; tparams_map; fparams; body; return_t; knot; _ } = x in
     let loc =
       let open Ast.Function in
       match body with
@@ -302,11 +301,13 @@ struct
     );
 
     (* decl/type visit pre-pass *)
-    decls cx statements;
+    Statement.toplevel_decls cx statements;
 
     (* statement visit pass *)
     let (statements_ast, statements_abnormal) =
-      Abnormal.catch_stmts_control_flow_exception (fun () -> stmts cx statements)
+      Abnormal.catch_stmts_control_flow_exception (fun () ->
+          Toplevels.toplevels Statement.statement cx statements
+      )
     in
     let maybe_void =
       Abnormal.(
@@ -372,7 +373,7 @@ struct
             let use_op = Frame (ImplicitTypeParam, use_op) in
             (use_op, t, None)
           | FieldInit e ->
-            let (((_, t), _) as ast) = expr ?cond:None cx ~annot:return_annot e in
+            let (((_, t), _) as ast) = Statement.expression ?cond:None cx ~annot:return_annot e in
             let body = mk_expression_reason e in
             let use_op = Op (InitField { op = reason_fn; body }) in
             (use_op, t, Some ast)

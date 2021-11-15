@@ -25,9 +25,11 @@ open TypeUtil
 module Make
     (Env : Env_sig.S)
     (Destructuring : Destructuring_sig.S)
-    (Func_stmt_config : Func_stmt_config_sig.S) : Statement_sig.S with module Env := Env = struct
+    (Func_stmt_config : Func_stmt_config_sig.S)
+    (Statement : Statement_sig.S with module Env := Env) : Statement_sig.S with module Env := Env =
+struct
   module Abnormal = Abnormal.Make (Env)
-  module Anno = Type_annotation.Make (Env) (Abnormal)
+  module Anno = Type_annotation.Make (Env) (Abnormal) (Statement)
   module Class_type_sig = Anno.Class_type_sig
   module Toplevels = Toplevels.DependencyToplevels (Env) (Abnormal)
   module Refinement = Refinement.Make (Env)
@@ -316,7 +318,7 @@ module Make
         )
 
   module Func_stmt_params = Func_params.Make (Func_stmt_config)
-  module Func_stmt_sig = Func_sig.Make (Env) (Abnormal) (Func_stmt_params)
+  module Func_stmt_sig = Func_sig.Make (Env) (Abnormal) (Statement) (Func_stmt_params)
   module Class_stmt_sig = Class_sig.Make (Env) (Abnormal) (Func_stmt_sig)
 
   (* In positions where an annotation may be present or an annotation can be pushed down,
@@ -7912,9 +7914,6 @@ module Make
              Class_stmt_sig.toplevels
                cx
                class_sig
-               ~decls:toplevel_decls
-               ~stmts:(Toplevels.toplevels statement)
-               ~expr:expression
                ~private_property_map
                ~instance_this_type
                ~static_this_type;
@@ -8634,17 +8633,7 @@ module Make
     let save_throw = Abnormal.clear_saved Abnormal.Throw in
     let (this_t, params_ast, body_ast, _) =
       func_sig
-      |> Func_stmt_sig.check_with_generics
-           cx
-           (Func_stmt_sig.toplevels
-              id
-              cx
-              this_recipe
-              super
-              ~decls:toplevel_decls
-              ~stmts:(Toplevels.toplevels statement)
-              ~expr:expression
-           )
+      |> Func_stmt_sig.check_with_generics cx (Func_stmt_sig.toplevels id cx this_recipe super)
     in
     ignore (Abnormal.swap_saved Abnormal.Return save_return);
     ignore (Abnormal.swap_saved Abnormal.Throw save_throw);

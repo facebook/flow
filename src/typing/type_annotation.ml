@@ -16,7 +16,11 @@ open Trust_helpers
 module Flow = Flow_js
 module T = Ast.Type
 
-module Make (Env : Env_sig.S) (Abnormal : Abnormal_sig.S with module Env := Env) = struct
+module Make
+    (Env : Env_sig.S)
+    (Abnormal : Abnormal_sig.S with module Env := Env)
+    (Statement : Statement_sig.S with module Env := Env) =
+struct
   open Env_sig.LookupMode
 
   module Func_type_params = Func_params.Make (struct
@@ -72,7 +76,7 @@ module Make (Env : Env_sig.S) (Abnormal : Abnormal_sig.S with module Env := Env)
     let eval_this _cx (_, tast) = tast
   end)
 
-  module Func_type_sig = Func_sig.Make (Env) (Abnormal) (Func_type_params)
+  module Func_type_sig = Func_sig.Make (Env) (Abnormal) (Statement) (Func_type_params)
   module Class_type_sig = Class_sig.Make (Env) (Abnormal) (Func_type_sig)
 
   (* AST helpers *)

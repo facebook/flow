@@ -161,22 +161,26 @@ let before_and_after_stmts file_name =
     let stmts = Base.List.map ~f:Ast_loc_utils.loc_to_aloc_mapper#statement stmts in
     let t_stmts =
       try
-        Statement.toplevel_decls cx stmts;
-        Statement.Toplevels.toplevels Statement.statement cx stmts
+        Abnormal.try_with_abnormal_exn
+          ~f:(fun _ ->
+            Statement.toplevel_decls cx stmts;
+            Statement.Toplevels.toplevels Statement.statement cx stmts)
+          ~on_abnormal_exn:(function
+            | (Abnormal.Stmts t_stmts, _) -> t_stmts
+            | (Abnormal.Stmt t_stmt, _) -> [t_stmt]
+            | (Abnormal.Expr (annot, t_expr), _) ->
+              [
+                ( annot,
+                  Flow_ast.Statement.Expression
+                    {
+                      Flow_ast.Statement.Expression.expression = t_expr;
+                      directive = None;
+                      comments = None;
+                    }
+                );
+              ])
+          ()
       with
-      | Abnormal.Exn (Abnormal.Stmts t_stmts, _) -> t_stmts
-      | Abnormal.Exn (Abnormal.Stmt t_stmt, _) -> [t_stmt]
-      | Abnormal.Exn (Abnormal.Expr (annot, t_expr), _) ->
-        [
-          ( annot,
-            Flow_ast.Statement.Expression
-              {
-                Flow_ast.Statement.Expression.expression = t_expr;
-                directive = None;
-                comments = None;
-              }
-          );
-        ]
       | e ->
         let e = Exception.wrap e in
         let message = Exception.get_ctor_string e in

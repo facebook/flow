@@ -923,8 +923,7 @@ struct
     (poly t_inner, poly t_outer)
 
   (* Processes the bodies of instance and static class members. *)
-  let toplevels cx ~decls ~stmts ~expr ~private_property_map ~instance_this_type ~static_this_type x
-      =
+  let toplevels cx ~private_property_map ~instance_this_type ~static_this_type x =
     let open Type in
     Env.in_lex_scope (fun () ->
         let new_entry ?(state = Scope.State.Initialized) t =
@@ -939,7 +938,7 @@ struct
           let save_return = Abnormal.clear_saved Abnormal.Return in
           let save_throw = Abnormal.clear_saved Abnormal.Throw in
           let (_, params_ast, body_ast, init_ast) =
-            f |> F.check_with_generics cx (F.toplevels None cx this_recipe super ~decls ~stmts ~expr)
+            f |> F.check_with_generics cx (F.toplevels None cx this_recipe super)
           in
           set_asts (params_ast, body_ast, init_ast);
           ignore (Abnormal.swap_saved Abnormal.Return save_return);
