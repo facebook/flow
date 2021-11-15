@@ -9,5 +9,5 @@
 
 include module type of Class_sig_intf
 
-module Make (Env : Env_sig.S) (_ : module type of Abnormal.Make (Env)) (F : Func_sig.S) :
+module Make (Env : Env_sig.S) (_ : Abnormal_sig.S with module Env := Env) (F : Func_sig.S) :
   S with type func_sig = F.t and type func_params_tast = F.func_params_tast

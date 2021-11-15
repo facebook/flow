@@ -16,7 +16,7 @@ open Trust_helpers
 module Flow = Flow_js
 module T = Ast.Type
 
-module Make (Env : Env_sig.S) (Abnormal : module type of Abnormal.Make (Env)) = struct
+module Make (Env : Env_sig.S) (Abnormal : Abnormal_sig.S with module Env := Env) = struct
   open Env_sig.LookupMode
 
   module Func_type_params = Func_params.Make (struct

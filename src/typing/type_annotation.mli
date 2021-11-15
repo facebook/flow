@@ -9,7 +9,7 @@
     called during AST traversal.
  *)
 
-module Make : functor (Env : Env_sig.S) (_ : module type of Abnormal.Make (Env)) -> sig
+module Make : functor (Env : Env_sig.S) (_ : Abnormal_sig.S with module Env := Env) -> sig
   module Class_type_sig : Class_sig.S
 
   val convert :

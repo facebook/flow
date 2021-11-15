@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Make (Env : Env_sig.S) = struct
+module Make (Env : Env_sig.S) : Abnormal_sig.S with module Env := Env = struct
   (* we model abnormal control flows using exceptions during traversal *)
 
   (* control directives encountered during traversal *)
@@ -14,16 +14,6 @@ module Make (Env : Env_sig.S) = struct
     | Throw
     | Break of string option
     | Continue of string option
-
-  let opt_label name = function
-    | None -> name
-    | Some s -> name ^ " " ^ s
-
-  let to_string = function
-    | Return -> "Return"
-    | Throw -> "Throw"
-    | Break label -> opt_label "Break" label
-    | Continue label -> opt_label "Continue" label
 
   type payload =
     | Expr of ALoc.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
@@ -45,10 +35,6 @@ module Make (Env : Env_sig.S) = struct
   let check_stmt_control_flow_exception = function
     | (stmt, None) -> stmt
     | (stmt, Some abnormal) -> throw_stmt_control_flow_exception stmt abnormal
-
-  let check_stmts_control_flow_exception = function
-    | (stmts, None) -> stmts
-    | (stmts, Some abnormal) -> throw_stmts_control_flow_exception stmts abnormal
 
   (* helper *)
   let check_env_depth depth =
@@ -166,12 +152,4 @@ module Make (Env : Env_sig.S) = struct
   (** remove a given control flow directive's value,
     and return the current one *)
   let clear_saved abnormal = swap_saved abnormal None
-
-  let string = function
-    | Return -> "return"
-    | Throw -> "throw"
-    | Break (Some lbl) -> spf "break `%s`" lbl
-    | Break None -> "break"
-    | Continue (Some lbl) -> spf "continue `%s`" lbl
-    | Continue None -> "continue"
 end

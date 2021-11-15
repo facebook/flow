@@ -11,10 +11,8 @@ open Reason
 open Utils_js
 include Class_sig_intf
 
-module Make
-    (Env : Env_sig.S)
-    (Abnormal : module type of Abnormal.Make (Env)) (F : Func_sig.S) =
-    struct
+module Make (Env : Env_sig.S) (Abnormal : Abnormal_sig.S with module Env := Env) (F : Func_sig.S) =
+struct
   type func_sig = F.t
 
   type func_params_tast = F.func_params_tast

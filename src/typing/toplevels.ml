@@ -25,8 +25,8 @@ end
 module Toplevels
     (Order : Ordering with type loc = ALoc.t)
     (Env : Env_sig.S)
-    (Abnormal : module type of Abnormal.Make (Env)) =
-    struct
+    (Abnormal : Abnormal_sig.S with module Env := Env) =
+struct
   let toplevels statement cx stmts =
     let ordering = Order.make cx stmts in
     (* Enumerate and sort statements using the order specified *)
