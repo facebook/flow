@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-(* this gets shadowed by Lsp.Exit *)
-module FlowExit = Exit
 open Base.Result
 open ServerEnv
 open Utils_js
@@ -226,36 +224,27 @@ let of_file_input ~options ~env file_input =
     | Error reason -> Error (Skipped reason)
     | Ok () -> Ok (file_key, file_contents))
 
-let get_status ~profiling ~reader genv env client_root =
-  let options = genv.ServerEnv.options in
-  let server_root = Options.root options in
+let get_status ~profiling ~reader ~options env =
   let lazy_stats = Rechecker.get_lazy_stats ~options env in
   let status_response =
-    if server_root <> client_root then
-      ServerProt.Response.DIRECTORY_MISMATCH
-        { ServerProt.Response.server = server_root; ServerProt.Response.client = client_root }
-    else
-      (* collate errors by origin *)
-      let (errors, warnings, suppressed_errors) =
-        ErrorCollator.get ~profiling ~reader ~options env
-      in
-      let warnings =
-        if Options.should_include_warnings options then
-          warnings
-        else
-          Errors.ConcreteLocPrintableErrorSet.empty
-      in
-      let suppressed_errors =
-        if Options.include_suppressions options then
-          suppressed_errors
-        else
-          []
-      in
-      (* TODO: check status.directory *)
-      status_log errors;
-      FlowEventLogger.status_response
-        ~num_errors:(Errors.ConcreteLocPrintableErrorSet.cardinal errors);
-      convert_errors ~errors ~warnings ~suppressed_errors
+    (* collate errors by origin *)
+    let (errors, warnings, suppressed_errors) = ErrorCollator.get ~profiling ~reader ~options env in
+    let warnings =
+      if Options.should_include_warnings options then
+        warnings
+      else
+        Errors.ConcreteLocPrintableErrorSet.empty
+    in
+    let suppressed_errors =
+      if Options.include_suppressions options then
+        suppressed_errors
+      else
+        []
+    in
+    (* TODO: check status.directory *)
+    status_log errors;
+    FlowEventLogger.status_response ~num_errors:(Errors.ConcreteLocPrintableErrorSet.cardinal errors);
+    convert_errors ~errors ~warnings ~suppressed_errors
   in
   (status_response, lazy_stats)
 
@@ -1045,8 +1034,8 @@ let handle_rage ~reader ~options ~files ~profiling ~env =
   let items = collect_rage ~profiling ~options ~reader ~env ~files:(Some files) in
   Lwt.return (ServerProt.Response.RAGE items, None)
 
-let handle_status ~reader ~genv ~client_root ~profiling ~env =
-  let (status_response, lazy_stats) = get_status ~profiling ~reader genv env client_root in
+let handle_status ~reader ~options ~profiling ~env =
+  let (status_response, lazy_stats) = get_status ~profiling ~reader ~options env in
   Lwt.return (env, ServerProt.Response.STATUS { status_response; lazy_stats }, None)
 
 let handle_save_state ~saved_state_filename ~genv ~profiling ~env =
@@ -1300,21 +1289,17 @@ let get_ephemeral_handler genv command =
          ~location_is_strict
          ~ambiguity_strategy
       )
-  | ServerProt.Request.STATUS { client_root; include_warnings } ->
-    let genv =
-      {
-        genv with
-        options =
-          Options.
-            { options with opt_include_warnings = options.opt_include_warnings || include_warnings }
-          ;
-      }
+  | ServerProt.Request.STATUS { include_warnings } ->
+    let options =
+      let open Options in
+      { options with opt_include_warnings = options.opt_include_warnings || include_warnings }
     in
+
     (* `flow status` is often used by users to get all the current errors. After talking to some
      * coworkers and users, glevi decided that users would rather that `flow status` always waits
      * for the current recheck to finish. So even though we could technically make `flow status`
      * parallelizable, we choose to make it nonparallelizable *)
-    Handle_nonparallelizable (handle_status ~reader ~genv ~client_root)
+    Handle_nonparallelizable (handle_status ~reader ~options)
   | ServerProt.Request.SAVE_STATE { outfile } ->
     (* save-state can take awhile to run. Furthermore, you probably don't want to run this with out
      * of date data. So save-state is not parallelizable *)
@@ -1409,17 +1394,6 @@ let rec handle_parallelizable_ephemeral_unsafe
       run_command_in_parallel ~env ~profiling ~name:cmd_str ~workload ~mk_workload
     in
     MonitorRPC.respond_to_request ~request_id ~response;
-
-    (* It sucks this has to live here. We need a better way to handle post-send logic
-     * TODO - Do we actually need this error? Why do we even send the path? *)
-    (match response with
-    | ServerProt.Response.(
-        STATUS { lazy_stats = _; status_response = DIRECTORY_MISMATCH { server; client } }) ->
-      Hh_logger.fatal "Status: Error";
-      Hh_logger.fatal "server_dir=%s, client_dir=%s" (Path.to_string server) (Path.to_string client);
-      Hh_logger.fatal "flow server is not listening to the same directory. Exiting.";
-      FlowExit.(exit Server_client_directory_mismatch)
-    | _ -> ());
     Lwt.return json_data
   in
   Lwt.return ((), json_data)

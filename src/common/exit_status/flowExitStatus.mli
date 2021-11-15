@@ -25,7 +25,6 @@ type t =
   | Server_out_of_date
   | Out_of_shared_memory
   | Flowconfig_changed
-  | Server_client_directory_mismatch
   | Commandline_usage_error
   | No_input
   | Server_start_failed of Unix.process_status

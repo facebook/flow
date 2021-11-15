@@ -152,8 +152,5 @@ let main
     else
       Printf.printf "File is not @flow!\n%!";
     Exit.(exit No_error)
-  | _ ->
-    let msg = "Unexpected server response!" in
-    Exit.(exit ~msg Unknown_error)
 
 let command = CommandSpec.command spec main

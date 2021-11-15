@@ -511,8 +511,6 @@ module KeepAliveLoop = LwtLoop.Make (struct
         (* Parse/version/etc error. Server will never start correctly. *)
         | Path_is_not_a_file
         (* Required a file but privided path was not a file *)
-        | Server_client_directory_mismatch
-        (* This is a weird one *)
         | Flowconfig_changed
         (* We could survive some config changes, but it's too hard to tell *)
         | Invalid_saved_state

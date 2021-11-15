@@ -45,9 +45,6 @@ type t =
   | Out_of_shared_memory
   (* The .flowconfig has changed and we're out of date *)
   | Flowconfig_changed
-  (* A weird error where a client talks to the wrong server. Really should
-   * never happen *)
-  | Server_client_directory_mismatch
   (* Failed to parse the command line or misuse of command line arguments *)
   | Commandline_usage_error
   (* No input *)
@@ -110,7 +107,6 @@ let error_code = function
   | Lock_stolen -> 11
   | Could_not_find_flowconfig -> 12
   | Server_out_of_date -> 13
-  | Server_client_directory_mismatch -> 14
   | Out_of_shared_memory -> 15
   | Flowconfig_changed -> 16
   (* EX_USAGE -- command line usage error -- from glibc's sysexits.h *)
@@ -151,7 +147,6 @@ let error_type = function
   | 11 -> Lock_stolen
   | 12 -> Could_not_find_flowconfig
   | 13 -> Server_out_of_date
-  | 14 -> Server_client_directory_mismatch
   | 15 -> Out_of_shared_memory
   | 16 -> Flowconfig_changed
   | 17 -> Path_is_not_a_file
@@ -192,7 +187,6 @@ let to_string = function
   | Could_not_find_flowconfig -> "Could_not_find_flowconfig"
   | Could_not_extract_flowlibs -> "Could_not_extract_flowlibs"
   | Server_out_of_date -> "Server_out_of_date"
-  | Server_client_directory_mismatch -> "Server_client_directory_mismatch"
   | Out_of_shared_memory -> "Out_of_shared_memory"
   | Kill_error -> "Kill_error"
   | Unused_server -> "Unused_server"

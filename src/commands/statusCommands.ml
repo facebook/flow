@@ -84,9 +84,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
   }
 
   let check_status flowconfig_name (args : args) connect_flags =
-    let name = "flow" in
     let include_warnings = args.error_flags.Errors.Cli_output.include_warnings in
-    let request = ServerProt.Request.STATUS { client_root = args.root; include_warnings } in
+    let request = ServerProt.Request.STATUS { include_warnings } in
     let (response, lazy_stats) =
       match connect_and_make_request flowconfig_name connect_flags args.root request with
       | ServerProt.Response.STATUS { status_response; lazy_stats } -> (status_response, lazy_stats)
@@ -121,15 +120,6 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
           )
     in
     match response with
-    | ServerProt.Response.DIRECTORY_MISMATCH d ->
-      let msg =
-        Printf.sprintf
-          ("%s is running on a different directory.\n" ^^ "server_root: %s, client_root: %s")
-          name
-          (Path.to_string d.ServerProt.Response.server)
-          (Path.to_string d.ServerProt.Response.client)
-      in
-      Exit.(exit ~msg Server_client_directory_mismatch)
     | ServerProt.Response.ERRORS { errors; warnings; suppressed_errors } ->
       let error_flags = args.error_flags in
       let from = FlowEventLogger.get_from_I_AM_A_CLOWN () in

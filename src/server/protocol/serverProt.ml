@@ -94,10 +94,7 @@ module Request = struct
       }
     | RAGE of { files: string list }
     | SAVE_STATE of { outfile: Path.t }
-    | STATUS of {
-        client_root: Path.t;
-        include_warnings: bool;
-      }
+    | STATUS of { include_warnings: bool }
 
   let to_string = function
     | AUTOCOMPLETE { input; cursor = _; wait_for_recheck = _; trigger_character = _; imports = _ }
@@ -148,7 +145,7 @@ module Request = struct
           target._end.column
       )
     | RAGE { files } -> Printf.sprintf "rage %s" (String.concat " " files)
-    | STATUS { client_root = _; include_warnings = _ } -> "status"
+    | STATUS { include_warnings = _ } -> "status"
     | SAVE_STATE { outfile } -> Printf.sprintf "save-state %s" (Path.to_string outfile)
 
   type command_with_context = {
@@ -232,13 +229,7 @@ module Response = struct
 
   and graph_response_subgraph = (string * string list) list
 
-  type directory_mismatch = {
-    server: Path.t;
-    client: Path.t;
-  }
-
   type status_response =
-    | DIRECTORY_MISMATCH of directory_mismatch
     | ERRORS of {
         errors: Errors.ConcreteLocPrintableErrorSet.t;
         warnings: Errors.ConcreteLocPrintableErrorSet.t;
