@@ -141,8 +141,24 @@ end = struct
     else
       None
 
+  let from_default_export import_kind local_defs exports remote_name =
+    let default_ref = ref None in
+    Array.iter
+      (function
+        | P.ExportDefaultBinding { default_loc = _; index } -> default_ref := Some index
+        | _ -> ())
+      exports;
+    match !default_ref with
+    | None -> None
+    | Some index ->
+      let local_name = Type_sig.def_name (Local_defs.get local_defs index) in
+      if remote_name = local_name then
+        Some { import_kind; default = true }
+      else
+        None
+
   let from_type_sig import_kind type_sig remote_name =
-    let { Packed_type_sig.Module.module_kind; _ } = type_sig in
+    let { Packed_type_sig.Module.module_kind; local_defs; _ } = type_sig in
     match module_kind with
     | P.CJSModule { exports; info = P.CJSModuleInfo { type_export_keys; _ }; _ } ->
       Utils_js.lazy_seq
@@ -150,11 +166,13 @@ end = struct
           lazy (from_cjs_module_exports import_kind type_sig exports remote_name);
           lazy (from_export_keys import_kind type_export_keys remote_name);
         ]
-    | P.ESModule { info = P.ESModuleInfo { export_keys; type_export_keys; _ }; _ } ->
+    | P.ESModule { info; exports; _ } ->
+      let (P.ESModuleInfo { export_keys; type_export_keys; _ }) = info in
       Utils_js.lazy_seq
         [
           lazy (from_export_keys import_kind export_keys remote_name);
           lazy (from_export_keys import_kind type_export_keys remote_name);
+          lazy (from_default_export import_kind local_defs exports remote_name);
         ]
 
   (* NOTE Here we assume 'react' is available as a library *)
