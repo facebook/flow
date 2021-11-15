@@ -394,10 +394,26 @@ module type S = sig
     Reason.name list
 end
 
-module Make (Env : Env_sig.S) : S = struct
-  module Statement = Statement.Make (Env)
+module Make_Inference (Env : Env_sig.S) = struct
+  module rec Statement_ : (Statement_sig.S with module Env := Env) =
+    Statement.Make (Env) (Destructuring_) (Func_stmt_config_)
+
+  and Destructuring_ : Destructuring_sig.S = Destructuring.Make (Env) (Statement_)
+
+  and Func_stmt_config_ : Func_stmt_config_sig.S =
+    Func_stmt_config.Make (Env) (Destructuring_) (Statement_)
+
+  module Statement = Statement_
   module Abnormal = Statement.Abnormal
   module ImpExp = Statement.Import_export
+
+  (* Some versions of Ocaml raise a warning 60 (unused module) without the following *)
+  module _ = Destructuring_
+  module _ = Func_stmt_config_
+end
+
+module Make (Env : Env_sig.S) : S = struct
+  include Make_Inference (Env)
 
   (**********)
   (* Driver *)

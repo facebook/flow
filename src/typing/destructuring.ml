@@ -20,7 +20,8 @@ open Reason
 open Type
 open TypeUtil
 
-module Make (Env : Env_sig.S) = struct
+module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := Env) :
+  Destructuring_sig.S = struct
   module Refinement = Refinement.Make (Env)
 
   type state = {
@@ -30,11 +31,6 @@ module Make (Env : Env_sig.S) = struct
     default: Type.t Default.t option;
     annot: bool;
   }
-
-  type expr =
-    Context.t ->
-    (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
-    (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
 
   type callback =
     use_op:Type.use_op -> name_loc:ALoc.t -> string -> Type.t Default.t option -> Type.t -> Type.t
@@ -52,11 +48,11 @@ module Make (Env : Env_sig.S) = struct
         Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
     )
 
-  let pattern_default cx ~expr acc = function
+  let pattern_default cx acc = function
     | None -> (acc, None)
     | Some e ->
       let { current; default; annot; _ } = acc in
-      let (((loc, t), _) as e) = expr cx e in
+      let (((loc, t), _) as e) = Statement.expression cx ~annot:None e in
       let default = Some (Default.expr ?default t) in
       let reason = mk_reason RDefaultValue loc in
       let current = destruct cx reason ~annot Default current in
@@ -164,9 +160,9 @@ module Make (Env : Env_sig.S) = struct
     in
     { acc with parent; current; init; default }
 
-  let object_computed_property cx ~expr acc e =
+  let object_computed_property cx acc e =
     let { current; init; default; annot; _ } = acc in
-    let (((loc, t), _) as e') = expr cx e in
+    let (((loc, t), _) as e') = Statement.expression cx ~annot:None e in
     let reason = mk_reason (RProperty None) loc in
     let init =
       Base.Option.map init (fun init ->
@@ -196,8 +192,8 @@ module Make (Env : Env_sig.S) = struct
     { acc with parent; current; default }
 
   let object_property
-      cx ~expr ~has_default (acc : state) xs (key : (ALoc.t, ALoc.t) Ast.Pattern.Object.Property.key)
-      : state * string list * (ALoc.t, ALoc.t * Type.t) Ast.Pattern.Object.Property.key =
+      cx ~has_default (acc : state) xs (key : (ALoc.t, ALoc.t) Ast.Pattern.Object.Property.key) :
+      state * string list * (ALoc.t, ALoc.t * Type.t) Ast.Pattern.Object.Property.key =
     let open Ast.Pattern.Object in
     match key with
     | Property.Identifier (loc, { Ast.Identifier.name = x; comments }) ->
@@ -207,7 +203,7 @@ module Make (Env : Env_sig.S) = struct
       let acc = object_named_property ~has_default cx acc loc x None in
       (acc, x :: xs, Property.Literal (loc, lit))
     | Property.Computed (loc, { Ast.ComputedKey.expression; comments }) ->
-      let (acc, e) = object_computed_property cx ~expr acc expression in
+      let (acc, e) = object_computed_property cx acc expression in
       (acc, xs, Property.Computed (loc, { Ast.ComputedKey.expression = e; comments }))
     | Property.Literal (loc, _) ->
       Flow_js.add_output
@@ -273,16 +269,16 @@ module Make (Env : Env_sig.S) = struct
     in
     f ~use_op ~name_loc name default current
 
-  let rec pattern cx ~(expr : expr) ~(f : callback) acc (loc, p) =
+  let rec pattern cx ~(f : callback) acc (loc, p) =
     Ast.Pattern.
       ( (loc, acc.current),
         match p with
         | Array { Array.elements; annot; comments } ->
-          let elements = array_elements cx ~expr ~f acc elements in
+          let elements = array_elements cx ~f acc elements in
           let annot = Tast_utils.unimplemented_mapper#type_annotation_hint annot in
           Array { Array.elements; annot; comments }
         | Object { Object.properties; annot; comments } ->
-          let properties = object_properties cx ~expr ~f acc properties in
+          let properties = object_properties cx ~f acc properties in
           let annot = Tast_utils.unimplemented_mapper#type_annotation_hint annot in
           Object { Object.properties; annot; comments }
         | Identifier { Identifier.name = id; optional; annot } ->
@@ -299,43 +295,43 @@ module Make (Env : Env_sig.S) = struct
       )
     
 
-  and array_elements cx ~expr ~f acc =
+  and array_elements cx ~f acc =
     let open Ast.Pattern.Array in
     Base.List.mapi ~f:(fun i -> function
       | Hole loc -> Hole loc
       | Element (loc, { Element.argument = p; default = d }) ->
         let acc = array_element cx acc i loc in
-        let (acc, d) = pattern_default cx ~expr acc d in
-        let p = pattern cx ~expr ~f acc p in
+        let (acc, d) = pattern_default cx acc d in
+        let p = pattern cx ~f acc p in
         Element (loc, { Element.argument = p; default = d })
       | RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments }) ->
         let acc = array_rest_element cx acc i loc in
-        let p = pattern cx ~expr ~f acc p in
+        let p = pattern cx ~f acc p in
         RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments })
     )
 
   and object_properties =
     let open Ast.Pattern.Object in
-    let prop cx ~expr ~f acc xs p =
+    let prop cx ~f acc xs p =
       match p with
       | Property (loc, { Property.key; pattern = p; default = d; shorthand }) ->
         let has_default = d <> None in
-        let (acc, xs, key) = object_property cx ~expr ~has_default acc xs key in
-        let (acc, d) = pattern_default cx ~expr acc d in
-        let p = pattern cx ~expr ~f acc p in
+        let (acc, xs, key) = object_property cx ~has_default acc xs key in
+        let (acc, d) = pattern_default cx acc d in
+        let p = pattern cx ~f acc p in
         (xs, Property (loc, { Property.key; pattern = p; default = d; shorthand }))
       | RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments }) ->
         let acc = object_rest_property cx acc xs loc in
-        let p = pattern cx ~expr ~f acc p in
+        let p = pattern cx ~f acc p in
         (xs, RestElement (loc, { Ast.Pattern.RestElement.argument = p; comments }))
     in
-    let rec loop cx ~expr ~f acc xs rev_ps = function
+    let rec loop cx ~f acc xs rev_ps = function
       | [] -> List.rev rev_ps
       | p :: ps ->
-        let (xs, p) = prop cx ~expr ~f acc xs p in
-        loop cx ~expr ~f acc xs (p :: rev_ps) ps
+        let (xs, p) = prop cx ~f acc xs p in
+        loop cx ~f acc xs (p :: rev_ps) ps
     in
-    (fun cx ~expr ~f acc ps -> loop cx ~expr ~f acc [] [] ps)
+    (fun cx ~f acc ps -> loop cx ~f acc [] [] ps)
 
   let type_of_pattern (_, p) =
     let open Ast.Pattern in
@@ -347,12 +343,12 @@ module Make (Env : Env_sig.S) = struct
     | _ -> Ast.Type.Missing ALoc.none
 
   (* instantiate pattern visitor for assignments *)
-  let assignment cx ~expr rhs_t init =
+  let assignment cx rhs_t init =
     let acc = empty ~init ~annot:false rhs_t in
     let f ~use_op ~name_loc name _default t =
       (* TODO destructuring+defaults unsupported in assignment expressions *)
       ignore Env.(set_var cx ~use_op name t name_loc);
       Env.constraining_type ~default:t cx (OrdinaryName name) name_loc
     in
-    pattern cx ~expr ~f acc
+    pattern cx ~f acc
 end

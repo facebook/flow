@@ -5,13 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Make : functor (_ : Env_sig.S) -> sig
+module type S = sig
   type state
-
-  type expr =
-    Context.t ->
-    (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
-    (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
 
   type callback =
     use_op:Type.use_op -> name_loc:ALoc.t -> string -> Type.t Default.t option -> Type.t -> Type.t
@@ -25,7 +20,6 @@ module Make : functor (_ : Env_sig.S) -> sig
 
   val pattern :
     Context.t ->
-    expr:expr ->
     f:callback ->
     state ->
     (ALoc.t, ALoc.t) Flow_ast.Pattern.t ->
@@ -33,7 +27,6 @@ module Make : functor (_ : Env_sig.S) -> sig
 
   val array_elements :
     Context.t ->
-    expr:expr ->
     f:callback ->
     state ->
     (ALoc.t, ALoc.t) Flow_ast.Pattern.Array.element list ->
@@ -41,7 +34,6 @@ module Make : functor (_ : Env_sig.S) -> sig
 
   val object_properties :
     Context.t ->
-    expr:expr ->
     f:callback ->
     state ->
     (ALoc.t, ALoc.t) Flow_ast.Pattern.Object.property list ->
@@ -52,7 +44,6 @@ module Make : functor (_ : Env_sig.S) -> sig
 
   val assignment :
     Context.t ->
-    expr:expr ->
     Type.t ->
     (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
     (ALoc.t, ALoc.t) Flow_ast.Pattern.t ->

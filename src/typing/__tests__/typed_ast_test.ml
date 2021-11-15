@@ -8,8 +8,7 @@
 open OUnit2
 module File_sig = File_sig.With_Loc
 module Env = Env.Env
-module Statement = Statement.Make (Env)
-module Abnormal = Statement.Abnormal
+include Type_inference_js.Make_Inference (Env)
 
 (* pretty much copied from Flow_dot_js *)
 let metadata =

@@ -11,6 +11,12 @@ val scan_for_suppressions :
 val add_require_tvars :
   unresolved_tvar:(Context.t -> Reason.t -> Type.ident) -> Context.t -> File_sig.With_ALoc.t -> unit
 
+module Make_Inference (Env : Env_sig.S) : sig
+  module Statement : Statement_sig.S with module Env := Env
+
+  module Abnormal : Abnormal_sig.S with module Env := Env
+end
+
 module type S = sig
   module ImpExp : Import_export.S
 
