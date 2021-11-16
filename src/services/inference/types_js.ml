@@ -1429,9 +1429,7 @@ end = struct
     in
     (* We may be forcing a recheck on some unchanged files *)
     let unchanged_files_to_force =
-      CheckedSet.filter files_to_force ~f:(fun fn ->
-          (not (FilenameSet.mem fn new_or_changed)) && FilenameSet.mem fn old_parsed
-      )
+      CheckedSet.filter files_to_force ~f:(fun fn -> FilenameSet.mem fn unchanged)
     in
     MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
     let%lwt (changed_modules, resolved_requires_changed_in_commit_modules, errors) =
