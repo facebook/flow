@@ -1,0 +1,13 @@
+Error -------------------------------------------------------------------------------------------------------- a.js:3:17
+
+Cannot resolve module `./b`. [cannot-resolve-module]
+
+   3| import {b} from './b'; // error
+                      ^^^^^
+
+
+
+Found 1 error
+
+The Flow server is currently in lazy mode and is only checking 1/1 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
