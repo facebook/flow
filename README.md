@@ -1,13 +1,13 @@
 # Flow
 <p align="center">
-  <a href="https://circleci.com/gh/facebook/flow/tree/master">
-    <img src="https://circleci.com/gh/facebook/flow/tree/master.svg?style=shield" alt="CircleCI" />
+  <a href="https://circleci.com/gh/facebook/flow/tree/main">
+    <img src="https://circleci.com/gh/facebook/flow/tree/main.svg?style=shield" alt="CircleCI" />
   </a>
   <a href="https://twitter.com/flowtype">
-   <img src="https://img.shields.io/twitter/follow/flowtype?style=social" alt="Follow @flowtype" />
+   <img src="https://img.shields.io/twitter/follow/flowtype?style=shield&logo=twitter&color=blue" alt="Follow @flowtype" />
   </a>
-  <a href="https://github.com/facebook/flow/blob/master/LICENSE">
-    <img alt="GitHub" src="https://img.shields.io/github/license/facebook/flow">
+  <a href="https://github.com/facebook/flow/blob/main/LICENSE">
+    <img alt="MIT License" src="https://img.shields.io/github/license/facebook/flow">
   </a>
   <a href="https://github.com/facebook/flow/graphs/contributors">
    <img alt="GitHub contributors" src="https://img.shields.io/github/contributors/facebook/flow">
@@ -135,4 +135,4 @@ For example: `bash runtests.sh bin/flow class | grep -v 'SKIP'`
 * Stack Overflow: Ask a question with the [flowtype tag](https://stackoverflow.com/questions/tagged/flowtype)
 
 ## License
-Flow is MIT-licensed ([LICENSE](https://github.com/facebook/flow/blob/master/LICENSE)). The [website](https://flow.org/) and [documentation](https://flow.org/en/docs/) are licensed under the Creative Commons Attribution 4.0 license ([website/LICENSE-DOCUMENTATION](https://github.com/facebook/flow/blob/master/website/LICENSE-DOCUMENTATION)).
+Flow is MIT-licensed ([LICENSE](https://github.com/facebook/flow/blob/main/LICENSE)). The [website](https://flow.org/) and [documentation](https://flow.org/en/docs/) are licensed under the Creative Commons Attribution 4.0 license ([website/LICENSE-DOCUMENTATION](https://github.com/facebook/flow/blob/main/website/LICENSE-DOCUMENTATION)).
