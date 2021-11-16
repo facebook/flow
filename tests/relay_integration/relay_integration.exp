@@ -132,24 +132,5 @@ Expected a GraphQL fragment, query, mutation, or subscription. [invalid-graphql]
        ^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:76:1
 
-Expected exactly one definition per GraphQL tag. [invalid-graphql]
-
-       v---------------
-   76| graphql` # ERROR
-   77|   fragment MyFragment on User {
-   78|     friends {
-   79|       count
-   80|     }
-   81|   }
-   82|   query MyQuery {
-   83|     friends {
-   84|       count
-   85|     }
-   86|   }`;
-         -^
-
-
-
-Found 11 errors
+Found 10 errors

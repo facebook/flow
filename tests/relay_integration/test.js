@@ -73,14 +73,10 @@ const fragmentWithCommas = graphql`
 graphql``; // ERROR
 graphql`query MyQuery {${fragment}}`; // ERROR
 graphql`boop MyBoop {}`; // ERROR
-graphql` # ERROR
-  fragment MyFragment on User {
-    friends {
-      count
-    }
-  }
+graphql`
   query MyQuery {
-    friends {
-      count
+    foo {
+      query
+      bar
     }
-  }`;
+  }`; // OK

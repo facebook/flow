@@ -1823,7 +1823,6 @@ let dump_error_message =
         match err with
         | Graphql.InvalidTaggedTemplate -> "invalid tagged template"
         | Graphql.InvalidGraphQL -> "invalid graphql"
-        | Graphql.MultipleDefinitions -> "multiple definitions"
       in
       spf "EInvalidGraphQL (%s) (%s)" (string_of_aloc loc) err_str
     | EAnnotationInference (loc, reason_op, reason) ->

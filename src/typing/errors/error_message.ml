@@ -3697,7 +3697,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         [text "Template literal substitutions are not allowed in GraphQL literals."]
       | Graphql.InvalidGraphQL ->
         [text "Expected a GraphQL fragment, query, mutation, or subscription."]
-      | Graphql.MultipleDefinitions -> [text "Expected exactly one definition per GraphQL tag."]
     in
     Normal { features }
   | EAnnotationInference (_, reason_op, reason) ->
