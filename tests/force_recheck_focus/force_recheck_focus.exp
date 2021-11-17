@@ -1,7 +1,7 @@
 ===== force-recheck of a unchanged file does nothing: =====
 No errors!
 
-The Flow server is currently in lazy mode and is only checking 0/1 files.
+The Flow server is currently in lazy mode and is only checking 0/2 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 ===== force-recheck --focus of a unchanged file does a recheck: =====
@@ -19,8 +19,25 @@ References:
              ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------------- b.js:8:2
 
-Found 1 error
+Cannot cast `y` to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
 
-The Flow server is currently in lazy mode and is only checking 1/1 files.
+   b.js:8:2
+   8| (y: void); // error
+       ^
+
+References:
+   a.js:5:18
+   5| export const y = "y";
+                       ^^^ [1]
+   b.js:8:5
+   8| (y: void); // error
+          ^^^^ [2]
+
+
+
+Found 2 errors
+
+The Flow server is currently in lazy mode and is only checking 2/2 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
