@@ -879,25 +879,6 @@ let calc_modules_helper ~reader workers files =
     ~merge:List.rev_append
     ~next:(MultiWorkerLwt.next workers (FilenameSet.elements files))
 
-(* Given a set of files which are unchanged, return the set of modules which those files provide *)
-let calc_unchanged_modules ~reader workers unchanged =
-  let%lwt old_file_module_assoc = calc_modules_helper ~reader workers unchanged in
-  let unchanged_modules =
-    List.fold_left
-      (fun unchanged_modules (file, module_provider_assoc) ->
-        List.fold_left
-          (fun unchanged_modules (module_name, provider) ->
-            if provider = file then
-              Modulename.Set.add module_name unchanged_modules
-            else
-              unchanged_modules)
-          unchanged_modules
-          module_provider_assoc)
-      Modulename.Set.empty
-      old_file_module_assoc
-  in
-  Lwt.return unchanged_modules
-
 (* Calculate the set of modules whose current providers are changed or deleted files.
 
    Possibilities:

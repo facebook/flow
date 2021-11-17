@@ -68,15 +68,6 @@ val calc_old_modules :
   FilenameSet.t ->
   (Modulename.t * File_key.t option) list Lwt.t
 
-(* Given a set of files which haven't changed, return the modules currently being provided by these
- * modules.
- *)
-val calc_unchanged_modules :
-  reader:Mutator_state_reader.t ->
-  MultiWorkerLwt.worker list option ->
-  FilenameSet.t ->
-  Modulename.Set.t Lwt.t
-
 (* repick providers for old and new modules *)
 val commit_modules :
   transaction:Transaction.t ->

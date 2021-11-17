@@ -1449,41 +1449,21 @@ end = struct
         ~errors
         ~is_init:false
     in
-    (* We can ignore unchanged files which were forced as dependencies. We don't care about their
-     * dependents *)
-    let unchanged_files_with_dependents =
-      CheckedSet.filter_into_set
-        ~f:(fun kind -> not (CheckedSet.is_dependency kind))
-        unchanged_files_to_force
-    in
-    (* Figure out which modules the unchanged forced files provide. We need these to figure out
-     * which dependents need to be added to the checked set *)
-    let%lwt unchanged_modules =
-      Memory_utils.with_memory_timer_lwt ~options "CalcUnchangedModules" profiling (fun () ->
-          Module_js.calc_unchanged_modules ~reader workers unchanged_files_with_dependents
-      )
-    in
     let parsed = FilenameSet.union freshparsed unchanged in
     (* direct_dependent_files are unchanged files which directly depend on changed modules,
        or are new / changed files that are phantom dependents. *)
     let%lwt direct_dependent_files =
       Memory_utils.with_memory_timer_lwt ~options "DirectDependentFiles" profiling (fun () ->
-          let cache_key =
-            if Options.direct_dependent_files_fix options then
-              FilenameSet.union new_or_changed_or_deleted unchanged_files_with_dependents
-            else
-              FilenameSet.union new_or_changed unchanged_files_with_dependents
-          in
           DirectDependentFilesCache.with_cache
-            ~cache_key
+            ~cache_key:new_or_changed_or_deleted
             ~on_miss:
               ( lazy
                 (Dep_service.calc_direct_dependents
                    ~reader:(Abstract_state_reader.Mutator_state_reader reader)
                    workers
                    ~candidates:unchanged
-                   ~root_files:(FilenameSet.union new_or_changed unchanged_files_with_dependents)
-                   ~root_modules:(Modulename.Set.union unchanged_modules changed_modules)
+                   ~root_files:new_or_changed_or_deleted
+                   ~root_modules:changed_modules
                 )
                 )
       )
@@ -1603,11 +1583,21 @@ end = struct
     let%lwt (sig_dependent_files, all_dependent_files) =
       (* all_dependent_files are direct_dependent_files plus their dependents (transitive closure) *)
       Memory_utils.with_memory_timer_lwt ~options "AllDependentFiles" profiling (fun () ->
+          let forced_direct_dependents =
+            unchanged_files_to_force
+            (* We can ignore unchanged files which were forced as dependencies. We only merge them, so we
+               don't care about their dependents. *)
+            |> CheckedSet.filter_into_set ~f:(fun kind -> not (CheckedSet.is_dependency kind))
+            (* We then need to expand out to the direct implementation dependents, similar to how
+               [direct_dependent_files] is the set of changed files expanded to their direct implementation
+               dependents. These are all the files that literally import the files we're forcing. *)
+            |> Pure_dep_graph_operations.calc_direct_dependents implementation_dependency_graph
+          in
           Lwt.return
             (Pure_dep_graph_operations.calc_all_dependents
                ~sig_dependency_graph
                ~implementation_dependency_graph
-               direct_dependent_files
+               (FilenameSet.union direct_dependent_files forced_direct_dependents)
             )
       )
     in
