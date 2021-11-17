@@ -9,3 +9,4 @@ module.system.haste.name_reducers='^.*/\([a-zA-Z0-9$_.-]+\.js\(\.flow\)?\)$' -> 
 module.system.haste.name_reducers='^\(.*\)\.js\(\.flow\)?$' -> '\1'
 
 relay_integration=true
+relay_integration.excludes=.*/__tests__/.*

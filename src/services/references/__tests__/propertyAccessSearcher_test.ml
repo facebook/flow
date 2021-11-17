@@ -26,6 +26,7 @@ let run ctxt expected name content =
       parse_exact_by_default = false;
       parse_enable_enums = false;
       parse_enable_relay_integration = false;
+      parse_relay_integration_excludes = [];
       parse_relay_integration_module_prefix = None;
       parse_node_main_fields = [];
     }

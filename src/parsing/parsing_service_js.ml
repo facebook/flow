@@ -95,6 +95,7 @@ type parse_options = {
   parse_exact_by_default: bool;
   parse_enable_enums: bool;
   parse_enable_relay_integration: bool;
+  parse_relay_integration_excludes: Str.regexp list;
   parse_relay_integration_module_prefix: string option;
   parse_node_main_fields: string list;
 }
@@ -399,6 +400,7 @@ let do_parse ~parse_options ~info content file =
     parse_exact_by_default = exact_by_default;
     parse_enable_enums = enable_enums;
     parse_enable_relay_integration = enable_relay_integration;
+    parse_relay_integration_excludes = relay_integration_excludes;
     parse_relay_integration_module_prefix = relay_integration_module_prefix;
     parse_node_main_fields = node_main_fields;
   } =
@@ -441,6 +443,9 @@ let do_parse ~parse_options ~info content file =
            recognize and process a custom `keyMirror` function that makes an enum out of the keys
            of an object. *)
         let facebook_keyMirror = true in
+        let enable_relay_integration =
+          enable_relay_integration && Relay_options.enabled_for_file relay_integration_excludes file
+        in
         let file_sig_opts =
           {
             File_sig.With_Loc.module_ref_prefix;
@@ -783,6 +788,7 @@ let make_parse_options_internal
     parse_exact_by_default = Options.exact_by_default options;
     parse_enable_enums = Options.enums options;
     parse_enable_relay_integration = Options.enable_relay_integration options;
+    parse_relay_integration_excludes = Options.relay_integration_excludes options;
     parse_relay_integration_module_prefix = Options.relay_integration_module_prefix options;
     parse_node_main_fields = Options.node_main_fields options;
   }

@@ -132,6 +132,8 @@ val gc_worker_window_size : config -> int option
 
 val relay_integration : config -> bool
 
+val relay_integration_excludes : config -> string list
+
 val relay_integration_module_prefix : config -> string option
 
 val haste_module_ref_prefix : config -> string option
