@@ -739,6 +739,21 @@ References:
                ^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- keyMirror.js:28:27
+
+Cannot instantiate `$KeyMirror` because number literal `1` [1] is not a valid argument of `$KeyMirror` [2].
+[incompatible-use]
+
+   keyMirror.js:28:27
+   28| declare var badKeyMirror: $KeyMirror<1>;
+                                 ^^^^^^^^^^^^^ [2]
+
+References:
+   keyMirror.js:28:38
+   28| declare var badKeyMirror: $KeyMirror<1>;
+                                            ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------------ main.js:9:2
 
 Cannot cast `t1` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
@@ -862,4 +877,4 @@ References:
 
 
 
-Found 45 errors
+Found 46 errors

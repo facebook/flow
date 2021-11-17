@@ -24,3 +24,6 @@ export type SpreadKeyMirroredProps = $ReadOnly<{
 // `$ReadOnly<$ObjMapi<Props, <K>(K) => K>>` that preserves the optionality of the
 // properties.
 ({b: 'b'}: SpreadKeyMirroredProps);
+
+declare var badKeyMirror: $KeyMirror<1>;
+badKeyMirror.f; // error
