@@ -266,6 +266,15 @@ let rec recheck_single ~recheck_count genv env =
         ServerMonitorListenerState.requeue_deferred_parallelizable_workloads ();
         Lwt.return (Completed_recheck { profiling; env; recheck_count })
       in
+
+      if prioritize_dependency_checks then
+        (* adding files_to_force to will_be_checked_files makes sure that future requests for
+           the same files doesn't cause us to cancel a check that was already working on
+           checking those files (see [get_forced]). note: will_be_checked_files is also passed
+           into [recheck] and mutated further when we determine what to recheck, but forced
+           files are definitely checked, so we can add them now. *)
+        will_be_checked_files := CheckedSet.union files_to_force !will_be_checked_files;
+
       run_but_cancel_on_file_changes
         ~options
         env
