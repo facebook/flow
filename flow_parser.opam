@@ -1,6 +1,6 @@
 opam-version: "2.0"
 name: "flow_parser"
-version: "0.164.0"
+version: "0.165.0"
 maintainer: "flow@fb.com"
 authors: ["Flow Team <flow@fb.com>"]
 homepage: "https://github.com/facebook/flow/tree/master/src/parser"

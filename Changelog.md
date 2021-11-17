@@ -1,3 +1,13 @@
+### 0.165.0
+
+Likely to cause new Flow errors:
+* The Flow parser now requires that variables declared using the `declare var` syntax be annotated with a type. `declare var x;` is now illegal.
+
+Notable bug fixes:
+* [fix] No longer attempt to provide autocomplete or `flow autocomplete` on non-Flow files.
+* [fix] Fix a crash when deleting a file in lazy mode
+* [fix] Fix a bug that prevented some code actions from adding type imports for `export default class` definitions
+
 ### 0.164.0
 
 New Features:
