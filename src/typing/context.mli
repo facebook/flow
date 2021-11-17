@@ -73,6 +73,7 @@ type metadata = {
   react_runtime: Options.react_runtime;
   react_server_component_exts: SSet.t;
   recursion_limit: int;
+  relay_integration_excludes: Str.regexp list;
   relay_integration_module_prefix: string option;
   reorder_checking: Options.order_mode;
   root: Path.t;

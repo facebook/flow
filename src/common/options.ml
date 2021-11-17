@@ -93,7 +93,6 @@ type t = {
   opt_format: format;
   opt_gc_worker: gc_control;
   opt_enable_relay_integration: bool;
-  opt_relay_integration_module_prefix: string option;
   opt_haste_module_ref_prefix: string option;
   opt_haste_name_reducers: (Str.regexp * string) list;
   opt_haste_paths_excludes: string list;
@@ -128,6 +127,8 @@ type t = {
   opt_react_server_component_exts: SSet.t;
   opt_recursion_limit: int;
   opt_refactor: bool;
+  opt_relay_integration_excludes: Str.regexp list;
+  opt_relay_integration_module_prefix: string option;
   opt_reorder_checking: order_mode;
   opt_root_name: string option;
   opt_root: Path.t;
@@ -171,8 +172,6 @@ let direct_dependent_files_fix opts = opts.opt_direct_dependent_files_fix
 let enable_const_params opts = opts.opt_enable_const_params
 
 let enable_relay_integration opts = opts.opt_enable_relay_integration
-
-let relay_integration_module_prefix opts = opts.opt_relay_integration_module_prefix
 
 let enabled_rollouts opts = opts.opt_enabled_rollouts
 
@@ -259,6 +258,10 @@ let react_server_component_exts opts = opts.opt_react_server_component_exts
 let recursion_limit opts = opts.opt_recursion_limit
 
 let refactor opts = opts.opt_refactor
+
+let relay_integration_excludes opts = opts.opt_relay_integration_excludes
+
+let relay_integration_module_prefix opts = opts.opt_relay_integration_module_prefix
 
 let root opts = opts.opt_root
 

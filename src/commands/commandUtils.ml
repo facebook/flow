@@ -1320,7 +1320,6 @@ let make_options
     opt_direct_dependent_files_fix;
     opt_enable_const_params = FlowConfig.enable_const_params flowconfig;
     opt_enable_relay_integration = FlowConfig.relay_integration flowconfig;
-    opt_relay_integration_module_prefix = FlowConfig.relay_integration_module_prefix flowconfig;
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
     opt_enforce_local_inference_annotations =
       FlowConfig.enforce_local_inference_annotations flowconfig;
@@ -1381,6 +1380,11 @@ let make_options
     opt_react_server_component_exts = FlowConfig.react_server_component_exts flowconfig;
     opt_recursion_limit = FlowConfig.recursion_limit flowconfig;
     opt_refactor = flowconfig |> FlowConfig.refactor |> Option.value ~default:true;
+    opt_relay_integration_excludes =
+      Base.List.map
+        ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
+        (FlowConfig.relay_integration_excludes flowconfig);
+    opt_relay_integration_module_prefix = FlowConfig.relay_integration_module_prefix flowconfig;
     opt_max_files_checked_per_worker = FlowConfig.max_files_checked_per_worker flowconfig;
     opt_max_rss_bytes_for_check_per_worker =
       FlowConfig.max_rss_bytes_for_check_per_worker flowconfig;

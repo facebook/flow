@@ -52,6 +52,7 @@ type metadata = {
   react_runtime: Options.react_runtime;
   react_server_component_exts: SSet.t;
   recursion_limit: int;
+  relay_integration_excludes: Str.regexp list;
   relay_integration_module_prefix: string option;
   reorder_checking: Options.order_mode;
   root: Path.t;
@@ -244,6 +245,7 @@ let metadata_of_options options =
     react_runtime = Options.react_runtime options;
     react_server_component_exts = Options.react_server_component_exts options;
     recursion_limit = Options.recursion_limit options;
+    relay_integration_excludes = Options.relay_integration_excludes options;
     relay_integration_module_prefix = Options.relay_integration_module_prefix options;
     reorder_checking = Options.reorder_checking options;
     root = Options.root options;
@@ -407,7 +409,9 @@ let enable_const_params cx =
 
 let enable_enums cx = cx.metadata.enable_enums
 
-let enable_relay_integration cx = cx.metadata.enable_relay_integration
+let enable_relay_integration cx =
+  cx.metadata.enable_relay_integration
+  && Relay_options.enabled_for_file cx.metadata.relay_integration_excludes cx.file
 
 let relay_integration_module_prefix cx = cx.metadata.relay_integration_module_prefix
 
