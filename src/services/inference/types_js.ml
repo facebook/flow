@@ -1465,8 +1465,7 @@ end = struct
     in
     let parsed = FilenameSet.union freshparsed unchanged in
     (* direct_dependent_files are unchanged files which directly depend on changed modules,
-       or are new / changed files that are phantom dependents. all_dependent_files are
-       direct_dependent_files plus their dependents (transitive closure) *)
+       or are new / changed files that are phantom dependents. *)
     let%lwt direct_dependent_files =
       Memory_utils.with_memory_timer_lwt ~options "DirectDependentFiles" profiling (fun () ->
           let cache_key =
@@ -1482,7 +1481,7 @@ end = struct
                 (Dep_service.calc_direct_dependents
                    ~reader:(Abstract_state_reader.Mutator_state_reader reader)
                    workers
-                   ~candidates:(FilenameSet.diff unchanged unchanged_files_with_dependents)
+                   ~candidates:unchanged
                    ~root_files:(FilenameSet.union new_or_changed unchanged_files_with_dependents)
                    ~root_modules:(Modulename.Set.union unchanged_modules changed_modules)
                 )
@@ -1513,9 +1512,8 @@ end = struct
                         ~options
                         ~node_modules_containers
                     in
-                    ignore errors;
-
                     (* TODO: why, FFS, why? *)
+                    ignore errors;
                     anything_changed || changed)
                   anything_changed
                   files)
@@ -1603,6 +1601,7 @@ end = struct
       ~unchanged_files_to_force
       ~direct_dependent_files =
     let%lwt (sig_dependent_files, all_dependent_files) =
+      (* all_dependent_files are direct_dependent_files plus their dependents (transitive closure) *)
       Memory_utils.with_memory_timer_lwt ~options "AllDependentFiles" profiling (fun () ->
           Lwt.return
             (Pure_dep_graph_operations.calc_all_dependents

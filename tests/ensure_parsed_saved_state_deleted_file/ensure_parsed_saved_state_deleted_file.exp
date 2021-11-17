@@ -6,10 +6,9 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 
 ==== ensure_parsed notices that A was removed ====
-NOTE: This error message has been modified to remove the full file path.
 Error -------------------------------------------------------------------------------------------------------- B.js:1:17
 
-Cannot resolve module `A.js`. [cannot-resolve-module]
+Cannot resolve module `./A`. [cannot-resolve-module]
 
    1| import {A} from './A';
                       ^^^^^
