@@ -145,13 +145,7 @@ type single_def_info =
  * particular order. *)
 type property_def_info = single_def_info Nel.t
 
-type def_info =
-  | Property of property_def_info * string (* name *)
-  | CJSExport of Loc.t
-
-let display_name_of_def_info = function
-  | Property (_, name) -> name
-  | CJSExport _ -> "module.exports"
+type def_info = property_def_info * string (* name *)
 
 let loc_of_single_def_info = function
   | Class loc -> loc
@@ -159,9 +153,7 @@ let loc_of_single_def_info = function
 
 let all_locs_of_property_def_info def_info = def_info |> Nel.map loc_of_single_def_info
 
-let all_locs_of_def_info = function
-  | Property (def_info, _) -> all_locs_of_property_def_info def_info
-  | CJSExport loc -> Nel.one loc
+let all_locs_of_def_info (def_info, _) = all_locs_of_property_def_info def_info
 
 type def_loc =
   (* We found a class property. Include all overridden implementations. Superclass implementations
@@ -195,10 +187,8 @@ let debug_string_of_property_def_info def_info =
   |> String.concat ", "
   |> spf "[%s]"
 
-let debug_string_of_def_info = function
-  | Property (def_info, name) ->
-    spf "Property (%s, %s)" (debug_string_of_property_def_info def_info) name
-  | CJSExport loc -> spf "CJSExport (%s)" (Loc.debug_to_string loc)
+let debug_string_of_def_info (def_info, name) =
+  spf "(%s, %s)" (debug_string_of_property_def_info def_info) name
 
 let rec debug_string_of_def_loc = function
   | FoundClass locs -> spf "FoundClass (%s)" (debug_string_of_locs locs)
@@ -367,20 +357,15 @@ let add_literal_properties literal_key_info def_info =
    * list and add additional complexity just for the sake of this one case.
    * (b) We would have to add a type inference hook, which we are trying to
    * avoid. *)
-  let def_info =
-    match (def_info, literal_key_info) with
-    | (None, None) -> Ok None
-    | (Some _, None) -> Ok def_info
-    | (None, Some (_, loc, name)) -> Ok (Some (Nel.one (Object loc), name))
-    | (Some (defs, name1), Some (_, loc, name2)) ->
-      if name1 <> name2 then
-        Error "Unexpected name mismatch"
-      else
-        Ok (Some (Nel.cons (Object loc) defs, name1))
-  in
-  Result.map
-    def_info
-    ~f:(Base.Option.map ~f:(fun (prop_def_info, name) -> Property (prop_def_info, name)))
+  match (def_info, literal_key_info) with
+  | (None, None) -> Ok None
+  | (Some _, None) -> Ok def_info
+  | (None, Some (_, loc, name)) -> Ok (Some (Nel.one (Object loc), name))
+  | (Some (defs, name1), Some (_, loc, name2)) ->
+    if name1 <> name2 then
+      Error "Unexpected name mismatch"
+    else
+      Ok (Some (Nel.cons (Object loc) defs, name1))
 
 let get_def_info ~reader ~options env profiling file_key ast_info loc :
     (def_info option, string) result =
@@ -407,54 +392,5 @@ let get_def_info ~reader ~options env profiling file_key ast_info loc :
     !props_access_info
     >>= Base.Option.value_map ~f:(def_info_of_typecheck_results ~reader cx) ~default:(Ok None)
     >>= add_literal_properties literal_key_info
-    >>= function
-    | Some _ as def_info -> Ok def_info
-    | None ->
-      (* Check if we are on a CJS import/export. These cases are not covered above since the type
-       * system hooks don't quite get us what we want. *)
-      let export_loc =
-        File_sig.With_Loc.(
-          List.fold_left
-            begin
-              fun acc -> function
-              | Require { source = (_, module_ref); require_loc; _ } ->
-                if Loc.contains require_loc loc then
-                  match acc with
-                  | Error _ -> acc
-                  | Ok (Some _) -> Error "Did not expect multiple requires to match one location"
-                  | Ok None ->
-                    let external_file_sig =
-                      let filename = file_key_of_module_ref ~reader file_key module_ref in
-                      Base.Option.bind filename (Parsing_heaps.Reader.get_file_sig ~reader)
-                    in
-                    Result.return
-                    @@ Base.Option.bind external_file_sig (fun external_file_sig ->
-                           match external_file_sig.module_sig.module_kind with
-                           | CommonJS { mod_exp_loc = Some loc; _ } -> Some loc
-                           | _ -> None
-                       )
-                else
-                  acc
-              | _ -> acc
-            end
-            (Ok None)
-            file_sig.module_sig.requires
-        )
-      in
-      let export_loc =
-        export_loc >>| function
-        | Some _ as x -> x
-        | None ->
-          File_sig.With_Loc.(
-            (match file_sig.module_sig.module_kind with
-            | CommonJS { mod_exp_loc = Some mod_exp_loc; _ } ->
-              if Loc.contains mod_exp_loc loc then
-                Some mod_exp_loc
-              else
-                None
-            | _ -> None)
-          )
-      in
-      Result.map export_loc ~f:(Base.Option.map ~f:(fun x -> CJSExport x))
   in
   def_info
