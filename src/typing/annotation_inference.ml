@@ -388,9 +388,26 @@ module rec ConsGen : Annotation_inference_sig = struct
       let (_, { A.constraints; _ }) = Context.find_avar cx id in
       match Lazy.force constraints with
       | A.Annot_resolved ->
-        (* Annot_resolved ids definitelly appear in the type graph *)
-        let t = get_fully_resolved_type cx id in
-        elab_t cx ~seen:(ISet.add id seen) t op
+        (* [id] may refer to a lazily resolved constraint (e.g. created through
+         * [mk_lazy_tvar]). To protect against trying to force recursive lazy
+         * structures, we introduce a lazy indirection around the resulting
+         * constraint. An example that would have cause this unwanted behavior is
+         *
+         *   declare var x: {
+         *     p: number;
+         *     q: typeof (x.p);
+         *   };
+         *
+         * This lazy indirection allows the type of `x` to be resolved, before we
+         * attempt to force the constraint for `x.p`. *)
+        let resolved =
+          lazy
+            ((* Annot_resolved ids definitelly appear in the type graph *)
+             let t = get_fully_resolved_type cx id in
+             elab_t cx ~seen:(ISet.add id seen) t op
+            )
+        in
+        mk_sig_tvar cx (AConstraint.reason_of_op op) resolved
       | A.Annot_unresolved _
       | A.Annot_op _ ->
         let fresh_id = Avar.constrained cx op id in

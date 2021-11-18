@@ -764,5 +764,39 @@ References:
                          ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- main.js:174:2
 
-Found 48 errors
+Cannot cast `C27.Q` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   main.js:174:2
+   174| (C27.Q: string); // error
+         ^^^^^
+
+References:
+   recursive.js:8:13
+     8|   static Q: typeof (C.P);
+                    ^^^^^^^^^^^^ [1]
+   main.js:174:9
+   174| (C27.Q: string); // error
+                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- main.js:176:2
+
+Cannot cast `x27.q` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   main.js:176:2
+   176| (x27.q: string); // error
+         ^^^^^
+
+References:
+   recursive.js:13:6
+    13|   q: typeof (x.p);
+             ^^^^^^^^^^^^ [1]
+   main.js:176:9
+   176| (x27.q: string); // error
+                ^^^^^^ [2]
+
+
+
+Found 50 errors

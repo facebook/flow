@@ -17,15 +17,15 @@ import {
   x14 as call_x14,
 } from './ops_on_eval_call';
 
-(call_x1: any);
+(call_x1.f: any);
 (call_x2: any);
 (call_x3: any);
 (call_x4: any);
 (call_x5: any);
 (call_x6: any);
 (call_x7: any);
-(call_x8: any);
-(call_x9: any);
+(call_x8.__proto__: any);
+((new call_x9).f: any);
 (call_x10: any);
 (call_x11: any);
 (call_x12: any);
@@ -49,15 +49,15 @@ import {
   x14 as intersection_x14,
 } from './ops_on_intersection';
 
-(intersection_x1: any);
+(intersection_x1.f: any);
 (intersection_x2: any);
 (intersection_x3: any);
 (intersection_x4: any);
 (intersection_x5: any);
 (intersection_x6: any);
 (intersection_x7: any);
-(intersection_x8: any);
-(intersection_x9: any);
+(intersection_x8.__proto__: any);
+((new intersection_x9).f: any);
 (intersection_x10: any);
 (intersection_x11: any);
 (intersection_x12: any);
@@ -81,15 +81,15 @@ import {
   x14 as react_config_x14,
 } from './ops_on_react_config';
 
-(react_config_x1: any);
+(react_config_x1.f: any);
 (react_config_x2: any);
 (react_config_x3: any);
 (react_config_x4: any);
 (react_config_x5: any);
 (react_config_x6: any);
 (react_config_x7: any);
-(react_config_x8: any);
-(react_config_x9: any);
+(react_config_x8.__proto__: any);
+((new react_config_x9).f: any);
 (react_config_x10: any);
 (react_config_x11: any);
 (react_config_x12: any);

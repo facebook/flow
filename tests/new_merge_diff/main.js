@@ -19,7 +19,7 @@ import {
   x as x4,
   y as y4,
   z as z4,
-  f as f4,
+  C as C4,
   type T as T4,
   type S as S4,
   type R as R4,
@@ -28,7 +28,7 @@ import {
 (x4: any);
 (y4: any);
 (x4: any);
-(f4: any);
+(C4.R: any);
 
 (0: T4);
 (0: S4); // error number ~> string

@@ -41,8 +41,8 @@ Cannot cast `0` to `S4` because number [1] is incompatible with string [2]. [inc
         ^ [1]
 
 References:
-   recursive_types.js:15:17
-   15| export type S = string | R; // okay
+   recursive_types.js:12:17
+   12| export type S = string | R; // okay
                        ^^^^^^ [2]
 
 
@@ -92,24 +92,16 @@ Invalid trivially recursive definition of `x` in an export position.  [invalid-r
                       ^
 
 
-Error ------------------------------------------------------------------------------------------ recursive_types.js:5:24
+Error ------------------------------------------------------------------------------------------ recursive_types.js:5:26
 
-Invalid trivially recursive definition of `y` in an export position.  [invalid-recursive-exported-annotation]
+Invalid trivially recursive definition of property `f` in an export position.  [invalid-recursive-exported-annotation]
 
    5| export const y: typeof y.f = 0; // error recursive
-                             ^
-
-
-Error ------------------------------------------------------------------------------------------ recursive_types.js:9:29
-
-Invalid trivially recursive definition of function type in an export position.  [invalid-recursive-exported-annotation]
-
-   9| export function f(): typeof f.g { return 1; } // error recursive
-                                  ^
+                               ^
 
 
 
-Found 10 errors
+Found 9 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -162,3 +162,15 @@ declare var indirectFrozenSuitevalues: IndirectFrozenSuiteValues;
 
 import S26 from './type_of_typeapp';
 (S26.getState(): empty); // error RecordInstance ~> empty
+
+import {
+  f as f27,
+  C as C27,
+  x as x27,
+} from './recursive';
+
+(f27(): any);
+(C27.Q: number);
+(C27.Q: string); // error
+(x27.q: number);
+(x27.q: string); // error
