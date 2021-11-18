@@ -189,6 +189,10 @@ let parse_json_file ~fail content file =
 (* Avoid lexing unbounded in perverse cases *)
 let docblock_max_tokens = 10
 
+let attributes_rx = Str.regexp "[ \t\r\n\\*/]+"
+
+let lines_rx = Str.regexp "\\(\r\n\\|\n\\|\r\\)"
+
 let extract_docblock =
   Docblock.(
     (* walks a list of words, returns a list of errors and the extracted info.
@@ -266,8 +270,6 @@ let extract_docblock =
       | _ :: xs -> parse_attributes (errors, info) xs
       | [] -> (errors, info)
     in
-    let attributes_rx = Str.regexp "[ \t\r\n\\*/]+" in
-    let lines_rx = Str.regexp "\\(\r\n\\|\n\\|\r\\)" in
     let calc_end start s =
       Str.full_split lines_rx s
       |> List.fold_left
