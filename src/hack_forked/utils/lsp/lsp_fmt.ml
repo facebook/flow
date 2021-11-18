@@ -1644,6 +1644,8 @@ let denorm_message_to_string (message : lsp_message) : string =
   match message with
   | RequestMessage (id, r) ->
     Printf.sprintf "request %s %s" (id_to_string id) (request_name_to_string r)
+  | NotificationMessage (CancelRequestNotification CancelRequest.{ id } as n) ->
+    Printf.sprintf "notification %s %s" (notification_name_to_string n) (id_to_string id)
   | NotificationMessage n -> Printf.sprintf "notification %s" (notification_name_to_string n)
   | ResponseMessage (id, ErrorResult (e, _stack)) ->
     Printf.sprintf "error %s %s" (id_to_string id) e.Error.message
