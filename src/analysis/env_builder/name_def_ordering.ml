@@ -100,7 +100,17 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
           this#add ~why:loc loc;
           id
 
-        method! object_key_identifier id = id
+        method! member_property_identifier (id : (L.t, L.t) Ast.Identifier.t) = id
+
+        method! typeof_member_identifier ident = ident
+
+        method! member_type_identifier (id : (L.t, L.t) Ast.Identifier.t) = id
+
+        method! pattern_object_property_identifier_key ?kind:_ id = id
+
+        method! enum_member_identifier id = id
+
+        method! object_key_identifier (id : (L.t, L.t) Ast.Identifier.t) = id
 
         (* For classes/functions that are known to be fully annotated, we skip property bodies *)
         method function_def ~fully_annotated (expr : ('loc, 'loc) Ast.Function.t) =
@@ -214,6 +224,16 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
             ())
           L.LMap.empty
       in
+      let depends_of_interface { Ast.Statement.Interface.tparams; extends; body; _ } =
+        depends_of_node
+          (fun visitor ->
+            let open Flow_ast_mapper in
+            let _ = map_opt visitor#type_params tparams in
+            let _ = map_list (map_loc visitor#generic_type) extends in
+            let _ = map_loc visitor#object_type body in
+            ())
+          L.LMap.empty
+      in
       let depends_of_root state = function
         | Annotation anno -> depends_of_annotation anno state
         | Value exp -> depends_of_expression exp state
@@ -268,16 +288,21 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
       | Class { fully_annotated; class_ } -> depends_of_class fully_annotated class_
       | TypeAlias alias -> depends_of_alias alias
       | TypeParam tparam -> depends_of_tparam tparam
+      | Interface inter -> depends_of_interface inter
+      | Enum _ ->
+        (* Enums don't contain any code or type references, they're literal-like *) L.LMap.empty
 
     (* Is the variable defined by this def able to be recursively depended on, e.g. created as a 0->1 tvar before being
        resolved? *)
     let recursively_resolvable = function
       | TypeAlias _
       | TypeParam _
+      | Interface _
       | Class { fully_annotated = true; _ } ->
         true
       | Binding _
       | Function _
+      | Enum _
       | Class { fully_annotated = false; _ } ->
         false
   end

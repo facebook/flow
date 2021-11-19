@@ -301,6 +301,8 @@ let mapper cctx =
 
     method! member_type_identifier ident = ident
 
+    method! enum_member_identifier id = id
+
     method! pattern_object_property_identifier_key ?kind:_ id = id
 
     method! pattern_identifier ?kind:_ id = id

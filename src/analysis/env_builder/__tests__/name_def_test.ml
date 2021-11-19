@@ -50,6 +50,8 @@ let string_of_source = function
   | TypeAlias { Ast.Statement.TypeAlias.right = (loc, _); _ } ->
     spf "alias %s" (L.debug_to_string loc)
   | TypeParam (loc, _) -> spf "tparam %s" (L.debug_to_string loc)
+  | Enum (loc, _) -> spf "enum %s" (L.debug_to_string loc)
+  | Interface _ -> "interface"
 
 let print_values values =
   let kvlist = L.LMap.bindings values in
@@ -517,3 +519,35 @@ class D extends C {
   |};
   [%expect {|
     legal cycle: (((2, 6) to (2, 7)); ((5, 6) to (5, 7))) |}]
+
+let%expect_test "enum" =
+  print_order_test {|
+function havoced() {
+  var x: E = E.Foo
+}
+enum E {
+  Foo
+}
+  |};
+  [%expect {|
+    (5, 5) to (5, 6) =>
+    (3, 6) to (3, 7) =>
+    (2, 9) to (2, 16) |}]
+
+let%expect_test "interface" =
+  print_order_test {|
+interface I extends J { x: J }
+interface J { h: number }
+  |};
+  [%expect {|
+    (3, 10) to (3, 11) =>
+    (2, 10) to (2, 11) |}]
+
+let%expect_test "interface_class_anno_cycle" =
+  print_order_test {|
+interface I extends J { x: J }
+interface J { h: C }
+class C implements I { }
+  |};
+  [%expect {|
+    legal cycle: (((2, 10) to (2, 11)); ((4, 6) to (4, 7)); ((3, 10) to (3, 11))) |}]

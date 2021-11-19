@@ -36,6 +36,8 @@ module Queries = struct
 
       method! typeof_member_identifier ident = ident
 
+      method! enum_member_identifier id = id
+
       method! identifier id =
         let (_, { Ast.Identifier.name; _ }) = id in
         init := SSet.add name !init;

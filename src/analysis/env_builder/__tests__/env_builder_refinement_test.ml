@@ -4460,3 +4460,21 @@ class D extends C {
       (5, 16) to (5, 17) => {
         (2, 6) to (2, 7): (`C`)
       }] |}]
+
+let%expect_test "enum" =
+  print_ssa_test {|
+function havoced() {
+  var x: E = E.Foo
+}
+enum E {
+  Foo
+}
+  |};
+  [%expect {|
+    [
+      (3, 9) to (3, 10) => {
+        (5, 5) to (5, 6): (`E`)
+      };
+      (3, 13) to (3, 14) => {
+        (5, 5) to (5, 6): (`E`)
+      }] |}]

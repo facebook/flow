@@ -46,8 +46,8 @@ module Make (L : Loc_sig.S) = struct
       }
     | TypeAlias of (L.t, L.t) Ast.Statement.TypeAlias.t
     | TypeParam of (L.t, L.t) Ast.Type.TypeParam.t
-  (* | Interface
-     | Enum *)
+    | Interface of (L.t, L.t) Ast.Statement.Interface.t
+    | Enum of L.t Ast.Statement.EnumDeclaration.body
 
   type map = def L.LMap.t
 
@@ -277,6 +277,18 @@ module Make (L : Loc_sig.S) = struct
         let (_, { name = (name_loc, _); _ }) = tparam in
         this#add_binding name_loc (TypeParam tparam);
         super#type_param tparam
+
+      method! interface loc (interface : ('loc, 'loc) Ast.Statement.Interface.t) =
+        let open Ast.Statement.Interface in
+        let { id = (name_loc, _); _ } = interface in
+        this#add_binding name_loc (Interface interface);
+        super#interface loc interface
+
+      method! enum_declaration loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
+        let open Ast.Statement.EnumDeclaration in
+        let { id = (name_loc, _); body; _ } = enum in
+        this#add_binding name_loc (Enum body);
+        super#enum_declaration loc enum
     end
 
   let find_defs ast =

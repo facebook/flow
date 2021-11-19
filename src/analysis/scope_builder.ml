@@ -246,6 +246,9 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         ignore kind;
         id
 
+      (* don't rename the `Foo` in `enum E { Foo }` *)
+      method! enum_member_identifier id = id
+
       (* don't rename the `foo` in `{ foo: ... }` *)
       method! object_key_identifier (id : (L.t, L.t) Ast.Identifier.t) = id
 
