@@ -1709,7 +1709,7 @@ end = struct
     in
     (* This is a much better estimate of what checked_files will be after the merge finishes. We now
      * include the dependencies and dependents that are being implicitly included in the recheck. *)
-    will_be_checked_files := CheckedSet.union env.ServerEnv.checked_files to_merge_or_check;
+    will_be_checked_files := CheckedSet.union to_merge_or_check !will_be_checked_files;
 
     let%lwt estimates =
       restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~file_watcher_metadata
