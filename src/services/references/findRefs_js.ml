@@ -38,20 +38,11 @@ let find_local_refs ~reader ~options ~env ~profiling ~file_input ~line ~col =
   let (ast, _, _) = ast_info in
   let scope_info = Scope_builder.program ~with_types:true ast in
   let (var_refs, loc) = local_variable_refs scope_info loc in
-  (* Then run property find-refs *)
-  let%bind prop_refs =
-    PropertyFindRefs.find_local_refs
-      ~reader
-      ~options
-      ~env
-      ~profiling
-      file_key
-      ast_info
-      scope_info
-      loc
+  let%bind refs =
+    match var_refs with
+    | Some _ -> Ok var_refs
+    | None ->
+      PropertyFindRefs.find_local_refs ~reader ~options ~env ~profiling file_key ast_info loc
   in
-  (* If property find-refs returned nothing (for example if we are importing from an untyped
-     * module), then fall back on the local refs we computed earlier. *)
-  let refs = Base.Option.first_some prop_refs var_refs in
   let refs = Base.Option.map ~f:(fun (name, refs) -> (name, sort_and_dedup refs)) refs in
   Ok refs

@@ -148,30 +148,10 @@ let property_find_refs_in_file ~reader options ast_info file_key def_info name =
     >>| ( @ ) literal_prop_refs_result
   )
 
-let add_related_bindings file_sig scope_info refs =
-  let locs = Base.List.map ~f:snd refs in
-  let related_bindings = ImportExportSymbols.find_related_symbols file_sig locs in
-  List.fold_left
-    begin
-      fun acc loc ->
-      let new_refs =
-        VariableFindRefs.local_find_refs scope_info loc
-        |> Base.Option.value_map ~default:[] ~f:(fun ((_, refs), _) -> refs)
-      in
-      List.rev_append new_refs acc
-    end
-    refs
-    related_bindings
-
-let find_refs_in_file ~reader options ast_info scope_info file_key def_info name =
-  let (_, file_sig, _) = ast_info in
-  let refs = property_find_refs_in_file ~reader options ast_info file_key def_info name in
-  refs >>| add_related_bindings file_sig scope_info
-
-let find_local_refs ~reader ~options ~env ~profiling file_key ast_info scope_info loc =
+let find_local_refs ~reader ~options ~env ~profiling file_key ast_info loc =
   match get_def_info ~reader ~options env profiling file_key ast_info loc with
   | Error _ as err -> err
   | Ok None -> Ok None
   | Ok (Some (def_info, name)) ->
-    find_refs_in_file ~reader options ast_info scope_info file_key def_info name >>= fun refs ->
+    property_find_refs_in_file ~reader options ast_info file_key def_info name >>= fun refs ->
     Ok (Some (name, refs))
