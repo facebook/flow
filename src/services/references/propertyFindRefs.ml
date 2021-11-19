@@ -6,7 +6,6 @@
  *)
 
 module Ast = Flow_ast
-module File_sig = File_sig.With_Loc
 open Loc_collections
 open GetDefUtils
 
@@ -149,36 +148,6 @@ let property_find_refs_in_file ~reader options ast_info file_key def_info name =
     >>| ( @ ) literal_prop_refs_result
   )
 
-let export_find_refs_in_file ~reader ast_info file_key def_loc =
-  File_sig.(
-    let (_, file_sig, _) = ast_info in
-    let is_relevant module_ref =
-      Loc.source def_loc = file_key_of_module_ref ~reader file_key module_ref
-    in
-    let locs =
-      List.fold_left
-        begin
-          fun acc require ->
-          match require with
-          | Require { source = (_, module_ref); require_loc; _ } ->
-            if is_relevant module_ref then
-              require_loc :: acc
-            else
-              acc
-          | _ -> acc
-        end
-        []
-        file_sig.module_sig.requires
-    in
-    let locs =
-      if Loc.source def_loc = Some file_key then
-        def_loc :: locs
-      else
-        locs
-    in
-    Ok locs
-  )
-
 let add_related_bindings file_sig scope_info refs =
   let locs = Base.List.map ~f:snd refs in
   let related_bindings = ImportExportSymbols.find_related_symbols file_sig locs in
@@ -194,22 +163,15 @@ let add_related_bindings file_sig scope_info refs =
     refs
     related_bindings
 
-let find_refs_in_file ~reader options ast_info scope_info file_key def_info =
+let find_refs_in_file ~reader options ast_info scope_info file_key def_info name =
   let (_, file_sig, _) = ast_info in
-  let refs =
-    match def_info with
-    | Property (def_info, name) ->
-      property_find_refs_in_file ~reader options ast_info file_key def_info name
-    | CJSExport loc ->
-      export_find_refs_in_file ~reader ast_info file_key loc >>| fun refs ->
-      add_ref_kind FindRefsTypes.Other refs
-  in
+  let refs = property_find_refs_in_file ~reader options ast_info file_key def_info name in
   refs >>| add_related_bindings file_sig scope_info
 
 let find_local_refs ~reader ~options ~env ~profiling file_key ast_info scope_info loc =
   match get_def_info ~reader ~options env profiling file_key ast_info loc with
   | Error _ as err -> err
   | Ok None -> Ok None
-  | Ok (Some def_info) ->
-    find_refs_in_file ~reader options ast_info scope_info file_key def_info >>= fun refs ->
-    Ok (Some (display_name_of_def_info def_info, refs))
+  | Ok (Some (def_info, name)) ->
+    find_refs_in_file ~reader options ast_info scope_info file_key def_info name >>= fun refs ->
+    Ok (Some (name, refs))
