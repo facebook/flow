@@ -312,30 +312,31 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
         | ArrRest _ ->
           state
       in
-      let depends_of_binding id_loc bind =
-        let state =
-          (* When looking at a binding def, like `x = y`, in order to resolve this def we need
+      let depends_of_lhs id_loc =
+        (* When looking at a binding def, like `x = y`, in order to resolve this def we need
              to have resolved the providers for `x`, as well as the type of `y`, in order to check
              the type of `y` against `x`. So in addition to exploring the RHS, we also add the providers
              for `x` to the set of dependencies. *)
-          if not @@ Provider_api.is_provider providers id_loc then
-            let (_, providers) =
-              Base.Option.value_exn (Provider_api.providers_of_def providers id_loc)
-            in
-            Base.List.fold
-              ~init:L.LMap.empty
-              ~f:(fun acc r ->
-                let key = Reason.poly_loc_of_reason r in
-                L.LMap.update
-                  key
-                  (function
-                    | None -> Some (Nel.one id_loc)
-                    | Some locs -> Some (Nel.cons id_loc locs))
-                  acc)
-              providers
-          else
-            L.LMap.empty
-        in
+        if not @@ Provider_api.is_provider providers id_loc then
+          let (_, providers) =
+            Base.Option.value_exn (Provider_api.providers_of_def providers id_loc)
+          in
+          Base.List.fold
+            ~init:L.LMap.empty
+            ~f:(fun acc r ->
+              let key = Reason.poly_loc_of_reason r in
+              L.LMap.update
+                key
+                (function
+                  | None -> Some (Nel.one id_loc)
+                  | Some locs -> Some (Nel.cons id_loc locs))
+                acc)
+            providers
+        else
+          L.LMap.empty
+      in
+      let depends_of_binding id_loc bind =
+        let state = depends_of_lhs id_loc in
         let rec rhs_loop bind state =
           match bind with
           | Root root -> depends_of_root state root
@@ -345,8 +346,22 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
         in
         rhs_loop bind state
       in
+      let depends_of_update id_loc =
+        let state = depends_of_lhs id_loc in
+        let visitor = new use_visitor env state in
+        let writes = visitor#find_writes ~for_type:false id_loc in
+        Base.List.iter ~f:(visitor#add ~why:id_loc) writes;
+        visitor#acc
+      in
+      let depends_of_op_assign id_loc rhs =
+        (* reusing depends_of_update, since the LHS of an op-assign is handled identically to an update *)
+        let state = depends_of_update id_loc in
+        depends_of_expression rhs state
+      in
       function
       | Binding (id_loc, binding) -> depends_of_binding id_loc binding
+      | Update (id_loc, _) -> depends_of_update id_loc
+      | OpAssign (id_loc, _, rhs) -> depends_of_op_assign id_loc rhs
       | Function { fully_annotated; function_ } -> depends_of_fun fully_annotated function_
       | Class { fully_annotated; class_ } -> depends_of_class fully_annotated class_
       | DeclaredClass decl -> depends_of_declared_class decl
@@ -377,6 +392,8 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
       | DeclaredClass _ ->
         true
       | Binding _
+      | Update _
+      | OpAssign _
       | Function _
       | Enum _
       | Import _
@@ -462,7 +479,12 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
         let key_set = L.LSet.of_list keys in
         match find_path key_set [] fst with
         | Some (sequence, link_to_fst) -> IllegalCycle ((fst, link_to_fst), List.rev sequence)
-        | None -> failwith "Could not find cycle"
+        | None ->
+          failwith
+            (Printf.sprintf
+               "Could not find cycle in %s"
+               (Base.List.map ~f:(L.debug_to_string ~include_source:true) keys |> String.concat ",")
+            )
     in
     Base.List.map
       ~f:(function

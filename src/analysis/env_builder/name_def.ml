@@ -50,6 +50,8 @@ module Make (L : Loc_sig.S) = struct
 
   type def =
     | Binding of L.t * binding
+    | OpAssign of L.t * Ast.Expression.Assignment.operator * (L.t, L.t) Ast.Expression.t
+    | Update of L.t * Ast.Expression.Update.operator
     | Function of {
         fully_annotated: bool;
         function_: (L.t, L.t) Ast.Function.t;
@@ -296,11 +298,23 @@ module Make (L : Loc_sig.S) = struct
         let () =
           match (operator, lhs_node) with
           | (None, _) -> Destructure.pattern ~f:this#add_binding (Root (Value right)) left
-          | (Some _operator, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = _name; _ }) ->
-            (* Add an OpAssignment def *) ()
+          | (Some operator, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (id_loc, _); _ })
+            ->
+            this#add_binding id_loc (OpAssign (id_loc, operator, right))
           | _ -> ()
         in
         super#assignment loc expr
+
+      method! update_expression loc (expr : (L.t, L.t) Ast.Expression.Update.t) =
+        let open Ast.Expression.Update in
+        let { argument; operator; prefix = _; comments = _ } = expr in
+        begin
+          match argument with
+          | (_, Ast.Expression.Identifier (id_loc, _)) ->
+            this#add_binding id_loc (Update (id_loc, operator))
+          | _ -> ()
+        end;
+        super#update_expression loc expr
 
       method! for_of_statement loc (stuff : ('loc, 'loc) Ast.Statement.ForOf.t) =
         let open Ast.Statement.ForOf in

@@ -49,6 +49,8 @@ let string_of_import =
 
 let string_of_source = function
   | Binding (_, b) -> string_of_binding b
+  | Update (loc, _) -> spf "crement %s" (L.debug_to_string loc)
+  | OpAssign (loc, _, _) -> spf "opassign %s" (L.debug_to_string loc)
   | Function { function_ = { Ast.Function.id; _ }; _ } ->
     spf
       "fun %s"
@@ -805,3 +807,35 @@ for (var [x,y]: T of foo) { }
       (2, 10) to (2, 11) => (annot (2, 14) to (2, 17))[0];
       (2, 12) to (2, 13) => (annot (2, 14) to (2, 17))[1]
     ] |}]
+
+let%expect_test "inc" =
+  print_order_test {|
+let x;
+var y;
+function f() {
+  y = x;
+}
+x++;
+  |};
+  [%expect {|
+    (7, 0) to (7, 1) =>
+    (5, 2) to (5, 3) =>
+    (4, 9) to (4, 10) |}]
+
+let%expect_test "opassign" =
+  print_order_test {|
+let x;
+var y;
+function f() {
+  y = x;
+}
+function h() {
+  x += y;
+}
+  |};
+  [%expect {|
+    illegal cycle: ((5, 2) to (5, 3) ->
+      (via (5, 6) to (5, 7)) (8, 2) to (8, 3) ->
+      (via (8, 7) to (8, 8)) (5, 2) to (5, 3)) =>
+    (4, 9) to (4, 10) =>
+    (7, 9) to (7, 10) |}]
