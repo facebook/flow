@@ -588,3 +588,37 @@ import F, {type G, typeof H, J } from 'x';
       (5, 26) to (5, 27) => import typeof H from x;
       (5, 29) to (5, 30) => import J from x
     ] |}]
+
+let%expect_test "refi_instanceof" =
+  print_order_test {|
+class C {
+  foo() { y }
+}
+declare var x: mixed;
+var y;
+
+if (x instanceof C) {
+  y = x;
+}
+  |};
+  [%expect {|
+    (5, 12) to (5, 13) =>
+    illegal cycle: ((2, 6) to (2, 7) ->
+      (via (3, 10) to (3, 11)) (9, 2) to (9, 3) ->
+      (via (9, 6) to (9, 7)) (2, 6) to (2, 7)) |}]
+
+let%expect_test "refi_latent" =
+  print_order_test {|
+function f() { return y; }
+declare var x: mixed;
+var y;
+
+if (f(x)) {
+  y = x;
+}
+  |};
+  [%expect {|
+    (3, 12) to (3, 13) =>
+    illegal cycle: ((2, 9) to (2, 10) ->
+      (via (2, 22) to (2, 23)) (7, 2) to (7, 3) ->
+      (via (7, 6) to (7, 7)) (2, 9) to (2, 10)) |}]

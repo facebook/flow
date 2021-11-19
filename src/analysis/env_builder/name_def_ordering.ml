@@ -55,8 +55,8 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
     *)
 
     (* Helper class for the dependency analysis--traverse the AST nodes
-       in a def to determine which variables appead *)
-    class use_visitor { Env_api.env_values; _ } init =
+       in a def to determine which variables appear *)
+    class use_visitor ({ Env_api.env_values; _ } as env) init =
       object (this)
         inherit [L.t Nel.t L.LMap.t, L.t] Flow_ast_visitor.visitor ~init
 
@@ -70,23 +70,50 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
                 uses
           )
 
+        method find_writes ~for_type loc =
+          let write_locs = Env_api.write_locs_of_read_loc env_values loc in
+          let writes = Base.List.concat_map ~f:(Env_api.writes_of_write_loc ~for_type) write_locs in
+          let refinements =
+            Base.List.concat_map ~f:(Env_api.refinements_of_write_loc env) write_locs
+          in
+          let rec writes_of_refinement refi =
+            let open Env_api.Refi in
+            match refi with
+            | InstanceOfR loc
+            | LatentR { func_loc = loc; _ } ->
+              this#find_writes ~for_type:false loc
+            | AndR (l, r)
+            | OrR (l, r) ->
+              writes_of_refinement l @ writes_of_refinement r
+            | NotR r -> writes_of_refinement r
+            | TruthyR _
+            | NullR
+            | UndefinedR
+            | MaybeR
+            | IsArrayR
+            | BoolR _
+            | FunctionR
+            | NumberR _
+            | ObjectR
+            | StringR _
+            | SymbolR _
+            | SingletonBoolR _
+            | SingletonStrR _
+            | SingletonNumR _
+            | SentinelR _ ->
+              []
+          in
+          writes @ Base.List.concat_map ~f:writes_of_refinement refinements
+
         (* In order to resolve a def containing a variable read, the writes that the
            Name_resolver determines reach the variable must be resolved *)
         method! identifier ((loc, _) as id) =
-          let writes =
-            Env_api.write_locs_of_read_loc env_values loc
-            |> Base.List.map ~f:(Env_api.writes_of_write_loc ~for_type:false)
-            |> List.flatten
-          in
+          let writes = this#find_writes ~for_type:false loc in
           Base.List.iter ~f:(this#add ~why:loc) writes;
           id
 
         method! type_identifier_reference ((loc, _) as id) =
-          let writes =
-            Env_api.write_locs_of_read_loc env_values loc
-            |> Base.List.map ~f:(Env_api.writes_of_write_loc ~for_type:true)
-            |> List.flatten
-          in
+          let writes = this#find_writes ~for_type:true loc in
           Base.List.iter ~f:(this#add ~why:loc) writes;
           id
 

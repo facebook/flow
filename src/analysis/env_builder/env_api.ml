@@ -100,6 +100,8 @@ module type S = sig
 
   val writes_of_write_loc : for_type:bool -> write_loc -> L.t list
 
+  val refinements_of_write_loc : env_info -> write_loc -> refinement_kind list
+
   val print_values : values -> string
 
   val sources_of_use : for_type:bool -> env_info -> L.t -> L.LSet.t
@@ -237,6 +239,13 @@ module Make
     | Global _ -> []
     | Projection -> []
     | Unreachable _ -> []
+
+  let rec refinements_of_write_loc ({ refinement_of_id; _ } as env) write_loc =
+    match write_loc with
+    | Refinement { refinement_id; writes } ->
+      let writes = writes |> List.map (refinements_of_write_loc env) |> List.flatten in
+      (refinement_of_id refinement_id |> snd) :: writes
+    | _ -> []
 
   let sources_of_use ~for_type { env_values = vals; refinement_of_id; _ } loc =
     let write_locs =
