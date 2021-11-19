@@ -190,10 +190,10 @@ end
 let ty_normalizer_options =
   Ty_normalizer_env.
     {
-      expand_internal_types = true;
-      flag_shadowed_type_params = true;
+      expand_internal_types = false;
+      flag_shadowed_type_params = false;
       preserve_inferred_literal_types = false;
-      evaluate_type_destructors = true;
+      evaluate_type_destructors = false;
       optimize_types = true;
       omit_targ_defaults = false;
       merge_bot_and_any_kinds = true;
