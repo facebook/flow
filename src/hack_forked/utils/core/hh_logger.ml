@@ -6,20 +6,20 @@
  *)
 
 let timestamp_string () =
-  Unix.(
-    let tm = localtime (time ()) in
-    let ms = int_of_float (gettimeofday () *. 1000.) mod 1000 in
-    let year = tm.tm_year + 1900 in
-    Printf.sprintf
-      "[%d-%02d-%02d %02d:%02d:%02d.%03d]"
-      year
-      (tm.tm_mon + 1)
-      tm.tm_mday
-      tm.tm_hour
-      tm.tm_min
-      tm.tm_sec
-      ms
-  )
+  let open Unix in
+  let timeofday = gettimeofday () in
+  let tm = localtime timeofday in
+  let ms = int_of_float (timeofday *. 1000.) mod 1000 in
+  let year = tm.tm_year + 1900 in
+  Printf.sprintf
+    "[%d-%02d-%02d %02d:%02d:%02d.%03d]"
+    year
+    (tm.tm_mon + 1)
+    tm.tm_mday
+    tm.tm_hour
+    tm.tm_min
+    tm.tm_sec
+    ms
 
 type dest = {
   file: bool;
