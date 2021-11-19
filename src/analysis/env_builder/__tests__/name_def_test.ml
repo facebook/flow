@@ -54,6 +54,8 @@ let string_of_source = function
          ~default:"<anonymous>"
          id
       )
+  | DeclaredClass { Ast.Statement.DeclareClass.id = (_, { Ast.Identifier.name; _ }); _ } ->
+    spf "declared class %s" name
   | Class { class_ = { Ast.Class.id; _ }; _ } ->
     spf
       "class %s"
@@ -64,6 +66,8 @@ let string_of_source = function
       )
   | TypeAlias { Ast.Statement.TypeAlias.right = (loc, _); _ } ->
     spf "alias %s" (L.debug_to_string loc)
+  | OpaqueType { Ast.Statement.OpaqueType.id = (loc, _); _ } ->
+    spf "opaque %s" (L.debug_to_string loc)
   | TypeParam (loc, _) -> spf "tparam %s" (L.debug_to_string loc)
   | Enum (loc, _) -> spf "enum %s" (L.debug_to_string loc)
   | Interface _ -> "interface"
@@ -622,3 +626,39 @@ if (f(x)) {
     illegal cycle: ((2, 9) to (2, 10) ->
       (via (2, 22) to (2, 23)) (7, 2) to (7, 3) ->
       (via (7, 6) to (7, 7)) (2, 9) to (2, 10)) |}]
+
+let%expect_test "declare_class" =
+  print_order_test {|
+var f: C = 42;
+type S = typeof f;
+declare class C mixins S { }
+  |};
+  [%expect {|
+    illegal cycle: ((2, 4) to (2, 5) ->
+      (via (2, 7) to (2, 8)) (4, 14) to (4, 15) ->
+      (via (4, 23) to (4, 24)) (3, 5) to (3, 6) ->
+      (via (3, 16) to (3, 17)) (2, 4) to (2, 5)) |}]
+
+let%expect_test "declare_class2" =
+  print_order_test {|
+declare class C<S> {
+  foo<T>(x: T): P;
+}
+  |};
+  [%expect {|
+    (2, 16) to (2, 17) =>
+    (3, 6) to (3, 7) =>
+    (2, 14) to (2, 15) |}]
+
+let%expect_test "opaque" =
+  print_order_test {|
+type Y<W> = T<W>
+type S<T> = T
+opaque type T<X>: S<X> = Y<X>
+  |};
+  [%expect {|
+    (2, 7) to (2, 8) =>
+    (3, 7) to (3, 8) =>
+    (3, 5) to (3, 6) =>
+    (4, 14) to (4, 15) =>
+    legal cycle: (((2, 5) to (2, 6)); ((4, 12) to (4, 13))) |}]

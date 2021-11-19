@@ -52,7 +52,9 @@ module Make (L : Loc_sig.S) = struct
         fully_annotated: bool;
         class_: (L.t, L.t) Ast.Class.t;
       }
+    | DeclaredClass of (L.t, L.t) Ast.Statement.DeclareClass.t
     | TypeAlias of (L.t, L.t) Ast.Statement.TypeAlias.t
+    | OpaqueType of (L.t, L.t) Ast.Statement.OpaqueType.t
     | TypeParam of (L.t, L.t) Ast.Type.TypeParam.t
     | Interface of (L.t, L.t) Ast.Statement.Interface.t
     | Enum of L.t Ast.Statement.EnumDeclaration.body
@@ -267,6 +269,12 @@ module Make (L : Loc_sig.S) = struct
         this#add_binding id_loc (Binding (id_loc, Root (Annotation annot)));
         super#declare_function loc decl
 
+      method! declare_class loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =
+        let open Ast.Statement.DeclareClass in
+        let { id = (id_loc, _); _ } = decl in
+        this#add_binding id_loc (DeclaredClass decl);
+        super#declare_class loc decl
+
       method! assignment loc (expr : ('loc, 'loc) Ast.Expression.Assignment.t) =
         let open Ast.Expression.Assignment in
         let { operator; left = (_, lhs_node) as left; right; comments = _ } = expr in
@@ -284,6 +292,12 @@ module Make (L : Loc_sig.S) = struct
         let { id = (id_loc, _); _ } = alias in
         this#add_binding id_loc (TypeAlias alias);
         super#type_alias loc alias
+
+      method! opaque_type loc (otype : ('loc, 'loc) Ast.Statement.OpaqueType.t) =
+        let open Ast.Statement.OpaqueType in
+        let { id = (id_loc, _); _ } = otype in
+        this#add_binding id_loc (OpaqueType otype);
+        super#opaque_type loc otype
 
       method! type_param (tparam : ('loc, 'loc) Ast.Type.TypeParam.t) =
         let open Ast.Type.TypeParam in

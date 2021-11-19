@@ -232,12 +232,43 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
             ())
           L.LMap.empty
       in
+      let depends_of_declared_class
+          {
+            Ast.Statement.DeclareClass.id = _;
+            tparams;
+            body;
+            extends;
+            mixins;
+            implements;
+            comments = _;
+          } =
+        depends_of_node
+          (fun visitor ->
+            let open Flow_ast_mapper in
+            let _ = map_opt visitor#type_params tparams in
+            let _ = map_loc visitor#object_type body in
+            let _ = map_opt (map_loc visitor#generic_type) extends in
+            let _ = map_list (map_loc visitor#generic_type) mixins in
+            let _ = map_opt visitor#class_implements implements in
+            ())
+          L.LMap.empty
+      in
       let depends_of_alias { Ast.Statement.TypeAlias.tparams; right; _ } =
         depends_of_node
           (fun visitor ->
             let open Flow_ast_mapper in
             let _ = map_opt visitor#type_params tparams in
             let _ = visitor#type_ right in
+            ())
+          L.LMap.empty
+      in
+      let depends_of_opaque { Ast.Statement.OpaqueType.tparams; impltype; supertype; _ } =
+        depends_of_node
+          (fun visitor ->
+            let open Flow_ast_mapper in
+            let _ = map_opt visitor#type_params tparams in
+            let _ = map_opt visitor#type_ impltype in
+            let _ = map_opt visitor#type_ supertype in
             ())
           L.LMap.empty
       in
@@ -313,7 +344,9 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
       | Binding (id_loc, binding) -> depends_of_binding id_loc binding
       | Function { fully_annotated; function_ } -> depends_of_fun fully_annotated function_
       | Class { fully_annotated; class_ } -> depends_of_class fully_annotated class_
+      | DeclaredClass decl -> depends_of_declared_class decl
       | TypeAlias alias -> depends_of_alias alias
+      | OpaqueType alias -> depends_of_opaque alias
       | TypeParam tparam -> depends_of_tparam tparam
       | Interface inter -> depends_of_interface inter
       | Enum _ ->
@@ -324,6 +357,7 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
        resolved? *)
     let recursively_resolvable = function
       | TypeAlias _
+      | OpaqueType _
       | TypeParam _
       | Interface _
       (* Imports are academic here since they can't be in a cycle anyways, since they depend on nothing *)
@@ -334,7 +368,8 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
               Named { kind = Some Ast.Statement.ImportDeclaration.(ImportType | ImportTypeof); _ };
             _;
           }
-      | Class { fully_annotated = true; _ } ->
+      | Class { fully_annotated = true; _ }
+      | DeclaredClass _ ->
         true
       | Binding _
       | Function _
@@ -360,7 +395,15 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
     let graph = build_graph env map in
     let order_graph = L.LMap.map (fun deps -> L.LMap.keys deps |> L.LSet.of_list) graph in
     let roots = L.LMap.keys order_graph |> L.LSet.of_list in
-    let sort = Tarjan.topsort ~roots order_graph |> List.rev in
+    let sort =
+      try Tarjan.topsort ~roots order_graph |> List.rev with
+      | Not_found ->
+        failwith
+          (L.LSet.elements roots
+          |> Base.List.map ~f:(L.debug_to_string ~include_source:true)
+          |> String.concat ","
+          )
+    in
     (* Tarjan gives us a sorted list, but we still need to figure out if the cycles
        are legal (all type definitions) or not, and whether non-cycles are actually cycles that point to
        themselves. *)
