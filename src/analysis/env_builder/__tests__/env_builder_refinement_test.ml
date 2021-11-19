@@ -4442,3 +4442,21 @@ function f() {
       (5, 6) to (5, 7) => {
         (3, 4) to (3, 5): (`x`)
       }] |}]
+
+let%expect_test "class3" =
+  print_ssa_test {|
+class C {
+  foo: D;
+}
+class D extends C {
+  bar;
+}
+  |};
+  [%expect {|
+    [
+      (3, 7) to (3, 8) => {
+        (uninitialized class) (5, 6) to (5, 7): (`D`)
+      };
+      (5, 16) to (5, 17) => {
+        (2, 6) to (2, 7): (`C`)
+      }] |}]

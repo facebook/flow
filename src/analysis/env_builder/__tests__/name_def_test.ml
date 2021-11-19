@@ -31,15 +31,22 @@ let rec string_of_binding = function
 
 let string_of_source = function
   | Binding (_, b) -> string_of_binding b
-  | Function (InferredFunction { Ast.Function.id; _ }) ->
+  | Function { function_ = { Ast.Function.id; _ }; _ } ->
     spf
-      "fun/inferred %s"
+      "fun %s"
       (Base.Option.value_map
          ~f:(fun (_, { Ast.Identifier.name; _ }) -> name)
          ~default:"<anonymous>"
          id
       )
-  | Function (ReturnAnnotatedFunction _) -> "fun/annotated"
+  | Class { class_ = { Ast.Class.id; _ }; _ } ->
+    spf
+      "class %s"
+      (Base.Option.value_map
+         ~f:(fun (_, { Ast.Identifier.name; _ }) -> name)
+         ~default:"<anonymous>"
+         id
+      )
   | TypeAlias { Ast.Statement.TypeAlias.right = (loc, _); _ } ->
     spf "alias %s" (L.debug_to_string loc)
   | TypeParam (loc, _) -> spf "tparam %s" (L.debug_to_string loc)
@@ -64,23 +71,29 @@ let print_order lst =
   let msg =
     Base.List.map
       ~f:(function
-        | Singleton key -> Key.to_string key
+        | Singleton key -> L.debug_to_string key
         | ReflCycle (key, why) ->
-          Printf.sprintf "illegal self-cycle: (%s via %s)" (Key.to_string key) (string_of_why why)
+          Printf.sprintf
+            "illegal self-cycle: (%s via %s)"
+            (L.debug_to_string key)
+            (string_of_why why)
         | IllegalCycle ((fst_key, fst_why), rest) ->
           Printf.sprintf
             "illegal cycle: (%s -> \n  %s)"
-            (Key.to_string fst_key)
+            (L.debug_to_string fst_key)
             (List.map
                (fun (key, why) ->
-                 Printf.sprintf "(via %s) %s" (string_of_why why) (Key.to_string key))
+                 Printf.sprintf "(via %s) %s" (string_of_why why) (L.debug_to_string key))
                (rest @ [(fst_key, fst_why)])
             |> String.concat " -> \n  "
             )
         | TypeCycle keys ->
           Printf.sprintf
             "legal cycle: ((%s))"
-            (Nel.map Key.to_string keys |> Nel.to_list |> String.concat "); ("))
+            (Nel.map (L.debug_to_string ?include_source:None) keys
+            |> Nel.to_list
+            |> String.concat "); ("
+            ))
       lst
     |> String.concat " => \n"
   in
@@ -225,7 +238,7 @@ function f(y, z: number) {
   |};
   [%expect {|
     [
-      (2, 9) to (2, 10) => fun/inferred f;
+      (2, 9) to (2, 10) => fun f;
       (2, 11) to (2, 12) => contextual;
       (2, 14) to (2, 15) => annot (2, 15) to (2, 23);
       (3, 2) to (3, 3) => val (3, 6) to (3, 8)
@@ -240,7 +253,7 @@ var w = function f(y, z: number) {
   [%expect {|
     [
       (2, 4) to (2, 5) => val (2, 8) to (4, 1);
-      (2, 17) to (2, 18) => fun/inferred f;
+      (2, 17) to (2, 18) => fun f;
       (2, 19) to (2, 20) => contextual;
       (2, 22) to (2, 23) => annot (2, 23) to (2, 31);
       (3, 2) to (3, 3) => val (3, 6) to (3, 8)
@@ -275,8 +288,8 @@ let x = 1;
 let y = x;
   |};
   [%expect {|
-    term((2, 4) to (2, 5)) =>
-    term((3, 4) to (3, 5)) |}]
+    (2, 4) to (2, 5) =>
+    (3, 4) to (3, 5) |}]
 
 let%expect_test "deps_on_type" =
   print_order_test {|
@@ -285,9 +298,9 @@ let x: T = 1;
 let y = x;
   |};
   [%expect {|
-    type((2, 5) to (2, 6)) =>
-    term((3, 4) to (3, 5)) =>
-    term((4, 4) to (4, 5)) |}]
+    (2, 5) to (2, 6) =>
+    (3, 4) to (3, 5) =>
+    (4, 4) to (4, 5) |}]
 
 let%expect_test "deps_recur" =
   print_order_test {|
@@ -298,10 +311,10 @@ function f() {
 }
   |};
   [%expect {|
-    type((2, 5) to (2, 6)) =>
-    term((3, 4) to (3, 5)) =>
-    term((5, 2) to (5, 3)) =>
-    term((4, 9) to (4, 10)) |}]
+    (2, 5) to (2, 6) =>
+    (3, 4) to (3, 5) =>
+    (5, 2) to (5, 3) =>
+    (4, 9) to (4, 10) |}]
 
 let%expect_test "recur_func" =
   print_order_test {|
@@ -310,7 +323,7 @@ function f() {
 }
   |};
   [%expect {|
-    illegal self-cycle: (term((2, 9) to (2, 10)) via (3, 9) to (3, 10)) |}]
+    illegal self-cycle: ((2, 9) to (2, 10) via (3, 9) to (3, 10)) |}]
 
 let%expect_test "recur_func_anno" =
   print_order_test {|
@@ -319,7 +332,7 @@ function f(): void {
 }
   |};
   [%expect {|
-    term((2, 9) to (2, 10)) |}]
+    (2, 9) to (2, 10) |}]
 
 let%expect_test "recur_fun_order" =
   print_order_test {|
@@ -328,7 +341,7 @@ function f() {
 }
   |};
   [%expect {|
-    illegal self-cycle: (term((2, 9) to (2, 10)) via (3, 9) to (3, 10)) |}]
+    illegal self-cycle: ((2, 9) to (2, 10) via (3, 9) to (3, 10)) |}]
 
 let%expect_test "deps1" =
   print_order_test {|
@@ -339,10 +352,10 @@ function f() {
 }
   |};
   [%expect {|
-    type((2, 5) to (2, 6)) =>
-    term((3, 4) to (3, 5)) =>
-    term((5, 2) to (5, 3)) =>
-    term((4, 9) to (4, 10)) |}]
+    (2, 5) to (2, 6) =>
+    (3, 4) to (3, 5) =>
+    (5, 2) to (5, 3) =>
+    (4, 9) to (4, 10) |}]
 
 let%expect_test "deps2" =
   print_order_test {|
@@ -357,36 +370,15 @@ function nested() {
 }
   |};
   [%expect {|
-    illegal cycle: (term((7, 2) to (7, 3)) ->
-      (via (7, 6) to (7, 7)) term((8, 2) to (8, 3)) ->
-      (via (8, 6) to (8, 7)) term((9, 2) to (9, 3)) ->
-      (via (9, 6) to (9, 7)) term((7, 2) to (7, 3))) =>
-    term((6, 9) to (6, 15)) =>
-    type((2, 5) to (2, 6)) =>
-    legal cycle: ((type((3, 5) to (3, 6))); (type((4, 5) to (4, 6)))) |}]
+    (2, 5) to (2, 6) =>
+    legal cycle: (((3, 5) to (3, 6)); ((4, 5) to (4, 6))) =>
+    illegal cycle: ((7, 2) to (7, 3) ->
+      (via (7, 6) to (7, 7)) (8, 2) to (8, 3) ->
+      (via (8, 6) to (8, 7)) (9, 2) to (9, 3) ->
+      (via (9, 6) to (9, 7)) (7, 2) to (7, 3)) =>
+    (6, 9) to (6, 15) |}]
 
-let%expect_test "deps2" =
-  print_order_test {|
-type T = Array<T>;
-type S = W;
-type W = S;
-let x, y, z;
-function nested() {
-  x = y;
-  y = z;
-  z = x;
-}
-  |};
-  [%expect {|
-    illegal cycle: (term((7, 2) to (7, 3)) ->
-      (via (7, 6) to (7, 7)) term((8, 2) to (8, 3)) ->
-      (via (8, 6) to (8, 7)) term((9, 2) to (9, 3)) ->
-      (via (9, 6) to (9, 7)) term((7, 2) to (7, 3))) =>
-    term((6, 9) to (6, 15)) =>
-    type((2, 5) to (2, 6)) =>
-    legal cycle: ((type((3, 5) to (3, 6))); (type((4, 5) to (4, 6)))) |}]
-
-let%expect_test "deps2" =
+let%expect_test "deps2a" =
   print_order_test {|
 let x = f();
 function f() {
@@ -394,9 +386,9 @@ function f() {
 }
   |};
   [%expect {|
-    illegal cycle: (term((2, 4) to (2, 5)) ->
-      (via (2, 8) to (2, 9)) term((3, 9) to (3, 10)) ->
-      (via (4, 9) to (4, 10)) term((2, 4) to (2, 5))) |}]
+    illegal cycle: ((2, 4) to (2, 5) ->
+      (via (2, 8) to (2, 9)) (3, 9) to (3, 10) ->
+      (via (4, 9) to (4, 10)) (2, 4) to (2, 5)) |}]
 
 let%expect_test "deps3" =
   print_order_test {|
@@ -412,10 +404,10 @@ x = 42;
 (x: number);
   |};
   [%expect {|
-    term((6, 4) to (6, 5)) =>
-    term((10, 0) to (10, 1)) =>
-    term((3, 2) to (3, 3)) =>
-    term((2, 9) to (2, 21)) |}]
+    (6, 4) to (6, 5) =>
+    (10, 0) to (10, 1) =>
+    (3, 2) to (3, 3) =>
+    (2, 9) to (2, 21) |}]
 
 let%expect_test "typeof1" =
   print_order_test {|
@@ -424,9 +416,9 @@ type T = typeof x;
 var z: T = 100;
   |};
   [%expect {|
-    term((2, 4) to (2, 5)) =>
-    type((3, 5) to (3, 6)) =>
-    term((4, 4) to (4, 5)) |}]
+    (2, 4) to (2, 5) =>
+    (3, 5) to (3, 6) =>
+    (4, 4) to (4, 5) |}]
 
 let%expect_test "typeof2" =
   print_order_test {|
@@ -434,6 +426,94 @@ var x: T = 42;
 type T = typeof x;
   |};
   [%expect {|
-    illegal cycle: (term((2, 4) to (2, 5)) ->
-      (via (2, 7) to (2, 8)) type((3, 5) to (3, 6)) ->
-      (via (3, 16) to (3, 17)) term((2, 4) to (2, 5))) |}]
+    illegal cycle: ((2, 4) to (2, 5) ->
+      (via (2, 7) to (2, 8)) (3, 5) to (3, 6) ->
+      (via (3, 16) to (3, 17)) (2, 4) to (2, 5)) |}]
+
+let%expect_test "func_exp" =
+  print_order_test {|
+var y = function f(): number {
+  return 42;
+}
+  |};
+  [%expect {|
+    (2, 17) to (2, 18) =>
+    (2, 4) to (2, 5) |}]
+
+let%expect_test "class_def" =
+  print_init_test {|
+let x;
+class C {
+  foo() { x = 42; }
+}
+x = 10;
+  |};
+  [%expect {|
+    [
+      (3, 6) to (3, 7) => class C;
+      (4, 10) to (4, 11) => val (4, 14) to (4, 16);
+      (6, 0) to (6, 1) => val (6, 4) to (6, 6)
+    ] |}]
+
+let%expect_test "class_def2" =
+  print_init_test {|
+var x = 42;
+let foo = class C<Y: typeof x> { };
+  |};
+  [%expect {|
+    [
+      (2, 4) to (2, 5) => val (2, 8) to (2, 10);
+      (3, 4) to (3, 7) => val (3, 10) to (3, 34);
+      (3, 16) to (3, 17) => class C;
+      (3, 18) to (3, 19) => tparam (3, 18) to (3, 29)
+    ] |}]
+
+let%expect_test "class1" =
+  print_order_test {|
+let x;
+class C {
+  foo() { x = 42; }
+}
+x = 10;
+  |};
+  [%expect {|
+    (6, 0) to (6, 1) =>
+    (4, 10) to (4, 11) =>
+    (3, 6) to (3, 7) |}]
+
+let%expect_test "class2" =
+  print_order_test {|
+var x = 42;
+let foo = class C<Y: typeof x> { };
+  |};
+  [%expect {|
+    (2, 4) to (2, 5) =>
+    (3, 18) to (3, 19) =>
+    (3, 16) to (3, 17) =>
+    (3, 4) to (3, 7) |}]
+
+let%expect_test "class3" =
+  print_order_test {|
+class C {
+  foo: D;
+}
+class D extends C {
+  bar;
+}
+  |};
+  [%expect {|
+    illegal cycle: ((2, 6) to (2, 7) ->
+      (via (3, 7) to (3, 8)) (5, 6) to (5, 7) ->
+      (via (5, 16) to (5, 17)) (2, 6) to (2, 7)) |}]
+
+let%expect_test "class3_anno" =
+  print_order_test {|
+class C {
+  foo: D;
+}
+class D extends C {
+  bar: C;
+}
+  |};
+  [%expect {|
+    legal cycle: (((2, 6) to (2, 7)); ((5, 6) to (5, 7))) |}]

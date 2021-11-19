@@ -13,38 +13,18 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
   module Name_def = Name_def.Make (L)
   open Name_def
 
-  module Key = struct
-    type t =
-      | Type of L.t
-      | Term of L.t
+  module Tarjan =
+    Tarjan.Make
+      (struct
+        include L
 
-    let compare l1 l2 =
-      match (l1, l2) with
-      | (Type _, Term _) -> 1
-      | (Term _, Type _) -> -1
-      | (Term l1, Term l2)
-      | (Type l1, Type l2) ->
-        L.compare l1 l2
-
-    let to_string l =
-      let open Utils_js in
-      match l with
-      | Type l -> spf "type(%s)" (L.debug_to_string l)
-      | Term l -> spf "term(%s)" (L.debug_to_string l)
-
-    let loc_of_key l =
-      match l with
-      | Type l
-      | Term l ->
-        l
-  end
-
-  module KeySet = Flow_set.Make (Key)
-  module KeyMap = WrappedMap.Make (Key)
-  module Tarjan = Tarjan.Make (Key) (KeyMap) (KeySet)
+        let to_string l = debug_to_string l
+      end)
+      (L.LMap)
+      (L.LSet)
 
   module FindDependencies : sig
-    val depends : Env_api.env_info -> Name_def.def -> L.t Nel.t KeyMap.t
+    val depends : Env_api.env_info -> Name_def.def -> L.t Nel.t L.LMap.t
 
     val recursively_resolvable : Name_def.def -> bool
   end = struct
@@ -78,35 +58,27 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
        in a def to determine which variables appead *)
     class use_visitor { Env_api.env_values; _ } init =
       object (this)
-        inherit [L.t Nel.t KeyMap.t, L.t] Flow_ast_visitor.visitor ~init
+        inherit [L.t Nel.t L.LMap.t, L.t] Flow_ast_visitor.visitor ~init
 
-        method add key loc =
+        method add ~why t =
           this#update_acc (fun uses ->
-              KeyMap.update
-                key
+              L.LMap.update
+                t
                 (function
-                  | None -> Some (Nel.one loc)
-                  | Some locs -> Some (Nel.cons loc locs))
+                  | None -> Some (Nel.one why)
+                  | Some locs -> Some (Nel.cons why locs))
                 uses
           )
 
-        method add_type ~why t =
-          let key = Key.Type t in
-          this#add key why
-
-        method add_term ~why t =
-          let key = Key.Term t in
-          this#add key why
-
         (* In order to resolve a def containing a variable read, the writes that the
-           Name_resolver detemines reach the variable must be resolved *)
+           Name_resolver determines reach the variable must be resolved *)
         method! identifier ((loc, _) as id) =
           let writes =
             Env_api.write_locs_of_read_loc env_values loc
             |> Base.List.map ~f:(Env_api.writes_of_write_loc ~for_type:false)
             |> List.flatten
           in
-          Base.List.iter ~f:(this#add_term ~why:loc) writes;
+          Base.List.iter ~f:(this#add ~why:loc) writes;
           id
 
         method! type_identifier_reference ((loc, _) as id) =
@@ -115,24 +87,77 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
             |> Base.List.map ~f:(Env_api.writes_of_write_loc ~for_type:true)
             |> List.flatten
           in
-          Base.List.iter ~f:(this#add_type ~why:loc) writes;
+          Base.List.iter ~f:(this#add ~why:loc) writes;
           id
 
         (* In order to resolve a def containing a variable write, the
            write itself should first be resolved *)
         method! pattern_identifier ?kind:_ ((loc, _) as id) =
-          this#add_term ~why:loc loc;
+          this#add ~why:loc loc;
           id
 
         method! binding_type_identifier ((loc, _) as id) =
-          this#add_type ~why:loc loc;
+          this#add ~why:loc loc;
           id
+
+        method! object_key_identifier id = id
+
+        (* For classes/functions that are known to be fully annotated, we skip property bodies *)
+        method function_def ~fully_annotated (expr : ('loc, 'loc) Ast.Function.t) =
+          let open Ast.Function in
+          let { params; body; predicate; return; tparams; _ } = expr in
+          let open Flow_ast_mapper in
+          let _ = this#function_params params in
+          let _ =
+            if fully_annotated then
+              (this#type_annotation_hint return, body)
+            else
+              (return, this#function_body_any body)
+          in
+          let _ = map_opt this#predicate predicate in
+          let _ = map_opt this#type_params tparams in
+          ()
+
+        method class_body_annotated (cls_body : ('loc, 'loc) Ast.Class.Body.t) =
+          let open Ast.Class.Body in
+          let (_, { body; comments = _ }) = cls_body in
+          Base.List.iter ~f:this#class_element_annotated body;
+          cls_body
+
+        method class_element_annotated (elem : ('loc, 'loc) Ast.Class.Body.element) =
+          let open Ast.Class.Body in
+          match elem with
+          | Method (_, meth) -> this#class_method_annotated meth
+          | Property (_, prop) -> this#class_property_annotated prop
+          | PrivateField (_, field) -> this#class_private_field_annotated field
+
+        method class_method_annotated (meth : ('loc, 'loc) Ast.Class.Method.t') =
+          let open Ast.Class.Method in
+          let { kind = _; key; value = (_, value); static = _; decorators; comments = _ } = meth in
+          let _ = Base.List.map ~f:this#class_decorator decorators in
+          let _ = this#object_key key in
+          let _ = this#function_def ~fully_annotated:true value in
+          ()
+
+        method class_property_annotated (prop : ('loc, 'loc) Ast.Class.Property.t') =
+          let open Ast.Class.Property in
+          let { key; value = _; annot; static = _; variance = _; comments = _ } = prop in
+          let _ = this#object_key key in
+          let _ = this#type_annotation_hint annot in
+          ()
+
+        method class_private_field_annotated (prop : ('loc, 'loc) Ast.Class.PrivateField.t') =
+          let open Ast.Class.PrivateField in
+          let { key; value = _; annot; static = _; variance = _; comments = _ } = prop in
+          let _ = this#private_name key in
+          let _ = this#type_annotation_hint annot in
+          ()
       end
 
     (* For all the possible defs, explore the def's structure with the class above
        to find what variables have to be resolved before this def itself can be resolved *)
     let depends ({ Env_api.providers; _ } as env) =
-      let visitor = new use_visitor env KeyMap.empty in
+      let visitor = new use_visitor env L.LMap.empty in
       let depends_of_node mk_visit state =
         visitor#set_acc state;
         let node_visit () = mk_visit visitor in
@@ -146,39 +171,29 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
       let depends_of_expression expr =
         depends_of_node (fun visitor -> ignore @@ visitor#expression expr)
       in
-      let depends_of_inferred_fun
-          {
-            Ast.Function.id = _;
-            params;
-            body;
-            async = _;
-            generator = _;
-            predicate;
-            return = _;
-            tparams;
-            comments = _;
-            sig_loc = _;
-          } =
+      let depends_of_fun fully_annotated function_ =
         depends_of_node
-          (fun visitor ->
-            let open Flow_ast_mapper in
-            let _ = visitor#function_params params in
-            let _ = visitor#function_body_any body in
-            let _ = map_opt visitor#predicate predicate in
-            let _ = map_opt visitor#type_params tparams in
-            ())
-          KeyMap.empty
+          (fun visitor -> visitor#function_def ~fully_annotated function_)
+          L.LMap.empty
       in
-      let depends_of_annotated_fun ~tparams ~params ~return ~predicate =
+      let depends_of_class
+          fully_annotated
+          { Ast.Class.id = _; body; tparams; extends; implements; class_decorators; comments = _ } =
         depends_of_node
           (fun visitor ->
             let open Flow_ast_mapper in
-            let _ = visitor#function_params params in
-            let _ = visitor#type_annotation_hint return in
-            let _ = map_opt visitor#predicate predicate in
+            let _ =
+              if fully_annotated then
+                visitor#class_body_annotated body
+              else
+                visitor#class_body body
+            in
+            let _ = map_opt (map_loc visitor#class_extends) extends in
+            let _ = map_opt visitor#class_implements implements in
+            let _ = map_list visitor#class_decorator class_decorators in
             let _ = map_opt visitor#type_params tparams in
             ())
-          KeyMap.empty
+          L.LMap.empty
       in
       let depends_of_alias { Ast.Statement.TypeAlias.tparams; right; _ } =
         depends_of_node
@@ -187,7 +202,7 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
             let _ = map_opt visitor#type_params tparams in
             let _ = visitor#type_ right in
             ())
-          KeyMap.empty
+          L.LMap.empty
       in
       let depends_of_tparam (_, { Ast.Type.TypeParam.bound; variance; default; _ }) =
         depends_of_node
@@ -197,7 +212,7 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
             let _ = visitor#variance_opt variance in
             let _ = map_opt visitor#type_ default in
             ())
-          KeyMap.empty
+          L.LMap.empty
       in
       let depends_of_root state = function
         | Annotation anno -> depends_of_annotation anno state
@@ -225,10 +240,10 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
               Base.Option.value_exn (Provider_api.providers_of_def providers id_loc)
             in
             Base.List.fold
-              ~init:KeyMap.empty
+              ~init:L.LMap.empty
               ~f:(fun acc r ->
-                let key = Key.Term (Reason.poly_loc_of_reason r) in
-                KeyMap.update
+                let key = Reason.poly_loc_of_reason r in
+                L.LMap.update
                   key
                   (function
                     | None -> Some (Nel.one id_loc)
@@ -236,7 +251,7 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
                   acc)
               providers
           else
-            KeyMap.empty
+            L.LMap.empty
         in
         let rec rhs_loop bind state =
           match bind with
@@ -249,9 +264,8 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
       in
       function
       | Binding (id_loc, binding) -> depends_of_binding id_loc binding
-      | Function (ReturnAnnotatedFunction { tparams; params; return; predicate }) ->
-        depends_of_annotated_fun ~tparams ~params ~return ~predicate
-      | Function (InferredFunction fun_) -> depends_of_inferred_fun fun_
+      | Function { fully_annotated; function_ } -> depends_of_fun fully_annotated function_
+      | Class { fully_annotated; class_ } -> depends_of_class fully_annotated class_
       | TypeAlias alias -> depends_of_alias alias
       | TypeParam tparam -> depends_of_tparam tparam
 
@@ -259,78 +273,73 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
        resolved? *)
     let recursively_resolvable = function
       | TypeAlias _
-      | TypeParam _ ->
+      | TypeParam _
+      | Class { fully_annotated = true; _ } ->
         true
       | Binding _
-      | Function _ ->
+      | Function _
+      | Class { fully_annotated = false; _ } ->
         false
   end
 
   type result =
-    | Singleton of Key.t
-    | TypeCycle of Key.t Nel.t
-    | IllegalCycle of (Key.t * L.t Nel.t) Nel.t
-    | ReflCycle of Key.t * L.t Nel.t
+    | Singleton of L.t
+    | TypeCycle of L.t Nel.t
+    | IllegalCycle of (L.t * L.t Nel.t) Nel.t
+    | ReflCycle of L.t * L.t Nel.t
 
   let dependencies env loc def acc =
     let depends = FindDependencies.depends env def in
-    let key =
-      if FindDependencies.recursively_resolvable def then
-        Key.Type loc
-      else
-        Key.Term loc
-    in
-    KeyMap.add key depends acc
+    L.LMap.add loc depends acc
 
-  let build_graph env map = L.LMap.fold (dependencies env) map KeyMap.empty
+  let build_graph env map = L.LMap.fold (dependencies env) map L.LMap.empty
 
   let build_ordering env map =
     let graph = build_graph env map in
-    let order_graph = KeyMap.map (fun deps -> KeyMap.keys deps |> KeySet.of_list) graph in
-    let roots = KeyMap.keys order_graph |> KeySet.of_list in
+    let order_graph = L.LMap.map (fun deps -> L.LMap.keys deps |> L.LSet.of_list) graph in
+    let roots = L.LMap.keys order_graph |> L.LSet.of_list in
     let sort = Tarjan.topsort ~roots order_graph |> List.rev in
     (* Tarjan gives us a sorted list, but we still need to figure out if the cycles
        are legal (all type definitions) or not, and whether non-cycles are actually cycles that point to
        themselves. *)
     let result_of_non_cycle key =
-      let deps = KeyMap.find key graph in
-      match (key, KeyMap.find_opt key deps) with
-      | (Key.Term _, Some k) -> ReflCycle (key, k)
+      let deps = L.LMap.find key graph in
+      match L.LMap.find_opt key deps with
+      | Some k when not (FindDependencies.recursively_resolvable (L.LMap.find key map)) ->
+        ReflCycle (key, k)
       | _ -> Singleton key
     in
     let result_of_cycle (fst, keys) =
       if
         Base.List.for_all
-          ~f:(function
-            | Key.Type _ -> true
-            | Key.Term _ -> false)
+          ~f:(fun k -> FindDependencies.recursively_resolvable (L.LMap.find k map))
           (fst :: keys)
       then
         TypeCycle (fst, keys)
       else
         (* We should eventually do some work to choose the most-likely-candidate for annotation as a starting point *)
         let rec find_path remaining sequence key =
-          let deps = KeyMap.find key graph in
-          if KeySet.cardinal remaining = 0 then
+          let deps = L.LMap.find key graph in
+          if L.LSet.cardinal remaining = 0 then
             (* Is the initial node connected to this one? *)
-            match KeyMap.find_opt fst deps with
+            match L.LMap.find_opt fst deps with
             | Some links -> Some (sequence, links)
             | None -> None
           else
             (* Find the connected nodes that are in the set of remaining nodes to traverse *)
             let candidates =
-              KeySet.filter (fun k -> KeyMap.mem k deps) remaining |> KeySet.elements
+              L.LSet.filter (fun k -> L.LMap.mem k deps) remaining |> L.LSet.elements
             in
             Base.List.find_map
               ~f:(fun candidate ->
-                let link = KeyMap.find candidate deps in
+                let link = L.LMap.find candidate deps in
                 find_path
-                  (KeySet.remove candidate remaining)
+                  (L.LSet.remove candidate remaining)
                   ((candidate, link) :: sequence)
                   candidate)
               candidates
         in
-        let key_set = KeySet.of_list keys in
+        let key_set = L.LSet.of_list keys in
         match find_path key_set [] fst with
         | Some (sequence, link_to_fst) -> IllegalCycle ((fst, link_to_fst), List.rev sequence)
         | None -> failwith "Could not find cycle"

@@ -34,20 +34,20 @@ module Make (L : Loc_sig.S) = struct
     | Root of root
     | Select of selector * binding
 
-  type function_ =
-    | ReturnAnnotatedFunction of {
-        params: (L.t, L.t) Ast.Function.Params.t;
-        predicate: (L.t, L.t) Ast.Type.Predicate.t option;
-        return: (L.t, L.t) Ast.Type.annotation_or_hint;
-        tparams: (L.t, L.t) Ast.Type.TypeParams.t option;
-      }
-    | InferredFunction of (L.t, L.t) Ast.Function.t
-
   type def =
     | Binding of L.t * binding
-    | Function of function_
+    | Function of {
+        fully_annotated: bool;
+        function_: (L.t, L.t) Ast.Function.t;
+      }
+    | Class of {
+        fully_annotated: bool;
+        class_: (L.t, L.t) Ast.Class.t;
+      }
     | TypeAlias of (L.t, L.t) Ast.Statement.TypeAlias.t
     | TypeParam of (L.t, L.t) Ast.Type.TypeParam.t
+  (* | Interface
+     | Enum *)
 
   type map = def L.LMap.t
 
@@ -140,10 +140,44 @@ module Make (L : Loc_sig.S) = struct
       (fun ~f acc ps -> loop ~f acc [] false ps)
   end
 
-  let def_of_function ({ Ast.Function.tparams; predicate; params; return; _ } as func) =
+  let func_is_annotated { Ast.Function.return; _ } =
     match return with
-    | Ast.Type.Missing _ -> InferredFunction func
-    | Ast.Type.Available _ -> ReturnAnnotatedFunction { tparams; predicate; params; return }
+    | Ast.Type.Missing _ -> false
+    | Ast.Type.Available _ -> true
+
+  let def_of_function function_ =
+    Function { fully_annotated = func_is_annotated function_; function_ }
+
+  let def_of_class ({ Ast.Class.body = (_, { Ast.Class.Body.body; _ }); _ } as class_) =
+    let open Ast.Class.Body in
+    let fully_annotated =
+      Base.List.for_all
+        ~f:(function
+          | Method
+              ( _,
+                {
+                  Ast.Class.Method.key = Ast.Expression.Object.Property.Identifier _;
+                  value = (_, value);
+                  _;
+                }
+              ) ->
+            func_is_annotated value
+          | Method _ -> false
+          | Property
+              ( _,
+                {
+                  Ast.Class.Property.key = Ast.Expression.Object.Property.Identifier _;
+                  annot = Ast.Type.Available _;
+                  _;
+                }
+              ) ->
+            true
+          | Property _ -> false
+          | PrivateField (_, { Ast.Class.PrivateField.annot = Ast.Type.Available _; _ }) -> true
+          | PrivateField (_, { Ast.Class.PrivateField.annot = Ast.Type.Missing _; _ }) -> false)
+        body
+    in
+    Class { fully_annotated; class_ }
 
   class def_finder =
     object (this)
@@ -199,10 +233,20 @@ module Make (L : Loc_sig.S) = struct
         let { id; _ } = expr in
         begin
           match id with
-          | Some (id_loc, _) -> this#add_binding id_loc (Function (def_of_function expr))
+          | Some (id_loc, _) -> this#add_binding id_loc (def_of_function expr)
           | None -> ()
         end;
         super#function_ loc expr
+
+      method! class_ loc expr =
+        let open Ast.Class in
+        let { id; _ } = expr in
+        begin
+          match id with
+          | Some (id_loc, _) -> this#add_binding id_loc (def_of_class expr)
+          | None -> ()
+        end;
+        super#class_ loc expr
 
       method! declare_function loc (decl : ('loc, 'loc) Ast.Statement.DeclareFunction.t) =
         let open Ast.Statement.DeclareFunction in
