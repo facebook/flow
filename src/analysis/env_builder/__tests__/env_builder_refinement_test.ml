@@ -4425,3 +4425,20 @@ class C {
         (uninitialized class) (10, 6) to (10, 7): (`C`),
         (10, 6) to (10, 7): (`C`)
       }] |}]
+
+let%expect_test "deps_recur_broken_init" =
+  print_ssa_test {|
+type T = number;
+let x: T;
+function f() {
+  x = x;
+}
+  |};
+  [%expect {|
+    [
+      (3, 7) to (3, 8) => {
+        (2, 5) to (2, 6): (`T`)
+      };
+      (5, 6) to (5, 7) => {
+        (3, 4) to (3, 5): (`x`)
+      }] |}]

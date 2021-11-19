@@ -34,9 +34,18 @@ module Make (L : Loc_sig.S) = struct
     | Root of root
     | Select of selector * binding
 
+  type function_ =
+    | ReturnAnnotatedFunction of {
+        params: (L.t, L.t) Ast.Function.Params.t;
+        predicate: (L.t, L.t) Ast.Type.Predicate.t option;
+        return: (L.t, L.t) Ast.Type.annotation_or_hint;
+        tparams: (L.t, L.t) Ast.Type.TypeParams.t option;
+      }
+    | InferredFunction of (L.t, L.t) Ast.Function.t
+
   type def =
-    | Binding of binding
-    | Function of (L.t, L.t) Ast.Function.t
+    | Binding of L.t * binding
+    | Function of function_
     | TypeAlias of (L.t, L.t) Ast.Statement.TypeAlias.t
     | TypeParam of (L.t, L.t) Ast.Type.TypeParam.t
 
@@ -83,7 +92,7 @@ module Make (L : Loc_sig.S) = struct
         (acc, xs, true)
       | Property.Literal (_, _) -> (acc, xs, false)
 
-    let identifier ~f acc name_loc = f name_loc (Binding acc)
+    let identifier ~f acc name_loc = f name_loc (Binding (name_loc, acc))
 
     let rec pattern ~f acc (_, p) =
       match p with
@@ -131,6 +140,11 @@ module Make (L : Loc_sig.S) = struct
       (fun ~f acc ps -> loop ~f acc [] false ps)
   end
 
+  let def_of_function ({ Ast.Function.tparams; predicate; params; return; _ } as func) =
+    match return with
+    | Ast.Type.Missing _ -> InferredFunction func
+    | Ast.Type.Available _ -> ReturnAnnotatedFunction { tparams; predicate; params; return }
+
   class def_finder =
     object (this)
       inherit [map, L.t] Flow_ast_visitor.visitor ~init:L.LMap.empty as super
@@ -154,7 +168,7 @@ module Make (L : Loc_sig.S) = struct
       method! declare_variable loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
         let open Ast.Statement.DeclareVariable in
         let { id = (id_loc, _); annot; comments = _ } = decl in
-        this#add_binding id_loc (Binding (Root (Annotation annot)));
+        this#add_binding id_loc (Binding (id_loc, Root (Annotation annot)));
         super#declare_variable loc decl
 
       method! function_param (param : ('loc, 'loc) Ast.Function.Param.t) =
@@ -185,7 +199,7 @@ module Make (L : Loc_sig.S) = struct
         let { id; _ } = expr in
         begin
           match id with
-          | Some (id_loc, _) -> this#add_binding id_loc (Function expr)
+          | Some (id_loc, _) -> this#add_binding id_loc (Function (def_of_function expr))
           | None -> ()
         end;
         super#function_ loc expr
@@ -193,7 +207,7 @@ module Make (L : Loc_sig.S) = struct
       method! declare_function loc (decl : ('loc, 'loc) Ast.Statement.DeclareFunction.t) =
         let open Ast.Statement.DeclareFunction in
         let { id = (id_loc, _); annot; predicate = _; comments = _ } = decl in
-        this#add_binding id_loc (Binding (Root (Annotation annot)));
+        this#add_binding id_loc (Binding (id_loc, Root (Annotation annot)));
         super#declare_function loc decl
 
       method! assignment loc (expr : ('loc, 'loc) Ast.Expression.Assignment.t) =
