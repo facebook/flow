@@ -291,6 +291,7 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
       | Interface inter -> depends_of_interface inter
       | Enum _ ->
         (* Enums don't contain any code or type references, they're literal-like *) L.LMap.empty
+      | Import _ -> (* same with all imports *) L.LMap.empty
 
     (* Is the variable defined by this def able to be recursively depended on, e.g. created as a 0->1 tvar before being
        resolved? *)
@@ -298,11 +299,20 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
       | TypeAlias _
       | TypeParam _
       | Interface _
+      (* Imports are academic here since they can't be in a cycle anyways, since they depend on nothing *)
+      | Import { import_kind = Ast.Statement.ImportDeclaration.(ImportType | ImportTypeof); _ }
+      | Import
+          {
+            import =
+              Named { kind = Some Ast.Statement.ImportDeclaration.(ImportType | ImportTypeof); _ };
+            _;
+          }
       | Class { fully_annotated = true; _ } ->
         true
       | Binding _
       | Function _
       | Enum _
+      | Import _
       | Class { fully_annotated = false; _ } ->
         false
   end

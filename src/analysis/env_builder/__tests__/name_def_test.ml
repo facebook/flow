@@ -29,6 +29,21 @@ let rec string_of_binding = function
   | Root r -> string_of_root r
   | Select (sel, src) -> spf "(%s)%s" (string_of_binding src) (string_of_selector sel)
 
+let string_of_import_kind =
+  let open Ast.Statement.ImportDeclaration in
+  function
+  | ImportTypeof -> "typeof "
+  | ImportType -> "type "
+  | ImportValue -> ""
+
+let string_of_import =
+  let open Ast.Statement.ImportDeclaration in
+  function
+  | Named { kind; remote } ->
+    spf "%s%s" (Base.Option.value_map ~f:string_of_import_kind ~default:"" kind) remote
+  | Namespace -> "namespace"
+  | Default -> "default"
+
 let string_of_source = function
   | Binding (_, b) -> string_of_binding b
   | Function { function_ = { Ast.Function.id; _ }; _ } ->
@@ -52,6 +67,8 @@ let string_of_source = function
   | TypeParam (loc, _) -> spf "tparam %s" (L.debug_to_string loc)
   | Enum (loc, _) -> spf "enum %s" (L.debug_to_string loc)
   | Interface _ -> "interface"
+  | Import { import_kind; source; import } ->
+    spf "import %s%s from %s" (string_of_import_kind import_kind) (string_of_import import) source
 
 let print_values values =
   let kvlist = L.LMap.bindings values in
@@ -551,3 +568,23 @@ class C implements I { }
   |};
   [%expect {|
     legal cycle: (((2, 10) to (2, 11)); ((4, 6) to (4, 7)); ((3, 10) to (3, 11))) |}]
+
+let%expect_test "import" =
+  print_init_test {|
+import typeof B, * as A from 'x';
+import type C, * as D from 'x';
+import E from 'x';
+import F, {type G, typeof H, J } from 'x';
+  |};
+  [%expect {|
+    [
+      (2, 14) to (2, 15) => import typeof default from x;
+      (2, 22) to (2, 23) => import typeof namespace from x;
+      (3, 12) to (3, 13) => import type default from x;
+      (3, 20) to (3, 21) => import type namespace from x;
+      (4, 7) to (4, 8) => import default from x;
+      (5, 7) to (5, 8) => import default from x;
+      (5, 16) to (5, 17) => import type G from x;
+      (5, 26) to (5, 27) => import typeof H from x;
+      (5, 29) to (5, 30) => import J from x
+    ] |}]

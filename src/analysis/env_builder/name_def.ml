@@ -34,6 +34,14 @@ module Make (L : Loc_sig.S) = struct
     | Root of root
     | Select of selector * binding
 
+  type import =
+    | Named of {
+        kind: Ast.Statement.ImportDeclaration.import_kind option;
+        remote: string;
+      }
+    | Namespace
+    | Default
+
   type def =
     | Binding of L.t * binding
     | Function of {
@@ -48,6 +56,11 @@ module Make (L : Loc_sig.S) = struct
     | TypeParam of (L.t, L.t) Ast.Type.TypeParam.t
     | Interface of (L.t, L.t) Ast.Statement.Interface.t
     | Enum of L.t Ast.Statement.EnumDeclaration.body
+    | Import of {
+        import_kind: Ast.Statement.ImportDeclaration.import_kind;
+        import: import;
+        source: string;
+      }
 
   type map = def L.LMap.t
 
@@ -289,6 +302,39 @@ module Make (L : Loc_sig.S) = struct
         let { id = (name_loc, _); body; _ } = enum in
         this#add_binding name_loc (Enum body);
         super#enum_declaration loc enum
+
+      method! import_declaration loc (decl : ('loc, 'loc) Ast.Statement.ImportDeclaration.t) =
+        let open Ast.Statement.ImportDeclaration in
+        let {
+          import_kind;
+          source = (_, { Ast.StringLiteral.value = source; _ });
+          specifiers;
+          default;
+          comments = _;
+        } =
+          decl
+        in
+        begin
+          match specifiers with
+          | Some (ImportNamedSpecifiers specifiers) ->
+            Base.List.iter
+              ~f:(fun { kind; local; remote = (rem_id_loc, { Ast.Identifier.name = remote; _ }) } ->
+                let id_loc =
+                  Base.Option.value_map ~f:(fun (id_loc, _) -> id_loc) ~default:rem_id_loc local
+                in
+                this#add_binding
+                  id_loc
+                  (Import { import_kind; source; import = Named { kind; remote } }))
+              specifiers
+          | Some (ImportNamespaceSpecifier (_, (id_loc, _))) ->
+            this#add_binding id_loc (Import { import_kind; source; import = Namespace })
+          | None -> ()
+        end;
+        Base.Option.iter
+          ~f:(fun (id_loc, _) ->
+            this#add_binding id_loc (Import { import_kind; source; import = Default }))
+          default;
+        super#import_declaration loc decl
     end
 
   let find_defs ast =
