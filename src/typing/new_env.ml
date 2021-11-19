@@ -162,7 +162,7 @@ module New_env : Env_sig.S = struct
       | InstanceOfR loc ->
         (* Instanceof refinements store the loc they check against, which is a read in the env *)
         let reason = mk_reason (RCustom "RHS of `instanceof` operator") loc in
-        let t = read_entry cx loc reason in
+        let t = read_entry ~for_type:false cx loc reason in
         Flow_js.flow cx (t, AssertInstanceofRHST reason);
         LeftP (InstanceofTest, t)
       | IsArrayR -> ArrP
@@ -180,7 +180,7 @@ module New_env : Env_sig.S = struct
       | LatentR { func_loc; index } ->
         (* Latent refinements store the loc of the callee, which is a read in the env *)
         let reason = mk_reason (RCustom "Function call") func_loc in
-        let t = read_entry cx func_loc reason in
+        let t = read_entry ~for_type:false cx func_loc reason in
         LatentP (t, index)
     )
 
@@ -195,12 +195,24 @@ module New_env : Env_sig.S = struct
       ~default:t
       refi
 
-  and read_entry cx loc reason =
+  and read_entry ~for_type cx loc reason =
     let ({ Loc_env.var_info; _ } as env) = Context.environment cx in
     let rec type_of_state states refi =
       Base.List.map
         ~f:(function
           | Env_api.Uninitialized reason -> Type.(VoidT.make reason |> with_trust Trust.bogus_trust)
+          | Env_api.UninitializedClass { read; _ } when not for_type ->
+            Type.(VoidT.make read |> with_trust Trust.bogus_trust)
+          | Env_api.UninitializedClass { def; _ } ->
+            Debug_js.Verbose.print_if_verbose
+              cx
+              [
+                spf
+                  "reading %s from location %s"
+                  (ALoc.debug_to_string loc)
+                  (Reason.aloc_of_reason def |> ALoc.debug_to_string);
+              ];
+            Base.Option.value_exn (Reason.aloc_of_reason def |> Loc_env.find_write env)
           | Env_api.With_ALoc.Write reason ->
             Debug_js.Verbose.print_if_verbose
               cx
@@ -229,7 +241,7 @@ module New_env : Env_sig.S = struct
   let get_var ?(lookup_mode = ForValue) cx name loc =
     match lookup_mode with
     | ForType -> Old_env.get_var ~lookup_mode cx name loc
-    | _ -> read_entry cx loc (mk_reason (RIdentifier (OrdinaryName name)) loc)
+    | _ -> read_entry ~for_type:false cx loc (mk_reason (RIdentifier (OrdinaryName name)) loc)
 
   let query_var ?(lookup_mode = ForValue) cx name ?desc loc =
     match (name, lookup_mode) with
@@ -242,7 +254,7 @@ module New_env : Env_sig.S = struct
         | Some desc -> desc
         | None -> RIdentifier name
       in
-      read_entry cx loc (mk_reason desc loc)
+      read_entry ~for_type:false cx loc (mk_reason desc loc)
 
   let var_ref ?(lookup_mode = ForValue) cx ?desc name loc =
     let t = query_var ~lookup_mode cx name ?desc loc in
@@ -262,6 +274,7 @@ module New_env : Env_sig.S = struct
       Base.List.exists
         ~f:(function
           | Env_api.With_ALoc.Uninitialized _ -> true
+          | Env_api.With_ALoc.UninitializedClass _ -> true
           | Env_api.With_ALoc.Write _ -> true
           | Env_api.With_ALoc.Unreachable _ -> true
           | Env_api.With_ALoc.Refinement { refinement_id = _; writes } -> local_def_exists writes

@@ -38,7 +38,11 @@ struct
         )
 
       method! identifier ((loc, _) as id) =
-        this#update_convert_acc (Env_api.sources_of_use env loc |> L.LSet.elements);
+        this#update_convert_acc (Env_api.sources_of_use ~for_type:false env loc |> L.LSet.elements);
+        id
+
+      method! type_identifier_reference ((loc, _) as id) =
+        this#update_convert_acc (Env_api.sources_of_use ~for_type:true env loc |> L.LSet.elements);
         id
 
       method! pattern_identifier ?kind ((loc, _) as id) =

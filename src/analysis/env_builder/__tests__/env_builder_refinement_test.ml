@@ -15,6 +15,12 @@ let print_values refinement_of_id =
     match write_loc with
     | Uninitialized _ -> "(uninitialized)"
     | Projection -> "projection"
+    | UninitializedClass { def; _ } ->
+      let loc = Reason.poly_loc_of_reason def in
+      Utils_js.spf
+        "(uninitialized class) %s: (%s)"
+        (L.debug_to_string loc)
+        Reason.(desc_of_reason def |> string_of_desc)
     | Write reason ->
       let loc = Reason.poly_loc_of_reason reason in
       Utils_js.spf
@@ -4318,4 +4324,104 @@ x.a;
       };
       (4, 0) to (4, 3) => {
         (3, 0) to (3, 3): (some property)
+      }] |}]
+
+let%expect_test "class1" =
+  print_ssa_test {|
+(C: void); // as a value, C is undefined and in the TDZ
+
+declare var c: C; // as a type, C refers to the class below
+c.foo;
+
+class C {
+    foo: number;
+}
+  |};
+  [%expect {|
+    [
+      (2, 1) to (2, 2) => {
+        (uninitialized class) (7, 6) to (7, 7): (`C`)
+      };
+      (4, 15) to (4, 16) => {
+        (uninitialized class) (7, 6) to (7, 7): (`C`)
+      };
+      (5, 0) to (5, 1) => {
+        (4, 12) to (4, 13): (`c`)
+      }] |}]
+
+let%expect_test "class2" =
+  print_ssa_test {|
+class C {
+  foo: D;
+}
+class D extends C {
+  bar;
+}
+  |};
+  [%expect {|
+    [
+      (3, 7) to (3, 8) => {
+        (uninitialized class) (5, 6) to (5, 7): (`D`)
+      };
+      (5, 16) to (5, 17) => {
+        (2, 6) to (2, 7): (`C`)
+      }] |}]
+
+let%expect_test "class3" =
+  print_ssa_test {|
+C;
+class C {
+  x: C;
+}
+C;
+  |};
+  [%expect {|
+    [
+      (2, 0) to (2, 1) => {
+        (uninitialized class) (3, 6) to (3, 7): (`C`)
+      };
+      (4, 5) to (4, 6) => {
+        (3, 6) to (3, 7): (`C`)
+      };
+      (6, 0) to (6, 1) => {
+        (3, 6) to (3, 7): (`C`)
+      }] |}]
+
+let%expect_test "class4" =
+  print_ssa_test {|
+
+function havoced() {
+  C;
+}
+
+class C {
+}
+  |};
+  [%expect {|
+    [
+      (4, 2) to (4, 3) => {
+        (7, 6) to (7, 7): (`C`)
+      }] |}]
+
+let%expect_test "class5" =
+  print_ssa_test {|
+
+function havoc() {
+  C = 42;
+}
+
+havoc();
+C;
+
+class C {
+}
+  |};
+  [%expect {|
+    [
+      (7, 0) to (7, 5) => {
+        (3, 9) to (3, 14): (`havoc`)
+      };
+      (8, 0) to (8, 1) => {
+        (uninitialized class) (10, 6) to (10, 7): (`C`),
+        (10, 6) to (10, 7): (`C`)
       }] |}]

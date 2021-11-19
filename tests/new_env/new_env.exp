@@ -379,5 +379,30 @@ References:
                               ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- undef_class.js:3:16
 
-Found 23 errors
+Cannot assign `C` to `x` because uninitialized variable [1] is incompatible with empty [2]. [incompatible-type]
+
+   undef_class.js:3:16
+   3| var x: empty = C; // should be a TDZ error, but for now just undefined
+                     ^
+
+References:
+   undef_class.js:6:7
+   6| class C {}
+            ^ [1]
+   undef_class.js:3:8
+   3| var x: empty = C; // should be a TDZ error, but for now just undefined
+             ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- undef_class.js:4:5
+
+Cannot resolve name `C`. [cannot-resolve-name]
+
+   4| (x: C); // currently not actually a useful test, but when types are looked up in the new_env, should fail
+          ^
+
+
+
+Found 25 errors

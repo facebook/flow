@@ -144,6 +144,8 @@ module Make
 
     val uninitialized : L.t -> t
 
+    val uninitialized_class : L.t virtual_reason -> L.t -> t
+
     val merge : t -> t -> t
 
     val global : string -> t
@@ -151,6 +153,8 @@ module Make
     val one : L.t virtual_reason -> t
 
     val all : L.t virtual_reason list -> t
+
+    val of_write : write_state -> t
 
     val simplify : t -> Env_api.write_loc list
 
@@ -167,7 +171,7 @@ module Make
 
     val normalize_through_refinements : write_state -> WriteSet.t
 
-    val locs_of_uninitialized : (int -> bool) -> t -> L.t list
+    val writes_of_uninitialized : (int -> bool) -> t -> write_state list
 
     val is_global_undefined : t -> bool
   end = struct
@@ -175,6 +179,10 @@ module Make
 
     type write_state =
       | Uninitialized of L.t
+      | UninitializedClass of {
+          read: L.t;
+          def: L.t virtual_reason;
+        }
       | Projection
       | Global of string
       | Loc of L.t virtual_reason
@@ -203,9 +211,13 @@ module Make
       let id = new_id () in
       { id; write_state }
 
+    let of_write = mk_with_write_state
+
     let empty () = mk_with_write_state @@ PHI []
 
     let uninitialized r = mk_with_write_state (Uninitialized r)
+
+    let uninitialized_class def read = mk_with_write_state (UninitializedClass { def; read })
 
     let projection () = mk_with_write_state @@ Projection
 
@@ -247,6 +259,7 @@ module Make
     let rec normalize (t : write_state) : WriteSet.t =
       match t with
       | Uninitialized _
+      | UninitializedClass _
       | Projection
       | Global _
       | Loc _
@@ -277,6 +290,7 @@ module Make
     let rec normalize_through_refinements (t : write_state) : WriteSet.t =
       match t with
       | Uninitialized _
+      | UninitializedClass _
       | Projection
       | Global _
       | Loc _ ->
@@ -303,7 +317,11 @@ module Make
         ~f:(function
           | Uninitialized l when WriteSet.cardinal vals <= 1 ->
             Env_api.Uninitialized (mk_reason RUninitialized l)
+          | UninitializedClass { def; read } when WriteSet.cardinal vals <= 1 ->
+            Env_api.UninitializedClass { def; read = mk_reason RUninitialized read }
           | Uninitialized l -> Env_api.Uninitialized (mk_reason RPossiblyUninitialized l)
+          | UninitializedClass { def; read } ->
+            Env_api.UninitializedClass { def; read = mk_reason RPossiblyUninitialized read }
           | Projection -> Env_api.Projection
           | Loc r -> Env_api.Write r
           | Refinement { refinement_id; val_t } ->
@@ -314,10 +332,11 @@ module Make
 
     let id_of_val { id; write_state = _ } = id
 
-    let locs_of_uninitialized refine_to_undefined { write_state; _ } =
+    let writes_of_uninitialized refine_to_undefined { write_state; _ } =
       let rec state_is_uninitialized v =
         match v with
-        | Uninitialized l -> [l]
+        | Uninitialized _ -> [v]
+        | UninitializedClass _ -> [v]
         | PHI states -> Base.List.concat_map ~f:state_is_uninitialized states
         | Refinement { refinement_id; val_t = { write_state; _ } } ->
           let states = state_is_uninitialized write_state in
@@ -660,15 +679,15 @@ module Make
         SMap.iter
           (fun _x { val_ref; havoc; def_loc; heap_refinements } ->
             this#havoc_heap_refinements heap_refinements;
-            let uninitialized_locs =
-              lazy (Val.locs_of_uninitialized this#refinement_may_be_undefined !val_ref)
+            let uninitialized_writes =
+              lazy (Val.writes_of_uninitialized this#refinement_may_be_undefined !val_ref)
             in
             let havoc_ref =
               if not force_initialization then
                 Base.List.fold
                   ~init:havoc
-                  ~f:(fun acc loc -> Val.merge acc (Val.uninitialized loc))
-                  (Lazy.force uninitialized_locs)
+                  ~f:(fun acc write -> Val.merge acc (Val.of_write write))
+                  (Lazy.force uninitialized_writes)
               else
                 havoc
             in
@@ -680,7 +699,7 @@ module Make
                    prepass_info
                    prepass_values
                    (Base.Option.value_exn def_loc (* checked against none above *))
-              || (force_initialization && List.length (Lazy.force uninitialized_locs) > 0)
+              || (force_initialization && List.length (Lazy.force uninitialized_writes) > 0)
             then
               val_ref := havoc_ref)
           env_state.env
@@ -724,6 +743,22 @@ module Make
               {
                 val_ref = ref (Val.one reason);
                 havoc = Val.one reason;
+                def_loc = Some loc;
+                heap_refinements = ref HeapRefinementMap.empty;
+              }
+            | Bindings.Class ->
+              let (havoc, providers) = this#providers_of_def_loc loc in
+              let write_entries =
+                Base.List.fold
+                  ~f:(fun acc r -> L.LMap.add (poly_loc_of_reason r) r acc)
+                  ~init:env_state.write_entries
+                  providers
+              in
+              let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
+              env_state <- { env_state with write_entries };
+              {
+                val_ref = ref (Val.uninitialized_class reason loc);
+                havoc;
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
               }

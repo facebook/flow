@@ -50,7 +50,7 @@ let mk_sources_test contents expected_values ctxt =
     in
     Printf.sprintf "[ %s ]" (String.concat "; " strlist)
   in
-  let use_kinds = Name_resolver.With_Loc.Env_api.source_bindings info in
+  let use_kinds = Name_resolver.With_Loc.Env_api.source_bindings ~for_type:false info in
   assert_equal
     ~ctxt
     ~cmp:(eq printer)
@@ -59,9 +59,9 @@ let mk_sources_test contents expected_values ctxt =
     expected_values
     use_kinds
 
-let mk_source_of_use_test contents target_loc expected_values ctxt =
+let mk_source_of_use_test contents target_loc for_type expected_values ctxt =
   let (_, info) = Name_resolver.With_Loc.program_with_scope () (parse contents) in
-  let locs = Env_api.With_Loc.sources_of_use info target_loc in
+  let locs = Env_api.With_Loc.sources_of_use ~for_type info target_loc in
   assert_equal
     ~ctxt
     ~cmp:(eq print_locs)
@@ -98,6 +98,7 @@ let tests =
           "let x = 42;
 (x && x)"
           (mk_loc (2, 6) (2, 7))
+          false
           (LocSet.of_list [mk_loc (1, 4) (1, 5); mk_loc (2, 1) (2, 2)]);
     "refiner_of_use_2"
     >:: mk_source_of_use_test
@@ -110,6 +111,7 @@ function f() {
   (x !== true && x);
 }"
           (mk_loc (7, 17) (7, 18))
+          false
           (LocSet.of_list [mk_loc (3, 6) (3, 7); mk_loc (5, 4) (5, 5); mk_loc (7, 3) (7, 13)]);
     "constlike_havoc"
     >:: mk_source_of_use_test
@@ -123,6 +125,7 @@ x;
 x = 20;
 "
           (mk_loc (7, 0) (7, 1))
+          false
           (LocSet.of_list [mk_loc (5, 0) (5, 1)]);
     "nonconstlike_havoc"
     >:: mk_source_of_use_test
@@ -136,6 +139,7 @@ x;
 x = 20;
 "
           (mk_loc (7, 0) (7, 1))
+          false
           (LocSet.of_list [mk_loc (4, 4) (4, 5)]);
     "before"
     >:: mk_source_of_use_test
@@ -144,6 +148,7 @@ function f() { x };
 var x = 10;
 "
           (mk_loc (2, 15) (2, 16))
+          false
           (LocSet.of_list [mk_loc (3, 4) (3, 5)]);
     "merge"
     >:: mk_source_of_use_test
@@ -155,6 +160,7 @@ f();
 (x !== 'number' && x);
 "
           (mk_loc (6, 19) (6, 20))
+          false
           (LocSet.of_list [mk_loc (3, 4) (3, 5); mk_loc (6, 1) (6, 15)]);
     "merge_nonhavoc"
     >:: mk_source_of_use_test
@@ -166,7 +172,22 @@ f();
 (x !== 'number' && x);
 "
           (mk_loc (6, 19) (6, 20))
+          false
           (LocSet.of_list [mk_loc (4, 0) (4, 1); mk_loc (6, 1) (6, 15)]);
+    "class_as_val"
+    >:: mk_source_of_use_test "
+C;
+class C { }
+" (mk_loc (2, 0) (2, 1)) false (LocSet.of_list []);
+    "class_as_type"
+    >:: mk_source_of_use_test
+          "
+(1: C);
+class C { }
+"
+          (mk_loc (2, 4) (2, 5))
+          true
+          (LocSet.of_list [mk_loc (3, 6) (3, 7)]);
     (* These tests are intentionally commented out in this diff so that Jordan can
      * address handling globals in the EnvBuilder given the new way of modeling
      * refinements as writes

@@ -23,6 +23,10 @@ module type S = sig
   type write_loc =
     | Write of L.t Reason.virtual_reason
     | Uninitialized of L.t Reason.virtual_reason
+    | UninitializedClass of {
+        read: L.t Reason.virtual_reason;
+        def: L.t Reason.virtual_reason;
+      }
     | Refinement of {
         refinement_id: int;
         writes: write_locs;
@@ -94,13 +98,13 @@ module type S = sig
 
   val write_locs_of_read_loc : values -> read_loc -> write_locs
 
-  val writes_of_write_loc : write_loc -> L.t list
+  val writes_of_write_loc : for_type:bool -> write_loc -> L.t list
 
   val print_values : values -> string
 
-  val sources_of_use : env_info -> L.t -> L.LSet.t
+  val sources_of_use : for_type:bool -> env_info -> L.t -> L.LSet.t
 
-  val source_bindings : env_info -> L.LSet.t L.LMap.t
+  val source_bindings : for_type:bool -> env_info -> L.LSet.t L.LMap.t
 
   val show_refinement_kind : refinement_kind -> string
 
@@ -136,6 +140,10 @@ module Make
   type write_loc =
     | Write of L.t Reason.virtual_reason
     | Uninitialized of L.t Reason.virtual_reason
+    | UninitializedClass of {
+        read: L.t Reason.virtual_reason;
+        def: L.t Reason.virtual_reason;
+      }
     | Refinement of {
         refinement_id: int;
         writes: write_locs;
@@ -218,20 +226,22 @@ module Make
 
   let write_locs_of_read_loc values read_loc = L.LMap.find read_loc values
 
-  let rec writes_of_write_loc write_loc =
+  let rec writes_of_write_loc ~for_type write_loc =
     match write_loc with
     | Refinement { refinement_id = _; writes } ->
-      writes |> List.map writes_of_write_loc |> List.flatten
+      writes |> List.map (writes_of_write_loc ~for_type) |> List.flatten
+    | UninitializedClass { def; _ } when for_type -> [Reason.poly_loc_of_reason def]
+    | UninitializedClass _ -> []
     | Write r -> [Reason.poly_loc_of_reason r]
     | Uninitialized _ -> []
     | Global _ -> []
     | Projection -> []
     | Unreachable _ -> []
 
-  let sources_of_use { env_values = vals; refinement_of_id; _ } loc =
+  let sources_of_use ~for_type { env_values = vals; refinement_of_id; _ } loc =
     let write_locs =
       L.LMap.find_opt loc vals
-      |> Base.Option.value_map ~default:[] ~f:(List.map writes_of_write_loc)
+      |> Base.Option.value_map ~default:[] ~f:(List.map (writes_of_write_loc ~for_type))
       |> List.flatten
       |> L.LSet.of_list
     in
@@ -243,14 +253,20 @@ module Make
     in
     L.LSet.union refi_locs write_locs
 
-  let source_bindings ({ env_values = vals; _ } as info) =
+  let source_bindings ~for_type ({ env_values = vals; _ } as info) =
     let keys = L.LSet.of_list (L.LMap.keys vals) in
-    L.LSet.fold (fun k acc -> L.LMap.add k (sources_of_use info k) acc) keys L.LMap.empty
+    L.LSet.fold (fun k acc -> L.LMap.add k (sources_of_use ~for_type info k) acc) keys L.LMap.empty
 
   let print_values =
     let rec print_write_loc write_loc =
       match write_loc with
       | Uninitialized _ -> "(uninitialized)"
+      | UninitializedClass { def; _ } ->
+        let loc = Reason.poly_loc_of_reason def in
+        Utils_js.spf
+          "(uninitialized class) %s: (%s)"
+          (L.debug_to_string loc)
+          Reason.(desc_of_reason def |> string_of_desc)
       | Projection -> "projection"
       | Unreachable _ -> "unreachable"
       | Write reason ->
