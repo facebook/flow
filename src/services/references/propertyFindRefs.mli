@@ -12,6 +12,5 @@ val find_local_refs :
   profiling:Profiling_js.running ->
   File_key.t ->
   FindRefsUtils.ast_info ->
-  Scope_api.With_Loc.info ->
   Loc.t ->
   (FindRefsTypes.find_refs_ok, string) result

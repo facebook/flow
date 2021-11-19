@@ -103,6 +103,8 @@ module.exports = (suite(
       test('Exports', [
         addFiles(...fixtures),
         lspStartAndConnect(),
+        snapshot('locals.js', 62, 18, 'exports_const_decl.json'),
+        snapshot('locals.js', 63, 23, 'exports_func_decl.json'),
         snapshot('locals.js', 65, 20, 'exports_1.json'),
         snapshot('locals.js', 66, 6, 'exports_2.json'),
       ]),
