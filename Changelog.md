@@ -1,3 +1,9 @@
+### 0.165.1
+
+Notable bug fixes:
+* Improve performance of signature help
+* Fix a bug that caused rechecks to be unnecessarily invalidated and restarted
+
 ### 0.165.0
 
 Likely to cause new Flow errors:
