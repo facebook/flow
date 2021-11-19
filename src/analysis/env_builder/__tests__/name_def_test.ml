@@ -14,8 +14,11 @@ module LocSet = Loc_collections.LocSet
 
 let string_of_root = function
   | Contextual _ -> "contextual"
+  | Catch -> "catch"
   | Annotation (loc, _) -> spf "annot %s" (L.debug_to_string loc)
   | Value (loc, _) -> spf "val %s" (L.debug_to_string loc)
+  | For (In, (loc, _)) -> spf "for in %s" (L.debug_to_string loc)
+  | For (Of, (loc, _)) -> spf "for of %s" (L.debug_to_string loc)
 
 let string_of_selector = function
   | Elem n -> spf "[%d]" n
@@ -662,3 +665,143 @@ opaque type T<X>: S<X> = Y<X>
     (3, 5) to (3, 6) =>
     (4, 14) to (4, 15) =>
     legal cycle: (((2, 5) to (2, 6)); ((4, 12) to (4, 13))) |}]
+
+let%expect_test "catch" =
+  print_init_test {|
+var x;
+try {} catch (e) { x = e }
+  |};
+  [%expect {|
+    [
+      (3, 14) to (3, 15) => catch;
+      (3, 19) to (3, 20) => val (3, 23) to (3, 24)
+    ] |}]
+
+let%expect_test "declarepred" =
+  print_init_test {|
+declare function f(x: T): boolean %checks(x);
+type T = number;
+  |};
+  [%expect {|
+    [
+      (2, 17) to (2, 18) => fun f;
+      (2, 19) to (2, 20) => annot (2, 22) to (2, 23);
+      (3, 5) to (3, 6) => alias (3, 9) to (3, 15)
+    ] |}]
+
+let%expect_test "for1" =
+  print_init_test {|
+for (var x = 0;;) { }
+  |};
+  [%expect {|
+    [
+      (2, 9) to (2, 10) => val (2, 13) to (2, 14)
+    ] |}]
+
+let%expect_test "for2" =
+  print_init_test {|
+var x;
+for (x = 0;;) { }
+  |};
+  [%expect {|
+    [
+      (3, 5) to (3, 6) => val (3, 9) to (3, 10)
+    ] |}]
+
+let%expect_test "for3" =
+  print_init_test {|
+for (var [x,y] = [1,2];;) { }
+  |};
+  [%expect {|
+    [
+      (2, 10) to (2, 11) => (val (2, 17) to (2, 22))[0];
+      (2, 12) to (2, 13) => (val (2, 17) to (2, 22))[1]
+    ] |}]
+
+let%expect_test "for4" =
+  print_init_test {|
+for (var [x,y]: T = [1,2];;) { }
+  |};
+  [%expect {|
+    [
+      (2, 10) to (2, 11) => (annot (2, 14) to (2, 17))[0];
+      (2, 12) to (2, 13) => (annot (2, 14) to (2, 17))[1]
+    ] |}]
+
+let%expect_test "for_in1" =
+  print_init_test {|
+for (var x in foo) { }
+  |};
+  [%expect {|
+    [
+      (2, 9) to (2, 10) => for in (2, 14) to (2, 17)
+    ] |}]
+
+let%expect_test "for_in2" =
+  print_init_test {|
+var x;
+for (x in foo) { }
+  |};
+  [%expect {|
+    [
+      (3, 5) to (3, 6) => for in (3, 10) to (3, 13)
+    ] |}]
+
+let%expect_test "for_in3" =
+  print_init_test {|
+for (var [x,y] in foo) { }
+  |};
+  [%expect {|
+    [
+      (2, 10) to (2, 11) => (for in (2, 18) to (2, 21))[0];
+      (2, 12) to (2, 13) => (for in (2, 18) to (2, 21))[1]
+    ] |}]
+
+let%expect_test "for_in4" =
+  print_init_test {|
+for (var [x,y]: T in foo) { }
+  |};
+  [%expect {|
+    [
+      (2, 10) to (2, 11) => (annot (2, 14) to (2, 17))[0];
+      (2, 12) to (2, 13) => (annot (2, 14) to (2, 17))[1]
+    ] |}]
+
+let%expect_test "for_of1" =
+  print_init_test {|
+for (var x of foo) { }
+  |};
+  [%expect {|
+    [
+      (2, 9) to (2, 10) => for of (2, 14) to (2, 17)
+    ] |}]
+
+let%expect_test "for_of2" =
+  print_init_test {|
+var x;
+for (x of foo) { }
+  |};
+  [%expect {|
+    [
+      (3, 5) to (3, 6) => for of (3, 10) to (3, 13)
+    ] |}]
+
+let%expect_test "for_of3" =
+  print_init_test {|
+for (var [x,y] of foo) { }
+  |};
+  [%expect {|
+    [
+      (2, 10) to (2, 11) => (for of (2, 18) to (2, 21))[0];
+      (2, 12) to (2, 13) => (for of (2, 18) to (2, 21))[1]
+    ] |}]
+
+let%expect_test "for_of4" =
+  print_init_test {|
+for (var [x,y]: T of foo) { }
+  |};
+  [%expect {|
+    [
+      (2, 10) to (2, 11) => (annot (2, 14) to (2, 17))[0];
+      (2, 12) to (2, 13) => (annot (2, 14) to (2, 17))[1]
+    ] |}]

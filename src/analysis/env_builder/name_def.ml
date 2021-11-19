@@ -11,10 +11,16 @@ open Flow_ast_mapper
 module Make (L : Loc_sig.S) = struct
   module L = L
 
+  type for_kind =
+    | In
+    | Of
+
   type root =
     | Annotation of (L.t, L.t) Ast.Type.annotation
     | Value of (L.t, L.t) Ast.Expression.t
     | Contextual of L.t
+    | Catch
+    | For of for_kind * (L.t, L.t) Ast.Expression.t
 
   type selector =
     | Elem of int
@@ -243,6 +249,10 @@ module Make (L : Loc_sig.S) = struct
         Destructure.pattern ~f:this#add_binding (Root source) argument;
         super#function_rest_param expr
 
+      method! catch_clause_pattern pat =
+        Destructure.pattern ~f:this#add_binding (Root Catch) pat;
+        super#catch_clause_pattern pat
+
       method! function_ loc expr =
         let open Ast.Function in
         let { id; _ } = expr in
@@ -264,10 +274,15 @@ module Make (L : Loc_sig.S) = struct
         super#class_ loc expr
 
       method! declare_function loc (decl : ('loc, 'loc) Ast.Statement.DeclareFunction.t) =
-        let open Ast.Statement.DeclareFunction in
-        let { id = (id_loc, _); annot; predicate = _; comments = _ } = decl in
-        this#add_binding id_loc (Binding (id_loc, Root (Annotation annot)));
-        super#declare_function loc decl
+        match Declare_function_utils.declare_function_to_function_declaration_simple loc decl with
+        | Some stmt ->
+          let _ = this#statement (loc, stmt) in
+          decl
+        | None ->
+          let open Ast.Statement.DeclareFunction in
+          let { id = (id_loc, _); annot; predicate = _; comments = _ } = decl in
+          this#add_binding id_loc (Binding (id_loc, Root (Annotation annot)));
+          super#declare_function loc decl
 
       method! declare_class loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =
         let open Ast.Statement.DeclareClass in
@@ -286,6 +301,54 @@ module Make (L : Loc_sig.S) = struct
           | _ -> ()
         in
         super#assignment loc expr
+
+      method! for_of_statement loc (stuff : ('loc, 'loc) Ast.Statement.ForOf.t) =
+        let open Ast.Statement.ForOf in
+        let { left; right; body = _; await = _; comments = _ } = stuff in
+        begin
+          match left with
+          | LeftDeclaration
+              ( _,
+                {
+                  Ast.Statement.VariableDeclaration.declarations =
+                    [(_, { Ast.Statement.VariableDeclaration.Declarator.id; _ })];
+                  _;
+                }
+              ) ->
+            let source =
+              match Destructure.type_of_pattern id with
+              | Some annot -> Annotation annot
+              | None -> For (Of, right)
+            in
+            Destructure.pattern ~f:this#add_binding (Root source) id
+          | LeftDeclaration _ -> failwith "Invalid AST structure"
+          | LeftPattern pat -> Destructure.pattern ~f:this#add_binding (Root (For (Of, right))) pat
+        end;
+        super#for_of_statement loc stuff
+
+      method! for_in_statement loc (stuff : ('loc, 'loc) Ast.Statement.ForIn.t) =
+        let open Ast.Statement.ForIn in
+        let { left; right; body = _; each = _; comments = _ } = stuff in
+        begin
+          match left with
+          | LeftDeclaration
+              ( _,
+                {
+                  Ast.Statement.VariableDeclaration.declarations =
+                    [(_, { Ast.Statement.VariableDeclaration.Declarator.id; _ })];
+                  _;
+                }
+              ) ->
+            let source =
+              match Destructure.type_of_pattern id with
+              | Some annot -> Annotation annot
+              | None -> For (In, right)
+            in
+            Destructure.pattern ~f:this#add_binding (Root source) id
+          | LeftDeclaration _ -> failwith "Invalid AST structure"
+          | LeftPattern pat -> Destructure.pattern ~f:this#add_binding (Root (For (In, right))) pat
+        end;
+        super#for_in_statement loc stuff
 
       method! type_alias loc (alias : ('loc, 'loc) Ast.Statement.TypeAlias.t) =
         let open Ast.Statement.TypeAlias in

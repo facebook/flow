@@ -56,7 +56,7 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
 
     (* Helper class for the dependency analysis--traverse the AST nodes
        in a def to determine which variables appear *)
-    class use_visitor ({ Env_api.env_values; _ } as env) init =
+    class use_visitor ({ Env_api.env_values; env_entries; _ } as env) init =
       object (this)
         inherit [L.t Nel.t L.LMap.t, L.t] Flow_ast_visitor.visitor ~init
 
@@ -120,10 +120,13 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
         (* In order to resolve a def containing a variable write, the
            write itself should first be resolved *)
         method! pattern_identifier ?kind:_ ((loc, _) as id) =
-          this#add ~why:loc loc;
+          (* Ignore cases that don't have bindings in the environment, like `var x;` *)
+          if L.LMap.mem loc env_entries then this#add ~why:loc loc;
           id
 
         method! binding_type_identifier ((loc, _) as id) =
+          (* Unconditional, unlike the above, because all binding type identifiers should
+             exist in the environment. *)
           this#add ~why:loc loc;
           id
 
@@ -295,7 +298,9 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
       let depends_of_root state = function
         | Annotation anno -> depends_of_annotation anno state
         | Value exp -> depends_of_expression exp state
+        | For (_, exp) -> depends_of_expression exp state
         | Contextual _ -> state
+        | Catch -> state
       in
       let depends_of_selector state = function
         | Computed exp
@@ -398,11 +403,21 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
     let sort =
       try Tarjan.topsort ~roots order_graph |> List.rev with
       | Not_found ->
-        failwith
-          (L.LSet.elements roots
+        let all =
+          L.LMap.values order_graph
+          |> List.map L.LSet.elements
+          |> List.flatten
+          |> L.LSet.of_list
+          |> L.LSet.elements
+          |> Base.List.map ~f:(L.debug_to_string ~include_source:false)
+          |> String.concat ","
+        in
+        let roots =
+          L.LSet.elements roots
           |> Base.List.map ~f:(L.debug_to_string ~include_source:true)
           |> String.concat ","
-          )
+        in
+        failwith (Printf.sprintf "roots: %s\n\nall: %s" roots all)
     in
     (* Tarjan gives us a sorted list, but we still need to figure out if the cycles
        are legal (all type definitions) or not, and whether non-cycles are actually cycles that point to
