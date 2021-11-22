@@ -239,14 +239,28 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
    * large repos *)
   if CheckedSet.is_empty unchecked_dependencies then
     ()
-  else (
-    Hh_logger.info
-      "Canceling command due to %d unchecked dependencies"
-      (CheckedSet.cardinal unchecked_dependencies);
+  else
+    let n = CheckedSet.cardinal unchecked_dependencies in
+    Hh_logger.info "Canceling command due to %d unchecked dependencies" n;
+    let _ =
+      CheckedSet.fold
+        (fun i f ->
+          let cap = 10 in
+          if i <= cap then
+            Hh_logger.info "%d/%d: %s" i n (File_key.to_string f)
+          else if Hh_logger.Level.(passes_min_level Debug) then
+            Hh_logger.debug "%d/%d: %s" i n (File_key.to_string f)
+          else if i = cap + 1 then
+            Hh_logger.info "..."
+          else
+            ();
+          i + 1)
+        1
+        unchecked_dependencies
+    in
     let reason = LspProt.Unchecked_dependencies { filename = File_key.to_string file } in
     ServerMonitorListenerState.push_checked_set_to_force ~reason unchecked_dependencies;
     raise Lwt.Canceled
-  )
 
 (** TODO: handle case when file+contents don't agree with file system state **)
 let merge_contents ~options ~env ~profiling ~reader filename info ast file_sig =

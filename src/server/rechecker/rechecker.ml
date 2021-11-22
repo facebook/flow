@@ -156,7 +156,7 @@ let run_but_cancel_on_file_changes ~options env ~get_forced ~f ~pre_cancel ~post
     let%lwt () =
       ServerMonitorListenerState.wait_for_updates_for_recheck ~process_updates ~get_forced
     in
-    Hh_logger.info "Canceling since a recheck is needed";
+    Hh_logger.info "Canceling recheck because additional files changed";
     let%lwt () = pre_cancel () in
     Lwt.cancel run_thread;
     Lwt.return_unit

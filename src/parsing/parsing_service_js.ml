@@ -533,10 +533,10 @@ let reducer
     try Some (cat filename_string) with
     | e ->
       let e = Exception.wrap e in
-      prerr_endlinef
-        "Parsing service failed to cat %s, so skipping it. Exception: %s"
+      Hh_logger.warn
+        "Parsing service failed to read %s, so skipping it. Exception: %s"
         filename_string
-        (Exception.to_string e);
+        (Exception.get_ctor_string e);
       None
   in
   match content with

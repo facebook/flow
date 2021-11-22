@@ -14,7 +14,6 @@ open Utils_js
 let clear_errors (files : FilenameSet.t) errors =
   FilenameSet.fold
     (fun file { ServerEnv.local_errors; merge_errors; warnings; suppressions } ->
-      Hh_logger.debug "clear errors %s" (File_key.to_string file);
       {
         ServerEnv.local_errors = FilenameMap.remove file local_errors;
         merge_errors = FilenameMap.remove file merge_errors;
@@ -850,15 +849,17 @@ end
 exception Unexpected_file_changes of File_key.t Nel.t
 
 let handle_unexpected_file_changes changed_files =
-  let filenames = Nel.map File_key.to_string changed_files in
-  let reason =
-    LspProt.(
-      match filenames with
-      | (filename, []) -> Single_file_changed { filename }
-      | _ -> Many_files_changed { file_count = Nel.length filenames }
-    )
+  let filename_set =
+    Nel.fold_left (fun acc file -> SSet.add (File_key.to_string file) acc) SSet.empty changed_files
   in
-  let filename_set = filenames |> Nel.to_list |> SSet.of_list in
+  let file_count = SSet.cardinal filename_set in
+  let reason =
+    if file_count = 1 then
+      LspProt.Single_file_changed { filename = SSet.choose filename_set }
+    else
+      LspProt.Many_files_changed { file_count }
+  in
+  Hh_logger.info "Canceling recheck due to %d unexpected file changes" file_count;
   ServerMonitorListenerState.push_files_to_prioritize ~reason filename_set;
   raise Lwt.Canceled
 
