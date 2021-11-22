@@ -304,8 +304,14 @@ let get_and_clear_recheck_workload ~prioritize_dependency_checks ~process_update
     recheck_acc := recheck_workload;
     priority_workload
 
+(** [wait_for stream] blocks until a message arrives on [stream] *)
+let wait_for stream =
+  (* [is_empty] blocks until there is something to read or an explicit [None] (end of stream) *)
+  let%lwt _ = Lwt_stream.is_empty stream in
+  Lwt.return_unit
+
 let rec wait_for_updates_for_recheck ~process_updates ~get_forced =
-  let%lwt _ = Lwt_stream.is_empty recheck_stream in
+  let%lwt () = wait_for recheck_stream in
   let workload_before = !recheck_acc in
   recheck_fetch ~process_updates ~get_forced;
   let workload_after = !recheck_acc in
@@ -320,12 +326,8 @@ let wait_for_anything ~process_updates ~get_forced =
     Lwt.pick
       [
         WorkloadStream.wait_for_workload workload_stream;
-        (let%lwt _ = Lwt_stream.is_empty env_update_stream in
-         Lwt.return_unit
-        );
-        (let%lwt _ = Lwt_stream.is_empty recheck_stream in
-         Lwt.return_unit
-        );
+        wait_for env_update_stream;
+        wait_for recheck_stream;
         wait_for_updates_for_recheck ~process_updates ~get_forced;
       ]
   in
