@@ -779,8 +779,8 @@ class ['loc] mapper =
       let { members; explicit_type = _; has_unknown_members = _; comments } = body in
       let members' =
         match members with
-        | Defaulted members -> Defaulted (map_list this#enum_defaulted_member members)
-        | Initialized members -> Initialized (map_list this#enum_string_member members)
+        | Defaulted m -> id (map_list this#enum_defaulted_member) m members (fun m -> Defaulted m)
+        | Initialized m -> id (map_list this#enum_string_member) m members (fun m -> Initialized m)
       in
       let comments' = this#syntax_opt comments in
       if members == members' && comments == comments' then
