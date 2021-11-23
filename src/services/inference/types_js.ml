@@ -927,7 +927,7 @@ let filter_out_node_modules ~options =
  *)
 let unfocused_files_to_infer ~options ~input_focused ~input_dependencies =
   let focused = filter_out_node_modules ~options input_focused in
-  let dependencies = Base.Option.value ~default:FilenameSet.empty input_dependencies in
+  let dependencies = input_dependencies in
   CheckedSet.add ~focused ~dependencies CheckedSet.empty
 
 (* Called on initialization in non-lazy mode, with optional focus targets.
@@ -948,7 +948,10 @@ let files_to_infer ~options ~profiling ~reader ~dependency_info ~focus_targets ~
       match focus_targets with
       | None ->
         let to_infer =
-          unfocused_files_to_infer ~options ~input_focused:parsed ~input_dependencies:None
+          unfocused_files_to_infer
+            ~options
+            ~input_focused:parsed
+            ~input_dependencies:FilenameSet.empty
         in
         Lwt.return to_infer
       | Some input_focused ->
@@ -1542,7 +1545,7 @@ end = struct
             unfocused_files_to_infer
               ~options
               ~input_focused:(FilenameSet.union focused (CheckedSet.focused files_to_force))
-              ~input_dependencies:(Some (CheckedSet.dependencies files_to_force))
+              ~input_dependencies:(CheckedSet.dependencies files_to_force)
           in
           Lwt.return to_infer
       )
