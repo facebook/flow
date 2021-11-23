@@ -47,6 +47,8 @@ module type S = sig
 
   val inter : t -> t -> t
 
+  val disjoint : t -> t -> bool
+
   val diff : t -> t -> t
 
   val compare : t -> t -> int
@@ -525,6 +527,49 @@ module Make (Ord : OrderedType) : S with type elt = Ord.t = struct
   (* Same as split, but compute the left and right subtrees
      only if the pivot element is not in the set.  The right subtree
      is computed on demand. *)
+
+  type split_bis =
+    | Found
+    | NotFound of t * (unit -> t)
+
+  let rec split_bis x = function
+    | Empty -> NotFound (empty, (fun () -> empty))
+    | Leaf v ->
+      let c = Ord.compare x v in
+      if c = 0 then
+        Found
+      else
+        NotFound (empty, (fun () -> empty))
+    | Node { l; v; r; _ } ->
+      let c = Ord.compare x v in
+      if c = 0 then
+        Found
+      else if c < 0 then
+        match split_bis x l with
+        | Found -> Found
+        | NotFound (ll, rl) -> NotFound (ll, (fun () -> join (rl ()) v r))
+      else (
+        match split_bis x r with
+        | Found -> Found
+        | NotFound (lr, rr) -> NotFound (join l v lr, rr)
+      )
+
+  let rec disjoint s1 s2 =
+    match (s1, s2) with
+    | (Empty, _)
+    | (_, Empty) ->
+      true
+    | (Leaf v, s)
+    | (s, Leaf v) ->
+      not (mem v s)
+    | (Node { l = l1; v = v1; r = r1; _ }, t2) ->
+      if s1 == s2 then
+        false
+      else (
+        match split_bis v1 t2 with
+        | NotFound (l2, r2) -> disjoint l1 l2 && disjoint r1 (r2 ())
+        | Found -> false
+      )
 
   let rec diff s1 s2 =
     match (s1, s2) with
