@@ -1407,18 +1407,6 @@ end = struct
         ~local_errors
         ~is_init:false
     in
-    let%lwt (resolve_errors, resolved_requires_changed) =
-      resolve_requires
-        ~transaction
-        ~reader
-        ~options
-        ~profiling
-        ~workers
-        ~parsed:freshparsed_list
-        ~parsed_set:freshparsed
-    in
-    let local_errors = FilenameMap.union resolve_errors local_errors in
-    let parsed = FilenameSet.union freshparsed unchanged in
     (* direct_dependent_files are unchanged files which directly depend on changed modules,
        or are new / changed files that are phantom dependents. *)
     let%lwt direct_dependent_files =
@@ -1437,43 +1425,16 @@ end = struct
                 )
       )
     in
-    Hh_logger.info "Re-resolving directly dependent files";
+    Hh_logger.info "Re-resolving parsed and directly dependent files";
     let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader direct_dependent_files in
+    let%lwt (resolve_errors, resolved_requires_changed) =
+      let parsed_set = FilenameSet.union freshparsed direct_dependent_files in
+      let parsed = FilenameSet.elements parsed_set in
+      resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set
+    in
+    let local_errors = FilenameMap.union resolve_errors local_errors in
+    let parsed = FilenameSet.union freshparsed unchanged in
 
-    let node_modules_containers = !Files.node_modules_containers in
-    (* requires in direct_dependent_files must be re-resolved before merging. *)
-    let mutator =
-      Module_heaps.Resolved_requires_mutator.create transaction direct_dependent_files
-    in
-    let%lwt resolved_requires_changed_in_reresolve_direct_dependents =
-      Memory_utils.with_memory_timer_lwt ~options "ReresolveDirectDependents" profiling (fun () ->
-          let%lwt resolved_requires_changed =
-            MultiWorkerLwt.call
-              workers
-              ~job:(fun anything_changed files ->
-                List.fold_left
-                  (fun anything_changed filename ->
-                    let (changed, errors) =
-                      Module_js.add_parsed_resolved_requires
-                        filename
-                        ~mutator
-                        ~reader
-                        ~options
-                        ~node_modules_containers
-                    in
-                    (* TODO: why, FFS, why? *)
-                    ignore errors;
-                    anything_changed || changed)
-                  anything_changed
-                  files)
-              ~neutral:false
-              ~merge:(fun changed1 changed2 -> changed1 || changed2)
-              ~next:(MultiWorkerLwt.next workers (FilenameSet.elements direct_dependent_files))
-          in
-          clear_cache_if_resolved_requires_changed resolved_requires_changed;
-          Lwt.return resolved_requires_changed
-      )
-    in
     Hh_logger.info "Recalculating dependency graph";
     let%lwt dependency_info =
       Memory_utils.with_memory_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
@@ -1501,10 +1462,7 @@ end = struct
       FilenameSet.diff env.ServerEnv.unparsed to_remove |> FilenameSet.union unparsed_set
     in
     let cannot_skip_direct_dependents =
-      resolved_requires_changed
-      || resolved_requires_changed_in_reresolve_direct_dependents
-      || deleted_count > 0
-      || not (FilenameSet.is_empty unparsed_set)
+      resolved_requires_changed || deleted_count > 0 || not (FilenameSet.is_empty unparsed_set)
     in
 
     Hh_logger.info "Updating index";
