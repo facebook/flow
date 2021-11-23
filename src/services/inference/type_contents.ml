@@ -230,21 +230,22 @@ let resolved_requires_of_contents ~options ~reader ~env file file_sig =
 let ensure_checked_dependencies ~options ~reader ~env file file_sig =
   let resolved_requires = resolved_requires_of_contents ~options ~reader ~env file file_sig in
   let unchecked_dependencies =
-    let all_deps = CheckedSet.add ~dependencies:resolved_requires CheckedSet.empty in
-    CheckedSet.diff all_deps env.ServerEnv.checked_files
+    FilenameSet.filter
+      (fun f -> not (CheckedSet.mem f env.ServerEnv.checked_files))
+      resolved_requires
   in
 
   (* Often, all dependencies have already been checked, so input contains no unchecked files.
    * In that case, let's short-circuit typecheck, since a no-op typecheck still takes time on
    * large repos *)
-  if CheckedSet.is_empty unchecked_dependencies then
+  if FilenameSet.is_empty unchecked_dependencies then
     ()
   else
-    let n = CheckedSet.cardinal unchecked_dependencies in
+    let n = FilenameSet.cardinal unchecked_dependencies in
     Hh_logger.info "Canceling command due to %d unchecked dependencies" n;
     let _ =
-      CheckedSet.fold
-        (fun i f ->
+      FilenameSet.fold
+        (fun f i ->
           let cap = 10 in
           if i <= cap then
             Hh_logger.info "%d/%d: %s" i n (File_key.to_string f)
@@ -255,11 +256,11 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
           else
             ();
           i + 1)
-        1
         unchecked_dependencies
+        1
     in
     let reason = LspProt.Unchecked_dependencies { filename = File_key.to_string file } in
-    ServerMonitorListenerState.push_checked_set_to_force ~reason unchecked_dependencies;
+    ServerMonitorListenerState.push_dependencies_to_prioritize ~reason unchecked_dependencies;
     raise Lwt.Canceled
 
 (** TODO: handle case when file+contents don't agree with file system state **)

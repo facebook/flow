@@ -59,7 +59,7 @@ type recheck_msg = {
 and recheck_files =
   | ChangedFiles of SSet.t * bool
   | FilesToForceFocusedAndRecheck of SSet.t
-  | CheckedSetToForce of CheckedSet.t
+  | DependenciesToPrioritize of FilenameSet.t
   | FilesToResync of SSet.t
       (** When the file watcher restarts, it can miss changes so we need to recheck
           all of these files. This differs subtly from [ChangedFiles] because they
@@ -81,8 +81,8 @@ let push_files_to_prioritize ~reason changed_files =
 let push_files_to_force_focused_and_recheck ?callback ~reason forced_focused_files =
   push_recheck_msg ?callback ~reason (FilesToForceFocusedAndRecheck forced_focused_files)
 
-let push_checked_set_to_force ?callback ~reason checked_set =
-  push_recheck_msg ?callback ~reason (CheckedSetToForce checked_set)
+let push_dependencies_to_prioritize ?callback ~reason dependencies =
+  push_recheck_msg ?callback ~reason (DependenciesToPrioritize dependencies)
 
 let push_files_to_resync_after_file_watcher_restart
     ?metadata ?callback ~reason changed_since_mergebase =
@@ -221,7 +221,8 @@ let recheck_fetch ~process_updates ~get_forced =
                let files_to_force = CheckedSet.add ~focused CheckedSet.empty in
                let workload = update ~files_to_prioritize:updates ~files_to_force workload in
                (FilenameSet.is_empty updates, workload)
-             | CheckedSetToForce checked_set ->
+             | DependenciesToPrioritize dependencies ->
+               let checked_set = CheckedSet.add ~dependencies CheckedSet.empty in
                let files_to_force = CheckedSet.diff checked_set (get_forced ()) in
                let workload = update ~files_to_force workload in
                (CheckedSet.is_empty files_to_force, workload)

@@ -33,10 +33,10 @@ val push_files_to_force_focused_and_recheck :
   SSet.t ->
   unit
 
-val push_checked_set_to_force :
+val push_dependencies_to_prioritize :
   ?callback:(Profiling_js.finished option -> unit) ->
   reason:LspProt.recheck_reason ->
-  CheckedSet.t ->
+  Utils_js.FilenameSet.t ->
   unit
 
 val push_files_to_resync_after_file_watcher_restart :
