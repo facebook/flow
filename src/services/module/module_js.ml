@@ -649,13 +649,6 @@ let choose_provider ~options m files errmap =
 (***** public *****)
 (******************)
 
-(* Look up cached resolved module. *)
-let find_resolved_module ~reader ~audit file r =
-  let { Module_heaps.resolved_modules; _ } =
-    Module_heaps.Reader_dispatcher.get_resolved_requires_unsafe ~reader ~audit file
-  in
-  SMap.find r resolved_modules
-
 let checked_file ~reader ~audit f =
   let info = f |> Module_heaps.Reader_dispatcher.get_info_unsafe ~reader ~audit in
   info.Module_heaps.checked

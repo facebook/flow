@@ -344,7 +344,9 @@ let mk_check_file ~options ~reader ~cache () =
   let get_info_unsafe = Module_heaps.Reader_dispatcher.get_info_unsafe ~reader ~audit in
   let get_aloc_table_unsafe = Parsing_heaps.Reader_dispatcher.get_aloc_table_unsafe ~reader in
   let find_leader = Context_heaps.Reader_dispatcher.find_leader ~reader in
-  let find_resolved_module = Module_js.find_resolved_module ~reader ~audit in
+  let get_resolved_requires_unsafe =
+    Module_heaps.Reader_dispatcher.get_resolved_requires_unsafe ~reader ~audit
+  in
 
   let master_cx = Context_heaps.Reader_dispatcher.find_master ~reader in
 
@@ -405,9 +407,10 @@ let mk_check_file ~options ~reader ~cache () =
     let cx = create_dep_cx file_key docblock ccx in
 
     let dependencies =
+      let { Module_heaps.resolved_modules; _ } = get_resolved_requires_unsafe file_key in
       let f addr =
         let mref = Heap.read_module_ref addr in
-        let provider = find_resolved_module file_key mref in
+        let provider = SMap.find mref resolved_modules in
         (mref, dep_module_t cx mref provider)
       in
       let addr = Heap.file_module_refs file_addr in

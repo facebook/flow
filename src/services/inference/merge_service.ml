@@ -244,10 +244,9 @@ let sig_hash ~root =
     Heap.read_dyn_module cjs_module es_module addr
   in
 
-  let file_dependency ~reader component_rec component_map file_key mref =
+  let file_dependency ~reader component_rec component_map provider =
     let open Module_heaps in
-    let mname = Module_js.find_resolved_module ~reader ~audit:Expensive.ok file_key mref in
-    match Reader_dispatcher.get_file ~reader ~audit:Expensive.ok mname with
+    match Reader_dispatcher.get_file ~reader ~audit:Expensive.ok provider with
     | None -> Unchecked
     | Some (File_key.ResourceFile f) -> resource_dep f
     | Some dep ->
@@ -265,9 +264,16 @@ let sig_hash ~root =
     let file_addr = Parsing_heaps.Reader_dispatcher.get_type_sig_addr_unsafe ~reader file_key in
 
     let dependencies =
+      let { Module_heaps.resolved_modules; _ } =
+        Module_heaps.Reader_dispatcher.get_resolved_requires_unsafe
+          ~reader
+          ~audit:Expensive.ok
+          file_key
+      in
       let f addr =
         let mref = Heap.read_module_ref addr in
-        file_dependency ~reader component_rec component_map file_key mref
+        let provider = SMap.find mref resolved_modules in
+        file_dependency ~reader component_rec component_map provider
       in
       let addr = Heap.file_module_refs file_addr in
       Heap.read_addr_tbl_generic f addr Module_refs.init
@@ -454,9 +460,11 @@ let mk_check_file options ~reader () =
       let aloc_table = lazy (get_aloc_table_unsafe file) in
       let requires =
         let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
-        let reader = Abstract_state_reader.Mutator_state_reader reader in
+        let { Module_heaps.resolved_modules; _ } =
+          Module_heaps.Mutator_reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.ok file
+        in
         let f mref locs acc =
-          let provider = Module_js.find_resolved_module ~reader ~audit:Expensive.ok file mref in
+          let provider = SMap.find mref resolved_modules in
           (mref, locs, provider) :: acc
         in
         SMap.fold f require_loc_map []

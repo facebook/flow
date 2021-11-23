@@ -39,9 +39,6 @@ val imported_module :
   string ->
   Modulename.t
 
-val find_resolved_module :
-  reader:Abstract_state_reader.t -> (File_key.t -> string -> Modulename.t) Expensive.t
-
 val checked_file : reader:Abstract_state_reader.t -> (File_key.t -> bool) Expensive.t
 
 (* add module records for given files;
