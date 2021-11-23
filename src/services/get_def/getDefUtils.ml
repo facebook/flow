@@ -291,18 +291,6 @@ and extract_def_loc_resolved ~reader cx ty name : (def_loc, string) result =
     )
   )
 
-(* Takes the file key where the module reference appeared, as well as the module reference, and
- * returns the file name for the module that the module reference refers to. *)
-let file_key_of_module_ref ~reader file_key module_ref =
-  let resolved =
-    Module_js.find_resolved_module
-      ~reader:(Abstract_state_reader.State_reader reader)
-      ~audit:Expensive.warn
-      file_key
-      module_ref
-  in
-  Module_heaps.Reader.get_file ~reader ~audit:Expensive.warn resolved
-
 let def_info_of_typecheck_results ~reader cx props_access_info =
   let def_info_of_class_member_locs locs =
     (* We want to include the immediate implementation as well as all superclass implementations.
