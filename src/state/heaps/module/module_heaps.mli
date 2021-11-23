@@ -6,6 +6,7 @@
  *)
 
 type resolved_requires = {
+  file_key: File_key.t;
   resolved_modules: Modulename.t SMap.t;
   phantom_dependents: SSet.t;
   hash: Xx.hash;
@@ -13,7 +14,10 @@ type resolved_requires = {
 [@@deriving show]
 
 val mk_resolved_requires :
-  resolved_modules:Modulename.t SMap.t -> phantom_dependents:SSet.t -> resolved_requires
+  File_key.t ->
+  resolved_modules:Modulename.t SMap.t ->
+  phantom_dependents:SSet.t ->
+  resolved_requires
 
 type info = {
   module_name: Modulename.t;

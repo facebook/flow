@@ -670,7 +670,7 @@ let resolved_requires_of ~options ~reader node_modules_containers file require_l
       SMap.empty
   in
   let { paths = phantom_dependents; errors } = resolution_acc in
-  (errors, Module_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependents)
+  (errors, Module_heaps.mk_resolved_requires file ~resolved_modules ~phantom_dependents)
 
 let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_containers file =
   let file_sig =

@@ -31,6 +31,7 @@ module NameHeap =
     that's probably guessable.
  **)
 type resolved_requires = {
+  file_key: File_key.t;
   resolved_modules: Modulename.t SMap.t;
   (* map from module references in file
      to module names they resolve to *)
@@ -43,7 +44,7 @@ type resolved_requires = {
 }
 [@@deriving show]
 
-let mk_resolved_requires ~resolved_modules ~phantom_dependents =
+let mk_resolved_requires file_key ~resolved_modules ~phantom_dependents =
   let state = Xx.init 0L in
   SMap.iter
     (fun reference modulename ->
@@ -51,7 +52,7 @@ let mk_resolved_requires ~resolved_modules ~phantom_dependents =
       Xx.update state (Modulename.to_string modulename))
     resolved_modules;
   SSet.iter (Xx.update state) phantom_dependents;
-  { resolved_modules; phantom_dependents; hash = Xx.digest state }
+  { file_key; resolved_modules; phantom_dependents; hash = Xx.digest state }
 
 module ResolvedRequiresHeap =
   SharedMem.NoCache

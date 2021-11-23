@@ -201,7 +201,8 @@ end = struct
     { info with Module_heaps.module_name }
 
   let normalize_resolved_requires
-      ~normalizer { Module_heaps.resolved_modules; phantom_dependents; hash } =
+      ~normalizer { Module_heaps.file_key; resolved_modules; phantom_dependents; hash } =
+    let file_key = FileNormalizer.normalize_file_key normalizer file_key in
     let phantom_dependents =
       SSet.map (FileNormalizer.normalize_path normalizer) phantom_dependents
     in
@@ -210,7 +211,7 @@ end = struct
         (modulename_map_fn ~f:(FileNormalizer.normalize_file_key normalizer))
         resolved_modules
     in
-    { Module_heaps.resolved_modules; phantom_dependents; hash }
+    { Module_heaps.file_key; resolved_modules; phantom_dependents; hash }
 
   let normalize_file_data ~normalizer { resolved_requires; exports; hash } =
     let resolved_requires = normalize_resolved_requires ~normalizer resolved_requires in
@@ -521,13 +522,14 @@ end = struct
     denormalize_info_generic ~denormalize:(denormalize_file_key_nocache ~root) info
 
   let denormalize_resolved_requires
-      ~root { Module_heaps.resolved_modules; phantom_dependents; hash = _ } =
+      ~root { Module_heaps.file_key; resolved_modules; phantom_dependents; hash = _ } =
     (* We do our best to avoid reading the file system (which Path.make will do) *)
     let phantom_dependents = SSet.map (Files.absolute_path root) phantom_dependents in
     let resolved_modules =
       SMap.map (modulename_map_fn ~f:(denormalize_file_key_nocache ~root)) resolved_modules
     in
-    Module_heaps.mk_resolved_requires ~resolved_modules ~phantom_dependents
+    let file_key = denormalize_file_key_nocache ~root file_key in
+    Module_heaps.mk_resolved_requires file_key ~resolved_modules ~phantom_dependents
 
   (** Turns all the relative paths in a file's data back into absolute paths. *)
   let denormalize_file_data ~root { resolved_requires; exports; hash } =
