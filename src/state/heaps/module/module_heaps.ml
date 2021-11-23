@@ -54,7 +54,7 @@ let mk_resolved_requires ~resolved_modules ~phantom_dependents =
   { resolved_modules; phantom_dependents; hash = Xx.digest state }
 
 module ResolvedRequiresHeap =
-  SharedMem.WithCache
+  SharedMem.NoCache
     (File_key)
     (struct
       type t = resolved_requires
