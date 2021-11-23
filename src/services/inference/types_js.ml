@@ -268,54 +268,6 @@ let resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~
   clear_cache_if_resolved_requires_changed resolved_requires_changed;
   Lwt.return (errors, resolved_requires_changed)
 
-let commit_modules_and_resolve_requires
-    ~transaction
-    ~reader
-    ~all_providers_mutator
-    ~options
-    ~profiling
-    ~workers
-    ~old_modules
-    ~parsed_set
-    ~unparsed
-    ~unparsed_set
-    ~new_or_changed
-    ~deleted
-    ~errors
-    ~is_init =
-  (* TODO remove after lookup overhaul *)
-  Module_js.clear_filename_cache ();
-
-  let { ServerEnv.local_errors; merge_errors; warnings; suppressions } = errors in
-  let parsed = FilenameSet.elements parsed_set in
-  let%lwt (changed_modules, local_errors) =
-    commit_modules
-      ~transaction
-      ~reader
-      ~all_providers_mutator
-      ~options
-      ~is_init
-      ~profiling
-      ~workers
-      ~parsed
-      ~parsed_set
-      ~unparsed
-      ~unparsed_set
-      ~old_modules
-      ~deleted
-      ~local_errors
-      ~new_or_changed
-  in
-  let%lwt (resolve_errors, resolved_requires_changed) =
-    resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set
-  in
-  let local_errors = FilenameMap.union resolve_errors local_errors in
-  Lwt.return
-    ( changed_modules,
-      resolved_requires_changed,
-      { ServerEnv.local_errors; merge_errors; warnings; suppressions }
-    )
-
 let error_set_of_internal_error file (loc, internal_error) =
   Error_message.EInternal (loc, internal_error)
   |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file
@@ -1261,9 +1213,11 @@ end = struct
       List.fold_left (fun set (fn, _) -> FilenameSet.add fn set) FilenameSet.empty unparsed
     in
     (* clear errors for new, changed and deleted files *)
-    let errors = errors |> clear_errors new_or_changed |> clear_errors deleted in
+    let { ServerEnv.local_errors; merge_errors; warnings; suppressions } =
+      errors |> clear_errors new_or_changed |> clear_errors deleted
+    in
     (* record reparse errors *)
-    let errors =
+    let local_errors =
       let () =
         let error_set : Flow_error.ErrorSet.t =
           FilenameMap.fold
@@ -1280,8 +1234,7 @@ end = struct
             ~errors_reason:(LspProt.Recheck_streaming { recheck_reasons })
             ~calc_errors_and_warnings:(fun () -> (error_set, FilenameMap.empty))
       in
-      let local_errors = merge_error_maps new_local_errors errors.ServerEnv.local_errors in
-      { errors with ServerEnv.local_errors }
+      merge_error_maps new_local_errors local_errors
     in
     (* get old (unchanged, undeleted) files that were parsed successfully *)
     let old_parsed = env.ServerEnv.files in
@@ -1433,8 +1386,11 @@ end = struct
       CheckedSet.filter files_to_force ~f:(fun fn -> FilenameSet.mem fn unchanged)
     in
     MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
-    let%lwt (changed_modules, resolved_requires_changed_in_commit_modules, errors) =
-      commit_modules_and_resolve_requires
+    let freshparsed_list = FilenameSet.elements freshparsed in
+    let%lwt (changed_modules, local_errors) =
+      (* TODO remove after lookup overhaul *)
+      Module_js.clear_filename_cache ();
+      commit_modules
         ~transaction
         ~reader
         ~all_providers_mutator
@@ -1442,14 +1398,26 @@ end = struct
         ~profiling
         ~workers
         ~old_modules
+        ~parsed:freshparsed_list
         ~parsed_set:freshparsed
         ~unparsed
         ~unparsed_set
         ~new_or_changed
         ~deleted
-        ~errors
+        ~local_errors
         ~is_init:false
     in
+    let%lwt (resolve_errors, resolved_requires_changed) =
+      resolve_requires
+        ~transaction
+        ~reader
+        ~options
+        ~profiling
+        ~workers
+        ~parsed:freshparsed_list
+        ~parsed_set:freshparsed
+    in
+    let local_errors = FilenameMap.union resolve_errors local_errors in
     let parsed = FilenameSet.union freshparsed unchanged in
     (* direct_dependent_files are unchanged files which directly depend on changed modules,
        or are new / changed files that are phantom dependents. *)
@@ -1533,7 +1501,7 @@ end = struct
       FilenameSet.diff env.ServerEnv.unparsed to_remove |> FilenameSet.union unparsed_set
     in
     let cannot_skip_direct_dependents =
-      resolved_requires_changed_in_commit_modules
+      resolved_requires_changed
       || resolved_requires_changed_in_reresolve_direct_dependents
       || deleted_count > 0
       || not (FilenameSet.is_empty unparsed_set)
@@ -1553,6 +1521,7 @@ end = struct
     Hh_logger.info "Done updating index";
 
     let env = { env with ServerEnv.files = parsed; unparsed; dependency_info; exports } in
+    let errors = { ServerEnv.local_errors; merge_errors; warnings; suppressions } in
     let intermediate_values =
       ( deleted,
         direct_dependent_files,
@@ -2332,11 +2301,9 @@ let init_from_scratch ~profiling ~workers options =
   in
   let all_files = FilenameSet.union parsed_set unparsed_set in
   let all_providers_mutator = Module_hashtables.All_providers_mutator.create transaction in
-  let%lwt (_, _, errors) =
-    let errors =
-      { ServerEnv.local_errors; merge_errors = FilenameMap.empty; warnings; suppressions }
-    in
-    commit_modules_and_resolve_requires
+  let parsed = FilenameSet.elements parsed_set in
+  let%lwt (_changed_modules, local_errors) =
+    commit_modules
       ~transaction
       ~reader
       ~all_providers_mutator
@@ -2344,14 +2311,19 @@ let init_from_scratch ~profiling ~workers options =
       ~profiling
       ~workers
       ~old_modules:[]
+      ~parsed
       ~parsed_set
       ~unparsed
       ~unparsed_set
       ~new_or_changed:all_files
       ~deleted:FilenameSet.empty
-      ~errors
+      ~local_errors
       ~is_init:true
   in
+  let%lwt (resolve_errors, _resolved_requires_changed) =
+    resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set
+  in
+  let local_errors = FilenameMap.union resolve_errors local_errors in
   let%lwt dependency_info =
     Memory_utils.with_memory_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
         Dep_service.calc_dependency_info ~reader workers ~parsed:parsed_set
@@ -2366,6 +2338,9 @@ let init_from_scratch ~profiling ~workers options =
   in
   Hh_logger.info "Done";
 
+  let errors =
+    { ServerEnv.local_errors; merge_errors = FilenameMap.empty; warnings; suppressions }
+  in
   let env =
     mk_init_env
       ~files:parsed_set
