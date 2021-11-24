@@ -27,12 +27,9 @@ let parse_contents ~options ~profiling content file_key =
     else
       Error "Parse unexpectedly failed"
 
-let find_local_refs ~reader ~options ~env ~profiling ~file_input ~line ~col =
+let find_local_refs ~reader ~options ~env ~profiling ~file_key ~content ~line ~col =
   let open Base.Result.Let_syntax in
-  let filename = File_input.filename_of_file_input file_input in
-  let file_key = File_key.SourceFile filename in
   let loc = Loc.cursor (Some file_key) line col in
-  let%bind content = File_input.content_of_file_input file_input in
   let%bind ast_info = parse_contents ~options ~profiling content file_key in
   (* Start by running local variable find references *)
   let (ast, _, _) = ast_info in

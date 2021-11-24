@@ -10,7 +10,8 @@ val find_local_refs :
   options:Options.t ->
   env:ServerEnv.env ->
   profiling:Profiling_js.running ->
-  file_input:File_input.t ->
+  file_key:File_key.t ->
+  content:string ->
   line:int ->
   col:int ->
   (FindRefsTypes.find_refs_ok, string) result
