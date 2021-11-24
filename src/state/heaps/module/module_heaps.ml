@@ -55,12 +55,15 @@ let mk_resolved_requires file_key ~resolved_modules ~phantom_dependents =
   { file_key; resolved_modules; phantom_dependents; hash = Xx.digest state }
 
 module ResolvedRequiresHeap =
-  SharedMem.NoCache
+  SharedMem.NoCacheTag
     (File_key)
     (struct
       type t = resolved_requires
 
       let description = "ResolvedRequires"
+    end)
+    (struct
+      let value = SharedMem.Serialized_resolved_requires
     end)
 
 (********************************** Info Heap *********************************)

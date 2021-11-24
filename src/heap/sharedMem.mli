@@ -23,6 +23,8 @@ type effort =
   | `always_TEST
   ]
 
+type serialized_tag = Serialized_resolved_requires
+
 exception Out_of_shared_memory
 
 exception Hash_table_full
@@ -63,6 +65,10 @@ module type Value = sig
   type t
 
   val description : string
+end
+
+module type SerializedTag = sig
+  val value : serialized_tag
 end
 
 module type AddrValue = sig
@@ -142,6 +148,9 @@ module WithCache (Key : Key) (Value : Value) :
   WithCache with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key)
 
 module NoCache (Key : Key) (Value : Value) :
+  NoCache with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key)
+
+module NoCacheTag (Key : Key) (Value : Value) (_ : SerializedTag) :
   NoCache with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key)
 
 module NoCacheAddr (Key : Key) (Value : AddrValue) :

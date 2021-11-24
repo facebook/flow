@@ -32,6 +32,8 @@ type effort =
   | `always_TEST
   ]
 
+type serialized_tag = Serialized_resolved_requires
+
 let heap_ref : heap option ref = ref None
 
 exception Out_of_shared_memory
@@ -232,6 +234,10 @@ module type Value = sig
   val description : string
 end
 
+module type SerializedTag = sig
+  val value : serialized_tag
+end
+
 module type AddrValue = sig
   type t
 end
@@ -416,7 +422,11 @@ end
 (* A functor returning an implementation of the S module without caching. *)
 (*****************************************************************************)
 
-module NoCache (Key : Key) (Value : Value) :
+module NoCacheInternal
+    (Key : Key)
+    (Value : Value) (Tag : sig
+      val tag : int
+    end) :
   NoCache with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key) =
 struct
   module Tbl = HashtblSegment (Key)
@@ -427,13 +437,13 @@ struct
   type value = Value.t
 
   (* Returns address into the heap, alloc size, and orig size *)
-  external hh_store : Value.t -> _ addr * int * int = "hh_store_ocaml"
+  external hh_store : Value.t -> int -> _ addr * int * int = "hh_store_ocaml"
 
   external hh_deserialize : _ addr -> Value.t = "hh_deserialize"
 
   external hh_get_size : _ addr -> int = "hh_get_size"
 
-  let hh_store x = WorkerCancel.with_worker_exit (fun () -> hh_store x)
+  let hh_store x = WorkerCancel.with_worker_exit (fun () -> hh_store x Tag.tag)
 
   let hh_deserialize x = WorkerCancel.with_worker_exit (fun () -> hh_deserialize x)
 
@@ -493,6 +503,21 @@ struct
 
   let remove_old_batch keys = KeySet.iter Tbl.remove_old keys
 end
+
+module NoCache (Key : Key) (Value : Value) =
+  NoCacheInternal (Key) (Value)
+    (struct
+      let tag = 0
+    end)
+
+module NoCacheTag (Key : Key) (Value : Value) (Tag : SerializedTag) =
+  NoCacheInternal (Key) (Value)
+    (struct
+      (* Tag values here must match the corresponding values from NewAPI.tag *)
+      let tag =
+        match Tag.value with
+        | Serialized_resolved_requires -> 1
+    end)
 
 module NoCacheAddr (Key : Key) (Value : AddrValue) = struct
   module Tbl = HashtblSegment (Key)
@@ -913,7 +938,9 @@ module NewAPI = struct
    * hh_shared.c -- e.g., the should_scan function. *)
   type tag =
     | Serialized_tag
-    | String_tag
+    | Serialized_resolved_requires_tag
+    (* tags defined above this point are serialized+compressed *)
+    | String_tag (* 2 *)
     | Docblock_tag
     | ALoc_table_tag
     | Type_export_tag
@@ -927,7 +954,7 @@ module NewAPI = struct
     | Pattern_def_tag
     | Pattern_tag
     (* tags defined below this point are scanned for pointers *)
-    | Addr_tbl_tag (* 14 *)
+    | Addr_tbl_tag (* 15 *)
     | Checked_file_tag
     | CJS_module_tag
     | ES_module_tag
@@ -935,11 +962,13 @@ module NewAPI = struct
   (* avoid unused constructor warning *)
   let () = ignore Serialized_tag
 
+  let () = ignore Serialized_resolved_requires_tag
+
   (* constant constructors are integers *)
   let tag_val : tag -> int = Obj.magic
 
   (* double-check integer value is consistent with hh_shared.c *)
-  let () = assert (tag_val Addr_tbl_tag = 14)
+  let () = assert (tag_val Addr_tbl_tag = 15)
 
   let mk_header tag size =
     (* lower byte of header is reserved for 6-bit tag and 2 GC bits, OCaml

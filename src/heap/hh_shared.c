@@ -283,8 +283,8 @@ typedef uintnat hh_header_t;
 typedef uintnat hh_tag_t;
 
 // Keep these in sync with "tag" type definition in sharedMem.ml
-#define Serialized_tag 0
-#define Addr_tbl_tag 14
+#define Heap_string_tag 2
+#define Addr_tbl_tag 15
 
 static _Bool should_scan(hh_tag_t tag) {
   // By convention, tags below Addr_tbl_tag contain no pointers, whereas
@@ -329,7 +329,7 @@ static _Bool should_scan(hh_tag_t tag) {
 // from other objects, so we need to look up the tag to read the size.
 
 #define Obj_tag(hd) (((hd) >> 2) & 0x3F)
-#define Obj_wosize_shift(tag) ((tag) == Serialized_tag ? 36 : 8)
+#define Obj_wosize_shift(tag) ((tag) < Heap_string_tag ? 36 : 8)
 #define Obj_wosize_tag(hd, tag) ((hd) >> Obj_wosize_shift(tag))
 #define Obj_wosize(hd) (Obj_wosize_tag(hd, Obj_tag(hd)))
 #define Obj_whsize(hd) (1 + Obj_wosize(hd))
@@ -1400,7 +1400,7 @@ CAMLprim value hh_ml_alloc(value wsize) {
  * the allocated chunk.
  */
 /*****************************************************************************/
-CAMLprim value hh_store_ocaml(value v) {
+CAMLprim value hh_store_ocaml(value v, value tag_val) {
   CAMLparam1(v);
   CAMLlocal1(result);
   check_should_exit();
@@ -1464,8 +1464,12 @@ CAMLprim value hh_store_ocaml(value v) {
   assert(compressed_size < 0x10000000);
   assert(decompress_capacity < 0x10000000);
 
-  hh_header_t header =
-      compressed_wsize << 36 | decompress_capacity << 8 | Color_white;
+  // Ensure tag fits in high 6 bits of low bytes
+  int tag = Long_val(tag_val);
+  assert(tag < 0x40);
+
+  hh_header_t header = compressed_wsize << 36 | decompress_capacity << 8 |
+      tag << 2 | Color_white;
 
   // Allocate space for the header and compressed data
   heap_entry_t* entry = Entry_of_addr(hh_alloc(1 + compressed_wsize));
