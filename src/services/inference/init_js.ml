@@ -70,7 +70,7 @@ let infer_lib_file ~ccx ~options ~exclude_syms lib_file ast file_sig =
   let metadata =
     Context.(
       let metadata = metadata_of_options options in
-      { metadata with checked = false; weak = false }
+      { metadata with checked = false }
     )
   in
   (* Lib files use only concrete locations, so this is not used. *)
@@ -203,7 +203,7 @@ let init ~options ~reader lib_files =
     let metadata =
       Context.(
         let metadata = metadata_of_options options in
-        { metadata with checked = false; weak = false }
+        { metadata with checked = false }
       )
     in
     (* Lib files use only concrete locations, so this is not used. *)

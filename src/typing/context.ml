@@ -23,7 +23,6 @@ type metadata = {
   checked: bool;
   munge_underscores: bool;
   verbose: Verbose.t option;
-  weak: bool;
   include_suppressions: bool;
   jsx: Options.jsx_mode;
   strict: bool;
@@ -215,7 +214,6 @@ let metadata_of_options options =
     checked = Options.all options;
     munge_underscores = Options.should_munge_underscores options;
     verbose = Options.verbose options;
-    weak = Options.weak_by_default options;
     include_suppressions = Options.include_suppressions options;
     jsx = Options.Jsx_react;
     strict = false;
@@ -482,8 +480,6 @@ let is_verbose cx =
   | Some { Verbose.focused_files = Some files; _ } ->
     let file = file cx in
     Base.List.mem files (File_key.to_string file) ~equal:String.equal
-
-let is_weak cx = cx.metadata.weak
 
 let is_strict cx = Base.Option.is_some cx.declare_module_ref || cx.metadata.strict
 

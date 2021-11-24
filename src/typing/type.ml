@@ -1002,7 +1002,6 @@ module rec TypeTerm : sig
     | Unchecked
     | Unimplemented
     | UnresolvedType
-    | WeakContext
 
   and fun_param = string option * t
 
@@ -3161,8 +3160,6 @@ module Unsoundness = struct
 
   let unimplemented = Unsound Unimplemented
 
-  let weak_context = Unsound WeakContext
-
   let inference_hooks = Unsound InferenceHooks
 
   let exports = Unsound Exports
@@ -3186,8 +3183,6 @@ module Unsoundness = struct
   let computed_nonlit_key_any = AnyT.make computed_nonlit_key
 
   let unimplemented_any = AnyT.make unimplemented
-
-  let weak_context_any = AnyT.make weak_context
 
   let inference_hooks_any = AnyT.make inference_hooks
 

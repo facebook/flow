@@ -1771,12 +1771,7 @@ struct
 
   and mk_type cx tparams_map reason = function
     | None ->
-      let t =
-        if Context.is_weak cx then
-          Unsoundness.why WeakContext reason
-        else
-          Tvar.mk cx reason
-      in
+      let t = Tvar.mk cx reason in
       (t, None)
     | Some annot ->
       let (((_, t), _) as annot_ast) = convert cx tparams_map annot in

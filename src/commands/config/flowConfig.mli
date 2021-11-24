@@ -244,8 +244,6 @@ val watchman_survive_restarts : config -> bool option
 
 val wait_for_recheck : config -> bool
 
-val weak : config -> bool
-
 (* global defaults for lint suppressions and strict mode *)
 val lint_severities : config -> Severity.severity LintSettings.t
 

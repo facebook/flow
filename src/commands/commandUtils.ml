@@ -852,7 +852,6 @@ module Options_flags = struct
     new_merge: bool;
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
-    weak: bool;
     include_suppressions: bool;
     prioritize_dependency_checks: bool;
   }
@@ -901,7 +900,6 @@ let options_flags =
       profile
       all
       wait_for_recheck
-      weak
       traces
       no_flowlib
       munge_underscore_members
@@ -932,7 +930,6 @@ let options_flags =
         all;
         wait_for_recheck;
         env_mode;
-        weak;
         traces;
         no_flowlib;
         munge_underscore_members;
@@ -964,10 +961,6 @@ let options_flags =
            (optional bool)
            ~doc:
              "If true, always wait for rechecks to finish before serving commands (default: false)"
-      |> flag
-           "--weak"
-           no_arg
-           ~doc:"Typecheck with weak inference, assuming dynamic types by default"
       |> flag "--traces" (optional int) ~doc:"Outline an error path up to a specified level"
       |> flag "--no-flowlib" no_arg ~doc:"Do not include embedded declarations"
       |> flag
@@ -1300,7 +1293,6 @@ let make_options
     opt_babel_loose_array_spread =
       Base.Option.value (FlowConfig.babel_loose_array_spread flowconfig) ~default:false;
     opt_wait_for_recheck;
-    opt_weak = options_flags.weak || FlowConfig.weak flowconfig;
     opt_traces = Base.Option.value options_flags.traces ~default:(FlowConfig.traces flowconfig);
     opt_quiet = options_flags.Options_flags.quiet;
     opt_module_name_mappers = FlowConfig.module_name_mappers flowconfig;

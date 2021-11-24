@@ -149,7 +149,6 @@ let stub_metadata ~root ~checked =
     Context.checked (* local *);
     munge_underscores = false;
     verbose = None;
-    weak = false;
     jsx = Options.Jsx_react;
     strict = false;
     strict_local = false;

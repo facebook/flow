@@ -505,8 +505,6 @@ module Env : Env_sig.S = struct
         | [(_, t)] -> t
         | (_, t1) :: (_, t2) :: ts ->
           UnionT (mk_reason (RType name) loc, UnionRep.make t1 t2 (Base.List.map ~f:snd ts))
-      else if Context.is_weak cx then
-        Unsoundness.why WeakContext (mk_reason (RIdentifier name) loc)
       else
         general
     in
@@ -527,33 +525,29 @@ module Env : Env_sig.S = struct
     | _ -> ()
 
   let get_provider cx name loc =
-    if Context.is_weak cx then
-      let reason = mk_reason (RIdentifier name) loc in
-      (true, Some (Unsoundness.why WeakContext reason), [reason])
-    else
-      let ({ Loc_env.var_info = { Env_api.providers; _ }; _ } as env) = Context.environment cx in
-      let (fully_initialized, provider_locs) =
-        Base.Option.value ~default:(false, []) (Env_api.Provider_api.providers_of_def providers loc)
-      in
-      let providers =
-        Base.List.map ~f:(Fn.compose (Loc_env.find_write env) Reason.aloc_of_reason) provider_locs
-        |> Base.Option.all
-      in
-      let provider =
-        match providers with
-        | None
-          (* We can have no providers when the only writes to a variable are in unreachable code *)
-        | Some [] ->
-          (* If we find an entry for the providers, but none that actually exist, its because this variable
-             was never assigned to. We treat this as undefined. We handle erroring on
-             these cases using a different approach (the error should be at the declaration,
-             not the assignment). *)
-          None
-        | Some [t] -> Some t
-        | Some (t1 :: t2 :: ts) ->
-          Some (UnionT (mk_reason (RIdentifier name) loc, UnionRep.make t1 t2 ts))
-      in
-      (fully_initialized, provider, provider_locs)
+    let ({ Loc_env.var_info = { Env_api.providers; _ }; _ } as env) = Context.environment cx in
+    let (fully_initialized, provider_locs) =
+      Base.Option.value ~default:(false, []) (Env_api.Provider_api.providers_of_def providers loc)
+    in
+    let providers =
+      Base.List.map ~f:(Fn.compose (Loc_env.find_write env) Reason.aloc_of_reason) provider_locs
+      |> Base.Option.all
+    in
+    let provider =
+      match providers with
+      | None
+        (* We can have no providers when the only writes to a variable are in unreachable code *)
+      | Some [] ->
+        (* If we find an entry for the providers, but none that actually exist, its because this variable
+           was never assigned to. We treat this as undefined. We handle erroring on
+           these cases using a different approach (the error should be at the declaration,
+           not the assignment). *)
+        None
+      | Some [t] -> Some t
+      | Some (t1 :: t2 :: ts) ->
+        Some (UnionT (mk_reason (RIdentifier name) loc, UnionRep.make t1 t2 ts))
+    in
+    (fully_initialized, provider, provider_locs)
 
   let constrain_by_provider cx ~use_op t name loc =
     match name with

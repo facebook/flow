@@ -16,7 +16,6 @@ let metadata =
     Context.checked (* local *) = true;
     munge_underscores = false;
     verbose = None;
-    weak = false;
     jsx = Options.Jsx_react;
     strict = false;
     strict_local = false;

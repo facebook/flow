@@ -150,7 +150,6 @@ type t = {
   opt_type_asserts: bool;
   opt_verbose: Verbose.t option;
   opt_wait_for_recheck: bool;
-  opt_weak: bool;
 }
 
 let abstract_locations opts = opts.opt_abstract_locations
@@ -309,8 +308,6 @@ let temp_dir opts = opts.opt_temp_dir
 let verbose opts = opts.opt_verbose
 
 let wait_for_recheck opts = opts.opt_wait_for_recheck
-
-let weak_by_default opts = opts.opt_weak
 
 let include_suppressions opts = opts.opt_include_suppressions
 

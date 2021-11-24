@@ -44,7 +44,6 @@ type metadata = {
   checked: bool;
   munge_underscores: bool;
   verbose: Verbose.t option;
-  weak: bool;
   include_suppressions: bool;
   jsx: Options.jsx_mode;
   strict: bool;
@@ -218,8 +217,6 @@ val trust_graph : t -> Trust_constraint.node IMap.t
 val is_checked : t -> bool
 
 val is_verbose : t -> bool
-
-val is_weak : t -> bool
 
 val is_strict : t -> bool
 

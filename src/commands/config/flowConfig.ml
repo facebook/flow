@@ -135,7 +135,6 @@ module Opts = struct
     watchman_defer_states: string list;
     watchman_survive_restarts: bool option;
     watchman_sync_timeout: int option;
-    weak: bool;
   }
 
   let warn_on_unknown_opts (raw_opts, config) : (t * warning list, error) result =
@@ -267,7 +266,6 @@ module Opts = struct
       watchman_defer_states = [];
       watchman_survive_restarts = None;
       watchman_sync_timeout = None;
-      weak = false;
     }
 
   let parse_lines : line list -> (raw_options, error) result =
@@ -885,7 +883,6 @@ module Opts = struct
       ("types_first.max_rss_bytes_for_check_per_worker", max_rss_bytes_for_check_per_worker_parser);
       ("types_first.max_seconds_for_check_per_worker", max_seconds_for_check_per_worker_parser);
       ("wait_for_recheck", boolean (fun opts v -> Ok { opts with wait_for_recheck = v }));
-      ("weak", boolean (fun opts v -> Ok { opts with weak = v }));
     ]
 
   let parse =
@@ -979,7 +976,6 @@ end = struct
           pp_opt o "module.system" (module_system options.module_system);
         if options.all <> default_options.all then
           pp_opt o "all" (string_of_bool (Base.Option.value options.all ~default:false));
-        if options.weak <> default_options.weak then pp_opt o "weak" (string_of_bool options.weak);
         if options.temp_dir <> default_options.temp_dir then pp_opt o "temp_dir" options.temp_dir;
         if options.include_warnings <> default_options.include_warnings then
           pp_opt o "include_warnings" (string_of_bool options.include_warnings)
@@ -1581,8 +1577,6 @@ let run_post_inference_implicit_instantiation c =
   c.options.Opts.run_post_inference_implicit_instantiation
 
 let wait_for_recheck c = c.options.Opts.wait_for_recheck
-
-let weak c = c.options.Opts.weak
 
 (* global defaults for lint severities and strict mode *)
 let lint_severities c = c.lint_severities

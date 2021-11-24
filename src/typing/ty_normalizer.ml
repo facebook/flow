@@ -922,7 +922,6 @@ end = struct
       | T.Unchecked -> Ty.Unchecked
       | T.Unimplemented -> Ty.Unimplemented
       | T.UnresolvedType -> Ty.UnresolvedType
-      | T.WeakContext -> Ty.WeakContext
 
     and bound_t reason name =
       let loc = Reason.def_aloc_of_reason reason in
