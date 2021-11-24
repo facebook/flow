@@ -65,85 +65,6 @@ open Utils_js
 
  **)
 
-(* produce, given files in fileset:
-   (1) a dependent (reverse dependency) map for those files:
-       the key is the module provided by a file;
-       the value is the subset of files which require that module directly
-   (2) a subset of those files that phantom depend on root_fileset
-
-   IMPORTANT!!! The only state this function can read is the resolved requires! If you need this
-                function to read any other state, make sure to update the DirectDependentFilesCache!
-*)
-let calc_direct_dependents_utils ~reader workers fileset root_fileset =
-  let open Module_heaps in
-  let root_fileset =
-    FilenameSet.fold
-      (fun f root_fileset ->
-        match f with
-        | File_key.SourceFile s
-        | File_key.JsonFile s
-        | File_key.ResourceFile s ->
-          SSet.add s root_fileset
-        | File_key.LibFile _
-        | File_key.Builtins ->
-          root_fileset)
-      root_fileset
-      SSet.empty
-  in
-  (* Distribute work, looking up InfoHeap and ResolvedRequiresHeap once per file. *)
-  let job =
-    List.fold_left (fun acc f ->
-        let { resolved_modules; phantom_dependents; _ } =
-          Reader_dispatcher.get_resolved_requires_unsafe ~reader ~audit:Expensive.ok f
-        in
-
-        (* For every required module m, add f to the reverse dependency list for m,
-           stored in `module_dependents_tbl`. This will be used downstream when computing
-           direct_dependents, and also in calc_all_dependents.
-
-           TODO: should generate this map once on startup, keep required_by in
-           module records and update incrementally on recheck.
-        *)
-        let required = Modulename.Set.of_list (SMap.values resolved_modules) in
-        (* If f's phantom dependents are in root_fileset, then add f to
-           `resolution_path_files`. These are considered direct dependencies (in
-           addition to others computed by direct_dependents downstream). *)
-        let is_resolution_path_file =
-          SSet.exists (fun f -> SSet.mem f root_fileset) phantom_dependents
-        in
-        (f, required, is_resolution_path_file) :: acc
-    )
-  in
-  (* merge results *)
-  let merge = List.rev_append in
-  let%lwt result =
-    MultiWorkerLwt.call
-      workers
-      ~job
-      ~merge
-      ~neutral:[]
-      ~next:(MultiWorkerLwt.next workers (FilenameSet.elements fileset))
-  in
-  List.fold_left
-    (fun (module_dependents, resolution_path_files) (f, required, is_resolution_path_file) ->
-      let add_file = function
-        | None -> Some [f]
-        | Some fs -> Some (f :: fs)
-      in
-      let module_dependents =
-        Modulename.Set.fold (fun r -> Modulename.Map.update r add_file) required module_dependents
-      in
-      let resolution_path_files =
-        if is_resolution_path_file then
-          FilenameSet.add f resolution_path_files
-        else
-          resolution_path_files
-      in
-      (module_dependents, resolution_path_files))
-    (Modulename.Map.empty, FilenameSet.empty)
-    result
-  |> Lwt.return
-
 (* Identify the direct dependents of new, changed, and deleted files.
 
    Files that must be rechecked include those that immediately or recursively
@@ -163,33 +84,70 @@ let calc_direct_dependents_utils ~reader workers fileset root_fileset =
 
    Return the subset of candidates directly dependent on root_modules / root_files.
 
-  IMPORTANT!!! The only state this function can read is the resolved requires! If you need this
-               function to read any other state, make sure to update the DirectDependentFilesCache!
+   TODO: Scanning the dependency graph to find reverse dependencies like this is not good! To avoid
+   this, we should maintain the reverse dependency graph carefully as well. The existing reverse
+   dependency graph stored in the server's OCaml heap is not enough:
+     - It does not track reverse dependencies for non-checked files
+     - It does not track reverse dependencies for no-provider modules
+     - It does not track reverse dependencies for "phantom" files
+
+   IMPORTANT!!! The only state this function can read is the resolved requires! If you need this
+                function to read any other state, make sure to update the DirectDependentFilesCache!
 *)
-let calc_direct_dependents ~reader workers ~candidates ~root_files ~root_modules =
+let calc_direct_dependents_job acc (root_files, root_modules) =
+  (* The MultiWorker API is weird. All jobs get the `neutral` value as their
+   * accumulator argument. We can exploit this to return a set from workers
+   * while the server accumulates lists of sets. *)
+  assert (acc = []);
+  let open Module_heaps in
+  let root_files =
+    List.fold_left
+      (fun acc f ->
+        match f with
+        | File_key.SourceFile s
+        | File_key.JsonFile s
+        | File_key.ResourceFile s ->
+          SSet.add s acc
+        | File_key.LibFile _
+        | File_key.Builtins ->
+          acc)
+      SSet.empty
+      root_files
+  in
+  let root_modules = Modulename.Set.of_list root_modules in
+  let dependents = ref FilenameSet.empty in
+  Module_heaps.iter_resolved_requires (fun { file_key; resolved_modules; phantom_dependents; _ } ->
+      if not (SSet.disjoint root_files phantom_dependents) then
+        dependents := FilenameSet.add file_key !dependents
+      else if SMap.exists (fun _ m -> Modulename.Set.mem m root_modules) resolved_modules then
+        dependents := FilenameSet.add file_key !dependents
+  );
+  !dependents
+
+let calc_direct_dependents workers ~candidates ~root_files ~root_modules =
   if FilenameSet.is_empty root_files && Modulename.Set.is_empty root_modules then
-    (* dependent_calc_utils is O(candidates), but if root_files and root_modules are empty then we
-     * can immediately return. We know that the empty set has no direct or transitive dependencies.
-     * This can save us a lot of time on very large repositories *)
+    (* If root_files and root_modules are empty then we can immediately return.
+     * We know that the empty set has no direct or transitive dependencies. This
+     * can save us a lot of time on very large repositories *)
     Lwt.return FilenameSet.empty
   else
-    (* Get the modules provided by candidate files, the reverse dependency map
-       for candidate files, and the subset of candidate files whose resolution
-       paths may encounter new or changed modules. *)
-    let%lwt (module_dependents, resolution_path_files) =
-      calc_direct_dependents_utils ~reader workers candidates root_files
+    (* Find direct dependents via parallel heap scans, searching for dependents
+     * of the changed files and modules. Note that we accumulate a list of sets
+     * during the call, then merge the sets after. List.cons is much faster than
+     * FilenameSet.union, so we can avoid blocking worker SEND this way. *)
+    let next =
+      MultiWorkerLwt.next2
+        workers
+        ~max_size:2000
+        (FilenameSet.elements root_files)
+        (Modulename.Set.elements root_modules)
     in
-    (* resolution_path_files, plus files that require root_modules *)
-    let direct_dependents =
-      Modulename.Set.fold
-        (fun m acc ->
-          match Modulename.Map.find_opt m module_dependents with
-          | None -> acc
-          | Some files -> List.fold_left (fun acc f -> FilenameSet.add f acc) acc files)
-        root_modules
-        resolution_path_files
+    let%lwt dependent_sets =
+      MultiWorkerLwt.call workers ~job:calc_direct_dependents_job ~merge:List.cons ~neutral:[] ~next
     in
-    Lwt.return direct_dependents
+    let dependents = List.fold_left FilenameSet.union FilenameSet.empty dependent_sets in
+    (* We are only interested in dependents which are also in `candidates` *)
+    Lwt.return (FilenameSet.inter candidates dependents)
 
 (* Calculate module dependencies. Since this involves a lot of reading from
    shared memory, it is useful to parallelize this process (leading to big

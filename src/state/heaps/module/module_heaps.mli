@@ -86,3 +86,5 @@ end
 module From_saved_state : sig
   val add_resolved_requires : File_key.t -> resolved_requires -> unit
 end
+
+val iter_resolved_requires : (resolved_requires -> unit) -> unit

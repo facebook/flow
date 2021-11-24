@@ -11,13 +11,10 @@ val implementation_file :
   reader:Mutator_state_reader.t -> (Modulename.t -> File_key.t option) Expensive.t
 
 val calc_direct_dependents :
-  reader:Abstract_state_reader.t ->
   MultiWorkerLwt.worker list option ->
-  candidates:(* workers *)
-             FilenameSet.t ->
+  candidates:FilenameSet.t ->
   root_files:FilenameSet.t ->
   root_modules:Modulename.Set.t ->
-  (* direct_dependents of changed_modules *)
   FilenameSet.t Lwt.t
 
 val calc_dependency_info :

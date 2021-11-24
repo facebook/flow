@@ -1419,7 +1419,6 @@ end = struct
             ~on_miss:
               ( lazy
                 (Dep_service.calc_direct_dependents
-                   ~reader:(Abstract_state_reader.Mutator_state_reader reader)
                    workers
                    ~candidates:unchanged
                    ~root_files:new_or_changed_or_deleted

@@ -430,3 +430,5 @@ end
 module From_saved_state = struct
   let add_resolved_requires = ResolvedRequiresHeap.add
 end
+
+let iter_resolved_requires = ResolvedRequiresHeap.iter
