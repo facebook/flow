@@ -101,6 +101,12 @@ module type NoCache = sig
   val revive_batch : KeySet.t -> unit
 end
 
+module type NoCacheTag = sig
+  include NoCache
+
+  val iter : (value -> unit) -> unit
+end
+
 module type DebugCacheType = sig
   val get_size : unit -> int
 end
@@ -151,7 +157,7 @@ module NoCache (Key : Key) (Value : Value) :
   NoCache with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key)
 
 module NoCacheTag (Key : Key) (Value : Value) (_ : SerializedTag) :
-  NoCache with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key)
+  NoCacheTag with type key = Key.t and type value = Value.t and module KeySet = Flow_set.Make(Key)
 
 module NoCacheAddr (Key : Key) (Value : AddrValue) :
   NoCache with type key = Key.t and type value = Value.t addr and module KeySet = Flow_set.Make(Key)

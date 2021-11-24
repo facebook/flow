@@ -390,6 +390,12 @@ module type NoCache = sig
   val revive_batch : KeySet.t -> unit
 end
 
+module type NoCacheTag = sig
+  include NoCache
+
+  val iter : (value -> unit) -> unit
+end
+
 module type LocalCache = sig
   module DebugL1 : DebugCacheType
 
@@ -510,14 +516,22 @@ module NoCache (Key : Key) (Value : Value) =
       let tag = 0
     end)
 
-module NoCacheTag (Key : Key) (Value : Value) (Tag : SerializedTag) =
-  NoCacheInternal (Key) (Value)
-    (struct
-      (* Tag values here must match the corresponding values from NewAPI.tag *)
-      let tag =
-        match Tag.value with
-        | Serialized_resolved_requires -> 1
-    end)
+module NoCacheTag (Key : Key) (Value : Value) (Tag : SerializedTag) = struct
+  let tag =
+    (* Tag values here must match the corresponding values from NewAPI.tag *)
+    match Tag.value with
+    | Serialized_resolved_requires -> 1
+
+  include
+    NoCacheInternal (Key) (Value)
+      (struct
+        let tag = tag
+      end)
+
+  external hh_iter_serialized : ('a -> unit) -> int -> unit = "hh_iter_serialized"
+
+  let iter f = hh_iter_serialized f tag
+end
 
 module NoCacheAddr (Key : Key) (Value : AddrValue) = struct
   module Tbl = HashtblSegment (Key)

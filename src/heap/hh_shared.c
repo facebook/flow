@@ -1781,3 +1781,24 @@ CAMLprim value hh_read_string(value addr, value wsize) {
       Bsize_wsize(Long_val(wsize)));
   CAMLreturn(s);
 }
+
+/* Iterates the shared hash table looking for heap values with a given tag. The
+ * tag must correspond to a serialized OCaml value, which is deserialized and
+ * passed to the callback function. */
+CAMLprim value hh_iter_serialized(value f, value filter_tag_val) {
+  CAMLparam2(f, filter_tag_val);
+  CAMLlocal1(x);
+  intnat hashtbl_slots = info->hashtbl_slots;
+  for (intnat i = 0; i < hashtbl_slots; i++) {
+    addr_t addr = hashtbl[i].addr;
+    if (addr != NULL_ADDR) {
+      hh_header_t hd = Deref(addr);
+      int tag = (hd >> 2) & 0x3F;
+      if (tag == Long_val(filter_tag_val)) {
+        x = hh_deserialize(Val_long(addr));
+        caml_callback(f, x);
+      }
+    }
+  }
+  CAMLreturn(Val_unit);
+}
