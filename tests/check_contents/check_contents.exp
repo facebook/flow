@@ -77,38 +77,10 @@ Found 1 error
 
 not_flow.js
 
-Error -------------------------------------------------------------------------------------------------- not_flow.js:1:5
-
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
-
-   1| 1 * 'foo';
-          ^^^^^ [1]
-
-
-
-Found 1 error
-
-
-not_flow.js with --all
-
-Error -------------------------------------------------------------------------------------------------- not_flow.js:1:5
-
-Cannot perform arithmetic operation because string [1] is not a number. [unsafe-addition]
-
-   1| 1 * 'foo';
-          ^^^^^ [1]
-
-
-
-Found 1 error
-
-
-not_flow.js with --respect-pragma
-
 File is not @flow!
 
 
-not_flow.js with --respect-pragma and --all
+not_flow.js with --all
 
 Error -------------------------------------------------------------------------------------------------- not_flow.js:1:5
 
@@ -129,12 +101,12 @@ No errors!
 
 bad_exports.js
 
-Error ---------------------------------------------------------------------------------------------- bad_exports.js:1:31
+Error ---------------------------------------------------------------------------------------------- bad_exports.js:2:31
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
 annotation at function return: [signature-verification-failure]
 
-   1| export function foo(x: number) { return x; } // Error, missing return type
+   2| export function foo(x: number) { return x; } // Error, missing return type
                                     
 
 
@@ -144,4 +116,4 @@ Found 1 error
 
 json.json
 
-No errors!
+File is not @flow!

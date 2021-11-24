@@ -34,7 +34,6 @@ let spec =
         |> verbose_flags
         |> from_flag
         |> wait_for_recheck_flag
-        |> flag "--respect-pragma" no_arg ~doc:"" (* deprecated *)
         |> flag "--all" no_arg ~doc:"Ignore absence of an @flow pragma"
         |> anon "filename" (optional string)
       );
@@ -52,7 +51,6 @@ let main
     strip_root
     verbose
     wait_for_recheck
-    respect_pragma
     all
     file
     () =
@@ -71,15 +69,6 @@ let main
   if (not option_values.quiet) && verbose <> None then
     prerr_endline "NOTE: --verbose writes to the server log file";
 
-  if (not option_values.quiet) && all && respect_pragma then
-    prerr_endline "Warning: --all and --respect-pragma cannot be used together. --all wins.";
-
-  (* TODO: --respect-pragma is deprecated. We will soon flip the default. As a
-     transition, --all defaults to enabled. To maintain the current behavior
-     going forward, callers should add --all, which currently is a no-op.
-     Once we flip the default, --respect-pragma will have no effect and will
-     be removed. *)
-  let all = all || not respect_pragma in
   let include_warnings = error_flags.Errors.Cli_output.include_warnings in
   let request =
     ServerProt.Request.CHECK_FILE

@@ -367,33 +367,25 @@ let autocomplete ~trigger_character ~reader ~options ~env ~profiling ~input ~cur
       ))
 
 let check_file ~options ~env ~profiling ~force file_input =
-  let file = file_key_of_file_input ~options file_input in
-  match file_input with
-  | File_input.FileName _ -> failwith "Not implemented"
-  | File_input.FileContent (_, content) ->
-    let should_check =
-      if force then
-        true
+  let options = { options with Options.opt_all = Options.all options || force } in
+  match of_file_input ~options ~env file_input with
+  | Error (Failed _reason)
+  | Error (Skipped _reason) ->
+    ServerProt.Response.NOT_COVERED
+  | Ok (file, content) ->
+    let result =
+      let ((_, parse_errs) as intermediate_result) =
+        Type_contents.parse_contents ~options ~profiling content file
+      in
+      if not (Flow_error.ErrorSet.is_empty parse_errs) then
+        Error parse_errs
       else
-        let (_, docblock) = Parsing_service_js.(parse_docblock docblock_max_tokens file content) in
-        Docblock.is_flow docblock
+        Type_contents.type_parse_artifacts ~options ~env ~profiling file intermediate_result
     in
-    if should_check then
-      let result =
-        let ((_, parse_errs) as intermediate_result) =
-          Type_contents.parse_contents ~options ~profiling content file
-        in
-        if not (Flow_error.ErrorSet.is_empty parse_errs) then
-          Error parse_errs
-        else
-          Type_contents.type_parse_artifacts ~options ~env ~profiling file intermediate_result
-      in
-      let (errors, warnings) =
-        Type_contents.printable_errors_of_file_artifacts_result ~options ~env file result
-      in
-      convert_errors ~errors ~warnings ~suppressed_errors:[]
-    else
-      ServerProt.Response.NOT_COVERED
+    let (errors, warnings) =
+      Type_contents.printable_errors_of_file_artifacts_result ~options ~env file result
+    in
+    convert_errors ~errors ~warnings ~suppressed_errors:[]
 
 (* This returns result, json_data_to_log, where json_data_to_log is the json data from
  * getdef_get_result which we end up using *)
