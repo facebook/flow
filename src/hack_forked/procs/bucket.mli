@@ -39,6 +39,8 @@ val make :
   'a list ->
   'a list next
 
+val make2 : num_workers:int -> ?max_size:int -> 'a list -> 'b list -> ('a list * 'b list) next
+
 type 'a of_n = {
   work: 'a;
   bucket: int;

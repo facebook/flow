@@ -149,5 +149,13 @@ let next ?progress_fn ?max_size workers =
     ?progress_fn
     ?max_size
 
+let next2 ?max_size workers =
+  Hh_bucket.make2
+    ~num_workers:
+      (match workers with
+      | Some w -> List.length w
+      | None -> 1)
+    ?max_size
+
 (* Wrap WorkerController.make to abstract out the worker type *)
 let make = WorkerController.make

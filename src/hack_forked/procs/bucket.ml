@@ -58,10 +58,20 @@ let of_list = function
   | [] -> Done
   | wl -> Job wl
 
+let of_list2 = function
+  | ([], []) -> Done
+  | wl -> Job wl
+
 let make ~num_workers ?progress_fn ?max_size jobs =
   let max_size = Base.Option.value max_size ~default:!max_size_ref in
   let maker = make_list ~num_workers ?progress_fn ~max_size jobs in
   (fun () -> of_list (maker ()))
+
+let make2 ~num_workers ?max_size ajobs bjobs =
+  let max_size = Base.Option.value max_size ~default:!max_size_ref in
+  let amaker = make_list ~num_workers ~max_size ajobs in
+  let bmaker = make_list ~num_workers ~max_size bjobs in
+  (fun () -> of_list2 (amaker (), bmaker ()))
 
 type 'a of_n = {
   work: 'a;

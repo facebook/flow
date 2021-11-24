@@ -24,6 +24,9 @@ val next :
   'a list ->
   'a list Hh_bucket.next
 
+val next2 :
+  ?max_size:int -> worker list option -> 'a list -> 'b list -> ('a list * 'b list) Hh_bucket.next
+
 (* Creates a pool of workers. *)
 val make :
   call_wrapper:
