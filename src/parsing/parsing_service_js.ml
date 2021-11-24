@@ -384,8 +384,7 @@ let types_checked types_mode info =
       false
     | Some Docblock.OptIn
     | Some Docblock.OptInStrict
-    | Some Docblock.OptInStrictLocal
-    | Some Docblock.OptInWeak ->
+    | Some Docblock.OptInStrictLocal ->
       true)
 
 let do_parse ~parse_options ~info content file =

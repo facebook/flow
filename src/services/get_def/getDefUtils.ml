@@ -359,7 +359,6 @@ let get_def_info ~reader ~options env profiling file_key ast_info loc :
     (def_info option, string) result =
   let props_access_info = ref (Ok None) in
   let (ast, file_sig, info) = ast_info in
-  let info = Docblock.set_flow_mode_for_ide_command info in
   let literal_key_info : (Loc.t * Loc.t * string) option = ObjectKeyAtLoc.get ast loc in
   let cx =
     set_def_loc_hook ~reader props_access_info literal_key_info loc;

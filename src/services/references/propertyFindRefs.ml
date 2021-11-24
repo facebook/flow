@@ -115,7 +115,6 @@ let property_find_refs_in_file ~reader options ast_info file_key def_info name =
   let potential_refs : Type.t ALocMap.t ref = ref ALocMap.empty in
   let potential_matching_literals : (ALoc.t * Type.t) list ref = ref [] in
   let (ast, file_sig, info) = ast_info in
-  let info = Docblock.set_flow_mode_for_ide_command info in
   let local_defs =
     Nel.to_list (all_locs_of_property_def_info def_info)
     |> List.filter (fun loc -> loc.Loc.source = Some file_key)

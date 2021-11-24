@@ -276,7 +276,6 @@ let docblock_overrides docblock_info metadata =
     | Some Docblock.OptIn -> { metadata with checked = true }
     | Some Docblock.OptInStrict -> { metadata with checked = true; strict = true }
     | Some Docblock.OptInStrictLocal -> { metadata with checked = true; strict_local = true }
-    | Some Docblock.OptInWeak -> { metadata with checked = true; weak = true }
     (* --all (which sets metadata.checked = true) overrides @noflow, so there are
        currently no scenarios where we'd change checked = true to false. in the
        future, there may be a case where checked defaults to true (but is not

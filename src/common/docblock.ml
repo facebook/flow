@@ -9,7 +9,6 @@ type flow_mode =
   | OptIn
   | OptInStrict
   | OptInStrictLocal
-  | OptInWeak
   | OptOut
 
 (*
@@ -46,7 +45,6 @@ let is_strict info =
   | Some OptInStrict -> true
   | Some OptIn
   | Some OptInStrictLocal
-  | Some OptInWeak
   | Some OptOut
   | None ->
     false
@@ -55,36 +53,11 @@ let is_flow info =
   match info.flow with
   | Some OptIn
   | Some OptInStrict
-  | Some OptInStrictLocal
-  | Some OptInWeak ->
+  | Some OptInStrictLocal ->
     true
   | Some OptOut
   | None ->
     false
-
-let set_flow_mode_for_ide_command info =
-  let flow =
-    match flow info with
-    (* If the file does not specify a @flow pragma, we still want to try
-       to infer something, but the file might be huge and unannotated,
-       which can cause performance issues (including non-termination).
-       To avoid this case, we infer the file using "weak mode." *)
-    | None -> OptInWeak
-    (* Respect @flow pragma *)
-    | Some OptIn -> OptIn
-    (* Respect @flow strict pragma *)
-    | Some OptInStrict -> OptInStrict
-    (* Respect @flow strict-local pragma *)
-    | Some OptInStrictLocal -> OptInStrictLocal
-    (* Respect @flow weak pragma *)
-    | Some OptInWeak -> OptInWeak
-    (* Respect @noflow, which `apply_docblock_overrides` does not by
-       default. Again, large files can cause non-termination, so
-       respecting this pragma gives programmers a way to tell Flow to
-       avoid inference on such files. *)
-    | Some OptOut -> OptInWeak
-  in
-  { info with flow = Some flow }
 
 (* debugging *)
 let json_of_docblock info =
@@ -94,7 +67,6 @@ let json_of_docblock info =
       | Some OptIn -> JSON_String "OptIn"
       | Some OptInStrict -> JSON_String "OptInStrict"
       | Some OptInStrictLocal -> JSON_String "OptInStrictLocal"
-      | Some OptInWeak -> JSON_String "OptInWeak"
       | Some OptOut -> JSON_String "OptOut"
       | None -> JSON_Null
     in

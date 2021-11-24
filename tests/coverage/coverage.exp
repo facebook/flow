@@ -48,7 +48,7 @@ errors because not @flow:
 File is missing @flow pragma and `all` is not set to `true`
 
 forces @flow:
-Covered: 75.00% (3 of 4 expressions)
+Covered: 100.00% (4 of 4 expressions)
 
 -----------------------------
 call.js
