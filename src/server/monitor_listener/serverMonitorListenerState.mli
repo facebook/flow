@@ -48,6 +48,19 @@ val push_files_to_resync_after_file_watcher_restart :
 
 val cancellation_requests : Lsp.IdSet.t ref
 
+type recheck_workload = {
+  files_to_prioritize: Utils_js.FilenameSet.t;
+  files_to_recheck: Utils_js.FilenameSet.t;
+  files_to_force: CheckedSet.t;
+  profiling_callbacks: (Profiling_js.finished option -> unit) list;
+  metadata: MonitorProt.file_watcher_metadata;
+  recheck_reasons_rev: LspProt.recheck_reason list;
+}
+
+type priority =
+  | Priority
+  | Normal
+
 (* APIs to wait *)
 val wait_for_anything :
   process_updates:(?skip_incompatible:bool -> SSet.t -> Utils_js.FilenameSet.t) ->
@@ -57,17 +70,8 @@ val wait_for_anything :
 val wait_for_updates_for_recheck :
   process_updates:(?skip_incompatible:bool -> SSet.t -> Utils_js.FilenameSet.t) ->
   get_forced:(unit -> CheckedSet.t) ->
+  priority:priority ->
   unit Lwt.t
-
-(* APIs to consume *)
-type recheck_workload = {
-  files_to_prioritize: Utils_js.FilenameSet.t;
-  files_to_recheck: Utils_js.FilenameSet.t;
-  files_to_force: CheckedSet.t;
-  profiling_callbacks: (Profiling_js.finished option -> unit) list;
-  metadata: MonitorProt.file_watcher_metadata;
-  recheck_reasons_rev: LspProt.recheck_reason list;
-}
 
 val pop_next_workload : unit -> WorkloadStream.workload option
 
@@ -81,4 +85,4 @@ val get_and_clear_recheck_workload :
   prioritize_dependency_checks:bool ->
   process_updates:(?skip_incompatible:bool -> SSet.t -> Utils_js.FilenameSet.t) ->
   get_forced:(unit -> CheckedSet.t) ->
-  recheck_workload
+  priority * recheck_workload

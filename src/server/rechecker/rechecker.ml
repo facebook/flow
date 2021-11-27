@@ -144,7 +144,7 @@ let recheck
 
 (* Runs a function which should be canceled if we are notified about any file changes. After the
  * thread is canceled, post_cancel is called and its result returned *)
-let run_but_cancel_on_file_changes ~options env ~get_forced ~f ~pre_cancel ~post_cancel =
+let run_but_cancel_on_file_changes ~options env ~get_forced ~priority ~f ~pre_cancel ~post_cancel =
   let process_updates ?skip_incompatible = process_updates ?skip_incompatible ~options env in
   (* We don't want to start running f until we're in the try block *)
   let (waiter, wakener) = Lwt.task () in
@@ -154,7 +154,7 @@ let run_but_cancel_on_file_changes ~options env ~get_forced ~f ~pre_cancel ~post
   in
   let cancel_thread =
     let%lwt () =
-      ServerMonitorListenerState.wait_for_updates_for_recheck ~process_updates ~get_forced
+      ServerMonitorListenerState.wait_for_updates_for_recheck ~process_updates ~get_forced ~priority
     in
     Hh_logger.info "Canceling recheck because additional files changed";
     let%lwt () = pre_cancel () in
@@ -201,7 +201,7 @@ let rec recheck_single ~recheck_count genv env =
     let will_be_checked_files = ref env.ServerEnv.checked_files in
     let get_forced () = !will_be_checked_files in
     let prioritize_dependency_checks = Options.prioritize_dependency_checks options in
-    let workload =
+    let (priority, workload) =
       get_and_clear_recheck_workload ~prioritize_dependency_checks ~process_updates ~get_forced
     in
     let file_watcher_metadata = workload.metadata in
@@ -279,6 +279,7 @@ let rec recheck_single ~recheck_count genv env =
         ~options
         env
         ~get_forced
+        ~priority
         ~f
         ~pre_cancel:stop_parallelizable_workloads
         ~post_cancel

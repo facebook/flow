@@ -108,6 +108,10 @@ type recheck_workload = {
   recheck_reasons_rev: LspProt.recheck_reason list;
 }
 
+type priority =
+  | Priority
+  | Normal
+
 let empty_recheck_workload =
   {
     files_to_prioritize = FilenameSet.empty;
@@ -192,7 +196,7 @@ let workload_changed a b =
  * the recheck stream is asking us to focus `foo.js` but it's already focused, then we can ignore
  * it.
  *)
-let recheck_fetch ~process_updates ~get_forced =
+let recheck_fetch ~process_updates ~get_forced ~priority =
   recheck_acc :=
     Lwt_stream.get_available recheck_stream
     (* Get all the files which have changed *)
@@ -222,8 +226,16 @@ let recheck_fetch ~process_updates ~get_forced =
                let workload = update ~files_to_prioritize:updates ~files_to_force workload in
                (FilenameSet.is_empty updates, workload)
              | DependenciesToPrioritize dependencies ->
-               let checked_set = CheckedSet.add ~dependencies CheckedSet.empty in
-               let files_to_force = CheckedSet.diff checked_set (get_forced ()) in
+               let to_prioritize = CheckedSet.add ~dependencies CheckedSet.empty in
+               let files_to_force =
+                 (* if we're doing a normal recheck, don't filter out dependencies that are
+                    already being checked, because we want to cancel this recheck and do a
+                    faster priority check. but if we're already doing a priority check, we
+                    don't want to cancel it just to start another with the same files. *)
+                 match priority with
+                 | Normal -> to_prioritize
+                 | Priority -> CheckedSet.diff to_prioritize (get_forced ())
+               in
                let workload = update ~files_to_force workload in
                (CheckedSet.is_empty files_to_force, workload)
              | FilesToResync changed_since_mergebase ->
@@ -274,7 +286,7 @@ let requeue_workload workload =
   recheck_acc := next
 
 let get_and_clear_recheck_workload ~prioritize_dependency_checks ~process_updates ~get_forced =
-  recheck_fetch ~process_updates ~get_forced;
+  recheck_fetch ~process_updates ~get_forced ~priority:Normal;
   let recheck_workload = !recheck_acc in
   let { files_to_force; files_to_prioritize; _ } = recheck_workload in
   (* when prioritize_dependency_checks is enabled, if there are any dependencies to force, then we
@@ -282,7 +294,7 @@ let get_and_clear_recheck_workload ~prioritize_dependency_checks ~process_update
 
      if there are any files_to_prioritize, those are included in the next recheck but do not
      themselves cause a prioritized recheck. the use-case for this is unexpected changes that
-     need to be reparsed. they could be discovered by either a regular recheck or a prioritized
+     need to be reparsed. they could be discovered by either a normal recheck or a prioritized
      recheck, and so need to be included in whichever kind happens next.
 
      for example, imagine we're doing a priority recheck and discover that [foo.js] needs to
@@ -294,7 +306,7 @@ let get_and_clear_recheck_workload ~prioritize_dependency_checks ~process_update
   in
   if (not prioritize_dependency_checks) || CheckedSet.is_empty dependencies_to_force then (
     recheck_acc := empty_recheck_workload;
-    recheck_workload
+    (Normal, recheck_workload)
   ) else
     let priority_workload =
       { empty_recheck_workload with files_to_force = dependencies_to_force; files_to_prioritize }
@@ -303,7 +315,7 @@ let get_and_clear_recheck_workload ~prioritize_dependency_checks ~process_update
       { recheck_workload with files_to_force; files_to_prioritize = FilenameSet.empty }
     in
     recheck_acc := recheck_workload;
-    priority_workload
+    (Priority, priority_workload)
 
 (** [wait_for stream] blocks until a message arrives on [stream] *)
 let wait_for stream =
@@ -311,15 +323,15 @@ let wait_for stream =
   let%lwt _ = Lwt_stream.is_empty stream in
   Lwt.return_unit
 
-let rec wait_for_updates_for_recheck ~process_updates ~get_forced =
+let rec wait_for_updates_for_recheck ~process_updates ~get_forced ~priority =
   let%lwt () = wait_for recheck_stream in
   let workload_before = !recheck_acc in
-  recheck_fetch ~process_updates ~get_forced;
+  recheck_fetch ~process_updates ~get_forced ~priority;
   let workload_after = !recheck_acc in
   if workload_changed workload_before workload_after then
     Lwt.return_unit
   else
-    wait_for_updates_for_recheck ~process_updates ~get_forced
+    wait_for_updates_for_recheck ~process_updates ~get_forced ~priority
 
 (* Block until any stream receives something *)
 let wait_for_anything ~process_updates ~get_forced =
@@ -329,7 +341,7 @@ let wait_for_anything ~process_updates ~get_forced =
         WorkloadStream.wait_for_workload workload_stream;
         wait_for env_update_stream;
         wait_for recheck_stream;
-        wait_for_updates_for_recheck ~process_updates ~get_forced;
+        wait_for_updates_for_recheck ~process_updates ~get_forced ~priority:Normal;
       ]
   in
   Lwt.return_unit

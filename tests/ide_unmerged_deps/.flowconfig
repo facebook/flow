@@ -1,0 +1,3 @@
+[options]
+lazy_mode=true
+experimental.prioritize_dependency_checks=true
