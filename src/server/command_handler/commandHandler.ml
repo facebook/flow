@@ -1305,11 +1305,12 @@ let wrap_ephemeral_handler handler ~genv ~request_id ~client_context ~workload ~
     MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
 
     let should_print_summary = Options.should_profile genv.options in
-    let%lwt (profiling, (ret, json_data)) =
+    let%lwt (profiling, (ret, response, json_data)) =
       Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary (fun profiling ->
           handler ~genv ~request_id ~workload ~profiling arg
       )
     in
+    MonitorRPC.respond_to_request ~request_id ~response;
     let event =
       ServerStatus.(
         Finishing_up
@@ -1338,10 +1339,9 @@ let wrap_ephemeral_handler handler ~genv ~request_id ~client_context ~workload ~
 
 (* A few commands need to be handled immediately, as soon as they arrive from the monitor. An
  * `env` is NOT available, since we don't have the server's full attention *)
-let handle_ephemeral_immediately_unsafe ~genv:_ ~request_id ~workload ~profiling () =
+let handle_ephemeral_immediately_unsafe ~genv:_ ~request_id:_ ~workload ~profiling () =
   let%lwt (response, json_data) = workload ~profiling in
-  MonitorRPC.respond_to_request ~request_id ~response;
-  Lwt.return ((), json_data)
+  Lwt.return ((), response, json_data)
 
 let handle_ephemeral_immediately = wrap_ephemeral_handler handle_ephemeral_immediately_unsafe
 
@@ -1378,17 +1378,13 @@ let run_command_in_parallel ~env ~profiling ~name ~workload ~mk_workload =
 
 let rec handle_parallelizable_ephemeral_unsafe
     ~client_context ~cmd_str ~genv ~request_id ~workload ~profiling env =
-  let%lwt json_data =
-    let%lwt (response, json_data) =
-      let mk_workload () =
-        handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str
-      in
-      run_command_in_parallel ~env ~profiling ~name:cmd_str ~workload ~mk_workload
+  let%lwt (response, json_data) =
+    let mk_workload () =
+      handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str
     in
-    MonitorRPC.respond_to_request ~request_id ~response;
-    Lwt.return json_data
+    run_command_in_parallel ~env ~profiling ~name:cmd_str ~workload ~mk_workload
   in
-  Lwt.return ((), json_data)
+  Lwt.return ((), response, json_data)
 
 and handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str env =
   try%lwt
@@ -1405,10 +1401,8 @@ and handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload 
     (* It's fine for parallelizable commands to be canceled - they'll be run again later *)
     Lwt.return_unit
 
-let handle_nonparallelizable_ephemeral_unsafe ~genv ~request_id ~workload ~profiling env =
-  let%lwt (env, response, json_data) = run_command_in_serial ~genv ~env ~profiling ~workload in
-  MonitorRPC.respond_to_request ~request_id ~response;
-  Lwt.return (env, json_data)
+let handle_nonparallelizable_ephemeral_unsafe ~genv ~request_id:_ ~workload ~profiling env =
+  run_command_in_serial ~genv ~env ~profiling ~workload
 
 let handle_nonparallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str env =
   let%lwt result =
