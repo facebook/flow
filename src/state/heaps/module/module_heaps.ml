@@ -202,7 +202,7 @@ end = struct
     | Some old_resolve_requires -> old_resolve_requires.hash <> resolved_requires.hash
 end
 
-let currently_oldified_infoheap_files : Utils_js.FilenameSet.t option ref = ref None
+let currently_oldified_infoheap_files : Utils_js.FilenameSet.t ref = ref Utils_js.FilenameSet.empty
 
 module Introduce_files_mutator : sig
   type t
@@ -213,28 +213,26 @@ module Introduce_files_mutator : sig
 end = struct
   type t = unit
 
-  let commit oldified_files =
+  let commit () =
     WorkerCancel.with_no_cancellations (fun () ->
         Hh_logger.debug "Committing InfoHeap";
-        InfoHeap.remove_old_batch oldified_files;
-        currently_oldified_infoheap_files := None
+        InfoHeap.remove_old_batch !currently_oldified_infoheap_files;
+        currently_oldified_infoheap_files := Utils_js.FilenameSet.empty
     );
     Lwt.return_unit
 
-  let rollback oldified_files =
+  let rollback () =
     WorkerCancel.with_no_cancellations (fun () ->
         Hh_logger.debug "Rolling back InfoHeap";
-        InfoHeap.revive_batch oldified_files;
-        currently_oldified_infoheap_files := None
+        InfoHeap.revive_batch !currently_oldified_infoheap_files;
+        currently_oldified_infoheap_files := Utils_js.FilenameSet.empty
     );
     Lwt.return_unit
 
   let create transaction oldified_files =
     WorkerCancel.with_no_cancellations (fun () ->
-        currently_oldified_infoheap_files := Some oldified_files;
+        currently_oldified_infoheap_files := oldified_files;
         InfoHeap.oldify_batch oldified_files;
-        let commit () = commit oldified_files in
-        let rollback () = rollback oldified_files in
         Transaction.add ~singleton:"Introduce_files" ~commit ~rollback transaction
     )
 
@@ -308,10 +306,7 @@ module Reader : READER with type reader = State_reader.t = struct
   let should_use_old_resolved_requires f =
     Utils_js.FilenameSet.mem f !currently_oldified_resolved_requires
 
-  let should_use_old_infoheap f =
-    match !currently_oldified_infoheap_files with
-    | None -> false
-    | Some oldified_files -> Utils_js.FilenameSet.mem f oldified_files
+  let should_use_old_infoheap f = Utils_js.FilenameSet.mem f !currently_oldified_infoheap_files
 
   let get_file ~reader:_ ~audit key =
     if should_use_old_nameheap key then
