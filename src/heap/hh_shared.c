@@ -284,7 +284,7 @@ typedef uintnat hh_tag_t;
 
 // Keep these in sync with "tag" type definition in sharedMem.ml
 #define Heap_string_tag 2
-#define Addr_tbl_tag 15
+#define Addr_tbl_tag 6
 
 static _Bool should_scan(hh_tag_t tag) {
   // By convention, tags below Addr_tbl_tag contain no pointers, whereas

@@ -47,8 +47,7 @@ let sig_hash ~root =
   let open Type_sig_hash in
   let module Heap = SharedMem.NewAPI in
   let module P = Type_sig_pack in
-  let deserialize x = Marshal.from_string x 0 in
-
+  let module Bin = Type_sig_bin in
   let hash_file_key file_key =
     let file_string =
       match file_key with
@@ -82,46 +81,32 @@ let sig_hash ~root =
    * components in a merge batch, but this performs well enough without caching
    * for now. *)
   let acyclic_dep =
-    let type_export addr () = Heap.read_type_export_hash addr in
-    let cjs_exports addr () = Heap.read_cjs_exports_hash addr in
-    let es_export addr () = Heap.read_es_export_hash addr in
-    let cjs_module file_key addr =
+    let read_hash buf pos () = Bin.read_hash buf pos in
+    let cjs_module file_key buf pos =
       let filename = Fun.const (hash_file_key file_key) in
-      let info_addr = Heap.cjs_module_info addr in
+      let info_pos = Bin.cjs_module_info buf pos in
       let (P.CJSModuleInfo { type_export_keys; type_stars = _; strict = _ }) =
-        Heap.read_cjs_module_info info_addr |> deserialize
+        Bin.read_hashed Bin.read_cjs_info buf info_pos
       in
-      let type_exports =
-        let addr = Heap.cjs_module_type_exports addr in
-        Heap.read_addr_tbl type_export addr
-      in
-      let exports =
-        let addr = Heap.cjs_module_exports addr in
-        Heap.read_opt cjs_exports addr
-      in
-      let ns () = Heap.read_cjs_module_hash info_addr in
+      let type_exports = Bin.cjs_module_type_exports buf pos |> Bin.read_tbl read_hash buf in
+      let exports = Bin.cjs_module_exports buf pos |> Bin.read_opt read_hash buf in
+      let ns = read_hash buf info_pos in
       let type_exports =
         let f acc name export = SMap.add name export acc in
         Base.Array.fold2_exn ~init:SMap.empty ~f type_export_keys type_exports
       in
       CJS { filename; type_exports; exports; ns }
     in
-    let es_module file_key addr =
+    let es_module file_key buf pos =
       let filename = Fun.const (hash_file_key file_key) in
-      let info_addr = Heap.es_module_info addr in
+      let info_pos = Bin.es_module_info buf pos in
       let (P.ESModuleInfo { type_export_keys; export_keys; type_stars = _; stars = _; strict = _ })
           =
-        Heap.read_es_module_info info_addr |> deserialize
+        Bin.read_hashed Bin.read_es_info buf info_pos
       in
-      let type_exports =
-        let addr = Heap.es_module_type_exports addr in
-        Heap.read_addr_tbl type_export addr
-      in
-      let exports =
-        let addr = Heap.es_module_exports addr in
-        Heap.read_addr_tbl es_export addr
-      in
-      let ns () = Heap.read_es_module_hash info_addr in
+      let type_exports = Bin.es_module_type_exports buf pos |> Bin.read_tbl read_hash buf in
+      let exports = Bin.es_module_exports buf pos |> Bin.read_tbl read_hash buf in
+      let ns = read_hash buf info_pos in
       let type_exports =
         let f acc name export = SMap.add name export acc in
         Base.Array.fold2_exn ~init:SMap.empty ~f type_export_keys type_exports
@@ -134,65 +119,61 @@ let sig_hash ~root =
     in
     fun ~reader dep_key ->
       let file_addr = Parsing_heaps.Reader_dispatcher.get_type_sig_addr_unsafe ~reader dep_key in
-      let addr = Heap.file_module file_addr in
-      Heap.read_dyn_module (cjs_module dep_key) (es_module dep_key) addr
+      let buf = Heap.type_sig_buf (Heap.file_type_sig file_addr) in
+      Bin.read_module_kind (cjs_module dep_key) (es_module dep_key) buf (Bin.module_kind buf)
   in
 
   (* Create a Type_sig_hash.checked_dep record for a file in the merged component. *)
   let cyclic_dep file_key file_addr file =
     let filename = Fun.const (hash_file_key file_key) in
 
-    let type_export addr =
-      let read_hash () = Heap.read_type_export_hash addr in
-      let write_hash hash = Heap.write_type_export_hash addr hash in
-      let export = Heap.read_type_export addr in
-      write_hash (Xx.hash export 0L);
-      let export = deserialize export in
-      let visit edge _ = visit_type_export edge file export in
+    let type_export buf pos =
+      let init_hash = Bin.read_hashed Bin.hash_serialized buf pos in
+      let export = Bin.read_hashed Bin.read_type_export buf pos in
+      let read_hash () = Bin.read_hash buf pos in
+      let write_hash hash = Bin.write_hash buf pos hash in
+      let visit edge _dep_edge = visit_type_export edge file export in
+      write_hash init_hash;
       Cycle_hash.create_node visit read_hash write_hash
     in
 
-    let cjs_exports addr =
-      let read_hash () = Heap.read_cjs_exports_hash addr in
-      let write_hash hash = Heap.write_cjs_exports_hash addr hash in
-      let exports = Heap.read_cjs_exports addr in
-      write_hash (Xx.hash exports 0L);
-      let exports = deserialize exports in
+    let cjs_exports buf pos =
+      let init_hash = Bin.read_hashed Bin.hash_serialized buf pos in
+      let exports = Bin.read_hashed Bin.read_packed buf pos in
+      let read_hash () = Bin.read_hash buf pos in
+      let write_hash hash = Bin.write_hash buf pos hash in
       let visit edge dep_edge = visit_packed edge dep_edge file exports in
+      write_hash init_hash;
       Cycle_hash.create_node visit read_hash write_hash
     in
 
-    let es_export addr =
-      let read_hash () = Heap.read_es_export_hash addr in
-      let write_hash hash = Heap.write_es_export_hash addr hash in
-      let export = Heap.read_es_export addr in
-      write_hash (Xx.hash export 0L);
-      let export = deserialize export in
+    let es_export buf pos =
+      let init_hash = Bin.read_hashed Bin.hash_serialized buf pos in
+      let export = Bin.read_hashed Bin.read_es_export buf pos in
+      let read_hash () = Bin.read_hash buf pos in
+      let write_hash hash = Bin.write_hash buf pos hash in
       let visit edge dep_edge = visit_export edge dep_edge file export in
+      write_hash init_hash;
       Cycle_hash.create_node visit read_hash write_hash
     in
 
-    let cjs_module addr =
-      let info_addr = Heap.cjs_module_info addr in
-      let info = Heap.read_cjs_module_info info_addr in
-      let (P.CJSModuleInfo { type_export_keys; type_stars; strict = _ }) = deserialize info in
-      let type_exports =
-        let addr = Heap.cjs_module_type_exports addr in
-        Heap.read_addr_tbl type_export addr
+    let cjs_module buf pos =
+      let info_pos = Bin.cjs_module_info buf pos in
+      let init_hash = Bin.read_hashed Bin.hash_serialized buf info_pos in
+      let (P.CJSModuleInfo { type_export_keys; type_stars; strict = _ }) =
+        Bin.read_hashed Bin.read_cjs_info buf info_pos
       in
-      let exports =
-        let addr = Heap.cjs_module_exports addr in
-        Heap.read_opt cjs_exports addr
-      in
+      let type_exports = Bin.cjs_module_type_exports buf pos |> Bin.read_tbl type_export buf in
+      let exports = Bin.cjs_module_exports buf pos |> Bin.read_opt cjs_exports buf in
       let ns =
         let visit edge dep_edge =
           Array.iter edge type_exports;
           Option.iter edge exports;
           List.iter (fun (_, index) -> edge_import_ns edge dep_edge file index) type_stars
         in
-        let read_hash () = Heap.read_cjs_module_hash info_addr in
-        let write_hash hash = Heap.write_cjs_module_hash info_addr hash in
-        write_hash (Xx.hash info 0L);
+        let read_hash () = Bin.read_hash buf info_pos in
+        let write_hash hash = Bin.write_hash buf info_pos hash in
+        write_hash init_hash;
         Cycle_hash.create_node visit read_hash write_hash
       in
       let type_exports =
@@ -202,31 +183,24 @@ let sig_hash ~root =
       CJS { filename; type_exports; exports; ns }
     in
 
-    let es_module addr =
-      let info_addr = Heap.es_module_info addr in
-      let info = Heap.read_es_module_info info_addr in
+    let es_module buf pos =
+      let info_pos = Bin.es_module_info buf pos in
+      let init_hash = Bin.read_hashed Bin.hash_serialized buf info_pos in
       let (P.ESModuleInfo { type_export_keys; export_keys; type_stars; stars; strict = _ }) =
-        deserialize info
+        Bin.read_hashed Bin.read_es_info buf info_pos
       in
-      let type_exports =
-        let addr = Heap.es_module_type_exports addr in
-        Heap.read_addr_tbl type_export addr
-      in
-      let exports =
-        let addr = Heap.es_module_exports addr in
-        Heap.read_addr_tbl es_export addr
-      in
+      let type_exports = Bin.es_module_type_exports buf pos |> Bin.read_tbl type_export buf in
+      let exports = Bin.es_module_exports buf pos |> Bin.read_tbl es_export buf in
       let ns =
-        let addr = Heap.es_module_info addr in
         let visit edge dep_edge =
           Array.iter edge type_exports;
           Array.iter edge exports;
           List.iter (fun (_, index) -> edge_import_ns edge dep_edge file index) type_stars;
           List.iter (fun (_, index) -> edge_import_ns edge dep_edge file index) stars
         in
-        let read_hash () = Heap.read_es_module_hash addr in
-        let write_hash hash = Heap.write_es_module_hash addr hash in
-        write_hash (Xx.hash info 0L);
+        let read_hash () = Bin.read_hash buf info_pos in
+        let write_hash hash = Bin.write_hash buf info_pos hash in
+        write_hash init_hash;
         Cycle_hash.create_node visit read_hash write_hash
       in
       let type_exports =
@@ -240,8 +214,8 @@ let sig_hash ~root =
       ES { filename; type_exports; exports; ns }
     in
 
-    let addr = Heap.file_module file_addr in
-    Heap.read_dyn_module cjs_module es_module addr
+    let buf = Heap.type_sig_buf (Heap.file_type_sig file_addr) in
+    Bin.read_module_kind cjs_module es_module buf (Bin.module_kind buf)
   in
 
   let file_dependency ~reader component_rec component_map provider =
@@ -263,6 +237,8 @@ let sig_hash ~root =
   let component_file ~reader component_rec component_map file_key =
     let file_addr = Parsing_heaps.Reader_dispatcher.get_type_sig_addr_unsafe ~reader file_key in
 
+    let buf = Heap.type_sig_buf (Heap.file_type_sig file_addr) in
+
     let dependencies =
       let { Module_heaps.resolved_modules; _ } =
         Module_heaps.Reader_dispatcher.get_resolved_requires_unsafe
@@ -270,69 +246,65 @@ let sig_hash ~root =
           ~audit:Expensive.ok
           file_key
       in
-      let f addr =
-        let mref = Heap.read_module_ref addr in
+      let f buf pos =
+        let mref = Bin.read_str buf pos in
         let provider = SMap.find mref resolved_modules in
         file_dependency ~reader component_rec component_map provider
       in
-      let addr = Heap.file_module_refs file_addr in
-      Heap.read_addr_tbl_generic f addr Module_refs.init
+      let pos = Bin.module_refs buf in
+      Bin.read_tbl_generic f buf pos Module_refs.init
     in
 
     let local_defs file_rec =
-      let f addr =
-        let def = Heap.read_local_def addr in
-        let hash = ref (Xx.hash def 0L) in
-        let def = deserialize def in
+      let f buf pos =
+        let def = Bin.read_local_def buf pos in
+        let hash = ref (Bin.hash_serialized buf pos) in
         let visit edge dep_edge = visit_def edge dep_edge (Lazy.force file_rec) def in
         let read_hash () = !hash in
         let write_hash = ( := ) hash in
         Cycle_hash.create_node visit read_hash write_hash
       in
-      let addr = Heap.file_local_defs file_addr in
-      Heap.read_addr_tbl_generic f addr Local_defs.init
+      let pos = Bin.local_defs buf in
+      Bin.read_tbl_generic f buf pos Local_defs.init
     in
 
     let remote_refs file_rec =
-      let f addr =
-        let remote_ref = Heap.read_remote_ref addr in
-        let hash = ref (Xx.hash remote_ref 0L) in
-        let remote_ref = deserialize remote_ref in
+      let f buf pos =
+        let remote_ref = Bin.read_remote_ref buf pos in
+        let hash = ref (Bin.hash_serialized buf pos) in
         let visit edge dep_edge = visit_remote_ref edge dep_edge (Lazy.force file_rec) remote_ref in
         let read_hash () = !hash in
         let write_hash = ( := ) hash in
         Cycle_hash.create_node visit read_hash write_hash
       in
-      let addr = Heap.file_remote_refs file_addr in
-      Heap.read_addr_tbl_generic f addr Remote_refs.init
+      let pos = Bin.remote_refs buf in
+      Bin.read_tbl_generic f buf pos Remote_refs.init
     in
 
     let pattern_defs file_rec =
-      let f addr =
-        let def = Heap.read_pattern_def addr in
-        let hash = ref (Xx.hash def 0L) in
-        let def = deserialize def in
+      let f buf pos =
+        let def = Bin.read_packed buf pos in
+        let hash = ref (Bin.hash_serialized buf pos) in
         let visit edge dep_edge = visit_packed edge dep_edge (Lazy.force file_rec) def in
         let read_hash () = !hash in
         let write_hash = ( := ) hash in
         Cycle_hash.create_node visit read_hash write_hash
       in
-      let addr = Heap.file_pattern_defs file_addr in
-      Heap.read_addr_tbl_generic f addr Pattern_defs.init
+      let pos = Bin.pattern_defs buf in
+      Bin.read_tbl_generic f buf pos Pattern_defs.init
     in
 
     let patterns file_rec =
-      let f addr =
-        let pattern = Heap.read_pattern addr in
-        let hash = ref (Xx.hash pattern 0L) in
-        let pattern = deserialize pattern in
+      let f buf pos =
+        let pattern = Bin.read_pattern buf pos in
+        let hash = ref (Bin.hash_serialized buf pos) in
         let visit f _ = visit_pattern f (Lazy.force file_rec) pattern in
         let read_hash () = !hash in
         let write_hash = ( := ) hash in
         Cycle_hash.create_node visit read_hash write_hash
       in
-      let addr = Heap.file_patterns file_addr in
-      Heap.read_addr_tbl_generic f addr Patterns.init
+      let pos = Bin.patterns buf in
+      Bin.read_tbl_generic f buf pos Patterns.init
     in
 
     let rec file_rec =

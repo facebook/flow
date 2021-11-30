@@ -336,6 +336,7 @@ let mk_check_file ~options ~reader ~cache () =
   in
   let module Merge = Type_sig_merge.Make (ConsGen) in
   let module Pack = Type_sig_pack in
+  let module Bin = Type_sig_bin in
   let module Heap = SharedMem.NewAPI in
   let audit = Expensive.ok in
 
@@ -402,84 +403,69 @@ let mk_check_file ~options ~reader ~cache () =
 
     let file_addr = get_type_sig_unsafe file_key in
 
+    let buf = Heap.type_sig_buf (Heap.file_type_sig file_addr) in
+
     let docblock = Heap.file_docblock file_addr |> Heap.read_docblock |> deserialize in
 
     let cx = create_dep_cx file_key docblock ccx in
 
     let dependencies =
       let { Module_heaps.resolved_modules; _ } = get_resolved_requires_unsafe file_key in
-      let f addr =
-        let mref = Heap.read_module_ref addr in
+      let f buf pos =
+        let mref = Bin.read_str buf pos in
         let provider = SMap.find mref resolved_modules in
         (mref, dep_module_t cx mref provider)
       in
-      let addr = Heap.file_module_refs file_addr in
-      Heap.read_addr_tbl_generic f addr Module_refs.init
+      let pos = Bin.module_refs buf in
+      Bin.read_tbl_generic f buf pos Module_refs.init
     in
 
     let exports file_rec =
       let file_loc = ALoc.of_loc { Loc.none with Loc.source = Some file_key } in
       let reason = Reason.(mk_reason RExports file_loc) in
-      let type_export addr =
+      let type_export buf pos =
         lazy
-          (Heap.read_type_export addr
-          |> deserialize
+          (Bin.read_hashed Bin.read_type_export buf pos
           |> Pack.map_type_export aloc
           |> Merge.merge_type_export (Lazy.force file_rec) reason
           )
       in
-      let cjs_exports addr =
+      let cjs_exports buf pos =
         lazy
-          (Heap.read_cjs_exports addr
-          |> deserialize
+          (Bin.read_hashed Bin.read_packed buf pos
           |> Pack.map_packed aloc
           |> Merge.merge (Lazy.force file_rec)
           )
       in
-      let es_export addr =
+      let es_export buf pos =
         lazy
-          (Heap.read_es_export addr
-          |> deserialize
+          (Bin.read_hashed Bin.read_es_export buf pos
           |> Pack.map_export aloc
           |> Merge.merge_export (Lazy.force file_rec)
           )
       in
-      let cjs_exports addr =
+      let cjs_module buf pos =
         let (Pack.CJSModuleInfo { type_export_keys; type_stars; strict }) =
-          Heap.cjs_module_info addr
-          |> Heap.read_cjs_module_info
-          |> deserialize
+          Bin.cjs_module_info buf pos
+          |> Bin.read_hashed Bin.read_cjs_info buf
           |> Pack.map_cjs_module_info aloc
         in
-        let type_exports =
-          let addr = Heap.cjs_module_type_exports addr in
-          Heap.read_addr_tbl type_export addr
-        in
-        let exports =
-          let addr = Heap.cjs_module_exports addr in
-          Heap.read_opt cjs_exports addr
-        in
+        let type_exports = Bin.cjs_module_type_exports buf pos |> Bin.read_tbl type_export buf in
+        let exports = Bin.cjs_module_exports buf pos |> Bin.read_opt cjs_exports buf in
         let type_exports =
           let f acc name export = SMap.add name export acc in
           Base.Array.fold2_exn ~init:SMap.empty ~f type_export_keys type_exports
         in
         Type_sig_merge.CJSExports { type_exports; exports; type_stars; strict }
       in
-      let es_exports addr =
+      let es_module buf pos =
         let (Pack.ESModuleInfo { type_export_keys; export_keys; type_stars; stars; strict }) =
-          Heap.es_module_info addr
-          |> Heap.read_es_module_info
-          |> deserialize
+          Bin.es_module_info buf pos
+          |> Bin.read_hashed Bin.read_es_info buf
           |> Pack.map_es_module_info aloc
         in
-        let type_exports =
-          let addr = Heap.es_module_type_exports addr in
-          Heap.read_addr_tbl type_export addr
-        in
-        let exports =
-          let addr = Heap.es_module_exports addr in
-          Heap.read_addr_tbl es_export addr
-        in
+        let type_exports = Bin.es_module_type_exports buf pos |> Bin.read_tbl type_export buf in
+        let exports = Bin.es_module_exports buf pos |> Bin.read_tbl es_export buf in
         let type_exports =
           let f acc name export = SMap.add name export acc in
           Base.Array.fold2_exn ~init:SMap.empty ~f type_export_keys type_exports
@@ -492,8 +478,8 @@ let mk_check_file ~options ~reader ~cache () =
       in
       let resolved =
         lazy
-          (Heap.file_module file_addr
-          |> Heap.read_dyn_module cjs_exports es_exports
+          (Bin.module_kind buf
+          |> Bin.read_module_kind cjs_module es_module buf
           |> Merge.merge_exports (Lazy.force file_rec) reason
           )
       in
@@ -501,10 +487,10 @@ let mk_check_file ~options ~reader ~cache () =
       (fun () -> t)
     in
 
-    let local_def file_rec addr =
+    let local_def file_rec buf pos =
       let thunk =
         lazy
-          (let def = Pack.map_packed_def aloc (deserialize (Heap.read_local_def addr)) in
+          (let def = Pack.map_packed_def aloc (Bin.read_local_def buf pos) in
            let loc = Type_sig.def_id_loc def in
            let name = Type_sig.def_name def in
            let reason = Type_sig_merge.def_reason def in
@@ -516,10 +502,10 @@ let mk_check_file ~options ~reader ~cache () =
       (fun () -> Lazy.force thunk)
     in
 
-    let remote_ref file_rec addr =
+    let remote_ref file_rec buf pos =
       let thunk =
         lazy
-          (let remote_ref = Pack.map_remote_ref aloc (deserialize (Heap.read_remote_ref addr)) in
+          (let remote_ref = Pack.map_remote_ref aloc (Bin.read_remote_ref buf pos) in
            let loc = Pack.remote_ref_loc remote_ref in
            let name = Pack.remote_ref_name remote_ref in
            let reason = Type_sig_merge.remote_ref_reason remote_ref in
@@ -531,42 +517,36 @@ let mk_check_file ~options ~reader ~cache () =
       (fun () -> Lazy.force thunk)
     in
 
-    let pattern_def file_rec addr =
-      lazy
-        (Heap.read_pattern_def addr
-        |> deserialize
-        |> Pack.map_packed aloc
-        |> Merge.merge (Lazy.force file_rec)
-        )
+    let pattern_def file_rec buf pos =
+      lazy (Bin.read_packed buf pos |> Pack.map_packed aloc |> Merge.merge (Lazy.force file_rec))
     in
 
-    let pattern file_rec addr =
+    let pattern file_rec buf pos =
       lazy
-        (Heap.read_pattern addr
-        |> deserialize
+        (Bin.read_pattern buf pos
         |> Pack.map_pattern aloc
         |> Merge.merge_pattern (Lazy.force file_rec)
         )
     in
 
     let local_defs file_rec =
-      let addr = Heap.file_local_defs file_addr in
-      Heap.read_addr_tbl_generic (local_def file_rec) addr Local_defs.init
+      let pos = Bin.local_defs buf in
+      Bin.read_tbl_generic (local_def file_rec) buf pos Local_defs.init
     in
 
     let remote_refs file_rec =
-      let addr = Heap.file_remote_refs file_addr in
-      Heap.read_addr_tbl_generic (remote_ref file_rec) addr Remote_refs.init
+      let pos = Bin.remote_refs buf in
+      Bin.read_tbl_generic (remote_ref file_rec) buf pos Remote_refs.init
     in
 
     let pattern_defs file_rec =
-      let addr = Heap.file_pattern_defs file_addr in
-      Heap.read_addr_tbl_generic (pattern_def file_rec) addr Pattern_defs.init
+      let pos = Bin.pattern_defs buf in
+      Bin.read_tbl_generic (pattern_def file_rec) buf pos Pattern_defs.init
     in
 
     let patterns file_rec =
-      let addr = Heap.file_patterns file_addr in
-      Heap.read_addr_tbl_generic (pattern file_rec) addr Patterns.init
+      let pos = Bin.patterns buf in
+      Bin.read_tbl_generic (pattern file_rec) buf pos Patterns.init
     in
 
     let rec file_rec =

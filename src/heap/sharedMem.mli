@@ -13,6 +13,8 @@ type config = {
 
 type handle = Unix.file_descr
 
+type buf = (char, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
+
 (* Addresses are represented as integers, but are well-typed via a phantom
  * type parameter. The type checker will ensure that a `foo addr` is not
  * passed where a `bar addr` is expected. *)
@@ -206,53 +208,13 @@ module NewAPI : sig
    * location for a given keyed location in a signature. *)
   type aloc_table
 
+  (* Phantom type tag for type sig, which contains a serialized representation
+   * of the visible exports of a file. See Type_sig_bin *)
+  type type_sig
+
   (* Phantom type tag for checked file objects. A checked file contains
    * references to the filename, any local definitions, exports, etc. *)
   type checked_file
-
-  type type_export
-
-  type cjs_exports
-
-  type cjs_module_info
-
-  type cjs_module
-
-  type es_export
-
-  type es_module_info
-
-  type es_module
-
-  (* Phantom type tag for module references. A module reference is the string
-   * argument to a require() call or import statement. This is needed to resolve
-   * dependencies. *)
-  type module_ref
-
-  (* Phantom type tag for remote references. A remote reference is a local
-   * binding that corresponds to an imported value. For example, the statement
-   * `import {Foo} from 'bar'` will be represented by a remote ref object. *)
-  type remote_ref
-
-  (* Phantom type tag for local definitions. A local definition is a binding
-   * that corresponds to a definition from a given file. For example, variable,
-   * function, and class declarations are represented by local def objects. *)
-  type local_def
-
-  (* Phantom type tag for pattern definitions. A pattern definition is the
-   * right-hand side of a destructuring definition. For example, the `e` in a
-   * variable declaration of the form `var {a, b} = e` would be represented by a
-   * pattern def object.
-   *
-   * Pattern defs are represented as separate heap objects because they might
-   * have multiple references -- in the above example, from both `a` and `b` --
-   * and should not be duplicated in the heap. *)
-  type pattern_def
-
-  (* Phantom type tag for pattern bindings. A pattern binding is the left-hand
-   * side of a destructuring definition. For example, the `a` and `b` bindings
-   * introduced by `var {a, b} = e` would be represented by pattern objects. *)
-  type pattern
 
   (* Before writing to the heap, we first calculate the required size (in words)
    * for all the heap objects we would like to write. We will pass this size
@@ -270,44 +232,14 @@ module NewAPI : sig
 
   val aloc_table_size : string -> size
 
+  val type_sig_size : int -> size
+
   val checked_file_size : size
-
-  val type_export_size : string -> size
-
-  val cjs_exports_size : string -> size
-
-  val cjs_module_info_size : string -> size
-
-  val cjs_module_size : size
-
-  val es_export_size : string -> size
-
-  val es_module_info_size : string -> size
-
-  val es_module_size : size
-
-  val module_ref_size : string -> size
-
-  val remote_ref_size : string -> size
-
-  val local_def_size : string -> size
-
-  val pattern_def_size : string -> size
-
-  val pattern_size : string -> size
 
   (* Allocate the requested space (in words) in the heap. All writes must be
    * done within the provided callback, and the writes must fully consume all
    * allocated space. *)
   val alloc : size -> (chunk -> 'a) -> 'a
-
-  (* dyn module *)
-
-  type dyn_module
-
-  val dyn_cjs_module : cjs_module addr -> dyn_module addr
-
-  val dyn_es_module : es_module addr -> dyn_module addr
 
   (* write *)
 
@@ -321,51 +253,10 @@ module NewAPI : sig
 
   val write_aloc_table : chunk -> string -> aloc_table addr
 
-  val write_type_export : chunk -> string -> type_export addr
-
-  val write_cjs_exports : chunk -> string -> cjs_exports addr
-
-  val write_cjs_module_info : chunk -> string -> cjs_module_info addr
-
-  val write_cjs_module :
-    chunk ->
-    cjs_module_info addr ->
-    cjs_exports opt addr ->
-    type_export addr_tbl addr ->
-    cjs_module addr
-
-  val write_es_export : chunk -> string -> es_export addr
-
-  val write_es_module_info : chunk -> string -> es_module_info addr
-
-  val write_es_module :
-    chunk ->
-    es_module_info addr ->
-    es_export addr_tbl addr ->
-    type_export addr_tbl addr ->
-    es_module addr
+  val write_type_sig : chunk -> int -> (buf -> unit) -> type_sig addr
 
   val write_checked_file :
-    chunk ->
-    docblock addr ->
-    aloc_table addr ->
-    dyn_module addr ->
-    module_ref addr_tbl addr ->
-    local_def addr_tbl addr ->
-    remote_ref addr_tbl addr ->
-    pattern_def addr_tbl addr ->
-    pattern addr_tbl addr ->
-    checked_file addr
-
-  val write_module_ref : chunk -> string -> module_ref addr
-
-  val write_local_def : chunk -> string -> local_def addr
-
-  val write_remote_ref : chunk -> string -> remote_ref addr
-
-  val write_pattern_def : chunk -> string -> pattern_def addr
-
-  val write_pattern : chunk -> string -> pattern addr
+    chunk -> docblock addr -> aloc_table addr -> type_sig addr -> checked_file addr
 
   (* getters *)
 
@@ -373,29 +264,7 @@ module NewAPI : sig
 
   val file_aloc_table : checked_file addr -> aloc_table addr
 
-  val file_module : checked_file addr -> dyn_module addr
-
-  val file_module_refs : checked_file addr -> module_ref addr_tbl addr
-
-  val file_local_defs : checked_file addr -> local_def addr_tbl addr
-
-  val file_remote_refs : checked_file addr -> remote_ref addr_tbl addr
-
-  val file_pattern_defs : checked_file addr -> pattern_def addr_tbl addr
-
-  val file_patterns : checked_file addr -> pattern addr_tbl addr
-
-  val cjs_module_exports : cjs_module addr -> cjs_exports opt addr
-
-  val cjs_module_type_exports : cjs_module addr -> type_export addr_tbl addr
-
-  val cjs_module_info : cjs_module addr -> cjs_module_info addr
-
-  val es_module_exports : es_module addr -> es_export addr_tbl addr
-
-  val es_module_type_exports : es_module addr -> type_export addr_tbl addr
-
-  val es_module_info : es_module addr -> es_module_info addr
+  val file_type_sig : checked_file addr -> type_sig addr
 
   (* read *)
 
@@ -412,47 +281,9 @@ module NewAPI : sig
 
   val read_aloc_table : aloc_table addr -> string
 
-  val read_dyn_module : (cjs_module addr -> 'a) -> (es_module addr -> 'a) -> dyn_module addr -> 'a
+  val read_type_sig : type_sig addr -> (buf -> 'a) -> 'a
 
-  val read_type_export : type_export addr -> string
+  (* buf *)
 
-  val read_cjs_exports : cjs_exports addr -> string
-
-  val read_cjs_module_info : cjs_module_info addr -> string
-
-  val read_es_export : es_export addr -> string
-
-  val read_es_module_info : es_module_info addr -> string
-
-  val read_module_ref : module_ref addr -> string
-
-  val read_remote_ref : remote_ref addr -> string
-
-  val read_local_def : local_def addr -> string
-
-  val read_pattern_def : pattern_def addr -> string
-
-  val read_pattern : pattern addr -> string
-
-  (* hashes *)
-
-  val read_type_export_hash : type_export addr -> int64
-
-  val read_cjs_exports_hash : cjs_exports addr -> int64
-
-  val read_cjs_module_hash : cjs_module_info addr -> int64
-
-  val read_es_export_hash : es_export addr -> int64
-
-  val read_es_module_hash : es_module_info addr -> int64
-
-  val write_type_export_hash : type_export addr -> int64 -> unit
-
-  val write_cjs_exports_hash : cjs_exports addr -> int64 -> unit
-
-  val write_cjs_module_hash : cjs_module_info addr -> int64 -> unit
-
-  val write_es_export_hash : es_export addr -> int64 -> unit
-
-  val write_es_module_hash : es_module_info addr -> int64 -> unit
+  val type_sig_buf : type_sig addr -> buf
 end

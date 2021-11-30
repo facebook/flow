@@ -21,7 +21,7 @@ type table_stats = {
   slots: int;
 }
 
-type heap = (char, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
+type buf = (char, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t
 
 (* Phantom type parameter provides type-safety to callers of this API.
  * Internally, these are all just ints, so be careful! *)
@@ -34,7 +34,7 @@ type effort =
 
 type serialized_tag = Serialized_resolved_requires
 
-let heap_ref : heap option ref = ref None
+let heap_ref : buf option ref = ref None
 
 exception Out_of_shared_memory
 
@@ -53,7 +53,7 @@ let () =
 (*****************************************************************************)
 (* Initializes the shared memory. Must be called before forking. *)
 (*****************************************************************************)
-external init : config -> num_workers:int -> heap * handle = "hh_shared_init"
+external init : config -> num_workers:int -> buf * handle = "hh_shared_init"
 
 let init config ~num_workers =
   try
@@ -63,7 +63,7 @@ let init config ~num_workers =
   with
   | Failed_memfd_init _ -> Error ()
 
-external connect : handle -> worker_id:int -> heap = "hh_connect"
+external connect : handle -> worker_id:int -> buf = "hh_connect"
 
 let connect handle ~worker_id =
   let heap = connect handle ~worker_id in
@@ -854,7 +854,7 @@ end
 
 module NewAPI = struct
   type chunk = {
-    heap: heap;
+    heap: buf;
     mutable next_addr: int;
     mutable remaining_size: int;
   }
@@ -869,31 +869,9 @@ module NewAPI = struct
 
   type aloc_table
 
-  type type_export
-
-  type cjs_exports
-
-  type cjs_module_info
-
-  type cjs_module
-
-  type es_export
-
-  type es_module_info
-
-  type es_module
+  type type_sig
 
   type checked_file
-
-  type module_ref
-
-  type remote_ref
-
-  type local_def
-
-  type pattern_def
-
-  type pattern
 
   type size = int
 
@@ -925,26 +903,6 @@ module NewAPI = struct
    * internal use of null should be hidden from callers of this module. *)
   let null_addr = 0
 
-  (* dyn *)
-
-  (* A `dyn addr` is a valid address pointing to some value, but we don't know
-   * what it is. We can go from a dyn to a specific address type by inspecting
-   * the tag in the header of the object. *)
-  type dyn
-
-  let dyn : _ addr -> dyn addr = Obj.magic
-
-  (* dyn module *)
-
-  (* A `dyn_module addr` is a valid address pointing to either a cjs module or
-   * an es module, but we don't know which one. As with `dyn`, we can look at
-   * the tag at runtime to specialize. *)
-  type dyn_module
-
-  let dyn_cjs_module : cjs_module addr -> dyn_module addr = dyn
-
-  let dyn_es_module : cjs_module addr -> dyn_module addr = dyn
-
   (* header utils *)
 
   (* The integer values corresponding to these tags are encoded in the low byte
@@ -957,21 +915,10 @@ module NewAPI = struct
     | String_tag (* 2 *)
     | Docblock_tag
     | ALoc_table_tag
-    | Type_export_tag
-    | CJS_exports_tag
-    | CJS_module_info_tag
-    | ES_export_tag
-    | ES_module_info_tag
-    | Module_ref_tag
-    | Remote_ref_tag
-    | Local_def_tag
-    | Pattern_def_tag
-    | Pattern_tag
+    | Type_sig_tag
     (* tags defined below this point are scanned for pointers *)
-    | Addr_tbl_tag (* 15 *)
+    | Addr_tbl_tag (* 6 *)
     | Checked_file_tag
-    | CJS_module_tag
-    | ES_module_tag
 
   (* avoid unused constructor warning *)
   let () = ignore Serialized_tag
@@ -982,7 +929,7 @@ module NewAPI = struct
   let tag_val : tag -> int = Obj.magic
 
   (* double-check integer value is consistent with hh_shared.c *)
-  let () = assert (tag_val Addr_tbl_tag = 15)
+  let () = assert (tag_val Addr_tbl_tag = 6)
 
   let mk_header tag size =
     (* lower byte of header is reserved for 6-bit tag and 2 GC bits, OCaml
@@ -1001,8 +948,6 @@ module NewAPI = struct
 
   let addr_size = 1
 
-  let hash_size = 1
-
   (* Obj used as an efficient way to get at the word size of an OCaml string
    * directly from the block header, since that's the size we need. *)
   let string_size s = Obj.size (Obj.repr s)
@@ -1013,31 +958,15 @@ module NewAPI = struct
 
   let aloc_table_size = string_size
 
-  let checked_file_size = 8 * addr_size
+  (* Because the heap is word aligned, we store the size of the type sig object
+   * in words. The underlying data might not be word sized, so we use a trick
+   * lifted from OCaml's representation of strings. The last byte of the block
+   * stores a value which we can use to recover the byte size from the word
+   * size. If the value is exactly word sized, we add another word to hold this
+   * final byte. *)
+  let type_sig_size bsize = (bsize + 8) lsr 3
 
-  let type_export_size export = hash_size + string_size export
-
-  let cjs_exports_size exports = hash_size + string_size exports
-
-  let cjs_module_info_size info = hash_size + string_size info
-
-  let cjs_module_size = 3 * addr_size
-
-  let es_export_size export = hash_size + string_size export
-
-  let es_module_info_size info = hash_size + string_size info
-
-  let es_module_size = 3 * addr_size
-
-  let module_ref_size ref = string_size ref
-
-  let remote_ref_size ref = string_size ref
-
-  let local_def_size def = string_size def
-
-  let pattern_def_size def = string_size def
-
-  let pattern_size pattern = string_size pattern
+  let checked_file_size = 3 * addr_size
 
   (* headers *)
 
@@ -1059,67 +988,13 @@ module NewAPI = struct
 
   let checked_file_header = mk_header Checked_file_tag checked_file_size
 
-  let type_export_header export =
-    let size = type_export_size export in
-    mk_header Type_export_tag size
-
-  let cjs_exports_header export =
-    let size = cjs_exports_size export in
-    mk_header CJS_exports_tag size
-
-  let cjs_module_info_header info =
-    let size = cjs_module_info_size info in
-    mk_header CJS_module_info_tag size
-
-  let cjs_module_header = mk_header CJS_module_tag cjs_module_size
-
-  let es_export_header export =
-    let size = es_export_size export in
-    mk_header ES_export_tag size
-
-  let es_module_info_header info =
-    let size = es_module_info_size info in
-    mk_header ES_module_info_tag size
-
-  let es_module_header = mk_header ES_module_tag es_module_size
-
-  let module_ref_header ref =
-    let size = module_ref_size ref in
-    mk_header Module_ref_tag size
-
-  let remote_ref_header ref =
-    let size = remote_ref_size ref in
-    mk_header Remote_ref_tag size
-
-  let local_def_header def =
-    let size = local_def_size def in
-    mk_header Local_def_tag size
-
-  let pattern_def_header def =
-    let size = pattern_def_size def in
-    mk_header Pattern_def_tag size
-
-  let pattern_header pattern =
-    let size = pattern_size pattern in
-    mk_header Pattern_tag size
-
   (* offsets *)
 
   let docblock_addr file = addr_offset file 1
 
   let aloc_table_addr file = addr_offset file 2
 
-  let module_addr file = addr_offset file 3
-
-  let module_refs_addr file = addr_offset file 4
-
-  let local_defs_addr file = addr_offset file 5
-
-  let remote_refs_addr file = addr_offset file 6
-
-  let pattern_defs_addr file = addr_offset file 7
-
-  let patterns_addr file = addr_offset file 8
+  let type_sig_addr file = addr_offset file 3
 
   (* read *)
 
@@ -1130,8 +1005,10 @@ module NewAPI = struct
    * must ensure that the given destination contains string data. *)
   external unsafe_read_string : _ addr -> int -> string = "hh_read_string"
 
+  external unsafe_read_int8 : buf -> int -> int = "%caml_ba_unsafe_ref_1"
+
   (* Read int64 from given byte offset in the heap. This is bounds checked. *)
-  external read_int64 : heap -> int -> int64 = "%caml_bigstring_get64"
+  external read_int64 : buf -> int -> int64 = "%caml_bigstring_get64"
 
   (* Read a header from the heap. The low 2 bits of the header are reserved for
    * GC and not used in OCaml. *)
@@ -1182,36 +1059,16 @@ module NewAPI = struct
 
   let read_aloc_table addr = read_string_generic ALoc_table_tag addr 0
 
-  let read_dyn_module f g addr =
+  let type_sig_buf addr =
     let heap = get_heap () in
-    let hd = read_header heap addr in
-    let tag = obj_tag hd in
-    if tag = tag_val CJS_module_tag then
-      f addr
-    else if tag = tag_val ES_module_tag then
-      g addr
-    else
-      assert false
+    let hd = read_header_checked heap Type_sig_tag addr in
+    let offset_index = bsize_wsize (obj_size hd) - 1 in
+    let bsize =
+      offset_index - unsafe_read_int8 heap (addr_offset addr header_size + offset_index)
+    in
+    Bigarray.Array1.sub heap (addr_offset addr header_size) bsize
 
-  let read_type_export addr = read_string_generic Type_export_tag addr hash_size
-
-  let read_cjs_exports addr = read_string_generic CJS_exports_tag addr hash_size
-
-  let read_cjs_module_info addr = read_string_generic CJS_module_info_tag addr hash_size
-
-  let read_es_export addr = read_string_generic ES_export_tag addr hash_size
-
-  let read_es_module_info addr = read_string_generic ES_module_info_tag addr hash_size
-
-  let read_module_ref addr = read_string_generic Module_ref_tag addr 0
-
-  let read_remote_ref addr = read_string_generic Remote_ref_tag addr 0
-
-  let read_local_def addr = read_string_generic Local_def_tag addr 0
-
-  let read_pattern_def addr = read_string_generic Pattern_def_tag addr 0
-
-  let read_pattern addr = read_string_generic Pattern_tag addr 0
+  let read_type_sig addr f = f (type_sig_buf addr)
 
   (* getters *)
 
@@ -1219,34 +1076,14 @@ module NewAPI = struct
 
   let file_aloc_table file = read_addr (get_heap ()) (aloc_table_addr file)
 
-  let file_module file = read_addr (get_heap ()) (module_addr file)
-
-  let file_module_refs file = read_addr (get_heap ()) (module_refs_addr file)
-
-  let file_local_defs file = read_addr (get_heap ()) (local_defs_addr file)
-
-  let file_remote_refs file = read_addr (get_heap ()) (remote_refs_addr file)
-
-  let file_pattern_defs file = read_addr (get_heap ()) (pattern_defs_addr file)
-
-  let file_patterns file = read_addr (get_heap ()) (patterns_addr file)
-
-  let cjs_module_info m = read_addr (get_heap ()) (addr_offset m 1)
-
-  let cjs_module_exports m = read_addr (get_heap ()) (addr_offset m 2)
-
-  let cjs_module_type_exports m = read_addr (get_heap ()) (addr_offset m 3)
-
-  let es_module_info m = read_addr (get_heap ()) (addr_offset m 1)
-
-  let es_module_exports m = read_addr (get_heap ()) (addr_offset m 2)
-
-  let es_module_type_exports m = read_addr (get_heap ()) (addr_offset m 3)
+  let file_type_sig file = read_addr (get_heap ()) (type_sig_addr file)
 
   (* write *)
 
+  external unsafe_write_int8 : buf -> int -> int -> unit = "%caml_ba_unsafe_set_1"
+
   (* Write int64 to given byte offset in the heap. This is not bounds checked. *)
-  external unsafe_write_int64 : heap -> int -> int64 -> unit = "%caml_bigstring_set64u"
+  external unsafe_write_int64 : buf -> int -> int64 -> unit = "%caml_bigstring_set64u"
 
   (* Write a header at a specified address in the heap. This write is not
    * bounds checked; caller must ensure the given destination has already been
@@ -1258,11 +1095,6 @@ module NewAPI = struct
    * bounds checked; caller must ensure the given destination has already been
    * allocated. *)
   let unsafe_write_addr_at heap dst addr = unsafe_write_int64 heap dst (Int64.of_int addr)
-
-  (* Write a 64-bit hash at a specified address in the heap. This write is not
-   * bounds checked; caller must ensure the given destination has already been
-   * allocated. *)
-  let unsafe_write_hash_at = unsafe_write_int64
 
   (* Write a string at the specified address in the heap. This write is not
    * bounds checked; caller must ensure the given destination has already been
@@ -1282,13 +1114,6 @@ module NewAPI = struct
   let unsafe_write_addr chunk addr =
     unsafe_write_addr_at chunk.heap chunk.next_addr addr;
     chunk.next_addr <- addr_offset chunk.next_addr addr_size
-
-  (* Write a 64-bit hash into the given chunk and advance the chunk address.
-   * This write is not bounds checked; caller must ensure the given destination
-   * has already been allocated. *)
-  let unsafe_write_hash chunk hash =
-    unsafe_write_hash_at chunk.heap chunk.next_addr hash;
-    chunk.next_addr <- addr_offset chunk.next_addr hash_size
 
   (* Write a string into the given chunk and advance the chunk address. This
    * write is not bounds checked; caller must ensure the given destination has
@@ -1323,88 +1148,23 @@ module NewAPI = struct
     unsafe_write_string chunk tbl;
     addr
 
-  let write_type_export chunk export =
-    let addr = write_header chunk (type_export_header export) in
-    unsafe_write_hash chunk 0L;
-    unsafe_write_string chunk export;
+  let write_type_sig chunk bsize f =
+    let size = type_sig_size bsize in
+    let hd = mk_header Type_sig_tag size in
+    let addr = write_header chunk hd in
+    let offset_index = bsize_wsize size - 1 in
+    unsafe_write_int8 chunk.heap (addr_offset addr header_size + offset_index) (offset_index - bsize);
+    let buf = Bigarray.Array1.sub chunk.heap (addr_offset addr header_size) bsize in
+    f buf;
+    chunk.next_addr <- addr_offset chunk.next_addr size;
     addr
 
-  let write_cjs_exports chunk exports =
-    let addr = write_header chunk (cjs_exports_header exports) in
-    unsafe_write_hash chunk 0L;
-    unsafe_write_string chunk exports;
-    addr
-
-  let write_cjs_module_info chunk info =
-    let addr = write_header chunk (cjs_module_info_header info) in
-    unsafe_write_hash chunk 0L;
-    unsafe_write_string chunk info;
-    addr
-
-  let write_cjs_module chunk info exports type_exports =
-    let addr = write_header chunk cjs_module_header in
-    unsafe_write_addr chunk info;
-    unsafe_write_addr chunk exports;
-    unsafe_write_addr chunk type_exports;
-    addr
-
-  let write_es_export chunk export =
-    let addr = write_header chunk (es_export_header export) in
-    unsafe_write_hash chunk 0L;
-    unsafe_write_string chunk export;
-    addr
-
-  let write_es_module_info chunk info =
-    let addr = write_header chunk (es_module_info_header info) in
-    unsafe_write_hash chunk 0L;
-    unsafe_write_string chunk info;
-    addr
-
-  let write_es_module chunk info exports type_exports =
-    let addr = write_header chunk es_module_header in
-    unsafe_write_addr chunk info;
-    unsafe_write_addr chunk exports;
-    unsafe_write_addr chunk type_exports;
-    addr
-
-  let write_checked_file
-      chunk docblock aloc_table dyn_module module_refs local_defs remote_refs pattern_defs patterns
-      =
+  let write_checked_file chunk docblock aloc_table type_sig =
     let checked_file = write_header chunk checked_file_header in
     unsafe_write_addr chunk docblock;
     unsafe_write_addr chunk aloc_table;
-    unsafe_write_addr chunk dyn_module;
-    unsafe_write_addr chunk module_refs;
-    unsafe_write_addr chunk local_defs;
-    unsafe_write_addr chunk remote_refs;
-    unsafe_write_addr chunk pattern_defs;
-    unsafe_write_addr chunk patterns;
+    unsafe_write_addr chunk type_sig;
     checked_file
-
-  let write_module_ref chunk ref =
-    let heap_ref = write_header chunk (module_ref_header ref) in
-    unsafe_write_string chunk ref;
-    heap_ref
-
-  let write_local_def chunk def =
-    let heap_def = write_header chunk (local_def_header def) in
-    unsafe_write_string chunk def;
-    heap_def
-
-  let write_remote_ref chunk ref =
-    let heap_ref = write_header chunk (remote_ref_header ref) in
-    unsafe_write_string chunk ref;
-    heap_ref
-
-  let write_pattern_def chunk def =
-    let heap_resolved = write_header chunk (pattern_def_header def) in
-    unsafe_write_string chunk def;
-    heap_resolved
-
-  let write_pattern chunk pattern =
-    let heap_pattern = write_header chunk (pattern_header pattern) in
-    unsafe_write_string chunk pattern;
-    heap_pattern
 
   let write_addr_tbl f chunk xs =
     if Array.length xs = 0 then
@@ -1423,34 +1183,4 @@ module NewAPI = struct
   let write_opt f chunk = function
     | None -> null_addr
     | Some x -> f chunk x
-
-  (* hashes *)
-
-  let read_hash addr =
-    let heap = get_heap () in
-    read_int64 heap (addr_offset addr header_size)
-
-  let write_hash addr hash =
-    let heap = get_heap () in
-    unsafe_write_hash_at heap (addr_offset addr header_size) hash
-
-  let read_type_export_hash = read_hash
-
-  let read_cjs_exports_hash = read_hash
-
-  let read_cjs_module_hash = read_hash
-
-  let read_es_export_hash = read_hash
-
-  let read_es_module_hash = read_hash
-
-  let write_type_export_hash = write_hash
-
-  let write_cjs_exports_hash = write_hash
-
-  let write_cjs_module_hash = write_hash
-
-  let write_es_export_hash = write_hash
-
-  let write_es_module_hash = write_hash
 end

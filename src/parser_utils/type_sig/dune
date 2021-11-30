@@ -1,6 +1,11 @@
 (library
  (name flow_type_sig)
  (wrapped false)
+ (foreign_stubs
+  (language c)
+  (names type_sig_bin)
+  (flags
+   (:standard -I../../src/third-party/lz4)))
  (libraries
   leb128
   flow_parser_utils

@@ -233,6 +233,7 @@ NATIVE_C_FILES=\
   src/hack_forked/utils/sys/processor_info.c\
   src/hack_forked/utils/sys/realpath.c\
   src/hack_forked/utils/sys/sysinfo.c\
+  src/parser_utils/type_sig/type_sig_bin_stubs.c\
   src/third-party/fuzzy-path/src/fuzzy_path_stubs.c\
   $(LZ4_C_FILES)\
   $(INTERNAL_NATIVE_C_FILES)

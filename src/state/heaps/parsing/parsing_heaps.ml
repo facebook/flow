@@ -35,105 +35,23 @@ type checked_file_addr = Heap.checked_file SharedMem.addr
 
 let write_type_sig docblock locs type_sig =
   let open Type_sig_collections in
-  let {
-    Packed_type_sig.Module.module_kind;
-    module_refs;
-    local_defs;
-    remote_refs;
-    pattern_defs;
-    patterns;
-  } =
-    type_sig
-  in
   let serialize x = Marshal.to_string x [] in
   let docblock = serialize docblock in
   let aloc_table = Packed_locs.pack (Locs.length locs) (fun f -> Locs.iter f locs) in
-  let module_refs = Module_refs.to_array module_refs in
-  let local_defs = Local_defs.to_array_map serialize local_defs in
-  let remote_refs = Remote_refs.to_array_map serialize remote_refs in
-  let pattern_defs = Pattern_defs.to_array_map serialize pattern_defs in
-  let patterns = Patterns.to_array_map serialize patterns in
+  let (sig_bsize, write_sig) = Type_sig_bin.write type_sig in
   let open Heap in
-  let array_size f xs =
-    if Array.length xs = 0 then
-      0
-    else
-      let size = header_size + addr_tbl_size xs in
-      Array.fold_left (fun size x -> size + header_size + f x) size xs
-  in
-  let opt_size f = Base.Option.value_map ~default:0 ~f:(fun x -> header_size + f x) in
-  let (module_size, write_module) =
-    match module_kind with
-    | Type_sig_pack.CJSModule { type_exports; exports; info } ->
-      let type_exports = Array.map serialize type_exports in
-      let exports = Option.map serialize exports in
-      let info = serialize info in
-      let size =
-        (2 * header_size)
-        + cjs_module_size
-        + cjs_module_info_size info
-        + opt_size cjs_exports_size exports
-        + array_size type_export_size type_exports
-      in
-      let write chunk =
-        let info = write_cjs_module_info chunk info in
-        let exports = write_opt write_cjs_exports chunk exports in
-        let type_exports = write_addr_tbl write_type_export chunk type_exports in
-        let cjs_module = write_cjs_module chunk info exports type_exports in
-        dyn_cjs_module cjs_module
-      in
-      (size, write)
-    | Type_sig_pack.ESModule { type_exports; exports; info } ->
-      let type_exports = Array.map serialize type_exports in
-      let exports = Array.map serialize exports in
-      let info = serialize info in
-      let size =
-        (2 * header_size)
-        + es_module_size
-        + es_module_info_size info
-        + array_size es_export_size exports
-        + array_size type_export_size type_exports
-      in
-      let write chunk =
-        let info = write_es_module_info chunk info in
-        let exports = write_addr_tbl write_es_export chunk exports in
-        let type_exports = write_addr_tbl write_type_export chunk type_exports in
-        let es_module = write_es_module chunk info exports type_exports in
-        dyn_es_module es_module
-      in
-      (size, write)
-  in
   let size =
-    (3 * header_size)
+    (4 * header_size)
     + checked_file_size
     + docblock_size docblock
     + aloc_table_size aloc_table
-    + module_size
-    + array_size module_ref_size module_refs
-    + array_size local_def_size local_defs
-    + array_size remote_ref_size remote_refs
-    + array_size pattern_def_size pattern_defs
-    + array_size pattern_size patterns
+    + type_sig_size sig_bsize
   in
   alloc size (fun chunk ->
       let docblock = write_docblock chunk docblock in
       let aloc_table = write_aloc_table chunk aloc_table in
-      let dyn_module = write_module chunk in
-      let module_refs = write_addr_tbl write_module_ref chunk module_refs in
-      let local_defs = write_addr_tbl write_local_def chunk local_defs in
-      let remote_refs = write_addr_tbl write_remote_ref chunk remote_refs in
-      let pattern_defs = write_addr_tbl write_pattern_def chunk pattern_defs in
-      let patterns = write_addr_tbl write_pattern chunk patterns in
-      write_checked_file
-        chunk
-        docblock
-        aloc_table
-        dyn_module
-        module_refs
-        local_defs
-        remote_refs
-        pattern_defs
-        patterns
+      let type_sig = write_type_sig chunk sig_bsize write_sig in
+      write_checked_file chunk docblock aloc_table type_sig
   )
 
 let read_docblock file_addr =
@@ -147,79 +65,8 @@ let read_aloc_table file_key file_addr =
   file_aloc_table file_addr |> read_aloc_table |> Packed_locs.unpack (Some file_key) init
 
 let read_type_sig file =
-  let open Type_sig_collections in
   let open Heap in
-  let deserialize x = Marshal.from_string x 0 in
-  let module_refs =
-    let addr = file_module_refs file in
-    read_addr_tbl_generic read_module_ref addr Module_refs.init
-  in
-  let module_kind =
-    let cjs_module addr =
-      let type_exports =
-        let f addr = deserialize (read_type_export addr) in
-        let addr = cjs_module_type_exports addr in
-        read_addr_tbl f addr
-      in
-      let exports =
-        let f addr = deserialize (read_cjs_exports addr) in
-        let addr = cjs_module_exports addr in
-        read_opt f addr
-      in
-      let info =
-        let addr = cjs_module_info addr in
-        deserialize (read_cjs_module_info addr)
-      in
-      Type_sig_pack.CJSModule { type_exports; exports; info }
-    in
-    let es_module addr =
-      let type_exports =
-        let f addr = deserialize (read_type_export addr) in
-        let addr = es_module_type_exports addr in
-        read_addr_tbl f addr
-      in
-      let exports =
-        let f addr = deserialize (read_es_export addr) in
-        let addr = es_module_exports addr in
-        read_addr_tbl f addr
-      in
-      let info =
-        let addr = es_module_info addr in
-        deserialize (read_es_module_info addr)
-      in
-      Type_sig_pack.ESModule { type_exports; exports; info }
-    in
-    let addr = file_module file in
-    read_dyn_module cjs_module es_module addr
-  in
-  let local_defs =
-    let f addr = deserialize (read_local_def addr) in
-    let addr = file_local_defs file in
-    read_addr_tbl_generic f addr Local_defs.init
-  in
-  let remote_refs =
-    let f addr = deserialize (read_remote_ref addr) in
-    let addr = file_remote_refs file in
-    read_addr_tbl_generic f addr Remote_refs.init
-  in
-  let pattern_defs =
-    let f addr = deserialize (read_pattern_def addr) in
-    let addr = file_pattern_defs file in
-    read_addr_tbl_generic f addr Pattern_defs.init
-  in
-  let patterns =
-    let f addr = deserialize (read_pattern addr) in
-    let addr = file_patterns file in
-    read_addr_tbl_generic f addr Patterns.init
-  in
-  {
-    Packed_type_sig.Module.module_kind;
-    module_refs;
-    local_defs;
-    remote_refs;
-    pattern_defs;
-    patterns;
-  }
+  read_type_sig (file_type_sig file) Type_sig_bin.read
 
 (* There's some redundancy in the visitors here, but an attempt to avoid repeated code led,
  * inexplicably, to a shared heap size regression under types-first: D15481813 *)
