@@ -385,6 +385,8 @@ module type NoCache = sig
 
   val mem_old : key -> bool
 
+  val oldify : key -> unit
+
   val oldify_batch : KeySet.t -> unit
 
   val revive_batch : KeySet.t -> unit
@@ -503,7 +505,9 @@ struct
 
   let remove_batch keys = KeySet.iter Tbl.remove keys
 
-  let oldify_batch keys = KeySet.iter Tbl.oldify keys
+  let oldify = Tbl.oldify
+
+  let oldify_batch keys = KeySet.iter oldify keys
 
   let revive_batch keys = KeySet.iter Tbl.revive keys
 
@@ -553,7 +557,9 @@ module NoCacheAddr (Key : Key) (Value : AddrValue) = struct
 
   let remove_batch keys = KeySet.iter Tbl.remove keys
 
-  let oldify_batch keys = KeySet.iter Tbl.oldify keys
+  let oldify = Tbl.oldify
+
+  let oldify_batch keys = KeySet.iter oldify keys
 
   let revive_batch keys = KeySet.iter Tbl.revive keys
 
@@ -828,6 +834,10 @@ struct
     match get x with
     | None -> false
     | Some _ -> true
+
+  let oldify key =
+    Direct.oldify key;
+    Cache.remove key
 
   let oldify_batch keys =
     Direct.oldify_batch keys;

@@ -98,6 +98,8 @@ module type NoCache = sig
 
   val mem_old : key -> bool
 
+  val oldify : key -> unit
+
   val oldify_batch : KeySet.t -> unit
 
   val revive_batch : KeySet.t -> unit
