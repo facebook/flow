@@ -1300,39 +1300,41 @@ let get_ephemeral_handler genv command =
 (* This is the common code which wraps each command handler. It deals with stuff like logging and
  * catching exceptions *)
 let wrap_ephemeral_handler handler ~genv ~request_id ~client_context ~workload ~cmd_str arg =
-  try%lwt
-    Hh_logger.info "%s" cmd_str;
-    MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
+  Hh_logger.info "%s" cmd_str;
+  MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
 
-    let should_print_summary = Options.should_profile genv.options in
-    let%lwt (profiling, (ret, response, json_data)) =
-      Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary (fun profiling ->
-          handler ~genv ~request_id ~workload ~profiling arg
-      )
-    in
-    MonitorRPC.respond_to_request ~request_id ~response;
-    let event =
-      ServerStatus.(
-        Finishing_up
-          {
-            duration = Profiling_js.get_profiling_duration profiling;
-            info = CommandSummary cmd_str;
-          }
-      )
-    in
-    MonitorRPC.status_update ~event;
+  let should_print_summary = Options.should_profile genv.options in
+  let%lwt (profiling, result) =
+    Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary (fun profiling ->
+        try%lwt
+          let%lwt result = handler ~genv ~request_id ~workload ~profiling arg in
+          Lwt.return (Ok result)
+        with
+        | Lwt.Canceled as exn ->
+          let exn = Exception.wrap exn in
+          Exception.reraise exn
+        | exn ->
+          let exn = Exception.wrap exn in
+          let exn_str = Exception.to_string exn in
+          let json_data = Some Hh_json.(JSON_Object [("exn", JSON_String exn_str)]) in
+          Hh_logger.error ~exn "Uncaught exception while handling a request (%s)" cmd_str;
+          Lwt.return (Error (exn_str, json_data))
+    )
+  in
+  let event =
+    ServerStatus.(
+      Finishing_up
+        { duration = Profiling_js.get_profiling_duration profiling; info = CommandSummary cmd_str }
+    )
+  in
+  MonitorRPC.status_update ~event;
+  match result with
+  | Ok (ret, response, json_data) ->
     FlowEventLogger.ephemeral_command_success ~json_data ~client_context ~profiling;
+    MonitorRPC.respond_to_request ~request_id ~response;
     Hh_logger.info "Finished %s" cmd_str;
     Lwt.return (Ok ret)
-  with
-  | Lwt.Canceled as exn ->
-    let exn = Exception.wrap exn in
-    Exception.reraise exn
-  | exn ->
-    let exn = Exception.wrap exn in
-    let exn_str = Exception.to_string exn in
-    let json_data = Some Hh_json.(JSON_Object [("exn", JSON_String exn_str)]) in
-    Hh_logger.error ~exn "Uncaught exception while handling a request (%s)" cmd_str;
+  | Error (exn_str, json_data) ->
     FlowEventLogger.ephemeral_command_failure ~client_context ~json_data;
     MonitorRPC.request_failed ~request_id ~exn_str;
     Lwt.return (Error ())
