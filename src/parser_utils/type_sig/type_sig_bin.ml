@@ -314,6 +314,28 @@ let read_tbl_generic f buf pos init =
 
 let read_tbl f buf pos = read_tbl_generic f buf pos Array.init
 
+let iter_tbl_len f g buf pos len =
+  for i = 0 to len - 1 do
+    let ipos = pos + (4 * (i + 1)) in
+    let dpos = Int32.to_int (buf_get32 buf ipos) in
+    g (f buf dpos)
+  done
+
+let iter_tbl f g buf pos =
+  if pos <> 0 then
+    let len = Int32.to_int (buf_get32 buf pos) in
+    iter_tbl_len f g buf pos len
+
+let fold_tbl f g buf pos init =
+  if pos = 0 then
+    init
+  else
+    let len = Int32.to_int (buf_get32 buf pos) in
+    let acc = ref init in
+    let g x = acc := g x !acc in
+    iter_tbl_len f g buf pos len;
+    !acc
+
 let read_opt f buf pos =
   if pos = 0 then
     None

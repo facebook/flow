@@ -93,6 +93,10 @@ val read_tbl_generic :
 
 val read_tbl : (buf -> 'k pos -> 'a) -> buf -> 'k tbl pos -> 'a array
 
+val iter_tbl : (buf -> 'k pos -> 'a) -> ('a -> unit) -> buf -> 'k tbl pos -> unit
+
+val fold_tbl : (buf -> 'k pos -> 'a) -> ('a -> 'b -> 'b) -> buf -> 'k tbl pos -> 'b -> 'b
+
 val read_opt : (buf -> 'k pos -> 'a) -> buf -> 'k opt pos -> 'a option
 
 val read_hashed : (buf -> 'k pos -> 'a) -> buf -> 'k hashed pos -> 'a
