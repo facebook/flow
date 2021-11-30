@@ -87,7 +87,7 @@ module InfoHeap =
 
 (*********************************** Mutators *********************************)
 
-let currently_oldified_nameheap_modulenames : Modulename.Set.t ref option ref = ref None
+let currently_oldified_nameheap_modulenames : Modulename.Set.t ref = ref Modulename.Set.empty
 
 module Commit_modules_mutator : sig
   type t
@@ -101,32 +101,28 @@ module Commit_modules_mutator : sig
     to_replace:(Modulename.t * File_key.t) list ->
     unit Lwt.t
 end = struct
-  type t = {
-    is_init: bool;
-    changed_files: Modulename.Set.t ref;
-  }
+  type t = { is_init: bool }
 
   let commit mutator =
     WorkerCancel.with_no_cancellations (fun () ->
         Hh_logger.debug "Committing NameHeap";
-        if not mutator.is_init then NameHeap.remove_old_batch !(mutator.changed_files);
-        currently_oldified_nameheap_modulenames := None
+        if not mutator.is_init then
+          NameHeap.remove_old_batch !currently_oldified_nameheap_modulenames;
+        currently_oldified_nameheap_modulenames := Modulename.Set.empty
     );
     Lwt.return_unit
 
   let rollback mutator =
     WorkerCancel.with_no_cancellations (fun () ->
         Hh_logger.debug "Rolling back NameHeap";
-        if not mutator.is_init then NameHeap.revive_batch !(mutator.changed_files);
-        currently_oldified_nameheap_modulenames := None
+        if not mutator.is_init then NameHeap.revive_batch !currently_oldified_nameheap_modulenames;
+        currently_oldified_nameheap_modulenames := Modulename.Set.empty
     );
     Lwt.return_unit
 
   let create transaction ~is_init =
     WorkerCancel.with_no_cancellations (fun () ->
-        let changed_files = ref Modulename.Set.empty in
-        currently_oldified_nameheap_modulenames := Some changed_files;
-        let mutator = { changed_files; is_init } in
+        let mutator = { is_init } in
         let commit () = commit mutator in
         let rollback () = rollback mutator in
         Transaction.add ~singleton:"Commit_modules" ~commit ~rollback transaction;
@@ -136,17 +132,13 @@ end = struct
   let remove_and_replace mutator ~workers ~to_remove ~to_replace =
     (* During init we don't need to worry about oldifying, reviving, or removing old entries *)
     if not mutator.is_init then (
-      (* Verify there are no files we're both trying to remove and replace
-       * - Note, to_replace may be a VERY LARGE list so avoid non-tail-recursive calls *)
-      let to_replace_set =
-        List.fold_left (fun set (f, _) -> Modulename.Set.add f set) Modulename.Set.empty to_replace
-      in
-      (* to_remove_set and to_replace_set should be disjoint sets *)
-      let changed_files = Modulename.Set.union to_remove to_replace_set in
-      mutator.changed_files := changed_files;
+      let oldified = !currently_oldified_nameheap_modulenames in
+      currently_oldified_nameheap_modulenames :=
+        List.fold_left (fun acc (m, _) -> Modulename.Set.add m acc) oldified to_replace
+        |> Modulename.Set.union to_remove;
 
-      (* Save the old data *)
-      NameHeap.oldify_batch changed_files
+      List.iter (fun (m, _) -> NameHeap.oldify m) to_replace;
+      NameHeap.oldify_batch to_remove
     );
 
     (* Remove *)
@@ -311,10 +303,7 @@ end
 module Reader : READER with type reader = State_reader.t = struct
   type reader = State_reader.t
 
-  let should_use_old_nameheap key =
-    match !currently_oldified_nameheap_modulenames with
-    | None -> false
-    | Some oldified_modulenames -> Modulename.Set.mem key !oldified_modulenames
+  let should_use_old_nameheap key = Modulename.Set.mem key !currently_oldified_nameheap_modulenames
 
   let should_use_old_resolved_requires f =
     Utils_js.FilenameSet.mem f !currently_oldified_resolved_requires
