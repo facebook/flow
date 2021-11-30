@@ -154,12 +154,8 @@ let determine_what_to_recheck
     ~options
     ~sig_dependency_graph
     ~implementation_dependency_graph
-    ~checked_files
     ~freshparsed
-    ~unparsed_set:FilenameSet.empty
-    ~deleted:FilenameSet.empty
     ~unchanged_checked
-    ~files_to_force:CheckedSet.empty
     ~unchanged_files_to_force:CheckedSet.empty
     ~direct_dependent_files
 

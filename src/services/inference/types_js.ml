@@ -1081,12 +1081,8 @@ module Recheck : sig
     options:Options.t ->
     sig_dependency_graph:FilenameGraph.t ->
     implementation_dependency_graph:FilenameGraph.t ->
-    checked_files:CheckedSet.t ->
     freshparsed:FilenameSet.t ->
-    unparsed_set:FilenameSet.t ->
-    deleted:FilenameSet.t ->
     unchanged_checked:CheckedSet.t ->
-    files_to_force:CheckedSet.t ->
     unchanged_files_to_force:CheckedSet.t ->
     direct_dependent_files:FilenameSet.t ->
     determine_what_to_recheck_result Lwt.t
@@ -1457,7 +1453,6 @@ end = struct
       ( deleted,
         direct_dependent_files,
         errors,
-        files_to_force,
         freshparsed,
         new_or_changed,
         unchanged_checked,
@@ -1473,12 +1468,8 @@ end = struct
       ~options
       ~sig_dependency_graph
       ~implementation_dependency_graph
-      ~checked_files
       ~freshparsed
-      ~unparsed_set
-      ~deleted
       ~unchanged_checked
-      ~files_to_force
       ~unchanged_files_to_force
       ~direct_dependent_files =
     let%lwt (sig_dependent_files, all_dependent_files) =
@@ -1508,24 +1499,11 @@ end = struct
     in
     let%lwt input =
       Memory_utils.with_memory_timer_lwt ~options "RecalcDepGraph" profiling (fun () ->
-          let old_focus_targets = CheckedSet.focused checked_files in
-          let old_focus_targets = FilenameSet.diff old_focus_targets deleted in
-          let old_focus_targets = FilenameSet.diff old_focus_targets unparsed_set in
-          let focused = FilenameSet.union old_focus_targets freshparsed in
-          let to_infer =
-            unfocused_files_to_infer
-              ~options
-              ~input_focused:(FilenameSet.union focused (CheckedSet.focused files_to_force))
-              ~input_dependencies:(CheckedSet.dependencies files_to_force)
+          let input_focused =
+            FilenameSet.union freshparsed (CheckedSet.focused unchanged_files_to_force)
           in
-          (* Filter to_infer down to the files which we just parsed or unchanged files which
-           * will be focused *)
-          let input =
-            CheckedSet.filter to_infer ~f:(fun fn ->
-                FilenameSet.mem fn freshparsed || CheckedSet.mem fn unchanged_files_to_force
-            )
-          in
-          Lwt.return input
+          let input_dependencies = CheckedSet.dependencies unchanged_files_to_force in
+          Lwt.return (unfocused_files_to_infer ~options ~input_focused ~input_dependencies)
       )
     in
     let%lwt (to_merge, to_check, to_merge_or_check, components, recheck_set) =
@@ -1569,7 +1547,6 @@ end = struct
     let ( deleted,
           direct_dependent_files,
           errors,
-          files_to_force,
           freshparsed,
           new_or_changed,
           unchanged_checked,
@@ -1600,12 +1577,8 @@ end = struct
         ~options
         ~sig_dependency_graph
         ~implementation_dependency_graph
-        ~checked_files:env.ServerEnv.checked_files
         ~freshparsed
-        ~unparsed_set
-        ~deleted
         ~unchanged_checked
-        ~files_to_force
         ~unchanged_files_to_force
         ~direct_dependent_files
     in
@@ -1799,7 +1772,7 @@ end = struct
         ~recheck_reasons
         ~env
     in
-    let (_, _, errors, _, _, _, _, _, _, _) = intermediate_values in
+    let (_, _, errors, _, _, _, _, _, _) = intermediate_values in
     Lwt.return { env with ServerEnv.errors }
 end
 

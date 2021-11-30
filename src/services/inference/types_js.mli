@@ -63,12 +63,8 @@ val debug_determine_what_to_recheck :
   options:Options.t ->
   sig_dependency_graph:FilenameGraph.t ->
   implementation_dependency_graph:FilenameGraph.t ->
-  checked_files:CheckedSet.t ->
   freshparsed:FilenameSet.t ->
-  unparsed_set:FilenameSet.t ->
-  deleted:FilenameSet.t ->
   unchanged_checked:CheckedSet.t ->
-  files_to_force:CheckedSet.t ->
   unchanged_files_to_force:CheckedSet.t ->
   direct_dependent_files:FilenameSet.t ->
   determine_what_to_recheck_result Lwt.t
