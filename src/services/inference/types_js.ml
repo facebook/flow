@@ -866,49 +866,20 @@ let is_file_tracked_and_checked ~reader filename =
   (* otherwise, f is probably a directory *)
   && Module_js.checked_file ~reader ~audit:Expensive.warn filename
 
-(* Given a CheckedSet of focused files and a dependency graph, calculate all the dependents and
- * dependencies and return them as a CheckedSet
- *
- * This is pretty darn expensive for large repos (on the order of a few seconds). What is taking
- * all that time?
- *
- * - Around 75% of the time is dependent_files looking up the dependents
- * - Around 20% of the time is calc_dependency_graph building the dependency graph
- *
- * There are no expected invariants for the input sets. The returned set has the following invariants
- * 1. Every recursive dependent of a focused file will be in the focused set or the dependent set
- *
- * `is_file_checked` should return a boolean indicating whether the file has @flow or is otherwise
- * considered to be a file that Flow should check. Unfortunately the term "checked" is overloaded in
- * this codebase. In some contexts it means the set of files that we are *currently* checking due to
- * lazy mode. In other contexts, it means the set of files which are eligible to be checked. In this
- * case, it has the latter meaning.
- * *)
-let focused_files_to_infer
-    ~is_file_checked
-    ~implementation_dependency_graph
-    ~sig_dependency_graph
-    ~input_focused
-    ~input_dependencies =
-  let input =
-    CheckedSet.add
-      ~focused:input_focused
-      ~dependencies:(Base.Option.value ~default:FilenameSet.empty input_dependencies)
-      CheckedSet.empty
-  in
-  (* Filter unchecked files out of the input *)
-  let input = CheckedSet.filter input ~f:is_file_checked in
-  let focused = CheckedSet.focused input in
-  (* Roots is the set of all focused files and all dependent files. *)
+(** Given a set of focused files and a dependency graph, calculates the recursive dependents and
+    returns a CheckedSet containing both the focused and dependent files. *)
+let focused_files_to_infer ~implementation_dependency_graph ~sig_dependency_graph focused =
   let (_sig_dependents, roots) =
     Pure_dep_graph_operations.calc_all_dependents
       ~sig_dependency_graph
       ~implementation_dependency_graph
       focused
   in
-  let dependents = FilenameSet.diff roots focused in
-  let dependencies = CheckedSet.dependencies input in
-  CheckedSet.add ~focused ~dependents ~dependencies CheckedSet.empty
+  (* [roots] is the set of all focused files and all dependent files.
+     CheckedSet will ignore the focused files in [dependents] since they are
+     also passed via [focused] and duplicates take the highest priority. *)
+  let dependents = roots in
+  CheckedSet.add ~focused ~dependents CheckedSet.empty
 
 let filter_out_node_modules ~options =
   let root = Options.root options in
@@ -964,13 +935,13 @@ let files_to_infer ~options ~profiling ~reader ~dependency_info ~focus_targets ~
         in
         (* only focus files that parsed successfully *)
         let input_focused = FilenameSet.inter input_focused parsed in
+        (* Filter unchecked files out of the input *)
+        let input_focused = FilenameSet.filter is_file_checked input_focused in
         let to_infer =
           focused_files_to_infer
-            ~is_file_checked
             ~implementation_dependency_graph
             ~sig_dependency_graph
-            ~input_focused
-            ~input_dependencies:None
+            input_focused
         in
         Lwt.return to_infer
   )
