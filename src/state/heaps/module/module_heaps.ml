@@ -173,38 +173,27 @@ module Resolved_requires_mutator : sig
 end = struct
   type t = unit
 
-  (* We actually may have multiple Resolved_requires_mutator's in a single transaction. So we need to
-   * assert that they never interfere with each other *)
-  let active_files = currently_oldified_resolved_requires
-
-  let commit files =
+  let commit () =
     WorkerCancel.with_no_cancellations (fun () ->
         Hh_logger.debug "Committing ResolvedRequiresHeap";
-        active_files := Utils_js.FilenameSet.diff !active_files files;
-        ResolvedRequiresHeap.remove_old_batch files
-    )
+        ResolvedRequiresHeap.remove_old_batch !currently_oldified_resolved_requires;
+        currently_oldified_resolved_requires := Utils_js.FilenameSet.empty
+    );
+    Lwt.return_unit
 
-  let rollback files =
+  let rollback () =
     WorkerCancel.with_no_cancellations (fun () ->
         Hh_logger.debug "Rolling back ResolvedRequiresHeap";
-        active_files := Utils_js.FilenameSet.diff !active_files files;
-        ResolvedRequiresHeap.revive_batch files
-    )
+        ResolvedRequiresHeap.revive_batch !currently_oldified_resolved_requires;
+        currently_oldified_resolved_requires := Utils_js.FilenameSet.empty
+    );
+    Lwt.return_unit
 
   let create transaction oldified_files =
     WorkerCancel.with_no_cancellations (fun () ->
-        if
-          not
-            (Utils_js.FilenameSet.is_empty (Utils_js.FilenameSet.inter oldified_files !active_files))
-        then
-          failwith "Multiple Resolved_requires_mutator's operating on the same files";
-        active_files := Utils_js.FilenameSet.union oldified_files !active_files;
-
+        currently_oldified_resolved_requires := oldified_files;
         ResolvedRequiresHeap.oldify_batch oldified_files;
-        Transaction.add
-          ~commit:(fun () -> Lwt.return (commit oldified_files))
-          ~rollback:(fun () -> Lwt.return (rollback oldified_files))
-          transaction
+        Transaction.add ~commit ~rollback transaction
     )
 
   (* This function runs on a worker process. Ideally, we'd assert that file is a member of
