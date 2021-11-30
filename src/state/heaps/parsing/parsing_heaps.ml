@@ -369,7 +369,7 @@ end
  * If you revive some files before the transaction ends, then those won't be affected by
  * commit/rollback
  *)
-let currently_oldified_files : FilenameSet.t ref option ref = ref None
+let currently_oldified_files : FilenameSet.t ref = ref FilenameSet.empty
 
 module Reparse_mutator : sig
   type master_mutator (* Used by the master process *)
@@ -378,52 +378,45 @@ module Reparse_mutator : sig
 
   val revive_files : master_mutator -> FilenameSet.t -> unit
 end = struct
-  type master_mutator = FilenameSet.t ref
+  type master_mutator = unit
 
-  let commit oldified_files =
+  let commit () =
     WorkerCancel.with_no_cancellations (fun () ->
         Hh_logger.debug "Committing parsing heaps";
-        ParsingHeaps.remove_old_batch oldified_files;
-        currently_oldified_files := None
+        ParsingHeaps.remove_old_batch !currently_oldified_files;
+        currently_oldified_files := FilenameSet.empty
     );
     Lwt.return_unit
 
-  let rollback oldified_files =
+  let rollback () =
     WorkerCancel.with_no_cancellations (fun () ->
         Hh_logger.debug "Rolling back parsing heaps";
-        ParsingHeaps.revive_batch oldified_files;
-        currently_oldified_files := None
+        ParsingHeaps.revive_batch !currently_oldified_files;
+        currently_oldified_files := FilenameSet.empty
     );
     Lwt.return_unit
 
   (* Ideally we'd assert that file was oldified and not revived, but it's too expensive to pass the
    * set of oldified files to the worker *)
-  let add_file file ~exports info ast file_sig sig_opt =
-    ParsingHeaps.add file ~exports info ast file_sig sig_opt
+  let add_file = ParsingHeaps.add
 
   (* Ideally we'd assert that file was oldified and not revived, but it's too expensive to pass the
    * set of oldified files to the worker *)
-  let add_hash file hash = FileHashHeap.add file hash
+  let add_hash = FileHashHeap.add
 
   let create transaction files =
     WorkerCancel.with_no_cancellations (fun () ->
-        let master_mutator = ref files in
-        currently_oldified_files := Some master_mutator;
-        let worker_mutator = { add_file; add_hash } in
+        currently_oldified_files := files;
         ParsingHeaps.oldify_batch files;
-
-        let commit () = commit !master_mutator in
-        let rollback () = rollback !master_mutator in
         Transaction.add ~singleton:"Reparse" ~commit ~rollback transaction;
-
-        (master_mutator, worker_mutator)
+        ((), { add_file; add_hash })
     )
 
-  let revive_files oldified_files files =
+  let revive_files () files =
     WorkerCancel.with_no_cancellations (fun () ->
         (* Every file in files should be in the oldified set *)
-        assert (FilenameSet.is_empty (FilenameSet.diff files !oldified_files));
-        oldified_files := FilenameSet.diff !oldified_files files;
+        assert (FilenameSet.is_empty (FilenameSet.diff files !currently_oldified_files));
+        currently_oldified_files := FilenameSet.diff !currently_oldified_files files;
         ParsingHeaps.revive_batch files
     )
 end
@@ -433,10 +426,7 @@ end
 module Reader : READER with type reader = State_reader.t = struct
   type reader = State_reader.t
 
-  let should_use_oldified key =
-    match !currently_oldified_files with
-    | None -> false
-    | Some oldified_files -> FilenameSet.mem key !oldified_files
+  let should_use_oldified key = FilenameSet.mem key !currently_oldified_files
 
   let has_ast ~reader:_ key =
     if should_use_oldified key then

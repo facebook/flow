@@ -71,7 +71,7 @@ end = struct
   let add_master ~audit cx = add_master ~audit cx
 end
 
-let currently_oldified_files : FilenameSet.t ref option ref = ref None
+let currently_oldified_files : FilenameSet.t ref = ref FilenameSet.empty
 
 module Merge_context_mutator : sig
   type master_mutator
@@ -86,38 +86,34 @@ module Merge_context_mutator : sig
 
   val revive_files : master_mutator -> Utils_js.FilenameSet.t -> unit
 end = struct
-  type master_mutator = Utils_js.FilenameSet.t ref
+  type master_mutator = unit
 
   type worker_mutator = unit
 
-  let commit oldified_files =
+  let commit () =
     WorkerCancel.with_no_cancellations (fun () ->
         Hh_logger.debug "Committing context heaps";
-        remove_old_merge_batch oldified_files;
-        currently_oldified_files := None
+        remove_old_merge_batch !currently_oldified_files;
+        currently_oldified_files := FilenameSet.empty
     );
     Lwt.return_unit
 
-  let rollback oldified_files =
+  let rollback () =
     WorkerCancel.with_no_cancellations (fun () ->
         Hh_logger.debug "Rolling back context heaps";
-        revive_merge_batch oldified_files;
-        currently_oldified_files := None
+        revive_merge_batch !currently_oldified_files;
+        currently_oldified_files := FilenameSet.empty
     );
     Lwt.return_unit
 
   let create transaction files =
     WorkerCancel.with_no_cancellations (fun () ->
-        let master_mutator = ref files in
-        let worker_mutator = () in
-        currently_oldified_files := Some master_mutator;
+        currently_oldified_files := files;
 
-        let commit () = commit !master_mutator in
-        let rollback () = rollback !master_mutator in
         oldify_merge_batch files;
         Transaction.add ~singleton:"Merge_context" ~commit ~rollback transaction;
 
-        (master_mutator, worker_mutator)
+        ((), ())
     )
 
   (* While merging, we must keep LeaderHeap and SigHashHeap in sync, sometimes
@@ -151,11 +147,11 @@ end = struct
     );
     true
 
-  let revive_files oldified_files files =
+  let revive_files () files =
     (* Every file in files should be in the oldified set *)
-    assert (FilenameSet.is_empty (FilenameSet.diff files !oldified_files));
+    assert (FilenameSet.is_empty (FilenameSet.diff files !currently_oldified_files));
     WorkerCancel.with_no_cancellations (fun () ->
-        oldified_files := FilenameSet.diff !oldified_files files;
+        currently_oldified_files := FilenameSet.diff !currently_oldified_files files;
         revive_merge_batch files
     )
 end
@@ -214,10 +210,7 @@ end
 module Reader : READER with type reader = State_reader.t = struct
   type reader = State_reader.t
 
-  let should_use_oldified file =
-    match !currently_oldified_files with
-    | None -> false
-    | Some oldified_files -> FilenameSet.mem file !oldified_files
+  let should_use_oldified file = FilenameSet.mem file !currently_oldified_files
 
   let find_leader ~reader:_ file =
     let leader =
