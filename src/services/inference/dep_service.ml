@@ -172,12 +172,11 @@ let file_dependencies ~audit ~reader file =
   let file_sig = Parsing_heaps.Mutator_reader.get_file_sig_unsafe reader file in
   let require_set = File_sig.With_Loc.(require_set file_sig.module_sig) in
   let sig_require_set =
-    let { Packed_type_sig.Module.module_refs = mrefs; _ } =
-      Parsing_heaps.Mutator_reader.get_type_sig_unsafe reader file
-    in
-    let acc = ref SSet.empty in
-    Type_sig_collections.Module_refs.iter (fun x -> acc := SSet.add x !acc) mrefs;
-    !acc
+    let module Heap = SharedMem.NewAPI in
+    let module Bin = Type_sig_bin in
+    let file_addr = Parsing_heaps.Mutator_reader.get_type_sig_addr_unsafe reader file in
+    let buf = Heap.type_sig_buf (Heap.file_type_sig file_addr) in
+    Bin.fold_tbl Bin.read_str SSet.add buf (Bin.module_refs buf) SSet.empty
   in
   let { Module_heaps.resolved_modules; _ } =
     Module_heaps.Mutator_reader.get_resolved_requires_unsafe ~reader ~audit file
