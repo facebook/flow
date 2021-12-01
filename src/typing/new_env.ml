@@ -233,7 +233,7 @@ module New_env : Env_sig.S = struct
           | Env_api.With_ALoc.Unreachable loc ->
             let reason = mk_reason (RCustom "unreachable value") loc in
             EmptyT.make reason (Trust.bogus_trust ())
-          | Env_api.With_ALoc.Projection -> failwith "Projections not yet implemented")
+          | Env_api.With_ALoc.Projection _ -> failwith "Projections not yet implemented")
         states
       |> phi cx reason
       |> refine cx reason loc refi
@@ -287,7 +287,7 @@ module New_env : Env_sig.S = struct
           | Env_api.With_ALoc.Write _ -> true
           | Env_api.With_ALoc.Unreachable _ -> true
           | Env_api.With_ALoc.Refinement { refinement_id = _; writes } -> local_def_exists writes
-          | Env_api.With_ALoc.Projection -> false
+          | Env_api.With_ALoc.Projection _ -> false
           | Env_api.With_ALoc.Global _ -> false)
         states
       |> not

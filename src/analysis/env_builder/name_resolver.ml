@@ -163,7 +163,7 @@ module Make
 
     val refinement : int -> t -> t
 
-    val projection : unit -> t
+    val projection : ALoc.t -> t
 
     (* unwraps a RefinementWrite into just the underlying write *)
     val unrefine : int -> t -> t
@@ -184,7 +184,7 @@ module Make
           read: ALoc.t;
           def: ALoc.t virtual_reason;
         }
-      | Projection
+      | Projection of ALoc.t
       | Global of string
       | Loc of ALoc.t virtual_reason
       | PHI of write_state list
@@ -220,7 +220,7 @@ module Make
 
     let uninitialized_class def read = mk_with_write_state (UninitializedClass { def; read })
 
-    let projection () = mk_with_write_state @@ Projection
+    let projection loc = mk_with_write_state @@ Projection loc
 
     let refinement refinement_id val_t = mk_with_write_state @@ Refinement { refinement_id; val_t }
 
@@ -261,7 +261,7 @@ module Make
       match t with
       | Uninitialized _
       | UninitializedClass _
-      | Projection
+      | Projection _
       | Global _
       | Loc _
       | Refinement _ ->
@@ -292,7 +292,7 @@ module Make
       match t with
       | Uninitialized _
       | UninitializedClass _
-      | Projection
+      | Projection _
       | Global _
       | Loc _ ->
         WriteSet.singleton t
@@ -323,7 +323,7 @@ module Make
           | Uninitialized l -> Env_api.Uninitialized (mk_reason RPossiblyUninitialized l)
           | UninitializedClass { def; read } ->
             Env_api.UninitializedClass { def; read = mk_reason RPossiblyUninitialized read }
-          | Projection -> Env_api.Projection
+          | Projection loc -> Env_api.Projection loc
           | Loc r -> Env_api.Write r
           | Refinement { refinement_id; val_t } ->
             Env_api.Refinement { writes = simplify val_t; refinement_id }
@@ -347,7 +347,7 @@ module Make
             states
         | Loc _ -> []
         | Global _ -> []
-        | Projection -> []
+        | Projection _ -> []
       in
       state_is_uninitialized write_state
   end
@@ -2103,7 +2103,7 @@ module Make
             refinement_heap = IMap.add refinement_id (BASE refinement) env_state.refinement_heap;
           };
         let head = List.hd env_state.latest_refinements in
-        let { RefinementKey.loc = _; lookup } = refinement_key in
+        let { RefinementKey.loc; lookup } = refinement_key in
         let latest_refinement_opt = LookupMap.find_opt lookup head in
         let add_refinements v =
           let ssa_id = Val.id_of_val v in
@@ -2133,7 +2133,7 @@ module Make
             { env_state with latest_refinements = head' :: List.tl env_state.latest_refinements };
           Val.refinement final_refinement.refinement_id unrefined_v
         in
-        this#map_val_with_lookup lookup ~heap_default:(Some (Val.projection ())) add_refinements
+        this#map_val_with_lookup lookup ~heap_default:(Some (Val.projection loc)) add_refinements
 
       method identifier_refinement ((loc, ident) as identifier) =
         ignore @@ this#identifier identifier;

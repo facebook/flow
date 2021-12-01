@@ -32,7 +32,7 @@ module type S = sig
         writes: write_locs;
       }
     | Global of string
-    | Projection
+    | Projection of L.t
     | Unreachable of L.t
 
   and write_locs = write_loc list
@@ -151,7 +151,7 @@ module Make
         writes: write_locs;
       }
     | Global of string
-    | Projection
+    | Projection of L.t
     | Unreachable of L.t
 
   and write_locs = write_loc list
@@ -237,7 +237,7 @@ module Make
     | Write r -> [Reason.poly_loc_of_reason r]
     | Uninitialized _ -> []
     | Global _ -> []
-    | Projection -> []
+    | Projection _ -> []
     | Unreachable _ -> []
 
   let rec refinements_of_write_loc ({ refinement_of_id; _ } as env) write_loc =
@@ -276,7 +276,7 @@ module Make
           "(uninitialized class) %s: (%s)"
           (L.debug_to_string loc)
           Reason.(desc_of_reason def |> string_of_desc)
-      | Projection -> "projection"
+      | Projection l -> Printf.sprintf "projection at %s" (L.debug_to_string l)
       | Unreachable _ -> "unreachable"
       | Write reason ->
         let loc = Reason.poly_loc_of_reason reason in

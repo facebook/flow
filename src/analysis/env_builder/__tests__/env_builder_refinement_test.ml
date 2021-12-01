@@ -28,13 +28,13 @@ let print_values refinement_of_id =
   let rec print_value write_loc =
     match write_loc with
     | Uninitialized _ -> "(uninitialized)"
-    | Projection -> "projection"
     | UninitializedClass { def; _ } ->
       let loc = Reason.poly_loc_of_reason def in
       Utils_js.spf
         "(uninitialized class) %s: (%s)"
         (L.debug_to_string loc)
         Reason.(desc_of_reason def |> string_of_desc)
+    | Projection l -> Utils_js.spf "projection at %s" (L.debug_to_string l)
     | Write reason ->
       let loc = Reason.poly_loc_of_reason reason in
       Utils_js.spf
@@ -3244,19 +3244,19 @@ if (x.foo === 3) {
           {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}
         };
         (4, 2) to (4, 7) => {
-          {refinement = 3; writes = projection}
+          {refinement = 3; writes = projection at (3, 4) to (3, 9)}
         };
         (5, 6) to (5, 7) => {
           {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}
         };
         (5, 6) to (5, 11) => {
-          {refinement = 3; writes = projection}
+          {refinement = 3; writes = projection at (3, 4) to (3, 9)}
         };
         (6, 4) to (6, 5) => {
           {refinement = SentinelR foo; writes = {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}}
         };
         (6, 4) to (6, 9) => {
-          {refinement = 4; writes = {refinement = 3; writes = projection}}
+          {refinement = 4; writes = {refinement = 3; writes = projection at (3, 4) to (3, 9)}}
         }] |}]
 
 let%expect_test "heap_refinement_basic" =
@@ -3278,19 +3278,19 @@ if (x.foo === 3) {
           {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}
         };
         (4, 2) to (4, 7) => {
-          {refinement = 3; writes = projection}
+          {refinement = 3; writes = projection at (3, 4) to (3, 9)}
         };
         (5, 6) to (5, 7) => {
           {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}
         };
         (5, 6) to (5, 11) => {
-          {refinement = 3; writes = projection}
+          {refinement = 3; writes = projection at (3, 4) to (3, 9)}
         };
         (6, 4) to (6, 5) => {
           {refinement = SentinelR foo; writes = {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}}
         };
         (6, 4) to (6, 9) => {
-          {refinement = 4; writes = {refinement = 3; writes = projection}}
+          {refinement = 4; writes = {refinement = 3; writes = projection at (3, 4) to (3, 9)}}
         }] |}]
 
 let%expect_test "heap_refinement_merge_branches" =
@@ -3323,8 +3323,8 @@ x.foo; // 3 | 4
           {refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}
         };
         (9, 0) to (9, 5) => {
-          {refinement = 3; writes = projection},
-          {refinement = 4; writes = projection}
+          {refinement = 3; writes = projection at (5, 12) to (5, 17)},
+          {refinement = 4; writes = projection at (7, 12) to (7, 17)}
         }] |}]
 
 let%expect_test "heap_refinement_one_branch" =
@@ -3369,7 +3369,7 @@ x.foo; // No heap refinement here
           {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}
         };
         (4, 2) to (4, 7) => {
-          {refinement = 3; writes = projection}
+          {refinement = 3; writes = projection at (3, 7) to (3, 12)}
         };
         (8, 0) to (8, 1) => {
           (2, 4) to (2, 5): (`x`),
@@ -3399,21 +3399,21 @@ x.foo; // No heap refinement here from guard, but union of === 4 and projection
           {refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}
         };
         (5, 12) to (5, 17) => {
-          {refinement = 3; writes = projection}
+          {refinement = 3; writes = projection at (4, 7) to (4, 12)}
         };
         (6, 2) to (6, 3) => {
           {refinement = SentinelR foo; writes = {refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}}
         };
         (6, 2) to (6, 7) => {
-          {refinement = 4; writes = {refinement = 3; writes = projection}}
+          {refinement = 4; writes = {refinement = 3; writes = projection at (4, 7) to (4, 12)}}
         };
         (9, 0) to (9, 1) => {
           (3, 4) to (3, 5): (`x`),
           {refinement = SentinelR foo; writes = {refinement = SentinelR foo; writes = (3, 4) to (3, 5): (`x`)}}
         };
         (9, 0) to (9, 5) => {
-          projection,
-          {refinement = 4; writes = {refinement = 3; writes = projection}}
+          projection at (4, 7) to (4, 12),
+          {refinement = 4; writes = {refinement = 3; writes = projection at (4, 7) to (4, 12)}}
         }] |}]
 
 let%expect_test "heap_refinement_while_loop_negated" =
@@ -3433,13 +3433,13 @@ x.foo;
           {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}
         };
         (4, 2) to (4, 7) => {
-          {refinement = 3; writes = projection}
+          {refinement = 3; writes = projection at (3, 7) to (3, 12)}
         };
         (6, 0) to (6, 1) => {
           {refinement = Not (SentinelR foo); writes = (2, 4) to (2, 5): (`x`)}
         };
         (6, 0) to (6, 5) => {
-          {refinement = Not (3); writes = projection}
+          {refinement = Not (3); writes = projection at (3, 7) to (3, 12)}
         }] |}]
 
 let%expect_test "heap_refinement_loop_control_flow_write" =
@@ -3462,13 +3462,13 @@ x.foo; // x.foo === 4 refinement should not be present
           {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}
         };
         (4, 6) to (4, 11) => {
-          {refinement = 3; writes = projection}
+          {refinement = 3; writes = projection at (3, 7) to (3, 12)}
         };
         (5, 4) to (5, 5) => {
           {refinement = SentinelR foo; writes = {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}}
         };
         (5, 4) to (5, 9) => {
-          {refinement = 4; writes = {refinement = 3; writes = projection}}
+          {refinement = 4; writes = {refinement = 3; writes = projection at (3, 7) to (3, 12)}}
         };
         (7, 2) to (7, 3) => {
           {refinement = SentinelR foo; writes = {refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}}
@@ -3477,7 +3477,7 @@ x.foo; // x.foo === 4 refinement should not be present
           {refinement = Not (SentinelR foo); writes = (2, 4) to (2, 5): (`x`),{refinement = SentinelR foo; writes = (2, 4) to (2, 5): (`x`)}}
         };
         (9, 0) to (9, 5) => {
-          {refinement = Not (3); writes = projection}
+          {refinement = Not (3); writes = projection at (3, 7) to (3, 12)}
         }] |}]
 
 let%expect_test "heap_refinement_write" =
