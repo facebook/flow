@@ -601,15 +601,81 @@ module Make
          *   obj.bar = 4;
          * }
          * (obj.foo: 3); // Should fail because the else branch does not add this refinement
-         *
-         * An alternative implementation could merge the refinement with a projection on the object
-         * but that is more precise than what Flow did pre-EnvBuilder.
          *)
         HeapRefinementMap.merge (fun _ refinement1 refinement2 ->
             match (refinement1, refinement2) with
             | (Some v1, Some v2) -> Some (Val.merge v1 v2)
             | _ -> None
         )
+
+      (*
+       * See merge_heap_refinements for an explanation of our general strategy.
+       *
+       * The exception to that rule is when we're merging heap refinements after a loop.
+       *
+       * See the comment at env_loop for an explanation of how we havoc changed
+       * values in a loop before reading on.
+       *
+       * If we refine over a heap value x.foo in the loop guard then we have 2
+       * possible scenarios that affect the post-loop refinement:
+       * 1. x.foo changes in the loop
+       * 2. x.foo does not change in the loop
+       *
+       * If x.foo does not change in the loop then there will be an
+       * entry for x.foo in both the end-of-loop environment and the never-entered-loop
+       * environment. We merge those two states and then apply the negated loop guard
+       * in this case.
+       *
+       * while (x.foo === 3) {
+       * }
+       * x.foo; // x.foo did not change throughout the lifetime of the loop,
+       *        // so we can safely merge the pre-state and post-state and add the negated
+       *        // refinement. Both the pre- and post-states will have an entry for
+       *        // x.foo because both traverse the refinement
+       *
+       * If x.foo _does_ change then we're in a more interesting situation. In this
+       * case, it is possible for the end-of-loop environment to not contain a heap
+       * entry for x.foo, so merging it with the never-entered-loop environment would
+       * not add an entry for the heap refinement, and applying the negated refinement
+       * would have no effect. To fix this, we take advantage of the fact that if
+       * x.foo is changed then we havoc before analyzing the loop guard. That means
+       * that the access in the loop guard is a fine location to use for the projection
+       * at the base of the refinement. If we did not havoc, then we could end
+       * up in a situation where x.foo was already refined at the loop guard and we
+       * unsoundly carry that refinement into the post-loop state even though that refinement
+       * was invalidated by the loop body.
+       *
+       * while (x.foo === 3) {
+       *  f();
+       * } // The post state of the loop has no entry for x.foo because
+       *   // the call of f havocs the heap refinement.
+       * x.foo; // Since x.foo (and x) is havoced before looking at the guard,
+       *        // the x.foo projection in the guard is a "general" type for
+       *        // the x.foo projection, so we can use that location to grab
+       *        // the type we need to refine with the negation of the loop guard.
+       *)
+      method merge_loop_guard_env_after_loop env_after_guard_no_refinements =
+        let env_after_loop = env_state.env in
+        let merge_heap_refinements ~heap_entries_after_loop ~heap_entries_after_guard =
+          HeapRefinementMap.merge
+            (fun _ refinement1 refinement2 ->
+              match (refinement1, refinement2) with
+              | (Some v1, Some v2) -> Some (Val.merge v1 v2)
+              | (Some v, None) -> Some v (* Keep the projection from the guard! *)
+              | _ -> None)
+            heap_entries_after_guard
+            heap_entries_after_loop
+        in
+        List.iter2
+          (fun { Env.env_val = after_guard; heap_refinements = heap_entries_after_guard }
+               { val_ref = after_loop; heap_refinements = heap_entries_after_loop; _ } ->
+            after_loop := Val.merge after_guard !after_loop;
+            heap_entries_after_loop :=
+              merge_heap_refinements
+                ~heap_entries_after_loop:!heap_entries_after_loop
+                ~heap_entries_after_guard)
+          (SMap.values env_after_guard_no_refinements)
+          (SMap.values env_after_loop)
 
       method merge_remote_env (env : Env.t) : unit =
         (* NOTE: env might have more keys than env_state.env, since the environment it
@@ -1322,10 +1388,7 @@ module Make
                        IMap.add new_refinement_id (NOT refinement_id) env_state.refinement_heap;
                    };
                  let refine_val = Val.refinement new_refinement_id in
-                 this#map_val_with_refinement_key
-                   refinement_key
-                   ~heap_default:(Some (Val.projection ()))
-                   refine_val
+                 this#map_val_with_refinement_key refinement_key refine_val
              )
 
       (*
@@ -1396,7 +1459,7 @@ module Make
             (* We either enter the loop body or we don't *)
             (match env_after_test_no_refinements with
             | None -> ()
-            | Some env -> this#merge_self_env env);
+            | Some env -> this#merge_loop_guard_env_after_loop env);
             this#post_loop_refinements guard_refinements;
 
             let completion_states = make_completion_states loop_completion_state in
