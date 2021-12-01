@@ -50,7 +50,6 @@ let push_new_env_update env_update = push_new_env_update (Some env_update)
 let cancellation_requests = ref Lsp.IdSet.empty
 
 type recheck_msg = {
-  callback: (Profiling_js.finished option -> unit) option;
   file_watcher_metadata: MonitorProt.file_watcher_metadata option;
   files: recheck_files;
   recheck_reason: LspProt.recheck_reason;
@@ -69,24 +68,23 @@ and recheck_files =
 (* Files which have changed *)
 let (recheck_stream, push_recheck_msg) = Lwt_stream.create ()
 
-let push_recheck_msg ?metadata ?callback ~reason:recheck_reason files =
-  push_recheck_msg (Some { files; callback; file_watcher_metadata = metadata; recheck_reason })
+let push_recheck_msg ?metadata ~reason:recheck_reason files =
+  push_recheck_msg (Some { files; file_watcher_metadata = metadata; recheck_reason })
 
-let push_files_to_recheck ?metadata ?callback ~reason changed_files =
-  push_recheck_msg ?metadata ?callback ~reason (ChangedFiles (changed_files, false))
+let push_files_to_recheck ?metadata ~reason changed_files =
+  push_recheck_msg ?metadata ~reason (ChangedFiles (changed_files, false))
 
 let push_files_to_prioritize ~reason changed_files =
   push_recheck_msg ~reason (ChangedFiles (changed_files, true))
 
-let push_files_to_force_focused_and_recheck ?callback ~reason forced_focused_files =
-  push_recheck_msg ?callback ~reason (FilesToForceFocusedAndRecheck forced_focused_files)
+let push_files_to_force_focused_and_recheck ~reason forced_focused_files =
+  push_recheck_msg ~reason (FilesToForceFocusedAndRecheck forced_focused_files)
 
-let push_dependencies_to_prioritize ?callback ~reason dependencies =
-  push_recheck_msg ?callback ~reason (DependenciesToPrioritize dependencies)
+let push_dependencies_to_prioritize ~reason dependencies =
+  push_recheck_msg ~reason (DependenciesToPrioritize dependencies)
 
-let push_files_to_resync_after_file_watcher_restart
-    ?metadata ?callback ~reason changed_since_mergebase =
-  push_recheck_msg ?metadata ?callback ~reason (FilesToResync changed_since_mergebase)
+let push_files_to_resync_after_file_watcher_restart ?metadata ~reason changed_since_mergebase =
+  push_recheck_msg ?metadata ~reason (FilesToResync changed_since_mergebase)
 
 let pop_next_workload () = WorkloadStream.pop workload_stream
 
@@ -103,7 +101,6 @@ type recheck_workload = {
   files_to_prioritize: FilenameSet.t;
   files_to_recheck: FilenameSet.t;
   files_to_force: CheckedSet.t;
-  profiling_callbacks: (Profiling_js.finished option -> unit) list;
   metadata: MonitorProt.file_watcher_metadata;
   recheck_reasons_rev: LspProt.recheck_reason list;
 }
@@ -117,7 +114,6 @@ let empty_recheck_workload =
     files_to_prioritize = FilenameSet.empty;
     files_to_recheck = FilenameSet.empty;
     files_to_force = CheckedSet.empty;
-    profiling_callbacks = [];
     metadata = MonitorProt.empty_file_watcher_metadata;
     recheck_reasons_rev = [];
   }
@@ -166,7 +162,6 @@ let workload_changed a b =
     files_to_prioritize = files_to_prioritize_a;
     files_to_recheck = files_to_recheck_a;
     files_to_force = files_to_force_a;
-    profiling_callbacks = _;
     metadata = _;
     recheck_reasons_rev = _;
   } =
@@ -176,7 +171,6 @@ let workload_changed a b =
     files_to_prioritize = files_to_prioritize_b;
     files_to_recheck = files_to_recheck_b;
     files_to_force = files_to_force_b;
-    profiling_callbacks = _;
     metadata = _;
     recheck_reasons_rev = _;
   } =
@@ -202,29 +196,25 @@ let recheck_fetch ~process_updates ~get_forced ~priority =
     (* Get all the files which have changed *)
     |> Base.List.fold_left
          ~init:!recheck_acc
-         ~f:(fun workload { files; callback; file_watcher_metadata; recheck_reason } ->
+         ~f:(fun workload { files; file_watcher_metadata; recheck_reason } ->
            let skip_incompatible =
              match recheck_reason with
              | LspProt.Lazy_init_typecheck -> Some true
              | _ -> None
            in
-           let (is_empty_msg, workload) =
+           let workload =
              match files with
              | ChangedFiles (changed_files, urgent) ->
                let updates = process_updates ?skip_incompatible changed_files in
-               let workload =
-                 if urgent then
-                   update ~files_to_prioritize:updates workload
-                 else
-                   update ~files_to_recheck:updates workload
-               in
-               (FilenameSet.is_empty updates, workload)
+               if urgent then
+                 update ~files_to_prioritize:updates workload
+               else
+                 update ~files_to_recheck:updates workload
              | FilesToForceFocusedAndRecheck forced_focused_files ->
                let updates = process_updates ?skip_incompatible forced_focused_files in
                let focused = FilenameSet.diff updates (get_forced () |> CheckedSet.focused) in
                let files_to_force = CheckedSet.add ~focused CheckedSet.empty in
-               let workload = update ~files_to_prioritize:updates ~files_to_force workload in
-               (FilenameSet.is_empty updates, workload)
+               update ~files_to_prioritize:updates ~files_to_force workload
              | DependenciesToPrioritize dependencies ->
                let to_prioritize = CheckedSet.add ~dependencies CheckedSet.empty in
                let files_to_force =
@@ -236,26 +226,10 @@ let recheck_fetch ~process_updates ~get_forced ~priority =
                  | Normal -> to_prioritize
                  | Priority -> CheckedSet.diff to_prioritize (get_forced ())
                in
-               let workload = update ~files_to_force workload in
-               (CheckedSet.is_empty files_to_force, workload)
+               update ~files_to_force workload
              | FilesToResync changed_since_mergebase ->
                let updates = process_updates ?skip_incompatible changed_since_mergebase in
-               let workload = update ~files_to_recheck:updates workload in
-               (* we don't know yet whether there's anything to recheck. even if [updates]
-                   is empty, the server also needs to check the existing checked files, so
-                   we always return [false] here. *)
-               (false, workload)
-           in
-           let workload =
-             match callback with
-             | None -> workload
-             | Some callback ->
-               if is_empty_msg then (
-                 (* Call the callback immediately if there's nothing to recheck *)
-                 callback None;
-                 workload
-               ) else
-                 { workload with profiling_callbacks = callback :: workload.profiling_callbacks }
+               update ~files_to_recheck:updates workload
            in
            let workload =
              { workload with recheck_reasons_rev = recheck_reason :: workload.recheck_reasons_rev }
@@ -278,7 +252,6 @@ let requeue_workload workload =
       files_to_prioritize = FilenameSet.union workload.files_to_prioritize prev.files_to_prioritize;
       files_to_recheck = FilenameSet.union workload.files_to_recheck prev.files_to_recheck;
       files_to_force = CheckedSet.union workload.files_to_force prev.files_to_force;
-      profiling_callbacks = prev.profiling_callbacks @ workload.profiling_callbacks;
       metadata = MonitorProt.merge_file_watcher_metadata prev.metadata workload.metadata;
       recheck_reasons_rev = prev.recheck_reasons_rev @ workload.recheck_reasons_rev;
     }

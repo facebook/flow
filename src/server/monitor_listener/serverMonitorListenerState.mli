@@ -19,32 +19,17 @@ val requeue_deferred_parallelizable_workloads : unit -> unit
 val push_new_env_update : env_update -> unit
 
 val push_files_to_recheck :
-  ?metadata:MonitorProt.file_watcher_metadata ->
-  ?callback:(Profiling_js.finished option -> unit) ->
-  reason:LspProt.recheck_reason ->
-  SSet.t ->
-  unit
+  ?metadata:MonitorProt.file_watcher_metadata -> reason:LspProt.recheck_reason -> SSet.t -> unit
 
 val push_files_to_prioritize : reason:LspProt.recheck_reason -> SSet.t -> unit
 
-val push_files_to_force_focused_and_recheck :
-  ?callback:(Profiling_js.finished option -> unit) ->
-  reason:LspProt.recheck_reason ->
-  SSet.t ->
-  unit
+val push_files_to_force_focused_and_recheck : reason:LspProt.recheck_reason -> SSet.t -> unit
 
 val push_dependencies_to_prioritize :
-  ?callback:(Profiling_js.finished option -> unit) ->
-  reason:LspProt.recheck_reason ->
-  Utils_js.FilenameSet.t ->
-  unit
+  reason:LspProt.recheck_reason -> Utils_js.FilenameSet.t -> unit
 
 val push_files_to_resync_after_file_watcher_restart :
-  ?metadata:MonitorProt.file_watcher_metadata ->
-  ?callback:(Profiling_js.finished option -> unit) ->
-  reason:LspProt.recheck_reason ->
-  SSet.t ->
-  unit
+  ?metadata:MonitorProt.file_watcher_metadata -> reason:LspProt.recheck_reason -> SSet.t -> unit
 
 val cancellation_requests : Lsp.IdSet.t ref
 
@@ -52,7 +37,6 @@ type recheck_workload = {
   files_to_prioritize: Utils_js.FilenameSet.t;
   files_to_recheck: Utils_js.FilenameSet.t;
   files_to_force: CheckedSet.t;
-  profiling_callbacks: (Profiling_js.finished option -> unit) list;
   metadata: MonitorProt.file_watcher_metadata;
   recheck_reasons_rev: LspProt.recheck_reason list;
 }

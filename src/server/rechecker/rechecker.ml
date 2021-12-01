@@ -219,10 +219,9 @@ let rec recheck_single ~recheck_count genv env =
     in
     let files_to_force = workload.files_to_force in
     let recheck_reasons_rev = workload.recheck_reasons_rev in
-    if FilenameSet.is_empty files_to_recheck && CheckedSet.is_empty files_to_force then (
-      List.iter (fun callback -> callback None) workload.profiling_callbacks;
+    if FilenameSet.is_empty files_to_recheck && CheckedSet.is_empty files_to_force then
       Lwt.return (Nothing_to_do env)
-    ) else
+    else
       (* Start the parallelizable workloads loop and return a function which will stop the loop *)
       let stop_parallelizable_workloads = start_parallelizable_workloads env in
       let post_cancel () =
@@ -260,7 +259,6 @@ let rec recheck_single ~recheck_count genv env =
             Exception.reraise exn
         in
         let%lwt () = stop_parallelizable_workloads () in
-        List.iter (fun callback -> callback (Some profiling)) workload.profiling_callbacks;
 
         (* Now that the recheck is done, it's safe to retry deferred parallelizable workloads *)
         ServerMonitorListenerState.requeue_deferred_parallelizable_workloads ();
