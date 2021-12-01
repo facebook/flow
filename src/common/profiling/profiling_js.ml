@@ -28,6 +28,8 @@ module Timing : sig
 
   val with_timing_lwt : label:string -> f:(running -> 'a Lwt.t) -> (finished * 'a) Lwt.t
 
+  val with_timing : label:string -> f:(running -> 'a) -> finished * 'a
+
   val with_timer_lwt :
     ?should_print:bool -> timer:string -> f:(unit -> 'a Lwt.t) -> running -> 'a Lwt.t
 
@@ -280,6 +282,15 @@ end = struct
     let%lwt ret = f running in
     let finished_timer = stop_timer total_timer in
     Lwt.return (finished_timer, ret)
+
+  let with_timing ~label ~f =
+    let total_timer = start_timer ~timer:label in
+    let running = ref total_timer in
+    (* Why don't we wrap this in a finalize? Well, if f throws, then no one will ever read our
+     * finished timer, so we don't really need to stop it *)
+    let ret = f running in
+    let finished_timer = stop_timer total_timer in
+    (finished_timer, ret)
 
   let prepare_timer ~timer ~running =
     let parent_timer = !running in
@@ -854,6 +865,8 @@ module Memory : sig
 
   val with_memory_lwt : label:string -> f:(running -> 'a Lwt.t) -> (finished * 'a) Lwt.t
 
+  val with_memory : label:string -> f:(running -> 'a) -> finished * 'a
+
   val legacy_sample_memory : metric:string -> value:float -> running -> unit
 
   val sample_memory : group:string -> metric:string -> value:float -> running -> unit
@@ -897,20 +910,29 @@ end = struct
 
   let legacy_group = "LEGACY"
 
+  let finish label running_memory =
+    {
+      finished_label = label;
+      finished_groups = List.rev running_memory.running_groups_rev;
+      finished_results = running_memory.running_results;
+      finished_sub_results = List.rev running_memory.running_sub_results_rev;
+    }
+
   let with_memory_lwt ~label ~f =
     let running_memory =
       ref { running_groups_rev = []; running_results = SMap.empty; running_sub_results_rev = [] }
     in
     let%lwt ret = f running_memory in
-    let finished_memory =
-      {
-        finished_label = label;
-        finished_groups = List.rev !running_memory.running_groups_rev;
-        finished_results = !running_memory.running_results;
-        finished_sub_results = List.rev !running_memory.running_sub_results_rev;
-      }
-    in
+    let finished_memory = finish label !running_memory in
     Lwt.return (finished_memory, ret)
+
+  let with_memory ~label ~f =
+    let running_memory =
+      ref { running_groups_rev = []; running_results = SMap.empty; running_sub_results_rev = [] }
+    in
+    let ret = f running_memory in
+    let finished_memory = finish label !running_memory in
+    (finished_memory, ret)
 
   let get_group_map ~group running_memory =
     match SMap.find_opt group !running_memory.running_results with
@@ -1125,6 +1147,30 @@ let with_profiling_lwt ~label ~should_print_summary f =
   let finished_profile = { finished_timing; finished_memory } in
   if should_print_summary then print_summary finished_profile;
   Lwt.return (finished_profile, ret)
+
+(**
+  [with_profiling_sync ~label f] starts a timer named [label] around [f], and resets
+  memory statistics.
+
+  Do NOT use this with an Lwt [f]! Since it doesn't resolve the promise, it will
+  return incorrect results: it will only time until the promise yields. Use
+  [with_profiling_lwt] instead.
+  *)
+let with_profiling_sync ~label ~should_print_summary f =
+  let (finished_timing, (finished_memory, ret)) =
+    Timing.with_timing ~label ~f:(fun running_timing ->
+        Memory.with_memory ~label ~f:(fun running_memory ->
+            let profile = { running_timing; running_memory } in
+            (* We don't really need to wrap this in a finalize, because if this throws no one will ever
+             * read the profiling info, so there's really nothing we need to do in the exceptional case
+             *)
+            f profile
+        )
+    )
+  in
+  let finished_profile = { finished_timing; finished_memory } in
+  if should_print_summary then print_summary finished_profile;
+  (finished_profile, ret)
 
 let get_profiling_duration profile = Timing.get_total_wall_duration profile.finished_timing
 

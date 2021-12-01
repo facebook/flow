@@ -12,6 +12,9 @@ type finished
 val with_profiling_lwt :
   label:string -> should_print_summary:bool -> (running -> 'a Lwt.t) -> (finished * 'a) Lwt.t
 
+val with_profiling_sync :
+  label:string -> should_print_summary:bool -> (running -> 'a) -> finished * 'a
+
 val get_profiling_duration : finished -> float
 
 val merge : from:finished -> into:running -> unit
