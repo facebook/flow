@@ -352,13 +352,19 @@ module Make
       state_is_uninitialized write_state
   end
 
+  module RefinementKey = Refinement_key.Make (L)
+
   module HeapRefinementMap = WrappedMap.Make (struct
-    type t = Refinement_key.proj list
+    type t = RefinementKey.proj list
 
     let compare = Stdlib.compare
   end)
 
-  module RefinementKeyMap = WrappedMap.Make (Refinement_key)
+  module LookupMap = WrappedMap.Make (struct
+    type t = RefinementKey.lookup
+
+    let compare = Stdlib.compare
+  end)
 
   type heap_refinement_map = Val.t HeapRefinementMap.t
 
@@ -443,7 +449,7 @@ module Make
     (* Maps refinement ids to refinements. This mapping contains _all_ the refinements reachable at
      * any point in the code. The latest_refinement maps keep track of which entries to read. *)
     refinement_heap: refinement_chain IMap.t;
-    latest_refinements: latest_refinement RefinementKeyMap.t list;
+    latest_refinements: latest_refinement LookupMap.t list;
     env: env_val SMap.t;
     (* When an abrupt completion is raised, it falls through any subsequent
        straight-line code, until it reaches a merge point in the control-flow
@@ -569,23 +575,21 @@ module Make
        * and successive refinement writes to model conjunctions, but it's not clear that that
        * approach is simpler than this one. *)
       method env_without_latest_refinements : Env.t =
-        let unrefine latest_refinements refinement_key v =
-          match RefinementKeyMap.find_opt refinement_key latest_refinements with
+        let unrefine latest_refinements lookup_key v =
+          match LookupMap.find_opt lookup_key latest_refinements with
           | None -> v
           | Some { refinement_id; _ } -> Val.unrefine refinement_id v
         in
         SMap.mapi
           (fun name { val_ref; heap_refinements; _ } ->
             let head = List.hd env_state.latest_refinements in
-            let refinement_key = Refinement_key.key_of_name name in
-            let env_val = unrefine head refinement_key !val_ref in
+            let lookup_key = RefinementKey.lookup_of_name name in
+            let env_val = unrefine head lookup_key !val_ref in
             let unrefined_heap_refinements =
               HeapRefinementMap.mapi
                 (fun projections v ->
-                  let refinement_key =
-                    Refinement_key.key_of_name_with_projections name projections
-                  in
-                  unrefine head refinement_key v)
+                  let lookup_key = RefinementKey.lookup_of_name_with_projections name projections in
+                  unrefine head lookup_key v)
                 !heap_refinements
             in
             { Env.env_val; heap_refinements = unrefined_heap_refinements })
@@ -734,8 +738,8 @@ module Make
        * every method that needs to update an entry. The heap_default argument can
        * be used to specify what value to apply the function to if the heap entry
        * does not yet exist. *)
-      method map_val_with_refinement_key refinement_key ?(heap_default = None) f =
-        let { Refinement_key.base; projections } = refinement_key in
+      method map_val_with_lookup lookup ?(heap_default = None) f =
+        let { RefinementKey.base; projections } = lookup in
         match SMap.find_opt base env_state.env with
         | None -> ()
         | Some { val_ref; heap_refinements; havoc = _; def_loc = _ } ->
@@ -1035,7 +1039,7 @@ module Make
             heap_refinements :=
               HeapRefinementMap.filter
                 (fun projections _ ->
-                  not (Refinement_key.proj_uses_propname ~private_ name projections))
+                  not (RefinementKey.proj_uses_propname ~private_ name projections))
                 !heap_refinements)
           env_state.env
 
@@ -1052,15 +1056,12 @@ module Make
       method assign_member ~update_entry lhs_member lhs_loc =
         this#post_assignment_heap_refinement_havoc lhs_member;
         (* We pass allow_optional:false, but optional chains can't be in the LHS anyway. *)
-        let refinement_key = Refinement_key.key_of_member lhs_member ~allow_optional:false in
-        match refinement_key with
-        | Some refinement_key when update_entry ->
+        let lookup = RefinementKey.lookup_of_member lhs_member ~allow_optional:false in
+        match lookup with
+        | Some lookup when update_entry ->
           let reason = Reason.(mk_reason RSomeProperty lhs_loc) in
           let write_val = Val.one reason in
-          this#map_val_with_refinement_key
-            refinement_key
-            (fun _ -> write_val)
-            ~heap_default:(Some write_val);
+          this#map_val_with_lookup lookup (fun _ -> write_val) ~heap_default:(Some write_val);
           let write_entries = L.LMap.add lhs_loc reason env_state.write_entries in
           env_state <- { env_state with write_entries }
         | _ -> ()
@@ -1205,7 +1206,7 @@ module Make
       method! if_statement _loc stmt =
         let open Flow_ast.Statement.If in
         let { test; consequent; alternate; _ } = stmt in
-        this#push_refinement_scope RefinementKeyMap.empty;
+        this#push_refinement_scope LookupMap.empty;
         ignore @@ this#expression_refinement test;
         let test_refinements = this#peek_new_refinements () in
         let env0 = this#env_without_latest_refinements in
@@ -1247,7 +1248,7 @@ module Make
       method! conditional _loc (expr : (ALoc.t, ALoc.t) Flow_ast.Expression.Conditional.t) =
         let open Flow_ast.Expression.Conditional in
         let { test; consequent; alternate; comments = _ } = expr in
-        this#push_refinement_scope RefinementKeyMap.empty;
+        this#push_refinement_scope LookupMap.empty;
         ignore @@ this#expression_refinement test;
         let test_refinements = this#peek_new_refinements () in
         let env0 = this#env_without_latest_refinements in
@@ -1335,15 +1336,15 @@ module Make
                 if Val.WriteSet.equal normalized_val1 normalized_val2 then
                   acc
                 else
-                  Refinement_key.key_of_name name :: acc)
+                  RefinementKey.lookup_of_name name :: acc)
               post_env
               []
         )
 
       method havoc_changed_vars changed_vars =
         List.iter
-          (fun refinement_key ->
-            let { Refinement_key.base; projections } = refinement_key in
+          (fun lookup ->
+            let { RefinementKey.base; projections } = lookup in
             let { val_ref; havoc; heap_refinements; def_loc = _ } = SMap.find base env_state.env in
             (* If a var is changed then all the heap refinements on that var should
              * also be havoced. If only heap refinements are havoced then there's no
@@ -1379,7 +1380,7 @@ module Make
         if not AbruptCompletion.(mem (List.map fst env_state.abrupt_completion_envs) (break None))
         then
           refinements
-          |> RefinementKeyMap.iter (fun refinement_key { refinement_id; ssa_id = _ } ->
+          |> LookupMap.iter (fun lookup { refinement_id; ssa_id = _ } ->
                  let new_refinement_id = this#new_id () in
                  env_state <-
                    {
@@ -1388,7 +1389,7 @@ module Make
                        IMap.add new_refinement_id (NOT refinement_id) env_state.refinement_heap;
                    };
                  let refine_val = Val.refinement new_refinement_id in
-                 this#map_val_with_refinement_key refinement_key refine_val
+                 this#map_val_with_lookup lookup refine_val
              )
 
       (*
@@ -1444,7 +1445,7 @@ module Make
              * }
              * x; // Don't want x to be a PHI of x != null and x = 4.
              *)
-            this#push_refinement_scope RefinementKeyMap.empty;
+            this#push_refinement_scope LookupMap.empty;
             let (guard_refinements, env_after_test_no_refinements, loop_completion_state) =
               visit_guard_and_body ()
             in
@@ -1712,13 +1713,13 @@ module Make
             let negated_total_refinements = List.map this#negate_refinements total_refinements in
             let conjuncted_negated_total_refinements =
               this#conjunct_all_refinements_for_key
-                (Refinement_key.key discriminant)
+                (RefinementKey.of_expression discriminant)
                 negated_total_refinements
             in
             this#push_refinement_scope conjuncted_negated_total_refinements;
             (true, total_refinements)
           | Some test ->
-            this#push_refinement_scope RefinementKeyMap.empty;
+            this#push_refinement_scope LookupMap.empty;
             ignore @@ this#expression test;
             let (loc, _) = test in
             this#eq_test ~strict:true ~sense:true ~cond_context:SwitchTest loc discriminant test;
@@ -1878,7 +1879,7 @@ module Make
                 }
               )
             ) ->
-            this#push_refinement_scope RefinementKeyMap.empty;
+            this#push_refinement_scope LookupMap.empty;
             ignore @@ this#expression_refinement cond;
             let _ = List.map this#expression_or_spread other_args in
             this#pop_refinement_scope_invariant ()
@@ -1976,14 +1977,14 @@ module Make
             latest_refinements = new_latest_refinements :: env_state.latest_refinements;
           };
         new_latest_refinements
-        |> RefinementKeyMap.iter (fun refinement_key latest_refinement ->
+        |> LookupMap.iter (fun lookup latest_refinement ->
                let refine_val v =
                  if Val.id_of_val v = latest_refinement.ssa_id then
                    Val.refinement latest_refinement.refinement_id v
                  else
                    v
                in
-               this#map_val_with_refinement_key refinement_key refine_val
+               this#map_val_with_lookup lookup refine_val
            )
 
       (* See pop_refinement_scope. The only difference here is that we unrefine values deeply
@@ -1995,9 +1996,9 @@ module Make
         let refinements = List.hd env_state.latest_refinements in
         env_state <- { env_state with latest_refinements = List.tl env_state.latest_refinements };
         refinements
-        |> RefinementKeyMap.iter (fun refinement_key latest_refinement ->
+        |> LookupMap.iter (fun lookup latest_refinement ->
                let unrefine_deeply = Val.unrefine_deeply latest_refinement.refinement_id in
-               this#map_val_with_refinement_key refinement_key unrefine_deeply
+               this#map_val_with_lookup lookup unrefine_deeply
            )
 
       (* Invariant refinement scopes can be popped, but the refinement should continue living on.
@@ -2017,15 +2018,15 @@ module Make
         let refinements = List.hd env_state.latest_refinements in
         env_state <- { env_state with latest_refinements = List.tl env_state.latest_refinements };
         refinements
-        |> RefinementKeyMap.iter (fun refinement_key latest_refinement ->
+        |> LookupMap.iter (fun lookup latest_refinement ->
                let unrefine = Val.unrefine latest_refinement.refinement_id in
-               this#map_val_with_refinement_key refinement_key unrefine
+               this#map_val_with_lookup lookup unrefine
            )
 
       method private peek_new_refinements () = List.hd env_state.latest_refinements
 
       method private negate_refinements refinements =
-        RefinementKeyMap.map
+        LookupMap.map
           (fun latest_refinement ->
             let new_id = this#new_id () in
             let new_ref = NOT latest_refinement.refinement_id in
@@ -2034,10 +2035,10 @@ module Make
             { latest_refinement with refinement_id = new_id })
           refinements
 
-      method private conjunct_all_refinements_for_key key refinement_scopes =
-        match key with
-        | None -> RefinementKeyMap.empty
-        | Some key ->
+      method private conjunct_all_refinements_for_key refinement_key refinement_scopes =
+        match refinement_key with
+        | None -> LookupMap.empty
+        | Some { RefinementKey.loc = _; lookup } ->
           let (total_refinement_opt, _) =
             List.fold_left
               (fun (total_refinement, mismatched_ids) refinement_scope ->
@@ -2046,7 +2047,7 @@ module Make
                 if mismatched_ids then
                   (None, true)
                 else
-                  match (total_refinement, RefinementKeyMap.find_opt key refinement_scope) with
+                  match (total_refinement, LookupMap.find_opt lookup refinement_scope) with
                   | (None, Some refinement)
                   | (Some refinement, None) ->
                     (Some refinement, mismatched_ids)
@@ -2071,8 +2072,8 @@ module Make
               refinement_scopes
           in
           (match total_refinement_opt with
-          | None -> RefinementKeyMap.empty
-          | Some refinement -> RefinementKeyMap.singleton key refinement)
+          | None -> LookupMap.empty
+          | Some refinement -> LookupMap.singleton lookup refinement)
 
       method private negate_new_refinements () =
         let head = List.hd env_state.latest_refinements in
@@ -2083,7 +2084,7 @@ module Make
       method private merge_self_refinement_scope new_refinements =
         let head = List.hd env_state.latest_refinements in
         let head' =
-          RefinementKeyMap.merge
+          LookupMap.merge
             (fun _ latest1 latest2 ->
               match (latest1, latest2) with
               | (_, None) -> latest1
@@ -2094,7 +2095,7 @@ module Make
         this#pop_refinement_scope ();
         this#push_refinement_scope head'
 
-      method private add_refinement refinement_key refinement =
+      method private add_refinement (refinement_key : RefinementKey.t) refinement =
         let refinement_id = this#new_id () in
         env_state <-
           {
@@ -2102,7 +2103,8 @@ module Make
             refinement_heap = IMap.add refinement_id (BASE refinement) env_state.refinement_heap;
           };
         let head = List.hd env_state.latest_refinements in
-        let latest_refinement_opt = RefinementKeyMap.find_opt refinement_key head in
+        let { RefinementKey.loc = _; lookup } = refinement_key in
+        let latest_refinement_opt = LookupMap.find_opt lookup head in
         let add_refinements v =
           let ssa_id = Val.id_of_val v in
           let (final_refinement, unrefined_v) =
@@ -2126,20 +2128,17 @@ module Make
             | None -> ({ ssa_id; refinement_id }, v)
           in
 
-          let head' = RefinementKeyMap.add refinement_key final_refinement head in
+          let head' = LookupMap.add lookup final_refinement head in
           env_state <-
             { env_state with latest_refinements = head' :: List.tl env_state.latest_refinements };
           Val.refinement final_refinement.refinement_id unrefined_v
         in
-        this#map_val_with_refinement_key
-          refinement_key
-          ~heap_default:(Some (Val.projection ()))
-          add_refinements
+        this#map_val_with_lookup lookup ~heap_default:(Some (Val.projection ())) add_refinements
 
       method identifier_refinement ((loc, ident) as identifier) =
         ignore @@ this#identifier identifier;
         let { Flow_ast.Identifier.name; _ } = ident in
-        this#add_refinement (Refinement_key.key_of_name name) (L.LSet.singleton loc, TruthyR loc)
+        this#add_refinement (RefinementKey.of_name name loc) (L.LSet.singleton loc, TruthyR loc)
 
       method assignment_refinement loc assignment =
         ignore @@ this#assignment loc assignment;
@@ -2150,16 +2149,16 @@ module Make
               { Flow_ast.Pattern.Identifier.name = (_, { Flow_ast.Identifier.name; _ }); _ }
           ) ->
           this#add_refinement
-            (Refinement_key.key_of_name name)
+            (RefinementKey.of_name name id_loc)
             (L.LSet.singleton loc, TruthyR id_loc)
         | _ -> ()
 
       method private merge_refinement_scopes
           ~merge
-          (lhs_latest_refinements : latest_refinement RefinementKeyMap.t)
-          (rhs_latest_refinements : latest_refinement RefinementKeyMap.t) =
+          (lhs_latest_refinements : latest_refinement LookupMap.t)
+          (rhs_latest_refinements : latest_refinement LookupMap.t) =
         let new_latest_refinements =
-          RefinementKeyMap.merge
+          LookupMap.merge
             (fun _ ref1 ref2 ->
               match (ref1, ref2) with
               | (None, None) -> None
@@ -2183,7 +2182,7 @@ module Make
         let { Flow_ast.Expression.Logical.operator; left = (loc, _) as left; right; comments = _ } =
           expr
         in
-        this#push_refinement_scope RefinementKeyMap.empty;
+        this#push_refinement_scope LookupMap.empty;
         (* The RHS is _only_ evaluated if the LHS fails its check. That means that patterns like
          * x || invariant(false) should propagate the truthy refinement to the next line. We keep track
          * of the completion state on the rhs to do that. If the LHS throws then the entire expression
@@ -2198,7 +2197,7 @@ module Make
             (match operator with
             | Flow_ast.Expression.Logical.Or -> this#negate_new_refinements ()
             | _ -> ());
-            this#push_refinement_scope RefinementKeyMap.empty;
+            this#push_refinement_scope LookupMap.empty;
             let rhs_completion_state =
               this#run_to_completion (fun () -> ignore @@ this#expression_refinement right)
             in
@@ -2220,20 +2219,21 @@ module Make
             let nullish = this#peek_new_refinements () in
             let env1 = this#env_without_latest_refinements in
             this#negate_new_refinements ();
-            this#push_refinement_scope RefinementKeyMap.empty;
+            this#push_refinement_scope LookupMap.empty;
             let rhs_completion_state =
               this#run_to_completion (fun () -> ignore (this#expression_refinement right))
             in
             let rhs_latest_refinements = this#peek_new_refinements () in
             this#pop_refinement_scope ();
             this#pop_refinement_scope ();
-            this#push_refinement_scope RefinementKeyMap.empty;
-            (match Refinement_key.key left with
+            this#push_refinement_scope LookupMap.empty;
+            (match RefinementKey.of_expression left with
             | None -> ()
-            | Some name -> this#add_refinement name (L.LSet.singleton loc, TruthyR loc));
+            | Some refinement_key ->
+              this#add_refinement refinement_key (L.LSet.singleton loc, TruthyR loc));
             let truthy_refinements = this#peek_new_refinements () in
             this#pop_refinement_scope ();
-            this#push_refinement_scope RefinementKeyMap.empty;
+            this#push_refinement_scope LookupMap.empty;
             this#merge_refinement_scopes merge_and nullish truthy_refinements;
             let lhs_latest_refinements = this#peek_new_refinements () in
             this#pop_refinement_scope ();
@@ -2260,9 +2260,9 @@ module Make
       method null_test ~strict ~sense loc expr =
         ignore @@ this#expression expr;
         let optional_chain_refinement = this#maybe_sentinel_and_chain_refinement ~sense loc expr in
-        match Refinement_key.key expr with
+        match RefinementKey.of_expression expr with
         | None -> ()
-        | Some name ->
+        | Some refinement_key ->
           let refinement =
             if strict then
               NullR
@@ -2275,9 +2275,9 @@ module Make
             else
               NotR refinement
           in
-          this#add_refinement name (L.LSet.singleton loc, refinement);
+          this#add_refinement refinement_key (L.LSet.singleton loc, refinement);
           (match optional_chain_refinement with
-          | Some name ->
+          | Some refinement_key ->
             (* Optional chaining with ==/=== null can be tricky. If the value before ? is
              * null or undefined then the entire chain evaluates to undefined. That leaves us
              * with these cases:
@@ -2287,7 +2287,7 @@ module Make
              * introducing a second mapping for the negation of refinements.
              *)
             if (strict && sense) || ((not sense) && not strict) then
-              this#add_refinement name (L.LSet.singleton loc, NotR MaybeR)
+              this#add_refinement refinement_key (L.LSet.singleton loc, NotR MaybeR)
           | None -> ())
 
       method void_test ~sense ~strict ~check_for_bound_undefined loc expr =
@@ -2298,9 +2298,9 @@ module Make
           | None -> false
           | Some { val_ref = v; _ } -> Val.is_global_undefined !v
         in
-        match Refinement_key.key expr with
+        match RefinementKey.of_expression expr with
         | None -> ()
-        | Some name ->
+        | Some refinement_key ->
           (* Only add the refinement if undefined is not re-bound *)
           if (not check_for_bound_undefined) || is_global_undefined () then (
             let refinement =
@@ -2315,16 +2315,17 @@ module Make
               else
                 NotR refinement
             in
-            this#add_refinement name (L.LSet.singleton loc, refinement);
+            this#add_refinement refinement_key (L.LSet.singleton loc, refinement);
             match optional_chain_refinement with
             | None -> ()
-            | Some name ->
+            | Some refinement_key ->
               (* Optional chaining against void is also difficult... (see null_test)
                * a?.b === undefined THEN a maybe or a.b is undefined ELSE a non-maybe and a.b not undefined
                * a?.b == undefined THEN a maybe or a.b maybe ELSE a non-maybe and a.b not undefined
                * TODO: we can't model this disjunction without heap refinements, so until then we
                * won't add any refinements for the sense && strict and sense && not strict cases *)
-              if not sense then this#add_refinement name (L.LSet.singleton loc, NotR MaybeR)
+              if not sense then
+                this#add_refinement refinement_key (L.LSet.singleton loc, NotR MaybeR)
           )
 
       method default_optional_chain_refinement_handler ~sense loc expr =
@@ -2346,29 +2347,29 @@ module Make
           | "undefined" -> Some UndefinedR
           | _ -> None
         in
-        match (refinement, Refinement_key.key arg) with
-        | (Some ref, Some name) ->
+        match (refinement, RefinementKey.of_expression arg) with
+        | (Some ref, Some refinement_key) ->
           let refinement =
             if sense then
               ref
             else
               NotR ref
           in
-          this#add_refinement name (L.LSet.singleton loc, refinement)
+          this#add_refinement refinement_key (L.LSet.singleton loc, refinement)
         | _ -> ()
 
       method literal_test ~strict ~sense loc expr refinement =
         ignore @@ this#expression expr;
         this#default_optional_chain_refinement_handler ~sense loc expr;
-        match Refinement_key.key expr with
-        | Some name when strict ->
+        match RefinementKey.of_expression expr with
+        | Some refinement_key when strict ->
           let refinement =
             if sense then
               refinement
             else
               NotR refinement
           in
-          this#add_refinement name (L.LSet.singleton loc, refinement)
+          this#add_refinement refinement_key (L.LSet.singleton loc, refinement)
         | _ -> ()
 
       method maybe_sentinel_and_chain_refinement ~sense loc expr =
@@ -2392,8 +2393,8 @@ module Make
               }
           ) ->
           let (_ : ('a, 'b) Ast.Expression.t) = this#expression _object in
-          (match Refinement_key.key _object with
-          | Some name ->
+          (match RefinementKey.of_expression _object with
+          | Some refinement_key ->
             let refinement = SentinelR (prop_name, ploc) in
             let refinement =
               if sense then
@@ -2401,13 +2402,13 @@ module Make
               else
                 NotR refinement
             in
-            this#add_refinement name (L.LSet.singleton loc, refinement)
+            this#add_refinement refinement_key (L.LSet.singleton loc, refinement)
           | None -> ())
         | _ -> ignore (this#expression expr : ('a, 'b) Ast.Expression.t));
         (* We return the refinement to the callers to handle specially. null_test and void_test have the
          * most interesting behaviors *)
-        match Refinement_key.key_of_optional_chain expr with
-        | Some name -> Some name
+        match RefinementKey.of_optional_chain expr with
+        | Some refinement_key -> Some refinement_key
         | None -> None
 
       method eq_test ~strict ~sense ~cond_context loc left right =
@@ -2578,11 +2579,11 @@ module Make
       method instance_test loc expr instance =
         ignore @@ this#expression expr;
         ignore @@ this#expression instance;
-        match Refinement_key.key expr with
+        match RefinementKey.of_expression expr with
         | None -> ()
-        | Some name ->
+        | Some refinement_key ->
           let (inst_loc, _) = instance in
-          this#add_refinement name (L.LSet.singleton loc, InstanceOfR inst_loc)
+          this#add_refinement refinement_key (L.LSet.singleton loc, InstanceOfR inst_loc)
 
       method binary_refinement loc expr =
         let open Flow_ast.Expression.Binary in
@@ -2644,9 +2645,10 @@ module Make
         } ->
           ignore @@ this#expression callee;
           ignore @@ this#expression arg;
-          (match Refinement_key.key arg with
+          (match RefinementKey.of_expression arg with
           | None -> ()
-          | Some name -> this#add_refinement name (L.LSet.singleton loc, IsArrayR))
+          | Some refinement_key ->
+            this#add_refinement refinement_key (L.LSet.singleton loc, IsArrayR))
         (* Latent refinements are only applied on function calls where the function call is an identifier *)
         | {
          Flow_ast.Expression.Call.callee = (_, Flow_ast.Expression.Identifier _) as callee;
@@ -2677,7 +2679,7 @@ module Make
             if List.exists is_spread arglist then
               []
             else
-              List.map (fun arg -> Refinement_key.key_of_argument arg) arglist
+              List.map (fun arg -> RefinementKey.of_argument arg) arglist
           in
           ignore @@ this#expression callee;
           ignore @@ this#call_arguments arguments;
@@ -2689,7 +2691,7 @@ module Make
           loc ({ Flow_ast.Expression.Unary.operator; argument; comments = _ } as unary) =
         match operator with
         | Flow_ast.Expression.Unary.Not ->
-          this#push_refinement_scope RefinementKeyMap.empty;
+          this#push_refinement_scope LookupMap.empty;
           ignore @@ this#expression_refinement argument;
           this#negate_new_refinements ();
           let negated_refinements = this#peek_new_refinements () in
@@ -2752,7 +2754,7 @@ module Make
       method! logical _loc (expr : (ALoc.t, ALoc.t) Flow_ast.Expression.Logical.t) =
         let open Flow_ast.Expression.Logical in
         let { operator; left = (loc, _) as left; right; comments = _ } = expr in
-        this#push_refinement_scope RefinementKeyMap.empty;
+        this#push_refinement_scope LookupMap.empty;
         (* THe LHS is unconditionally evaluated, so we don't run-to-completion and catch the
          * error here *)
         (match operator with
@@ -2809,9 +2811,9 @@ module Make
         match expr with
         | (loc, Flow_ast.Expression.Member _)
         | (loc, Flow_ast.Expression.OptionalMember _) ->
-          (match Refinement_key.key expr with
+          (match RefinementKey.of_expression expr with
           | None -> ()
-          | Some { Refinement_key.base; projections } ->
+          | Some { RefinementKey.loc = _; lookup = { RefinementKey.base; projections } } ->
             let { Env.env_val = _; heap_refinements } = SMap.find base this#env in
             (match HeapRefinementMap.find_opt projections heap_refinements with
             | None -> ()
