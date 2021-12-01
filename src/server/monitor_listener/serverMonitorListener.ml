@@ -19,7 +19,8 @@ let handle_message genv = function
   | MonitorProt.Request (request_id, command) ->
     CommandHandler.enqueue_or_handle_ephemeral genv (request_id, command)
   | MonitorProt.PersistentConnectionRequest (client_id, request) ->
-    CommandHandler.enqueue_persistent genv client_id request
+    CommandHandler.enqueue_persistent genv client_id request;
+    Lwt.return_unit
   | MonitorProt.NewPersistentConnection (client_id, lsp_init_params) ->
     (* Immediately register the new client *)
     Persistent_connection.add_client client_id lsp_init_params;
