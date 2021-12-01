@@ -1,3 +1,10 @@
+### 0.166.0
+
+* Improve recheck performance on large projects
+* No longer support `flow check-contents` on non-Flow files by default; pass `--all` to force it. (D32626054 mroch)
+* No longer attempt to provide LSP documentHighlight on non-Flow files. (D32625123 mroch)
+* Remove legacy "weak" mode. The `--weak` CLI flag and `weak=true` flowconfig option have been removed.
+
 ### 0.165.1
 
 Notable bug fixes:
@@ -10,9 +17,9 @@ Likely to cause new Flow errors:
 * The Flow parser now requires that variables declared using the `declare var` syntax be annotated with a type. `declare var x;` is now illegal.
 
 Notable bug fixes:
-* [fix] No longer attempt to provide autocomplete or `flow autocomplete` on non-Flow files.
-* [fix] Fix a crash when deleting a file in lazy mode
-* [fix] Fix a bug that prevented some code actions from adding type imports for `export default class` definitions
+* No longer attempt to provide autocomplete or `flow autocomplete` on non-Flow files.
+* Fix a crash when deleting a file in lazy mode
+* Fix a bug that prevented some code actions from adding type imports for `export default class` definitions
 
 ### 0.164.0
 
