@@ -31,10 +31,8 @@ start_flow . --no-auto-restart
 
 # This should cause the flow server and monitor to die, due to --no-auto-restart
 cp lib/lib.js.orig lib/lib.js
-# The force-recheck will cause the server and monitor to crash, so it won't get
-# a response. The --profile flag will make sure it doesn't get an early response
-# pre-crash
-assert_exit 6 "$FLOW" force-recheck --no-auto-start --profile lib/lib.js
+assert_ok "$FLOW" force-recheck --no-auto-start lib/lib.js
+
 echo "fourth status, after modification"
 # This should have no output, since it won't find a server. It will print stuff
 # on stderr but it includes the nondeterministically-chosen tmpdir so we can't

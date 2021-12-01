@@ -17,9 +17,10 @@ assert_ok "$FLOW" start . \
   --log-file "$FLOW_LOG_FILE" \
   --monitor-log-file "$FLOW_MONITOR_LOG_FILE"
 
+assert_ok "$FLOW" force-recheck sleep.js
+
 # This will timeout
-assert_exit 3 \
-  "$FLOW" force-recheck sleep.js --profile --timeout 5 --no-auto-start
+assert_exit 3 "$FLOW" status --timeout 5 --no-auto-start
 
 rm sleep.js
 
