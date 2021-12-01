@@ -43,8 +43,6 @@ module New_env : Env_sig.S = struct
 
   let widen_env = Old_env.widen_env
 
-  let get_refinement = Old_env.get_refinement
-
   let havoc_heap_refinements_with_propname = Old_env.havoc_heap_refinements_with_propname
 
   let havoc_local_refinements = Old_env.havoc_local_refinements
@@ -111,7 +109,12 @@ module New_env : Env_sig.S = struct
   (* Helpers **************)
   (************************)
 
-  let find_var { Env_api.env_values; _ } loc = ALocMap.find loc env_values
+  exception LocEnvEntryNotFound of ALoc.t
+
+  let find_var { Env_api.env_values; _ } loc =
+    match ALocMap.find_opt loc env_values with
+    | None -> raise (LocEnvEntryNotFound loc)
+    | Some x -> x
 
   let find_refi { Env_api.refinement_of_id; _ } = refinement_of_id
 
@@ -237,6 +240,12 @@ module New_env : Env_sig.S = struct
     in
     let var_state = find_var var_info loc in
     type_of_state var_state None
+
+  let get_refinement cx key loc =
+    let reason = mk_reason (Key.reason_desc key) loc in
+    try Some (read_entry ~for_type:false cx loc reason) with
+    | LocEnvEntryNotFound _ -> None
+    | ex -> raise ex
 
   let get_var ?(lookup_mode = ForValue) cx name loc =
     match lookup_mode with
@@ -509,8 +518,10 @@ module New_env : Env_sig.S = struct
     let refine_with_pred key pred acc =
       let refi_reason = mk_reason (RRefined (Key.reason_desc key)) loc in
       match key with
-      | (OrdinaryName _, []) -> (* new env doesn't need to refine ordinary names *) acc
-      (* for heap refinements, we just add new entries *)
+      | (OrdinaryName _, _) ->
+        (* new env doesn't need to refine ordinary names. The EnvBuilder computes
+         * the refinements in advance *)
+        acc
       | _ ->
         let orig_type = Key_map.find key orig_types in
         let refi_type = mk_refi_type orig_type pred refi_reason in
