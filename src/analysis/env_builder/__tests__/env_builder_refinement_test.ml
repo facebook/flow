@@ -4586,3 +4586,58 @@ function time_to_create_some_elements_bro() {
         (5, 3) to (5, 16) => {
           Global SecondElement
         }] |}]
+
+let%expect_test "react_jsx" =
+  print_ssa_test {|
+const React = require('react');
+
+<div />;
+|};
+    [%expect {|
+      [
+        (2, 14) to (2, 21) => {
+          Global require
+        };
+        (4, 0) to (4, 7) => {
+          (2, 6) to (2, 11): (`React`)
+        };
+        (4, 1) to (4, 4) => {
+          Global div
+        }] |}]
+
+let%expect_test "unreachable_jsx" =
+  print_ssa_test {|
+const React = require('react');
+throw new Error();
+<Component />;
+|};
+    [%expect {|
+      [
+        (2, 14) to (2, 21) => {
+          Global require
+        };
+        (3, 10) to (3, 15) => {
+          Global Error
+        };
+        (4, 0) to (4, 13) => {
+          unreachable
+        }] |}]
+
+let%expect_test "switch_reread_discriminant" =
+  print_ssa_test {|
+let y = {};
+switch (y.x) { // Does not report a Projection
+    case 'ONE': break;
+    case 'TWO': break;
+    default:
+      (y.x: empty);
+}
+|};
+    [%expect {|
+      [
+        (3, 8) to (3, 9) => {
+          (2, 4) to (2, 5): (`y`)
+        };
+        (7, 7) to (7, 8) => {
+          (2, 4) to (2, 5): (`y`)
+        }] |}]

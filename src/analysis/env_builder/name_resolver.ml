@@ -1725,7 +1725,18 @@ module Make
             this#push_refinement_scope LookupMap.empty;
             ignore @@ this#expression test;
             let (loc, _) = test in
+            (* eq_test re-reads the discriminant. We don't want to actually update the writes that
+             * reach the discriminant read as we consider each case, so we restore the writes at the
+             * discriminant's location after calling eq_test *)
+            let (discriminant_loc, _) = discriminant in
+            let discriminant_read = L.LMap.find_opt discriminant_loc env_state.values in
             this#eq_test ~strict:true ~sense:true ~cond_context:SwitchTest loc discriminant test;
+            env_state <-
+              {
+                env_state with
+                values =
+                  L.LMap.update discriminant_loc (fun _ -> discriminant_read) env_state.values;
+              };
             (has_default, this#peek_new_refinements () :: total_refinements)
         in
         (* The refinement scope for this case is a disjunction of the refinement scope left
