@@ -109,6 +109,12 @@ module New_env : Env_sig.S = struct
   (* Helpers **************)
   (************************)
 
+  let record_projection_if_needed cx loc t =
+    let env = Context.environment cx in
+    match Loc_env.find_write env loc with
+    | None -> ()
+    | Some w -> Flow_js.unify cx ~use_op:unknown_use t w
+
   exception LocEnvEntryNotFound of ALoc.t
 
   let find_var { Env_api.env_values; _ } loc =
@@ -233,7 +239,7 @@ module New_env : Env_sig.S = struct
           | Env_api.With_ALoc.Unreachable loc ->
             let reason = mk_reason (RCustom "unreachable value") loc in
             EmptyT.make reason (Trust.bogus_trust ())
-          | Env_api.With_ALoc.Projection _ -> failwith "Projections not yet implemented")
+          | Env_api.With_ALoc.Projection loc -> Base.Option.value_exn (Loc_env.find_write env loc))
         states
       |> phi cx reason
       |> refine cx reason loc refi

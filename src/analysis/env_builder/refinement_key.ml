@@ -43,6 +43,8 @@ module type REFINEMENT_KEY = sig
     ?allow_optional:bool -> ('a, L.t) Flow_ast.Expression.t -> lookup option
 
   val proj_uses_propname : private_:bool -> string -> proj list -> bool
+
+  val reason_desc : t -> L.t Reason.virtual_reason_desc
 end
 
 module Make (L : Loc_sig.S) : REFINEMENT_KEY with module L = L = struct
@@ -183,4 +185,17 @@ module Make (L : Loc_sig.S) : REFINEMENT_KEY with module L = L = struct
     match lookup_of_optional_chain expr with
     | None -> None
     | Some lookup -> Some { loc; lookup }
+
+  let reason_desc refinement_key =
+    let { lookup; _ } = refinement_key in
+    let { base; projections } = lookup in
+    Reason.(
+      match (base, projections) with
+      | (name, []) -> RIdentifier (OrdinaryName name)
+      | (_, projs) ->
+        (match List.hd (List.rev projs) with
+        | Prop x -> RProperty (Some (OrdinaryName x))
+        | PrivateField x -> RPrivateProperty x
+        | Elem _ -> RProperty None)
+    )
 end

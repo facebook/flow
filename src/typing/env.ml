@@ -1826,4 +1826,6 @@ module Env : Env_sig.S = struct
     result
 
   let new_env = false
+
+  let record_projection_if_needed _ _ _ = ()
 end

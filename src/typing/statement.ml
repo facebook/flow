@@ -4640,491 +4640,503 @@ struct
           ~test_hooks
           ~get_reason
     in
-    match try_non_chain cx loc e' ~call_ast ~member_ast with
-    | Some ((((_, lhs_t), _) as res), preds, sentinel_refinement) ->
-      (* Nothing to do with respect to optional chaining, because we're in a
-         case where chaining isn't allowed. *)
-      (lhs_t, None, res, preds, sentinel_refinement)
-    | None ->
-      let (e', method_receiver_and_state) =
-        (* If we're looking at a call, look "one level deeper" to see if the
-         * next element of the chain is an member access, in which case we're
-         * looking at an optional method call and we need to process both
-         * "levels" at once.  Similar to the call to factor_out_optional above,
-         * we then factor out the optionality of the member lookup component of
-         * the method call. However, we can skip this if the callee is optional
-         * and the call is non-optional--this means that the callee is in
-         * parentheses, so we can treat it as a regular GetProp followed by a
-         * regular Call instead of using the special method call machinery. Such
-         * a case would look like this:
-         *
-         *     callee
-         *    vvvvvvvvv
-         *   (obj?.meth)()
-         *    ^^^
-         *     member._object
-         *)
-        match (e', opt_state) with
-        | ( Call
-              ( {
-                  Call.callee = (callee_loc, OptionalMember { OptionalMember.member; optional });
-                  targs = _;
-                  arguments = _;
-                  comments = _;
-                } as call
-              ),
-            (NewChain | ContinueChain)
-          ) ->
-          let receiver_ast member = OptionalMember { OptionalMember.member; optional } in
-          let member_opt =
-            if optional then
-              (* In this case:
-               *
-               *   callee
-               *  vvvvvvvvv
-               *  obj?.meth() (or obj?.meth?.())
-               *  ^^^
-               *   member._object
-               *
-               * There may or may not be other links in the chain earlier than obj, and the call
-               * to meth() may be optional itself (e.g. obj?.meth?.()) -- this has already been
-               * factored out.
-               *)
-              NewChain
-            else
-              (* In this case:
-               *
-               *             callee
-               *            vvvvvvvv
-               * other_obj?.obj.meth() (or other_obj?.obj.meth?.())
-               *            ^^^
-               *             member._object
-               *)
-              ContinueChain
-          in
-          ( Call { call with Call.callee = (callee_loc, Member member) },
-            Some (member_opt, member, receiver_ast)
-          )
-        | (Call { Call.callee = (_, Member member); targs = _; arguments = _; comments = _ }, _) ->
-          (e', Some (NonOptional, member, (fun member -> Member member)))
-        | _ -> (e', None)
-      in
-      (match (e', method_receiver_and_state) with
-      (* e1[e2] *)
-      | (Member { Member._object; property = Member.PropertyExpression index; comments }, _) ->
-        let reason = mk_reason (RProperty None) loc in
-        let use_op = Op (GetProperty (mk_expression_reason ex)) in
-        let get_opt_use tind _ _ = OptGetElemT (use_op, reason, tind) in
-        let get_mem_t tind reason obj_t =
-          Tvar.mk_no_wrap_where cx reason (fun t ->
-              let use = apply_opt_use (get_opt_use tind reason obj_t) t in
-              Flow.flow cx (obj_t, use)
-          )
-        in
-        let eval_index preds =
-          in_env preds (fun () ->
-              let (((_, tind), _) as index) = expression cx ~annot:None index in
-              (tind, index)
-          )
-        in
-        let (filtered_out, voided_out, lhs_t, obj_t, object_ast, index, preds) =
-          handle_chaining
-            opt_state
-            _object
-            loc
-            ~this_reason:(mk_expression_reason _object)
-            ~subexpressions:eval_index
-            ~get_result:get_mem_t
-            ~test_hooks:noop
-            ~get_opt_use
-            ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc)
-            ~get_reason:(Fn.const reason)
-        in
-        let sentinel_refinement =
-          Base.Option.value_map ~f:(fun f -> f obj_t) ~default:None sentinel_refine
-        in
-        let new_pred_list = exists_pred (loc, e') lhs_t in
-        let preds = combine_preds preds new_pred_list in
-        ( filtered_out,
-          voided_out,
-          ( (loc, lhs_t),
-            member_ast
-              { Member._object = object_ast; property = Member.PropertyExpression index; comments }
-          ),
-          preds,
-          sentinel_refinement
-        )
-      (* e.l *)
-      | ( Member
-            {
-              Member._object;
-              property =
-                Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name; comments = _ } as id));
-              comments;
-            },
-          _
-        ) ->
-        let expr_reason = mk_expression_reason ex in
-        let prop_reason = mk_reason (RProperty (Some (OrdinaryName name))) ploc in
-        let use_op = Op (GetProperty expr_reason) in
-        let opt_use = get_prop_opt_use ~cond expr_reason ~use_op (prop_reason, name) in
-        let test_hooks obj_t =
-          if Type_inference_hooks_js.dispatch_member_hook cx name ploc obj_t then
-            Some (inference_hook_tvar cx ploc)
-          else
-            None
-        in
-        let get_mem_t () _ obj_t =
-          Tvar.mk_no_wrap_where cx expr_reason (fun t ->
-              let use = apply_opt_use opt_use t in
-              Flow.flow cx (obj_t, use)
-          )
-        in
-        let (filtered_out, voided_out, lhs_t, obj_t, object_ast, _, preds) =
-          handle_chaining
-            opt_state
-            _object
-            loc
-            ~subexpressions:(Fn.const ((), ()))
-            ~this_reason:(mk_expression_reason _object)
-            ~get_result:get_mem_t
-            ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc)
-            ~test_hooks
-            ~get_opt_use:(fun _ _ _ -> opt_use)
-            ~get_reason:(Fn.const expr_reason)
-        in
-        let sentinel_refinement =
-          Base.Option.value_map ~f:(fun f -> f obj_t) ~default:None sentinel_refine
-        in
-        let new_pred_list =
-          exists_pred (loc, e') filtered_out @ prop_exists_pred _object name obj_t prop_reason
-        in
-        let preds = combine_preds preds new_pred_list in
-        let property = Member.PropertyIdentifier ((ploc, lhs_t), id) in
-        ( filtered_out,
-          voided_out,
-          ((loc, lhs_t), member_ast { Member._object = object_ast; property; comments }),
-          preds,
-          sentinel_refinement
-        )
-      (* e.#l *)
-      | ( Member
-            {
-              Member._object;
-              property =
-                Member.PropertyPrivateName (ploc, { Ast.PrivateName.name; comments = _ }) as
-                property;
-              comments;
-            },
-          _
-        ) ->
-        let expr_reason = mk_reason (RPrivateProperty name) loc in
-        let use_op = Op (GetProperty (mk_expression_reason ex)) in
-        let opt_use = get_private_field_opt_use expr_reason ~use_op name in
-        let test_hooks obj_t =
-          if Type_inference_hooks_js.dispatch_member_hook cx name ploc obj_t then
-            Some (inference_hook_tvar cx ploc)
-          else
-            None
-        in
-        let get_mem_t () _ obj_t =
-          Tvar.mk_no_wrap_where cx expr_reason (fun t ->
-              let use = apply_opt_use opt_use t in
-              Flow.flow cx (obj_t, use)
-          )
-        in
-        let (filtered_out, voided_out, lhs_t, _, object_ast, _, preds) =
-          handle_chaining
-            opt_state
-            _object
-            loc
-            ~this_reason:(mk_expression_reason _object)
-            ~subexpressions:(Fn.const ((), ()))
-            ~get_result:get_mem_t
-            ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc)
-            ~test_hooks
-            ~get_opt_use:(fun _ _ _ -> opt_use)
-            ~get_reason:(Fn.const expr_reason)
-        in
-        let new_pred_list = exists_pred (loc, e') lhs_t in
-        let preds = combine_preds preds new_pred_list in
-        ( filtered_out,
-          voided_out,
-          ((loc, lhs_t), member_ast { Member._object = object_ast; property; comments }),
-          preds,
-          None
-        )
-      (* Method calls: e.l(), e.#l(), and e1[e2]() *)
-      | ( Call { Call.callee = (lookup_loc, callee_expr) as callee; targs; arguments; comments },
-          Some
-            ( member_opt,
-              ({ Member._object; property; comments = member_comments } as receiver),
-              receiver_ast
-            )
-        ) ->
-        let (targts, targs) = convert_call_targs_opt cx targs in
-        let expr_reason = mk_expression_reason ex in
-        let ( filtered_out,
-              lookup_voided_out,
-              call_voided_out,
-              member_lhs_t,
-              prop_t,
-              object_ast,
-              property,
-              argument_asts
-            ) =
-          match property with
-          | Member.PropertyPrivateName (prop_loc, { Ast.PrivateName.name; comments = _ })
-          | Member.PropertyIdentifier (prop_loc, { Ast.Identifier.name; comments = _ }) ->
-            let reason_call = mk_reason (RMethodCall (Some name)) loc in
-            let reason_prop = mk_reason (RProperty (Some (OrdinaryName name))) prop_loc in
-            let this_reason = mk_expression_reason callee in
-            let use_op =
-              Op
-                (FunCallMethod
-                   {
-                     op = expr_reason;
-                     fn = mk_expression_reason (lookup_loc, receiver_ast receiver);
-                     prop = reason_prop;
-                     args = mk_initial_arguments_reason arguments;
-                     local = true;
-                   }
-                )
-            in
-            let prop_t = Tvar.mk cx reason_prop in
-            let call_voided_out = Tvar.mk cx reason_call in
-            let private_ =
-              match property with
-              | Member.PropertyExpression _ ->
-                Utils_js.assert_false "unexpected property expression"
-              | Member.PropertyPrivateName _ -> true
-              | Member.PropertyIdentifier _ -> false
-            in
-            let get_opt_use argts _ _ =
-              method_call_opt_use
-                cx
-                opt_state
-                ~prop_t
-                ~voided_out:call_voided_out
-                reason_call
-                ~use_op
-                ~private_
-                prop_loc
-                (callee, name)
-                loc
-                targts
-                argts
-            in
-            let test_hooks obj_t =
-              if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc obj_t then
-                Some (inference_hook_tvar cx prop_loc)
+    let result =
+      match try_non_chain cx loc e' ~call_ast ~member_ast with
+      | Some ((((_, lhs_t), _) as res), preds, sentinel_refinement) ->
+        (* Nothing to do with respect to optional chaining, because we're in a
+           case where chaining isn't allowed. *)
+        (lhs_t, None, res, preds, sentinel_refinement)
+      | None ->
+        let (e', method_receiver_and_state) =
+          (* If we're looking at a call, look "one level deeper" to see if the
+           * next element of the chain is an member access, in which case we're
+           * looking at an optional method call and we need to process both
+           * "levels" at once.  Similar to the call to factor_out_optional above,
+           * we then factor out the optionality of the member lookup component of
+           * the method call. However, we can skip this if the callee is optional
+           * and the call is non-optional--this means that the callee is in
+           * parentheses, so we can treat it as a regular GetProp followed by a
+           * regular Call instead of using the special method call machinery. Such
+           * a case would look like this:
+           *
+           *     callee
+           *    vvvvvvvvv
+           *   (obj?.meth)()
+           *    ^^^
+           *     member._object
+           *)
+          match (e', opt_state) with
+          | ( Call
+                ( {
+                    Call.callee = (callee_loc, OptionalMember { OptionalMember.member; optional });
+                    targs = _;
+                    arguments = _;
+                    comments = _;
+                  } as call
+                ),
+              (NewChain | ContinueChain)
+            ) ->
+            let receiver_ast member = OptionalMember { OptionalMember.member; optional } in
+            let member_opt =
+              if optional then
+                (* In this case:
+                 *
+                 *   callee
+                 *  vvvvvvvvv
+                 *  obj?.meth() (or obj?.meth?.())
+                 *  ^^^
+                 *   member._object
+                 *
+                 * There may or may not be other links in the chain earlier than obj, and the call
+                 * to meth() may be optional itself (e.g. obj?.meth?.()) -- this has already been
+                 * factored out.
+                 *)
+                NewChain
               else
-                None
+                (* In this case:
+                 *
+                 *             callee
+                 *            vvvvvvvv
+                 * other_obj?.obj.meth() (or other_obj?.obj.meth?.())
+                 *            ^^^
+                 *             member._object
+                 *)
+                ContinueChain
             in
-            let handle_refined_callee argts obj_t f =
-              Env.havoc_heap_refinements ();
-              Env.havoc_local_refinements cx;
-              Tvar.mk_no_wrap_where cx reason_call (fun t ->
-                  let app = mk_boundfunctioncalltype obj_t targts argts t ~call_strict_arity:true in
-                  Flow.unify cx f prop_t;
-                  let call_t =
-                    match opt_state with
-                    | NewChain ->
-                      let chain_reason = mk_reason ROptionalChain loc in
-                      let lhs_reason = mk_expression_reason callee in
-                      let this_t = Tvar.mk cx this_reason in
-                      OptionalChainT
-                        {
-                          reason = chain_reason;
-                          lhs_reason;
-                          this_t;
-                          t_out = CallT (use_op, reason_call, app);
-                          voided_out = OpenT t;
-                        }
-                    | _ -> CallT (use_op, reason_call, app)
-                  in
-                  Flow.flow cx (f, call_t)
-              )
-            in
-            let get_mem_t argts reason obj_t =
-              Type_inference_hooks_js.dispatch_call_hook cx name prop_loc obj_t;
-              Tvar.mk_no_wrap_where cx reason_call (fun t ->
-                  let use = apply_opt_use (get_opt_use argts reason obj_t) t in
-                  Flow.flow cx (obj_t, use)
-              )
-            in
-            let eval_args preds = in_env preds (fun () -> arg_list cx arguments) in
-            let (filtered_out, lookup_voided_out, member_lhs_t, _, object_ast, argument_asts, _) =
-              handle_chaining
-                member_opt
-                _object
-                lookup_loc
-                ~this_reason
-                ~subexpressions:eval_args
-                ~get_result:get_mem_t
-                ~test_hooks
-                ~get_opt_use
-                ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, callee_expr) loc)
-                ~refinement_action:handle_refined_callee
-                ~get_reason:(Fn.const expr_reason)
-            in
-            let prop_ast =
-              match property with
-              | Member.PropertyExpression _ ->
-                Utils_js.assert_false "unexpected property expression"
-              | Member.PropertyPrivateName (_, id) -> Member.PropertyPrivateName (prop_loc, id)
-              | Member.PropertyIdentifier (_, id) ->
-                Member.PropertyIdentifier ((prop_loc, prop_t), id)
-            in
-            ( filtered_out,
-              lookup_voided_out,
-              call_voided_out,
-              member_lhs_t,
-              prop_t,
-              object_ast,
-              prop_ast,
-              argument_asts
+            ( Call { call with Call.callee = (callee_loc, Member member) },
+              Some (member_opt, member, receiver_ast)
             )
-          | Member.PropertyExpression expr ->
-            let reason_call = mk_reason (RMethodCall None) loc in
-            let reason_lookup = mk_reason (RProperty None) lookup_loc in
-            let call_voided_out = Tvar.mk cx expr_reason in
-            let prop_t = Tvar.mk cx reason_lookup in
-            let get_opt_use (argts, elem_t) _ _ =
-              elem_call_opt_use
-                opt_state
-                ~prop_t
-                ~voided_out:call_voided_out
-                ~reason_call
-                ~reason_lookup
-                ~reason_expr:expr_reason
-                ~reason_chain:(mk_reason ROptionalChain loc)
-                targts
-                argts
-                elem_t
-            in
-            let get_mem_t arg_and_elem_ts reason obj_t =
-              Tvar.mk_no_wrap_where cx reason_call (fun t ->
-                  let use = apply_opt_use (get_opt_use arg_and_elem_ts reason obj_t) t in
-                  Flow.flow cx (obj_t, use);
-                  Flow.flow_t cx (obj_t, prop_t)
-              )
-            in
-            let eval_args_and_expr preds =
-              in_env preds (fun () ->
-                  let (((_, elem_t), _) as expr) = expression cx ~annot:None expr in
-                  let (argts, arguments_ast) = arg_list cx arguments in
-                  ((argts, elem_t), (arguments_ast, expr))
-              )
-            in
-            let this_reason = mk_expression_reason callee in
-            let ( filtered_out,
-                  lookup_voided_out,
-                  member_lhs_t,
-                  _,
-                  object_ast,
-                  (argument_asts, expr_ast),
-                  _
-                ) =
-              handle_chaining
-                member_opt
-                _object
-                lookup_loc
-                ~this_reason
-                ~subexpressions:eval_args_and_expr
-                ~get_result:get_mem_t
-                ~test_hooks:noop
-                ~get_opt_use
-                ~refine:noop
-                ~get_reason:(Fn.const expr_reason)
-            in
-            ( filtered_out,
-              lookup_voided_out,
-              call_voided_out,
-              member_lhs_t,
-              prop_t,
-              object_ast,
-              Member.PropertyExpression expr_ast,
-              argument_asts
-            )
+          | (Call { Call.callee = (_, Member member); targs = _; arguments = _; comments = _ }, _)
+            ->
+            (e', Some (NonOptional, member, (fun member -> Member member)))
+          | _ -> (e', None)
         in
-        let voided_out = join_optional_branches lookup_voided_out call_voided_out in
-        let lhs_t =
-          Tvar.mk_where cx (reason_of_t member_lhs_t) (fun t ->
-              Flow.flow_t cx (member_lhs_t, t);
-              Flow.flow_t cx (voided_out, t)
+        (match (e', method_receiver_and_state) with
+        (* e1[e2] *)
+        | (Member { Member._object; property = Member.PropertyExpression index; comments }, _) ->
+          let reason = mk_reason (RProperty None) loc in
+          let use_op = Op (GetProperty (mk_expression_reason ex)) in
+          let get_opt_use tind _ _ = OptGetElemT (use_op, reason, tind) in
+          let get_mem_t tind reason obj_t =
+            Tvar.mk_no_wrap_where cx reason (fun t ->
+                let use = apply_opt_use (get_opt_use tind reason obj_t) t in
+                Flow.flow cx (obj_t, use)
+            )
+          in
+          let eval_index preds =
+            in_env preds (fun () ->
+                let (((_, tind), _) as index) = expression cx ~annot:None index in
+                (tind, index)
+            )
+          in
+          let (filtered_out, voided_out, lhs_t, obj_t, object_ast, index, preds) =
+            handle_chaining
+              opt_state
+              _object
+              loc
+              ~this_reason:(mk_expression_reason _object)
+              ~subexpressions:eval_index
+              ~get_result:get_mem_t
+              ~test_hooks:noop
+              ~get_opt_use
+              ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc)
+              ~get_reason:(Fn.const reason)
+          in
+          let sentinel_refinement =
+            Base.Option.value_map ~f:(fun f -> f obj_t) ~default:None sentinel_refine
+          in
+          let new_pred_list = exists_pred (loc, e') lhs_t in
+          let preds = combine_preds preds new_pred_list in
+          ( filtered_out,
+            voided_out,
+            ( (loc, lhs_t),
+              member_ast
+                {
+                  Member._object = object_ast;
+                  property = Member.PropertyExpression index;
+                  comments;
+                }
+            ),
+            preds,
+            sentinel_refinement
           )
-        in
-        ( filtered_out,
-          Some voided_out,
-          ( (loc, lhs_t),
-            call_ast
+        (* e.l *)
+        | ( Member
               {
-                Call.callee =
-                  ( (lookup_loc, prop_t),
-                    receiver_ast
-                      { Member._object = object_ast; property; comments = member_comments }
-                  );
-                targs;
-                arguments = argument_asts;
+                Member._object;
+                property =
+                  Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name; comments = _ } as id));
                 comments;
-              }
-          ),
-          None,
-          None
-        )
-      (* e1(e2...) *)
-      | (Call { Call.callee; targs; arguments; comments }, None) ->
-        let (targts, targs) = convert_call_targs_opt cx targs in
-        let use_op =
-          Op
-            (FunCall
-               {
-                 op = mk_expression_reason ex;
-                 fn = mk_expression_reason callee;
-                 args = mk_initial_arguments_reason arguments;
-                 local = true;
-               }
+              },
+            _
+          ) ->
+          let expr_reason = mk_expression_reason ex in
+          let prop_reason = mk_reason (RProperty (Some (OrdinaryName name))) ploc in
+          let use_op = Op (GetProperty expr_reason) in
+          let opt_use = get_prop_opt_use ~cond expr_reason ~use_op (prop_reason, name) in
+          let test_hooks obj_t =
+            if Type_inference_hooks_js.dispatch_member_hook cx name ploc obj_t then
+              Some (inference_hook_tvar cx ploc)
+            else
+              None
+          in
+          let get_mem_t () _ obj_t =
+            Tvar.mk_no_wrap_where cx expr_reason (fun t ->
+                let use = apply_opt_use opt_use t in
+                Flow.flow cx (obj_t, use)
             )
-        in
-        let get_opt_use argts reason _ = func_call_opt_use cx reason ~use_op targts argts in
-        let get_reason lhs_t = mk_reason (RFunctionCall (desc_of_t lhs_t)) loc in
-        let get_result argts reason f =
-          Tvar.mk_no_wrap_where cx reason (fun t ->
-              let use = apply_opt_use (get_opt_use argts reason f) t in
-              Flow.flow cx (f, use)
+          in
+          let (filtered_out, voided_out, lhs_t, obj_t, object_ast, _, preds) =
+            handle_chaining
+              opt_state
+              _object
+              loc
+              ~subexpressions:(Fn.const ((), ()))
+              ~this_reason:(mk_expression_reason _object)
+              ~get_result:get_mem_t
+              ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc)
+              ~test_hooks
+              ~get_opt_use:(fun _ _ _ -> opt_use)
+              ~get_reason:(Fn.const expr_reason)
+          in
+          let sentinel_refinement =
+            Base.Option.value_map ~f:(fun f -> f obj_t) ~default:None sentinel_refine
+          in
+          let new_pred_list =
+            exists_pred (loc, e') filtered_out @ prop_exists_pred _object name obj_t prop_reason
+          in
+          let preds = combine_preds preds new_pred_list in
+          let property = Member.PropertyIdentifier ((ploc, lhs_t), id) in
+          ( filtered_out,
+            voided_out,
+            ((loc, lhs_t), member_ast { Member._object = object_ast; property; comments }),
+            preds,
+            sentinel_refinement
           )
-        in
-        let eval_args preds = in_env preds (fun () -> arg_list cx arguments) in
-        let (filtered_out, voided_out, lhs_t, _, object_ast, argument_asts, _) =
-          handle_chaining
-            opt_state
-            callee
-            loc
-            ~subexpressions:eval_args
-            ~this_reason:(mk_expression_reason ex)
-            ~refine:noop
-            ~get_result
-            ~test_hooks:noop
-            ~get_opt_use
-            ~get_reason
-        in
-        let exp callee = call_ast { Call.callee; targs; arguments = argument_asts; comments } in
-        (filtered_out, voided_out, ((loc, lhs_t), exp object_ast), None, None)
-      | (This _, _)
-      | (Identifier _, _)
-        when is_existence_check ->
-        (* if optional_chain is called from a conditional position and we're generating
-           predicates, we might recursively reach an identifier, and if the level "above"
-           it in the chain was a "?." operator, we'll need to add the predicate that the
-           property exists, so that e.g. "a?.b" generates the predicates "a.b exists",
-           "a has prop b", and "a exists". *)
-        let (((_, t), _) as res) = expression ?cond ~annot:None cx ex in
-        let preds = mk_preds @@ exists_pred (loc, e') t in
-        (t, None, res, preds, None)
-      | _ ->
-        let (((_, t), _) as res) = expression ?cond ~annot:None cx ex in
-        (t, None, res, None, None))
+        (* e.#l *)
+        | ( Member
+              {
+                Member._object;
+                property =
+                  Member.PropertyPrivateName (ploc, { Ast.PrivateName.name; comments = _ }) as
+                  property;
+                comments;
+              },
+            _
+          ) ->
+          let expr_reason = mk_reason (RPrivateProperty name) loc in
+          let use_op = Op (GetProperty (mk_expression_reason ex)) in
+          let opt_use = get_private_field_opt_use expr_reason ~use_op name in
+          let test_hooks obj_t =
+            if Type_inference_hooks_js.dispatch_member_hook cx name ploc obj_t then
+              Some (inference_hook_tvar cx ploc)
+            else
+              None
+          in
+          let get_mem_t () _ obj_t =
+            Tvar.mk_no_wrap_where cx expr_reason (fun t ->
+                let use = apply_opt_use opt_use t in
+                Flow.flow cx (obj_t, use)
+            )
+          in
+          let (filtered_out, voided_out, lhs_t, _, object_ast, _, preds) =
+            handle_chaining
+              opt_state
+              _object
+              loc
+              ~this_reason:(mk_expression_reason _object)
+              ~subexpressions:(Fn.const ((), ()))
+              ~get_result:get_mem_t
+              ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, e) loc)
+              ~test_hooks
+              ~get_opt_use:(fun _ _ _ -> opt_use)
+              ~get_reason:(Fn.const expr_reason)
+          in
+          let new_pred_list = exists_pred (loc, e') lhs_t in
+          let preds = combine_preds preds new_pred_list in
+          ( filtered_out,
+            voided_out,
+            ((loc, lhs_t), member_ast { Member._object = object_ast; property; comments }),
+            preds,
+            None
+          )
+        (* Method calls: e.l(), e.#l(), and e1[e2]() *)
+        | ( Call { Call.callee = (lookup_loc, callee_expr) as callee; targs; arguments; comments },
+            Some
+              ( member_opt,
+                ({ Member._object; property; comments = member_comments } as receiver),
+                receiver_ast
+              )
+          ) ->
+          let (targts, targs) = convert_call_targs_opt cx targs in
+          let expr_reason = mk_expression_reason ex in
+          let ( filtered_out,
+                lookup_voided_out,
+                call_voided_out,
+                member_lhs_t,
+                prop_t,
+                object_ast,
+                property,
+                argument_asts
+              ) =
+            match property with
+            | Member.PropertyPrivateName (prop_loc, { Ast.PrivateName.name; comments = _ })
+            | Member.PropertyIdentifier (prop_loc, { Ast.Identifier.name; comments = _ }) ->
+              let reason_call = mk_reason (RMethodCall (Some name)) loc in
+              let reason_prop = mk_reason (RProperty (Some (OrdinaryName name))) prop_loc in
+              let this_reason = mk_expression_reason callee in
+              let use_op =
+                Op
+                  (FunCallMethod
+                     {
+                       op = expr_reason;
+                       fn = mk_expression_reason (lookup_loc, receiver_ast receiver);
+                       prop = reason_prop;
+                       args = mk_initial_arguments_reason arguments;
+                       local = true;
+                     }
+                  )
+              in
+              let prop_t = Tvar.mk cx reason_prop in
+              let call_voided_out = Tvar.mk cx reason_call in
+              let private_ =
+                match property with
+                | Member.PropertyExpression _ ->
+                  Utils_js.assert_false "unexpected property expression"
+                | Member.PropertyPrivateName _ -> true
+                | Member.PropertyIdentifier _ -> false
+              in
+              let get_opt_use argts _ _ =
+                method_call_opt_use
+                  cx
+                  opt_state
+                  ~prop_t
+                  ~voided_out:call_voided_out
+                  reason_call
+                  ~use_op
+                  ~private_
+                  prop_loc
+                  (callee, name)
+                  loc
+                  targts
+                  argts
+              in
+              let test_hooks obj_t =
+                if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc obj_t then
+                  Some (inference_hook_tvar cx prop_loc)
+                else
+                  None
+              in
+              let handle_refined_callee argts obj_t f =
+                Env.havoc_heap_refinements ();
+                Env.havoc_local_refinements cx;
+                Tvar.mk_no_wrap_where cx reason_call (fun t ->
+                    let app =
+                      mk_boundfunctioncalltype obj_t targts argts t ~call_strict_arity:true
+                    in
+                    Flow.unify cx f prop_t;
+                    let call_t =
+                      match opt_state with
+                      | NewChain ->
+                        let chain_reason = mk_reason ROptionalChain loc in
+                        let lhs_reason = mk_expression_reason callee in
+                        let this_t = Tvar.mk cx this_reason in
+                        OptionalChainT
+                          {
+                            reason = chain_reason;
+                            lhs_reason;
+                            this_t;
+                            t_out = CallT (use_op, reason_call, app);
+                            voided_out = OpenT t;
+                          }
+                      | _ -> CallT (use_op, reason_call, app)
+                    in
+                    Flow.flow cx (f, call_t)
+                )
+              in
+              let get_mem_t argts reason obj_t =
+                Type_inference_hooks_js.dispatch_call_hook cx name prop_loc obj_t;
+                Tvar.mk_no_wrap_where cx reason_call (fun t ->
+                    let use = apply_opt_use (get_opt_use argts reason obj_t) t in
+                    Flow.flow cx (obj_t, use)
+                )
+              in
+              let eval_args preds = in_env preds (fun () -> arg_list cx arguments) in
+              let (filtered_out, lookup_voided_out, member_lhs_t, _, object_ast, argument_asts, _) =
+                handle_chaining
+                  member_opt
+                  _object
+                  lookup_loc
+                  ~this_reason
+                  ~subexpressions:eval_args
+                  ~get_result:get_mem_t
+                  ~test_hooks
+                  ~get_opt_use
+                  ~refine:(fun () -> Refinement.get ~allow_optional:true cx (loc, callee_expr) loc)
+                  ~refinement_action:handle_refined_callee
+                  ~get_reason:(Fn.const expr_reason)
+              in
+              let prop_ast =
+                match property with
+                | Member.PropertyExpression _ ->
+                  Utils_js.assert_false "unexpected property expression"
+                | Member.PropertyPrivateName (_, id) -> Member.PropertyPrivateName (prop_loc, id)
+                | Member.PropertyIdentifier (_, id) ->
+                  Member.PropertyIdentifier ((prop_loc, prop_t), id)
+              in
+              ( filtered_out,
+                lookup_voided_out,
+                call_voided_out,
+                member_lhs_t,
+                prop_t,
+                object_ast,
+                prop_ast,
+                argument_asts
+              )
+            | Member.PropertyExpression expr ->
+              let reason_call = mk_reason (RMethodCall None) loc in
+              let reason_lookup = mk_reason (RProperty None) lookup_loc in
+              let call_voided_out = Tvar.mk cx expr_reason in
+              let prop_t = Tvar.mk cx reason_lookup in
+              let get_opt_use (argts, elem_t) _ _ =
+                elem_call_opt_use
+                  opt_state
+                  ~prop_t
+                  ~voided_out:call_voided_out
+                  ~reason_call
+                  ~reason_lookup
+                  ~reason_expr:expr_reason
+                  ~reason_chain:(mk_reason ROptionalChain loc)
+                  targts
+                  argts
+                  elem_t
+              in
+              let get_mem_t arg_and_elem_ts reason obj_t =
+                Tvar.mk_no_wrap_where cx reason_call (fun t ->
+                    let use = apply_opt_use (get_opt_use arg_and_elem_ts reason obj_t) t in
+                    Flow.flow cx (obj_t, use);
+                    Flow.flow_t cx (obj_t, prop_t)
+                )
+              in
+              let eval_args_and_expr preds =
+                in_env preds (fun () ->
+                    let (((_, elem_t), _) as expr) = expression cx ~annot:None expr in
+                    let (argts, arguments_ast) = arg_list cx arguments in
+                    ((argts, elem_t), (arguments_ast, expr))
+                )
+              in
+              let this_reason = mk_expression_reason callee in
+              let ( filtered_out,
+                    lookup_voided_out,
+                    member_lhs_t,
+                    _,
+                    object_ast,
+                    (argument_asts, expr_ast),
+                    _
+                  ) =
+                handle_chaining
+                  member_opt
+                  _object
+                  lookup_loc
+                  ~this_reason
+                  ~subexpressions:eval_args_and_expr
+                  ~get_result:get_mem_t
+                  ~test_hooks:noop
+                  ~get_opt_use
+                  ~refine:noop
+                  ~get_reason:(Fn.const expr_reason)
+              in
+              ( filtered_out,
+                lookup_voided_out,
+                call_voided_out,
+                member_lhs_t,
+                prop_t,
+                object_ast,
+                Member.PropertyExpression expr_ast,
+                argument_asts
+              )
+          in
+          let voided_out = join_optional_branches lookup_voided_out call_voided_out in
+          let lhs_t =
+            Tvar.mk_where cx (reason_of_t member_lhs_t) (fun t ->
+                Flow.flow_t cx (member_lhs_t, t);
+                Flow.flow_t cx (voided_out, t)
+            )
+          in
+          ( filtered_out,
+            Some voided_out,
+            ( (loc, lhs_t),
+              call_ast
+                {
+                  Call.callee =
+                    ( (lookup_loc, prop_t),
+                      receiver_ast
+                        { Member._object = object_ast; property; comments = member_comments }
+                    );
+                  targs;
+                  arguments = argument_asts;
+                  comments;
+                }
+            ),
+            None,
+            None
+          )
+        (* e1(e2...) *)
+        | (Call { Call.callee; targs; arguments; comments }, None) ->
+          let (targts, targs) = convert_call_targs_opt cx targs in
+          let use_op =
+            Op
+              (FunCall
+                 {
+                   op = mk_expression_reason ex;
+                   fn = mk_expression_reason callee;
+                   args = mk_initial_arguments_reason arguments;
+                   local = true;
+                 }
+              )
+          in
+          let get_opt_use argts reason _ = func_call_opt_use cx reason ~use_op targts argts in
+          let get_reason lhs_t = mk_reason (RFunctionCall (desc_of_t lhs_t)) loc in
+          let get_result argts reason f =
+            Tvar.mk_no_wrap_where cx reason (fun t ->
+                let use = apply_opt_use (get_opt_use argts reason f) t in
+                Flow.flow cx (f, use)
+            )
+          in
+          let eval_args preds = in_env preds (fun () -> arg_list cx arguments) in
+          let (filtered_out, voided_out, lhs_t, _, object_ast, argument_asts, _) =
+            handle_chaining
+              opt_state
+              callee
+              loc
+              ~subexpressions:eval_args
+              ~this_reason:(mk_expression_reason ex)
+              ~refine:noop
+              ~get_result
+              ~test_hooks:noop
+              ~get_opt_use
+              ~get_reason
+          in
+          let exp callee = call_ast { Call.callee; targs; arguments = argument_asts; comments } in
+          (filtered_out, voided_out, ((loc, lhs_t), exp object_ast), None, None)
+        | (This _, _)
+        | (Identifier _, _)
+          when is_existence_check ->
+          (* if optional_chain is called from a conditional position and we're generating
+             predicates, we might recursively reach an identifier, and if the level "above"
+             it in the chain was a "?." operator, we'll need to add the predicate that the
+             property exists, so that e.g. "a?.b" generates the predicates "a.b exists",
+             "a has prop b", and "a exists". *)
+          let (((_, t), _) as res) = expression ?cond ~annot:None cx ex in
+          let preds = mk_preds @@ exists_pred (loc, e') t in
+          (t, None, res, preds, None)
+        | _ ->
+          let (((_, t), _) as res) = expression ?cond ~annot:None cx ex in
+          (t, None, res, None, None))
+    in
+    let (_, _, ((loc, t), _), _, _) = result in
+    Env.record_projection_if_needed cx loc t;
+    result
 
   and arg_list cx (args_loc, { Ast.Expression.ArgList.arguments; comments }) =
     let (argts, arg_asts) = arguments |> Base.List.map ~f:(expression_or_spread cx) |> List.split in

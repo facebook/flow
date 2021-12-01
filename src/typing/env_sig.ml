@@ -229,4 +229,6 @@ module type S = sig
   val havoc_heap_refinements_with_propname : private_:bool -> string -> unit
 
   val get_refinement : Context.t -> Key.t -> ALoc.t -> Type.t option
+
+  val record_projection_if_needed : Context.t -> ALoc.t -> Type.t -> unit
 end

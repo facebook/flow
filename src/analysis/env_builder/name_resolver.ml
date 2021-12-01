@@ -444,7 +444,7 @@ module Make
     values: Val.t L.LMap.t;
     (* We also maintain a list of all write locations, for use in populating the env with
        types. *)
-    write_entries: ALoc.t virtual_reason L.LMap.t;
+    write_entries: ALoc.t virtual_reason Loc_sig.ALocS.LMap.t;
     curr_id: int;
     (* Maps refinement ids to refinements. This mapping contains _all_ the refinements reachable at
      * any point in the code. The latest_refinement maps keep track of which entries to read. *)
@@ -735,10 +735,10 @@ module Make
       (* This method applies a function over the value stored with a refinement key. It is
        * mostly just a convenient helper so that the process of deconstructing the
        * key and finding the appropriate Val.t does not have to be repeated in
-       * every method that needs to update an entry. The heap_default argument can
+       * every method that needs to update an entry. The create_val_for_heap argument can
        * be used to specify what value to apply the function to if the heap entry
        * does not yet exist. *)
-      method map_val_with_lookup lookup ?(heap_default = None) f =
+      method map_val_with_lookup lookup ?(create_val_for_heap = None) f =
         let { RefinementKey.base; projections } = lookup in
         match SMap.find_opt base env_state.env with
         | None -> ()
@@ -751,9 +751,9 @@ module Make
                 projections
                 (function
                   | None ->
-                    (match heap_default with
+                    (match create_val_for_heap with
                     | None -> None
-                    | Some default -> Some (f default))
+                    | Some default -> Some (f (default ())))
                   | Some heap_val -> Some (f heap_val))
                 !heap_refinements
             in
@@ -1061,7 +1061,10 @@ module Make
         | Some lookup when update_entry ->
           let reason = Reason.(mk_reason RSomeProperty lhs_loc) in
           let write_val = Val.one reason in
-          this#map_val_with_lookup lookup (fun _ -> write_val) ~heap_default:(Some write_val);
+          this#map_val_with_lookup
+            lookup
+            (fun _ -> write_val)
+            ~create_val_for_heap:(Some (fun () -> write_val));
           let write_entries = L.LMap.add lhs_loc reason env_state.write_entries in
           env_state <- { env_state with write_entries }
         | _ -> ()
@@ -2131,9 +2134,20 @@ module Make
           let head' = LookupMap.add lookup final_refinement head in
           env_state <-
             { env_state with latest_refinements = head' :: List.tl env_state.latest_refinements };
+
           Val.refinement final_refinement.refinement_id unrefined_v
         in
-        this#map_val_with_lookup lookup ~heap_default:(Some (Val.projection loc)) add_refinements
+        this#map_val_with_lookup
+          lookup
+          ~create_val_for_heap:
+            (Some
+               (fun () ->
+                 let reason = mk_reason (RefinementKey.reason_desc refinement_key) loc in
+                 let write_entries = L.LMap.add loc reason env_state.write_entries in
+                 env_state <- { env_state with write_entries };
+                 Val.projection loc)
+            )
+          add_refinements
 
       method identifier_refinement ((loc, ident) as identifier) =
         ignore @@ this#identifier identifier;
