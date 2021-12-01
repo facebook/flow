@@ -1283,6 +1283,15 @@ let get_ephemeral_handler genv command =
      * of date data. So save-state is not parallelizable *)
     Handle_nonparallelizable (handle_save_state ~saved_state_filename:outfile ~genv)
 
+let send_finished_status_update profiling cmd_str =
+  let event =
+    ServerStatus.(
+      Finishing_up
+        { duration = Profiling_js.get_profiling_duration profiling; info = CommandSummary cmd_str }
+    )
+  in
+  MonitorRPC.status_update ~event
+
 (* This is the common code which wraps each command handler. It deals with stuff like logging and
  * catching exceptions *)
 let wrap_ephemeral_handler handler ~genv ~request_id ~client_context ~workload ~cmd_str arg =
@@ -1307,13 +1316,7 @@ let wrap_ephemeral_handler handler ~genv ~request_id ~client_context ~workload ~
           Lwt.return (Error (exn_str, json_data))
     )
   in
-  let event =
-    ServerStatus.(
-      Finishing_up
-        { duration = Profiling_js.get_profiling_duration profiling; info = CommandSummary cmd_str }
-    )
-  in
-  MonitorRPC.status_update ~event;
+  send_finished_status_update profiling cmd_str;
   match result with
   | Ok (ret, response, json_data) ->
     FlowEventLogger.ephemeral_command_success ~json_data ~client_context ~profiling;
@@ -2438,6 +2441,35 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
 
 type 'a persistent_handling_result = 'a * LspProt.response * LspProt.metadata
 
+let check_if_cancelled ~profiling ~client request metadata =
+  match request with
+  | LspProt.LspToServer (RequestMessage (id, _))
+    when IdSet.mem id !ServerMonitorListenerState.cancellation_requests ->
+    Hh_logger.info "Skipping canceled persistent request: %s" (LspProt.string_of_request request);
+
+    (* We can't actually skip a canceled request...we need to send a response. But we can
+     * skip the normal handler *)
+    let%lwt result = handle_persistent_canceled ~id ~metadata ~client ~profiling in
+    Lwt.return (Some result)
+  | _ -> Lwt.return None
+
+let handle_persistent_uncaught_exception request e =
+  let exception_constructor = Exception.get_ctor_string e in
+  let stack = Exception.get_backtrace_string e in
+  LspProt.UncaughtException { request; exception_constructor; stack }
+
+let send_persistent_response ~profiling ~client request result =
+  let server_profiling = Some profiling in
+  let server_logging_context = Some (FlowEventLogger.get_context ()) in
+  let (ret, lsp_response, metadata) = result in
+  let metadata = { metadata with LspProt.server_profiling; server_logging_context } in
+  let response = (lsp_response, metadata) in
+  Persistent_connection.send_response response client;
+  Hh_logger.info "Persistent response: %s" (LspProt.string_of_response lsp_response);
+  (* we'll send this "Finishing_up" event only after sending the LSP response *)
+  send_finished_status_update profiling (LspProt.string_of_request request);
+  ret
+
 let wrap_persistent_handler
     (type a b c)
     (handler :
@@ -2466,56 +2498,20 @@ let wrap_persistent_handler
     let should_print_summary = Options.should_profile genv.options in
     let%lwt (profiling, result) =
       Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary (fun profiling ->
-          match request with
-          | LspProt.LspToServer (RequestMessage (id, _))
-            when IdSet.mem id !ServerMonitorListenerState.cancellation_requests ->
-            Hh_logger.info
-              "Skipping canceled persistent request: %s"
-              (LspProt.string_of_request request);
-
-            (* We can't actually skip a canceled request...we need to send a response. But we can
-             * skip the normal handler *)
-            let%lwt (response, json_data) =
-              handle_persistent_canceled ~id ~metadata ~client ~profiling
-            in
-            Lwt.return (default_ret, response, json_data)
-          | _ ->
+          match%lwt check_if_cancelled ~profiling ~client request metadata with
+          | Some (response, json_data) -> Lwt.return (default_ret, response, json_data)
+          | None ->
             (try%lwt handler ~genv ~workload ~client ~profiling arg with
             | Lwt.Canceled as e ->
               (* Don't swallow Lwt.Canceled. Parallelizable commands may be canceled and run again
                * later. *)
-              let e = Exception.wrap e in
-              Exception.reraise e
+              Exception.(reraise (wrap e))
             | e ->
-              let e = Exception.wrap e in
-              let exception_constructor = Exception.get_ctor_string e in
-              let stack = Exception.get_backtrace_string e in
-              Lwt.return
-                ( default_ret,
-                  LspProt.UncaughtException { request; exception_constructor; stack },
-                  metadata
-                ))
+              let response = handle_persistent_uncaught_exception request (Exception.wrap e) in
+              Lwt.return (default_ret, response, metadata))
       )
     in
-    (* we'll send this "Finishing_up" event only after sending the LSP response *)
-    let event =
-      ServerStatus.(
-        Finishing_up
-          {
-            duration = Profiling_js.get_profiling_duration profiling;
-            info = CommandSummary (LspProt.string_of_request request);
-          }
-      )
-    in
-    let server_profiling = Some profiling in
-    let server_logging_context = Some (FlowEventLogger.get_context ()) in
-    let (ret, lsp_response, metadata) = result in
-    let metadata = { metadata with LspProt.server_profiling; server_logging_context } in
-    let response = (lsp_response, metadata) in
-    Persistent_connection.send_response response client;
-    Hh_logger.info "Persistent response: %s" (LspProt.string_of_response lsp_response);
-    MonitorRPC.status_update ~event;
-    Lwt.return ret
+    Lwt.return (send_persistent_response ~profiling ~client request result)
 
 let handle_persistent_immediately_unsafe ~genv:_ ~workload ~client ~profiling () =
   let%lwt (response, json_data) = workload ~client ~profiling in
