@@ -19,8 +19,7 @@ let handle_message genv = function
   | MonitorProt.Request (request_id, command) ->
     CommandHandler.enqueue_or_handle_ephemeral genv (request_id, command)
   | MonitorProt.PersistentConnectionRequest (client_id, request) ->
-    CommandHandler.enqueue_persistent genv client_id request;
-    Lwt.return_unit
+    CommandHandler.enqueue_persistent genv client_id request
   | MonitorProt.NewPersistentConnection (client_id, lsp_init_params) ->
     (* Immediately register the new client *)
     Persistent_connection.add_client client_id lsp_init_params;
@@ -29,8 +28,7 @@ let handle_message genv = function
           env with
           connections = Persistent_connection.add_client_to_clients env.connections client_id;
         }
-    );
-    Lwt.return_unit
+    )
   | MonitorProt.DeadPersistentConnection client_id ->
     (* Immediately remove the dead client *)
     Persistent_connection.remove_client client_id;
@@ -39,16 +37,14 @@ let handle_message genv = function
           env with
           connections = Persistent_connection.remove_client_from_clients env.connections client_id;
         }
-    );
-    Lwt.return_unit
+    )
   | MonitorProt.FileWatcherNotification { files = changed_files; metadata; initial } ->
     let open LspProt in
     let file_count = SSet.cardinal changed_files in
-    if initial then (
+    if initial then
       let reason = Lazy_init_typecheck in
-      ServerMonitorListenerState.push_files_to_force_focused_and_recheck ~reason changed_files;
-      Lwt.return_unit
-    ) else
+      ServerMonitorListenerState.push_files_to_force_focused_and_recheck ~reason changed_files
+    else
       let reason =
         match metadata with
         | Some { MonitorProt.changed_mergebase = Some true; _ } -> Rebased { file_count }
@@ -57,8 +53,7 @@ let handle_message genv = function
           Single_file_changed { filename = SSet.elements changed_files |> List.hd }
         | _ -> Many_files_changed { file_count }
       in
-      ServerMonitorListenerState.push_files_to_recheck ?metadata ~reason changed_files;
-      Lwt.return_unit
+      ServerMonitorListenerState.push_files_to_recheck ?metadata ~reason changed_files
   | MonitorProt.PleaseDie please_die_reason ->
     kill_workers ();
     let msg =
@@ -83,5 +78,5 @@ let rec listen_for_messages genv =
       let msg = "Connection to monitor closed unexpectedly" in
       Exit.(exit ~msg Killed_by_monitor)
   in
-  let%lwt () = handle_message genv message in
+  let () = handle_message genv message in
   listen_for_messages genv

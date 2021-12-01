@@ -927,7 +927,7 @@ let handle_force_recheck ~files ~focus ~profiling:_ =
     ServerMonitorListenerState.push_files_to_force_focused_and_recheck ~reason fileset
   else
     ServerMonitorListenerState.push_files_to_recheck ?metadata:None ~reason fileset;
-  Lwt.return (ServerProt.Response.FORCE_RECHECK, None)
+  (ServerProt.Response.FORCE_RECHECK, None)
 
 let handle_get_def ~reader ~options ~filename ~line ~char ~profiling ~env =
   let (result, json_data) =
@@ -1130,7 +1130,7 @@ let organize_imports ~options ~profiling ~client textDocument =
     | Some (Parse_artifacts { ast; _ }) -> Ok (Code_action_service.organize_imports ~options ~ast))
 
 type command_handler =
-  | Handle_immediately of (profiling:Profiling_js.running -> ephemeral_parallelizable_result Lwt.t)
+  | Handle_immediately of (profiling:Profiling_js.running -> ephemeral_parallelizable_result)
       (** A command can be handled immediately if it is super duper fast and doesn't require the env.
           These commands will be handled as soon as we read them off the pipe. Almost nothing should ever
           be handled immediately *)
@@ -1292,6 +1292,25 @@ let send_finished_status_update profiling cmd_str =
   in
   MonitorRPC.status_update ~event
 
+let send_ephemeral_response ~profiling ~client_context ~cmd_str ~request_id result =
+  send_finished_status_update profiling cmd_str;
+  match result with
+  | Ok (ret, response, json_data) ->
+    FlowEventLogger.ephemeral_command_success ~json_data ~client_context ~profiling;
+    MonitorRPC.respond_to_request ~request_id ~response;
+    Hh_logger.info "Finished %s" cmd_str;
+    Ok ret
+  | Error (exn_str, json_data) ->
+    FlowEventLogger.ephemeral_command_failure ~client_context ~json_data;
+    MonitorRPC.request_failed ~request_id ~exn_str;
+    Error ()
+
+let handle_ephemeral_uncaught_exception cmd_str exn =
+  let exn_str = Exception.to_string exn in
+  let json_data = Some Hh_json.(JSON_Object [("exn", JSON_String exn_str)]) in
+  Hh_logger.error ~exn "Uncaught exception while handling a request (%s)" cmd_str;
+  Error (exn_str, json_data)
+
 (* This is the common code which wraps each command handler. It deals with stuff like logging and
  * catching exceptions *)
 let wrap_ephemeral_handler handler ~genv ~request_id ~client_context ~workload ~cmd_str arg =
@@ -1305,36 +1324,38 @@ let wrap_ephemeral_handler handler ~genv ~request_id ~client_context ~workload ~
           let%lwt result = handler ~genv ~request_id ~workload ~profiling arg in
           Lwt.return (Ok result)
         with
-        | Lwt.Canceled as exn ->
-          let exn = Exception.wrap exn in
-          Exception.reraise exn
+        | Lwt.Canceled as exn -> Exception.(reraise (wrap exn))
         | exn ->
           let exn = Exception.wrap exn in
-          let exn_str = Exception.to_string exn in
-          let json_data = Some Hh_json.(JSON_Object [("exn", JSON_String exn_str)]) in
-          Hh_logger.error ~exn "Uncaught exception while handling a request (%s)" cmd_str;
-          Lwt.return (Error (exn_str, json_data))
+          Lwt.return (handle_ephemeral_uncaught_exception cmd_str exn)
     )
   in
-  send_finished_status_update profiling cmd_str;
-  match result with
-  | Ok (ret, response, json_data) ->
-    FlowEventLogger.ephemeral_command_success ~json_data ~client_context ~profiling;
-    MonitorRPC.respond_to_request ~request_id ~response;
-    Hh_logger.info "Finished %s" cmd_str;
-    Lwt.return (Ok ret)
-  | Error (exn_str, json_data) ->
-    FlowEventLogger.ephemeral_command_failure ~client_context ~json_data;
-    MonitorRPC.request_failed ~request_id ~exn_str;
-    Lwt.return (Error ())
+  Lwt.return (send_ephemeral_response ~profiling ~client_context ~cmd_str ~request_id result)
+
+let wrap_immediate_ephemeral_handler
+    handler ~genv ~request_id ~client_context ~workload ~cmd_str arg =
+  Hh_logger.info "%s" cmd_str;
+  MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
+
+  let should_print_summary = Options.should_profile genv.options in
+  let (profiling, result) =
+    Profiling_js.with_profiling_sync ~label:"Command" ~should_print_summary (fun profiling ->
+        try Ok (handler ~genv ~request_id ~workload ~profiling arg) with
+        | exn ->
+          let exn = Exception.wrap exn in
+          handle_ephemeral_uncaught_exception cmd_str exn
+    )
+  in
+  send_ephemeral_response ~profiling ~client_context ~cmd_str ~request_id result
 
 (* A few commands need to be handled immediately, as soon as they arrive from the monitor. An
  * `env` is NOT available, since we don't have the server's full attention *)
 let handle_ephemeral_immediately_unsafe ~genv:_ ~request_id:_ ~workload ~profiling () =
-  let%lwt (response, json_data) = workload ~profiling in
-  Lwt.return ((), response, json_data)
+  let (response, json_data) = workload ~profiling in
+  ((), response, json_data)
 
-let handle_ephemeral_immediately = wrap_ephemeral_handler handle_ephemeral_immediately_unsafe
+let handle_ephemeral_immediately =
+  wrap_immediate_ephemeral_handler handle_ephemeral_immediately_unsafe
 
 (* If command running in serial (i.e. not in parallel with a recheck) is canceled, it kicks off a
  * recheck itself and then reruns itself
@@ -1417,25 +1438,23 @@ let enqueue_or_handle_ephemeral genv (request_id, command_with_context) =
   let cmd_str = spf "%s: %s" request_id (ServerProt.Request.to_string command) in
   match get_ephemeral_handler genv command with
   | Handle_immediately workload ->
-    let%lwt result =
+    let result =
       handle_ephemeral_immediately ~genv ~request_id ~client_context ~workload ~cmd_str ()
     in
     (match result with
     | Ok ()
     | Error () ->
-      Lwt.return_unit)
+      ())
   | Handle_parallelizable workload ->
     let workload =
       handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str
     in
-    ServerMonitorListenerState.push_new_parallelizable_workload ~name:cmd_str workload;
-    Lwt.return_unit
+    ServerMonitorListenerState.push_new_parallelizable_workload ~name:cmd_str workload
   | Handle_nonparallelizable workload ->
     let workload =
       handle_nonparallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str
     in
-    ServerMonitorListenerState.push_new_workload ~name:cmd_str workload;
-    Lwt.return_unit
+    ServerMonitorListenerState.push_new_workload ~name:cmd_str workload
 
 let did_open ~profiling ~reader genv env client (_files : (string * string) Nel.t) :
     ServerEnv.env Lwt.t =
