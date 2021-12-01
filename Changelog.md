@@ -1,8 +1,8 @@
 ### 0.166.0
 
 * Improve recheck performance on large projects
-* No longer support `flow check-contents` on non-Flow files by default; pass `--all` to force it. (D32626054 mroch)
-* No longer attempt to provide LSP documentHighlight on non-Flow files. (D32625123 mroch)
+* No longer support `flow check-contents` on non-Flow files by default; pass `--all` to force it.
+* No longer attempt to provide LSP documentHighlight on non-Flow files.
 * Remove legacy "weak" mode. The `--weak` CLI flag and `weak=true` flowconfig option have been removed.
 
 ### 0.165.1
