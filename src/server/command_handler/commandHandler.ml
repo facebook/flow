@@ -913,7 +913,7 @@ let handle_find_module ~options ~reader ~moduleref ~filename ~profiling:_ ~env:_
   let response = find_module ~options ~reader (moduleref, filename) in
   Lwt.return (ServerProt.Response.FIND_MODULE response, None)
 
-let handle_force_recheck ~files ~focus ~profile ~profiling =
+let handle_force_recheck ~files ~focus ~profiling:_ =
   let fileset = SSet.of_list files in
   let reason =
     match files with
@@ -923,25 +923,11 @@ let handle_force_recheck ~files ~focus ~profile ~profiling =
   (* `flow force-recheck --focus a.js` not only marks a.js as a focused file, but it also
    * tells Flow that `a.js` has changed. In that case we push a.js to be rechecked and to be
    * focused *)
-  let push ?callback files =
-    if focus then
-      ServerMonitorListenerState.push_files_to_force_focused_and_recheck ?callback ~reason files
-    else
-      ServerMonitorListenerState.push_files_to_recheck ?metadata:None ?callback ~reason files
-  in
-  if profile then (
-    let (wait_for_recheck_thread, wakener) = Lwt.task () in
-    push ~callback:(fun profiling -> Lwt.wakeup wakener profiling) fileset;
-    let%lwt recheck_profiling = wait_for_recheck_thread in
-    Base.Option.iter recheck_profiling ~f:(fun recheck_profiling ->
-        Profiling_js.merge ~from:recheck_profiling ~into:profiling
-    );
-    Lwt.return (ServerProt.Response.FORCE_RECHECK recheck_profiling, None)
-  ) else (
-    (* If we're not profiling the recheck, then respond immediately *)
-    push fileset;
-    Lwt.return (ServerProt.Response.FORCE_RECHECK None, None)
-  )
+  if focus then
+    ServerMonitorListenerState.push_files_to_force_focused_and_recheck ~reason fileset
+  else
+    ServerMonitorListenerState.push_files_to_recheck ?metadata:None ~reason fileset;
+  Lwt.return (ServerProt.Response.FORCE_RECHECK, None)
 
 let handle_get_def ~reader ~options ~filename ~line ~char ~profiling ~env =
   let (result, json_data) =
@@ -1218,8 +1204,8 @@ let get_ephemeral_handler genv command =
       ~wait_for_recheck
       ~options
       (handle_find_module ~options ~reader ~moduleref ~filename)
-  | ServerProt.Request.FORCE_RECHECK { files; focus; profile } ->
-    Handle_immediately (handle_force_recheck ~files ~focus ~profile)
+  | ServerProt.Request.FORCE_RECHECK { files; focus } ->
+    Handle_immediately (handle_force_recheck ~files ~focus)
   | ServerProt.Request.GET_DEF { filename; line; char; wait_for_recheck } ->
     mk_parallelizable
       ~wait_for_recheck

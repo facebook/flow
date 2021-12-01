@@ -54,7 +54,6 @@ module Request = struct
     | FORCE_RECHECK of {
         files: string list;
         focus: bool;
-        profile: bool;
       }
     | GET_DEF of {
         filename: File_input.t;
@@ -115,7 +114,7 @@ module Request = struct
       Printf.sprintf "dump-types %s" (File_input.filename_of_file_input input)
     | FIND_MODULE { moduleref; filename; wait_for_recheck = _ } ->
       Printf.sprintf "find-module %s %s" moduleref filename
-    | FORCE_RECHECK { files; focus; profile = _ } ->
+    | FORCE_RECHECK { files; focus } ->
       Printf.sprintf "force-recheck %s (focus = %b)" (String.concat " " files) focus
     | GET_DEF { filename; line; char; wait_for_recheck = _ } ->
       Printf.sprintf "get-def %s:%d:%d" (File_input.filename_of_file_input filename) line char
@@ -252,7 +251,7 @@ module Response = struct
     | GRAPH_DEP_GRAPH of (unit, string) result
     | DUMP_TYPES of dump_types_response
     | FIND_MODULE of find_module_response
-    | FORCE_RECHECK of Profiling_js.finished option
+    | FORCE_RECHECK
     | GET_DEF of get_def_response
     | GET_IMPORTS of get_imports_response
     | INFER_TYPE of infer_type_response
@@ -274,7 +273,7 @@ module Response = struct
     | GRAPH_DEP_GRAPH _ -> "dep-graph response"
     | DUMP_TYPES _ -> "dump_types response"
     | FIND_MODULE _ -> "find_module response"
-    | FORCE_RECHECK _ -> "force_recheck response"
+    | FORCE_RECHECK -> "force_recheck response"
     | GET_DEF _ -> "get_def response"
     | GET_IMPORTS _ -> "get_imports response"
     | INFER_TYPE _ -> "infer_type response"
