@@ -16,40 +16,36 @@ printf "\n== Delete unrelated.js and now there is 1 error ==\n"
 assert_ok mv src/unrelated{.js,.js.ignored}
 assert_ok "$FLOW" force-recheck src/unrelated.js
 
-OUT=$(assert_errors "$FLOW" status --no-auto-start src)
-grep "Resolved requires" "$log_file" | tail -n 1 | cut -d"]" -f 2
+assert_errors "$FLOW" status --no-auto-start src
 printf "\n"
-echo "$OUT"
+grep "Resolved requires" "$log_file" | tail -n 1 | cut -d"]" -f 2
 
 printf "\n== Restore unrelated.js and back to 2 errors ==\n"
 # Unchanged during `ResolvedRequires`
 assert_ok mv src/unrelated{.js.ignored,.js}
 assert_ok "$FLOW" force-recheck src/unrelated.js
 
-OUT=$(assert_errors "$FLOW" status --no-auto-start src)
-grep "Resolved requires" "$log_file" | tail -n 1 | cut -d"]" -f 2
+assert_errors "$FLOW" status --no-auto-start src
 printf "\n"
-echo "$OUT"
+grep "Resolved requires" "$log_file" | tail -n 1 | cut -d"]" -f 2
 
 printf "\n== Delete src/node_modules/dependency.js changes an error ==\n"
 # Changed during `ResolvedRequires`
 assert_ok mv src/node_modules/dependency{.js,.js.ignored}
 assert_ok "$FLOW" force-recheck src/node_modules/dependency.js
 
-OUT=$(assert_errors "$FLOW" status --no-auto-start src)
-grep "Resolved requires" "$log_file" | tail -n 1 | cut -d"]" -f 2
+assert_errors "$FLOW" status --no-auto-start src
 printf "\n"
-echo "$OUT"
+grep "Resolved requires" "$log_file" | tail -n 1 | cut -d"]" -f 2
 
 printf "\n== Restore src/node_modules/dependency.js change it back ==\n"
 # Changed during `ResolvedRequires`
 assert_ok mv src/node_modules/dependency{.js.ignored,.js}
 assert_ok "$FLOW" force-recheck src/node_modules/dependency.js
 
-OUT=$(assert_errors "$FLOW" status --no-auto-start src)
-grep "Resolved requires" "$log_file" | tail -n 1 | cut -d"]" -f 2
+assert_errors "$FLOW" status --no-auto-start src
 printf "\n"
-echo "$OUT"
+grep "Resolved requires" "$log_file" | tail -n 1 | cut -d"]" -f 2
 
 printf "\n== Remove the import from dependent.js ==\n"
 # Changed during `ResolvedRequires`
@@ -57,29 +53,26 @@ assert_ok mv src/dependent{.js,.js.ignored}
 assert_ok echo "// @flow" > src/dependent.js
 assert_ok "$FLOW" force-recheck src/dependent.js
 
-OUT=$(assert_errors "$FLOW" status --no-auto-start src)
-grep "Resolved requires" "$log_file" | tail -n 1 | cut -d"]" -f 2
+assert_errors "$FLOW" status --no-auto-start src
 printf "\n"
-echo "$OUT"
+grep "Resolved requires" "$log_file" | tail -n 1 | cut -d"]" -f 2
 
 printf "\n== Add the import back to dependent.js ==\n"
 # Changed during `ResolvedRequires`
 assert_ok mv src/dependent{.js.ignored,.js}
 assert_ok "$FLOW" force-recheck src/dependent.js
 
-OUT=$(assert_errors "$FLOW" status --no-auto-start src)
-grep "Resolved requires" "$log_file" | tail -n 1 | cut -d"]" -f 2
+assert_errors "$FLOW" status --no-auto-start src
 printf "\n"
-echo "$OUT"
+grep "Resolved requires" "$log_file" | tail -n 1 | cut -d"]" -f 2
 
 printf "\n== Adding code that doesn't import has no effect on dep graph ==\n"
 # Unchanged during `ResolvedRequires`
 assert_ok echo "export var foo: bool = 123" >> src/node_modules/dependency.js
 assert_ok "$FLOW" force-recheck src/node_modules/dependency.js
 
-OUT=$(assert_errors "$FLOW" status --no-auto-start src)
-grep "Resolved requires" "$log_file" | tail -n 1 | cut -d"]" -f 2
+assert_errors "$FLOW" status --no-auto-start src
 printf "\n"
-echo "$OUT"
+grep "Resolved requires" "$log_file" | tail -n 1 | cut -d"]" -f 2
 
 "$FLOW" stop src 1> /dev/null 2>&1

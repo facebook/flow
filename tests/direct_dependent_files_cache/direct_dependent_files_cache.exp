@@ -34,8 +34,6 @@ References:
 Found 2 errors
 
 == Delete unrelated.js and now there is 1 error ==
- Resolved requires are unchanged
-
 Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
 
 Cannot cast `dependency` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
@@ -56,9 +54,9 @@ References:
 
 Found 1 error
 
-== Restore unrelated.js and back to 2 errors ==
  Resolved requires are unchanged
 
+== Restore unrelated.js and back to 2 errors ==
 Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
 
 Cannot cast `dependency` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
@@ -93,9 +91,9 @@ References:
 
 Found 2 errors
 
-== Delete src/node_modules/dependency.js changes an error ==
- Resolved requires changed
+ Resolved requires are unchanged
 
+== Delete src/node_modules/dependency.js changes an error ==
 Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
 
 Cannot cast `dependency` to string because number [1] is incompatible with string [2]. [incompatible-cast]
@@ -130,9 +128,9 @@ References:
 
 Found 2 errors
 
-== Restore src/node_modules/dependency.js change it back ==
  Resolved requires changed
 
+== Restore src/node_modules/dependency.js change it back ==
 Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
 
 Cannot cast `dependency` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
@@ -167,9 +165,9 @@ References:
 
 Found 2 errors
 
-== Remove the import from dependent.js ==
  Resolved requires changed
 
+== Remove the import from dependent.js ==
 Error -------------------------------------------------------------------------------------------- src/unrelated.js:3:19
 
 Cannot assign `123` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -187,9 +185,9 @@ References:
 
 Found 1 error
 
-== Add the import back to dependent.js ==
  Resolved requires changed
 
+== Add the import back to dependent.js ==
 Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
 
 Cannot cast `dependency` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
@@ -223,10 +221,10 @@ References:
 
 
 Found 2 errors
+
+ Resolved requires changed
 
 == Adding code that doesn't import has no effect on dep graph ==
- Resolved requires are unchanged
-
 Error --------------------------------------------------------------------------------------------- src/dependent.js:4:2
 
 Cannot cast `dependency` to string because boolean [1] is incompatible with string [2]. [incompatible-cast]
@@ -260,3 +258,5 @@ References:
 
 
 Found 2 errors
+
+ Resolved requires are unchanged
