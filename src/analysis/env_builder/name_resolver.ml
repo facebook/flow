@@ -51,20 +51,20 @@ let error_todo = ()
 
 module type C = sig
   type t
+
+  val jsx : t -> Options.jsx_mode
+
+  val react_runtime : t -> Options.react_runtime
 end
 
 module type F = sig
   type cx
 
-  type loc
-
-  val add_output : cx -> ?trace:Type.trace -> loc Error_message.t' -> unit
+  val add_output : cx -> ?trace:Type.trace -> ALoc.t Error_message.t' -> unit
 end
 
 module type S = sig
-  module L : Loc_sig.S
-
-  module Env_api : Env_api.S with module L = L
+  module Env_api : Env_api.S with module L = Loc_sig.ALocS
 
   type cx
 
@@ -73,35 +73,36 @@ module type S = sig
   exception AbruptCompletionExn of abrupt_kind
 
   val program_with_scope :
-    cx -> (L.t, L.t) Flow_ast.Program.t -> abrupt_kind option * Env_api.env_info
+    cx -> (ALoc.t, ALoc.t) Flow_ast.Program.t -> abrupt_kind option * Env_api.env_info
 
-  val program : cx -> (L.t, L.t) Flow_ast.Program.t -> Env_api.values * (int -> Env_api.refinement)
+  val program :
+    cx -> (ALoc.t, ALoc.t) Flow_ast.Program.t -> Env_api.values * (int -> Env_api.refinement)
 end
 
 module Make
-    (L : Loc_sig.S)
-    (Scope_api : Scope_api_sig.S with module L = L)
-    (Ssa_api : Ssa_api.S with module L = L)
+    (Scope_api : Scope_api_sig.S with module L = Loc_sig.ALocS)
+    (Ssa_api : Ssa_api.S with module L = Loc_sig.ALocS)
     (Env_api : Env_api.S
-                 with module L = L
+                 with module L = Loc_sig.ALocS
                   and module Scope_api = Scope_api
                   and module Ssa_api = Ssa_api)
     (Context : C)
     (FlowAPIUtils : F with type cx = Context.t) :
-  S with module L = L and module Env_api = Env_api and type cx = Context.t = struct
+  S with module Env_api = Env_api and type cx = Context.t = struct
   let _f = FlowAPIUtils.add_output
   (* To make ocaml not complain, will be removed when FlowAPIUtils module is used *)
 
-  module L = L
+  module Scope_builder :
+    Scope_builder_sig.S with module L = Loc_sig.ALocS and module Api = Scope_api =
+    Scope_builder.Make (Loc_sig.ALocS) (Scope_api)
 
-  module Scope_builder : Scope_builder_sig.S with module L = L and module Api = Scope_api =
-    Scope_builder.Make (L) (Scope_api)
-
-  module Provider_api : Provider_api.S with type info = Env_api.Provider_api.info and module L = L =
+  module Provider_api :
+    Provider_api.S with type info = Env_api.Provider_api.info and module L = Loc_sig.ALocS =
     Env_api.Provider_api
 
-  module Ssa_builder = Ssa_builder.Make (L) (Ssa_api) (Scope_builder)
-  module Invalidation_api = Invalidation_api.Make (L) (Scope_api) (Ssa_api) (Provider_api)
+  module Ssa_builder = Ssa_builder.Make (Loc_sig.ALocS) (Ssa_api) (Scope_builder)
+  module Invalidation_api =
+    Invalidation_api.Make (Loc_sig.ALocS) (Scope_api) (Ssa_api) (Provider_api)
   module Env_api = Env_api
   open Scope_builder
   open Env_api.Refi
@@ -142,7 +143,7 @@ module Make
 
     val empty : unit -> t
 
-    val uninitialized : L.t -> t
+    val uninitialized : ALoc.t -> t
 
     val uninitialized_class : L.t virtual_reason -> L.t -> t
 
@@ -150,9 +151,9 @@ module Make
 
     val global : string -> t
 
-    val one : L.t virtual_reason -> t
+    val one : ALoc.t virtual_reason -> t
 
-    val all : L.t virtual_reason list -> t
+    val all : ALoc.t virtual_reason list -> t
 
     val of_write : write_state -> t
 
@@ -178,14 +179,14 @@ module Make
     let curr_id = ref 0
 
     type write_state =
-      | Uninitialized of L.t
+      | Uninitialized of ALoc.t
       | UninitializedClass of {
-          read: L.t;
-          def: L.t virtual_reason;
+          read: ALoc.t;
+          def: ALoc.t virtual_reason;
         }
       | Projection
       | Global of string
-      | Loc of L.t virtual_reason
+      | Loc of ALoc.t virtual_reason
       | PHI of write_state list
       | Refinement of {
           refinement_id: int;
@@ -422,7 +423,7 @@ module Make
   type env_val = {
     val_ref: Val.t ref;
     havoc: Val.t;
-    def_loc: L.t option;
+    def_loc: ALoc.t option;
     heap_refinements: heap_refinement_map ref;
   }
 
@@ -437,7 +438,7 @@ module Make
     values: Val.t L.LMap.t;
     (* We also maintain a list of all write locations, for use in populating the env with
        types. *)
-    write_entries: L.t virtual_reason L.LMap.t;
+    write_entries: ALoc.t virtual_reason L.LMap.t;
     curr_id: int;
     (* Maps refinement ids to refinements. This mapping contains _all_ the refinements reachable at
      * any point in the code. The latest_refinement maps keep track of which entries to read. *)
@@ -469,6 +470,7 @@ module Make
        also clear the list on our way out of any labeled statement. *)
     possible_labeled_continues: AbruptCompletion.t list;
     visiting_hoisted_type: bool;
+    jsx_base_name: string option;
   }
 
   let initialize_globals unbound_names =
@@ -486,28 +488,64 @@ module Make
       unbound_names
       SMap.empty
 
-  class name_resolver _cx (prepass_info, prepass_values, unbound_names) provider_info =
+  (* Statement.ml tries to extract the name and traverse at the location of the
+   * jsx element if it's an identifier, otherwise it just traverses the
+   * jsx_pragma expression *)
+  let extract_jsx_basename =
+    let open Flow_ast.Expression in
+    function
+    | (_, Identifier (_, { Flow_ast.Identifier.name; _ })) -> Some name
+    | _ -> None
+
+  let initial_env cx unbound_names =
+    let globals = initialize_globals unbound_names in
+    (* We need to make sure that the base name for jsx is always in scope.
+     * statement.ml is going to read these identifiers at jsx calls, even if
+     * they haven't been declared locally. *)
+    let jsx_base_name =
+      match Context.jsx cx with
+      | Options.Jsx_react -> Some "React"
+      | Options.Jsx_pragma (_, ast) -> extract_jsx_basename ast
+    in
+    match jsx_base_name with
+    | None -> (globals, None)
+    | Some jsx_base_name ->
+      (* We use a global here so that if the base name is never created locally
+       * we first check the globals before emitting an error *)
+      let entry =
+        {
+          val_ref = ref (Val.global jsx_base_name);
+          havoc = Val.global jsx_base_name;
+          def_loc = None;
+          heap_refinements = ref HeapRefinementMap.empty;
+        }
+      in
+      (SMap.add jsx_base_name entry globals, Some jsx_base_name)
+
+  class name_resolver cx (prepass_info, prepass_values, unbound_names) provider_info =
     object (this)
       inherit Scope_builder.scope_builder ~flowmin_compatibility:false ~with_types:true as super
 
       val invalidation_caches = Invalidation_api.mk_caches ()
 
       val mutable env_state : name_resolver_state =
+        let (env, jsx_base_name) = initial_env cx unbound_names in
         {
           values = L.LMap.empty;
           write_entries = L.LMap.empty;
           curr_id = 0;
           refinement_heap = IMap.empty;
           latest_refinements = [];
-          env = initialize_globals unbound_names;
+          env;
           abrupt_completion_envs = [];
           possible_labeled_continues = [];
           visiting_hoisted_type = false;
+          jsx_base_name;
         }
 
       method values : Env_api.values = L.LMap.map Val.simplify env_state.values
 
-      method write_entries : L.t virtual_reason L.LMap.t = env_state.write_entries
+      method write_entries : ALoc.t virtual_reason L.LMap.t = env_state.write_entries
 
       method private new_id () =
         let new_id = env_state.curr_id in
@@ -788,7 +826,8 @@ module Make
 
       method private pop_env (_, old_env) = env_state <- { env_state with env = old_env }
 
-      method! with_bindings : 'a. ?lexical:bool -> L.t -> L.t Bindings.t -> ('a -> 'a) -> 'a -> 'a =
+      method! with_bindings
+          : 'a. ?lexical:bool -> ALoc.t -> ALoc.t Bindings.t -> ('a -> 'a) -> 'a -> 'a =
         fun ?lexical loc bindings visit node ->
           let saved_state = this#push_env bindings in
           this#run
@@ -900,12 +939,22 @@ module Make
         let values = L.LMap.add loc v env_state.values in
         env_state <- { env_state with values }
 
-      method! identifier (ident : (L.t, L.t) Ast.Identifier.t) =
+      method! identifier (ident : (ALoc.t, ALoc.t) Ast.Identifier.t) =
         let (loc, { Ast.Identifier.name = x; comments = _ }) = ident in
         this#any_identifier loc x;
         super#identifier ident
 
-      method! jsx_element_name_identifier (ident : (L.t, L.t) Ast.JSX.Identifier.t) =
+      method! generic_identifier_type (git : ('loc, 'loc) Ast.Type.Generic.Identifier.t) =
+        let open Ast.Type.Generic.Identifier in
+        let rec loop git =
+          match git with
+          | Unqualified i -> ignore @@ this#type_identifier i
+          | Qualified (_, { qualification; _ }) -> loop qualification
+        in
+        loop git;
+        git
+
+      method! jsx_element_name_identifier (ident : (ALoc.t, ALoc.t) Ast.JSX.Identifier.t) =
         let (loc, { Ast.JSX.Identifier.name; comments = _ }) = ident in
         this#any_identifier loc name;
         super#jsx_identifier ident
@@ -952,7 +1001,8 @@ module Make
 
       (* This method is called after assigning a member expression but _before_ the refinement for
        * that assignment is recorded. *)
-      method post_assignment_heap_refinement_havoc (lhs : (L.t, L.t) Flow_ast.Expression.Member.t) =
+      method post_assignment_heap_refinement_havoc
+          (lhs : (ALoc.t, ALoc.t) Flow_ast.Expression.Member.t) =
         let open Flow_ast.Expression in
         match lhs with
         | {
@@ -982,7 +1032,7 @@ module Make
           this#havoc_all_heap_refinements ()
 
       (* Order of evaluation matters *)
-      method! assignment _loc (expr : (L.t, L.t) Ast.Expression.Assignment.t) =
+      method! assignment _loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Assignment.t) =
         let open Ast.Expression.Assignment in
         let { operator; left; right; comments = _ } = expr in
         begin
@@ -1018,7 +1068,7 @@ module Make
 
       (* Order of evaluation matters *)
       method! variable_declarator
-          ~kind (decl : (L.t, L.t) Ast.Statement.VariableDeclaration.Declarator.t) =
+          ~kind (decl : (ALoc.t, ALoc.t) Ast.Statement.VariableDeclaration.Declarator.t) =
         let open Ast.Statement.VariableDeclaration.Declarator in
         let (_loc, { id; init }) = decl in
         let open Ast.Pattern in
@@ -1044,7 +1094,7 @@ module Make
         decl
 
       (* read and write (when the argument is an identifier) *)
-      method! update_expression _loc (expr : (L.t, L.t) Ast.Expression.Update.t) =
+      method! update_expression _loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Update.t) =
         let open Ast.Expression.Update in
         let { argument; operator = _; prefix = _; comments = _ } = expr in
         begin
@@ -1063,23 +1113,23 @@ module Make
         expr
 
       (* things that cause abrupt completions *)
-      method! break _loc (stmt : L.t Ast.Statement.Break.t) =
+      method! break _loc (stmt : ALoc.t Ast.Statement.Break.t) =
         let open Ast.Statement.Break in
         let { label; comments = _ } = stmt in
         this#raise_abrupt_completion (AbruptCompletion.break label)
 
-      method! continue _loc (stmt : L.t Ast.Statement.Continue.t) =
+      method! continue _loc (stmt : ALoc.t Ast.Statement.Continue.t) =
         let open Ast.Statement.Continue in
         let { label; comments = _ } = stmt in
         this#raise_abrupt_completion (AbruptCompletion.continue label)
 
-      method! return _loc (stmt : (L.t, L.t) Ast.Statement.Return.t) =
+      method! return _loc (stmt : (ALoc.t, ALoc.t) Ast.Statement.Return.t) =
         let open Ast.Statement.Return in
         let { argument; comments = _ } = stmt in
         ignore @@ Flow_ast_mapper.map_opt this#expression argument;
         this#raise_abrupt_completion AbruptCompletion.return
 
-      method! throw _loc (stmt : (L.t, L.t) Ast.Statement.Throw.t) =
+      method! throw _loc (stmt : (ALoc.t, ALoc.t) Ast.Statement.Throw.t) =
         let open Ast.Statement.Throw in
         let { argument; comments = _ } = stmt in
         ignore @@ this#expression argument;
@@ -1128,7 +1178,7 @@ module Make
         this#merge_completion_states if_completion_states;
         stmt
 
-      method! conditional _loc (expr : (L.t, L.t) Flow_ast.Expression.Conditional.t) =
+      method! conditional _loc (expr : (ALoc.t, ALoc.t) Flow_ast.Expression.Conditional.t) =
         let open Flow_ast.Expression.Conditional in
         let { test; consequent; alternate; comments = _ } = expr in
         this#push_refinement_scope RefinementKeyMap.empty;
@@ -1358,7 +1408,7 @@ module Make
               completion_state
         )
 
-      method! while_ _loc (stmt : (L.t, L.t) Flow_ast.Statement.While.t) =
+      method! while_ _loc (stmt : (ALoc.t, ALoc.t) Flow_ast.Statement.While.t) =
         let open Flow_ast.Statement.While in
         let { test; body; comments = _ } = stmt in
         let scout () =
@@ -1587,7 +1637,7 @@ module Make
       method private env_switch_case
           discriminant
           (env, case_completion_states, total_refinements, has_default)
-          (case : (L.t, L.t) Ast.Statement.Switch.Case.t') =
+          (case : (ALoc.t, ALoc.t) Ast.Statement.Switch.Case.t') =
         let open Ast.Statement.Switch.Case in
         let { test; consequent; comments = _ } = case in
         let (has_default, total_refinements) =
@@ -1661,7 +1711,7 @@ module Make
       (* [HAVOC] s3 [ENV3 ]                                  *)
       (* POST = ENV3                                         *)
       (*******************************************************)
-      method! try_catch _loc (stmt : (L.t, L.t) Ast.Statement.Try.t) =
+      method! try_catch _loc (stmt : (ALoc.t, ALoc.t) Ast.Statement.Try.t) =
         this#expecting_abrupt_completions (fun () ->
             let open Ast.Statement.Try in
             let { block = (loc, block); handler; finalizer; comments = _ } = stmt in
@@ -1730,7 +1780,7 @@ module Make
           expr
         | None -> super#declare_function loc expr
 
-      method! call loc (expr : (L.t, L.t) Ast.Expression.Call.t) =
+      method! call loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Call.t) =
         (* Traverse everything up front. Now we don't need to worry about missing any reads
          * of identifiers in sub-expressions *)
         ignore @@ super#call loc expr;
@@ -1778,7 +1828,7 @@ module Make
           this#havoc_current_env ~all:false;
         expr
 
-      method! new_ _loc (expr : (L.t, L.t) Ast.Expression.New.t) =
+      method! new_ _loc (expr : (ALoc.t, ALoc.t) Ast.Expression.New.t) =
         let open Ast.Expression.New in
         let { callee; targs = _; arguments; comments = _ } = expr in
         ignore @@ this#expression callee;
@@ -1786,7 +1836,7 @@ module Make
         this#havoc_current_env ~all:false;
         expr
 
-      method! unary_expression _loc (expr : (L.t, L.t) Ast.Expression.Unary.t) =
+      method! unary_expression _loc (expr : (ALoc.t, ALoc.t) Ast.Expression.Unary.t) =
         Ast.Expression.Unary.(
           let { argument; operator; comments = _ } = expr in
           ignore @@ this#expression argument;
@@ -1805,7 +1855,7 @@ module Make
 
       (* Labeled statements handle labeled breaks, but also push labeled continues
          that are expected to be handled by immediately nested loops. *)
-      method! labeled_statement _loc (stmt : (L.t, L.t) Ast.Statement.Labeled.t) =
+      method! labeled_statement _loc (stmt : (ALoc.t, ALoc.t) Ast.Statement.Labeled.t) =
         this#expecting_abrupt_completions (fun () ->
             let open Ast.Statement.Labeled in
             let { label; body; comments = _ } = stmt in
@@ -1825,7 +1875,7 @@ module Make
         );
         stmt
 
-      method! statement (stmt : (L.t, L.t) Ast.Statement.t) =
+      method! statement (stmt : (ALoc.t, ALoc.t) Ast.Statement.t) =
         let open Ast.Statement in
         begin
           match stmt with
@@ -1842,7 +1892,7 @@ module Make
 
       (* Function declarations are hoisted to the top of a block, so that they may be considered
          initialized before they are read. *)
-      method! statement_list (stmts : (L.t, L.t) Ast.Statement.t list) =
+      method! statement_list (stmts : (ALoc.t, ALoc.t) Ast.Statement.t list) =
         let open Ast.Statement in
         let (function_decls, other_stmts) =
           List.partition
@@ -2636,7 +2686,7 @@ module Make
         | Yield _ ->
           this#expression expression
 
-      method! logical _loc (expr : (L.t, L.t) Flow_ast.Expression.Logical.t) =
+      method! logical _loc (expr : (ALoc.t, ALoc.t) Flow_ast.Expression.Logical.t) =
         let open Flow_ast.Expression.Logical in
         let { operator; left = (loc, _) as left; right; comments = _ } = expr in
         this#push_refinement_scope RefinementKeyMap.empty;
@@ -2713,6 +2763,21 @@ module Make
         env_state <- { env_state with visiting_hoisted_type = true };
         f ();
         env_state <- { env_state with visiting_hoisted_type }
+
+      method jsx_function_call loc =
+        match (Context.react_runtime cx, env_state.jsx_base_name, Context.jsx cx) with
+        | (Options.ReactRuntimeClassic, Some name, _) -> this#any_identifier loc name
+        | (Options.ReactRuntimeClassic, None, Options.Jsx_pragma (_, ast)) ->
+          ignore @@ this#expression ast
+        | _ -> ()
+
+      method! jsx_element loc expr =
+        this#jsx_function_call loc;
+        super#jsx_element loc expr
+
+      method! jsx_fragment loc expr =
+        this#jsx_function_call loc;
+        super#jsx_fragment loc expr
     end
 
   (* The EnvBuilder does not traverse dead code, but statement.ml does. Dead code
@@ -2723,7 +2788,7 @@ module Make
    * but that assumes that the EnvBuilder is 100% correct. This approach lets us discriminate
    * between real dead code and issues with the EnvBuilder, which seems far better than
    * the alternative *)
-  class dead_code_marker env_values =
+  class dead_code_marker cx env_values =
     object (this)
       inherit Scope_builder.scope_builder ~flowmin_compatibility:false ~with_types:true as super
 
@@ -2742,15 +2807,23 @@ module Make
 
       method! binding_type_identifier ident = super#identifier ident
 
-      method! identifier (ident : (L.t, L.t) Ast.Identifier.t) =
+      method! identifier (ident : (ALoc.t, ALoc.t) Ast.Identifier.t) =
         let (loc, _) = ident in
         this#any_identifier loc;
         super#identifier ident
 
-      method! jsx_element_name_identifier (ident : (L.t, L.t) Ast.JSX.Identifier.t) =
-        let (loc, _) = ident in
-        this#any_identifier loc;
-        super#jsx_identifier ident
+      method private jsx_function_call loc =
+        match Context.react_runtime cx with
+        | Options.ReactRuntimeClassic -> this#any_identifier loc
+        | _ -> ()
+
+      method! jsx_element loc expr =
+        this#jsx_function_call loc;
+        super#jsx_element loc expr
+
+      method! jsx_fragment loc expr =
+        this#jsx_function_call loc;
+        super#jsx_fragment loc expr
 
       method! pattern_identifier ?kind e =
         ignore kind;
@@ -2760,8 +2833,13 @@ module Make
   let program_with_scope cx program =
     let open Hoister in
     let (loc, _) = program in
+    let jsx_ast =
+      match Context.jsx cx with
+      | Options.Jsx_react -> None
+      | Options.Jsx_pragma (_, ast) -> Some ast
+    in
     let (_ssa_completion_state, ((scopes, ssa_values, _) as prepass)) =
-      Ssa_builder.program_with_scope ~flowmin_compatibility:false program
+      Ssa_builder.program_with_scope_and_jsx_pragma ~flowmin_compatibility:false ~jsx_ast program
     in
     let providers = Provider_api.find_providers program in
     let env_walk = new name_resolver cx prepass providers in
@@ -2775,7 +2853,7 @@ module Make
       )
     in
     (* Fill in dead code reads *)
-    let dead_code_marker = new dead_code_marker env_walk#values in
+    let dead_code_marker = new dead_code_marker cx env_walk#values in
     let _ = dead_code_marker#program program in
     ( completion_state,
       {
@@ -2793,20 +2871,12 @@ module Make
     (env_values, refinement_of_id)
 end
 
-module DummyCx = struct
-  type t = unit
-end
-
-module DummyFlow = struct
-  type cx = unit
-
-  type loc = Loc.t
+module DummyFlow (Context : C) = struct
+  type cx = Context.t
 
   let add_output _ ?trace _ = ignore trace
 end
 
-module With_Loc =
-  Make (Loc_sig.LocS) (Scope_api.With_Loc) (Ssa_api.With_Loc) (Env_api.With_Loc) (DummyCx)
-    (DummyFlow)
-module Make_of_flow =
-  Make (Loc_sig.ALocS) (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api.With_ALoc)
+module Make_Test_With_Cx (Context : C) =
+  Make (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api.With_ALoc) (Context) (DummyFlow (Context))
+module Make_of_flow = Make (Scope_api.With_ALoc) (Ssa_api.With_ALoc) (Env_api.With_ALoc)

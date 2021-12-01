@@ -1216,9 +1216,15 @@ struct
         stmts
     end
 
-  let program_with_scope ?(flowmin_compatibility = false) program =
+  let program_with_scope_and_jsx_pragma ?(flowmin_compatibility = false) ~jsx_ast program =
     let (loc, _) = program in
     let ssa_walk = new ssa_builder ~flowmin_compatibility in
+    (* Before we introduce bindings for the top levels, we must read every
+     * identifier in the jsx_pragma so that we can record them as unbound names
+     *)
+    (match jsx_ast with
+    | None -> ()
+    | Some ast -> ignore (ssa_walk#run_to_completion (fun () -> ignore @@ ssa_walk#expression ast)));
     let bindings =
       if flowmin_compatibility then
         let hoist = new lexical_hoister ~flowmin_compatibility in
@@ -1234,6 +1240,9 @@ struct
       )
     in
     (completion_state, (ssa_walk#acc, ssa_walk#values, ssa_walk#unbound_names))
+
+  let program_with_scope ?(flowmin_compatibility = false) program =
+    program_with_scope_and_jsx_pragma ~flowmin_compatibility ~jsx_ast:None program
 
   let program program =
     let (_, (_, values, _)) = program_with_scope ~flowmin_compatibility:false program in

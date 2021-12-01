@@ -863,7 +863,7 @@ Cannot get `React.Fragment` because property `Fragment` is missing in object typ
 
    expression.js:40:4
    40| (((<>foo</>: empty): T).p: empty);
-          ^^
+          ^^^^^^^^
 
 References:
    expression.js:12:20
@@ -873,23 +873,23 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:40:4
 
+Cannot resolve name `React$Element`. [cannot-resolve-name]
+
+   40| (((<>foo</>: empty): T).p: empty);
+          ^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:40:4
+
 Cannot resolve name `React$Key`. [cannot-resolve-name]
 
    40| (((<>foo</>: empty): T).p: empty);
-          ^^
+          ^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------------- expression.js:40:4
 
 Cannot resolve name `React$Ref`. [cannot-resolve-name]
-
-   40| (((<>foo</>: empty): T).p: empty);
-          ^^
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:40:4
-
-Cannot resolve name `React$Element`. [cannot-resolve-name]
 
    40| (((<>foo</>: empty): T).p: empty);
           ^^^^^^^^

@@ -1,0 +1,10 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:3:9
+
+Cannot resolve name `call`. [cannot-resolve-name]
+
+   3|  * @jsx call()
+              ^^^^
+
+
+
+Found 1 error

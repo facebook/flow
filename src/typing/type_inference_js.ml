@@ -439,7 +439,7 @@ module Make (Env : Env_sig.S) : S = struct
 
   let initialize_env cx aloc_ast =
     let (_abrupt_completion, info) = NameResolver.program_with_scope cx aloc_ast in
-    Context.set_environment cx { Loc_env.types = NameResolver.L.LMap.empty; var_info = info }
+    Context.set_environment cx { Loc_env.types = Loc_sig.ALocS.LMap.empty; var_info = info }
 
   (* build module graph *)
   (* Lint suppressions are handled iff lint_severities is Some. *)

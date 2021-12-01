@@ -6,11 +6,25 @@
  *)
 
 open Test_utils
-module LocMap = Loc_collections.LocMap
-module LocSet = Loc_collections.LocSet
+module ALocMap = Loc_collections.ALocMap
+module ALocSet = Loc_collections.ALocSet
+
+let jsx_mode = ref Options.Jsx_react
+
+let react_runtime = ref Options.ReactRuntimeClassic
+
+module TestCx = struct
+  type t = unit
+
+  let jsx _cx = !jsx_mode
+
+  let react_runtime _cx = !react_runtime
+end
+
+module Name_resolver = Name_resolver.Make_Test_With_Cx (TestCx)
 
 let print_values refinement_of_id =
-  let open Name_resolver.With_Loc.Env_api in
+  let open Name_resolver.Env_api in
   let rec print_value write_loc =
     match write_loc with
     | Uninitialized _ -> "(uninitialized)"
@@ -51,9 +65,23 @@ let print_values refinement_of_id =
 (* TODO: ocamlformat mangles the ppx syntax. *)
 [@@@ocamlformat "disable=true"]
 
-let print_ssa_test contents =
-  let refined_reads, refinement_of_id = Name_resolver.With_Loc.program () (parse contents) in
-  print_values refinement_of_id refined_reads
+let print_ssa_test ?(custom_jsx = None) ?(react_runtime_automatic=false) contents =
+  if react_runtime_automatic then (
+    react_runtime := Options.ReactRuntimeAutomatic
+  );
+  (match custom_jsx with
+  | None -> ()
+  | Some str ->
+      let (ast, _errors) = Parser_flow.jsx_pragma_expression str None in
+      let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#expression ast in
+      jsx_mode := Options.Jsx_pragma (str, aloc_ast)
+
+  );
+  let aloc_ast = parse_with_alocs contents in 
+  let refined_reads, refinement_of_id = Name_resolver.program () aloc_ast in
+  print_values refinement_of_id refined_reads;
+  react_runtime := Options.ReactRuntimeClassic;
+  jsx_mode := Options.Jsx_react
 
 let%expect_test "logical_expr" =
   print_ssa_test {|let x = null;
@@ -4478,3 +4506,79 @@ enum E {
       (3, 13) to (3, 14) => {
         (5, 5) to (5, 6): (`E`)
       }] |}]
+
+let%expect_test "react_jsx" =
+  print_ssa_test {|
+const React = require('react');
+
+<div />;
+  |};
+    [%expect {|
+      [
+        (2, 14) to (2, 21) => {
+          Global require
+        };
+        (4, 0) to (4, 7) => {
+          (2, 6) to (2, 11): (`React`)
+        };
+        (4, 1) to (4, 4) => {
+          Global div
+        }] |}]
+
+let%expect_test "unreachable_jsx" =
+  print_ssa_test {|
+const React = require('react');
+throw new Error();
+<Component />;
+|};
+    [%expect {|
+      [
+        (2, 14) to (2, 21) => {
+          Global require
+        };
+        (3, 10) to (3, 15) => {
+          Global Error
+        };
+        (4, 0) to (4, 13) => {
+          unreachable
+        }] |}]
+
+let%expect_test "custom_jsx_pragma" =
+  print_ssa_test ~custom_jsx:(Some "createMikesCoolElement") {|
+  let createMikesCoolElement = (null: any);
+<FirstElement />
+function time_to_create_some_elements_bro() {
+  <SecondElement />
+}
+|};
+    [%expect {|
+      [
+        (3, 0) to (3, 16) => {
+          (2, 6) to (2, 28): (`createMikesCoolElement`)
+        };
+        (3, 1) to (3, 13) => {
+          Global FirstElement
+        };
+        (5, 2) to (5, 19) => {
+          (2, 6) to (2, 28): (`createMikesCoolElement`)
+        };
+        (5, 3) to (5, 16) => {
+          Global SecondElement
+        }] |}]
+
+let%expect_test "automatic_react_runtime" =
+  print_ssa_test ~react_runtime_automatic:true {|
+  let createMikesCoolElement = (null: any);
+<FirstElement />
+function time_to_create_some_elements_bro() {
+  <SecondElement />
+}
+|};
+    [%expect {|
+      [
+        (3, 1) to (3, 13) => {
+          Global FirstElement
+        };
+        (5, 3) to (5, 16) => {
+          Global SecondElement
+        }] |}]

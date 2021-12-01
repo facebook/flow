@@ -6,11 +6,17 @@
  *)
 
 open Test_utils
-open Name_def.With_Loc
+open Name_def.With_ALoc
 open Utils_js
 module Ast = Flow_ast
-module LocMap = Loc_collections.LocMap
-module LocSet = Loc_collections.LocSet
+
+module Name_resolver = Name_resolver.Make_Test_With_Cx (struct
+  type t = unit
+
+  let jsx _cx = Options.Jsx_react
+
+  let react_runtime _cx = Options.ReactRuntimeClassic
+end)
 
 let string_of_root = function
   | Contextual _ -> "contextual"
@@ -90,7 +96,7 @@ let print_values values =
   Printf.printf "[\n  %s\n]" (String.concat ";\n  " strlist)
 
 let print_order lst =
-  let open Name_def_ordering.With_Loc in
+  let open Name_def_ordering.With_ALoc in
   let string_of_why why =
     match why with
     | (loc, []) -> L.debug_to_string loc
@@ -128,15 +134,15 @@ let print_order lst =
   print_string msg
 
 let print_init_test contents =
-  let inits = Name_def.With_Loc.find_defs (parse contents) in
+  let inits = Name_def.With_ALoc.find_defs (parse_with_alocs contents) in
   print_values inits
 
 let print_order_test contents =
-  let module Name_def = Name_def_ordering.With_Loc.Name_def in
-  let ast = parse contents in
-  let (_, env) = Name_resolver.With_Loc.program_with_scope () ast in
+  let module Name_def = Name_def_ordering.With_ALoc.Name_def in
+  let ast = parse_with_alocs contents in
+  let (_, env) = Name_resolver.program_with_scope () ast in
   let inits = Name_def.find_defs ast in
-  let order = Name_def_ordering.With_Loc.build_ordering env inits in
+  let order = Name_def_ordering.With_ALoc.build_ordering env inits in
   print_order order
 
 (* TODO: ocamlformat mangles the ppx syntax. *)

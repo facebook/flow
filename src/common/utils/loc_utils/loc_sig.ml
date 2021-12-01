@@ -12,6 +12,8 @@ module type S = sig
 
   val equal : t -> t -> bool
 
+  val none : t
+
   (* Exposes the underlying representation of the location. Use for debugging purposes only. Do not
    * expose these results in user output or make typecheker behavior depend on it. *)
   val debug_to_string : ?include_source:bool -> t -> string
@@ -67,6 +69,8 @@ module LocS : S with type t = Loc.t = struct
 
   let debug_to_string = Loc.debug_to_string
 
+  let none = Loc.none
+
   module LMap = struct
     include WrappedMap.Make (Loc)
 
@@ -111,6 +115,8 @@ module ALocS : S with type t = ALoc.t = struct
   let compare = ALoc.compare
 
   let equal = ALoc.equal
+
+  let none = ALoc.none
 
   let debug_to_string = ALoc.debug_to_string
 
@@ -158,6 +164,8 @@ module ILocS : S with type t = ILoc.t = struct
   let compare = ILoc.compare
 
   let equal = ILoc.equal
+
+  let none = ILoc.none
 
   let debug_to_string = ILoc.debug_to_string
 

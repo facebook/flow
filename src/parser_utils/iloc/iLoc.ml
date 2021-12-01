@@ -16,5 +16,7 @@ let compare (a_loc, a_id) (b_loc, b_id) =
 
 let equal (a_loc, a_id) (b_loc, b_id) = Loc.equal a_loc b_loc && a_id = b_id
 
+let none = (Loc.none, 0)
+
 let debug_to_string ?include_source (loc, id) =
   Printf.sprintf "(%s, %s)" (Loc.debug_to_string ?include_source loc) (string_of_int id)

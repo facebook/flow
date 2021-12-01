@@ -6175,15 +6175,14 @@ struct
     let open Ast.JSX in
     let { frag_opening_element; frag_children; frag_closing_element; frag_comments } = fragment in
     let (children_loc, _) = frag_children in
-    let loc_opening = frag_opening_element in
     let fragment_t =
       match Context.react_runtime cx with
       | Options.ReactRuntimeAutomatic ->
-        let reason = mk_reason (RIdentifier (OrdinaryName "Fragment")) loc_opening in
+        let reason = mk_reason (RIdentifier (OrdinaryName "Fragment")) expr_loc in
         Flow.get_builtin_type cx reason (OrdinaryName "React$FragmentType")
       | Options.ReactRuntimeClassic ->
-        let reason = mk_reason (RIdentifier (OrdinaryName "React.Fragment")) loc_opening in
-        let react = Env.var_ref ~lookup_mode:ForValue cx (OrdinaryName "React") loc_opening in
+        let reason = mk_reason (RIdentifier (OrdinaryName "React.Fragment")) expr_loc in
+        let react = Env.var_ref ~lookup_mode:ForValue cx (OrdinaryName "React") expr_loc in
         let use_op = Op (GetProperty reason) in
         get_prop ~cond:None cx reason ~use_op react (reason, "Fragment")
     in
@@ -6194,7 +6193,7 @@ struct
         cx
         "React.Fragment"
         fragment_t
-        (NullT.at loc_opening |> with_trust bogus_trust)
+        (NullT.at expr_loc |> with_trust bogus_trust)
         []
         unresolved_params
         locs
@@ -6525,7 +6524,7 @@ struct
                }
             )
         in
-        let react = Env.var_ref ~lookup_mode:ForValue cx (OrdinaryName "React") loc_opening in
+        let react = Env.var_ref ~lookup_mode:ForValue cx (OrdinaryName "React") loc_element in
         Flow.flow
           cx
           ( react,
