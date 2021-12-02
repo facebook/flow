@@ -530,7 +530,7 @@ module NoCacheTag (Key : Key) (Value : Value) (Tag : SerializedTag) = struct
 
   external hh_iter_serialized : ('a -> unit) -> int -> unit = "hh_iter_serialized"
 
-  let iter f = hh_iter_serialized f tag
+  let iter f = WorkerCancel.with_worker_exit (fun () -> hh_iter_serialized f tag)
 end
 
 module NoCacheAddr (Key : Key) (Value : AddrValue) = struct
