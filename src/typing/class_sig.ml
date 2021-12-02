@@ -366,12 +366,14 @@ struct
     | Interface { inline; extends; callable } ->
       Interface { inline; extends = Base.List.map ~f:(subst_typeapp cx map) extends; callable }
     | Class { extends; mixins; implements; this_t; this_tparam } ->
+      let this_tparam_loc = aloc_of_reason this_tparam.Type.reason in
+      let this_t_annot_reason = annot_reason ~annot_loc:this_tparam_loc this_tparam.Type.reason in
       Class
         {
           extends = subst_extends cx map extends;
           mixins = Base.List.map ~f:(subst_typeapp cx map) mixins;
           implements = Base.List.map ~f:(subst_typeapp cx map) implements;
-          this_t = Flow.subst cx map this_t;
+          this_t = Flow.reposition_reason cx this_t_annot_reason (Flow.subst cx map this_t);
           this_tparam;
         }
 
@@ -1058,9 +1060,7 @@ struct
     let is_bound_to_empty { super; _ } =
       Type.(
         match super with
-        | Class { this_t = DefT (_, _, EmptyT); _ }
-        | Class { this_t = ReposT (_, DefT (_, _, EmptyT)); _ } ->
-          true
+        | Class { this_t = DefT (_, _, EmptyT); _ } -> true
         | _ -> false
       )
 

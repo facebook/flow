@@ -37,6 +37,9 @@ val reposition :
   Type.t ->
   Type.t
 
+val reposition_reason :
+  Context.t -> ?trace:Type.trace -> Reason.reason -> ?use_desc:bool -> Type.t -> Type.t
+
 (* constraint utils *)
 val filter_optional : Context.t -> ?trace:Type.trace -> reason -> Type.t -> Type.ident
 

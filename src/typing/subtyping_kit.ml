@@ -569,13 +569,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
       in
       let use_desc = false in
       rec_flow cx trace (t, ReposUseT (reason, use_desc, use_op, OpenT tout))
-    (* if a ReposT is used as a lower bound, `reposition` can reposition it *)
-    | (ReposT (reason, l), _) ->
-      rec_flow_t cx trace ~use_op (reposition_reason cx ~trace reason l, u)
-    (* if a ReposT is used as an upper bound, wrap the now-concrete lower bound
-       in a `ReposUpperT`, which will repos `u` when `u` becomes concrete. *)
-    | (_, ReposT (reason, u)) ->
-      rec_flow cx trace (InternalT (ReposUpperT (reason, l)), UseT (use_op, u))
     | (InternalT (ReposUpperT (reason, l)), u) ->
       (* since this guarantees that `u` is not an OpenT, it's safe to use
        * `reposition` on the upper bound here. *)

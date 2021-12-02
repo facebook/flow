@@ -176,7 +176,6 @@ class visitor =
       | TypeAppT (_, _, t, _)
       | DefT (_, _, TypeT (_, t))
       | OpenPredT { base_t = t; m_pos = _; m_neg = _; reason = _ }
-      | ReposT (_, t)
       | ShapeT (_, t)
       | GenericT { bound = t; _ }
       | ThisClassT (_, t, _)

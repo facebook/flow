@@ -188,7 +188,6 @@ module rec TypeTerm : sig
         m_pos: predicate Key_map.t;
         m_neg: predicate Key_map.t;
       }
-    | ReposT of reason * t
     | AnyT of reason * any_source
 
   and def_t =
@@ -3450,7 +3449,6 @@ let string_of_ctor = function
   | MatchingPropT _ -> "MatchingPropT"
   | OpaqueT _ -> "OpaqueT"
   | OpenPredT _ -> "OpenPredT"
-  | ReposT _ -> "ReposT"
   | InternalT (ReposUpperT _) -> "ReposUpperT"
   | ShapeT _ -> "ShapeT"
   | ThisClassT _ -> "ThisClassT"

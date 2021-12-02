@@ -375,6 +375,24 @@ References:
                     [3]
 
 
+Error --------------------------------------------------------------------------------------------------- class.js:94:18
+
+Cannot assign `this.constructor` to `globalCtor` because class `D` [1] contains `this` [1] which cannot escape from its
+class [1] (try adding a type annotation to `globalCtor` [2]). [escaped-generic]
+
+   class.js:94:18
+   94|     globalCtor = this.constructor;
+                        ^^^^^^^^^^^^^^^^
+
+References:
+   class.js:92:7
+   92| class D {
+             ^ [1]
+   class.js:90:5
+   90| let globalCtor;
+           ^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------------ func.js:6:7
 
 Cannot assign `a` to `x` because type variable `X` [1] cannot escape from the scope in which it was defined [2] (try
@@ -1247,7 +1265,7 @@ References:
 
 
 
-Found 63 errors
+Found 64 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -721,9 +721,6 @@ struct
         (*************************)
         (* repositioning, part 1 *)
         (*************************)
-
-        (* if a ReposT is used as a lower bound, `reposition` can reposition it *)
-        | (ReposT (reason, l), _) -> rec_flow cx trace (reposition_reason cx ~trace reason l, u)
         | (InternalT (ReposUpperT (_, l)), _) -> rec_flow cx trace (l, u)
         (***************)
         (* annotations *)
@@ -6195,7 +6192,6 @@ struct
     | AnnotT _
     | ExactT _
     | ThisClassT _
-    | ReposT _
     | EvalT _
     | OpenPredT _
     | InternalT (ReposUpperT _)

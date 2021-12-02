@@ -448,7 +448,6 @@ module rec ConsGen : Annotation_inference_sig = struct
     | (EvalT _, _) -> error_unsupported cx t op
     | (OpenT (reason, id), _) -> elab_open cx ~seen reason id op
     | (TypeDestructorTriggerT _, _)
-    | (ReposT _, _)
     | (InternalT _, _) ->
       error_unsupported cx t op
     | (AnnotT (r, t, _), _) ->

@@ -37,7 +37,6 @@ let rec reason_of_t = function
   | MatchingPropT (reason, _, _) -> reason
   | OpaqueT (reason, _) -> reason
   | OpenPredT { reason; m_pos = _; m_neg = _; base_t = _ } -> reason
-  | ReposT (reason, _) -> reason
   | InternalT (ReposUpperT (reason, _)) -> reason (* HUH? cf. mod_reason below *)
   | ShapeT (reason, _) -> reason
   | ThisClassT (reason, _, _) -> reason
@@ -212,7 +211,6 @@ let rec mod_reason_of_t f = function
   | OpaqueT (reason, opaquetype) -> OpaqueT (f reason, opaquetype)
   | OpenPredT { reason; base_t; m_pos; m_neg } ->
     OpenPredT { reason = f reason; base_t; m_pos; m_neg }
-  | ReposT (reason, t) -> ReposT (f reason, t)
   | InternalT (ReposUpperT (reason, t)) -> InternalT (ReposUpperT (reason, mod_reason_of_t f t))
   | ShapeT (reason, t) -> ShapeT (f reason, t)
   | ThisClassT (reason, t, is_this) -> ThisClassT (f reason, t, is_this)

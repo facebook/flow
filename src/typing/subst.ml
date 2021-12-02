@@ -72,10 +72,6 @@ let substituter =
             begin
               match SMap.find_opt name map with
               | None -> t
-              | Some (ReposT (_, param_t)) when name = "this" ->
-                ReposT (annot_reason ~annot_loc tp_reason, param_t)
-              | Some param_t when name = "this" ->
-                ReposT (annot_reason ~annot_loc tp_reason, param_t)
               | Some (GenericT _ as param_t) ->
                 mod_reason_of_t
                   (fun param_reason ->

@@ -357,9 +357,7 @@ let rec dump_t_ (depth, tvars) cx t =
                 )
              )
           )
-    | ReposT (_, arg)
-    | InternalT (ReposUpperT (_, arg)) ->
-      p ~extra:(kid arg) t
+    | InternalT (ReposUpperT (_, arg)) -> p ~extra:(kid arg) t
 
 and dump_use_t_ (depth, tvars) cx t =
   let p ?(reason = true) ?(extra = "") use_t =

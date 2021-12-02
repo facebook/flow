@@ -540,7 +540,6 @@ end = struct
               let ts = T.TypeMap.keys bounds.T.Constraint.lower in
               List.fold_left (fun a t -> loop cx a seen t) acc ts)
         | T.AnnotT (_, t, _) -> loop cx acc seen t
-        | T.ReposT (_, t) -> loop cx acc seen t
         | _ -> List.rev (t :: acc)
       in
       fun ~env t ->
@@ -796,7 +795,6 @@ end = struct
         let%map ty = type__ ~env t in
         Ty.Utility (Ty.Keys ty)
       | OpaqueT (r, o) -> opaque_t ~env r o
-      | ReposT (_, t) -> type__ ~env t
       | ShapeT (_, t) ->
         let%map t = type__ ~env t in
         Ty.Utility (Ty.Shape t)
@@ -2395,9 +2393,7 @@ end = struct
       let open Type in
       match t with
       | OpenT (_, id) -> type_variable ~env ~proto ~imode id
-      | AnnotT (_, t, _)
-      | ReposT (_, t) ->
-        type__ ~env ~proto ~imode t
+      | AnnotT (_, t, _) -> type__ ~env ~proto ~imode t
       | DefT (_, _, IdxWrapper t) ->
         idx_hook ();
         type__ ~env ~proto ~imode t

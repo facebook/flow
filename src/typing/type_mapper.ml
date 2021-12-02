@@ -35,9 +35,7 @@ let unwrap_type =
           | Unresolved _ -> t
         )
       )
-    | AnnotT (_, t, _)
-    | ReposT (_, t) ->
-      unwrap seen cx t
+    | AnnotT (_, t, _) -> unwrap seen cx t
     | t -> t
   in
   (fun cx -> unwrap (ref ISet.empty) cx)
@@ -62,7 +60,6 @@ let union_flatten =
         )
       )
     | AnnotT (_, t, _) -> flatten cx seen t
-    | ReposT (_, t) -> flatten cx seen t
     | UnionT (_, rep) -> union_flatten cx seen @@ UnionRep.members rep
     | MaybeT (r, t) ->
       DefT (r, Trust.bogus_trust (), NullT)
@@ -228,12 +225,6 @@ class virtual ['a] t =
           t
         else
           OpenPredT { reason = r; base_t = t''; m_pos = map1'; m_neg = map2' }
-      | ReposT (r, t') ->
-        let t'' = self#type_ cx map_cx t' in
-        if t'' == t' then
-          t
-        else
-          ReposT (r, t'')
       | InternalT (ReposUpperT (r, t')) ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then

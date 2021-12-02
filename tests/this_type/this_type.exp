@@ -454,9 +454,9 @@ Cannot cast `A.make()` to `B` because `A` [1] is incompatible with `B` [2]. [inc
         ^^^^^^^^
 
 References:
-   statics.js:4:18
-    4|   static make(): this { // factory method, whose return type `this` (still)
-                        ^^^^ [1]
+   statics.js:3:7
+    3| class A {
+             ^ [1]
    statics.js:17:12
    17| (A.make(): B); // error
                   ^ [2]

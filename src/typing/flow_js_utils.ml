@@ -698,11 +698,6 @@ let lookup_builtin_typeapp cx reason x targs =
   let t = lookup_builtin_strict cx x reason in
   typeapp reason t targs
 
-let match_this_binding map f =
-  match SMap.find "this" map with
-  | ReposT (_, t) -> f t
-  | _ -> failwith "not a this binding"
-
 (**
  * Determines whether a property name should be considered "munged"/private when
  * the `munge_underscores` config option is set.

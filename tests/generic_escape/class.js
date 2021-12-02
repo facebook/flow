@@ -85,3 +85,12 @@ class H<T> {
     H.#pa = x;
   }
 }
+
+
+let globalCtor;
+
+class D {
+  constructor() {
+    globalCtor = this.constructor;
+  }
+}
