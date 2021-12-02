@@ -26,8 +26,8 @@ let should_require_annot cx =
   else
     false
 
-let require_annot_on_pattern cx ~annot pattern_reason pattern =
-  match annot with
+let require_annot_on_pattern cx ~hint pattern_reason pattern =
+  match hint with
   | None when should_require_annot cx ->
     let open Ast.Pattern in
     (match pattern with

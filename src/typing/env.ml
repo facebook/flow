@@ -1066,9 +1066,7 @@ module Env : Env_sig.S = struct
   let get_var_annotation cx name loc =
     let (_, entry) = find_entry cx name loc in
     match entry with
-    (* When we start actually passing annotation targets through statement.ml
-     * we should return the type here instead of unit *)
-    | Entry.Value { Entry.general = Annotated _; _ } -> Some ()
+    | Entry.Value { Entry.general = Annotated t; _ } -> Some t
     | _ -> None
 
   (* get var's general type - for annotated vars, this is the

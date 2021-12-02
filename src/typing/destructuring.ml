@@ -52,7 +52,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
     | None -> (acc, None)
     | Some e ->
       let { current; default; annot; _ } = acc in
-      let (((loc, t), _) as e) = Statement.expression cx ~annot:None e in
+      let (((loc, t), _) as e) = Statement.expression cx ~hint:None e in
       let default = Some (Default.expr ?default t) in
       let reason = mk_reason RDefaultValue loc in
       let current = destruct cx reason ~annot Default current in
@@ -162,7 +162,7 @@ module Make (Env : Env_sig.S) (Statement : Statement_sig.S with module Env := En
 
   let object_computed_property cx acc e =
     let { current; init; default; annot; _ } = acc in
-    let (((loc, t), _) as e') = Statement.expression cx ~annot:None e in
+    let (((loc, t), _) as e') = Statement.expression cx ~hint:None e in
     let reason = mk_reason (RProperty None) loc in
     let init =
       Base.Option.map init (fun init ->

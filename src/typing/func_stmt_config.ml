@@ -134,7 +134,7 @@ module Make
 
   let eval_default cx = function
     | None -> None
-    | Some e -> Some (Statement.expression cx ~annot:None e)
+    | Some e -> Some (Statement.expression cx ~hint:None e)
 
   let eval_param cx (Param { t; loc; ploc; pattern; default; has_anno }) =
     match pattern with

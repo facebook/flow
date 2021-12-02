@@ -19,7 +19,7 @@ module type S = sig
   val expression :
     ?cond:Type.cond_context ->
     Context.t ->
-    annot:unit option ->
+    hint:Type.t option ->
     (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
     (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
 

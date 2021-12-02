@@ -168,7 +168,7 @@ module type S = sig
 
   val get_internal_var : Context.t -> string -> ALoc.t -> Type.t
 
-  val get_var_annotation : Context.t -> Reason.name -> ALoc.t -> unit option
+  val get_var_annotation : Context.t -> Reason.name -> ALoc.t -> Type.t option
 
   val get_var_declared_type :
     ?lookup_mode:LookupMode.t -> Context.t -> Reason.name -> ALoc.t -> Type.t
