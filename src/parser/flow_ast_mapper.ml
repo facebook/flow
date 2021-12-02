@@ -2253,14 +2253,29 @@ class ['loc] mapper =
 
     method pattern_object_property ?kind (prop : ('loc, 'loc) Ast.Pattern.Object.Property.t) =
       let open Ast.Pattern.Object.Property in
-      let (loc, { key; pattern; default; shorthand = _ }) = prop in
+      let (loc, { key; pattern; default; shorthand }) = prop in
       let key' = this#pattern_object_property_key ?kind key in
       let pattern' = this#pattern_object_property_pattern ?kind pattern in
       let default' = map_opt this#expression default in
-      if key' == key && pattern' == pattern && default' == default then
+      let shorthand' =
+        (* Try to figure out if shorthand should still be true--if
+            key and value change differently, it should become false *)
+        shorthand
+        &&
+        match (key', pattern') with
+        | ( Identifier (_, { Ast.Identifier.name = key_name; _ }),
+            ( _,
+              Ast.Pattern.Identifier
+                { Ast.Pattern.Identifier.name = (_, { Ast.Identifier.name = value_name; _ }); _ }
+            )
+          ) ->
+          String.equal key_name value_name
+        | _ -> key == key' && pattern == pattern'
+      in
+      if key' == key && pattern' == pattern && default' == default && shorthand == shorthand' then
         prop
       else
-        (loc, { key = key'; pattern = pattern'; default = default'; shorthand = false })
+        (loc, { key = key'; pattern = pattern'; default = default'; shorthand = shorthand' })
 
     method pattern_object_property_key ?kind (key : ('loc, 'loc) Ast.Pattern.Object.Property.key) =
       let open Ast.Pattern.Object.Property in
