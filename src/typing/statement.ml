@@ -2964,6 +2964,15 @@ struct
       | Ast.Type.Missing _ -> false
       | Ast.Type.Available _ -> true
     in
+    let id_reason =
+      match id with
+      | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ }) ->
+        let (id_loc, { Ast.Identifier.name; _ }) = name in
+        mk_reason (RIdentifier (OrdinaryName name)) id_loc
+      | (ploc, _) -> mk_reason RDestructuring ploc
+    in
+    let (annot_or_inferred, annot_ast) = Anno.mk_type_annotation cx SMap.empty id_reason annot in
+    let annot_t = type_t_of_annotated_or_inferred annot_or_inferred in
     (* Identifiers do not need to be initialized at the declaration site as long
      * as they are definitely initialized before use. Destructuring patterns must
      * be initialized, since their declaration involves some operation on the
@@ -2990,15 +2999,7 @@ struct
         let r = reason_of_t t in
         (Some (t, r), None)
     in
-    let id_reason =
-      match id with
-      | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ }) ->
-        let (id_loc, { Ast.Identifier.name; _ }) = name in
-        mk_reason (RIdentifier (OrdinaryName name)) id_loc
-      | (ploc, _) -> mk_reason RDestructuring ploc
-    in
-    let (annot_or_inferred, annot_ast) = Anno.mk_type_annotation cx SMap.empty id_reason annot in
-    let annot_t = type_t_of_annotated_or_inferred annot_or_inferred in
+
     let id_ast =
       match id with
       | (ploc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; annot = _; optional }) ->
