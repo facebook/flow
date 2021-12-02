@@ -94,7 +94,6 @@ class ['a] t =
            information should override this to be more specific. *)
         let acc = self#list (self#type_ cx pole_TODO) acc ts in
         acc
-      | InternalT (ReposUpperT (_, t)) -> self#type_ cx pole acc t
       | AnyT _ -> acc
       | OptionalT { reason = _; type_ = t; use_desc = _ }
       | MaybeT (_, t) ->

@@ -1588,8 +1588,7 @@ end = struct
       Type.(
         function
         | ChoiceKitT _
-        | ExtendsT _
-        | ReposUpperT _ ->
+        | ExtendsT _ ->
           terr ~kind:BadInternalT (Some t)
       )
 

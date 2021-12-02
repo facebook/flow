@@ -262,7 +262,6 @@ module rec TypeTerm : sig
     | ChoiceKitT of reason * choice_tool
     (* util for deciding subclassing relations *)
     | ExtendsT of reason * t * t
-    | ReposUpperT of reason * t
 
   and internal_use_op =
     | CopyEnv
@@ -3449,7 +3448,6 @@ let string_of_ctor = function
   | MatchingPropT _ -> "MatchingPropT"
   | OpaqueT _ -> "OpaqueT"
   | OpenPredT _ -> "OpenPredT"
-  | InternalT (ReposUpperT _) -> "ReposUpperT"
   | ShapeT _ -> "ShapeT"
   | ThisClassT _ -> "ThisClassT"
   | ThisTypeAppT _ -> "ThisTypeAppT"

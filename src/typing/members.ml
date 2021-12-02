@@ -436,7 +436,6 @@ let rec extract_type cx this_t =
     get_builtin_type cx reason (OrdinaryName "String") |> extract_type cx
   | DefT (_, _, IdxWrapper t) -> extract_type cx t
   | DefT (_, _, ReactAbstractComponentT _) as t -> Success t
-  | InternalT (ReposUpperT (_, t)) -> extract_type cx t
   | OpaqueT (_, { underlying_t = Some t; _ })
   | OpaqueT (_, { super_t = Some t; _ }) ->
     extract_type cx t

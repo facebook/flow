@@ -225,12 +225,6 @@ class virtual ['a] t =
           t
         else
           OpenPredT { reason = r; base_t = t''; m_pos = map1'; m_neg = map2' }
-      | InternalT (ReposUpperT (r, t')) ->
-        let t'' = self#type_ cx map_cx t' in
-        if t'' == t' then
-          t
-        else
-          InternalT (ReposUpperT (r, t''))
       | AnyT _ -> t
       | OptionalT { reason; type_ = t'; use_desc } ->
         let t'' = self#type_ cx map_cx t' in

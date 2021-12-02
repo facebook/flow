@@ -718,10 +718,6 @@ struct
             Unix.sleepf (min !n 1.0);
             n := !n -. 1.
           done
-        (*************************)
-        (* repositioning, part 1 *)
-        (*************************)
-        | (InternalT (ReposUpperT (_, l)), _) -> rec_flow cx trace (l, u)
         (***************)
         (* annotations *)
         (***************)
@@ -5039,9 +5035,9 @@ struct
             | None -> l
           in
           rec_flow_t cx trace ~use_op:unknown_use (then_t, tout)
-        (*************************)
-        (* repositioning, part 2 *)
-        (*************************)
+        (*****************)
+        (* repositioning *)
+        (*****************)
 
         (* waits for a lower bound to become concrete, and then repositions it to
            the location stored in the ReposLowerT, which is usually the location
@@ -6194,7 +6190,6 @@ struct
     | ThisClassT _
     | EvalT _
     | OpenPredT _
-    | InternalT (ReposUpperT _)
     | MatchingPropT _
     | ShapeT _
     | OptionalT _

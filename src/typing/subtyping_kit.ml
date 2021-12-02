@@ -569,11 +569,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
       in
       let use_desc = false in
       rec_flow cx trace (t, ReposUseT (reason, use_desc, use_op, OpenT tout))
-    | (InternalT (ReposUpperT (reason, l)), u) ->
-      (* since this guarantees that `u` is not an OpenT, it's safe to use
-       * `reposition` on the upper bound here. *)
-      let u = reposition_reason cx ~trace reason u in
-      rec_flow cx trace (l, UseT (use_op, u))
     (* The sink component of an annotation constrains values flowing
        into the annotated site. *)
     | (_, AnnotT (r, t, use_desc)) -> rec_flow cx trace (t, ReposUseT (r, use_desc, use_op, l))
