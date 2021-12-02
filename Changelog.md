@@ -1,3 +1,7 @@
+### 0.166.1
+
+* Fix a crash introduced in 0.166.0
+
 ### 0.166.0
 
 * Improve recheck performance on large projects
