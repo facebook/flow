@@ -1611,6 +1611,7 @@ let dump_error_message =
         (string_of_aloc loc)
         (match err with
         | MultipleFlowAttributes -> "MultipleFlowAttributes"
+        | InvalidFlowMode _ -> "InvalidFlowMode"
         | MultipleProvidesModuleAttributes -> "MultipleProvidesModuleAttributes"
         | MultipleJSXAttributes -> "MultipleJSXAttributes"
         | InvalidJSXAttribute _ -> "InvalidJSXAttribute")

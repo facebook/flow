@@ -68,6 +68,7 @@ type error_code =
   | InvalidExhaustiveCheck
   | InvalidExport
   | InvalidExportsTypeArg
+  | InvalidFlowModeDecl
   | InvalidGraphQL
   | InvalidExportedAnnotation
   | InvalidExportedAnnotationRecursive
@@ -241,6 +242,7 @@ let string_of_code : error_code -> string = function
   | InvalidExhaustiveCheck -> "invalid-exhaustive-check"
   | InvalidExport -> "invalid-export"
   | InvalidExportsTypeArg -> "invalid-exports-type-arg"
+  | InvalidFlowModeDecl -> "invalid-flow-mode"
   | InvalidGraphQL -> "invalid-graphql"
   | InvalidExportedAnnotation -> "invalid-exported-annotation"
   | InvalidExportedAnnotationRecursive -> "invalid-recursive-exported-annotation"

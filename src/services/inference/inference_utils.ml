@@ -13,6 +13,7 @@ let error_of_docblock_error ~source_file (loc, err) =
       ( ALoc.of_loc loc,
         match err with
         | Parsing_service_js.MultipleFlowAttributes -> Error_message.MultipleFlowAttributes
+        | Parsing_service_js.InvalidFlowMode s -> Error_message.InvalidFlowMode s
         | Parsing_service_js.MultipleProvidesModuleAttributes ->
           Error_message.MultipleProvidesModuleAttributes
         | Parsing_service_js.MultipleJSXAttributes -> Error_message.MultipleJSXAttributes

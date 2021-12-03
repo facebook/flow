@@ -39,6 +39,7 @@ and docblock_error = Loc.t * docblock_error_kind
 
 and docblock_error_kind =
   | MultipleFlowAttributes
+  | InvalidFlowMode of string
   | MultipleProvidesModuleAttributes
   | MultipleJSXAttributes
   | InvalidJSXAttribute of string option
@@ -193,6 +194,8 @@ let attributes_rx = Str.regexp "[ \t\r\n\\*/]+"
 
 let lines_rx = Str.regexp "\\(\r\n\\|\n\\|\r\\)"
 
+let pragma_rx = Str.regexp "^@"
+
 let extract_docblock =
   Docblock.(
     (* walks a list of words, returns a list of errors and the extracted info.
@@ -215,6 +218,16 @@ let extract_docblock =
             (errors, { info with flow = Some OptInStrictLocal })
         in
         parse_attributes acc xs
+      | (flow_loc, "@flow") :: (next_loc, next) :: xs
+        when Loc.lines_intersect flow_loc next_loc && (not @@ Str.string_match pragma_rx next 0) ->
+        let (errors, info) =
+          if info.flow <> None then
+            ((flow_loc, MultipleFlowAttributes) :: errors, info)
+          else
+            (errors, { info with flow = Some OptIn })
+        in
+        let errors = (next_loc, InvalidFlowMode next) :: errors in
+        parse_attributes (errors, info) xs
       | (loc, "@flow") :: xs ->
         let acc =
           if info.flow <> None then

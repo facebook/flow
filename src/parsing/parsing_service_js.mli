@@ -41,6 +41,7 @@ and docblock_error = Loc.t * docblock_error_kind
 
 and docblock_error_kind =
   | MultipleFlowAttributes
+  | InvalidFlowMode of string
   | MultipleProvidesModuleAttributes
   | MultipleJSXAttributes
   | InvalidJSXAttribute of string option

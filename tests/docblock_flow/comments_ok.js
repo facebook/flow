@@ -1,0 +1,4 @@
+/**
+ * @flow
+ * ok a comment
+ */

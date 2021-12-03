@@ -1,3 +1,12 @@
+Error ---------------------------------------------------------------------------------------- invalid_flow_mode.js:2:10
+
+`@flow local` is not a valid `@flow` mode. Valid ones are: `@flow`, `@flow strict`, and `@flow strict-local`.
+[invalid-flow-mode]
+
+   2|  * @flow local
+               ^^^^^
+
+
 Error ----------------------------------------------------------------------------------------- license_with_flow.js:4:2
 
 Cannot cast empty string to undefined because string [1] is incompatible with undefined [2]. [incompatible-cast]
@@ -73,4 +82,4 @@ References:
 
 
 
-Found 7 errors
+Found 8 errors

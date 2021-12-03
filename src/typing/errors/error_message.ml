@@ -462,6 +462,7 @@ and binding_error =
 
 and docblock_error =
   | MultipleFlowAttributes
+  | InvalidFlowMode of string
   | MultipleProvidesModuleAttributes
   | MultipleJSXAttributes
   | InvalidJSXAttribute of string option
@@ -2982,6 +2983,19 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           text " declaration. Only one per ";
           text "file is allowed.";
         ]
+      | InvalidFlowMode s ->
+        [
+          code (spf "@flow %s" s);
+          text " is not a valid ";
+          code "@flow";
+          text " mode. Valid ones are: ";
+          code "@flow";
+          text ", ";
+          code "@flow strict";
+          text ", and ";
+          code "@flow strict-local";
+          text ".";
+        ]
       | MultipleProvidesModuleAttributes ->
         [
           text "Unexpected ";
@@ -3837,6 +3851,7 @@ let error_code_of_message err : error_code option =
     begin
       match err with
       | MultipleFlowAttributes -> Some DuplicateFlowDecl
+      | InvalidFlowMode _ -> Some InvalidFlowModeDecl
       | MultipleProvidesModuleAttributes -> Some DuplicateProvideModuleDecl
       | MultipleJSXAttributes -> Some DuplicateJsxDecl
       | InvalidJSXAttribute _ -> Some InvalidJsxDecl
