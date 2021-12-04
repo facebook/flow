@@ -9,8 +9,8 @@ open OUnit2
 open Test_utils
 module LocMap = Loc_collections.LocMap
 
-let mk_ssa_builder_test contents expected_values ctxt =
-  let values = Ssa_builder.program (parse contents) in
+let mk_ssa_builder_test ?(enable_enums = false) contents expected_values ctxt =
+  let values = Ssa_builder.program ~enable_enums (parse contents) in
   let printer = Ssa_api.print_values in
   assert_equal
     ~ctxt
@@ -470,8 +470,10 @@ let tests =
                );
          "enums"
          >:: mk_ssa_builder_test
+               ~enable_enums:true
                "enum E {A, B}; let a = E.A;"
                LocMap.(empty |> add (mk_loc (1, 23) (1, 24)) [mk_write (1, 5) (1, 6) "E"]);
+         "enums_off" >:: mk_ssa_builder_test "enum E {A, B}; let a = E.A;" LocMap.empty;
          "instance_of"
          >:: mk_ssa_builder_test
                "class A {}; let x = undefined; (x instanceof A)"

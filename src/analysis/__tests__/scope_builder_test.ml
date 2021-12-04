@@ -9,8 +9,8 @@ open OUnit2
 open Test_utils
 module Scope_api = Scope_api.With_Loc
 
-let mk_scope_builder_all_uses_test contents expected_all_uses ctxt =
-  let info = Scope_builder.program ~with_types:true (parse contents) in
+let mk_scope_builder_all_uses_test ?(enable_enums = false) contents expected_all_uses ctxt =
+  let info = Scope_builder.program ~enable_enums ~with_types:true (parse contents) in
   let all_uses = Loc_collections.LocSet.elements @@ Scope_api.all_uses info in
   let printer = print_list Loc.debug_to_string in
   assert_equal
@@ -21,8 +21,9 @@ let mk_scope_builder_all_uses_test contents expected_all_uses ctxt =
     expected_all_uses
     all_uses
 
-let mk_scope_builder_locs_of_defs_of_all_uses_test contents expected_locs_of_defs ctxt =
-  let info = Scope_builder.program ~with_types:true (parse contents) in
+let mk_scope_builder_locs_of_defs_of_all_uses_test
+    ?(enable_enums = false) contents expected_locs_of_defs ctxt =
+  let info = Scope_builder.program ~enable_enums ~with_types:true (parse contents) in
   let all_uses = Loc_collections.LocSet.elements @@ Scope_api.all_uses info in
   let defs = Base.List.map ~f:(Scope_api.def_of_use info) all_uses in
   let locs_of_defs = Base.List.map ~f:(fun { Scope_api.Def.locs; _ } -> Nel.to_list locs) defs in
@@ -35,8 +36,8 @@ let mk_scope_builder_locs_of_defs_of_all_uses_test contents expected_locs_of_def
     expected_locs_of_defs
     locs_of_defs
 
-let mk_scope_builder_uses_of_all_uses_test contents expected_uses ctxt =
-  let info = Scope_builder.program ~with_types:true (parse contents) in
+let mk_scope_builder_uses_of_all_uses_test ?(enable_enums = false) contents expected_uses ctxt =
+  let info = Scope_builder.program ~enable_enums ~with_types:true (parse contents) in
   let all_uses = Loc_collections.LocSet.elements @@ Scope_api.all_uses info in
   let uses =
     Base.List.map
@@ -56,8 +57,9 @@ let mk_scope_builder_uses_of_all_uses_test contents expected_uses ctxt =
     uses
 
 (* Asserts that scopes classified as toplevel indeed contains all toplevel defs. *)
-let mk_scope_builder_toplevel_scopes_test contents expected_defs_in_toplevel ctxt =
-  let info = Scope_builder.program ~with_types:false (parse contents) in
+let mk_scope_builder_toplevel_scopes_test
+    contents ?(enable_enums = false) expected_defs_in_toplevel ctxt =
+  let info = Scope_builder.program ~enable_enums ~with_types:false (parse contents) in
   let collect_def_names acc scope_id =
     let { Scope_api.Scope.defs; _ } = Scope_api.scope info scope_id in
     defs |> SMap.keys |> List.fold_left (fun acc def -> SSet.add def acc) acc
@@ -68,8 +70,8 @@ let mk_scope_builder_toplevel_scopes_test contents expected_defs_in_toplevel ctx
   let printer = String.concat ", " in
   assert_equal ~ctxt ~printer expected_defs_in_toplevel actual_defs_in_toplevel
 
-let mk_scope_builder_scope_loc_test contents expected_scope_locs ctxt =
-  let info = Scope_builder.program ~with_types:true (parse contents) in
+let mk_scope_builder_scope_loc_test ?(enable_enums = false) contents expected_scope_locs ctxt =
+  let info = Scope_builder.program ~enable_enums ~with_types:true (parse contents) in
   let scope_locs =
     IMap.elements (IMap.map (fun scope -> scope.Scope_api.Scope.loc) info.Scope_api.scopes)
   in
@@ -242,8 +244,10 @@ let tests =
                ];
          "enums"
          >:: mk_scope_builder_all_uses_test
+               ~enable_enums:true
                "enum Foo {}\nFoo"
                [mk_loc (1, 5) (1, 8); mk_loc (2, 0) (2, 3)];
+         "enums_off" >:: mk_scope_builder_all_uses_test "enum Foo {}\nFoo" [];
          "switch"
          >:: mk_scope_builder_all_uses_test
                "switch ('') { case '': const foo = ''; foo; };"

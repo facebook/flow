@@ -13,6 +13,8 @@ module Ast = Flow_ast
 module Name_resolver = Name_resolver.Make_Test_With_Cx (struct
   type t = unit
 
+  let enable_enums _cx = true
+
   let jsx _cx = Options.Jsx_react
 
   let react_runtime _cx = Options.ReactRuntimeClassic

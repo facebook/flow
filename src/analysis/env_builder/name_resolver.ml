@@ -52,6 +52,8 @@ let error_todo = ()
 module type C = sig
   type t
 
+  val enable_enums : t -> bool
+
   val jsx : t -> Options.jsx_mode
 
   val react_runtime : t -> Options.react_runtime
@@ -530,7 +532,11 @@ module Make
 
   class name_resolver cx (prepass_info, prepass_values, unbound_names) provider_info =
     object (this)
-      inherit Scope_builder.scope_builder ~flowmin_compatibility:false ~with_types:true as super
+      inherit
+        Scope_builder.scope_builder
+          ~flowmin_compatibility:false
+          ~enable_enums:(Context.enable_enums cx)
+          ~with_types:true as super
 
       val invalidation_caches = Invalidation_api.mk_caches ()
 
@@ -2880,7 +2886,11 @@ module Make
    * the alternative *)
   class dead_code_marker cx env_values =
     object (this)
-      inherit Scope_builder.scope_builder ~flowmin_compatibility:false ~with_types:true as super
+      inherit
+        Scope_builder.scope_builder
+          ~flowmin_compatibility:false
+          ~enable_enums:(Context.enable_enums cx)
+          ~with_types:true as super
 
       val mutable values = env_values
 
@@ -2928,13 +2938,18 @@ module Make
       | Options.Jsx_react -> None
       | Options.Jsx_pragma (_, ast) -> Some ast
     in
+    let enable_enums = Context.enable_enums cx in
     let (_ssa_completion_state, ((scopes, ssa_values, _) as prepass)) =
-      Ssa_builder.program_with_scope_and_jsx_pragma ~flowmin_compatibility:false ~jsx_ast program
+      Ssa_builder.program_with_scope_and_jsx_pragma
+        ~flowmin_compatibility:false
+        ~enable_enums
+        ~jsx_ast
+        program
     in
     let providers = Provider_api.find_providers program in
     let env_walk = new name_resolver cx prepass providers in
     let bindings =
-      let hoist = new hoister ~flowmin_compatibility:false ~with_types:true in
+      let hoist = new hoister ~flowmin_compatibility:false ~enable_enums ~with_types:true in
       hoist#eval hoist#program program
     in
     let completion_state =

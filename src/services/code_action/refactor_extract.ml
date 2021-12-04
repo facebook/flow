@@ -481,7 +481,7 @@ let extract_from_statements_refactors
         | Some loc -> Loc.btwn insert_new_function_call_loc loc
       in
       let (_ssa_abnormal_completion_state, (scope_info, ssa_values, _possible_globals)) =
-        Ssa_builder.program_with_scope ast
+        Ssa_builder.program_with_scope ~enable_enums:(Context.enable_enums full_cx) ast
       in
       let {
         VariableAnalysis.defs_with_scopes_of_local_uses;
@@ -605,6 +605,7 @@ let create_extract_to_constant_refactor
 
 let extract_from_expression_refactors
     ~ast
+    ~full_cx
     ~typed_ast
     ~reader
     ~create_unique_name
@@ -614,7 +615,7 @@ let extract_from_expression_refactors
   in
   let extracted_expression_loc = fst expression in
   let (_abnormal_completion_state, (scope_info, ssa_values, _possible_globals)) =
-    Ssa_builder.program_with_scope ast
+    Ssa_builder.program_with_scope ~enable_enums:(Context.enable_enums full_cx) ast
   in
   let { VariableAnalysis.defs_with_scopes_of_local_uses; _ } =
     VariableAnalysis.collect_relevant_defs_with_scope
@@ -787,7 +788,7 @@ let provide_available_refactors
   let extract_from_expression_refactors =
     Base.Option.value_map
       ~default:[]
-      ~f:(extract_from_expression_refactors ~ast ~typed_ast ~reader ~create_unique_name)
+      ~f:(extract_from_expression_refactors ~ast ~full_cx ~typed_ast ~reader ~create_unique_name)
       extracted_expression
   in
   let extract_to_type_alias_refactors =

@@ -17,10 +17,15 @@ module type S = sig
   end
 
   val program :
-    ?flowmin_compatibility:bool -> with_types:bool -> (L.t, L.t) Flow_ast.Program.t -> Acc.t
+    ?flowmin_compatibility:bool ->
+    enable_enums:bool ->
+    with_types:bool ->
+    (L.t, L.t) Flow_ast.Program.t ->
+    Acc.t
 
   class scope_builder :
     flowmin_compatibility:bool
+    -> enable_enums:bool
     -> with_types:bool
     -> object
          inherit [Acc.t, L.t] Flow_ast_visitor.visitor

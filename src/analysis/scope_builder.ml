@@ -110,7 +110,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       env :: parent_env
   end
 
-  class scope_builder ~flowmin_compatibility ~with_types =
+  class scope_builder ~flowmin_compatibility ~enable_enums ~with_types =
     object (this)
       inherit [Acc.t, L.t] visitor ~init:Acc.init as super
 
@@ -295,7 +295,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         spec
 
       method! block loc (stmt : (L.t, L.t) Ast.Statement.Block.t) =
-        let lexical_hoist = new lexical_hoister ~flowmin_compatibility in
+        let lexical_hoist = new lexical_hoister ~flowmin_compatibility ~enable_enums in
         let lexical_bindings = lexical_hoist#eval (lexical_hoist#block loc) stmt in
         this#with_bindings ~lexical:true loc lexical_bindings (super#block loc) stmt
 
@@ -307,7 +307,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         let open Ast.Statement.Switch in
         let { discriminant; cases; comments = _ } = switch in
         let _ = this#expression discriminant in
-        let lexical_hoist = new lexical_hoister ~flowmin_compatibility in
+        let lexical_hoist = new lexical_hoister ~flowmin_compatibility ~enable_enums in
         let lexical_bindings =
           lexical_hoist#eval
             (Base.List.map ~f:(fun ((_, { Case.consequent; _ }) as case) ->
@@ -335,7 +335,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       method! for_in_statement loc (stmt : (L.t, L.t) Ast.Statement.ForIn.t) =
         let open Ast.Statement.ForIn in
         let { left; right = _; body = _; each = _; comments = _ } = stmt in
-        let lexical_hoist = new lexical_hoister ~flowmin_compatibility in
+        let lexical_hoist = new lexical_hoister ~flowmin_compatibility ~enable_enums in
         let lexical_bindings =
           match left with
           | LeftDeclaration (loc, decl) ->
@@ -355,7 +355,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       method! for_of_statement loc (stmt : (L.t, L.t) Ast.Statement.ForOf.t) =
         let open Ast.Statement.ForOf in
         let { left; right = _; body = _; await = _; comments = _ } = stmt in
-        let lexical_hoist = new lexical_hoister ~flowmin_compatibility in
+        let lexical_hoist = new lexical_hoister ~flowmin_compatibility ~enable_enums in
         let lexical_bindings =
           match left with
           | LeftDeclaration (loc, decl) ->
@@ -375,7 +375,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       method! for_statement loc (stmt : (L.t, L.t) Ast.Statement.For.t) =
         let open Ast.Statement.For in
         let { init; test = _; update = _; body = _; comments = _ } = stmt in
-        let lexical_hoist = new lexical_hoister ~flowmin_compatibility in
+        let lexical_hoist = new lexical_hoister ~flowmin_compatibility ~enable_enums in
         let lexical_bindings =
           match init with
           | Some (InitDeclaration (loc, decl)) ->
@@ -391,7 +391,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         let lexical_bindings =
           match param with
           | Some p ->
-            let lexical_hoist = new lexical_hoister ~flowmin_compatibility in
+            let lexical_hoist = new lexical_hoister ~flowmin_compatibility ~enable_enums in
             lexical_hoist#eval lexical_hoist#catch_clause_pattern p
           | None -> Bindings.empty
         in
@@ -401,7 +401,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       method private lambda params body =
         (* function params and bindings within the function body share the same scope *)
         let bindings =
-          let hoist = new hoister ~flowmin_compatibility ~with_types in
+          let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
           run hoist#function_params params;
           run hoist#function_body_any body;
           hoist#acc
@@ -653,17 +653,23 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         in
         this#scoped_type_params tparams ~in_tparam_scope;
         decl
+
+      method! enum_declaration loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
+        if not enable_enums then
+          enum
+        else
+          super#enum_declaration loc enum
     end
 
-  let program ?(flowmin_compatibility = false) ~with_types program =
+  let program ?(flowmin_compatibility = false) ~enable_enums ~with_types program =
     let (loc, _) = program in
-    let walk = new scope_builder ~flowmin_compatibility ~with_types in
+    let walk = new scope_builder ~flowmin_compatibility ~enable_enums ~with_types in
     let bindings =
       if flowmin_compatibility then
-        let hoist = new lexical_hoister ~flowmin_compatibility in
+        let hoist = new lexical_hoister ~flowmin_compatibility ~enable_enums in
         hoist#eval hoist#program program
       else
-        let hoist = new hoister ~flowmin_compatibility ~with_types in
+        let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
         hoist#eval hoist#program program
     in
     walk#eval (walk#with_bindings loc bindings walk#program) program

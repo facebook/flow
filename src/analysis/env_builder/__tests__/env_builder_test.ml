@@ -13,6 +13,8 @@ module ALocSet = Loc_collections.ALocSet
 module TestCx = struct
   type t = unit
 
+  let enable_enums _cx = true
+
   let jsx _cx = Options.Jsx_react
 
   let react_runtime _cx = Options.ReactRuntimeClassic

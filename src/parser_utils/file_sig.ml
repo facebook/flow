@@ -24,6 +24,7 @@ struct
 
   and options = {
     module_ref_prefix: string option;
+    enable_enums: bool;
     enable_relay_integration: bool;
     relay_integration_module_prefix: string option;
   }
@@ -133,6 +134,7 @@ struct
     {
       module_ref_prefix = None;
       enable_relay_integration = false;
+      enable_enums = false;
       relay_integration_module_prefix = None;
     }
 
@@ -364,7 +366,8 @@ struct
       inherit
         [(t * tolerable_error list, error) result, L.t] visitor ~init:(Ok (empty, [])) as super
 
-      val scope_info : Scope_api.info = Scope_builder.program ~with_types:true ast
+      val scope_info : Scope_api.info =
+        Scope_builder.program ~with_types:true ~enable_enums:opts.enable_enums ast
 
       val mutable curr_declare_module : module_sig option = None
 

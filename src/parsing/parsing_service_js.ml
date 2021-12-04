@@ -463,6 +463,7 @@ let do_parse ~parse_options ~info content file =
         let file_sig_opts =
           {
             File_sig.With_Loc.module_ref_prefix;
+            enable_enums;
             enable_relay_integration;
             relay_integration_module_prefix;
           }

@@ -24,6 +24,7 @@ module type S = sig
 
   and options = {
     module_ref_prefix: string option;
+    enable_enums: bool;
     enable_relay_integration: bool;
     relay_integration_module_prefix: string option;
   }

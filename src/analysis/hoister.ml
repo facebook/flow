@@ -24,7 +24,7 @@ open Flow_ast_visitor
    are known to introduce bindings. The logic here is sufficiently tricky that
    we probably should not change it without extensive testing. *)
 
-class ['loc] lexical_hoister ~flowmin_compatibility =
+class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
   object (this)
     inherit ['loc Bindings.t, 'loc] visitor ~init:Bindings.empty as super
 
@@ -168,13 +168,13 @@ class ['loc] lexical_hoister ~flowmin_compatibility =
     method! enum_declaration _loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
       let open Ast.Statement.EnumDeclaration in
       let { id; _ } = enum in
-      this#add_const_binding ~kind:Bindings.Enum id;
+      if enable_enums then this#add_const_binding ~kind:Bindings.Enum id;
       enum
   end
 
-class ['loc] hoister ~flowmin_compatibility ~with_types =
+class ['loc] hoister ~flowmin_compatibility ~enable_enums ~with_types =
   object (this)
-    inherit ['loc] lexical_hoister ~flowmin_compatibility as super
+    inherit ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums as super
 
     val mutable lexical = true
 

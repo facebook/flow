@@ -626,7 +626,7 @@ let collect_relevant_defs_with_scope_tests =
       extracted_loc =
     let ast = parse source in
     let (_abnormal_completion_state, (scope_info, ssa_values, _possible_globals)) =
-      Ssa_builder.program_with_scope ast
+      Ssa_builder.program_with_scope ~enable_enums:true ast
     in
     let { VariableAnalysis.defs_with_scopes_of_local_uses; vars_with_shadowed_local_reassignments }
         =
@@ -753,7 +753,7 @@ let undefined_variables_after_extraction_tests =
       ~ctxt ~expected ~source ~new_function_target_scope_loc ~extracted_loc =
     let ast = parse source in
     let (_abnormal_completion_state, (scope_info, ssa_values, _possible_globals)) =
-      Ssa_builder.program_with_scope ast
+      Ssa_builder.program_with_scope ~enable_enums:true ast
     in
     let { VariableAnalysis.defs_with_scopes_of_local_uses; _ } =
       VariableAnalysis.collect_relevant_defs_with_scope ~scope_info ~ssa_values ~extracted_loc
@@ -872,7 +872,7 @@ let escaping_locally_defined_variables_tests =
       ~ctxt ~expected_variables ~expected_has_external_writes source extracted_statements_loc =
     let ast = parse source in
     let (_abnormal_completion_state, (scope_info, ssa_values, _possible_globals)) =
-      Ssa_builder.program_with_scope ast
+      Ssa_builder.program_with_scope ~enable_enums:true ast
     in
     let { VariableAnalysis.escaping_variables; has_external_writes = actual_has_external_writes } =
       VariableAnalysis.collect_escaping_local_defs ~scope_info ~ssa_values ~extracted_statements_loc

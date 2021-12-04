@@ -721,7 +721,9 @@ let make ~output_dir ~write_root =
       let resolved_requires =
         Module_heaps.Reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.warn file
       in
-      let scope_info = Scope_builder.program ~with_types:false ast in
+      let scope_info =
+        Scope_builder.program ~enable_enums:(Options.enums options) ~with_types:false ast
+      in
       let (declaration_info, member_declaration_info, type_declaration_info) =
         declaration_infos
           ~scope_info

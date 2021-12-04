@@ -16,6 +16,8 @@ let react_runtime = ref Options.ReactRuntimeClassic
 module TestCx = struct
   type t = unit
 
+  let enable_enums _ = true
+
   let jsx _cx = !jsx_mode
 
   let react_runtime _cx = !react_runtime

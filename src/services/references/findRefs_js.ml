@@ -33,7 +33,9 @@ let find_local_refs ~reader ~options ~env ~profiling ~file_key ~content ~line ~c
   let%bind ast_info = parse_contents ~options ~profiling content file_key in
   (* Start by running local variable find references *)
   let (ast, _, _) = ast_info in
-  let scope_info = Scope_builder.program ~with_types:true ast in
+  let scope_info =
+    Scope_builder.program ~enable_enums:(Options.enums options) ~with_types:true ast
+  in
   let (var_refs, loc) = local_variable_refs scope_info loc in
   let%bind refs =
     match var_refs with
