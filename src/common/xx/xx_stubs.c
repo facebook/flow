@@ -51,7 +51,6 @@ CAMLexport value caml_xx_init(value seed) {
 }
 
 CAMLexport value caml_xx_update(value state, value v) {
-  assert(Tag_val(v) == String_tag);
   XXH64_update(&State_val(state), String_val(v), caml_string_length(v));
   return Val_unit;
 }
