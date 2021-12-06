@@ -21,21 +21,34 @@ export default function Home() {
   return (
     <Layout title={siteConfig.title} description={siteConfig.description}>
       <header className={clsx(styles.feature, styles.featureHero)}>
-        <div className="container text--center">
+        <div className="container">
           <p className={styles.featureHeading}>
             <span>Flow is</span> <br className={styles.hiddenLargerUp} /> a
             static type <br className={styles.hiddenLargerUp} /> checker for{' '}
             <br className={styles.hiddenLargerUp} /> <span>JavaScript.</span>
           </p>
-          <div>
-            <Link className={styles.featureButton} to={useBaseUrl('docs/')}>
-              Get Started
-            </Link>
-            <Link
-              className={styles.featureButton}
-              to={useBaseUrl('docs/install')}>
-              Install Flow
-            </Link>
+          <Link className={styles.featureButton} to={useBaseUrl('docs/')}>
+            Get Started
+          </Link>
+          <Link
+            className={styles.featureButton}
+            to={useBaseUrl('docs/install')}>
+            Install Flow
+          </Link>
+          <iframe
+            className="gh-btn"
+            src="https://ghbtns.com/github-btn.html?user=facebook&repo=flow&type=star&count=false&size=large"
+            frameborder="0"
+            scrolling="0"
+            width="160px"
+            height="30px"
+            title="Star"></iframe>
+          <div className={clsx(styles.featureHeroText)}>
+            Current version:{' '}
+            <strong class="navbar-text">
+              {/* TODO: add release */}
+              <a href="">RELEASE_NAME</a>
+            </strong>
           </div>
         </div>
       </header>
@@ -47,7 +60,7 @@ export default function Home() {
               styles.featureDecorationDrop,
             )}
           />
-          <div className="container text--center">
+          <div className="container">
             <div className="row">
               <div className="col col--7">
                 <h2

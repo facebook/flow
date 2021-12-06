@@ -117,3 +117,9 @@
   background: var(--flow-red);
   color: white;
 }
+
+.gh-btn {
+  position: relative;
+  vertical-align: middle;
+}
+
