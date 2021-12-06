@@ -1560,6 +1560,307 @@ References:
                                             ^^^^^^ [4]
 
 
+Error ------------------------------------------------------------------------------------- inspector/inspector.js:10:16
+
+Cannot call `inspector.open` with `'8080'` bound to `port` because string [1] is incompatible with number [2].
+[incompatible-call]
+
+   inspector/inspector.js:10:16
+     10| inspector.open('8080'); // error
+                        ^^^^^^ [1]
+
+References:
+   <BUILTINS>/node.js:2811:12
+   2811|     port?: number,
+                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- inspector/inspector.js:11:22
+
+Cannot call `inspector.open` with `127001` bound to `host` because number [1] is incompatible with string [2].
+[incompatible-call]
+
+   inspector/inspector.js:11:22
+     11| inspector.open(8080, 127001); // error
+                              ^^^^^^ [1]
+
+References:
+   <BUILTINS>/node.js:2812:12
+   2812|     host?: string,
+                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- inspector/inspector.js:12:42
+
+Cannot call `inspector.open` with `1000` bound to `wait` because number [1] is incompatible with boolean [2].
+[incompatible-call]
+
+   inspector/inspector.js:12:42
+     12| inspector.open(8080, 'http://localhost', 1000); // error
+                                                  ^^^^ [1]
+
+References:
+   <BUILTINS>/node.js:2813:12
+   2813|     wait?: boolean
+                    ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- inspector/inspector.js:16:2
+
+Cannot cast `inspector.open()` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
+
+   inspector/inspector.js:16:2
+     16| (inspector.open() : string); // error
+          ^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:2814:6
+   2814|   ): void;
+              ^^^^ [1]
+   inspector/inspector.js:16:21
+     16| (inspector.open() : string); // error
+                             ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- inspector/inspector.js:24:2
+
+Cannot cast `inspector.close()` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
+
+   inspector/inspector.js:24:2
+     24| (inspector.close() : string); // error
+          ^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:2816:29
+   2816|   declare function close(): void;
+                                     ^^^^ [1]
+   inspector/inspector.js:24:22
+     24| (inspector.close() : string); // error
+                              ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- inspector/inspector.js:36:2
+
+Cannot cast `inspector.url()` to number because string [1] is incompatible with number [2]. [incompatible-cast]
+
+   inspector/inspector.js:36:2
+     36| (inspector.url() : number); // error
+          ^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:2817:28
+   2817|   declare function url() : string | void;
+                                    ^^^^^^ [1]
+   inspector/inspector.js:36:20
+     36| (inspector.url() : number); // error
+                            ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- inspector/inspector.js:36:2
+
+Cannot cast `inspector.url()` to number because undefined [1] is incompatible with number [2]. [incompatible-cast]
+
+   inspector/inspector.js:36:2
+     36| (inspector.url() : number); // error
+          ^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:2817:37
+   2817|   declare function url() : string | void;
+                                             ^^^^ [1]
+   inspector/inspector.js:36:20
+     36| (inspector.url() : number); // error
+                            ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- inspector/inspector.js:44:2
+
+Cannot cast `inspector.waitForDebugger()` to number because undefined [1] is incompatible with number [2].
+[incompatible-cast]
+
+   inspector/inspector.js:44:2
+     44| (inspector.waitForDebugger() : number); // error
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:2819:39
+   2819|   declare function waitForDebugger(): void;
+                                               ^^^^ [1]
+   inspector/inspector.js:44:32
+     44| (inspector.waitForDebugger() : number); // error
+                                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- inspector/inspector.js:54:12
+
+Cannot call `inspector.connect` because property `connect` is missing in module `inspector` [1]. [prop-missing]
+
+   inspector/inspector.js:54:12
+     54| (inspector.connect() : number); // error
+                    ^^^^^^^
+
+References:
+   <BUILTINS>/node.js:2809:1
+         v---------------------------
+   2809| declare module 'inspector' {
+   2810|   declare function open(
+   2811|     port?: number,
+   2812|     host?: string,
+   2813|     wait?: boolean
+   2814|   ): void;
+   2815|
+   2816|   declare function close(): void;
+   2817|   declare function url() : string | void;
+   2818|   declare var console: Object;
+   2819|   declare function waitForDebugger(): void;
+   2820|
+   2821|   declare class Session extends events$EventEmitter {
+   2822|     constructor(): void;
+   2823|     connect(): void;
+   2824|     connectToMainThread(): void;
+   2825|     disconnect(): void;
+   2826|     post(
+   2827|       method: string,
+   2828|       params?: Object,
+   2829|       callback?: Function
+   2830|     ): void;
+   2831|   }
+   2832| }
+         ^ [1]
+
+
+Error ------------------------------------------------------------------------------------- inspector/inspector.js:68:12
+
+Cannot call `inspector.connectToMainThread` because property `connectToMainThread` is missing in module `inspector` [1].
+[prop-missing]
+
+   inspector/inspector.js:68:12
+     68| (inspector.connectToMainThread() : number); // error
+                    ^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:2809:1
+         v---------------------------
+   2809| declare module 'inspector' {
+   2810|   declare function open(
+   2811|     port?: number,
+   2812|     host?: string,
+   2813|     wait?: boolean
+   2814|   ): void;
+   2815|
+   2816|   declare function close(): void;
+   2817|   declare function url() : string | void;
+   2818|   declare var console: Object;
+   2819|   declare function waitForDebugger(): void;
+   2820|
+   2821|   declare class Session extends events$EventEmitter {
+   2822|     constructor(): void;
+   2823|     connect(): void;
+   2824|     connectToMainThread(): void;
+   2825|     disconnect(): void;
+   2826|     post(
+   2827|       method: string,
+   2828|       params?: Object,
+   2829|       callback?: Function
+   2830|     ): void;
+   2831|   }
+   2832| }
+         ^ [1]
+
+
+Error ------------------------------------------------------------------------------------- inspector/inspector.js:78:12
+
+Cannot call `inspector.disconnect` because property `disconnect` is missing in module `inspector` [1]. [prop-missing]
+
+   inspector/inspector.js:78:12
+     78| (inspector.disconnect() : number); // error
+                    ^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:2809:1
+         v---------------------------
+   2809| declare module 'inspector' {
+   2810|   declare function open(
+   2811|     port?: number,
+   2812|     host?: string,
+   2813|     wait?: boolean
+   2814|   ): void;
+   2815|
+   2816|   declare function close(): void;
+   2817|   declare function url() : string | void;
+   2818|   declare var console: Object;
+   2819|   declare function waitForDebugger(): void;
+   2820|
+   2821|   declare class Session extends events$EventEmitter {
+   2822|     constructor(): void;
+   2823|     connect(): void;
+   2824|     connectToMainThread(): void;
+   2825|     disconnect(): void;
+   2826|     post(
+   2827|       method: string,
+   2828|       params?: Object,
+   2829|       callback?: Function
+   2830|     ): void;
+   2831|   }
+   2832| }
+         ^ [1]
+
+
+Error -------------------------------------------------------------------------------------- inspector/inspector.js:86:9
+
+Cannot call `session.post` because function [1] requires another argument. [incompatible-call]
+
+   inspector/inspector.js:86:9
+     86| session.post(); // error
+                 ^^^^
+
+References:
+   <BUILTINS>/node.js:2826:5
+             v----
+   2826|     post(
+   2827|       method: string,
+   2828|       params?: Object,
+   2829|       callback?: Function
+   2830|     ): void;
+             ------^ [1]
+
+
+Error ------------------------------------------------------------------------------------- inspector/inspector.js:90:10
+
+Cannot call `session.post` because function [1] requires another argument. [incompatible-call]
+
+   inspector/inspector.js:90:10
+     90| (session.post() : string); // error
+                  ^^^^
+
+References:
+   <BUILTINS>/node.js:2826:5
+             v----
+   2826|     post(
+   2827|       method: string,
+   2828|       params?: Object,
+   2829|       callback?: Function
+   2830|     ): void;
+             ------^ [1]
+
+
+Error -------------------------------------------------------------------------------------- inspector/inspector.js:90:2
+
+Cannot cast `session.post()` to string because undefined [1] is incompatible with string [2]. [incompatible-cast]
+
+   inspector/inspector.js:90:2
+     90| (session.post() : string); // error
+          ^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:2830:8
+   2830|     ): void;
+                ^^^^ [1]
+   inspector/inspector.js:90:19
+     90| (session.post() : string); // error
+                           ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------- invalid_package_file/package.json:1:1
 
 Unexpected end of input, expected a valid JSON value
@@ -1636,26 +1937,26 @@ References:
    process/emitWarning.js:10:1
      10| process.emitWarning(); // error
          ^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:2830:24
-   2830|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:2855:24
+   2855|   emitWarning(warning: string | Error): void;
                                 ^^^^^^ [2]
-   <BUILTINS>/node.js:2830:33
-   2830|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:2855:33
+   2855|   emitWarning(warning: string | Error): void;
                                          ^^^^^ [3]
-   <BUILTINS>/node.js:2831:3
-   2831|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2856:3
+   2856|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/node.js:2832:3
-   2832|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2857:3
+   2857|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
-   <BUILTINS>/node.js:2833:3
+   <BUILTINS>/node.js:2858:3
            v-----------
-   2833|   emitWarning(
-   2834|     warning: string,
-   2835|     type: string,
-   2836|     code: string,
-   2837|     ctor?: (...empty) => mixed
-   2838|   ): void;
+   2858|   emitWarning(
+   2859|     warning: string,
+   2860|     type: string,
+   2861|     code: string,
+   2862|     ctor?: (...empty) => mixed
+   2863|   ): void;
            ------^ [6]
 
 
@@ -1674,14 +1975,14 @@ References:
    process/emitWarning.js:11:21
      11| process.emitWarning(42); // error
                              ^^ [1]
-   <BUILTINS>/node.js:2831:24
-   2831|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2856:24
+   2856|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
                                 ^^^^^^ [2]
-   <BUILTINS>/node.js:2832:24
-   2832|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2857:24
+   2857|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
                                 ^^^^^^ [3]
-   <BUILTINS>/node.js:2834:14
-   2834|     warning: string,
+   <BUILTINS>/node.js:2859:14
+   2859|     warning: string,
                       ^^^^^^ [4]
 
 
@@ -1699,11 +2000,11 @@ References:
    process/emitWarning.js:12:29
      12| process.emitWarning("blah", 42); // error
                                      ^^ [1]
-   <BUILTINS>/node.js:2832:38
-   2832|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2857:38
+   2857|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
                                               ^^^^^^ [2]
-   <BUILTINS>/node.js:2835:11
-   2835|     type: string,
+   <BUILTINS>/node.js:2860:11
+   2860|     type: string,
                    ^^^^^^ [3]
 
 
@@ -1719,8 +2020,8 @@ References:
    process/emitWarning.js:13:37
      13| process.emitWarning("blah", "blah", 42); // error
                                              ^^ [1]
-   <BUILTINS>/node.js:2836:11
-   2836|     code: string,
+   <BUILTINS>/node.js:2861:11
+   2861|     code: string,
                    ^^^^^^ [2]
 
 
@@ -1734,8 +2035,8 @@ Cannot cast `process.emitWarning(...)` to string because undefined [1] is incomp
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2830:41
-   2830|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:2855:41
+   2855|   emitWarning(warning: string | Error): void;
                                                  ^^^^ [1]
    process/emitWarning.js:14:31
      14| (process.emitWarning("blah"): string); // error
@@ -1800,8 +2101,8 @@ References:
    process/nextTick.js:27:3
      27|   (a: string, b: number, c: boolean) => {} // Error: too few arguments
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:2859:21
-   2859|   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+   <BUILTINS>/node.js:2884:21
+   2884|   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
                              ^^^^^^^^^^^^^^^ [2]
 
 
@@ -1815,8 +2116,8 @@ Cannot cast `process.allowedNodeEnvironmentFlags` to string because `Set` [1] is
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2819:32
-   2819|   allowedNodeEnvironmentFlags: Set<string>;
+   <BUILTINS>/node.js:2844:32
+   2844|   allowedNodeEnvironmentFlags: Set<string>;
                                         ^^^^^^^^^^^ [1]
    process/process.js:5:39
       5| (process.allowedNodeEnvironmentFlags: string); // error
@@ -2139,7 +2440,7 @@ References:
 
 
 
-Found 112 errors
+Found 126 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
