@@ -51,6 +51,11 @@ module.exports = {
       },
       items: [
         {
+          to: 'docs/getting-started/',
+          label: 'Getting Started',
+          position: 'left',
+        },
+        {
           to: 'docs/',
           activeBasePath: 'docs',
           label: 'Docs',
@@ -61,11 +66,24 @@ module.exports = {
           label: 'Blog',
           position: 'left',
         },
+        {
+          href: 'https://twitter.com/flowtype',
+          'aria-label': 'Twitter',
+          position: 'right',
+          className: 'navbar__icon twitter__link',
+        },
+        {
+          href: 'http://stackoverflow.com/questions/tagged/flowtype',
+          'aria-label': 'Stack Overflow',
+          position: 'right',
+          className: 'navbar__icon stackoverflow__link',
+        },
         // Please keep GitHub link to the right for consistency.
         {
           href: 'https://github.com/facebook/flow',
-          label: 'GitHub',
+          'aria-label': 'GitHub',
           position: 'right',
+          className: 'navbar__icon github__link',
         },
       ],
     },

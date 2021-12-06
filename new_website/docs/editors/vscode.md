@@ -3,7 +3,7 @@ title: Visual Studio Code
 slug: /editors/vscode
 ---
 
-![Screenshot of Flow Language Support](/static/flow_for_vscode.gif)
+![Screenshot of Flow Language Support](/img/flow_for_vscode.gif)
 
 Support for Flow in [Visual Studio Code](https://code.visualstudio.com/) is provided by
 the [Flow Language Support](https://marketplace.visualstudio.com/items?itemName=flowtype.flow-for-vscode)

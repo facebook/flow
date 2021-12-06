@@ -45,8 +45,57 @@
   color: rgba(255, 255, 255, 0.7);
 }
 
+.navbar .menu__link {
+  color: rgba(255, 255, 255, 0.7);
+}
+
 .navbar__brand {
   height: 100%;
+}
+
+.navbar .navbar__icon {
+  padding: 0px;
+  padding-right: 1rem;
+}
+.navbar .navbar__icon:hover {
+  opacity: 0.8;
+}
+.navbar .navbar__icon:active {
+  opacity: 0.7;
+}
+.navbar .navbar__icon:before {
+  content: '';
+  display: flex;
+  height: 20px;
+  width: 21px;
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
+.navbar .twitter__link:before {
+  background: url(/img/icon-twitter.svg);
+  background-repeat: no-repeat;
+}
+.navbar .stackoverflow__link:before {
+  background: url(/img/icon-stackoverflow.svg);
+  background-repeat: no-repeat;
+}
+.navbar .github__link:before {
+  background: url(/img/icon-github.svg);
+  background-repeat: no-repeat;
+}
+
+.navbar-sidebar {
+  background-color: #2d343a;
+}
+
+.navbar-sidebar .navbar__icon {
+  padding: var(--ifm-menu-link-padding-vertical) var(--ifm-menu-link-padding-horizontal);
+}
+.navbar-sidebar .navbar__icon:hover {
+  opacity: 1;
+}
+.navbar-sidebar .navbar__icon:active {
+  opacity: 1;
 }
 
 .rounded {
