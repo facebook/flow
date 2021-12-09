@@ -129,6 +129,7 @@ type t = {
   opt_refactor: bool;
   opt_relay_integration_excludes: Str.regexp list;
   opt_relay_integration_module_prefix: string option;
+  opt_relay_integration_module_prefix_includes: Str.regexp list;
   opt_reorder_checking: order_mode;
   opt_root_name: string option;
   opt_root: Path.t;
@@ -261,6 +262,9 @@ let refactor opts = opts.opt_refactor
 let relay_integration_excludes opts = opts.opt_relay_integration_excludes
 
 let relay_integration_module_prefix opts = opts.opt_relay_integration_module_prefix
+
+let relay_integration_module_prefix_includes opts =
+  opts.opt_relay_integration_module_prefix_includes
 
 let root opts = opts.opt_root
 

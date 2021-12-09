@@ -1,0 +1,14 @@
+[options]
+all=true
+
+module.system=haste
+module.system.haste.use_name_reducers=true
+module.system.haste.paths.excludes=.*/__tests__/.*
+# get basename
+module.system.haste.name_reducers='^.*/\([a-zA-Z0-9$_.-]+\.js\(\.flow\)?\)$' -> '\1'
+# strip .js or .js.flow suffix
+module.system.haste.name_reducers='^\(.*\)\.js\(\.flow\)?$' -> '\1'
+
+relay_integration=true
+relay_integration.module_prefix=./__generated__/
+relay_integration.module_prefix.includes=.*/__tests__/.*

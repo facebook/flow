@@ -80,6 +80,7 @@ module Opts = struct
     relay_integration: bool;
     relay_integration_excludes: string list;
     relay_integration_module_prefix: string option;
+    relay_integration_module_prefix_includes: string list;
     haste_module_ref_prefix: string option;
     haste_name_reducers: (Str.regexp * string) list;
     haste_paths_excludes: string list;
@@ -210,6 +211,7 @@ module Opts = struct
       relay_integration = false;
       relay_integration_excludes = [];
       relay_integration_module_prefix = None;
+      relay_integration_module_prefix_includes = ["<PROJECT_ROOT>/.*"];
       haste_module_ref_prefix = None;
       haste_name_reducers =
         [(Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$", "\\2")];
@@ -685,6 +687,18 @@ module Opts = struct
       (fun opts v ->
         Ok { opts with relay_integration_excludes = v :: opts.relay_integration_excludes })
 
+  let relay_integration_module_prefix_includes_parser =
+    string
+      ~init:(fun opts -> { opts with relay_integration_module_prefix_includes = [] })
+      ~multiple:true
+      (fun opts v ->
+        Ok
+          {
+            opts with
+            relay_integration_module_prefix_includes =
+              v :: opts.relay_integration_module_prefix_includes;
+          })
+
   let root_name_parser =
     string (fun opts v ->
         FlowEventLogger.set_root_name (Some v);
@@ -840,6 +854,7 @@ module Opts = struct
       ( "relay_integration.module_prefix",
         string (fun opts v -> Ok { opts with relay_integration_module_prefix = Some v })
       );
+      ("relay_integration.module_prefix.includes", relay_integration_module_prefix_includes_parser);
       ("include_warnings", boolean (fun opts v -> Ok { opts with include_warnings = v }));
       ("lazy_mode", lazy_mode_parser);
       ("log.file", filepath (fun opts v -> Ok { opts with log_file = Some v }));
@@ -1476,6 +1491,9 @@ let relay_integration c = c.options.Opts.relay_integration
 let relay_integration_excludes c = c.options.Opts.relay_integration_excludes
 
 let relay_integration_module_prefix c = c.options.Opts.relay_integration_module_prefix
+
+let relay_integration_module_prefix_includes c =
+  c.options.Opts.relay_integration_module_prefix_includes
 
 let haste_module_ref_prefix c = c.options.Opts.haste_module_ref_prefix
 

@@ -28,6 +28,7 @@ let run ctxt expected name content =
       parse_enable_relay_integration = false;
       parse_relay_integration_excludes = [];
       parse_relay_integration_module_prefix = None;
+      parse_relay_integration_module_prefix_includes = [];
       parse_node_main_fields = [];
     }
   in

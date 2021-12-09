@@ -1,0 +1,70 @@
+Error ------------------------------------------------------------------------------------------- __tests__/test.js:11:2
+
+Cannot cast `fragment` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   __tests__/test.js:11:2
+   11| (fragment: string); // ERROR
+        ^^^^^^^^
+
+References:
+   __tests__/__generated__/TestFragment.graphql.js:1:18
+    1| module.exports = 1;
+                        ^ [1]
+   __tests__/test.js:11:12
+   11| (fragment: string); // ERROR
+                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- __tests__/test.js:21:2
+
+Cannot cast `query` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   __tests__/test.js:21:2
+   21| (query: string); // ERROR
+        ^^^^^
+
+References:
+   __tests__/__generated__/TestQuery.graphql.js:1:18
+    1| module.exports = 2;
+                        ^ [1]
+   __tests__/test.js:21:9
+   21| (query: string); // ERROR
+               ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- non-prefixed.js:11:2
+
+Cannot cast `fragment` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   non-prefixed.js:11:2
+   11| (fragment: string); // ERROR
+        ^^^^^^^^
+
+References:
+   MyFragment.graphql.js:1:18
+    1| module.exports = 1;
+                        ^ [1]
+   non-prefixed.js:11:12
+   11| (fragment: string); // ERROR
+                  ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- non-prefixed.js:21:2
+
+Cannot cast `query` to string because number [1] is incompatible with string [2]. [incompatible-cast]
+
+   non-prefixed.js:21:2
+   21| (query: string); // ERROR
+        ^^^^^
+
+References:
+   MyQuery.graphql.js:1:18
+    1| module.exports = 2;
+                        ^ [1]
+   non-prefixed.js:21:9
+   21| (query: string); // ERROR
+               ^^^^^^ [2]
+
+
+
+Found 4 errors

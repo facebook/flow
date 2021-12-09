@@ -56,6 +56,7 @@ let stub_metadata ~root ~checked =
     recursion_limit = 10000;
     relay_integration_excludes = [];
     relay_integration_module_prefix = None;
+    relay_integration_module_prefix_includes = [];
     reorder_checking = Options.Lexical;
     root;
     run_post_inference_implicit_instantiation = false;
