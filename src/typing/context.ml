@@ -53,6 +53,7 @@ type metadata = {
   recursion_limit: int;
   relay_integration_excludes: Str.regexp list;
   relay_integration_module_prefix: string option;
+  relay_integration_module_prefix_includes: Str.regexp list;
   reorder_checking: Options.order_mode;
   root: Path.t;
   run_post_inference_implicit_instantiation: bool;
@@ -245,6 +246,8 @@ let metadata_of_options options =
     recursion_limit = Options.recursion_limit options;
     relay_integration_excludes = Options.relay_integration_excludes options;
     relay_integration_module_prefix = Options.relay_integration_module_prefix options;
+    relay_integration_module_prefix_includes =
+      Options.relay_integration_module_prefix_includes options;
     reorder_checking = Options.reorder_checking options;
     root = Options.root options;
     run_post_inference_implicit_instantiation =
@@ -410,7 +413,11 @@ let enable_relay_integration cx =
   cx.metadata.enable_relay_integration
   && Relay_options.enabled_for_file cx.metadata.relay_integration_excludes cx.file
 
-let relay_integration_module_prefix cx = cx.metadata.relay_integration_module_prefix
+let relay_integration_module_prefix cx =
+  Relay_options.module_prefix_for_file
+    cx.metadata.relay_integration_module_prefix_includes
+    cx.file
+    cx.metadata.relay_integration_module_prefix
 
 let env_mode cx = cx.metadata.env_mode
 

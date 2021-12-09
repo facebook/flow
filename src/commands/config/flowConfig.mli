@@ -136,6 +136,8 @@ val relay_integration_excludes : config -> string list
 
 val relay_integration_module_prefix : config -> string option
 
+val relay_integration_module_prefix_includes : config -> string list
+
 val haste_module_ref_prefix : config -> string option
 
 val haste_name_reducers : config -> (Str.regexp * string) list

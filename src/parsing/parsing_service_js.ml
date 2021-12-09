@@ -98,6 +98,7 @@ type parse_options = {
   parse_enable_relay_integration: bool;
   parse_relay_integration_excludes: Str.regexp list;
   parse_relay_integration_module_prefix: string option;
+  parse_relay_integration_module_prefix_includes: Str.regexp list;
   parse_node_main_fields: string list;
 }
 
@@ -416,6 +417,7 @@ let do_parse ~parse_options ~info content file =
     parse_enable_relay_integration = enable_relay_integration;
     parse_relay_integration_excludes = relay_integration_excludes;
     parse_relay_integration_module_prefix = relay_integration_module_prefix;
+    parse_relay_integration_module_prefix_includes = relay_integration_module_prefix_includes;
     parse_node_main_fields = node_main_fields;
   } =
     parse_options
@@ -459,6 +461,12 @@ let do_parse ~parse_options ~info content file =
         let facebook_keyMirror = true in
         let enable_relay_integration =
           enable_relay_integration && Relay_options.enabled_for_file relay_integration_excludes file
+        in
+        let relay_integration_module_prefix =
+          Relay_options.module_prefix_for_file
+            relay_integration_module_prefix_includes
+            file
+            relay_integration_module_prefix
         in
         let file_sig_opts =
           {
@@ -805,6 +813,8 @@ let make_parse_options_internal
     parse_enable_relay_integration = Options.enable_relay_integration options;
     parse_relay_integration_excludes = Options.relay_integration_excludes options;
     parse_relay_integration_module_prefix = Options.relay_integration_module_prefix options;
+    parse_relay_integration_module_prefix_includes =
+      Options.relay_integration_module_prefix_includes options;
     parse_node_main_fields = Options.node_main_fields options;
   }
 

@@ -74,6 +74,7 @@ type metadata = {
   recursion_limit: int;
   relay_integration_excludes: Str.regexp list;
   relay_integration_module_prefix: string option;
+  relay_integration_module_prefix_includes: Str.regexp list;
   reorder_checking: Options.order_mode;
   root: Path.t;
   run_post_inference_implicit_instantiation: bool;
