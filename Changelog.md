@@ -1,3 +1,18 @@
+### 0.167.0
+
+Notable bug fixes:
+* Error on invalid `@flow` modes
+
+Misc:
+* Remove the `--profile`, `--json` and `--pretty` flags from `flow force-recheck`
+* Reduce usage of shared heap space
+
+Library Definitions:
+* Add support for Node inspector
+* Improve Document definition
+* Add document.contentType
+* Add 'navigate' as valid request ModeType (Thanks @comp615)
+
 ### 0.166.1
 
 * Fix a crash introduced in 0.166.0
