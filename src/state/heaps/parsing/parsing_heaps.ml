@@ -97,7 +97,7 @@ let loc_decompactifier source =
 let decompactify_loc file ast = (loc_decompactifier (Some file))#program ast
 
 module FileSigHeap =
-  SharedMem.WithCache
+  SharedMem.NoCache
     (File_key)
     (struct
       type t = File_sig.With_Loc.tolerable_t
