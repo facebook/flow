@@ -21,6 +21,7 @@ let metadata =
     strict_local = false;
     include_suppressions = false;
     (* global *)
+    any_propagation = true;
     automatic_require_default = false;
     babel_loose_array_spread = false;
     max_literal_length = 100;

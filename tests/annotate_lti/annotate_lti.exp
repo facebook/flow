@@ -34,7 +34,7 @@ a.arrow(true);
 
 
 
->>> function.js (#changes: 14)
+>>> function.js (#changes: 15)
 // @flow
 
 function f(x: number) {
@@ -110,6 +110,11 @@ function default_arr_err([num=0]) {
 function default_obj_err({x: y=1}) {
   return 1;
 }
+
+// Only annotate with `number` instead of `any | number`.
+function any_propagation(props: number) {}
+any_propagation(1);
+(any_propagation: any);
 
 >>> react.js (#changes: 1)
 // @flow
@@ -205,9 +210,9 @@ let arrow = () => { return this; }
 
 Stats:
   Files changed:                            5
-  Number of annotations added:             25
-  Total size of annotations:               35
-  Number of LTI errors:                    34
+  Number of annotations added:             26
+  Total size of annotations:               36
+  Number of LTI errors:                    35
 
 Errors:
   Missing annot./normalizer error:          0

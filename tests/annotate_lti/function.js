@@ -73,3 +73,8 @@ function default_arr_err([num=0]) {
 function default_obj_err({x: y=1}) {
   return 1;
 }
+
+// Only annotate with `number` instead of `any | number`.
+function any_propagation(props) {}
+any_propagation(1);
+(any_propagation: any);

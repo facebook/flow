@@ -28,6 +28,7 @@ type metadata = {
   strict: bool;
   strict_local: bool;
   (* global *)
+  any_propagation: bool;
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
   max_literal_length: int;
@@ -220,6 +221,7 @@ let metadata_of_options options =
     strict = false;
     strict_local = false;
     (* global *)
+    any_propagation = Options.any_propagation options;
     automatic_require_default = Options.automatic_require_default options;
     babel_loose_array_spread = Options.babel_loose_array_spread options;
     max_literal_length = Options.max_literal_length options;
@@ -564,6 +566,8 @@ let implicit_instantiation_checks cx = cx.ccx.implicit_instantiation_checks
 let inferred_indexers cx = cx.ccx.inferred_indexers
 
 let environment cx = cx.environment
+
+let any_propagation cx = cx.metadata.any_propagation
 
 let automatic_require_default cx = cx.metadata.automatic_require_default
 

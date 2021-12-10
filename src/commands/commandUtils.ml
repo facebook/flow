@@ -1412,6 +1412,8 @@ let make_options
       };
     opt_log_saving = FlowConfig.log_saving flowconfig;
     opt_log_file;
+    (* Not user-configurable for now, but set to false for some codemods. *)
+    opt_any_propagation = true;
   }
 
 let make_env flowconfig flowconfig_name connect_flags root =

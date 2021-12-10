@@ -263,6 +263,7 @@ module Annotate_lti_command = struct
         Options.
           {
             o with
+            opt_any_propagation = false;
             opt_enforce_local_inference_annotations = true;
             opt_enforce_this_annotations = true;
           }
