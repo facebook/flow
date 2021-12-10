@@ -10,7 +10,7 @@ open Parsing_heaps_exceptions
 
 (* shared heap for parsed ASTs by filename *)
 module ASTHeap =
-  SharedMem.WithCache
+  SharedMem.NoCache
     (File_key)
     (struct
       type t = (RelativeLoc.t, RelativeLoc.t) Flow_ast.Program.t
@@ -141,6 +141,14 @@ module ExportsHeap =
       let description = "Exports"
     end)
 
+module ASTCache = SharedMem.LocalCache (struct
+  type key = File_key.t
+
+  type value = (Loc.t, Loc.t) Flow_ast.Program.t
+
+  let capacity = 1000
+end)
+
 module ALocTableCache = SharedMem.LocalCache (struct
   type key = File_key.t
 
@@ -163,6 +171,7 @@ module ParsingHeaps = struct
     WorkerCancel.with_no_cancellations (fun () ->
         ASTHeap.oldify_batch files;
         TypeSigHeap.oldify_batch files;
+        FilenameSet.iter ASTCache.remove files;
         FilenameSet.iter ALocTableCache.remove files;
         ExportsHeap.oldify_batch files;
         FileSigHeap.oldify_batch files;
@@ -182,6 +191,7 @@ module ParsingHeaps = struct
     WorkerCancel.with_no_cancellations (fun () ->
         ASTHeap.revive_batch files;
         TypeSigHeap.revive_batch files;
+        FilenameSet.iter ASTCache.remove files;
         FilenameSet.iter ALocTableCache.remove files;
         ExportsHeap.revive_batch files;
         FileSigHeap.revive_batch files;
@@ -255,8 +265,9 @@ end = struct
   let has_ast ~reader:_ = ASTHeap.mem
 
   let get_ast ~reader:_ key =
-    let ast = ASTHeap.get key in
-    Base.Option.map ~f:(decompactify_loc key) ast
+    match ASTHeap.get key with
+    | None -> None
+    | Some ast -> Some (decompactify_loc key ast)
 
   let get_type_sig_addr ~reader:_ = TypeSigHeap.get
 
@@ -435,13 +446,20 @@ module Reader : READER with type reader = State_reader.t = struct
       ASTHeap.mem key
 
   let get_ast ~reader:_ key =
-    let ast =
-      if should_use_oldified key then
-        ASTHeap.get_old key
-      else
-        ASTHeap.get key
-    in
-    Base.Option.map ~f:(decompactify_loc key) ast
+    if should_use_oldified key then
+      match ASTHeap.get_old key with
+      | None -> None
+      | Some ast -> Some (decompactify_loc key ast)
+    else
+      match ASTCache.get key with
+      | Some _ as cached -> cached
+      | None ->
+        (match ASTHeap.get key with
+        | None -> None
+        | Some ast ->
+          let ast = decompactify_loc key ast in
+          ASTCache.add key ast;
+          Some ast)
 
   let get_aloc_table ~reader:_ key =
     if should_use_oldified key then
