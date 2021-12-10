@@ -118,7 +118,9 @@ let sig_hash ~root =
       ES { filename; type_exports; exports; ns }
     in
     fun ~reader dep_key ->
-      let file_addr = Parsing_heaps.Reader_dispatcher.get_type_sig_addr_unsafe ~reader dep_key in
+      let file_addr =
+        Parsing_heaps.Reader_dispatcher.get_checked_file_addr_unsafe ~reader dep_key
+      in
       let buf = Heap.type_sig_buf (Heap.file_type_sig file_addr) in
       Bin.read_module_kind (cjs_module dep_key) (es_module dep_key) buf (Bin.module_kind buf)
   in
@@ -235,7 +237,7 @@ let sig_hash ~root =
 
   (* Create a Type_sig_hash.file record for a file in the merged component. *)
   let component_file ~reader component_rec component_map file_key =
-    let file_addr = Parsing_heaps.Reader_dispatcher.get_type_sig_addr_unsafe ~reader file_key in
+    let file_addr = Parsing_heaps.Reader_dispatcher.get_checked_file_addr_unsafe ~reader file_key in
 
     let buf = Heap.type_sig_buf (Heap.file_type_sig file_addr) in
 

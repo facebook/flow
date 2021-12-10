@@ -20,7 +20,7 @@ module ASTHeap =
 
 module Heap = SharedMem.NewAPI
 
-module TypeSigHeap =
+module CheckedFileHeap =
   SharedMem.NoCacheAddr
     (File_key)
     (struct
@@ -33,7 +33,7 @@ type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
 
 type checked_file_addr = Heap.checked_file SharedMem.addr
 
-let write_type_sig docblock locs type_sig =
+let write_checked_file docblock locs type_sig =
   let open Type_sig_collections in
   let serialize x = Marshal.to_string x [] in
   let docblock = serialize docblock in
@@ -64,9 +64,9 @@ let read_aloc_table file_key file_addr =
   let init = ALoc.ALocRepresentationDoNotUse.init_table file_key in
   file_aloc_table file_addr |> read_aloc_table |> Packed_locs.unpack (Some file_key) init
 
-let read_type_sig file =
+let read_type_sig file_addr =
   let open Heap in
-  read_type_sig (file_type_sig file) Type_sig_bin.read
+  read_type_sig (file_type_sig file_addr) Type_sig_bin.read
 
 (* There's some redundancy in the visitors here, but an attempt to avoid repeated code led,
  * inexplicably, to a shared heap size regression under types-first: D15481813 *)
@@ -164,13 +164,13 @@ module ParsingHeaps = struct
         ASTHeap.add file (compactify_loc ast);
         ExportsHeap.add file exports;
         FileSigHeap.add file file_sig;
-        TypeSigHeap.add file (write_type_sig info locs type_sig)
+        CheckedFileHeap.add file (write_checked_file info locs type_sig)
     )
 
   let oldify_batch files =
     WorkerCancel.with_no_cancellations (fun () ->
         ASTHeap.oldify_batch files;
-        TypeSigHeap.oldify_batch files;
+        CheckedFileHeap.oldify_batch files;
         FilenameSet.iter ASTCache.remove files;
         FilenameSet.iter ALocTableCache.remove files;
         ExportsHeap.oldify_batch files;
@@ -181,7 +181,7 @@ module ParsingHeaps = struct
   let remove_old_batch files =
     WorkerCancel.with_no_cancellations (fun () ->
         ASTHeap.remove_old_batch files;
-        TypeSigHeap.remove_old_batch files;
+        CheckedFileHeap.remove_old_batch files;
         ExportsHeap.remove_old_batch files;
         FileSigHeap.remove_old_batch files;
         FileHashHeap.remove_old_batch files
@@ -190,7 +190,7 @@ module ParsingHeaps = struct
   let revive_batch files =
     WorkerCancel.with_no_cancellations (fun () ->
         ASTHeap.revive_batch files;
-        TypeSigHeap.revive_batch files;
+        CheckedFileHeap.revive_batch files;
         FilenameSet.iter ASTCache.remove files;
         FilenameSet.iter ALocTableCache.remove files;
         ExportsHeap.revive_batch files;
@@ -230,7 +230,7 @@ module type READER = sig
 
   val get_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.t
 
-  val get_type_sig_addr_unsafe : reader:reader -> File_key.t -> checked_file_addr
+  val get_checked_file_addr_unsafe : reader:reader -> File_key.t -> checked_file_addr
 
   val get_type_sig_unsafe : reader:reader -> File_key.t -> type_sig
 
@@ -269,10 +269,10 @@ end = struct
     | None -> None
     | Some ast -> Some (decompactify_loc key ast)
 
-  let get_type_sig_addr ~reader:_ = TypeSigHeap.get
+  let get_checked_file_addr ~reader:_ = CheckedFileHeap.get
 
   let get_docblock ~reader file =
-    match get_type_sig_addr ~reader file with
+    match get_checked_file_addr ~reader file with
     | Some addr -> Some (read_docblock addr)
     | None -> None
 
@@ -287,8 +287,8 @@ end = struct
     | Some (file_sig, _tolerable_errors) -> Some file_sig
     | None -> None
 
-  let get_type_sig ~reader:_ file =
-    match TypeSigHeap.get file with
+  let get_type_sig ~reader file =
+    match get_checked_file_addr ~reader file with
     | Some addr -> Some (read_type_sig addr)
     | None -> None
 
@@ -301,11 +301,11 @@ end = struct
     | Some ast -> ast
     | None -> raise (Ast_not_found (File_key.to_string file))
 
-  let get_aloc_table_unsafe ~reader:_ file =
+  let get_aloc_table_unsafe ~reader file =
     match ALocTableCache.get file with
     | Some aloc_table -> aloc_table
     | None ->
-      (match TypeSigHeap.get file with
+      (match get_checked_file_addr ~reader file with
       | Some addr ->
         let aloc_table = read_aloc_table file addr in
         ALocTableCache.add file aloc_table;
@@ -332,8 +332,8 @@ end = struct
     | Some file_sig -> file_sig
     | None -> raise (Requires_not_found (File_key.to_string file))
 
-  let get_type_sig_addr_unsafe ~reader file =
-    match get_type_sig_addr ~reader file with
+  let get_checked_file_addr_unsafe ~reader file =
+    match get_checked_file_addr ~reader file with
     | Some addr -> addr
     | None -> raise (Type_sig_not_found (File_key.to_string file))
 
@@ -463,28 +463,28 @@ module Reader : READER with type reader = State_reader.t = struct
 
   let get_aloc_table ~reader:_ key =
     if should_use_oldified key then
-      match TypeSigHeap.get_old key with
+      match CheckedFileHeap.get_old key with
       | Some addr -> Some (read_aloc_table key addr)
       | None -> None
     else
       match ALocTableCache.get key with
       | Some _ as cached -> cached
       | None ->
-        (match TypeSigHeap.get key with
+        (match CheckedFileHeap.get key with
         | Some addr ->
           let aloc_table = read_aloc_table key addr in
           ALocTableCache.add key aloc_table;
           Some aloc_table
         | None -> None)
 
-  let get_type_sig_addr ~reader:_ key =
+  let get_checked_file_addr ~reader:_ key =
     if should_use_oldified key then
-      TypeSigHeap.get_old key
+      CheckedFileHeap.get_old key
     else
-      TypeSigHeap.get key
+      CheckedFileHeap.get key
 
   let get_docblock ~reader key =
-    match get_type_sig_addr ~reader key with
+    match get_checked_file_addr ~reader key with
     | Some addr -> Some (read_docblock addr)
     | None -> None
 
@@ -506,7 +506,7 @@ module Reader : READER with type reader = State_reader.t = struct
     | None -> None
 
   let get_type_sig ~reader key =
-    let addr_opt = get_type_sig_addr ~reader key in
+    let addr_opt = get_checked_file_addr ~reader key in
     Base.Option.map ~f:read_type_sig addr_opt
 
   let get_file_hash ~reader:_ key =
@@ -545,8 +545,8 @@ module Reader : READER with type reader = State_reader.t = struct
     | Some file_sig -> file_sig
     | None -> raise (Requires_not_found (File_key.to_string file))
 
-  let get_type_sig_addr_unsafe ~reader file =
-    match get_type_sig_addr ~reader file with
+  let get_checked_file_addr_unsafe ~reader file =
+    match get_checked_file_addr ~reader file with
     | Some addr -> addr
     | None -> raise (Type_sig_not_found (File_key.to_string file))
 
@@ -639,10 +639,10 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
     | Mutator_state_reader reader -> Mutator_reader.get_file_sig_unsafe ~reader
     | State_reader reader -> Reader.get_file_sig_unsafe ~reader
 
-  let get_type_sig_addr_unsafe ~reader =
+  let get_checked_file_addr_unsafe ~reader =
     match reader with
-    | Mutator_state_reader reader -> Mutator_reader.get_type_sig_addr_unsafe ~reader
-    | State_reader reader -> Reader.get_type_sig_addr_unsafe ~reader
+    | Mutator_state_reader reader -> Mutator_reader.get_checked_file_addr_unsafe ~reader
+    | State_reader reader -> Reader.get_checked_file_addr_unsafe ~reader
 
   let get_type_sig_unsafe ~reader =
     match reader with

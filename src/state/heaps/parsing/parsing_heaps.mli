@@ -42,7 +42,7 @@ module type READER = sig
 
   val get_file_sig_unsafe : reader:reader -> File_key.t -> File_sig.With_Loc.t
 
-  val get_type_sig_addr_unsafe : reader:reader -> File_key.t -> checked_file_addr
+  val get_checked_file_addr_unsafe : reader:reader -> File_key.t -> checked_file_addr
 
   val get_type_sig_unsafe : reader:reader -> File_key.t -> type_sig
 
