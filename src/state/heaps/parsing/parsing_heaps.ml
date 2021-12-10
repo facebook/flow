@@ -107,7 +107,7 @@ module FileSigHeap =
 
 (* Contains the hash for every file we even consider parsing *)
 module FileHashHeap =
-  SharedMem.WithCache
+  SharedMem.NoCache
     (File_key)
     (struct
       (* In the future I imagine a system like this:
