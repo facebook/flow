@@ -1,3 +1,8 @@
+### 0.167.1
+
+Notable bug fixes:
+* Fix crash when moving a module introduced in v0.167.0
+
 ### 0.167.0
 
 Notable bug fixes:
