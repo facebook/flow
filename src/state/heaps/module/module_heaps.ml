@@ -132,13 +132,17 @@ end = struct
   let remove_and_replace mutator ~workers ~to_remove ~to_replace =
     (* During init we don't need to worry about oldifying, reviving, or removing old entries *)
     if not mutator.is_init then (
+      (* NOTE: oldifying something twice permanently removes it, because... legacy. so it's
+         important that we oldify a single set, in case a name is in both to_remove and to_replace
+         (e.g. a moved module). It's also possible that a name is already oldified, and we should
+         probably call [oldify_batch (Modulename.Set.diff to_oldify oldify)], but will avoid
+         rocking the boat for now. *)
       let oldified = !currently_oldified_nameheap_modulenames in
-      currently_oldified_nameheap_modulenames :=
-        List.fold_left (fun acc (m, _) -> Modulename.Set.add m acc) oldified to_replace
-        |> Modulename.Set.union to_remove;
-
-      List.iter (fun (m, _) -> NameHeap.oldify m) to_replace;
-      NameHeap.oldify_batch to_remove
+      let to_oldify =
+        List.fold_left (fun set (f, _) -> Modulename.Set.add f set) to_remove to_replace
+      in
+      currently_oldified_nameheap_modulenames := Modulename.Set.union oldified to_oldify;
+      NameHeap.oldify_batch to_oldify
     );
 
     (* Remove *)

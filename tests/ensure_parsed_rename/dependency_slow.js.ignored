@@ -1,0 +1,7 @@
+// @flow
+// @providesModule Dependency
+
+export const x = "dependency";
+
+declare var sleep: $Flow$DebugSleep;
+sleep(20);
