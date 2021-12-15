@@ -1,0 +1,3 @@
+shell: test.sh
+saved_state_only: true
+wait_for_recheck: false
