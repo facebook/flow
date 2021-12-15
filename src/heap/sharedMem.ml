@@ -27,11 +27,6 @@ type buf = (char, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1
  * Internally, these are all just ints, so be careful! *)
 type _ addr = int
 
-type effort =
-  [ `aggressive
-  | `always_TEST
-  ]
-
 type serialized_tag = Serialized_resolved_requires
 
 let heap_ref : buf option ref = ref None
@@ -905,6 +900,34 @@ module NewAPI = struct
     assert (chunk.next_addr = addr_offset addr size);
     x
 
+  (** Primitives
+
+      These low-level functions write to and read from the shared heap directly.
+      Prefer using interfaces based on the `chunk` APIs, which ensure that the
+      destination has been allocated. Also prefer higher-level APIs below. *)
+
+  external unsafe_read_int8 : buf -> int -> int = "%caml_ba_unsafe_ref_1"
+
+  external read_int64 : buf -> int -> int64 = "%caml_bigstring_get64"
+
+  (* Read a string from the heap at the specified address with the specified
+   * size (in words). This read is not bounds checked or type checked; caller
+   * must ensure that the given destination contains string data. *)
+  external unsafe_read_string : _ addr -> int -> string = "hh_read_string"
+
+  external unsafe_write_int8 : buf -> int -> int -> unit = "%caml_ba_unsafe_set_1"
+
+  external unsafe_write_int64 : buf -> int -> int64 -> unit = "%caml_bigstring_set64u"
+
+  (* Write a string at the specified address in the heap. This write is not
+   * bounds checked; caller must ensure the given destination has already been
+   * allocated. *)
+  external unsafe_write_string_at : _ addr -> string -> unit = "hh_write_string" [@@noalloc]
+
+  (** Addresses *)
+
+  let addr_size = 1
+
   (* Addresses are relative to the hashtbl pointer, so the null address actually
    * points to the hash field of the first hashtbl entry, which is never a
    * meaningful address, so we can use it to represent "missing" or similar.
@@ -913,7 +936,26 @@ module NewAPI = struct
    * internal use of null should be hidden from callers of this module. *)
   let null_addr = 0
 
-  (* header utils *)
+  (* Write an address at a specified address in the heap. This write is not
+   * bounds checked; caller must ensure the given destination has already been
+   * allocated. *)
+  let unsafe_write_addr_at heap dst addr = unsafe_write_int64 heap dst (Int64.of_int addr)
+
+  (* Write an address into the given chunk and advance the chunk address. This
+   * write is not bounds checked; caller must ensure the given destination has
+   * already been allocated. *)
+  let unsafe_write_addr chunk addr =
+    unsafe_write_addr_at chunk.heap chunk.next_addr addr;
+    chunk.next_addr <- addr_offset chunk.next_addr addr_size
+
+  (* Read an address from the heap. *)
+  let read_addr heap addr =
+    let addr64 = read_int64 heap addr in
+    (* double-check that the data looks like an address *)
+    assert (Int64.logand addr64 1L = 0L);
+    Int64.to_int addr64
+
+  (** Headers *)
 
   (* The integer values corresponding to these tags are encoded in the low byte
    * of object headers. Any changes made here must be kept in sync with
@@ -941,132 +983,7 @@ module NewAPI = struct
   (* double-check integer value is consistent with hh_shared.c *)
   let () = assert (tag_val Addr_tbl_tag = 6)
 
-  let obj_tag hd = hd land 0x3F
-
-  let obj_size hd = hd lsr 6
-
-  (* sizes *)
-
   let header_size = 1
-
-  let addr_size = 1
-
-  (* Obj used as an efficient way to get at the word size of an OCaml string
-   * directly from the block header, since that's the size we need. *)
-  let string_size s = Obj.size (Obj.repr s)
-
-  let addr_tbl_size xs = addr_size * Array.length xs
-
-  let docblock_size = string_size
-
-  let aloc_table_size = string_size
-
-  (* Because the heap is word aligned, we store the size of the type sig object
-   * in words. The underlying data might not be word sized, so we use a trick
-   * lifted from OCaml's representation of strings. The last byte of the block
-   * stores a value which we can use to recover the byte size from the word
-   * size. If the value is exactly word sized, we add another word to hold this
-   * final byte. *)
-  let type_sig_size bsize = (bsize + 8) lsr 3
-
-  let checked_file_size = 3 * addr_size
-
-  (* offsets *)
-
-  let docblock_addr file = addr_offset file 1
-
-  let aloc_table_addr file = addr_offset file 2
-
-  let type_sig_addr file = addr_offset file 3
-
-  (* read *)
-
-  let assert_tag hd tag = assert (obj_tag hd = tag_val tag)
-
-  (* Read a string from the heap at the specified address with the specified
-   * size (in words). This read is not bounds checked or type checked; caller
-   * must ensure that the given destination contains string data. *)
-  external unsafe_read_string : _ addr -> int -> string = "hh_read_string"
-
-  external unsafe_read_int8 : buf -> int -> int = "%caml_ba_unsafe_ref_1"
-
-  (* Read int64 from given byte offset in the heap. This is bounds checked. *)
-  external read_int64 : buf -> int -> int64 = "%caml_bigstring_get64"
-
-  (* Read a header from the heap. The low 2 bits of the header are reserved for
-   * GC and not used in OCaml. *)
-  let read_header heap addr =
-    let hd64 = read_int64 heap addr in
-    (* Double-check that the data looks like a header. All reachable headers
-     * will have the lsb set. *)
-    assert (Int64.(logand hd64 1L = 1L));
-    Int64.(to_int (shift_right_logical hd64 2))
-
-  let read_header_checked heap tag addr =
-    let hd = read_header heap addr in
-    assert_tag hd tag;
-    hd
-
-  (* Read an address from the heap. *)
-  let read_addr heap addr =
-    let addr64 = read_int64 heap addr in
-    (* double-check that the data looks like an address *)
-    assert (Int64.logand addr64 1L = 0L);
-    Int64.to_int addr64
-
-  let read_string_generic tag addr offset =
-    let hd = read_header_checked (get_heap ()) tag addr in
-    let str_addr = addr_offset addr (header_size + offset) in
-    let str_size = obj_size hd - offset in
-    unsafe_read_string str_addr str_size
-
-  let read_string addr = read_string_generic String_tag addr 0
-
-  let read_addr_tbl_generic f addr init =
-    if addr = null_addr then
-      init 0 (fun _ -> failwith "empty")
-    else
-      let heap = get_heap () in
-      let hd = read_header_checked heap Addr_tbl_tag addr in
-      init (obj_size hd) (fun i -> f (read_addr heap (addr_offset addr (header_size + i))))
-
-  let read_addr_tbl f addr = read_addr_tbl_generic f addr Array.init
-
-  let read_opt f addr =
-    if addr = null_addr then
-      None
-    else
-      Some (f addr)
-
-  let read_docblock addr = read_string_generic Docblock_tag addr 0
-
-  let read_aloc_table addr = read_string_generic ALoc_table_tag addr 0
-
-  let type_sig_buf addr =
-    let heap = get_heap () in
-    let hd = read_header_checked heap Type_sig_tag addr in
-    let offset_index = bsize_wsize (obj_size hd) - 1 in
-    let bsize =
-      offset_index - unsafe_read_int8 heap (addr_offset addr header_size + offset_index)
-    in
-    Bigarray.Array1.sub heap (addr_offset addr header_size) bsize
-
-  let read_type_sig addr f = f (type_sig_buf addr)
-
-  (* getters *)
-
-  let file_docblock file = read_addr (get_heap ()) (docblock_addr file)
-
-  let file_aloc_table file = read_addr (get_heap ()) (aloc_table_addr file)
-
-  let file_type_sig file = read_addr (get_heap ()) (type_sig_addr file)
-
-  (* write *)
-
-  external unsafe_write_int8 : buf -> int -> int -> unit = "%caml_ba_unsafe_set_1"
-
-  (* Write int64 to given byte offset in the heap. This is not bounds checked. *)
-  external unsafe_write_int64 : buf -> int -> int64 -> unit = "%caml_bigstring_set64u"
 
   (* Write a header at a specified address in the heap. This write is not
    * bounds checked; caller must ensure the given destination has already been
@@ -1083,30 +1000,6 @@ module NewAPI = struct
     let hd = (obj_size lsl 8) lor (tag lsl 2) lor 1L in
     unsafe_write_int64 heap dst hd
 
-  (* Write an address at a specified address in the heap. This write is not
-   * bounds checked; caller must ensure the given destination has already been
-   * allocated. *)
-  let unsafe_write_addr_at heap dst addr = unsafe_write_int64 heap dst (Int64.of_int addr)
-
-  (* Write a string at the specified address in the heap. This write is not
-   * bounds checked; caller must ensure the given destination has already been
-   * allocated. *)
-  external unsafe_write_string_at : _ addr -> string -> unit = "hh_write_string" [@@noalloc]
-
-  (* Write an address into the given chunk and advance the chunk address. This
-   * write is not bounds checked; caller must ensure the given destination has
-   * already been allocated. *)
-  let unsafe_write_addr chunk addr =
-    unsafe_write_addr_at chunk.heap chunk.next_addr addr;
-    chunk.next_addr <- addr_offset chunk.next_addr addr_size
-
-  (* Write a string into the given chunk and advance the chunk address. This
-   * write is not bounds checked; caller must ensure the given destination has
-   * already been allocated. *)
-  let unsafe_write_string chunk s =
-    unsafe_write_string_at chunk.next_addr s;
-    chunk.next_addr <- addr_offset chunk.next_addr (string_size s)
-
   (* Consume space in the chunk for the object described by the given header,
    * write header, advance chunk address, and return address to the header. This
    * function should be called before writing any heap object. *)
@@ -1119,37 +1012,55 @@ module NewAPI = struct
     chunk.next_addr <- addr_offset addr header_size;
     addr
 
+  (* Read a header from the heap. The low 2 bits of the header are reserved for
+   * GC and not used in OCaml. *)
+  let read_header heap addr =
+    let hd64 = read_int64 heap addr in
+    (* Double-check that the data looks like a header. All reachable headers
+     * will have the lsb set. *)
+    assert (Int64.(logand hd64 1L = 1L));
+    Int64.(to_int (shift_right_logical hd64 2))
+
+  let obj_tag hd = hd land 0x3F
+
+  let obj_size hd = hd lsr 6
+
+  let assert_tag hd tag = assert (obj_tag hd = tag_val tag)
+
+  let read_header_checked heap tag addr =
+    let hd = read_header heap addr in
+    assert_tag hd tag;
+    hd
+
+  (** Strings *)
+
+  (* Obj used as an efficient way to get at the word size of an OCaml string
+   * directly from the block header, since that's the size we need. *)
+  let string_size s = Obj.size (Obj.repr s)
+
+  (* Write a string into the given chunk and advance the chunk address. This
+   * write is not bounds checked; caller must ensure the given destination has
+   * already been allocated. *)
+  let unsafe_write_string chunk s =
+    unsafe_write_string_at chunk.next_addr s;
+    chunk.next_addr <- addr_offset chunk.next_addr (string_size s)
+
   let write_string chunk s =
     let heap_string = write_header chunk String_tag (string_size s) in
     unsafe_write_string chunk s;
     heap_string
 
-  let write_docblock chunk docblock =
-    let addr = write_header chunk Docblock_tag (docblock_size docblock) in
-    unsafe_write_string chunk docblock;
-    addr
+  let read_string_generic tag addr offset =
+    let hd = read_header_checked (get_heap ()) tag addr in
+    let str_addr = addr_offset addr (header_size + offset) in
+    let str_size = obj_size hd - offset in
+    unsafe_read_string str_addr str_size
 
-  let write_aloc_table chunk tbl =
-    let addr = write_header chunk ALoc_table_tag (aloc_table_size tbl) in
-    unsafe_write_string chunk tbl;
-    addr
+  let read_string addr = read_string_generic String_tag addr 0
 
-  let write_type_sig chunk bsize f =
-    let size = type_sig_size bsize in
-    let addr = write_header chunk Type_sig_tag size in
-    let offset_index = bsize_wsize size - 1 in
-    unsafe_write_int8 chunk.heap (addr_offset addr header_size + offset_index) (offset_index - bsize);
-    let buf = Bigarray.Array1.sub chunk.heap (addr_offset addr header_size) bsize in
-    f buf;
-    chunk.next_addr <- addr_offset chunk.next_addr size;
-    addr
+  (** Address tables *)
 
-  let write_checked_file chunk docblock aloc_table type_sig =
-    let checked_file = write_header chunk Checked_file_tag checked_file_size in
-    unsafe_write_addr chunk docblock;
-    unsafe_write_addr chunk aloc_table;
-    unsafe_write_addr chunk type_sig;
-    checked_file
+  let addr_tbl_size xs = addr_size * Array.length xs
 
   let write_addr_tbl f chunk xs =
     if Array.length xs = 0 then
@@ -1165,7 +1076,101 @@ module NewAPI = struct
         xs;
       map
 
+  let read_addr_tbl_generic f addr init =
+    if addr = null_addr then
+      init 0 (fun _ -> failwith "empty")
+    else
+      let heap = get_heap () in
+      let hd = read_header_checked heap Addr_tbl_tag addr in
+      init (obj_size hd) (fun i -> f (read_addr heap (addr_offset addr (header_size + i))))
+
+  let read_addr_tbl f addr = read_addr_tbl_generic f addr Array.init
+
+  (** Optionals *)
+
   let write_opt f chunk = function
     | None -> null_addr
     | Some x -> f chunk x
+
+  let read_opt f addr =
+    if addr = null_addr then
+      None
+    else
+      Some (f addr)
+
+  (** Docblocks *)
+
+  let docblock_size = string_size
+
+  let read_docblock addr = read_string_generic Docblock_tag addr 0
+
+  let write_docblock chunk docblock =
+    let addr = write_header chunk Docblock_tag (docblock_size docblock) in
+    unsafe_write_string chunk docblock;
+    addr
+
+  (** ALoc tables *)
+
+  let aloc_table_size = string_size
+
+  let write_aloc_table chunk tbl =
+    let addr = write_header chunk ALoc_table_tag (aloc_table_size tbl) in
+    unsafe_write_string chunk tbl;
+    addr
+
+  let read_aloc_table addr = read_string_generic ALoc_table_tag addr 0
+
+  (** Type signatures *)
+
+  (* Because the heap is word aligned, we store the size of the type sig object
+   * in words. The underlying data might not be word sized, so we use a trick
+   * lifted from OCaml's representation of strings. The last byte of the block
+   * stores a value which we can use to recover the byte size from the word
+   * size. If the value is exactly word sized, we add another word to hold this
+   * final byte. *)
+  let type_sig_size bsize = (bsize + 8) lsr 3
+
+  let write_type_sig chunk bsize f =
+    let size = type_sig_size bsize in
+    let addr = write_header chunk Type_sig_tag size in
+    let offset_index = bsize_wsize size - 1 in
+    unsafe_write_int8 chunk.heap (addr_offset addr header_size + offset_index) (offset_index - bsize);
+    let buf = Bigarray.Array1.sub chunk.heap (addr_offset addr header_size) bsize in
+    f buf;
+    chunk.next_addr <- addr_offset chunk.next_addr size;
+    addr
+
+  let type_sig_buf addr =
+    let heap = get_heap () in
+    let hd = read_header_checked heap Type_sig_tag addr in
+    let offset_index = bsize_wsize (obj_size hd) - 1 in
+    let bsize =
+      offset_index - unsafe_read_int8 heap (addr_offset addr header_size + offset_index)
+    in
+    Bigarray.Array1.sub heap (addr_offset addr header_size) bsize
+
+  let read_type_sig addr f = f (type_sig_buf addr)
+
+  (** Checked files *)
+
+  let checked_file_size = 3 * addr_size
+
+  let write_checked_file chunk docblock aloc_table type_sig =
+    let checked_file = write_header chunk Checked_file_tag checked_file_size in
+    unsafe_write_addr chunk docblock;
+    unsafe_write_addr chunk aloc_table;
+    unsafe_write_addr chunk type_sig;
+    checked_file
+
+  let docblock_addr file = addr_offset file 1
+
+  let aloc_table_addr file = addr_offset file 2
+
+  let type_sig_addr file = addr_offset file 3
+
+  let file_docblock file = read_addr (get_heap ()) (docblock_addr file)
+
+  let file_aloc_table file = read_addr (get_heap ()) (aloc_table_addr file)
+
+  let file_type_sig file = read_addr (get_heap ()) (type_sig_addr file)
 end

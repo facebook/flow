@@ -20,11 +20,6 @@ type buf = (char, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1
  * passed where a `bar addr` is expected. *)
 type 'k addr [@@immediate]
 
-type effort =
-  [ `aggressive
-  | `always_TEST
-  ]
-
 type serialized_tag = Serialized_resolved_requires
 
 exception Out_of_shared_memory
@@ -224,68 +219,76 @@ module NewAPI : sig
    * writes. *)
   type size = int
 
-  val header_size : size
-
-  val string_size : string -> size
-
-  val addr_tbl_size : 'a array -> size
-
-  val docblock_size : string -> size
-
-  val aloc_table_size : string -> size
-
-  val type_sig_size : int -> size
-
-  val checked_file_size : size
-
   (* Allocate the requested space (in words) in the heap. All writes must be
    * done within the provided callback, and the writes must fully consume all
    * allocated space. *)
   val alloc : size -> (chunk -> 'a) -> 'a
 
-  (* write *)
+  (* headers *)
+
+  val header_size : size
+
+  (* strings *)
+
+  val string_size : string -> size
 
   val write_string : chunk -> string -> heap_string addr
 
-  val write_addr_tbl : (chunk -> 'a -> 'k addr) -> chunk -> 'a array -> 'k addr_tbl addr
-
-  val write_opt : (chunk -> 'a -> 'k addr) -> chunk -> 'a option -> 'k opt addr
-
-  val write_docblock : chunk -> string -> docblock addr
-
-  val write_aloc_table : chunk -> string -> aloc_table addr
-
-  val write_type_sig : chunk -> int -> (buf -> unit) -> type_sig addr
-
-  val write_checked_file :
-    chunk -> docblock addr -> aloc_table addr -> type_sig addr -> checked_file addr
-
-  (* getters *)
-
-  val file_docblock : checked_file addr -> docblock addr
-
-  val file_aloc_table : checked_file addr -> aloc_table addr
-
-  val file_type_sig : checked_file addr -> type_sig addr
-
-  (* read *)
-
   val read_string : heap_string addr -> string
+
+  (* addr tbl *)
+
+  val addr_tbl_size : 'a array -> size
+
+  val write_addr_tbl : (chunk -> 'a -> 'k addr) -> chunk -> 'a array -> 'k addr_tbl addr
 
   val read_addr_tbl_generic :
     ('k addr -> 'a) -> 'k addr_tbl addr -> (int -> (int -> 'a) -> 'b) -> 'b
 
   val read_addr_tbl : ('k addr -> 'a) -> 'k addr_tbl addr -> 'a array
 
+  (* opt *)
+
+  val write_opt : (chunk -> 'a -> 'k addr) -> chunk -> 'a option -> 'k opt addr
+
   val read_opt : ('a addr -> 'b) -> 'a opt addr -> 'b option
+
+  (* docblock *)
+
+  val docblock_size : string -> size
+
+  val write_docblock : chunk -> string -> docblock addr
 
   val read_docblock : docblock addr -> string
 
+  (* aloc table *)
+
+  val aloc_table_size : string -> size
+
+  val write_aloc_table : chunk -> string -> aloc_table addr
+
   val read_aloc_table : aloc_table addr -> string
+
+  (* type sig *)
+
+  val type_sig_size : int -> size
+
+  val write_type_sig : chunk -> int -> (buf -> unit) -> type_sig addr
 
   val read_type_sig : type_sig addr -> (buf -> 'a) -> 'a
 
-  (* buf *)
-
   val type_sig_buf : type_sig addr -> buf
+
+  (* checked file *)
+
+  val checked_file_size : size
+
+  val write_checked_file :
+    chunk -> docblock addr -> aloc_table addr -> type_sig addr -> checked_file addr
+
+  val file_docblock : checked_file addr -> docblock addr
+
+  val file_aloc_table : checked_file addr -> aloc_table addr
+
+  val file_type_sig : checked_file addr -> type_sig addr
 end
