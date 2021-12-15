@@ -93,7 +93,7 @@ let recheck
     ~will_be_checked_files
     updates =
   (* Caller should have already checked this *)
-  assert (not (FilenameSet.is_empty updates && CheckedSet.is_empty files_to_force));
+  assert (not (CheckedSet.is_empty updates && CheckedSet.is_empty files_to_force));
 
   MonitorRPC.status_update ~event:ServerStatus.Recheck_start;
   Persistent_connection.send_start_recheck env.connections;
@@ -206,20 +206,23 @@ let rec recheck_single ~recheck_count genv env =
     in
     let file_watcher_metadata = workload.metadata in
     let files_to_recheck =
-      FilenameSet.union workload.files_to_prioritize workload.files_to_recheck
+      CheckedSet.add
+        ~focused:workload.files_to_recheck
+        ~dependencies:workload.files_to_prioritize
+        CheckedSet.empty
     in
     let files_to_recheck =
       if file_watcher_metadata.MonitorProt.missed_changes then
         (* If the file watcher missed some changes, it's possible that previously-modified
            files have been reverted when it wasn't watching. Since previously-modified
            files are focused, we recheck all focused files. *)
-        FilenameSet.union files_to_recheck (CheckedSet.focused env.checked_files)
+        CheckedSet.add ~focused:(CheckedSet.focused env.checked_files) files_to_recheck
       else
         files_to_recheck
     in
     let files_to_force = workload.files_to_force in
     let recheck_reasons_rev = workload.recheck_reasons_rev in
-    if FilenameSet.is_empty files_to_recheck && CheckedSet.is_empty files_to_force then
+    if CheckedSet.is_empty files_to_recheck && CheckedSet.is_empty files_to_force then
       Lwt.return (Nothing_to_do env)
     else
       (* Start the parallelizable workloads loop and return a function which will stop the loop *)

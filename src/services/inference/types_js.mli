@@ -26,7 +26,7 @@ val recheck :
   profiling:Profiling_js.running ->
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
-  updates:FilenameSet.t ->
+  updates:CheckedSet.t ->
   ServerEnv.env ->
   files_to_force:CheckedSet.t ->
   file_watcher_metadata:MonitorProt.file_watcher_metadata ->
@@ -63,7 +63,7 @@ val debug_determine_what_to_recheck :
   options:Options.t ->
   sig_dependency_graph:FilenameGraph.t ->
   implementation_dependency_graph:FilenameGraph.t ->
-  freshparsed:FilenameSet.t ->
+  freshparsed:CheckedSet.t ->
   unchanged_checked:CheckedSet.t ->
   unchanged_files_to_force:CheckedSet.t ->
   direct_dependent_files:FilenameSet.t ->

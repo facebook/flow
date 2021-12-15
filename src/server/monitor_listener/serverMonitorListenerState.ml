@@ -275,7 +275,7 @@ let get_and_clear_recheck_workload ~prioritize_dependency_checks ~process_update
      [foo.js] was not included in the next priority workload, then it would fail and be retried
      but again discover it needs [foo.js]. *)
   let (dependencies_to_force, files_to_force) =
-    CheckedSet.partition ~f:CheckedSet.is_dependency files_to_force
+    CheckedSet.partition ~f:(fun _file -> CheckedSet.is_dependency) files_to_force
   in
   if (not prioritize_dependency_checks) || CheckedSet.is_empty dependencies_to_force then (
     recheck_acc := empty_recheck_workload;

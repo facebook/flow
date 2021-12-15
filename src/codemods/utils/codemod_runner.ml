@@ -463,7 +463,7 @@ module TypedRunner (TypedRunnerConfig : TYPED_RUNNER_CONFIG) : STEP_RUNNER = str
             ~profiling
             ~options
             ~workers
-            ~updates:roots
+            ~updates:(CheckedSet.add ~focused:roots CheckedSet.empty)
             env
             ~files_to_force:CheckedSet.empty
             ~file_watcher_metadata:MonitorProt.empty_file_watcher_metadata
