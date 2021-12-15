@@ -283,8 +283,8 @@ typedef uintnat hh_header_t;
 typedef uintnat hh_tag_t;
 
 // Keep these in sync with "tag" type definition in sharedMem.ml
-#define Heap_string_tag 2
-#define Addr_tbl_tag 6
+#define Heap_string_tag 3
+#define Addr_tbl_tag 7
 
 static _Bool should_scan(hh_tag_t tag) {
   // By convention, tags below Addr_tbl_tag contain no pointers, whereas
@@ -1761,6 +1761,25 @@ CAMLprim value hh_remove(value key) {
 
 CAMLprim value hh_write_string(value addr, value s) {
   memcpy(Ptr_of_addr(Long_val(addr)), String_val(s), Bosize_val(s));
+  return Val_unit;
+}
+
+/*****************************************************************************/
+/* Blits bytes into the shared heap.
+ *
+ * Unlike `hh_write_string` above, which writes the entire string representation
+ * into shared memory, this function takes `pos`, an offset from the beginning
+ * of the byte array, and `len`, the number of bytes to write starting at `pos`.
+ *
+ * Callers is responsible for ensuring the heap space is allocated and for
+ * bounds checking the buffer, offset, and length. */
+/*****************************************************************************/
+
+CAMLprim value hh_write_bytes(value addr, value buf, value pos, value len) {
+  memcpy(
+      Ptr_of_addr(Long_val(addr)),
+      Bytes_val(buf) + Long_val(pos),
+      Long_val(len));
   return Val_unit;
 }
 

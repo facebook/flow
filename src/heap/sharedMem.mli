@@ -197,6 +197,9 @@ module NewAPI : sig
   (* Phantom type tag for optional objects. *)
   type 'a opt
 
+  (* Phantom type tag for ASTs. *)
+  type ast
+
   (* Phantom type tag for docblock, which contains information contained in the
    * leading comment of a file. *)
   type docblock
@@ -253,6 +256,12 @@ module NewAPI : sig
 
   val read_opt : ('a addr -> 'b) -> 'a opt addr -> 'b option
 
+  (* ast *)
+
+  val prepare_write_ast : string -> size * (chunk -> ast addr)
+
+  val read_ast : ast addr -> string
+
   (* docblock *)
 
   val docblock_size : string -> size
@@ -284,7 +293,9 @@ module NewAPI : sig
   val checked_file_size : size
 
   val write_checked_file :
-    chunk -> docblock addr -> aloc_table addr -> type_sig addr -> checked_file addr
+    chunk -> ast addr -> docblock addr -> aloc_table addr -> type_sig addr -> checked_file addr
+
+  val file_ast : checked_file addr -> ast addr
 
   val file_docblock : checked_file addr -> docblock addr
 

@@ -870,6 +870,8 @@ module NewAPI = struct
 
   type 'a opt
 
+  type ast
+
   type docblock
 
   type aloc_table
@@ -924,6 +926,9 @@ module NewAPI = struct
    * allocated. *)
   external unsafe_write_string_at : _ addr -> string -> unit = "hh_write_string" [@@noalloc]
 
+  external unsafe_write_bytes_at : _ addr -> bytes -> pos:int -> len:int -> unit = "hh_write_bytes"
+    [@@noalloc]
+
   (** Addresses *)
 
   let addr_size = 1
@@ -963,13 +968,14 @@ module NewAPI = struct
   type tag =
     | Serialized_tag
     | Serialized_resolved_requires_tag
+    | Serialized_ast_tag
     (* tags defined above this point are serialized+compressed *)
-    | String_tag (* 2 *)
+    | String_tag (* 3 *)
     | Docblock_tag
     | ALoc_table_tag
     | Type_sig_tag
     (* tags defined below this point are scanned for pointers *)
-    | Addr_tbl_tag (* 6 *)
+    | Addr_tbl_tag (* 7 *)
     | Checked_file_tag
 
   (* avoid unused constructor warning *)
@@ -981,7 +987,7 @@ module NewAPI = struct
   let tag_val : tag -> int = Obj.magic
 
   (* double-check integer value is consistent with hh_shared.c *)
-  let () = assert (tag_val Addr_tbl_tag = 6)
+  let () = assert (tag_val Addr_tbl_tag = 7)
 
   let header_size = 1
 
@@ -1009,6 +1015,53 @@ module NewAPI = struct
     assert (chunk.remaining_size >= 0);
     let addr = chunk.next_addr in
     unsafe_write_header_at chunk.heap addr tag obj_size;
+    chunk.next_addr <- addr_offset addr header_size;
+    addr
+
+  (* Similar to `unsafe_write_header_at` above, but the header format is
+   * different.
+   *
+   * The low byte contains the same 6-bit tag and 2 GC bits, but the remaining
+   * space contains two sizes: the size of the object in words as well as the
+   * size (in words) of the buffer needed to hold the decompressed data.
+   *
+   * Is 56 bits enough space to store the serialized size and decompress
+   * capacity?
+   *
+   * In the worst case, we try to compress uncompressible input of
+   * LZ4_MAX_INPUT_SIZE, consuming the entire compress bound. That would be
+   * 0x7E7E7E8E bytes compressed size.
+   *
+   * NOTE: The compressed size might actually be bigger than the serialized
+   * size, in a worst case scenario where the input is not compressible. This
+   * shouldn't happen in practice, but we account for it in the worse case.
+   *
+   * If we store the size in words instead of bytes, the max size is 0xFCFCFD2
+   * words, which fits in 2^28, so we can fit both sizes (in words) in 56 bits.
+   *
+   * All this is somewhat academic, since we have bigger problems if we're
+   * trying to store 2 gig entries. *)
+  let unsafe_write_serialized_header_at heap dst tag obj_size decompress_capacity =
+    let tag = Int64.of_int (tag_val tag) in
+    let obj_size = Int64.of_int obj_size in
+    let decompress_capacity = Int64.of_int decompress_capacity in
+
+    (* Just in case the math above doesn't check out *)
+    assert (obj_size < 0x10000000L);
+    assert (decompress_capacity < 0x10000000L);
+
+    let ( lsl ) = Int64.shift_left in
+    let ( lor ) = Int64.logor in
+    let hd = (obj_size lsl 36) lor (decompress_capacity lsl 8) lor (tag lsl 2) lor 1L in
+    unsafe_write_int64 heap dst hd
+
+  (* See `write_header` above *)
+  let write_serialized_header chunk tag obj_size decompress_capacity =
+    let size = header_size + obj_size in
+    chunk.remaining_size <- chunk.remaining_size - size;
+    assert (chunk.remaining_size >= 0);
+    let addr = chunk.next_addr in
+    unsafe_write_serialized_header_at chunk.heap addr tag obj_size decompress_capacity;
     chunk.next_addr <- addr_offset addr header_size;
     addr
 
@@ -1098,6 +1151,53 @@ module NewAPI = struct
     else
       Some (f addr)
 
+  (** ASTs
+
+      We store ASTs as serialized+compressed blobs in the heap. The object
+      header stores both the compressed size (in words) and the size (in
+      words) of the buffer needed to hold the decompressed value.
+
+      LZ4 decompression requires the precise compressed size in bytes. To
+      recover the precise byte size, we use a trick lifted from OCaml's
+      representation of strings. The last byte of the block stores a value which
+      we can use to recover the byte size from the word size. If the value is
+      exactly word sized, we add another word to hold this final byte.
+   *)
+
+  let prepare_write_ast ast =
+    let serialized_bsize = String.length ast in
+    let compress_bound = Lz4.compress_bound serialized_bsize in
+    if compress_bound = 0 then invalid_arg "value larger than max input size";
+    let compressed = Bytes.create compress_bound in
+    let compressed_bsize = Lz4.compress_default ast compressed in
+    let compressed_wsize = (compressed_bsize + 8) / 8 in
+    let decompress_capacity = (serialized_bsize + 7) / 8 in
+    let write chunk =
+      let addr =
+        write_serialized_header chunk Serialized_ast_tag compressed_wsize decompress_capacity
+      in
+      unsafe_write_bytes_at chunk.next_addr compressed ~pos:0 ~len:compressed_bsize;
+      let offset_index = bsize_wsize compressed_wsize - 1 in
+      unsafe_write_int8 chunk.heap (chunk.next_addr + offset_index) (offset_index - compressed_bsize);
+      chunk.next_addr <- addr_offset chunk.next_addr compressed_wsize;
+      addr
+    in
+    (compressed_wsize, write)
+
+  let read_ast addr =
+    let heap = get_heap () in
+    let hd = read_header_checked heap Serialized_ast_tag addr in
+    let compressed_wsize = hd lsr 34 in
+    let offset_index = bsize_wsize compressed_wsize - 1 in
+    let compressed_bsize =
+      offset_index - unsafe_read_int8 heap (addr_offset addr header_size + offset_index)
+    in
+    let buf = Bigarray.Array1.sub heap (addr_offset addr header_size) compressed_bsize in
+    let decompress_capacity = bsize_wsize ((hd lsr 6) land 0xFFFFFFF) in
+    let decompressed = Bytes.create decompress_capacity in
+    let serialized_bsize = Lz4.decompress_safe buf decompressed in
+    Bytes.sub_string decompressed 0 serialized_bsize
+
   (** Docblocks *)
 
   let docblock_size = string_size
@@ -1153,20 +1253,25 @@ module NewAPI = struct
 
   (** Checked files *)
 
-  let checked_file_size = 3 * addr_size
+  let checked_file_size = 4 * addr_size
 
-  let write_checked_file chunk docblock aloc_table type_sig =
+  let write_checked_file chunk ast docblock aloc_table type_sig =
     let checked_file = write_header chunk Checked_file_tag checked_file_size in
+    unsafe_write_addr chunk ast;
     unsafe_write_addr chunk docblock;
     unsafe_write_addr chunk aloc_table;
     unsafe_write_addr chunk type_sig;
     checked_file
 
-  let docblock_addr file = addr_offset file 1
+  let ast_addr file = addr_offset file 1
 
-  let aloc_table_addr file = addr_offset file 2
+  let docblock_addr file = addr_offset file 2
 
-  let type_sig_addr file = addr_offset file 3
+  let aloc_table_addr file = addr_offset file 3
+
+  let type_sig_addr file = addr_offset file 4
+
+  let file_ast file = read_addr (get_heap ()) (ast_addr file)
 
   let file_docblock file = read_addr (get_heap ()) (docblock_addr file)
 

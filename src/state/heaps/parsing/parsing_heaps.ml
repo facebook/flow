@@ -7,17 +7,6 @@
 
 open Utils_js
 open Parsing_heaps_exceptions
-
-(* shared heap for parsed ASTs by filename *)
-module ASTHeap =
-  SharedMem.NoCache
-    (File_key)
-    (struct
-      type t = (RelativeLoc.t, RelativeLoc.t) Flow_ast.Program.t
-
-      let description = "AST"
-    end)
-
 module Heap = SharedMem.NewAPI
 
 module CheckedFileHeap =
@@ -33,25 +22,29 @@ type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
 
 type checked_file_addr = Heap.checked_file SharedMem.addr
 
-let write_checked_file docblock locs type_sig =
+let write_checked_file ast docblock locs type_sig =
   let open Type_sig_collections in
   let serialize x = Marshal.to_string x [] in
+  let ast = serialize ast in
   let docblock = serialize docblock in
   let aloc_table = Packed_locs.pack (Locs.length locs) (fun f -> Locs.iter f locs) in
   let (sig_bsize, write_sig) = Type_sig_bin.write type_sig in
   let open Heap in
+  let (ast_size, write_ast) = prepare_write_ast ast in
   let size =
-    (4 * header_size)
+    (5 * header_size)
     + checked_file_size
+    + ast_size
     + docblock_size docblock
     + aloc_table_size aloc_table
     + type_sig_size sig_bsize
   in
   alloc size (fun chunk ->
+      let ast = write_ast chunk in
       let docblock = write_docblock chunk docblock in
       let aloc_table = write_aloc_table chunk aloc_table in
       let type_sig = write_type_sig chunk sig_bsize write_sig in
-      write_checked_file chunk docblock aloc_table type_sig
+      write_checked_file chunk ast docblock aloc_table type_sig
   )
 
 let read_docblock file_addr =
@@ -95,6 +88,11 @@ let loc_decompactifier source =
   end
 
 let decompactify_loc file ast = (loc_decompactifier (Some file))#program ast
+
+let read_ast file_key file_addr =
+  let open Heap in
+  let deserialize x = Marshal.from_string x 0 in
+  file_ast file_addr |> read_ast |> deserialize |> decompactify_loc file_key
 
 module FileSigHeap =
   SharedMem.NoCache
@@ -161,15 +159,13 @@ end)
 module ParsingHeaps = struct
   let add file ~exports info ast file_sig locs type_sig =
     WorkerCancel.with_no_cancellations (fun () ->
-        ASTHeap.add file (compactify_loc ast);
         ExportsHeap.add file exports;
         FileSigHeap.add file file_sig;
-        CheckedFileHeap.add file (write_checked_file info locs type_sig)
+        CheckedFileHeap.add file (write_checked_file (compactify_loc ast) info locs type_sig)
     )
 
   let oldify_batch files =
     WorkerCancel.with_no_cancellations (fun () ->
-        ASTHeap.oldify_batch files;
         CheckedFileHeap.oldify_batch files;
         FilenameSet.iter ASTCache.remove files;
         FilenameSet.iter ALocTableCache.remove files;
@@ -180,7 +176,6 @@ module ParsingHeaps = struct
 
   let remove_old_batch files =
     WorkerCancel.with_no_cancellations (fun () ->
-        ASTHeap.remove_old_batch files;
         CheckedFileHeap.remove_old_batch files;
         ExportsHeap.remove_old_batch files;
         FileSigHeap.remove_old_batch files;
@@ -189,7 +184,6 @@ module ParsingHeaps = struct
 
   let revive_batch files =
     WorkerCancel.with_no_cancellations (fun () ->
-        ASTHeap.revive_batch files;
         CheckedFileHeap.revive_batch files;
         FilenameSet.iter ASTCache.remove files;
         FilenameSet.iter ALocTableCache.remove files;
@@ -262,14 +256,14 @@ module Mutator_reader : sig
 end = struct
   type reader = Mutator_state_reader.t
 
-  let has_ast ~reader:_ = ASTHeap.mem
-
-  let get_ast ~reader:_ key =
-    match ASTHeap.get key with
-    | None -> None
-    | Some ast -> Some (decompactify_loc key ast)
+  let has_ast ~reader:_ = CheckedFileHeap.mem
 
   let get_checked_file_addr ~reader:_ = CheckedFileHeap.get
+
+  let get_ast ~reader file =
+    match get_checked_file_addr ~reader file with
+    | None -> None
+    | Some addr -> Some (read_ast file addr)
 
   let get_docblock ~reader file =
     match get_checked_file_addr ~reader file with
@@ -441,23 +435,23 @@ module Reader : READER with type reader = State_reader.t = struct
 
   let has_ast ~reader:_ key =
     if should_use_oldified key then
-      ASTHeap.mem_old key
+      CheckedFileHeap.mem_old key
     else
-      ASTHeap.mem key
+      CheckedFileHeap.mem key
 
   let get_ast ~reader:_ key =
     if should_use_oldified key then
-      match ASTHeap.get_old key with
+      match CheckedFileHeap.get_old key with
       | None -> None
-      | Some ast -> Some (decompactify_loc key ast)
+      | Some addr -> Some (read_ast key addr)
     else
       match ASTCache.get key with
       | Some _ as cached -> cached
       | None ->
-        (match ASTHeap.get key with
+        (match CheckedFileHeap.get key with
         | None -> None
-        | Some ast ->
-          let ast = decompactify_loc key ast in
+        | Some addr ->
+          let ast = read_ast key addr in
           ASTCache.add key ast;
           Some ast)
 
