@@ -1053,7 +1053,7 @@ module Recheck : sig
     reader:Parsing_heaps.Mutator_reader.reader ->
     options:Options.t ->
     workers:MultiWorkerLwt.worker list option ->
-    updates:Utils_js.FilenameSet.t ->
+    updates:CheckedSet.t ->
     files_to_force:CheckedSet.t ->
     file_watcher_metadata:MonitorProt.file_watcher_metadata ->
     recheck_reasons:LspProt.recheck_reason list ->
@@ -1069,7 +1069,7 @@ module Recheck : sig
     reader:Parsing_heaps.Mutator_reader.reader ->
     options:Options.t ->
     workers:MultiWorkerLwt.worker list option ->
-    updates:Utils_js.FilenameSet.t ->
+    updates:CheckedSet.t ->
     files_to_force:CheckedSet.t ->
     recheck_reasons:LspProt.recheck_reason list ->
     env:ServerEnv.env ->
@@ -1081,7 +1081,7 @@ module Recheck : sig
     options:Options.t ->
     sig_dependency_graph:FilenameGraph.t ->
     implementation_dependency_graph:FilenameGraph.t ->
-    freshparsed:FilenameSet.t ->
+    freshparsed:CheckedSet.t ->
     unchanged_checked:CheckedSet.t ->
     unchanged_files_to_force:CheckedSet.t ->
     direct_dependent_files:FilenameSet.t ->
@@ -1116,7 +1116,7 @@ end = struct
       ~reader
       ~options
       ~workers
-      ~updates
+      ~(updates : CheckedSet.t)
       ~files_to_force
       ~recheck_reasons
       ~env =
@@ -1132,18 +1132,18 @@ end = struct
           state, a modified file could be any of "new," "changed," or "unchanged."
        **)
     let (modified, deleted) =
-      FilenameSet.partition (fun f -> Sys.file_exists (File_key.to_string f)) updates
+      CheckedSet.partition (fun f _ -> Sys.file_exists (File_key.to_string f)) updates
     in
-    let deleted_count = FilenameSet.cardinal deleted in
-    let modified_count = FilenameSet.cardinal modified in
+    let deleted_count = CheckedSet.cardinal deleted in
+    let modified_count = CheckedSet.cardinal modified in
     (* log modified and deleted files *)
     if deleted_count + modified_count > 0 then (
       Hh_logger.info "recheck %d modified, %d deleted files" modified_count deleted_count;
       let log_files files msg n =
         Hh_logger.info "%s files:" msg;
         let _ =
-          FilenameSet.fold
-            (fun f i ->
+          CheckedSet.fold
+            (fun i f ->
               let cap = 500 in
               if i <= cap then
                 Hh_logger.info "%d/%d: %s" i n (File_key.to_string f)
@@ -1154,14 +1154,15 @@ end = struct
               else
                 ();
               i + 1)
-            files
             1
+            files
         in
         ()
       in
       if modified_count > 0 then log_files modified "modified" modified_count;
       if deleted_count > 0 then log_files deleted "deleted" deleted_count
     );
+    let deleted = CheckedSet.all deleted in
 
     (* We don't need to delete things from the parsing heaps - they will be automatically oldified.
      * Oldifying something removes it from the heap (but keeps it around in case we need it back) *)
@@ -1176,8 +1177,13 @@ end = struct
      * unchanged_parse - Set of files who's file hash didn't changes
      * new_local_errors - Parse errors, docblock errors, etc
      *)
-    let%lwt (new_or_changed, freshparsed, unparsed, _unchanged_parse, new_local_errors) =
+    let%lwt (new_or_changed, freshparsed_set, unparsed, _unchanged_parse, new_local_errors) =
+      let modified = CheckedSet.all modified in
       reparse ~options ~profiling ~transaction ~reader ~workers ~modified ~deleted
+    in
+    (* turn [freshparsed_set] into a CheckedSet with the same priorities as they came in from [modified] *)
+    let freshparsed =
+      CheckedSet.filter ~f:(fun file -> FilenameSet.mem file freshparsed_set) modified
     in
     let unparsed_set =
       List.fold_left (fun set (fn, _) -> FilenameSet.add fn set) FilenameSet.empty unparsed
@@ -1214,7 +1220,7 @@ end = struct
       "recheck: old = %d, del = %d, fresh = %d, unmod = %d"
       (FilenameSet.cardinal old_parsed)
       (FilenameSet.cardinal deleted)
-      (FilenameSet.cardinal freshparsed)
+      (CheckedSet.cardinal freshparsed)
       (FilenameSet.cardinal unchanged);
 
     (* Here's where the interesting part of rechecking begins. Before diving into
@@ -1356,7 +1362,7 @@ end = struct
       CheckedSet.filter files_to_force ~f:(fun fn -> FilenameSet.mem fn unchanged)
     in
     MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
-    let freshparsed_list = FilenameSet.elements freshparsed in
+    let freshparsed_list = FilenameSet.elements freshparsed_set in
     let%lwt (changed_modules, local_errors) =
       (* TODO remove after lookup overhaul *)
       Module_js.clear_filename_cache ();
@@ -1369,7 +1375,7 @@ end = struct
         ~workers
         ~old_modules
         ~parsed:freshparsed_list
-        ~parsed_set:freshparsed
+        ~parsed_set:freshparsed_set
         ~unparsed
         ~unparsed_set
         ~new_or_changed
@@ -1397,18 +1403,18 @@ end = struct
     Hh_logger.info "Re-resolving parsed and directly dependent files";
     let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader direct_dependent_files in
     let%lwt (resolve_errors, resolved_requires_changed) =
-      let parsed_set = FilenameSet.union freshparsed direct_dependent_files in
+      let parsed_set = FilenameSet.union freshparsed_set direct_dependent_files in
       let parsed = FilenameSet.elements parsed_set in
       resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set
     in
     let local_errors = FilenameMap.union resolve_errors local_errors in
-    let parsed = FilenameSet.union freshparsed unchanged in
 
     Hh_logger.info "Recalculating dependency graph";
+    let parsed = FilenameSet.union freshparsed_set unchanged in
     let%lwt dependency_info =
       Memory_utils.with_memory_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
           let files_to_update_dependency_info =
-            FilenameSet.union freshparsed direct_dependent_files
+            FilenameSet.union freshparsed_set direct_dependent_files
           in
           let%lwt partial_dependency_graph =
             Dep_service.calc_partial_dependency_graph
@@ -1500,7 +1506,9 @@ end = struct
     let%lwt input =
       Memory_utils.with_memory_timer_lwt ~options "RecalcDepGraph" profiling (fun () ->
           let input_focused =
-            FilenameSet.union freshparsed (CheckedSet.focused unchanged_files_to_force)
+            FilenameSet.union
+              (CheckedSet.all freshparsed)
+              (CheckedSet.focused unchanged_files_to_force)
           in
           let input_dependencies = CheckedSet.dependencies unchanged_files_to_force in
           Lwt.return (unfocused_files_to_infer ~options ~input_focused ~input_dependencies)
@@ -2093,7 +2101,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
   (* We know that all the files in updates have changed since the saved state was generated. We
      * have two ways to deal with them: *)
   if (not (Options.lazy_mode options)) || should_force_recheck then begin
-    if FilenameSet.is_empty updates || not libs_ok then
+    if CheckedSet.is_empty updates || not libs_ok then
       (* Don't recheck if the libs are not ok *)
       Lwt.return (env, libs_ok)
     else
@@ -2143,9 +2151,8 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates options =
             ~env
         with
         | Unexpected_file_changes changed_files ->
-          let updated_files =
-            changed_files |> Nel.to_list |> FilenameSet.of_list |> FilenameSet.union updated_files
-          in
+          let dependencies = changed_files |> Nel.to_list |> FilenameSet.of_list in
+          let updated_files = CheckedSet.add ~dependencies updated_files in
           try_update updated_files
       in
       try_update updates
@@ -2306,6 +2313,7 @@ let load_saved_state ~profiling ~workers options =
          (FilenameSet.cardinal updates);
        FlowEventLogger.set_saved_state_filename (Path.to_string saved_state_filename);
        FlowEventLogger.load_saved_state_success ~changed_files_count;
+       let updates = CheckedSet.(add ~focused:updates empty) in
        Lwt.return_some (saved_state, updates)
      with
     | Saved_state.Invalid_saved_state invalid_reason ->

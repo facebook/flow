@@ -97,9 +97,7 @@ let make_checked_set ~focused ~dependents ~dependencies =
   CheckedSet.add ~focused ~dependents ~dependencies CheckedSet.empty
 
 let make_unchanged_checked checked_files freshparsed =
-  CheckedSet.add
-    ~focused:(FilenameSet.diff (CheckedSet.all checked_files) freshparsed)
-    CheckedSet.empty
+  CheckedSet.remove (CheckedSet.all freshparsed) checked_files
 
 let make_options () =
   let flowconfig = FlowConfig.empty_config in
@@ -114,7 +112,7 @@ let make_options () =
     ~saved_state_options_flags:dummy_saved_state_flags
 
 let prepare_freshparsed freshparsed =
-  freshparsed |> Base.List.map ~f:make_fake_file_key |> FilenameSet.of_list
+  freshparsed |> Base.List.map ~f:make_fake_file_key |> CheckedSet.of_focused_list
 
 let checked_files_of_graph ~implementation_dependency_graph =
   (* Get all the files from the implementation_dependency_graph and consider them focused *)
@@ -142,7 +140,7 @@ let determine_what_to_recheck
   let direct_dependent_files =
     FilenameGraph.fold
       (fun file deps acc ->
-        if FilenameSet.exists (fun x -> FilenameSet.mem x freshparsed) deps then
+        if FilenameSet.exists (fun x -> CheckedSet.mem x freshparsed) deps then
           FilenameSet.add file acc
         else
           acc)
@@ -182,7 +180,7 @@ let include_dependencies_and_dependents
     | `All -> checked_files_of_graph ~implementation_dependency_graph
     | `Lazy lst -> make_checked_set ~focused:lst ~dependents:[] ~dependencies:[]
   in
-  let unchanged_checked = make_unchanged_checked checked_files changed_files in
+  let unchanged_checked = make_unchanged_checked checked_files input in
   let options = make_options () in
   let (sig_dependent_files, all_dependent_files) =
     Pure_dep_graph_operations.calc_all_dependents
