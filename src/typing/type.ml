@@ -1985,7 +1985,7 @@ end = struct
   module UnionEnumMap = WrappedMap.Make (UnionEnum)
 
   type finally_optimized_rep =
-    | UnionEnum of UnionEnumSet.t
+    | EnumUnion of UnionEnumSet.t
     | PartiallyOptimizedUnionEnum of UnionEnumSet.t
     | DisjointUnion of TypeTerm.t UnionEnumMap.t NameUtils.Map.t
     | PartiallyOptimizedDisjointUnion of TypeTerm.t UnionEnumMap.t NameUtils.Map.t
@@ -2015,7 +2015,7 @@ end = struct
     in
     fun t0 t1 ts ->
       let enum =
-        Base.Option.(mk_enum UnionEnumSet.empty (t0 :: t1 :: ts) >>| fun tset -> UnionEnum tset)
+        Base.Option.(mk_enum UnionEnumSet.empty (t0 :: t1 :: ts) >>| fun tset -> EnumUnion tset)
       in
       (t0, t1, ts, ref enum)
 
@@ -2044,7 +2044,7 @@ end = struct
     match !specialization with
     | Some Empty -> replace_desc_reason REmpty r
     | Some (Singleton t) -> reason_of_t t
-    | Some (UnionEnum _) -> replace_desc_reason RUnionEnum r
+    | Some (EnumUnion _) -> replace_desc_reason RUnionEnum r
     | _ -> r
 
   (********** Optimizations **********)
@@ -2092,7 +2092,7 @@ end = struct
         else
           PartiallyOptimizedUnionEnum tset
       else
-        UnionEnum tset
+        EnumUnion tset
 
   let canon_prop find_resolved p = Base.Option.(Property.read_t p >>= find_resolved >>= canon)
 
@@ -2240,7 +2240,7 @@ end = struct
             Conditional t
         | Some (DisjointUnion _) -> No
         | Some (PartiallyOptimizedDisjointUnion _) -> Unknown
-        | Some (UnionEnum tset) ->
+        | Some (EnumUnion tset) ->
           if UnionEnumSet.mem tcanon tset then
             Yes
           else
@@ -2302,19 +2302,19 @@ end = struct
           lookup_disjoint_union find_resolved prop_map ~partial:false map
         | Some (PartiallyOptimizedDisjointUnion map) ->
           lookup_disjoint_union find_resolved prop_map ~partial:true map
-        | Some (UnionEnum _) -> No
+        | Some (EnumUnion _) -> No
         | Some (PartiallyOptimizedUnionEnum _) -> Unknown
       end
     | _ -> failwith "quick_mem_disjoint_union is defined only on object / exact object types"
 
   let check_enum (_, _, _, specialization) =
     match !specialization with
-    | Some (UnionEnum enums) -> Some enums
+    | Some (EnumUnion enums) -> Some enums
     | _ -> None
 
   let string_of_specialization (_, _, _, spec) =
     match !spec with
-    | Some (UnionEnum _) -> "Enum"
+    | Some (EnumUnion _) -> "Enum"
     | Some Empty -> "Empty"
     | Some Unoptimized -> "Unoptimized"
     | Some (Singleton _) -> "Singleton"
