@@ -504,6 +504,7 @@ let union_optimization_guard =
      of l is comparable to an element of u. Note that the comparator need not
      be symmetric. *)
   let union_compare cx comparator lts uts =
+    if Context.is_verbose cx then prerr_endline "union_compare slow";
     let ts2 = Type_mapper.union_flatten cx uts in
     Type_mapper.union_flatten cx lts
     |> Base.List.for_all ~f:(fun t1 -> Base.List.exists ~f:(comparator t1) ts2)
