@@ -214,7 +214,7 @@ let recheck_fetch ~process_updates ~get_forced ~priority =
                let updates = process_updates ?skip_incompatible forced_focused_files in
                let focused = FilenameSet.diff updates (get_forced () |> CheckedSet.focused) in
                let files_to_force = CheckedSet.add ~focused CheckedSet.empty in
-               update ~files_to_prioritize:updates ~files_to_force workload
+               update ~files_to_recheck:updates ~files_to_force workload
              | DependenciesToPrioritize dependencies ->
                let to_prioritize = CheckedSet.add ~dependencies CheckedSet.empty in
                let files_to_force =
@@ -243,9 +243,10 @@ let recheck_fetch ~process_updates ~get_forced ~priority =
 
 let requeue_workload workload =
   Hh_logger.info
-    "Re-queueing force-check of %d files and recheck of %d files"
+    "Re-queueing force-check of %d files and recheck of %d files (%d dependencies)"
     (CheckedSet.cardinal workload.files_to_force)
-    (FilenameSet.cardinal workload.files_to_recheck);
+    (FilenameSet.cardinal (FilenameSet.union workload.files_to_recheck workload.files_to_prioritize))
+    (FilenameSet.cardinal workload.files_to_prioritize);
   let prev = !recheck_acc in
   let next =
     {
@@ -261,7 +262,7 @@ let requeue_workload workload =
 let get_and_clear_recheck_workload ~prioritize_dependency_checks ~process_updates ~get_forced =
   recheck_fetch ~process_updates ~get_forced ~priority:Normal;
   let recheck_workload = !recheck_acc in
-  let { files_to_force; files_to_prioritize; _ } = recheck_workload in
+  let { files_to_force; files_to_prioritize; files_to_recheck; _ } = recheck_workload in
   (* when prioritize_dependency_checks is enabled, if there are any dependencies to force, then we
      will return them first and leave everything else in the queue for the next recheck.
 
@@ -281,6 +282,20 @@ let get_and_clear_recheck_workload ~prioritize_dependency_checks ~process_update
     recheck_acc := empty_recheck_workload;
     (Normal, recheck_workload)
   ) else
+    (* include all files_to_recheck in files_to_prioritize, so that we update the dependency
+       graph and merge all known changes. we have to do this because an added or deleted
+       file will modify the dependency graph (e.g. phantom dependents), and if we don't
+       include everything, we end up discovering a subset of the changes bit by bit as "unexpected
+       changes" via [ensure_parsed], which is much slower. Also, we'll never find out about added
+       files that way, so the results can end up being inaccurate -- until the file watcher catches
+       up.
+
+       so why do we track files_to_prioritize and files_to_recheck separately? files_to_prioritize
+       become "dependency" updates. so here, priority_workload treats everything as a
+       dependency -- updating the dependency graph and merging, but not checking -- but the
+       normal recheck_workload ALSO passes the same files_to_recheck, which upgrades them to normal
+       "focused" updates that get checked. *)
+    let files_to_prioritize = FilenameSet.union files_to_prioritize files_to_recheck in
     let priority_workload =
       { empty_recheck_workload with files_to_force = dependencies_to_force; files_to_prioritize }
     in

@@ -50,7 +50,7 @@ val union : t -> t -> t
  *)
 val diff : t -> t -> t
 
-val filter : f:(File_key.t -> bool) -> t -> t
+val filter : f:(File_key.t -> kind -> bool) -> t -> t
 
 val filter_into_set : f:(kind -> bool) -> t -> Utils_js.FilenameSet.t
 
@@ -69,6 +69,12 @@ val focused : t -> Utils_js.FilenameSet.t
 val dependents : t -> Utils_js.FilenameSet.t
 
 val dependencies : t -> Utils_js.FilenameSet.t
+
+val mem_focused : File_key.t -> t -> bool
+
+val mem_dependent : File_key.t -> t -> bool
+
+val mem_dependency : File_key.t -> t -> bool
 
 (* This is O(n) in the size of the checked set. Because checked sets are typically very large, this
  * operation should be avoided in production code. *)

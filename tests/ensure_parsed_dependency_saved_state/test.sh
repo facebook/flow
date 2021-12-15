@@ -34,17 +34,19 @@ assert_ok "$FLOW" status --no-auto-start
 # when using lazy mode + saved state.
 assert_ok "$FLOW" force-recheck --focus file.js
 
-printf "\\n\\n==== ensure_parsed rechecks dependent ====\\n"
-# ensure_parsed included dependency.js as an update, and fans out
-# to dependency.js's dependents (dependent.js).
-assert_errors "$FLOW" status --no-auto-start
+printf "\\n\\n==== ensure_parsed skips dependent ====\\n"
+# ensure_parsed included dependency.js as a dependency update, which means
+# it does not fan out to dependency.js's dependents (dependent.js)
+assert_ok "$FLOW" status --no-auto-start
 show_skipping_stats_types_first "$FLOW_LOG_FILE"
 
 # now simulate the file system event for dependency.js
 assert_ok "$FLOW" force-recheck dependency.js
 
-printf "\\n\\n==== force-recheck does nothing ====\\n"
-# since we've already noticed the change, force-recheck does nothing
+printf "\\n\\n==== force-recheck checks dependent ====\\n"
+# even though we've already partially processed the change to dependency.js
+# (updated the parsing heaps and the dep graph), its signature changed so we
+# need to recheck its dependents now.
 assert_errors "$FLOW" status --no-auto-start
 show_skipping_stats_types_first "$FLOW_LOG_FILE"
 

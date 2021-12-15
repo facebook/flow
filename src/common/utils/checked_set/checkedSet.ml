@@ -97,7 +97,7 @@ let diff a b =
     (* Dependency removes Dependency *)
     a
 
-let filter ~f checked = FilenameMap.filter (fun k _ -> f k) checked
+let filter ~f checked = FilenameMap.filter f checked
 
 let filter_into_set ~f checked =
   FilenameMap.fold
@@ -145,6 +145,17 @@ let dependents_cardinal = count ~f:is_dependent
 let dependencies = filter_into_set ~f:is_dependency
 
 let dependencies_cardinal = count ~f:is_dependency
+
+let mem_kind ~f fn t =
+  match FilenameMap.find_opt fn t with
+  | Some kind -> f kind
+  | None -> false
+
+let mem_focused = mem_kind ~f:is_focused
+
+let mem_dependent = mem_kind ~f:is_dependent
+
+let mem_dependency = mem_kind ~f:is_dependency
 
 (* Helper function for debugging *)
 let debug_to_string ?limit =

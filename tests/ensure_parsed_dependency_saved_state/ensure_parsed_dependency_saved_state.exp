@@ -17,7 +17,18 @@ The Flow server is currently in lazy mode and is only checking 0/3 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 
 
-==== ensure_parsed rechecks dependent ====
+==== ensure_parsed skips dependent ====
+No errors!
+
+The Flow server is currently in lazy mode and is only checking 2/3 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+========Skipping stats========
+Merge skipped 0 of 2 modules
+Check will skip 0 of 1 files
+
+
+==== force-recheck checks dependent ====
 Error ------------------------------------------------------------------------------------------------- dependent.js:7:2
 
 Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-cast]
@@ -41,32 +52,6 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 ========Skipping stats========
 Merge skipped 0 of 3 modules
 Check will skip 0 of 3 files
-
-
-==== force-recheck does nothing ====
-Error ------------------------------------------------------------------------------------------------- dependent.js:7:2
-
-Cannot cast `123` to string because number [1] is incompatible with string [2]. [incompatible-cast]
-
-   dependent.js:7:2
-   7| (123: string); // no error!
-       ^^^ [1]
-
-References:
-   dependent.js:7:7
-   7| (123: string); // no error!
-            ^^^^^^ [2]
-
-
-
-Found 1 error
-
-The Flow server is currently in lazy mode and is only checking 3/3 files.
-To learn more, visit flow.org/en/docs/lang/lazy-modes
-
-========Skipping stats========
-Merge skipped 0 of 0 modules
-Check will skip 0 of 0 files
 
 
 ==== force-recheck on dependent finds errors ====

@@ -963,7 +963,7 @@ let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~file_watche
     | Some true ->
       Hh_logger.info "File watcher changed mergebase";
       (* TODO (glevi) - One of the numbers we need to estimate is "If we restart how many files
-       * would we merge". Currently we're looking at the number of already checked files. But a
+       * would we check". Currently we're looking at the number of already checked files. But a
        * better way would be to
        *
        * 1. When watchman notices the mergebase changing, also record the files which have changed
@@ -972,7 +972,11 @@ let restart_if_faster_than_recheck ~options ~env ~to_merge_or_check ~file_watche
        * 3. Calculate the fanout of these files (we should have an updated dependency graph by now)
        * 4. That should actually be the right number, instead of just an estimate. But it costs
        *    a little to compute the fanout
-       *)
+       *
+       * This also treats dependencies, which are only merged, equally with focused/dependent
+       * files which are also checked. So, doing a priority update, which merges but doesn't
+       * check, throws off the estimate by making it seem like files get checked as quickly
+       * as they get merged. This makes us underestimate how long it will take to recheck. *)
       let files_already_checked = CheckedSet.cardinal env.ServerEnv.checked_files in
       let files_about_to_recheck = CheckedSet.cardinal to_merge_or_check in
       Hh_logger.info
@@ -1177,13 +1181,13 @@ end = struct
      * unchanged_parse - Set of files who's file hash didn't changes
      * new_local_errors - Parse errors, docblock errors, etc
      *)
-    let%lwt (new_or_changed, freshparsed_set, unparsed, _unchanged_parse, new_local_errors) =
+    let%lwt (new_or_changed, freshparsed_set, unparsed, unchanged_parse, new_local_errors) =
       let modified = CheckedSet.all modified in
       reparse ~options ~profiling ~transaction ~reader ~workers ~modified ~deleted
     in
     (* turn [freshparsed_set] into a CheckedSet with the same priorities as they came in from [modified] *)
     let freshparsed =
-      CheckedSet.filter ~f:(fun file -> FilenameSet.mem file freshparsed_set) modified
+      CheckedSet.filter ~f:(fun file _ -> FilenameSet.mem file freshparsed_set) modified
     in
     let unparsed_set =
       List.fold_left (fun set (fn, _) -> FilenameSet.add fn set) FilenameSet.empty unparsed
@@ -1222,6 +1226,27 @@ end = struct
       (FilenameSet.cardinal deleted)
       (CheckedSet.cardinal freshparsed)
       (FilenameSet.cardinal unchanged);
+
+    (* "updates" is a CheckedSet where "focused" updates come from file system events.
+       When a file changes, [reparse] notices and includes it in [new_or_changed], and
+       that makes it get rechecked.
+
+       Sometimes, we notice that a dependency changed before the file system event
+       (via [ensure_parsed]); in that case, we have a "dependency" update, where we only
+       want to update the dependency graph and merge, but not check.
+
+       When we get the delayed file system event, it appears unchanged since we already
+       reparsed it. We still want to check it and its dependents, since we skipped that
+       before. We can detect this when a "focused" update is unchanged but was previously
+       only a "dependency". *)
+    let unchanged_files_to_upgrade =
+      (* file is unchanged, should now be checked, and was previously merged but not checked *)
+      CheckedSet.filter updates ~f:(fun file kind ->
+          (not (CheckedSet.is_dependency kind))
+          && FilenameSet.mem file unchanged_parse
+          && CheckedSet.mem_dependency file env.ServerEnv.checked_files
+      )
+    in
 
     (* Here's where the interesting part of rechecking begins. Before diving into
           code, let's think through the problem independently.
@@ -1359,7 +1384,7 @@ end = struct
     in
     (* We may be forcing a recheck on some unchanged files *)
     let unchanged_files_to_force =
-      CheckedSet.filter files_to_force ~f:(fun fn -> FilenameSet.mem fn unchanged)
+      CheckedSet.filter files_to_force ~f:(fun fn _ -> FilenameSet.mem fn unchanged)
     in
     MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
     let freshparsed_list = FilenameSet.elements freshparsed_set in
@@ -1463,11 +1488,130 @@ end = struct
         new_or_changed,
         unchanged_checked,
         unchanged_files_to_force,
+        unchanged_files_to_upgrade,
         unparsed_set,
         cannot_skip_direct_dependents
       )
     in
     Lwt.return (env, intermediate_values)
+
+  (** [direct_dependents_to_recheck ~direct_dependent_files ~focused ~dependencies] computes the
+      dependent files that directly depend on its inputs. a file directly depends on another if it
+      literaly has an [import].
+
+      Here's an example:
+
+      - D depends on B, B and C depend on A
+
+      ```
+            A
+           / \
+          B   C
+           \
+            D
+      ```
+
+      Suppose we're rechecking B and notice that A changed unexpectedly.
+
+      focused = {B}
+      dependencies = {A}
+      direct_dependent_files = { C, D }
+
+      The dependents of the focused updates, {B}, are {D}. These are the dependents we want to
+      check. We don't want to check C right now. We want to do it when we receive the file watcher
+      update for A. How do we exclude C?
+
+      Instead of using direct_dependent_files at all, we could recompute the direct dependents of
+      {B} using `implementation_dependency_graph` and get {D}. win!
+
+      But consider this expanded graph:
+
+      ```
+         E   A
+        / \ / \
+       F   B   C
+            \
+             D
+      ```
+
+      What if `E` is deleted (and A is changed, as before)?
+
+      focused = {B}
+      dependencies = {A, E}
+      direct_dependent_files = {C, D, F}
+
+      We actually have to recheck F. We won't want to -- it's not required to recheck B -- but as
+      soon as the transaction commits, all record of the E <- B and E <- F edges are gone and we
+      won't know to recheck F and B when we get the deletion event about E. Maybe we could keep
+      track of this, but not today.
+
+      implementation_dependency_graph doesn't contain E. Whereas before, we could recompute the
+      direct dependents of B, we can't compute the direct dependents of E.
+
+      Who knows what depended on E? direct_dependent_files!
+
+      But recall that we don't want to just use direct_dependent_files, because it includes
+      dependents of changed dependencies (C, because A changed).
+
+      The result we're looking for is {D, F}.
+
+      - direct dependents of focused updates = { D }
+      - direct dependents of dependency updates = { B, C }
+      - direct_dependent_files = { C, D, F }
+
+      It's tempting to just remove the dependents of dependencies from direct_dependent_files:
+      {C, D, F} - {B, C} = {D, F} -- win!
+
+      Not so fast. If we even further complicate the dependency graph such that D also depends on A,
+      then we get:
+
+      ```
+         E   A
+        / \ /|\
+       F   B | C
+            \|
+             D
+      ```
+
+      - direct dependents of focused updates = { D }
+      - direct dependents of dependency updates = { B, C, D }
+      - `direct_dependent_files` = { C, D, F }
+
+      { C, D, F } - { B, C, D } = { F } -- fail!
+
+      So we need to add the focused dependents back in:
+
+      { D } + ({ C, D, F } - { B, C, D}) =
+      { D } + { F } =
+      { D, F }
+  *)
+  let direct_dependents_to_recheck
+      ~implementation_dependency_graph ~direct_dependent_files ~focused ~dependencies =
+    (* These are all the files that literally import the files we're focusing. *)
+    let focused_direct_dependents =
+      Pure_dep_graph_operations.calc_direct_dependents implementation_dependency_graph focused
+    in
+    (* These are all the files that import changed dependencies. We don't want to check
+       dependents of dependencies. *)
+    let dependency_direct_dependents =
+      Pure_dep_graph_operations.calc_direct_dependents implementation_dependency_graph dependencies
+    in
+    (* These are files that import deleted files[1]. They need to be included now because
+       we will forget they're dirty as soon as this recheck is over and we commit the
+       updated dependency graph.
+
+       We have to compute it this way because (a) the deleted edges are already removed
+       from implementation_dependency_graph, so focused_direct_dependents doesn't include
+       them, and (b) direct_dependent_files doesn't track which files a dependent depended
+       on, so it doesn't tell us which files are dependents of deleted files.
+
+       [1] strictly, we should also diff out focused_direct_dependents to get the orphaned
+       dependents, but since we're about to union it with focused_direct_dependents, that's
+       a waste. *)
+    let orphaned_direct_dependents =
+      FilenameSet.diff direct_dependent_files dependency_direct_dependents
+    in
+    FilenameSet.union focused_direct_dependents orphaned_direct_dependents
 
   let determine_what_to_recheck
       ~profiling
@@ -1478,24 +1622,41 @@ end = struct
       ~unchanged_checked
       ~unchanged_files_to_force
       ~direct_dependent_files =
+    let input_focused =
+      FilenameSet.union
+        (CheckedSet.focused freshparsed)
+        (CheckedSet.focused unchanged_files_to_force)
+    in
+    let input_dependencies =
+      FilenameSet.union
+        (CheckedSet.dependencies freshparsed)
+        (CheckedSet.dependencies unchanged_files_to_force)
+    in
+    (* we will need the signature dependents and implementation dependents to compute the fanout
+       from the changed files ([input_focused] + [input_dependencies]) to all of the files that
+       could be impacted by those changes.
+
+       [sig_dependent_files] is the set of files whose signatures transitively depend on the input.
+       We re-merge these because their exports may have changed.
+
+       [all_dependent_files] is the set of files whose implementations directly depend on the
+       signature dependents. In other words, if a file F imports something from G where G's
+       signature is impacted by C (a changed file), then G is a sig dependent and F needs to be
+       checked because its implementation may use something from C through G. *)
     let%lwt (sig_dependent_files, all_dependent_files) =
-      (* all_dependent_files are direct_dependent_files plus their dependents (transitive closure) *)
       Memory_utils.with_memory_timer_lwt ~options "AllDependentFiles" profiling (fun () ->
-          let forced_direct_dependents =
-            unchanged_files_to_force
-            (* We can ignore unchanged files which were forced as dependencies. We only merge them, so we
-               don't care about their dependents. *)
-            |> CheckedSet.filter_into_set ~f:(fun kind -> not (CheckedSet.is_dependency kind))
-            (* We then need to expand out to the direct implementation dependents, similar to how
-               [direct_dependent_files] is the set of changed files expanded to their direct implementation
-               dependents. These are all the files that literally import the files we're forcing. *)
-            |> Pure_dep_graph_operations.calc_direct_dependents implementation_dependency_graph
+          let implementation_dependents =
+            direct_dependents_to_recheck
+              ~implementation_dependency_graph
+              ~direct_dependent_files
+              ~focused:input_focused
+              ~dependencies:input_dependencies
           in
           let (sig_dependent_files, all_dependent_files) =
             Pure_dep_graph_operations.calc_all_dependents
               ~sig_dependency_graph
               ~implementation_dependency_graph
-              (FilenameSet.union direct_dependent_files forced_direct_dependents)
+              implementation_dependents
           in
           (* Prevent files in node_modules from being added to the checked set. *)
           let sig_dependent_files = filter_out_node_modules ~options sig_dependent_files in
@@ -1503,17 +1664,7 @@ end = struct
           Lwt.return (sig_dependent_files, all_dependent_files)
       )
     in
-    let%lwt input =
-      Memory_utils.with_memory_timer_lwt ~options "RecalcDepGraph" profiling (fun () ->
-          let input_focused =
-            FilenameSet.union
-              (CheckedSet.all freshparsed)
-              (CheckedSet.focused unchanged_files_to_force)
-          in
-          let input_dependencies = CheckedSet.dependencies unchanged_files_to_force in
-          Lwt.return (unfocused_files_to_infer ~options ~input_focused ~input_dependencies)
-      )
-    in
+    let input = unfocused_files_to_infer ~options ~input_focused ~input_dependencies in
     let%lwt (to_merge, to_check, to_merge_or_check, components, recheck_set) =
       include_dependencies_and_dependents
         ~options
@@ -1559,6 +1710,7 @@ end = struct
           new_or_changed,
           unchanged_checked,
           unchanged_files_to_force,
+          unchanged_files_to_upgrade,
           unparsed_set,
           cannot_skip_direct_dependents
         ) =
@@ -1580,6 +1732,9 @@ end = struct
                 all_dependent_files;
               }
               ) =
+      let unchanged_files_to_force =
+        CheckedSet.union unchanged_files_to_force unchanged_files_to_upgrade
+      in
       determine_what_to_recheck
         ~profiling
         ~options
@@ -1653,6 +1808,13 @@ end = struct
               num_slow_files,
               check_internal_error
             ) =
+      let sig_new_or_changed =
+        (* include all files that were previously rechecked as "dependency" updates and are now
+           being rechecked normally. their signatures are unchanged because we already saw them
+           when they were rechecked as dependencies, but since we skipped checking their dependents
+           before, we need to include them now. *)
+        FilenameSet.union sig_new_or_changed (CheckedSet.all unchanged_files_to_upgrade)
+      in
       Check_files.check_files
         ~reader
         ~options
@@ -1780,7 +1942,7 @@ end = struct
         ~recheck_reasons
         ~env
     in
-    let (_, _, errors, _, _, _, _, _, _) = intermediate_values in
+    let (_, _, errors, _, _, _, _, _, _, _) = intermediate_values in
     Lwt.return { env with ServerEnv.errors }
 end
 
