@@ -152,6 +152,8 @@ module type S = sig
 
   val init_type : Context.t -> string -> Type.t -> ALoc.t -> unit
 
+  val init_import : lookup_mode:LookupMode.t -> Context.t -> Reason.name -> ALoc.t -> Type.t -> unit
+
   val pseudo_init_declared_type : Context.t -> string -> ALoc.t -> unit
 
   val install_provider : Context.t -> Type.t -> Reason.name -> ALoc.t -> unit

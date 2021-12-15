@@ -565,4 +565,6 @@ module New_env : Env_sig.S = struct
     in
     try Some (read_entry ~for_type:false cx switch_loc (mk_reason reason_desc switch_loc)) with
     | LocEnvEntryNotFound _ -> None
+
+  let init_import ~lookup_mode:_ cx _name loc t = set_env_entry ~use_op:unknown_use cx t loc
 end

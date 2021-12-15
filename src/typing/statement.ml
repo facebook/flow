@@ -2507,16 +2507,13 @@ struct
       in
       List.iter
         (fun (loc, local_name, t, specifier_kind) ->
-          let t_generic =
-            let lookup_mode =
-              match Base.Option.value ~default:import_kind specifier_kind with
-              | ImportDeclaration.ImportType -> ForType
-              | ImportDeclaration.ImportTypeof -> ForType
-              | ImportDeclaration.ImportValue -> ForValue
-            in
-            Env.get_var_declared_type ~lookup_mode cx (OrdinaryName local_name) loc
+          let lookup_mode =
+            match Base.Option.value ~default:import_kind specifier_kind with
+            | ImportDeclaration.ImportType -> ForType
+            | ImportDeclaration.ImportTypeof -> ForType
+            | ImportDeclaration.ImportValue -> ForValue
           in
-          Flow.unify cx t t_generic)
+          Env.init_import ~lookup_mode cx (OrdinaryName local_name) loc t)
         specifiers;
 
       ( import_loc,

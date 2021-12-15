@@ -1134,6 +1134,10 @@ module Env : Env_sig.S = struct
     let t = query_var ~lookup_mode cx name ?desc loc in
     Flow.reposition cx loc t
 
+  let init_import ~lookup_mode cx name loc t =
+    let t_generic = get_var_declared_type ~lookup_mode cx name loc in
+    Flow.unify cx t t_generic
+
   (* get refinement entry *)
   let get_refinement cx key loc =
     match find_refi_in_var_scope key with
