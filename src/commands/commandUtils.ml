@@ -853,7 +853,7 @@ module Options_flags = struct
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
     include_suppressions: bool;
-    prioritize_dependency_checks: bool;
+    prioritize_dependency_checks: bool option;
   }
 end
 
@@ -1012,7 +1012,7 @@ let options_flags =
            "--env-mode"
            (optional (enum [("classic", Options.ClassicEnv []); ("ssa", Options.SSAEnv)]))
            ~doc:""
-      |> flag "--prioritize-dep-checks" no_arg ~doc:(* experimental *) ""
+      |> flag "--prioritize-dep-checks" (optional bool) ~doc:(* experimental *) ""
     )
 
 let saved_state_flags =
@@ -1276,8 +1276,10 @@ let make_options
     Base.Option.value (FlowConfig.direct_dependent_files_fix flowconfig) ~default:true
   in
   let opt_prioritize_dependency_checks =
-    options_flags.prioritize_dependency_checks
-    || Base.Option.value (FlowConfig.prioritize_dependency_checks flowconfig) ~default:false
+    Base.Option.first_some
+      options_flags.prioritize_dependency_checks
+      (FlowConfig.prioritize_dependency_checks flowconfig)
+    |> Base.Option.value ~default:false
   in
   let strict_mode = FlowConfig.strict_mode flowconfig in
   let opt_temp_dir = Path.to_string temp_dir in
