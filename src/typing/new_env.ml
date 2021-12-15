@@ -273,14 +273,6 @@ module New_env : Env_sig.S = struct
     let t = query_var ~lookup_mode cx name ?desc loc in
     Flow_js.reposition cx loc t
 
-  let local_scope_entry_exists cx loc _ =
-    let { Loc_env.var_info; _ } = Context.environment cx in
-    try
-      ignore (find_var var_info loc);
-      true
-    with
-    | Not_found -> false
-
   let is_global_var cx _ loc =
     let { Loc_env.var_info; _ } = Context.environment cx in
     let rec local_def_exists states =
@@ -291,13 +283,18 @@ module New_env : Env_sig.S = struct
           | Env_api.With_ALoc.Write _ -> true
           | Env_api.With_ALoc.Unreachable _ -> true
           | Env_api.With_ALoc.Refinement { refinement_id = _; writes } -> local_def_exists writes
-          | Env_api.With_ALoc.Projection _ -> false
+          | Env_api.With_ALoc.Projection _ -> true
           | Env_api.With_ALoc.Global _ -> false)
         states
       |> not
     in
-    let var_state = find_var var_info loc in
-    local_def_exists var_state
+    try
+      let var_state = find_var var_info loc in
+      local_def_exists var_state
+    with
+    | LocEnvEntryNotFound _ -> false
+
+  let local_scope_entry_exists cx loc name = not (is_global_var cx name loc)
 
   let get_var_annotation cx name loc =
     match name with
