@@ -100,6 +100,7 @@ MODULES=\
   src/common/lints\
   src/common/logging_utils\
   src/common/lwt\
+  src/common/lz4\
   src/common/modulename\
   src/common/monad\
   src/common/packed_locs\
@@ -109,10 +110,10 @@ MODULES=\
   src/common/tarjan\
   src/common/transaction\
   src/common/ty\
-  src/common/utils\
   src/common/utils/checked_set\
   src/common/utils/filename_cache\
   src/common/utils/loc_utils\
+  src/common/utils\
   src/common/vcs\
   src/common/xx\
   src/flowlib\
@@ -218,6 +219,7 @@ LZ4_C_FILES=\
 NATIVE_C_FILES=\
   $(INOTIFY_STUBS)\
   $(FSNOTIFY_STUBS)\
+  src/common/lz4/lz4_stubs.c\
   src/common/xx/xx_stubs.c\
   src/services/saved_state/compression/saved_state_compression_stubs.c\
   src/hack_forked/find/hh_readdir.c\
