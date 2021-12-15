@@ -941,13 +941,6 @@ module NewAPI = struct
   (* double-check integer value is consistent with hh_shared.c *)
   let () = assert (tag_val Addr_tbl_tag = 6)
 
-  let mk_header tag size =
-    (* lower byte of header is reserved for 6-bit tag and 2 GC bits, OCaml
-     * representation of the header does not include the GC bits, which will be
-     * set when converting to intnat before writing to shmem, see
-     * unsafe_write_header. *)
-    tag_val tag lor (size lsl 6)
-
   let obj_tag hd = hd land 0x3F
 
   let obj_size hd = hd lsr 6
@@ -977,26 +970,6 @@ module NewAPI = struct
   let type_sig_size bsize = (bsize + 8) lsr 3
 
   let checked_file_size = 3 * addr_size
-
-  (* headers *)
-
-  let string_header s =
-    let size = string_size s in
-    mk_header String_tag size
-
-  let addr_tbl_header xs =
-    let size = addr_tbl_size xs in
-    mk_header Addr_tbl_tag size
-
-  let docblock_header docblock =
-    let size = docblock_size docblock in
-    mk_header Docblock_tag size
-
-  let aloc_table_header tbl =
-    let size = aloc_table_size tbl in
-    mk_header ALoc_table_tag size
-
-  let checked_file_header = mk_header Checked_file_tag checked_file_size
 
   (* offsets *)
 
@@ -1097,9 +1070,18 @@ module NewAPI = struct
 
   (* Write a header at a specified address in the heap. This write is not
    * bounds checked; caller must ensure the given destination has already been
-   * allocated. *)
-  let unsafe_write_header_at heap dst hd =
-    unsafe_write_int64 heap dst Int64.(logor 1L (shift_left (of_int hd) 2))
+   * allocated.
+   *
+   * The low bytes of the header includes a 6-bit tag and 2 GC bits, initially
+   * 0b01, or "white." See hh_shared.c for more about the GC. The size of the
+   * object in words is stored in the remaining space. *)
+  let unsafe_write_header_at heap dst tag obj_size =
+    let tag = Int64.of_int (tag_val tag) in
+    let obj_size = Int64.of_int obj_size in
+    let ( lsl ) = Int64.shift_left in
+    let ( lor ) = Int64.logor in
+    let hd = (obj_size lsl 8) lor (tag lsl 2) lor 1L in
+    unsafe_write_int64 heap dst hd
 
   (* Write an address at a specified address in the heap. This write is not
    * bounds checked; caller must ensure the given destination has already been
@@ -1110,13 +1092,6 @@ module NewAPI = struct
    * bounds checked; caller must ensure the given destination has already been
    * allocated. *)
   external unsafe_write_string_at : _ addr -> string -> unit = "hh_write_string" [@@noalloc]
-
-  (* Write a header into the given chunk and advance the chunk address. This
-   * write is not bounds checked; caller must ensure the given destination has
-   * already been allocated. *)
-  let unsafe_write_header chunk hd =
-    unsafe_write_header_at chunk.heap chunk.next_addr hd;
-    chunk.next_addr <- addr_offset chunk.next_addr header_size
 
   (* Write an address into the given chunk and advance the chunk address. This
    * write is not bounds checked; caller must ensure the given destination has
@@ -1135,33 +1110,33 @@ module NewAPI = struct
   (* Consume space in the chunk for the object described by the given header,
    * write header, advance chunk address, and return address to the header. This
    * function should be called before writing any heap object. *)
-  let write_header chunk hd =
-    let size = header_size + obj_size hd in
+  let write_header chunk tag obj_size =
+    let size = header_size + obj_size in
     chunk.remaining_size <- chunk.remaining_size - size;
     assert (chunk.remaining_size >= 0);
     let addr = chunk.next_addr in
-    unsafe_write_header chunk hd;
+    unsafe_write_header_at chunk.heap addr tag obj_size;
+    chunk.next_addr <- addr_offset addr header_size;
     addr
 
   let write_string chunk s =
-    let heap_string = write_header chunk (string_header s) in
+    let heap_string = write_header chunk String_tag (string_size s) in
     unsafe_write_string chunk s;
     heap_string
 
   let write_docblock chunk docblock =
-    let addr = write_header chunk (docblock_header docblock) in
+    let addr = write_header chunk Docblock_tag (docblock_size docblock) in
     unsafe_write_string chunk docblock;
     addr
 
   let write_aloc_table chunk tbl =
-    let addr = write_header chunk (aloc_table_header tbl) in
+    let addr = write_header chunk ALoc_table_tag (aloc_table_size tbl) in
     unsafe_write_string chunk tbl;
     addr
 
   let write_type_sig chunk bsize f =
     let size = type_sig_size bsize in
-    let hd = mk_header Type_sig_tag size in
-    let addr = write_header chunk hd in
+    let addr = write_header chunk Type_sig_tag size in
     let offset_index = bsize_wsize size - 1 in
     unsafe_write_int8 chunk.heap (addr_offset addr header_size + offset_index) (offset_index - bsize);
     let buf = Bigarray.Array1.sub chunk.heap (addr_offset addr header_size) bsize in
@@ -1170,7 +1145,7 @@ module NewAPI = struct
     addr
 
   let write_checked_file chunk docblock aloc_table type_sig =
-    let checked_file = write_header chunk checked_file_header in
+    let checked_file = write_header chunk Checked_file_tag checked_file_size in
     unsafe_write_addr chunk docblock;
     unsafe_write_addr chunk aloc_table;
     unsafe_write_addr chunk type_sig;
@@ -1180,9 +1155,9 @@ module NewAPI = struct
     if Array.length xs = 0 then
       null_addr
     else
-      let hd = addr_tbl_header xs in
-      let map = write_header chunk hd in
-      chunk.next_addr <- addr_offset chunk.next_addr (obj_size hd);
+      let size = addr_tbl_size xs in
+      let map = write_header chunk Addr_tbl_tag size in
+      chunk.next_addr <- addr_offset chunk.next_addr size;
       Array.iteri
         (fun i x ->
           let addr = f chunk x in
