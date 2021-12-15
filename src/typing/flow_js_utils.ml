@@ -516,6 +516,15 @@ let union_optimization_guard =
       ||
       (* Try O(n) check, then O(n log n) check, then O(n^2) check *)
       begin
+        (* Only optimize for enums, since this is the only fast path examined below.
+         * Note that optimizing both reps with [UnionRep.optimize] can potentially
+         * cause a `RecursionCheck.LimitExceeded` exception. (`tests/typeapp_termination`
+         * is a sanity check against that.) *)
+        if not (UnionRep.is_optimized_finally rep1) then
+          UnionRep.optimize_enum_only ~flatten:(Type_mapper.union_flatten cx) rep1;
+        if not (UnionRep.is_optimized_finally rep2) then
+          UnionRep.optimize_enum_only ~flatten:(Type_mapper.union_flatten cx) rep2;
+
         match (UnionRep.check_enum rep1, UnionRep.check_enum rep2) with
         | (Some enums1, Some enums2) -> UnionEnumSet.subset enums1 enums2
         | (_, _) ->
