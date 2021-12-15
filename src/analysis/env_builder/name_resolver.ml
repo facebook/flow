@@ -765,6 +765,17 @@ module Make
             in
             heap_refinements := new_heap_refinements)
 
+      method get_val_of_expression expr =
+        match RefinementKey.of_expression expr with
+        | None -> None
+        | Some { RefinementKey.loc = _; lookup = { RefinementKey.base; projections } } ->
+          (match SMap.find_opt base this#env with
+          | None -> None
+          | Some { Env.env_val; heap_refinements } ->
+            (match projections with
+            | [] -> Some env_val
+            | _ -> HeapRefinementMap.find_opt projections heap_refinements))
+
       (* Function calls may introduce refinements if the function called is a
        * predicate function. The EnvBuilder has no idea if a function is a
        * predicate function or not. To handle that, we encode that a variable
@@ -1673,9 +1684,9 @@ module Make
       (*   [ENVi+1 | ENVi'] si+1 [ENVi+1']                       *)
       (* POST = ENVN | ENVN'                                     *)
       (***********************************************************)
-      method! switch_cases discriminant cases =
+      method! switch_cases switch_loc discriminant cases =
         this#expecting_abrupt_completions (fun () ->
-            let (env, case_completion_states, _total_refinements, has_default) =
+            let (env, case_completion_states, total_refinements, has_default) =
               List.fold_left
                 (fun acc stuff ->
                   let (_loc, case) = stuff in
@@ -1687,10 +1698,31 @@ module Make
              * TODO: Each refinement that ends in a break will be reachable via
              * the PHI node at the end of the switch. Should we get rid of these refinements?
              *)
-            if has_default then
+            ( if has_default then
               this#reset_env env
             else
-              this#merge_self_env env;
+              let negated_total_refinements = List.map this#negate_refinements total_refinements in
+              let refinement_key = RefinementKey.of_expression discriminant in
+              let conjuncted_negated_total_refinements =
+                this#conjunct_all_refinements_for_key refinement_key negated_total_refinements
+              in
+              this#push_refinement_scope conjuncted_negated_total_refinements;
+              (* Statement.ml uses this to determine if the switch was exhaustive, so
+               * the name-resolver records the Val.t to be queried later, keyed by
+               * the location of the switch. We add this directly to the values map,
+               * since there is no risk of the switch loc clashing with an expression loc. *)
+              let discriminant_after_all_negated_refinements =
+                this#get_val_of_expression discriminant
+              in
+              (match discriminant_after_all_negated_refinements with
+              | Some discriminant ->
+                env_state <-
+                  { env_state with values = L.LMap.add switch_loc discriminant env_state.values }
+              | None -> ());
+
+              this#pop_refinement_scope ();
+              this#merge_self_env env
+            );
 
             (* In general, cases are non-exhaustive, but if it has a default case then it is! *)
             let completion_state =
@@ -1906,7 +1938,7 @@ module Make
             this#push_refinement_scope LookupMap.empty;
             ignore @@ this#expression_refinement cond;
             let _ = List.map this#expression_or_spread other_args in
-            this#pop_refinement_scope_invariant ()
+            this#pop_refinement_scope_without_unrefining ()
           | ( _,
               (_, { Ast.Expression.ArgList.arguments = Ast.Expression.Spread _ :: _; comments = _ })
             ) ->
@@ -2028,7 +2060,7 @@ module Make
       (* Invariant refinement scopes can be popped, but the refinement should continue living on.
        * To model that, we pop the refinement scope but do not unrefine the refinements. The
        * refinements live on in the Refinement writes in the env. *)
-      method private pop_refinement_scope_invariant () =
+      method private pop_refinement_scope_without_unrefining () =
         env_state <- { env_state with latest_refinements = List.tl env_state.latest_refinements }
 
       (* When a refinement scope ends, we need to undo the refinement applied to the
@@ -2286,7 +2318,7 @@ module Make
           let env2 = this#env in
           this#reset_env env1;
           this#push_refinement_scope lhs_latest_refinements;
-          this#pop_refinement_scope_invariant ();
+          this#pop_refinement_scope_without_unrefining ();
           this#merge_self_env env2
         | _ ->
           this#merge_self_env env1;
@@ -2816,7 +2848,7 @@ module Make
         | Some AbruptCompletion.Throw ->
           let env2 = this#env in
           this#reset_env env1_with_refinements;
-          this#pop_refinement_scope_invariant ();
+          this#pop_refinement_scope_without_unrefining ();
           this#merge_self_env env2
         | _ ->
           this#pop_refinement_scope ();
@@ -2846,15 +2878,11 @@ module Make
         match expr with
         | (loc, Flow_ast.Expression.Member _)
         | (loc, Flow_ast.Expression.OptionalMember _) ->
-          (match RefinementKey.of_expression expr with
+          (match this#get_val_of_expression expr with
           | None -> ()
-          | Some { RefinementKey.loc = _; lookup = { RefinementKey.base; projections } } ->
-            let { Env.env_val = _; heap_refinements } = SMap.find base this#env in
-            (match HeapRefinementMap.find_opt projections heap_refinements with
-            | None -> ()
-            | Some refined_v ->
-              let values = L.LMap.add loc refined_v env_state.values in
-              env_state <- { env_state with values }));
+          | Some refined_v ->
+            let values = L.LMap.add loc refined_v env_state.values in
+            env_state <- { env_state with values });
           super#expression expr
         | _ -> super#expression expr
 

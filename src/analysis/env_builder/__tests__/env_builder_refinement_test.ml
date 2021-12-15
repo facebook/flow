@@ -2836,6 +2836,9 @@ x;
         (1, 8) to (1, 17) => {
           Global undefined
         };
+        (2, 0) to (2, 13) => {
+          (1, 4) to (1, 5): (`x`)
+        };
         (2, 8) to (2, 9) => {
           (1, 4) to (1, 5): (`x`)
         };
@@ -4664,4 +4667,58 @@ x[y]; // Should not report an entry
         };
         (5, 2) to (5, 3) => {
           (3, 4) to (3, 5): (`y`)
+        }] |}]
+
+let%expect_test "switch_no_default" =
+  print_ssa_test {|
+let y = 'ONE';
+switch (y) {
+    case 'ONE': break;
+    case 'TWO': break;
+}
+|};
+    [%expect {|
+      [
+        (3, 0) to (6, 1) => {
+          {refinement = And (Not (TWO), Not (ONE)); writes = (2, 4) to (2, 5): (`y`)}
+        };
+        (3, 8) to (3, 9) => {
+          (2, 4) to (2, 5): (`y`)
+        }] |}]
+
+let%expect_test "switch_exhaustive_return" =
+  print_ssa_test {|
+let obj = {};
+  switch (obj.k) {
+    case 'a':
+      throw 0;
+    case 'b':
+      throw 1;
+  }
+|};
+    [%expect {|
+      [
+        (3, 2) to (8, 3) => {
+          {refinement = And (Not (b), Not (a)); writes = projection at (3, 10) to (3, 15)}
+        };
+        (3, 10) to (3, 13) => {
+          (2, 4) to (2, 7): (`obj`)
+        }] |}]
+
+let%expect_test "switch_exhaustive_fallthrough_return" =
+  print_ssa_test {|
+let obj = {};
+  switch (obj.k) {
+    case 'a':
+    case 'b':
+      throw 1;
+  }
+|};
+    [%expect {|
+      [
+        (3, 2) to (7, 3) => {
+          {refinement = And (Not (b), Not (a)); writes = projection at (3, 10) to (3, 15)}
+        };
+        (3, 10) to (3, 13) => {
+          (2, 4) to (2, 7): (`obj`)
         }] |}]

@@ -322,12 +322,12 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             ~lexical:true
             loc
             lexical_bindings
-            (this#switch_cases discriminant)
+            (this#switch_cases loc discriminant)
             cases
         in
         switch
 
-      method private switch_cases _ cases = Base.List.map ~f:this#switch_case cases
+      method private switch_cases _ _ cases = Base.List.map ~f:this#switch_case cases
 
       method private scoped_for_in_statement loc (stmt : (L.t, L.t) Ast.Statement.ForIn.t) =
         super#for_in_statement loc stmt
