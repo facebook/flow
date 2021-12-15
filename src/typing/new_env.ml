@@ -53,8 +53,6 @@ module New_env : Env_sig.S = struct
 
   let refine_expr = Old_env.refine_expr
 
-  let set_expr = Old_env.set_expr
-
   let get_current_env_refi = Old_env.get_current_env_refi
 
   let save_excluded_symbols = Old_env.save_excluded_symbols
@@ -324,6 +322,14 @@ module New_env : Env_sig.S = struct
   (*************)
   (*  Writing  *)
   (*************)
+
+  let set_expr cx _key loc _o e =
+    let env = Context.environment cx in
+    match Loc_env.find_write env loc with
+    | None ->
+      (* As below, this entry is empty if the refinement is never read from *)
+      ()
+    | Some w -> Flow_js.unify cx ~use_op:unknown_use e w
 
   let set_env_entry cx ~use_op t loc =
     Debug_js.Verbose.print_if_verbose cx [spf "writing to location %s" (ALoc.debug_to_string loc)];

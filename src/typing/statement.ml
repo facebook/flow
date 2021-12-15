@@ -5873,7 +5873,7 @@ struct
               (SetPrivatePropT (use_op, reason, name, mode, class_entries, false, t, Some prop_t))
           in
           Flow.flow cx (o, upper);
-          post_assignment_havoc ~private_:true name (lhs_loc, lhs_expr) prop_t t;
+          post_assignment_havoc cx ~private_:true name (lhs_loc, lhs_expr) prop_t t;
           prop_t
       in
       ((lhs_loc, prop_t), reconstruct_ast { Member._object; property; comments })
@@ -5917,7 +5917,7 @@ struct
               )
           in
           Flow.flow cx (o, upper);
-          post_assignment_havoc ~private_:false name (lhs_loc, lhs_expr) prop_t t;
+          post_assignment_havoc cx ~private_:false name (lhs_loc, lhs_expr) prop_t t;
           prop_t
       in
       let property = Member.PropertyIdentifier ((prop_loc, prop_t), id) in
@@ -8783,7 +8783,7 @@ struct
       )
     | _ -> ()
 
-  and post_assignment_havoc ~private_ name exp orig_t t =
+  and post_assignment_havoc cx ~private_ name exp orig_t t =
     (* types involved in the assignment are computed
        in pre-havoc environment. it's the assignment itself
        which clears refis *)
@@ -8802,7 +8802,7 @@ struct
          object and refinement types - `o` and `t` here - are
          fully resolved.
       *)
-      ignore Env.(set_expr key (fst exp) t orig_t)
+      Env.(set_expr cx key (fst exp) t orig_t)
     | None -> ()
 
   and mk_initial_arguments_reason =
