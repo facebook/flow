@@ -212,6 +212,10 @@ module NewAPI : sig
    * of the visible exports of a file. See Type_sig_bin *)
   type type_sig
 
+  (* Phantom type tag for file sig, which contains a serialized representation
+   * of the imports/requires of a file. *)
+  type file_sig
+
   (* Phantom type tag for checked file objects. A checked file contains
    * references to the filename, any local definitions, exports, etc. *)
   type checked_file
@@ -262,6 +266,12 @@ module NewAPI : sig
 
   val read_ast : ast addr -> string
 
+  (* file sig *)
+
+  val prepare_write_file_sig : string -> size * (chunk -> file_sig addr)
+
+  val read_file_sig : file_sig addr -> string
+
   (* docblock *)
 
   val docblock_size : string -> size
@@ -293,7 +303,13 @@ module NewAPI : sig
   val checked_file_size : size
 
   val write_checked_file :
-    chunk -> ast addr -> docblock addr -> aloc_table addr -> type_sig addr -> checked_file addr
+    chunk ->
+    ast addr ->
+    docblock addr ->
+    aloc_table addr ->
+    type_sig addr ->
+    file_sig addr ->
+    checked_file addr
 
   val file_ast : checked_file addr -> ast addr
 
@@ -302,4 +318,6 @@ module NewAPI : sig
   val file_aloc_table : checked_file addr -> aloc_table addr
 
   val file_type_sig : checked_file addr -> type_sig addr
+
+  val file_sig : checked_file addr -> file_sig addr
 end

@@ -878,6 +878,8 @@ module NewAPI = struct
 
   type type_sig
 
+  type file_sig
+
   type checked_file
 
   type size = int
@@ -969,13 +971,14 @@ module NewAPI = struct
     | Serialized_tag
     | Serialized_resolved_requires_tag
     | Serialized_ast_tag
+    | Serialized_file_sig_tag
     (* tags defined above this point are serialized+compressed *)
-    | String_tag (* 3 *)
+    | String_tag (* 4 *)
     | Docblock_tag
     | ALoc_table_tag
     | Type_sig_tag
     (* tags defined below this point are scanned for pointers *)
-    | Addr_tbl_tag (* 7 *)
+    | Addr_tbl_tag (* 8 *)
     | Checked_file_tag
 
   (* avoid unused constructor warning *)
@@ -987,7 +990,7 @@ module NewAPI = struct
   let tag_val : tag -> int = Obj.magic
 
   (* double-check integer value is consistent with hh_shared.c *)
-  let () = assert (tag_val Addr_tbl_tag = 7)
+  let () = assert (tag_val Addr_tbl_tag = 8)
 
   let header_size = 1
 
@@ -1151,10 +1154,10 @@ module NewAPI = struct
     else
       Some (f addr)
 
-  (** ASTs
+  (** Compressed OCaml values
 
-      We store ASTs as serialized+compressed blobs in the heap. The object
-      header stores both the compressed size (in words) and the size (in
+      We store OCaml values as serialized+compressed blobs in the heap. The
+      object header stores both the compressed size (in words) and the size (in
       words) of the buffer needed to hold the decompressed value.
 
       LZ4 decompression requires the precise compressed size in bytes. To
@@ -1164,18 +1167,16 @@ module NewAPI = struct
       exactly word sized, we add another word to hold this final byte.
    *)
 
-  let prepare_write_ast ast =
-    let serialized_bsize = String.length ast in
+  let prepare_write_compressed tag serialized =
+    let serialized_bsize = String.length serialized in
     let compress_bound = Lz4.compress_bound serialized_bsize in
     if compress_bound = 0 then invalid_arg "value larger than max input size";
     let compressed = Bytes.create compress_bound in
-    let compressed_bsize = Lz4.compress_default ast compressed in
+    let compressed_bsize = Lz4.compress_default serialized compressed in
     let compressed_wsize = (compressed_bsize + 8) / 8 in
     let decompress_capacity = (serialized_bsize + 7) / 8 in
     let write chunk =
-      let addr =
-        write_serialized_header chunk Serialized_ast_tag compressed_wsize decompress_capacity
-      in
+      let addr = write_serialized_header chunk tag compressed_wsize decompress_capacity in
       unsafe_write_bytes_at chunk.next_addr compressed ~pos:0 ~len:compressed_bsize;
       let offset_index = bsize_wsize compressed_wsize - 1 in
       unsafe_write_int8 chunk.heap (chunk.next_addr + offset_index) (offset_index - compressed_bsize);
@@ -1184,9 +1185,9 @@ module NewAPI = struct
     in
     (compressed_wsize, write)
 
-  let read_ast addr =
+  let read_compressed tag addr =
     let heap = get_heap () in
-    let hd = read_header_checked heap Serialized_ast_tag addr in
+    let hd = read_header_checked heap tag addr in
     let compressed_wsize = hd lsr 34 in
     let offset_index = bsize_wsize compressed_wsize - 1 in
     let compressed_bsize =
@@ -1197,6 +1198,12 @@ module NewAPI = struct
     let decompressed = Bytes.create decompress_capacity in
     let serialized_bsize = Lz4.decompress_safe buf decompressed in
     Bytes.sub_string decompressed 0 serialized_bsize
+
+  (** ASTs *)
+
+  let prepare_write_ast ast = prepare_write_compressed Serialized_ast_tag ast
+
+  let read_ast addr = read_compressed Serialized_ast_tag addr
 
   (** Docblocks *)
 
@@ -1251,16 +1258,23 @@ module NewAPI = struct
 
   let read_type_sig addr f = f (type_sig_buf addr)
 
+  (** File sigs *)
+
+  let prepare_write_file_sig file_sig = prepare_write_compressed Serialized_file_sig_tag file_sig
+
+  let read_file_sig addr = read_compressed Serialized_file_sig_tag addr
+
   (** Checked files *)
 
-  let checked_file_size = 4 * addr_size
+  let checked_file_size = 5 * addr_size
 
-  let write_checked_file chunk ast docblock aloc_table type_sig =
+  let write_checked_file chunk ast docblock aloc_table type_sig file_sig =
     let checked_file = write_header chunk Checked_file_tag checked_file_size in
     unsafe_write_addr chunk ast;
     unsafe_write_addr chunk docblock;
     unsafe_write_addr chunk aloc_table;
     unsafe_write_addr chunk type_sig;
+    unsafe_write_addr chunk file_sig;
     checked_file
 
   let ast_addr file = addr_offset file 1
@@ -1271,6 +1285,8 @@ module NewAPI = struct
 
   let type_sig_addr file = addr_offset file 4
 
+  let file_sig_addr file = addr_offset file 5
+
   let file_ast file = read_addr (get_heap ()) (ast_addr file)
 
   let file_docblock file = read_addr (get_heap ()) (docblock_addr file)
@@ -1278,4 +1294,6 @@ module NewAPI = struct
   let file_aloc_table file = read_addr (get_heap ()) (aloc_table_addr file)
 
   let file_type_sig file = read_addr (get_heap ()) (type_sig_addr file)
+
+  let file_sig file = read_addr (get_heap ()) (file_sig_addr file)
 end

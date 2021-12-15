@@ -90,8 +90,6 @@ module Reparse_mutator : sig
 end
 
 module From_saved_state : sig
-  val add_file_sig : File_key.t -> File_sig.With_Loc.tolerable_t -> unit
-
   val add_file_hash : File_key.t -> Xx.hash -> unit
 
   val add_exports : File_key.t -> Exports.t -> unit

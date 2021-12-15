@@ -22,45 +22,6 @@ type type_sig = Type_sig_collections.Locs.index Packed_type_sig.Module.t
 
 type checked_file_addr = Heap.checked_file SharedMem.addr
 
-let write_checked_file ast docblock locs type_sig =
-  let open Type_sig_collections in
-  let serialize x = Marshal.to_string x [] in
-  let ast = serialize ast in
-  let docblock = serialize docblock in
-  let aloc_table = Packed_locs.pack (Locs.length locs) (fun f -> Locs.iter f locs) in
-  let (sig_bsize, write_sig) = Type_sig_bin.write type_sig in
-  let open Heap in
-  let (ast_size, write_ast) = prepare_write_ast ast in
-  let size =
-    (5 * header_size)
-    + checked_file_size
-    + ast_size
-    + docblock_size docblock
-    + aloc_table_size aloc_table
-    + type_sig_size sig_bsize
-  in
-  alloc size (fun chunk ->
-      let ast = write_ast chunk in
-      let docblock = write_docblock chunk docblock in
-      let aloc_table = write_aloc_table chunk aloc_table in
-      let type_sig = write_type_sig chunk sig_bsize write_sig in
-      write_checked_file chunk ast docblock aloc_table type_sig
-  )
-
-let read_docblock file_addr =
-  let open Heap in
-  let deserialize x = Marshal.from_string x 0 in
-  file_docblock file_addr |> read_docblock |> deserialize
-
-let read_aloc_table file_key file_addr =
-  let open Heap in
-  let init = ALoc.ALocRepresentationDoNotUse.init_table file_key in
-  file_aloc_table file_addr |> read_aloc_table |> Packed_locs.unpack (Some file_key) init
-
-let read_type_sig file_addr =
-  let open Heap in
-  read_type_sig (file_type_sig file_addr) Type_sig_bin.read
-
 (* There's some redundancy in the visitors here, but an attempt to avoid repeated code led,
  * inexplicably, to a shared heap size regression under types-first: D15481813 *)
 let loc_compactifier =
@@ -89,19 +50,58 @@ let loc_decompactifier source =
 
 let decompactify_loc file ast = (loc_decompactifier (Some file))#program ast
 
+let write_checked_file ast docblock locs type_sig file_sig =
+  let open Type_sig_collections in
+  let serialize x = Marshal.to_string x [] in
+  let ast = serialize (compactify_loc ast) in
+  let docblock = serialize docblock in
+  let file_sig = serialize file_sig in
+  let aloc_table = Packed_locs.pack (Locs.length locs) (fun f -> Locs.iter f locs) in
+  let (sig_bsize, write_sig) = Type_sig_bin.write type_sig in
+  let (file_sig_size, write_file_sig) = Heap.prepare_write_file_sig file_sig in
+  let (ast_size, write_ast) = Heap.prepare_write_ast ast in
+  let open Heap in
+  let size =
+    (6 * header_size)
+    + checked_file_size
+    + ast_size
+    + docblock_size docblock
+    + aloc_table_size aloc_table
+    + type_sig_size sig_bsize
+    + file_sig_size
+  in
+  alloc size (fun chunk ->
+      let ast = write_ast chunk in
+      let docblock = write_docblock chunk docblock in
+      let aloc_table = write_aloc_table chunk aloc_table in
+      let type_sig = write_type_sig chunk sig_bsize write_sig in
+      let file_sig = write_file_sig chunk in
+      write_checked_file chunk ast docblock aloc_table type_sig file_sig
+  )
+
 let read_ast file_key file_addr =
   let open Heap in
   let deserialize x = Marshal.from_string x 0 in
   file_ast file_addr |> read_ast |> deserialize |> decompactify_loc file_key
 
-module FileSigHeap =
-  SharedMem.NoCache
-    (File_key)
-    (struct
-      type t = File_sig.With_Loc.tolerable_t
+let read_docblock file_addr =
+  let open Heap in
+  let deserialize x = Marshal.from_string x 0 in
+  file_docblock file_addr |> read_docblock |> deserialize
 
-      let description = "Requires"
-    end)
+let read_aloc_table file_key file_addr =
+  let open Heap in
+  let init = ALoc.ALocRepresentationDoNotUse.init_table file_key in
+  file_aloc_table file_addr |> read_aloc_table |> Packed_locs.unpack (Some file_key) init
+
+let read_type_sig file_addr =
+  let open Heap in
+  read_type_sig (file_type_sig file_addr) Type_sig_bin.read
+
+let read_file_sig file_addr =
+  let open Heap in
+  let deserialize x = Marshal.from_string x 0 in
+  file_sig file_addr |> read_file_sig |> deserialize
 
 (* Contains the hash for every file we even consider parsing *)
 module FileHashHeap =
@@ -160,8 +160,7 @@ module ParsingHeaps = struct
   let add file ~exports info ast file_sig locs type_sig =
     WorkerCancel.with_no_cancellations (fun () ->
         ExportsHeap.add file exports;
-        FileSigHeap.add file file_sig;
-        CheckedFileHeap.add file (write_checked_file (compactify_loc ast) info locs type_sig)
+        CheckedFileHeap.add file (write_checked_file ast info locs type_sig file_sig)
     )
 
   let oldify_batch files =
@@ -170,7 +169,6 @@ module ParsingHeaps = struct
         FilenameSet.iter ASTCache.remove files;
         FilenameSet.iter ALocTableCache.remove files;
         ExportsHeap.oldify_batch files;
-        FileSigHeap.oldify_batch files;
         FileHashHeap.oldify_batch files
     )
 
@@ -178,7 +176,6 @@ module ParsingHeaps = struct
     WorkerCancel.with_no_cancellations (fun () ->
         CheckedFileHeap.remove_old_batch files;
         ExportsHeap.remove_old_batch files;
-        FileSigHeap.remove_old_batch files;
         FileHashHeap.remove_old_batch files
     )
 
@@ -188,7 +185,6 @@ module ParsingHeaps = struct
         FilenameSet.iter ASTCache.remove files;
         FilenameSet.iter ALocTableCache.remove files;
         ExportsHeap.revive_batch files;
-        FileSigHeap.revive_batch files;
         FileHashHeap.revive_batch files
     )
 end
@@ -274,7 +270,10 @@ end = struct
 
   let get_old_exports ~reader:_ = ExportsHeap.get_old
 
-  let get_tolerable_file_sig ~reader:_ = FileSigHeap.get
+  let get_tolerable_file_sig ~reader file =
+    match get_checked_file_addr ~reader file with
+    | Some addr -> Some (read_file_sig addr)
+    | None -> None
 
   let get_file_sig ~reader file =
     match get_tolerable_file_sig ~reader file with
@@ -488,11 +487,10 @@ module Reader : READER with type reader = State_reader.t = struct
     else
       ExportsHeap.get key
 
-  let get_tolerable_file_sig ~reader:_ key =
-    if should_use_oldified key then
-      FileSigHeap.get_old key
-    else
-      FileSigHeap.get key
+  let get_tolerable_file_sig ~reader key =
+    match get_checked_file_addr ~reader key with
+    | Some addr -> Some (read_file_sig addr)
+    | None -> None
 
   let get_file_sig ~reader key =
     match get_tolerable_file_sig ~reader key with
@@ -652,14 +650,10 @@ module Reader_dispatcher : READER with type reader = Abstract_state_reader.t = s
 end
 
 module From_saved_state : sig
-  val add_file_sig : File_key.t -> File_sig.With_Loc.tolerable_t -> unit
-
   val add_file_hash : File_key.t -> Xx.hash -> unit
 
   val add_exports : File_key.t -> Exports.t -> unit
 end = struct
-  let add_file_sig = FileSigHeap.add
-
   let add_file_hash = FileHashHeap.add
 
   let add_exports = ExportsHeap.add
