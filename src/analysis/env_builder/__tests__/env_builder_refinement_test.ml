@@ -4643,3 +4643,25 @@ switch (y.x) { // Does not report a Projection
         (7, 7) to (7, 8) => {
           (2, 4) to (2, 5): (`y`)
         }] |}]
+
+let%expect_test "no_refinement_write_on_indexed" =
+  print_ssa_test {|
+let x = {};
+let y = 'str';
+x[y] = 3;
+x[y]; // Should not report an entry
+|};
+    [%expect {|
+      [
+        (4, 0) to (4, 1) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (4, 2) to (4, 3) => {
+          (3, 4) to (3, 5): (`y`)
+        };
+        (5, 0) to (5, 1) => {
+          (2, 4) to (2, 5): (`x`)
+        };
+        (5, 2) to (5, 3) => {
+          (3, 4) to (3, 5): (`y`)
+        }] |}]

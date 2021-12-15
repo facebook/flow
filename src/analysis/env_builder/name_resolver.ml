@@ -1063,8 +1063,12 @@ module Make
         this#post_assignment_heap_refinement_havoc lhs_member;
         (* We pass allow_optional:false, but optional chains can't be in the LHS anyway. *)
         let lookup = RefinementKey.lookup_of_member lhs_member ~allow_optional:false in
-        match lookup with
-        | Some lookup when update_entry ->
+        let open Flow_ast.Expression in
+        match (lhs_member, lookup) with
+        | ( { Member.property = Member.PropertyIdentifier _ | Member.PropertyPrivateName _; _ },
+            Some lookup
+          )
+          when update_entry ->
           let reason = Reason.(mk_reason RSomeProperty lhs_loc) in
           let write_val = Val.one reason in
           this#map_val_with_lookup
