@@ -1262,13 +1262,8 @@ struct
           let ((_, discriminant_t), _) = discriminant_ast in
           let discriminant_after_check =
             if added_default then
-              match discriminant with
-              | (loc, Ast.Expression.Identifier (_, { Ast.Identifier.name; _ })) ->
-                Some (Env.query_var cx (OrdinaryName name) loc)
-              | _ ->
-                Refinement.key ~allow_optional:true discriminant
-                |> Base.Option.bind ~f:Env.get_current_env_refi
-                |> Base.Option.map ~f:(fun refi -> refi.Scope.refined)
+              let refinement_key = Refinement.key ~allow_optional:true discriminant in
+              Env.discriminant_after_negated_cases cx switch_loc refinement_key discriminant
             else
               None
           in

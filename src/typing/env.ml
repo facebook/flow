@@ -1826,4 +1826,13 @@ module Env : Env_sig.S = struct
   let new_env = false
 
   let record_projection_if_needed _ _ _ = ()
+
+  let discriminant_after_negated_cases cx _switch_loc refinement_key_opt discriminant =
+    match discriminant with
+    | (loc, Flow_ast.Expression.Identifier (_, { Flow_ast.Identifier.name; _ })) ->
+      Some (query_var cx (OrdinaryName name) loc)
+    | _ ->
+      refinement_key_opt
+      |> Base.Option.bind ~f:get_current_env_refi
+      |> Base.Option.map ~f:(fun refi -> refi.Scope.refined)
 end

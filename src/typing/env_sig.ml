@@ -231,4 +231,11 @@ module type S = sig
   val get_refinement : Context.t -> Key.t -> ALoc.t -> Type.t option
 
   val record_projection_if_needed : Context.t -> ALoc.t -> Type.t -> unit
+
+  val discriminant_after_negated_cases :
+    Context.t ->
+    ALoc.t ->
+    (Reason.name * Key.proj list) option ->
+    (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
+    Type.t option
 end

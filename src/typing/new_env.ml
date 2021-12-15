@@ -243,7 +243,6 @@ module New_env : Env_sig.S = struct
     let reason = mk_reason (Key.reason_desc key) loc in
     try Some (read_entry ~for_type:false cx loc reason) with
     | LocEnvEntryNotFound _ -> None
-    | ex -> raise ex
 
   let get_var ?(lookup_mode = ForValue) cx name loc =
     let for_type =
@@ -557,4 +556,13 @@ module New_env : Env_sig.S = struct
     result
 
   let new_env = true
+
+  let discriminant_after_negated_cases cx switch_loc refinement_key_opt _discriminant =
+    let reason_desc =
+      match refinement_key_opt with
+      | None -> RCustom "discriminant of switch"
+      | Some refinement_key -> Key.reason_desc refinement_key
+    in
+    try Some (read_entry ~for_type:false cx switch_loc (mk_reason reason_desc switch_loc)) with
+    | LocEnvEntryNotFound _ -> None
 end
