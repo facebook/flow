@@ -7,4 +7,4 @@
 printf "\\nServer should start in verbose mode\\n"
 start_flow . --verbose-indent
 assert_ok "$FLOW" status --strip-root
-assert_ok grep "union_compare slow" "$FLOW_LOG_FILE" # TODO
+assert_one grep "union_compare slow" "$FLOW_LOG_FILE" # assert union_compare is not called

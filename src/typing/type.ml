@@ -1923,6 +1923,8 @@ and UnionRep : sig
     find_props:(Properties.id -> TypeTerm.property NameUtils.Map.t) ->
     unit
 
+  val optimize_enum_only : t -> flatten:(TypeTerm.t list -> TypeTerm.t list) -> unit
+
   val is_optimized_finally : t -> bool
 
   (** quick membership tests for enums and disjoint unions *)
@@ -2203,6 +2205,15 @@ end = struct
       in
       let (_, _, _, specialization) = rep in
       specialization := Some opt
+
+  let optimize_enum_only rep ~flatten =
+    let ts = flatten (members rep) in
+    if contains_only_flattened_types ts then
+      match enum_optimize ts with
+      | EnumUnion _ as opt ->
+        let (_, _, _, specialization) = rep in
+        specialization := Some opt
+      | _ -> ()
 
   (********** Quick matching **********)
 
