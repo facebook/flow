@@ -2235,7 +2235,7 @@ struct
           match default with
           | None -> Import_export.export_binding cx name id_loc Ast.Statement.ExportValue
           | Some default_loc ->
-            let t = Env.var_ref ~lookup_mode:Env_sig.LookupMode.ForType cx name loc in
+            let t = Env.get_var_declared_type ~lookup_mode:Env_sig.LookupMode.ForType cx name loc in
             Import_export.export cx (OrdinaryName "default") default_loc t
         in
         (* error-handling around calls to `statement` is omitted here because we

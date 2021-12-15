@@ -135,7 +135,7 @@ module Make (Env : Env_sig.S) = struct
       let t = Env.get_var_declared_type ~lookup_mode:Env_sig.LookupMode.ForValue cx name loc in
       export cx name loc t
     | Flow_ast.Statement.ExportType ->
-      let t = Env.var_ref ~lookup_mode:Env_sig.LookupMode.ForType cx name loc in
+      let t = Env.get_var_declared_type ~lookup_mode:Env_sig.LookupMode.ForType cx name loc in
       export_type cx name (Some loc) t
 
   (* After we have seen all the export statements in a module, this function will

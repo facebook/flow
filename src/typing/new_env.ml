@@ -27,10 +27,6 @@ module New_env : Env_sig.S = struct
      what interface to use.*)
   module Old_env = Env.Env
 
-  let bind_type = Old_env.bind_type
-
-  let bind_import_type = Old_env.bind_import_type
-
   let peek_env = Old_env.peek_env
 
   let merge_env = Old_env.merge_env
@@ -68,8 +64,6 @@ module New_env : Env_sig.S = struct
   let get_internal_var = Old_env.get_internal_var
 
   let get_class_entries = Old_env.get_class_entries
-
-  let init_type = Old_env.init_type
 
   let bind_class = Old_env.bind_class
 
@@ -254,14 +248,18 @@ module New_env : Env_sig.S = struct
     | ex -> raise ex
 
   let get_var ?(lookup_mode = ForValue) cx name loc =
-    match lookup_mode with
-    | ForType -> Old_env.get_var ~lookup_mode cx name loc
-    | _ -> read_entry ~for_type:false cx loc (mk_reason (RIdentifier (OrdinaryName name)) loc)
+    let for_type =
+      match lookup_mode with
+      | ForType -> true
+      | _ -> false
+    in
+    ignore lookup_mode;
+    read_entry ~for_type cx loc (mk_reason (RIdentifier (OrdinaryName name)) loc)
 
   let query_var ?(lookup_mode = ForValue) cx name ?desc loc =
-    match (name, lookup_mode) with
-    | ((InternalName _ | InternalModuleName _), _)
-    | (_, ForType) ->
+    match name with
+    | InternalName _
+    | InternalModuleName _ ->
       Old_env.query_var ~lookup_mode cx name ?desc loc
     | _ ->
       let desc =
@@ -402,6 +400,10 @@ module New_env : Env_sig.S = struct
       Old_env.bind_declare_fun cx ~predicate name t loc
     | OrdinaryName _ -> bind cx t loc
 
+  let bind_type ?state:(_ = Scope.State.Declared) cx _name t loc = bind cx t loc
+
+  let bind_import_type cx _name t loc = bind cx t loc
+
   let declare_let cx name =
     match name with
     | InternalName _
@@ -472,14 +474,16 @@ module New_env : Env_sig.S = struct
       Old_env.init_implicit_const kind cx ~use_op name ~has_anno t loc
     | OrdinaryName _ -> init_entry ~has_anno cx ~use_op t loc
 
+  let init_type cx _name t loc = set_env_entry cx ~use_op:unknown_use t loc
+
   let pseudo_init_declared_type _ _ _ = ()
 
   let unify_declared_type ?(lookup_mode = ForValue) cx name loc t =
-    match (name, lookup_mode) with
-    | (_, ForType)
-    | ((InternalName _ | InternalModuleName _), _) ->
+    match name with
+    | InternalName _
+    | InternalModuleName _ ->
       Old_env.unify_declared_type ~lookup_mode cx name loc t
-    | (OrdinaryName _, _) -> set_env_entry cx ~use_op:unknown_use t loc
+    | OrdinaryName _ -> set_env_entry cx ~use_op:unknown_use t loc
 
   let unify_declared_fun_type cx name loc t =
     match name with
