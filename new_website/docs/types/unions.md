@@ -98,48 +98,47 @@ By checking the typeof our value and testing to see if it is a number, Flow
 knows that inside of that block it is only a number. We can then write code
 which treats our value as a number inside of that block.
 
-### Disjoint Unions {#toc-disjoint-unions}
+### Disjoint Object Unions {#toc-disjoint-object-unions}
 
-There's a special type of union in Flow known as a "disjoint union" which can
-be used in [refinements](../../lang/refinements/). These disjoint unions are
-made up of any number of object types which are each tagged by a single
-property.
+There's a special type of union in Flow known as a "disjoint object union" which can
+be used in [refinements](../../lang/refinements/). These disjoint object unions are
+made up of any number of object types which are each tagged by a single property.
 
 For example, imagine we have a function for handling a response from a server
 after we've sent it a request. When the request is successful, we'll get back
-an object with a `success` property which is `true` and a `value` that we've
+an object with a `type` property set to `'success'` and a `value` that we've
 updated.
 
 ```js
-{ success: true, value: false };
+{ type: 'success', value: 23 };
 ```
 
-When the request fails, we'll get back an object with `success` set to `false`
+When the request fails, we'll get back an object with `type` set to `'error'`
 and an `error` property describing the error.
 
 ```js
-{ success: false, error: 'Bad request' };
+{ type: 'error', error: 'Bad request' };
 ```
 
 We can try to express both of these objects in a single object type. However,
 we'll quickly run into issues where we know a property exists based on the
-success property but Flow does not.
+`type` property but Flow does not.
 
 ```js flow-check
 // @flow
 type Response = {
-  success: boolean,
-  value?: boolean,
+  type: 'success' | 'error',
+  value?: number,
   error?: string
 };
 
 function handleResponse(response: Response) {
-  if (response.success) {
+  if (response.type === 'success') {
     // $ExpectError
-    var value: boolean = response.value; // Error!
+    const value: number = response.value; // Error!
   } else {
     // $ExpectError
-    var error: string = response.error; // Error!
+    const error: string = response.error; // Error!
   }
 }
 ```
@@ -148,23 +147,26 @@ Trying to combine these two separate types into a single one will only cause us
 trouble.
 
 Instead, if we create a union type of both object types, Flow will be able to
-know which object we're using based on the success property.
+know which object we're using based on the `type` property.
 
 ```js flow-check
 // @flow
-type Success = { success: true, value: boolean };
-type Failed  = { success: false, error: string };
-
-type Response = Success | Failed;
+type Response =
+  | { type: 'success', value: 23 }
+  | { type: 'error', error: string };
 
 function handleResponse(response: Response) {
-  if (response.success) {
-    var value: boolean = response.value; // Works!
+  if (response.type === 'success') {
+    const value: number = response.value; // Works!
   } else {
-    var error: string = response.error; // Works!
+    const error: string = response.error; // Works!
   }
 }
 ```
+
+In order to use this pattern, there must be a key that is in every object in your union (in our example above, `type`),
+and every object must set a different [literal type](../literals) for that key (in our example, the string `'success'`, and the string `'error'`).
+You can use any kind of literal type, including numbers and booleans.
 
 ### Disjoint unions with exact types {#toc-disjoint-unions-with-exact-types}
 
