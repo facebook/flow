@@ -266,6 +266,7 @@ module Annotate_lti_command = struct
             opt_any_propagation = false;
             opt_enforce_local_inference_annotations = true;
             opt_enforce_this_annotations = true;
+            opt_local_inference_annotation_dirs = [];
           }
         
 
