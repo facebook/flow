@@ -156,16 +156,32 @@ module Make (Extra : BASE_STATS) = struct
          * with literal types are usually noise.
          *)
         | Ty.Union (true, ty1, ty2, tys) ->
-          let type_aliases =
-            List.filter
+          let ts = ty1 :: ty2 :: tys in
+          let has_type_aliases =
+            List.exists
               (function
                 | Ty.Generic (_, Ty.TypeAliasKind, _) -> true
                 | _ -> false)
-              (ty1 :: ty2 :: tys)
+              ts
           in
-          (match type_aliases with
-          | [] -> super#on_t env t
-          | t :: ts -> super#on_t env (Ty.mk_union ~from_bounds:true (t, ts)))
+          if has_type_aliases then
+            let ts =
+              List.filter
+                (function
+                  | Ty.Obj { Ty.obj_literal = Some true; _ }
+                  | Ty.Num (Some _)
+                  | Ty.Str (Some _)
+                  | Ty.Bool (Some _) ->
+                    false
+                  | _ -> true)
+                ts
+            in
+            match ts with
+            | [] -> t
+            | [t] -> super#on_t env t
+            | t :: ts -> super#on_t env (Ty.mk_union ~from_bounds:true (t, ts))
+          else
+            super#on_t env t
         (*
          * Minimal form of evaluating utility types:
          *

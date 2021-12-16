@@ -15,8 +15,8 @@ const z: NumType | StringType = 1;
 g2(z);
 g2('test');
 
-// Should be annotated with `?StringType` (TODO)
-function g3(x: StringType) {}
+// Should be annotated with `?StringType`
+function g3(x: ?StringType) {}
 declare var w: ?StringType;
 g3(w);
 g3('test');
@@ -26,7 +26,7 @@ g3('test');
 Stats:
   Files changed:                            1
   Number of annotations added:              3
-  Total size of annotations:                5
+  Total size of annotations:                8
   Number of LTI errors:                     3
 
 Errors:
