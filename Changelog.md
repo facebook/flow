@@ -1,3 +1,9 @@
+### 0.168.0
+
+Notable bug fixes:
+* Improve performance of IDE requests when using lazy mode and saved state
+* Improve performance of checking union types by optimizing enums more aggressively
+
 ### 0.167.1
 
 Notable bug fixes:
