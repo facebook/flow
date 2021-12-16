@@ -1,0 +1,1 @@
+cmd: codemod annotate-lti-experimental --add-this-params --strip-root --quiet --preserve-literals auto ./
