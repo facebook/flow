@@ -429,6 +429,8 @@ const counts = new Map<Status, number>([
 const activeCount: Status | void = counts.get(Status.Active);
 ```
 
+Flow Enums cannot be used as keys in object literals, as [explained later on this page](#toc-distinct-object-keys).
+
 
 ### Enums in a union <a class="toc" id="toc-enums-in-a-union" href="#toc-enums-in-a-union"></a>
 If your enum value is in a union (e.g. `?Status`), first refine to only the enum type:

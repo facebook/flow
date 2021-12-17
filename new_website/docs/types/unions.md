@@ -51,6 +51,8 @@ type Colors = 'red' | 'blue'
 type Fish = Numbers | Colors;
 ```
 
+If you have enabled [Flow Enums](../../enums/), they may be an alternative to unions of primitive values.
+
 ## Union types requires one in, but all out {#toc-union-types-requires-one-in-but-all-out}
 
 When calling our function that accepts a union type we must pass in ***one of
