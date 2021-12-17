@@ -104,6 +104,8 @@ module type S = sig
 
   val bind_type : ?state:State.t -> Context.t -> string -> Type.t -> ALoc.t -> unit
 
+  val bind_this_tparam : state:State.t -> Context.t -> Type.t -> ALoc.t -> unit
+
   val bind_import_type : Context.t -> string -> Type.t -> ALoc.t -> unit
 
   val bind_declare_var : Context.t -> Reason.name -> Type.t -> ALoc.t -> unit

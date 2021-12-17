@@ -207,12 +207,19 @@ struct
       (fun name t ->
         let r = reason_of_t t in
         let loc = aloc_of_reason r in
-        Env.bind_type
-          cx
-          name
-          (DefT (r, bogus_trust (), TypeT (TypeParamKind, t)))
-          loc
-          ~state:Scope.State.Initialized)
+        if name <> "this" then
+          Env.bind_type
+            cx
+            name
+            (DefT (r, bogus_trust (), TypeT (TypeParamKind, t)))
+            loc
+            ~state:Scope.State.Initialized
+        else
+          Env.bind_this_tparam
+            ~state:Scope.State.Initialized
+            cx
+            (DefT (r, bogus_trust (), TypeT (TypeParamKind, t)))
+            loc)
       tparams_map;
 
     (* add param bindings *)

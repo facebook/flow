@@ -396,13 +396,21 @@ References:
              ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- undef_class.js:4:5
+Error ----------------------------------------------------------------------------------------------- undef_class.js:4:2
 
-Cannot use `C` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
-definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+Cannot cast `x` to `C` because number [1] is incompatible with `C` [2]. [incompatible-cast]
 
+   undef_class.js:4:2
    4| (x: C); // error, number ~> C
-          ^
+       ^
+
+References:
+   undef_class.js:3:8
+   3| var x: number = C; // should be a TDZ error, but for now just undefined
+             ^^^^^^ [1]
+   undef_class.js:4:5
+   4| (x: C); // error, number ~> C
+          ^ [2]
 
 
 

@@ -97,6 +97,8 @@ module New_env : Env_sig.S = struct
 
   type scope = Old_env.scope
 
+  let this_type_params = ref ALocMap.empty
+
   (************************)
   (* Helpers **************)
   (************************)
@@ -239,6 +241,14 @@ module New_env : Env_sig.S = struct
     let var_state = find_var var_info loc in
     type_of_state var_state None
 
+  let get_this_type_param_if_necessary ~otherwise name loc =
+    if name = OrdinaryName "this" then
+      match ALocMap.find_opt loc !this_type_params with
+      | Some t -> t
+      | None -> otherwise ()
+    else
+      otherwise ()
+
   let get_refinement cx key loc =
     let reason = mk_reason (Key.reason_desc key) loc in
     try Some (read_entry ~for_type:false cx loc reason) with
@@ -251,7 +261,10 @@ module New_env : Env_sig.S = struct
       | _ -> false
     in
     ignore lookup_mode;
-    read_entry ~for_type cx loc (mk_reason (RIdentifier (OrdinaryName name)) loc)
+    let name = OrdinaryName name in
+    get_this_type_param_if_necessary name loc ~otherwise:(fun () ->
+        read_entry ~for_type cx loc (mk_reason (RIdentifier name) loc)
+    )
 
   let query_var ?(lookup_mode = ForValue) cx name ?desc loc =
     match name with
@@ -259,12 +272,19 @@ module New_env : Env_sig.S = struct
     | InternalModuleName _ ->
       Old_env.query_var ~lookup_mode cx name ?desc loc
     | _ ->
-      let desc =
-        match desc with
-        | Some desc -> desc
-        | None -> RIdentifier name
-      in
-      read_entry ~for_type:false cx loc (mk_reason desc loc)
+      get_this_type_param_if_necessary name loc ~otherwise:(fun () ->
+          let desc =
+            match desc with
+            | Some desc -> desc
+            | None -> RIdentifier name
+          in
+          let for_type =
+            match lookup_mode with
+            | ForType -> true
+            | _ -> false
+          in
+          read_entry ~for_type cx loc (mk_reason desc loc)
+      )
 
   let var_ref ?(lookup_mode = ForValue) cx ?desc name loc =
     let t = query_var ~lookup_mode cx name ?desc loc in
@@ -405,6 +425,8 @@ module New_env : Env_sig.S = struct
   let bind_type ?state:(_ = Scope.State.Declared) cx _name t loc = bind cx t loc
 
   let bind_import_type cx _name t loc = bind cx t loc
+
+  let bind_this_tparam ~state:_ _cx t loc = this_type_params := ALocMap.add loc t !this_type_params
 
   let declare_let cx name =
     match name with

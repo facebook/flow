@@ -730,6 +730,8 @@ module Env : Env_sig.S = struct
   let bind_type ?(state = State.Declared) cx name t loc =
     bind_entry cx (OrdinaryName name) (Entry.new_type t ~loc ~state) loc
 
+  let bind_this_tparam ~state cx t loc = bind_type ~state cx "this" t loc
+
   let bind_import_type cx name t loc =
     bind_entry cx (OrdinaryName name) (Entry.new_import_type t ~loc) loc
 
