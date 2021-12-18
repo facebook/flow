@@ -18,20 +18,3 @@ function square(n: number): number {
 
 square("2"); // Error!
 ```
-
-Because Flow understands JavaScript so well, it doesn't need many of these
-types. You should only ever have to do a minimal amount of work to describe your
-code to Flow and it will _infer_ the rest. A lot of the time, Flow can
-understand your code without any types at all.
-
-```js
-// @flow
-function square(n) {
-  return n * n; // Error!
-}
-
-square("2");
-```
-
-You can also adopt Flow incrementally and easily remove it at
-anytime, so you can try Flow out on any codebase and see how you like it.
