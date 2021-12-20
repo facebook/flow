@@ -21,14 +21,11 @@ module type S = sig
   val print_full_env : info -> string
 
   val providers_of_def :
-    info ->
-    L.t ->
-    ( bool (* Is the def fully-initialized, e.g. not null- or un-initialized *)
-    * L.t Reason.virtual_reason list
-    )
-    option
+    info -> L.t -> (Find_providers.state * L.t Reason.virtual_reason list) option
 
   val is_provider_of_annotated : info -> L.t -> bool
+
+  val is_provider_state_fully_initialized : Find_providers.state -> bool
 end
 
 module Make (L : Loc_sig.S) : S with module L = L = struct
@@ -59,7 +56,8 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
   let all_annotated_providers entries =
     EntrySet.fold
       (function
-        | { state = AnnotatedVar; provider_locs; _ } -> (fun acc -> L.LSet.union provider_locs acc)
+        | { state = Find_providers.AnnotatedVar; provider_locs; _ } ->
+          (fun acc -> L.LSet.union provider_locs acc)
         | _ -> (fun acc -> acc))
       entries
       L.LSet.empty
@@ -67,24 +65,26 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
   let is_provider_of_annotated { all_annotated_providers; _ } loc =
     L.LSet.mem loc all_annotated_providers
 
+  let is_provider_state_fully_initialized =
+    Find_providers.(
+      function
+      | InitializedVar
+      | AnnotatedVar ->
+        true
+      | UninitializedVar
+      | NullInitializedVar ->
+        false
+    )
+
   let providers_of_def { all_entries; _ } loc =
     Base.List.find_map
       ~f:(fun { declare_locs; def_locs; provider_locs; name; state; _ } ->
         if L.LSet.mem loc declare_locs || L.LSet.mem loc def_locs then
-          let fully_initialized =
-            match state with
-            | InitializedVar
-            | AnnotatedVar ->
-              true
-            | UninitializedVar
-            | NullInitializedVar ->
-              false
-          in
           let provider_reasons =
             L.LSet.elements provider_locs
             |> Base.List.map ~f:Reason.(mk_reason (RIdentifier (OrdinaryName name)))
           in
-          Some (fully_initialized, provider_reasons)
+          Some (state, provider_reasons)
         else
           None)
       (EntrySet.elements all_entries)

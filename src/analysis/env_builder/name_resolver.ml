@@ -847,8 +847,11 @@ module Make
         refine_undefined id
 
       method private providers_of_def_loc def_loc =
-        let (_, providers) =
-          Base.Option.value ~default:(true, []) (Provider_api.providers_of_def provider_info def_loc)
+        let providers =
+          Base.Option.value_map
+            ~default:[]
+            ~f:snd
+            (Provider_api.providers_of_def provider_info def_loc)
         in
         ( ( if Base.List.is_empty providers then
             Val.uninitialized def_loc

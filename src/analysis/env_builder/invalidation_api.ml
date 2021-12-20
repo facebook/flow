@@ -51,7 +51,9 @@ struct
   let declaration_validity info values providers loc =
     match Provider_api.providers_of_def providers loc with
     | None -> Valid
-    | Some (true, _ :: _) -> Valid
+    | Some (provider_state, _ :: _)
+      when Provider_api.is_provider_state_fully_initialized provider_state ->
+      Valid
     | Some (_, providers) ->
       (try
          let null_providers =

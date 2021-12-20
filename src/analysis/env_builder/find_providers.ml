@@ -9,16 +9,17 @@ open Flow_ast_mapper
 open Utils_js
 module Ast = Flow_ast
 
+(* This describes the state of a variable AFTER the provider analysis, suitable for external consumption *)
+type state =
+  | AnnotatedVar
+  | InitializedVar
+  | NullInitializedVar
+  | UninitializedVar
+
 module FindProviders (L : Loc_sig.S) : sig
   module Id : sig
     type t
   end
-
-  type state =
-    | AnnotatedVar
-    | InitializedVar
-    | NullInitializedVar
-    | UninitializedVar
 
   type ('locs, 'state) base_entry = {
     entry_id: Id.t;
@@ -82,13 +83,6 @@ end = struct
     (* For variables that have, so far, only been initialized to null, this records the depth of the assignment *)
     | NullInitialized of int
     | Uninitialized
-
-  (* This describes the state of a variable AFTER the provider analysis, suitable for external consumption *)
-  type state =
-    | AnnotatedVar
-    | InitializedVar
-    | NullInitializedVar
-    | UninitializedVar
 
   (* This describes a single assingment/initialization of a var (rather than the var's state as a whole). ints are
      number of scopes deeper than the variable's declaration that the assignment occurs *)

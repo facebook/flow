@@ -526,9 +526,12 @@ module Env : Env_sig.S = struct
 
   let get_provider cx name loc =
     let ({ Loc_env.var_info = { Env_api.providers; _ }; _ } as env) = Context.environment cx in
-    let (fully_initialized, provider_locs) =
-      Base.Option.value ~default:(false, []) (Env_api.Provider_api.providers_of_def providers loc)
+    let (provider_state, provider_locs) =
+      Base.Option.value
+        ~default:(Find_providers.UninitializedVar, [])
+        (Env_api.Provider_api.providers_of_def providers loc)
     in
+    let fully_initialized = Provider_api.is_provider_state_fully_initialized provider_state in
     let providers =
       Base.List.map ~f:(Fn.compose (Loc_env.find_write env) Reason.aloc_of_reason) provider_locs
       |> Base.Option.all
