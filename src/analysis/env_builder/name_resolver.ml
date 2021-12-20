@@ -433,6 +433,7 @@ module Make
     havoc: Val.t;
     def_loc: ALoc.t option;
     heap_refinements: heap_refinement_map ref;
+    kind: Bindings.kind;
   }
 
   type latest_refinement = {
@@ -490,6 +491,7 @@ module Make
             havoc = Val.global name;
             def_loc = None;
             heap_refinements = ref HeapRefinementMap.empty;
+            kind = Bindings.Var;
           }
         in
         SMap.add name entry acc)
@@ -526,6 +528,7 @@ module Make
           havoc = Val.global jsx_base_name;
           def_loc = None;
           heap_refinements = ref HeapRefinementMap.empty;
+          kind = Bindings.Var;
         }
       in
       (SMap.add jsx_base_name entry globals, Some jsx_base_name)
@@ -748,7 +751,7 @@ module Make
         let { RefinementKey.base; projections } = lookup in
         match SMap.find_opt base env_state.env with
         | None -> ()
-        | Some { val_ref; heap_refinements; havoc = _; def_loc = _ } ->
+        | Some { val_ref; heap_refinements; havoc = _; def_loc = _; kind = _ } ->
           (match projections with
           | [] -> val_ref := f !val_ref
           | _ ->
@@ -802,7 +805,7 @@ module Make
 
       method havoc_env ~force_initialization ~all =
         SMap.iter
-          (fun _x { val_ref; havoc; def_loc; heap_refinements } ->
+          (fun _x { val_ref; havoc; def_loc; heap_refinements; kind = _ } ->
             this#havoc_heap_refinements heap_refinements;
             let uninitialized_writes =
               lazy (Val.writes_of_uninitialized this#refinement_may_be_undefined !val_ref)
@@ -873,6 +876,7 @@ module Make
                 havoc = Val.one reason;
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
+                kind;
               }
             | Bindings.Class ->
               let (havoc, providers) = this#providers_of_def_loc loc in
@@ -889,6 +893,7 @@ module Make
                 havoc;
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
+                kind;
               }
             | _ ->
               let (havoc, providers) = this#providers_of_def_loc loc in
@@ -904,6 +909,7 @@ module Make
                 havoc;
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
+                kind;
               }
         )
 
@@ -1372,7 +1378,9 @@ module Make
         List.iter
           (fun lookup ->
             let { RefinementKey.base; projections } = lookup in
-            let { val_ref; havoc; heap_refinements; def_loc = _ } = SMap.find base env_state.env in
+            let { val_ref; havoc; heap_refinements; def_loc = _; kind = _ } =
+              SMap.find base env_state.env
+            in
             (* If a var is changed then all the heap refinements on that var should
              * also be havoced. If only heap refinements are havoced then there's no
              * need to havoc the subject of the projection *)
@@ -1597,8 +1605,7 @@ module Make
 
       method for_in_or_of_left_declaration left =
         let (_, decl) = left in
-        let open Flow_ast.Statement.VariableDeclaration in
-        let { declarations; kind; comments = _ } = decl in
+        let { Flow_ast.Statement.VariableDeclaration.declarations; kind; comments = _ } = decl in
         match declarations with
         | [(_, { Flow_ast.Statement.VariableDeclaration.Declarator.id; init = _ })] ->
           let open Flow_ast.Pattern in
