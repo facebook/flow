@@ -6,6 +6,7 @@
  *)
 
 open Reason
+module Ast = Flow_ast
 
 module type S = sig
   module L : Loc_sig.S
@@ -49,7 +50,7 @@ module type S = sig
       | NullR
       | UndefinedR
       | MaybeR
-      | InstanceOfR of L.t
+      | InstanceOfR of (L.t, L.t) Ast.Expression.t
       | IsArrayR
       | BoolR of L.t
       | FunctionR
@@ -74,7 +75,7 @@ module type S = sig
         }
       | SentinelR of string * L.t
       | LatentR of {
-          func_loc: L.t;
+          func: (L.t, L.t) Ast.Expression.t;
           index: int;
         }
     [@@deriving show { with_path = false }]
@@ -167,7 +168,7 @@ module Make
       | NullR
       | UndefinedR
       | MaybeR
-      | InstanceOfR of L.t
+      | InstanceOfR of (L.t, L.t) Ast.Expression.t
       | IsArrayR
       | BoolR of L.t
       | FunctionR
@@ -192,7 +193,7 @@ module Make
         }
       | SentinelR of string * L.t
       | LatentR of {
-          func_loc: L.t;
+          func: (L.t, L.t) Ast.Expression.t;
           index: int;
         }
     [@@deriving show { with_path = false }]
@@ -343,7 +344,7 @@ module Make
       else
         lit
     | SentinelR (prop, _) -> Printf.sprintf "SentinelR %s" prop
-    | LatentR { func_loc = _; index } -> Printf.sprintf "LatentR (index = %i)" index
+    | LatentR { func = _; index } -> Printf.sprintf "LatentR (index = %i)" index
 end
 
 module With_Loc =

@@ -837,3 +837,19 @@ class JSResourceReference<+T> {
     (4, 27) to (4, 28) =>
     legal scc: (((4, 6) to (4, 25)); ((7, 4) to (7, 12)); ((6, 4) to (6, 11)); ((5, 17) to (5, 18))) =>
     (2, 5) to (2, 12) |}]
+
+let%expect_test "refi" =
+  print_order_test {|
+function havoc(x) {
+  let y;
+  if (x instanceof R.Y) {
+    y = x;
+  }
+}
+import * as R from 'foo';
+  |};
+  [%expect {|
+    (2, 15) to (2, 16) =>
+    (8, 12) to (8, 13) =>
+    (5, 4) to (5, 5) =>
+    (2, 9) to (2, 14) |}]

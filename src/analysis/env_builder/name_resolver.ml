@@ -802,14 +802,12 @@ module Make
        * as an argument. Variables not passed into the function are havoced if
        * the invalidation api says they can be invalidated.
        *)
-      method apply_latent_refinements callee_loc refinement_keys_by_arg =
+      method apply_latent_refinements ((callee_loc, _) as callee) refinement_keys_by_arg =
         List.iteri
           (fun index -> function
             | None -> ()
             | Some key ->
-              this#add_refinement
-                key
-                (L.LSet.singleton callee_loc, LatentR { func_loc = callee_loc; index }))
+              this#add_refinement key (L.LSet.singleton callee_loc, LatentR { func = callee; index }))
           refinement_keys_by_arg
 
       method havoc_heap_refinements heap_refinements = heap_refinements := HeapRefinementMap.empty
@@ -2703,8 +2701,7 @@ module Make
         match RefinementKey.of_expression expr with
         | None -> ()
         | Some refinement_key ->
-          let (inst_loc, _) = instance in
-          this#add_refinement refinement_key (L.LSet.singleton loc, InstanceOfR inst_loc)
+          this#add_refinement refinement_key (L.LSet.singleton loc, InstanceOfR instance)
 
       method binary_refinement loc expr =
         let open Flow_ast.Expression.Binary in
@@ -2805,7 +2802,7 @@ module Make
           ignore @@ this#expression callee;
           ignore @@ this#call_arguments arguments;
           this#havoc_current_env ~all:false;
-          this#apply_latent_refinements (fst callee) refinement_keys
+          this#apply_latent_refinements callee refinement_keys
         | _ -> ignore @@ this#call loc call
 
       method unary_refinement

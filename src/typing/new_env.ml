@@ -168,7 +168,7 @@ module New_env : Env_sig.S = struct
       | NullR -> NullP
       | UndefinedR -> VoidP
       | MaybeR -> MaybeP
-      | InstanceOfR loc ->
+      | InstanceOfR (loc, _) ->
         (* Instanceof refinements store the loc they check against, which is a read in the env *)
         let reason = mk_reason (RCustom "RHS of `instanceof` operator") loc in
         let t = read_entry ~for_type:false cx loc reason in
@@ -186,7 +186,7 @@ module New_env : Env_sig.S = struct
       | SingletonNumR { loc; sense; lit } -> SingletonNumP (loc, sense, lit)
       | SentinelR (prop, loc) ->
         PropExistsP (prop, mk_reason (RProperty (Some (OrdinaryName prop))) loc)
-      | LatentR { func_loc; index } ->
+      | LatentR { func = (func_loc, _); index } ->
         (* Latent refinements store the loc of the callee, which is a read in the env *)
         let reason = mk_reason (RCustom "Function call") func_loc in
         let t = read_entry ~for_type:false cx func_loc reason in

@@ -79,12 +79,13 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
           let rec writes_of_refinement refi =
             let open Env_api.Refi in
             match refi with
-            | InstanceOfR loc
-            | LatentR { func_loc = loc; _ } ->
-              this#find_writes ~for_type:false loc
+            | InstanceOfR ((_loc, _) as exp)
+            | LatentR { func = (_loc, _) as exp; _ } ->
+              ignore (this#expression exp)
             | AndR (l, r)
             | OrR (l, r) ->
-              writes_of_refinement l @ writes_of_refinement r
+              writes_of_refinement l;
+              writes_of_refinement r
             | NotR r -> writes_of_refinement r
             | TruthyR _
             | NullR
@@ -96,14 +97,15 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
             | NumberR _
             | ObjectR
             | StringR _
+            | SentinelR _
             | SymbolR _
             | SingletonBoolR _
             | SingletonStrR _
-            | SingletonNumR _
-            | SentinelR _ ->
-              []
+            | SingletonNumR _ ->
+              ()
           in
-          writes @ Base.List.concat_map ~f:writes_of_refinement refinements
+          Base.List.iter ~f:writes_of_refinement refinements;
+          writes
 
         (* In order to resolve a def containing a variable read, the writes that the
            Name_resolver determines reach the variable must be resolved *)
