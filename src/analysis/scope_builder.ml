@@ -398,7 +398,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         this#with_bindings ~lexical:true loc lexical_bindings (super#catch_clause loc) clause
 
       (* helper for function params and body *)
-      method private lambda params body =
+      method private lambda params predicate body =
         (* function params and bindings within the function body share the same scope *)
         let bindings =
           let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
@@ -418,6 +418,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           bindings
           (fun () ->
             run this#function_params params;
+            run_opt this#predicate predicate;
             run this#function_body_any body)
           ()
 
@@ -467,7 +468,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             tparams;
             async = _;
             generator = _;
-            predicate = _;
+            predicate;
             sig_loc = _;
             comments = _;
           } =
@@ -478,7 +479,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             ~hoist_op:this#hoist_annotations
             tparams
             ~in_tparam_scope:(fun () ->
-              this#lambda params body;
+              this#lambda params predicate body;
               if with_types then
                 this#hoist_annotations (fun () -> ignore @@ this#type_annotation_hint return)
           )
@@ -505,7 +506,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             tparams;
             async = _;
             generator = _;
-            predicate = _;
+            predicate;
             sig_loc = _;
             comments = _;
           } =
@@ -524,7 +525,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
               run_opt this#function_identifier id;
               (* This function is not hoisted, so we just traverse the signature *)
               this#scoped_type_params tparams ~in_tparam_scope:(fun () ->
-                  this#lambda params body;
+                  this#lambda params predicate body;
                   if with_types then ignore @@ this#type_annotation_hint return
               ))
             ()

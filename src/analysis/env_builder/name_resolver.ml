@@ -1932,14 +1932,14 @@ module Make
         stmt
 
       (* We also havoc state when entering functions and exiting calls. *)
-      method! lambda params body =
+      method! lambda params predicate body =
         this#expecting_abrupt_completions (fun () ->
             let env = this#env in
             this#run
               (fun () ->
                 this#havoc_uninitialized_env;
                 let completion_state =
-                  this#run_to_completion (fun () -> super#lambda params body)
+                  this#run_to_completion (fun () -> super#lambda params predicate body)
                 in
                 this#commit_abrupt_completion_matching
                   AbruptCompletion.(mem [return; throw])
