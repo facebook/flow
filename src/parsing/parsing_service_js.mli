@@ -54,14 +54,14 @@ type results = {
   parse_ok: FilenameSet.t;
   (* list of skipped files *)
   parse_skips: (File_key.t * Docblock.t) list;
-  (* set of files skipped because they were not found on disk *)
-  parse_not_found_skips: FilenameSet.t;
   (* list of files skipped due to an out of date hash *)
   parse_hash_mismatch_skips: FilenameSet.t;
   (* list of failed files *)
   parse_fails: (File_key.t * Docblock.t * parse_failure) list;
   (* set of unchanged files *)
   parse_unchanged: FilenameSet.t;
+  (* set of files that were not found on disk *)
+  parse_not_found: FilenameSet.t;
   (* package.json files parsed *)
   parse_package_json: File_key.t list * package_json_error list;
 }
@@ -114,7 +114,6 @@ val reparse_with_defaults :
   ?with_progress:bool ->
   workers:MultiWorkerLwt.worker list option ->
   modified:FilenameSet.t ->
-  deleted:FilenameSet.t ->
   Options.t ->
   (FilenameSet.t * results) Lwt.t
 

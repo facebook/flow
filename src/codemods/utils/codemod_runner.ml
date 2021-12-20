@@ -546,10 +546,10 @@ module UntypedRunner (C : UNTYPED_RUNNER_CONFIG) : STEP_RUNNER = struct
             let%lwt {
                   Parsing_service_js.parse_ok = roots;
                   parse_skips = _;
-                  parse_not_found_skips = _;
                   parse_hash_mismatch_skips = _;
                   parse_fails = _;
                   parse_unchanged = _;
+                  parse_not_found = _;
                   parse_package_json = _;
                 } =
               Parsing_service_js.parse_with_defaults ~reader options workers next

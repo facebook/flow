@@ -22,8 +22,8 @@ let is_ok { Parsing.parse_ok; _ } = not (FilenameSet.is_empty parse_ok)
 
 let is_fail { Parsing.parse_fails; _ } = not (Base.List.is_empty parse_fails)
 
-let is_skip { Parsing.parse_skips; parse_not_found_skips; _ } =
-  (not (Base.List.is_empty parse_skips)) || not (FilenameSet.is_empty parse_not_found_skips)
+let is_skip { Parsing.parse_skips; parse_not_found; _ } =
+  (not (Base.List.is_empty parse_skips)) || not (FilenameSet.is_empty parse_not_found)
 
 type lib_result =
   | Lib_ok of {

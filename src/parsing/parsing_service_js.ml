@@ -52,14 +52,14 @@ type results = {
   parse_ok: FilenameSet.t;
   (* list of intentionally skipped files *)
   parse_skips: (File_key.t * Docblock.t) list;
-  (* set of files skipped because they were not found on disk *)
-  parse_not_found_skips: FilenameSet.t;
   (* list of files skipped due to an out of date hash *)
   parse_hash_mismatch_skips: FilenameSet.t;
   (* list of failed files *)
   parse_fails: (File_key.t * Docblock.t * parse_failure) list;
   (* set of unchanged files *)
   parse_unchanged: FilenameSet.t;
+  (* set of files that were not found on disk *)
+  parse_not_found: FilenameSet.t;
   (* package.json files parsed *)
   parse_package_json: File_key.t list * package_json_error list;
 }
@@ -68,10 +68,10 @@ let empty_result =
   {
     parse_ok = FilenameSet.empty;
     parse_skips = [];
-    parse_not_found_skips = FilenameSet.empty;
     parse_hash_mismatch_skips = FilenameSet.empty;
     parse_fails = [];
     parse_unchanged = FilenameSet.empty;
+    parse_not_found = FilenameSet.empty;
     parse_package_json = ([], []);
   }
 
@@ -552,13 +552,7 @@ let reducer
   let content =
     let filename_string = File_key.to_string file in
     try Some (cat filename_string) with
-    | e ->
-      let e = Exception.wrap e in
-      Hh_logger.warn
-        "Parsing service failed to read %s, so skipping it. Exception: %s"
-        filename_string
-        (Exception.get_ctor_string e);
-      None
+    | _ -> None
   in
   match content with
   | Some content ->
@@ -634,19 +628,19 @@ let reducer
           { parse_results with parse_fails }
       )
   | None ->
-    let parse_not_found_skips = FilenameSet.add file parse_results.parse_not_found_skips in
-    { parse_results with parse_not_found_skips }
+    let parse_not_found = FilenameSet.add file parse_results.parse_not_found in
+    { parse_results with parse_not_found }
 
 (* merge is just memberwise union/concat of results *)
 let merge r1 r2 =
   {
     parse_ok = FilenameSet.union r1.parse_ok r2.parse_ok;
     parse_skips = r1.parse_skips @ r2.parse_skips;
-    parse_not_found_skips = FilenameSet.union r1.parse_not_found_skips r2.parse_not_found_skips;
     parse_hash_mismatch_skips =
       FilenameSet.union r1.parse_hash_mismatch_skips r2.parse_hash_mismatch_skips;
     parse_fails = r1.parse_fails @ r2.parse_fails;
     parse_unchanged = FilenameSet.union r1.parse_unchanged r2.parse_unchanged;
+    parse_not_found = FilenameSet.union r1.parse_not_found r2.parse_not_found;
     parse_package_json =
       (let (s1, e1) = r1.parse_package_json in
        let (s2, e2) = r2.parse_package_json in
@@ -720,7 +714,7 @@ let parse
     let t2 = Unix.gettimeofday () in
     let ok_count = FilenameSet.cardinal results.parse_ok in
     let skip_count = List.length results.parse_skips in
-    let not_found_count = FilenameSet.cardinal results.parse_not_found_skips in
+    let not_found_count = FilenameSet.cardinal results.parse_not_found in
     let mismatch_count = FilenameSet.cardinal results.parse_hash_mismatch_skips in
     let fail_count = List.length results.parse_fails in
     let unchanged_count = FilenameSet.cardinal results.parse_unchanged in
@@ -748,13 +742,9 @@ let reparse
     ~parse_unchanged
     ~with_progress
     ~workers
-    ~modified:files
-    ~deleted =
+    ~modified:files =
   (* save old parsing info for files *)
-  let all_files = FilenameSet.union files deleted in
-  let (master_mutator, worker_mutator) =
-    Parsing_heaps.Reparse_mutator.create transaction all_files
-  in
+  let (master_mutator, worker_mutator) = Parsing_heaps.Reparse_mutator.create transaction files in
   let next = next_of_filename_set ?with_progress workers files in
   let%lwt results =
     parse
@@ -776,9 +766,9 @@ let reparse
   let modified =
     List.fold_left (fun acc (skip, _) -> FilenameSet.add skip acc) modified results.parse_skips
   in
-  let modified = FilenameSet.union modified results.parse_not_found_skips in
   let modified = FilenameSet.union modified results.parse_hash_mismatch_skips in
-  let unchanged = FilenameSet.diff files modified in
+  let not_found = FilenameSet.union modified results.parse_not_found in
+  let unchanged = FilenameSet.diff (FilenameSet.diff files modified) not_found in
   (* restore old parsing info for unchanged files *)
   Parsing_heaps.Reparse_mutator.revive_files master_mutator unchanged;
   Lwt.return (modified, results)
@@ -844,8 +834,7 @@ let parse_with_defaults ?types_mode ?use_strict ~reader options workers next =
     next
 
 let reparse_with_defaults
-    ~transaction ~reader ?types_mode ?use_strict ?with_progress ~workers ~modified ~deleted options
-    =
+    ~transaction ~reader ?types_mode ?use_strict ?with_progress ~workers ~modified options =
   let (types_mode, use_strict, profile, max_header_tokens, noflow) =
     get_defaults ~types_mode ~use_strict options
   in
@@ -863,7 +852,6 @@ let reparse_with_defaults
     ~with_progress
     ~workers
     ~modified
-    ~deleted
 
 (* ensure_parsed takes a set of files, finds the files which haven't been parsed, and parses them.
  * Any not-yet-parsed files who's on-disk contents don't match their already-known hash are skipped
@@ -901,10 +889,10 @@ let ensure_parsed ~reader options workers files =
   let%lwt {
         parse_ok = _;
         parse_skips = _;
-        parse_not_found_skips;
         parse_hash_mismatch_skips;
         parse_fails = _;
         parse_unchanged = _;
+        parse_not_found;
         parse_package_json = _;
       } =
     parse
@@ -919,4 +907,4 @@ let ensure_parsed ~reader options workers files =
       workers
       next
   in
-  Lwt.return (FilenameSet.union parse_not_found_skips parse_hash_mismatch_skips)
+  Lwt.return (FilenameSet.union parse_not_found parse_hash_mismatch_skips)

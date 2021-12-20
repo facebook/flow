@@ -52,10 +52,10 @@ let collate_parse_results parse_results =
   let {
     Parsing_service_js.parse_ok;
     parse_skips;
-    parse_not_found_skips;
     parse_hash_mismatch_skips;
     parse_fails;
     parse_unchanged;
+    parse_not_found;
     parse_package_json;
   } =
     parse_results
@@ -83,11 +83,8 @@ let collate_parse_results parse_results =
       (fun unparsed (file, info, _) -> (file, info) :: unparsed)
       parse_skips
       parse_fails
-    |> FilenameSet.fold
-         (fun file unparsed -> (file, Docblock.default_info) :: unparsed)
-         parse_not_found_skips
   in
-  (parse_ok, unparsed, parse_unchanged, local_errors, parse_package_json)
+  (parse_ok, unparsed, parse_unchanged, parse_not_found, local_errors, parse_package_json)
 
 let parse ~options ~profiling ~workers ~reader parse_next =
   Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
@@ -95,7 +92,7 @@ let parse ~options ~profiling ~workers ~reader parse_next =
       Lwt.return (collate_parse_results results)
   )
 
-let reparse ~options ~profiling ~transaction ~reader ~workers ~modified ~deleted =
+let reparse ~options ~profiling ~transaction ~reader ~workers ~modified =
   Memory_utils.with_memory_timer_lwt ~options "Parsing" profiling (fun () ->
       let%lwt (new_or_changed, results) =
         Parsing_service_js.reparse_with_defaults
@@ -104,11 +101,12 @@ let reparse ~options ~profiling ~transaction ~reader ~workers ~modified ~deleted
           ~with_progress:true
           ~workers
           ~modified
-          ~deleted
           options
       in
-      let (parse_ok, unparsed, unchanged, local_errors, _) = collate_parse_results results in
-      Lwt.return (new_or_changed, parse_ok, unparsed, unchanged, local_errors)
+      let (parse_ok, unparsed, unchanged, deleted, local_errors, _) =
+        collate_parse_results results
+      in
+      Lwt.return (new_or_changed, deleted, parse_ok, unparsed, unchanged, local_errors)
   )
 
 let flow_error_of_module_error file err =
@@ -1130,43 +1128,6 @@ end = struct
      * or focused file. We can ignore a request if the file is already checked at the desired level
      * or at a more important level *)
     let files_to_force = CheckedSet.diff files_to_force env.ServerEnv.checked_files in
-    (* split updates into deleted files and modified files *)
-    (* NOTE: We use the term "modified" in the same sense as the underlying file
-          system: a modified file exists, and in relation to an old file system
-          state, a modified file could be any of "new," "changed," or "unchanged."
-       **)
-    let (modified, deleted) =
-      CheckedSet.partition (fun f _ -> Sys.file_exists (File_key.to_string f)) updates
-    in
-    let deleted_count = CheckedSet.cardinal deleted in
-    let modified_count = CheckedSet.cardinal modified in
-    (* log modified and deleted files *)
-    if deleted_count + modified_count > 0 then (
-      Hh_logger.info "recheck %d modified, %d deleted files" modified_count deleted_count;
-      let log_files files msg n =
-        Hh_logger.info "%s files:" msg;
-        let _ =
-          CheckedSet.fold
-            (fun i f ->
-              let cap = 500 in
-              if i <= cap then
-                Hh_logger.info "%d/%d: %s" i n (File_key.to_string f)
-              else if Hh_logger.Level.(passes_min_level Debug) then
-                Hh_logger.debug "%d/%d: %s" i n (File_key.to_string f)
-              else if i = cap + 1 then
-                Hh_logger.info "..."
-              else
-                ();
-              i + 1)
-            1
-            files
-        in
-        ()
-      in
-      if modified_count > 0 then log_files modified "modified" modified_count;
-      if deleted_count > 0 then log_files deleted "deleted" deleted_count
-    );
-    let deleted = CheckedSet.all deleted in
 
     (* We don't need to delete things from the parsing heaps - they will be automatically oldified.
      * Oldifying something removes it from the heap (but keeps it around in case we need it back) *)
@@ -1181,13 +1142,14 @@ end = struct
      * unchanged_parse - Set of files who's file hash didn't changes
      * new_local_errors - Parse errors, docblock errors, etc
      *)
-    let%lwt (new_or_changed, freshparsed_set, unparsed, unchanged_parse, new_local_errors) =
-      let modified = CheckedSet.all modified in
-      reparse ~options ~profiling ~transaction ~reader ~workers ~modified ~deleted
+    let%lwt (new_or_changed, deleted, freshparsed_set, unparsed, unchanged_parse, new_local_errors)
+        =
+      let modified = CheckedSet.all updates in
+      reparse ~options ~profiling ~transaction ~reader ~workers ~modified
     in
-    (* turn [freshparsed_set] into a CheckedSet with the same priorities as they came in from [modified] *)
+    (* turn [freshparsed_set] into a CheckedSet with the same priorities as they came in from [updates] *)
     let freshparsed =
-      CheckedSet.filter ~f:(fun file _ -> FilenameSet.mem file freshparsed_set) modified
+      CheckedSet.filter ~f:(fun file _ -> FilenameSet.mem file freshparsed_set) updates
     in
     let unparsed_set =
       List.fold_left (fun set (fn, _) -> FilenameSet.add fn set) FilenameSet.empty unparsed
@@ -1220,6 +1182,36 @@ end = struct
     let old_parsed = env.ServerEnv.files in
     let new_or_changed_or_deleted = FilenameSet.union new_or_changed deleted in
     let unchanged = FilenameSet.diff old_parsed new_or_changed_or_deleted in
+
+    let deleted_count = FilenameSet.cardinal deleted in
+    let modified_count = FilenameSet.cardinal new_or_changed in
+    (* log modified and deleted files *)
+    if deleted_count + modified_count > 0 then (
+      Hh_logger.info "recheck %d modified, %d deleted files" modified_count deleted_count;
+      let log_files files msg n =
+        Hh_logger.info "%s files:" msg;
+        let _ =
+          FilenameSet.fold
+            (fun f i ->
+              let cap = 500 in
+              if i <= cap then
+                Hh_logger.info "%d/%d: %s" i n (File_key.to_string f)
+              else if Hh_logger.Level.(passes_min_level Debug) then
+                Hh_logger.debug "%d/%d: %s" i n (File_key.to_string f)
+              else if i = cap + 1 then
+                Hh_logger.info "..."
+              else
+                ();
+              i + 1)
+            files
+            1
+        in
+        ()
+      in
+      if modified_count > 0 then log_files new_or_changed "modified" modified_count;
+      if deleted_count > 0 then log_files deleted "deleted" deleted_count
+    );
+
     Hh_logger.debug
       "recheck: old = %d, del = %d, fresh = %d, unmod = %d"
       (FilenameSet.cardinal old_parsed)
@@ -2340,8 +2332,13 @@ let init_from_scratch ~profiling ~workers options =
   let next_files = make_next_files ~libs ~file_options (Options.root options) in
   Hh_logger.info "Parsing";
   MonitorRPC.status_update ServerStatus.(Parsing_progress { finished = 0; total = None });
-  let%lwt (parsed_set, unparsed, unchanged, local_errors, (package_json_files, package_json_errors))
-      =
+  let%lwt ( parsed_set,
+            unparsed,
+            unchanged,
+            _not_found,
+            local_errors,
+            (package_json_files, package_json_errors)
+          ) =
     parse ~options ~profiling ~workers ~reader next_files
   in
   assert (FilenameSet.is_empty unchanged);
