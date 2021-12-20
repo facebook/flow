@@ -23,6 +23,7 @@ module type S = sig
   type write_loc =
     | Write of L.t Reason.virtual_reason
     | Uninitialized of L.t Reason.virtual_reason
+    | Undeclared of L.t Reason.virtual_reason
     | UninitializedClass of {
         read: L.t Reason.virtual_reason;
         def: L.t Reason.virtual_reason;
@@ -142,6 +143,7 @@ module Make
   type write_loc =
     | Write of L.t Reason.virtual_reason
     | Uninitialized of L.t Reason.virtual_reason
+    | Undeclared of L.t Reason.virtual_reason
     | UninitializedClass of {
         read: L.t Reason.virtual_reason;
         def: L.t Reason.virtual_reason;
@@ -236,6 +238,7 @@ module Make
     | UninitializedClass _ -> []
     | Write r -> [Reason.poly_loc_of_reason r]
     | Uninitialized _ -> []
+    | Undeclared _ -> []
     | Global _ -> []
     | Projection _ -> []
     | Unreachable _ -> []
@@ -270,6 +273,7 @@ module Make
     let rec print_write_loc write_loc =
       match write_loc with
       | Uninitialized _ -> "(uninitialized)"
+      | Undeclared _ -> "(undeclared)"
       | UninitializedClass { def; _ } ->
         let loc = Reason.poly_loc_of_reason def in
         Utils_js.spf

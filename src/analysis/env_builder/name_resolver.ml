@@ -167,6 +167,8 @@ module Make
 
     val projection : ALoc.t -> t
 
+    val undeclared : ALoc.t virtual_reason -> t
+
     (* unwraps a RefinementWrite into just the underlying write *)
     val unrefine : int -> t -> t
 
@@ -177,11 +179,14 @@ module Make
     val writes_of_uninitialized : (int -> bool) -> t -> write_state list
 
     val is_global_undefined : t -> bool
+
+    val is_undeclared : t -> bool
   end = struct
     let curr_id = ref 0
 
     type write_state =
       | Uninitialized of ALoc.t
+      | Undeclared of ALoc.t virtual_reason
       | UninitializedClass of {
           read: ALoc.t;
           def: ALoc.t virtual_reason;
@@ -205,6 +210,11 @@ module Make
       | Global "undefined" -> true
       | _ -> false
 
+    let is_undeclared t =
+      match t.write_state with
+      | Undeclared _ -> true
+      | _ -> false
+
     let new_id () =
       let id = !curr_id in
       curr_id := !curr_id + 1;
@@ -225,6 +235,8 @@ module Make
     let projection loc = mk_with_write_state @@ Projection loc
 
     let refinement refinement_id val_t = mk_with_write_state @@ Refinement { refinement_id; val_t }
+
+    let undeclared r = mk_with_write_state @@ Undeclared r
 
     let rec unrefine_deeply_write_state id write_state =
       match write_state with
@@ -262,6 +274,7 @@ module Make
     let rec normalize (t : write_state) : WriteSet.t =
       match t with
       | Uninitialized _
+      | Undeclared _
       | UninitializedClass _
       | Projection _
       | Global _
@@ -293,6 +306,7 @@ module Make
     let rec normalize_through_refinements (t : write_state) : WriteSet.t =
       match t with
       | Uninitialized _
+      | Undeclared _
       | UninitializedClass _
       | Projection _
       | Global _
@@ -320,6 +334,7 @@ module Make
         ~f:(function
           | Uninitialized l when WriteSet.cardinal vals <= 1 ->
             Env_api.Uninitialized (mk_reason RUninitialized l)
+          | Undeclared r -> Env_api.Undeclared r
           | UninitializedClass { def; read } when WriteSet.cardinal vals <= 1 ->
             Env_api.UninitializedClass { def; read = mk_reason RUninitialized read }
           | Uninitialized l -> Env_api.Uninitialized (mk_reason RPossiblyUninitialized l)
@@ -338,6 +353,7 @@ module Make
     let writes_of_uninitialized refine_to_undefined { write_state; _ } =
       let rec state_is_uninitialized v =
         match v with
+        | Undeclared _ -> []
         | Uninitialized _ -> [v]
         | UninitializedClass _ -> [v]
         | PHI states -> Base.List.concat_map ~f:state_is_uninitialized states
@@ -810,14 +826,17 @@ module Make
             let uninitialized_writes =
               lazy (Val.writes_of_uninitialized this#refinement_may_be_undefined !val_ref)
             in
+            let val_is_undeclared = Val.is_undeclared !val_ref in
             let havoc_ref =
-              if not force_initialization then
+              if force_initialization then
+                havoc
+              else if val_is_undeclared then
+                !val_ref
+              else
                 Base.List.fold
                   ~init:havoc
                   ~f:(fun acc write -> Val.merge acc (Val.of_write write))
                   (Lazy.force uninitialized_writes)
-              else
-                havoc
             in
             if
               Base.Option.is_none def_loc
@@ -827,7 +846,8 @@ module Make
                    prepass_info
                    prepass_values
                    (Base.Option.value_exn def_loc (* checked against none above *))
-              || (force_initialization && List.length (Lazy.force uninitialized_writes) > 0)
+              || force_initialization
+                 && (List.length (Lazy.force uninitialized_writes) > 0 || val_is_undeclared)
             then
               val_ref := havoc_ref)
           env_state.env
@@ -896,6 +916,18 @@ module Make
                 kind;
               }
             | _ ->
+              let initial_val =
+                match kind with
+                (* let/const/enum all introduce errors if you try to access or assign them
+                 * before syntactically encountering the declaration. All other bindings
+                 * do not, so we don't set them to be undeclared *)
+                | Bindings.Let
+                | Bindings.Const
+                | Bindings.Enum ->
+                  let reason = mk_reason (RIdentifier (OrdinaryName name)) loc in
+                  Val.undeclared reason
+                | _ -> Val.uninitialized loc
+              in
               let (havoc, providers) = this#providers_of_def_loc loc in
               let write_entries =
                 Base.List.fold
@@ -905,7 +937,7 @@ module Make
               in
               env_state <- { env_state with write_entries };
               {
-                val_ref = ref (Val.uninitialized loc);
+                val_ref = ref initial_val;
                 havoc;
                 def_loc = Some loc;
                 heap_refinements = ref HeapRefinementMap.empty;
@@ -1015,10 +1047,15 @@ module Make
         let (loc, { Flow_ast.Identifier.name = x; comments = _ }) = ident in
         let reason = Reason.(mk_reason (RIdentifier (OrdinaryName x))) loc in
         let { val_ref; heap_refinements; _ } = SMap.find x env_state.env in
-        val_ref := Val.one reason;
-        this#havoc_heap_refinements heap_refinements;
-        let write_entries = L.LMap.add loc reason env_state.write_entries in
-        env_state <- { env_state with write_entries };
+        (match kind with
+        (* Assignments to undeclared bindings that aren't part of declarations do not
+         * initialize those bindings. TODO: Emit a use before declaration error *)
+        | None when Val.is_undeclared !val_ref -> ()
+        | _ ->
+          val_ref := Val.one reason;
+          this#havoc_heap_refinements heap_refinements;
+          let write_entries = L.LMap.add loc reason env_state.write_entries in
+          env_state <- { env_state with write_entries });
         super#identifier ident
 
       (* This method is called during every read of an identifier. We need to ensure that
@@ -1186,7 +1223,14 @@ module Make
                 ignore @@ this#expression init;
                 ignore @@ this#variable_declarator_pattern ~kind id
               | None ->
-                (* `var x;` is not a write of `x`, but there might be reads in the annotation *)
+                (* No rhs means no write occurs, but the variable moves from undeclared to
+                 * uninitialized. *)
+                Flow_ast_utils.fold_bindings_of_pattern
+                  (fun () (loc, { Flow_ast.Identifier.name; _ }) ->
+                    let { val_ref; _ } = SMap.find name env_state.env in
+                    if Val.is_undeclared !val_ref then val_ref := Val.uninitialized loc)
+                  ()
+                  id;
                 ignore @@ this#type_annotation_hint annot
             end
           | (_, Expression _) -> statement_error

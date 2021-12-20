@@ -30,6 +30,7 @@ let print_values refinement_of_id =
   let rec print_value write_loc =
     match write_loc with
     | Uninitialized _ -> "(uninitialized)"
+    | Undeclared _ -> "(undeclared)"
     | UninitializedClass { def; _ } ->
       let loc = Reason.poly_loc_of_reason def in
       Utils_js.spf
@@ -2295,7 +2296,7 @@ let%expect_test "switch_weird_decl" =
   [%expect {|
     [
       (1, 19) to (1, 20) => {
-        (uninitialized)
+        (undeclared)
       }] |}]
 
 let%expect_test "for_in" =
@@ -4721,4 +4722,109 @@ let obj = {};
         };
         (3, 10) to (3, 13) => {
           (2, 4) to (2, 7): (`obj`)
+        }] |}]
+
+let%expect_test "reference_before_declaration" =
+  print_ssa_test {|
+  _const;
+  _let;
+  _var;
+  _func;
+  _class;
+  E;
+
+  const _const = 3;
+  let _let = 3;
+  var _var = 3;
+  function _func() {}
+class _class {}
+  enum E { A }
+|};
+    [%expect {|
+      [
+        (2, 2) to (2, 8) => {
+          (undeclared)
+        };
+        (3, 2) to (3, 6) => {
+          (undeclared)
+        };
+        (4, 2) to (4, 6) => {
+          (uninitialized)
+        };
+        (5, 2) to (5, 7) => {
+          (12, 11) to (12, 16): (`_func`)
+        };
+        (6, 2) to (6, 8) => {
+          (uninitialized class) (13, 6) to (13, 12): (`_class`)
+        };
+        (7, 2) to (7, 3) => {
+          (undeclared)
+        }] |}]
+
+let%expect_test "declaration_declares_undeclared" =
+  print_ssa_test {|
+x;
+x = 3; // Does not count as a write until LHS is declared
+x;
+let x;
+x;
+x = 3;
+x;
+|};
+    [%expect {|
+      [
+        (2, 0) to (2, 1) => {
+          (undeclared)
+        };
+        (4, 0) to (4, 1) => {
+          (undeclared)
+        };
+        (6, 0) to (6, 1) => {
+          (uninitialized)
+        };
+        (8, 0) to (8, 1) => {
+          (7, 0) to (7, 1): (`x`)
+        }] |}]
+
+let%expect_test "undeclared_havoc_no_writes" =
+  print_ssa_test {|
+console.log('foo');
+x;
+let x;
+|};
+    [%expect {|
+      [
+        (2, 0) to (2, 7) => {
+          Global console
+        };
+        (3, 0) to (3, 1) => {
+          (undeclared)
+        }] |}]
+
+let%expect_test "undeclared_havoc_function_writes" =
+  print_ssa_test {|
+function f() { x = 3 }
+console.log('foo');
+x;
+let x;
+|};
+    [%expect {|
+      [
+        (3, 0) to (3, 7) => {
+          Global console
+        };
+        (4, 0) to (4, 1) => {
+          (undeclared)
+        }] |}]
+
+let%expect_test "undeclared_enter_function_scope" =
+  print_ssa_test {|
+function f() { x; }
+let x;
+x = 3;
+|};
+    [%expect {|
+      [
+        (2, 15) to (2, 16) => {
+          (4, 0) to (4, 1): (`x`)
         }] |}]

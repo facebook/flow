@@ -210,6 +210,8 @@ module New_env : Env_sig.S = struct
       Base.List.map
         ~f:(function
           | Env_api.Uninitialized reason -> Type.(VoidT.make reason |> with_trust Trust.bogus_trust)
+          (* An error is emitted in the name_resolver when Undeclared bindings are read or written *)
+          | Env_api.Undeclared reason -> Type.(AnyT.make (AnyError None) reason)
           | Env_api.UninitializedClass { read; _ } when not for_type ->
             Type.(VoidT.make read |> with_trust Trust.bogus_trust)
           | Env_api.UninitializedClass { def; _ } ->
@@ -305,6 +307,7 @@ module New_env : Env_sig.S = struct
           | Env_api.With_ALoc.UninitializedClass _ -> true
           | Env_api.With_ALoc.Write _ -> true
           | Env_api.With_ALoc.Unreachable _ -> true
+          | Env_api.With_ALoc.Undeclared _ -> true
           | Env_api.With_ALoc.Refinement { refinement_id = _; writes } -> local_def_exists writes
           | Env_api.With_ALoc.Projection _ -> true
           | Env_api.With_ALoc.Global _ -> false)
