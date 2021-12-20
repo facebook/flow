@@ -99,37 +99,25 @@ let print_values values =
 
 let print_order lst =
   let open Name_def_ordering.With_ALoc in
-  let string_of_why why =
-    match why with
-    | (loc, []) -> L.debug_to_string loc
-    | (loc, _) -> Printf.sprintf "[%s, ...]" (L.debug_to_string loc)
+  let msg_of_elt elt =
+    match elt with
+    | Normal l
+    | Resolvable l ->
+      L.debug_to_string l
+    | Illegal l -> Printf.sprintf "illegal self-cycle (%s)" (L.debug_to_string l)
   in
   let msg =
     Base.List.map
       ~f:(function
-        | Singleton key -> L.debug_to_string key
-        | ReflCycle (key, why) ->
+        | Singleton elt -> msg_of_elt elt
+        | IllegalSCC keys ->
           Printf.sprintf
-            "illegal self-cycle: (%s via %s)"
-            (L.debug_to_string key)
-            (string_of_why why)
-        | IllegalCycle ((fst_key, fst_why), rest) ->
+            "illegal scc: ((%s))"
+            (Nel.map msg_of_elt keys |> Nel.to_list |> String.concat "); (")
+        | ResolvableSCC keys ->
           Printf.sprintf
-            "illegal cycle: (%s -> \n  %s)"
-            (L.debug_to_string fst_key)
-            (List.map
-               (fun (key, why) ->
-                 Printf.sprintf "(via %s) %s" (string_of_why why) (L.debug_to_string key))
-               (rest @ [(fst_key, fst_why)])
-            |> String.concat " -> \n  "
-            )
-        | TypeCycle keys ->
-          Printf.sprintf
-            "legal cycle: ((%s))"
-            (Nel.map (L.debug_to_string ?include_source:None) keys
-            |> Nel.to_list
-            |> String.concat "); ("
-            ))
+            "legal scc: ((%s))"
+            (Nel.map msg_of_elt keys |> Nel.to_list |> String.concat "); ("))
       lst
     |> String.concat " => \n"
   in
@@ -359,7 +347,7 @@ function f() {
 }
   |};
   [%expect {|
-    illegal self-cycle: ((2, 9) to (2, 10) via (3, 9) to (3, 10)) |}]
+    illegal self-cycle ((2, 9) to (2, 10)) |}]
 
 let%expect_test "recur_func_anno" =
   print_order_test {|
@@ -370,14 +358,14 @@ function f(): void {
   [%expect {|
     (2, 9) to (2, 10) |}]
 
-let%expect_test "recur_fun_order" =
+let%expect_test "recur_fun_typeof" =
   print_order_test {|
-function f() {
-  return f();
+var x = f ();
+function f(): typeof x {
 }
   |};
   [%expect {|
-    illegal self-cycle: ((2, 9) to (2, 10) via (3, 9) to (3, 10)) |}]
+    illegal scc: (((2, 4) to (2, 5)); ((3, 9) to (3, 10))) |}]
 
 let%expect_test "deps1" =
   print_order_test {|
@@ -407,11 +395,8 @@ function nested() {
   |};
   [%expect {|
     (2, 5) to (2, 6) =>
-    legal cycle: (((3, 5) to (3, 6)); ((4, 5) to (4, 6))) =>
-    illegal cycle: ((7, 2) to (7, 3) ->
-      (via (7, 6) to (7, 7)) (8, 2) to (8, 3) ->
-      (via (8, 6) to (8, 7)) (9, 2) to (9, 3) ->
-      (via (9, 6) to (9, 7)) (7, 2) to (7, 3)) =>
+    legal scc: (((3, 5) to (3, 6)); ((4, 5) to (4, 6))) =>
+    illegal scc: (((7, 2) to (7, 3)); ((9, 2) to (9, 3)); ((8, 2) to (8, 3))) =>
     (6, 9) to (6, 15) |}]
 
 let%expect_test "deps2a" =
@@ -422,9 +407,7 @@ function f() {
 }
   |};
   [%expect {|
-    illegal cycle: ((2, 4) to (2, 5) ->
-      (via (2, 8) to (2, 9)) (3, 9) to (3, 10) ->
-      (via (4, 9) to (4, 10)) (2, 4) to (2, 5)) |}]
+    illegal scc: (((2, 4) to (2, 5)); ((3, 9) to (3, 10))) |}]
 
 let%expect_test "deps3" =
   print_order_test {|
@@ -462,9 +445,7 @@ var x: T = 42;
 type T = typeof x;
   |};
   [%expect {|
-    illegal cycle: ((2, 4) to (2, 5) ->
-      (via (2, 7) to (2, 8)) (3, 5) to (3, 6) ->
-      (via (3, 16) to (3, 17)) (2, 4) to (2, 5)) |}]
+    legal scc: (((2, 4) to (2, 5)); ((3, 5) to (3, 6))) |}]
 
 let%expect_test "func_exp" =
   print_order_test {|
@@ -538,9 +519,7 @@ class D extends C {
 }
   |};
   [%expect {|
-    illegal cycle: ((2, 6) to (2, 7) ->
-      (via (3, 7) to (3, 8)) (5, 6) to (5, 7) ->
-      (via (5, 16) to (5, 17)) (2, 6) to (2, 7)) |}]
+    illegal scc: (((2, 6) to (2, 7)); ((5, 6) to (5, 7))) |}]
 
 let%expect_test "class3_anno" =
   print_order_test {|
@@ -552,7 +531,7 @@ class D extends C {
 }
   |};
   [%expect {|
-    legal cycle: (((2, 6) to (2, 7)); ((5, 6) to (5, 7))) |}]
+    legal scc: (((2, 6) to (2, 7)); ((5, 6) to (5, 7))) |}]
 
 let%expect_test "enum" =
   print_order_test {|
@@ -584,7 +563,7 @@ interface J { h: C }
 class C implements I { }
   |};
   [%expect {|
-    legal cycle: (((2, 10) to (2, 11)); ((4, 6) to (4, 7)); ((3, 10) to (3, 11))) |}]
+    legal scc: (((2, 10) to (2, 11)); ((4, 6) to (4, 7)); ((3, 10) to (3, 11))) |}]
 
 let%expect_test "import" =
   print_init_test {|
@@ -620,9 +599,7 @@ if (x instanceof C) {
   |};
   [%expect {|
     (5, 12) to (5, 13) =>
-    illegal cycle: ((2, 6) to (2, 7) ->
-      (via (3, 10) to (3, 11)) (9, 2) to (9, 3) ->
-      (via (9, 6) to (9, 7)) (2, 6) to (2, 7)) |}]
+    illegal scc: (((2, 6) to (2, 7)); ((9, 2) to (9, 3))) |}]
 
 let%expect_test "refi_latent" =
   print_order_test {|
@@ -636,9 +613,7 @@ if (f(x)) {
   |};
   [%expect {|
     (3, 12) to (3, 13) =>
-    illegal cycle: ((2, 9) to (2, 10) ->
-      (via (2, 22) to (2, 23)) (7, 2) to (7, 3) ->
-      (via (7, 6) to (7, 7)) (2, 9) to (2, 10)) |}]
+    illegal scc: (((2, 9) to (2, 10)); ((7, 2) to (7, 3))) |}]
 
 let%expect_test "declare_class" =
   print_order_test {|
@@ -647,10 +622,7 @@ type S = typeof f;
 declare class C mixins S { }
   |};
   [%expect {|
-    illegal cycle: ((2, 4) to (2, 5) ->
-      (via (2, 7) to (2, 8)) (4, 14) to (4, 15) ->
-      (via (4, 23) to (4, 24)) (3, 5) to (3, 6) ->
-      (via (3, 16) to (3, 17)) (2, 4) to (2, 5)) |}]
+    legal scc: (((2, 4) to (2, 5)); ((3, 5) to (3, 6)); ((4, 14) to (4, 15))) |}]
 
 let%expect_test "declare_class2" =
   print_order_test {|
@@ -674,7 +646,7 @@ opaque type T<X>: S<X> = Y<X>
     (3, 7) to (3, 8) =>
     (3, 5) to (3, 6) =>
     (4, 14) to (4, 15) =>
-    legal cycle: (((2, 5) to (2, 6)); ((4, 12) to (4, 13))) |}]
+    legal scc: (((2, 5) to (2, 6)); ((4, 12) to (4, 13))) |}]
 
 let%expect_test "catch" =
   print_init_test {|
@@ -842,8 +814,26 @@ function h() {
 }
   |};
   [%expect {|
-    illegal cycle: ((5, 2) to (5, 3) ->
-      (via (5, 6) to (5, 7)) (8, 2) to (8, 3) ->
-      (via (8, 7) to (8, 8)) (5, 2) to (5, 3)) =>
+    illegal scc: (((5, 2) to (5, 3)); (illegal self-cycle ((8, 2) to (8, 3)))) =>
     (4, 9) to (4, 10) =>
     (7, 9) to (7, 10) |}]
+
+let%expect_test "type_alias" =
+  print_order_test {|
+type $unwrap = <T>(l: JSResourceReference<T>) => T;
+
+class JSResourceReference<+T> {
+  static loadAll<I: Array<JSResourceReference<mixed>>>(
+    loaders: I,
+    callback: I,
+  ): void {
+    // ...load the modules and then pass them to the callback
+  }
+}
+
+  |};
+  [%expect {|
+    (2, 16) to (2, 17) =>
+    (4, 27) to (4, 28) =>
+    legal scc: (((4, 6) to (4, 25)); ((7, 4) to (7, 12)); ((6, 4) to (6, 11)); ((5, 17) to (5, 18))) =>
+    (2, 5) to (2, 12) |}]

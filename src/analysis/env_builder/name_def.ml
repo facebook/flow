@@ -179,6 +179,16 @@ module Make (L : Loc_sig.S) = struct
           | Method
               ( _,
                 {
+                  Ast.Class.Method.key =
+                    Ast.Expression.Object.Property.Identifier
+                      (_, { Ast.Identifier.name = "constructor"; _ });
+                  _;
+                }
+              ) ->
+            true
+          | Method
+              ( _,
+                {
                   Ast.Class.Method.key = Ast.Expression.Object.Property.Identifier _;
                   value = (_, value);
                   _;

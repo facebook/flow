@@ -375,10 +375,20 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
 
     (* Is the variable defined by this def able to be recursively depended on, e.g. created as a 0->1 tvar before being
        resolved? *)
-    let recursively_resolvable = function
+    let recursively_resolvable =
+      let rec bind_loop b =
+        match b with
+        | Root (Annotation _ | Catch) -> true
+        | Root (For _ | Value _ | Contextual _) -> false
+        | Select ((Computed _ | Default _), _) -> false
+        | Select (_, b) -> bind_loop b
+      in
+      function
+      | Binding (_, bind) -> bind_loop bind
       | TypeAlias _
       | OpaqueType _
       | TypeParam _
+      | Function { fully_annotated = true; _ }
       | Interface _
       (* Imports are academic here since they can't be in a cycle anyways, since they depend on nothing *)
       | Import { import_kind = Ast.Statement.ImportDeclaration.(ImportType | ImportTypeof); _ }
@@ -391,21 +401,24 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
       | Class { fully_annotated = true; _ }
       | DeclaredClass _ ->
         true
-      | Binding _
       | Update _
       | OpAssign _
-      | Function _
+      | Function { fully_annotated = false; _ }
       | Enum _
       | Import _
       | Class { fully_annotated = false; _ } ->
         false
   end
 
+  type element =
+    | Normal of L.t
+    | Resolvable of L.t
+    | Illegal of L.t
+
   type result =
-    | Singleton of L.t
-    | TypeCycle of L.t Nel.t
-    | IllegalCycle of (L.t * L.t Nel.t) Nel.t
-    | ReflCycle of L.t * L.t Nel.t
+    | Singleton of element
+    | ResolvableSCC of element Nel.t
+    | IllegalSCC of element Nel.t
 
   let dependencies env loc def acc =
     let depends = FindDependencies.depends env def in
@@ -436,61 +449,29 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
         in
         failwith (Printf.sprintf "roots: %s\n\nall: %s" roots all)
     in
-    (* Tarjan gives us a sorted list, but we still need to figure out if the cycles
-       are legal (all type definitions) or not, and whether non-cycles are actually cycles that point to
-       themselves. *)
-    let result_of_non_cycle key =
-      let deps = L.LMap.find key graph in
-      match L.LMap.find_opt key deps with
-      | Some k when not (FindDependencies.recursively_resolvable (L.LMap.find key map)) ->
-        ReflCycle (key, k)
-      | _ -> Singleton key
-    in
-    let result_of_cycle (fst, keys) =
-      if
-        Base.List.for_all
-          ~f:(fun k -> FindDependencies.recursively_resolvable (L.LMap.find k map))
-          (fst :: keys)
-      then
-        TypeCycle (fst, keys)
-      else
-        (* We should eventually do some work to choose the most-likely-candidate for annotation as a starting point *)
-        let rec find_path remaining sequence key =
-          let deps = L.LMap.find key graph in
-          if L.LSet.cardinal remaining = 0 then
-            (* Is the initial node connected to this one? *)
-            match L.LMap.find_opt fst deps with
-            | Some links -> Some (sequence, links)
-            | None -> None
+    let result_of_scc (fst, rest) =
+      let element_of_loc loc =
+        if L.LSet.mem loc (L.LMap.find loc order_graph) then
+          if FindDependencies.recursively_resolvable (L.LMap.find loc map) then
+            Resolvable loc
           else
-            (* Find the connected nodes that are in the set of remaining nodes to traverse *)
-            let candidates =
-              L.LSet.filter (fun k -> L.LMap.mem k deps) remaining |> L.LSet.elements
-            in
-            Base.List.find_map
-              ~f:(fun candidate ->
-                let link = L.LMap.find candidate deps in
-                find_path
-                  (L.LSet.remove candidate remaining)
-                  ((candidate, link) :: sequence)
-                  candidate)
-              candidates
-        in
-        let key_set = L.LSet.of_list keys in
-        match find_path key_set [] fst with
-        | Some (sequence, link_to_fst) -> IllegalCycle ((fst, link_to_fst), List.rev sequence)
-        | None ->
-          failwith
-            (Printf.sprintf
-               "Could not find cycle in %s"
-               (Base.List.map ~f:(L.debug_to_string ~include_source:true) keys |> String.concat ",")
-            )
+            Illegal loc
+        else
+          Normal loc
+      in
+      match rest with
+      | [] -> Singleton (element_of_loc fst)
+      | _ ->
+        if
+          Base.List.for_all
+            ~f:(fun m -> FindDependencies.recursively_resolvable (L.LMap.find m map))
+            (fst :: rest)
+        then
+          ResolvableSCC (Nel.map element_of_loc (fst, rest))
+        else
+          IllegalSCC (Nel.map element_of_loc (fst, rest))
     in
-    Base.List.map
-      ~f:(function
-        | (fst, []) -> result_of_non_cycle fst
-        | nel -> result_of_cycle nel)
-      sort
+    Base.List.map ~f:result_of_scc sort
 end
 
 module With_Loc = Make (Loc_sig.LocS) (Env_api.With_Loc)
