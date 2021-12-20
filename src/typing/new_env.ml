@@ -125,6 +125,12 @@ module New_env : Env_sig.S = struct
     |> Base.Option.value_map ~f:snd ~default:[]
     |> Base.List.map ~f:Reason.aloc_of_reason
 
+  let is_def_loc_annotated { Env_api.providers; _ } loc =
+    let providers = Env_api.Provider_api.providers_of_def providers loc in
+    match providers with
+    | Some (Find_providers.AnnotatedVar, _) -> true
+    | _ -> false
+
   let provider_type_for_def_loc env def_loc =
     let { Loc_env.var_info; _ } = env in
     let providers =
@@ -361,9 +367,12 @@ module New_env : Env_sig.S = struct
       | Some w -> Flow_js.unify cx ~use_op t w
     end;
 
-    if not @@ is_provider var_info loc then
+    if not (is_provider var_info loc) then
       let general = provider_type_for_def_loc env loc in
-      Context.add_constrained_write cx (t, UseT (use_op, general))
+      if is_def_loc_annotated var_info loc then
+        Flow_js.flow cx (t, UseT (use_op, general))
+      else
+        Context.add_constrained_write cx (t, UseT (use_op, general))
 
   let subtype_entry cx ~use_op t loc =
     let env = Context.environment cx in
