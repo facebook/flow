@@ -204,7 +204,7 @@ and 'loc t' =
   | EUseArrayLiteral of 'loc
   | EMissingAnnotation of 'loc virtual_reason * 'loc virtual_reason list
   | EMissingLocalAnnotation of 'loc virtual_reason
-  | EBindingError of binding_error * 'loc * name * Scope.Entry.t
+  | EBindingError of binding_error * 'loc * name * ALoc.t
   | ERecursionLimit of ('loc virtual_reason * 'loc virtual_reason)
   | EModuleOutsideRoot of 'loc * string
   | EMalformedPackageJson of 'loc * string
@@ -2387,7 +2387,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     Normal { features }
   | EMissingLocalAnnotation r ->
     Normal { features = [text "Missing an annotation on "; desc r; text "."] }
-  | EBindingError (binding_error, _, x, entry) ->
+  | EBindingError (binding_error, _, x, entry_loc) ->
     let desc =
       match x with
       | InternalName "this" -> RThis
@@ -2396,7 +2396,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     in
     (* We can call to_loc here because reaching this point requires that everything else
        in the error message is concretized already; making Scopes polymorphic is not a good idea *)
-    let x = mk_reason desc (Scope.Entry.entry_loc entry |> ALoc.to_loc_exn) in
+    let x = mk_reason desc (entry_loc |> ALoc.to_loc_exn) in
     let features =
       match binding_error with
       | ENameAlreadyBound ->

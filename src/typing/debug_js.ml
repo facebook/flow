@@ -1480,12 +1480,12 @@ let dump_error_message =
     | EUseArrayLiteral loc -> spf "EUseArrayLiteral (%s)" (string_of_aloc loc)
     | EMissingAnnotation (reason, _) -> spf "EMissingAnnotation (%s)" (dump_reason cx reason)
     | EMissingLocalAnnotation reason -> spf "EMissingLocalAnnotation (%s)" (dump_reason cx reason)
-    | EBindingError (_binding_error, loc, x, entry) ->
+    | EBindingError (_binding_error, loc, x, entry_loc) ->
       spf
         "EBindingError (_, %s, %s, %s)"
         (string_of_aloc loc)
         (Reason.display_string_of_name x)
-        (Scope.Entry.string_of_kind entry)
+        (string_of_aloc entry_loc)
     | ERecursionLimit (reason1, reason2) ->
       spf "ERecursionLimit (%s, %s)" (dump_reason cx reason1) (dump_reason cx reason2)
     | EModuleOutsideRoot (loc, name) -> spf "EModuleOutsideRoot (%s, %S)" (string_of_aloc loc) name

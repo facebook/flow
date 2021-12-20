@@ -511,7 +511,7 @@ module Env : Env_sig.S = struct
     (spec', closure_writes, provider)
 
   let binding_error msg cx name entry loc =
-    Flow.add_output cx (Error_message.EBindingError (msg, loc, name, entry))
+    Flow.add_output cx (Error_message.EBindingError (msg, loc, name, Entry.entry_loc entry))
 
   let already_bound_error = binding_error Error_message.ENameAlreadyBound
 
