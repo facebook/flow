@@ -59,9 +59,9 @@ let has_flow_ext file = File_key.check_suffix file flow_ext
 
 let chop_flow_ext file =
   if has_flow_ext file then
-    Some (File_key.chop_suffix file flow_ext)
+    File_key.chop_suffix file flow_ext
   else
-    None
+    file
 
 let is_directory path =
   try Sys.is_directory path with

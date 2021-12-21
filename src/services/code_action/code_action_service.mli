@@ -88,6 +88,7 @@ module For_tests : sig
     node_resolver_dirnames:string list ->
     reader:State_reader.t ->
     string option ->
-    Modulename.t ->
+    File_key.t ->
+    string option ->
     string option
 end

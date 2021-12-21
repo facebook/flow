@@ -69,7 +69,7 @@ module ResolvedRequiresHeap =
 (********************************** Info Heap *********************************)
 
 type info = {
-  module_name: Modulename.t;
+  module_name: string option;
   checked: bool;  (** in flow? *)
   parsed: bool;  (** if false, it's a tracking record only *)
 }

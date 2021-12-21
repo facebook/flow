@@ -115,9 +115,9 @@ let gen_import_statements file (symbols : Ty_symbol.symbol SymbolMap.t) =
     (* Relativize module name *)
     let module_name =
       match module_name with
-      | Modulename.String s -> s
-      | Modulename.Filename f ->
-        let f = File_key.to_string f in
+      | Some s -> s
+      | None ->
+        let f = File_key.to_string (Files.chop_flow_ext remote_source) in
         let dir = Filename.dirname (File_key.to_string file) in
         Filename.concat "./" (Files.relative_path dir f)
     in

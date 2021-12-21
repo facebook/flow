@@ -496,7 +496,9 @@ end = struct
               let info =
                 Module_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.warn remote_source
               in
-              info.Module_heaps.module_name
+              (match info.Module_heaps.module_name with
+              | Some name -> Modulename.String name
+              | None -> Modulename.Filename (Files.chop_flow_ext remote_source))
           | None -> failwith "No source"
         in
         (* TODO we should probably give up if we are trying to generate an import statement with

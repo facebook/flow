@@ -660,8 +660,8 @@ let file_of_string_modules ~root ~write_root ~options ~docblock ~file:file_key =
   in
   let%bind string =
     match Module_js.exported_module ~options file_key docblock with
-    | Modulename.String string -> return string
-    | Modulename.Filename _ -> []
+    | Some string -> return string
+    | None -> []
   in
   return FileOfStringModule.(to_json { file; string })
 

@@ -22,7 +22,7 @@ type error =
 val eponymous_module : File_key.t -> Modulename.t
 
 (* export and import functions for the module system *)
-val exported_module : options:Options.t -> File_key.t -> Docblock.t -> Modulename.t
+val exported_module : options:Options.t -> File_key.t -> Docblock.t -> string option
 
 type resolution_acc = {
   mutable paths: SSet.t;

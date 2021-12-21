@@ -27,7 +27,8 @@ let tests =
                ~node_resolver_dirnames
                ~reader
                (Some "/path/to/root")
-               (source_modulename "/path/to/root/foo/bar.js")
+               (File_key.SourceFile "/path/to/root/foo/bar.js")
+               None
            in
            assert_equal ~ctxt ~printer:string_opt (Some "./foo/bar") path
          );
@@ -37,7 +38,8 @@ let tests =
                ~node_resolver_dirnames
                ~reader
                (Some "/path/to/root")
-               (source_modulename "/path/to/root/foo/index.js")
+               (File_key.SourceFile "/path/to/root/foo/index.js")
+               None
            in
            assert_equal ~ctxt ~printer:string_opt (Some "./foo") path
          );
@@ -47,7 +49,8 @@ let tests =
                ~node_resolver_dirnames
                ~reader
                (Some "/path/to/root")
-               (source_modulename "/path/to/root/foo/bar.json")
+               (File_key.SourceFile "/path/to/root/foo/bar.json")
+               None
            in
            assert_equal ~ctxt ~printer:string_opt (Some "./foo/bar.json") path
          );
@@ -57,7 +60,8 @@ let tests =
                ~node_resolver_dirnames
                ~reader
                (Some "/path/to/root")
-               (source_modulename "/path/to/root/foo/index.json")
+               (File_key.SourceFile "/path/to/root/foo/index.json")
+               None
            in
            assert_equal ~ctxt ~printer:string_opt (Some "./foo/index.json") path
          );
@@ -67,7 +71,8 @@ let tests =
                ~node_resolver_dirnames
                ~reader
                (Some "/path/to/root/a/b")
-               (source_modulename "/path/to/root/a/node_modules/module/index.js")
+               (File_key.SourceFile "/path/to/root/a/node_modules/module/index.js")
+               None
            in
            assert_equal ~ctxt ~printer:string_opt (Some "module") path
          );
@@ -77,7 +82,8 @@ let tests =
                ~node_resolver_dirnames
                ~reader
                (Some "/path/to/root/a")
-               (source_modulename "/path/to/root/a/node_modules/module/index.js")
+               (File_key.SourceFile "/path/to/root/a/node_modules/module/index.js")
+               None
            in
            assert_equal ~ctxt ~printer:string_opt (Some "module") path
          );
@@ -87,7 +93,8 @@ let tests =
                ~node_resolver_dirnames
                ~reader
                (Some "/path/to/root/a")
-               (source_modulename "/path/to/root/a/b/node_modules/module/index.js")
+               (File_key.SourceFile "/path/to/root/a/b/node_modules/module/index.js")
+               None
            in
            assert_equal ~ctxt ~printer:string_opt (Some "./b/node_modules/module") path
          );
@@ -97,7 +104,8 @@ let tests =
                ~node_resolver_dirnames
                ~reader
                (Some "/path/to/root/a/c")
-               (source_modulename "/path/to/root/a/b/node_modules/module/index.js")
+               (File_key.SourceFile "/path/to/root/a/b/node_modules/module/index.js")
+               None
            in
            assert_equal ~ctxt ~printer:string_opt (Some "../b/node_modules/module") path
          );
@@ -111,7 +119,8 @@ let tests =
                ~node_resolver_dirnames
                ~reader
                (Some "/path/to/root/a/c")
-               (source_modulename "/path/to/root/node_modules/pkg_with_main/main.js")
+               (File_key.SourceFile "/path/to/root/node_modules/pkg_with_main/main.js")
+               None
            in
            assert_equal ~ctxt ~printer:string_opt (Some "pkg_with_main") path
          );
@@ -125,7 +134,8 @@ let tests =
                ~node_resolver_dirnames
                ~reader
                (Some "/path/to/root/a/c")
-               (source_modulename "/path/to/root/node_modules/pkg_with_relative_main/main.js")
+               (File_key.SourceFile "/path/to/root/node_modules/pkg_with_relative_main/main.js")
+               None
            in
            assert_equal ~ctxt ~printer:string_opt (Some "pkg_with_relative_main") path
          );
@@ -139,7 +149,8 @@ let tests =
                ~node_resolver_dirnames
                ~reader
                (Some "/path/to/root/a/c")
-               (source_modulename "/path/to/root/node_modules/pkg_with_nested_main/dist/main.js")
+               (File_key.SourceFile "/path/to/root/node_modules/pkg_with_nested_main/dist/main.js")
+               None
            in
            assert_equal ~ctxt ~printer:string_opt (Some "pkg_with_nested_main") path
          );

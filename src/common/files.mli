@@ -49,7 +49,7 @@ val flow_ext : string
 
 val has_flow_ext : File_key.t -> bool
 
-val chop_flow_ext : File_key.t -> File_key.t option
+val chop_flow_ext : File_key.t -> File_key.t
 
 val is_json_file : string -> bool
 

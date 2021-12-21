@@ -192,14 +192,6 @@ end = struct
     in
     loop 0 saved_state_version_length
 
-  let normalize_info ~normalizer info =
-    let module_name =
-      modulename_map_fn
-        ~f:(FileNormalizer.normalize_file_key normalizer)
-        info.Module_heaps.module_name
-    in
-    { info with Module_heaps.module_name }
-
   let normalize_resolved_requires
       ~normalizer { Module_heaps.file_key; resolved_modules; phantom_dependents; hash } =
     let file_key = FileNormalizer.normalize_file_key normalizer file_key in
@@ -218,7 +210,6 @@ end = struct
     { resolved_requires; exports; hash }
 
   let normalize_parsed_data ~normalizer { info; normalized_file_data; sig_hash } =
-    let info = normalize_info ~normalizer info in
     let normalized_file_data = normalize_file_data ~normalizer normalized_file_data in
     { info; normalized_file_data; sig_hash }
 
@@ -251,9 +242,7 @@ end = struct
   let collect_normalized_data_for_unparsed_file ~normalizer ~reader fn unparsed_heaps =
     let relative_file_data =
       {
-        unparsed_info =
-          normalize_info ~normalizer
-          @@ Module_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.ok fn;
+        unparsed_info = Module_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.ok fn;
         unparsed_hash = Parsing_heaps.Reader.get_file_hash_unsafe ~reader fn;
       }
     in
@@ -511,16 +500,6 @@ end = struct
     fun fd ->
       read_version fd (Bytes.create saved_state_version_length) 0 saved_state_version_length
 
-  let denormalize_info_generic ~denormalize info =
-    let module_name = modulename_map_fn ~f:denormalize info.Module_heaps.module_name in
-    { info with Module_heaps.module_name }
-
-  let denormalize_info ~denormalizer info =
-    denormalize_info_generic ~denormalize:(FileDenormalizer.denormalize_file_key denormalizer) info
-
-  let denormalize_info_nocache ~root info =
-    denormalize_info_generic ~denormalize:(denormalize_file_key_nocache ~root) info
-
   let denormalize_resolved_requires
       ~root { Module_heaps.file_key; resolved_modules; phantom_dependents; hash = _ } =
     (* We do our best to avoid reading the file system (which Path.make will do) *)
@@ -536,10 +515,6 @@ end = struct
     let resolved_requires = denormalize_resolved_requires ~root resolved_requires in
     { resolved_requires; exports; hash }
 
-  let partially_denormalize_parsed_data ~denormalizer { info; normalized_file_data; sig_hash } =
-    let info = denormalize_info ~denormalizer info in
-    { info; normalized_file_data; sig_hash }
-
   let progress_fn real_total ~total:_ ~start ~length:_ =
     MonitorRPC.status_update
       ServerStatus.(Load_saved_state_progress { total = Some real_total; finished = start })
@@ -548,7 +523,6 @@ end = struct
   let denormalize_parsed_heaps ~denormalizer parsed_heaps =
     Base.List.map
       ~f:(fun (relative_fn, parsed_file_data) ->
-        let parsed_file_data = partially_denormalize_parsed_data ~denormalizer parsed_file_data in
         let fn = FileDenormalizer.denormalize_file_key denormalizer relative_fn in
         (fn, parsed_file_data))
       parsed_heaps
@@ -560,9 +534,8 @@ end = struct
       workers
       ~job:
         (List.fold_left (fun acc (relative_fn, unparsed_file_data) ->
-             let unparsed_info = denormalize_info_nocache ~root unparsed_file_data.unparsed_info in
              let fn = denormalize_file_key_nocache ~root relative_fn in
-             (fn, { unparsed_info; unparsed_hash = unparsed_file_data.unparsed_hash }) :: acc
+             (fn, unparsed_file_data) :: acc
          )
         )
       ~neutral:[]

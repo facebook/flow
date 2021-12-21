@@ -194,12 +194,12 @@ let node_path ~node_resolver_dirnames ~reader ~src_dir require_path =
 (** [path_of_modulename src_dir t] converts the Modulename.t [t] to a string
     suitable for importing [t] from a file in [src_dir]. that is, if it is a
     filename, returns the path relative to [src_dir]. *)
-let path_of_modulename ~node_resolver_dirnames ~reader src_dir = function
-  | Modulename.String str -> Some str
-  | Modulename.Filename file_key ->
+let path_of_modulename ~node_resolver_dirnames ~reader src_dir file_key = function
+  | Some _ as string_module_name -> string_module_name
+  | None ->
     Base.Option.map
       ~f:(fun src_dir ->
-        let path = File_key.to_string file_key in
+        let path = File_key.to_string (Files.chop_flow_ext file_key) in
         node_path ~node_resolver_dirnames ~reader ~src_dir path)
       src_dir
 
@@ -218,13 +218,9 @@ let from_of_source ~options ~reader ~src_dir source =
   | Export_index.File_key from ->
     (match Module_heaps.Reader.get_info ~reader ~audit:Expensive.ok from with
     | None -> None
-    | Some info ->
+    | Some { Module_heaps.module_name; _ } ->
       let node_resolver_dirnames = Options.file_options options |> Files.node_resolver_dirnames in
-      (match
-         path_of_modulename ~node_resolver_dirnames ~reader src_dir info.Module_heaps.module_name
-       with
-      | None -> None
-      | Some from -> Some from))
+      path_of_modulename ~node_resolver_dirnames ~reader src_dir from module_name)
 
 let text_edits_of_import ~options ~reader ~src_dir ~ast kind name source =
   let from = from_of_source ~options ~reader ~src_dir source in

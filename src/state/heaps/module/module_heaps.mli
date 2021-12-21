@@ -20,7 +20,7 @@ val mk_resolved_requires :
   resolved_requires
 
 type info = {
-  module_name: Modulename.t;
+  module_name: string option;
   checked: bool;  (** in flow? *)
   parsed: bool;  (** if false, it's a tracking record only *)
 }

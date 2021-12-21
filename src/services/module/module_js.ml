@@ -157,7 +157,7 @@ type resolution_acc = {
    model both Haste and Node, but should be further generalized. *)
 module type MODULE_SYSTEM = sig
   (* Given a file and docblock info, make the name of the module it exports. *)
-  val exported_module : Options.t -> File_key.t -> Docblock.t -> Modulename.t
+  val exported_module : Options.t -> File_key.t -> Docblock.t -> string option
 
   (* Given a file and a reference in it to an imported module, make the name of
      the module it refers to. If given an optional reference to an accumulator,
@@ -246,16 +246,12 @@ let resolve_symlinks path = Path.to_string (Path.make path)
 (* Every <file>.js can be imported by its path, so it effectively exports a
    module by the name <file>.js. Every <file>.js.flow shadows the corresponding
    <file>.js, so it effectively exports a module by the name <file>.js. *)
-let eponymous_module file =
-  Modulename.Filename
-    (match Files.chop_flow_ext file with
-    | Some file -> file
-    | None -> file)
+let eponymous_module file = Modulename.Filename (Files.chop_flow_ext file)
 
 (*******************************)
 
 module Node = struct
-  let exported_module _ file _ = eponymous_module file
+  let exported_module _ _ _ = None
 
   let record_path path = function
     | None -> ()
@@ -525,24 +521,21 @@ module Haste : MODULE_SYSTEM = struct
       match file with
       | File_key.SourceFile _ ->
         if is_mock file then
-          Modulename.String (short_module_name_of file)
+          Some (short_module_name_of file)
         else if Options.haste_use_name_reducers options then
           (* Standardize \ to / in path for Windows *)
           let normalized_file_name =
             Sys_utils.normalize_filename_dir_sep (File_key.to_string file)
           in
           if is_haste_file normalized_file_name then
-            Modulename.String (haste_name options normalized_file_name)
+            Some (haste_name options normalized_file_name)
           else
-            Modulename.Filename file
-        else (
-          match Docblock.providesModule info with
-          | Some m -> Modulename.String m
-          | None -> Modulename.Filename file
-        )
+            None
+        else
+          Docblock.providesModule info
       | _ ->
         (* Lib files, resource files, etc don't have any fancy haste name *)
-        Modulename.Filename file
+        None
 
   let expanded_name ~reader r =
     match Str.split_delim (Str.regexp_string "/") r with
@@ -836,25 +829,29 @@ let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_change
   if debug then prerr_endlinef "*** done committing modules ***";
   Lwt.return (providers, changed_modules, errmap)
 
-let get_files ~reader ~audit filename module_name =
-  (module_name, Module_heaps.Reader_dispatcher.get_file ~reader ~audit module_name)
-  ::
-  (let f_module = eponymous_module filename in
-   if f_module = module_name then
-     []
-   else
-     [(f_module, Module_heaps.Reader_dispatcher.get_file ~reader ~audit f_module)]
-  )
+let get_files ~reader ~audit file info =
+  let get_file = Module_heaps.Reader_dispatcher.get_file ~reader ~audit in
+  let eponymous_module_provider =
+    let m = eponymous_module file in
+    (m, get_file m)
+  in
+  match info.Module_heaps.module_name with
+  | None -> [eponymous_module_provider]
+  | Some name ->
+    let m = Modulename.String name in
+    [(m, get_file m); eponymous_module_provider]
 
-let get_files_unsafe ~reader ~audit filename module_name =
-  (module_name, Module_heaps.Mutator_reader.get_file_unsafe ~reader ~audit module_name)
-  ::
-  (let f_module = eponymous_module filename in
-   if f_module = module_name then
-     []
-   else
-     [(f_module, Module_heaps.Mutator_reader.get_file_unsafe ~reader ~audit f_module)]
-  )
+let get_files_unsafe ~reader ~audit file info =
+  let get_file = Module_heaps.Mutator_reader.get_file_unsafe ~reader ~audit in
+  let eponymous_module_provider =
+    let m = eponymous_module file in
+    (m, get_file m)
+  in
+  match info.Module_heaps.module_name with
+  | None -> [eponymous_module_provider]
+  | Some name ->
+    let m = Modulename.String name in
+    [(m, get_file m); eponymous_module_provider]
 
 let calc_modules_helper ~reader workers files =
   MultiWorkerLwt.call
@@ -862,9 +859,7 @@ let calc_modules_helper ~reader workers files =
     ~job:
       (List.fold_left (fun acc file ->
            match Module_heaps.Mutator_reader.get_info ~reader ~audit:Expensive.ok file with
-           | Some info ->
-             let { Module_heaps.module_name; _ } = info in
-             (file, get_files_unsafe ~reader ~audit:Expensive.ok file module_name) :: acc
+           | Some info -> (file, get_files_unsafe ~reader ~audit:Expensive.ok file info) :: acc
            | None -> acc
        )
       )
@@ -953,7 +948,7 @@ end = struct
       let checked = force_check || Docblock.is_flow docblock in
       let info = { Module_heaps.module_name; checked; parsed = true } in
       Module_heaps.Introduce_files_mutator.add_info mutator file info;
-      (file, module_name)
+      (file, info)
 
   (* We need to track files that have failed to parse. This begins with
      adding tracking records for unparsed files to InfoHeap. They never
@@ -970,7 +965,7 @@ end = struct
       let checked = force_check || File_key.is_lib_file file || Docblock.is_flow docblock in
       let info = { Module_heaps.module_name; checked; parsed = false } in
       Module_heaps.Introduce_files_mutator.add_info mutator file info;
-      (file, module_name)
+      (file, info)
 
   let calc_new_modules ~all_providers_mutator ~options file_module_assoc =
     (* all modules provided by newly parsed / unparsed files must be repicked *)
@@ -1013,8 +1008,8 @@ end = struct
           let add_unparsed_info = add_unparsed_info ~options in
           List.fold_left
             (fun acc unparsed ->
-              let (file, m) = add_unparsed_info ~mutator ~reader unparsed in
-              let providers = get_files ~reader ~audit:Expensive.ok file m in
+              let (file, info) = add_unparsed_info ~mutator ~reader unparsed in
+              let providers = get_files ~reader ~audit:Expensive.ok file info in
               (file, providers) :: acc)
             acc
             files)
@@ -1030,8 +1025,8 @@ end = struct
           let add_parsed_info = add_parsed_info ~options in
           List.fold_left
             (fun acc parsed ->
-              let (file, m) = add_parsed_info ~mutator ~reader parsed in
-              let providers = get_files ~reader ~audit:Expensive.ok file m in
+              let (file, info) = add_parsed_info ~mutator ~reader parsed in
+              let providers = get_files ~reader ~audit:Expensive.ok file info in
               (file, providers) :: acc)
             acc
             files)
@@ -1049,9 +1044,9 @@ end = struct
     introduce_files_generic ~add_parsed_info ~add_unparsed_info ~mutator ~reader
 
   let introduce_files_from_saved_state =
-    let add_info_from_saved_state ~options:_ ~mutator ~reader:_ (filename, info) =
-      Module_heaps.Introduce_files_mutator.add_info mutator filename info;
-      (filename, info.Module_heaps.module_name)
+    let add_info_from_saved_state ~options:_ ~mutator ~reader:_ (file, info) =
+      Module_heaps.Introduce_files_mutator.add_info mutator file info;
+      (file, info)
     in
     fun ~mutator ->
       let reader = Abstract_state_reader.State_reader (State_reader.create ()) in
