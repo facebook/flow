@@ -71,7 +71,15 @@ module Make (L : Loc_sig.S) (Env_api : Env_api.S with module L = L) = struct
           )
 
         method find_writes ~for_type loc =
-          let write_locs = Env_api.write_locs_of_read_loc env_values loc in
+          let write_locs =
+            try Env_api.write_locs_of_read_loc env_values loc with
+            | Not_found ->
+              failwith
+                (Printf.sprintf
+                   "missing write locs for %s"
+                   (L.debug_to_string ~include_source:true loc)
+                )
+          in
           let writes = Base.List.concat_map ~f:(Env_api.writes_of_write_loc ~for_type) write_locs in
           let refinements =
             Base.List.concat_map ~f:(Env_api.refinements_of_write_loc env) write_locs
