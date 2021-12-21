@@ -27,20 +27,13 @@ assert_ok "$FLOW" get-def --strip-root main.js 20 5
 assert_ok "$FLOW" get-def --strip-root main.js 20 41
 
 printf "\nTrace \`ParentFoo\` back to its def\n"
-assert_ok "$FLOW" get-def --strip-root require.js 4 2
+queries_in_file get-def "require.js"
 
 printf "\nReact class and attribute expressions\n"
-assert_ok "$FLOW" get-def --strip-root react.js 11 3
-assert_ok "$FLOW" get-def --strip-root react.js 11 5
-assert_ok "$FLOW" get-def --strip-root react.js 11 9
-# TODO give some result for the JSX intrinsic here
-assert_ok "$FLOW" get-def --strip-root react.js 13 4
-assert_ok "$FLOW" get-def --strip-root react.js 13 12
+queries_in_file get-def "react.js"
 
 printf "\nInheritance\n"
-assert_ok "$FLOW" get-def --strip-root override.js 8 19
-assert_ok "$FLOW" get-def --strip-root override.js 11 11
-assert_ok "$FLOW" get-def --strip-root override.js 12 11
+queries_in_file get-def "override.js"
 
 printf "\nDirectly jump to required/imported modules (TODO #2)\n"
 assert_ok "$FLOW" get-def --strip-root main.js 3 26
@@ -50,14 +43,10 @@ assert_ok "$FLOW" get-def --strip-root main.js 24 25
 queries_in_file "get-def" "module_ref.js"
 
 printf "\nRefinements\n"
-assert_ok "$FLOW" get-def --strip-root refinements.js 10 9
-assert_ok "$FLOW" get-def --strip-root refinements.js 11 9
+queries_in_file "get-def" "refinements.js"
 
 printf "\ndeclare var\n"
-assert_ok "$FLOW" get-def --strip-root declare.js 4 1
-assert_ok "$FLOW" get-def --strip-root declare.js 7 1
-assert_ok "$FLOW" get-def --strip-root declare.js 10 1
-assert_ok "$FLOW" get-def --strip-root declare.js 13 5
+queries_in_file "get-def" "declare.js"
 
 printf "\nShadowing \`require\`\n"
 assert_ok "$FLOW" get-def --strip-root main.js 28 20

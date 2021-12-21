@@ -2,3 +2,4 @@
 
 const { ParentFoo } = require('./Parent');
 ParentFoo;
+// ^

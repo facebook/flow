@@ -8,5 +8,7 @@ type Foo = {
 
 function foo(x: Foo): void {
   if (x.kind === 'jkl;') {}
+//      ^
   if (x.kind) {}
+//      ^
 }
