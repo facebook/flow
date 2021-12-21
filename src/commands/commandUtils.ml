@@ -1010,7 +1010,15 @@ let options_flags =
            ~doc:""
       |> flag
            "--env-mode"
-           (optional (enum [("classic", Options.ClassicEnv []); ("ssa", Options.SSAEnv)]))
+           (optional
+              (enum
+                 [
+                   ("classic", Options.ClassicEnv []);
+                   ("ssa", Options.SSAEnv { resolved = false });
+                   ("resolved", Options.SSAEnv { resolved = true });
+                 ]
+              )
+           )
            ~doc:""
       |> flag "--prioritize-dep-checks" (optional bool) ~doc:(* experimental *) ""
     )
@@ -1323,7 +1331,8 @@ let make_options
         (FlowConfig.local_inference_annotation_dirs flowconfig);
     opt_enforce_this_annotations = FlowConfig.enforce_this_annotations flowconfig;
     opt_experimental_infer_indexers = false;
-    opt_reorder_checking = FlowConfig.reorder_checking flowconfig;
+    opt_statement_reorder_checking = FlowConfig.statement_reorder_checking flowconfig;
+    opt_cycle_errors = FlowConfig.cycle_errors flowconfig;
     opt_run_post_inference_implicit_instantiation =
       FlowConfig.run_post_inference_implicit_instantiation flowconfig;
     opt_enforce_strict_call_arity = FlowConfig.enforce_strict_call_arity flowconfig;

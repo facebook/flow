@@ -49,7 +49,7 @@ let metadata =
     relay_integration_excludes = [];
     relay_integration_module_prefix = None;
     relay_integration_module_prefix_includes = [];
-    reorder_checking = Options.Lexical;
+    statement_reorder_checking = Options.Lexical;
     root = Path.dummy_path;
     run_post_inference_implicit_instantiation = false;
     strict_es6_import_export = false;
@@ -58,6 +58,7 @@ let metadata =
     suppress_types = SSet.empty;
     trust_mode = Options.NoTrust;
     type_asserts = false;
+    cycle_errors = false;
   }
 
 (* somewhat copied from Flow_dot_js *)

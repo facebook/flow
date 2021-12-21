@@ -115,7 +115,8 @@ module Opts = struct
     react_server_component_exts: SSet.t;
     recursion_limit: int;
     refactor: bool option;
-    reorder_checking: Options.order_mode;
+    statement_reorder_checking: Options.statement_order_mode;
+    cycle_errors: bool;
     root_name: string option;
     run_post_inference_implicit_instantiation: bool;
     saved_state_fetcher: Options.saved_state_fetcher;
@@ -247,7 +248,8 @@ module Opts = struct
       react_server_component_exts;
       recursion_limit = 10000;
       refactor = None;
-      reorder_checking = Options.Lexical;
+      statement_reorder_checking = Options.Lexical;
+      cycle_errors = false;
       root_name = None;
       run_post_inference_implicit_instantiation = false;
       saved_state_fetcher = Options.Dummy_fetcher;
@@ -503,14 +505,14 @@ module Opts = struct
   let enforce_this_annotations =
     boolean (fun opts v -> Ok { opts with enforce_this_annotations = v })
 
-  let reorder_checking_parser =
+  let statement_reorder_checking_parser =
     enum
       [
         ("lexical", Options.Lexical);
         ("dependency", Options.Dependency);
         ("lexical_with_dependency_validation", Options.LexicalWithDependencyValidation);
       ]
-      (fun opts v -> Ok { opts with reorder_checking = v }
+      (fun opts v -> Ok { opts with statement_reorder_checking = v }
     )
 
   let post_inference_implicit_instantiation_parser =
@@ -748,10 +750,16 @@ module Opts = struct
         | [] -> Error "env_mode requires an argument"
         | ["ssa"] ->
           if List.length opts.env_mode_constrain_write_dirs = 0 then
-            Ok { opts with env_mode = Options.SSAEnv }
+            Ok { opts with env_mode = Options.SSAEnv { resolved = false } }
           else
             Error
               "Option \"env_mode\" must not be set to \"ssa\" when \"constrain_write_dirs\" is set."
+        | ["resolved"] ->
+          if List.length opts.env_mode_constrain_write_dirs = 0 then
+            Ok { opts with env_mode = Options.SSAEnv { resolved = true } }
+          else
+            Error
+              "Option \"env_mode\" must not be set to \"resolved\" when \"constrain_write_dirs\" is set."
         | ["classic"] -> Ok { opts with env_mode = Options.ClassicEnv [] }
         | options ->
           let options =
@@ -763,6 +771,8 @@ module Opts = struct
                   Error
                     "Option \"env_mode\" should not set \"constrain_writes\" when \"env_mode.constrain_writes.includes\" is also set."
                 | "ssa" -> Error "\"ssa\" must be the first and only env_mode option if present"
+                | "resolved" ->
+                  Error "\"resolved\" must be the first and only env_mode option if present"
                 | "classic" ->
                   Error "\"classic\" must be the first and only env_mode option if present"
                 | opt -> Error (spf "\"%s\" is not a valid env_mode option" opt)
@@ -779,9 +789,12 @@ module Opts = struct
       ~multiple:true
       (fun opts v ->
         match opts.env_mode with
-        | Options.SSAEnv ->
+        | Options.SSAEnv { resolved = false } ->
           Error
             "Option \"env_mode\" must not be set to \"ssa\" when \"constrain_writes.includes\" is set."
+        | Options.SSAEnv { resolved = true } ->
+          Error
+            "Option \"env_mode\" must not be set to \"resolved\" when \"constrain_writes.includes\" is set."
         | Options.ClassicEnv opts when List.mem Options.ConstrainWrites opts ->
           Error
             "Option \"env_mode\" should not set \"constrain_writes\" when \"env_mode.constrain_writes.includes\" is also set."
@@ -822,7 +835,8 @@ module Opts = struct
       ("experimental.prioritize_dependency_checks", prioritize_dependency_checks_parser);
       ("experimental.react.server_component_ext", react_server_component_exts_parser);
       ("experimental.refactor", boolean (fun opts v -> Ok { opts with refactor = Some v }));
-      ("experimental.reorder_checking", reorder_checking_parser);
+      ("experimental.statement_reorder_checking", statement_reorder_checking_parser);
+      ("experimental.cycle_errors", boolean (fun opts v -> Ok { opts with cycle_errors = v }));
       ( "experimental.run_post_inference_implicit_instantiation",
         post_inference_implicit_instantiation_parser
       );
@@ -1589,7 +1603,9 @@ let type_asserts c = c.options.Opts.type_asserts
 
 let required_version c = c.version
 
-let reorder_checking c = c.options.Opts.reorder_checking
+let statement_reorder_checking c = c.options.Opts.statement_reorder_checking
+
+let cycle_errors c = c.options.Opts.cycle_errors
 
 let run_post_inference_implicit_instantiation c =
   c.options.Opts.run_post_inference_implicit_instantiation

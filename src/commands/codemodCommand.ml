@@ -347,7 +347,7 @@ module Annotate_declarations_command = struct
           { o with opt_env_mode = ClassicEnv (ConstrainWrites :: opts) }
         | ClassicEnv opts ->
           { o with opt_env_mode = ClassicEnv (ConstrainWrites :: ClassicTypeAtPos :: opts) }
-        | SSAEnv -> { o with opt_env_mode = ClassicEnv [ConstrainWrites; ClassicTypeAtPos] }
+        | SSAEnv _ -> { o with opt_env_mode = ClassicEnv [ConstrainWrites; ClassicTypeAtPos] }
 
       let visit =
         let mapper =
@@ -399,7 +399,7 @@ module Rename_redefinitions_command = struct
         match o.opt_env_mode with
         | ClassicEnv opts when List.mem ConstrainWrites opts -> o
         | ClassicEnv opts -> { o with opt_env_mode = ClassicEnv (ConstrainWrites :: opts) }
-        | SSAEnv -> { o with opt_env_mode = ClassicEnv [ConstrainWrites] }
+        | SSAEnv _ -> { o with opt_env_mode = ClassicEnv [ConstrainWrites] }
 
       let visit =
         let mapper = Rename_redefinitions.mapper in

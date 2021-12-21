@@ -76,7 +76,8 @@ type metadata = {
   relay_integration_excludes: Str.regexp list;
   relay_integration_module_prefix: string option;
   relay_integration_module_prefix_includes: Str.regexp list;
-  reorder_checking: Options.order_mode;
+  statement_reorder_checking: Options.statement_order_mode;
+  cycle_errors: bool;
   root: Path.t;
   run_post_inference_implicit_instantiation: bool;
   strict_es6_import_export: bool;
@@ -188,7 +189,9 @@ val enforce_this_annotations : t -> bool
 
 val experimental_infer_indexers : t -> bool
 
-val reorder_checking : t -> Options.order_mode
+val statement_reorder_checking : t -> Options.statement_order_mode
+
+val cycle_errors : t -> bool
 
 val run_post_inference_implicit_instantiation : t -> bool
 
@@ -313,6 +316,8 @@ val any_propagation : t -> bool
 val automatic_require_default : t -> bool
 
 val env_option_enabled : t -> Options.env_option -> bool
+
+val resolved_env : t -> bool
 
 (* modules *)
 val push_declare_module : t -> Module_info.t -> unit

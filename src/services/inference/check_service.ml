@@ -583,7 +583,7 @@ let mk_check_file ~options ~reader ~cache () =
     ConsGen.set_dst_cx cx;
     let infer_ast =
       match Context.env_mode cx with
-      | Options.SSAEnv -> Type_inference_js.NewEnvInference.infer_ast
+      | Options.SSAEnv _ -> Type_inference_js.NewEnvInference.infer_ast
       | _ -> Type_inference_js.infer_ast
     in
     let lint_severities = get_lint_severities metadata options in

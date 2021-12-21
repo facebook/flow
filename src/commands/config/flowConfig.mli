@@ -210,11 +210,13 @@ val refactor : config -> bool option
 
 val root_name : config -> string option
 
-val reorder_checking : config -> Options.order_mode
+val statement_reorder_checking : config -> Options.statement_order_mode
 
 val run_post_inference_implicit_instantiation : config -> bool
 
 val saved_state_fetcher : config -> Options.saved_state_fetcher
+
+val cycle_errors : config -> bool
 
 val saved_state_load_sighashes : config -> bool
 

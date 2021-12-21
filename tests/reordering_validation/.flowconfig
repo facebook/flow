@@ -1,2 +1,2 @@
 [options]
-experimental.reorder_checking=lexical_with_dependency_validation
+experimental.statement_reorder_checking=lexical_with_dependency_validation

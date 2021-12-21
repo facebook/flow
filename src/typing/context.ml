@@ -55,7 +55,8 @@ type metadata = {
   relay_integration_excludes: Str.regexp list;
   relay_integration_module_prefix: string option;
   relay_integration_module_prefix_includes: Str.regexp list;
-  reorder_checking: Options.order_mode;
+  statement_reorder_checking: Options.statement_order_mode;
+  cycle_errors: bool;
   root: Path.t;
   run_post_inference_implicit_instantiation: bool;
   strict_es6_import_export: bool;
@@ -250,7 +251,8 @@ let metadata_of_options options =
     relay_integration_module_prefix = Options.relay_integration_module_prefix options;
     relay_integration_module_prefix_includes =
       Options.relay_integration_module_prefix_includes options;
-    reorder_checking = Options.reorder_checking options;
+    statement_reorder_checking = Options.statement_reorder_checking options;
+    cycle_errors = Options.cycle_errors options;
     root = Options.root options;
     run_post_inference_implicit_instantiation =
       Options.run_post_inference_implicit_instantiation options;
@@ -443,7 +445,9 @@ let enforce_this_annotations cx = cx.metadata.enforce_this_annotations
 
 let experimental_infer_indexers cx = cx.metadata.experimental_infer_indexers
 
-let reorder_checking cx = cx.metadata.reorder_checking
+let statement_reorder_checking cx = cx.metadata.statement_reorder_checking
+
+let cycle_errors cx = cx.metadata.cycle_errors
 
 let run_post_inference_implicit_instantiation cx =
   cx.metadata.run_post_inference_implicit_instantiation
@@ -588,13 +592,19 @@ let trust_errors cx =
 let env_option_enabled cx option =
   let open Options in
   match (cx.metadata.env_mode, cx.metadata.env_mode_constrain_write_dirs, option) with
-  | (SSAEnv, _, _) -> false
+  | (SSAEnv _, _, _) -> false
   | (ClassicEnv opts, _, _) when List.mem option opts -> true
   | (_, (_ :: _ as dirs), ConstrainWrites) ->
     let filename = File_key.to_string @@ file cx in
     let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
     List.exists (fun str -> Base.String.is_prefix ~prefix:str normalized_filename) dirs
   | _ -> false
+
+let resolved_env cx =
+  let open Options in
+  match cx.metadata.env_mode with
+  | SSAEnv { resolved } -> resolved
+  | ClassicEnv _ -> false
 
 let pid_prefix cx =
   if max_workers cx > 0 then

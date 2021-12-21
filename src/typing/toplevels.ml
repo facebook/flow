@@ -109,7 +109,7 @@ module DependencyOrdering : Ordering with type loc = ALoc.t = struct
   type loc = ALoc.t
 
   let make cx stmts =
-    if Context.reorder_checking cx = Options.Lexical then
+    if Context.statement_reorder_checking cx = Options.Lexical then
       None
     else
       let { Loc_env.var_info = info; _ } = Context.environment cx in
@@ -144,7 +144,7 @@ module DependencyOrdering : Ordering with type loc = ALoc.t = struct
             (order, seen))
           deps
       in
-      if Context.reorder_checking cx = Options.LexicalWithDependencyValidation then
+      if Context.statement_reorder_checking cx = Options.LexicalWithDependencyValidation then
         None
       else
         let order =

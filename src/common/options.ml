@@ -29,7 +29,7 @@ type trust_mode =
   | CheckTrust
   | SilentTrust
 
-type order_mode =
+type statement_order_mode =
   | Lexical
   | Dependency
   | LexicalWithDependencyValidation
@@ -40,7 +40,7 @@ type env_option =
 
 type env_mode =
   | ClassicEnv of env_option list
-  | SSAEnv
+  | SSAEnv of { resolved: bool }
 
 type react_runtime =
   | ReactRuntimeAutomatic
@@ -131,7 +131,8 @@ type t = {
   opt_relay_integration_excludes: Str.regexp list;
   opt_relay_integration_module_prefix: string option;
   opt_relay_integration_module_prefix_includes: Str.regexp list;
-  opt_reorder_checking: order_mode;
+  opt_statement_reorder_checking: statement_order_mode;
+  opt_cycle_errors: bool;
   opt_root_name: string option;
   opt_root: Path.t;
   opt_run_post_inference_implicit_instantiation: bool;
@@ -281,7 +282,9 @@ let facebook_module_interop opts = opts.opt_facebook_module_interop
 
 let gc_worker opts = opts.opt_gc_worker
 
-let reorder_checking opts = opts.opt_reorder_checking
+let statement_reorder_checking opts = opts.opt_statement_reorder_checking
+
+let cycle_errors opts = opts.opt_cycle_errors
 
 let run_post_inference_implicit_instantiation opts =
   opts.opt_run_post_inference_implicit_instantiation
