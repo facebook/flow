@@ -1,0 +1,8 @@
+(library
+ (name common_lz4)
+ (wrapped false)
+ (foreign_stubs
+  (language c)
+  (names lz4_stubs)
+  (flags
+   (:standard -I../../../src/third-party/lz4))))

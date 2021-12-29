@@ -1,9 +1,11 @@
 (library
  (name flow_parser_utils)
  (wrapped false)
+ (modules (:standard \ flow_ast_visitor file_sig file_sig_sig))
  (libraries
   cycle_hash
   dtoa
+  flow_ast_visitor
   flow_common
   flow_common_utils
   flow_common_utils_loc_utils
@@ -12,8 +14,24 @@
   flow_parser_utils_signature_builder
   flow_typing_polarity
   hh_json ; hack
-  flow_typing_type
-  flow_typing_errors
   )
  (preprocess
   (pps ppx_let ppx_deriving.std)))
+
+(library
+ (name flow_ast_visitor)
+ (wrapped false)
+ (modules flow_ast_visitor)
+ (libraries
+  flow_parser
+  ))
+
+(library
+ (name flow_file_sig)
+ (wrapped false)
+ (modules file_sig file_sig_sig)
+ (libraries
+  flow_ast_visitor
+  flow_parser_utils
+  flow_analysis
+  ))

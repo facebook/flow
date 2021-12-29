@@ -7,5 +7,5 @@
     flow_service_get_def
     flow_state_readers
   )
-  (preprocess (pps lwt_ppx))
+  (preprocess (pps lwt_ppx ppx_let))
 )

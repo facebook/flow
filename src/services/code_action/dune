@@ -8,4 +8,4 @@
   flow_typing
   collections)
  (preprocess
-  (pps lwt_ppx)))
+  (pps lwt_ppx ppx_let)))

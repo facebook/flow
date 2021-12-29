@@ -3,7 +3,7 @@
  (wrapped false)
  (foreign_stubs
   (language c)
-  (names type_sig_bin)
+  (names type_sig_bin_stubs)
   (flags
    (:standard -I../../src/third-party/lz4)))
  (libraries
