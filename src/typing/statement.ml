@@ -6705,11 +6705,15 @@ struct
       let (loc, { Ast.JSX.Identifier.name; comments }) = member.property in
       (loc, mk_ident ~comments name)
     in
-    Ast.Expression.Member.
-      ( mloc,
-        Ast.Expression.Member { _object; property = PropertyIdentifier property; comments = None }
-      )
-    
+    let member =
+      Ast.Expression.Member
+        {
+          Ast.Expression.Member._object;
+          property = Ast.Expression.Member.PropertyIdentifier property;
+          comments = None;
+        }
+    in
+    (mloc, member)
 
   (* reverses jsx_title_member_to_expression *)
   and expression_to_jsx_title_member loc member =
