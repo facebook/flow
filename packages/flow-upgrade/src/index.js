@@ -5,7 +5,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @noformat
+ * @format
  * @flow
  */
 
@@ -17,8 +17,7 @@ const yargs = require('yargs/yargs')(process.argv.slice(2))
   .boolean(['all'])
   .describe('all', 'Include all files, not just those with the @flow pragma')
   .demandCommand(2)
-  .help('help')
-  .argv;
+  .help('help').argv;
 
 const options = {
   all: !!yargs.all,

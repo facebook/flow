@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
- * @noformat
+ * @format
  */
 
 import type {Context} from './getContext';
@@ -48,7 +48,8 @@ function expandComment(
 ) {
   const length = contents.length;
 
-  const emptyFlowlintRegex = /^[ \t\n\r*]*flowlint(-line|-next-line)?[ \t\n\r*]*$/;
+  const emptyFlowlintRegex =
+    /^[ \t\n\r*]*flowlint(-line|-next-line)?[ \t\n\r*]*$/;
   if (commentAST && isLintSuppression(commentAST)) {
     // We're operating on a flowlint comment
 

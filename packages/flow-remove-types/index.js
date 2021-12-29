@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @noformat
+ * @format
  */
 
 var parse = require('flow-parser').parse;
@@ -103,7 +103,7 @@ function resultPrinter(options, source, removedNodes) {
   var pretty = Boolean(options && options.pretty);
 
   return {
-    toString: function() {
+    toString: function () {
       if (!removedNodes || removedNodes.length === 0) {
         return source;
       }
@@ -135,7 +135,7 @@ function resultPrinter(options, source, removedNodes) {
 
       return (result += source.slice(lastPos));
     },
-    generateMap: function() {
+    generateMap: function () {
       return {
         version: 3,
         sources: ['source.js'],
@@ -170,7 +170,7 @@ var removeFlowVisitor = {
   ClassDeclaration: removeImplementedInterfaces,
   ClassExpression: removeImplementedInterfaces,
 
-  Identifier: function(context, node, ast) {
+  Identifier: function (context, node, ast) {
     if (node.optional) {
       // Find the optional token.
       var idx = findTokenIndex(ast.tokens, startOf(node));
@@ -181,7 +181,7 @@ var removeFlowVisitor = {
     }
   },
 
-  FunctionDeclaration: function(context, node) {
+  FunctionDeclaration: function (context, node) {
     if (node.params && node.params.length) {
       if (node.params[0].name === 'this') {
         return removeNode(context, node.params[0], undefined, node.params[1]);
@@ -189,7 +189,7 @@ var removeFlowVisitor = {
     }
   },
 
-  FunctionExpression: function(context, node) {
+  FunctionExpression: function (context, node) {
     if (node.params && node.params.length) {
       if (node.params[0].name === 'this') {
         return removeNode(context, node.params[0], undefined, node.params[1]);
@@ -197,7 +197,7 @@ var removeFlowVisitor = {
     }
   },
 
-  PropertyDefinition: function(context, node) {
+  PropertyDefinition: function (context, node) {
     if (node.declare || (context.ignoreUninitializedFields && !node.value)) {
       return removeNode(context, node);
     }
@@ -206,19 +206,19 @@ var removeFlowVisitor = {
     }
   },
 
-  ExportNamedDeclaration: function(context, node) {
+  ExportNamedDeclaration: function (context, node) {
     if (node.exportKind === 'type' || node.exportKind === 'typeof') {
       return removeNode(context, node);
     }
   },
 
-  ImportDeclaration: function(context, node) {
+  ImportDeclaration: function (context, node) {
     if (node.importKind === 'type' || node.importKind === 'typeof') {
       return removeNode(context, node);
     }
   },
 
-  ImportSpecifier: function(context, node) {
+  ImportSpecifier: function (context, node) {
     if (node.importKind === 'type' || node.importKind === 'typeof') {
       var ast = context.ast;
 
@@ -250,7 +250,7 @@ var removeFlowVisitor = {
     }
   },
 
-  ArrowFunctionExpression: function(context, node) {
+  ArrowFunctionExpression: function (context, node) {
     // Naively erasing a multi-line return type from an arrow function will
     // leave a newline between the parameter list and the arrow, which is not
     // valid JS. Detect this here and move the arrow up to the correct line.

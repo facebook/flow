@@ -3,6 +3,8 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @format
  */
 
 const {addCommentsToCode} = require('./add-commentsRunner');
@@ -12,7 +14,10 @@ const path = require('path');
 test('addCommentsToCode', async () => {
   const flowBinPath = path.resolve(process.env.FLOW_BIN);
 
-  expect(await addCommentsToCode('foobar', null, '', [], flowBinPath)).toEqual(['', 0]);
+  expect(await addCommentsToCode('foobar', null, '', [], flowBinPath)).toEqual([
+    '',
+    0,
+  ]);
 
   expect(
     await addCommentsToCode(
@@ -20,18 +25,15 @@ test('addCommentsToCode', async () => {
       null,
       testInput,
       /* Intentionally made these out of order to test that they are still inserted properly */
-      [1, 6, 5, 3].map((line) => makeSuppression(line, testInput)),
+      [1, 6, 5, 3].map(line => makeSuppression(line, testInput)),
       flowBinPath,
-    )
-  ).toEqual([
-    testOutput,
-    8
-  ]);
+    ),
+  ).toEqual([testOutput, 8]);
 });
 
-const longComment = 'this is a really long comment that definitely goes over the line length limit so the tool has to wrap it';
-const testInput =
-`const bar = 4;
+const longComment =
+  'this is a really long comment that definitely goes over the line length limit so the tool has to wrap it';
+const testInput = `const bar = 4;
 const foo = 4;
 const baz = 3;
 <>
@@ -43,8 +45,7 @@ const baz = 3;
 </>
 `;
 
-const testOutput =
-`/* $FlowFixMe[code1] this is a really long comment that definitely goes over
+const testOutput = `/* $FlowFixMe[code1] this is a really long comment that definitely goes over
  * the line length limit so the tool has to wrap it */
 /* $FlowFixMe[code2] this is a really long comment that definitely goes over
  * the line length limit so the tool has to wrap it */
@@ -92,16 +93,16 @@ function makeSuppression(line, text) {
     },
     isError: true,
     lints: new Set(),
-    error_codes:["code2","code1"]
+    error_codes: ['code2', 'code1'],
   };
 }
 
 function offsetsForLine(line, text) {
   let startOffset = 0;
   const lines = text.split('\n');
-  for (let currLine = 0; currLine < line - 1; currLine++ ) {
+  for (let currLine = 0; currLine < line - 1; currLine++) {
     // Add the line length + \n to the offset
     startOffset += lines[currLine].length + 1;
   }
-  return [startOffset, startOffset + lines[line -1].length];
+  return [startOffset, startOffset + lines[line - 1].length];
 }

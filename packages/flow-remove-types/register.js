@@ -3,6 +3,8 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @format
  */
 
 var flowRemoveTypes = require('./index');
@@ -33,7 +35,7 @@ var revert = pirates.addHook(
       throw e;
     }
   },
-  {exts: exts, matcher: shouldTransform}
+  {exts: exts, matcher: shouldTransform},
 );
 
 function shouldTransform(filename) {
@@ -42,8 +44,8 @@ function shouldTransform(filename) {
     options && 'excludes' in options
       ? regexpPattern(options.excludes)
       : options && 'exclude' in options
-        ? regexpPattern(options.exclude)
-        : /\/node_modules\//;
+      ? regexpPattern(options.exclude)
+      : /\/node_modules\//;
   return (
     (!includes || includes.test(filename)) &&
     !(excludes && excludes.test(filename))
@@ -71,6 +73,6 @@ function regexpPattern(pattern) {
   throw new Error(
     'flow-remove-types: ' +
       'includes and excludes must be RegExp or path strings. Got: ' +
-      pattern
+      pattern,
   );
 }

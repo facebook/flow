@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
- * @noformat
+ * @format
  */
 
 const path = require('path');
@@ -400,8 +400,9 @@ async function interactive(args: Args): Promise<void> {
     });
     entries.forEach(([locString, errorsOfLoc], scrollIndex) => {
       scrollToLocationMap.set(scrollIndex + 1, locString);
-      const numSelected = errorsOfLoc.filter(e => e.selected === selectedBox)
-        .length;
+      const numSelected = errorsOfLoc.filter(
+        e => e.selected === selectedBox,
+      ).length;
       const selected =
         numSelected === 0
           ? unselectedBox

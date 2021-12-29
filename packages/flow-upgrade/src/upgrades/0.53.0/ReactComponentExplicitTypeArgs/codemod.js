@@ -3,6 +3,8 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @format
  */
 
 'use strict';
@@ -95,15 +97,11 @@ module.exports = (j, root) => {
     // `defaultProps` if they are only used to specify a type.
     path.node.body.body = path.node.body.body.filter(member => {
       // Do we need to check to see if props or state were used?
-      const checkForPropsUsage = (
+      const checkForPropsUsage =
         !propsTypeAnnotation &&
         !constructorPropsTypeAnnotation &&
-        !usesPropsSomewhere
-      );
-      const checkForStateUsage = (
-        !stateTypeAnnotation &&
-        !usesStateSomewhere
-      );
+        !usesPropsSomewhere;
+      const checkForStateUsage = !stateTypeAnnotation && !usesStateSomewhere;
       // Check that either props or state were used in a non-static member.
       if (
         member &&
@@ -196,15 +194,13 @@ module.exports = (j, root) => {
           // annotation.
           if (paramName === 'props' && !propsLifecycleTypeAnnotation) {
             propsLifecycleTypeAnnotation =
-              typeAnnotation ||
-              fallbackPropsTypeAnnotation;
+              typeAnnotation || fallbackPropsTypeAnnotation;
           }
           // If this is a state param and we don't yet have a lifecycle type
           // annotation.
           if (paramName === 'state' && !stateLifecycleTypeAnnotation) {
             stateLifecycleTypeAnnotation =
-              typeAnnotation ||
-              fallbackStateTypeAnnotation;
+              typeAnnotation || fallbackStateTypeAnnotation;
           }
         }
         return true;
@@ -213,23 +209,25 @@ module.exports = (j, root) => {
       }
     });
     // Set the super type parameters to the class.
-    path.node.superTypeParameters = j.typeParameterInstantiation([
-      defaultPropsTypeAnnotation,
-      // Use the props type annotation if we have it. If not try using the
-      // constructor props annotation. Otherwise, if we found any mention to
-      // props use the any type. If not then use an empty object type.
-      propsTypeAnnotation ||
-        constructorPropsTypeAnnotation ||
-        propsLifecycleTypeAnnotation ||
-        (usesPropsSomewhere
-          ? fallbackPropsTypeAnnotation
-          : j.objectTypeAnnotation([])),
-      // The state type annotation may be null. If it is then it will be
-      // filtered out at the end. If state was used somewhere then we need the
-      // fallback type annotation.
-      stateTypeAnnotation ||
-        stateLifecycleTypeAnnotation ||
-        (usesStateSomewhere ? fallbackStateTypeAnnotation : null),
-    ].filter(Boolean));
+    path.node.superTypeParameters = j.typeParameterInstantiation(
+      [
+        defaultPropsTypeAnnotation,
+        // Use the props type annotation if we have it. If not try using the
+        // constructor props annotation. Otherwise, if we found any mention to
+        // props use the any type. If not then use an empty object type.
+        propsTypeAnnotation ||
+          constructorPropsTypeAnnotation ||
+          propsLifecycleTypeAnnotation ||
+          (usesPropsSomewhere
+            ? fallbackPropsTypeAnnotation
+            : j.objectTypeAnnotation([])),
+        // The state type annotation may be null. If it is then it will be
+        // filtered out at the end. If state was used somewhere then we need the
+        // fallback type annotation.
+        stateTypeAnnotation ||
+          stateLifecycleTypeAnnotation ||
+          (usesStateSomewhere ? fallbackStateTypeAnnotation : null),
+      ].filter(Boolean),
+    );
   }
 };

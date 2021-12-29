@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
- * @noformat
+ * @format
  */
 
 const {join} = require('path');
@@ -260,10 +260,14 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
       env.triggerFlowCheck();
     });
 
-  addFixtures: (...sources: Array<string>) => TestStepFirstStage = (...sources) =>
+  addFixtures: (...sources: Array<string>) => TestStepFirstStage = (
+    ...sources
+  ) =>
     this._cloneWithAction(async (builder, env) => {
       await Promise.all(
-        sources.map(source => builder.addFileImpl(join('__fixtures__', source), source)),
+        sources.map(source =>
+          builder.addFileImpl(join('__fixtures__', source), source),
+        ),
       );
       env.triggerFlowCheck();
     });
@@ -365,35 +369,32 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
-  verifyLSPStatus: (
-    'stopped' | 'running',
-  ) => TestStepSecondStage = expected => {
-    const assertLoc = searchStackForTestAssertion();
-    const ret = this._cloneWithAssertion((reason, env) => {
-      const actual = env.getLSPRunning();
-      const suggestion = {method: 'verifyLSPStatus', args: [actual]};
-      return simpleDiffAssertion(
-        expected,
-        actual,
-        assertLoc,
-        reason,
-        "'is LSP running?'",
-        suggestion,
-      );
-    });
-    return ret;
-  };
+  verifyLSPStatus: ('stopped' | 'running') => TestStepSecondStage =
+    expected => {
+      const assertLoc = searchStackForTestAssertion();
+      const ret = this._cloneWithAssertion((reason, env) => {
+        const actual = env.getLSPRunning();
+        const suggestion = {method: 'verifyLSPStatus', args: [actual]};
+        return simpleDiffAssertion(
+          expected,
+          actual,
+          assertLoc,
+          reason,
+          "'is LSP running?'",
+          suggestion,
+        );
+      });
+      return ret;
+    };
 
-  waitUntilServerStatus: (
-    number,
-    'stopped' | 'running',
-  ) => TestStepFirstStage = (timeoutMs, expected) => {
-    const ret = this._cloneWithAction(async (builder, env) => {
-      await builder.waitUntilServerStatus(timeoutMs, expected);
-    });
-    ret._allowServerToDie = expected === 'stopped';
-    return ret;
-  };
+  waitUntilServerStatus: (number, 'stopped' | 'running') => TestStepFirstStage =
+    (timeoutMs, expected) => {
+      const ret = this._cloneWithAction(async (builder, env) => {
+        await builder.waitUntilServerStatus(timeoutMs, expected);
+      });
+      ret._allowServerToDie = expected === 'stopped';
+      return ret;
+    };
 
   lspIgnoreStatusAndCancellation: Array<string> = [
     'window/showStatus',
@@ -646,7 +647,10 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
-  verifyLSPMessageSnapshot: (string, $ReadOnlyArray<string | [string, string] | LSPMessage>) => TestStepSecondStage = (snapshot, ignores) => {
+  verifyLSPMessageSnapshot: (
+    string,
+    $ReadOnlyArray<string | [string, string] | LSPMessage>,
+  ) => TestStepSecondStage = (snapshot, ignores) => {
     const assertLoc = searchStackForTestAssertion();
     const ret = this._cloneWithAssertion((reason, env) => {
       const actualMessages = env.getLSPMessagesSinceStartOfStep();
@@ -654,7 +658,7 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
       try {
         expected = readFileSync(snapshot, 'utf8');
       } catch (_) {
-        expected = "";
+        expected = '';
       }
       let actuals: Array<string> = [];
       let doesMatch = (
@@ -710,15 +714,16 @@ class TestStepFirstStage extends TestStepFirstOrSecondStage {
 
   // waitAndVerifyNoLSPMessagesSinceStartOfStep: if any messages arrive since the start
   // of this step until the timeout then it fails; otherwise it succeeds
-  waitAndVerifyNoLSPMessagesSinceStartOfStep: number => TestStepSecondStage = timeoutMs => {
-    const assertLoc = searchStackForTestAssertion();
+  waitAndVerifyNoLSPMessagesSinceStartOfStep: number => TestStepSecondStage =
+    timeoutMs => {
+      const assertLoc = searchStackForTestAssertion();
 
-    const ret = this._cloneWithAction(async (builder, env) => {
-      await sleep(timeoutMs);
-    })._cloneWithAssertion(lspNoNewMessagesAfterSleep(timeoutMs, assertLoc));
-    ret._readsIdeMessages = true;
-    return ret;
-  };
+      const ret = this._cloneWithAction(async (builder, env) => {
+        await sleep(timeoutMs);
+      })._cloneWithAssertion(lspNoNewMessagesAfterSleep(timeoutMs, assertLoc));
+      ret._readsIdeMessages = true;
+      return ret;
+    };
 
   sleep: number => TestStepFirstStage = timeoutMs =>
     this._cloneWithAction(async (builder, env) => {

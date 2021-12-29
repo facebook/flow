@@ -4,44 +4,38 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @format
  */
 
 var fs = require('fs');
 var path = require('path');
-var colors = require("colors");
-var parseArgs = require("minimist");
+var colors = require('colors');
+var parseArgs = require('minimist');
 
-var argv = parseArgs(
-  process.argv.slice(2),
-  {
-    string: [
-      "esprima-tests",
-      "hardcoded-tests",
-      "filter",
-      "section-filter",
-      "numTests",
-      "parser",
-    ],
-    boolean: [
-      "dumpAst",
-      "help",
-      "jsonErrors",
-      "showDifferences",
-    ],
-    unknown: function(flag) {
-      if (flag.match(/^-/)) {
-        console.log('Unsupported flag:', flag, "\n");
-        usage();
-      }
+var argv = parseArgs(process.argv.slice(2), {
+  string: [
+    'esprima-tests',
+    'hardcoded-tests',
+    'filter',
+    'section-filter',
+    'numTests',
+    'parser',
+  ],
+  boolean: ['dumpAst', 'help', 'jsonErrors', 'showDifferences'],
+  unknown: function (flag) {
+    if (flag.match(/^-/)) {
+      console.log('Unsupported flag:', flag, '\n');
+      usage();
     }
-  }
-);
+  },
+});
 
 var cli_options = {
   dumpAst: argv.dumpAst,
   jsonErrors: argv.jsonErrors,
   showDifferences: argv.showDifferences,
-  flow: require(argv.parser || "../flow_parser.js"),
+  flow: require(argv.parser || '../flow_parser.js'),
 };
 
 function escape_content(content) {
@@ -61,10 +55,10 @@ function apply_filters(sections) {
   var filtered_sections = {};
   for (var section in sections) {
     if (sections.hasOwnProperty(section) && section_filter.test(section)) {
-      var tests_to_filter = Array.isArray(sections[section]) ?
-        sections[section] :
-        sections[section].tests;
-      var filtered_tests = tests_to_filter.filter(function(test) {
+      var tests_to_filter = Array.isArray(sections[section])
+        ? sections[section]
+        : sections[section].tests;
+      var filtered_tests = tests_to_filter.filter(function (test) {
         return test_filter.test(test.content);
       });
       if (filtered_tests.length > 0) {
@@ -86,17 +80,17 @@ function apply_filters(sections) {
 }
 
 function get_esprima_tests() {
-  var spec = require(
-    argv['esprima-tests'] ?
-      path.resolve(argv['esprima-tests']) :
-      '../../../src/parser/test/esprima_tests.js'
-  );
+  var spec = require(argv['esprima-tests']
+    ? path.resolve(argv['esprima-tests'])
+    : '../../../src/parser/test/esprima_tests.js');
 
   var sections = {};
   for (var section_name in spec.sections) {
     // Remove TODO sections
-    if (!spec.sections.hasOwnProperty(section_name) ||
-        spec.todo[section_name] === true) {
+    if (
+      !spec.sections.hasOwnProperty(section_name) ||
+      spec.todo[section_name] === true
+    ) {
       continue;
     }
 
@@ -109,8 +103,8 @@ function get_esprima_tests() {
     }
 
     // Normalize the tests
-    section.tests = section.tests.map(function(test) {
-      return typeof test === "string" ? { content: test } : test;
+    section.tests = section.tests.map(function (test) {
+      return typeof test === 'string' ? {content: test} : test;
     });
     sections[section_name] = section;
   }
@@ -150,18 +144,17 @@ function get_tests(root_dir) {
     var cases = (tests[test_name] = tests[test_name] || {});
     var case_ = (cases[case_name] = cases[case_name] || {});
 
-    var content = fs.readFileSync(
-      path.join(root_dir, file),
-      { encoding: 'utf8' }
-    );
+    var content = fs.readFileSync(path.join(root_dir, file), {
+      encoding: 'utf8',
+    });
     var ext = case_parts[case_parts.length - 1];
     var kind = case_parts.length > 2 ? case_parts[case_parts.length - 2] : null;
 
-    if (ext === "js") {
+    if (ext === 'js') {
       case_.content = content;
-    } else if (ext === "json" && kind === "tree") {
+    } else if (ext === 'json' && kind === 'tree') {
       case_.expected_ast = JSON.parse(content);
-    } else if (ext === "json" && kind === "options") {
+    } else if (ext === 'json' && kind === 'options') {
       case_.options = JSON.parse(content);
     }
   }
@@ -170,9 +163,9 @@ function get_tests(root_dir) {
 
 function get_hardcoded_tests() {
   var tests = get_tests(
-    argv['hardcoded-tests'] ?
-      path.resolve(argv['hardcoded-tests']) :
-      path.resolve(__dirname, '../../../src/parser/test/flow')
+    argv['hardcoded-tests']
+      ? path.resolve(argv['hardcoded-tests'])
+      : path.resolve(__dirname, '../../../src/parser/test/flow'),
   );
   var result = {};
   for (var section in tests) {
@@ -185,14 +178,14 @@ function get_hardcoded_tests() {
           cases.push(test[case_]);
         }
       }
-      result[section] = { tests: cases };
+      result[section] = {tests: cases};
     }
   }
   return result;
 }
 
 function test_section(runTest, section_name, section) {
-  console.log("===%s===".bold, section_name);
+  console.log('===%s==='.bold, section_name);
   var esprima_opts = {};
   var results = {
     num_successes: 0,
@@ -202,7 +195,7 @@ function test_section(runTest, section_name, section) {
   for (var i = 0; i < section.tests.length; i++) {
     var test = section.tests[i];
     var name = escape_content(test.content);
-    process.stdout.write("RUNNING".yellow + " " + name + "\r");
+    process.stdout.write('RUNNING'.yellow + ' ' + name + '\r');
 
     var options = {};
     for (var key in section.options) {
@@ -232,14 +225,12 @@ function test_section(runTest, section_name, section) {
 
 function report_percentage_passed(results) {
   var passed = results.num_failures === 0;
-  var result_fraction = passed ?
-    "%s/%s".green :
-    "%s/%s".redBG.white;
+  var result_fraction = passed ? '%s/%s'.green : '%s/%s'.redBG.white;
   console.log(
-    "%s test suite: ".bold + result_fraction + " tests passed",
+    '%s test suite: '.bold + result_fraction + ' tests passed',
     results.suite,
     results.num_successes,
-    results.num_successes + results.num_failures
+    results.num_successes + results.num_failures,
   );
   return passed;
 }
@@ -248,14 +239,11 @@ function report_results(results) {
   var passed = report_percentage_passed(results);
 
   if (!passed) {
-    console.log(
-      "*** %d TESTS FAILED! ***".redBG.white,
-      results.num_failures
-    );
+    console.log('*** %d TESTS FAILED! ***'.redBG.white, results.num_failures);
 
     for (var section_name in results.failures) {
       if (results.failures.hasOwnProperty(section_name)) {
-        console.log("===%s Failures===".bold, section_name);
+        console.log('===%s Failures==='.bold, section_name);
         for (var test in results.failures[section_name]) {
           if (results.failures[section_name].hasOwnProperty(test)) {
             var result = results.failures[section_name][test];
@@ -271,8 +259,8 @@ function report_results(results) {
 
 function run_test_suite(test) {
   console.log(
-    "\n\n*****RUNNING %s TEST SUITE*****".bold,
-    test.suite.toUpperCase()
+    '\n\n*****RUNNING %s TEST SUITE*****'.bold,
+    test.suite.toUpperCase(),
   );
   var exit_code = 0;
 
@@ -285,8 +273,11 @@ function run_test_suite(test) {
   };
   for (var section_name in sections) {
     if (sections.hasOwnProperty(section_name)) {
-      var section_results =
-        test_section(test.runner, section_name, sections[section_name]);
+      var section_results = test_section(
+        test.runner,
+        section_name,
+        sections[section_name],
+      );
       results.num_successes += section_results.num_successes;
       results.num_failures += section_results.num_failures;
       if (section_results.num_failures > 0) {
@@ -345,9 +336,9 @@ function go() {
   var suite_results = tests.map(run_test_suite);
 
   console.log(
-    "\n%d suite%s run",
+    '\n%d suite%s run',
     suite_results.length,
-    suite_results.length === 1 ? '' : 's'
+    suite_results.length === 1 ? '' : 's',
   );
   var exit_code = 0;
   suite_results.forEach(function (results) {
@@ -360,18 +351,27 @@ function go() {
 }
 
 function usage() {
-  console.log("usage: %s [OPTIONS] [all] [esprima] [hardcoded]", process.argv[1]);
-  console.log("Supported options");
-  console.log("\t--esprima-tests", "Path to legacy esprima tests");
-  console.log("\t--hardcoded-tests", "Directory containing the hardcoded tests");
-  console.log("\t--dumpAst", "Dumps the esprima & flow ASTs before each test");
-  console.log("\t--filter=regex", "Only run tests that match the regex");
-  console.log("\t--section-filter=regex", "Only run tests from sections that match the regex");
-  console.log("\t--jsonErrors", "Output errors in json format");
-  console.log("\t--numTests=n", "Run at most n tests");
   console.log(
-    "\t--showDifferences",
-    "Only run the tests for which esprima and flow differ"
+    'usage: %s [OPTIONS] [all] [esprima] [hardcoded]',
+    process.argv[1],
+  );
+  console.log('Supported options');
+  console.log('\t--esprima-tests', 'Path to legacy esprima tests');
+  console.log(
+    '\t--hardcoded-tests',
+    'Directory containing the hardcoded tests',
+  );
+  console.log('\t--dumpAst', 'Dumps the esprima & flow ASTs before each test');
+  console.log('\t--filter=regex', 'Only run tests that match the regex');
+  console.log(
+    '\t--section-filter=regex',
+    'Only run tests from sections that match the regex',
+  );
+  console.log('\t--jsonErrors', 'Output errors in json format');
+  console.log('\t--numTests=n', 'Run at most n tests');
+  console.log(
+    '\t--showDifferences',
+    'Only run the tests for which esprima and flow differ',
   );
   process.exit(1);
 }
