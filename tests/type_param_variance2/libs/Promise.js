@@ -1,4 +1,4 @@
-// Copyright (c) Facebook, Inc. and its affiliates.
+// Copyright (c) Meta Platforms, Inc. and affiliates.
 
 // These annotations are copy/pasted from the built-in Flow definitions for
 // Native Promises (https://phabricator.fb.com/P19792689),
