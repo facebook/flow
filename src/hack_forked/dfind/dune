@@ -4,6 +4,7 @@
   (libraries
     avl
     collections
+    flow_logging_stubs
     fsnotify
     logging_common
     lwt

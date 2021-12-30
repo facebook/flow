@@ -1,0 +1,8 @@
+(library
+ (name flow_analysis)
+ (wrapped false)
+ (libraries
+    flow_common_utils_loc_utils
+    flow_parser_utils)
+ (preprocess
+  (pps ppx_let ppx_deriving.std)))

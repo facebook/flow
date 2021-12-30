@@ -7,4 +7,5 @@
     semver
     xx
   )
+   (preprocess (pps ppx_let))
 )
