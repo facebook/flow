@@ -122,29 +122,10 @@ let read_file_sig file_addr =
 
 (* Contains the hash for every file we even consider parsing *)
 module FileHashHeap =
-  SharedMem.NoCache
+  SharedMem.NoCacheAddr
     (File_key)
     (struct
-      (* In the future I imagine a system like this:
-       *
-       * type t = {
-       *   since_version: Recheck.version;
-       *   hash: Sha1.hash;
-       * }
-       *
-       * Every time we notice files changing (via file_watcher or some other way) we bump the version
-       * so a recheck is known to be from version N to version N+1. If the recheck gets cancelled
-       * due to a file watcher event, then we're checking from version N to version N+2 (etc etc).
-       *
-       * Ideally we'd be able to ignore file watcher events that are either old & outdated or where
-       * hash hasn't changed (watchman can provide the sha1).
-       *
-       * And ideally a cancelled recheck leading to a recheck from version N to N+2 will still
-       * merge file foo.js, even if we parsed it at version N+1 & it's unchanged since version N+1.
-       *)
-      type t = Xx.hash
-
-      let description = "FileHash"
+      type t = Heap.heap_int64
     end)
 
 module ExportsHeap =
@@ -185,6 +166,11 @@ module ParsingHeaps = struct
   let add_unparsed file module_name =
     let info = { module_name; checked = false; parsed = false } in
     WorkerCancel.with_no_cancellations (fun () -> InfoHeap.add file info)
+
+  let add_hash file hash =
+    let open Heap in
+    let addr = alloc (header_size + int64_size) (fun chunk -> write_int64 chunk hash) in
+    FileHashHeap.add file addr
 
   let oldify_batch files =
     WorkerCancel.with_no_cancellations (fun () ->
@@ -319,9 +305,15 @@ end = struct
     | Some addr -> Some (read_type_sig addr)
     | None -> None
 
-  let get_file_hash ~reader:_ = FileHashHeap.get
+  let get_file_hash ~reader:_ file =
+    match FileHashHeap.get file with
+    | Some addr -> Some (Heap.read_int64 addr)
+    | None -> None
 
-  let get_old_file_hash ~reader:_ = FileHashHeap.get_old
+  let get_old_file_hash ~reader:_ file =
+    match FileHashHeap.get_old file with
+    | Some addr -> Some (Heap.read_int64 addr)
+    | None -> None
 
   let get_ast_unsafe ~reader file =
     match get_ast ~reader file with
@@ -413,7 +405,7 @@ end = struct
     {
       add_parsed = ParsingHeaps.add_parsed;
       add_unparsed = ParsingHeaps.add_unparsed;
-      add_hash = FileHashHeap.add;
+      add_hash = ParsingHeaps.add_hash;
     }
 end
 
@@ -462,7 +454,7 @@ end = struct
 
   (* Ideally we'd assert that file was oldified and not revived, but it's too expensive to pass the
    * set of oldified files to the worker *)
-  let add_hash = FileHashHeap.add
+  let add_hash = ParsingHeaps.add_hash
 
   let create transaction files =
     WorkerCancel.with_no_cancellations (fun () ->
@@ -558,10 +550,13 @@ module Reader : READER with type reader = State_reader.t = struct
     Base.Option.map ~f:read_type_sig addr_opt
 
   let get_file_hash ~reader:_ key =
-    if should_use_oldified key then
-      FileHashHeap.get_old key
-    else
-      FileHashHeap.get key
+    let addr_opt =
+      if should_use_oldified key then
+        FileHashHeap.get_old key
+      else
+        FileHashHeap.get key
+    in
+    Base.Option.map ~f:Heap.read_int64 addr_opt
 
   let get_ast_unsafe ~reader file =
     match get_ast ~reader file with
@@ -744,7 +739,7 @@ module From_saved_state : sig
 
   val add_info : File_key.t -> info -> unit
 end = struct
-  let add_file_hash = FileHashHeap.add
+  let add_file_hash = ParsingHeaps.add_hash
 
   let add_exports = ExportsHeap.add
 

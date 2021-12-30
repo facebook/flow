@@ -189,6 +189,9 @@ module NewAPI : sig
   (* Phantom type tag for string objects. *)
   type heap_string
 
+  (* Phantom type tag for int64 data, like hashes *)
+  type heap_int64
+
   (* Phantom type tag for addr map objects, which are arrays of addresses to
    * another kind of object. For example, a `heap_string addr_tbl addr` is an
    * array of addresses to string objects. *)
@@ -242,6 +245,14 @@ module NewAPI : sig
   val write_string : chunk -> string -> heap_string addr
 
   val read_string : heap_string addr -> string
+
+  (* hash *)
+
+  val int64_size : size
+
+  val write_int64 : chunk -> int64 -> heap_int64 addr
+
+  val read_int64 : heap_int64 addr -> int64
 
   (* addr tbl *)
 

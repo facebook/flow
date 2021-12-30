@@ -866,6 +866,8 @@ module NewAPI = struct
 
   type heap_string
 
+  type heap_int64
+
   type 'a addr_tbl
 
   type 'a opt
@@ -974,11 +976,12 @@ module NewAPI = struct
     | Serialized_file_sig_tag
     (* tags defined above this point are serialized+compressed *)
     | String_tag (* 4 *)
+    | Int64_tag
     | Docblock_tag
     | ALoc_table_tag
     | Type_sig_tag
     (* tags defined below this point are scanned for pointers *)
-    | Addr_tbl_tag (* 8 *)
+    | Addr_tbl_tag (* 9 *)
     | Checked_file_tag
 
   (* avoid unused constructor warning *)
@@ -990,7 +993,7 @@ module NewAPI = struct
   let tag_val : tag -> int = Obj.magic
 
   (* double-check integer value is consistent with hh_shared.c *)
-  let () = assert (tag_val Addr_tbl_tag = 8)
+  let () = assert (tag_val Addr_tbl_tag = 9)
 
   let header_size = 1
 
@@ -1113,6 +1116,22 @@ module NewAPI = struct
     unsafe_read_string str_addr str_size
 
   let read_string addr = read_string_generic String_tag addr 0
+
+  (** Int64 *)
+
+  let int64_size = 1
+
+  let write_int64 chunk n =
+    let addr = write_header chunk Int64_tag int64_size in
+    let data_addr = chunk.next_addr in
+    unsafe_write_int64 chunk.heap data_addr n;
+    chunk.next_addr <- addr_offset data_addr int64_size;
+    addr
+
+  let read_int64 addr =
+    let heap = get_heap () in
+    let _ = read_header_checked heap Int64_tag addr in
+    read_int64 heap (addr_offset addr header_size)
 
   (** Address tables *)
 
